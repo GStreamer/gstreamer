@@ -188,7 +188,7 @@ class WebRTCClient:
         decodebin.connect('pad-added', self.on_incoming_decodebin_stream)
         self.pipe.add(decodebin)
         decodebin.sync_state_with_parent()
-        self.webrtc.link(decodebin)
+        pad.link(decodebin.get_static_pad('sink'))
 
     def start_pipeline(self, create_offer=True, opus_pt=96, vp8_pt=97):
         print_status(f'Creating pipeline, create_offer: {create_offer}')
