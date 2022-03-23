@@ -105,6 +105,9 @@ typedef struct
 
   GstVideoConverter *convert;
 
+  GstStructure *converter_config;
+  gboolean converter_config_changed;
+
   gint borders_h;
   gint borders_w;
 } GstVideoConvertScalePrivate;
@@ -158,6 +161,7 @@ enum
   PROP_MATRIX_MODE,
   PROP_GAMMA_MODE,
   PROP_PRIMARIES_MODE,
+  PROP_CONVERTER_CONFIG,
 };
 
 #undef GST_VIDEO_SIZE_RANGE
@@ -375,6 +379,23 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
           DEFAULT_PROP_PRIMARIES_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVideoConvertScale:converter-config:
+   *
+   * A #GstStructure describing the configuration that should be used. This
+   * configuration, if set, takes precedence over the other similar conversion
+   * properties.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_CONVERTER_CONFIG, g_param_spec_boxed ("converter-config",
+          "Converter configuration",
+          "A GstStructure describing the configuration that should be used."
+          " This configuration, if set, takes precedence over the other similar conversion properties.",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
   gst_element_class_set_static_metadata (element_class,
       "Video colorspace converter and scaler",
       "Filter/Converter/Video/Scaler/Colorspace",
@@ -431,6 +452,9 @@ gst_video_convert_scale_init (GstVideoConvertScale * self)
   priv->matrix_mode = DEFAULT_PROP_MATRIX_MODE;
   priv->gamma_mode = DEFAULT_PROP_GAMMA_MODE;
   priv->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
+
+  priv->converter_config = NULL;
+  priv->converter_config_changed = FALSE;
 }
 
 static void
@@ -440,6 +464,10 @@ gst_video_convert_scale_finalize (GstVideoConvertScale * self)
 
   if (priv->convert)
     gst_video_converter_free (priv->convert);
+
+  if (priv->converter_config)
+    gst_structure_free (priv->converter_config);
+  priv->converter_config = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (G_OBJECT (self));
 }
@@ -503,6 +531,12 @@ gst_video_convert_scale_set_property (GObject * object, guint prop_id,
     case PROP_DITHER_QUANTIZATION:
       priv->dither_quantization = g_value_get_uint (value);
       break;
+    case PROP_CONVERTER_CONFIG:
+      if (priv->converter_config)
+        gst_structure_free (priv->converter_config);
+      priv->converter_config = g_value_dup_boxed (value);
+      priv->converter_config_changed = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -565,6 +599,9 @@ gst_video_convert_scale_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DITHER_QUANTIZATION:
       g_value_set_uint (value, priv->dither_quantization);
+      break;
+    case PROP_CONVERTER_CONFIG:
+      g_value_set_boxed (value, priv->converter_config);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -709,6 +746,14 @@ gst_video_convert_scale_transform_meta (GstBaseTransform * trans,
   return TRUE;
 }
 
+static GstStructure *
+gst_video_convert_scale_get_converter_config (GstVideoConvertScale * self,
+    GstVideoInfo * out_info)
+{
+  GstVideoConvertScalePrivate *priv = PRIV (self);
+  return gst_structure_copy (priv->converter_config);
+}
+
 static gboolean
 gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     GstVideoInfo * in_info, GstCaps * out, GstVideoInfo * out_info)
@@ -717,6 +762,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   GstVideoConvertScalePrivate *priv = PRIV (self);
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   GstVideoInfo tmp_info;
+  GstStructure *options;
 
   if (priv->convert) {
     gst_video_converter_free (priv->convert);
@@ -765,6 +811,13 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   if (in_info->interlace_mode != out_info->interlace_mode)
     goto format_mismatch;
 
+  if (priv->converter_config) {
+    options = gst_video_convert_scale_get_converter_config (self, out_info);
+    GST_DEBUG_OBJECT (self,
+        "Using user-provided converter-config: %" GST_PTR_FORMAT, options);
+    goto build_converter;
+  }
+
   /* if the only thing different in the caps is the transfer function, and
    * we're converting between equivalent transfer functions and not
    * quantizing/dithering or adjusting alpha, then do passthrough */
@@ -784,7 +837,6 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
           out_info->finfo->bits) && !need_dither && !need_alpha) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   } else {
-    GstStructure *options;
     GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "setup videoscaling");
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
 
@@ -885,6 +937,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         priv->primaries_mode, GST_VIDEO_CONVERTER_OPT_THREADS, G_TYPE_UINT,
         priv->n_threads, NULL);
 
+  build_converter:
     priv->convert = gst_video_converter_new (in_info, out_info, options);
     if (priv->convert == NULL)
       goto no_convert;
@@ -1747,6 +1800,18 @@ gst_video_convert_scale_transform_frame (GstVideoFilter * filter,
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "doing video scaling");
+
+  if (priv->converter_config_changed) {
+    GstStructure *options =
+        gst_video_convert_scale_get_converter_config (GST_VIDEO_CONVERT_SCALE
+        (filter), &filter->out_info);
+
+    gst_video_converter_free (priv->convert);
+    priv->convert =
+        gst_video_converter_new (&filter->in_info, &filter->out_info, options);
+
+    priv->converter_config_changed = FALSE;
+  }
 
   gst_video_converter_frame (priv->convert, in_frame, out_frame);
 

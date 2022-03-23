@@ -14548,6 +14548,17 @@
                         "type": "GstVideoResamplerMethod",
                         "writable": true
                     },
+                    "converter-config": {
+                        "blurb": "A GstStructure describing the configuration that should be used. This configuration, if set, takes precedence over the other similar conversion properties.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
+                        "writable": true
+                    },
                     "dither": {
                         "blurb": "Apply dithering while converting",
                         "conditionally-available": false,
@@ -14800,6 +14811,17 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "GstVideoResamplerMethod",
+                        "writable": true
+                    },
+                    "converter-config": {
+                        "blurb": "A GstStructure describing the configuration that should be used. This configuration, if set, takes precedence over the other similar conversion properties.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
                         "writable": true
                     },
                     "dither": {
