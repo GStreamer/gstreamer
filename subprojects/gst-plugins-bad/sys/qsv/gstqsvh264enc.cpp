@@ -813,7 +813,6 @@ gst_qsv_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
         downstream_profiles.insert (profile);
     }
   }
-  gst_clear_caps (&allowed_caps);
 
   GST_DEBUG_OBJECT (self, "Downstream specified %" G_GSIZE_FORMAT " profiles",
       downstream_profiles.size ());
@@ -824,8 +823,12 @@ gst_qsv_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
     GST_WARNING_OBJECT (self,
         "Allowed caps holds no profile field %" GST_PTR_FORMAT, allowed_caps);
 
+    gst_clear_caps (&allowed_caps);
+
     return gst_video_encoder_proxy_getcaps (encoder, nullptr, filter);
   }
+
+  gst_clear_caps (&allowed_caps);
 
   /* Profile allows interlaced? */
   /* *INDENT-OFF* */
