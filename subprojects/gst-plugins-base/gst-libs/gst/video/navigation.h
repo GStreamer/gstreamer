@@ -64,6 +64,8 @@ struct _GstNavigationInterface {
 
   /**
    * GstNavigationInterface::send_event_simple:
+   * @navigation: The navigation interface instance
+   * @event: (transfer full): The event to send
    *
    * sending a navigation event.
    *

@@ -199,7 +199,7 @@ gst_navigation_send_command (GstNavigation * navigation,
 /**
  * gst_navigation_send_event_simple:
  * @navigation: The navigation interface instance
- * @event: The event to send
+ * @event: (transfer full): The event to send
  *
  * Sends an event to the navigation interface.
  * Since: 1.22
