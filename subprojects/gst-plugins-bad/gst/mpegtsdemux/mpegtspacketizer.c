@@ -2253,9 +2253,9 @@ mpegts_packetizer_offset_to_ts (MpegTSPacketizer2 * packetizer,
 
 /* Input  : local PTS (in GHz units)
  * Return : Stream time (in GHz units) */
-GstClockTime
-mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
-    GstClockTime pts, guint16 pcr_pid)
+static GstClockTime
+mpegts_packetizer_pts_to_ts_internal (MpegTSPacketizer2 * packetizer,
+    GstClockTime pts, guint16 pcr_pid, gboolean check_diff)
 {
   GstClockTime res = GST_CLOCK_TIME_NONE;
   MpegTSPCR *pcrtable;
@@ -2281,14 +2281,14 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
     res = pts + pcrtable->pcroffset + packetizer->extra_shift;
 
     /* Don't return anything if we differ too much against last seen PCR */
-    if (G_UNLIKELY (pcr_pid != 0x1fff &&
-            ABSDIFF (res, pcrtable->last_pcrtime) > 15 * GST_SECOND))
+    if (G_UNLIKELY (check_diff && pcr_pid != 0x1fff &&
+            ABSDIFF (res, pcrtable->last_pcrtime) > 15 * GST_SECOND)) {
       res = GST_CLOCK_TIME_NONE;
-    else {
+    } else {
       GstClockTime tmp = pcrtable->base_time + pcrtable->skew;
       if (tmp + res >= pcrtable->base_pcrtime) {
         res += tmp - pcrtable->base_pcrtime;
-      } else if (ABSDIFF (tmp + res + PCR_GST_MAX_VALUE,
+      } else if (!check_diff || ABSDIFF (tmp + res + PCR_GST_MAX_VALUE,
               pcrtable->base_pcrtime) < PCR_GST_MAX_VALUE / 2) {
         /* Handle wrapover */
         res += tmp + PCR_GST_MAX_VALUE - pcrtable->base_pcrtime;
@@ -2386,6 +2386,24 @@ mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
       GST_TIME_FORMAT " pcr_pid:0x%04x", GST_TIME_ARGS (res),
       GST_TIME_ARGS (pts), pcr_pid);
   return res;
+}
+
+/* Input  : local PTS (in GHz units)
+ * Return : Stream time (in GHz units) */
+GstClockTime
+mpegts_packetizer_pts_to_ts_unchecked (MpegTSPacketizer2 * packetizer,
+    GstClockTime pts, guint16 pcr_pid)
+{
+  return mpegts_packetizer_pts_to_ts_internal (packetizer, pts, pcr_pid, FALSE);
+}
+
+/* Input  : local PTS (in GHz units)
+ * Return : Stream time (in GHz units) */
+GstClockTime
+mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
+    GstClockTime pts, guint16 pcr_pid)
+{
+  return mpegts_packetizer_pts_to_ts_internal (packetizer, pts, pcr_pid, TRUE);
 }
 
 /* Stream time to offset */

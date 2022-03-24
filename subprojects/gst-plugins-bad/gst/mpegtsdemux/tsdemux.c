@@ -1179,7 +1179,7 @@ handle_psi (MpegTSBase * base, GstMpegtsSection * section)
 
           if (sevent->program_splice_time_specified) {
             pts =
-                mpegts_packetizer_pts_to_ts (base->packetizer,
+                mpegts_packetizer_pts_to_ts_unchecked (base->packetizer,
                 MPEGTIME_TO_GSTTIME (sevent->program_splice_time +
                     sit->pts_adjustment), demux->program->pcr_pid);
             field_name =

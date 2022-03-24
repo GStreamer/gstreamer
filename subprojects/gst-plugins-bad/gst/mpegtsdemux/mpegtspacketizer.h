@@ -373,6 +373,9 @@ G_GNUC_INTERNAL GstClockTime
 mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
 			     GstClockTime pts, guint16 pcr_pid);
 G_GNUC_INTERNAL GstClockTime
+mpegts_packetizer_pts_to_ts_unchecked (MpegTSPacketizer2 * packetizer,
+			     GstClockTime pts, guint16 pcr_pid);
+G_GNUC_INTERNAL GstClockTime
 mpegts_packetizer_get_current_time (MpegTSPacketizer2 * packetizer,
 				    guint16 pcr_pid);
 G_GNUC_INTERNAL void
