@@ -408,6 +408,23 @@ endif
 
 if host_machine.system() == 'windows'
   winsock2 = [cc.find_library('ws2_32')]
+
+  building_for_win7 = cc.compiles('''#include <windows.h>
+      #ifndef WINVER
+      #error "unknown minimum supported OS version"
+      #endif
+      #if (WINVER < _WIN32_WINNT_WIN7)
+      #error "Windows 7 API is not guaranteed"
+      #endif
+      ''',
+      name: 'building for Windows 7')
+
+  if not building_for_win7
+    add_project_arguments([
+      '-D_WIN32_WINNT=_WIN32_WINNT_WIN7',
+      '-DWINVER=_WIN32_WINNT_WIN7',
+    ], language: ['c', 'cpp'])
+  endif
 else
   winsock2 = []
 endif

@@ -77,7 +77,6 @@ elif system == 'windows'
     if compiler.get_id() == 'gcc'
         compile_args += [compiler.get_supported_arguments([
             '-Wno-format',
-            '-D_WIN32_WINNT=0x601',  # Enables inet_ntop and friends
         ])]
     endif
 else

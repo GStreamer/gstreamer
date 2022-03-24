@@ -404,6 +404,23 @@ if host_system == 'windows'
   if cc.compiles(code, name : 'building for UWP')
     building_for_uwp = true
   endif
+
+  building_for_win7 = cc.compiles('''#include <windows.h>
+      #ifndef WINVER
+      #error "unknown minimum supported OS version"
+      #endif
+      #if (WINVER < _WIN32_WINNT_WIN7)
+      #error "Windows 7 API is not guaranteed"
+      #endif
+      ''',
+      name: 'building for Windows 7')
+
+  if not building_for_win7
+    add_project_arguments([
+      '-D_WIN32_WINNT=_WIN32_WINNT_WIN7',
+      '-DWINVER=_WIN32_WINNT_WIN7',
+    ], language: ['c', 'cpp'])
+  endif
 endif
 
 backtrace_deps = []
