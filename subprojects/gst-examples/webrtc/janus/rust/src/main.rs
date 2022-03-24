@@ -18,14 +18,9 @@
 // Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 // Boston, MA 02110-1301, USA.
 
-#![recursion_limit = "256"]
-
 use anyhow::bail;
 use gst::prelude::*;
 use std::sync::{Arc, Weak};
-
-#[macro_use]
-extern crate log;
 
 mod janus;
 
@@ -67,9 +62,8 @@ impl App {
 
     fn new() -> Result<Self, anyhow::Error> {
         let pipeline = gst::parse_launch(
-            &"webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
-             videotestsrc pattern=ball ! videoconvert ! queue name=vqueue"
-                .to_string(),
+            "webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
+             videotestsrc pattern=ball ! videoconvert ! queue name=vqueue",
         )?;
 
         let pipeline = pipeline

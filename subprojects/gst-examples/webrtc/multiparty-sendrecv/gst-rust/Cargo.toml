@@ -10,10 +10,10 @@ async-std = "1"
 structopt = { version = "0.3", default-features = false }
 anyhow = "1"
 rand = "0.8"
-async-tungstenite = { version = "0.16", features = ["async-std-runtime", "async-native-tls"] }
-gst = { package = "gstreamer", version = "0.17", features = ["v1_14", "v1_20"] }
-gst-webrtc = { package = "gstreamer-webrtc", version = "0.17" }
-gst-sdp = { package = "gstreamer-sdp", version = "0.17", features = ["v1_14"] }
+async-tungstenite = { version = "0.17", features = ["async-std-runtime", "async-native-tls"] }
+gst = { package = "gstreamer", version = "0.18", features = ["v1_14"] }
+gst-webrtc = { package = "gstreamer-webrtc", version = "0.18" }
+gst-sdp = { package = "gstreamer-sdp", version = "0.18", features = ["v1_14"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"

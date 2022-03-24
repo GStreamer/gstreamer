@@ -27,6 +27,7 @@ use {
     futures::stream::{Stream, StreamExt},
     gst::prelude::*,
     http::Request,
+    log::{debug, error, info, trace},
     rand::prelude::*,
     serde_derive::{Deserialize, Serialize},
     serde_json::json,
@@ -153,10 +154,10 @@ struct JsonReply {
 
 fn transaction_id() -> String {
     thread_rng()
-	.sample_iter(&rand::distributions::Alphanumeric)
-	.map(char::from)
-	.take(30)
-	.collect()
+        .sample_iter(&rand::distributions::Alphanumeric)
+        .map(char::from)
+        .take(30)
+        .collect()
 }
 
 // Strong reference to the state of one peer
@@ -225,7 +226,7 @@ impl Peer {
         });
 
         self.webrtcbin
-            .emit_by_name("create-offer", &[&None::<gst::Structure>, &promise])?;
+            .emit_by_name::<()>("create-offer", &[&None::<gst::Structure>, &promise]);
 
         Ok(())
     }
@@ -237,7 +238,7 @@ impl Peer {
             .get::<gst_webrtc::WebRTCSessionDescription>("offer")
             .expect("Invalid argument");
         self.webrtcbin
-            .emit_by_name("set-local-description", &[&offer, &None::<gst::Promise>])?;
+            .emit_by_name::<()>("set-local-description", &[&offer, &None::<gst::Promise>]);
 
         info!("sending SDP offer to peer: {:?}", offer.sdp().as_text());
 
@@ -266,7 +267,7 @@ impl Peer {
             .lock()
             .expect("Invalid message sender")
             .unbounded_send(msg)
-            .with_context(|| "Failed to send SDP offer".to_string())?;
+            .context("Failed to send SDP offer")?;
 
         Ok(())
     }
@@ -278,12 +279,9 @@ impl Peer {
             .get::<gst_webrtc::WebRTCSessionDescription>("answer")
             .expect("Invalid answer");
         self.webrtcbin
-            .emit_by_name("set-local-description", &[&answer, &None::<gst::Promise>])?;
+            .emit_by_name::<()>("set-local-description", &[&answer, &None::<gst::Promise>]);
 
-        info!(
-            "sending SDP answer to peer: {:?}",
-            answer.sdp().as_text()
-        );
+        info!("sending SDP answer to peer: {:?}", answer.sdp().as_text());
 
         Ok(())
     }
@@ -299,7 +297,7 @@ impl Peer {
                 gst_webrtc::WebRTCSessionDescription::new(gst_webrtc::WebRTCSDPType::Answer, ret);
 
             self.webrtcbin
-                .emit_by_name("set-remote-description", &[&answer, &None::<gst::Promise>])?;
+                .emit_by_name::<()>("set-remote-description", &[&answer, &None::<gst::Promise>]);
 
             Ok(())
         } else if type_ == "offer" {
@@ -321,8 +319,7 @@ impl Peer {
 
                 peer.0
                     .webrtcbin
-                    .emit_by_name("set-remote-description", &[&offer, &None::<gst::Promise>])
-                    .expect("Unable to set remote description");
+                    .emit_by_name::<()>("set-remote-description", &[&offer, &None::<gst::Promise>]);
 
                 let peer_clone = peer.downgrade();
                 let promise = gst::Promise::with_change_func(move |reply| {
@@ -340,8 +337,7 @@ impl Peer {
 
                 peer.0
                     .webrtcbin
-                    .emit_by_name("create-answer", &[&None::<gst::Structure>, &promise])
-                    .expect("Unable to create answer");
+                    .emit_by_name::<()>("create-answer", &[&None::<gst::Structure>, &promise]);
             });
 
             Ok(())
@@ -357,14 +353,14 @@ impl Peer {
             sdp_mline_index, candidate
         );
         self.webrtcbin
-            .emit_by_name("add-ice-candidate", &[&sdp_mline_index, &candidate])?;
+            .emit_by_name::<()>("add-ice-candidate", &[&sdp_mline_index, &candidate]);
 
         Ok(())
     }
 
     // Asynchronously send ICE candidates to the peer via the WebSocket connection as a JSON
     // message
-    fn on_ice_candidate(&self, mlineindex: u32, candidate: String) -> Result<(), anyhow::Error> {
+    fn on_ice_candidate(&self, mlineindex: u32, candidate: &str) -> Result<(), anyhow::Error> {
         let transaction = transaction_id();
         info!("Sending ICE {} {}", mlineindex, &candidate);
         let msg = WsMessage::Text(
@@ -384,7 +380,7 @@ impl Peer {
             .lock()
             .expect("Invalid message sender")
             .unbounded_send(msg)
-            .with_context(|| "Failed to send ICE candidate".to_string())?;
+            .context("Failed to send ICE candidate")?;
 
         Ok(())
     }
@@ -479,9 +475,7 @@ impl JanusGateway {
         );
         ws.send(msg).await?;
 
-        let webrtcbin = pipeline
-            .by_name("webrtcbin")
-            .expect("can't find webrtcbin");
+        let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
         let webrtc_codec = &args.webrtc_video_codec;
         let bin_description = &format!(
@@ -516,18 +510,15 @@ impl JanusGateway {
         let vsink = encode_bin
             .by_name("webrtc-vsink")
             .expect("No webrtc-vsink found");
-        let srcpad = vsink
-            .static_pad("src")
-            .expect("Element without src pad");
+        let srcpad = vsink.static_pad("src").expect("Element without src pad");
         if let Ok(webrtc_ghost_pad) = gst::GhostPad::with_target(Some("webrtc_video_src"), &srcpad)
         {
             encode_bin.add_pad(&webrtc_ghost_pad)?;
             webrtc_ghost_pad.link(&sinkpad2)?;
         }
 
-        if let Some(transceiver) = webrtcbin.emit_by_name("get-transceiver", &[&0.to_value()]).unwrap().and_then(|val| val.get::<glib::Object>().ok()) {
-            transceiver.set_property("do-nack", &false.to_value())?;
-        }
+        let transceiver = webrtcbin.emit_by_name::<glib::Object>("get-transceiver", &[&0i32]);
+        transceiver.set_property("do-nack", false);
 
         let (send_ws_msg_tx, send_ws_msg_rx) = mpsc::unbounded::<WsMessage>();
 
@@ -545,9 +536,11 @@ impl JanusGateway {
 
         // Connect to on-negotiation-needed to handle sending an Offer
         let peer_clone = peer.downgrade();
-        peer.webrtcbin
-            .connect("on-negotiation-needed", false, move |_| {
-                let peer = upgrade_weak!(peer_clone, None);
+        peer.webrtcbin.connect_closure(
+            "on-negotiation-needed",
+            false,
+            glib::closure!(move |_webrtcbin: &gst::Element| {
+                let peer = upgrade_weak!(peer_clone);
                 if let Err(err) = peer.on_negotiation_needed() {
                     gst::element_error!(
                         peer.bin,
@@ -555,32 +548,27 @@ impl JanusGateway {
                         ("Failed to negotiate: {:?}", err)
                     );
                 }
-
-                None
-            })?;
+            }),
+        );
 
         // Whenever there is a new ICE candidate, send it to the peer
         let peer_clone = peer.downgrade();
-        peer.webrtcbin
-            .connect("on-ice-candidate", false, move |values| {
-                let mlineindex = values[1]
-                    .get::<u32>()
-                    .expect("Invalid type");
-                let candidate = values[2]
-                    .get::<String>()
-                    .expect("Invalid type");
-
-                let peer = upgrade_weak!(peer_clone, None);
-                if let Err(err) = peer.on_ice_candidate(mlineindex, candidate) {
-                    gst::element_error!(
-                        peer.bin,
-                        gst::LibraryError::Failed,
-                        ("Failed to send ICE candidate: {:?}", err)
-                    );
+        peer.webrtcbin.connect_closure(
+            "on-ice-candidate",
+            false,
+            glib::closure!(
+                move |_webrtcbin: &gst::Element, mlineindex: u32, candidate: &str| {
+                    let peer = upgrade_weak!(peer_clone);
+                    if let Err(err) = peer.on_ice_candidate(mlineindex, candidate) {
+                        gst::element_error!(
+                            peer.bin,
+                            gst::LibraryError::Failed,
+                            ("Failed to send ICE candidate: {:?}", err)
+                        );
+                    }
                 }
-
-                None
-            })?;
+            ),
+        );
 
         // Split the websocket into the Sink and Stream
         let (ws_sink, ws_stream) = ws.split();
@@ -628,6 +616,7 @@ impl JanusGateway {
                                 }
                                 None
                             },
+                            WsMessage::Frame(_) => unreachable!(),
                         }
                     },
                     // Handle WebSocket messages we created asynchronously

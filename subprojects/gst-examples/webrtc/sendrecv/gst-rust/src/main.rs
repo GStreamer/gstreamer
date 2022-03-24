@@ -16,6 +16,7 @@ use async_tungstenite::tungstenite;
 use tungstenite::Error as WsError;
 use tungstenite::Message as WsMessage;
 
+use gst::glib;
 use gst::prelude::*;
 
 use serde_derive::{Deserialize, Serialize};
@@ -125,9 +126,7 @@ impl App {
             .expect("not a pipeline");
 
         // Get access to the webrtcbin by name
-        let webrtcbin = pipeline
-            .by_name("webrtcbin")
-            .expect("can't find webrtcbin");
+        let webrtcbin = pipeline.by_name("webrtcbin").expect("can't find webrtcbin");
 
         // Set some properties on webrtcbin
         webrtcbin.set_property_from_str("stun-server", STUN_SERVER);
@@ -151,11 +150,11 @@ impl App {
         // Connect to on-negotiation-needed to handle sending an Offer
         if app.args.peer_id.is_some() {
             let app_clone = app.downgrade();
-            app.webrtcbin
-                .connect("on-negotiation-needed", false, move |values| {
-                    let _webrtc = values[0].get::<gst::Element>().unwrap();
-
-                    let app = upgrade_weak!(app_clone, None);
+            app.webrtcbin.connect_closure(
+                "on-negotiation-needed",
+                false,
+                glib::closure!(move |_webrtcbin: &gst::Element| {
+                    let app = upgrade_weak!(app_clone);
                     if let Err(err) = app.on_negotiation_needed() {
                         gst::element_error!(
                             app.pipeline,
@@ -163,35 +162,29 @@ impl App {
                             ("Failed to negotiate: {:?}", err)
                         );
                     }
-
-                    None
-                })
-                .unwrap();
+                }),
+            );
         }
 
         // Whenever there is a new ICE candidate, send it to the peer
         let app_clone = app.downgrade();
-        app.webrtcbin
-            .connect("on-ice-candidate", false, move |values| {
-                let _webrtc = values[0].get::<gst::Element>().expect("Invalid argument");
-                let mlineindex = values[1].get::<u32>().expect("Invalid argument");
-                let candidate = values[2]
-                    .get::<String>()
-                    .expect("Invalid argument");
+        app.webrtcbin.connect_closure(
+            "on-ice-candidate",
+            false,
+            glib::closure!(
+                move |_webrtcbin: &gst::Element, mlineindex: u32, candidate: &str| {
+                    let app = upgrade_weak!(app_clone);
 
-                let app = upgrade_weak!(app_clone, None);
-
-                if let Err(err) = app.on_ice_candidate(mlineindex, candidate) {
-                    gst::element_error!(
-                        app.pipeline,
-                        gst::LibraryError::Failed,
-                        ("Failed to send ICE candidate: {:?}", err)
-                    );
+                    if let Err(err) = app.on_ice_candidate(mlineindex, candidate) {
+                        gst::element_error!(
+                            app.pipeline,
+                            gst::LibraryError::Failed,
+                            ("Failed to send ICE candidate: {:?}", err)
+                        );
+                    }
                 }
-
-                None
-            })
-            .unwrap();
+            ),
+        );
 
         // Whenever there is a new stream incoming from the peer, handle it
         let app_clone = app.downgrade();
@@ -288,8 +281,7 @@ impl App {
         });
 
         self.webrtcbin
-            .emit_by_name("create-offer", &[&None::<gst::Structure>, &promise])
-            .unwrap();
+            .emit_by_name::<()>("create-offer", &[&None::<gst::Structure>, &promise]);
 
         Ok(())
     }
@@ -316,8 +308,7 @@ impl App {
             .get::<gst_webrtc::WebRTCSessionDescription>()
             .expect("Invalid argument");
         self.webrtcbin
-            .emit_by_name("set-local-description", &[&offer, &None::<gst::Promise>])
-            .unwrap();
+            .emit_by_name::<()>("set-local-description", &[&offer, &None::<gst::Promise>]);
 
         println!(
             "sending SDP offer to peer: {}",
@@ -334,7 +325,7 @@ impl App {
             .lock()
             .unwrap()
             .unbounded_send(WsMessage::Text(message))
-            .with_context(|| format!("Failed to send SDP offer"))?;
+            .context("Failed to send SDP offer")?;
 
         Ok(())
     }
@@ -361,8 +352,7 @@ impl App {
             .get::<gst_webrtc::WebRTCSessionDescription>()
             .expect("Invalid argument");
         self.webrtcbin
-            .emit_by_name("set-local-description", &[&answer, &None::<gst::Promise>])
-            .unwrap();
+            .emit_by_name::<()>("set-local-description", &[&answer, &None::<gst::Promise>]);
 
         println!(
             "sending SDP answer to peer: {}",
@@ -379,7 +369,7 @@ impl App {
             .lock()
             .unwrap()
             .unbounded_send(WsMessage::Text(message))
-            .with_context(|| format!("Failed to send SDP answer"))?;
+            .context("Failed to send SDP answer")?;
 
         Ok(())
     }
@@ -395,8 +385,7 @@ impl App {
                 gst_webrtc::WebRTCSessionDescription::new(gst_webrtc::WebRTCSDPType::Answer, ret);
 
             self.webrtcbin
-                .emit_by_name("set-remote-description", &[&answer, &None::<gst::Promise>])
-                .unwrap();
+                .emit_by_name::<()>("set-remote-description", &[&answer, &None::<gst::Promise>]);
 
             Ok(())
         } else if type_ == "offer" {
@@ -418,8 +407,7 @@ impl App {
 
                 app.0
                     .webrtcbin
-                    .emit_by_name("set-remote-description", &[&offer, &None::<gst::Promise>])
-                    .unwrap();
+                    .emit_by_name::<()>("set-remote-description", &[&offer, &None::<gst::Promise>]);
 
                 let app_clone = app.downgrade();
                 let promise = gst::Promise::with_change_func(move |reply| {
@@ -436,8 +424,7 @@ impl App {
 
                 app.0
                     .webrtcbin
-                    .emit_by_name("create-answer", &[&None::<gst::Structure>, &promise])
-                    .unwrap();
+                    .emit_by_name::<()>("create-answer", &[&None::<gst::Structure>, &promise]);
             });
 
             Ok(())
@@ -449,17 +436,16 @@ impl App {
     // Handle incoming ICE candidates from the peer by passing them to webrtcbin
     fn handle_ice(&self, sdp_mline_index: u32, candidate: &str) -> Result<(), anyhow::Error> {
         self.webrtcbin
-            .emit_by_name("add-ice-candidate", &[&sdp_mline_index, &candidate])
-            .unwrap();
+            .emit_by_name::<()>("add-ice-candidate", &[&sdp_mline_index, &candidate]);
 
         Ok(())
     }
 
     // Asynchronously send ICE candidates to the peer via the WebSocket connection as a JSON
     // message
-    fn on_ice_candidate(&self, mlineindex: u32, candidate: String) -> Result<(), anyhow::Error> {
+    fn on_ice_candidate(&self, mlineindex: u32, candidate: &str) -> Result<(), anyhow::Error> {
         let message = serde_json::to_string(&JsonMsg::Ice {
-            candidate,
+            candidate: candidate.to_string(),
             sdp_mline_index: mlineindex,
         })
         .unwrap();
@@ -468,7 +454,7 @@ impl App {
             .lock()
             .unwrap()
             .unbounded_send(WsMessage::Text(message))
-            .with_context(|| format!("Failed to send ICE candidate"))?;
+            .context("Failed to send ICE candidate")?;
 
         Ok(())
     }
@@ -576,6 +562,7 @@ async fn run(
                         app.handle_websocket_message(&text)?;
                         None
                     },
+                    WsMessage::Frame(_) => unreachable!(),
                 }
             },
             // Pass the GStreamer messages to the application control logic
