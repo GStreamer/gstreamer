@@ -315,6 +315,9 @@ _get_reference_index (GstH265Decoder * decoder, GstH265Picture * picture)
   GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
   guint8 i;
 
+  if (!picture)
+    return 0xFF;
+
   for (i = 0; i < 15; i++) {
     VAPictureHEVC *ref_va_pic = &self->pic_param.base.ReferenceFrames[i];
 
