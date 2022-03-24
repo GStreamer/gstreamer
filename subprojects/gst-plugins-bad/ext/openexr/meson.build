@@ -1,4 +1,5 @@
-openexr_dep = dependency('OpenEXR', required: get_option('openexr'))
+openexr_dep = dependency('OpenEXR', modules: ['OpenEXR::IlmImf'], required: get_option('openexr'))
+
 if openexr_dep.found()
   openexr_override_options = []
   # Older versions of openexr fail to build with -Werror when using GCC >= 9.2
