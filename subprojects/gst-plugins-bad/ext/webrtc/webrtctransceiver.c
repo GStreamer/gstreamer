@@ -38,7 +38,6 @@ G_DEFINE_TYPE_WITH_CODE (WebRTCTransceiver, webrtc_transceiver,
 #define DEFAULT_FEC_TYPE GST_WEBRTC_FEC_TYPE_NONE
 #define DEFAULT_DO_NACK FALSE
 #define DEFAULT_FEC_PERCENTAGE 100
-#define DEFAULT_MSID_APPDATA NULL
 
 enum
 {
@@ -47,7 +46,6 @@ enum
   PROP_FEC_TYPE,
   PROP_FEC_PERCENTAGE,
   PROP_DO_NACK,
-  PROP_MSID_APPDATA,
 };
 
 void
@@ -114,22 +112,6 @@ webrtc_transceiver_set_property (GObject * object, guint prop_id,
     case PROP_FEC_PERCENTAGE:
       trans->fec_percentage = g_value_get_uint (value);
       break;
-    case PROP_MSID_APPDATA:
-    {
-      gchar *new_msid_appdata = g_value_dup_string (value);
-
-      if (new_msid_appdata && strlen (new_msid_appdata) > 64) {
-        g_warning ("Msid appdata exceeds 64 characters: %s", new_msid_appdata);
-        g_free (new_msid_appdata);
-      } else {
-        if (trans->msid_appdata)
-          g_free (trans->msid_appdata);
-
-        trans->msid_appdata = new_msid_appdata;
-      }
-
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -154,9 +136,6 @@ webrtc_transceiver_get_property (GObject * object, guint prop_id,
     case PROP_FEC_PERCENTAGE:
       g_value_set_uint (value, trans->fec_percentage);
       break;
-    case PROP_MSID_APPDATA:
-      g_value_set_string (value, trans->msid_appdata);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -173,7 +152,6 @@ webrtc_transceiver_finalize (GObject * object)
   gst_clear_object (&trans->ulpfecdec);
   gst_clear_object (&trans->ulpfecenc);
   gst_clear_object (&trans->redenc);
-  g_clear_pointer (&trans->msid_appdata, g_free);
 
   if (trans->local_rtx_ssrc_map)
     gst_structure_free (trans->local_rtx_ssrc_map);
@@ -224,23 +202,6 @@ webrtc_transceiver_class_init (WebRTCTransceiverClass * klass)
       g_param_spec_uint ("fec-percentage", "FEC percentage",
           "The amount of Forward Error Correction to apply",
           0, 100, DEFAULT_FEC_PERCENTAGE,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * WebRTCTransceiver:msid-appdata:
-   *
-   * The appdata part of the media stream id, must not exceed 64 characters.
-   *
-   * Consult https://datatracker.ietf.org/doc/html/draft-ietf-mmusic-msid-16#section-2
-   * for more details.
-   *
-   * Since: 1.22
-   */
-  g_object_class_install_property (gobject_class,
-      PROP_MSID_APPDATA,
-      g_param_spec_string ("msid-appdata", "Msid appdata",
-          "The appdata part of the media stream id, must not exceed 64 characters",
-          NULL,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 

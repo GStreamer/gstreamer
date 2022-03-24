@@ -47,7 +47,6 @@ struct _WebRTCTransceiver
   GstWebRTCFECType         fec_type;
   guint                    fec_percentage;
   gboolean                 do_nack;
-  gchar                   *msid_appdata;
 
   GstCaps                  *last_configured_caps;
 
