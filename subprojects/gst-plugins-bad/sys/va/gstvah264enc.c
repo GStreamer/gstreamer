@@ -60,26 +60,23 @@
 #include <va/va_drmcommon.h>
 
 #include "vacompat.h"
+#include "gstvabaseenc.h"
 #include "gstvaencoder.h"
 #include "gstvacaps.h"
 #include "gstvaprofile.h"
 #include "gstvadisplay_priv.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264enc_debug);
-#ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT gst_va_h264enc_debug
-#else
-#define GST_CAT_DEFAULT NULL
-#endif
+
+#define GST_VA_H264_ENC(obj)            ((GstVaH264Enc *) obj)
+#define GST_VA_H264_ENC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaH264EncClass))
+#define GST_VA_H264_ENC_CLASS(klass)    ((GstVaH264EncClass *) klass)
 
 typedef struct _GstVaH264Enc GstVaH264Enc;
 typedef struct _GstVaH264EncClass GstVaH264EncClass;
 typedef struct _GstVaH264EncFrame GstVaH264EncFrame;
 typedef struct _GstVaH264LevelLimits GstVaH264LevelLimits;
-
-#define GST_VA_H264_ENC(obj)            ((GstVaH264Enc *) obj)
-#define GST_VA_H264_ENC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaH264EncClass))
-#define GST_VA_H264_ENC_CLASS(klass)    ((GstVaH264EncClass *) klass)
 
 enum
 {
@@ -104,11 +101,12 @@ enum
   PROP_RATE_CONTROL,
   PROP_CPB_SIZE,
   PROP_AUD,
-  PROP_DEVICE_PATH,
   N_PROPERTIES
 };
 
 static GParamSpec *properties[N_PROPERTIES];
+
+static GstElementClass *parent_class = NULL;
 
 /* Scale factor for bitrate (HRD bit_rate_scale: min = 6) */
 #define SX_BITRATE 6
@@ -123,40 +121,18 @@ static GParamSpec *properties[N_PROPERTIES];
 
 #define MAX_GOP_SIZE  1024
 
-static GstObjectClass *parent_class = NULL;
-
 /* *INDENT-OFF* */
 struct _GstVaH264EncClass
 {
-  GstVideoEncoderClass parent_class;
-
-  GstVaCodecs codec;
-  gchar *render_device_path;
-
-  gboolean (*reconfig)       (GstVaH264Enc * encoder);
-  gboolean (*push_frame)     (GstVaH264Enc * encoder,
-                              GstVideoCodecFrame * frame,
-                              gboolean last);
-  gboolean (*pop_frame)      (GstVaH264Enc * encoder,
-                              GstVideoCodecFrame ** out_frame);
-  gboolean (*encode_frame)   (GstVaH264Enc * encoder,
-                              GstVideoCodecFrame * frame);
+  GstVaBaseEncClass parent_class;
 };
 /* *INDENT-ON* */
 
 struct _GstVaH264Enc
 {
   /*< private > */
-  GstVideoEncoder parent_instance;
+  GstVaBaseEnc parent;
 
-  GstVaDisplay *display;
-
-  gint width;
-  gint height;
-  VAProfile profile;
-  VAEntrypoint entrypoint;
-  guint rt_format;
-  guint codedbuf_size;
   /* properties */
   struct
   {
@@ -184,26 +160,6 @@ struct _GstVaH264Enc
     guint32 target_percentage;
     guint32 target_usage;
   } prop;
-
-  GstVideoCodecState *input_state;
-  GstVideoCodecState *output_state;
-  GstCaps *in_caps;
-  GstVideoInfo in_info;
-  GstVideoInfo sinkpad_info;
-  GstBufferPool *raw_pool;
-
-  GstClockTime start_pts;
-  GstClockTime frame_duration;
-  /* Total frames we handled since reconfig. */
-  guint input_frame_count;
-  guint output_frame_count;
-
-  GstVaEncoder *encoder;
-
-  GQueue reorder_list;
-  GQueue ref_list;
-
-  GQueue output_list;
 
   /* H264 fields */
   gint mb_width;
@@ -304,7 +260,6 @@ struct _GstVaH264EncFrame
 
   gint poc;
   gint frame_num;
-  gboolean last_frame;
   /* The pic_num will be marked as unused_for_reference, which is
    * replaced by this frame. -1 if we do not need to care about it
    * explicitly. */
@@ -312,6 +267,8 @@ struct _GstVaH264EncFrame
 
   /* The total frame count we handled. */
   guint total_frame_count;
+
+  gboolean last_frame;
 };
 
 /**
@@ -409,11 +366,11 @@ gst_va_enc_frame_new (void)
   GstVaH264EncFrame *frame;
 
   frame = g_slice_new (GstVaH264EncFrame);
-  frame->last_frame = FALSE;
   frame->frame_num = 0;
   frame->unused_for_reference_pic_num = -1;
   frame->picture = NULL;
   frame->total_frame_count = 0;
+  frame->last_frame = FALSE;
 
   return frame;
 }
@@ -518,12 +475,13 @@ _ensure_rate_control (GstVaH264Enc * self)
    *    ignored.
    */
 
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint bitrate;
   guint32 rc_mode;
   guint32 quality_level;
 
-  quality_level = gst_va_encoder_get_quality_level (self->encoder,
-      self->profile, self->entrypoint);
+  quality_level = gst_va_encoder_get_quality_level (base->encoder,
+      base->profile, base->entrypoint);
   if (self->rc.target_usage > quality_level) {
     GST_INFO_OBJECT (self, "User setting target-usage: %d is not supported, "
         "fallback to %d", self->rc.target_usage, quality_level);
@@ -534,8 +492,8 @@ _ensure_rate_control (GstVaH264Enc * self)
   }
 
   /* TODO: find a better heuristics to infer a nearer control mode */
-  rc_mode = gst_va_encoder_get_rate_control_mode (self->encoder,
-      self->profile, self->entrypoint);
+  rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
+      base->profile, base->entrypoint);
   if (!(rc_mode & self->prop.rc_ctrl)) {
     GST_INFO_OBJECT (self, "The race control mode %s is not supported, "
         "fallback to %s mode",
@@ -615,8 +573,8 @@ _ensure_rate_control (GstVaH264Enc * self)
 
     factor = (guint64) self->mb_width * self->mb_height * bits_per_mb;
     bitrate = gst_util_uint64_scale (factor,
-        GST_VIDEO_INFO_FPS_N (&self->in_info),
-        GST_VIDEO_INFO_FPS_D (&self->in_info)) / 1000;
+        GST_VIDEO_INFO_FPS_N (&base->input_state->info),
+        GST_VIDEO_INFO_FPS_D (&base->input_state->info)) / 1000;
     GST_INFO_OBJECT (self, "target bitrate computed to %u kbps", bitrate);
   }
 
@@ -715,14 +673,15 @@ _get_h264_cpb_nal_factor (VAProfile profile)
 static gboolean
 _calculate_level (GstVaH264Enc * self)
 {
-  const guint cpb_factor = _get_h264_cpb_nal_factor (self->profile);
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+  const guint cpb_factor = _get_h264_cpb_nal_factor (base->profile);
   guint i, PicSizeMbs, MaxDpbMbs, MaxMBPS;
 
   PicSizeMbs = self->mb_width * self->mb_height;
   MaxDpbMbs = PicSizeMbs * (self->gop.num_ref_frames + 1);
   MaxMBPS = gst_util_uint64_scale_int_ceil (PicSizeMbs,
-      GST_VIDEO_INFO_FPS_N (&self->in_info),
-      GST_VIDEO_INFO_FPS_D (&self->in_info));
+      GST_VIDEO_INFO_FPS_N (&base->input_state->info),
+      GST_VIDEO_INFO_FPS_D (&base->input_state->info));
 
   for (i = 0; i < G_N_ELEMENTS (_va_h264_level_limits); i++) {
     const GstVaH264LevelLimits *const limits = &_va_h264_level_limits[i];
@@ -749,14 +708,15 @@ _calculate_level (GstVaH264Enc * self)
 static void
 _validate_parameters (GstVaH264Enc * self)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   gint32 max_slices;
 
   /* Ensure the num_slices provided by the user not exceed the limit
    * of the number of slices permitted by the stream and by the
    * hardware. */
   g_assert (self->num_slices >= 1);
-  max_slices = gst_va_encoder_get_max_slice_num (self->encoder,
-      self->profile, self->entrypoint);
+  max_slices = gst_va_encoder_get_max_slice_num (base->encoder,
+      base->profile, base->entrypoint);
   if (self->num_slices > max_slices)
     self->num_slices = max_slices;
   /* The stream size limit. */
@@ -770,8 +730,8 @@ _validate_parameters (GstVaH264Enc * self)
 
   /* Ensure trellis. */
   if (self->use_trellis &&
-      !gst_va_encoder_has_trellis (self->encoder, self->profile,
-          self->entrypoint)) {
+      !gst_va_encoder_has_trellis (base->encoder, base->profile,
+          base->entrypoint)) {
     GST_INFO_OBJECT (self, "The trellis is not supported");
     self->use_trellis = FALSE;
   }
@@ -963,14 +923,15 @@ _create_gop_frame_types (GstVaH264Enc * self)
 static void
 _generate_gop_structure (GstVaH264Enc * self)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint32 list0, list1, gop_ref_num;
   gint32 p_frames;
 
   /* If not set, generate a idr every second */
   if (self->gop.idr_period == 0) {
-    self->gop.idr_period = (GST_VIDEO_INFO_FPS_N (&self->in_info)
-        + GST_VIDEO_INFO_FPS_D (&self->in_info) - 1) /
-        GST_VIDEO_INFO_FPS_D (&self->in_info);
+    self->gop.idr_period = (GST_VIDEO_INFO_FPS_N (&base->input_state->info)
+        + GST_VIDEO_INFO_FPS_D (&base->input_state->info) - 1) /
+        GST_VIDEO_INFO_FPS_D (&base->input_state->info);
   }
 
   /* Do not use a too huge GOP size. */
@@ -1004,8 +965,8 @@ _generate_gop_structure (GstVaH264Enc * self)
     }
   }
 
-  if (!gst_va_encoder_get_max_num_reference (self->encoder, self->profile,
-          self->entrypoint, &list0, &list1)) {
+  if (!gst_va_encoder_get_max_num_reference (base->encoder, base->profile,
+          base->entrypoint, &list0, &list1)) {
     GST_INFO_OBJECT (self, "Failed to get the max num reference");
     list0 = 1;
     list1 = 0;
@@ -1184,11 +1145,12 @@ create_poc:
 static void
 _calculate_coded_size (GstVaH264Enc * self)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint codedbuf_size = 0;
 
-  if (self->profile == VAProfileH264High
-      || self->profile == VAProfileH264MultiviewHigh
-      || self->profile == VAProfileH264StereoHigh) {
+  if (base->profile == VAProfileH264High
+      || base->profile == VAProfileH264MultiviewHigh
+      || base->profile == VAProfileH264StereoHigh) {
     /* The number of bits of macroblock_layer( ) data for any macroblock
        is not greater than 128 + RawMbBits */
     guint RawMbBits = 0;
@@ -1197,7 +1159,7 @@ _calculate_coded_size (GstVaH264Enc * self)
     guint MbWidthC = 8;
     guint MbHeightC = 8;
 
-    switch (self->rt_format) {
+    switch (base->rt_format) {
       case VA_RT_FORMAT_YUV420:
         BitDepthY = 8;
         BitDepthC = 8;
@@ -1267,9 +1229,9 @@ _calculate_coded_size (GstVaH264Enc * self)
       self->num_slices * (4 + GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
 
   /* Add 5% for safety */
-  self->codedbuf_size = (guint) ((gfloat) codedbuf_size * 1.05);
+  base->codedbuf_size = (guint) ((gfloat) codedbuf_size * 1.05);
 
-  GST_DEBUG_OBJECT (self, "Calculate codedbuf size: %u", self->codedbuf_size);
+  GST_DEBUG_OBJECT (self, "Calculate codedbuf size: %u", base->codedbuf_size);
 }
 
 static guint
@@ -1292,6 +1254,7 @@ _get_rtformat (GstVaH264Enc * self, GstVideoFormat format)
 static gboolean
 _init_packed_headers (GstVaH264Enc * self)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint32 packed_headers;
   guint32 desired_packed_headers = VA_ENC_PACKED_HEADER_SEQUENCE        /* SPS */
       | VA_ENC_PACKED_HEADER_PICTURE    /* PPS */
@@ -1300,8 +1263,8 @@ _init_packed_headers (GstVaH264Enc * self)
 
   self->packed_headers = 0;
 
-  packed_headers = gst_va_encoder_get_packed_headers (self->encoder,
-      self->profile, self->entrypoint);
+  packed_headers = gst_va_encoder_get_packed_headers (base->encoder,
+      base->profile, base->entrypoint);
 
   if (packed_headers == 0)
     return FALSE;
@@ -1320,6 +1283,7 @@ _init_packed_headers (GstVaH264Enc * self)
 static gboolean
 _decide_profile (GstVaH264Enc * self)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   gboolean ret = FALSE;
   GstVideoFormat in_format;
   VAProfile profile;
@@ -1334,9 +1298,9 @@ _decide_profile (GstVaH264Enc * self)
   candidates = g_ptr_array_new_with_free_func (g_free);
 
   /* First, check whether the downstream requires a specified profile. */
-  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (self));
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (base));
   if (!allowed_caps)
-    allowed_caps = gst_pad_query_caps (GST_VIDEO_ENCODER_SRC_PAD (self), NULL);
+    allowed_caps = gst_pad_query_caps (GST_VIDEO_ENCODER_SRC_PAD (base), NULL);
 
   if (allowed_caps && !gst_caps_is_empty (allowed_caps)) {
     num_structures = gst_caps_get_size (allowed_caps);
@@ -1370,7 +1334,7 @@ _decide_profile (GstVaH264Enc * self)
     goto out;
   }
 
-  in_format = GST_VIDEO_INFO_FORMAT (&self->in_info);
+  in_format = GST_VIDEO_INFO_FORMAT (&base->input_state->info);
   rt_format = _get_rtformat (self, in_format);
   if (!rt_format) {
     GST_ERROR_OBJECT (self, "unsupported video format %s",
@@ -1408,17 +1372,17 @@ _decide_profile (GstVaH264Enc * self)
     if (profile == VAProfileNone)
       continue;
 
-    if (!gst_va_encoder_has_profile_and_entrypoint (self->encoder,
+    if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
             profile, VAEntrypointEncSlice))
       continue;
 
-    if ((rt_format & gst_va_encoder_get_rtformat (self->encoder,
+    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
                 profile, VAEntrypointEncSlice)) == 0)
       continue;
 
-    self->profile = profile;
-    self->entrypoint = VAEntrypointEncSlice;
-    self->rt_format = rt_format;
+    base->profile = profile;
+    base->entrypoint = VAEntrypointEncSlice;
+    base->rt_format = rt_format;
     ret = TRUE;
     goto out;
   }
@@ -1432,17 +1396,17 @@ _decide_profile (GstVaH264Enc * self)
     if (profile == VAProfileNone)
       continue;
 
-    if (!gst_va_encoder_has_profile_and_entrypoint (self->encoder,
+    if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
             profile, VAEntrypointEncSlice))
       continue;
 
-    if ((rt_format & gst_va_encoder_get_rtformat (self->encoder,
+    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
                 profile, VAEntrypointEncSlice)) == 0)
       continue;
 
-    self->profile = profile;
-    self->entrypoint = VAEntrypointEncSlice;
-    self->rt_format = rt_format;
+    base->profile = profile;
+    base->entrypoint = VAEntrypointEncSlice;
+    base->rt_format = rt_format;
     ret = TRUE;
   }
 
@@ -1451,7 +1415,7 @@ _decide_profile (GstVaH264Enc * self)
 
   if (self->use_dct8x8 && !g_strstr_len (profile_name, -1, "high")) {
     GST_INFO_OBJECT (self, "Disable dct8x8, profile %s does not support it",
-        gst_va_profile_name (self->profile));
+        gst_va_profile_name (base->profile));
     self->use_dct8x8 = FALSE;
     self->prop.use_dct8x8 = FALSE;
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DCT8X8]);
@@ -1460,7 +1424,7 @@ _decide_profile (GstVaH264Enc * self)
   if (self->use_cabac && (!g_strstr_len (profile_name, -1, "main")
           && !g_strstr_len (profile_name, -1, "high"))) {
     GST_INFO_OBJECT (self, "Disable cabac, profile %s does not support it",
-        gst_va_profile_name (self->profile));
+        gst_va_profile_name (base->profile));
     self->use_cabac = FALSE;
     self->prop.use_cabac = FALSE;
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CABAC]);
@@ -1468,7 +1432,7 @@ _decide_profile (GstVaH264Enc * self)
 
   if (self->gop.num_bframes > 0 && g_strstr_len (profile_name, -1, "baseline")) {
     GST_INFO_OBJECT (self, "No B frames, profile %s does not support it",
-        gst_va_profile_name (self->profile));
+        gst_va_profile_name (base->profile));
     self->gop.num_bframes = 0;
     self->gop.b_pyramid = 0;
   }
@@ -1493,16 +1457,7 @@ out:
 static void
 gst_va_h264_enc_reset_state (GstVaH264Enc * self)
 {
-  self->width = 0;
-  self->height = 0;
-  self->profile = VAProfileNone;
-  self->entrypoint = 0;
-  self->rt_format = 0;
-  self->codedbuf_size = 0;
-
-  self->frame_duration = GST_CLOCK_TIME_NONE;
-  self->input_frame_count = 0;
-  self->output_frame_count = 0;
+  gst_va_base_enc_reset_state (GST_VA_BASE_ENC (self));
 
   self->level_idc = 0;
   self->level_str = NULL;
@@ -1553,31 +1508,37 @@ gst_va_h264_enc_reset_state (GstVaH264Enc * self)
 }
 
 static gboolean
-gst_va_h264_enc_reconfig (GstVaH264Enc * self)
+gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
 {
+  GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
+  GstVaH264Enc *self = GST_VA_H264_ENC (base);
+  GstCaps *out_caps;
+  guint max_ref_frames;
+  GstVideoCodecState *output_state;
+
   gst_va_h264_enc_reset_state (self);
 
-  self->width = GST_VIDEO_INFO_WIDTH (&self->in_info);
-  self->height = GST_VIDEO_INFO_HEIGHT (&self->in_info);
+  base->width = GST_VIDEO_INFO_WIDTH (&base->input_state->info);
+  base->height = GST_VIDEO_INFO_HEIGHT (&base->input_state->info);
 
-  self->mb_width = GST_ROUND_UP_16 (self->width) / 16;
-  self->mb_height = GST_ROUND_UP_16 (self->height) / 16;
+  self->mb_width = GST_ROUND_UP_16 (base->width) / 16;
+  self->mb_height = GST_ROUND_UP_16 (base->height) / 16;
 
   /* Frame rate is needed for rate control and PTS setting. */
-  if (GST_VIDEO_INFO_FPS_N (&self->in_info) == 0
-      || GST_VIDEO_INFO_FPS_D (&self->in_info) == 0) {
+  if (GST_VIDEO_INFO_FPS_N (&base->input_state->info) == 0
+      || GST_VIDEO_INFO_FPS_D (&base->input_state->info) == 0) {
     GST_INFO_OBJECT (self, "Unknown framerate, just set to 30 fps");
-    GST_VIDEO_INFO_FPS_N (&self->in_info) = 30;
-    GST_VIDEO_INFO_FPS_D (&self->in_info) = 1;
+    GST_VIDEO_INFO_FPS_N (&base->input_state->info) = 30;
+    GST_VIDEO_INFO_FPS_D (&base->input_state->info) = 1;
   }
-  self->frame_duration = gst_util_uint64_scale (GST_SECOND,
-      GST_VIDEO_INFO_FPS_D (&self->in_info),
-      GST_VIDEO_INFO_FPS_N (&self->in_info));
+  base->frame_duration = gst_util_uint64_scale (GST_SECOND,
+      GST_VIDEO_INFO_FPS_D (&base->input_state->info),
+      GST_VIDEO_INFO_FPS_N (&base->input_state->info));
 
   GST_DEBUG_OBJECT (self, "resolution:%dx%d, MB size: %dx%d,"
       " frame duration is %" GST_TIME_FORMAT,
-      self->width, self->height, self->mb_width, self->mb_height,
-      GST_TIME_ARGS (self->frame_duration));
+      base->width, base->height, self->mb_width, self->mb_height,
+      GST_TIME_ARGS (base->frame_duration));
 
   if (!_decide_profile (self))
     return FALSE;
@@ -1607,13 +1568,49 @@ gst_va_h264_enc_reconfig (GstVaH264Enc * self)
   if (!_init_packed_headers (self))
     return FALSE;
 
+  max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
+  if (!gst_va_encoder_open (base->encoder, base->profile, base->entrypoint,
+          GST_VIDEO_INFO_FORMAT (&base->input_state->info), base->rt_format,
+          self->mb_width * 16, self->mb_height * 16, base->codedbuf_size,
+          max_ref_frames, self->rc.rc_ctrl_mode, self->packed_headers)) {
+    GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
+    return FALSE;
+  }
+
+  /* Add some tags */
+  gst_va_base_enc_add_codec_tag (base, "H264");
+
+  out_caps = gst_va_profile_caps (base->profile);
+  g_assert (out_caps);
+  out_caps = gst_caps_fixate (out_caps);
+
+  if (self->level_str)
+    gst_caps_set_simple (out_caps, "level", G_TYPE_STRING, self->level_str,
+        NULL);
+
+  gst_caps_set_simple (out_caps, "width", G_TYPE_INT, base->width,
+      "height", G_TYPE_INT, base->height, "alignment", G_TYPE_STRING, "au",
+      "stream-format", G_TYPE_STRING, "byte-stream", NULL);
+
+  GST_DEBUG_OBJECT (self, "output caps is %" GST_PTR_FORMAT, out_caps);
+
+  output_state =
+      gst_video_encoder_set_output_state (venc, out_caps, base->input_state);
+  gst_video_codec_state_unref (output_state);
+
+  if (!gst_video_encoder_negotiate (venc)) {
+    GST_ERROR_OBJECT (self, "Failed to negotiate with the downstream");
+    return FALSE;
+  }
+
   return TRUE;
 }
 
 static gboolean
-gst_va_h264_enc_push_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame,
+_push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
     gboolean last)
 {
+  GstVaH264Enc *self = GST_VA_H264_ENC (base);
   GstVaH264EncFrame *frame;
 
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
@@ -1622,7 +1619,7 @@ gst_va_h264_enc_push_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame,
   if (gst_frame) {
     /* Begin a new GOP, should have a empty reorder_list. */
     if (self->gop.cur_frame_index == self->gop.idr_period) {
-      g_assert (g_queue_is_empty (&self->reorder_list));
+      g_assert (g_queue_is_empty (&base->reorder_list));
       self->gop.cur_frame_index = 0;
       self->gop.cur_frame_num = 0;
     }
@@ -1636,7 +1633,7 @@ gst_va_h264_enc_push_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame,
       GST_LOG_OBJECT (self, "system_frame_number: %d, an IDR frame, starts"
           " a new GOP", gst_frame->system_frame_number);
 
-      g_queue_clear_full (&self->ref_list,
+      g_queue_clear_full (&base->ref_list,
           (GDestroyNotify) gst_video_codec_frame_unref);
     }
 
@@ -1662,7 +1659,7 @@ gst_va_h264_enc_push_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame,
         _slice_type_name (frame->type));
 
     self->gop.cur_frame_index++;
-    g_queue_push_tail (&self->reorder_list,
+    g_queue_push_tail (&base->reorder_list,
         gst_video_codec_frame_ref (gst_frame));
   }
 
@@ -1673,8 +1670,8 @@ gst_va_h264_enc_push_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame,
     /* Ensure next push will start a new GOP. */
     self->gop.cur_frame_index = self->gop.idr_period;
 
-    if (!g_queue_is_empty (&self->reorder_list)) {
-      last_frame = g_queue_peek_tail (&self->reorder_list);
+    if (!g_queue_is_empty (&base->reorder_list)) {
+      last_frame = g_queue_peek_tail (&base->reorder_list);
       frame = _enc_frame (last_frame);
       if (frame->type == GST_H264_B_SLICE) {
         frame->type = GST_H264_P_SLICE;
@@ -1706,6 +1703,7 @@ _count_backward_ref_num (gpointer data, gpointer user_data)
 static GstVideoCodecFrame *
 _pop_pyramid_b_frame (GstVaH264Enc * self)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint i;
   gint index = -1;
   GstVaH264EncFrame *b_vaframe;
@@ -1718,11 +1716,11 @@ _pop_pyramid_b_frame (GstVaH264Enc * self)
   b_vaframe = NULL;
 
   /* Find the lowest level with smallest poc. */
-  for (i = 0; i < g_queue_get_length (&self->reorder_list); i++) {
+  for (i = 0; i < g_queue_get_length (&base->reorder_list); i++) {
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
 
-    f = g_queue_peek_nth (&self->reorder_list, i);
+    f = g_queue_peek_nth (&base->reorder_list, i);
 
     if (!b_frame) {
       b_frame = f;
@@ -1750,11 +1748,11 @@ again:
   /* Check whether its refs are already poped. */
   g_assert (b_vaframe->left_ref_poc_diff != 0);
   g_assert (b_vaframe->right_ref_poc_diff != 0);
-  for (i = 0; i < g_queue_get_length (&self->reorder_list); i++) {
+  for (i = 0; i < g_queue_get_length (&base->reorder_list); i++) {
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
 
-    f = g_queue_peek_nth (&self->reorder_list, i);
+    f = g_queue_peek_nth (&base->reorder_list, i);
 
     if (f == b_frame)
       continue;
@@ -1772,12 +1770,12 @@ again:
   /* Ensure we already have enough backward refs */
   count.num = 0;
   count.poc = b_vaframe->poc;
-  g_queue_foreach (&self->ref_list, (GFunc) _count_backward_ref_num, &count);
+  g_queue_foreach (&base->ref_list, (GFunc) _count_backward_ref_num, &count);
   if (count.num >= self->gop.ref_num_list1) {
     GstVideoCodecFrame *f;
 
     /* it will unref at pop_frame */
-    f = g_queue_pop_nth (&self->reorder_list, index);
+    f = g_queue_pop_nth (&base->reorder_list, index);
     g_assert (f == b_frame);
   } else {
     b_frame = NULL;
@@ -1787,8 +1785,9 @@ again:
 }
 
 static gboolean
-gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVideoCodecFrame ** out_frame)
+_pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
 {
+  GstVaH264Enc *self = GST_VA_H264_ENC (base);
   GstVaH264EncFrame *vaframe;
   GstVideoCodecFrame *frame;
   struct RefFramesCount count;
@@ -1798,14 +1797,14 @@ gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVideoCodecFrame ** out_frame)
 
   *out_frame = NULL;
 
-  if (g_queue_is_empty (&self->reorder_list))
+  if (g_queue_is_empty (&base->reorder_list))
     return TRUE;
 
   /* Return the last pushed non-B immediately. */
-  frame = g_queue_peek_tail (&self->reorder_list);
+  frame = g_queue_peek_tail (&base->reorder_list);
   vaframe = _enc_frame (frame);
   if (vaframe->type != GST_H264_B_SLICE) {
-    frame = g_queue_pop_tail (&self->reorder_list);
+    frame = g_queue_pop_tail (&base->reorder_list);
     goto get_one;
   }
 
@@ -1820,18 +1819,18 @@ gst_va_h264_enc_pop_frame (GstVaH264Enc * self, GstVideoCodecFrame ** out_frame)
 
   /* If GOP end, pop anyway. */
   if (self->gop.cur_frame_index == self->gop.idr_period) {
-    frame = g_queue_pop_head (&self->reorder_list);
+    frame = g_queue_pop_head (&base->reorder_list);
     goto get_one;
   }
 
   /* Ensure we already have enough backward refs */
-  frame = g_queue_peek_head (&self->reorder_list);
+  frame = g_queue_peek_head (&base->reorder_list);
   vaframe = _enc_frame (frame);
   count.num = 0;
   count.poc = vaframe->poc;
-  g_queue_foreach (&self->ref_list, _count_backward_ref_num, &count);
+  g_queue_foreach (&base->ref_list, _count_backward_ref_num, &count);
   if (count.num >= self->gop.ref_num_list1) {
-    frame = g_queue_pop_head (&self->reorder_list);
+    frame = g_queue_pop_head (&base->reorder_list);
     goto get_one;
   }
 
@@ -1868,9 +1867,32 @@ get_one:
   return TRUE;
 }
 
+static gboolean
+gst_va_h264_enc_reorder_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame,
+    gboolean bump_all, GstVideoCodecFrame ** out_frame)
+{
+  if (!_push_one_frame (base, frame, bump_all)) {
+    GST_ERROR_OBJECT (base, "Failed to push the input frame"
+        " system_frame_number: %d into the reorder list",
+        frame->system_frame_number);
+
+    *out_frame = NULL;
+    return FALSE;
+  }
+
+  if (!_pop_one_frame (base, out_frame)) {
+    GST_ERROR_OBJECT (base, "Failed to pop the frame from the reorder list");
+    *out_frame = NULL;
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static inline gboolean
 _fill_sps (GstVaH264Enc * self, VAEncSequenceParameterBufferH264 * seq_param)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   GstH264Profile profile;
   guint32 constraint_set0_flag, constraint_set1_flag;
   guint32 constraint_set2_flag, constraint_set3_flag;
@@ -1886,7 +1908,7 @@ _fill_sps (GstVaH264Enc * self, VAEncSequenceParameterBufferH264 * seq_param)
   constraint_set2_flag = 0;
   constraint_set3_flag = 0;
 
-  switch (self->profile) {
+  switch (base->profile) {
     case VAProfileH264ConstrainedBaseline:
       profile = GST_H264_PROFILE_BASELINE;
       /* A.2.1 (baseline profile constraints) */
@@ -1996,6 +2018,7 @@ _fill_sps (GstVaH264Enc * self, VAEncSequenceParameterBufferH264 * seq_param)
 static gboolean
 _add_sequence_header (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   gsize size;
 #define SPS_SIZE 4 + GST_ROUND_UP_8 (MAX_SPS_HDR_SIZE + MAX_VUI_PARAMS_SIZE + \
     2 * MAX_HRD_PARAMS_SIZE) / 8
@@ -2009,7 +2032,7 @@ _add_sequence_header (GstVaH264Enc * self, GstVaH264EncFrame * frame)
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (self->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
           VAEncPackedHeaderSequence, packed_sps, size, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed sequence header");
     return FALSE;
@@ -2022,6 +2045,7 @@ static inline void
 _fill_sequence_param (GstVaH264Enc * self,
     VAEncSequenceParameterBufferH264 * sequence)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   gboolean direct_8x8_inference_flag = TRUE;
 
   g_assert (self->gop.log2_max_frame_num >= 4);
@@ -2039,7 +2063,7 @@ _fill_sequence_param (GstVaH264Enc * self,
    * direct_8x8_inference_flag is equal to 1 for all levels of the
    * Extended profile. Table A-4.  We only have constrained baseline
    * here. */
-  if (self->profile == VAProfileH264ConstrainedBaseline)
+  if (base->profile == VAProfileH264ConstrainedBaseline)
     direct_8x8_inference_flag = FALSE;
 
   /* *INDENT-OFF* */
@@ -2082,15 +2106,15 @@ _fill_sequence_param (GstVaH264Enc * self,
     },
     .aspect_ratio_idc = 0xff,
     /* FIXME: what if no framerate info is provided */
-    .sar_width = GST_VIDEO_INFO_PAR_N (&self->in_info),
-    .sar_height = GST_VIDEO_INFO_PAR_D (&self->in_info),
-    .num_units_in_tick = GST_VIDEO_INFO_FPS_D (&self->in_info),
-    .time_scale = GST_VIDEO_INFO_FPS_N (&self->in_info) * 2,
+    .sar_width = GST_VIDEO_INFO_PAR_N (&base->input_state->info),
+    .sar_height = GST_VIDEO_INFO_PAR_D (&base->input_state->info),
+    .num_units_in_tick = GST_VIDEO_INFO_FPS_D (&base->input_state->info),
+    .time_scale = GST_VIDEO_INFO_FPS_N (&base->input_state->info) * 2,
   };
   /* *INDENT-ON* */
 
   /* frame_cropping_flag */
-  if (self->width & 15 || self->height & 15) {
+  if (base->width & 15 || base->height & 15) {
     static const guint SubWidthC[] = { 1, 2, 2, 1 };
     static const guint SubHeightC[] = { 1, 2, 1, 1 };
     const guint CropUnitX =
@@ -2102,10 +2126,10 @@ _fill_sequence_param (GstVaH264Enc * self,
     sequence->frame_cropping_flag = 1;
     sequence->frame_crop_left_offset = 0;
     sequence->frame_crop_right_offset = (16 * self->mb_width -
-        self->width) / CropUnitX;
+        base->width) / CropUnitX;
     sequence->frame_crop_top_offset = 0;
     sequence->frame_crop_bottom_offset = (16 * self->mb_height -
-        self->height) / CropUnitY;
+        base->height) / CropUnitY;
   }
 }
 
@@ -2113,166 +2137,11 @@ static gboolean
 _add_sequence_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture,
     VAEncSequenceParameterBufferH264 * sequence)
 {
-  if (!gst_va_encoder_add_param (self->encoder, picture,
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+
+  if (!gst_va_encoder_add_param (base->encoder, picture,
           VAEncSequenceParameterBufferType, sequence, sizeof (*sequence))) {
     GST_ERROR_OBJECT (self, "Failed to create the sequence parameter");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_add_rate_control_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
-{
-  uint32_t window_size;
-  struct VAEncMiscParameterRateControlWrap
-  {
-    VAEncMiscParameterType type;
-    VAEncMiscParameterRateControl rate_control;
-  } rate_control;
-
-  if (self->rc.rc_ctrl_mode == VA_RC_CQP)
-    return TRUE;
-
-  window_size = self->rc.rc_ctrl_mode == VA_RC_VBR ?
-      self->rc.max_bitrate_bits / 2 : self->rc.max_bitrate_bits;
-
-  /* *INDENT-OFF* */
-  rate_control = (struct VAEncMiscParameterRateControlWrap) {
-    .type = VAEncMiscParameterTypeRateControl,
-    .rate_control = {
-      .bits_per_second = self->rc.max_bitrate_bits,
-      .target_percentage = self->rc.target_percentage,
-      .window_size = window_size,
-      .initial_qp = self->rc.qp_i,
-      .min_qp = self->rc.min_qp,
-      .max_qp = self->rc.max_qp,
-      .rc_flags.bits.mb_rate_control = self->rc.mbbrc,
-      .quality_factor = 0,
-    },
-  };
-  /* *INDENT-ON* */
-
-  if (!gst_va_encoder_add_param (self->encoder, picture,
-          VAEncMiscParameterBufferType, &rate_control, sizeof (rate_control))) {
-    GST_ERROR_OBJECT (self, "Failed to create the race control parameter");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_add_hrd_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
-{
-  /* *INDENT-OFF* */
-  struct
-  {
-    VAEncMiscParameterType type;
-    VAEncMiscParameterHRD hrd;
-  } hrd = {
-    .type = VAEncMiscParameterTypeHRD,
-    .hrd = {
-      .buffer_size = self->rc.cpb_length_bits,
-      .initial_buffer_fullness = self->rc.cpb_length_bits / 2,
-    },
-  };
-  /* *INDENT-ON* */
-
-  if (self->rc.rc_ctrl_mode == VA_RC_CQP || self->rc.rc_ctrl_mode == VA_RC_VCM)
-    return TRUE;
-
-  g_assert (self->rc.max_bitrate_bits > 0);
-
-
-  if (!gst_va_encoder_add_param (self->encoder, picture,
-          VAEncMiscParameterBufferType, &hrd, sizeof (hrd))) {
-    GST_ERROR_OBJECT (self, "Failed to create the HRD parameter");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_add_quality_level_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
-{
-  /* *INDENT-OFF* */
-  struct
-  {
-    VAEncMiscParameterType type;
-    VAEncMiscParameterBufferQualityLevel ql;
-  } quality_level = {
-    .type = VAEncMiscParameterTypeQualityLevel,
-    .ql.quality_level = self->rc.target_usage,
-  };
-  /* *INDENT-ON* */
-
-  if (self->rc.target_usage == 0)
-    return TRUE;
-
-  if (!gst_va_encoder_add_param (self->encoder, picture,
-          VAEncMiscParameterBufferType, &quality_level,
-          sizeof (quality_level))) {
-    GST_ERROR_OBJECT (self, "Failed to create the quality level parameter");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_add_frame_rate_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
-{
-  /* *INDENT-OFF* */
-  struct
-  {
-    VAEncMiscParameterType type;
-    VAEncMiscParameterFrameRate fr;
-  } framerate = {
-    .type = VAEncMiscParameterTypeFrameRate,
-    /* denominator = framerate >> 16 & 0xffff;
-     * numerator   = framerate & 0xffff; */
-    .fr.framerate = (GST_VIDEO_INFO_FPS_N (&self->in_info) & 0xffff) |
-        ((GST_VIDEO_INFO_FPS_D (&self->in_info) & 0xffff) << 16)
-  };
-  /* *INDENT-ON* */
-
-  if (!gst_va_encoder_add_param (self->encoder, picture,
-          VAEncMiscParameterBufferType, &framerate, sizeof (framerate))) {
-    GST_ERROR_OBJECT (self, "Failed to create the frame rate parameter");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_add_trellis_parameter (GstVaH264Enc * self, GstVaEncodePicture * picture)
-{
-  /* *INDENT-OFF* */
-  struct
-  {
-    VAEncMiscParameterType type;
-    VAEncMiscParameterQuantization tr;
-  } trellis = {
-    .type = VAEncMiscParameterTypeQuantization,
-    .tr.quantization_flags.bits = {
-       .disable_trellis = 0,
-       .enable_trellis_I = 1,
-       .enable_trellis_B = 1,
-       .enable_trellis_P = 1,
-    },
-  };
-  /* *INDENT-ON* */
-
-  if (!self->use_trellis)
-    return TRUE;
-
-  if (!gst_va_encoder_add_param (self->encoder, picture,
-          VAEncMiscParameterBufferType, &trellis, sizeof (trellis))) {
-    GST_ERROR_OBJECT (self, "Failed to create the trellis parameter");
     return FALSE;
   }
 
@@ -2283,12 +2152,16 @@ static inline gboolean
 _fill_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     VAEncPictureParameterBufferH264 * pic_param)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint i;
 
   /* *INDENT-OFF* */
   *pic_param = (VAEncPictureParameterBufferH264) {
-    .CurrPic.picture_id = gst_va_encode_picture_get_reconstruct_surface (frame->picture),
-    .CurrPic.TopFieldOrderCnt = frame->poc,
+    .CurrPic = {
+      .picture_id =
+          gst_va_encode_picture_get_reconstruct_surface (frame->picture),
+      .TopFieldOrderCnt = frame->poc,
+    },
     .coded_buf = frame->picture->coded_buffer,
     /* Only support one sps and pps now. */
     .pic_parameter_set_id = 0,
@@ -2325,17 +2198,17 @@ _fill_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
   if (frame->type != GST_H264_I_SLICE) {
     GstVaH264EncFrame *f;
 
-    if (g_queue_is_empty (&self->ref_list)) {
+    if (g_queue_is_empty (&base->ref_list)) {
       GST_ERROR_OBJECT (self, "No reference found for frame type %s",
           _slice_type_name (frame->type));
       return FALSE;
     }
 
-    g_assert (g_queue_get_length (&self->ref_list) <= self->gop.num_ref_frames);
+    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.num_ref_frames);
 
     /* ref frames in queue are already sorted by frame_num. */
-    for (; i < g_queue_get_length (&self->ref_list); i++) {
-      f = _enc_frame (g_queue_peek_nth (&self->ref_list, i));
+    for (; i < g_queue_get_length (&base->ref_list); i++) {
+      f = _enc_frame (g_queue_peek_nth (&base->ref_list, i));
 
       pic_param->ReferenceFrames[i].picture_id =
           gst_va_encode_picture_get_reconstruct_surface (f->picture);
@@ -2355,7 +2228,9 @@ static gboolean
 _add_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     VAEncPictureParameterBufferH264 * pic_param)
 {
-  if (!gst_va_encoder_add_param (self->encoder, frame->picture,
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+
+  if (!gst_va_encoder_add_param (base->encoder, frame->picture,
           VAEncPictureParameterBufferType, pic_param,
           sizeof (VAEncPictureParameterBufferH264))) {
     GST_ERROR_OBJECT (self, "Failed to create the picture parameter");
@@ -2406,6 +2281,7 @@ static gboolean
 _add_picture_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     GstH264PPS * pps)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
 #define PPS_SIZE 4 + GST_ROUND_UP_8 (MAX_PPS_HDR_SIZE) / 8
   guint8 packed_pps[PPS_SIZE] = { 0, };
 #undef PPS_SIZE
@@ -2418,7 +2294,7 @@ _add_picture_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (self->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
           VAEncPackedHeaderPicture, packed_pps, size, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed picture header");
     return FALSE;
@@ -2434,6 +2310,7 @@ _add_one_slice (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     GstVaH264EncFrame * list0[16], guint list0_num,
     GstVaH264EncFrame * list1[16], guint list1_num)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   int8_t slice_qp_delta = 0;
   gint i;
 
@@ -2521,7 +2398,7 @@ _add_one_slice (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     slice->RefPicList1[i].flags = VA_PICTURE_H264_INVALID;
   }
 
-  if (!gst_va_encoder_add_param (self->encoder, frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, frame->picture,
           VAEncSliceParameterBufferType, slice,
           sizeof (VAEncSliceParameterBufferH264))) {
     GST_ERROR_OBJECT (self, "Failed to create the slice parameter");
@@ -2669,6 +2546,7 @@ _add_slice_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     GstVaH264EncFrame * list0[16], guint list0_num,
     GstVaH264EncFrame * list1[16], guint list1_num)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   GstH264SliceHdr slice_hdr;
   gsize size;
   GstH264NalUnitType nal_type = GST_H264_NAL_SLICE;
@@ -2750,7 +2628,7 @@ _add_slice_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (self->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
           VAEncPackedHeaderSlice, packed_slice_hdr, size, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed slice header");
     return FALSE;
@@ -2762,6 +2640,7 @@ _add_slice_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
 static gboolean
 _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint8 aud_data[8] = { };
   gsize size;
   guint8 primary_pic_type = 0;
@@ -2788,7 +2667,7 @@ _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (self->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
           VAEncPackedHeaderRawData, aud_data, size, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the AUD");
     return FALSE;
@@ -2798,9 +2677,9 @@ _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 }
 
 static gboolean
-gst_va_h264_enc_encode_frame (GstVaH264Enc * self,
-    GstVideoCodecFrame * gst_frame)
+_encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   VAEncPictureParameterBufferH264 pic_param;
   GstH264PPS pps;
   GstVaH264EncFrame *list0[16] = { NULL, };
@@ -2819,19 +2698,25 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self,
   if (frame->poc == 0) {
     VAEncSequenceParameterBufferH264 sequence;
 
-    if (!_add_rate_control_parameter (self, frame->picture))
+    if (!gst_va_base_enc_add_rate_control_parameter (base, frame->picture,
+            self->rc.rc_ctrl_mode, self->rc.max_bitrate_bits,
+            self->rc.target_percentage, self->rc.qp_i, self->rc.min_qp,
+            self->rc.max_qp, self->rc.mbbrc))
       return FALSE;
 
-    if (!_add_quality_level_parameter (self, frame->picture))
+    if (!gst_va_base_enc_add_quality_level_parameter (base, frame->picture,
+            self->rc.target_usage))
       return FALSE;
 
-    if (!_add_frame_rate_parameter (self, frame->picture))
+    if (!gst_va_base_enc_add_frame_rate_parameter (base, frame->picture))
       return FALSE;
 
-    if (!_add_hrd_parameter (self, frame->picture))
+    if (!gst_va_base_enc_add_hrd_parameter (base, frame->picture,
+            self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
       return FALSE;
 
-    if (!_add_trellis_parameter (self, frame->picture))
+    if (!gst_va_base_enc_add_trellis_parameter (base, frame->picture,
+            self->use_trellis))
       return FALSE;
 
     _fill_sequence_param (self, &sequence);
@@ -2857,8 +2742,8 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self,
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
 
-    for (i = g_queue_get_length (&self->ref_list) - 1; i >= 0; i--) {
-      f = g_queue_peek_nth (&self->ref_list, i);
+    for (i = g_queue_get_length (&base->ref_list) - 1; i >= 0; i--) {
+      f = g_queue_peek_nth (&base->ref_list, i);
       vaf = _enc_frame (f);
       if (vaf->poc > frame->poc)
         continue;
@@ -2879,8 +2764,8 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self,
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
 
-    for (i = 0; i < g_queue_get_length (&self->ref_list); i++) {
-      f = g_queue_peek_nth (&self->ref_list, i);
+    for (i = 0; i < g_queue_get_length (&base->ref_list); i++) {
+      f = g_queue_peek_nth (&base->ref_list, i);
       vaf = _enc_frame (f);
       if (vaf->poc < frame->poc)
         continue;
@@ -2929,14 +2814,14 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self,
       return FALSE;
 
     if ((self->packed_headers & VA_ENC_PACKED_HEADER_SLICE) &&
-        (!_add_slice_header (self, frame, &pps, &slice, list0, list0_num, list1,
-                list1_num)))
+        (!_add_slice_header (self, frame, &pps, &slice, list0, list0_num,
+                list1, list1_num)))
       return FALSE;
 
     slice_start_mb += slice_mbs;
   }
 
-  if (!gst_va_encoder_encode (self->encoder, frame->picture)) {
+  if (!gst_va_encoder_encode (base->encoder, frame->picture)) {
     GST_ERROR_OBJECT (self, "Encode frame error");
     return FALSE;
   }
@@ -2945,94 +2830,23 @@ gst_va_h264_enc_encode_frame (GstVaH264Enc * self,
 }
 
 static gboolean
-gst_va_h264_enc_start (GstVideoEncoder * encoder)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (encoder);
-
-  /* Set the minimum pts to some huge value (1000 hours). This keeps
-   * the dts at the start of the stream from needing to be
-   * negative. */
-  self->start_pts = GST_SECOND * 60 * 60 * 1000;
-  gst_video_encoder_set_min_pts (encoder, self->start_pts);
-
-  return TRUE;
-}
-
-static gboolean
-gst_va_h264_enc_open (GstVideoEncoder * venc)
-{
-  GstVaH264Enc *encoder = GST_VA_H264_ENC (venc);
-  GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (venc);
-  gboolean ret = FALSE;
-
-  if (!gst_va_ensure_element_data (venc, klass->render_device_path,
-          &encoder->display))
-    return FALSE;
-
-  if (!g_atomic_pointer_get (&encoder->encoder)) {
-    GstVaEncoder *va_encoder;
-
-    va_encoder = gst_va_encoder_new (encoder->display, klass->codec);
-    if (va_encoder)
-      ret = TRUE;
-
-    gst_object_replace ((GstObject **) (&encoder->encoder),
-        (GstObject *) va_encoder);
-    gst_clear_object (&va_encoder);
-  } else {
-    ret = TRUE;
-  }
-
-  return ret;
-}
-
-static gboolean
-gst_va_h264_enc_close (GstVideoEncoder * venc)
+gst_va_h264_enc_start (GstVideoEncoder * venc)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
 
   gst_va_h264_enc_reset_state (self);
 
-  gst_clear_object (&self->encoder);
-  gst_clear_object (&self->display);
-
-  return TRUE;
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->start (venc);
 }
 
-static GstCaps *
-gst_va_h264_enc_get_caps (GstVideoEncoder * venc, GstCaps * filter)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  GstCaps *caps = NULL, *tmp;
-
-  if (self->encoder)
-    caps = gst_va_encoder_get_sinkpad_caps (self->encoder);
-
-  if (caps) {
-    if (filter) {
-      tmp = gst_caps_intersect_full (filter, caps, GST_CAPS_INTERSECT_FIRST);
-      gst_caps_unref (caps);
-      caps = tmp;
-    }
-  } else {
-    caps = gst_video_encoder_proxy_getcaps (venc, NULL, filter);
-  }
-
-  GST_LOG_OBJECT (self, "Returning caps %" GST_PTR_FORMAT, caps);
-  return caps;
-}
-
-static void
-_flush_all_frames (GstVideoEncoder * venc)
+static gboolean
+gst_va_h264_enc_stop (GstVideoEncoder * venc)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
 
-  g_queue_clear_full (&self->reorder_list,
-      (GDestroyNotify) gst_video_codec_frame_unref);
-  g_queue_clear_full (&self->output_list,
-      (GDestroyNotify) gst_video_codec_frame_unref);
-  g_queue_clear_full (&self->ref_list,
-      (GDestroyNotify) gst_video_codec_frame_unref);
+  gst_va_h264_enc_reset_state (self);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->stop (venc);
 }
 
 static gboolean
@@ -3040,271 +2854,29 @@ gst_va_h264_enc_flush (GstVideoEncoder * venc)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
 
-  _flush_all_frames (venc);
-
   /* begin from an IDR after flush. */
   self->gop.cur_frame_index = 0;
   self->gop.cur_frame_num = 0;
 
-  return TRUE;
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->flush (venc);
 }
 
-static gboolean
-gst_va_h264_enc_stop (GstVideoEncoder * venc)
+static void
+gst_va_h264_enc_prepare_output (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
 {
-  GstVaH264Enc *const self = GST_VA_H264_ENC (venc);
-
-  _flush_all_frames (venc);
-
-  if (!gst_va_encoder_close (self->encoder)) {
-    GST_ERROR_OBJECT (self, "Failed to close the VA encoder");
-    return FALSE;
-  }
-
-  if (self->raw_pool)
-    gst_buffer_pool_set_active (self->raw_pool, FALSE);
-  gst_clear_object (&self->raw_pool);
-
-  if (self->input_state)
-    gst_video_codec_state_unref (self->input_state);
-  self->input_state = NULL;
-  if (self->output_state)
-    gst_video_codec_state_unref (self->output_state);
-  self->output_state = NULL;
-
-  gst_clear_caps (&self->in_caps);
-
-  return TRUE;
-}
-
-static gboolean
-_try_import_buffer (GstVaH264Enc * self, GstBuffer * inbuf)
-{
-  VASurfaceID surface;
-
-  /* The VA buffer. */
-  surface = gst_va_buffer_get_surface (inbuf);
-  if (surface != VA_INVALID_ID)
-    return TRUE;
-
-  /* TODO: DMA buffer. */
-
-  return FALSE;
-}
-
-static GstBufferPool *
-_get_sinkpad_pool (GstVaH264Enc * self)
-{
-  GstAllocator *allocator;
-  GstAllocationParams params = { 0, };
-  guint size, usage_hint = 0;
-  GArray *surface_formats = NULL;
-  GstCaps *caps;
-
-  if (self->raw_pool)
-    return self->raw_pool;
-
-  g_assert (self->in_caps);
-  caps = gst_caps_copy (self->in_caps);
-  gst_caps_set_features_simple (caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
-
-  gst_allocation_params_init (&params);
-
-  size = GST_VIDEO_INFO_SIZE (&self->in_info);
-
-  surface_formats = gst_va_encoder_get_surface_formats (self->encoder);
-
-  allocator = gst_va_allocator_new (self->display, surface_formats);
-
-  self->raw_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
-      usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
-  if (!self->raw_pool) {
-    gst_object_unref (allocator);
-    return NULL;
-  }
-
-  gst_va_allocator_get_format (allocator, &self->sinkpad_info, NULL, NULL);
-
-  gst_object_unref (allocator);
-
-  gst_buffer_pool_set_active (self->raw_pool, TRUE);
-
-  return self->raw_pool;
-}
-
-static GstFlowReturn
-_import_input_buffer (GstVaH264Enc * self, GstBuffer * inbuf, GstBuffer ** buf)
-{
-  GstBuffer *buffer = NULL;
-  GstBufferPool *pool;
-  GstFlowReturn ret;
-  GstVideoFrame in_frame, out_frame;
-  gboolean imported, copied;
-
-  imported = _try_import_buffer (self, inbuf);
-  if (imported) {
-    *buf = gst_buffer_ref (inbuf);
-    return GST_FLOW_OK;
-  }
-
-  /* input buffer doesn't come from a vapool, thus it is required to
-   * have a pool, grab from it a new buffer and copy the input
-   * buffer to the new one */
-  if (!(pool = _get_sinkpad_pool (self)))
-    return GST_FLOW_ERROR;
-
-  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  GST_LOG_OBJECT (self, "copying input frame");
-
-  if (!gst_video_frame_map (&in_frame, &self->in_info, inbuf, GST_MAP_READ))
-    goto invalid_buffer;
-  if (!gst_video_frame_map (&out_frame, &self->sinkpad_info, buffer,
-          GST_MAP_WRITE)) {
-    gst_video_frame_unmap (&in_frame);
-    goto invalid_buffer;
-  }
-
-  copied = gst_video_frame_copy (&out_frame, &in_frame);
-
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&in_frame);
-
-  if (!copied)
-    goto invalid_buffer;
-
-  /* strictly speaking this is not needed but let's play safe */
-  if (!gst_buffer_copy_into (buffer, inbuf, GST_BUFFER_COPY_FLAGS |
-          GST_BUFFER_COPY_TIMESTAMPS, 0, -1))
-    return GST_FLOW_ERROR;
-
-  *buf = buffer;
-
-  return GST_FLOW_OK;
-
-invalid_buffer:
-  {
-    GST_ELEMENT_WARNING (self, CORE, NOT_IMPLEMENTED, (NULL),
-        ("invalid video buffer received"));
-    if (buffer)
-      gst_buffer_unref (buffer);
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
-_push_buffer_to_downstream (GstVaH264Enc * self, GstVideoCodecFrame * frame)
-{
+  GstVaH264Enc *self = GST_VA_H264_ENC (base);
   GstVaH264EncFrame *frame_enc;
-  GstFlowReturn ret;
-  guint coded_size;
-  goffset offset;
-  GstBuffer *buf;
-  VASurfaceID surface;
-  VACodedBufferSegment *seg, *seg_list;
 
   frame_enc = _enc_frame (frame);
 
-  /* Wait for encoding to finish */
-  surface = gst_va_encode_picture_get_raw_surface (frame_enc->picture);
-  if (!va_sync_surface (self->display, surface))
-    goto error;
-
-  seg_list = NULL;
-  if (!va_map_buffer (self->display, frame_enc->picture->coded_buffer,
-          (gpointer *) & seg_list))
-    goto error;
-
-  if (!seg_list) {
-    GST_WARNING_OBJECT (self, "coded buffer has no segment list");
-    goto error;
-  }
-
-  coded_size = 0;
-  for (seg = seg_list; seg; seg = seg->next)
-    coded_size += seg->size;
-
-  buf = gst_video_encoder_allocate_output_buffer (GST_VIDEO_ENCODER_CAST (self),
-      coded_size);
-  if (!buf) {
-    GST_ERROR_OBJECT (self, "Failed to allocate output buffer, size %d",
-        coded_size);
-    goto error;
-  }
-
-  offset = 0;
-  for (seg = seg_list; seg; seg = seg->next) {
-    gsize write_size;
-
-    write_size = gst_buffer_fill (buf, offset, seg->buf, seg->size);
-    if (write_size != seg->size) {
-      GST_WARNING_OBJECT (self, "Segment size is %d, but copied %"
-          G_GSIZE_FORMAT, seg->size, write_size);
-      break;
-    }
-    offset += seg->size;
-  }
-
-  va_unmap_buffer (self->display, frame_enc->picture->coded_buffer);
-
   frame->pts =
-      self->start_pts + self->frame_duration * frame_enc->total_frame_count;
+      base->start_pts + base->frame_duration * frame_enc->total_frame_count;
   /* The PTS should always be later than the DTS. */
-  frame->dts = self->start_pts + self->frame_duration *
-      ((gint64) self->output_frame_count -
+  frame->dts = base->start_pts + base->frame_duration *
+      ((gint64) base->output_frame_count -
       (gint64) self->gop.num_reorder_frames);
-  self->output_frame_count++;
-  frame->duration = self->frame_duration;
-
-  gst_buffer_replace (&frame->output_buffer, buf);
-  gst_clear_buffer (&buf);
-
-  GST_LOG_OBJECT (self, "Push to downstream: frame system_frame_number: %d,"
-      " pts: %" GST_TIME_FORMAT ", dts: %" GST_TIME_FORMAT
-      " duration: %" GST_TIME_FORMAT ", buffer size: %" G_GSIZE_FORMAT,
-      frame->system_frame_number, GST_TIME_ARGS (frame->pts),
-      GST_TIME_ARGS (frame->dts), GST_TIME_ARGS (frame->duration),
-      gst_buffer_get_size (frame->output_buffer));
-
-  ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
-  return ret;
-
-error:
-  gst_clear_buffer (&frame->output_buffer);
-  gst_clear_buffer (&buf);
-  gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), frame);
-
-  return GST_FLOW_ERROR;
-}
-
-static gboolean
-_reorder_frame (GstVideoEncoder * venc, GstVideoCodecFrame * frame,
-    gboolean bump_all, GstVideoCodecFrame ** out_frame)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (self);
-
-  g_assert (klass->push_frame);
-  if (!klass->push_frame (self, frame, bump_all)) {
-    GST_ERROR_OBJECT (self, "Failed to push the input frame"
-        " system_frame_number: %d into the reorder list",
-        frame->system_frame_number);
-
-    *out_frame = NULL;
-    return FALSE;
-  }
-
-  g_assert (klass->pop_frame);
-  if (!klass->pop_frame (self, out_frame)) {
-    GST_ERROR_OBJECT (self, "Failed to pop the frame from the reorder list");
-    *out_frame = NULL;
-    return FALSE;
-  }
-
-  return TRUE;
+  base->output_frame_count++;
+  frame->duration = base->frame_duration;
 }
 
 static gint
@@ -3321,30 +2893,31 @@ _sort_by_frame_num (gconstpointer a, gconstpointer b, gpointer user_data)
 static GstVideoCodecFrame *
 _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   GstVaH264EncFrame *b_vaframe;
   GstVideoCodecFrame *b_frame;
   guint i;
 
   /* We still have more space. */
-  if (g_queue_get_length (&self->ref_list) < self->gop.num_ref_frames)
+  if (g_queue_get_length (&base->ref_list) < self->gop.num_ref_frames)
     return NULL;
 
   /* Not b_pyramid, sliding window is enough. */
   if (!self->gop.b_pyramid)
-    return g_queue_peek_head (&self->ref_list);
+    return g_queue_peek_head (&base->ref_list);
 
   /* I/P frame, just using sliding window. */
   if (frame->type != GST_H264_B_SLICE)
-    return g_queue_peek_head (&self->ref_list);
+    return g_queue_peek_head (&base->ref_list);
 
   /* Choose the B frame with lowest POC. */
   b_frame = NULL;
   b_vaframe = NULL;
-  for (i = 0; i < g_queue_get_length (&self->ref_list); i++) {
+  for (i = 0; i < g_queue_get_length (&base->ref_list); i++) {
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
 
-    f = g_queue_peek_nth (&self->ref_list, i);
+    f = g_queue_peek_nth (&base->ref_list, i);
     vaf = _enc_frame (f);
     if (vaf->type != GST_H264_B_SLICE)
       continue;
@@ -3365,9 +2938,9 @@ _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 
   /* No B frame as ref. */
   if (!b_frame)
-    return g_queue_peek_head (&self->ref_list);
+    return g_queue_peek_head (&base->ref_list);
 
-  if (b_frame != g_queue_peek_head (&self->ref_list)) {
+  if (b_frame != g_queue_peek_head (&base->ref_list)) {
     b_vaframe = _enc_frame (b_frame);
     frame->unused_for_reference_pic_num = b_vaframe->frame_num;
     GST_LOG_OBJECT (self, "The frame with POC: %d, pic_num %d will be"
@@ -3380,498 +2953,63 @@ _find_unused_reference_frame (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 }
 
 static GstFlowReturn
-_encode_frame (GstVideoEncoder * venc, GstVideoCodecFrame * gst_frame)
+gst_va_h264_enc_encode_frame (GstVaBaseEnc * base,
+    GstVideoCodecFrame * gst_frame, gboolean is_last)
 {
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (self);
+  GstVaH264Enc *self = GST_VA_H264_ENC (base);
   GstVaH264EncFrame *frame;
   GstVideoCodecFrame *unused_ref = NULL;
 
   frame = _enc_frame (gst_frame);
+  frame->last_frame = is_last;
+
   g_assert (frame->picture == NULL);
-  frame->picture = gst_va_encode_picture_new (self->encoder,
+  frame->picture = gst_va_encode_picture_new (base->encoder,
       gst_frame->input_buffer);
 
   if (!frame->picture) {
-    GST_ERROR_OBJECT (venc, "Failed to create the encode picture");
+    GST_ERROR_OBJECT (self, "Failed to create the encode picture");
     return GST_FLOW_ERROR;
   }
 
   if (frame->is_ref)
     unused_ref = _find_unused_reference_frame (self, frame);
 
-  if (!klass->encode_frame (self, gst_frame)) {
-    GST_ERROR_OBJECT (venc, "Failed to encode the frame");
+  if (!_encode_one_frame (self, gst_frame)) {
+    GST_ERROR_OBJECT (self, "Failed to encode the frame");
     return GST_FLOW_ERROR;
   }
 
-  g_queue_push_tail (&self->output_list, gst_video_codec_frame_ref (gst_frame));
+  g_queue_push_tail (&base->output_list, gst_video_codec_frame_ref (gst_frame));
 
   if (frame->is_ref) {
     if (unused_ref) {
-      if (!g_queue_remove (&self->ref_list, unused_ref))
+      if (!g_queue_remove (&base->ref_list, unused_ref))
         g_assert_not_reached ();
 
       gst_video_codec_frame_unref (unused_ref);
     }
 
     /* Add it into the reference list. */
-    g_queue_push_tail (&self->ref_list, gst_video_codec_frame_ref (gst_frame));
-    g_queue_sort (&self->ref_list, _sort_by_frame_num, NULL);
+    g_queue_push_tail (&base->ref_list, gst_video_codec_frame_ref (gst_frame));
+    g_queue_sort (&base->ref_list, _sort_by_frame_num, NULL);
 
-    g_assert (g_queue_get_length (&self->ref_list) <= self->gop.num_ref_frames);
+    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.num_ref_frames);
   }
 
   return GST_FLOW_OK;
 }
 
-static GstFlowReturn
-gst_va_h264_enc_handle_frame (GstVideoEncoder * venc,
-    GstVideoCodecFrame * frame)
+static gboolean
+gst_va_h264_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
 {
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  GstFlowReturn ret;
-  GstBuffer *in_buf = NULL;
-  GstVaH264EncFrame *frame_in = NULL;
-  GstVideoCodecFrame *frame_out, *frame_encode = NULL;
-
-  GST_LOG_OBJECT (venc,
-      "handle frame id %d, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
-      frame->system_frame_number,
-      GST_TIME_ARGS (GST_BUFFER_DTS (frame->input_buffer)),
-      GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)));
-
-  ret = _import_input_buffer (self, frame->input_buffer, &in_buf);
-  if (ret != GST_FLOW_OK)
-    goto error_buffer_invalid;
-
-  gst_buffer_replace (&frame->input_buffer, in_buf);
-  gst_clear_buffer (&in_buf);
+  GstVaH264EncFrame *frame_in;
 
   frame_in = gst_va_enc_frame_new ();
-  frame_in->total_frame_count = self->input_frame_count++;
+  frame_in->total_frame_count = base->input_frame_count++;
   gst_video_codec_frame_set_user_data (frame, frame_in, gst_va_enc_frame_free);
 
-  if (!_reorder_frame (venc, frame, FALSE, &frame_encode))
-    goto error_reorder;
-
-  /* pass it to reorder list and we should not use it again. */
-  frame = NULL;
-
-  while (frame_encode) {
-    ret = _encode_frame (venc, frame_encode);
-    if (ret != GST_FLOW_OK)
-      goto error_encode;
-
-    while (g_queue_get_length (&self->output_list) > 0) {
-      frame_out = g_queue_pop_head (&self->output_list);
-      gst_video_codec_frame_unref (frame_out);
-      ret = _push_buffer_to_downstream (self, frame_out);
-      if (ret != GST_FLOW_OK)
-        goto error_push_buffer;
-    }
-
-    frame_encode = NULL;
-    if (!_reorder_frame (venc, NULL, FALSE, &frame_encode))
-      goto error_reorder;
-  }
-
-  return ret;
-
-error_buffer_invalid:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to import the input frame."), (NULL));
-    gst_clear_buffer (&in_buf);
-    gst_clear_buffer (&frame->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame);
-    return ret;
-  }
-error_reorder:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to reorder the input frame."), (NULL));
-    if (frame) {
-      gst_clear_buffer (&frame->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame);
-    }
-    return GST_FLOW_ERROR;
-  }
-error_encode:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to encode the frame."), (NULL));
-    gst_clear_buffer (&frame_encode->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame_encode);
-    return ret;
-  }
-error_push_buffer:
-  GST_ERROR_OBJECT (self, "Failed to push the buffer");
-  return ret;
-}
-
-static GstFlowReturn
-gst_va_h264_enc_drain (GstVideoEncoder * venc)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstVideoCodecFrame *frame_enc = NULL;
-
-  GST_DEBUG_OBJECT (self, "Encoder is draining");
-
-  /* Kickout all cached frames */
-  if (!_reorder_frame (venc, NULL, TRUE, &frame_enc)) {
-    ret = GST_FLOW_ERROR;
-    goto error_and_purge_all;
-  }
-
-  while (frame_enc) {
-    if (g_queue_is_empty (&self->reorder_list))
-      _enc_frame (frame_enc)->last_frame = TRUE;
-
-    ret = _encode_frame (venc, frame_enc);
-    if (ret != GST_FLOW_OK)
-      goto error_and_purge_all;
-
-    frame_enc = g_queue_pop_head (&self->output_list);
-    gst_video_codec_frame_unref (frame_enc);
-    ret = _push_buffer_to_downstream (self, frame_enc);
-    frame_enc = NULL;
-    if (ret != GST_FLOW_OK)
-      goto error_and_purge_all;
-
-    frame_enc = NULL;
-    if (!_reorder_frame (venc, NULL, TRUE, &frame_enc)) {
-      ret = GST_FLOW_ERROR;
-      goto error_and_purge_all;
-    }
-  }
-
-  g_assert (g_queue_is_empty (&self->reorder_list));
-
-  /* Output all frames. */
-  while (!g_queue_is_empty (&self->output_list)) {
-    frame_enc = g_queue_pop_head (&self->output_list);
-    gst_video_codec_frame_unref (frame_enc);
-    ret = _push_buffer_to_downstream (self, frame_enc);
-    frame_enc = NULL;
-    if (ret != GST_FLOW_OK)
-      goto error_and_purge_all;
-  }
-
-  /* Also clear the reference list. */
-  g_queue_clear_full (&self->ref_list,
-      (GDestroyNotify) gst_video_codec_frame_unref);
-
-  return GST_FLOW_OK;
-
-error_and_purge_all:
-  if (frame_enc) {
-    gst_clear_buffer (&frame_enc->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame_enc);
-  }
-
-  if (!g_queue_is_empty (&self->output_list)) {
-    GST_WARNING_OBJECT (self, "Still %d frame in the output list"
-        " after drain", g_queue_get_length (&self->output_list));
-    while (!g_queue_is_empty (&self->output_list)) {
-      frame_enc = g_queue_pop_head (&self->output_list);
-      gst_video_codec_frame_unref (frame_enc);
-      gst_clear_buffer (&frame_enc->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame_enc);
-    }
-  }
-
-  if (!g_queue_is_empty (&self->reorder_list)) {
-    GST_WARNING_OBJECT (self, "Still %d frame in the reorder list"
-        " after drain", g_queue_get_length (&self->reorder_list));
-    while (!g_queue_is_empty (&self->reorder_list)) {
-      frame_enc = g_queue_pop_head (&self->reorder_list);
-      gst_video_codec_frame_unref (frame_enc);
-      gst_clear_buffer (&frame_enc->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame_enc);
-    }
-  }
-
-  /* Also clear the reference list. */
-  g_queue_clear_full (&self->ref_list,
-      (GDestroyNotify) gst_video_codec_frame_unref);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_va_h264_enc_finish (GstVideoEncoder * venc)
-{
-  return gst_va_h264_enc_drain (venc);
-}
-
-static GstAllocator *
-_allocator_from_caps (GstVaH264Enc * self, GstCaps * caps)
-{
-  GstAllocator *allocator = NULL;
-
-  if (gst_caps_is_dmabuf (caps)) {
-    allocator = gst_va_dmabuf_allocator_new (self->display);
-  } else {
-    GArray *surface_formats =
-        gst_va_encoder_get_surface_formats (self->encoder);
-    allocator = gst_va_allocator_new (self->display, surface_formats);
-  }
-
-  return allocator;
-}
-
-static gboolean
-gst_va_h264_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  GstAllocator *allocator = NULL;
-  GstAllocationParams params = { 0, };
-  GstBufferPool *pool;
-  GstCaps *caps;
-  GstVideoInfo info;
-  gboolean need_pool = FALSE;
-  guint size, usage_hint = 0;
-
-  gst_query_parse_allocation (query, &caps, &need_pool);
-  if (!caps)
-    return FALSE;
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
-  size = GST_VIDEO_INFO_SIZE (&info);
-
-  gst_allocation_params_init (&params);
-
-  if (!(allocator = _allocator_from_caps (self, caps)))
-    return FALSE;
-
-  pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint,
-      GST_VA_FEATURE_AUTO, allocator, &params);
-  if (!pool) {
-    gst_object_unref (allocator);
-    goto config_failed;
-  }
-
-  gst_query_add_allocation_param (query, allocator, &params);
-  gst_query_add_allocation_pool (query, pool, size, 0, 0);
-
-  GST_DEBUG_OBJECT (self,
-      "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
-      pool, allocator);
-
-  gst_object_unref (allocator);
-  gst_object_unref (pool);
-
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-
   return TRUE;
-
-  /* ERRORS */
-config_failed:
-  {
-    GST_ERROR_OBJECT (self, "failed to set config");
-    return FALSE;
-  }
-}
-
-static void
-gst_va_h264_enc_set_context (GstElement * element, GstContext * context)
-{
-  GstVaDisplay *old_display, *new_display;
-  GstVaH264Enc *self = GST_VA_H264_ENC (element);
-  GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (self);
-  gboolean ret;
-
-  old_display = self->display ? gst_object_ref (self->display) : NULL;
-
-  ret = gst_va_handle_set_context (element, context, klass->render_device_path,
-      &self->display);
-
-  new_display = self->display ? gst_object_ref (self->display) : NULL;
-
-  if (!ret || (old_display && new_display && old_display != new_display
-          && self->encoder)) {
-    GST_ELEMENT_WARNING (element, RESOURCE, BUSY,
-        ("Can't replace VA display while operating"), (NULL));
-  }
-
-  gst_clear_object (&old_display);
-  gst_clear_object (&new_display);
-
-  GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
-}
-
-static gboolean
-gst_va_h264_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  GstVaH264EncClass *klass = GST_VA_H264_ENC_GET_CLASS (self);
-  GstCaps *out_caps;
-  guint max_ref_frames;
-
-  g_return_val_if_fail (state->caps != NULL, FALSE);
-
-  if (self->input_state)
-    gst_video_codec_state_unref (self->input_state);
-  self->input_state = gst_video_codec_state_ref (state);
-
-  gst_caps_replace (&self->in_caps, state->caps);
-
-  if (!gst_video_info_from_caps (&self->in_info, self->in_caps))
-    return FALSE;
-
-  if (gst_va_h264_enc_drain (venc) != GST_FLOW_OK)
-    return FALSE;
-
-  if (!gst_va_encoder_close (self->encoder)) {
-    GST_ERROR_OBJECT (self, "Failed to close the VA encoder");
-    return FALSE;
-  }
-
-  g_assert (klass->reconfig);
-  if (!klass->reconfig (self)) {
-    GST_ERROR_OBJECT (self, "Reconfig the encoder error");
-    return FALSE;
-  }
-
-  max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
-  if (!gst_va_encoder_open (self->encoder, self->profile, self->entrypoint,
-          GST_VIDEO_INFO_FORMAT (&self->in_info), self->rt_format,
-          self->mb_width * 16, self->mb_height * 16, self->codedbuf_size,
-          max_ref_frames, self->rc.rc_ctrl_mode, self->packed_headers)) {
-    GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
-    return FALSE;
-  }
-
-  /* Add some tags */
-  {
-    GstTagList *tags = gst_tag_list_new_empty ();
-    const gchar *encoder_name;
-    guint bitrate = 0;
-
-    g_object_get (venc, "bitrate", &bitrate, NULL);
-    if (bitrate > 0)
-      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_NOMINAL_BITRATE,
-          bitrate, NULL);
-
-    if ((encoder_name =
-            gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (venc),
-                GST_ELEMENT_METADATA_LONGNAME)))
-      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
-          encoder_name, NULL);
-
-    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_CODEC, "H264", NULL);
-
-    gst_video_encoder_merge_tags (venc, tags, GST_TAG_MERGE_REPLACE);
-    gst_tag_list_unref (tags);
-  }
-
-  out_caps = gst_va_profile_caps (self->profile);
-  g_assert (out_caps);
-  out_caps = gst_caps_fixate (out_caps);
-
-  if (self->level_str)
-    gst_caps_set_simple (out_caps, "level", G_TYPE_STRING, self->level_str,
-        NULL);
-
-  gst_caps_set_simple (out_caps, "width", G_TYPE_INT, self->width,
-      "height", G_TYPE_INT, self->height, "alignment", G_TYPE_STRING, "au",
-      "stream-format", G_TYPE_STRING, "byte-stream", NULL);
-
-  GST_DEBUG_OBJECT (self, "output caps is %" GST_PTR_FORMAT, out_caps);
-
-  if (self->output_state)
-    gst_video_codec_state_unref (self->output_state);
-  self->output_state = gst_video_encoder_set_output_state (venc, out_caps,
-      self->input_state);
-
-  if (!gst_video_encoder_negotiate (venc)) {
-    GST_ERROR_OBJECT (self, "Failed to negotiate with the downstream");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-_query_context (GstVaH264Enc * self, GstQuery * query)
-{
-  GstVaDisplay *display = NULL;
-  gboolean ret;
-
-  gst_object_replace ((GstObject **) & display, (GstObject *) self->display);
-  ret = gst_va_handle_context_query (GST_ELEMENT_CAST (self), query, display);
-  gst_clear_object (&display);
-
-  return ret;
-}
-
-static gboolean
-gst_va_h264_enc_src_query (GstVideoEncoder * venc, GstQuery * query)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-  gboolean ret = FALSE;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:{
-      ret = _query_context (self, query);
-      break;
-    }
-    case GST_QUERY_CAPS:{
-      GstCaps *caps = NULL, *tmp, *filter = NULL;
-      GstVaEncoder *va_encoder = NULL;
-      gboolean fixed_caps;
-
-      gst_object_replace ((GstObject **) & va_encoder,
-          (GstObject *) self->encoder);
-
-      gst_query_parse_caps (query, &filter);
-
-      fixed_caps = GST_PAD_IS_FIXED_CAPS (GST_VIDEO_ENCODER_SRC_PAD (venc));
-
-      if (!fixed_caps && va_encoder)
-        caps = gst_va_encoder_get_srcpad_caps (va_encoder);
-
-      gst_clear_object (&va_encoder);
-
-      if (caps) {
-        if (filter) {
-          tmp = gst_caps_intersect_full (filter, caps,
-              GST_CAPS_INTERSECT_FIRST);
-          gst_caps_unref (caps);
-          caps = tmp;
-        }
-
-        GST_LOG_OBJECT (self, "Returning caps %" GST_PTR_FORMAT, caps);
-        gst_query_set_caps_result (query, caps);
-        gst_caps_unref (caps);
-        ret = TRUE;
-        break;
-      }
-      /* else jump to default */
-    }
-    default:
-      ret = GST_VIDEO_ENCODER_CLASS (parent_class)->src_query (venc, query);
-      break;
-  }
-
-  return ret;
-}
-
-static gboolean
-gst_va_h264_enc_sink_query (GstVideoEncoder * venc, GstQuery * query)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-
-  if (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT)
-    return _query_context (self, query);
-
-  return GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (venc, query);
 }
 
 /* *INDENT-OFF* */
@@ -3896,10 +3034,6 @@ static void
 gst_va_h264_enc_init (GTypeInstance * instance, gpointer g_class)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (instance);
-
-  g_queue_init (&self->reorder_list);
-  g_queue_init (&self->ref_list);
-  g_queue_init (&self->output_list);
 
   /* default values */
   self->prop.key_int_max = 0;
@@ -3930,8 +3064,9 @@ gst_va_h264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstVaH264Enc *const self = GST_VA_H264_ENC (object);
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
 
-  if (self->encoder && gst_va_encoder_is_open (self->encoder)) {
+  if (base->encoder && gst_va_encoder_is_open (base->encoder)) {
     GST_ERROR_OBJECT (object,
         "failed to set any property after encoding started");
     return;
@@ -4098,14 +3233,6 @@ gst_va_h264_enc_get_property (GObject * object, guint prop_id,
     case PROP_CPB_SIZE:
       g_value_set_uint (value, self->prop.cpb_size);
       break;
-    case PROP_DEVICE_PATH:{
-      if (!(self->display && GST_IS_VA_DISPLAY_DRM (self->display))) {
-        g_value_set_string (value, NULL);
-      } else {
-        g_object_get_property (G_OBJECT (self->display), "path", value);
-      }
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -4113,30 +3240,23 @@ gst_va_h264_enc_get_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (self);
 }
 
-struct CData
+static void
+gst_va_h264_enc_dispose (GObject * object)
 {
-  gchar *render_device_path;
-  gchar *description;
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-};
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
 
 static void
 gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
 {
   GstCaps *src_doc_caps, *sink_doc_caps;
+  GstPadTemplate *sink_pad_templ, *src_pad_templ;
   GObjectClass *const object_class = G_OBJECT_CLASS (g_klass);
   GstElementClass *const element_class = GST_ELEMENT_CLASS (g_klass);
   GstVideoEncoderClass *const venc_class = GST_VIDEO_ENCODER_CLASS (g_klass);
-  GstVaH264EncClass *const klass = GST_VA_H264_ENC_CLASS (g_klass);
-  GstPadTemplate *sink_pad_templ, *src_pad_templ;
+  GstVaBaseEncClass *va_enc_class = GST_VA_BASE_ENC_CLASS (g_klass);
   struct CData *cdata = class_data;
   gchar *long_name;
-
-  parent_class = g_type_class_peek_parent (g_klass);
-
-  klass->render_device_path = g_strdup (cdata->render_device_path);
-  klass->codec = H264;
 
   if (cdata->description) {
     long_name = g_strdup_printf ("VA-API H.264 Encoder in %s",
@@ -4152,6 +3272,11 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   sink_doc_caps = gst_caps_from_string (sink_caps_str);
   src_doc_caps = gst_caps_from_string (src_caps_str);
 
+  parent_class = g_type_class_peek_parent (g_klass);
+
+  va_enc_class->codec = H264;
+  va_enc_class->render_device_path = g_strdup (cdata->render_device_path);
+
   sink_pad_templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
       cdata->sink_caps);
   gst_element_class_add_pad_template (element_class, sink_pad_templ);
@@ -4166,28 +3291,21 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   gst_pad_template_set_documentation_caps (src_pad_templ, src_doc_caps);
   gst_caps_unref (src_doc_caps);
 
+  object_class->dispose = gst_va_h264_enc_dispose;
   object_class->set_property = gst_va_h264_enc_set_property;
   object_class->get_property = gst_va_h264_enc_get_property;
 
-  element_class->set_context = GST_DEBUG_FUNCPTR (gst_va_h264_enc_set_context);
-  venc_class->open = GST_DEBUG_FUNCPTR (gst_va_h264_enc_open);
   venc_class->start = GST_DEBUG_FUNCPTR (gst_va_h264_enc_start);
-  venc_class->close = GST_DEBUG_FUNCPTR (gst_va_h264_enc_close);
   venc_class->stop = GST_DEBUG_FUNCPTR (gst_va_h264_enc_stop);
-  venc_class->handle_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_handle_frame);
-  venc_class->finish = GST_DEBUG_FUNCPTR (gst_va_h264_enc_finish);
   venc_class->flush = GST_DEBUG_FUNCPTR (gst_va_h264_enc_flush);
-  venc_class->set_format = GST_DEBUG_FUNCPTR (gst_va_h264_enc_set_format);
-  venc_class->getcaps = GST_DEBUG_FUNCPTR (gst_va_h264_enc_get_caps);
-  venc_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_va_h264_enc_propose_allocation);
-  venc_class->src_query = GST_DEBUG_FUNCPTR (gst_va_h264_enc_src_query);
-  venc_class->sink_query = GST_DEBUG_FUNCPTR (gst_va_h264_enc_sink_query);
 
-  klass->reconfig = GST_DEBUG_FUNCPTR (gst_va_h264_enc_reconfig);
-  klass->push_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_push_frame);
-  klass->pop_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_pop_frame);
-  klass->encode_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_encode_frame);
+  va_enc_class->reconfig = GST_DEBUG_FUNCPTR (gst_va_h264_enc_reconfig);
+  va_enc_class->new_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_new_frame);
+  va_enc_class->reorder_frame =
+      GST_DEBUG_FUNCPTR (gst_va_h264_enc_reorder_frame);
+  va_enc_class->encode_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_encode_frame);
+  va_enc_class->prepare_output =
+      GST_DEBUG_FUNCPTR (gst_va_h264_enc_prepare_output);
 
   g_free (long_name);
   g_free (cdata->description);
@@ -4420,10 +3538,6 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
       GST_TYPE_VA_ENCODER_RATE_CONTROL, VA_RC_CBR,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
-  properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
-      "Device Path", "DRM device path", NULL,
-      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
-
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
   gst_type_mark_as_plugin_api (gst_va_encoder_rate_control_get_type (), 0);
@@ -4443,17 +3557,9 @@ static GstCaps *
 _complete_src_caps (GstCaps * srccaps)
 {
   GstCaps *caps = gst_caps_copy (srccaps);
-  GValue val = G_VALUE_INIT;
 
-  g_value_init (&val, G_TYPE_STRING);
-  g_value_set_string (&val, "au");
-  gst_caps_set_value (caps, "alignment", &val);
-  g_value_unset (&val);
-
-  g_value_init (&val, G_TYPE_STRING);
-  g_value_set_string (&val, "byte-stream");
-  gst_caps_set_value (caps, "stream-format", &val);
-  g_value_unset (&val);
+  gst_caps_set_simple (caps, "alignment", G_TYPE_STRING, "au", "stream-format",
+      G_TYPE_STRING, "byte-stream", NULL);
 
   return caps;
 }
@@ -4511,7 +3617,7 @@ gst_va_h264_enc_register (GstPlugin * plugin, GstVaDevice * device,
   }
 
   g_once (&debug_once, _register_debug_category, NULL);
-  type = g_type_register_static (GST_TYPE_VIDEO_ENCODER,
+  type = g_type_register_static (GST_TYPE_VA_BASE_ENC,
       type_name, &type_info, 0);
   ret = gst_element_register (plugin, feature_name, rank, type);
 
