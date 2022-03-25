@@ -213,6 +213,11 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
               G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 #endif
 
+  g_object_class_install_property (object_class, PROP_GOP_SIZE,
+      g_param_spec_uint ("gop-size", "GOP Size",
+          "Number of pictures within a GOP (0: unspecified)",
+          0, G_MAXINT, DEFAULT_GOP_SIZE, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_B_FRAMES,
       g_param_spec_uint ("b-frames", "B Frames",
           "Number of B frames between I and P frames",
