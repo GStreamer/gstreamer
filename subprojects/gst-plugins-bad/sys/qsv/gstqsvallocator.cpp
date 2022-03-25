@@ -391,7 +391,7 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
 
   if (frame->map_count == 0) {
     gst_video_frame_map (&frame->frame, &frame->info, frame->buffer,
-        (GstMapFlags) GST_MAP_READWRITE);
+        frame->map_flags);
   }
 
   frame->map_count++;
@@ -653,6 +653,8 @@ gst_qsv_allocator_acquire_frame (GstQsvAllocator * allocator,
           "Unknown read/write access for video memory");
       return nullptr;
     }
+  } else if ((mem_type & GST_QSV_ENCODER_IN_MEMORY) != 0) {
+    map_flags = GST_MAP_READ;
   } else {
     map_flags = GST_MAP_READWRITE;
   }
