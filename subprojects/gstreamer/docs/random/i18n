@@ -11,8 +11,6 @@ Internationalization notes
   - use dgettext (possibly disguised as _) to translate from a set domain
 
 - How to make your plug-in code translatable:
-  - include <gst/gst-i18n-plugin.h> in all files that mark strings for
-    translation, or do the bindtextdomain call
   - in plugin_init, add a block like this:
 
 #ifdef ENABLE_NLS

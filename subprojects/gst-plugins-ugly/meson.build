@@ -89,6 +89,8 @@ if have_cxx and cxx.has_link_argument('-Wl,-Bsymbolic-functions')
 endif
 
 cdata = configuration_data()
+cdata.set('ENABLE_NLS', 1)
+
 check_headers = [
   ['HAVE_DLFCN_H', 'dlfcn.h'],
   ['HAVE_INTTYPES_H', 'inttypes.h'],
@@ -302,7 +304,6 @@ subdir('tests')
 
 # xgettext is optional (on Windows for instance)
 if find_program('xgettext', required : get_option('nls')).found()
-  cdata.set('ENABLE_NLS', 1)
   subdir('po')
 endif
 subdir('docs')

@@ -119,6 +119,7 @@ if glib_checks.disabled() or (glib_checks.auto() and not gst_version_is_dev)
 endif
 
 cdata = configuration_data()
+cdata.set('ENABLE_NLS', 1)
 
 check_headers = [
   ['HAVE_DLFCN_H', 'dlfcn.h'],
@@ -494,7 +495,6 @@ endif
 
 # xgettext is optional (on Windows for instance)
 if find_program('xgettext', required : get_option('nls')).found()
-  cdata.set('ENABLE_NLS', 1)
   subdir('po')
 endif
 
