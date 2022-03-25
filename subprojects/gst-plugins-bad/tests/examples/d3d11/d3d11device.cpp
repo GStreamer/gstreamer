@@ -126,7 +126,7 @@ prepare_shared_texture (ID3D11Device * d3d11_device, guint width,
 
   ComPtr<ID3D11ShaderResourceView> shader_resource_view;
   if (srv) {
-    D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc = { 0, };
+    D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc = { DXGI_FORMAT_UNKNOWN, };
     srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srv_desc.Texture2D.MipLevels = 1;
     srv_desc.Format = format;
@@ -262,7 +262,7 @@ prepare_shader (ID3D11Device * d3d11_device, ID3D11DeviceContext * context,
     "  return input;\n"
     "}\n";
 
-  D3D11_SAMPLER_DESC sampler_desc = { 0, };
+  D3D11_SAMPLER_DESC sampler_desc = { D3D11_FILTER_MIN_MAG_MIP_POINT, };
   sampler_desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
   sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
   sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
