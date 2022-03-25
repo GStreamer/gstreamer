@@ -35,9 +35,11 @@ if default_library in ['static', 'both']
   if libsoup3_dep.found()
     static_deps += libsoup3_dep
     static_args += '-DSTATIC_SOUP=3'
+    message('soup plugin: using libsoup-3.0 for static build')
   elif libsoup2_dep.found()
     static_deps += libsoup2_dep
     static_args += '-DSTATIC_SOUP=2'
+    message('soup plugin: using libsoup-2.4 for static build')
   endif
 endif
 
