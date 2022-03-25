@@ -69,7 +69,6 @@ static gboolean gst_svtav1enc_propose_allocation (GstVideoEncoder * encoder,
 static gboolean gst_svtav1enc_flush (GstVideoEncoder * encoder);
 
 /* helpers */
-void set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config);
 gint compare_video_code_frame_and_pts (const void *video_codec_frame_ptr,
     const void *pts_ptr);
 
@@ -309,7 +308,6 @@ gst_svtav1enc_init (GstSvtAv1Enc * svtav1enc)
     return;
   }
   /* setting configuration here since svt_av1_enc_init_handle overrides it */
-  set_default_svt_configuration (svtav1enc->svt_config);
   GST_OBJECT_UNLOCK (svtav1enc);
 }
 
@@ -559,80 +557,6 @@ gst_svtav1enc_start_svt (GstSvtAv1Enc * svtav1enc)
     return FALSE;
   }
   return TRUE;
-}
-
-void
-set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
-{
-  memset(svt_config, 0, sizeof(EbSvtAv1EncConfiguration));
-  svt_config->source_width = 0;
-  svt_config->source_height = 0;
-  svt_config->intra_period_length = PROP_GOP_SIZE_DEFAULT - 1;
-  svt_config->intra_refresh_type = PROP_INTRA_REFRESH_DEFAULT;
-  svt_config->enc_mode = PROP_ENCMODE_DEFAULT;
-  svt_config->frame_rate = 25;
-  svt_config->frame_rate_denominator = 1;
-  svt_config->frame_rate_numerator = 25;
-  svt_config->hierarchical_levels = PROP_HIERARCHICAL_LEVEL_DEFAULT;
-  svt_config->pred_structure = PROP_PRED_STRUCTURE_DEFAULT;
-  svt_config->scene_change_detection = PROP_SCD_DEFAULT;
-  svt_config->rate_control_mode = PROP_RC_MODE_DEFAULT; // todo: add CVBR
-  svt_config->target_bit_rate = PROP_BITRATE_DEFAULT;
-  svt_config->max_qp_allowed = PROP_QP_MAX_DEFAULT;
-  svt_config->min_qp_allowed = PROP_QP_MIN_DEFAULT;
-  svt_config->screen_content_mode = FALSE;
-  svt_config->enable_adaptive_quantization = FALSE;
-  svt_config->qp = PROP_QP_DEFAULT;
-  svt_config->use_qp_file = FALSE;
-  svt_config->enable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == TRUE);
-  svt_config->film_grain_denoise_strength = FALSE;
-  svt_config->cdef_level = -1;
-  svt_config->enable_restoration_filtering = -1;
-  svt_config->enable_mfmv = -1;
-  // HME parameters
-  svt_config->channel_id = 0;
-  svt_config->active_channel_count = 1;
-  svt_config->recon_enabled = FALSE;
-
-  // thread affinity
-  svt_config->logical_processors = PROP_CORES_DEFAULT;
-  svt_config->target_socket = PROP_SOCKET_DEFAULT;
-  svt_config->pin_threads = 0;
-
-  // tile based encoding
-  svt_config->tile_columns = 0;
-  svt_config->tile_rows = 0;
-  svt_config->restricted_motion_vector = FALSE;
-
-  // alt-ref
-  svt_config->enable_tf = TRUE;
-  svt_config->enable_overlays = FALSE;
-
-  // super resolution
-  svt_config->superres_mode = FALSE; // SUPERRES_NONE
-  svt_config->superres_denom = 8;
-  svt_config->superres_kf_denom = 8;
-  svt_config->superres_qthres = 43;
-
-  // latency
-
-  // Annex A
-  svt_config->profile = 0;
-  svt_config->tier = 0;
-  svt_config->level = 0;
-
-  svt_config->stat_report = FALSE;
-  svt_config->high_dynamic_range_input = FALSE;
-  svt_config->encoder_bit_depth = 8;
-  svt_config->encoder_color_format = 1; // todo. Only 420 for now.
-  svt_config->compressed_ten_bit_format = FALSE;
-  svt_config->use_cpu_flags = CPU_FLAGS_ALL;
-
-  // color description
-  svt_config->color_range = 0;
-  svt_config->color_primaries = 2;
-  svt_config->transfer_characteristics = 2;
-  svt_config->matrix_coefficients = 2;
 }
 
 GstFlowReturn
