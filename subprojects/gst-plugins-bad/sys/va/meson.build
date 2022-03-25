@@ -2,6 +2,7 @@ va_sources = [
   'plugin.c',
   'gstvabasedec.c',
   'gstvabasetransform.c',
+  'gstvabaseenc.c',
   'gstvacaps.c',
   'gstvadecoder.c',
   'gstvadeinterlace.c',
