@@ -41,10 +41,12 @@ void _soup_session_add_feature (SoupSession *session,
 void _soup_session_add_feature_by_type (SoupSession *session, GType feature_type);
 
 typedef struct _GstSoupUri {
-#if GLIB_CHECK_VERSION(2, 66, 0)
+#if (defined(STATIC_SOUP) && STATIC_SOUP == 3) || (!defined(STATIC_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
   GUri *uri;
 #endif
+#if (defined(STATIC_SOUP) && STATIC_SOUP == 2) || !defined(STATIC_SOUP)
   SoupURI *soup_uri;
+#endif
 } GstSoupUri;
 
 GstSoupUri *gst_soup_uri_new (const char *uri_string);
