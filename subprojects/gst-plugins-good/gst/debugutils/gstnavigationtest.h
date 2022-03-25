@@ -62,6 +62,7 @@ struct _GstNavigationtest
   GstVideoFilter videofilter;
 
   gdouble mousex, mousey;
+  GstNavigationModifierType modifiers;
   gboolean display_mouse, display_touch;
   GSList *clicks;
   GSList *touches;

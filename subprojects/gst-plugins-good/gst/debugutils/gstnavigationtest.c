@@ -130,6 +130,7 @@ gst_navigationtest_src_event (GstBaseTransform * trans, GstEvent * event)
               &navtest->mousey);
           GST_DEBUG ("received mouse-move event at %f,%f", navtest->mousex,
               navtest->mousey);
+          gst_navigation_event_parse_state (event, &navtest->modifiers);
           break;
         }
         case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:{
@@ -175,6 +176,7 @@ gst_navigationtest_src_event (GstBaseTransform * trans, GstEvent * event)
         case GST_NAVIGATION_EVENT_KEY_RELEASE:{
           const char *name;
 
+          gst_navigation_event_parse_state (event, &navtest->modifiers);
           gst_navigation_event_parse_key_event (event, &name);
           GST_DEBUG ("received %s event for key \"%s\"",
               type == GST_NAVIGATION_EVENT_KEY_PRESS ? "key-press" :
@@ -377,6 +379,7 @@ gst_navigationtest_transform_frame (GstVideoFilter * filter,
 {
   GstNavigationtest *navtest = GST_NAVIGATIONTEST (filter);
   GSList *walk;
+  guint8 u = 255, v = 255;
 
   gst_video_frame_copy (out_frame, in_frame);
 
@@ -394,8 +397,15 @@ gst_navigationtest_transform_frame (GstVideoFilter * filter,
         g_free (click);
       }
     }
+
+    for (guint i = 0; i <= 28; i++) {
+      if (navtest->modifiers & (1 << i)) {
+        u /= 2;
+        v /= 2;
+      }
+    }
     draw_box_planar411 (out_frame,
-        rint (navtest->mousex), rint (navtest->mousey), 5, 0, 128, 128);
+        rint (navtest->mousex), rint (navtest->mousey), 5, 128, u, v);
   }
 
   /* Draw touch events */
