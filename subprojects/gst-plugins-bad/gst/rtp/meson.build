@@ -7,7 +7,7 @@ gst_plugins_rtp_sources = [
 
 gstrtp = library('gstrtpmanagerbad',
   gst_plugins_rtp_sources,
-  dependencies: [gio_dep, gst_dep, gstbase_dep, gstrtp_dep, gstnet_dep, gstcontroller_dep],
+  dependencies: [gst_dep, gstbase_dep, gstrtp_dep, gstnet_dep, gstcontroller_dep, gio_dep],
   include_directories: [configinc],
   install: true,
   c_args: gst_plugins_bad_args,

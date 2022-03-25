@@ -31,7 +31,7 @@ if vorbis_dep.found()
     c_args : gst_plugins_base_args,
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],
-    dependencies : vorbis_deps + glib_deps + [audio_dep, tag_dep, gst_dep, gst_base_dep],
+    dependencies : vorbis_deps + [audio_dep, tag_dep, gst_dep, gst_base_dep],
     install : true,
     install_dir : plugins_install_dir,
   )
@@ -47,7 +47,7 @@ if vorbisidec_dep.found()
     c_args : gst_plugins_base_args + ['-DTREMOR'],
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],
-    dependencies : glib_deps + [vorbisidec_dep, audio_dep, tag_dep, gst_dep, gst_base_dep],
+    dependencies : [vorbisidec_dep, audio_dep, tag_dep, gst_dep, gst_base_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

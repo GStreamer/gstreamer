@@ -8,7 +8,7 @@ foreach example : examples
     src_file,
     install: false,
     include_directories : [configinc],
-    dependencies : [glib_dep, gst_dep, gstwebrtc_dep],
+    dependencies : [gst_dep, gstwebrtc_dep],
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   )
 endforeach

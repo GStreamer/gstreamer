@@ -12,6 +12,6 @@ foreach app : app_examples
   executable(app, '@0@.c'.format(app),
     c_args : gst_plugins_base_args,
     include_directories: [configinc, libsinc],
-    dependencies : [glib_deps, gst_dep, app_dep],
+    dependencies : [gst_dep, app_dep],
     install: false)
 endforeach

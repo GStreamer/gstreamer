@@ -24,7 +24,6 @@ library_def = {'lib': gstsdp}
 pkg_name = 'gstreamer-sdp-1.0'
 sdp_gen_sources  = []
 pkgconfig.generate(gstsdp,
-  libraries : [glib_deps],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,

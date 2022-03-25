@@ -3,7 +3,7 @@ if validate_video_dep.found()
                 'gstvalidatessim.c',
                 include_directories : inc_dirs,
                 link_with: [gstvalidate],
-                dependencies : [gst_dep, gst_video_dep, glib_dep, validate_video_dep,
+                dependencies : [gst_dep, gst_video_dep, validate_video_dep,
                     gst_pbutils_dep],
                 install : true,
                 install_dir : validate_plugins_install_dir,

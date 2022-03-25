@@ -9,31 +9,31 @@ if gtk_x11_dep.found()
     executable('jsseek', 'jsseek.c',
       c_args : gst_plugins_base_args,
       include_directories: [configinc, libsinc],
-      dependencies : [glib_deps, gst_dep, video_dep, libm, gtk_dep],
+      dependencies : [gst_dep, video_dep, libm, gtk_dep],
       install: false)
   endif
   executable('scrubby', 'scrubby.c',
     c_args : gst_plugins_base_args,
     include_directories: [configinc, libsinc],
-    dependencies : [glib_deps, gst_dep, video_dep, libm, gtk_dep],
+    dependencies : [gst_dep, video_dep, libm, gtk_dep],
     install: false)
 endif
 
 executable('stepping', 'stepping.c',
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : [libm, glib_deps, gst_dep, video_dep],
+  dependencies : [libm, gst_dep, video_dep],
   install: false)
 
 executable('stepping2', 'stepping2.c',
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : [libm, glib_deps, gst_dep, video_dep],
+  dependencies : [libm, gst_dep, video_dep],
   install: false)
 
 executable('instant-rate-change', 'instant-rate-change.c',
   c_args : gst_plugins_base_args,
   include_directories: [configinc, libsinc],
-  dependencies : [libm, glib_deps, gst_dep, video_dep],
+  dependencies : [libm, gst_dep, video_dep],
   install: false)
 

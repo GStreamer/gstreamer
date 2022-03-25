@@ -46,7 +46,7 @@ gst_base = library('gstbase-@0@'.format(apiversion),
   darwin_versions : osxversion,
   install : true,
   include_directories : [configinc, libsinc],
-  dependencies : [gobject_dep, glib_dep, gst_dep],
+  dependencies : [gst_dep],
 )
 
 library_def = {'lib': gst_base}

@@ -19,7 +19,7 @@ endif
 state_ignore_elements=''
 
 # FIXME: check, also + PTHREAD_CFLAGS
-test_deps = [gst_dep, gstbase_dep, glib_dep, gstcheck_dep]
+test_deps = [gst_dep, gstbase_dep, gstcheck_dep]
 
 # FIXME: add valgrind suppression common/gst.supp gst-plugins-good.supp
 foreach t : omx_tests

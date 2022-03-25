@@ -158,4 +158,4 @@ libraries += [[pkg_name, library_def]]
 # Still non-public api, should not install headers
 gstd3d11_dep = declare_dependency(link_with : gstd3d11,
   include_directories : [libsinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib])
+  dependencies : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib])

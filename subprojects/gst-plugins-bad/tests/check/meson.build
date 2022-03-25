@@ -32,8 +32,8 @@ base_tests = [
   [['elements/ccconverter.c'], not closedcaption_dep.found(), [gstvideo_dep]],
   [['elements/cccombiner.c'], not closedcaption_dep.found(), ],
   [['elements/ccextractor.c'], not closedcaption_dep.found(), ],
-  [['elements/cudaconvert.c'], false, [gmodule_dep, gstgl_dep]],
-  [['elements/cudafilter.c'], false, [gmodule_dep, gstgl_dep]],
+  [['elements/cudaconvert.c'], false, [gstgl_dep, gmodule_dep]],
+  [['elements/cudafilter.c'], false, [gstgl_dep, gmodule_dep]],
   [['elements/d3d11colorconvert.c'], host_machine.system() != 'windows', ],
   [['elements/gdpdepay.c']],
   [['elements/gdppay.c']],
@@ -53,8 +53,8 @@ base_tests = [
   [['elements/msdkh264enc.c'], not have_msdk, [msdk_dep]],
   [['elements/mxfdemux.c']],
   [['elements/mxfmux.c']],
-  [['elements/nvenc.c'], false, [gmodule_dep, gstgl_dep]],
-  [['elements/nvdec.c'], not gstgl_dep.found(), [gmodule_dep, gstgl_dep]],
+  [['elements/nvenc.c'], false, [gstgl_dep, gmodule_dep]],
+  [['elements/nvdec.c'], not gstgl_dep.found(), [gstgl_dep, gmodule_dep]],
   [['elements/svthevcenc.c'], not svthevcenc_dep.found(), [svthevcenc_dep]],
    [['elements/openjpeg.c'], not openjpeg_dep.found(), [openjpeg_dep]],
   [['elements/pcapparse.c'], false, [libparser_dep]],
@@ -162,7 +162,7 @@ test_deps = [gst_dep, gstapp_dep, gstbase_dep,
              gstbasecamerabin_dep, gstphotography_dep,
              gstpbutils_dep, gstcontroller_dep, gstaudio_dep,
              gstvideo_dep, gstrtp_dep, gsturidownloader_dep,
-             gstcheck_dep, gio_dep, glib_dep, gsttag_dep]
+             gstcheck_dep, gio_dep, gsttag_dep]
 
 pluginsdirs = [  ]
 

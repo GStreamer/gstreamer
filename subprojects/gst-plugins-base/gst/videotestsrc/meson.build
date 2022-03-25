@@ -1,4 +1,4 @@
-videotestsrc_deps = glib_deps + [video_dep, gst_dep, gst_base_dep, libm]
+videotestsrc_deps = [video_dep, gst_dep, gst_base_dep, libm]
 orcsrc = 'gstvideotestsrcorc'
 if have_orcc
   videotestsrc_deps += [orc_dep]

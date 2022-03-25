@@ -45,7 +45,7 @@ gst_check = library('gstcheck-@0@'.format(apiversion),
   install : true,
   include_directories : [configinc, libsinc],
   link_with : [libcheck],
-  dependencies : [gobject_dep, glib_dep, gst_dep],
+  dependencies : [gst_dep],
 )
 
 library_def = {'lib': gst_check}

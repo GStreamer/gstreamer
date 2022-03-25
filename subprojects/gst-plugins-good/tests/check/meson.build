@@ -196,7 +196,7 @@ state_ignore_elements = '''aasink autoaudiosrc autoaudiosink autovideosrc
 # FIXME: check, also + PTHREAD_CFLAGS
 test_deps = [gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep, gstaudio_dep,
   gstvideo_dep, gstpbutils_dep, gstrtp_dep, gstrtsp_dep, gsttag_dep,
-  gstapp_dep, gio_dep, valgrind_dep] + glib_deps
+  gstapp_dep, gio_dep, valgrind_dep]
 
 # FIXME: add valgrind suppression common/gst.supp gst-plugins-good.supp
 foreach t : good_tests

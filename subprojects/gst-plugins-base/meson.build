@@ -309,19 +309,13 @@ endif
 
 # X11 checks are for sys/ and tests/
 x11_dep = dependency('x11', required : get_option('x11'))
-# GLib checks are for the entire project
-# Almost everything that uses glib also uses gobject
-glib_deps = [dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep']),
-             dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])]
 # GIO is used by the GIO plugin, and by the TCP, SDP, and RTSP plugins
-gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
+gio_dep = dependency('gio-2.0', version: glib_req)
 giounix_dep = dependency('', required: false)
 if host_system != 'windows'
-  giounix_dep = dependency('gio-unix-2.0', version : glib_req,
-                           fallback: ['glib', 'libgiounix_dep'])
+  giounix_dep = dependency('gio-unix-2.0')
 endif
-gmodule_dep = dependency('gmodule-no-export-2.0',
-                         fallback: ['glib', 'libgmodule_dep'])
+gmodule_dep = dependency('gmodule-2.0')
 
 # some of the examples can use gdk-pixbuf and GTK+3
 gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : get_option('examples'))

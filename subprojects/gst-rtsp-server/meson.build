@@ -139,8 +139,6 @@ endforeach
 
 rtspserver_incs = include_directories('gst/rtsp-server', '.')
 
-glib_dep = dependency('glib-2.0', version : glib_req,
-  fallback: ['glib', 'libglib_dep'])
 gst_dep = dependency('gstreamer-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
 gstrtsp_dep = dependency('gstreamer-rtsp-1.0', version : gst_req,

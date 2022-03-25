@@ -7,7 +7,7 @@ foreach example : examples
   executable(exe_name,
     src_file,
     include_directories: [configinc],
-    dependencies: [glib_dep, gst_dep, gstbase_dep],
+    dependencies: [gst_dep, gstbase_dep],
     c_args : gst_plugins_bad_args,
     install: false)
 endforeach

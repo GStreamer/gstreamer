@@ -381,9 +381,8 @@ if gstgl_dep.found()
 endif
 
 libm = cc.find_library('m', required : false)
-glib_dep = dependency('glib-2.0', version : glib_req, fallback: ['glib', 'libglib_dep'])
-gmodule_dep = dependency('gmodule-2.0', fallback: ['glib', 'libgmodule_dep'])
-gio_dep = dependency('gio-2.0', fallback: ['glib', 'libgio_dep'])
+gio_dep = dependency('gio-2.0', version: glib_req)
+gmodule_dep = dependency('gmodule-2.0')
 # gio-unix-2.0 is used by sys/bluez
 
 # Optional dep of ext/gl and gst/librfb
@@ -588,7 +587,7 @@ if gst_version_nano == 0
   message('Package release date: ' + release_date)
 endif
 
-if glib_dep.version().version_compare('< 2.67.4')
+if gio_dep.version().version_compare('< 2.67.4')
   cdata.set('g_memdup2(ptr,sz)', '(G_LIKELY(((guint64)(sz)) < G_MAXUINT)) ? g_memdup(ptr,sz) : (g_abort(),NULL)')
 endif
 

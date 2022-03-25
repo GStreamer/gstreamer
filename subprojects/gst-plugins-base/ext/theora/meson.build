@@ -21,7 +21,7 @@ if theoradec_dep.found() or theoraenc_dep.found()
     c_args : gst_plugins_base_args,
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],
-    dependencies : theora_deps + glib_deps + [video_dep, tag_dep, gst_dep, gst_base_dep],
+    dependencies : theora_deps + [video_dep, tag_dep, gst_dep, gst_base_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

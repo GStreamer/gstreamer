@@ -8,6 +8,6 @@ if gtk_dep.found()
   executable('playback-test', 'playback-test.c',
     c_args : gst_plugins_base_args + quartz_cflags,
     include_directories: [configinc, libsinc],
-    dependencies : [glib_deps, gst_dep, video_dep, libm, gtk_dep],
+    dependencies : [gst_dep, video_dep, libm, gtk_dep],
     install: false)
 endif

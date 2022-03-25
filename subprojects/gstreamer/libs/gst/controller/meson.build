@@ -45,7 +45,7 @@ gst_controller = library('gstcontroller-@0@'.format(apiversion),
   soversion : soversion,
   darwin_versions : osxversion,
   include_directories : [configinc, libsinc],
-  dependencies : [gobject_dep, glib_dep, mathlib, gst_dep],
+  dependencies : [mathlib, gst_dep],
 )
 
 library_def = {'lib': gst_controller}

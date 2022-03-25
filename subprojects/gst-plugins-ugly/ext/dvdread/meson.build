@@ -5,7 +5,7 @@ dvdread_opt = get_option('dvdread').require(gpl_allowed, error_message: '''
 
 dvdread_dep = dependency('dvdread', version : '>= 0.5.0', required : dvdread_opt)
 
-if gmodule_dep.found() and dvdread_dep.found()
+if dvdread_dep.found()
   dvdread = library('gstdvdread',
     ['dvdreadsrc.c'],
     c_args : ugly_args,

@@ -10,7 +10,7 @@ gstrtsp = library('gstrtsp',
   rtsp_sources,
   c_args : gst_plugins_good_args,
   include_directories : [configinc, libsinc],
-  dependencies : [gstbase_dep, gio_dep, gstrtp_dep, gstrtsp_dep, gstsdp_dep, gstnet_dep],
+  dependencies : [gstbase_dep, gstrtp_dep, gstrtsp_dep, gstsdp_dep, gstnet_dep, gio_dep],
   install : true,
   install_dir : plugins_install_dir,
 )

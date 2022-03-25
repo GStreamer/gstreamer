@@ -2,7 +2,7 @@ exe = executable('gst-plugin-scanner',
   'gst-plugin-scanner.c',
   c_args : gst_c_args,
   include_directories : [configinc],
-  dependencies : [gobject_dep, gmodule_dep, glib_dep, mathlib, gst_dep],
+  dependencies : [gst_dep, mathlib, gmodule_dep,],
   install_dir : helpers_install_dir,
   install: true,
 )
@@ -17,7 +17,7 @@ if bashcomp_found
     'gst-completion-helper.c',
     c_args : gst_c_args,
     include_directories : [configinc],
-    dependencies : [gobject_dep, glib_dep, gst_dep],
+    dependencies : [gst_dep],
     install_dir : helpers_install_dir,
     install: true,
   )
@@ -114,7 +114,7 @@ if have_ptp
   exe = executable('gst-ptp-helper', 'gst-ptp-helper.c',
     c_args : gst_c_args,
     include_directories : [configinc, libsinc],
-    dependencies : [gio_dep, gobject_dep, glib_dep, mathlib, gst_dep, cap_dep],
+    dependencies : [gst_dep, gio_dep, mathlib, cap_dep],
     install_dir : helpers_install_dir,
     install : true)
 

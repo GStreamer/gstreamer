@@ -12,9 +12,6 @@ if soup_opt.disabled()
   subdir_done()
 endif
 
-gmodule_dep = dependency('gmodule-2.0', fallback: ['glib', 'libgmodule_dep'])
-gobject_dep = dependency('gobject-2.0', fallback: ['glib', 'libgobject_dep'])
-
 libdl_dep = cc.find_library('dl', required: false)
 
 static_args = []
@@ -50,7 +47,7 @@ soup_library_kwargs = {
   'install' : true,
   'install_dir' : plugins_install_dir,
 }
-soup_library_deps = [gst_dep, gstbase_dep, gsttag_dep, gmodule_dep, gobject_dep, gio_dep, libdl_dep]
+soup_library_deps = [gst_dep, gstbase_dep, gsttag_dep, gmodule_dep, gio_dep, libdl_dep]
 soup_library_c_args = gst_plugins_good_args
 
 if default_library in ['shared', 'both']

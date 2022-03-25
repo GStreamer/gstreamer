@@ -187,7 +187,7 @@ else
   cdata.set('DISABLE_ORC', 1)
 endif
 
-gmodule_dep = dependency('gmodule-2.0', fallback : ['glib', 'libgmodule_dep'])
+gmodule_dep = dependency('gmodule-2.0', version: glib_req)
 
 if gmodule_dep.version().version_compare('< 2.67.4')
   cdata.set('g_memdup2(ptr,sz)', '(G_LIKELY(((guint64)(sz)) < G_MAXUINT)) ? g_memdup(ptr,sz) : (g_abort(),NULL)')

@@ -46,7 +46,7 @@ gstvulkan_plugin = library('gstvulkan',
   objc_args : gst_plugins_bad_args,
   link_args : noseh_link_args,
   include_directories : [configinc],
-  dependencies : [gio_dep, gstvideo_dep, gstbase_dep, gstvulkan_dep, vulkan_dep],
+  dependencies : [gstvideo_dep, gstbase_dep, gstvulkan_dep, vulkan_dep, gio_dep],
   install : true,
   install_dir : plugins_install_dir,
 )

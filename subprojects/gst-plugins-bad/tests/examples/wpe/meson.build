@@ -8,7 +8,7 @@ foreach example : examples
     src_file,
     install: false,
     include_directories : [configinc],
-    dependencies : [glib_dep, gst_dep],
+    dependencies : [gst_dep],
     c_args : ['-DHAVE_CONFIG_H=1'],
   )
 endforeach

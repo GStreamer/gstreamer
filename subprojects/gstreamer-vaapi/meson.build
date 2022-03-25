@@ -21,7 +21,6 @@ else
 endif
 
 libva_req = ['>= 0.39.0', '!= 0.99.0']
-glib_req = '>= 2.44.0'
 libwayland_req = '>= 1.11.0'
 libdrm_req = '>= 2.4.98'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
@@ -95,7 +94,7 @@ libudev_dep = dependency('libudev', required: get_option('drm'))
 x11_dep = dependency('x11', required: get_option('x11'))
 xrandr_dep = dependency('xrandr', required: get_option('x11'))
 
-gmodule_dep = dependency('gmodule-2.0', required: get_option('egl'))
+gmodule_dep = dependency('gmodule-2.0')
 egl_dep = dependency('egl', required: get_option('egl'))
 glesv2_dep = dependency('glesv2', required: false)
 
@@ -139,8 +138,7 @@ USE_AV1_DECODER = libva_dep.version().version_compare('>= 1.10')
 USE_DRM = (libva_drm_dep.found()
     and libdrm_dep.found()
     and libudev_dep.found())
-USE_EGL = (gmodule_dep.found()
-    and egl_dep.found()
+USE_EGL = (egl_dep.found()
     and GLES_VERSION_MASK != 0)
 USE_WAYLAND = (libva_wayland_dep.found()
     and wayland_client_dep.found()

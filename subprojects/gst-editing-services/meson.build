@@ -115,7 +115,8 @@ gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
 gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : get_option('validate'),
   fallback : ['gst-devtools', 'validate_dep'])
 
-gio_dep = dependency('gio-2.0', version: glib_req, fallback: ['glib', 'libgio_dep'])
+gio_dep = dependency('gio-2.0', version: glib_req)
+gmodule_dep = dependency('gmodule-2.0')
 libxml_dep = dependency('libxml-2.0', required: get_option('xptv'))
 cdata.set('DISABLE_XPTV', not libxml_dep.found())
 
@@ -196,7 +197,6 @@ elif build_gir
           pylib_suffix = 'dylib'
         endif
 
-        gmodule_dep = dependency('gmodule-2.0')
         libges_deps = libges_deps + [python_dep, gmodule_dep]
         has_python = true
         message('python_abi_flags = @0@'.format(python_abi_flags))
