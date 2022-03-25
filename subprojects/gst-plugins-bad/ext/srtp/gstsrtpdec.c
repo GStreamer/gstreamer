@@ -229,6 +229,8 @@ struct _GstSrtpDecSsrcStream
   GstSrtpCipherType rtcp_cipher;
   GstSrtpAuthType rtcp_auth;
   GArray *keys;
+  guint recv_count;
+  guint recv_drop_count;
 };
 
 #ifdef HAVE_SRTP2
@@ -435,10 +437,11 @@ gst_srtp_dec_create_stats (GstSrtpDec * filter)
 
   if (filter->session) {
     GHashTableIter iter;
-    gpointer key;
+    gpointer key, value;
 
     g_hash_table_iter_init (&iter, filter->streams);
-    while (g_hash_table_iter_next (&iter, &key, NULL)) {
+    while (g_hash_table_iter_next (&iter, &key, &value)) {
+      GstSrtpDecSsrcStream *stream = value;
       GstStructure *ss;
       guint32 ssrc = GPOINTER_TO_UINT (key);
       srtp_err_status_t status;
@@ -450,7 +453,9 @@ gst_srtp_dec_create_stats (GstSrtpDec * filter)
       }
 
       ss = gst_structure_new ("application/x-srtp-stream",
-          "ssrc", G_TYPE_UINT, ssrc, "roc", G_TYPE_UINT, roc, NULL);
+          "ssrc", G_TYPE_UINT, ssrc, "roc", G_TYPE_UINT, roc, "recv-count",
+          G_TYPE_UINT, stream->recv_count, "recv-drop-count", G_TYPE_UINT,
+          stream->recv_drop_count, NULL);
 
       g_value_take_boxed (&v, ss);
       gst_value_array_append_value (&va, &v);
@@ -458,6 +463,11 @@ gst_srtp_dec_create_stats (GstSrtpDec * filter)
   }
 
   gst_structure_take_value (s, "streams", &va);
+  gst_structure_set (s, "recv-count", G_TYPE_UINT, filter->recv_count, NULL);
+  gst_structure_set (s, "recv-drop-count", G_TYPE_UINT,
+      filter->recv_drop_count, NULL);
+  GST_LOG_OBJECT (filter, "stats: recv-count %u recv-drop-count %u",
+      filter->recv_count, filter->recv_drop_count);
   g_value_unset (&v);
 
   return s;
@@ -1325,11 +1335,12 @@ gst_srtp_dec_decode_buffer (GstSrtpDec * filter, GstPad * pad, GstBuffer * buf,
   GstMapInfo map;
   srtp_err_status_t err;
   gint size;
+  GstSrtpDecSsrcStream *stream;
 
   GST_LOG_OBJECT (pad, "Received %s buffer of size %" G_GSIZE_FORMAT
       " with SSRC = %u", is_rtcp ? "RTCP" : "RTP", gst_buffer_get_size (buf),
       ssrc);
-
+  filter->recv_count++;
   /* Change buffer to remove protection */
   buf = gst_buffer_make_writable (buf);
 
@@ -1342,7 +1353,7 @@ unprotect:
 
   if (is_rtcp) {
 #ifdef HAVE_SRTP2
-    GstSrtpDecSsrcStream *stream = find_stream_by_ssrc (filter, ssrc);
+    stream = find_stream_by_ssrc (filter, ssrc);
 
     err = srtp_unprotect_rtcp_mki (filter->session, map.data, &size,
         stream && stream->keys);
@@ -1381,7 +1392,7 @@ unprotect:
 
 #ifdef HAVE_SRTP2
     {
-      GstSrtpDecSsrcStream *stream = find_stream_by_ssrc (filter, ssrc);
+      stream = find_stream_by_ssrc (filter, ssrc);
 
       err = srtp_unprotect_mki (filter->session, map.data, &size,
           stream && stream->keys);
@@ -1390,7 +1401,12 @@ unprotect:
     err = srtp_unprotect (filter->session, map.data, &size);
 #endif
   }
-
+  stream = find_stream_by_ssrc (filter, ssrc);
+  if (stream == NULL) {
+    GST_WARNING_OBJECT (filter, "Could not find matching stream, dropping");
+    goto err;
+  }
+  stream->recv_count++;
   /* Signal user depending on type of error */
   switch (err) {
     case srtp_err_status_ok:
@@ -1399,20 +1415,14 @@ unprotect:
     case srtp_err_status_replay_fail:
       GST_DEBUG_OBJECT (filter,
           "Dropping replayed packet, probably retransmission");
+      stream->recv_drop_count++;
       goto err;
     case srtp_err_status_replay_old:
       GST_DEBUG_OBJECT (filter,
           "Dropping replayed old packet, probably retransmission");
+      stream->recv_drop_count++;
       goto err;
     case srtp_err_status_key_expired:{
-      GstSrtpDecSsrcStream *stream;
-
-      /* Check we have an existing stream to rekey */
-      stream = find_stream_by_ssrc (filter, ssrc);
-      if (stream == NULL) {
-        GST_WARNING_OBJECT (filter, "Could not find matching stream, dropping");
-        goto err;
-      }
 
       GST_OBJECT_UNLOCK (filter);
       stream = request_key_with_signal (filter, ssrc, SIGNAL_HARD_LIMIT);
@@ -1428,21 +1438,24 @@ unprotect:
     }
     case srtp_err_status_auth_fail:
       GST_WARNING_OBJECT (filter, "Error authentication packet, dropping");
+      stream->recv_drop_count++;
       goto err;
     case srtp_err_status_cipher_fail:
       GST_WARNING_OBJECT (filter, "Error while decrypting packet, dropping");
+      stream->recv_drop_count++;
       goto err;
     default:
       GST_WARNING_OBJECT (pad,
           "Unable to unprotect buffer (unprotect failed code %d)", err);
+      stream->recv_drop_count++;
       goto err;
   }
-
   gst_buffer_unmap (buf, &map);
   gst_buffer_set_size (buf, size);
   return TRUE;
 
 err:
+  filter->recv_drop_count++;
   gst_buffer_unmap (buf, &map);
   return FALSE;
 }
@@ -1541,6 +1554,8 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
 
       filter->rtp_has_segment = FALSE;
       filter->rtcp_has_segment = FALSE;
+      filter->recv_count = 0;
+      filter->recv_drop_count = 0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -1560,7 +1575,6 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
       gst_srtp_dec_clear_streams (filter);
       g_hash_table_unref (filter->streams);
       filter->streams = NULL;
-
 #ifndef HAVE_SRTP2
       g_hash_table_unref (filter->streams_roc_changed);
       filter->streams_roc_changed = NULL;
