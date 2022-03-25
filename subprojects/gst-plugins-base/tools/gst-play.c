@@ -1636,8 +1636,8 @@ main (int argc, char **argv)
     {"quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet,
         N_("Do not print any output (apart from errors)"), NULL},
     {"use-playbin3", 0, 0, G_OPTION_ARG_NONE, &use_playbin3,
-          N_("Use playbin3 pipeline")
-          N_("(default varies depending on 'USE_PLAYBIN' env variable)"),
+          N_("Use playbin3 pipeline"
+              "(default varies depending on 'USE_PLAYBIN' env variable)"),
         NULL},
     {"wait-on-eos", 0, 0, G_OPTION_ARG_NONE, &wait_on_eos,
           N_
