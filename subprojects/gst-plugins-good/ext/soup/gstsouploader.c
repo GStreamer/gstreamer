@@ -28,10 +28,12 @@
 #if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
 #define GST_WINAPI_ONLY_APP
 #endif
-#endif
+#endif /* G_OS_WIN32 */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_soup_debug);
 #define GST_CAT_DEFAULT gst_soup_debug
+
+#ifndef STATIC_SOUP
 
 /* G_OS_WIN32 is handled separately below */
 #ifdef __APPLE__
@@ -165,7 +167,7 @@ gst_soup_load_library (void)
 
     g_clear_pointer (&handle, dlclose);
   }
-#else
+#else /* !HAVE_RTLD_NOLOAD */
 
 #ifdef G_OS_WIN32
 
@@ -206,7 +208,7 @@ gst_soup_load_library (void)
       }
     }
   }
-#else
+#else /* !G_OS_WIN32 */
   libsoup_sonames[0] = LIBSOUP_3_SONAME;
   libsoup_sonames[1] = LIBSOUP_2_SONAME;
 #endif /* G_OS_WIN32 */
@@ -290,13 +292,16 @@ gst_soup_load_library (void)
   return vtable->loaded;
 }
 
+#endif /* !STATIC_SOUP */
+
 guint
 gst_soup_loader_get_api_version (void)
 {
 #ifdef STATIC_SOUP
   return STATIC_SOUP;
-#endif
+#else
   return gst_soup_vtable.lib_version;
+#endif
 }
 
 SoupSession *
@@ -382,38 +387,49 @@ gst_soup_uri_new (const char *uri_string)
 void
 gst_soup_uri_free (GstSoupUri * uri)
 {
-#if GLIB_CHECK_VERSION(2, 66, 0)
+#if (defined(STATIC_SOUP) && STATIC_SOUP == 3) || (!defined(STATIC_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
   if (uri->uri) {
     g_uri_unref (uri->uri);
   }
 #endif
+
+#if defined(STATIC_SOUP)
+#if STATIC_SOUP == 2
   if (uri->soup_uri) {
-#if defined(STATIC_SOUP) && STATIC_SOUP == 2
     soup_uri_free (uri->soup_uri);
-#else
+  }
+#endif
+#else /* !STATIC_SOUP */
+  if (uri->soup_uri) {
     g_assert (gst_soup_vtable._soup_uri_free_2 != NULL);
     gst_soup_vtable._soup_uri_free_2 (uri->soup_uri);
-#endif
   }
+#endif /* STATIC_SOUP */
   g_free (uri);
 }
 
 char *
 gst_soup_uri_to_string (GstSoupUri * uri)
 {
-#if GLIB_CHECK_VERSION(2, 66, 0)
+#if (defined(STATIC_SOUP) && STATIC_SOUP == 3) || (!defined(STATIC_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
   if (uri->uri) {
     return g_uri_to_string_partial (uri->uri, G_URI_HIDE_PASSWORD);
   }
 #endif
+
+#if defined(STATIC_SOUP)
+#if STATIC_SOUP == 2
   if (uri->soup_uri) {
-#if defined(STATIC_SOUP) && STATIC_SOUP == 2
     return soup_uri_to_string (uri->soup_uri, FALSE);
-#else
+  }
+#endif
+#else /* !STATIC_SOUP */
+  if (uri->soup_uri) {
     g_assert (gst_soup_vtable._soup_uri_to_string_2 != NULL);
     return gst_soup_vtable._soup_uri_to_string_2 (uri->soup_uri, FALSE);
-#endif
   }
+#endif /* STATIC_SOUP */
+
   g_assert_not_reached ();
   return NULL;
 }
