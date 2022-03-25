@@ -1014,11 +1014,14 @@ thread_func (gpointer user_data)
           NULL);
       g_object_unref (proxy_resolver);
     }
+#if !defined(STATIC_SOUP) || STATIC_SOUP == 2
   } else {
     g_object_set (session->session, "ssl-strict", src->ssl_strict, NULL);
     if (src->proxy != NULL) {
+      /* Need #if because there's no proxy->soup_uri when STATIC_SOUP == 3 */
       g_object_set (session->session, "proxy-uri", src->proxy->soup_uri, NULL);
     }
+#endif
   }
 
   gst_soup_util_log_setup (session->session, src->log_level,
@@ -1612,6 +1615,8 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
     return GST_FLOW_OK;
   }
 
+  /* SOUP_STATUS_IS_TRANSPORT_ERROR was replaced with GError in libsoup-3.0 */
+#if !defined(STATIC_SOUP) || STATIC_SOUP == 2
   if (SOUP_STATUS_IS_TRANSPORT_ERROR (status_code)) {
     switch (status_code) {
       case SOUP_STATUS_CANT_RESOLVE:
@@ -1647,6 +1652,7 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
     }
     return GST_FLOW_OK;
   }
+#endif
 
   if (SOUP_STATUS_IS_CLIENT_ERROR (status_code) ||
       SOUP_STATUS_IS_REDIRECTION (status_code) ||
@@ -1770,8 +1776,20 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
         G_CALLBACK (gst_soup_http_src_authenticate_cb), src);
   }
 
-  _soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS |
-      (src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT));
+  {
+    SoupMessageFlags flags =
+        src->automatic_redirect ? 0 : SOUP_MESSAGE_NO_REDIRECT;
+
+    /* SOUP_MESSAGE_OVERWRITE_CHUNKS is gone in libsoup-3.0, and
+     * soup_message_body_set_accumulate() requires SoupMessageBody, which
+     * can only be fetched from SoupServerMessage, not SoupMessage */
+#if !defined(STATIC_SOUP) || STATIC_SOUP == 2
+    if (gst_soup_loader_get_api_version () == 2)
+      flags |= SOUP_MESSAGE_OVERWRITE_CHUNKS;
+#endif
+
+    _soup_message_set_flags (src->msg, flags);
+  }
 
   if (src->automatic_redirect) {
     g_signal_connect (src->msg, "restarted",
