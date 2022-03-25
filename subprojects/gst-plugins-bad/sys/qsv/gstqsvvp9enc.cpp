@@ -30,7 +30,7 @@
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #else
-#include <gst/va/gstvadisplay_drm.h>
+#include <gst/va/gstva.h>
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (gst_qsv_vp9_enc_debug);
@@ -948,6 +948,13 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   gst_caps_set_features_simple (d3d11_caps, caps_features);
   gst_caps_append (d3d11_caps, sink_caps);
   sink_caps = d3d11_caps;
+#else
+  GstCaps *va_caps = gst_caps_copy (sink_caps);
+  GstCapsFeatures *caps_features =
+      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VA, nullptr);
+  gst_caps_set_features_simple (va_caps, caps_features);
+  gst_caps_append (va_caps, sink_caps);
+  sink_caps = va_caps;
 #endif
 
   std::string src_caps_str = "video/x-vp9";

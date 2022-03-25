@@ -854,8 +854,6 @@ gst_qsv_encoder_prepare_d3d11_pool (GstQsvEncoder * self,
   GstD3D11AllocationParams *params;
   GstD3D11Device *device = GST_D3D11_DEVICE_CAST (priv->device);
 
-  GST_DEBUG_OBJECT (self, "Use d3d11 memory pool");
-
   priv->internal_pool = gst_d3d11_buffer_pool_new (device);
   config = gst_buffer_pool_get_config (priv->internal_pool);
   params = gst_d3d11_allocation_params_new (device, aligned_info,
@@ -870,34 +868,57 @@ gst_qsv_encoder_prepare_d3d11_pool (GstQsvEncoder * self,
 
   return TRUE;
 }
-#endif
-
+#else
 static gboolean
-gst_qsv_encoder_prepare_system_pool (GstQsvEncoder * self,
+gst_qsv_encoder_prepare_va_pool (GstQsvEncoder * self,
     GstCaps * caps, GstVideoInfo * aligned_info)
 {
   GstQsvEncoderPrivate *priv = self->priv;
+  GstAllocator *allocator;
   GstStructure *config;
+  GArray *formats;
+  GstAllocationParams params;
+  GstVaDisplay *display = GST_VA_DISPLAY (priv->device);
 
-  GST_DEBUG_OBJECT (self, "Use system memory pool");
+  formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+  g_array_append_val (formats, GST_VIDEO_INFO_FORMAT (aligned_info));
 
-  priv->internal_pool = gst_video_buffer_pool_new ();
+  allocator = gst_va_allocator_new (display, formats);
+  if (!allocator) {
+    GST_ERROR_OBJECT (self, "Failed to create allocator");
+    return FALSE;
+  }
+
+  gst_allocation_params_init (&params);
+
+  priv->internal_pool = gst_va_pool_new_with_config (caps,
+      GST_VIDEO_INFO_SIZE (aligned_info), 0, 0,
+      VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER, GST_VA_FEATURE_DISABLED,
+      allocator, &params);
+  gst_object_unref (allocator);
+
+
+  if (!priv->internal_pool) {
+    GST_ERROR_OBJECT (self, "Failed to create va pool");
+    return FALSE;
+  }
+
   config = gst_buffer_pool_get_config (priv->internal_pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_set_params (config,
-      caps, GST_VIDEO_INFO_SIZE (aligned_info), 0, 0);
-
+  gst_buffer_pool_config_set_params (config, caps,
+      GST_VIDEO_INFO_SIZE (aligned_info), 0, 0);
   gst_buffer_pool_set_config (priv->internal_pool, config);
   gst_buffer_pool_set_active (priv->internal_pool, TRUE);
 
   return TRUE;
 }
+#endif
 
 /* Prepare internal pool, which is used to allocate fallback buffer
  * when upstream buffer is not directly accessible by QSV */
 static gboolean
 gst_qsv_encoder_prepare_pool (GstQsvEncoder * self, GstCaps * caps,
-    GstVideoInfo * aligned_info, mfxU16 * io_pattern)
+    GstVideoInfo * aligned_info)
 {
   GstQsvEncoderPrivate *priv = self->priv;
   gboolean ret = FALSE;
@@ -910,21 +931,12 @@ gst_qsv_encoder_prepare_pool (GstQsvEncoder * self, GstCaps * caps,
 
   aligned_caps = gst_video_info_to_caps (aligned_info);
 
-  /* TODO: Add Linux video memory (VA/DMABuf) support */
 #ifdef G_OS_WIN32
-  priv->mem_type = GST_QSV_VIDEO_MEMORY | GST_QSV_ENCODER_IN_MEMORY;
-  *io_pattern = MFX_IOPATTERN_IN_VIDEO_MEMORY;
-
   ret = gst_qsv_encoder_prepare_d3d11_pool (self, aligned_caps, aligned_info);
+#else
+  ret = gst_qsv_encoder_prepare_va_pool (self, aligned_caps, aligned_info);
 #endif
 
-  if (!ret) {
-    priv->mem_type = GST_QSV_SYSTEM_MEMORY | GST_QSV_ENCODER_IN_MEMORY;
-    *io_pattern = MFX_IOPATTERN_IN_SYSTEM_MEMORY;
-
-    ret = gst_qsv_encoder_prepare_system_pool (self,
-        aligned_caps, aligned_info);
-  }
   gst_caps_unref (aligned_caps);
 
   return ret;
@@ -976,8 +988,10 @@ gst_qsv_encoder_init_encode_session (GstQsvEncoder * self)
       GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_INTERLACE_MODE (info),
       frame_info->Width, frame_info->Height);
 
-  if (!gst_qsv_encoder_prepare_pool (self, caps, &priv->aligned_info,
-          &param.IOPattern)) {
+  /* Always video memory, even when upstream is non-hardware element */
+  priv->mem_type = GST_QSV_VIDEO_MEMORY | GST_QSV_ENCODER_IN_MEMORY;
+  param.IOPattern = MFX_IOPATTERN_IN_VIDEO_MEMORY;
+  if (!gst_qsv_encoder_prepare_pool (self, caps, &priv->aligned_info)) {
     GST_ERROR_OBJECT (self, "Failed to prepare pool");
     goto error;
   }
@@ -1428,18 +1442,20 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   return TRUE;
 }
 #else
-/* TODO: Add support VA/DMABuf */
 static gboolean
 gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 {
   GstQsvEncoder *self = GST_QSV_ENCODER (encoder);
   GstQsvEncoderPrivate *priv = self->priv;
   GstVideoInfo info;
+  GstAllocator *allocator = nullptr;
   GstBufferPool *pool;
   GstCaps *caps;
   guint size;
   GstStructure *config;
   GstVideoAlignment align;
+  GstAllocationParams params;
+  GArray *formats;
 
   gst_query_parse_allocation (query, &caps, nullptr);
   if (!caps) {
@@ -1452,7 +1468,31 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
     return FALSE;
   }
 
-  pool = gst_video_buffer_pool_new ();
+  gst_allocation_params_init (&params);
+
+  formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+  g_array_append_val (formats, GST_VIDEO_INFO_FORMAT (&info));
+
+  allocator = gst_va_allocator_new (GST_VA_DISPLAY (priv->device), formats);
+  if (!allocator) {
+    GST_ERROR_OBJECT (self, "Failed to create allocator");
+    return FALSE;
+  }
+
+  /* Will not use derived image
+   * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1110
+   */
+  pool = gst_va_pool_new_with_config (caps,
+      GST_VIDEO_INFO_SIZE (&info), priv->surface_pool->len, 0,
+      VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER, GST_VA_FEATURE_DISABLED,
+      allocator, &params);
+
+  if (!pool) {
+    GST_ERROR_OBJECT (self, "Failed to create va pool");
+    gst_object_unref (allocator);
+
+    return FALSE;
+  }
 
   gst_video_alignment_reset (&align);
   align.padding_right = GST_VIDEO_INFO_WIDTH (&priv->aligned_info) -
@@ -1464,21 +1504,29 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-  gst_video_info_align (&info, &align);
   gst_buffer_pool_config_set_video_alignment (config, &align);
 
-  size = GST_VIDEO_INFO_SIZE (&info);
   gst_buffer_pool_config_set_params (config,
-      caps, size, priv->surface_pool->len, 0);
+      caps, GST_VIDEO_INFO_SIZE (&info), priv->surface_pool->len, 0);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
-    GST_WARNING_OBJECT (self, "Failed to set pool config");
+    GST_ERROR_OBJECT (self, "Failed to set pool config");
+    gst_clear_object (&allocator);
     gst_object_unref (pool);
     return FALSE;
   }
 
+  if (allocator)
+    gst_query_add_allocation_param (query, allocator, &params);
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
+
   gst_query_add_allocation_pool (query, pool, size, priv->surface_pool->len, 0);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
+
+  gst_clear_object (&allocator);
   gst_object_unref (pool);
 
   return TRUE;

@@ -87,9 +87,69 @@ static GstBuffer *
 gst_qsv_va_allocator_upload (GstQsvAllocator * allocator,
     const GstVideoInfo * info, GstBuffer * buffer, GstBufferPool * pool)
 {
-  GST_ERROR_OBJECT (allocator, "Not implemented");
+  GstVideoFrame src_frame, dst_frame;
+  VASurfaceID surface;
+  GstBuffer *dst_buf;
+  GstFlowReturn ret;
 
-  return nullptr;
+  /* TODO: handle buffer from different VA display */
+  surface = gst_va_buffer_get_surface (buffer);
+  if (surface != VA_INVALID_ID)
+    return gst_buffer_ref (buffer);
+
+  ret = gst_buffer_pool_acquire_buffer (pool, &dst_buf, nullptr);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (allocator, "Failed to acquire buffer");
+    return nullptr;
+  }
+
+  if (!gst_video_frame_map (&src_frame, info, buffer, GST_MAP_READ)) {
+    GST_WARNING_OBJECT (allocator, "Failed to map src frame");
+    gst_buffer_unref (dst_buf);
+    return nullptr;
+  }
+
+  if (!gst_video_frame_map (&dst_frame, info, dst_buf, GST_MAP_WRITE)) {
+    GST_WARNING_OBJECT (allocator, "Failed to map src frame");
+    gst_video_frame_unmap (&src_frame);
+    gst_buffer_unref (dst_buf);
+    return nullptr;
+  }
+
+  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&src_frame); i++) {
+    guint src_width_in_bytes, src_height;
+    guint dst_width_in_bytes, dst_height;
+    guint width_in_bytes, height;
+    guint src_stride, dst_stride;
+    guint8 *src_data, *dst_data;
+
+    src_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&src_frame, i) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&src_frame, i);
+    src_height = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, i);
+    src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&src_frame, i);
+
+    dst_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&dst_frame, i) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&src_frame, i);
+    dst_height = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, i);
+    dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&dst_frame, i);
+
+    width_in_bytes = MIN (src_width_in_bytes, dst_width_in_bytes);
+    height = MIN (src_height, dst_height);
+
+    src_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&src_frame, i);
+    dst_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&dst_frame, i);
+
+    for (guint j = 0; j < height; j++) {
+      memcpy (dst_data, src_data, width_in_bytes);
+      dst_data += dst_stride;
+      src_data += src_stride;
+    }
+  }
+
+  gst_video_frame_unmap (&dst_frame);
+  gst_video_frame_unmap (&src_frame);
+
+  return dst_buf;
 }
 
 static GstBuffer *
