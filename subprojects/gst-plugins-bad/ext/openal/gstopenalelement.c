@@ -30,7 +30,7 @@
 #include "gstopenalsink.h"
 #include "gstopenalsrc.h"
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY (openal_debug);
 

@@ -28,7 +28,7 @@
 #include <gmodule.h>
 #include <gst/gst.h>
 #include <gst/glib-compat-private.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/video/video.h>
 #include <gst/video/navigation.h>
 #include <gst/tag/tag.h>

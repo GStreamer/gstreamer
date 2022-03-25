@@ -112,7 +112,7 @@
 
 #include "gstpluginloader.h"
 
-#include "gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 
 #include "gst.h"
 #include "glib-compat-private.h"

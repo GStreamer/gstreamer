@@ -285,7 +285,7 @@
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/tag/tag.h>
 #include <gst/net/gstnet.h>
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 #include "gstdashdemux.h"
 #include "gstdash_debug.h"
 

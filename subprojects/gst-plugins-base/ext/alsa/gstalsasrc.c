@@ -48,7 +48,7 @@
 #include "gstalsaelements.h"
 #include "gstalsasrc.h"
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 #ifndef ESTRPIPE
 #define ESTRPIPE EPIPE

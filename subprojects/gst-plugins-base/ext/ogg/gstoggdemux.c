@@ -40,7 +40,7 @@
 #endif
 
 #include <string.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
 

@@ -42,7 +42,7 @@
 
 #include <string.h>
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 #include "gstv4l2elements.h"
 #include "gstv4l2object.h"

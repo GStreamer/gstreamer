@@ -61,7 +61,7 @@
 #include "gstv4l2tuner.h"
 #include "gstv4l2vidorient.h"
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug

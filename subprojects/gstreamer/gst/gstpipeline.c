@@ -80,7 +80,7 @@
 
 #include "gst_private.h"
 #include "gsterror.h"
-#include "gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 
 #include "gstpipeline.h"
 #include "gstinfo.h"

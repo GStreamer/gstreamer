@@ -48,7 +48,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 #define NO_LEGACY_MIXER
 #include "oss4-audio.h"

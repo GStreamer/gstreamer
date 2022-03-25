@@ -146,7 +146,7 @@
 
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
 #include "gstcamerabin2.h"
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/glib-compat-private.h>
 

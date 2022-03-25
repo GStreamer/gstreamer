@@ -24,7 +24,7 @@
 #include "gstplaysinkvideoconvert.h"
 
 #include <gst/pbutils/pbutils.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_sink_video_convert_debug);
 #define GST_CAT_DEFAULT gst_play_sink_video_convert_debug

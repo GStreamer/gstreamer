@@ -43,7 +43,7 @@
 #include <gstv4l2bufferpool.h>
 
 #include "gstv4l2object.h"
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 #include <gst/glib-compat-private.h>
 
 GST_DEBUG_CATEGORY_STATIC (v4l2bufferpool_debug);

@@ -45,7 +45,7 @@
 #include "gstparse.h"
 #include "gstvalue.h"
 #include "gstquark.h"
-#include "gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "glib-compat-private.h"
 #include <math.h>
 

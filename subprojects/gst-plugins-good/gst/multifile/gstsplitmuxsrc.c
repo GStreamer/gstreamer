@@ -50,7 +50,7 @@
 #include "gstsplitmuxsrc.h"
 #include "gstsplitutils.h"
 
-#include "../../gst-libs/gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY (splitmux_debug);
 #define GST_CAT_DEFAULT splitmux_debug

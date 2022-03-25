@@ -37,7 +37,7 @@
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/riff/riff-media.h>
 #include <gst/tag/tag.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/video/video.h>
 #include <stdio.h>
 #include <stdlib.h>

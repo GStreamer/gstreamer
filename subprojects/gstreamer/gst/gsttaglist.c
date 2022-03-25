@@ -37,7 +37,7 @@
 #define GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS
 #include "gst_private.h"
 #include "math-compat.h"
-#include "gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "gsttaglist.h"
 #include "gstinfo.h"
 #include "gstvalue.h"

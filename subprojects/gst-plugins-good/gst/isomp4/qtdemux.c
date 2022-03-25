@@ -50,7 +50,7 @@
 #include "config.h"
 #endif
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 #include <glib/gprintf.h>
 #include <gst/base/base.h>

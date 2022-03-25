@@ -40,7 +40,7 @@
 #include "config.h"
 #endif
 
-#include "../../gst/gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "gstcapsfilter.h"
 #include "gstcoreelementselements.h"
 

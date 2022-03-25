@@ -63,7 +63,7 @@
 
 #include <string.h>
 #include "gstlamemp3enc.h"
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 /* lame < 3.98 */
 #ifndef HAVE_LAME_SET_VBR_QUALITY

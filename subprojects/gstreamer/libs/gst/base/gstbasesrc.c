@@ -152,7 +152,7 @@
 #include <gst/glib-compat-private.h>
 
 #include "gstbasesrc.h"
-#include <gst/gst-i18n-lib.h>
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_src_debug);
 #define GST_CAT_DEFAULT gst_base_src_debug

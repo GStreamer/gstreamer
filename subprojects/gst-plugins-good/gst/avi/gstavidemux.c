@@ -50,7 +50,7 @@
 #include "gstavielements.h"
 #include "gstavidemux.h"
 #include "avi-ids.h"
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/base/gstadapter.h>
 #include <gst/tag/tag.h>
 

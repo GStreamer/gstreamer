@@ -39,7 +39,7 @@
 #include "gstv4l2tuner.h"
 #include "gstv4l2colorbalance.h"
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 #include <gst/video/video.h>
 #include <gst/allocators/gstdmabuf.h>

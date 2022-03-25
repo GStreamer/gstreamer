@@ -43,7 +43,7 @@
 #include "config.h"
 #endif
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include "gsttcpelements.h"
 #include "gsttcpclientsrc.h"
 #include "gsttcpsrcstats.h"

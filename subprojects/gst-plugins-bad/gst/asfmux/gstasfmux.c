@@ -75,7 +75,7 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include "gstasfmux.h"
 
 #define DEFAULT_SIMPLE_INDEX_TIME_INTERVAL G_GUINT64_CONSTANT (10000000)

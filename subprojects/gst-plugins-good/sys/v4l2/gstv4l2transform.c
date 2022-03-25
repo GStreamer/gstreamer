@@ -33,7 +33,7 @@
 #include "gstv4l2transform.h"
 
 #include <string.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 #define DEFAULT_PROP_DEVICE "/dev/video10"
 

@@ -119,7 +119,7 @@ that the demux object and its streams are not changed by anybody else.
 #endif
 
 #include "gstadaptivedemux.h"
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 #include <gst/base/gstadapter.h>
 
 GST_DEBUG_CATEGORY (adaptivedemux_debug);

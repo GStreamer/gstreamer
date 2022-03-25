@@ -79,7 +79,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "../../gst/gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

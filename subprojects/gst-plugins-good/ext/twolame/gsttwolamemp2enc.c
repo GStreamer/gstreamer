@@ -53,7 +53,7 @@
 
 #include "string.h"
 #include "gsttwolamemp2enc.h"
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug);
 #define GST_CAT_DEFAULT debug

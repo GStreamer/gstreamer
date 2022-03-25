@@ -22,7 +22,7 @@
 #endif
 
 #include <stdlib.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/audio/audio.h>
 
 #include "gstsfelements.h"

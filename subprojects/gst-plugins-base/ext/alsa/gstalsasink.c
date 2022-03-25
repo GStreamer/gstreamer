@@ -52,7 +52,7 @@
 #include "gstalsasink.h"
 
 #include <gst/audio/gstaudioiec61937.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 #ifndef ESTRPIPE
 #define ESTRPIPE EPIPE

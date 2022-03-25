@@ -30,7 +30,7 @@
 #include "gstadaptivedemux.h"
 #include "gstadaptivedemux-private.h"
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 #include <gst/app/gstappsrc.h>
 
 GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);

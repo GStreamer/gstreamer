@@ -101,7 +101,7 @@
 #include "gstquark.h"
 #include "gsttracerutils.h"
 #include "gstvalue.h"
-#include "gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "glib-compat-private.h"
 
 #ifndef GST_DISABLE_GST_DEBUG

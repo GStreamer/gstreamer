@@ -141,7 +141,7 @@
 #include <string.h>
 
 #include "../../../gst/gst_private.h"
-#include "../../../gst/gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "../../../gst/glib-compat-private.h"
 #include "gstbasetransform.h"
 

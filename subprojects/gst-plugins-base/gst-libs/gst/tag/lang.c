@@ -38,7 +38,7 @@
 #define ISO_639_XML_PATH ISO_CODES_PREFIX "/share/xml/iso-codes/iso_639.xml"
 #define ISO_CODES_LOCALEDIR ISO_CODES_PREFIX "/share/locale"
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/gst.h>
 
 #include <string.h>

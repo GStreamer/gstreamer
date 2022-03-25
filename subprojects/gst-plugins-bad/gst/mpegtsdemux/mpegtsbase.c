@@ -37,7 +37,7 @@
 
 #include <glib.h>
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include "mpegtsbase.h"
 #include "gstmpegdesc.h"
 

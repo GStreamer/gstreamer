@@ -111,7 +111,7 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 /* Before 5.6 we map A to AC */
 #if !HAVE_V5_MINOR(6)

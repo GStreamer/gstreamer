@@ -77,7 +77,7 @@
 #include <stdlib.h>             /* atoi() */
 #endif
 #include <gst/gstelement.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include "gstsoupelements.h"
 #include "gstsouphttpsrc.h"
 #include "gstsouputils.h"

@@ -35,7 +35,7 @@
 
 #include <glib.h>
 #include <gst/basecamerabinsrc/gstbasecamerasrc.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 #include "camerabingeneral.h"
 

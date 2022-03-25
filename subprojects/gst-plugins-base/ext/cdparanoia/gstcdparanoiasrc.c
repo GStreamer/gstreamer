@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 #include "gstcdparanoiasrc.h"
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 enum
 {

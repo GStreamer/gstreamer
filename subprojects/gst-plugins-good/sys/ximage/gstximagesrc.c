@@ -47,7 +47,7 @@
 #include <X11/Xutil.h>
 
 #include <gst/gst.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/video/video.h>
 
 #include "gst/glib-compat-private.h"

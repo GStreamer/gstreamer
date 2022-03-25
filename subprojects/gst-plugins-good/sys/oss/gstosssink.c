@@ -69,7 +69,7 @@
 #include "gstossaudioelements.h"
 #include "gstosssink.h"
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug

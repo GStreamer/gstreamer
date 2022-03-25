@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/riff/riff-read.h>
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 #include "gstasfelements.h"
 

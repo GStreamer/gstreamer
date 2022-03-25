@@ -60,7 +60,7 @@
 #include "config.h"
 #endif
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -105,7 +105,7 @@ By using the api_lock a thread is protected against other API calls.
 #include "gstadaptivedemux.h"
 #include "gstadaptivedemux-private.h"
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 #include <gst/base/gstadapter.h>
 #include <gst/app/gstappsrc.h>
 

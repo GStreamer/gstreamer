@@ -57,7 +57,7 @@
 
 #include <glib/gstdio.h>
 
-#include "gst/gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "gst/glib-compat-private.h"
 
 #include <string.h>

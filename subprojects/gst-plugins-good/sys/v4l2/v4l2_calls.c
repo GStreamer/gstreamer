@@ -46,7 +46,7 @@
 #include "gstv4l2sink.h"
 #include "gstv4l2videodec.h"
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug

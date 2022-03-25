@@ -49,7 +49,7 @@
 #include "gstinfo.h"
 #include "gstregistry.h"
 
-#include "gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 
 #include <string.h>
 #include <glib.h>

@@ -27,7 +27,7 @@
 #include <locale.h>
 
 #include <gst/gst.h>
-#include <gst/gst-i18n-app.h>
+#include <glib/gi18n.h>
 #include <gst/audio/audio.h>
 #include <gst/video/video.h>
 #include <gst/pbutils/pbutils.h>

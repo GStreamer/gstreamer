@@ -74,7 +74,7 @@
 
 #include "gsttypefindelement.h"
 #include "gstcoreelementselements.h"
-#include "gst/gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "gst/base/gsttypefindhelper.h"
 
 #include <gst/gsttypefind.h>

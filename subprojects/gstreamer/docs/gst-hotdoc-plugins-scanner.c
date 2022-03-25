@@ -8,7 +8,7 @@
 #include <glib/gprintf.h>
 #include <gst/gst.h>
 #include <gio/gio.h>
-#include "gst/gst-i18n-app.h"
+#include <glib/gi18n.h>
 
 static GRegex *cleanup_caps_field = NULL;
 static void _add_object_details (GString * json, GString * other_types,

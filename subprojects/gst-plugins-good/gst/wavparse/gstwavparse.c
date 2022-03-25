@@ -55,7 +55,7 @@
 #include "gst/riff/riff-media.h"
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/pbutils/descriptions.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (wavparse_debug);
 #define GST_CAT_DEFAULT (wavparse_debug)

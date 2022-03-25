@@ -52,7 +52,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 #include <gst/audio/streamvolume.h>
 
 #define NO_LEGACY_MIXER

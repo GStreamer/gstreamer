@@ -36,7 +36,7 @@
 #include <string.h>
 
 #include "gstelements_private.h"
-#include "../../gst/gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 #include "gstidentity.h"
 #include "gstcoreelementselements.h"
 

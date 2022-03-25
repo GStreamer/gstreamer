@@ -112,7 +112,7 @@
 #include <gst/sdp/gstmikey.h>
 #include <gst/rtp/rtp.h>
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 #include "gstrtspelements.h"
 #include "gstrtspsrc.h"

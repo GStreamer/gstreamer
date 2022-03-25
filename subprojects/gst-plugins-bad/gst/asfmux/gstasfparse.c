@@ -25,7 +25,7 @@
 #include "gstasfparse.h"
 
 /* FIXME add this include
- * #include <gst/gst-i18n-plugin.h> */
+ * #include <glib/gi18n-lib.h> */
 
 GST_DEBUG_CATEGORY_STATIC (asfparse_debug);
 #define GST_CAT_DEFAULT asfparse_debug

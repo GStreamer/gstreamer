@@ -28,7 +28,7 @@
 #include <gst/pbutils/missing-plugins.h>
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 #include "resindvdbin.h"
 #include "resindvdsrc.h"

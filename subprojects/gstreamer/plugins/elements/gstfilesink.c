@@ -38,7 +38,7 @@
 #  include "config.h"
 #endif
 
-#include "../../gst/gst-i18n-lib.h"
+#include <glib/gi18n-lib.h>
 
 #include <gst/gst.h>
 #include <glib/gstdio.h>

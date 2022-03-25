@@ -53,7 +53,7 @@
 # include <unistd.h>            /* getpid on UNIX */
 #endif
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 #include "pbutils.h"
 #include "pbutils-private.h"

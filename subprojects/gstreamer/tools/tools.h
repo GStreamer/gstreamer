@@ -26,7 +26,7 @@
 #include <stdlib.h>
 
 #include <gst/gst.h>
-#include "gst/gst-i18n-app.h"
+#include <glib/gi18n.h>
 
 /*
  * This is a kind of hacky way to make all the tools use the same version code.

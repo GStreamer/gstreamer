@@ -34,7 +34,7 @@
 #include "gstv4l2h264codec.h"
 
 #include <string.h>
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_v4l2_h264_enc_debug);
 #define GST_CAT_DEFAULT gst_v4l2_h264_enc_debug

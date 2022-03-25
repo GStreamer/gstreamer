@@ -26,7 +26,7 @@
 #include "gstalsaelements.h"
 #include "gstalsadeviceprovider.h"
 
-#include <gst/gst-i18n-plugin.h>
+#include <glib/gi18n-lib.h>
 
 static gboolean
 plugin_init (GstPlugin * plugin)

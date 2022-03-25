@@ -40,7 +40,7 @@
 #include <gst/audio/audio.h>
 #include "gstaudiobasesrc.h"
 
-#include "gst/gst-i18n-plugin.h"
+#include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_audio_base_src_debug);
 #define GST_CAT_DEFAULT gst_audio_base_src_debug
