@@ -20,7 +20,7 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/va/gstvadisplay.h>
+#include <gst/va/gstva.h>
 #include "gstqsvallocator.h"
 
 G_BEGIN_DECLS

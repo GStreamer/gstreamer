@@ -26,7 +26,6 @@
 #include <string.h>
 
 #ifdef G_OS_WIN32
-#include <gst/d3d11/gstd3d11.h>
 #include "gstqsvallocator_d3d11.h"
 
 #include <wrl.h>
@@ -35,7 +34,6 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 #else
-#include <gst/va/gstvadisplay_drm.h>
 #include "gstqsvallocator_va.h"
 #endif /* G_OS_WIN32 */
 
@@ -243,13 +241,16 @@ gst_qsv_decoder_finalize (GObject * object)
 static void
 gst_qsv_decoder_set_context (GstElement * element, GstContext * context)
 {
-#ifdef G_OS_WIN32
   GstQsvDecoder *self = GST_QSV_DECODER (element);
   GstQsvDecoderClass *klass = GST_QSV_DECODER_GET_CLASS (element);
   GstQsvDecoderPrivate *priv = self->priv;
 
+#ifdef G_OS_WIN32
   gst_d3d11_handle_set_context_for_adapter_luid (element,
       context, klass->adapter_luid, (GstD3D11Device **) & priv->device);
+#else
+  gst_va_handle_set_context (element, context, klass->display_path,
+      (GstVaDisplay **) & priv->device);
 #endif
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
@@ -319,18 +320,13 @@ gst_qsv_decoder_open_platform_device (GstQsvDecoder * self)
   mfxStatus status;
   GstVaDisplay *display;
 
-  /* TODO: use GstVADisplay context sharing */
-  if (!priv->device) {
-    display = gst_va_display_drm_new_from_path (klass->display_path);
-    if (!display) {
-      GST_ERROR_OBJECT (self, "VA display is unavailable");
-      return FALSE;
-    }
-
-    priv->device = GST_OBJECT (display);
-  } else {
-    display = GST_VA_DISPLAY (priv->device);
+  if (!gst_va_ensure_element_data (GST_ELEMENT (self), klass->display_path,
+          (GstVaDisplay **) & priv->device)) {
+    GST_ERROR_OBJECT (self, "VA display is unavailable");
+    return FALSE;
   }
+
+  display = GST_VA_DISPLAY (priv->device);
 
   priv->allocator = gst_qsv_va_allocator_new (display);
 
@@ -1270,14 +1266,15 @@ gst_qsv_decoder_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 static gboolean
 gst_qsv_decoder_handle_context_query (GstQsvDecoder * self, GstQuery * query)
 {
-#ifdef G_OS_WIN32
   GstQsvDecoderPrivate *priv = self->priv;
 
+#ifdef G_OS_WIN32
   return gst_d3d11_handle_context_query (GST_ELEMENT (self), query,
       (GstD3D11Device *) priv->device);
+#else
+  return gst_va_handle_context_query (GST_ELEMENT (self), query,
+      (GstVaDisplay *) priv->device);
 #endif
-
-  return FALSE;
 }
 
 static gboolean
