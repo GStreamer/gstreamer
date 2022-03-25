@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <gst/va/gstva.h>
+#include <gst/va/va_fwd.h>
 #include <gst/video/video.h>
 #include <va/va.h>
 #include <va/va_drmcommon.h>

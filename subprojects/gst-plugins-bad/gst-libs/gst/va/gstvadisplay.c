@@ -41,6 +41,7 @@
 #endif
 
 #include "gstvadisplay.h"
+
 #include <va/va.h>
 
 GST_DEBUG_CATEGORY (gst_va_display_debug);

@@ -11,10 +11,10 @@
 
 #include <gtk/gtk.h>
 
-#include <gst/gst.h>
 #include <gst/app/gstappsink.h>
-#include <gst/video/video.h>
+#include <gst/gst.h>
 #include <gst/va/gstva.h>
+#include <gst/video/video.h>
 
 #include <va/va_x11.h>
 

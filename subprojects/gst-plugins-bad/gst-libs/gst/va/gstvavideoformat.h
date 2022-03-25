@@ -20,8 +20,8 @@
 
 #pragma once
 
-#include <gst/va/va_fwd.h>
-#include <gst/va/va-prelude.h>
+#include <gst/gst.h>
+#include <gst/va/gstva.h>
 #include <gst/video/video.h>
 #include <va/va.h>
 

@@ -24,8 +24,7 @@
 
 #include "gstvadecoder.h"
 
-#include <gst/va/gstvaallocator.h>
-#include <gst/va/gstvavideoformat.h>
+#include <gst/va/gstva.h>
 
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"

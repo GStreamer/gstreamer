@@ -33,6 +33,7 @@
 #endif
 
 #include "gstvadisplay_drm.h"
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/types.h>

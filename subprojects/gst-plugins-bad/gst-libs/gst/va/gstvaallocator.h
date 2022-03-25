@@ -28,11 +28,6 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstVaAllocator GstVaAllocator;
-typedef struct _GstVaAllocatorClass GstVaAllocatorClass;
-typedef struct _GstVaDmabufAllocator GstVaDmabufAllocator;
-typedef struct _GstVaDmabufAllocatorClass GstVaDmabufAllocatorClass;
-
 #define GST_TYPE_VA_DMABUF_ALLOCATOR (gst_va_dmabuf_allocator_get_type())
 #define GST_VA_DMABUF_ALLOCATOR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocator))
 #define GST_VA_DMABUF_ALLOCATOR_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VA_DMABUF_ALLOCATOR, GstVaDmabufAllocatorClass))

@@ -43,7 +43,7 @@
 #include "config.h"
 #endif
 
-#include <gst/va/gstvaallocator.h>
+#include <gst/va/gstva.h>
 
 #include "gstvaav1dec.h"
 #include "gstvabasedec.h"

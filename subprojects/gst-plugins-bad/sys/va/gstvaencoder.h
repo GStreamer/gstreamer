@@ -21,8 +21,8 @@
 
 #pragma once
 
+#include <gst/va/gstva.h>
 #include <gst/video/video.h>
-#include <gst/va/gstvadisplay.h>
 #include <va/va.h>
 
 G_BEGIN_DECLS

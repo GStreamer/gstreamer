@@ -22,9 +22,8 @@
 #include "config.h"
 #endif
 
-#include <gst/va/gstvavideoformat.h>
-
 #include "gstvadisplay_priv.h"
+
 #include "gstvaprofile.h"
 
 GArray *

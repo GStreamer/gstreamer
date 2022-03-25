@@ -23,7 +23,6 @@
 #endif
 
 #include "gstvapool.h"
-#include "gstvaallocator.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_pool_debug);
 #define GST_CAT_DEFAULT gst_va_pool_debug

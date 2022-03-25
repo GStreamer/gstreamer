@@ -62,9 +62,8 @@
 
 #include "gstvavpp.h"
 
+#include <gst/va/gstva.h>
 #include <gst/video/video.h>
-#include <gst/va/gstvaallocator.h>
-#include <gst/va/gstvapool.h>
 #include <va/va_drmcommon.h>
 
 #include "gstvabasetransform.h"

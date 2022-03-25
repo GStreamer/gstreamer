@@ -20,9 +20,7 @@
 
 #include "gstvabasedec.h"
 
-#include <gst/va/gstvaallocator.h>
-#include <gst/va/gstvapool.h>
-#include <gst/va/gstvavideoformat.h>
+#include <gst/va/gstva.h>
 
 #include "gstvacaps.h"
 

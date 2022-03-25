@@ -20,7 +20,8 @@
 
 #pragma once
 
-#include "gstvadisplay.h"
+#include <gst/va/gstva.h>
+#include <gst/va/va_fwd.h>
 
 G_BEGIN_DECLS
 

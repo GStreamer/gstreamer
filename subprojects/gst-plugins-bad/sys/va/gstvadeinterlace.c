@@ -51,8 +51,7 @@
 
 #include "gstvadeinterlace.h"
 
-#include <gst/va/gstvaallocator.h>
-#include <gst/va/gstvapool.h>
+#include <gst/va/gstva.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 

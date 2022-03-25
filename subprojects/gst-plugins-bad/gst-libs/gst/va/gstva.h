@@ -25,7 +25,13 @@
 #pragma message ("You can define GST_USE_UNSTABLE_API to avoid this warning.")
 #endif
 
+#include <gst/va/va-prelude.h>
 #include <gst/va/gstvadisplay.h>
 #include <gst/va/gstvadisplay_drm.h>
 #include <gst/va/gstvadisplay_wrapped.h>
+
+#include <gst/va/gstvaallocator.h>
+#include <gst/va/gstvapool.h>
+
 #include <gst/va/gstvautils.h>
+#include <gst/va/gstvavideoformat.h>

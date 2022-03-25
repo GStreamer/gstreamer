@@ -24,8 +24,6 @@
 
 #include "gstvafilter.h"
 
-#include <gst/va/gstvaallocator.h>
-#include <gst/va/gstvavideoformat.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 
