@@ -243,6 +243,8 @@ on_frame_available_cb (JNIEnv * env, jobject thiz,
     long long context, jobject surfaceTexture)
 {
   GstAmcSurfaceTextureJNI *self = JLONG_TO_GPOINTER (context);
+  if (!self || !self->callback)
+    return;
 
   self->callback (GST_AMC_SURFACE_TEXTURE (self), self->user_data);
 }
