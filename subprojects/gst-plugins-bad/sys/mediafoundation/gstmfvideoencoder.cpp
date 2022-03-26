@@ -1335,31 +1335,6 @@ gst_mf_video_encoder_propose_allocation (GstVideoEncoder * enc,
     if (!is_d3d11) {
       gst_buffer_pool_config_add_option (config,
           GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    } else {
-      GstD3D11AllocationParams *d3d11_params;
-      guint misc_flags = 0;
-      gboolean is_hardware = FALSE;
-      gint i;
-
-      g_object_get (device, "hardware", &is_hardware, nullptr);
-
-      /* In case of hardware, set D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX flag
-       * so that it can be shared with other d3d11 devices */
-      if (is_hardware)
-        misc_flags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-
-      d3d11_params =
-          gst_buffer_pool_config_get_d3d11_allocation_params (config);
-      if (!d3d11_params) {
-        d3d11_params = gst_d3d11_allocation_params_new (device, &info,
-            (GstD3D11AllocationFlags) 0, 0);
-      } else {
-        for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
-          d3d11_params->desc[i].MiscFlags |= misc_flags;
-      }
-
-      gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
-      gst_d3d11_allocation_params_free (d3d11_params);
     }
 
     size = GST_VIDEO_INFO_SIZE (&info);
