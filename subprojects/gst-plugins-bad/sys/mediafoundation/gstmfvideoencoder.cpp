@@ -1925,7 +1925,7 @@ gst_mf_video_encoder_register (GstPlugin * plugin, guint rank, GUID * subtype,
 
   /* register hardware encoders first */
   enum_flags = (MFT_ENUM_FLAG_HARDWARE | MFT_ENUM_FLAG_ASYNCMFT |
-      MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
+      MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
 
   if (d3d11_device) {
     GList *iter;
@@ -1979,7 +1979,7 @@ gst_mf_video_encoder_register (GstPlugin * plugin, guint rank, GUID * subtype,
 
   /* register software encoders */
   enum_flags = (MFT_ENUM_FLAG_SYNCMFT |
-      MFT_ENUM_FLAG_SORTANDFILTER | MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
+      MFT_ENUM_FLAG_SORTANDFILTER_APPROVED_ONLY);
 
   transform = gst_mf_video_encoder_enum (enum_flags, subtype, 0, &device_caps,
       nullptr, &sink_template, &src_template);
