@@ -52,6 +52,7 @@ struct _GstMFVideoEncoderDeviceCaps
 
   gboolean adaptive_mode;     /* AVEncAdaptiveMode */
   gboolean buffer_size;       /* AVEncCommonBufferSize */
+  gboolean mean_bitrate;      /* AVEncCommonMeanBitRate */
   gboolean max_bitrate;       /* AVEncCommonMaxBitRate */
   gboolean quality_vs_speed;  /* AVEncCommonQualityVsSpeed */
   gboolean cabac;             /* AVEncH264CABACEnable */
@@ -133,6 +134,8 @@ struct _GstMFVideoEncoderClass
   gboolean (*set_src_caps)  (GstMFVideoEncoder * encoder,
                              GstVideoCodecState * state,
                              IMFMediaType * output_type);
+
+  gboolean (*check_reconfigure) (GstMFVideoEncoder * encoder);
 };
 
 GType gst_mf_video_encoder_get_type (void);

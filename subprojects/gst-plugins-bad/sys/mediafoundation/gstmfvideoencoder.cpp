@@ -280,12 +280,11 @@ gst_mf_video_encoder_start (GstVideoEncoder * enc)
 }
 
 static gboolean
-gst_mf_video_encoder_set_format (GstVideoEncoder * enc,
-    GstVideoCodecState * state)
+gst_mf_video_encoder_init_mft (GstMFVideoEncoder * self)
 {
-  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
-  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (enc);
-  GstVideoInfo *info = &state->info;
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (self);
+  GstVideoInfo *info = &self->input_state->info;
+  GstCaps *caps = self->input_state->caps;
   ComPtr < IMFMediaType > in_type;
   ComPtr < IMFMediaType > out_type;
   GList *input_types = nullptr;
@@ -295,15 +294,11 @@ gst_mf_video_encoder_set_format (GstVideoEncoder * enc,
 
   GST_DEBUG_OBJECT (self, "Set format");
 
-  gst_mf_video_encoder_finish (enc);
+  gst_mf_video_encoder_finish (GST_VIDEO_ENCODER (self));
 
   self->mf_pts_offset = 0;
   self->has_reorder_frame = FALSE;
   self->last_ret = GST_FLOW_OK;
-
-  if (self->input_state)
-    gst_video_codec_state_unref (self->input_state);
-  self->input_state = gst_video_codec_state_ref (state);
 
   if (!gst_mf_transform_open (self->transform)) {
     GST_ERROR_OBJECT (self, "Failed to open MFT");
@@ -408,8 +403,7 @@ gst_mf_video_encoder_set_format (GstVideoEncoder * enc,
 
   if (!in_type) {
     GST_ERROR_OBJECT (self,
-        "Couldn't convert input caps %" GST_PTR_FORMAT " to media type",
-        state->caps);
+        "Couldn't convert input caps %" GST_PTR_FORMAT " to media type", caps);
     return FALSE;
   }
 
@@ -467,76 +461,88 @@ gst_mf_video_encoder_set_format (GstVideoEncoder * enc,
   }
 
   /* Check whether upstream is d3d11 element */
-  if (state->caps) {
-    GstCapsFeatures *features;
-    ComPtr < IMFVideoSampleAllocatorEx > allocator;
+  GstCapsFeatures *features;
+  ComPtr < IMFVideoSampleAllocatorEx > allocator;
 
-    features = gst_caps_get_features (state->caps, 0);
+  features = gst_caps_get_features (caps, 0);
 
-    if (features &&
-        gst_caps_features_contains (features,
-            GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-      GST_DEBUG_OBJECT (self, "found D3D11 memory feature");
+  if (features &&
+      gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+    GST_DEBUG_OBJECT (self, "found D3D11 memory feature");
 
-      hr = GstMFCreateVideoSampleAllocatorEx (IID_PPV_ARGS (&allocator));
+    hr = GstMFCreateVideoSampleAllocatorEx (IID_PPV_ARGS (&allocator));
+    if (!gst_mf_result (hr))
+      GST_WARNING_OBJECT (self,
+          "IMFVideoSampleAllocatorEx interface is unavailable");
+  }
+
+  if (allocator) {
+    do {
+      ComPtr < IMFAttributes > attr;
+
+      hr = MFCreateAttributes (&attr, 4);
       if (!gst_mf_result (hr))
-        GST_WARNING_OBJECT (self,
-            "IMFVideoSampleAllocatorEx interface is unavailable");
-    }
+        break;
 
-    if (allocator) {
-      do {
-        ComPtr < IMFAttributes > attr;
+      /* Only one buffer per sample
+       * (multiple sample is usually for multi-view things) */
+      hr = attr->SetUINT32 (GST_GUID_MF_SA_BUFFERS_PER_SAMPLE, 1);
+      if (!gst_mf_result (hr))
+        break;
 
-        hr = MFCreateAttributes (&attr, 4);
-        if (!gst_mf_result (hr))
-          break;
+      hr = attr->SetUINT32 (GST_GUID_MF_SA_D3D11_USAGE, D3D11_USAGE_DEFAULT);
+      if (!gst_mf_result (hr))
+        break;
 
-        /* Only one buffer per sample
-         * (multiple sample is usually for multi-view things) */
-        hr = attr->SetUINT32 (GST_GUID_MF_SA_BUFFERS_PER_SAMPLE, 1);
-        if (!gst_mf_result (hr))
-          break;
+      /* TODO: Check if we need to use keyed-mutex */
+      hr = attr->SetUINT32 (GST_GUID_MF_SA_D3D11_SHARED_WITHOUT_MUTEX, TRUE);
+      if (!gst_mf_result (hr))
+        break;
 
-        hr = attr->SetUINT32 (GST_GUID_MF_SA_D3D11_USAGE, D3D11_USAGE_DEFAULT);
-        if (!gst_mf_result (hr))
-          break;
+      hr = attr->SetUINT32 (GST_GUID_MF_SA_D3D11_BINDFLAGS,
+          D3D11_BIND_VIDEO_ENCODER);
+      if (!gst_mf_result (hr))
+        break;
 
-        /* TODO: Check if we need to use keyed-mutex */
-        hr = attr->SetUINT32 (GST_GUID_MF_SA_D3D11_SHARED_WITHOUT_MUTEX, TRUE);
-        if (!gst_mf_result (hr))
-          break;
+      hr = allocator->SetDirectXManager (self->device_manager);
+      if (!gst_mf_result (hr))
+        break;
 
-        hr = attr->SetUINT32 (GST_GUID_MF_SA_D3D11_BINDFLAGS,
-            D3D11_BIND_VIDEO_ENCODER);
-        if (!gst_mf_result (hr))
-          break;
+      hr = allocator->InitializeSampleAllocatorEx (
+          /* min samples, since we are running on async mode,
+           * at least 2 samples would be required */
+          2,
+          /* max samples, why 16 + 2? it's just magic number
+           * (H264 max dpb size 16 + our min sample size 2) */
+          16 + 2, attr.Get (), in_type.Get ()
+          );
 
-        hr = allocator->SetDirectXManager (self->device_manager);
-        if (!gst_mf_result (hr))
-          break;
+      if (!gst_mf_result (hr))
+        break;
 
-        hr = allocator->InitializeSampleAllocatorEx (
-            /* min samples, since we are running on async mode,
-             * at least 2 samples would be required */
-            2,
-            /* max samples, why 16 + 2? it's just magic number
-             * (H264 max dpb size 16 + our min sample size 2) */
-            16 + 2, attr.Get (), in_type.Get ()
-            );
+      GST_DEBUG_OBJECT (self, "IMFVideoSampleAllocatorEx is initialized");
 
-        if (!gst_mf_result (hr))
-          break;
-
-        GST_DEBUG_OBJECT (self, "IMFVideoSampleAllocatorEx is initialized");
-
-        self->mf_allocator = allocator.Detach ();
-      } while (0);
-    }
+      self->mf_allocator = allocator.Detach ();
+    } while (0);
   }
 #endif
 
   return TRUE;
+}
+
+static gboolean
+gst_mf_video_encoder_set_format (GstVideoEncoder * enc,
+    GstVideoCodecState * state)
+{
+  GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
+  GST_DEBUG_OBJECT (self, "Set format");
+
+  if (self->input_state)
+    gst_video_codec_state_unref (self->input_state);
+  self->input_state = gst_video_codec_state_ref (state);
+
+  return gst_mf_video_encoder_init_mft (self);
 }
 
 static void
@@ -1201,11 +1207,18 @@ gst_mf_video_encoder_handle_frame (GstVideoEncoder * enc,
   GstMFVideoEncoder *self = GST_MF_VIDEO_ENCODER (enc);
   GstFlowReturn ret = GST_FLOW_OK;
   ComPtr < IMFSample > sample;
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (self);
 
   if (self->last_ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (self, "Last return was %s", gst_flow_get_name (ret));
     ret = self->last_ret;
     goto done;
+  }
+
+  if (klass->check_reconfigure (self) && !gst_mf_video_encoder_init_mft (self)) {
+    GST_ELEMENT_ERROR (self, STREAM, ENCODE, (nullptr),
+        ("Failed to reconfigure encoder"));
+    return GST_FLOW_ERROR;
   }
 #if GST_MF_HAVE_D3D11
   if (self->mf_allocator &&
@@ -1737,6 +1750,7 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
   CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonQuality, quality);
   CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncAdaptiveMode, adaptive_mode);
   CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonBufferSize, buffer_size);
+  CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonMeanBitRate, mean_bitrate);
   CHECK_DEVICE_CAPS (codec_api, CODECAPI_AVEncCommonMaxBitRate, max_bitrate);
   CHECK_DEVICE_CAPS (codec_api,
       CODECAPI_AVEncCommonQualityVsSpeed, quality_vs_speed);
