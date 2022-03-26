@@ -142,7 +142,7 @@ get_d3d11_devices (void)
 
     /* device can support NV12 format? */
     if (!gst_d3d11_device_get_format (device,
-        GST_VIDEO_FORMAT_NV12, &d3d11_format) ||
+            GST_VIDEO_FORMAT_NV12, &d3d11_format) ||
         d3d11_format.dxgi_format != DXGI_FORMAT_NV12) {
       GST_DEBUG_OBJECT (device,
           "Given d3d11 device cannot support NV12 format");
