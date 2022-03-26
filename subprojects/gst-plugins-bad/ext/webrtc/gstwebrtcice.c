@@ -1006,6 +1006,17 @@ gst_webrtc_ice_get_selected_pair (GstWebRTCICE * ice,
   return FALSE;
 }
 
+void
+gst_webrtc_ice_candidate_stats_free (GstWebRTCICECandidateStats * stats)
+{
+  if (stats) {
+    g_free (stats->ipaddr);
+    g_free (stats->url);
+  }
+
+  g_free (stats);
+}
+
 static void
 _clear_ice_stream (struct NiceStreamItem *item)
 {

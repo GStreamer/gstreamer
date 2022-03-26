@@ -128,6 +128,9 @@ gboolean                    gst_webrtc_ice_get_selected_pair        (GstWebRTCIC
                                                                      GstWebRTCICEStream * stream,
                                                                      GstWebRTCICECandidateStats ** local_stats,
                                                                      GstWebRTCICECandidateStats ** remote_stats);
+
+void                        gst_webrtc_ice_candidate_stats_free     (GstWebRTCICECandidateStats * stats);
+
 G_END_DECLS
 
 #endif /* __GST_WEBRTC_ICE_H__ */

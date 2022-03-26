@@ -711,15 +711,8 @@ _get_stats_from_ice_transport (GstWebRTCBin * webrtc,
   g_free (local_cand_id);
   g_free (remote_cand_id);
 
-  if (local_cand) {
-    g_free (local_cand->ipaddr);
-    g_free (local_cand->url);
-  }
-  if (remote_cand)
-    g_free (remote_cand->ipaddr);
-
-  g_free (local_cand);
-  g_free (remote_cand);
+  gst_webrtc_ice_candidate_stats_free (local_cand);
+  gst_webrtc_ice_candidate_stats_free (remote_cand);
 
   gst_structure_free (stats);
 
