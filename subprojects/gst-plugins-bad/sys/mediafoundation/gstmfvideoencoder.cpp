@@ -1039,6 +1039,8 @@ static gboolean
 gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
     GstVideoCodecFrame * frame, IMFSample ** sample)
 {
+  GstMFVideoEncoderClass *klass = GST_MF_VIDEO_ENCODER_GET_CLASS (self);
+  GstMFVideoEncoderDeviceCaps *device_caps = &klass->device_caps;
   HRESULT hr;
   ComPtr < IMFSample > new_sample;
   ComPtr < IMFMediaBuffer > mf_buffer;
@@ -1059,6 +1061,7 @@ gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
   D3D11_BOX src_box = { 0, };
   D3D11_TEXTURE2D_DESC dst_desc, src_desc;
   guint subidx;
+  gint64 adapter_luid;
 
   if (!self->mf_allocator) {
     GST_WARNING_OBJECT (self, "IMFVideoSampleAllocatorEx was configured");
@@ -1071,7 +1074,13 @@ gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
     return FALSE;
   }
 
-  dmem = (GstD3D11Memory *) mem;
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+  g_object_get (dmem->device, "adapter-luid", &adapter_luid, nullptr);
+  if (adapter_luid != device_caps->adapter_luid) {
+    GST_LOG_OBJECT (self, "Buffer from different GPU");
+    return FALSE;
+  }
+
   device_handle = gst_d3d11_device_get_device_handle (dmem->device);
   context_handle = gst_d3d11_device_get_device_context_handle (dmem->device);
 
@@ -1154,6 +1163,7 @@ gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
   hr = device_handle->CreateQuery (&query_desc, &query);
   if (!gst_d3d11_result (hr, dmem->device)) {
     GST_ERROR_OBJECT (self, "Couldn't Create event query");
+    gst_memory_unmap (mem, &info);
     return FALSE;
   }
 
@@ -1200,7 +1210,7 @@ gst_mf_video_encoder_handle_frame (GstVideoEncoder * enc,
 #if GST_MF_HAVE_D3D11
   if (self->mf_allocator &&
       !gst_mf_video_encoder_create_input_sample_d3d11 (self, frame, &sample)) {
-    GST_WARNING_OBJECT (self, "Failed to create IMFSample for D3D11");
+    GST_LOG_OBJECT (self, "Failed to create IMFSample for D3D11");
     sample = nullptr;
   }
 #endif
