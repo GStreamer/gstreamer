@@ -1164,7 +1164,7 @@ gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
 
   /* Wait until all issued GPU commands are finished */
   do {
-    context_handle->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
+    hr = context_handle->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
   } while (!sync_done && (hr == S_OK || hr == S_FALSE));
 
   if (!gst_d3d11_result (hr, dmem->device)) {
