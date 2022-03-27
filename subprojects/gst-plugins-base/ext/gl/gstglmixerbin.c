@@ -315,6 +315,10 @@ _create_input_chain (GstGLMixerBin * self, struct input_chain *chain,
   res &= gst_bin_add (GST_BIN (self), chain->in_convert);
   res &= gst_bin_add (GST_BIN (self), chain->in_overlay);
   res &= gst_bin_add (GST_BIN (self), chain->upload);
+  if (!res) {
+    g_warn_if_reached ();
+    return FALSE;
+  }
 
   pad = gst_element_get_static_pad (chain->in_overlay, "src");
   if (gst_pad_link (pad, mixer_pad) != GST_PAD_LINK_OK) {
@@ -322,11 +326,15 @@ _create_input_chain (GstGLMixerBin * self, struct input_chain *chain,
     return FALSE;
   }
   gst_object_unref (pad);
-  res &=
-      gst_element_link_pads (chain->in_convert, "src", chain->in_overlay,
-      "sink");
-  res &=
-      gst_element_link_pads (chain->upload, "src", chain->in_convert, "sink");
+  if (!gst_element_link_pads (chain->in_convert, "src", chain->in_overlay,
+          "sink")) {
+    g_warn_if_reached ();
+    return FALSE;
+  }
+  if (!gst_element_link_pads (chain->upload, "src", chain->in_convert, "sink")) {
+    g_warn_if_reached ();
+    return FALSE;
+  }
 
   pad = gst_element_get_static_pad (chain->upload, "sink");
   if (!pad) {
