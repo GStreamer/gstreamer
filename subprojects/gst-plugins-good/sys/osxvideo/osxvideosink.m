@@ -856,7 +856,7 @@ gst_osx_video_sink_get_type (void)
 - (void) showFrame: (GstBufferObject *) object
 {
   GstVideoFrame frame;
-  guint8 *data, *readp, *writep;
+  guint8 *readp, *writep;
   gint i, active_width, stride;
   guint8 *texture_buffer;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
@@ -873,7 +873,7 @@ gst_osx_video_sink_get_type (void)
   if (!gst_video_frame_map (&frame, &osxvideosink->info, buf, GST_MAP_READ))
       goto no_map;
 
-  data = readp = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+  readp = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
   stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
   writep = texture_buffer;
   active_width = GST_VIDEO_SINK_WIDTH (osxvideosink) * sizeof (short);
