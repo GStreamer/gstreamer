@@ -85,7 +85,9 @@ struct _GstQsvEncoderClass
                                        mfxBitstream * bitstream);
 
   GstQsvEncoderReconfigure (*check_reconfigure) (GstQsvEncoder * encoder,
-                                                 mfxVideoParam * param);
+                                                 mfxSession session,
+                                                 mfxVideoParam * param,
+                                                 GPtrArray * extra_params);
 };
 
 GType gst_qsv_encoder_get_type (void);

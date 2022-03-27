@@ -75,6 +75,10 @@ gst_qsv_h265_enc_rate_control_get_type (void)
   static const GEnumValue rate_controls[] = {
     {MFX_RATECONTROL_CBR, "Constant Bitrate", "cbr"},
     {MFX_RATECONTROL_VBR, "Variable Bitrate", "vbr"},
+    {MFX_RATECONTROL_CQP, "Constant Quantizer", "cqp"},
+    {MFX_RATECONTROL_ICQ, "Intelligent CQP", "icq"},
+    {MFX_RATECONTROL_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
+    {MFX_RATECONTROL_QVBR, "VBR with CQP", "qvbr"},
     {0, nullptr, nullptr}
   };
 
@@ -92,21 +96,39 @@ enum
   PROP_0,
   PROP_ADAPTER_LUID,
   PROP_DEVICE_PATH,
+  PROP_MIN_QP_I,
+  PROP_MIN_QP_P,
+  PROP_MIN_QP_B,
+  PROP_MAX_QP_I,
+  PROP_MAX_QP_P,
+  PROP_MAX_QP_B,
+  PROP_QP_I,
+  PROP_QP_P,
+  PROP_QP_B,
   PROP_GOP_SIZE,
+  PROP_I_FRAMES,
   PROP_B_FRAMES,
   PROP_REF_FRAMES,
   PROP_BITRATE,
   PROP_MAX_BITRATE,
   PROP_RATE_CONTROL,
+  PROP_ICQ_QUALITY,
+  PROP_QVBR_QUALITY,
+  PROP_DISABLE_HRD_CONFORMANCE,
   PROP_CC_INSERT,
 };
 
+#define DEFAULT_QP 0
 #define DEFAULT_GOP_SIZE 0
+#define DEFAULT_I_FRAMES 0
 #define DEFAULT_B_FRAMES 0
 #define DEFAULT_REF_FRAMES 2
 #define DEFAULT_BITRATE 2000
 #define DEFAULT_MAX_BITRATE 0
 #define DEFAULT_RATE_CONTROL MFX_RATECONTROL_CBR
+#define DEFAULT_IQC_QUALITY 0
+#define DEFAULT_QVBR_QUALITY 0
+#define DEFAULT_DISABLE_HRD_CONFORMANCE FALSE
 #define DEFAULT_CC_INSERT GST_QSV_H265_ENC_SEI_INSERT
 
 typedef struct _GstQsvH265EncClassData
@@ -135,12 +157,25 @@ typedef struct _GstQsvH265Enc
   gboolean property_updated;
 
   /* properties */
+  guint min_qp_i;
+  guint min_qp_p;
+  guint min_qp_b;
+  guint max_qp_i;
+  guint max_qp_p;
+  guint max_qp_b;
+  guint qp_i;
+  guint qp_p;
+  guint qp_b;
   guint gop_size;
+  guint iframes;
   guint bframes;
   guint ref_frames;
   guint bitrate;
   guint max_bitrate;
   mfxU16 rate_control;
+  guint icq_quality;
+  guint qvbr_quality;
+  gboolean disable_hrd_conformance;
   GstQsvH265EncSeiInsertMode cc_insert;
 } GstQsvH265Enc;
 
@@ -177,8 +212,8 @@ static gboolean gst_qsv_h265_enc_attach_payload (GstQsvEncoder * encoder,
 static GstBuffer *gst_qsv_h265_enc_create_output_buffer (GstQsvEncoder *
     encoder, mfxBitstream * bitstream);
 static GstQsvEncoderReconfigure
-gst_qsv_h265_enc_check_reconfigure (GstQsvEncoder * encoder,
-    mfxVideoParam * param);
+gst_qsv_h265_enc_check_reconfigure (GstQsvEncoder * encoder, mfxSession session,
+    mfxVideoParam * param, GPtrArray * extra_params);
 
 static void
 gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
@@ -213,10 +248,61 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
               G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 #endif
 
+  g_object_class_install_property (object_class, PROP_MIN_QP_I,
+      g_param_spec_uint ("min-qpi", "Min QP I",
+          "Minimum allowed QP value for I-frame types (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_MIN_QP_P,
+      g_param_spec_uint ("min-qpp", "Min QP P",
+          "Minimum allowed QP value for P-frame types (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_MIN_QP_B,
+      g_param_spec_uint ("min-qpb", "Min QP B",
+          "Minimum allowed QP value for B-frame types (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_MAX_QP_I,
+      g_param_spec_uint ("max-qpi", "Max QP I",
+          "Maximum allowed QP value for I-frame types (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_MAX_QP_P,
+      g_param_spec_uint ("max-qpp", "Max QP P",
+          "Maximum allowed QP value for P-frame types (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_MAX_QP_B,
+      g_param_spec_uint ("max-qpb", "Max QP B",
+          "Maximum allowed QP value for B-frame types (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_QP_I,
+      g_param_spec_uint ("qpi", "QP I",
+          "Constant quantizer for I frames (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_QP_P,
+      g_param_spec_uint ("qpp", "QP P",
+          "Constant quantizer for P frames (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_QP_B,
+      g_param_spec_uint ("qpb", "QP B",
+          "Constant quantizer for B frames (0: no limitations)",
+          0, 51, DEFAULT_QP, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_GOP_SIZE,
       g_param_spec_uint ("gop-size", "GOP Size",
           "Number of pictures within a GOP (0: unspecified)",
           0, G_MAXINT, DEFAULT_GOP_SIZE, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_I_FRAMES,
+      g_param_spec_uint ("i-frames", "I Frames",
+          "Number of I frames between IDR frames"
+          "(0: every I frame is an IDR frame)",
+          0, G_MAXINT, DEFAULT_I_FRAMES, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_B_FRAMES,
       g_param_spec_uint ("b-frames", "B Frames",
@@ -231,13 +317,13 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
   g_object_class_install_property (object_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
           "Target bitrate in kbit/sec, Ignored when selected rate-control mode "
-          "is constant QP variants (i.e., \"cqp\", \"icq\", and \"la_icq\")",
+          "is constant QP variants (i.e., \"cqp\" and \"icq\")",
           0, G_MAXINT, DEFAULT_BITRATE, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_MAX_BITRATE,
       g_param_spec_uint ("max-bitrate", "Max Bitrate",
           "Maximum bitrate in kbit/sec, Ignored when selected rate-control mode "
-          "is constant QP variants (i.e., \"cqp\", \"icq\", and \"la_icq\")",
+          "is constant QP variants (i.e., \"cqp\" and \"icq\")",
           0, G_MAXINT, DEFAULT_MAX_BITRATE, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_RATE_CONTROL,
@@ -245,9 +331,23 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
           "Rate Control Method", GST_TYPE_QSV_H265_ENC_RATE_CONTROL,
           DEFAULT_RATE_CONTROL,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_ICQ_QUALITY,
+      g_param_spec_uint ("icq-quality", "ICQ Quality",
+          "Intelligent Constant Quality for \"icq\" rate-control (0: default)",
+          0, 51, DEFAULT_IQC_QUALITY, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_QVBR_QUALITY,
+      g_param_spec_uint ("qvbr-quality", "QVBR Quality",
+          "Quality level used for \"qvbr\" rate-control mode (0: default)",
+          0, 51, DEFAULT_QVBR_QUALITY, (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_DISABLE_HRD_CONFORMANCE,
+      g_param_spec_boolean ("disable-hrd-conformance",
+          "Disable HRD Conformance", "Allow NAL HRD non-conformant stream",
+          DEFAULT_DISABLE_HRD_CONFORMANCE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_CC_INSERT,
-      g_param_spec_enum ("cc-insert",
-          "Closed Caption Insert",
+      g_param_spec_enum ("cc-insert", "Closed Caption Insert",
           "Closed Caption Insert mode. "
           "Only CEA-708 RAW format is supported for now",
           GST_TYPE_QSV_H265_ENC_SEI_INSERT_MODE, DEFAULT_CC_INSERT,
@@ -290,12 +390,25 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
 static void
 gst_qsv_h265_enc_init (GstQsvH265Enc * self)
 {
+  self->min_qp_i = DEFAULT_QP;
+  self->min_qp_p = DEFAULT_QP;
+  self->min_qp_b = DEFAULT_QP;
+  self->max_qp_i = DEFAULT_QP;
+  self->max_qp_p = DEFAULT_QP;
+  self->max_qp_p = DEFAULT_QP;
+  self->qp_i = DEFAULT_QP;
+  self->qp_p = DEFAULT_QP;
+  self->qp_b = DEFAULT_QP;
   self->gop_size = DEFAULT_GOP_SIZE;
+  self->iframes = DEFAULT_I_FRAMES;
   self->bframes = DEFAULT_B_FRAMES;
   self->ref_frames = DEFAULT_REF_FRAMES;
   self->bitrate = DEFAULT_BITRATE;
   self->max_bitrate = DEFAULT_MAX_BITRATE;
   self->rate_control = DEFAULT_RATE_CONTROL;
+  self->icq_quality = DEFAULT_IQC_QUALITY;
+  self->qvbr_quality = DEFAULT_QVBR_QUALITY;
+  self->disable_hrd_conformance = DEFAULT_DISABLE_HRD_CONFORMANCE;
   self->cc_insert = DEFAULT_CC_INSERT;
 
   g_mutex_init (&self->prop_lock);
@@ -341,14 +454,67 @@ gst_qsv_h265_enc_check_update_enum (GstQsvH265Enc * self, mfxU16 * old_val,
 }
 
 static void
+gst_qsv_h265_enc_check_update_boolean (GstQsvH265Enc * self, gboolean * old_val,
+    gboolean new_val)
+{
+  if (*old_val == new_val)
+    return;
+
+  g_mutex_lock (&self->prop_lock);
+  *old_val = new_val;
+  self->property_updated = TRUE;
+  g_mutex_unlock (&self->prop_lock);
+}
+
+static void
 gst_qsv_h265_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstQsvH265Enc *self = GST_QSV_H265_ENC (object);
 
   switch (prop_id) {
+    case PROP_MIN_QP_I:
+      gst_qsv_h265_enc_check_update_uint (self, &self->min_qp_i,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_MIN_QP_P:
+      gst_qsv_h265_enc_check_update_uint (self, &self->min_qp_p,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_MIN_QP_B:
+      gst_qsv_h265_enc_check_update_uint (self, &self->min_qp_b,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_MAX_QP_I:
+      gst_qsv_h265_enc_check_update_uint (self, &self->max_qp_i,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_MAX_QP_P:
+      gst_qsv_h265_enc_check_update_uint (self, &self->max_qp_p,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_MAX_QP_B:
+      gst_qsv_h265_enc_check_update_uint (self, &self->max_qp_b,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_QP_I:
+      gst_qsv_h265_enc_check_update_uint (self, &self->qp_i,
+          g_value_get_uint (value), TRUE);
+      break;
+    case PROP_QP_P:
+      gst_qsv_h265_enc_check_update_uint (self, &self->qp_p,
+          g_value_get_uint (value), TRUE);
+      break;
+    case PROP_QP_B:
+      gst_qsv_h265_enc_check_update_uint (self, &self->qp_b,
+          g_value_get_uint (value), TRUE);
+      break;
     case PROP_GOP_SIZE:
       gst_qsv_h265_enc_check_update_uint (self, &self->gop_size,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_I_FRAMES:
+      gst_qsv_h265_enc_check_update_uint (self, &self->iframes,
           g_value_get_uint (value), FALSE);
       break;
     case PROP_B_FRAMES:
@@ -370,6 +536,18 @@ gst_qsv_h265_enc_set_property (GObject * object, guint prop_id,
     case PROP_RATE_CONTROL:
       gst_qsv_h265_enc_check_update_enum (self, &self->rate_control,
           g_value_get_enum (value));
+      break;
+    case PROP_ICQ_QUALITY:
+      gst_qsv_h265_enc_check_update_uint (self, &self->icq_quality,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_QVBR_QUALITY:
+      gst_qsv_h265_enc_check_update_uint (self, &self->qvbr_quality,
+          g_value_get_uint (value), FALSE);
+      break;
+    case PROP_DISABLE_HRD_CONFORMANCE:
+      gst_qsv_h265_enc_check_update_boolean (self,
+          &self->disable_hrd_conformance, g_value_get_boolean (value));
       break;
     case PROP_CC_INSERT:
       /* This property is unrelated to encoder-reset */
@@ -395,8 +573,38 @@ gst_qsv_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_DEVICE_PATH:
       g_value_set_string (value, klass->display_path);
       break;
+    case PROP_MIN_QP_I:
+      g_value_set_uint (value, self->min_qp_i);
+      break;
+    case PROP_MIN_QP_P:
+      g_value_set_uint (value, self->min_qp_p);
+      break;
+    case PROP_MIN_QP_B:
+      g_value_set_uint (value, self->min_qp_b);
+      break;
+    case PROP_MAX_QP_I:
+      g_value_set_uint (value, self->max_qp_i);
+      break;
+    case PROP_MAX_QP_P:
+      g_value_set_uint (value, self->max_qp_p);
+      break;
+    case PROP_MAX_QP_B:
+      g_value_set_uint (value, self->max_qp_b);
+      break;
+    case PROP_QP_I:
+      g_value_set_uint (value, self->qp_i);
+      break;
+    case PROP_QP_P:
+      g_value_set_uint (value, self->qp_p);
+      break;
+    case PROP_QP_B:
+      g_value_set_uint (value, self->qp_b);
+      break;
     case PROP_GOP_SIZE:
       g_value_set_uint (value, self->gop_size);
+      break;
+    case PROP_I_FRAMES:
+      g_value_set_uint (value, self->iframes);
       break;
     case PROP_B_FRAMES:
       g_value_set_uint (value, self->bframes);
@@ -413,8 +621,17 @@ gst_qsv_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_RATE_CONTROL:
       g_value_set_enum (value, self->rate_control);
       break;
+    case PROP_ICQ_QUALITY:
+      g_value_set_uint (value, self->icq_quality);
+      break;
+    case PROP_QVBR_QUALITY:
+      g_value_set_uint (value, self->qvbr_quality);
+      break;
     case PROP_CC_INSERT:
       g_value_set_enum (value, self->cc_insert);
+      break;
+    case PROP_DISABLE_HRD_CONFORMANCE:
+      g_value_set_boolean (value, self->disable_hrd_conformance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -625,6 +842,42 @@ gst_qsv_h265_enc_init_extra_params (GstQsvH265Enc * self)
   self->option3.Header.BufferSz = sizeof (mfxExtCodingOption3);
 }
 
+static void
+gst_qsv_h265_enc_set_bitrate (GstQsvH265Enc * self, mfxVideoParam * param)
+{
+  guint max_val;
+  guint multiplier;
+
+  switch (param->mfx.RateControlMethod) {
+    case MFX_RATECONTROL_CBR:
+      multiplier = (self->bitrate + 0x10000) / 0x10000;
+      param->mfx.TargetKbps = param->mfx.MaxKbps = self->bitrate / multiplier;
+      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
+      break;
+    case MFX_RATECONTROL_VBR:
+    case MFX_RATECONTROL_VCM:
+    case MFX_RATECONTROL_QVBR:
+      max_val = MAX (self->bitrate, self->max_bitrate);
+      multiplier = (max_val + 0x10000) / 0x10000;
+      param->mfx.TargetKbps = self->bitrate / multiplier;
+      param->mfx.MaxKbps = self->max_bitrate / multiplier;
+      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
+      break;
+    case MFX_RATECONTROL_CQP:
+      param->mfx.QPI = self->qp_i;
+      param->mfx.QPP = self->qp_p;
+      param->mfx.QPB = self->qp_b;
+      break;
+    case MFX_RATECONTROL_ICQ:
+      param->mfx.ICQQuality = self->icq_quality;
+      break;
+    default:
+      GST_WARNING_OBJECT (self,
+          "Unhandled rate-control method %d", self->rate_control);
+      break;
+  }
+}
+
 static gboolean
 gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
     GstVideoCodecState * state, mfxVideoParam * param, GPtrArray * extra_params)
@@ -698,25 +951,11 @@ gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
   param->mfx.CodecProfile = mfx_profile;
   param->mfx.GopRefDist = self->bframes + 1;
   param->mfx.GopPicSize = self->gop_size;
+  param->mfx.IdrInterval = self->iframes;
   param->mfx.RateControlMethod = self->rate_control;
   param->mfx.NumRefFrame = self->ref_frames;
 
-  /* Calculate multiplier to avoid uint16 overflow */
-  guint max_val = MAX (self->bitrate, self->max_bitrate);
-  guint multiplier = (max_val + 0x10000) / 0x10000;
-
-  switch (param->mfx.RateControlMethod) {
-    case MFX_RATECONTROL_CBR:
-    case MFX_RATECONTROL_VBR:
-      param->mfx.TargetKbps = self->bitrate / multiplier;
-      param->mfx.MaxKbps = self->max_bitrate / multiplier;
-      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
-      break;
-    default:
-      GST_WARNING_OBJECT (self,
-          "Unhandled rate-control method %d", self->rate_control);
-      break;
-  }
+  gst_qsv_h265_enc_set_bitrate (self, param);
 
   /* Write signal info only when upstream caps contains valid colorimetry,
    * because derived default colorimetry in gst_video_info_from_caps() tends to
@@ -749,6 +988,11 @@ gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
   /* TODO: property ? */
   option->AUDelimiter = MFX_CODINGOPTION_ON;
 
+  if (self->disable_hrd_conformance) {
+    option->NalHrdConformance = MFX_CODINGOPTION_OFF;
+    option->VuiVclHrdParameters = MFX_CODINGOPTION_OFF;
+  }
+
   /* Enables PicTiming SEI by default */
   option->PicTimingSEI = MFX_CODINGOPTION_ON;
 
@@ -757,6 +1001,13 @@ gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
 
   /* Do not repeat PPS */
   option2->RepeatPPS = MFX_CODINGOPTION_OFF;
+
+  option2->MinQPI = self->min_qp_i;
+  option2->MinQPP = self->min_qp_p;
+  option2->MinQPB = self->min_qp_b;
+  option2->MaxQPI = self->max_qp_i;
+  option2->MaxQPP = self->max_qp_p;
+  option2->MaxQPB = self->max_qp_b;
 
   /* QSV wants MFX_B_REF_PYRAMID when more than 1 b-frame is enabled */
   if (param->mfx.GopRefDist > 2)
@@ -767,6 +1018,9 @@ gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
     option2->FixedFrameRate = MFX_CODINGOPTION_ON;
     option3->TimingInfoPresent = MFX_CODINGOPTION_ON;
   }
+
+  if (param->mfx.RateControlMethod == MFX_RATECONTROL_QVBR)
+    option3->QVBRQuality = self->qvbr_quality;
 
   if (signal_info)
     g_ptr_array_add (extra_params, signal_info);
@@ -830,7 +1084,6 @@ gst_qsv_h265_enc_set_output_state (GstQsvEncoder * encoder,
   switch (param.mfx.RateControlMethod) {
     case MFX_RATECONTROL_CQP:
     case MFX_RATECONTROL_ICQ:
-    case MFX_RATECONTROL_LA_ICQ:
       /* We don't know target/max bitrate in this case */
       break;
     default:
@@ -966,31 +1219,56 @@ gst_qsv_h265_enc_create_output_buffer (GstQsvEncoder * encoder,
 }
 
 static GstQsvEncoderReconfigure
-gst_qsv_h265_enc_check_reconfigure (GstQsvEncoder * encoder,
-    mfxVideoParam * param)
+gst_qsv_h265_enc_check_reconfigure (GstQsvEncoder * encoder, mfxSession session,
+    mfxVideoParam * param, GPtrArray * extra_params)
 {
   GstQsvH265Enc *self = GST_QSV_H265_ENC (encoder);
+  GstQsvEncoderReconfigure ret = GST_QSV_ENCODER_RECONFIGURE_NONE;
 
   g_mutex_lock (&self->prop_lock);
-
   if (self->property_updated) {
-    g_mutex_unlock (&self->prop_lock);
-    return GST_QSV_ENCODER_RECONFIGURE_FULL;
+    ret = GST_QSV_ENCODER_RECONFIGURE_FULL;
+    goto done;
   }
 
   if (self->bitrate_updated) {
-    /* Update @param with updated bitrate values so that baseclass can
-     * call MFXVideoENCODE_Query() with updated values */
-    param->mfx.TargetKbps = self->bitrate;
-    param->mfx.MaxKbps = self->max_bitrate;
-    g_mutex_unlock (&self->prop_lock);
+    mfxStatus status;
+    mfxExtEncoderResetOption reset_opt;
+    reset_opt.Header.BufferId = MFX_EXTBUFF_ENCODER_RESET_OPTION;
+    reset_opt.Header.BufferSz = sizeof (mfxExtEncoderResetOption);
+    reset_opt.StartNewSequence = MFX_CODINGOPTION_UNKNOWN;
 
-    return GST_QSV_ENCODER_RECONFIGURE_BITRATE;
+    gst_qsv_h265_enc_set_bitrate (self, param);
+
+    g_ptr_array_add (extra_params, &reset_opt);
+    param->ExtParam = (mfxExtBuffer **) extra_params->pdata;
+    param->NumExtParam = extra_params->len;
+
+    status = MFXVideoENCODE_Query (session, param, param);
+    g_ptr_array_remove_index (extra_params, extra_params->len - 1);
+    param->NumExtParam = extra_params->len;
+
+    if (status != MFX_ERR_NONE) {
+      GST_WARNING_OBJECT (self, "MFXVideoENCODE_Query returned %d (%s)",
+          QSV_STATUS_ARGS (status));
+      ret = GST_QSV_ENCODER_RECONFIGURE_FULL;
+    } else {
+      if (reset_opt.StartNewSequence == MFX_CODINGOPTION_OFF) {
+        GST_DEBUG_OBJECT (self, "Can update without new sequence");
+        ret = GST_QSV_ENCODER_RECONFIGURE_BITRATE;
+      } else {
+        GST_DEBUG_OBJECT (self, "Need new sequence");
+        ret = GST_QSV_ENCODER_RECONFIGURE_FULL;
+      }
+    }
   }
 
+done:
+  self->property_updated = FALSE;
+  self->bitrate_updated = FALSE;
   g_mutex_unlock (&self->prop_lock);
 
-  return GST_QSV_ENCODER_RECONFIGURE_NONE;
+  return ret;
 }
 
 typedef struct

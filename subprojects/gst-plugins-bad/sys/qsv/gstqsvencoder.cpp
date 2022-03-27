@@ -455,7 +455,6 @@ gst_qsv_encoder_reset (GstQsvEncoder * self)
   g_array_set_size (priv->task_pool, 0);
   g_queue_clear (&priv->free_tasks);
   g_queue_clear (&priv->pending_tasks);
-  g_clear_pointer (&priv->input_state, gst_video_codec_state_unref);
 
   return TRUE;
 }
@@ -464,8 +463,12 @@ static gboolean
 gst_qsv_encoder_stop (GstVideoEncoder * encoder)
 {
   GstQsvEncoder *self = GST_QSV_ENCODER (encoder);
+  GstQsvEncoderPrivate *priv = self->priv;
 
-  return gst_qsv_encoder_reset (self);
+  gst_qsv_encoder_reset (self);
+  g_clear_pointer (&priv->input_state, gst_video_codec_state_unref);
+
+  return TRUE;
 }
 
 static gboolean
@@ -932,13 +935,12 @@ gst_qsv_encoder_prepare_pool (GstQsvEncoder * self, GstCaps * caps,
 }
 
 static gboolean
-gst_qsv_encoder_set_format (GstVideoEncoder * encoder,
-    GstVideoCodecState * state)
+gst_qsv_encoder_init_encode_session (GstQsvEncoder * self)
 {
-  GstQsvEncoder *self = GST_QSV_ENCODER (encoder);
   GstQsvEncoderPrivate *priv = self->priv;
   GstQsvEncoderClass *klass = GST_QSV_ENCODER_GET_CLASS (self);
-  GstVideoInfo *info;
+  GstVideoInfo *info = &priv->input_state->info;
+  GstCaps *caps = priv->input_state->caps;
   mfxVideoParam param;
   mfxFrameInfo *frame_info;
   mfxFrameAllocRequest alloc_request;
@@ -951,10 +953,6 @@ gst_qsv_encoder_set_format (GstVideoEncoder * encoder,
 
   gst_qsv_encoder_drain (self, FALSE);
   gst_qsv_encoder_reset (self);
-
-  priv->input_state = gst_video_codec_state_ref (state);
-
-  info = &priv->input_state->info;
 
   encoder_handle = new MFXVideoENCODE (priv->session);
 
@@ -982,7 +980,7 @@ gst_qsv_encoder_set_format (GstVideoEncoder * encoder,
       GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_INTERLACE_MODE (info),
       frame_info->Width, frame_info->Height);
 
-  if (!gst_qsv_encoder_prepare_pool (self, state->caps, &priv->aligned_info,
+  if (!gst_qsv_encoder_prepare_pool (self, caps, &priv->aligned_info,
           &param.IOPattern)) {
     GST_ERROR_OBJECT (self, "Failed to prepare pool");
     goto error;
@@ -1053,7 +1051,8 @@ gst_qsv_encoder_set_format (GstVideoEncoder * encoder,
       param.mfx.FrameInfo.FrameRateExtD, param.mfx.FrameInfo.FrameRateExtN);
   max_latency = gst_util_uint64_scale (max_delay_frames * GST_SECOND,
       param.mfx.FrameInfo.FrameRateExtD, param.mfx.FrameInfo.FrameRateExtN);
-  gst_video_encoder_set_latency (encoder, min_latency, max_latency);
+  gst_video_encoder_set_latency (GST_VIDEO_ENCODER (self),
+      min_latency, max_latency);
 
   priv->video_param = param;
   priv->encoder = encoder_handle;
@@ -1067,6 +1066,57 @@ error:
   gst_qsv_encoder_reset (self);
 
   return FALSE;
+}
+
+static gboolean
+gst_qsv_encoder_reset_encode_session (GstQsvEncoder * self)
+{
+  GstQsvEncoderPrivate *priv = self->priv;
+  GPtrArray *extra_params = priv->extra_params;
+  mfxStatus status;
+  mfxExtEncoderResetOption reset_opt;
+
+  if (!priv->encoder) {
+    GST_WARNING_OBJECT (self, "Encoder was not configured");
+    return gst_qsv_encoder_init_encode_session (self);
+  }
+
+  reset_opt.Header.BufferId = MFX_EXTBUFF_ENCODER_RESET_OPTION;
+  reset_opt.Header.BufferSz = sizeof (mfxExtEncoderResetOption);
+  reset_opt.StartNewSequence = MFX_CODINGOPTION_OFF;
+
+  gst_qsv_encoder_drain (self, FALSE);
+
+  g_ptr_array_add (extra_params, &reset_opt);
+  priv->video_param.ExtParam = (mfxExtBuffer **) extra_params->pdata;
+  priv->video_param.NumExtParam = extra_params->len;
+
+  status = priv->encoder->Reset (&priv->video_param);
+  g_ptr_array_remove_index (extra_params, extra_params->len - 1);
+  priv->video_param.NumExtParam = extra_params->len;
+
+  if (status != MFX_ERR_NONE) {
+    GST_WARNING_OBJECT (self, "MFXVideoENCODE_Reset returned %d (%s)",
+        QSV_STATUS_ARGS (status));
+    return gst_qsv_encoder_init_encode_session (self);
+  }
+
+  GST_DEBUG_OBJECT (self, "Encode session reset done");
+
+  return TRUE;
+}
+
+static gboolean
+gst_qsv_encoder_set_format (GstVideoEncoder * encoder,
+    GstVideoCodecState * state)
+{
+  GstQsvEncoder *self = GST_QSV_ENCODER (encoder);
+  GstQsvEncoderPrivate *priv = self->priv;
+
+  g_clear_pointer (&priv->input_state, gst_video_codec_state_unref);
+  priv->input_state = gst_video_codec_state_ref (state);
+
+  return gst_qsv_encoder_init_encode_session (self);
 }
 
 static mfxU16
@@ -1125,32 +1175,29 @@ gst_qsv_encoder_handle_frame (GstVideoEncoder * encoder,
   mfxU64 timestamp;
   mfxStatus status;
 
-  if (klass->check_reconfigure) {
+  if (klass->check_reconfigure && priv->encoder) {
     GstQsvEncoderReconfigure reconfigure;
 
-    reconfigure = klass->check_reconfigure (self, &priv->video_param);
+    reconfigure = klass->check_reconfigure (self, priv->session,
+        &priv->video_param, priv->extra_params);
+
     switch (reconfigure) {
       case GST_QSV_ENCODER_RECONFIGURE_BITRATE:
-        /* TODO: In case of bitrate change, we can query whether we need to
-         * start from a new sequence or soft-reset is possible
-         * via MFXVideoENCODE_Query() with mfxExtEncoderResetOption struct,
-         * and then if soft-reset is allowed, we can avoid inefficient full-reset
-         * (including IDR insertion) by using MFXVideoENCODE_Reset() */
-        /* fallthrough */
-      case GST_QSV_ENCODER_RECONFIGURE_FULL:
-      {
-        GstVideoCodecState *state =
-            gst_video_codec_state_ref (priv->input_state);
-        gboolean rst;
+        if (!gst_qsv_encoder_reset_encode_session (self)) {
+          GST_ERROR_OBJECT (self, "Failed to reset session");
+          gst_video_encoder_finish_frame (encoder, frame);
 
-        GST_INFO_OBJECT (self, "Configure encoder again");
-        rst = gst_qsv_encoder_set_format (encoder, state);
-        gst_video_codec_state_unref (state);
-
-        if (!rst)
-          return GST_FLOW_NOT_NEGOTIATED;
+          return GST_FLOW_ERROR;
+        }
         break;
-      }
+      case GST_QSV_ENCODER_RECONFIGURE_FULL:
+        if (!gst_qsv_encoder_init_encode_session (self)) {
+          GST_ERROR_OBJECT (self, "Failed to init session");
+          gst_video_encoder_finish_frame (encoder, frame);
+
+          return GST_FLOW_ERROR;
+        }
+        break;
       default:
         break;
     }
@@ -1158,6 +1205,8 @@ gst_qsv_encoder_handle_frame (GstVideoEncoder * encoder,
 
   if (!priv->encoder) {
     GST_ERROR_OBJECT (self, "Encoder object was not configured");
+    gst_video_encoder_finish_frame (encoder, frame);
+
     return GST_FLOW_NOT_NEGOTIATED;
   }
 

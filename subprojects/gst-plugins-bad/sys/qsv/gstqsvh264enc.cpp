@@ -77,7 +77,7 @@ gst_qsv_h264_enc_rate_control_get_type (void)
     {MFX_RATECONTROL_CBR, "Constant Bitrate", "cbr"},
     {MFX_RATECONTROL_VBR, "Variable Bitrate", "vbr"},
     {MFX_RATECONTROL_CQP, "Constant Quantizer", "cqp"},
-    {MFX_RATECONTROL_AVBR, "Average Bitrate", "avbr"},
+    {MFX_RATECONTROL_AVBR, "Average Variable Bitrate", "avbr"},
     {MFX_RATECONTROL_LA, "VBR with look ahead (Non HRD compliant)", "la_vbr"},
     {MFX_RATECONTROL_ICQ, "Intelligent CQP", "icq"},
     {MFX_RATECONTROL_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
@@ -149,6 +149,7 @@ enum
   PROP_AVBR_CONVERGENCE,
   PROP_ICQ_QUALITY,
   PROP_QVBR_QUALITY,
+  PROP_DISABLE_HRD_CONFORMANCE,
   PROP_CC_INSERT,
 };
 
@@ -167,6 +168,7 @@ enum
 #define DEFAULT_AVBR_CONVERGENCE 0
 #define DEFAULT_IQC_QUALITY 0
 #define DEFAULT_QVBR_QUALITY 0
+#define DEFAULT_DISABLE_HRD_CONFORMANCE FALSE
 #define DEFAULT_CC_INSERT GST_QSV_H264_ENC_SEI_INSERT
 
 typedef struct _GstQsvH264EncClassData
@@ -221,6 +223,7 @@ typedef struct _GstQsvH264Enc
   guint avbr_convergence;
   guint icq_quality;
   guint qvbr_quality;
+  gboolean disable_hrd_conformance;
   GstQsvH264EncSeiInsertMode cc_insert;
 } GstQsvH264Enc;
 
@@ -257,8 +260,8 @@ static gboolean gst_qsv_h264_enc_attach_payload (GstQsvEncoder * encoder,
 static GstBuffer *gst_qsv_h264_enc_create_output_buffer (GstQsvEncoder *
     encoder, mfxBitstream * bitstream);
 static GstQsvEncoderReconfigure
-gst_qsv_h264_enc_check_reconfigure (GstQsvEncoder * encoder,
-    mfxVideoParam * param);
+gst_qsv_h264_enc_check_reconfigure (GstQsvEncoder * encoder, mfxSession session,
+    mfxVideoParam * param, GPtrArray * extra_params);
 
 static void
 gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
@@ -404,7 +407,7 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_ICQ_QUALITY,
       g_param_spec_uint ("icq-quality", "ICQ Quality",
-          "Intelligent Constant Quality (0: default)",
+          "Intelligent Constant Quality for \"icq\" rate-control (0: default)",
           0, 51, DEFAULT_IQC_QUALITY, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_QVBR_QUALITY,
@@ -412,9 +415,13 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
           "Quality level used for \"qvbr\" rate-control mode (0: default)",
           0, 51, DEFAULT_QVBR_QUALITY, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (object_class, PROP_DISABLE_HRD_CONFORMANCE,
+      g_param_spec_boolean ("disable-hrd-conformance",
+          "Disable HRD Conformance", "Allow NAL HRD non-conformant stream",
+          DEFAULT_DISABLE_HRD_CONFORMANCE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_CC_INSERT,
-      g_param_spec_enum ("cc-insert",
-          "Closed Caption Insert",
+      g_param_spec_enum ("cc-insert", "Closed Caption Insert",
           "Closed Caption Insert mode. "
           "Only CEA-708 RAW format is supported for now",
           GST_TYPE_QSV_H264_ENC_SEI_INSERT_MODE, DEFAULT_CC_INSERT,
@@ -480,6 +487,7 @@ gst_qsv_h264_enc_init (GstQsvH264Enc * self)
   self->avbr_convergence = DEFAULT_AVBR_CONVERGENCE;
   self->icq_quality = DEFAULT_IQC_QUALITY;
   self->qvbr_quality = DEFAULT_QVBR_QUALITY;
+  self->disable_hrd_conformance = DEFAULT_DISABLE_HRD_CONFORMANCE;
   self->cc_insert = DEFAULT_CC_INSERT;
 
   g_mutex_init (&self->prop_lock);
@@ -523,6 +531,19 @@ gst_qsv_h264_enc_check_update_enum (GstQsvH264Enc * self, mfxU16 * old_val,
 
   g_mutex_lock (&self->prop_lock);
   *old_val = (mfxU16) new_val;
+  self->property_updated = TRUE;
+  g_mutex_unlock (&self->prop_lock);
+}
+
+static void
+gst_qsv_h264_enc_check_update_boolean (GstQsvH264Enc * self, gboolean * old_val,
+    gboolean new_val)
+{
+  if (*old_val == new_val)
+    return;
+
+  g_mutex_lock (&self->prop_lock);
+  *old_val = new_val;
   self->property_updated = TRUE;
   g_mutex_unlock (&self->prop_lock);
 }
@@ -627,6 +648,10 @@ gst_qsv_h264_enc_set_property (GObject * object, guint prop_id,
       gst_qsv_h264_enc_check_update_uint (self, &self->qvbr_quality,
           g_value_get_uint (value), FALSE);
       break;
+    case PROP_DISABLE_HRD_CONFORMANCE:
+      gst_qsv_h264_enc_check_update_boolean (self,
+          &self->disable_hrd_conformance, g_value_get_boolean (value));
+      break;
     case PROP_CC_INSERT:
       /* This property is unrelated to encoder-reset */
       self->cc_insert = (GstQsvH264EncSeiInsertMode) g_value_get_enum (value);
@@ -722,6 +747,9 @@ gst_qsv_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CC_INSERT:
       g_value_set_enum (value, self->cc_insert);
+      break;
+    case PROP_DISABLE_HRD_CONFORMANCE:
+      g_value_set_boolean (value, self->disable_hrd_conformance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -920,6 +948,62 @@ gst_qsv_h264_enc_init_extra_params (GstQsvH264Enc * self)
 
   self->option3.Header.BufferId = MFX_EXTBUFF_CODING_OPTION3;
   self->option3.Header.BufferSz = sizeof (mfxExtCodingOption3);
+}
+
+static void
+gst_qsv_h264_enc_set_bitrate (GstQsvH264Enc * self, mfxVideoParam * param)
+{
+  guint max_val;
+  guint multiplier;
+
+  switch (param->mfx.RateControlMethod) {
+    case MFX_RATECONTROL_CBR:
+      multiplier = (self->bitrate + 0x10000) / 0x10000;
+      param->mfx.TargetKbps = param->mfx.MaxKbps = self->bitrate / multiplier;
+      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
+      break;
+    case MFX_RATECONTROL_VBR:
+    case MFX_RATECONTROL_VCM:
+    case MFX_RATECONTROL_QVBR:
+      max_val = MAX (self->bitrate, self->max_bitrate);
+      multiplier = (max_val + 0x10000) / 0x10000;
+      param->mfx.TargetKbps = self->bitrate / multiplier;
+      param->mfx.MaxKbps = self->max_bitrate / multiplier;
+      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
+      break;
+    case MFX_RATECONTROL_CQP:
+      param->mfx.QPI = self->qp_i;
+      param->mfx.QPP = self->qp_p;
+      param->mfx.QPB = self->qp_b;
+      break;
+    case MFX_RATECONTROL_AVBR:
+      multiplier = (self->bitrate + 0x10000) / 0x10000;
+      param->mfx.TargetKbps = self->bitrate / multiplier;
+      param->mfx.Accuracy = self->avbr_accuracy;
+      param->mfx.Convergence = self->avbr_convergence;
+      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
+      break;
+    case MFX_RATECONTROL_LA:
+      multiplier = (self->bitrate + 0x10000) / 0x10000;
+      param->mfx.TargetKbps = self->bitrate / multiplier;
+      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
+      break;
+    case MFX_RATECONTROL_LA_HRD:
+      max_val = MAX (self->bitrate, self->max_bitrate);
+      multiplier = (max_val + 0x10000) / 0x10000;
+      param->mfx.TargetKbps = self->bitrate / multiplier;
+      param->mfx.MaxKbps = self->max_bitrate / multiplier;
+      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
+      break;
+    case MFX_RATECONTROL_ICQ:
+    case MFX_RATECONTROL_LA_ICQ:
+      param->mfx.ICQQuality = self->icq_quality;
+      break;
+    default:
+      GST_WARNING_OBJECT (self,
+          "Unhandled rate-control method %d", self->rate_control);
+      break;
+  }
 }
 
 static gboolean
@@ -1147,48 +1231,7 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   param->mfx.RateControlMethod = self->rate_control;
   param->mfx.NumRefFrame = self->ref_frames;
 
-  /* Calculate multiplier to avoid uint16 overflow */
-  guint max_val = MAX (self->bitrate, self->max_bitrate);
-  guint multiplier = (max_val + 0x10000) / 0x10000;
-
-  switch (param->mfx.RateControlMethod) {
-    case MFX_RATECONTROL_CBR:
-    case MFX_RATECONTROL_VBR:
-    case MFX_RATECONTROL_VCM:
-    case MFX_RATECONTROL_QVBR:
-      param->mfx.TargetKbps = self->bitrate / multiplier;
-      param->mfx.MaxKbps = self->max_bitrate / multiplier;
-      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
-      break;
-    case MFX_RATECONTROL_CQP:
-      param->mfx.QPI = self->qp_i;
-      param->mfx.QPP = self->qp_p;
-      param->mfx.QPB = self->qp_b;
-      break;
-    case MFX_RATECONTROL_AVBR:
-      param->mfx.TargetKbps = self->bitrate;
-      param->mfx.Accuracy = self->avbr_accuracy;
-      param->mfx.Convergence = self->avbr_convergence;
-      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
-      break;
-    case MFX_RATECONTROL_LA:
-      param->mfx.TargetKbps = self->bitrate;
-      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
-      break;
-    case MFX_RATECONTROL_LA_HRD:
-      param->mfx.TargetKbps = self->bitrate;
-      param->mfx.MaxKbps = self->max_bitrate;
-      param->mfx.BRCParamMultiplier = (mfxU16) multiplier;
-      break;
-    case MFX_RATECONTROL_ICQ:
-    case MFX_RATECONTROL_LA_ICQ:
-      param->mfx.ICQQuality = self->icq_quality;
-      break;
-    default:
-      GST_WARNING_OBJECT (self,
-          "Unhandled rate-control method %d", self->rate_control);
-      break;
-  }
+  gst_qsv_h264_enc_set_bitrate (self, param);
 
   /* Write signal info only when upstream caps contains valid colorimetry,
    * because derived default colorimetry in gst_video_info_from_caps() tends to
@@ -1225,6 +1268,11 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
 
   /* TODO: property ? */
   option->AUDelimiter = MFX_CODINGOPTION_ON;
+
+  if (self->disable_hrd_conformance) {
+    option->NalHrdConformance = MFX_CODINGOPTION_OFF;
+    option->VuiVclHrdParameters = MFX_CODINGOPTION_OFF;
+  }
 
   /* Enables PicTiming SEI by default */
   option->PicTimingSEI = MFX_CODINGOPTION_ON;
@@ -1593,34 +1641,56 @@ gst_qsv_h264_enc_create_output_buffer (GstQsvEncoder * encoder,
 }
 
 static GstQsvEncoderReconfigure
-gst_qsv_h264_enc_check_reconfigure (GstQsvEncoder * encoder,
-    mfxVideoParam * param)
+gst_qsv_h264_enc_check_reconfigure (GstQsvEncoder * encoder, mfxSession session,
+    mfxVideoParam * param, GPtrArray * extra_params)
 {
   GstQsvH264Enc *self = GST_QSV_H264_ENC (encoder);
+  GstQsvEncoderReconfigure ret = GST_QSV_ENCODER_RECONFIGURE_NONE;
 
   g_mutex_lock (&self->prop_lock);
-
   if (self->property_updated) {
-    g_mutex_unlock (&self->prop_lock);
-    return GST_QSV_ENCODER_RECONFIGURE_FULL;
+    ret = GST_QSV_ENCODER_RECONFIGURE_FULL;
+    goto done;
   }
 
   if (self->bitrate_updated) {
-    /* Update @param with updated bitrate values so that baseclass can
-     * call MFXVideoENCODE_Query() with updated values */
-    param->mfx.TargetKbps = self->bitrate;
-    param->mfx.MaxKbps = self->max_bitrate;
-    param->mfx.QPI = self->qp_i;
-    param->mfx.QPP = self->qp_p;
-    param->mfx.QPB = self->qp_b;
-    g_mutex_unlock (&self->prop_lock);
+    mfxStatus status;
+    mfxExtEncoderResetOption reset_opt;
+    reset_opt.Header.BufferId = MFX_EXTBUFF_ENCODER_RESET_OPTION;
+    reset_opt.Header.BufferSz = sizeof (mfxExtEncoderResetOption);
+    reset_opt.StartNewSequence = MFX_CODINGOPTION_UNKNOWN;
 
-    return GST_QSV_ENCODER_RECONFIGURE_BITRATE;
+    gst_qsv_h264_enc_set_bitrate (self, param);
+
+    g_ptr_array_add (extra_params, &reset_opt);
+    param->ExtParam = (mfxExtBuffer **) extra_params->pdata;
+    param->NumExtParam = extra_params->len;
+
+    status = MFXVideoENCODE_Query (session, param, param);
+    g_ptr_array_remove_index (extra_params, extra_params->len - 1);
+    param->NumExtParam = extra_params->len;
+
+    if (status != MFX_ERR_NONE) {
+      GST_WARNING_OBJECT (self, "MFXVideoENCODE_Query returned %d (%s)",
+          QSV_STATUS_ARGS (status));
+      ret = GST_QSV_ENCODER_RECONFIGURE_FULL;
+    } else {
+      if (reset_opt.StartNewSequence == MFX_CODINGOPTION_OFF) {
+        GST_DEBUG_OBJECT (self, "Can update without new sequence");
+        ret = GST_QSV_ENCODER_RECONFIGURE_BITRATE;
+      } else {
+        GST_DEBUG_OBJECT (self, "Need new sequence");
+        ret = GST_QSV_ENCODER_RECONFIGURE_FULL;
+      }
+    }
   }
 
+done:
+  self->property_updated = FALSE;
+  self->bitrate_updated = FALSE;
   g_mutex_unlock (&self->prop_lock);
 
-  return GST_QSV_ENCODER_RECONFIGURE_NONE;
+  return ret;
 }
 
 typedef struct
