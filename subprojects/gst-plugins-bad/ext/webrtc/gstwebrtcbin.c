@@ -8316,7 +8316,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * RTCReceivedStreamStats supported fields (https://w3c.github.io/webrtc-stats/#receivedrtpstats-dict*)
    *
    *  "packets-received"    G_TYPE_UINT64               number of packets received (only for local inbound)
-   *  "packets-lost"        G_TYPE_UINT64               number of packets lost
+   *  "packets-lost"        G_TYPE_INT64                number of packets lost
    *  "packets-discarded"   G_TYPE_UINT64               number of packets discarded
    *  "packets-repaired"    G_TYPE_UINT64               number of packets repaired
    *  "jitter"              G_TYPE_DOUBLE               packet jitter measured in seconds

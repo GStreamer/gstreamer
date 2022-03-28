@@ -142,7 +142,7 @@ _get_stats_from_remote_rtp_source_stats (GstWebRTCBin * webrtc,
   /* RTCReceivedRtpStreamStats */
 
   if (gst_structure_get_int (source_stats, "rb-packetslost", &lost))
-    gst_structure_set (r_in, "packets-lost", G_TYPE_INT, lost, NULL);
+    gst_structure_set (r_in, "packets-lost", G_TYPE_INT64, (gint64) lost, NULL);
 
   if (clock_rate && gst_structure_get_uint (source_stats, "rb-jitter", &jitter))
     gst_structure_set (r_in, "jitter", G_TYPE_DOUBLE,
@@ -359,8 +359,11 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
 
     if (gst_structure_get_uint64 (source_stats, "packets-received", &packets))
       gst_structure_set (in, "packets-received", G_TYPE_UINT64, packets, NULL);
-    if (jb_stats)
-      gst_structure_set (in, "packets-lost", G_TYPE_UINT64, jb_lost, NULL);
+    if (jb_stats) {
+      gint64 packets_lost = jb_lost > G_MAXINT64 ?
+          G_MAXINT64 : (gint64) jb_lost;
+      gst_structure_set (in, "packets-lost", G_TYPE_INT64, packets_lost, NULL);
+    }
     if (gst_structure_get_uint (source_stats, "jitter", &jitter))
       gst_structure_set (in, "jitter", G_TYPE_DOUBLE,
           CLOCK_RATE_VALUE_TO_SECONDS (jitter, clock_rate), NULL);

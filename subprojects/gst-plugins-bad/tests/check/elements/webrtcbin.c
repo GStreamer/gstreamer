@@ -1453,7 +1453,7 @@ static void
 validate_inbound_rtp_stats (const GstStructure * s, const GstStructure * stats)
 {
   guint ssrc, fir, pli, nack;
-  gint packets_lost;
+  gint64 packets_lost;
   guint64 packets_received, bytes_received;
   double jitter;
   gchar *remote_id;
@@ -1470,8 +1470,8 @@ validate_inbound_rtp_stats (const GstStructure * s, const GstStructure * stats)
   fail_unless (gst_structure_get (s, "bytes-received", G_TYPE_UINT64,
           &bytes_received, NULL));
   fail_unless (gst_structure_get (s, "jitter", G_TYPE_DOUBLE, &jitter, NULL));
-  fail_unless (gst_structure_get (s, "packets-lost", G_TYPE_INT, &packets_lost,
-          NULL));
+  fail_unless (gst_structure_get (s, "packets-lost", G_TYPE_INT64,
+          &packets_lost, NULL));
   fail_unless (gst_structure_get (s, "remote-id", G_TYPE_STRING, &remote_id,
           NULL));
   fail_unless (gst_structure_get (stats, remote_id, GST_TYPE_STRUCTURE, &remote,
@@ -1487,7 +1487,7 @@ validate_remote_inbound_rtp_stats (const GstStructure * s,
     const GstStructure * stats)
 {
   guint ssrc;
-  gint packets_lost;
+  gint64 packets_lost;
   double jitter, rtt;
   gchar *local_id;
   GstStructure *local;
@@ -1496,8 +1496,8 @@ validate_remote_inbound_rtp_stats (const GstStructure * s,
 
   fail_unless (gst_structure_get (s, "ssrc", G_TYPE_UINT, &ssrc, NULL));
   fail_unless (gst_structure_get (s, "jitter", G_TYPE_DOUBLE, &jitter, NULL));
-  fail_unless (gst_structure_get (s, "packets-lost", G_TYPE_INT, &packets_lost,
-          NULL));
+  fail_unless (gst_structure_get (s, "packets-lost", G_TYPE_INT64,
+          &packets_lost, NULL));
   fail_unless (gst_structure_get (s, "round-trip-time", G_TYPE_DOUBLE, &rtt,
           NULL));
   fail_unless (gst_structure_get (s, "local-id", G_TYPE_STRING, &local_id,
