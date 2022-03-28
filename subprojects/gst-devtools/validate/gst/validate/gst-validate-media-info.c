@@ -711,7 +711,10 @@ check_and_remove_input_selector_counters (GstElement * element,
   gboolean done = FALSE;
   GstPad *pad;
   GValue value = { 0, };
-  guint id, ncounters = 0, total_sink_count = 0;
+  guint id, ncounters = 0;
+#if 0
+  guint total_sink_count = 0;
+#endif
   BufferCountData *bcd, **bcds =
       g_malloc0 (sizeof (BufferCountData *) * element->numpads);
   gboolean ret = TRUE;
@@ -725,7 +728,9 @@ check_and_remove_input_selector_counters (GstElement * element,
         bcd = g_object_get_data (G_OBJECT (pad), "buffer-count-data");
         if (GST_PAD_IS_SINK (pad)) {
           bcds[++ncounters] = bcd;
+#if 0
           total_sink_count += bcd->counter;
+#endif
         } else {
           bcds[0] = bcd;
         }
