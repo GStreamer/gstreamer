@@ -216,7 +216,7 @@ _io_surface_gl_memory_set_surface (GstIOSurfaceGLMemory * memory,
     IOSurfaceDecrementUseCount (memory->surface);
   memory->surface = surface;
   if (surface) {
-    GLuint tex_id, tex_target, texifmt, texfmt;
+    GLuint tex_id, tex_target, texifmt;
     guint plane;
     CGLError cglError;
 
@@ -224,9 +224,6 @@ _io_surface_gl_memory_set_surface (GstIOSurfaceGLMemory * memory,
     tex_id = gl_mem->tex_id;
     tex_target = gst_gl_texture_target_to_gl (gl_mem->tex_target);
     texifmt = gst_gl_format_from_video_info (context, &gl_mem->info, plane);
-    texfmt =
-        gst_gl_sized_gl_format_from_gl_format_type (context, texifmt,
-        GL_UNSIGNED_BYTE);
     gl->BindTexture (tex_target, tex_id);
     cglError = CGLTexImageIOSurface2D ((CGLContextObj)
         gst_gl_context_get_gl_context (context), tex_target, texifmt,
