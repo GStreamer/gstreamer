@@ -1244,7 +1244,7 @@ nle_composition_dispose (GObject * object)
   g_list_free (priv->objects_stop);
 
   g_list_free_full (priv->actions, (GDestroyNotify) _remove_each_action);
-  g_clear_object (&priv->stack_initialization_seek);
+  gst_clear_event (&priv->stack_initialization_seek);
 
   nle_composition_reset_target_pad (comp);
 
