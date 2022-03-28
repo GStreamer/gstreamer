@@ -206,10 +206,7 @@ gst_core_video_wrap_pixel_buffer (GstBuffer * buf,
   gst_apple_core_video_pixel_buffer_unref (gpixbuf);
 
   if (info) {
-    GstVideoMeta *video_meta;
-
-    video_meta =
-        gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+    gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_INFO_FORMAT (info), info->width, info->height, n_planes,
         offset, stride);
   }
