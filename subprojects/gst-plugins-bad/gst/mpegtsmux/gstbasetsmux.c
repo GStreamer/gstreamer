@@ -2112,7 +2112,7 @@ gst_base_ts_mux_src_event (GstAggregator * agg, GstEvent * event)
       GstIterator *iter;
       GValue sinkpad_value = G_VALUE_INIT;
       GstClockTime running_time;
-      gboolean all_headers, done = FALSE, res = FALSE;
+      gboolean all_headers, done = FALSE;
       guint count;
 
       if (!gst_video_event_is_force_key_unit (event))
