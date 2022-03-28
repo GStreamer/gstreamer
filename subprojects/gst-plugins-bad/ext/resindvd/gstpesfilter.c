@@ -114,7 +114,7 @@ gst_pes_filter_parse (GstPESFilter * filter)
   guint32 start_code;
 
   gboolean STD_buffer_bound_scale G_GNUC_UNUSED;
-  guint16 STD_buffer_size_bound;
+  guint16 STD_buffer_size_bound G_GNUC_UNUSED;
   const guint8 *data;
   gint avail, datalen;
   gboolean have_size = FALSE;
