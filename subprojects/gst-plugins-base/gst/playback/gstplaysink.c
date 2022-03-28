@@ -1471,11 +1471,18 @@ static GstElement *
 try_element (GstPlaySink * playsink, GstElement * element, gboolean unref)
 {
   GstStateChangeReturn ret;
+  GstBus *element_bus;
 
   if (element) {
+    element_bus = gst_element_get_bus (element);
+    g_assert (!element_bus);
+    gst_element_set_bus (element, GST_BIN_CAST (playsink)->child_bus);
+
     ret = gst_element_set_state (element, GST_STATE_READY);
+
     if (ret == GST_STATE_CHANGE_FAILURE) {
       GST_DEBUG_OBJECT (playsink, "failed state change..");
+      gst_element_set_bus (element, NULL);
       gst_element_set_state (element, GST_STATE_NULL);
       if (unref)
         gst_object_unref (element);
