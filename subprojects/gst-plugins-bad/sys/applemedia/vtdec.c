@@ -608,7 +608,7 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
   OSStatus status;
   CMSampleBufferRef cm_sample_buffer = NULL;
-  VTDecodeFrameFlags input_flags, output_flags;
+  VTDecodeFrameFlags input_flags;
   GstVtdec *vtdec = GST_VTDEC (decoder);
   GstFlowReturn ret = GST_FLOW_OK;
   int decode_frame_number = frame->decode_frame_number;
@@ -629,7 +629,6 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
    * reordering ourselves.
    */
   input_flags = kVTDecodeFrame_EnableAsynchronousDecompression;
-  output_flags = 0;
 
   cm_sample_buffer =
       cm_sample_buffer_from_gst_buffer (vtdec, frame->input_buffer);
