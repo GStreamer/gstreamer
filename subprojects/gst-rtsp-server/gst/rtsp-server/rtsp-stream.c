@@ -2667,7 +2667,6 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
   GstSample *sample;
   GstBuffer *buffer;
   GstBufferList *buffer_list;
-  guint n_messages = 0;
   gboolean is_rtp;
   GPtrArray *transports;
 
@@ -2699,10 +2698,6 @@ send_tcp_message (GstRTSPStream * stream, gint idx)
 
   /* We will get one message-sent notification per buffer or
    * complete buffer-list. We handle each buffer-list as a unit */
-  if (buffer)
-    n_messages += 1;
-  if (buffer_list)
-    n_messages += 1;
 
   transports = priv->tr_cache;
   if (transports)
