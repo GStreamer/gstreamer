@@ -64,6 +64,7 @@ base_tests = [
   [['elements/rtponviftimestamp.c']],
   [['elements/rtpsrc.c']],
   [['elements/rtpsink.c']],
+  [['elements/srtp.c']],
   [['elements/switchbin.c']],
   [['elements/videoframe-audiolevel.c']],
   [['elements/viewfinderbin.c']],

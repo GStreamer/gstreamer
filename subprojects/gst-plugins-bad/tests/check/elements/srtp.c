@@ -20,11 +20,11 @@
  */
 
 #ifdef HAVE_CONFIG_H
-# include "config.h"
+#include "config.h"
 #endif
 
 #ifdef HAVE_VALGRIND
-# include <valgrind/valgrind.h>
+#include <valgrind/valgrind.h>
 #endif
 
 #include <gst/check/gstcheck.h>
@@ -48,20 +48,35 @@ GST_START_TEST (test_create_and_unref)
 
 GST_END_TEST;
 
-GST_START_TEST (test_play)
+static void
+check_play (const gchar * encode_key, const gchar * decode_key,
+    guint buffer_count, guint expected_recv_count,
+    guint expected_recv_drop_count)
 {
   GstElement *source_pipeline, *sink_pipeline;
   GstBus *source_bus;
   GstMessage *msg;
+  GstStructure *stats;
+  guint recv_count = 0;
+  guint drop_count = 0;
+  GstElement *srtp_dec;
+  guint port = 5004;
 
-  source_pipeline =
-      gst_parse_launch
-      ("audiotestsrc num-buffers=50 ! alawenc ! rtppcmapay ! application/x-rtp, payload=(int)8, ssrc=(uint)1356955624 ! srtpenc name=enc key=012345678901234567890123456789012345678901234567890123456789 ! udpsink port=5004 sync=false",
-      NULL);
-  sink_pipeline =
-      gst_parse_launch
-      ("udpsrc port=5004 caps=\"application/x-srtp, payload=(int)8, ssrc=(uint)1356955624, srtp-key=(buffer)012345678901234567890123456789012345678901234567890123456789, srtp-cipher=(string)aes-128-icm, srtp-auth=(string)hmac-sha1-80, srtcp-cipher=(string)aes-128-icm, srtcp-auth=(string)hmac-sha1-80\" ! srtpdec name=dec ! rtppcmadepay ! alawdec ! fakesink",
-      NULL);
+  gchar *source_pipeline_desc = g_strdup_printf ("audiotestsrc num-buffers=%d \
+        ! alawenc ! rtppcmapay ! application/x-rtp, payload=(int)8, ssrc=(uint)1356955624 \
+        ! srtpenc name=enc key=%s ! udpsink port=%d sync=false host=127.0.0.1", buffer_count, encode_key, port);
+
+  gchar *sink_pipeline_desc =
+      g_strdup_printf ("udpsrc port=%d caps=\"application/x-srtp, \
+      payload=(int)8, ssrc=(uint)1356955624, srtp-key=(buffer)%s, srtp-cipher=(string)aes-128-icm, \
+      srtp-auth=(string)hmac-sha1-80, srtcp-cipher=(string)aes-128-icm, srtcp-auth=(string)hmac-sha1-80\" \
+      ! srtpdec name=dec ! rtppcmadepay ! alawdec ! fakesink", port, decode_key);
+
+  source_pipeline = gst_parse_launch (source_pipeline_desc, NULL);
+  sink_pipeline = gst_parse_launch (sink_pipeline_desc, NULL);
+
+  g_free (source_pipeline_desc);
+  g_free (sink_pipeline_desc);
 
   fail_unless (gst_element_set_state (source_pipeline,
           GST_STATE_PLAYING) != GST_STATE_CHANGE_FAILURE);
@@ -76,6 +91,17 @@ GST_START_TEST (test_play)
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
+  // Wait 1s that all the buffers reached the sink pipeline entirely
+  g_usleep (G_USEC_PER_SEC * 1);
+
+  srtp_dec = gst_bin_get_by_name (GST_BIN (sink_pipeline), "dec");
+  g_object_get (srtp_dec, "stats", &stats, NULL);
+  gst_structure_get_uint (stats, "recv-count", &recv_count);
+  fail_unless (recv_count <= expected_recv_count);
+  gst_structure_get_uint (stats, "recv-drop-count", &drop_count);
+  fail_unless (drop_count <= expected_recv_drop_count);
+  gst_object_unref (srtp_dec);
+  gst_structure_free (stats);
   gst_object_unref (source_bus);
 
   gst_element_set_state (source_pipeline, GST_STATE_NULL);
@@ -85,8 +111,23 @@ GST_START_TEST (test_play)
   gst_object_unref (sink_pipeline);
 }
 
+GST_START_TEST (test_play)
+{
+  check_play ("012345678901234567890123456789012345678901234567890123456789",
+      "012345678901234567890123456789012345678901234567890123456789", 50, 50,
+      0);
+}
+
 GST_END_TEST;
 
+GST_START_TEST (test_play_key_error)
+{
+  check_play ("012345678901234567890123456789012345678901234567890123456789",
+      "000000000000000000000000000000000000000000000000000000000000", 50, 50,
+      50);
+}
+
+GST_END_TEST;
 typedef struct
 {
   guint counter;
@@ -96,16 +137,18 @@ typedef struct
 static guint
 get_roc (GstElement * e)
 {
-  const GstStructure *s, *ss;
+  GstStructure *stats;
+  const GstStructure *ss;
   const GValue *v;
   guint roc = 0;
 
-  g_object_get (e, "stats", &s, NULL);
-  v = gst_structure_get_value (s, "streams");
+  g_object_get (e, "stats", &stats, NULL);
+  v = gst_structure_get_value (stats, "streams");
   fail_unless (v);
   v = gst_value_array_get_value (v, 0);
   ss = gst_value_get_structure (v);
   gst_structure_get_uint (ss, "roc", &roc);
+  gst_structure_free (stats);
   return roc;
 }
 
@@ -151,7 +194,7 @@ GST_START_TEST (test_roc)
 
   source_pipeline =
       gst_parse_launch
-      ("audiotestsrc num-buffers=65555 ! alawenc ! rtppcmapay ! application/x-rtp, payload=(int)8, ssrc=(uint)1356955624 ! srtpenc name=enc key=012345678901234567890123456789012345678901234567890123456789 ! udpsink port=5004 sync=false",
+      ("audiotestsrc num-buffers=65555 ! alawenc ! rtppcmapay ! application/x-rtp, payload=(int)8, ssrc=(uint)1356955624 ! srtpenc name=enc key=012345678901234567890123456789012345678901234567890123456789 ! udpsink port=5004 sync=false host=127.0.0.1",
       NULL);
   sink_pipeline =
       gst_parse_launch
@@ -352,6 +395,7 @@ srtp_suite (void)
   tcase_add_test (tc_chain, test_create_and_unref);
   tcase_add_test (tc_chain, test_play);
   tcase_add_test (tc_chain, test_roc);
+  tcase_add_test (tc_chain, test_play_key_error);
 #ifdef HAVE_SRTP2
   tcase_add_test (tc_chain, test_simple_mki);
   tcase_add_test (tc_chain, test_srtpdec_multiple_mki);
