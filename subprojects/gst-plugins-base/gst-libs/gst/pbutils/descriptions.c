@@ -649,7 +649,7 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       case 1:
       case 2:
       case 3:
-        if (str && strncmp (str, "MSS", 3)) {
+        if (str && !strncmp (str, "MSS", 3)) {
           return g_strdup_printf ("Windows Media Video %d Screen", ver + 6);
         } else {
           return g_strdup_printf ("Windows Media Video %d", ver + 6);
