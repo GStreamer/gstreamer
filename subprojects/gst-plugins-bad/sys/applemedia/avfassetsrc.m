@@ -1011,18 +1011,15 @@ gst_avf_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
 {
   CMSampleBufferRef cmbuf;
   AVAssetReaderTrackOutput *areader = NULL;
-  GstCaps *caps;
   GstBuffer *buf;
   CMTime dur, ts;
 
   GST_LOG ("Reading %s next buffer", MEDIA_TYPE_TO_STR (type));
   if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_AUDIO && audio_track != NULL) {
     areader = audio_track;
-    caps = audio_caps;
   } else if (type == GST_AVF_ASSET_READER_MEDIA_TYPE_VIDEO &&
       video_track != NULL) {
     areader = video_track;
-    caps = video_caps;
   }
 
   if (areader == NULL) {
