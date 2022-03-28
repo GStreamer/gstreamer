@@ -68,18 +68,15 @@ gst_video_texture_cache_default_set_format (GstVideoTextureCache * cache,
     GstVideoFormat in_format, GstCaps * out_caps)
 {
   GstCaps *in_caps;
-  GstCapsFeatures *features;
 
   g_return_if_fail (gst_caps_is_fixed (out_caps));
 
   out_caps = gst_caps_copy (out_caps);
-  features = gst_caps_get_features (out_caps, 0);
   gst_video_info_from_caps (&cache->output_info, out_caps);
 
   in_caps = gst_caps_copy (out_caps);
   gst_caps_set_simple (in_caps, "format",
           G_TYPE_STRING, gst_video_format_to_string (in_format), NULL);
-  features = gst_caps_get_features (in_caps, 0);
   gst_video_info_from_caps (&cache->input_info, in_caps);
 
   gst_caps_take (&cache->in_caps, in_caps);
