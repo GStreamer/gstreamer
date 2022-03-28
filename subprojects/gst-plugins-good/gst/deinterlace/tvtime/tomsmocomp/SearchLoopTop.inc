@@ -21,6 +21,12 @@ long        y;
 
 long     Last8;
 
+// XXX; silence unused-but-set warnings turned into errors with Werror
+(void) pSrc;
+(void) pSrcP;
+(void) pBob;
+(void) pBobP;
+
 	pSrc  = pWeaveSrc;			// points 1 weave line above
 	pSrcP = pWeaveSrcP;			// " 
 
