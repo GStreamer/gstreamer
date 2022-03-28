@@ -415,6 +415,8 @@ describe_stream_info (GstDiscovererStreamInfo * sinfo, GString * desc)
   g_string_append_printf (desc, "%s%s%s", desc->len ? ", " : "",
       get_type_icon (sinfo), capsdesc);
 
+  g_free (capsdesc);
+
   if (GST_IS_DISCOVERER_CONTAINER_INFO (sinfo)) {
     GList *tmp, *streams;
 
