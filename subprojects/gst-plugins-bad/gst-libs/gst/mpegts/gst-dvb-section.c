@@ -203,7 +203,7 @@ static gpointer
 _parse_eit (GstMpegtsSection * section)
 {
   GstMpegtsEIT *eit = NULL;
-  guint i = 0, allocated_events = 12;
+  guint allocated_events = 12;
   guint8 *data, *end, *duration_ptr;
   guint16 descriptors_loop_length;
 
@@ -267,8 +267,6 @@ _parse_eit (GstMpegtsSection * section)
     if (event->descriptors == NULL)
       goto error;
     data += descriptors_loop_length;
-
-    i += 1;
   }
 
   if (data != end - 4) {
@@ -362,7 +360,7 @@ static gpointer
 _parse_bat (GstMpegtsSection * section)
 {
   GstMpegtsBAT *bat = NULL;
-  guint i = 0, allocated_streams = 12;
+  guint allocated_streams = 12;
   guint8 *data, *end, *entry_begin;
   guint16 descriptors_loop_length, transport_stream_loop_length;
 
@@ -444,7 +442,6 @@ _parse_bat (GstMpegtsSection * section)
 
     data += descriptors_loop_length;
 
-    i += 1;
     transport_stream_loop_length -= data - entry_begin;
   }
 
@@ -540,7 +537,7 @@ static gpointer
 _parse_nit (GstMpegtsSection * section)
 {
   GstMpegtsNIT *nit = NULL;
-  guint i = 0, allocated_streams = 12;
+  guint allocated_streams = 12;
   guint8 *data, *end, *entry_begin;
   guint16 descriptors_loop_length, transport_stream_loop_length;
 
@@ -625,7 +622,6 @@ _parse_nit (GstMpegtsSection * section)
 
     data += descriptors_loop_length;
 
-    i += 1;
     transport_stream_loop_length -= data - entry_begin;
   }
 
@@ -882,7 +878,7 @@ static gpointer
 _parse_sdt (GstMpegtsSection * section)
 {
   GstMpegtsSDT *sdt = NULL;
-  guint i = 0, allocated_services = 8;
+  guint allocated_services = 8;
   guint8 *data, *end, *entry_begin;
   guint tmp;
   guint sdt_info_length;
@@ -954,7 +950,6 @@ _parse_sdt (GstMpegtsSection * section)
     data += descriptors_loop_length;
 
     sdt_info_length -= data - entry_begin;
-    i += 1;
   }
 
   if (data != end - 4) {
@@ -1313,7 +1308,7 @@ static gpointer
 _parse_sit (GstMpegtsSection * section)
 {
   GstMpegtsSIT *sit = NULL;
-  guint i = 0, allocated_services = 8;
+  guint allocated_services = 8;
   guint8 *data, *end, *entry_begin;
   guint sit_info_length;
   guint descriptors_loop_length;
@@ -1373,7 +1368,6 @@ _parse_sit (GstMpegtsSection * section)
     data += descriptors_loop_length;
 
     sit_info_length -= data - entry_begin;
-    i += 1;
   }
 
   if (data != end - 4) {
