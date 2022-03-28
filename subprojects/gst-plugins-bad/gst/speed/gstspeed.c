@@ -520,7 +520,7 @@ speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_SEGMENT:{
       gdouble rate;
       GstFormat format;
-      gint64 start_value, stop_value, base;
+      gint64 start_value, stop_value;
       const GstSegment *segment;
       GstSegment seg;
 
@@ -530,7 +530,6 @@ speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       format = segment->format;
       start_value = segment->start;
       stop_value = segment->stop;
-      base = segment->base;
 
       gst_event_unref (event);
 
@@ -545,7 +544,6 @@ speed_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         start_value /= filter->speed;
       if (stop_value >= 0)
         stop_value /= filter->speed;
-      base /= filter->speed;
 
       /* this would only really be correct if we clipped incoming data */
       filter->timestamp = start_value;
