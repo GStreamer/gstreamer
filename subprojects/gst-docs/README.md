@@ -51,7 +51,7 @@ From `gstreamer`:
 
 ```
 meson build/
-ninja -C build subprojects/gst-docs/GStreamer-doc
+./gst-env ninja -C build subprojects/gst-docs/GStreamer-doc
 ```
 
 And browse the doc:
