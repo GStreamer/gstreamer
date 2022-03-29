@@ -323,7 +323,7 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
   gst_allocation_params_init (&params);
 
   pool = gst_va_pool_new_with_config (caps, size, 0, max_buffers, usage_hint,
-      allocator, &params);
+      GST_VA_FEATURE_AUTO, allocator, &params);
 
   gst_clear_object (&allocator);
   gst_clear_caps (&caps);

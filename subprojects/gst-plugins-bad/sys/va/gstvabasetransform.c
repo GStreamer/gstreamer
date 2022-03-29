@@ -261,7 +261,7 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   }
 
   pool = gst_va_pool_new_with_config (caps, size, 1 + self->extra_min_buffers,
-      0, usage_hint, allocator, &params);
+      0, usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
     goto config_failed;
@@ -392,7 +392,8 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
-  gst_buffer_pool_config_set_va_allocation_params (config, usage_hint);
+  gst_buffer_pool_config_set_va_allocation_params (config, usage_hint,
+      GST_VA_FEATURE_AUTO);
   if (!gst_buffer_pool_set_config (pool, config)) {
     gst_object_unref (allocator);
     gst_object_unref (pool);
@@ -403,7 +404,8 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
     gst_va_dmabuf_allocator_get_format (allocator, &self->priv->srcpad_info,
         NULL);
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    gst_va_allocator_get_format (allocator, &self->priv->srcpad_info, NULL);
+    gst_va_allocator_get_format (allocator, &self->priv->srcpad_info, NULL,
+        NULL);
   }
 
   if (update_allocator)
@@ -759,7 +761,7 @@ _get_sinkpad_pool (GstVaBaseTransform * self)
 
   allocator = gst_va_base_transform_allocator_from_caps (self, caps);
   self->priv->sinkpad_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
-      usage_hint, allocator, &params);
+      usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
   if (!self->priv->sinkpad_pool) {
     gst_object_unref (allocator);
     return NULL;
@@ -769,7 +771,8 @@ _get_sinkpad_pool (GstVaBaseTransform * self)
     gst_va_dmabuf_allocator_get_format (allocator, &self->priv->sinkpad_info,
         NULL);
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    gst_va_allocator_get_format (allocator, &self->priv->sinkpad_info, NULL);
+    gst_va_allocator_get_format (allocator, &self->priv->sinkpad_info, NULL,
+        NULL);
   }
 
   gst_object_unref (allocator);

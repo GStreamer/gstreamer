@@ -94,11 +94,13 @@ void                  gst_va_allocator_flush              (GstAllocator * alloca
 GST_VA_API
 gboolean              gst_va_allocator_set_format         (GstAllocator * allocator,
                                                            GstVideoInfo * info,
-                                                           guint usage_hint);
+                                                           guint usage_hint,
+							   GstVaFeature use_derived);
 GST_VA_API
 gboolean              gst_va_allocator_get_format         (GstAllocator * allocator,
                                                            GstVideoInfo * info,
-                                                           guint * usage_hint);
+                                                           guint * usage_hint,
+							   GstVaFeature * use_derived);
 
 GST_VA_API
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);

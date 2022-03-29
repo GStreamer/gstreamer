@@ -926,6 +926,7 @@ struct _GstVaAllocator
 
   GstVaDisplay *display;
 
+  GstVaFeature feat_use_derived;
   gboolean use_derived;
   GArray *surface_formats;
 
@@ -1088,7 +1089,8 @@ _update_image_info (GstVaAllocator * va_allocator)
       GST_VIDEO_INFO_HEIGHT (&va_allocator->info));
 
   /* Try derived first, but different formats can never derive */
-  if (va_allocator->surface_format == va_allocator->img_format) {
+  if (va_allocator->feat_use_derived != GST_VA_FEATURE_DISABLED
+      && va_allocator->surface_format == va_allocator->img_format) {
     if (va_get_derive_image (va_allocator->display, surface, &image)) {
       va_allocator->use_derived = TRUE;
       va_allocator->derived_info = va_allocator->info;
@@ -1096,6 +1098,12 @@ _update_image_info (GstVaAllocator * va_allocator)
       va_destroy_image (va_allocator->display, image.image_id);
     }
     image.image_id = VA_INVALID_ID;     /* reset it */
+  }
+
+  if (va_allocator->feat_use_derived == GST_VA_FEATURE_ENABLED
+      && !va_allocator->use_derived) {
+    GST_WARNING_OBJECT (va_allocator, "Derived images are disabled.");
+    va_allocator->feat_use_derived = GST_VA_FEATURE_DISABLED;
   }
 
   /* Then we try to create a image. */
@@ -1146,30 +1154,36 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
     goto success;
   }
 
-  switch (gst_va_display_get_implementation (display)) {
-    case GST_VA_IMPLEMENTATION_INTEL_IHD:
-      /* On Gen7+ Intel graphics the memory is mappable but not
-       * cached, so normal memcpy() access is very slow to read, but
-       * it's ok for writing. So let's assume that users won't prefer
-       * direct-mapped memory if they request read access. */
-      use_derived = va_allocator->use_derived && !(flags & GST_MAP_READ);
-      break;
-    case GST_VA_IMPLEMENTATION_INTEL_I965:
-      /* YUV derived images are tiled, so writing them is also
-       * problematic */
-      use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
-          || ((flags & GST_MAP_WRITE)
-              && GST_VIDEO_INFO_IS_YUV (&va_allocator->derived_info)));
-      break;
-    case GST_VA_IMPLEMENTATION_MESA_GALLIUM:
-      /* Reading RGB derived images, with non-standard resolutions,
-       * looks like tiled too. TODO(victor): fill a bug in Mesa. */
-      use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
-          && GST_VIDEO_INFO_IS_RGB (&va_allocator->derived_info));
-      break;
-    default:
-      use_derived = va_allocator->use_derived;
-      break;
+  if (va_allocator->feat_use_derived == GST_VA_FEATURE_ENABLED) {
+    use_derived = TRUE;
+  } else if (va_allocator->feat_use_derived == GST_VA_FEATURE_DISABLED) {
+    use_derived = FALSE;
+  } else {
+    switch (gst_va_display_get_implementation (display)) {
+      case GST_VA_IMPLEMENTATION_INTEL_IHD:
+        /* On Gen7+ Intel graphics the memory is mappable but not
+         * cached, so normal memcpy() access is very slow to read, but
+         * it's ok for writing. So let's assume that users won't prefer
+         * direct-mapped memory if they request read access. */
+        use_derived = va_allocator->use_derived && !(flags & GST_MAP_READ);
+        break;
+      case GST_VA_IMPLEMENTATION_INTEL_I965:
+        /* YUV derived images are tiled, so writing them is also
+         * problematic */
+        use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
+            || ((flags & GST_MAP_WRITE)
+                && GST_VIDEO_INFO_IS_YUV (&va_allocator->derived_info)));
+        break;
+      case GST_VA_IMPLEMENTATION_MESA_GALLIUM:
+        /* Reading RGB derived images, with non-standard resolutions,
+         * looks like tiled too. TODO(victor): fill a bug in Mesa. */
+        use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
+            && GST_VIDEO_INFO_IS_RGB (&va_allocator->derived_info));
+        break;
+      default:
+        use_derived = va_allocator->use_derived;
+        break;
+    }
   }
   if (use_derived)
     info = &va_allocator->derived_info;
@@ -1373,6 +1387,8 @@ gst_va_allocator_init (GstVaAllocator * self)
 
   gst_va_memory_pool_init (&self->pool);
 
+  self->feat_use_derived = GST_VA_FEATURE_AUTO;
+
   GST_OBJECT_FLAG_SET (self, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
@@ -1556,7 +1572,7 @@ gst_va_allocator_try (GstAllocator * allocator)
 
 gboolean
 gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
-    guint usage_hint)
+    guint usage_hint, GstVaFeature use_derived)
 {
   GstVaAllocator *self;
   gboolean ret;
@@ -1570,7 +1586,8 @@ gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
     if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_INFO_FORMAT (&self->info)
         && GST_VIDEO_INFO_WIDTH (info) == GST_VIDEO_INFO_WIDTH (&self->info)
         && GST_VIDEO_INFO_HEIGHT (info) == GST_VIDEO_INFO_HEIGHT (&self->info)
-        && usage_hint == self->usage_hint) {
+        && usage_hint == self->usage_hint
+        && use_derived == self->feat_use_derived) {
       *info = self->info;       /* update callee info (offset & stride) */
       return TRUE;
     }
@@ -1578,6 +1595,7 @@ gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
   }
 
   self->usage_hint = usage_hint;
+  self->feat_use_derived = use_derived;
   self->info = *info;
 
   g_clear_pointer (&self->copy, gst_va_surface_copy_free);
@@ -1591,7 +1609,7 @@ gst_va_allocator_set_format (GstAllocator * allocator, GstVideoInfo * info,
 
 gboolean
 gst_va_allocator_get_format (GstAllocator * allocator, GstVideoInfo * info,
-    guint * usage_hint)
+    guint * usage_hint, GstVaFeature * use_derived)
 {
   GstVaAllocator *self;
 
@@ -1605,6 +1623,8 @@ gst_va_allocator_get_format (GstAllocator * allocator, GstVideoInfo * info,
     *info = self->info;
   if (usage_hint)
     *usage_hint = self->usage_hint;
+  if (use_derived)
+    *use_derived = self->feat_use_derived;
 
   return TRUE;
 }

@@ -65,10 +65,17 @@ gst_va_pool_get_options (GstBufferPool * pool)
 
 static inline gboolean
 gst_buffer_pool_config_get_va_allocation_params (GstStructure * config,
-    guint32 * usage_hint)
+    guint32 * usage_hint, GstVaFeature * use_derived)
 {
-  if (!gst_structure_get (config, "usage-hint", G_TYPE_UINT, usage_hint, NULL))
+  if (!gst_structure_get (config, "usage-hint", G_TYPE_UINT, usage_hint, NULL)) {
     *usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+  }
+
+  if (!gst_structure_get (config, "use-derived", GST_TYPE_VA_FEATURE,
+          use_derived, NULL)) {
+    *use_derived = GST_VA_FEATURE_AUTO;
+  }
+
 
   return TRUE;
 }
@@ -84,6 +91,7 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
   gint width, height;
   guint i, min_buffers, max_buffers;
   guint32 usage_hint;
+  GstVaFeature use_derived;
   gboolean has_alignment;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -103,7 +111,8 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
               || GST_IS_VA_ALLOCATOR (allocator))))
     goto wrong_config;
 
-  if (!gst_buffer_pool_config_get_va_allocation_params (config, &usage_hint))
+  if (!gst_buffer_pool_config_get_va_allocation_params (config, &usage_hint,
+          &use_derived))
     goto wrong_config;
 
   width = GST_VIDEO_INFO_WIDTH (&caps_info);
@@ -141,7 +150,8 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
             usage_hint))
       goto failed_allocator;
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    if (!gst_va_allocator_set_format (allocator, &alloc_info, usage_hint))
+    if (!gst_va_allocator_set_format (allocator, &alloc_info, usage_hint,
+            use_derived))
       goto failed_allocator;
   }
 
@@ -338,9 +348,10 @@ gst_va_pool_new (void)
 
 void
 gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
-    guint usage_hint)
+    guint usage_hint, GstVaFeature use_derived)
 {
-  gst_structure_set (config, "usage-hint", G_TYPE_UINT, usage_hint, NULL);
+  gst_structure_set (config, "usage-hint", G_TYPE_UINT, usage_hint,
+      "use-derived", GST_TYPE_VA_FEATURE, use_derived, NULL);
 }
 
 gboolean
@@ -354,8 +365,8 @@ gst_va_pool_requires_video_meta (GstBufferPool * pool)
 
 GstBufferPool *
 gst_va_pool_new_with_config (GstCaps * caps, guint size, guint min_buffers,
-    guint max_buffers, guint usage_hint, GstAllocator * allocator,
-    GstAllocationParams * alloc_params)
+    guint max_buffers, guint usage_hint, GstVaFeature use_derived,
+    GstAllocator * allocator, GstAllocationParams * alloc_params)
 {
   GstBufferPool *pool;
   GstStructure *config;
@@ -365,7 +376,8 @@ gst_va_pool_new_with_config (GstCaps * caps, guint size, guint min_buffers,
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
       max_buffers);
-  gst_buffer_pool_config_set_va_allocation_params (config, usage_hint);
+  gst_buffer_pool_config_set_va_allocation_params (config, usage_hint,
+      use_derived);
   gst_buffer_pool_config_set_allocator (config, allocator, alloc_params);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 

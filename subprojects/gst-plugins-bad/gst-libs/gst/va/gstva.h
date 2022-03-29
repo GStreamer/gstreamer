@@ -25,7 +25,15 @@
 #pragma message ("You can define GST_USE_UNSTABLE_API to avoid this warning.")
 #endif
 
+typedef enum
+{
+  GST_VA_FEATURE_DISABLED,
+  GST_VA_FEATURE_ENABLED,
+  GST_VA_FEATURE_AUTO,
+} GstVaFeature;
+
 #include <gst/va/va-prelude.h>
+#include <gst/va/va-enumtypes.h>
 #include <gst/va/gstvadisplay.h>
 #include <gst/va/gstvadisplay_drm.h>
 #include <gst/va/gstvadisplay_wrapped.h>

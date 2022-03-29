@@ -42,8 +42,15 @@ endif
 libdrm_dep = dependency('libdrm', required: false, fallback: ['libdrm', 'ext_libdrm'])
 cdata.set10('HAVE_LIBDRM', libdrm_dep.found())
 
+va_enums = gnome.mkenums_simple('va-enumtypes',
+  sources: ['gstva.h'],
+  decorator: 'GST_VA_API',
+  header_prefix: '#include <gst/va/va-prelude.h>',
+  body_prefix: '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
+  install_header: false)
+
 gstva = library('gstva-' + api_version,
-  va_sources,
+  va_sources, va_enums,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_VA', '-DG_LOG_DOMAIN="GStreamer-VA"'],
   include_directories : [configinc, libsinc],
   version : libversion,

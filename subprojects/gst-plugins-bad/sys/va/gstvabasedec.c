@@ -351,7 +351,8 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
     gst_buffer_pool_config_add_option (other_config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-    gst_buffer_pool_config_set_va_allocation_params (other_config, 0);
+    gst_buffer_pool_config_set_va_allocation_params (other_config, 0,
+        GST_VA_FEATURE_AUTO);
 
     if (!gst_buffer_pool_set_config (other_pool, other_config)) {
       ret = FALSE;
@@ -391,7 +392,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
     }
 
     gst_buffer_pool_config_set_va_allocation_params (config,
-        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER);
+        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       ret = FALSE;
@@ -566,7 +567,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     }
 
     gst_buffer_pool_config_set_va_allocation_params (config,
-        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER);
+        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       ret = FALSE;
