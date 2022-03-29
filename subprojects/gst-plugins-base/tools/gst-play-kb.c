@@ -145,37 +145,37 @@ typedef struct
 
 static Win32KeyHandler *win32_handler = NULL;
 
-static gboolean
-gst_play_kb_source_cb (Win32KeyHandler * handler)
+typedef struct
 {
-  HANDLE h_input = handler->console_handle;
-  INPUT_RECORD buffer;
-  DWORD n;
+  gboolean is_ascii;
+  WORD vkcode;
+  gchar key_val[2];
+} KbSourceData;
 
-  if (PeekConsoleInput (h_input, &buffer, 1, &n) && n == 1) {
-    ReadConsoleInput (h_input, &buffer, 1, &n);
+static gboolean
+gst_play_kb_source_cb (KbSourceData * data)
+{
+  if (!kb_callback)
+    return G_SOURCE_REMOVE;
 
-    if (buffer.EventType == KEY_EVENT && buffer.Event.KeyEvent.bKeyDown) {
-      gchar key_val[2] = { 0 };
-
-      switch (buffer.Event.KeyEvent.wVirtualKeyCode) {
-        case VK_RIGHT:
-          kb_callback (GST_PLAY_KB_ARROW_RIGHT, kb_callback_data);
-          break;
-        case VK_LEFT:
-          kb_callback (GST_PLAY_KB_ARROW_LEFT, kb_callback_data);
-          break;
-        case VK_UP:
-          kb_callback (GST_PLAY_KB_ARROW_UP, kb_callback_data);
-          break;
-        case VK_DOWN:
-          kb_callback (GST_PLAY_KB_ARROW_DOWN, kb_callback_data);
-          break;
-        default:
-          key_val[0] = buffer.Event.KeyEvent.uChar.AsciiChar;
-          kb_callback (key_val, kb_callback_data);
-          break;
-      }
+  if (data->is_ascii) {
+    kb_callback (data->key_val, kb_callback_data);
+  } else {
+    switch (data->vkcode) {
+      case VK_RIGHT:
+        kb_callback (GST_PLAY_KB_ARROW_RIGHT, kb_callback_data);
+        break;
+      case VK_LEFT:
+        kb_callback (GST_PLAY_KB_ARROW_LEFT, kb_callback_data);
+        break;
+      case VK_UP:
+        kb_callback (GST_PLAY_KB_ARROW_UP, kb_callback_data);
+        break;
+      case VK_DOWN:
+        kb_callback (GST_PLAY_KB_ARROW_DOWN, kb_callback_data);
+        break;
+      default:
+        break;
     }
   }
 
@@ -187,6 +187,8 @@ gst_play_kb_win32_thread (gpointer user_data)
 {
   Win32KeyHandler *handler = (Win32KeyHandler *) user_data;
   HANDLE handles[2];
+  INPUT_RECORD buffer;
+  DWORD n;
 
   handles[0] = handler->event_handle;
   handles[1] = handler->console_handle;
@@ -210,7 +212,30 @@ gst_play_kb_win32_thread (gpointer user_data)
     }
     g_mutex_unlock (&handler->lock);
 
-    g_idle_add ((GSourceFunc) gst_play_kb_source_cb, handler);
+    if (PeekConsoleInput (handler->console_handle, &buffer, 1, &n) && n == 1) {
+      if (ReadConsoleInput (handler->console_handle, &buffer, 1, &n) &&
+          buffer.EventType == KEY_EVENT && buffer.Event.KeyEvent.bKeyDown) {
+        KbSourceData *data = g_new0 (KbSourceData, 1);
+
+        switch (buffer.Event.KeyEvent.wVirtualKeyCode) {
+          case VK_RIGHT:
+          case VK_LEFT:
+          case VK_UP:
+          case VK_DOWN:
+            data->is_ascii = FALSE;
+            data->vkcode = buffer.Event.KeyEvent.wVirtualKeyCode;
+            break;
+          default:
+            data->is_ascii = TRUE;
+            data->key_val[0] = buffer.Event.KeyEvent.uChar.AsciiChar;
+            data->key_val[1] = '\0';
+            break;
+        }
+
+        g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+            (GSourceFunc) gst_play_kb_source_cb, data, g_free);
+      }
+    }
   }
 
   return NULL;
