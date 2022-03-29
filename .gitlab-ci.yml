@@ -123,8 +123,9 @@ trigger:
   rules:
     # If the MR is assigned to the Merge bot, trigger the pipeline automatically
     - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
-    # Alway run tests post merged
+    # Require explicit action to trigger tests post merge
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: 'manual'
     # When the assignee isn't the merge bot, require an explicit action to trigger the pipeline
     # to avoid wasting CI resources
     - if: '$CI_MERGE_REQUEST_ASSIGNEES != "gstreamer-merge-bot"'
