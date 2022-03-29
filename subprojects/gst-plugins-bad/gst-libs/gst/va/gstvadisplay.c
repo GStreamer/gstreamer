@@ -55,6 +55,7 @@ struct _GstVaDisplayPrivate
   gboolean foreign;
   gboolean init;
   GstVaImplementation impl;
+  gchar *vendor_desc;
 };
 
 #define gst_va_display_parent_class parent_class
@@ -65,6 +66,7 @@ G_DEFINE_TYPE_WITH_CODE (GstVaDisplay, gst_va_display, GST_TYPE_OBJECT,
 enum
 {
   PROP_VA_DISPLAY = 1,
+  PROP_DESC,
   N_PROPERTIES
 };
 
@@ -105,6 +107,7 @@ _gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
     priv->foreign = TRUE;
   }
   priv->impl = _get_implementation (vendor);
+  priv->vendor_desc = g_strdup (vendor);
 
   return TRUE;
 }
@@ -157,6 +160,9 @@ gst_va_display_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_VA_DISPLAY:
       g_value_set_pointer (value, priv->display);
       break;
+    case PROP_DESC:
+      g_value_set_string (value, priv->vendor_desc);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -191,6 +197,10 @@ gst_va_display_dispose (GObject * object)
 static void
 gst_va_display_finalize (GObject * object)
 {
+  GstVaDisplayPrivate *priv = GET_PRIV (object);
+
+  g_free (priv->vendor_desc);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -208,6 +218,11 @@ gst_va_display_class_init (GstVaDisplayClass * klass)
   g_properties[PROP_VA_DISPLAY] =
       g_param_spec_pointer ("va-display", "VADisplay", "VA Display handler",
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
+
+  g_properties[PROP_DESC] =
+      g_param_spec_string ("description", "Description",
+      "Vendor specific VA implementation description", NULL,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES, g_properties);
 }

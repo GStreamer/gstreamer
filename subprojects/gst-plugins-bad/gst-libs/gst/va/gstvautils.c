@@ -423,12 +423,31 @@ gst_context_set_va_display (GstContext * context, GstVaDisplay * display)
 
   g_return_if_fail (context != NULL);
 
-  if (display) {
-    GST_CAT_LOG (GST_CAT_CONTEXT,
-        "setting GstVaDisplay (%" GST_PTR_FORMAT ") on context (%"
-        GST_PTR_FORMAT ")", display, context);
-  }
-
   s = gst_context_writable_structure (context);
   gst_structure_set (s, "gst-display", GST_TYPE_OBJECT, display, NULL);
+
+  if (display) {
+    GObjectClass *klass = G_OBJECT_GET_CLASS (display);
+    gchar *vendor_desc = NULL;
+    gchar *path = NULL;
+
+    g_object_get (display, "description", &vendor_desc, NULL);
+    if (g_object_class_find_property (klass, "path"))
+      g_object_get (display, "path", &path, NULL);
+
+    GST_CAT_LOG (GST_CAT_CONTEXT,
+        "setting GstVaDisplay (%" GST_PTR_FORMAT ") on context (%"
+        GST_PTR_FORMAT "), description: \"%s\", path: %s", display, context,
+        GST_STR_NULL (vendor_desc), GST_STR_NULL (path));
+
+    if (vendor_desc) {
+      gst_structure_set (s, "description", G_TYPE_STRING, vendor_desc, NULL);
+      g_free (vendor_desc);
+    }
+
+    if (path) {
+      gst_structure_set (s, "path", G_TYPE_STRING, path, NULL);
+      g_free (path);
+    }
+  }
 }
