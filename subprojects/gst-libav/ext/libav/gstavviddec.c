@@ -477,10 +477,6 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   GST_DEBUG_OBJECT (ffmpegdec, "setcaps called");
 
   GST_OBJECT_LOCK (ffmpegdec);
-  /* stupid check for VC1 */
-  if ((oclass->in_plugin->id == AV_CODEC_ID_WMV3) ||
-      (oclass->in_plugin->id == AV_CODEC_ID_VC1))
-    oclass->in_plugin->id = gst_ffmpeg_caps_to_codecid (state->caps, NULL);
 
   /* close old session */
   if (ffmpegdec->opened) {
@@ -2553,8 +2549,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
 
     /* (Ronald) MPEG-4 gets a higher priority because it has been well-
      * tested and by far outperforms divxdec/xviddec - so we prefer it.
-     * msmpeg4v3 same, as it outperforms divxdec for divx3 playback.
-     * VC1/WMV3 are not working and thus unpreferred for now. */
+     * msmpeg4v3 same, as it outperforms divxdec for divx3 playback. */
     switch (in_plugin->id) {
       case AV_CODEC_ID_MPEG1VIDEO:
       case AV_CODEC_ID_MPEG2VIDEO:
