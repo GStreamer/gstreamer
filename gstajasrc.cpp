@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <ajaanc/includes/ancillarydata_cea608_vanc.h>
 #include <ajaanc/includes/ancillarydata_cea708.h>
 #include <ajaanc/includes/ancillarylist.h>
 #include <ajantv2/includes/ntv2rp188.h>
@@ -41,6 +42,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define DEFAULT_AUDIO_SOURCE (GST_AJA_AUDIO_SOURCE_EMBEDDED)
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_FREERUN)
+#define DEFAULT_CLOSED_CAPTION_CAPTURE_MODE \
+  (GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_AND_CEA608)
 #define DEFAULT_QUEUE_SIZE (16)
 #define DEFAULT_START_FRAME (8)
 #define DEFAULT_END_FRAME (8)
@@ -57,6 +60,7 @@ enum {
   PROP_AUDIO_SOURCE,
   PROP_TIMECODE_INDEX,
   PROP_REFERENCE_SOURCE,
+  PROP_CLOSED_CAPTION_CAPTURE_MODE,
   PROP_START_FRAME,
   PROP_END_FRAME,
   PROP_QUEUE_SIZE,
@@ -219,6 +223,16 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
                         G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property(
+      gobject_class, PROP_CLOSED_CAPTION_CAPTURE_MODE,
+      g_param_spec_enum(
+          "closed-caption-capture-mode", "Closed Caption Capture Mode",
+          "Closed Caption Capture Mode",
+          GST_TYPE_AJA_CLOSED_CAPTION_CAPTURE_MODE,
+          DEFAULT_CLOSED_CAPTION_CAPTURE_MODE,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
       gobject_class, PROP_CAPTURE_CPU_CORE,
       g_param_spec_uint(
           "capture-cpu-core", "Capture CPU Core",
@@ -274,6 +288,7 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->audio_source = DEFAULT_AUDIO_SOURCE;
   self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
+  self->closed_caption_capture_mode = DEFAULT_CLOSED_CAPTION_CAPTURE_MODE;
   self->capture_cpu_core = DEFAULT_CAPTURE_CPU_CORE;
 
   self->queue =
@@ -326,6 +341,10 @@ void gst_aja_src_set_property(GObject *object, guint property_id,
     case PROP_REFERENCE_SOURCE:
       self->reference_source = (GstAjaReferenceSource)g_value_get_enum(value);
       break;
+    case PROP_CLOSED_CAPTION_CAPTURE_MODE:
+      self->closed_caption_capture_mode =
+          (GstAjaClosedCaptionCaptureMode)g_value_get_enum(value);
+      break;
     case PROP_CAPTURE_CPU_CORE:
       self->capture_cpu_core = g_value_get_uint(value);
       break;
@@ -375,6 +394,9 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
       break;
     case PROP_REFERENCE_SOURCE:
       g_value_set_enum(value, self->reference_source);
+      break;
+    case PROP_CLOSED_CAPTION_CAPTURE_MODE:
+      g_value_set_enum(value, self->closed_caption_capture_mode);
       break;
     case PROP_CAPTURE_CPU_CORE:
       g_value_set_uint(value, self->capture_cpu_core);
@@ -1680,17 +1702,80 @@ static GstFlowReturn gst_aja_src_create(GstPushSrc *psrc, GstBuffer **buffer) {
   //
   // See AJA SDK support ticket #4844.
   guint32 n_vanc_packets = anc_packets.CountAncillaryData();
+
+  // Check if we have either CEA608 or CEA708 packets, or both.
+  bool have_cea608 = false;
+  bool have_cea708 = false;
+  for (guint32 i = 0; i < n_vanc_packets; i++) {
+    AJAAncillaryData *packet = anc_packets.GetAncillaryDataAtIndex(i);
+
+    if (packet->GetDID() == AJAAncillaryData_Cea608_Vanc_DID &&
+        packet->GetSID() == AJAAncillaryData_Cea608_Vanc_SID &&
+        packet->GetPayloadData() && packet->GetPayloadByteCount() &&
+        AJA_SUCCESS(packet->ParsePayloadData())) {
+      GST_TRACE_OBJECT(
+          self, "Found CEA608 VANC of %" G_GSIZE_FORMAT " bytes at line %u",
+          packet->GetPayloadByteCount(), packet->GetLocationLineNumber());
+      have_cea608 = true;
+    } else if (packet->GetDID() == AJAAncillaryData_CEA708_DID &&
+               packet->GetSID() == AJAAncillaryData_CEA708_SID &&
+               packet->GetPayloadData() && packet->GetPayloadByteCount() &&
+               AJA_SUCCESS(packet->ParsePayloadData())) {
+      GST_TRACE_OBJECT(
+          self, "Found CEA708 CDP VANC of %" G_GSIZE_FORMAT " bytes at line %u",
+          packet->GetPayloadByteCount(), packet->GetLocationLineNumber());
+      have_cea708 = true;
+    }
+  }
+
+  // Decide based on the closed-caption-capture-mode property and closed
+  // caption availability which ones to add as metadata to the output buffer.
+  bool want_cea608 =
+      have_cea608 &&
+      (self->closed_caption_capture_mode ==
+           GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_AND_CEA608 ||
+       self->closed_caption_capture_mode ==
+           GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA608_OR_CEA708 ||
+       self->closed_caption_capture_mode ==
+           GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA608_ONLY ||
+       (!have_cea708 &&
+        self->closed_caption_capture_mode ==
+            GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_OR_CEA608));
+
+  bool want_cea708 =
+      have_cea708 &&
+      (self->closed_caption_capture_mode ==
+           GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_AND_CEA608 ||
+       self->closed_caption_capture_mode ==
+           GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_OR_CEA608 ||
+       self->closed_caption_capture_mode ==
+           GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_ONLY ||
+       (!have_cea608 &&
+        self->closed_caption_capture_mode ==
+            GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA608_OR_CEA708));
+
   bool aspect_ratio_flag = false;
   bool have_afd_bar = false;
   for (guint32 i = 0; i < n_vanc_packets; i++) {
     AJAAncillaryData *packet = anc_packets.GetAncillaryDataAtIndex(i);
 
-    if (packet->GetDID() == AJAAncillaryData_CEA708_DID &&
-        packet->GetSID() == AJAAncillaryData_CEA708_SID &&
+    if (want_cea608 && packet->GetDID() == AJAAncillaryData_Cea608_Vanc_DID &&
+        packet->GetSID() == AJAAncillaryData_Cea608_Vanc_SID &&
         packet->GetPayloadData() && packet->GetPayloadByteCount() &&
         AJA_SUCCESS(packet->ParsePayloadData())) {
       GST_TRACE_OBJECT(
-          self, "Found CEA708 CDP VANC of %" G_GSIZE_FORMAT " bytes at line %u",
+          self, "Adding CEA608 VANC of %" G_GSIZE_FORMAT " bytes at line %u",
+          packet->GetPayloadByteCount(), packet->GetLocationLineNumber());
+      gst_buffer_add_video_caption_meta(
+          *buffer, GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A,
+          packet->GetPayloadData(), packet->GetPayloadByteCount());
+    } else if (want_cea708 && packet->GetDID() == AJAAncillaryData_CEA708_DID &&
+               packet->GetSID() == AJAAncillaryData_CEA708_SID &&
+               packet->GetPayloadData() && packet->GetPayloadByteCount() &&
+               AJA_SUCCESS(packet->ParsePayloadData())) {
+      GST_TRACE_OBJECT(
+          self,
+          "Adding CEA708 CDP VANC of %" G_GSIZE_FORMAT " bytes at line %u",
           packet->GetPayloadByteCount(), packet->GetLocationLineNumber());
       gst_buffer_add_video_caption_meta(
           *buffer, GST_VIDEO_CAPTION_TYPE_CEA708_CDP, packet->GetPayloadData(),

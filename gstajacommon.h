@@ -277,6 +277,20 @@ typedef enum {
 G_GNUC_INTERNAL
 GType gst_aja_timecode_index_get_type(void);
 
+typedef enum {
+  GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_AND_CEA608,
+  GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_OR_CEA608,
+  GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA608_OR_CEA708,
+  GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_ONLY,
+  GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA608_ONLY,
+  GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_NONE,
+} GstAjaClosedCaptionCaptureMode;
+
+#define GST_TYPE_AJA_CLOSED_CAPTION_CAPTURE_MODE \
+  (gst_aja_closed_caption_capture_mode_get_type())
+G_GNUC_INTERNAL
+GType gst_aja_closed_caption_capture_mode_get_type(void);
+
 G_GNUC_INTERNAL
 void gst_aja_common_init(void);
 

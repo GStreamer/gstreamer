@@ -1057,6 +1057,34 @@ GType gst_aja_timecode_index_get_type(void) {
   return (GType)id;
 }
 
+GType gst_aja_closed_caption_capture_mode_get_type(void) {
+  static gsize id = 0;
+  static const GEnumValue modes[] = {
+      {GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_AND_CEA608,
+       "cea708-and-cea608",
+       "CEA708 S334-2 and CEA608 S334-1 Annex A Closed Captions"},
+      {GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_OR_CEA608, "cea708-or-cea608",
+       "CEA708 S334-2 or if not existing CEA608 S334-1 Annex A Closed "
+       "Captions"},
+      {GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA608_OR_CEA708, "cea608-or-cea708",
+       "CEA608 S334-1 Annex A or if not existing CEA708 S334-2 Closed "
+       "Captions"},
+      {GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA708_ONLY, "cea708-only",
+       "CEA708 S334-2 Closed Captions only"},
+      {GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_CEA608_ONLY, "cea608-only",
+       "CEA608 S334-1 Annex A Closed Captions only"},
+      {GST_AJA_CLOSED_CAPTION_CAPTURE_MODE_NONE, "none",
+       "Don't capture Closed Captions"},
+      {0, NULL, NULL}};
+
+  if (g_once_init_enter(&id)) {
+    GType tmp = g_enum_register_static("GstAjaClosedCaptionCaptureMode", modes);
+    g_once_init_leave(&id, tmp);
+  }
+
+  return (GType)id;
+}
+
 void gst_aja_common_init(void) {
   GST_DEBUG_CATEGORY_INIT(gst_aja_debug, "aja", 0,
                           "Debug category for AJA plugin");
