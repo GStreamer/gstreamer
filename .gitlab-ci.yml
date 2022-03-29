@@ -265,6 +265,12 @@ gst indent:
           echo 'style diverges, please run gst-indent first'
           exit 1
       fi
+  rules:
+    # Don't check indentation on post merge pipelines
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: 'manual'
+    - if: '$CI_PROJECT_NAMESPACE != "gstreamer" || $CI_COMMIT_BRANCH != $GST_UPSTREAM_BRANCH'
+      when: 'always'
 
 #
 # build setup templates
