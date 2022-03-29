@@ -78,6 +78,9 @@ struct _GstAjaSink {
   GstAjaTimecodeIndex timecode_index;
   GstAjaReferenceSource reference_source;
 
+  gint cea608_line_number;
+  gint cea708_line_number;
+
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
   bool quad_mode;

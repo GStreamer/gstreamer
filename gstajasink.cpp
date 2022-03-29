@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include <ajaanc/includes/ancillarydata_cea608_vanc.h>
 #include <ajaanc/includes/ancillarydata_cea708.h>
 #include <ajaanc/includes/ancillarylist.h>
 #include <ajantv2/includes/ntv2rp188.h>
@@ -38,6 +39,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_sink_debug);
 #define DEFAULT_SDI_MODE (GST_AJA_SDI_MODE_SINGLE_LINK)
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_AUTO)
+#define DEFAULT_CEA608_LINE_NUMBER (12)
+#define DEFAULT_CEA708_LINE_NUMBER (12)
 #define DEFAULT_QUEUE_SIZE (16)
 #define DEFAULT_START_FRAME (0)
 #define DEFAULT_END_FRAME (0)
@@ -52,6 +55,8 @@ enum {
   PROP_SDI_MODE,
   PROP_TIMECODE_INDEX,
   PROP_REFERENCE_SOURCE,
+  PROP_CEA608_LINE_NUMBER,
+  PROP_CEA708_LINE_NUMBER,
   PROP_QUEUE_SIZE,
   PROP_START_FRAME,
   PROP_END_FRAME,
@@ -199,6 +204,27 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
                         G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property(
+      gobject_class, PROP_CEA608_LINE_NUMBER,
+      g_param_spec_uint(
+          "cea608-line-number", "CEA608 Line Number",
+          "Sets the line number to use for CEA608 S334-1 Annex A Closed "
+          "Captions "
+          "(-1=disabled)",
+          0, G_MAXUINT, DEFAULT_CEA608_LINE_NUMBER,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
+      gobject_class, PROP_CEA708_LINE_NUMBER,
+      g_param_spec_uint(
+          "cea708-line-number", "CEA708 Line Number",
+          "Sets the line number to use for CEA708 S334-2 Closed Captions "
+          "(-1=disabled)",
+          0, G_MAXUINT, DEFAULT_CEA608_LINE_NUMBER,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
       gobject_class, PROP_OUTPUT_CPU_CORE,
       g_param_spec_uint(
           "output-cpu-core", "Output CPU Core",
@@ -288,6 +314,12 @@ void gst_aja_sink_set_property(GObject *object, guint property_id,
     case PROP_REFERENCE_SOURCE:
       self->reference_source = (GstAjaReferenceSource)g_value_get_enum(value);
       break;
+    case PROP_CEA608_LINE_NUMBER:
+      self->cea608_line_number = g_value_get_uint(value);
+      break;
+    case PROP_CEA708_LINE_NUMBER:
+      self->cea708_line_number = g_value_get_uint(value);
+      break;
     case PROP_OUTPUT_CPU_CORE:
       self->output_cpu_core = g_value_get_uint(value);
       break;
@@ -331,6 +363,12 @@ void gst_aja_sink_get_property(GObject *object, guint property_id,
       break;
     case PROP_REFERENCE_SOURCE:
       g_value_set_enum(value, self->reference_source);
+      break;
+    case PROP_CEA608_LINE_NUMBER:
+      g_value_set_uint(value, self->cea608_line_number);
+      break;
+    case PROP_CEA708_LINE_NUMBER:
+      g_value_set_uint(value, self->cea708_line_number);
       break;
     case PROP_OUTPUT_CPU_CORE:
       g_value_set_uint(value, self->output_cpu_core);
@@ -1578,19 +1616,50 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
       (caption_meta = (GstVideoCaptionMeta *)gst_buffer_iterate_meta_filtered(
            buffer, &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
     if (caption_meta->caption_type == GST_VIDEO_CAPTION_TYPE_CEA708_CDP) {
-      const AJAAncillaryDataLocation kCEA708LocF1(
-          AJAAncillaryDataLink_A, AJAAncillaryDataVideoStream_Y,
-          AJAAncillaryDataSpace_VANC, 12, AJAAncDataHorizOffset_AnyVanc);
+      if (self->cea708_line_number != -1) {
+        const AJAAncillaryDataLocation kCEA708LocF1(
+            AJAAncillaryDataLink_A, AJAAncillaryDataVideoStream_Y,
+            AJAAncillaryDataSpace_VANC, self->cea708_line_number,
+            AJAAncDataHorizOffset_AnyVanc);
 
-      AJAAncillaryData_Cea708 pkt;
+        AJAAncillaryData_Cea708 pkt;
 
-      pkt.SetDID(GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 >> 8);
-      pkt.SetSID(GST_VIDEO_ANCILLARY_DID16_S334_EIA_708 & 0xff);
-      pkt.SetDataLocation(kCEA708LocF1);
-      pkt.SetDataCoding(AJAAncillaryDataCoding_Digital);
-      pkt.SetPayloadData(caption_meta->data, caption_meta->size);
+        pkt.SetDID(AJAAncillaryData_CEA708_DID);
+        pkt.SetSID(AJAAncillaryData_CEA708_SID);
+        pkt.SetDataLocation(kCEA708LocF1);
+        pkt.SetDataCoding(AJAAncillaryDataCoding_Digital);
+        pkt.SetPayloadData(caption_meta->data, caption_meta->size);
 
-      anc_packet_list.AddAncillaryData(pkt);
+        GST_TRACE_OBJECT(
+            self,
+            "Adding CEA708 CDP VANC of %" G_GSIZE_FORMAT " bytes at line %u",
+            pkt.GetPayloadByteCount(), pkt.GetLocationLineNumber());
+
+        anc_packet_list.AddAncillaryData(pkt);
+      }
+    } else if (caption_meta->caption_type ==
+               GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A) {
+      if (self->cea608_line_number != -1) {
+        const AJAAncillaryDataLocation kCEA608LocF1(
+            AJAAncillaryDataLink_A, AJAAncillaryDataVideoStream_Y,
+            AJAAncillaryDataSpace_VANC, self->cea608_line_number,
+            AJAAncDataHorizOffset_AnyVanc);
+
+        AJAAncillaryData_Cea608_Vanc pkt;
+
+        pkt.SetDID(AJAAncillaryData_Cea608_Vanc_DID);
+        pkt.SetSID(AJAAncillaryData_Cea608_Vanc_SID);
+        pkt.SetDataLocation(kCEA608LocF1);
+        pkt.SetDataCoding(AJAAncillaryDataCoding_Digital);
+        pkt.SetPayloadData(caption_meta->data, caption_meta->size);
+        pkt.ParsePayloadData();
+
+        GST_TRACE_OBJECT(
+            self, "Adding CEA608 VANC of %" G_GSIZE_FORMAT " bytes at line %u",
+            pkt.GetPayloadByteCount(), pkt.GetLocationLineNumber());
+
+        anc_packet_list.AddAncillaryData(pkt);
+      }
     } else {
       GST_WARNING_OBJECT(self, "Unhandled caption type %d",
                          caption_meta->caption_type);
