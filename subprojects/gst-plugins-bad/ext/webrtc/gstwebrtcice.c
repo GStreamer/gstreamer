@@ -855,8 +855,12 @@ _clear_ice_stream (struct NiceStreamItem *item)
     return;
 
   if (item->stream) {
-    g_signal_handlers_disconnect_by_data (item->stream->ice->priv->nice_agent,
-        item->stream);
+    GstWebRTCICE *ice = g_weak_ref_get (&item->stream->ice_weak);
+    if (ice != NULL) {
+      g_signal_handlers_disconnect_by_data (ice->priv->nice_agent,
+          item->stream);
+      gst_object_unref (ice);
+    }
     gst_object_unref (item->stream);
   }
 }

@@ -51,6 +51,8 @@ struct _GstWebRTCNiceTransportPrivate
 
   gint send_buffer_size;
   gint receive_buffer_size;
+  gulong on_new_selected_pair_id;
+  gulong on_component_state_changed_id;
 };
 
 #define gst_webrtc_nice_transport_parent_class parent_class
@@ -162,6 +164,24 @@ static void
 gst_webrtc_nice_transport_finalize (GObject * object)
 {
   GstWebRTCNiceTransport *nice = GST_WEBRTC_NICE_TRANSPORT (object);
+  NiceAgent *agent;
+  GstWebRTCICE *webrtc_ice = g_weak_ref_get (&nice->stream->ice_weak);
+
+  if (webrtc_ice) {
+    g_object_get (webrtc_ice, "agent", &agent, NULL);
+
+    if (nice->priv->on_component_state_changed_id != 0) {
+      g_signal_handler_disconnect (agent,
+          nice->priv->on_component_state_changed_id);
+    }
+
+    if (nice->priv->on_new_selected_pair_id != 0) {
+      g_signal_handler_disconnect (agent, nice->priv->on_new_selected_pair_id);
+    }
+
+    g_object_unref (agent);
+    gst_object_unref (webrtc_ice);
+  }
 
   gst_object_unref (nice->stream);
 
@@ -174,13 +194,17 @@ gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice)
   NiceAgent *agent = NULL;
   GPtrArray *sockets;
   guint i;
+  GstWebRTCICE *webrtc_ice = g_weak_ref_get (&nice->stream->ice_weak);
 
-  g_object_get (nice->stream->ice, "agent", &agent, NULL);
+  g_assert (webrtc_ice != NULL);
+
+  g_object_get (webrtc_ice, "agent", &agent, NULL);
   g_assert (agent != NULL);
 
   sockets = nice_agent_get_sockets (agent, nice->stream->stream_id, 1);
   if (sockets == NULL) {
     g_object_unref (agent);
+    gst_object_unref (webrtc_ice);
     return;
   }
 
@@ -209,49 +233,82 @@ gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice)
   }
   g_ptr_array_unref (sockets);
   g_object_unref (agent);
+  gst_object_unref (webrtc_ice);
 }
 
 
 static void
 _on_new_selected_pair (NiceAgent * agent, guint stream_id,
     NiceComponentType component, NiceCandidate * lcandidate,
-    NiceCandidate * rcandidate, GstWebRTCNiceTransport * nice)
+    NiceCandidate * rcandidate, GWeakRef * nice_weak)
 {
-  GstWebRTCICETransport *ice = GST_WEBRTC_ICE_TRANSPORT (nice);
+  GstWebRTCNiceTransport *nice = g_weak_ref_get (nice_weak);
+  GstWebRTCICETransport *ice;
   GstWebRTCICEComponent comp = _nice_component_to_gst (component);
   guint our_stream_id;
+
+  if (!nice)
+    return;
+
+  ice = GST_WEBRTC_ICE_TRANSPORT (nice);
 
   g_object_get (nice->stream, "stream-id", &our_stream_id, NULL);
 
   if (stream_id != our_stream_id)
-    return;
+    goto cleanup;
   if (comp != ice->component)
-    return;
+    goto cleanup;
 
   gst_webrtc_ice_transport_selected_pair_change (ice);
+
+cleanup:
+  gst_object_unref (nice);
 }
 
 static void
 _on_component_state_changed (NiceAgent * agent, guint stream_id,
-    NiceComponentType component, NiceComponentState state,
-    GstWebRTCNiceTransport * nice)
+    NiceComponentType component, NiceComponentState state, GWeakRef * nice_weak)
 {
-  GstWebRTCICETransport *ice = GST_WEBRTC_ICE_TRANSPORT (nice);
+  GstWebRTCNiceTransport *nice = g_weak_ref_get (nice_weak);
+  GstWebRTCICETransport *ice;
   GstWebRTCICEComponent comp = _nice_component_to_gst (component);
   guint our_stream_id;
+
+  if (!nice)
+    return;
+
+  ice = GST_WEBRTC_ICE_TRANSPORT (nice);
 
   g_object_get (nice->stream, "stream-id", &our_stream_id, NULL);
 
   if (stream_id != our_stream_id)
-    return;
+    goto cleanup;
   if (comp != ice->component)
-    return;
+    goto cleanup;
 
   GST_DEBUG_OBJECT (ice, "%u %u %s", stream_id, component,
       nice_component_state_to_string (state));
 
   gst_webrtc_ice_transport_connection_state_change (ice,
       _nice_component_state_to_gst (state));
+
+cleanup:
+  gst_object_unref (nice);
+}
+
+static GWeakRef *
+weak_new (GstWebRTCNiceTransport * nice)
+{
+  GWeakRef *weak = g_new0 (GWeakRef, 1);
+  g_weak_ref_init (weak, nice);
+  return weak;
+}
+
+static void
+weak_free (GWeakRef * weak)
+{
+  g_weak_ref_clear (weak);
+  g_free (weak);
 }
 
 static void
@@ -263,19 +320,23 @@ gst_webrtc_nice_transport_constructed (GObject * object)
   gboolean controlling_mode;
   guint our_stream_id;
   NiceAgent *agent;
+  GstWebRTCICE *webrtc_ice = g_weak_ref_get (&nice->stream->ice_weak);
 
+  g_assert (webrtc_ice != NULL);
   g_object_get (nice->stream, "stream-id", &our_stream_id, NULL);
-  g_object_get (nice->stream->ice, "agent", &agent, NULL);
+  g_object_get (webrtc_ice, "agent", &agent, NULL);
 
   g_object_get (agent, "controlling-mode", &controlling_mode, NULL);
   ice->role =
       controlling_mode ? GST_WEBRTC_ICE_ROLE_CONTROLLING :
       GST_WEBRTC_ICE_ROLE_CONTROLLED;
 
-  g_signal_connect (agent, "component-state-changed",
-      G_CALLBACK (_on_component_state_changed), nice);
-  g_signal_connect (agent, "new-selected-pair-full",
-      G_CALLBACK (_on_new_selected_pair), nice);
+  nice->priv->on_component_state_changed_id = g_signal_connect_data (agent,
+      "component-state-changed", G_CALLBACK (_on_component_state_changed),
+      weak_new (nice), (GClosureNotify) weak_free, (GConnectFlags) 0);
+  nice->priv->on_new_selected_pair_id = g_signal_connect_data (agent,
+      "new-selected-pair-full", G_CALLBACK (_on_new_selected_pair),
+      weak_new (nice), (GClosureNotify) weak_free, (GConnectFlags) 0);
 
   ice->src = gst_element_factory_make ("nicesrc", NULL);
   if (ice->src) {
@@ -290,6 +351,7 @@ gst_webrtc_nice_transport_constructed (GObject * object)
   }
 
   g_object_unref (agent);
+  gst_object_unref (webrtc_ice);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }

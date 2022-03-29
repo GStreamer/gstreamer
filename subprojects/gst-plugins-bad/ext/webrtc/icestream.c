@@ -47,6 +47,7 @@ struct _GstWebRTCICEStreamPrivate
   gboolean gathered;
   GList *transports;
   gboolean gathering_started;
+  gulong candidate_gathering_done_id;
 };
 
 #define gst_webrtc_ice_stream_parent_class parent_class
@@ -63,8 +64,7 @@ gst_webrtc_ice_stream_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ICE:
-      /* XXX: weak-ref this? */
-      stream->ice = g_value_get_object (value);
+      g_weak_ref_set (&stream->ice_weak, g_value_get_object (value));
       break;
     case PROP_STREAM_ID:
       stream->stream_id = g_value_get_uint (value);
@@ -83,7 +83,7 @@ gst_webrtc_ice_stream_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ICE:
-      g_value_set_object (value, stream->ice);
+      g_value_set_object (value, g_weak_ref_get (&stream->ice_weak));
       break;
     case PROP_STREAM_ID:
       g_value_set_uint (value, stream->stream_id);
@@ -98,21 +98,41 @@ static void
 gst_webrtc_ice_stream_finalize (GObject * object)
 {
   GstWebRTCICEStream *stream = GST_WEBRTC_ICE_STREAM (object);
+  GstWebRTCICE *ice = g_weak_ref_get (&stream->ice_weak);
+
+  if (ice) {
+    NiceAgent *agent;
+    g_object_get (ice, "agent", &agent, NULL);
+
+    if (stream->priv->candidate_gathering_done_id != 0) {
+      g_signal_handler_disconnect (agent,
+          stream->priv->candidate_gathering_done_id);
+    }
+
+    g_object_unref (agent);
+    gst_object_unref (ice);
+  }
 
   g_list_free (stream->priv->transports);
   stream->priv->transports = NULL;
+
+  g_weak_ref_clear (&stream->ice_weak);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 _on_candidate_gathering_done (NiceAgent * agent, guint stream_id,
-    GstWebRTCICEStream * ice)
+    GWeakRef * ice_weak)
 {
+  GstWebRTCICEStream *ice = g_weak_ref_get (ice_weak);
   GList *l;
 
-  if (stream_id != ice->stream_id)
+  if (!ice)
     return;
+
+  if (stream_id != ice->stream_id)
+    goto cleanup;
 
   GST_DEBUG_OBJECT (ice, "%u gathering done", stream_id);
 
@@ -124,6 +144,9 @@ _on_candidate_gathering_done (NiceAgent * agent, guint stream_id,
     gst_webrtc_ice_transport_gathering_state_change (ice,
         GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE);
   }
+
+cleanup:
+  gst_object_unref (ice);
 }
 
 GstWebRTCICETransport *
@@ -152,17 +175,36 @@ gst_webrtc_ice_stream_find_transport (GstWebRTCICEStream * stream,
   return ret;
 }
 
+static GWeakRef *
+weak_new (GstWebRTCICEStream * stream)
+{
+  GWeakRef *weak = g_new0 (GWeakRef, 1);
+  g_weak_ref_init (weak, stream);
+  return weak;
+}
+
+static void
+weak_free (GWeakRef * weak)
+{
+  g_weak_ref_clear (weak);
+  g_free (weak);
+}
+
 static void
 gst_webrtc_ice_stream_constructed (GObject * object)
 {
   GstWebRTCICEStream *stream = GST_WEBRTC_ICE_STREAM (object);
   NiceAgent *agent;
+  GstWebRTCICE *ice = g_weak_ref_get (&stream->ice_weak);
 
-  g_object_get (stream->ice, "agent", &agent, NULL);
-  g_signal_connect (agent, "candidate-gathering-done",
-      G_CALLBACK (_on_candidate_gathering_done), stream);
+  g_assert (ice != NULL);
+  g_object_get (ice, "agent", &agent, NULL);
+  stream->priv->candidate_gathering_done_id = g_signal_connect_data (agent,
+      "candidate-gathering-done", G_CALLBACK (_on_candidate_gathering_done),
+      weak_new (stream), (GClosureNotify) weak_free, (GConnectFlags) 0);
 
   g_object_unref (agent);
+  gst_object_unref (ice);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
@@ -172,6 +214,8 @@ gst_webrtc_ice_stream_gather_candidates (GstWebRTCICEStream * stream)
 {
   NiceAgent *agent;
   GList *l;
+  GstWebRTCICE *ice;
+  gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_IS_WEBRTC_ICE_STREAM (stream), FALSE);
 
@@ -187,28 +231,31 @@ gst_webrtc_ice_stream_gather_candidates (GstWebRTCICEStream * stream)
         GST_WEBRTC_ICE_GATHERING_STATE_GATHERING);
   }
 
-  g_object_get (stream->ice, "agent", &agent, NULL);
+  ice = g_weak_ref_get (&stream->ice_weak);
+  g_assert (ice != NULL);
+
+  g_object_get (ice, "agent", &agent, NULL);
 
   if (!stream->priv->gathering_started) {
-    if (stream->ice->min_rtp_port != 0 || stream->ice->max_rtp_port != 65535) {
-      if (stream->ice->min_rtp_port > stream->ice->max_rtp_port) {
-        GST_ERROR_OBJECT (stream->ice,
+    if (ice->min_rtp_port != 0 || ice->max_rtp_port != 65535) {
+      if (ice->min_rtp_port > ice->max_rtp_port) {
+        GST_ERROR_OBJECT (ice,
             "invalid port range: min-rtp-port %d must be <= max-rtp-port %d",
-            stream->ice->min_rtp_port, stream->ice->max_rtp_port);
-        return FALSE;
+            ice->min_rtp_port, ice->max_rtp_port);
+        ret = FALSE;
+        goto cleanup;
       }
 
       nice_agent_set_port_range (agent, stream->stream_id,
-          NICE_COMPONENT_TYPE_RTP, stream->ice->min_rtp_port,
-          stream->ice->max_rtp_port);
+          NICE_COMPONENT_TYPE_RTP, ice->min_rtp_port, ice->max_rtp_port);
     }
     /* mark as gathering started to prevent changing ports again */
     stream->priv->gathering_started = TRUE;
   }
 
   if (!nice_agent_gather_candidates (agent, stream->stream_id)) {
-    g_object_unref (agent);
-    return FALSE;
+    ret = FALSE;
+    goto cleanup;
   }
 
   for (l = stream->priv->transports; l; l = l->next) {
@@ -217,8 +264,13 @@ gst_webrtc_ice_stream_gather_candidates (GstWebRTCICEStream * stream)
     gst_webrtc_nice_transport_update_buffer_size (trans);
   }
 
-  g_object_unref (agent);
-  return TRUE;
+cleanup:
+  if (agent)
+    g_object_unref (agent);
+  if (ice)
+    gst_object_unref (ice);
+
+  return ret;
 }
 
 static void
@@ -247,9 +299,11 @@ gst_webrtc_ice_stream_class_init (GstWebRTCICEStreamClass * klass)
 }
 
 static void
-gst_webrtc_ice_stream_init (GstWebRTCICEStream * ice)
+gst_webrtc_ice_stream_init (GstWebRTCICEStream * stream)
 {
-  ice->priv = gst_webrtc_ice_stream_get_instance_private (ice);
+  stream->priv = gst_webrtc_ice_stream_get_instance_private (stream);
+
+  g_weak_ref_init (&stream->ice_weak, NULL);
 }
 
 GstWebRTCICEStream *

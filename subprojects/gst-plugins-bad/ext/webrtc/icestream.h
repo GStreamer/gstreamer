@@ -40,7 +40,7 @@ struct _GstWebRTCICEStream
 {
   GstObject                 parent;
 
-  GstWebRTCICE             *ice;
+  GWeakRef                  ice_weak;
 
   guint                     stream_id;
 
