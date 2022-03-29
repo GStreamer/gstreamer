@@ -524,3 +524,13 @@
    Memcheck:Cond
    fun:PyUnicode_Decode
 }
+
+{
+   https://gitlab.gnome.org/GNOME/pygobject/-/merge_requests/204
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   fun:g_malloc0
+   obj:*site-packages/gi/_gi*.so*
+   ...
+}

@@ -683,6 +683,7 @@ valgrind ges:
       - subprojects/gst-plugins-good/**/*
       - subprojects/gst-plugins-bad/**/*
       - subprojects/gst-editing-services/**/*
+      - subprojects/gst-python/**/*
 
 # ---- Integration ----- #
 
