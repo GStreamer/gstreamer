@@ -22,7 +22,7 @@
 #  include "config.h"
 #endif
 
-#include <gst/gl/gstglutils.c>
+#include <gst/gl/gl.h>
 #undef GST_CAT_DEFAULT
 #include <gst/check/gstcheck.h>
 
