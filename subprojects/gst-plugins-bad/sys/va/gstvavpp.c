@@ -2021,6 +2021,7 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   GstVaFilter *filter;
   struct CData *cdata = class_data;
   gchar *long_name;
+  GString *klass;
 
   parent_class = g_type_class_peek_parent (g_class);
 
@@ -2033,10 +2034,7 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
     long_name = g_strdup ("VA-API Video Postprocessor");
   }
 
-  gst_element_class_set_metadata (element_class, long_name,
-      "Filter/Converter/Video/Scaler/Hardware",
-      "VA-API based video postprocessor",
-      "Víctor Jáquez <vjaquez@igalia.com>");
+  klass = g_string_new ("Converter/Filter/Colorspace/Scaler/Video/Hardware");
 
   display = gst_va_display_drm_new_from_path (btrans_class->render_device_path);
   filter = gst_va_filter_new (display);
@@ -2050,9 +2048,31 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
       gst_caps_set_features_simple (any_caps, gst_caps_features_new_any ());
       caps = gst_caps_merge (caps, any_caps);
     }
+
+    /* add converter klass */
+    {
+      int i;
+      VAProcFilterType types[] = { VAProcFilterColorBalance,
+        VAProcFilterSkinToneEnhancement, VAProcFilterSharpening,
+        VAProcFilterNoiseReduction
+      };
+
+      for (i = 0; i < G_N_ELEMENTS (types); i++) {
+        if (gst_va_filter_has_filter (filter, types[i])) {
+          g_string_prepend (klass, "Effect/");
+          break;
+        }
+      }
+    }
   } else {
     caps = gst_caps_from_string (caps_str);
   }
+
+  gst_element_class_set_metadata (element_class, long_name, klass->str,
+      "VA-API based video postprocessor",
+      "Víctor Jáquez <vjaquez@igalia.com>");
+
+  g_string_free (klass, TRUE);
 
   doc_caps = gst_caps_from_string (caps_str);
 
