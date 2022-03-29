@@ -1,6 +1,11 @@
+gstgl_dep = dependency('', required : false)
+gstglproto_dep = dependency('', required : false)
+gstglx11_dep = dependency('', required : false)
+gstglwayland_dep = dependency('', required : false)
+gstglegl_dep = dependency('', required : false)
+
 if get_option('gl').disabled()
   message('GStreamer OpenGL integration disabled via options.')
-  gstgl_dep = dependency('', required: false)
   build_gstgl = false
   subdir_done()
 endif
@@ -650,6 +655,7 @@ if need_platform_glx == 'yes'
   endif
 endif
 
+xcb_dep = unneeded_dep
 if need_win_x11 != 'no'
   xcb_dep = dependency('x11-xcb', required : false)
   if x11_dep.found() and xcb_dep.found()
@@ -966,12 +972,6 @@ if enabled_gl_winsys.length() == 0
   build_gstgl = false
 endif
 
-gstgl_dep = dependency('', required : false)
-gstglproto_dep = dependency('', required : false)
-gstglx11_dep = dependency('', required : false)
-gstglwayland_dep = dependency('', required : false)
-gstglegl_dep = dependency('', required : false)
-
 if build_gstgl
   # find some types that may or may not be defined
   if cc.has_type('GLeglImageOES', prefix : gl_include_block, dependencies : gl_lib_deps, include_directories : gl_includes)
@@ -1144,7 +1144,7 @@ if build_gstgl
         gl_x11_gir = gnome.generate_gir(gstgl, kwargs: gir)
       endif
     endif
-    gstglx11_dep = declare_dependency(dependencies : [gstgl_dep],
+    gstglx11_dep = declare_dependency(dependencies : [gstgl_dep, x11_dep, xcb_dep],
       sources : gl_x11_gir)
     meson.override_dependency('gstreamer-gl-x11-1.0', gstglx11_dep)
   endif
