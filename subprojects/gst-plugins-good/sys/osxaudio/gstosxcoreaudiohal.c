@@ -138,6 +138,25 @@ _audio_device_is_alive (AudioDeviceID device_id, gboolean output)
   return alive;
 }
 
+static inline gboolean
+_audio_device_is_hidden (AudioDeviceID device_id)
+{
+  OSStatus status = noErr;
+  UInt32 hidden = FALSE;
+  UInt32 property_size = sizeof (hidden);
+  AudioObjectPropertyAddress property_address;
+
+  property_address.mSelector = kAudioDevicePropertyIsHidden;
+
+  status = AudioObjectGetPropertyData (device_id,
+      &property_address, 0, NULL, &property_size, &hidden);
+  if (status != noErr) {
+    return FALSE;
+  }
+
+  return hidden;
+}
+
 static inline guint
 _audio_device_get_latency (AudioDeviceID device_id)
 {
@@ -1200,6 +1219,13 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
       res = TRUE;
     } else {
       GST_ERROR ("No device of required type available");
+      res = FALSE;
+    }
+  } else if (_audio_device_is_hidden (device_id)) {
+    if (_audio_device_is_alive (device_id, output)) {
+      res = TRUE;
+    } else {
+      GST_ERROR ("Requested hidden device not usable");
       res = FALSE;
     }
   } else {
