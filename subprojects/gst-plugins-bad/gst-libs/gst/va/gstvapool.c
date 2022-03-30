@@ -27,6 +27,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_va_pool_debug);
 #define GST_CAT_DEFAULT gst_va_pool_debug
 
+typedef struct _GstVaPool GstVaPool;
+typedef struct _GstVaPoolClass GstVaPoolClass;
+
 struct _GstVaPool
 {
   GstBufferPool parent;

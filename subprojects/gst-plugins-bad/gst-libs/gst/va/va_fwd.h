@@ -32,13 +32,4 @@ typedef struct _GstVaDisplayDrmClass GstVaDisplayDrmClass;
 typedef struct _GstVaDisplayWrapped GstVaDisplayWrapped;
 typedef struct _GstVaDisplayWrappedClass GstVaDisplayWrappedClass;
 
-typedef struct _GstVaAllocator GstVaAllocator;
-typedef struct _GstVaAllocatorClass GstVaAllocatorClass;
-
-typedef struct _GstVaDmabufAllocator GstVaDmabufAllocator;
-typedef struct _GstVaDmabufAllocatorClass GstVaDmabufAllocatorClass;
-
-typedef struct _GstVaPool GstVaPool;
-typedef struct _GstVaPoolClass GstVaPoolClass;
-
 G_END_DECLS

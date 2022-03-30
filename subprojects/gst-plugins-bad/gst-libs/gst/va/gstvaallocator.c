@@ -236,6 +236,9 @@ gst_va_memory_pool_surface_inc (GstVaMemoryPool * self)
 
 /*=========================== GstVaDmabufAllocator ===========================*/
 
+typedef struct _GstVaDmabufAllocator GstVaDmabufAllocator;
+typedef struct _GstVaDmabufAllocatorClass GstVaDmabufAllocatorClass;
+
 struct _GstVaDmabufAllocator
 {
   GstDmaBufAllocator parent;
@@ -913,6 +916,9 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
 }
 
 /*===================== GstVaAllocator / GstVaMemory =========================*/
+
+typedef struct _GstVaAllocator GstVaAllocator;
+typedef struct _GstVaAllocatorClass GstVaAllocatorClass;
 
 struct _GstVaAllocator
 {
