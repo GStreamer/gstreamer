@@ -1042,7 +1042,7 @@ warning_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
   play_err =
       g_error_new_literal (GST_PLAY_ERROR, GST_PLAY_ERROR_FAILED, full_message);
 
-  GST_ERROR_OBJECT (self, "Warning: %s (%s, %d)", err->message,
+  GST_WARNING_OBJECT (self, "Warning: %s (%s, %d)", err->message,
       g_quark_to_string (err->domain), err->code);
 
   api_bus_post_message (self, GST_PLAY_MESSAGE_WARNING,
