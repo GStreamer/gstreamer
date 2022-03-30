@@ -1185,7 +1185,6 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
 {
   AudioDeviceID *devices = NULL;
   AudioDeviceID device_id = core_audio->device_id;
-  AudioDeviceID default_device_id = 0;
   gint i, ndevices = 0;
   gboolean output = !core_audio->is_src;
   gboolean res = FALSE;
@@ -1227,12 +1226,14 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
   }
 #endif
 
-  /* Find the ID of the default output device */
-  default_device_id = _audio_system_get_default_device (output);
-
   /* Here we decide if selected device is valid or autoselect
    * the default one when required */
   if (device_id == kAudioDeviceUnknown) {
+    AudioDeviceID default_device_id;
+
+    /* Find the ID of the default output device */
+    default_device_id = _audio_system_get_default_device (output);
+
     if (default_device_id != kAudioDeviceUnknown) {
       device_id = default_device_id;
       res = TRUE;
