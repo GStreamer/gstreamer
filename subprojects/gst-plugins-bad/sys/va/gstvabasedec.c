@@ -696,33 +696,67 @@ gst_va_base_dec_class_init (GstVaBaseDecClass * klass, GstVaCodecs codec,
 }
 
 static GstVideoFormat
-_default_video_format_from_chroma (guint chroma_type)
+_find_video_format_from_chroma (const GValue * formats, guint chroma_type)
 {
-  switch (chroma_type) {
-      /* 4:2:0 */
-    case VA_RT_FORMAT_YUV420:
-      return GST_VIDEO_FORMAT_NV12;
-    case VA_RT_FORMAT_YUV420_10:
-      return GST_VIDEO_FORMAT_P010_10LE;
-    case VA_RT_FORMAT_YUV420_12:
-      return GST_VIDEO_FORMAT_P012_LE;
-      /* 4:2:2 */
-    case VA_RT_FORMAT_YUV422:
-      return GST_VIDEO_FORMAT_UYVY;
-    case VA_RT_FORMAT_YUV422_10:
-      return GST_VIDEO_FORMAT_Y210;
-    case VA_RT_FORMAT_YUV422_12:
-      return GST_VIDEO_FORMAT_Y212_LE;
-      /* 4:4:4 */
-    case VA_RT_FORMAT_YUV444:
-      return GST_VIDEO_FORMAT_VUYA;
-    case VA_RT_FORMAT_YUV444_10:
-      return GST_VIDEO_FORMAT_Y410;
-    case VA_RT_FORMAT_YUV444_12:
-      return GST_VIDEO_FORMAT_Y412_LE;
-    default:
-      return GST_VIDEO_FORMAT_UNKNOWN;
+  GstVideoFormat fmt;
+  guint i, num_values;
+
+  if (!formats)
+    return GST_VIDEO_FORMAT_UNKNOWN;
+
+  if (G_VALUE_HOLDS_STRING (formats)) {
+    fmt = gst_video_format_from_string (g_value_get_string (formats));
+    if (gst_va_chroma_from_video_format (fmt) == chroma_type)
+      return fmt;
+  } else if (GST_VALUE_HOLDS_LIST (formats)) {
+    num_values = gst_value_list_get_size (formats);
+    for (i = 0; i < num_values; i++) {
+      const GValue *val = gst_value_list_get_value (formats, i);
+      if (!val)
+        continue;
+      fmt = gst_video_format_from_string (g_value_get_string (val));
+      if (gst_va_chroma_from_video_format (fmt) == chroma_type)
+        return fmt;
+    }
   }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+static GstVideoFormat
+_caps_video_format_from_chroma (GstCaps * caps, GstCapsFeatures * features,
+    guint chroma_type)
+{
+  guint i, num_structures;
+  GstCapsFeatures *feats;
+  GstStructure *structure;
+  const GValue *format;
+
+  num_structures = gst_caps_get_size (caps);
+  for (i = 0; i < num_structures; i++) {
+    feats = gst_caps_get_features (caps, i);
+    if (!gst_caps_features_is_equal (feats, features))
+      continue;
+    structure = gst_caps_get_structure (caps, i);
+    format = gst_structure_get_value (structure, "format");
+    return _find_video_format_from_chroma (format, chroma_type);
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+static GstVideoFormat
+_default_video_format_from_chroma (GstVaBaseDec * base,
+    GstCapsFeatures * features, guint chroma_type)
+{
+  GstCaps *tmpl_caps;
+  GstVideoFormat ret = GST_VIDEO_FORMAT_UNKNOWN;
+
+  tmpl_caps = gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (base));
+  ret = _caps_video_format_from_chroma (tmpl_caps, features, chroma_type);
+  gst_caps_unref (tmpl_caps);
+
+  return ret;
 }
 
 /* Check whether the downstream supports VideoMeta; if not, we need to
@@ -790,11 +824,15 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
   if (gst_caps_is_empty (preferred_caps)) {
     if (capsfeatures)
       *capsfeatures = NULL;     /* system memory */
-    if (format)
-      *format = _default_video_format_from_chroma (base->rt_format);
+    if (format) {
+      *format = _default_video_format_from_chroma (base,
+          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY, base->rt_format);
+    }
     goto bail;
   }
 
+  /* Use the first structure/feature is caps because is the
+   * "preferred" one */
   if (capsfeatures) {
     features = gst_caps_get_features (preferred_caps, 0);
     if (features) {
@@ -812,33 +850,22 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
     } else {
       *capsfeatures = NULL;
     }
+
+    if (!*capsfeatures && format) {
+      *format = _default_video_format_from_chroma (base,
+          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY, base->rt_format);
+
+      goto bail;
+    }
   }
 
   if (!format)
     goto bail;
 
+
   structure = gst_caps_get_structure (preferred_caps, 0);
   v_format = gst_structure_get_value (structure, "format");
-  if (!v_format)
-    *format = _default_video_format_from_chroma (base->rt_format);
-  else if (G_VALUE_HOLDS_STRING (v_format))
-    *format = gst_video_format_from_string (g_value_get_string (v_format));
-  else if (GST_VALUE_HOLDS_LIST (v_format)) {
-    guint num_values = gst_value_list_get_size (v_format);
-    for (i = 0; i < num_values; i++) {
-      GstVideoFormat fmt;
-      const GValue *v_fmt = gst_value_list_get_value (v_format, i);
-      if (!v_fmt)
-        continue;
-      fmt = gst_video_format_from_string (g_value_get_string (v_fmt));
-      if (gst_va_chroma_from_video_format (fmt) == base->rt_format) {
-        *format = fmt;
-        break;
-      }
-    }
-    if (i == num_values)
-      *format = _default_video_format_from_chroma (base->rt_format);
-  }
+  *format = _find_video_format_from_chroma (v_format, base->rt_format);
 
 bail:
   gst_clear_caps (&preferred_caps);

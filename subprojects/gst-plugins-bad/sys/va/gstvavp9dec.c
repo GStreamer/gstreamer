@@ -601,6 +601,8 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
 
   gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
       &capsfeatures);
+  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
 
   base->output_state =
       gst_video_decoder_set_output_state (decoder, format,
