@@ -762,6 +762,8 @@ build documentation:
 cerbero trigger:
   stage: build
   timeout: '3h'
+  tags:
+    - placeholder-job
   extends:
     - '.fedora image'
     - '.fdo.suffixed-image@fedora'
