@@ -1,3 +1,4 @@
+subdir('amfcodec')
 subdir('androidmedia')
 subdir('applemedia')
 subdir('asio')

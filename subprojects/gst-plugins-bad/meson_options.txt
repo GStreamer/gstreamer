@@ -79,6 +79,7 @@ option('x11', type : 'feature', value : 'auto', description : 'X11 support in Vu
 option('aes', type : 'feature', value : 'auto', description : 'AES encryption/decryption plugin')
 option('aom', type : 'feature', value : 'auto', description : 'AOM AV1 video codec plugin')
 option('avtp', type : 'feature', value : 'auto', description : 'Audio/Video Transport Protocol (AVTP) plugin')
+option('amfcodec', type : 'feature', value : 'auto', description : 'AMD AMF codec plugin')
 option('androidmedia', type : 'feature', value : 'auto', description : 'Video capture and codec plugins for Android')
 option('applemedia', type : 'feature', value : 'auto', description : 'Video capture and codec access plugins for macOS and iOS')
 option('asio', type : 'feature', value : 'auto', description : 'Steinberg Audio Streaming Input Output (ASIO) plugin')
