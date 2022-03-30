@@ -2729,6 +2729,80 @@ gst_query_parse_bitrate (GstQuery * query, guint * nominal_bitrate)
 }
 
 /**
+ * gst_query_new_selectable:
+ *
+ * Constructs a new query object for querying the stream selection capability.
+ *
+ * Free-function: gst_query_unref()
+ *
+ * Returns: (transfer full): a new #GstQuery
+ *
+ * Since: 1.22
+ */
+GstQuery *
+gst_query_new_selectable (void)
+{
+  GstQuery *query;
+  GstStructure *structure;
+
+  structure = gst_structure_new_id_empty (GST_QUARK (QUERY_SELECTABLE));
+  query = gst_query_new_custom (GST_QUERY_SELECTABLE, structure);
+
+  return query;
+}
+
+/**
+ * gst_query_set_selectable:
+ * @query: a GST_QUERY_SELECTABLE type #GstQuery
+ * @selectable: Whether the element can handle stream selection.
+ *
+ * Set the results of a selectable query. If the element answering the query can
+ * handle stream selection, @selectable should be set to %TRUE.
+ *
+ * Since: 1.22
+ */
+void
+gst_query_set_selectable (GstQuery * query, gboolean selectable)
+{
+  GstStructure *s;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SELECTABLE);
+
+  s = GST_QUERY_STRUCTURE (query);
+
+  gst_structure_id_set (s,
+      GST_QUARK (SELECTABLE), G_TYPE_BOOLEAN, selectable, NULL);
+}
+
+/**
+ * gst_query_parse_selectable:
+ * @query: a GST_QUERY_SELECTABLE type #GstQuery
+ * @selectable: (out) (allow-none): The resulting stream selection capability
+ *
+ * Get the results of a selectable query. See also gst_query_set_selectable().
+ *
+ * Since: 1.22
+ */
+void
+gst_query_parse_selectable (GstQuery * query, gboolean * selectable)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_SELECTABLE);
+
+  structure = GST_QUERY_STRUCTURE (query);
+
+  if (selectable) {
+    const GValue *value =
+        gst_structure_id_get_value (structure, GST_QUARK (SELECTABLE));
+    if (value)
+      *selectable = g_value_get_boolean (value);
+    else
+      *selectable = FALSE;
+  }
+}
+
+/**
  * gst_query_ref:
  * @q: a #GstQuery to increase the refcount of.
  *
