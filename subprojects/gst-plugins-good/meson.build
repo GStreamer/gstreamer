@@ -370,7 +370,7 @@ endif
 cdata.set('HAVE_ZLIB', true)
 
 gio_dep = dependency('gio-2.0', version: glib_req)
-gmodule_dep = dependency('gmodule-2.0')
+gmodule_dep = dependency('gmodule-no-export-2.0')
 
 gst_plugins_good_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')

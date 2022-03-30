@@ -88,7 +88,7 @@ gst_check_dep = dependency('gstreamer-check-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_check_dep'])
 
 gio_dep = dependency('gio-2.0', version: glib_req)
-gmodule_dep = dependency('gmodule-2.0')
+gmodule_dep = dependency('gmodule-no-export-2.0')
 
 gtk_dep = dependency('gtk+-3.0', required: false)
 mathlib = cc.find_library('m', required : false)

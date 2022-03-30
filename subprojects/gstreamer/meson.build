@@ -525,7 +525,7 @@ privinc = include_directories('gst')
 glib_dep = dependency('glib-2.0', version : '>=2.56.0',
   fallback: ['glib', 'libglib_dep'])
 gobject_dep = dependency('gobject-2.0')
-gmodule_dep = dependency('gmodule-2.0')
+gmodule_dep = dependency('gmodule-no-export-2.0')
 if host_system == 'windows'
     gio_dep = dependency('gio-2.0')
 else

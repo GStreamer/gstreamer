@@ -19,7 +19,7 @@ gst_dep = dependency('gstreamer-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_dep'])
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_base_dep'])
-gmodule_dep = dependency('gmodule-2.0')
+gmodule_dep = dependency('gmodule-no-export-2.0')
 pygobject_dep = dependency('pygobject-3.0', fallback: ['pygobject', 'pygobject_dep'], version : '>= 3.8')
 
 pymod = import('python')

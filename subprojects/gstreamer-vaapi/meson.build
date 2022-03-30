@@ -94,7 +94,7 @@ libudev_dep = dependency('libudev', required: get_option('drm'))
 x11_dep = dependency('x11', required: get_option('x11'))
 xrandr_dep = dependency('xrandr', required: get_option('x11'))
 
-gmodule_dep = dependency('gmodule-2.0')
+gmodule_dep = dependency('gmodule-no-export-2.0')
 egl_dep = dependency('egl', required: get_option('egl'))
 glesv2_dep = dependency('glesv2', required: false)
 

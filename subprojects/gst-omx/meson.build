@@ -163,7 +163,7 @@ gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_check_dep'])
 
 libm = cc.find_library('m', required : false)
-gmodule_dep = dependency('gmodule-2.0', version: glib_req)
+gmodule_dep = dependency('gmodule-no-export-2.0', version: glib_req)
 
 gst_omx_args = ['-DHAVE_CONFIG_H']
 configinc = include_directories('.')

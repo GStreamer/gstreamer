@@ -116,7 +116,7 @@ gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : g
   fallback : ['gst-devtools', 'validate_dep'])
 
 gio_dep = dependency('gio-2.0', version: glib_req)
-gmodule_dep = dependency('gmodule-2.0')
+gmodule_dep = dependency('gmodule-no-export-2.0')
 libxml_dep = dependency('libxml-2.0', required: get_option('xptv'))
 cdata.set('DISABLE_XPTV', not libxml_dep.found())
 

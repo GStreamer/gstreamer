@@ -315,7 +315,7 @@ giounix_dep = dependency('', required: false)
 if host_system != 'windows'
   giounix_dep = dependency('gio-unix-2.0')
 endif
-gmodule_dep = dependency('gmodule-2.0')
+gmodule_dep = dependency('gmodule-no-export-2.0')
 
 # some of the examples can use gdk-pixbuf and GTK+3
 gdk_pixbuf_dep = dependency('gdk-pixbuf-2.0', required : get_option('examples'))
