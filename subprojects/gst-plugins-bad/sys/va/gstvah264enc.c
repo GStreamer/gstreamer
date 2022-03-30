@@ -55,6 +55,7 @@
 
 #include <gst/codecparsers/gsth264bitwriter.h>
 #include <gst/va/gstva.h>
+#include <gst/va/vasurfaceimage.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 
@@ -3199,30 +3200,20 @@ _push_buffer_to_downstream (GstVaH264Enc * self, GstVideoCodecFrame * frame)
   guint coded_size;
   goffset offset;
   GstBuffer *buf;
-  VADisplay dpy;
   VASurfaceID surface;
-  VAStatus status;
   VACodedBufferSegment *seg, *seg_list;
-
-  dpy = gst_va_display_get_va_dpy (self->display);
 
   frame_enc = _enc_frame (frame);
 
   /* Wait for encoding to finish */
   surface = gst_va_encode_picture_get_raw_surface (frame_enc->picture);
-  status = vaSyncSurface (dpy, surface);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING_OBJECT (self, "vaSyncSurface: %s", vaErrorStr (status));
+  if (!va_sync_surface (self->display, surface))
     goto error;
-  }
 
   seg_list = NULL;
-  status = vaMapBuffer (dpy, frame_enc->picture->coded_buffer,
-      (gpointer *) & seg_list);
-  if (status != VA_STATUS_SUCCESS) {
-    GST_WARNING_OBJECT (self, "vaMapBuffer: %s", vaErrorStr (status));
+  if (!va_map_buffer (self->display, frame_enc->picture->coded_buffer,
+          (gpointer *) & seg_list))
     goto error;
-  }
 
   if (!seg_list) {
     GST_WARNING_OBJECT (self, "coded buffer has no segment list");
@@ -3254,9 +3245,7 @@ _push_buffer_to_downstream (GstVaH264Enc * self, GstVideoCodecFrame * frame)
     offset += seg->size;
   }
 
-  status = vaUnmapBuffer (dpy, frame_enc->picture->coded_buffer);
-  if (status != VA_STATUS_SUCCESS)
-    GST_WARNING ("vaUnmapBuffer: %s", vaErrorStr (status));
+  va_unmap_buffer (self->display, frame_enc->picture->coded_buffer);
 
   frame->pts =
       self->start_pts + self->frame_duration * frame_enc->total_frame_count;

@@ -26,6 +26,10 @@
 #include "gstvavideoformat.h"
 #include <va/va.h>
 
+/* XXX: find a better log category */
+#define GST_CAT_DEFAULT gst_va_display_debug
+GST_DEBUG_CATEGORY_EXTERN (gst_va_display_debug);
+
 gboolean
 va_destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
     gint num_surfaces)
@@ -42,7 +46,6 @@ va_destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
   }
 
   return TRUE;
-
 }
 
 gboolean

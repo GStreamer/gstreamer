@@ -24,6 +24,7 @@
 
 #include "gstvafilter.h"
 
+#include <gst/va/vasurfaceimage.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 
@@ -1518,23 +1519,6 @@ gst_va_filter_drop_filter_buffers (GstVaFilter * self)
 }
 
 static gboolean
-_check_surface (GstVaDisplay * display, VASurfaceID surface)
-{
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-  VASurfaceStatus state;
-
-  status = vaQuerySurfaceStatus (dpy, surface, &state);
-
-  if (status != VA_STATUS_SUCCESS)
-    GST_ERROR ("vaQuerySurfaceStatus: %s", vaErrorStr (status));
-
-  GST_LOG ("surface %#x status %d", surface, state);
-
-  return (status == VA_STATUS_SUCCESS);
-}
-
-static gboolean
 _fill_va_sample (GstVaFilter * self, GstVaSample * sample,
     GstPadDirection direction)
 {
@@ -1548,7 +1532,7 @@ _fill_va_sample (GstVaFilter * self, GstVaSample * sample,
   /* @FIXME: in gallium vaQuerySurfaceStatus only seems to work with
    * encoder's surfaces */
   if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, MESA_GALLIUM)) {
-    if (!_check_surface (self->display, sample->surface))
+    if (!va_check_surface (self->display, sample->surface))
       return FALSE;
   }
 

@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <gst/va/va_fwd.h>
+#include <gst/va/gstva.h>
 #include <gst/video/video.h>
 #include <va/va.h>
 #include <va/va_drmcommon.h>
@@ -42,10 +42,14 @@ gboolean              va_export_surface_to_dmabuf         (GstVaDisplay * displa
                                                            VASurfaceID surface,
                                                            guint32 flags,
                                                            VADRMPRIMESurfaceDescriptor * desc);
+
+GST_VA_API
 gboolean              va_sync_surface                     (GstVaDisplay * display,
                                                            VASurfaceID surface);
+GST_VA_API
 gboolean              va_check_surface                    (GstVaDisplay * display,
                                                            VASurfaceID surface);
+
 gboolean              va_copy_surface                     (GstVaDisplay * display,
                                                            VASurfaceID dst,
                                                            VASurfaceID src);
@@ -73,9 +77,11 @@ gboolean              va_ensure_image                     (GstVaDisplay * displa
                                                            gboolean derived);
 
 /* mapping */
+GST_VA_API
 gboolean              va_map_buffer                       (GstVaDisplay * display,
                                                            VABufferID buffer,
                                                            gpointer * data);
+GST_VA_API
 gboolean              va_unmap_buffer                     (GstVaDisplay * display,
                                                            VABufferID buffer);
 
