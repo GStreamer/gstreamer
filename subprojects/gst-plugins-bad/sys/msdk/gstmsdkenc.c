@@ -1112,6 +1112,7 @@ static GstFlowReturn
 gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     gboolean discard)
 {
+  GstMsdkEncClass *klass = GST_MSDKENC_GET_CLASS (thiz);
   GstVideoCodecFrame *frame;
   GList *list;
 
@@ -1139,14 +1140,25 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
         task->output_bitstream.Data + task->output_bitstream.DataOffset;
     gsize size = task->output_bitstream.DataLength;
 
+    if (klass->pre_finish) {
+      if (!klass->pre_finish (thiz, &out_buf, data, size))
+        return GST_FLOW_ERROR;
+      if (!out_buf) {
+        gst_msdkenc_reset_task (task);
+        g_list_free_full (list, (GDestroyNotify) gst_video_codec_frame_unref);
+        return GST_FLOW_OK;
+      }
+    } else {
+      out_buf = gst_buffer_new_allocate (NULL, size, NULL);
+      gst_buffer_fill (out_buf, 0, data, size);
+    }
+
     frame = gst_msdkenc_find_best_frame (thiz, list, &task->output_bitstream);
     if (!frame) {
       /* just pick the oldest one */
       frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (thiz));
     }
 
-    out_buf = gst_buffer_new_allocate (NULL, size, NULL);
-    gst_buffer_fill (out_buf, 0, data, size);
     frame->output_buffer = out_buf;
     frame->pts =
         gst_util_uint64_scale (task->output_bitstream.TimeStamp, GST_SECOND,
@@ -1267,6 +1279,7 @@ gst_msdkenc_flush_frames (GstMsdkEnc * thiz, gboolean discard)
   mfxSession session;
   MsdkEncTask *task;
   guint i, t;
+  GstMsdkEncClass *klass = GST_MSDKENC_GET_CLASS (thiz);
 
   if (!thiz->tasks)
     return;
@@ -1300,6 +1313,8 @@ gst_msdkenc_flush_frames (GstMsdkEnc * thiz, gboolean discard)
     gst_msdkenc_finish_frame (thiz, &thiz->tasks[t], discard);
     t = (t + 1) % thiz->num_tasks;
   }
+  if (klass->flush_frames)
+    klass->flush_frames (thiz);
 }
 
 static gboolean

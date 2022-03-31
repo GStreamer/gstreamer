@@ -144,6 +144,21 @@ if have_mfx_ver134
   cdata.set('USE_MSDK_AV1_DEC', 1)
 endif
 
+mfx_ver205_check_code = '''
+#include <mfxdefs.h>
+#if MFX_VERSION < 2005
+#error "The current verison of mfx doesn't support AV1 encoding"
+#endif
+'''
+
+have_mfx_ver205 = cc.compiles(mfx_ver205_check_code,
+                include_directories: [configinc, mfx_inc])
+
+if use_onevpl and have_mfx_ver205
+  msdk_sources += [ 'gstmsdkav1enc.c' ]
+  cdata.set10('USE_MSDK_AV1_ENC', 1)
+endif
+
 if host_machine.system() == 'windows'
   if cc.get_id() != 'msvc' and msdk_option.enabled()
     error('msdk plugin can only be built with MSVC')

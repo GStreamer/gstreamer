@@ -62,6 +62,9 @@
 #ifdef USE_MSDK_AV1_DEC
 #include "gstmsdkav1dec.h"
 #endif
+#ifdef USE_MSDK_AV1_ENC
+#include "gstmsdkav1enc.h"
+#endif
 #include "gstmsdkvpp.h"
 
 GST_DEBUG_CATEGORY (gst_msdk_debug);
@@ -81,6 +84,7 @@ GST_DEBUG_CATEGORY (gst_msdkvc1dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp9dec_debug);
 GST_DEBUG_CATEGORY (gst_msdkvp9enc_debug);
 GST_DEBUG_CATEGORY (gst_msdkav1dec_debug);
+GST_DEBUG_CATEGORY (gst_msdkav1enc_debug);
 
 static void
 plugin_add_dependencies (GstPlugin * plugin)
@@ -137,6 +141,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp9dec_debug, "msdkvp9dec", 0, "msdkvp9dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp9enc_debug, "msdkvp9enc", 0, "msdkvp9enc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkav1dec_debug, "msdkav1dec", 0, "msdkav1dec");
+  GST_DEBUG_CATEGORY_INIT (gst_msdkav1dec_debug, "msdkav1enc", 0, "msdkav1enc");
 
   plugin_add_dependencies (plugin);
 
@@ -183,6 +188,10 @@ plugin_init (GstPlugin * plugin)
 #ifdef USE_MSDK_AV1_DEC
   ret = gst_element_register (plugin, "msdkav1dec", GST_RANK_NONE,
       GST_TYPE_MSDKAV1DEC);
+#endif
+#ifdef USE_MSDK_AV1_ENC
+  ret = gst_element_register (plugin, "msdkav1enc", GST_RANK_NONE,
+      GST_TYPE_MSDKAV1ENC);
 #endif
   ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
       GST_TYPE_MSDKVPP);
