@@ -2906,15 +2906,15 @@ gst_base_ts_mux_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PMT_INTERVAL:
       mux->pmt_interval = g_value_get_uint (value);
+      g_mutex_lock (&mux->lock);
       GST_OBJECT_LOCK (mux);
       for (l = GST_ELEMENT_CAST (mux)->sinkpads; l; l = l->next) {
         GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (l->data);
 
-        g_mutex_lock (&mux->lock);
         tsmux_set_pmt_interval (ts_pad->prog, mux->pmt_interval);
-        g_mutex_unlock (&mux->lock);
       }
       GST_OBJECT_UNLOCK (mux);
+      g_mutex_unlock (&mux->lock);
       break;
     case PROP_ALIGNMENT:
       mux->alignment = g_value_get_int (value);
