@@ -3165,7 +3165,7 @@ _get_sinkpad_pool (GstVaH264Enc * self)
   allocator = gst_va_allocator_new (self->display, surface_formats);
 
   self->raw_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
-      usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
+      usage_hint, GST_VA_FEATURE_DISABLED, allocator, &params);
   if (!self->raw_pool) {
     gst_object_unref (allocator);
     return NULL;
@@ -3710,7 +3710,7 @@ gst_va_h264_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
     return FALSE;
 
   pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint,
-      GST_VA_FEATURE_AUTO, allocator, &params);
+      GST_VA_FEATURE_DISABLED, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
     goto config_failed;
