@@ -176,7 +176,6 @@ struct GstBaseTsMux {
   GstMpegtsSection *pending_scte35_section;
 
   /* write callback handling/state */
-  GstFlowReturn last_flow_ret;
   GQueue streamheader;
   gboolean streamheader_sent;
   gboolean is_delta;

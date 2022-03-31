@@ -380,7 +380,6 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
   GList *l;
 
   mux->first = TRUE;
-  mux->last_flow_ret = GST_FLOW_OK;
   mux->last_ts = GST_CLOCK_TIME_NONE;
   mux->is_delta = TRUE;
   mux->is_header = FALSE;
