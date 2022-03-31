@@ -40,6 +40,15 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkav1enc_debug);
 #define GST_CAT_DEFAULT gst_msdkav1enc_debug
 
+enum
+{
+  PROP_TILE_ROW = GST_MSDKENC_PROP_MAX,
+  PROP_TILE_COL,
+};
+
+#define PROP_TILE_ROW_DEFAULT           1
+#define PROP_TILE_COL_DEFAULT           1
+
 #define RAW_FORMATS "NV12, P010_10LE"
 #define PROFILES    "main"
 
@@ -159,6 +168,15 @@ gst_msdkav1enc_configure (GstMsdkEnc * encoder)
   av1enc->ext_av1_res_param.FrameHeight = encoder->param.mfx.FrameInfo.CropH;
   gst_msdkenc_add_extra_param (encoder,
       (mfxExtBuffer *) & av1enc->ext_av1_res_param);
+
+  memset (&av1enc->ext_av1_tile_param, 0, sizeof (av1enc->ext_av1_tile_param));
+  av1enc->ext_av1_tile_param.Header.BufferId = MFX_EXTBUFF_AV1_TILE_PARAM;
+  av1enc->ext_av1_tile_param.Header.BufferSz =
+      sizeof (av1enc->ext_av1_tile_param);
+  av1enc->ext_av1_tile_param.NumTileRows = av1enc->num_tile_rows;
+  av1enc->ext_av1_tile_param.NumTileColumns = av1enc->num_tile_cols;
+  gst_msdkenc_add_extra_param (encoder,
+      (mfxExtBuffer *) & av1enc->ext_av1_tile_param);
 
   return TRUE;
 }
@@ -296,8 +314,25 @@ gst_msdkav1enc_set_property (GObject * object, guint prop_id,
 {
   GstMsdkAV1Enc *thiz = GST_MSDKAV1ENC (object);
 
-  if (!gst_msdkenc_set_common_property (object, prop_id, value, pspec))
-    GST_WARNING_OBJECT (thiz, "Failed to set common encode property");
+  if (gst_msdkenc_set_common_property (object, prop_id, value, pspec))
+    return;
+
+  GST_OBJECT_LOCK (thiz);
+
+  switch (prop_id) {
+    case PROP_TILE_ROW:
+      thiz->num_tile_rows = g_value_get_uint (value);
+      break;
+
+    case PROP_TILE_COL:
+      thiz->num_tile_cols = g_value_get_uint (value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
 }
 
 static void
@@ -307,7 +342,24 @@ gst_msdkav1enc_get_property (GObject * object, guint prop_id, GValue * value,
   GstMsdkAV1Enc *thiz = GST_MSDKAV1ENC (object);
 
   if (gst_msdkenc_get_common_property (object, prop_id, value, pspec))
-    GST_WARNING_OBJECT (thiz, "Failed to get common encode property");
+    return;
+
+  GST_OBJECT_LOCK (thiz);
+
+  switch (prop_id) {
+    case PROP_TILE_ROW:
+      g_value_set_uint (value, thiz->num_tile_rows);
+      break;
+
+    case PROP_TILE_COL:
+      g_value_set_uint (value, thiz->num_tile_cols);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
 }
 
 static void
@@ -349,6 +401,18 @@ gst_msdkav1enc_class_init (GstMsdkAV1EncClass * klass)
 
   gst_msdkenc_install_common_properties (encoder_class);
 
+  g_object_class_install_property (gobject_class, PROP_TILE_ROW,
+      g_param_spec_uint ("num-tile-rows",
+          "number of rows for tiled encoding",
+          "number of rows for tiled encoding", 1, 64,
+          PROP_TILE_ROW_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_TILE_COL,
+      g_param_spec_uint ("num-tile-cols",
+          "number of columns for tiled encoding",
+          "number of columns for tiled encoding", 1, 64,
+          PROP_TILE_COL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK AV1 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -363,6 +427,8 @@ gst_msdkav1enc_class_init (GstMsdkAV1EncClass * klass)
 static void
 gst_msdkav1enc_init (GstMsdkAV1Enc * thiz)
 {
+  thiz->num_tile_rows = PROP_TILE_ROW_DEFAULT;
+  thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
   thiz->adapter = gst_adapter_new ();
   thiz->parser = gst_av1_parser_new ();
 }
