@@ -4,10 +4,6 @@ cpu_family = 'x86_64'
 cpu = 'x86_64'
 endian = 'little'
 
-[properties]
-c_args = []
-c_link_args = []
-
 [binaries]
 c = 'x86_64-w64-mingw32-gcc'
 cpp = 'x86_64-w64-mingw32-g++'
