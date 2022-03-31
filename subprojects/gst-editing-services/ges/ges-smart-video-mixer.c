@@ -129,6 +129,7 @@ typedef struct _PadInfos
   GESSmartMixer *self;
   GstPad *mixer_pad;
   GstPad *ghostpad;
+  GstPad *real_mixer_pad;
 } PadInfos;
 
 static void
@@ -140,6 +141,7 @@ pad_infos_unref (PadInfos * infos)
       gst_element_release_request_pad (infos->self->mixer, infos->mixer_pad);
       gst_object_unref (infos->mixer_pad);
     }
+    gst_clear_object (&infos->real_mixer_pad);
 
     g_free (infos);
   }
@@ -252,6 +254,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   PadInfos *infos = pad_infos_new ();
   GESSmartMixer *self = GES_SMART_MIXER (element);
   GstPad *ghost;
+  gchar *mixer_pad_name;
 
   infos->mixer_pad = gst_element_request_pad (self->mixer,
       gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (self->mixer),
@@ -259,6 +262,19 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   if (infos->mixer_pad == NULL) {
     GST_WARNING_OBJECT (element, "Could not get any pad from GstMixer");
+    pad_infos_unref (infos);
+
+    return NULL;
+  }
+
+  /* We can rely on this because the mixer bin uses the same name pad
+     as the internal mixer when creating the ghost pad. */
+  mixer_pad_name = gst_pad_get_name (infos->mixer_pad);
+  infos->real_mixer_pad = gst_element_get_static_pad (self->real_mixer,
+      mixer_pad_name);
+  g_free (mixer_pad_name);
+  if (infos->real_mixer_pad == NULL) {
+    GST_WARNING_OBJECT (element, "Could not get the real mixer pad");
     pad_infos_unref (infos);
 
     return NULL;
@@ -280,6 +296,8 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   LOCK (self);
   g_hash_table_insert (self->pads_infos, ghost, infos);
   g_hash_table_insert (self->pads_infos, infos->mixer_pad,
+      pad_infos_ref (infos));
+  g_hash_table_insert (self->pads_infos, infos->real_mixer_pad,
       pad_infos_ref (infos));
   UNLOCK (self);
 
@@ -383,6 +401,7 @@ ges_smart_mixer_dispose (GObject * object)
     g_hash_table_unref (self->pads_infos);
     self->pads_infos = NULL;
   }
+  gst_clear_object (&self->real_mixer);
 
   G_OBJECT_CLASS (ges_smart_mixer_parent_class)->dispose (object);
 }
@@ -404,23 +423,21 @@ ges_smart_mixer_constructed (GObject * obj)
   GstElement *identity, *videoconvert;
   GESSmartMixer *self = GES_SMART_MIXER (obj);
   gchar *cname = g_strdup_printf ("%s-compositor", GST_OBJECT_NAME (self));
-  GstElement *mixer;
 
   self->mixer =
       gst_element_factory_create (ges_get_compositor_factory (), cname);
   g_free (cname);
 
   if (GST_IS_BIN (self->mixer)) {
-    g_object_get (self->mixer, "mixer", &mixer, NULL);
-    g_assert (mixer);
+    g_object_get (self->mixer, "mixer", &self->real_mixer, NULL);
+    g_assert (self->real_mixer);
   } else {
-    mixer = gst_object_ref (self->mixer);
+    self->real_mixer = gst_object_ref (self->mixer);
   }
 
-  g_object_set (mixer, "background", 1, "emit-signals", TRUE, NULL);
-  g_signal_connect (mixer, "samples-selected",
+  g_object_set (self->real_mixer, "background", 1, "emit-signals", TRUE, NULL);
+  g_signal_connect (self->real_mixer, "samples-selected",
       G_CALLBACK (ges_smart_mixer_samples_selected_cb), self);
-  gst_object_unref (mixer);
 
   /* See https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/310 */
   GST_FIXME ("Stop dropping allocation query when it is not required anymore.");

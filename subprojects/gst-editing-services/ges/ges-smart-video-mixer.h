@@ -50,6 +50,7 @@ struct _GESSmartMixer
   GHashTable *pads_infos;
   GstPad *srcpad;
   GstElement *mixer;
+  GstElement *real_mixer;
   GMutex lock;
 
   GstCaps *caps;
