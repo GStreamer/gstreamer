@@ -130,7 +130,8 @@ gst_navigationtest_src_event (GstBaseTransform * trans, GstEvent * event)
               &navtest->mousey);
           GST_DEBUG ("received mouse-move event at %f,%f", navtest->mousex,
               navtest->mousey);
-          gst_navigation_event_parse_state (event, &navtest->modifiers);
+          gst_navigation_event_parse_modifier_state (event,
+              &navtest->modifiers);
           break;
         }
         case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:{
@@ -176,7 +177,8 @@ gst_navigationtest_src_event (GstBaseTransform * trans, GstEvent * event)
         case GST_NAVIGATION_EVENT_KEY_RELEASE:{
           const char *name;
 
-          gst_navigation_event_parse_state (event, &navtest->modifiers);
+          gst_navigation_event_parse_modifier_state (event,
+              &navtest->modifiers);
           gst_navigation_event_parse_key_event (event, &name);
           GST_DEBUG ("received %s event for key \"%s\"",
               type == GST_NAVIGATION_EVENT_KEY_PRESS ? "key-press" :

@@ -560,8 +560,8 @@ void    gst_navigation_send_event_simple (GstNavigation *navigation,
                                           GstEvent *event);
 
 GST_VIDEO_API
-gboolean        gst_navigation_event_parse_state (GstEvent *event,
-                                                  GstNavigationModifierType *state);
+gboolean        gst_navigation_event_parse_modifier_state (GstEvent *event,
+                                                           GstNavigationModifierType *state);
 
 G_END_DECLS
 

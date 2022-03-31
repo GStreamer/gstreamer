@@ -1443,7 +1443,7 @@ gst_navigation_event_set_coordinates (GstEvent * event, gdouble x, gdouble y)
 
 
 /**
- * gst_navigation_event_parse_state:
+ * gst_navigation_event_parse_modifier_state:
  * @event: The #GstEvent to modify.
  * @state: a bit-mask representing the state of the modifier keys (e.g. Control,
  * Shift and Alt).
@@ -1454,7 +1454,7 @@ gst_navigation_event_set_coordinates (GstEvent * event, gdouble x, gdouble y)
  * Since: 1.22
  */
 gboolean
-gst_navigation_event_parse_state (GstEvent * event,
+gst_navigation_event_parse_modifier_state (GstEvent * event,
     GstNavigationModifierType * state)
 {
   GstNavigationEventType e_type;
