@@ -256,6 +256,8 @@ enum
   PROP_SI_INTERVAL,
   PROP_BITRATE,
   PROP_PCR_INTERVAL,
+  PROP_AUDIO_PES_TARGET_TIME,
+  PROP_AUDIO_PES_TARGET_BYTES,
   PROP_SCTE_35_PID,
   PROP_SCTE_35_NULL_INTERVAL,
   PROP_ENABLE_CUSTOM_MAPPINGS
@@ -264,12 +266,16 @@ enum
 #define DEFAULT_SCTE_35_PID 0
 #define DEFAULT_ENABLE_CUSTOM_MAPPINGS FALSE
 
-#define BASETSMUX_DEFAULT_ALIGNMENT    -1
-
 #define CLOCK_BASE 9LL
 #define CLOCK_FREQ (CLOCK_BASE * 10000) /* 90 kHz PTS clock */
 #define CLOCK_FREQ_SCR (CLOCK_FREQ * 300)       /* 27 MHz SCR clock */
 #define TS_MUX_CLOCK_BASE (TSMUX_CLOCK_FREQ * 10 * 360)
+
+#define BASETSMUX_DEFAULT_ALIGNMENT    -1
+#define BASETSMUX_DEFAULT_AUDIO_PES_TARGET_TIME (CLOCK_FREQ / 1000 * 350)       /* 350ms */
+
+/* Aim for a PES header about every 16 TS packets, leaving space for a (max) 22-byte PES header */
+#define BASETSMUX_DEFAULT_AUDIO_PES_TARGET_BYTES (16 * TSMUX_PAYLOAD_LENGTH - 22)
 
 #define GSTTIME_TO_MPEGTIME(time) \
   (gst_util_uint64_scale (time, CLOCK_BASE, GST_MSECOND/10))
@@ -404,6 +410,9 @@ gst_base_ts_mux_reset (GstBaseTsMux * mux, gboolean alloc)
     g_hash_table_destroy (mux->programs);
   }
   mux->programs = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+  gst_clear_object (&mux->current_pad);
+  gst_clear_buffer (&mux->current_buffer);
 
   while ((buf = GST_BUFFER (g_queue_pop_head (&mux->streamheader))))
     gst_buffer_unref (buf);
@@ -993,6 +1002,13 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     ts_pad->stream =
         tsmux_create_stream (mux->tsmux, st, stream_number, ts_pad->pid,
         ts_pad->language, ts_pad->bitrate, ts_pad->max_bitrate);
+
+    /* if this is an audio stream, report the PES target time in the latency */
+    if (ts_pad->stream->gst_stream_type == GST_STREAM_TYPE_AUDIO) {
+      gst_aggregator_set_latency (GST_AGGREGATOR (mux),
+          mux->audio_pes_target_time, GST_CLOCK_TIME_NONE);
+    }
+
     if (ts_pad->stream == NULL)
       goto error;
   }
@@ -1559,74 +1575,18 @@ alloc_packet_cb (GstBuffer ** buf, void *user_data)
   klass->allocate_packet (mux, buf);
 }
 
+/* Sends the buffer to tsmux for output.
+ * Called with mux->lock held. Releases the lock before exit */
 static GstFlowReturn
-gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
-    GstAggregatorPad * agg_pad, GstBuffer * buf)
+gst_base_ts_mux_output_buffer_locked (GstBaseTsMux * mux,
+    GstBaseTsMuxPad * best, GstBuffer * buf, gint64 bufdts)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseTsMuxPad *best = GST_BASE_TS_MUX_PAD (agg_pad);
-  TsMuxProgram *prog;
-  gint64 pts = GST_CLOCK_STIME_NONE;
+  TsMuxProgram *prog = best->prog;
   gint64 dts = GST_CLOCK_STIME_NONE;
+  gint64 pts = GST_CLOCK_STIME_NONE;
   gboolean delta = TRUE, header = FALSE;
   StreamData *stream_data;
   GstMpegtsSection *scte_section = NULL;
-
-  GST_DEBUG_OBJECT (mux, "Pads collected");
-
-  if (buf && gst_buffer_get_size (buf) == 0
-      && GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)) {
-    gst_buffer_unref (buf);
-    return GST_FLOW_OK;
-  }
-
-  g_mutex_lock (&mux->lock);
-  if (G_UNLIKELY (mux->first)) {
-    ret = gst_base_ts_mux_create_streams (mux);
-    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      if (buf)
-        gst_buffer_unref (buf);
-      g_mutex_unlock (&mux->lock);
-      return ret;
-    }
-
-    mux->first = FALSE;
-  }
-
-  prog = best->prog;
-  if (prog == NULL) {
-    GList *cur;
-
-    ret = gst_base_ts_mux_create_pad_stream (mux, GST_PAD (best), FALSE);
-    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-      if (buf)
-        gst_buffer_unref (buf);
-      g_mutex_unlock (&mux->lock);
-      return ret;
-    }
-    tsmux_resend_pat (mux->tsmux);
-    tsmux_resend_si (mux->tsmux);
-    prog = best->prog;
-    g_assert_nonnull (prog);
-
-    /* output PMT for each program */
-    for (cur = mux->tsmux->programs; cur; cur = cur->next) {
-      TsMuxProgram *program = (TsMuxProgram *) cur->data;
-
-      tsmux_resend_pmt (program);
-    }
-  }
-
-  g_assert (buf != NULL);
-
-  if (best->prepare_func) {
-    GstBuffer *tmp;
-
-    tmp = best->prepare_func (buf, best, mux);
-    g_assert (tmp);
-    gst_buffer_unref (buf);
-    buf = tmp;
-  }
 
   if (mux->force_key_unit_event != NULL
       && best->stream->gst_stream_type == GST_STREAM_TYPE_VIDEO) {
@@ -1634,7 +1594,7 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
 
     g_mutex_unlock (&mux->lock);
     event = check_pending_key_unit_event (mux->force_key_unit_event,
-        &agg_pad->segment, GST_BUFFER_PTS (buf),
+        &GST_AGGREGATOR_PAD_CAST (best)->segment, GST_BUFFER_PTS (buf),
         GST_BUFFER_FLAGS (buf), mux->pending_key_unit_ts);
     if (event) {
       GstClockTime running_time;
@@ -1698,10 +1658,10 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
             GST_BUFFER_FLAG_DELTA_UNIT) ? " (keyframe)" : "");
   }
 
-  if (GST_CLOCK_STIME_IS_VALID (best->dts)) {
-    dts = GSTTIMEDIFF_TO_MPEGTIME (best->dts);
+  if (GST_CLOCK_STIME_IS_VALID (bufdts)) {
+    dts = GSTTIMEDIFF_TO_MPEGTIME (bufdts);
     GST_DEBUG_OBJECT (mux, "Buffer has DTS %" GST_STIME_FORMAT " dts %"
-        G_GINT64_FORMAT, GST_STIME_ARGS (best->dts), dts);
+        G_GINT64_FORMAT, GST_STIME_ARGS (bufdts), dts);
   }
 
   /* should not have a DTS without PTS */
@@ -1750,8 +1710,90 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   /* ERRORS */
 write_fail:
   {
-    return mux->last_flow_ret;
+    g_mutex_unlock (&mux->lock);
+    return GST_FLOW_ERROR;
   }
+}
+
+static GstFlowReturn
+gst_base_ts_mux_prepare_and_accumulate_buffer (GstBaseTsMux * mux,
+    GstAggregatorPad * agg_pad, GstBuffer * buf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBaseTsMuxPad *best = GST_BASE_TS_MUX_PAD (agg_pad);
+  TsMuxProgram *prog;
+
+  GST_DEBUG_OBJECT (mux, "Pads collected");
+
+  if (buf && gst_buffer_get_size (buf) == 0
+      && GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_GAP)) {
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
+
+  g_mutex_lock (&mux->lock);
+  if (G_UNLIKELY (mux->first)) {
+    ret = gst_base_ts_mux_create_streams (mux);
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      if (buf)
+        gst_buffer_unref (buf);
+      g_mutex_unlock (&mux->lock);
+      return ret;
+    }
+
+    mux->first = FALSE;
+  }
+
+  prog = best->prog;
+  if (prog == NULL) {
+    GList *cur;
+
+    ret = gst_base_ts_mux_create_pad_stream (mux, GST_PAD (best), FALSE);
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      if (buf)
+        gst_buffer_unref (buf);
+      g_mutex_unlock (&mux->lock);
+      return ret;
+    }
+    tsmux_resend_pat (mux->tsmux);
+    tsmux_resend_si (mux->tsmux);
+    prog = best->prog;
+    g_assert_nonnull (prog);
+
+    /* output PMT for each program */
+    for (cur = mux->tsmux->programs; cur; cur = cur->next) {
+      TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+      tsmux_resend_pmt (program);
+    }
+  }
+
+  g_assert (buf != NULL);
+
+  if (best->prepare_func) {
+    GstBuffer *tmp;
+
+    tmp = best->prepare_func (buf, best, mux);
+    g_assert (tmp);
+    gst_buffer_unref (buf);
+    buf = tmp;
+  }
+
+  if (best->stream->gst_stream_type == GST_STREAM_TYPE_AUDIO) {
+    if (gst_buffer_get_size (buf) < mux->audio_pes_target_bytes) {
+      /* Start accumulating audio buffers on this pad */
+      GST_DEBUG_OBJECT (best, "Starting to accumulate audio PES on pad");
+
+      mux->current_pad = gst_object_ref (best);
+      mux->current_buffer = buf;
+      mux->current_buffer_dts = best->dts;
+
+      g_mutex_unlock (&mux->lock);
+      return GST_FLOW_OK;
+    }
+  }
+
+  return gst_base_ts_mux_output_buffer_locked (mux, best, buf, best->dts);
 }
 
 /* GstElement implementation */
@@ -2312,6 +2354,8 @@ gst_base_ts_mux_resend_all_pmts (GstBaseTsMux * mux)
   }
 }
 
+static GstFlowReturn finish_current_pes (GstBaseTsMux * mux);
+
 /* GstAggregator implementation */
 
 static gboolean
@@ -2329,6 +2373,13 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
     {
       GstCaps *caps;
       GstFlowReturn ret;
+
+      if (mux->current_pad == ts_pad) {
+        GST_DEBUG_OBJECT (ts_pad,
+            "Current accumulating pad is switching caps. Draining");
+        if (finish_current_pes (mux) != GST_FLOW_OK)
+          return FALSE;
+      }
 
       g_mutex_lock (&mux->lock);
       if (ts_pad->stream == NULL) {
@@ -2511,6 +2562,25 @@ out:
 }
 
 static gboolean
+gst_base_ts_mux_sink_query (GstAggregator * agg, GstAggregatorPad * agg_pad,
+    GstQuery * query)
+{
+  GstAggregatorClass *agg_class = GST_AGGREGATOR_CLASS (parent_class);
+  GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
+  GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (agg_pad);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_DRAIN) {
+    if (mux->current_pad == ts_pad) {
+      GST_DEBUG_OBJECT (ts_pad, "Drain query on current accumulating pad");
+      if (finish_current_pes (mux) != GST_FLOW_OK)
+        return FALSE;
+    }
+  }
+
+  return agg_class->sink_query (agg, agg_pad, query);
+}
+
+static gboolean
 gst_base_ts_mux_src_event (GstAggregator * agg, GstEvent * event)
 {
   GstAggregatorClass *agg_class = GST_AGGREGATOR_CLASS (parent_class);
@@ -2660,6 +2730,39 @@ beach:
   return ret;
 }
 
+static gboolean
+can_accumulate_buffer (GstBaseTsMux * mux,
+    GstBaseTsMuxPad * pad, GstBuffer * new_buf, GstBuffer * current_buf)
+{
+  gsize new_buf_size;
+
+  /* If this buffer would overflow the target time, don't accumulate it */
+  if (GST_BUFFER_DTS_IS_VALID (current_buf) && GST_BUFFER_DTS_IS_VALID (new_buf)
+      && GST_CLOCK_DIFF (GST_BUFFER_DTS (current_buf),
+          GST_BUFFER_DTS (new_buf)) > mux->audio_pes_target_time) {
+    GST_LOG_OBJECT (pad,
+        "Not accumulating %" GST_PTR_FORMAT " into pending %" GST_PTR_FORMAT
+        " - time overflow", new_buf, current_buf);
+    return FALSE;
+  }
+
+  /* If this buffer would overflow the target size, don't accumulate it */
+  if (pad->prepared_size_func != NULL)
+    new_buf_size = pad->prepared_size_func (pad, new_buf);
+  else
+    new_buf_size = gst_buffer_get_size (new_buf);
+
+  if (gst_buffer_get_size (current_buf) + new_buf_size >
+      mux->audio_pes_target_bytes) {
+    GST_LOG_OBJECT (pad,
+        "Not accumulating %" GST_PTR_FORMAT " into pending %" GST_PTR_FORMAT
+        " - bytes overflow", new_buf, current_buf);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstBaseTsMuxPad *
 gst_base_ts_mux_find_best_pad (GstAggregator * aggregator,
     GstClockTime * best_time, gboolean timeout)
@@ -2740,13 +2843,39 @@ gst_base_ts_mux_are_all_pads_eos (GstBaseTsMux * mux)
   return ret;
 }
 
+static GstFlowReturn
+finish_current_pes (GstBaseTsMux * mux)
+{
+  GstFlowReturn ret;
+
+  if (mux->current_pad == NULL) {
+    return GST_FLOW_OK;
+  }
+
+  /* Output the accumulated buffer, then choose a new best pad */
+  GST_DEBUG_OBJECT (mux->current_pad,
+      "Outputting accumulated audio PES on pad: %" GST_PTR_FORMAT,
+      mux->current_buffer);
+
+  g_mutex_lock (&mux->lock);
+  ret =
+      gst_base_ts_mux_output_buffer_locked (GST_BASE_TS_MUX (mux),
+      mux->current_pad, mux->current_buffer, mux->current_buffer_dts);
+
+  mux->current_buffer = NULL;
+
+  gst_object_unref (mux->current_pad);
+  mux->current_pad = NULL;
+
+  return ret;
+}
 
 static GstFlowReturn
 gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
 {
   GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg, NULL, timeout);
+  GstBaseTsMuxPad *best = NULL;
   GstCaps *caps;
 
   /* set caps on the srcpad if no caps were set yet */
@@ -2763,6 +2892,56 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
   }
   gst_caps_unref (caps);
 
+  /* If we're accumulating packets from an audio pad, see if we can fit
+   * more */
+  if (mux->current_pad != NULL) {
+    GstBuffer *buffer =
+        gst_aggregator_pad_peek_buffer (GST_AGGREGATOR_PAD (mux->current_pad));
+    gboolean can_accumulate;
+
+    if (buffer == NULL)
+      goto maybe_eos;
+
+    can_accumulate =
+        can_accumulate_buffer (mux, mux->current_pad, buffer,
+        mux->current_buffer);
+    gst_buffer_unref (buffer);
+
+    if (can_accumulate) {
+      GstBuffer *tmp;
+
+      /* Collect another buffer from the current pad */
+      best = mux->current_pad;
+
+      buffer = gst_aggregator_pad_pop_buffer (GST_AGGREGATOR_PAD (best));
+      if (!buffer) {
+        /* We might have gotten a flush event after we picked the pad */
+        goto maybe_eos;
+      }
+
+      if (best->prepare_func) {
+        tmp = best->prepare_func (buffer, best, mux);
+        gst_buffer_unref (buffer);
+        buffer = tmp;
+      }
+
+      GST_LOG_OBJECT (best,
+          "Accumulating from current pad. Concatenating %" GST_PTR_FORMAT
+          " and %" GST_PTR_FORMAT, mux->current_buffer, buffer);
+
+      /* Append the new packet to the current PES */
+      mux->current_buffer = gst_buffer_append (mux->current_buffer, buffer);
+      goto done;
+    } else {
+      ret = finish_current_pes (mux);
+      if (ret != GST_FLOW_OK)
+        goto done;
+    }
+  }
+
+  if (best == NULL)
+    best = gst_base_ts_mux_find_best_pad (agg, NULL, timeout);
+
   if (best) {
     GstBuffer *buffer;
 
@@ -2773,7 +2952,7 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
     }
 
     ret =
-        gst_base_ts_mux_aggregate_buffer (GST_BASE_TS_MUX (agg),
+        gst_base_ts_mux_prepare_and_accumulate_buffer (GST_BASE_TS_MUX (agg),
         GST_AGGREGATOR_PAD (best), buffer);
 
     gst_object_unref (best);
@@ -2782,9 +2961,21 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
       goto done;
   }
 
+maybe_eos:
+  if (mux->current_pad != NULL
+      && gst_aggregator_pad_is_eos (GST_AGGREGATOR_PAD (mux->current_pad))) {
+    /* drain some possibly cached data */
+    if (mux->current_pad != NULL) {
+      ret = finish_current_pes (mux);
+      if (ret != GST_FLOW_OK)
+        goto done;
+    }
+  }
+
   if (gst_base_ts_mux_are_all_pads_eos (mux)) {
     GstBaseTsMuxClass *klass = GST_BASE_TS_MUX_GET_CLASS (mux);
-    /* drain some possibly cached data */
+    GST_DEBUG_OBJECT (mux, "All pads are EOS. Finishing up");
+
     if (klass->drain)
       klass->drain (mux);
     gst_base_ts_mux_push_packets (mux, TRUE);
@@ -2945,6 +3136,14 @@ gst_base_ts_mux_set_property (GObject * object, guint prop_id,
         tsmux_set_pcr_interval (mux->tsmux, mux->pcr_interval);
       g_mutex_unlock (&mux->lock);
       break;
+    case PROP_AUDIO_PES_TARGET_TIME:
+      mux->audio_pes_target_time_ticks = g_value_get_uint (value);
+      mux->audio_pes_target_time =
+          MPEGTIME_TO_GSTTIME (mux->audio_pes_target_time_ticks);
+      break;
+    case PROP_AUDIO_PES_TARGET_BYTES:
+      mux->audio_pes_target_bytes = g_value_get_uint (value);
+      break;
     case PROP_SCTE_35_PID:
       mux->scte35_pid = g_value_get_uint (value);
       break;
@@ -2987,6 +3186,12 @@ gst_base_ts_mux_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PCR_INTERVAL:
       g_value_set_uint (value, mux->pcr_interval);
+      break;
+    case PROP_AUDIO_PES_TARGET_TIME:
+      g_value_set_uint (value, mux->audio_pes_target_time_ticks);
+      break;
+    case PROP_AUDIO_PES_TARGET_BYTES:
+      g_value_set_uint (value, mux->audio_pes_target_bytes);
       break;
     case PROP_SCTE_35_PID:
       g_value_set_uint (value, mux->scte35_pid);
@@ -3084,6 +3289,7 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   gstagg_class->aggregate = gst_base_ts_mux_aggregate;
   gstagg_class->clip = gst_base_ts_mux_clip;
   gstagg_class->sink_event = gst_base_ts_mux_sink_event;
+  gstagg_class->sink_query = gst_base_ts_mux_sink_query;
   gstagg_class->src_event = gst_base_ts_mux_src_event;
   gstagg_class->start = gst_base_ts_mux_start;
   gstagg_class->stop = gst_base_ts_mux_stop;
@@ -3165,6 +3371,36 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
           DEFAULT_ENABLE_CUSTOM_MAPPINGS,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstBaseTsMux:audio-pes-target-time:
+   *
+   * Target / maximum duration for accumulating incoming raw audio packets into a
+   * single larger PES to reduce muxing overhead (in ticks of the 90kHz MPEG clock)
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_AUDIO_PES_TARGET_TIME, g_param_spec_uint ("audio-pes-target-time",
+          "Audio PES target time",
+          "Target audio PES duration for aggregating raw audio packets (in ticks of the 90kHz clock)",
+          0, G_MAXUINT, BASETSMUX_DEFAULT_AUDIO_PES_TARGET_TIME,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstBaseTsMux:audio-pes-target-bytes:
+   *
+   * Target / maximum PES payload size for accumulating incoming raw audio packets into a
+   * single larger PES to reduce muxing overhead (in bytes)
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_AUDIO_PES_TARGET_BYTES, g_param_spec_uint ("audio-pes-target-bytes",
+          "Audio PES target size",
+          "Target audio PES size for aggregating raw audio packets (in bytes)",
+          0, G_MAXUINT, BASETSMUX_DEFAULT_AUDIO_PES_TARGET_BYTES,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &gst_base_ts_mux_src_factory, GST_TYPE_AGGREGATOR_PAD);
 
@@ -3190,6 +3426,11 @@ gst_base_ts_mux_init (GstBaseTsMux * mux)
 
   mux->packet_size = GST_BASE_TS_MUX_NORMAL_PACKET_LENGTH;
   mux->automatic_alignment = 0;
+
+  mux->audio_pes_target_time_ticks = BASETSMUX_DEFAULT_AUDIO_PES_TARGET_TIME;
+  mux->audio_pes_target_time =
+      MPEGTIME_TO_GSTTIME (mux->audio_pes_target_time_ticks);
+  mux->audio_pes_target_bytes = BASETSMUX_DEFAULT_AUDIO_PES_TARGET_BYTES;
 
   g_mutex_init (&mux->lock);
 }

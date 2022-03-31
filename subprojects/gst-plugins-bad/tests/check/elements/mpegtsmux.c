@@ -626,11 +626,13 @@ GST_START_TEST (test_caps_noop_change)
   GstEvent *caps_event = gst_pad_get_sticky_event (sinkpad, GST_EVENT_CAPS, 0);
   gst_pad_send_event (sinkpad, caps_event);
 
+  /* Wait for the caps event to be processed */
+  GstQuery *drain = gst_query_new_drain ();
+  gst_pad_query (sinkpad, drain);
+  gst_query_unref (drain);
+
   gst_object_unref (sinkpad);
   gst_object_unref (mux);
-
-  /* Wait for the caps event to be processed */
-  g_usleep (1000);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
