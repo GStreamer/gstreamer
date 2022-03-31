@@ -69,6 +69,9 @@
 
 #include "gstbasetsmux.h"
 
+
+gsize gst_base_ts_mux_prepared_size_aac (GstBaseTsMuxPad * pad, GstBuffer * buf);
+
 GstBuffer * gst_base_ts_mux_prepare_aac_mpeg4 (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux);
 

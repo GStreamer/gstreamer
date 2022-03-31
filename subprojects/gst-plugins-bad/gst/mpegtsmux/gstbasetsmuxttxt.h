@@ -71,5 +71,6 @@
 
 GstBuffer * gst_base_ts_mux_prepare_teletext (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux);
+gsize gst_base_ts_mux_prepared_size_teletext (GstBaseTsMuxPad * pad, GstBuffer *buf);
 
 #endif /* __BASETSMUX_TTXT_H__ */

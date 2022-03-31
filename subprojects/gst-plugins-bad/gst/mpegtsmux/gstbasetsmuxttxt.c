@@ -138,3 +138,36 @@ gst_base_ts_mux_prepare_teletext (GstBuffer * buf, GstBaseTsMuxPad * pad,
 
   return out_buf;
 }
+
+gsize
+gst_base_ts_mux_prepared_size_teletext (GstBaseTsMuxPad * pad, GstBuffer * buf)
+{
+  gint size, stuff;
+  guint8 *data;
+  GstMapInfo map;
+
+  (void) pad;
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  size = map.size;
+  data = map.data;
+
+  /* check if leading data_identifier byte is already present,
+   * if not increase size since it will need to be added */
+  if (data[0] < 0x10 || data[0] > 0x1F) {
+    size += 1;
+  }
+
+  gst_buffer_unmap (buf, &map);
+
+  if (size <= 184 - 45) {
+    stuff = 184 - 45 - size;
+  } else {
+    stuff = size - (184 - 45);
+    stuff = 184 - (stuff % 184);
+  }
+  if (G_UNLIKELY (stuff == 1))
+    stuff += 184;
+
+  return size + stuff;
+}

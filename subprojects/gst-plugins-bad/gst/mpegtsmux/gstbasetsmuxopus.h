@@ -71,5 +71,6 @@
 
 GstBuffer * gst_base_ts_mux_prepare_opus (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux);
+gsize gst_base_ts_mux_prepared_size_opus (GstBaseTsMuxPad * pad, GstBuffer * buf);
 
 #endif /* __BASETSMUX_OPUS_H__ */

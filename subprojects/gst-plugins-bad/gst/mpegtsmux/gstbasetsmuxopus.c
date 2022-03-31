@@ -131,3 +131,22 @@ gst_base_ts_mux_prepare_opus (GstBuffer * buf, GstBaseTsMuxPad * pad,
 
   return outbuf;
 }
+
+gsize
+gst_base_ts_mux_prepared_size_opus (GstBaseTsMuxPad * pad, GstBuffer * buf)
+{
+  gsize insize = gst_buffer_get_size (buf);
+  gsize outsize;
+  GstAudioClippingMeta *cmeta = gst_buffer_get_audio_clipping_meta (buf);
+
+  (void) pad;
+  g_assert (!cmeta || cmeta->format == GST_FORMAT_DEFAULT);
+
+  outsize = 2 + insize / 255 + 1;
+  if (cmeta && cmeta->start)
+    outsize += 2;
+  if (cmeta && cmeta->end)
+    outsize += 2;
+
+  return outsize + insize;
+}

@@ -115,6 +115,7 @@ gst_base_ts_mux_pad_reset (GstBaseTsMuxPad * pad)
     pad->free_func (pad->prepare_data);
   pad->prepare_data = NULL;
   pad->prepare_func = NULL;
+  pad->prepared_size_func = NULL;
   pad->free_func = NULL;
 
   if (pad->codec_data)
@@ -612,6 +613,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
 
   g_clear_pointer (&ts_pad->codec_data, gst_buffer_unref);
   ts_pad->prepare_func = NULL;
+  ts_pad->prepared_size_func = NULL;
 
   stream_format = gst_structure_get_string (s, "stream-format");
 
@@ -682,6 +684,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
           ts_pad->codec_data =
               gst_base_ts_mux_aac_mpeg2_make_codec_data (mux, caps);
           ts_pad->prepare_func = gst_base_ts_mux_prepare_aac_mpeg2;
+          ts_pad->prepared_size_func = gst_base_ts_mux_prepared_size_aac;
           if (ts_pad->codec_data == NULL) {
             GST_ERROR_OBJECT (mux, "Invalid or incomplete caps for MPEG-2 AAC");
             goto not_negotiated;
@@ -701,6 +704,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
                 gst_buffer_get_size (codec_data));
             ts_pad->codec_data = gst_buffer_ref (codec_data);
             ts_pad->prepare_func = gst_base_ts_mux_prepare_aac_mpeg4;
+            ts_pad->prepared_size_func = gst_base_ts_mux_prepared_size_aac;
           } else {
             ts_pad->codec_data = NULL;
             GST_ERROR_OBJECT (mux, "Need codec_data for raw MPEG-4 AAC");
@@ -745,6 +749,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     st = TSMUX_ST_PS_TELETEXT;
     /* needs a particularly sized layout */
     ts_pad->prepare_func = gst_base_ts_mux_prepare_teletext;
+    ts_pad->prepared_size_func = gst_base_ts_mux_prepared_size_teletext;
   } else if (strcmp (mt, "audio/x-opus") == 0) {
     guint8 channels, mapping_family, stream_count, coupled_count;
     guint8 channel_mapping[256];
@@ -838,6 +843,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
 
     st = TSMUX_ST_PS_OPUS;
     ts_pad->prepare_func = gst_base_ts_mux_prepare_opus;
+    ts_pad->prepared_size_func = gst_base_ts_mux_prepared_size_opus;
   } else if (strcmp (mt, "meta/x-klv") == 0) {
     st = TSMUX_ST_PS_KLV;
   } else if (strcmp (mt, "meta/x-st-2038") == 0) {
@@ -955,6 +961,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     }
     st = TSMUX_ST_VIDEO_JP2K;
     ts_pad->prepare_func = gst_base_ts_mux_prepare_jpeg2000;
+    ts_pad->prepared_size_func = gst_base_ts_mux_prepared_size_jpeg2000;
     ts_pad->prepare_data = private_data;
     ts_pad->free_func = gst_base_ts_mux_free_jpeg2000;
   } else {

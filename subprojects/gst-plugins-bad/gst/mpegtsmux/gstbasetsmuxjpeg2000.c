@@ -128,6 +128,16 @@ gst_base_ts_mux_prepare_jpeg2000 (GstBuffer * buf, GstBaseTsMuxPad * pad,
   return out_buf;
 }
 
+gsize
+gst_base_ts_mux_prepared_size_jpeg2000 (GstBaseTsMuxPad * pad, GstBuffer * buf)
+{
+  j2k_private_data *private_data = pad->prepare_data;
+  const guint header_size = private_data->interlace ? 48 : 38;
+  gsize insize = gst_buffer_get_size (buf);
+
+  return header_size + insize;
+}
+
 void
 gst_base_ts_mux_free_jpeg2000 (gpointer prepare_data)
 {

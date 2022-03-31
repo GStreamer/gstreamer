@@ -98,6 +98,7 @@ typedef struct GstBaseTsPadData GstBaseTsPadData;
 
 typedef GstBuffer * (*GstBaseTsMuxPadPrepareFunction) (GstBuffer * buf,
     GstBaseTsMuxPad * data, GstBaseTsMux * mux);
+typedef gsize (*GstBaseTsMuxPadPreparedSizeFunction) (GstBaseTsMuxPad * data, GstBuffer * buf);
 
 typedef void (*GstBaseTsMuxPadFreePrepareDataFunction) (gpointer prepare_data);
 
@@ -119,6 +120,8 @@ struct _GstBaseTsMuxPad
 
   /* handler to prepare input data */
   GstBaseTsMuxPadPrepareFunction prepare_func;
+  /* handler to calculate size of prepared input data */
+  GstBaseTsMuxPadPreparedSizeFunction prepared_size_func;
   /* handler to free the private data */
   GstBaseTsMuxPadFreePrepareDataFunction free_func;
 

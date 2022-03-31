@@ -59,6 +59,7 @@ typedef struct j2k_private_data
 
 GstBuffer *gst_base_ts_mux_prepare_jpeg2000 (GstBuffer * buf, GstBaseTsMuxPad * pad,
     GstBaseTsMux * mux);
+gsize gst_base_ts_mux_prepared_size_jpeg2000 (GstBaseTsMuxPad * pad, GstBuffer * buf);
 
 void gst_base_ts_mux_free_jpeg2000 (gpointer prepare_data);
 

@@ -134,6 +134,14 @@ gst_base_ts_mux_prepare_aac_adts (GstBuffer * buf,
   return out_buf;
 }
 
+gsize
+gst_base_ts_mux_prepared_size_aac (GstBaseTsMuxPad * pad, GstBuffer * buf)
+{
+  (void) pad;
+
+  return gst_buffer_get_size (buf) + 7;
+}
+
 /* Constructs a dummy codec_data buffer for generating ADTS headers
  * from raw MPEG-2 AAC input, where we don't expect codec_data in the caps,
  * and need to get the info from the profile/channels/rate fields */
