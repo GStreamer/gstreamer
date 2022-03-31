@@ -1261,7 +1261,9 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
    *
-   * Returns: a #GstPad, or NULL when the stream number does not exist.
+   * Returns: (transfer full) (nullable): a #GstPad, or NULL when the
+   * stream number does not exist. The #GstPad must be unreffed after
+   * usage.
    */
   gst_play_bin_signals[SIGNAL_GET_VIDEO_PAD] =
       g_signal_new ("get-video-pad", G_TYPE_FROM_CLASS (klass),
@@ -1278,7 +1280,9 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
    *
-   * Returns: a #GstPad, or NULL when the stream number does not exist.
+   * Returns: (transfer full) (nullable): a #GstPad, or NULL when the
+   * stream number does not exist. The #GstPad must be unreffed after
+   * usage.
    */
   gst_play_bin_signals[SIGNAL_GET_AUDIO_PAD] =
       g_signal_new ("get-audio-pad", G_TYPE_FROM_CLASS (klass),
@@ -1295,7 +1299,9 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This pad can be used for notifications of caps changes, stream-specific
    * queries, etc.
    *
-   * Returns: a #GstPad, or NULL when the stream number does not exist.
+   * Returns: (transfer full) (nullable): a #GstPad, or NULL when the
+   * stream number does not exist. The #GstPad must be unreffed after
+   * usage.
    */
   gst_play_bin_signals[SIGNAL_GET_TEXT_PAD] =
       g_signal_new ("get-text-pad", G_TYPE_FROM_CLASS (klass),
