@@ -162,7 +162,9 @@ foreach sp : subprojects
     plugins = subproj.get_variable('plugins', [])
     all_plugins += plugins
     all_libraries += subproj.get_variable('libraries', [])
-    all_tools += subproj.get_variable('gst_tools', {})
+    if not get_option('tools').disabled()
+      all_tools += subproj.get_variable('gst_tools', {})
+    endif
 
     orc_update_targets += subproj.get_variable('orc_update_targets', [])
 
@@ -464,5 +466,14 @@ if dotnet_format.found()
 endif
 
 summary({
-  'gstreamer-full': building_full,
+  'gstreamer-full library': building_full,
 }, section: 'Build options', bool_yn: true, list_sep: '  ')
+
+gst_tools = []
+foreach tool, data: all_tools
+  gst_tools += tool
+endforeach
+
+summary({
+    'Tools': gst_tools,
+}, section: 'Build options', list_sep: ', ')
