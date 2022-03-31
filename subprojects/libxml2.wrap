@@ -3,9 +3,9 @@ directory = libxml2-2.9.7
 source_url = https://download.gnome.org/sources/libxml2/2.9/libxml2-2.9.7.tar.xz
 source_filename = libxml2-2.9.7.tar.xz
 source_hash = 6437855f3332fcc0fc25323c5f06901e02277e1232a662b621dc88fde37259ac
-patch_filename = libxml2_2.9.7-8_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/libxml2_2.9.7-8/get_patch
-patch_hash = 84da01091c2e39cf345ced801855b43442bfdfafd59e4d16376b23015222cfad
+patch_filename = libxml2_2.9.7-12_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/libxml2_2.9.7-12/get_patch
+patch_hash = a0fc97727fefe0cfdd9947213954692a71c8caee77de17bd1320df050aca8775
 
 [provide]
 libxml-2.0 = libxml2_dep
