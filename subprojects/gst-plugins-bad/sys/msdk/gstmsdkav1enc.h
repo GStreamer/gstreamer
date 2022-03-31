@@ -58,6 +58,8 @@ struct _GstMsdkAV1Enc
   gint profile;
   gushort num_tile_rows;
   gushort num_tile_cols;
+  guint b_pyramid;
+  guint p_pyramid;
 
   mfxExtAV1BitstreamParam ext_av1_bs_param;
   mfxExtAV1ResolutionParam ext_av1_res_param;

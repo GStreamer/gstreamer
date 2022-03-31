@@ -44,10 +44,14 @@ enum
 {
   PROP_TILE_ROW = GST_MSDKENC_PROP_MAX,
   PROP_TILE_COL,
+  PROP_B_PYRAMID,
+  PROP_P_PYRAMID,
 };
 
 #define PROP_TILE_ROW_DEFAULT           1
 #define PROP_TILE_COL_DEFAULT           1
+#define PROP_B_PYRAMID_DEFAULT          MFX_B_REF_UNKNOWN
+#define PROP_P_PYRAMID_DEFAULT          MFX_P_REF_DEFAULT
 
 #define RAW_FORMATS "NV12, P010_10LE"
 #define PROFILES    "main"
@@ -148,6 +152,17 @@ gst_msdkav1enc_configure (GstMsdkEnc * encoder)
   /* encoder->param.mfx.LowPower = MFX_CODINGOPTION_ON; */
 
   /* Enable Extended coding options */
+  if (av1enc->b_pyramid)
+    encoder->option2.BRefType = MFX_B_REF_PYRAMID;
+
+  if (av1enc->p_pyramid) {
+    encoder->option3.PRefType = MFX_P_REF_PYRAMID;
+    /* MFX_P_REF_PYRAMID is available for GopRefDist = 1 */
+    encoder->param.mfx.GopRefDist = 1;
+    /* SDK decides the DPB size for P pyramid */
+    encoder->param.mfx.NumRefFrame = 0;
+  }
+
   encoder->option3.GPB = MFX_CODINGOPTION_OFF;
   encoder->enable_extopt3 = TRUE;
 
@@ -328,6 +343,14 @@ gst_msdkav1enc_set_property (GObject * object, guint prop_id,
       thiz->num_tile_cols = g_value_get_uint (value);
       break;
 
+    case PROP_B_PYRAMID:
+      thiz->b_pyramid = g_value_get_boolean (value);
+      break;
+
+    case PROP_P_PYRAMID:
+      thiz->p_pyramid = g_value_get_boolean (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -353,6 +376,14 @@ gst_msdkav1enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_TILE_COL:
       g_value_set_uint (value, thiz->num_tile_cols);
+      break;
+
+    case PROP_B_PYRAMID:
+      g_value_set_boolean (value, thiz->b_pyramid);
+      break;
+
+    case PROP_P_PYRAMID:
+      g_value_set_boolean (value, thiz->p_pyramid);
       break;
 
     default:
@@ -413,6 +444,16 @@ gst_msdkav1enc_class_init (GstMsdkAV1EncClass * klass)
           "number of columns for tiled encoding", 1, 64,
           PROP_TILE_COL_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_B_PYRAMID,
+      g_param_spec_boolean ("b-pyramid", "B-pyramid",
+          "Enable B-Pyramid Reference structure", PROP_B_PYRAMID_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_P_PYRAMID,
+      g_param_spec_boolean ("p-pyramid", "P-pyramid",
+          "Enable P-Pyramid Reference structure", PROP_P_PYRAMID_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK AV1 encoder",
       "Codec/Encoder/Video/Hardware",
@@ -429,6 +470,8 @@ gst_msdkav1enc_init (GstMsdkAV1Enc * thiz)
 {
   thiz->num_tile_rows = PROP_TILE_ROW_DEFAULT;
   thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
+  thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
+  thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
   thiz->adapter = gst_adapter_new ();
   thiz->parser = gst_av1_parser_new ();
 }
