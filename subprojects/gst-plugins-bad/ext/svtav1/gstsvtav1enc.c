@@ -519,15 +519,11 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
   svtav1enc->svt_config->source_height = GST_VIDEO_INFO_HEIGHT (info);
   svtav1enc->svt_config->frame_rate_numerator = GST_VIDEO_INFO_FPS_N (info)> 0 ? GST_VIDEO_INFO_FPS_N (info) : 1;
   svtav1enc->svt_config->frame_rate_denominator = GST_VIDEO_INFO_FPS_D (info) > 0 ? GST_VIDEO_INFO_FPS_D (info) : 1;
-  svtav1enc->svt_config->frame_rate =
-      svtav1enc->svt_config->frame_rate_numerator /
-      svtav1enc->svt_config->frame_rate_denominator;
-
-  if (svtav1enc->svt_config->frame_rate < 1000) {
-      svtav1enc->svt_config->frame_rate = svtav1enc->svt_config->frame_rate << 16;
-  }
-
-  GST_LOG_OBJECT(svtav1enc, "width %d, height %d, framerate %d", svtav1enc->svt_config->source_width, svtav1enc->svt_config->source_height, svtav1enc->svt_config->frame_rate);
+  GST_LOG_OBJECT(svtav1enc,
+                "width %d, height %d, framerate %d",
+                svtav1enc->svt_config->source_width,
+                svtav1enc->svt_config->source_height,
+                svtav1enc->svt_config->frame_rate_numerator / svtav1enc->svt_config->frame_rate_denominator);
 
   /* TODO: better handle HDR metadata when GStreamer will have such support
    * https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/400 */
@@ -831,17 +827,19 @@ gst_svtav1enc_set_format (GstVideoEncoder * encoder,
   gst_svtav1enc_allocate_svt_buffers (svtav1enc);
   gst_svtav1enc_start_svt (svtav1enc);
 
-  uint32_t fps = (uint32_t)((svtav1enc->svt_config->frame_rate > 1000) ?
-      svtav1enc->svt_config->frame_rate >> 16 : svtav1enc->svt_config->frame_rate);
-  fps = fps > 120 ? 120 : fps;
-  fps = fps < 24 ? 24 : fps;
+  uint32_t fps = svtav1enc->svt_config->frame_rate_numerator /
+                    svtav1enc->svt_config->frame_rate_denominator;
+  fps          = fps > 120 ? 120 : fps;
+  fps          = fps < 24 ? 24 : fps;
 
-  min_latency_frames =  ((fps * 5) >> 2);
+  min_latency_frames = ((fps * 5) >> 2);
 
   /* TODO: find a better value for max_latency */
-  gst_video_encoder_set_latency (encoder,
-      min_latency_frames * GST_SECOND / svtav1enc->svt_config->frame_rate,
-      3 * GST_SECOND);
+  gst_video_encoder_set_latency(encoder,
+                                min_latency_frames * GST_SECOND /
+                                    (svtav1enc->svt_config->frame_rate_numerator /
+                                     svtav1enc->svt_config->frame_rate_denominator),
+                                3 * GST_SECOND);
 
   src_caps =
       gst_static_pad_template_get_caps (&gst_svtav1enc_src_pad_template);
