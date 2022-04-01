@@ -187,7 +187,7 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
   mfxStatus sts = MFX_ERR_NONE;
   mfxLoader loader = NULL;
   mfxSession session = NULL;
-  uint32_t impl_idx = 0;
+  mfxU32 impl_idx = 0;
   mfxConfig cfg;
   mfxVariant impl_value;
 
