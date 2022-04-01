@@ -49,6 +49,8 @@ va_enums = gnome.mkenums_simple('va-enumtypes',
   body_prefix: '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
   install_header: false)
 
+va_enumtypes_h = va_enums[1]
+
 gstva = library('gstva-' + api_version,
   va_sources, va_enums,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_VA', '-DG_LOG_DOMAIN="GStreamer-VA"'],
@@ -64,5 +66,7 @@ libraries += [[pkg_name, {'lib': gstva}]]
 
 gstva_dep = declare_dependency(link_with : gstva,
   include_directories : [libsinc],
-  dependencies : [gst_dep, gstvideo_dep, gstallocators_dep, libva_dep, libva_drm_dep, libdrm_dep])
+  dependencies : [gst_dep, gstvideo_dep, gstallocators_dep, libva_dep, libva_drm_dep, libdrm_dep],
+  sources : [va_enumtypes_h])
+
 meson.override_dependency(pkg_name, gstva_dep)
