@@ -308,7 +308,7 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
   /* 0 is DRM_FORMAT_MOD_LINEAR, we do not include its header now. */
   if (buf->n_mems > 1 && *drm_mod != 0) {
     GST_ERROR_OBJECT (self, "Failed to copy multi-dmabuf because non-linear "
-        "modifier: %#lx.", *drm_mod);
+        "modifier: %#" G_GINT64_MODIFIER "x.", *drm_mod);
     return NULL;
   }
 
@@ -366,7 +366,7 @@ gst_va_dmabuf_mem_copy (GstMemory * gmem, gssize offset, gssize size)
 
   if (*drm_mod != 0) {
     GST_ERROR_OBJECT (self, "Failed to copy dmabuf because non-linear "
-        "modifier: %#lx.", *drm_mod);
+        "modifier: %#" G_GINT64_MODIFIER "x.", *drm_mod);
     return NULL;
   }
 
@@ -388,7 +388,7 @@ gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   /* 0 is DRM_FORMAT_MOD_LINEAR, we do not include its header now. */
   if (*drm_mod != 0) {
     GST_ERROR_OBJECT (self, "Failed to map the dmabuf because the modifier "
-        "is: %#lx, which is not linear.", *drm_mod);
+        "is: %#" G_GINT64_MODIFIER "x, which is not linear.", *drm_mod);
     return NULL;
   }
 
@@ -625,7 +625,8 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
       GST_VIDEO_INFO_SIZE (info) += size;
 
     GST_LOG_OBJECT (self, "buffer %p: new dmabuf %d / surface %#x [%dx%d] "
-        "size %" G_GSIZE_FORMAT " drm mod %#lx", buffer, fd, surface,
+        "size %" G_GSIZE_FORMAT " drm mod %#" G_GINT64_MODIFIER "x",
+        buffer, fd, surface,
         GST_VIDEO_INFO_WIDTH (&self->info), GST_VIDEO_INFO_HEIGHT (&self->info),
         GST_VIDEO_INFO_SIZE (&self->info), *drm_mod);
   }
