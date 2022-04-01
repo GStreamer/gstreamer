@@ -933,6 +933,8 @@ class GstValidateTest(Test):
         # Ensure XInitThreads is called, see bgo#731525
         subproc_env['GST_GL_XINITTHREADS'] = '1'
         self.add_env_variable('GST_GL_XINITTHREADS', '1')
+        subproc_env['GST_XINITTHREADS'] = '1'
+        self.add_env_variable('GST_XINITTHREADS', '1')
 
         if self.scenario is not None:
             scenario = self.scenario.get_execution_name()

@@ -125,6 +125,7 @@ main (int argc, char **argv)
 {
   Suite *s;
   g_setenv ("GST_GL_XINITTHREADS", "1", TRUE);
+  g_setenv ("GST_XINITTHREADS", "1", TRUE);
   gst_check_init (&argc, &argv);
   s = glfilter_suite ();
   return gst_check_run_suite (s, "glfilter", __FILE__);

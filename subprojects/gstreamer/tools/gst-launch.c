@@ -1149,6 +1149,7 @@ main (int argc, char *argv[])
   g_set_prgname ("gst-launch-" GST_API_VERSION);
   /* Ensure XInitThreads() is called if/when needed */
   g_setenv ("GST_GL_XINITTHREADS", "1", TRUE);
+  g_setenv ("GST_XINITTHREADS", "1", TRUE);
 
 #ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");

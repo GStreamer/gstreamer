@@ -62,7 +62,7 @@ gl_element_init (GstPlugin * plugin)
 #endif
 
 #if GST_GL_HAVE_WINDOW_X11
-    if (g_getenv ("GST_GL_XINITTHREADS"))
+    if (g_getenv ("GST_GL_XINITTHREADS") || g_getenv ("GST_XINITTHREADS"))
       XInitThreads ();
 #endif
     g_once_init_leave (&res, TRUE);

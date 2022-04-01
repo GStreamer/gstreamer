@@ -27,6 +27,9 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (g_getenv ("GST_XINITTHREADS"))
+    XInitThreads ();
+
   return GST_ELEMENT_REGISTER (ximagesink, plugin);
 }
 
