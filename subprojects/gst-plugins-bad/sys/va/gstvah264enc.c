@@ -3144,7 +3144,7 @@ _get_sinkpad_pool (GstVaH264Enc * self)
 {
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
-  guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+  guint size, usage_hint = 0;
   GArray *surface_formats = NULL;
   GstCaps *caps;
 
@@ -3691,7 +3691,7 @@ gst_va_h264_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   GstCaps *caps;
   GstVideoInfo info;
   gboolean need_pool = FALSE;
-  guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+  guint size, usage_hint = 0;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps)
