@@ -99,7 +99,6 @@
 #include "gstvalue.h"
 #include "glib-compat-private.h"
 
-GST_DEBUG_CATEGORY_STATIC (debug_dataflow);
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
 /* Pad signals and args */
@@ -312,8 +311,6 @@ gst_pad_link_get_name (GstPadLinkReturn ret)
     flow_quarks[i].quark = g_quark_from_static_string (flow_quarks[i].name); \
   } \
   \
-  GST_DEBUG_CATEGORY_INIT (debug_dataflow, "GST_DATAFLOW", \
-      GST_DEBUG_BOLD | GST_DEBUG_FG_GREEN, "dataflow inside pads"); \
 }
 
 #define gst_pad_parent_class parent_class
