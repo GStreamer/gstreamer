@@ -3021,7 +3021,8 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   GstFlowReturn flow_return;
   GstClockTime buf_pts;
 
-  GST_TRACE_OBJECT (aggpad, "entering chain internal");
+  GST_TRACE_OBJECT (aggpad,
+      "entering chain internal with %" GST_PTR_FORMAT, buffer);
 
   PAD_LOCK (aggpad);
   flow_return = aggpad->priv->flow_return;
@@ -3044,10 +3045,12 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 
     if ((gst_aggregator_pad_has_space (self, aggpad) || !head)
         && aggpad->priv->flow_return == GST_FLOW_OK) {
-      if (head)
+      if (head) {
+        GST_DEBUG_OBJECT (aggpad, "Enqueuing %" GST_PTR_FORMAT, buffer);
         g_queue_push_head (&aggpad->priv->data, buffer);
-      else
+      } else {
         g_queue_push_tail (&aggpad->priv->data, buffer);
+      }
       apply_buffer (aggpad, buffer, head);
       aggpad->priv->num_buffers++;
       buffer = NULL;
@@ -3061,7 +3064,9 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
       SRC_UNLOCK (self);
       goto flushing;
     }
-    GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed (chain)");
+    GST_DEBUG_OBJECT (aggpad,
+        "Waiting for buffer to be consumed (chain) before enqueueing %"
+        GST_PTR_FORMAT, buffer);
     GST_OBJECT_UNLOCK (self);
     SRC_UNLOCK (self);
     PAD_WAIT_EVENT (aggpad);
