@@ -1476,12 +1476,7 @@ gst_play_bin3_set_uri (GstPlayBin3 * playbin, const gchar * uri)
 {
   GstSourceGroup *group;
 
-  if (uri == NULL) {
-    g_warning ("cannot set NULL uri");
-    return;
-  }
-
-  if (!gst_playbin_uri_is_valid (playbin, uri)) {
+  if (uri && !gst_playbin_uri_is_valid (playbin, uri)) {
     if (g_str_has_prefix (uri, "file:")) {
       GST_WARNING_OBJECT (playbin, "not entirely correct file URI '%s' - make "
           "sure to escape spaces and non-ASCII characters properly and specify "
@@ -1498,11 +1493,16 @@ gst_play_bin3_set_uri (GstPlayBin3 * playbin, const gchar * uri)
   GST_SOURCE_GROUP_LOCK (group);
   /* store the uri in the next group we will play */
   g_free (group->uri);
-  group->uri = g_strdup (uri);
-  group->valid = TRUE;
+  if (uri) {
+    group->uri = g_strdup (uri);
+    group->valid = TRUE;
+  } else {
+    group->uri = NULL;
+    group->valid = FALSE;
+  }
   GST_SOURCE_GROUP_UNLOCK (group);
 
-  GST_DEBUG ("set new uri to %s", uri);
+  GST_DEBUG ("set new uri to %s", GST_STR_NULL (uri));
   GST_PLAY_BIN3_UNLOCK (playbin);
 }
 
