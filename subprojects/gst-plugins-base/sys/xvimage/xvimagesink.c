@@ -423,9 +423,12 @@ gst_xv_image_sink_handle_xevents (GstXvImageSink * xvimagesink)
 {
   XEvent e;
   gint pointer_x = 0, pointer_y = 0;
-  GstNavigationModifierType state = GST_NAVIGATION_MODIFIER_NONE;
-  gboolean pointer_moved = FALSE, touch_frame_open = FALSE;
+  gboolean pointer_moved = FALSE;
   gboolean exposed = FALSE, configured = FALSE;
+#ifdef HAVE_XI2
+  gboolean touch_frame_open = FALSE;
+  GstNavigationModifierType state = GST_NAVIGATION_MODIFIER_NONE;
+#endif
 
   g_return_if_fail (GST_IS_XV_IMAGE_SINK (xvimagesink));
 
