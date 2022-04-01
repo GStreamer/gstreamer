@@ -261,7 +261,7 @@ gst_webrtc_data_channel_class_init (GstWebRTCDataChannelClass * klass)
           "Ready State",
           "The Ready state of this data channel",
           GST_TYPE_WEBRTC_DATA_CHANNEL_STATE,
-          GST_WEBRTC_DATA_CHANNEL_STATE_NEW,
+          GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,

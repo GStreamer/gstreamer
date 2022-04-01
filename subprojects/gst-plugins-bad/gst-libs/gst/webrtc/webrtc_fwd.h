@@ -351,8 +351,7 @@ typedef enum /*< underscore_name=gst_webrtc_priority_type >*/
 
 /**
  * GstWebRTCDataChannelState:
- * @GST_WEBRTC_DATA_CHANNEL_STATE_NEW: new
- * @GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING: connection
+ * @GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING: connecting
  * @GST_WEBRTC_DATA_CHANNEL_STATE_OPEN: open
  * @GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING: closing
  * @GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED: closed
@@ -363,8 +362,7 @@ typedef enum /*< underscore_name=gst_webrtc_priority_type >*/
  */
 typedef enum /*< underscore_name=gst_webrtc_data_channel_state >*/
 {
-  GST_WEBRTC_DATA_CHANNEL_STATE_NEW,
-  GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING,
+  GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING = 1,
   GST_WEBRTC_DATA_CHANNEL_STATE_OPEN,
   GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING,
   GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED,
