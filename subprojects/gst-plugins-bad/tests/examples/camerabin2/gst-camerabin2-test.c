@@ -809,7 +809,7 @@ setup_pipeline (void)
     change_mode_after = gst_util_get_timestamp ();
   }
 
-  return TRUE;
+  return res;
 error:
   cleanup_pipeline ();
   return FALSE;
