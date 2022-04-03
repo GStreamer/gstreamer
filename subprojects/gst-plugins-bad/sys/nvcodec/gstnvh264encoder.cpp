@@ -259,7 +259,7 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
   GstNvH264EncoderDeviceCaps *dev_caps = &cdata->dev_caps;
   GParamFlags param_flags = (GParamFlags) (G_PARAM_READWRITE |
       GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
-  GParamFlags conditonal_param_flags = (GParamFlags) (G_PARAM_READWRITE |
+  GParamFlags conditional_param_flags = (GParamFlags) (G_PARAM_READWRITE |
       GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_PLAYING |
       G_PARAM_STATIC_STRINGS);
 
@@ -290,7 +290,7 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
     g_object_class_install_property (object_class, PROP_WEIGHTED_PRED,
         g_param_spec_boolean ("weighted-pred", "Weighted Pred",
             "Enables Weighted Prediction", DEFAULT_WEIGHTED_PRED,
-            conditonal_param_flags));
+            conditional_param_flags));
   }
   g_object_class_install_property (object_class, PROP_GOP_SIZE,
       g_param_spec_int ("gop-size", "GOP size",
@@ -300,7 +300,7 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
     g_object_class_install_property (object_class, PROP_B_FRAMES,
         g_param_spec_uint ("bframes", "B-Frames",
             "Number of B-frames between I and P", 0, dev_caps->max_bframes,
-            DEFAULT_B_FRAMES, conditonal_param_flags));
+            DEFAULT_B_FRAMES, conditional_param_flags));
   }
   g_object_class_install_property (object_class, PROP_RC_MODE,
       g_param_spec_enum ("rc-mode", "RC Mode", "Rate Control Mode",
@@ -330,22 +330,22 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
         PROP_VBV_BUFFER_SIZE,
         g_param_spec_uint ("vbv-buffer-size", "VBV Buffer Size",
             "VBV(HRD) Buffer Size in kbits (0 = NVENC default)",
-            0, G_MAXUINT, DEFAULT_VBV_BUFFER_SIZE, conditonal_param_flags));
+            0, G_MAXUINT, DEFAULT_VBV_BUFFER_SIZE, conditional_param_flags));
   }
   if (dev_caps->lookahead) {
     g_object_class_install_property (object_class, PROP_RC_LOOKAHEAD,
         g_param_spec_uint ("rc-lookahead", "Rate Control Lookahead",
             "Number of frames for frame type lookahead",
-            0, 32, DEFAULT_RC_LOOKAHEAD, conditonal_param_flags));
+            0, 32, DEFAULT_RC_LOOKAHEAD, conditional_param_flags));
     g_object_class_install_property (object_class, PROP_I_ADAPT,
         g_param_spec_boolean ("i-adapt", "I Adapt",
             "Enable adaptive I-frame insert when lookahead is enabled",
-            DEFAULT_I_ADAPT, conditonal_param_flags));
+            DEFAULT_I_ADAPT, conditional_param_flags));
     if (dev_caps->max_bframes > 0) {
       g_object_class_install_property (object_class, PROP_B_ADAPT,
           g_param_spec_boolean ("b-adapt", "B Adapt",
               "Enable adaptive B-frame insert when lookahead is enabled",
-              DEFAULT_B_ADAPT, conditonal_param_flags));
+              DEFAULT_B_ADAPT, conditional_param_flags));
     }
   }
   g_object_class_install_property (object_class, PROP_SPATIAL_AQ,
@@ -355,7 +355,7 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
     g_object_class_install_property (object_class, PROP_TEMPORAL_AQ,
         g_param_spec_boolean ("temporal-aq", "Temporal AQ",
             "Temporal Adaptive Quantization", DEFAULT_TEMPORAL_AQ,
-            conditonal_param_flags));
+            conditional_param_flags));
   }
   g_object_class_install_property (object_class, PROP_ZERO_LATENCY,
       g_param_spec_boolean ("zerolatency", "Zerolatency",
@@ -408,7 +408,7 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
   if (dev_caps->cabac) {
     g_object_class_install_property (object_class, PROP_CABAC,
         g_param_spec_boolean ("cabac", "CABAC",
-            "Enable CABAC entropy coding", TRUE, conditonal_param_flags));
+            "Enable CABAC entropy coding", TRUE, conditional_param_flags));
   }
   g_object_class_install_property (object_class, PROP_REPEAT_SEQUENCE_HEADER,
       g_param_spec_boolean ("repeat-sequence-header", "Repeat Sequence Header",
