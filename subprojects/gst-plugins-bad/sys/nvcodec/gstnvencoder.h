@@ -157,7 +157,7 @@ G_END_DECLS
 #ifndef G_OS_WIN32
 inline bool is_equal_guid(const GUID & lhs, const GUID & rhs)
 {
-  return !!memcmp(&lhs, &rhs, sizeof (GUID));
+  return memcmp(&lhs, &rhs, sizeof (GUID)) == 0;
 }
 
 inline bool operator==(const GUID & lhs, const GUID & rhs)
@@ -167,7 +167,7 @@ inline bool operator==(const GUID & lhs, const GUID & rhs)
 
 inline bool operator!=(const GUID & lhs, const GUID & rhs)
 {
-  return !(lhs == rhs);
+  return !is_equal_guid(lhs, rhs);
 }
 #endif /* G_OS_WIN32 */
 #endif /* __cplusplus */
