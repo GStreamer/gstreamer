@@ -1,4 +1,4 @@
-project('gst-libav', 'c', 'cpp',
+project('gst-libav', 'c',
   version : '1.21.0.1',
   meson_version : '>= 0.60',
   default_options : [ 'warning_level=1',
