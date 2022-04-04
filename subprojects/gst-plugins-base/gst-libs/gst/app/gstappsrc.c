@@ -621,11 +621,14 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    /**
     * GstAppSrc::push-buffer:
     * @appsrc: the appsrc
-    * @buffer: a buffer to push
+    * @buffer (transfer none): a buffer to push
     *
     * Adds a buffer to the queue of buffers that the appsrc element will
-    * push to its source pad. This function does not take ownership of the
-    * buffer so the buffer needs to be unreffed after calling this function.
+    * push to its source pad.
+    *
+    * This function does not take ownership of the buffer, but it takes a
+    * reference so the buffer can be unreffed at any time after calling this
+    * function.
     *
     * When the block property is TRUE, this function can block until free space
     * becomes available in the queue.
@@ -639,12 +642,14 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    /**
     * GstAppSrc::push-buffer-list:
     * @appsrc: the appsrc
-    * @buffer_list: a buffer list to push
+    * @buffer_list (transfer none): a buffer list to push
     *
     * Adds a buffer list to the queue of buffers and buffer lists that the
-    * appsrc element will push to its source pad. This function does not take
-    * ownership of the buffer list so the buffer list needs to be unreffed
-    * after calling this function.
+    * appsrc element will push to its source pad.
+    *
+    * This function does not take ownership of the buffer list, but it takes a
+    * reference so the buffer list can be unreffed at any time after calling
+    * this function.
     *
     * When the block property is TRUE, this function can block until free space
     * becomes available in the queue.
@@ -660,7 +665,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   /**
     * GstAppSrc::push-sample:
     * @appsrc: the appsrc
-    * @sample: a sample from which extract buffer to push
+    * @sample (transfer none): a sample from which extract buffer to push
     *
     * Extract a buffer from the provided sample and adds the extracted buffer
     * to the queue of buffers that the appsrc element will
@@ -668,8 +673,10 @@ gst_app_src_class_init (GstAppSrcClass * klass)
     * in the sample and reset the caps if they change.
     * Only the caps and the buffer of the provided sample are used and not
     * for example the segment in the sample.
-    * This function does not take ownership of the
-    * sample so the sample needs to be unreffed after calling this function.
+    *
+    * This function does not take ownership of the sample, but it takes a
+    * reference so the sample can be unreffed at any time after calling this
+    * function.
     *
     * When the block property is TRUE, this function can block until free space
     * becomes available in the queue.
