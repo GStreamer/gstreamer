@@ -9,6 +9,8 @@ if cc.get_id() == 'msvc'
       language : 'c')
 endif
 
+host_system = host_machine.system()
+
 gst_version = meson.project_version()
 version_arr = gst_version.split('.')
 

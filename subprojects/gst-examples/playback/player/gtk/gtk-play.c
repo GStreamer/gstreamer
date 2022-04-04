@@ -196,7 +196,7 @@ video_area_realize_cb (GtkWidget * widget, GtkPlay * play)
 #if defined (GDK_WINDOWING_WIN32)
   window_handle = (guintptr) GDK_WINDOW_HWND (window);
 #elif defined (GDK_WINDOWING_QUARTZ)
-  window_handle = gdk_quartz_window_get_nsview (window);
+  window_handle = (guintptr) gdk_quartz_window_get_nsview (window);
 #elif defined (GDK_WINDOWING_X11)
   window_handle = GDK_WINDOW_XID (window);
 #endif
