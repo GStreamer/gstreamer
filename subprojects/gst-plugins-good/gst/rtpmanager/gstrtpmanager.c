@@ -37,6 +37,7 @@
 #include "gstrtphdrext-twcc.h"
 #include "gstrtphdrext-clientaudiolevel.h"
 #include "gstrtphdrext-mid.h"
+#include "gstrtphdrext-ntp.h"
 #include "gstrtphdrext-repairedstreamid.h"
 #include "gstrtphdrext-streamid.h"
 
@@ -61,6 +62,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (rtphdrexttwcc, plugin);
   ret |= GST_ELEMENT_REGISTER (rtphdrextclientaudiolevel, plugin);
   ret |= GST_ELEMENT_REGISTER (rtphdrextmid, plugin);
+  ret |= GST_ELEMENT_REGISTER (rtphdrextntp64, plugin);
   ret |= GST_ELEMENT_REGISTER (rtphdrextstreamid, plugin);
   ret |= GST_ELEMENT_REGISTER (rtphdrextrepairedstreamid, plugin);
 

@@ -6,6 +6,7 @@ rtpmanager_sources = [
   'gstrtphdrext-twcc.c',
   'gstrtphdrext-clientaudiolevel.c',
   'gstrtphdrext-mid.c',
+  'gstrtphdrext-ntp.c',
   'gstrtphdrext-repairedstreamid.c',
   'gstrtphdrext-streamid.c',
   'gstrtpmux.c',

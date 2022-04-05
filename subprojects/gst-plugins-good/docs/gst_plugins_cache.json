@@ -17948,6 +17948,50 @@
                 },
                 "rank": "marginal"
             },
+            "rtphdrextntp64": {
+                "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:ntp-64",
+                "author": "Sebastian Dröge <sebastian@centricular.com>",
+                "description": "Extends RTP packets to add or retrieve a 64-bit NTP timestamp as specified in RFC6501",
+                "hierarchy": [
+                    "GstRTPHeaderExtensionNtp64",
+                    "GstRTPHeaderExtension",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Network/Extension/RTPHeader",
+                "long-name": "RTP Header Extension RFC6051 64-bit NTP timestamp",
+                "properties": {
+                    "every-packet": {
+                        "blurb": "Add the header extension to every packet",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "interval": {
+                        "blurb": "Interval between consecutive packets that get the header extension added",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    }
+                },
+                "rank": "marginal"
+            },
             "rtphdrextrepairedstreamid": {
                 "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id",
                 "author": "Matthew Waters <matthew@centricular.com>",
