@@ -1,0 +1,32 @@
+From dc33cdc1f9210d5f284bf115c4c66b55b38f79b9 Mon Sep 17 00:00:00 2001
+From: Andoni Morales Alastruey <amorales@fluendo.com>
+Date: Wed, 19 Jul 2023 15:21:42 +0200
+Subject: [PATCH] gir: stop assuming glib source and build dirs using variables
+
+---
+ gir/meson.build | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/gir/meson.build b/gir/meson.build
+index 09714cc..59e03d6 100644
+--- a/gir/meson.build
++++ b/gir/meson.build
+@@ -134,14 +134,13 @@ elif dep_type == 'internal'
+   # XXX: This is a pile of hacks to allow gobject-introspection to parse the
+   #      GLib source files when GLib is used as a subproject
+   #      Assumes that the builddir layout is 'mirror'
+-  #      Assumes the location of the glib subproject dir
+   #      We should add API to meson to get a specific file from a specific
+   #      subproject
+   # We know exactly what headers will be installed, so just fetch that
+   glib_subproject = subproject('glib')
+
+-  glibproj_sourcedir = join_paths(meson.global_source_root(), subprojdir, 'glib')
+-  glibproj_builddir = join_paths(meson.global_build_root(), subprojdir, 'glib')
++  glibproj_sourcedir = glib_subproject.get_variable('glib_source_dir', join_paths(meson.global_source_root(), subprojdir, 'glib'))
++  glibproj_builddir = glib_subproject.get_variable('glib_build_dir', join_paths(meson.global_build_root(), subprojdir, 'glib'))
+
+   glib_files += glib_subproject.get_variable('glib_types_h')
+
+--
+2.39.2

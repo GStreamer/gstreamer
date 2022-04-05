@@ -1,0 +1,33 @@
+From 783bf28650ec581c3d225821d13dad5ec3cf6c24 Mon Sep 17 00:00:00 2001
+From: Andoni Morales Alastruey <amorales@fluendo.com>
+Date: Wed, 19 Jul 2023 17:14:02 +0200
+Subject: [PATCH] meson: help gobject-introspection locate source and build
+ dirs
+
+gobject-introspection is currently assuming glib subproject
+is in unversioned, but gstreamer uses a versioned directory, eg:
+subprojects/glib-2.74.1 instead of subprojects/glib
+---
+ meson.build | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index 43bb468..3e4dd96 100644
+--- a/meson.build
++++ b/meson.build
+@@ -54,6 +54,12 @@ if host_system == 'darwin'
+   endif
+ endif
+ 
++# When building glib and gobject-introspection with subprojects, gobject-introspection
++# requires to know to lnow the path of the sources and the build directory.
++# We provide it here with a variable.
++glib_source_dir = meson.current_source_dir()
++glib_build_dir = meson.current_build_dir()
++
+ glib_version = meson.project_version()
+ glib_api_version = '2.0'
+ version_arr = glib_version.split('.')
+-- 
+2.40.0.windows.1
+
