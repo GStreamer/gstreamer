@@ -2118,6 +2118,25 @@ update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
       pinfo->header_ext = gst_rtp_buffer_get_extension_bytes (&rtp,
           &pinfo->header_ext_bit_pattern);
     }
+
+    if (pinfo->ntp64_ext_id != 0 && pinfo->send && !pinfo->have_ntp64_ext) {
+      guint8 *data;
+      guint size;
+
+      /* Remember here that there is a 64-bit NTP header extension on this buffer
+       * or any of the other buffers in the buffer list.
+       * Later we update this after making the buffer(list) writable.
+       */
+      if ((gst_rtp_buffer_get_extension_onebyte_header (&rtp,
+                  pinfo->ntp64_ext_id, 0, (gpointer *) & data, &size)
+              && size == 8)
+          || (gst_rtp_buffer_get_extension_twobytes_header (&rtp, NULL,
+                  pinfo->ntp64_ext_id, 0, (gpointer *) & data, &size)
+              && size == 8)) {
+        pinfo->have_ntp64_ext = TRUE;
+      }
+    }
+
     gst_rtp_buffer_unmap (&rtp);
   }
 
@@ -2166,6 +2185,8 @@ update_packet_info (RTPSession * sess, RTPPacketInfo * pinfo,
   pinfo->payload_len = 0;
   pinfo->packets = 0;
   pinfo->marker = FALSE;
+  pinfo->ntp64_ext_id = send ? sess->send_ntp64_ext_id : 0;
+  pinfo->have_ntp64_ext = FALSE;
 
   if (is_list) {
     GstBufferList *list = GST_BUFFER_LIST_CAST (data);
@@ -3125,6 +3146,29 @@ invalid_packet:
   }
 }
 
+static guint8
+_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
+{
+  guint i;
+  guint8 extmap_id = 0;
+  guint n_fields = gst_structure_n_fields (s);
+
+  for (i = 0; i < n_fields; i++) {
+    const gchar *field_name = gst_structure_nth_field_name (s, i);
+    if (g_str_has_prefix (field_name, "extmap-")) {
+      const gchar *str = gst_structure_get_string (s, field_name);
+      if (str && g_strcmp0 (str, ext_name) == 0) {
+        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
+        if (id > 0 && id < 15) {
+          extmap_id = id;
+          break;
+        }
+      }
+    }
+  }
+  return extmap_id;
+}
+
 /**
  * rtp_session_update_send_caps:
  * @sess: an #RTPSession
@@ -3180,7 +3224,149 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
     sess->internal_ssrc_from_caps_or_property = FALSE;
   }
 
+  sess->send_ntp64_ext_id =
+      _get_extmap_id_for_attribute (s,
+      GST_RTP_HDREXT_BASE GST_RTP_HDREXT_NTP_64);
+
   rtp_twcc_manager_parse_send_ext_id (sess->twcc, s);
+}
+
+static void
+update_ntp64_header_ext_data (RTPPacketInfo * pinfo, GstBuffer * buffer)
+{
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  if (gst_rtp_buffer_map (buffer, GST_MAP_READWRITE, &rtp)) {
+    guint16 bits;
+    guint8 *data;
+    guint wordlen;
+
+    if (gst_rtp_buffer_get_extension_data (&rtp, &bits, (gpointer *) & data,
+            &wordlen)) {
+      gsize len = wordlen * 4;
+
+      /* One-byte header */
+      if (bits == 0xBEDE) {
+        /* One-byte header extension */
+        while (TRUE) {
+          guint8 ext_id, ext_len;
+
+          if (len < 1)
+            break;
+
+          ext_id = GST_READ_UINT8 (data) >> 4;
+          ext_len = (GST_READ_UINT8 (data) & 0xF) + 1;
+          data += 1;
+          len -= 1;
+          if (ext_id == 0) {
+            /* Skip padding */
+            continue;
+          } else if (ext_id == 15) {
+            /* Stop parsing */
+            break;
+          }
+
+          /* extension doesn't fit into the header */
+          if (ext_len > len)
+            break;
+
+          if (ext_id == pinfo->ntp64_ext_id && ext_len == 8) {
+            if (pinfo->ntpnstime != GST_CLOCK_TIME_NONE) {
+              guint64 ntptime = gst_util_uint64_scale (pinfo->ntpnstime,
+                  G_GUINT64_CONSTANT (1) << 32,
+                  GST_SECOND);
+
+              GST_WRITE_UINT64_BE (data, ntptime);
+            } else {
+              /* Replace extension with padding */
+              memset (data - 1, 0, 1 + ext_len);
+            }
+          }
+
+          /* skip to the next extension */
+          data += ext_len;
+          len -= ext_len;
+        }
+      } else if ((bits >> 4) == 0x100) {
+        /* Two-byte header extension */
+
+        while (TRUE) {
+          guint8 ext_id, ext_len;
+
+          if (len < 1)
+            break;
+
+          ext_id = GST_READ_UINT8 (data);
+          data += 1;
+          len -= 1;
+          if (ext_id == 0) {
+            /* Skip padding */
+            continue;
+          }
+
+          ext_len = GST_READ_UINT8 (data);
+          data += 1;
+          len -= 1;
+
+          /* extension doesn't fit into the header */
+          if (ext_len > len)
+            break;
+
+          if (ext_id == pinfo->ntp64_ext_id && ext_len == 8) {
+            if (pinfo->ntpnstime != GST_CLOCK_TIME_NONE) {
+              guint64 ntptime = gst_util_uint64_scale (pinfo->ntpnstime,
+                  G_GUINT64_CONSTANT (1) << 32,
+                  GST_SECOND);
+
+              GST_WRITE_UINT64_BE (data, ntptime);
+            } else {
+              /* Replace extension with padding */
+              memset (data - 2, 0, 2 + ext_len);
+            }
+          }
+
+          /* skip to the next extension */
+          data += ext_len;
+          len -= ext_len;
+        }
+      }
+    }
+    gst_rtp_buffer_unmap (&rtp);
+  }
+}
+
+static void
+update_ntp64_header_ext (RTPPacketInfo * pinfo)
+{
+  /* Early return if we don't know the header extension id or the packets
+   * don't contain the header extension */
+  if (pinfo->ntp64_ext_id == 0 || !pinfo->have_ntp64_ext)
+    return;
+
+  /* If no NTP time is known then the header extension will be replaced with
+   * padding, otherwise it will be updated */
+  GST_TRACE
+      ("Updating NTP-64 header extension for SSRC %08x packet with RTP time %u and running time %"
+      GST_TIME_FORMAT " to %" GST_TIME_FORMAT, pinfo->ssrc, pinfo->rtptime,
+      GST_TIME_ARGS (pinfo->running_time), GST_TIME_ARGS (pinfo->ntpnstime));
+
+  if (GST_IS_BUFFER_LIST (pinfo->data)) {
+    GstBufferList *list;
+    guint i = 0;
+
+    pinfo->data = gst_buffer_list_make_writable (pinfo->data);
+
+    list = GST_BUFFER_LIST (pinfo->data);
+
+    for (i = 0; i < gst_buffer_list_length (list); i++) {
+      GstBuffer *buffer = gst_buffer_list_get_writable (list, i);
+
+      update_ntp64_header_ext_data (pinfo, buffer);
+    }
+  } else {
+    pinfo->data = gst_buffer_make_writable (pinfo->data);
+    update_ntp64_header_ext_data (pinfo, pinfo->data);
+  }
 }
 
 /**
@@ -3198,7 +3384,7 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
  */
 GstFlowReturn
 rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
-    GstClockTime current_time, GstClockTime running_time)
+    GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
 {
   GstFlowReturn result;
   RTPSource *source;
@@ -3214,9 +3400,11 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
 
   RTP_SESSION_LOCK (sess);
   if (!update_packet_info (sess, &pinfo, TRUE, TRUE, is_list, data,
-          current_time, running_time, -1))
+          current_time, running_time, ntpnstime))
     goto invalid_packet;
 
+  /* Update any 64-bit NTP header extensions with the actual NTP time here */
+  update_ntp64_header_ext (&pinfo);
   rtp_twcc_manager_send_packet (sess->twcc, &pinfo);
 
   source = obtain_internal_source (sess, pinfo.ssrc, &created, current_time);

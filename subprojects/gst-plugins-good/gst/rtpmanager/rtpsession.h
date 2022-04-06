@@ -309,6 +309,9 @@ struct _RTPSession {
 
   gboolean timestamp_sender_reports;
 
+  /* RFC6051 64-bit NTP header extension */
+  guint8 send_ntp64_ext_id;
+
   /* Transport-wide cc-extension */
   RTPTWCCManager *twcc;
   RTPTWCCStats *twcc_stats;
@@ -410,7 +413,8 @@ GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer 
 /* processing packets for sending */
 void            rtp_session_update_send_caps       (RTPSession *sess, GstCaps *caps);
 GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, gpointer data, gboolean is_list,
-                                                    GstClockTime current_time, GstClockTime running_time);
+                                                    GstClockTime current_time, GstClockTime running_time,
+                                                    guint64 ntpnstime);
 
 /* scheduling bye */
 void            rtp_session_mark_all_bye           (RTPSession *sess, const gchar *reason);
