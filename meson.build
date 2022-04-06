@@ -436,6 +436,8 @@ devenv_cmd = [setenv, '--builddir=@0@'.format(meson.global_build_root()),
               '--srcdir=@0@'.format(meson.global_source_root())]
 
 subdir('tests')
+subdir('ci/fuzzing')
+
 if meson.can_run_host_binaries() and build_machine.system() == 'linux' and host_machine.system() == 'windows'
   # FIXME: Ideally we could get the wrapper directly from meson
   devenv_cmd += ['--wine', host_machine.cpu_family() == 'x86_64' ? 'wine64' : 'wine32']

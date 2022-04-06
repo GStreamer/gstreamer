@@ -32,6 +32,12 @@ Fuzzing GStreamer
   function whose signature follows the LibFuzzer signature:
   https://llvm.org/docs/LibFuzzer.html
 
+* *.corpus
+
+  A file matching a test name that contains a list of files to use when
+  starting a fuzzing run.  Providing an initial set files can speed up
+  the fuzzing process significantly.
+
 * TODO
 
   * Add a standalone build script
