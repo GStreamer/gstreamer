@@ -373,18 +373,6 @@ gst_device_monitor_dispose (GObject * object)
   G_OBJECT_CLASS (gst_device_monitor_parent_class)->dispose (object);
 }
 
-#if !GLIB_CHECK_VERSION(2, 60, 0)
-#define g_queue_clear_full queue_clear_full
-static void
-queue_clear_full (GQueue * queue, GDestroyNotify free_func)
-{
-  gpointer data;
-
-  while ((data = g_queue_pop_head (queue)) != NULL)
-    free_func (data);
-}
-#endif
-
 /**
  * gst_device_monitor_get_devices:
  * @monitor: A #GstDeviceProvider

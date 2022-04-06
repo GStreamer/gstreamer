@@ -80,22 +80,6 @@ using namespace Microsoft::WRL;
  *   D3D11_VIDEO_PROCESSOR_STREAM::ppFutureSurfaces
  */
 
-/* g_queue_clear_full is available since 2.60 */
-#if !GLIB_CHECK_VERSION(2,60,0)
-#define g_queue_clear_full gst_d3d11_deinterlace_g_queue_clear_full
-static void
-gst_d3d11_deinterlace_g_queue_clear_full (GQueue * queue,
-    GDestroyNotify free_func)
-{
-  g_return_if_fail (queue != NULL);
-
-  if (free_func != NULL)
-    g_queue_foreach (queue, (GFunc) free_func, NULL);
-
-  g_queue_clear (queue);
-}
-#endif
-
 typedef enum
 {
   GST_D3D11_DEINTERLACE_METHOD_BLEND =

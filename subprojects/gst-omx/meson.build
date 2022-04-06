@@ -15,7 +15,7 @@ else
   gst_version_nano = 0
 endif
 
-glib_req = '>= 2.56.0'
+glib_req = '>= 2.62.0'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 tizil_req = '>= 0.19.0'
 api_version = '1.0'

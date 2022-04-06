@@ -521,8 +521,10 @@ configinc = include_directories('.')
 libsinc = include_directories('libs')
 privinc = include_directories('gst')
 
+glib_req = '>= 2.62.0'
+
 # Find dependencies
-glib_dep = dependency('glib-2.0', version : '>=2.56.0',
+glib_dep = dependency('glib-2.0', version: glib_req,
   fallback: ['glib', 'libglib_dep'])
 gobject_dep = dependency('gobject-2.0')
 gmodule_dep = dependency('gmodule-no-export-2.0')

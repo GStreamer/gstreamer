@@ -24,34 +24,4 @@
 
 G_BEGIN_DECLS
 
-#if !GLIB_CHECK_VERSION(2, 60, 0)
-#define g_queue_clear_full queue_clear_full
-static inline void
-queue_clear_full (GQueue * queue, GDestroyNotify free_func)
-{
-  gpointer data;
-
-  while ((data = g_queue_pop_head (queue)) != NULL)
-    free_func (data);
-}
-#endif
-
-#if !GLIB_CHECK_VERSION(2, 62, 0)
-#define g_array_copy array_copy
-static inline GArray *
-array_copy (GArray *array)
-{
-  GArray *new_array;
-  guint elt_size = g_array_get_element_size (array);
-
-  new_array = g_array_sized_new (FALSE, FALSE, elt_size, array->len);
-
-  g_array_set_size (new_array, array->len);
-  if (array->len > 0)
-    memcpy (new_array->data, array->data, array->len * elt_size);
-
-  return new_array;
-}
-#endif
-
 G_END_DECLS

@@ -477,12 +477,7 @@ static const struct URITest url_presenting_tests[] = {
   {.uri = {"scheme", "user:pass", "host", 1234, "/path/to/dir",
           {{"query", NULL}, {"key", "value"}}, "fragment"},
       .str =
-#if GLIB_CHECK_VERSION(2, 59, 0)
       "scheme://user:pass@host:1234/path/to/dir?key=value&query#fragment"},
-#else
-      "scheme://user:pass@host:1234/path/to/dir?query&key=value#fragment"},
-#endif
-
   /* IPv6 literal should render in square brackets */
   {.uri = {"scheme", "user:pass", "12:34:56:78:9a:bc:de:f0", 1234,
           "/path/to/dir", {{"query", "value"}}, "fragment"},
@@ -1044,24 +1039,14 @@ GST_START_TEST (test_url_get_set)
 
   fail_unless (gst_uri_set_query_value (url, "key", "value"));
   tmp_str = gst_uri_to_string (url);
-#if GLIB_CHECK_VERSION(2, 59, 0)
   fail_unless_equals_string (tmp_str,
       "//example.com/path/to/file/there/segment?key=value&query#fragment");
-#else
-  fail_unless_equals_string (tmp_str,
-      "//example.com/path/to/file/there/segment?query&key=value#fragment");
-#endif
   g_free (tmp_str);
 
   fail_unless (gst_uri_set_query_value (url, "key", NULL));
   tmp_str = gst_uri_to_string (url);
-#if GLIB_CHECK_VERSION(2, 59, 0)
   fail_unless_equals_string (tmp_str,
       "//example.com/path/to/file/there/segment?key&query#fragment");
-#else
-  fail_unless_equals_string (tmp_str,
-      "//example.com/path/to/file/there/segment?query&key#fragment");
-#endif
   g_free (tmp_str);
 
   fail_unless (!gst_uri_set_query_value (NULL, "key", "value"));

@@ -2281,18 +2281,6 @@ gst_video_decoder_get_buffer_info_at_offset (GstVideoDecoder *
       GST_TIME_ARGS (*pts), GST_TIME_ARGS (*dts), *flags, got_offset, offset);
 }
 
-#if !GLIB_CHECK_VERSION(2, 60, 0)
-#define g_queue_clear_full queue_clear_full
-static void
-queue_clear_full (GQueue * queue, GDestroyNotify free_func)
-{
-  gpointer data;
-
-  while ((data = g_queue_pop_head (queue)) != NULL)
-    free_func (data);
-}
-#endif
-
 static void
 gst_video_decoder_clear_queues (GstVideoDecoder * dec)
 {

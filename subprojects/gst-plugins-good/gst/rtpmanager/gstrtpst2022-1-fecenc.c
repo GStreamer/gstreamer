@@ -70,18 +70,6 @@
 
 #include "gstrtpst2022-1-fecenc.h"
 
-#if !GLIB_CHECK_VERSION(2, 60, 0)
-#define g_queue_clear_full queue_clear_full
-static void
-queue_clear_full (GQueue * queue, GDestroyNotify free_func)
-{
-  gpointer data;
-
-  while ((data = g_queue_pop_head (queue)) != NULL)
-    free_func (data);
-}
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (gst_rtpst_2022_1_fecenc_debug);
 #define GST_CAT_DEFAULT gst_rtpst_2022_1_fecenc_debug
 

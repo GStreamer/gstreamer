@@ -469,11 +469,6 @@ live_switch_push (gint pts, gint rate, GstCaps * caps)
   gst_caps_unref (desired);
 }
 
-#if !GLIB_CHECK_VERSION(2,58,0)
-#define G_APPROX_VALUE(a, b, epsilon) \
-  (((a) > (b) ? (a) - (b) : (b) - (a)) < (epsilon))
-#endif
-
 GST_START_TEST (test_live_switch)
 {
   GstElement *audioresample;

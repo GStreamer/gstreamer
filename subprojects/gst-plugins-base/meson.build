@@ -27,7 +27,7 @@ else
   have_objc = false
 endif
 
-glib_req = '>= 2.56.0'
+glib_req = '>= 2.62.0'
 orc_req = '>= 0.4.24'
 
 if gst_version_is_stable

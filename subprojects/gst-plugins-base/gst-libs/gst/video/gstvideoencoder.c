@@ -444,18 +444,6 @@ _flush_events (GstPad * pad, GList * events)
   return NULL;
 }
 
-#if !GLIB_CHECK_VERSION(2, 60, 0)
-#define g_queue_clear_full queue_clear_full
-static void
-queue_clear_full (GQueue * queue, GDestroyNotify free_func)
-{
-  gpointer data;
-
-  while ((data = g_queue_pop_head (queue)) != NULL)
-    free_func (data);
-}
-#endif
-
 static gboolean
 gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 {

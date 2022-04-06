@@ -3338,21 +3338,6 @@ compare_index_table_segment (MXFIndexTableSegment * sa,
   return 1;
 }
 
-#if !GLIB_CHECK_VERSION(2, 62, 0)
-static gboolean
-has_table_segment (GArray * segments, MXFIndexTableSegment * target)
-{
-  guint i;
-  for (i = 0; i < segments->len; i++) {
-    MXFIndexTableSegment *cand =
-        &g_array_index (segments, MXFIndexTableSegment, i);
-    if (compare_index_table_segment (cand, target) == 0)
-      return TRUE;
-  }
-  return FALSE;
-}
-#endif
-
 static GstFlowReturn
 gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux, GstMXFKLV * klv)
 {
@@ -3392,12 +3377,8 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux, GstMXFKLV * klv)
   }
   for (tmp = demux->index_tables; tmp; tmp = tmp->next) {
     GstMXFDemuxIndexTable *table = (GstMXFDemuxIndexTable *) tmp->data;
-#if !GLIB_CHECK_VERSION (2, 62, 0)
-    if (has_table_segment (table->segments, segment)) {
-#else
     if (g_array_binary_search (table->segments, segment,
             (GCompareFunc) compare_index_table_segment, NULL)) {
-#endif
       GST_DEBUG_OBJECT (demux, "Already handled");
       g_free (segment);
       return GST_FLOW_OK;
