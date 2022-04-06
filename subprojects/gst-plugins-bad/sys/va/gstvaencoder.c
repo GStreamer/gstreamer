@@ -642,6 +642,44 @@ gst_va_encoder_get_max_num_reference (GstVaEncoder * self,
   return TRUE;
 }
 
+guint
+gst_va_encoder_get_prediction_direction (GstVaEncoder * self,
+    VAProfile profile, VAEntrypoint entrypoint)
+{
+#if VA_CHECK_VERSION(1,9,0)
+  VAStatus status;
+  VADisplay dpy;
+  VAConfigAttrib attrib = {.type = VAConfigAttribPredictionDirection };
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), 0);
+
+  if (profile == VAProfileNone)
+    return 0;
+
+  if (entrypoint != self->entrypoint)
+    return 0;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_WARNING_OBJECT (self, "Failed to query prediction direction: %s",
+        vaErrorStr (status));
+    return 0;
+  }
+
+  if (attrib.value == VA_ATTRIB_NOT_SUPPORTED) {
+    GST_WARNING_OBJECT (self, "Driver does not support query"
+        " prediction direction");
+    return 0;
+  }
+
+  return attrib.value & (VA_PREDICTION_DIRECTION_PREVIOUS |
+      VA_PREDICTION_DIRECTION_FUTURE | VA_PREDICTION_DIRECTION_BI_NOT_EMPTY);
+#else
+  return 0;
+#endif
+}
+
 guint32
 gst_va_encoder_get_rate_control_mode (GstVaEncoder * self,
     VAProfile profile, VAEntrypoint entrypoint)

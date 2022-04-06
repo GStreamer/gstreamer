@@ -69,6 +69,9 @@ gboolean              gst_va_encoder_get_max_num_reference (GstVaEncoder * self,
                                                             VAEntrypoint entrypoint,
                                                             guint32 * list0,
                                                             guint32 * list1);
+guint                 gst_va_encoder_get_prediction_direction (GstVaEncoder * self,
+                                                               VAProfile profile,
+                                                               VAEntrypoint entrypoint);
 guint32               gst_va_encoder_get_rate_control_mode (GstVaEncoder * self,
                                                             VAProfile profile,
                                                             VAEntrypoint entrypoint);
