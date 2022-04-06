@@ -534,7 +534,7 @@ configinc = include_directories('.')
 libsinc = include_directories('libs')
 privinc = include_directories('gst')
 
-glib_req = '>= 2.62.0'
+glib_req = '>= 2.64.0'
 
 # Find dependencies
 glib_dep = dependency('glib-2.0', version: glib_req,

@@ -22,7 +22,7 @@ if have_cxx
   cxx = meson.get_compiler('cpp')
 endif
 
-glib_req = '>= 2.62.0'
+glib_req = '>= 2.64.0'
 orc_req = '>= 0.4.17'
 
 if gst_version_is_stable
