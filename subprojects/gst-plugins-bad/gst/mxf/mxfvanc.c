@@ -116,7 +116,9 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
-  if (gst_buffer_get_size (buffer) < 2) {
+  /* Either there is no data or there is at least room for the 16bit length,
+   * therefore the only invalid packet length is 1 */
+  if (gst_buffer_get_size (buffer) == 1) {
     GST_ERROR ("Invalid VANC essence element size");
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
@@ -124,6 +126,11 @@ mxf_vanc_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   gst_byte_reader_init (&reader, map.data, map.size);
+
+  /* Some XDCAM recorders store empty vanc packets (without even the
+   * length). Treat them as gaps */
+  if (map.size == 0)
+    goto no_data;
 
   num_packets = gst_byte_reader_get_uint16_be_unchecked (&reader);
   if (num_packets == 0) {
