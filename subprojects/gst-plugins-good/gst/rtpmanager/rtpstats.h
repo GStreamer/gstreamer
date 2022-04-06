@@ -79,9 +79,10 @@ typedef struct {
  * @pt: the payload type of the packet
  * @rtptime: the RTP time of the packet
  * @marker: the marker bit
- *
- * @tw_seqnum_ext_id: the extension-header ID for transport-wide seqnums
- * @tw_seqnum: the transport-wide seqnum of the packet
+ * @csrc_count: Number of CSRCs in @csrcs
+ * @csrcs: CSRCs
+ * @header_ext: Header extension data
+ * @header_ext_bit_pattern: Header extension bit pattern
  *
  * Structure holding information about the packet.
  */
