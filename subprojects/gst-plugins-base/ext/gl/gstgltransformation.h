@@ -73,15 +73,15 @@ struct _GstGLTransformation
     gfloat zfar;
     gboolean ortho;
 
-    graphene_matrix_t model_matrix;
-    graphene_matrix_t view_matrix;
-    graphene_matrix_t projection_matrix;
-    graphene_matrix_t inv_model_matrix;
-    graphene_matrix_t inv_view_matrix;
-    graphene_matrix_t inv_projection_matrix;
-    graphene_matrix_t mvp_matrix;
+    graphene_matrix_t *model_matrix;
+    graphene_matrix_t *view_matrix;
+    graphene_matrix_t *projection_matrix;
+    graphene_matrix_t *inv_model_matrix;
+    graphene_matrix_t *inv_view_matrix;
+    graphene_matrix_t *inv_projection_matrix;
+    graphene_matrix_t *mvp_matrix;
 
-    graphene_vec3_t camera_position;
+    graphene_vec3_t *camera_position;
 
     gboolean downstream_supports_affine_meta;
     gboolean caps_change;

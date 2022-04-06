@@ -93,6 +93,7 @@ G_DEFINE_TYPE_WITH_CODE (GstGLTransformation, gst_gl_transformation,
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (gltransformation, "gltransformation",
     GST_RANK_NONE, GST_TYPE_GL_TRANSFORMATION, gl_element_init (plugin));
 
+static void gst_gl_transformation_finalize (GObject * object);
 static void gst_gl_transformation_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gl_transformation_get_property (GObject * object, guint prop_id,
@@ -247,6 +248,8 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =
       GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2;
+
+  gobject_class->finalize = gst_gl_transformation_finalize;
 }
 
 static void
@@ -263,7 +266,41 @@ gst_gl_transformation_init (GstGLTransformation * filter)
 
   filter->in_tex = 0;
 
+  /* let graphene alloc its structures with correct memory alignment, otherwise
+   * unaligned memory access faults can occur */
+  filter->model_matrix = graphene_matrix_alloc ();
+  filter->view_matrix = graphene_matrix_alloc ();
+  filter->projection_matrix = graphene_matrix_alloc ();
+  filter->inv_model_matrix = graphene_matrix_alloc ();
+  filter->inv_view_matrix = graphene_matrix_alloc ();
+  filter->inv_projection_matrix = graphene_matrix_alloc ();
+  filter->mvp_matrix = graphene_matrix_alloc ();
+
+  filter->camera_position = graphene_vec3_alloc ();
+
   gst_gl_transformation_build_mvp (filter);
+}
+
+static void
+gst_gl_transformation_finalize (GObject * object)
+{
+  GstGLTransformation *transformation;
+
+  g_return_if_fail (GST_IS_GL_TRANSFORMATION (object));
+
+  transformation = GST_GL_TRANSFORMATION (object);
+
+  graphene_matrix_free (transformation->model_matrix);
+  graphene_matrix_free (transformation->view_matrix);
+  graphene_matrix_free (transformation->projection_matrix);
+  graphene_matrix_free (transformation->inv_model_matrix);
+  graphene_matrix_free (transformation->inv_view_matrix);
+  graphene_matrix_free (transformation->inv_projection_matrix);
+  graphene_matrix_free (transformation->mvp_matrix);
+
+  graphene_vec3_free (transformation->camera_position);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -273,9 +310,9 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
   graphene_matrix_t modelview_matrix;
 
   if (!filter->out_info.finfo) {
-    graphene_matrix_init_identity (&transformation->model_matrix);
-    graphene_matrix_init_identity (&transformation->view_matrix);
-    graphene_matrix_init_identity (&transformation->projection_matrix);
+    graphene_matrix_init_identity (transformation->model_matrix);
+    graphene_matrix_init_identity (transformation->view_matrix);
+    graphene_matrix_init_identity (transformation->projection_matrix);
   } else {
     graphene_point3d_t translation_vector =
         GRAPHENE_POINT3D_INIT (transformation->xtranslation * 2.0 *
@@ -296,47 +333,47 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
     gboolean current_passthrough;
     gboolean passthrough;
 
-    graphene_vec3_init (&transformation->camera_position, 0.f, 0.f, 1.f);
+    graphene_vec3_init (transformation->camera_position, 0.f, 0.f, 1.f);
     graphene_vec3_init (&center, 0.f, 0.f, 0.f);
     graphene_vec3_init (&up, 0.f, 1.f, 0.f);
 
     /* Translate into pivot origin */
-    graphene_matrix_init_translate (&transformation->model_matrix,
+    graphene_matrix_init_translate (transformation->model_matrix,
         &pivot_vector);
 
     /* Scale */
-    graphene_matrix_scale (&transformation->model_matrix,
+    graphene_matrix_scale (transformation->model_matrix,
         transformation->xscale, transformation->yscale, 1.0f);
 
     /* Rotation */
-    graphene_matrix_rotate (&transformation->model_matrix,
+    graphene_matrix_rotate (transformation->model_matrix,
         transformation->xrotation, graphene_vec3_x_axis ());
-    graphene_matrix_rotate (&transformation->model_matrix,
+    graphene_matrix_rotate (transformation->model_matrix,
         transformation->yrotation, graphene_vec3_y_axis ());
-    graphene_matrix_rotate (&transformation->model_matrix,
+    graphene_matrix_rotate (transformation->model_matrix,
         transformation->zrotation, graphene_vec3_z_axis ());
 
     /* Translate back from pivot origin */
     graphene_point3d_scale (&pivot_vector, -1.0, &negative_pivot_vector);
-    graphene_matrix_translate (&transformation->model_matrix,
+    graphene_matrix_translate (transformation->model_matrix,
         &negative_pivot_vector);
 
     /* Translation */
-    graphene_matrix_translate (&transformation->model_matrix,
+    graphene_matrix_translate (transformation->model_matrix,
         &translation_vector);
 
     if (transformation->ortho) {
-      graphene_matrix_init_ortho (&transformation->projection_matrix,
+      graphene_matrix_init_ortho (transformation->projection_matrix,
           -transformation->aspect, transformation->aspect,
           -1, 1, transformation->znear, transformation->zfar);
     } else {
-      graphene_matrix_init_perspective (&transformation->projection_matrix,
+      graphene_matrix_init_perspective (transformation->projection_matrix,
           transformation->fov,
           transformation->aspect, transformation->znear, transformation->zfar);
     }
 
-    graphene_matrix_init_look_at (&transformation->view_matrix,
-        &transformation->camera_position, &center, &up);
+    graphene_matrix_init_look_at (transformation->view_matrix,
+        transformation->camera_position, &center, &up);
 
     current_passthrough =
         gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (transformation));
@@ -353,17 +390,17 @@ gst_gl_transformation_build_mvp (GstGLTransformation * transformation)
     }
   }
 
-  graphene_matrix_multiply (&transformation->model_matrix,
-      &transformation->view_matrix, &modelview_matrix);
+  graphene_matrix_multiply (transformation->model_matrix,
+      transformation->view_matrix, &modelview_matrix);
   graphene_matrix_multiply (&modelview_matrix,
-      &transformation->projection_matrix, &transformation->mvp_matrix);
+      transformation->projection_matrix, transformation->mvp_matrix);
 
-  graphene_matrix_inverse (&transformation->model_matrix,
-      &transformation->inv_model_matrix);
-  graphene_matrix_inverse (&transformation->view_matrix,
-      &transformation->inv_view_matrix);
-  graphene_matrix_inverse (&transformation->projection_matrix,
-      &transformation->inv_projection_matrix);
+  graphene_matrix_inverse (transformation->model_matrix,
+      transformation->inv_model_matrix);
+  graphene_matrix_inverse (transformation->view_matrix,
+      transformation->inv_view_matrix);
+  graphene_matrix_inverse (transformation->projection_matrix,
+      transformation->inv_projection_matrix);
 }
 
 static void
@@ -467,7 +504,7 @@ gst_gl_transformation_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MVP:
       /* FIXME: need to decompose this to support navigation events */
-      g_value_set_boxed (value, (gconstpointer) & filter->mvp_matrix);
+      g_value_set_boxed (value, (gconstpointer) filter->mvp_matrix);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -519,7 +556,7 @@ _screen_coord_to_world_ray (GstGLTransformation * transformation, float x,
 
   graphene_point3d_init (&ray_clip, graphene_vec2_get_x (&screen_coord),
       graphene_vec2_get_y (&screen_coord), -1.);
-  graphene_matrix_transform_point3d (&transformation->inv_projection_matrix,
+  graphene_matrix_transform_point3d (transformation->inv_projection_matrix,
       &ray_clip, &ray_eye);
 
   graphene_vec3_init (&ray_eye_vec3, ray_eye.x, ray_eye.y, -1.);
@@ -530,11 +567,11 @@ _screen_coord_to_world_ray (GstGLTransformation * transformation, float x,
     ray_origin = &ray_eye_vec3;
     ray_direction = &ray_ortho_dir;
   } else {
-    graphene_matrix_transform_vec3 (&transformation->inv_view_matrix,
+    graphene_matrix_transform_vec3 (transformation->inv_view_matrix,
         &ray_eye_vec3, &ray_world_dir);
     graphene_vec3_normalize (&ray_world_dir, &ray_world_dir);
 
-    ray_origin = &transformation->camera_position;
+    ray_origin = transformation->camera_position;
     ray_direction = &ray_world_dir;
   }
 
@@ -561,13 +598,13 @@ _init_world_video_plane (GstGLTransformation * transformation,
   graphene_point3d_init (&bottom_left, -transformation->aspect, -1., 0.);
   graphene_point3d_init (&bottom_right, transformation->aspect, -1., 0.);
 
-  graphene_matrix_transform_point3d (&transformation->model_matrix,
+  graphene_matrix_transform_point3d (transformation->model_matrix,
       &bottom_left, &world_bottom_left);
-  graphene_matrix_transform_point3d (&transformation->model_matrix,
+  graphene_matrix_transform_point3d (transformation->model_matrix,
       &bottom_right, &world_bottom_right);
-  graphene_matrix_transform_point3d (&transformation->model_matrix,
+  graphene_matrix_transform_point3d (transformation->model_matrix,
       &top_left, &world_top_left);
-  graphene_matrix_transform_point3d (&transformation->model_matrix,
+  graphene_matrix_transform_point3d (transformation->model_matrix,
       &top_right, &world_top_right);
 
   graphene_plane_init_from_points (video_plane, &world_bottom_left,
@@ -589,7 +626,7 @@ _screen_coord_to_model_coord (GstGLTransformation * transformation,
   _init_world_video_plane (transformation, &video_plane);
   _screen_coord_to_world_ray (transformation, x, y, &ray);
   _intersect_plane_and_ray (&video_plane, &ray, &world_point);
-  graphene_matrix_transform_point3d (&transformation->inv_model_matrix,
+  graphene_matrix_transform_point3d (transformation->inv_model_matrix,
       &world_point, &model_coord);
 
   /* ndc to pixels.  We render the frame Y-flipped so need to unflip the
@@ -648,7 +685,7 @@ _vertex_to_screen_coord (GstGLTransformation * transformation,
   graphene_vec4_t clip;
   graphene_vec3_t ndc;
 
-  graphene_matrix_transform_vec4 (&transformation->mvp_matrix, vertex, &clip);
+  graphene_matrix_transform_vec4 (transformation->mvp_matrix, vertex, &clip);
   _perspective_division (&clip, &ndc);
   _ndc_to_viewport (transformation, &ndc, 0, 0, w, h, 0., 1., view);
 }
@@ -812,7 +849,7 @@ gst_gl_transformation_prepare_output_buffer (GstBaseTransform * trans,
     /* invert the aspect effects */
     graphene_matrix_multiply (&upstream_matrix, &inv_aspect, &tmp2);
     /* apply the transformation */
-    graphene_matrix_multiply (&tmp2, &transformation->mvp_matrix, &tmp);
+    graphene_matrix_multiply (&tmp2, transformation->mvp_matrix, &tmp);
     /* and undo yflip */
     graphene_matrix_multiply (&tmp, &yflip, &tmp2);
 
@@ -932,7 +969,7 @@ gst_gl_transformation_callback (gpointer stuff)
   gl->BindTexture (GL_TEXTURE_2D, transformation->in_tex->tex_id);
   gst_gl_shader_set_uniform_1i (transformation->shader, "texture", 0);
 
-  graphene_matrix_to_float (&transformation->mvp_matrix, temp_matrix);
+  graphene_matrix_to_float (transformation->mvp_matrix, temp_matrix);
   gst_gl_shader_set_uniform_matrix_4fv (transformation->shader,
       "u_transformation", 1, GL_FALSE, temp_matrix);
 
