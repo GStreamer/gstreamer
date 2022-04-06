@@ -8927,6 +8927,11 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    *  "local-id"            G_TYPE_STRING               identifier for the associated RTCInboundRTPSTreamStats
    *  "remote-timestamp"    G_TYPE_DOUBLE               remote timestamp the statistics were sent by the remote
    *
+   * RTCPeerConnectionStats supported fields (https://w3c.github.io/webrtc-stats/#pcstats-dict*) (Since: 1.24)
+   *
+   *  "data-channels-opened"  G_TYPE_UINT               number of unique data channels that have entered the 'open' state
+   *  "data-channels-closed"  G_TYPE_UINT               number of unique data channels that have left the 'open' state
+   *
    * RTCIceCandidateStats supported fields (https://www.w3.org/TR/webrtc-stats/#icecandidate-dict*) (Since: 1.22)
    *
    *  "transport-id"         G_TYPE_STRING              identifier for the associated RTCTransportStats for this stream
