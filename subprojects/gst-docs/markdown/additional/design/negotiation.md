@@ -113,16 +113,16 @@ push buffer  |---------------->| Process buffer of type A
 One possible implementation in pseudo code:
 
 ```
-    [element wants to create a buffer]
-    if not format
-      # see what we can do
-      ourcaps = gst_pad_query_caps (srcpad)
-      # see what the peer can do filtered against our caps
-      candidates = gst_pad_peer_query_caps (srcpad, ourcaps)
+[element wants to create a buffer]
+if not format
+  # see what we can do
+  ourcaps = gst_pad_query_caps (srcpad)
+  # see what the peer can do filtered against our caps
+  candidates = gst_pad_peer_query_caps (srcpad, ourcaps)
 
-    foreach candidate in candidates
-      # make sure the caps is fixed
-      fixedcaps = gst_pad_fixate_caps (srcpad, candidate)
+  foreach candidate in candidates
+    # make sure the caps is fixed
+    fixedcaps = gst_pad_fixate_caps (srcpad, candidate)
 
     # see if the peer accepts it
     if gst_pad_peer_accept_caps (srcpad, fixedcaps)
