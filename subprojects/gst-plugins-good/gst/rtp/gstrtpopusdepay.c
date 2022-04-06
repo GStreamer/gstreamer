@@ -206,8 +206,10 @@ gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
         GST_WARNING_OBJECT (depayload, "Unknown sprop-stereo value '%s'",
             sprop_stereo);
     } else {
-      /* sprop-stereo defaults to mono as per RFC 7587. */
-      gst_caps_set_simple (srccaps, "channels", G_TYPE_INT, 1, NULL);
+      /* Although sprop-stereo defaults to mono as per RFC 7587, this just means
+         that the signal is likely mono and can be safely downmixed, it may
+         still be stereo at times. */
+      gst_caps_set_simple (srccaps, "channels", G_TYPE_INT, 2, NULL);
     }
   }
 
