@@ -1236,7 +1236,8 @@ gst_rtp_bin_propagate_property_to_session (GstRtpBin * bin,
 
 /* get a client with the given SDES name. Must be called with RTP_BIN_LOCK */
 static GstRtpBinClient *
-get_client (GstRtpBin * bin, guint8 len, guint8 * data, gboolean * created)
+get_client (GstRtpBin * bin, guint8 len, const guint8 * data,
+    gboolean * created)
 {
   GstRtpBinClient *result = NULL;
   GSList *walk;
@@ -1446,7 +1447,7 @@ gst_rtp_bin_send_sync_event (GstRtpBinStream * stream)
  * Must be called with GST_RTP_BIN_LOCK */
 static void
 gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
-    guint8 * data, guint64 ntptime, guint64 last_extrtptime,
+    const guint8 * data, guint64 ntpnstime, guint64 last_extrtptime,
     guint64 base_rtptime, guint64 base_time, guint clock_rate,
     gint64 rtp_clock_base)
 {
@@ -1454,7 +1455,6 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   gboolean created;
   GSList *walk;
   GstClockTime running_time, running_time_rtp;
-  guint64 ntpnstime;
 
   /* first find or create the CNAME */
   client = get_client (bin, len, data, &created);
@@ -1511,10 +1511,6 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   running_time =
       gst_util_uint64_scale_int (running_time_rtp, GST_SECOND, clock_rate);
   running_time += base_time;
-
-  /* convert ntptime to nanoseconds */
-  ntpnstime = gst_util_uint64_scale (ntptime, GST_SECOND,
-      (G_GINT64_CONSTANT (1) << 32));
 
   stream->have_sync = TRUE;
 
@@ -1737,15 +1733,16 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   GstRtpBin *bin;
   GstRTCPPacket packet;
   guint32 ssrc;
-  guint64 ntptime;
+  guint64 ntpnstime, inband_ntpnstime;
   gboolean have_sr, have_sdes;
   gboolean more;
   guint64 base_rtptime;
   guint64 base_time;
   guint clock_rate;
   guint64 clock_base;
-  guint64 extrtptime;
+  guint64 extrtptime, inband_ext_rtptime;
   GstBuffer *buffer;
+  const gchar *cname;
   GstRTCPBuffer rtcp = { NULL, };
 
   bin = stream->bin;
@@ -1756,13 +1753,42 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
    * timestamps. We get this info directly from the jitterbuffer which
    * constructs gstreamer timestamps from rtp timestamps and so it know exactly
    * what the current situation is. */
-  base_rtptime =
-      g_value_get_uint64 (gst_structure_get_value (s, "base-rtptime"));
-  base_time = g_value_get_uint64 (gst_structure_get_value (s, "base-time"));
-  clock_rate = g_value_get_uint (gst_structure_get_value (s, "clock-rate"));
-  clock_base = g_value_get_uint64 (gst_structure_get_value (s, "clock-base"));
-  extrtptime =
-      g_value_get_uint64 (gst_structure_get_value (s, "sr-ext-rtptime"));
+  if (!gst_structure_get_uint64 (s, "base-rtptime", &base_rtptime) ||
+      !gst_structure_get_uint64 (s, "base-time", &base_time) ||
+      !gst_structure_get_uint (s, "clock-rate", &clock_rate) ||
+      !gst_structure_get_uint64 (s, "clock-base", &clock_base)) {
+    /* invalid structure */
+    return;
+  }
+
+  /* if the jitterbuffer directly got the NTP timestamp then don't work
+   * through the RTCP SR, otherwise extract it from there */
+  if (gst_structure_get_uint64 (s, "inband-ntpnstime", &inband_ntpnstime)
+      && gst_structure_get_uint64 (s, "inband-ext-rtptime", &inband_ext_rtptime)
+      && (cname = gst_structure_get_string (s, "cname"))
+      && gst_structure_get_uint (s, "ssrc", &ssrc)) {
+    GST_DEBUG_OBJECT (bin,
+        "handle sync from inband NTP-64 information for SSRC %08x", ssrc);
+
+    if (ssrc != stream->ssrc)
+      return;
+
+    GST_RTP_BIN_LOCK (bin);
+    gst_rtp_bin_associate (bin, stream, strlen (cname), (const guint8 *) cname,
+        inband_ntpnstime, inband_ext_rtptime, base_rtptime, base_time,
+        clock_rate, clock_base);
+    GST_RTP_BIN_UNLOCK (bin);
+    return;
+  }
+
+  if (!gst_structure_get_uint64 (s, "sr-ext-rtptime", &extrtptime)
+      || !gst_structure_has_field_typed (s, "sr-buffer", GST_TYPE_BUFFER)) {
+    /* invalid structure */
+    return;
+  }
+
+  GST_DEBUG_OBJECT (bin, "handle sync from RTCP SR information");
+
   buffer = gst_value_get_buffer (gst_structure_get_value (s, "sr-buffer"));
 
   have_sr = FALSE;
@@ -1779,8 +1805,12 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
         if (have_sr)
           break;
         /* get NTP and RTP times */
-        gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntptime, NULL,
+        gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntpnstime, NULL,
             NULL, NULL);
+
+        /* convert ntptime to nanoseconds */
+        ntpnstime = gst_util_uint64_scale (ntpnstime, GST_SECOND,
+            (G_GINT64_CONSTANT (1) << 32));
 
         GST_DEBUG_OBJECT (bin, "received sync packet from SSRC %08x", ssrc);
         /* ignore SR that is not ours */
@@ -1816,7 +1846,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
               GST_RTP_BIN_LOCK (bin);
               /* associate the stream to CNAME */
               gst_rtp_bin_associate (bin, stream, len, data,
-                  ntptime, extrtptime, base_rtptime, base_time, clock_rate,
+                  ntpnstime, extrtptime, base_rtptime, base_time, clock_rate,
                   clock_base);
               GST_RTP_BIN_UNLOCK (bin);
             }
