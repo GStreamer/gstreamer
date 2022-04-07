@@ -1959,7 +1959,7 @@ no_rate:
 /**
  * gst_rtp_base_payload_push_list:
  * @payload: a #GstRTPBasePayload
- * @list: a #GstBufferList
+ * @list: (transfer full): a #GstBufferList
  *
  * Push @list to the peer element of the payloader. The SSRC, payload type,
  * seqnum and timestamp of the RTP buffer will be updated first.
@@ -1993,7 +1993,7 @@ gst_rtp_base_payload_push_list (GstRTPBasePayload * payload,
 /**
  * gst_rtp_base_payload_push:
  * @payload: a #GstRTPBasePayload
- * @buffer: a #GstBuffer
+ * @buffer: (tranfer full): a #GstBuffer
  *
  * Push @buffer to the peer element of the payloader. The SSRC, payload type,
  * seqnum and timestamp of the RTP buffer will be updated first.
