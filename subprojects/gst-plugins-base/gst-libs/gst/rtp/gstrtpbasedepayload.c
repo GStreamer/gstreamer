@@ -468,8 +468,15 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
     priv->onvif_mode = FALSE;
   GST_DEBUG_OBJECT (filter, "Onvif mode: %d", priv->onvif_mode);
 
-  if (priv->onvif_mode)
+  if (priv->onvif_mode){
     filter->need_newsegment = FALSE;
+  }
+  else{
+    /*This change is required to handle stream switching from recording to live - Anand*/
+    GST_DEBUG ("need_newsegment flag coming from upstream: %d", filter->need_newsegment);
+    filter->need_newsegment = TRUE;
+    GST_DEBUG ("need_newsegment: %d", filter->need_newsegment);
+  }
 
   /* get other values for newsegment */
   value = gst_structure_get_value (caps_struct, "npt-start");
