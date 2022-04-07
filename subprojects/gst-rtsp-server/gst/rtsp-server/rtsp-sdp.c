@@ -465,6 +465,35 @@ gst_rtsp_sdp_make_media (GstSDPMessage * sdp, GstSDPInfo * info,
     }
   }
 
+  /* RFC5576 Source-specific media attributes */
+  {
+    GObject *session;
+    guint ssrc;
+    GstStructure *sdes;
+    const gchar *cname;
+    gchar *ssrc_cname;
+
+    session = gst_rtsp_stream_get_rtpsession (stream);
+    if (session) {
+      g_object_get (session, "sdes", &sdes, NULL);
+
+      cname = gst_structure_get_string (sdes, "cname");
+      gst_rtsp_stream_get_ssrc (stream, &ssrc);
+
+      if (cname) {
+        ssrc_cname = g_strdup_printf ("%u cname:%s", ssrc, cname);
+        gst_sdp_media_add_attribute (smedia, "ssrc", ssrc_cname);
+        g_free (ssrc_cname);
+      } else {
+        GST_ERROR ("unable to get CNAME for stream %p", stream);
+      }
+      gst_structure_free (sdes);
+      g_object_unref (session);
+    } else {
+      GST_ERROR ("unable to get RTP session from stream %p", stream);
+    }
+  }
+
   gst_sdp_message_add_media (sdp, smedia);
   gst_sdp_media_free (smedia);
 
