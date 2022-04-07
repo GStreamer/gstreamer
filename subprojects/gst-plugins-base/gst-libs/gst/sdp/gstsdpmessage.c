@@ -3583,7 +3583,7 @@ gst_sdp_media_caps_adjust_h264 (GstCaps * caps)
  *
  * a=fmtp:(payload) (param)[=(value)];...
  *
- * Note that the extmap attribute is set only by gst_sdp_media_attributes_to_caps().
+ * Note that the extmap, ssrc and rid attributes are set only by gst_sdp_media_attributes_to_caps().
  *
  * Returns: a #GstCaps, or %NULL if an error happened
  *
@@ -4216,6 +4216,8 @@ sdp_add_attributes_to_caps (GArray * attributes, GstCaps * caps)
         continue;
       if (!strcmp (key, "extmap"))
         continue;
+      if (!strcmp (key, "ssrc"))
+        continue;
       if (!strcmp (key, "rid"))
         continue;
 
@@ -4336,6 +4338,73 @@ gst_sdp_media_add_extmap_attributes (GArray * attributes, GstCaps * caps)
       GST_DEBUG ("adding caps: %s=%s", key, extensionname);
       g_free (key);
     }
+
+  next:
+    g_free (to_free);
+  }
+  return GST_SDP_OK;
+}
+
+/* parses Source-specific media SDP attributes (RFC5576) into caps */
+static GstSDPResult
+gst_sdp_media_add_ssrc_attributes (GArray * attributes, GstCaps * caps)
+{
+  gchar *p, *tmp, *to_free;
+  guint i;
+  GstStructure *s;
+
+  g_return_val_if_fail (attributes != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (caps != NULL && GST_IS_CAPS (caps), GST_SDP_EINVAL);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  for (i = 0; i < attributes->len; i++) {
+    const gchar *value;
+    GstSDPAttribute *attr;
+    guint32 ssrc;
+    gchar *ssrc_val, *ssrc_attr;
+    gchar *key;
+
+    attr = &g_array_index (attributes, GstSDPAttribute, i);
+    if (strcmp (attr->key, "ssrc") != 0)
+      continue;
+
+    value = attr->value;
+
+    /* p is now of the format ssrc attribute[:value] */
+    to_free = p = g_strdup (value);
+
+    ssrc = strtoul (p, &tmp, 10);
+    if (*tmp != ' ') {
+      GST_ERROR ("Invalid ssrc attribute '%s'", to_free);
+      goto next;
+    }
+
+    /* At the space */
+    p = tmp;
+
+    SKIP_SPACES (p);
+
+    tmp = strstr (p, ":");
+    if (tmp == NULL) {
+      ssrc_attr = tmp;
+      ssrc_val = (gchar *) "";
+    } else {
+      ssrc_attr = p;
+      *tmp = '\0';
+      p = tmp + 1;
+      ssrc_val = p;
+    }
+
+    if (ssrc_attr == NULL || *ssrc_attr == '\0') {
+      GST_ERROR ("Invalid ssrc attribute '%s'", to_free);
+      goto next;
+    }
+
+    key = g_strdup_printf ("ssrc-%u-%s", ssrc, ssrc_attr);
+    gst_structure_set (s, key, G_TYPE_STRING, ssrc_val, NULL);
+    GST_DEBUG ("adding caps: %s=%s", key, ssrc_val);
+    g_free (key);
 
   next:
     g_free (to_free);
@@ -4549,6 +4618,11 @@ gst_sdp_media_attributes_to_caps (const GstSDPMedia * media, GstCaps * caps)
   if (res == GST_SDP_OK) {
     /* parse media extmap field */
     res = gst_sdp_media_add_extmap_attributes (media->attributes, caps);
+  }
+
+  if (res == GST_SDP_OK) {
+    /* parse media ssrc field */
+    res = gst_sdp_media_add_ssrc_attributes (media->attributes, caps);
   }
 
   if (res == GST_SDP_OK) {
