@@ -549,8 +549,7 @@ gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
   /* d3d11 buffer pool will update buffer size based on allocated texture,
    * get size from config again */
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_get_params (config,
-      nullptr, &size, nullptr, nullptr);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
   gst_structure_free (config);
 
   if (!self->downstream_supports_d3d11) {

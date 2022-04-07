@@ -427,7 +427,7 @@ static GstFlowReturn gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
 static GstFlowReturn gst_d3d11_av1_dec_new_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture);
 static GstAV1Picture *gst_d3d11_av1_dec_duplicate_picture (GstAV1Decoder *
-    decoder, GstVideoCodecFrame * frame,  GstAV1Picture * picture);
+    decoder, GstVideoCodecFrame * frame, GstAV1Picture * picture);
 static GstFlowReturn gst_d3d11_av1_dec_start_picture (GstAV1Decoder * decoder,
     GstAV1Picture * picture, GstAV1Dpb * dpb);
 static GstFlowReturn gst_d3d11_av1_dec_decode_tile (GstAV1Decoder * decoder,
