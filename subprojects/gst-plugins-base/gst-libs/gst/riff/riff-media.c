@@ -1755,8 +1755,10 @@ gst_riff_create_audio_caps (guint16 codec_id,
             GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE audio");
           if (caps) {
             if (codec_name) {
+              gchar *tmp = *codec_name;
               GST_DEBUG ("WAVE_FORMAT_EXTENSIBLE %s", *codec_name);
-              *codec_name = g_strjoin ("wavext ", *codec_name, NULL);
+              *codec_name = g_strjoin ("wavext ", tmp, NULL);
+              g_free (tmp);
             }
             return caps;
           }
