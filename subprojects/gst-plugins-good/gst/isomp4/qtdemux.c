@@ -12593,6 +12593,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           entry->caps = gst_codec_utils_opus_create_caps (rate, channels,
               channel_mapping_family, stream_count, coupled_count,
               channel_mapping);
+          g_free (channel_mapping);
           break;
         }
         default:
