@@ -1680,6 +1680,18 @@ validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
   g_free (protocol);
 }
 
+static void
+validate_peer_connection_stats (const GstStructure * s)
+{
+  guint opened, closed;
+
+  fail_unless (gst_structure_get (s, "data-channels-opened", G_TYPE_UINT,
+          &opened, NULL));
+  fail_unless (gst_structure_get (s, "data-channels-closed", G_TYPE_UINT,
+          &closed, NULL));
+  fail_unless (opened >= closed);
+}
+
 static gboolean
 validate_stats_foreach (GQuark field_id, const GValue * value,
     const GstStructure * stats)
@@ -1708,6 +1720,7 @@ validate_stats_foreach (GQuark field_id, const GValue * value,
     validate_remote_outbound_rtp_stats (s, stats);
   } else if (type == GST_WEBRTC_STATS_CSRC) {
   } else if (type == GST_WEBRTC_STATS_PEER_CONNECTION) {
+    validate_peer_connection_stats (s);
   } else if (type == GST_WEBRTC_STATS_DATA_CHANNEL) {
   } else if (type == GST_WEBRTC_STATS_STREAM) {
   } else if (type == GST_WEBRTC_STATS_TRANSPORT) {
