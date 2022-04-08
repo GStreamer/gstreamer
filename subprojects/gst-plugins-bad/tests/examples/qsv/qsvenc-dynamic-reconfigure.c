@@ -231,37 +231,37 @@ keyboard_cb (gchar input, gboolean is_ascii, gpointer user_data)
       case 'I':
         if (rc_mode == RC_MODE_CQP && qp_i < max_qp) {
           gst_println ("Increase QP-I to %d", ++qp_i);
-          g_object_set (data->encoder, "qpi", qp_i, NULL);
+          g_object_set (data->encoder, "qp-i", qp_i, NULL);
         }
         break;
       case 'i':
         if (rc_mode == RC_MODE_CQP && qp_i > 0) {
           gst_println ("Decrease QP-I to %d", --qp_i);
-          g_object_set (data->encoder, "qpi", qp_i, NULL);
+          g_object_set (data->encoder, "qp-i", qp_i, NULL);
         }
         break;
       case 'P':
         if (rc_mode == RC_MODE_CQP && qp_p < max_qp) {
           gst_println ("Increase QP-P to %d", ++qp_p);
-          g_object_set (data->encoder, "qpp", qp_p, NULL);
+          g_object_set (data->encoder, "qp-p", qp_p, NULL);
         }
         break;
       case 'p':
         if (rc_mode == RC_MODE_CQP && qp_p > 0) {
           gst_println ("Decrease QP-P to %d", --qp_p);
-          g_object_set (data->encoder, "qpp", qp_p, NULL);
+          g_object_set (data->encoder, "qp-p", qp_p, NULL);
         }
         break;
       case 'B':
         if (rc_mode == RC_MODE_CQP && qp_b < max_qp && codec != CODEC_VP9) {
           gst_println ("Increase QP-B to %d", ++qp_b);
-          g_object_set (data->encoder, "qpb", qp_b, NULL);
+          g_object_set (data->encoder, "qp-b", qp_b, NULL);
         }
         break;
       case 'b':
         if (rc_mode == RC_MODE_CQP && qp_b > 0 && codec != CODEC_VP9) {
           gst_println ("Decrease QP-B to %d", --qp_b);
-          g_object_set (data->encoder, "qpb", qp_b, NULL);
+          g_object_set (data->encoder, "qp-b", qp_b, NULL);
         }
         break;
       default:
@@ -471,9 +471,9 @@ main (gint argc, gchar ** argv)
   MAKE_ELEMENT_AND_ADD (enc, encoder_name);
 
   g_object_set (enc, "bitrate", bitrate, "max-bitrate", max_bitrate,
-      "qpi", qp_i, "qpp", qp_p, "gop-size", 30, NULL);
+      "qp-i", qp_i, "qp-p", qp_p, "gop-size", 30, NULL);
   if (codec != CODEC_VP9)
-    g_object_set (enc, "qpb", qp_b, NULL);
+    g_object_set (enc, "qp-b", qp_b, NULL);
 
   gst_util_set_object_arg (G_OBJECT (enc), "rate-control", rate_control);
 

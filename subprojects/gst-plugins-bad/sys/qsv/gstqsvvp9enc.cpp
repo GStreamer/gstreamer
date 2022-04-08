@@ -78,7 +78,7 @@ enum
 #define DEFAULT_REF_FRAMES 1
 #define DEFAULT_BITRATE 2000
 #define DEFAULT_MAX_BITRATE 0
-#define DEFAULT_RATE_CONTROL MFX_RATECONTROL_CBR
+#define DEFAULT_RATE_CONTROL MFX_RATECONTROL_VBR
 #define DEFAULT_IQC_QUALITY 0
 
 typedef struct _GstQsvVP9EncClassData
@@ -177,13 +177,13 @@ gst_qsv_vp9_enc_class_init (GstQsvVP9EncClass * klass, gpointer data)
 #endif
 
   g_object_class_install_property (object_class, PROP_QP_I,
-      g_param_spec_uint ("qpi", "QP I",
-          "Constant quantizer for I frames (0: no limitations)",
+      g_param_spec_uint ("qp-i", "QP I",
+          "Constant quantizer for I frames (0: default)",
           0, 255, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_QP_P,
-      g_param_spec_uint ("qpp", "QP P",
-          "Constant quantizer for P frames (0: no limitations)",
+      g_param_spec_uint ("qp-p", "QP P",
+          "Constant quantizer for P frames (0: default)",
           0, 255, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_GOP_SIZE,

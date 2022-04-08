@@ -119,13 +119,13 @@ enum
 };
 
 #define DEFAULT_QP 0
-#define DEFAULT_GOP_SIZE 0
+#define DEFAULT_GOP_SIZE 30
 #define DEFAULT_I_FRAMES 0
 #define DEFAULT_B_FRAMES 0
 #define DEFAULT_REF_FRAMES 2
 #define DEFAULT_BITRATE 2000
 #define DEFAULT_MAX_BITRATE 0
-#define DEFAULT_RATE_CONTROL MFX_RATECONTROL_CBR
+#define DEFAULT_RATE_CONTROL MFX_RATECONTROL_VBR
 #define DEFAULT_IQC_QUALITY 0
 #define DEFAULT_QVBR_QUALITY 0
 #define DEFAULT_DISABLE_HRD_CONFORMANCE FALSE
@@ -249,65 +249,65 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
 #endif
 
   g_object_class_install_property (object_class, PROP_MIN_QP_I,
-      g_param_spec_uint ("min-qpi", "Min QP I",
-          "Minimum allowed QP value for I-frame types (0: no limitations)",
+      g_param_spec_uint ("min-qp-i", "Min QP I",
+          "Minimum allowed QP value for I-frame types (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_MIN_QP_P,
-      g_param_spec_uint ("min-qpp", "Min QP P",
-          "Minimum allowed QP value for P-frame types (0: no limitations)",
+      g_param_spec_uint ("min-qp-p", "Min QP P",
+          "Minimum allowed QP value for P-frame types (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_MIN_QP_B,
-      g_param_spec_uint ("min-qpb", "Min QP B",
-          "Minimum allowed QP value for B-frame types (0: no limitations)",
+      g_param_spec_uint ("min-qp-b", "Min QP B",
+          "Minimum allowed QP value for B-frame types (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_MAX_QP_I,
-      g_param_spec_uint ("max-qpi", "Max QP I",
-          "Maximum allowed QP value for I-frame types (0: no limitations)",
+      g_param_spec_uint ("max-qp-i", "Max QP I",
+          "Maximum allowed QP value for I-frame types (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_MAX_QP_P,
-      g_param_spec_uint ("max-qpp", "Max QP P",
-          "Maximum allowed QP value for P-frame types (0: no limitations)",
+      g_param_spec_uint ("max-qp-p", "Max QP P",
+          "Maximum allowed QP value for P-frame types (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_MAX_QP_B,
-      g_param_spec_uint ("max-qpb", "Max QP B",
-          "Maximum allowed QP value for B-frame types (0: no limitations)",
+      g_param_spec_uint ("max-qp-b", "Max QP B",
+          "Maximum allowed QP value for B-frame types (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_QP_I,
-      g_param_spec_uint ("qpi", "QP I",
-          "Constant quantizer for I frames (0: no limitations)",
+      g_param_spec_uint ("qp-i", "QP I",
+          "Constant quantizer for I frames (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_QP_P,
-      g_param_spec_uint ("qpp", "QP P",
-          "Constant quantizer for P frames (0: no limitations)",
+      g_param_spec_uint ("qp-p", "QP P",
+          "Constant quantizer for P frames (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_QP_B,
-      g_param_spec_uint ("qpb", "QP B",
-          "Constant quantizer for B frames (0: no limitations)",
+      g_param_spec_uint ("qp-b", "QP B",
+          "Constant quantizer for B frames (0: default)",
           0, 51, DEFAULT_QP, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_GOP_SIZE,
       g_param_spec_uint ("gop-size", "GOP Size",
           "Number of pictures within a GOP (0: unspecified)",
-          0, G_MAXINT, DEFAULT_GOP_SIZE, (GParamFlags)
+          0, G_MAXUSHORT, DEFAULT_GOP_SIZE, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_I_FRAMES,
       g_param_spec_uint ("i-frames", "I Frames",
           "Number of I frames between IDR frames"
           "(0: every I frame is an IDR frame)",
-          0, G_MAXINT, DEFAULT_I_FRAMES, (GParamFlags)
+          0, G_MAXUSHORT, DEFAULT_I_FRAMES, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_B_FRAMES,
       g_param_spec_uint ("b-frames", "B Frames",
           "Number of B frames between I and P frames",
-          0, G_MAXINT, DEFAULT_B_FRAMES, (GParamFlags)
+          0, G_MAXUSHORT, DEFAULT_B_FRAMES, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_REF_FRAMES,
       g_param_spec_uint ("ref-frames", "Reference Frames",
