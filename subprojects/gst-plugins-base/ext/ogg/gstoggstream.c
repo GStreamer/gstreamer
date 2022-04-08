@@ -916,14 +916,16 @@ setup_vorbis_mapper (GstOggStream * pad, ogg_packet * packet)
 static gboolean
 is_header_vorbis (GstOggStream * pad, ogg_packet * packet)
 {
+  int res = 0;
+
   if (packet->bytes == 0 || (packet->packet[0] & 0x01) == 0)
     return FALSE;
 
   if (packet->packet[0] == 5) {
-    gst_parse_vorbis_setup_packet (pad, packet);
+    res = gst_parse_vorbis_setup_packet (pad, packet);
   }
 
-  return TRUE;
+  return res == 0;
 }
 
 static void

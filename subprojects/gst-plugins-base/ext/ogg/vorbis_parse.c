@@ -97,7 +97,7 @@ gst_parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * packet)
   pad->nsn_increment = short_size >> 1;
 }
 
-void
+int
 gst_parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op)
 {
   /*
@@ -220,6 +220,10 @@ gst_parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op)
       current_pos += 1;
     current_pos += 5;
     size -= 1;
+
+    /* have we overrun? */
+    if (current_pos >= op->packet + op->bytes)
+      return -1;
   }
 
   /* Store mode size information in our info struct */
@@ -235,6 +239,11 @@ gst_parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op)
       current_pos += 1;
     *mode_size_ptr++ = (current_pos[0] >> offset) & 0x1;
     current_pos += 5;
+
+    /* have we overrun? */
+    if (current_pos >= op->packet + op->bytes)
+      return -1;
   }
 
+  return 0;
 }
