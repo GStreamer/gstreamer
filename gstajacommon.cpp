@@ -1040,6 +1040,28 @@ GType gst_aja_audio_source_get_type(void) {
   return (GType)id;
 }
 
+GType gst_aja_embedded_audio_input_get_type(void) {
+  static gsize id = 0;
+  static const GEnumValue modes[] = {
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_AUTO, "auto", "auto"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO1, "video-1", "Video 1"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO2, "video-2", "Video 2"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO3, "video-3", "Video 3"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO4, "video-4", "Video 4"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO5, "video-5", "Video 5"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO6, "video-6", "Video 6"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO7, "video-7", "Video 7"},
+      {GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO8, "video-8", "Video 8"},
+      {0, NULL, NULL}};
+
+  if (g_once_init_enter(&id)) {
+    GType tmp = g_enum_register_static("GstAjaEmbeddedAudioInput", modes);
+    g_once_init_leave(&id, tmp);
+  }
+
+  return (GType)id;
+}
+
 GType gst_aja_timecode_index_get_type(void) {
   static gsize id = 0;
   static const GEnumValue modes[] = {

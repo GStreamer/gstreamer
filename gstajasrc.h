@@ -67,6 +67,7 @@ struct _GstAjaSrc {
   GstAjaSdiMode sdi_mode;
   GstAjaInputSource input_source;
   GstAjaAudioSource audio_source;
+  GstAjaEmbeddedAudioInput embedded_audio_input;
   GstAjaTimecodeIndex timecode_index;
   GstAjaReferenceSource reference_source;
   GstAjaClosedCaptionCaptureMode closed_caption_capture_mode;

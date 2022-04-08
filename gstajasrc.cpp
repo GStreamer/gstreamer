@@ -40,6 +40,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define DEFAULT_INPUT_SOURCE (GST_AJA_INPUT_SOURCE_AUTO)
 #define DEFAULT_SDI_MODE (GST_AJA_SDI_MODE_SINGLE_LINK)
 #define DEFAULT_AUDIO_SOURCE (GST_AJA_AUDIO_SOURCE_EMBEDDED)
+#define DEFAULT_EMBEDDED_AUDIO_INPUT (GST_AJA_EMBEDDED_AUDIO_INPUT_AUTO)
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_FREERUN)
 #define DEFAULT_CLOSED_CAPTION_CAPTURE_MODE \
@@ -58,6 +59,7 @@ enum {
   PROP_INPUT_SOURCE,
   PROP_SDI_MODE,
   PROP_AUDIO_SOURCE,
+  PROP_EMBEDDED_AUDIO_INPUT,
   PROP_TIMECODE_INDEX,
   PROP_REFERENCE_SOURCE,
   PROP_CLOSED_CAPTION_CAPTURE_MODE,
@@ -207,6 +209,15 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
                         G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property(
+      gobject_class, PROP_EMBEDDED_AUDIO_INPUT,
+      g_param_spec_enum(
+          "embedded-audio-input", "Embedded Audio Input",
+          "Embedded Audio Input to use", GST_TYPE_AJA_EMBEDDED_AUDIO_INPUT,
+          DEFAULT_EMBEDDED_AUDIO_INPUT,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
       gobject_class, PROP_TIMECODE_INDEX,
       g_param_spec_enum(
           "timecode-index", "Timecode Index", "Timecode index to use",
@@ -286,6 +297,7 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->audio_system_setting = DEFAULT_AUDIO_SYSTEM;
   self->input_source = DEFAULT_INPUT_SOURCE;
   self->audio_source = DEFAULT_AUDIO_SOURCE;
+  self->embedded_audio_input = DEFAULT_EMBEDDED_AUDIO_INPUT;
   self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
   self->closed_caption_capture_mode = DEFAULT_CLOSED_CAPTION_CAPTURE_MODE;
@@ -334,6 +346,10 @@ void gst_aja_src_set_property(GObject *object, guint property_id,
       break;
     case PROP_AUDIO_SOURCE:
       self->audio_source = (GstAjaAudioSource)g_value_get_enum(value);
+      break;
+    case PROP_EMBEDDED_AUDIO_INPUT:
+      self->embedded_audio_input =
+          (GstAjaEmbeddedAudioInput)g_value_get_enum(value);
       break;
     case PROP_TIMECODE_INDEX:
       self->timecode_index = (GstAjaTimecodeIndex)g_value_get_enum(value);
@@ -388,6 +404,9 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
       break;
     case PROP_AUDIO_SOURCE:
       g_value_set_enum(value, self->audio_source);
+      break;
+    case PROP_EMBEDDED_AUDIO_INPUT:
+      g_value_set_enum(value, self->embedded_audio_input);
       break;
     case PROP_TIMECODE_INDEX:
       g_value_set_enum(value, self->timecode_index);
@@ -1228,9 +1247,43 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
       break;
   }
 
+  NTV2EmbeddedAudioInput embedded_audio_input;
+  switch (self->embedded_audio_input) {
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_AUTO:
+      embedded_audio_input =
+          ::NTV2InputSourceToEmbeddedAudioInput(input_source);
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO1:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_1;
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO2:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_2;
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO3:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_3;
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO4:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_4;
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO5:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_5;
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO6:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_6;
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO7:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_7;
+      break;
+    case GST_AJA_EMBEDDED_AUDIO_INPUT_VIDEO8:
+      embedded_audio_input = ::NTV2_EMBEDDED_AUDIO_INPUT_VIDEO_8;
+      break;
+    default:
+      g_assert_not_reached();
+      break;
+  }
+
   self->device->device->SetAudioSystemInputSource(
-      self->audio_system, audio_source,
-      ::NTV2InputSourceToEmbeddedAudioInput(input_source));
+      self->audio_system, audio_source, embedded_audio_input);
   self->configured_audio_channels =
       ::NTV2DeviceGetMaxAudioChannels(self->device_id);
   self->device->device->SetNumberAudioChannels(self->configured_audio_channels,
