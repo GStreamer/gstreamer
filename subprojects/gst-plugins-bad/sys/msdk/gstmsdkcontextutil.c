@@ -31,8 +31,10 @@
  */
 
 #include "gstmsdkcontextutil.h"
+#ifndef _WIN32
 #include <gst/va/gstvadisplay.h>
 #include <gst/va/gstvautils.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
