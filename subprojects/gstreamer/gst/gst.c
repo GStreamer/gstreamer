@@ -168,16 +168,6 @@ static gboolean parse_goption_arg (const gchar * s_opt,
 
 GSList *_priv_gst_preload_plugins = NULL;
 
-static void
-debug_log_handler (const gchar * log_domain,
-    GLogLevelFlags log_level, const gchar * message, gpointer user_data)
-{
-  g_log_default_handler (log_domain, log_level, message, user_data);
-  /* FIXME: do we still need this ? fatal errors these days are all
-   * other than core errors */
-  /* g_on_error_query (NULL); */
-}
-
 enum
 {
   ARG_VERSION = 1,
@@ -670,16 +660,10 @@ static gboolean
 init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
     GError ** error)
 {
-  GLogLevelFlags llf;
-
   if (gst_initialized) {
     GST_DEBUG ("already initialized");
     return TRUE;
   }
-
-  llf = G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_ERROR | G_LOG_FLAG_FATAL;
-  /* TODO: should we also set up a handler for the other gst libs/domains? */
-  g_log_set_handler (G_LOG_DOMAIN, llf, debug_log_handler, NULL);
 
   _priv_gst_mini_object_initialize ();
   _priv_gst_quarks_initialize ();
