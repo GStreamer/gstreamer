@@ -51,7 +51,7 @@ gst_adaptive_demux_track_flush (GstAdaptiveDemuxTrack * track)
   gst_segment_init (&track->output_segment, GST_FORMAT_TIME);
   track->gap_position = track->gap_duration = GST_CLOCK_TIME_NONE;
 
-  track->output_time = 0;
+  track->output_time = GST_CLOCK_STIME_NONE;
   track->next_position = GST_CLOCK_STIME_NONE;
 
   track->level_bytes = 0;
@@ -123,6 +123,7 @@ track_dequeue_data_locked (GstAdaptiveDemux * demux,
   gboolean is_pending_sticky = FALSE;
   GstEvent *event;
   GstClockTimeDiff running_time;
+  GstClockTimeDiff running_time_buffering = GST_CLOCK_STIME_NONE;
   GstClockTimeDiff running_time_end;
   gsize item_size = 0;
 
@@ -131,7 +132,8 @@ track_dequeue_data_locked (GstAdaptiveDemux * demux,
     event = gst_event_store_get_next_pending (&track->sticky_events);
     if (event != NULL) {
       res = (GstMiniObject *) event;
-      running_time = running_time_end = GST_CLOCK_STIME_NONE;
+      running_time_buffering = running_time = running_time_end =
+          GST_CLOCK_STIME_NONE;
       GST_DEBUG_OBJECT (demux,
           "track %s dequeued pending sticky event %" GST_PTR_FORMAT,
           track->stream_id, event);
@@ -160,9 +162,16 @@ track_dequeue_data_locked (GstAdaptiveDemux * demux,
       }
 
       res = (GstMiniObject *) gst_event_new_gap (pos, duration);
-      running_time = my_segment_to_running_time (&track->output_segment, pos);
-      running_time_end =
-          my_segment_to_running_time (&track->output_segment, pos + duration);
+      if (track->output_segment.rate > 0.0) {
+        running_time = my_segment_to_running_time (&track->output_segment, pos);
+        running_time_buffering = running_time_end =
+            my_segment_to_running_time (&track->output_segment, pos + duration);
+      } else {
+        running_time =
+            my_segment_to_running_time (&track->output_segment, pos + duration);
+        running_time_buffering = running_time_end =
+            my_segment_to_running_time (&track->output_segment, pos);
+      }
       item_size = 0;
       break;
     }
@@ -174,6 +183,7 @@ track_dequeue_data_locked (GstAdaptiveDemux * demux,
     res = item.item;
     running_time = item.runningtime;
     running_time_end = item.runningtime_end;
+    running_time_buffering = item.runningtime_buffering;
     item_size = item.size;
 
     /* Special case for a gap event, to drain them out little-by-little.
@@ -223,6 +233,18 @@ handle_event:
     switch (GST_EVENT_TYPE (event)) {
       case GST_EVENT_SEGMENT:
         gst_event_copy_segment (event, &track->output_segment);
+
+        if (!GST_CLOCK_STIME_IS_VALID (track->output_time)) {
+          if (track->output_segment.rate > 0.0)
+            track->output_time =
+                my_segment_to_running_time (&track->output_segment,
+                track->output_segment.start);
+          else
+            track->output_time =
+                my_segment_to_running_time (&track->output_segment,
+                track->output_segment.stop);
+        }
+
         if (track->update_next_segment) {
           GstClockTimeDiff global_output_position =
               demux->priv->global_output_position;
@@ -261,14 +283,21 @@ handle_event:
   }
 
   /* Update track buffering levels */
-  if (running_time != GST_CLOCK_STIME_NONE) {
+  if (GST_CLOCK_STIME_IS_VALID (running_time_buffering)) {
     GstClockTimeDiff output_time;
 
-    track->output_time = running_time;
-    if (running_time_end != GST_CLOCK_TIME_NONE)
-      track->output_time = running_time_end;
+    track->output_time = running_time_buffering;
 
-    output_time = MAX (track->output_time, demux->priv->global_output_position);
+    GST_LOG_OBJECT (demux,
+        "track %s buffering time:%" GST_STIME_FORMAT,
+        track->stream_id, GST_STIME_ARGS (running_time_buffering));
+
+    if (GST_CLOCK_STIME_IS_VALID (track->output_time))
+      output_time =
+          MAX (track->output_time, demux->priv->global_output_position);
+    else
+      output_time = track->input_time;
+
     if (track->input_time >= output_time)
       track->level_time = track->input_time - output_time;
     else
@@ -409,29 +438,46 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
   item.size = size;
   item.runningtime = GST_CLOCK_STIME_NONE;
   item.runningtime_end = GST_CLOCK_STIME_NONE;
+  item.runningtime_buffering = GST_CLOCK_STIME_NONE;
 
   if (timestamp != GST_CLOCK_TIME_NONE) {
-    GstClockTimeDiff output_time;
+    GstClockTimeDiff output_time, input_time;
 
     /* Set the running time of the item */
-    item.runningtime =
+    input_time = item.runningtime_end = item.runningtime =
         my_segment_to_running_time (&track->input_segment, timestamp);
 
     /* Update segment position (include duration if valid) */
     track->input_segment.position = timestamp;
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      track->input_segment.position += duration;
-      item.runningtime_end =
-          my_segment_to_running_time (&track->input_segment,
-          track->input_segment.position);
+      /* In backward playback, each buffer is played
+       * 'backward', so the segment position should
+       * only include duration in forward playback */
+      if (track->input_segment.rate > 0.0) {
+        track->input_segment.position += duration;
+        input_time = my_segment_to_running_time (&track->input_segment,
+            track->input_segment.position);
+      } else {
+        /* Otherwise, the end of the buffer has the smaller running time */
+        item.runningtime = my_segment_to_running_time (&track->input_segment,
+            timestamp + duration);
+      }
     }
 
     /* Update track input time and level */
-    track->input_time =
-        my_segment_to_running_time (&track->input_segment,
-        track->input_segment.position);
+    if (input_time > track->input_time)
+      track->input_time = input_time;
 
-    output_time = MAX (track->output_time, demux->priv->global_output_position);
+    /* Store the maximum running time we've seen as
+     * this item's "buffering running time" */
+    item.runningtime_buffering = track->input_time;
+
+    if (GST_CLOCK_STIME_IS_VALID (track->output_time))
+      output_time =
+          MAX (track->output_time, demux->priv->global_output_position);
+    else
+      output_time = track->input_time;
+
     if (track->input_time >= output_time)
       track->level_time = track->input_time - output_time;
     else
@@ -879,7 +925,7 @@ gst_adaptive_demux_track_new (GstAdaptiveDemux * demux,
   gst_segment_init (&track->output_segment, GST_FORMAT_TIME);
   track->gap_position = track->gap_duration = GST_CLOCK_TIME_NONE;
 
-  track->output_time = 0;
+  track->output_time = GST_CLOCK_STIME_NONE;
   track->next_position = GST_CLOCK_STIME_NONE;
 
   track->update_next_segment = FALSE;

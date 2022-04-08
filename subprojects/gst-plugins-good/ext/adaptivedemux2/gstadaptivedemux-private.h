@@ -204,6 +204,8 @@ typedef struct
   GstClockTimeDiff runningtime;
   /* GST_CLOCK_STIME_NONE for non-timed data */
   GstClockTimeDiff runningtime_end;
+  /* running time of item for buffering tracking: GST_CLOCK_STIME_NONE for non-timed data */
+  GstClockTimeDiff runningtime_buffering;
 } TrackQueueItem;
 
 GstAdaptiveDemux2Stream *find_stream_for_track_locked (GstAdaptiveDemux *
