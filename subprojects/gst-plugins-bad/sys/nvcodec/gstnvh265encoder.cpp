@@ -50,7 +50,7 @@ typedef struct
   gint hierarchical_bframes;
   gint level_max;
   gint level_min;
-  gint seperate_colour_plane;
+  gint separate_colour_plane;
   gint width_max;
   gint height_max;
   gint temporal_svc;
@@ -111,11 +111,11 @@ enum
   PROP_B_FRAMES,
 
   /* rate-control params */
-  PROP_RC_MODE,
+  PROP_RATE_CONTROL,
 
-  PROP_QP_CONST_I,
-  PROP_QP_CONST_P,
-  PROP_QP_CONST_B,
+  PROP_QP_I,
+  PROP_QP_P,
+  PROP_QP_B,
 
   PROP_BITRATE,
   PROP_MAX_BITRATE,
@@ -126,18 +126,18 @@ enum
   PROP_B_ADAPT,
   PROP_SPATIAL_AQ,
   PROP_TEMPORAL_AQ,
-  PROP_ZERO_LATENCY,
+  PROP_ZERO_REORDER_DELAY,
   PROP_NON_REF_P,
   PROP_STRICT_GOP,
   PROP_AQ_STRENGTH,
 
-  PROP_QP_MIN_I,
-  PROP_QP_MIN_P,
-  PROP_QP_MIN_B,
+  PROP_MIN_QP_I,
+  PROP_MIN_QP_P,
+  PROP_MIN_QP_B,
 
-  PROP_QP_MAX_I,
-  PROP_QP_MAX_P,
-  PROP_QP_MAX_B,
+  PROP_MAX_QP_I,
+  PROP_MAX_QP_P,
+  PROP_MAX_QP_B,
 
   PROP_CONST_QUALITY,
 
@@ -148,9 +148,9 @@ enum
 
 #define DEFAULT_PRESET            GST_NV_ENCODER_PRESET_DEFAULT
 #define DEFAULT_WEIGHTED_PRED     FALSE
-#define DEFAULT_GOP_SIZE          75
+#define DEFAULT_GOP_SIZE          30
 #define DEFAULT_B_FRAMES          0
-#define DEFAULT_RC_MODE           GST_NV_ENCODER_RC_MODE_VBR
+#define DEFAULT_RATE_CONTROL      GST_NV_ENCODER_RC_MODE_VBR
 #define DEFAULT_QP                -1
 #define DEFAULT_BITRATE           0
 #define DEFAULT_MAX_BITRATE       0
@@ -160,7 +160,7 @@ enum
 #define DEFAULT_B_ADAPT           FALSE
 #define DEFAULT_SPATIAL_AQ        FALSE
 #define DEFAULT_TEMPORAL_AQ       FALSE
-#define DEFAULT_ZERO_LATENCY      FALSE
+#define DEFAULT_ZERO_REORDER_DELAY FALSE
 #define DEFAULT_NON_REF_P         FALSE
 #define DEFAULT_STRICT_GOP        FALSE
 #define DEFAULT_AQ_STRENGTH       FALSE
@@ -195,9 +195,9 @@ typedef struct _GstNvH265Encoder
   guint bframes;
 
   GstNvEncoderRCMode rc_mode;
-  gint qp_const_i;
-  gint qp_const_p;
-  gint qp_const_b;
+  gint qp_i;
+  gint qp_p;
+  gint qp_b;
   guint bitrate;
   guint max_bitrate;
   guint vbv_buffer_size;
@@ -206,16 +206,16 @@ typedef struct _GstNvH265Encoder
   gboolean b_adapt;
   gboolean spatial_aq;
   gboolean temporal_aq;
-  gboolean zero_latency;
+  gboolean zero_reorder_delay;
   gboolean non_ref_p;
   gboolean strict_gop;
   guint aq_strength;
-  gint qp_min_i;
-  gint qp_min_p;
-  gint qp_min_b;
-  gint qp_max_i;
-  gint qp_max_p;
-  gint qp_max_b;
+  gint min_qp_i;
+  gint min_qp_p;
+  gint min_qp_b;
+  gint max_qp_i;
+  gint max_qp_p;
+  gint max_qp_b;
   gdouble const_quality;
 
   gboolean aud;
@@ -305,24 +305,24 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
           -1, G_MAXINT, DEFAULT_GOP_SIZE, param_flags));
   if (dev_caps->max_bframes > 0) {
     g_object_class_install_property (object_class, PROP_B_FRAMES,
-        g_param_spec_uint ("bframes", "B-Frames",
+        g_param_spec_uint ("b-frames", "B-Frames",
             "Number of B-frames between I and P", 0, dev_caps->max_bframes,
             DEFAULT_B_FRAMES, conditional_param_flags));
   }
-  g_object_class_install_property (object_class, PROP_RC_MODE,
-      g_param_spec_enum ("rc-mode", "RC Mode", "Rate Control Mode",
-          GST_TYPE_NV_ENCODER_RC_MODE, DEFAULT_RC_MODE, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_CONST_I,
-      g_param_spec_int ("qp-const-i", "QP Const I",
-          "Constant QP value for I frame (-1 = disabled)", -1, 51,
+  g_object_class_install_property (object_class, PROP_RATE_CONTROL,
+      g_param_spec_enum ("rate-control", "Rate Control", "Rate Control Method",
+          GST_TYPE_NV_ENCODER_RC_MODE, DEFAULT_RATE_CONTROL, param_flags));
+  g_object_class_install_property (object_class, PROP_QP_I,
+      g_param_spec_int ("qp-i", "QP I",
+          "Constant QP value for I frame (-1 = default)", -1, 51,
           DEFAULT_QP, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_CONST_P,
-      g_param_spec_int ("qp-const-p", "QP Const P",
-          "Constant QP value for P frame (-1 = disabled)", -1, 51,
+  g_object_class_install_property (object_class, PROP_QP_P,
+      g_param_spec_int ("qp-p", "QP P",
+          "Constant QP value for P frame (-1 = default)", -1, 51,
           DEFAULT_QP, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_CONST_B,
-      g_param_spec_int ("qp-const-b", "QP Const B",
-          "Constant QP value for B frame (-1 = disabled)", -1, 51,
+  g_object_class_install_property (object_class, PROP_QP_B,
+      g_param_spec_int ("qp-b", "QP B",
+          "Constant QP value for B frame (-1 = default)", -1, 51,
           DEFAULT_QP, param_flags));
   g_object_class_install_property (object_class, PROP_BITRATE,
       g_param_spec_uint ("bitrate", "Bitrate",
@@ -364,10 +364,10 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
             "Temporal Adaptive Quantization", DEFAULT_TEMPORAL_AQ,
             conditional_param_flags));
   }
-  g_object_class_install_property (object_class, PROP_ZERO_LATENCY,
-      g_param_spec_boolean ("zerolatency", "Zerolatency",
-          "Zero latency operation (no reordering delay)", DEFAULT_ZERO_LATENCY,
-          param_flags));
+  g_object_class_install_property (object_class, PROP_ZERO_REORDER_DELAY,
+      g_param_spec_boolean ("zero-reorder-delay", "Zero Reorder Delay",
+          "Zero latency operation (i.e., num_reorder_frames = 0)",
+          DEFAULT_ZERO_REORDER_DELAY, param_flags));
   g_object_class_install_property (object_class, PROP_NON_REF_P,
       g_param_spec_boolean ("nonref-p", "Nonref P",
           "Automatic insertion of non-reference P-frames", DEFAULT_NON_REF_P,
@@ -381,28 +381,28 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
           "Adaptive Quantization Strength when spatial-aq is enabled"
           " from 1 (low) to 15 (aggressive), (0 = autoselect)",
           0, 15, DEFAULT_AQ_STRENGTH, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_MIN_I,
-      g_param_spec_int ("qp-min-i", "QP Min I",
+  g_object_class_install_property (object_class, PROP_MIN_QP_I,
+      g_param_spec_int ("min-qp-i", "Min QP I",
           "Minimum QP value for I frame, (-1 = disabled)", -1, 51,
           DEFAULT_QP, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_MIN_P,
-      g_param_spec_int ("qp-min-p", "QP Min P",
+  g_object_class_install_property (object_class, PROP_MIN_QP_P,
+      g_param_spec_int ("min-qp-p", "Min QP P",
           "Minimum QP value for P frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_MIN_B,
-      g_param_spec_int ("qp-min-b", "QP Min B",
+  g_object_class_install_property (object_class, PROP_MIN_QP_B,
+      g_param_spec_int ("min-qp-b", "Min QP B",
           "Minimum QP value for B frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_MAX_I,
-      g_param_spec_int ("qp-max-i", "QP Max I",
+  g_object_class_install_property (object_class, PROP_MAX_QP_I,
+      g_param_spec_int ("max-qp-i", "Max QP I",
           "Maximum QP value for I frame, (-1 = disabled)", -1, 51,
           DEFAULT_QP, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_MAX_P,
-      g_param_spec_int ("qp-max-p", "QP Max P",
+  g_object_class_install_property (object_class, PROP_MAX_QP_P,
+      g_param_spec_int ("max-qp-p", "Max QP P",
           "Maximum QP value for P frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
-  g_object_class_install_property (object_class, PROP_QP_MAX_B,
-      g_param_spec_int ("qp-max-b", "QP Max B",
+  g_object_class_install_property (object_class, PROP_MAX_QP_B,
+      g_param_spec_int ("max-qp-b", "Max QP B",
           "Maximum QP value for B frame, (-1 = automatic)", -1, 51,
           DEFAULT_QP, param_flags));
   g_object_class_install_property (object_class, PROP_CONST_QUALITY,
@@ -470,10 +470,10 @@ gst_nv_h265_encoder_init (GstNvH265Encoder * self)
   self->weighted_pred = DEFAULT_WEIGHTED_PRED;
   self->gop_size = DEFAULT_GOP_SIZE;
   self->bframes = DEFAULT_B_FRAMES;
-  self->rc_mode = DEFAULT_RC_MODE;
-  self->qp_const_i = DEFAULT_QP;
-  self->qp_const_p = DEFAULT_QP;
-  self->qp_const_b = DEFAULT_QP;
+  self->rc_mode = DEFAULT_RATE_CONTROL;
+  self->qp_i = DEFAULT_QP;
+  self->qp_p = DEFAULT_QP;
+  self->qp_b = DEFAULT_QP;
   self->bitrate = DEFAULT_BITRATE;
   self->max_bitrate = DEFAULT_MAX_BITRATE;
   self->vbv_buffer_size = DEFAULT_VBV_BUFFER_SIZE;
@@ -482,16 +482,16 @@ gst_nv_h265_encoder_init (GstNvH265Encoder * self)
   self->b_adapt = DEFAULT_B_ADAPT;
   self->spatial_aq = DEFAULT_SPATIAL_AQ;
   self->temporal_aq = DEFAULT_TEMPORAL_AQ;
-  self->zero_latency = DEFAULT_ZERO_LATENCY;
+  self->zero_reorder_delay = DEFAULT_ZERO_REORDER_DELAY;
   self->non_ref_p = DEFAULT_NON_REF_P;
   self->strict_gop = DEFAULT_STRICT_GOP;
   self->aq_strength = DEFAULT_AQ_STRENGTH;
-  self->qp_min_i = DEFAULT_QP;
-  self->qp_min_p = DEFAULT_QP;
-  self->qp_min_b = DEFAULT_QP;
-  self->qp_max_i = DEFAULT_QP;
-  self->qp_max_p = DEFAULT_QP;
-  self->qp_max_b = DEFAULT_QP;
+  self->min_qp_i = DEFAULT_QP;
+  self->min_qp_p = DEFAULT_QP;
+  self->min_qp_b = DEFAULT_QP;
+  self->max_qp_i = DEFAULT_QP;
+  self->max_qp_p = DEFAULT_QP;
+  self->max_qp_b = DEFAULT_QP;
   self->const_quality = DEFAULT_CONST_QUALITY;
   self->aud = DEFAULT_AUD;
   self->repeat_sequence_header = DEFAULT_REPEAT_SEQUENCE_HEADER;
@@ -642,7 +642,7 @@ gst_nv_h265_encoder_set_property (GObject * object, guint prop_id,
     case PROP_B_FRAMES:
       update_uint (self, &self->bframes, value, UPDATE_INIT_PARAM);
       break;
-    case PROP_RC_MODE:{
+    case PROP_RATE_CONTROL:{
       GstNvEncoderRCMode mode = (GstNvEncoderRCMode) g_value_get_enum (value);
       if (mode != self->rc_mode) {
         self->rc_mode = mode;
@@ -650,14 +650,14 @@ gst_nv_h265_encoder_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_QP_CONST_I:
-      update_int (self, &self->qp_const_i, value, UPDATE_RC_PARAM);
+    case PROP_QP_I:
+      update_int (self, &self->qp_i, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_CONST_P:
-      update_int (self, &self->qp_const_p, value, UPDATE_RC_PARAM);
+    case PROP_QP_P:
+      update_int (self, &self->qp_p, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_CONST_B:
-      update_int (self, &self->qp_const_b, value, UPDATE_RC_PARAM);
+    case PROP_QP_B:
+      update_int (self, &self->qp_b, value, UPDATE_RC_PARAM);
       break;
     case PROP_BITRATE:
       update_uint (self, &self->bitrate, value, UPDATE_BITRATE);
@@ -684,8 +684,8 @@ gst_nv_h265_encoder_set_property (GObject * object, guint prop_id,
     case PROP_TEMPORAL_AQ:
       update_boolean (self, &self->temporal_aq, value, UPDATE_RC_PARAM);
       break;
-    case PROP_ZERO_LATENCY:
-      update_boolean (self, &self->zero_latency, value, UPDATE_RC_PARAM);
+    case PROP_ZERO_REORDER_DELAY:
+      update_boolean (self, &self->zero_reorder_delay, value, UPDATE_RC_PARAM);
       break;
     case PROP_NON_REF_P:
       update_boolean (self, &self->non_ref_p, value, UPDATE_RC_PARAM);
@@ -696,23 +696,23 @@ gst_nv_h265_encoder_set_property (GObject * object, guint prop_id,
     case PROP_AQ_STRENGTH:
       update_uint (self, &self->aq_strength, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_MIN_I:
-      update_int (self, &self->qp_min_i, value, UPDATE_RC_PARAM);
+    case PROP_MIN_QP_I:
+      update_int (self, &self->min_qp_i, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_MIN_P:
-      update_int (self, &self->qp_min_p, value, UPDATE_RC_PARAM);
+    case PROP_MIN_QP_P:
+      update_int (self, &self->min_qp_p, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_MIN_B:
-      update_int (self, &self->qp_min_b, value, UPDATE_RC_PARAM);
+    case PROP_MIN_QP_B:
+      update_int (self, &self->min_qp_b, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_MAX_I:
-      update_int (self, &self->qp_min_i, value, UPDATE_RC_PARAM);
+    case PROP_MAX_QP_I:
+      update_int (self, &self->min_qp_i, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_MAX_P:
-      update_int (self, &self->qp_min_p, value, UPDATE_RC_PARAM);
+    case PROP_MAX_QP_P:
+      update_int (self, &self->min_qp_p, value, UPDATE_RC_PARAM);
       break;
-    case PROP_QP_MAX_B:
-      update_int (self, &self->qp_min_b, value, UPDATE_RC_PARAM);
+    case PROP_MAX_QP_B:
+      update_int (self, &self->min_qp_b, value, UPDATE_RC_PARAM);
       break;
     case PROP_CONST_QUALITY:
       update_double (self, &self->const_quality, value, UPDATE_RC_PARAM);
@@ -758,17 +758,17 @@ gst_nv_h265_encoder_get_property (GObject * object, guint prop_id,
     case PROP_B_FRAMES:
       g_value_set_uint (value, self->bframes);
       break;
-    case PROP_RC_MODE:
+    case PROP_RATE_CONTROL:
       g_value_set_enum (value, self->rc_mode);
       break;
-    case PROP_QP_CONST_I:
-      g_value_set_int (value, self->qp_const_i);
+    case PROP_QP_I:
+      g_value_set_int (value, self->qp_i);
       break;
-    case PROP_QP_CONST_P:
-      g_value_set_int (value, self->qp_const_p);
+    case PROP_QP_P:
+      g_value_set_int (value, self->qp_p);
       break;
-    case PROP_QP_CONST_B:
-      g_value_set_int (value, self->qp_const_b);
+    case PROP_QP_B:
+      g_value_set_int (value, self->qp_b);
       break;
     case PROP_BITRATE:
       g_value_set_uint (value, self->bitrate);
@@ -794,8 +794,8 @@ gst_nv_h265_encoder_get_property (GObject * object, guint prop_id,
     case PROP_TEMPORAL_AQ:
       g_value_set_boolean (value, self->temporal_aq);
       break;
-    case PROP_ZERO_LATENCY:
-      g_value_set_boolean (value, self->zero_latency);
+    case PROP_ZERO_REORDER_DELAY:
+      g_value_set_boolean (value, self->zero_reorder_delay);
       break;
     case PROP_NON_REF_P:
       g_value_set_boolean (value, self->non_ref_p);
@@ -806,23 +806,23 @@ gst_nv_h265_encoder_get_property (GObject * object, guint prop_id,
     case PROP_AQ_STRENGTH:
       g_value_set_uint (value, self->aq_strength);
       break;
-    case PROP_QP_MIN_I:
-      g_value_set_int (value, self->qp_min_i);
+    case PROP_MIN_QP_I:
+      g_value_set_int (value, self->min_qp_i);
       break;
-    case PROP_QP_MIN_P:
-      g_value_set_int (value, self->qp_min_p);
+    case PROP_MIN_QP_P:
+      g_value_set_int (value, self->min_qp_p);
       break;
-    case PROP_QP_MIN_B:
-      g_value_set_int (value, self->qp_min_b);
+    case PROP_MIN_QP_B:
+      g_value_set_int (value, self->min_qp_b);
       break;
-    case PROP_QP_MAX_I:
-      g_value_set_int (value, self->qp_max_i);
+    case PROP_MAX_QP_I:
+      g_value_set_int (value, self->max_qp_i);
       break;
-    case PROP_QP_MAX_P:
-      g_value_set_int (value, self->qp_max_p);
+    case PROP_MAX_QP_P:
+      g_value_set_int (value, self->max_qp_p);
       break;
-    case PROP_QP_MAX_B:
-      g_value_set_int (value, self->qp_max_b);
+    case PROP_MAX_QP_B:
+      g_value_set_int (value, self->max_qp_b);
       break;
     case PROP_CONST_QUALITY:
       g_value_set_double (value, self->const_quality);
@@ -1111,54 +1111,43 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
   if (self->vbv_buffer_size)
     rc_params->vbvBufferSize = self->vbv_buffer_size * 1024;
 
-  if (rc_mode == GST_NV_ENCODER_RC_MODE_DEFAULT) {
-    if (self->qp_const_i >= 0)
-      rc_mode = GST_NV_ENCODER_RC_MODE_CONSTQP;
-  }
-
-  if (self->qp_min_i >= 0) {
+  if (self->min_qp_i >= 0) {
     rc_params->enableMinQP = TRUE;
-    rc_params->minQP.qpIntra = self->qp_min_i;
-    if (self->qp_min_p >= 0) {
-      rc_params->minQP.qpInterP = self->qp_min_p;
+    rc_params->minQP.qpIntra = self->min_qp_i;
+    if (self->min_qp_p >= 0) {
+      rc_params->minQP.qpInterP = self->min_qp_p;
     } else {
       rc_params->minQP.qpInterP = rc_params->minQP.qpIntra;
     }
-    if (self->qp_min_b >= 0) {
-      rc_params->minQP.qpInterB = self->qp_min_b;
+    if (self->min_qp_b >= 0) {
+      rc_params->minQP.qpInterB = self->min_qp_b;
     } else {
       rc_params->minQP.qpInterB = rc_params->minQP.qpInterP;
     }
   }
 
-  if (self->qp_max_i >= 0) {
+  if (self->max_qp_i >= 0) {
     rc_params->enableMaxQP = TRUE;
-    rc_params->maxQP.qpIntra = self->qp_max_i;
-    if (self->qp_max_p >= 0) {
-      rc_params->maxQP.qpInterP = self->qp_max_p;
+    rc_params->maxQP.qpIntra = self->max_qp_i;
+    if (self->max_qp_p >= 0) {
+      rc_params->maxQP.qpInterP = self->max_qp_p;
     } else {
       rc_params->maxQP.qpInterP = rc_params->maxQP.qpIntra;
     }
-    if (self->qp_max_b >= 0) {
-      rc_params->maxQP.qpInterB = self->qp_max_b;
+    if (self->max_qp_b >= 0) {
+      rc_params->maxQP.qpInterB = self->max_qp_b;
     } else {
       rc_params->maxQP.qpInterB = rc_params->maxQP.qpInterP;
     }
   }
 
-  if (rc_mode == GST_NV_ENCODER_RC_MODE_CONSTQP && self->qp_const_i >= 0) {
-    rc_params->enableMaxQP = TRUE;
-    rc_params->maxQP.qpIntra = self->qp_max_i;
-    if (self->qp_max_p >= 0) {
-      rc_params->maxQP.qpInterP = self->qp_max_p;
-    } else {
-      rc_params->maxQP.qpInterP = rc_params->maxQP.qpIntra;
-    }
-    if (self->qp_max_b >= 0) {
-      rc_params->maxQP.qpInterB = self->qp_max_b;
-    } else {
-      rc_params->maxQP.qpInterB = rc_params->maxQP.qpInterP;
-    }
+  if (rc_mode == GST_NV_ENCODER_RC_MODE_CONSTQP) {
+    if (self->qp_i >= 0)
+      rc_params->constQP.qpIntra = self->qp_i;
+    if (self->qp_p >= 0)
+      rc_params->constQP.qpInterP = self->qp_p;
+    if (self->qp_p >= 0)
+      rc_params->constQP.qpInterB = self->qp_b;
   }
 
   rc_params->rateControlMode = gst_nv_encoder_rc_mode_to_native (rc_mode);
@@ -1179,7 +1168,7 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
 
   rc_params->strictGOPTarget = self->strict_gop;
   rc_params->enableNonRefP = self->non_ref_p;
-  rc_params->zeroReorderDelay = self->zero_latency;
+  rc_params->zeroReorderDelay = self->zero_reorder_delay;
 
   if (self->const_quality) {
     guint scaled = (gint) (self->const_quality * 256.0);
@@ -1617,7 +1606,7 @@ gst_nv_h265_encoder_create_class_data (GstObject * device, gpointer session,
   CHECK_CAPS (NV_ENC_CAPS_LEVEL_MAX, dev_caps.level_max, 0);
   CHECK_CAPS (NV_ENC_CAPS_LEVEL_MIN, dev_caps.level_min, 0);
   CHECK_CAPS (NV_ENC_CAPS_SEPARATE_COLOUR_PLANE,
-      dev_caps.seperate_colour_plane, 0);
+      dev_caps.separate_colour_plane, 0);
   CHECK_CAPS (NV_ENC_CAPS_WIDTH_MAX, dev_caps.width_max, 4096);
   CHECK_CAPS (NV_ENC_CAPS_HEIGHT_MAX, dev_caps.height_max, 4096);
   CHECK_CAPS (NV_ENC_CAPS_SUPPORT_TEMPORAL_SVC, dev_caps.temporal_svc, 0);

@@ -414,8 +414,7 @@ main (gint argc, gchar ** argv)
   enc = gst_element_factory_make (encoder_name, NULL);
   parse = gst_element_factory_make ("h264parse", NULL);
 
-  /* vbr with target bitrate */
-  g_object_set (G_OBJECT (enc), "rc-mode", 4, "bitrate", bitrate, NULL);
+  g_object_set (G_OBJECT (enc), "bitrate", bitrate, NULL);
 
   dec = gst_element_factory_make ("nvh264dec", NULL);
 

@@ -72,7 +72,6 @@ GType gst_nv_encoder_rc_mode_get_type (void);
 
 typedef enum
 {
-  GST_NV_ENCODER_RC_MODE_DEFAULT,
   GST_NV_ENCODER_RC_MODE_CONSTQP,
   GST_NV_ENCODER_RC_MODE_VBR,
   GST_NV_ENCODER_RC_MODE_CBR,

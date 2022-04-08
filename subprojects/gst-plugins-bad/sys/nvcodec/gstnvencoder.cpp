@@ -1912,8 +1912,7 @@ gst_nv_encoder_rc_mode_get_type (void)
 {
   static GType rc_mode_type = 0;
   static const GEnumValue rc_modes[] = {
-    {GST_NV_ENCODER_RC_MODE_DEFAULT, "Default", "default"},
-    {GST_NV_ENCODER_RC_MODE_CONSTQP, "Constant Quantization", "constqp"},
+    {GST_NV_ENCODER_RC_MODE_CONSTQP, "Constant Quantization", "cqp"},
     {GST_NV_ENCODER_RC_MODE_VBR, "Variable Bit Rate", "vbr"},
     {GST_NV_ENCODER_RC_MODE_CBR, "Constant Bit Rate", "cbr"},
     {GST_NV_ENCODER_RC_MODE_CBR_LOWDELAY_HQ,
@@ -1936,8 +1935,6 @@ NV_ENC_PARAMS_RC_MODE
 gst_nv_encoder_rc_mode_to_native (GstNvEncoderRCMode rc_mode)
 {
   switch (rc_mode) {
-    case GST_NV_ENCODER_RC_MODE_DEFAULT:
-      return NV_ENC_PARAMS_RC_VBR;
     case GST_NV_ENCODER_RC_MODE_CONSTQP:
       return NV_ENC_PARAMS_RC_CONSTQP;
     case GST_NV_ENCODER_RC_MODE_VBR:
