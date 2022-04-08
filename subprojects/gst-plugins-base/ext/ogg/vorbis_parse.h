@@ -27,6 +27,6 @@
 G_GNUC_INTERNAL
 void gst_parse_vorbis_header_packet (GstOggStream * pad, ogg_packet * packet);
 G_GNUC_INTERNAL
-void gst_parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op);
+int gst_parse_vorbis_setup_packet (GstOggStream * pad, ogg_packet * op);
 
 #endif /* __GST_VORBIS_PARSE_H__ */
