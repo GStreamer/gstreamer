@@ -20,7 +20,8 @@ This video sink is based on
 and filtering of the scaled image to alleviate aliasing. It implements
 the VideoOverlay interface, so the video window can be re-parented
 (embedded inside other windows). This is the video sink recommended on
-most platforms. In particular, on Android and iOS, it is the only
+most platforms except for Windows (On Windows, `d3d11videosink` is recommended).
+In particular, on Android and iOS, it is the only
 available video sink. It can be decomposed into
 `glupload ! glcolorconvert ! glimagesinkelement` to insert further OpenGL
 hardware accelerated processing into the pipeline.
@@ -73,14 +74,24 @@ This is the only audio sink available to GStreamer on Mac OS X.
 
 ## Windows
 
-### `directdrawsink`
+### `d3d11videosink`
 
-This is the oldest of the Windows video sinks, based on [Direct
-Draw](http://en.wikipedia.org/wiki/DirectDraw). It requires DirectX 7,
-so it is available on almost every current Windows platform. It supports
-rescaling and filtering of the scaled image to alleviate aliasing.
+This video sink is based on [Direct3D11](https://en.wikipedia.org/wiki/Direct3D#Direct3D_11)
+and is the recommended element on Windows.
+It supports VideoOverlay interface and rescaling/colorspace conversion
+in [zero-copy](https://en.wikipedia.org/wiki/Zero-copy) manner. This element
+is the most performant and featureful video sink element on Windows.
 
-### `dshowvideosink`
+### `d3dvideosink`
+
+This video sink is based on
+[Direct3D9](https://en.wikipedia.org/wiki/Direct3D#Direct3D_9).
+It supports rescaling and filtering of the scaled image to alleviate aliasing.
+It implements the VideoOverlay interface, so the video window can be re-parented (embedded inside other windows).
+This element is not recommended for applications targetting Windows 8 or more recent.
+
+
+### `dshowvideosink (deprecated)`
 
 This video sink is based on [Direct
 Show](http://en.wikipedia.org/wiki/Direct_Show).  It can use different
@@ -92,21 +103,21 @@ or
 EVR only being available on Windows Vista or more recent. It supports
 rescaling and filtering of the scaled image to alleviate aliasing. It
 implements the VideoOverlay interface, so the video window can be
-re-parented (embedded inside other windows).
+re-parented (embedded inside other windows). This element is not recommended
+in most cases.
 
-### `d3dvideosink`
+### `wasapisink` and `wasapi2sink`
 
-This video sink is based on
-[Direct3D](http://en.wikipedia.org/wiki/Direct3D) and it’s the most
-recent Windows video sink. It supports rescaling and filtering of the
-scaled image to alleviate aliasing. It implements the VideoOverlay
-interface, so the video window can be re-parented (embedded inside other
-windows).
+Those elements are the default audio sink elements on Windows, based on
+[WASAPI](https://docs.microsoft.com/en-us/windows/win32/coreaudio/wasapi),
+which is available on Vista or more recent. Note that `wasapi2sink` is
+a replacement of `wasapisink` and `wasapi2sink` is default for Windows 8 or
+more recent. Otherwise `wasapisink` will be default audio sink element.
 
-### `directsoundsink`
+### `directsoundsink (deprecated)`
 
-This is the default audio sink for Windows, based on [Direct
-Sound](http://en.wikipedia.org/wiki/DirectSound), which is available in
+This audio sink element is based on
+[DirectSound](http://en.wikipedia.org/wiki/DirectSound), which is available in
 all Windows versions.
 
 ### `dshowdecwrapper`
