@@ -1213,12 +1213,40 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
 }
 
 static gboolean
-is_blacklisted_directory (const gchar * dirent)
+skip_directory (const gchar * parent_path, const gchar * dirent)
 {
+  const gchar *target;
+
   /* hotdoc private folder can contain many files and it slows down
    * the discovery for nothing */
   if (g_str_has_prefix (dirent, "hotdoc-private-"))
     return TRUE;
+
+  /* Rust build dirs which may contain artefacts we should skip, can be
+   * /target/{debug,release} or /target/{arch}/{debug,release} */
+  target = strstr (parent_path, "/target/");
+
+  /* On Windows both forward and backward slashes may be used */
+#ifdef G_OS_WIN32
+  if (target == NULL)
+    target = strstr (parent_path, "\\target\\");
+#endif
+
+  if (target != NULL) {
+    if (g_str_has_suffix (target + 7, "/debug")
+#ifdef G_OS_WIN32
+        || g_str_has_suffix (target + 7, "\\debug")
+        || g_str_has_suffix (target + 7, "\\release")
+#endif
+        || g_str_has_suffix (target + 7, "/release")) {
+      if (dirent[0] == '.'
+          || strcmp (dirent, "build") == 0
+          || strcmp (dirent, "deps") == 0
+          || strcmp (dirent, "incremental") == 0) {
+        return TRUE;
+      }
+    }
+  }
 
   if (G_LIKELY (dirent[0] != '.'))
     return FALSE;
@@ -1262,7 +1290,7 @@ gst_registry_scan_path_level (GstRegistryScanContext * context,
     }
 
     if (file_status.st_mode & S_IFDIR) {
-      if (G_UNLIKELY (is_blacklisted_directory (dirent))) {
+      if (G_UNLIKELY (skip_directory (path, dirent))) {
         GST_TRACE_OBJECT (context->registry, "ignoring %s directory", dirent);
         g_free (filename);
         continue;
