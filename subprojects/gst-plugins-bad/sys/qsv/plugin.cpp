@@ -27,6 +27,7 @@
 #include "gstqsvh264dec.h"
 #include "gstqsvh264enc.h"
 #include "gstqsvh265enc.h"
+#include "gstqsvjpegenc.h"
 #include "gstqsvvp9enc.h"
 #include <string.h>
 
@@ -47,6 +48,7 @@ GST_DEBUG_CATEGORY (gst_qsv_encoder_debug);
 GST_DEBUG_CATEGORY (gst_qsv_h264_dec_debug);
 GST_DEBUG_CATEGORY (gst_qsv_h264_enc_debug);
 GST_DEBUG_CATEGORY (gst_qsv_h265_enc_debug);
+GST_DEBUG_CATEGORY (gst_qsv_jpeg_enc_debug);
 GST_DEBUG_CATEGORY (gst_qsv_vp9_enc_debug);
 
 #define GST_CAT_DEFAULT gst_qsv_debug
@@ -228,6 +230,8 @@ plugin_init (GstPlugin * plugin)
       "qsvh264enc", 0, "qsvh264enc");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_h265_enc_debug,
       "qsvh265enc", 0, "qsvh265enc");
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_jpeg_enc_debug,
+      "qsvjpegenc", 0, "qsvjpegenc");
   GST_DEBUG_CATEGORY_INIT (gst_qsv_vp9_enc_debug, "qsvvp9enc", 0, "qsvvp9enc");
 
   do {
@@ -257,6 +261,7 @@ plugin_init (GstPlugin * plugin)
 
     gst_qsv_h264_enc_register (plugin, GST_RANK_NONE, i, device, session);
     gst_qsv_h265_enc_register (plugin, GST_RANK_NONE, i, device, session);
+    gst_qsv_jpeg_enc_register (plugin, GST_RANK_NONE, i, device, session);
     gst_qsv_vp9_enc_register (plugin, GST_RANK_NONE, i, device, session);
 
   next:

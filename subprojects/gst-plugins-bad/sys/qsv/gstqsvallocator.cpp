@@ -390,8 +390,11 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
   }
 
   if (frame->map_count == 0) {
+    guint map_flags = (guint) frame->map_flags;
+    map_flags &= ~((guint) GST_MAP_QSV);
+
     gst_video_frame_map (&frame->frame, &frame->info, frame->buffer,
-        frame->map_flags);
+        (GstMapFlags) map_flags);
   }
 
   frame->map_count++;
@@ -417,6 +420,20 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
       ptr->PitchHigh = (mfxU16) (stride / (1 << 16));
       ptr->PitchLow = (mfxU16) (stride % (1 << 16));
       ptr->Y410 = (mfxY410 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      ptr->Pitch = (mfxU16) stride;
+      ptr->B = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->G = ptr->B + 1;
+      ptr->R = ptr->B + 2;
+      ptr->A = ptr->B + 3;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+      ptr->Pitch = (mfxU16) stride;
+      ptr->R = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->G = ptr->R + 1;
+      ptr->B = ptr->R + 2;
+      ptr->A = ptr->R + 3;
       break;
     default:
       break;
@@ -447,6 +464,13 @@ gst_qsv_allocator_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
   }
 
   g_mutex_unlock (&frame->lock);
+
+  /* SDK will not re-lock unless we clear data pointer here. It happens
+   * on Linux with BGRA JPEG encoding */
+  ptr->R = nullptr;
+  ptr->G = nullptr;
+  ptr->B = nullptr;
+  ptr->A = nullptr;
 
   return MFX_ERR_NONE;
 }

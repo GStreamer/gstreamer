@@ -1041,8 +1041,26 @@ gst_qsv_encoder_init_encode_session (GstQsvEncoder * self)
   priv->next_surface_index = 0;
 
   g_array_set_size (priv->task_pool, param.AsyncDepth);
-  bitstream_size =
-      (guint) param.mfx.BufferSizeInKB * param.mfx.BRCParamMultiplier * 1024;
+  if (klass->codec_id == MFX_CODEC_JPEG) {
+    gdouble factor = 4.0;
+
+    /* jpeg zero returns buffer size */
+    switch (GST_VIDEO_INFO_FORMAT (info)) {
+      case GST_VIDEO_FORMAT_NV12:
+        factor = 1.5;
+        break;
+      case GST_VIDEO_FORMAT_YUY2:
+        factor = 2.0;
+        break;
+      default:
+        break;
+    }
+    bitstream_size = (guint)
+        (factor * GST_VIDEO_INFO_WIDTH (info) * GST_VIDEO_INFO_HEIGHT (info));
+  } else {
+    bitstream_size =
+        (guint) param.mfx.BufferSizeInKB * param.mfx.BRCParamMultiplier * 1024;
+  }
 
   for (guint i = 0; i < priv->task_pool->len; i++) {
     GstQsvEncoderTask *task = &g_array_index (priv->task_pool,

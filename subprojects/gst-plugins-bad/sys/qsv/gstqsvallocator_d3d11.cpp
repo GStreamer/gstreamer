@@ -105,6 +105,12 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     case MFX_FOURCC_Y410:
       dxgi_format = DXGI_FORMAT_Y410;
       break;
+    case MFX_FOURCC_RGB4:
+      dxgi_format = DXGI_FORMAT_B8G8R8A8_UNORM;
+      break;
+    case MFX_FOURCC_BGR4:
+      dxgi_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+      break;
     default:
       /* TODO: add more formats */
       break;
