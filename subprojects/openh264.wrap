@@ -1,4 +1,4 @@
 [wrap-git]
 directory=openh264
 url=https://github.com/cisco/openh264.git
-revision=v2.1.1
+revision=0819f288dc5fc24fb34089113bc230aea65c8375
