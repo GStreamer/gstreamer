@@ -117,6 +117,8 @@ gst_amf_encoder_class_init (GstAmfEncoderClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_amf_encoder_debug,
       "amfencoder", 0, "amfencoder");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_ENCODER, (GstPluginAPIFlags) 0);
 }
 
 static void

@@ -17,6 +17,23 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-amfh265enc
+ * @title: amfh265enc
+ * @short_description: An AMD AMF API based H.265 video encoder
+ *
+ * amfh265enc element encodes raw video stream into compressed H.265 bitstream
+ * via AMD AMF API.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc num-buffers=100 ! amfh265enc ! h265parse ! mp4mux ! filesink location=encoded.mp4
+ * ```
+ *
+ * Since: 1.22
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -59,16 +76,46 @@ typedef struct
   guint valign;
 } GstAmfH265EncDeviceCaps;
 
+/**
+ * GstAmfH265EncUsage:
+ *
+ * Encoder usages
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_AMF_H265_ENC_USAGE (gst_amf_h265_enc_usage_get_type ())
 static GType
 gst_amf_h265_enc_usage_get_type (void)
 {
   static GType usage_type = 0;
   static const GEnumValue usages[] = {
+    /**
+     * GstAmfH265EncUsage::transcoding:
+     *
+     * Transcoding usage
+     */
     {AMF_VIDEO_ENCODER_HEVC_USAGE_TRANSCODING, "Transcoding", "transcoding"},
+
+    /**
+     * GstAmfH265EncUsage::ultra-low-latency:
+     *
+     * Ultra Low Latency usage
+     */
     {AMF_VIDEO_ENCODER_HEVC_USAGE_ULTRA_LOW_LATENCY, "Ultra Low Latency",
         "ultra-low-latency"},
+
+    /**
+     * GstAmfH265EncUsage::low-latency:
+     *
+     * Low Latency usage
+     */
     {AMF_VIDEO_ENCODER_HEVC_USAGE_LOW_LATENCY, "Low Latency", "low-latency"},
+
+    /**
+     * GstAmfH265EncUsage::webcam:
+     *
+     * Webcam usage
+     */
     {AMF_VIDEO_ENCODER_HEVC_USAGE_WEBCAM, "Webcam", "webcam"},
     {0, nullptr, nullptr}
   };
@@ -81,21 +128,56 @@ gst_amf_h265_enc_usage_get_type (void)
   return usage_type;
 }
 
+/**
+ * GstAmfH265EncRateControl:
+ *
+ * Rate control methods
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_AMF_H265_ENC_RATE_CONTROL (gst_amf_h265_enc_rate_control_get_type ())
 static GType
 gst_amf_h265_enc_rate_control_get_type (void)
 {
   static GType rate_control_type = 0;
   static const GEnumValue rate_controls[] = {
+    /**
+     * GstAmfH265EncRateControl::default:
+     *
+     * Default rate control method depending on usage
+     */
     {AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_UNKNOWN,
-          "Default, depends on Usage",
-        "default"},
+        "Default, depends on Usage", "default"},
+
+    /**
+     * GstAmfH265EncRateControl::cqp:
+     *
+     * Constant QP
+     */
     {AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_CONSTANT_QP, "Constant QP",
         "cqp"},
+
+    /**
+     * GstAmfH265EncRateControl::lcvbr:
+     *
+     * Latency Constrained Variable Bitrate
+     */
     {AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_LATENCY_CONSTRAINED_VBR,
         "Latency Constrained VBR", "lcvbr"},
+
+    /**
+     * GstAmfH265EncRateControl::vbr:
+     *
+     * Peak Constrained Variable Bitrate
+     */
     {AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_PEAK_CONSTRAINED_VBR,
         "Peak Constrained VBR", "vbr"},
+
+    /**
+     * GstAmfH265EncRateControl::cbr:
+     *
+     * Constant Bitrate
+     */
     {AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_CBR, "Constant Bitrate", "cbr"},
     {0, nullptr, nullptr}
   };
@@ -109,18 +191,47 @@ gst_amf_h265_enc_rate_control_get_type (void)
   return rate_control_type;
 }
 
+/**
+ * GstAmfH265EncPreset:
+ *
+ * Encoding quality presets
+ *
+ * Since: 1.22
+ */
 #define AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_UNKNOWN -1
-
 #define GST_TYPE_AMF_H265_ENC_PRESET (gst_amf_h265_enc_preset_get_type ())
 static GType
 gst_amf_h265_enc_preset_get_type (void)
 {
   static GType preset_type = 0;
   static const GEnumValue presets[] = {
+    /**
+     * GstAmfH265EncRateControl::default:
+     *
+     * Default preset depends on usage
+     */
     {AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_UNKNOWN, "Default, depends on USAGE",
         "default"},
+
+    /**
+     * GstAmfH265EncRateControl::quality:
+     *
+     * Quality oriented preset
+     */
     {AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_QUALITY, "Quality", "quality"},
+    /**
+     *
+     * GstAmfH265EncRateControl::balanced:
+     *
+     * Balanced preset
+     */
     {AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_BALANCED, "Balanced", "balanced"},
+
+    /**
+     * GstAmfH265EncRateControl::speed:
+     *
+     * Speed oriented preset
+     */
     {AMF_VIDEO_ENCODER_HEVC_QUALITY_PRESET_SPEED, "Speed", "speed"},
     {0, nullptr, nullptr}
   };
@@ -329,6 +440,13 @@ gst_amf_h265_enc_class_init (GstAmfH265EncClass * klass, gpointer data)
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
   g_free (cdata);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_H265_ENC_USAGE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_H265_ENC_RATE_CONTROL,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_H265_ENC_PRESET,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -1077,6 +1195,9 @@ gst_amf_h265_enc_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
 
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
