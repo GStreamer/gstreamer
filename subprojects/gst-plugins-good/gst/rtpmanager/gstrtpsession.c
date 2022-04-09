@@ -1309,6 +1309,7 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_RTP_SESSION_LOCK (rtpsession);
       rtpsession->priv->wait_send = TRUE;
+      rtpsession->priv->send_latency = GST_CLOCK_TIME_NONE;
       GST_RTP_SESSION_UNLOCK (rtpsession);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -2429,8 +2430,15 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
     running_time =
         gst_segment_to_running_time (&rtpsession->send_rtp_seg, GST_FORMAT_TIME,
         timestamp);
-    if (priv->rtcp_sync_send_time)
-      running_time += priv->send_latency;
+    if (priv->rtcp_sync_send_time) {
+      if (priv->send_latency != GST_CLOCK_TIME_NONE) {
+        running_time += priv->send_latency;
+      } else {
+        GST_WARNING_OBJECT (rtpsession,
+            "Can't determine running time for this packet without knowing configured latency");
+        running_time = -1;
+      }
+    }
   } else {
     /* no timestamp. */
     running_time = -1;
