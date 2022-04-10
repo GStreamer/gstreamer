@@ -913,15 +913,16 @@ struct PyramidInfo
 };
 
 static void
-_set_pyramid_info (struct PyramidInfo *info, guint len, guint level)
+_set_pyramid_info (struct PyramidInfo *info, guint len,
+    guint current_level, guint highest_level)
 {
   guint index;
 
   g_assert (len >= 1);
 
-  if (level == 0 || len == 1) {
+  if (current_level == highest_level || len == 1) {
     for (index = 0; index < len; index++) {
-      info[index].level = level;
+      info[index].level = current_level;
       info[index].left_ref_poc_diff = (index + 1) * -2;
       info[index].right_ref_poc_diff = (len - index) * 2;
     }
@@ -930,17 +931,18 @@ _set_pyramid_info (struct PyramidInfo *info, guint len, guint level)
   }
 
   index = len / 2;
-  info[index].level = level;
+  info[index].level = current_level;
   info[index].left_ref_poc_diff = (index + 1) * -2;
   info[index].right_ref_poc_diff = (len - index) * 2;
 
-  level--;
+  current_level++;
 
   if (index > 0)
-    _set_pyramid_info (info, index, level);
+    _set_pyramid_info (info, index, current_level, highest_level);
 
   if (index + 1 < len)
-    _set_pyramid_info (&info[index + 1], len - (index + 1), level);
+    _set_pyramid_info (&info[index + 1], len - (index + 1),
+        current_level, highest_level);
 }
 
 static void
@@ -953,7 +955,7 @@ _create_gop_frame_types (GstVaH264Enc * self)
   if (self->gop.highest_pyramid_level > 0) {
     g_assert (self->gop.num_bframes > 0);
     _set_pyramid_info (pyramid_info, self->gop.num_bframes,
-        self->gop.highest_pyramid_level);
+        0, self->gop.highest_pyramid_level);
   }
 
   g_assert (self->gop.idr_period <= MAX_GOP_SIZE);
@@ -979,7 +981,8 @@ _create_gop_frame_types (GstVaH264Enc * self)
       self->gop.frame_types[i].pyramid_level =
           pyramid_info[pyramid_index].level;
       self->gop.frame_types[i].is_ref =
-          (self->gop.frame_types[i].pyramid_level > 0);
+          (self->gop.frame_types[i].pyramid_level <
+          self->gop.highest_pyramid_level);
       self->gop.frame_types[i].left_ref_poc_diff =
           pyramid_info[pyramid_index].left_ref_poc_diff;
       self->gop.frame_types[i].right_ref_poc_diff =
@@ -1779,7 +1782,7 @@ _pop_pyramid_b_frame (GstVaH264Enc * self)
     }
 
     vaf = _enc_frame (f);
-    if (b_vaframe->pyramid_level > vaf->pyramid_level) {
+    if (b_vaframe->pyramid_level < vaf->pyramid_level) {
       b_frame = f;
       b_vaframe = vaf;
       index = i;
