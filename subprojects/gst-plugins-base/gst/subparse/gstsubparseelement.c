@@ -187,7 +187,7 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
       if (sscanf (str, "[%u:%02u.%02u]", &n1, &n2, &n3) == 3 ||
           sscanf (str, "[%u:%02u.%03u]", &n1, &n2, &n3) == 3) {
         all_lines_good = TRUE;
-      } else if (str[len - 1] == ']' && strchr (str, ':') != NULL) {
+      } else if (len > 0 && str[len - 1] == ']' && strchr (str, ':') != NULL) {
         all_lines_good = TRUE;
       } else {
         all_lines_good = FALSE;
