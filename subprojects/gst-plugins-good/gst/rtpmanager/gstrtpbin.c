@@ -1761,6 +1761,8 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
     return;
   }
 
+  cname = gst_structure_get_string (s, "cname");
+
   /* if the jitterbuffer directly got the NTP timestamp then don't work
    * through the RTCP SR, otherwise extract it from there */
   if (gst_structure_get_uint64 (s, "inband-ntpnstime", &inband_ntpnstime)
@@ -1797,6 +1799,9 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
 
   GST_RTCP_BUFFER_FOR_PACKETS (more, &rtcp, &packet) {
+    if (have_sr && (cname || have_sdes))
+      break;
+
     /* first packet must be SR or RR or else the validate would have failed */
     switch (gst_rtcp_packet_get_type (&packet)) {
       case GST_RTCP_TYPE_SR:
@@ -1818,6 +1823,18 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
           continue;
 
         have_sr = TRUE;
+
+        /* If we already have the CNAME don't require parsing SDES */
+        if (cname) {
+          GST_RTP_BIN_LOCK (bin);
+          /* associate the stream to CNAME */
+          gst_rtp_bin_associate (bin, stream, strlen (cname),
+              (const guint8 *) cname, ntpnstime, extrtptime, base_rtptime,
+              base_time, clock_rate, clock_base);
+          GST_RTP_BIN_UNLOCK (bin);
+          break;
+        }
+
         break;
       case GST_RTCP_TYPE_SDES:
       {

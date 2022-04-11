@@ -406,6 +406,7 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime peer_latency;
   guint64 ext_rtptime;
   GstBuffer *last_sr;
+  guint32 last_sr_ssrc;
 
   /* some accounting */
   guint64 num_pushed;
@@ -4579,14 +4580,25 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
     GST_DEBUG_OBJECT (jitterbuffer, "keeping RTCP packet for later");
   } else if (valid) {
     GstStructure *s;
+    GList *l;
 
     s = gst_structure_new ("application/x-rtp-sync",
         "base-rtptime", G_TYPE_UINT64, base_rtptime,
         "base-time", G_TYPE_UINT64, base_time,
         "clock-rate", G_TYPE_UINT, clock_rate,
         "clock-base", G_TYPE_UINT64, clock_base,
+        "ssrc", G_TYPE_UINT, priv->last_sr_ssrc,
         "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
         "sr-buffer", GST_TYPE_BUFFER, priv->last_sr, NULL);
+
+    for (l = priv->cname_ssrc_mappings; l; l = l->next) {
+      const CNameSSRCMapping *map = l->data;
+
+      if (map->ssrc == priv->last_ssrc) {
+        gst_structure_set (s, "cname", G_TYPE_STRING, map->cname, NULL);
+        break;
+      }
+    }
 
     GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
     gst_buffer_replace (&priv->last_sr, NULL);
@@ -4700,6 +4712,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
 
   priv->ext_rtptime = ext_rtptime;
   gst_buffer_replace (&priv->last_sr, buffer);
+  priv->last_sr_ssrc = ssrc;
 
   do_handle_sync (jitterbuffer);
 
