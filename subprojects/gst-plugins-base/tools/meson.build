@@ -38,8 +38,9 @@ endif
     },
     'gst-play': {
       'files': files('gst-play.c', 'gst-play-kb.c'),
-      'deps': tool_deps,
-      'man_page': files('gst-play-@0@.1'.format(api_version))
+      'deps': tool_deps + extra_deps,
+      'man_page': files('gst-play-@0@.1'.format(api_version)),
+      'extra_c_args': extra_args
     },
   }
 
