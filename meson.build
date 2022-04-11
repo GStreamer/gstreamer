@@ -457,12 +457,12 @@ endif
 dotnet_format = find_program('dotnet-format', required: false)
 if dotnet_format.found()
     run_target('csharp_format_check',
-        command: [join_paths(meson.current_source_dir(), 'scripts', 'format-chsharp'),
+        command: [join_paths(meson.current_source_dir(), 'scripts', 'format-csharp'),
             '--check'
         ],
     )
     run_target('csharp_format_apply',
-        command: [join_paths(meson.current_source_dir(), 'scripts', 'format-chsharp'),
+        command: [join_paths(meson.current_source_dir(), 'scripts', 'format-csharp'),
         ],
     )
 endif
