@@ -1331,7 +1331,7 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
 
   num_val = in_iocaps->GetNumOfFormats ();
   GST_LOG_OBJECT (device, "Input format count: %d", num_val);
-  for (guint i = 0; i < num_val; i++) {
+  for (amf_int32 i = 0; i < num_val; i++) {
     AMF_SURFACE_FORMAT format;
     amf_bool native;
 
@@ -1351,7 +1351,7 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
 
   num_val = in_iocaps->GetNumOfMemoryTypes ();
   GST_LOG_OBJECT (device, "Input memory type count: %d", num_val);
-  for (guint i = 0; i < num_val; i++) {
+  for (amf_int32 i = 0; i < num_val; i++) {
     AMF_MEMORY_TYPE type;
     amf_bool native;
 
@@ -1383,7 +1383,7 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
       in_min_width, in_max_width, in_min_height, in_max_height);
 
 #define QUERY_CAPS_PROP(prop,val) G_STMT_START { \
-  amf_int64 _val; \
+  amf_int64 _val = 0; \
   result = amf_caps->GetProperty (prop, &_val); \
   if (result == AMF_OK) { \
     GST_INFO_OBJECT (device, G_STRINGIFY (val) ": %" G_GINT64_FORMAT, _val); \

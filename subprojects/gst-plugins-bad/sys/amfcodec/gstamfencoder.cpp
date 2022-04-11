@@ -28,7 +28,7 @@
 #include <gst/d3d11/gstd3d11.h>
 #include <wrl.h>
 #include <string.h>
-#include <timeapi.h>
+#include <mmsystem.h>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -1006,7 +1006,6 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   guint size;
   GstStructure *config;
   GstCapsFeatures *features;
-  gboolean is_d3d11 = FALSE;
 
   gst_query_parse_allocation (query, &caps, nullptr);
   if (!caps) {
@@ -1024,7 +1023,6 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     GST_DEBUG_OBJECT (self, "upstream support d3d11 memory");
     pool = gst_d3d11_buffer_pool_new (device);
-    is_d3d11 = TRUE;
   } else {
     pool = gst_d3d11_staging_buffer_pool_new (device);
   }
