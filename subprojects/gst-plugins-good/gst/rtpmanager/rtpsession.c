@@ -2892,6 +2892,34 @@ rtp_session_process_nack (RTPSession * sess, guint32 sender_ssrc,
 }
 
 static void
+rtp_session_process_sr_req (RTPSession * sess, guint32 sender_ssrc,
+    guint32 media_ssrc)
+{
+  RTPSource *src;
+
+  /* Request a new SR in feedback profiles ASAP */
+  if (sess->rtp_profile != GST_RTP_PROFILE_AVPF
+      && sess->rtp_profile != GST_RTP_PROFILE_SAVPF)
+    return;
+
+  src = find_source (sess, sender_ssrc);
+  /* Our own RTCP packet */
+  if (src && src->internal)
+    return;
+
+  src = find_source (sess, media_ssrc);
+  /* Not an SSRC we're producing */
+  if (!src || !src->internal)
+    return;
+
+  GST_DEBUG_OBJECT (sess, "Handling RTCP-SR-REQ");
+  /* FIXME: 5s max_delay hard-coded here as we have to give some
+   * high enough value */
+  sess->sr_req_pending = TRUE;
+  rtp_session_send_rtcp (sess, 5 * GST_SECOND);
+}
+
+static void
 rtp_session_process_twcc (RTPSession * sess, guint32 sender_ssrc,
     guint32 media_ssrc, guint8 * fci_data, guint fci_length)
 {
@@ -3010,6 +3038,9 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
               src->stats.recv_nack_count++;
             rtp_session_process_nack (sess, sender_ssrc, media_ssrc,
                 fci_data, fci_length, current_time);
+            break;
+          case GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ:
+            rtp_session_process_sr_req (sess, sender_ssrc, media_ssrc);
             break;
           case GST_RTCP_RTPFB_TYPE_TWCC:
             rtp_session_process_twcc (sess, sender_ssrc, media_ssrc,
@@ -3760,13 +3791,13 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 
   gst_rtcp_buffer_map (data->rtcp, GST_MAP_READWRITE, rtcp);
 
-  if (data->is_early && sess->reduced_size_rtcp)
-    return;
-
-  if (RTP_SOURCE_IS_SENDER (own)) {
+  if (RTP_SOURCE_IS_SENDER (own) && (!data->is_early || !sess->reduced_size_rtcp
+          || sess->sr_req_pending)) {
     guint64 ntptime;
     guint32 rtptime;
     guint32 packet_count, octet_count;
+
+    sess->sr_req_pending = FALSE;
 
     /* we are a sender, create SR */
     GST_DEBUG ("create SR for SSRC %08x", own->ssrc);
@@ -3784,7 +3815,7 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
         sess->timestamp_sender_reports ? ntptime : 0,
         sess->timestamp_sender_reports ? rtptime : 0,
         packet_count, octet_count);
-  } else {
+  } else if (!data->is_early || !sess->reduced_size_rtcp) {
     /* we are only receiver, create RR */
     GST_DEBUG ("create RR for SSRC %08x", own->ssrc);
     gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_RR, packet);
@@ -4452,6 +4483,7 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   RTPSession *sess = data->sess;
   gboolean is_bye = FALSE;
   ReportOutput *output;
+  gboolean sr_req_pending = sess->sr_req_pending;
 
   /* only generate RTCP for active internal sources */
   if (!source->internal || source->sent_bye)
@@ -4482,7 +4514,8 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
     g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
         (GHFunc) session_report_blocks, data);
   }
-  if (!data->has_sdes && (!data->is_early || !sess->reduced_size_rtcp))
+  if (!data->has_sdes && (!data->is_early || !sess->reduced_size_rtcp
+          || sr_req_pending))
     session_sdes (sess, data);
 
   if (data->have_fir)

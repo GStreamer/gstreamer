@@ -280,6 +280,7 @@ struct _RTPSession {
 
   GstClockTime  next_early_rtcp_time;
 
+  gboolean      sr_req_pending;
   gboolean      scheduled_bye;
 
   RTPSessionCallbacks   callbacks;
