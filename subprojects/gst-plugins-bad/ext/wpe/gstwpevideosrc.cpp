@@ -586,9 +586,17 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
         if (gst_navigation_event_parse_key_event (event, &key)) {
           /* FIXME: This is wrong... The GstNavigation API should pass
              hardware-level information, not high-level keysym strings */
-          uint32_t keysym =
-              (uint32_t) xkb_keysym_from_name (key, XKB_KEYSYM_NO_FLAGS);
+	  gunichar *unichar;
+	  glong items_written;
+	  uint32_t keysym;
           struct wpe_input_keyboard_event wpe_event = { 0 };
+
+          unichar = g_utf8_to_ucs4_fast (key, -1, &items_written);
+          if (items_written == 1)
+            keysym = (uint32_t) xkb_utf32_to_keysym (*unichar);
+          else
+            keysym =
+              (uint32_t) xkb_keysym_from_name (key, XKB_KEYSYM_NO_FLAGS);
 
           wpe_event.key_code = keysym;
           wpe_event.pressed =
