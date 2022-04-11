@@ -58,7 +58,7 @@
 #include <string>
 
 #ifdef HAVE_WINMM
-#include <timeapi.h>
+#include <mmsystem.h>
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_decoder_debug);

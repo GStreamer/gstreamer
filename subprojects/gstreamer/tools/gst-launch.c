@@ -47,7 +47,7 @@
 #include <locale.h>             /* for LC_ALL */
 #include "tools.h"
 #ifdef HAVE_WINMM
-#include <timeapi.h>
+#include <mmsystem.h>
 #endif
 
 extern volatile gboolean glib_on_error_halt;

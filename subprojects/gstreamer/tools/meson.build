@@ -6,7 +6,7 @@ extra_launch_arg = []
 if gst_parse
   if host_system == 'windows' and not building_for_uwp
     winmm_lib = cc.find_library('winmm', required: false)
-    if winmm_lib.found() and cc.has_header('timeapi.h')
+    if winmm_lib.found() and cc.has_header('mmsystem.h')
       extra_launch_dep += [winmm_lib]
       extra_launch_arg += ['-DHAVE_WINMM']
     endif

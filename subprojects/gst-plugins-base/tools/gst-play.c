@@ -42,7 +42,7 @@
 #ifdef HAVE_WINMM
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <timeapi.h>
+#include <mmsystem.h>
 #endif
 
 #include "gst-play-kb.h"

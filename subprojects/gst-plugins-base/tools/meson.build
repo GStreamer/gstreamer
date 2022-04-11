@@ -18,7 +18,7 @@ if host_system == 'windows'
 
   if not building_for_uwp
     winmm_lib = cc.find_library('winmm', required: false)
-    if winmm_lib.found() and cc.has_header('timeapi.h')
+    if winmm_lib.found() and cc.has_header('mmsystem.h')
       extra_args += ['-DHAVE_WINMM']
       extra_deps += [winmm_lib]
     endif

@@ -90,7 +90,7 @@ if d3d11_winapi_desktop
     message('Enable D3D11 Desktop Duplication API')
   endif
   # multimedia clock is desktop only API
-  if has_decoder and winmm_lib.found() and cc.has_header('timeapi.h')
+  if has_decoder and winmm_lib.found() and cc.has_header('mmsystem.h')
     extra_args += ['-DHAVE_WINMM']
     extra_dep += [winmm_lib]
   endif
