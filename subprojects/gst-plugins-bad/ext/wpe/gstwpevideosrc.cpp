@@ -567,6 +567,36 @@ _set_touch_point (struct wpe_input_touch_event_raw * point,
   point->y = (int32_t) y;
 }
 
+static uint32_t
+_gst_modifiers_to_wpe (GstEvent * ev)
+{
+  GstNavigationModifierType modifier_state;
+  uint32_t modifiers = 0;
+
+  if (gst_navigation_event_parse_modifier_state (ev, &modifier_state)) {
+    if (modifier_state & GST_NAVIGATION_MODIFIER_CONTROL_MASK)
+      modifiers |= wpe_input_keyboard_modifier_control;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_SHIFT_MASK)
+      modifiers |= wpe_input_keyboard_modifier_shift;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_ALT_MASK)
+      modifiers |= wpe_input_keyboard_modifier_alt;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_META_MASK)
+      modifiers |= wpe_input_keyboard_modifier_meta;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON1_MASK)
+      modifiers |= wpe_input_pointer_modifier_button1;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON2_MASK)
+      modifiers |= wpe_input_pointer_modifier_button2;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON3_MASK)
+      modifiers |= wpe_input_pointer_modifier_button3;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON4_MASK)
+      modifiers |= wpe_input_pointer_modifier_button4;
+    if (modifier_state & GST_NAVIGATION_MODIFIER_BUTTON5_MASK)
+      modifiers |= wpe_input_pointer_modifier_button5;
+  }
+
+  return modifiers;
+}
+
 static gboolean
 gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
 {
@@ -586,9 +616,9 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
         if (gst_navigation_event_parse_key_event (event, &key)) {
           /* FIXME: This is wrong... The GstNavigation API should pass
              hardware-level information, not high-level keysym strings */
-	  gunichar *unichar;
-	  glong items_written;
-	  uint32_t keysym;
+          gunichar *unichar;
+          glong items_written;
+          uint32_t keysym;
           struct wpe_input_keyboard_event wpe_event = { 0 };
 
           unichar = g_utf8_to_ucs4_fast (key, -1, &items_written);
@@ -602,6 +632,7 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
           wpe_event.pressed =
               gst_navigation_event_get_type (event) ==
               GST_NAVIGATION_EVENT_KEY_PRESS;
+          wpe_event.modifiers = _gst_modifiers_to_wpe (event);
           src->view->dispatchKeyboardEvent (wpe_event);
           ret = TRUE;
         }
@@ -615,17 +646,7 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
           wpe_event.type = wpe_input_pointer_event_type_button;
           wpe_event.x = (int) x;
           wpe_event.y = (int) y;
-          if (button == 1) {
-            wpe_event.modifiers = wpe_input_pointer_modifier_button1;
-          } else if (button == 2) {
-            wpe_event.modifiers = wpe_input_pointer_modifier_button2;
-          } else if (button == 3) {
-            wpe_event.modifiers = wpe_input_pointer_modifier_button3;
-          } else if (button == 4) {
-            wpe_event.modifiers = wpe_input_pointer_modifier_button4;
-          } else if (button == 5) {
-            wpe_event.modifiers = wpe_input_pointer_modifier_button5;
-          }
+          wpe_event.modifiers = _gst_modifiers_to_wpe (event);
           wpe_event.button = button;
           wpe_event.state =
               gst_navigation_event_get_type (event) ==
@@ -641,6 +662,7 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
           wpe_event.type = wpe_input_pointer_event_type_motion;
           wpe_event.x = (int) x;
           wpe_event.y = (int) y;
+          wpe_event.modifiers = _gst_modifiers_to_wpe (event);
           src->view->dispatchPointerEvent (wpe_event);
           ret = TRUE;
         }
@@ -727,6 +749,7 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
           wpe_event.touchpoints_length = src->touch_points->len;
           wpe_event.type = src->last_touch->type;
           wpe_event.id = src->last_touch->id;
+          wpe_event.modifiers = _gst_modifiers_to_wpe (event);
           wpe_event.time = src->last_touch->time;
           src->view->dispatchTouchEvent (wpe_event);
 
