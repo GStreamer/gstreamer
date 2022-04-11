@@ -3109,11 +3109,11 @@ gst_mxf_demux_handle_generic_container_essence_element (GstMXFDemux * demux,
         ret =
             gst_mxf_demux_pad_set_component (demux, pad,
             pad->current_component_index + 1);
-        if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
-          GST_ERROR_OBJECT (demux, "Switching component failed");
-        } else {
+        if (ret == GST_FLOW_OK) {
           pad->current_essence_track->position =
               pad->current_essence_track_position;
+        } else if (ret != GST_FLOW_EOS) {
+          GST_ERROR_OBJECT (demux, "Switching component failed");
         }
       } else if (etrack->duration > 0
           && pad->current_essence_track_position >= etrack->duration) {
