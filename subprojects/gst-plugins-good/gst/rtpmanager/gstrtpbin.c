@@ -1362,10 +1362,12 @@ stream_set_ts_offset (GstRtpBin * bin, GstRtpBinStream * stream,
        *   ((bin->ts_offset_smoothing_factor - 1) * stream->avg_ts_offset
        *    + ts_offset) / bin->ts_offset_smoothing_factor
        */
-      guint64 max_possible_smoothing_factor =
-          G_MAXINT64 / ABS (stream->avg_ts_offset);
+      guint64 max_possible_smoothing_factor = G_MAXUINT64;
       gint64 cur_avg_product =
           (bin->ts_offset_smoothing_factor - 1) * stream->avg_ts_offset;
+      if (stream->avg_ts_offset != 0)
+        max_possible_smoothing_factor =
+            G_MAXINT64 / ABS (stream->avg_ts_offset);
 
       if ((max_possible_smoothing_factor < bin->ts_offset_smoothing_factor) ||
           (cur_avg_product > 0 && G_MAXINT64 - cur_avg_product < ts_offset) ||
