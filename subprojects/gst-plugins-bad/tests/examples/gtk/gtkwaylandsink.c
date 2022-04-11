@@ -219,11 +219,12 @@ main (int argc, char **argv)
   } else {
     if (live) {
       d->pipeline = gst_parse_launch ("videotestsrc pattern=18 "
-          "background-color=0xFF0062FF is-live=true ! "
-          "gtkwaylandsink name=vsink", NULL);
+          "background-color=0xFF0062FF is-live=true ! navigationtest ! "
+          "videoconvert ! gtkwaylandsink name=vsink", NULL);
     } else {
       d->pipeline = gst_parse_launch ("videotestsrc pattern=18 "
-          "background-color=0xFF0062FF ! gtkwaylandsink name=vsink", NULL);
+          "background-color=0xFF0062FF ! navigationtest ! videoconvert ! "
+          "gtkwaylandsink name=vsink", NULL);
     }
   }
 
