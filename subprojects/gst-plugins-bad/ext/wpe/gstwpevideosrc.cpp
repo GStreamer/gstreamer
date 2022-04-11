@@ -588,7 +588,8 @@ gst_wpe_video_src_event (GstBaseSrc * base_src, GstEvent * event)
              hardware-level information, not high-level keysym strings */
           uint32_t keysym =
               (uint32_t) xkb_keysym_from_name (key, XKB_KEYSYM_NO_FLAGS);
-          struct wpe_input_keyboard_event wpe_event;
+          struct wpe_input_keyboard_event wpe_event = { 0 };
+
           wpe_event.key_code = keysym;
           wpe_event.pressed =
               gst_navigation_event_get_type (event) ==
