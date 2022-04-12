@@ -1348,6 +1348,7 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
       break;
     case V4L2_PIX_FMT_MM21:
       format = GST_VIDEO_FORMAT_NV12_16L32S;
+      break;
     case V4L2_PIX_FMT_NV12M_8L128:
       format = GST_VIDEO_FORMAT_NV12_8L128;
       break;
