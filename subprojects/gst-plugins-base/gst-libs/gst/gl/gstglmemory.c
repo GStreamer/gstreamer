@@ -59,7 +59,7 @@
 
 #define GL_MEM_WIDTH(gl_mem) _get_plane_width (&gl_mem->info, gl_mem->plane)
 #define GL_MEM_HEIGHT(gl_mem) _get_plane_height (&gl_mem->info, gl_mem->plane)
-#define GL_MEM_STRIDE(gl_mem) GST_VIDEO_INFO_PLANE_STRIDE (&gl_mem->info, gl_mem->plane)
+#define GL_MEM_STRIDE(gl_mem) _get_mem_stride (gl_mem)
 
 static GstAllocator *_gl_memory_allocator;
 
@@ -122,19 +122,43 @@ _get_plane_width (const GstVideoInfo * info, guint plane)
 static inline guint
 _get_plane_height (const GstVideoInfo * info, guint plane)
 {
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (info->finfo)) {
+    guint hs;
+    gsize stride;
+
+    gst_video_format_info_get_tile_sizes (info->finfo, plane, NULL, &hs);
+    stride = GST_VIDEO_INFO_PLANE_STRIDE (info, plane);
+
+    return GST_VIDEO_TILE_Y_TILES (stride) << hs;
+  }
+
   if (GST_VIDEO_INFO_IS_YUV (info)) {
     gint comp[GST_VIDEO_MAX_COMPONENTS];
     gst_video_format_info_component (info->finfo, plane, comp);
     return GST_VIDEO_INFO_COMP_HEIGHT (info, comp[0]);
-  } else {
-    /* RGB, GRAY */
-    return GST_VIDEO_INFO_HEIGHT (info);
   }
+
+  /* RGB, GRAY */
+  return GST_VIDEO_INFO_HEIGHT (info);
+}
+
+static guint
+_get_mem_stride (GstGLMemory * gl_mem)
+{
+  const GstVideoFormatInfo *finfo = gl_mem->info.finfo;
+  guint stride = GST_VIDEO_INFO_PLANE_STRIDE (&gl_mem->info, gl_mem->plane);
+
+  if (!GST_VIDEO_FORMAT_INFO_IS_TILED (finfo))
+    return stride;
+
+  return
+      GST_VIDEO_TILE_X_TILES (stride) << GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
 }
 
 static inline void
 _calculate_unpack_length (GstGLMemory * gl_mem, GstGLContext * context)
 {
+  GstVideoInfo *info = &gl_mem->info;
   guint n_gl_bytes;
   GstGLFormat tex_format;
   guint tex_type;
@@ -142,7 +166,6 @@ _calculate_unpack_length (GstGLMemory * gl_mem, GstGLContext * context)
   gl_mem->tex_scaling[0] = 1.0f;
   gl_mem->tex_scaling[1] = 1.0f;
   gl_mem->unpack_length = 1;
-  gl_mem->tex_width = GL_MEM_WIDTH (gl_mem);
 
   gst_gl_format_type_from_sized_gl_format (gl_mem->tex_format, &tex_format,
       &tex_type);
@@ -151,6 +174,13 @@ _calculate_unpack_length (GstGLMemory * gl_mem, GstGLContext * context)
     GST_ERROR ("Unsupported texture type %d", gl_mem->tex_format);
     return;
   }
+
+  /* For tiles, we need GL not to clip on the display width, as the would make
+   * some tile not fully accessible by GLSL. */
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (info->finfo))
+    gl_mem->tex_width = GL_MEM_STRIDE (gl_mem) / n_gl_bytes;
+  else
+    gl_mem->tex_width = GL_MEM_WIDTH (gl_mem);
 
   if (USING_OPENGL (context) || USING_GLES3 (context)
       || USING_OPENGL3 (context)) {

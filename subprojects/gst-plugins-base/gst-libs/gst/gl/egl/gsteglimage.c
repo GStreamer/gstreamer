@@ -553,6 +553,21 @@ _drm_rgba_fourcc_from_info (const GstVideoInfo * info, int plane,
   }
 }
 
+static gint
+get_egl_stride (const GstVideoInfo * info, gint plane)
+{
+  const GstVideoFormatInfo *finfo = info->finfo;
+  gint stride = info->stride[plane];
+  guint ws;
+
+  if (!GST_VIDEO_FORMAT_INFO_IS_TILED (finfo))
+    return stride;
+
+  gst_video_format_info_get_tile_sizes (finfo, plane, &ws, NULL);
+
+  return GST_VIDEO_TILE_X_TILES (stride) << ws;
+}
+
 /**
  * gst_egl_image_from_dmabuf:
  * @context: a #GstGLContext (must be an EGL context)
@@ -601,7 +616,7 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
   attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
   attribs[atti++] = offset;
   attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-  attribs[atti++] = GST_VIDEO_INFO_PLANE_STRIDE (in_info, plane);
+  attribs[atti++] = get_egl_stride (in_info, plane);
   attribs[atti] = EGL_NONE;
   g_assert (atti == G_N_ELEMENTS (attribs) - 1);
 
@@ -905,7 +920,7 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
     attribs[atti++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
     attribs[atti++] = offset[0];
     attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-    attribs[atti++] = in_info->stride[0];
+    attribs[atti++] = get_egl_stride (in_info, 0);
     if (with_modifiers) {
       attribs[atti++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
       attribs[atti++] = DRM_FORMAT_MOD_LINEAR & 0xffffffff;
@@ -921,7 +936,7 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
     attribs[atti++] = EGL_DMA_BUF_PLANE1_OFFSET_EXT;
     attribs[atti++] = offset[1];
     attribs[atti++] = EGL_DMA_BUF_PLANE1_PITCH_EXT;
-    attribs[atti++] = in_info->stride[1];
+    attribs[atti++] = get_egl_stride (in_info, 1);
     if (with_modifiers) {
       attribs[atti++] = EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT;
       attribs[atti++] = DRM_FORMAT_MOD_LINEAR & 0xffffffff;
@@ -937,7 +952,7 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
     attribs[atti++] = EGL_DMA_BUF_PLANE2_OFFSET_EXT;
     attribs[atti++] = offset[2];
     attribs[atti++] = EGL_DMA_BUF_PLANE2_PITCH_EXT;
-    attribs[atti++] = in_info->stride[2];
+    attribs[atti++] = get_egl_stride (in_info, 2);
     if (with_modifiers) {
       attribs[atti++] = EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT;
       attribs[atti++] = DRM_FORMAT_MOD_LINEAR & 0xffffffff;
