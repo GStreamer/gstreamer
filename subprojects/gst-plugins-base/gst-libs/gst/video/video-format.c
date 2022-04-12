@@ -7895,3 +7895,62 @@ gst_video_make_raw_caps_with_features (const GstVideoFormat formats[],
 
   return caps;
 }
+
+static void
+scale_tile_shifts (const GstVideoFormatInfo * finfo, gint plane, guint * ws,
+    guint * hs)
+{
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
+  gint i;
+
+  gst_video_format_info_component (finfo, plane, comp);
+
+  /* scale the tile size according to the subsampling */
+  *ws -= finfo->w_sub[comp[0]];
+  *hs -= finfo->h_sub[comp[0]];
+
+  /* for each additional component in the same plane, double the tile width,
+   * this should provide the appropriate tile size when the tile size varies
+   * base on the subsampling. */
+  for (i = 1; i < GST_VIDEO_MAX_COMPONENTS && comp[i] >= 0; i++)
+    *ws += 1;
+}
+
+/**
+ * gst_video_format_info_get_tile_sizes:
+ * @finfo: #GstVideoFormatInfo
+ * @plane: The plane to read the tile sizes for.
+ * @out_ws: (nullable): Set to the scaled tile width shift
+ * @out_hs: (nullable): Set to the scaled tile height shift
+ *
+ * This function will read the width and height tile dimension shifts from
+ * @info and scale it according to the tiling type and @plane. The results
+ * will written into @out_hs and @out_ws. It also computes the size of a tile
+ * in bytes.
+ *
+ * Returns: The size of a tile in bytes.
+ *
+ * Since: 1.22
+ */
+guint
+gst_video_format_info_get_tile_sizes (const GstVideoFormatInfo * finfo,
+    guint plane, guint * out_ws, guint * out_hs)
+{
+  guint ws, hs;
+
+  g_return_val_if_fail (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo), 0);
+
+  ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
+  hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
+
+  if (GST_VIDEO_FORMAT_INFO_HAS_SUBTILES (finfo))
+    scale_tile_shifts (finfo, plane, &ws, &hs);
+
+  if (out_ws)
+    *out_ws = ws;
+
+  if (out_hs)
+    *out_hs = hs;
+
+  return 1 << (ws + hs);
+}

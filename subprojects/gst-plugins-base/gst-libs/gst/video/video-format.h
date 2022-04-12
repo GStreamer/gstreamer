@@ -861,6 +861,13 @@ GST_VIDEO_API
 GstCaps * gst_video_make_raw_caps_with_features (const GstVideoFormat formats[], guint len,
                                                  GstCapsFeatures * features);
 
+GST_VIDEO_API
+guint     gst_video_format_info_get_tile_sizes  (const GstVideoFormatInfo * finfo,
+                                                 guint plane,
+                                                 guint * out_ws, guint * out_hs);
+
+
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_FORMAT_H__ */
