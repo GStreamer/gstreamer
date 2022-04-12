@@ -226,7 +226,7 @@ gst_vaapi_type_define_enum_subset_from_mask (GstVaapiEnumSubset * subset,
  * @type: an enum #GType
  * @value: the value to get its nick
  *
- * Returns: (tranfer none); the string associated with
+ * Returns: (transfer none); the string associated with
  *   @value. Otherwise "<unknown>"
  **/
 const gchar *
