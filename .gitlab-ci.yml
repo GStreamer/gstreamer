@@ -57,6 +57,7 @@ variables:
     -Dsharp=disabled
     -Drs=disabled
     -Dgpl=enabled
+    -Dintrospection=enabled
 
   SIMPLE_BUILD: >-
     ${DEFAULT_MESON_ARGS}
@@ -417,7 +418,6 @@ build fedora clang:
   variables:
     MESON_ARGS: >-
       ${DEFAULT_MESON_ARGS}
-      -Dpython=disabled
       -Dlibav=disabled
       -Dvaapi=disabled
       -Dgst-plugins-base:pango=enabled
@@ -466,6 +466,9 @@ build vs2022 amd64:
     - mkdir destdir
     - meson install -C build --destdir installdir
     - Remove-Item -Recurse -Force build\installdir
+  variables:
+    # FIXME: https://github.com/mesonbuild/meson/pull/11007
+    PKG_CONFIG: ${CI_PROJECT_DIR}/subprojects/win-pkgconfig/pkg-config.exe
 
 .build windows cross:
   extends: '.build windows'
@@ -482,6 +485,10 @@ build vs2022 x86:
   extends: '.build windows cross'
   variables:
     ARCH: 'x86'
+    # Installed python is 64 bits instead of 32 bits
+    MESON_CROSS_ARGS: >
+      -Dpython=disabled
+      -Dintrospection=disabled
 
 build vs2022 arm64:
   extends: '.build windows cross'
@@ -496,6 +503,8 @@ build vs2022 arm64:
       -Dgst-plugins-good:cairo=disabled
       -Dgst-plugins-good:soup-lookup-dep=false
       -Dgst-devtools:cairo=disabled
+      -Dpython=disabled
+      -Dintrospection=disabled
       --cross-file ci/meson/vs2022-paths.ini
       --cross-file ci/meson/vs2022-arm64-cross.ini
       --native-file ci/meson/vs2022-paths.ini
