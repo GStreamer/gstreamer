@@ -79,14 +79,9 @@ set_stride (GstVideoInfo * info, gint plane, gint stride)
   const GstVideoFormatInfo *finfo = info->finfo;
 
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
-    gint x_tiles, y_tiles, ws, hs, padded_height;
+    guint x_tiles, y_tiles, ws, hs, padded_height;
 
-    ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
-    hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
-
-    /* this only works for what we support, NV12 subsampled tiles */
-    if (GST_VIDEO_FORMAT_INFO_HAS_SUBTILES (finfo) && plane == 1)
-      hs -= 1;
+    gst_video_format_info_get_tile_sizes (finfo, plane, &ws, &hs);
 
     padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
         info->height);
