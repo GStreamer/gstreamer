@@ -105,13 +105,6 @@ subprojects = [
   ['gst-plugins-rs', { 'option': get_option('rs'), 'build-hotdoc': true, 'match_gst_version': false}],
 ]
 
-symlink = '''
-import os
-
-os.symlink(os.path.join('@1@', 'subprojects', '@0@'),
-  os.path.join('@1@', '@0@'))
-'''
-
 if build_system == 'windows'
   subproject('win-flex-bison-binaries')
   subproject('win-nasm')
