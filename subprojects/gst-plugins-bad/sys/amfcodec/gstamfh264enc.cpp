@@ -849,6 +849,16 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
+  if (self->preset > AMF_VIDEO_ENCODER_QUALITY_PRESET_UNKNOWN) {
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_QUALITY_PRESET,
+        (amf_int64) self->preset);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set quality preset, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+  }
+
   result = comp->SetProperty (AMF_VIDEO_ENCODER_PROFILE, (amf_int64) profile);
   if (result != AMF_OK) {
     GST_ERROR_OBJECT (self, "Failed to set profile, result %"
