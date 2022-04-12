@@ -192,6 +192,7 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_NV16:
     case GST_VIDEO_FORMAT_NV61:
+    case GST_VIDEO_FORMAT_NV12_16L32S:
       n_plane_components = plane == 0 ? 1 : 2;
       break;
     case GST_VIDEO_FORMAT_AV12:

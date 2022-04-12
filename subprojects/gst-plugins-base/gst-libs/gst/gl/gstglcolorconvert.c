@@ -50,6 +50,8 @@
 
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
+#define USING_OPENGL30(context) \
+  (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 3, 0) || USING_OPENGL3(context))
 #define USING_GLES(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES, 1, 0))
 #define USING_GLES2(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 2, 0))
 #define USING_GLES3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_GLES2, 3, 0))
@@ -354,6 +356,49 @@ static const struct shader_templ templ_AV12_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, UVtex, Atex;\n",
     { glsl_func_yuv_to_rgb, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
+#define glsl_func_frag_to_tile \
+    "ivec2 frag_to_tile(ivec2 tile_coord, ivec2 delta_coord, ivec2 dim, int width, int tiles_per_row, int need_offset) {\n" \
+    "  int tile_size = (dim.x * dim.y);\n" \
+    "  int tile_index = tile_coord.y * tiles_per_row + tile_coord.x;\n" \
+    "  int linear_index = tile_index * tile_size + delta_coord.y * dim.x + delta_coord.x;\n" \
+    "  linear_index += need_offset * tile_size / 2;\n" \
+    "  return ivec2(linear_index % width, linear_index / width);\n" \
+    "}\n"
+
+/* TILED semi-planar to RGB conversion */
+static const gchar templ_TILED_SEMI_PLANAR_to_RGB_BODY[] =
+    "  vec4 rgba;\n"
+    "  vec3 yuv;\n"
+    "  ivec2 texel;\n"
+    "\n"
+    "  const ivec2 luma_dim = ivec2(%i, %i);\n"
+    "  const ivec2 chroma_dim = ivec2(%i, %i);\n"
+    "  const int fy = chroma_dim.y * 2 / luma_dim.y;\n"
+    "\n"
+    "  int iwidth = int(width);\n"
+    "  int tiles_per_row = iwidth / luma_dim.x;\n"
+    "\n"
+    "  ivec2 coord = ivec2(gl_FragCoord.xy);\n"
+    "  ivec2 tile_coord = coord / luma_dim;\n"
+    "  ivec2 delta_coord = coord %% luma_dim;\n" \
+    "  texel = frag_to_tile(tile_coord, delta_coord, luma_dim, iwidth, tiles_per_row, 0);\n"
+    "  yuv.x = texelFetch(Ytex, texel, 0).r;\n"
+    "\n"
+    "  ivec2 chroma_tcoord = ivec2(tile_coord.x, tile_coord.y / fy);\n"
+    "  texel = frag_to_tile(chroma_tcoord, delta_coord / 2, chroma_dim, iwidth / 2, tiles_per_row, tile_coord.y %% fy);\n"
+    "  yuv.yz = texelFetch(UVtex, texel, 0).%c%c;\n"
+    "\n"
+    "  rgba.rgb = yuv_to_rgb (yuv, offset, coeff1, coeff2, coeff3);\n"
+    "  rgba.a = 1.0;\n"
+    "  gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,rgba.%c);\n";
+
+static const struct shader_templ templ_TILED_SEMI_PLANAR_to_RGB =
+  { NULL,
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, UVtex;\n",
+    { glsl_func_yuv_to_rgb, glsl_func_frag_to_tile, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
@@ -1082,6 +1127,10 @@ _init_supported_formats (GstGLContext * context, gboolean output,
     _append_value_string_list (supported_formats, "Y412_BE", NULL);
 #endif
   }
+
+  if (!context || USING_GLES3 (context) || USING_OPENGL30 (context)) {
+    _append_value_string_list (supported_formats, "NV12_16L32S", NULL);
+  }
 }
 
 /* copies the given caps */
@@ -1713,6 +1762,7 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_P012_BE:
     case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_P016_BE:
+    case GST_VIDEO_FORMAT_NV12_16L32S:
       return 2;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_Y444:
@@ -2066,6 +2116,17 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[1] = "UVtex";
         break;
       }
+      case GST_VIDEO_FORMAT_NV12_16L32S:
+      {
+        char val2 = convert->priv->in_tex_formats[1] == GST_GL_RG ? 'g' : 'a';
+        info->templ = &templ_TILED_SEMI_PLANAR_to_RGB;
+        info->frag_body = g_strdup_printf (templ_TILED_SEMI_PLANAR_to_RGB_BODY,
+            16, 32, 8, 16, 'r', val2,
+            pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+        info->shader_tex_names[0] = "Ytex";
+        info->shader_tex_names[1] = "UVtex";
+        break;
+      }
       default:
         break;
     }
@@ -2313,13 +2374,14 @@ _bind_buffer (GstGLColorConvert * convert)
   /* Load the vertex position */
   gl->VertexAttribPointer (convert->priv->attr_position, 3, GL_FLOAT, GL_FALSE,
       5 * sizeof (GLfloat), (void *) 0);
-
-  /* Load the texture coordinate */
-  gl->VertexAttribPointer (convert->priv->attr_texture, 2, GL_FLOAT, GL_FALSE,
-      5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
-
   gl->EnableVertexAttribArray (convert->priv->attr_position);
-  gl->EnableVertexAttribArray (convert->priv->attr_texture);
+
+  if (convert->priv->attr_texture != -1) {
+    /* Load the texture coordinate */
+    gl->VertexAttribPointer (convert->priv->attr_texture, 2, GL_FLOAT, GL_FALSE,
+        5 * sizeof (GLfloat), (void *) (3 * sizeof (GLfloat)));
+    gl->EnableVertexAttribArray (convert->priv->attr_texture);
+  }
 }
 
 static void
@@ -2328,10 +2390,12 @@ _unbind_buffer (GstGLColorConvert * convert)
   const GstGLFuncs *gl = convert->context->gl_vtable;
 
   gl->BindBuffer (GL_ELEMENT_ARRAY_BUFFER, 0);
-  gl->BindBuffer (GL_ARRAY_BUFFER, 0);
-
   gl->DisableVertexAttribArray (convert->priv->attr_position);
-  gl->DisableVertexAttribArray (convert->priv->attr_texture);
+
+  if (convert->priv->attr_texture != -1) {
+    gl->BindBuffer (GL_ARRAY_BUFFER, 0);
+    gl->DisableVertexAttribArray (convert->priv->attr_texture);
+  }
 }
 
 static GstGLShader *
@@ -2573,13 +2637,25 @@ _init_convert (GstGLColorConvert * convert)
     goto incompatible_api;
   }
 
+  /* Requires texelFetch() function... */
+  if (!(USING_GLES3 (convert->context) || USING_OPENGL30 (convert->context)) &&
+      GST_VIDEO_FORMAT_INFO_IS_TILED (convert->in_info.finfo)) {
+    GST_ERROR ("Conversion requires texelFetch() function available since "
+        "GLSL 1.30");
+    goto incompatible_api;
+  }
+
   if (!(convert->shader = _create_shader (convert)))
     goto error;
 
   convert->priv->attr_position =
       gst_gl_shader_get_attribute_location (convert->shader, "a_position");
-  convert->priv->attr_texture =
-      gst_gl_shader_get_attribute_location (convert->shader, "a_texcoord");
+
+  if (!GST_VIDEO_FORMAT_INFO_IS_TILED (convert->in_info.finfo))
+    convert->priv->attr_texture =
+        gst_gl_shader_get_attribute_location (convert->shader, "a_texcoord");
+  else
+    convert->priv->attr_texture = -1;
 
   gst_gl_shader_use (convert->shader);
 
@@ -2601,10 +2677,25 @@ _init_convert (GstGLColorConvert * convert)
           i);
   }
 
-  gst_gl_shader_set_uniform_1f (convert->shader, "width",
-      GST_VIDEO_INFO_WIDTH (&convert->in_info));
-  gst_gl_shader_set_uniform_1f (convert->shader, "height",
-      GST_VIDEO_INFO_HEIGHT (&convert->in_info));
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (convert->in_info.finfo)) {
+    guint ws, hs;
+    gsize stride;
+    gfloat width, height;
+
+    stride = GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0);
+    gst_video_format_info_get_tile_sizes (convert->in_info.finfo, 0, &ws, &hs);
+
+    width = GST_VIDEO_TILE_X_TILES (stride) << ws;
+    height = GST_VIDEO_TILE_Y_TILES (stride) << hs;
+
+    gst_gl_shader_set_uniform_1f (convert->shader, "width", width);
+    gst_gl_shader_set_uniform_1f (convert->shader, "height", height);
+  } else {
+    gst_gl_shader_set_uniform_1f (convert->shader, "width",
+        GST_VIDEO_INFO_WIDTH (&convert->in_info));
+    gst_gl_shader_set_uniform_1f (convert->shader, "height",
+        GST_VIDEO_INFO_HEIGHT (&convert->in_info));
+  }
 
   if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_RECTANGLE) {
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_x", 1.);
