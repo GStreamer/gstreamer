@@ -77,15 +77,15 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
 endif
 
 building_full = get_option('default_library') == 'static'
-tools_option = 'tools=auto'
+tools_option = []
 if building_full and not get_option('tools').disabled()
   # Do not build subprojects tools when we build them against gst-full
-  tools_option = 'tools=disabled'
+  tools_option = ['tools=disabled']
 endif
 
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
-  ['gstreamer', {'build-hotdoc': true, 'subproject_options': [tools_option]}],
+  ['gstreamer', {'build-hotdoc': true, 'subproject_options': tools_option}],
   ['gst-plugins-base', {'option': get_option('base'), 'build-hotdoc': true}],
   ['gst-plugins-good', {'option': get_option('good'), 'build-hotdoc': true}],
   ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
@@ -93,9 +93,9 @@ subprojects = [
   ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true}],
   ['gst-libav', { 'option': get_option('libav'), 'build-hotdoc': true}],
   ['gst-rtsp-server', { 'option': get_option('rtsp_server'), 'build-hotdoc': true}],
-  ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true, 'subproject_options': [tools_option]}],
+  ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true, 'subproject_options': tools_option}],
   ['gst-integration-testsuites', { 'option': get_option('devtools') }],
-  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true, 'subproject_options': [tools_option]}],
+  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true, 'subproject_options': tools_option}],
   ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true}],
   ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true}],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
