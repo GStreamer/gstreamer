@@ -781,7 +781,7 @@ gst_amf_encoder_upload_buffer (GstAmfEncoder * self, GstBuffer * buffer)
   if (desc.Usage != D3D11_USAGE_DEFAULT) {
     GST_TRACE_OBJECT (self, "Not a default usage texture, d3d11 copy");
     gst_d3d11_device_lock (priv->device);
-    ret = gst_amf_encoder_copy_d3d11 (self, buffer, TRUE);
+    ret = gst_amf_encoder_copy_d3d11 (self, buffer, FALSE);
     gst_d3d11_device_unlock (priv->device);
 
     return ret;
