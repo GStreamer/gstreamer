@@ -1235,7 +1235,7 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
       seq_header->operating_points[i].idc = AV1_READ_BITS (br, 12);
       seq_header->operating_points[i].seq_level_idx = AV1_READ_BITS (br, 5);
       if (!av1_seq_level_idx_is_valid
-          (seq_header->operating_points[0].seq_level_idx)) {
+          (seq_header->operating_points[i].seq_level_idx)) {
         GST_INFO ("The seq_level_idx is unsupported");
         retval = GST_AV1_PARSER_BITSTREAM_ERROR;
         goto error;
