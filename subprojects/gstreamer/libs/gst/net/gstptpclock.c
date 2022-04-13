@@ -1385,8 +1385,8 @@ update_mean_path_delay (PtpDomainData * domain, PtpPendingSync * sync)
   if (sync->follow_up_recv_time_local != GST_CLOCK_TIME_NONE &&
       domain->mean_path_delay != 0
       && sync->follow_up_recv_time_local >
-      MAX (100 * GST_MSECOND,
-          sync->sync_recv_time_local + 20 * domain->mean_path_delay)) {
+      sync->sync_recv_time_local + MAX (100 * GST_MSECOND,
+          20 * domain->mean_path_delay)) {
     GST_WARNING ("Sync-follow-up delay for domain %u too big: %" GST_TIME_FORMAT
         " > MAX(100ms, 20 * %" GST_TIME_FORMAT ")", domain->domain,
         GST_TIME_ARGS (sync->follow_up_recv_time_local -
