@@ -402,33 +402,6 @@ _rate_control_get_name (guint32 rc_mode)
   return NULL;
 }
 
-/**
- * GstVaH264Mbbrc:
- *
- * Since: 1.22
- */
-static GType
-gst_va_h264_enc_mbbrc_get_type (void)
-{
-  static gsize type = 0;
-
-  static const GEnumValue values[] = {
-    {0, "Auto choose", "auto"},
-    {1, "Always enable", "enable"},
-    {2, "Always disable", "disable"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&type)) {
-    GType _type;
-
-    _type = g_enum_register_static ("GstVaH264Mbbrc", values);
-    g_once_init_leave (&type, _type);
-  }
-
-  return type;
-}
-
 static GstVaH264EncFrame *
 gst_va_enc_frame_new (void)
 {
@@ -4020,9 +3993,25 @@ gst_va_h264_enc_set_property (GObject * object, guint prop_id,
     case PROP_AUD:
       self->prop.aud = g_value_get_boolean (value);
       break;
-    case PROP_MBBRC:
-      self->prop.mbbrc = g_value_get_enum (value);
+    case PROP_MBBRC:{
+      /* Macroblock-level rate control.
+       * 0: use default,
+       * 1: always enable,
+       * 2: always disable,
+       * other: reserved. */
+      switch (g_value_get_enum (value)) {
+        case GST_VA_FEATURE_DISABLED:
+          self->prop.mbbrc = 2;
+          break;
+        case GST_VA_FEATURE_ENABLED:
+          self->prop.mbbrc = 1;
+          break;
+        case GST_VA_FEATURE_AUTO:
+          self->prop.mbbrc = 0;
+          break;
+      }
       break;
+    }
     case PROP_BITRATE:
       self->prop.bitrate = g_value_get_uint (value);
       break;
@@ -4372,7 +4361,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_MBBRC] = g_param_spec_enum ("mbbrc",
       "Macroblock level Bitrate Control",
       "Macroblock level Bitrate Control. It is not compatible with CQP",
-      gst_va_h264_enc_mbbrc_get_type (), 0,
+      GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
@@ -4446,7 +4435,16 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
   gst_type_mark_as_plugin_api (gst_va_encoder_rate_control_get_type (), 0);
-  gst_type_mark_as_plugin_api (gst_va_h264_enc_mbbrc_get_type (), 0);
+
+  /**
+   * GstVaFeature:
+   * @GST_VA_FEATURE_DISABLED: The feature is disabled.
+   * @GST_VA_FEATURE_ENABLED: The feature is enabled.
+   * @GST_VA_FEATURE_AUTO: The feature is enabled automatically.
+   *
+   * Since: 1.22
+   */
+  gst_type_mark_as_plugin_api (GST_TYPE_VA_FEATURE, 0);
 }
 
 static GstCaps *
