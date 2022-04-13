@@ -5584,7 +5584,7 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
     pad = gst_object_ref (priv->send_src[0]);
   } else {
     g_mutex_unlock (&priv->lock);
-    GST_WARNING_OBJECT (stream, "Couldn't obtain postion: erroneous pipeline");
+    GST_WARNING_OBJECT (stream, "Couldn't obtain position: erroneous pipeline");
     return FALSE;
   }
   g_mutex_unlock (&priv->lock);
@@ -5592,7 +5592,7 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
   if (sink) {
     if (!gst_element_query_position (sink, GST_FORMAT_TIME, position)) {
       GST_WARNING_OBJECT (stream,
-          "Couldn't obtain postion: position query failed");
+          "Couldn't obtain position: position query failed");
       gst_object_unref (sink);
       return FALSE;
     }
@@ -5603,7 +5603,7 @@ gst_rtsp_stream_query_position (GstRTSPStream * stream, gint64 * position)
 
     event = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
     if (!event) {
-      GST_WARNING_OBJECT (stream, "Couldn't obtain postion: no segment event");
+      GST_WARNING_OBJECT (stream, "Couldn't obtain position: no segment event");
       gst_object_unref (pad);
       return FALSE;
     }
@@ -5779,7 +5779,7 @@ beach:
  * Add a receiver and sender part to the pipeline based on the transport from
  * SETUP.
  *
- * Returns: %TRUE if the stream has been sucessfully updated.
+ * Returns: %TRUE if the stream has been successfully updated.
  *
  * Since: 1.14
  */
@@ -5811,7 +5811,7 @@ gst_rtsp_stream_complete_stream (GstRTSPStream * stream,
   priv->is_complete = TRUE;
   g_mutex_unlock (&priv->lock);
 
-  GST_DEBUG_OBJECT (stream, "pipeline sucsessfully updated");
+  GST_DEBUG_OBJECT (stream, "pipeline successfully updated");
   return TRUE;
 
 create_receiver_error:
