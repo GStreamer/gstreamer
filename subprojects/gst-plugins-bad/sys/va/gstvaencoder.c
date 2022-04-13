@@ -1141,3 +1141,36 @@ gst_va_encode_picture_free (GstVaEncodePicture * pic)
 
   g_slice_free (GstVaEncodePicture, pic);
 }
+
+/**
+ * GstVaEncoderRateControl:
+ *
+ * Since: 1.22
+ */
+GType
+gst_va_encoder_rate_control_get_type (void)
+{
+  static gsize type = 0;
+  static const GEnumValue values[] = {
+    {VA_RC_CBR, "Constant Bitrate", "cbr"},
+    {VA_RC_VBR, "Variable Bitrate", "vbr"},
+    {VA_RC_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
+    {VA_RC_CQP, "Constant Quantizer", "cqp"},
+    /* {VA_RC_VBR_CONSTRAINED, "VBR with peak rate higher than average bitrate", */
+    /*  "vbr-constrained"}, */
+    /* {VA_RC_ICQ, "Intelligent Constant Quality", "icq"}, */
+    /* {VA_RC_MB, "Macroblock based rate control", "mb"}, */
+    /* {VA_RC_CFS, "Constant Frame Size", "cfs"}, */
+    /* {VA_RC_PARALLEL, "Parallel BRC", "parallel"}, */
+    /* {VA_RC_QVBR, "Quality defined VBR", "qvbr"}, */
+    /* {VA_RC_AVBR, "Average VBR", "avbr"}, */
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType _type = g_enum_register_static ("GstVaEncoderRateControl", values);
+    g_once_init_leave (&type, _type);
+  }
+
+  return type;
+}

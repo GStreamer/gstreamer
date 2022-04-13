@@ -403,34 +403,6 @@ _rate_control_get_name (guint32 rc_mode)
 }
 
 /**
- * GstVaH264EncRateControl:
- *
- * Since: 1.22
- */
-static GType
-gst_va_h264_enc_rate_control_get_type (void)
-{
-  static gsize type = 0;
-
-  static const GEnumValue values[] = {
-    {VA_RC_CBR, "Constant Bitrate", "cbr"},
-    {VA_RC_VBR, "Variable Bitrate", "vbr"},
-    {VA_RC_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
-    {VA_RC_CQP, "Constant Quantizer", "cqp"},
-    {0, NULL, NULL}
-  };
-
-  if (g_once_init_enter (&type)) {
-    GType _type;
-
-    _type = g_enum_register_static ("GstVaH264EncRateControl", values);
-    g_once_init_leave (&type, _type);
-  }
-
-  return type;
-}
-
-/**
  * GstVaH264Mbbrc:
  *
  * Since: 1.22
@@ -4464,7 +4436,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",
       "rate control mode", "The desired rate control mode for the encoder",
-      gst_va_h264_enc_rate_control_get_type (), VA_RC_CBR,
+      GST_TYPE_VA_ENCODER_RATE_CONTROL, VA_RC_CBR,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
@@ -4473,7 +4445,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
 
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
-  gst_type_mark_as_plugin_api (gst_va_h264_enc_rate_control_get_type (), 0);
+  gst_type_mark_as_plugin_api (gst_va_encoder_rate_control_get_type (), 0);
   gst_type_mark_as_plugin_api (gst_va_h264_enc_mbbrc_get_type (), 0);
 }
 

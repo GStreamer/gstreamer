@@ -44,6 +44,9 @@ struct _GstVaEncodePicture
   VABufferID coded_buffer;
 };
 
+#define GST_TYPE_VA_ENCODER_RATE_CONTROL (gst_va_encoder_rate_control_get_type())
+GType                 gst_va_encoder_rate_control_get_type (void);
+
 gboolean              gst_va_encoder_is_open              (GstVaEncoder * self);
 gboolean              gst_va_encoder_open                 (GstVaEncoder * self,
                                                            VAProfile profile,
