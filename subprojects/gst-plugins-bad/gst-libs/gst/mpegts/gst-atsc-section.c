@@ -140,7 +140,6 @@ _parse_atsc_vct (GstMpegtsSection * section)
   guint32 tmp32;
   guint16 descriptors_loop_length, tmp16;
   guint i;
-  GError *err = NULL;
 
   vct = g_new0 (GstMpegtsAtscVCT, 1);
 
@@ -167,6 +166,7 @@ _parse_atsc_vct (GstMpegtsSection * section)
 
   for (i = 0; i < source_nb; i++) {
     GstMpegtsAtscVCTSource *source;
+    GError *err = NULL;
 
     /* minimum 32 bytes for a entry, 2 bytes second descriptor
        loop-length, 4 bytes crc */
@@ -182,7 +182,7 @@ _parse_atsc_vct (GstMpegtsSection * section)
       GST_WARNING ("Failed to convert VCT Source short_name to utf-8: %d %s",
           err->code, err->message);
       GST_MEMDUMP ("UTF-16 string", data, 14);
-      g_error_free (err);
+      g_clear_error (&err);
     }
     data += 14;
 
