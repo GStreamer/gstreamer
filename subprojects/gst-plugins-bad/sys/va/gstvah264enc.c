@@ -103,6 +103,7 @@ enum
   PROP_RATE_CONTROL,
   PROP_CPB_SIZE,
   PROP_AUD,
+  PROP_DEVICE_PATH,
   N_PROPERTIES
 };
 
@@ -4144,6 +4145,14 @@ gst_va_h264_enc_get_property (GObject * object, guint prop_id,
     case PROP_CPB_SIZE:
       g_value_set_uint (value, self->prop.cpb_size);
       break;
+    case PROP_DEVICE_PATH:{
+      if (!(self->display && GST_IS_VA_DISPLAY_DRM (self->display))) {
+        g_value_set_string (value, NULL);
+        return;
+      }
+      g_object_get_property (G_OBJECT (self->display), "path", value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -4457,6 +4466,10 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
       "rate control mode", "The desired rate control mode for the encoder",
       gst_va_h264_enc_rate_control_get_type (), VA_RC_CBR,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
+      "Device Path", "DRM device path", NULL,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
