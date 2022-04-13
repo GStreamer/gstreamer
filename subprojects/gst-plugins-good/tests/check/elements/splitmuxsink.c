@@ -663,6 +663,55 @@ GST_START_TEST (test_splitmuxsink_muxer_pad_map)
 
 GST_END_TEST;
 
+static void
+run_eos_pipeline (guint num_video_buf, guint num_audio_buf,
+    gboolean configure_audio)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  gchar *dest_pattern;
+  gchar *pipeline_str;
+  gchar *audio_branch = NULL;
+
+  dest_pattern = g_build_filename (tmpdir, "out%05d.mp4", NULL);
+
+  if (configure_audio) {
+    audio_branch = g_strdup_printf ("audiotestsrc num-buffers=%d ! "
+        "splitsink.audio_0", num_audio_buf);
+  }
+
+  pipeline_str = g_strdup_printf ("splitmuxsink name=splitsink location=%s "
+      "muxer-factory=qtmux videotestsrc num-buffers=%d ! jpegenc ! splitsink. "
+      "%s", dest_pattern, num_video_buf, audio_branch ? audio_branch : "");
+  pipeline = gst_parse_launch (pipeline_str, NULL);
+  g_free (dest_pattern);
+  g_free (audio_branch);
+  g_free (pipeline_str);
+
+  fail_if (pipeline == NULL);
+
+  msg = run_pipeline (pipeline);
+
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
+    dump_error (msg);
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_splitmuxsink_eos_without_buffer)
+{
+  /* below pipelines will create non-playable files but at least we should not
+   * crash */
+  run_eos_pipeline (0, 0, FALSE);
+  run_eos_pipeline (0, 0, TRUE);
+  run_eos_pipeline (1, 0, TRUE);
+  run_eos_pipeline (0, 1, TRUE);
+}
+
+GST_END_TEST;
+
 static GstPadProbeReturn
 count_upstrea_fku (GstPad * pad, GstPadProbeInfo * info,
     guint * upstream_fku_count)
@@ -863,6 +912,7 @@ splitmuxsink_suite (void)
     tcase_add_checked_fixture (tc_chain_mp4_jpeg, tempdir_setup,
         tempdir_cleanup);
     tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsink_muxer_pad_map);
+    tcase_add_test (tc_chain_mp4_jpeg, test_splitmuxsink_eos_without_buffer);
   } else {
     GST_INFO ("Skipping tests, missing plugins: jpegenc or mp4mux");
   }

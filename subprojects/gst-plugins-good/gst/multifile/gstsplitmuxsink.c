@@ -2805,14 +2805,34 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
           splitmux->input_state = SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT;
           /* Wake up other input pads to collect this GOP */
           GST_SPLITMUX_BROADCAST_INPUT (splitmux);
-          check_completed_gop (splitmux, ctx);
+          if (g_queue_is_empty (&splitmux->pending_input_gops)) {
+            GST_WARNING_OBJECT (splitmux,
+                "EOS with no buffers received on the reference pad");
+
+            /* - child muxer and sink might be still locked state
+             *   (see gst_splitmux_reset_elements()) so should be unlocked
+             *   for state change of splitmuxsink to be applied to child
+             * - would need to post async done message
+             * - location on sink element is still null then it will post
+             *   error message on bus (muxer will produce something, header
+             *   data for example)
+             *
+             * Calls start_next_fragment() here, the method will address
+             * everything the above mentioned one */
+            ret = start_next_fragment (splitmux, ctx);
+            if (ret != GST_FLOW_OK)
+              goto beach;
+          } else {
+            check_completed_gop (splitmux, ctx);
+          }
         } else if (splitmux->input_state ==
             SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT) {
           /* If we are waiting for a GOP to be completed (ie, for aux
            * pads to catch up), then this pad is complete, so check
            * if the whole GOP is.
            */
-          check_completed_gop (splitmux, ctx);
+          if (!g_queue_is_empty (&splitmux->pending_input_gops))
+            check_completed_gop (splitmux, ctx);
         }
         GST_SPLITMUX_UNLOCK (splitmux);
         break;
@@ -3181,6 +3201,15 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
         GST_LOG_OBJECT (pad,
             "Collected last packet of GOP. Checking other pads");
+
+        if (g_queue_is_empty (&splitmux->pending_input_gops)) {
+          GST_WARNING_OBJECT (pad,
+              "Reference was closed without GOP, dropping");
+          GST_SPLITMUX_UNLOCK (splitmux);
+          GST_PAD_PROBE_INFO_FLOW_RETURN (info) = GST_FLOW_EOS;
+          return GST_PAD_PROBE_DROP;
+        }
+
         check_completed_gop (splitmux, ctx);
         break;
       }
