@@ -692,7 +692,7 @@ gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
 }
 
 const gchar *
-gst_cuda_buffery_copy_type_to_string (GstCudaBufferCopyType type)
+gst_cuda_buffer_copy_type_to_string (GstCudaBufferCopyType type)
 {
   switch (type) {
     case GST_CUDA_BUFFER_COPY_SYSTEM:
@@ -1528,7 +1528,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
       cuda_context = GST_CUDA_MEMORY_CAST (dst_mem)->context;
 
     GST_TRACE_OBJECT (context, "GL -> %s",
-        gst_cuda_buffery_copy_type_to_string (dst_type));
+        gst_cuda_buffer_copy_type_to_string (dst_type));
 
     return cuda_copy_gl_interop (dst, dst_info, src, src_info, gl_context,
         cuda_context, stream, TRUE, dst_type);
@@ -1543,7 +1543,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
       cuda_context = GST_CUDA_MEMORY_CAST (src_mem)->context;
 
     GST_TRACE_OBJECT (context, "%s -> GL",
-        gst_cuda_buffery_copy_type_to_string (src_type));
+        gst_cuda_buffer_copy_type_to_string (src_type));
 
     return cuda_copy_gl_interop (dst, dst_info, src, src_info, gl_context,
         cuda_context, stream, FALSE, src_type);
@@ -1597,8 +1597,8 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   }
 
   GST_TRACE_OBJECT (context, "%s -> %s",
-      gst_cuda_buffery_copy_type_to_string (src_type),
-      gst_cuda_buffery_copy_type_to_string (dst_type));
+      gst_cuda_buffer_copy_type_to_string (src_type),
+      gst_cuda_buffer_copy_type_to_string (dst_type));
 
   return gst_cuda_buffer_copy_internal (dst, dst_type, dst_info,
       src, src_type, src_info, cuda_context, stream);

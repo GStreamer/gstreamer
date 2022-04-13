@@ -204,7 +204,7 @@ typedef enum
 } GstCudaBufferCopyType;
 
 /**
- * gst_cuda_buffery_copy_type_to_string:
+ * gst_cuda_buffer_copy_type_to_string:
  * @type: The #GstCudaBufferCopyType to get name from
  *
  * Returns: The human readable name of @type
@@ -212,7 +212,7 @@ typedef enum
  * Since: 1.22
  */
 GST_CUDA_API
-const gchar * gst_cuda_buffery_copy_type_to_string (GstCudaBufferCopyType type);
+const gchar * gst_cuda_buffer_copy_type_to_string (GstCudaBufferCopyType type);
 
 /**
  * gst_cuda_buffer_copy:

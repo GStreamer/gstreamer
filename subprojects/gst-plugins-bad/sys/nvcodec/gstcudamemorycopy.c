@@ -867,8 +867,8 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
     GST_LOG_OBJECT (self,
         "Copy %s -> %s failed, checking whether fallback is possible",
-        gst_cuda_buffery_copy_type_to_string (in_type),
-        gst_cuda_buffery_copy_type_to_string (out_type));
+        gst_cuda_buffer_copy_type_to_string (in_type),
+        gst_cuda_buffer_copy_type_to_string (out_type));
 
     switch (in_type) {
       case GST_CUDA_BUFFER_COPY_GL:
@@ -890,15 +890,15 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
     if (in_type == fallback_in_type && out_type == fallback_out_type) {
       GST_ERROR_OBJECT (self, "Failed to copy %s -> %s",
-          gst_cuda_buffery_copy_type_to_string (in_type),
-          gst_cuda_buffery_copy_type_to_string (out_type));
+          gst_cuda_buffer_copy_type_to_string (in_type),
+          gst_cuda_buffer_copy_type_to_string (out_type));
 
       return GST_FLOW_ERROR;
     }
 
     GST_LOG_OBJECT (self, "Trying %s -> %s fallback",
-        gst_cuda_buffery_copy_type_to_string (fallback_in_type),
-        gst_cuda_buffery_copy_type_to_string (fallback_out_type));
+        gst_cuda_buffer_copy_type_to_string (fallback_in_type),
+        gst_cuda_buffer_copy_type_to_string (fallback_out_type));
 
     ret = gst_cuda_buffer_copy (outbuf, fallback_out_type, out_info, inbuf,
         fallback_in_type, in_info, ctrans->context, ctrans->cuda_stream);
@@ -922,8 +922,8 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_OK;
 
   GST_ERROR_OBJECT (self, "Failed to copy %s -> %s",
-      gst_cuda_buffery_copy_type_to_string (in_type),
-      gst_cuda_buffery_copy_type_to_string (out_type));
+      gst_cuda_buffer_copy_type_to_string (in_type),
+      gst_cuda_buffer_copy_type_to_string (out_type));
 
   return GST_FLOW_ERROR;
 }
