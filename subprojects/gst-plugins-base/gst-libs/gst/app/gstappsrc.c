@@ -621,7 +621,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    /**
     * GstAppSrc::push-buffer:
     * @appsrc: the appsrc
-    * @buffer (transfer none): a buffer to push
+    * @buffer: (transfer none): a buffer to push
     *
     * Adds a buffer to the queue of buffers that the appsrc element will
     * push to its source pad.
@@ -642,7 +642,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
    /**
     * GstAppSrc::push-buffer-list:
     * @appsrc: the appsrc
-    * @buffer_list (transfer none): a buffer list to push
+    * @buffer_list: (transfer none): a buffer list to push
     *
     * Adds a buffer list to the queue of buffers and buffer lists that the
     * appsrc element will push to its source pad.
@@ -665,7 +665,7 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   /**
     * GstAppSrc::push-sample:
     * @appsrc: the appsrc
-    * @sample (transfer none): a sample from which extract buffer to push
+    * @sample: (transfer none): a sample from which extract buffer to push
     *
     * Extract a buffer from the provided sample and adds the extracted buffer
     * to the queue of buffers that the appsrc element will
