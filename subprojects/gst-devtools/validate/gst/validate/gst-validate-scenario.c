@@ -252,6 +252,7 @@ struct _GstValidateScenarioPrivate
   gboolean changing_state;
   gboolean needs_async_done;
   gboolean ignore_eos;
+  gboolean allow_errors;
   GstState target_state;
 
   GList *overrides;
@@ -4246,6 +4247,28 @@ handle_bus_message (MessageData * d)
         goto done;
       }
 
+      if (is_error && priv->allow_errors) {
+        GST_INFO_OBJECT (scenario, "Got error but ignoring it!");
+        if (scenario->priv->needs_async_done || scenario->priv->changing_state) {
+
+          if (scenario->priv->actions) {
+            GstValidateAction *act =
+                gst_validate_action_ref (scenario->priv->actions->data);
+
+            GST_VALIDATE_REPORT_ACTION (scenario, act,
+                SCENARIO_ACTION_EXECUTION_ERROR,
+                "Error message happened while executing action");
+            gst_validate_action_set_done (act);
+
+            gst_validate_action_unref (act);
+          }
+
+          scenario->priv->needs_async_done = scenario->priv->changing_state =
+              FALSE;
+        }
+        goto done;
+      }
+
       GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK (scenario);
       {
         /* gst_validate_action_set_done() does not finish the action
@@ -4488,6 +4511,8 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
       gst_structure_get_boolean (structure, "ignore-eos", &priv->ignore_eos);
+      gst_structure_get_boolean (structure, "allow-errors",
+          &priv->allow_errors);
       gst_structure_get_boolean (structure, "actions-on-idle",
           &priv->execute_on_idle);
 
@@ -6603,6 +6628,15 @@ register_action_types (void)
         .name = "ignore-eos",
         .description = "Ignore EOS and keep executing the scenario when it happens.\n By default "
           "a 'stop' action is generated one EOS",
+        .mandatory = FALSE,
+        .types = "boolean",
+        .possible_variables = NULL,
+        .def = "false"
+      },
+      {
+        .name = "allow-errors",
+        .description = "Ignore error messages and keep executing the scenario when it happens.\n By default "
+          "a 'stop' action is generated one ERROR messages",
         .mandatory = FALSE,
         .types = "boolean",
         .possible_variables = NULL,

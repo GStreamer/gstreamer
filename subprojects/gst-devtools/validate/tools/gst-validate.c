@@ -87,7 +87,8 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
           GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate.error");
 
-      g_main_loop_quit (loop);
+      if (!g_getenv ("GST_VALIDATE_SCENARIO") && !is_testfile)
+        g_main_loop_quit (loop);
       break;
     }
     case GST_MESSAGE_EOS:
