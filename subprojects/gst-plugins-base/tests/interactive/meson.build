@@ -1,4 +1,4 @@
-base_icles = [
+base_itests = [
   [ 'benchmark-appsink.c', false, [gst_base_dep, app_dep], true ],
   [ 'benchmark-appsrc.c', false, [gst_base_dep, app_dep], true ],
   [ 'benchmark-video-conversion.c', false, [gst_base_dep, video_dep], true ],
@@ -27,35 +27,35 @@ base_icles = [
   [ 'playback/test7.c' ],
 ]
 
-icle_deps = [gst_dep]
+itest_deps = [gst_dep]
 
-foreach icle : base_icles
-  fname = icle.get(0)
-  icle_name = fname.split('.').get(0).underscorify()
-  skip_icle = false
+foreach itest : base_itests
+  fname = itest.get(0)
+  itest_name = fname.split('.').get(0).underscorify()
+  skip_itest = false
   is_bench = false
   extra_deps = [ ]
 
-  if icle.length() >= 4
-    is_bench = icle.get(3)
+  if itest.length() >= 4
+    is_bench = itest.get(3)
   endif
 
-  if icle.length() >= 3
-    extra_deps = icle.get(2)
+  if itest.length() >= 3
+    extra_deps = itest.get(2)
   endif
 
-  if icle.length() >= 2
-    skip_icle = icle.get(1)
+  if itest.length() >= 2
+    skip_itest = itest.get(1)
   endif
 
-  if not skip_icle
-    exe = executable(icle_name, fname,
+  if not skip_itest
+    exe = executable(itest_name, fname,
       include_directories : [configinc],
       c_args : ['-DHAVE_CONFIG_H=1' ],
-      dependencies : icle_deps + extra_deps,
+      dependencies : itest_deps + extra_deps,
     )
     if is_bench
-      benchmark('bench_' + icle_name, exe)
+      benchmark('bench_' + itest_name, exe)
     endif
   endif
 endforeach

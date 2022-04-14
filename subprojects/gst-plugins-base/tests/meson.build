@@ -9,7 +9,7 @@ gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner
 
 if not get_option('tests').disabled() and gst_check_dep.found()
   subdir('check')
-  subdir('icles')
+  subdir('interactive')
   subdir('validate')
 endif
 if not get_option('examples').disabled()

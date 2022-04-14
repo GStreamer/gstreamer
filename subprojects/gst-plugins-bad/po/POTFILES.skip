@@ -7,4 +7,4 @@ tests/examples/uvch264/enum_property_gtk2.glade
 tests/examples/uvch264/int_property.glade
 tests/examples/uvch264/window.glade
 tests/examples/waylandsink/window.ui
-tests/icles/metadata_editor.ui
+tests/interactive/metadata_editor.ui
