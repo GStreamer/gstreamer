@@ -112,7 +112,9 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-editing-services.pythontests', 'Need to figure out how to introduce python suppressions'),
     (r'check.gst-editing-services.check_keyframes_in_compositor_two_sources', 'Valgrind exit with an exitcode 20 but shows no issue: https://gitlab.freedesktop.org/thiblahute/gst-editing-services/-/jobs/4079972'),
     (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
-    (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740')
+    (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740'),
+    (r'check.gst-plugins-base.validate.convertscale.scale_disable_convert', 'Use of uninitialised value of size 8 in digest_to_string that needs investigating'),
+    (r'check.gst-plugins-base.validate.convertscale.convert_disable_scale', 'Use of uninitialised value of size 8 in digest_to_string that needs investigating'),
 ]
 
 

@@ -13639,6 +13639,20 @@
                         "presence": "always"
                     }
                 },
+                "properties": {
+                    "disable-scaling": {
+                        "blurb": "Disables frame scaling",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    }
+                },
                 "rank": "marginal"
             },
             "videoconvertscale": {
@@ -13891,6 +13905,18 @@
                     }
                 },
                 "properties": {
+                    "disable-conversion": {
+                        "blurb": "Disables colorspace conversions",
+                        "conditionally-available": false,
+                        "construct": true,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "gamma-decode": {
                         "blurb": "Decode gamma before scaling",
                         "conditionally-available": false,

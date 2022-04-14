@@ -20,6 +20,8 @@ tests = [
     'compositor/renogotiate_failing_unsupported_src_format',
     'giosrc/read-growing-file',
     'encodebin/set-encoder-properties',
+    'convertscale/convert_disable_scale',
+    'convertscale/scale_disable_convert',
 ]
 
 env = environment()
