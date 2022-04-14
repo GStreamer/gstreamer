@@ -56,7 +56,6 @@
 #define ST_PS_DVD_SUBPICTURE            0xff
 
 /* Blu-ray related (registration: 'HDMV'*/
-#define ST_BD_AUDIO_AC4                 0x06
 #define ST_BD_AUDIO_LPCM                0x80
 #define ST_BD_AUDIO_AC3                 0x81
 #define ST_BD_AUDIO_DTS                 0x82

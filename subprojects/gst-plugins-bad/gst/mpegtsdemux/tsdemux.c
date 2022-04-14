@@ -1382,14 +1382,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         is_audio = TRUE;
         caps = gst_caps_new_empty_simple ("audio/x-eac3");
         break;
-      case ST_BD_AUDIO_AC4:
-        /* Opus also uses 0x06, and there are bad streams that have HDMV registration ID,
-         * but contain an Opus registration id, so check for it */
-        if (bstream->registration_id != DRF_ID_OPUS) {
-          is_audio = TRUE;
-          caps = gst_caps_new_empty_simple ("audio/x-ac4");
-        }
-        break;
       case ST_BD_AUDIO_AC3_TRUE_HD:
         is_audio = TRUE;
         caps = gst_caps_new_empty_simple ("audio/x-true-hd");
