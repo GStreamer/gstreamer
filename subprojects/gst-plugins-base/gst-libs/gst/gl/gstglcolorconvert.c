@@ -1129,7 +1129,8 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   }
 
   if (!context || USING_GLES3 (context) || USING_OPENGL30 (context)) {
-    _append_value_string_list (supported_formats, "NV12_16L32S", NULL);
+    _append_value_string_list (supported_formats, "NV12_16L32S", "NV12_4L4",
+        NULL);
   }
 }
 
@@ -1763,6 +1764,7 @@ _get_n_textures (GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_P016_BE:
     case GST_VIDEO_FORMAT_NV12_16L32S:
+    case GST_VIDEO_FORMAT_NV12_4L4:
       return 2;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_Y444:
@@ -2122,6 +2124,17 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->templ = &templ_TILED_SEMI_PLANAR_to_RGB;
         info->frag_body = g_strdup_printf (templ_TILED_SEMI_PLANAR_to_RGB_BODY,
             16, 32, 8, 16, 'r', val2,
+            pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
+        info->shader_tex_names[0] = "Ytex";
+        info->shader_tex_names[1] = "UVtex";
+        break;
+      }
+      case GST_VIDEO_FORMAT_NV12_4L4:
+      {
+        char val2 = convert->priv->in_tex_formats[1] == GST_GL_RG ? 'g' : 'a';
+        info->templ = &templ_TILED_SEMI_PLANAR_to_RGB;
+        info->frag_body = g_strdup_printf (templ_TILED_SEMI_PLANAR_to_RGB_BODY,
+            4, 4, 2, 4, 'r', val2,
             pixel_order[0], pixel_order[1], pixel_order[2], pixel_order[3]);
         info->shader_tex_names[0] = "Ytex";
         info->shader_tex_names[1] = "UVtex";
