@@ -2155,6 +2155,7 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       GstVideoMultiviewFlags mview_flags = h264parse->multiview_flags;
       const gchar *chroma_format = NULL;
       guint bit_depth_chroma;
+      const gchar *coded_picture_structure;
 
       fps_num = h264parse->fps_num;
       fps_den = h264parse->fps_den;
@@ -2232,6 +2233,15 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
         gst_base_parse_set_latency (GST_BASE_PARSE (h264parse), latency,
             latency);
       }
+
+      if (sps->frame_mbs_only_flag == 1) {
+        coded_picture_structure = "frame";
+      } else {
+        coded_picture_structure = "field";
+      }
+
+      gst_caps_set_simple (caps, "coded-picture-structure", G_TYPE_STRING,
+          coded_picture_structure, NULL);
 
       bit_depth_chroma = sps->bit_depth_chroma_minus8 + 8;
 
