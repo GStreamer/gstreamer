@@ -2272,6 +2272,11 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
       return FALSE;
     }
 
+    if (gst_caps_is_any (allowed_caps)) {
+      gst_caps_unref (allowed_caps);
+      allowed_caps = gst_caps_ref (template_caps);
+    }
+
     allowed_caps = gst_caps_make_writable (allowed_caps);
     allowed_caps = gst_caps_fixate (allowed_caps);
     s = gst_caps_get_structure (allowed_caps, 0);
