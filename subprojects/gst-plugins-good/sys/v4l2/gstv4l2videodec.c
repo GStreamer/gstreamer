@@ -762,6 +762,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     /* Copy the rest of the information, there might be more in the future */
     output_state->info.interlace_mode = info.interlace_mode;
+    output_state->info.colorimetry = info.colorimetry;
     gst_video_codec_state_unref (output_state);
 
     if (!gst_video_decoder_negotiate (decoder)) {
