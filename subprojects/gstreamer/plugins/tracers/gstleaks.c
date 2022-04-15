@@ -925,7 +925,7 @@ gst_leaks_tracer_setup_signals (GstLeaksTracer * leaks)
      * See https://pubs.opengroup.org/onlinepubs/007904975/functions/pthread_atfork.html
      * for details. */
     res = pthread_atfork (atfork_prepare, atfork_parent, atfork_child);
-    if (!res) {
+    if (res != 0) {
       GST_WARNING_OBJECT (leaks, "pthread_atfork() failed (%d)", res);
     }
 
