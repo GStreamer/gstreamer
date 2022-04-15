@@ -3147,11 +3147,12 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   else if (g_str_has_prefix (GST_PAD_NAME (pad), "text"))
     combine = &playbin->combiner[PLAYBIN_STREAM_TEXT];
   else
-    return;
+    goto done;
 
   combiner_release_pad (playbin, combine, pad);
   release_source_pad (playbin, group, pad);
 
+done:
   GST_PLAY_BIN3_UNLOCK (playbin);
 }
 
