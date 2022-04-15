@@ -706,7 +706,7 @@ gst_cuda_buffer_fallback_copy (GstBuffer * dst, const GstVideoInfo * dst_info,
   }
 
   /* src and dst resolutions can be different, pick min value */
-  for (i = 0; GST_VIDEO_FRAME_N_PLANES (&dst_frame); i++) {
+  for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (&dst_frame); i++) {
     guint dst_width_in_bytes, src_width_in_bytes;
     guint dst_height, src_height;
     guint width_in_bytes, height;
