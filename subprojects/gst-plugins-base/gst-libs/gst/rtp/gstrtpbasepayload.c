@@ -1718,7 +1718,8 @@ set_headers (GstBuffer ** buffer, guint idx, gpointer user_data)
   gst_rtp_buffer_set_timestamp (&rtp, data->rtptime);
 
   GST_OBJECT_LOCK (data->payload);
-  if (data->payload->priv->header_exts->len > 0) {
+  if (data->payload->priv->header_exts->len > 0
+      && data->payload->priv->input_meta_buffer) {
     guint wordlen;
     gsize extlen;
     guint16 bit_pattern;
