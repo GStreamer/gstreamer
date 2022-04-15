@@ -74,6 +74,9 @@ enum
   PROP_MIN_QP,
   PROP_MAX_QP,
   PROP_INTRA_REFRESH_TYPE,
+  PROP_INTRA_REFRESH_CYCLE_SIZE,
+  PROP_INTRA_REFRESH_QP_DELTA,
+  PROP_INTRA_REFRESH_CYCLE_DIST,
   PROP_DBLK_IDC,
 };
 
@@ -83,19 +86,22 @@ enum
   GST_MSDK_FLAG_TUNE_MODE = 1 << 1,
 };
 
-#define PROP_CABAC_DEFAULT              TRUE
-#define PROP_LOWPOWER_DEFAULT           FALSE
-#define PROP_FRAME_PACKING_DEFAULT      -1
-#define PROP_RC_LA_DOWNSAMPLING_DEFAULT MFX_LOOKAHEAD_DS_UNKNOWN
-#define PROP_TRELLIS_DEFAULT            _MFX_TRELLIS_NONE
-#define PROP_MAX_SLICE_SIZE_DEFAULT     0
-#define PROP_B_PYRAMID_DEFAULT          FALSE
-#define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
-#define PROP_P_PYRAMID_DEFAULT          FALSE
-#define PROP_MIN_QP_DEFAULT             0
-#define PROP_MAX_QP_DEFAULT             0
-#define PROP_INTRA_REFRESH_TYPE_DEFAULT MFX_REFRESH_NO
-#define PROP_DBLK_IDC_DEFAULT           0
+#define PROP_CABAC_DEFAULT                    TRUE
+#define PROP_LOWPOWER_DEFAULT                 FALSE
+#define PROP_FRAME_PACKING_DEFAULT            -1
+#define PROP_RC_LA_DOWNSAMPLING_DEFAULT       MFX_LOOKAHEAD_DS_UNKNOWN
+#define PROP_TRELLIS_DEFAULT                  _MFX_TRELLIS_NONE
+#define PROP_MAX_SLICE_SIZE_DEFAULT           0
+#define PROP_B_PYRAMID_DEFAULT                FALSE
+#define PROP_TUNE_MODE_DEFAULT                MFX_CODINGOPTION_UNKNOWN
+#define PROP_P_PYRAMID_DEFAULT                FALSE
+#define PROP_MIN_QP_DEFAULT                   0
+#define PROP_MAX_QP_DEFAULT                   0
+#define PROP_INTRA_REFRESH_TYPE_DEFAULT       MFX_REFRESH_NO
+#define PROP_INTRA_REFRESH_CYCLE_SIZE_DEFAULT 0
+#define PROP_INTRA_REFRESH_QP_DELTA_DEFAULT   0
+#define PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT 0
+#define PROP_DBLK_IDC_DEFAULT                 0
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -407,6 +413,8 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
   encoder->option2.MaxQPI = encoder->option2.MaxQPP = encoder->option2.MaxQPB =
       thiz->max_qp;
   encoder->option2.IntRefType = thiz->intra_refresh_type;
+  encoder->option2.IntRefCycleSize = thiz->intra_refresh_cycle_size;
+  encoder->option2.IntRefQPDelta = thiz->intra_refresh_qp_delta;
   encoder->option2.DisableDeblockingIdc = thiz->dblk_idc;
 
   if (encoder->rate_control == MFX_RATECONTROL_LA ||
@@ -427,6 +435,9 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
     encoder->param.mfx.GopRefDist = 1;
     /* SDK decides the DPB size for P pyramid */
     encoder->param.mfx.NumRefFrame = 0;
+  }
+  if (thiz->intra_refresh_cycle_dist) {
+    encoder->option3.IntRefCycleDist = thiz->intra_refresh_cycle_dist;
     encoder->enable_extopt3 = TRUE;
   }
 
@@ -611,6 +622,15 @@ gst_msdkh264enc_set_property (GObject * object, guint prop_id,
     case PROP_INTRA_REFRESH_TYPE:
       thiz->intra_refresh_type = g_value_get_enum (value);
       break;
+    case PROP_INTRA_REFRESH_CYCLE_SIZE:
+      thiz->intra_refresh_cycle_size = g_value_get_uint (value);
+      break;
+    case PROP_INTRA_REFRESH_QP_DELTA:
+      thiz->intra_refresh_qp_delta = g_value_get_int (value);
+      break;
+    case PROP_INTRA_REFRESH_CYCLE_DIST:
+      thiz->intra_refresh_cycle_dist = g_value_get_uint (value);
+      break;
     case PROP_DBLK_IDC:
       thiz->dblk_idc = g_value_get_uint (value);
       break;
@@ -670,6 +690,15 @@ gst_msdkh264enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_INTRA_REFRESH_TYPE:
       g_value_set_enum (value, thiz->intra_refresh_type);
+      break;
+    case PROP_INTRA_REFRESH_CYCLE_SIZE:
+      g_value_set_uint (value, thiz->intra_refresh_cycle_size);
+      break;
+    case PROP_INTRA_REFRESH_QP_DELTA:
+      g_value_set_int (value, thiz->intra_refresh_qp_delta);
+      break;
+    case PROP_INTRA_REFRESH_CYCLE_DIST:
+      g_value_set_uint (value, thiz->intra_refresh_cycle_dist);
       break;
     case PROP_DBLK_IDC:
       g_value_set_uint (value, thiz->dblk_idc);
@@ -799,6 +828,24 @@ gst_msdkh264enc_class_init (GstMsdkH264EncClass * klass)
           PROP_INTRA_REFRESH_TYPE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_CYCLE_SIZE,
+      g_param_spec_uint ("intra-refresh-cycle-size", "Intra refresh cycle size",
+          "Set intra refresh cycle size, valid value starts from 2",
+          0, G_MAXUINT16, PROP_INTRA_REFRESH_CYCLE_SIZE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_QP_DELTA,
+      g_param_spec_int ("intra-refresh-qp-delta", "Intra refresh qp delta",
+          "Set intra refresh qp delta",
+          -51, 51, PROP_INTRA_REFRESH_QP_DELTA_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_CYCLE_DIST,
+      g_param_spec_uint ("intra-refresh-cycle-dist", "Intra refresh cycle dist",
+          "Set intra refresh cycle dist",
+          0, G_MAXUINT16, PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_DBLK_IDC,
       g_param_spec_uint ("dblk-idc", "Disable Deblocking Idc",
           "Option of disable deblocking idc",
@@ -827,5 +874,8 @@ gst_msdkh264enc_init (GstMsdkH264Enc * thiz)
   thiz->min_qp = PROP_MIN_QP_DEFAULT;
   thiz->max_qp = PROP_MAX_QP_DEFAULT;
   thiz->intra_refresh_type = PROP_INTRA_REFRESH_TYPE_DEFAULT;
+  thiz->intra_refresh_cycle_size = PROP_INTRA_REFRESH_CYCLE_SIZE_DEFAULT;
+  thiz->intra_refresh_qp_delta = PROP_INTRA_REFRESH_QP_DELTA_DEFAULT;
+  thiz->intra_refresh_cycle_dist = PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT;
   thiz->dblk_idc = PROP_DBLK_IDC_DEFAULT;
 }
