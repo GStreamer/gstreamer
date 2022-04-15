@@ -1123,6 +1123,9 @@ _generate_gop_structure (GstVaH264Enc * self)
       self->gop.ref_num_list0--;
       self->gop.ref_num_list1++;
     }
+
+    if (self->gop.ref_num_list0 > list0)
+      self->gop.ref_num_list0 = list0;
   }
 
   /* It's OK, keep slots for GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME frame. */
