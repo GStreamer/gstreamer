@@ -1,4 +1,4 @@
-project('gst-python', 'c', 'cpp',
+project('gst-python', 'c',
   version : '1.20.1.1',
   meson_version : '>= 0.59',
   default_options : [ 'warning_level=1',
