@@ -1081,6 +1081,9 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
     case MFX_FOURCC_NV12:
       format = GST_VIDEO_FORMAT_NV12;
       break;
+    case MFX_FOURCC_P010:
+      format = GST_VIDEO_FORMAT_P010_10LE;
+      break;
     default:
       break;
   }

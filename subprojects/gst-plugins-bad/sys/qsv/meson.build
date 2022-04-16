@@ -4,6 +4,7 @@ qsv_sources = [
   'gstqsvencoder.cpp',
   'gstqsvh264dec.cpp',
   'gstqsvh264enc.cpp',
+  'gstqsvh265dec.cpp',
   'gstqsvh265enc.cpp',
   'gstqsvjpegenc.cpp',
   'gstqsvutils.cpp',
