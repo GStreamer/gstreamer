@@ -138,6 +138,7 @@ typedef struct _GstQsvH265EncClassData
   guint impl_index;
   gint64 adapter_luid;
   gchar *display_path;
+  gboolean hdr10_aware;
 } GstQsvH265EncClassData;
 
 typedef struct _GstQsvH265Enc
@@ -148,6 +149,8 @@ typedef struct _GstQsvH265Enc
   mfxExtCodingOption option;
   mfxExtCodingOption2 option2;
   mfxExtCodingOption3 option3;
+  mfxExtContentLightLevelInfo cll;
+  mfxExtMasteringDisplayColourVolume mdcv;
 
   mfxU16 profile;
 
@@ -182,6 +185,8 @@ typedef struct _GstQsvH265Enc
 typedef struct _GstQsvH265EncClass
 {
   GstQsvEncoderClass parent_class;
+
+  gboolean hdr10_aware;
 } GstQsvH265EncClass;
 
 static GstElementClass *parent_class = nullptr;
@@ -381,6 +386,8 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_qsv_h265_enc_create_output_buffer);
   qsvenc_class->check_reconfigure =
       GST_DEBUG_FUNCPTR (gst_qsv_h265_enc_check_reconfigure);
+
+  klass->hdr10_aware = cdata->hdr10_aware;
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
@@ -828,6 +835,8 @@ gst_qsv_h265_enc_init_extra_params (GstQsvH265Enc * self)
   memset (&self->option, 0, sizeof (mfxExtCodingOption));
   memset (&self->option2, 0, sizeof (mfxExtCodingOption2));
   memset (&self->option3, 0, sizeof (mfxExtCodingOption3));
+  memset (&self->cll, 0, sizeof (mfxExtContentLightLevelInfo));
+  memset (&self->mdcv, 0, sizeof (mfxExtMasteringDisplayColourVolume));
 
   self->signal_info.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO;
   self->signal_info.Header.BufferSz = sizeof (mfxExtVideoSignalInfo);
@@ -840,6 +849,14 @@ gst_qsv_h265_enc_init_extra_params (GstQsvH265Enc * self)
 
   self->option3.Header.BufferId = MFX_EXTBUFF_CODING_OPTION3;
   self->option3.Header.BufferSz = sizeof (mfxExtCodingOption3);
+
+  self->cll.Header.BufferId = MFX_EXTBUFF_CONTENT_LIGHT_LEVEL_INFO;
+  self->cll.Header.BufferSz = sizeof (mfxExtContentLightLevelInfo);
+  self->cll.InsertPayloadToggle = MFX_PAYLOAD_IDR;
+
+  self->mdcv.Header.BufferId = MFX_EXTBUFF_MASTERING_DISPLAY_COLOUR_VOLUME;
+  self->mdcv.Header.BufferSz = sizeof (mfxExtMasteringDisplayColourVolume);
+  self->mdcv.InsertPayloadToggle = MFX_PAYLOAD_IDR;
 }
 
 static void
@@ -883,12 +900,18 @@ gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
     GstVideoCodecState * state, mfxVideoParam * param, GPtrArray * extra_params)
 {
   GstQsvH265Enc *self = GST_QSV_H265_ENC (encoder);
+  GstQsvH265EncClass *klass = GST_QSV_H265_ENC_GET_CLASS (self);
   mfxU16 mfx_profile = MFX_PROFILE_UNKNOWN;
   GstVideoInfo *info = &state->info;
   mfxExtVideoSignalInfo *signal_info = nullptr;
   mfxExtCodingOption *option;
   mfxExtCodingOption2 *option2;
   mfxExtCodingOption3 *option3;
+  mfxExtContentLightLevelInfo *cll;
+  mfxExtMasteringDisplayColourVolume *mdcv;
+  gboolean have_cll = FALSE;
+  gboolean have_mdcv = FALSE;
+
   mfxFrameInfo *frame_info;
 
   frame_info = &param->mfx.FrameInfo;
@@ -945,6 +968,37 @@ gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
   option = &self->option;
   option2 = &self->option2;
   option3 = &self->option3;
+  cll = &self->cll;
+  mdcv = &self->mdcv;
+
+  if (klass->hdr10_aware) {
+    GstVideoMasteringDisplayInfo mdcv_info;
+    GstVideoContentLightLevel cll_info;
+
+    if (gst_video_content_light_level_from_caps (&cll_info, state->caps)) {
+      cll->MaxContentLightLevel = cll_info.max_content_light_level;
+      cll->MaxPicAverageLightLevel = cll_info.max_frame_average_light_level;
+      have_cll = TRUE;
+    }
+
+    if (gst_video_mastering_display_info_from_caps (&mdcv_info, state->caps)) {
+      /* GBR order is used in HEVC */
+      mdcv->DisplayPrimariesX[0] = mdcv_info.display_primaries[1].x;
+      mdcv->DisplayPrimariesY[0] = mdcv_info.display_primaries[1].y;
+      mdcv->DisplayPrimariesX[1] = mdcv_info.display_primaries[2].x;
+      mdcv->DisplayPrimariesY[1] = mdcv_info.display_primaries[2].y;
+      mdcv->DisplayPrimariesX[2] = mdcv_info.display_primaries[0].x;
+      mdcv->DisplayPrimariesY[2] = mdcv_info.display_primaries[0].y;
+
+      mdcv->WhitePointX = mdcv_info.white_point.x;
+      mdcv->WhitePointY = mdcv_info.white_point.y;
+      mdcv->MaxDisplayMasteringLuminance =
+          mdcv_info.max_display_mastering_luminance;
+      mdcv->MinDisplayMasteringLuminance =
+          mdcv_info.min_display_mastering_luminance;
+      have_mdcv = TRUE;
+    }
+  }
 
   g_mutex_lock (&self->prop_lock);
   param->mfx.CodecId = MFX_CODEC_HEVC;
@@ -1027,6 +1081,10 @@ gst_qsv_h265_enc_set_format (GstQsvEncoder * encoder,
   g_ptr_array_add (extra_params, option);
   g_ptr_array_add (extra_params, option2);
   g_ptr_array_add (extra_params, option3);
+  if (have_cll)
+    g_ptr_array_add (extra_params, cll);
+  if (have_mdcv)
+    g_ptr_array_add (extra_params, mdcv);
 
   param->ExtParam = (mfxExtBuffer **) extra_params->pdata;
   param->NumExtParam = extra_params->len;
@@ -1290,9 +1348,15 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   std::vector < mfxU16 > supported_profiles;
   std::vector < std::string > supported_formats;
   Resolution max_resolution;
+  mfxExtContentLightLevelInfo cll;
+  mfxExtMasteringDisplayColourVolume mdcv;
+  mfxExtBuffer *ext_buffers[2];
+  gboolean hdr10_aware = FALSE;
 
   memset (&param, 0, sizeof (mfxVideoParam));
   memset (&max_resolution, 0, sizeof (Resolution));
+  memset (&cll, 0, sizeof (mfxExtContentLightLevelInfo));
+  memset (&mdcv, 0, sizeof (mfxExtMasteringDisplayColourVolume));
 
   param.AsyncDepth = 4;
   param.IOPattern = MFX_IOPATTERN_IN_VIDEO_MEMORY;
@@ -1353,6 +1417,32 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.Shift = 0;
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN;
+
+  /* check hdr10 metadata SEI support */
+  cll.Header.BufferId = MFX_EXTBUFF_CONTENT_LIGHT_LEVEL_INFO;
+  cll.Header.BufferSz = sizeof (mfxExtContentLightLevelInfo);
+  cll.InsertPayloadToggle = MFX_PAYLOAD_IDR;
+  cll.MaxContentLightLevel = 1;
+  cll.MaxPicAverageLightLevel = 1;
+
+  mdcv.Header.BufferId = MFX_EXTBUFF_MASTERING_DISPLAY_COLOUR_VOLUME;
+  mdcv.Header.BufferSz = sizeof (mfxExtMasteringDisplayColourVolume);
+  mdcv.InsertPayloadToggle = MFX_PAYLOAD_IDR;
+  mdcv.MaxDisplayMasteringLuminance = 1;
+  mdcv.MinDisplayMasteringLuminance = 1;
+
+  ext_buffers[0] = (mfxExtBuffer *) & cll;
+  ext_buffers[1] = (mfxExtBuffer *) & mdcv;
+
+  param.NumExtParam = 2;
+  param.ExtParam = ext_buffers;
+  if (MFXVideoENCODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    GST_INFO ("HDR10 metadata SEI is supported");
+    hdr10_aware = TRUE;
+  }
+
+  param.NumExtParam = 0;
+  param.ExtParam = nullptr;
 
   /* Check max-resolution */
   for (guint i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
@@ -1453,6 +1543,7 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   cdata->sink_caps = sink_caps;
   cdata->src_caps = src_caps;
   cdata->impl_index = impl_index;
+  cdata->hdr10_aware = hdr10_aware;
 
 #ifdef G_OS_WIN32
   gint64 device_luid;
