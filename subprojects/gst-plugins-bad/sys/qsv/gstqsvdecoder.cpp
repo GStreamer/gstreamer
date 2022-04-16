@@ -1036,6 +1036,7 @@ gst_qsv_decoder_init_session (GstQsvDecoder * self)
 
     gst_qsv_decoder_task_clear (task);
   }
+  priv->next_task_index = 0;
 
   priv->decoder = decoder_handle;
 
