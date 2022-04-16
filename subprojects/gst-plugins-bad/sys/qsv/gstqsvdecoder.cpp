@@ -851,6 +851,8 @@ gst_qsv_decoder_set_format (GstVideoDecoder * decoder,
   gst_query_unref (query);
 
   /* We will open decoder later once sequence header is parsed */
+  if (klass->set_format)
+    return klass->set_format (self, state);
 
   return TRUE;
 }
@@ -1319,15 +1321,25 @@ gst_qsv_decoder_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
   GstQsvDecoder *self = GST_QSV_DECODER (decoder);
+  GstQsvDecoderClass *klass = GST_QSV_DECODER_GET_CLASS (self);
   GstQsvDecoderPrivate *priv = self->priv;
   mfxBitstream bs;
   GstMapInfo info;
   mfxStatus status;
   GstFlowReturn ret = GST_FLOW_ERROR;
   gboolean was_reconfigured = FALSE;
+  GstBuffer *input_buf = nullptr;
 
-  if (!gst_buffer_map (frame->input_buffer, &info, GST_MAP_READ)) {
+  if (klass->process_input) {
+    input_buf = klass->process_input (self, priv->decoder ? FALSE : TRUE,
+        frame->input_buffer);
+  } else {
+    input_buf = gst_buffer_ref (frame->input_buffer);
+  }
+
+  if (!input_buf || !gst_buffer_map (input_buf, &info, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Failed to map input buffer");
+    gst_clear_buffer (&input_buf);
     gst_video_decoder_release_frame (decoder, frame);
     return GST_FLOW_ERROR;
   }
@@ -1394,13 +1406,15 @@ new_sequence:
       break;
   }
 
-  gst_buffer_unmap (frame->input_buffer, &info);
+  gst_buffer_unmap (input_buf, &info);
+  gst_buffer_unref (input_buf);
   gst_video_codec_frame_unref (frame);
 
   return ret;
 
 unmap_and_error:
-  gst_buffer_unmap (frame->input_buffer, &info);
+  gst_buffer_unmap (input_buf, &info);
+  gst_buffer_unref (input_buf);
   gst_video_decoder_release_frame (decoder, frame);
 
   return ret;

@@ -67,6 +67,13 @@ struct _GstQsvDecoderClass
 
   /* VA display device path, for Linux */
   gchar *display_path;
+
+  gboolean    (*set_format)    (GstQsvDecoder * decoder,
+                                GstVideoCodecState * state);
+
+  GstBuffer * (*process_input) (GstQsvDecoder * decoder,
+                                gboolean need_codec_data,
+                                GstBuffer * buffer);
 };
 
 GType gst_qsv_decoder_get_type (void);

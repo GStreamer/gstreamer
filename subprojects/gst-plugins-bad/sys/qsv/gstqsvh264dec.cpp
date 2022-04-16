@@ -22,6 +22,7 @@
 #endif
 
 #include "gstqsvh264dec.h"
+#include <gst/codecparsers/gsth264parser.h>
 #include <string>
 #include <string.h>
 
@@ -37,6 +38,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_dec_debug);
 typedef struct _GstQsvH264Dec
 {
   GstQsvDecoder parent;
+  GstH264NalParser *parser;
+  gboolean packetized;
+  gboolean nal_length_size;
+
+  GstBuffer *sps_nals[GST_H264_MAX_SPS_COUNT];
+  GstBuffer *pps_nals[GST_H264_MAX_PPS_COUNT];
 } GstQsvH264Dec;
 
 typedef struct _GstQsvH264DecClass
@@ -44,17 +51,28 @@ typedef struct _GstQsvH264DecClass
   GstQsvDecoderClass parent_class;
 } GstQsvH264DecClass;
 
+static GTypeClass *parent_class = nullptr;
+
+#define GST_QSV_H264_DEC(object) ((GstQsvH264Dec *) (object))
+#define GST_QSV_H264_DEC_GET_CLASS(object) \
+    (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstQsvH264DecClass))
+
+static gboolean gst_qsv_h264_dec_start (GstVideoDecoder * decoder);
+static gboolean gst_qsv_h264_dec_stop (GstVideoDecoder * decoder);
+static gboolean gst_qsv_h264_dec_set_format (GstQsvDecoder * decoder,
+    GstVideoCodecState * state);
+static GstBuffer *gst_qsv_h264_dec_process_input (GstQsvDecoder * decoder,
+    gboolean need_codec_data, GstBuffer * buffer);
+
 static void
 gst_qsv_h264_dec_class_init (GstQsvH264DecClass * klass, gpointer data)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoDecoderClass *videodec_class = GST_VIDEO_DECODER_CLASS (klass);
   GstQsvDecoderClass *qsvdec_class = GST_QSV_DECODER_CLASS (klass);
   GstQsvDecoderClassData *cdata = (GstQsvDecoderClassData *) data;
 
-  qsvdec_class->codec_id = MFX_CODEC_AVC;
-  qsvdec_class->impl_index = cdata->impl_index;
-  qsvdec_class->adapter_luid = cdata->adapter_luid;
-  qsvdec_class->display_path = cdata->display_path;
+  parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
 
   gst_element_class_set_static_metadata (element_class,
       "Intel Quick Sync Video H.264 Decoder",
@@ -69,6 +87,18 @@ gst_qsv_h264_dec_class_init (GstQsvH264DecClass * klass, gpointer data)
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           cdata->src_caps));
 
+  videodec_class->start = GST_DEBUG_FUNCPTR (gst_qsv_h264_dec_start);
+  videodec_class->stop = GST_DEBUG_FUNCPTR (gst_qsv_h264_dec_stop);
+
+  qsvdec_class->set_format = GST_DEBUG_FUNCPTR (gst_qsv_h264_dec_set_format);
+  qsvdec_class->process_input =
+      GST_DEBUG_FUNCPTR (gst_qsv_h264_dec_process_input);
+
+  qsvdec_class->codec_id = MFX_CODEC_AVC;
+  qsvdec_class->impl_index = cdata->impl_index;
+  qsvdec_class->adapter_luid = cdata->adapter_luid;
+  qsvdec_class->display_path = cdata->display_path;
+
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
   g_free (cdata);
@@ -77,6 +107,320 @@ gst_qsv_h264_dec_class_init (GstQsvH264DecClass * klass, gpointer data)
 static void
 gst_qsv_h264_dec_init (GstQsvH264Dec * self)
 {
+}
+
+static gboolean
+gst_qsv_h264_dec_start (GstVideoDecoder * decoder)
+{
+  GstQsvH264Dec *self = GST_QSV_H264_DEC (decoder);
+
+  self->parser = gst_h264_nal_parser_new ();
+
+  return TRUE;
+}
+
+static void
+gst_qsv_h264_dec_clear_codec_data (GstQsvH264Dec * self)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (self->sps_nals); i++)
+    gst_clear_buffer (&self->sps_nals[i]);
+
+  for (i = 0; i < G_N_ELEMENTS (self->pps_nals); i++)
+    gst_clear_buffer (&self->pps_nals[i]);
+}
+
+static gboolean
+gst_qsv_h264_dec_stop (GstVideoDecoder * decoder)
+{
+  GstQsvH264Dec *self = GST_QSV_H264_DEC (decoder);
+
+  gst_qsv_h264_dec_clear_codec_data (self);
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
+}
+
+static void
+gst_qsv_h264_dec_store_nal (GstQsvH264Dec * self, guint id,
+    GstH264NalUnitType nal_type, GstH264NalUnit * nalu)
+{
+  GstBuffer *buf, **store;
+  guint size = nalu->size, store_size;
+  static const guint8 start_code[] = { 0, 0, 1 };
+
+  if (nal_type == GST_H264_NAL_SPS || nal_type == GST_H264_NAL_SUBSET_SPS) {
+    store_size = GST_H264_MAX_SPS_COUNT;
+    store = self->sps_nals;
+    GST_DEBUG_OBJECT (self, "storing sps %u", id);
+  } else if (nal_type == GST_H264_NAL_PPS) {
+    store_size = GST_H264_MAX_PPS_COUNT;
+    store = self->pps_nals;
+    GST_DEBUG_OBJECT (self, "storing pps %u", id);
+  } else {
+    return;
+  }
+
+  if (id >= store_size) {
+    GST_DEBUG_OBJECT (self, "unable to store nal, id out-of-range %d", id);
+    return;
+  }
+
+  buf = gst_buffer_new_allocate (nullptr, size + sizeof (start_code), nullptr);
+  gst_buffer_fill (buf, 0, start_code, sizeof (start_code));
+  gst_buffer_fill (buf, sizeof (start_code), nalu->data + nalu->offset, size);
+
+  if (store[id])
+    gst_buffer_unref (store[id]);
+
+  store[id] = buf;
+}
+
+static gboolean
+gst_qsv_h264_dec_parse_codec_data (GstQsvH264Dec * self, const guint8 * data,
+    gsize size)
+{
+  GstH264NalParser *parser = self->parser;
+  guint num_sps, num_pps;
+  guint off;
+  guint i;
+  GstH264ParserResult pres;
+  GstH264NalUnit nalu;
+#ifndef GST_DISABLE_GST_DEBUG
+  guint profile;
+#endif
+
+  /* parse the avcC data */
+  if (size < 7) {               /* when numSPS==0 and numPPS==0, length is 7 bytes */
+    return FALSE;
+  }
+
+  /* parse the version, this must be 1 */
+  if (data[0] != 1) {
+    return FALSE;
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  /* AVCProfileIndication */
+  /* profile_compat */
+  /* AVCLevelIndication */
+  profile = (data[1] << 16) | (data[2] << 8) | data[3];
+  GST_DEBUG_OBJECT (self, "profile %06x", profile);
+#endif
+
+  /* 6 bits reserved | 2 bits lengthSizeMinusOne */
+  /* this is the number of bytes in front of the NAL units to mark their
+   * length */
+  self->nal_length_size = (data[4] & 0x03) + 1;
+  GST_DEBUG_OBJECT (self, "nal length size %u", self->nal_length_size);
+
+  num_sps = data[5] & 0x1f;
+  off = 6;
+  for (i = 0; i < num_sps; i++) {
+    GstH264SPS sps;
+
+    pres = gst_h264_parser_identify_nalu_avc (parser,
+        data, off, size, 2, &nalu);
+    if (pres != GST_H264_PARSER_OK) {
+      GST_WARNING_OBJECT (self, "Failed to identify SPS nalu");
+      return FALSE;
+    }
+
+    if (nalu.type == GST_H264_NAL_SPS) {
+      pres = gst_h264_parser_parse_sps (parser, &nalu, &sps);
+    } else {
+      pres = gst_h264_parser_parse_subset_sps (parser, &nalu, &sps);
+    }
+
+    if (pres != GST_H264_PARSER_OK) {
+      GST_WARNING_OBJECT (self, "Failed to parse SPS");
+      return FALSE;
+    }
+    gst_qsv_h264_dec_store_nal (self,
+        sps.id, (GstH264NalUnitType) nalu.type, &nalu);
+    gst_h264_sps_clear (&sps);
+
+    off = nalu.offset + nalu.size;
+  }
+
+  if (off >= size) {
+    GST_WARNING_OBJECT (self, "Too small avcC");
+    return GST_FLOW_ERROR;
+  }
+
+  num_pps = data[off];
+  off++;
+
+  for (i = 0; i < num_pps; i++) {
+    GstH264PPS pps;
+
+    pres = gst_h264_parser_identify_nalu_avc (parser,
+        data, off, size, 2, &nalu);
+    if (pres != GST_H264_PARSER_OK) {
+      GST_WARNING_OBJECT (self, "Failed to identify PPS nalu");
+      return FALSE;
+    }
+
+    pres = gst_h264_parser_parse_pps (parser, &nalu, &pps);
+    if (pres != GST_H264_PARSER_OK) {
+      GST_WARNING_OBJECT (self, "Failed to parse PPS nalu");
+      return FALSE;
+    }
+
+    gst_qsv_h264_dec_store_nal (self,
+        pps.id, (GstH264NalUnitType) nalu.type, &nalu);
+    gst_h264_pps_clear (&pps);
+    off = nalu.offset + nalu.size;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_qsv_h264_dec_set_format (GstQsvDecoder * decoder,
+    GstVideoCodecState * state)
+{
+  GstQsvH264Dec *self = GST_QSV_H264_DEC (decoder);
+  GstStructure *s;
+  const gchar *str;
+  GstMapInfo map;
+
+  gst_qsv_h264_dec_clear_codec_data (self);
+  self->packetized = FALSE;
+
+  s = gst_caps_get_structure (state->caps, 0);
+  str = gst_structure_get_string (s, "stream-format");
+  if ((g_strcmp0 (str, "avc") == 0 || g_strcmp0 (str, "avc3")) &&
+      state->codec_data) {
+    self->packetized = TRUE;
+    /* Will be updated */
+    self->nal_length_size = 4;
+  }
+
+  if (!self->packetized)
+    return TRUE;
+
+  if (!gst_buffer_map (state->codec_data, &map, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Failed to map codec data");
+    return FALSE;
+  }
+
+  gst_qsv_h264_dec_parse_codec_data (self, map.data, map.size);
+  gst_buffer_unmap (state->codec_data, &map);
+
+  return TRUE;
+}
+
+static GstBuffer *
+gst_qsv_h264_dec_process_input (GstQsvDecoder * decoder,
+    gboolean need_codec_data, GstBuffer * buffer)
+{
+  GstQsvH264Dec *self = GST_QSV_H264_DEC (decoder);
+  GstH264NalParser *parser = self->parser;
+  GstH264NalUnit nalu;
+  GstH264ParserResult pres;
+  GstMapInfo map;
+  gboolean have_sps = FALSE;
+  gboolean have_pps = FALSE;
+  guint i;
+  GstBuffer *new_buf;
+  static const guint8 start_code[] = { 0, 0, 1 };
+
+  if (!self->packetized)
+    return gst_buffer_ref (buffer);
+
+  if (!gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Failed to map input buffer");
+    return nullptr;
+  }
+
+  memset (&nalu, 0, sizeof (GstH264NalUnit));
+  new_buf = gst_buffer_new ();
+
+  do {
+    GstMemory *mem;
+    guint8 *data;
+    gsize size;
+
+    pres = gst_h264_parser_identify_nalu_avc (parser, map.data,
+        nalu.offset + nalu.size, map.size, self->nal_length_size, &nalu);
+
+    if (pres == GST_H264_PARSER_NO_NAL_END)
+      pres = GST_H264_PARSER_OK;
+
+    switch (nalu.type) {
+      case GST_H264_NAL_SPS:
+      case GST_H264_NAL_SUBSET_SPS:{
+        GstH264SPS sps;
+
+        if (nalu.type == GST_H264_NAL_SPS) {
+          pres = gst_h264_parser_parse_sps (parser, &nalu, &sps);
+        } else {
+          pres = gst_h264_parser_parse_subset_sps (parser, &nalu, &sps);
+        }
+
+        if (pres != GST_H264_PARSER_OK)
+          break;
+
+        have_sps = TRUE;
+        gst_qsv_h264_dec_store_nal (self,
+            sps.id, (GstH264NalUnitType) nalu.type, &nalu);
+        gst_h264_sps_clear (&sps);
+        break;
+      }
+      case GST_H264_NAL_PPS:{
+        GstH264PPS pps;
+
+        pres = gst_h264_parser_parse_pps (parser, &nalu, &pps);
+        if (pres != GST_H264_PARSER_OK)
+          break;
+
+        have_pps = TRUE;
+        gst_qsv_h264_dec_store_nal (self,
+            pps.id, (GstH264NalUnitType) nalu.type, &nalu);
+        gst_h264_pps_clear (&pps);
+        break;
+      }
+      default:
+        break;
+    }
+
+    size = sizeof (start_code) + nalu.size;
+    data = (guint8 *) g_malloc (size);
+    memcpy (data, start_code, sizeof (start_code));
+    memcpy (data + sizeof (start_code), nalu.data + nalu.offset, nalu.size);
+
+    mem = gst_memory_new_wrapped ((GstMemoryFlags) 0, data, size, 0, size,
+        nullptr, (GDestroyNotify) g_free);
+    gst_buffer_append_memory (new_buf, mem);
+  } while (pres == GST_H264_PARSER_OK);
+
+  gst_buffer_unmap (buffer, &map);
+
+  if (need_codec_data) {
+    GstBuffer *tmp = gst_buffer_new ();
+
+    if (!have_sps) {
+      for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
+        if (!self->sps_nals[i])
+          continue;
+
+        tmp = gst_buffer_append (tmp, gst_buffer_ref (self->sps_nals[i]));
+      }
+    }
+
+    if (!have_pps) {
+      for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++) {
+        if (!self->pps_nals[i])
+          continue;
+
+        tmp = gst_buffer_append (tmp, gst_buffer_ref (self->pps_nals[i]));
+      }
+    }
+
+    new_buf = gst_buffer_append (tmp, new_buf);
+  }
+
+  return new_buf;
 }
 
 typedef struct
@@ -161,7 +505,7 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   sink_caps_str += ", width=(int) [ 16, " + std::to_string (resolution) + " ]";
   sink_caps_str += ", height=(int) [ 16, " + std::to_string (resolution) + " ]";
 
-  sink_caps_str += ", stream-format=(string) byte-stream";
+  sink_caps_str += ", stream-format=(string) { byte-stream, avc, avc3 }";
   sink_caps_str += ", alignment=(string) au";
   sink_caps_str += ", profile=(string) { high, progressive-high, "
       "constrained-high, main, constrained-baseline, baseline } ";
