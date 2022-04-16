@@ -478,6 +478,9 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
     max_resolution.height = resolutions_to_check[i].height;
   }
 
+  if (max_resolution.width == 0 || max_resolution.height == 0)
+    return;
+
   GST_INFO ("Maximum supported resolution: %dx%d",
       max_resolution.width, max_resolution.height);
 
