@@ -1603,6 +1603,8 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
   gboolean alternate_supported = FALSE;
   gboolean d3d11_supported = FALSE;
   GstVideoCodecState *input_state;
+  GstStructure *s;
+  const gchar *str;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
@@ -1693,6 +1695,19 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
   }
 
   state->caps = gst_video_info_to_caps (&state->info);
+
+  s = gst_caps_get_structure (input_state->caps, 0);
+  str = gst_structure_get_string (s, "mastering-display-info");
+  if (str) {
+    gst_caps_set_simple (state->caps,
+        "mastering-display-info", G_TYPE_STRING, str, nullptr);
+  }
+
+  str = gst_structure_get_string (s, "content-light-level");
+  if (str) {
+    gst_caps_set_simple (state->caps,
+        "content-light-level", G_TYPE_STRING, str, nullptr);
+  }
 
   g_clear_pointer (&decoder->output_state, gst_video_codec_state_unref);
   decoder->output_state = state;
