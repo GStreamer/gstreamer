@@ -37,8 +37,7 @@
 #include <versionhelpers.h>
 #include <gst/d3d11/gstd3d11.h>
 #else
-#include <gst/va/gstvadisplay.h>
-#include <gst/va/gstvadisplay_drm.h>
+#include <gst/va/gstva.h>
 #endif
 
 GST_DEBUG_CATEGORY (gst_qsv_debug);

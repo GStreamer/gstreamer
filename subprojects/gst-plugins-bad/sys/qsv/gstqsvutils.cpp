@@ -31,7 +31,7 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 #else
-#include <gst/va/gstvadisplay_drm.h>
+#include <gst/va/gstva.h>
 #endif
 
 static mfxLoader _loader = nullptr;

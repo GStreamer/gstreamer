@@ -29,7 +29,7 @@
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #else
-#include <gst/va/gstvadisplay_drm.h>
+#include <gst/va/gstva.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_dec_debug);
