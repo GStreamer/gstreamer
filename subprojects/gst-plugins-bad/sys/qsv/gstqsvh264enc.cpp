@@ -137,7 +137,7 @@ enum
   PROP_QP_P,
   PROP_QP_B,
   PROP_GOP_SIZE,
-  PROP_I_FRAMES,
+  PROP_IDR_INTERVAL,
   PROP_B_FRAMES,
   PROP_REF_FRAMES,
   PROP_BITRATE,
@@ -156,7 +156,7 @@ enum
 #define DEFAULT_CABAC MFX_CODINGOPTION_UNKNOWN
 #define DEFAULT_QP 0
 #define DEFAULT_GOP_SIZE 30
-#define DEFAULT_I_FRAMES 0
+#define DEFAULT_IDR_INTERVAL 0
 #define DEFAULT_B_FRAMES 0
 #define DEFAULT_REF_FRAMES 2
 #define DEFAULT_BITRATE 2000
@@ -211,7 +211,7 @@ typedef struct _GstQsvH264Enc
   guint qp_p;
   guint qp_b;
   guint gop_size;
-  guint iframes;
+  guint idr_interval;
   guint bframes;
   guint ref_frames;
   guint bitrate;
@@ -350,11 +350,12 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
           "Number of pictures within a GOP (0: unspecified)",
           0, G_MAXUSHORT, DEFAULT_GOP_SIZE, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_I_FRAMES,
-      g_param_spec_uint ("i-frames", "I Frames",
-          "Number of I frames between IDR frames"
-          "(0: every I frame is an IDR frame)",
-          0, G_MAXUSHORT, DEFAULT_I_FRAMES, (GParamFlags)
+  g_object_class_install_property (object_class, PROP_IDR_INTERVAL,
+      g_param_spec_uint ("idr-interval", "IDR interval",
+          "IDR-frame interval in terms of I-frames. "
+          "0: every I-frame is an IDR frame, "
+          "N: \"N\" I-frames are inserted between IDR-frames",
+          0, G_MAXUSHORT, DEFAULT_IDR_INTERVAL, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_B_FRAMES,
       g_param_spec_uint ("b-frames", "B Frames",
@@ -475,7 +476,7 @@ gst_qsv_h264_enc_init (GstQsvH264Enc * self)
   self->qp_p = DEFAULT_QP;
   self->qp_b = DEFAULT_QP;
   self->gop_size = DEFAULT_GOP_SIZE;
-  self->iframes = DEFAULT_I_FRAMES;
+  self->idr_interval = DEFAULT_IDR_INTERVAL;
   self->bframes = DEFAULT_B_FRAMES;
   self->ref_frames = DEFAULT_REF_FRAMES;
   self->bitrate = DEFAULT_BITRATE;
@@ -600,8 +601,8 @@ gst_qsv_h264_enc_set_property (GObject * object, guint prop_id,
       gst_qsv_h264_enc_check_update_uint (self, &self->gop_size,
           g_value_get_uint (value), FALSE);
       break;
-    case PROP_I_FRAMES:
-      gst_qsv_h264_enc_check_update_uint (self, &self->iframes,
+    case PROP_IDR_INTERVAL:
+      gst_qsv_h264_enc_check_update_uint (self, &self->idr_interval,
           g_value_get_uint (value), FALSE);
       break;
     case PROP_B_FRAMES:
@@ -709,8 +710,8 @@ gst_qsv_h264_enc_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_GOP_SIZE:
       g_value_set_uint (value, self->gop_size);
       break;
-    case PROP_I_FRAMES:
-      g_value_set_uint (value, self->iframes);
+    case PROP_IDR_INTERVAL:
+      g_value_set_uint (value, self->idr_interval);
       break;
     case PROP_B_FRAMES:
       g_value_set_uint (value, self->bframes);
@@ -1227,7 +1228,7 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   param->mfx.CodecProfile = mfx_profile;
   param->mfx.GopRefDist = bframes + 1;
   param->mfx.GopPicSize = self->gop_size;
-  param->mfx.IdrInterval = self->iframes;
+  param->mfx.IdrInterval = self->idr_interval;
   param->mfx.RateControlMethod = self->rate_control;
   param->mfx.NumRefFrame = self->ref_frames;
 
