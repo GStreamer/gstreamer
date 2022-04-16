@@ -38,7 +38,7 @@ using namespace Microsoft::WRL;
 #include "gstqsvallocator_va.h"
 #endif /* G_OS_WIN32 */
 
-GST_DEBUG_CATEGORY_EXTERN (gst_qsv_encoder_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_qsv_encoder_debug);
 #define GST_CAT_DEFAULT gst_qsv_encoder_debug
 
 GType
@@ -129,8 +129,10 @@ struct _GstQsvEncoderPrivate
 };
 
 #define gst_qsv_encoder_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstQsvEncoder, gst_qsv_encoder,
-    GST_TYPE_VIDEO_ENCODER);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstQsvEncoder, gst_qsv_encoder,
+    GST_TYPE_VIDEO_ENCODER, G_ADD_PRIVATE (GstQsvEncoder);
+    GST_DEBUG_CATEGORY_INIT (gst_qsv_encoder_debug,
+        "qsvencoder", 0, "qsvencoder"));
 
 static void gst_qsv_encoder_dispose (GObject * object);
 static void gst_qsv_encoder_finalize (GObject * object);

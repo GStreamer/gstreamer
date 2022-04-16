@@ -35,7 +35,7 @@
 #include <gst/va/gstva.h>
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (gst_qsv_h264_enc_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_h264_enc_debug
 
 typedef enum
@@ -1714,6 +1714,9 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   std::vector < mfxU16 > supported_profiles;
   Resolution max_resolution;
   bool supports_interlaced = false;
+
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_enc_debug,
+      "qsvh264enc", 0, "qsvh264enc");
 
   memset (&param, 0, sizeof (mfxVideoParam));
   memset (&max_resolution, 0, sizeof (Resolution));

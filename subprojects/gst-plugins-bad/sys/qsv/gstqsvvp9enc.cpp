@@ -33,7 +33,7 @@
 #include <gst/va/gstva.h>
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (gst_qsv_vp9_enc_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_qsv_vp9_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_vp9_enc_debug
 
 #define GST_TYPE_QSV_VP9_ENC_RATE_CONTROL (gst_qsv_vp9_enc_rate_control_get_type ())
@@ -799,6 +799,8 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   Resolution max_resolution;
   mfxExtVP9Param vp9_param;
   mfxExtBuffer *ext_bufs[1];
+
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_vp9_enc_debug, "qsvvp9enc", 0, "qsvvp9enc");
 
   memset (&param, 0, sizeof (mfxVideoParam));
   memset (&max_resolution, 0, sizeof (Resolution));

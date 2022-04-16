@@ -34,7 +34,7 @@
 #include <gst/va/gstva.h>
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (gst_qsv_h265_enc_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_qsv_h265_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_h265_enc_debug
 
 typedef enum
@@ -1354,6 +1354,9 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfxExtMasteringDisplayColourVolume mdcv;
   mfxExtBuffer *ext_buffers[2];
   gboolean hdr10_aware = FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_h265_enc_debug,
+      "qsvh265enc", 0, "qsvh265enc");
 
   memset (&param, 0, sizeof (mfxVideoParam));
   memset (&max_resolution, 0, sizeof (Resolution));

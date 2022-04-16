@@ -43,13 +43,6 @@
 
 GST_DEBUG_CATEGORY (gst_qsv_debug);
 GST_DEBUG_CATEGORY (gst_qsv_allocator_debug);
-GST_DEBUG_CATEGORY (gst_qsv_decoder_debug);
-GST_DEBUG_CATEGORY (gst_qsv_encoder_debug);
-GST_DEBUG_CATEGORY (gst_qsv_h264_dec_debug);
-GST_DEBUG_CATEGORY (gst_qsv_h264_enc_debug);
-GST_DEBUG_CATEGORY (gst_qsv_h265_enc_debug);
-GST_DEBUG_CATEGORY (gst_qsv_jpeg_enc_debug);
-GST_DEBUG_CATEGORY (gst_qsv_vp9_enc_debug);
 
 #define GST_CAT_DEFAULT gst_qsv_debug
 
@@ -205,6 +198,8 @@ plugin_init (GstPlugin * plugin)
 #endif
 
   GST_DEBUG_CATEGORY_INIT (gst_qsv_debug, "qsv", 0, "Intel Quick Sync Video");
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_allocator_debug,
+      "qsvallocator", 0, "qsvallocator");
 
   loader = gst_qsv_get_loader ();
   if (!loader)
@@ -217,22 +212,6 @@ plugin_init (GstPlugin * plugin)
   }
 
   GST_INFO ("Found %d platform devices", g_list_length (platform_devices));
-
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_allocator_debug,
-      "qsvallocator", 0, "qsvallocator");
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_decoder_debug,
-      "qsvdecoder", 0, "qsvdecoder");
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_encoder_debug,
-      "qsvencoder", 0, "qsvencoder");
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_dec_debug,
-      "qsvh264dec", 0, "qsvh264dec");
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_enc_debug,
-      "qsvh264enc", 0, "qsvh264enc");
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_h265_enc_debug,
-      "qsvh265enc", 0, "qsvh265enc");
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_jpeg_enc_debug,
-      "qsvjpegenc", 0, "qsvjpegenc");
-  GST_DEBUG_CATEGORY_INIT (gst_qsv_vp9_enc_debug, "qsvvp9enc", 0, "qsvvp9enc");
 
   do {
     mfxStatus status = MFX_ERR_NONE;

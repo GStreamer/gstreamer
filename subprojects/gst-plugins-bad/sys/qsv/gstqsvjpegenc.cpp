@@ -33,7 +33,7 @@
 #include <gst/va/gstva.h>
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (gst_qsv_jpeg_enc_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_qsv_jpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_jpeg_enc_debug
 
 enum
@@ -355,6 +355,9 @@ gst_qsv_jpeg_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   Resolution max_resolution;
   mfxStatus status;
   gboolean interlaved = TRUE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_jpeg_enc_debug,
+      "qsvjpegenc", 0, "qsvjpegenc");
 
   memset (&param, 0, sizeof (mfxVideoParam));
   memset (&max_resolution, 0, sizeof (Resolution));

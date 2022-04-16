@@ -31,7 +31,7 @@
 #include <gst/va/gstvadisplay_drm.h>
 #endif
 
-GST_DEBUG_CATEGORY_EXTERN (gst_qsv_h264_dec_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_dec_debug);
 #define GST_CAT_DEFAULT gst_qsv_h264_dec_debug
 
 typedef struct _GstQsvH264Dec
@@ -96,6 +96,9 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
     {7680, 4320}, {8192, 4320}
   };
   Resolution max_resolution;
+
+  GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_dec_debug,
+      "qsvh264dec", 0, "qsvh264dec");
 
   memset (&param, 0, sizeof (mfxVideoParam));
   memset (&max_resolution, 0, sizeof (Resolution));
