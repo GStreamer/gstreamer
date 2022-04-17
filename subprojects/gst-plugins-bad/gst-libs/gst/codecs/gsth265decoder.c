@@ -61,8 +61,6 @@ struct _GstH265DecoderPrivate
   gint crop_rect_x;
   gint crop_rect_y;
 
-  /* input codec_data, if any */
-  GstBuffer *codec_data;
   guint nal_length_size;
 
   /* state */
@@ -273,8 +271,6 @@ gst_h265_decoder_stop (GstVideoDecoder * decoder)
     gst_video_codec_state_unref (self->input_state);
     self->input_state = NULL;
   }
-
-  gst_clear_buffer (&priv->codec_data);
 
   if (priv->parser) {
     gst_h265_parser_free (priv->parser);
@@ -1012,26 +1008,14 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
   self->input_state = gst_video_codec_state_ref (state);
 
   if (state->caps) {
-    GstStructure *str;
-    const GValue *codec_data_value;
     GstH265DecoderFormat format;
     GstH265DecoderAlign align;
 
     gst_h265_decoder_format_from_caps (self, state->caps, &format, &align);
 
-    str = gst_caps_get_structure (state->caps, 0);
-    codec_data_value = gst_structure_get_value (str, "codec_data");
-
-    if (GST_VALUE_HOLDS_BUFFER (codec_data_value)) {
-      gst_buffer_replace (&priv->codec_data,
-          gst_value_get_buffer (codec_data_value));
-    } else {
-      gst_buffer_replace (&priv->codec_data, NULL);
-    }
-
     if (format == GST_H265_DECODER_FORMAT_NONE) {
       /* codec_data implies packetized */
-      if (codec_data_value != NULL) {
+      if (state->codec_data) {
         GST_WARNING_OBJECT (self,
             "video/x-h265 caps with codec_data but no stream-format=hev1 or hvc1");
         format = GST_H265_DECODER_FORMAT_HEV1;
@@ -1045,7 +1029,7 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
 
     if (format == GST_H265_DECODER_FORMAT_HEV1 ||
         format == GST_H265_DECODER_FORMAT_HVC1) {
-      if (codec_data_value == NULL) {
+      if (!state->codec_data) {
         /* Try it with size 4 anyway */
         priv->nal_length_size = 4;
         GST_WARNING_OBJECT (self,
@@ -1057,27 +1041,24 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
         align = GST_H265_DECODER_ALIGN_AU;
     }
 
-    if (format == GST_H265_DECODER_FORMAT_BYTE) {
-      if (codec_data_value != NULL) {
-        GST_WARNING_OBJECT (self, "bytestream with codec data");
-      }
-    }
+    if (format == GST_H265_DECODER_FORMAT_BYTE && state->codec_data)
+      GST_WARNING_OBJECT (self, "bytestream with codec data");
 
     priv->in_format = format;
     priv->align = align;
   }
 
-  if (priv->codec_data) {
+  if (state->codec_data) {
     GstMapInfo map;
 
-    gst_buffer_map (priv->codec_data, &map, GST_MAP_READ);
+    gst_buffer_map (state->codec_data, &map, GST_MAP_READ);
     if (gst_h265_decoder_parse_codec_data (self, map.data, map.size) !=
         GST_FLOW_OK) {
       /* keep going without error.
        * Probably inband SPS/PPS might be valid data */
       GST_WARNING_OBJECT (self, "Failed to handle codec data");
     }
-    gst_buffer_unmap (priv->codec_data, &map);
+    gst_buffer_unmap (state->codec_data, &map);
   }
 
   priv->is_live = FALSE;

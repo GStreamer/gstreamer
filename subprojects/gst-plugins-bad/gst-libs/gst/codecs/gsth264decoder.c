@@ -85,8 +85,6 @@ struct _GstH264DecoderPrivate
   guint8 profile_idc;
   gint width, height;
 
-  /* input codec_data, if any */
-  GstBuffer *codec_data;
   guint nal_length_size;
 
   /* state */
@@ -408,7 +406,6 @@ gst_h264_decoder_reset (GstH264Decoder * self)
 {
   GstH264DecoderPrivate *priv = self->priv;
 
-  gst_clear_buffer (&priv->codec_data);
   g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
   g_clear_pointer (&priv->parser, gst_h264_nal_parser_free);
   g_clear_pointer (&priv->dpb, gst_h264_dpb_free);
@@ -1412,26 +1409,14 @@ gst_h264_decoder_set_format (GstVideoDecoder * decoder,
   self->input_state = gst_video_codec_state_ref (state);
 
   if (state->caps) {
-    GstStructure *str;
-    const GValue *codec_data_value;
     GstH264DecoderFormat format;
     GstH264DecoderAlign align;
 
     gst_h264_decoder_format_from_caps (self, state->caps, &format, &align);
 
-    str = gst_caps_get_structure (state->caps, 0);
-    codec_data_value = gst_structure_get_value (str, "codec_data");
-
-    if (GST_VALUE_HOLDS_BUFFER (codec_data_value)) {
-      gst_buffer_replace (&priv->codec_data,
-          gst_value_get_buffer (codec_data_value));
-    } else {
-      gst_buffer_replace (&priv->codec_data, NULL);
-    }
-
     if (format == GST_H264_DECODER_FORMAT_NONE) {
       /* codec_data implies avc */
-      if (codec_data_value != NULL) {
+      if (state->codec_data) {
         GST_WARNING_OBJECT (self,
             "video/x-h264 caps with codec_data but no stream-format=avc");
         format = GST_H264_DECODER_FORMAT_AVC;
@@ -1445,7 +1430,7 @@ gst_h264_decoder_set_format (GstVideoDecoder * decoder,
 
     if (format == GST_H264_DECODER_FORMAT_AVC) {
       /* AVC requires codec_data, AVC3 might have one and/or SPS/PPS inline */
-      if (codec_data_value == NULL) {
+      if (!state->codec_data) {
         /* Try it with size 4 anyway */
         priv->nal_length_size = 4;
         GST_WARNING_OBJECT (self,
@@ -1457,27 +1442,24 @@ gst_h264_decoder_set_format (GstVideoDecoder * decoder,
         align = GST_H264_DECODER_ALIGN_AU;
     }
 
-    if (format == GST_H264_DECODER_FORMAT_BYTE) {
-      if (codec_data_value != NULL) {
-        GST_WARNING_OBJECT (self, "bytestream with codec data");
-      }
-    }
+    if (format == GST_H264_DECODER_FORMAT_BYTE && state->codec_data)
+      GST_WARNING_OBJECT (self, "bytestream with codec data");
 
     priv->in_format = format;
     priv->align = align;
   }
 
-  if (priv->codec_data) {
+  if (state->codec_data) {
     GstMapInfo map;
 
-    gst_buffer_map (priv->codec_data, &map, GST_MAP_READ);
+    gst_buffer_map (state->codec_data, &map, GST_MAP_READ);
     if (gst_h264_decoder_parse_codec_data (self, map.data, map.size) !=
         GST_FLOW_OK) {
       /* keep going without error.
        * Probably inband SPS/PPS might be valid data */
       GST_WARNING_OBJECT (self, "Failed to handle codec data");
     }
-    gst_buffer_unmap (priv->codec_data, &map);
+    gst_buffer_unmap (state->codec_data, &map);
   }
 
   /* in case live streaming, we will run on low-latency mode */
