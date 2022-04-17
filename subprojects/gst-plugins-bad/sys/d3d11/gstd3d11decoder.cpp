@@ -1709,6 +1709,10 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     }
 
     GST_DEBUG_OBJECT (videodec, "Downstream min buffres: %d", min);
+
+    /* We will not use downstream pool for decoding, and therefore preallocation
+     * is unnecessary. So, Non-zero min buffer will be a waste of GPU memory */
+    min = 0;
   }
 
   gst_buffer_pool_set_config (pool, config);
