@@ -88,7 +88,8 @@ struct _GstQsvDecoderPrivate
 
   MFXVideoDECODE *decoder;
   GstQsvMemoryType mem_type;
-  gboolean can_direct_render;
+  gboolean use_video_memory;
+  gboolean have_video_meta;
 
   gboolean is_live;
 
@@ -642,10 +643,15 @@ gst_qsv_decoder_finish_frame (GstQsvDecoder * self, GstQsvDecoderTask * task,
     return GST_FLOW_ERROR;
   }
 
-  /* Copy decoded frame in case of reverse playback, too many bound frame to
-   * decoder may cause driver unhappy */
-  if (!priv->can_direct_render || vdec->input_segment.rate < 0.0)
+  if (priv->use_video_memory) {
+    /* Copy decoded frame in case of reverse playback, too many bound frame to
+     * decoder may cause driver unhappy */
+    if (vdec->input_segment.rate < 0.0)
+      force_copy = TRUE;
+  } else if (!priv->have_video_meta) {
+    /* downstream does not support video meta, need copy */
     force_copy = TRUE;
+  }
 
   /* TODO: Handle non-zero crop-{x,y} position via crop meta or similar */
   buffer = gst_qsv_allocator_download_frame (priv->allocator, force_copy,
@@ -937,10 +943,12 @@ gst_qsv_decoder_prepare_pool (GstQsvDecoder * self, mfxU16 * io_pattern)
 
   /* TODO: Add Linux video memory (VA/DMABuf) support */
 #ifdef G_OS_WIN32
-  priv->mem_type = GST_QSV_VIDEO_MEMORY | GST_QSV_DECODER_OUT_MEMORY;
-  *io_pattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
+  if (priv->use_video_memory) {
+    priv->mem_type = GST_QSV_VIDEO_MEMORY | GST_QSV_DECODER_OUT_MEMORY;
+    *io_pattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
-  ret = gst_qsv_decoder_prepare_d3d11_pool (self, caps, &priv->info, &align);
+    ret = gst_qsv_decoder_prepare_d3d11_pool (self, caps, &priv->info, &align);
+  }
 #endif
 
   if (!ret) {
@@ -1120,7 +1128,7 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
       format, interlace_mode, width, height, priv->input_state);
 
   priv->output_state->caps = gst_video_info_to_caps (&priv->output_state->info);
-  priv->can_direct_render = FALSE;
+  priv->use_video_memory = FALSE;
 
 #ifdef G_OS_WIN32
   GstCaps *peer_caps =
@@ -1142,14 +1150,14 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
 
       if (gst_caps_features_contains (features,
               GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-        priv->can_direct_render = TRUE;
+        priv->use_video_memory = TRUE;
         break;
       }
     }
   }
   gst_clear_caps (&peer_caps);
 
-  if (priv->can_direct_render) {
+  if (priv->use_video_memory) {
     GST_DEBUG_OBJECT (self, "Downstream supports D3D11 memory");
     gst_caps_set_features (priv->output_state->caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
@@ -1175,7 +1183,6 @@ gst_qsv_decoder_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstStructure *config;
   GstD3D11AllocationParams *d3d11_params;
   gboolean use_d3d11_pool;
-  gboolean has_videometa;
   GstD3D11Device *device = GST_D3D11_DEVICE (priv->device);
 
   gst_query_parse_allocation (query, &outcaps, nullptr);
@@ -1185,39 +1192,32 @@ gst_qsv_decoder_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     return FALSE;
   }
 
-  has_videometa = gst_query_find_allocation_meta (query,
+  priv->have_video_meta = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, nullptr);
-  use_d3d11_pool = priv->can_direct_render;
+  use_d3d11_pool = priv->use_video_memory;
 
   gst_video_info_from_caps (&vinfo, outcaps);
   n = gst_query_get_n_allocation_pools (query);
   if (n > 0)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
-  if (pool) {
-    if (use_d3d11_pool) {
-      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-        GST_DEBUG_OBJECT (self,
-            "Downstream pool is not d3d11, will create new one");
-        gst_clear_object (&pool);
-      } else {
-        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
-        if (dpool->device != device) {
-          GST_DEBUG_OBJECT (self, "Different device, will create new one");
-          gst_clear_object (&pool);
-        }
-      }
-    } else if (has_videometa) {
-      /* We will use d3d11 staging buffer pool */
+  if (pool && use_d3d11_pool) {
+    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+      GST_DEBUG_OBJECT (self,
+          "Downstream pool is not d3d11, will create new one");
       gst_clear_object (&pool);
+    } else {
+      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+      if (dpool->device != device) {
+        GST_DEBUG_OBJECT (self, "Different device, will create new one");
+        gst_clear_object (&pool);
+      }
     }
   }
 
   if (!pool) {
     if (use_d3d11_pool)
       pool = gst_d3d11_buffer_pool_new (device);
-    else if (has_videometa)
-      pool = gst_d3d11_staging_buffer_pool_new (device);
     else
       pool = gst_video_buffer_pool_new ();
 
