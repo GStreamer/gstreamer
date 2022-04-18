@@ -63,6 +63,23 @@ struct _GstClockSync
   gboolean is_first;
 
   GstClockTime   upstream_latency;
+
+  /* QoS */
+  gboolean qos_enabled;
+  // With STREAM_LOCK {
+  GstClockTime earliest_in_time;
+  GstClockTime current_rstart;
+  GstClockTimeDiff current_jitter;
+  GstClockTime avg_pt, avg_in_diff;
+  gdouble avg_rate;             /* average with infinite window */
+
+  /* when the last buffer left the sink, running time */
+  GstClockTime last_left;
+
+  /* the running time of the previous buffer */
+  GstClockTime prev_rstart;
+
+  // } With STREAM_LOCK
 };
 
 struct _GstClockSyncClass

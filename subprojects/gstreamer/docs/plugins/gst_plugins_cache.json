@@ -80,6 +80,18 @@
                     }
                 },
                 "properties": {
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "sync": {
                         "blurb": "Synchronize to pipeline clock",
                         "conditionally-available": false,
