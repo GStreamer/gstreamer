@@ -253,7 +253,7 @@ libgst = library('gstreamer-1.0', gst_sources,
 pkg_name = 'gstreamer-1.0'
 library_def = {'lib': libgst}
 pkgconfig.generate(libgst,
-  libraries : [glib_dep, gobject_dep],
+  libraries : [glib_dep, gobject_dep] + pkgconfig_libs,
   variables : pkgconfig_variables,
   uninstalled_variables: pkgconfig_uninstalled_variables,
   subdirs : pkgconfig_subdirs,
