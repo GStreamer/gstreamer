@@ -10,8 +10,10 @@
 #include <gst/sdp/sdp.h>
 #include <gst/rtp/rtp.h>
 
-#define GST_USE_UNSTABLE_API
 #include <gst/webrtc/webrtc.h>
+#include <gst/webrtc/nice/nice.h>
+
+#include "custom_agent.h"
 
 /* For signalling */
 #include <libsoup/soup.h>
@@ -44,7 +46,7 @@ enum AppState
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static GMainLoop *loop;
-static GstElement *pipe1, *webrtc1 = NULL;
+static GstElement *pipe1, *webrtc1, *audio_bin, *video_bin = NULL;
 static GObject *send_channel, *receive_channel;
 
 static SoupWebsocketConnection *ws_conn = NULL;
@@ -54,6 +56,7 @@ static gchar *our_id = NULL;
 static const gchar *server_url = "wss://webrtc.nirbheek.in:8443";
 static gboolean disable_ssl = FALSE;
 static gboolean remote_is_offerer = FALSE;
+static gboolean custom_ice = FALSE;
 
 static GOptionEntry entries[] = {
   {"peer-id", 0, 0, G_OPTION_ARG_STRING, &peer_id,
@@ -65,6 +68,8 @@ static GOptionEntry entries[] = {
   {"disable-ssl", 0, 0, G_OPTION_ARG_NONE, &disable_ssl, "Disable ssl", NULL},
   {"remote-offerer", 0, 0, G_OPTION_ARG_NONE, &remote_is_offerer,
       "Request that the peer generate the offer and we'll answer", NULL},
+  {"custom-ice", 0, 0, G_OPTION_ARG_NONE, &custom_ice,
+      "Use a custom ice agent", NULL},
   {NULL},
 };
 
@@ -418,24 +423,37 @@ webrtcbin_get_stats (GstElement * webrtcbin)
 }
 
 
-#define STUN_SERVER " stun-server=stun://stun.l.google.com:19302 "
+#define STUN_SERVER "stun://stun.l.google.com:19302"
 #define RTP_TWCC_URI "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
-#define RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS"
 #define RTP_OPUS_DEFAULT_PT 97
-#define RTP_CAPS_VP8 "application/x-rtp,media=video,encoding-name=VP8"
 #define RTP_VP8_DEFAULT_PT 96
 
 static gboolean
 start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
 {
-  char *pipeline;
+  char *audio_desc, *video_desc;
   GstStateChangeReturn ret;
-  GError *error = NULL;
+  GstWebRTCICE *custom_agent;
+  GError *audio_error = NULL;
+  GError *video_error = NULL;
 
-  pipeline =
-      g_strdup_printf ("webrtcbin bundle-policy=max-bundle name=sendrecv "
-      STUN_SERVER
-      "videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! "
+  pipe1 = gst_pipeline_new ("webrtc-pipeline");
+
+  audio_desc =
+      g_strdup_printf
+      ("audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample"
+      "! queue ! opusenc ! rtpopuspay name=audiopay ! queue");
+  audio_bin = gst_parse_bin_from_description (audio_desc, TRUE, &audio_error);
+  g_free (audio_desc);
+  if (audio_error) {
+    gst_printerr ("Failed to parse audio_bin: %s\n", audio_error->message);
+    g_error_free (audio_error);
+    goto err;
+  }
+
+  video_desc =
+      g_strdup_printf
+      ("videotestsrc is-live=true pattern=ball ! videoconvert ! queue ! "
       /* increase the default keyframe distance, browsers have really long
        * periods between keyframes and rely on PLI events on packet loss to
        * fix corrupted video.
@@ -443,22 +461,34 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
       "vp8enc deadline=1 keyframe-max-dist=2000 ! "
       /* picture-id-mode=15-bit seems to make TWCC stats behave better, and
        * fixes stuttery video playback in Chrome */
-      "rtpvp8pay name=videopay picture-id-mode=15-bit ! "
-      "queue ! %s,payload=%u ! sendrecv. "
-      "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay name=audiopay ! "
-      "queue ! %s,payload=%u ! sendrecv. ", RTP_CAPS_VP8, vp8_pt,
-      RTP_CAPS_OPUS, opus_pt);
-
-  pipe1 = gst_parse_launch (pipeline, &error);
-  g_free (pipeline);
-  if (error) {
-    gst_printerr ("Failed to parse launch: %s\n", error->message);
-    g_error_free (error);
+      "rtpvp8pay name=videopay picture-id-mode=15-bit ! queue");
+  video_bin = gst_parse_bin_from_description (video_desc, TRUE, &video_error);
+  g_free (video_desc);
+  if (video_error) {
+    gst_printerr ("Failed to parse video_bin: %s\n", video_error->message);
+    g_error_free (video_error);
     goto err;
   }
 
-  webrtc1 = gst_bin_get_by_name (GST_BIN (pipe1), "sendrecv");
+  if (custom_ice) {
+    custom_agent = GST_WEBRTC_ICE (customice_agent_new ("custom"));
+    webrtc1 = gst_element_factory_make_full ("webrtcbin", "name", "sendrecv",
+        "bundle-policy", "max-bundle",
+        "stun-server", STUN_SERVER, "ice-agent", custom_agent, NULL);
+  } else {
+    webrtc1 = gst_element_factory_make_full ("webrtcbin", "name", "sendrecv",
+        "bundle-policy", "max-bundle", "stun-server", STUN_SERVER, NULL);
+  }
   g_assert_nonnull (webrtc1);
+
+  gst_bin_add_many (GST_BIN (pipe1), audio_bin, video_bin, webrtc1, NULL);
+
+  if (!gst_element_link (audio_bin, webrtc1)) {
+    gst_printerr ("Failed to link audio_bin \n");
+  }
+  if (!gst_element_link (video_bin, webrtc1)) {
+    gst_printerr ("Failed to link video_bin \n");
+  }
 
   if (!create_offer) {
     /* XXX: this will fail when the remote offers twcc as the extension id

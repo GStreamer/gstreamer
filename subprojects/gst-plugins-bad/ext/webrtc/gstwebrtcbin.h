@@ -22,7 +22,6 @@
 
 #include <gst/sdp/sdp.h>
 #include "fwd.h"
-#include "gstwebrtcice.h"
 #include "transportstream.h"
 #include "webrtcsctptransport.h"
 

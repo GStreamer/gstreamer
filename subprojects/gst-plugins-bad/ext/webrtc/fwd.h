@@ -29,18 +29,6 @@ typedef struct _GstWebRTCBin GstWebRTCBin;
 typedef struct _GstWebRTCBinClass GstWebRTCBinClass;
 typedef struct _GstWebRTCBinPrivate GstWebRTCBinPrivate;
 
-typedef struct _GstWebRTCICE GstWebRTCICE;
-typedef struct _GstWebRTCICEClass GstWebRTCICEClass;
-typedef struct _GstWebRTCICEPrivate GstWebRTCICEPrivate;
-
-typedef struct _GstWebRTCICEStream GstWebRTCICEStream;
-typedef struct _GstWebRTCICEStreamClass GstWebRTCICEStreamClass;
-typedef struct _GstWebRTCICEStreamPrivate GstWebRTCICEStreamPrivate;
-
-typedef struct _GstWebRTCNiceTransport GstWebRTCNiceTransport;
-typedef struct _GstWebRTCNiceTransportClass GstWebRTCNiceTransportClass;
-typedef struct _GstWebRTCNiceTransportPrivate GstWebRTCNiceTransportPrivate;
-
 typedef struct _GstWebRTCSCTPTransport GstWebRTCSCTPTransport;
 typedef struct _GstWebRTCSCTPTransportClass GstWebRTCSCTPTransportClass;
 typedef struct _GstWebRTCSCTPTransportPrivate GstWebRTCSCTPTransportPrivate;
@@ -56,8 +44,6 @@ typedef struct _TransportReceiveBinClass TransportReceiveBinClass;
 
 typedef struct _WebRTCTransceiver WebRTCTransceiver;
 typedef struct _WebRTCTransceiverClass WebRTCTransceiverClass;
-
-typedef struct _GstWebRTCICECandidateStats GstWebRTCICECandidateStats;
 
 G_END_DECLS
 

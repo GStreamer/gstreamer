@@ -12,6 +12,8 @@ if not libsoup_dep.found() or not json_glib_dep.found()
     subdir_done()
 endif
 
+libgstwebrtcnice_dep = dependency('gstreamer-webrtc-nice-1.0', version : gst_req)
+
 py3_mod = import('python3')
 py3 = py3_mod.find_python()
 

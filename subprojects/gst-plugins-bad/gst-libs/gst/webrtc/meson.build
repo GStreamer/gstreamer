@@ -1,5 +1,7 @@
 webrtc_sources = files([
   'dtlstransport.c',
+  'ice.c',
+  'icestream.c',
   'icetransport.c',
   'rtcsessiondescription.c',
   'rtpreceiver.c',
@@ -12,6 +14,8 @@ webrtc_sources = files([
 
 webrtc_headers = files([
   'dtlstransport.h',
+  'ice.h',
+  'icestream.h',
   'icetransport.h',
   'rtcsessiondescription.h',
   'rtpreceiver.h',
@@ -25,6 +29,8 @@ webrtc_headers = files([
 
 webrtc_enumtypes_headers = files([
   'dtlstransport.h',
+  'ice.h',
+  'icestream.h',
   'icetransport.h',
   'rtptransceiver.h',
   'webrtc_fwd.h',
@@ -95,3 +101,5 @@ gstwebrtc_dep = declare_dependency(link_with: gstwebrtc,
   dependencies: gstwebrtc_dependencies)
 
 meson.override_dependency(pkg_name, gstwebrtc_dep)
+
+subdir('nice')

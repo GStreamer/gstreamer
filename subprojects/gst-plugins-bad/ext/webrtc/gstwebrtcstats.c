@@ -26,7 +26,6 @@
 
 #include "gstwebrtcstats.h"
 #include "gstwebrtcbin.h"
-#include "icestream.h"
 #include "transportstream.h"
 #include "transportreceivebin.h"
 #include "utils.h"

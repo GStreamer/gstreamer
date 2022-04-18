@@ -24,6 +24,8 @@
 #include <gst/webrtc/webrtc_fwd.h>
 #include <gst/webrtc/webrtc-enumtypes.h>
 #include <gst/webrtc/dtlstransport.h>
+#include <gst/webrtc/ice.h>
+#include <gst/webrtc/icestream.h>
 #include <gst/webrtc/icetransport.h>
 #include <gst/webrtc/rtcsessiondescription.h>
 #include <gst/webrtc/rtpreceiver.h>

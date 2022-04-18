@@ -49,6 +49,19 @@ typedef struct _GstWebRTCDTLSTransport GstWebRTCDTLSTransport;
 typedef struct _GstWebRTCDTLSTransportClass GstWebRTCDTLSTransportClass;
 
 /**
+ * GstWebRTCICE:
+ */
+typedef struct _GstWebRTCICE GstWebRTCICE;
+typedef struct _GstWebRTCICEClass GstWebRTCICEClass;
+typedef struct _GstWebRTCICECandidateStats GstWebRTCICECandidateStats;
+
+/**
+ * GstWebRTCICEStream:
+ */
+typedef struct _GstWebRTCICEStream GstWebRTCICEStream;
+typedef struct _GstWebRTCICEStreamClass GstWebRTCICEStreamClass;
+
+/**
  * GstWebRTCICETransport:
  */
 typedef struct _GstWebRTCICETransport GstWebRTCICETransport;

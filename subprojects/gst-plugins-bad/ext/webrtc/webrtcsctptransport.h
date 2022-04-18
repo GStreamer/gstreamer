@@ -23,7 +23,7 @@
 #include <gst/gst.h>
 #include <gst/webrtc/webrtc.h>
 #include <gst/webrtc/sctptransport.h>
-#include "gstwebrtcice.h"
+#include "fwd.h"
 
 #include "gst/webrtc/webrtc-priv.h"
 

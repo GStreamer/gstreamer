@@ -32,7 +32,7 @@
 #include "webrtcsctptransport.h"
 
 #include "gst/webrtc/webrtc-priv.h"
-
+#include <gst/webrtc/nice/nice.h>
 #include <gst/rtp/rtp.h>
 
 #include <stdio.h>
@@ -8053,6 +8053,9 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
       webrtc->priv->jb_latency = g_value_get_uint (value);
       _update_rtpstorage_latency (webrtc);
       break;
+    case PROP_ICE_AGENT:
+      webrtc->priv->ice = g_value_get_object (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -8143,13 +8146,13 @@ gst_webrtc_bin_constructed (GObject * object)
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (object);
   gchar *name;
 
-  name = g_strdup_printf ("%s:ice", GST_OBJECT_NAME (webrtc));
-  webrtc->priv->ice = gst_webrtc_ice_new (name);
-
+  if (!webrtc->priv->ice) {
+    name = g_strdup_printf ("%s:ice", GST_OBJECT_NAME (webrtc));
+    webrtc->priv->ice = GST_WEBRTC_ICE (gst_webrtc_nice_new (name));
+    g_free (name);
+  }
   gst_webrtc_ice_set_on_ice_candidate (webrtc->priv->ice,
-      (GstWebRTCIceOnCandidateFunc) _on_local_ice_candidate_cb, webrtc, NULL);
-
-  g_free (name);
+      (GstWebRTCICEOnCandidateFunc) _on_local_ice_candidate_cb, webrtc, NULL);
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
@@ -8392,7 +8395,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       PROP_ICE_AGENT,
       g_param_spec_object ("ice-agent", "WebRTC ICE agent",
           "The WebRTC ICE agent",
-          GST_TYPE_WEBRTC_ICE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          GST_TYPE_WEBRTC_ICE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
 
   /**
    * GstWebRTCBin:latency:
@@ -8736,7 +8740,6 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       NULL, GST_TYPE_WEBRTC_DATA_CHANNEL, 2, G_TYPE_STRING, GST_TYPE_STRUCTURE);
 
   gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_BIN_PAD, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_ICE, 0);
 }
 
 static void

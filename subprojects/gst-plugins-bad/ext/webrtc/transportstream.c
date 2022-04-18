@@ -24,7 +24,6 @@
 #include "transportstream.h"
 #include "transportsendbin.h"
 #include "transportreceivebin.h"
-#include "gstwebrtcice.h"
 #include "gstwebrtcbin.h"
 #include "utils.h"
 #include "gst/webrtc/webrtc-priv.h"
