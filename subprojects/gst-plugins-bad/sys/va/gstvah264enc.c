@@ -4109,9 +4109,9 @@ gst_va_h264_enc_get_property (GObject * object, guint prop_id,
     case PROP_DEVICE_PATH:{
       if (!(self->display && GST_IS_VA_DISPLAY_DRM (self->display))) {
         g_value_set_string (value, NULL);
-        return;
+      } else {
+        g_object_get_property (G_OBJECT (self->display), "path", value);
       }
-      g_object_get_property (G_OBJECT (self->display), "path", value);
       break;
     }
     default:
