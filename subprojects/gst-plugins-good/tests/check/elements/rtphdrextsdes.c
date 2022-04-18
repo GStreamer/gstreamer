@@ -30,11 +30,17 @@
 
 #define ALL_VALID_PROPERTY_ALPHANUMERIC "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVYZ"
 
-static void
-on_notify_val (GObject * ext, GParamSpec * pspec, char **out_val)
+typedef struct
 {
-  char *property_name = *out_val;
-  g_object_get (ext, property_name, out_val, NULL);
+  const gchar *property_name;
+  gchar *out_val;
+} NotifyValCtx;
+
+static void
+on_notify_val (GObject * ext, G_GNUC_UNUSED GParamSpec * pspec,
+    NotifyValCtx * ctx)
+{
+  g_object_get (ext, ctx->property_name, &ctx->out_val, NULL);
 }
 
 static void
@@ -45,9 +51,9 @@ read_write_extension (GstRTPHeaderExtension * read_ext,
   GstBuffer *buffer;
   gsize size, written;
   guint8 *data;
-  char *got_val = NULL;
   GstRTPHeaderExtensionFlags supported_flags = 0;
   char *notify_signal_name;
+  NotifyValCtx ctx = {.property_name = property_name,.out_val = NULL };
 
   buffer = gst_buffer_new ();
 
@@ -68,36 +74,35 @@ read_write_extension (GstRTPHeaderExtension * read_ext,
 
   /* moving from no rid to a detected rid, fires the property notify signal */
   notify_signal_name = g_strdup_printf ("notify::%s", property_name);
-  g_signal_connect (read_ext, notify_signal_name, G_CALLBACK (on_notify_val),
-      &got_val);
+  g_signal_connect (read_ext,
+      notify_signal_name, G_CALLBACK (on_notify_val), &ctx);
   g_clear_pointer (&notify_signal_name, g_free);
 
-  got_val = (char *) property_name;
   fail_unless (gst_rtp_header_extension_read (read_ext,
           flags, data, written, buffer));
-  fail_unless_equals_string (got_val, val);
-  g_clear_pointer (&got_val, g_free);
-  got_val = (char *) property_name;
-  fail_unless (gst_rtp_header_extension_read (read_ext,
-          flags, data, written, buffer));
+  fail_unless_equals_string (ctx.out_val, val);
+  g_clear_pointer (&ctx.out_val, g_free);
+
   /* sequential val's don't notify */
-  fail_unless_equals_pointer (got_val, (void *) property_name);
+  fail_unless (gst_rtp_header_extension_read (read_ext,
+          flags, data, written, buffer));
+  fail_if (ctx.out_val);
 
   /* attempting to write a NULL val, doesn't write anything */
-  got_val = (char *) property_name;
   g_object_set (write_ext, property_name, NULL, NULL);
   written =
       gst_rtp_header_extension_write (write_ext, buffer,
       flags, buffer, data, size);
   fail_unless (written == 0);
+
   /* reading an empty extension data does nothing */
   fail_unless (gst_rtp_header_extension_read (read_ext,
           flags, data, written, buffer));
-  fail_unless_equals_pointer (got_val, (void *) property_name);
+  fail_if (ctx.out_val);
 
   g_clear_pointer (&data, g_free);
   gst_clear_buffer (&buffer);
-  g_signal_handlers_disconnect_by_func (read_ext, on_notify_val, &got_val);
+  g_signal_handlers_disconnect_by_func (read_ext, on_notify_val, &ctx);
 }
 
 static void
