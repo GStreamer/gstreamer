@@ -17327,7 +17327,7 @@
                         "writable": true
                     },
                     "rtcp-sync-interval": {
-                        "blurb": "RTCP SR interval synchronization (ms) (0 = always)",
+                        "blurb": "RTCP SR / NTP-64 interval synchronization (ms) (0 = always)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
@@ -18459,6 +18459,20 @@
                         "readable": true,
                         "type": "GstStructure",
                         "writable": false
+                    },
+                    "sync-interval": {
+                        "blurb": "RTCP SR / NTP-64 interval synchronization (ms) (0 = always)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
                     },
                     "ts-offset": {
                         "blurb": "Adjust buffer timestamps with offset in nanoseconds",

@@ -156,6 +156,7 @@ enum
 #define DEFAULT_RFC7273_SYNC        FALSE
 #define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
 #define DEFAULT_FASTSTART_MIN_PACKETS 0
+#define DEFAULT_SYNC_INTERVAL 0
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -189,7 +190,8 @@ enum
   PROP_MAX_MISORDER_TIME,
   PROP_RFC7273_SYNC,
   PROP_ADD_REFERENCE_TIMESTAMP_META,
-  PROP_FASTSTART_MIN_PACKETS
+  PROP_FASTSTART_MIN_PACKETS,
+  PROP_SYNC_INTERVAL,
 };
 
 #define JBUF_LOCK(priv)   G_STMT_START {			\
@@ -338,6 +340,7 @@ struct _GstRtpJitterBufferPrivate
   guint32 max_misorder_time;
   guint faststart_min_packets;
   gboolean add_reference_timestamp_meta;
+  guint sync_interval;
 
   /* Reference for GstReferenceTimestampMeta */
   GstCaps *rfc7273_ref;
@@ -424,6 +427,7 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime last_dts;
   GstClockTime last_pts;
   guint64 last_rtptime;
+  GstClockTime last_ntpnstime;
   GstClockTime avg_jitter;
 
   /* for dropped packet messages */
@@ -978,6 +982,20 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpJitterBuffer:sync-interval:
+   *
+   * Determines how often to sync streams using RTCP data or inband NTP-64
+   * header extensions.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_SYNC_INTERVAL,
+      g_param_spec_uint ("sync-interval", "Sync Interval",
+          "RTCP SR / NTP-64 interval synchronization (ms) (0 = always)",
+          0, G_MAXUINT, DEFAULT_SYNC_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
@@ -1106,11 +1124,14 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
   priv->max_misorder_time = DEFAULT_MAX_MISORDER_TIME;
   priv->faststart_min_packets = DEFAULT_FASTSTART_MIN_PACKETS;
+  priv->add_reference_timestamp_meta = DEFAULT_ADD_REFERENCE_TIMESTAMP_META;
+  priv->sync_interval = DEFAULT_SYNC_INTERVAL;
 
   priv->ts_offset_remainder = 0;
   priv->last_dts = -1;
   priv->last_pts = -1;
   priv->last_rtptime = -1;
+  priv->last_ntpnstime = -1;
   priv->avg_jitter = 0;
   priv->last_drop_msg_timestamp = GST_CLOCK_TIME_NONE;
   priv->num_too_late = 0;
@@ -1737,6 +1758,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->avg_jitter = 0;
   priv->last_dts = -1;
   priv->last_rtptime = -1;
+  priv->last_ntpnstime = -1;
   priv->last_in_pts = 0;
   priv->equidistant = 0;
   priv->segment_seqnum = GST_SEQNUM_INVALID;
@@ -4496,6 +4518,16 @@ do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer, guint64 ntpnstime)
     return;
   }
 
+  if (priv->last_ntpnstime != GST_CLOCK_TIME_NONE
+      && ntpnstime - priv->last_ntpnstime < priv->sync_interval * GST_MSECOND) {
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "discarding RTCP sender packet for sync; "
+        "previous sender info too recent " "(previous NTP %" G_GUINT64_FORMAT
+        ")", priv->last_ntpnstime);
+    return;
+  }
+  priv->last_ntpnstime = ntpnstime;
+
   s = gst_structure_new ("application/x-rtp-sync",
       "base-rtptime", G_TYPE_UINT64, base_rtptime,
       "base-time", G_TYPE_UINT64, base_time,
@@ -4634,7 +4666,8 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 ssrc;
   GstRTCPPacket packet;
-  guint64 ext_rtptime;
+  guint64 ext_rtptime, ntptime;
+  GstClockTime ntpnstime = GST_CLOCK_TIME_NONE;
   guint32 rtptime;
   GstRTCPBuffer rtcp = { NULL, };
   gchar *cname = NULL;
@@ -4654,8 +4687,11 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
     /* first packet must be SR or RR or else the validate would have failed */
     switch (gst_rtcp_packet_get_type (&packet)) {
       case GST_RTCP_TYPE_SR:
-        gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, NULL, &rtptime,
+        gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntptime, &rtptime,
             NULL, NULL);
+        ntpnstime =
+            gst_util_uint64_scale (ntptime, GST_SECOND,
+            G_GUINT64_CONSTANT (1) << 32);
         have_sr = TRUE;
         break;
       case GST_RTCP_TYPE_SDES:
@@ -4711,10 +4747,19 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
   priv->ext_rtptime = ext_rtptime;
-  gst_buffer_replace (&priv->last_sr, buffer);
   priv->last_sr_ssrc = ssrc;
 
-  do_handle_sync (jitterbuffer);
+  if (priv->last_ntpnstime != GST_CLOCK_TIME_NONE
+      && ntpnstime - priv->last_ntpnstime < priv->sync_interval * GST_MSECOND) {
+    gst_buffer_replace (&priv->last_sr, NULL);
+    GST_DEBUG_OBJECT (jitterbuffer, "discarding RTCP sender packet for sync; "
+        "previous sender info too recent "
+        "(previous NTP %" G_GUINT64_FORMAT ")", priv->last_ntpnstime);
+  } else {
+    gst_buffer_replace (&priv->last_sr, buffer);
+    do_handle_sync (jitterbuffer);
+    priv->last_ntpnstime = ntpnstime;
+  }
 
   JBUF_UNLOCK (priv);
 
@@ -5069,6 +5114,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->add_reference_timestamp_meta = g_value_get_boolean (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_SYNC_INTERVAL:
+      JBUF_LOCK (priv);
+      priv->sync_interval = g_value_get_uint (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -5228,6 +5278,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_ADD_REFERENCE_TIMESTAMP_META:
       JBUF_LOCK (priv);
       g_value_set_boolean (value, priv->add_reference_timestamp_meta);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_SYNC_INTERVAL:
+      JBUF_LOCK (priv);
+      g_value_set_uint (value, priv->sync_interval);
       JBUF_UNLOCK (priv);
       break;
     default:

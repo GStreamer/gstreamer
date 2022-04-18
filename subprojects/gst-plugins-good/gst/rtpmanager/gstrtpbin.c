@@ -1962,6 +1962,8 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   if (g_object_class_find_property (jb_class, "max-ts-offset-adjustment"))
     g_object_set (buffer, "max-ts-offset-adjustment",
         rtpbin->max_ts_offset_adjustment, NULL);
+  if (g_object_class_find_property (jb_class, "sync-interval"))
+    g_object_set (buffer, "sync-interval", rtpbin->rtcp_sync_interval, NULL);
 
   g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER], 0,
       buffer, session->id, ssrc);
@@ -2740,11 +2742,12 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   /**
    * GstRtpBin:rtcp-sync-interval:
    *
-   * Determines how often to sync streams using RTCP data.
+   * Determines how often to sync streams using RTCP data or inband NTP-64
+   * header extensions.
    */
   g_object_class_install_property (gobject_class, PROP_RTCP_SYNC_INTERVAL,
       g_param_spec_uint ("rtcp-sync-interval", "RTCP Sync Interval",
-          "RTCP SR interval synchronization (ms) (0 = always)",
+          "RTCP SR / NTP-64 interval synchronization (ms) (0 = always)",
           0, G_MAXUINT, DEFAULT_RTCP_SYNC_INTERVAL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
