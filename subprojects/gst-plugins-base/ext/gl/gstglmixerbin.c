@@ -375,23 +375,20 @@ _find_element_pad_template (GstElement * element,
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
   GList *templ_list = gst_element_class_get_pad_template_list (klass);
-  GstPadTemplate *templ;
 
   /* find suitable template */
   while (templ_list) {
-    templ = (GstPadTemplate *) templ_list->data;
+    GstPadTemplate *templ = (GstPadTemplate *) templ_list->data;
 
-    if (GST_PAD_TEMPLATE_DIRECTION (templ) != direction
-        || GST_PAD_TEMPLATE_PRESENCE (templ) != presence) {
-      templ_list = templ_list->next;
-      templ = NULL;
-      continue;
+    if (GST_PAD_TEMPLATE_DIRECTION (templ) == direction
+        && GST_PAD_TEMPLATE_PRESENCE (templ) == presence) {
+      return templ;
     }
 
-    break;
+    templ_list = templ_list->next;
   }
 
-  return templ;
+  return NULL;
 }
 
 static gboolean
