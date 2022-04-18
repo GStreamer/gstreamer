@@ -8,7 +8,7 @@ the clock can also use threads.
 This design decision has implications for the usage of the API and the objects
 which this document explains.
 
-## MT safety techniques
+## Multi-threading safety techniques
 
 Several design patterns are used to guarantee object consistency in GStreamer.
 This is an overview of the methods used in various GStreamer subsystems.

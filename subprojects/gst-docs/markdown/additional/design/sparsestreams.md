@@ -1,4 +1,4 @@
-# DRAFT Sparse Streams
+# Sparse Streams
 
 ## Introduction
 

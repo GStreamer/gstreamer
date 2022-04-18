@@ -1,4 +1,4 @@
-# Frame step
+# Frame stepping
 
 This document outlines the details of the frame stepping functionality
 in GStreamer.
