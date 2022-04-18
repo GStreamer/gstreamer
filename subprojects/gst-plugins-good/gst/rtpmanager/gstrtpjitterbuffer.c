@@ -410,6 +410,7 @@ struct _GstRtpJitterBufferPrivate
   guint64 ext_rtptime;
   GstBuffer *last_sr;
   guint32 last_sr_ssrc;
+  GstClockTime last_sr_ntpnstime;
 
   /* some accounting */
   guint64 num_pushed;
@@ -4569,10 +4570,12 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
   clock_base = priv->clock_base;
   ext_rtptime = priv->ext_rtptime;
 
-  GST_DEBUG_OBJECT (jitterbuffer, "ext SR %" G_GUINT64_FORMAT ", base %"
-      G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT
-      ", clock-base %" G_GUINT64_FORMAT ", last-rtptime %" G_GUINT64_FORMAT,
-      ext_rtptime, base_rtptime, clock_rate, clock_base, last_rtptime);
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "ext SR %" G_GUINT64_FORMAT ", NTP %" G_GUINT64_FORMAT ", base %"
+      G_GUINT64_FORMAT ", clock-rate %" G_GUINT32_FORMAT ", clock-base %"
+      G_GUINT64_FORMAT ", last-rtptime %" G_GUINT64_FORMAT, ext_rtptime,
+      priv->last_sr_ntpnstime, base_rtptime, clock_rate, clock_base,
+      last_rtptime);
 
   if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
     /* we keep this SR packet for later. When we get a valid RTP packet the
@@ -4621,6 +4624,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
         "clock-base", G_TYPE_UINT64, clock_base,
         "ssrc", G_TYPE_UINT, priv->last_sr_ssrc,
         "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
+        "sr-ntpnstime", G_TYPE_UINT64, priv->last_sr_ntpnstime,
         "sr-buffer", GST_TYPE_BUFFER, priv->last_sr, NULL);
 
     for (l = priv->cname_ssrc_mappings; l; l = l->next) {
@@ -4748,6 +4752,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
 
   priv->ext_rtptime = ext_rtptime;
   priv->last_sr_ssrc = ssrc;
+  priv->last_sr_ntpnstime = ntpnstime;
 
   if (priv->last_ntpnstime != GST_CLOCK_TIME_NONE
       && ntpnstime - priv->last_ntpnstime < priv->sync_interval * GST_MSECOND) {

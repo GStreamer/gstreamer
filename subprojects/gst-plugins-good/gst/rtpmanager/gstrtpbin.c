@@ -1791,6 +1791,18 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
 
   GST_DEBUG_OBJECT (bin, "handle sync from RTCP SR information");
 
+  /* get RTCP SR ntpnstime if available */
+  if (gst_structure_get_uint64 (s, "sr-ntpnstime", &ntpnstime) && cname) {
+    GST_RTP_BIN_LOCK (bin);
+    /* associate the stream to CNAME */
+    gst_rtp_bin_associate (bin, stream, strlen (cname),
+        (const guint8 *) cname, ntpnstime, extrtptime, base_rtptime,
+        base_time, clock_rate, clock_base);
+    GST_RTP_BIN_UNLOCK (bin);
+    return;
+  }
+
+  /* otherwise parse the RTCP packet */
   buffer = gst_value_get_buffer (gst_structure_get_value (s, "sr-buffer"));
 
   have_sr = FALSE;
