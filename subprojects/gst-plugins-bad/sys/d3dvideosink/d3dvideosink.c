@@ -645,7 +645,6 @@ gst_d3dvideosink_navigation_send_event (GstNavigation * navigation,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  /* PRIMARY: this is the best videosink to use on windows */
   if (!gst_element_register (plugin, ELEMENT_NAME,
           GST_RANK_SECONDARY, GST_TYPE_D3DVIDEOSINK))
     return FALSE;
