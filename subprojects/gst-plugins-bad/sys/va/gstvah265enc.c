@@ -277,6 +277,7 @@ struct _GstVaH265Enc
     guint32 max_l1_num;
     guint32 forward_ref_num;
     guint32 backward_ref_num;
+    gboolean low_delay_b_mode;
 
     guint num_reorder_frames;
     guint max_dpb_size;
@@ -1265,7 +1266,12 @@ _h265_to_va_coding_type (GstVaH265Enc * self, GstVaH265EncFrame * frame)
       coding_type = 1;
       break;
     case GST_H265_P_SLICE:
-      coding_type = 2;
+      if (self->gop.low_delay_b_mode) {
+        /* Convert P into forward ref B */
+        coding_type = 3;
+      } else {
+        coding_type = 2;
+      }
       break;
     case GST_H265_B_SLICE:
       /* We use hierarchical_level_plus1, so same for all B frames */
@@ -1431,6 +1437,7 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     VAEncSliceParameterBufferHEVC * slice)
 {
   int8_t slice_qp_delta = 0;
+  GstH265SliceType frame_type;
   gint i;
 
   /* *INDENT-OFF* */
@@ -1443,10 +1450,25 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     g_assert (slice_qp_delta <= 51 && slice_qp_delta >= -51);
   }
 
+  frame_type = frame->type;
+  /* If low_delay_b_mode, we convert P to low delay b, which has 2
+     ref lists and clone L1 from L0. */
+  if (self->gop.low_delay_b_mode && frame->type == GST_H265_P_SLICE) {
+    g_assert (self->gop.max_l1_num > 0);
+    g_assert (list1_num == 0);
+
+    frame_type = GST_H265_B_SLICE;
+    list1_num = (list0_num <= self->gop.max_l1_num ?
+        list0_num : self->gop.max_l1_num);
+
+    for (i = 0; i < list1_num; i++)
+      list1[i] = list0[i];
+  }
+
   *slice = (VAEncSliceParameterBufferHEVC) {
     .slice_segment_address = start_address,
     .num_ctu_in_slice = ctu_num,
-    .slice_type = frame->type,
+    .slice_type = frame_type,
     /* Only one parameter set supported now. */
     .slice_pic_parameter_set_id = 0,
     /* Set the reference list later
@@ -1490,7 +1512,7 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
       /* deblocking_filter_control_present_flag not set now */
       .slice_deblocking_filter_disabled_flag = 0,
       .slice_loop_filter_across_slices_enabled_flag = 1,
-      .collocated_from_l0_flag = (frame->type == GST_H265_I_SLICE ?
+      .collocated_from_l0_flag = (frame_type == GST_H265_I_SLICE ?
           0 : self->features.collocated_from_l0_flag),
     },
 #if VA_CHECK_VERSION(1, 10, 0)
@@ -1500,16 +1522,17 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
   };
   /* *INDENT-ON* */
 
-  if (frame->type == GST_H265_B_SLICE || frame->type == GST_H265_P_SLICE) {
+  if (frame_type == GST_H265_B_SLICE || frame_type == GST_H265_P_SLICE) {
     slice->slice_fields.bits.num_ref_idx_active_override_flag =
         (list0_num > 0 || list1_num > 0);
     slice->num_ref_idx_l0_active_minus1 = list0_num > 0 ? list0_num - 1 : 0;
-    if (frame->type == GST_H265_B_SLICE)
+
+    if (frame_type == GST_H265_B_SLICE)
       slice->num_ref_idx_l1_active_minus1 = list1_num > 0 ? list1_num - 1 : 0;
   }
 
   i = 0;
-  if (frame->type != GST_H265_I_SLICE) {
+  if (frame_type != GST_H265_I_SLICE) {
     for (; i < list0_num; i++) {
       slice->ref_pic_list0[i].picture_id =
           gst_va_encode_picture_get_reconstruct_surface (list0[i]->picture);
@@ -1522,7 +1545,7 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
   }
 
   i = 0;
-  if (frame->type == GST_H265_B_SLICE) {
+  if (frame_type == GST_H265_B_SLICE) {
     for (; i < list1_num; i++) {
       slice->ref_pic_list1[i].picture_id =
           gst_va_encode_picture_get_reconstruct_surface (list1[i]->picture);
@@ -2311,6 +2334,7 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   self->gop.i_period = 0;
   self->gop.total_idr_count = 0;
   self->gop.ip_period = 0;
+  self->gop.low_delay_b_mode = FALSE;
   self->gop.highest_pyramid_level = 0;
   memset (self->gop.frame_types, 0, sizeof (self->gop.frame_types));
   self->gop.cur_frame_index = 0;
@@ -2942,8 +2966,13 @@ _h265_print_gop_structure (GstVaH265Enc * self)
       g_string_append_printf (str, ", ");
     }
 
-    g_string_append_printf (str, "%s",
-        _h265_slice_type_name (self->gop.frame_types[i].slice_type));
+    if (self->gop.low_delay_b_mode &&
+        self->gop.frame_types[i].slice_type == GST_H265_P_SLICE) {
+      g_string_append_printf (str, "%s", "LDB");
+    } else {
+      g_string_append_printf (str, "%s",
+          _h265_slice_type_name (self->gop.frame_types[i].slice_type));
+    }
 
     if (self->gop.b_pyramid
         && self->gop.frame_types[i].slice_type == GST_H265_B_SLICE) {
@@ -3028,13 +3057,14 @@ _get_log2_max_num (guint num)
 /* Consider the idr_period, num_bframes, L0/L1 reference number.
  * TODO: Load some preset fixed GOP structure.
  * TODO: Skip this if in lookahead mode. */
-static void
+static gboolean
 _h265_generate_gop_structure (GstVaH265Enc * self)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint32 log2_max_frame_num;
   guint32 list0, list1, forward_num, backward_num, gop_ref_num;
   gint32 p_frames;
+  guint32 prediction_direction;
 
   /* If not set, generate a idr every second */
   if (self->gop.idr_period == 0) {
@@ -3085,11 +3115,39 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
 
   forward_num = list0;
   backward_num = list1;
+
+  prediction_direction = gst_va_encoder_get_prediction_direction (base->encoder,
+      base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
+  if (prediction_direction) {
+#if VA_CHECK_VERSION(1,9,0)
+    if (!(prediction_direction & VA_PREDICTION_DIRECTION_PREVIOUS)) {
+      GST_INFO_OBJECT (self, "No forward prediction support");
+      forward_num = 0;
+      /* Only backward ref is insane. */
+      backward_num = 0;
+    }
+
+    if (!(prediction_direction & VA_PREDICTION_DIRECTION_FUTURE)) {
+      GST_INFO_OBJECT (self, "No backward prediction support");
+      backward_num = 0;
+    }
+
+    if (prediction_direction & VA_PREDICTION_DIRECTION_BI_NOT_EMPTY) {
+      if (self->gop.max_l1_num == 0) {
+        GST_INFO_OBJECT (self, "Not possible to support "
+            "VA_PREDICTION_DIRECTION_BI_NOT_EMPTY while list1 is 0");
+        return FALSE;
+      }
+      GST_INFO_OBJECT (self, "Enable low-delay-b mode");
+      self->gop.low_delay_b_mode = TRUE;
+    }
+#endif
+  }
+
   if (forward_num > self->gop.num_ref_frames)
     forward_num = self->gop.num_ref_frames;
   if (backward_num > self->gop.num_ref_frames)
     backward_num = self->gop.num_ref_frames;
-
 
   if (forward_num == 0) {
     GST_INFO_OBJECT (self,
@@ -3261,6 +3319,8 @@ create_poc:
       self->gop.num_bframes, PROP_BFRAMES);
   update_property_bool (base, &self->prop.b_pyramid,
       self->gop.b_pyramid, PROP_B_PYRAMID);
+
+  return TRUE;
 }
 
 static gboolean
@@ -3770,7 +3830,8 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   if (!_h265_calculate_tier_level (self))
     return FALSE;
 
-  _h265_generate_gop_structure (self);
+  if (!_h265_generate_gop_structure (self))
+    return FALSE;
 
   _h265_setup_encoding_features (self);
 
