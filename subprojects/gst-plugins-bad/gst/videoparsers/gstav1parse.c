@@ -1544,7 +1544,7 @@ gst_av1_parse_handle_to_small_and_equal_align (GstBaseParse * parse,
   GstMapInfo map_info;
   GstAV1OBU obu;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstAV1ParserResult res;
+  GstAV1ParserResult res = GST_AV1_PARSER_INVALID_OPERATION;
   GstBuffer *buffer = gst_buffer_ref (frame->buffer);
   guint32 total_consumed, consumed;
   gboolean frame_complete;
@@ -1773,7 +1773,7 @@ gst_av1_parse_detect_alignment (GstBaseParse * parse,
   GstAV1Parse *self = GST_AV1_PARSE (parse);
   GstMapInfo map_info;
   GstAV1OBU obu;
-  GstAV1ParserResult res;
+  GstAV1ParserResult res = GST_AV1_PARSER_INVALID_OPERATION;
   GstBuffer *buffer = gst_buffer_ref (frame->buffer);
   gboolean got_seq, got_frame;
   gboolean frame_complete;
