@@ -135,7 +135,7 @@
 		additional/splitup.md
 		additional/design/index.md
 			additional/design/MT-refcounting.md
-			additional/design/TODO.md
+			additional/design/adaptive-demuxer.md
 			additional/design/activation.md
 			additional/design/audiosinks.md
 			additional/design/buffer.md
@@ -204,6 +204,7 @@
 			additional/design/toc.md
 			additional/design/tracing.md
 			additional/design/trickmodes.md
+			additional/design/TODO.md
 		additional/rtp.md
 		additional/videos.md
 	tools/index.md

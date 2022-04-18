@@ -1,23 +1,31 @@
-# Adaptive Demuxers v2
+# Adaptive Demuxers for DASH, HLS and Smooth Streaming
 
-The existing adaptive demuxer support in `gst-plugins-bad` has several pitfalls
-that prevents improving it easily. The existing design uses a model where an
-adaptive streaming element (`dashdemux`, `hlsdemux`) downloads multiplexed
-fragments of media, but then relies on other components in the pipeline to
+There are two sets of elements implementing client-side adaptive streaming
+(HLS, DASH, Microsoft Smooth Streaming) in GStreamer:
+
+ - The old legacy elements `dashdemux`, `hlsdemux`, `mssdemux` in the
+   gst-plugins-bad module.
+
+ - New `dashdemux2`, `hlsdemux2`, `mssdemux2` elements in gst-plugins-good
+   (added in GStreamer 1.22).
+
+The legacy adaptive streaming support in `gst-plugins-bad` had several pitfalls
+that prevented improving it easily. The legacy design used a model where an
+adaptive streaming element (`dashdemux`, `hlsdemux`) downloaded multiplexed
+fragments of media, but then relied on other components in the pipeline to
 provide download buffering, demuxing, elementary stream handling and decoding.
 
-
-The problems with the old design include:
+The problems with the old design included:
 
 1. An assumption that fragment streams (to download) are equal to output
    (elementary) streams.
 
    * This made it hard to expose `GstStream` and `GstStreamCollection`
-     describing the available media streams, and by extension it is difficult to
-     provide efficient stream selection support
+     describing the available media streams, and by extension made it
+     difficult to provide efficient stream selection support
 
-2. By performing download buffering outside the adaptive streaming element,
-   the download scheduling has no visibility into the presentation timeline.
+2. By performing download buffering outside the adaptive streaming elements,
+   the download scheduling had no visibility into the presentation timeline.
 
    * This made it impossible to handle more efficient variant selection and
      download strategy
@@ -28,22 +36,30 @@ The problems with the old design include:
    * Especially with HLS, which does not provide detailed timing information
      about the underlying media streams to the same extent that DASH does.
 
-4. Aging design that grew organically since initial adaptive demuxers and miss
-   better understanding of how they should work in 2020
+4. Aging design that grew organically since the initial adaptive demuxer
+   implementation with a much more limited feature set, and misses a better
+   understanding of how a feature-rich implementation should work nowadays.
 
-   * The code is complicated and interwoven in ways that are hard to follow
+   * The code was complicated and interwoven in ways that were hard to follow
      and reason about.
 
 5. Use of GStreamer pipeline sources for downloading.
 
-   * An internal download pipeline that contains a `httpsrc -> queue2 -> src`
-     chain makes download management, bandwidth estimation and stream parsing
-     more difficult, and uses a new thread for each download.
-
+   * An internal download pipeline that contained a `httpsrc -> queue2 -> src`
+     chain made download management, bandwidth estimation and stream parsing
+     more difficult, and used a new thread for each download.
 
 # New design
 
-## High-level overview of the new AdaptiveDemux base class:
+The rest of this document describes the new adaptive streaming client
+implementation that landed in gst-plugins-good in GStreamer 1.22.
+
+The new elements only work in combination with the "streams-aware"
+`playbin3` and `uridecodebin3` elements that support advanced stream
+selection functionality, they won't work with the legacy `playbin`
+element.
+
+## High-level overview of the new internal AdaptiveDemux2 base class:
 
 * Buffering is handled inside the adaptive streaming element, based on
   elementary streams (i.e. de-multiplexed from the downloaded fragments) and
