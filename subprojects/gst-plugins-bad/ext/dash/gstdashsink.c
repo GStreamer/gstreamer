@@ -854,8 +854,10 @@ gst_dash_sink_write_mpd_file (GstDashSink * sink,
 
   g_mutex_lock (&sink->mpd_lock);
   gst_dash_sink_generate_mpd_content (sink, current_stream);
-  if (!gst_mpd_client_get_xml_content (sink->mpd_client, &mpd_content, &size))
+  if (!gst_mpd_client_get_xml_content (sink->mpd_client, &mpd_content, &size)) {
+    g_mutex_unlock (&sink->mpd_lock);
     return;
+  }
   g_mutex_unlock (&sink->mpd_lock);
 
   if (sink->mpd_root_path)
