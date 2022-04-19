@@ -691,6 +691,7 @@ _add_filter_hdr_buffer (GstVaVpp * self,
 
 bail:
   self->hdr_mapping = FALSE;
+  g_object_notify (G_OBJECT (self), "hdr-tone-mapping");
   return FALSE;
 }
 
