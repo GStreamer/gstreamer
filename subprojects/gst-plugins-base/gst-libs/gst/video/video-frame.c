@@ -294,7 +294,7 @@ scale_tile_shifts (const GstVideoFormatInfo * finfo, gint plane, guint * ws,
   /* for each additional component in the same plane, double the tile width,
    * this should provide the appropriate tile size when the tile size varies
    * base on the subsampling. */
-  for (i = 1; comp[i] >= 0; i++)
+  for (i = 1; i < GST_VIDEO_MAX_COMPONENTS && comp[i] >= 0; i++)
     *ws += 1;
 }
 

@@ -7743,7 +7743,7 @@ gst_video_format_info_extrapolate_stride (const GstVideoFormatInfo * finfo,
    * number of component on the first plane against the number of component on
    * the current plane. */
   estride = 0;
-  for (i = 0; comp[i] >= 0; i++)
+  for (i = 0; i < GST_VIDEO_MAX_COMPONENTS && comp[i] >= 0; i++)
     estride += GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, comp[i], stride);
 
   return estride;
