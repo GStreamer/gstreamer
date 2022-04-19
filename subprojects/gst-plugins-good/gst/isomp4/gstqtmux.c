@@ -605,9 +605,9 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
    *
    * Currently, two options exist:
    * - "dash-or-mss": for the original fragmented mode that supports dash or
-   *   mocrosoft smoothstreaming with a single input stream
+   *   microsoft smoothstreaming with a single input stream
    * - "first-moov-then-finalise" is a fragmented mode that will start with a
-   *   self-contained 'moov' atom fo the first fragment, then produce fragments.
+   *   self-contained 'moov' atom for the first fragment, then produce fragments.
    *   When the file is finalised, the initial 'moov' is invalidated and a
    *   new 'moov' is written covering the entire file.
    *
@@ -616,7 +616,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   g_object_class_install_property (gobject_class, PROP_FRAGMENT_MODE,
       g_param_spec_enum ("fragment-mode", "Fragment Mode",
           "How to to write fragments to the file.  Only used when "
-          "\'fragment-duration\' is greather than 0",
+          "\'fragment-duration\' is greater than 0",
           GST_TYPE_QT_MUX_FRAGMENT_MODE, DEFAULT_FRAGMENT_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

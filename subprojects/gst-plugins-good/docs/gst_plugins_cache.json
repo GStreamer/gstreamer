@@ -8473,7 +8473,7 @@
                         "writable": true
                     },
                     "fragment-mode": {
-                        "blurb": "How to to write fragments to the file.  Only used when 'fragment-duration' is greather than 0",
+                        "blurb": "How to to write fragments to the file.  Only used when 'fragment-duration' is greater than 0",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
