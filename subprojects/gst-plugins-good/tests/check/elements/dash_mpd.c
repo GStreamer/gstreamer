@@ -63,6 +63,20 @@ downloadhelper_fetch_uri (DownloadHelper * dh, const gchar * uri,
     const gchar * referer, DownloadFlags flags, GError ** err)
 {
   g_assert_not_reached ();
+  return NULL;
+}
+
+GstBuffer *
+download_request_take_buffer (DownloadRequest * request)
+{
+  g_assert_not_reached ();
+  return NULL;
+}
+
+void
+download_request_unref (DownloadRequest * request)
+{
+  g_assert_not_reached ();
 }
 
 /*
