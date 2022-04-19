@@ -298,7 +298,6 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
     StructureIncompatibleFieldsInfo * info)
 {
   gchar *value_str, *filter_str;
-  GValue intersect = { 0, };
   const GValue *filter_value = gst_structure_id_get_value (info->filter,
       field_id);
 
@@ -320,8 +319,7 @@ _find_structure_incompatible_fields (GQuark field_id, const GValue * value,
     return TRUE;
   }
 
-  if (gst_value_intersect (&intersect, value, filter_value)) {
-    g_value_reset (&intersect);
+  if (gst_value_intersect (NULL, value, filter_value)) {
     g_free (value_str);
     g_free (filter_str);
 
