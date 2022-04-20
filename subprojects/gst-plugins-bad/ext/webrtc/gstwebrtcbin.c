@@ -1886,7 +1886,6 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
 
       caps = _query_pad_caps (webrtc, rtp_trans, pad, filter, error);
     }
-    gst_object_unref (pad);
 
     if (*error)
       goto out;
@@ -1940,6 +1939,8 @@ _find_codec_preferences (GstWebRTCBin * webrtc,
 
 out:
 
+  if (pad)
+    gst_object_unref (pad);
   if (codec_preferences)
     gst_caps_unref (codec_preferences);
 
