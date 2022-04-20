@@ -1232,7 +1232,8 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
               (unsigned) devices[i], device_name);
 
           channel_layout =
-              gst_core_audio_audio_device_get_channel_layout (devices[i], output);
+              gst_core_audio_audio_device_get_channel_layout (devices[i],
+              output);
           if (channel_layout) {
             gst_core_audio_dump_channel_layout (channel_layout);
             g_free (channel_layout);
