@@ -151,6 +151,7 @@
 #include "rtpsession.h"
 #include "gstrtpsession.h"
 #include "gstrtpjitterbuffer.h"
+#include "gstrtputils.h"
 
 #include <gst/glib-compat-private.h>
 
@@ -1298,7 +1299,7 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
     if (bin->use_pipeline_clock) {
       ntpns = rt;
       /* add constant to convert from 1970 based time to 1900 based time */
-      ntpns += (2208988800LL * GST_SECOND);
+      ntpns += (GST_RTP_NTP_UNIX_OFFSET * GST_SECOND);
     } else {
       switch (bin->ntp_time_source) {
         case GST_RTP_NTP_TIME_SOURCE_NTP:
@@ -1308,7 +1309,7 @@ get_current_times (GstRtpBin * bin, GstClockTime * running_time,
 
           /* add constant to convert from 1970 based time to 1900 based time */
           if (bin->ntp_time_source == GST_RTP_NTP_TIME_SOURCE_NTP)
-            ntpns += (2208988800LL * GST_SECOND);
+            ntpns += (GST_RTP_NTP_UNIX_OFFSET * GST_SECOND);
           break;
         }
         case GST_RTP_NTP_TIME_SOURCE_RUNNING_TIME:

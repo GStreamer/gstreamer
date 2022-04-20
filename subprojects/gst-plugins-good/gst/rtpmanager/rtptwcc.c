@@ -22,6 +22,8 @@
 #include <gst/base/gstbitreader.h>
 #include <gst/base/gstbitwriter.h>
 
+#include "gstrtputils.h"
+
 GST_DEBUG_CATEGORY_EXTERN (rtp_session_debug);
 #define GST_CAT_DEFAULT rtp_session_debug
 
@@ -166,34 +168,11 @@ recv_packet_init (RecvPacket * packet, guint16 seqnum, RTPPacketInfo * pinfo)
     packet->ts = pinfo->current_time;
 }
 
-static guint8
-_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
-{
-  guint i;
-  guint8 extmap_id = 0;
-  guint n_fields = gst_structure_n_fields (s);
-
-  for (i = 0; i < n_fields; i++) {
-    const gchar *field_name = gst_structure_nth_field_name (s, i);
-    if (g_str_has_prefix (field_name, "extmap-")) {
-      const gchar *str = gst_structure_get_string (s, field_name);
-      if (str && g_strcmp0 (str, ext_name) == 0) {
-        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
-        if (id > 0 && id < 15) {
-          extmap_id = id;
-          break;
-        }
-      }
-    }
-  }
-  return extmap_id;
-}
-
 void
 rtp_twcc_manager_parse_recv_ext_id (RTPTWCCManager * twcc,
     const GstStructure * s)
 {
-  guint8 recv_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+  guint8 recv_ext_id = gst_rtp_get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
   if (recv_ext_id > 0) {
     twcc->recv_ext_id = recv_ext_id;
     GST_INFO ("TWCC enabled for recv using extension id: %u",
@@ -205,7 +184,7 @@ void
 rtp_twcc_manager_parse_send_ext_id (RTPTWCCManager * twcc,
     const GstStructure * s)
 {
-  guint8 send_ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+  guint8 send_ext_id = gst_rtp_get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
   if (send_ext_id > 0) {
     twcc->send_ext_id = send_ext_id;
     GST_INFO ("TWCC enabled for send using extension id: %u",

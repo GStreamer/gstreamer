@@ -70,6 +70,7 @@
 #include <gst/rtp/gstrtphdrext.h>
 
 #include "gstrtpfunnel.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_funnel_debug);
 #define GST_CAT_DEFAULT gst_rtp_funnel_debug
@@ -327,29 +328,6 @@ gst_rtp_funnel_set_twcc_ext_id (GstRtpFunnel * funnel, guint8 twcc_ext_id)
   gst_rtp_header_extension_set_id (funnel->twcc_ext, twcc_ext_id);
 }
 
-static guint8
-_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
-{
-  guint i;
-  guint8 extmap_id = 0;
-  guint n_fields = gst_structure_n_fields (s);
-
-  for (i = 0; i < n_fields; i++) {
-    const gchar *field_name = gst_structure_nth_field_name (s, i);
-    if (g_str_has_prefix (field_name, "extmap-")) {
-      const gchar *str = gst_structure_get_string (s, field_name);
-      if (str && g_strcmp0 (str, ext_name) == 0) {
-        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
-        if (id > 0 && id < 15) {
-          extmap_id = id;
-          break;
-        }
-      }
-    }
-  }
-  return extmap_id;
-}
-
 #define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
 
 static gboolean
@@ -398,7 +376,7 @@ gst_rtp_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         funnel->twcc_ext =
             gst_rtp_header_extension_create_from_uri (TWCC_EXTMAP_STR);
 
-      ext_id = _get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
+      ext_id = gst_rtp_get_extmap_id_for_attribute (s, TWCC_EXTMAP_STR);
       if (ext_id > 0) {
         fpad->has_twcc = TRUE;
         funnel->twcc_pads++;

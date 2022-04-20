@@ -113,6 +113,7 @@
 #include "rtpjitterbuffer.h"
 #include "rtpstats.h"
 #include "rtptimerqueue.h"
+#include "gstrtputils.h"
 
 #include <gst/glib-compat-private.h>
 
@@ -1494,29 +1495,6 @@ _get_cname_ssrc_mappings (GstRtpJitterBuffer * jitterbuffer,
   }
 }
 
-static guint8
-_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
-{
-  guint i;
-  guint8 extmap_id = 0;
-  guint n_fields = gst_structure_n_fields (s);
-
-  for (i = 0; i < n_fields; i++) {
-    const gchar *field_name = gst_structure_nth_field_name (s, i);
-    if (g_str_has_prefix (field_name, "extmap-")) {
-      const gchar *str = gst_structure_get_string (s, field_name);
-      if (str && g_strcmp0 (str, ext_name) == 0) {
-        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
-        if (id > 0 && id < 15) {
-          extmap_id = id;
-          break;
-        }
-      }
-    }
-  }
-  return extmap_id;
-}
-
 /*
  * Must be called with JBUF_LOCK held
  */
@@ -1692,7 +1670,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 
   _get_cname_ssrc_mappings (jitterbuffer, caps_struct);
   priv->ntp64_ext_id =
-      _get_extmap_id_for_attribute (caps_struct,
+      gst_rtp_get_extmap_id_for_attribute (caps_struct,
       GST_RTP_HDREXT_BASE GST_RTP_HDREXT_NTP_64);
 
   return TRUE;

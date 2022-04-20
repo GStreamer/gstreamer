@@ -30,6 +30,7 @@
 #include <gst/glib-compat-private.h>
 
 #include "rtpsession.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY (rtp_session_debug);
 #define GST_CAT_DEFAULT rtp_session_debug
@@ -3177,29 +3178,6 @@ invalid_packet:
   }
 }
 
-static guint8
-_get_extmap_id_for_attribute (const GstStructure * s, const gchar * ext_name)
-{
-  guint i;
-  guint8 extmap_id = 0;
-  guint n_fields = gst_structure_n_fields (s);
-
-  for (i = 0; i < n_fields; i++) {
-    const gchar *field_name = gst_structure_nth_field_name (s, i);
-    if (g_str_has_prefix (field_name, "extmap-")) {
-      const gchar *str = gst_structure_get_string (s, field_name);
-      if (str && g_strcmp0 (str, ext_name) == 0) {
-        gint64 id = g_ascii_strtoll (field_name + 7, NULL, 10);
-        if (id > 0 && id < 15) {
-          extmap_id = id;
-          break;
-        }
-      }
-    }
-  }
-  return extmap_id;
-}
-
 /**
  * rtp_session_update_send_caps:
  * @sess: an #RTPSession
@@ -3256,7 +3234,7 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
   }
 
   sess->send_ntp64_ext_id =
-      _get_extmap_id_for_attribute (s,
+      gst_rtp_get_extmap_id_for_attribute (s,
       GST_RTP_HDREXT_BASE GST_RTP_HDREXT_NTP_64);
 
   rtp_twcc_manager_parse_send_ext_id (sess->twcc, s);

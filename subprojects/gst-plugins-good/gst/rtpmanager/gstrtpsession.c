@@ -111,6 +111,7 @@
 
 #include "gstrtpsession.h"
 #include "rtpsession.h"
+#include "gstrtputils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_session_debug);
 #define GST_CAT_DEFAULT gst_rtp_session_debug
@@ -1101,7 +1102,7 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
     if (rtpsession->priv->use_pipeline_clock) {
       ntpns = rt;
       /* add constant to convert from 1970 based time to 1900 based time */
-      ntpns += (2208988800LL * GST_SECOND);
+      ntpns += (GST_RTP_NTP_UNIX_OFFSET * GST_SECOND);
     } else {
       switch (rtpsession->priv->ntp_time_source) {
         case GST_RTP_NTP_TIME_SOURCE_NTP:
@@ -1111,7 +1112,7 @@ get_current_times (GstRtpSession * rtpsession, GstClockTime * running_time,
 
           /* add constant to convert from 1970 based time to 1900 based time */
           if (rtpsession->priv->ntp_time_source == GST_RTP_NTP_TIME_SOURCE_NTP)
-            ntpns += (2208988800LL * GST_SECOND);
+            ntpns += (GST_RTP_NTP_UNIX_OFFSET * GST_SECOND);
           break;
         }
         case GST_RTP_NTP_TIME_SOURCE_RUNNING_TIME:
@@ -2458,7 +2459,7 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
     if (rtpsession->priv->use_pipeline_clock) {
       ntpnstime = running_time;
       /* add constant to convert from 1970 based time to 1900 based time */
-      ntpnstime += (2208988800LL * GST_SECOND);
+      ntpnstime += (GST_RTP_NTP_UNIX_OFFSET * GST_SECOND);
     } else {
       switch (rtpsession->priv->ntp_time_source) {
         case GST_RTP_NTP_TIME_SOURCE_NTP:
@@ -2494,7 +2495,7 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
           if (ntpnstime != GST_CLOCK_TIME_NONE
               && rtpsession->priv->ntp_time_source ==
               GST_RTP_NTP_TIME_SOURCE_NTP)
-            ntpnstime += (2208988800LL * GST_SECOND);
+            ntpnstime += (GST_RTP_NTP_UNIX_OFFSET * GST_SECOND);
           break;
         }
         case GST_RTP_NTP_TIME_SOURCE_RUNNING_TIME:
