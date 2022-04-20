@@ -44,7 +44,7 @@ struct _GstRtpGSTPay
 {
   GstRTPBasePayload payload;
 
-  GList *pending_buffers; /* GstBufferList */
+  GstBufferList *pending_buffers;
   GstAdapter *adapter;
   guint8 flags;
   guint8 etype;
@@ -57,6 +57,8 @@ struct _GstRtpGSTPay
   guint config_interval;
   GstClockTime last_config;
   gboolean force_config;
+
+  gboolean received_buffer;
 };
 
 struct _GstRtpGSTPayClass
