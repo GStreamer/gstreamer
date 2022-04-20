@@ -22,6 +22,7 @@
 
 #include <gst/video/video.h>
 #include <gst/base/gstbasesink.h>
+#include <gst/rtp/rtp.h>
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstharness.h>
@@ -973,6 +974,8 @@ GST_START_TEST (test_transform_meta)
   const guint8 data[16] = { 0 };
   GstCaps *caps;
   GstVideoRegionOfInterestMeta *roi_meta;
+  GstRTPSourceMeta *rtp_source_meta;
+  guint32 ssrc = 1234;
 
   h = gst_harness_new ("videoscale");
 
@@ -981,6 +984,7 @@ GST_START_TEST (test_transform_meta)
 
   caps = gst_caps_new_empty_simple ("timestamp/test");
   gst_buffer_add_video_region_of_interest_meta (buffer, "face", 0, 1, 2, 3);
+  rtp_source_meta = gst_buffer_add_rtp_source_meta (buffer, &ssrc, NULL, 0);
 
   gst_harness_set_sink_caps_str (h,
       "video/x-raw,width=8,height=8,format=GRAY8");
@@ -998,6 +1002,11 @@ GST_START_TEST (test_transform_meta)
   fail_unless_equals_int (roi_meta->y, 2);
   fail_unless_equals_int (roi_meta->w, 4);
   fail_unless_equals_int (roi_meta->h, 6);
+
+  rtp_source_meta = gst_buffer_get_rtp_source_meta (buffer);
+  fail_unless (rtp_source_meta != NULL);
+  fail_unless (rtp_source_meta->ssrc_valid);
+  fail_unless_equals_int (rtp_source_meta->ssrc, ssrc);
 
   gst_buffer_unref (buffer);
   gst_caps_unref (caps);
