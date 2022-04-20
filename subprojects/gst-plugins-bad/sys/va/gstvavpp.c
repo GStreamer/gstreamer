@@ -1800,13 +1800,28 @@ copy_misc_fields_from_input (GstCaps * in_caps, GstCaps * out_caps)
   }
 }
 
-static inline void
-remove_hdr_fields (GstCaps * caps)
+static void
+update_hdr_fields (GstVaVpp * self, GstCaps * result)
 {
-  GstStructure *s = gst_caps_get_structure (caps, 0);
+  GstStructure *s = gst_caps_get_structure (result, 0);
+  GstVideoInfo out_info;
+  gboolean have_colorimetry;
 
   gst_structure_remove_fields (s, "mastering-display-info",
       "content-light-level", "hdr-format", NULL);
+
+  have_colorimetry = gst_structure_has_field (s, "colorimetry");
+  if (!have_colorimetry) {
+    if (gst_video_info_from_caps (&out_info, result)) {
+      gchar *colorimetry_str =
+          gst_video_colorimetry_to_string (&out_info.colorimetry);
+      gst_caps_set_simple (result, "colorimetry", G_TYPE_STRING,
+          colorimetry_str, NULL);
+      g_free (colorimetry_str);
+    } else {
+      GST_WARNING_OBJECT (self, "Failed to convert src pad caps to video info");
+    }
+  }
 }
 
 static GstCaps *
@@ -1836,14 +1851,14 @@ gst_va_vpp_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
   result = gst_caps_fixate (result);
 
   if (direction == GST_PAD_SINK) {
-    if (gst_caps_is_subset (caps, result)) {
+    if (self->hdr_mapping)
+      update_hdr_fields (self, result);
+
+    /* Try and preserve input colorimetry / chroma information */
+    transfer_colorimetry_from_input (self, caps, result);
+
+    if (gst_caps_is_subset (caps, result))
       gst_caps_replace (&result, caps);
-    } else {
-      /* Try and preserve input colorimetry / chroma information */
-      transfer_colorimetry_from_input (self, caps, result);
-      if (self->hdr_mapping)
-        remove_hdr_fields (result);
-    }
   }
 
   GST_DEBUG_OBJECT (self, "fixated othercaps to %" GST_PTR_FORMAT, result);
