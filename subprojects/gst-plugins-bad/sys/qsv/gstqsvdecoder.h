@@ -43,6 +43,7 @@ typedef struct _GstQsvDecoderClassData
   guint impl_index;
   gint64 adapter_luid;
   gchar *display_path;
+  gchar *description;
 
   GstCaps *sink_caps;
   GstCaps *src_caps;

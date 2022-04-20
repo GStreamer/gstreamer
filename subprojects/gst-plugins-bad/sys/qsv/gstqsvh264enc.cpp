@@ -178,6 +178,7 @@ typedef struct _GstQsvH264EncClassData
   guint impl_index;
   gint64 adapter_luid;
   gchar *display_path;
+  gchar *description;
 } GstQsvH264EncClassData;
 
 typedef struct _GstQsvH264Enc
@@ -429,11 +430,22 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
+
+#ifdef G_OS_WIN32
+  std::string long_name = "Intel Quick Sync Video " +
+      std::string (cdata->description) + " H.264 Encoder";
+
+  gst_element_class_set_metadata (element_class, long_name.c_str (),
+      "Codec/Encoder/Video/Hardware",
+      "Intel Quick Sync Video H.264 Encoder",
+      "Seungha Yang <seungha@centricular.com>");
+#else
   gst_element_class_set_static_metadata (element_class,
       "Intel Quick Sync Video H.264 Encoder",
       "Codec/Encoder/Video/Hardware",
       "Intel Quick Sync Video H.264 Encoder",
       "Seungha Yang <seungha@centricular.com>");
+#endif
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -459,6 +471,7 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
+  g_free (cdata->description);
   g_free (cdata);
 }
 
@@ -1878,13 +1891,10 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   cdata->impl_index = impl_index;
 
 #ifdef G_OS_WIN32
-  gint64 device_luid;
-  g_object_get (device, "adapter-luid", &device_luid, nullptr);
-  cdata->adapter_luid = device_luid;
+  g_object_get (device, "adapter-luid", &cdata->adapter_luid,
+      "description", &cdata->description, nullptr);
 #else
-  gchar *display_path;
-  g_object_get (device, "path", &display_path, nullptr);
-  cdata->display_path = display_path;
+  g_object_get (device, "path", &cdata->display_path, nullptr);
 #endif
 
   GType type;
