@@ -772,7 +772,7 @@ process_webvtt_cue_timing_setting_line (const gchar * input,
     return FALSE;
 
   /* --> */
-  if (gst_byte_reader_get_remaining (&br) < 15 ||
+  if (gst_byte_reader_get_remaining (&br) < 12 ||
       g_ascii_strncasecmp ((const gchar *)
           gst_byte_reader_peek_data_unchecked (&br), "-->", 3))
     return FALSE;
