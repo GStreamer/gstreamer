@@ -697,6 +697,7 @@ process_leaks (GstLeaksTracer * self, GValue * ret_leaks)
 {
   GList *leaks, *l;
   gboolean ret = FALSE;
+  guint n = 0;
 
   if (!ret_leaks)
     GST_TRACE_OBJECT (self, "start listing currently alive objects");
@@ -708,8 +709,10 @@ process_leaks (GstLeaksTracer * self, GValue * ret_leaks)
     goto done;
   }
 
-  for (l = leaks; l; l = l->next)
+  for (l = leaks; l; l = l->next) {
     process_leak (l->data, ret_leaks);
+    n++;
+  }
 
   g_list_free_full (leaks, (GDestroyNotify) leak_free);
 
@@ -717,7 +720,7 @@ process_leaks (GstLeaksTracer * self, GValue * ret_leaks)
 
 done:
   if (!ret_leaks)
-    GST_TRACE_OBJECT (self, "done listing currently alive objects");
+    GST_TRACE_OBJECT (self, "listed %u alive objects", n);
 
   return ret;
 }
