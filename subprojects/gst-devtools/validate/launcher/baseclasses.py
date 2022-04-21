@@ -2070,7 +2070,7 @@ class _TestsLauncher(Loggable):
         return True
 
     def print_result(self, current_test_num, test, total_num_tests, retry_on_failures=False):
-        if test.result != Result.PASSED and (not retry_on_failures or test.max_retries):
+        if test.result not in [Result.PASSED, Result.KNOWN_ERROR] and (not retry_on_failures or test.max_retries):
             printc(str(test), color=utils.get_color_for_result(test.result))
 
         length = 80
