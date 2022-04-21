@@ -1240,7 +1240,7 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
     if (ndevices < 1) {
       GST_ERROR ("no audio output devices found");
       g_free (devices);
-      goto done;
+      return res;
     }
 
     GST_DEBUG ("found %d audio device(s)", ndevices);
@@ -1283,14 +1283,12 @@ gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
     if (res && !_audio_device_is_alive (device_id, output)) {
       GST_ERROR ("Requested device not usable");
       res = FALSE;
-      goto done;
     }
   }
 
   if (res)
     core_audio->device_id = device_id;
 
-done:
   return res;
 }
 
