@@ -57,6 +57,9 @@
 #define DEFAULT_SHOW_TIMES_AS_DATES FALSE
 #define DEFAULT_DATETIME_FORMAT "%F %T" /* YYYY-MM-DD hh:mm:ss */
 
+static GstStaticCaps ntp_reference_timestamp_caps =
+GST_STATIC_CAPS ("timestamp/x-ntp");
+
 enum
 {
   PROP_0,
@@ -64,6 +67,7 @@ enum
   PROP_SHOW_TIMES_AS_DATES,
   PROP_DATETIME_EPOCH,
   PROP_DATETIME_FORMAT,
+  PROP_REFERENCE_TIMESTAMP_CAPS,
 };
 
 #define gst_time_overlay_parent_class parent_class
@@ -84,6 +88,14 @@ static void gst_time_overlay_get_property (GObject * object, guint prop_id,
  * Since: 1.20
  */
 
+/**
+ * GstTimeOverlayTimeLine::reference-timestamp:
+ *
+ * Use #GstReferenceTimestampMeta.
+ *
+ * Since: 1.22
+ */
+
 #define GST_TYPE_TIME_OVERLAY_TIME_LINE (gst_time_overlay_time_line_type())
 static GType
 gst_time_overlay_time_line_type (void)
@@ -96,6 +108,8 @@ gst_time_overlay_time_line_type (void)
     {GST_TIME_OVERLAY_TIME_LINE_TIME_CODE, "time-code", "time-code"},
     {GST_TIME_OVERLAY_TIME_LINE_ELAPSED_RUNNING_TIME,
         "elapsed-running-time", "elapsed-running-time"},
+    {GST_TIME_OVERLAY_TIME_LINE_REFERENCE_TIMESTAMP,
+        "reference-timestamp", "reference-timestamp"},
     {0, NULL, NULL},
   };
 
@@ -169,6 +183,26 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
           self->first_running_time = ts;
         ts -= self->first_running_time;
         break;
+      case GST_TIME_OVERLAY_TIME_LINE_REFERENCE_TIMESTAMP:
+      {
+        GstReferenceTimestampMeta *meta;
+
+        if (self->reference_timestamp_caps) {
+          meta =
+              gst_buffer_get_reference_timestamp_meta (video_frame,
+              self->reference_timestamp_caps);
+
+          if (meta) {
+            ts = meta->timestamp;
+          } else {
+            ts = 0;
+          }
+        } else {
+          ts = 0;
+        }
+
+        break;
+      }
       case GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME:
       default:
         ts = ts_buffer;
@@ -180,8 +214,10 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
 
       datetime =
           g_date_time_add_seconds (self->datetime_epoch,
-          (gdouble) GST_BUFFER_TIMESTAMP (video_frame) / GST_SECOND);
+          ((gdouble) ts) / GST_SECOND);
+
       time_str = g_date_time_format (datetime, self->datetime_format);
+
       g_date_time_unref (datetime);
     } else {
       time_str = gst_time_overlay_render_time (GST_TIME_OVERLAY (overlay), ts);
@@ -224,8 +260,10 @@ gst_time_overlay_finalize (GObject * gobject)
 {
   GstTimeOverlay *self = GST_TIME_OVERLAY (gobject);
 
+  gst_clear_caps (&self->reference_timestamp_caps);
   g_date_time_unref (self->datetime_epoch);
   g_free (self->datetime_format);
+
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
@@ -275,6 +313,20 @@ gst_time_overlay_class_init (GstTimeOverlayClass * klass)
           DEFAULT_SHOW_TIMES_AS_DATES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * timeoverlay:reference-timestamp-caps
+   *
+   * Selects the caps to use for the reference timestamp meta in
+   * time-mode=reference-timestamp.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_REFERENCE_TIMESTAMP_CAPS,
+      g_param_spec_boxed ("reference-timestamp-caps",
+          "Reference Timestamp Caps",
+          "Caps to use for the reference timestamp time mode",
+          GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_type_mark_as_plugin_api (GST_TYPE_TIME_OVERLAY_TIME_LINE, 0);
 }
 
@@ -312,6 +364,9 @@ gst_time_overlay_init (GstTimeOverlay * overlay)
   overlay->show_times_as_dates = DEFAULT_SHOW_TIMES_AS_DATES;
   overlay->datetime_epoch = g_date_time_new_utc (1900, 1, 1, 0, 0, 0);
   overlay->datetime_format = g_strdup (DEFAULT_DATETIME_FORMAT);
+
+  overlay->reference_timestamp_caps =
+      gst_static_caps_get (&ntp_reference_timestamp_caps);
 
   context = textoverlay->pango_context;
 
@@ -354,6 +409,10 @@ gst_time_overlay_set_property (GObject * object, guint prop_id,
       g_free (overlay->datetime_format);
       overlay->datetime_format = g_value_dup_string (value);
       break;
+    case PROP_REFERENCE_TIMESTAMP_CAPS:
+      gst_clear_caps (&overlay->reference_timestamp_caps);
+      overlay->reference_timestamp_caps = g_value_dup_boxed (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -378,6 +437,9 @@ gst_time_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DATETIME_FORMAT:
       g_value_set_string (value, overlay->datetime_format);
+      break;
+    case PROP_REFERENCE_TIMESTAMP_CAPS:
+      g_value_set_boxed (value, overlay->reference_timestamp_caps);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

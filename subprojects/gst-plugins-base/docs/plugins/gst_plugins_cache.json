@@ -8272,6 +8272,18 @@
                         "type": "gchararray",
                         "writable": true
                     },
+                    "reference-timestamp-caps": {
+                        "blurb": "Caps to use for the reference timestamp time mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "timestamp/x-ntp",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstCaps",
+                        "writable": true
+                    },
                     "show-times-as-dates": {
                         "blurb": "Whether to display times, counted from datetime-epoch, as dates",
                         "conditionally-available": false,
@@ -8929,6 +8941,11 @@
                         "desc": "elapsed-running-time",
                         "name": "elapsed-running-time",
                         "value": "4"
+                    },
+                    {
+                        "desc": "reference-timestamp",
+                        "name": "reference-timestamp",
+                        "value": "5"
                     }
                 ]
             }
