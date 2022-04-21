@@ -1589,98 +1589,6 @@ GST_START_TEST (test_nopts_in_middle)
 
 GST_END_TEST;
 
-/* test segment update */
-GST_START_TEST (test_segment_update)
-{
-  GstElement *videorate;
-  GstBuffer *first, *second, *third;
-  GstCaps *caps;
-  GstSegment segment;
-  GstBuffer *buf;
-  GList *l;
-  GstClockTime next_ts = 0;
-
-  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
-  fail_unless (gst_element_set_state (videorate,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
-      "could not set to playing");
-
-  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
-  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
-  gst_caps_unref (caps);
-
-  /* first buffer */
-  first = gst_buffer_new_and_alloc (4);
-  GST_BUFFER_TIMESTAMP (first) = 0;
-  gst_buffer_memset (first, 0, 1, 4);
-  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
-  gst_buffer_ref (first);
-
-  GST_DEBUG ("pushing first buffer");
-  /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
-  /* ... and a copy is now stuck inside videorate */
-  ASSERT_BUFFER_REFCOUNT (first, "first", 1);
-  fail_unless_equals_int (g_list_length (buffers), 0);
-  assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
-
-  /* second buffer */
-  second = gst_buffer_new_and_alloc (4);
-  GST_BUFFER_TIMESTAMP (second) = 2 * GST_SECOND;
-  gst_buffer_memset (second, 0, 2, 4);
-  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  gst_buffer_ref (second);
-
-  /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
-  ASSERT_BUFFER_REFCOUNT (second, "second", 1);
-  fail_unless_equals_int (g_list_length (buffers), 26);
-  assert_videorate_stats (videorate, "second", 2, 26, 0, 25);
-
-  for (l = buffers; l; l = l->next) {
-    buf = l->data;
-    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
-    fail_unless_equals_int (buffer_get_byte (buf, 0), 1);
-
-    next_ts += GST_SECOND / 25;
-  }
-  gst_check_drop_buffers ();
-
-  /* Send a pointless segment update, shouldn't change anything */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  segment.position = 5 * GST_SECOND;
-  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
-
-  /* third buffer */
-  third = gst_buffer_new_and_alloc (4);
-  GST_BUFFER_TIMESTAMP (third) = 3 * GST_SECOND;
-  gst_buffer_memset (third, 0, 3, 4);
-  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-  gst_buffer_ref (third);
-
-  /* pushing gives away my reference ... */
-  fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
-  ASSERT_BUFFER_REFCOUNT (third, "third", 1);
-  fail_unless_equals_int (g_list_length (buffers), 37);
-  assert_videorate_stats (videorate, "third", 3, 63, 0, 61);
-
-  for (l = buffers; l; l = l->next) {
-    buf = l->data;
-    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
-    fail_unless_equals_int (buffer_get_byte (buf, 0), 2);
-
-    next_ts += GST_SECOND / 25;
-  }
-
-  /* cleanup */
-  gst_buffer_unref (first);
-  gst_buffer_unref (second);
-  gst_buffer_unref (third);
-  cleanup_videorate (videorate);
-}
-
-GST_END_TEST;
-
 static Suite *
 videorate_suite (void)
 {
@@ -1707,7 +1615,6 @@ videorate_suite (void)
   tcase_add_loop_test (tc_chain, test_query_position, 0,
       G_N_ELEMENTS (position_tests));
   tcase_add_test (tc_chain, test_nopts_in_middle);
-  tcase_add_test (tc_chain, test_segment_update);
 
   return s;
 }
