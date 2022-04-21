@@ -8,7 +8,6 @@ import gitlab
 CERBERO_PROJECT = 'gstreamer/cerbero'
 
 
-
 class Status:
     FAILED = 'failed'
     MANUAL = 'manual'
@@ -36,13 +35,33 @@ def fprint(msg):
 if __name__ == "__main__":
     server = os.environ['CI_SERVER_URL']
     gl = gitlab.Gitlab(server,
-        private_token=os.environ.get('GITLAB_API_TOKEN'),
-        job_token=os.environ.get('CI_JOB_TOKEN'))
+                       private_token=os.environ.get('GITLAB_API_TOKEN'),
+                       job_token=os.environ.get('CI_JOB_TOKEN'))
 
-    cerbero = gl.projects.get(CERBERO_PROJECT)
+    cerbero = None
+    # We do not want to run on (often out of date) user upstream branch
+    if os.environ["CI_COMMIT_REF_NAME"] != os.environ['GST_UPSTREAM_BRANCH']:
+        try:
+            user_cerbero_name = f'{os.environ["CI_PROJECT_NAMESPACE"]}/cerbero'
+            cerbero = gl.projects.get(user_cerbero_name)
+            if os.environ["CI_COMMIT_REF_NAME"] in [b.name for b in cerbero.branches.list()]:
+                cerbero_branch = os.environ["CI_COMMIT_REF_NAME"]
+                fprint(
+                    f"-> Triggering on branch {cerbero_branch} in {user_cerbero_name}\n")
+            else:
+                # No branch with a same name on the user cerbero repo... trigger
+                # on upstream project
+                cerbero = None
+        except gitlab.exceptions.GitlabGetError:
+            pass
+
+    if cerbero is None:
+        cerbero = gl.projects.get(CERBERO_PROJECT)
+        cerbero_branch = os.environ["GST_UPSTREAM_BRANCH"]
+
     pipe = cerbero.trigger_pipeline(
         token=os.environ['CI_JOB_TOKEN'],
-        ref=os.environ["GST_UPSTREAM_BRANCH"],
+        ref=cerbero_branch,
         variables={
             "CI_GSTREAMER_URL": os.environ["CI_PROJECT_URL"],
             "CI_GSTREAMER_REF_NAME": os.environ["CI_COMMIT_REF_NAME"],
