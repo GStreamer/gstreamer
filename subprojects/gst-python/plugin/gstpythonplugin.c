@@ -113,7 +113,6 @@ gst_python_load_directory (GstPlugin * plugin, const gchar * path)
   GDir *dir;
   const gchar *file;
   GError *error = NULL;
-  gboolean ret = TRUE;
 
   dir = g_dir_open (path, 0, &error);
   if (!dir) {
@@ -127,7 +126,7 @@ gst_python_load_directory (GstPlugin * plugin, const gchar * path)
     if (g_str_has_suffix (file, ".py")) {
       gsize len = strlen (file) - 3;
       gchar *name = g_strndup (file, len);
-      ret &= gst_python_plugin_load_file (plugin, name);
+      gst_python_plugin_load_file (plugin, name);
       g_free (name);
     }
   }
