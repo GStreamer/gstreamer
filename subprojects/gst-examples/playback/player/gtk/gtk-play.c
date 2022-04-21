@@ -26,7 +26,8 @@
 #include <gst/tag/tag.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-#include <gdk/gdk.h>
+#include <gtk/gtk.h>
+
 #if defined (GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
 #elif defined (GDK_WINDOWING_WIN32)
@@ -38,8 +39,6 @@
 NSView *gdk_quartz_window_get_nsview (GdkWindow * window);
 #endif
 #endif
-
-#include <gtk/gtk.h>
 
 #include <gst/play/play.h>
 #include "gtk-video-renderer.h"
