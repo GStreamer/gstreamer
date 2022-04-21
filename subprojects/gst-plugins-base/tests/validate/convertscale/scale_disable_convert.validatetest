@@ -6,7 +6,7 @@ meta,
         "videotestsrc num-buffers=1 ! video/x-raw,format=ARGB,width=20,height=20 ! videoscale name=scaler ! video/x-raw,format=I420,width=100,height=100 ! fakevideosink",
     },
     configs = {
-       "$(validateflow), pad=scaler:src, buffers-checksum=as-id, ignored-event-types={ tag }",
+       "$(validateflow), pad=scaler:src, buffers-checksum=as-id, ignored-event-types={ tag, eos }",
     },
     expected-issues = {
         [
@@ -28,7 +28,7 @@ meta,
 
 
 play
-set-state,  state=ready, on-message=eos
+set-state, state=ready, on-message=eos
 
 set-properties, scaler::disable-conversion=true
 play
