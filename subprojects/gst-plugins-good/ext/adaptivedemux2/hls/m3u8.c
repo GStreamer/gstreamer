@@ -1124,8 +1124,8 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self)
     /* Live playlist */
     res =
         g_ptr_array_index (self->segments,
-        MAX ((gint) self->segments->len - GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE,
-            0));
+        MAX ((gint) self->segments->len - GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE -
+            1, 0));
   }
 
   if (res) {
