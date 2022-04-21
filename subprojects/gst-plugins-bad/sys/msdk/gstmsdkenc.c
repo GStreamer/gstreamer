@@ -131,10 +131,6 @@ typedef struct
 {
   mfxFrameSurface1 *surface;
   GstBuffer *buf;
-  GstBuffer *buf_external;
-#ifndef _WIN32
-  VASurfaceID cache_surface;
-#endif
 } MsdkSurface;
 
 void
@@ -980,19 +976,6 @@ gst_msdkenc_create_surface (mfxFrameSurface1 * surface, GstBuffer * buf)
 static void
 gst_msdkenc_free_surface (MsdkSurface * surface)
 {
-  if (surface->buf_external) {
-    GstMsdkMemoryID *msdk_mid = NULL;
-    mfxFrameSurface1 *mfx_surface = NULL;
-
-    mfx_surface = surface->surface;
-    msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
-#ifndef _WIN32
-    *msdk_mid->surface = surface->cache_surface;
-#endif
-
-    gst_buffer_unref (surface->buf_external);
-  }
-
   if (surface->buf)
     gst_buffer_unref (surface->buf);
 
@@ -1723,47 +1706,33 @@ static gboolean
 import_va_surface_to_msdk (GstMsdkEnc * thiz, GstBuffer * buf,
     MsdkSurface * msdk_surface)
 {
-  GstVideoInfo vinfo;
-  GstVideoMeta *vmeta;
-  GstMsdkMemoryID *msdk_mid = NULL;
+  VASurfaceID va_surface;
+  mfxFrameInfo frame_info = { {0,}, 0, };
   mfxFrameSurface1 *mfx_surface = NULL;
-  VASurfaceID surface;
-  gint i;
+  GstMsdkMemoryID *msdk_mid = NULL;
+  mfxMemId *mfx_mid = NULL;
 
-  surface = gst_va_buffer_get_surface (buf);
-  if (surface == VA_INVALID_SURFACE)
+  va_surface = gst_va_buffer_get_surface (buf);
+  if (va_surface == VA_INVALID_SURFACE)
     return FALSE;
 
-  vinfo = thiz->input_state->info;
-  /* Update offset/stride/size if there is VideoMeta attached to
-   * the buffer */
-  vmeta = gst_buffer_get_video_meta (buf);
-  if (vmeta) {
-    if (GST_VIDEO_INFO_FORMAT (&vinfo) != vmeta->format ||
-        GST_VIDEO_INFO_WIDTH (&vinfo) != vmeta->width ||
-        GST_VIDEO_INFO_HEIGHT (&vinfo) != vmeta->height ||
-        GST_VIDEO_INFO_N_PLANES (&vinfo) != vmeta->n_planes) {
-      GST_ERROR_OBJECT (thiz, "VideoMeta attached to buffer is not matching"
-          "the negotiated width/height/format");
-      return FALSE;
-    }
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); ++i) {
-      GST_VIDEO_INFO_PLANE_OFFSET (&vinfo, i) = vmeta->offset[i];
-      GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, i) = vmeta->stride[i];
-    }
-    GST_VIDEO_INFO_SIZE (&vinfo) = gst_buffer_get_size (buf);
-  }
+  mfx_surface = g_slice_new0 (mfxFrameSurface1);
+  msdk_mid = g_slice_new0 (GstMsdkMemoryID);
+  mfx_mid = g_slice_new0 (mfxMemId);
 
-  if (GST_VIDEO_INFO_SIZE (&vinfo) < GST_VIDEO_INFO_SIZE (&thiz->aligned_info))
-    return FALSE;
+  msdk_mid->surface = g_slice_new0 (VASurfaceID);
+  *msdk_mid->surface = va_surface;
 
-  msdk_surface->buf_external = gst_buffer_ref (buf);
+  mfx_mid = (mfxMemId *) msdk_mid;
+  mfx_surface->Data.MemId = mfx_mid;
 
-  mfx_surface = msdk_surface->surface;
-  msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
+  gst_msdk_set_mfx_frame_info_from_video_info (&frame_info,
+      &thiz->input_state->info);
+  mfx_surface->Info = frame_info;
 
-  msdk_surface->cache_surface = *msdk_mid->surface;
-  *msdk_mid->surface = surface;
+  msdk_surface->buf = gst_buffer_ref (buf);
+  msdk_surface->surface = mfx_surface;
+
   return TRUE;
 }
 #endif
@@ -1785,6 +1754,15 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
     msdk_surface->surface = gst_msdk_get_surface_from_buffer (inbuf);
     return msdk_surface;
   }
+#ifndef _WIN32
+  if (thiz->use_va) {
+    msdk_surface = g_slice_new0 (MsdkSurface);
+    if (import_va_surface_to_msdk (thiz, inbuf, msdk_surface))
+      return msdk_surface;
+    else
+      g_slice_free (MsdkSurface, msdk_surface);
+  }
+#endif
 
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
    * just copy frame (if not dmabuf backed )to msdk buffer and take a surface from it.
@@ -1794,13 +1772,6 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
     goto error;
 
 #ifndef _WIN32
-    /************** VA import *****************/
-  if (thiz->use_va) {
-    if (import_va_surface_to_msdk (thiz, inbuf, msdk_surface)) {
-      return msdk_surface;
-    }
-  }
-
   /************ dmabuf-import ************* */
   /* if upstream provided a dmabuf backed memory, but not an msdk
    * buffer, we could try to export the dmabuf to underlined vasurface */
