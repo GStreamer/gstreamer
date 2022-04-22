@@ -107,7 +107,10 @@ enum
   PROP_RTCP_REDUCED_SIZE,
   PROP_RTCP_DISABLE_SR_TIMESTAMP,
   PROP_TWCC_FEEDBACK_INTERVAL,
+  PROP_LAST,
 };
+
+static GParamSpec *properties[PROP_LAST];
 
 /* update average packet size */
 #define INIT_AVG(avg, val) \
@@ -449,64 +452,62 @@ rtp_session_class_init (RTPSessionClass * klass)
       G_TYPE_UINT, 4, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_ARRAY,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE);
 
-  g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
+  properties[PROP_INTERNAL_SSRC] =
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
-          "The internal SSRC used for the session (deprecated)",
-          0, G_MAXUINT, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_DOC_SHOW_DEFAULT));
+      "The internal SSRC used for the session (deprecated)",
+      0, G_MAXUINT, 0,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT);
 
-  g_object_class_install_property (gobject_class, PROP_INTERNAL_SOURCE,
+  properties[PROP_INTERNAL_SOURCE] =
       g_param_spec_object ("internal-source", "Internal Source",
-          "The internal source element of the session (deprecated)",
-          RTP_TYPE_SOURCE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "The internal source element of the session (deprecated)",
+      RTP_TYPE_SOURCE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
+  properties[PROP_BANDWIDTH] =
       g_param_spec_double ("bandwidth", "Bandwidth",
-          "The bandwidth of the session in bits per second (0 for auto-discover)",
-          0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The bandwidth of the session in bits per second (0 for auto-discover)",
+      0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
+  properties[PROP_RTCP_FRACTION] =
       g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
-          "The fraction of the bandwidth used for RTCP in bits per second (or as a real fraction of the RTP bandwidth if < 1)",
-          0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The fraction of the bandwidth used for RTCP in bits per second (or as a real fraction of the RTP bandwidth if < 1)",
+      0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_RTCP_RR_BANDWIDTH,
+  properties[PROP_RTCP_RR_BANDWIDTH] =
       g_param_spec_int ("rtcp-rr-bandwidth", "RTCP RR bandwidth",
-          "The RTCP bandwidth used for receivers in bits per second (-1 = default)",
-          -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The RTCP bandwidth used for receivers in bits per second (-1 = default)",
+      -1, G_MAXINT, DEFAULT_RTCP_RR_BANDWIDTH,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_RTCP_RS_BANDWIDTH,
+  properties[PROP_RTCP_RS_BANDWIDTH] =
       g_param_spec_int ("rtcp-rs-bandwidth", "RTCP RS bandwidth",
-          "The RTCP bandwidth used for senders in bits per second (-1 = default)",
-          -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The RTCP bandwidth used for senders in bits per second (-1 = default)",
+      -1, G_MAXINT, DEFAULT_RTCP_RS_BANDWIDTH,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_RTCP_MTU,
+  properties[PROP_RTCP_MTU] =
       g_param_spec_uint ("rtcp-mtu", "RTCP MTU",
-          "The maximum size of the RTCP packets",
-          16, G_MAXINT16, DEFAULT_RTCP_MTU,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The maximum size of the RTCP packets",
+      16, G_MAXINT16, DEFAULT_RTCP_MTU,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_SDES,
+  properties[PROP_SDES] =
       g_param_spec_boxed ("sdes", "SDES",
-          "The SDES items of this session",
-          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
-          | GST_PARAM_DOC_SHOW_DEFAULT));
+      "The SDES items of this session",
+      GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+      | GST_PARAM_DOC_SHOW_DEFAULT);
 
-  g_object_class_install_property (gobject_class, PROP_NUM_SOURCES,
+  properties[PROP_NUM_SOURCES] =
       g_param_spec_uint ("num-sources", "Num Sources",
-          "The number of sources in the session", 0, G_MAXUINT,
-          DEFAULT_NUM_SOURCES, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "The number of sources in the session", 0, G_MAXUINT,
+      DEFAULT_NUM_SOURCES, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_NUM_ACTIVE_SOURCES,
+  properties[PROP_NUM_ACTIVE_SOURCES] =
       g_param_spec_uint ("num-active-sources", "Num Active Sources",
-          "The number of active sources in the session", 0, G_MAXUINT,
-          DEFAULT_NUM_ACTIVE_SOURCES,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "The number of active sources in the session", 0, G_MAXUINT,
+      DEFAULT_NUM_ACTIVE_SOURCES, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
   /**
    * RTPSource:sources
    *
@@ -532,56 +533,54 @@ rtp_session_class_init (RTPSessionClass * klass)
    * }
    * ```
    */
-  g_object_class_install_property (gobject_class, PROP_SOURCES,
+  properties[PROP_SOURCES] =
       g_param_spec_boxed ("sources", "Sources",
-          "An array of all known sources in the session",
-          G_TYPE_VALUE_ARRAY, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "An array of all known sources in the session",
+      G_TYPE_VALUE_ARRAY, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_FAVOR_NEW,
+  properties[PROP_FAVOR_NEW] =
       g_param_spec_boolean ("favor-new", "Favor new sources",
-          "Resolve SSRC conflict in favor of new sources", FALSE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Resolve SSRC conflict in favor of new sources", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_RTCP_MIN_INTERVAL,
+  properties[PROP_RTCP_MIN_INTERVAL] =
       g_param_spec_uint64 ("rtcp-min-interval", "Minimum RTCP interval",
-          "Minimum interval between Regular RTCP packet (in ns)",
-          0, G_MAXUINT64, DEFAULT_RTCP_MIN_INTERVAL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Minimum interval between Regular RTCP packet (in ns)",
+      0, G_MAXUINT64, DEFAULT_RTCP_MIN_INTERVAL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class,
-      PROP_RTCP_FEEDBACK_RETENTION_WINDOW,
+  properties[PROP_RTCP_FEEDBACK_RETENTION_WINDOW] =
       g_param_spec_uint64 ("rtcp-feedback-retention-window",
-          "RTCP Feedback retention window",
-          "Duration during which RTCP Feedback packets are retained (in ns)",
-          0, G_MAXUINT64, DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "RTCP Feedback retention window",
+      "Duration during which RTCP Feedback packets are retained (in ns)",
+      0, G_MAXUINT64, DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class,
-      PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
+  properties[PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD] =
       g_param_spec_uint ("rtcp-immediate-feedback-threshold",
-          "RTCP Immediate Feedback threshold",
-          "The maximum number of members of a RTP session for which immediate"
-          " feedback is used (DEPRECATED: has no effect and is not needed)",
-          0, G_MAXUINT, DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
+      "RTCP Immediate Feedback threshold",
+      "The maximum number of members of a RTP session for which immediate"
+      " feedback is used (DEPRECATED: has no effect and is not needed)",
+      0, G_MAXUINT, DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED);
 
-  g_object_class_install_property (gobject_class, PROP_PROBATION,
+  properties[PROP_PROBATION] =
       g_param_spec_uint ("probation", "Number of probations",
-          "Consecutive packet sequence numbers to accept the source",
-          0, G_MAXUINT, DEFAULT_PROBATION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Consecutive packet sequence numbers to accept the source",
+      0, G_MAXUINT, DEFAULT_PROBATION,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_MAX_DROPOUT_TIME,
+  properties[PROP_MAX_DROPOUT_TIME] =
       g_param_spec_uint ("max-dropout-time", "Max dropout time",
-          "The maximum time (milliseconds) of missing packets tolerated.",
-          0, G_MAXUINT, DEFAULT_MAX_DROPOUT_TIME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The maximum time (milliseconds) of missing packets tolerated.",
+      0, G_MAXUINT, DEFAULT_MAX_DROPOUT_TIME,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_MAX_MISORDER_TIME,
+  properties[PROP_MAX_MISORDER_TIME] =
       g_param_spec_uint ("max-misorder-time", "Max misorder time",
-          "The maximum time (milliseconds) of misordered packets tolerated.",
-          0, G_MAXUINT, DEFAULT_MAX_MISORDER_TIME,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "The maximum time (milliseconds) of misordered packets tolerated.",
+      0, G_MAXUINT, DEFAULT_MAX_MISORDER_TIME,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * RTPSession:stats:
@@ -598,21 +597,20 @@ rtp_session_class_init (RTPSessionClass * klass)
    *
    * Since: 1.4
    */
-  g_object_class_install_property (gobject_class, PROP_STATS,
+  properties[PROP_STATS] =
       g_param_spec_boxed ("stats", "Statistics",
-          "Various statistics", GST_TYPE_STRUCTURE,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+      "Various statistics", GST_TYPE_STRUCTURE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_RTP_PROFILE,
+  properties[PROP_RTP_PROFILE] =
       g_param_spec_enum ("rtp-profile", "RTP Profile",
-          "RTP profile to use for this session", GST_TYPE_RTP_PROFILE,
-          DEFAULT_RTP_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "RTP profile to use for this session", GST_TYPE_RTP_PROFILE,
+      DEFAULT_RTP_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
-  g_object_class_install_property (gobject_class, PROP_RTCP_REDUCED_SIZE,
+  properties[PROP_RTCP_REDUCED_SIZE] =
       g_param_spec_boolean ("rtcp-reduced-size", "RTCP Reduced Size",
-          "Use Reduced Size RTCP for feedback packets",
-          DEFAULT_RTCP_REDUCED_SIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Use Reduced Size RTCP for feedback packets",
+      DEFAULT_RTCP_REDUCED_SIZE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * RTPSession:disable-sr-timestamp:
@@ -621,13 +619,12 @@ rtp_session_class_init (RTPSessionClass * klass)
    *
    * Since: 1.16
    */
-  g_object_class_install_property (gobject_class,
-      PROP_RTCP_DISABLE_SR_TIMESTAMP,
+  properties[PROP_RTCP_DISABLE_SR_TIMESTAMP] =
       g_param_spec_boolean ("disable-sr-timestamp",
-          "Disable Sender Report Timestamp",
-          "Whether sender reports should be timestamped",
-          DEFAULT_RTCP_DISABLE_SR_TIMESTAMP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "Disable Sender Report Timestamp",
+      "Whether sender reports should be timestamped",
+      DEFAULT_RTCP_DISABLE_SR_TIMESTAMP,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /**
    * RTPSession:twcc-feedback-interval:
@@ -638,13 +635,14 @@ rtp_session_class_init (RTPSessionClass * klass)
    *
    * Since: 1.20
    */
-  g_object_class_install_property (gobject_class,
-      PROP_TWCC_FEEDBACK_INTERVAL,
+  properties[PROP_TWCC_FEEDBACK_INTERVAL] =
       g_param_spec_uint64 ("twcc-feedback-interval",
-          "TWCC Feedback Interval",
-          "The interval to send TWCC reports on",
-          0, G_MAXUINT64, DEFAULT_TWCC_FEEDBACK_INTERVAL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      "TWCC Feedback Interval",
+      "The interval to send TWCC reports on",
+      0, G_MAXUINT64, DEFAULT_TWCC_FEEDBACK_INTERVAL,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
@@ -3076,7 +3074,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
 {
   GstRTCPPacket packet;
-  gboolean more, is_bye = FALSE, do_sync = FALSE;
+  gboolean more, is_bye = FALSE, do_sync = FALSE, has_report = FALSE;
   RTPPacketInfo pinfo = { 0, };
   GstFlowReturn result = GST_FLOW_OK;
   GstRTCPBuffer rtcp = { NULL, };
@@ -3107,9 +3105,11 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
     switch (type) {
       case GST_RTCP_TYPE_SR:
+        has_report = TRUE;
         rtp_session_process_sr (sess, &packet, &pinfo, &do_sync);
         break;
       case GST_RTCP_TYPE_RR:
+        has_report = TRUE;
         rtp_session_process_rr (sess, &packet, &pinfo);
         break;
       case GST_RTCP_TYPE_SDES:
@@ -3156,6 +3156,10 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   GST_DEBUG ("%p, received RTCP packet, avg size %u, %u", &sess->stats,
       sess->stats.avg_rtcp_packet_size, pinfo.bytes);
   RTP_SESSION_UNLOCK (sess);
+
+  if (has_report) {
+    g_object_notify_by_pspec (G_OBJECT (sess), properties[PROP_STATS]);
+  }
 
   pinfo.data = NULL;
   clean_packet_info (&pinfo);
@@ -4712,7 +4716,7 @@ done:
   RTP_SESSION_UNLOCK (sess);
 
   /* notify about updated statistics */
-  g_object_notify (G_OBJECT (sess), "stats");
+  g_object_notify_by_pspec (G_OBJECT (sess), properties[PROP_STATS]);
 
   /* push out the RTCP packets */
   while ((output = g_queue_pop_head (&data.output))) {
