@@ -1115,6 +1115,7 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
   GstMsdkEncClass *klass = GST_MSDKENC_GET_CLASS (thiz);
   GstVideoCodecFrame *frame;
   GList *list;
+  mfxU64 pts;
 
   if (!task->sync_point)
     return GST_FLOW_OK;
@@ -1160,13 +1161,21 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     }
 
     frame->output_buffer = out_buf;
-    frame->pts =
-        gst_util_uint64_scale (task->output_bitstream.TimeStamp, GST_SECOND,
-        90000);
+    /* This is a workaround for output pts, because oneVPL cannot return the
+     * correct pts for each display frame. We just use the input frame's pts
+     * as output ones as oneVPL return each coded frames as display.
+     */
+    if (klass->get_timestamp) {
+      pts = klass->get_timestamp (thiz);
+      frame->pts = gst_util_uint64_scale (pts, GST_SECOND, 90000);
+    } else {
+      frame->pts =
+          gst_util_uint64_scale (task->output_bitstream.TimeStamp, GST_SECOND,
+          90000);
+    }
     frame->dts =
         gst_util_uint64_scale (task->output_bitstream.DecodeTimeStamp,
         GST_SECOND, 90000);
-
     if ((task->output_bitstream.FrameType & MFX_FRAMETYPE_IDR) != 0 ||
         (task->output_bitstream.FrameType & MFX_FRAMETYPE_xIDR) != 0) {
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
@@ -1214,6 +1223,7 @@ gst_msdkenc_encode_frame (GstMsdkEnc * thiz, mfxFrameSurface1 * surface,
     status =
         MFXVideoENCODE_EncodeFrameAsync (session, &thiz->enc_cntrl, surface,
         &task->output_bitstream, &task->sync_point);
+
     if (status != MFX_WRN_DEVICE_BUSY)
       break;
     /* If device is busy, wait 1ms and retry, as per MSDK's recomendation */
@@ -1922,6 +1932,9 @@ gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     if (frame->pts != GST_CLOCK_TIME_NONE) {
       surface->surface->Data.TimeStamp =
           gst_util_uint64_scale (frame->pts, 90000, GST_SECOND);
+
+      if (klass->set_timestamp)
+        klass->set_timestamp (thiz, surface->surface->Data.TimeStamp);
     } else {
       surface->surface->Data.TimeStamp = MFX_TIMESTAMP_UNKNOWN;
     }

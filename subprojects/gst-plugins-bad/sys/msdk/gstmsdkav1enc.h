@@ -67,6 +67,7 @@ struct _GstMsdkAV1Enc
 
   GstAdapter *adapter;
   GstAV1Parser *parser;
+  GQueue *timestamp;
 };
 
 struct _GstMsdkAV1EncClass

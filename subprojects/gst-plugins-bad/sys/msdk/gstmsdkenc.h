@@ -192,6 +192,10 @@ struct _GstMsdkEncClass
                                guint8 *data, gsize size);
   void (*flush_frames) (GstMsdkEnc * encoder);
 
+  void (*set_timestamp) (GstMsdkEnc * encoder, mfxU64 pts);
+
+  mfxU64 (*get_timestamp) (GstMsdkEnc * encoder);
+
   guint qp_max;
   guint qp_min;
 };

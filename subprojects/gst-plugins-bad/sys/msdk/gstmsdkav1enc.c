@@ -209,6 +209,24 @@ profile_to_string (gint profile)
   return NULL;
 }
 
+static void
+gst_msdkav1enc_set_timestamp (GstMsdkEnc * encoder, mfxU64 timestamp)
+{
+  GstMsdkAV1Enc *thiz = GST_MSDKAV1ENC (encoder);
+
+  g_queue_push_tail (thiz->timestamp, (gpointer) timestamp);
+}
+
+static mfxU64
+gst_msdkav1enc_get_timestamp (GstMsdkEnc * encoder)
+{
+  GstMsdkAV1Enc *thiz = GST_MSDKAV1ENC (encoder);
+  mfxU64 pts;
+
+  pts = (mfxU64) g_queue_pop_head (thiz->timestamp);
+  return pts;
+}
+
 static gint
 gst_msdkav1enc_find_show_frame (GstMsdkAV1Enc * thiz, guint8 * data, gsize size,
     gsize * offset)
@@ -291,6 +309,7 @@ gst_msdkav1enc_flush_frames (GstMsdkEnc * encoder)
 {
   GstVideoCodecFrame *frame;
   GstBuffer *out_buf = NULL;
+  mfxU64 pts;
 
   while (1) {
     if (!gst_msdkav1enc_pre_finish (encoder, &out_buf, NULL, 0))
@@ -299,6 +318,8 @@ gst_msdkav1enc_flush_frames (GstMsdkEnc * encoder)
       break;
     frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (encoder));
     frame->output_buffer = out_buf;
+    pts = gst_msdkav1enc_get_timestamp (encoder);
+    frame->pts = gst_util_uint64_scale (pts, GST_SECOND, 90000);
     gst_video_codec_frame_unref (frame);
     gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (encoder), frame);
   }
@@ -429,6 +450,8 @@ gst_msdkav1enc_class_init (GstMsdkAV1EncClass * klass)
   encoder_class->qp_min = 0;
   encoder_class->pre_finish = gst_msdkav1enc_pre_finish;
   encoder_class->flush_frames = gst_msdkav1enc_flush_frames;
+  encoder_class->set_timestamp = gst_msdkav1enc_set_timestamp;
+  encoder_class->get_timestamp = gst_msdkav1enc_get_timestamp;
 
   gst_msdkenc_install_common_properties (encoder_class);
 
@@ -474,4 +497,5 @@ gst_msdkav1enc_init (GstMsdkAV1Enc * thiz)
   thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
   thiz->adapter = gst_adapter_new ();
   thiz->parser = gst_av1_parser_new ();
+  thiz->timestamp = g_queue_new ();
 }
