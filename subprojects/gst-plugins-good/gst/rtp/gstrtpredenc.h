@@ -57,6 +57,8 @@ struct _GstRtpRedEnc {
   gboolean send_caps;
   gboolean is_current_caps_red;
   guint8 twcc_ext_id;
+
+  gboolean ignoring_extension_warned;
 };
 
 GType gst_rtp_red_enc_get_type (void);
