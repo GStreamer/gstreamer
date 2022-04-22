@@ -73,6 +73,9 @@ enum
   PROP_MIN_QP,
   PROP_MAX_QP,
   PROP_INTRA_REFRESH_TYPE,
+  PROP_INTRA_REFRESH_CYCLE_SIZE,
+  PROP_INTRA_REFRESH_QP_DELTA,
+  PROP_INTRA_REFRESH_CYCLE_DIST,
   PROP_DBLK_IDC,
 };
 
@@ -82,18 +85,21 @@ enum
   GST_MSDK_FLAG_TUNE_MODE = 1 << 1,
 };
 
-#define PROP_LOWPOWER_DEFAULT           FALSE
-#define PROP_TILE_ROW_DEFAULT           1
-#define PROP_TILE_COL_DEFAULT           1
-#define PROP_MAX_SLICE_SIZE_DEFAULT     0
-#define PROP_TUNE_MODE_DEFAULT          MFX_CODINGOPTION_UNKNOWN
-#define PROP_TRANSFORM_SKIP_DEFAULT     MFX_CODINGOPTION_UNKNOWN
-#define PROP_B_PYRAMID_DEFAULT          FALSE
-#define PROP_P_PYRAMID_DEFAULT          FALSE
-#define PROP_MIN_QP_DEFAULT             0
-#define PROP_MAX_QP_DEFAULT             0
-#define PROP_INTRA_REFRESH_TYPE_DEFAULT MFX_REFRESH_NO
-#define PROP_DBLK_IDC_DEFAULT           0
+#define PROP_LOWPOWER_DEFAULT                 FALSE
+#define PROP_TILE_ROW_DEFAULT                 1
+#define PROP_TILE_COL_DEFAULT                 1
+#define PROP_MAX_SLICE_SIZE_DEFAULT           0
+#define PROP_TUNE_MODE_DEFAULT                MFX_CODINGOPTION_UNKNOWN
+#define PROP_TRANSFORM_SKIP_DEFAULT           MFX_CODINGOPTION_UNKNOWN
+#define PROP_B_PYRAMID_DEFAULT                FALSE
+#define PROP_P_PYRAMID_DEFAULT                FALSE
+#define PROP_MIN_QP_DEFAULT                   0
+#define PROP_MAX_QP_DEFAULT                   0
+#define PROP_INTRA_REFRESH_TYPE_DEFAULT       MFX_REFRESH_NO
+#define PROP_INTRA_REFRESH_CYCLE_SIZE_DEFAULT 0
+#define PROP_INTRA_REFRESH_QP_DELTA_DEFAULT   0
+#define PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT 0
+#define PROP_DBLK_IDC_DEFAULT                 0
 
 #define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, BGR10A2_LE, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444, main-still-picture, main-10-still-picture"
@@ -497,9 +503,19 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
       h265enc->min_qp;
   encoder->option2.MaxQPI = encoder->option2.MaxQPP = encoder->option2.MaxQPB =
       h265enc->max_qp;
-  encoder->option2.IntRefType = h265enc->intra_refresh_type;
   encoder->option2.DisableDeblockingIdc = h265enc->dblk_idc;
 
+  if (h265enc->tune_mode == 16 || h265enc->lowpower) {
+    encoder->option2.IntRefType = h265enc->intra_refresh_type;
+    encoder->option2.IntRefCycleSize = h265enc->intra_refresh_cycle_size;
+    encoder->option2.IntRefQPDelta = h265enc->intra_refresh_qp_delta;
+    encoder->option3.IntRefCycleDist = h265enc->intra_refresh_cycle_dist;
+    encoder->enable_extopt3 = TRUE;
+  } else if (h265enc->intra_refresh_type || h265enc->intra_refresh_cycle_size
+      || h265enc->intra_refresh_qp_delta || h265enc->intra_refresh_cycle_dist) {
+    GST_WARNING_OBJECT (h265enc,
+        "Intra refresh is only supported under lowpower mode, ingoring...");
+  }
 #if (MFX_VERSION >= 1026)
   if (h265enc->transform_skip != MFX_CODINGOPTION_UNKNOWN) {
     encoder->option3.TransformSkip = h265enc->transform_skip;
@@ -730,6 +746,18 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       thiz->intra_refresh_type = g_value_get_enum (value);
       break;
 
+    case PROP_INTRA_REFRESH_CYCLE_SIZE:
+      thiz->intra_refresh_cycle_size = g_value_get_uint (value);
+      break;
+
+    case PROP_INTRA_REFRESH_QP_DELTA:
+      thiz->intra_refresh_qp_delta = g_value_get_int (value);
+      break;
+
+    case PROP_INTRA_REFRESH_CYCLE_DIST:
+      thiz->intra_refresh_cycle_dist = g_value_get_uint (value);
+      break;
+
     case PROP_DBLK_IDC:
       thiz->dblk_idc = g_value_get_uint (value);
       break;
@@ -796,6 +824,18 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_INTRA_REFRESH_TYPE:
       g_value_set_enum (value, thiz->intra_refresh_type);
+      break;
+
+    case PROP_INTRA_REFRESH_CYCLE_SIZE:
+      g_value_set_uint (value, thiz->intra_refresh_cycle_size);
+      break;
+
+    case PROP_INTRA_REFRESH_QP_DELTA:
+      g_value_set_int (value, thiz->intra_refresh_qp_delta);
+      break;
+
+    case PROP_INTRA_REFRESH_CYCLE_DIST:
+      g_value_set_uint (value, thiz->intra_refresh_cycle_dist);
       break;
 
     case PROP_DBLK_IDC:
@@ -957,6 +997,24 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
           PROP_INTRA_REFRESH_TYPE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_CYCLE_SIZE,
+      g_param_spec_uint ("intra-refresh-cycle-size", "Intra refresh cycle size",
+          "Set intra refresh cycle size, valid value starts from 2, only available when tune=low-power",
+          0, G_MAXUINT16, PROP_INTRA_REFRESH_CYCLE_SIZE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_QP_DELTA,
+      g_param_spec_int ("intra-refresh-qp-delta", "Intra refresh qp delta",
+          "Set intra refresh qp delta, only available when tune=low-power",
+          -51, 51, PROP_INTRA_REFRESH_QP_DELTA_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_INTRA_REFRESH_CYCLE_DIST,
+      g_param_spec_uint ("intra-refresh-cycle-dist", "Intra refresh cycle dist",
+          "Set intra refresh cycle dist, only available when tune=low-power",
+          0, G_MAXUINT16, PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_DBLK_IDC,
       g_param_spec_uint ("dblk-idc", "Disable Deblocking Idc",
           "Option of disable deblocking idc",
@@ -988,6 +1046,9 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->min_qp = PROP_MIN_QP_DEFAULT;
   thiz->max_qp = PROP_MAX_QP_DEFAULT;
   thiz->intra_refresh_type = PROP_INTRA_REFRESH_TYPE_DEFAULT;
+  thiz->intra_refresh_cycle_size = PROP_INTRA_REFRESH_CYCLE_SIZE_DEFAULT;
+  thiz->intra_refresh_qp_delta = PROP_INTRA_REFRESH_QP_DELTA_DEFAULT;
+  thiz->intra_refresh_cycle_dist = PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT;
   thiz->dblk_idc = PROP_DBLK_IDC_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }
