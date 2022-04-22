@@ -467,7 +467,7 @@ gst_d3d11_window_win32_create_internal_window (GstD3D11WindowWin32 * self)
     wc.lpfnWndProc = window_proc;
     wc.hInstance = hinstance;
     wc.hIcon = LoadIcon (NULL, IDI_WINLOGO);
-    wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+    wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wc.hCursor = LoadCursor (NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
     wc.lpszClassName = "GSTD3D11";
@@ -690,14 +690,7 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
     case WM_MOUSEMOVE:
-      /* To handle mouse event only once, do this only for internal window */
-      if (self->internal_hwnd && self->internal_hwnd == hWnd)
-        gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam,
-            lParam);
-
-      /* DefWindowProc will not chain up mouse event to parent window */
-      if (self->external_hwnd && self->external_hwnd != hWnd)
-        SendMessageA (self->external_hwnd, uMsg, wParam, lParam);
+      gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam, lParam);
       break;
     case WM_SYSKEYDOWN:
       if ((window->fullscreen_toggle_mode &
@@ -771,7 +764,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     if (!GST_IS_D3D11_WINDOW_WIN32 (handle)) {
       GST_WARNING ("%p is not d3d11window object", handle);
-      goto done;
+      return DefWindowProcA (hWnd, uMsg, wParam, lParam);
     }
 
     self = GST_D3D11_WINDOW_WIN32 (handle);
@@ -780,6 +773,22 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
         lParam);
+
+    switch (uMsg) {
+      case WM_SIZE:
+        /* We handled this event already */
+        return 0;
+      case WM_NCHITTEST:
+        /* To passthrough mouse event if external window is used.
+         * Only hit-test succeeded window can receive/handle some mouse events
+         * and we want such events to be handled by parent (application) window
+         */
+        if (self->external_hwnd)
+          return (LRESULT) HTTRANSPARENT;
+        break;
+      default:
+        break;
+    }
   } else if (uMsg == WM_GST_D3D11_DESTROY_INTERNAL_WINDOW) {
     GST_INFO ("Handle destroy window message");
     gst_d3d11_window_win32_destroy_internal_window (hWnd);
@@ -787,10 +796,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
   }
 
-  if (uMsg == WM_SIZE)
-    return 0;
-
-done:
   return DefWindowProcA (hWnd, uMsg, wParam, lParam);
 }
 
