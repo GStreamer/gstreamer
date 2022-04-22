@@ -24,7 +24,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
 
-#include <cairo/cairo.h>
+#include <cairo.h>
 
 #include <librsvg/rsvg.h>
 
