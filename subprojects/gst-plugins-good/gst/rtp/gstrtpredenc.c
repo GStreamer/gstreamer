@@ -157,8 +157,11 @@ _alloc_red_packet_and_fill_headers (GstRtpRedEnc * self,
     g_assert_not_reached ();
 
   /* Copying RTP header of incoming packet */
-  if (gst_rtp_buffer_get_extension (inp_rtp))
-    GST_WARNING_OBJECT (self, "FIXME: Ignoring RTP extension");
+  if (gst_rtp_buffer_get_extension (inp_rtp)
+      && !self->ignoring_extension_warned) {
+    GST_FIXME_OBJECT (self, "Ignoring RTP extension");
+    self->ignoring_extension_warned = TRUE;
+  }
 
   gst_rtp_buffer_set_marker (&red_rtp, gst_rtp_buffer_get_marker (inp_rtp));
   gst_rtp_buffer_set_payload_type (&red_rtp, self->pt);
@@ -475,6 +478,7 @@ gst_rtp_red_enc_init (GstRtpRedEnc * self)
   self->allow_no_red_blocks = DEFAULT_ALLOW_NO_RED_BLOCKS;
   self->num_sent = 0;
   self->rtp_history = g_queue_new ();
+  self->ignoring_extension_warned = FALSE;
 }
 
 
