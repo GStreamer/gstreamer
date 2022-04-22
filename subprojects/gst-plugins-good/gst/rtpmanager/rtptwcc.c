@@ -232,32 +232,17 @@ _get_twcc_seqnum_data (RTPPacketInfo * pinfo, guint8 ext_id, gpointer * data)
   return ret;
 }
 
-static gboolean
+static void
 sent_packet_init (SentPacket * packet, guint16 seqnum, RTPPacketInfo * pinfo,
-    GstBuffer * buffer)
+    GstRTPBuffer * rtp)
 {
-  GstRTPBuffer rtp = { NULL };
-
-  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
-    goto invalid_packet;
-
   packet->seqnum = seqnum;
   packet->ts = pinfo->current_time;
-  packet->size = gst_rtp_buffer_get_payload_len (&rtp);
-  packet->pt = gst_rtp_buffer_get_payload_type (&rtp);
+  packet->size = gst_rtp_buffer_get_payload_len (rtp);
+  packet->pt = gst_rtp_buffer_get_payload_type (rtp);
   packet->remote_ts = GST_CLOCK_TIME_NONE;
   packet->socket_ts = GST_CLOCK_TIME_NONE;
   packet->lost = FALSE;
-
-  gst_rtp_buffer_unmap (&rtp);
-
-  return TRUE;
-
-invalid_packet:
-  {
-    GST_DEBUG ("invalid RTP packet received");
-    return FALSE;
-  }
 }
 
 static void
@@ -274,11 +259,11 @@ _set_twcc_seqnum_data (RTPTWCCManager * twcc, RTPPacketInfo * pinfo,
       guint16 seqnum = twcc->send_seqnum++;
 
       GST_WRITE_UINT16_BE (data, seqnum);
-      sent_packet_init (&packet, seqnum, pinfo, buf);
+      sent_packet_init (&packet, seqnum, pinfo, &rtp);
       g_array_append_val (twcc->sent_packets, packet);
 
       GST_LOG ("Send: twcc-seqnum: %u, pt: %u, marker: %d, len: %u, ts: %"
-          GST_TIME_FORMAT, seqnum, pinfo->pt, pinfo->marker, packet.size,
+          GST_TIME_FORMAT, seqnum, packet.pt, pinfo->marker, packet.size,
           GST_TIME_ARGS (pinfo->current_time));
     }
     gst_rtp_buffer_unmap (&rtp);
