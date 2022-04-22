@@ -184,10 +184,10 @@ static const gchar WRITE_CHROMA_TO_PLANAR[] =
 /* CUDA kernel source for from YUV to YUV conversion and scale */
 static const gchar templ_YUV_TO_YUV[] =
 "extern \"C\"{\n"
-"__constant__ float SCALE_H = %f;\n"
-"__constant__ float SCALE_V = %f;\n"
-"__constant__ float CHROMA_SCALE_H = %f;\n"
-"__constant__ float CHROMA_SCALE_V = %f;\n"
+"__constant__ float SCALE_H = %s;\n"
+"__constant__ float SCALE_V = %s;\n"
+"__constant__ float CHROMA_SCALE_H = %s;\n"
+"__constant__ float CHROMA_SCALE_V = %s;\n"
 "__constant__ int WIDTH = %d;\n"
 "__constant__ int HEIGHT = %d;\n"
 "__constant__ int CHROMA_WIDTH = %d;\n"
@@ -274,15 +274,15 @@ GST_CUDA_KERNEL_FUNC
 /* CUDA kernel source for from YUV to RGB conversion and scale */
 static const gchar templ_YUV_TO_RGB[] =
 "extern \"C\"{\n"
-"__constant__ float offset[3] = {%f, %f, %f};\n"
-"__constant__ float rcoeff[3] = {%f, %f, %f};\n"
-"__constant__ float gcoeff[3] = {%f, %f, %f};\n"
-"__constant__ float bcoeff[3] = {%f, %f, %f};\n"
+"__constant__ float offset[3] = {%s, %s, %s};\n"
+"__constant__ float rcoeff[3] = {%s, %s, %s};\n"
+"__constant__ float gcoeff[3] = {%s, %s, %s};\n"
+"__constant__ float bcoeff[3] = {%s, %s, %s};\n"
 "\n"
-"__constant__ float SCALE_H = %f;\n"
-"__constant__ float SCALE_V = %f;\n"
-"__constant__ float CHROMA_SCALE_H = %f;\n"
-"__constant__ float CHROMA_SCALE_V = %f;\n"
+"__constant__ float SCALE_H = %s;\n"
+"__constant__ float SCALE_V = %s;\n"
+"__constant__ float CHROMA_SCALE_H = %s;\n"
+"__constant__ float CHROMA_SCALE_V = %s;\n"
 "__constant__ int WIDTH = %d;\n"
 "__constant__ int HEIGHT = %d;\n"
 "__constant__ int CHROMA_WIDTH = %d;\n"
@@ -489,15 +489,15 @@ GST_CUDA_KERNEL_FUNC_TO_ARGB
 /* CUDA kernel source for from RGB to YUV conversion and scale */
 static const gchar templ_RGB_TO_YUV[] =
 "extern \"C\"{\n"
-"__constant__ float offset[3] = {%f, %f, %f};\n"
-"__constant__ float ycoeff[3] = {%f, %f, %f};\n"
-"__constant__ float ucoeff[3] = {%f, %f, %f};\n"
-"__constant__ float vcoeff[3] = {%f, %f, %f};\n"
+"__constant__ float offset[3] = {%s, %s, %s};\n"
+"__constant__ float ycoeff[3] = {%s, %s, %s};\n"
+"__constant__ float ucoeff[3] = {%s, %s, %s};\n"
+"__constant__ float vcoeff[3] = {%s, %s, %s};\n"
 "\n"
-"__constant__ float SCALE_H = %f;\n"
-"__constant__ float SCALE_V = %f;\n"
-"__constant__ float CHROMA_SCALE_H = %f;\n"
-"__constant__ float CHROMA_SCALE_V = %f;\n"
+"__constant__ float SCALE_H = %s;\n"
+"__constant__ float SCALE_V = %s;\n"
+"__constant__ float CHROMA_SCALE_H = %s;\n"
+"__constant__ float CHROMA_SCALE_V = %s;\n"
 "__constant__ int WIDTH = %d;\n"
 "__constant__ int HEIGHT = %d;\n"
 "__constant__ int CHROMA_WIDTH = %d;\n"
@@ -635,8 +635,8 @@ GST_CUDA_KERNEL_FUNC_Y444_TO_YUV
 /* CUDA kernel source for from RGB to RGB conversion and scale */
 static const gchar templ_RGB_to_RGB[] =
 "extern \"C\"{\n"
-"__constant__ float SCALE_H = %f;\n"
-"__constant__ float SCALE_V = %f;\n"
+"__constant__ float SCALE_H = %s;\n"
+"__constant__ float SCALE_V = %s;\n"
 "__constant__ int WIDTH = %d;\n"
 "__constant__ int HEIGHT = %d;\n"
 "__constant__ int IN_DEPTH = %d;\n"
@@ -1752,55 +1752,101 @@ static gchar *
 cuda_converter_generate_yuv_to_yuv_kernel_code (GstCudaConverter * convert,
     GstCudaKernelTempl * templ)
 {
-  return g_strdup_printf (templ_YUV_TO_YUV,
-      templ->scale_h, templ->scale_v, templ->chroma_scale_h,
-      templ->chroma_scale_v, templ->width, templ->height, templ->chroma_width,
-      templ->chroma_height, templ->in_depth, templ->out_depth, templ->pstride,
-      templ->chroma_pstride, templ->in_shift, templ->out_shift, templ->mask,
-      templ->swap_uv, templ->read_chroma, templ->write_chroma);
+  gchar scale_h_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar scale_v_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar chroma_scale_h_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar chroma_scale_v_str[G_ASCII_DTOSTR_BUF_SIZE];
+  g_ascii_formatd (scale_h_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_h);
+  g_ascii_formatd (scale_v_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_v);
+  g_ascii_formatd (chroma_scale_h_str, G_ASCII_DTOSTR_BUF_SIZE, "%f",
+      templ->chroma_scale_h);
+  g_ascii_formatd (chroma_scale_v_str, G_ASCII_DTOSTR_BUF_SIZE, "%f",
+      templ->chroma_scale_v);
+  return g_strdup_printf (templ_YUV_TO_YUV, scale_h_str, scale_v_str,
+      chroma_scale_h_str, chroma_scale_v_str, templ->width, templ->height,
+      templ->chroma_width, templ->chroma_height, templ->in_depth,
+      templ->out_depth, templ->pstride, templ->chroma_pstride, templ->in_shift,
+      templ->out_shift, templ->mask, templ->swap_uv, templ->read_chroma,
+      templ->write_chroma);
 }
 
 static gchar *
 cuda_converter_generate_yuv_to_rgb_kernel_code (GstCudaConverter * convert,
     GstCudaKernelTempl * templ, MatrixData * matrix)
 {
-  return g_strdup_printf (templ_YUV_TO_RGB,
-      matrix->dm[0][3], matrix->dm[1][3], matrix->dm[2][3],
-      matrix->dm[0][0], matrix->dm[0][1], matrix->dm[0][2],
-      matrix->dm[1][0], matrix->dm[1][1], matrix->dm[1][2],
-      matrix->dm[2][0], matrix->dm[2][1], matrix->dm[2][2],
-      templ->scale_h, templ->scale_v, templ->chroma_scale_h,
-      templ->chroma_scale_v, templ->width, templ->height, templ->chroma_width,
-      templ->chroma_height, templ->in_depth, templ->out_depth, templ->pstride,
-      templ->chroma_pstride, templ->in_shift, templ->out_shift, templ->mask,
-      templ->swap_uv, templ->max_in_val, templ->rgb_order.R,
-      templ->rgb_order.G, templ->rgb_order.B, templ->rgb_order.A,
-      templ->rgb_order.X, templ->read_chroma);
+  gchar matrix_dm[4][4][G_ASCII_DTOSTR_BUF_SIZE];
+  gchar scale_h_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar scale_v_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar chroma_scale_h_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar chroma_scale_v_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gint i, j;
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      g_ascii_formatd (matrix_dm[i][j], G_ASCII_DTOSTR_BUF_SIZE, "%f",
+          matrix->dm[i][j]);
+    }
+  }
+  g_ascii_formatd (scale_h_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_h);
+  g_ascii_formatd (scale_v_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_v);
+  g_ascii_formatd (chroma_scale_h_str, G_ASCII_DTOSTR_BUF_SIZE, "%f",
+      templ->chroma_scale_h);
+  g_ascii_formatd (chroma_scale_v_str, G_ASCII_DTOSTR_BUF_SIZE, "%f",
+      templ->chroma_scale_v);
+  return g_strdup_printf (templ_YUV_TO_RGB, matrix_dm[0][3], matrix_dm[1][3],
+      matrix_dm[2][3], matrix_dm[0][0], matrix_dm[0][1], matrix_dm[0][2],
+      matrix_dm[1][0], matrix_dm[1][1], matrix_dm[1][2], matrix_dm[2][0],
+      matrix_dm[2][1], matrix_dm[2][2], scale_h_str, scale_v_str,
+      chroma_scale_h_str, chroma_scale_v_str, templ->width, templ->height,
+      templ->chroma_width, templ->chroma_height, templ->in_depth,
+      templ->out_depth, templ->pstride, templ->chroma_pstride, templ->in_shift,
+      templ->out_shift, templ->mask, templ->swap_uv, templ->max_in_val,
+      templ->rgb_order.R, templ->rgb_order.G, templ->rgb_order.B,
+      templ->rgb_order.A, templ->rgb_order.X, templ->read_chroma);
 }
 
 static gchar *
 cuda_converter_generate_rgb_to_yuv_kernel_code (GstCudaConverter * convert,
     GstCudaKernelTempl * templ, MatrixData * matrix)
 {
-  return g_strdup_printf (templ_RGB_TO_YUV,
-      matrix->dm[0][3], matrix->dm[1][3], matrix->dm[2][3],
-      matrix->dm[0][0], matrix->dm[0][1], matrix->dm[0][2],
-      matrix->dm[1][0], matrix->dm[1][1], matrix->dm[1][2],
-      matrix->dm[2][0], matrix->dm[2][1], matrix->dm[2][2],
-      templ->scale_h, templ->scale_v, templ->chroma_scale_h,
-      templ->chroma_scale_v, templ->width, templ->height, templ->chroma_width,
-      templ->chroma_height, templ->in_depth, templ->out_depth, templ->pstride,
-      templ->chroma_pstride, templ->in_shift, templ->out_shift, templ->mask,
-      templ->swap_uv, templ->unpack_function, templ->read_chroma,
-      templ->write_chroma);
+  gchar matrix_dm[4][4][G_ASCII_DTOSTR_BUF_SIZE];
+  gchar scale_h_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar scale_v_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar chroma_scale_h_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar chroma_scale_v_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gint i, j;
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      g_ascii_formatd (matrix_dm[i][j], G_ASCII_DTOSTR_BUF_SIZE, "%f",
+          matrix->dm[i][j]);
+    }
+  }
+  g_ascii_formatd (scale_h_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_h);
+  g_ascii_formatd (scale_v_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_v);
+  g_ascii_formatd (chroma_scale_h_str, G_ASCII_DTOSTR_BUF_SIZE, "%f",
+      templ->chroma_scale_h);
+  g_ascii_formatd (chroma_scale_v_str, G_ASCII_DTOSTR_BUF_SIZE, "%f",
+      templ->chroma_scale_v);
+  return g_strdup_printf (templ_RGB_TO_YUV, matrix_dm[0][3], matrix_dm[1][3],
+      matrix_dm[2][3], matrix_dm[0][0], matrix_dm[0][1], matrix_dm[0][2],
+      matrix_dm[1][0], matrix_dm[1][1], matrix_dm[1][2], matrix_dm[2][0],
+      matrix_dm[2][1], matrix_dm[2][2], scale_h_str, scale_v_str,
+      chroma_scale_h_str, chroma_scale_v_str, templ->width, templ->height,
+      templ->chroma_width, templ->chroma_height, templ->in_depth,
+      templ->out_depth, templ->pstride, templ->chroma_pstride, templ->in_shift,
+      templ->out_shift, templ->mask, templ->swap_uv, templ->unpack_function,
+      templ->read_chroma, templ->write_chroma);
 }
 
 static gchar *
 cuda_converter_generate_rgb_to_rgb_kernel_code (GstCudaConverter * convert,
     GstCudaKernelTempl * templ)
 {
+  gchar scale_h_str[G_ASCII_DTOSTR_BUF_SIZE];
+  gchar scale_v_str[G_ASCII_DTOSTR_BUF_SIZE];
+  g_ascii_formatd (scale_h_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_h);
+  g_ascii_formatd (scale_v_str, G_ASCII_DTOSTR_BUF_SIZE, "%f", templ->scale_v);
   return g_strdup_printf (templ_RGB_to_RGB,
-      templ->scale_h, templ->scale_v,
+      scale_h_str, scale_v_str,
       templ->width, templ->height,
       templ->in_depth, templ->out_depth, templ->pstride,
       templ->rgb_order.R, templ->rgb_order.G,
