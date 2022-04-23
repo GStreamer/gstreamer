@@ -31,6 +31,13 @@ if get_option('nvcodec').disabled()
   subdir_done()
 endif
 
+if not gstcuda_dep.found()
+  if get_option('nvcodec').enabled()
+    error('The nvcodec was enabled explicitly, but required gstcuda dependency is not found')
+  endif
+  subdir_done()
+endif
+
 plugin_incdirs = [configinc, cuda_stubinc]
 extra_args = ['-DGST_USE_UNSTABLE_API']
 
