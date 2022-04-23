@@ -52,9 +52,7 @@ G_DEFINE_TYPE_WITH_CODE (GstVaPool, gst_va_pool, GST_TYPE_BUFFER_POOL,
 static const gchar **
 gst_va_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
-    GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT, NULL
-  };
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL };
   return options;
 }
 
@@ -122,12 +120,10 @@ gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
       GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   /* parse extra alignment info */
-  has_alignment = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  has_alignment = gst_buffer_pool_config_get_va_alignment (config,
+      &video_align);
 
   if (has_alignment) {
-    gst_buffer_pool_config_get_video_alignment (config, &video_align);
-
     width += video_align.padding_left + video_align.padding_right;
     height += video_align.padding_bottom + video_align.padding_top;
 
