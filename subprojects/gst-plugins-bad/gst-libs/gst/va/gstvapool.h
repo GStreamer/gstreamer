@@ -42,7 +42,7 @@ gboolean             gst_va_pool_requires_video_meta      (GstBufferPool * pool)
 GST_VA_API
 void                 gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
                                                                       guint usage_hint,
-								      GstVaFeature use_derived);
+                                                                      GstVaFeature use_derived);
 GST_VA_API
 void                 gst_buffer_pool_config_set_va_alignment (GstStructure * config,
                                                               const GstVideoAlignment * align);
@@ -52,7 +52,7 @@ GstBufferPool *      gst_va_pool_new_with_config          (GstCaps * caps,
                                                            guint min_buffers,
                                                            guint max_buffers,
                                                            guint usage_hint,
-							   GstVaFeature use_derived,
+                                                           GstVaFeature use_derived,
                                                            GstAllocator * allocator,
                                                            GstAllocationParams * alloc_params);
 
