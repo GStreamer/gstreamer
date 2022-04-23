@@ -362,11 +362,8 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-    if (_need_video_crop (base)) {
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-      gst_buffer_pool_config_set_video_alignment (config, &base->valign);
-    }
+    if (_need_video_crop (base))
+      gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
     gst_buffer_pool_config_set_va_allocation_params (config,
         VA_SURFACE_ATTRIB_USAGE_HINT_DECODER);
@@ -537,11 +534,8 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-    if (base->need_valign) {
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-      gst_buffer_pool_config_set_video_alignment (config, &base->valign);
-    }
+    if (base->need_valign)
+      gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
     gst_buffer_pool_config_set_va_allocation_params (config,
         VA_SURFACE_ATTRIB_USAGE_HINT_DECODER);
