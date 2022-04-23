@@ -21,6 +21,7 @@
 #pragma once
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/va/gstva.h>
 
 G_BEGIN_DECLS
@@ -42,6 +43,9 @@ GST_VA_API
 void                 gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
                                                                       guint usage_hint,
 								      GstVaFeature use_derived);
+GST_VA_API
+void                 gst_buffer_pool_config_set_va_alignment (GstStructure * config,
+                                                              const GstVideoAlignment * align);
 GST_VA_API
 GstBufferPool *      gst_va_pool_new_with_config          (GstCaps * caps,
                                                            guint size,
