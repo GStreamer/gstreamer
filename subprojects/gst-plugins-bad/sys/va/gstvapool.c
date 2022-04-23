@@ -68,6 +68,17 @@ gst_buffer_pool_config_get_va_allocation_params (GstStructure * config,
   return TRUE;
 }
 
+static inline gboolean
+gst_buffer_pool_config_get_va_alignment (GstStructure * config,
+    GstVideoAlignment * align)
+{
+  return gst_structure_get (config,
+      "va-padding-top", G_TYPE_UINT, &align->padding_top,
+      "va-padding-bottom", G_TYPE_UINT, &align->padding_bottom,
+      "va-padding-left", G_TYPE_UINT, &align->padding_left,
+      "va-padding-right", G_TYPE_UINT, &align->padding_right, NULL);
+}
+
 static gboolean
 gst_va_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
@@ -336,6 +347,17 @@ gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
     guint usage_hint)
 {
   gst_structure_set (config, "usage-hint", G_TYPE_UINT, usage_hint, NULL);
+}
+
+void
+gst_buffer_pool_config_set_va_alignment (GstStructure * config,
+    const GstVideoAlignment * align)
+{
+  gst_structure_set (config,
+      "va-padding-top", G_TYPE_UINT, align->padding_top,
+      "va-padding-bottom", G_TYPE_UINT, align->padding_bottom,
+      "va-padding-left", G_TYPE_UINT, align->padding_left,
+      "va-padding-right", G_TYPE_UINT, align->padding_right, NULL);
 }
 
 gboolean
