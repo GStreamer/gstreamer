@@ -31,17 +31,17 @@ G_DECLARE_FINAL_TYPE (GstVaPool, gst_va_pool, GST, VA_POOL, GstBufferPool)
 GstBufferPool *      gst_va_pool_new                      (void);
 gboolean             gst_va_pool_requires_video_meta      (GstBufferPool * pool);
 void                 gst_buffer_pool_config_set_va_allocation_params (GstStructure * config,
-                                                           guint usage_hint);
+                                                                      guint usage_hint);
 
 void                 gst_buffer_pool_config_set_va_alignment (GstStructure * config,
                                                               const GstVideoAlignment * align);
 
 GstBufferPool *      gst_va_pool_new_with_config          (GstCaps * caps,
-							   guint size,
-							   guint min_buffers,
-							   guint max_buffers,
-							   guint usage_hint,
-							   GstAllocator * allocator,
-							   GstAllocationParams * alloc_params);
+                                                           guint size,
+                                                           guint min_buffers,
+                                                           guint max_buffers,
+                                                           guint usage_hint,
+                                                           GstAllocator * allocator,
+                                                           GstAllocationParams * alloc_params);
 
 G_END_DECLS
