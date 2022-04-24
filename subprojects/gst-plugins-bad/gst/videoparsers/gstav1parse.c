@@ -1182,9 +1182,9 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
 
     if (have_cinfo) {
       if (seq_header.color_config.color_range)
-        cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
-      else
         cinfo.range = GST_VIDEO_COLOR_RANGE_0_255;
+      else
+        cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
 
       cinfo.matrix = gst_video_color_matrix_from_iso
           (seq_header.color_config.matrix_coefficients);
