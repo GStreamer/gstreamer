@@ -795,9 +795,9 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
   tmp_info = *in_info;
   tmp_info.colorimetry.transfer = out_info->colorimetry.transfer;
   if (gst_video_info_is_equal (&tmp_info, out_info)) {
-    if (gst_video_transfer_function_is_equivalent (in_info->
-            colorimetry.transfer, in_info->finfo->bits,
-            out_info->colorimetry.transfer, out_info->finfo->bits)) {
+    if (gst_video_transfer_function_is_equivalent (in_info->colorimetry.
+            transfer, in_info->finfo->bits, out_info->colorimetry.transfer,
+            out_info->finfo->bits)) {
       gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
     }
   } else {
@@ -1164,17 +1164,34 @@ transfer_colorimetry_from_input (GstBaseTransform * trans, GstCaps * in_caps,
     GstVideoInfo in_info, out_info;
     const GValue *in_colorimetry =
         gst_structure_get_value (in_caps_s, "colorimetry");
+    GstCaps *tmp_caps = NULL;
+    GstStructure *tmp_caps_s;
 
     if (!gst_video_info_from_caps (&in_info, in_caps)) {
       GST_WARNING_OBJECT (trans,
           "Failed to convert sink pad caps to video info");
       return;
     }
-    if (!gst_video_info_from_caps (&out_info, out_caps)) {
+
+    /* We are before fixate_size(), the width and height of
+       the output caps may be absent or not fixed. */
+    tmp_caps = gst_caps_copy (out_caps);
+    tmp_caps = gst_caps_fixate (tmp_caps);
+    tmp_caps_s = gst_caps_get_structure (tmp_caps, 0);
+    if (!gst_structure_has_field (tmp_caps_s, "width"))
+      gst_structure_set_value (tmp_caps_s, "width",
+          gst_structure_get_value (in_caps_s, "width"));
+    if (!gst_structure_has_field (tmp_caps_s, "height"))
+      gst_structure_set_value (tmp_caps_s, "height",
+          gst_structure_get_value (in_caps_s, "height"));
+
+    if (!gst_video_info_from_caps (&out_info, tmp_caps)) {
+      gst_clear_caps (&tmp_caps);
       GST_WARNING_OBJECT (trans,
           "Failed to convert src pad caps to video info");
       return;
     }
+    gst_clear_caps (&tmp_caps);
 
     if (!have_colorimetry && in_colorimetry != NULL) {
       if ((GST_VIDEO_INFO_IS_YUV (&out_info)
