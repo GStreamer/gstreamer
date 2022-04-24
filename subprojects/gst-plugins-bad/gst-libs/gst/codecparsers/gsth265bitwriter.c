@@ -137,11 +137,6 @@ _h265_bit_writer_profile_tier_level (const GstH265ProfileTierLevel * ptl,
 
   GST_DEBUG ("writing profile_tier_level");
 
-  if (maxNumSubLayersMinus1 > 0) {
-    GST_WARNING ("sub layers are not supported now");
-    goto error;
-  }
-
   WRITE_BITS (bw, ptl->profile_space, 2);
   WRITE_BITS (bw, ptl->tier_flag, 1);
   WRITE_BITS (bw, ptl->profile_idc, 5);
@@ -376,7 +371,7 @@ _h265_bit_writer_vps (const GstH265VPS * vps, GstBitWriter * bw,
 
   for (i = (vps->sub_layer_ordering_info_present_flag ? 0 :
           vps->max_sub_layers_minus1); i <= vps->max_sub_layers_minus1; i++) {
-    WRITE_UE_MAX (bw, vps->max_dec_pic_buffering_minus1[i], G_MAXUINT32 - 1);
+    WRITE_UE (bw, vps->max_dec_pic_buffering_minus1[i]);
     WRITE_UE_MAX (bw, vps->max_num_reorder_pics[i],
         vps->max_dec_pic_buffering_minus1[i]);
     WRITE_UE_MAX (bw, vps->max_latency_increase_plus1[i], G_MAXUINT32 - 1);
@@ -908,7 +903,7 @@ _h265_bit_writer_sps (const GstH265SPS * sps,
     WRITE_UE_MAX (bw, sps->max_dec_pic_buffering_minus1[i], 16);
     WRITE_UE_MAX (bw, sps->max_num_reorder_pics[i],
         sps->max_dec_pic_buffering_minus1[i]);
-    WRITE_UE_MAX (bw, sps->max_latency_increase_plus1[i], G_MAXUINT32 - 1);
+    WRITE_UE (bw, sps->max_latency_increase_plus1[i]);
   }
 
   /* The limits are calculted based on the profile_tier_level constraint
@@ -1263,10 +1258,10 @@ _h265_bit_writer_pps (const GstH265PPS * pps, GstBitWriter * bw,
         pps->sps->bit_depth_luma_minus8 - 2 : 0;
     MaxBitDepthC = pps->sps->bit_depth_chroma_minus8 > 2 ?
         pps->sps->bit_depth_chroma_minus8 - 2 : 0;
-    WRITE_SE_RANGE (bw, pps->pps_extension_params.log2_sao_offset_scale_luma, 0,
+    WRITE_UE_MAX (bw, pps->pps_extension_params.log2_sao_offset_scale_luma,
         MaxBitDepthY);
-    WRITE_SE_RANGE (bw, pps->pps_extension_params.log2_sao_offset_scale_chroma,
-        0, MaxBitDepthC);
+    WRITE_UE_MAX (bw, pps->pps_extension_params.log2_sao_offset_scale_chroma,
+        MaxBitDepthC);
   }
 
   if (pps->pps_multilayer_extension_flag) {
@@ -2140,8 +2135,7 @@ gst_h265_bit_writer_aud (guint8 pic_type, gboolean start_code,
   gboolean have_space = TRUE;
   GstBitWriter bw;
 
-  g_return_val_if_fail (pic_type >= 0 && pic_type <= 2,
-      GST_H265_BIT_WRITER_ERROR);
+  g_return_val_if_fail (pic_type <= 2, GST_H265_BIT_WRITER_ERROR);
   g_return_val_if_fail (data != NULL, GST_H265_BIT_WRITER_ERROR);
   g_return_val_if_fail (size != NULL, GST_H265_BIT_WRITER_ERROR);
   g_return_val_if_fail (*size > 0, GST_H265_BIT_WRITER_ERROR);
