@@ -64,6 +64,9 @@ gboolean              gst_va_encoder_has_profile          (GstVaEncoder * self,
 gint                  gst_va_encoder_get_max_slice_num    (GstVaEncoder * self,
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint);
+gint32                gst_va_encoder_get_slice_structure  (GstVaEncoder * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
 gboolean              gst_va_encoder_get_max_num_reference (GstVaEncoder * self,
                                                             VAProfile profile,
                                                             VAEntrypoint entrypoint,
@@ -79,6 +82,9 @@ guint32               gst_va_encoder_get_quality_level    (GstVaEncoder * self,
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint);
 gboolean              gst_va_encoder_has_trellis          (GstVaEncoder * self,
+                                                           VAProfile profile,
+                                                           VAEntrypoint entrypoint);
+gboolean              gst_va_encoder_has_tile             (GstVaEncoder * self,
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint);
 guint32               gst_va_encoder_get_rtformat         (GstVaEncoder * self,

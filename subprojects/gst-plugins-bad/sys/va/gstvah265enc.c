@@ -90,6 +90,8 @@ enum
   PROP_RATE_CONTROL,
   PROP_CPB_SIZE,
   PROP_AUD,
+  PROP_NUM_TILE_COLS,
+  PROP_NUM_TILE_ROWS,
   N_PROPERTIES
 };
 
@@ -112,6 +114,11 @@ static GstObjectClass *parent_class = NULL;
 #define MAX_SLICE_HDR_SIZE 33660
 
 #define MAX_GOP_SIZE  1024
+
+/* The max tiles in column according to spec A1 */
+#define MAX_COL_TILES 20
+/* The max tiles in row according to spec A1 */
+#define MAX_ROW_TILES 22
 
 /* *INDENT-OFF* */
 struct _GstVaH265EncClass
@@ -150,6 +157,8 @@ struct _GstVaH265Enc
     gboolean aud;
     guint32 mbbrc;
     guint32 num_slices;
+    guint32 num_tile_cols;
+    guint32 num_tile_rows;
     guint32 cpb_size;
     guint32 target_percentage;
     guint32 target_usage;
@@ -180,8 +189,24 @@ struct _GstVaH265Enc
   guint min_cr;
 
   gboolean aud;
-  guint32 num_slices;
   guint32 packed_headers;
+
+  struct
+  {
+    guint32 num_slices;
+    /* start address in CTUs */
+    guint32 *slice_segment_address;
+    /* CTUs in this slice */
+    guint32 *num_ctu_in_slice;
+
+    gboolean slice_span_tiles;
+    guint32 num_tile_cols;
+    guint32 num_tile_rows;
+    /* CTUs in each tile column */
+    guint32 *tile_ctu_cols;
+    /* CTUs in each tile row */
+    guint32 *tile_ctu_rows;
+  } partition;
 
   struct
   {
@@ -445,6 +470,12 @@ _enc_frame (GstVideoCodecFrame * frame)
   GstVaH265EncFrame *enc_frame = gst_video_codec_frame_get_user_data (frame);
   g_assert (enc_frame);
   return enc_frame;
+}
+
+static inline gboolean
+_is_tile_enabled (GstVaH265Enc * self)
+{
+  return self->partition.num_tile_cols * self->partition.num_tile_rows > 1;
 }
 
 static GstH265NalUnitType
@@ -1290,12 +1321,12 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     VAEncPictureParameterBufferHEVC * pic_param, gint collocated_poc)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
-  gboolean tiles_enabled_flag;
   guint8 num_ref_idx_l0_default_active_minus1 = 0;
   guint8 num_ref_idx_l1_default_active_minus1 = 0;
   guint hierarchical_level_plus1 = 0;
   guint i;
 
+  /* *INDENT-OFF* */
   if (self->gop.b_pyramid) {
     /* I/P is the base hierarchical level 0, L0 level B is 1, and so on. */
     hierarchical_level_plus1 = 1;
@@ -1315,10 +1346,6 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
         (self->gop.backward_ref_num > 0 ? self->gop.backward_ref_num - 1 : 0);
   }
 
-  /* TODO: multi tile support. */
-  tiles_enabled_flag = 0;
-
-  /* *INDENT-OFF* */
   *pic_param = (VAEncPictureParameterBufferHEVC) {
     .decoded_curr_pic.picture_id =
         gst_va_encode_picture_get_reconstruct_surface (frame->picture),
@@ -1357,10 +1384,10 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
       .weighted_bipred_flag = self->features.weighted_bipred_flag,
       .transquant_bypass_enabled_flag =
           self->features.transquant_bypass_enabled_flag,
-      .tiles_enabled_flag = tiles_enabled_flag,
+      .tiles_enabled_flag = _is_tile_enabled (self),
       .entropy_coding_sync_enabled_flag = 0,
       /* When we enable multi tiles, enable this. */
-      .loop_filter_across_tiles_enabled_flag = tiles_enabled_flag,
+      .loop_filter_across_tiles_enabled_flag = _is_tile_enabled (self),
       .pps_loop_filter_across_slices_enabled_flag = 1,
       /* Should not change the scaling list, not used now */
       .scaling_list_data_present_flag =
@@ -1424,6 +1451,24 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     pic_param->collocated_ref_pic_index = index;
   } else {
     pic_param->collocated_ref_pic_index = 0xFF;
+  }
+
+  /* Setup tile info */
+  if (pic_param->pic_fields.bits.tiles_enabled_flag) {
+    /* Always set loop filter across tiles enabled now */
+    pic_param->pic_fields.bits.loop_filter_across_tiles_enabled_flag = 1;
+
+    pic_param->num_tile_columns_minus1 = self->partition.num_tile_cols - 1;
+    pic_param->num_tile_rows_minus1 = self->partition.num_tile_rows - 1;
+
+    /* The VA row_height_minus1 and column_width_minus1 size is 1 smaller
+       than the MAX_COL_TILES and MAX_ROW_TILES, which means the driver
+       can deduce the last tile's size based on the picture info. We need
+       to take care of the array size here. */
+    for (i = 0; i < MIN (self->partition.num_tile_cols, 19); i++)
+      pic_param->column_width_minus1[i] = self->partition.tile_ctu_cols[i] - 1;
+    for (i = 0; i < MIN (self->partition.num_tile_rows, 21); i++)
+      pic_param->row_height_minus1[i] = self->partition.tile_ctu_rows[i] - 1;
   }
 
   return TRUE;
@@ -1615,33 +1660,16 @@ _h265_add_slices (GstVaH265Enc * self,
     gint negative_pocs[16], guint num_negative_pics,
     gint positive_pocs[16], guint num_positive_pics)
 {
-  guint ctu_size;
-  guint ctus_per_slice, ctus_mod_slice, cur_slice_ctus;
-  guint last_ctu_index;
   guint i_slice;
   VAEncSliceParameterBufferHEVC slice;
   GstH265SliceHdr slice_hdr;
 
-  ctu_size = self->ctu_width * self->ctu_height;
-
-  g_assert (self->num_slices && self->num_slices < ctu_size);
-
-  ctus_per_slice = ctu_size / self->num_slices;
-  ctus_mod_slice = ctu_size % self->num_slices;
-  last_ctu_index = 0;
-
-  for (i_slice = 0; i_slice < self->num_slices; i_slice++) {
-    cur_slice_ctus = ctus_per_slice;
-    /* Scatter the remainder to each slice */
-    if (ctus_mod_slice) {
-      ++cur_slice_ctus;
-      --ctus_mod_slice;
-    }
-
-    if (!_h265_fill_slice_parameter (self, frame, last_ctu_index,
-            cur_slice_ctus, (i_slice == self->num_slices - 1),
-            list_forward, list_forward_num,
-            list_backward, list_backward_num, &slice))
+  for (i_slice = 0; i_slice < self->partition.num_slices; i_slice++) {
+    if (!_h265_fill_slice_parameter (self, frame,
+            self->partition.slice_segment_address[i_slice],
+            self->partition.num_ctu_in_slice[i_slice],
+            (i_slice == self->partition.num_slices - 1), list_forward,
+            list_forward_num, list_backward, list_backward_num, &slice))
       return FALSE;
 
     if (!_h265_add_slice_parameter (self, frame, &slice))
@@ -1656,10 +1684,6 @@ _h265_add_slices (GstVaH265Enc * self,
       if (!_h265_add_slice_header (self, frame, &slice_hdr))
         return FALSE;
     }
-
-    /* set calculation for next slice */
-    last_ctu_index += cur_slice_ctus;
-    g_assert (last_ctu_index <= ctu_size);
   }
 
   return TRUE;
@@ -2258,7 +2282,9 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   GST_OBJECT_LOCK (self);
   self->features.use_trellis = self->prop.use_trellis;
   self->aud = self->prop.aud;
-  self->num_slices = self->prop.num_slices;
+  self->partition.num_slices = self->prop.num_slices;
+  self->partition.num_tile_cols = self->prop.num_tile_cols;
+  self->partition.num_tile_rows = self->prop.num_tile_rows;
   self->gop.idr_period = self->prop.key_int_max;
   self->gop.num_bframes = self->prop.num_bframes;
   self->gop.b_pyramid = self->prop.b_pyramid;
@@ -2296,6 +2322,12 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   self->bits_depth_chroma_minus8 = 0;
 
   self->packed_headers = 0;
+
+  self->partition.slice_span_tiles = FALSE;
+  g_clear_pointer (&self->partition.slice_segment_address, g_free);
+  g_clear_pointer (&self->partition.num_ctu_in_slice, g_free);
+  g_clear_pointer (&self->partition.tile_ctu_cols, g_free);
+  g_clear_pointer (&self->partition.tile_ctu_rows, g_free);
 
   self->features.log2_min_luma_coding_block_size_minus3 = 0;
   self->features.log2_diff_max_min_luma_coding_block_size = 0;
@@ -2489,37 +2521,375 @@ out:
   update_property (bool, obj, old_val, new_val, prop_id)
 
 static void
-_h265_validate_parameters (GstVaH265Enc * self)
+_h265_calculate_tile_partition (GstVaH265Enc * self)
+{
+  guint32 ctu_per_slice;
+  guint32 left_slices;
+  gint32 i, j, k;
+  guint32 ctu_tile_width_accu[MAX_COL_TILES + 1];
+  guint32 ctu_tile_height_accu[MAX_ROW_TILES + 1];
+  /* CTB address in tile scan.
+     Add one as sentinel, hold val to calculate ctu_num */
+  guint32 *tile_slice_address =
+      g_malloc ((self->partition.num_slices + 1) * sizeof (guint32));
+  /* map the CTB address in tile scan to CTB raster scan of a picture. */
+  guint32 *tile_slice_address_map =
+      g_malloc (self->ctu_width * self->ctu_height * sizeof (guint32));
+
+  self->partition.slice_segment_address =
+      g_malloc (self->partition.num_slices * sizeof (guint32));
+  self->partition.num_ctu_in_slice =
+      g_malloc (self->partition.num_slices * sizeof (guint32));
+  self->partition.tile_ctu_cols = g_malloc (MAX_COL_TILES * sizeof (guint32));
+  self->partition.tile_ctu_rows = g_malloc (MAX_ROW_TILES * sizeof (guint32));
+
+  /* firstly uniformly separate CTUs into tiles, as the spec 6.5.1 define */
+  for (i = 0; i < self->partition.num_tile_cols; i++)
+    self->partition.tile_ctu_cols[i] =
+        ((i + 1) * self->ctu_width) / self->partition.num_tile_cols -
+        (i * self->ctu_width) / self->partition.num_tile_cols;
+  for (i = 0; i < self->partition.num_tile_rows; i++)
+    self->partition.tile_ctu_rows[i] =
+        ((i + 1) * self->ctu_height) / self->partition.num_tile_rows -
+        (i * self->ctu_height) / self->partition.num_tile_rows;
+
+  /* The requirement that the slice should not span tiles. Firstly we
+     should scatter slices uniformly into each tile, bigger tile gets
+     more slices. Then we should assign CTUs within one tile uniformly
+     to each slice in that tile. */
+  if (!self->partition.slice_span_tiles) {
+    guint32 *slices_per_tile = g_malloc (self->partition.num_tile_cols *
+        self->partition.num_tile_rows * sizeof (guint32));
+
+    ctu_per_slice = (self->ctu_width * self->ctu_height +
+        self->partition.num_slices - 1) / self->partition.num_slices;
+    g_assert (ctu_per_slice > 0);
+    left_slices = self->partition.num_slices;
+
+    for (i = 0;
+        i < self->partition.num_tile_cols * self->partition.num_tile_rows;
+        i++) {
+      slices_per_tile[i] = 1;
+      left_slices--;
+    }
+    while (left_slices) {
+      /* Find the biggest CTUs/slices, and assign more. */
+      gfloat largest = 0.0f;
+      k = -1;
+      for (i = 0;
+          i < self->partition.num_tile_cols * self->partition.num_tile_rows;
+          i++) {
+        gfloat f;
+        f = ((gfloat)
+            (self->partition.tile_ctu_cols[i % self->partition.num_tile_cols] *
+                self->partition.tile_ctu_rows
+                [i / self->partition.num_tile_cols])) /
+            (gfloat) slices_per_tile[i];
+        g_assert (f >= 1.0f);
+        if (f > largest) {
+          k = i;
+          largest = f;
+        }
+      }
+
+      g_assert (k >= 0);
+      slices_per_tile[k]++;
+      left_slices--;
+    }
+
+    /* Assign CTUs in one tile uniformly to each slice. Note: the slice start
+       address is CTB address in tile scan(see spec 6.5), that is, we accumulate
+       all CTUs in tile0, then tile1, and tile2..., not from the picture's
+       perspective. */
+    tile_slice_address[0] = 0;
+    k = 1;
+    for (i = 0; i < self->partition.num_tile_rows; i++) {
+      for (j = 0; j < self->partition.num_tile_cols; j++) {
+        guint32 s_num = slices_per_tile[i * self->partition.num_tile_cols + j];
+        guint32 one_tile_ctus =
+            self->partition.tile_ctu_cols[j] * self->partition.tile_ctu_rows[i];
+        guint32 s;
+
+        GST_LOG_OBJECT (self, "Tile(row %d col %d), has CTU in col %d,"
+            " CTU in row is %d, total CTU %d, assigned %d slices", i, j,
+            self->partition.tile_ctu_cols[j], self->partition.tile_ctu_rows[i],
+            one_tile_ctus, s_num);
+
+        g_assert (s_num > 0);
+        for (s = 0; s < s_num; s++) {
+          tile_slice_address[k] = tile_slice_address[k - 1] +
+              ((s + 1) * one_tile_ctus) / s_num - (s * one_tile_ctus) / s_num;
+          self->partition.num_ctu_in_slice[k - 1] =
+              tile_slice_address[k] - tile_slice_address[k - 1];
+          k++;
+        }
+      }
+    }
+
+    g_assert (k == self->partition.num_slices + 1);
+    /* Calculate the last one */
+    self->partition.num_ctu_in_slice[self->partition.num_slices - 1] =
+        self->ctu_width * self->ctu_height -
+        tile_slice_address[self->partition.num_slices - 1];
+
+    g_free (slices_per_tile);
+  }
+  /* The easy way, just assign CTUs to each slice uniformly */
+  else {
+    guint ctu_size, ctu_mod_slice, cur_slice_ctu, last_ctu_index;
+
+    ctu_size = self->ctu_width * self->ctu_height;
+
+    ctu_per_slice = ctu_size / self->partition.num_slices;
+    ctu_mod_slice = ctu_size % self->partition.num_slices;
+    last_ctu_index = 0;
+
+    for (i = 0; i < self->partition.num_slices; i++) {
+      cur_slice_ctu = ctu_per_slice;
+      /* Scatter the remainder to each slice */
+      if (ctu_mod_slice) {
+        ++cur_slice_ctu;
+        --ctu_mod_slice;
+      }
+
+      tile_slice_address[i] = last_ctu_index;
+      self->partition.num_ctu_in_slice[i] = cur_slice_ctu;
+
+      /* set calculation for next slice */
+      last_ctu_index += cur_slice_ctu;
+      g_assert (last_ctu_index <= ctu_size);
+    }
+  }
+
+  /* Build the map to specifying the conversion between a CTB address in CTB
+     raster scan of a picture and a CTB address in tile scan(see spec 6.5.1
+     for details). */
+  ctu_tile_width_accu[0] = 0;
+  for (i = 1; i <= self->partition.num_tile_cols; i++)
+    ctu_tile_width_accu[i] =
+        ctu_tile_width_accu[i - 1] + self->partition.tile_ctu_cols[i - 1];
+
+  ctu_tile_height_accu[0] = 0;
+  for (i = 1; i <= self->partition.num_tile_rows; i++)
+    ctu_tile_height_accu[i] =
+        ctu_tile_height_accu[i - 1] + self->partition.tile_ctu_rows[i - 1];
+
+  for (k = 0; k < self->ctu_width * self->ctu_height; k++) {
+    /* The ctu coordinate in the picture. */
+    guint32 x = k % self->ctu_width;
+    guint32 y = k / self->ctu_width;
+    /* The ctu coordinate in the tile mode. */
+    guint32 tile_x = 0;
+    guint32 tile_y = 0;
+    /* The index of the CTU in the tile mode. */
+    guint32 tso = 0;
+
+    for (i = 0; i < self->partition.num_tile_cols; i++)
+      if (x >= ctu_tile_width_accu[i])
+        tile_x = i;
+    g_assert (tile_x <= self->partition.num_tile_cols - 1);
+
+    for (j = 0; j < self->partition.num_tile_rows; j++)
+      if (y >= ctu_tile_height_accu[j])
+        tile_y = j;
+    g_assert (tile_y <= self->partition.num_tile_rows - 1);
+
+    /* add all ctus in the tiles the same line before us */
+    for (i = 0; i < tile_x; i++)
+      tso += self->partition.tile_ctu_rows[tile_y] *
+          self->partition.tile_ctu_cols[i];
+
+    /* add all ctus in the tiles above us */
+    for (j = 0; j < tile_y; j++)
+      tso += self->ctu_width * self->partition.tile_ctu_rows[j];
+
+    /* add the ctus inside the same tile before us */
+    tso += (y - ctu_tile_height_accu[tile_y]) *
+        self->partition.tile_ctu_cols[tile_x]
+        + x - ctu_tile_width_accu[tile_x];
+
+    g_assert (tso < self->ctu_width * self->ctu_height);
+
+    tile_slice_address_map[tso] = k;
+  }
+
+  for (i = 0; i < self->partition.num_slices; i++)
+    self->partition.slice_segment_address[i] =
+        tile_slice_address_map[tile_slice_address[i]];
+
+  g_free (tile_slice_address);
+  g_free (tile_slice_address_map);
+}
+
+static void
+_h265_calculate_slice_partition (GstVaH265Enc * self, gint32 slice_structure)
+{
+  guint ctu_size;
+  guint ctus_per_slice, ctus_mod_slice, cur_slice_ctus;
+  guint last_ctu_index;
+  guint i_slice;
+
+  /* TODO: consider other slice structure modes */
+  if (!(slice_structure & VA_ENC_SLICE_STRUCTURE_ARBITRARY_MACROBLOCKS) &&
+      !(slice_structure & VA_ENC_SLICE_STRUCTURE_ARBITRARY_ROWS)) {
+    GST_INFO_OBJECT (self, "Driver slice structure is %x, does not support"
+        " ARBITRARY_MACROBLOCKS mode, fallback to no slice partition",
+        slice_structure);
+    self->partition.num_slices = 1;
+  }
+
+  self->partition.slice_segment_address =
+      g_malloc (self->partition.num_slices * sizeof (guint32));
+  self->partition.num_ctu_in_slice =
+      g_malloc (self->partition.num_slices * sizeof (guint32));
+
+  ctu_size = self->ctu_width * self->ctu_height;
+
+  g_assert (self->partition.num_slices &&
+      self->partition.num_slices < ctu_size);
+
+  ctus_per_slice = ctu_size / self->partition.num_slices;
+  ctus_mod_slice = ctu_size % self->partition.num_slices;
+  last_ctu_index = 0;
+
+  for (i_slice = 0; i_slice < self->partition.num_slices; i_slice++) {
+    cur_slice_ctus = ctus_per_slice;
+    /* Scatter the remainder to each slice */
+    if (ctus_mod_slice) {
+      ++cur_slice_ctus;
+      --ctus_mod_slice;
+    }
+
+    /* Align start address to the row begin */
+    if (slice_structure & VA_ENC_SLICE_STRUCTURE_ARBITRARY_ROWS) {
+      guint ctu_width_round_factor;
+
+      ctu_width_round_factor =
+          self->ctu_width - (cur_slice_ctus % self->ctu_width);
+      cur_slice_ctus += ctu_width_round_factor;
+      if ((last_ctu_index + cur_slice_ctus) > ctu_size)
+        cur_slice_ctus = ctu_size - last_ctu_index;
+    }
+
+    self->partition.slice_segment_address[i_slice] = last_ctu_index;
+    self->partition.num_ctu_in_slice[i_slice] = cur_slice_ctus;
+
+    /* set calculation for next slice */
+    last_ctu_index += cur_slice_ctus;
+    g_assert (last_ctu_index <= ctu_size);
+  }
+}
+
+static gboolean
+_h265_setup_slice_and_tile_partition (GstVaH265Enc * self)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   gint32 max_slices;
+  gint32 slice_structure;
 
   /* Ensure the num_slices provided by the user not exceed the limit
    * of the number of slices permitted by the stream and by the
    * hardware. */
-  g_assert (self->num_slices >= 1);
+  g_assert (self->partition.num_slices >= 1);
   max_slices = gst_va_encoder_get_max_slice_num (base->encoder,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
-  if (self->num_slices > max_slices)
-    self->num_slices = max_slices;
+  if (self->partition.num_slices > max_slices)
+    self->partition.num_slices = max_slices;
 
   /* The stream size limit. */
-  if (self->num_slices > ((self->ctu_width * self->ctu_height + 1) / 2))
-    self->num_slices = ((self->ctu_width * self->ctu_height + 1) / 2);
+  if (self->partition.num_slices >
+      ((self->ctu_width * self->ctu_height + 1) / 2))
+    self->partition.num_slices = ((self->ctu_width * self->ctu_height + 1) / 2);
 
-  update_property_uint (base, &self->prop.num_slices, self->num_slices,
-      PROP_NUM_SLICES);
+  slice_structure = gst_va_encoder_get_slice_structure (base->encoder,
+      base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
 
-  /* Ensure trellis. */
-  if (self->features.use_trellis &&
-      !gst_va_encoder_has_trellis (base->encoder, base->profile,
-          GST_VA_BASE_ENC_ENTRYPOINT (base))) {
-    GST_INFO_OBJECT (self, "The trellis is not supported");
-    self->features.use_trellis = FALSE;
+  if (_is_tile_enabled (self)) {
+    const GstVaH265LevelLimits *level_limits;
+    guint i;
+
+    if (!gst_va_encoder_has_tile (base->encoder,
+            base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) {
+      self->partition.num_tile_cols = 1;
+      self->partition.num_tile_rows = 1;
+    }
+
+    level_limits = NULL;
+    for (i = 0; i < G_N_ELEMENTS (_va_h265_level_limits); i++) {
+      if (_va_h265_level_limits[i].level_idc == self->level_idc) {
+        level_limits = &_va_h265_level_limits[i];
+        break;
+      }
+    }
+    g_assert (level_limits);
+
+    if (self->partition.num_tile_cols > level_limits->MaxTileColumns) {
+      GST_INFO_OBJECT (self, "num_tile_cols:%d exceeds MaxTileColumns:%d"
+          " of level %s", self->partition.num_tile_cols,
+          level_limits->MaxTileColumns, self->level_str);
+      self->partition.num_tile_cols = level_limits->MaxTileColumns;
+    }
+    if (self->partition.num_tile_rows > level_limits->MaxTileRows) {
+      GST_INFO_OBJECT (self, "num_tile_rows:%d exceeds MaxTileRows:%d"
+          " of level %s", self->partition.num_tile_rows,
+          level_limits->MaxTileRows, self->level_str);
+      self->partition.num_tile_rows = level_limits->MaxTileRows;
+    }
+
+    if (self->partition.num_tile_cols > self->ctu_width) {
+      GST_INFO_OBJECT (self,
+          "Only %d CTUs in width, not enough to split into %d tile columns",
+          self->ctu_width, self->partition.num_tile_cols);
+      self->partition.num_tile_cols = self->ctu_width;
+    }
+    if (self->partition.num_tile_rows > self->ctu_height) {
+      GST_INFO_OBJECT (self,
+          "Only %d CTUs in height, not enough to split into %d tile rows",
+          self->ctu_height, self->partition.num_tile_rows);
+      self->partition.num_tile_rows = self->ctu_height;
+    }
+
+    /* Some driver require that the slice should not span tiles,
+       we need to increase slice number if needed. */
+    if (gst_va_display_is_implementation (base->display,
+            GST_VA_IMPLEMENTATION_INTEL_IHD)) {
+      if (self->partition.num_slices <
+          self->partition.num_tile_cols * self->partition.num_tile_rows) {
+        if (self->partition.num_tile_cols * self->partition.num_tile_rows >
+            max_slices) {
+          GST_ERROR_OBJECT (self, "The slice can not span tiles, but total"
+              " tile num %d is bigger than max_slices %d",
+              self->partition.num_tile_cols * self->partition.num_tile_rows,
+              max_slices);
+          return FALSE;
+        } else {
+          GST_INFO_OBJECT (self, "The num_slices %d is smaller than tile"
+              " num %d. The slice can not span tiles, so set the num-slices"
+              " to tile num.", self->partition.num_slices,
+              self->partition.num_tile_cols * self->partition.num_tile_rows);
+          self->partition.num_slices =
+              self->partition.num_tile_cols * self->partition.num_tile_rows;
+        }
+      }
+
+      self->partition.slice_span_tiles = FALSE;
+    } else {
+      self->partition.slice_span_tiles = TRUE;
+    }
+
+    _h265_calculate_tile_partition (self);
+  } else {
+    _h265_calculate_slice_partition (self, slice_structure);
   }
 
-  update_property_bool (base, &self->prop.use_trellis,
-      self->features.use_trellis, PROP_TRELLIS);
+  update_property_uint (base, &self->prop.num_slices,
+      self->partition.num_slices, PROP_NUM_SLICES);
+  update_property_uint (base, &self->prop.num_tile_cols,
+      self->partition.num_tile_cols, PROP_NUM_TILE_COLS);
+  update_property_uint (base, &self->prop.num_tile_rows,
+      self->partition.num_tile_rows, PROP_NUM_TILE_ROWS);
+
+  return TRUE;
 }
 
 /* Normalizes bitrate (and CPB size) for HRD conformance */
@@ -3021,7 +3391,7 @@ _h265_calculate_coded_size (GstVaH265Enc * self)
   codedbuf_size += 4 + GST_ROUND_UP_8 (MAX_PPS_HDR_SIZE) / 8;
 
   /* Account for slice header */
-  codedbuf_size += self->num_slices * (4 +
+  codedbuf_size += self->partition.num_slices * (4 +
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE + MAX_SHORT_TERM_REFPICSET_SIZE) / 8);
 
   /* TODO: Only YUV 4:2:0 formats are supported for now.
@@ -3575,6 +3945,19 @@ print_options:
       self->features.weighted_pred_flag,
       self->features.weighted_bipred_flag,
       self->features.transquant_bypass_enabled_flag);
+
+  /* Ensure trellis. */
+  if (self->features.use_trellis &&
+      !gst_va_encoder_has_trellis (base->encoder, base->profile,
+          GST_VA_BASE_ENC_ENTRYPOINT (base))) {
+    GST_INFO_OBJECT (self, "The trellis is not supported");
+    self->features.use_trellis = FALSE;
+  }
+
+  if (self->prop.use_trellis != self->features.use_trellis) {
+    self->prop.use_trellis = self->features.use_trellis;
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TRELLIS]);
+  }
 }
 
 /* We need to decide the profile and entrypoint before call this.
@@ -3822,8 +4205,6 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
       base->width, base->height, self->ctu_width, self->ctu_height,
       GST_TIME_ARGS (base->frame_duration));
 
-  _h265_validate_parameters (self);
-
   if (!_h265_ensure_rate_control (self))
     return FALSE;
 
@@ -3836,6 +4217,9 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   _h265_setup_encoding_features (self);
 
   _h265_calculate_coded_size (self);
+
+  if (!_h265_setup_slice_and_tile_partition (self))
+    return FALSE;
 
   if (!_h265_init_packed_headers (self))
     return FALSE;
@@ -4086,6 +4470,12 @@ gst_va_h265_enc_set_property (GObject * object, guint prop_id,
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       already_effect = TRUE;
       break;
+    case PROP_NUM_TILE_COLS:
+      self->prop.num_tile_cols = g_value_get_uint (value);
+      break;
+    case PROP_NUM_TILE_ROWS:
+      self->prop.num_tile_rows = g_value_get_uint (value);
+      break;
     case PROP_RATE_CONTROL:
       self->prop.rc_ctrl = g_value_get_enum (value);
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
@@ -4168,6 +4558,12 @@ gst_va_h265_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TARGET_USAGE:
       g_value_set_uint (value, self->prop.target_usage);
+      break;
+    case PROP_NUM_TILE_COLS:
+      g_value_set_uint (value, self->prop.num_tile_cols);
+      break;
+    case PROP_NUM_TILE_ROWS:
+      g_value_set_uint (value, self->prop.num_tile_rows);
       break;
     case PROP_RATE_CONTROL:
       g_value_set_enum (value, self->prop.rc_ctrl);
@@ -4465,6 +4861,24 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
       "max CPB size in Kb",
       "The desired max CPB size in Kb (0: auto-calculate)", 0, 2000 * 1024, 0,
       param_flags);
+
+  /**
+   * GstVaH265Enc:num-tile-cols:
+   *
+   * The number of tile columns when tile encoding is enabled.
+   */
+  properties[PROP_NUM_TILE_COLS] = g_param_spec_uint ("num-tile-cols",
+      "number of tile columns", "The number of columns for tile encoding",
+      1, MAX_COL_TILES, 1, param_flags);
+
+  /**
+   * GstVaH265Enc:num-tile-rows:
+   *
+   * The number of tile rows when tile encoding is enabled.
+   */
+  properties[PROP_NUM_TILE_ROWS] = g_param_spec_uint ("num-tile-rows",
+      "number of tile rows", "The number of rows for tile encoding",
+      1, MAX_ROW_TILES, 1, param_flags);
 
   if (vah265enc_class->rate_control_type > 0) {
     properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",

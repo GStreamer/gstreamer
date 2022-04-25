@@ -603,6 +603,35 @@ gst_va_encoder_get_max_slice_num (GstVaEncoder * self,
   return attrib.value;
 }
 
+gint32
+gst_va_encoder_get_slice_structure (GstVaEncoder * self,
+    VAProfile profile, VAEntrypoint entrypoint)
+{
+  VAStatus status;
+  VADisplay dpy;
+  VAConfigAttrib attrib = {.type = VAConfigAttribEncSliceStructure };
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), 0);
+
+  if (profile == VAProfileNone)
+    return -1;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_WARNING_OBJECT (self, "Failed to query encoding slice structure: %s",
+        vaErrorStr (status));
+    return 0;
+  }
+
+  if (attrib.value == VA_ATTRIB_NOT_SUPPORTED) {
+    GST_WARNING_OBJECT (self, "Driver does not support slice structure");
+    return 0;
+  }
+
+  return attrib.value;
+}
+
 gboolean
 gst_va_encoder_get_max_num_reference (GstVaEncoder * self,
     VAProfile profile, VAEntrypoint entrypoint,
@@ -765,6 +794,35 @@ gst_va_encoder_has_trellis (GstVaEncoder * self,
   }
 
   return attrib.value & VA_ENC_QUANTIZATION_TRELLIS_SUPPORTED;
+}
+
+gboolean
+gst_va_encoder_has_tile (GstVaEncoder * self,
+    VAProfile profile, VAEntrypoint entrypoint)
+{
+  VAStatus status;
+  VADisplay dpy;
+  VAConfigAttrib attrib = {.type = VAConfigAttribEncTileSupport };
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
+
+  if (profile == VAProfileNone)
+    return FALSE;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+  status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_WARNING_OBJECT (self, "Failed to query the tile: %s",
+        vaErrorStr (status));
+    return FALSE;
+  }
+
+  if (attrib.value == VA_ATTRIB_NOT_SUPPORTED) {
+    GST_WARNING_OBJECT (self, "Driver does not support tile");
+    return FALSE;
+  }
+
+  return attrib.value > 0;
 }
 
 guint32
