@@ -169,7 +169,7 @@ dummy_parser_handle_frame (GstBaseParse * parse,
   if (((DummyParser *) parse)->caps_set == FALSE) {
     GstCaps *caps;
     /* push caps */
-    caps = gst_caps_new_empty_simple ("ANY");
+    caps = gst_caps_new_empty_simple ("video/x-raw");
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
     ((DummyParser *) parse)->caps_set = TRUE;
