@@ -1191,29 +1191,30 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
 
   if (seq_header.color_config.color_description_present_flag) {
     GstVideoColorimetry cinfo;
-    gboolean have_cinfo = TRUE;
     gchar *colorimetry = NULL;
 
-    if (have_cinfo) {
-      if (seq_header.color_config.color_range)
-        cinfo.range = GST_VIDEO_COLOR_RANGE_0_255;
-      else
-        cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
+    if (seq_header.color_config.color_range)
+      cinfo.range = GST_VIDEO_COLOR_RANGE_0_255;
+    else
+      cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
 
-      cinfo.matrix = gst_video_color_matrix_from_iso
-          (seq_header.color_config.matrix_coefficients);
-      cinfo.transfer = gst_video_transfer_function_from_iso
-          (seq_header.color_config.transfer_characteristics);
-      cinfo.primaries = gst_video_color_primaries_from_iso
-          (seq_header.color_config.color_primaries);
-      colorimetry = gst_video_colorimetry_to_string (&cinfo);
-    }
+    cinfo.matrix = gst_video_color_matrix_from_iso
+        (seq_header.color_config.matrix_coefficients);
+    cinfo.transfer = gst_video_transfer_function_from_iso
+        (seq_header.color_config.transfer_characteristics);
+    cinfo.primaries = gst_video_color_primaries_from_iso
+        (seq_header.color_config.color_primaries);
 
-    if (g_strcmp0 (colorimetry, self->colorimetry)) {
-      g_clear_pointer (&self->colorimetry, g_free);
+    colorimetry = gst_video_colorimetry_to_string (&cinfo);
+
+    if (g_strcmp0 (colorimetry, self->colorimetry) != 0) {
+      g_free (self->colorimetry);
       self->colorimetry = colorimetry;
+      colorimetry = NULL;
       self->update_caps = TRUE;
     }
+
+    g_clear_pointer (&colorimetry, g_free);
   }
 
   if (self->subsampling_x != seq_header.color_config.subsampling_x) {
