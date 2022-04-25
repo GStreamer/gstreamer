@@ -36,7 +36,7 @@
 
 #include <gst/base/base.h>
 
-#define IMAGE_MINSZ 4096
+#define IMAGE_MINSZ (256*1024)  /* 256kB */
 
 GST_DEBUG_CATEGORY (v4l2_decoder_debug);
 #define GST_CAT_DEFAULT v4l2_decoder_debug
