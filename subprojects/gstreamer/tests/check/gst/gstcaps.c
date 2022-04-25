@@ -1404,16 +1404,15 @@ GST_START_TEST (test_special_caps)
 
   caps = gst_caps_new_any ();
   fail_unless (gst_caps_is_any (caps));
-  fail_unless (gst_caps_is_any (caps) == TRUE);
+  fail_unless (gst_caps_is_any (caps));
   fail_if (gst_caps_is_empty (caps));
   fail_unless (gst_caps_is_empty (caps) == FALSE);
   gst_caps_unref (caps);
 
   caps = gst_caps_new_empty ();
   fail_if (gst_caps_is_any (caps));
-  fail_unless (gst_caps_is_any (caps) == FALSE);
   fail_unless (gst_caps_is_empty (caps));
-  fail_unless (gst_caps_is_empty (caps) == TRUE);
+  fail_unless (gst_caps_is_empty (caps));
   gst_caps_unref (caps);
 }
 
@@ -1817,6 +1816,32 @@ GST_START_TEST (test_remains_any)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fixed)
+{
+  GstCaps *caps;
+
+  caps =
+      gst_caps_from_string
+      ("video/x-raw, format=I420; video/x-raw(foo:bar); video/x-h264");
+  fail_if (gst_caps_is_fixed (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_new_any ();
+  fail_if (gst_caps_is_fixed (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("ANY");
+  fail_unless (gst_caps_is_any (caps));
+  fail_if (gst_caps_is_fixed (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string ("video/x-raw, format=I420");
+  fail_unless (gst_caps_is_fixed (caps));
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_caps_suite (void)
 {
@@ -1854,6 +1879,7 @@ gst_caps_suite (void)
   tcase_add_test (tc_chain, test_filter_and_map_in_place);
   tcase_add_test (tc_chain, test_equality);
   tcase_add_test (tc_chain, test_remains_any);
+  tcase_add_test (tc_chain, test_fixed);
 
   return s;
 }
