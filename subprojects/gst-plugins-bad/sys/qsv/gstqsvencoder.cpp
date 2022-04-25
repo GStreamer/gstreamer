@@ -704,8 +704,8 @@ gst_qsv_encoder_finish_frame (GstQsvEncoder * self, GstQsvEncoderTask * task,
   mfxStatus status;
   mfxBitstream *bs;
   GstVideoCodecFrame *frame;
-  GstClockTime pts = GST_CLOCK_TIME_NONE;
-  GstClockTime dts = GST_CLOCK_TIME_NONE;
+  GstClockTime qsv_pts = GST_CLOCK_TIME_NONE;
+  GstClockTime qsv_dts = GST_CLOCK_TIME_NONE;
   GstBuffer *buffer;
   gboolean keyframe = FALSE;
   guint retry_count = 0;
@@ -750,8 +750,19 @@ gst_qsv_encoder_finish_frame (GstQsvEncoder * self, GstQsvEncoderTask * task,
   }
 
   bs = &task->bitstream;
-  pts = gst_qsv_timestamp_to_gst (bs->TimeStamp);
-  dts = gst_qsv_timestamp_to_gst ((mfxU64) bs->DecodeTimeStamp);
+  qsv_pts = gst_qsv_timestamp_to_gst (bs->TimeStamp);
+
+  /* SDK runtime seems to report zero DTS for all fraems in case of VP9.
+   * It sounds SDK bug, but we can workaround it safely because VP9 B-frame is
+   * not supported in this implementation.
+   *
+   * Also we perfer our nanoseconds timestamp instead of QSV's timescale.
+   * So let' ignore QSV's timescale for non-{h264,h265} cases.
+   *
+   * TODO: We may need to use DTS for MPEG2 (not implemented yet)
+   */
+  if (klass->codec_id == MFX_CODEC_AVC || klass->codec_id == MFX_CODEC_HEVC)
+    qsv_dts = gst_qsv_timestamp_to_gst ((mfxU64) bs->DecodeTimeStamp);
 
   if ((bs->FrameType & MFX_FRAMETYPE_IDR) != 0)
     keyframe = TRUE;
@@ -768,10 +779,15 @@ gst_qsv_encoder_finish_frame (GstQsvEncoder * self, GstQsvEncoderTask * task,
     return GST_FLOW_ERROR;
   }
 
-  frame = gst_qsv_encoder_find_output_frame (self, pts);
+  frame = gst_qsv_encoder_find_output_frame (self, qsv_pts);
   if (frame) {
-    frame->pts = pts;
-    frame->dts = dts;
+    if (GST_CLOCK_TIME_IS_VALID (qsv_dts)) {
+      frame->pts = qsv_pts;
+      frame->dts = qsv_dts;
+    } else {
+      frame->dts = frame->pts;
+    }
+
     frame->output_buffer = buffer;
 
     if (keyframe)
@@ -783,8 +799,11 @@ gst_qsv_encoder_finish_frame (GstQsvEncoder * self, GstQsvEncoderTask * task,
   /* Empty available frame, something went wrong but we can just push this
    * buffer */
   GST_WARNING_OBJECT (self, "Failed to find corresponding frame");
-  GST_BUFFER_PTS (buffer) = pts;
-  GST_BUFFER_DTS (buffer) = dts;
+  GST_BUFFER_PTS (buffer) = qsv_pts;
+  if (GST_CLOCK_TIME_IS_VALID (qsv_dts))
+    GST_BUFFER_DTS (buffer) = qsv_dts;
+  else
+    GST_BUFFER_DTS (buffer) = qsv_pts;
 
   if (!keyframe)
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
