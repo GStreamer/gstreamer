@@ -2836,7 +2836,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   /**
    * GstRtpBin:add-reference-timestamp-meta:
    *
-   * When syncing to a RFC7273 clock, add #GstReferenceTimestampMeta
+   * When syncing to a RFC7273 clock or after clock synchronization via RTCP or
+   * inband NTP-64 header extensions has happened, add #GstReferenceTimestampMeta
    * to buffers with the original reconstructed reference clock timestamp.
    *
    * Since: 1.22
@@ -2846,7 +2847,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       g_param_spec_boolean ("add-reference-timestamp-meta",
           "Add Reference Timestamp Meta",
           "Add Reference Timestamp Meta to buffers with the original clock timestamp "
-          "before any adjustments when syncing to an RFC7273 clock.",
+          "before any adjustments when syncing to an RFC7273 clock or after clock "
+          "synchronization via RTCP or inband NTP-64 header extensions has happened.",
           DEFAULT_ADD_REFERENCE_TIMESTAMP_META,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
