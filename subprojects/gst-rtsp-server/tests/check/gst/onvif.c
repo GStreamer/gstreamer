@@ -290,7 +290,7 @@ test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 
   if (src->segment->rate < 0) {
     guint64 n_frames =
-        ROUND_DOWN_TO_10 (gst_util_uint64_scale (src->segment->stop, 1000,
+        ROUND_DOWN_TO_10 (gst_util_uint64_scale (src->segment->stop - 1, 1000,
             GST_SECOND));
 
     src->segment->position = n_frames * GST_MSECOND;
