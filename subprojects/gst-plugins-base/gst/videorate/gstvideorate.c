@@ -649,7 +649,7 @@ gst_video_rate_init (GstVideoRate * videorate)
 /* @outbuf: (transfer full) needs to be writable */
 static GstFlowReturn
 gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
-    gboolean duplicate, GstClockTime next_intime)
+    gboolean duplicate, GstClockTime next_intime, gboolean invalid_duration)
 {
   GstFlowReturn res;
   GstClockTime push_ts;
@@ -707,7 +707,7 @@ gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
           videorate->to_rate_denominator * GST_SECOND,
           videorate->to_rate_numerator);
       GST_BUFFER_DURATION (outbuf) = videorate->next_ts - push_ts;
-    } else {
+    } else if (!invalid_duration) {
       /* There must always be a valid duration on prevbuf if rate > 0,
        * it is ensured in the transform_ip function */
       g_assert (GST_BUFFER_PTS_IS_VALID (outbuf));
@@ -737,7 +737,7 @@ gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
 /* flush the oldest buffer */
 static GstFlowReturn
 gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate,
-    GstClockTime next_intime)
+    GstClockTime next_intime, gboolean invalid_duration)
 {
   GstBuffer *outbuf;
 
@@ -748,7 +748,8 @@ gst_video_rate_flush_prev (GstVideoRate * videorate, gboolean duplicate,
   /* make sure we can write to the metadata */
   outbuf = gst_buffer_make_writable (outbuf);
 
-  return gst_video_rate_push_buffer (videorate, outbuf, duplicate, next_intime);
+  return gst_video_rate_push_buffer (videorate, outbuf, duplicate, next_intime,
+      invalid_duration);
 
   /* WARNINGS */
 eos_before_buffers:
@@ -824,7 +825,7 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
                 || count < 1)) {
           res =
               gst_video_rate_flush_prev (videorate, count > 0,
-              GST_CLOCK_TIME_NONE);
+              GST_CLOCK_TIME_NONE, FALSE);
           count++;
         }
         if (count > 1) {
@@ -886,7 +887,7 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
                     videorate->segment.start)
             )) {
           res = gst_video_rate_flush_prev (videorate, count > 0,
-              GST_CLOCK_TIME_NONE);
+              GST_CLOCK_TIME_NONE, FALSE);
           count++;
         }
       } else if (!videorate->drop_only && videorate->prevbuf) {
@@ -904,12 +905,15 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
                   || count < 1)) {
             res =
                 gst_video_rate_flush_prev (videorate, count > 0,
-                GST_CLOCK_TIME_NONE);
+                GST_CLOCK_TIME_NONE, FALSE);
             count++;
           }
         } else {
+          /* allow the duration to be invalid as there is no way to infer it if we
+           * received a single buffer and not output framerate was set. */
           res =
-              gst_video_rate_flush_prev (videorate, FALSE, GST_CLOCK_TIME_NONE);
+              gst_video_rate_flush_prev (videorate, FALSE, GST_CLOCK_TIME_NONE,
+              TRUE);
           count = 1;
         }
       }
@@ -1397,12 +1401,14 @@ gst_video_rate_do_max_duplicate (GstVideoRate * videorate, GstBuffer * buffer,
      * previous buffer */
     if (videorate->segment.rate < 0.0) {
       while (videorate->next_ts > prevtime) {
-        gst_video_rate_flush_prev (videorate, *count > 0, GST_CLOCK_TIME_NONE);
+        gst_video_rate_flush_prev (videorate, *count > 0, GST_CLOCK_TIME_NONE,
+            FALSE);
         *count += 1;
       }
     } else {
       while (videorate->next_ts <= prevtime) {
-        gst_video_rate_flush_prev (videorate, *count > 0, GST_CLOCK_TIME_NONE);
+        gst_video_rate_flush_prev (videorate, *count > 0, GST_CLOCK_TIME_NONE,
+            FALSE);
         *count += 1;
       }
     }
@@ -1582,7 +1588,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
          * GstBaseTransform can get its reference back. */
         if ((r = gst_video_rate_push_buffer (videorate,
                     gst_buffer_ref (buffer), FALSE,
-                    GST_CLOCK_TIME_NONE)) != GST_FLOW_OK) {
+                    GST_CLOCK_TIME_NONE, FALSE)) != GST_FLOW_OK) {
           res = r;
           goto done;
         }
@@ -1710,7 +1716,7 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
         /* on error the _flush function posted a warning already */
         if ((r = gst_video_rate_flush_prev (videorate,
-                    count > 1, intime)) != GST_FLOW_OK) {
+                    count > 1, intime, FALSE)) != GST_FLOW_OK) {
           res = r;
           goto done;
         }
