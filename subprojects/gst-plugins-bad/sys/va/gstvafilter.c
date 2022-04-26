@@ -1518,23 +1518,34 @@ gst_va_filter_drop_filter_buffers (GstVaFilter * self)
   return ret;
 }
 
+static VASurfaceID
+_get_surface_from_buffer (GstVaFilter * self, GstBuffer * buffer)
+{
+  VASurfaceID surface = VA_INVALID_ID;
+
+  if (buffer)
+    surface = gst_va_buffer_get_surface (buffer);
+
+  if (surface != VA_INVALID_ID) {
+    /* @FIXME: in gallium vaQuerySurfaceStatus only seems to work with
+     * encoder's surfaces */
+    if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, MESA_GALLIUM))
+      if (!va_check_surface (self->display, surface))
+        surface = VA_INVALID_ID;
+  }
+
+  return surface;
+}
+
 static gboolean
 _fill_va_sample (GstVaFilter * self, GstVaSample * sample,
     GstPadDirection direction)
 {
   GstVideoCropMeta *crop = NULL;
 
-  if (sample->buffer)
-    sample->surface = gst_va_buffer_get_surface (sample->buffer);
+  sample->surface = _get_surface_from_buffer (self, sample->buffer);
   if (sample->surface == VA_INVALID_ID)
     return FALSE;
-
-  /* @FIXME: in gallium vaQuerySurfaceStatus only seems to work with
-   * encoder's surfaces */
-  if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, MESA_GALLIUM)) {
-    if (!va_check_surface (self->display, sample->surface))
-      return FALSE;
-  }
 
   /* XXX: cropping occurs only in input frames */
   if (direction == GST_PAD_SRC) {
@@ -1703,6 +1714,140 @@ fail_end_pic:
   }
 }
 
+gboolean
+gst_va_filter_has_compose (GstVaFilter * self)
+{
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
+  /* HACK(uartie): i965 can't do composition */
+  if (gst_va_display_is_implementation (self->display,
+          GST_VA_IMPLEMENTATION_INTEL_I965))
+    return FALSE;
+
+  /* some drivers can compose, but may not support blending (e.g. GALLIUM) */
+#ifndef GST_DISABLE_GST_DEBUG
+  if (self->pipeline_caps.blend_flags & VA_BLEND_GLOBAL_ALPHA)
+    GST_WARNING_OBJECT (self, "VPP does not support alpha blending");
+#endif
+
+  return TRUE;
+}
+
+/**
+ * gst_va_filter_compose:
+ * @tx: the #GstVaComposeTransaction for input samples and output.
+ *
+ * Iterates over all inputs via #GstVaComposeTransaction:next and composes
+ * them onto the #GstVaComposeTransaction:output.
+ *
+ * Only csc, scaling and blending filters are applied during composition.
+ * All other filters are ignored here.  Use #gst_va_filter_process to apply
+ * other filters.
+ *
+ * Returns: TRUE on successful compose, FALSE otherwise.
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_va_filter_compose (GstVaFilter * self, GstVaComposeTransaction * tx)
+{
+  VADisplay dpy;
+  VAStatus status;
+  VASurfaceID out_surface;
+  GstVaComposeSample *sample;
+
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+  g_return_val_if_fail (tx, FALSE);
+  g_return_val_if_fail (tx->next, FALSE);
+  g_return_val_if_fail (tx->output, FALSE);
+
+  if (!gst_va_filter_is_open (self))
+    return FALSE;
+
+  out_surface = _get_surface_from_buffer (self, tx->output);
+  if (out_surface == VA_INVALID_ID)
+    return FALSE;
+
+  dpy = gst_va_display_get_va_dpy (self->display);
+
+  status = vaBeginPicture (dpy, self->context, out_surface);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaBeginPicture: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  sample = tx->next (tx->user_data);
+  for (; sample; sample = tx->next (tx->user_data)) {
+    VAProcPipelineParameterBuffer params = { 0, };
+    VABufferID buffer;
+    VASurfaceID in_surface;
+    VABlendState blend = { 0, };
+
+    in_surface = _get_surface_from_buffer (self, sample->buffer);
+    if (in_surface == VA_INVALID_ID)
+      return FALSE;
+
+    /* (transfer full), unref it */
+    gst_buffer_unref (sample->buffer);
+
+    /* *INDENT-OFF* */
+    params = (VAProcPipelineParameterBuffer) {
+      .surface = in_surface,
+      .surface_region = &sample->input_region,
+      .output_region = &sample->output_region,
+      .output_background_color = 0xff000000,
+      .filter_flags = sample->flags,
+    };
+    /* *INDENT-ON* */
+
+    /* only send blend state when sample is not fully opaque */
+    if ((self->pipeline_caps.blend_flags & VA_BLEND_GLOBAL_ALPHA)
+        && sample->alpha < 1.0) {
+      /* *INDENT-OFF* */
+      blend = (VABlendState) {
+        .flags = VA_BLEND_GLOBAL_ALPHA,
+        .global_alpha = sample->alpha,
+      };
+      /* *INDENT-ON* */
+      params.blend_state = &blend;
+    }
+
+    status = vaCreateBuffer (dpy, self->context,
+        VAProcPipelineParameterBufferType, sizeof (params), 1, &params,
+        &buffer);
+    if (status != VA_STATUS_SUCCESS) {
+      GST_ERROR_OBJECT (self, "vaCreateBuffer: %s", vaErrorStr (status));
+      goto fail_end_pic;
+    }
+
+    status = vaRenderPicture (dpy, self->context, &buffer, 1);
+    vaDestroyBuffer (dpy, buffer);
+    if (status != VA_STATUS_SUCCESS) {
+      GST_ERROR_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+      goto fail_end_pic;
+    }
+  }
+
+  status = vaEndPicture (dpy, self->context);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  return TRUE;
+
+fail_end_pic:
+  {
+    status = vaEndPicture (dpy, self->context);
+    if (status != VA_STATUS_SUCCESS)
+      GST_ERROR_OBJECT (self, "vaEndPicture: %s", vaErrorStr (status));
+    return FALSE;
+  }
+}
+
 /**
  * gst_va_buffer_get_surface_flags:
  * @buffer: the #GstBuffer to check.
@@ -1781,4 +1926,22 @@ gst_va_filter_has_video_format (GstVaFilter * self, GstVideoFormat format,
   GST_OBJECT_UNLOCK (self);
 
   return FALSE;
+}
+
+GType
+gst_va_scale_method_get_type (void)
+{
+  static gsize type = 0;
+  static const GEnumValue values[] = {
+    {VA_FILTER_SCALING_DEFAULT, "Default scaling method", "default"},
+    {VA_FILTER_SCALING_FAST, "Fast scaling method", "fast"},
+    {VA_FILTER_SCALING_HQ, "High quality scaling method", "hq"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&type)) {
+    const GType _type = g_enum_register_static ("GstVaScaleMethod", values);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
 }

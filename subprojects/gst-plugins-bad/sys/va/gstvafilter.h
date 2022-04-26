@@ -57,6 +57,9 @@ enum {
   GST_VA_FILTER_PROP_LAST
 };
 
+#define GST_TYPE_VA_SCALE_METHOD gst_va_scale_method_get_type()
+GType gst_va_scale_method_get_type (void) G_GNUC_CONST;
+
 typedef struct _GstVaSample GstVaSample;
 struct _GstVaSample
 {
@@ -76,6 +79,34 @@ struct _GstVaSample
   /*< private >*/
   VASurfaceID surface;
   VARectangle rect;
+};
+
+typedef struct _GstVaComposeSample GstVaComposeSample;
+struct _GstVaComposeSample
+{
+  /* input buffer (transfer full) */
+  GstBuffer *buffer;
+
+  /* scale method flags */
+  guint32 flags;
+
+  VARectangle input_region;
+  VARectangle output_region;
+
+  gdouble alpha;
+};
+
+typedef struct _GstVaComposeTransaction GstVaComposeTransaction;
+struct _GstVaComposeTransaction
+{
+  /* input sample iterator function */
+  GstVaComposeSample* (*next) (gpointer user_data);
+
+  /* the output buffer to compose onto */
+  GstBuffer *output;
+
+  /* user data parameter for "next" function */
+  gpointer user_data;
 };
 
 GstVaFilter *         gst_va_filter_new                   (GstVaDisplay * display);
@@ -122,5 +153,9 @@ guint32               gst_va_buffer_get_surface_flags     (GstBuffer * buffer,
 gboolean              gst_va_filter_has_video_format      (GstVaFilter * self,
                                                            GstVideoFormat format,
                                                            GstCapsFeatures * feature);
+
+gboolean              gst_va_filter_has_compose           (GstVaFilter * self);
+gboolean              gst_va_filter_compose               (GstVaFilter * self,
+                                                           GstVaComposeTransaction * tx);
 
 G_END_DECLS

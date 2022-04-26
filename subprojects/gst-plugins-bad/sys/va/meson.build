@@ -4,6 +4,7 @@ va_sources = [
   'gstvabasetransform.c',
   'gstvabaseenc.c',
   'gstvacaps.c',
+  'gstvacompositor.c',
   'gstvadecoder.c',
   'gstvadeinterlace.c',
   'gstvaencoder.c',
