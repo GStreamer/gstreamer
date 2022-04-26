@@ -425,7 +425,8 @@ setup_theora_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->granulerate_n = GST_READ_UINT32_BE (data + 22);
   pad->granulerate_d = GST_READ_UINT32_BE (data + 26);
   if (pad->granulerate_n == 0 || pad->granulerate_d == 0) {
-    GST_WARNING ("frame rate %d/%d", pad->granulerate_n, pad->granulerate_d);
+    GST_WARNING ("Invalid frame rate %d/%d", pad->granulerate_n,
+        pad->granulerate_d);
     pad->granulerate_n = 0;
     pad->granulerate_d = 0;
     return FALSE;
@@ -565,6 +566,12 @@ setup_dirac_mapper (GstOggStream * pad, ogg_packet * packet)
     return FALSE;
   }
 
+  if (header.frame_rate_numerator == 0 || header.frame_rate_denominator == 0) {
+    GST_WARNING ("invalid framerate %d/%d", header.frame_rate_numerator,
+        header.frame_rate_denominator);
+    return FALSE;
+  }
+
   pad->is_video = TRUE;
   pad->always_flush_page = TRUE;
   pad->granulerate_n = header.frame_rate_numerator * 2;
@@ -669,6 +676,11 @@ setup_vp8_mapper (GstOggStream * pad, ogg_packet * packet)
   par_d = GST_READ_UINT24_BE (packet->packet + 15);
   fps_n = GST_READ_UINT32_BE (packet->packet + 18);
   fps_d = GST_READ_UINT32_BE (packet->packet + 22);
+
+  if (fps_n == 0 || fps_d == 0) {
+    GST_WARNING ("invalid framerate %d/%d", fps_n, fps_d);
+    return FALSE;
+  }
 
   pad->is_video = TRUE;
   pad->is_vp8 = TRUE;
@@ -1690,7 +1702,7 @@ setup_ogmvideo_mapper (GstOggStream * pad, ogg_packet * packet)
   pad->is_video = TRUE;
   pad->granulerate_n = 10000000;
   time_unit = GST_READ_UINT64_LE (data + 17);
-  if (time_unit > G_MAXINT || time_unit < G_MININT) {
+  if (time_unit > G_MAXINT || time_unit < G_MININT || time_unit == 0) {
     GST_WARNING ("timeunit is out of range");
   }
   pad->granulerate_d = (gint) CLAMP (time_unit, G_MININT, G_MAXINT);
