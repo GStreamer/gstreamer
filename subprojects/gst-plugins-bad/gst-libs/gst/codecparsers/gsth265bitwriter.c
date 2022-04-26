@@ -25,6 +25,7 @@
 #include "gsth265bitwriter.h"
 #include <gst/codecparsers/nalutils.h>
 #include <gst/base/gstbitwriter.h>
+#include <math.h>
 
 /********************************  Utils ********************************/
 #define SIGNED(val)    (2 * ABS(val) - ((val) > 0))
@@ -1532,8 +1533,25 @@ _h265_bit_writer_slice_header (const GstH265SliceHdr * slice,
   WRITE_UE_MAX (bw, slice->pps->id, GST_H265_MAX_PPS_COUNT - 1);
 
   if (!slice->first_slice_segment_in_pic_flag) {
-    const guint n =
-        ceil_log2 (slice->pps->PicWidthInCtbsY * slice->pps->PicHeightInCtbsY);
+    guint32 PicSizeInCtbsY;
+    guint32 PicWidthInCtbsY;
+    guint32 PicHeightInCtbsY;
+    guint32 CtbSizeY, MinCbLog2SizeY, CtbLog2SizeY;
+    guint n;
+
+    /* We can not directly use slice->pps->PicWidthInCtbsY/PicHeightInCtbsY,
+       they are calculated value when parsing but may not have value here. */
+    MinCbLog2SizeY = sps->log2_min_luma_coding_block_size_minus3 + 3;
+    CtbLog2SizeY =
+        MinCbLog2SizeY + sps->log2_diff_max_min_luma_coding_block_size;
+    CtbSizeY = 1 << CtbLog2SizeY;
+    PicHeightInCtbsY =
+        ceil ((gdouble) sps->pic_height_in_luma_samples / (gdouble) CtbSizeY);
+    PicWidthInCtbsY =
+        ceil ((gdouble) sps->pic_width_in_luma_samples / (gdouble) CtbSizeY);
+    PicSizeInCtbsY = PicWidthInCtbsY * PicHeightInCtbsY;
+
+    n = ceil_log2 (PicSizeInCtbsY);
 
     if (slice->pps->dependent_slice_segments_enabled_flag)
       WRITE_BITS (bw, slice->dependent_slice_segment_flag, 1);
