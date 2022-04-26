@@ -732,15 +732,18 @@ gst_rtp_onvif_timestamp_chain (GstPad * pad, GstObject * parent,
   return result;
 }
 
+static gboolean
+do_handle_buffer (GstBuffer ** buffer, guint idx, GstRtpOnvifTimestamp * self)
+{
+  return handle_buffer (self, *buffer);
+}
+
 /* @buf: (transfer full) */
 static GstFlowReturn
 handle_and_push_buffer_list (GstRtpOnvifTimestamp * self, GstBufferList * list)
 {
-  GstBuffer *buf;
-
-  /* Set the extension on the *first* buffer */
-  buf = gst_buffer_list_get (list, 0);
-  if (!handle_buffer (self, buf)) {
+  if (!gst_buffer_list_foreach (list, (GstBufferListFunc) do_handle_buffer,
+          self)) {
     gst_buffer_list_unref (list);
     return GST_FLOW_ERROR;
   }
