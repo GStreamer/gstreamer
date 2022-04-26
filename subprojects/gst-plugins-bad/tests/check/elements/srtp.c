@@ -51,7 +51,7 @@ GST_END_TEST;
 static void
 check_play (const gchar * encode_key, const gchar * decode_key,
     guint buffer_count, guint expected_recv_count,
-    guint expected_recv_drop_count)
+    guint expected_recv_drop_count, guint port)
 {
   GstElement *source_pipeline, *sink_pipeline;
   GstBus *source_bus;
@@ -60,7 +60,6 @@ check_play (const gchar * encode_key, const gchar * decode_key,
   guint recv_count = 0;
   guint drop_count = 0;
   GstElement *srtp_dec;
-  guint port = 5004;
 
   gchar *source_pipeline_desc = g_strdup_printf ("audiotestsrc num-buffers=%d \
         ! alawenc ! rtppcmapay ! application/x-rtp, payload=(int)8, ssrc=(uint)1356955624 \
@@ -91,15 +90,15 @@ check_play (const gchar * encode_key, const gchar * decode_key,
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
-  // Wait 1s that all the buffers reached the sink pipeline entirely
-  g_usleep (G_USEC_PER_SEC * 1);
+  // Wait 3s that all the buffers reached the sink pipeline entirely
+  g_usleep (G_USEC_PER_SEC * 3);
 
   srtp_dec = gst_bin_get_by_name (GST_BIN (sink_pipeline), "dec");
   g_object_get (srtp_dec, "stats", &stats, NULL);
   gst_structure_get_uint (stats, "recv-count", &recv_count);
-  fail_unless (recv_count <= expected_recv_count);
+  fail_unless (recv_count == expected_recv_count);
   gst_structure_get_uint (stats, "recv-drop-count", &drop_count);
-  fail_unless (drop_count <= expected_recv_drop_count);
+  fail_unless (drop_count == expected_recv_drop_count);
   gst_object_unref (srtp_dec);
   gst_structure_free (stats);
   gst_object_unref (source_bus);
@@ -115,7 +114,7 @@ GST_START_TEST (test_play)
 {
   check_play ("012345678901234567890123456789012345678901234567890123456789",
       "012345678901234567890123456789012345678901234567890123456789", 50, 50,
-      0);
+      0, 5064);
 }
 
 GST_END_TEST;
@@ -124,7 +123,7 @@ GST_START_TEST (test_play_key_error)
 {
   check_play ("012345678901234567890123456789012345678901234567890123456789",
       "000000000000000000000000000000000000000000000000000000000000", 50, 50,
-      50);
+      50, 5074);
 }
 
 GST_END_TEST;
