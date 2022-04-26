@@ -1,19 +1,16 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;
 
-# Download gst-build and all its subprojects
-# git clone -b $env:DEFAULT_BRANCH https://gitlab.freedesktop.org/gstreamer/gst-build.git C:\gst-build
-# FIXME: need 1.19+ for cairo subproject :/
-# Should use a stable branch instead
-git clone -b master --depth 1 https://gitlab.freedesktop.org/gstreamer/gst-build.git C:\gst-build
+# Download gstreamer and all its subprojects
+git clone -b $env:DEFAULT_BRANCH --depth 1 https://gitlab.freedesktop.org/gstreamer/gstreamer.git C:\gstreamer
 if (!$?) {
-  Write-Host "Failed to clone gst-build"
+  Write-Host "Failed to clone gstreamer"
   Exit 1
 }
 
-Set-Location C:\gst-build
+Set-Location C:\gstreamer
 
 # Copy the cache we already have in the image to avoid massive redownloads
-Move-Item C:/subprojects/*  C:\gst-build\subprojects
+Move-Item C:/subprojects/*  C:\gstreamer\subprojects
 
 if (!$?) {
   Write-Host "Failed to copy subprojects cache"
@@ -26,14 +23,6 @@ meson subprojects update --reset
 
 if (!$?) {
   Write-Host "Failed to reset subprojects state"
-  Exit 1
-}
-
-Write-Output "Running git update"
-python git-update --no-interaction
-
-if (!$?) {
-  Write-Host "Failed to run git-update"
   Exit 1
 }
 
