@@ -643,7 +643,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
             } else if (type & GST_STREAM_TYPE_TEXT) {
               play->cur_text_sid = g_strdup (stream_id);
             } else {
-              gst_print ("Unknown stream type with stream-id %s", stream_id);
+              gst_print ("Unknown stream type with stream-id %s\n", stream_id);
             }
             gst_object_unref (stream);
           }
