@@ -274,7 +274,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
           cudaVideoCodec_VP9, &info, self->width, self->height,
           frame_hdr->bit_depth,
           /* +4 for render delay */
-          NUM_OUTPUT_VIEW)) {
+          NUM_OUTPUT_VIEW + 4)) {
     GST_ERROR_OBJECT (self, "Failed to configure decoder");
     return GST_FLOW_NOT_NEGOTIATED;
   }
