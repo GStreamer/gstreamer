@@ -201,7 +201,7 @@ plugin_init (GstPlugin * plugin)
   if (decoders) {
     gst_vaapidecode_register (plugin, decoders);
     gst_element_register (plugin, "vaapidecodebin",
-        GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
+        GST_RANK_NONE, GST_TYPE_VAAPI_DECODE_BIN);
     g_array_unref (decoders);
   }
 
@@ -212,9 +212,7 @@ plugin_init (GstPlugin * plugin)
         GST_RANK_NONE, GST_TYPE_VAAPIPOSTPROC);
   }
 
-  rank = GST_RANK_SECONDARY;
-  if (g_getenv ("WAYLAND_DISPLAY"))
-    rank = GST_RANK_MARGINAL;
+  rank = GST_RANK_NONE;
   gst_element_register (plugin, "vaapisink", rank, GST_TYPE_VAAPISINK);
 
 #if GST_VAAPI_USE_ENCODERS

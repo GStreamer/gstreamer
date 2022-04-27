@@ -96,21 +96,21 @@ struct _GstVaapiDecoderMap
 };
 
 static const GstVaapiDecoderMap vaapi_decode_map[] = {
-  {GST_VAAPI_CODEC_JPEG, GST_RANK_MARGINAL, "jpeg", "image/jpeg", NULL},
-  {GST_VAAPI_CODEC_MPEG2, GST_RANK_PRIMARY, "mpeg2",
+  {GST_VAAPI_CODEC_JPEG, GST_RANK_NONE, "jpeg", "image/jpeg", NULL},
+  {GST_VAAPI_CODEC_MPEG2, GST_RANK_NONE, "mpeg2",
       "video/mpeg, mpegversion=2, systemstream=(boolean)false", NULL},
-  {GST_VAAPI_CODEC_MPEG4, GST_RANK_PRIMARY, "mpeg4",
+  {GST_VAAPI_CODEC_MPEG4, GST_RANK_NONE, "mpeg4",
       "video/mpeg, mpegversion=4", NULL},
-  {GST_VAAPI_CODEC_H263, GST_RANK_PRIMARY, "h263", "video/x-h263", NULL},
-  {GST_VAAPI_CODEC_H264, GST_RANK_PRIMARY, "h264", "video/x-h264",
+  {GST_VAAPI_CODEC_H263, GST_RANK_NONE, "h263", "video/x-h263", NULL},
+  {GST_VAAPI_CODEC_H264, GST_RANK_NONE, "h264", "video/x-h264",
       gst_vaapi_decode_h264_install_properties},
-  {GST_VAAPI_CODEC_VC1, GST_RANK_PRIMARY, "vc1",
+  {GST_VAAPI_CODEC_VC1, GST_RANK_NONE, "vc1",
       "video/x-wmv, wmvversion=3, format={WMV3,WVC1}", NULL},
-  {GST_VAAPI_CODEC_VP8, GST_RANK_PRIMARY, "vp8", "video/x-vp8", NULL},
-  {GST_VAAPI_CODEC_VP9, GST_RANK_PRIMARY, "vp9", "video/x-vp9", NULL},
-  {GST_VAAPI_CODEC_H265, GST_RANK_PRIMARY, "h265", "video/x-h265", NULL},
-  {GST_VAAPI_CODEC_AV1, GST_RANK_PRIMARY, "av1", "video/x-av1", NULL},
-  {0 /* the rest */ , GST_RANK_PRIMARY + 1, NULL, NULL, NULL},
+  {GST_VAAPI_CODEC_VP8, GST_RANK_NONE, "vp8", "video/x-vp8", NULL},
+  {GST_VAAPI_CODEC_VP9, GST_RANK_NONE, "vp9", "video/x-vp9", NULL},
+  {GST_VAAPI_CODEC_H265, GST_RANK_NONE, "h265", "video/x-h265", NULL},
+  {GST_VAAPI_CODEC_AV1, GST_RANK_NONE, "av1", "video/x-av1", NULL},
+  {0 /* the rest */ , GST_RANK_NONE, NULL, NULL, NULL},
 };
 
 static GstElementClass *parent_class = NULL;
