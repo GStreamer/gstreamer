@@ -183,7 +183,8 @@ plugin_init (GstPlugin * plugin)
       gst_d3d11_h264_dec_register (plugin,
           device, GST_RANK_PRIMARY + 1, legacy);
       if (!legacy) {
-        gst_d3d11_h265_dec_register (plugin, device, GST_RANK_PRIMARY);
+        /* avdec_h265 has primary rank, make this higher than it */
+        gst_d3d11_h265_dec_register (plugin, device, GST_RANK_PRIMARY + 1);
         gst_d3d11_vp9_dec_register (plugin, device, GST_RANK_PRIMARY);
         gst_d3d11_vp8_dec_register (plugin, device, GST_RANK_PRIMARY);
         gst_d3d11_av1_dec_register (plugin, device, GST_RANK_PRIMARY);
