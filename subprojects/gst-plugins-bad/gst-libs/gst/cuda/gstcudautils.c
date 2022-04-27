@@ -172,7 +172,7 @@ context_set_cuda_context (GstContext * context, GstCudaContext * cuda_ctx)
 
   s = gst_context_writable_structure (context);
   gst_structure_set (s, GST_CUDA_CONTEXT_TYPE, GST_TYPE_CUDA_CONTEXT,
-      cuda_ctx, "cuda-device-id", G_TYPE_INT, device_id, NULL);
+      cuda_ctx, "cuda-device-id", G_TYPE_UINT, device_id, NULL);
 }
 
 /**
