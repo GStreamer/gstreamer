@@ -2871,12 +2871,6 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
   return ret;
 }
 
-/* mime types we are not handling on purpose right now, don't post a
- * missing-plugin message for these */
-static const gchar *blacklisted_mimes[] = {
-  NULL
-};
-
 static void
 gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
 {
@@ -2884,21 +2878,7 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
   GstSourceGroup *group;
   gboolean do_reset_time = FALSE;
 
-  if (gst_is_missing_plugin_message (msg)) {
-    gchar *detail;
-    guint i;
-
-    detail = gst_missing_plugin_message_get_installer_detail (msg);
-    for (i = 0; detail != NULL && blacklisted_mimes[i] != NULL; ++i) {
-      if (strstr (detail, "|decoder-") && strstr (detail, blacklisted_mimes[i])) {
-        GST_LOG_OBJECT (bin, "suppressing message %" GST_PTR_FORMAT, msg);
-        gst_message_unref (msg);
-        g_free (detail);
-        return;
-      }
-    }
-    g_free (detail);
-  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_START ||
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_START ||
       GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
     GstObject *src = GST_OBJECT_CAST (msg->src);
 
