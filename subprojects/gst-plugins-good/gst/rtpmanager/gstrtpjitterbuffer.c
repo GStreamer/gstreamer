@@ -4700,7 +4700,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
   guint32 rtptime;
   GstRTCPBuffer rtcp = { NULL, };
   gchar *cname = NULL;
-  gboolean have_sr, have_sdes;
+  gboolean have_sr = FALSE, have_sdes = FALSE;
   gboolean more;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
