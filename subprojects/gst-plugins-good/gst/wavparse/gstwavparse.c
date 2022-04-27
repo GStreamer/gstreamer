@@ -2158,6 +2158,8 @@ iterate_adapter:
     GST_DEBUG_OBJECT (wav, "marking DISCONT");
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     wav->discont = FALSE;
+  } else {
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
