@@ -66,12 +66,17 @@ struct _GstAV1Tile
  */
 struct _GstAV1Picture
 {
+  /*< private >*/
   GstMiniObject parent;
 
   /* From GstVideoCodecFrame */
   guint32 system_frame_number;
 
   GstAV1FrameHeaderOBU frame_hdr;
+
+  /* from OBU header */
+  guint8 temporal_id;
+  guint8 spatial_id;
 
   /* copied from parser */
   guint32 display_frame_id;

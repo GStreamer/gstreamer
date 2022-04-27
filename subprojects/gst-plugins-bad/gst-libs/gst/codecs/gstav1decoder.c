@@ -323,7 +323,7 @@ gst_av1_decoder_decode_tile_group (GstAV1Decoder * self,
 
 static GstFlowReturn
 gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
-    GstAV1FrameHeaderOBU * frame_header)
+    GstAV1OBU * obu, GstAV1FrameHeaderOBU * frame_header)
 {
   GstAV1DecoderPrivate *priv = self->priv;
   GstAV1DecoderClass *klass = GST_AV1_DECODER_GET_CLASS (self);
@@ -367,6 +367,8 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
     picture->showable_frame = frame_header->showable_frame;
     picture->apply_grain = frame_header->film_grain_params.apply_grain;
     picture->system_frame_number = priv->current_frame->system_frame_number;
+    picture->temporal_id = obu->header.obu_temporal_id;
+    picture->spatial_id = obu->header.obu_spatial_id;
 
     if (!frame_header->show_frame && !frame_header->showable_frame)
       GST_VIDEO_CODEC_FRAME_FLAG_SET (priv->current_frame,
@@ -409,7 +411,7 @@ gst_av1_decoder_process_frame_header (GstAV1Decoder * self, GstAV1OBU * obu)
     return GST_FLOW_ERROR;
   }
 
-  return gst_av1_decoder_decode_frame_header (self, &frame_header);
+  return gst_av1_decoder_decode_frame_header (self, obu, &frame_header);
 }
 
 static GstFlowReturn
@@ -442,7 +444,7 @@ gst_av1_decoder_process_frame (GstAV1Decoder * self, GstAV1OBU * obu)
     return GST_FLOW_ERROR;
   }
 
-  ret = gst_av1_decoder_decode_frame_header (self, &frame.frame_header);
+  ret = gst_av1_decoder_decode_frame_header (self, obu, &frame.frame_header);
   if (ret != GST_FLOW_OK)
     return ret;
 
