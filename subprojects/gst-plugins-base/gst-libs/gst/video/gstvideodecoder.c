@@ -1492,6 +1492,7 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
          */
         forward_immediate = TRUE;
       } else {
+        GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
         gst_clear_event (&event);
       }
       break;
