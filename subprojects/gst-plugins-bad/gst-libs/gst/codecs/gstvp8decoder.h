@@ -89,7 +89,8 @@ struct _GstVp8DecoderClass
   GstVideoDecoderClass parent_class;
 
   GstFlowReturn   (*new_sequence)      (GstVp8Decoder * decoder,
-                                        const GstVp8FrameHdr * frame_hdr);
+                                        const GstVp8FrameHdr * frame_hdr,
+                                        gint max_dpb_size);
 
   /**
    * GstVp8DecoderClass:new_picture:

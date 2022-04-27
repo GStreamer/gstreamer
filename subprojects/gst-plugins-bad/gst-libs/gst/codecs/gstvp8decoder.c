@@ -178,14 +178,18 @@ gst_vp8_decoder_check_codec_change (GstVp8Decoder * self,
 
     priv->had_sequence = TRUE;
 
-    if (klass->get_preferred_output_delay)
+    if (klass->get_preferred_output_delay) {
       priv->preferred_output_delay =
           klass->get_preferred_output_delay (self, priv->is_live);
-    else
+    } else {
       priv->preferred_output_delay = 0;
+    }
 
-    if (klass->new_sequence)
-      ret = klass->new_sequence (self, frame_hdr);
+    g_assert (klass->new_sequence);
+
+    ret = klass->new_sequence (self, frame_hdr,
+        /* last/golden/alt 3 pictures */
+        3 + priv->preferred_output_delay);
   }
 
   return ret;

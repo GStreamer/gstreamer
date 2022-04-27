@@ -145,7 +145,7 @@ _get_profile (GstVaVp9Dec * self, GstVP9Profile profile)
 
 static GstFlowReturn
 gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9FrameHeader * frame_hdr)
+    const GstVp9FrameHeader * frame_hdr, gint max_dpb_size)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);

@@ -67,6 +67,10 @@ struct _GstVp9DecoderClass
 
   /**
    * GstVp9DecoderClass::new_sequence:
+   * @decoder: a #GstVp9Decoder
+   * @frame_hdr: a #GstVp9FrameHeader
+   * @max_dpb_size: the size of dpb including preferred output delay
+   *   by subclass reported via get_preferred_output_delay method.
    *
    * Notifies subclass of video sequence update such as resolution, bitdepth,
    * profile.
@@ -74,7 +78,8 @@ struct _GstVp9DecoderClass
    * Since: 1.18
    */
   GstFlowReturn   (*new_sequence)      (GstVp9Decoder * decoder,
-                                        const GstVp9FrameHeader *frame_hdr);
+                                        const GstVp9FrameHeader *frame_hdr,
+                                        gint max_dpb_size);
 
   /**
    * GstVp9DecoderClass::new_picture:

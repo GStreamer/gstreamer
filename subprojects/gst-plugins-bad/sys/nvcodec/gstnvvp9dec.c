@@ -75,7 +75,7 @@ static gboolean gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder,
 
 /* GstVp9Decoder */
 static GstFlowReturn gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9FrameHeader * frame_hdr);
+    const GstVp9FrameHeader * frame_hdr, gint max_dpb_size);
 static GstFlowReturn gst_nv_vp9_dec_new_picture (GstVp9Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp9Picture * picture);
 static GstVp9Picture *gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder *
@@ -242,7 +242,7 @@ gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
 static GstFlowReturn
 gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9FrameHeader * frame_hdr)
+    const GstVp9FrameHeader * frame_hdr, gint max_dpb_size)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
   GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;

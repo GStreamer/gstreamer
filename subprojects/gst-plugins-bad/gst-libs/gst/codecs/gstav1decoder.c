@@ -273,7 +273,8 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
       priv->max_width, priv->max_height, seq_header.max_frame_width_minus_1 + 1,
       seq_header.max_frame_height_minus_1 + 1);
 
-  ret = klass->new_sequence (self, &seq_header);
+  /* TODO: Implement render delay */
+  ret = klass->new_sequence (self, &seq_header, GST_AV1_TOTAL_REFS_PER_FRAME);
   if (ret != GST_FLOW_OK) {
     GST_ERROR_OBJECT (self, "subclass does not want accept new sequence");
     return ret;

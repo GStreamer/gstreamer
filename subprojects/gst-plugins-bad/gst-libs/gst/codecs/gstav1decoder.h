@@ -70,13 +70,16 @@ struct _GstAV1DecoderClass
    * GstAV1DecoderClass::new_sequence:
    * @decoder: a #GstAV1Decoder
    * @seq_hdr: a #GstAV1SequenceHeaderOBU
+   * @max_dpb_size: the size of dpb including preferred output delay
+   *   by subclass reported via get_preferred_output_delay method.
    *
    * Notifies subclass of SPS update
    *
    * Since: 1.20
    */
   GstFlowReturn   (*new_sequence)      (GstAV1Decoder * decoder,
-                                        const GstAV1SequenceHeaderOBU * seq_hdr);
+                                        const GstAV1SequenceHeaderOBU * seq_hdr,
+                                        gint max_dpb_size);
   /**
    * GstAV1DecoderClass::new_picture:
    * @decoder: a #GstAV1Decoder

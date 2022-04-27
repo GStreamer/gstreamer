@@ -120,7 +120,8 @@ static GstFlowReturn gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder *
     decoder, const GstMpegVideoSequenceHdr * seq,
     const GstMpegVideoSequenceExt * seq_ext,
     const GstMpegVideoSequenceDisplayExt * seq_display_ext,
-    const GstMpegVideoSequenceScalableExt * seq_scalable_ext);
+    const GstMpegVideoSequenceScalableExt * seq_scalable_ext,
+    gint max_dpb_size);
 static GstFlowReturn gst_d3d11_mpeg2_dec_new_picture (GstMpeg2Decoder * decoder,
     GstVideoCodecFrame * frame, GstMpeg2Picture * picture);
 static GstFlowReturn
@@ -332,7 +333,7 @@ gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
     const GstMpegVideoSequenceHdr * seq,
     const GstMpegVideoSequenceExt * seq_ext,
     const GstMpegVideoSequenceDisplayExt * seq_display_ext,
-    const GstMpegVideoSequenceScalableExt * seq_scalable_ext)
+    const GstMpegVideoSequenceScalableExt * seq_scalable_ext, gint max_dpb_size)
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstD3D11Mpeg2DecInner *inner = self->inner;

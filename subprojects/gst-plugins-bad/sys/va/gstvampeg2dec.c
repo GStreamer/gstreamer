@@ -220,7 +220,7 @@ gst_va_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
     const GstMpegVideoSequenceHdr * seq,
     const GstMpegVideoSequenceExt * seq_ext,
     const GstMpegVideoSequenceDisplayExt * seq_display_ext,
-    const GstMpegVideoSequenceScalableExt * seq_scalable_ext)
+    const GstMpegVideoSequenceScalableExt * seq_scalable_ext, gint max_dpb_size)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaMpeg2Dec *self = GST_VA_MPEG2_DEC (decoder);

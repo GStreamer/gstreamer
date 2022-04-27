@@ -450,7 +450,7 @@ gst_v4l2_codec_vp8_dec_fill_references (GstV4l2CodecVp8Dec * self)
 
 static GstFlowReturn
 gst_v4l2_codec_vp8_dec_new_sequence (GstVp8Decoder * decoder,
-    const GstVp8FrameHdr * frame_hdr)
+    const GstVp8FrameHdr * frame_hdr, gint max_dpb_size)
 {
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
   gboolean negotiation_needed = FALSE;

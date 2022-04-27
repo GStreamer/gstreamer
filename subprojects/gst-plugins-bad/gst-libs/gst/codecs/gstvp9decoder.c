@@ -216,6 +216,8 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
   GstVp9DecoderClass *klass = GST_VP9_DECODER_GET_CLASS (self);
   GstFlowReturn ret = GST_FLOW_OK;
 
+  g_assert (klass->new_sequence);
+
   if (priv->had_sequence && !gst_vp9_decoder_is_format_change (self, frame_hdr)) {
     return GST_FLOW_OK;
   }
@@ -243,8 +245,8 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
     priv->preferred_output_delay = 0;
   }
 
-  if (klass->new_sequence)
-    ret = klass->new_sequence (self, frame_hdr);
+  ret = klass->new_sequence (self, frame_hdr,
+      GST_VP9_REF_FRAMES + priv->preferred_output_delay);
 
   if (ret != GST_FLOW_OK)
     priv->had_sequence = FALSE;

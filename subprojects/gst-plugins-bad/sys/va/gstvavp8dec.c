@@ -143,7 +143,7 @@ _get_profile (GstVaVp8Dec * self, const GstVp8FrameHdr * frame_hdr)
 
 static GstFlowReturn
 gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
-    const GstVp8FrameHdr * frame_hdr)
+    const GstVp8FrameHdr * frame_hdr, gint max_dpb_size)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp8Dec *self = GST_VA_VP8_DEC (decoder);

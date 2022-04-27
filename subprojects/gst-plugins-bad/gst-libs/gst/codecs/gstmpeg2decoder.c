@@ -741,6 +741,8 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
   GstMpegVideoPictureHdr pic_hdr = { 0, };
   GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
 
+  g_assert (klass->new_sequence);
+
   if (!_is_valid_state (decoder, GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS)) {
     GST_ERROR_OBJECT (decoder, "no sequence before parsing picture header");
     return GST_FLOW_ERROR;
@@ -767,24 +769,27 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
       priv->need_to_drain = FALSE;
     }
 
-    if (klass->get_preferred_output_delay)
+    if (klass->get_preferred_output_delay) {
       priv->preferred_output_delay =
           klass->get_preferred_output_delay (decoder, priv->is_live);
+    } else {
+      priv->preferred_output_delay = 0;
+    }
 
     priv->seq_changed = FALSE;
 
-    if (klass->new_sequence) {
-      ret = klass->new_sequence (decoder, &priv->seq_hdr,
-          _seq_ext_is_valid (&priv->seq_ext) ? &priv->seq_ext : NULL,
-          _seq_display_ext_is_valid (&priv->seq_display_ext) ?
-          &priv->seq_display_ext : NULL,
-          _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
-          &priv->seq_scalable_ext : NULL);
+    ret = klass->new_sequence (decoder, &priv->seq_hdr,
+        _seq_ext_is_valid (&priv->seq_ext) ? &priv->seq_ext : NULL,
+        _seq_display_ext_is_valid (&priv->seq_display_ext) ?
+        &priv->seq_display_ext : NULL,
+        _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
+        &priv->seq_scalable_ext : NULL,
+        /* previous/next 2 pictures */
+        2 + priv->preferred_output_delay);
 
-      if (ret != GST_FLOW_OK) {
-        GST_WARNING_OBJECT (decoder, "new sequence error");
-        return ret;
-      }
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (decoder, "new sequence error");
+      return ret;
     }
   }
 

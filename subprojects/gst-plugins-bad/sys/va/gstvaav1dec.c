@@ -247,7 +247,7 @@ gst_va_av1_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
 
 static GstFlowReturn
 gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
-    const GstAV1SequenceHeaderOBU * seq_hdr)
+    const GstAV1SequenceHeaderOBU * seq_hdr, gint max_dpb_size)
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);

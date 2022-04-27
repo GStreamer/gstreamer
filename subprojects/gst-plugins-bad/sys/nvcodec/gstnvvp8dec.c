@@ -74,7 +74,7 @@ static gboolean gst_nv_vp8_dec_src_query (GstVideoDecoder * decoder,
 
 /* GstVp8Decoder */
 static GstFlowReturn gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
-    const GstVp8FrameHdr * frame_hdr);
+    const GstVp8FrameHdr * frame_hdr, gint max_dpb_size);
 static GstFlowReturn gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp8Picture * picture);
 static GstFlowReturn gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
@@ -232,7 +232,7 @@ gst_nv_vp8_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 
 static GstFlowReturn
 gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
-    const GstVp8FrameHdr * frame_hdr)
+    const GstVp8FrameHdr * frame_hdr, gint max_dpb_size)
 {
   GstNvVp8Dec *self = GST_NV_VP8_DEC (decoder);
   gboolean modified = FALSE;

@@ -580,7 +580,7 @@ gst_v4l2_codec_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
 
 static GstFlowReturn
 gst_v4l2_codec_vp9_dec_new_sequence (GstVp9Decoder * decoder,
-    const GstVp9FrameHeader * frame_hdr)
+    const GstVp9FrameHeader * frame_hdr, gint max_dpb_size)
 {
   GstV4l2CodecVp9Dec *self = GST_V4L2_CODEC_VP9_DEC (decoder);
   gboolean negotiation_needed = FALSE;

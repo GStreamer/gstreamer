@@ -73,6 +73,8 @@ struct _GstMpeg2DecoderClass
    * @decoder: a #GstMpeg2Decoder
    * @seq: a #GstMpegVideoSequenceHdr
    * @seq_ext: a #GstMpegVideoSequenceExt
+   * @max_dpb_size: the size of dpb including preferred output delay
+   *   by subclass reported via get_preferred_output_delay method.
    *
    * Notifies subclass of SPS update
    *
@@ -82,7 +84,8 @@ struct _GstMpeg2DecoderClass
                                      const GstMpegVideoSequenceHdr * seq,
                                      const GstMpegVideoSequenceExt * seq_ext,
                                      const GstMpegVideoSequenceDisplayExt * seq_display_ext,
-                                     const GstMpegVideoSequenceScalableExt * seq_scalable_ext);
+                                     const GstMpegVideoSequenceScalableExt * seq_scalable_ext,
+                                     gint max_dpb_size);
 
   /**
    * GstMpeg2DecoderClass::new_picture:

@@ -111,7 +111,7 @@ static gboolean gst_d3d11_vp8_sink_event (GstVideoDecoder * decoder,
 
 /* GstVp8Decoder */
 static GstFlowReturn gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
-    const GstVp8FrameHdr * frame_hdr);
+    const GstVp8FrameHdr * frame_hdr, gint max_dpb_size);
 static GstFlowReturn gst_d3d11_vp8_dec_new_picture (GstVp8Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp8Picture * picture);
 static GstFlowReturn gst_d3d11_vp8_dec_start_picture (GstVp8Decoder * decoder,
@@ -313,7 +313,7 @@ gst_d3d11_vp8_sink_event (GstVideoDecoder * decoder, GstEvent * event)
 
 static GstFlowReturn
 gst_d3d11_vp8_dec_new_sequence (GstVp8Decoder * decoder,
-    const GstVp8FrameHdr * frame_hdr)
+    const GstVp8FrameHdr * frame_hdr, gint max_dpb_size)
 {
   GstD3D11Vp8Dec *self = GST_D3D11_VP8_DEC (decoder);
   GstD3D11Vp8DecInner *inner = self->inner;
