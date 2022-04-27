@@ -1190,6 +1190,12 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     return TRUE;
   }
 
+  /* Don't attempt to handle pmt without any streams */
+  if (G_UNLIKELY (pmt->streams->len == 0)) {
+    GST_WARNING ("Skipping PMT without any entries");
+    return TRUE;
+  }
+
   program_number = section->subtable_extension;
   GST_DEBUG ("Applying PMT (program_number:%d, pid:0x%04x)",
       program_number, section->pid);
