@@ -3194,7 +3194,6 @@ gst_v4l2_object_reset_compose_region (GstV4l2Object * obj)
   struct v4l2_selection sel = { 0 };
 
   GST_V4L2_CHECK_OPEN (obj);
-  GST_V4L2_CHECK_NOT_ACTIVE (obj);
 
   sel.type = obj->type;
   sel.target = V4L2_SEL_TGT_COMPOSE_DEFAULT;
@@ -4357,7 +4356,6 @@ gst_v4l2_object_set_crop (GstV4l2Object * obj, struct v4l2_rect * crop_rect)
   struct v4l2_crop crop = { 0 };
 
   GST_V4L2_CHECK_OPEN (obj);
-  GST_V4L2_CHECK_NOT_ACTIVE (obj);
 
   sel.type = obj->type;
   sel.target = V4L2_SEL_TGT_CROP;

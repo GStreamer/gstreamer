@@ -342,6 +342,9 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
     return FALSE;
   }
 
+  /* best effort */
+  gst_v4l2_object_setup_padding (self->v4l2output);
+
   self->input_state = gst_video_codec_state_ref (state);
 
   GST_DEBUG_OBJECT (self, "output caps: %" GST_PTR_FORMAT, state->caps);
@@ -875,6 +878,9 @@ gst_v4l2_video_enc_decide_allocation (GstVideoEncoder *
     goto done;
   }
   gst_caps_unref (caps);
+
+  /* best effort */
+  gst_v4l2_object_setup_padding (self->v4l2capture);
 
   if (gst_v4l2_object_decide_allocation (self->v4l2capture, query)) {
     GstVideoEncoderClass *enc_class = GST_VIDEO_ENCODER_CLASS (parent_class);
