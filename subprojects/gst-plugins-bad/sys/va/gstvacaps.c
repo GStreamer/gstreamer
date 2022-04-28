@@ -88,6 +88,17 @@ bail:
   return NULL;
 }
 
+static inline void
+_value_list_append_string (GValue * list, const gchar * str)
+{
+  GValue item = G_VALUE_INIT;
+
+  g_value_init (&item, G_TYPE_STRING);
+  g_value_set_string (&item, str);
+  gst_value_list_append_value (list, &item);
+  g_value_unset (&item);
+}
+
 gboolean
 gst_caps_set_format_array (GstCaps * caps, GArray * formats)
 {
@@ -114,8 +125,6 @@ gst_caps_set_format_array (GstCaps * caps, GArray * formats)
     gst_value_list_init (&v_formats, formats->len);
 
     for (i = 0; i < formats->len; i++) {
-      GValue item = G_VALUE_INIT;
-
       fmt = g_array_index (formats, GstVideoFormat, i);
       if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
         continue;
@@ -123,10 +132,7 @@ gst_caps_set_format_array (GstCaps * caps, GArray * formats)
       if (!format)
         continue;
 
-      g_value_init (&item, G_TYPE_STRING);
-      g_value_set_string (&item, format);
-      gst_value_list_append_value (&v_formats, &item);
-      g_value_unset (&item);
+      _value_list_append_string (&v_formats, format);
     }
   } else {
     return FALSE;
@@ -258,6 +264,83 @@ gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
   return caps;
 }
 
+static void
+_add_jpeg_fields (GstCaps * caps, guint32 rt_formats)
+{
+  guint i;
+  GValue colorspace = G_VALUE_INIT, sampling = G_VALUE_INIT;
+  gboolean rgb, gray, yuv;
+
+  rgb = gray = yuv = FALSE;
+
+  gst_value_list_init (&colorspace, 3);
+  gst_value_list_init (&sampling, 3);
+
+  for (i = 0; rt_formats && i < G_N_ELEMENTS (va_rt_format_list); i++) {
+    if (rt_formats & va_rt_format_list[i]) {
+#define APPEND_YUV do { \
+        if (!yuv) { _value_list_append_string (&colorspace, "sYUV"); yuv = TRUE; } \
+      } while (0)
+
+      switch (va_rt_format_list[i]) {
+        case VA_RT_FORMAT_YUV420:
+          APPEND_YUV;
+          _value_list_append_string (&sampling, "YCbCr-4:2:0");
+          break;
+        case VA_RT_FORMAT_YUV422:
+          APPEND_YUV;
+          _value_list_append_string (&sampling, "YCbCr-4:2:2");
+          break;
+        case VA_RT_FORMAT_YUV444:
+          APPEND_YUV;
+          _value_list_append_string (&sampling, "YCbCr-4:4:4");
+          break;
+        case VA_RT_FORMAT_YUV411:
+          APPEND_YUV;
+          _value_list_append_string (&sampling, "YCbCr-4:1:1");
+          break;
+        case VA_RT_FORMAT_YUV400:
+          if (!gray) {
+            _value_list_append_string (&colorspace, "GRAY");
+            _value_list_append_string (&sampling, "GRAYSCALE");
+            gray = TRUE;
+          }
+          break;
+        case VA_RT_FORMAT_RGBP:
+        case VA_RT_FORMAT_RGB16:
+        case VA_RT_FORMAT_RGB32:
+          if (!rgb) {
+            _value_list_append_string (&colorspace, "sRGB");
+            _value_list_append_string (&sampling, "RGB");
+            _value_list_append_string (&sampling, "BGR");
+            rgb = TRUE;
+          }
+          break;
+        default:
+          break;
+      }
+#undef APPEND_YUV
+    }
+  }
+
+  if (gst_value_list_get_size (&colorspace) == 1) {
+    gst_caps_set_value (caps, "colorspace",
+        gst_value_list_get_value (&colorspace, 0));
+  } else {
+    gst_caps_set_value (caps, "colorspace", &colorspace);
+  }
+
+  if (gst_value_list_get_size (&sampling) == 1) {
+    gst_caps_set_value (caps, "sampling",
+        gst_value_list_get_value (&sampling, 0));
+  } else {
+    gst_caps_set_value (caps, "sampling", &sampling);
+  }
+
+  g_value_unset (&colorspace);
+  g_value_unset (&sampling);
+}
+
 GstCaps *
 gst_va_create_coded_caps (GstVaDisplay * display, VAProfile profile,
     VAEntrypoint entrypoint, guint32 * rt_formats_ptr)
@@ -312,6 +395,9 @@ gst_va_create_coded_caps (GstVaDisplay * display, VAProfile profile,
   caps = gst_va_profile_caps (profile);
   if (!caps)
     return NULL;
+
+  if (rt_formats > 0 && gst_va_profile_codec (profile) == JPEG)
+    _add_jpeg_fields (caps, rt_formats);
 
   if (max_width == -1 || max_height == -1)
     return caps;
