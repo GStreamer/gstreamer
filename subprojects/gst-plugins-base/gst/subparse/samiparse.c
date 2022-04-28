@@ -494,6 +494,10 @@ html_context_handle_element (HtmlContext * ctxt,
     gchar *attr_name = NULL, *attr_value = NULL;
     gsize length;
     next = string_token (next + 1, "=", &attr_name);
+    if (!next) {
+      g_free (attr_name);
+      break;
+    }
     next = string_token (next + 1, " ", &attr_value);
 
     /* strip " or ' from attribute value */
