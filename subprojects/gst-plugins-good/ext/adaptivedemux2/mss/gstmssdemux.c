@@ -369,14 +369,28 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
     GstStreamType stream_type =
         gst_stream_type_from_mss_type (gst_mss_stream_get_type
         (manifeststream));
-    const gchar *lang, *stream_id = gst_stream_type_get_name (stream_type);
-    gchar *name;
+    const gchar *lang = gst_mss_stream_get_lang (manifeststream);
+    const gchar *name = gst_mss_stream_get_name (manifeststream);
+    gchar *stream_id;
     GstCaps *caps;
     GstTagList *tags = NULL;
 
-    name = g_strdup_printf ("mss-stream-%s", stream_id);
-    mss_stream = g_object_new (GST_TYPE_MSS_DEMUX_STREAM, "name", name, NULL);
-    g_free (name);
+    if (name)
+      stream_id =
+          g_strdup_printf ("mss-stream-%s-%s",
+          gst_stream_type_get_name (stream_type),
+          gst_mss_stream_get_name (manifeststream));
+    else if (lang)
+      stream_id =
+          g_strdup_printf ("mss-stream-%s-%s",
+          gst_stream_type_get_name (stream_type), lang);
+    else
+      stream_id =
+          g_strdup_printf ("mss-stream-%s",
+          gst_stream_type_get_name (stream_type));
+
+    mss_stream =
+        g_object_new (GST_TYPE_MSS_DEMUX_STREAM, "name", stream_id, NULL);
 
     stream = GST_ADAPTIVE_DEMUX2_STREAM_CAST (mss_stream);
     stream->stream_type = stream_type;
@@ -391,7 +405,6 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
     caps = gst_mss_stream_get_caps (mss_stream->manifest_stream);
     gst_adaptive_demux2_stream_set_caps (stream, create_mss_caps (mss_stream,
             caps));
-    lang = gst_mss_stream_get_lang (mss_stream->manifest_stream);
     if (lang != NULL)
       tags = gst_tag_list_new (GST_TAG_LANGUAGE_CODE, lang, NULL);
 
@@ -399,6 +412,7 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
         GST_STREAM_FLAG_NONE, (gchar *) stream_id, create_mss_caps (mss_stream,
             caps), tags);
 
+    g_free (stream_id);
     gst_adaptive_demux2_add_stream (demux, stream);
     gst_adaptive_demux2_stream_add_track (stream, track);
     gst_adaptive_demux_track_unref (track);

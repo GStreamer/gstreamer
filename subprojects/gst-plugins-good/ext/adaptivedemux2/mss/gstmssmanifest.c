@@ -44,6 +44,7 @@ GST_DEBUG_CATEGORY_EXTERN (mssdemux2_debug);
 #define MSS_PROP_DURATION             "d"
 #define MSS_PROP_DVR_WINDOW_LENGTH    "DVRWindowLength"
 #define MSS_PROP_LANGUAGE             "Language"
+#define MSS_PROP_NAME                 "Name"
 #define MSS_PROP_NUMBER               "n"
 #define MSS_PROP_REPETITIONS          "r"
 #define MSS_PROP_STREAM_DURATION      "Duration"
@@ -84,6 +85,7 @@ struct _GstMssStream
 
   gchar *url;
   gchar *lang;
+  gchar *name;
 
   GstMssFragmentParser fragment_parser;
 
@@ -254,6 +256,7 @@ _gst_mss_stream_init (GstMssManifest * manifest, GstMssStream * stream,
   stream->xmlnode = node;
 
   /* get the base url path generator */
+  stream->name = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_NAME);
   stream->url = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_URL);
   stream->lang = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_LANGUAGE);
 
@@ -263,12 +266,14 @@ _gst_mss_stream_init (GstMssManifest * manifest, GstMssStream * stream,
    * of the manifest.
    */
 
+  GST_DEBUG ("lang '%s' url %s", stream->lang, stream->url);
   GST_DEBUG ("Live stream: %s, look-ahead fragments: %" G_GUINT64_FORMAT,
       manifest->is_live ? "yes" : "no", manifest->look_ahead_fragment_count);
   stream->has_live_fragments = manifest->is_live
       && manifest->look_ahead_fragment_count;
 
   for (iter = node->children; iter; iter = iter->next) {
+    GST_LOG ("Handling child '%s'", iter->name);
     if (node_has_type (iter, MSS_NODE_STREAM_FRAGMENT)) {
       gst_mss_fragment_list_builder_add (&builder, iter);
     } else if (node_has_type (iter, MSS_NODE_STREAM_QUALITY)) {
@@ -439,6 +444,7 @@ gst_mss_stream_free (GstMssStream * stream)
   g_list_free_full (stream->qualities,
       (GDestroyNotify) gst_mss_stream_quality_free);
   xmlFree (stream->url);
+  xmlFree (stream->name);
   xmlFree (stream->lang);
   g_regex_unref (stream->regex_position);
   g_regex_unref (stream->regex_bitrate);
@@ -1497,6 +1503,12 @@ const gchar *
 gst_mss_stream_get_lang (GstMssStream * stream)
 {
   return stream->lang;
+}
+
+const gchar *
+gst_mss_stream_get_name (GstMssStream * stream)
+{
+  return stream->name;
 }
 
 static GstClockTime
