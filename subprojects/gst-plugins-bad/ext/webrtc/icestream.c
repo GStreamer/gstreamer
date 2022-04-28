@@ -83,7 +83,7 @@ gst_webrtc_ice_stream_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ICE:
-      g_value_set_object (value, g_weak_ref_get (&stream->ice_weak));
+      g_value_take_object (value, g_weak_ref_get (&stream->ice_weak));
       break;
     case PROP_STREAM_ID:
       g_value_set_uint (value, stream->stream_id);
