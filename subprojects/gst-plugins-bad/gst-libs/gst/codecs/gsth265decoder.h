@@ -127,7 +127,6 @@ struct _GstH265DecoderClass
    * @decoder: a #GstH265Decoder
    * @picture: (transfer none): a #GstH265Picture
    * @slice: (transfer none): a #GstH265Slice
-   * @dpb: (transfer none): a #GstH265Dpb
    * @ref_pic_list0: (element-type GstH265Picture) (transfer none):
    *    an array of #GstH265Picture pointers
    * @ref_pic_list1: (element-type GstH265Picture) (transfer none):
