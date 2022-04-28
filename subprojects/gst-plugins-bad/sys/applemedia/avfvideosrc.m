@@ -671,6 +671,10 @@ checked:
             break;
           }
         }
+
+        if (found_framerate) {
+          break;
+        }
       }
     }
     if (!found_format) {
