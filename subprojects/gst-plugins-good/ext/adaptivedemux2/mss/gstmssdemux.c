@@ -375,6 +375,11 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
     GstCaps *caps;
     GstTagList *tags = NULL;
 
+    if (stream_type == GST_STREAM_TYPE_UNKNOWN) {
+      GST_WARNING_OBJECT (mssdemux, "Skipping unknown stream %s", name);
+      continue;
+    }
+
     if (name)
       stream_id =
           g_strdup_printf ("mss-stream-%s-%s",
