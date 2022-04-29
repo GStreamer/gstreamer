@@ -75,6 +75,8 @@ struct _GstMsdkH265Enc
 
   mfxExtHEVCTiles ext_tiles;
   mfxExtHEVCParam ext_param;
+
+  mfxExtCodingOption option;
   /* roi[0] for current ROI and roi[1] for previous ROI */
   mfxExtEncoderROI roi[2];
 

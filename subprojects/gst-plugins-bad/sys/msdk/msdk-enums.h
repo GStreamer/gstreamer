@@ -64,6 +64,9 @@ GType
 gst_msdkenc_mbbrc_get_type (void);
 
 GType
+gst_msdkenc_lowdelay_brc_get_type (void);
+
+GType
 gst_msdkenc_adaptive_i_get_type (void);
 
 GType

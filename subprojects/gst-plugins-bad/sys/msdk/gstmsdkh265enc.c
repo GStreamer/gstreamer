@@ -539,6 +539,13 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
     encoder->enable_extopt3 = TRUE;
   }
 
+  if (encoder->option3.LowDelayBRC == MFX_CODINGOPTION_ON) {
+    h265enc->option.Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
+    h265enc->option.Header.BufferSz = sizeof (h265enc->option);
+    h265enc->option.NalHrdConformance = MFX_CODINGOPTION_OFF;
+    gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h265enc->option);
+  }
+
   gst_msdkenc_ensure_extended_coding_options (encoder);
 
   if (h265enc->num_tile_rows > 1 || h265enc->num_tile_cols > 1) {

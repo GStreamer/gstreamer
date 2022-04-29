@@ -84,6 +84,9 @@ enum
   GST_MSDKENC_PROP_ADAPTIVE_I,
   GST_MSDKENC_PROP_ADAPTIVE_B,
   GST_MSDKENC_PROP_EXT_CODING_PROPS,
+  GST_MSDKENC_PROP_LOWDELAY_BRC,
+  GST_MSDKENC_PROP_MAX_FRAME_SIZE_I,
+  GST_MSDKENC_PROP_MAX_FRAME_SIZE_P,
   GST_MSDKENC_PROP_MAX,
 };
 
@@ -159,6 +162,9 @@ struct _GstMsdkEnc
   gint16 mbbrc;
   gint16 adaptive_i;
   gint16 adaptive_b;
+  guint max_frame_size_i;
+  guint max_frame_size_p;
+  gint16 lowdelay_brc;
 
   GstStructure *ext_coding_props;
 

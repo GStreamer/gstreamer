@@ -404,6 +404,10 @@ gst_msdkh264enc_configure (GstMsdkEnc * encoder)
         (thiz->cabac ? MFX_CODINGOPTION_OFF : MFX_CODINGOPTION_ON);
   }
 
+  if (encoder->option3.LowDelayBRC == MFX_CODINGOPTION_ON) {
+    thiz->option.NalHrdConformance = MFX_CODINGOPTION_OFF;
+  }
+
   gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & thiz->option);
 
   encoder->option2.Trellis = thiz->trellis ? thiz->trellis : MFX_TRELLIS_OFF;

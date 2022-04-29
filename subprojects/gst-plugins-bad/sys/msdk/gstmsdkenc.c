@@ -113,7 +113,10 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_RC_LOOKAHEAD_DEPTH_DEFAULT  10
 #define PROP_MAX_VBV_BITRATE_DEFAULT     0
 #define PROP_MAX_FRAME_SIZE_DEFAULT      0
+#define PROP_MAX_FRAME_SIZE_I_DEFAULT    0
+#define PROP_MAX_FRAME_SIZE_P_DEFAULT    0
 #define PROP_MBBRC_DEFAULT               MFX_CODINGOPTION_OFF
+#define PROP_LOWDELAY_BRC_DEFAULT        MFX_CODINGOPTION_OFF
 #define PROP_ADAPTIVE_I_DEFAULT          MFX_CODINGOPTION_OFF
 #define PROP_ADAPTIVE_B_DEFAULT          MFX_CODINGOPTION_OFF
 
@@ -222,7 +225,15 @@ ensure_bitrate_control (GstMsdkEnc * thiz)
       break;
 
     case MFX_RATECONTROL_VBR:
+      thiz->enable_extopt3 = TRUE;
       option2->MaxFrameSize = thiz->max_frame_size * 1000;
+      if (thiz->max_frame_size_i > 0)
+        option3->MaxFrameSizeI = thiz->max_frame_size_i * 1000;
+      if (thiz->max_frame_size_p > 0)
+        option3->MaxFrameSizeP = thiz->max_frame_size_p * 1000;
+      if (thiz->lowdelay_brc != MFX_CODINGOPTION_UNKNOWN) {
+        option3->LowDelayBRC = thiz->lowdelay_brc;
+      }
       break;
 
     case MFX_RATECONTROL_VCM:
@@ -2282,6 +2293,8 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->rate_control = PROP_RATE_CONTROL_DEFAULT;
   thiz->bitrate = PROP_BITRATE_DEFAULT;
   thiz->max_frame_size = PROP_MAX_FRAME_SIZE_DEFAULT;
+  thiz->max_frame_size_i = PROP_MAX_FRAME_SIZE_I_DEFAULT;
+  thiz->max_frame_size_p = PROP_MAX_FRAME_SIZE_P_DEFAULT;
   thiz->max_vbv_bitrate = PROP_MAX_VBV_BITRATE_DEFAULT;
   thiz->accuracy = PROP_AVBR_ACCURACY_DEFAULT;
   thiz->convergence = PROP_AVBR_ACCURACY_DEFAULT;
@@ -2295,6 +2308,7 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
   thiz->b_frames = PROP_B_FRAMES_DEFAULT;
   thiz->num_slices = PROP_NUM_SLICES_DEFAULT;
   thiz->mbbrc = PROP_MBBRC_DEFAULT;
+  thiz->lowdelay_brc = PROP_LOWDELAY_BRC_DEFAULT;
   thiz->adaptive_i = PROP_ADAPTIVE_I_DEFAULT;
   thiz->adaptive_b = PROP_ADAPTIVE_B_DEFAULT;
 
@@ -2351,6 +2365,12 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE:
       thiz->max_frame_size = g_value_get_uint (value);
       break;
+    case GST_MSDKENC_PROP_MAX_FRAME_SIZE_I:
+      thiz->max_frame_size_i = g_value_get_uint (value);
+      break;
+    case GST_MSDKENC_PROP_MAX_FRAME_SIZE_P:
+      thiz->max_frame_size_p = g_value_get_uint (value);
+      break;
     case GST_MSDKENC_PROP_MAX_VBV_BITRATE:
       thiz->max_vbv_bitrate = g_value_get_uint (value);
       break;
@@ -2389,6 +2409,9 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
       break;
     case GST_MSDKENC_PROP_MBBRC:
       thiz->mbbrc = g_value_get_enum (value);
+      break;
+    case GST_MSDKENC_PROP_LOWDELAY_BRC:
+      thiz->lowdelay_brc = g_value_get_enum (value);
       break;
     case GST_MSDKENC_PROP_ADAPTIVE_I:
       thiz->adaptive_i = g_value_get_enum (value);
@@ -2454,6 +2477,12 @@ gst_msdkenc_get_common_property (GObject * object, guint prop_id,
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE:
       g_value_set_uint (value, thiz->max_frame_size);
       break;
+    case GST_MSDKENC_PROP_MAX_FRAME_SIZE_I:
+      g_value_set_uint (value, thiz->max_frame_size_i);
+      break;
+    case GST_MSDKENC_PROP_MAX_FRAME_SIZE_P:
+      g_value_set_uint (value, thiz->max_frame_size_p);
+      break;
     case GST_MSDKENC_PROP_MAX_VBV_BITRATE:
       g_value_set_uint (value, thiz->max_vbv_bitrate);
       break;
@@ -2492,6 +2521,9 @@ gst_msdkenc_get_common_property (GObject * object, guint prop_id,
       break;
     case GST_MSDKENC_PROP_MBBRC:
       g_value_set_enum (value, thiz->mbbrc);
+      break;
+    case GST_MSDKENC_PROP_LOWDELAY_BRC:
+      g_value_set_enum (value, thiz->lowdelay_brc);
       break;
     case GST_MSDKENC_PROP_ADAPTIVE_I:
       g_value_set_enum (value, thiz->adaptive_i);
@@ -2556,6 +2588,18 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
       g_param_spec_uint ("max-frame-size", "Max Frame Size",
       "Maximum possible size (in kbyte) of any compressed frames (0: auto-calculate)",
       0, G_MAXUINT16, PROP_MAX_FRAME_SIZE_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[GST_MSDKENC_PROP_MAX_FRAME_SIZE_I] =
+      g_param_spec_uint ("max-frame-size-i", "Max Frame Size for I frame",
+      "Maximum possible size (in kbyte) of I frames (0: auto-calculate)",
+      0, G_MAXUINT16, PROP_MAX_FRAME_SIZE_I_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[GST_MSDKENC_PROP_MAX_FRAME_SIZE_P] =
+      g_param_spec_uint ("max-frame-size-p", "Max Frame Size for P frame",
+      "Maximum possible size (in kbyte) of P frames (0: auto-calculate)",
+      0, G_MAXUINT16, PROP_MAX_FRAME_SIZE_P_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   /* Set the same upper bound with bitrate */
@@ -2636,6 +2680,12 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
       "Macroblock level bitrate control",
       gst_msdkenc_mbbrc_get_type (),
       PROP_MBBRC_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  obj_properties[GST_MSDKENC_PROP_LOWDELAY_BRC] =
+      g_param_spec_enum ("lowdelay-brc", "Low delay bitrate control",
+      "Bitrate control for low-delay user scenarios",
+      gst_msdkenc_lowdelay_brc_get_type (),
+      PROP_LOWDELAY_BRC_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_ADAPTIVE_I] =
       g_param_spec_enum ("i-adapt", "Adaptive I-Frame Insertion",
