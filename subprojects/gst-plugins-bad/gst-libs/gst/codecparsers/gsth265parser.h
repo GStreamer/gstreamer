@@ -1384,6 +1384,9 @@ struct _GstH265PredWeightTable
  *   in this slice_header\()
  * @short_term_ref_pic_set_size: the calculated size of short_term_ref_pic_set\()
  *   in bits. (Since: 1.18)
+ * @long_term_ref_pic_set_size: the calculated size of the branch
+ *   `if( long_term_ref_pics_present_flag )` `inside slice_segment_header()` syntax
+ *   in bits. (Since: 1.22)
  */
 struct _GstH265SliceHdr
 {
@@ -1463,6 +1466,16 @@ struct _GstH265SliceHdr
   /* Size of short_term_ref_pic_set() after emulation preventation bytes are
    * removed, in bits */
   guint short_term_ref_pic_set_size;
+
+  /**
+   * _GstH265SliceHdr.long_term_ref_pic_set_size:
+   *
+   * The calculated size of the branch `if( long_term_ref_pics_present_flag )`
+   * inside `slice_segment_header()` syntax in bits.
+   *
+   * Since: 1.22
+   */
+  guint long_term_ref_pic_set_size;
 };
 
 struct _GstH265PicTiming

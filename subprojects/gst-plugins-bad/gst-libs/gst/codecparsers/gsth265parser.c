@@ -2672,7 +2672,6 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
       nal_reader_skip (&nr, 1);
     READ_UE_MAX (&nr, slice->type, 63);
 
-
     if (pps->output_flag_present_flag)
       READ_UINT8 (&nr, slice->pic_output_flag, 1);
     if (sps->separate_colour_plane_flag == 1)
@@ -2704,6 +2703,8 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
 
       if (sps->long_term_ref_pics_present_flag) {
         guint32 limit;
+        guint pos = nal_reader_get_pos (&nr);
+        guint epb_pos = nal_reader_get_epb_count (&nr);
 
         if (sps->num_long_term_ref_pics_sps > 0)
           READ_UE_MAX (&nr, slice->num_long_term_sps,
@@ -2733,6 +2734,10 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
           if (slice->delta_poc_msb_present_flag[i])
             READ_UE (&nr, slice->delta_poc_msb_cycle_lt[i]);
         }
+
+        slice->long_term_ref_pic_set_size =
+            (nal_reader_get_pos (&nr) - pos) -
+            (8 * (nal_reader_get_epb_count (&nr) - epb_pos));
       }
       if (sps->temporal_mvp_enabled_flag)
         READ_UINT8 (&nr, slice->temporal_mvp_enabled_flag, 1);
