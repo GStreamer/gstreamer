@@ -891,6 +891,8 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
   top_field_first = interlace->top_field_first;
   GST_OBJECT_UNLOCK (interlace);
 
+  GST_DEBUG_OBJECT (pad, "Querying caps with filter %" GST_PTR_FORMAT, filter);
+
   if (filter != NULL) {
     clean_filter = gst_caps_copy (filter);
     if (pattern == GST_INTERLACE_PATTERN_1_1) {
@@ -928,9 +930,12 @@ gst_interlace_getcaps (GstPad * pad, GstInterlace * interlace, GstCaps * filter)
     }
   }
 
+  GST_DEBUG_OBJECT (pad, "Querying peer with filter %" GST_PTR_FORMAT,
+      clean_filter);
   tcaps = gst_pad_get_pad_template_caps (otherpad);
   othercaps = gst_pad_peer_query_caps (otherpad, clean_filter);
   othercaps = gst_caps_make_writable (othercaps);
+  GST_DEBUG_OBJECT (pad, "Other caps %" GST_PTR_FORMAT, othercaps);
   if (othercaps) {
     if (pattern == GST_INTERLACE_PATTERN_2_2) {
       for (i = 0; i < gst_caps_get_size (othercaps); ++i) {
