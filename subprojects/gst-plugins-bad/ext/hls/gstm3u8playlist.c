@@ -40,11 +40,12 @@ struct _GstM3U8Entry
   gchar *title;
   gchar *url;
   gboolean discontinuous;
+  GDateTime *program_dt;
 };
 
 static GstM3U8Entry *
 gst_m3u8_entry_new (const gchar * url, const gchar * title,
-    gfloat duration, gboolean discontinuous)
+    gfloat duration, gboolean discontinuous, GDateTime * program_dt)
 {
   GstM3U8Entry *entry;
 
@@ -55,6 +56,7 @@ gst_m3u8_entry_new (const gchar * url, const gchar * title,
   entry->title = g_strdup (title);
   entry->duration = duration;
   entry->discontinuous = discontinuous;
+  entry->program_dt = program_dt;
   return entry;
 }
 
@@ -65,6 +67,7 @@ gst_m3u8_entry_free (GstM3U8Entry * entry)
 
   g_free (entry->url);
   g_free (entry->title);
+  g_clear_pointer (&entry->program_dt, g_date_time_unref);
   g_free (entry);
 }
 
@@ -79,6 +82,7 @@ gst_m3u8_playlist_new (guint version, guint window_size)
   playlist->type = GST_M3U8_PLAYLIST_TYPE_EVENT;
   playlist->end_list = FALSE;
   playlist->entries = g_queue_new ();
+  playlist->start_dt = NULL;
 
   return playlist;
 }
@@ -90,9 +94,78 @@ gst_m3u8_playlist_free (GstM3U8Playlist * playlist)
 
   g_queue_foreach (playlist->entries, (GFunc) gst_m3u8_entry_free, NULL);
   g_queue_free (playlist->entries);
+  g_clear_pointer (&playlist->start_dt, g_date_time_unref);
   g_free (playlist);
 }
 
+static gchar *
+_gst_m3u8_playlist_date_time_format_iso8601z (GDateTime * datetime)
+{
+  GString *outstr = NULL;
+  const gchar *format = "%C%y-%m-%dT%H:%M:%S";
+  gchar *main_date = g_date_time_format (datetime, format);
+  outstr = g_string_new (main_date);
+  g_string_append_printf (outstr, ".%03" G_GUINT64_FORMAT "Z",
+      gst_util_uint64_scale_round (g_date_time_get_microsecond (datetime), 1,
+          G_TIME_SPAN_MILLISECOND));
+  g_free (main_date);
+  return g_string_free (outstr, FALSE);
+}
+
+void
+gst_m3u8_playlist_calc_start_date_time (GstM3U8Playlist * playlist,
+    GstClockTime running_time, GstElement * sink)
+{
+  GstClock *clock;
+  GstClockTime base_time, now_time, pts_clock_time;
+  GstClockTimeDiff diff;
+  gdouble add_s;
+  GDateTime *now_utc, *start_date_time;
+
+  clock = gst_element_get_clock (sink);
+  if (!clock) {
+    GST_WARNING_OBJECT (sink,
+        "element has no clock, can't determine PROGRAM_DATE_TIME");
+    return;
+  }
+  base_time = gst_element_get_base_time (sink);
+  now_time = gst_clock_get_time (clock);
+  now_utc = g_date_time_new_now_utc ();
+  pts_clock_time = running_time + base_time;
+  diff = (now_time - pts_clock_time);
+  add_s = (-0.001) * GST_TIME_AS_MSECONDS (diff);
+  start_date_time = g_date_time_add_seconds (now_utc, add_s);
+
+  if (G_UNLIKELY (GST_LEVEL_DEBUG <= _gst_debug_min) &&
+      GST_LEVEL_DEBUG <= gst_debug_category_get_threshold (GST_CAT_DEFAULT)) {
+    gchar *fmt_now_utc = _gst_m3u8_playlist_date_time_format_iso8601z (now_utc);
+    gchar *fmt_start_date_time =
+        _gst_m3u8_playlist_date_time_format_iso8601z (start_date_time);
+
+    /* *INDENT-OFF* */
+    GST_DEBUG_OBJECT (sink, "Calculating start PROGRAM_DATE_TIME:\n"
+        "        base_time = %" GST_TIME_FORMAT " [hlssink element base time]\n"
+        "         now_time = %" GST_TIME_FORMAT " [current wall clock time]\n"
+        "     running_time = %" GST_TIME_FORMAT " [running time at beginning of fragment]\n"
+        "   pts_clock_time = %" GST_TIME_FORMAT " [running + base time]\n"
+        "             diff = %" GST_STIME_FORMAT " (add_s=%f) [now_time - pts_clock_time]\n"
+        "          now_utc = %s\n"
+        "  start_date_time = %s",
+        GST_TIME_ARGS (base_time), GST_TIME_ARGS (now_time),
+        GST_TIME_ARGS (running_time), GST_TIME_ARGS (pts_clock_time),
+        GST_STIME_ARGS (diff), add_s, fmt_now_utc, fmt_start_date_time);
+    /* *INDENT-ON* */
+
+    g_free (fmt_now_utc);
+    g_free (fmt_start_date_time);
+  }
+
+  g_date_time_unref (now_utc);
+  gst_object_unref (clock);
+  if (playlist->start_dt)
+    g_date_time_unref (playlist->start_dt);
+  playlist->start_dt = start_date_time;
+}
 
 gboolean
 gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
@@ -107,7 +180,53 @@ gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
   if (playlist->type == GST_M3U8_PLAYLIST_TYPE_VOD)
     return FALSE;
 
-  entry = gst_m3u8_entry_new (url, title, duration, discontinuous);
+  entry = gst_m3u8_entry_new (url, title, duration, discontinuous, NULL);
+
+  if (playlist->window_size > 0) {
+    /* Delete old entries from the playlist */
+    while (playlist->entries->length >= playlist->window_size) {
+      GstM3U8Entry *old_entry;
+
+      old_entry = g_queue_pop_head (playlist->entries);
+      gst_m3u8_entry_free (old_entry);
+    }
+  }
+
+  playlist->sequence_number = index + 1;
+  g_queue_push_tail (playlist->entries, entry);
+
+  return TRUE;
+}
+
+gboolean
+gst_m3u8_playlist_add_entry_with_pts (GstM3U8Playlist * playlist,
+    const gchar * url, const gchar * title, GstClockTime start_time,
+    GstClockTime end_time, guint index, gboolean discontinuous)
+{
+  GstM3U8Entry *entry;
+  gfloat duration = 0;
+  GDateTime *program_dt = NULL;
+
+  g_return_val_if_fail (playlist != NULL, FALSE);
+  g_return_val_if_fail (url != NULL, FALSE);
+
+  if (playlist->type == GST_M3U8_PLAYLIST_TYPE_VOD)
+    return FALSE;
+
+  if (GST_CLOCK_TIME_IS_VALID (start_time)) {
+    if (GST_CLOCK_TIME_IS_VALID (end_time) && end_time >= start_time) {
+      duration = GST_CLOCK_DIFF (start_time, end_time);
+    }
+
+    if (playlist->start_dt) {
+      gdouble add_s;
+
+      add_s = start_time / (gdouble) GST_SECOND;
+      program_dt = g_date_time_add_seconds (playlist->start_dt, add_s);
+    }
+  }
+
+  entry = gst_m3u8_entry_new (url, title, duration, discontinuous, program_dt);
 
   if (playlist->window_size > 0) {
     /* Delete old entries from the playlist */
@@ -145,7 +264,9 @@ gchar *
 gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
 {
   GString *playlist_str;
-  GList *l;
+  GList *l = playlist->entries->head;
+  gchar *program_dt = NULL;
+  GstM3U8Entry *entry = l != NULL ? l->data : NULL;
 
   g_return_val_if_fail (playlist != NULL, NULL);
 
@@ -159,10 +280,19 @@ gst_m3u8_playlist_render (GstM3U8Playlist * playlist)
 
   g_string_append_printf (playlist_str, "#EXT-X-TARGETDURATION:%u\n",
       gst_m3u8_playlist_target_duration (playlist));
+
+  if (entry && entry->program_dt) {
+    program_dt =
+        _gst_m3u8_playlist_date_time_format_iso8601z (entry->program_dt);
+    g_string_append_printf (playlist_str, "#EXT-X-PROGRAM-DATE-TIME:%s\n",
+        program_dt);
+    g_free (program_dt);
+  }
+
   g_string_append (playlist_str, "\n");
 
   /* Entries */
-  for (l = playlist->entries->head; l != NULL; l = l->next) {
+  for (; l != NULL; l = l->next) {
     gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
     GstM3U8Entry *entry = l->data;
 

@@ -50,11 +50,13 @@ struct _GstHlsSink2
   gint max_files;
   gint target_duration;
   gboolean send_keyframe_requests;
+  gboolean enable_program_date_time;
 
   GstM3U8Playlist *playlist;
   guint index;
 
   gchar *current_location;
+  GstClockTime base_running_time;
   GstClockTime current_running_time_start;
   GQueue old_locations;
   GstM3U8PlaylistRenderState state;

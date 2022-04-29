@@ -62,6 +62,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_hls_sink2_debug);
 #define DEFAULT_TARGET_DURATION 15
 #define DEFAULT_PLAYLIST_LENGTH 5
 #define DEFAULT_SEND_KEYFRAME_REQUESTS TRUE
+#define DEFAULT_ENABLE_PROGRAM_DATE_TIME FALSE
 
 #define GST_M3U8_PLAYLIST_VERSION 3
 
@@ -75,6 +76,7 @@ enum
   PROP_TARGET_DURATION,
   PROP_PLAYLIST_LENGTH,
   PROP_SEND_KEYFRAME_REQUESTS,
+  PROP_ENABLE_PROGRAM_DATE_TIME,
 };
 
 enum
@@ -258,6 +260,21 @@ gst_hls_sink2_class_init (GstHlsSink2Class * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstHlsSink2:enable-program-date-time:
+   *
+   * Whether to put EXT-X-PROGRAM-DATE-TIME tags into the playlist, specifying
+   * the ISO 8601 UTC wall clock time each segment starts at.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_ENABLE_PROGRAM_DATE_TIME,
+      g_param_spec_boolean ("enable-program-date-time",
+          "Enable EXT-X-PROGRAM-DATE-TIME",
+          "Put EXT-X-PROGRAM-DATE-TIME tag in the playlist",
+          DEFAULT_ENABLE_PROGRAM_DATE_TIME,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstHlsSink2::get-playlist-stream:
    * @sink: the #GstHlsSink2
    * @location: Location for the playlist file
@@ -348,6 +365,8 @@ gst_hls_sink2_init (GstHlsSink2 * sink)
   sink->max_files = DEFAULT_MAX_FILES;
   sink->target_duration = DEFAULT_TARGET_DURATION;
   sink->send_keyframe_requests = DEFAULT_SEND_KEYFRAME_REQUESTS;
+  sink->base_running_time = GST_CLOCK_TIME_NONE;
+  sink->current_running_time_start = GST_CLOCK_TIME_NONE;
   g_queue_init (&sink->old_locations);
 
   sink->splitmuxsink = gst_element_factory_make ("splitmuxsink", NULL);
@@ -378,6 +397,9 @@ gst_hls_sink2_reset (GstHlsSink2 * sink)
     gst_m3u8_playlist_free (sink->playlist);
   sink->playlist =
       gst_m3u8_playlist_new (GST_M3U8_PLAYLIST_VERSION, sink->playlist_length);
+
+  sink->base_running_time = GST_CLOCK_TIME_NONE;
+  sink->current_running_time_start = GST_CLOCK_TIME_NONE;
 
   g_queue_foreach (&sink->old_locations, (GFunc) g_free, NULL);
   g_queue_clear (&sink->old_locations);
@@ -430,8 +452,13 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
         if (gst_structure_has_name (s, "splitmuxsink-fragment-opened")) {
           gst_structure_get_clock_time (s, "running-time",
               &sink->current_running_time_start);
+          if (!GST_CLOCK_TIME_IS_VALID (sink->base_running_time)) {
+            sink->base_running_time = sink->current_running_time_start;
+            gst_m3u8_playlist_calc_start_date_time (sink->playlist,
+                sink->base_running_time, GST_ELEMENT (sink));
+          }
         } else if (gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
-          GstClockTime running_time;
+          GstClockTime start_time, running_time;
           gchar *entry_location;
 
           if (!sink->current_location) {
@@ -440,7 +467,10 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
             break;
           }
 
+          start_time =
+              sink->current_running_time_start - sink->base_running_time;
           gst_structure_get_clock_time (s, "running-time", &running_time);
+          running_time -= sink->base_running_time;
 
           GST_INFO_OBJECT (sink, "COUNT %d", sink->index);
           if (sink->playlist_root == NULL) {
@@ -453,9 +483,13 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
             g_free (name);
           }
 
-          gst_m3u8_playlist_add_entry (sink->playlist, entry_location,
-              NULL, running_time - sink->current_running_time_start,
-              sink->index++, FALSE);
+          if (sink->enable_program_date_time)
+            gst_m3u8_playlist_add_entry_with_pts (sink->playlist,
+                entry_location, NULL, start_time, running_time, sink->index++,
+                FALSE);
+          else
+            gst_m3u8_playlist_add_entry (sink->playlist, entry_location,
+                NULL, running_time - start_time, sink->index++, FALSE);
           g_free (entry_location);
 
           gst_hls_sink2_write_playlist (sink);
@@ -651,6 +685,9 @@ gst_hls_sink2_set_property (GObject * object, guint prop_id,
             sink->send_keyframe_requests, NULL);
       }
       break;
+    case PROP_ENABLE_PROGRAM_DATE_TIME:
+      sink->enable_program_date_time = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -684,6 +721,9 @@ gst_hls_sink2_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SEND_KEYFRAME_REQUESTS:
       g_value_set_boolean (value, sink->send_keyframe_requests);
+      break;
+    case PROP_ENABLE_PROGRAM_DATE_TIME:
+      g_value_set_boolean (value, sink->enable_program_date_time);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

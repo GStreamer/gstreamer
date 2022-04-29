@@ -23,6 +23,7 @@
 #define __GST_M3U8_PLAYLIST_H__
 
 #include <glib.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -35,6 +36,7 @@ struct _GstM3U8Playlist
   gint type;
   gboolean end_list;
   guint sequence_number;
+  GDateTime *start_dt;
 
   /*< Private >*/
   GQueue *entries;
@@ -59,6 +61,18 @@ gboolean          gst_m3u8_playlist_add_entry (GstM3U8Playlist * playlist,
                                                gfloat            duration,
                                                guint             index,
                                                gboolean          discontinuous);
+
+gboolean          gst_m3u8_playlist_add_entry_with_pts (GstM3U8Playlist * playlist,
+                                                        const gchar     * url,
+                                                        const gchar     * title,
+                                                        GstClockTime      start_time,
+                                                        GstClockTime      end_time,
+                                                        guint             index,
+                                                        gboolean          discontinuous);
+
+void              gst_m3u8_playlist_calc_start_date_time (GstM3U8Playlist  * playlist,
+                                                          GstClockTime       running_time,
+                                                          GstElement       * sink);
 
 gchar *           gst_m3u8_playlist_render (GstM3U8Playlist * playlist);
 
