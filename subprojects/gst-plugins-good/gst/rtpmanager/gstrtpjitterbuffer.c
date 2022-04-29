@@ -4700,7 +4700,7 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
   guint32 rtptime;
   GstRTCPBuffer rtcp = { NULL, };
   gchar *cname = NULL;
-  gboolean have_sr = FALSE, have_sdes = FALSE;
+  gboolean have_sr = FALSE;
   gboolean more;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
@@ -4716,24 +4716,35 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
     /* first packet must be SR or RR or else the validate would have failed */
     switch (gst_rtcp_packet_get_type (&packet)) {
       case GST_RTCP_TYPE_SR:
+        /* only parse first. There is only supposed to be one SR in the packet
+         * but we will deal with malformed packets gracefully by trying the
+         * next RTCP packet */
+        if (have_sr)
+          continue;
+
+        /* get NTP and RTP times */
         gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntptime, &rtptime,
             NULL, NULL);
+
+        /* convert ntptime to nanoseconds */
         ntpnstime =
             gst_util_uint64_scale (ntptime, GST_SECOND,
             G_GUINT64_CONSTANT (1) << 32);
+
         have_sr = TRUE;
+
         break;
       case GST_RTCP_TYPE_SDES:
       {
-        gboolean more_items, more_entries;
+        gboolean more_items;
 
-        /* only deal with first SDES, there is only supposed to be one SDES in
-         * the RTCP packet but we deal with bad packets gracefully. Also bail
-         * out if we have not seen an SR item yet. */
-        if (have_sdes || !have_sr)
-          break;
+        /* Bail out if we have not seen an SR item yet. */
+        if (!have_sr)
+          goto ignore_buffer;
 
         GST_RTCP_SDES_FOR_ITEMS (more_items, &packet) {
+          gboolean more_entries;
+
           /* skip items that are not about the SSRC of the sender */
           if (gst_rtcp_packet_sdes_get_ssrc (&packet) != ssrc)
             continue;
@@ -4742,22 +4753,28 @@ gst_rtp_jitter_buffer_chain_rtcp (GstPad * pad, GstObject * parent,
           GST_RTCP_SDES_FOR_ENTRIES (more_entries, &packet) {
             GstRTCPSDESType type;
             guint8 len;
-            guint8 *data;
+            const guint8 *data;
 
-            gst_rtcp_packet_sdes_get_entry (&packet, &type, &len, &data);
+            gst_rtcp_packet_sdes_get_entry (&packet, &type, &len,
+                (guint8 **) & data);
 
             if (type == GST_RTCP_SDES_CNAME) {
               cname = g_strndup ((const gchar *) data, len);
+              goto out;
             }
           }
         }
-        have_sdes = TRUE;
-        break;
+
+        /* only deal with first SDES, there is only supposed to be one SDES in
+         * the RTCP packet but we deal with bad packets gracefully. */
+        goto out;
       }
       default:
-        goto ignore_buffer;
+        /* we can ignore these packets */
+        break;
     }
   }
+out:
   gst_rtcp_buffer_unmap (&rtcp);
 
   GST_DEBUG_OBJECT (jitterbuffer, "received RTCP of SSRC %08x from CNAME %s",

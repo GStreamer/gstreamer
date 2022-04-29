@@ -1735,7 +1735,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   GstRTCPPacket packet;
   guint32 ssrc;
   guint64 ntpnstime, inband_ntpnstime;
-  gboolean have_sr, have_sdes;
+  gboolean have_sr;
   gboolean more;
   guint64 base_rtptime;
   guint64 base_time;
@@ -1807,22 +1807,20 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   buffer = gst_value_get_buffer (gst_structure_get_value (s, "sr-buffer"));
 
   have_sr = FALSE;
-  have_sdes = FALSE;
 
   gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
 
   GST_RTCP_BUFFER_FOR_PACKETS (more, &rtcp, &packet) {
-    if (have_sr && (cname || have_sdes))
-      break;
-
     /* first packet must be SR or RR or else the validate would have failed */
     switch (gst_rtcp_packet_get_type (&packet)) {
       case GST_RTCP_TYPE_SR:
         /* only parse first. There is only supposed to be one SR in the packet
-         * but we will deal with malformed packets gracefully */
+         * but we will deal with malformed packets gracefully by trying the
+         * next RTCP packet. */
         if (have_sr)
-          break;
-        /* get NTP and RTP times */
+          continue;
+
+        /* get NTP time */
         gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, &ntpnstime, NULL,
             NULL, NULL);
 
@@ -1831,7 +1829,8 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
             (G_GINT64_CONSTANT (1) << 32));
 
         GST_DEBUG_OBJECT (bin, "received sync packet from SSRC %08x", ssrc);
-        /* ignore SR that is not ours */
+
+        /* ignore SR that is not ours and check the next RTCP packet */
         if (ssrc != stream->ssrc)
           continue;
 
@@ -1845,21 +1844,22 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
               (const guint8 *) cname, ntpnstime, extrtptime, base_rtptime,
               base_time, clock_rate, clock_base);
           GST_RTP_BIN_UNLOCK (bin);
-          break;
+
+          goto out;
         }
 
         break;
       case GST_RTCP_TYPE_SDES:
       {
-        gboolean more_items, more_entries;
+        gboolean more_items;
 
-        /* only deal with first SDES, there is only supposed to be one SDES in
-         * the RTCP packet but we deal with bad packets gracefully. Also bail
-         * out if we have not seen an SR item yet. */
-        if (have_sdes || !have_sr)
-          break;
+        /* Bail out if we have not seen an SR item yet. */
+        if (!have_sr)
+          goto out;
 
         GST_RTCP_SDES_FOR_ITEMS (more_items, &packet) {
+          gboolean more_entries;
+
           /* skip items that are not about the SSRC of the sender */
           if (gst_rtcp_packet_sdes_get_ssrc (&packet) != ssrc)
             continue;
@@ -1868,9 +1868,10 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
           GST_RTCP_SDES_FOR_ENTRIES (more_entries, &packet) {
             GstRTCPSDESType type;
             guint8 len;
-            guint8 *data;
+            const guint8 *data;
 
-            gst_rtcp_packet_sdes_get_entry (&packet, &type, &len, &data);
+            gst_rtcp_packet_sdes_get_entry (&packet, &type, &len,
+                (guint8 **) & data);
 
             if (type == GST_RTCP_SDES_CNAME) {
               GST_RTP_BIN_LOCK (bin);
@@ -1879,17 +1880,22 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
                   ntpnstime, extrtptime, base_rtptime, base_time, clock_rate,
                   clock_base);
               GST_RTP_BIN_UNLOCK (bin);
+
+              goto out;
             }
           }
         }
-        have_sdes = TRUE;
-        break;
+
+        /* only deal with first SDES, there is only supposed to be one SDES in
+         * the RTCP packet but we deal with bad packets gracefully. */
+        goto out;
       }
       default:
         /* we can ignore these packets */
         break;
     }
   }
+out:
   gst_rtcp_buffer_unmap (&rtcp);
 }
 
