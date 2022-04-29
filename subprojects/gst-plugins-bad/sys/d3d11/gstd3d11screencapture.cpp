@@ -509,6 +509,15 @@ public:
     context_handle->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     context_handle->IASetInputLayout(layout_.Get());
 
+    D3D11_VIEWPORT VP;
+    VP.Width = static_cast<FLOAT>(FullDesc.Width);
+    VP.Height = static_cast<FLOAT>(FullDesc.Height);
+    VP.MinDepth = 0.0f;
+    VP.MaxDepth = 1.0f;
+    VP.TopLeftX = 0.0f;
+    VP.TopLeftY = 0.0f;
+    context_handle->RSSetViewports(1, &VP);
+
     context_handle->Draw(NUMVERTICES, 0);
 
     /* Unbind srv and rtv from context */
