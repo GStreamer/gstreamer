@@ -775,7 +775,8 @@ gst_interlace_caps_double_framerate (GstCaps * caps, gboolean half,
     interlace_mode = gst_structure_get_string (s, "interlace-mode");
     /* Do not double the framerate for interlaced - we will either passthrough
      * or fail to negotiate */
-    if (skip_progressive && (g_strcmp0 (interlace_mode, "progressive") != 0))
+    if (skip_progressive && (interlace_mode
+            && g_strcmp0 (interlace_mode, "progressive") != 0))
       continue;
 
     if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION) {
