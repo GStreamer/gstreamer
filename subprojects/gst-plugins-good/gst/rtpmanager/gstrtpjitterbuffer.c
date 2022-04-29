@@ -1226,6 +1226,9 @@ gst_rtp_jitter_buffer_finalize (GObject * object)
   g_cond_clear (&priv->jbuf_query);
 
   rtp_jitter_buffer_flush (priv->jbuf, NULL, NULL);
+  g_list_free_full (priv->cname_ssrc_mappings,
+      (GDestroyNotify) cname_ssrc_mapping_free);
+  priv->cname_ssrc_mappings = NULL;
   g_queue_foreach (&priv->gap_packets, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (&priv->gap_packets);
   g_object_unref (priv->jbuf);
@@ -1882,6 +1885,9 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       g_thread_join (priv->timer_thread);
       priv->timer_thread = NULL;
       gst_clear_caps (&priv->reference_timestamp_caps);
+      g_list_free_full (priv->cname_ssrc_mappings,
+          (GDestroyNotify) cname_ssrc_mapping_free);
+      priv->cname_ssrc_mappings = NULL;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
