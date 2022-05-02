@@ -22,21 +22,25 @@
 #endif
 
 #include "gstadaptivedemuxelements.h"
+#include "../soup/gstsouploader.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+GST_DEBUG_CATEGORY (adaptivedemux2_debug);
+#define GST_CAT_DEFAULT adaptivedemux2_debug
+
+gboolean
+adaptivedemux2_base_element_init (GstPlugin * plugin)
 {
-  gboolean ret = TRUE;
-
-  ret |= GST_ELEMENT_REGISTER (hlsdemux2, plugin);
-  ret |= GST_ELEMENT_REGISTER (dashdemux2, plugin);
-  ret |= GST_ELEMENT_REGISTER (mssdemux2, plugin);
-
-  return ret;
+  static gsize res = FALSE;
+  if (g_once_init_enter (&res)) {
+    GST_DEBUG_CATEGORY_INIT (adaptivedemux2_debug, "adaptivedemux2", 0,
+        "adaptivedemux2");
+    g_once_init_leave (&res, TRUE);
+  }
+#ifndef STATIC_SOUP
+  if (!gst_soup_load_library ()) {
+    GST_WARNING ("Failed to load libsoup library");
+    return FALSE;
+  }
+#endif
+  return TRUE;
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    adaptivedemux2,
-    "Adaptive Streaming 2 plugin", plugin_init, VERSION,
-    GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

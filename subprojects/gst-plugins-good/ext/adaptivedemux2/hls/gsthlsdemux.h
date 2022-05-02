@@ -246,7 +246,5 @@ GstHLSTimeMap *gst_hls_find_time_map (GstHLSDemux * demux, gint64 dsn);
 GType gst_hls_demux2_get_type (void);
 GType gst_hls_demux_stream_get_type (void);
 
-GST_ELEMENT_REGISTER_DECLARE (hlsdemux2);
-
 G_END_DECLS
 #endif /* __GST_HLS_DEMUX_H__ */

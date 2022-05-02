@@ -41,6 +41,7 @@ plugin_sources = [
   'plugin.c',
   'gstisoff.c',
   'gstadaptivedemux.c',
+  'gstadaptivedemuxelement.c',
   'gstadaptivedemuxutils.c',
   'gstadaptivedemux-period.c',
   'gstadaptivedemux-stream.c',

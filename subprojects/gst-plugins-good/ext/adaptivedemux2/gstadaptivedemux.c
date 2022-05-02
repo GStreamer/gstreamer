@@ -109,7 +109,7 @@ By using the api_lock a thread is protected against other API calls.
 #include <gst/base/gstadapter.h>
 #include <gst/app/gstappsrc.h>
 
-GST_DEBUG_CATEGORY (adaptivedemux2_debug);
+GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 #define GST_CAT_DEFAULT adaptivedemux2_debug
 
 #define DEFAULT_FAILED_COUNT 3

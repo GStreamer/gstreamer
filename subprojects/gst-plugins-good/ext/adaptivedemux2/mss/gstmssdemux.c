@@ -73,9 +73,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gstadaptivedemuxelements.h"
 #include "gstmssdemux.h"
 
 GST_DEBUG_CATEGORY (mssdemux2_debug);
+#define GST_CAT_DEFAULT mssdemux2_debug
 
 static GstStaticPadTemplate gst_mss_demux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -106,8 +108,9 @@ G_DEFINE_TYPE (GstMssDemux2, gst_mss_demux2, GST_TYPE_ADAPTIVE_DEMUX);
 G_DEFINE_TYPE (GstMssDemuxStream, gst_mss_demux_stream,
     GST_TYPE_ADAPTIVE_DEMUX2_STREAM);
 
-GST_ELEMENT_REGISTER_DEFINE (mssdemux2, "mssdemux2",
-    GST_RANK_PRIMARY + 1, GST_TYPE_MSS_DEMUX2);
+static gboolean mssdemux_element_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (mssdemux2, mssdemux_element_init);
 
 static void gst_mss_demux_dispose (GObject * object);
 
@@ -204,8 +207,6 @@ gst_mss_demux2_class_init (GstMssDemuxClass * klass)
   gstadaptivedemux_class->requires_periodical_playlist_update =
       gst_mss_demux_requires_periodical_playlist_update;
 
-  GST_DEBUG_CATEGORY_INIT (mssdemux2_debug, "mssdemux2", 0,
-      "mssdemux2 element");
 }
 
 static void
@@ -687,4 +688,22 @@ gst_stream_type_from_mss_type (GstMssStreamType mtype)
     default:
       return GST_STREAM_TYPE_UNKNOWN;
   }
+}
+
+static gboolean
+mssdemux_element_init (GstPlugin * plugin)
+{
+  gboolean ret = TRUE;
+
+  GST_DEBUG_CATEGORY_INIT (mssdemux2_debug, "mssdemux2", 0,
+      "mssdemux2 element");
+
+  if (!adaptivedemux2_base_element_init (plugin))
+    return TRUE;
+
+  ret =
+      gst_element_register (plugin, "mssdemux2", GST_RANK_PRIMARY + 1,
+      GST_TYPE_MSS_DEMUX2);
+
+  return ret;
 }

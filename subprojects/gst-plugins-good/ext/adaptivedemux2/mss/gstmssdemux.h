@@ -32,9 +32,6 @@
 
 G_BEGIN_DECLS
 
-GST_DEBUG_CATEGORY_EXTERN (mssdemux2_debug);
-#define GST_CAT_DEFAULT mssdemux2_debug
-
 #define GST_TYPE_MSS_DEMUX2 \
   (gst_mss_demux2_get_type())
 #define GST_MSS_DEMUX(obj) \
@@ -80,7 +77,7 @@ struct _GstMssDemux2Class {
 GType gst_mss_demux2_get_type (void);
 GType gst_mss_demux_stream_get_type (void);
 
-GST_ELEMENT_REGISTER_DECLARE (mssdemux2);
+
 G_END_DECLS
 
 #endif /* __GST_MSSDEMUX_H__ */

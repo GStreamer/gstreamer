@@ -291,6 +291,7 @@
 #include <gst/tag/tag.h>
 #include <gst/net/gstnet.h>
 
+#include "gstadaptivedemuxelements.h"
 #include "gstdashdemux.h"
 #include "gstdash_debug.h"
 
@@ -467,13 +468,11 @@ gst_dash_demux_stream_class_init (GstDashDemux2StreamClass * klass)
 
 
 #define gst_dash_demux2_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstDashDemux2, gst_dash_demux2,
-    GST_TYPE_ADAPTIVE_DEMUX, GST_DEBUG_CATEGORY_INIT (gst_dash_demux2_debug,
-        "dashdemux2", 0, "dashdemux2 element")
-    );
+G_DEFINE_TYPE (GstDashDemux2, gst_dash_demux2, GST_TYPE_ADAPTIVE_DEMUX);
 
-GST_ELEMENT_REGISTER_DEFINE (dashdemux2, "dashdemux2",
-    GST_RANK_PRIMARY + 1, GST_TYPE_DASH_DEMUX2);
+static gboolean dashdemux2_element_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (dashdemux2, dashdemux2_element_init);
 
 static void
 gst_dash_demux_dispose (GObject * obj)
@@ -3966,4 +3965,21 @@ gst_dash_demux_get_server_now_utc (GstDashDemux2 * demux)
       gst_dash_demux_get_clock_compensation (demux));
   g_date_time_unref (client_now);
   return server_now;
+}
+
+static gboolean
+dashdemux2_element_init (GstPlugin * plugin)
+{
+  gboolean ret = TRUE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_dash_demux2_debug,
+      "dashdemux2", 0, "dashdemux2 element");
+
+  if (!adaptivedemux2_base_element_init (plugin))
+    return TRUE;
+
+  ret = gst_element_register (plugin, "dashdemux2",
+      GST_RANK_PRIMARY + 1, GST_TYPE_DASH_DEMUX2);
+
+  return ret;
 }

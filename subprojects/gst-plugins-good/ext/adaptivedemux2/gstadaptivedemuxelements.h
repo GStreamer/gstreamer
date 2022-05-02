@@ -17,26 +17,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_ADAPTIVEDEMUX2_ELEMENTS_H__
+#define __GST_ADAPTIVEDEMUX2_ELEMENTS_H__
+
 #ifdef HAVE_CONFIG_H
-#  include <config.h>
+#include <config.h>
 #endif
 
-#include "gstadaptivedemuxelements.h"
+#include <gst/gst.h>
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = TRUE;
+gboolean adaptivedemux2_base_element_init (GstPlugin * plugin);
 
-  ret |= GST_ELEMENT_REGISTER (hlsdemux2, plugin);
-  ret |= GST_ELEMENT_REGISTER (dashdemux2, plugin);
-  ret |= GST_ELEMENT_REGISTER (mssdemux2, plugin);
+GST_ELEMENT_REGISTER_DECLARE (mssdemux2);
+GST_ELEMENT_REGISTER_DECLARE (hlsdemux2);
+GST_ELEMENT_REGISTER_DECLARE (dashdemux2);
 
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    adaptivedemux2,
-    "Adaptive Streaming 2 plugin", plugin_init, VERSION,
-    GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif

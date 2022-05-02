@@ -51,6 +51,7 @@
 #include <gst/tag/tag.h>
 
 #include "gsthlselements.h"
+#include "gstadaptivedemuxelements.h"
 #include "gsthlsdemux.h"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -147,8 +148,9 @@ static void gst_hls_demux_stream_finalize (GObject * object);
 G_DEFINE_TYPE (GstHLSDemuxStream, gst_hls_demux_stream,
     GST_TYPE_ADAPTIVE_DEMUX2_STREAM);
 
-GST_ELEMENT_REGISTER_DEFINE (hlsdemux2, "hlsdemux2",
-    GST_RANK_PRIMARY + 1, GST_TYPE_HLS_DEMUX2);
+static gboolean hlsdemux2_element_init (GstPlugin * plugin);
+
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (hlsdemux2, hlsdemux2_element_init);
 
 static void
 gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
@@ -279,9 +281,6 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
   adaptivedemux_class->start_fragment = gst_hls_demux_start_fragment;
   adaptivedemux_class->finish_fragment = gst_hls_demux_finish_fragment;
   adaptivedemux_class->data_received = gst_hls_demux_data_received;
-
-  GST_DEBUG_CATEGORY_INIT (gst_hls_demux2_debug, "hlsdemux2", 0,
-      "hlsdemux2 element");
 }
 
 static void
@@ -2671,6 +2670,23 @@ gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
     ret =
         gst_hls_media_playlist_get_seek_range (hlsdemux->main_stream->playlist,
         start, stop);
+
+  return ret;
+}
+
+static gboolean
+hlsdemux2_element_init (GstPlugin * plugin)
+{
+  gboolean ret = TRUE;
+
+  GST_DEBUG_CATEGORY_INIT (gst_hls_demux2_debug, "hlsdemux2", 0,
+      "hlsdemux2 element");
+
+  if (!adaptivedemux2_base_element_init (plugin))
+    return TRUE;
+
+  ret = gst_element_register (plugin, "hlsdemux2",
+      GST_RANK_PRIMARY + 1, GST_TYPE_HLS_DEMUX2);
 
   return ret;
 }
