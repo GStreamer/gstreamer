@@ -1,7 +1,13 @@
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-omx.doap:

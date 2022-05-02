@@ -1,7 +1,36 @@
+2022-02-15 13:39:43 +0000  Pierre Bourré <pierre.moltess@gmail.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtspclientsink: fix possible shutdown deadlock collect_streams()
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2278>
+
+2022-04-13 14:34:57 +0200  Marc Leeman <m.leeman@televic.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  gst-rtsp-server: minor spelling fixes
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2172>
+
+2022-03-28 21:03:16 +1100  Matthew Waters <matthew@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-stream: remove unused variable:
+	  Fixes:
+	  ../gst/rtsp-server/rtsp-stream.c:2670:9: error: variable 'n_messages' set but not used [-Werror,-Wunused-but-set-variable]
+	  guint n_messages = 0;
+	  ^
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2068>
+
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

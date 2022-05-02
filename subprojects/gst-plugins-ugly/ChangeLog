@@ -1,7 +1,20 @@
+2022-04-15 16:53:25 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Don't try to fixate ANY allowed caps
+	  Instead fall back to the template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2207>
+
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-plugins-ugly.doap:

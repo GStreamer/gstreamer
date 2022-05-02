@@ -1,7 +1,27 @@
+2022-04-21 10:54:50 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson_options.txt:
+	  vaapi: fix up package-origin in meson_options.txt
+	  Follow-up to !2243
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2260>
+
+2022-04-12 15:23:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapivalue.c:
+	  Fix `transfer` gobject-introspection annotation typos
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2163>
+
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gstreamer-vaapi.doap:

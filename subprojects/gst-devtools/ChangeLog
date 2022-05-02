@@ -1,7 +1,23 @@
+2022-03-28 21:15:15 +1100  Matthew Waters <matthew@centricular.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  validate/media-info: silence unsed variable warning
+	  Fixes:
+	  ../validate/gst/validate/gst-validate-media-info.c:714:28: error: variable 'total_sink_count' set but not used [-Werror,-Wunused-but-set-variable]
+	  guint id, ncounters = 0, total_sink_count = 0;
+	  ^
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2068>
+
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-devtools.doap:

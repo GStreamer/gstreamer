@@ -1,7 +1,43 @@
+2022-04-15 16:38:46 +0200  Guillaume Desmottes <guillaume.desmottes@onestream.live>
+
+	* ext/libav/gstavviddec.c:
+	  libav: fix frame leak on negotiation error
+	  The function owns a reference on the frame. Drop it if negotiation
+	  failed as we are already doing for the other error cases.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2217>
+
+2022-04-04 23:32:56 +0200  Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+	* meson.build:
+	  gst-libav: fix build on systems without C++ compiler
+	  Fix the following build failure on systems without C++ compiler:
+	  The following exception(s) were encountered:
+	  Running "/nvmedata/autobuild/instance-9/output-1/host/bin/or1k-buildroot-linux-musl-g++ --version" gave "[Errno 2] No such file or directory: '/nvmedata/autobuild/instance-9/output-1/host/bin/or1k-buildroot-linux-musl-g++'"
+	  Fixes:
+	  - http://autobuild.buildroot.org/results/8ac0ba5eaaf7571857b4d8cfabf1488d640dc59a
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2119>
+
+2022-03-29 09:36:06 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Remove vc1/wmv3 override
+	  FFMPEG 5+ doesn't allow overriding the codec anymore (causes a segfault if you
+	  attempt to do that). But the best part is ... that with the current caps
+	  implementation in pad template and gst_ffmpeg_caps_to_codecid() we would never
+	  replace it by anything different than the existing codec id.
+	  Fixes #1054
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2074>
+
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:

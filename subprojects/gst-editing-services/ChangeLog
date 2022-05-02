@@ -1,7 +1,24 @@
+2022-03-14 09:06:46 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* bindings/python/gi/overrides/__init__.py:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  Fix license as GES is released under the LGPL2+ license
+	  This was a mistake that some of the licensing notice in a few files was
+	  referring to GPL3+ and it needs fixing
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2015>
+
+2022-03-14 14:48:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.1 ===
 
 2022-03-14 11:33:33 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:
