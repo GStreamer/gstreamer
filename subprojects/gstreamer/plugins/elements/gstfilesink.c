@@ -153,6 +153,9 @@ gst_fopen (const gchar * filename, const gchar * mode, gboolean o_sync)
 
   fd = open (filename, flags, 0666);
 
+  if (fd < 0)
+    return NULL;
+
   retval = fdopen (fd, mode);
   return retval;
 #endif
