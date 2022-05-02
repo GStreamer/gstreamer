@@ -236,7 +236,6 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
         context, *cuda_ctx);
     msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
     gst_element_post_message (GST_ELEMENT_CAST (element), msg);
-    gst_context_unref (context);
   }
 
   return TRUE;
