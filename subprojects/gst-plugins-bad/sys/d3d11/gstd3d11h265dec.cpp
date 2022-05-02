@@ -407,9 +407,7 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
 
     if (!gst_d3d11_decoder_configure (inner->d3d11_decoder,
             decoder->input_state, &info,
-            inner->coded_width, inner->coded_height,
-            /* Additional 4 views margin for zero-copy rendering */
-            max_dpb_size + 4)) {
+            inner->coded_width, inner->coded_height, max_dpb_size)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }

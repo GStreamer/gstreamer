@@ -365,9 +365,6 @@ typedef struct _GST_DXVA_Status_AV1
 
 #pragma pack(pop)
 
-/* reference list 8 + 4 margin */
-#define NUM_OUTPUT_VIEW 12
-
 /* *INDENT-OFF* */
 typedef struct _GstD3D11AV1DecInner
 {
@@ -687,7 +684,7 @@ gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
 
     if (!gst_d3d11_decoder_configure (inner->d3d11_decoder,
             decoder->input_state, &info, (gint) inner->max_width,
-            (gint) inner->max_height, NUM_OUTPUT_VIEW)) {
+            (gint) inner->max_height, max_dpb_size)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }
