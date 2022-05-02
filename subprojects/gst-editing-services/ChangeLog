@@ -1,3 +1,18 @@
+=== release 1.20.2 ===
+
+2022-05-02 23:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-editing-services.doap:
+	* meson.build:
+	  Release 1.20.2
+
+2022-05-02 23:29:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.2
+
 2022-03-14 09:06:46 -0300  Thibault Saunier <tsaunier@igalia.com>
 
 	* bindings/python/gi/overrides/GES.py:

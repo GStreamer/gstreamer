@@ -1,3 +1,18 @@
+=== release 1.20.2 ===
+
+2022-05-02 23:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.20.2
+
+2022-05-02 23:29:19 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.2
+
 2022-03-28 21:15:15 +1100  Matthew Waters <matthew@centricular.com>
 
 	* validate/gst/validate/gst-validate-media-info.c:

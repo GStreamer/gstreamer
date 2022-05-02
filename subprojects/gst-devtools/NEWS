@@ -2,13 +2,13 @@ GStreamer 1.20 Release Notes
 
 GStreamer 1.20.0 was originally released on 3 February 2022.
 
-The latest bug-fix release in the 1.20 series is 1.20.1 and was released
-on 14 March 2022.
+The latest bug-fix release in the 1.20 series is 1.20.2 and was released
+on 2 May 2022.
 
 See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
 version of this document.
 
-Last updated: Monday 14 March 2022, 00:30 UTC (log)
+Last updated: Monday 2 May 2022, 0:30 UTC (log)
 
 Introduction
 
@@ -2075,6 +2075,221 @@ List of merge requests and issues fixed in 1.20.1
 
 -   List of Merge Requests applied in 1.20.1
 -   List of Issues fixed in 1.20.1
+
+1.20.2
+
+The second 1.20 bug-fix release (1.20.2) was released on 2 May 2022.
+
+This release only contains bugfixes and it should be safe to update from
+1.20.x.
+
+Highlighted bugfixes in 1.20.2
+
+-   avviddec: Remove vc1/wmv3 override and fix crashes on WMV files with
+    FFMPEG 5.0+
+-   macOS: fix plugin discovery for GStreamer installed via brew and fix
+    loading of Rust plugins
+-   rtpbasepayload: various header extension handling fixes
+-   rtpopusdepay: fix regression in stereo input handling if
+    sprop-stereo is not advertised
+-   rtspclientsink: fix possible shutdown deadlock
+-   mpegts: gracefully handle “empty” program maps and fix AC-4
+    detection
+-   mxfdemux: Handle empty VANC packets and fix EOS handling
+-   playbin3: various playbin3, uridecodebin3, and playsink fixes
+-   ptpclock: fix initial sync-up with certain devices
+-   gltransformation: let graphene alloc its structures memory aligned
+-   webrtcbin fixes and webrtc sendrecv example improvements
+-   video4linux2: various fixes including some fixes for Raspberry Pi
+    users
+-   videorate segment handling fixes and other fixes
+-   nvh264dec, nvh265dec: Fix broken key-unit trick modes and reverse
+    playback
+-   wpe: Reintroduce persistent WebContext
+-   cerbero: Make it easier to consume 1.20.1 macOS GStreamer .pkgs
+-   build fixes and gobject annotation fixes
+-   bug fixes, security fixes, memory leak fixes, and other stability
+    and reliability improvements
+
+gstreamer
+
+-   devicemonitor: clean up signal handlers and hidden providers list
+-   Leaks tracer: fix pthread_atfork return value check leading to bogus
+    warning in log
+-   Rust plugins: Not picked up by the plugin loader on macOS
+-   Failed to use plugins of latest GStreamer version 1.20.x installed
+    by brew on macOS
+-   ptpclock: Allow at least 100ms delay between Sync/Follow_Up and
+    Delay_Req/Delay_Resp messages. Fixes problems acquiring initial sync
+    with certain devices
+-   meson: Add -Wl,-rpath,${libdir} on macOS
+-   registry: skip Rust dep builddirs when searching for plugins
+    recursively
+
+gst-plugins-base
+
+-   appsrc: Clarify buffer ref semantics in signals documentation
+-   appsrc: fix annotations for bindings
+-   typefind: Skip extension parsing for data:// URIs, fixing regression
+    with mp4 files serialised to data uris
+-   playbin3: various fixes
+-   playbin3: fix missing lock when unknown stream type in pad-removed
+    cb
+-   decodebin3: fix collection leaks
+-   decodebin3: Don’t duplicate stream selections
+-   discoverer: chain up to parent finalize methods in all our types to
+    fix memory leaks
+-   glmixerbin: slightly better pad/element creation
+-   gltransformation: let graphene alloc its structures memory aligned
+-   ogg: fix possible buffer overrun
+-   rtpbasepayload: Don’t write header extensions if there’s no
+    corresponding…
+-   rtpbasepayload: always store input buffer meta before negotiation
+-   rtpbasepayload: fix transfer annotation for push and push_list
+-   subparse: don’t try to index string with -1
+-   riff-media: fix memory leak after usage for g_strjoin()
+-   playbin/playbin3: Allow setting a NULL URI
+-   playsink: Complete reconfiguration on pad release.
+-   parsebin: Expose streams of unknown type
+-   pbutils: Fix wmv screen description detection
+-   subparse: don’t deref a potentially NULL variable
+-   rawvideoparse: set format from caps in
+    gst_raw_video_parse_set_config_from_caps
+-   videodecoder: release stream lock after handling gap events
+-   videorate: fix assertion when pushing last and only buffer without
+    duration
+-   videorate: Revert “don’t reset on segment update” to fix segment
+    handling regressions
+-   gst-play-1.0, gst-launch-1.0: Enable win32 high-resolution timer
+    also for MinGW build
+
+gst-plugins-good
+
+-   deinterlace: silence unused-but-set werror from imported code
+-   qtdemux: fix leak of channel_mapping
+-   rtpopusdepay: missing sprop-stereo should not assume mono
+-   rtpjitterbuffer: Fix invalid memory access in
+    rtp_jitter_buffer_pop()
+-   rtpptdemux: fix leak of caps when ignoring a pt
+-   rtpredenc: quieten warning about ignoring header extensions
+-   soup: Fix pre-processor macros in souploader for libsoup-3.0
+-   twcc: Note that twcc-stats packet loss counts reordering as loss +
+    add some logging
+-   video4linux2: Manual backports for RPi users
+-   wavparse: handle URI query in any parse state, fixing audio track
+    selection issue in GES
+-   wavparse: Unset DISCONT buffer flag for divided into multiple
+    buffers in push mode
+
+gst-plugins-bad
+
+-   av1parse: Fix several issues about the colorimetry.
+-   av1parse: fix up various possible logic errors
+-   dashsink: fix missing mutex unlock in error code path when failing
+    to get content
+-   d3d11videosink: Fix for unhandled mouse double click events
+-   interlace: Also handle a missing “interlace-mode” field as
+    progressive
+-   msdk: fix build with MSVC
+-   mxfdemux: Fix issues at EOS
+-   mxfdemux: Handle empty VANC packets
+-   nvh264dec, nvh265dec: Fix broken key-unit trick and reverse playback
+-   nvvp9sldec: Increase DPB size to cover render delay
+-   rvsg: fix cairo include
+-   tsdemux: Fix AC-4 detection in MPEG-TS
+-   tsdemux: Handle “empty” PMT gracefully
+-   va: pool: don’t advertise the GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT
+    option any more
+-   v4l2codecs: Fix memory leak
+-   v4l2videodec: set frame duration according to framerate
+-   webrtcbin: Update documentation of ‘get-stats’ action signal
+-   webrtcbin: Check data channel transport for notifying
+    ‘ice-gathering-state’
+-   webrtcbin: Avoid access of freed memory
+-   wpe: Reintroduce persistent WebContext
+-   Build: use CMake to find some openssl and exr deps
+-   Fix multiple “unused-but-set variable” compiler warnings
+
+gst-plugins-ugly
+
+-   x264enc: Don’t try to fixate ANY allowed caps
+
+gst-libav
+
+-   video decoders: fix frame leak on negotiation error
+-   Fix build on systems without C++ compiler
+-   avviddec: Remove vc1/wmv3 override (fixing crash with FFmpeg 5
+-   Segfaults on ASF/WMV files with FFMPEG 5.0+
+
+gst-rtsp-server
+
+-   rtspclientsink: fix possible shutdown deadlock in collect_streams()
+-   Minor spelling fixes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   Fix build on systems without C++ compiler
+
+gst-editing-services
+
+-   License clarification: GES is released under the LGPL2+ license
+
+gst-examples:
+
+-   Fix build on macOS with gtk+-quartz-3.0
+-   player android: add missing dummy.cpp
+-   player android: update for android changes
+-   webrtc_sendrecv.py: Link pads instead of elements
+-   webrtc_sendrecv.py: Implement all negotiation modes + bugfixes
+
+Development build environment + gst-full build
+
+-   meson: provide gobject-cast-checks, glib-checks and glib-asserts
+    options at top level as well
+
+Cerbero build tool and packaging changes in 1.20.2
+
+-   macOS: Make it easier to consume 1.20.1 GStreamer .pkgs
+-   Android: fix text relocation regression on Android (x86/ x86_64
+    platforms)
+
+Bindings
+
+-   appsrc: fix annotations for bindings
+-   bindings: The out args for gst_rtp_buffer_get_extension_data*() are
+    optional
+-   rtpbasepayload: fix transfer annotation for push and push_list
+
+Contributors to 1.20.2
+
+Bastian Krause, Benjamin Gaignard, Camilo Celis Guzman, Chun-wei Fan,
+Corentin Damman, Daniel Stone, Dongil Park, Edward Hervey, Fabrice
+Fontaine, Guillaume Desmottes, Havard Graff, He Junyan, Hoonhee Lee, Hou
+Qi, Jan Schmidt, Marc Leeman, Mathieu Duponchelle, Matthew Waters,
+Nicolas Dufresne, Nirbheek Chauhan, Philippe Normand, Pierre Bourré,
+Sangchul Lee, Sebastian Dröge, Seungha Yang, Stéphane Cerveau, Thibault
+Saunier, Tim-Philipp Müller, Tong Wu, Tristan Matthews, Tulio Beloqui,
+Wonchul Lee, Zhao Zhili,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.20.2
+
+-   List of Merge Requests applied in 1.20.2
+-   List of Issues fixed in 1.20.2
 
 Schedule for 1.22
 
