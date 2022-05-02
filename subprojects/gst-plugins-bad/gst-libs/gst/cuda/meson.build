@@ -10,7 +10,6 @@ cuda_sources = [
 
 cuda_headers = [
     'cuda-prelude.h',
-    'cuda-gst.h',
     'gstcudabufferpool.h',
     'gstcudacontext.h',
     'gstcudaloader.h',
@@ -61,8 +60,7 @@ if build_gir
     'namespace' : 'CudaGst',
     'nsversion' : api_version,
     'identifier_prefix' : 'CU',
-    'symbol_prefix' : 'cu',
-    'export_packages' : pkg_name,
+    'symbol_prefix' : ['cu', 'cuda'],
     'includes' : [],
     'install' : true,
     'extra_args' : [],
@@ -100,7 +98,7 @@ pkgconfig.generate(gstcuda,
   description : 'Unstable library to work with CUDA inside GStreamer',
 )
 
-install_headers(cuda_headers, subdir : 'gstreamer-1.0/gst/cuda')
+install_headers(cuda_headers + ['cuda-gst.h'], subdir : 'gstreamer-1.0/gst/cuda')
 gstcuda_dep = declare_dependency(link_with : gstcuda,
   include_directories : [libsinc],
   dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep],
