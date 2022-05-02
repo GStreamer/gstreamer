@@ -378,7 +378,7 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
      * adaptation field length is 183. This just means a zero length
      * payload so we clear the payload flag here and continue.
      */
-    GST_WARNING ("PID 0x%04x afc == 0x%02x and length %d == 183 (ignored)",
+    GST_DEBUG ("PID 0x%04x afc == 0x%02x and length %d == 183 (ignored)",
         packet->pid, packet->scram_afc_cc & 0x30, length);
     packet->scram_afc_cc &= ~0x10;
   } else if (length > 182) {
