@@ -566,8 +566,8 @@ _h265_fill_ptl (GstVaH265Enc * self,
   /* additional indications specified for general_profile_idc from 4~10 */
   if (sequence->general_profile_idc == 4) {
     /* In A.3.5, Format range extensions profiles.
-       Just support main444, main444-10 and main422-10 profile now, may add
-       more profiles when needed. */
+       Just support main444, main444-10 main422-10 main422-12 and main-12
+       profile now, may add more profiles when needed. */
     switch (base->profile) {
       case VAProfileHEVCMain444:
         ptl->max_12bit_constraint_flag = 1;
@@ -594,6 +594,17 @@ _h265_fill_ptl (GstVaH265Enc * self,
       case VAProfileHEVCMain422_10:
         ptl->max_12bit_constraint_flag = 1;
         ptl->max_10bit_constraint_flag = 1;
+        ptl->max_8bit_constraint_flag = 0;
+        ptl->max_422chroma_constraint_flag = 1;
+        ptl->max_420chroma_constraint_flag = 0;
+        ptl->max_monochrome_constraint_flag = 0;
+        ptl->intra_constraint_flag = 0;
+        ptl->one_picture_only_constraint_flag = 0;
+        ptl->lower_bit_rate_constraint_flag = 1;
+        break;
+      case VAProfileHEVCMain422_12:
+        ptl->max_12bit_constraint_flag = 1;
+        ptl->max_10bit_constraint_flag = 0;
         ptl->max_8bit_constraint_flag = 0;
         ptl->max_422chroma_constraint_flag = 1;
         ptl->max_420chroma_constraint_flag = 0;
@@ -2391,17 +2402,59 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
 }
 
 static guint
-_h265_get_rtformat (GstVaH265Enc * self, GstVideoFormat format)
+_h265_get_rtformat (GstVaH265Enc * self, GstVideoFormat format,
+    guint * depth, guint * chrome)
 {
   guint chroma;
 
   chroma = gst_va_chroma_from_video_format (format);
 
-  /* Check whether the rtformat is supported. */
-  if (chroma != VA_RT_FORMAT_YUV420) {
-    GST_ERROR_OBJECT (self, "Unsupported chroma for video format: %s",
-        gst_video_format_to_string (format));
-    return 0;
+  switch (chroma) {
+    case VA_RT_FORMAT_YUV400:
+      *depth = 8;
+      *chrome = 0;
+      break;
+    case VA_RT_FORMAT_YUV420:
+      *depth = 8;
+      *chrome = 1;
+      break;
+    case VA_RT_FORMAT_YUV422:
+      *depth = 8;
+      *chrome = 2;
+      break;
+    case VA_RT_FORMAT_YUV444:
+      *depth = 8;
+      *chrome = 3;
+      break;
+    case VA_RT_FORMAT_YUV420_10:
+      *depth = 10;
+      *chrome = 1;
+      break;
+    case VA_RT_FORMAT_YUV422_10:
+      *depth = 10;
+      *chrome = 2;
+      break;
+    case VA_RT_FORMAT_YUV444_10:
+      *depth = 10;
+      *chrome = 3;
+      break;
+    case VA_RT_FORMAT_YUV420_12:
+      *depth = 12;
+      *chrome = 1;
+      break;
+    case VA_RT_FORMAT_YUV422_12:
+      *depth = 12;
+      *chrome = 2;
+      break;
+    case VA_RT_FORMAT_YUV444_12:
+      *depth = 12;
+      *chrome = 3;
+      break;
+    default:
+      chroma = 0;
+      GST_ERROR_OBJECT (self, "Unsupported chroma for video format: %s",
+          gst_video_format_to_string (format));
+      break;
   }
 
   return chroma;
@@ -2417,13 +2470,15 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
   VAProfile profile;
   guint rt_format;
   GstCaps *allowed_caps = NULL;
-  guint num_structures, i;
+  guint num_structures, i, j;
   GstStructure *structure;
   const GValue *v_profile;
-  GPtrArray *candidates = NULL;
-  gchar *profile_name;
+  GArray *caps_candidates = NULL;
+  GArray *chroma_candidates = NULL;
+  guint depth = 0, chrome = 0;
 
-  candidates = g_ptr_array_new_with_free_func (g_free);
+  caps_candidates = g_array_new (TRUE, TRUE, sizeof (VAProfile));
+  chroma_candidates = g_array_new (TRUE, TRUE, sizeof (VAProfile));
 
   /* First, check whether the downstream requires a specified profile. */
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (base));
@@ -2439,8 +2494,12 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
         continue;
 
       if (G_VALUE_HOLDS_STRING (v_profile)) {
-        profile_name = g_strdup (g_value_get_string (v_profile));
-        g_ptr_array_add (candidates, profile_name);
+        profile =
+            gst_va_profile_from_name (HEVC, g_value_get_string (v_profile));
+        if (profile == VAProfileNone)
+          continue;
+
+        g_array_append_val (caps_candidates, profile);
       } else if (GST_VALUE_HOLDS_LIST (v_profile)) {
         guint j;
 
@@ -2449,21 +2508,23 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
           if (!p)
             continue;
 
-          profile_name = g_strdup (g_value_get_string (p));
-          g_ptr_array_add (candidates, profile_name);
+          profile = gst_va_profile_from_name (HEVC, g_value_get_string (p));
+          if (profile == VAProfileNone)
+            continue;
+          g_array_append_val (caps_candidates, profile);
         }
       }
     }
   }
 
-  if (candidates->len == 0) {
+  if (caps_candidates->len == 0) {
     GST_ERROR_OBJECT (self, "No available profile in caps");
     ret = FALSE;
     goto out;
   }
 
   in_format = GST_VIDEO_INFO_FORMAT (&base->input_state->info);
-  rt_format = _h265_get_rtformat (self, in_format);
+  rt_format = _h265_get_rtformat (self, in_format, &depth, &chrome);
   if (!rt_format) {
     GST_ERROR_OBJECT (self, "unsupported video format %s",
         gst_video_format_to_string (in_format));
@@ -2471,23 +2532,71 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     goto out;
   }
 
-  /* Find the suitable profile by features and check the HW
-   * support. */
+  /* To make the thing a little simple here, We only consider the bit
+     depth compatibility for each level. For example, we will consider
+     that Main-4:4:4-10 is able to contain 8 bits 4:4:4 streams, but
+     the we wiil not consider that it will contain 10 bits 4:2:0 stream. */
+  if (chrome == 3) {
+    /* 4:4:4 */
+    if (depth == 8) {
+      profile = VAProfileHEVCMain444;
+      g_array_append_val (chroma_candidates, profile);
+    }
 
-  /* Just use the first HW available profile and disable features if
-   * needed. */
-  profile_name = NULL;
-  for (i = 0; i < candidates->len; i++) {
-    profile_name = g_ptr_array_index (candidates, i);
-    profile = gst_va_profile_from_name (HEVC, profile_name);
-    if (profile == VAProfileNone)
-      continue;
+    if (depth <= 10) {
+      profile = VAProfileHEVCMain444_10;
+      g_array_append_val (chroma_candidates, profile);
+    }
 
+    if (depth <= 12) {
+      profile = VAProfileHEVCMain444_12;
+      g_array_append_val (chroma_candidates, profile);
+    }
+  } else if (chrome == 2) {
+    /* 4:2:2 */
+    if (depth <= 10) {
+      profile = VAProfileHEVCMain422_10;
+      g_array_append_val (chroma_candidates, profile);
+    }
+
+    if (depth <= 12) {
+      profile = VAProfileHEVCMain422_12;
+      g_array_append_val (chroma_candidates, profile);
+    }
+  } else if (chrome == 1 || chrome == 0) {
+    /* 4:2:0 or 4:0:0 */
+    if (depth == 8) {
+      profile = VAProfileHEVCMain;
+      g_array_append_val (chroma_candidates, profile);
+    }
+
+    if (depth <= 10) {
+      profile = VAProfileHEVCMain10;
+      g_array_append_val (chroma_candidates, profile);
+    }
+
+    if (depth <= 12) {
+      profile = VAProfileHEVCMain12;
+      g_array_append_val (chroma_candidates, profile);
+    }
+  }
+
+  /* Just use the first HW available profile in candidate. */
+  for (i = 0; i < chroma_candidates->len; i++) {
+    profile = g_array_index (chroma_candidates, VAProfile, i);
     if (!gst_va_encoder_has_profile (base->encoder, profile))
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
                 profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
+      continue;
+
+    for (j = 0; j < caps_candidates->len; j++) {
+      VAProfile p = g_array_index (caps_candidates, VAProfile, j);
+      if (profile == p)
+        break;
+    }
+    if (j == caps_candidates->len)
       continue;
 
     *_profile = profile;
@@ -2496,11 +2605,9 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     goto out;
   }
 
-  if (ret == FALSE)
-    goto out;
-
 out:
-  g_clear_pointer (&candidates, g_ptr_array_unref);
+  g_clear_pointer (&caps_candidates, g_array_unref);
+  g_clear_pointer (&chroma_candidates, g_array_unref);
   g_clear_pointer (&allowed_caps, gst_caps_unref);
 
   if (ret) {
@@ -3068,16 +3175,35 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
   if ((self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
           || self->rc.rc_ctrl_mode == VA_RC_VCM) && bitrate == 0) {
     /* FIXME: Provide better estimation. */
-    /* Just Using a 1/6 compression ratio, 12 bits per pixel for YUV420.
-       TODO: Other video format. */
+    /* Choose the max value of all levels' MinCr which is 8, and x2 for
+       conservative calculation. So just using a 1/16 compression ratio,
+       and the bits per pixel for YUV420, YUV422, YUV444, accordingly. */
     guint64 factor;
+    guint depth = 8, chrome = 1;
+    guint bits_per_pix;
 
-    factor = (guint64) self->luma_width * self->luma_height * 12 / 6;
+    if (!_h265_get_rtformat (self,
+            GST_VIDEO_INFO_FORMAT (&base->input_state->info), &depth, &chrome))
+      g_assert_not_reached ();
+
+    if (chrome == 3) {
+      bits_per_pix = 24;
+    } else if (chrome == 2) {
+      bits_per_pix = 16;
+    } else {
+      bits_per_pix = 12;
+    }
+    bits_per_pix = bits_per_pix + bits_per_pix * (depth - 8) / 8;
+
+    factor = (guint64) self->luma_width * self->luma_height * bits_per_pix / 16;
     bitrate = gst_util_uint64_scale (factor,
         GST_VIDEO_INFO_FPS_N (&base->input_state->info),
         GST_VIDEO_INFO_FPS_D (&base->input_state->info)) / 1000;
 
     GST_INFO_OBJECT (self, "target bitrate computed to %u kbps", bitrate);
+
+    self->prop.bitrate = bitrate;
+    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_BITRATE]);
   }
 
   /* Adjust the setting based on RC mode. */
@@ -3372,11 +3498,40 @@ static void
 _h265_calculate_coded_size (GstVaH265Enc * self)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+  guint codedbuf_size = 0;
+  guint chrome, depth;
+
+  if (!_h265_get_rtformat (self,
+          GST_VIDEO_INFO_FORMAT (&base->input_state->info), &depth, &chrome))
+    g_assert_not_reached ();
+
+  switch (chrome) {
+    case 0:
+      /* 4:0:0 */
+    case 1:
+      /* 4:2:0 */
+      codedbuf_size = (self->luma_width * self->luma_height * 3 / 2);
+      break;
+    case 2:
+      /* 4:2:2 */
+      codedbuf_size = (self->luma_width * self->luma_height * 2);
+      break;
+    case 3:
+      /* 4:4:4 */
+      codedbuf_size = (self->luma_width * self->luma_height * 3);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  codedbuf_size = codedbuf_size + (codedbuf_size * (depth - 8) / 8);
+  codedbuf_size = codedbuf_size / (self->min_cr / 2 /* For safety */ );
+
   /* FIXME: Using only a rough approximation for bitstream headers.
    * Not taken into account: ScalingList, RefPicListModification,
    * PredWeightTable, which is not used now. */
   /* Calculate the maximum sizes for common headers (in bits) */
-  guint codedbuf_size = 0;
 
   /* Account for VPS header */
   codedbuf_size += 4 /* start code */  + GST_ROUND_UP_8 (MAX_VPS_HDR_SIZE +
@@ -3393,11 +3548,6 @@ _h265_calculate_coded_size (GstVaH265Enc * self)
   /* Account for slice header */
   codedbuf_size += self->partition.num_slices * (4 +
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE + MAX_SHORT_TERM_REFPICSET_SIZE) / 8);
-
-  /* TODO: Only YUV 4:2:0 formats are supported for now.
-     more video format to check. */
-  codedbuf_size +=
-      (self->luma_width * self->luma_height * 3 / 2) / self->min_cr;
 
   base->codedbuf_size = codedbuf_size;
   GST_INFO_OBJECT (self, "Calculate codedbuf size: %u", base->codedbuf_size);
