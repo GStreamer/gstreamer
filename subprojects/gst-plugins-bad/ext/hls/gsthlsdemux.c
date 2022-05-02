@@ -1166,6 +1166,13 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
     buffer = tmp_buffer;
   }
 
+  if (hlsdemux->prog_dt) {
+    gst_adaptive_demux_stream_set_tags (stream,
+        gst_tag_list_new (GST_TAG_DATE_TIME, hlsdemux->prog_dt, NULL));
+    gst_date_time_unref (hlsdemux->prog_dt);
+    hlsdemux->prog_dt = NULL;
+  }
+
   return gst_hls_demux_handle_buffer (demux, stream, buffer, FALSE);
 }
 
@@ -1247,7 +1254,9 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemuxStream * stream)
   m3u8 = gst_hls_demux_stream_get_m3u8 (hlsdemux_stream);
 
   forward = (stream->demux->segment.rate > 0);
-  file = gst_m3u8_get_next_fragment (m3u8, forward, &sequence_pos, &discont);
+  file =
+      gst_m3u8_get_next_fragment (m3u8, forward, &sequence_pos,
+      &hlsdemux->prog_dt, &discont);
 
   if (file == NULL) {
     GST_INFO_OBJECT (hlsdemux, "This playlist doesn't contain more fragments");
@@ -1359,6 +1368,12 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   GST_DEBUG_OBJECT (demux, "Streams aware : %d", demux->streams_aware);
 
   gst_hls_demux_clear_all_pending_data (demux);
+
+  if (demux->prog_dt) {
+    gst_date_time_unref (demux->prog_dt);
+    demux->prog_dt = NULL;
+  }
+
   GST_M3U8_CLIENT_UNLOCK (hlsdemux->client);
 }
 

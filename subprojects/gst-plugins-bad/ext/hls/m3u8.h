@@ -99,6 +99,7 @@ struct _GstM3U8MediaFile
   gchar *key;
   guint8 iv[16];
   gint64 offset, size;
+  GstDateTime *program_dt;      /* program date time */
   gint ref_count;               /* ATOMIC */
   GstM3U8InitFile *init_file;   /* Media Initialization (hold ref) */
 };
@@ -127,6 +128,7 @@ void               gst_m3u8_set_uri              (GstM3U8      * m3u8,
 GstM3U8MediaFile * gst_m3u8_get_next_fragment    (GstM3U8      * m3u8,
                                                   gboolean       forward,
                                                   GstClockTime * sequence_position,
+                                                  GstDateTime ** program_dt,
                                                   gboolean     * discont);
 
 gboolean           gst_m3u8_has_next_fragment    (GstM3U8 * m3u8,

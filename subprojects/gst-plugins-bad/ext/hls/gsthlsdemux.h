@@ -141,6 +141,8 @@ struct _GstHLSDemux
   GHashTable *keys;
   GMutex      keys_lock;
 
+  GstDateTime *prog_dt;
+
   /* FIXME: check locking, protected automatically by manifest_lock already? */
   /* The master playlist with the available variant streams */
   GstHLSMasterPlaylist *master;

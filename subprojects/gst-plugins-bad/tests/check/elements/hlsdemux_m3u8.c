@@ -572,7 +572,7 @@ GST_START_TEST (test_live_playlist_rotated)
 
   ret = gst_m3u8_update (pl, g_strdup (LIVE_ROTATED_PLAYLIST));
   assert_equals_int (ret, TRUE);
-  file = gst_m3u8_get_next_fragment (pl, TRUE, NULL, NULL);
+  file = gst_m3u8_get_next_fragment (pl, TRUE, NULL, NULL, NULL);
   fail_unless (file != NULL);
   gst_m3u8_media_file_unref (file);
 
@@ -805,7 +805,7 @@ GST_START_TEST (test_get_next_fragment)
   pl = master->default_variant->m3u8;
 
   /* Check the next fragment */
-  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinuous);
+  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, NULL, &discontinuous);
   fail_unless (mf != NULL);
   assert_equals_int (discontinuous, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
@@ -818,7 +818,7 @@ GST_START_TEST (test_get_next_fragment)
   gst_m3u8_advance_fragment (pl, TRUE);
 
   /* Check next media segments */
-  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinuous);
+  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, NULL, &discontinuous);
   fail_unless (mf != NULL);
   assert_equals_int (discontinuous, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
@@ -831,7 +831,7 @@ GST_START_TEST (test_get_next_fragment)
   gst_m3u8_advance_fragment (pl, TRUE);
 
   /* Check next media segments */
-  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, &discontinuous);
+  mf = gst_m3u8_get_next_fragment (pl, TRUE, &timestamp, NULL, &discontinuous);
   assert_equals_int (discontinuous, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
   assert_equals_uint64 (timestamp, 20 * GST_SECOND);

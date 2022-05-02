@@ -32,7 +32,8 @@
 #define GST_CAT_DEFAULT hls_debug
 
 static GstM3U8MediaFile *gst_m3u8_media_file_new (gchar * uri,
-    gchar * title, GstClockTime duration, guint sequence);
+    gchar * title, GstClockTime duration, guint sequence,
+    GstDateTime * program_dt);
 static void gst_m3u8_init_file_unref (GstM3U8InitFile * self);
 static gchar *uri_join (const gchar * uri, const gchar * path);
 
@@ -116,7 +117,7 @@ gst_m3u8_unref (GstM3U8 * self)
 
 static GstM3U8MediaFile *
 gst_m3u8_media_file_new (gchar * uri, gchar * title, GstClockTime duration,
-    guint sequence)
+    guint sequence, GstDateTime * program_dt)
 {
   GstM3U8MediaFile *file;
 
@@ -126,6 +127,7 @@ gst_m3u8_media_file_new (gchar * uri, gchar * title, GstClockTime duration,
   file->duration = duration;
   file->sequence = sequence;
   file->ref_count = 1;
+  file->program_dt = program_dt;
 
   return file;
 }
@@ -150,6 +152,8 @@ gst_m3u8_media_file_unref (GstM3U8MediaFile * self)
     g_free (self->title);
     g_free (self->uri);
     g_free (self->key);
+    if (self->program_dt)
+      gst_date_time_unref (self->program_dt);
     g_free (self);
   }
 }
@@ -483,6 +487,7 @@ gboolean
 gst_m3u8_update (GstM3U8 * self, gchar * data)
 {
   gint val;
+  GstDateTime *program_dt = NULL;
   GstClockTime duration;
   gchar *title, *end;
   gboolean discontinuity = FALSE;
@@ -558,7 +563,10 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
       data = uri_join (self->base_uri ? self->base_uri : self->uri, data);
       if (data != NULL) {
         GstM3U8MediaFile *file;
-        file = gst_m3u8_media_file_new (data, title, duration, mediasequence++);
+        file =
+            gst_m3u8_media_file_new (data, title, duration,
+            mediasequence++, program_dt);
+        program_dt = NULL;
 
         /* set encryption params */
         file->key = current_key ? g_strdup (current_key) : NULL;
@@ -647,8 +655,12 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
         self->discont_sequence++;
         discontinuity = TRUE;
       } else if (g_str_has_prefix (data_ext_x, "PROGRAM-DATE-TIME:")) {
-        /* <YYYY-MM-DDThh:mm:ssZ> */
-        GST_DEBUG ("FIXME parse date");
+        if (program_dt)
+          gst_date_time_unref (program_dt);
+        program_dt = gst_date_time_new_from_iso8601_string (data + 25);
+        if (!program_dt) {
+          GST_WARNING ("Could not parse program date/time");
+        }
       } else if (g_str_has_prefix (data_ext_x, "ALLOW-CACHE:")) {
         self->allowcache = g_ascii_strcasecmp (data + 19, "YES") == 0;
       } else if (g_str_has_prefix (data_ext_x, "KEY:")) {
@@ -766,6 +778,11 @@ gst_m3u8_update (GstM3U8 * self, gchar * data)
 
   g_free (current_key);
   current_key = NULL;
+
+  if (program_dt) {
+    gst_date_time_unref (program_dt);
+    program_dt = NULL;
+  }
 
   self->files = g_list_reverse (self->files);
 
@@ -919,7 +936,8 @@ m3u8_find_next_fragment (GstM3U8 * m3u8, gboolean forward)
 
 GstM3U8MediaFile *
 gst_m3u8_get_next_fragment (GstM3U8 * m3u8, gboolean forward,
-    GstClockTime * sequence_position, gboolean * discont)
+    GstClockTime * sequence_position, GstDateTime ** program_dt,
+    gboolean * discont)
 {
   GstM3U8MediaFile *file = NULL;
 
@@ -945,6 +963,11 @@ gst_m3u8_get_next_fragment (GstM3U8 * m3u8, gboolean forward,
 
   if (sequence_position)
     *sequence_position = m3u8->sequence_position;
+
+  if (program_dt)
+    *program_dt =
+        file->program_dt ? gst_date_time_ref (file->program_dt) : NULL;
+
   if (discont)
     *discont = file->discont || (m3u8->sequence != file->sequence);
 
