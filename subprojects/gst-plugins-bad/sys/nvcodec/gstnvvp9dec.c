@@ -31,9 +31,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_nv_vp9_dec_debug);
 #define GST_CAT_DEFAULT gst_nv_vp9_dec_debug
 
-/* reference list 8 + 2 margin */
-#define NUM_OUTPUT_VIEW 10
-
 struct _GstNvVp9Dec
 {
   GstVp9Decoder parent;
@@ -272,9 +269,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   gst_video_info_set_format (&info, out_format, self->width, self->height);
   if (!gst_nv_decoder_configure (self->decoder,
           cudaVideoCodec_VP9, &info, self->width, self->height,
-          frame_hdr->bit_depth,
-          /* +4 for render delay */
-          NUM_OUTPUT_VIEW + 4)) {
+          frame_hdr->bit_depth, max_dpb_size)) {
     GST_ERROR_OBJECT (self, "Failed to configure decoder");
     return GST_FLOW_NOT_NEGOTIATED;
   }

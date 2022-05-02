@@ -276,6 +276,9 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
 
   format = GST_VIDEO_INFO_FORMAT (info);
 
+  /* Additional 2 frame margin */
+  pool_size += 2;
+
   /* FIXME: check aligned resolution or actual coded resolution */
   create_info.ulWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
   create_info.ulHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
