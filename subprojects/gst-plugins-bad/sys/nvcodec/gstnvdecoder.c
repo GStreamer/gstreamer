@@ -84,6 +84,7 @@ struct _GstNvDecoder
 
   GstNvDecoderFrameInfo *frame_pool;
   guint pool_size;
+  gboolean alloc_aux_frame;
 
   GstVideoInfo info;
   GstVideoInfo coded_info;
@@ -254,11 +255,12 @@ gst_nv_decoder_reset (GstNvDecoder * self)
 gboolean
 gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
     GstVideoInfo * info, gint coded_width, gint coded_height,
-    guint coded_bitdepth, guint pool_size)
+    guint coded_bitdepth, guint pool_size, gboolean alloc_aux_frame)
 {
   CUVIDDECODECREATEINFO create_info = { 0, };
   GstVideoFormat format;
   gboolean ret;
+  guint alloc_size;
 
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
   g_return_val_if_fail (codec < cudaVideoCodec_NumCodecs, FALSE);
@@ -279,10 +281,20 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   /* Additional 2 frame margin */
   pool_size += 2;
 
+  /* Need pool size * 2 for decode-only (used for reference) frame
+   * and output frame, AV1 film grain case for example */
+  if (alloc_aux_frame) {
+    alloc_size = pool_size * 2;
+  } else {
+    alloc_size = pool_size;
+  }
+
+  decoder->alloc_aux_frame = alloc_aux_frame;
+
   /* FIXME: check aligned resolution or actual coded resolution */
   create_info.ulWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
   create_info.ulHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
-  create_info.ulNumDecodeSurfaces = pool_size;
+  create_info.ulNumDecodeSurfaces = alloc_size;
   create_info.CodecType = codec;
   create_info.ChromaFormat = chroma_format_from_video_format (format);
   create_info.ulCreationFlags = cudaVideoCreate_Default;
@@ -355,8 +367,15 @@ gst_nv_decoder_new_frame (GstNvDecoder * decoder)
 
   frame = g_new0 (GstNvDecoderFrame, 1);
   frame->index = index_to_use;
+  frame->decode_frame_index = index_to_use;
   frame->decoder = gst_object_ref (decoder);
   frame->ref_count = 1;
+  if (decoder->alloc_aux_frame) {
+    /* [0, pool_size - 1]: output picture
+     * [pool_size, pool_size * 2 - 1]: decoder output without film-grain,
+     * used for reference picture */
+    frame->decode_frame_index = index_to_use + decoder->pool_size;
+  }
 
   GST_LOG_OBJECT (decoder, "New frame %p (index %d)", frame, frame->index);
 
@@ -1001,6 +1020,10 @@ gst_nv_decoder_get_supported_codec_profiles (GValue * profiles,
 
       ret = TRUE;
       break;
+    case cudaVideoCodec_AV1:
+      g_value_set_static_string (&val, "main");
+      gst_value_list_append_value (profiles, &val);
+      ret = TRUE;
     default:
       break;
   }
@@ -1045,7 +1068,8 @@ const GstNvdecoderCodecMap codec_map_list[] = {
       "video/x-h265, stream-format = (string) byte-stream"
         ", alignment = (string) au, profile = (string) { main }"},
   {cudaVideoCodec_VP8, "vp8", "video/x-vp8"},
-  {cudaVideoCodec_VP9, "vp9", "video/x-vp9"}
+  {cudaVideoCodec_VP9, "vp9", "video/x-vp9"},
+  {cudaVideoCodec_AV1, "av1", "video/x-av1, alignment = (string) frame"}
 };
 
 gboolean

@@ -256,7 +256,7 @@ gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
 
     if (!gst_nv_decoder_configure (self->decoder,
             cudaVideoCodec_VP8, &info, self->width, self->height, 8,
-            max_dpb_size)) {
+            max_dpb_size, FALSE)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }

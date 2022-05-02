@@ -40,6 +40,9 @@ typedef struct _GstNvDecoderFrame
 
   gboolean mapped;
 
+  /* Extra frame allocated for AV1 film grain */
+  gint decode_frame_index;
+
   /*< private >*/
   GstNvDecoder *decoder;
 
@@ -56,7 +59,8 @@ gboolean       gst_nv_decoder_configure (GstNvDecoder * decoder,
                                          gint coded_width,
                                          gint coded_height,
                                          guint coded_bitdepth,
-                                         guint pool_size);
+                                         guint pool_size,
+                                         gboolean alloc_aux_frame);
 
 GstNvDecoderFrame * gst_nv_decoder_new_frame (GstNvDecoder * decoder);
 

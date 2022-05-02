@@ -31,6 +31,7 @@
 
 #include "gstnvdec.h"
 #include "gstnvenc.h"
+#include "gstnvav1dec.h"
 #include "gstnvh264dec.h"
 #include "gstnvh265dec.h"
 #include "gstnvvp8dec.h"
@@ -218,6 +219,12 @@ plugin_init (GstPlugin * plugin)
                 gst_nv_vp9_dec_register (plugin,
                     i, GST_RANK_PRIMARY, sink_template, src_template, TRUE);
               }
+              break;
+            case cudaVideoCodec_AV1:
+              gst_nv_av1_dec_register (plugin, i, GST_RANK_PRIMARY,
+                  sink_template, src_template);
+              /* Stateless decoder only in case of AV1 */
+              register_cuviddec = FALSE;
               break;
             default:
               break;

@@ -6,6 +6,7 @@ nvcodec_sources = [
   'gstnvh265enc.c',
   'gstnvdec.c',
   'gstcuvidloader.c',
+  'gstnvav1dec.c',
   'gstnvdecoder.c',
   'gstnvh264dec.c',
   'gstnvh265dec.c',

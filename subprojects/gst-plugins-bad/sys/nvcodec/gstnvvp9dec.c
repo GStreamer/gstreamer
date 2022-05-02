@@ -269,7 +269,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
   gst_video_info_set_format (&info, out_format, self->width, self->height);
   if (!gst_nv_decoder_configure (self->decoder,
           cudaVideoCodec_VP9, &info, self->width, self->height,
-          frame_hdr->bit_depth, max_dpb_size)) {
+          frame_hdr->bit_depth, max_dpb_size, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to configure decoder");
     return GST_FLOW_NOT_NEGOTIATED;
   }
