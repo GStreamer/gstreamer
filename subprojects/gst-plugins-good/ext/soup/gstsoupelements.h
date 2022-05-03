@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-void soup_element_init (GstPlugin * plugin);
+gboolean soup_element_init (GstPlugin * plugin);
 
 GST_ELEMENT_REGISTER_DECLARE (souphttpsrc);
 GST_ELEMENT_REGISTER_DECLARE (souphttpclientsink);

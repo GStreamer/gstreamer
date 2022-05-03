@@ -31,15 +31,6 @@ plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (gst_soup_debug, "soup", 0, "soup");
-
-#ifndef STATIC_SOUP
-  if (!gst_soup_load_library ()) {
-    GST_WARNING ("Failed to load libsoup library");
-    return TRUE;
-  }
-#endif
-
   ret |= GST_ELEMENT_REGISTER (souphttpsrc, plugin);
   ret |= GST_ELEMENT_REGISTER (souphttpclientsink, plugin);
 

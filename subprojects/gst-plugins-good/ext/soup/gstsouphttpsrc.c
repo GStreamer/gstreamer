@@ -272,8 +272,9 @@ static gboolean gst_soup_http_src_accept_certificate_cb (SoupMessage * msg,
 G_DEFINE_TYPE_WITH_CODE (GstSoupHTTPSrc, gst_soup_http_src, GST_TYPE_PUSH_SRC,
     G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER,
         gst_soup_http_src_uri_handler_init));
-GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (souphttpsrc, "souphttpsrc",
-    GST_RANK_PRIMARY, GST_TYPE_SOUP_HTTP_SRC, soup_element_init (plugin));
+
+static gboolean souphttpsrc_element_init (GstPlugin * plugin);
+GST_ELEMENT_REGISTER_DEFINE_CUSTOM (souphttpsrc, souphttpsrc_element_init);
 
 static void
 gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
@@ -519,9 +520,6 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_soup_http_src_query);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_soup_http_src_create);
-
-  GST_DEBUG_CATEGORY_INIT (souphttpsrc_debug, "souphttpsrc", 0,
-      "SOUP HTTP src");
 }
 
 static void
@@ -2630,4 +2628,21 @@ gst_soup_http_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_protocols = gst_soup_http_src_uri_get_protocols;
   iface->get_uri = gst_soup_http_src_uri_get_uri;
   iface->set_uri = gst_soup_http_src_uri_set_uri;
+}
+
+static gboolean
+souphttpsrc_element_init (GstPlugin * plugin)
+{
+  gboolean ret = TRUE;
+
+  GST_DEBUG_CATEGORY_INIT (souphttpsrc_debug, "souphttpsrc", 0,
+      "SOUP HTTP src");
+
+  if (!soup_element_init (plugin))
+    return TRUE;
+
+  ret = gst_element_register (plugin, "souphttpsrc",
+      GST_RANK_PRIMARY, GST_TYPE_SOUP_HTTP_SRC);
+
+  return ret;
 }
