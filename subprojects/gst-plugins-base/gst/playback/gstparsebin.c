@@ -1398,22 +1398,23 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
     g_value_array_free (factories);
 
     if (parsebin->expose_allstreams) {
-      GstStream *newstream;
-      GST_LOG_OBJECT (parsepad, "Existing GstStream %" GST_PTR_FORMAT,
-          parsepad->active_stream);
       /* If we expose all streams, we only need to inform the application about
        * a missing handler but still expose it. We also make sure the stream
        * type is unknown. */
-      g_assert (parsepad->active_stream);
-      newstream =
-          gst_stream_new (gst_stream_get_stream_id (parsepad->active_stream),
-          caps, GST_STREAM_TYPE_UNKNOWN,
-          gst_stream_get_stream_flags (parsepad->active_stream));
-      gst_object_replace ((GstObject **) & parsepad->active_stream,
-          (GstObject *) newstream);
-      GST_LOG_OBJECT (parsepad, "New GstStream %" GST_PTR_FORMAT,
-          parsepad->active_stream);
-
+      if (parsepad->in_a_fallback_collection) {
+        GstStream *newstream;
+        GST_LOG_OBJECT (parsepad, "Existing GstStream %" GST_PTR_FORMAT,
+            parsepad->active_stream);
+        g_assert (parsepad->active_stream);
+        newstream =
+            gst_stream_new (gst_stream_get_stream_id (parsepad->active_stream),
+            caps, GST_STREAM_TYPE_UNKNOWN,
+            gst_stream_get_stream_flags (parsepad->active_stream));
+        gst_object_replace ((GstObject **) & parsepad->active_stream,
+            (GstObject *) newstream);
+        GST_LOG_OBJECT (parsepad, "New GstStream %" GST_PTR_FORMAT,
+            parsepad->active_stream);
+      }
       gst_element_post_message (GST_ELEMENT_CAST (parsebin),
           gst_missing_decoder_message_new (GST_ELEMENT_CAST (parsebin), caps));
       goto expose_pad;
