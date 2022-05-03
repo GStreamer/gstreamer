@@ -695,6 +695,8 @@ gst_va_base_dec_class_init (GstVaBaseDecClass * klass, GstVaCodecs codec,
           "DRM device path", NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
+/* XXX: if chroma has not an available format, the first format is
+ * returned, relying on an hypothetical internal CSC */
 static GstVideoFormat
 _find_video_format_from_chroma (const GValue * formats, guint chroma_type)
 {
@@ -705,19 +707,24 @@ _find_video_format_from_chroma (const GValue * formats, guint chroma_type)
     return GST_VIDEO_FORMAT_UNKNOWN;
 
   if (G_VALUE_HOLDS_STRING (formats)) {
-    fmt = gst_video_format_from_string (g_value_get_string (formats));
-    if (gst_va_chroma_from_video_format (fmt) == chroma_type)
-      return fmt;
+    return gst_video_format_from_string (g_value_get_string (formats));
   } else if (GST_VALUE_HOLDS_LIST (formats)) {
+    GValue *val, *first_val = NULL;
+
     num_values = gst_value_list_get_size (formats);
     for (i = 0; i < num_values; i++) {
-      const GValue *val = gst_value_list_get_value (formats, i);
+      val = (GValue *) gst_value_list_get_value (formats, i);
       if (!val)
         continue;
+      if (!first_val)
+        first_val = val;
       fmt = gst_video_format_from_string (g_value_get_string (val));
       if (gst_va_chroma_from_video_format (fmt) == chroma_type)
         return fmt;
     }
+
+    if (first_val)
+      return gst_video_format_from_string (g_value_get_string (first_val));
   }
 
   return GST_VIDEO_FORMAT_UNKNOWN;
