@@ -2289,6 +2289,13 @@ pause:
         if (G_UNLIKELY (wav->first)) {
           wav->first = FALSE;
           gst_wavparse_add_src_pad (wav, NULL);
+        } else {
+          /* If we have a pending start segment, send it now. Can happen if a seek
+           * causes an immediate EOS */
+          if (G_UNLIKELY (wav->start_segment != NULL)) {
+            gst_pad_push_event (wav->srcpad, wav->start_segment);
+            wav->start_segment = NULL;
+          }
         }
 
         /* perform EOS logic */
