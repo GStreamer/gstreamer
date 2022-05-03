@@ -192,6 +192,7 @@ gst_hls_demux_stream_init (GstHLSDemuxStream * stream)
   stream->do_typefind = TRUE;
   stream->reset_pts = TRUE;
   stream->presentation_offset = 60 * GST_SECOND;
+  stream->pdt_tag_sent = FALSE;
 }
 
 typedef struct _GstHLSDemux2 GstHLSDemux2;
@@ -1683,8 +1684,9 @@ gst_hls_demux_stream_data_received (GstAdaptiveDemux2Stream * stream,
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
+  GstM3U8MediaSegment *file = hls_stream->current_segment;
 
-  if (hls_stream->current_segment == NULL)
+  if (file == NULL)
     return GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC;
 
   if (hls_stream->current_offset == -1)
@@ -1725,6 +1727,14 @@ gst_hls_demux_stream_data_received (GstAdaptiveDemux2Stream * stream,
     buffer = tmp_buffer;
     if (!buffer)
       return GST_FLOW_OK;
+  }
+
+  if (!hls_stream->pdt_tag_sent && file != NULL && file->datetime != NULL) {
+    gst_adaptive_demux2_stream_set_tags (stream,
+        gst_tag_list_new (GST_TAG_DATE_TIME,
+            gst_date_time_new_from_g_date_time (g_date_time_ref
+                (file->datetime)), NULL));
+    hls_stream->pdt_tag_sent = TRUE;
   }
 
   return gst_hls_demux_stream_handle_buffer (stream, buffer, FALSE);
@@ -2597,6 +2607,14 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
   GstHLSDemux *demux = GST_HLS_DEMUX_CAST (ademux);
 
   GST_DEBUG_OBJECT (demux, "resetting");
+
+  if (ademux->input_period) {
+    GList *walk;
+    for (walk = ademux->input_period->streams; walk != NULL; walk = walk->next) {
+      GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (walk->data);
+      hls_stream->pdt_tag_sent = FALSE;
+    }
+  }
 
   if (demux->master) {
     gst_hls_master_playlist_unref (demux->master);
