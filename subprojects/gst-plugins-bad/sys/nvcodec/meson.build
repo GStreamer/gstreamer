@@ -65,24 +65,25 @@ if host_system == 'linux'
   endif
 endif
 
-override_opt = []
-if host_system == 'windows'
-  # MinGW 32bits compiler seems to be complaining about redundant-decls
-  # when ComPtr is in use. Let's just disable the warning
-  if cc.get_id() != 'msvc'
+if cc.get_id() != 'msvc'
+  if host_system == 'windows'
+    # MinGW 32bits compiler seems to be complaining about redundant-decls
+    # when ComPtr is in use. Let's just disable the warning
     extra_args += cc.get_supported_arguments([
       '-Wno-redundant-decls',
     ])
   endif
-else
-  override_opt += ['cpp_std=c++11']
+
+  # Allow deprecated decls since it's part of SDK header
+  extra_args += cc.get_supported_arguments([
+    '-Wno-deprecated-declarations',
+  ])
 endif
 
 gstnvcodec = library('gstnvcodec',
   nvcodec_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
-  override_options: override_opt,
   include_directories : plugin_incdirs,
   dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gstglproto_dep, gmodule_dep, gstcodecs_dep, gstd3d11_dep, gstcuda_dep],
   install : true,
