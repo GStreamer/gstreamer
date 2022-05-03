@@ -683,6 +683,8 @@ gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
   } else if (out_chans > 1) {
     GST_ERROR_OBJECT (base, "Have no default layout for %d channels",
         out_chans);
+    gst_structure_set (outs, "channel-mask", GST_TYPE_BITMASK,
+        G_GUINT64_CONSTANT (0), NULL);
   }
 }
 
