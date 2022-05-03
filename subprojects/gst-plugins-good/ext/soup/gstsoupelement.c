@@ -25,7 +25,7 @@
 
 GST_DEBUG_CATEGORY (soup_utils_debug);
 
-void
+gboolean
 soup_element_init (GstPlugin * plugin)
 {
   static gsize res = FALSE;
@@ -55,4 +55,11 @@ soup_element_init (GstPlugin * plugin)
 
     g_once_init_leave (&res, TRUE);
   }
+#ifndef STATIC_SOUP
+  if (!gst_soup_load_library ()) {
+    GST_WARNING ("Failed to load libsoup library");
+    return FALSE;
+  }
+#endif
+  return TRUE;
 }
