@@ -1178,7 +1178,7 @@ update_requested_selection (GstDecodebin3 * dbin)
     for (i = 0; i < nb; i++) {
       GstStream *stream = gst_stream_collection_get_stream (collection, i);
       GstStreamType curtype = gst_stream_get_stream_type (stream);
-      if (!(used_types & curtype)) {
+      if (curtype != GST_STREAM_TYPE_UNKNOWN && !(used_types & curtype)) {
         const gchar *sid = gst_stream_get_stream_id (stream);
         GST_DEBUG_OBJECT (dbin,
             "Automatically selecting stream '%s' of type %s", sid,
