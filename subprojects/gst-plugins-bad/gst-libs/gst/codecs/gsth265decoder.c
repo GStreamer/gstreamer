@@ -1007,6 +1007,12 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
 
   self->input_state = gst_video_codec_state_ref (state);
 
+  priv->is_live = FALSE;
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
+    gst_query_parse_latency (query, &priv->is_live, NULL, NULL);
+  gst_query_unref (query);
+
   if (state->caps) {
     GstH265DecoderFormat format;
     GstH265DecoderAlign align;
@@ -1060,12 +1066,6 @@ gst_h265_decoder_set_format (GstVideoDecoder * decoder,
     }
     gst_buffer_unmap (state->codec_data, &map);
   }
-
-  priv->is_live = FALSE;
-  query = gst_query_new_latency ();
-  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (self), query))
-    gst_query_parse_latency (query, &priv->is_live, NULL, NULL);
-  gst_query_unref (query);
 
   return TRUE;
 }
