@@ -125,7 +125,6 @@ struct _GstNvH264DecClass
 G_DEFINE_TYPE (GstNvH264Dec, gst_nv_h264_dec, GST_TYPE_H264_DECODER);
 
 static void gst_nv_h264_decoder_dispose (GObject * object);
-static void gst_nv_h264_decoder_finalize (GObject * object);
 static void gst_nv_h264_dec_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_nv_h264_dec_open (GstVideoDecoder * decoder);
@@ -171,7 +170,6 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass)
    */
 
   object_class->dispose = gst_nv_h264_decoder_dispose;
-  object_class->finalize = gst_nv_h264_decoder_finalize;
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_set_context);
 
@@ -222,17 +220,6 @@ gst_nv_h264_decoder_dispose (GObject * object)
   g_clear_pointer (&self->ref_list, g_array_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_nv_h264_decoder_finalize (GObject * object)
-{
-  GstNvH264Dec *self = GST_NV_H264_DEC (object);
-
-  g_free (self->bitstream_buffer);
-  g_free (self->slice_offsets);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -303,6 +290,12 @@ gst_nv_h264_dec_close (GstVideoDecoder * decoder)
   g_clear_pointer (&self->output_state, gst_video_codec_state_unref);
   gst_clear_object (&self->decoder);
   gst_clear_object (&self->context);
+
+  g_clear_pointer (&self->bitstream_buffer, g_free);
+  g_clear_pointer (&self->slice_offsets, g_free);
+
+  self->bitstream_buffer_alloc_size = 0;
+  self->slice_offsets_alloc_len = 0;
 
   return TRUE;
 }
@@ -821,8 +814,10 @@ gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
   GST_LOG_OBJECT (self, "Decode slice, nalu size %u", slice->nalu.size);
 
   if (self->slice_offsets_alloc_len < self->num_slices + 1) {
+    self->slice_offsets_alloc_len = 2 * (self->num_slices + 1);
+
     self->slice_offsets = (guint *) g_realloc_n (self->slice_offsets,
-        self->num_slices + 1, sizeof (guint));
+        self->slice_offsets_alloc_len, sizeof (guint));
   }
   self->slice_offsets[self->num_slices] = self->bitstream_buffer_offset;
   GST_LOG_OBJECT (self, "Slice offset %u for slice %d",
@@ -832,8 +827,10 @@ gst_nv_h264_dec_decode_slice (GstH264Decoder * decoder,
 
   new_size = self->bitstream_buffer_offset + slice->nalu.size + 3;
   if (self->bitstream_buffer_alloc_size < new_size) {
-    self->bitstream_buffer =
-        (guint8 *) g_realloc (self->bitstream_buffer, new_size);
+    self->bitstream_buffer_alloc_size = 2 * new_size;
+
+    self->bitstream_buffer = (guint8 *) g_realloc (self->bitstream_buffer,
+        self->bitstream_buffer_alloc_size);
   }
 
   self->bitstream_buffer[self->bitstream_buffer_offset] = 0;
