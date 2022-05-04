@@ -119,7 +119,6 @@ struct _GstNvH265DecClass
 #define gst_nv_h265_dec_parent_class parent_class
 G_DEFINE_TYPE (GstNvH265Dec, gst_nv_h265_dec, GST_TYPE_H265_DECODER);
 
-static void gst_nv_h265_decoder_finalize (GObject * object);
 static void gst_nv_h265_dec_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_nv_h265_dec_open (GstVideoDecoder * decoder);
@@ -151,7 +150,6 @@ gst_nv_h265_dec_get_preferred_output_delay (GstH265Decoder * decoder,
 static void
 gst_nv_h265_dec_class_init (GstNvH265DecClass * klass)
 {
-  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstH265DecoderClass *h265decoder_class = GST_H265_DECODER_CLASS (klass);
@@ -161,8 +159,6 @@ gst_nv_h265_dec_class_init (GstNvH265DecClass * klass)
    *
    * Since: 1.18
    */
-
-  object_class->finalize = gst_nv_h265_decoder_finalize;
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h265_dec_set_context);
 
@@ -197,17 +193,6 @@ gst_nv_h265_dec_class_init (GstNvH265DecClass * klass)
 static void
 gst_nv_h265_dec_init (GstNvH265Dec * self)
 {
-}
-
-static void
-gst_nv_h265_decoder_finalize (GObject * object)
-{
-  GstNvH265Dec *self = GST_NV_H265_DEC (object);
-
-  g_free (self->bitstream_buffer);
-  g_free (self->slice_offsets);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -262,6 +247,12 @@ gst_nv_h265_dec_close (GstVideoDecoder * decoder)
   g_clear_pointer (&self->output_state, gst_video_codec_state_unref);
   gst_clear_object (&self->decoder);
   gst_clear_object (&self->context);
+
+  g_clear_pointer (&self->bitstream_buffer, g_free);
+  g_clear_pointer (&self->slice_offsets, g_free);
+
+  self->bitstream_buffer_alloc_size = 0;
+  self->slice_offsets_alloc_len = 0;
 
   return TRUE;
 }
@@ -873,8 +864,10 @@ gst_nv_h265_dec_decode_slice (GstH265Decoder * decoder,
   GST_LOG_OBJECT (self, "Decode slice, nalu size %u", slice->nalu.size);
 
   if (self->slice_offsets_alloc_len < self->num_slices + 1) {
+    self->slice_offsets_alloc_len = 2 * (self->num_slices + 1);
+
     self->slice_offsets = (guint *) g_realloc_n (self->slice_offsets,
-        self->num_slices + 1, sizeof (guint));
+        self->slice_offsets_alloc_len, sizeof (guint));
   }
   self->slice_offsets[self->num_slices] = self->bitstream_buffer_offset;
   GST_LOG_OBJECT (self, "Slice offset %u for slice %d",
@@ -884,8 +877,10 @@ gst_nv_h265_dec_decode_slice (GstH265Decoder * decoder,
 
   new_size = self->bitstream_buffer_offset + slice->nalu.size + 3;
   if (self->bitstream_buffer_alloc_size < new_size) {
-    self->bitstream_buffer =
-        (guint8 *) g_realloc (self->bitstream_buffer, new_size);
+    self->bitstream_buffer_alloc_size = 2 * new_size;
+
+    self->bitstream_buffer = (guint8 *) g_realloc (self->bitstream_buffer,
+        self->bitstream_buffer_alloc_size);
   }
 
   self->bitstream_buffer[self->bitstream_buffer_offset] = 0;
