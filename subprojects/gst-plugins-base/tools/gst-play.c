@@ -692,7 +692,7 @@ play_timeout (gpointer user_data)
     status[len] = '\0';
   }
 
-  if (pos >= 0 && dur > 0) {
+  if (pos >= 0) {
     gchar dstr[32], pstr[32];
 
     /* FIXME: pretty print in nicer format */
