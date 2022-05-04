@@ -39,6 +39,7 @@
 #include "gstd3d11screencapturesrc.h"
 #include "gstd3d11screencapture.h"
 #include "gstd3d11pluginutils.h"
+#include "gstd3d11shader.h"
 #include <wrl.h>
 #include <string.h>
 
@@ -92,6 +93,12 @@ struct _GstD3D11ScreenCaptureSrc
   GstClockTime max_latency;
 
   gboolean downstream_supports_d3d11;
+
+  ID3D11VertexShader *vs;
+  ID3D11PixelShader *ps;
+  ID3D11InputLayout *layout;
+  ID3D11SamplerState *sampler;
+  ID3D11BlendState *blend;
 };
 
 static void gst_d3d11_screen_capture_src_dispose (GObject * object);
@@ -504,6 +511,118 @@ error:
 }
 
 static gboolean
+gst_d3d11_screen_capture_prepare_shader (GstD3D11ScreenCaptureSrc * self)
+{
+  /* *INDENT-OFF* */
+  static const gchar vs_str[] =
+      "struct VS_INPUT {\n"
+      "  float4 Position: POSITION;\n"
+      "  float2 Texture: TEXCOORD;\n"
+      "};\n"
+      "\n"
+      "struct VS_OUTPUT {\n"
+      "  float4 Position: SV_POSITION;\n"
+      "  float2 Texture: TEXCOORD;\n"
+      "};\n"
+      "\n"
+      "VS_OUTPUT main (VS_INPUT input)\n"
+      "{\n"
+      "  return input;\n"
+      "}";
+  static const gchar ps_str[] =
+      "Texture2D shaderTexture;\n"
+      "SamplerState samplerState;\n"
+      "\n"
+      "struct PS_INPUT {\n"
+      "  float4 Position: SV_POSITION;\n"
+      "  float2 Texture: TEXCOORD;\n"
+      "};\n"
+      "\n"
+      "struct PS_OUTPUT {\n"
+      "  float4 Plane: SV_Target;\n"
+      "};\n"
+      "\n"
+      "PS_OUTPUT main(PS_INPUT input)\n"
+      "{\n"
+      "  PS_OUTPUT output;\n"
+      "  output.Plane = shaderTexture.Sample(samplerState, input.Texture);\n"
+      "  return output;\n"
+      "}";
+  /* *INDENT-ON* */
+  D3D11_INPUT_ELEMENT_DESC input_desc[] = {
+    {"POSITION",
+        0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+    {"TEXCOORD",
+        0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0}
+  };
+  ComPtr < ID3D11VertexShader > vs;
+  ComPtr < ID3D11InputLayout > layout;
+  ComPtr < ID3D11PixelShader > ps;
+  ComPtr < ID3D11SamplerState > sampler;
+  ComPtr < ID3D11BlendState > blend;
+  D3D11_SAMPLER_DESC sampler_desc;
+  D3D11_BLEND_DESC blend_desc;
+  ID3D11Device *device_handle;
+  HRESULT hr;
+
+  device_handle = gst_d3d11_device_get_device_handle (self->device);
+
+  if (!gst_d3d11_create_vertex_shader (self->device,
+          vs_str, input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+    GST_ERROR_OBJECT (self, "Failed to create vertex shader");
+    return FALSE;
+  }
+
+  if (!gst_d3d11_create_pixel_shader (self->device, ps_str, &ps)) {
+    GST_ERROR_OBJECT (self, "Failed to create pixel shader");
+    return FALSE;
+  }
+
+  memset (&sampler_desc, 0, sizeof (D3D11_SAMPLER_DESC));
+  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+  sampler_desc.MinLOD = 0;
+  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+  hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self,
+        "Failed to create sampler state, hr 0x%x", (guint) hr);
+    return FALSE;
+  }
+
+  blend_desc.AlphaToCoverageEnable = FALSE;
+  blend_desc.IndependentBlendEnable = FALSE;
+  blend_desc.RenderTarget[0].BlendEnable = TRUE;
+  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+  blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+  blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+  blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+  blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+  blend_desc.RenderTarget[0].RenderTargetWriteMask =
+      D3D11_COLOR_WRITE_ENABLE_ALL;
+
+  hr = device_handle->CreateBlendState (&blend_desc, &blend);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self,
+        "Failed to create blend state, hr 0x%x", (guint) hr);
+    return FALSE;
+  }
+
+  self->vs = vs.Detach ();
+  self->ps = ps.Detach ();
+  self->layout = layout.Detach ();
+  self->sampler = sampler.Detach ();
+  self->blend = blend.Detach ();
+
+  return TRUE;
+}
+
+static gboolean
 gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
 {
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
@@ -559,6 +678,9 @@ gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
       goto error;
   }
 
+  if (!gst_d3d11_screen_capture_prepare_shader (self))
+    goto error;
+
   self->last_frame_no = -1;
   self->min_latency = self->max_latency = GST_CLOCK_TIME_NONE;
 
@@ -593,6 +715,12 @@ gst_d3d11_screen_capture_src_stop (GstBaseSrc * bsrc)
     gst_buffer_pool_set_active (self->pool, FALSE);
     gst_clear_object (&self->pool);
   }
+
+  GST_D3D11_CLEAR_COM (self->vs);
+  GST_D3D11_CLEAR_COM (self->ps);
+  GST_D3D11_CLEAR_COM (self->layout);
+  GST_D3D11_CLEAR_COM (self->sampler);
+  GST_D3D11_CLEAR_COM (self->blend);
 
   gst_clear_object (&self->capture);
   gst_clear_object (&self->device);
@@ -807,9 +935,9 @@ again:
 
   texture = (ID3D11Texture2D *) info.data;
   before_capture = gst_clock_get_time (clock);
-  ret =
-      gst_d3d11_screen_capture_do_capture (self->capture, texture, rtv,
-      draw_mouse);
+  ret = gst_d3d11_screen_capture_do_capture (self->capture, self->device,
+      texture, rtv, self->vs, self->ps, self->layout, self->sampler,
+      self->blend, draw_mouse);
   gst_memory_unmap (mem, &info);
 
   switch (ret) {
