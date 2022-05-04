@@ -478,6 +478,23 @@ _is_tile_enabled (GstVaH265Enc * self)
   return self->partition.num_tile_cols * self->partition.num_tile_rows > 1;
 }
 
+static inline gboolean
+_is_scc_enabled (GstVaH265Enc * self)
+{
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+
+  if (base->profile == VAProfileHEVCSccMain
+      || base->profile == VAProfileHEVCSccMain10
+      || base->profile == VAProfileHEVCSccMain444
+#if VA_CHECK_VERSION(1, 8, 0)
+      || base->profile == VAProfileHEVCSccMain444_10
+#endif
+      )
+    return TRUE;
+
+  return FALSE;
+}
+
 static GstH265NalUnitType
 _h265_nal_unit_type (GstVaH265EncFrame * frame)
 {
@@ -627,6 +644,64 @@ _h265_fill_ptl (GstVaH265Enc * self,
       default:
         GST_WARNING_OBJECT (self, "do not support the profile: %s of"
             " range extensions.", gst_va_profile_name (base->profile));
+        goto error;
+    }
+  } else if (sequence->general_profile_idc == 9) {
+    /* In A.3.7, Screen content coding extensions profiles. */
+    switch (base->profile) {
+      case VAProfileHEVCSccMain:
+        ptl->max_14bit_constraint_flag = 1;
+        ptl->max_12bit_constraint_flag = 1;
+        ptl->max_10bit_constraint_flag = 1;
+        ptl->max_8bit_constraint_flag = 1;
+        ptl->max_422chroma_constraint_flag = 1;
+        ptl->max_420chroma_constraint_flag = 1;
+        ptl->max_monochrome_constraint_flag = 0;
+        ptl->intra_constraint_flag = 0;
+        ptl->one_picture_only_constraint_flag = 0;
+        ptl->lower_bit_rate_constraint_flag = 1;
+        break;
+      case VAProfileHEVCSccMain10:
+        ptl->max_14bit_constraint_flag = 1;
+        ptl->max_12bit_constraint_flag = 1;
+        ptl->max_10bit_constraint_flag = 1;
+        ptl->max_8bit_constraint_flag = 0;
+        ptl->max_422chroma_constraint_flag = 1;
+        ptl->max_420chroma_constraint_flag = 1;
+        ptl->max_monochrome_constraint_flag = 0;
+        ptl->intra_constraint_flag = 0;
+        ptl->one_picture_only_constraint_flag = 0;
+        ptl->lower_bit_rate_constraint_flag = 1;
+        break;
+      case VAProfileHEVCSccMain444:
+        ptl->max_14bit_constraint_flag = 1;
+        ptl->max_12bit_constraint_flag = 1;
+        ptl->max_10bit_constraint_flag = 1;
+        ptl->max_8bit_constraint_flag = 1;
+        ptl->max_422chroma_constraint_flag = 0;
+        ptl->max_420chroma_constraint_flag = 0;
+        ptl->max_monochrome_constraint_flag = 0;
+        ptl->intra_constraint_flag = 0;
+        ptl->one_picture_only_constraint_flag = 0;
+        ptl->lower_bit_rate_constraint_flag = 1;
+        break;
+#if VA_CHECK_VERSION(1, 8, 0)
+      case VAProfileHEVCSccMain444_10:
+        ptl->max_14bit_constraint_flag = 1;
+        ptl->max_12bit_constraint_flag = 1;
+        ptl->max_10bit_constraint_flag = 1;
+        ptl->max_8bit_constraint_flag = 0;
+        ptl->max_422chroma_constraint_flag = 0;
+        ptl->max_420chroma_constraint_flag = 0;
+        ptl->max_monochrome_constraint_flag = 0;
+        ptl->intra_constraint_flag = 0;
+        ptl->one_picture_only_constraint_flag = 0;
+        ptl->lower_bit_rate_constraint_flag = 1;
+        break;
+#endif
+      default:
+        GST_WARNING_OBJECT (self, "do not support the profile: %s of screen"
+            " content coding extensions.", gst_va_profile_name (base->profile));
         goto error;
     }
   }
@@ -810,6 +885,27 @@ _h265_fill_sps (GstVaH265Enc * self,
       .log2_max_mv_length_vertical =
           seq_param->vui_fields.bits.log2_max_mv_length_vertical,
     },
+    .sps_extension_flag = _is_scc_enabled (self),
+    /* if sps_extension_present_flag */
+    .sps_range_extension_flag = 0,
+    .sps_multilayer_extension_flag = 0,
+    .sps_3d_extension_flag = 0,
+    .sps_scc_extension_flag = _is_scc_enabled (self),
+    /* if sps_scc_extension_flag */
+#if VA_CHECK_VERSION(1, 8, 0)
+    .sps_scc_extension_params = {
+      .sps_curr_pic_ref_enabled_flag = 1,
+      .palette_mode_enabled_flag =
+          seq_param->scc_fields.bits.palette_mode_enabled_flag,
+      .palette_max_size = 64,
+      .delta_palette_max_predictor_size = 32,
+      .sps_palette_predictor_initializers_present_flag = 0,
+      .sps_num_palette_predictor_initializer_minus1 = 0,
+      .sps_palette_predictor_initializer = { },
+      .motion_vector_resolution_control_idc = 0,
+      .intra_boundary_filtering_disabled_flag = 0,
+    },
+#endif
   };
   /* *INDENT-ON* */
 
@@ -820,7 +916,8 @@ _h265_fill_sps (GstVaH265Enc * self,
 }
 
 static void
-_h265_fill_pps (VAEncPictureParameterBufferHEVC * pic_param,
+_h265_fill_pps (GstVaH265Enc * self,
+    VAEncPictureParameterBufferHEVC * pic_param,
     GstH265SPS * sps, GstH265PPS * pps)
 {
   /* *INDENT-OFF* */
@@ -879,8 +976,21 @@ _h265_fill_pps (VAEncPictureParameterBufferHEVC * pic_param,
     .log2_parallel_merge_level_minus2 =
         pic_param->log2_parallel_merge_level_minus2,
     .slice_segment_header_extension_present_flag = 0,
-    /* TODO: set for SCC */
-    .pps_extension_flag = 0,
+    .pps_extension_flag = _is_scc_enabled (self),
+    /* if pps_extension_flag*/
+    .pps_range_extension_flag = 0,
+    .pps_multilayer_extension_flag = 0,
+    .pps_3d_extension_flag = 0,
+    .pps_scc_extension_flag = _is_scc_enabled (self),
+    /* if pps_scc_extension_flag*/
+#if VA_CHECK_VERSION(1, 8, 0)
+    .pps_scc_extension_params = {
+      .pps_curr_pic_ref_enabled_flag =
+          pic_param->scc_fields.bits.pps_curr_pic_ref_enabled_flag,
+      .residual_adaptive_colour_transform_enabled_flag = 0,
+      .pps_palette_predictor_initializers_present_flag = 0,
+    },
+#endif
   };
   /* *INDENT-ON* */
 }
@@ -1005,11 +1115,31 @@ _h265_fill_slice_header (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     }
   }
 
-  slice_hdr->num_ref_idx_active_override_flag =
-      slice_param->slice_fields.bits.num_ref_idx_active_override_flag;
+  /* For scc, add the current frame into ref */
+  if (_is_scc_enabled (self)) {
+    slice_hdr->num_ref_idx_active_override_flag = 1;
+  } else {
+    slice_hdr->num_ref_idx_active_override_flag =
+        slice_param->slice_fields.bits.num_ref_idx_active_override_flag;
+  }
+
   if (slice_hdr->num_ref_idx_active_override_flag) {
-    slice_hdr->num_ref_idx_l0_active_minus1 =
-        slice_param->num_ref_idx_l0_active_minus1;
+    if (_is_scc_enabled (self)) {
+      /* For scc, need to add 1 for current picture itself when calculating
+         NumRpsCurrTempList0. But slice_param->num_ref_idx_l0_active_minus1
+         does not include the current frame, but the stream's
+         slice_hdr->num_ref_idx_l0_active_minus1 needs to include. */
+      if (frame->type == GST_H265_I_SLICE) {
+        g_assert (slice_param->num_ref_idx_l0_active_minus1 == 0);
+        slice_hdr->num_ref_idx_l0_active_minus1 = 0;
+      } else {
+        slice_hdr->num_ref_idx_l0_active_minus1 =
+            slice_param->num_ref_idx_l0_active_minus1 + 1;
+      }
+    } else {
+      slice_hdr->num_ref_idx_l0_active_minus1 =
+          slice_param->num_ref_idx_l0_active_minus1;
+    }
 
     if (slice_param->slice_type == GST_H265_B_SLICE)
       slice_hdr->num_ref_idx_l1_active_minus1 =
@@ -1208,10 +1338,10 @@ _h265_fill_sequence_parameter (GstVaH265Enc * self,
 
   switch (base->profile) {
     case VAProfileHEVCMain:
-      profile_idc = 1;
+      profile_idc = GST_H265_PROFILE_IDC_MAIN;
       break;
     case VAProfileHEVCMain10:
-      profile_idc = 2;
+      profile_idc = GST_H265_PROFILE_IDC_MAIN;
       break;
     case VAProfileHEVCMain12:
     case VAProfileHEVCMain422_10:
@@ -1219,7 +1349,15 @@ _h265_fill_sequence_parameter (GstVaH265Enc * self,
     case VAProfileHEVCMain444:
     case VAProfileHEVCMain444_10:
     case VAProfileHEVCMain444_12:
-      profile_idc = 4;
+      profile_idc = GST_H265_PROFILE_IDC_FORMAT_RANGE_EXTENSION;
+      break;
+    case VAProfileHEVCSccMain:
+    case VAProfileHEVCSccMain10:
+    case VAProfileHEVCSccMain444:
+#if VA_CHECK_VERSION(1, 8, 0)
+    case VAProfileHEVCSccMain444_10:
+#endif
+      profile_idc = GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING;
       break;
     default:
       GST_ERROR_OBJECT (self, "unsupported profile %d", base->profile);
@@ -1292,6 +1430,9 @@ _h265_fill_sequence_parameter (GstVaH265Enc * self,
     /* if (vui_fields.bits.vui_timing_info_present_flag) */
     .vui_num_units_in_tick = GST_VIDEO_INFO_FPS_D (&base->input_state->info),
     .vui_time_scale = GST_VIDEO_INFO_FPS_N (&base->input_state->info),
+#if VA_CHECK_VERSION(1, 8, 0)
+    .scc_fields.bits.palette_mode_enabled_flag = _is_scc_enabled (self),
+#endif
   };
   /* *INDENT-ON* */
 
@@ -1411,6 +1552,10 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     },
     /* We use coding_type here, set this to 0. */
     .hierarchical_level_plus1 = hierarchical_level_plus1,
+#if VA_CHECK_VERSION(1, 8, 0)
+    .scc_fields.bits.pps_curr_pic_ref_enabled_flag =
+        _is_scc_enabled (self),
+#endif
   };
   /* *INDENT-ON* */
 
@@ -1519,6 +1664,16 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
 
     for (i = 0; i < list1_num; i++)
       list1[i] = list0[i];
+  }
+
+  /* In scc mode, the I frame can ref to itself and so the L0 reference
+     list is enabled. Then we need to change I frame to P frame because
+     it uses L0 list. We just leave all reference unchanged and so all
+     ref_pic_list0's picture is invalid, the only ref is itself enabled
+     by pic_param->scc_fields.bits.pps_curr_pic_ref_enabled_flag. */
+  if (_is_scc_enabled (self) && frame->type == GST_H265_I_SLICE) {
+    frame_type = GST_H265_P_SLICE;
+    g_assert (list0_num == 0);
   }
 
   *slice = (VAEncSliceParameterBufferHEVC) {
@@ -1863,7 +2018,7 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
   if (!_h265_add_picture_parameter (self, frame, &pic_param))
     return FALSE;
 
-  _h265_fill_pps (&pic_param, &self->sps_hdr, &pps);
+  _h265_fill_pps (self, &pic_param, &self->sps_hdr, &pps);
 
   if ((self->packed_headers & VA_ENC_PACKED_HEADER_PICTURE)
       && frame->type == GST_H265_I_SLICE
@@ -2476,6 +2631,15 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
   GArray *caps_candidates = NULL;
   GArray *chroma_candidates = NULL;
   guint depth = 0, chrome = 0;
+  gboolean support_scc = TRUE;
+
+  /* We do not have scc_fields defined in sequence and picture
+     before 1.8.0, just disable scc all. */
+#if VA_CHECK_VERSION(1, 8, 0)
+  support_scc = TRUE;
+#else
+  support_scc = FALSE;
+#endif
 
   caps_candidates = g_array_new (TRUE, TRUE, sizeof (VAProfile));
   chroma_candidates = g_array_new (TRUE, TRUE, sizeof (VAProfile));
@@ -2541,11 +2705,19 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     if (depth == 8) {
       profile = VAProfileHEVCMain444;
       g_array_append_val (chroma_candidates, profile);
+      if (support_scc) {
+        profile = VAProfileHEVCSccMain444;
+        g_array_append_val (chroma_candidates, profile);
+      }
     }
 
     if (depth <= 10) {
       profile = VAProfileHEVCMain444_10;
       g_array_append_val (chroma_candidates, profile);
+#if VA_CHECK_VERSION(1, 8, 0)
+      profile = VAProfileHEVCSccMain444_10;
+      g_array_append_val (chroma_candidates, profile);
+#endif
     }
 
     if (depth <= 12) {
@@ -2568,11 +2740,19 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     if (depth == 8) {
       profile = VAProfileHEVCMain;
       g_array_append_val (chroma_candidates, profile);
+      if (support_scc) {
+        profile = VAProfileHEVCSccMain;
+        g_array_append_val (chroma_candidates, profile);
+      }
     }
 
     if (depth <= 10) {
       profile = VAProfileHEVCMain10;
       g_array_append_val (chroma_candidates, profile);
+      if (support_scc) {
+        profile = VAProfileHEVCSccMain10;
+        g_array_append_val (chroma_candidates, profile);
+      }
     }
 
     if (depth <= 12) {
