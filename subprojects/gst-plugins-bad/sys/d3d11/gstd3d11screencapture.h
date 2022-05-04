@@ -44,8 +44,14 @@ gboolean        gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * captu
                                                    guint * height);
 
 GstFlowReturn   gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
+                                                     GstD3D11Device * device,
                                                      ID3D11Texture2D * texture,
                                                      ID3D11RenderTargetView * rtv,
+                                                     ID3D11VertexShader * vs,
+                                                     ID3D11PixelShader * ps,
+                                                     ID3D11InputLayout * layout,
+                                                     ID3D11SamplerState * sampler,
+                                                     ID3D11BlendState * blend,
                                                      D3D11_BOX * crop_box,
                                                      gboolean draw_mouse);
 

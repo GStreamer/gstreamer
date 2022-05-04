@@ -143,9 +143,12 @@ gint
 main (gint argc, gchar ** argv)
 {
   GstElement *pipeline, *src, *queue, *sink;
+  GstElement *pipeline_1 = nullptr, *src_1, *queue_1, *sink_1;
   GMainLoop *loop;
   gboolean ret;
   gboolean show_devices = FALSE;
+  gboolean multi_pipelines = FALSE;
+  gboolean show_cursor = FALSE;
   gint64 hmonitor = 0;
   gint monitor_index = -1;
   GError *err = nullptr;
@@ -158,6 +161,10 @@ main (gint argc, gchar ** argv)
         "Address of HMONITOR handle", nullptr},
     {"index", 0, 0, G_OPTION_ARG_INT, &monitor_index,
         "Monitor index to capture (-1 for primary monitor)", nullptr},
+    {"multi-pipelines", 0, 0, G_OPTION_ARG_NONE, &multi_pipelines,
+        "Run two separate pipelines for capturing a single monitor", nullptr},
+    {"show-cursor", 0, 0, G_OPTION_ARG_NONE, &show_cursor,
+        "Draw mouse cursor", nullptr},
     {nullptr}
   };
 
@@ -185,11 +192,24 @@ main (gint argc, gchar ** argv)
   }
 
   src = gst_device_create_element (device, nullptr);
-  gst_object_unref (device);
   if (!src) {
     g_warning ("Failed to create d3d11screencapture element");
     return 1;
   }
+
+  g_object_set (src, "show-cursor", show_cursor, nullptr);
+
+  if (multi_pipelines) {
+    src_1 = gst_device_create_element (device, nullptr);
+    if (!src_1) {
+      g_warning ("Failed to create second d3d11screencapture element");
+      return 1;
+    }
+
+    g_object_set (src_1, "show-cursor", show_cursor, nullptr);
+  }
+
+  gst_object_unref (device);
 
   loop = g_main_loop_new (nullptr, FALSE);
   pipeline = gst_pipeline_new (nullptr);
@@ -203,12 +223,31 @@ main (gint argc, gchar ** argv)
   gst_bus_add_watch (GST_ELEMENT_BUS (pipeline), (GstBusFunc) bus_msg, loop);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
+  if (multi_pipelines) {
+    pipeline_1 = gst_pipeline_new (nullptr);
+
+    queue_1 = gst_element_factory_make ("queue", nullptr);
+    sink_1 = gst_element_factory_make ("d3d11videosink", nullptr);
+
+    gst_bin_add_many (GST_BIN (pipeline_1), src_1, queue_1, sink_1, nullptr);
+    gst_element_link_many (src_1, queue_1, sink_1, nullptr);
+
+    gst_bus_add_watch (GST_ELEMENT_BUS (pipeline_1), (GstBusFunc) bus_msg, loop);
+    gst_element_set_state (pipeline_1, GST_STATE_PLAYING);
+  }
+
   g_main_loop_run (loop);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_bus_remove_watch (GST_ELEMENT_BUS (pipeline));
-
   gst_object_unref (pipeline);
+
+  if (multi_pipelines) {
+    gst_element_set_state (pipeline_1, GST_STATE_NULL);
+    gst_bus_remove_watch (GST_ELEMENT_BUS (pipeline));
+    gst_object_unref (pipeline_1);
+  }
+
   g_main_loop_unref (loop);
 
   return 0;
