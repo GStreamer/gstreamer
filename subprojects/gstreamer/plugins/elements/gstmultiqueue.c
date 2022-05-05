@@ -1633,7 +1633,7 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
 
     /* Progressively grow up the interleave up to 5s if some streams were inactive */
     if (some_inactive && interleave <= mq->interleave) {
-      interleave = MIN (5 * GST_SECOND, mq->interleave + 100 * GST_MSECOND);
+      interleave = MIN (5 * GST_SECOND, mq->interleave + 500 * GST_MSECOND);
       do_update = TRUE;
     }
 
