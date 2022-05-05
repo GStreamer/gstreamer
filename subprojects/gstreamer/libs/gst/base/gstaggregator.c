@@ -598,7 +598,7 @@ gst_aggregator_reset_flow_values (GstAggregator * self)
 }
 
 static inline void
-gst_aggregator_push_mandatory_events (GstAggregator * self)
+gst_aggregator_push_mandatory_events (GstAggregator * self, gboolean up_to_caps)
 {
   GstAggregatorPrivate *priv = self->priv;
   GstEvent *segment = NULL;
@@ -618,7 +618,6 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
   }
 
   if (self->priv->srccaps) {
-
     GST_INFO_OBJECT (self, "pushing caps: %" GST_PTR_FORMAT,
         self->priv->srccaps);
     if (!gst_pad_push_event (GST_PAD (self->srcpad),
@@ -628,6 +627,9 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
     gst_caps_unref (self->priv->srccaps);
     self->priv->srccaps = NULL;
   }
+
+  if (up_to_caps)
+    return;
 
   GST_OBJECT_LOCK (self);
   if (self->priv->send_segment && !self->priv->flushing) {
@@ -655,7 +657,6 @@ gst_aggregator_push_mandatory_events (GstAggregator * self)
     gst_pad_push_event (self->srcpad, segment);
   if (tags)
     gst_pad_push_event (self->srcpad, tags);
-
 }
 
 /**
@@ -670,14 +671,14 @@ gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
 {
   GST_PAD_STREAM_LOCK (self->srcpad);
   gst_caps_replace (&self->priv->srccaps, caps);
-  gst_aggregator_push_mandatory_events (self);
+  gst_aggregator_push_mandatory_events (self, TRUE);
   GST_PAD_STREAM_UNLOCK (self->srcpad);
 }
 
 static GstFlowReturn
 gst_aggregator_default_finish_buffer (GstAggregator * self, GstBuffer * buffer)
 {
-  gst_aggregator_push_mandatory_events (self);
+  gst_aggregator_push_mandatory_events (self, FALSE);
 
   GST_OBJECT_LOCK (self);
   if (!self->priv->flushing && gst_pad_is_active (self->srcpad)) {
@@ -716,7 +717,7 @@ static GstFlowReturn
 gst_aggregator_default_finish_buffer_list (GstAggregator * self,
     GstBufferList * bufferlist)
 {
-  gst_aggregator_push_mandatory_events (self);
+  gst_aggregator_push_mandatory_events (self, FALSE);
 
   GST_OBJECT_LOCK (self);
   if (!self->priv->flushing && gst_pad_is_active (self->srcpad)) {
@@ -758,7 +759,7 @@ static void
 gst_aggregator_push_eos (GstAggregator * self)
 {
   GstEvent *event;
-  gst_aggregator_push_mandatory_events (self);
+  gst_aggregator_push_mandatory_events (self, FALSE);
 
   event = gst_event_new_eos ();
 
