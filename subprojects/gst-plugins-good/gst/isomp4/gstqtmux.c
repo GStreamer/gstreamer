@@ -631,6 +631,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   gstagg_class->start = gst_qt_mux_start;
   gstagg_class->stop = gst_qt_mux_stop;
   gstagg_class->create_new_pad = gst_qt_mux_create_new_pad;
+  gstagg_class->negotiate = NULL;
 
   gst_type_mark_as_plugin_api (GST_TYPE_QT_MUX_PAD, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_QT_MUX_DTS_METHOD, 0);
