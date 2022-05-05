@@ -342,7 +342,7 @@ gst_d3d11_memory_upload (GstD3D11Memory * dmem)
   GstD3D11MemoryPrivate *priv = dmem->priv;
   ID3D11DeviceContext *device_context;
 
-  if (!priv->staging || priv->staging == priv->texture ||
+  if (!priv->staging ||
       !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD))
     return;
 
@@ -358,7 +358,7 @@ gst_d3d11_memory_download (GstD3D11Memory * dmem)
   GstD3D11MemoryPrivate *priv = dmem->priv;
   ID3D11DeviceContext *device_context;
 
-  if (!priv->staging || priv->staging == priv->texture ||
+  if (!priv->staging ||
       !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD))
     return;
 
@@ -1432,12 +1432,6 @@ gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * self,
   mem->priv->desc = *desc;
   mem->priv->native_type = GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D;
   mem->device = (GstD3D11Device *) gst_object_ref (device);
-
-  /* This is staging texture as well */
-  if (desc->Usage == D3D11_USAGE_STAGING) {
-    mem->priv->staging = texture;
-    texture->AddRef ();
-  }
 
   return GST_MEMORY_CAST (mem);
 }
