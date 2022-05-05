@@ -173,6 +173,7 @@ gst_mxf_mux_class_init (GstMXFMuxClass * klass)
   gstaggregator_class->sink_event = GST_DEBUG_FUNCPTR (gst_mxf_mux_sink_event);
   gstaggregator_class->stop = GST_DEBUG_FUNCPTR (gst_mxf_mux_stop);
   gstaggregator_class->aggregate = GST_DEBUG_FUNCPTR (gst_mxf_mux_aggregate);
+  gstaggregator_class->negotiate = NULL;
 
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &src_templ, GST_TYPE_MXF_MUX_PAD);
