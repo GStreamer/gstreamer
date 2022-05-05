@@ -263,14 +263,13 @@ gst_base_ts_mux_set_header_on_caps (GstBaseTsMux * mux)
   GValue value = { 0 };
   GstCaps *caps;
 
-  caps = gst_pad_get_current_caps (GST_AGGREGATOR_SRC_PAD (mux));
-
-  /* If we have no caps, we are possibly shutting down */
-  if (!caps)
-    return;
+  caps = gst_pad_get_pad_template_caps (GST_AGGREGATOR_SRC_PAD (mux));
 
   caps = gst_caps_make_writable (caps);
   structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_set (structure, "packetsize", G_TYPE_INT, mux->packet_size,
+      NULL);
 
   g_value_init (&array, GST_TYPE_ARRAY);
 
@@ -2249,20 +2248,6 @@ beach:
   return ret;
 }
 
-static GstFlowReturn
-gst_base_ts_mux_update_src_caps (GstAggregator * agg, GstCaps * caps,
-    GstCaps ** ret)
-{
-  GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
-  GstStructure *s;
-
-  *ret = gst_caps_copy (caps);
-  s = gst_caps_get_structure (*ret, 0);
-  gst_structure_set (s, "packetsize", G_TYPE_INT, mux->packet_size, NULL);
-
-  return GST_FLOW_OK;
-}
-
 static GstBaseTsMuxPad *
 gst_base_ts_mux_find_best_pad (GstAggregator * aggregator)
 {
@@ -2629,7 +2614,7 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   gstelement_class->release_pad = gst_base_ts_mux_release_pad;
   gstelement_class->send_event = gst_base_ts_mux_send_event;
 
-  gstagg_class->update_src_caps = gst_base_ts_mux_update_src_caps;
+  gstagg_class->negotiate = NULL;
   gstagg_class->aggregate = gst_base_ts_mux_aggregate;
   gstagg_class->clip = gst_base_ts_mux_clip;
   gstagg_class->sink_event = gst_base_ts_mux_sink_event;
