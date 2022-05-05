@@ -979,32 +979,32 @@ fit_and_scale_cc_data (GstCCConverter * self,
 
   /* This is slightly looser than checking for the exact framerate as the cdp
    * spec allow for 0.1% difference between framerates to be considered equal */
-  if (in_fps_entry->max_cc_count == out_fps_entry->max_cc_count) {
-    if (tc && tc->config.fps_n != 0)
-      interpolate_time_code_with_framerate (self, tc, out_fps_entry->fps_n,
-          out_fps_entry->fps_d, 1, 1, &self->current_output_timecode);
-
-    self->scratch_ccp_len = 0;
-    self->scratch_cea608_1_len = 0;
-    self->scratch_cea608_2_len = 0;
-    self->input_frames = 0;
-    self->output_frames = 0;
-  } else {
+  {
     int input_frame_n, input_frame_d, output_frame_n, output_frame_d;
-    int output_time_cmp, scale_n, scale_d, rate_cmp;
+    int output_time_cmp, scale_n, scale_d;
 
     /* TODO: handle input discont */
 
-    /* compute the relative frame count for each */
-    if (!gst_util_fraction_multiply (self->in_fps_d, self->in_fps_n,
-            self->input_frames, 1, &input_frame_n, &input_frame_d))
-      /* we should never overflow */
-      g_assert_not_reached ();
+    if (self->in_fps_n == 0) {
+      input_frame_n = self->input_frames;
+      input_frame_d = 1;
+    } else {
+      /* compute the relative frame count for each */
+      if (!gst_util_fraction_multiply (self->in_fps_d, self->in_fps_n,
+              self->input_frames, 1, &input_frame_n, &input_frame_d))
+        /* we should never overflow */
+        g_assert_not_reached ();
+    }
 
-    if (!gst_util_fraction_multiply (self->out_fps_d, self->out_fps_n,
-            self->output_frames, 1, &output_frame_n, &output_frame_d))
-      /* we should never overflow */
-      g_assert_not_reached ();
+    if (self->in_fps_n == 0) {
+      output_frame_n = self->output_frames;
+      output_frame_d = 1;
+    } else {
+      if (!gst_util_fraction_multiply (self->out_fps_d, self->out_fps_n,
+              self->output_frames, 1, &output_frame_n, &output_frame_d))
+        /* we should never overflow */
+        g_assert_not_reached ();
+    }
 
     output_time_cmp = gst_util_fraction_compare (input_frame_n, input_frame_d,
         output_frame_n, output_frame_d);
@@ -1012,18 +1012,12 @@ fit_and_scale_cc_data (GstCCConverter * self,
     /* compute the relative rates of the two framerates */
     get_framerate_output_scale (self, in_fps_entry, &scale_n, &scale_d);
 
-    rate_cmp = gst_util_fraction_compare (scale_n, scale_d, 1, 1);
-
-    GST_TRACE_OBJECT (self, "performing framerate conversion at scale %d/%d "
+    GST_TRACE_OBJECT (self, "performing conversion at scale %d/%d "
         "of cc data of with sizes, ccp:%u, cea608-1:%u, cea608-2:%u", scale_n,
         scale_d, VAL_OR_0 (ccp_data_len), VAL_OR_0 (cea608_1_len),
         VAL_OR_0 (cea608_2_len));
 
-    if (rate_cmp == 0) {
-      /* we are not scaling. Should never happen with current conditions
-       * above */
-      g_assert_not_reached ();
-    } else if (output_time_cmp < 0) {
+    if (output_time_cmp < 0) {
       /* we can't generate an output yet */
       guint cd_len = ccp_data_len ? *ccp_data_len : 0;
       guint c1_len = cea608_1_len ? *cea608_1_len : 0;
@@ -1038,7 +1032,7 @@ fit_and_scale_cc_data (GstCCConverter * self,
       if (cea608_2_len)
         *cea608_2_len = 0;
       return FALSE;
-    } else if (rate_cmp != 0) {
+    } else {
       /* we are changing the framerate and may overflow the max output packet
        * size. Split them where necessary. */
       gint extra_ccp = 0, extra_cea608_1 = 0, extra_cea608_2 = 0;
@@ -1130,8 +1124,6 @@ fit_and_scale_cc_data (GstCCConverter * self,
         self->scratch_cea608_1_len = 0;
         self->scratch_cea608_2_len = 0;
       }
-    } else {
-      g_assert_not_reached ();
     }
 
     if (tc && tc->config.fps_n != 0)
