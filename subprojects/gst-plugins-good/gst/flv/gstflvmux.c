@@ -134,8 +134,6 @@ static GstFlowReturn gst_flv_mux_write_eos (GstFlvMux * mux);
 static GstFlowReturn gst_flv_mux_write_header (GstFlvMux * mux);
 static GstFlowReturn gst_flv_mux_rewrite_header (GstFlvMux * mux);
 static gboolean gst_flv_mux_are_all_pads_eos (GstFlvMux * mux);
-static GstFlowReturn gst_flv_mux_update_src_caps (GstAggregator * aggregator,
-    GstCaps * caps, GstCaps ** ret);
 static GstClockTime gst_flv_mux_query_upstream_duration (GstFlvMux * mux);
 static GstClockTime gst_flv_mux_segment_to_running_time (const GstSegment *
     segment, GstClockTime t);
@@ -303,8 +301,7 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
   gstaggregator_class->flush = GST_DEBUG_FUNCPTR (gst_flv_mux_flush);
   gstaggregator_class->get_next_time =
       GST_DEBUG_FUNCPTR (gst_flv_mux_get_next_time);
-  gstaggregator_class->update_src_caps =
-      GST_DEBUG_FUNCPTR (gst_flv_mux_update_src_caps);
+  gstaggregator_class->negotiate = NULL;
 
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &videosink_templ, GST_TYPE_FLV_MUX_PAD);
@@ -2189,15 +2186,4 @@ gst_flv_mux_get_next_time (GstAggregator * aggregator)
 wait_for_data:
   GST_OBJECT_UNLOCK (aggregator);
   return GST_CLOCK_TIME_NONE;
-}
-
-static GstFlowReturn
-gst_flv_mux_update_src_caps (GstAggregator * aggregator,
-    GstCaps * caps, GstCaps ** ret)
-{
-  GstFlvMux *mux = GST_FLV_MUX (aggregator);
-
-  *ret = gst_flv_mux_prepare_src_caps (mux, NULL, NULL, NULL, NULL);
-
-  return GST_FLOW_OK;
 }
