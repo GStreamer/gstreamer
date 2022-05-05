@@ -671,7 +671,22 @@ gst_aggregator_push_mandatory_events (GstAggregator * self, gboolean up_to_caps)
 void
 gst_aggregator_set_src_caps (GstAggregator * self, GstCaps * caps)
 {
+  GstCaps *old_caps;
+
   GST_PAD_STREAM_LOCK (self->srcpad);
+
+  if (caps && (old_caps = gst_pad_get_current_caps (self->srcpad))) {
+    if (gst_caps_is_equal (caps, old_caps)) {
+      GST_DEBUG_OBJECT (self,
+          "New caps are the same as the previously set caps %" GST_PTR_FORMAT,
+          old_caps);
+      gst_caps_unref (old_caps);
+      GST_PAD_STREAM_UNLOCK (self->srcpad);
+      return;
+    }
+    gst_caps_unref (old_caps);
+  }
+
   gst_caps_replace (&self->priv->srccaps, caps);
   gst_aggregator_push_mandatory_events (self, TRUE);
   GST_PAD_STREAM_UNLOCK (self->srcpad);
