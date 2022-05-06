@@ -144,6 +144,8 @@ print_structure_field (GQuark field_id, const GValue * value,
   if (G_VALUE_HOLDS_UINT (value)) {
     val = g_strdup_printf ("%u (0x%08x)", g_value_get_uint (value),
         g_value_get_uint (value));
+  } else if (G_VALUE_HOLDS_STRING (value)) {
+    val = g_value_dup_string (value);
   } else {
     val = gst_value_serialize (value);
   }
