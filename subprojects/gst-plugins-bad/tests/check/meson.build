@@ -64,7 +64,7 @@ base_tests = [
   [['elements/rtponviftimestamp.c']],
   [['elements/rtpsrc.c']],
   [['elements/rtpsink.c']],
-  [['elements/srtp.c']],
+  [['elements/srtp.c'], not srtp_dep.found(), [srtp_dep]],
   [['elements/switchbin.c']],
   [['elements/videoframe-audiolevel.c']],
   [['elements/viewfinderbin.c']],
