@@ -1073,6 +1073,93 @@ GST_START_TEST (convert_cea708_cc_data_cea708_cdp_double_input_data)
 
 GST_END_TEST;
 
+static guint8
+calculate_cdp_checksum (guint8 * cdp, gsize len)
+{
+  guint8 checksum = 0;
+  gsize i;
+
+  for (i = 0; i < len; i++) {
+    checksum += cdp[i];
+  }
+  checksum &= 0xff;
+  return 256 - checksum;
+}
+
+GST_START_TEST (convert_cea708_cc_data_cea708_cdp_field1_overflow)
+{
+  /* caps say 60fps, but every buffer is cea608 field 1. Ensure data is taken
+   * alternatatively from each field even if there is too much input data.
+   * Also ensure that overflow does something sane, like dropping previous data */
+#define N_INPUTS 100
+  guint8 in_data[N_INPUTS * 3];
+  guint in_len[N_INPUTS];
+  guint8 *in[N_INPUTS];
+  guint i;
+
+#define N_OUTPUTS 100
+  guint8 out_data[N_OUTPUTS * 43];
+  guint out_len[N_OUTPUTS];
+  guint8 *out[N_OUTPUTS];
+
+  const guint8 out_template[] =
+      { 0x96, 0x69, 0x2b, 0x8f, 0x43, 0x00, 0x01, 0x72, 0xea, 0xf9, 0x80, 0x80,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0x74, 0x00, 0x01, 0x6f
+  };
+
+  G_STATIC_ASSERT (sizeof (out_template) == 43);
+
+  /* generate input data */
+  for (i = 0; i < N_INPUTS; i++) {
+    in_len[i] = 3;
+    in_data[i * 3 + 0] = 0xfc;
+    in_data[i * 3 + 1] = 0x81 + i * 2;
+    in_data[i * 3 + 2] = 0x81 + i * 2 + 1;
+    in[i] = &in_data[i * 3];
+  }
+
+  for (i = 0; i < N_OUTPUTS; i++) {
+    out_len[i] = 43;
+    memcpy (&out_data[i * 43], out_template, sizeof (out_template));
+    /* write correct counters */
+    out_data[i * 43 + 6] = i;
+    out_data[i * 43 + 41] = i;
+    /* write the correct cea608 data */
+    if (i % 2 == 0) {
+      gsize in_data_offset;
+      /* take frames sequentially from the input */
+      gsize in_idx = i / 2;
+      /* take the first 16 input frames, then skip the next 16 frames and take
+       * the next 16 frames etc.
+       * 32 is the byte size of the internal cea608 field buffers that we are
+       * overflowing but every second buffer will have cea608 field 1 in it.
+       * 16 frames is 32 bytes stored and is enough to cause overflow */
+      in_idx = (in_idx / 16) * 32 + in_idx % 16;
+      in_data_offset = in_idx * 3;
+
+      out_data[i * 43 + 9] = in_data[in_data_offset + 0];
+      out_data[i * 43 + 10] = in_data[in_data_offset + 1];
+      out_data[i * 43 + 11] = in_data[in_data_offset + 2];
+    } else {
+      out_data[i * 43 + 9] = 0xf9;
+      out_data[i * 43 + 10] = 0x80;
+      out_data[i * 43 + 11] = 0x80;
+    }
+    out_data[i * 43 + 42] = calculate_cdp_checksum (&out_data[i * 43], 42);
+    out[i] = &out_data[i * 43];
+  }
+
+  check_conversion_multiple (G_N_ELEMENTS (in_len), (const guint8 **) in,
+      in_len, G_N_ELEMENTS (out_len), (const guint8 **) out, out_len,
+      "closedcaption/x-cea-708,format=(string)cc_data,framerate=(fraction)60/1",
+      "closedcaption/x-cea-708,format=(string)cdp,framerate=(fraction)60/1",
+      NULL, NULL, FLAG_SEND_EOS);
+}
+
+GST_END_TEST;
+
 static Suite *
 ccextractor_suite (void)
 {
@@ -1110,6 +1197,7 @@ ccextractor_suite (void)
   tcase_add_test (tc, convert_cea608_s334_1a_cea708_cdp_double_framerate);
   tcase_add_test (tc, convert_cea708_cdp_cea708_cc_data_double_input_data);
   tcase_add_test (tc, convert_cea708_cc_data_cea708_cdp_double_input_data);
+  tcase_add_test (tc, convert_cea708_cc_data_cea708_cdp_field1_overflow);
 
   return s;
 }

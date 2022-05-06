@@ -647,6 +647,9 @@ compact_cc_data (guint8 * cc_data, guint cc_data_len)
   return out_len;
 }
 
+#define CC_DATA_EXTRACT_TOO_MANY_FIELD1 -2
+#define CC_DATA_EXTRACT_TOO_MANY_FIELD2 -3
+
 static gint
 cc_data_extract_cea608 (guint8 * cc_data, guint cc_data_len,
     guint8 * cea608_field1, guint * cea608_field1_len,
@@ -687,7 +690,7 @@ cc_data_extract_cea608 (guint8 * cc_data, guint cc_data_len,
         if (*cea608_field1_len + 2 > field_1_len) {
           GST_WARNING ("Too many cea608 input bytes %u for field 1",
               *cea608_field1_len + 2);
-          return -1;
+          return CC_DATA_EXTRACT_TOO_MANY_FIELD1;
         }
 
         if (byte1 != 0x80 || byte2 != 0x80) {
@@ -703,7 +706,7 @@ cc_data_extract_cea608 (guint8 * cc_data, guint cc_data_len,
         if (*cea608_field2_len + 2 > field_2_len) {
           GST_WARNING ("Too many cea608 input bytes %u for field 2",
               *cea608_field2_len + 2);
-          return -1;
+          return CC_DATA_EXTRACT_TOO_MANY_FIELD2;
         }
         if (byte1 != 0x80 || byte2 != 0x80) {
           cea608_field2[(*cea608_field2_len)++] = byte1;
@@ -1510,15 +1513,6 @@ cc_data_to_cea608_ccp (GstCCConverter * self, guint8 * cc_data,
     guint new_cea608_1_len = 0, new_cea608_2_len = 0;
     guint8 *new_cea608_1 = cea608_1, *new_cea608_2 = cea608_2;
 
-    if (cea608_1_len) {
-      new_cea608_1_len = cea608_1_in_size - *cea608_1_len;
-      new_cea608_1 = &cea608_1[*cea608_1_len];
-    }
-    if (cea608_2_len) {
-      new_cea608_2_len = cea608_2_in_size - *cea608_2_len;
-      new_cea608_2 = &cea608_2[*cea608_2_len];
-    }
-
     cc_data_len = compact_cc_data (cc_data, cc_data_len);
 
     if (cc_data_len / 3 > in_fps_entry->max_cc_count) {
@@ -1527,11 +1521,34 @@ cc_data_to_cea608_ccp (GstCCConverter * self, guint8 * cc_data,
       cc_data_len = 3 * in_fps_entry->max_cc_count;
     }
 
-    ccp_offset = cc_data_extract_cea608 (cc_data, cc_data_len, new_cea608_1,
-        &new_cea608_1_len, new_cea608_2, &new_cea608_2_len);
-    if (ccp_offset < 0) {
-      GST_WARNING_OBJECT (self, "Failed to extract cea608 from cc_data");
-      goto fail;
+    while (TRUE) {
+      if (cea608_1_len) {
+        new_cea608_1_len = cea608_1_in_size - *cea608_1_len;
+        new_cea608_1 = &cea608_1[*cea608_1_len];
+      }
+      if (cea608_2_len) {
+        new_cea608_2_len = cea608_2_in_size - *cea608_2_len;
+        new_cea608_2 = &cea608_2[*cea608_2_len];
+      }
+
+      ccp_offset = cc_data_extract_cea608 (cc_data, cc_data_len, new_cea608_1,
+          &new_cea608_1_len, new_cea608_2, &new_cea608_2_len);
+
+      if (ccp_offset == CC_DATA_EXTRACT_TOO_MANY_FIELD1 && cea608_1_len) {
+        GST_WARNING_OBJECT (self, "cea608 field 1 overflow, dropping all "
+            "previously stored field 1 data and trying again");
+        *cea608_1_len = 0;
+      } else if (ccp_offset == CC_DATA_EXTRACT_TOO_MANY_FIELD2 && cea608_2_len) {
+        GST_WARNING_OBJECT (self, "cea608 field 2 overflow, dropping all "
+            "previously stored field 2 data and trying again");
+        *cea608_2_len = 0;
+      } else if (ccp_offset < 0) {
+        GST_WARNING_OBJECT (self, "Failed to extract cea608 from cc_data");
+        goto fail;
+      } else {
+        /* success */
+        break;
+      }
     }
 
     if ((new_cea608_1_len + new_cea608_2_len) / 2 >
