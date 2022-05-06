@@ -253,8 +253,6 @@ typedef struct _GstSourceGroup GstSourceGroup;
 typedef struct _GstSourceCombine GstSourceCombine;
 typedef struct _SourcePad SourcePad;
 
-typedef GstCaps *(*SourceCombineGetMediaCapsFunc) (void);
-
 /* GstSourceCombine controls all the information regarding a certain
  * media type.
  *
@@ -262,13 +260,10 @@ typedef GstCaps *(*SourceCombineGetMediaCapsFunc) (void);
  */
 struct _GstSourceCombine
 {
-  const gchar *media_type;      /* the media type for the combiner */
-  SourceCombineGetMediaCapsFunc get_media_caps; /* more complex caps for the combiner */
-  GstPlaySinkType type;         /* the sink pad type of the combiner */
   GstStreamType stream_type;    /* The GstStreamType of the combiner */
 
   GstElement *combiner;         /* the combiner */
-  GPtrArray *channels;          /* Array of GstPad ? */
+  GPtrArray *inputpads;         /* Array of sink request GstPad of the combiner */
 
   GstPad *srcpad;               /* the source pad of the combiner */
   GstPad *sinkpad;              /* the sinkpad of the sink when the combiner
@@ -305,7 +300,6 @@ static const gchar *stream_type_names[] = {
     (s) & GST_STREAM_TYPE_TEXT ? "text " : ""
 
 
-
 #if 0                           /* AUTOPLUG DISABLED */
 static void avelements_free (gpointer data);
 static GSequence *avelements_create (GstPlayBin3 * playbin,
@@ -327,6 +321,7 @@ struct _SourcePad
 {
   GstPad *pad;                  /* The controlled pad */
   GstStreamType stream_type;    /* stream type of the controlled pad */
+  GstPad *combine_sinkpad;      /* Combiner request sinkpad linked to pad */
   gulong event_probe_id;
 };
 
@@ -440,9 +435,6 @@ struct _GstPlayBin3
   GstSourceGroup groups[2];     /* array with group info */
   GstSourceGroup *curr_group;   /* pointer to the currently playing group */
   GstSourceGroup *next_group;   /* pointer to the next group */
-
-  /* Array of GstPad controlled by each combiner */
-  GPtrArray *channels[PLAYBIN_STREAM_LAST];     /* links to combiner pads */
 
   /* combiners for different streams */
   GstSourceCombine combiner[PLAYBIN_STREAM_LAST];
@@ -1096,32 +1088,18 @@ do_async_done (GstPlayBin3 * playbin)
 static void
 init_combiners (GstPlayBin3 * playbin)
 {
-  gint i;
-
-  /* store the array for the different channels */
-  for (i = 0; i < PLAYBIN_STREAM_LAST; i++)
-    playbin->channels[i] = g_ptr_array_new ();
-
-  playbin->combiner[PLAYBIN_STREAM_AUDIO].media_type = "audio";
-  playbin->combiner[PLAYBIN_STREAM_AUDIO].type = GST_PLAY_SINK_TYPE_AUDIO;
   playbin->combiner[PLAYBIN_STREAM_AUDIO].stream_type = GST_STREAM_TYPE_AUDIO;
-  playbin->combiner[PLAYBIN_STREAM_AUDIO].channels = playbin->channels[0];
+  playbin->combiner[PLAYBIN_STREAM_AUDIO].inputpads = g_ptr_array_new ();
   playbin->combiner[PLAYBIN_STREAM_AUDIO].streams =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 
-  playbin->combiner[PLAYBIN_STREAM_VIDEO].media_type = "video";
-  playbin->combiner[PLAYBIN_STREAM_VIDEO].type = GST_PLAY_SINK_TYPE_VIDEO;
   playbin->combiner[PLAYBIN_STREAM_VIDEO].stream_type = GST_STREAM_TYPE_VIDEO;
-  playbin->combiner[PLAYBIN_STREAM_VIDEO].channels = playbin->channels[1];
+  playbin->combiner[PLAYBIN_STREAM_VIDEO].inputpads = g_ptr_array_new ();
   playbin->combiner[PLAYBIN_STREAM_VIDEO].streams =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 
-  playbin->combiner[PLAYBIN_STREAM_TEXT].media_type = "text";
-  playbin->combiner[PLAYBIN_STREAM_TEXT].get_media_caps =
-      gst_subtitle_overlay_create_factory_caps;
-  playbin->combiner[PLAYBIN_STREAM_TEXT].type = GST_PLAY_SINK_TYPE_TEXT;
   playbin->combiner[PLAYBIN_STREAM_TEXT].stream_type = GST_STREAM_TYPE_TEXT;
-  playbin->combiner[PLAYBIN_STREAM_TEXT].channels = playbin->channels[2];
+  playbin->combiner[PLAYBIN_STREAM_TEXT].inputpads = g_ptr_array_new ();
   playbin->combiner[PLAYBIN_STREAM_TEXT].streams =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 }
@@ -1183,7 +1161,8 @@ update_combiner_info (GstPlayBin3 * playbin, GstStreamCollection * collection)
     for (i = 0; i < 2; i++) {				\
       GstSourceGroup *group = &playbin->groups[i];	\
       							\
-      GST_DEBUG ("GstSourceGroup #%d (%s)", i, (group == playbin->curr_group) ? "current" : (group == playbin->next_group) ? "next" : "unused"); \
+      GST_DEBUG ("GstSourceGroup #%d (%s) : %s", i, (group == playbin->curr_group) ? "current" : (group == playbin->next_group) ? "next" : "unused", \
+		 group->uridecodebin ? GST_ELEMENT_NAME (group->uridecodebin) : "NULL" ); \
       GST_DEBUG ("  valid:%d , active:%d , playing:%d", group->valid, group->active, group->playing); \
       GST_DEBUG ("  uri:%s", group->uri);				\
       GST_DEBUG ("  suburi:%s", group->suburi);				\
@@ -1380,15 +1359,11 @@ static void
 gst_play_bin3_finalize (GObject * object)
 {
   GstPlayBin3 *playbin;
-  gint i;
 
   playbin = GST_PLAY_BIN3 (object);
 
   free_group (playbin, &playbin->groups[0]);
   free_group (playbin, &playbin->groups[1]);
-
-  for (i = 0; i < PLAYBIN_STREAM_LAST; i++)
-    g_ptr_array_free (playbin->channels[i], TRUE);
 
   /* Setting states to NULL is safe here because playsink
    * will already be gone and none of these sinks will be
@@ -1421,8 +1396,11 @@ gst_play_bin3_finalize (GObject * object)
   }
 
   g_ptr_array_free (playbin->combiner[PLAYBIN_STREAM_AUDIO].streams, TRUE);
+  g_ptr_array_free (playbin->combiner[PLAYBIN_STREAM_AUDIO].inputpads, TRUE);
   g_ptr_array_free (playbin->combiner[PLAYBIN_STREAM_VIDEO].streams, TRUE);
+  g_ptr_array_free (playbin->combiner[PLAYBIN_STREAM_VIDEO].inputpads, TRUE);
   g_ptr_array_free (playbin->combiner[PLAYBIN_STREAM_TEXT].streams, TRUE);
+  g_ptr_array_free (playbin->combiner[PLAYBIN_STREAM_TEXT].inputpads, TRUE);
 
   if (playbin->elements)
     gst_plugin_feature_list_free (playbin->elements);
@@ -1594,7 +1572,6 @@ gst_play_bin3_set_current_stream (GstPlayBin3 * playbin,
     gboolean * flush_marker)
 {
   GstSourceCombine *combine;
-  GPtrArray *channels;
   GstPad *sinkpad;
 
   GST_PLAY_BIN3_LOCK (playbin);
@@ -1604,7 +1581,6 @@ gst_play_bin3_set_current_stream (GstPlayBin3 * playbin,
   playbin->do_stream_selections = TRUE;
 
   combine = playbin->combiner + stream_type;
-  channels = playbin->channels[stream_type];
 
   GST_DEBUG_OBJECT (playbin, "Changing current %s stream %d -> %d",
       stream_type_names[stream_type], *current_value, stream);
@@ -1621,14 +1597,14 @@ gst_play_bin3_set_current_stream (GstPlayBin3 * playbin,
 
   if (!combine->has_active_pad)
     goto no_active_pad;
-  if (channels == NULL)
+  if (combine->inputpads == NULL)
     goto no_channels;
 
-  if (stream == -1 || channels->len <= stream) {
+  if (stream == -1 || combine->inputpads->len <= stream) {
     sinkpad = NULL;
   } else {
-    /* take channel from selected stream */
-    sinkpad = g_ptr_array_index (channels, stream);
+    /* take combiner sink pad for selected stream */
+    sinkpad = g_ptr_array_index (combine->inputpads, stream);
   }
 
   if (sinkpad)
@@ -1676,7 +1652,8 @@ no_active_pad:
 no_channels:
   {
     GST_PLAY_BIN3_UNLOCK (playbin);
-    GST_DEBUG_OBJECT (playbin, "can't switch video, we have no channels");
+    GST_DEBUG_OBJECT (playbin,
+        "can't switch stream, we have no combiner input pad");
     return FALSE;
   }
 }
@@ -2607,8 +2584,7 @@ gst_play_bin3_deep_element_added (GstBin * playbin, GstBin * sub_bin,
 
 /* Returns current stream number, or -1 if none has been selected yet */
 static int
-get_current_stream_number (GstPlayBin3 * playbin, GstSourceCombine * combine,
-    GPtrArray * channels)
+get_current_stream_number (GstPlayBin3 * playbin, GstSourceCombine * combine)
 {
   /* Internal API cleanup would make this easier... */
   int i;
@@ -2622,8 +2598,8 @@ get_current_stream_number (GstPlayBin3 * playbin, GstSourceCombine * combine,
     return ret;
   }
 
-  for (i = 0; i < channels->len; i++) {
-    pad = g_ptr_array_index (channels, i);
+  for (i = 0; i < combine->inputpads->len; i++) {
+    pad = g_ptr_array_index (combine->inputpads, i);
     if ((combiner = gst_pad_get_parent (pad))) {
       g_object_get (combiner, "active-pad", &current, NULL);
       gst_object_unref (combiner);
@@ -2647,7 +2623,6 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
     GstPlayBin3 * playbin)
 {
   GstSourceCombine *combine = NULL;
-  GPtrArray *channels = NULL;
   int i;
 
   GST_PLAY_BIN3_LOCK (playbin);
@@ -2655,7 +2630,6 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
   for (i = 0; i < PLAYBIN_STREAM_LAST; i++) {
     if (combiner == G_OBJECT (playbin->combiner[i].combiner)) {
       combine = &playbin->combiner[i];
-      channels = playbin->channels[i];
     }
   }
 
@@ -2665,10 +2639,9 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
     return;
   }
 
-  switch (combine->type) {
-    case GST_PLAY_SINK_TYPE_VIDEO:
-      playbin->current_video = get_current_stream_number (playbin,
-          combine, channels);
+  switch (combine->stream_type) {
+    case GST_STREAM_TYPE_VIDEO:
+      playbin->current_video = get_current_stream_number (playbin, combine);
 
       if (playbin->video_pending_flush_finish) {
         playbin->video_pending_flush_finish = FALSE;
@@ -2677,9 +2650,8 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
             "playsink-custom-video-flush-finish");
       }
       break;
-    case GST_PLAY_SINK_TYPE_AUDIO:
-      playbin->current_audio = get_current_stream_number (playbin,
-          combine, channels);
+    case GST_STREAM_TYPE_AUDIO:
+      playbin->current_audio = get_current_stream_number (playbin, combine);
 
       if (playbin->audio_pending_flush_finish) {
         playbin->audio_pending_flush_finish = FALSE;
@@ -2688,9 +2660,8 @@ combiner_active_pad_changed (GObject * combiner, GParamSpec * pspec,
             "playsink-custom-audio-flush-finish");
       }
       break;
-    case GST_PLAY_SINK_TYPE_TEXT:
-      playbin->current_text = get_current_stream_number (playbin,
-          combine, channels);
+    case GST_STREAM_TYPE_TEXT:
+      playbin->current_text = get_current_stream_number (playbin, combine);
 
       if (playbin->text_pending_flush_finish) {
         playbin->text_pending_flush_finish = FALSE;
@@ -2833,7 +2804,7 @@ _decodebin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
 
 static void
 control_source_pad (GstSourceGroup * group, GstPad * pad,
-    GstStreamType stream_type)
+    GstPad * combine_pad, GstStreamType stream_type)
 {
   SourcePad *sourcepad = g_slice_new0 (SourcePad);
 
@@ -2842,6 +2813,7 @@ control_source_pad (GstSourceGroup * group, GstPad * pad,
       gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       _decodebin_event_probe, group, NULL);
   sourcepad->stream_type = stream_type;
+  sourcepad->combine_sinkpad = combine_pad;
   group->source_pads = g_list_append (group->source_pads, sourcepad);
 }
 
@@ -2856,13 +2828,13 @@ remove_combiner (GstPlayBin3 * playbin, GstSourceCombine * combine)
   }
 
   /* Go over all sink pads and release them ! */
-  for (n = 0; n < combine->channels->len; n++) {
-    GstPad *sinkpad = g_ptr_array_index (combine->channels, n);
+  for (n = 0; n < combine->inputpads->len; n++) {
+    GstPad *sinkpad = g_ptr_array_index (combine->inputpads, n);
 
     gst_element_release_request_pad (combine->combiner, sinkpad);
     gst_object_unref (sinkpad);
   }
-  g_ptr_array_set_size (combine->channels, 0);
+  g_ptr_array_set_size (combine->inputpads, 0);
 
   gst_element_set_state (combine->combiner, GST_STATE_NULL);
   gst_bin_remove (GST_BIN_CAST (playbin), combine->combiner);
@@ -2894,7 +2866,9 @@ create_combiner (GstPlayBin3 * playbin, GstSourceCombine * combine)
     gchar *concat_name;
     GST_DEBUG_OBJECT (playbin,
         "No custom combiner requested, using 'concat' element");
-    concat_name = g_strdup_printf ("%s-concat", combine->media_type);
+    concat_name =
+        g_strdup_printf ("%s-concat",
+        gst_stream_type_get_name (combine->stream_type));
     combine->combiner = gst_element_factory_make ("concat", concat_name);
     g_object_set (combine->combiner, "adjust-base", FALSE, NULL);
     g_free (concat_name);
@@ -2922,11 +2896,12 @@ create_combiner (GstPlayBin3 * playbin, GstSourceCombine * combine)
   gst_element_sync_state_with_parent (combine->combiner);
 }
 
-static gboolean
+static GstPad *
 combiner_control_pad (GstPlayBin3 * playbin, GstSourceCombine * combine,
     GstPad * srcpad)
 {
   GstPadLinkReturn res;
+  GstPad *combine_pad = NULL;
 
   GST_DEBUG_OBJECT (playbin, "srcpad %" GST_PTR_FORMAT, srcpad);
 
@@ -2943,7 +2918,7 @@ combiner_control_pad (GstPlayBin3 * playbin, GstSourceCombine * combine,
     /* store the pad in the array */
     GST_DEBUG_OBJECT (playbin, "pad %" GST_PTR_FORMAT " added to array",
         sinkpad);
-    g_ptr_array_add (combine->channels, sinkpad);
+    g_ptr_array_add (combine->inputpads, sinkpad);
 
     res = gst_pad_link (srcpad, sinkpad);
     if (GST_PAD_LINK_FAILED (res))
@@ -2952,7 +2927,7 @@ combiner_control_pad (GstPlayBin3 * playbin, GstSourceCombine * combine,
     GST_DEBUG_OBJECT (playbin,
         "linked pad %" GST_PTR_FORMAT " to combiner %" GST_PTR_FORMAT, srcpad,
         combine->combiner);
-
+    combine_pad = sinkpad;
   } else {
     GST_LOG_OBJECT (playbin, "combine->sinkpad:%" GST_PTR_FORMAT,
         combine->sinkpad);
@@ -2968,61 +2943,39 @@ combiner_control_pad (GstPlayBin3 * playbin, GstSourceCombine * combine,
       goto failed_sinkpad_link;
   }
 
-  return TRUE;
+  return combine_pad;
 
   /* Failure cases */
 request_pad_failed:
   GST_ELEMENT_ERROR (playbin, CORE, PAD,
       ("Internal playbin error."),
       ("Failed to get request pad from combiner %p.", combine->combiner));
-  return FALSE;
+  return NULL;
 
 
 sinkpad_already_linked:
   GST_ELEMENT_ERROR (playbin, CORE, PAD,
       ("Internal playbin error."), ("playsink pad already used !"));
-  return FALSE;
+  return NULL;
 
 failed_sinkpad_link:
   GST_ELEMENT_ERROR (playbin, CORE, PAD,
       ("Internal playbin error."),
       ("Failed to link pad to sink. Error %d", res));
-  return FALSE;
+  return NULL;
 
 failed_combiner_link:
   GST_ELEMENT_ERROR (playbin, CORE, PAD,
       ("Internal playbin error."),
       ("Failed to link pad to combiner. Error %d", res));
-  return FALSE;
+  return NULL;
 }
 
-static void
-combiner_release_pad (GstPlayBin3 * playbin, GstSourceCombine * combine,
-    GstPad * pad)
-{
-  if (combine->combiner) {
-    GstPad *peer = gst_pad_get_peer (pad);
-
-    if (peer) {
-      GST_DEBUG_OBJECT (playbin, "Removing combiner pad %" GST_PTR_FORMAT,
-          peer);
-      g_ptr_array_remove (combine->channels, peer);
-
-      gst_element_release_request_pad (combine->combiner, peer);
-      gst_object_unref (peer);
-    }
-  } else {
-    /* Release direct link if present */
-    if (combine->sinkpad) {
-      GST_DEBUG_OBJECT (playbin, "Unlinking pad from playsink sinkpad");
-      gst_pad_unlink (pad, combine->sinkpad);
-    }
-  }
-}
 
 /* Call after pad was unlinked from (potential) combiner */
 static void
-release_source_pad (GstPlayBin3 * playbin, GstSourceGroup * group, GstPad * pad)
+release_source_pad (GstPlayBin3 * playbin, GstSourceGroup * group,
+    GstSourceCombine * combine, GstPad * pad)
 {
   SourcePad *sourcepad;
   GList *tmp;
@@ -3037,6 +2990,12 @@ release_source_pad (GstPlayBin3 * playbin, GstSourceGroup * group, GstPad * pad)
   if (sourcepad->event_probe_id) {
     gst_pad_remove_probe (pad, sourcepad->event_probe_id);
     sourcepad->event_probe_id = 0;
+  }
+
+  if (sourcepad->combine_sinkpad) {
+    gst_element_release_request_pad (combine->combiner,
+        sourcepad->combine_sinkpad);
+    g_ptr_array_remove (combine->inputpads, sourcepad->combine_sinkpad);
   }
 
   /* Remove from list of controlled pads and check again for EOS status */
@@ -3061,6 +3020,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
   gint pb_stream_type = -1;
   gchar *pad_name;
   GstPlayBin3 *playbin = group->playbin;
+  GstPad *combine_pad;
 
   GST_PLAY_BIN3_SHUTDOWN_LOCK (playbin, shutdown);
 
@@ -3091,9 +3051,9 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
   GST_PLAY_BIN3_LOCK (playbin);
   combine = &playbin->combiner[pb_stream_type];
 
-  combiner_control_pad (playbin, combine, pad);
+  combine_pad = combiner_control_pad (playbin, combine, pad);
 
-  control_source_pad (group, pad, combine->stream_type);
+  control_source_pad (group, pad, combine_pad, combine->stream_type);
 
   /* Update present stream_types and check whether we should post a pending about-to-finish */
   group->present_stream_types |= combine->stream_type;
@@ -3145,8 +3105,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   else
     goto done;
 
-  combiner_release_pad (playbin, combine, pad);
-  release_source_pad (playbin, group, pad);
+  release_source_pad (playbin, group, combine, pad);
 
 done:
   GST_PLAY_BIN3_UNLOCK (playbin);
@@ -3207,16 +3166,17 @@ reconfigure_output (GstPlayBin3 * playbin)
         combine->stream_type;
 
     GST_DEBUG_OBJECT (playbin, "Stream type status: '%s' %s %s",
-        combine->media_type, is_selected ? "selected" : "NOT selected",
+        gst_stream_type_get_name (combine->stream_type),
+        is_selected ? "selected" : "NOT selected",
         is_active ? "active" : "NOT active");
     /* FIXME : Remove asserts below once enough testing has been done */
 
     if (is_selected && is_active) {
       GST_DEBUG_OBJECT (playbin, "Stream type '%s' already active",
-          combine->media_type);
+          gst_stream_type_get_name (combine->stream_type));
     } else if (is_active && !is_selected) {
       GST_DEBUG_OBJECT (playbin, "Stream type '%s' is no longer requested",
-          combine->media_type);
+          gst_stream_type_get_name (combine->stream_type));
 
       /* Unlink combiner from sink */
       if (combine->srcpad) {
@@ -3240,7 +3200,7 @@ reconfigure_output (GstPlayBin3 * playbin)
       remove_combiner (playbin, combine);
     } else if (!is_active && is_selected) {
       GST_DEBUG_OBJECT (playbin, "Stream type '%s' is now requested",
-          combine->media_type);
+          gst_stream_type_get_name (combine->stream_type));
 
       /* If we are shutting down, do *not* add more combiners */
       if (g_atomic_int_get (&playbin->shutdown))
@@ -3250,14 +3210,15 @@ reconfigure_output (GstPlayBin3 * playbin)
 
       /* Request playsink sink pad */
       combine->sinkpad =
-          gst_play_sink_request_pad (playbin->playsink, combine->type);
+          gst_play_sink_request_pad (playbin->playsink,
+          gst_play_sink_type_from_stream_type (combine->stream_type));
       gst_object_ref (combine->sinkpad);
       /* Create combiner if needed and link it */
       create_combiner (playbin, combine);
       if (combine->combiner) {
         res = gst_pad_link (combine->srcpad, combine->sinkpad);
         GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d",
-            combine->media_type, res);
+            gst_stream_type_get_name (combine->stream_type), res);
         if (res != GST_PAD_LINK_OK) {
           GST_ELEMENT_ERROR (playbin, CORE, PAD,
               ("Internal playbin error."),

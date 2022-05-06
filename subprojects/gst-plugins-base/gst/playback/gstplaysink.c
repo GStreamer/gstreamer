@@ -5596,3 +5596,18 @@ gst_play_sink_colorbalance_init (gpointer g_iface, gpointer g_iface_data)
   iface->get_value = gst_play_sink_colorbalance_get_value;
   iface->get_balance_type = gst_play_sink_colorbalance_get_balance_type;
 }
+
+GstPlaySinkType
+gst_play_sink_type_from_stream_type (GstStreamType stream_type)
+{
+  switch (stream_type) {
+    case GST_STREAM_TYPE_AUDIO:
+      return GST_PLAY_SINK_TYPE_AUDIO;
+    case GST_STREAM_TYPE_VIDEO:
+      return GST_PLAY_SINK_TYPE_VIDEO;
+    case GST_STREAM_TYPE_TEXT:
+      return GST_PLAY_SINK_TYPE_TEXT;
+    default:
+      return GST_PLAY_SINK_TYPE_LAST;
+  }
+}

@@ -101,6 +101,8 @@ GstSample *      gst_play_sink_convert_sample  (GstPlaySink * playsink, GstCaps 
 
 gboolean         gst_play_sink_reconfigure    (GstPlaySink * playsink);
 
+GstPlaySinkType  gst_play_sink_type_from_stream_type (GstStreamType stream_type);
+
 G_END_DECLS
 
 #endif /* __GST_PLAY_SINK_H__ */
