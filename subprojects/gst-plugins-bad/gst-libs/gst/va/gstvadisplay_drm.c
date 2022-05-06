@@ -136,7 +136,7 @@ gst_va_display_drm_create_va_display (GstVaDisplay * display)
   int fd, saved_errno = 0;
   GstVaDisplayDrm *self = GST_VA_DISPLAY_DRM (display);
 
-  fd = open (self->path, O_RDWR);
+  fd = open (self->path, O_CLOEXEC | O_RDWR);
   saved_errno = errno;
   if (fd < 0) {
     GST_WARNING_OBJECT (self, "Failed to open %s: %s", self->path,
