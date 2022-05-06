@@ -127,6 +127,9 @@ struct _GstH265DecoderPrivate
 
   GArray *nalu;
 
+  /* Split packetized data into actual nal chunks (for malformed stream) */
+  GArray *split_nalu;
+
   /* For delayed output */
   guint preferred_output_delay;
   gboolean is_live;
@@ -224,6 +227,7 @@ gst_h265_decoder_init (GstH265Decoder * self)
       sizeof (GstH265Picture *), 32);
   priv->nalu = g_array_sized_new (FALSE, TRUE, sizeof (GstH265DecoderNalUnit),
       8);
+  priv->split_nalu = g_array_new (FALSE, FALSE, sizeof (GstH265NalUnit));
   g_array_set_clear_func (priv->nalu,
       (GDestroyNotify) gst_h265_decoder_clear_nalu);
   priv->output_queue =
@@ -242,6 +246,7 @@ gst_h265_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
   g_array_unref (priv->nalu);
+  g_array_unref (priv->split_nalu);
   gst_queue_array_free (priv->output_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1852,18 +1857,29 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
 
   if (priv->in_format == GST_H265_DECODER_FORMAT_HVC1 ||
       priv->in_format == GST_H265_DECODER_FORMAT_HEV1) {
-    pres = gst_h265_parser_identify_nalu_hevc (priv->parser,
-        map.data, 0, map.size, priv->nal_length_size, &nalu);
+    guint offset = 0;
+    gsize consumed;
 
-    while (pres == GST_H265_PARSER_OK) {
-      pres = gst_h265_decoder_parse_nalu (self, &nalu);
+    do {
+      pres = gst_h265_parser_identify_and_split_nalu_hevc (priv->parser,
+          map.data, offset, map.size, priv->nal_length_size, priv->split_nalu,
+          &consumed);
       if (pres != GST_H265_PARSER_OK)
         break;
 
-      pres = gst_h265_parser_identify_nalu_hevc (priv->parser,
-          map.data, nalu.offset + nalu.size, map.size, priv->nal_length_size,
-          &nalu);
-    }
+      for (i = 0; i < priv->split_nalu->len; i++) {
+        GstH265NalUnit *nl =
+            &g_array_index (priv->split_nalu, GstH265NalUnit, i);
+        pres = gst_h265_decoder_parse_nalu (self, nl);
+        if (pres != GST_H265_PARSER_OK)
+          break;
+      }
+
+      if (pres != GST_H265_PARSER_OK)
+        break;
+
+      offset += consumed;
+    } while (pres == GST_H265_PARSER_OK);
   } else {
     pres = gst_h265_parser_identify_nalu (priv->parser,
         map.data, 0, map.size, &nalu);
