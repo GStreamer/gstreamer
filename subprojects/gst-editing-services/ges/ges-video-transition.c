@@ -337,9 +337,13 @@ ges_video_transition_create_element (GESTrackElement * object)
   GESVideoTransition *self;
   GESVideoTransitionPrivate *priv;
   const gchar *smpte_properties[] = { "invert", "border", NULL };
+  gboolean is_fade;
 
   self = GES_VIDEO_TRANSITION (object);
   priv = self->priv;
+
+  is_fade = (priv->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ||
+      priv->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN);
 
   GST_LOG ("creating a video bin");
 
@@ -373,11 +377,9 @@ ges_video_transition_create_element (GESTrackElement * object)
   g_object_set (priv->mixer_sinka, "zorder", 0, NULL);
   g_object_set (priv->mixer_sinkb, "zorder", 1, NULL);
   gst_util_set_object_arg (G_OBJECT (priv->mixer_sinka), "operator",
-      priv->type ==
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "source" : "over");
+      is_fade ? "source" : "over");
   gst_util_set_object_arg (G_OBJECT (priv->mixer_sinkb), "operator",
-      priv->type ==
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "add" : "over");
+      is_fade ? "add" : "over");
 
   fast_element_link (mixer, priv->positioner);
 
@@ -480,6 +482,13 @@ ges_video_transition_update_control_sources (GESVideoTransition * self,
         (priv->fade_out_control_source, duration, 1.0, 0.0);
     ges_video_transition_update_control_source (priv->smpte_control_source,
         duration, 0.0, 0.0);
+  } else if (type == GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN) {
+    ges_video_transition_update_control_source
+        (priv->fade_in_control_source, duration, 0.0, 1.0);
+    ges_video_transition_update_control_source
+        (priv->fade_out_control_source, duration, 1.0, 1.0);
+    ges_video_transition_update_control_source (priv->smpte_control_source,
+        duration, 0.0, 0.0);
   } else {
     ges_video_transition_update_control_source
         (priv->fade_in_control_source, duration, 1.0, 1.0);
@@ -531,6 +540,7 @@ ges_video_transition_set_transition_type_internal (GESVideoTransition
     * self, GESVideoStandardTransitionType type)
 {
   GESVideoTransitionPrivate *priv = self->priv;
+  gboolean is_fade;
 
   GST_DEBUG ("%p %d => %d", self, priv->type, type);
 
@@ -547,17 +557,17 @@ ges_video_transition_set_transition_type_internal (GESVideoTransition
   ges_video_transition_update_control_sources (self, type);
 
   priv->type = type;
+  is_fade = (type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ||
+      type == GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN);
 
-  if (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
+  if (!is_fade) {
     g_object_set (priv->smpte, "type", (gint) type, NULL);
   }
 
   gst_util_set_object_arg (G_OBJECT (priv->mixer_sinka), "operator",
-      priv->type ==
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "source" : "over");
+      is_fade ? "source" : "over");
   gst_util_set_object_arg (G_OBJECT (priv->mixer_sinkb), "operator",
-      priv->type ==
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE ? "add" : "over");
+      is_fade ? "add" : "over");
 
   return TRUE;
 }
