@@ -559,7 +559,7 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
                 self->cur_ts += self->offset;
               }
             }
-            GST_BUFFER_TIMESTAMP (out_buf) = self->cur_ts;
+            GST_BUFFER_DTS (out_buf) = self->cur_ts;
 
 
             if (list == NULL)
