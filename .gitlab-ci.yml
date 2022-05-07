@@ -270,7 +270,9 @@ gst indent:
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
   script:
-    *build
+    - *build
+    - ./gst-env.py gst-inspect-1.0 --version
+    - ./gst-env.py gst-inspect-1.0
   after_script:
     - mv build/meson-logs/ meson-logs
   artifacts:
@@ -383,6 +385,8 @@ build vs2019 amd64:
   script:
     - !reference [".build windows", "script",]
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
+        .\gst-env.py gst-inspect-1.0.exe --version &&
+        .\gst-env.py gst-inspect-1.0.exe &&
         mkdir .\destdir &&
         meson install --destdir=$env:CI_PROJECT_DIR\destdir -C build &&
         rmdir /s /q  $env:CI_PROJECT_DIR\destdir"
