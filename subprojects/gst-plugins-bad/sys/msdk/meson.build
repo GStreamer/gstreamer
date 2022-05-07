@@ -31,6 +31,10 @@ use_msdk = false
 use_onevpl = false
 onevpl_extra_args = []
 
+extra_args = [
+  '-DGST_USE_UNSTABLE_API',
+]
+
 msdk_option = get_option('msdk')
 if msdk_option.disabled()
   subdir_done()
@@ -38,6 +42,15 @@ endif
 
 if host_machine.system() == 'windows'
   msdk_sources += ['msdk_d3d.c', 'gstmsdkallocator_d3d.c' ]
+  if gstd3d11_dep.found()
+    extra_args += ['-DCOBJMACROS']
+  else
+    if msdk_option.enabled()
+      error('The msdk plugin was enabled explicity, but required d3d11 dependencies were not found.')
+    endif
+    subdir_done()
+  endif
+
 else
   if not gstva_dep.found()
     if msdk_option.enabled()
@@ -167,9 +180,8 @@ if host_machine.system() == 'windows'
     error('msdk plugin can only be built with MSVC')
   endif
   legacy_stdio_dep = cc.find_library('legacy_stdio_definitions', required: get_option('msdk'))
-  d3d11_dep = cc.find_library('d3d11', required: get_option('msdk'))
-  msdk_deps = declare_dependency(dependencies: [d3d11_dep, legacy_stdio_dep])
-  msdk_deps_found = d3d11_dep.found() and legacy_stdio_dep.found() and cc.get_id() == 'msvc'
+  msdk_deps = declare_dependency(dependencies: [gstd3d11_dep, legacy_stdio_dep])
+  msdk_deps_found = gstd3d11_dep.found() and legacy_stdio_dep.found() and cc.get_id() == 'msvc'
 else
   libdl_dep = cc.find_library('dl', required: get_option('msdk'))
   libgudev_dep = dependency('gudev-1.0', required: get_option('msdk'))
@@ -189,7 +201,7 @@ if msdk_deps_found
 
   gstmsdktag = library('gstmsdk',
     msdk_sources,
-    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'] + onevpl_extra_args,
+    c_args : gst_plugins_bad_args + extra_args + onevpl_extra_args,
     include_directories : [configinc, mfx_inc],
     dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, gstcodecparsers_dep, mfx_dep, msdk_deps],
     install : true,
