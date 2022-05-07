@@ -37,6 +37,8 @@
 #ifndef _WIN32
 #include <va/va.h>
 #include <va/va_drmcommon.h>
+#else
+#include <gst/d3d11/gstd3d11_fwd.h>
 #endif
 
 G_BEGIN_DECLS
@@ -87,12 +89,21 @@ GType gst_msdk_context_get_type (void);
 
 GstMsdkContext * gst_msdk_context_new (gboolean hardware, GstMsdkContextJobType job_type);
 GstMsdkContext * gst_msdk_context_new_with_parent (GstMsdkContext * parent);
+#ifndef _WIN32
 GstMsdkContext * gst_msdk_context_new_with_va_display (GstObject * display_obj,
     gboolean hardware, GstMsdkContextJobType job_type);
+#else
+GstMsdkContext * gst_msdk_context_new_with_d3d11_device (GstD3D11Device * device,
+    gboolean hardware, GstMsdkContextJobType job_type);
+#endif
 mfxSession gst_msdk_context_get_session (GstMsdkContext * context);
 
 gpointer gst_msdk_context_get_handle (GstMsdkContext * context);
-GstObject * gst_msdk_context_get_display (GstMsdkContext * context);
+#ifndef _WIN32
+GstObject * gst_msdk_context_get_va_display (GstMsdkContext * context);
+#else
+GstD3D11Device * gst_msdk_context_get_d3d11_device (GstMsdkContext * context);
+#endif
 
 /* GstMsdkContext contains mfxFrameAllocResponses,
  * if app calls MFXVideoCORE_SetFrameAllocator.

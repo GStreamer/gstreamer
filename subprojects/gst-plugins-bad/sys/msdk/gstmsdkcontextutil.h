@@ -52,9 +52,15 @@ gst_msdk_ensure_new_context (GstElement * element, gboolean hardware, GstMsdkCon
 gboolean
 gst_msdk_context_get_context (GstContext * context, GstMsdkContext ** msdk_context);
 
+#ifndef _WIN32
 gboolean
-gst_msdk_context_from_external_display (GstContext * context, gboolean hardware,
+gst_msdk_context_from_external_va_display (GstContext * context, gboolean hardware,
     GstMsdkContextJobType job_type, GstMsdkContext ** msdk_context);
+#else
+gboolean
+gst_msdk_context_from_external_d3d11_device (GstContext * context, gboolean hardware,
+    GstMsdkContextJobType job_type, GstMsdkContext ** msdk_context);
+#endif
 
 gboolean
 gst_msdk_handle_context_query (GstElement * element, GstQuery * query, GstMsdkContext * msdk_context);

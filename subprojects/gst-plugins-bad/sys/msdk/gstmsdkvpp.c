@@ -420,7 +420,7 @@ gst_msdk_create_va_pool (GstVideoInfo * info, GstMsdkContext * msdk_context,
   GstVaDisplay *display = NULL;
   GstCaps *aligned_caps = NULL;
 
-  display = (GstVaDisplay *) gst_msdk_context_get_display (msdk_context);
+  display = (GstVaDisplay *) gst_msdk_context_get_va_display (msdk_context);
 
   if (use_dmabuf)
     allocator = gst_va_dmabuf_allocator_new (display);
@@ -1661,13 +1661,24 @@ gst_msdkvpp_set_context (GstElement * element, GstContext * context)
     gst_object_replace ((GstObject **) & thiz->context,
         (GstObject *) msdk_context);
     gst_object_unref (msdk_context);
-  } else if (gst_msdk_context_from_external_display (context,
+  } else
+#ifndef _WIN32
+    if (gst_msdk_context_from_external_va_display (context,
           thiz->hardware, 0 /* GST_MSDK_JOB_VPP will be set later */ ,
           &msdk_context)) {
     gst_object_replace ((GstObject **) & thiz->context,
         (GstObject *) msdk_context);
     gst_object_unref (msdk_context);
   }
+#else
+    if (gst_msdk_context_from_external_d3d11_device (context,
+          thiz->hardware, 0 /* GST_MSDK_JOB_VPP will be set later */ ,
+          &msdk_context)) {
+    gst_object_replace ((GstObject **) & thiz->context,
+        (GstObject *) msdk_context);
+    gst_object_unref (msdk_context);
+  }
+#endif
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }

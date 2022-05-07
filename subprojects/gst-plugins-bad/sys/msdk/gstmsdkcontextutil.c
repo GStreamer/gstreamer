@@ -34,6 +34,8 @@
 #ifndef _WIN32
 #include <gst/va/gstvadisplay.h>
 #include <gst/va/gstvautils.h>
+#else
+#include <gst/d3d11/gstd3d11device.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
@@ -236,8 +238,19 @@ gst_msdk_ensure_new_context (GstElement * element, gboolean hardware,
 
 #ifndef _WIN32
   /* 2) Query the neighbour the VA display. If already a valid VA display,
-     using it by gst_msdk_context_from_external_display() in set_context(). */
+     using it by gst_msdk_context_from_external_va_display() in set_context(). */
   gst_va_context_query (element, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR);
+  msdk_context = g_atomic_pointer_get (context_ptr);
+  if (msdk_context) {
+    gst_object_ref (msdk_context);
+    propagate_display = FALSE;
+    ret = TRUE;
+    goto done;
+  }
+#else
+  /* 2) Query the neighbour the D3D11 device. If already a valid D3D11 device,
+     using it by gst_msdk_context_from_external_d3d11_device() in set_context(). */
+  _context_query (element, GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE);
   msdk_context = g_atomic_pointer_get (context_ptr);
   if (msdk_context) {
     gst_object_ref (msdk_context);
@@ -247,7 +260,10 @@ gst_msdk_ensure_new_context (GstElement * element, gboolean hardware,
   }
 #endif
 
-  /* 3) Create a MSDK context from scratch. */
+  /* 3) Create a MSDK context from scratch. Currently we use environment variable
+     to enable user to choose GPU device in multi-GPU environment. This variable
+     is only valid when there's no context returned by upstream or downstream.
+     Otherwise it will use the device that created by upstream or downstream. */
   msdk_context = gst_msdk_context_new (hardware, job);
   if (!msdk_context) {
     GST_ERROR_OBJECT (element, "Context creation failed");
@@ -264,7 +280,7 @@ done:
   if (propagate_display) {
 #ifndef _WIN32
     GstVaDisplay *display =
-        (GstVaDisplay *) gst_msdk_context_get_display (msdk_context);
+        (GstVaDisplay *) gst_msdk_context_get_va_display (msdk_context);
     gst_va_element_propagate_display_context (element, display);
     gst_clear_object (&display);
 #endif
@@ -276,11 +292,12 @@ done:
   return ret;
 }
 
-gboolean
-gst_msdk_context_from_external_display (GstContext * context, gboolean hardware,
-    GstMsdkContextJobType job_type, GstMsdkContext ** msdk_context)
-{
 #ifndef _WIN32
+gboolean
+gst_msdk_context_from_external_va_display (GstContext * context,
+    gboolean hardware, GstMsdkContextJobType job_type,
+    GstMsdkContext ** msdk_context)
+{
   GstObject *va_display = NULL;
   const gchar *type;
   const GstStructure *s;
@@ -309,10 +326,50 @@ gst_msdk_context_from_external_display (GstContext * context, gboolean hardware,
   if (ctx)
     return TRUE;
 
-#endif
+  return FALSE;
+}
+#else
+gboolean
+gst_msdk_context_from_external_d3d11_device (GstContext * context,
+    gboolean hardware, GstMsdkContextJobType job_type,
+    GstMsdkContext ** msdk_context)
+{
+  GstD3D11Device *d3d11_device = NULL;
+  const gchar *type;
+  const GstStructure *s;
+  GstMsdkContext *ctx = NULL;
+  guint vendor_id = 0;
+
+  _init_context_debug ();
+
+  type = gst_context_get_context_type (context);
+  if (g_strcmp0 (type, GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE))
+    return FALSE;
+
+  s = gst_context_get_structure (context);
+  if (gst_structure_get (s, "device", GST_TYPE_D3D11_DEVICE, &d3d11_device,
+          NULL)) {
+    g_object_get (d3d11_device, "vendor-id", &vendor_id, NULL);
+    if (vendor_id != 0x8086) {
+      GST_ERROR ("Not an Intel device");
+      gst_clear_object (&d3d11_device);
+      return FALSE;
+    }
+    ctx =
+        gst_msdk_context_new_with_d3d11_device (d3d11_device, hardware,
+        job_type);
+    if (ctx)
+      *msdk_context = ctx;
+
+    gst_clear_object (&d3d11_device);
+  }
+
+  if (ctx)
+    return TRUE;
 
   return FALSE;
 }
+#endif
 
 gboolean
 gst_msdk_handle_context_query (GstElement * element, GstQuery * query,
@@ -346,7 +403,7 @@ gst_msdk_handle_context_query (GstElement * element, GstQuery * query,
 #ifndef _WIN32
   if (g_strcmp0 (context_type, GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR) == 0) {
     GstStructure *s;
-    GstObject *display = gst_msdk_context_get_display (msdk_context);
+    GstObject *display = gst_msdk_context_get_va_display (msdk_context);
 
     if (display) {
       GST_CAT_LOG (GST_CAT_CONTEXT,
@@ -357,6 +414,22 @@ gst_msdk_handle_context_query (GstElement * element, GstQuery * query,
       gst_structure_set (s, "gst-display", GST_TYPE_OBJECT, display, NULL);
       /* Structure hold one ref */
       gst_object_unref (display);
+      ret = TRUE;
+    }
+  } else
+#else
+  if (g_strcmp0 (context_type, GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE) == 0) {
+    GstStructure *s;
+    GstD3D11Device *device = gst_msdk_context_get_d3d11_device (msdk_context);
+
+    if (device) {
+      GST_CAT_LOG (GST_CAT_CONTEXT,
+          "setting GstD3D11Device (%" GST_PTR_FORMAT ") on context (%"
+          GST_PTR_FORMAT ")", device, ctxt);
+
+      s = gst_context_writable_structure (ctxt);
+      gst_structure_set (s, "device", GST_TYPE_D3D11_DEVICE, device, NULL);
+      gst_object_unref (device);
       ret = TRUE;
     }
   } else
