@@ -97,6 +97,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
     "{ NV12, YV12, I420, YUY2, UYVY, VUYA, BGRA, BGRx, P010_10LE" EXT_SINK_FORMATS "}"
 #define SUPPORTED_DMABUF_FORMAT \
     "{ NV12, BGRA, YUY2, UYVY, VUYA, P010_10LE" EXT_SINK_FORMATS "}"
+#define SUPPORTED_VA_FORMAT \
+    "{ NV12, VUYA, P010_10LE }"
 #define SRC_SYSTEM_FORMAT \
     "{ NV12, BGRA, YUY2, UYVY, VUYA, BGRx, P010_10LE" EXT_FORMATS EXT_SRC_FORMATS "}"
 #define SRC_DMABUF_FORMAT       \
@@ -105,19 +107,24 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #ifndef _WIN32
 #define DMABUF_SINK_CAPS_STR \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, \
-      SUPPORTED_DMABUF_FORMAT)
+      SUPPORTED_DMABUF_FORMAT) ";"
+#define VA_SINK_CAPS_STR \
+  GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE (SUPPORTED_VA_FORMAT)
 #else
 #define DMABUF_SINK_CAPS_STR ""
+#define VA_SINK_CAPS_STR ""
 #endif
 
 #ifndef _WIN32
 #define DMABUF_SRC_CAPS_STR \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, \
       SRC_DMABUF_FORMAT) ";"
+#define VA_SRC_CAPS_STR \
+  GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE (SUPPORTED_VA_FORMAT)
 #else
 #define DMABUF_SRC_CAPS_STR ""
+#define VA_SRC_CAPS_STR ""
 #endif
-
 
 static GstStaticPadTemplate gst_msdkvpp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -125,7 +132,7 @@ static GstStaticPadTemplate gst_msdkvpp_sink_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SUPPORTED_SYSTEM_FORMAT)
         ", " "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
-        DMABUF_SINK_CAPS_STR));
+        DMABUF_SINK_CAPS_STR VA_SINK_CAPS_STR));
 
 static GstStaticPadTemplate gst_msdkvpp_src_factory =
     GST_STATIC_PAD_TEMPLATE ("src",
@@ -133,7 +140,8 @@ static GstStaticPadTemplate gst_msdkvpp_src_factory =
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (DMABUF_SRC_CAPS_STR
         GST_VIDEO_CAPS_MAKE (SRC_SYSTEM_FORMAT) ", "
-        "interlace-mode = (string){ progressive, interleaved, mixed }" ";"));
+        "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
+        VA_SRC_CAPS_STR));
 
 enum
 {
