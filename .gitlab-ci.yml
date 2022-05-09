@@ -409,13 +409,11 @@ build clang fedora x86_64:
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
         meson build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
         ninja -C build"
-  # XXX: Re-enable when uploading stops timing out
-  #artifacts:
-  #  expire_in: "7 days"
-  #  when: "always"
-  #  paths:
-  #    - 'build/meson-logs/'
-  #    - 'vslogs.zip'
+  artifacts:
+   expire_in: "7 days"
+   when: "always"
+   paths:
+     - 'build/meson-logs/'
 
 build vs2019 amd64:
   extends: '.build windows'
