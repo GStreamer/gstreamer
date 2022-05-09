@@ -547,18 +547,26 @@ if __name__ == "__main__":
         gst_version += '-' + os.path.basename(options.wine)
 
     env = get_subprocess_env(options, gst_version)
-    if not args:
-        if os.name == 'nt':
-            shell = get_windows_shell()
-            if shell == 'powershell.exe':
-                args = ['powershell.exe']
-                args += ['-NoLogo', '-NoExit']
+    if os.name == 'nt':
+        shell = get_windows_shell()
+        if shell == 'powershell.exe':
+            new_args = ['powershell.exe']
+            new_args += ['-NoLogo']
+            if not args:
                 prompt = 'function global:prompt {  "[gst-' + gst_version + '"+"] PS " + $PWD + "> "}'
-                args += ['-Command', prompt]
+                new_args += ['-NoExit', '-Command', prompt]
             else:
-                args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
-                args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
+                new_args += ['-NonInteractive', '-Command'] + args
+            args = new_args
         else:
+            new_args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
+            if not args:
+                new_args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
+            else:
+                new_args += ['/c', 'start', '/b', '/wait'] + args
+            args = new_args
+    if not args:
+        if os.name != 'nt':
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
         if args[0].endswith('bash') and not str_to_bool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
             # Let the GC remove the tmp file
