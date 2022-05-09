@@ -1175,6 +1175,203 @@ GST_START_TEST (test_h265_create_sei)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_split_hevc)
+{
+  GstH265Parser *parser;
+  GArray *array;
+  GstH265NalUnit *nal;
+  static const guint8 aud[] = { 0x46, 0x01, 0x10 };
+  static const guint8 eos[] = { 0x48, 0x01 };
+  static const guint8 sc_3bytes[] = { 0x00, 0x00, 0x01 };
+  static const guint8 sc_4bytes[] = { 0x00, 0x00, 0x00, 0x01 };
+  const guint8 nal_length_size = 4;
+  guint8 data[128];
+  gsize size;
+  GstH265ParserResult ret;
+  gsize consumed;
+  guint off;
+
+  parser = gst_h265_parser_new ();
+  array = g_array_new (FALSE, FALSE, sizeof (GstH265NalUnit));
+
+#define BUILD_NAL(arr) G_STMT_START { \
+  memcpy (data + off, arr, sizeof (arr)); \
+  off += sizeof (arr); \
+} G_STMT_END
+
+  /* 1) Complete packetized nalu */
+  size = nal_length_size + sizeof (aud);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud));
+  BUILD_NAL (aud);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 2-1) SC (3 bytes) + nalu */
+  size = nal_length_size + sizeof (sc_3bytes) + sizeof (aud);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_3bytes) + sizeof (aud));
+  BUILD_NAL (sc_3bytes);
+  BUILD_NAL (aud);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 2-2) SC (4 bytes) + nalu */
+  size = nal_length_size + sizeof (sc_4bytes) + sizeof (aud);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_4bytes) + sizeof (aud));
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (aud);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 3-1) nalu + trailing SC (3 bytes) */
+  size = nal_length_size + sizeof (aud) + sizeof (sc_3bytes);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud) + sizeof (sc_3bytes));
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_3bytes);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 3-2) nalu + trailing SC (4 bytes) */
+  size = nal_length_size + sizeof (aud) + sizeof (sc_4bytes);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud) + sizeof (sc_4bytes));
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 4-1) SC + nalu + SC + nalu */
+  size = nal_length_size + sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (eos);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (eos));
+  BUILD_NAL (sc_3bytes);
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (eos);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 2);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+  nal = &g_array_index (array, GstH265NalUnit, 1);
+  assert_equals_int (nal->type, GST_H265_NAL_EOS);
+  assert_equals_int (nal->sc_offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud));
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud) + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (eos));
+
+  /* 4-2) SC + nalu + SC + nalu + trailing SC */
+  size = nal_length_size + sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (eos) + sizeof (sc_3bytes);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (eos) + sizeof (sc_3bytes));
+  BUILD_NAL (sc_3bytes);
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (eos);
+  BUILD_NAL (sc_3bytes);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 2);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+  nal = &g_array_index (array, GstH265NalUnit, 1);
+  assert_equals_int (nal->type, GST_H265_NAL_EOS);
+  assert_equals_int (nal->sc_offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud));
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud) + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (eos));
+
+  /* 4-3) nalu + SC + nalu */
+  size = nal_length_size + sizeof (aud) + sizeof (sc_4bytes) + sizeof (eos);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud) + sizeof (sc_4bytes) + sizeof (eos));
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (eos);
+  ret = gst_h265_parser_identify_and_split_nalu_hevc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H265_PARSER_OK);
+  assert_equals_int (array->len, 2);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH265NalUnit, 0);
+  assert_equals_int (nal->type, GST_H265_NAL_AUD);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+  nal = &g_array_index (array, GstH265NalUnit, 1);
+  assert_equals_int (nal->type, GST_H265_NAL_EOS);
+  assert_equals_int (nal->sc_offset, nal_length_size + sizeof (aud));
+  assert_equals_int (nal->offset,
+      nal_length_size + sizeof (aud) + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (eos));
+
+#undef BUILD_NAL
+
+  gst_h265_parser_free (parser);
+  g_array_unref (array);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -1197,6 +1394,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_nal_type_classification);
   tcase_add_test (tc_chain, test_h265_sei_registered_user_data);
   tcase_add_test (tc_chain, test_h265_create_sei);
+  tcase_add_test (tc_chain, test_h265_split_hevc);
 
   return s;
 }
