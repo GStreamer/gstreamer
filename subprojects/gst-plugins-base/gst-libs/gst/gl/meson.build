@@ -20,6 +20,7 @@ gl_sources = files([
   'gstglbufferpool.c',
   'gstglcontext.c',
   'gstglcontextconfig.c',
+  'gstglcontextquirks.c',
   'gstgldebug.c',
   'gstgldisplay.c',
   'gstglfeature.c',

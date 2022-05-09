@@ -1530,17 +1530,7 @@ gst_gl_context_fill_info (GstGLContext * context, GError ** error)
     goto failure;
   }
 
-  /* Does not implement OES_vertex_array_object properly, see
-   * https://bugzilla.gnome.org/show_bug.cgi?id=750185 */
-  if (g_strcmp0 ((const gchar *) gl->GetString (GL_VENDOR),
-          "Imagination Technologies") == 0
-      && g_strcmp0 ((const gchar *) gl->GetString (GL_RENDERER),
-          "PowerVR SGX 544MP") == 0) {
-    gl->GenVertexArrays = NULL;
-    gl->DeleteVertexArrays = NULL;
-    gl->BindVertexArray = NULL;
-    gl->IsVertexArray = NULL;
-  }
+  gst_gl_context_apply_quirks (context);
 
   if (GST_IS_GL_WRAPPED_CONTEXT (context)) {
     /* XXX: vfunc? */

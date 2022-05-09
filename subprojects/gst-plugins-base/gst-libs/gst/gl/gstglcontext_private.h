@@ -29,6 +29,9 @@ G_GNUC_INTERNAL extern GstDebugCategory *gst_gl_context_debug;
 G_GNUC_INTERNAL
 gboolean            _gst_gl_context_debug_is_enabled            (GstGLContext * context);
 
+G_GNUC_INTERNAL
+void                gst_gl_context_apply_quirks                 (GstGLContext * context);
+
 #define GST_GL_CONTEXT_WRAPPED_GL_CONFIG_NAME "gst.gl.context.wrapped.config"
 
 #define GST_TYPE_GL_WRAPPED_CONTEXT (gst_gl_wrapped_context_get_type())
