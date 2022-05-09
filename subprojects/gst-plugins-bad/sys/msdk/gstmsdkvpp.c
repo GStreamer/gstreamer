@@ -202,23 +202,18 @@ enum
 #define gst_msdkvpp_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
 
-typedef struct
-{
-  mfxFrameSurface1 *surface;
-  GstBuffer *buf;
-} MsdkSurface;
-
 static void
 free_msdk_surface (gpointer p)
 {
-  MsdkSurface *surface = (MsdkSurface *) p;
+  GstMsdkSurface *surface = (GstMsdkSurface *) p;
   if (surface->buf)
     gst_buffer_unref (surface->buf);
-  g_slice_free (MsdkSurface, surface);
+  g_slice_free (GstMsdkSurface, surface);
 }
 
 static void
-release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface, GList ** list)
+release_msdk_surface (GstMsdkVPP * thiz, GstMsdkSurface * surface,
+    GList ** list)
 {
   if (surface->surface) {
     if (surface->surface->Data.Locked) {
@@ -230,7 +225,7 @@ release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface, GList ** list)
 }
 
 static void
-release_in_surface (GstMsdkVPP * thiz, MsdkSurface * surface,
+release_in_surface (GstMsdkVPP * thiz, GstMsdkSurface * surface,
     gboolean locked_by_others)
 {
   if (locked_by_others) {
@@ -243,7 +238,7 @@ release_in_surface (GstMsdkVPP * thiz, MsdkSurface * surface,
 }
 
 static void
-release_out_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
+release_out_surface (GstMsdkVPP * thiz, GstMsdkSurface * surface)
 {
   release_msdk_surface (thiz, surface, &thiz->locked_out_surfaces);
 }
@@ -252,7 +247,7 @@ static void
 free_unlocked_msdk_surfaces_from_list (GstMsdkVPP * thiz, GList ** list)
 {
   GList *l;
-  MsdkSurface *surface;
+  GstMsdkSurface *surface;
 
   for (l = *list; l;) {
     GList *next = l->next;
@@ -700,13 +695,13 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
       decide_query, query);
 }
 
-static MsdkSurface *
+static GstMsdkSurface *
 get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
     GstBufferPoolAcquireParams * params)
 {
   GstBuffer *new_buffer;
   mfxFrameSurface1 *new_surface;
-  MsdkSurface *msdk_surface;
+  GstMsdkSurface *msdk_surface = NULL;
 
   if (!gst_buffer_pool_is_active (pool) &&
       !gst_buffer_pool_set_active (pool, TRUE)) {
@@ -719,122 +714,54 @@ get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
     return NULL;
   }
 
-  if (gst_msdk_is_msdk_buffer (new_buffer))
+  if (gst_msdk_is_msdk_buffer (new_buffer)) {
     new_surface = gst_msdk_get_surface_from_buffer (new_buffer);
-  else {
-    GST_ERROR_OBJECT (pool, "the acquired memory is not MSDK memory");
-    return NULL;
+    msdk_surface = g_slice_new0 (GstMsdkSurface);
+    msdk_surface->surface = new_surface;
+    msdk_surface->buf = new_buffer;
+  } else {
+#ifndef _WIN32
+    msdk_surface = gst_msdk_import_to_msdk_surface (new_buffer, thiz->context,
+        &thiz->sinkpad_info);
+    if (msdk_surface)
+      msdk_surface->buf = new_buffer;
+    else {
+      GST_ERROR_OBJECT (pool, "Failed to get msdk surface");
+      return NULL;
+    }
+#endif
   }
-
-  msdk_surface = g_slice_new0 (MsdkSurface);
-  msdk_surface->surface = new_surface;
-  msdk_surface->buf = new_buffer;
 
   return msdk_surface;
 }
 
-#ifndef _WIN32
-static gboolean
-import_dmabuf_to_msdk_surface (GstMsdkVPP * thiz, GstBuffer * buf,
-    MsdkSurface * msdk_surface)
-{
-  GstMemory *mem = NULL;
-  GstVideoInfo vinfo;
-  GstVideoMeta *vmeta;
-  GstMsdkMemoryID *msdk_mid = NULL;
-  mfxFrameSurface1 *mfx_surface = NULL;
-  gint fd, i;
-
-  mem = gst_buffer_peek_memory (buf, 0);
-  fd = gst_dmabuf_memory_get_fd (mem);
-  if (fd < 0)
-    return FALSE;
-
-  vinfo = thiz->sinkpad_info;
-
-  /* Update offset/stride/size if there is VideoMeta attached to
-   * the buffer */
-  vmeta = gst_buffer_get_video_meta (buf);
-  if (vmeta) {
-    if (GST_VIDEO_INFO_FORMAT (&vinfo) != vmeta->format ||
-        GST_VIDEO_INFO_WIDTH (&vinfo) != vmeta->width ||
-        GST_VIDEO_INFO_HEIGHT (&vinfo) != vmeta->height ||
-        GST_VIDEO_INFO_N_PLANES (&vinfo) != vmeta->n_planes) {
-      GST_ERROR_OBJECT (thiz, "VideoMeta attached to buffer is not matching"
-          "the negotiated width/height/format");
-      return FALSE;
-    }
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); ++i) {
-      GST_VIDEO_INFO_PLANE_OFFSET (&vinfo, i) = vmeta->offset[i];
-      GST_VIDEO_INFO_PLANE_STRIDE (&vinfo, i) = vmeta->stride[i];
-    }
-    GST_VIDEO_INFO_SIZE (&vinfo) = gst_buffer_get_size (buf);
-  }
-
-  /* Upstream neither accepted the msdk pool nor the msdk buffer size restrictions.
-   * Current media-driver and GMMLib will fail due to strict memory size restrictions.
-   * Ideally, media-driver should accept what ever memory coming from other drivers
-   * in case of dmabuf-import and this is how the intel-vaapi-driver works.
-   * For now, in order to avoid any crash we check the buffer size and fallback
-   * to copy frame method.
-   *
-   * See this: https://github.com/intel/media-driver/issues/169
-   * */
-  if (GST_VIDEO_INFO_SIZE (&vinfo) <
-      GST_VIDEO_INFO_SIZE (&thiz->sinkpad_buffer_pool_info))
-    return FALSE;
-
-  mfx_surface = msdk_surface->surface;
-  msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
-
-  /* release the internal memory storage of associated mfxSurface */
-  gst_msdk_replace_mfx_memid (thiz->context, mfx_surface, VA_INVALID_ID);
-
-  /* export dmabuf to vasurface */
-  if (!gst_msdk_export_dmabuf_to_vasurface (thiz->context, &vinfo, fd,
-          msdk_mid->surface))
-    return FALSE;
-
-  return TRUE;
-}
-#endif
-
-static MsdkSurface *
+static GstMsdkSurface *
 get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
 {
   GstVideoFrame src_frame, out_frame;
-  MsdkSurface *msdk_surface;
-#ifndef _WIN32
-  GstMemory *mem = NULL;
-#endif
+  GstMsdkSurface *msdk_surface = NULL;
 
   if (gst_msdk_is_msdk_buffer (inbuf)) {
-    msdk_surface = g_slice_new0 (MsdkSurface);
+    msdk_surface = g_slice_new0 (GstMsdkSurface);
     msdk_surface->surface = gst_msdk_get_surface_from_buffer (inbuf);
     msdk_surface->buf = gst_buffer_ref (inbuf);
     return msdk_surface;
   }
+#ifndef _WIN32
+  msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
+      &thiz->sinkpad_info);
+  if (msdk_surface) {
+    msdk_surface->buf = gst_buffer_ref (inbuf);
+    return msdk_surface;
+  }
+#endif
 
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
-   * just copy frame (if not dmabuf backed) to msdk buffer and
-   * take a surface from it.   */
+   * just copy frame to msdk buffer and take a surface from it.
+   */
   if (!(msdk_surface =
           get_surface_from_pool (thiz, thiz->sinkpad_buffer_pool, NULL)))
     goto error;
-
-#ifndef _WIN32
-  /************ dmabuf-import ************* */
-  /* if upstream provided a dmabuf backed memory, but not an msdk
-   * buffer, we could export the dmabuf to underlined vasurface */
-  mem = gst_buffer_peek_memory (inbuf, 0);
-  if (gst_is_dmabuf_memory (mem)) {
-    if (import_dmabuf_to_msdk_surface (thiz, inbuf, msdk_surface))
-      return msdk_surface;
-    else
-      GST_INFO_OBJECT (thiz, "Upstream dmabuf-backed memory is not imported"
-          "to the msdk surface, fall back to the copy input frame method");
-  }
-#endif
 
   if (!gst_video_frame_map (&src_frame, &thiz->sinkpad_info, inbuf,
           GST_MAP_READ)) {
@@ -876,8 +803,8 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   mfxSyncPoint sync_point = NULL;
   mfxStatus status;
   mfxFrameInfo *in_info = NULL;
-  MsdkSurface *in_surface = NULL;
-  MsdkSurface *out_surface = NULL;
+  GstMsdkSurface *in_surface = NULL;
+  GstMsdkSurface *out_surface = NULL;
   GstBuffer *outbuf_new = NULL;
   gboolean locked_by_others;
   gboolean create_new_surface = FALSE;
@@ -903,12 +830,20 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         gst_util_uint64_scale_round (inbuf->pts, 90000, GST_SECOND);
 
   if (gst_msdk_is_msdk_buffer (outbuf)) {
-    out_surface = g_slice_new0 (MsdkSurface);
+    out_surface = g_slice_new0 (GstMsdkSurface);
     out_surface->surface = gst_msdk_get_surface_from_buffer (outbuf);
   } else {
-    GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
-    free_msdk_surface (in_surface);
-    return GST_FLOW_ERROR;
+#ifndef _WIN32
+    out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
+        &thiz->srcpad_info);
+    if (out_surface)
+      out_surface->buf = gst_buffer_ref (outbuf);
+#endif
+    if (!out_surface) {
+      GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
+      free_msdk_surface (in_surface);
+      return GST_FLOW_ERROR;
+    }
   }
 
   /* update surface crop info (NOTE: msdk min frame size is 2x2) */
@@ -916,7 +851,11 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if ((thiz->crop_left + thiz->crop_right >= in_info->CropW - 1)
       || (thiz->crop_top + thiz->crop_bottom >= in_info->CropH - 1)) {
     GST_WARNING_OBJECT (thiz, "ignoring crop... cropping too much!");
-  } else {
+  } else if (!in_surface->from_qdata) {
+    /* We only fill crop info when it is a new surface.
+     * If the surface is a cached one, it already has crop info,
+     * and we should avoid updating again.
+     */
     in_info->CropX = thiz->crop_left;
     in_info->CropY = thiz->crop_top;
     in_info->CropW -= thiz->crop_left + thiz->crop_right;
@@ -979,12 +918,24 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
       if (gst_msdk_is_msdk_buffer (outbuf_new)) {
         release_out_surface (thiz, out_surface);
-        out_surface = g_slice_new0 (MsdkSurface);
+        out_surface = g_slice_new0 (GstMsdkSurface);
         out_surface->surface = gst_msdk_get_surface_from_buffer (outbuf_new);
         create_new_surface = TRUE;
       } else {
-        GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
-        goto vpp_error;
+        release_out_surface (thiz, out_surface);
+#ifndef _WIN32
+        out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
+            &thiz->srcpad_info);
+        if (out_surface) {
+          out_surface->buf = gst_buffer_ref (outbuf);
+          create_new_surface = TRUE;
+        }
+#endif
+        if (!out_surface) {
+          GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
+          release_in_surface (thiz, in_surface, locked_by_others);
+          return GST_FLOW_ERROR;
+        }
       }
     } else {
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;

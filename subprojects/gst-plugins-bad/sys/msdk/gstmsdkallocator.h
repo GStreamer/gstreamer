@@ -61,6 +61,7 @@ struct _GstMsdkSurface
 {
   mfxFrameSurface1 *surface;
   GstBuffer *buf;
+  gboolean from_qdata;
 };
 
 GstMsdkSurface *

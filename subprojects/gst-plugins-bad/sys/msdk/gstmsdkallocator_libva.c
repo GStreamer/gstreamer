@@ -782,6 +782,7 @@ gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
   if ((mfx_surface = gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem),
               GST_MSDK_FRAME_SURFACE))) {
     msdk_surface->surface = mfx_surface;
+    msdk_surface->from_qdata = TRUE;
     return msdk_surface;
   }
 
