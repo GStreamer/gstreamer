@@ -54,6 +54,8 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define DEFAULT_PROP_IO_MODE            GST_V4L2_IO_AUTO
 
 #define ENCODED_BUFFER_SIZE             (2 * 1024 * 1024)
+#define GST_V4L2_DEFAULT_WIDTH          320
+#define GST_V4L2_DEFAULT_HEIGHT         240
 
 enum
 {
@@ -3563,6 +3565,11 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   pixelformat = fmtdesc->pixelformat;
   width = GST_VIDEO_INFO_WIDTH (&info);
   height = GST_VIDEO_INFO_FIELD_HEIGHT (&info);
+  /* if caps has no width and height info, use default value */
+  if (V4L2_TYPE_IS_OUTPUT (v4l2object->type) && width == 0 && height == 0) {
+    width = GST_V4L2_DEFAULT_WIDTH;
+    height = GST_V4L2_DEFAULT_HEIGHT;
+  }
   fps_n = GST_VIDEO_INFO_FPS_N (&info);
   fps_d = GST_VIDEO_INFO_FPS_D (&info);
 
