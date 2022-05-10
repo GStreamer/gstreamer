@@ -89,6 +89,16 @@ gst_msdkmjpegdec_configure (GstMsdkDec * decoder)
      of Interleaved samples, so let's hardcode it for now */
   decoder->param.mfx.InterleavedDec = MFX_SCANTYPE_NONINTERLEAVED;
 
+#if (MFX_VERSION >= 2006)
+  if (decoder->report_error) {
+    decoder->error_report.Header.BufferId = MFX_EXTBUFF_DECODE_ERROR_REPORT;
+    decoder->error_report.Header.BufferSz = sizeof (decoder->error_report);
+    decoder->error_report.ErrorTypes = 0;
+    gst_msdkdec_add_bs_extra_param (decoder,
+        (mfxExtBuffer *) & decoder->error_report);
+  }
+#endif
+
   return TRUE;
 }
 
@@ -110,13 +120,73 @@ gst_msdkmjpegdec_post_configure (GstMsdkDec * decoder)
 }
 
 static void
+gst_msdkdec_mjpeg_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstMsdkMJPEGDec *thiz = GST_MSDKMJPEGDEC (object);
+#if (MFX_VERSION >= 2006)
+  GstMsdkDec *dec = GST_MSDKDEC (object);
+#endif
+  GstState state;
+
+  GST_OBJECT_LOCK (thiz);
+  state = GST_STATE (thiz);
+
+  if (!gst_msdkdec_prop_check_state (state, pspec)) {
+    GST_WARNING_OBJECT (thiz, "setting property in wrong state");
+    GST_OBJECT_UNLOCK (thiz);
+    return;
+  }
+  switch (prop_id) {
+#if (MFX_VERSION >= 2006)
+    case GST_MSDKDEC_PROP_ERROR_REPORT:
+      dec->report_error = g_value_get_boolean (value);
+      break;
+#endif
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
+  return;
+}
+
+static void
+gst_msdkdec_mjpeg_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstMsdkMJPEGDec *thiz = GST_MSDKMJPEGDEC (object);
+#if (MFX_VERSION >= 2006)
+  GstMsdkDec *dec = GST_MSDKDEC (object);
+#endif
+
+  GST_OBJECT_LOCK (thiz);
+  switch (prop_id) {
+#if (MFX_VERSION >= 2006)
+    case GST_MSDKDEC_PROP_ERROR_REPORT:
+      g_value_set_boolean (value, dec->report_error);
+      break;
+#endif
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  GST_OBJECT_UNLOCK (thiz);
+}
+
+static void
 gst_msdkmjpegdec_class_init (GstMsdkMJPEGDecClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstMsdkDecClass *decoder_class;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   decoder_class = GST_MSDKDEC_CLASS (klass);
+
+  gobject_class->set_property = gst_msdkdec_mjpeg_set_property;
+  gobject_class->get_property = gst_msdkdec_mjpeg_get_property;
 
   decoder_class->configure = GST_DEBUG_FUNCPTR (gst_msdkmjpegdec_configure);
   decoder_class->post_configure =
@@ -127,6 +197,10 @@ gst_msdkmjpegdec_class_init (GstMsdkMJPEGDecClass * klass)
       "Codec/Decoder/Video/Hardware",
       "MJPEG video decoder based on " MFX_API_SDK,
       "Scott D Phillips <scott.d.phillips@intel.com>");
+
+#if (MFX_VERSION >= 2006)
+  gst_msdkdec_prop_install_error_report_property (gobject_class);
+#endif
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
   gst_element_class_add_static_pad_template (element_class, &src_factory);

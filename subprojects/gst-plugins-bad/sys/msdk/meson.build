@@ -28,6 +28,7 @@ have_msdk = false
 msdk_dep = []
 use_msdk = false
 use_onevpl = false
+onevpl_extra_args = []
 
 msdk_option = get_option('msdk')
 if msdk_option.disabled()
@@ -97,6 +98,7 @@ endif
 
 # Check oneVPL firstly
 if use_onevpl
+  onevpl_extra_args += ['-DONEVPL_EXPERIMENTAL']
   mfx_incdir = join_paths([mfx_incdir, 'vpl'])
   mfx_inc = include_directories(mfx_incdir)
 elif cxx.has_header('mfx/mfxdefs.h', args: '-I' + mfx_incdir)
@@ -186,7 +188,7 @@ if msdk_deps_found
 
   gstmsdktag = library('gstmsdk',
     msdk_sources,
-    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'] + onevpl_extra_args,
     include_directories : [configinc, mfx_inc],
     dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstallocators_dep, gstcodecparsers_dep, mfx_dep, msdk_deps],
     install : true,
