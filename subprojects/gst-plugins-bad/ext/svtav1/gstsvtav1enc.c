@@ -564,6 +564,9 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
   EbSvtIOFormat *input_picture_buffer =
       (EbSvtIOFormat *) svtav1enc->input_buf->p_buffer;
   GstVideoFrame video_frame;
+#if FTR_RSZ_RANDOM_ACCESS
+  EbPrivDataNode private_data;
+#endif // FTR_RSZ_RANDOM_ACCESS
 
   if (!gst_video_frame_map (&video_frame, &svtav1enc->state->info,
           frame->input_buffer, GST_MAP_READ)) {
@@ -589,7 +592,16 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
 
   /* Fill in Buffers Header control data */
   input_buffer->flags = 0;
+#if FTR_RSZ_RANDOM_ACCESS
+  // private data is copied in svt_av1_enc_send_picture
+  private_data.node_type = PRIVATE_DATA;
+  private_data.size = sizeof (GstVideoCodecFrame);
+  private_data.data = (void *) frame;
+  private_data.next = NULL;
+  input_buffer->p_app_private = (void *) &private_data;
+#else
   input_buffer->p_app_private = (void *) frame;
+#endif // FTR_RSZ_RANDOM_ACCESS
   input_buffer->pts = frame->pts;
   input_buffer->pic_type = EB_AV1_INVALID_PICTURE;
 
@@ -678,7 +690,12 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
        * it's not currently the case with SVT-AV1
        * so we fallback on using its PTS to find it back */
       if (output_buf->p_app_private) {
+#if FTR_RSZ_RANDOM_ACCESS
+        EbPrivDataNode *private_data = (EbPrivDataNode *) output_buf->p_app_private;
+        frame = (GstVideoCodecFrame *) private_data->data;
+#else
         frame = (GstVideoCodecFrame *) output_buf->p_app_private;
+#endif // FTR_RSZ_RANDOM_ACCESS
       } else {
         pending_frames = gst_video_encoder_get_frames (GST_VIDEO_ENCODER
             (svtav1enc));
