@@ -394,6 +394,13 @@ build clang fedora x86_64:
     - changes:
         *modules_changes
   script:
+    # Make sure powershell exits on errors
+    # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
+    - $ErrorActionPreference = "Stop"
+
+    # Set the code page to UTF-8
+    - chcp 65001
+
     - ci/scripts/handle-subprojects-cache.py subprojects/
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
@@ -445,6 +452,9 @@ build msys2 :
     # Make sure powershell exits on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
     - $ErrorActionPreference = "Stop"
+
+    # Set the code page to UTF-8
+    - chcp 65001
 
     # Configure MSYS2 to use the UCRT64 environment, start in the same directory
     # and inherit PATH
