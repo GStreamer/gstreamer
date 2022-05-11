@@ -2030,6 +2030,8 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
     /* discard older frames that were dropped by libvpx */
     frame = NULL;
     do {
+      GstClockTime pts_rt;
+
       if (frame)
         gst_video_encoder_finish_frame (video_encoder, frame);
       frame = gst_video_encoder_get_oldest_frame (video_encoder);
@@ -2040,8 +2042,12 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
         goto out;
       }
 
+      pts_rt =
+          gst_segment_to_running_time (&video_encoder->input_segment,
+          GST_FORMAT_TIME, frame->pts);
+
       pts =
-          gst_util_uint64_scale (frame->pts,
+          gst_util_uint64_scale (pts_rt,
           encoder->cfg.g_timebase.den,
           encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
       GST_TRACE_OBJECT (encoder, "vpx pts: %" G_GINT64_FORMAT
@@ -2227,6 +2233,7 @@ gst_vpx_enc_handle_frame (GstVideoEncoder * video_encoder,
   int flags = 0;
   vpx_image_t *image;
   GstVideoFrame vframe;
+  GstClockTime pts_rt;
   vpx_codec_pts_t pts;
   unsigned long duration;
   GstVPXEncClass *vpx_enc_class;
@@ -2251,11 +2258,18 @@ gst_vpx_enc_handle_frame (GstVideoEncoder * video_encoder,
   }
 
   g_mutex_lock (&encoder->encoder_lock);
+
+  /* the input pts needs to be strictly increasing, see vpx_codec_encode() doc, so convert it to
+   * running time as we don't want to reset the encoder for each segment. */
+  pts_rt =
+      gst_segment_to_running_time (&video_encoder->input_segment,
+      GST_FORMAT_TIME, frame->pts);
+
   pts =
-      gst_util_uint64_scale (frame->pts,
+      gst_util_uint64_scale (pts_rt,
       encoder->cfg.g_timebase.den,
       encoder->cfg.g_timebase.num * (GstClockTime) GST_SECOND);
-  encoder->last_pts = frame->pts;
+  encoder->last_pts = pts_rt;
 
   if (frame->duration != GST_CLOCK_TIME_NONE) {
     duration =
