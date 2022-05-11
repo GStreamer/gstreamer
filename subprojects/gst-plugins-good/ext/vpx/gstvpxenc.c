@@ -2033,6 +2033,13 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
       if (frame)
         gst_video_encoder_finish_frame (video_encoder, frame);
       frame = gst_video_encoder_get_oldest_frame (video_encoder);
+      if (!frame) {
+        GST_WARNING_OBJECT (encoder,
+            "vpx pts %" G_GINT64_FORMAT
+            " does not match input frames, discarding", pkt->data.frame.pts);
+        goto out;
+      }
+
       pts =
           gst_util_uint64_scale (frame->pts,
           encoder->cfg.g_timebase.den,
@@ -2099,6 +2106,8 @@ gst_vpx_enc_process (GstVPXEnc * encoder)
 
     pkt = vpx_codec_get_cx_data (&encoder->encoder, &iter);
   }
+
+out:
   g_mutex_unlock (&encoder->encoder_lock);
 
   return ret;
