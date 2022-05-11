@@ -886,10 +886,44 @@ static gchar *
 _get_server_url (GstWebRTCICE * ice, NiceCandidate * cand)
 {
   switch (cand->type) {
-    case NICE_CANDIDATE_TYPE_RELAYED:
+    case NICE_CANDIDATE_TYPE_RELAYED:{
+#if NICE_CHECK_VERSION(0, 1, 19)
+      NiceAddress addr;
+      gchar ipaddr[NICE_ADDRESS_STRING_LEN];
+      nice_candidate_relay_address (cand, &addr);
+      nice_address_to_string (&addr, ipaddr);
+      return g_strdup (ipaddr);
+#else
+      static gboolean warned = FALSE;
+      if (!warned) {
+        GST_WARNING
+            ("libnice version < 0.1.19 detected, relayed candidate server address might be wrong.");
+        warned = TRUE;
+      }
       return g_strdup (gst_uri_get_host (ice->turn_server));
-    case NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE:
+#endif
+    }
+    case NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE:{
+#if NICE_CHECK_VERSION(0, 1, 20)
+      NiceAddress addr;
+      gchar ipaddr[NICE_ADDRESS_STRING_LEN];
+      if (nice_candidate_stun_server_address (cand, &addr)) {
+        nice_address_to_string (&addr, ipaddr);
+        return g_strdup (ipaddr);
+      } else {
+        return g_strdup (gst_uri_get_host (ice->stun_server));
+      }
+#else
+      static gboolean warned = FALSE;
+      if (!warned) {
+        GST_WARNING
+            ("libnice version < 0.1.20 detected, server-reflexive candidate server "
+            "address might be wrong.");
+        warned = TRUE;
+      }
+#endif
       return g_strdup (gst_uri_get_host (ice->stun_server));
+    }
     default:
       return g_strdup ("");
   }
