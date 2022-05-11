@@ -814,16 +814,9 @@ gst_d3d11_mpeg2_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   /* NOTE: We are supporting only 4:2:0, main or simple profiles */
   gst_caps_set_simple (src_caps, "format", G_TYPE_STRING, "NV12", NULL);
 
-  gst_caps_set_simple (sink_caps,
-      "width", GST_TYPE_INT_RANGE, 1, 1920,
-      "height", GST_TYPE_INT_RANGE, 1, 1920, NULL);
-  gst_caps_set_simple (src_caps,
-      "width", GST_TYPE_INT_RANGE, 1, 1920,
-      "height", GST_TYPE_INT_RANGE, 1, 1920, NULL);
-
   type_info.class_data =
       gst_d3d11_decoder_class_data_new (device, GST_DXVA_CODEC_MPEG2,
-      sink_caps, src_caps);
+      sink_caps, src_caps, 1920);
 
   type_name = g_strdup ("GstD3D11Mpeg2Dec");
   feature_name = g_strdup ("d3d11mpeg2dec");

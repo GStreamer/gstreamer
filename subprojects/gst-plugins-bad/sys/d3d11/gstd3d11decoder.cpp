@@ -1979,6 +1979,7 @@ struct _GstD3D11DecoderClassData
  * @device: (transfer none): a #GstD3D11Device
  * @sink_caps: (transfer full): a #GstCaps
  * @src_caps: (transfer full): a #GstCaps
+ * @max_resolution: maximum supported resolution
  *
  * Create new #GstD3D11DecoderClassData
  *
@@ -1986,15 +1987,50 @@ struct _GstD3D11DecoderClassData
  */
 GstD3D11DecoderClassData *
 gst_d3d11_decoder_class_data_new (GstD3D11Device * device, GstDXVACodec codec,
-    GstCaps * sink_caps, GstCaps * src_caps)
+    GstCaps * sink_caps, GstCaps * src_caps, guint max_resolution)
 {
   GstD3D11DecoderClassData *ret;
+  guint min_width = 1;
+  guint min_height = 1;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
   g_return_val_if_fail (sink_caps != NULL, NULL);
   g_return_val_if_fail (src_caps != NULL, NULL);
 
+  /* FIXME: D3D11/DXVA does not have an API for querying minimum resolution
+   * capability. Might need to find a nice way for testing minimum resolution.
+   *
+   * Below hardcoded values were checked on RTX 2080/3060 GPUs via NVDEC API
+   * (VP8 decoding is not supported by those GPUs via D3D11/DXVA) */
+  if (gst_d3d11_get_device_vendor (device) == GST_D3D11_DEVICE_VENDOR_NVIDIA) {
+    switch (codec) {
+      case GST_DXVA_CODEC_MPEG2:
+      case GST_DXVA_CODEC_H264:
+      case GST_DXVA_CODEC_VP8:
+        min_width = 48;
+        min_height = 16;
+        break;
+      case GST_DXVA_CODEC_H265:
+        min_width = min_height = 144;
+        break;
+      case GST_DXVA_CODEC_VP9:
+      case GST_DXVA_CODEC_AV1:
+        min_width = min_height = 128;
+        break;
+      default:
+        g_assert_not_reached ();
+        return nullptr;
+    }
+  }
+
   ret = g_new0 (GstD3D11DecoderClassData, 1);
+
+  gst_caps_set_simple (sink_caps,
+      "width", GST_TYPE_INT_RANGE, min_width, max_resolution,
+      "height", GST_TYPE_INT_RANGE, min_height, max_resolution, nullptr);
+  gst_caps_set_simple (src_caps,
+      "width", GST_TYPE_INT_RANGE, min_width, max_resolution,
+      "height", GST_TYPE_INT_RANGE, min_height, max_resolution, nullptr);
 
   /* class data will be leaked if the element never gets instantiated */
   GST_MINI_OBJECT_FLAG_SET (sink_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);

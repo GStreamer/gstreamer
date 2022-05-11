@@ -1083,12 +1083,6 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
   /* To cover both landscape and portrait, select max value */
   resolution = MAX (max_width, max_height);
-  gst_caps_set_simple (sink_caps,
-      "width", GST_TYPE_INT_RANGE, 1, resolution,
-      "height", GST_TYPE_INT_RANGE, 1, resolution, NULL);
-  gst_caps_set_simple (src_caps,
-      "width", GST_TYPE_INT_RANGE, 1, resolution,
-      "height", GST_TYPE_INT_RANGE, 1, resolution, NULL);
 
   /* Copy src caps to append other capsfeatures */
   src_caps_copy = gst_caps_copy (src_caps);
@@ -1124,7 +1118,7 @@ gst_d3d11_h265_dec_register (GstPlugin * plugin, GstD3D11Device * device,
 
   type_info.class_data =
       gst_d3d11_decoder_class_data_new (device, GST_DXVA_CODEC_H265,
-      sink_caps, src_caps);
+      sink_caps, src_caps, resolution);
 
   type_name = g_strdup ("GstD3D11H265Dec");
   feature_name = g_strdup ("d3d11h265dec");

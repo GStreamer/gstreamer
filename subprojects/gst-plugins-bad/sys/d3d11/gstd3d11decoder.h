@@ -143,7 +143,8 @@ gboolean          gst_d3d11_decoder_supports_resolution (GstD3D11Device * device
 GstD3D11DecoderClassData *  gst_d3d11_decoder_class_data_new  (GstD3D11Device * device,
                                                                GstDXVACodec codec,
                                                                GstCaps * sink_caps,
-                                                               GstCaps * src_caps);
+                                                               GstCaps * src_caps,
+                                                               guint max_resolution);
 
 void  gst_d3d11_decoder_class_data_fill_subclass_data (GstD3D11DecoderClassData * data,
                                                        GstD3D11DecoderSubClassData * subclass_data);
