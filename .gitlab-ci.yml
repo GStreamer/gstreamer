@@ -282,6 +282,7 @@ gst indent:
 
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
+  - gst-env.py
   - ci/gitlab/*.py
   - meson.build
   - subprojects/*.wrap
