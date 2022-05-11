@@ -114,7 +114,10 @@ struct _GstVPXEnc
 
   vpx_image_t image;
 
+  /* last input pts, in running time */
   GstClockTime last_pts;
+  /* duration of the last input buffer */
+  GstClockTime last_input_duration;
 
   GstVideoCodecState *input_state;
 };
