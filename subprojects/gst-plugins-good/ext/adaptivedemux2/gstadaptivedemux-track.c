@@ -45,7 +45,7 @@ gst_adaptive_demux_track_flush (GstAdaptiveDemuxTrack * track)
   gst_event_store_flush (&track->sticky_events);
 
   gst_segment_init (&track->input_segment, GST_FORMAT_TIME);
-  track->input_time = 0;
+  track->lowest_input_time = track->input_time = 0;
   track->input_segment_seqnum = GST_SEQNUM_INVALID;
 
   gst_segment_init (&track->output_segment, GST_FORMAT_TIME);
@@ -235,14 +235,15 @@ handle_event:
         gst_event_copy_segment (event, &track->output_segment);
 
         if (!GST_CLOCK_STIME_IS_VALID (track->output_time)) {
-          if (track->output_segment.rate > 0.0)
+          if (track->output_segment.rate > 0.0) {
             track->output_time =
                 my_segment_to_running_time (&track->output_segment,
                 track->output_segment.start);
-          else
+          } else {
             track->output_time =
                 my_segment_to_running_time (&track->output_segment,
                 track->output_segment.stop);
+          }
         }
 
         if (track->update_next_segment) {
@@ -430,7 +431,7 @@ my_segment_to_running_time (GstSegment * segment, GstClockTime val)
 static void
 track_queue_data_locked (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxTrack * track, GstMiniObject * object, gsize size,
-    GstClockTime timestamp, GstClockTime duration)
+    GstClockTime timestamp, GstClockTime duration, gboolean is_discont)
 {
   TrackQueueItem item;
 
@@ -449,24 +450,44 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
 
     /* Update segment position (include duration if valid) */
     track->input_segment.position = timestamp;
+
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      /* In backward playback, each buffer is played
-       * 'backward', so the segment position should
-       * only include duration in forward playback */
       if (track->input_segment.rate > 0.0) {
+        /* Forward playback, add duration onto our position and update
+         * the input time to match */
         track->input_segment.position += duration;
-        input_time = my_segment_to_running_time (&track->input_segment,
+        item.runningtime_end = input_time =
+            my_segment_to_running_time (&track->input_segment,
             track->input_segment.position);
       } else {
-        /* Otherwise, the end of the buffer has the smaller running time */
+        /* Otherwise, the end of the buffer has the smaller running time and
+         * we need to change the item.runningtime, but input_time and runningtime_end
+         * are already set to the larger running time */
         item.runningtime = my_segment_to_running_time (&track->input_segment,
             timestamp + duration);
       }
     }
 
     /* Update track input time and level */
-    if (input_time > track->input_time)
-      track->input_time = input_time;
+    if (track->input_segment.rate > 0.0) {
+      if (input_time > track->input_time) {
+        track->input_time = input_time;
+      }
+    } else {
+      /* In reverse playback, we track input time differently, to do buffering
+       * across the reversed GOPs. Each GOP arrives in reverse order, with
+       * running time moving backward, then jumping forward at the start of
+       * each GOP. At each point, we want the input time to be the lowest
+       * running time of the previous GOP. Therefore, we track input times
+       * into a different variable, and transfer it across when a discont buffer
+       * arrives */
+      if (is_discont) {
+        track->input_time = track->lowest_input_time;
+        track->lowest_input_time = input_time;
+      } else if (input_time < track->lowest_input_time) {
+        track->lowest_input_time = input_time;
+      }
+    }
 
     /* Store the maximum running time we've seen as
      * this item's "buffering running time" */
@@ -489,6 +510,12 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
         track->stream_id, GST_STIME_ARGS (track->input_time),
         GST_STIME_ARGS (track->output_time), GST_TIME_ARGS (track->level_time));
   }
+
+  GST_LOG_OBJECT (demux,
+      "track %s item running_time :%" GST_STIME_FORMAT " end :%"
+      GST_STIME_FORMAT, track->stream_id, GST_STIME_ARGS (item.runningtime),
+      GST_STIME_ARGS (item.runningtime_end));
+
   track->level_bytes += size;
   gst_queue_array_push_tail_struct (track->queue, &item);
 
@@ -554,11 +581,12 @@ _track_sink_chain_function (GstPad * pad, GstObject * parent,
         "Inserting gap for %" GST_TIME_FORMAT " vs %" GST_TIME_FORMAT,
         GST_TIME_ARGS (ts), GST_TIME_ARGS (track->input_segment.position));
     track_queue_data_locked (demux, track, (GstMiniObject *) gap, 0,
-        track->input_segment.position, duration);
+        track->input_segment.position, duration, FALSE);
   }
 
   track_queue_data_locked (demux, track, (GstMiniObject *) buffer,
-      gst_buffer_get_size (buffer), ts, GST_BUFFER_DURATION (buffer));
+      gst_buffer_get_size (buffer), ts, GST_BUFFER_DURATION (buffer),
+      GST_BUFFER_IS_DISCONT (buffer));
 
   /* Recalculate buffering */
   demux_update_buffering_locked (demux);
@@ -577,6 +605,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
   GstClockTime timestamp = GST_CLOCK_TIME_NONE;
   GstClockTime duration = GST_CLOCK_TIME_NONE;
   gboolean drop = FALSE;
+  gboolean is_discont = FALSE;
 
   GST_DEBUG_OBJECT (pad, "event %" GST_PTR_FORMAT, event);
 
@@ -667,6 +696,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_DEBUG_OBJECT (pad, "track %s stored segment %" GST_SEGMENT_FORMAT,
           track->stream_id, &track->input_segment);
       timestamp = track->input_segment.position;
+      is_discont = TRUE;
 
       break;
     }
@@ -686,7 +716,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   track_queue_data_locked (demux, track, (GstMiniObject *) event, 0,
-      timestamp, duration);
+      timestamp, duration, is_discont);
 
   /* Recalculate buffering */
   demux_update_buffering_locked (demux);

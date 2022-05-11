@@ -208,6 +208,7 @@ struct _GstAdaptiveDemuxTrack
   /* Input segment and time (in running time) */
   GstSegment input_segment;
   GstClockTimeDiff input_time;
+  GstClockTimeDiff lowest_input_time;
   guint64 input_segment_seqnum;
 
   /* ================= */
