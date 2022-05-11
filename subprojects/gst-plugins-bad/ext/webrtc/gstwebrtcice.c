@@ -27,6 +27,16 @@
 #include "icestream.h"
 #include "nicetransport.h"
 
+#ifndef NICE_CHECH_VERSION
+#define NICE_CHECK_VERSION(major, minor, micro)                                \
+  (NICE_VERSION_MAJOR > (major) ||                                             \
+   (NICE_VERSION_MAJOR == (major) && NICE_VERSION_MINOR > (minor)) ||          \
+   (NICE_VERSION_MAJOR == (major) && NICE_VERSION_MINOR == (minor) &&          \
+    NICE_VERSION_MICRO >= (micro)) ||                                          \
+   (NICE_VERSION_MAJOR == (major) && NICE_VERSION_MINOR == (minor) &&          \
+    NICE_VERSION_MICRO + 1 == (micro) && NICE_VERSION_NANO > 0))
+#endif
+
 /* XXX:
  *
  * - are locally generated remote candidates meant to be readded to libnice?
