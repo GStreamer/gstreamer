@@ -40,15 +40,6 @@ G_BEGIN_DECLS
 typedef struct _GstCCCombiner GstCCCombiner;
 typedef struct _GstCCCombinerClass GstCCCombinerClass;
 
-struct cdp_fps_entry
-{
-  guint8 fps_idx;
-  guint fps_n, fps_d;
-  guint max_cc_count;
-  guint max_ccp_count;
-  guint max_cea608_count;
-};
-
 struct _GstCCCombiner
 {
   GstAggregator parent;

@@ -12,7 +12,7 @@ zvbi_sources = [
 if closedcaption_dep.found()
   gstclosedcaption = library('gstclosedcaption',
     'gstcccombiner.c', 'gstccextractor.c', 'gstccconverter.c', 'gstclosedcaption.c',
-    'gstline21dec.c', 'gstcea708decoder.c', 'gstceaccoverlay.c', 'gstline21enc.c',
+    'gstline21dec.c', 'gstcea708decoder.c', 'gstceaccoverlay.c', 'gstline21enc.c', 'ccutils.c',
     zvbi_sources,
     c_args : gst_plugins_bad_args,
     link_args : noseh_link_args,
