@@ -1165,6 +1165,16 @@ _gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
   }
 #endif
 
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  {
+    if (!g_list_find (oclass->padtemplates, templ)) {
+      /* FIXME 2.0: Change this to g_return_val_if_fail() */
+      g_critical ("Element type %s does not have a pad template %s (%p)",
+          g_type_name (G_OBJECT_TYPE (element)), templ->name_template, templ);
+    }
+  }
+#endif
+
   if (oclass->request_new_pad)
     newpad = (oclass->request_new_pad) (element, templ, name, caps);
 
