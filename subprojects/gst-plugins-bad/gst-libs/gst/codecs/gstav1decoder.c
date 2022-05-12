@@ -140,6 +140,8 @@ gst_av1_decoder_reset (GstAV1Decoder * self)
 {
   GstAV1DecoderPrivate *priv = self->priv;
 
+  self->highest_spatial_layer = 0;
+
   priv->max_width = 0;
   priv->max_height = 0;
   gst_clear_av1_picture (&priv->current_picture);
@@ -379,6 +381,13 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
     priv->preferred_output_delay = 0;
   }
 
+  if (priv->parser->state.operating_point_idc) {
+    self->highest_spatial_layer =
+        _floor_log2 (priv->parser->state.operating_point_idc >> 8);
+    GST_INFO_OBJECT (self, "set highest spatial layer to %d",
+        self->highest_spatial_layer);
+  }
+
   ret = klass->new_sequence (self, &seq_header,
       GST_AV1_TOTAL_REFS_PER_FRAME + priv->preferred_output_delay);
   if (ret != GST_FLOW_OK) {
@@ -474,6 +483,9 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
     picture->system_frame_number = priv->current_frame->system_frame_number;
     picture->temporal_id = obu->header.obu_temporal_id;
     picture->spatial_id = obu->header.obu_spatial_id;
+
+    g_assert (picture->spatial_id <= self->highest_spatial_layer);
+    g_assert (self->highest_spatial_layer < GST_AV1_MAX_NUM_SPATIAL_LAYERS);
 
     if (!frame_header->show_frame && !frame_header->showable_frame)
       GST_VIDEO_CODEC_FRAME_FLAG_SET (priv->current_frame,
@@ -683,6 +695,15 @@ gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
     goto out;
   }
 
+  if (priv->current_picture->temporal_id > self->highest_spatial_layer) {
+    ret = GST_FLOW_ERROR;
+    GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
+        ("current picture temporal_id %d should not be higher than "
+            "highest spatial layer %d", priv->current_picture->temporal_id,
+            self->highest_spatial_layer), (NULL), ret);
+    goto out;
+  }
+
   if (!priv->current_picture->frame_hdr.show_existing_frame) {
     if (klass->end_picture) {
       ret = klass->end_picture (self, priv->current_picture);
@@ -704,9 +725,7 @@ out:
       /* Only output one frame with the highest spatial id from each TU
        * when there are multiple spatial layers.
        */
-      if (priv->parser->state.operating_point_idc &&
-          obu.header.obu_spatial_id <
-          _floor_log2 (priv->parser->state.operating_point_idc >> 8)) {
+      if (obu.header.obu_spatial_id < self->highest_spatial_layer) {
         gst_av1_picture_unref (priv->current_picture);
         gst_video_decoder_release_frame (decoder, frame);
       } else {

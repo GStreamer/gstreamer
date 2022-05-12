@@ -53,6 +53,7 @@ struct _GstAV1Decoder
 
   /*< protected >*/
   GstVideoCodecState * input_state;
+  guint highest_spatial_layer;
 
   /*< private >*/
   GstAV1DecoderPrivate *priv;
