@@ -486,7 +486,6 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
   guint8 field0_data[3], field1_data[3];
   guint field0_len = 0, field1_len = 0;
   guint i;
-  gboolean field0_608 = FALSE, field1_608 = FALSE;
 
   if (len % 3 != 0) {
     GST_WARNING ("Invalid cc_data buffer size %u. Truncating to a multiple "
@@ -496,11 +495,6 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
 
   for (i = 0; i < len / 3; i++) {
     if (data[i * 3] & 0x80) {
-      if (field0_608)
-        continue;
-
-      field0_608 = TRUE;
-
       if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
         continue;
 
@@ -508,11 +502,6 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
       field0_data[field0_len++] = data[i * 3 + 1];
       field0_data[field0_len++] = data[i * 3 + 2];
     } else {
-      if (field1_608)
-        continue;
-
-      field1_608 = TRUE;
-
       if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
         continue;
 
@@ -550,7 +539,6 @@ schedule_cea708_raw (GstCCCombiner * self, guint8 * data, guint len,
   guint8 field0_data[MAX_CDP_PACKET_LEN], field1_data[3];
   guint field0_len = 0, field1_len = 0;
   guint i;
-  gboolean field0_608 = FALSE, field1_608 = FALSE;
   gboolean started_ccp = FALSE;
 
   if (len % 3 != 0) {
@@ -568,11 +556,6 @@ schedule_cea708_raw (GstCCCombiner * self, guint8 * data, guint len,
         if (!cc_valid)
           continue;
 
-        if (field0_608)
-          continue;
-
-        field0_608 = TRUE;
-
         if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
           continue;
 
@@ -582,11 +565,6 @@ schedule_cea708_raw (GstCCCombiner * self, guint8 * data, guint len,
       } else if (cc_type == 0x01) {
         if (!cc_valid)
           continue;
-
-        if (field1_608)
-          continue;
-
-        field1_608 = TRUE;
 
         if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
           continue;
