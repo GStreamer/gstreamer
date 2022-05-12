@@ -1324,7 +1324,7 @@ convert_cea708_cdp_cea708_cc_data_internal (GstCCConverter * self,
       return 0;
     }
 
-    drop_frame = ! !(u8 & 0x80);
+    drop_frame = !(!(u8 & 0x80));
     frames = ((u8 >> 4) & 0x3) * 10 + (u8 & 0xf);
 
     gst_video_time_code_init (tc, fps_entry->fps_n, fps_entry->fps_d, NULL,
