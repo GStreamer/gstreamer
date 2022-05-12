@@ -4154,6 +4154,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       /* iterate all siblings */
       trun_node = qtdemux_tree_get_sibling_by_type_full (trun_node, FOURCC_trun,
           &trun_data);
+      /* don't use tfdt for subsequent trun as it only refers to the first */
+      tfdt_node = NULL;
     }
 
     uuid_node = qtdemux_tree_get_child_by_type (traf_node, FOURCC_uuid);
