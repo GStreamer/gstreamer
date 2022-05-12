@@ -3320,16 +3320,22 @@ static gint
 compare_index_table_segment (MXFIndexTableSegment * sa,
     MXFIndexTableSegment * sb)
 {
-  if (mxf_uuid_is_equal (&sa->instance_id, &sb->instance_id))
-    return 0;
   if (sa->body_sid != sb->body_sid)
     return (sa->body_sid < sb->body_sid) ? -1 : 1;
   if (sa->index_sid != sb->index_sid)
     return (sa->index_sid < sb->index_sid) ? -1 : 1;
-  /* Finally sort by index start position */
-  if (sa->index_start_position < sb->index_start_position)
-    return -1;
-  return (sa->index_start_position != sb->index_start_position);
+  if (sa->index_start_position != sb->index_start_position)
+    return (sa->index_start_position < sb->index_start_position) ? -1 : 1;
+
+  /* If all the above are equal ... the index table segments are only equal if
+   * their instance ID are equal. Until March 2022 the FFmpeg MXF muxer would
+   * write the same instance id for the various (different) index table
+   * segments, we therefore only check instance ID *after* all the above
+   * properties to make sure they are really different. */
+  if (mxf_uuid_is_equal (&sa->instance_id, &sb->instance_id))
+    return 0;
+
+  return 1;
 }
 
 #if !GLIB_CHECK_VERSION(2, 62, 0)
@@ -3340,7 +3346,7 @@ has_table_segment (GArray * segments, MXFIndexTableSegment * target)
   for (i = 0; i < segments->len; i++) {
     MXFIndexTableSegment *cand =
         &g_array_index (segments, MXFIndexTableSegment, i);
-    if (mxf_uuid_is_equal (&cand->instance_id, &target->instance_id))
+    if (compare_index_table_segment (cand, target) == 0)
       return TRUE;
   }
   return FALSE;
