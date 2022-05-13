@@ -19,11 +19,14 @@
  */
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #ifndef __CCUTILS_H__
 #define __CCUTILS_H__
 
 G_BEGIN_DECLS
+
+GST_DEBUG_CATEGORY_EXTERN(ccutils_debug_cat);
 
 struct cdp_fps_entry
 {
@@ -40,6 +43,22 @@ G_GNUC_INTERNAL
 const struct cdp_fps_entry * cdp_fps_entry_from_id  (guint8 id);
 
 extern const struct cdp_fps_entry null_fps_entry;
+
+typedef enum {
+  GST_CC_CDP_MODE_TIME_CODE   = (1<<0),
+  GST_CC_CDP_MODE_CC_DATA     = (1<<1),
+  GST_CC_CDP_MODE_CC_SVC_INFO = (1<<2)
+} GstCCCDPMode;
+
+guint           convert_cea708_cc_data_to_cdp  (GstObject * dbg_obj,
+                                                GstCCCDPMode cdp_mode,
+                                                guint16 cdp_hdr_sequence_cntr,
+                                                const guint8 * cc_data,
+                                                guint cc_data_len,
+                                                guint8 * cdp,
+                                                guint cdp_len,
+                                                const GstVideoTimeCode * tc,
+                                                const struct cdp_fps_entry *fps_entry);
 
 G_END_DECLS
 

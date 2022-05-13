@@ -31,11 +31,15 @@
 #include "gstline21dec.h"
 #include "gstceaccoverlay.h"
 #include "gstline21enc.h"
+#include "ccutils.h"
 
 static gboolean
 closedcaption_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (ccutils_debug_cat, "ccutils", 0,
+      "Closed caption utilities");
 
   ret |= GST_ELEMENT_REGISTER (cccombiner, plugin);
   ret |= GST_ELEMENT_REGISTER (ccconverter, plugin);

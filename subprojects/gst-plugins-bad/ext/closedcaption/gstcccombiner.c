@@ -192,108 +192,22 @@ done:
 
 #define MAX_CDP_PACKET_LEN 256
 #define MAX_CEA608_LEN 32
+#define CDP_MODE (GST_CC_CDP_MODE_CC_DATA | GST_CC_CDP_MODE_TIME_CODE)
 
 static GstBuffer *
 make_cdp (GstCCCombiner * self, const guint8 * cc_data, guint cc_data_len,
     const struct cdp_fps_entry *fps_entry, const GstVideoTimeCode * tc)
 {
-  GstByteWriter bw;
-  guint8 flags, checksum;
-  guint i, len;
+  guint len;
   GstBuffer *ret = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
   GstMapInfo map;
 
   gst_buffer_map (ret, &map, GST_MAP_WRITE);
 
-  gst_byte_writer_init_with_data (&bw, map.data, MAX_CDP_PACKET_LEN, FALSE);
-  gst_byte_writer_put_uint16_be_unchecked (&bw, 0x9669);
-  /* Write a length of 0 for now */
-  gst_byte_writer_put_uint8_unchecked (&bw, 0);
-
-  gst_byte_writer_put_uint8_unchecked (&bw, fps_entry->fps_idx);
-
-  /* caption_service_active */
-  flags = 0x02;
-
-  /* ccdata_present */
-  flags |= 0x40;
-
-  if (tc && tc->config.fps_n > 0)
-    flags |= 0x80;
-
-  /* reserved */
-  flags |= 0x01;
-
-  gst_byte_writer_put_uint8_unchecked (&bw, flags);
-
-  gst_byte_writer_put_uint16_be_unchecked (&bw, self->cdp_hdr_sequence_cntr);
-
-  if (tc && tc->config.fps_n > 0) {
-    guint8 u8;
-
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x71);
-    /* reserved 11 - 2 bits */
-    u8 = 0xc0;
-    /* tens of hours - 2 bits */
-    u8 |= ((tc->hours / 10) & 0x3) << 4;
-    /* units of hours - 4 bits */
-    u8 |= (tc->hours % 10) & 0xf;
-    gst_byte_writer_put_uint8_unchecked (&bw, u8);
-
-    /* reserved 1 - 1 bit */
-    u8 = 0x80;
-    /* tens of minutes - 3 bits */
-    u8 |= ((tc->minutes / 10) & 0x7) << 4;
-    /* units of minutes - 4 bits */
-    u8 |= (tc->minutes % 10) & 0xf;
-    gst_byte_writer_put_uint8_unchecked (&bw, u8);
-
-    /* field flag - 1 bit */
-    u8 = tc->field_count < 2 ? 0x00 : 0x80;
-    /* tens of seconds - 3 bits */
-    u8 |= ((tc->seconds / 10) & 0x7) << 4;
-    /* units of seconds - 4 bits */
-    u8 |= (tc->seconds % 10) & 0xf;
-    gst_byte_writer_put_uint8_unchecked (&bw, u8);
-
-    /* drop frame flag - 1 bit */
-    u8 = (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) ? 0x80 :
-        0x00;
-    /* reserved0 - 1 bit */
-    /* tens of frames - 2 bits */
-    u8 |= ((tc->frames / 10) & 0x3) << 4;
-    /* units of frames 4 bits */
-    u8 |= (tc->frames % 10) & 0xf;
-    gst_byte_writer_put_uint8_unchecked (&bw, u8);
-  }
-
-  gst_byte_writer_put_uint8_unchecked (&bw, 0x72);
-  gst_byte_writer_put_uint8_unchecked (&bw, 0xe0 | fps_entry->max_cc_count);
-  gst_byte_writer_put_data_unchecked (&bw, cc_data, cc_data_len);
-  while (fps_entry->max_cc_count > cc_data_len / 3) {
-    gst_byte_writer_put_uint8_unchecked (&bw, 0xfa);
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x00);
-    gst_byte_writer_put_uint8_unchecked (&bw, 0x00);
-    cc_data_len += 3;
-  }
-
-  gst_byte_writer_put_uint8_unchecked (&bw, 0x74);
-  gst_byte_writer_put_uint16_be_unchecked (&bw, self->cdp_hdr_sequence_cntr);
+  len = convert_cea708_cc_data_to_cdp (GST_OBJECT (self), CDP_MODE,
+      self->cdp_hdr_sequence_cntr, cc_data, cc_data_len, map.data, map.size,
+      tc, fps_entry);
   self->cdp_hdr_sequence_cntr++;
-  /* We calculate the checksum afterwards */
-  gst_byte_writer_put_uint8_unchecked (&bw, 0);
-
-  len = gst_byte_writer_get_pos (&bw);
-  gst_byte_writer_set_pos (&bw, 2);
-  gst_byte_writer_put_uint8_unchecked (&bw, len);
-
-  checksum = 0;
-  for (i = 0; i < len; i++) {
-    checksum += map.data[i];
-  }
-  checksum &= 0xff;
-  checksum = 256 - checksum;
-  map.data[len - 1] = checksum;
 
   gst_buffer_unmap (ret, &map);
 
