@@ -4426,8 +4426,6 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   session->recv_rtp_sink_ghost =
       gst_ghost_pad_new_from_template (name, recv_rtp_sink, templ);
   gst_object_unref (recv_rtp_sink);
-  gst_pad_set_active (session->recv_rtp_sink_ghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->recv_rtp_sink_ghost);
 
   complete_session_receiver (rtpbin, session, sessid);
 
@@ -4665,9 +4663,6 @@ create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   session->recv_rtcp_sink_ghost =
       gst_ghost_pad_new_from_template (name, decsink, templ);
   gst_object_unref (decsink);
-  gst_pad_set_active (session->recv_rtcp_sink_ghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin),
-      session->recv_rtcp_sink_ghost);
 
   return session->recv_rtcp_sink_ghost;
 
@@ -4721,8 +4716,6 @@ create_recv_fec (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   session->recv_fec_sink_ghosts =
       g_slist_prepend (session->recv_fec_sink_ghosts, ghost);
   gst_object_unref (decsink);
-  gst_pad_set_active (ghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), ghost);
 
   return ghost;
 
@@ -5255,8 +5248,6 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   session->send_rtp_sink_ghost =
       gst_ghost_pad_new_from_template (name, send_rtp_sink, templ);
   gst_object_unref (send_rtp_sink);
-  gst_pad_set_active (session->send_rtp_sink_ghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->send_rtp_sink_ghost);
 
   return session->send_rtp_sink_ghost;
 
@@ -5425,8 +5416,6 @@ create_send_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
   session->send_rtcp_src_ghost =
       gst_ghost_pad_new_from_template (name, encsrc, templ);
   gst_object_unref (encsrc);
-  gst_pad_set_active (session->send_rtcp_src_ghost, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), session->send_rtcp_src_ghost);
 
   return session->send_rtcp_src_ghost;
 
@@ -5590,6 +5579,11 @@ gst_rtp_bin_request_new_pad (GstElement * element,
 
   g_free (pad_name);
   GST_RTP_BIN_UNLOCK (rtpbin);
+
+  if (result) {
+    gst_pad_set_active (result, TRUE);
+    gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), result);
+  }
 
   return result;
 
