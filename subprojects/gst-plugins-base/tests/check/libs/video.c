@@ -4042,6 +4042,34 @@ GST_START_TEST (test_video_extrapolate_stride)
 
 GST_END_TEST;
 
+GST_START_TEST (test_auto_video_frame_unmap)
+{
+#ifdef g_auto
+  g_autoptr (GstBuffer) buf = NULL;
+  GstVideoInfo info;
+
+  fail_unless (gst_video_info_set_format (&info, GST_VIDEO_FORMAT_ENCODED, 10,
+          10));
+  buf = gst_buffer_new_and_alloc (info.size);
+
+  {
+    // unmap should be no-op
+    g_auto (GstVideoFrame) frame = GST_VIDEO_FRAME_INIT;
+    fail_unless (frame.buffer == NULL);
+  }
+
+  {
+    g_auto (GstVideoFrame) frame = GST_VIDEO_FRAME_INIT;
+    gst_video_frame_map (&frame, &info, buf, GST_MAP_READ);
+    fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (buf), 2);
+  }
+
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (buf), 1);
+
+#endif
+}
+
+GST_END_TEST;
 
 static Suite *
 video_suite (void)
@@ -4098,6 +4126,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_flags);
   tcase_add_test (tc_chain, test_video_make_raw_caps);
   tcase_add_test (tc_chain, test_video_extrapolate_stride);
+  tcase_add_test (tc_chain, test_auto_video_frame_unmap);
 
   return s;
 }

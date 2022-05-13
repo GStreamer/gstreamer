@@ -266,6 +266,12 @@ gst_video_frame_unmap (GstVideoFrame * frame)
   meta = frame->meta;
   flags = frame->map[0].flags;
 
+  /* Allow to unmap even if not mapped, to work nicely with
+   * g_auto (GstVideoFrame) frame = GST_VIDEO_FRAME_INIT;
+   * This is also more consistent with gst_buffer_unmap() */
+  if (G_UNLIKELY (buffer == NULL))
+    return;
+
   if (meta) {
     for (i = 0; i < frame->info.finfo->n_planes; i++) {
       gst_video_meta_unmap (meta, i, &frame->map[i]);
