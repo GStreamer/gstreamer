@@ -944,6 +944,29 @@ GST_START_TEST (test_new_memdup)
 
 GST_END_TEST;
 
+GST_START_TEST (test_auto_unmap)
+{
+#ifdef g_auto
+  g_autoptr (GstBuffer) buf = NULL;
+  g_autoptr (GstMemory) mem = NULL;
+
+  buf = gst_buffer_new_memdup (ro_memory, sizeof (ro_memory));
+
+  {
+    g_auto (GstBufferMapInfo) map = GST_MAP_INFO_INIT;
+    fail_unless (gst_buffer_map (buf, &map, GST_MAP_READ));
+    mem = gst_memory_ref (map.memory);
+    /* mem should be reffed by buffer, map and us */
+    fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 3);
+  }
+
+  /* mem should have been unreffed by g_auto() */
+  fail_unless_equals_int (GST_MINI_OBJECT_REFCOUNT (mem), 2);
+#endif
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -970,6 +993,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_writable_memory);
   tcase_add_test (tc_chain, test_wrapped_bytes);
   tcase_add_test (tc_chain, test_new_memdup);
+  tcase_add_test (tc_chain, test_auto_unmap);
 
   return s;
 }

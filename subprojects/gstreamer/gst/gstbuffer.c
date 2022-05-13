@@ -1907,12 +1907,7 @@ gst_buffer_unmap (GstBuffer * buffer, GstMapInfo * info)
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (info != NULL);
 
-  /* we need to check for NULL, it is possible that we tried to map a buffer
-   * without memory and we should be able to unmap that fine */
-  if (G_LIKELY (info->memory)) {
-    gst_memory_unmap (info->memory, info);
-    gst_memory_unref (info->memory);
-  }
+  _gst_buffer_map_info_clear ((GstBufferMapInfo *) info);
 }
 
 /**

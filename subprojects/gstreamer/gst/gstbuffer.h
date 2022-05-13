@@ -798,6 +798,37 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBuffer, gst_buffer_unref)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBufferPool, gst_object_unref)
 
+/**
+ * GstBufferMapInfo: (skip):
+ *
+ * Alias for #GstMapInfo to be used with g_auto():
+ * ```c
+ * void my_func(GstBuffer *buf)
+ * {
+ *   g_auto(GstBufferMapInfo) map = GST_MAP_INFO_INIT;
+ *   if (!gst_buffer_map(buf, &map, GST_MAP_READWRITE))
+ *     return;
+ *   ...
+ *   // No need to call gst_buffer_unmap()
+ * }
+ * ```
+ *
+ * Since: 1.22
+ */
+typedef GstMapInfo GstBufferMapInfo;
+
+static inline void _gst_buffer_map_info_clear(GstBufferMapInfo *info)
+{
+  /* we need to check for NULL, it is possible that we tried to map a buffer
+   * without memory and we should be able to unmap that fine */
+  if (G_LIKELY (info->memory)) {
+    gst_memory_unmap (info->memory, info);
+    gst_memory_unref (info->memory);
+  }
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(GstBufferMapInfo, _gst_buffer_map_info_clear)
+
 G_END_DECLS
 
 #endif /* __GST_BUFFER_H__ */
