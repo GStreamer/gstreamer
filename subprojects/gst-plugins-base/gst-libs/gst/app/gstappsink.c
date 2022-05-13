@@ -731,6 +731,7 @@ gst_app_sink_flush_unlocked (GstAppSink * appsink)
     gst_mini_object_unref (obj);
   priv->num_buffers = 0;
   priv->num_events = 0;
+  gst_caps_replace (&priv->last_caps, NULL);
   g_cond_signal (&priv->cond);
 }
 

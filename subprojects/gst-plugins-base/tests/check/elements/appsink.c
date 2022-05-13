@@ -987,6 +987,87 @@ GST_START_TEST (test_reverse_stepping)
 
 GST_END_TEST;
 
+static void
+push_caps_with_type (gint caps_type)
+{
+  GstCaps *caps;
+
+  caps =
+      gst_caps_new_simple ("application/x-gst-check", "type", G_TYPE_INT,
+      caps_type, NULL);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_caps (caps)));
+
+  gst_caps_unref (caps);
+}
+
+static void
+push_buffer_with_number (gint buffer_number)
+{
+  GstBuffer *buffer;
+
+  buffer = gst_buffer_new_and_alloc (sizeof (gint));
+  gst_buffer_fill (buffer, 0, &buffer_number, sizeof (gint));
+  fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+}
+
+static void
+pull_and_check_sample (GstElement * appsink, gint expected_buffer_number,
+    gint expected_caps_type)
+{
+  GstSample *sample;
+  GstCaps *caps;
+  GstBuffer *buffer;
+  GstStructure *structure;
+  gint actual_caps_type;
+
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (appsink));
+
+  caps = gst_sample_get_caps (sample);
+  fail_unless (structure = gst_caps_get_structure (caps, 0));
+  fail_unless (gst_structure_get_int (structure, "type", &actual_caps_type));
+  assert_equals_int (actual_caps_type, expected_caps_type);
+
+  buffer = gst_sample_get_buffer (sample);
+  gst_check_buffer_data (buffer, &expected_buffer_number, sizeof (gint));
+
+  gst_sample_unref (sample);
+}
+
+GST_START_TEST (test_caps_before_flush_race_condition)
+{
+  GstElement *sink;
+  GstSegment segment;
+
+  sink = setup_appsink ();
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  // Push a series of buffers, and at the end, a new caps event.
+  push_caps_with_type (1);
+  push_buffer_with_number (10);
+  push_buffer_with_number (11);
+  push_caps_with_type (2);
+
+  pull_and_check_sample (sink, 10, 1);
+
+  // Then, let a flush happen.
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_start ()));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_stop (TRUE)));
+  // Sinks downgrade state to PAUSED after a flush, let's up it to PLAYING again to avoid gst_pad_push becoming blocking.
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+  // A segment must be sent after a flush.
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  // Send a buffer now, and check that when pulled by the appsink user, it didn't come with the wrong old caps.
+  push_buffer_with_number (20);
+  pull_and_check_sample (sink, 20, 2);
+
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsink_suite (void)
 {
@@ -1012,6 +1093,7 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_event_signals);
   tcase_add_test (tc_chain, test_event_paused);
   tcase_add_test (tc_chain, test_reverse_stepping);
+  tcase_add_test (tc_chain, test_caps_before_flush_race_condition);
 
   return s;
 }
