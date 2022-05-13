@@ -19,6 +19,11 @@ RUN choco install -y 7zip
 RUN choco install -y python3
 RUN choco install -y msys2 --params '/NoPath /NoUpdate /InstallDir:C:\\msys64'
 
+# Remove MAX_PATH limit of 260 characters
+RUN New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' `
+    -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+RUN git config --system core.longpaths true
+
 RUN c:\msys64\usr\bin\bash -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja'
 # Visual Studio can't be installed with choco.
 # It depends on dotnetfx v4.8.0.20190930, which requires a reboot: dotnetfx (exit code 3010)
