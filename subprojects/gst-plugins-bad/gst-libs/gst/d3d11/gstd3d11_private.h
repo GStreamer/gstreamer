@@ -29,6 +29,9 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_D3D11_FORMAT_SUPPORT (gst_d3d11_format_support_get_type())
+GType gst_d3d11_format_support_get_type (void);
+
 void  gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
                                     const gchar * file,
                                     const gchar * function,

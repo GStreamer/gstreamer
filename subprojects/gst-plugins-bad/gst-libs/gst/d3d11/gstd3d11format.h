@@ -54,11 +54,17 @@ struct _GstD3D11Format
   /* formats for texture processing */
   DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES];
 
-  /* extra format used for unordered access view */
+  /* extra format used for unordered access view (unused) */
   DXGI_FORMAT uav_format[GST_VIDEO_MAX_PLANES];
 
-  /* cached flags */
-  D3D11_FORMAT_SUPPORT support_flags;
+  /* D3D11_FORMAT_SUPPORT flags */
+  guint format_support[GST_VIDEO_MAX_PLANES];
+
+  /* D3D11_FORMAT_SUPPORT2 flags (unused) */
+  guint format_support2[GST_VIDEO_MAX_PLANES];
+
+  /*< private >*/
+  guint padding[GST_PADDING_LARGE];
 };
 
 GST_D3D11_API

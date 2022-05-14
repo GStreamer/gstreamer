@@ -51,6 +51,67 @@ ensure_debug_category (void)
 #define ensure_debug_category() /* NOOP */
 #endif /* GST_DISABLE_GST_DEBUG */
 
+GType
+gst_d3d11_format_support_get_type (void)
+{
+  static gsize support_type = 0;
+  static const GFlagsValue support_values[] = {
+    {D3D11_FORMAT_SUPPORT_BUFFER, "BUFFER", "buffer"},
+    {D3D11_FORMAT_SUPPORT_IA_VERTEX_BUFFER, "IA_VERTEX_BUFFER",
+        "ia-vertex-buffer"},
+    {D3D11_FORMAT_SUPPORT_IA_INDEX_BUFFER, "IA_INDEX_BUFFER",
+        "ia-index-buffer"},
+    {D3D11_FORMAT_SUPPORT_SO_BUFFER, "SO_BUFFER", "so-buffer"},
+    {D3D11_FORMAT_SUPPORT_TEXTURE1D, "TEXTURE1D", "texture1d"},
+    {D3D11_FORMAT_SUPPORT_TEXTURE2D, "TEXTURE2D", "texture2d"},
+    {D3D11_FORMAT_SUPPORT_TEXTURE3D, "TEXTURE3D", "texture3d"},
+    {D3D11_FORMAT_SUPPORT_TEXTURECUBE, "TEXTURECUBE", "texturecube"},
+    {D3D11_FORMAT_SUPPORT_SHADER_LOAD, "SHADER_LOAD", "shader-load"},
+    {D3D11_FORMAT_SUPPORT_SHADER_SAMPLE, "SHADER_SAMPLE", "shader-sample"},
+    {D3D11_FORMAT_SUPPORT_SHADER_SAMPLE_COMPARISON, "SHADER_COMPARISION",
+        "shader-comparision"},
+    {D3D11_FORMAT_SUPPORT_SHADER_SAMPLE_MONO_TEXT, "SHADER_SAMPLE_MONO_TEXT",
+        "shader-sample-mono-text"},
+    {D3D11_FORMAT_SUPPORT_MIP, "MIP", "mip"},
+    {D3D11_FORMAT_SUPPORT_MIP_AUTOGEN, "MIP_AUTOGEN", "mip-autogen"},
+    {D3D11_FORMAT_SUPPORT_RENDER_TARGET, "RENDER_TARGET", "render-target"},
+    {D3D11_FORMAT_SUPPORT_BLENDABLE, "BLANDABLE", "blandable"},
+    {D3D11_FORMAT_SUPPORT_DEPTH_STENCIL, "DEPTH_STENCIL", "depth-stencil"},
+    {D3D11_FORMAT_SUPPORT_CPU_LOCKABLE, "CPU_LOCKABLE", "cpu-lockable"},
+    {D3D11_FORMAT_SUPPORT_MULTISAMPLE_RESOLVE, "MULTISAMPLE_RESOLVE",
+        "multisample-resolve"},
+    {D3D11_FORMAT_SUPPORT_DISPLAY, "DISPLAY", "display"},
+    {D3D11_FORMAT_SUPPORT_CAST_WITHIN_BIT_LAYOUT, "CAST_WITHIN_BIT_LAYOUT",
+        "cast-within-bit-layout"},
+    {D3D11_FORMAT_SUPPORT_MULTISAMPLE_RENDERTARGET, "MULTISAMPLE_RENDERTARGET",
+        "multisample-rendertarget"},
+    {D3D11_FORMAT_SUPPORT_MULTISAMPLE_LOAD, "MULTISAMPLE_LOAD",
+        "multisample-load"},
+    {D3D11_FORMAT_SUPPORT_SHADER_GATHER, "SHADER_GATHER", "shader-gether"},
+    {D3D11_FORMAT_SUPPORT_BACK_BUFFER_CAST, "BACK_BUFFER_CAST",
+        "back-buffer-cast"},
+    {D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW, "UNORDERED_ACCESS_VIEW",
+        "unordered-access-view"},
+    {D3D11_FORMAT_SUPPORT_SHADER_GATHER_COMPARISON, "SHADER_GATHER_COMPARISON",
+        "shader-gether-comparision"},
+    {D3D11_FORMAT_SUPPORT_DECODER_OUTPUT, "DECODER_OUTPUT", "decoder-output"},
+    {D3D11_FORMAT_SUPPORT_VIDEO_PROCESSOR_OUTPUT, "VIDEO_PROCESSOR_OUTPUT",
+        "video-processor-output"},
+    {D3D11_FORMAT_SUPPORT_VIDEO_PROCESSOR_INPUT, "VIDEO_PROCESSOR_INPUT",
+        "video-processor-input"},
+    {D3D11_FORMAT_SUPPORT_VIDEO_ENCODER, "VIDEO_ENCODER", "video-encoder"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&support_type)) {
+    GType tmp = g_flags_register_static ("GstD3D11FormatSupport",
+        support_values);
+    g_once_init_leave (&support_type, tmp);
+  }
+
+  return (GType) support_type;
+}
+
 /**
  * gst_d3d11_dxgi_format_get_size:
  * @format: a DXGI_FORMAT

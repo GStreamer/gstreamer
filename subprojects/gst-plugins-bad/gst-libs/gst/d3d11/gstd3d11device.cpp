@@ -111,7 +111,7 @@ struct _GstD3D11DevicePrivate
   ID3D11VideoContext *video_context;
 
   IDXGIFactory1 *factory;
-  GstD3D11Format format_table[GST_D3D11_N_FORMATS];
+  GArray *format_table;
 
   GRecMutex extern_lock;
   GMutex resource_lock;
@@ -413,6 +413,8 @@ gst_d3d11_device_init (GstD3D11Device * self)
   priv = (GstD3D11DevicePrivate *)
       gst_d3d11_device_get_instance_private (self);
   priv->adapter = DEFAULT_ADAPTER;
+  priv->format_table = g_array_sized_new (FALSE, FALSE,
+      sizeof (GstD3D11Format), GST_D3D11_N_FORMATS);
 
   g_rec_mutex_init (&priv->extern_lock);
   g_mutex_init (&priv->resource_lock);
@@ -440,87 +442,29 @@ is_windows_8_or_greater (void)
   return ret;
 }
 
-inline D3D11_FORMAT_SUPPORT
-operator | (D3D11_FORMAT_SUPPORT lhs, D3D11_FORMAT_SUPPORT rhs)
-{
-  return static_cast < D3D11_FORMAT_SUPPORT > (static_cast < UINT >
-      (lhs) | static_cast < UINT > (rhs));
-}
-
-inline D3D11_FORMAT_SUPPORT
-operator |= (D3D11_FORMAT_SUPPORT lhs, D3D11_FORMAT_SUPPORT rhs)
-{
-  return lhs | rhs;
-}
-
-static gboolean
-can_support_format (GstD3D11Device * self, DXGI_FORMAT format,
-    D3D11_FORMAT_SUPPORT extra_flags)
+static guint
+check_format_support (GstD3D11Device * self, DXGI_FORMAT format)
 {
   GstD3D11DevicePrivate *priv = self->priv;
   ID3D11Device *handle = priv->device;
   HRESULT hr;
-  UINT supported;
-  D3D11_FORMAT_SUPPORT flags = D3D11_FORMAT_SUPPORT_TEXTURE2D;
-  const gchar *format_name = gst_d3d11_dxgi_format_to_string (format);
+  UINT format_support;
 
-  flags |= extra_flags;
+  hr = handle->CheckFormatSupport (format, &format_support);
+  if (FAILED (hr) || format_support == 0)
+    return 0;
 
-  if (!is_windows_8_or_greater ()) {
-    GST_INFO_OBJECT (self, "DXGI_FORMAT_%s (%d) needs Windows 8 or greater",
-        format_name, (guint) format);
-    return FALSE;
-  }
-
-  hr = handle->CheckFormatSupport (format, &supported);
-  if (FAILED (hr)) {
-    GST_DEBUG_OBJECT (self, "DXGI_FORMAT_%s (%d) is not supported by device",
-        format_name, (guint) format);
-    return FALSE;
-  }
-
-  if ((supported & flags) != flags) {
-    GST_DEBUG_OBJECT (self,
-        "DXGI_FORMAT_%s (%d) doesn't support flag 0x%x (supported flag 0x%x)",
-        format_name, (guint) format, (guint) supported, (guint) flags);
-    return FALSE;
-  }
-
-  GST_INFO_OBJECT (self, "Device supports DXGI_FORMAT_%s (%d)",
-      format_name, (guint) format);
-
-  return TRUE;
-}
-
-static void
-update_format_support_flag (GstD3D11Device * self, GstD3D11Format * format)
-{
-  GstD3D11DevicePrivate *priv = self->priv;
-  ID3D11Device *handle = priv->device;
-  HRESULT hr;
-  UINT supported;
-  DXGI_FORMAT dxgi_format;
-
-  if (format->dxgi_format != DXGI_FORMAT_UNKNOWN)
-    dxgi_format = format->dxgi_format;
-  else
-    dxgi_format = format->resource_format[0];
-
-  hr = handle->CheckFormatSupport (dxgi_format, &supported);
-  if (FAILED (hr)) {
-    GST_DEBUG_OBJECT (self, "DXGI_FORMAT_%s (%d) is not supported by device",
-        gst_d3d11_dxgi_format_to_string (dxgi_format), (guint) dxgi_format);
-    return;
-  }
-
-  format->support_flags = (D3D11_FORMAT_SUPPORT) supported;
+  return format_support;
 }
 
 static void
 dump_format (GstD3D11Device * self, GstD3D11Format * format)
 {
-  GST_LOG_OBJECT (self, "%s -> DXGI_FORMAT_%s (%d), "
-      "resource format: %s (%d), %s (%d), %s (%d), %s (%d), flags 0x%x",
+  gchar *format_support_str = g_flags_to_string (GST_TYPE_D3D11_FORMAT_SUPPORT,
+      format->format_support[0]);
+
+  GST_LOG_OBJECT (self, "%s -> %s (%d), "
+      "resource format: %s (%d), %s (%d), %s (%d), %s (%d), flags (0x%x) %s",
       gst_video_format_to_string (format->format),
       gst_d3d11_dxgi_format_to_string (format->dxgi_format),
       format->dxgi_format,
@@ -531,7 +475,10 @@ dump_format (GstD3D11Device * self, GstD3D11Format * format)
       gst_d3d11_dxgi_format_to_string (format->resource_format[2]),
       format->resource_format[2],
       gst_d3d11_dxgi_format_to_string (format->resource_format[3]),
-      format->resource_format[3], (guint) format->support_flags);
+      format->resource_format[3], format->format_support[0],
+      format_support_str);
+
+  g_free (format_support_str);
 }
 
 static void
@@ -539,21 +486,31 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
 {
   GstD3D11DevicePrivate *priv = self->priv;
 
-  for (guint i = 0; i < G_N_ELEMENTS (priv->format_table); i++) {
-    GstD3D11Format *format = &priv->format_table[i];
+  for (guint i = 0; i < G_N_ELEMENTS (_gst_d3d11_default_format_map); i++) {
+    const GstD3D11Format *iter = &_gst_d3d11_default_format_map[i];
+    GstD3D11Format format;
+    guint support[GST_VIDEO_MAX_PLANES] = { 0, };
+    gboolean native = TRUE;
 
-    *format = _gst_d3d11_default_format_map[i];
-
-    switch (format->format) {
-        /* RGB */
+    switch (iter->format) {
+        /* RGB/GRAY */
       case GST_VIDEO_FORMAT_BGRA:
       case GST_VIDEO_FORMAT_BGRx:
       case GST_VIDEO_FORMAT_RGBA:
       case GST_VIDEO_FORMAT_RGBx:
       case GST_VIDEO_FORMAT_RGB10A2_LE:
       case GST_VIDEO_FORMAT_RGBA64_LE:
-        g_assert (format->dxgi_format != DXGI_FORMAT_UNKNOWN);
-        update_format_support_flag (self, format);
+      case GST_VIDEO_FORMAT_GRAY8:
+      case GST_VIDEO_FORMAT_GRAY16_LE:
+        support[0] = check_format_support (self, iter->dxgi_format);
+        if (!support[0]) {
+          const gchar *format_name =
+              gst_d3d11_dxgi_format_to_string (iter->dxgi_format);
+          GST_INFO_OBJECT (self, "DXGI_FORMAT_%s (%d) for %s is not supported",
+              format_name, (guint) iter->dxgi_format,
+              gst_video_format_to_string (iter->format));
+          continue;
+        }
         break;
         /* YUV DXGI native formats */
       case GST_VIDEO_FORMAT_VUYA:
@@ -561,13 +518,40 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_P010_10LE:
       case GST_VIDEO_FORMAT_P012_LE:
-      case GST_VIDEO_FORMAT_P016_LE:
-        if (!can_support_format (self,
-                format->dxgi_format, format->support_flags)) {
-          format->dxgi_format = DXGI_FORMAT_UNKNOWN;
+      case GST_VIDEO_FORMAT_P016_LE:{
+        gboolean supported = TRUE;
+
+        if (is_windows_8_or_greater ())
+          support[0] = check_format_support (self, iter->dxgi_format);
+
+        if (!support[0]) {
+          GST_DEBUG_OBJECT (self,
+              "DXGI_FORMAT_%s (%d) for %s is not supported, "
+              "checking resource format",
+              gst_d3d11_dxgi_format_to_string (iter->dxgi_format),
+              (guint) iter->dxgi_format,
+              gst_video_format_to_string (iter->format));
+
+          native = FALSE;
+          for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
+            if (iter->resource_format[j] == DXGI_FORMAT_UNKNOWN)
+              break;
+
+            support[j] = check_format_support (self, iter->resource_format[j]);
+            if (support[j] == 0) {
+              supported = FALSE;
+              break;
+            }
+          }
+
+          if (!supported) {
+            GST_INFO_OBJECT (self, "%s is not supported",
+                gst_video_format_to_string (iter->format));
+            continue;
+          }
         }
-        update_format_support_flag (self, format);
         break;
+      }
         /* YUV non-DXGI native formats */
       case GST_VIDEO_FORMAT_NV21:
       case GST_VIDEO_FORMAT_I420:
@@ -582,23 +566,45 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_Y444_12LE:
       case GST_VIDEO_FORMAT_Y444_16LE:
       case GST_VIDEO_FORMAT_AYUV:
-      case GST_VIDEO_FORMAT_AYUV64:
-      {
-        g_assert (format->dxgi_format == DXGI_FORMAT_UNKNOWN);
-        update_format_support_flag (self, format);
+      case GST_VIDEO_FORMAT_AYUV64:{
+        gboolean supported = TRUE;
+
+        native = FALSE;
+        for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
+          if (iter->resource_format[j] == DXGI_FORMAT_UNKNOWN)
+            break;
+
+          support[j] = check_format_support (self, iter->resource_format[j]);
+          if (support[j] == 0) {
+            supported = FALSE;
+            break;
+          }
+        }
+
+        if (!supported) {
+          GST_INFO_OBJECT (self, "%s is not supported",
+              gst_video_format_to_string (iter->format));
+          continue;
+        }
         break;
       }
-      case GST_VIDEO_FORMAT_GRAY8:
-      case GST_VIDEO_FORMAT_GRAY16_LE:
-        g_assert (format->dxgi_format != DXGI_FORMAT_UNKNOWN);
-        update_format_support_flag (self, format);
-        break;
       default:
         g_assert_not_reached ();
-        break;
+        return;
     }
 
-    dump_format (self, format);
+    format = *iter;
+
+    if (!native)
+      format.dxgi_format = DXGI_FORMAT_UNKNOWN;
+
+    for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++)
+      format.format_support[j] = support[j];
+
+    if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_LOG)
+      dump_format (self, &format);
+
+    g_array_append_val (priv->format_table, format);
   }
 
   /* FIXME: d3d11 sampler doesn't support packed-and-subsampled formats
@@ -739,6 +745,7 @@ gst_d3d11_device_finalize (GObject * object)
 
   GST_LOG_OBJECT (self, "finalize");
 
+  g_array_unref (priv->format_table);
   g_rec_mutex_clear (&priv->extern_lock);
   g_mutex_clear (&priv->resource_lock);
   g_free (priv->description);
@@ -1357,12 +1364,15 @@ gst_d3d11_device_get_format (GstD3D11Device * device, GstVideoFormat format,
 
   priv = device->priv;
 
-  for (guint i = 0; i < G_N_ELEMENTS (priv->format_table); i++) {
-    if (priv->format_table[i].format != format)
+  for (guint i = 0; i < priv->format_table->len; i++) {
+    const GstD3D11Format *d3d11_fmt =
+        &g_array_index (priv->format_table, GstD3D11Format, i);
+
+    if (d3d11_fmt->format != format)
       continue;
 
     if (device_format)
-      *device_format = priv->format_table[i];
+      *device_format = *d3d11_fmt;
 
     return TRUE;
   }
