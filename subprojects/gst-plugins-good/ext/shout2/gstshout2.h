@@ -68,6 +68,8 @@ struct _GstShout2send {
   gchar *songmetadata;
   gchar *songartist;
   gchar *songtitle;
+  gboolean send_title_info;
+  gchar *user_agent;
   gint  format;
   guint timeout;
 

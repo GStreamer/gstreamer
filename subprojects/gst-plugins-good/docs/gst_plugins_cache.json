@@ -21672,6 +21672,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "send-title-info": {
+                        "blurb": "Update stream metadata with song title and artist information",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "streamname": {
                         "blurb": "name of the stream",
                         "conditionally-available": false,
@@ -21705,6 +21717,18 @@
                         "construct-only": false,
                         "controllable": false,
                         "default": "",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "user-agent": {
+                        "blurb": "User agent of the source",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "GStreamer 1.21.0.1",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",

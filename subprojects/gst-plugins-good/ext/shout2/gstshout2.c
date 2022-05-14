@@ -72,22 +72,26 @@ enum
   ARG_MOUNT,                    /* mountpoint of stream (icecast only) */
   ARG_URL,                      /* the stream's homepage URL */
 
-  ARG_TIMEOUT                   /* The max amount of time to wait for
+  ARG_TIMEOUT,                  /* The max amount of time to wait for
                                    network activity */
+  ARG_SEND_TITLE_INFO,          /* If stream song title updates should be made */
+  ARG_USERAGENT                 /* User-Agent setting */
 };
 
 #define DEFAULT_IP           "127.0.0.1"
 #define DEFAULT_PORT         8000
 #define DEFAULT_PASSWORD     "hackme"
 #define DEFAULT_USERNAME     "source"
-#define DEFAULT_PUBLIC     FALSE
+#define DEFAULT_PUBLIC       FALSE
 #define DEFAULT_STREAMNAME   ""
 #define DEFAULT_DESCRIPTION  ""
+#define DEFAULT_USERAGENT    "GStreamer " PACKAGE_VERSION
 #define DEFAULT_GENRE        ""
 #define DEFAULT_MOUNT        ""
 #define DEFAULT_URL          ""
 #define DEFAULT_PROTOCOL     SHOUT2SEND_PROTOCOL_HTTP
 #define DEFAULT_TIMEOUT      10000
+#define DEFAULT_SEND_TITLE_INFO TRUE
 
 #ifdef SHOUT_FORMAT_WEBM
 #define WEBM_CAPS "; video/webm; audio/webm"
@@ -219,6 +223,32 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
           GST_TYPE_SHOUT_PROTOCOL, DEFAULT_PROTOCOL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstShout2send:send-title-info
+   *
+   * Update stream metadata with song title and artist information
+   *
+   * Since: 1.22
+   **/
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      ARG_SEND_TITLE_INFO,
+      g_param_spec_boolean ("send-title-info", "send-title-info",
+          "Update stream metadata with song title and artist information",
+          DEFAULT_SEND_TITLE_INFO, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstShout2send:user-agent
+   *
+   * User agent of the source
+   *
+   * Since: 1.22
+   **/
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USERAGENT,
+      g_param_spec_string ("user-agent", "user-agent",
+          "User agent of the source", DEFAULT_USERAGENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* icecast only */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MOUNT,
@@ -296,6 +326,8 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->songmetadata = NULL;
   shout2send->songartist = NULL;
   shout2send->songtitle = NULL;
+  shout2send->send_title_info = DEFAULT_SEND_TITLE_INFO;
+  shout2send->user_agent = g_strdup (DEFAULT_USERAGENT);
 }
 
 static void
@@ -309,6 +341,7 @@ gst_shout2send_finalize (GstShout2send * shout2send)
   g_free (shout2send->genre);
   g_free (shout2send->mount);
   g_free (shout2send->url);
+  g_free (shout2send->user_agent);
 
   gst_tag_list_unref (shout2send->tags);
 
@@ -358,6 +391,10 @@ set_shout_metadata (const GstTagList * list, const gchar * tag,
   if (*shout_metadata != NULL)
     g_free (*shout_metadata);
 
+  if (!shout2send->send_title_info) {
+    *shout_metadata = NULL;
+    return;
+  }
 
   if (*song_title && *song_artist) {
     *shout_metadata = g_strdup_printf ("%s - %s", *song_artist, *song_title);
@@ -461,7 +498,6 @@ gst_shout2send_start (GstBaseSink * basesink)
   GstShout2send *sink = GST_SHOUT2SEND (basesink);
   const gchar *cur_prop;
   gshort proto = 3;
-  gchar *version_string;
 
   GST_DEBUG_OBJECT (sink, "starting");
 
@@ -530,15 +566,12 @@ gst_shout2send_start (GstBaseSink * basesink)
   if (shout_set_user (sink->conn, sink->username) != SHOUTERR_SUCCESS)
     goto set_failed;
 
-  version_string = gst_version_string ();
   cur_prop = "agent";
-  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, version_string);
-  if (shout_set_agent (sink->conn, version_string) != SHOUTERR_SUCCESS) {
-    g_free (version_string);
+  GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, sink->user_agent);
+  if (shout_set_agent (sink->conn, sink->user_agent) != SHOUTERR_SUCCESS) {
     goto set_failed;
   }
 
-  g_free (version_string);
   return TRUE;
 
 /* ERROR */
@@ -876,6 +909,13 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
     case ARG_TIMEOUT:
       shout2send->timeout = g_value_get_uint (value);
       break;
+    case ARG_SEND_TITLE_INFO:
+      shout2send->send_title_info = g_value_get_boolean (value);
+      break;
+    case ARG_USERAGENT:
+      g_free (shout2send->user_agent);
+      shout2send->user_agent = g_value_dup_string (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -926,6 +966,12 @@ gst_shout2send_get_property (GObject * object, guint prop_id,
       break;
     case ARG_TIMEOUT:
       g_value_set_uint (value, shout2send->timeout);
+      break;
+    case ARG_SEND_TITLE_INFO:
+      g_value_set_boolean (value, shout2send->send_title_info);
+      break;
+    case ARG_USERAGENT:
+      g_value_set_string (value, shout2send->user_agent);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
