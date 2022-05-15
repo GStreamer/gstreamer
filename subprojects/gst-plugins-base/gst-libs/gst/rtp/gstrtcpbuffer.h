@@ -262,10 +262,10 @@ typedef enum
 /**
  * GST_RTCP_REDUCED_SIZE_VALID_MASK:
  *
- * Mask for version, padding bit and packet type pair allowing reduced size
+ * Mask for version and packet type pair allowing reduced size
  * packets, basically it accepts other types than RR and SR
  */
-#define GST_RTCP_REDUCED_SIZE_VALID_MASK (0xc000 | 0x2000 | 0xf8)
+#define GST_RTCP_REDUCED_SIZE_VALID_MASK (0xc000 | 0xf8)
 
 /**
  * GST_RTCP_VALID_VALUE:

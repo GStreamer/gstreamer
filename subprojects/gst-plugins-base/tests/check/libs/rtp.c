@@ -31,6 +31,8 @@
 
 #define RTP_HEADER_LEN 12
 
+static GstBuffer *create_feedback_buffer (gboolean with_padding);
+
 GST_START_TEST (test_rtp_buffer)
 {
   GstBuffer *buf;
@@ -1073,20 +1075,19 @@ GST_END_TEST;
 
 GST_START_TEST (test_rtcp_validate_reduced_with_padding)
 {
-  /* Reduced size packet with padding. */
-  guint8 rtcp_pkt[] = {
-    0xA0, 0xcd, 0x00, 0x08,     /* P=1, Type FB, length = 8 */
-    0x97, 0x6d, 0x21, 0x6a,
-    0x4d, 0x16, 0xaf, 0x14,
-    0x10, 0x1f, 0xd9, 0x91,
-    0x0f, 0xb7, 0x50, 0x88,
-    0x3b, 0x79, 0x31, 0x50,
-    0xbe, 0x19, 0x12, 0xa8,
-    0xbb, 0xce, 0x9e, 0x3e,
-    0x00, 0x00, 0x00, 0x04      /* RTCP padding */
-  };
+  GstRTCPPacket packet;
+  GstRTCPBuffer rtcp = GST_RTCP_BUFFER_INIT;
+  GstBuffer *buffer = create_feedback_buffer (TRUE);
 
-  fail_if (gst_rtcp_buffer_validate_data_reduced (rtcp_pkt, sizeof (rtcp_pkt)));
+  gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
+  fail_unless (gst_rtcp_buffer_get_first_packet (&rtcp, &packet));
+  fail_unless (gst_rtcp_packet_get_padding (&packet));
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  fail_unless (gst_rtcp_buffer_validate_reduced (buffer));
+  fail_if (gst_rtcp_buffer_validate (buffer));
+
+  gst_buffer_unref (buffer);
 }
 
 GST_END_TEST;
