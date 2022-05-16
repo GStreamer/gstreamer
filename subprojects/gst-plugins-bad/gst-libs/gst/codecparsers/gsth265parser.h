@@ -788,6 +788,7 @@ struct _GstH265ShortTermRefPicSet
 
 /**
  * GstH265VUIParams:
+ * @parsed: %TRUE indicate that VUI parameters have been parsed (Since: 1.22)
  * @aspect_ratio_info_present_flag: %TRUE specifies that aspect_ratio_idc is present.
  *  %FALSE specifies that aspect_ratio_idc is not present
  * @aspect_ratio_idc specifies the value of the sample aspect ratio of the luma samples
@@ -856,6 +857,14 @@ struct _GstH265ShortTermRefPicSet
  */
 struct _GstH265VUIParams
 {
+  /**
+   * _GstH265VUIParams.parsed:
+   *
+   * %TRUE indicate that VUI parameters have been parsed.
+   *
+   * Since: 1.22
+   */
+  gboolean parsed;
   guint8 aspect_ratio_info_present_flag;
   guint8 aspect_ratio_idc;
   /* if aspect_ratio_idc == 255 */
@@ -1102,6 +1111,14 @@ struct _GstH265SPS
 {
   guint8 id;
 
+  /**
+   * _GstH265SPS.vps_id:
+   *
+   * The ID of the VPS. This is used to store the ID until the VPS is
+   * parsed in case its placed after the SPS.
+   * Since: 1.22
+   */
+  guint8 vps_id;
   GstH265VPS *vps;
 
   guint8 max_sub_layers_minus1;
@@ -1201,6 +1218,15 @@ struct _GstH265PPS
 {
   guint id;
 
+  /**
+   * _GstH265PPS.sps_id:
+   *
+   * The ID of the SPS. This is used to store the ID until the SPS is
+   * parsed in case its placed after the PPS.
+   *
+   * Since: 1.22
+   */
+  guint sps_id;
   GstH265SPS *sps;
 
   guint8 dependent_slice_segments_enabled_flag;
