@@ -3257,8 +3257,16 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     }
 
     if (!caps) {
-      GST_WARNING_OBJECT (webrtc, "no caps available for transceiver %"
-          GST_PTR_FORMAT ", skipping", trans);
+      if (WEBRTC_TRANSCEIVER (trans)->mline_locked) {
+        g_set_error (error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+            "Transceiver <%s> with mid %s has locked mline %u, but no caps. "
+            "Can't produce offer.", GST_OBJECT_NAME (trans), trans->mid,
+            trans->mline);
+      } else {
+        GST_WARNING_OBJECT (webrtc, "no caps available for transceiver %"
+            GST_PTR_FORMAT ", skipping", trans);
+      }
       return FALSE;
     }
   }

@@ -4067,6 +4067,36 @@ GST_START_TEST (test_reject_create_offer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reject_create_offer_mline_locked_no_caps)
+{
+  GstHarness *h;
+  GstPromise *promise;
+  const GstStructure *s;
+  GstPromiseResult res;
+  GError *error = NULL;
+
+  h = gst_harness_new_with_padnames ("webrtcbin", "sink_0", NULL);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (h->element, "create-offer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
+  fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INTERNAL_FAILURE));
+  fail_unless_equals_string (error->message,
+      "Transceiver <webrtctransceiver0> with mid (null) has locked mline 0,"
+      " but no caps. Can't produce offer.");
+  g_clear_error (&error);
+  gst_promise_unref (promise);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_reject_set_description)
 {
   struct test_webrtc *t = test_webrtc_new ();
@@ -5514,6 +5544,7 @@ webrtcbin_suite (void)
         test_bundle_codec_preferences_rtx_no_duplicate_payloads);
     tcase_add_test (tc, test_reject_request_pad);
     tcase_add_test (tc, test_reject_create_offer);
+    tcase_add_test (tc, test_reject_create_offer_mline_locked_no_caps);
     tcase_add_test (tc, test_reject_set_description);
     tcase_add_test (tc, test_force_second_media);
     tcase_add_test (tc, test_codec_preferences_caps);
