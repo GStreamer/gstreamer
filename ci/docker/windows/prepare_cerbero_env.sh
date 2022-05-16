@@ -9,7 +9,7 @@ cd cerbero
 echo 'local_sources="C:/cerbero/cerbero-sources"' > localconf.cbc
 echo 'home_dir="C:/cerbero/cerbero-build"' >> localconf.cbc
 echo 'vs_install_path = "C:/BuildTools"' >> localconf.cbc
-echo 'vs_install_version = "vs15"' >> localconf.cbc
+echo 'vs_install_version = "vs16"' >> localconf.cbc
 
 # Fetch all bootstrap requirements
 ./cerbero-uninstalled -t -c localconf.cbc -c config/win64.cbc fetch-bootstrap --jobs=4
