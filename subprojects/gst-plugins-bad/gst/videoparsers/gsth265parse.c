@@ -797,13 +797,7 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       h265parse->state |= GST_H265_PARSE_STATE_GOT_SPS;
       break;
     case GST_H265_NAL_PPS:
-      /* expected state: got-sps */
-      h265parse->state &= GST_H265_PARSE_STATE_GOT_SPS;
-      if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
-        return FALSE;
-
       pres = gst_h265_parser_parse_pps (nalparser, nalu, &pps);
-
 
       /* arranged for a fallback pps.id, so use that one and only warn */
       if (pres != GST_H265_PARSER_OK) {
@@ -960,16 +954,8 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       break;
     }
     case GST_H265_NAL_AUD:
-      /* Just accumulate AU Delimiter, whether it's before SPS or not */
-      pres = gst_h265_parser_parse_nal (nalparser, nalu);
-      if (pres != GST_H265_PARSER_OK)
-        return FALSE;
-      break;
     default:
-      /* drop anything before the initial SPS */
-      if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS))
-        return FALSE;
-
+      /* Just accumulate AU Delimiter, whether it's before SPS or not */
       pres = gst_h265_parser_parse_nal (nalparser, nalu);
       if (pres != GST_H265_PARSER_OK)
         return FALSE;
