@@ -3081,17 +3081,14 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
   loop_again = TRUE;
   do {
-    if (ctx->flushing)
-      break;
+    if (ctx->flushing) {
+      ret = GST_FLOW_FLUSHING;
+      goto beach;
+    }
 
     switch (splitmux->input_state) {
       case SPLITMUX_INPUT_STATE_COLLECTING_GOP_START:
-        if (ctx->is_releasing) {
-          /* The pad belonging to this context is being released */
-          GST_WARNING_OBJECT (pad, "Pad is being released while the muxer is "
-              "running. Data might not drain correctly");
-          loop_again = FALSE;
-        } else if (ctx->is_reference) {
+        if (ctx->is_reference) {
           const InputGop *gop, *next_gop;
 
           /* This is the reference context. If it's a keyframe,
@@ -3576,7 +3573,7 @@ gst_splitmux_sink_release_pad (GstElement * element, GstPad * pad)
   /* Remove the context from our consideration */
   splitmux->contexts = g_list_remove (splitmux->contexts, ctx);
 
-  ctx->is_releasing = TRUE;
+  ctx->flushing = TRUE;
   GST_SPLITMUX_BROADCAST_INPUT (splitmux);
 
   GST_SPLITMUX_UNLOCK (splitmux);
