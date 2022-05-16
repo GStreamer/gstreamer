@@ -964,7 +964,7 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
 
   hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
   if (!gst_d3d11_result (hr, NULL)) {
-    GST_ERROR ("cannot create dxgi factory, hr: 0x%x", (guint) hr);
+    GST_WARNING ("cannot create dxgi factory, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 
@@ -993,7 +993,7 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
 
     hr = external_device->QueryInterface (IID_PPV_ARGS (&device));
     if (FAILED (hr)) {
-      GST_ERROR ("Not a valid external ID3D11Device handle");
+      GST_WARNING ("Not a valid external ID3D11Device handle");
       return nullptr;
     }
 
@@ -1050,7 +1050,7 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
       }
       case DEVICE_CONSTRUCT_FOR_ADAPTER_LUID:
       {
-        GST_ERROR ("Failed to create d3d11 device for adapter luid %"
+        GST_WARNING ("Failed to create d3d11 device for adapter luid %"
             G_GINT64_FORMAT " with flags 0x%x, hr: 0x%x",
             data->data.adapter_luid, create_flags, (guint) hr);
         return nullptr;
