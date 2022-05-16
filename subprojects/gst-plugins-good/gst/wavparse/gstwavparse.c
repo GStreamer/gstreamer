@@ -1772,7 +1772,7 @@ invalid_blockalign:
 invalid_bps:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
-        ("Stream claims av_bsp = %u, which is more than %u - invalid data",
+        ("Stream claims av_bps = %u, which is more than %u - invalid data",
             wav->av_bps, wav->blockalign * wav->rate));
     goto fail;
   }
