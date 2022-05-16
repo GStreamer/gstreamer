@@ -452,7 +452,7 @@ gst_video_parse_user_data_unregistered (GstElement * elt,
     GstVideoParseUserDataUnregistered * user_data,
     GstByteReader * br, guint8 uuid[16])
 {
-  gst_video_user_data_unregistered_free (user_data);
+  gst_video_user_data_unregistered_clear (user_data);
 
   memcpy (&user_data->uuid, uuid, 16);
   user_data->size = gst_byte_reader_get_size (br);
@@ -460,13 +460,13 @@ gst_video_parse_user_data_unregistered (GstElement * elt,
 }
 
 /*
- * gst_video_user_data_unregistered_free:
+ * gst_video_user_data_unregistered_clear:
  * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
  *
- * Frees the user data unregistered
+ * Clears the user data unregistered
  */
 void
-gst_video_user_data_unregistered_free (GstVideoParseUserDataUnregistered *
+gst_video_user_data_unregistered_clear (GstVideoParseUserDataUnregistered *
     user_data)
 {
   g_free (user_data->data);
@@ -489,6 +489,6 @@ gst_video_push_user_data_unregistered (GstElement * elt,
   if (user_data->data != NULL) {
     gst_buffer_add_video_sei_user_data_unregistered_meta (buf, user_data->uuid,
         user_data->data, user_data->size);
-    gst_video_user_data_unregistered_free (user_data);
+    gst_video_user_data_unregistered_clear (user_data);
   }
 }

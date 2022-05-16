@@ -212,7 +212,7 @@ gst_h264_parse_finalize (GObject * object)
 {
   GstH264Parse *h264parse = GST_H264_PARSE (object);
 
-  gst_video_user_data_unregistered_free (&h264parse->user_data_unregistered);
+  gst_video_user_data_unregistered_clear (&h264parse->user_data_unregistered);
 
   g_object_unref (h264parse->frame_out);
 
