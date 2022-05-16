@@ -4,7 +4,7 @@ event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, s
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\;";
 event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2013-09-03T16:21:39Z\,\ description\=\(string\)\"audiotest\\\ wave\"\,\ encoder\=\(string\)x264\,\ container-format\=\(string\)Quicktime\;";
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(High\\\ Profile\\\)\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\;";
-buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header
+buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header, meta=GstVideoSEIUserDataUnregisteredMeta
 buffer: dts=0:00:00.033333333, pts=0:00:00.100000000, dur=0:00:00.033333333, flags=marker delta-unit
 buffer: dts=0:00:00.066666666, pts=0:00:00.233333333, dur=0:00:00.033333333, flags=marker delta-unit
 event flush-start: (no structure)
@@ -24,7 +24,7 @@ event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(High\\\ Profile\\\)\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\,\ minimum-bitrate\=\(uint\)61440\,\ maximum-bitrate\=\(uint\)156720\;";
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(High\\\ Profile\\\)\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\,\ minimum-bitrate\=\(uint\)54480\,\ maximum-bitrate\=\(uint\)156720\;";
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ \\\(High\\\ Profile\\\)\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\,\ minimum-bitrate\=\(uint\)38640\,\ maximum-bitrate\=\(uint\)156720\;";
-buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header
+buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header, meta=GstVideoSEIUserDataUnregisteredMeta
 buffer: dts=0:00:00.033333333, pts=0:00:00.100000000, dur=0:00:00.033333333, flags=marker delta-unit
 buffer: dts=0:00:00.066666666, pts=0:00:00.233333333, dur=0:00:00.033333333, flags=marker delta-unit
 buffer: dts=0:00:00.100000000, pts=0:00:00.166666666, dur=0:00:00.033333333, flags=marker delta-unit
