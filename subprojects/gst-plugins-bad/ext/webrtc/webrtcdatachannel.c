@@ -966,9 +966,14 @@ on_appsrc_data (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 static void
 gst_webrtc_data_channel_constructed (GObject * object)
 {
-  WebRTCDataChannel *channel = WEBRTC_DATA_CHANNEL (object);
+  WebRTCDataChannel *channel;
   GstPad *pad;
   GstCaps *caps;
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
+  channel = WEBRTC_DATA_CHANNEL (object);
+  GST_DEBUG ("New channel %p constructed", channel);
 
   caps = gst_caps_new_any ();
 
