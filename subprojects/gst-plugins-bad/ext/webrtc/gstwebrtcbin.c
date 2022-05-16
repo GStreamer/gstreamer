@@ -3213,7 +3213,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
    * multiple dtls fingerprints https://tools.ietf.org/html/draft-ietf-mmusic-4572-update-05
    */
   GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
-  gchar *direction, *ufrag, *pwd, *mid;
+  gchar *direction, *ufrag, *pwd, *mid = NULL;
   gboolean bundle_only;
   guint rtp_session_idx;
   GstCaps *caps;
@@ -3422,11 +3422,13 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
       return FALSE;
     }
     mid = g_strdup (trans->mid);
-  } else {
+    g_hash_table_insert (all_mids, g_strdup (mid), NULL);
+  }
+
+  if (mid == NULL) {
     const GstStructure *s = gst_caps_get_structure (caps, 0);
 
     mid = g_strdup (gst_structure_get_string (s, "a-mid"));
-
     if (mid) {
       if (g_hash_table_contains (all_mids, (gpointer) mid)) {
         g_set_error (error, GST_WEBRTC_ERROR,
@@ -3436,19 +3438,39 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
             media_idx);
         return FALSE;
       }
+      g_free (WEBRTC_TRANSCEIVER (trans)->pending_mid);
+      WEBRTC_TRANSCEIVER (trans)->pending_mid = g_strdup (mid);
       g_hash_table_insert (all_mids, g_strdup (mid), NULL);
-    } else {
-      /* Make sure to avoid mid collisions */
-      while (TRUE) {
-        mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
-            webrtc->priv->media_counter++);
-        if (g_hash_table_contains (all_mids, (gpointer) mid)) {
-          g_free (mid);
-        } else {
-          gst_sdp_media_add_attribute (media, "mid", mid);
-          g_hash_table_insert (all_mids, g_strdup (mid), NULL);
-          break;
-        }
+    }
+  }
+
+  if (mid == NULL) {
+    mid = g_strdup (WEBRTC_TRANSCEIVER (trans)->pending_mid);
+    if (mid) {
+      /* If it's already used, just ignore the pending one and generate
+       * a new one */
+      if (g_hash_table_contains (all_mids, (gpointer) mid)) {
+        g_clear_pointer (&mid, free);
+        g_clear_pointer (&WEBRTC_TRANSCEIVER (trans)->pending_mid, free);
+      } else {
+        gst_sdp_media_add_attribute (media, "mid", mid);
+        g_hash_table_insert (all_mids, g_strdup (mid), NULL);
+      }
+    }
+  }
+
+  if (mid == NULL) {
+    /* Make sure to avoid mid collisions */
+    while (TRUE) {
+      mid = g_strdup_printf ("%s%u", gst_sdp_media_get_media (media),
+          webrtc->priv->media_counter++);
+      if (g_hash_table_contains (all_mids, (gpointer) mid)) {
+        g_free (mid);
+      } else {
+        gst_sdp_media_add_attribute (media, "mid", mid);
+        g_hash_table_insert (all_mids, g_strdup (mid), NULL);
+        WEBRTC_TRANSCEIVER (trans)->pending_mid = g_strdup (mid);
+        break;
       }
     }
   }
@@ -3706,14 +3728,22 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
           || g_strcmp0 (gst_sdp_media_get_media (last_media), "video") == 0) {
         const gchar *last_mid;
         int j;
+
         last_mid = gst_sdp_media_get_attribute_val (last_media, "mid");
 
         for (j = 0; j < webrtc->priv->transceivers->len; j++) {
-          trans = g_ptr_array_index (webrtc->priv->transceivers, j);
+          WebRTCTransceiver *wtrans;
+          const gchar *mid;
 
-          if (trans->mid && g_strcmp0 (trans->mid, last_mid) == 0) {
-            WebRTCTransceiver *wtrans = WEBRTC_TRANSCEIVER (trans);
-            const char *mid;
+          trans = g_ptr_array_index (webrtc->priv->transceivers, j);
+          wtrans = WEBRTC_TRANSCEIVER (trans);
+
+          if (trans->mid)
+            mid = trans->mid;
+          else
+            mid = wtrans->pending_mid;
+
+          if (mid && g_strcmp0 (mid, last_mid) == 0) {
             GstSDPMedia media;
 
             memset (&media, 0, sizeof (media));
@@ -3800,6 +3830,11 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       }
 
       g_hash_table_insert (all_mids, g_strdup (trans->mid), NULL);
+    } else if (WEBRTC_TRANSCEIVER (trans)->pending_mid &&
+        !g_hash_table_contains (all_mids,
+            WEBRTC_TRANSCEIVER (trans)->pending_mid)) {
+      g_hash_table_insert (all_mids,
+          g_strdup (WEBRTC_TRANSCEIVER (trans)->pending_mid), NULL);
     }
   }
 

@@ -5426,6 +5426,48 @@ GST_START_TEST (test_invalid_add_media_in_answer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_data_channel_recreate_offer)
+{
+  GstHarness *h;
+  GstWebRTCDataChannel *channel;
+  GstPromise *promise;
+  const GstStructure *s;
+  GstPromiseResult res;
+  GstPad *pad;
+
+  h = gst_harness_new_with_padnames ("webrtcbin", "sink_0", NULL);
+  add_audio_test_src_harness (h, 0xDEADBEEF);
+
+  g_signal_emit_by_name (h->element, "create-data-channel", "label", NULL,
+      &channel);
+  fail_unless (GST_IS_WEBRTC_DATA_CHANNEL (channel));
+
+  pad = gst_element_get_static_pad (h->element, "sink_0");
+  fail_unless (pad != NULL);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (h->element, "create-offer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  gst_promise_unref (promise);
+
+  promise = gst_promise_new ();
+  g_signal_emit_by_name (h->element, "create-offer", NULL, promise);
+  res = gst_promise_wait (promise);
+  fail_unless_equals_int (res, GST_PROMISE_RESULT_REPLIED);
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  gst_promise_unref (promise);
+
+  gst_object_unref (pad);
+  gst_object_unref (channel);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -5502,6 +5544,7 @@ webrtcbin_suite (void)
       tcase_add_test (tc, test_renego_stream_add_data_channel);
       tcase_add_test (tc, test_renego_data_channel_add_stream);
       tcase_add_test (tc, test_renego_stream_data_channel_add_stream);
+      tcase_add_test (tc, test_data_channel_recreate_offer);
     } else {
       GST_WARNING ("Some required elements were not found. "
           "All datachannel tests are disabled. sctpenc %p, sctpdec %p", sctpenc,
