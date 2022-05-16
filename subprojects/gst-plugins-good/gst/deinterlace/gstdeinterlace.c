@@ -1090,14 +1090,13 @@ gst_deinterlace_get_buffer_state (GstDeinterlace * self, GstVideoFrame * frame,
   (m) == GST_VIDEO_INTERLACE_MODE_ALTERNATE ? "A" : \
   (m) == GST_VIDEO_INTERLACE_MODE_FIELDS ? "FIELDS" : "P")
 
-static void
+static GstFlowReturn
 gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
 {
   int i = 1;
   GstDeinterlaceFieldLayout field_layout = self->field_layout;
   gboolean tff;
   gboolean onefield;
-  GstVideoFrame *frame = NULL;
   GstVideoFrame *field1, *field2 = NULL;
   guint fields_to_push;
   guint field1_flags, field2_flags;
@@ -1107,26 +1106,40 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
   /* we will only read from this buffer and write into fresh output buffers
    * if this is not the case, change the map flags as appropriate
    */
-  frame = gst_video_frame_new_and_map (&self->vinfo, buffer, GST_MAP_READ);
+  field1 = gst_video_frame_new_and_map (&self->vinfo, buffer, GST_MAP_READ);
+  if (G_UNLIKELY (field1 == NULL)) {
+    GST_ERROR_OBJECT (self, "Failed to map video frame for %" GST_PTR_FORMAT,
+        buffer);
+    return GST_FLOW_ERROR;
+  }
 
-  tff = GST_VIDEO_FRAME_IS_TFF (frame);
-  onefield = GST_VIDEO_FRAME_IS_ONEFIELD (frame);
+  tff = GST_VIDEO_FRAME_IS_TFF (field1);
+  onefield = GST_VIDEO_FRAME_IS_ONEFIELD (field1);
   fields_to_push = (onefield) ? 1 : 2;
 
   if (G_UNLIKELY (self->history_count >=
           GST_DEINTERLACE_MAX_FIELD_HISTORY - fields_to_push)) {
     GST_WARNING_OBJECT (self, "history count exceeded limit");
-    gst_video_frame_unmap_and_free (frame);
-    return;
+    gst_video_frame_unmap_and_free (field1);
+    return GST_FLOW_OK;         /* When does this happen? */
   }
 
-  gst_deinterlace_get_buffer_state (self, frame, &buf_state, &interlacing_mode);
+  field2 = gst_video_frame_new_and_map (&self->vinfo, buffer, GST_MAP_READ);
+  if (G_UNLIKELY (field2 == NULL)) {
+    GST_ERROR_OBJECT (self, "Failed to map video frame for %" GST_PTR_FORMAT,
+        buffer);
+    gst_video_frame_unmap_and_free (field1);
+    return GST_FLOW_ERROR;
+  }
+
+  gst_deinterlace_get_buffer_state (self, field1, &buf_state,
+      &interlacing_mode);
 
   GST_DEBUG_OBJECT (self,
       "Pushing new frame as %d fields to the history (count before %d): ptr %p at %"
       GST_TIME_FORMAT " with duration %" GST_TIME_FORMAT
       ", size %" G_GSIZE_FORMAT ", state %s, interlacing mode %s",
-      fields_to_push, self->history_count, frame,
+      fields_to_push, self->history_count, field1,
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
       gst_buffer_get_size (buffer),
@@ -1166,8 +1179,6 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
     }
   }
 
-  field1 = frame;
-  field2 = gst_video_frame_new_and_map (&self->vinfo, buffer, GST_MAP_READ);
   if (field_layout == GST_DEINTERLACE_LAYOUT_TFF) {
     GST_DEBUG_OBJECT (self, "Top field first");
     field1_flags = PICTURE_INTERLACED_TOP;
@@ -1243,18 +1254,15 @@ gst_deinterlace_push_history (GstDeinterlace * self, GstBuffer * buffer)
     gst_video_frame_unmap_and_free (field2);
   }
 
-  /* we can manage the buffer ref count using the maps from here on */
-  gst_buffer_unref (buffer);
-
   self->history_count += fields_to_push;
   self->cur_field_idx += fields_to_push;
 
   GST_DEBUG_OBJECT (self, "Pushed buffer -- current history size %d, index %d",
       self->history_count, self->cur_field_idx);
 
-  if (self->last_buffer)
-    gst_buffer_unref (self->last_buffer);
-  self->last_buffer = gst_buffer_ref (buffer);
+  gst_buffer_replace (&self->last_buffer, buffer);
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -2184,7 +2192,7 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_OBJECT_LOCK (self);
   if (self->reconfigure || gst_pad_check_reconfigure (self->srcpad)) {
     GstCaps *caps;
-    gboolean force_reconfigure = FALSE;
+    gboolean force_reconfigure = FALSE, res;
 
     if ((gint) self->new_fields != -1) {
       force_reconfigure |= (self->user_set_fields != self->new_fields);
@@ -2199,21 +2207,23 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     self->reconfigure = FALSE;
     GST_OBJECT_UNLOCK (self);
+
     caps = gst_pad_get_current_caps (self->sinkpad);
-    if (caps != NULL) {
-      if (!gst_deinterlace_setcaps (self, self->sinkpad, caps,
-              force_reconfigure)) {
-        gst_pad_mark_reconfigure (self->srcpad);
-        gst_caps_unref (caps);
-        if (GST_PAD_IS_FLUSHING (self->srcpad))
-          return GST_FLOW_FLUSHING;
-        else
-          return GST_FLOW_NOT_NEGOTIATED;
-      }
+    res = (caps != NULL);
+
+    if (res) {
+      res = gst_deinterlace_setcaps (self, self->sinkpad, caps,
+          force_reconfigure);
       gst_caps_unref (caps);
-    } else {
+    }
+
+    if (!res) {
       gst_pad_mark_reconfigure (self->srcpad);
-      return GST_FLOW_FLUSHING;
+      if (GST_PAD_IS_FLUSHING (self->srcpad))
+        ret = GST_FLOW_FLUSHING;
+      else
+        ret = GST_FLOW_NOT_NEGOTIATED;
+      goto out_unref;
     }
   } else {
     GST_OBJECT_UNLOCK (self);
@@ -2243,13 +2253,16 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     self->discont = TRUE;
   }
 
-  gst_deinterlace_push_history (self, buf);
-  buf = NULL;
+  ret = gst_deinterlace_push_history (self, buf);
+  if (ret != GST_FLOW_OK)
+    goto out_unref;
 
   do {
     ret = gst_deinterlace_output_frame (self, FALSE);
   } while (!self->need_more && self->history_count > 0 && ret == GST_FLOW_OK);
 
+out_unref:
+  gst_buffer_unref (buf);
   return ret;
 }
 
