@@ -54,6 +54,7 @@ typedef struct _GstSplitMuxPartPad
   gboolean is_eos;
   gboolean flushing;
   gboolean seen_buffer;
+  gboolean first_activation;
 
   gboolean is_sparse;
   GstClockTime max_ts;
@@ -326,13 +327,50 @@ splitmux_is_flushing (GstSplitMuxPartReader * reader)
 }
 
 static gboolean
+enqueue_event (GstSplitMuxPartReader * reader, GstSplitMuxPartPad * part_pad,
+    GstEvent * event)
+{
+  gboolean ret = TRUE;
+  GstDataQueueItem *item;
+
+  GST_LOG_OBJECT (reader, "Enqueueing event %" GST_PTR_FORMAT, event);
+  item = g_slice_new (GstDataQueueItem);
+  item->destroy = (GDestroyNotify) splitmux_part_free_queue_item;
+  item->object = GST_MINI_OBJECT (event);
+  item->size = 0;
+  item->duration = 0;
+  if (item->duration == GST_CLOCK_TIME_NONE)
+    item->duration = 0;
+  item->visible = FALSE;
+
+  if (!gst_data_queue_push (part_pad->queue, item)) {
+    splitmux_part_free_queue_item (item);
+    ret = FALSE;
+  }
+
+  return ret;
+}
+
+static gboolean
+resend_sticky_event (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstSplitMuxPartPad *part_pad = SPLITMUX_PART_PAD_CAST (pad);
+  GstSplitMuxPartReader *reader = part_pad->reader;
+
+  GST_DEBUG_OBJECT (part_pad, "queuing sticky event %" GST_PTR_FORMAT, *event);
+  (void) enqueue_event (reader, part_pad, gst_event_ref (*event));
+
+  return TRUE;
+}
+
+static gboolean
 splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstSplitMuxPartPad *part_pad = SPLITMUX_PART_PAD_CAST (pad);
   GstSplitMuxPartReader *reader = part_pad->reader;
   gboolean ret = TRUE;
+  gboolean resend_sticky = FALSE;
   SplitMuxSrcPad *target;
-  GstDataQueueItem *item;
 
   SPLITMUX_PART_LOCK (reader);
 
@@ -413,6 +451,8 @@ splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
           reader->prep_state == PART_STATE_PREPARING_MEASURE_STREAMS) {
         /* Mark this pad as EOS */
         part_pad->is_eos = TRUE;
+        /* Mark the pad to re-send sticky events on the first activation */
+        part_pad->first_activation = TRUE;
         if (splitmux_part_is_eos_locked (reader)) {
           /* Finished measuring things, set state and tell the state change func
            * so it can seek back to the start */
@@ -475,25 +515,22 @@ splitmux_part_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
 
+  /* Re-queue any sticky events on the first activation that were
+   * dropped during probing */
+  if (part_pad->first_activation) {
+    resend_sticky = TRUE;
+    part_pad->first_activation = FALSE;
+  }
+
   /* We are active, and one queue is empty, place this buffer in
    * the dataqueue */
   gst_object_ref (part_pad->queue);
   SPLITMUX_PART_UNLOCK (reader);
 
-  GST_LOG_OBJECT (reader, "Enqueueing event %" GST_PTR_FORMAT, event);
-  item = g_slice_new (GstDataQueueItem);
-  item->destroy = (GDestroyNotify) splitmux_part_free_queue_item;
-  item->object = GST_MINI_OBJECT (event);
-  item->size = 0;
-  item->duration = 0;
-  if (item->duration == GST_CLOCK_TIME_NONE)
-    item->duration = 0;
-  item->visible = FALSE;
+  if (resend_sticky)
+    gst_pad_sticky_events_foreach (pad, resend_sticky_event, NULL);
 
-  if (!gst_data_queue_push (part_pad->queue, item)) {
-    splitmux_part_free_queue_item (item);
-    ret = FALSE;
-  }
+  ret = enqueue_event (reader, part_pad, event);
 
   gst_object_unref (part_pad->queue);
   gst_object_unref (target);
@@ -508,11 +545,11 @@ wrong_segment:
           reader->path, pad));
   return FALSE;
 drop_event:
+  SPLITMUX_PART_UNLOCK (reader);
   GST_LOG_OBJECT (pad, "Dropping event %" GST_PTR_FORMAT
       " from %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT, event, pad, target);
   gst_event_unref (event);
   gst_object_unref (target);
-  SPLITMUX_PART_UNLOCK (reader);
   return TRUE;
 }
 
