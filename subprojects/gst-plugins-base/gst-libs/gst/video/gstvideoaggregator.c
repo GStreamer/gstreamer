@@ -1063,6 +1063,8 @@ gst_video_aggregator_find_best_format (GstVideoAggregator * vagg,
         gst_caps_unref (possible_caps);
         continue;
       }
+
+      gst_caps_unref (possible_caps);
     }
 
     /* If the format is supported, consider it very high weight */
