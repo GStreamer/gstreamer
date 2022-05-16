@@ -2513,6 +2513,13 @@ gst_h264_sei_clear (GstH264SEIMessage * sei)
       rud->data = NULL;
       break;
     }
+    case GST_H264_SEI_USER_DATA_UNREGISTERED:{
+      GstH264UserDataUnregistered *udu = &sei->payload.user_data_unregistered;
+
+      g_free ((guint8 *) udu->data);
+      udu->data = NULL;
+      break;
+    }
     case GST_H264_SEI_UNHANDLED_PAYLOAD:{
       GstH264SEIUnhandledPayload *payload = &sei->payload.unhandled_payload;
 
