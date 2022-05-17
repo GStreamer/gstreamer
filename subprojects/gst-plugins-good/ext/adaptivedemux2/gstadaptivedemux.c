@@ -1812,6 +1812,16 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
       GST_TIME_ARGS (period_start), GST_STIME_ARGS (min_stream_time),
       &demux->segment);
 
+  /* Synchronize stream start/current positions */
+  if (min_stream_time == GST_CLOCK_STIME_NONE)
+    min_stream_time = period_start;
+  else
+    min_stream_time += period_start;
+  for (iter = new_streams; iter; iter = g_list_next (iter)) {
+    GstAdaptiveDemux2Stream *stream = iter->data;
+    stream->start_position = stream->current_position = min_stream_time;
+  }
+
   for (iter = new_streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemux2Stream *stream = iter->data;
     stream->compute_segment = TRUE;

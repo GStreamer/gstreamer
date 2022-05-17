@@ -63,6 +63,8 @@ gst_adaptive_demux2_stream_init (GstAdaptiveDemux2Stream * stream)
   stream->fragment_bitrates =
       g_malloc0 (sizeof (guint64) * NUM_LOOKBACK_FRAGMENTS);
 
+  stream->start_position = stream->current_position = GST_CLOCK_TIME_NONE;
+
   gst_segment_init (&stream->parse_segment, GST_FORMAT_TIME);
 }
 
