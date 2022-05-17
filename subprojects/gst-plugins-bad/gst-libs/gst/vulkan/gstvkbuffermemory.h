@@ -139,6 +139,8 @@ struct _GstVulkanBufferMemoryAllocatorClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanBufferMemoryAllocator, gst_object_unref);
+
 GST_VULKAN_API
 void            gst_vulkan_buffer_memory_init_once       (void);
 GST_VULKAN_API

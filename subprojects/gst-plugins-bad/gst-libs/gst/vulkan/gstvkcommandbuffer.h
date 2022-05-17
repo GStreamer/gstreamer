@@ -141,6 +141,8 @@ gst_clear_vulkan_command_buffer (GstVulkanCommandBuffer ** cmd_ptr)
  */
 #define gst_vulkan_command_buffer_unlock(cmd) (gst_vulkan_command_pool_unlock((cmd)->pool))
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanCommandBuffer, gst_vulkan_command_buffer_unref);
+
 GST_VULKAN_API
 GstVulkanCommandBuffer *    gst_vulkan_command_buffer_new_wrapped       (VkCommandBuffer cmd,
                                                                          VkCommandBufferLevel level);

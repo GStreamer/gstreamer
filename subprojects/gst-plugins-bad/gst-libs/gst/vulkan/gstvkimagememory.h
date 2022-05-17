@@ -158,6 +158,8 @@ struct _GstVulkanImageMemoryAllocatorClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanImageMemoryAllocator, gst_object_unref);
+
 GST_VULKAN_API
 void            gst_vulkan_image_memory_init_once       (void);
 GST_VULKAN_API

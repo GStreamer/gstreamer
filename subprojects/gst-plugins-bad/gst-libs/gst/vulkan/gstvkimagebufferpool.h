@@ -75,6 +75,8 @@ struct _GstVulkanImageBufferPoolClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanImageBufferPool, gst_object_unref);
+
 GST_VULKAN_API
 GstBufferPool *gst_vulkan_image_buffer_pool_new (GstVulkanDevice * device);
 

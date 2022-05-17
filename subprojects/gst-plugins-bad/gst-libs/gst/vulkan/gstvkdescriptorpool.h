@@ -66,6 +66,8 @@ struct _GstVulkanDescriptorPoolClass
   gpointer _reserved        [GST_PADDING];
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanDescriptorPool, gst_object_unref);
+
 GST_VULKAN_API
 GstVulkanDescriptorPool *   gst_vulkan_descriptor_pool_new_wrapped      (GstVulkanDevice * device,
                                                                          VkDescriptorPool pool,
