@@ -1,9 +1,9 @@
 include:
   - project: 'freedesktop/ci-templates'
-    ref: "801093be0b88f23c8dbabe9cfce7134548f7ccdc"
+    ref: "3826695f80807d8a4d999f6b6efb3d405d708db9"
     file: '/templates/fedora.yml'
   - project: 'freedesktop/ci-templates'
-    ref: "801093be0b88f23c8dbabe9cfce7134548f7ccdc"
+    ref: "3826695f80807d8a4d999f6b6efb3d405d708db9"
     file: '/templates/debian.yml'
   ###
   # IMPORTANT
@@ -130,8 +130,8 @@ trigger:
 .fedora image:
   variables:
     CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache/'
-    FDO_BASE_IMAGE: 'registry.fedoraproject.org/fedora-toolbox:34'
-    FDO_DISTRIBUTION_VERSION: '34'
+    FDO_BASE_IMAGE: 'registry.fedoraproject.org/fedora-toolbox:40'
+    FDO_DISTRIBUTION_VERSION: '40'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/fedora/prepare.sh'
@@ -441,7 +441,6 @@ build fedora clang:
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
         MESON_ARGS: >-
           ${SIMPLE_BUILD}
-          --force-fallback-for=glib
 
       - BUILD_TYPE: ["--default-library=static"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
@@ -457,7 +456,6 @@ build fedora clang:
           -Dpython=disabled
           -Ddoc=disabled
           -Dgstreamer-sharp:tests=disabled
-          --force-fallback-for=glib
 
 build debian x86_64:
   extends:
