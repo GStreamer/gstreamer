@@ -943,57 +943,35 @@ gst_hls_media_playlist_find_by_uri (GstHLSMediaPlaylist * playlist,
   return NULL;
 }
 
-/* Given a media segment (potentially from another media playlist), find the
- * equivalent media segment in this playlist.
+/* Find the equivalent segment in the given playlist.
  *
- * This will also recalculate all stream times based on that segment stream
- * time (i.e. "sync" the playlist to that previous time).
- *
- * If an equivalent/identical one is found it is returned with
- * the reference count incremented
- *
- * If the reference segment is *just* before the 1st segment in the playlist, it
- * will be inserted and returned. This allows coping with non-overlapping (but
- * contiguous) playlist updates.
+ * The returned segment does *NOT* have increased reference !
  */
-GstM3U8MediaSegment *
-gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
+static GstM3U8MediaSegment *
+find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
     GstM3U8MediaSegment * segment)
 {
-  guint idx = G_MAXUINT;
   GstM3U8MediaSegment *res = NULL;
-#ifndef GST_DISABLE_GST_DEBUG
-  gchar *pdtstring;
-#endif
-
-  g_return_val_if_fail (playlist, NULL);
-  g_return_val_if_fail (segment, NULL);
-
-  GST_DEBUG ("Re-syncing to segment %" GST_STIME_FORMAT " duration:%"
-      GST_TIME_FORMAT " sn:%" G_GINT64_FORMAT "/dsn:%" G_GINT64_FORMAT
-      " uri:%s in playlist %s", GST_STIME_ARGS (segment->stream_time),
-      GST_TIME_ARGS (segment->duration), segment->sequence,
-      segment->discont_sequence, segment->uri, playlist->uri);
+  guint idx;
 
   /* The easy one. Happens when stream times need to be re-synced in an existing
    * playlist */
   if (g_ptr_array_find (playlist->segments, segment, NULL)) {
     GST_DEBUG ("Present as-is in playlist");
-    res = segment;
-    goto out;
+    return segment;
   }
 
   /* If there is an identical segment with the same URI and SN, use that one */
   res = gst_hls_media_playlist_find_by_uri (playlist, segment);
   if (res) {
     GST_DEBUG ("Using same URI/DSN/SN match");
-    goto out;
+    return res;
   }
 
   /* Try with PDT */
   if (segment->datetime && playlist->ext_x_pdt_present) {
 #ifndef GST_DISABLE_GST_DEBUG
-    pdtstring = g_date_time_format_iso8601 (segment->datetime);
+    gchar *pdtstring = g_date_time_format_iso8601 (segment->datetime);
     GST_DEBUG ("Search by datetime for %s", pdtstring);
     g_free (pdtstring);
 #endif
@@ -1016,15 +994,19 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
               GST_STIME_ARGS (ddiff));
           g_ptr_array_insert (playlist->segments, 0,
               gst_m3u8_media_segment_ref (segment));
-          res = segment;
-          goto out;
+          return segment;
+        }
+        if (ddiff > 0) {
+          /* If the reference segment is completely before the first segment, bail out */
+          GST_DEBUG ("Reference segment ends before first segment");
+          break;
         }
       }
 
       if (cand->datetime
           && g_date_time_difference (cand->datetime, segment->datetime) >= 0) {
-        res = cand;
-        goto out;
+        GST_DEBUG ("Picking by date time");
+        return cand;
       }
     }
   }
@@ -1039,15 +1021,13 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
 
       /* If the candidate starts at or after the previous stream time */
       if (cand->stream_time >= segment->stream_time) {
-        res = cand;
-        goto out;
+        return cand;
       }
 
       /* If the previous end stream time is before the candidate end stream time */
       if ((segment->stream_time + segment->duration) <
           (cand->stream_time + cand->duration)) {
-        res = cand;
-        goto out;
+        return cand;
       }
     }
   }
@@ -1064,19 +1044,52 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
       GST_DEBUG ("reference segment is just before 1st segment, inserting");
       g_ptr_array_insert (playlist->segments, 0,
           gst_m3u8_media_segment_ref (segment));
-      res = segment;
-      goto out;
+      return segment;
     }
 
     if ((segment->discont_sequence == cand->discont_sequence
             || !playlist->has_ext_x_dsn)
-        && (cand->sequence >= segment->sequence)) {
-      res = cand;
-      goto out;
+        && (cand->sequence == segment->sequence)) {
+      return cand;
     }
   }
 
-out:
+  return NULL;
+}
+
+/* Given a media segment (potentially from another media playlist), find the
+ * equivalent media segment in this playlist.
+ *
+ * This will also recalculate all stream times based on that segment stream
+ * time (i.e. "sync" the playlist to that previous time).
+ *
+ * If an equivalent/identical one is found it is returned with
+ * the reference count incremented
+ *
+ * If the reference segment is *just* before the 1st segment in the playlist, it
+ * will be inserted and returned. This allows coping with non-overlapping (but
+ * contiguous) playlist updates.
+ */
+GstM3U8MediaSegment *
+gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
+    GstM3U8MediaSegment * segment)
+{
+  GstM3U8MediaSegment *res = NULL;
+#ifndef GST_DISABLE_GST_DEBUG
+  gchar *pdtstring;
+#endif
+
+  g_return_val_if_fail (playlist, NULL);
+  g_return_val_if_fail (segment, NULL);
+
+  GST_DEBUG ("Re-syncing to segment %" GST_STIME_FORMAT " duration:%"
+      GST_TIME_FORMAT " sn:%" G_GINT64_FORMAT "/dsn:%" G_GINT64_FORMAT
+      " uri:%s in playlist %s", GST_STIME_ARGS (segment->stream_time),
+      GST_TIME_ARGS (segment->duration), segment->sequence,
+      segment->discont_sequence, segment->uri, playlist->uri);
+
+  res = find_segment_in_playlist (playlist, segment);
+
   /* For live playlists we re-calculate all stream times based on the existing
    * stream time. Non-live playlists have their stream time calculated at
    * parsing time. */
@@ -1135,6 +1148,53 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self)
   }
 
   return res;
+}
+
+/* Calls this to carry over stream time, DSN, ... from one playlist to another.
+ *
+ * This should be used when a reference media segment couldn't be matched in the
+ * playlist, but we still want to carry over the information from a reference
+ * playlist to an updated one. This can happen with live playlists where the
+ * reference media segment is no longer present but the playlists intersect */
+gboolean
+gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
+    GstHLSMediaPlaylist * reference)
+{
+  GstM3U8MediaSegment *res = NULL;
+  GstM3U8MediaSegment *cand = NULL;
+  guint idx;
+
+  g_return_val_if_fail (playlist && reference, FALSE);
+
+  /* The new playlist is supposed to be an update of the reference playlist,
+   * therefore we will try from the last segment of the reference playlist and
+   * go backwards */
+  for (idx = reference->segments->len - 1; idx; idx--) {
+    cand = g_ptr_array_index (reference->segments, idx);
+    res = find_segment_in_playlist (playlist, cand);
+    if (res)
+      break;
+  }
+
+  if (res == NULL) {
+    GST_WARNING ("Could not synchronize media playlists");
+    return FALSE;
+  }
+
+  /* Carry over reference stream time */
+  if (res->stream_time == GST_CLOCK_STIME_NONE)
+    res->stream_time = cand->stream_time;
+  if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist))
+    gst_hls_media_playlist_recalculate_stream_time (playlist, res);
+  /* If the playlist didn't specify a reference discont sequence number, we
+   * carry over the one from the reference segment */
+  if (!playlist->has_ext_x_dsn
+      && res->discont_sequence != cand->discont_sequence) {
+    res->discont_sequence = cand->discont_sequence;
+    gst_hls_media_playlist_recalculate_dsn (playlist, res);
+  }
+
+  return TRUE;
 }
 
 gboolean

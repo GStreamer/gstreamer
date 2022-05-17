@@ -183,6 +183,10 @@ gst_hls_media_playlist_sync_to_segment      (GstHLSMediaPlaylist * m3u8,
 					     GstM3U8MediaSegment * segment);
 
 gboolean
+gst_hls_media_playlist_sync_to_playlist     (GstHLSMediaPlaylist * m3u8,
+					     GstHLSMediaPlaylist * reference);
+
+gboolean
 gst_hls_media_playlist_has_next_fragment    (GstHLSMediaPlaylist * m3u8,
 					     GstM3U8MediaSegment * current,
 					     gboolean  forward);
