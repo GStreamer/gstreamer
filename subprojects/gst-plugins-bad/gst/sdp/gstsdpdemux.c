@@ -313,17 +313,33 @@ gst_sdp_demux_stream_free (GstSDPDemux * demux, GstSDPStream * stream)
 
   for (i = 0; i < 2; i++) {
     GstElement *udpsrc = stream->udpsrc[i];
+    GstPad *channelpad = stream->channelpad[i];
 
     if (udpsrc) {
       gst_element_set_state (udpsrc, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (demux), udpsrc);
       stream->udpsrc[i] = NULL;
     }
+
+    if (channelpad) {
+      if (demux->session) {
+        gst_element_release_request_pad (demux->session, channelpad);
+      }
+      gst_object_unref (channelpad);
+      stream->channelpad[i] = NULL;
+    }
   }
   if (stream->udpsink) {
     gst_element_set_state (stream->udpsink, GST_STATE_NULL);
     gst_bin_remove (GST_BIN_CAST (demux), stream->udpsink);
     stream->udpsink = NULL;
+  }
+  if (stream->rtcppad) {
+    if (demux->session) {
+      gst_element_release_request_pad (demux->session, stream->rtcppad);
+    }
+    gst_object_unref (stream->rtcppad);
+    stream->rtcppad = NULL;
   }
   if (stream->srcpad) {
     gst_pad_set_active (stream->srcpad, FALSE);
@@ -842,7 +858,7 @@ static gboolean
 gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
     GstSDPStream * stream)
 {
-  GstPad *pad, *sinkpad;
+  GstPad *sinkpad;
   gint port;
   GSocket *socket;
   gchar *destination, *uri, *name;
@@ -894,20 +910,18 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
 
   /* get session RTCP pad */
   name = g_strdup_printf ("send_rtcp_src_%u", stream->id);
-  pad = gst_element_request_pad_simple (demux->session, name);
+  stream->rtcppad = gst_element_request_pad_simple (demux->session, name);
   g_free (name);
 
   /* and link */
-  if (pad) {
+  if (stream->rtcppad) {
     sinkpad = gst_element_get_static_pad (stream->udpsink, "sink");
-    gst_pad_link (pad, sinkpad);
-    gst_object_unref (pad);
+    gst_pad_link (stream->rtcppad, sinkpad);
     gst_object_unref (sinkpad);
   } else {
     /* not very fatal, we just won't be able to send RTCP */
     GST_WARNING_OBJECT (demux, "could not get session RTCP pad");
   }
-
 
   return TRUE;
 
