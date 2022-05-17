@@ -2319,6 +2319,21 @@ gst_base_ts_mux_aggregate (GstAggregator * agg, gboolean timeout)
   GstBaseTsMux *mux = GST_BASE_TS_MUX (agg);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBaseTsMuxPad *best = gst_base_ts_mux_find_best_pad (agg);
+  GstCaps *caps;
+
+  /* set caps on the srcpad if no caps were set yet */
+  if (!(caps = gst_pad_get_current_caps (agg->srcpad))) {
+    GstStructure *structure;
+
+    caps = gst_pad_get_pad_template_caps (GST_AGGREGATOR_SRC_PAD (mux));
+    caps = gst_caps_make_writable (caps);
+    structure = gst_caps_get_structure (caps, 0);
+    gst_structure_set (structure, "packetsize", G_TYPE_INT, mux->packet_size,
+        NULL);
+
+    gst_aggregator_set_src_caps (GST_AGGREGATOR (mux), caps);
+  }
+  gst_caps_unref (caps);
 
   if (best) {
     GstBuffer *buffer;
