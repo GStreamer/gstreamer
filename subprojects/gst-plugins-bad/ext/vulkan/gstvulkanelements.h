@@ -29,14 +29,4 @@
 
 void vulkan_element_init (GstPlugin * plugin);
 
-GST_ELEMENT_REGISTER_DECLARE (vulkancolorconvert);
-GST_ELEMENT_REGISTER_DECLARE (vulkandownload);
-GST_ELEMENT_REGISTER_DECLARE (vulkanimageidentity);
-GST_ELEMENT_REGISTER_DECLARE (vulkanshaderspv);
-GST_ELEMENT_REGISTER_DECLARE (vulkansink);
-GST_ELEMENT_REGISTER_DECLARE (vulkanupload);
-GST_ELEMENT_REGISTER_DECLARE (vulkanviewconvert);
-GST_DEVICE_PROVIDER_REGISTER_DECLARE (vulkandeviceprovider);
-
-
 #endif /* __GST_VULKAN_ELEMENTS_H__ */

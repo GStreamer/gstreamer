@@ -71,6 +71,8 @@ struct _GstVulkanSinkClass
 
 GType gst_vulkan_sink_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (vulkansink);
+
 G_END_DECLS
 
 #endif

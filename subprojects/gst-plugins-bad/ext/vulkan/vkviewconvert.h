@@ -67,6 +67,8 @@ struct _GstVulkanViewConvertClass
 
 GType gst_vulkan_view_convert_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (vulkanviewconvert);
+
 G_END_DECLS
 
 #endif

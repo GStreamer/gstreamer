@@ -58,6 +58,8 @@ struct _GstVulkanShaderSpvClass
 
 GType gst_vulkan_shader_spv_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (vulkanshaderspv);
+
 G_END_DECLS
 
 #endif

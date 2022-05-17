@@ -70,6 +70,8 @@ struct _GstVulkanColorConvertClass
 
 GType gst_vulkan_color_convert_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (vulkancolorconvert);
+
 G_END_DECLS
 
 #endif

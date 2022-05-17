@@ -85,6 +85,8 @@ struct _GstVulkanDeviceObjectClass {
 
 GType        gst_vulkan_device_object_get_type (void);
 
+GST_DEVICE_PROVIDER_REGISTER_DECLARE (vulkandeviceprovider);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_DEVICE_PROVIDER_H__ */

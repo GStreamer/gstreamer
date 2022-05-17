@@ -82,6 +82,8 @@ struct _GstVulkanDownloadClass
 
 GType gst_vulkan_download_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (vulkandownload);
+
 G_END_DECLS
 
 #endif

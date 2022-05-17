@@ -82,6 +82,8 @@ struct _GstVulkanUploadClass
 
 GType gst_vulkan_upload_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (vulkanupload);
+
 G_END_DECLS
 
 #endif

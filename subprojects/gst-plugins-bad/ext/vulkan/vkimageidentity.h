@@ -51,6 +51,8 @@ struct _GstVulkanImageIdentityClass
 
 GType gst_vulkan_image_identity_get_type(void);
 
+GST_ELEMENT_REGISTER_DECLARE (vulkanimageidentity);
+
 G_END_DECLS
 
 #endif
