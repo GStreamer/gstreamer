@@ -491,9 +491,6 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
     }
   }
 
-  /* We seeked, reset pending_advance */
-  hls_stream->pending_advance = FALSE;
-
   new_position =
       gst_hls_media_playlist_seek (hls_stream->playlist, forward, flags, ts);
   if (new_position) {
@@ -1719,13 +1716,13 @@ gst_hls_demux_advance_fragment (GstAdaptiveDemux2Stream * stream)
         GST_STIME_FORMAT " uri:%s", hlsdemux_stream->current_segment->sequence,
         GST_STIME_ARGS (hlsdemux_stream->current_segment->stream_time),
         hlsdemux_stream->current_segment->uri);
-    hlsdemux_stream->pending_advance = FALSE;
     return GST_FLOW_OK;
   }
 
   GST_LOG_OBJECT (stream, "Could not advance to next fragment");
   if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (hlsdemux_stream->playlist)) {
-    hlsdemux_stream->pending_advance = TRUE;
+    gst_m3u8_media_segment_unref (hlsdemux_stream->current_segment);
+    hlsdemux_stream->current_segment = NULL;
     return GST_FLOW_OK;
   }
 
@@ -1933,6 +1930,17 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
     *uri = g_strdup (new_playlist->uri);
   }
 
+  /* Synchronize playlist with previous one */
+  if (stream->playlist) {
+    if (!gst_hls_media_playlist_sync_to_playlist (new_playlist,
+            stream->playlist)) {
+      /* FIXME : We need to have a way to re-calculate sync ! */
+      GST_ERROR_OBJECT (stream,
+          "Could not synchronize new playlist with previous one !");
+      return FALSE;
+    }
+  }
+
   if (stream->current_segment) {
     GstM3U8MediaSegment *new_segment;
     GST_DEBUG_OBJECT (stream,
@@ -1961,30 +1969,25 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
             GST_STIME_ARGS (stream->current_segment->stream_time));
     } else {
       /* Not finding a matching segment only happens in live (otherwise we would
-       * have found a match by stream time). In order to fix this, we pick a new
-       * starting segment, give it the current segment stream time and hope for
-       * the best */
-      GST_WARNING_OBJECT (stream,
-          "Could not find a matching segment, picking a new initial one");
-      new_segment = gst_hls_media_playlist_get_starting_segment (new_playlist);
-      new_segment->stream_time = stream->current_segment->stream_time;
-      gst_hls_media_playlist_recalculate_stream_time (new_playlist,
-          new_segment);
+       * have found a match by stream time) when we are at the live edge. This is normal*/
+      GST_DEBUG_OBJECT (stream, "Could not find a matching segment");
     }
     gst_m3u8_media_segment_unref (stream->current_segment);
     stream->current_segment = new_segment;
   } else {
-    GST_DEBUG_OBJECT (stream, "No current segment, doing initial selection");
-    /* Initial choice */
-    stream->current_segment =
-        gst_hls_media_playlist_get_starting_segment (new_playlist);
+    GST_DEBUG_OBJECT (stream, "No current segment");
+  }
+
+  if (stream->playlist) {
+    gst_hls_media_playlist_unref (stream->playlist);
+    stream->playlist = new_playlist;
+    gst_hls_media_playlist_dump (new_playlist);
+  } else {
+    GST_DEBUG_OBJECT (stream, "Setting up initial playlist");
+    stream->playlist = new_playlist;
     setup_initial_playlist_and_mapping (demux, new_playlist);
   }
 
-  if (stream->playlist)
-    gst_hls_media_playlist_unref (stream->playlist);
-  stream->playlist = new_playlist;
-  gst_hls_media_playlist_dump (new_playlist);
 
   if (stream->current_segment) {
     GST_DEBUG_OBJECT (stream,
@@ -2062,27 +2065,42 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       return GST_FLOW_ERROR;
   }
 
-  if (hlsdemux_stream->pending_advance) {
-    GST_DEBUG_OBJECT (stream, "Applying pending advance_fragment");
-    gst_hls_demux_advance_fragment (stream);
-    /* If we are still waiting to advance, return EOS to trigger the appropriate
-     * playlist update (if live) or real EOS */
-    if (hlsdemux_stream->pending_advance)
-      return GST_FLOW_EOS;
-  }
+  GST_DEBUG_OBJECT (stream, "Updating fragment information");
 
-  GST_DEBUG_OBJECT (hlsdemux, "Updating for %s stream '%s'",
-      hlsdemux_stream->is_variant ? "MAIN" : "MEDIA",
-      hlsdemux_stream->is_variant ?
-      hlsdemux->current_variant->name : hlsdemux_stream->
-      current_rendition->name);
+  /* Find the current segment if we don't already have it */
+  if (hlsdemux_stream->current_segment == NULL) {
+    if (stream->current_position == GST_CLOCK_TIME_NONE) {
+      GST_DEBUG_OBJECT (stream, "Setting up initial segment");
+      hlsdemux_stream->current_segment =
+          gst_hls_media_playlist_get_starting_segment
+          (hlsdemux_stream->playlist);
+      setup_initial_playlist_and_mapping (hlsdemux, hlsdemux_stream->playlist);
+    } else {
+      GST_DEBUG_OBJECT (stream,
+          "Looking up segment for position %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (stream->current_position));
+      hlsdemux_stream->current_segment =
+          gst_hls_media_playlist_seek (hlsdemux_stream->playlist, TRUE,
+          GST_SEEK_FLAG_SNAP_NEAREST, stream->current_position);
+
+      if (hlsdemux_stream->current_segment == NULL) {
+        GST_INFO_OBJECT (hlsdemux,
+            "This playlist doesn't contain more fragments");
+        return GST_FLOW_EOS;
+      }
+
+      /* Update time mapping. If it already exists it will be ignored */
+      gst_hls_demux_add_time_mapping (hlsdemux,
+          hlsdemux_stream->current_segment->discont_sequence,
+          hlsdemux_stream->current_segment->stream_time,
+          hlsdemux_stream->current_segment->datetime);
+    }
+  }
 
   file = hlsdemux_stream->current_segment;
 
-  if (file == NULL) {
-    GST_INFO_OBJECT (hlsdemux, "This playlist doesn't contain more fragments");
-    return GST_FLOW_EOS;
-  }
+  GST_DEBUG_OBJECT (stream, "Current segment stream_time %" GST_STIME_FORMAT,
+      GST_STIME_ARGS (file->stream_time));
 
   discont = file->discont || stream->discont;
 
@@ -2301,18 +2319,6 @@ gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
   if (!gst_hls_demux_stream_update_variant_playlist (demux, demux->main_stream,
           err))
     return FALSE;
-
-  if (demux->main_stream->pending_advance) {
-    GST_DEBUG_OBJECT (demux, "Applying variant pending advance_fragment");
-    if (gst_hls_demux_advance_fragment ((GstAdaptiveDemux2Stream *)
-            demux->main_stream) != GST_FLOW_OK) {
-      /* We return now without updating variant streams for update since we
-       * couldn't advance. But we return TRUE since we *did* update the
-       * playlist */
-      GST_DEBUG_OBJECT (demux, "Couldn't apply pending advance yet");
-      return TRUE;
-    }
-  }
 
   if (update && gst_hls_demux_is_live (adaptive_demux)) {
     GList *tmp;

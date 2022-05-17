@@ -113,9 +113,6 @@ struct _GstHLSDemuxStream
   /* The segment (from the above playlist) currently being used */
   GstM3U8MediaSegment *current_segment;
 
-  /* The previous ::advance_fragment() failed for live stream */
-  gboolean pending_advance;
-
   /* Whether we need to typefind the next buffer */
   gboolean do_typefind;
 
