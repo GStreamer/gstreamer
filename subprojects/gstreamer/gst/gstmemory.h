@@ -205,6 +205,10 @@ typedef enum {
  *
  * A structure containing the result of a map operation such as
  * gst_memory_map(). It contains the data and size.
+ *
+ * #GstMapInfo cannot be used with g_auto() because it is ambiguous whether it
+ * needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap(). Instead,
+ * #GstBufferMapInfo and #GstMemoryMapInfo can be used in that case.
  */
 typedef struct {
   GstMemory *memory;
@@ -384,6 +388,39 @@ gboolean       gst_memory_is_span      (GstMemory *mem1, GstMemory *mem2, gsize 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMemory, gst_memory_unref)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstAllocator, gst_object_unref)
+
+/**
+ * GstMemoryMapInfo: (skip):
+ *
+ * Alias for #GstMapInfo to be used with g_auto():
+ * ```c
+ * void my_func(GstMemory *mem)
+ * {
+ *   g_auto(GstMemoryMapInfo) map = GST_MAP_INFO_INIT;
+ *   if (!gst_memory_map(mem, &map, GST_MAP_READWRITE))
+ *     return;
+ *   ...
+ *   // No need to call gst_memory_unmap()
+ * }
+ * ```
+ *
+ * #GstMapInfo cannot be used with g_auto() because it is ambiguous whether it
+ * needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap().
+ *
+ * See also #GstBufferMapInfo.
+ *
+ * Since: 1.22
+ */
+typedef GstMapInfo GstMemoryMapInfo;
+
+static inline void _gst_memory_map_info_clear(GstMemoryMapInfo *info)
+{
+  if (G_LIKELY (info->memory)) {
+    gst_memory_unmap (info->memory, info);
+  }
+}
+
+G_DEFINE_AUTO_CLEANUP_CLEAR_FUNC(GstMemoryMapInfo, _gst_memory_map_info_clear)
 
 G_END_DECLS
 

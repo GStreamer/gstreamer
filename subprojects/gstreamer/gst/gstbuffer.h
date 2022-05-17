@@ -813,6 +813,11 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBufferPool, gst_object_unref)
  * }
  * ```
  *
+ * #GstMapInfo cannot be used with g_auto() because it is ambiguous whether it
+ * needs to be unmapped using gst_buffer_unmap() or gst_memory_unmap().
+ *
+ * See also #GstMemoryMapInfo.
+ *
  * Since: 1.22
  */
 typedef GstMapInfo GstBufferMapInfo;
