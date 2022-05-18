@@ -3932,7 +3932,8 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
   } else {
     guint8 *outdata = NULL;
     gsize buf_size, size;
-    guint32 block_samples, flags, crc, blocksize;
+    guint32 block_samples, flags, crc;
+    gsize blocksize;
     GstAdapter *adapter;
 
     adapter = gst_adapter_new ();
@@ -3968,6 +3969,13 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
 
       if (blocksize == 0 || size < blocksize) {
         GST_ERROR_OBJECT (element, "Too small wavpack buffer");
+        gst_buffer_unmap (*buf, &map);
+        g_object_unref (adapter);
+        return GST_FLOW_ERROR;
+      }
+
+      if (blocksize > G_MAXSIZE - WAVPACK4_HEADER_SIZE) {
+        GST_ERROR_OBJECT (element, "Too big wavpack buffer");
         gst_buffer_unmap (*buf, &map);
         g_object_unref (adapter);
         return GST_FLOW_ERROR;
