@@ -1,0 +1,316 @@
+/* GStreamer
+ * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+ * Boston, MA 02110-1301, USA.
+ */
+
+/**
+ * SECTION:element-h265timestamper
+ * @title: h265timestamper
+ *
+ * A timestamp correction element for H.265 stream.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=video.mkv ! matroskademux ! h265parse ! h265timestamper ! mp4mux ! filesink location=output.mp4
+ * ```
+ *
+ * Since: 1.22
+ *
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/base/base.h>
+#include <gst/codecparsers/gsth265parser.h>
+#include "gsth265timestamper.h"
+
+GST_DEBUG_CATEGORY_STATIC (gst_h265_timestamper_debug);
+#define GST_CAT_DEFAULT gst_h265_timestamper_debug
+
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-h265, alignment=(string) au"));
+
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-h265, alignment=(string) au"));
+
+struct _GstH265Timestamper
+{
+  GstCodecTimestamper parent;
+
+  GstH265Parser *parser;
+  gboolean packetized;
+  guint nal_length_size;
+};
+
+static gboolean gst_h265_timestamper_start (GstCodecTimestamper * timestamper);
+static gboolean gst_h265_timestamper_stop (GstCodecTimestamper * timestamper);
+static gboolean gst_h265_timestamper_set_caps (GstCodecTimestamper *
+    timestamper, GstCaps * caps);
+static GstFlowReturn gst_h265_timestamper_handle_buffer (GstCodecTimestamper *
+    timestamper, GstBuffer * buffer);
+static void gst_h265_timestamper_process_nal (GstH265Timestamper * self,
+    GstH265NalUnit * nalu);
+
+G_DEFINE_TYPE (GstH265Timestamper,
+    gst_h265_timestamper, GST_TYPE_CODEC_TIMESTAMPER);
+
+GST_ELEMENT_REGISTER_DEFINE (h265timestamper, "h265timestamper",
+    GST_RANK_NONE, GST_TYPE_H265_TIMESTAMPER);
+
+static void
+gst_h265_timestamper_class_init (GstH265TimestamperClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstCodecTimestamperClass *timestamper_class =
+      GST_CODEC_TIMESTAMPER_CLASS (klass);
+
+  gst_element_class_add_static_pad_template (element_class, &sinktemplate);
+  gst_element_class_add_static_pad_template (element_class, &srctemplate);
+
+  gst_element_class_set_static_metadata (element_class, "H.265 timestamper",
+      "Codec/Video", "Timestamp H.265 streams",
+      "Seungha Yang <seungha@centricular.com>");
+
+  timestamper_class->start = GST_DEBUG_FUNCPTR (gst_h265_timestamper_start);
+  timestamper_class->stop = GST_DEBUG_FUNCPTR (gst_h265_timestamper_stop);
+  timestamper_class->set_caps =
+      GST_DEBUG_FUNCPTR (gst_h265_timestamper_set_caps);
+  timestamper_class->handle_buffer =
+      GST_DEBUG_FUNCPTR (gst_h265_timestamper_handle_buffer);
+
+  GST_DEBUG_CATEGORY_INIT (gst_h265_timestamper_debug, "h265timestamper", 0,
+      "h265timestamper");
+}
+
+static void
+gst_h265_timestamper_init (GstH265Timestamper * self)
+{
+}
+
+static gboolean
+gst_h265_timestamper_set_caps (GstCodecTimestamper * timestamper,
+    GstCaps * caps)
+{
+  GstH265Timestamper *self = GST_H265_TIMESTAMPER (timestamper);
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  const gchar *str;
+  gboolean found_format = FALSE;
+  const GValue *codec_data_val;
+
+  self->packetized = FALSE;
+  self->nal_length_size = 4;
+  str = gst_structure_get_string (s, "stream-format");
+  if (g_strcmp0 (str, "hvc1") == 0 || g_strcmp0 (str, "hev1") == 0) {
+    self->packetized = TRUE;
+    found_format = TRUE;
+  } else if (g_strcmp0 (str, "byte-stream") == 0) {
+    found_format = TRUE;
+  }
+
+  codec_data_val = gst_structure_get_value (s, "codec_data");
+  if (codec_data_val && GST_VALUE_HOLDS_BUFFER (codec_data_val)) {
+    GstBuffer *codec_data = gst_value_get_buffer (codec_data_val);
+    GstH265Parser *parser = self->parser;
+    GstMapInfo map;
+    GstH265NalUnit nalu;
+    GstH265ParserResult pres;
+    guint num_nal_arrays;
+    guint off;
+    guint num_nals, i, j;
+    guint8 *data;
+    gsize size;
+
+    if (!gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "Unable to map codec-data buffer");
+      return FALSE;
+    }
+
+    data = map.data;
+    size = map.size;
+
+    /* parse the hvcC data */
+    if (size < 23) {
+      GST_WARNING_OBJECT (self, "hvcC too small");
+      goto unmap;
+    }
+
+    /* wrong hvcC version */
+    if (data[0] != 0 && data[0] != 1) {
+      goto unmap;
+    }
+
+    self->nal_length_size = (data[21] & 0x03) + 1;
+    GST_DEBUG_OBJECT (self, "nal length size %u", self->nal_length_size);
+
+    num_nal_arrays = data[22];
+    off = 23;
+
+    for (i = 0; i < num_nal_arrays; i++) {
+      if (off + 3 >= size) {
+        GST_WARNING_OBJECT (self, "hvcC too small");
+        goto unmap;
+      }
+
+      num_nals = GST_READ_UINT16_BE (data + off + 1);
+      off += 3;
+      for (j = 0; j < num_nals; j++) {
+        pres = gst_h265_parser_identify_nalu_hevc (parser,
+            data, off, size, 2, &nalu);
+
+        if (pres != GST_H265_PARSER_OK) {
+          GST_WARNING_OBJECT (self, "hvcC too small");
+          goto unmap;
+        }
+
+        gst_h265_timestamper_process_nal (self, &nalu);
+
+        off = nalu.offset + nalu.size;
+      }
+    }
+    /* codec_data would mean packetized format */
+    if (!found_format)
+      self->packetized = TRUE;
+
+  unmap:
+    gst_buffer_unmap (codec_data, &map);
+  }
+
+  return TRUE;
+}
+
+static void
+gst_h265_timestamper_process_sps (GstH265Timestamper * self, GstH265SPS * sps)
+{
+  guint max_reorder_frames =
+      sps->max_num_reorder_pics[sps->max_sub_layers_minus1];
+
+  GST_DEBUG_OBJECT (self, "Max num reorder frames %d", max_reorder_frames);
+
+  gst_codec_timestamper_set_window_size (GST_CODEC_TIMESTAMPER_CAST (self),
+      max_reorder_frames);
+}
+
+static void
+gst_h265_timestamper_process_nal (GstH265Timestamper * self,
+    GstH265NalUnit * nalu)
+{
+  GstH265ParserResult ret;
+
+  switch (nalu->type) {
+    case GST_H265_NAL_VPS:{
+      GstH265VPS vps;
+      ret = gst_h265_parser_parse_vps (self->parser, nalu, &vps);
+      if (ret != GST_H265_PARSER_OK)
+        GST_WARNING_OBJECT (self, "Failed to parse SPS");
+      break;
+    }
+    case GST_H265_NAL_SPS:{
+      GstH265SPS sps;
+      ret = gst_h265_parser_parse_sps (self->parser, nalu, &sps, FALSE);
+      if (ret != GST_H265_PARSER_OK) {
+        GST_WARNING_OBJECT (self, "Failed to parse SPS");
+        break;
+      }
+
+      gst_h265_timestamper_process_sps (self, &sps);
+      break;
+    }
+      /* TODO: parse PPS/SLICE and correct PTS based on POC if needed */
+    default:
+      break;
+  }
+}
+
+static GstFlowReturn
+gst_h265_timestamper_handle_buffer (GstCodecTimestamper * timestamper,
+    GstBuffer * buffer)
+{
+  GstH265Timestamper *self = GST_H265_TIMESTAMPER (timestamper);
+  GstMapInfo map;
+
+  /* Ignore any error while parsing NAL */
+  if (gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+    GstH265ParserResult ret;
+    GstH265NalUnit nalu;
+
+    if (self->packetized) {
+      ret = gst_h265_parser_identify_nalu_hevc (self->parser,
+          map.data, 0, map.size, self->nal_length_size, &nalu);
+
+      while (ret == GST_H265_PARSER_OK) {
+        gst_h265_timestamper_process_nal (self, &nalu);
+
+        ret = gst_h265_parser_identify_nalu_hevc (self->parser,
+            map.data, nalu.offset + nalu.size, map.size, self->nal_length_size,
+            &nalu);
+      }
+    } else {
+      ret = gst_h265_parser_identify_nalu (self->parser,
+          map.data, 0, map.size, &nalu);
+
+      if (ret == GST_H265_PARSER_NO_NAL_END)
+        ret = GST_H265_PARSER_OK;
+
+      while (ret == GST_H265_PARSER_OK) {
+        gst_h265_timestamper_process_nal (self, &nalu);
+
+        ret = gst_h265_parser_identify_nalu (self->parser,
+            map.data, nalu.offset + nalu.size, map.size, &nalu);
+
+        if (ret == GST_H265_PARSER_NO_NAL_END)
+          ret = GST_H265_PARSER_OK;
+      }
+    }
+    gst_buffer_unmap (buffer, &map);
+  }
+
+  return GST_FLOW_OK;
+}
+
+static void
+gst_h265_timestamper_reset (GstH265Timestamper * self)
+{
+  g_clear_pointer (&self->parser, gst_h265_parser_free);
+}
+
+static gboolean
+gst_h265_timestamper_start (GstCodecTimestamper * timestamper)
+{
+  GstH265Timestamper *self = GST_H265_TIMESTAMPER (timestamper);
+
+  gst_h265_timestamper_reset (self);
+
+  self->parser = gst_h265_parser_new ();
+
+  return TRUE;
+}
+
+static gboolean
+gst_h265_timestamper_stop (GstCodecTimestamper * timestamper)
+{
+  GstH265Timestamper *self = GST_H265_TIMESTAMPER (timestamper);
+
+  gst_h265_timestamper_reset (self);
+
+  return TRUE;
+}
