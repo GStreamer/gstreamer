@@ -375,6 +375,7 @@ typedef struct _GstH264MasteringDisplayColourVolume GstH264MasteringDisplayColou
 typedef struct _GstH264ContentLightLevel        GstH264ContentLightLevel;
 typedef struct _GstH264SEIUnhandledPayload    GstH264SEIUnhandledPayload;
 typedef struct _GstH264SEIMessage             GstH264SEIMessage;
+typedef struct _GstH264DecoderConfigRecord    GstH264DecoderConfigRecord;
 
 /**
  * GstH264NalUnitExtensionMVC:
@@ -1239,6 +1240,106 @@ struct _GstH264SEIMessage
 };
 
 /**
+ * GstH264DecoderConfigRecord:
+ *
+ * Contains AVCDecoderConfigurationRecord data as defined in ISO/IEC 14496-15
+ *
+ * Since: 1.22
+ */
+struct _GstH264DecoderConfigRecord
+{
+  /**
+   * GstH264DecoderConfigRecord.configuration_version:
+   *
+   * Indicates configurationVersion, must be 1
+   */
+  guint8 configuration_version;
+
+  /**
+   * GstH264DecoderConfigRecord.profile_indication:
+   *
+   * H.264 profile indication
+   */
+  guint8 profile_indication;
+
+  /**
+   * GstH264DecoderConfigRecord.profile_compatibility:
+   *
+   * H.264 profile compatibility
+   */
+  guint8 profile_compatibility;
+
+  /**
+   * GstH264DecoderConfigRecord.level_indication:
+   *
+   * H.264 level indiction
+   */
+  guint8 level_indication;
+
+  /**
+   * GstH264DecoderConfigRecord.length_size_minus_one:
+   *
+   * Indicates the length in bytes of the NAL unit length field
+   */
+  guint8 length_size_minus_one;
+
+  /**
+   * GstH264DecoderConfigRecord.sps
+   *
+   * Array of identified #GstH264NalUnit from sequenceParameterSetNALUnit.
+   * This array may contain non-SPS nal units such as SEI message
+   */
+  GArray *sps;
+
+  /**
+   * GstH264DecoderConfigRecord.pps
+   *
+   * Array of identified #GstH264NalUnit from pictureParameterSetNALUnit.
+   * This array may contain non-PPS nal units such as SEI message
+   */
+  GArray *pps;
+
+  /**
+   * GstH264DecoderConfigRecord.chroma_format_present
+   *
+   * %TRUE if chroma information is present. Otherwise below values
+   * have no meaning
+   */
+  gboolean chroma_format_present;
+
+  /**
+   * GstH264DecoderConfigRecord.chroma_format
+   *
+   * chroma_format_idc defined in ISO/IEC 14496-10
+   */
+  guint8 chroma_format;
+
+  /**
+   * GstH264DecoderConfigRecord.bit_depth_luma_minus8
+   *
+   * Indicates bit depth of luma component
+   */
+  guint8 bit_depth_luma_minus8;
+
+  /**
+   * GstH264DecoderConfigRecord.bit_depth_chroma_minus8
+   *
+   * Indicates bit depth of chroma component
+   */
+  guint8 bit_depth_chroma_minus8;
+
+  /**
+   * GstH264DecoderConfigRecord.sps_ext
+   *
+   * Array of identified #GstH264NalUnit from sequenceParameterSetExtNALUnit.
+   */
+  GArray *sps_ext;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
  * GstH264NalParser:
  *
  * H264 NAL Parser (opaque structure).
@@ -1365,6 +1466,15 @@ GstBuffer * gst_h264_parser_insert_sei_avc (GstH264NalParser * nalparser,
                                             guint8 nal_length_size,
                                             GstBuffer * au,
                                             GstMemory * sei);
+
+GST_CODEC_PARSERS_API
+void        gst_h264_decoder_config_record_free (GstH264DecoderConfigRecord * config);
+
+GST_CODEC_PARSERS_API
+GstH264ParserResult gst_h264_parser_parse_decoder_config_record (GstH264NalParser * nalparser,
+                                                                 const guint8 * data,
+                                                                 gsize size,
+                                                                 GstH264DecoderConfigRecord ** config);
 
 G_END_DECLS
 

@@ -714,6 +714,117 @@ GST_START_TEST (test_h264_create_sei)
 
 GST_END_TEST;
 
+static guint8 h264_avc_codec_data[] = {
+  0x01, 0x4d, 0x40, 0x15, 0xff, 0xe1, 0x00, 0x17,
+  0x67, 0x4d, 0x40, 0x15, 0xec, 0xa4, 0xbf, 0x2e,
+  0x02, 0x20, 0x00, 0x00, 0x03, 0x00, 0x2e, 0xe6,
+  0xb2, 0x80, 0x01, 0xe2, 0xc5, 0xb2, 0xc0, 0x01,
+  0x00, 0x04, 0x68, 0xeb, 0xec, 0xb2
+};
+
+/* *INDENT-OFF* */
+static guint8 h264_avc3_codec_data[] = {
+  0x01, /* config version, always == 1 */
+  0x4d, /* profile */
+  0x40, /* profile compatibility */
+  0x15, /* level */
+  0xff, /* 6 reserved bits, lengthSizeMinusOne */
+  0xe0, /* 3 reserved bits, numSPS */
+  0x00  /* numPPS */
+};
+
+static guint8 h264_wrong_version_codec_data[] = {
+  0x00, /* config version, wrong value 0 */
+  0x4d, /* profile */
+  0x40, /* profile compatibility */
+  0x15, /* level */
+  0xff, /* 6 reserved bits, lengthSizeMinusOne */
+  0xe0, /* 3 reserved bits, numSPS */
+  0x00  /* numPPS */
+};
+
+static guint8 h264_wrong_length_size_codec_data[] = {
+  0x01, /* config version, always == 1 */
+  0x4d, /* profile */
+  0x40, /* profile compatibility */
+  0x15, /* level */
+  0xfe, /* 6 reserved bits, invalid lengthSizeMinusOne 3 */
+  0xe0, /* 3 reserved bits, numSPS */
+  0x00  /* numPPS */
+};
+/* *INDENT-ON* */
+
+GST_START_TEST (test_h264_decoder_config_record)
+{
+  GstH264NalParser *parser;
+  GstH264ParserResult ret;
+  GstH264DecoderConfigRecord *config = NULL;
+  GstH264SPS sps;
+  GstH264PPS pps;
+  GstH264NalUnit *nalu;
+
+  parser = gst_h264_nal_parser_new ();
+
+  /* avc */
+  ret = gst_h264_parser_parse_decoder_config_record (parser,
+      h264_avc_codec_data, sizeof (h264_avc_codec_data), &config);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  fail_unless (config != NULL);
+  assert_equals_int (config->configuration_version, 1);
+  assert_equals_int (config->length_size_minus_one, 3);
+
+  assert_equals_int (config->sps->len, 1);
+  nalu = &g_array_index (config->sps, GstH264NalUnit, 0);
+  assert_equals_int (nalu->type, GST_H264_NAL_SPS);
+  ret = gst_h264_parser_parse_sps (parser, nalu, &sps);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  gst_h264_sps_clear (&sps);
+
+  assert_equals_int (config->pps->len, 1);
+  nalu = &g_array_index (config->pps, GstH264NalUnit, 0);
+  assert_equals_int (nalu->type, GST_H264_NAL_PPS);
+  ret = gst_h264_parser_parse_pps (parser, nalu, &pps);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  gst_h264_pps_clear (&pps);
+  g_clear_pointer (&config, gst_h264_decoder_config_record_free);
+
+  /* avc3 */
+  ret = gst_h264_parser_parse_decoder_config_record (parser,
+      h264_avc3_codec_data, sizeof (h264_avc3_codec_data), &config);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  fail_unless (config != NULL);
+
+  assert_equals_int (config->configuration_version, 1);
+  assert_equals_int (config->length_size_minus_one, 3);
+  assert_equals_int (config->sps->len, 0);
+  assert_equals_int (config->pps->len, 0);
+  g_clear_pointer (&config, gst_h264_decoder_config_record_free);
+
+  /* avc3 wrong size, return error with null config data */
+  ret = gst_h264_parser_parse_decoder_config_record (parser,
+      h264_avc3_codec_data, sizeof (h264_avc3_codec_data) - 1, &config);
+  assert_equals_int (ret, GST_H264_PARSER_ERROR);
+  fail_unless (config == NULL);
+
+  /* wrong version, return error with null config data */
+  ret = gst_h264_parser_parse_decoder_config_record (parser,
+      h264_wrong_version_codec_data, sizeof (h264_wrong_version_codec_data),
+      &config);
+  assert_equals_int (ret, GST_H264_PARSER_ERROR);
+  fail_unless (config == NULL);
+
+  /* wrong length size, return error with null config data */
+  ret = gst_h264_parser_parse_decoder_config_record (parser,
+      h264_wrong_length_size_codec_data,
+      sizeof (h264_wrong_length_size_codec_data), &config);
+  assert_equals_int (ret, GST_H264_PARSER_ERROR);
+  fail_unless (config == NULL);
+
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h264parser_suite (void)
 {
@@ -728,6 +839,7 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_parse_identify_nalu_avc);
   tcase_add_test (tc_chain, test_h264_parse_invalid_sei);
   tcase_add_test (tc_chain, test_h264_create_sei);
+  tcase_add_test (tc_chain, test_h264_decoder_config_record);
 
   return s;
 }
