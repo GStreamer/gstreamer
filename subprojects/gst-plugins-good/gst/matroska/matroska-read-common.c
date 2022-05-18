@@ -70,6 +70,10 @@ typedef struct
   gboolean audio_only;
 } TargetTypeContext;
 
+/* 120MB as maximum decompressed data size. Anything bigger is likely
+ * pathological, and like this we avoid out of memory situations in many cases
+ */
+#define MAX_DECOMPRESS_SIZE (120 * 1024 * 1024)
 
 static gboolean
 gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
@@ -77,19 +81,23 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
     GstMatroskaTrackCompressionAlgorithm algo)
 {
   guint8 *new_data = NULL;
-  guint new_size = 0;
+  gsize new_size = 0;
   guint8 *data = *data_out;
-  guint size = *size_out;
+  const gsize size = *size_out;
   gboolean ret = TRUE;
+
+  if (size > G_MAXUINT32) {
+    GST_WARNING ("too large compressed data buffer.");
+    ret = FALSE;
+    goto out;
+  }
 
   if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_ZLIB) {
 #ifdef HAVE_ZLIB
     /* zlib encoded data */
     z_stream zstream;
-    guint orig_size;
     int result;
 
-    orig_size = size;
     zstream.zalloc = (alloc_func) 0;
     zstream.zfree = (free_func) 0;
     zstream.opaque = (voidpf) 0;
@@ -99,8 +107,8 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
       goto out;
     }
     zstream.next_in = (Bytef *) data;
-    zstream.avail_in = orig_size;
-    new_size = orig_size;
+    zstream.avail_in = size;
+    new_size = size;
     new_data = g_malloc (new_size);
     zstream.avail_out = new_size;
     zstream.next_out = (Bytef *) new_data;
@@ -114,10 +122,18 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
         break;
       }
 
+      if (new_size > G_MAXSIZE - 4096 || new_size + 4096 > MAX_DECOMPRESS_SIZE) {
+        GST_WARNING ("too big decompressed data");
+        result = Z_MEM_ERROR;
+        break;
+      }
+
       new_size += 4096;
       new_data = g_realloc (new_data, new_size);
       zstream.next_out = (Bytef *) (new_data + zstream.total_out);
-      zstream.avail_out += 4096;
+      /* avail_out is an unsigned int */
+      g_assert (new_size - zstream.total_out <= G_MAXUINT);
+      zstream.avail_out = new_size - zstream.total_out;
     } while (zstream.avail_in > 0);
 
     if (result != Z_STREAM_END) {
@@ -137,13 +153,11 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
 #ifdef HAVE_BZ2
     /* bzip2 encoded data */
     bz_stream bzstream;
-    guint orig_size;
     int result;
 
     bzstream.bzalloc = NULL;
     bzstream.bzfree = NULL;
     bzstream.opaque = NULL;
-    orig_size = size;
 
     if (BZ2_bzDecompressInit (&bzstream, 0, 0) != BZ_OK) {
       GST_WARNING ("bzip2 initialization failed.");
@@ -152,8 +166,8 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
     }
 
     bzstream.next_in = (char *) data;
-    bzstream.avail_in = orig_size;
-    new_size = orig_size;
+    bzstream.avail_in = size;
+    new_size = size;
     new_data = g_malloc (new_size);
     bzstream.avail_out = new_size;
     bzstream.next_out = (char *) new_data;
@@ -167,17 +181,31 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
         break;
       }
 
+      if (new_size > G_MAXSIZE - 4096 || new_size + 4096 > MAX_DECOMPRESS_SIZE) {
+        GST_WARNING ("too big decompressed data");
+        result = BZ_MEM_ERROR;
+        break;
+      }
+
       new_size += 4096;
       new_data = g_realloc (new_data, new_size);
-      bzstream.next_out = (char *) (new_data + bzstream.total_out_lo32);
-      bzstream.avail_out += 4096;
+      bzstream.next_out =
+          (char *) (new_data + ((guint64) bzstream.total_out_hi32 << 32) +
+          bzstream.total_out_lo32);
+      /* avail_out is an unsigned int */
+      g_assert (new_size - ((guint64) bzstream.total_out_hi32 << 32) +
+          bzstream.total_out_lo32 <= G_MAXUINT);
+      bzstream.avail_out =
+          new_size - ((guint64) bzstream.total_out_hi32 << 32) +
+          bzstream.total_out_lo32;
     } while (bzstream.avail_in > 0);
 
     if (result != BZ_STREAM_END) {
       ret = FALSE;
       g_free (new_data);
     } else {
-      new_size = bzstream.total_out_lo32;
+      new_size =
+          ((guint64) bzstream.total_out_hi32 << 32) + bzstream.total_out_lo32;
     }
     BZ2_bzDecompressEnd (&bzstream);
 
@@ -189,7 +217,13 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
   } else if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_LZO1X) {
     /* lzo encoded data */
     int result;
-    int orig_size, out_size;
+    gint orig_size, out_size;
+
+    if (size > G_MAXINT) {
+      GST_WARNING ("too large compressed data buffer.");
+      ret = FALSE;
+      goto out;
+    }
 
     orig_size = size;
     out_size = size;
@@ -203,6 +237,11 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
       result = lzo1x_decode (new_data, &out_size, data, &orig_size);
 
       if (orig_size > 0) {
+        if (new_size > G_MAXINT - 4096 || new_size + 4096 > MAX_DECOMPRESS_SIZE) {
+          GST_WARNING ("too big decompressed data");
+          result = LZO_ERROR;
+          break;
+        }
         new_size += 4096;
         new_data = g_realloc (new_data, new_size);
       }
@@ -221,6 +260,13 @@ gst_matroska_decompress_data (GstMatroskaTrackEncoding * enc,
   } else if (algo == GST_MATROSKA_TRACK_COMPRESSION_ALGORITHM_HEADERSTRIP) {
     /* header stripped encoded data */
     if (enc->comp_settings_length > 0) {
+      if (size > G_MAXSIZE - enc->comp_settings_length
+          || size + enc->comp_settings_length > MAX_DECOMPRESS_SIZE) {
+        GST_WARNING ("too big decompressed data");
+        ret = FALSE;
+        goto out;
+      }
+
       new_data = g_malloc (size + enc->comp_settings_length);
       new_size = size + enc->comp_settings_length;
 
