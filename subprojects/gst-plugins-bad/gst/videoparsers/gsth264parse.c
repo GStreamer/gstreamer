@@ -3377,11 +3377,11 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   GstStructure *str;
   const GValue *codec_data_value;
   GstBuffer *codec_data = NULL;
-  gsize size;
-  guint format, align, off;
-  GstH264NalUnit nalu;
+  guint format, align;
+  GstH264NalUnit *nalu;
   GstH264ParserResult parseres;
   GstCaps *old_caps;
+  GstH264DecoderConfigRecord *config = NULL;
 
   h264parse = GST_H264_PARSE (parse);
 
@@ -3446,12 +3446,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   /* packetized video has codec_data (required for AVC, optional for AVC3) */
   if (codec_data_value != NULL) {
     GstMapInfo map;
-    guint8 *data;
-    guint num_sps, num_pps;
-#ifndef GST_DISABLE_GST_DEBUG
-    guint profile;
-#endif
-    gint i;
+    guint i;
 
     GST_DEBUG_OBJECT (h264parse, "have packetized h264");
     /* make note for optional split processing */
@@ -3465,67 +3460,36 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     if (!codec_data)
       goto avc_caps_codec_data_missing;
     gst_buffer_map (codec_data, &map, GST_MAP_READ);
-    data = map.data;
-    size = map.size;
 
-    /* parse the avcC data */
-    if (size < 7) {             /* when numSPS==0 and numPPS==0, length is 7 bytes */
+    parseres =
+        gst_h264_parser_parse_decoder_config_record (h264parse->nalparser,
+        map.data, map.size, &config);
+    if (parseres != GST_H264_PARSER_OK) {
       gst_buffer_unmap (codec_data, &map);
-      goto avcc_too_small;
+      goto avcC_failed;
     }
-    /* parse the version, this must be 1 */
-    if (data[0] != 1) {
-      gst_buffer_unmap (codec_data, &map);
-      goto wrong_version;
-    }
-#ifndef GST_DISABLE_GST_DEBUG
-    /* AVCProfileIndication */
-    /* profile_compat */
-    /* AVCLevelIndication */
-    profile = (data[1] << 16) | (data[2] << 8) | data[3];
-    GST_DEBUG_OBJECT (h264parse, "profile %06x", profile);
-#endif
 
-    /* 6 bits reserved | 2 bits lengthSizeMinusOne */
-    /* this is the number of bytes in front of the NAL units to mark their
-     * length */
-    h264parse->nal_length_size = (data[4] & 0x03) + 1;
+    h264parse->nal_length_size = config->length_size_minus_one + 1;
     GST_DEBUG_OBJECT (h264parse, "nal length size %u",
         h264parse->nal_length_size);
+    GST_DEBUG_OBJECT (h264parse, "AVCProfileIndication %d",
+        config->profile_indication);
+    GST_DEBUG_OBJECT (h264parse, "profile_compatibility %d",
+        config->profile_compatibility);
+    GST_DEBUG_OBJECT (h264parse, "AVCLevelIndication %d",
+        config->level_indication);
 
-    num_sps = data[5] & 0x1f;
-    off = 6;
-    for (i = 0; i < num_sps; i++) {
-      parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-          data, off, size, 2, &nalu);
-      if (parseres != GST_H264_PARSER_OK) {
-        gst_buffer_unmap (codec_data, &map);
-        goto avcc_too_small;
-      }
-
-      gst_h264_parse_process_nal (h264parse, &nalu);
-      off = nalu.offset + nalu.size;
+    for (i = 0; i < config->sps->len; i++) {
+      nalu = &g_array_index (config->sps, GstH264NalUnit, i);
+      gst_h264_parse_process_nal (h264parse, nalu);
     }
 
-    if (off >= size) {
-      gst_buffer_unmap (codec_data, &map);
-      goto avcc_too_small;
-    }
-    num_pps = data[off];
-    off++;
-
-    for (i = 0; i < num_pps; i++) {
-      parseres = gst_h264_parser_identify_nalu_avc (h264parse->nalparser,
-          data, off, size, 2, &nalu);
-      if (parseres != GST_H264_PARSER_OK) {
-        gst_buffer_unmap (codec_data, &map);
-        goto avcc_too_small;
-      }
-
-      gst_h264_parse_process_nal (h264parse, &nalu);
-      off = nalu.offset + nalu.size;
+    for (i = 0; i < config->pps->len; i++) {
+      nalu = &g_array_index (config->pps, GstH264NalUnit, i);
+      gst_h264_parse_process_nal (h264parse, nalu);
     }
 
+    gst_h264_decoder_config_record_free (config);
     gst_buffer_unmap (codec_data, &map);
 
     gst_buffer_replace (&h264parse->codec_data_in, codec_data);
@@ -3600,14 +3564,9 @@ bytestream_caps_with_codec_data:
         "expected, send SPS/PPS in-band with data or in streamheader field");
     goto refuse_caps;
   }
-avcc_too_small:
+avcC_failed:
   {
-    GST_DEBUG_OBJECT (h264parse, "avcC size %" G_GSIZE_FORMAT " < 8", size);
-    goto refuse_caps;
-  }
-wrong_version:
-  {
-    GST_DEBUG_OBJECT (h264parse, "wrong avcC version");
+    GST_DEBUG_OBJECT (h264parse, "Failed to parse avcC data");
     goto refuse_caps;
   }
 refuse_caps:
