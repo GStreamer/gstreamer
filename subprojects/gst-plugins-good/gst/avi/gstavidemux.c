@@ -4973,8 +4973,8 @@ swap_line (guint8 * d1, guint8 * d2, guint8 * tmp, gint bytes)
 static GstBuffer *
 gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
 {
-  gint y, w, h;
-  gint bpp, stride;
+  guint y, w, h;
+  guint bpp, stride;
   guint8 *tmp = NULL;
   GstMapInfo map;
   guint32 fourcc;
@@ -5001,12 +5001,23 @@ gst_avi_demux_invert (GstAviStream * stream, GstBuffer * buf)
   h = stream->strf.vids->height;
   w = stream->strf.vids->width;
   bpp = stream->strf.vids->bit_cnt ? stream->strf.vids->bit_cnt : 8;
+
+  if ((guint64) w * ((guint64) bpp / 8) > G_MAXUINT - 4) {
+    GST_WARNING ("Width x stride overflows");
+    return buf;
+  }
+
+  if (w == 0 || h == 0) {
+    GST_WARNING ("Zero width or height");
+    return buf;
+  }
+
   stride = GST_ROUND_UP_4 (w * (bpp / 8));
 
   buf = gst_buffer_make_writable (buf);
 
   gst_buffer_map (buf, &map, GST_MAP_READWRITE);
-  if (map.size < (stride * h)) {
+  if (map.size < ((guint64) stride * (guint64) h)) {
     GST_WARNING ("Buffer is smaller than reported Width x Height x Depth");
     gst_buffer_unmap (buf, &map);
     return buf;
