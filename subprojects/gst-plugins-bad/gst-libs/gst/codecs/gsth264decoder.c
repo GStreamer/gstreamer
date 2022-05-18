@@ -649,82 +649,48 @@ gst_h264_decoder_parse_codec_data (GstH264Decoder * self, const guint8 * data,
     gsize size)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  guint num_sps, num_pps;
-  guint off;
-  gint i;
-  GstH264ParserResult pres;
-  GstH264NalUnit nalu;
+  GstH264DecoderConfigRecord *config = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
-#ifndef GST_DISABLE_GST_DEBUG
-  guint profile;
-#endif
+  GstH264NalUnit *nalu;
+  guint i;
 
-  /* parse the avcC data */
-  if (size < 7) {               /* when numSPS==0 and numPPS==0, length is 7 bytes */
+  if (gst_h264_parser_parse_decoder_config_record (priv->parser, data, size,
+          &config) != GST_H264_PARSER_OK) {
+    GST_WARNING_OBJECT (self, "Failed to parse codec-data");
     return GST_FLOW_ERROR;
   }
 
-  /* parse the version, this must be 1 */
-  if (data[0] != 1) {
-    return GST_FLOW_ERROR;
-  }
-#ifndef GST_DISABLE_GST_DEBUG
-  /* AVCProfileIndication */
-  /* profile_compat */
-  /* AVCLevelIndication */
-  profile = (data[1] << 16) | (data[2] << 8) | data[3];
-  GST_DEBUG_OBJECT (self, "profile %06x", profile);
-#endif
+  priv->nal_length_size = config->length_size_minus_one + 1;
+  for (i = 0; i < config->sps->len; i++) {
+    nalu = &g_array_index (config->sps, GstH264NalUnit, i);
 
-  /* 6 bits reserved | 2 bits lengthSizeMinusOne */
-  /* this is the number of bytes in front of the NAL units to mark their
-   * length */
-  priv->nal_length_size = (data[4] & 0x03) + 1;
-  GST_DEBUG_OBJECT (self, "nal length size %u", priv->nal_length_size);
+    /* TODO: handle subset sps for SVC/MVC. That would need to be stored in
+     * separate array instead of putting SPS/subset-SPS into a single array */
+    if (nalu->type != GST_H264_NAL_SPS)
+      continue;
 
-  num_sps = data[5] & 0x1f;
-  off = 6;
-  for (i = 0; i < num_sps; i++) {
-    pres = gst_h264_parser_identify_nalu_avc (priv->parser,
-        data, off, size, 2, &nalu);
-    if (pres != GST_H264_PARSER_OK) {
-      GST_WARNING_OBJECT (self, "Failed to identify SPS nalu");
-      return GST_FLOW_ERROR;
-    }
-
-    ret = gst_h264_decoder_parse_sps (self, &nalu);
+    ret = gst_h264_decoder_parse_sps (self, nalu);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "Failed to parse SPS");
-      return ret;
+      goto out;
     }
-    off = nalu.offset + nalu.size;
   }
 
-  if (off >= size) {
-    GST_WARNING_OBJECT (self, "Too small avcC");
-    return GST_FLOW_ERROR;
-  }
+  for (i = 0; i < config->pps->len; i++) {
+    nalu = &g_array_index (config->pps, GstH264NalUnit, i);
+    if (nalu->type != GST_H264_NAL_PPS)
+      continue;
 
-  num_pps = data[off];
-  off++;
-
-  for (i = 0; i < num_pps; i++) {
-    pres = gst_h264_parser_identify_nalu_avc (priv->parser,
-        data, off, size, 2, &nalu);
-    if (pres != GST_H264_PARSER_OK) {
-      GST_WARNING_OBJECT (self, "Failed to identify PPS nalu");
-      return GST_FLOW_ERROR;
-    }
-
-    ret = gst_h264_decoder_parse_pps (self, &nalu);
+    ret = gst_h264_decoder_parse_pps (self, nalu);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "Failed to parse PPS");
-      return ret;
+      goto out;
     }
-    off = nalu.offset + nalu.size;
   }
 
-  return GST_FLOW_OK;
+out:
+  gst_h264_decoder_config_record_free (config);
+  return ret;
 }
 
 static gboolean
