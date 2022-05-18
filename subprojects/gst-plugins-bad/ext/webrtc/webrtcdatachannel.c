@@ -918,7 +918,7 @@ on_appsrc_data (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
         channel->parent.buffered_amount_low_threshold,
         channel->parent.buffered_amount);
     if (prev_amount >= channel->parent.buffered_amount_low_threshold
-        && channel->parent.buffered_amount <
+        && channel->parent.buffered_amount <=
         channel->parent.buffered_amount_low_threshold) {
       _channel_enqueue_task (channel, (ChannelTask) _emit_low_threshold, NULL,
           NULL);
