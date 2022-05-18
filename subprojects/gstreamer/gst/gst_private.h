@@ -514,11 +514,14 @@ struct _GstDynamicTypeFactoryClass {
 /* privat flag used by GstBus / GstMessage */
 #define GST_MESSAGE_FLAG_ASYNC_DELIVERY (GST_MINI_OBJECT_FLAG_LAST << 0)
 
+/* private type used by GstClock */
+typedef struct _GstClockWeakRef GstClockWeakRef;
+
 /* private struct used by GstClock and GstSystemClock */
 struct _GstClockEntryImpl
 {
   GstClockEntry entry;
-  GWeakRef clock;
+  GstClockWeakRef *weakref;
   GDestroyNotify destroy_entry;
   gpointer padding[21];                 /* padding for allowing e.g. systemclock
                                          * to add data in lieu of overridable
