@@ -348,6 +348,32 @@ qtdemux_dump_stsd_av01 (GstQTDemux * qtdemux, GstByteReader * data, guint size,
   return TRUE;
 }
 
+static gboolean
+qtdemux_dump_stsd_metx (GstQTDemux * qtdemux, GstByteReader * data, int depth)
+{
+  const gchar *content_encoding;
+  const gchar *namespaces;
+  const gchar *schema_locations;
+
+  if (gst_byte_reader_get_remaining (data) < 6 + 2)
+    return FALSE;
+
+  gst_byte_reader_skip_unchecked (data, 6);
+  GST_LOG_OBJECT (qtdemux, "%*s    data reference:%d", depth, "",
+      GET_UINT16 (data));
+
+  if (!gst_byte_reader_get_string (data, &content_encoding) ||
+      !gst_byte_reader_get_string (data, &namespaces) ||
+      !gst_byte_reader_get_string (data, &schema_locations))
+    return FALSE;
+
+  GST_LOG ("%*s  content_encoding:          %s", depth, "", content_encoding);
+  GST_LOG ("%*s  namespaces:                %s", depth, "", namespaces);
+  GST_LOG ("%*s  schema_locations:          %s", depth, "", schema_locations);
+
+  return TRUE;
+}
+
 gboolean
 qtdemux_dump_stsd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
 {
@@ -400,6 +426,10 @@ qtdemux_dump_stsd (GstQTDemux * qtdemux, GstByteReader * data, int depth)
         break;
       case FOURCC_av01:
         if (!qtdemux_dump_stsd_av01 (qtdemux, &sub, size, depth + 1))
+          return FALSE;
+        break;
+      case FOURCC_metx:
+        if (!qtdemux_dump_stsd_metx (qtdemux, &sub, depth + 1))
           return FALSE;
         break;
       default:

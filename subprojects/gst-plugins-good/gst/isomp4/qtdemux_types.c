@@ -54,6 +54,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_vmhd, "video media information", 0,
       qtdemux_dump_vmhd},
   {FOURCC_smhd, "sound media information", 0},
+  {FOURCC_nmhd, "null media information", 0},
   {FOURCC_gmhd, "base media information header", QT_FLAG_CONTAINER},
   {FOURCC_gmin, "base media info", 0, qtdemux_dump_gmin},
   {FOURCC_dinf, "data information", QT_FLAG_CONTAINER},
@@ -230,6 +231,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_aavd, "AAX encrypted audio", 0},
   {FOURCC_adrm, "AAX DRM key data", 0},
   {FOURCC_vttc, "VTTCueBox 14496-30", QT_FLAG_CONTAINER},
+  {FOURCC_metx, "XML MetaData Sample Entry", 0},
   {0, "unknown", 0,},
 };
 

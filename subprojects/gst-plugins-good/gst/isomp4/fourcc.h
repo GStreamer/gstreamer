@@ -418,6 +418,8 @@ G_BEGIN_DECLS
 #define FOURCC_aavd     GST_MAKE_FOURCC('a','a','v','d')
 #define FOURCC_adrm     GST_MAKE_FOURCC('a','d','r','m')
 
+#define FOURCC_metx     GST_MAKE_FOURCC('m','e','t','x')
+
 G_END_DECLS
 
 #endif /* __FOURCC_H__ */
