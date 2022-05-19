@@ -824,8 +824,18 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
         self->v4l2output->info.size, min, max);
 
     /* There is no reason to refuse this config */
-    if (!gst_buffer_pool_set_config (pool, config))
-      goto activate_failed;
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      config = gst_buffer_pool_get_config (pool);
+
+      if (!gst_buffer_pool_config_validate_params (config,
+              self->input_state->caps, self->v4l2output->info.size, min, max)) {
+        gst_structure_free (config);
+        goto activate_failed;
+      }
+
+      if (!gst_buffer_pool_set_config (pool, config))
+        goto activate_failed;
+    }
 
     if (!gst_buffer_pool_set_active (pool, TRUE))
       goto activate_failed;
