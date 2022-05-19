@@ -296,6 +296,20 @@ gst indent:
   variables:
     MESON_ARGS: *simple_build
 
+build fedora x86_64:
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build fedora x86_64'
+  needs:
+    - "fedora amd64 docker"
+  script:
+    - *build
+    - ./gst-env.py gst-inspect-1.0 --version
+    - ./gst-env.py gst-inspect-1.0
+    - meson install --destdir $CI_PROJECT_DIR/destdir -C build
+    - rm -rf $CI_PROJECT_DIR/destdir
+
 build nodebug fedora x86_64:
   extends:
     - '.fedora image'
@@ -355,7 +369,7 @@ build clang fedora x86_64:
     - $env:MESON_CROSS_ARGS = $env:MESON_CROSS_ARGS.replace("`n"," ")
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
         meson build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
-        ninja -C build"
+        meson compile -C build"
   artifacts:
    expire_in: "7 days"
    when: "always"
@@ -366,6 +380,12 @@ build vs2019 amd64:
   extends: '.build windows'
   variables:
     ARCH: 'amd64'
+  script:
+    - !reference [".build windows", "script",]
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
+        mkdir .\destdir &&
+        meson install --destdir=$env:CI_PROJECT_DIR\destdir -C build &&
+        rmdir /s /q  $env:CI_PROJECT_DIR\destdir"
 
 build vs2019 x86:
   extends: '.build windows'
