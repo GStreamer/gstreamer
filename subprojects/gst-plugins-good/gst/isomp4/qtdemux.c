@@ -289,6 +289,12 @@ GST_STATIC_PAD_TEMPLATE ("subtitle_%u",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
+static GstStaticPadTemplate gst_qtdemux_metasrc_template =
+GST_STATIC_PAD_TEMPLATE ("meta_%u",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
+
 #define gst_qtdemux_parent_class parent_class
 G_DEFINE_TYPE (GstQTDemux, gst_qtdemux, GST_TYPE_ELEMENT);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (qtdemux, "qtdemux",
@@ -349,6 +355,9 @@ static GstCaps *qtdemux_audio_caps (GstQTDemux * qtdemux,
     QtDemuxStream * stream, QtDemuxStreamStsdEntry * entry, guint32 fourcc,
     const guint8 * data, int len, gchar ** codec_name);
 static GstCaps *qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    QtDemuxStreamStsdEntry * entry, guint32 fourcc, const guint8 * data,
+    gchar ** codec_name);
+static GstCaps *qtdemux_meta_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     QtDemuxStreamStsdEntry * entry, guint32 fourcc, const guint8 * data,
     gchar ** codec_name);
 static GstCaps *qtdemux_generic_caps (GstQTDemux * qtdemux,
@@ -2051,6 +2060,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->n_video_streams = 0;
     qtdemux->n_audio_streams = 0;
     qtdemux->n_sub_streams = 0;
+    qtdemux->n_meta_streams = 0;
     qtdemux->exposed = FALSE;
     qtdemux->fragmented = FALSE;
     qtdemux->mss_mode = FALSE;
@@ -9028,6 +9038,19 @@ gst_qtdemux_add_stream (GstQTDemux * qtdemux,
       goto done;
     }
     qtdemux->n_sub_streams++;
+  } else if (stream->subtype == FOURCC_meta) {
+    gchar *name = g_strdup_printf ("meta_%u", qtdemux->n_meta_streams);
+
+    stream->pad =
+        gst_pad_new_from_static_template (&gst_qtdemux_metasrc_template, name);
+    g_free (name);
+    if (!gst_qtdemux_configure_stream (qtdemux, stream)) {
+      gst_object_unref (stream->pad);
+      stream->pad = NULL;
+      ret = FALSE;
+      goto done;
+    }
+    qtdemux->n_meta_streams++;
   } else if (CUR_STREAM (stream)->caps) {
     gchar *name = g_strdup_printf ("video_%u", qtdemux->n_video_streams);
 
@@ -13110,6 +13133,23 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       GST_INFO_OBJECT (qtdemux,
           "type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
           GST_FOURCC_ARGS (fourcc), entry->caps);
+    } else if (stream->subtype == FOURCC_meta) {
+      entry->sampled = TRUE;
+      entry->sparse = TRUE;
+
+      entry->caps =
+          qtdemux_meta_caps (qtdemux, stream, entry, fourcc, stsd_entry_data,
+          &codec);
+      if (codec) {
+        gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
+            GST_TAG_CODEC, codec, NULL);
+        g_free (codec);
+        codec = NULL;
+      }
+
+      GST_INFO_OBJECT (qtdemux,
+          "type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
+          GST_FOURCC_ARGS (fourcc), entry->caps);
     } else {
       /* everything in 1 sample */
       entry->sampled = TRUE;
@@ -15267,6 +15307,63 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     }
   }
+  return caps;
+}
+
+static GstCaps *
+qtdemux_meta_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    QtDemuxStreamStsdEntry * entry, guint32 fourcc,
+    const guint8 * stsd_entry_data, gchar ** codec_name)
+{
+  GstCaps *caps = NULL;
+
+  GST_DEBUG_OBJECT (qtdemux, "resolve fourcc 0x%08x", GUINT32_TO_BE (fourcc));
+
+  switch (fourcc) {
+    case FOURCC_metx:{
+      gsize size = QT_UINT32 (stsd_entry_data);
+      GstByteReader reader = GST_BYTE_READER_INIT (stsd_entry_data, size);
+      const gchar *content_encoding;
+      const gchar *namespaces;
+      const gchar *schema_locations;
+
+      if (!gst_byte_reader_skip (&reader, 8 + 6 + 2)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short metx sample entry");
+        break;
+      }
+
+      if (!gst_byte_reader_get_string (&reader, &content_encoding) ||
+          !gst_byte_reader_get_string (&reader, &namespaces) ||
+          !gst_byte_reader_get_string (&reader, &schema_locations)) {
+        GST_WARNING_OBJECT (qtdemux, "Too short metx sample entry");
+        break;
+      }
+
+      if (strstr (namespaces, "http://www.onvif.org/ver10/schema") != 0) {
+        if (content_encoding == NULL || *content_encoding == '\0'
+            || g_ascii_strcasecmp (content_encoding, "xml") == 0) {
+          _codec ("ONVIF Timed XML MetaData");
+          caps =
+              gst_caps_new_simple ("application/x-onvif-metadata", "encoding",
+              G_TYPE_STRING, "utf8", NULL);
+        } else {
+          GST_DEBUG_OBJECT (qtdemux, "Unknown content encoding: %s",
+              content_encoding);
+        }
+      } else {
+        GST_DEBUG_OBJECT (qtdemux, "Unknown metadata namespaces: %s",
+            namespaces);
+      }
+
+      break;
+    }
+    default:
+      break;
+  }
+
+  if (!caps)
+    caps = _get_unknown_codec_name ("meta", fourcc);
+
   return caps;
 }
 
