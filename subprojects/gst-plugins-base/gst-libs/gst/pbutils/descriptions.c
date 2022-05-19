@@ -56,7 +56,8 @@ typedef enum
   FLAG_IMAGE = (1 << 4),        /* format is an image format, or image container/tag  */
   FLAG_SUB = (1 << 5),          /* format is a subtitle format, or subtitle container */
   FLAG_TAG = (1 << 6),          /* format is a tag/container                          */
-  FLAG_GENERIC = (1 << 7)       /* format is a generic container (e.g. multipart)     */
+  FLAG_GENERIC = (1 << 7),      /* format is a generic container (e.g. multipart)     */
+  FLAG_METADATA = (1 << 8),     /* format is a metadata format, or metadata container/tag */
 } FormatFlags;
 
 typedef struct
@@ -330,7 +331,8 @@ static const FormatInfo formats[] = {
   {"video/x-svq", NULL, FLAG_VIDEO, ""},
   {"video/x-wmv", NULL, FLAG_VIDEO, ""},
   {"video/x-xan", NULL, FLAG_VIDEO, ""},
-  {"video/x-tscc", NULL, FLAG_VIDEO, ""}
+  {"video/x-tscc", NULL, FLAG_VIDEO, ""},
+  {"application/x-onvif-metadata", "ONVIF XML Timed MetaData", FLAG_METADATA, ""}
 };
 
 static const gchar *
@@ -1346,6 +1348,8 @@ gst_pb_utils_get_caps_description_flags (const GstCaps * caps)
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_TAG;
     if ((info->flags | FLAG_GENERIC))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_GENERIC;
+    if ((info->flags | FLAG_METADATA))
+      flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_METADATA;
   }
 
   gst_caps_unref (tmp);
