@@ -2672,14 +2672,56 @@ qtdemux_parse_ftyp (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
   /* only consider at least a sufficiently complete ftyp atom */
   if (length >= 20) {
     GstBuffer *buf;
+    guint32 minor_version;
+    const guint8 *p;
 
     qtdemux->major_brand = QT_FOURCC (buffer + 8);
-    GST_DEBUG_OBJECT (qtdemux, "major brand: %" GST_FOURCC_FORMAT,
+    GST_DEBUG_OBJECT (qtdemux, "ftyp major brand: %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (qtdemux->major_brand));
+    minor_version = QT_UINT32 (buffer + 12);
+    GST_DEBUG_OBJECT (qtdemux, "ftyp minor version: %u", minor_version);
     if (qtdemux->comp_brands)
       gst_buffer_unref (qtdemux->comp_brands);
     buf = qtdemux->comp_brands = gst_buffer_new_and_alloc (length - 16);
     gst_buffer_fill (buf, 0, buffer + 16, length - 16);
+
+    p = buffer + 16;
+    length = length - 16;
+    while (length > 0) {
+      GST_DEBUG_OBJECT (qtdemux, "ftyp compatible brand: %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (QT_FOURCC (p)));
+      length -= 4;
+      p += 4;
+    }
+  }
+}
+
+static void
+qtdemux_parse_styp (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
+{
+  /* only consider at least a sufficiently complete styp atom */
+  if (length >= 20) {
+    GstBuffer *buf;
+    guint32 major_brand;
+    guint32 minor_version;
+    const guint8 *p;
+
+    major_brand = QT_FOURCC (buffer + 8);
+    GST_DEBUG_OBJECT (qtdemux, "styp major brand: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (major_brand));
+    minor_version = QT_UINT32 (buffer + 12);
+    GST_DEBUG_OBJECT (qtdemux, "styp minor version: %u", minor_version);
+    buf = qtdemux->comp_brands = gst_buffer_new_and_alloc (length - 16);
+    gst_buffer_fill (buf, 0, buffer + 16, length - 16);
+
+    p = buffer + 16;
+    length = length - 16;
+    while (length > 0) {
+      GST_DEBUG_OBJECT (qtdemux, "styp compatible brand: %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (QT_FOURCC (p)));
+      length -= 4;
+      p += 4;
+    }
   }
 }
 
@@ -4603,6 +4645,20 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       qtdemux_parse_ftyp (qtdemux, map.data, map.size);
       gst_buffer_unmap (ftyp, &map);
       gst_buffer_unref (ftyp);
+      break;
+    }
+    case FOURCC_styp:
+    {
+      GstBuffer *styp = NULL;
+
+      ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &styp);
+      if (ret != GST_FLOW_OK)
+        goto beach;
+      qtdemux->offset += length;
+      gst_buffer_map (styp, &map, GST_MAP_READ);
+      qtdemux_parse_styp (qtdemux, map.data, map.size);
+      gst_buffer_unmap (styp, &map);
+      gst_buffer_unref (styp);
       break;
     }
     case FOURCC_uuid:
