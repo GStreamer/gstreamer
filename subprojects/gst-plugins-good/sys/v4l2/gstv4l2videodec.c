@@ -699,6 +699,12 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 
     GST_LOG_OBJECT (decoder, "Process output buffer");
     ret = gst_v4l2_buffer_pool_process (v4l2_pool, &buffer, NULL);
+
+    if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
+      GST_INFO_OBJECT (decoder, "Received resolution change");
+      g_atomic_int_set (&self->capture_configuration_change, TRUE);
+      return;
+    }
   } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
 
   if (ret != GST_FLOW_OK)
