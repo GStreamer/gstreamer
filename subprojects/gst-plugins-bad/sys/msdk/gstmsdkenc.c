@@ -1650,12 +1650,16 @@ import_dmabuf_to_msdk_surface (GstMsdkEnc * thiz, GstBuffer * buf,
   GstVideoMeta *vmeta;
   GstMsdkMemoryID *msdk_mid = NULL;
   mfxFrameSurface1 *mfx_surface = NULL;
+  mfxMemId *mfx_mid = NULL;
+  VASurfaceID *va_surface = NULL;
+  mfxFrameInfo frame_info = { {0,}, 0, };
   gint fd, i;
   mem = gst_buffer_peek_memory (buf, 0);
   fd = gst_dmabuf_memory_get_fd (mem);
   if (fd < 0)
     return FALSE;
 
+  va_surface = g_slice_new0 (VASurfaceID);
   vinfo = thiz->input_state->info;
   /* Update offset/stride/size if there is VideoMeta attached to
    * the buffer */
@@ -1688,16 +1692,26 @@ import_dmabuf_to_msdk_surface (GstMsdkEnc * thiz, GstBuffer * buf,
   if (GST_VIDEO_INFO_SIZE (&vinfo) < GST_VIDEO_INFO_SIZE (&thiz->aligned_info))
     return FALSE;
 
-  mfx_surface = msdk_surface->surface;
-  msdk_mid = (GstMsdkMemoryID *) mfx_surface->Data.MemId;
-
-  /* release the internal memory storage of associated mfxSurface */
-  gst_msdk_replace_mfx_memid (thiz->context, mfx_surface, VA_INVALID_ID);
-
   /* export dmabuf to vasurface */
   if (!gst_msdk_export_dmabuf_to_vasurface (thiz->context, &vinfo, fd,
-          msdk_mid->surface))
+          va_surface)) {
+    g_slice_free (VASurfaceID, va_surface);
     return FALSE;
+  }
+
+  msdk_mid = g_slice_new0 (GstMsdkMemoryID);
+  msdk_mid->surface = g_slice_new0 (VASurfaceID);
+  mfx_surface = g_slice_new0 (mfxFrameSurface1);
+
+  msdk_mid->surface = va_surface;
+  mfx_mid = (mfxMemId *) msdk_mid;
+  mfx_surface->Data.MemId = mfx_mid;
+
+  gst_msdk_set_mfx_frame_info_from_video_info (&frame_info, &vinfo);
+  mfx_surface->Info = frame_info;
+
+  msdk_surface->surface = mfx_surface;
+  msdk_surface->buf = gst_buffer_ref (buf);
 
   return TRUE;
 }
@@ -1762,28 +1776,23 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
     else
       g_slice_free (MsdkSurface, msdk_surface);
   }
+
+  mem = gst_buffer_peek_memory (inbuf, 0);
+  if (gst_is_dmabuf_memory (mem)) {
+    msdk_surface = g_slice_new0 (MsdkSurface);
+    if (import_dmabuf_to_msdk_surface (thiz, inbuf, msdk_surface))
+      return msdk_surface;
+    else
+      g_slice_free (MsdkSurface, msdk_surface);
+  }
 #endif
 
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
-   * just copy frame (if not dmabuf backed )to msdk buffer and take a surface from it.
+   * just copy frame to msdk buffer and take a surface from it.
    */
   if (!(msdk_surface =
           gst_msdkenc_get_surface_from_pool (thiz, thiz->msdk_pool, NULL)))
     goto error;
-
-#ifndef _WIN32
-  /************ dmabuf-import ************* */
-  /* if upstream provided a dmabuf backed memory, but not an msdk
-   * buffer, we could try to export the dmabuf to underlined vasurface */
-  mem = gst_buffer_peek_memory (inbuf, 0);
-  if (gst_is_dmabuf_memory (mem)) {
-    if (import_dmabuf_to_msdk_surface (thiz, inbuf, msdk_surface))
-      return msdk_surface;
-    else
-      GST_INFO_OBJECT (thiz, "Upstream dmabuf-backed memory is not imported"
-          "to the msdk surface, fall back to the copy input frame method");
-  }
-#endif
 
   if (!gst_video_frame_map (&src_frame, &thiz->input_state->info, inbuf,
           GST_MAP_READ)) {
