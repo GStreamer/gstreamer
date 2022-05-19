@@ -689,7 +689,7 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
     g_object_unref (pool);
 
     if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
-      GST_WARNING_OBJECT (decoder, "Received resolution change");
+      GST_INFO_OBJECT (decoder, "Received resolution change");
       g_atomic_int_set (&self->capture_configuration_change, TRUE);
       return;
     }
