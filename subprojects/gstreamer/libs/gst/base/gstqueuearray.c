@@ -332,16 +332,24 @@ gst_queue_array_peek_nth_struct (GstQueueArray * array, guint idx)
 static void
 gst_queue_array_do_expand (GstQueueArray * array)
 {
-  guint elt_size = array->elt_size;
+  gsize elt_size = array->elt_size;
   /* newsize is 50% bigger */
-  guint oldsize = array->size;
-  guint newsize = MAX ((3 * oldsize) / 2, oldsize + 1);
+  gsize oldsize = array->size;
+  guint64 newsize;
+
+  newsize = MAX ((3 * (guint64) oldsize) / 2, (guint64) oldsize + 1);
+  if (newsize > G_MAXUINT)
+    g_error ("growing the queue array would overflow");
 
   /* copy over data */
   if (array->tail != 0) {
-    guint8 *array2 = g_malloc0 (elt_size * newsize);
-    guint t1 = array->head;
-    guint t2 = oldsize - array->head;
+    guint8 *array2 = NULL;
+    gsize t1 = 0;
+    gsize t2 = 0;
+
+    array2 = g_malloc0_n (newsize, elt_size);
+    t1 = array->head;
+    t2 = oldsize - array->head;
 
     /* [0-----TAIL][HEAD------SIZE]
      *
@@ -352,7 +360,8 @@ gst_queue_array_do_expand (GstQueueArray * array)
      * 2) move [0-------TAIL] part new array, after previous part
      */
 
-    memcpy (array2, array->array + (elt_size * array->head), t2 * elt_size);
+    memcpy (array2, array->array + (elt_size * (gsize) array->head),
+        t2 * elt_size);
     memcpy (array2 + t2 * elt_size, array->array, t1 * elt_size);
 
     g_free (array->array);
@@ -360,7 +369,7 @@ gst_queue_array_do_expand (GstQueueArray * array)
     array->head = 0;
   } else {
     /* Fast path, we just need to grow the array */
-    array->array = g_realloc (array->array, elt_size * newsize);
+    array->array = g_realloc_n (array->array, newsize, elt_size);
     memset (array->array + elt_size * oldsize, 0,
         elt_size * (newsize - oldsize));
   }
