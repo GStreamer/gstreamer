@@ -85,6 +85,13 @@ gst_mask_factory_new (gint type, gboolean invert, gint bpp, gint width,
     mask->height = height;
     mask->destroy_func = definition->destroy_func;
     mask->user_data = definition->user_data;
+
+    if (((guint64) width * (guint64) height * sizeof (guint32)) > G_MAXUINT) {
+      GST_WARNING ("width x height overflows");
+      g_free (mask);
+      return NULL;
+    }
+
     mask->data = g_malloc (width * height * sizeof (guint32));
 
     definition->draw_func (mask);
