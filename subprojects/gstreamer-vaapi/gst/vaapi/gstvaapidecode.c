@@ -71,7 +71,6 @@ char *gst_vaapidecode_sink_caps_str = NULL;
 
 static const char gst_vaapidecode_src_caps_str[] =
     GST_VAAPI_MAKE_SURFACE_CAPS "; "
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_DMABUF, GST_VAAPI_FORMATS_ALL) " ;"
 #if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
     GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
 #endif
@@ -261,14 +260,6 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   gst_caps_set_features_simple (va_caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
 
-  if (gst_vaapi_mem_type_supports (mem_types,
-          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF) ||
-      gst_vaapi_mem_type_supports (mem_types,
-          GST_VAAPI_BUFFER_MEMORY_TYPE_DMA_BUF2)) {
-    dma_caps = gst_caps_copy (base_caps);
-    gst_caps_set_features_simple (dma_caps,
-        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
-  }
 #if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)
       && gst_vaapi_display_has_opengl (GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))) {
