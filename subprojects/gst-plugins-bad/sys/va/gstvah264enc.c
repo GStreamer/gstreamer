@@ -50,7 +50,6 @@
 #include "config.h"
 #endif
 
-
 #include "gstvah264enc.h"
 
 #include <gst/codecparsers/gsth264bitwriter.h>
@@ -59,12 +58,12 @@
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 
-#include "vacompat.h"
 #include "gstvabaseenc.h"
-#include "gstvaencoder.h"
 #include "gstvacaps.h"
-#include "gstvaprofile.h"
 #include "gstvadisplay_priv.h"
+#include "gstvaencoder.h"
+#include "gstvaprofile.h"
+#include "vacompat.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264enc_debug);
 #define GST_CAT_DEFAULT gst_va_h264enc_debug

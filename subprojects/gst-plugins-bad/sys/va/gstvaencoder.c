@@ -25,9 +25,9 @@
 
 #include "gstvaencoder.h"
 
-#include "vacompat.h"
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
+#include "vacompat.h"
 
 #define VA_ENTRYPOINT_FLAG(entry) (1U << G_PASTE(VAEntrypoint, entry))
 
