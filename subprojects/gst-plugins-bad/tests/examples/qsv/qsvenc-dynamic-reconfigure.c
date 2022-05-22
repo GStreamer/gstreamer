@@ -24,7 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <stdlib.h>
-#include "key-handler.h"
+#include "../key-handler.h"
 
 typedef enum
 {

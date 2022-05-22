@@ -27,7 +27,7 @@
 
 #include <windows.h>
 #include <string.h>
-#include "d3d11videosink-kb.h"
+#include "../key-handler.h"
 
 static GMainLoop *loop = NULL;
 static gboolean visible = FALSE;
@@ -61,13 +61,12 @@ window_proc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 static void
-keyboard_cb (gchar key_input, CallbackData * data)
+keyboard_cb (gchar input, gboolean is_ascii, CallbackData * data)
 {
-  gchar key;
+  if (!is_ascii)
+    return;
 
-  key = g_ascii_tolower (key_input);
-
-  switch (key) {
+  switch (input) {
     case 'q':
     case 'Q':
       gst_element_send_event (data->pipeline, gst_event_new_eos ());
@@ -141,9 +140,9 @@ bus_msg (GstBus * bus, GstMessage * msg, CallbackData * data)
 
             if (gst_navigation_event_parse_key_event (ev, &key)) {
               if (strcmp (key, "space") == 0 || strcmp (key, "Space") == 0) {
-                keyboard_cb (' ', data);
+                keyboard_cb (' ', TRUE, data);
               } else {
-                keyboard_cb (key[0], data);
+                keyboard_cb (key[0], TRUE, data);
               }
             }
           }
@@ -300,8 +299,7 @@ main (gint argc, gchar ** argv)
   gst_bus_add_watch (GST_ELEMENT_BUS (pipeline), (GstBusFunc) bus_msg,
       &cb_data);
 
-  gst_d3d11_video_sink_kb_set_key_handler ((GstD3D11VideoSinkKbFunc)
-      keyboard_cb, &cb_data);
+  set_key_handler ((KeyInputCallback) keyboard_cb, &cb_data);
 
   if (start_fullscreen)
     g_object_set (sink, "fullscreen", TRUE, NULL);
@@ -339,6 +337,8 @@ main (gint argc, gchar ** argv)
   gst_bus_remove_watch (GST_ELEMENT_BUS (pipeline));
 
 terminate:
+  unset_key_handler ();
+
   if (hwnd)
     DestroyWindow (hwnd);
 
