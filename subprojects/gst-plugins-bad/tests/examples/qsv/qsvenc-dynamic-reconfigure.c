@@ -146,8 +146,8 @@ keyboard_cb (gchar input, gboolean is_ascii, gpointer user_data)
         gst_println ("Decrease width to %d", width);
         break;
       case KB_ARROW_RIGHT:
-        height += 2;
-        gst_println ("Increase height to %d", height);
+        width += 2;
+        gst_println ("Increase width to %d", width);
         break;
       default:
         break;
