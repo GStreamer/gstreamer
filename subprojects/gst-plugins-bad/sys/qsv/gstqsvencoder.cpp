@@ -64,6 +64,8 @@ gst_qsv_coding_option_get_type (void)
 enum
 {
   PROP_0,
+  PROP_ADAPTER_LUID,
+  PROP_DEVICE_PATH,
   PROP_TARGET_USAGE,
   PROP_LOW_LATENCY,
 };
@@ -175,6 +177,21 @@ gst_qsv_encoder_class_init (GstQsvEncoderClass * klass)
   object_class->set_property = gst_qsv_encoder_set_property;
   object_class->get_property = gst_qsv_encoder_get_property;
 
+#ifdef G_OS_WIN32
+  g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
+      g_param_spec_int64 ("adapter-luid", "Adapter LUID",
+          "DXGI Adapter LUID (Locally Unique Identifier) of created device",
+          G_MININT64, G_MAXINT64, 0,
+          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
+              G_PARAM_STATIC_STRINGS)));
+#else
+  g_object_class_install_property (object_class, PROP_DEVICE_PATH,
+      g_param_spec_string ("device-path", "Device Path",
+          "DRM device path", NULL,
+          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+#endif
+
   g_object_class_install_property (object_class, PROP_TARGET_USAGE,
       g_param_spec_uint ("target-usage", "Target Usage",
           "1: Best quality, 4: Balanced, 7: Best speed",
@@ -277,8 +294,15 @@ gst_qsv_encoder_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstQsvEncoder *self = GST_QSV_ENCODER (object);
   GstQsvEncoderPrivate *priv = self->priv;
+  GstQsvEncoderClass *klass = GST_QSV_ENCODER_GET_CLASS (self);
 
   switch (prop_id) {
+    case PROP_ADAPTER_LUID:
+      g_value_set_int64 (value, klass->adapter_luid);
+      break;
+    case PROP_DEVICE_PATH:
+      g_value_set_string (value, klass->display_path);
+      break;
     case PROP_TARGET_USAGE:
       g_value_set_uint (value, priv->target_usage);
       break;

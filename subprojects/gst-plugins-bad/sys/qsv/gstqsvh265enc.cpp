@@ -94,8 +94,6 @@ gst_qsv_h265_enc_rate_control_get_type (void)
 enum
 {
   PROP_0,
-  PROP_ADAPTER_LUID,
-  PROP_DEVICE_PATH,
   PROP_MIN_QP_I,
   PROP_MIN_QP_P,
   PROP_MIN_QP_B,
@@ -238,21 +236,6 @@ gst_qsv_h265_enc_class_init (GstQsvH265EncClass * klass, gpointer data)
   object_class->finalize = gst_qsv_h265_enc_finalize;
   object_class->set_property = gst_qsv_h265_enc_set_property;
   object_class->get_property = gst_qsv_h265_enc_get_property;
-
-#ifdef G_OS_WIN32
-  g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
-      g_param_spec_int64 ("adapter-luid", "Adapter LUID",
-          "DXGI Adapter LUID (Locally Unique Identifier) of created device",
-          G_MININT64, G_MAXINT64, qsvenc_class->adapter_luid,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
-              G_PARAM_STATIC_STRINGS)));
-#else
-  g_object_class_install_property (object_class, PROP_DEVICE_PATH,
-      g_param_spec_string ("device-path", "Device Path",
-          "DRM device path", cdata->display_path,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-#endif
 
   g_object_class_install_property (object_class, PROP_MIN_QP_I,
       g_param_spec_uint ("min-qp-i", "Min QP I",
@@ -586,15 +569,8 @@ gst_qsv_h265_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstQsvH265Enc *self = GST_QSV_H265_ENC (object);
-  GstQsvEncoderClass *klass = GST_QSV_ENCODER_GET_CLASS (self);
 
   switch (prop_id) {
-    case PROP_ADAPTER_LUID:
-      g_value_set_int64 (value, klass->adapter_luid);
-      break;
-    case PROP_DEVICE_PATH:
-      g_value_set_string (value, klass->display_path);
-      break;
     case PROP_MIN_QP_I:
       g_value_set_uint (value, self->min_qp_i);
       break;

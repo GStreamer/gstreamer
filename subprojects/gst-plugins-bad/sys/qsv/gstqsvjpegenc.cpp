@@ -39,8 +39,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_qsv_jpeg_enc_debug);
 enum
 {
   PROP_0,
-  PROP_ADAPTER_LUID,
-  PROP_DEVICE_PATH,
   PROP_QUALITY,
 };
 
@@ -112,21 +110,6 @@ gst_qsv_jpeg_enc_class_init (GstQsvJpegEncClass * klass, gpointer data)
   object_class->finalize = gst_qsv_jpeg_enc_finalize;
   object_class->set_property = gst_qsv_jpeg_enc_set_property;
   object_class->get_property = gst_qsv_jpeg_enc_get_property;
-
-#ifdef G_OS_WIN32
-  g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
-      g_param_spec_int64 ("adapter-luid", "Adapter LUID",
-          "DXGI Adapter LUID (Locally Unique Identifier) of created device",
-          G_MININT64, G_MAXINT64, qsvenc_class->adapter_luid,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
-              G_PARAM_STATIC_STRINGS)));
-#else
-  g_object_class_install_property (object_class, PROP_DEVICE_PATH,
-      g_param_spec_string ("device-path", "Device Path",
-          "DRM device path", cdata->display_path,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-#endif
 
   g_object_class_install_property (object_class, PROP_QUALITY,
       g_param_spec_uint ("quality", "Quality",
@@ -226,15 +209,8 @@ gst_qsv_jpeg_enc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstQsvJpegEnc *self = GST_QSV_JPEG_ENC (object);
-  GstQsvEncoderClass *klass = GST_QSV_ENCODER_GET_CLASS (self);
 
   switch (prop_id) {
-    case PROP_ADAPTER_LUID:
-      g_value_set_int64 (value, klass->adapter_luid);
-      break;
-    case PROP_DEVICE_PATH:
-      g_value_set_string (value, klass->display_path);
-      break;
     case PROP_QUALITY:
       g_value_set_uint (value, self->quality);
       break;
