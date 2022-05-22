@@ -23,13 +23,14 @@
 
 #include <gst/gst.h>
 #include <mfx.h>
-#include "gstqsvutils.h"
+#include "gstqsvav1enc.h"
 #include "gstqsvh264dec.h"
 #include "gstqsvh264enc.h"
 #include "gstqsvh265dec.h"
 #include "gstqsvh265enc.h"
 #include "gstqsvjpegenc.h"
 #include "gstqsvvp9enc.h"
+#include "gstqsvutils.h"
 #include <string.h>
 
 #ifdef G_OS_WIN32
@@ -243,6 +244,7 @@ plugin_init (GstPlugin * plugin)
     gst_qsv_h265_enc_register (plugin, GST_RANK_NONE, i, device, session);
     gst_qsv_jpeg_enc_register (plugin, GST_RANK_NONE, i, device, session);
     gst_qsv_vp9_enc_register (plugin, GST_RANK_NONE, i, device, session);
+    gst_qsv_av1_enc_register (plugin, GST_RANK_NONE, i, device, session);
 
   next:
     MFXDispReleaseImplDescription (loader, desc);

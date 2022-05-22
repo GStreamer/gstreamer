@@ -38,7 +38,8 @@ typedef enum
 {
   CODEC_AVC,
   CODEC_HEVC,
-  CODEC_VP9
+  CODEC_VP9,
+  CODEC_AV1,
 } Codec;
 
 static GMainLoop *loop = NULL;
@@ -435,6 +436,11 @@ main (gint argc, gchar ** argv)
     max_qp = 255;
     qp_i = 128;
     qp_p = 128;
+  } else if (g_strcmp0 (encoder_name, "qsvav1enc") == 0) {
+    codec = CODEC_AV1;
+    max_qp = 255;
+    qp_i = 128;
+    qp_p = 128;
   } else {
     gst_printerrln ("Unexpected encoder %s", encoder_name);
     exit (1);
@@ -472,7 +478,7 @@ main (gint argc, gchar ** argv)
 
   g_object_set (enc, "bitrate", bitrate, "max-bitrate", max_bitrate,
       "qp-i", qp_i, "qp-p", qp_p, "gop-size", 30, NULL);
-  if (codec != CODEC_VP9)
+  if (codec != CODEC_VP9 && codec != CODEC_AV1)
     g_object_set (enc, "qp-b", qp_b, NULL);
 
   gst_util_set_object_arg (G_OBJECT (enc), "rate-control", rate_control);
@@ -498,6 +504,13 @@ main (gint argc, gchar ** argv)
     MAKE_ELEMENT_AND_ADD (dec, "d3d11vp9dec");
 #else
     MAKE_ELEMENT_AND_ADD (dec, "vavp9dec");
+#endif
+  } else if (g_strrstr (encoder_name, "av1")) {
+    MAKE_ELEMENT_AND_ADD (parser, "av1parse");
+#ifdef G_OS_WIN32
+    MAKE_ELEMENT_AND_ADD (dec, "d3d11av1dec");
+#else
+    MAKE_ELEMENT_AND_ADD (dec, "vaav1dec");
 #endif
   } else {
     if (bframes > 0)
