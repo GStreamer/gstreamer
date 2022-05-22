@@ -23,6 +23,7 @@
 #include <gst/va/gstva.h>
 #include <gst/va/vasurfaceimage.h>
 
+#include "vacompat.h"
 #include "gstvacaps.h"
 
 #define GST_CAT_DEFAULT gst_va_base_enc_debug
