@@ -601,10 +601,16 @@ static gboolean
 gst_jpeg_dec_set_format (GstVideoDecoder * dec, GstVideoCodecState * state)
 {
   GstJpegDec *jpeg = GST_JPEG_DEC (dec);
+  GstStructure *structure;
+  gboolean parsed = FALSE;
 
   if (jpeg->input_state)
     gst_video_codec_state_unref (jpeg->input_state);
   jpeg->input_state = gst_video_codec_state_ref (state);
+
+  structure = gst_caps_get_structure (state->caps, 0);
+  gst_structure_get_boolean (structure, "parsed", &parsed);
+  gst_video_decoder_set_packetized (dec, parsed);
 
   return TRUE;
 }
