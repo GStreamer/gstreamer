@@ -24,3 +24,10 @@ executable('multiple-vpp',
   dependencies : [gst_dep, gstvideo_dep, gstva_dep, gstcontroller_dep],
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
 )
+
+executable('vaenc-dynamic-reconfigure',
+  ['vaenc-dynamic-reconfigure.c', '../key-handler.c'],
+  include_directories : [configinc],
+  dependencies: [gst_dep, gstbase_dep, gstvideo_dep],
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  install: false)
