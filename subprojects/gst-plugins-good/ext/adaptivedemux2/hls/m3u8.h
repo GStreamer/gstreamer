@@ -213,6 +213,10 @@ gst_hls_media_playlist_get_seek_range       (GstHLSMediaPlaylist * m3u8,
 					     gint64  * start,
 					     gint64  * stop);
 
+gboolean
+gst_hls_media_playlist_has_lost_sync        (GstHLSMediaPlaylist * m3u8,
+					     GstClockTime position);
+
 GstM3U8MediaSegment *
 gst_hls_media_playlist_seek                 (GstHLSMediaPlaylist *playlist,
 					     gboolean forward,

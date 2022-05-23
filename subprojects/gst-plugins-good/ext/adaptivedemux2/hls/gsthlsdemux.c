@@ -2105,6 +2105,11 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
           gst_hls_media_playlist_get_starting_segment
           (hlsdemux_stream->playlist);
     } else {
+      if (gst_hls_media_playlist_has_lost_sync (hlsdemux_stream->playlist,
+              stream->current_position)) {
+        GST_WARNING_OBJECT (stream, "Lost SYNC !");
+        return GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC;
+      }
       GST_DEBUG_OBJECT (stream,
           "Looking up segment for position %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->current_position));
@@ -2113,8 +2118,7 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
           GST_SEEK_FLAG_SNAP_NEAREST, stream->current_position);
 
       if (hlsdemux_stream->current_segment == NULL) {
-        GST_INFO_OBJECT (hlsdemux,
-            "This playlist doesn't contain more fragments");
+        GST_INFO_OBJECT (stream, "At the end of the current media playlist");
         return GST_FLOW_EOS;
       }
 

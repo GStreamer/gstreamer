@@ -1386,6 +1386,29 @@ out:
 }
 
 gboolean
+gst_hls_media_playlist_has_lost_sync (GstHLSMediaPlaylist * m3u8,
+    GstClockTime position)
+{
+  GstM3U8MediaSegment *first;
+
+  if (m3u8->segments->len < 1)
+    return TRUE;
+  first = g_ptr_array_index (m3u8->segments, 0);
+
+  GST_DEBUG ("position %" GST_TIME_FORMAT " first %" GST_STIME_FORMAT
+      " duration %" GST_STIME_FORMAT, GST_TIME_ARGS (position),
+      GST_STIME_ARGS (first->stream_time), GST_STIME_ARGS (first->duration));
+
+  if (first->stream_time <= 0)
+    return FALSE;
+
+  /* If we're definitely before the first fragment, we lost sync */
+  if ((position + (first->duration / 2)) < first->stream_time)
+    return TRUE;
+  return FALSE;
+}
+
+gboolean
 gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
     gint64 * start, gint64 * stop)
 {
