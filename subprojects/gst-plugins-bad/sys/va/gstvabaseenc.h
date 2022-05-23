@@ -88,6 +88,7 @@ struct _GstVaBaseEncClass
                               GstVideoCodecFrame * frame);
 
   GstVaCodecs codec;
+  VAEntrypoint entrypoint;
   gchar *render_device_path;
 
   gpointer _padding[GST_PADDING];
@@ -95,6 +96,7 @@ struct _GstVaBaseEncClass
 
 struct CData
 {
+  VAEntrypoint entrypoint;
   gchar *render_device_path;
   gchar *description;
   GstCaps *sink_caps;

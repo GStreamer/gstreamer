@@ -29,14 +29,12 @@
 #include "gstvadisplay_priv.h"
 #include "vacompat.h"
 
-#define VA_ENTRYPOINT_FLAG(entry) (1U << G_PASTE(VAEntrypoint, entry))
-
 typedef struct _GstVaProfileConfig GstVaProfileConfig;
 
 struct _GstVaProfileConfig
 {
   VAProfile profile;
-  guint32 entrypoints;          /* bits map of GstVaapiEntrypoint */
+  guint32 entrypoint;
 };
 
 struct _GstVaEncoder
@@ -131,6 +129,10 @@ gst_va_encoder_set_property (GObject * object, guint prop_id,
     case PROP_DISPLAY:{
       g_assert (!self->display);
       self->display = g_value_dup_object (value);
+      break;
+    }
+    case PROP_ENTRYPOINT:{
+      self->entrypoint = g_value_get_int (value);
       break;
     }
     default:
@@ -404,7 +406,6 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   self->config = config;
   self->context = context;
   self->profile = profile;
-  self->entrypoint = entrypoint;
   self->rt_format = rt_format;
   self->coded_width = coded_width;
   self->coded_height = coded_height;
@@ -466,7 +467,8 @@ gst_va_encoder_class_init (GstVaEncoderClass * klass)
 
   g_properties[PROP_ENTRYPOINT] =
       g_param_spec_int ("va-entrypoint", "VAEntrypoint", "VA Entrypoint",
-      0, 14, 0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+      0, 14, 0,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_properties[PROP_CHROMA] =
       g_param_spec_uint ("va-rt-format", "VARTFormat", "VA RT Fromat or chroma",
@@ -501,7 +503,7 @@ gst_va_encoder_initialize (GstVaEncoder * self, guint32 codec)
     return FALSE;
 
   enc_profiles = gst_va_display_get_profiles (self->display, codec,
-      VAEntrypointEncSlice);
+      self->entrypoint);
 
   if (!enc_profiles)
     return FALSE;
@@ -514,7 +516,7 @@ gst_va_encoder_initialize (GstVaEncoder * self, guint32 codec)
       GstVaProfileConfig config;
 
       config.profile = g_array_index (enc_profiles, VAProfile, i);
-      config.entrypoints = VA_ENTRYPOINT_FLAG (EncSlice);
+      config.entrypoint = self->entrypoint;
       g_array_append_val (self->available_profiles, config);
     }
   }
@@ -528,13 +530,15 @@ gst_va_encoder_initialize (GstVaEncoder * self, guint32 codec)
 }
 
 GstVaEncoder *
-gst_va_encoder_new (GstVaDisplay * display, guint32 codec)
+gst_va_encoder_new (GstVaDisplay * display, guint32 codec,
+    VAEntrypoint entrypoint)
 {
   GstVaEncoder *self;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), NULL);
 
-  self = g_object_new (GST_TYPE_VA_ENCODER, "display", display, NULL);
+  self = g_object_new (GST_TYPE_VA_ENCODER, "display", display,
+      "va-entrypoint", entrypoint, NULL);
   if (!gst_va_encoder_initialize (self, codec))
     gst_clear_object (&self);
 
@@ -559,7 +563,7 @@ gst_va_encoder_has_profile_and_entrypoint (GstVaEncoder * self,
       if (entrypoint == 0)
         break;
 
-      if (config->entrypoints & (1U << entrypoint))
+      if (config->entrypoint == entrypoint)
         break;
     }
   }
@@ -582,7 +586,7 @@ gst_va_encoder_get_max_slice_num (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return -1;
 
-  if (entrypoint != VAEntrypointEncSlice)
+  if (entrypoint != self->entrypoint)
     return -1;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -616,7 +620,7 @@ gst_va_encoder_get_max_num_reference (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return FALSE;
 
-  if (entrypoint != VAEntrypointEncSlice)
+  if (entrypoint != self->entrypoint)
     return FALSE;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -657,7 +661,7 @@ gst_va_encoder_get_rate_control_mode (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return 0;
 
-  if (entrypoint != VAEntrypointEncSlice)
+  if (entrypoint != self->entrypoint)
     return 0;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -689,7 +693,7 @@ gst_va_encoder_get_quality_level (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return 0;
 
-  if (entrypoint != VAEntrypointEncSlice)
+  if (entrypoint != self->entrypoint)
     return 0;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -721,7 +725,7 @@ gst_va_encoder_has_trellis (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return FALSE;
 
-  if (entrypoint != VAEntrypointEncSlice)
+  if (entrypoint != self->entrypoint)
     return FALSE;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -751,7 +755,7 @@ gst_va_encoder_get_rtformat (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return 0;
 
-  if (entrypoint != VAEntrypointEncSlice)
+  if (entrypoint != self->entrypoint)
     return 0;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -781,7 +785,7 @@ gst_va_encoder_get_packed_headers (GstVaEncoder * self, VAProfile profile,
   if (profile == VAProfileNone)
     return 0;
 
-  if (entrypoint != VAEntrypointEncSlice)
+  if (entrypoint != self->entrypoint)
     return 0;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -884,7 +888,7 @@ _get_codec_caps (GstVaEncoder * self)
   if (!gst_va_encoder_is_open (self)
       && GST_IS_VA_DISPLAY_WRAPPED (self->display)) {
     if (gst_va_caps_from_profiles (self->display, self->available_profiles,
-            VAEntrypointEncSlice, &sinkpad_caps, &srcpad_caps)) {
+            self->entrypoint, &sinkpad_caps, &srcpad_caps)) {
       gst_caps_replace (&self->sinkpad_caps, sinkpad_caps);
       gst_caps_replace (&self->srcpad_caps, srcpad_caps);
       gst_caps_unref (srcpad_caps);

@@ -61,12 +61,14 @@ G_DEFINE_TYPE_WITH_CODE (GstVaBaseEnc, gst_va_base_enc,
 static void
 gst_va_base_enc_reset_state (GstVaBaseEnc * base)
 {
+  GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
+
   base->frame_duration = GST_CLOCK_TIME_NONE;
 
   base->width = 0;
   base->height = 0;
   base->profile = VAProfileNone;
-  base->entrypoint = 0;
+  base->entrypoint = klass->entrypoint;
   base->rt_format = 0;
   base->codedbuf_size = 0;
 }
@@ -98,7 +100,8 @@ gst_va_base_enc_open (GstVideoEncoder * venc)
   if (!g_atomic_pointer_get (&base->encoder)) {
     GstVaEncoder *va_encoder;
 
-    va_encoder = gst_va_encoder_new (base->display, klass->codec);
+    va_encoder = gst_va_encoder_new (base->display, klass->codec,
+        klass->entrypoint);
     if (va_encoder)
       ret = TRUE;
 

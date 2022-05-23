@@ -98,7 +98,8 @@ gboolean              gst_va_encoder_add_packed_header    (GstVaEncoder * self,
                                                            gsize size_in_bits,
                                                            gboolean has_emulation_bytes);
 GstVaEncoder *        gst_va_encoder_new                  (GstVaDisplay * display,
-                                                           guint32 codec);
+                                                           guint32 codec,
+                                                           VAEntrypoint entrypoint);
 GArray *              gst_va_encoder_get_surface_formats  (GstVaEncoder * self);
 GstCaps *             gst_va_encoder_get_sinkpad_caps     (GstVaEncoder * self);
 GstCaps *             gst_va_encoder_get_srcpad_caps      (GstVaEncoder * self);

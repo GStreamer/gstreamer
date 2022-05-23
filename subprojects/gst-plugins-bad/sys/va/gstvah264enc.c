@@ -1372,15 +1372,14 @@ _decide_profile (GstVaH264Enc * self)
       continue;
 
     if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
-            profile, VAEntrypointEncSlice))
+            profile, base->entrypoint))
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
-                profile, VAEntrypointEncSlice)) == 0)
+                profile, base->entrypoint)) == 0)
       continue;
 
     base->profile = profile;
-    base->entrypoint = VAEntrypointEncSlice;
     base->rt_format = rt_format;
     ret = TRUE;
     goto out;
@@ -1396,15 +1395,14 @@ _decide_profile (GstVaH264Enc * self)
       continue;
 
     if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
-            profile, VAEntrypointEncSlice))
+            profile, base->entrypoint))
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
-                profile, VAEntrypointEncSlice)) == 0)
+                profile, base->entrypoint)) == 0)
       continue;
 
     base->profile = profile;
-    base->entrypoint = VAEntrypointEncSlice;
     base->rt_format = rt_format;
     ret = TRUE;
   }
@@ -3238,17 +3236,23 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   GstVaBaseEncClass *va_enc_class = GST_VA_BASE_ENC_CLASS (g_klass);
   struct CData *cdata = class_data;
   gchar *long_name;
+  const gchar *name, *desc;
 
-  if (cdata->description) {
-    long_name = g_strdup_printf ("VA-API H.264 Encoder in %s",
-        cdata->description);
+  if (cdata->entrypoint == VAEntrypointEncSlice) {
+    desc = "VA-API based H.264 video encoder";
+    name = "VA-API H.264 Encoder";
   } else {
-    long_name = g_strdup ("VA-API H.264 Encoder");
+    desc = "VA-API based H.264 low power video encoder";
+    name = "VA-API H.264 Low Power Encoder";
   }
 
+  if (cdata->description)
+    long_name = g_strdup_printf ("%s in %s", name, cdata->description);
+  else
+    long_name = g_strdup (name);
+
   gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Encoder/Video/Hardware", "VA-API based H.264 video encoder",
-      "He Junyan <junyan.he@intel.com>");
+      "Codec/Encoder/Video/Hardware", desc, "He Junyan <junyan.he@intel.com>");
 
   sink_doc_caps = gst_caps_from_string (sink_caps_str);
   src_doc_caps = gst_caps_from_string (src_caps_str);
@@ -3256,6 +3260,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   parent_class = g_type_class_peek_parent (g_klass);
 
   va_enc_class->codec = H264;
+  va_enc_class->entrypoint = cdata->entrypoint;
   va_enc_class->render_device_path = g_strdup (cdata->render_device_path);
 
   sink_pad_templ = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -3546,7 +3551,8 @@ _complete_src_caps (GstCaps * srccaps)
 
 gboolean
 gst_va_h264_enc_register (GstPlugin * plugin, GstVaDevice * device,
-    GstCaps * sink_caps, GstCaps * src_caps, guint rank)
+    GstCaps * sink_caps, GstCaps * src_caps, guint rank,
+    VAEntrypoint entrypoint)
 {
   static GOnce debug_once = G_ONCE_INIT;
   GType type;
@@ -3564,8 +3570,11 @@ gst_va_h264_enc_register (GstPlugin * plugin, GstVaDevice * device,
   g_return_val_if_fail (GST_IS_VA_DEVICE (device), FALSE);
   g_return_val_if_fail (GST_IS_CAPS (sink_caps), FALSE);
   g_return_val_if_fail (GST_IS_CAPS (src_caps), FALSE);
+  g_return_val_if_fail (entrypoint == VAEntrypointEncSlice ||
+      entrypoint == VAEntrypointEncSliceLP, FALSE);
 
   cdata = g_new (struct CData, 1);
+  cdata->entrypoint = entrypoint;
   cdata->description = NULL;
   cdata->render_device_path = g_strdup (device->render_device_path);
   cdata->sink_caps = gst_caps_ref (sink_caps);
@@ -3578,8 +3587,13 @@ gst_va_h264_enc_register (GstPlugin * plugin, GstVaDevice * device,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   type_info.class_data = cdata;
-  type_name = g_strdup ("GstVaH264Enc");
-  feature_name = g_strdup ("vah264enc");
+  if (entrypoint == VAEntrypointEncSlice) {
+    type_name = g_strdup ("GstVaH264Enc");
+    feature_name = g_strdup ("vah264enc");
+  } else {
+    type_name = g_strdup ("GstVaH264LPEnc");
+    feature_name = g_strdup ("vah264lpenc");
+  }
 
   /* The first encoder to be registered should use a constant name,
    * like vah264enc, for any additional encoders, we create unique
@@ -3588,8 +3602,13 @@ gst_va_h264_enc_register (GstPlugin * plugin, GstVaDevice * device,
     gchar *basename = g_path_get_basename (device->render_device_path);
     g_free (type_name);
     g_free (feature_name);
-    type_name = g_strdup_printf ("GstVa%sH264Enc", basename);
-    feature_name = g_strdup_printf ("va%sh264enc", basename);
+    if (entrypoint == VAEntrypointEncSlice) {
+      type_name = g_strdup_printf ("GstVa%sH264Enc", basename);
+      feature_name = g_strdup_printf ("va%sh264enc", basename);
+    } else {
+      type_name = g_strdup_printf ("GstVa%sH264LPEnc", basename);
+      feature_name = g_strdup_printf ("va%sh264lpenc", basename);
+    }
     cdata->description = basename;
     /* lower rank for non-first device */
     if (rank > 0)

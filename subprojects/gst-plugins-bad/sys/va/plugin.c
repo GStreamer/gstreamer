@@ -182,7 +182,7 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
     switch (codec) {
       case H264:
         if (!gst_va_h264_enc_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_NONE)) {
+                GST_RANK_NONE, entrypoint)) {
           GST_WARNING ("Failed to register H264 decoder: %s",
               device->render_device_path);
         }
@@ -309,8 +309,7 @@ plugin_register_elements (GstPlugin * plugin, GstVaDevice * device)
 
   plugin_register_decoders (plugin, device, decoders);
   plugin_register_encoders (plugin, device, encoders, VAEntrypointEncSlice);
-  /* @TODO: ignore low power encoders temporarly */
-  /* plugin_register_encoders (plugin, device, encoderslp, VAEntrypointEncSliceLP); */
+  plugin_register_encoders (plugin, device, encoderslp, VAEntrypointEncSliceLP);
   plugin_register_encoders (plugin, device, encodersimg,
       VAEntrypointEncPicture);
   if (has_vpp)

@@ -29,6 +29,7 @@ gboolean     gst_va_h264_enc_register                (GstPlugin * plugin,
                                                       GstVaDevice * device,
                                                       GstCaps * sink_caps,
                                                       GstCaps * src_caps,
-                                                      guint rank);
+                                                      guint rank,
+                                                      VAEntrypoint entrypoint);
 
 G_END_DECLS
