@@ -1982,31 +1982,6 @@ find_stream_for_track_locked (GstAdaptiveDemux * demux,
   return NULL;
 }
 
-/* Scheduler context held, takes TRACKS_LOCK */
-static GstAdaptiveDemux2Stream *
-gst_adaptive_demux_find_stream_for_pad (GstAdaptiveDemux * demux, GstPad * pad)
-{
-  GList *iter;
-  GstAdaptiveDemuxTrack *track = NULL;
-  GstAdaptiveDemux2Stream *stream = NULL;
-
-  TRACKS_LOCK (demux);
-  for (iter = demux->output_period->tracks; iter; iter = g_list_next (iter)) {
-    OutputSlot *cand = iter->data;
-    if (cand->pad == pad) {
-      track = cand->track;
-      break;
-    }
-  }
-
-  if (track)
-    stream = find_stream_for_track_locked (demux, track);
-
-  TRACKS_UNLOCK (demux);
-
-  return stream;
-}
-
 /* Called from seek handler
  *
  * This function is used when a (flushing) seek caused a new period to be activated.
@@ -2146,7 +2121,7 @@ gst_adaptive_demux_setup_streams_for_restart (GstAdaptiveDemux * demux,
                               GST_SEEK_FLAG_SNAP_NEAREST))
 
 static gboolean
-gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
+gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
     GstEvent * event)
 {
   GstAdaptiveDemuxClass *demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
@@ -2159,7 +2134,6 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
   gboolean update;
   gboolean ret;
   GstSegment oldsegment;
-  GstAdaptiveDemux2Stream *stream = NULL;
   GstEvent *flush_event;
 
   GST_INFO_OBJECT (demux, "Received seek event");
@@ -2362,23 +2336,19 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
 
   /*
    * Handle snap seeks as follows:
-   * 1) do the snap seeking on the stream that received
-   *    the event
+   * 1) do the snap seeking a (random) active stream
    * 2) use the final position on this stream to seek
    *    on the other streams to the same position
    *
-   * We can't snap at all streams at the same time as
-   * they might end in different positions, so just
-   * use the one that received the event as the 'leading'
-   * one to do the snap seek.
-   *
-   * FIXME: Could use the global_output_position (running time)
-   * as the snap reference
+   * We can't snap at all streams at the same time as they might end in
+   * different positions, so just pick one and align all others to that
+   * position.
    */
-  if (IS_SNAP_SEEK (flags) && demux_class->stream_seek && (stream =
-          gst_adaptive_demux_find_stream_for_pad (demux, pad))) {
+  if (IS_SNAP_SEEK (flags) && demux_class->stream_seek) {
+    GstAdaptiveDemux2Stream *stream = NULL;
     GstClockTimeDiff ts;
     GstSeekFlags stream_seek_flags = flags;
+    GList *iter;
 
     /* snap-seek on the stream that received the event and then
      * use the resulting position to seek on all streams */
@@ -2387,7 +2357,8 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
       if (start_type != GST_SEEK_TYPE_NONE)
         ts = start;
       else {
-        ts = stream->current_position;
+        ts = gst_segment_position_from_running_time (&demux->segment,
+            GST_FORMAT_TIME, demux->priv->global_output_position);
         start_type = GST_SEEK_TYPE_SET;
       }
     } else {
@@ -2395,10 +2366,19 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
         ts = stop;
       else {
         stop_type = GST_SEEK_TYPE_SET;
-        ts = stream->current_position;
+        ts = gst_segment_position_from_running_time (&demux->segment,
+            GST_FORMAT_TIME, demux->priv->global_output_position);
       }
     }
 
+    /* Pick a random active stream on which to do the stream seek */
+    for (iter = demux->output_period->streams; iter; iter = iter->next) {
+      GstAdaptiveDemux2Stream *cand = iter->data;
+      if (gst_adaptive_demux2_stream_is_selected_locked (cand)) {
+        stream = cand;
+        break;
+      }
+    }
     if (stream) {
       demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts, &ts);
     }
@@ -2415,7 +2395,6 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux, GstPad * pad,
         start_type, start, stop_type, stop);
     GST_DEBUG_OBJECT (demux, "Adapted snap seek to %" GST_PTR_FORMAT, event);
   }
-  stream = NULL;
 
   ret = gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,
       start, stop_type, stop, &update);
@@ -2635,7 +2614,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
         gst_event_unref (event);
         return TRUE;
       }
-      return gst_adaptive_demux_handle_seek_event (demux, pad, event);
+      return gst_adaptive_demux_handle_seek_event (demux, event);
     }
     case GST_EVENT_LATENCY:{
       /* Upstream and our internal source are irrelevant
