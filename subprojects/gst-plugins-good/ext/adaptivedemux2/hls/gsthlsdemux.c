@@ -105,10 +105,13 @@ static gboolean gst_hls_demux_stream_update_rendition_playlist (GstHLSDemux *
     demux, GstHLSDemuxStream * stream);
 static GstFlowReturn gst_hls_demux_update_manifest (GstAdaptiveDemux * demux);
 
-static void setup_initial_playlist_and_mapping (GstHLSDemux * demux,
+static void setup_initial_playlist (GstHLSDemux * demux,
     GstHLSMediaPlaylist * playlist);
-static GstHLSTimeMap *gst_hls_demux_add_time_mapping (GstHLSDemux * demux,
+static void gst_hls_demux_add_time_mapping (GstHLSDemux * demux,
     gint64 dsn, GstClockTimeDiff stream_time, GDateTime * pdt);
+static void
+gst_hls_update_time_mappings (GstHLSDemux * demux,
+    GstHLSMediaPlaylist * playlist);
 
 static gboolean gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
 static GstFlowReturn gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream *
@@ -911,7 +914,8 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     hlsdemux->main_stream->playlist = simple_media_playlist;
     hlsdemux->main_stream->current_segment =
         gst_hls_media_playlist_get_starting_segment (simple_media_playlist);
-    setup_initial_playlist_and_mapping (hlsdemux, simple_media_playlist);
+    setup_initial_playlist (hlsdemux, simple_media_playlist);
+    gst_hls_update_time_mappings (hlsdemux, simple_media_playlist);
     gst_hls_media_playlist_dump (simple_media_playlist);
   }
 
@@ -1577,9 +1581,14 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
   if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
     return GST_FLOW_OK;
 
-  if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED)
+  if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED) {
+    /* We can update the stream current position with a more accurate value
+     * before advancing. Note that we don't have any period so we can set the
+     * stream_time as-is on the stream current position */
+    stream->current_position = hls_stream->current_segment->stream_time;
     return gst_adaptive_demux2_stream_advance_fragment (demux, stream,
         hls_stream->current_segment->duration);
+  }
   return ret;
 }
 
@@ -1830,7 +1839,7 @@ gst_hls_time_map_new (void)
   return map;
 }
 
-static GstHLSTimeMap *
+static void
 gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
     GstClockTimeDiff stream_time, GDateTime * pdt)
 {
@@ -1851,13 +1860,13 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
       if (map->pdt)
         datestring = g_date_time_format_iso8601 (map->pdt);
       GST_DEBUG_OBJECT (demux,
-          "Returning existing mapping, dsn:%" G_GINT64_FORMAT " stream_time:%"
+          "Already have mapping, dsn:%" G_GINT64_FORMAT " stream_time:%"
           GST_TIME_FORMAT " internal_time:%" GST_TIME_FORMAT " pdt:%s",
           map->dsn, GST_TIME_ARGS (map->stream_time),
           GST_TIME_ARGS (map->internal_time), datestring);
       g_free (datestring);
 #endif
-      return map;
+      return;
     }
   }
 
@@ -1877,16 +1886,32 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
     map->pdt = g_date_time_ref (pdt);
 
   demux->mappings = g_list_append (demux->mappings, map);
-
-  return map;
 }
 
+/* Got over the DSN from the playlist and add any missing time mapping */
 static void
-setup_initial_playlist_and_mapping (GstHLSDemux * demux,
+gst_hls_update_time_mappings (GstHLSDemux * demux,
     GstHLSMediaPlaylist * playlist)
 {
   guint idx, len = playlist->segments->len;
-  GstHLSTimeMap *map = NULL;
+  gint64 dsn = G_MAXINT64;
+
+  for (idx = 0; idx < len; idx++) {
+    GstM3U8MediaSegment *segment = g_ptr_array_index (playlist->segments, idx);
+
+    if (dsn == G_MAXINT64 || segment->discont_sequence != dsn) {
+      dsn = segment->discont_sequence;
+      if (!gst_hls_find_time_map (demux, segment->discont_sequence))
+        gst_hls_demux_add_time_mapping (demux, segment->discont_sequence,
+            segment->stream_time, segment->datetime);
+    }
+  }
+}
+
+static void
+setup_initial_playlist (GstHLSDemux * demux, GstHLSMediaPlaylist * playlist)
+{
+  guint idx, len = playlist->segments->len;
   GstM3U8MediaSegment *segment;
   GstClockTimeDiff pos = 0;
 
@@ -1899,10 +1924,6 @@ setup_initial_playlist_and_mapping (GstHLSDemux * demux,
   for (idx = 0; idx < len; idx++) {
     segment = g_ptr_array_index (playlist->segments, idx);
 
-    if (!map || segment->discont)
-      map =
-          gst_hls_demux_add_time_mapping (demux, segment->discont_sequence, pos,
-          segment->datetime);
     segment->stream_time = pos;
     pos += segment->duration;
   }
@@ -1981,13 +2002,19 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
   if (stream->playlist) {
     gst_hls_media_playlist_unref (stream->playlist);
     stream->playlist = new_playlist;
-    gst_hls_media_playlist_dump (new_playlist);
   } else {
     GST_DEBUG_OBJECT (stream, "Setting up initial playlist");
     stream->playlist = new_playlist;
-    setup_initial_playlist_and_mapping (demux, new_playlist);
+    setup_initial_playlist (demux, new_playlist);
   }
 
+  if (stream->is_variant) {
+    /* Update time mappings. We only use the variant stream for collecting
+     * mappings since it is the reference on which rendition stream timing will
+     * be based. */
+    gst_hls_update_time_mappings (demux, stream->playlist);
+  }
+  gst_hls_media_playlist_dump (stream->playlist);
 
   if (stream->current_segment) {
     GST_DEBUG_OBJECT (stream,
@@ -2065,16 +2092,18 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       return GST_FLOW_ERROR;
   }
 
-  GST_DEBUG_OBJECT (stream, "Updating fragment information");
+  GST_DEBUG_OBJECT (stream,
+      "Updating fragment information, current_position:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (stream->current_position));
 
   /* Find the current segment if we don't already have it */
   if (hlsdemux_stream->current_segment == NULL) {
+    GST_LOG_OBJECT (stream, "No current segment");
     if (stream->current_position == GST_CLOCK_TIME_NONE) {
       GST_DEBUG_OBJECT (stream, "Setting up initial segment");
       hlsdemux_stream->current_segment =
           gst_hls_media_playlist_get_starting_segment
           (hlsdemux_stream->playlist);
-      setup_initial_playlist_and_mapping (hlsdemux, hlsdemux_stream->playlist);
     } else {
       GST_DEBUG_OBJECT (stream,
           "Looking up segment for position %" GST_TIME_FORMAT,
