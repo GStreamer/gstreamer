@@ -65,6 +65,8 @@ struct _GstVulkanFullScreenQuadPrivate
   VkBlendFactor dst_alpha_blend_factor;
   VkBlendOp colour_blend_op;
   VkBlendOp alpha_blend_op;
+
+  gboolean enable_clear;
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstVulkanFullScreenQuad, gst_vulkan_full_screen_quad,
@@ -300,7 +302,7 @@ create_render_pass (GstVulkanFullScreenQuad * self, GError ** error)
     color_attachments[i] = (VkAttachmentDescription) {
         .format = gst_vulkan_format_from_video_info (&self->out_info, i),
         .samples = VK_SAMPLE_COUNT_1_BIT,
-        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .loadOp = priv->enable_clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD,
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
         .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
         .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
@@ -1324,6 +1326,32 @@ gst_vulkan_full_screen_quad_set_blend_operation (GstVulkanFullScreenQuad * self,
   priv->alpha_blend_op = alpha_blend_op;
 
   clear_graphics_pipeline (self);
+}
+
+/**
+ * gst_vulkan_full_screen_quad_enable_clear:
+ * @self: the #GstVulkanFullScreenQuad
+ * @enable_clear: whether to clear the framebuffer on load
+ *
+ * Since: 1.22
+ */
+void
+gst_vulkan_full_screen_quad_enable_clear (GstVulkanFullScreenQuad * self,
+    gboolean enable_clear)
+{
+  GstVulkanFullScreenQuadPrivate *priv;
+
+  g_return_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self));
+
+  priv = GET_PRIV (self);
+
+  if (priv->enable_clear == enable_clear)
+    return;
+
+  priv->enable_clear = enable_clear;
+
+  clear_graphics_pipeline (self);
+  clear_render_pass (self);
 }
 
 /**

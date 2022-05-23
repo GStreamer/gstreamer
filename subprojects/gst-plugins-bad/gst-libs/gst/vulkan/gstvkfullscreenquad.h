@@ -132,6 +132,9 @@ void                gst_vulkan_full_screen_quad_set_blend_factors   (GstVulkanFu
                                                                      VkBlendFactor dst_blend_factor,
                                                                      VkBlendFactor src_alpha_blend_factor,
                                                                      VkBlendFactor dst_alpha_blend_factor);
+GST_VULKAN_API
+void                gst_vulkan_full_screen_quad_enable_clear        (GstVulkanFullScreenQuad * self,
+                                                                     gboolean enable_clear);
 
 GST_VULKAN_API
 gboolean            gst_vulkan_full_screen_quad_prepare_draw        (GstVulkanFullScreenQuad * self, GstVulkanFence * fence, GError ** error);
