@@ -1715,6 +1715,12 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
       GST_DEBUG_OBJECT (stream, "EOS, checking to stop download loop");
       gst_adaptive_demux2_stream_handle_playlist_eos (stream);
       return FALSE;
+    case GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC:
+      GST_DEBUG_OBJECT (stream, "Lost sync, asking reset to current position");
+      stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED;
+      gst_adaptive_demux_loop_call (demux->priv->scheduler_task,
+          (GSourceFunc) gst_adaptive_demux_handle_lost_sync, demux, NULL);
+      return FALSE;
     case GST_FLOW_NOT_LINKED:
     {
       stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_EOS;

@@ -196,6 +196,8 @@ void gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux);
 
 void gst_adaptive_demux2_stream_stop (GstAdaptiveDemux2Stream * stream);
 
+gboolean gst_adaptive_demux_handle_lost_sync (GstAdaptiveDemux * demux);
+
 typedef struct
 {
   GstMiniObject *item;

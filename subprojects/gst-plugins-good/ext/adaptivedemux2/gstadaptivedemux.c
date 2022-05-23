@@ -2788,6 +2788,22 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
   return ret;
 }
 
+gboolean
+gst_adaptive_demux_handle_lost_sync (GstAdaptiveDemux * demux)
+{
+  GstEvent *seek;
+
+  GST_WARNING_OBJECT (demux, "Lost synchronization, seeking back to live head");
+
+  seek =
+      gst_event_new_seek (1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, GST_SEEK_TYPE_END, 0,
+      GST_SEEK_TYPE_NONE, 0);
+  gst_adaptive_demux_handle_seek_event (demux, seek);
+  return FALSE;
+}
+
+
 /* Called when the scheduler starts, to kick off manifest updates
  * and stream downloads */
 static gboolean
