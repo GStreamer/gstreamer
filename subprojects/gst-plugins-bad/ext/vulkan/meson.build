@@ -26,6 +26,7 @@ vulkan_sources = [
   'vksink.c',
   'vkupload.c',
   'vkviewconvert.c',
+  'vkoverlaycompositor.c',
 ]
 
 vulkan_plugin_enum_headers = [

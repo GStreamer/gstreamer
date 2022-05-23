@@ -38,6 +38,7 @@
 #include "vkviewconvert.h"
 #include "vkdeviceprovider.h"
 #include "gstvulkanelements.h"
+#include "vkoverlaycompositor.h"
 
 
 static gboolean
@@ -60,6 +61,8 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (vulkanshaderspv, plugin);
 
   ret |= GST_ELEMENT_REGISTER (vulkanviewconvert, plugin);
+
+  ret |= GST_ELEMENT_REGISTER (vulkanoverlaycompositor, plugin);
 
   return ret;
 }
