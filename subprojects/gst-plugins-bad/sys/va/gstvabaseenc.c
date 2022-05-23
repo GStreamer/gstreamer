@@ -564,20 +564,16 @@ error_new_frame:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
         ("Failed to create the input frame."), (NULL));
-    if (frame) {
-      gst_clear_buffer (&frame->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame);
-    }
+    gst_clear_buffer (&frame->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame);
     return GST_FLOW_ERROR;
   }
 error_reorder:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
         ("Failed to reorder the input frame."), (NULL));
-    if (frame) {
-      gst_clear_buffer (&frame->output_buffer);
-      gst_video_encoder_finish_frame (venc, frame);
-    }
+    gst_clear_buffer (&frame->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame);
     return GST_FLOW_ERROR;
   }
 error_encode:
