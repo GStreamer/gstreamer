@@ -72,6 +72,7 @@ struct _GstShout2send {
   gchar *user_agent;
   gint  format;
   guint timeout;
+  guint usage;                   /* SHOUT_USAGE_* */
 
   GstTagList* tags;
 };
