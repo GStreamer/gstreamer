@@ -783,11 +783,16 @@ GstVulkanFullScreenQuad *
 gst_vulkan_full_screen_quad_new (GstVulkanQueue * queue)
 {
   GstVulkanFullScreenQuad *self;
+  GError *error = NULL;
 
   g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
 
   self = g_object_new (GST_TYPE_VULKAN_FULL_SCREEN_QUAD, NULL);
   self->queue = gst_object_ref (queue);
+  self->cmd_pool = gst_vulkan_queue_create_command_pool (queue, &error);
+  if (!self->cmd_pool)
+    GST_WARNING_OBJECT (self, "Failed to create command pool: %s",
+        error->message);
 
   gst_object_ref_sink (self);
 
