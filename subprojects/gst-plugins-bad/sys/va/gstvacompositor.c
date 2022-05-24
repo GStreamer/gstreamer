@@ -777,7 +777,13 @@ _get_sinkpad_pool (GstVaCompositor * const self, GstVaCompositorPad * const pad)
   gst_allocation_params_init (&params);
 
   caps = gst_pad_get_current_caps (GST_PAD (pad));
-  gst_video_info_from_caps (&info, caps);
+  if (!caps)
+    return NULL;
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
+    return NULL;
+  }
 
   size = GST_VIDEO_INFO_SIZE (&info);
 
@@ -892,20 +898,14 @@ extern GRecMutex GST_VA_SHARED_LOCK;
 
 static gboolean
 _try_import_buffer (GstVaCompositor * const self,
-    GstVaCompositorPad * const pad, GstBuffer * inbuf)
+    GstVideoInfo info, GstBuffer * inbuf)
 {
   VASurfaceID surface;
-  GstCaps *caps;
-  GstVideoInfo info;
   gboolean ret;
 
   surface = gst_va_buffer_get_surface (inbuf);
   if (surface != VA_INVALID_ID)
     return TRUE;
-
-  caps = gst_pad_get_current_caps (GST_PAD (pad));
-  gst_video_info_from_caps (&info, caps);
-  gst_caps_unref (caps);
 
   g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
   ret = _try_import_dmabuf_unlocked (self, &info, inbuf);
@@ -926,11 +926,23 @@ gst_va_compositor_import_buffer (GstVaCompositor * const self,
   GstVideoFrame in_frame, out_frame;
   gboolean imported, copied;
 
-  imported = _try_import_buffer (self, pad, inbuf);
+  caps = gst_pad_get_current_caps (GST_PAD (pad));
+  if (!caps)
+    return GST_FLOW_ERROR;
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
+    return GST_FLOW_ERROR;
+  }
+  gst_caps_unref (caps);
+
+  imported = _try_import_buffer (self, info, inbuf);
   if (imported) {
     *buf = gst_buffer_ref (inbuf);
     return GST_FLOW_OK;
   }
+
+  GST_LOG_OBJECT (self, "copying input frame");
 
   /* input buffer doesn't come from a vapool, thus it is required to
    * have a pool, grab from it a new buffer and copy the input
@@ -941,12 +953,6 @@ gst_va_compositor_import_buffer (GstVaCompositor * const self,
   ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
   if (ret != GST_FLOW_OK)
     return ret;
-
-  GST_LOG_OBJECT (self, "copying input frame");
-
-  caps = gst_pad_get_current_caps (GST_PAD (pad));
-  gst_video_info_from_caps (&info, caps);
-  gst_caps_unref (caps);
 
   if (!gst_video_frame_map (&in_frame, &info, inbuf, GST_MAP_READ))
     goto invalid_buffer;
