@@ -413,7 +413,7 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
     }
 
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
+      GST_WARNING_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;
     }
   }
