@@ -3061,6 +3061,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
   gint pb_stream_type = -1;
   gchar *pad_name;
   GstPlayBin3 *playbin = group->playbin;
+  GstStreamType selected, active, cur;
 
   GST_PLAY_BIN3_SHUTDOWN_LOCK (playbin, shutdown);
 
@@ -3073,10 +3074,13 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
      try exact match first */
   if (g_str_has_prefix (pad_name, "video")) {
     pb_stream_type = PLAYBIN_STREAM_VIDEO;
+    cur = GST_STREAM_TYPE_VIDEO;
   } else if (g_str_has_prefix (pad_name, "audio")) {
     pb_stream_type = PLAYBIN_STREAM_AUDIO;
+    cur = GST_STREAM_TYPE_AUDIO;
   } else if (g_str_has_prefix (pad_name, "text")) {
     pb_stream_type = PLAYBIN_STREAM_TEXT;
+    cur = GST_STREAM_TYPE_TEXT;
   }
 
   g_free (pad_name);
@@ -3090,6 +3094,30 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstSourceGroup * group)
 
   GST_PLAY_BIN3_LOCK (playbin);
   combine = &playbin->combiner[pb_stream_type];
+
+  /* (uri)decodebin3 will post streams-selected once all pads are expose.
+   * Therefore this stream might not be marked as selected on pad-added,
+   * and associated combiner can be null here.
+   * Marks this stream as selected manually, exposed pad implies it's selected
+   * already */
+  selected = playbin->selected_stream_types | cur;
+  active = playbin->active_stream_types;
+
+  if (selected != active) {
+    GST_DEBUG_OBJECT (playbin,
+        "%s:%s added but not an active stream, marking active",
+        GST_DEBUG_PAD_NAME (pad));
+    playbin->selected_stream_types = selected;
+    reconfigure_output (playbin);
+
+    /* shutdown state can be changed meantime then combiner will not be
+     * configured */
+    if (g_atomic_int_get (&playbin->shutdown)) {
+      GST_PLAY_BIN3_UNLOCK (playbin);
+      GST_PLAY_BIN3_SHUTDOWN_UNLOCK (playbin);
+      return;
+    }
+  }
 
   combiner_control_pad (playbin, combine, pad);
 
