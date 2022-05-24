@@ -5179,6 +5179,65 @@ GST_START_TEST (test_simulcast_fec_rtx)
 
 GST_END_TEST;
 
+GST_START_TEST (test_bundle_multiple_media_rtx_payload_mapping)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  guint offer_media_format_count[] = { 5, 5, };
+  VAL_SDP_INIT (payloads0, on_sdp_media_payload_types, GUINT_TO_POINTER (0),
+      NULL);
+  VAL_SDP_INIT (payloads1, on_sdp_media_payload_types, GUINT_TO_POINTER (1),
+      &payloads0);
+  VAL_SDP_INIT (no_dup_payloads, on_sdp_media_no_duplicate_payloads, NULL,
+      &payloads1);
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      offer_media_format_count, &no_dup_payloads);
+  const gchar *expected_offer_setup[] = { "actpass", "actpass", };
+  VAL_SDP_INIT (setup, on_sdp_media_setup, expected_offer_setup,
+      &media_formats);
+  const gchar *expected_offer_direction[] = { "recvonly", "recvonly", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &setup);
+  GstWebRTCRTPTransceiverDirection direction;
+  GstWebRTCRTPTransceiver *trans;
+  GstCaps *caps;
+
+  /* add two identical transceivers that will only receive a vp8 stream and check that
+   * the created offer has the same rtx/red mappings */
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+
+  gst_util_set_object_arg (G_OBJECT (t->webrtc1), "bundle-policy",
+      "max-bundle");
+  gst_util_set_object_arg (G_OBJECT (t->webrtc2), "bundle-policy",
+      "max-bundle");
+
+  /* setup recvonly transceiver */
+  caps = gst_caps_from_string (VP8_RTP_CAPS (97));
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  fail_unless (trans != NULL);
+  g_object_set (GST_OBJECT (trans), "do-nack", TRUE, "fec-type",
+      GST_WEBRTC_FEC_TYPE_ULP_RED, NULL);
+  gst_object_unref (trans);
+
+  direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+  g_signal_emit_by_name (t->webrtc1, "add-transceiver", direction, caps,
+      &trans);
+  fail_unless (trans != NULL);
+  g_object_set (GST_OBJECT (trans), "do-nack", TRUE, "fec-type",
+      GST_WEBRTC_FEC_TYPE_ULP_RED, NULL);
+  gst_object_unref (trans);
+
+  gst_caps_unref (caps);
+
+  /* don't really care about the answer */
+  test_validate_sdp (t, &offer, NULL);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
 static Suite *
 webrtcbin_suite (void)
 {
@@ -5238,6 +5297,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_max_bundle_fec);
     tcase_add_test (tc, test_simulcast);
     tcase_add_test (tc, test_simulcast_fec_rtx);
+    tcase_add_test (tc, test_bundle_multiple_media_rtx_payload_mapping);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
