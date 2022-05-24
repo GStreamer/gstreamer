@@ -4177,6 +4177,7 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
 
   gst_video_info_init (info);
   gst_video_alignment_reset (&align);
+  v4l2object->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
 
   memset (&fmt, 0x00, sizeof (struct v4l2_format));
   fmt.type = v4l2object->type;
