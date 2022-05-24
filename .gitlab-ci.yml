@@ -40,6 +40,10 @@ variables:
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$FDO_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
+  _BUILD_IGNORE_DEPRECATIONS: >
+    -Dc_args="-Wno-error=deprecated-declarations"
+    -Dcpp_args="-Wno-error=deprecated-declarations"
+
   DEFAULT_MESON_ARGS: >-
     -Dlibnice:tests=disabled
     -Dlibnice:examples=disabled
@@ -278,7 +282,7 @@ commitlint:
     fi
   - echo $ARGS
   - date -R
-  - meson setup build/ $(echo ${ARGS})
+  - meson setup build/ ${_BUILD_IGNORE_DEPRECATIONS} $(echo ${ARGS})
   - date -R
   - ninja -C build/
   - date -R
