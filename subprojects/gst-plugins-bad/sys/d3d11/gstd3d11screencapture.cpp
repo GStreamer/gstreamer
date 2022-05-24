@@ -296,7 +296,7 @@ public:
   }
 
   GstFlowReturn
-  Capture (gboolean draw_mouse)
+  Capture ()
   {
     GstFlowReturn ret;
     bool timeout = false;
@@ -315,14 +315,12 @@ public:
       return GST_FLOW_OK;
     }
 
-    if (draw_mouse) {
-      GST_TRACE ("Getting mouse pointer info");
-      ret = GetMouse (&ptr_info_, &frame_info);
-      if (ret != GST_FLOW_OK) {
-        GST_WARNING ("Couldn't get mouse pointer info");
-        dupl_->ReleaseFrame ();
-        return ret;
-      }
+    GST_TRACE ("Getting mouse pointer info");
+    ret = GetMouse (&ptr_info_, &frame_info);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING ("Couldn't get mouse pointer info");
+      dupl_->ReleaseFrame ();
+      return ret;
     }
 
     ret = ProcessFrame (texture.Get(), shared_texture_.Get(),
@@ -763,10 +761,6 @@ private:
     ptr_info->LastTimeStamp = frame_info->LastMouseUpdateTime;
     ptr_info->Visible = frame_info->PointerPosition.Visible != 0;
 
-    /* Mouse is invisible */
-    if (!ptr_info->Visible)
-      return GST_FLOW_OK;
-
     /* No new shape */
     if (frame_info->PointerShapeBufferSize == 0)
       return GST_FLOW_OK;
@@ -774,7 +768,9 @@ private:
     /* Realloc buffer if needed */
     ptr_info->MaybeReallocBuffer (frame_info->PointerShapeBufferSize);
 
-    /* Get shape */
+    /* Must always get shape of cursor, even if not drawn at the moment.
+     * Shape of cursor is not repeated by the AcquireNextFrame and can be
+     * requested to be drawn any time later */
     UINT dummy;
     HRESULT hr = dupl_->GetFramePointerShape(frame_info->PointerShapeBufferSize,
         (void *) ptr_info->PtrShapeBuffer, &dummy, &ptr_info->shape_info);
@@ -1878,7 +1874,7 @@ gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
   }
 
   gst_d3d11_device_lock (capture->device);
-  ret = capture->dupl_obj->Capture (draw_mouse);
+  ret = capture->dupl_obj->Capture ();
   if (ret != GST_FLOW_OK) {
     gst_d3d11_device_unlock (capture->device);
 
