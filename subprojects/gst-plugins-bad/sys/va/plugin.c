@@ -159,12 +159,6 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
 {
   GHashTableIter iter;
   gpointer key, value;
-  const gchar *str;
-
-  if (entrypoint == VAEntrypointEncSliceLP)
-    str = "low power ";
-  else
-    str = "";
 
   g_hash_table_iter_init (&iter, encoders);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
@@ -179,7 +173,8 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
             &srccaps, &sinkcaps))
       continue;
 
-    GST_LOG ("%d encoder %scodec: %" GST_FOURCC_FORMAT, profiles->len, str,
+    GST_LOG ("%d encoder %scodec: %" GST_FOURCC_FORMAT, profiles->len,
+        (entrypoint == VAEntrypointEncSliceLP) ? "low power " : "",
         GST_FOURCC_ARGS (codec));
     GST_LOG ("sink caps: %" GST_PTR_FORMAT, sinkcaps);
     GST_LOG ("src caps: %" GST_PTR_FORMAT, srccaps);
