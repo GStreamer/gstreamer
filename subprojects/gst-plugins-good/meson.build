@@ -361,13 +361,7 @@ if have_gstgl
   endif
 endif
 
-zlib_dep = dependency('zlib', required : false)
-if not zlib_dep.found()
-  zlib_dep = cc.find_library('z', required : false)
-  if not zlib_dep.found() or not cc.has_header('zlib.h')
-    zlib_dep = subproject('zlib').get_variable('zlib_dep')
-  endif
-endif
+zlib_dep = dependency('zlib')
 cdata.set('HAVE_ZLIB', true)
 
 gio_dep = dependency('gio-2.0', version: glib_req)

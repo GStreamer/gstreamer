@@ -70,13 +70,7 @@ endif
 core_conf.set('HAVE_ISO_CODES', have_iso_codes)
 
 # could drop optional zlib dep and use g_zlib_decompressor_new()
-zlib_dep = dependency('zlib', required : false)
-if not zlib_dep.found()
-  zlib_dep = cc.find_library('z', required : false)
-  if not zlib_dep.found() or not cc.has_header('zlib.h')
-    zlib_dep = subproject('zlib').get_variable('zlib_dep')
-  endif
-endif
+zlib_dep = dependency('zlib')
 core_conf.set('HAVE_ZLIB', true)
 
 tag_deps = [gst_base_dep, libm, zlib_dep]
