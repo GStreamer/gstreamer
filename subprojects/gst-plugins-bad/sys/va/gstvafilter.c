@@ -1729,7 +1729,7 @@ gst_va_filter_has_compose (GstVaFilter * self)
 
   /* some drivers can compose, but may not support blending (e.g. GALLIUM) */
 #ifndef GST_DISABLE_GST_DEBUG
-  if (self->pipeline_caps.blend_flags & VA_BLEND_GLOBAL_ALPHA)
+  if (!(self->pipeline_caps.blend_flags & VA_BLEND_GLOBAL_ALPHA))
     GST_WARNING_OBJECT (self, "VPP does not support alpha blending");
 #endif
 
