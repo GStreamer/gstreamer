@@ -62,8 +62,6 @@ static void
 gst_va_base_enc_reset_state (GstVaBaseEnc * base)
 {
   base->frame_duration = GST_CLOCK_TIME_NONE;
-  base->input_frame_count = 0;
-  base->output_frame_count = 0;
 
   base->width = 0;
   base->height = 0;
@@ -121,6 +119,9 @@ gst_va_base_enc_start (GstVideoEncoder * venc)
   GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
 
   klass->reset_state (base);
+
+  base->input_frame_count = 0;
+  base->output_frame_count = 0;
 
   base->input_state = NULL;
 
