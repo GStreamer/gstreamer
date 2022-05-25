@@ -643,6 +643,15 @@ gst_rtsp_connection_get_tls (GstRTSPConnection * conn, GError ** error)
  * Sets the TLS validation flags to be used to verify the peer
  * certificate when a TLS connection is established.
  *
+ * GLib guarantees that if certificate verification fails, at least one error
+ * will be set, but it does not guarantee that all possible errors will be
+ * set. Accordingly, you may not safely decide to ignore any particular type
+ * of error.
+ *
+ * For example, it would be incorrect to mask %G_TLS_CERTIFICATE_EXPIRED if
+ * you want to allow expired certificates, because this could potentially be
+ * the only error flag set even if other problems exist with the certificate.
+ *
  * Returns: TRUE if the validation flags are set correctly, or FALSE if
  * @conn is NULL or is not a TLS connection.
  *
@@ -657,8 +666,10 @@ gst_rtsp_connection_set_tls_validation_flags (GstRTSPConnection * conn,
   g_return_val_if_fail (conn != NULL, FALSE);
 
   res = g_socket_client_get_tls (conn->client);
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   if (res)
     g_socket_client_set_tls_validation_flags (conn->client, flags);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
 
   return res;
 }
@@ -670,7 +681,16 @@ gst_rtsp_connection_set_tls_validation_flags (GstRTSPConnection * conn,
  * Gets the TLS validation flags used to verify the peer certificate
  * when a TLS connection is established.
  *
- * Returns: the validationg flags.
+ * GLib guarantees that if certificate verification fails, at least one error
+ * will be set, but it does not guarantee that all possible errors will be
+ * set. Accordingly, you may not safely decide to ignore any particular type
+ * of error.
+ *
+ * For example, it would be incorrect to ignore %G_TLS_CERTIFICATE_EXPIRED if
+ * you want to allow expired certificates, because this could potentially be
+ * the only error flag set even if other problems exist with the certificate.
+ *
+ * Returns: the validation flags.
  *
  * Since: 1.2.1
  */
@@ -679,7 +699,9 @@ gst_rtsp_connection_get_tls_validation_flags (GstRTSPConnection * conn)
 {
   g_return_val_if_fail (conn != NULL, 0);
 
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   return g_socket_client_get_tls_validation_flags (conn->client);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
 }
 
 /**

@@ -84,6 +84,22 @@ gst_rtmp_location_handler_default_init (GstRtmpLocationHandlerInterface * iface)
   g_object_interface_install_property (iface, g_param_spec_uint ("timeout",
           "Timeout", "RTMP timeout in seconds", 0, G_MAXUINT, DEFAULT_TIMEOUT,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRtmpLocationHandler::tls-validation-flags:
+   *
+   * TLS certificate validation flags used to validate server
+   * certificate.
+   *
+   * GLib guarantees that if certificate verification fails, at least one
+   * error will be set, but it does not guarantee that all possible errors
+   * will be set. Accordingly, you may not safely decide to ignore any
+   * particular type of error.
+   *
+   * For example, it would be incorrect to mask %G_TLS_CERTIFICATE_EXPIRED if
+   * you want to allow expired certificates, because this could potentially be
+   * the only error flag set even if other problems exist with the
+   * certificate.
+   */
   g_object_interface_install_property (iface,
       g_param_spec_flags ("tls-validation-flags", "TLS validation flags",
           "TLS validation flags to use", G_TYPE_TLS_CERTIFICATE_FLAGS,

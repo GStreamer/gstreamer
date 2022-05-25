@@ -810,6 +810,16 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * TLS certificate validation flags used to validate server
    * certificate.
    *
+   * GLib guarantees that if certificate verification fails, at least one
+   * error will be set, but it does not guarantee that all possible errors
+   * will be set. Accordingly, you may not safely decide to ignore any
+   * particular type of error.
+   *
+   * For example, it would be incorrect to mask %G_TLS_CERTIFICATE_EXPIRED if
+   * you want to allow expired certificates, because this could potentially be
+   * the only error flag set even if other problems exist with the
+   * certificate.
+   *
    * Since: 1.2.1
    */
   g_object_class_install_property (gobject_class, PROP_TLS_VALIDATION_FLAGS,
