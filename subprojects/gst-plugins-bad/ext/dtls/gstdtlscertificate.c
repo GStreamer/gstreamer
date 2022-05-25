@@ -221,14 +221,24 @@ init_generated (GstDtlsCertificate * self)
 #if OPENSSL_VERSION_NUMBER < 0x10100001L
   rsa = RSA_generate_key (2048, RSA_F4, NULL, NULL);
 #else
+  /*
+   * OpenSSL 3.0 deprecated all low-level APIs, so we need to rewrite this code
+   * to get rid of the warnings. The porting guide explicitly recommends
+   * disabling the warnings if this is not feasible, so let's do that for now:
+   * https://wiki.openssl.org/index.php/OpenSSL_3.0#Upgrading_to_OpenSSL_3.0_from_OpenSSL_1.1.1
+   */
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   rsa = RSA_new ();
+  G_GNUC_END_IGNORE_DEPRECATIONS;
   if (rsa != NULL) {
     BIGNUM *e = BN_new ();
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
     if (e == NULL || !BN_set_word (e, RSA_F4)
         || !RSA_generate_key_ex (rsa, 2048, e, NULL)) {
       RSA_free (rsa);
       rsa = NULL;
     }
+    G_GNUC_END_IGNORE_DEPRECATIONS;
     if (e)
       BN_free (e);
   }
@@ -236,16 +246,20 @@ init_generated (GstDtlsCertificate * self)
 
   if (!rsa) {
     GST_WARNING_OBJECT (self, "failed to generate RSA");
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
     EVP_PKEY_free (priv->private_key);
+    G_GNUC_END_IGNORE_DEPRECATIONS;
     priv->private_key = NULL;
     X509_free (priv->x509);
     priv->x509 = NULL;
     return;
   }
 
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   if (!EVP_PKEY_assign_RSA (priv->private_key, rsa)) {
     GST_WARNING_OBJECT (self, "failed to assign RSA");
     RSA_free (rsa);
+    G_GNUC_END_IGNORE_DEPRECATIONS;
     rsa = NULL;
     EVP_PKEY_free (priv->private_key);
     priv->private_key = NULL;
@@ -259,7 +273,9 @@ init_generated (GstDtlsCertificate * self)
 
   /* Set a random 64 bit integer as serial number */
   serial_number = BN_new ();
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   BN_pseudo_rand (serial_number, 64, 0, 0);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
   asn1_serial_number = X509_get_serialNumber (priv->x509);
   BN_to_ASN1_INTEGER (serial_number, asn1_serial_number);
   BN_free (serial_number);
