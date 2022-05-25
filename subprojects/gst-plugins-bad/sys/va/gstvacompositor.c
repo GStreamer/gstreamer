@@ -93,7 +93,7 @@ static void
 gst_va_compositor_pad_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVaCompositorPad *const self = GST_VA_COMPOSITOR_PAD (object);
+  GstVaCompositorPad *self = GST_VA_COMPOSITOR_PAD (object);
 
   switch (prop_id) {
     case PROP_PAD_XPOS:
@@ -121,7 +121,7 @@ static void
 gst_va_compositor_pad_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVaCompositorPad *const self = GST_VA_COMPOSITOR_PAD (object);
+  GstVaCompositorPad *self = GST_VA_COMPOSITOR_PAD (object);
 
   GST_OBJECT_LOCK (object);
   switch (prop_id) {
@@ -150,7 +150,7 @@ gst_va_compositor_pad_set_property (GObject * object, guint prop_id,
 static void
 gst_va_compositor_pad_finalize (GObject * object)
 {
-  GstVaCompositorPad *const self = GST_VA_COMPOSITOR_PAD (object);
+  GstVaCompositorPad *self = GST_VA_COMPOSITOR_PAD (object);
 
   if (self->pool) {
     gst_buffer_pool_set_active (self->pool, FALSE);
@@ -174,8 +174,8 @@ gst_va_compositor_pad_init (GstVaCompositorPad * self)
 static void
 gst_va_compositor_pad_class_init (GstVaCompositorPadClass * klass)
 {
-  GObjectClass *const gobject_class = G_OBJECT_CLASS (klass);
-  GstVideoAggregatorPadClass *const vaggpad_class =
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstVideoAggregatorPadClass *vaggpad_class =
       GST_VIDEO_AGGREGATOR_PAD_CLASS (klass);
 
   gobject_class->finalize = gst_va_compositor_pad_finalize;
@@ -259,7 +259,7 @@ static void
 gst_va_compositor_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (object);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (object);
 
   switch (prop_id) {
     case PROP_SCALE_METHOD:
@@ -278,7 +278,7 @@ static void
 gst_va_compositor_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (object);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (object);
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:
@@ -305,9 +305,9 @@ gst_va_compositor_get_property (GObject * object, guint prop_id,
 static gboolean
 gst_va_compositor_start (GstAggregator * agg)
 {
-  GstElement *const element = GST_ELEMENT (agg);
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (agg);
-  GstVaCompositorClass *const klass = GST_VA_COMPOSITOR_GET_CLASS (agg);
+  GstElement *element = GST_ELEMENT (agg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
+  GstVaCompositorClass *klass = GST_VA_COMPOSITOR_GET_CLASS (agg);
 
   if (!gst_va_ensure_element_data (element, klass->render_device_path,
           &self->display))
@@ -324,7 +324,7 @@ gst_va_compositor_start (GstAggregator * agg)
 static gboolean
 gst_va_compositor_stop (GstAggregator * agg)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (agg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
 
   gst_va_filter_close (self->filter);
   gst_clear_object (&self->filter);
@@ -337,7 +337,7 @@ gst_va_compositor_stop (GstAggregator * agg)
 static void
 gst_va_compositor_dispose (GObject * object)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (object);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (object);
 
   if (self->other_pool) {
     gst_buffer_pool_set_active (self->other_pool, FALSE);
@@ -368,7 +368,7 @@ gst_va_compositor_request_new_pad (GstElement * element, GstPadTemplate * templ,
 static void
 gst_va_compositor_release_pad (GstElement * element, GstPad * pad)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (element);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (element);
 
   gst_child_proxy_child_removed (GST_CHILD_PROXY (self), G_OBJECT (pad),
       GST_OBJECT_NAME (pad));
@@ -380,8 +380,8 @@ static void
 gst_va_compositor_set_context (GstElement * element, GstContext * context)
 {
   GstVaDisplay *old_display, *new_display;
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (element);
-  GstVaCompositorClass *const klass = GST_VA_COMPOSITOR_GET_CLASS (self);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (element);
+  GstVaCompositorClass *klass = GST_VA_COMPOSITOR_GET_CLASS (self);
   gboolean ret;
 
   old_display = self->display ? gst_object_ref (self->display) : NULL;
@@ -403,7 +403,7 @@ gst_va_compositor_set_context (GstElement * element, GstContext * context)
 }
 
 static gboolean
-_handle_context_query (GstVaCompositor * const self, GstQuery * query)
+_handle_context_query (GstVaCompositor * self, GstQuery * query)
 {
   GstVaDisplay *display = NULL;
   gboolean ret = FALSE;
@@ -470,7 +470,7 @@ static gboolean
 gst_va_compositor_sink_query (GstAggregator * agg, GstAggregatorPad * pad,
     GstQuery * query)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (agg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
@@ -509,7 +509,7 @@ gst_va_compositor_sink_query (GstAggregator * agg, GstAggregatorPad * pad,
 static gboolean
 gst_va_compositor_src_query (GstAggregator * agg, GstQuery * query)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (agg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
@@ -524,8 +524,7 @@ gst_va_compositor_src_query (GstAggregator * agg, GstQuery * query)
 }
 
 static GstAllocator *
-gst_va_compositor_allocator_from_caps (GstVaCompositor * const self,
-    GstCaps * caps)
+gst_va_compositor_allocator_from_caps (GstVaCompositor * self, GstCaps * caps)
 {
   GstAllocator *allocator = NULL;
 
@@ -544,7 +543,7 @@ static gboolean
 gst_va_compositor_propose_allocation (GstAggregator * agg,
     GstAggregatorPad * aggpad, GstQuery * decide_query, GstQuery * query)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (agg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
   GstAllocator *allocator = NULL;
   GstAllocationParams params = { 0, };
   GstBufferPool *pool;
@@ -638,8 +637,8 @@ _create_other_pool (GstAllocator * allocator, GstAllocationParams * params,
 static gboolean
 gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (agg);
-  GstVideoAggregator *const vagg = GST_VIDEO_AGGREGATOR (agg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
 
   GstAllocator *allocator = NULL, *other_allocator = NULL;
   GstAllocationParams params, other_params;
@@ -763,7 +762,7 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
 }
 
 static GstBufferPool *
-_get_sinkpad_pool (GstVaCompositor * const self, GstVaCompositorPad * const pad)
+_get_sinkpad_pool (GstVaCompositor * self, GstVaCompositorPad * pad)
 {
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
@@ -830,7 +829,7 @@ _get_plane_data_size (GstVideoInfo * info, guint plane)
 }
 
 static gboolean
-_try_import_dmabuf_unlocked (GstVaCompositor * const self, GstVideoInfo * info,
+_try_import_dmabuf_unlocked (GstVaCompositor * self, GstVideoInfo * info,
     GstBuffer * inbuf)
 {
   GstVideoMeta *meta;
@@ -897,8 +896,8 @@ _try_import_dmabuf_unlocked (GstVaCompositor * const self, GstVideoInfo * info,
 extern GRecMutex GST_VA_SHARED_LOCK;
 
 static gboolean
-_try_import_buffer (GstVaCompositor * const self,
-    GstVideoInfo info, GstBuffer * inbuf)
+_try_import_buffer (GstVaCompositor * self, GstVideoInfo info,
+    GstBuffer * inbuf)
 {
   VASurfaceID surface;
   gboolean ret;
@@ -915,8 +914,8 @@ _try_import_buffer (GstVaCompositor * const self,
 }
 
 static GstFlowReturn
-gst_va_compositor_import_buffer (GstVaCompositor * const self,
-    GstVaCompositorPad * const pad, GstBuffer * inbuf, GstBuffer ** buf)
+gst_va_compositor_import_buffer (GstVaCompositor * self,
+    GstVaCompositorPad * pad, GstBuffer * inbuf, GstBuffer ** buf)
 {
   GstBuffer *buffer = NULL;
   GstBufferPool *pool;
@@ -1063,10 +1062,10 @@ gst_va_compositor_sample_next (gpointer data)
 }
 
 static gboolean
-gst_va_compositor_copy_output_buffer (GstVaCompositor * const self,
+gst_va_compositor_copy_output_buffer (GstVaCompositor * self,
     GstBuffer * src_buf, GstBuffer * dst_buf)
 {
-  GstVideoAggregator *const vagg = GST_VIDEO_AGGREGATOR (self);
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (self);
   GstVideoFrame src_frame, dst_frame;
 
   GST_LOG_OBJECT (self, "copying output buffer");
@@ -1100,7 +1099,7 @@ static GstFlowReturn
 gst_va_compositor_aggregate_frames (GstVideoAggregator * vagg,
     GstBuffer * outbuf)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (vagg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (vagg);
   GstVaCompositorSampleGenerator generator;
   GstVaComposeTransaction tx;
   GstBuffer *vabuffer;
@@ -1159,7 +1158,7 @@ static GstFlowReturn
 gst_va_compositor_create_output_buffer (GstVideoAggregator * vagg,
     GstBuffer ** outbuf)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (vagg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (vagg);
   GstFlowReturn ret;
 
   *outbuf = NULL;
@@ -1190,7 +1189,7 @@ gst_va_compositor_create_output_buffer (GstVideoAggregator * vagg,
 static gboolean
 gst_va_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (agg);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
 
   if (!gst_video_info_from_caps (&self->other_info, caps)) {
     GST_ERROR_OBJECT (self, "invalid caps");
@@ -1206,8 +1205,8 @@ gst_va_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 }
 
 static void
-gst_va_compositor_pad_get_output_size (GstVaCompositorPad * const pad,
-    gint * width, gint * height)
+gst_va_compositor_pad_get_output_size (GstVaCompositorPad * pad, gint * width,
+    gint * height)
 {
   GstVideoAggregatorPad *vaggpad = GST_VIDEO_AGGREGATOR_PAD (pad);
   *width = (pad->width == DEFAULT_PAD_WIDTH)
@@ -1222,7 +1221,7 @@ gst_va_compositor_pad_get_output_size (GstVaCompositorPad * const pad,
 static GstCaps *
 gst_va_compositor_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 {
-  GstVideoAggregator *const vagg = GST_VIDEO_AGGREGATOR (agg);
+  GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
   GList *l;
   gint best_width = -1, best_height = -1;
   gint best_fps_n = -1, best_fps_d = -1;
@@ -1234,8 +1233,8 @@ gst_va_compositor_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
 
   GST_OBJECT_LOCK (vagg);
   for (l = GST_ELEMENT (vagg)->sinkpads; l; l = l->next) {
-    GstVideoAggregatorPad *const vaggpad = l->data;
-    GstVaCompositorPad *const pad = GST_VA_COMPOSITOR_PAD (vaggpad);
+    GstVideoAggregatorPad *vaggpad = l->data;
+    GstVaCompositorPad *pad = GST_VA_COMPOSITOR_PAD (vaggpad);
     gint this_width, this_height;
     gint fps_n, fps_d;
     gdouble cur_fps;
@@ -1296,12 +1295,11 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
 {
   GstCaps *doc_caps, *caps = NULL;
   GstPadTemplate *sink_pad_templ, *src_pad_templ;
-  GObjectClass *const object_class = G_OBJECT_CLASS (g_class);
-  GstElementClass *const element_class = GST_ELEMENT_CLASS (g_class);
-  GstAggregatorClass *const agg_class = GST_AGGREGATOR_CLASS (g_class);
-  GstVideoAggregatorClass *const vagg_class =
-      GST_VIDEO_AGGREGATOR_CLASS (g_class);
-  GstVaCompositorClass *const klass = GST_VA_COMPOSITOR_CLASS (g_class);
+  GObjectClass *object_class = G_OBJECT_CLASS (g_class);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstAggregatorClass *agg_class = GST_AGGREGATOR_CLASS (g_class);
+  GstVideoAggregatorClass *vagg_class = GST_VIDEO_AGGREGATOR_CLASS (g_class);
+  GstVaCompositorClass *klass = GST_VA_COMPOSITOR_CLASS (g_class);
   GstVaDisplay *display;
   GstVaFilter *filter;
   struct CData *cdata = class_data;
@@ -1440,7 +1438,7 @@ gst_va_compositor_child_proxy_init (gpointer g_iface, gpointer iface_data)
 static void
 gst_va_compositor_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstVaCompositor *const self = GST_VA_COMPOSITOR (instance);
+  GstVaCompositor *self = GST_VA_COMPOSITOR (instance);
 
   self->other_pool = NULL;
 }
