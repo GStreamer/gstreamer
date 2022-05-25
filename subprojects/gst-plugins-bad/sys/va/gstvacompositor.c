@@ -896,7 +896,7 @@ _try_import_dmabuf_unlocked (GstVaCompositor * self, GstVideoInfo * info,
 extern GRecMutex GST_VA_SHARED_LOCK;
 
 static gboolean
-_try_import_buffer (GstVaCompositor * self, GstVideoInfo info,
+_try_import_buffer (GstVaCompositor * self, GstVideoInfo * info,
     GstBuffer * inbuf)
 {
   VASurfaceID surface;
@@ -907,7 +907,7 @@ _try_import_buffer (GstVaCompositor * self, GstVideoInfo info,
     return TRUE;
 
   g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
-  ret = _try_import_dmabuf_unlocked (self, &info, inbuf);
+  ret = _try_import_dmabuf_unlocked (self, info, inbuf);
   g_rec_mutex_unlock (&GST_VA_SHARED_LOCK);
 
   return ret;
@@ -935,7 +935,7 @@ gst_va_compositor_import_buffer (GstVaCompositor * self,
   }
   gst_caps_unref (caps);
 
-  imported = _try_import_buffer (self, info, inbuf);
+  imported = _try_import_buffer (self, &info, inbuf);
   if (imported) {
     *buf = gst_buffer_ref (inbuf);
     return GST_FLOW_OK;
