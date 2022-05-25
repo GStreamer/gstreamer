@@ -426,8 +426,10 @@ socket_connect (GTask * task)
       GST_DEBUG ("Configuring TLS, validation flags 0x%02x",
           data->location.tls_flags);
       g_socket_client_set_tls (socket_client, TRUE);
+      G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
       g_socket_client_set_tls_validation_flags (socket_client,
           data->location.tls_flags);
+      G_GNUC_END_IGNORE_DEPRECATIONS;
       break;
 
     default:
