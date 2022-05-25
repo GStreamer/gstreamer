@@ -1454,9 +1454,11 @@ out:
  * property. The reconfig may change these fields because of the
  * profile/level and HW limitation. */
 static void
-gst_va_h264_enc_reset_state (GstVaH264Enc * self)
+gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
 {
-  gst_va_base_enc_reset_state (GST_VA_BASE_ENC (self));
+  GstVaH264Enc *self = GST_VA_H264_ENC (base);
+
+  GST_VA_BASE_ENC_CLASS (parent_class)->reset_state (base);
 
   self->level_idc = 0;
   self->level_str = NULL;
@@ -1515,7 +1517,7 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   guint max_ref_frames;
   GstVideoCodecState *output_state;
 
-  gst_va_h264_enc_reset_state (self);
+  gst_va_h264_enc_reset_state (base);
 
   base->width = GST_VIDEO_INFO_WIDTH (&base->input_state->info);
   base->height = GST_VIDEO_INFO_HEIGHT (&base->input_state->info);
@@ -2829,26 +2831,6 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
 }
 
 static gboolean
-gst_va_h264_enc_start (GstVideoEncoder * venc)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-
-  gst_va_h264_enc_reset_state (self);
-
-  return GST_VIDEO_ENCODER_CLASS (parent_class)->start (venc);
-}
-
-static gboolean
-gst_va_h264_enc_stop (GstVideoEncoder * venc)
-{
-  GstVaH264Enc *self = GST_VA_H264_ENC (venc);
-
-  gst_va_h264_enc_reset_state (self);
-
-  return GST_VIDEO_ENCODER_CLASS (parent_class)->stop (venc);
-}
-
-static gboolean
 gst_va_h264_enc_flush (GstVideoEncoder * venc)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (venc);
@@ -3294,10 +3276,9 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   object_class->set_property = gst_va_h264_enc_set_property;
   object_class->get_property = gst_va_h264_enc_get_property;
 
-  venc_class->start = GST_DEBUG_FUNCPTR (gst_va_h264_enc_start);
-  venc_class->stop = GST_DEBUG_FUNCPTR (gst_va_h264_enc_stop);
   venc_class->flush = GST_DEBUG_FUNCPTR (gst_va_h264_enc_flush);
 
+  va_enc_class->reset_state = GST_DEBUG_FUNCPTR (gst_va_h264_enc_reset_state);
   va_enc_class->reconfig = GST_DEBUG_FUNCPTR (gst_va_h264_enc_reconfig);
   va_enc_class->new_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_new_frame);
   va_enc_class->reorder_frame =

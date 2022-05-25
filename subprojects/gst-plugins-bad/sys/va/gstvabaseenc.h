@@ -73,6 +73,7 @@ struct _GstVaBaseEncClass
 {
   GstVideoEncoderClass parent_class;
 
+  void     (*reset_state)    (GstVaBaseEnc * encoder);
   gboolean (*reconfig)       (GstVaBaseEnc * encoder);
   gboolean (*new_frame)      (GstVaBaseEnc * encoder,
                               GstVideoCodecFrame * frame);
@@ -101,7 +102,6 @@ struct CData
 };
 
 GType                 gst_va_base_enc_get_type             (void);
-void                  gst_va_base_enc_reset_state          (GstVaBaseEnc * base);
 
 gboolean              gst_va_base_enc_add_rate_control_parameter (GstVaBaseEnc * base,
                                                                   GstVaEncodePicture * picture,
