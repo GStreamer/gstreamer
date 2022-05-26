@@ -191,6 +191,7 @@ GST_START_TEST (test_overlay_position)
       }
     }
   }
+  gst_video_frame_unmap (&frame);
 
   /* cleanup */
   gst_buffer_replace (&handoff_buffer, NULL);
