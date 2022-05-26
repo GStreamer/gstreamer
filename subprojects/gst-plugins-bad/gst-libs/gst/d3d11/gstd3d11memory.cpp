@@ -1436,13 +1436,39 @@ gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * self,
   return GST_MEMORY_CAST (mem);
 }
 
+typedef void (*GstD3D11ClearRTVFunc) (ID3D11DeviceContext * context_handle,
+    ID3D11RenderTargetView * rtv);
+
+static void
+clear_rtv_chroma (ID3D11DeviceContext * context_handle,
+    ID3D11RenderTargetView * rtv)
+{
+  const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+
+  context_handle->ClearRenderTargetView (rtv, clear_color);
+}
+
+static void
+clear_rtv_vuya (ID3D11DeviceContext * context_handle,
+    ID3D11RenderTargetView * rtv)
+{
+  const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
+
+  context_handle->ClearRenderTargetView (rtv, clear_color);
+}
+
 static GstMemory *
 gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
     GstD3D11Device * device, const D3D11_TEXTURE2D_DESC * desc)
 {
   ID3D11Texture2D *texture = NULL;
   ID3D11Device *device_handle;
+  ID3D11DeviceContext *context_handle;
   HRESULT hr;
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
+  ID3D11RenderTargetView *rtv = nullptr;
+  GstD3D11ClearRTVFunc clear_func = nullptr;
 
   device_handle = gst_d3d11_device_get_device_handle (device);
 
@@ -1452,7 +1478,41 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
     return NULL;
   }
 
-  return gst_d3d11_allocator_alloc_wrapped (self, device, desc, texture);
+  mem = gst_d3d11_allocator_alloc_wrapped (self, device, desc, texture);
+  if (!mem)
+    return nullptr;
+
+  /* Clear with YUV black if needed and possible
+   * TODO: do this using UAV if RTV is not allowed (e.g., packed YUV formats) */
+  if ((desc->BindFlags & D3D11_BIND_RENDER_TARGET) == 0)
+    return mem;
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+  switch (desc->Format) {
+    case DXGI_FORMAT_NV12:
+    case DXGI_FORMAT_P010:
+    case DXGI_FORMAT_P016:
+      /* Y component will be zero already */
+      rtv = gst_d3d11_memory_get_render_target_view (dmem, 1);
+      clear_func = (GstD3D11ClearRTVFunc) clear_rtv_chroma;
+      break;
+    case DXGI_FORMAT_AYUV:
+      rtv = gst_d3d11_memory_get_render_target_view (dmem, 0);
+      clear_func = (GstD3D11ClearRTVFunc) clear_rtv_vuya;
+      break;
+    default:
+      return mem;
+  }
+
+  if (!rtv)
+    return mem;
+
+  context_handle = gst_d3d11_device_get_device_context_handle (device);
+  gst_d3d11_device_lock (device);
+  clear_func (context_handle, rtv);
+  gst_d3d11_device_unlock (device);
+
+  return mem;
 }
 
 /**
