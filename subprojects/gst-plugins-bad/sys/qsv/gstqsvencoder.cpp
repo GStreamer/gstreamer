@@ -898,11 +898,24 @@ gst_qsv_encoder_prepare_d3d11_pool (GstQsvEncoder * self,
   GstStructure *config;
   GstD3D11AllocationParams *params;
   GstD3D11Device *device = GST_D3D11_DEVICE_CAST (priv->device);
+  guint bind_flags = 0;
+  GstD3D11Format device_format;
+
+  gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (aligned_info),
+      &device_format);
+  if ((device_format.format_support[0] & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
+      D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
+    /* XXX: workaround for greenish artifacts
+     * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1238
+     * bind to render target so that d3d11 memory allocator can clear texture
+     * with black color */
+    bind_flags = D3D11_BIND_RENDER_TARGET;
+  }
 
   priv->internal_pool = gst_d3d11_buffer_pool_new (device);
   config = gst_buffer_pool_get_config (priv->internal_pool);
   params = gst_d3d11_allocation_params_new (device, aligned_info,
-      (GstD3D11AllocationFlags) 0, 0);
+      (GstD3D11AllocationFlags) 0, bind_flags);
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);
