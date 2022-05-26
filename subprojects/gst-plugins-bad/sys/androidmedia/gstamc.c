@@ -1141,7 +1141,8 @@ static const struct
   HEVCHighTierLevel51, "high", "5.1"}, {
   HEVCHighTierLevel52, "high", "5.2"}, {
   HEVCHighTierLevel6, "high", "6"}, {
-  HEVCHighTierLevel61, "high", "6.1"}
+  HEVCHighTierLevel61, "high", "6.1"}, {
+  HEVCHighTierLevel62, "high", "6.2"}
 };
 
 const gchar *
@@ -2334,35 +2335,40 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               tmp2 = gst_structure_copy (tmp);
               gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
 
-              /* FIXME: Implement tier/level support here */
-#if 0
               if (codec_info->is_encoder) {
                 const gchar *level, *tier;
                 gint k;
-                GValue va = { 0, };
                 GValue v = { 0, };
 
-                g_value_init (&va, GST_TYPE_LIST);
                 g_value_init (&v, G_TYPE_STRING);
                 for (k = 1; k <= type->profile_levels[j].level && k != 0;
                     k <<= 1) {
                   level = gst_amc_hevc_tier_level_to_string (k, &tier);
-                  if (!level)
+                  if (!level || !tier)
                     continue;
 
-                  g_value_set_string (&v, level);
-                  gst_value_list_append_value (&va, &v);
+                  tmp3 = gst_structure_copy (tmp2);
+
+                  g_value_set_string (&v, tier);
+                  gst_structure_set_value (tmp3, "tier", &v);
                   g_value_reset (&v);
+
+                  g_value_set_string (&v, level);
+                  gst_structure_set_value (tmp3, "level", &v);
+                  g_value_reset (&v);
+
+                  encoded_ret = gst_caps_merge_structure (encoded_ret, tmp3);
+
+                  have_profile_level = TRUE;
                 }
-
-                gst_structure_set_value (tmp2, "level", &va);
-
-                g_value_unset (&va);
-                g_value_unset (&v);
               }
-#endif
 
-              encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+              if (have_profile_level) {
+                gst_structure_free (tmp2);
+              } else {
+                encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+              }
+
               have_profile_level = TRUE;
             }
           }

@@ -148,7 +148,8 @@ enum
   HEVCHighTierLevel6  = 0x200000,
   HEVCMainTierLevel61 = 0x400000,
   HEVCHighTierLevel61 = 0x800000,
-  HEVCMainTierLevel62 = 0x1000000
+  HEVCMainTierLevel62 = 0x1000000,
+  HEVCHighTierLevel62 = 0x2000000
 };
 
 enum

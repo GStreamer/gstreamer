@@ -56,6 +56,10 @@ struct _GstAmcVideoEnc
   GstAmcCodec *codec;
   GstAmcFormat *amc_format;
 
+  /* Set to TRUE if codec headers should be placed
+   * in the stream, or FALSE if they go in the headers */
+  gboolean codec_data_in_bytestream;
+
   GstVideoCodecState *input_state;
 
   /* Input format of the codec */
