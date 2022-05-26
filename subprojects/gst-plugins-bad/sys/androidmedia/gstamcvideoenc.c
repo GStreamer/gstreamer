@@ -213,6 +213,21 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
       amc_level.key = "level";  /* named level ? */
       amc_level.id = gst_amc_avc_level_from_string (level_string);
     }
+  } else if (strcmp (name, "video/x-h265") == 0) {
+    const gchar *tier_string = gst_structure_get_string (s, "tier");
+
+    mime = "video/hevc";
+
+    if (profile_string) {
+      amc_profile.key = "profile";      /* named profile ? */
+      amc_profile.id = gst_amc_hevc_profile_from_string (profile_string);
+    }
+
+    if (level_string && tier_string) {
+      amc_level.key = "level";  /* named level ? */
+      amc_level.id =
+          gst_amc_hevc_tier_level_from_string (tier_string, level_string);
+    }
   } else if (strcmp (name, "video/x-vp8") == 0) {
     mime = "video/x-vnd.on2.vp8";
   } else if (strcmp (name, "video/x-vp9") == 0) {
@@ -413,6 +428,32 @@ caps_from_amc_format (GstAmcFormat * amc_format)
         goto unsupported_level;
 
       gst_caps_set_simple (caps, "level", G_TYPE_STRING, level_string, NULL);
+    }
+  } else if (strcmp (mime, "video/hevc") == 0) {
+    const gchar *profile_string, *level_string, *tier_string;
+
+    caps =
+        gst_caps_new_simple ("video/x-h265",
+        "stream-format", G_TYPE_STRING, "byte-stream", NULL);
+
+    if (gst_amc_format_get_int (amc_format, "profile", &amc_profile, NULL)) {
+      profile_string = gst_amc_avc_profile_to_string (amc_profile, NULL);
+      if (!profile_string)
+        goto unsupported_profile;
+
+      gst_caps_set_simple (caps, "profile", G_TYPE_STRING, profile_string,
+          NULL);
+    }
+
+    if (gst_amc_format_get_int (amc_format, "level", &amc_level, NULL)) {
+      level_string =
+          gst_amc_hevc_tier_level_to_string (amc_profile, &tier_string);
+      if (!level_string || !tier_string)
+        goto unsupported_level;
+
+      gst_caps_set_simple (caps,
+          "level", G_TYPE_STRING, level_string,
+          "tier", G_TYPE_STRING, tier_string, NULL);
     }
   } else if (strcmp (mime, "video/x-vnd.on2.vp8") == 0) {
     caps = gst_caps_new_empty_simple ("video/x-vp8");
@@ -847,6 +888,7 @@ gst_amc_video_enc_set_src_caps (GstAmcVideoEnc * self, GstAmcFormat * format)
 {
   GstCaps *caps;
   GstVideoCodecState *output_state;
+  GstStructure *s;
 
   caps = caps_from_amc_format (format);
   if (!caps) {
@@ -870,6 +912,17 @@ gst_amc_video_enc_set_src_caps (GstAmcVideoEnc * self, GstAmcFormat * format)
 
   if (!gst_video_encoder_negotiate (GST_VIDEO_ENCODER (self)))
     return FALSE;
+
+  output_state = gst_video_encoder_get_output_state (GST_VIDEO_ENCODER (self));
+  s = gst_caps_get_structure (output_state->caps, 0);
+
+  if (!strcmp (gst_structure_get_name (s), "video/x-h264") ||
+      !strcmp (gst_structure_get_name (s), "video/x-h265")) {
+    self->codec_data_in_bytestream = TRUE;
+  } else {
+    self->codec_data_in_bytestream = FALSE;
+  }
+  gst_video_codec_state_unref (output_state);
 
   return TRUE;
 }
@@ -906,14 +959,8 @@ gst_amc_video_enc_handle_output_frame (GstAmcVideoEnc * self,
    * gstomxvideoenc.c and gstomxh264enc.c */
   if ((buffer_info->flags & BUFFER_FLAG_CODEC_CONFIG)
       && buffer_info->size > 0) {
-    GstStructure *s;
-    GstVideoCodecState *state;
 
-    state = gst_video_encoder_get_output_state (encoder);
-    s = gst_caps_get_structure (state->caps, 0);
-    if (!strcmp (gst_structure_get_name (s), "video/x-h264")) {
-      gst_video_codec_state_unref (state);
-
+    if (self->codec_data_in_bytestream) {
       if (buffer_info->size > 4 &&
           GST_READ_UINT32_BE (buf->data + buffer_info->offset) == 0x00000001) {
         GList *l = NULL;
@@ -933,14 +980,16 @@ gst_amc_video_enc_handle_output_frame (GstAmcVideoEnc * self,
       }
     } else {
       GstBuffer *codec_data;
+      GstVideoCodecState *output_state =
+          gst_video_encoder_get_output_state (GST_VIDEO_ENCODER (self));
 
       GST_DEBUG_OBJECT (self, "Handling codec data");
 
       codec_data = gst_buffer_new_and_alloc (buffer_info->size);
       gst_buffer_fill (codec_data, 0, buf->data + buffer_info->offset,
           buffer_info->size);
-      state->codec_data = codec_data;
-      gst_video_codec_state_unref (state);
+      output_state->codec_data = codec_data;
+      gst_video_codec_state_unref (output_state);
 
       if (!gst_video_encoder_negotiate (encoder)) {
         gst_video_codec_frame_unref (frame);
