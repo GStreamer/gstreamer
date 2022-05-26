@@ -618,12 +618,16 @@ gst_msdkvpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     GST_ERROR_OBJECT (thiz, "Failed to get video info");
     return FALSE;
   }
-  /* if downstream allocation query supports dmabuf-capsfeatures,
-   * we do allocate dmabuf backed memory */
+  /* We allocate the memory of type that downstream allocation requests */
+#ifndef _WIN32
   if (_gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     GST_INFO_OBJECT (thiz, "MSDK VPP srcpad uses DMABuf memory");
     thiz->use_srcpad_dmabuf = TRUE;
+  } else if (_gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_VA)) {
+    GST_INFO_OBJECT (thiz, "MSDK VPP srcpad uses VA memory");
+    thiz->use_srcpad_va = TRUE;
   }
+#endif
 
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL))
     thiz->add_video_meta = TRUE;
@@ -1317,7 +1321,8 @@ error_no_video_info:
 }
 
 static gboolean
-pad_can_dmabuf (GstMsdkVPP * thiz, GstPadDirection direction, GstCaps * filter)
+pad_accept_memory (GstMsdkVPP * thiz, const gchar * mem_type,
+    GstPadDirection direction, GstCaps * filter)
 {
   gboolean ret = FALSE;
   GstCaps *caps, *out_caps;
@@ -1332,8 +1337,7 @@ pad_can_dmabuf (GstMsdkVPP * thiz, GstPadDirection direction, GstCaps * filter)
   /* make a copy of filter caps since we need to alter the structure
    * by adding dmabuf-capsfeatures */
   caps = gst_caps_copy (filter);
-  gst_caps_set_features (caps, 0,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+  gst_caps_set_features (caps, 0, gst_caps_features_from_string (mem_type));
 
   out_caps = gst_pad_peer_query_caps (pad, caps);
   if (!out_caps)
@@ -1343,7 +1347,7 @@ pad_can_dmabuf (GstMsdkVPP * thiz, GstPadDirection direction, GstCaps * filter)
       || out_caps == caps)
     goto done;
 
-  if (_gst_caps_has_feature (out_caps, GST_CAPS_FEATURE_MEMORY_DMABUF))
+  if (_gst_caps_has_feature (out_caps, mem_type))
     ret = TRUE;
 done:
   if (caps)
@@ -1360,10 +1364,12 @@ gst_msdkvpp_fixate_caps (GstBaseTransform * trans,
   GstMsdkVPP *thiz = GST_MSDKVPP (trans);
   GstCaps *result = NULL;
   gboolean *use_dmabuf;
+  gboolean *use_va;
 
   if (direction == GST_PAD_SRC) {
     result = gst_caps_fixate (result);
     use_dmabuf = &thiz->use_sinkpad_dmabuf;
+    use_va = &thiz->use_sinkpad_va;
   } else {
     /*
      * Override mirroring & rotation properties once video-direction
@@ -1375,17 +1381,28 @@ gst_msdkvpp_fixate_caps (GstBaseTransform * trans,
 
     result = gst_msdkvpp_fixate_srccaps (thiz, caps, othercaps);
     use_dmabuf = &thiz->use_srcpad_dmabuf;
+    use_va = &thiz->use_srcpad_va;
   }
 
   GST_DEBUG_OBJECT (trans, "fixated to %" GST_PTR_FORMAT, result);
   gst_caps_unref (othercaps);
 
-  if (pad_can_dmabuf (thiz,
+  /* We let msdkvpp srcpad first query if downstream has dmabuf type caps,
+   * if not, will check the type of va memory.
+   */
+#ifndef _WIN32
+  if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_DMABUF,
           direction == GST_PAD_SRC ? GST_PAD_SINK : GST_PAD_SRC, result)) {
     gst_caps_set_features (result, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
     *use_dmabuf = TRUE;
+  } else if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_VA,
+          direction == GST_PAD_SRC ? GST_PAD_SINK : GST_PAD_SRC, result)) {
+    gst_caps_set_features (result, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VA, NULL));
+    *use_va = TRUE;
   }
+#endif
 
   return result;
 }
