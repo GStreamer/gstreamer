@@ -26,9 +26,9 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/video/video.h>
-#include <gst/check/gstharness.h>
 
 static GMainLoop *main_loop;
+
 static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 {
