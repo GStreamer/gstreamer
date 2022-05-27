@@ -2,4 +2,4 @@
 directory=glib-networking
 url=https://gitlab.gnome.org/GNOME/glib-networking.git
 push-url=git@gitlab.gnome.org:GNOME/glib-networking.git
-revision=2.68.2
+revision=glib-2-72
