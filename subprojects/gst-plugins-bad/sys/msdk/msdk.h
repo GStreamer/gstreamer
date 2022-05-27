@@ -99,6 +99,7 @@ void GstMFXUnload (mfxLoader loader);
 #endif
 
 typedef struct _MsdkSession MsdkSession;
+typedef struct _GstMsdkSurface GstMsdkSurface;
 
 struct _MsdkSession
 {
