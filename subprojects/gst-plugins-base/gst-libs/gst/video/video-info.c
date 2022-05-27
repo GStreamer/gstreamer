@@ -1129,7 +1129,7 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
       info->offset[1] =
           GST_ROUND_UP_N (width, 1 << ws) * GST_ROUND_UP_N (height, 1 << hs);
       info->size = info->offset[1] + GST_ROUND_UP_N (width, 1 << ws) *
-          GST_ROUND_UP_N (height, 1 << (hs - 1));
+          GST_ROUND_UP_N (height, 1 << hs) / 2;
       break;
     }
     case GST_VIDEO_FORMAT_A420_10LE:
