@@ -494,7 +494,7 @@ _ensure_rate_control (GstVaH264Enc * self)
   rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
       base->profile, base->entrypoint);
   if (!(rc_mode & self->prop.rc_ctrl)) {
-    GST_INFO_OBJECT (self, "The race control mode %s is not supported, "
+    GST_INFO_OBJECT (self, "The rate control mode %s is not supported, "
         "fallback to %s mode",
         _rate_control_get_name (self->prop.rc_ctrl),
         _rate_control_get_name (VA_RC_CQP));
