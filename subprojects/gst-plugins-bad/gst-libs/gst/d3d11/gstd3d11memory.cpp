@@ -262,6 +262,8 @@ struct _GstD3D11MemoryPrivate
   guint num_render_target_views;
 
   ID3D11VideoDecoderOutputView *decoder_output_view;
+  ID3D11VideoDecoder *decoder_handle;
+
   ID3D11VideoProcessorInputView *processor_input_view;
   ID3D11VideoProcessorOutputView *processor_output_view;
 
@@ -992,7 +994,8 @@ gst_d3d11_memory_get_render_target_view (GstD3D11Memory * mem, guint index)
 
 static gboolean
 gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
-    ID3D11VideoDevice * video_device, GUID * decoder_profile)
+    ID3D11VideoDevice * video_device, ID3D11VideoDecoder * decoder,
+    const GUID * decoder_profile)
 {
   GstD3D11MemoryPrivate *dmem_priv = mem->priv;
   GstD3D11Allocator *allocator;
@@ -1014,13 +1017,15 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   GST_D3D11_MEMORY_LOCK (mem);
   if (dmem_priv->decoder_output_view) {
     dmem_priv->decoder_output_view->GetDesc (&desc);
-    if (IsEqualGUID (desc.DecodeProfile, *decoder_profile)) {
+    if (IsEqualGUID (desc.DecodeProfile, *decoder_profile) &&
+        dmem_priv->decoder_handle == decoder) {
       goto succeeded;
     } else {
       /* Shouldn't happen, but try again anyway */
       GST_WARNING_OBJECT (allocator,
           "Existing view has different decoder profile");
       GST_D3D11_CLEAR_COM (dmem_priv->decoder_output_view);
+      GST_D3D11_CLEAR_COM (dmem_priv->decoder_handle);
     }
   }
 
@@ -1039,6 +1044,12 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
     goto done;
   }
 
+  /* XXX: decoder output view is bound to video device, not decoder handle
+   * from API point of view. But some driver seems to be unhappy
+   * when decoder handle is released while there are outstanding view objects */
+  dmem_priv->decoder_handle = decoder;
+  decoder->AddRef ();
+
 succeeded:
   ret = TRUE;
 
@@ -1051,6 +1062,9 @@ done:
 /**
  * gst_d3d11_memory_get_decoder_output_view:
  * @mem: a #GstD3D11Memory
+ * @video_device: (transfer none): a ID3D11VideoDevice handle
+ * @decoder: (transfer none): a ID3D11VideoDecoder handle
+ * @decoder_profile: a DXVA decoder profile GUID
  *
  * Returns: (transfer none) (nullable): a pointer to the
  * ID3D11VideoDecoderOutputView or %NULL if ID3D11VideoDecoderOutputView is
@@ -1060,14 +1074,16 @@ done:
  */
 ID3D11VideoDecoderOutputView *
 gst_d3d11_memory_get_decoder_output_view (GstD3D11Memory * mem,
-    ID3D11VideoDevice * video_device, GUID * decoder_profile)
+    ID3D11VideoDevice * video_device, ID3D11VideoDecoder * decoder,
+    const GUID * decoder_profile)
 {
   g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), NULL);
   g_return_val_if_fail (video_device != NULL, NULL);
+  g_return_val_if_fail (decoder != NULL, NULL);
   g_return_val_if_fail (decoder_profile != NULL, NULL);
 
   if (!gst_d3d11_memory_ensure_decoder_output_view (mem,
-          video_device, decoder_profile))
+          video_device, decoder, decoder_profile))
     return NULL;
 
   return mem->priv->decoder_output_view;
@@ -1408,6 +1424,8 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_D3D11_CLEAR_COM (dmem_priv->texture);
   GST_D3D11_CLEAR_COM (dmem_priv->staging);
   GST_D3D11_CLEAR_COM (dmem_priv->buffer);
+
+  GST_D3D11_CLEAR_COM (dmem_priv->decoder_handle);
 
   gst_clear_object (&dmem->device);
   g_mutex_clear (&dmem_priv->lock);

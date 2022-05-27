@@ -409,7 +409,7 @@ gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
 
   mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
   if (!gst_d3d11_memory_get_decoder_output_view (mem, self->video_device,
-          &self->decoder_profile)) {
+          self->decoder_handle, &self->decoder_profile)) {
     GST_ERROR_OBJECT (self, "Decoder output view is unavailable");
     return FALSE;
   }
@@ -1367,7 +1367,7 @@ gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
 
   dmem = (GstD3D11Memory *) mem;
   view = gst_d3d11_memory_get_decoder_output_view (dmem, decoder->video_device,
-      &decoder->decoder_profile);
+      decoder->decoder_handle, &decoder->decoder_profile);
 
   if (!view) {
     GST_ERROR_OBJECT (decoder, "Decoder output view is unavailable");

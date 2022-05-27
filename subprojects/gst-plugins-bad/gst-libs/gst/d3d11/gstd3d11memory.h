@@ -210,7 +210,8 @@ ID3D11RenderTargetView *   gst_d3d11_memory_get_render_target_view        (GstD3
 GST_D3D11_API
 ID3D11VideoDecoderOutputView *    gst_d3d11_memory_get_decoder_output_view  (GstD3D11Memory * mem,
                                                                              ID3D11VideoDevice * video_device,
-                                                                             GUID * decoder_profile);
+                                                                             ID3D11VideoDecoder * decoder,
+                                                                             const GUID * decoder_profile);
 
 GST_D3D11_API
 ID3D11VideoProcessorInputView *   gst_d3d11_memory_get_processor_input_view  (GstD3D11Memory * mem,
