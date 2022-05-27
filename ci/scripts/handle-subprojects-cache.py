@@ -8,6 +8,7 @@ import shutil
 import os
 import sys
 import argparse
+import subprocess
 
 DEST = "/subprojects"
 PARSER = argparse.ArgumentParser()
@@ -69,6 +70,7 @@ def copy_cache(options):
 
             print("Copying from %s -> %s" % (cache_dir, project_path))
             shutil.copytree(cache_dir, project_path)
+    subprocess.check_call(['meson', 'subprojects', 'update', '--reset'])
 
 
 if __name__ == "__main__":
