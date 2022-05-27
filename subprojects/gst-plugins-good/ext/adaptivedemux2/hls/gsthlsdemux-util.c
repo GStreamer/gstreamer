@@ -173,7 +173,7 @@ find_offset (const guint8 * data, guint size, guint * out_packet_size)
   const gint packet_size = 188;
 
   /* FIXME: check 192 as well, and maybe also 204, 208 */
-  for (off = 0; off < MIN (size, packet_size); ++off) {
+  for (off = 0; off < MIN (size, 1024); ++off) {
     if (have_ts_sync (data + off, size - off, packet_size, sync_points)) {
       *out_packet_size = packet_size;
       return off;
