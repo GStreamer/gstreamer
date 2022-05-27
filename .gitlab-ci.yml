@@ -210,8 +210,6 @@ gst indent:
 #
 .build_template: &build
   - ci/scripts/handle-subprojects-cache.py subprojects/
-  # Update subprojects to respect `.wrap` content
-  - meson subprojects update --reset
   - echo $MESON_ARGS
   - meson build/ $MESON_ARGS
   - ninja -C build/
