@@ -586,9 +586,6 @@ gst_va_encoder_get_max_slice_num (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return -1;
 
-  if (entrypoint != self->entrypoint)
-    return -1;
-
   dpy = gst_va_display_get_va_dpy (self->display);
   status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
   if (status != VA_STATUS_SUCCESS) {
@@ -618,9 +615,6 @@ gst_va_encoder_get_max_num_reference (GstVaEncoder * self,
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
 
   if (profile == VAProfileNone)
-    return FALSE;
-
-  if (entrypoint != self->entrypoint)
     return FALSE;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -661,9 +655,6 @@ gst_va_encoder_get_rate_control_mode (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return 0;
 
-  if (entrypoint != self->entrypoint)
-    return 0;
-
   dpy = gst_va_display_get_va_dpy (self->display);
   status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
   if (status != VA_STATUS_SUCCESS) {
@@ -691,9 +682,6 @@ gst_va_encoder_get_quality_level (GstVaEncoder * self,
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), 0);
 
   if (profile == VAProfileNone)
-    return 0;
-
-  if (entrypoint != self->entrypoint)
     return 0;
 
   dpy = gst_va_display_get_va_dpy (self->display);
@@ -725,9 +713,6 @@ gst_va_encoder_has_trellis (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return FALSE;
 
-  if (entrypoint != self->entrypoint)
-    return FALSE;
-
   dpy = gst_va_display_get_va_dpy (self->display);
   status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
   if (status != VA_STATUS_SUCCESS) {
@@ -755,9 +740,6 @@ gst_va_encoder_get_rtformat (GstVaEncoder * self,
   if (profile == VAProfileNone)
     return 0;
 
-  if (entrypoint != self->entrypoint)
-    return 0;
-
   dpy = gst_va_display_get_va_dpy (self->display);
   status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
   if (status != VA_STATUS_SUCCESS) {
@@ -783,9 +765,6 @@ gst_va_encoder_get_packed_headers (GstVaEncoder * self, VAProfile profile,
   VAConfigAttrib attrib = {.type = VAConfigAttribEncPackedHeaders };
 
   if (profile == VAProfileNone)
-    return 0;
-
-  if (entrypoint != self->entrypoint)
     return 0;
 
   dpy = gst_va_display_get_va_dpy (self->display);
