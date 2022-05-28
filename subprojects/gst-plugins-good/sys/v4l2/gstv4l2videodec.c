@@ -651,9 +651,11 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   GstVideoCodecFrame *frame;
   GstBuffer *buffer = NULL;
   GstFlowReturn ret;
+  gint capture_configuration_change;
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-  if (g_atomic_int_get (&self->capture_configuration_change)) {
+  if ((capture_configuration_change =
+          g_atomic_int_get (&self->capture_configuration_change))) {
     gst_v4l2_object_stop (self->v4l2capture);
     ret = gst_v4l2_video_dec_setup_capture (decoder);
     if (ret != GST_FLOW_OK) {
@@ -735,6 +737,28 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
             GST_ELEMENT_NAME (decoder));
         warned = TRUE;
       }
+    }
+
+    /* If the initial frame triggered a Caps renegotiation, but with no actual change in 
+     * resolution, already-correctly-decoded frames may incorrectly be dropped by the driver.
+     * This has been observed to occur in at least one driver.  These frames will never dequeue.
+     * As a workaround, drop all pending frames older than the current frame now. */
+    if (capture_configuration_change && oldest_frame
+        && oldest_frame->system_frame_number == 0
+        && frame->system_frame_number) {
+      gint counter = 0;
+      while (oldest_frame) {
+        counter++;
+        gst_video_decoder_drop_frame (decoder, oldest_frame);
+        oldest_frame = gst_video_decoder_get_oldest_frame (decoder);
+        if (oldest_frame->system_frame_number == frame->system_frame_number) {
+          gst_video_codec_frame_unref (oldest_frame);
+          oldest_frame = NULL;
+        }
+      }
+      g_warning
+          ("%s: %i initial frames before frame %u were not dequeued: bug in decoder -- please file a bug",
+          GST_ELEMENT_NAME (decoder), counter, frame->system_frame_number);
     }
     if (oldest_frame)
       gst_video_codec_frame_unref (oldest_frame);
