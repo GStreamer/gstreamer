@@ -2146,7 +2146,8 @@ gst_caps_merge_common (GstCaps * caps1, GstCaps * caps2)
 
 fail:
   {
-    GST_ERROR ("Failed to create common caps");
+    GST_WARNING ("Failed to create common caps of %"
+        GST_PTR_FORMAT " and %" GST_PTR_FORMAT, caps1, caps2);
     gst_caps_unref (res);
     return NULL;
   }
