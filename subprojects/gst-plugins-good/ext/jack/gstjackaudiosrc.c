@@ -1055,7 +1055,7 @@ gst_jack_audio_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
     if (ports != NULL) {
       for (; ports[max]; max++);
 
-      free (ports);
+      jack_free (ports);
     } else
       max = 0;
   } else {
