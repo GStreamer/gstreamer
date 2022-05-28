@@ -413,6 +413,7 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer;
+  GList *pending_frames = NULL;
 
   if (gst_pad_get_task_state (decoder->srcpad) != GST_TASK_STARTED)
     goto done;
@@ -465,7 +466,30 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (decoder, "Done draining buffers");
 
-  /* TODO Shall we cleanup any reffed frame to workaround broken decoders ? */
+  /* Draining of the capture buffer has completed. 
+   * If any pending frames remain at this point there is a decoder error.
+   * This has been observed as a driver bug, where eos is sent too early.   
+   * These frames will never be rendered, so drop them now with a warning */
+
+  pending_frames = gst_video_decoder_get_frames (decoder);
+  if (pending_frames) {
+    int counter = 0;
+    guint32 first, last;
+    for (GList * g = pending_frames; g; g = g->next) {
+      GstVideoCodecFrame *frame = g->data;
+      g->data = NULL;
+      last = frame->system_frame_number;
+      if (!counter)
+        first = last;
+      counter++;
+      gst_video_decoder_drop_frame (decoder, frame);
+    }
+    g_warning
+        ("%s: %i frames %u-%u left undrained after CMD_STOP, eos sent too early: bug in decoder -- please file a bug",
+        GST_ELEMENT_NAME (decoder), counter, first, last);
+    if (pending_frames)
+      g_list_free (pending_frames);
+  }
 
 done:
   return ret;
