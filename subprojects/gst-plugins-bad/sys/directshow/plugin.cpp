@@ -32,6 +32,7 @@
 
 GST_DEBUG_CATEGORY (dshowdec_debug);
 GST_DEBUG_CATEGORY (dshowsrcwrapper_debug);
+GST_DEBUG_CATEGORY (dshowvideosrc_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -39,6 +40,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (dshowdec_debug, "dshowdec", 0, "DirectShow decoder");
   GST_DEBUG_CATEGORY_INIT (dshowsrcwrapper_debug, "dshowsrcwrapper", 0,
       "DirectShow source wrapper");
+  GST_DEBUG_CATEGORY_INIT (dshowvideosrc_debug, "dshowvideosrc", 0,
+      "Directshow video source");
 
   dshow_adec_register (plugin);
   dshow_vdec_register (plugin);

@@ -28,7 +28,7 @@
 
 #include <gst/video/video.h>
 
-GST_DEBUG_CATEGORY_STATIC (dshowvideosrc_debug);
+GST_DEBUG_CATEGORY_EXTERN (dshowvideosrc_debug);
 #define GST_CAT_DEFAULT dshowvideosrc_debug
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -156,10 +156,6 @@ gst_dshowvideosrc_class_init (GstDshowVideoSrcClass * klass)
       "DirectShow video capture source", "Source/Video",
       "Receive data from a directshow video capture graph",
       "Sebastien Moutte <sebastien@moutte.net>");
-
-  GST_DEBUG_CATEGORY_INIT (dshowvideosrc_debug, "dshowvideosrc", 0,
-      "Directshow video source");
-
 }
 
 static void
