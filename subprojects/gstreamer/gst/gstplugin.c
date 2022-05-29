@@ -95,6 +95,8 @@ static char *_gst_plugin_fault_handler_filename = NULL;
  * MIT/X11: https://opensource.org/licenses/MIT
  * 3-clause BSD: https://opensource.org/licenses/BSD-3-Clause
  * Zero-Clause BSD: https://opensource.org/licenses/0BSD
+ * Apache License 2.0: http://www.apache.org/licenses/LICENSE-2.0 (Since: 1.22)
+
  * FIXME: update to use SPDX identifiers, or just remove entirely
  */
 static const gchar known_licenses[] = "LGPL\000"        /* GNU Lesser General Public License */
@@ -106,6 +108,7 @@ static const gchar known_licenses[] = "LGPL\000"        /* GNU Lesser General Pu
     "BSD\000"                   /* 3-clause BSD license */
     "MIT/X11\000"               /* MIT/X11 license */
     "0BSD\000"                  /* Zero-Clause BSD */
+    "Apache 2.0\000"            /* Apache License 2.0 */
     "Proprietary\000"           /* Proprietary license */
     GST_LICENSE_UNKNOWN;        /* some other license */
 
@@ -1487,19 +1490,19 @@ gst_plugin_list_free (GList * list)
  * ENV + *xyz   same as above, but xyz acts as suffix filter
  * ENV + xyz*   same as above, but xyz acts as prefix filter (is this needed?)
  * ENV + *xyz*  same as above, but xyz acts as strstr filter (is this needed?)
- * 
+ *
  * same as above, with additional paths hard-coded at compile-time:
  *   - only check paths + ... if ENV is not set or yields not paths
  *   - always check paths + ... in addition to ENV
  *
  * When user specifies set of environment variables, he/she may also use e.g.
  * "HOME/.mystuff/plugins", and we'll expand the content of $HOME with the
- * remainder 
+ * remainder
  */
 
 /* we store in registry:
  *  sets of:
- *   { 
+ *   {
  *     - environment variables (array of strings)
  *     - last hash of env variable contents (uint) (so we can avoid doing stats
  *       if one of the env vars has changed; premature optimisation galore)
