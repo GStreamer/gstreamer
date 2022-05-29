@@ -34,7 +34,7 @@ typedef struct _GstVaProfileConfig GstVaProfileConfig;
 struct _GstVaProfileConfig
 {
   VAProfile profile;
-  guint32 entrypoint;
+  VAEntrypoint entrypoint;
 };
 
 struct _GstVaEncoder
