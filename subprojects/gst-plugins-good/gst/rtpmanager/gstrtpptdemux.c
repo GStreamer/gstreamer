@@ -567,7 +567,7 @@ invalid_buffer:
     GST_ELEMENT_WARNING (rtpdemux, STREAM, DEMUX, (NULL),
         ("Dropping invalid RTP payload"));
     gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
   }
 no_caps:
   {
