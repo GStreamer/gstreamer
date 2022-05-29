@@ -60,7 +60,7 @@ struct _GstVaBaseTransformPrivate
  * Since: 1.20
  */
 #define gst_va_base_transform_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVaBaseTransform, gst_va_base_transform,
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaBaseTransform, gst_va_base_transform,
     GST_TYPE_BASE_TRANSFORM, G_ADD_PRIVATE (GstVaBaseTransform)
     GST_DEBUG_CATEGORY_INIT (gst_va_base_transform_debug,
         "vabasetransform", 0, "vabasetransform element");

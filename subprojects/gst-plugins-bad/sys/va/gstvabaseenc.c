@@ -52,7 +52,7 @@ static GParamSpec *properties[N_PROPERTIES];
  */
 /* *INDENT-OFF* */
 #define gst_va_base_enc_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVaBaseEnc, gst_va_base_enc,
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaBaseEnc, gst_va_base_enc,
     GST_TYPE_VIDEO_ENCODER, G_ADD_PRIVATE (GstVaBaseEnc)
     GST_DEBUG_CATEGORY_INIT (gst_va_base_enc_debug,
         "vabaseenc", 0, "vabaseenc element"););
