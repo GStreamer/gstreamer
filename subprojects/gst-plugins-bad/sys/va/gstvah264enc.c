@@ -326,6 +326,7 @@ static const GstVaH264LevelLimits _va_h264_level_limits[] = {
 };
 /* *INDENT-ON* */
 
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
 _slice_type_name (GstH264SliceType type)
 {
@@ -346,22 +347,22 @@ _slice_type_name (GstH264SliceType type)
 static const gchar *
 _rate_control_get_name (guint32 rc_mode)
 {
-  switch (rc_mode) {
-    case VA_RC_CBR:
-      return "cbr";
-    case VA_RC_VBR:
-      return "vbr";
-    case VA_RC_VCM:
-      return "vcm";
-    case VA_RC_CQP:
-      return "cqp";
-    default:
-      return "unknown";
+  GParamSpecEnum *spec;
+  guint i;
+
+  if (!(properties[PROP_RATE_CONTROL]
+          && G_IS_PARAM_SPEC_ENUM (properties[PROP_RATE_CONTROL])))
+    return NULL;
+
+  spec = G_PARAM_SPEC_ENUM (properties[PROP_RATE_CONTROL]);
+  for (i = 0; i < spec->enum_class->n_values; i++) {
+    if (spec->enum_class->values[i].value == rc_mode)
+      return spec->enum_class->values[i].value_nick;
   }
 
-  g_assert_not_reached ();
   return NULL;
 }
+#endif
 
 static GstVaH264EncFrame *
 gst_va_enc_frame_new (void)
