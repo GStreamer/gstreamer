@@ -1125,35 +1125,80 @@ gst_va_encode_picture_free (GstVaEncodePicture * pic)
   g_slice_free (GstVaEncodePicture, pic);
 }
 
-/**
- * GstVaEncoderRateControl:
- *
- * Since: 1.22
- */
-GType
-gst_va_encoder_rate_control_get_type (void)
-{
-  static gsize type = 0;
-  static const GEnumValue values[] = {
-    {VA_RC_CBR, "Constant Bitrate", "cbr"},
-    {VA_RC_VBR, "Variable Bitrate", "vbr"},
-    {VA_RC_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
-    {VA_RC_CQP, "Constant Quantizer", "cqp"},
-    /* {VA_RC_VBR_CONSTRAINED, "VBR with peak rate higher than average bitrate", */
-    /*  "vbr-constrained"}, */
-    /* {VA_RC_ICQ, "Intelligent Constant Quality", "icq"}, */
-    /* {VA_RC_MB, "Macroblock based rate control", "mb"}, */
-    /* {VA_RC_CFS, "Constant Frame Size", "cfs"}, */
-    /* {VA_RC_PARALLEL, "Parallel BRC", "parallel"}, */
-    /* {VA_RC_QVBR, "Quality defined VBR", "qvbr"}, */
-    /* {VA_RC_AVBR, "Average VBR", "avbr"}, */
-    {0, NULL, NULL}
-  };
+/* currently supported rate controls */
+static const GEnumValue rate_control_map[] = {
+  {VA_RC_CBR, "Constant Bitrate", "cbr"},
+  {VA_RC_VBR, "Variable Bitrate", "vbr"},
+  {VA_RC_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
+  {VA_RC_CQP, "Constant Quantizer", "cqp"},
+  /* {VA_RC_VBR_CONSTRAINED, "VBR with peak rate higher than average bitrate", */
+  /*  "vbr-constrained"}, */
+  /* {VA_RC_ICQ, "Intelligent Constant Quality", "icq"}, */
+  /* {VA_RC_MB, "Macroblock based rate control", "mb"}, */
+  /* {VA_RC_CFS, "Constant Frame Size", "cfs"}, */
+  /* {VA_RC_PARALLEL, "Parallel BRC", "parallel"}, */
+  /* {VA_RC_QVBR, "Quality defined VBR", "qvbr"}, */
+  /* {VA_RC_AVBR, "Average VBR", "avbr"}, */
+};
 
-  if (g_once_init_enter (&type)) {
-    GType _type = g_enum_register_static ("GstVaEncoderRateControl", values);
-    g_once_init_leave (&type, _type);
+static gint
+_guint32_cmp (gconstpointer a, gconstpointer b)
+{
+  return *((const guint32 *) a) - *((const guint32 *) b);
+}
+
+gboolean
+gst_va_encoder_get_rate_control_enum (GstVaEncoder * self,
+    GEnumValue ratectl[16])
+{
+  guint i, j, k = 0;
+  guint32 rc, rc_prev = 0;
+  VAProfile profile;
+  GArray *rcs;
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
+
+  /* reseve the number of supported rate controls per profile */
+  rcs = g_array_sized_new (FALSE, FALSE, sizeof (guint32),
+      G_N_ELEMENTS (rate_control_map) * self->available_profiles->len);
+
+  for (i = 0; i < self->available_profiles->len; i++) {
+    profile = g_array_index (self->available_profiles, VAProfile, i);
+    rc = gst_va_encoder_get_rate_control_mode (self, profile, self->entrypoint);
+    if (rc == 0)
+      continue;
+
+    for (j = 0; j < G_N_ELEMENTS (rate_control_map); j++) {
+      if (rc & rate_control_map[j].value)
+        rcs = g_array_append_val (rcs, rate_control_map[j].value);
+    }
   }
 
-  return type;
+  if (rcs->len == 0) {
+    g_clear_pointer (&rcs, g_array_unref);
+    return FALSE;
+  }
+
+  g_array_sort (rcs, _guint32_cmp);
+
+  for (i = 0; i < rcs->len; i++) {
+    rc = g_array_index (rcs, guint32, i);
+    if (rc == rc_prev)
+      continue;
+
+    for (j = 0; j < G_N_ELEMENTS (rate_control_map); j++) {
+      if (rc == rate_control_map[j].value && k < 15)
+        ratectl[k++] = rate_control_map[j];
+    }
+
+    rc_prev = rc;
+  }
+
+  g_clear_pointer (&rcs, g_array_unref);
+  if (k == 0)
+    return FALSE;
+  /* *INDENT-OFF* */
+  ratectl[k] = (GEnumValue) { 0, NULL, NULL };
+  /* *INDENT-ON* */
+  return TRUE;
 }

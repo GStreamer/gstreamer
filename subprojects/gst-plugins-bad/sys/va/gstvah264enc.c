@@ -124,6 +124,10 @@ static GstElementClass *parent_class = NULL;
 struct _GstVaH264EncClass
 {
   GstVaBaseEncClass parent_class;
+
+  GType rate_control_type;
+  char rate_control_type_name[34];
+  GEnumValue rate_control[16];
 };
 /* *INDENT-ON* */
 
@@ -3230,13 +3234,17 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
 {
   GstCaps *src_doc_caps, *sink_doc_caps;
   GstPadTemplate *sink_pad_templ, *src_pad_templ;
-  GObjectClass *const object_class = G_OBJECT_CLASS (g_klass);
-  GstElementClass *const element_class = GST_ELEMENT_CLASS (g_klass);
-  GstVideoEncoderClass *const venc_class = GST_VIDEO_ENCODER_CLASS (g_klass);
+  GObjectClass *object_class = G_OBJECT_CLASS (g_klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_klass);
+  GstVideoEncoderClass *venc_class = GST_VIDEO_ENCODER_CLASS (g_klass);
   GstVaBaseEncClass *va_enc_class = GST_VA_BASE_ENC_CLASS (g_klass);
+  GstVaH264EncClass *vah264enc_class = GST_VA_H264_ENC_CLASS (g_klass);
+  GstVaDisplay *display;
+  GstVaEncoder *encoder;
   struct CData *cdata = class_data;
   gchar *long_name;
   const gchar *name, *desc;
+  gint n_props = N_PROPERTIES;
 
   if (cdata->entrypoint == VAEntrypointEncSlice) {
     desc = "VA-API based H.264 video encoder";
@@ -3291,6 +3299,27 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   va_enc_class->encode_frame = GST_DEBUG_FUNCPTR (gst_va_h264_enc_encode_frame);
   va_enc_class->prepare_output =
       GST_DEBUG_FUNCPTR (gst_va_h264_enc_prepare_output);
+
+  {
+    display =
+        gst_va_display_drm_new_from_path (va_enc_class->render_device_path);
+    encoder = gst_va_encoder_new (display, va_enc_class->codec,
+        va_enc_class->entrypoint);
+    if (gst_va_encoder_get_rate_control_enum (encoder,
+            vah264enc_class->rate_control)) {
+      g_snprintf (vah264enc_class->rate_control_type_name,
+          G_N_ELEMENTS (vah264enc_class->rate_control_type_name) - 1,
+          "GstVaEncoderRateControl_%" GST_FOURCC_FORMAT "%s",
+          GST_FOURCC_ARGS (va_enc_class->codec),
+          (va_enc_class->entrypoint == VAEntrypointEncSliceLP) ? "_LP" : "");
+      vah264enc_class->rate_control_type =
+          g_enum_register_static (vah264enc_class->rate_control_type_name,
+          vah264enc_class->rate_control);
+      gst_type_mark_as_plugin_api (vah264enc_class->rate_control_type, 0);
+    }
+    gst_object_unref (encoder);
+    gst_object_unref (display);
+  }
 
   g_free (long_name);
   g_free (cdata->description);
@@ -3513,19 +3542,19 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
       "The desired max CPB size in Kb (0: auto-calculate)", 0, 2000 * 1024, 0,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
-  /**
-   * GstVaH264Enc:rate-control:
-   *
-   * The desired rate control mode for the encoder.
-   */
-  properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",
-      "rate control mode", "The desired rate control mode for the encoder",
-      GST_TYPE_VA_ENCODER_RATE_CONTROL, VA_RC_CBR,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+  if (vah264enc_class->rate_control_type > 0) {
+    properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",
+        "rate control mode", "The desired rate control mode for the encoder",
+        vah264enc_class->rate_control_type,
+        vah264enc_class->rate_control[0].value,
+        GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READWRITE
+        | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+  } else {
+    n_props--;
+    properties[PROP_RATE_CONTROL] = NULL;
+  }
 
-  g_object_class_install_properties (object_class, N_PROPERTIES, properties);
-
-  gst_type_mark_as_plugin_api (gst_va_encoder_rate_control_get_type (), 0);
+  g_object_class_install_properties (object_class, n_props, properties);
 
   /**
    * GstVaFeature:
