@@ -1,5 +1,5 @@
+runner_file = files('gst-validate-runner.c')
 gstvalidate_sources = files(
-    'gst-validate-runner.c',
     'gst-validate-reporter.c',
     'gst-validate-mockdecryptor.c',
     'gst-validate-monitor.c',
@@ -59,7 +59,7 @@ gst_validate_enums = gnome.mkenums('gstvalidateenumtypes',
 validate_deps = [gst_check_dep, gst_dep, gst_controller_dep, gstbase_dep,
                  gio_dep, gmodule_dep, gst_pbutils_dep, mathlib, json_dep]
 gstvalidate = library('gstvalidate-1.0',
-    sources: gstvalidate_sources + gst_validate_enums,
+    sources: gstvalidate_sources + gst_validate_enums + runner_file,
     version : libversion,
     soversion : soversion,
     darwin_versions : osxversion,
@@ -70,7 +70,7 @@ gstvalidate = library('gstvalidate-1.0',
 
 if not static_build
   gstvalidatetracer = library('gstvalidatetracer',
-      sources: gst_validate_enums,
+      sources: gst_validate_enums + runner_file,
       include_directories : [inc_dirs],
       install: true,
       c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
@@ -98,7 +98,7 @@ validate_gen_sources = []
 if build_gir
     gst_validate_gir_extra_args = gir_init_section + [ '--c-include=gst/validate/validate.h' ]
     gir = {
-            'sources' : gstvalidate_sources + gstvalidate_headers + gst_validate_enums,
+            'sources' : runner_file + gstvalidate_headers + gst_validate_enums,
             'nsversion' : '1.0',
             'namespace' : 'GstValidate',
             'symbol_prefix' : 'gst_validate',
