@@ -923,7 +923,7 @@ gst_va_base_enc_add_rate_control_parameter (GstVaBaseEnc * base,
     VAEncMiscParameterRateControl rate_control;
   } rate_control;
 
-  if (rc_mode == VA_RC_CQP)
+  if (rc_mode == VA_RC_NONE || rc_mode == VA_RC_CQP)
     return TRUE;
 
   window_size = rc_mode == VA_RC_VBR ? max_bitrate_bits / 2 : max_bitrate_bits;
@@ -1027,7 +1027,7 @@ gst_va_base_enc_add_hrd_parameter (GstVaBaseEnc * base,
   };
   /* *INDENT-ON* */
 
-  if (rc_mode == VA_RC_CQP || rc_mode == VA_RC_VCM)
+  if (rc_mode == VA_RC_NONE || rc_mode == VA_RC_CQP || rc_mode == VA_RC_VCM)
     return TRUE;
 
   if (!gst_va_encoder_add_param (base->encoder, picture,

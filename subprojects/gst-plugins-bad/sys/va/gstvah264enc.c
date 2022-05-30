@@ -494,18 +494,22 @@ _ensure_rate_control (GstVaH264Enc * self)
     g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TARGET_USAGE]);
   }
 
-  /* TODO: find a better heuristics to infer a nearer control mode */
-  rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
-      base->profile, base->entrypoint);
-  if (!(rc_mode & self->prop.rc_ctrl)) {
-    GST_INFO_OBJECT (self, "The rate control mode %s is not supported, "
-        "fallback to %s mode",
-        _rate_control_get_name (self->prop.rc_ctrl),
-        _rate_control_get_name (VA_RC_CQP));
-    self->rc.rc_ctrl_mode = VA_RC_CQP;
-
-    self->prop.rc_ctrl = self->rc.rc_ctrl_mode;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_RATE_CONTROL]);
+  if (self->prop.rc_ctrl != VA_RC_NONE) {
+    rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
+        base->profile, base->entrypoint);
+    if (!(rc_mode & self->prop.rc_ctrl)) {
+      guint32 defval =
+          G_PARAM_SPEC_ENUM (properties[PROP_RATE_CONTROL])->default_value;
+      GST_INFO_OBJECT (self, "The rate control mode %s is not supported, "
+          "fallback to %s mode",
+          _rate_control_get_name (self->prop.rc_ctrl),
+          _rate_control_get_name (defval));
+      self->rc.rc_ctrl_mode = defval;
+      self->prop.rc_ctrl = self->rc.rc_ctrl_mode;
+      g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_RATE_CONTROL]);
+    }
+  } else {
+    self->rc.rc_ctrl_mode = VA_RC_NONE;
   }
 
   if (self->rc.min_qp > self->rc.max_qp) {
@@ -3038,7 +3042,12 @@ gst_va_h264_enc_init (GTypeInstance * instance, gpointer g_class)
   self->prop.bitrate = 0;
   self->prop.target_percentage = 66;
   self->prop.target_usage = 4;
-  self->prop.rc_ctrl = VA_RC_CBR;
+  if (properties[PROP_RATE_CONTROL]) {
+    self->prop.rc_ctrl =
+        G_PARAM_SPEC_ENUM (properties[PROP_RATE_CONTROL])->default_value;
+  } else {
+    self->prop.rc_ctrl = VA_RC_NONE;
+  }
   self->prop.cpb_size = 0;
 }
 
