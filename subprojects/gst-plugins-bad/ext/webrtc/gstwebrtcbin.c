@@ -5396,18 +5396,16 @@ done:
   return ret;
 }
 
-static gboolean
-check_transceivers_not_removed (GstWebRTCBin * webrtc,
+static gint
+transceivers_media_num_cmp (GstWebRTCBin * webrtc,
     GstWebRTCSessionDescription * previous, GstWebRTCSessionDescription * new)
 {
   if (!previous)
-    return TRUE;
+    return 0;
 
-  if (gst_sdp_message_medias_len (previous->sdp) >
-      gst_sdp_message_medias_len (new->sdp))
-    return FALSE;
+  return gst_sdp_message_medias_len (new->sdp) -
+      gst_sdp_message_medias_len (previous->sdp);
 
-  return TRUE;
 }
 
 static gboolean
@@ -5495,6 +5493,35 @@ get_previous_description (GstWebRTCBin * webrtc, SDPSource source,
   return NULL;
 }
 
+static GstWebRTCSessionDescription *
+get_last_generated_description (GstWebRTCBin * webrtc, SDPSource source,
+    GstWebRTCSDPType type)
+{
+  switch (type) {
+    case GST_WEBRTC_SDP_TYPE_OFFER:
+      if (source == SDP_REMOTE)
+        return webrtc->priv->last_generated_answer;
+      else
+        return webrtc->priv->last_generated_offer;
+      break;
+    case GST_WEBRTC_SDP_TYPE_PRANSWER:
+    case GST_WEBRTC_SDP_TYPE_ANSWER:
+      if (source == SDP_LOCAL)
+        return webrtc->priv->last_generated_answer;
+      else
+        return webrtc->priv->last_generated_offer;
+    case GST_WEBRTC_SDP_TYPE_ROLLBACK:
+      return NULL;
+    default:
+      /* other values mean memory corruption/uninitialized! */
+      g_assert_not_reached ();
+      break;
+  }
+
+  return NULL;
+}
+
+
 /* http://w3c.github.io/webrtc-pc/#set-description */
 static GstStructure *
 _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
@@ -5535,13 +5562,24 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     }
   }
 
-  if (!check_transceivers_not_removed (webrtc,
+  if (transceivers_media_num_cmp (webrtc,
           get_previous_description (webrtc, sd->source, sd->sdp->type),
-          sd->sdp)) {
+          sd->sdp) < 0) {
     g_set_error_literal (&error, GST_WEBRTC_ERROR,
         GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
         "m=lines removed from the SDP. Processing a completely new connection "
         "is not currently supported.");
+    goto out;
+  }
+
+  if ((sd->sdp->type == GST_WEBRTC_SDP_TYPE_PRANSWER ||
+          sd->sdp->type == GST_WEBRTC_SDP_TYPE_ANSWER) &&
+      transceivers_media_num_cmp (webrtc,
+          get_last_generated_description (webrtc, sd->source, sd->sdp->type),
+          sd->sdp) != 0) {
+    g_set_error_literal (&error, GST_WEBRTC_ERROR,
+        GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+        "Answer doesn't have the same number of m-lines as the offer.");
     goto out;
   }
 

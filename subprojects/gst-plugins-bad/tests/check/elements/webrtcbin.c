@@ -4371,6 +4371,74 @@ GST_START_TEST (test_codec_preferences_in_on_new_transceiver)
 
 GST_END_TEST;
 
+static void
+add_media_line (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  GstSDPMedia *media = NULL;
+  const GstSDPMedia *existing_media;
+  GstSDPResult res;
+
+  existing_media = gst_sdp_message_get_media (desc->sdp, 0);
+
+  res = gst_sdp_media_copy (existing_media, &media);
+  fail_unless (res == GST_SDP_OK);
+  res = gst_sdp_message_add_media (desc->sdp, media);
+  fail_unless (res == GST_SDP_OK);
+  gst_sdp_media_free (media);
+}
+
+static void
+on_answer_set_rejected (struct test_webrtc *t, GstElement * element,
+    GstPromise * promise, gpointer user_data)
+{
+  const GstStructure *s;
+  GError *error = NULL;
+  GError *compare_error = user_data;
+
+  s = gst_promise_get_reply (promise);
+  fail_unless (s != NULL);
+  gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
+  fail_unless (g_error_matches (error, compare_error->domain,
+          compare_error->code));
+  fail_unless_equals_string (compare_error->message, error->message);
+  g_clear_error (&error);
+}
+
+GST_START_TEST (test_invalid_add_media_in_answer)
+{
+  struct test_webrtc *t = create_audio_test ();
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint media_format_count[] = { 1 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &media_formats);
+  const gchar *expected_offer_setup[] = { "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &count);
+  const gchar *expected_offer_direction[] = { "sendrecv", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  VAL_SDP_INIT (answer, add_media_line, NULL, NULL);
+  GError answer_set_error = { GST_WEBRTC_ERROR,
+    GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+    (gchar *) "Answer doesn't have the same number of m-lines as the offer."
+  };
+
+  /* Ensure that if the answer has more m-lines than the offer, it gets
+   * rejected.
+   */
+
+  t->on_answer_set = on_answer_set_rejected;
+  t->answer_set_data = &answer_set_error;
+
+  test_validate_sdp (t, &offer, &answer);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -4425,6 +4493,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_codec_preferences_no_duplicate_extmaps);
     tcase_add_test (tc, test_codec_preferences_incompatible_extmaps);
     tcase_add_test (tc, test_codec_preferences_invalid_extmap);
+    tcase_add_test (tc, test_invalid_add_media_in_answer);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
