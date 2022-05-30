@@ -180,3 +180,156 @@ convert_cea708_cc_data_to_cdp (GstObject * dbg_obj, GstCCCDPMode cdp_mode,
 
   return len;
 }
+
+/* Converts CDP into raw CEA708 cc_data */
+guint
+convert_cea708_cdp_to_cc_data (GstObject * dbg_obj,
+    const guint8 * cdp, guint cdp_len, guint8 * cc_data,
+    GstVideoTimeCode * tc, const cdp_fps_entry ** out_fps_entry)
+{
+  GstByteReader br;
+  guint16 u16;
+  guint8 u8;
+  guint8 flags;
+  guint len = 0;
+  const struct cdp_fps_entry *fps_entry;
+
+  *out_fps_entry = &null_fps_entry;
+  memset (tc, 0, sizeof (*tc));
+
+  /* Header + footer length */
+  if (cdp_len < 11) {
+    GST_WARNING_OBJECT (dbg_obj, "cdp packet too short (%u). expected at "
+        "least %u", cdp_len, 11);
+    return 0;
+  }
+
+  gst_byte_reader_init (&br, cdp, cdp_len);
+  u16 = gst_byte_reader_get_uint16_be_unchecked (&br);
+  if (u16 != 0x9669) {
+    GST_WARNING_OBJECT (dbg_obj, "cdp packet does not have initial magic bytes "
+        "of 0x9669");
+    return 0;
+  }
+
+  u8 = gst_byte_reader_get_uint8_unchecked (&br);
+  if (u8 != cdp_len) {
+    GST_WARNING_OBJECT (dbg_obj, "cdp packet length (%u) does not match passed "
+        "in value (%u)", u8, cdp_len);
+    return 0;
+  }
+
+  u8 = gst_byte_reader_get_uint8_unchecked (&br);
+  fps_entry = cdp_fps_entry_from_id (u8);
+  if (!fps_entry || fps_entry->fps_n == 0) {
+    GST_WARNING_OBJECT (dbg_obj, "cdp packet does not have a valid framerate "
+        "id (0x%02x", u8);
+    return 0;
+  }
+
+  flags = gst_byte_reader_get_uint8_unchecked (&br);
+  /* No cc_data? */
+  if ((flags & 0x40) == 0) {
+    GST_DEBUG_OBJECT (dbg_obj, "cdp packet does have any cc_data");
+    return 0;
+  }
+
+  /* cdp_hdr_sequence_cntr */
+  gst_byte_reader_skip_unchecked (&br, 2);
+
+  /* time_code_present */
+  if (flags & 0x80) {
+    guint8 hours, minutes, seconds, frames, fields;
+    gboolean drop_frame;
+
+    if (gst_byte_reader_get_remaining (&br) < 5) {
+      GST_WARNING_OBJECT (dbg_obj, "cdp packet does not have enough data to "
+          "contain a timecode (%u). Need at least 5 bytes",
+          gst_byte_reader_get_remaining (&br));
+      return 0;
+    }
+    u8 = gst_byte_reader_get_uint8_unchecked (&br);
+    if (u8 != 0x71) {
+      GST_WARNING_OBJECT (dbg_obj, "cdp packet does not have timecode start "
+          "byte of 0x71, found 0x%02x", u8);
+      return 0;
+    }
+
+    u8 = gst_byte_reader_get_uint8_unchecked (&br);
+    if ((u8 & 0xc0) != 0xc0) {
+      GST_WARNING_OBJECT (dbg_obj, "reserved bits are not 0xc0, found 0x%02x",
+          u8);
+      return 0;
+    }
+
+    hours = ((u8 >> 4) & 0x3) * 10 + (u8 & 0xf);
+
+    u8 = gst_byte_reader_get_uint8_unchecked (&br);
+    if ((u8 & 0x80) != 0x80) {
+      GST_WARNING_OBJECT (dbg_obj, "reserved bit is not 0x80, found 0x%02x",
+          u8);
+      return 0;
+    }
+    minutes = ((u8 >> 4) & 0x7) * 10 + (u8 & 0xf);
+
+    u8 = gst_byte_reader_get_uint8_unchecked (&br);
+    if (u8 & 0x80)
+      fields = 2;
+    else
+      fields = 1;
+    seconds = ((u8 >> 4) & 0x7) * 10 + (u8 & 0xf);
+
+    u8 = gst_byte_reader_get_uint8_unchecked (&br);
+    if (u8 & 0x40) {
+      GST_WARNING_OBJECT (dbg_obj, "reserved bit is not 0x0, found 0x%02x", u8);
+      return 0;
+    }
+
+    drop_frame = !(!(u8 & 0x80));
+    frames = ((u8 >> 4) & 0x3) * 10 + (u8 & 0xf);
+
+    gst_video_time_code_init (tc, fps_entry->fps_n, fps_entry->fps_d, NULL,
+        drop_frame ? GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME :
+        GST_VIDEO_TIME_CODE_FLAGS_NONE, hours, minutes, seconds, frames,
+        fields);
+  }
+
+  /* ccdata_present */
+  if (flags & 0x40) {
+    guint8 cc_count;
+
+    if (gst_byte_reader_get_remaining (&br) < 2) {
+      GST_WARNING_OBJECT (dbg_obj, "not enough data to contain valid cc_data");
+      return 0;
+    }
+    u8 = gst_byte_reader_get_uint8_unchecked (&br);
+    if (u8 != 0x72) {
+      GST_WARNING_OBJECT (dbg_obj, "missing cc_data start code of 0x72, "
+          "found 0x%02x", u8);
+      return 0;
+    }
+
+    cc_count = gst_byte_reader_get_uint8_unchecked (&br);
+    if ((cc_count & 0xe0) != 0xe0) {
+      GST_WARNING_OBJECT (dbg_obj, "reserved bits are not 0xe0, found 0x%02x",
+          u8);
+      return 0;
+    }
+    cc_count &= 0x1f;
+
+    len = 3 * cc_count;
+    if (gst_byte_reader_get_remaining (&br) < len) {
+      GST_WARNING_OBJECT (dbg_obj, "not enough bytes (%u) left for the "
+          "number of byte triples (%u)", gst_byte_reader_get_remaining (&br),
+          cc_count);
+      return 0;
+    }
+
+    memcpy (cc_data, gst_byte_reader_get_data_unchecked (&br, len), len);
+  }
+
+  *out_fps_entry = fps_entry;
+
+  /* skip everything else we don't care about */
+  return len;
+}

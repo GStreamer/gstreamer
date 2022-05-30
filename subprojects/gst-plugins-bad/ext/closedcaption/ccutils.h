@@ -60,6 +60,15 @@ guint           convert_cea708_cc_data_to_cdp  (GstObject * dbg_obj,
                                                 const GstVideoTimeCode * tc,
                                                 const struct cdp_fps_entry *fps_entry);
 
+guint           convert_cea708_cdp_to_cc_data  (GstObject * dbg_obj,
+                                                const guint8 * cdp,
+                                                guint cdp_len,
+                                                guint8 *cc_data,
+                                                GstVideoTimeCode * tc,
+                                                const struct cdp_fps_entry **out_fps_entry);
+
+#define MAX_CDP_PACKET_LEN 256
+
 G_END_DECLS
 
 #endif

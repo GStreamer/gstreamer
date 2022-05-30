@@ -109,88 +109,17 @@ gst_cc_combiner_finalize (GObject * object)
 
 #define GST_FLOW_NEED_DATA GST_FLOW_CUSTOM_SUCCESS
 
-static const guint8 *
-extract_cdp (const guint8 * cdp, guint cdp_len, guint * cc_data_len)
+static guint
+extract_cdp (GstCCCombiner * self, const guint8 * cdp, guint cdp_len,
+    guint8 * cc_data)
 {
-  GstByteReader br;
-  guint16 u16;
-  guint8 u8;
-  guint8 flags;
-  guint len = 0;
-  const guint8 *cc_data = NULL;
+  const struct cdp_fps_entry *out_fps_entry;
+  GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
 
-  *cc_data_len = 0;
-
-  /* Header + footer length */
-  if (cdp_len < 11) {
-    goto done;
-  }
-
-  gst_byte_reader_init (&br, cdp, cdp_len);
-  u16 = gst_byte_reader_get_uint16_be_unchecked (&br);
-  if (u16 != 0x9669) {
-    goto done;
-  }
-
-  u8 = gst_byte_reader_get_uint8_unchecked (&br);
-  if (u8 != cdp_len) {
-    goto done;
-  }
-
-  gst_byte_reader_skip_unchecked (&br, 1);
-
-  flags = gst_byte_reader_get_uint8_unchecked (&br);
-
-  /* No cc_data? */
-  if ((flags & 0x40) == 0) {
-    goto done;
-  }
-
-  /* cdp_hdr_sequence_cntr */
-  gst_byte_reader_skip_unchecked (&br, 2);
-
-  /* time_code_present */
-  if (flags & 0x80) {
-    if (gst_byte_reader_get_remaining (&br) < 5) {
-      goto done;
-    }
-    gst_byte_reader_skip_unchecked (&br, 5);
-  }
-
-  /* ccdata_present */
-  if (flags & 0x40) {
-    guint8 cc_count;
-
-    if (gst_byte_reader_get_remaining (&br) < 2) {
-      goto done;
-    }
-    u8 = gst_byte_reader_get_uint8_unchecked (&br);
-    if (u8 != 0x72) {
-      goto done;
-    }
-
-    cc_count = gst_byte_reader_get_uint8_unchecked (&br);
-    if ((cc_count & 0xe0) != 0xe0) {
-      goto done;
-    }
-    cc_count &= 0x1f;
-
-    if (cc_count == 0)
-      return 0;
-
-    len = 3 * cc_count;
-    if (gst_byte_reader_get_remaining (&br) < len)
-      goto done;
-
-    cc_data = gst_byte_reader_get_data_unchecked (&br, len);
-    *cc_data_len = len;
-  }
-
-done:
-  return cc_data;
+  return convert_cea708_cdp_to_cc_data (GST_OBJECT (self), cdp, cdp_len,
+      cc_data, &tc, &out_fps_entry);
 }
 
-#define MAX_CDP_PACKET_LEN 256
 #define MAX_CEA608_LEN 32
 #define CDP_MODE (GST_CC_CDP_MODE_CC_DATA | GST_CC_CDP_MODE_TIME_CODE)
 
@@ -331,11 +260,12 @@ static void
 schedule_cdp (GstCCCombiner * self, const GstVideoTimeCode * tc,
     const guint8 * data, guint len, GstClockTime pts, GstClockTime duration)
 {
-  const guint8 *cc_data;
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
   guint cc_data_len;
   gboolean inject = FALSE;
 
-  if ((cc_data = extract_cdp (data, len, &cc_data_len))) {
+  cc_data_len = extract_cdp (self, data, len, cc_data);
+  if (cc_data_len > 0) {
     guint8 i;
 
     for (i = 0; i < cc_data_len / 3; i++) {
