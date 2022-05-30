@@ -78,6 +78,7 @@ struct test_webrtc
   GCond cond;
   GArray *states;
   guint offerror;
+  gulong error_signal_handler_id;
   gpointer user_data;
   GDestroyNotify data_notify;
 /* *INDENT-OFF* */
@@ -122,6 +123,12 @@ struct test_webrtc
                                          gpointer user_data);
   gpointer answer_set_data;
   GDestroyNotify answer_set_notify;
+  void      (*on_prepare_data_channel)  (struct test_webrtc * t,
+                                         GstElement * element,
+                                         GObject * data_channel,
+                                         gboolean is_local,
+                                         gpointer user_data);
+
   void      (*on_data_channel)          (struct test_webrtc * t,
                                          GstElement * element,
                                          GObject *data_channel,
@@ -400,6 +407,46 @@ _bus_watch (GstBus * bus, GstMessage * msg, struct test_webrtc *t)
   return TRUE;
 }
 
+
+static void
+on_channel_error_not_reached (GObject * channel, GError * error,
+    gpointer user_data)
+{
+  g_assert_not_reached ();
+}
+
+static void on_message_string (GObject * channel, const gchar * str,
+    struct test_webrtc *t);
+static void on_message_data (GObject * channel, GBytes * data,
+    struct test_webrtc *t);
+
+static void
+have_prepare_data_channel (struct test_webrtc *t,
+    GstElement * element,
+    GObject * data_channel, gboolean is_local, gpointer user_data)
+{
+  t->error_signal_handler_id =
+      g_signal_connect (data_channel, "on-error",
+      G_CALLBACK (on_channel_error_not_reached), NULL);
+  g_signal_connect (data_channel, "on-message-string",
+      G_CALLBACK (on_message_string), t);
+  g_signal_connect (data_channel, "on-message-data",
+      G_CALLBACK (on_message_data), t);
+}
+
+static void
+_on_prepare_data_channel (GstElement * webrtc, GObject * data_channel,
+    gboolean is_local, struct test_webrtc *t)
+{
+  /* We can't lock the test_webrtc mutex here because this callback might be
+   * called from an already locked _on_data_channel thread. This is the case for
+   * the test_data_channel_create_after_negotiate test. */
+  if (t->on_prepare_data_channel)
+    t->on_prepare_data_channel (t, webrtc, data_channel, is_local,
+        t->data_channel_data);
+
+}
+
 static void
 _on_negotiation_needed (GstElement * webrtc, struct test_webrtc *t)
 {
@@ -498,8 +545,16 @@ _offer_answer_not_reached (struct test_webrtc *t, GstElement * element,
 }
 
 static void
-_on_data_channel_not_reached (struct test_webrtc *t, GstElement * element,
-    GObject * data_channel, gpointer user_data)
+_on_prepare_data_channel_not_reached (struct test_webrtc *t,
+    GstElement * element, GObject * data_channel, gboolean is_local,
+    gpointer user_data)
+{
+  g_assert_not_reached ();
+}
+
+static void
+_on_data_channel_not_reached (struct test_webrtc *t,
+    GstElement * element, GObject * data_channel, gpointer user_data)
 {
   g_assert_not_reached ();
 }
@@ -559,9 +614,11 @@ test_webrtc_new (void)
   ret->on_pad_added = _pad_added_not_reached;
   ret->on_offer_created = _offer_answer_not_reached;
   ret->on_answer_created = _offer_answer_not_reached;
+  ret->on_prepare_data_channel = _on_prepare_data_channel_not_reached;
   ret->on_data_channel = _on_data_channel_not_reached;
   ret->bus_message = _bus_no_errors;
   ret->offerror = 1;
+  ret->error_signal_handler_id = -1;
 
   g_mutex_init (&ret->lock);
   g_cond_init (&ret->cond);
@@ -607,6 +664,10 @@ test_webrtc_new (void)
       G_CALLBACK (_on_data_channel), ret);
   g_signal_connect (ret->webrtc2, "on-data-channel",
       G_CALLBACK (_on_data_channel), ret);
+  g_signal_connect (ret->webrtc1, "prepare-data-channel",
+      G_CALLBACK (_on_prepare_data_channel), ret);
+  g_signal_connect (ret->webrtc2, "prepare-data-channel",
+      G_CALLBACK (_on_prepare_data_channel), ret);
   g_signal_connect (ret->webrtc1, "pad-added", G_CALLBACK (_on_pad_added), ret);
   g_signal_connect (ret->webrtc2, "pad-added", G_CALLBACK (_on_pad_added), ret);
   g_signal_connect_swapped (ret->webrtc1, "notify::ice-gathering-state",
@@ -1050,6 +1111,7 @@ create_audio_test (void)
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
   t->on_pad_added = _pad_added_fakesink;
+  t->on_prepare_data_channel = have_prepare_data_channel;
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);
   add_fake_audio_src_harness (h, 96, 0xDEADBEEF);
@@ -1921,13 +1983,6 @@ on_sdp_has_datachannel (struct test_webrtc *t, GstElement * element,
   fail_unless_equals_int (TRUE, have_data_channel);
 }
 
-static void
-on_channel_error_not_reached (GObject * channel, GError * error,
-    gpointer user_data)
-{
-  g_assert_not_reached ();
-}
-
 GST_START_TEST (test_data_channel_create)
 {
   struct test_webrtc *t = test_webrtc_new ();
@@ -1938,6 +1993,7 @@ GST_START_TEST (test_data_channel_create)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
 
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
@@ -1949,8 +2005,6 @@ GST_START_TEST (test_data_channel_create)
   g_assert_nonnull (channel);
   g_object_get (channel, "label", &label, NULL);
   g_assert_cmpstr (label, ==, "label");
-  g_signal_connect (channel, "on-error",
-      G_CALLBACK (on_channel_error_not_reached), NULL);
 
   test_validate_sdp (t, &offer, &offer);
 
@@ -1968,8 +2022,7 @@ have_data_channel (struct test_webrtc *t, GstElement * element,
   GObject *other = user_data;
   gchar *our_label, *other_label;
 
-  g_signal_connect (our, "on-error", G_CALLBACK (on_channel_error_not_reached),
-      NULL);
+  g_assert_true (t->error_signal_handler_id > 0);
 
   g_object_get (our, "label", &our_label, NULL);
   g_object_get (other, "label", &other_label, NULL);
@@ -1991,6 +2044,7 @@ GST_START_TEST (test_data_channel_remote_notify)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
   t->on_data_channel = have_data_channel;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2002,8 +2056,6 @@ GST_START_TEST (test_data_channel_remote_notify)
       &channel);
   g_assert_nonnull (channel);
   t->data_channel_data = channel;
-  g_signal_connect (channel, "on-error",
-      G_CALLBACK (on_channel_error_not_reached), NULL);
 
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -2047,11 +2099,7 @@ have_data_channel_transfer_string (struct test_webrtc *t, GstElement * element,
   fail_unless_equals_int (GST_WEBRTC_DATA_CHANNEL_STATE_OPEN, state);
 
   g_object_set_data_full (our, "expected", g_strdup (test_string), g_free);
-  g_signal_connect (our, "on-message-string", G_CALLBACK (on_message_string),
-      t);
 
-  g_signal_connect (other, "on-error",
-      G_CALLBACK (on_channel_error_not_reached), NULL);
   g_signal_emit_by_name (other, "send-string", test_string);
 }
 
@@ -2064,6 +2112,7 @@ GST_START_TEST (test_data_channel_transfer_string)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
   t->on_data_channel = have_data_channel_transfer_string;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2128,10 +2177,7 @@ have_data_channel_transfer_data (struct test_webrtc *t, GstElement * element,
 
   g_object_set_data_full (our, "expected", g_bytes_ref (data),
       (GDestroyNotify) g_bytes_unref);
-  g_signal_connect (our, "on-message-data", G_CALLBACK (on_message_data), t);
 
-  g_signal_connect (other, "on-error",
-      G_CALLBACK (on_channel_error_not_reached), NULL);
   g_signal_emit_by_name (other, "send-data", data);
   g_bytes_unref (data);
 }
@@ -2145,6 +2191,7 @@ GST_START_TEST (test_data_channel_transfer_data)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
   t->on_data_channel = have_data_channel_transfer_data;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2178,6 +2225,7 @@ have_data_channel_create_data_channel (struct test_webrtc *t,
 {
   GObject *another;
 
+  t->on_prepare_data_channel = have_prepare_data_channel;
   t->on_data_channel = have_data_channel_transfer_string;
 
   g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
@@ -2185,8 +2233,6 @@ have_data_channel_create_data_channel (struct test_webrtc *t,
   g_assert_nonnull (another);
   t->data_channel_data = another;
   t->data_channel_notify = (GDestroyNotify) g_object_unref;
-  g_signal_connect (another, "on-error",
-      G_CALLBACK (on_channel_error_not_reached), NULL);
 }
 
 GST_START_TEST (test_data_channel_create_after_negotiate)
@@ -2198,6 +2244,7 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
   t->on_data_channel = have_data_channel_create_data_channel;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2209,8 +2256,6 @@ GST_START_TEST (test_data_channel_create_after_negotiate)
       &channel);
   g_assert_nonnull (channel);
   t->data_channel_data = channel;
-  g_signal_connect (channel, "on-error",
-      G_CALLBACK (on_channel_error_not_reached), NULL);
 
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -2297,6 +2342,7 @@ GST_START_TEST (test_data_channel_close)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
   t->on_data_channel = have_data_channel_mark_open;
   t->data_channel_data = &tdc;
 
@@ -2317,8 +2363,6 @@ GST_START_TEST (test_data_channel_close)
         &tdc.dc1);
     g_assert_nonnull (tdc.dc1);
     g_weak_ref_init (&dc1_ref, tdc.dc1);
-    g_signal_connect (tdc.dc1, "on-error",
-        G_CALLBACK (on_channel_error_not_reached), NULL);
     sigid = g_signal_connect (tdc.dc1, "notify::ready-state",
         G_CALLBACK (on_data_channel_open), t);
 
@@ -2413,6 +2457,7 @@ GST_START_TEST (test_data_channel_low_threshold)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = NULL;
   t->on_data_channel = have_data_channel_check_low_threshold_emitted;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2424,8 +2469,6 @@ GST_START_TEST (test_data_channel_low_threshold)
       &channel);
   g_assert_nonnull (channel);
   t->data_channel_data = channel;
-  g_signal_connect (channel, "on-error",
-      G_CALLBACK (on_channel_error_not_reached), NULL);
 
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -2482,6 +2525,7 @@ GST_START_TEST (test_data_channel_max_message_size)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = NULL;
   t->on_data_channel = have_data_channel_transfer_large_data;
 
   fail_if (gst_element_set_state (t->webrtc1,
@@ -2534,6 +2578,7 @@ GST_START_TEST (test_data_channel_pre_negotiated)
 
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
 
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
@@ -3246,6 +3291,7 @@ GST_START_TEST (test_renego_data_channel_add_stream)
   t->on_ice_candidate = NULL;
   t->on_data_channel = NULL;
   t->on_pad_added = _pad_added_fakesink;
+  t->on_prepare_data_channel = NULL;
 
   fail_if (gst_element_set_state (t->webrtc1,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
@@ -3311,6 +3357,7 @@ GST_START_TEST (test_renego_stream_data_channel_add_stream)
   t->on_negotiation_needed = NULL;
   t->on_ice_candidate = NULL;
   t->on_data_channel = NULL;
+  t->on_prepare_data_channel = NULL;
   t->on_pad_added = _pad_added_fakesink;
 
   h = gst_harness_new_with_element (t->webrtc1, "sink_0", NULL);

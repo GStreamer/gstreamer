@@ -491,6 +491,7 @@ enum
   ADD_TURN_SERVER_SIGNAL,
   CREATE_DATA_CHANNEL_SIGNAL,
   ON_DATA_CHANNEL_SIGNAL,
+  PREPARE_DATA_CHANNEL_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -2422,6 +2423,9 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     channel = g_object_new (WEBRTC_TYPE_DATA_CHANNEL, NULL);
     channel->parent.id = stream_id;
     channel->webrtcbin = webrtc;
+
+    g_signal_emit (webrtc, gst_webrtc_bin_signals[PREPARE_DATA_CHANNEL_SIGNAL],
+        0, channel, FALSE);
 
     gst_bin_add (GST_BIN (webrtc), channel->appsrc);
     gst_bin_add (GST_BIN (webrtc), channel->appsink);
@@ -6924,6 +6928,9 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     return ret;
   }
 
+  g_signal_emit (webrtc, gst_webrtc_bin_signals[PREPARE_DATA_CHANNEL_SIGNAL], 0,
+      ret, TRUE);
+
   gst_bin_add (GST_BIN (webrtc), ret->appsrc);
   gst_bin_add (GST_BIN (webrtc), ret->appsink);
 
@@ -8528,12 +8535,28 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   /**
    * GstWebRTCBin::on-data-channel:
    * @object: the #GstWebRTCBin
-   * @candidate: the new `GstWebRTCDataChannel`
+   * @channel: the new `GstWebRTCDataChannel`
    */
   gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL] =
       g_signal_new ("on-data-channel", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 1, GST_TYPE_WEBRTC_DATA_CHANNEL);
+
+  /**
+   * GstWebRTCBin::prepare-data-channel:
+   * @object: the #GstWebRTCBin
+   * @channel: the new `GstWebRTCDataChannel`
+   * @is_local: Whether this channel is local or remote
+   *
+   * Allows data-channel consumers to configure signal handlers on a newly
+   * created data-channel, before any data or state change has been notified.
+   *
+   * Since: 1.22
+   */
+  gst_webrtc_bin_signals[PREPARE_DATA_CHANNEL_SIGNAL] =
+      g_signal_new ("prepare-data-channel", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2,
+      GST_TYPE_WEBRTC_DATA_CHANNEL, G_TYPE_BOOLEAN);
 
   /**
    * GstWebRTCBin::add-transceiver:
