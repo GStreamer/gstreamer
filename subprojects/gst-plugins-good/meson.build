@@ -32,6 +32,7 @@ api_version = '1.0'
 
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 plugins = []
+static_build = get_option('default_library') == 'static'
 
 cc = meson.get_compiler('c')
 host_system = host_machine.system()

@@ -30,6 +30,7 @@ libavutil_dep = dependency('libavutil', version: '>= 56.14.100',
 libav_deps = [libavfilter_dep, libavformat_dep, libavcodec_dep, libavutil_dep]
 
 cc = meson.get_compiler('c')
+static_build = get_option('default_library') == 'static'
 
 check_ffmpeg_src = '''#include <libavcodec/avcodec.h>
 #if LIBAVCODEC_VERSION_MICRO >= 100

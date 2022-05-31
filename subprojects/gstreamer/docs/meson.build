@@ -8,6 +8,15 @@ if meson.is_cross_build()
     subdir_done()
 endif
 
+if static_build
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when building statically.')
+    endif
+
+    message('Building statically, can\'t build the documentation')
+    subdir_done()
+endif
+
 hotdoc_plugin_scanner = executable('gst-hotdoc-plugins-scanner',
   'gst-hotdoc-plugins-scanner.c',
   c_args : gst_c_args,

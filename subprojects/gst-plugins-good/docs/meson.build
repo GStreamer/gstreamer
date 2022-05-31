@@ -1,5 +1,14 @@
 build_hotdoc = false
 
+if static_build
+    if get_option('doc').enabled()
+        error('Documentation enabled but not supported when building statically.')
+    endif
+
+    message('Building statically, can\'t build the documentation')
+    subdir_done()
+endif
+
 if meson.is_cross_build()
     if get_option('doc').enabled()
         error('Documentation enabled but building the doc while cross building is not supported yet.')

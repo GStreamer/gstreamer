@@ -29,6 +29,7 @@ endif
 
 api_version = '1.0'
 
+static_build = get_option('default_library') == 'static'
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 plugins = []
 

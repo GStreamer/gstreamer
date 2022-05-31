@@ -26,6 +26,7 @@ libdrm_req = '>= 2.4.98'
 gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
 
 cc = meson.get_compiler('c')
+static_build = get_option('default_library') == 'static'
 
 if cc.has_link_argument('-Wl,-Bsymbolic-functions')
   add_project_link_arguments('-Wl,-Bsymbolic-functions', language : 'c')
