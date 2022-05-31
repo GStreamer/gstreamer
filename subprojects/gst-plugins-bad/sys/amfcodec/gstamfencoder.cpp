@@ -44,6 +44,8 @@ static GUID AMFTextureArrayIndexGUID = { 0x28115527, 0xe7c3, 0x4b66, 0x99, 0xd3,
 
 #define GST_AMF_BUFFER_PROP L"GstAmfFrameData"
 
+#define GST_AMF_ENCODER_FLOW_TRY_AGAIN GST_FLOW_CUSTOM_SUCCESS_1
+
 typedef struct
 {
   GstBuffer *buffer;
@@ -348,32 +350,34 @@ gst_amf_encoder_query_output (GstAmfEncoder * self, AMFBuffer ** buffer)
 static GstFlowReturn
 gst_amf_encoder_try_output (GstAmfEncoder * self, gboolean do_wait)
 {
-  AMFBufferPtr buffer;
-  AMF_RESULT result;
   GstFlowReturn ret = GST_FLOW_OK;
 
-again:
-  result = gst_amf_encoder_query_output (self, &buffer);
-  if (buffer) {
-    ret = gst_amf_encoder_process_output (self, buffer.GetPtr ());
-    if (ret != GST_FLOW_OK) {
-      GST_INFO_OBJECT (self, "Process output returned %s",
-          gst_flow_get_name (ret));
+  do {
+    AMFBufferPtr buffer;
+    AMF_RESULT result = gst_amf_encoder_query_output (self, &buffer);
+
+    if (buffer) {
+      ret = gst_amf_encoder_process_output (self, buffer.GetPtr ());
+      if (ret != GST_FLOW_OK) {
+        GST_INFO_OBJECT (self, "Process output returned %s",
+        gst_flow_get_name (ret));
+      }
+    } else if (result == AMF_REPEAT || result == AMF_OK) {
+      GST_TRACE_OBJECT (self, "Output is not ready, do_wait %d", do_wait);
+      if (do_wait) {
+        g_usleep (1000);
+      } else {
+        ret = GST_AMF_ENCODER_FLOW_TRY_AGAIN;
+      }
+    } else if (result == AMF_EOF) {
+      GST_DEBUG_OBJECT (self, "Output queue is drained");
+      ret = GST_VIDEO_ENCODER_FLOW_NEED_DATA;
+    } else {
+      GST_ERROR_OBJECT (self, "query output returned %" GST_AMF_RESULT_FORMAT,
+      GST_AMF_RESULT_ARGS (result));
+      ret = GST_FLOW_ERROR;
     }
-  } else if (result == AMF_REPEAT || result == AMF_OK) {
-    GST_TRACE_OBJECT (self, "Output is not ready, do_wait %d", do_wait);
-    if (do_wait) {
-      g_usleep (1000);
-      goto again;
-    }
-  } else if (result == AMF_EOF) {
-    GST_DEBUG_OBJECT (self, "Output queue is drained");
-    ret = GST_VIDEO_ENCODER_FLOW_NEED_DATA;
-  } else {
-    GST_ERROR_OBJECT (self, "query output returned %" GST_AMF_RESULT_FORMAT,
-        GST_AMF_RESULT_ARGS (result));
-    ret = GST_FLOW_ERROR;
-  }
+  } while (ret == GST_FLOW_OK);
 
   return ret;
 }
@@ -383,7 +387,6 @@ gst_amf_encoder_drain (GstAmfEncoder * self, gboolean flushing)
 {
   GstAmfEncoderPrivate *priv = self->priv;
   AMF_RESULT result;
-  GstFlowReturn ret;
 
   if (!priv->comp)
     return TRUE;
@@ -399,9 +402,7 @@ gst_amf_encoder_drain (GstAmfEncoder * self, gboolean flushing)
     goto done;
   }
 
-  do {
-    ret = gst_amf_encoder_try_output (self, TRUE);
-  } while (ret == GST_FLOW_OK);
+  gst_amf_encoder_try_output (self, TRUE);
 
 done:
   gst_amf_encoder_reset (self);
@@ -824,8 +825,13 @@ gst_amf_encoder_submit_input (GstAmfEncoder * self, AMFSurface * surface)
       break;
     }
 
-    ret = gst_amf_encoder_try_output (self, TRUE);
-    if (ret != GST_FLOW_OK) {
+    /* When submit queue is full, QueryInput() that returns no buffer MUST be
+     * followed by another SubmitInput(), otherwise no buffer will ever get
+     * returned. Therefore we're passing FALSE as do_wait here. */
+    ret = gst_amf_encoder_try_output (self, FALSE);
+    if (ret == GST_AMF_ENCODER_FLOW_TRY_AGAIN) {
+      g_usleep (1000);
+    } else if (ret != GST_FLOW_OK) {
       GST_INFO_OBJECT (self, "Try output returned %s", gst_flow_get_name (ret));
       break;
     }
@@ -918,6 +924,8 @@ gst_amf_encoder_handle_frame (GstVideoEncoder * encoder,
   ret = gst_amf_encoder_submit_input (self, surface.GetPtr ());
   if (ret == GST_FLOW_OK)
     ret = gst_amf_encoder_try_output (self, FALSE);
+  if (ret == GST_AMF_ENCODER_FLOW_TRY_AGAIN)
+    ret = GST_FLOW_OK;
 
   return ret;
 
