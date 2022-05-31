@@ -475,7 +475,7 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
     GST_LOG_OBJECT (trans, "  to: %" GST_PTR_FORMAT, ret);
 
 #ifdef GST_ENABLE_EXTRA_CHECKS
-    if (filter) {
+    if (ret && filter) {
       if (!gst_caps_is_subset (ret, filter)) {
         GstCaps *intersection;
 
