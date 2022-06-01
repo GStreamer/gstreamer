@@ -50,6 +50,7 @@ typedef enum {
   GST_CC_CDP_MODE_CC_SVC_INFO = (1<<2)
 } GstCCCDPMode;
 
+G_GNUC_INTERNAL
 guint           convert_cea708_cc_data_to_cdp  (GstObject * dbg_obj,
                                                 GstCCCDPMode cdp_mode,
                                                 guint16 cdp_hdr_sequence_cntr,
@@ -60,14 +61,60 @@ guint           convert_cea708_cc_data_to_cdp  (GstObject * dbg_obj,
                                                 const GstVideoTimeCode * tc,
                                                 const struct cdp_fps_entry *fps_entry);
 
+G_GNUC_INTERNAL
 guint           convert_cea708_cdp_to_cc_data  (GstObject * dbg_obj,
                                                 const guint8 * cdp,
                                                 guint cdp_len,
                                                 guint8 *cc_data,
                                                 GstVideoTimeCode * tc,
                                                 const struct cdp_fps_entry **out_fps_entry);
+G_GNUC_INTERNAL
+gint           drop_ccp_from_cc_data           (guint8 * cc_data,
+                                                 guint cc_data_len);
 
 #define MAX_CDP_PACKET_LEN 256
+#define MAX_CEA608_LEN 32
+
+G_DECLARE_FINAL_TYPE (CCBuffer, cc_buffer, GST, CC_BUFFER, GObject);
+
+G_GNUC_INTERNAL
+CCBuffer *      cc_buffer_new                   (void);
+G_GNUC_INTERNAL
+void            cc_buffer_get_stored_size       (CCBuffer * buf,
+                                                 guint * cea608_1_len,
+                                                 guint * cea608_2_len,
+                                                 guint * cc_data_len);
+G_GNUC_INTERNAL
+void            cc_buffer_push_separated        (CCBuffer * buf,
+                                                 const guint8 * cea608_1,
+                                                 guint cea608_1_len,
+                                                 const guint8 * cea608_2,
+                                                 guint cea608_2_len,
+                                                 const guint8 * cc_data,
+                                                 guint cc_data_len);
+G_GNUC_INTERNAL
+void            cc_buffer_push_cc_data          (CCBuffer * buf,
+                                                 const guint8 * cc_data,
+                                                 guint cc_data_len);
+G_GNUC_INTERNAL
+void            cc_buffer_take_cc_data          (CCBuffer * buf,
+                                                 const struct cdp_fps_entry * fps_entry,
+                                                 guint8 * cc_data,
+                                                 guint * cc_data_len);
+G_GNUC_INTERNAL
+void            cc_buffer_take_separated        (CCBuffer * buf,
+                                                 const struct cdp_fps_entry * fps_entry,
+                                                 guint8 * cea608_1,
+                                                 guint * cea608_1_len,
+                                                 guint8 * cea608_2,
+                                                 guint * cea608_2_len,
+                                                 guint8 * cc_data,
+                                                 guint * cc_data_len);
+G_GNUC_INTERNAL
+void            cc_buffer_discard               (CCBuffer * buf);
+G_GNUC_INTERNAL
+void            cc_buffer_set_max_buffer_time   (CCBuffer * buf,
+                                                 GstClockTime max_time);
 
 G_END_DECLS
 

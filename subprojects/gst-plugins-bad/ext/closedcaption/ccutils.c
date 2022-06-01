@@ -31,6 +31,8 @@ GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 typedef struct cdp_fps_entry cdp_fps_entry;
 
+#define VAL_OR_0(v) ((v) ? (*(v)) : 0)
+
 static const struct cdp_fps_entry cdp_fps_table[] = {
   {0x1f, 24000, 1001, 25, 22, 3 /* FIXME: alternating max cea608 count! */ },
   {0x2f, 24, 1, 25, 22, 2},
@@ -332,4 +334,574 @@ convert_cea708_cdp_to_cc_data (GstObject * dbg_obj,
 
   /* skip everything else we don't care about */
   return len;
+}
+
+#define CC_DATA_EXTRACT_TOO_MANY_FIELD1 -2
+#define CC_DATA_EXTRACT_TOO_MANY_FIELD2 -3
+
+static gint
+cc_data_extract_cea608 (const guint8 * cc_data, guint cc_data_len,
+    guint8 * cea608_field1, guint * cea608_field1_len,
+    guint8 * cea608_field2, guint * cea608_field2_len)
+{
+  guint i, field_1_len = 0, field_2_len = 0;
+
+  if (cea608_field1_len) {
+    field_1_len = *cea608_field1_len;
+    *cea608_field1_len = 0;
+  }
+  if (cea608_field2_len) {
+    field_2_len = *cea608_field2_len;
+    *cea608_field2_len = 0;
+  }
+
+  if (cc_data_len % 3 != 0) {
+    GST_WARNING ("Invalid cc_data buffer size %u. Truncating to a multiple "
+        "of 3", cc_data_len);
+    cc_data_len = cc_data_len - (cc_data_len % 3);
+  }
+
+  for (i = 0; i < cc_data_len / 3; i++) {
+    guint8 byte0 = cc_data[i * 3 + 0];
+    guint8 byte1 = cc_data[i * 3 + 1];
+    guint8 byte2 = cc_data[i * 3 + 2];
+    gboolean cc_valid = (byte0 & 0x04) == 0x04;
+    guint8 cc_type = byte0 & 0x03;
+
+    GST_TRACE ("0x%02x 0x%02x 0x%02x, valid: %u, type: 0b%u%u", byte0, byte1,
+        byte2, cc_valid, (cc_type & 0x2) == 0x2, (cc_type & 0x1) == 0x1);
+
+    if (cc_type == 0x00) {
+      if (!cc_valid)
+        continue;
+
+      if (cea608_field1 && cea608_field1_len) {
+        if (*cea608_field1_len + 2 > field_1_len) {
+          GST_WARNING ("Too many cea608 input bytes %u for field 1",
+              *cea608_field1_len + 2);
+          return CC_DATA_EXTRACT_TOO_MANY_FIELD1;
+        }
+
+        if (byte1 != 0x80 || byte2 != 0x80) {
+          cea608_field1[(*cea608_field1_len)++] = byte1;
+          cea608_field1[(*cea608_field1_len)++] = byte2;
+        }
+      }
+    } else if (cc_type == 0x01) {
+      if (!cc_valid)
+        continue;
+
+      if (cea608_field2 && cea608_field2_len) {
+        if (*cea608_field2_len + 2 > field_2_len) {
+          GST_WARNING ("Too many cea608 input bytes %u for field 2",
+              *cea608_field2_len + 2);
+          return CC_DATA_EXTRACT_TOO_MANY_FIELD2;
+        }
+        if (byte1 != 0x80 || byte2 != 0x80) {
+          cea608_field2[(*cea608_field2_len)++] = byte1;
+          cea608_field2[(*cea608_field2_len)++] = byte2;
+        }
+      }
+    } else {
+      /* all cea608 packets must be at the beginning of a cc_data */
+      break;
+    }
+  }
+
+  g_assert_cmpint (i * 3, <=, cc_data_len);
+
+  GST_LOG ("Extracted cea608-1 of length %u and cea608-2 of length %u, "
+      "ccp_offset %i", VAL_OR_0 (cea608_field1_len),
+      VAL_OR_0 (cea608_field2_len), i * 3);
+
+  return i * 3;
+}
+
+gint
+drop_ccp_from_cc_data (guint8 * cc_data, guint cc_data_len)
+{
+  return cc_data_extract_cea608 (cc_data, cc_data_len, NULL, NULL, NULL, NULL);
+}
+
+#define DEFAULT_MAX_BUFFER_TIME (100 * GST_MSECOND)
+
+struct _CCBuffer
+{
+  GstObject parent;
+  GArray *cea608_1;
+  GArray *cea608_2;
+  GArray *cc_data;
+  /* used for tracking which field to write across output buffer boundaries */
+  gboolean last_cea608_written_was_field1;
+
+  GstClockTime max_buffer_time;
+};
+
+G_DEFINE_TYPE (CCBuffer, cc_buffer, G_TYPE_OBJECT);
+
+CCBuffer *
+cc_buffer_new (void)
+{
+  return g_object_new (cc_buffer_get_type (), NULL);
+}
+
+static void
+cc_buffer_init (CCBuffer * buf)
+{
+  buf->cea608_1 = g_array_new (FALSE, FALSE, sizeof (guint8));
+  buf->cea608_2 = g_array_new (FALSE, FALSE, sizeof (guint8));
+  buf->cc_data = g_array_new (FALSE, FALSE, sizeof (guint8));
+
+  buf->max_buffer_time = DEFAULT_MAX_BUFFER_TIME;
+}
+
+static void
+cc_buffer_finalize (GObject * object)
+{
+  CCBuffer *buf = GST_CC_BUFFER (object);
+
+  g_array_unref (buf->cea608_1);
+  buf->cea608_1 = NULL;
+  g_array_unref (buf->cea608_2);
+  buf->cea608_2 = NULL;
+  g_array_unref (buf->cc_data);
+  buf->cc_data = NULL;
+
+  G_OBJECT_CLASS (cc_buffer_parent_class)->finalize (object);
+}
+
+static void
+cc_buffer_class_init (CCBufferClass * buf_class)
+{
+  GObjectClass *gobject_class = (GObjectClass *) buf_class;
+
+  gobject_class->finalize = cc_buffer_finalize;
+}
+
+/* remove padding bytes from a cc_data packet. Returns the length of the new
+ * data in @cc_data */
+static guint
+compact_cc_data (guint8 * cc_data, guint cc_data_len)
+{
+  gboolean started_ccp = FALSE;
+  guint out_len = 0;
+  guint i;
+
+  if (cc_data_len % 3 != 0) {
+    GST_WARNING ("Invalid cc_data buffer size");
+    cc_data_len = cc_data_len - (cc_data_len % 3);
+  }
+
+  for (i = 0; i < cc_data_len / 3; i++) {
+    gboolean cc_valid = (cc_data[i * 3] & 0x04) == 0x04;
+    guint8 cc_type = cc_data[i * 3] & 0x03;
+
+    if (!started_ccp && (cc_type == 0x00 || cc_type == 0x01)) {
+      if (cc_valid) {
+        /* copy over valid 608 data */
+        cc_data[out_len++] = cc_data[i * 3];
+        cc_data[out_len++] = cc_data[i * 3 + 1];
+        cc_data[out_len++] = cc_data[i * 3 + 2];
+      }
+      continue;
+    }
+
+    if (cc_type & 0x10)
+      started_ccp = TRUE;
+
+    if (!cc_valid)
+      continue;
+
+    if (cc_type == 0x00 || cc_type == 0x01) {
+      GST_WARNING ("Invalid cc_data.  cea608 bytes after cea708");
+      return 0;
+    }
+
+    cc_data[out_len++] = cc_data[i * 3];
+    cc_data[out_len++] = cc_data[i * 3 + 1];
+    cc_data[out_len++] = cc_data[i * 3 + 2];
+  }
+
+  GST_LOG ("compacted cc_data from %u to %u", cc_data_len, out_len);
+
+  return out_len;
+}
+
+static guint
+calculate_n_cea608_doubles_from_time_ceil (CCBuffer * buf, GstClockTime ns)
+{
+  /* cea608 has a maximum bitrate of 60000/1001 * 2 bytes/s */
+  guint ret = gst_util_uint64_scale_ceil (ns, 120000, 1001 * GST_SECOND);
+
+  return GST_ROUND_UP_2 (ret);
+}
+
+static guint
+calculate_n_cea708_doubles_from_time_ceil (CCBuffer * buf, GstClockTime ns)
+{
+  /* ccp has a maximum bitrate of 9600000/1001 bits/s */
+  guint ret = gst_util_uint64_scale_ceil (ns, 9600000 / 8, 1001 * GST_SECOND);
+
+  return GST_ROUND_UP_2 (ret);
+}
+
+static void
+push_internal (CCBuffer * buf, const guint8 * cea608_1,
+    guint cea608_1_len, const guint8 * cea608_2, guint cea608_2_len,
+    const guint8 * cc_data, guint cc_data_len)
+{
+  guint max_cea608_bytes;
+
+  GST_DEBUG_OBJECT (buf, "pushing cea608-1: %u cea608-2: %u ccp: %u",
+      cea608_1_len, cea608_2_len, cc_data_len);
+  max_cea608_bytes =
+      calculate_n_cea608_doubles_from_time_ceil (buf, buf->max_buffer_time);
+
+  if (cea608_1_len > 0) {
+    if (cea608_1_len + buf->cea608_1->len > max_cea608_bytes) {
+      GST_WARNING_OBJECT (buf, "cea608 field 1 overflow, dropping all "
+          "previous data, max %u, attempted to hold %u", max_cea608_bytes,
+          cea608_1_len + buf->cea608_1->len);
+      g_array_set_size (buf->cea608_1, 0);
+    }
+    g_array_append_vals (buf->cea608_1, cea608_1, cea608_1_len);
+  }
+  if (cea608_2_len > 0) {
+    if (cea608_2_len + buf->cea608_2->len > max_cea608_bytes) {
+      GST_WARNING_OBJECT (buf, "cea608 field 2 overflow, dropping all "
+          "previous data, max %u, attempted to hold %u", max_cea608_bytes,
+          cea608_2_len + buf->cea608_2->len);
+      g_array_set_size (buf->cea608_2, 0);
+    }
+    g_array_append_vals (buf->cea608_2, cea608_2, cea608_2_len);
+  }
+  if (cc_data_len > 0) {
+    guint max_cea708_bytes =
+        calculate_n_cea708_doubles_from_time_ceil (buf, buf->max_buffer_time);
+    if (cc_data_len + buf->cc_data->len > max_cea708_bytes) {
+      GST_WARNING_OBJECT (buf, "ccp data overflow, dropping all "
+          "previous data, max %u, attempted to hold %u", max_cea708_bytes,
+          cc_data_len + buf->cc_data->len);
+      g_array_set_size (buf->cea608_2, 0);
+    }
+    g_array_append_vals (buf->cc_data, cc_data, cc_data_len);
+  }
+}
+
+void
+cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
+    guint cea608_1_len, const guint8 * cea608_2, guint cea608_2_len,
+    const guint8 * cc_data, guint cc_data_len)
+{
+  guint8 cea608_1_copy[MAX_CEA608_LEN];
+  guint8 cea608_2_copy[MAX_CEA608_LEN];
+  guint8 cc_data_copy[MAX_CDP_PACKET_LEN];
+  guint i;
+
+  if (cea608_1 && cea608_1_len > 0) {
+    guint out_i = 0;
+    for (i = 0; i < cea608_1_len / 2; i++) {
+      if (cea608_1[i] != 0x80 || cea608_1[i + 1] != 0x80) {
+        cea608_1_copy[out_i++] = cea608_1[i];
+        cea608_1_copy[out_i++] = cea608_1[i + 1];
+      }
+    }
+    cea608_1_len = out_i;
+  } else {
+    cea608_1_len = 0;
+  }
+
+  if (cea608_2 && cea608_2_len > 0) {
+    guint out_i = 0;
+    for (i = 0; i < cea608_2_len / 2; i++) {
+      if (cea608_2[i] != 0x80 || cea608_2[i + 1] != 0x80) {
+        cea608_2_copy[out_i++] = cea608_2[i];
+        cea608_2_copy[out_i++] = cea608_2[i + 1];
+      }
+    }
+    cea608_2_len = out_i;
+  } else {
+    cea608_2_len = 0;
+  }
+
+  if (cc_data && cc_data_len > 0) {
+    memcpy (cc_data_copy, cc_data, cc_data_len);
+    cc_data_len = compact_cc_data (cc_data_copy, cc_data_len);
+  } else {
+    cc_data_len = 0;
+  }
+
+  push_internal (buf, cea608_1_copy, cea608_1_len, cea608_2_copy,
+      cea608_2_len, cc_data_copy, cc_data_len);
+}
+
+void
+cc_buffer_push_cc_data (CCBuffer * buf, const guint8 * cc_data,
+    guint cc_data_len)
+{
+  guint8 cea608_1[MAX_CEA608_LEN];
+  guint8 cea608_2[MAX_CEA608_LEN];
+  guint8 cc_data_copy[MAX_CDP_PACKET_LEN];
+  guint cea608_1_len = MAX_CEA608_LEN;
+  guint cea608_2_len = MAX_CEA608_LEN;
+  int ccp_offset;
+
+  memcpy (cc_data_copy, cc_data, cc_data_len);
+
+  cc_data_len = compact_cc_data (cc_data_copy, cc_data_len);
+
+  ccp_offset = cc_data_extract_cea608 (cc_data_copy, cc_data_len, cea608_1,
+      &cea608_1_len, cea608_2, &cea608_2_len);
+
+  if (ccp_offset < 0) {
+    GST_WARNING_OBJECT (buf, "Failed to extract cea608 from cc_data");
+    return;
+  }
+
+  push_internal (buf, cea608_1, cea608_1_len, cea608_2,
+      cea608_2_len, &cc_data_copy[ccp_offset], cc_data_len - ccp_offset);
+}
+
+void
+cc_buffer_get_stored_size (CCBuffer * buf, guint * cea608_1_len,
+    guint * cea608_2_len, guint * cc_data_len)
+{
+  if (cea608_1_len)
+    *cea608_1_len = buf->cea608_1->len;
+  if (cea608_2_len)
+    *cea608_2_len = buf->cea608_2->len;
+  if (cc_data_len)
+    *cc_data_len = buf->cc_data->len;
+}
+
+void
+cc_buffer_discard (CCBuffer * buf)
+{
+  g_array_set_size (buf->cea608_1, 0);
+  g_array_set_size (buf->cea608_2, 0);
+  g_array_set_size (buf->cc_data, 0);
+}
+
+#if 0
+void
+cc_buffer_peek (CCBuffer * buf, guint8 ** cea608_1, guint * cea608_1_len,
+    guint8 ** cea608_2, guint * cea608_2_len, guint8 ** cc_data,
+    guint * cc_data_len)
+{
+  if (cea608_1_len) {
+    if (cea608_1) {
+      *cea608_1 = (guint8 *) buf->cea608_1->data;
+    }
+    *cea608_1_len = buf->cea608_1->len;
+  }
+  if (cea608_1_len) {
+    if (cea608_2) {
+      *cea608_2 = (guint8 *) buf->cea608_2->data;
+    }
+    *cea608_2_len = buf->cea608_2->len;
+  }
+  if (cc_data_len) {
+    if (cc_data) {
+      *cc_data = (guint8 *) buf->cc_data->data;
+    }
+    *cc_data_len = buf->cc_data->len;
+  }
+}
+#endif
+static void
+cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
+    guint * cea608_1_len, guint * field1_padding, guint * cea608_2_len,
+    guint * field2_padding, guint * cc_data_len)
+{
+  gint extra_ccp = 0, extra_cea608_1 = 0, extra_cea608_2 = 0;
+  gint write_ccp_size = 0, write_cea608_1_size = 0, write_cea608_2_size = 0;
+  gboolean wrote_first = FALSE;
+
+  if (buf->cc_data->len) {
+    extra_ccp = buf->cc_data->len - 3 * fps_entry->max_ccp_count;
+    extra_ccp = MAX (0, extra_ccp);
+    write_ccp_size = buf->cc_data->len - extra_ccp;
+  }
+
+  extra_cea608_1 = buf->cea608_1->len;
+  extra_cea608_2 = buf->cea608_2->len;
+  *field1_padding = 0;
+  *field2_padding = 0;
+
+  wrote_first = !buf->last_cea608_written_was_field1;
+  /* try to push data into the packets.  Anything 'extra' will be
+   * stored for later */
+  while (TRUE) {
+    gint avail_1, avail_2;
+
+    avail_1 = buf->cea608_1->len - extra_cea608_1 + *field1_padding;
+    avail_2 = buf->cea608_2->len - extra_cea608_2 + *field2_padding;
+    if (avail_1 + avail_2 >= 2 * fps_entry->max_cea608_count)
+      break;
+
+    if (wrote_first) {
+      if (extra_cea608_1 > 0) {
+        extra_cea608_1 -= 2;
+        g_assert_cmpint (extra_cea608_1, >=, 0);
+        write_cea608_1_size += 2;
+        g_assert_cmpint (write_cea608_1_size, <=, buf->cea608_1->len);
+      } else {
+        *field1_padding += 2;
+      }
+    }
+
+    avail_1 = buf->cea608_1->len - extra_cea608_1 + *field1_padding;
+    avail_2 = buf->cea608_2->len - extra_cea608_2 + *field2_padding;
+    if (avail_1 + avail_2 >= 2 * fps_entry->max_cea608_count)
+      break;
+
+    if (extra_cea608_2 > 0) {
+      extra_cea608_2 -= 2;
+      g_assert_cmpint (extra_cea608_2, >=, 0);
+      write_cea608_2_size += 2;
+      g_assert_cmpint (write_cea608_2_size, <=, buf->cea608_2->len);
+    } else {
+      /* we need to insert field 2 padding if we don't have data and are
+       * requested to start with field2 */
+      *field2_padding += 2;
+    }
+    wrote_first = TRUE;
+  }
+
+  GST_TRACE_OBJECT (buf, "allocated sizes ccp:%u, cea608-1:%u (pad:%u), "
+      "cea608-2:%u (pad:%u)", write_ccp_size, write_cea608_1_size,
+      *field1_padding, write_cea608_2_size, *field2_padding);
+
+  *cea608_1_len = write_cea608_1_size;
+  *cea608_2_len = write_cea608_2_size;
+  *cc_data_len = write_ccp_size;
+}
+
+void
+cc_buffer_take_separated (CCBuffer * buf,
+    const struct cdp_fps_entry *fps_entry, guint8 * cea608_1,
+    guint * cea608_1_len, guint8 * cea608_2, guint * cea608_2_len,
+    guint8 * cc_data, guint * cc_data_len)
+{
+  guint write_cea608_1_size, write_cea608_2_size, write_ccp_size;
+  guint field1_padding, field2_padding;
+
+  cc_buffer_get_out_sizes (buf, fps_entry, &write_cea608_1_size,
+      &field1_padding, &write_cea608_2_size, &field2_padding, &write_ccp_size);
+
+  if (cea608_1_len) {
+    if (*cea608_1_len < write_cea608_1_size + field1_padding) {
+      GST_WARNING_OBJECT (buf, "output cea608 field 1 buffer (%u) is too "
+          "small to hold output (%u)", *cea608_1_len,
+          write_cea608_1_size + field1_padding);
+      *cea608_1_len = 0;
+    } else if (cea608_1) {
+      memcpy (cea608_1, buf->cea608_1->data, write_cea608_1_size);
+      memset (&cea608_1[write_cea608_1_size], 0x80, field1_padding);
+      *cea608_1_len = write_cea608_1_size + field1_padding;
+    } else {
+      *cea608_1_len = 0;
+    }
+  }
+  if (cea608_2_len) {
+    if (*cea608_2_len < write_cea608_2_size + field2_padding) {
+      GST_WARNING_OBJECT (buf, "output cea608 field 2 buffer (%u) is too "
+          "small to hold output (%u)", *cea608_2_len, write_cea608_2_size);
+      *cea608_2_len = 0;
+    } else if (cea608_2) {
+      memcpy (cea608_2, buf->cea608_2->data, write_cea608_2_size);
+      memset (&cea608_2[write_cea608_2_size], 0x80, field2_padding);
+      *cea608_2_len = write_cea608_2_size + field2_padding;
+    } else {
+      *cea608_2_len = 0;
+    }
+  }
+  if (cc_data_len) {
+    if (*cc_data_len < write_ccp_size) {
+      GST_WARNING_OBJECT (buf, "output ccp buffer (%u) is too "
+          "small to hold output (%u)", *cc_data_len, write_ccp_size);
+      *cc_data_len = 0;
+    } else if (cc_data) {
+      memcpy (cc_data, buf->cc_data->data, write_ccp_size);
+      *cc_data_len = write_ccp_size;
+    } else {
+      *cc_data_len = 0;
+    }
+  }
+
+  g_array_remove_range (buf->cea608_1, 0, write_cea608_1_size);
+  g_array_remove_range (buf->cea608_2, 0, write_cea608_2_size);
+  g_array_remove_range (buf->cc_data, 0, write_ccp_size);
+
+  GST_LOG_OBJECT (buf, "bytes currently stored, cea608-1:%u, cea608-2:%u "
+      "ccp:%u", buf->cea608_1->len, buf->cea608_2->len, buf->cc_data->len);
+}
+
+void
+cc_buffer_take_cc_data (CCBuffer * buf,
+    const struct cdp_fps_entry *fps_entry, guint8 * cc_data,
+    guint * cc_data_len)
+{
+  guint write_cea608_1_size, write_cea608_2_size, write_ccp_size;
+  guint field1_padding, field2_padding;
+  gboolean wrote_first;
+
+  cc_buffer_get_out_sizes (buf, fps_entry, &write_cea608_1_size,
+      &field1_padding, &write_cea608_2_size, &field2_padding, &write_ccp_size);
+
+  {
+    guint cea608_1_i = 0, cea608_2_i = 0;
+    guint out_i = 0;
+    guint8 *cea608_1 = (guint8 *) buf->cea608_1->data;
+    guint8 *cea608_2 = (guint8 *) buf->cea608_2->data;
+    guint cea608_output_count =
+        write_cea608_1_size + write_cea608_2_size + field1_padding +
+        field2_padding;
+
+    wrote_first = !buf->last_cea608_written_was_field1;
+    while (cea608_1_i + cea608_2_i < cea608_output_count) {
+      if (wrote_first) {
+        if (cea608_1_i < write_cea608_1_size) {
+          cc_data[out_i++] = 0xfc;
+          cc_data[out_i++] = cea608_1[cea608_1_i];
+          cc_data[out_i++] = cea608_1[cea608_1_i + 1];
+          cea608_1_i += 2;
+          buf->last_cea608_written_was_field1 = TRUE;
+        } else if (cea608_1_i < write_cea608_1_size + field1_padding) {
+          cc_data[out_i++] = 0xf8;
+          cc_data[out_i++] = 0x80;
+          cc_data[out_i++] = 0x80;
+          cea608_1_i += 2;
+          buf->last_cea608_written_was_field1 = TRUE;
+        }
+      }
+
+      if (cea608_2_i < write_cea608_2_size) {
+        cc_data[out_i++] = 0xfd;
+        cc_data[out_i++] = cea608_2[cea608_2_i];
+        cc_data[out_i++] = cea608_2[cea608_2_i + 1];
+        cea608_2_i += 2;
+        buf->last_cea608_written_was_field1 = FALSE;
+      } else if (cea608_2_i < write_cea608_2_size + field2_padding) {
+        cc_data[out_i++] = 0xf9;
+        cc_data[out_i++] = 0x80;
+        cc_data[out_i++] = 0x80;
+        cea608_2_i += 2;
+        buf->last_cea608_written_was_field1 = FALSE;
+      }
+
+      wrote_first = TRUE;
+    }
+
+    if (write_ccp_size > 0)
+      memcpy (&cc_data[out_i], buf->cc_data->data, write_ccp_size);
+    *cc_data_len = out_i + write_ccp_size;
+  }
+
+  g_array_remove_range (buf->cea608_1, 0, write_cea608_1_size);
+  g_array_remove_range (buf->cea608_2, 0, write_cea608_2_size);
+  g_array_remove_range (buf->cc_data, 0, write_ccp_size);
+
+  GST_LOG_OBJECT (buf, "bytes currently stored, cea608-1:%u, cea608-2:%u "
+      "ccp:%u", buf->cea608_1->len, buf->cea608_2->len, buf->cc_data->len);
 }
