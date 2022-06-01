@@ -396,8 +396,8 @@ gst_qsv_d3d11_allocator_upload (GstQsvAllocator * allocator,
     const GstVideoInfo * info, GstBuffer * buffer, GstBufferPool * pool)
 {
   GstMemory *mem;
-  GstD3D11Memory *dmem, *dst_dmem;
-  D3D11_TEXTURE2D_DESC desc, dst_desc;
+  GstD3D11Memory *dmem;
+  D3D11_TEXTURE2D_DESC desc;
   GstBuffer *dst_buf;
   GstFlowReturn flow_ret;
 
@@ -434,13 +434,9 @@ gst_qsv_d3d11_allocator_upload (GstQsvAllocator * allocator,
   if (dmem->device != GST_D3D11_BUFFER_POOL (pool)->device)
     return gst_qsv_frame_upload_sysmem (info, buffer, dst_buf);
 
-  dst_dmem = (GstD3D11Memory *) gst_buffer_peek_memory (dst_buf, 0);
   gst_d3d11_memory_get_texture_desc (dmem, &desc);
-  gst_d3d11_memory_get_texture_desc (dst_dmem, &dst_desc);
 
-  if (desc.Width == dst_desc.Width && desc.Height == dst_desc.Height &&
-      desc.Usage == D3D11_USAGE_DEFAULT) {
-    /* Identical size and non-staging texture, wrap without copying */
+  if (desc.Usage == D3D11_USAGE_DEFAULT) {
     GST_TRACE ("Wrapping D3D11 buffer without copy");
     gst_buffer_unref (dst_buf);
 
