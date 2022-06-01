@@ -1955,10 +1955,20 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
   if (stream->playlist) {
     if (!gst_hls_media_playlist_sync_to_playlist (new_playlist,
             stream->playlist)) {
-      /* FIXME : We need to have a way to re-calculate sync ! */
-      GST_ERROR_OBJECT (stream,
-          "Could not synchronize new playlist with previous one !");
-      return FALSE;
+      /* Failure to sync is only fatal for variant streams. */
+      if (stream->is_variant) {
+        GST_ERROR_OBJECT (stream,
+            "Could not synchronize new variant playlist with previous one !");
+        return FALSE;
+      }
+      /* For rendition streams, we can attempt synchronization against the
+       * variant playlist which is constantly updated */
+      if (!gst_hls_media_playlist_sync_to_playlist (new_playlist,
+              demux->main_stream->playlist)) {
+        GST_ERROR_OBJECT (stream,
+            "Could not do fallback synchronization of rendition stream to variant stream");
+        return FALSE;
+      }
     }
   }
 
