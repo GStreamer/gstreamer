@@ -85,7 +85,7 @@ void            cc_buffer_get_stored_size       (CCBuffer * buf,
                                                  guint * cea608_2_len,
                                                  guint * cc_data_len);
 G_GNUC_INTERNAL
-void            cc_buffer_push_separated        (CCBuffer * buf,
+gboolean        cc_buffer_push_separated        (CCBuffer * buf,
                                                  const guint8 * cea608_1,
                                                  guint cea608_1_len,
                                                  const guint8 * cea608_2,
@@ -93,7 +93,7 @@ void            cc_buffer_push_separated        (CCBuffer * buf,
                                                  const guint8 * cc_data,
                                                  guint cc_data_len);
 G_GNUC_INTERNAL
-void            cc_buffer_push_cc_data          (CCBuffer * buf,
+gboolean        cc_buffer_push_cc_data          (CCBuffer * buf,
                                                  const guint8 * cc_data,
                                                  guint cc_data_len);
 G_GNUC_INTERNAL
@@ -111,10 +111,25 @@ void            cc_buffer_take_separated        (CCBuffer * buf,
                                                  guint8 * cc_data,
                                                  guint * cc_data_len);
 G_GNUC_INTERNAL
+void            cc_buffer_take_cea608_field1    (CCBuffer * buf,
+                                                 const struct cdp_fps_entry * fps_entry,
+                                                 guint8 * cea608_1,
+                                                 guint * cea608_1_len);
+G_GNUC_INTERNAL
+void            cc_buffer_take_cea608_field2    (CCBuffer * buf,
+                                                 const struct cdp_fps_entry * fps_entry,
+                                                 guint8 * cea608_2,
+                                                 guint * cea608_2_len);
+G_GNUC_INTERNAL
+gboolean        cc_buffer_is_empty              (CCBuffer * buf);
+G_GNUC_INTERNAL
 void            cc_buffer_discard               (CCBuffer * buf);
 G_GNUC_INTERNAL
 void            cc_buffer_set_max_buffer_time   (CCBuffer * buf,
                                                  GstClockTime max_time);
+G_GNUC_INTERNAL
+void            cc_buffer_set_output_padding    (CCBuffer * buf,
+                                                 gboolean output_padding);
 
 G_END_DECLS
 

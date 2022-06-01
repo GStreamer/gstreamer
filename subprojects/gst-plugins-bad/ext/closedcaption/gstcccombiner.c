@@ -89,20 +89,14 @@ caption_data_clear (CaptionData * data)
 }
 
 static void
-clear_scheduled (CaptionQueueItem * item)
-{
-  gst_buffer_unref (item->buffer);
-}
-
-static void
 gst_cc_combiner_finalize (GObject * object)
 {
   GstCCCombiner *self = GST_CCCOMBINER (object);
 
-  gst_queue_array_free (self->scheduled[0]);
-  gst_queue_array_free (self->scheduled[1]);
   g_array_unref (self->current_frame_captions);
   self->current_frame_captions = NULL;
+
+  gst_clear_object (&self->cc_buffer);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -124,8 +118,9 @@ extract_cdp (GstCCCombiner * self, const guint8 * cdp, guint cdp_len,
 #define CDP_MODE (GST_CC_CDP_MODE_CC_DATA | GST_CC_CDP_MODE_TIME_CODE)
 
 static GstBuffer *
-make_cdp (GstCCCombiner * self, const guint8 * cc_data, guint cc_data_len,
-    const struct cdp_fps_entry *fps_entry, const GstVideoTimeCode * tc)
+make_cdp_buffer (GstCCCombiner * self, const guint8 * cc_data,
+    guint cc_data_len, const struct cdp_fps_entry *fps_entry,
+    const GstVideoTimeCode * tc)
 {
   guint len;
   GstBuffer *ret = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
@@ -146,114 +141,67 @@ make_cdp (GstCCCombiner * self, const guint8 * cc_data, guint cc_data_len,
 }
 
 static GstBuffer *
-make_padding (GstCCCombiner * self, const GstVideoTimeCode * tc, guint field)
+make_buffer (GstCCCombiner * self, const guint8 * cc_data, guint cc_data_len)
 {
-  GstBuffer *ret = NULL;
-
-  switch (self->caption_type) {
-    case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-    {
-      const guint8 cc_data[6] = { 0xfc, 0x80, 0x80, 0xf9, 0x80, 0x80 };
-
-      ret = make_cdp (self, cc_data, 6, self->cdp_fps_entry, tc);
-      break;
-    }
-    case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-    {
-      GstMapInfo map;
-
-      ret = gst_buffer_new_allocate (NULL, 3, NULL);
-
-      gst_buffer_map (ret, &map, GST_MAP_WRITE);
-
-      map.data[0] = 0xfc | (field & 0x01);
-      map.data[1] = 0x80;
-      map.data[2] = 0x80;
-
-      gst_buffer_unmap (ret, &map);
-      break;
-    }
-    case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
-    {
-      GstMapInfo map;
-
-      ret = gst_buffer_new_allocate (NULL, 3, NULL);
-
-      gst_buffer_map (ret, &map, GST_MAP_WRITE);
-
-      map.data[0] = field == 0 ? 0x80 : 0x00;
-      map.data[1] = 0x80;
-      map.data[2] = 0x80;
-
-      gst_buffer_unmap (ret, &map);
-      break;
-    }
-    case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-    {
-      GstMapInfo map;
-
-      ret = gst_buffer_new_allocate (NULL, 2, NULL);
-
-      gst_buffer_map (ret, &map, GST_MAP_WRITE);
-
-      map.data[0] = 0x80;
-      map.data[1] = 0x80;
-
-      gst_buffer_unmap (ret, &map);
-      break;
-    }
-    default:
-      break;
-  }
-
+  GstBuffer *ret = gst_buffer_new_allocate (NULL, cc_data_len, NULL);
+  gst_buffer_fill (ret, 0, cc_data, cc_data_len);
   return ret;
 }
 
 static void
-queue_caption (GstCCCombiner * self, GstBuffer * scheduled, guint field)
+write_cc_data_to (GstCCCombiner * self, GstBuffer * buffer)
 {
-  GstAggregatorPad *caption_pad;
-  CaptionQueueItem item;
+  GstMapInfo map;
+  guint len;
 
-  if (self->progressive && field == 1) {
-    gst_buffer_unref (scheduled);
-    return;
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  len = map.size;
+  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, map.data, &len);
+  gst_buffer_unmap (buffer, &map);
+  gst_buffer_set_size (buffer, len);
+}
+
+static void
+prepend_s334_to_cea608 (guint field, guint8 * data, guint * len,
+    guint alloc_len)
+{
+  int i;
+
+  g_assert (*len / 2 * 3 <= alloc_len);
+
+  for (i = *len / 2; i >= 0; i--) {
+    data[i * 3 + 0] = field == 0 ? 0x80 : 0x00;
+    data[i * 3 + 1] = data[i * 2 + 0];
+    data[i * 3 + 2] = data[i * 2 + 1];
+  }
+}
+
+static void
+take_s334_both_fields (GstCCCombiner * self, GstBuffer * buffer)
+{
+  GstMapInfo out = GST_MAP_INFO_INIT;
+  guint s334_len, cc_data_len, i;
+
+  gst_buffer_map (buffer, &out, GST_MAP_READWRITE);
+
+  cc_data_len = out.size;
+  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, out.data,
+      &cc_data_len);
+  s334_len = drop_ccp_from_cc_data (out.data, cc_data_len);
+  if (s334_len < 0) {
+    s334_len = 0;
+    goto out;
   }
 
-  caption_pad =
-      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
-          (self), "caption"));
-
-  g_assert (gst_queue_array_get_length (self->scheduled[field]) <=
-      self->max_scheduled);
-
-  if (gst_queue_array_get_length (self->scheduled[field]) ==
-      self->max_scheduled) {
-    CaptionQueueItem *dropped =
-        gst_queue_array_pop_tail_struct (self->scheduled[field]);
-
-    GST_WARNING_OBJECT (self,
-        "scheduled queue runs too long, dropping %" GST_PTR_FORMAT, dropped);
-
-    gst_element_post_message (GST_ELEMENT_CAST (self),
-        gst_message_new_qos (GST_OBJECT_CAST (self), FALSE,
-            dropped->running_time, dropped->stream_time,
-            GST_BUFFER_PTS (dropped->buffer), GST_BUFFER_DURATION (dropped)));
-
-    gst_buffer_unref (dropped->buffer);
+  for (i = 0; i < s334_len / 3; i++) {
+    guint byte = out.data[i * 3];
+    /* We have to assume a line offset of 0 */
+    out.data[i * 3] = (byte == 0xfc || byte == 0xf8) ? 0x80 : 0x00;
   }
 
-  gst_object_unref (caption_pad);
-
-  item.buffer = scheduled;
-  item.running_time =
-      gst_segment_to_running_time (&caption_pad->segment, GST_FORMAT_TIME,
-      GST_BUFFER_PTS (scheduled));
-  item.stream_time =
-      gst_segment_to_stream_time (&caption_pad->segment, GST_FORMAT_TIME,
-      GST_BUFFER_PTS (scheduled));
-
-  gst_queue_array_push_tail_struct (self->scheduled[field], &item);
+out:
+  gst_buffer_unmap (buffer, &out);
+  gst_buffer_set_size (buffer, s334_len);
 }
 
 static void
@@ -262,42 +210,10 @@ schedule_cdp (GstCCCombiner * self, const GstVideoTimeCode * tc,
 {
   guint8 cc_data[MAX_CDP_PACKET_LEN];
   guint cc_data_len;
-  gboolean inject = FALSE;
 
   cc_data_len = extract_cdp (self, data, len, cc_data);
-  if (cc_data_len > 0) {
-    guint8 i;
-
-    for (i = 0; i < cc_data_len / 3; i++) {
-      gboolean cc_valid = (cc_data[i * 3] & 0x04) == 0x04;
-      guint8 cc_type = cc_data[i * 3] & 0x03;
-
-      if (!cc_valid)
-        continue;
-
-      if (cc_type == 0x00 || cc_type == 0x01) {
-        if (cc_data[i * 3 + 1] != 0x80 || cc_data[i * 3 + 2] != 0x80) {
-          inject = TRUE;
-          break;
-        }
-        continue;
-      } else {
-        inject = TRUE;
-        break;
-      }
-    }
-  }
-
-  if (inject) {
-    GstBuffer *buf =
-        make_cdp (self, cc_data, cc_data_len, self->cdp_fps_entry, tc);
-
-    /* We only set those for QoS reporting purposes */
-    GST_BUFFER_PTS (buf) = pts;
-    GST_BUFFER_DURATION (buf) = duration;
-
-    queue_caption (self, buf, 0);
-  }
+  if (cc_buffer_push_cc_data (self->cc_buffer, cc_data, cc_data_len))
+    self->current_scheduled++;
 }
 
 static void
@@ -319,133 +235,36 @@ schedule_cea608_s334_1a (GstCCCombiner * self, guint8 * data, guint len,
       if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
         continue;
 
-      field0_data[field0_len++] = data[i * 3];
       field0_data[field0_len++] = data[i * 3 + 1];
       field0_data[field0_len++] = data[i * 3 + 2];
     } else {
       if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
         continue;
 
-      field1_data[field1_len++] = data[i * 3];
       field1_data[field1_len++] = data[i * 3 + 1];
       field1_data[field1_len++] = data[i * 3 + 2];
     }
   }
 
-  if (field0_len > 0) {
-    GstBuffer *buf = gst_buffer_new_allocate (NULL, field0_len, NULL);
-
-    gst_buffer_fill (buf, 0, field0_data, field0_len);
-    GST_BUFFER_PTS (buf) = pts;
-    GST_BUFFER_DURATION (buf) = duration;
-
-    queue_caption (self, buf, 0);
-  }
-
-  if (field1_len > 0) {
-    GstBuffer *buf = gst_buffer_new_allocate (NULL, field1_len, NULL);
-
-    gst_buffer_fill (buf, 0, field1_data, field1_len);
-    GST_BUFFER_PTS (buf) = pts;
-    GST_BUFFER_DURATION (buf) = duration;
-
-    queue_caption (self, buf, 1);
-  }
+  if (cc_buffer_push_separated (self->cc_buffer, field0_data, field0_len,
+          field1_data, field1_len, NULL, 0))
+    self->current_scheduled++;
 }
 
 static void
 schedule_cea708_raw (GstCCCombiner * self, guint8 * data, guint len,
     GstClockTime pts, GstClockTime duration)
 {
-  guint8 field0_data[MAX_CDP_PACKET_LEN], field1_data[3];
-  guint field0_len = 0, field1_len = 0;
-  guint i;
-  gboolean started_ccp = FALSE;
-
-  if (len % 3 != 0) {
-    GST_WARNING ("Invalid cc_data buffer size %u. Truncating to a multiple "
-        "of 3", len);
-    len = len - (len % 3);
-  }
-
-  for (i = 0; i < len / 3; i++) {
-    gboolean cc_valid = (data[i * 3] & 0x04) == 0x04;
-    guint8 cc_type = data[i * 3] & 0x03;
-
-    if (!started_ccp) {
-      if (cc_type == 0x00) {
-        if (!cc_valid)
-          continue;
-
-        if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
-          continue;
-
-        field0_data[field0_len++] = data[i * 3];
-        field0_data[field0_len++] = data[i * 3 + 1];
-        field0_data[field0_len++] = data[i * 3 + 2];
-      } else if (cc_type == 0x01) {
-        if (!cc_valid)
-          continue;
-
-        if (data[i * 3 + 1] == 0x80 && data[i * 3 + 2] == 0x80)
-          continue;
-
-        field1_data[field1_len++] = data[i * 3];
-        field1_data[field1_len++] = data[i * 3 + 1];
-        field1_data[field1_len++] = data[i * 3 + 2];
-      }
-
-      continue;
-    }
-
-    if (cc_type & 0x10)
-      started_ccp = TRUE;
-
-    if (!cc_valid)
-      continue;
-
-    if (cc_type == 0x00 || cc_type == 0x01)
-      continue;
-
-    field0_data[field0_len++] = data[i * 3];
-    field0_data[field0_len++] = data[i * 3 + 1];
-    field0_data[field0_len++] = data[i * 3 + 2];
-  }
-
-  if (field0_len > 0) {
-    GstBuffer *buf = gst_buffer_new_allocate (NULL, field0_len, NULL);
-
-    gst_buffer_fill (buf, 0, field0_data, field0_len);
-    GST_BUFFER_PTS (buf) = pts;
-    GST_BUFFER_DURATION (buf) = duration;
-
-    queue_caption (self, buf, 0);
-  }
-
-  if (field1_len > 0) {
-    GstBuffer *buf = gst_buffer_new_allocate (NULL, field1_len, NULL);
-
-    gst_buffer_fill (buf, 0, field1_data, field1_len);
-    GST_BUFFER_PTS (buf) = pts;
-    GST_BUFFER_DURATION (buf) = duration;
-
-    queue_caption (self, buf, 1);
-  }
+  if (cc_buffer_push_cc_data (self->cc_buffer, data, len))
+    self->current_scheduled++;
 }
 
 static void
-schedule_cea608_raw (GstCCCombiner * self, guint8 * data, guint len,
-    GstBuffer * buffer)
+schedule_cea608_raw (GstCCCombiner * self, guint8 * data, guint len)
 {
-  if (len < 2) {
-    return;
-  }
-
-  if (data[0] != 0x80 || data[1] != 0x80) {
-    queue_caption (self, gst_buffer_ref (buffer), 0);
-  }
+  if (cc_buffer_push_separated (self->cc_buffer, data, len, NULL, 0, NULL, 0))
+    self->current_scheduled++;
 }
-
 
 static void
 schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
@@ -456,6 +275,34 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
 
   pts = GST_BUFFER_PTS (caption_buf);
   duration = GST_BUFFER_DURATION (caption_buf);
+
+  if (self->current_scheduled + 1 >= self->max_scheduled) {
+    GstClockTime stream_time, running_time;
+    GstAggregatorPad *caption_pad;
+
+    caption_pad =
+        GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
+            (self), "caption"));
+
+    GST_WARNING_OBJECT (self,
+        "scheduled queue runs too long, discarding stored");
+
+    running_time =
+        gst_segment_to_running_time (&caption_pad->segment, GST_FORMAT_TIME,
+        pts);
+    stream_time =
+        gst_segment_to_stream_time (&caption_pad->segment, GST_FORMAT_TIME,
+        pts);
+
+    gst_element_post_message (GST_ELEMENT_CAST (self),
+        gst_message_new_qos (GST_OBJECT_CAST (self), FALSE,
+            running_time, stream_time, pts, duration));
+
+    cc_buffer_discard (self->cc_buffer);
+    self->current_scheduled = 0;
+
+    gst_clear_object (&caption_pad);
+  }
 
   gst_buffer_map (caption_buf, &map, GST_MAP_READ);
 
@@ -470,7 +317,7 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
       schedule_cea608_s334_1a (self, map.data, map.size, pts, duration);
       break;
     case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-      schedule_cea608_raw (self, map.data, map.size, caption_buf);
+      schedule_cea608_raw (self, map.data, map.size);
       break;
     default:
       break;
@@ -480,64 +327,119 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
 }
 
 static void
-dequeue_caption_one_field (GstCCCombiner * self, const GstVideoTimeCode * tc,
-    guint field, gboolean drain)
+dequeue_caption (GstCCCombiner * self, GstVideoTimeCode * tc, gboolean drain)
 {
-  CaptionQueueItem *scheduled;
+  guint8 cea608_1[MAX_CEA608_LEN], cea608_2[MAX_CEA608_LEN];
+  guint8 cc_data[MAX_CDP_PACKET_LEN];
+  guint cea608_1_len = MAX_CEA608_LEN, cea608_2_len = MAX_CEA608_LEN;
+  guint cc_data_len = MAX_CDP_PACKET_LEN;
   CaptionData caption_data;
 
-  if ((scheduled = gst_queue_array_pop_head_struct (self->scheduled[field]))) {
-    caption_data.buffer = scheduled->buffer;
-    caption_data.caption_type = self->caption_type;
-    g_array_append_val (self->current_frame_captions, caption_data);
-  } else if (!drain && self->output_padding) {
-    caption_data.caption_type = self->caption_type;
-    caption_data.buffer = make_padding (self, tc, field);
-    g_array_append_val (self->current_frame_captions, caption_data);
-  }
-}
+  g_assert (self->current_frame_captions->len == 0);
 
-static void
-dequeue_caption_both_fields (GstCCCombiner * self, const GstVideoTimeCode * tc,
-    gboolean drain)
-{
-  CaptionQueueItem *field0_scheduled, *field1_scheduled;
-  GstBuffer *field0_buffer = NULL, *field1_buffer = NULL;
-  CaptionData caption_data;
-
-  field0_scheduled = gst_queue_array_pop_head_struct (self->scheduled[0]);
-  field1_scheduled = gst_queue_array_pop_head_struct (self->scheduled[1]);
-
-  if (drain && !field0_scheduled && !field1_scheduled) {
+  if (drain && cc_buffer_is_empty (self->cc_buffer))
     return;
-  }
 
-  if (field0_scheduled) {
-    field0_buffer = field0_scheduled->buffer;
-  } else if (self->output_padding) {
-    field0_buffer = make_padding (self, tc, 0);
-  }
-
-  if (field1_scheduled) {
-    field1_buffer = field1_scheduled->buffer;
-  } else if (self->output_padding) {
-    field1_buffer = make_padding (self, tc, 1);
-  }
-
-  if (field0_buffer || field1_buffer) {
-    if (field0_buffer && field1_buffer) {
-      caption_data.buffer = gst_buffer_append (field0_buffer, field1_buffer);
-    } else if (field0_buffer) {
-      caption_data.buffer = field0_buffer;
-    } else if (field1_buffer) {
-      caption_data.buffer = field1_buffer;
-    } else {
-      g_assert_not_reached ();
+  caption_data.caption_type = self->caption_type;
+  switch (self->caption_type) {
+    case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
+    {
+      /* Only relevant in alternate and mixed mode, no need to look at the caps */
+      if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
+              GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
+        if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
+          cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, cc_data,
+              &cc_data_len);
+          caption_data.buffer =
+              make_cdp_buffer (self, cc_data, cc_data_len, self->cdp_fps_entry,
+              tc);
+          g_array_append_val (self->current_frame_captions, caption_data);
+        }
+      } else {
+        cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, cc_data,
+            &cc_data_len);
+        caption_data.buffer =
+            make_cdp_buffer (self, cc_data, cc_data_len, self->cdp_fps_entry,
+            tc);
+        g_array_append_val (self->current_frame_captions, caption_data);
+      }
+      break;
     }
-
-    caption_data.caption_type = self->caption_type;
-
-    g_array_append_val (self->current_frame_captions, caption_data);
+    case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
+    {
+      /* Only relevant in alternate and mixed mode, no need to look at the caps */
+      if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
+              GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
+        if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
+          caption_data.buffer =
+              gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+          write_cc_data_to (self, caption_data.buffer);
+          g_array_append_val (self->current_frame_captions, caption_data);
+        }
+      } else {
+        caption_data.buffer =
+            gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+        write_cc_data_to (self, caption_data.buffer);
+        g_array_append_val (self->current_frame_captions, caption_data);
+      }
+      break;
+    }
+    case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
+    {
+      if (self->progressive) {
+        cc_buffer_take_separated (self->cc_buffer, self->cdp_fps_entry,
+            cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, cc_data,
+            &cc_data_len);
+        prepend_s334_to_cea608 (0, cea608_1, &cea608_1_len, sizeof (cea608_1));
+        caption_data.buffer = make_buffer (self, cea608_1, cea608_1_len);
+        g_array_append_val (self->current_frame_captions, caption_data);
+      } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
+              GST_VIDEO_BUFFER_FLAG_INTERLACED) &&
+          GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
+              GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
+        cc_buffer_take_separated (self->cc_buffer, self->cdp_fps_entry,
+            cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, cc_data,
+            &cc_data_len);
+        if (GST_VIDEO_BUFFER_IS_TOP_FIELD (self->current_video_buffer)) {
+          prepend_s334_to_cea608 (0, cea608_1, &cea608_1_len,
+              sizeof (cea608_1));
+          caption_data.buffer = make_buffer (self, cea608_1, cea608_1_len);
+        } else {
+          prepend_s334_to_cea608 (1, cea608_2, &cea608_2_len,
+              sizeof (cea608_2));
+          caption_data.buffer = make_buffer (self, cea608_2, cea608_2_len);
+        }
+        g_array_append_val (self->current_frame_captions, caption_data);
+      } else {
+        caption_data.buffer =
+            gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+        take_s334_both_fields (self, caption_data.buffer);
+        g_array_append_val (self->current_frame_captions, caption_data);
+      }
+      break;
+    }
+    case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
+    {
+      cc_buffer_take_separated (self->cc_buffer, self->cdp_fps_entry,
+          cea608_1, &cea608_1_len, cea608_2, &cea608_2_len, cc_data,
+          &cc_data_len);
+      if (self->progressive) {
+        caption_data.buffer = make_buffer (self, cea608_1, cea608_1_len);
+        g_array_append_val (self->current_frame_captions, caption_data);
+      } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
+              GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
+        if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
+          caption_data.buffer = make_buffer (self, cea608_1, cea608_1_len);
+          g_array_append_val (self->current_frame_captions, caption_data);
+        }
+      } else {
+        caption_data.buffer = make_buffer (self, cea608_1, cea608_1_len);
+        g_array_append_val (self->current_frame_captions, caption_data);
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 
@@ -688,60 +590,8 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
     }
   } while (TRUE);
 
-  /* FIXME pad correctly according to fps */
   if (self->schedule) {
-    g_assert (self->current_frame_captions->len == 0);
-
-    switch (self->caption_type) {
-      case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-      {
-        /* Only relevant in alternate and mixed mode, no need to look at the caps */
-        if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
-                GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
-          if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
-            dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
-          }
-        } else {
-          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
-        }
-        break;
-      }
-      case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-      case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
-      {
-        if (self->progressive) {
-          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
-        } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
-                GST_VIDEO_BUFFER_FLAG_INTERLACED) &&
-            GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
-                GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
-          if (GST_VIDEO_BUFFER_IS_TOP_FIELD (self->current_video_buffer)) {
-            dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
-          } else {
-            dequeue_caption_one_field (self, tc, 1, caption_pad_is_eos);
-          }
-        } else {
-          dequeue_caption_both_fields (self, tc, caption_pad_is_eos);
-        }
-        break;
-      }
-      case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-      {
-        if (self->progressive) {
-          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
-        } else if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
-                GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
-          if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
-            dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
-          }
-        } else {
-          dequeue_caption_one_field (self, tc, 0, caption_pad_is_eos);
-        }
-        break;
-      }
-      default:
-        break;
-    }
+    dequeue_caption (self, tc, caption_pad_is_eos);
   }
 
   gst_aggregator_selected_samples (GST_AGGREGATOR_CAST (self),
@@ -754,6 +604,9 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
 
   if (self->current_frame_captions->len > 0) {
     guint i;
+
+    if (self->schedule)
+      self->current_scheduled = MAX (1, self->current_scheduled) - 1;
 
     video_buf = gst_buffer_make_writable (self->current_video_buffer);
     self->current_video_buffer = NULL;
@@ -976,6 +829,15 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
         self->video_fps_d = fps_d;
 
         self->cdp_fps_entry = cdp_fps_entry_from_fps (fps_n, fps_d);
+        if (!self->cdp_fps_entry || self->cdp_fps_entry->fps_n == 0) {
+          GST_WARNING_OBJECT (self, "Missing valid caption framerate in "
+              "video caps");
+
+          GST_ELEMENT_WARNING (self, CORE, NEGOTIATION, (NULL),
+              ("Missing valid caption framerate in video caps"));
+
+          self->cdp_fps_entry = cdp_fps_entry_from_fps (60, 1);
+        }
 
         gst_aggregator_set_src_caps (aggregator, caps);
       }
@@ -1012,8 +874,8 @@ gst_cc_combiner_stop (GstAggregator * aggregator)
   g_array_set_size (self->current_frame_captions, 0);
   self->caption_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
 
-  gst_queue_array_clear (self->scheduled[0]);
-  gst_queue_array_clear (self->scheduled[1]);
+  cc_buffer_discard (self->cc_buffer);
+  self->current_scheduled = 0;
   self->cdp_fps_entry = &null_fps_entry;
 
   return TRUE;
@@ -1035,8 +897,9 @@ gst_cc_combiner_flush (GstAggregator * aggregator)
   src_pad->segment.position = GST_CLOCK_TIME_NONE;
 
   self->cdp_hdr_sequence_cntr = 0;
-  gst_queue_array_clear (self->scheduled[0]);
-  gst_queue_array_clear (self->scheduled[1]);
+
+  cc_buffer_discard (self->cc_buffer);
+  self->current_scheduled = 0;
 
   return GST_FLOW_OK;
 }
@@ -1232,6 +1095,8 @@ gst_cc_combiner_change_state (GstElement * element, GstStateChange transition)
       self->schedule = self->prop_schedule;
       self->max_scheduled = self->prop_max_scheduled;
       self->output_padding = self->prop_output_padding;
+      cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);
+      cc_buffer_set_output_padding (self->cc_buffer, self->prop_output_padding);
       break;
     default:
       break;
@@ -1422,14 +1287,9 @@ gst_cc_combiner_init (GstCCCombiner * self)
   self->prop_schedule = DEFAULT_SCHEDULE;
   self->prop_max_scheduled = DEFAULT_MAX_SCHEDULED;
   self->prop_output_padding = DEFAULT_OUTPUT_PADDING;
-  self->scheduled[0] =
-      gst_queue_array_new_for_struct (sizeof (CaptionQueueItem), 0);
-  self->scheduled[1] =
-      gst_queue_array_new_for_struct (sizeof (CaptionQueueItem), 0);
-  gst_queue_array_set_clear_func (self->scheduled[0],
-      (GDestroyNotify) clear_scheduled);
-  gst_queue_array_set_clear_func (self->scheduled[1],
-      (GDestroyNotify) clear_scheduled);
   self->cdp_hdr_sequence_cntr = 0;
   self->cdp_fps_entry = &null_fps_entry;
+
+  self->cc_buffer = cc_buffer_new ();
+  cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);
 }
