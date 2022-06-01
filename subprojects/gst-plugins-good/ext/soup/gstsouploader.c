@@ -34,7 +34,7 @@
 GST_DEBUG_CATEGORY (gst_adaptivedemux_soup_debug);
 #define GST_CAT_DEFAULT gst_adaptivedemux_soup_debug
 #else
-GST_DEBUG_CATEGORY_EXTERN (gst_soup_debug);
+GST_DEBUG_CATEGORY (gst_soup_debug);
 #define GST_CAT_DEFAULT gst_soup_debug
 #endif
 
@@ -160,6 +160,8 @@ gst_soup_load_library (void)
 #ifdef BUILDING_ADAPTIVEDEMUX2
   GST_DEBUG_CATEGORY_INIT (gst_adaptivedemux_soup_debug, "adaptivedemux2-soup",
       0, "adaptivedemux2-soup");
+#else
+  GST_DEBUG_CATEGORY_INIT (gst_soup_debug, "soup", 0, "soup");
 #endif
 
 #ifdef HAVE_RTLD_NOLOAD
