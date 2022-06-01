@@ -103,3 +103,5 @@ gstcuda_dep = declare_dependency(link_with : gstcuda,
   include_directories : [libsinc],
   dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep],
   sources: gen_sources)
+
+meson.override_dependency(pkg_name, gstcuda_dep)
