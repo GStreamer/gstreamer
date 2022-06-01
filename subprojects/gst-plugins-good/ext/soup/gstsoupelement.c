@@ -24,6 +24,7 @@
 #include "gstsouputils.h"
 
 GST_DEBUG_CATEGORY (soup_utils_debug);
+#define GST_CAT_DEFAULT soup_utils_debug
 
 gboolean
 soup_element_init (GstPlugin * plugin)

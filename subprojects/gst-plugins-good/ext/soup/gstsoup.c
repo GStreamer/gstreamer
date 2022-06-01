@@ -22,10 +22,6 @@
 #include "gstsoupelements.h"
 #include "gstsouploader.h"
 
-GST_DEBUG_CATEGORY (gst_soup_debug);
-
-#define GST_CAT_DEFAULT gst_soup_debug
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

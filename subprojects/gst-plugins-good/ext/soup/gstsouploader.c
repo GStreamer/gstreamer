@@ -30,7 +30,7 @@
 #endif
 #endif /* G_OS_WIN32 */
 
-GST_DEBUG_CATEGORY_EXTERN (gst_soup_debug);
+GST_DEBUG_CATEGORY (gst_soup_debug);
 #define GST_CAT_DEFAULT gst_soup_debug
 
 #ifndef STATIC_SOUP
@@ -145,6 +145,8 @@ gst_soup_load_library (void)
     return TRUE;
 
   g_assert (g_module_supported ());
+
+  GST_DEBUG_CATEGORY_INIT (gst_soup_debug, "soup", 0, "soup");
 
 #ifdef HAVE_RTLD_NOLOAD
   {
