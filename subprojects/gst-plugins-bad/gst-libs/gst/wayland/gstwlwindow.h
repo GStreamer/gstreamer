@@ -68,4 +68,8 @@ void gst_wl_window_set_render_rectangle (GstWlWindow * self, gint x, gint y,
 GST_WL_API
 const GstVideoRectangle *gst_wl_window_get_render_rectangle (GstWlWindow * self);
 
+GST_WL_API
+void gst_wl_window_set_rotate_method (GstWlWindow               *self,
+        GstVideoOrientationMethod  rotate_method);
+
 G_END_DECLS

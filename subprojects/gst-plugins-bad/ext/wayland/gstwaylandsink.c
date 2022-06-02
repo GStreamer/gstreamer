@@ -60,6 +60,7 @@ enum
   PROP_0,
   PROP_DISPLAY,
   PROP_FULLSCREEN,
+  PROP_ROTATE_METHOD,
   PROP_LAST
 };
 
@@ -90,6 +91,7 @@ static GstStateChangeReturn gst_wayland_sink_change_state (GstElement * element,
 static void gst_wayland_sink_set_context (GstElement * element,
     GstContext * context);
 
+static gboolean gst_wayland_sink_event (GstBaseSink * sink, GstEvent * event);
 static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 static gboolean gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
@@ -144,6 +146,7 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   gstelement_class->set_context =
       GST_DEBUG_FUNCPTR (gst_wayland_sink_set_context);
 
+  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_wayland_sink_event);
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_get_caps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_set_caps);
   gstbasesink_class->propose_allocation =
@@ -160,6 +163,18 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
       g_param_spec_boolean ("fullscreen", "Fullscreen",
           "Whether the surface should be made fullscreen ", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * waylandsink:rotate-method:
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATE_METHOD,
+      g_param_spec_enum ("rotate-method",
+          "rotate method",
+          "rotate method",
+          GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
  /**
@@ -193,6 +208,43 @@ gst_wayland_sink_set_fullscreen (GstWaylandSink * sink, gboolean fullscreen)
 }
 
 static void
+gst_wayland_sink_set_rotate_method (GstWaylandSink * sink,
+    GstVideoOrientationMethod method, gboolean from_tag)
+{
+  GstVideoOrientationMethod new_method;
+
+  if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
+    GST_WARNING_OBJECT (sink, "unsupported custom orientation");
+    return;
+  }
+
+  GST_OBJECT_LOCK (sink);
+  if (from_tag)
+    sink->tag_rotate_method = method;
+  else
+    sink->sink_rotate_method = method;
+
+  if (sink->sink_rotate_method == GST_VIDEO_ORIENTATION_AUTO)
+    new_method = sink->tag_rotate_method;
+  else
+    new_method = sink->sink_rotate_method;
+
+  if (new_method != sink->current_rotate_method) {
+    GST_DEBUG_OBJECT (sink, "Changing method from %d to %d",
+        sink->current_rotate_method, new_method);
+
+    if (sink->window) {
+      g_mutex_lock (&sink->render_lock);
+      gst_wl_window_set_rotate_method (sink->window, new_method);
+      g_mutex_unlock (&sink->render_lock);
+    }
+
+    sink->current_rotate_method = new_method;
+  }
+  GST_OBJECT_UNLOCK (sink);
+}
+
+static void
 gst_wayland_sink_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
@@ -207,6 +259,11 @@ gst_wayland_sink_get_property (GObject * object,
     case PROP_FULLSCREEN:
       GST_OBJECT_LOCK (sink);
       g_value_set_boolean (value, sink->fullscreen);
+      GST_OBJECT_UNLOCK (sink);
+      break;
+    case PROP_ROTATE_METHOD:
+      GST_OBJECT_LOCK (sink);
+      g_value_set_enum (value, sink->current_rotate_method);
       GST_OBJECT_UNLOCK (sink);
       break;
     default:
@@ -231,6 +288,10 @@ gst_wayland_sink_set_property (GObject * object,
       GST_OBJECT_LOCK (sink);
       gst_wayland_sink_set_fullscreen (sink, g_value_get_boolean (value));
       GST_OBJECT_UNLOCK (sink);
+      break;
+    case PROP_ROTATE_METHOD:
+      gst_wayland_sink_set_rotate_method (sink, g_value_get_enum (value),
+          FALSE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -418,6 +479,34 @@ gst_wayland_sink_set_context (GstElement * element, GstContext * context)
 
   if (GST_ELEMENT_CLASS (parent_class)->set_context)
     GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
+}
+
+static gboolean
+gst_wayland_sink_event (GstBaseSink * bsink, GstEvent * event)
+{
+  GstWaylandSink *sink = GST_WAYLAND_SINK (bsink);
+  GstTagList *taglist;
+  GstVideoOrientationMethod method;
+  gboolean ret;
+
+  GST_DEBUG_OBJECT (sink, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      gst_event_parse_tag (event, &taglist);
+
+      if (gst_video_orientation_from_tag (taglist, &method)) {
+        gst_wayland_sink_set_rotate_method (sink, method, TRUE);
+      }
+
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_BASE_SINK_CLASS (parent_class)->event (bsink, event);
+
+  return ret;
 }
 
 static GstCaps *
@@ -679,6 +768,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
           &sink->video_info, sink->fullscreen, &sink->render_lock);
       g_signal_connect_object (sink->window, "closed",
           G_CALLBACK (on_window_closed), sink, 0);
+      gst_wl_window_set_rotate_method (sink->window,
+          sink->current_rotate_method);
     }
   }
 
@@ -922,6 +1013,8 @@ gst_wayland_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
       } else {
         sink->window = gst_wl_window_new_in_surface (sink->display, surface,
             &sink->render_lock);
+        gst_wl_window_set_rotate_method (sink->window,
+            sink->current_rotate_method);
       }
     } else {
       GST_ERROR_OBJECT (sink, "Failed to find display handle, "

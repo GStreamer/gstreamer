@@ -63,6 +63,8 @@ typedef struct _GstWlWindowPrivate
   /* the size of the video in the buffers */
   gint video_width, video_height;
 
+  enum wl_output_transform buffer_transform;
+
   /* when this is not set both the area_surface and the video_surface are not
    * visible and certain steps should be skipped */
   gboolean is_area_surface_mapped;
@@ -420,12 +422,27 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
   GstVideoRectangle dst = { 0, };
   GstVideoRectangle res;
 
-  /* center the video_subsurface inside area_subsurface */
-  src.w = priv->video_width;
-  src.h = priv->video_height;
+  switch (priv->buffer_transform) {
+    case WL_OUTPUT_TRANSFORM_NORMAL:
+    case WL_OUTPUT_TRANSFORM_180:
+    case WL_OUTPUT_TRANSFORM_FLIPPED:
+    case WL_OUTPUT_TRANSFORM_FLIPPED_180:
+      src.w = priv->video_width;
+      src.h = priv->video_height;
+      break;
+    case WL_OUTPUT_TRANSFORM_90:
+    case WL_OUTPUT_TRANSFORM_270:
+    case WL_OUTPUT_TRANSFORM_FLIPPED_90:
+    case WL_OUTPUT_TRANSFORM_FLIPPED_270:
+      src.w = priv->video_height;
+      src.h = priv->video_width;
+      break;
+  }
+
   dst.w = priv->render_rectangle.w;
   dst.h = priv->render_rectangle.h;
 
+  /* center the video_subsurface inside area_subsurface */
   if (priv->video_viewport) {
     gst_video_center_rect (&src, &dst, &res, TRUE);
     wp_viewport_set_destination (priv->video_viewport, res.w, res.h);
@@ -434,6 +451,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
   }
 
   wl_subsurface_set_position (priv->video_subsurface, res.x, res.y);
+  wl_surface_set_buffer_transform (priv->video_surface_wrapper,
+      priv->buffer_transform);
 
   if (commit)
     wl_surface_commit (priv->video_surface_wrapper);
@@ -567,24 +586,16 @@ gst_wl_window_update_borders (GstWlWindow * self)
   g_object_unref (alloc);
 }
 
-void
-gst_wl_window_set_render_rectangle (GstWlWindow * self, gint x, gint y,
-    gint w, gint h)
+static void
+gst_wl_window_update_geometry (GstWlWindow * self)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
 
-  if (priv->render_rectangle.x == x && priv->render_rectangle.y == y &&
-      priv->render_rectangle.w == w && priv->render_rectangle.h == h)
-    return;
-
-  priv->render_rectangle.x = x;
-  priv->render_rectangle.y = y;
-  priv->render_rectangle.w = w;
-  priv->render_rectangle.h = h;
-
   /* position the area inside the parent - needs a parent commit to apply */
-  if (priv->area_subsurface)
-    wl_subsurface_set_position (priv->area_subsurface, x, y);
+  if (priv->area_subsurface) {
+    wl_subsurface_set_position (priv->area_subsurface, priv->render_rectangle.x,
+        priv->render_rectangle.y);
+  }
 
   if (priv->is_area_surface_mapped)
     gst_wl_window_update_borders (self);
@@ -603,10 +614,64 @@ gst_wl_window_set_render_rectangle (GstWlWindow * self, gint x, gint y,
     wl_subsurface_set_desync (priv->video_subsurface);
 }
 
+void
+gst_wl_window_set_render_rectangle (GstWlWindow * self, gint x, gint y,
+    gint w, gint h)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  if (priv->render_rectangle.x == x && priv->render_rectangle.y == y &&
+      priv->render_rectangle.w == w && priv->render_rectangle.h == h)
+    return;
+
+  priv->render_rectangle.x = x;
+  priv->render_rectangle.y = y;
+  priv->render_rectangle.w = w;
+  priv->render_rectangle.h = h;
+
+  gst_wl_window_update_geometry (self);
+}
+
 const GstVideoRectangle *
 gst_wl_window_get_render_rectangle (GstWlWindow * self)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
 
   return &priv->render_rectangle;
+}
+
+static enum wl_output_transform
+output_transform_from_orientation_method (GstVideoOrientationMethod method)
+{
+  switch (method) {
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+      return WL_OUTPUT_TRANSFORM_NORMAL;
+    case GST_VIDEO_ORIENTATION_90R:
+      return WL_OUTPUT_TRANSFORM_90;
+    case GST_VIDEO_ORIENTATION_180:
+      return WL_OUTPUT_TRANSFORM_180;
+    case GST_VIDEO_ORIENTATION_90L:
+      return WL_OUTPUT_TRANSFORM_270;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      return WL_OUTPUT_TRANSFORM_FLIPPED;
+    case GST_VIDEO_ORIENTATION_VERT:
+      return WL_OUTPUT_TRANSFORM_FLIPPED_180;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      return WL_OUTPUT_TRANSFORM_FLIPPED_90;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      return WL_OUTPUT_TRANSFORM_FLIPPED_270;
+    default:
+      g_assert_not_reached ();
+  }
+}
+
+void
+gst_wl_window_set_rotate_method (GstWlWindow * self,
+    GstVideoOrientationMethod method)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  priv->buffer_transform = output_transform_from_orientation_method (method);
+
+  gst_wl_window_update_geometry (self);
 }

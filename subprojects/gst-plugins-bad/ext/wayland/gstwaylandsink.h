@@ -63,6 +63,10 @@ struct _GstWaylandSink
   GMutex render_lock;
   GstBuffer *last_buffer;
 
+  GstVideoOrientationMethod sink_rotate_method;
+  GstVideoOrientationMethod tag_rotate_method;
+  GstVideoOrientationMethod current_rotate_method;
+
   struct wl_callback *callback;
 };
 
