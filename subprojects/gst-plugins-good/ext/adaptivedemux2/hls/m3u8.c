@@ -946,13 +946,19 @@ gst_hls_media_playlist_find_by_uri (GstHLSMediaPlaylist * playlist,
 /* Find the equivalent segment in the given playlist.
  *
  * The returned segment does *NOT* have increased reference !
+ *
+ * If the provided segment is just before the first entry of the playlist, it
+ * will be added to the playlist (with a reference) and is_before will be set to
+ * TRUE.
  */
 static GstM3U8MediaSegment *
 find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
-    GstM3U8MediaSegment * segment)
+    GstM3U8MediaSegment * segment, gboolean * is_before)
 {
   GstM3U8MediaSegment *res = NULL;
   guint idx;
+
+  *is_before = FALSE;
 
   /* The easy one. Happens when stream times need to be re-synced in an existing
    * playlist */
@@ -994,6 +1000,7 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
               GST_STIME_ARGS (ddiff));
           g_ptr_array_insert (playlist->segments, 0,
               gst_m3u8_media_segment_ref (segment));
+          *is_before = TRUE;
           return segment;
         }
         if (ddiff > 0) {
@@ -1044,6 +1051,7 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
       GST_DEBUG ("reference segment is just before 1st segment, inserting");
       g_ptr_array_insert (playlist->segments, 0,
           gst_m3u8_media_segment_ref (segment));
+      *is_before = TRUE;
       return segment;
     }
 
@@ -1065,16 +1073,13 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
  *
  * If an equivalent/identical one is found it is returned with
  * the reference count incremented
- *
- * If the reference segment is *just* before the 1st segment in the playlist, it
- * will be inserted and returned. This allows coping with non-overlapping (but
- * contiguous) playlist updates.
  */
 GstM3U8MediaSegment *
 gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
     GstM3U8MediaSegment * segment)
 {
   GstM3U8MediaSegment *res = NULL;
+  gboolean is_before;
 #ifndef GST_DISABLE_GST_DEBUG
   gchar *pdtstring;
 #endif
@@ -1088,13 +1093,14 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
       GST_TIME_ARGS (segment->duration), segment->sequence,
       segment->discont_sequence, segment->uri, playlist->uri);
 
-  res = find_segment_in_playlist (playlist, segment);
+  res = find_segment_in_playlist (playlist, segment, &is_before);
 
   /* For live playlists we re-calculate all stream times based on the existing
    * stream time. Non-live playlists have their stream time calculated at
    * parsing time. */
   if (res) {
-    gst_m3u8_media_segment_ref (res);
+    if (!is_before)
+      gst_m3u8_media_segment_ref (res);
     if (res->stream_time == GST_CLOCK_STIME_NONE)
       res->stream_time = segment->stream_time;
     if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist))
@@ -1105,6 +1111,11 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
         && res->discont_sequence != segment->discont_sequence) {
       res->discont_sequence = segment->discont_sequence;
       gst_hls_media_playlist_recalculate_dsn (playlist, res);
+    }
+    if (is_before) {
+      GST_DEBUG ("Dropping segment from before the playlist");
+      g_ptr_array_remove_index (playlist->segments, 0);
+      res = NULL;
     }
 #ifndef GST_DISABLE_GST_DEBUG
     pdtstring =
@@ -1163,6 +1174,7 @@ gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
   GstM3U8MediaSegment *res = NULL;
   GstM3U8MediaSegment *cand = NULL;
   guint idx;
+  gboolean is_before;
 
   g_return_val_if_fail (playlist && reference, FALSE);
 
@@ -1171,7 +1183,7 @@ gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
    * go backwards */
   for (idx = reference->segments->len - 1; idx; idx--) {
     cand = g_ptr_array_index (reference->segments, idx);
-    res = find_segment_in_playlist (playlist, cand);
+    res = find_segment_in_playlist (playlist, cand, &is_before);
     if (res)
       break;
   }
@@ -1192,6 +1204,9 @@ gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
       && res->discont_sequence != cand->discont_sequence) {
     res->discont_sequence = cand->discont_sequence;
     gst_hls_media_playlist_recalculate_dsn (playlist, res);
+  }
+  if (is_before) {
+    g_ptr_array_remove_index (playlist->segments, 0);
   }
 
   return TRUE;
