@@ -202,6 +202,36 @@ gst_decklink_profile_id_get_type (void)
   return (GType) id;
 }
 
+/**
+ * GstDecklinkMappingFormat:
+ * @GST_DECKLINK_MAPPING_FORMAT_DEFAULT: Don't change the mapping format
+ * @GST_DECKLINK_MAPPING_FORMAT_LEVEL_A: Level A
+ * @GST_DECKLINK_MAPPING_FORMAT_LEVEL_B: Level B
+ *
+ * 3G-SDI mapping format (SMPTE ST 425-1:2017)
+ *
+ * Since: 1.22
+ */
+GType
+gst_decklink_mapping_format_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue mappingformats[] = {
+    {GST_DECKLINK_MAPPING_FORMAT_DEFAULT, "Default, don't change mapping format",
+      "default"},
+    {GST_DECKLINK_MAPPING_FORMAT_LEVEL_A, "Level A", "level-a"},
+    {GST_DECKLINK_MAPPING_FORMAT_LEVEL_B, "Level B", "level-b"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstDecklinkMappingFormat", mappingformats);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 GType
 gst_decklink_timecode_format_get_type (void)
 {
@@ -384,6 +414,13 @@ enum ProfileSetOperationResult
   PROFILE_SET_UNSUPPORTED,
   PROFILE_SET_SUCCESS,
   PROFILE_SET_FAILURE
+};
+
+enum MappingFormatSetOperationResult
+{
+  MAPPING_FORMAT_SET_UNSUPPORTED,
+  MAPPING_FORMAT_SET_SUCCESS,
+  MAPPING_FORMAT_SET_FAILURE
 };
 
 enum DuplexModeSetOperationResult
@@ -867,6 +904,8 @@ struct _Device
 
 static ProfileSetOperationResult gst_decklink_configure_profile (Device *
     device, GstDecklinkProfileId profile_id);
+static MappingFormatSetOperationResult gst_decklink_configure_mapping_format (Device *
+    device, GstDecklinkMappingFormat mapping_format);
 
 class GStreamerDecklinkInputCallback:public IDeckLinkInputCallback
 {
@@ -1718,6 +1757,10 @@ gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio)
             videosink->profile_id) == PROFILE_SET_FAILURE) {
       return NULL;
     }
+    if (gst_decklink_configure_mapping_format (device,
+            videosink->mapping_format) == MAPPING_FORMAT_SET_FAILURE) {
+      return NULL;
+    }
   }
 
   g_mutex_lock (&output->lock);
@@ -1902,6 +1945,49 @@ gst_decklink_configure_profile (Device * device,
   } else {
     GST_DEBUG ("Device has only one profile");
     return PROFILE_SET_UNSUPPORTED;
+  }
+}
+
+static MappingFormatSetOperationResult
+gst_decklink_configure_mapping_format (Device * device,
+    GstDecklinkMappingFormat mapping_format)
+{
+  HRESULT res;
+
+  bool level_a_output;
+  switch (mapping_format) {
+    case GST_DECKLINK_MAPPING_FORMAT_LEVEL_A:
+      level_a_output = true;
+      break;
+    case GST_DECKLINK_MAPPING_FORMAT_LEVEL_B:
+      level_a_output = false;
+      break;
+    default:
+    case GST_DECKLINK_MAPPING_FORMAT_DEFAULT:
+      return MAPPING_FORMAT_SET_SUCCESS;
+  }
+
+  // Make sure Level A is supported
+  bool supports_level_a_output = false;
+  res = device->output.attributes->GetFlag(BMDDeckLinkSupportsSMPTELevelAOutput,
+    &supports_level_a_output);
+  if (res != S_OK || !supports_level_a_output) {
+    if (level_a_output) {
+      GST_DEBUG ("Device does not support Level A mapping format");
+      return MAPPING_FORMAT_SET_UNSUPPORTED;
+    } else {
+      // Level B is the only supported option
+      return MAPPING_FORMAT_SET_SUCCESS;
+    }
+  }
+
+  res = device->input.config->SetFlag(bmdDeckLinkConfigSMPTELevelAOutput, level_a_output);
+  if (res == S_OK) {
+    GST_DEBUG ("Successfully set mapping format");
+    return MAPPING_FORMAT_SET_SUCCESS;
+  } else {
+    GST_ERROR ("Failed to set mapping format");
+    return MAPPING_FORMAT_SET_FAILURE;
   }
 }
 

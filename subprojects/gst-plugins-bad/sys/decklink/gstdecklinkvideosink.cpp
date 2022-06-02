@@ -232,6 +232,14 @@ private:
   gint m_refcount;
 };
 
+/**
+ * GstDecklinkMappingFormat:
+ * @GST_DECKLINK_MAPPING_FORMAT_DEFAULT: Don't change the mapping format
+ * @GST_DECKLINK_MAPPING_FORMAT_LEVEL_A: Level A
+ * @GST_DECKLINK_MAPPING_FORMAT_LEVEL_B: Level B
+ *
+ * Since: 1.22
+ */
 enum
 {
   PROP_0,
@@ -245,6 +253,7 @@ enum
   PROP_HW_SERIAL_NUMBER,
   PROP_CC_LINE,
   PROP_AFD_BAR_LINE,
+  PROP_MAPPING_FORMAT,
 };
 
 static void gst_decklink_video_sink_set_property (GObject * object,
@@ -407,6 +416,20 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+  /**
+   * GstDecklinkVideoSink:mapping-format
+   *
+   * Specifies the 3G-SDI mapping format to use (SMPTE ST 425-1:2017).
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_MAPPING_FORMAT,
+      g_param_spec_enum ("mapping-format", "3G-SDI Mapping Format",
+          "3G-SDI Mapping Format (Level A/B)",
+          GST_TYPE_DECKLINK_MAPPING_FORMAT, GST_DECKLINK_MAPPING_FORMAT_DEFAULT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   templ_caps = gst_decklink_mode_get_template_caps (FALSE);
   templ_caps = gst_caps_make_writable (templ_caps);
   /* For output we support any framerate and only really care about timestamps */
@@ -422,6 +445,8 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_decklink_video_sink_debug, "decklinkvideosink",
       0, "debug category for decklinkvideosink element");
+
+  gst_type_mark_as_plugin_api(GST_TYPE_DECKLINK_MAPPING_FORMAT, (GstPluginAPIFlags)0);
 }
 
 static void
@@ -435,6 +460,7 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
   self->timecode_format = bmdTimecodeRP188Any;
   self->caption_line = 0;
   self->afd_bar_line = 0;
+  self->mapping_format = GST_DECKLINK_MAPPING_FORMAT_DEFAULT;
 
   gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK_CAST (self), TRUE);
@@ -490,6 +516,9 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
     case PROP_AFD_BAR_LINE:
       self->afd_bar_line = g_value_get_int (value);
       break;
+    case PROP_MAPPING_FORMAT:
+      self->mapping_format = (GstDecklinkMappingFormat) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -537,6 +566,9 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
       break;
     case PROP_AFD_BAR_LINE:
       g_value_set_int (value, self->afd_bar_line);
+      break;
+    case PROP_MAPPING_FORMAT:
+      g_value_set_enum (value, self->mapping_format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

@@ -174,6 +174,14 @@ typedef enum {
 GType gst_decklink_profile_id_get_type (void);
 
 typedef enum {
+  GST_DECKLINK_MAPPING_FORMAT_DEFAULT,
+  GST_DECKLINK_MAPPING_FORMAT_LEVEL_A, /* bmdDeckLinkConfigSMPTELevelAOutput = true */
+  GST_DECKLINK_MAPPING_FORMAT_LEVEL_B, /* bmdDeckLinkConfigSMPTELevelAOutput = false */
+} GstDecklinkMappingFormat;
+#define GST_TYPE_DECKLINK_MAPPING_FORMAT (gst_decklink_mapping_format_get_type ())
+GType gst_decklink_mapping_format_get_type (void);
+
+typedef enum {
   GST_DECKLINK_TIMECODE_FORMAT_RP188VITC1, /*bmdTimecodeRP188VITC1 */
   GST_DECKLINK_TIMECODE_FORMAT_RP188VITC2, /*bmdTimecodeRP188VITC2 */
   GST_DECKLINK_TIMECODE_FORMAT_RP188LTC, /*bmdTimecodeRP188LTC */

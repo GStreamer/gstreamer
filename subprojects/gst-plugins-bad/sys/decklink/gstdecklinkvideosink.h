@@ -75,6 +75,7 @@ struct _GstDecklinkVideoSink
   guint16 cdp_hdr_sequence_cntr;
 
   gint afd_bar_line;
+  GstDecklinkMappingFormat mapping_format;
 };
 
 struct _GstDecklinkVideoSinkClass
