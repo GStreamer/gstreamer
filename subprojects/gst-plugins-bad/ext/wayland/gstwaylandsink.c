@@ -59,7 +59,8 @@ enum
 {
   PROP_0,
   PROP_DISPLAY,
-  PROP_FULLSCREEN
+  PROP_FULLSCREEN,
+  PROP_LAST
 };
 
 GST_DEBUG_CATEGORY (gstwayland_debug);
@@ -160,6 +161,16 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
       g_param_spec_boolean ("fullscreen", "Fullscreen",
           "Whether the surface should be made fullscreen ", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ /**
+  * waylandsink:render-rectangle:
+  *
+  * This helper installs the "render-rectangle" property into the
+  * class.
+  *
+  * Since: 1.22
+  */
+  gst_video_overlay_install_properties (gobject_class, PROP_LAST);
 }
 
 static void
