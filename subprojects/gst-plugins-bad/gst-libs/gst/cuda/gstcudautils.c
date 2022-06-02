@@ -367,6 +367,8 @@ gst_context_new_cuda_context (GstCudaContext * cuda_ctx)
 
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (cuda_ctx), NULL);
 
+  _init_debug ();
+
   context = gst_context_new (GST_CUDA_CONTEXT_TYPE, TRUE);
   context_set_cuda_context (context, cuda_ctx);
 
@@ -1490,6 +1492,8 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
   g_return_val_if_fail (src_info != NULL, FALSE);
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), FALSE);
+
+  _init_debug ();
 
   if (dst_type == GST_CUDA_BUFFER_COPY_NVMM &&
       src_type == GST_CUDA_BUFFER_COPY_NVMM) {
