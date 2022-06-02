@@ -2455,7 +2455,7 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
-                profile, VAEntrypointEncSlice)) == 0)
+                profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
     *_profile = profile;
@@ -4196,20 +4196,26 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
   GstVaEncoder *encoder;
   struct CData *cdata = class_data;
   gchar *long_name;
+  const gchar *name, *desc;
   gint n_props = N_PROPERTIES;
   GParamFlags param_flags =
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT;
 
-  if (cdata->description) {
-    long_name = g_strdup_printf ("VA-API H.265 Encoder in %s",
-        cdata->description);
+  if (cdata->entrypoint == VAEntrypointEncSlice) {
+    desc = "VA-API based H.265 video encoder";
+    name = "VA-API H.265 Encoder";
   } else {
-    long_name = g_strdup ("VA-API H.265 Encoder");
+    desc = "VA-API based H.265 low power video encoder";
+    name = "VA-API H.265 Low Power Encoder";
   }
 
+  if (cdata->description)
+    long_name = g_strdup_printf ("%s in %s", name, cdata->description);
+  else
+    long_name = g_strdup (name);
+
   gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Encoder/Video/Hardware", "VA-API based H.265 video encoder",
-      "He Junyan <junyan.he@intel.com>");
+      "Codec/Encoder/Video/Hardware", desc, "He Junyan <junyan.he@intel.com>");
 
   sink_doc_caps = gst_caps_from_string (sink_caps_str);
   src_doc_caps = gst_caps_from_string (src_caps_str);
@@ -4528,11 +4534,6 @@ gst_va_h265_enc_register (GstPlugin * plugin, GstVaDevice * device,
   g_return_val_if_fail (entrypoint == VAEntrypointEncSlice ||
       entrypoint == VAEntrypointEncSliceLP, FALSE);
 
-  if (entrypoint == VAEntrypointEncSliceLP) {
-    GST_WARNING ("low power H265 encoder is not supported now.");
-    return FALSE;
-  }
-
   cdata = g_new (struct CData, 1);
   cdata->entrypoint = entrypoint;
   cdata->description = NULL;
@@ -4547,8 +4548,13 @@ gst_va_h265_enc_register (GstPlugin * plugin, GstVaDevice * device,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   type_info.class_data = cdata;
-  type_name = g_strdup ("GstVaH265Enc");
-  feature_name = g_strdup ("vah265enc");
+  if (entrypoint == VAEntrypointEncSlice) {
+    type_name = g_strdup ("GstVaH265Enc");
+    feature_name = g_strdup ("vah265enc");
+  } else {
+    type_name = g_strdup ("GstVaH265LPEnc");
+    feature_name = g_strdup ("vah265lpenc");
+  }
 
   /* The first encoder to be registered should use a constant name,
    * like vah265enc, for any additional encoders, we create unique
@@ -4557,8 +4563,13 @@ gst_va_h265_enc_register (GstPlugin * plugin, GstVaDevice * device,
     gchar *basename = g_path_get_basename (device->render_device_path);
     g_free (type_name);
     g_free (feature_name);
-    type_name = g_strdup_printf ("GstVa%sH265Enc", basename);
-    feature_name = g_strdup_printf ("va%sh265enc", basename);
+    if (entrypoint == VAEntrypointEncSlice) {
+      type_name = g_strdup_printf ("GstVa%sH265Enc", basename);
+      feature_name = g_strdup_printf ("va%sh265enc", basename);
+    } else {
+      type_name = g_strdup_printf ("GstVa%sH265LPEnc", basename);
+      feature_name = g_strdup_printf ("va%sh265lpenc", basename);
+    }
     cdata->description = basename;
     /* lower rank for non-first device */
     if (rank > 0)
