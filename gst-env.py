@@ -549,9 +549,8 @@ if __name__ == "__main__":
     env = get_subprocess_env(options, gst_version)
     if os.name == 'nt':
         shell = get_windows_shell()
-        if shell == 'powershell.exe':
-            new_args = ['powershell.exe']
-            new_args += ['-NoLogo']
+        if shell in ['powershell.exe', 'pwsh.exe']:
+            new_args = [shell, '-NoLogo']
             if not args:
                 prompt = 'function global:prompt {  "[gst-' + gst_version + '"+"] PS " + $PWD + "> "}'
                 new_args += ['-NoExit', '-Command', prompt]
