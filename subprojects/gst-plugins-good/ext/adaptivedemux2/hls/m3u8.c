@@ -1117,7 +1117,9 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
       g_ptr_array_remove_index (playlist->segments, 0);
       res = NULL;
     }
+  }
 #ifndef GST_DISABLE_GST_DEBUG
+  if (res) {
     pdtstring =
         res->datetime ? g_date_time_format_iso8601 (res->datetime) : NULL;
     GST_DEBUG ("Returning segment sn:%" G_GINT64_FORMAT " dsn:%" G_GINT64_FORMAT
@@ -1126,10 +1128,10 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
         GST_STIME_ARGS (res->stream_time), GST_TIME_ARGS (res->duration),
         pdtstring);
     g_free (pdtstring);
-#endif
-  } else if (!GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist)) {
+  } else {
     GST_DEBUG ("Could not find a match");
   }
+#endif
 
   return res;
 }
