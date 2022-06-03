@@ -465,6 +465,7 @@ gst_gl_video_mixer_bin_class_init (GstGLVideoMixerBinClass * klass)
   GstGLMixerBinClass *mixer_class = GST_GL_MIXER_BIN_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstCaps *upload_caps;
 
   mixer_class->create_input_pad = _create_video_mixer_input;
 
@@ -476,9 +477,20 @@ gst_gl_video_mixer_bin_class_init (GstGLVideoMixerBinClass * klass)
           GST_TYPE_GL_VIDEO_MIXER_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /* override the sink_%u pad template from GstGLMixerBin.
+   * We pass it the GType of our sink pad so it's properly documented when
+   * inspecting the element. */
+  upload_caps = gst_gl_upload_get_input_template_caps ();
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new_with_gtype ("sink_%u", GST_PAD_SINK, GST_PAD_REQUEST,
+          upload_caps, gst_gl_video_mixer_input_get_type ()));
+  gst_caps_unref (upload_caps);
+
   gst_element_class_set_metadata (element_class, "OpenGL video_mixer bin",
       "Bin/Filter/Effect/Video/Compositor", "OpenGL video_mixer bin",
       "Matthew Waters <matthew@centricular.com>");
+
+  gst_type_mark_as_plugin_api (gst_gl_video_mixer_input_get_type (), 0);
 }
 
 static void
