@@ -29,7 +29,7 @@
 
 #include "gstflvelements.h"
 
-GST_DEBUG_CATEGORY_STATIC (flvdemux_debug);
+GST_DEBUG_CATEGORY (flvdemux_debug);
 #define GST_CAT_DEFAULT flvdemux_debug
 
 void
