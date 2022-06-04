@@ -1114,6 +1114,7 @@ gst_h264_parser_parse_user_data_unregistered (GstH264NalParser * nalparser,
 
   if (payload_size < 1) {
     GST_WARNING ("No more remaining payload data to store");
+    g_clear_pointer (&data, g_free);
     return GST_H264_PARSER_BROKEN_DATA;
   }
 
@@ -1124,6 +1125,7 @@ gst_h264_parser_parse_user_data_unregistered (GstH264NalParser * nalparser,
 error:
   {
     GST_WARNING ("error parsing \"User Data Unregistered\"");
+    g_clear_pointer (&data, g_free);
     return GST_H264_PARSER_ERROR;
   }
 }
