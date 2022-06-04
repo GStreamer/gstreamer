@@ -48,6 +48,9 @@
 #include <gst/video/video.h>
 #include <gst/tag/tag.h>
 
+GST_DEBUG_CATEGORY_EXTERN (flvdemux_debug);
+#define GST_CAT_DEFAULT flvdemux_debug
+
 /* FIXME: don't rely on own GstIndex */
 #include "gstindex.c"
 #include "gstmemindex.c"
