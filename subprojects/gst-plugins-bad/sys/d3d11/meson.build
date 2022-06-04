@@ -14,6 +14,7 @@ d3d11_sources = [
   'gstd3d11overlaycompositor.cpp',
   'gstd3d11pluginutils.cpp',
   'gstd3d11shader.cpp',
+  'gstd3d11testsrc.cpp',
   'gstd3d11upload.cpp',
   'gstd3d11videoprocessor.cpp',
   'gstd3d11videosink.cpp',
