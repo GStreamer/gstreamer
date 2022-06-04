@@ -216,6 +216,21 @@ _have_dtls_elements (GstWebRTCBin * webrtc)
   return TRUE;
 }
 
+static gboolean
+_gst_element_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  GstElement *element;
+
+  element = g_value_get_object (handler_return);
+  GST_DEBUG ("got element %" GST_PTR_FORMAT, element);
+
+  g_value_set_object (return_accu, element);
+
+  /* stop emission if we have an element */
+  return (element == NULL);
+}
+
 G_DEFINE_TYPE (GstWebRTCBinPad, gst_webrtc_bin_pad, GST_TYPE_GHOST_PAD);
 
 static void
@@ -494,6 +509,7 @@ enum
   CREATE_DATA_CHANNEL_SIGNAL,
   ON_DATA_CHANNEL_SIGNAL,
   PREPARE_DATA_CHANNEL_SIGNAL,
+  REQUEST_AUX_SENDER,
   LAST_SIGNAL,
 };
 
@@ -7107,6 +7123,7 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
   GstElement *ret, *rtx;
   GstPad *pad;
   char *name;
+  GstElement *aux_sender = NULL;
 
   stream = _find_transport_for_session (webrtc, session_id);
   if (!stream) {
@@ -7138,6 +7155,53 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
 
   name = g_strdup_printf ("src_%u", session_id);
   pad = gst_element_get_static_pad (rtx, "src");
+
+
+  g_signal_emit (webrtc, gst_webrtc_bin_signals[REQUEST_AUX_SENDER], 0,
+      stream->transport, &aux_sender);
+  if (aux_sender) {
+    GstPadLinkReturn link_res;
+    GstPad *sinkpad = gst_element_get_static_pad (aux_sender, "sink");
+    GstPad *srcpad = gst_element_get_static_pad (aux_sender, "src");
+
+    gst_object_ref_sink (aux_sender);
+
+    if (!sinkpad || !srcpad) {
+      GST_ERROR_OBJECT (webrtc,
+          "Invalid pads for the aux sender %" GST_PTR_FORMAT
+          ". Skipping it.", aux_sender);
+      goto bwe_done;
+    }
+
+    if (!gst_bin_add (GST_BIN (ret), aux_sender)) {
+      GST_ERROR_OBJECT (webrtc,
+          "Could not add aux sender %" GST_PTR_FORMAT, aux_sender);
+      goto bwe_done;
+    }
+
+    link_res = gst_pad_link (pad, sinkpad);
+    if (link_res != GST_PAD_LINK_OK) {
+      GST_ERROR_OBJECT (webrtc,
+          "Could not link aux sender %" GST_PTR_FORMAT " %s", aux_sender,
+          gst_pad_link_get_name (link_res));
+      goto bwe_done;
+    }
+
+    gst_clear_object (&pad);
+    pad = gst_object_ref (srcpad);
+
+  bwe_done:
+    if (pad != srcpad) {
+      /* Failed using the provided aux sender */
+      if (gst_object_has_as_parent (GST_OBJECT (aux_sender), GST_OBJECT (ret))) {
+        gst_bin_remove (GST_BIN (ret), aux_sender);
+      }
+    }
+    gst_clear_object (&aux_sender);
+    gst_clear_object (&srcpad);
+    gst_clear_object (&sinkpad);
+  }
+
   if (!gst_element_add_pad (ret, gst_ghost_pad_new (name, pad)))
     g_warn_if_reached ();
   gst_clear_object (&pad);
@@ -8573,6 +8637,23 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       g_signal_new ("prepare-data-channel", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 2,
       GST_TYPE_WEBRTC_DATA_CHANNEL, G_TYPE_BOOLEAN);
+
+   /**
+   * GstWebRTCBin::request-aux-sender:
+   * @object: the #GstWebRTCBin
+   * @dtls-transport: The #GstWebRTCDTLSTransport object for which the aux
+   * sender will be used.
+   *
+   * Request an AUX sender element for the given @dtls-transport.
+   *
+   * Returns: (transfer full): A new GStreamer element
+   *
+   * Since: 1.22
+   */
+  gst_webrtc_bin_signals[REQUEST_AUX_SENDER] =
+      g_signal_new ("request-aux-sender", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, _gst_element_accumulator, NULL, NULL,
+      GST_TYPE_ELEMENT, 1, GST_TYPE_WEBRTC_DTLS_TRANSPORT);
 
   /**
    * GstWebRTCBin::add-transceiver:
