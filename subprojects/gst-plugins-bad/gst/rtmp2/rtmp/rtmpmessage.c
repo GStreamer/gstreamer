@@ -207,7 +207,7 @@ gst_rtmp_meta_get_info (void)
 
   if (g_once_init_enter (&rtmp_meta_info)) {
     const GstMetaInfo *meta = gst_meta_register (GST_RTMP_META_API_TYPE,
-        "GstRtmpMeta", sizeof *meta, gst_rtmp_meta_init, NULL,
+        "GstRtmpMeta", sizeof (GstRtmpMeta), gst_rtmp_meta_init, NULL,
         gst_rtmp_meta_transform);
     g_once_init_leave (&rtmp_meta_info, meta);
   }
