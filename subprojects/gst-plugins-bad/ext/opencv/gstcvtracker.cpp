@@ -233,7 +233,7 @@ gst_cvtracker_init (GstCVTracker * filter)
   filter->y = DEFAULT_PROP_INITIAL_Y;
   filter->width = DEFAULT_PROP_INITIAL_WIDTH;
   filter->height = DEFAULT_PROP_INITIAL_HEIGHT;
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
   filter->tracker = cv::legacy::upgradeTrackingAPI(
       cv::legacy::TrackerMedianFlow::create());
 #else
@@ -283,7 +283,7 @@ create_cvtracker (GstCVTracker * filter)
 {
   switch (filter->algorithm) {
     case GST_OPENCV_TRACKER_ALGORITHM_BOOSTING:
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
       filter->tracker = cv::legacy::upgradeTrackingAPI(
           cv::legacy::TrackerBoosting::create());
 #else
@@ -297,7 +297,7 @@ create_cvtracker (GstCVTracker * filter)
       filter->tracker = cv::TrackerKCF::create ();
       break;
     case GST_OPENCV_TRACKER_ALGORITHM_MEDIANFLOW:
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
       filter->tracker = cv::legacy::upgradeTrackingAPI(
           cv::legacy::TrackerMedianFlow::create());
 #else
@@ -308,7 +308,7 @@ create_cvtracker (GstCVTracker * filter)
       filter->tracker = cv::TrackerMIL::create ();
       break;
     case GST_OPENCV_TRACKER_ALGORITHM_MOSSE:
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
       filter->tracker = cv::legacy::upgradeTrackingAPI(
           cv::legacy::TrackerMOSSE::create());
 #else
@@ -316,7 +316,7 @@ create_cvtracker (GstCVTracker * filter)
 #endif
       break;
     case GST_OPENCV_TRACKER_ALGORITHM_TLD:
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
       filter->tracker = cv::legacy::upgradeTrackingAPI(
           cv::legacy::TrackerTLD::create());
 #else
@@ -366,7 +366,7 @@ gst_cvtracker_transform_ip (GstOpencvVideoFilter * base,
   GstMessage *msg;
 
   if (filter->roi.empty ()) {
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
     filter->roi = new (cv::Rect);
 #else
     filter->roi = new (cv::Rect2d);
@@ -378,7 +378,7 @@ gst_cvtracker_transform_ip (GstOpencvVideoFilter * base,
     create_cvtracker (filter);
     filter->tracker->init (img, *filter->roi);
   } else if (filter->tracker->update (img, *filter->roi)) {
-#if (!(CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1))
+#if !GST_OPENCV_CHECK_VERSION(4, 5, 1)
     /* Round values to avoid inconsistencies depending on the OpenCV version. */
     filter->roi->x = cvRound (filter->roi->x);
     filter->roi->y = cvRound (filter->roi->y);
