@@ -37,8 +37,8 @@ typedef struct _GstD3D11Converter GstD3D11Converter;
 #define GST_D3D11_CONVERTER_OPT_ALPHA_VALUE "GstD3D11Converter.alpha-value"
 
 GstD3D11Converter * gst_d3d11_converter_new  (GstD3D11Device * device,
-                                              GstVideoInfo * in_info,
-                                              GstVideoInfo * out_info,
+                                              const GstVideoInfo * in_info,
+                                              const GstVideoInfo * out_info,
                                               GstStructure * config);
 
 void                gst_d3d11_converter_free    (GstD3D11Converter * converter);
@@ -56,13 +56,13 @@ gboolean            gst_d3d11_converter_convert_unlocked (GstD3D11Converter * co
                                                           gfloat blend_factor[4]);
 
 gboolean            gst_d3d11_converter_update_viewport  (GstD3D11Converter * converter,
-                                                          D3D11_VIEWPORT * viewport);
+                                                          const D3D11_VIEWPORT * viewport);
 
 gboolean            gst_d3d11_converter_update_src_rect (GstD3D11Converter * converter,
-                                                         RECT * src_rect);
+                                                         const RECT * src_rect);
 
 gboolean            gst_d3d11_converter_update_dest_rect (GstD3D11Converter * converter,
-                                                          RECT * dest_rect);
+                                                          const RECT * dest_rect);
 
 gboolean            gst_d3d11_converter_update_config    (GstD3D11Converter * converter,
                                                           GstStructure * config);
