@@ -50,7 +50,14 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/tracking.hpp>
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+
+#define GST_OPENCV_CHECK_VERSION(major,minor,revision) \
+  (CV_VERSION_MAJOR > (major) || \
+   (CV_VERSION_MAJOR == (major) && CV_VERSION_MINOR > (minor)) || \
+   (CV_VERSION_MAJOR == (major) && CV_VERSION_MINOR == (minor) && \
+    CV_VERSION_REVISION >= (revision)))
+
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
 #include <opencv2/tracking/tracking_legacy.hpp>
 #endif
 
@@ -84,7 +91,7 @@ struct _GstCVTracker
   gboolean post_debug_info;
 
   cv::Ptr<cv::Tracker> tracker;
-#if CV_VERSION_MAJOR == 4 && CV_VERSION_MINOR >= 5 && CV_VERSION_REVISION >= 1
+#if GST_OPENCV_CHECK_VERSION(4, 5, 1)
   cv::Ptr<cv::Rect> roi;
 #else
   cv::Ptr<cv::Rect2d> roi;
