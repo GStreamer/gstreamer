@@ -909,7 +909,42 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
       gst_event_set_seqnum (event, demux->segment_seqnum);
     if (have_group_id (demux))
       gst_event_set_group_id (event, demux->group_id);
-    gst_pad_push_event (demux->audio_pad, event);
+
+    if (demux->streams_aware) {
+      GstStreamCollection *stream_collection;
+      GstMessage *msg;
+
+      g_assert (!demux->audio_stream);
+      demux->audio_stream =
+          gst_stream_new (stream_id, caps, GST_STREAM_TYPE_AUDIO,
+          GST_STREAM_FLAG_SELECT);
+      if (demux->audio_tags)
+        gst_stream_set_tags (demux->audio_stream, demux->audio_tags);
+
+      gst_event_set_stream (event, demux->audio_stream);
+      gst_pad_push_event (demux->audio_pad, event);
+
+      stream_collection = gst_stream_collection_new (demux->upstream_stream_id);
+
+      gst_stream_collection_add_stream (stream_collection,
+          gst_object_ref (demux->audio_stream));
+      if (demux->video_stream)
+        gst_stream_collection_add_stream (stream_collection,
+            gst_object_ref (demux->video_stream));
+
+      event = gst_event_new_stream_collection (stream_collection);
+      gst_pad_push_event (demux->audio_pad, event);
+
+      msg = gst_message_new_stream_collection (GST_OBJECT (demux),
+          stream_collection);
+      GST_DEBUG_OBJECT (demux, "Posting stream collection");
+      gst_element_post_message (GST_ELEMENT (demux), msg);
+
+      gst_clear_object (&stream_collection);
+    } else {
+      gst_pad_push_event (demux->audio_pad, event);
+    }
+
     g_free (stream_id);
   }
   if (!old_caps || !gst_caps_is_equal (old_caps, caps))
@@ -1103,7 +1138,8 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
 
-  if (G_UNLIKELY (!demux->audio_pad && demux->no_more_pads)) {
+  if (G_UNLIKELY (!demux->streams_aware && !demux->audio_pad
+          && demux->no_more_pads)) {
 #ifndef GST_DISABLE_DEBUG
     if (G_UNLIKELY (!demux->no_audio_warned)) {
       GST_WARNING_OBJECT (demux,
@@ -1264,7 +1300,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     /* We only emit no more pads when we have audio and video. Indeed we can
      * not trust the FLV header to tell us if there will be only audio or
      * only video and we would just break discovery of some files */
-    if (demux->audio_pad && demux->video_pad) {
+    if (demux->audio_pad && demux->video_pad && !demux->streams_aware) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
       demux->no_more_pads = TRUE;
@@ -1360,7 +1396,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
     demux->audio_first_ts = GST_BUFFER_TIMESTAMP (outbuf);
   }
 
-  if (G_UNLIKELY (!demux->no_more_pads
+  if (G_UNLIKELY (!demux->streams_aware && !demux->no_more_pads
           && (GST_CLOCK_DIFF (demux->audio_start,
                   GST_BUFFER_TIMESTAMP (outbuf)) > NO_MORE_PADS_THRESHOLD))) {
     GST_DEBUG_OBJECT (demux,
@@ -1490,11 +1526,46 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
     event = gst_event_new_stream_start (stream_id);
     if (demux->segment_seqnum != GST_SEQNUM_INVALID)
       gst_event_set_seqnum (event, demux->segment_seqnum);
-    g_free (stream_id);
 
     if (have_group_id (demux))
       gst_event_set_group_id (event, demux->group_id);
-    gst_pad_push_event (demux->video_pad, event);
+
+    if (demux->streams_aware) {
+      GstStreamCollection *stream_collection;
+      GstMessage *msg;
+
+      g_assert (!demux->video_stream);
+      demux->video_stream =
+          gst_stream_new (stream_id, caps, GST_STREAM_TYPE_VIDEO,
+          GST_STREAM_FLAG_SELECT);
+      if (demux->video_tags)
+        gst_stream_set_tags (demux->video_stream, demux->video_tags);
+
+      gst_event_set_stream (event, demux->video_stream);
+      gst_pad_push_event (demux->video_pad, event);
+
+      stream_collection = gst_stream_collection_new (demux->upstream_stream_id);
+
+      if (demux->audio_stream)
+        gst_stream_collection_add_stream (stream_collection,
+            gst_object_ref (demux->audio_stream));
+      gst_stream_collection_add_stream (stream_collection,
+          gst_object_ref (demux->video_stream));
+
+      event = gst_event_new_stream_collection (stream_collection);
+      gst_pad_push_event (demux->video_pad, event);
+
+      msg = gst_message_new_stream_collection (GST_OBJECT (demux),
+          stream_collection);
+      GST_DEBUG_OBJECT (demux, "Posting stream collection");
+      gst_element_post_message (GST_ELEMENT (demux), msg);
+
+      gst_clear_object (&stream_collection);
+    } else {
+      gst_pad_push_event (demux->video_pad, event);
+    }
+
+    g_free (stream_id);
   }
 
   if (!old_caps || !gst_caps_is_equal (old_caps, caps))
@@ -1548,7 +1619,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
   if G_UNLIKELY
-    (!demux->video_pad && demux->no_more_pads) {
+    (!demux->streams_aware && !demux->video_pad && demux->no_more_pads) {
 #ifndef GST_DISABLE_DEBUG
     if G_UNLIKELY
       (!demux->no_video_warned) {
@@ -1700,7 +1771,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     /* We only emit no more pads when we have audio and video. Indeed we can
      * not trust the FLV header to tell us if there will be only audio or
      * only video and we would just break discovery of some files */
-    if (demux->audio_pad && demux->video_pad) {
+    if (demux->audio_pad && demux->video_pad && !demux->streams_aware) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
       demux->no_more_pads = TRUE;
@@ -1803,7 +1874,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
     demux->video_first_ts = GST_BUFFER_TIMESTAMP (outbuf);
   }
 
-  if (G_UNLIKELY (!demux->no_more_pads
+  if (G_UNLIKELY (!demux->streams_aware && !demux->no_more_pads
           && (GST_CLOCK_DIFF (demux->video_start,
                   GST_BUFFER_TIMESTAMP (outbuf)) > NO_MORE_PADS_THRESHOLD))) {
     GST_DEBUG_OBJECT (demux,
@@ -2139,6 +2210,13 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   demux->audio_bitrate = 0;
 
   gst_flv_demux_clear_tags (demux);
+
+  gst_clear_object (&demux->audio_stream);
+  gst_clear_object (&demux->video_stream);
+  g_clear_pointer (&demux->upstream_stream_id, (GDestroyNotify) g_free);
+  demux->streams_aware = GST_OBJECT_PARENT (demux)
+      && GST_OBJECT_FLAG_IS_SET (GST_OBJECT_PARENT (demux),
+      GST_BIN_FLAG_STREAMS_AWARE);
 }
 
 /*
@@ -2779,8 +2857,8 @@ gst_flv_demux_loop (GstPad * pad)
   }
 
   /* pause if something went wrong or at end */
-  if (G_UNLIKELY (ret != GST_FLOW_OK) && !(ret == GST_FLOW_NOT_LINKED
-          && !demux->no_more_pads))
+  if (G_UNLIKELY (ret != GST_FLOW_OK) && (demux->streams_aware
+          || ret != GST_FLOW_NOT_LINKED || demux->no_more_pads))
     goto pause;
 
   gst_object_unref (demux);
@@ -2807,7 +2885,7 @@ pause:
         demux->segment.position = demux->segment.start;
 
       /* perform EOS logic */
-      if (!demux->no_more_pads) {
+      if (!demux->streams_aware && !demux->no_more_pads) {
         gst_element_no_more_pads (GST_ELEMENT_CAST (demux));
         demux->no_more_pads = TRUE;
       }
@@ -2843,7 +2921,7 @@ pause:
         }
       } else {
         /* normal playback, send EOS to all linked pads */
-        if (!demux->no_more_pads) {
+        if (!demux->streams_aware && !demux->no_more_pads) {
           gst_element_no_more_pads (GST_ELEMENT (demux));
           demux->no_more_pads = TRUE;
         }
@@ -3352,7 +3430,7 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
             ("Internal data stream error."), ("Got EOS before any data"));
         gst_event_unref (event);
       } else {
-        if (!demux->no_more_pads) {
+        if (!demux->streams_aware && !demux->no_more_pads) {
           gst_element_no_more_pads (GST_ELEMENT (demux));
           demux->no_more_pads = TRUE;
         }
@@ -3361,6 +3439,21 @@ gst_flv_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_WARNING_OBJECT (demux, "failed pushing EOS on streams");
       }
       ret = TRUE;
+      break;
+    }
+    case GST_EVENT_STREAM_START:
+    {
+      const gchar *stream_id;
+
+      GST_DEBUG_OBJECT (demux, "received stream start");
+
+      gst_event_parse_stream_start (event, &stream_id);
+      g_clear_pointer (&demux->upstream_stream_id, (GDestroyNotify) g_free);
+      demux->upstream_stream_id = g_strdup (stream_id);
+
+      ret = TRUE;
+      gst_event_unref (event);
+
       break;
     }
     case GST_EVENT_SEGMENT:
