@@ -789,7 +789,6 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
   GstCaps *peer_caps, *preferred_caps = NULL;
   GstCapsFeatures *features;
   GstStructure *structure;
-  const GValue *v_format;
   guint num_structures, i;
   gboolean is_any;
 
@@ -840,39 +839,28 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
 
   /* Use the first structure/feature is caps because is the
    * "preferred" one */
-  if (capsfeatures) {
-    features = gst_caps_get_features (preferred_caps, 0);
-    if (features) {
-      *capsfeatures = gst_caps_features_copy (features);
-
-      if (is_any
-          && !gst_caps_features_is_equal (features,
-              GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
-          && !_downstream_has_video_meta (base, preferred_caps)) {
-        GST_INFO_OBJECT (base, "Downstream reports ANY caps but without"
-            " VideoMeta support; fallback to system memory.");
-        gst_caps_features_free (*capsfeatures);
-        *capsfeatures = NULL;
-      }
-    } else {
-      *capsfeatures = NULL;
-    }
-
-    if (!*capsfeatures && format) {
-      *format = _default_video_format_from_chroma (base,
-          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY, base->rt_format);
-
-      goto bail;
-    }
+  features = gst_caps_get_features (preferred_caps, 0);
+  if (!features) {
+    features = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
+  } else if (is_any
+      && !gst_caps_features_is_equal (features,
+          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+      && !_downstream_has_video_meta (base, preferred_caps)) {
+    GST_INFO_OBJECT (base, "Downstream reports ANY caps but without"
+        " VideoMeta support; fallback to system memory.");
+    features = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
   }
 
-  if (!format)
-    goto bail;
 
+  if (capsfeatures)
+    *capsfeatures = gst_caps_features_copy (features);
 
-  structure = gst_caps_get_structure (preferred_caps, 0);
-  v_format = gst_structure_get_value (structure, "format");
-  *format = _find_video_format_from_chroma (v_format, base->rt_format);
+  /* Use the format from chroma and available format for selected
+   * capsfeature */
+  if (format) {
+    *format = _default_video_format_from_chroma (base, features,
+        base->rt_format);
+  }
 
 bail:
   gst_clear_caps (&preferred_caps);
