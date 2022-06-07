@@ -136,6 +136,8 @@ void                  gst_hls_media_playlist_unref (GstHLSMediaPlaylist * m3u8);
  */
 struct _GstM3U8MediaSegment
 {
+  gboolean is_gap; /* TRUE if EXT-X-GAP was present for this segment */
+
   gchar *title;
   GstClockTimeDiff stream_time;	/* Computed stream time */
   GstClockTime duration;

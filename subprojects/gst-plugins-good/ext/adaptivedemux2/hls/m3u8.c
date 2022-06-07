@@ -488,6 +488,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
   GDateTime *date_time = NULL;
   GstM3U8InitFile *last_init_file = NULL;
   GstM3U8MediaSegment *previous = NULL;
+  gboolean is_gap = FALSE;
 
   GST_LOG ("uri: %s", uri);
   GST_LOG ("base_uri: %s", base_uri);
@@ -544,6 +545,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
         title = NULL;
         discontinuity = FALSE;
         size = offset = -1;
+        is_gap = FALSE;
         goto next_line;
       }
       if (data != NULL) {
@@ -555,6 +557,8 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
             gst_m3u8_media_segment_new (data, title, duration, mediasequence++,
             dsn, size, offset);
         self->duration += duration;
+
+        file->is_gap = is_gap;
 
         /* set encryption params */
         if (current_key != NULL) {
@@ -744,6 +748,8 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
 
           last_init_file = init_file;
         }
+      } else if (g_str_has_prefix (data_ext_x, "GAP:")) {
+        is_gap = TRUE;
       } else {
         GST_LOG ("Ignored line: %s", data);
       }
