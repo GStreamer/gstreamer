@@ -537,7 +537,6 @@ _get_gl_context (GtkGstGLWidget * gst_widget)
 
     GST_ERROR_OBJECT (gst_widget, "Error creating GdkGLContext : %s",
         error ? error->message : "No error set by Gdk");
-    g_clear_error (&error);
     return;
   }
 
