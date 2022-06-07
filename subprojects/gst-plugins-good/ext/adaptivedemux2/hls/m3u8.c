@@ -68,7 +68,7 @@ gst_hls_media_playlist_unref (GstHLSMediaPlaylist * self)
 
 static GstM3U8MediaSegment *
 gst_m3u8_media_segment_new (gchar * uri, gchar * title, GstClockTime duration,
-    gint64 sequence, gint64 discont_sequence)
+    gint64 sequence, gint64 discont_sequence, gint64 size, gint64 offset)
 {
   GstM3U8MediaSegment *file;
 
@@ -81,6 +81,11 @@ gst_m3u8_media_segment_new (gchar * uri, gchar * title, GstClockTime duration,
   file->ref_count = 1;
 
   file->stream_time = GST_CLOCK_STIME_NONE;
+
+  file->size = size;
+  if (size != -1 && offset != -1) {
+    file->offset = offset;
+  }
 
   return file;
 }
@@ -112,13 +117,18 @@ gst_m3u8_media_segment_unref (GstM3U8MediaSegment * self)
 }
 
 static GstM3U8InitFile *
-gst_m3u8_init_file_new (gchar * uri)
+gst_m3u8_init_file_new (gchar * uri, gint64 size, gint64 offset)
 {
   GstM3U8InitFile *file;
 
   file = g_new0 (GstM3U8InitFile, 1);
   file->uri = uri;
   file->ref_count = 1;
+
+  file->size = size;
+  if (size != -1 && offset != -1) {
+    file->offset = offset;
+  }
 
   return file;
 }
@@ -543,30 +553,24 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
          * EXT-X-DISCONTINUITY-SEQUENCE present.  */
         file =
             gst_m3u8_media_segment_new (data, title, duration, mediasequence++,
-            dsn);
+            dsn, size, offset);
         self->duration += duration;
 
         /* set encryption params */
-        file->key = current_key ? g_strdup (current_key) : NULL;
-        if (file->key) {
+        if (current_key != NULL) {
+          file->key = g_strdup (current_key);
           if (have_iv) {
             memcpy (file->iv, iv, sizeof (iv));
           } else {
+            /* An EXT-X-KEY tag with a KEYFORMAT of "identity" that does
+             * not have an IV attribute indicates that the Media Sequence
+             * Number is to be used as the IV when decrypting a Media
+             * Segment, by putting its big-endian binary representation
+             * into a 16-octet (128-bit) buffer and padding (on the left)
+             * with zeros. */
             guint8 *iv = file->iv + 12;
             GST_WRITE_UINT32_BE (iv, file->sequence);
           }
-        }
-
-        if (size != -1) {
-          file->size = size;
-          if (offset != -1) {
-            file->offset = offset;
-          } else {
-            file->offset = 0;
-          }
-        } else {
-          file->size = -1;
-          file->offset = 0;
         }
 
         file->datetime = date_time;
@@ -695,14 +699,20 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
 
         size = -1;
         offset = -1;
-        if (int64_from_string (v, &v, &size)) {
-          if (*v == '@' && !int64_from_string (v + 1, &v, &offset))
-            goto next_line;
-          /*  */
-          if (offset == -1 && previous)
-            offset = previous->offset + previous->size;
-        } else {
+
+        if (!int64_from_string (v, &v, &size))
           goto next_line;
+
+        if (*v == '@' && !int64_from_string (v + 1, &v, &offset))
+          goto next_line;
+
+        /* Either there must be an offset, or there must
+         * be a previous segment to calculate from */
+        if (offset == -1) {
+          if (previous == NULL)
+            goto next_line;
+
+          offset = previous->offset + previous->size;
         }
       } else if (g_str_has_prefix (data_ext_x, "MAP:")) {
         gchar *v, *a, *header_uri = NULL;
@@ -714,12 +724,11 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
             header_uri =
                 uri_join (self->base_uri ? self->base_uri : self->uri, v);
           } else if (strcmp (a, "BYTERANGE") == 0) {
-            if (int64_from_string (v, &v, &size)) {
-              if (*v == '@' && !int64_from_string (v + 1, &v, &offset)) {
-                g_free (header_uri);
-                goto next_line;
-              }
-            } else {
+            if (!int64_from_string (v, &v, &size)) {
+              g_free (header_uri);
+              goto next_line;
+            }
+            if (*v == '@' && !int64_from_string (v + 1, &v, &offset)) {
               g_free (header_uri);
               goto next_line;
             }
@@ -728,18 +737,8 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
 
         if (header_uri) {
           GstM3U8InitFile *init_file;
-          init_file = gst_m3u8_init_file_new (header_uri);
+          init_file = gst_m3u8_init_file_new (header_uri, size, offset);
 
-          if (size != -1) {
-            init_file->size = size;
-            if (offset != -1)
-              init_file->offset = offset;
-            else
-              init_file->offset = 0;
-          } else {
-            init_file->size = -1;
-            init_file->offset = 0;
-          }
           if (last_init_file)
             gst_m3u8_init_file_unref (last_init_file);
 
