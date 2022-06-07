@@ -112,7 +112,29 @@ gst_m3u8_media_segment_unref (GstM3U8MediaSegment * self)
     g_free (self->key);
     if (self->datetime)
       g_date_time_unref (self->datetime);
+    if (self->partial_segments)
+      g_ptr_array_free (self->partial_segments, TRUE);
     g_free (self);
+  }
+}
+
+GstM3U8PartialSegment *
+gst_m3u8_partial_segment_ref (GstM3U8PartialSegment * part)
+{
+  g_assert (part != NULL && part->ref_count > 0);
+
+  g_atomic_int_add (&part->ref_count, 1);
+  return part;
+}
+
+void
+gst_m3u8_partial_segment_unref (GstM3U8PartialSegment * part)
+{
+  g_return_if_fail (part != NULL && part->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&part->ref_count)) {
+    g_free (part->uri);
+    g_free (part);
   }
 }
 
@@ -343,6 +365,7 @@ gst_hls_media_playlist_new (const gchar * uri, const gchar * base_uri)
   m3u8->version = 1;
   m3u8->type = GST_HLS_PLAYLIST_TYPE_UNDEFINED;
   m3u8->targetduration = GST_CLOCK_TIME_NONE;
+  m3u8->partial_targetduration = GST_CLOCK_TIME_NONE;
   m3u8->media_sequence = 0;
   m3u8->discont_sequence = 0;
   m3u8->endlist = FALSE;
@@ -377,6 +400,8 @@ gst_hls_media_playlist_dump (GstHLSMediaPlaylist * self)
 
   GST_DEBUG ("targetduration   : %" GST_TIME_FORMAT,
       GST_TIME_ARGS (self->targetduration));
+  GST_DEBUG ("partial segment targetduration   : %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (self->partial_targetduration));
   GST_DEBUG ("media_sequence   : %" G_GINT64_FORMAT, self->media_sequence);
   GST_DEBUG ("discont_sequence : %" G_GINT64_FORMAT, self->discont_sequence);
 
@@ -398,6 +423,7 @@ gst_hls_media_playlist_dump (GstHLSMediaPlaylist * self)
 
     GST_DEBUG ("  sequence:%" G_GINT64_FORMAT " discont_sequence:%"
         G_GINT64_FORMAT, segment->sequence, segment->discont_sequence);
+    GST_DEBUG ("    partial only: %s", segment->partial_only ? "YES" : "NO");
     GST_DEBUG ("    stream_time : %" GST_STIME_FORMAT,
         GST_STIME_ARGS (segment->stream_time));
     GST_DEBUG ("    duration    :  %" GST_TIME_FORMAT,
@@ -412,6 +438,25 @@ gst_hls_media_playlist_dump (GstHLSMediaPlaylist * self)
     }
     GST_DEBUG ("    uri         : %s %" G_GUINT64_FORMAT " %" G_GINT64_FORMAT,
         segment->uri, segment->offset, segment->size);
+
+    GST_DEBUG ("    is gap      : %s", segment->is_gap ? "YES" : "NO");
+
+    if (segment->partial_segments != NULL) {
+      guint part_idx;
+      for (part_idx = 0; part_idx < segment->partial_segments->len; part_idx++) {
+        GstM3U8PartialSegment *part =
+            g_ptr_array_index (segment->partial_segments, part_idx);
+        GST_DEBUG ("    partial segment %u:", part_idx);
+        GST_DEBUG ("      uri         : %s %" G_GUINT64_FORMAT " %"
+            G_GINT64_FORMAT, part->uri, part->offset, part->size);
+        GST_DEBUG ("      stream_time : %" GST_STIME_FORMAT,
+            GST_STIME_ARGS (part->stream_time));
+        GST_DEBUG ("      duration    : %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (part->duration));
+        GST_DEBUG ("      is gap      : %s", part->is_gap ? "YES" : "NO");
+        GST_DEBUG ("      independent : %s", part->independent ? "YES" : "NO");
+      }
+    }
   }
 #endif
 }
@@ -479,6 +524,62 @@ gst_hls_media_playlist_postprocess_pdt (GstHLSMediaPlaylist * self)
   }
 }
 
+static GstM3U8PartialSegment *
+gst_m3u8_parse_partial_segment (gchar * data, const gchar * base_uri)
+{
+  gchar *v, *a;
+  gboolean have_duration = FALSE;
+  GstM3U8PartialSegment *part = g_new0 (GstM3U8PartialSegment, 1);
+
+  part->ref_count = 1;
+  part->stream_time = GST_CLOCK_STIME_NONE;
+  part->size = -1;
+
+  while (data != NULL && parse_attributes (&data, &a, &v)) {
+    if (strcmp (a, "URI") == 0) {
+      g_free (part->uri);
+      part->uri = uri_join (base_uri, v);
+    } else if (strcmp (a, "DURATION") == 0) {
+      if (!time_from_double_in_string (v, NULL, &part->duration)) {
+        GST_WARNING ("Can't read EXT-X-PART duration");
+        goto malformed_line;
+      }
+      have_duration = TRUE;
+    } else if (strcmp (a, "INDEPENDENT") == 0) {
+      part->independent = g_ascii_strcasecmp (v, "yes") == 0;
+    } else if (strcmp (a, "GAP") == 0) {
+      part->is_gap = g_ascii_strcasecmp (v, "yes") == 0;
+    } else if (strcmp (a, "BYTERANGE") == 0) {
+      if (int64_from_string (v, &v, &part->size)) {
+        goto malformed_line;
+      }
+      if (*v == '@' && !int64_from_string (v + 1, &v, &part->offset)) {
+        goto malformed_line;
+      }
+    }
+  }
+
+  if (part->uri == NULL || !have_duration) {
+    goto required_attributes_missing;
+  }
+
+  return part;
+
+required_attributes_missing:
+  {
+    GST_WARNING
+        ("EXT-X-PART description is missing required URI or DURATION attributes");
+    gst_m3u8_partial_segment_unref (part);
+    return NULL;
+  }
+malformed_line:
+  {
+    GST_WARNING ("Invalid EXT-X-PART entry in playlist");
+    gst_m3u8_partial_segment_unref (part);
+    return NULL;
+  }
+}
+
 /* Parse and create a new GstHLSMediaPlaylist */
 GstHLSMediaPlaylist *
 gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
@@ -487,7 +588,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
   gchar *input_data = data;
   GstHLSMediaPlaylist *self;
   gint val;
-  GstClockTime duration;
+  GstClockTime duration, partial_duration;
   gchar *title, *end;
   gboolean discontinuity = FALSE;
   gchar *current_key = NULL;
@@ -499,6 +600,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
   GDateTime *date_time = NULL;
   GstM3U8InitFile *last_init_file = NULL;
   GstM3U8MediaSegment *previous = NULL;
+  GPtrArray *partial_segments = NULL;
   gboolean is_gap = FALSE;
 
   GST_LOG ("uri: %s", uri);
@@ -523,6 +625,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
   self->last_data = g_strdup (data);
 
   duration = 0;
+  partial_duration = 0;
   title = NULL;
   data += 7;
   while (TRUE) {
@@ -552,17 +655,22 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
         data = NULL;
         date_time = NULL;
         duration = 0;
+        partial_duration = 0;
         g_free (title);
         title = NULL;
         discontinuity = FALSE;
         size = offset = -1;
         is_gap = FALSE;
+        if (partial_segments != NULL) {
+          g_ptr_array_free (partial_segments, TRUE);
+          partial_segments = NULL;
+        }
         goto next_line;
       }
       if (data != NULL) {
         GstM3U8MediaSegment *file;
         /* We can finally create the segment */
-        /* The disconinuity sequence number is only stored if the header has
+        /* The discontinuity sequence number is only stored if the header has
          * EXT-X-DISCONTINUITY-SEQUENCE present.  */
         file =
             gst_m3u8_media_segment_new (data, title, duration, mediasequence++,
@@ -593,8 +701,12 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
         if (last_init_file)
           file->init_file = gst_m3u8_init_file_ref (last_init_file);
 
+        file->partial_segments = partial_segments;
+        partial_segments = NULL;
+
         date_time = NULL;       /* Ownership was passed to the segment */
         duration = 0;
+        partial_duration = 0;
         title = NULL;           /* Ownership was passed to the segment */
         discontinuity = FALSE;
         size = offset = -1;
@@ -763,6 +875,36 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
         }
       } else if (g_str_has_prefix (data_ext_x, "GAP:")) {
         is_gap = TRUE;
+      } else if (g_str_has_prefix (data_ext_x, "PART:")) {
+        GstM3U8PartialSegment *part = NULL;
+
+        part =
+            gst_m3u8_parse_partial_segment (data + strlen ("#EXT-X-PART:"),
+            self->base_uri ? self->base_uri : self->uri);
+        if (part == NULL)
+          goto next_line;
+
+        if (partial_segments == NULL) {
+          partial_segments = g_ptr_array_new_full (2,
+              (GDestroyNotify) gst_m3u8_partial_segment_unref);
+        }
+        g_ptr_array_add (partial_segments, part);
+        partial_duration += part->duration;
+
+      } else if (g_str_has_prefix (data_ext_x, "PART-INF:")) {
+        gchar *v, *a;
+
+        data += strlen ("#EXT-X-PART-INF:");
+
+        while (data != NULL && parse_attributes (&data, &a, &v)) {
+          if (strcmp (a, "PART-TARGET") == 0) {
+            if (!time_from_double_in_string (v, NULL,
+                    &self->partial_targetduration)) {
+              GST_WARNING ("Invalid PART-TARGET");
+              goto next_line;
+            }
+          }
+        }
       } else {
         GST_LOG ("Ignored line: %s", data);
       }
@@ -775,6 +917,59 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
     if (!end)
       break;
     data = g_utf8_next_char (end);      /* skip \n */
+  }
+
+  /* If there are trailing partial segments at the end,
+   * create a dummy segment to hold them */
+  if (partial_segments != NULL) {
+    GstM3U8MediaSegment *file;
+    GST_DEBUG ("Creating dummy segment for trailing partial segments");
+
+    /* The discontinuity sequence number is only stored if the header has
+     * EXT-X-DISCONTINUITY-SEQUENCE present.  */
+    file =
+        gst_m3u8_media_segment_new (NULL, title, partial_duration,
+        mediasequence++, dsn, size, offset);
+
+    file->partial_only = TRUE;
+
+    self->duration += partial_duration;
+
+    file->is_gap = is_gap;
+
+    /* set encryption params */
+    if (current_key != NULL) {
+      file->key = g_strdup (current_key);
+      if (have_iv) {
+        memcpy (file->iv, iv, sizeof (iv));
+      } else {
+        /* An EXT-X-KEY tag with a KEYFORMAT of "identity" that does
+         * not have an IV attribute indicates that the Media Sequence
+         * Number is to be used as the IV when decrypting a Media
+         * Segment, by putting its big-endian binary representation
+         * into a 16-octet (128-bit) buffer and padding (on the left)
+         * with zeros. */
+        guint8 *iv = file->iv + 12;
+        GST_WRITE_UINT32_BE (iv, file->sequence);
+      }
+    }
+
+    file->datetime = date_time;
+    file->discont = discontinuity;
+    if (last_init_file)
+      file->init_file = gst_m3u8_init_file_ref (last_init_file);
+
+    file->partial_segments = partial_segments;
+    partial_segments = NULL;
+
+    date_time = NULL;           /* Ownership was passed to the partial segment */
+    duration = 0;
+    partial_duration = 0;
+    title = NULL;               /* Ownership was passed to the partial segment */
+    discontinuity = FALSE;
+    size = offset = -1;
+    g_ptr_array_add (self->segments, file);
+    previous = file;
   }
 
   /* Clean up date that wasn't freed / handed to a segment */
@@ -1445,7 +1640,7 @@ gst_hls_media_playlist_is_live (GstHLSMediaPlaylist * m3u8)
   return is_live;
 }
 
-gchar *
+static gchar *
 uri_join (const gchar * uri1, const gchar * uri2)
 {
   gchar *uri_copy, *tmp, *ret = NULL;
@@ -1617,7 +1812,7 @@ gst_hls_rendition_stream_type_get_name (GstHLSRenditionStreamType mtype)
   return nicks[mtype];
 }
 
-/* returns unquoted copy of string */
+/* returns copy of string with surrounding quotation marks removed */
 static gchar *
 gst_m3u8_unquote (const gchar * str)
 {

@@ -35,6 +35,7 @@ G_BEGIN_DECLS
 typedef struct _GstHLSMediaPlaylist GstHLSMediaPlaylist;
 typedef struct _GstHLSTimeMap GstHLSTimeMap;
 typedef struct _GstM3U8MediaSegment GstM3U8MediaSegment;
+typedef struct _GstM3U8PartialSegment GstM3U8PartialSegment;
 typedef struct _GstM3U8InitFile GstM3U8InitFile;
 typedef struct _GstHLSRenditionStream GstHLSRenditionStream;
 typedef struct _GstM3U8Client GstM3U8Client;
@@ -43,6 +44,7 @@ typedef struct _GstHLSMasterPlaylist GstHLSMasterPlaylist;
 
 #define GST_HLS_MEDIA_PLAYLIST(m) ((GstHLSMediaPlaylist*)m)
 #define GST_M3U8_MEDIA_SEGMENT(f) ((GstM3U8MediaSegment*)f)
+#define GST_M3U8_PARTIAL_SEGMENT(p) ((GstM3U8PartialSegment*)p)
 
 #define GST_HLS_MEDIA_PLAYLIST_LOCK(m) g_mutex_lock (&m->lock);
 #define GST_HLS_MEDIA_PLAYLIST_UNLOCK(m) g_mutex_unlock (&m->lock);
@@ -82,6 +84,8 @@ struct _GstHLSMediaPlaylist
 
   /* Media Playlist Tags */
   GstClockTime targetduration;  /* EXT-X-TARGETDURATION, default GST_CLOCK_TIME_NONE */
+  GstClockTime partial_targetduration;  /* EXT-X-PART-INF, default GST_CLOCK_TIME_NONE */
+
   gint64 media_sequence;	/* EXT-X-MEDIA-SEQUENCE, MSN of the first Media
 				   Segment in the playlist. */
   gint64 discont_sequence;	/* EXT-X-DISCONTINUITY-SEQUENCE. Default : 0 */
@@ -128,6 +132,31 @@ GstHLSMediaPlaylist * gst_hls_media_playlist_ref (GstHLSMediaPlaylist * m3u8);
 void                  gst_hls_media_playlist_unref (GstHLSMediaPlaylist * m3u8);
 
 /**
+ * GstM3U8PartialSegment:
+ *
+ * Official term in RFC : "Partial Segment"
+ *
+ */
+struct _GstM3U8PartialSegment
+{
+  gboolean is_gap; /* TRUE if this part is a gap */
+  gboolean independent; /* TRUE if there is an I-frame in the partial segment */
+  gchar *uri;
+  gint64 offset, size;
+
+  GstClockTimeDiff stream_time;	/* Computed stream time */
+  GstClockTime duration;
+
+  gint ref_count;               /* ATOMIC */
+};
+
+GstM3U8PartialSegment *
+gst_m3u8_partial_segment_ref   (GstM3U8PartialSegment *part);
+
+void
+gst_m3u8_partial_segment_unref (GstM3U8PartialSegment *part);
+
+/**
  * GstM3U8MediaSegment:
  *
  * Official term in RFC : "Media Segment"
@@ -137,6 +166,7 @@ void                  gst_hls_media_playlist_unref (GstHLSMediaPlaylist * m3u8);
 struct _GstM3U8MediaSegment
 {
   gboolean is_gap; /* TRUE if EXT-X-GAP was present for this segment */
+  gboolean partial_only; /* TRUE if this is the last segment in a playlist consisting of only EXT-X-PART and no full URL */
 
   gchar *title;
   GstClockTimeDiff stream_time;	/* Computed stream time */
@@ -148,9 +178,12 @@ struct _GstM3U8MediaSegment
   gchar *key;
   guint8 iv[16];
   gint64 offset, size;
-  gint ref_count;               /* ATOMIC */
   GstM3U8InitFile *init_file;   /* Media Initialization (hold ref) */
   GDateTime *datetime;		/* EXT-X-PROGRAM-DATE-TIME */
+
+  GPtrArray *partial_segments; /* If there are Partial Segments for this Media Segment */
+
+  gint ref_count;               /* ATOMIC */
 };
 
 struct _GstM3U8InitFile
@@ -169,7 +202,6 @@ gst_m3u8_media_segment_ref   (GstM3U8MediaSegment * mfile);
 
 void
 gst_m3u8_media_segment_unref (GstM3U8MediaSegment * mfile);
-
 
 gboolean
 gst_hls_media_playlist_has_same_data (GstHLSMediaPlaylist * m3u8,
