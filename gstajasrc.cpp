@@ -1339,26 +1339,8 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
                    (int)reference_source);
 
   self->device->device->SetReference(reference_source);
-
-  switch (self->timecode_index) {
-    case GST_AJA_TIMECODE_INDEX_VITC:
-      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, true);
-      break;
-    case GST_AJA_TIMECODE_INDEX_ATC_LTC:
-      self->tc_index = ::NTV2InputSourceToTimecodeIndex(input_source, false);
-      break;
-    case GST_AJA_TIMECODE_INDEX_LTC1:
-      self->tc_index = ::NTV2_TCINDEX_LTC1;
-      self->device->device->SetLTCInputEnable(true);
-      break;
-    case GST_AJA_TIMECODE_INDEX_LTC2:
-      self->tc_index = ::NTV2_TCINDEX_LTC2;
-      self->device->device->SetLTCInputEnable(true);
-      break;
-    default:
-      g_assert_not_reached();
-      break;
-  }
+  self->device->device->SetLTCInputEnable(true);
+  self->device->device->SetRP188SourceFilter(self->channel, 0xff);
 
   guint video_buffer_size = ::GetVideoActiveSize(
       self->video_format, ::NTV2_FBF_10BIT_YCBCR, self->vanc_mode);
@@ -2366,9 +2348,30 @@ restart:
         gst_buffer_set_size(anc_buffer2,
                             transfer.GetCapturedAncByteCount(true));
 
+      NTV2TCIndex tc_index;
+      switch (self->timecode_index) {
+        case GST_AJA_TIMECODE_INDEX_VITC:
+          tc_index = ::NTV2InputSourceToTimecodeIndex(
+              self->configured_input_source, true);
+          break;
+        case GST_AJA_TIMECODE_INDEX_ATC_LTC:
+          tc_index = ::NTV2InputSourceToTimecodeIndex(
+              self->configured_input_source, false);
+          break;
+        case GST_AJA_TIMECODE_INDEX_LTC1:
+          tc_index = ::NTV2_TCINDEX_LTC1;
+          break;
+        case GST_AJA_TIMECODE_INDEX_LTC2:
+          tc_index = ::NTV2_TCINDEX_LTC2;
+          break;
+        default:
+          g_assert_not_reached();
+          break;
+      }
+
       NTV2_RP188 time_code;
       transfer.acTransferStatus.acFrameStamp.GetInputTimeCode(time_code,
-                                                              self->tc_index);
+                                                              tc_index);
 
       gint64 frame_time = transfer.acTransferStatus.acFrameStamp.acFrameTime;
       gint64 now_sys = g_get_real_time();

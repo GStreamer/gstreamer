@@ -81,7 +81,6 @@ struct _GstAjaSrc {
   bool quad_mode;
   NTV2VANCMode vanc_mode;
   NTV2InputSource configured_input_source;
-  NTV2TCIndex tc_index;
 
   GstVideoInfo configured_info;  // Based on properties
   GstVideoInfo current_info;     // Based on properties + stream metadata
