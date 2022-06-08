@@ -39,6 +39,9 @@
 #define GST_CAT_DEFAULT hls2_debug
 
 static gchar *uri_join (const gchar * uri, const gchar * path);
+static void
+gst_m3u8_media_segment_fill_partial_stream_times (GstM3U8MediaSegment *
+    segment);
 
 GstHLSMediaPlaylist *
 gst_hls_media_playlist_ref (GstHLSMediaPlaylist * m3u8)
@@ -1172,6 +1175,8 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
     for (iter = 0; iter < len; iter++) {
       GstM3U8MediaSegment *segment = g_ptr_array_index (self->segments, iter);
       segment->stream_time = stream_time;
+      gst_m3u8_media_segment_fill_partial_stream_times (segment);
+
       stream_time += segment->duration;
     }
   }
@@ -1289,6 +1294,24 @@ gst_hls_media_playlist_recalculate_dsn (GstHLSMediaPlaylist * playlist,
 }
 
 
+static void
+gst_m3u8_media_segment_fill_partial_stream_times (GstM3U8MediaSegment * segment)
+{
+  guint idx;
+  GstClockTimeDiff stream_time = segment->stream_time;
+
+  if (segment->partial_segments == NULL)
+    return;
+
+  for (idx = 0; idx < segment->partial_segments->len; idx++) {
+    GstM3U8PartialSegment *part =
+        g_ptr_array_index (segment->partial_segments, idx);
+
+    part->stream_time = stream_time;
+    stream_time += part->duration;
+  }
+}
+
 /* Recalculate all segment stream time based on the stream time of the provided
  * anchor segment (which must belong to the playlist) */
 void
@@ -1316,6 +1339,7 @@ gst_hls_media_playlist_recalculate_stream_time (GstHLSMediaPlaylist * playlist,
     cand->stream_time = prev->stream_time + prev->duration;
     GST_DEBUG ("Forward iter %d %" GST_STIME_FORMAT, iter,
         GST_STIME_ARGS (cand->stream_time));
+    gst_m3u8_media_segment_fill_partial_stream_times (cand);
     prev = cand;
   }
 
@@ -1326,6 +1350,7 @@ gst_hls_media_playlist_recalculate_stream_time (GstHLSMediaPlaylist * playlist,
     cand->stream_time = prev->stream_time - cand->duration;
     GST_DEBUG ("Backward iter %d %" GST_STIME_FORMAT, iter,
         GST_STIME_ARGS (cand->stream_time));
+    gst_m3u8_media_segment_fill_partial_stream_times (cand);
     prev = cand;
   }
 }
@@ -1536,6 +1561,7 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
             &segment->stream_time, &stream_time_offset);
       }
       res->stream_time = segment->stream_time + stream_time_offset;
+      gst_m3u8_media_segment_fill_partial_stream_times (res);
     }
     if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist))
       gst_hls_media_playlist_recalculate_stream_time (playlist, res);
@@ -1660,6 +1686,7 @@ retry_without_dsn:
 
     }
     res->stream_time = cand->stream_time + stream_time_offset;
+    gst_m3u8_media_segment_fill_partial_stream_times (res);
   }
 
   if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist))
