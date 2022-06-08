@@ -1956,24 +1956,33 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
   }
 
   /* Synchronize playlist with previous one */
-  if (stream->playlist) {
-    if (!gst_hls_media_playlist_sync_to_playlist (new_playlist,
-            stream->playlist)) {
-      /* Failure to sync is only fatal for variant streams. */
-      if (stream->is_variant) {
-        GST_ERROR_OBJECT (stream,
-            "Could not synchronize new variant playlist with previous one !");
-        return FALSE;
-      }
-      /* For rendition streams, we can attempt synchronization against the
-       * variant playlist which is constantly updated */
-      if (!gst_hls_media_playlist_sync_to_playlist (new_playlist,
-              demux->main_stream->playlist)) {
-        GST_ERROR_OBJECT (stream,
-            "Could not do fallback synchronization of rendition stream to variant stream");
-        return FALSE;
-      }
+  if (stream->playlist
+      && !gst_hls_media_playlist_sync_to_playlist (new_playlist,
+          stream->playlist)) {
+    /* Failure to synchronize with the previous media playlist is only fatal for
+     * variant streams. */
+    if (stream->is_variant) {
+      GST_ERROR_OBJECT (stream,
+          "Could not synchronize new variant playlist with previous one !");
+      return FALSE;
     }
+
+    /* For rendition streams, we can attempt synchronization against the
+     * variant playlist which is constantly updated */
+    if (demux->main_stream->playlist
+        && !gst_hls_media_playlist_sync_to_playlist (new_playlist,
+            demux->main_stream->playlist)) {
+      GST_ERROR_OBJECT (stream,
+          "Could not do fallback synchronization of rendition stream to variant stream");
+      return FALSE;
+    }
+  } else if (!stream->is_variant && demux->main_stream->playlist) {
+    /* For initial rendition media playlist, attempt to synchronize the playlist
+     * against the variant stream. This is non-fatal if it fails. */
+    GST_DEBUG_OBJECT (stream,
+        "Attempting to synchronize initial rendition stream with variant stream");
+    gst_hls_media_playlist_sync_to_playlist (new_playlist,
+        demux->main_stream->playlist);
   }
 
   if (stream->current_segment) {
