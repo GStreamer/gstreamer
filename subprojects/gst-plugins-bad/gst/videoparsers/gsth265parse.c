@@ -2086,6 +2086,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
   gboolean modified = FALSE;
   GstBuffer *buf = NULL;
   GstStructure *s = NULL;
+  gint width, height;
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD
               (h265parse))))
@@ -2242,7 +2243,6 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     if (G_UNLIKELY (modified || h265parse->update_caps)) {
       gint fps_num = h265parse->fps_num;
       gint fps_den = h265parse->fps_den;
-      gint width, height;
       GstClockTime latency = 0;
 
       caps = gst_caps_copy (sink_caps);
@@ -2345,9 +2345,22 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     gst_h265_parse_get_par (h265parse, &par_n, &par_d);
     if (par_n != 0 && par_d != 0 &&
         (!s || !gst_structure_has_field (s, "pixel-aspect-ratio"))) {
-      GST_INFO_OBJECT (h265parse, "PAR %d/%d", par_n, par_d);
+      gint new_par_d = par_d;
+      /* Special case for some encoders which provide an 1:2 pixel aspect ratio
+       * for HEVC interlaced content, possibly to work around decoders that don't
+       * support field-based interlacing. Add some defensive checks to check for
+       * a "common" aspect ratio. */
+      if (par_n == 1 && par_d == 2
+          && gst_h265_parse_is_field_interlaced (h265parse)
+          && !gst_video_is_common_aspect_ratio (width, height, par_n, par_d)
+          && gst_video_is_common_aspect_ratio (width, height, 1, 1)) {
+        GST_WARNING_OBJECT (h265parse, "PAR 1/2 makes the aspect ratio of "
+            "a %d x %d frame uncommon. Switching to 1/1", width, height);
+        new_par_d = 1;
+      }
+      GST_INFO_OBJECT (h265parse, "PAR %d/%d", par_n, new_par_d);
       gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-          par_n, par_d, NULL);
+          par_n, new_par_d, NULL);
     }
 
     /* set profile and level in caps */

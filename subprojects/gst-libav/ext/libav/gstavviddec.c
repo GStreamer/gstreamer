@@ -1101,6 +1101,8 @@ gst_ffmpegviddec_update_par (GstFFMpegVidDec * ffmpegdec,
   gboolean decoder_par_set = FALSE;
   gint demuxer_num = 1, demuxer_denom = 1;
   gint decoder_num = 1, decoder_denom = 1;
+  GstVideoCodecFrame *out_frame;
+  GstFFMpegVidDecVideoFrame *out_dframe;
 
   if (in_info->par_n && in_info->par_d) {
     demuxer_num = in_info->par_n;
@@ -1127,14 +1129,38 @@ gst_ffmpegviddec_update_par (GstFFMpegVidDec * ffmpegdec,
   if (decoder_par_set && !demuxer_par_set)
     goto use_decoder_par;
 
+  /* Special case for some encoders which provide an 1:2 pixel aspect ratio
+   * for HEVC interlaced content, possibly to work around decoders that don't
+   * support field-based interlacing. Add some defensive checks to check for
+   * a "common" aspect ratio. */
+  out_dframe = ffmpegdec->picture->opaque;
+  out_frame = out_dframe->frame;
+
+  if (demuxer_num == 1 && demuxer_denom == 1 &&
+      decoder_num == 1 && decoder_denom == 2 &&
+      GST_BUFFER_FLAG_IS_SET (out_frame->input_buffer,
+          GST_VIDEO_BUFFER_FLAG_ONEFIELD) &&
+      gst_video_is_common_aspect_ratio (ffmpegdec->pic_width,
+          ffmpegdec->pic_height, 1, 2) &&
+      !gst_video_is_common_aspect_ratio (ffmpegdec->pic_width,
+          ffmpegdec->pic_height, 1, 1)) {
+    GST_WARNING_OBJECT (ffmpegdec,
+        "PAR 1/2 makes the aspect ratio of "
+        "a %d x %d frame uncommon. Switching to 1/1",
+        ffmpegdec->pic_width, ffmpegdec->pic_height);
+    goto use_demuxer_par;
+  }
+
   /* Both the demuxer and the decoder provide a PAR. If one of
    * the two PARs is 1:1 and the other one is not, use the one
    * that is not 1:1. */
-  if (demuxer_num == demuxer_denom && decoder_num != decoder_denom)
+  if (demuxer_num == demuxer_denom && decoder_num != decoder_denom) {
     goto use_decoder_par;
+  }
 
-  if (decoder_num == decoder_denom && demuxer_num != demuxer_denom)
+  if (decoder_num == decoder_denom && demuxer_num != demuxer_denom) {
     goto use_demuxer_par;
+  }
 
   /* Both PARs are non-1:1, so use the PAR provided by the demuxer */
   goto use_demuxer_par;
