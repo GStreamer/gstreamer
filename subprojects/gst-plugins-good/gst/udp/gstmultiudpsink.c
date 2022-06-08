@@ -333,7 +333,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEND_DUPLICATES,
       g_param_spec_boolean ("send-duplicates", "Send Duplicates",
-          "When a distination/port pair is added multiple times, send packets "
+          "When a destination/port pair is added multiple times, send packets "
           "multiple times as well", DEFAULT_SEND_DUPLICATES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

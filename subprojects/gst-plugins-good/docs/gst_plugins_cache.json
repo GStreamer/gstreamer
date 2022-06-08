@@ -24235,7 +24235,7 @@
                         "writable": true
                     },
                     "send-duplicates": {
-                        "blurb": "When a distination/port pair is added multiple times, send packets multiple times as well",
+                        "blurb": "When a destination/port pair is added multiple times, send packets multiple times as well",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
