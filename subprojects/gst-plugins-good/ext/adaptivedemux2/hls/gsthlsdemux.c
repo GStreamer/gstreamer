@@ -449,6 +449,10 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     GstAdaptiveDemux2Stream *stream =
         GST_ADAPTIVE_DEMUX2_STREAM_CAST (walk->data);
 
+    /* Only seek on selected streams */
+    if (!gst_adaptive_demux2_stream_is_selected (stream))
+      continue;
+
     if (gst_hls_demux_stream_seek (stream, rate >= 0, flags, target_pos,
             &current_pos) != GST_FLOW_OK) {
       GST_ERROR_OBJECT (stream, "Failed to seek on stream");
