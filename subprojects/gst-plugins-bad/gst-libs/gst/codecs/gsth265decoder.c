@@ -757,6 +757,15 @@ gst_h265_decoder_process_slice (GstH265Decoder * self, GstH265Slice * slice)
   if (ret != GST_FLOW_OK)
     return ret;
 
+  /* The used SPS may not be the latest parsed one, make
+   * sure we have updated it before decode the frame */
+  ret = gst_h265_decoder_process_sps (self,
+      priv->current_slice.header.pps->sps);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "Failed to process sps");
+    return ret;
+  }
+
   priv->active_pps = priv->current_slice.header.pps;
   priv->active_sps = priv->active_pps->sps;
 
@@ -932,10 +941,10 @@ static GstFlowReturn
 gst_h265_decoder_decode_nalu (GstH265Decoder * self,
     GstH265DecoderNalUnit * nalu)
 {
-  if (!nalu->is_slice)
-    return gst_h265_decoder_process_sps (self, &nalu->unit.sps);
+  if (nalu->is_slice)
+    return gst_h265_decoder_process_slice (self, &nalu->unit.slice);
 
-  return gst_h265_decoder_process_slice (self, &nalu->unit.slice);
+  return GST_FLOW_OK;
 }
 
 static void
@@ -991,7 +1000,6 @@ gst_h265_decoder_parse_codec_data (GstH265Decoder * self, const guint8 * data,
   guint num_nals, i, j;
   GstH265ParserResult pres;
   GstH265NalUnit nalu;
-  GstFlowReturn ret = GST_FLOW_OK;
   GstH265VPS vps;
   GstH265SPS sps;
   GstH265PPS pps;
@@ -1043,12 +1051,6 @@ gst_h265_decoder_parse_codec_data (GstH265Decoder * self, const guint8 * data,
           if (pres != GST_H265_PARSER_OK) {
             GST_WARNING_OBJECT (self, "Failed to parse SPS");
             return GST_FLOW_ERROR;
-          }
-
-          ret = gst_h265_decoder_process_sps (self, &sps);
-          if (ret != GST_FLOW_OK) {
-            GST_WARNING_OBJECT (self, "Failed to process SPS");
-            return ret;
           }
           break;
         case GST_H265_NAL_PPS:
