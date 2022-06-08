@@ -439,9 +439,11 @@ GST_START_TEST (test_live_playlist_rotated)
 
   pl = load_m3u8 (LIVE_ROTATED_PLAYLIST);
   file2 = gst_hls_media_playlist_sync_to_segment (pl, file);
-  fail_unless (file2 != NULL);
+  /* We can't sync the previous media plyalist to the new one, they are
+   * disconnected. A new synchronization point will be established later.
+   */
+  fail_unless (file2 == NULL);
   gst_m3u8_media_segment_unref (file);
-  gst_m3u8_media_segment_unref (file2);
 
   /* FIXME: Sequence should last - 3. Should it? */
   /* Check first media segment */
