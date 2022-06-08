@@ -232,6 +232,33 @@ main.mp4\n\
 main.mp4\n\
 #EXT-X-ENDLIST";
 
+static const gchar *LOW_LATENCY_PLAYLIST = "#EXTM3U\n\
+#EXT-X-VERSION:7\n\
+#EXT-X-TARGETDURATION:4\n\
+#EXT-X-PART-INF:PART-TARGET=2\n\
+#EXTINF:4.00008,\n\
+fileSequence268.mp4\n\
+#EXTINF:4.00008,\n\
+fileSequence269.mp4\n\
+#EXTINF:4.00008,\n\
+fileSequence270.mp4\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"filePart271.0.mp4\"\n\
+#EXT-X-PART:DURATION=2.00004,URI=\"filePart271.1.mp4\"\n\
+#EXTINF:4.00008,\n\
+fileSequence271.mp4\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"filePart272.0.mp4\"\n\
+#EXT-X-PART:DURATION=0.50001,URI=\"filePart272.1.mp4\"\n\
+#EXTINF:2.50005,\n\
+fileSequence272.mp4\n\
+#EXT-X-DISCONTINUITY\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"midRoll273.0.mp4\"\n\
+#EXT-X-PART:DURATION=2.00004,URI=\"midRoll273.1.mp4\"\n\
+#EXTINF:4.00008,\n\
+midRoll273.mp4\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"midRoll274.0.mp4\"\n\
+#EXT-X-PRELOAD-HINT:TYPE=PART,URI=\"midRoll274.1.mp4\"\n\
+#EXT-X-RENDITION-REPORT:URI=\"/1M/LL-HLS.m3u8\",LAST-MSN=274,LAST-PART=1";
+
 static GstHLSMediaPlaylist *
 load_m3u8 (const gchar * data)
 {
@@ -845,6 +872,50 @@ GST_START_TEST (test_map_tag)
 
 GST_END_TEST;
 
+GST_START_TEST (test_low_latency_playlist)
+{
+  GstHLSMediaPlaylist *pl;
+  GPtrArray *segments;
+  GstM3U8MediaSegment *seg;
+
+  /* Test low latency playlist features. EXT-X-PART-INF and EXT-X-PART
+   *
+   * There are 6 complete segments, and 1 dummy trailing segment containing
+   * only a partial segment
+   */
+
+  pl = load_m3u8 (LOW_LATENCY_PLAYLIST);
+  fail_unless (pl != NULL);
+
+  segments = pl->segments;
+
+  assert_equals_int (segments->len, 7);
+
+  for (gsize i = 0; i < segments->len; i++) {
+    GstM3U8MediaSegment *file = g_ptr_array_index (segments, i);
+
+    /* The first segments are full, with no partial entries */
+    if (i < 3) {
+      fail_unless (file->partial_segments == NULL);
+    } else if (i < 6) {
+      fail_unless (file->partial_segments != NULL);
+      /* 2 partial segments expected */
+      fail_unless (file->partial_segments->len == 2);
+    } else {
+      fail_unless (file->partial_segments != NULL);
+      /* 1 partial segment expected in the last segment */
+      fail_unless (file->partial_segments->len == 1);
+    }
+  }
+
+  /* The final segment only has one partial segment */
+  seg = g_ptr_array_index (segments, 6);
+  fail_unless (seg->partial_only == TRUE);
+
+  gst_hls_media_playlist_unref (pl);
+}
+
+GST_END_TEST;
 static Suite *
 hlsdemux_suite (void)
 {
@@ -879,6 +950,7 @@ hlsdemux_suite (void)
   tcase_add_test (tc_m3u8, test_url_with_slash_query_param);
   tcase_add_test (tc_m3u8, test_stream_inf_tag);
   tcase_add_test (tc_m3u8, test_map_tag);
+  tcase_add_test (tc_m3u8, test_low_latency_playlist);
   return s;
 }
 
