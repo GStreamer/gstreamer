@@ -520,6 +520,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   VASurfaceID surface;
   guint32 i, fourcc, rt_format, export_flags;
   GDestroyNotify buffer_destroy = NULL;
+  gsize object_offset[4];
 
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
 
@@ -598,6 +599,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     GstMemory *mem = gst_dmabuf_allocator_alloc (allocator, fd, size);
     guint64 *drm_mod = g_new (guint64, 1);
 
+    object_offset[i] = gst_buffer_get_size (buffer);
     gst_buffer_append_memory (buffer, mem);
     buf->mems[i] = mem;
 
@@ -620,19 +622,23 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
         drm_mod, g_free);
 
     if (G_UNLIKELY (info))
-      GST_VIDEO_INFO_SIZE (info) += size;
+      GST_VIDEO_INFO_PLANE_OFFSET (info, i) = GST_VIDEO_INFO_SIZE (info);
 
     GST_LOG_OBJECT (self, "buffer %p: new dmabuf %d / surface %#x [%dx%d] "
         "size %" G_GSIZE_FORMAT " drm mod %#" G_GINT64_MODIFIER "x",
         buffer, fd, surface,
         GST_VIDEO_INFO_WIDTH (&self->info), GST_VIDEO_INFO_HEIGHT (&self->info),
-        GST_VIDEO_INFO_SIZE (&self->info), *drm_mod);
+        size, *drm_mod);
   }
 
   if (G_UNLIKELY (info)) {
+    GST_VIDEO_INFO_SIZE (info) = gst_buffer_get_size (buffer);
+
     for (i = 0; i < desc.num_layers; i++) {
       g_assert (desc.layers[i].num_planes == 1);
-      GST_VIDEO_INFO_PLANE_OFFSET (info, i) = desc.layers[i].offset[0];
+      GST_VIDEO_INFO_PLANE_OFFSET (info, i) =
+          object_offset[desc.layers[i].object_index[0]] +
+          desc.layers[i].offset[0];
       GST_VIDEO_INFO_PLANE_STRIDE (info, i) = desc.layers[i].pitch[0];
     }
   } else {
