@@ -261,6 +261,17 @@ double_from_string (gchar * ptr, gchar ** endptr, gdouble * val)
 }
 
 static gboolean
+time_from_double_in_string (gchar * ptr, gchar ** endptr, GstClockTime * val)
+{
+  double fval;
+  if (!double_from_string (ptr, endptr, &fval)) {
+    return FALSE;
+  }
+  *val = fval * (gdouble) GST_SECOND;
+  return TRUE;
+}
+
+static gboolean
 parse_attributes (gchar ** ptr, gchar ** a, gchar ** v)
 {
   gchar *end = NULL, *p, *ve;
@@ -592,16 +603,18 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
       }
 
     } else if (g_str_has_prefix (data, "#EXTINF:")) {
-      gdouble fval;
-      if (!double_from_string (data + 8, &data, &fval)) {
+      if (!time_from_double_in_string (data + 8, &data, &duration)) {
         GST_WARNING ("Can't read EXTINF duration");
         goto next_line;
       }
-      duration = fval * (gdouble) GST_SECOND;
-      if (self->targetduration > 0 && duration > self->targetduration) {
-        GST_DEBUG ("EXTINF duration (%" GST_TIME_FORMAT
-            ") > TARGETDURATION (%" GST_TIME_FORMAT ")",
-            GST_TIME_ARGS (duration), GST_TIME_ARGS (self->targetduration));
+
+      /* As of protocol version 6, targetduration is maximum segment duration
+       * rounded to nearest integer seconds,so can be up to 0.5 seconds too low */
+      if (self->targetduration > 0
+          && duration > (self->targetduration + GST_SECOND / 2)) {
+        GST_DEBUG ("EXTINF duration (%" GST_TIME_FORMAT ") > TARGETDURATION (%"
+            GST_TIME_FORMAT ")", GST_TIME_ARGS (duration),
+            GST_TIME_ARGS (self->targetduration));
       }
       if (!data || *data != ',')
         goto next_line;
