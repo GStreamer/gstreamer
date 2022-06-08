@@ -102,9 +102,15 @@ foreach f: [
         'ext/closedcaption/raw_decoder.[ch]',
         'ext/closedcaption/sampling_par.[ch]',
         'ext/closedcaption/sliced.[ch]',
-        'ext/*/*.h',
-        'sys/*/*.h',
-        'gst/*/*.h',
+        'ext/lv2/gstlv2utils.h',
+        'ext/closedcaption/hamm.h',
+        'ext/closedcaption/io-sim.h',
+        'ext/avtp/gstavtpcrfbase.h',
+        'sys/nvcodec/nvEncodeAPI.h',
+        'sys/nvcodec/cuviddec.h',
+        'sys/nvcodec/nvcuvid.h',
+        'sys/winks/ksvideohelpers.h',
+        'gst/videoparsers/gstjpeg2000parse.h',
         'gst-libs/gst/*/*-prelude.h',
         'gst-libs/gst/vulkan/vulkan_fwd.h'
     ]
