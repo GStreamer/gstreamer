@@ -37,6 +37,8 @@ typedef struct _GstHLSTimeMap GstHLSTimeMap;
 typedef struct _GstM3U8MediaSegment GstM3U8MediaSegment;
 typedef struct _GstM3U8PartialSegment GstM3U8PartialSegment;
 typedef struct _GstM3U8InitFile GstM3U8InitFile;
+typedef enum _GstM3U8PreloadHintType GstM3U8PreloadHintType;
+typedef struct _GstM3U8PreloadHint GstM3U8PreloadHint;
 typedef struct _GstHLSRenditionStream GstHLSRenditionStream;
 typedef struct _GstM3U8Client GstM3U8Client;
 typedef struct _GstHLSVariantStream GstHLSVariantStream;
@@ -105,6 +107,8 @@ struct _GstHLSMediaPlaylist
 
   GPtrArray *segments;		/* Array of GstM3U8MediaSegment */
 
+  GPtrArray *preload_hints;		/* Array of GstM3U8PreloadHint */
+
   /* Generated information */
   GstClockTime duration;	/* The estimated total duration of all segments
 				   contained in this playlist */
@@ -163,6 +167,33 @@ gst_m3u8_partial_segment_ref   (GstM3U8PartialSegment *part);
 
 void
 gst_m3u8_partial_segment_unref (GstM3U8PartialSegment *part);
+
+enum _GstM3U8PreloadHintType {
+  M3U8_PRELOAD_HINT_MAP,
+  M3U8_PRELOAD_HINT_PART,
+};
+
+/**
+ * GstM3U8PreloadHint:
+ *
+ * Official term in RFC : "Preload Hint"
+ *
+ */
+struct _GstM3U8PreloadHint
+{
+  GstM3U8PreloadHintType hint_type;
+
+  gchar *uri;
+  gint64 offset, size;
+
+  gint ref_count;               /* ATOMIC */
+};
+
+GstM3U8PreloadHint *
+gst_m3u8_preload_hint_ref  (GstM3U8PreloadHint *hint);
+
+void
+gst_m3u8_preload_hint_unref (GstM3U8PreloadHint *hint);
 
 /**
  * GstM3U8MediaSegment:

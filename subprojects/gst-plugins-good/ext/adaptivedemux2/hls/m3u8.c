@@ -60,6 +60,9 @@ gst_hls_media_playlist_unref (GstHLSMediaPlaylist * self)
 
     g_ptr_array_free (self->segments, TRUE);
 
+    if (self->preload_hints != NULL)
+      g_ptr_array_free (self->preload_hints, TRUE);
+
     g_free (self->last_data);
     g_mutex_clear (&self->lock);
     g_free (self);
@@ -135,6 +138,26 @@ gst_m3u8_partial_segment_unref (GstM3U8PartialSegment * part)
   if (g_atomic_int_dec_and_test (&part->ref_count)) {
     g_free (part->uri);
     g_free (part);
+  }
+}
+
+GstM3U8PreloadHint *
+gst_m3u8_preload_hint_ref (GstM3U8PreloadHint * hint)
+{
+  g_assert (hint != NULL && hint->ref_count > 0);
+
+  g_atomic_int_add (&hint->ref_count, 1);
+  return hint;
+}
+
+void
+gst_m3u8_preload_hint_unref (GstM3U8PreloadHint * hint)
+{
+  g_return_if_fail (hint != NULL && hint->ref_count > 0);
+
+  if (g_atomic_int_dec_and_test (&hint->ref_count)) {
+    g_free (hint->uri);
+    g_free (hint);
   }
 }
 
@@ -474,6 +497,28 @@ gst_hls_media_playlist_dump (GstHLSMediaPlaylist * self)
       }
     }
   }
+
+  if (self->preload_hints) {
+    GST_DEBUG ("Preload Hints: %d", self->preload_hints->len);
+    for (idx = 0; idx < self->preload_hints->len; idx++) {
+      GstM3U8PreloadHint *hint = g_ptr_array_index (self->preload_hints, idx);
+      const gchar *hint_type_str;
+      switch (hint->hint_type) {
+        case M3U8_PRELOAD_HINT_MAP:
+          hint_type_str = "MAP";
+          break;
+        case M3U8_PRELOAD_HINT_PART:
+          hint_type_str = "PART";
+          break;
+        default:
+          g_assert_not_reached ();
+      }
+
+      GST_DEBUG ("    preload hint %u: type %s", idx, hint_type_str);
+      GST_DEBUG ("      uri         : %s %" G_GUINT64_FORMAT " %"
+          G_GINT64_FORMAT, hint->uri, hint->offset, hint->size);
+    }
+  }
 #endif
 }
 
@@ -592,6 +637,62 @@ malformed_line:
   {
     GST_WARNING ("Invalid EXT-X-PART entry in playlist");
     gst_m3u8_partial_segment_unref (part);
+    return NULL;
+  }
+}
+
+static GstM3U8PreloadHint *
+gst_m3u8_parse_preload_hint (gchar * data, const gchar * base_uri)
+{
+  gchar *v, *a;
+  GstM3U8PreloadHint *hint = g_new0 (GstM3U8PreloadHint, 1);
+  gboolean have_hint_type = FALSE;
+
+  hint->ref_count = 1;
+  hint->size = -1;
+
+  while (data != NULL && parse_attributes (&data, &a, &v)) {
+    if (strcmp (a, "TYPE") == 0) {
+      if (g_ascii_strcasecmp (v, "MAP") == 0) {
+        hint->hint_type = M3U8_PRELOAD_HINT_MAP;
+      } else if (g_ascii_strcasecmp (v, "PART") == 0) {
+        hint->hint_type = M3U8_PRELOAD_HINT_PART;
+      } else {
+        GST_WARNING ("Unknown Preload Hint type %s", v);
+        goto malformed_line;
+      }
+      have_hint_type = TRUE;
+    } else if (strcmp (a, "URI") == 0) {
+      g_free (hint->uri);
+      hint->uri = uri_join (base_uri, v);
+    } else if (strcmp (a, "BYTERANGE-START") == 0) {
+      if (int64_from_string (v, NULL, &hint->offset)) {
+        goto malformed_line;
+      }
+    } else if (strcmp (a, "BYTERANGE-LENGTH") == 0) {
+      if (int64_from_string (v, NULL, &hint->size)) {
+        goto malformed_line;
+      }
+    }
+  }
+
+  if (hint->uri == NULL || !have_hint_type) {
+    goto required_attributes_missing;
+  }
+
+  return hint;
+
+required_attributes_missing:
+  {
+    GST_WARNING
+        ("EXT-X-PRELOAD-HINT is missing required URI or TYPE attributes");
+    gst_m3u8_preload_hint_unref (hint);
+    return NULL;
+  }
+malformed_line:
+  {
+    GST_WARNING ("Invalid EXT-X-PRELOAD-HINT entry in playlist");
+    gst_m3u8_preload_hint_unref (hint);
     return NULL;
   }
 }
@@ -960,6 +1061,20 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
       } else if (g_str_has_prefix (data_ext_x, "SERVER-CONTROL:")) {
         data += strlen ("#EXT-X-SERVER-CONTROL:");
         parse_server_control (self, data);
+      } else if (g_str_has_prefix (data_ext_x, "PRELOAD-HINT:")) {
+        GstM3U8PreloadHint *hint = NULL;
+
+        hint =
+            gst_m3u8_parse_preload_hint (data + strlen ("#EXT-X-PRELOAD-HINT:"),
+            self->base_uri ? self->base_uri : self->uri);
+        if (hint == NULL)
+          goto next_line;
+
+        if (self->preload_hints == NULL) {
+          self->preload_hints = g_ptr_array_new_full (1,
+              (GDestroyNotify) gst_m3u8_preload_hint_unref);
+        }
+        g_ptr_array_add (self->preload_hints, hint);
       } else {
         GST_LOG ("Ignored line: %s", data);
       }
