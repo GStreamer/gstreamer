@@ -110,7 +110,154 @@ typedef enum {
   GST_DECKLINK_MODE_NTSC2398_WIDESCREEN,
   GST_DECKLINK_MODE_PAL_WIDESCREEN,
   GST_DECKLINK_MODE_NTSC_P_WIDESCREEN,
-  GST_DECKLINK_MODE_PAL_P_WIDESCREEN
+  GST_DECKLINK_MODE_PAL_P_WIDESCREEN,
+
+  /**
+   * GstDecklinkModes::4kdcip2398:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp2398,
+  /**
+   * GstDecklinkModes::4kdcip24:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp24,
+  /**
+   * GstDecklinkModes::4kdcip25:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp25,
+  /**
+   * GstDecklinkModes::4kdcip2997:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp2997,
+  /**
+   * GstDecklinkModes::4kdcip30:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp30,
+  /**
+   * GstDecklinkModes::4kdcip50:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp50,
+  /**
+   * GstDecklinkModes::4kdcip5994:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp5994,
+  /**
+   * GstDecklinkModes::4kdcip60:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4Kp60,
+
+  /**
+   * GstDecklinkModes::8kp2398:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p2398,
+  /**
+   * GstDecklinkModes::8kp24:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p24,
+  /**
+   * GstDecklinkModes::8kp25:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p25,
+  /**
+   * GstDecklinkModes::8kp2997:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p2997,
+  /**
+   * GstDecklinkModes::8kp30:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p30,
+  /**
+   * GstDecklinkModes::8kp50:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p50,
+  /**
+   * GstDecklinkModes::8kp5994:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p5994,
+  /**
+   * GstDecklinkModes::8kp60:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_4320p60,
+
+  /**
+   * GstDecklinkModes::8kdcip2398:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp2398,
+  /**
+   * GstDecklinkModes::8kdcip24:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp24,
+  /**
+   * GstDecklinkModes::8kdcip25:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp25,
+  /**
+   * GstDecklinkModes::8kdcip2997:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp2997,
+  /**
+   * GstDecklinkModes::8kdcip30:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp30,
+  /**
+   * GstDecklinkModes::8kdcip50:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp50,
+  /**
+   * GstDecklinkModes::8kdcip5994:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp5994,
+  /**
+   * GstDecklinkModes::8kdcip60:
+   *
+   * Since: 1.22
+   */
+  GST_DECKLINK_MODE_8Kp60
 } GstDecklinkModeEnum;
 #define GST_TYPE_DECKLINK_MODE (gst_decklink_mode_get_type ())
 GType gst_decklink_mode_get_type (void);

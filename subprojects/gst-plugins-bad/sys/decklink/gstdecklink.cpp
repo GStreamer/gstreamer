@@ -99,6 +99,33 @@ gst_decklink_mode_get_type (void)
     {GST_DECKLINK_MODE_PAL_P_WIDESCREEN, "PAL SD 50p Widescreen",
         "pal-p-widescreen"},
 
+    {GST_DECKLINK_MODE_4Kp2398, "4k dci 23.98p", "4kdcip2398"},
+    {GST_DECKLINK_MODE_4Kp24, "4k dci 24p", "4kdcip24"},
+    {GST_DECKLINK_MODE_4Kp25, "4k dci 25p", "4kdcip25"},
+    {GST_DECKLINK_MODE_4Kp2997, "4k dci 29.97p", "4kdcip2997"},
+    {GST_DECKLINK_MODE_4Kp30, "4k dci 30p", "4kdcip30"},
+    {GST_DECKLINK_MODE_4Kp50, "4k dci 50p", "4kdcip50"},
+    {GST_DECKLINK_MODE_4Kp5994, "4k dci 59.94p", "4kdcip5994"},
+    {GST_DECKLINK_MODE_4Kp60, "4k dci 60p", "4kdcip60"},
+
+    {GST_DECKLINK_MODE_4320p2398, "8k 23.98p", "8kp2398"},
+    {GST_DECKLINK_MODE_4320p24, "8k 24p", "8kp24"},
+    {GST_DECKLINK_MODE_4320p25, "8k 25p", "8kp25"},
+    {GST_DECKLINK_MODE_4320p2997, "8k 29.97p", "8kp2997"},
+    {GST_DECKLINK_MODE_4320p30, "8k 30p", "8kp30"},
+    {GST_DECKLINK_MODE_4320p50, "8k 50p", "8kp50"},
+    {GST_DECKLINK_MODE_4320p5994, "8k 59.94p", "8kp5994"},
+    {GST_DECKLINK_MODE_4320p60, "8k 60p", "8kp60"},
+
+    {GST_DECKLINK_MODE_8Kp2398, "8k dci 23.98p", "8kdcip2398"},
+    {GST_DECKLINK_MODE_8Kp24, "8k dci 24p", "8kdcip24"},
+    {GST_DECKLINK_MODE_8Kp25, "8k dci 25p", "8kdcip25"},
+    {GST_DECKLINK_MODE_8Kp2997, "8k dci 29.97p", "8kdcip2997"},
+    {GST_DECKLINK_MODE_8Kp30, "8k dci 30p", "8kdcip30"},
+    {GST_DECKLINK_MODE_8Kp50, "8k dci 50p", "8kdcip50"},
+    {GST_DECKLINK_MODE_8Kp5994, "8k dci 59.94p", "8kdcip5994"},
+    {GST_DECKLINK_MODE_8Kp60, "8k dci 60p", "8kdcip60"},
+
     {0, NULL, NULL}
   };
 
@@ -385,7 +412,34 @@ static const GstDecklinkMode modes[] = {
   {bmdModeNTSC2398, 720, 486, 24000, 1001, true, NTSC_WS},
   {bmdModePAL, 720, 576, 25, 1, true, PAL_WS},
   {bmdModeNTSCp, 720, 486, 30000, 1001, false, NTSC_WS},
-  {bmdModePALp, 720, 576, 25, 1, false, PAL_WS}
+  {bmdModePALp, 720, 576, 25, 1, false, PAL_WS},
+
+  {bmdMode4kDCI2398, 4096, 2160, 24000, 1001, false, UHD},
+  {bmdMode4kDCI24, 4096, 2160, 24, 1, false, UHD},
+  {bmdMode4kDCI25, 4096, 2160, 25, 1, false, UHD},
+  {bmdMode4kDCI2997, 4096, 2160, 30000, 1001, false, UHD},
+  {bmdMode4kDCI30, 4096, 2160, 30, 1, false, UHD},
+  {bmdMode4kDCI50, 4096, 2160, 50, 1, false, UHD},
+  {bmdMode4kDCI5994, 4096, 2160, 60000, 1001, false, UHD},
+  {bmdMode4kDCI60, 4096, 2160, 60, 1, false, UHD},
+
+  {bmdMode8K4320p2398, 7680, 4320, 24000, 1001, false, UHD},
+  {bmdMode8K4320p24, 7680, 4320, 24, 1, false, UHD},
+  {bmdMode8K4320p25, 7680, 4320, 25, 1, false, UHD},
+  {bmdMode8K4320p2997, 7680, 4320, 30000, 1001, false, UHD},
+  {bmdMode8K4320p30, 7680, 4320, 30, 1, false, UHD},
+  {bmdMode8K4320p50, 7680, 4320, 50, 1, false, UHD},
+  {bmdMode8K4320p5994, 7680, 4320, 60000, 1001, false, UHD},
+  {bmdMode8K4320p60, 7680, 4320, 60, 1, false, UHD},
+
+  {bmdMode8kDCI2398, 8192, 4320, 24000, 1001, false, UHD},
+  {bmdMode8kDCI24, 8192, 4320, 24, 1, false, UHD},
+  {bmdMode8kDCI25, 8192, 4320, 25, 1, false, UHD},
+  {bmdMode8kDCI2997, 8192, 4320, 30000, 1001, false, UHD},
+  {bmdMode8kDCI30, 8192, 4320, 30, 1, false, UHD},
+  {bmdMode8kDCI50, 8192, 4320, 50, 1, false, UHD},
+  {bmdMode8kDCI5994, 8192, 4320, 60000, 1001, false, UHD},
+  {bmdMode8kDCI60, 8192, 4320, 60, 1, false, UHD},
 };
 
 static const struct
@@ -584,6 +638,78 @@ gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode)
       break;
     case bmdMode4K2160p60:
       displayMode = GST_DECKLINK_MODE_2160p60;
+      break;
+    case bmdMode4kDCI2398:
+      displayMode = GST_DECKLINK_MODE_4Kp2398;
+      break;
+    case bmdMode4kDCI24:
+      displayMode = GST_DECKLINK_MODE_4Kp24;
+      break;
+    case bmdMode4kDCI25:
+      displayMode = GST_DECKLINK_MODE_4Kp25;
+      break;
+    case bmdMode4kDCI2997:
+      displayMode = GST_DECKLINK_MODE_4Kp2997;
+      break;
+    case bmdMode4kDCI30:
+      displayMode = GST_DECKLINK_MODE_4Kp30;
+      break;
+    case bmdMode4kDCI50:
+      displayMode = GST_DECKLINK_MODE_4Kp50;
+      break;
+    case bmdMode4kDCI5994:
+      displayMode = GST_DECKLINK_MODE_4Kp5994;
+      break;
+    case bmdMode4kDCI60:
+      displayMode = GST_DECKLINK_MODE_4Kp60;
+      break;
+    case bmdMode8K4320p2398:
+      displayMode = GST_DECKLINK_MODE_4320p2398;
+      break;
+    case bmdMode8K4320p24:
+      displayMode = GST_DECKLINK_MODE_4320p24;
+      break;
+    case bmdMode8K4320p25:
+      displayMode = GST_DECKLINK_MODE_4320p25;
+      break;
+    case bmdMode8K4320p2997:
+      displayMode = GST_DECKLINK_MODE_4320p2997;
+      break;
+    case bmdMode8K4320p30:
+      displayMode = GST_DECKLINK_MODE_4320p30;
+      break;
+    case bmdMode8K4320p50:
+      displayMode = GST_DECKLINK_MODE_4320p50;
+      break;
+    case bmdMode8K4320p5994:
+      displayMode = GST_DECKLINK_MODE_4320p5994;
+      break;
+    case bmdMode8K4320p60:
+      displayMode = GST_DECKLINK_MODE_4320p60;
+      break;
+    case bmdMode8kDCI2398:
+      displayMode = GST_DECKLINK_MODE_4Kp2398;
+      break;
+    case bmdMode8kDCI24:
+      displayMode = GST_DECKLINK_MODE_4Kp24;
+      break;
+    case bmdMode8kDCI25:
+      displayMode = GST_DECKLINK_MODE_4Kp25;
+      break;
+    case bmdMode8kDCI2997:
+      displayMode = GST_DECKLINK_MODE_4Kp2997;
+      break;
+    case bmdMode8kDCI30:
+      displayMode = GST_DECKLINK_MODE_4Kp30;
+      break;
+    case bmdMode8kDCI50:
+      displayMode = GST_DECKLINK_MODE_4Kp50;
+      break;
+    case bmdMode8kDCI5994:
+      displayMode = GST_DECKLINK_MODE_4Kp5994;
+      break;
+    case bmdMode8kDCI60:
+      displayMode = GST_DECKLINK_MODE_4Kp60;
       break;
     default:
       displayMode = (GstDecklinkModeEnum) - 1;
