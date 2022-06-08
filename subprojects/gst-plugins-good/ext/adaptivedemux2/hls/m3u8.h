@@ -112,6 +112,14 @@ struct _GstHLSMediaPlaylist
   gboolean reloaded;		/* If TRUE, this indicates that this playlist
 				 * was reloaded but had identical content */
 
+  /* Server-Control directive values */
+  GstClockTime skip_boundary;   /* Skip Boundary from CAN-SKIP-UNTIL */
+  gboolean can_skip_dateranges; /* TRUE if CAN-SKIP-DATERANGES was YES */
+
+  GstClockTime hold_back;       /* Hold-Back value, if provided (or CLOCK_TIME_NONE) */
+  GstClockTime part_hold_back;  /* Part-Hold-Back value, if provided (or CLOCK_TIME_NONE */
+  gboolean can_block_reload;    /* TRUE if CAN-BLOCK-RELOAD was YES */
+
   /*< private > */
   GMutex lock;
 

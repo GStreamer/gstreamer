@@ -380,6 +380,10 @@ gst_hls_media_playlist_new (const gchar * uri, const gchar * base_uri)
 
   m3u8->duration = 0;
 
+  m3u8->skip_boundary = GST_CLOCK_TIME_NONE;
+  m3u8->hold_back = GST_CLOCK_TIME_NONE;
+  m3u8->part_hold_back = GST_CLOCK_TIME_NONE;
+
   g_mutex_init (&m3u8->lock);
   m3u8->ref_count = 1;
 
@@ -416,6 +420,18 @@ gst_hls_media_playlist_dump (GstHLSMediaPlaylist * self)
 
   GST_DEBUG ("duration         : %" GST_TIME_FORMAT,
       GST_TIME_ARGS (self->duration));
+
+  GST_DEBUG ("skip boundary    : %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (self->skip_boundary));
+
+  GST_DEBUG ("skip dateranges  : %s", self->can_skip_dateranges ? "YES" : "NO");
+
+  GST_DEBUG ("hold back        : %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (self->hold_back));
+  GST_DEBUG ("part hold back   : %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (self->part_hold_back));
+
+  GST_DEBUG ("can block reloads: %s", self->can_block_reload ? "YES" : "NO");
 
   GST_DEBUG ("Segments : %d", self->segments->len);
   for (idx = 0; idx < self->segments->len; idx++) {
@@ -577,6 +593,42 @@ malformed_line:
     GST_WARNING ("Invalid EXT-X-PART entry in playlist");
     gst_m3u8_partial_segment_unref (part);
     return NULL;
+  }
+}
+
+static void
+parse_server_control (GstHLSMediaPlaylist * self, gchar * data)
+{
+  gchar *v, *a;
+
+  while (data != NULL && parse_attributes (&data, &a, &v)) {
+    if (strcmp (a, "CAN-SKIP-UNTIL") == 0) {
+      if (!time_from_double_in_string (v, NULL, &self->skip_boundary)) {
+        GST_WARNING ("Can't read Skip Boundary value");
+        goto malformed_line;
+      }
+    } else if (strcmp (a, "CAN-SKIP-DATERANGES") == 0) {
+      self->can_skip_dateranges = g_ascii_strcasecmp (v, "YES") == 0;
+    } else if (strcmp (a, "HOLD-BACK") == 0) {
+      if (!time_from_double_in_string (v, NULL, &self->hold_back)) {
+        GST_WARNING ("Can't read Hold-Back value");
+        goto malformed_line;
+      }
+    } else if (strcmp (a, "PART-HOLD-BACK") == 0) {
+      if (!time_from_double_in_string (v, NULL, &self->part_hold_back)) {
+        GST_WARNING ("Can't read Part-Hold-Back value");
+        goto malformed_line;
+      }
+    } else if (strcmp (a, "CAN-BLOCK-RELOAD") == 0) {
+      self->can_block_reload = g_ascii_strcasecmp (v, "YES") == 0;
+    }
+  }
+
+  return;
+malformed_line:
+  {
+    GST_WARNING ("Invalid EXT-X-SERVER-CONTROL entry in playlist");
+    return;
   }
 }
 
@@ -905,6 +957,9 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
             }
           }
         }
+      } else if (g_str_has_prefix (data_ext_x, "SERVER-CONTROL:")) {
+        data += strlen ("#EXT-X-SERVER-CONTROL:");
+        parse_server_control (self, data);
       } else {
         GST_LOG ("Ignored line: %s", data);
       }
