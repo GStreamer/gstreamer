@@ -92,8 +92,6 @@ struct _GstMsdkVPP
   GstMsdkContext *old_context;
   mfxVideoParam param;
   guint in_num_surfaces;
-  mfxFrameAllocResponse in_alloc_resp;
-  mfxFrameAllocResponse out_alloc_resp;
 
   gboolean initialized;
   gboolean use_video_memory;
