@@ -41,6 +41,10 @@
 #include "gstmsdksystemmemory.h"
 #include "gstmsdkcontextutil.h"
 
+#ifndef _WIN32
+#include <gst/va/gstvaallocator.h>
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkdec_debug);
 #define GST_CAT_DEFAULT gst_msdkdec_debug
 
@@ -567,26 +571,28 @@ _gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
 }
 
 static gboolean
-srcpad_can_dmabuf (GstMsdkDec * thiz)
+pad_accept_memory (GstMsdkDec * thiz, const gchar * mem_type, GstCaps * filter)
 {
   gboolean ret = FALSE;
   GstCaps *caps, *out_caps;
-  GstPad *srcpad;
+  GstPad *pad;
 
-  srcpad = GST_VIDEO_DECODER_SRC_PAD (thiz);
-  caps = gst_pad_get_pad_template_caps (srcpad);
+  pad = GST_VIDEO_DECODER_SRC_PAD (thiz);
 
-  out_caps = gst_pad_peer_query_caps (srcpad, caps);
+  /* make a copy of filter caps since we need to alter the structure
+   * by adding dmabuf-capsfeatures */
+  caps = gst_caps_copy (filter);
+  gst_caps_set_features (caps, 0, gst_caps_features_from_string (mem_type));
+
+  out_caps = gst_pad_peer_query_caps (pad, caps);
   if (!out_caps)
     goto done;
 
-  if (gst_caps_is_any (out_caps) || gst_caps_is_empty (out_caps)
-      || out_caps == caps)
+  if (gst_caps_is_any (out_caps) || gst_caps_is_empty (out_caps))
     goto done;
 
-  if (_gst_caps_has_feature (out_caps, GST_CAPS_FEATURE_MEMORY_DMABUF))
+  if (_gst_caps_has_feature (out_caps, mem_type))
     ret = TRUE;
-
 done:
   if (caps)
     gst_caps_unref (caps);
@@ -748,10 +754,16 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
     gst_msdk_set_video_alignment (vinfo, alloc_w, alloc_h, &align);
   gst_video_info_align (vinfo, &align);
   output_state->caps = gst_video_info_to_caps (vinfo);
-
-  if (srcpad_can_dmabuf (thiz))
+#ifndef _WIN32
+  if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_VA, output_state->caps)) {
+    gst_caps_set_features (output_state->caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VA, NULL));
+  } else if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_DMABUF,
+          output_state->caps)) {
     gst_caps_set_features (output_state->caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+  }
+#endif
 
   if (need_allocation) {
     /* Find allocation width and height */

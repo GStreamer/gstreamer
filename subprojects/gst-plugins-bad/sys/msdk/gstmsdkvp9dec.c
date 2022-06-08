@@ -58,6 +58,14 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9dec_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9dec_debug
 
 #define COMMON_FORMAT "{ NV12, P010_10LE, VUYA, Y410, P012_LE, Y412_LE }"
+#define SUPPORTED_VA_FORMAT "{ NV12 }"
+
+#ifndef _WIN32
+#define VA_SRC_CAPS_STR \
+    "; " GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE (SUPPORTED_VA_FORMAT)
+#else
+#define VA_SRC_CAPS_STR ""
+#endif
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -68,8 +76,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT))
-    );
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT)
+        VA_SRC_CAPS_STR));
 
 #define gst_msdkvp9dec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkVP9Dec, gst_msdkvp9dec, GST_TYPE_MSDKDEC);

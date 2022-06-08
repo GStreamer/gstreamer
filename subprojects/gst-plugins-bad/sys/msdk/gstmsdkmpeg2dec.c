@@ -57,6 +57,13 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkmpeg2dec_debug);
 #define GST_CAT_DEFAULT gst_msdkmpeg2dec_debug
 
+#ifndef _WIN32
+#define VA_SRC_CAPS_STR \
+    "; " GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("{ NV12 }")
+#else
+#define VA_SRC_CAPS_STR ""
+#endif
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -64,6 +71,12 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
         "mpegversion = (int) 2, " "systemstream = (boolean) false")
     );
+
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR ("{ NV12 }", "{ NV12 }")
+        VA_SRC_CAPS_STR));
 
 #define gst_msdkmpeg2dec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkMPEG2Dec, gst_msdkmpeg2dec, GST_TYPE_MSDKDEC);
@@ -151,6 +164,7 @@ gst_msdkmpeg2dec_class_init (GstMsdkMPEG2DecClass * klass)
   gst_msdkdec_prop_install_output_oder_property (gobject_class);
 
   gst_element_class_add_static_pad_template (element_class, &sink_factory);
+  gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
 static void

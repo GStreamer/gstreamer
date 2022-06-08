@@ -56,6 +56,13 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkh264dec_debug);
 
 #define COMMON_FORMAT "{ NV12, BGRA, BGRx }"
 
+#ifndef _WIN32
+#define VA_SRC_CAPS_STR \
+    "; " GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("{ NV12 }")
+#else
+#define VA_SRC_CAPS_STR ""
+#endif
+
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -68,8 +75,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT))
-    );
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT)
+        VA_SRC_CAPS_STR));
 
 #define gst_msdkh264dec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkH264Dec, gst_msdkh264dec, GST_TYPE_MSDKDEC);
