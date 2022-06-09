@@ -76,6 +76,9 @@ struct _GstVaAV1Dec
   GstAV1SequenceHeaderOBU seq;
   gint max_width;
   gint max_height;
+  GstVideoFormat preferred_format;
+  /* Used for layers not output. */
+  GstBufferPool *internal_pool;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -126,6 +129,14 @@ gst_va_av1_dec_negotiate (GstVideoDecoder * decoder)
       &capsfeatures);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
+
+  if (self->preferred_format != GST_VIDEO_FORMAT_UNKNOWN &&
+      self->preferred_format != format) {
+    GST_WARNING_OBJECT (self, "The preferred_format is different from"
+        " the last result");
+    return FALSE;
+  }
+  self->preferred_format = format;
 
   base->output_state = gst_video_decoder_set_output_state (decoder, format,
       base->width, base->height, av1dec->input_state);
@@ -247,6 +258,74 @@ gst_va_av1_dec_getcaps (GstVideoDecoder * decoder, GstCaps * filter)
   return caps;
 }
 
+static void
+_clear_internal_pool (GstVaAV1Dec * self)
+{
+  if (self->internal_pool)
+    gst_buffer_pool_set_active (self->internal_pool, FALSE);
+
+  gst_clear_object (&self->internal_pool);
+}
+
+static GstBufferPool *
+_create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (self);
+  GstVideoInfo info;
+  GArray *surface_formats;
+  GstAllocator *allocator;
+  GstCaps *caps = NULL;
+  GstBufferPool *pool;
+  GstAllocationParams params = { 0, };
+
+  gst_allocation_params_init (&params);
+
+  /* We may come here before the negotiation, make sure all pools
+     use the same video format. */
+  if (self->preferred_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GstVideoFormat format;
+
+    gst_va_base_dec_get_preferred_format_and_caps_features (base,
+        &format, NULL);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+      GST_WARNING_OBJECT (self, "Failed to get format for internal pool");
+      return NULL;
+    }
+
+    self->preferred_format = format;
+  }
+
+  gst_video_info_set_format (&info, self->preferred_format, width, height);
+
+  caps = gst_video_info_to_caps (&info);
+  if (caps == NULL) {
+    GST_WARNING_OBJECT (self, "Failed to create caps for internal pool");
+    return NULL;
+  }
+
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+
+  surface_formats = gst_va_decoder_get_surface_formats (base->decoder);
+  allocator = gst_va_allocator_new (base->display, surface_formats);
+
+  pool = gst_va_pool_new_with_config (caps, GST_VIDEO_INFO_SIZE (&info),
+      1, 0, VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO,
+      allocator, &params);
+  if (!pool) {
+    GST_WARNING_OBJECT (self, "Failed to create internal pool");
+    gst_object_unref (allocator);
+    gst_clear_caps (&caps);
+    return NULL;
+  }
+
+  gst_object_unref (allocator);
+
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  return pool;
+}
+
 static GstFlowReturn
 gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
     const GstAV1SequenceHeaderOBU * seq_hdr, gint max_dpb_size)
@@ -271,6 +350,9 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
   if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, seq_hdr->max_frame_width_minus_1 + 1,
           seq_hdr->max_frame_height_minus_1 + 1)) {
+    _clear_internal_pool (self);
+    self->preferred_format = GST_VIDEO_FORMAT_UNKNOWN;
+
     base->profile = profile;
     base->rt_format = rt_format;
     self->max_width = seq_hdr->max_frame_width_minus_1 + 1;
@@ -298,22 +380,33 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
 
-  if (frame_hdr->upscaled_width != base->width
-      || frame_hdr->frame_height != base->height) {
-    base->width = frame_hdr->upscaled_width;
-    base->height = frame_hdr->frame_height;
-
-    if (base->width < self->max_width || base->height < self->max_height) {
-      base->need_valign = TRUE;
-      /* *INDENT-OFF* */
-      base->valign = (GstVideoAlignment){
-        .padding_bottom = self->max_height - base->height,
-        .padding_right = self->max_width - base->width,
-      };
-      /* *INDENT-ON* */
+  /* Only output the highest spatial layer. For non output pictures,
+     we just use internal pool, then no negotiation needed. */
+  if (picture->spatial_id < decoder->highest_spatial_layer) {
+    if (!self->internal_pool) {
+      self->internal_pool =
+          _create_internal_pool (self, self->max_width, self->max_height);
+      if (!self->internal_pool)
+        return GST_FLOW_ERROR;
     }
+  } else {
+    if (frame_hdr->upscaled_width != base->width
+        || frame_hdr->frame_height != base->height) {
+      base->width = frame_hdr->upscaled_width;
+      base->height = frame_hdr->frame_height;
 
-    base->need_negotiation = TRUE;
+      if (base->width < self->max_width || base->height < self->max_height) {
+        base->need_valign = TRUE;
+        /* *INDENT-OFF* */
+        base->valign = (GstVideoAlignment){
+          .padding_bottom = self->max_height - base->height,
+          .padding_right = self->max_width - base->width,
+        };
+        /* *INDENT-ON* */
+      }
+
+      base->need_negotiation = TRUE;
+    }
   }
 
   if (base->need_negotiation) {
@@ -323,12 +416,23 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
     }
   }
 
-  self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
-  if (self->last_ret != GST_FLOW_OK) {
-    GST_WARNING_OBJECT (self,
-        "Failed to allocated output buffer, return %s",
-        gst_flow_get_name (self->last_ret));
-    return self->last_ret;
+  if (picture->spatial_id < decoder->highest_spatial_layer) {
+    self->last_ret = gst_buffer_pool_acquire_buffer (self->internal_pool,
+        &frame->output_buffer, NULL);
+    if (self->last_ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self,
+          "Failed to allocated output buffer from internal pool, return %s",
+          gst_flow_get_name (self->last_ret));
+      return self->last_ret;
+    }
+  } else {
+    self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+    if (self->last_ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self,
+          "Failed to allocated output buffer, return %s",
+          gst_flow_get_name (self->last_ret));
+      return self->last_ret;
+    }
   }
 
   if (picture->apply_grain) {
@@ -871,6 +975,26 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
   return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
 }
 
+static gboolean
+gst_va_av1_dec_start (GstVideoDecoder * decoder)
+{
+  GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
+
+  self->preferred_format = GST_VIDEO_FORMAT_UNKNOWN;
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->start (decoder);
+}
+
+static gboolean
+gst_va_av1_dec_close (GstVideoDecoder * decoder)
+{
+  GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
+
+  _clear_internal_pool (self);
+
+  return gst_va_base_dec_close (GST_VIDEO_DECODER (decoder));
+}
+
 static void
 gst_va_av1_dec_init (GTypeInstance * instance, gpointer g_class)
 {
@@ -919,6 +1043,8 @@ gst_va_av1_dec_class_init (gpointer g_class, gpointer class_data)
 
   decoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_va_av1_dec_getcaps);
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_va_av1_dec_negotiate);
+  decoder_class->close = GST_DEBUG_FUNCPTR (gst_va_av1_dec_close);
+  decoder_class->start = GST_DEBUG_FUNCPTR (gst_va_av1_dec_start);
 
   av1decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_va_av1_dec_new_sequence);
