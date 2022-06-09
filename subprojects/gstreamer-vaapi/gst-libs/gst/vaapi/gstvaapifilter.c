@@ -788,10 +788,12 @@ get_operations_ordered (GstVaapiFilter * filter, GPtrArray * default_ops)
         filter_caps = vpp_get_filter_caps (filter, va_type,
             op_data->va_cap_size, &num_filter_caps);
         if (!filter_caps)
-          goto error;
+          continue;
       }
+
       if (!op_data_ensure_caps (op_data, filter_caps, num_filter_caps))
-        goto error;
+        continue;
+
       g_ptr_array_add (ops, op_data_ref (op_data));
     }
     free (filter_caps);
