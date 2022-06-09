@@ -1454,6 +1454,8 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
   gboolean alternate_interlaced;
   gboolean alternate_supported = FALSE;
   gboolean d3d11_supported = FALSE;
+  /* No d3d11 element supports alternate now */
+  gboolean d3d11_alternate_supported = FALSE;
   GstVideoCodecState *input_state;
   GstStructure *s;
   const gchar *str;
@@ -1488,10 +1490,13 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
       if (gst_caps_features_contains (features,
               GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
         d3d11_supported = TRUE;
+
+        if (gst_caps_features_contains (features,
+                GST_CAPS_FEATURE_FORMAT_INTERLACED)) {
+          d3d11_alternate_supported = TRUE;
+        }
       }
 
-      /* FIXME: software deinterlace element will not return interlaced caps
-       * feature... We should fix it */
       if (gst_caps_features_contains (features,
               GST_CAPS_FEATURE_FORMAT_INTERLACED)) {
         alternate_supported = TRUE;
@@ -1509,7 +1514,7 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
     GST_FIXME_OBJECT (videodec,
         "Implement alternating interlaced stream for D3D11");
 
-    if (alternate_supported) {
+    if (d3d11_alternate_supported || (!d3d11_supported && alternate_supported)) {
       gint height = GST_VIDEO_INFO_HEIGHT (info);
 
       /* Set caps resolution with display size, that's how we designed
