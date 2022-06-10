@@ -1,7 +1,7 @@
 Moving around plug-ins between source modules
 ---------------------------------------------
 
-Last updated: 2020-05-19
+Last updated: 2022-06-10
 
 Contents:
   1. How to get your plug-in out of -bad and into -good or -ugly (ie. policies)
@@ -149,63 +149,16 @@ CHECKLIST
 2. Moving plugins with GIT (technical howto)
 ============================================
 
-Let's say we are moving the 'weneedthis' plugins from -bad/gst/weneedthis/ to
--good.
+Inside the monorepo we can simply use `git mv`. Make sure to move not
+just the plugin itself but also any relevant examples, tests, manual
+tests, and documentation, as well as i18n bits.
 
-We want to end up with the following situation after the plugin move:
-
-* weneedthis is no longer usable/visible in HEAD of -bad
-* weneedthis is present and usable in HEAD of -good
-* The whole history of commits concerning weneedthis are visible in -good
-* The whole history of commits concerning weneedthis are visible in -bad
-* If we go back to the previous release commit for -good, the 'weneedthis'
-  plugin code and commit history are not visible.
-* If we go back to the previous release commit for -bad, the 'weneedthis'
-  plugin code and commits are visible.
-
-
-# Four steps for moving plugins
-----------
-
-For this, we use git-format-patch which will extract the various commits
-involving the plugin we want to move into individual numbered patches.
-
-> cd gst-plugins-bad.git/
-> git format-patch -o ../patches/ --subject-prefix="MOVED FROM BAD" start..HEAD -- gst/weneedthis/ tests/check/elements/weneedthis.c
-or (without the prefix)
-> git format-patch -o ../patches/ --no-numbered --subject-prefix='' start..HEAD -- gst/weneedthis/ tests/check/elements/weneedthis.c
-
-We can then take those patches and commit them into -good.
-For safety, it is recommended to do all this work in a temporary branch
-
-> cd ../gst-plugins-good.git/
-> git checkout -b moving-weneedthis
-> git am -k ../patches/*.patch
-
-At this point, we have all the commits related to gst/weneedthis/ in -bad.
-
-We also need to move the other related parts in:
-* meson.build
-* meson_options.txt
-* i18n
-* documentation
-
-All those modifications should be committed as one commit with an obvious
-summary:
-"Moved 'weneedthis' from -bad to -good"
-> git commit -v -m "Moved 'weneedthis' from -bad to -good" <modified files>
-
-We can now merge the branch into master and push it out for everybody.
-
-> git checkout master
-> git merge moving-weneedthis
-
-The last step is to remove the plugin from the original module:
-
-> git rm gst/weneedthis/
-
-Remove all the code that was moved from configure, makefiles, documentations,
-and commit that with the *SAME* commit message as the last commit we did in
--good:
-> git commit -v -m "Moved 'weneedthis' from -bad to -good" <modified files>
-
+In order to move plugins from an external repository with history into
+the monorepo, we can import the plugin's git history from the repository
+or a git bundle through a merge commit with `--allow-unrelated-histories`
+and then move it into the right place and hook it up to the build system
+in a follow-up commit. If the original commit hashes don't need to be
+maintained, we can import a stripped-down version of the external repository
+where everything non-essential has been filtered out using `git filter-*`,
+so that we then import a repo that only has the history of the plugin code
+and the tests we want to import, but not any auxiliary files and such.
