@@ -106,7 +106,7 @@ sig_handler (int sig_nr)
   switch (sig_nr) {
     case SIGALRM:
       alarm_received = 1;
-      killpg (group_pid, SIGKILL);
+      killpg (group_pid, SIGABRT);
       break;
     case SIGTERM:
     case SIGINT:
