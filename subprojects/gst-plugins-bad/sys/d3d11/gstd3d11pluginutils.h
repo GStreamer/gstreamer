@@ -127,6 +127,10 @@ gboolean        gst_d3d11_rgb_to_yuv_matrix_unorm (const GstVideoInfo * in_rgb_i
                                                    const GstVideoInfo * out_yuv_info,
                                                    GstD3D11ColorMatrix * matrix);
 
+gboolean        gst_d3d11_color_primaries_matrix_unorm (const GstVideoColorPrimariesInfo * in_info,
+                                                        const GstVideoColorPrimariesInfo * out_info,
+                                                        GstD3D11ColorMatrix * matrix);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_PLUGIN_UTILS_H__ */

@@ -1100,6 +1100,53 @@ color_matrix_multiply (GstD3D11ColorMatrix * dst, GstD3D11ColorMatrix * a,
   color_matrix_copy (dst, &tmp);
 }
 
+static void
+color_matrix_identity (GstD3D11ColorMatrix * m)
+{
+  for (guint i = 0; i < 3; i++) {
+    for (guint j = 0; j < 3; j++) {
+      if (i == j)
+        m->matrix[i][j] = 1.0;
+      else
+        m->matrix[i][j] = 0;
+    }
+  }
+}
+
+static gboolean
+color_matrix_invert (GstD3D11ColorMatrix * dst, GstD3D11ColorMatrix * src)
+{
+  GstD3D11ColorMatrix tmp;
+  gdouble det;
+
+  color_matrix_identity (&tmp);
+  for (guint j = 0; j < 3; j++) {
+    for (guint i = 0; i < 3; i++) {
+      tmp.matrix[j][i] =
+          src->matrix[(i + 1) % 3][(j + 1) % 3] *
+          src->matrix[(i + 2) % 3][(j + 2) % 3] -
+          src->matrix[(i + 1) % 3][(j + 2) % 3] *
+          src->matrix[(i + 2) % 3][(j + 1) % 3];
+    }
+  }
+
+  det = tmp.matrix[0][0] * src->matrix[0][0] +
+      tmp.matrix[0][1] * src->matrix[1][0] +
+      tmp.matrix[0][2] * src->matrix[2][0];
+  if (det == 0)
+    return FALSE;
+
+  for (guint j = 0; j < 3; j++) {
+    for (guint i = 0; i < 3; i++) {
+      tmp.matrix[i][j] /= det;
+    }
+  }
+
+  color_matrix_copy (dst, &tmp);
+
+  return TRUE;
+}
+
 /**
  * gst_d3d11_color_range_adjust_matrix_unorm:
  * @in_info: a #GstVideoInfo
@@ -1597,6 +1644,155 @@ gst_d3d11_rgb_to_yuv_matrix_unorm (const GstVideoInfo * in_rgb_info,
     matrix->matrix[1][1] = 1.0;
     matrix->matrix[2][2] = 1.0;
   }
+
+  return TRUE;
+}
+
+static gboolean
+rgb_to_xyz_matrix (const GstVideoColorPrimariesInfo * info,
+    GstD3D11ColorMatrix * matrix)
+{
+  GstD3D11ColorMatrix m, im;
+  gdouble Sr, Sg, Sb;
+  gdouble Xw, Yw, Zw;
+
+  if (info->Rx == 0 || info->Gx == 0 || info->By == 0 || info->Wy == 0)
+    return FALSE;
+
+  color_matrix_identity (&m);
+
+  m.matrix[0][0] = info->Rx / info->Ry;
+  m.matrix[1][0] = 1.0;
+  m.matrix[2][0] = (1.0 - info->Rx - info->Ry) / info->Ry;
+
+  m.matrix[0][1] = info->Gx / info->Gy;
+  m.matrix[1][1] = 1.0;
+  m.matrix[2][1] = (1.0 - info->Gx - info->Gy) / info->Gy;
+
+  m.matrix[0][2] = info->Bx / info->By;
+  m.matrix[1][2] = 1.0;
+  m.matrix[2][2] = (1.0 - info->Bx - info->By) / info->By;
+
+  if (!color_matrix_invert (&im, &m))
+    return FALSE;
+
+  Xw = info->Wx / info->Wy;
+  Yw = 1.0;
+  Zw = (1.0 - info->Wx - info->Wy) / info->Wy;
+
+  Sr = im.matrix[0][0] * Xw + im.matrix[0][1] * Yw + im.matrix[0][2] * Zw;
+  Sg = im.matrix[1][0] * Xw + im.matrix[1][1] * Yw + im.matrix[1][2] * Zw;
+  Sb = im.matrix[2][0] * Xw + im.matrix[2][1] * Yw + im.matrix[2][2] * Zw;
+
+  for (guint i = 0; i < 3; i++) {
+    m.matrix[i][0] *= Sr;
+    m.matrix[i][1] *= Sg;
+    m.matrix[i][2] *= Sb;
+  }
+
+  color_matrix_copy (matrix, &m);
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d11_color_primaries_matrix_unorm:
+ * @in_info: a #GstVideoColorPrimariesInfo of input signal
+ * @out_info: a #GstVideoColorPrimariesInfo of output signal
+ * @matrix: a #GstD3D11ColorMatrix
+ *
+ * Calculates color primaries conversion matrix
+ *
+ * Resulting RGB values can be calculated by
+ * | Rout |                              | Rin |
+ * | Gout | = saturate ( matrix.matrix * | Gin | )
+ * | Bout |                              | Bin |
+ *
+ * Returns: %TRUE if successful
+ */
+gboolean
+gst_d3d11_color_primaries_matrix_unorm (const GstVideoColorPrimariesInfo *
+    in_info, const GstVideoColorPrimariesInfo * out_info,
+    GstD3D11ColorMatrix * matrix)
+{
+  GstD3D11ColorMatrix Ms, invMd, ret;
+
+  g_return_val_if_fail (in_info != nullptr, FALSE);
+  g_return_val_if_fail (out_info != nullptr, FALSE);
+  g_return_val_if_fail (matrix != nullptr, FALSE);
+
+  /*
+   * <Formula>
+   *
+   * 1) RGB -> XYZ conversion
+   * | X |     | R |
+   * | Y | = M | G |
+   * | Z |     | B |
+   * where
+   *     | SrXr, SgXg, SbXb |
+   * M = | SrYr, SgYg, SbYb |
+   *     | SrZr, SgZg, SbZb |
+   *
+   * Xr = xr / yr
+   * Yr = 1
+   * Zr = (1 - xr - yr) / yr
+   * xr and yr are xy coordinates of red primary in the CIE 1931 color space.
+   * And its applied to G and B components
+   *
+   * | Sr |        | Xr, Xg, Xb |     | Xw |
+   * | Sg | = inv( | Yr, Yg, Yb | ) * | Yw |
+   * | Sb |        | Zr, Zg, Zb |     | Zw |
+   *
+   * 2) XYZsrc -> XYZdst conversion
+   * Apply chromatic adaptation
+   * | Xdst |      | Xsrc |
+   * | Ydst | = Mc | Ysrc |
+   * | Zdst |      | Zsrc |
+   * where
+   *      | Xwdst / Xwsrc,       0      ,       0       |
+   * Mc = |       0      , Ywdst / Ywsrc,       0       |
+   *      |       0      ,       0      , Zwdst / Zwsrc |
+   *
+   * where
+   *
+   * 3) Final matrix
+   * | Rd |                      | Rs |
+   * | Gd | = inv (Md) * Mc * Ms | Gs |
+   * | Bd |                      | Bs |
+   */
+
+  memset (matrix, 0, sizeof (GstD3D11ColorMatrix));
+  for (guint i = 0; i < 3; i++)
+    matrix->max[i] = 1.0;
+
+  if (!rgb_to_xyz_matrix (in_info, &Ms)) {
+    GST_WARNING ("Failed to get src XYZ matrix");
+    return FALSE;
+  }
+
+  if (!rgb_to_xyz_matrix (out_info, &invMd) ||
+      !color_matrix_invert (&invMd, &invMd)) {
+    GST_WARNING ("Failed to get dst XYZ matrix");
+    return FALSE;
+  }
+
+  if (in_info->Wx != out_info->Wx || in_info->Wy != out_info->Wy) {
+    GstD3D11ColorMatrix Mc;
+
+    color_matrix_identity (&Mc);
+    Mc.matrix[0][0] = (out_info->Wx / out_info->Wy) /
+        (in_info->Wx / in_info->Wy);
+    /* Yw == 1.0 */
+    Mc.matrix[2][2] = ((1.0 - out_info->Wx - out_info->Wy) / out_info->Wy) /
+        ((1.0 - in_info->Wx - in_info->Wy) / in_info->Wy);
+
+    color_matrix_multiply (&ret, &Mc, &Ms);
+  } else {
+    color_matrix_copy (&ret, &Ms);
+  }
+
+  color_matrix_multiply (&ret, &invMd, &ret);
+  color_matrix_copy (matrix, &ret);
 
   return TRUE;
 }
