@@ -117,7 +117,7 @@ all_inputs_are_eos (GstDecodebin3 * dbin)
 
 /* WITH SELECTION_LOCK TAKEN! */
 static void
-check_all_streams_for_eos (GstDecodebin3 * dbin)
+check_all_streams_for_eos (GstDecodebin3 * dbin, GstEvent * event)
 {
   GList *tmp;
   GList *outputpads = NULL;
@@ -144,7 +144,7 @@ check_all_streams_for_eos (GstDecodebin3 * dbin)
     GstPad *peer = (GstPad *) tmp->data;
 
     /* Send EOS and then remove elements */
-    gst_pad_send_event (peer, gst_event_new_eos ());
+    gst_pad_send_event (peer, gst_event_ref (event));
     GST_FIXME_OBJECT (peer, "Remove input stream");
     gst_object_unref (peer);
   }
@@ -292,7 +292,7 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
         if (all_inputs_are_eos (input->dbin)) {
           GST_DEBUG_OBJECT (pad, "real input pad, marking as EOS");
           SELECTION_LOCK (input->dbin);
-          check_all_streams_for_eos (input->dbin);
+          check_all_streams_for_eos (input->dbin, ev);
           SELECTION_UNLOCK (input->dbin);
         } else {
           GstPad *peer = gst_pad_get_peer (input->srcpad);
@@ -553,7 +553,7 @@ parsebin_pending_event_probe (GstPad * pad, GstPadProbeInfo * info,
       g_free (ppad);
 
       SELECTION_LOCK (dbin);
-      check_all_streams_for_eos (dbin);
+      check_all_streams_for_eos (dbin, ev);
       SELECTION_UNLOCK (dbin);
     }
       break;
