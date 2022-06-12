@@ -1857,7 +1857,7 @@ is_selection_done (GstDecodebin3 * dbin)
 
 /* Must be called with SELECTION_LOCK taken */
 static void
-check_all_slot_for_eos (GstDecodebin3 * dbin)
+check_all_slot_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
 {
   gboolean all_drained = TRUE;
   GList *iter;
@@ -1922,6 +1922,7 @@ check_all_slot_for_eos (GstDecodebin3 * dbin)
         }
 
         eos = gst_event_new_eos ();
+        gst_event_set_seqnum (eos, gst_event_get_seqnum (ev));
         gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (eos),
             CUSTOM_FINAL_EOS_QUARK, (gchar *) CUSTOM_FINAL_EOS_QUARK_DATA,
             NULL);
@@ -2052,7 +2053,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
             free_multiqueue_slot_async (dbin, slot);
             ret = GST_PAD_PROBE_REMOVE;
           } else if (!was_drained) {
-            check_all_slot_for_eos (dbin);
+            check_all_slot_for_eos (dbin, ev);
           }
           if (ret == GST_PAD_PROBE_HANDLED)
             gst_event_unref (ev);
@@ -2097,7 +2098,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
            * when all output streams are also eos */
           ret = GST_PAD_PROBE_DROP;
           SELECTION_LOCK (dbin);
-          check_all_slot_for_eos (dbin);
+          check_all_slot_for_eos (dbin, ev);
           SELECTION_UNLOCK (dbin);
         }
       }
