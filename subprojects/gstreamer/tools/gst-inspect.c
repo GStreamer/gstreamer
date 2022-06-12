@@ -118,6 +118,14 @@ GMainLoop *loop = NULL;
 #define FEATURE_RANK_COLOR    (colored_output? CYAN : "")
 #define FEATURE_PROTO_COLOR   (colored_output? BRYELLOW : "")
 
+#define GST_DOC_BASE_URL "https://gstreamer.freedesktop.org/documentation"
+
+static const gchar *gstreamer_modules[] = {
+  "gstreamer", "gst-plugins-base", "gst-plugins-good", "gst-plugins-ugly",
+  "gst-plugins-bad", "gst-editing-services", "gst-libav", "gst-rtsp-server",
+  "gstreamer-vaapi"
+};
+
 static char *_name = NULL;
 static int indent = 0;
 
@@ -243,9 +251,10 @@ get_rank_name (char *s, gint rank)
 }
 
 static void
-print_factory_details_info (GstElementFactory * factory)
+print_factory_details_info (GstElementFactory * factory, GstPlugin * plugin)
 {
   gchar **keys, **k;
+  gboolean seen_doc_uri = FALSE;
   GstRank rank;
   char s[40];
 
@@ -266,9 +275,38 @@ print_factory_details_info (GstElementFactory * factory)
       key[0] = g_ascii_toupper (key[0]);
       n_print ("%s%-25s%s%s%s\n", PROP_NAME_COLOR, key, PROP_VALUE_COLOR, val,
           RESET_COLOR);
+      seen_doc_uri =
+          seen_doc_uri || g_str_equal (key, GST_ELEMENT_METADATA_DOC_URI);
     }
     g_strfreev (keys);
   }
+
+  if (!seen_doc_uri && plugin != NULL) {
+    const gchar *module = gst_plugin_get_source (plugin);
+
+    if (g_strv_contains (gstreamer_modules, module)) {
+      GList *features;
+
+      features =
+          gst_registry_get_feature_list_by_plugin (gst_registry_get (),
+          gst_plugin_get_name (plugin));
+
+      /* if the plugin only has a single feature, plugin page == feature page */
+      if (features != NULL && features->next == NULL) {
+        n_print ("%s%-25s%s%s%s/%s/#%s-page%s\n", PROP_NAME_COLOR,
+            "Documentation", RESET_COLOR, PROP_VALUE_COLOR, GST_DOC_BASE_URL,
+            gst_plugin_get_name (plugin), GST_OBJECT_NAME (factory),
+            RESET_COLOR);
+      } else {
+        n_print ("%s%-25s%s%s%s/%s/%s.html%s\n", PROP_NAME_COLOR,
+            "Documentation", RESET_COLOR, PROP_VALUE_COLOR, GST_DOC_BASE_URL,
+            gst_plugin_get_name (plugin), GST_OBJECT_NAME (factory),
+            RESET_COLOR);
+      }
+      gst_plugin_feature_list_free (features);
+    }
+  }
+
   pop_indent ();
   n_print ("\n");
 }
@@ -1443,15 +1481,17 @@ print_all_uri_handlers (void)
 static void
 print_plugin_info (GstPlugin * plugin)
 {
+  const gchar *plugin_name = gst_plugin_get_name (plugin);
   const gchar *release_date = gst_plugin_get_release_date_string (plugin);
   const gchar *filename = gst_plugin_get_filename (plugin);
+  const gchar *module = gst_plugin_get_source (plugin);
 
   n_print ("%sPlugin Details%s:\n", HEADING_COLOR, RESET_COLOR);
 
   push_indent ();
 
   n_print ("%s%-25s%s%s%s%s\n", PROP_NAME_COLOR, "Name", RESET_COLOR,
-      PROP_VALUE_COLOR, gst_plugin_get_name (plugin), RESET_COLOR);
+      PROP_VALUE_COLOR, plugin_name, RESET_COLOR);
   n_print ("%s%-25s%s%s%s%s\n", PROP_NAME_COLOR, "Description", RESET_COLOR,
       PROP_VALUE_COLOR, gst_plugin_get_description (plugin), RESET_COLOR);
   n_print ("%s%-25s%s%s%s%s\n", PROP_NAME_COLOR, "Filename", RESET_COLOR,
@@ -1461,7 +1501,13 @@ print_plugin_info (GstPlugin * plugin)
   n_print ("%s%-25s%s%s%s%s\n", PROP_NAME_COLOR, "License", RESET_COLOR,
       PROP_VALUE_COLOR, gst_plugin_get_license (plugin), RESET_COLOR);
   n_print ("%s%-25s%s%s%s%s\n", PROP_NAME_COLOR, "Source module", RESET_COLOR,
-      PROP_VALUE_COLOR, gst_plugin_get_source (plugin), RESET_COLOR);
+      PROP_VALUE_COLOR, module, RESET_COLOR);
+
+  if (g_strv_contains (gstreamer_modules, module)) {
+    n_print ("%s%-25s%s%s%s/%s/%s\n", PROP_NAME_COLOR, "Documentation",
+        RESET_COLOR, PROP_VALUE_COLOR, GST_DOC_BASE_URL, plugin_name,
+        RESET_COLOR);
+  }
 
   if (release_date != NULL) {
     const gchar *tz = "(UTC)";
@@ -1649,9 +1695,10 @@ print_element_info (GstPluginFeature * feature, gboolean print_names)
   else
     _name = NULL;
 
-  print_factory_details_info (factory);
-
   plugin = gst_plugin_feature_get_plugin (GST_PLUGIN_FEATURE (factory));
+
+  print_factory_details_info (factory, plugin);
+
   if (plugin) {
     print_plugin_info (plugin);
     gst_object_unref (plugin);
