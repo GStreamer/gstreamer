@@ -1778,7 +1778,9 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   if (in_info->width == out_info->width && in_info->height == out_info->height
       && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
-      self->borders_h == 0) {
+      self->borders_h == 0 &&
+      gst_video_colorimetry_is_equal (&in_info->colorimetry,
+          &out_info->colorimetry)) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
     return TRUE;
   } else {
