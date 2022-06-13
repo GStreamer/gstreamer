@@ -1180,6 +1180,7 @@ gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
 
   g_return_val_if_fail (playlist && reference, FALSE);
 
+retry_without_dsn:
   /* The new playlist is supposed to be an update of the reference playlist,
    * therefore we will try from the last segment of the reference playlist and
    * go backwards */
@@ -1191,6 +1192,16 @@ gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
   }
 
   if (res == NULL) {
+    if (playlist->has_ext_x_dsn) {
+      /* There is a possibility that the server doesn't have coherent DSN
+       * accross variants/renditions. If we reach this section, this means that
+       * we have already attempted matching by PDT, URI, stream time. The last
+       * matching would have been by MSN/DSN, therefore try it again without
+       * taking DSN into account. */
+      GST_DEBUG ("Retrying matching without taking DSN into account");
+      playlist->has_ext_x_dsn = FALSE;
+      goto retry_without_dsn;
+    }
     GST_WARNING ("Could not synchronize media playlists");
     return FALSE;
   }
