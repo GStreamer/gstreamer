@@ -516,11 +516,13 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
   const GstDxgiColorSpace *colorspace = NULL;
   gint best_score = G_MAXINT;
   guint i;
+  UINT can_support = 0;
+  HRESULT hr;
+  GST_DXGI_COLOR_SPACE_TYPE cur_type;
   /* list of tested display color spaces */
   static GST_DXGI_COLOR_SPACE_TYPE whitelist[] = {
     GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709,
     GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,
-    GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020,
   };
 
   g_return_val_if_fail (info != NULL, FALSE);
@@ -531,12 +533,26 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
     return FALSE;
   }
 
+  /* Select PQ color space only if input is also PQ */
+  if (info->colorimetry.primaries == GST_VIDEO_COLOR_PRIMARIES_BT2020 &&
+      info->colorimetry.transfer == GST_VIDEO_TRANSFER_SMPTE2084) {
+    guint pq = GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+    hr = swapchain->CheckColorSpaceSupport ((DXGI_COLOR_SPACE_TYPE) pq,
+        &can_support);
+    if (SUCCEEDED (hr) && can_support) {
+      for (i = 0; i < G_N_ELEMENTS (rgb_colorspace_map); i++) {
+        if (rgb_colorspace_map[i].dxgi_color_space_type == pq)
+          return &rgb_colorspace_map[i];
+      }
+    }
+  }
+
   for (i = 0; i < G_N_ELEMENTS (rgb_colorspace_map); i++) {
-    UINT can_support = 0;
-    HRESULT hr;
+    can_support = 0;
     gint score;
     gboolean valid = FALSE;
-    GST_DXGI_COLOR_SPACE_TYPE cur_type =
+
+    cur_type =
         (GST_DXGI_COLOR_SPACE_TYPE) rgb_colorspace_map[i].dxgi_color_space_type;
 
     for (guint j = 0; j < G_N_ELEMENTS (whitelist); j++) {
