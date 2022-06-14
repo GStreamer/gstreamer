@@ -21,6 +21,7 @@
 #ifndef __GST_MPDHELPER_H__
 #define __GST_MPDHELPER_H__
 
+#include "gstmpd-prelude.h"
 #include "gstxmlhelper.h"
 #include "gstmpdnode.h"
 #include "gstmpdurltypenode.h"

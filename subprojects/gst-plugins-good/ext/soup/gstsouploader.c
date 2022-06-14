@@ -112,11 +112,9 @@ typedef struct _GstSoupVTable
   goffset (*_soup_message_headers_get_content_length) (SoupMessageHeaders * hdrs);
   const char *(*_soup_message_headers_get_content_type) (SoupMessageHeaders * hdrs,
     GHashTable ** value);
-#ifdef BUILDING_ADAPTIVEDEMUX2
   gboolean (*_soup_message_headers_get_content_range) (SoupMessageHeaders *hdrs, goffset *start,
     goffset *end, goffset *total_length);
   void (*_soup_message_headers_set_range) (SoupMessageHeaders *hdrs, goffset start, goffset end);
-#endif
   SoupEncoding (*_soup_message_headers_get_encoding) (SoupMessageHeaders * hdrs);
   const char *(*_soup_message_headers_get_one) (SoupMessageHeaders * hdrs,
     const char * name);
@@ -280,10 +278,8 @@ gst_soup_load_library (void)
       LOAD_SYMBOL (soup_message_headers_foreach);
       LOAD_SYMBOL (soup_message_headers_get_content_length);
       LOAD_SYMBOL (soup_message_headers_get_content_type);
-#ifdef BUILDING_ADAPTIVEDEMUX2
       LOAD_SYMBOL (soup_message_headers_get_content_range);
       LOAD_SYMBOL (soup_message_headers_set_range);
-#endif
       LOAD_SYMBOL (soup_message_headers_get_encoding);
       LOAD_SYMBOL (soup_message_headers_get_one);
       LOAD_SYMBOL (soup_message_headers_remove);
@@ -814,7 +810,6 @@ _soup_message_headers_get_content_type (SoupMessageHeaders * hdrs,
 #endif
 }
 
-#ifdef BUILDING_ADAPTIVEDEMUX2
 gboolean
 _soup_message_headers_get_content_range (SoupMessageHeaders * hdrs,
     goffset * start, goffset * end, goffset * total_length)
@@ -840,7 +835,6 @@ _soup_message_headers_set_range (SoupMessageHeaders * hdrs, goffset start,
   gst_soup_vtable._soup_message_headers_set_range (hdrs, start, end);
 #endif
 }
-#endif
 
 void
 _soup_auth_authenticate (SoupAuth * auth, const char *username,

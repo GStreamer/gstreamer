@@ -28,6 +28,7 @@
 
 #include <gst/gst.h>
 #include "../gstisoff.h"
+#include "gstmss-prelude.h"
 
 G_BEGIN_DECLS
 

@@ -5,9 +5,9 @@
 
 G_BEGIN_DECLS
 
-void hls_element_init (void);
+void hls2_element_init (void);
 
-GST_DEBUG_CATEGORY_EXTERN (hls_debug);
+GST_DEBUG_CATEGORY_EXTERN (hls2_debug);
 
 G_END_DECLS
 

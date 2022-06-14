@@ -5,14 +5,14 @@
 
 #include "gsthlselements.h"
 
-GST_DEBUG_CATEGORY (hls_debug);
+GST_DEBUG_CATEGORY (hls2_debug);
 
 void
-hls_element_init (void)
+hls2_element_init (void)
 {
   static gsize res = FALSE;
   if (g_once_init_enter (&res)) {
-    GST_DEBUG_CATEGORY_INIT (hls_debug, "hlsng", 0,
+    GST_DEBUG_CATEGORY_INIT (hls2_debug, "hlsng", 0,
         "HTTP Live Streaming (HLS) NG");
     g_once_init_leave (&res, TRUE);
   }

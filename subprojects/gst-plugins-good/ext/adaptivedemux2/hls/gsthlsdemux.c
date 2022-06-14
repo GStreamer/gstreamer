@@ -174,7 +174,7 @@ typedef struct _GstHLSDemux2Class GstHLSDemux2Class;
 
 #define gst_hls_demux2_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstHLSDemux2, gst_hls_demux2, GST_TYPE_ADAPTIVE_DEMUX,
-    hls_element_init ());
+    hls2_element_init ());
 
 static void
 gst_hls_demux_finalize (GObject * obj)

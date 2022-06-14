@@ -104,7 +104,7 @@ typedef struct _GstMssDemux2Class GstMssDemux2Class;
 #define gst_mss_demux2_parent_class parent_class
 G_DEFINE_TYPE (GstMssDemux2, gst_mss_demux2, GST_TYPE_ADAPTIVE_DEMUX);
 
-#define gst_hls_demux_stream_parent_class stream_parent_class
+#define gst_mss_demux_stream_parent_class stream_parent_class
 G_DEFINE_TYPE (GstMssDemuxStream, gst_mss_demux_stream,
     GST_TYPE_ADAPTIVE_DEMUX2_STREAM);
 

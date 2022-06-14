@@ -24,6 +24,7 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include <gst/gst.h>
+#include "gstmpd-prelude.h"
 #include "gstdash_debug.h"
 
 G_BEGIN_DECLS

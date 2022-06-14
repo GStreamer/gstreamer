@@ -27,6 +27,7 @@
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstdataqueue.h>
 #include <gst/gstprotection.h>
+#include "gstmss-prelude.h"
 #include "gstmssmanifest.h"
 #include "../gstadaptivedemux.h"
 

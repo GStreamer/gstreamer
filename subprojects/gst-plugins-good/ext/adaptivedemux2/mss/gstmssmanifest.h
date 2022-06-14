@@ -27,6 +27,7 @@
 #include <gio/gio.h>
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include "gstmss-prelude.h"
 
 G_BEGIN_DECLS
 

@@ -28,7 +28,7 @@
 #include "m3u8.h"
 #include "m3u8.c"
 
-GST_DEBUG_CATEGORY (hls_debug);
+GST_DEBUG_CATEGORY (hls2_debug);
 
 static const gchar *INVALID_PLAYLIST = "#EXTM3 UINVALID";
 
@@ -849,7 +849,7 @@ hlsdemux_suite (void)
   Suite *s = suite_create ("hlsdemux_m3u8");
   TCase *tc_m3u8 = tcase_create ("m3u8client");
 
-  GST_DEBUG_CATEGORY_INIT (hls_debug, "hlsdemux_m3u", 0, "hlsdemux m3u test");
+  GST_DEBUG_CATEGORY_INIT (hls2_debug, "hlsdemux_m3u", 0, "hlsdemux m3u test");
 
   suite_add_tcase (s, tc_m3u8);
   tcase_add_test (tc_m3u8, test_load_main_playlist_invalid);

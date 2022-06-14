@@ -22,6 +22,7 @@
 #define __GSTMPDNODE_H__
 
 #include <gst/gst.h>
+#include "gstmpd-prelude.h"
 #include "gstxmlhelper.h"
 G_BEGIN_DECLS
 

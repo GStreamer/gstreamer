@@ -36,7 +36,7 @@
 #include "gstadaptivedemux.h"
 #include "gsthlselements.h"
 
-#define GST_CAT_DEFAULT hls_debug
+#define GST_CAT_DEFAULT hls2_debug
 
 static void gst_m3u8_init_file_unref (GstM3U8InitFile * self);
 static gchar *uri_join (const gchar * uri, const gchar * path);

@@ -32,6 +32,7 @@
 
 #include "gstadaptivedemux.h"
 
+#include "gstmpd-prelude.h"
 #include "gstmpdhelper.h"
 #include "gstxmlhelper.h"
 #include "gstmpdrootnode.h"
