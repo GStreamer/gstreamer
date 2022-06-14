@@ -2102,7 +2102,7 @@ gst_multi_queue_loop (GstPad * pad)
   srcpad = g_weak_ref_get (&sq->srcpad);
 
   if (!mq || !srcpad)
-    goto out_flushing;
+    goto done;
 
 next:
   GST_DEBUG_OBJECT (mq, "SingleQueue %d : trying to pop an object", sq->id);
@@ -2419,7 +2419,7 @@ gst_multi_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   mq = g_weak_ref_get (&sq->mqueue);
 
   if (!mq)
-    goto flushing;
+    goto done;
 
   /* if eos, we are always full, so avoid hanging incoming indefinitely */
   if (sq->is_eos)
