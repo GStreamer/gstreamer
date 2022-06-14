@@ -7454,6 +7454,9 @@ gst_video_format_from_masks (gint depth, gint bpp, gint endianness,
   } else if (depth == 24 && bpp == 32) {
     format = gst_video_format_from_rgb32_masks (red_mask, green_mask,
         blue_mask);
+  } else if (depth == 32 && bpp == 32 && !alpha_mask) {
+    format = gst_video_format_from_rgb32_masks (red_mask, green_mask,
+        blue_mask);
   } else if (depth == 32 && bpp == 32 && alpha_mask) {
     format = gst_video_format_from_rgba32_masks (red_mask, green_mask,
         blue_mask, alpha_mask);
