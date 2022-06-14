@@ -265,7 +265,7 @@ def get_subprocess_env(options, gst_version):
     prepend_env_var(env, "GST_VALIDATE_APPS_DIR", os.path.normpath(
         "%s/subprojects/gst-editing-services/tests/validate" % SCRIPTDIR),
         options.sysroot)
-    env["GST_ENV"] = 'gst-' + gst_version
+    env["GST_ENV"] = gst_version
     env["GST_REGISTRY"] = os.path.normpath(options.builddir + "/registry.dat")
     prepend_env_var(env, "PATH", os.path.normpath(
         "%s/subprojects/gst-devtools/validate/tools" % options.builddir),
@@ -552,7 +552,7 @@ if __name__ == "__main__":
         if shell in ['powershell.exe', 'pwsh.exe']:
             new_args = [shell, '-NoLogo']
             if not args:
-                prompt = 'function global:prompt {  "[gst-' + gst_version + '"+"] PS " + $PWD + "> "}'
+                prompt = 'function global:prompt {  "[' + gst_version + '"+"] PS " + $PWD + "> "}'
                 new_args += ['-NoExit', '-Command', prompt]
             else:
                 new_args += ['-NonInteractive', '-Command'] + args
@@ -560,7 +560,7 @@ if __name__ == "__main__":
         else:
             new_args = [os.environ.get("COMSPEC", r"C:\WINDOWS\system32\cmd.exe")]
             if not args:
-                new_args += ['/k', 'prompt [gst-{}] $P$G'.format(gst_version)]
+                new_args += ['/k', 'prompt [{}] $P$G'.format(gst_version)]
             else:
                 new_args += ['/c', 'start', '/b', '/wait'] + args
             args = new_args
@@ -574,7 +574,7 @@ if __name__ == "__main__":
             if os.path.exists(bashrc):
                 with open(bashrc, 'r') as src:
                     shutil.copyfileobj(src, tmprc)
-            tmprc.write('\nexport PS1="[gst-%s] $PS1"' % gst_version)
+            tmprc.write('\nexport PS1="[%s] $PS1"' % gst_version)
             tmprc.flush()
             if is_bash_completion_available(options):
                 bash_completions_files = []
@@ -595,7 +595,7 @@ if __name__ == "__main__":
             args.append('--init-command')
             prompt_cmd = '''functions --copy fish_prompt original_fish_prompt
             function fish_prompt
-                echo -n '[gst-{}] '(original_fish_prompt)
+                echo -n '[{}] '(original_fish_prompt)
             end'''.format(gst_version)
             args.append(prompt_cmd)
         elif args[0].endswith('zsh'):
@@ -606,7 +606,7 @@ if __name__ == "__main__":
             if os.path.exists(zshrc):
                 with open(zshrc, 'r') as src:
                     shutil.copyfileobj(src, tmprc)
-            tmprc.write('\nexport PROMPT="[gst-{}] $PROMPT"'.format(gst_version))
+            tmprc.write('\nexport PROMPT="[{}] $PROMPT"'.format(gst_version))
             tmprc.flush()
             env['ZDOTDIR'] = tmpdir.name
     try:
