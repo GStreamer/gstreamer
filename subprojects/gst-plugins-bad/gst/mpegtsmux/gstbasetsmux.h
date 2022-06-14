@@ -185,8 +185,6 @@ struct GstBaseTsMux {
   gint64 current_buffer_dts;
 
   /* write callback handling/state */
-  GQueue streamheader;
-  gboolean streamheader_sent;
   gboolean is_delta;
   gboolean is_header;
   GstClockTime last_ts;
