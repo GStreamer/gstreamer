@@ -2091,7 +2091,8 @@ gst_multi_queue_loop (GstPad * pad)
   guint32 newid;
   GstFlowReturn result;
   GstClockTimeDiff next_time;
-  gboolean is_buffer, is_query;
+  gboolean is_buffer;
+  gboolean is_query = FALSE;
   gboolean do_update_buffering = FALSE;
   gboolean dropping = FALSE;
   GstPad *srcpad = NULL;
