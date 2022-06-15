@@ -1,7 +1,37 @@
+2022-06-09 20:00:35 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	  vaapi: Do not disable the whole vpp when some va operations not available.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2604>
+
+2022-05-20 09:59:58 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapipostproc.c:
+	  vaapidecode,vaapipostproc: Disable DMAbuf from caps negotiation.
+	  Given the amount of complains about artifacts when negotiating dmabuf
+	  given incompatible drm-formats, and that there's no enough bandwidth
+	  for a proper and quick fix in gstreamer-vaapi, this patch disables,
+	  from decoders and postprocessor, the DMABuf caps feature.
+	  For those who needs DMABuf can use the va elements in -bad, increasing
+	  their ranking for autoplugging by using the environment variable
+	  GST_PLUGIN_FEATURE_RANK=vah264dec:MAX, for example.
+	  This can be considered a first step to the deprecation of
+	  gstreamer-vaapi in favor of the va plugin in -bad.
+	  Fixes: #1137
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2459>
+
+2022-05-03 00:39:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2347>
+
 === release 1.20.2 ===
 
 2022-05-02 23:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gstreamer-vaapi.doap:

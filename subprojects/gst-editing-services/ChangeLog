@@ -1,7 +1,22 @@
+2022-05-13 10:23:54 +1000  Matthew Waters <matthew@centricular.com>
+
+	* ges/ges-video-uri-source.c:
+	  ges/videourisource: handle non-1/1 PAR source videos
+	  The automatic scaling done by framepositioner does not account for the
+	  par of the video source.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2614>
+
+2022-05-03 00:39:09 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2347>
+
 === release 1.20.2 ===
 
 2022-05-02 23:29:25 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:
