@@ -459,8 +459,10 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
       direction, "template", template, NULL);
   gst_object_unref (template);
 
-  gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
-  gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
+  if (direction == GST_PAD_SINK) {
+    gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
+    gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
+  }
 
   GST_DEBUG_OBJECT (pad, "new visible pad with direction %s",
       direction == GST_PAD_SRC ? "src" : "sink");
