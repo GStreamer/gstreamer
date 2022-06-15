@@ -40,21 +40,19 @@ typedef struct
     FLOAT z;
   } position;
   struct {
-    FLOAT x;
-    FLOAT y;
+    FLOAT u;
+    FLOAT v;
   } texture;
 } VertexData;
 
 static const gchar templ_pixel_shader[] =
     "Texture2D shaderTexture;\n"
     "SamplerState samplerState;\n"
-    "\n"
     "struct PS_INPUT\n"
     "{\n"
     "  float4 Position: SV_POSITION;\n"
-    "  float3 Texture: TEXCOORD0;\n"
+    "  float2 Texture: TEXCOORD;\n"
     "};\n"
-    "\n"
     "float4 main(PS_INPUT input): SV_TARGET\n"
     "{\n"
     "  return shaderTexture.Sample(samplerState, input.Texture);\n"
@@ -64,13 +62,13 @@ static const gchar templ_vertex_shader[] =
     "struct VS_INPUT\n"
     "{\n"
     "  float4 Position : POSITION;\n"
-    "  float4 Texture : TEXCOORD0;\n"
+    "  float2 Texture : TEXCOORD;\n"
     "};\n"
     "\n"
     "struct VS_OUTPUT\n"
     "{\n"
     "  float4 Position: SV_POSITION;\n"
-    "  float4 Texture: TEXCOORD0;\n"
+    "  float2 Texture: TEXCOORD;\n"
     "};\n"
     "\n"
     "VS_OUTPUT main(VS_INPUT input)\n"
@@ -102,7 +100,7 @@ typedef struct
   GstVideoOverlayRectangle *overlay_rect;
   ID3D11Texture2D *texture;
   ID3D11ShaderResourceView *srv;
-  GstD3D11Quad *quad;
+  ID3D11Buffer *vertex_buffer;
 } GstD3D11CompositionOverlay;
 
 static GstD3D11CompositionOverlay *
@@ -127,14 +125,11 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
   GstD3D11Device *device = self->device;
-  const guint index_count = 2 * 3;
   FLOAT x1, y1, x2, y2;
   gdouble val;
-  /* *INDENT-OFF* */
-  ComPtr<ID3D11Texture2D> texture;
-  ComPtr<ID3D11ShaderResourceView> srv;
-  ComPtr<ID3D11Buffer> vertex_buffer;
-  /* *INDENT-ON* */
+  ComPtr < ID3D11Texture2D > texture;
+  ComPtr < ID3D11ShaderResourceView > srv;
+  ComPtr < ID3D11Buffer > vertex_buffer;
 
   g_return_val_if_fail (overlay_rect != NULL, NULL);
 
@@ -250,29 +245,29 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   vertex_data[0].position.x = x1;
   vertex_data[0].position.y = y1;
   vertex_data[0].position.z = 0.0f;
-  vertex_data[0].texture.x = 0.0f;
-  vertex_data[0].texture.y = 1.0f;
+  vertex_data[0].texture.u = 0.0f;
+  vertex_data[0].texture.v = 1.0f;
 
   /* top left */
   vertex_data[1].position.x = x1;
   vertex_data[1].position.y = y2;
   vertex_data[1].position.z = 0.0f;
-  vertex_data[1].texture.x = 0.0f;
-  vertex_data[1].texture.y = 0.0f;
+  vertex_data[1].texture.u = 0.0f;
+  vertex_data[1].texture.v = 0.0f;
 
   /* top right */
   vertex_data[2].position.x = x2;
   vertex_data[2].position.y = y2;
   vertex_data[2].position.z = 0.0f;
-  vertex_data[2].texture.x = 1.0f;
-  vertex_data[2].texture.y = 0.0f;
+  vertex_data[2].texture.u = 1.0f;
+  vertex_data[2].texture.v = 0.0f;
 
   /* bottom right */
   vertex_data[3].position.x = x2;
   vertex_data[3].position.y = y1;
   vertex_data[3].position.z = 0.0f;
-  vertex_data[3].texture.x = 1.0f;
-  vertex_data[3].texture.y = 1.0f;
+  vertex_data[3].texture.u = 1.0f;
+  vertex_data[3].texture.v = 1.0f;
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
   gst_d3d11_device_unlock (device);
@@ -281,10 +276,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   overlay->overlay_rect = gst_video_overlay_rectangle_ref (overlay_rect);
   overlay->texture = texture.Detach ();
   overlay->srv = srv.Detach ();
-  overlay->quad = gst_d3d11_quad_new (device,
-      self->ps, self->vs, self->layout, nullptr, 0,
-      vertex_buffer.Get (), sizeof (VertexData),
-      self->index_buffer, DXGI_FORMAT_R16_UINT, index_count);
+  overlay->vertex_buffer = vertex_buffer.Detach ();
 
   return overlay;
 }
@@ -300,9 +292,7 @@ gst_d3d11_composition_overlay_free (GstD3D11CompositionOverlay * overlay)
 
   GST_D3D11_CLEAR_COM (overlay->srv);
   GST_D3D11_CLEAR_COM (overlay->texture);
-
-  if (overlay->quad)
-    gst_d3d11_quad_free (overlay->quad);
+  GST_D3D11_CLEAR_COM (overlay->vertex_buffer);
 
   g_free (overlay);
 }
@@ -320,15 +310,12 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   WORD *indices;
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
-  /* *INDENT-OFF* */
-  ComPtr<ID3D11PixelShader> ps;
-  ComPtr<ID3D11VertexShader> vs;
-  ComPtr<ID3D11InputLayout> layout;
-  ComPtr<ID3D11SamplerState> sampler;
-  ComPtr<ID3D11BlendState> blend;
-  ComPtr<ID3D11Buffer> index_buffer;
-  /* *INDENT-ON* */
-  const guint index_count = 2 * 3;
+  ComPtr < ID3D11PixelShader > ps;
+  ComPtr < ID3D11VertexShader > vs;
+  ComPtr < ID3D11InputLayout > layout;
+  ComPtr < ID3D11SamplerState > sampler;
+  ComPtr < ID3D11BlendState > blend;
+  ComPtr < ID3D11Buffer > index_buffer;
 
   memset (&sampler_desc, 0, sizeof (sampler_desc));
   memset (input_desc, 0, sizeof (input_desc));
@@ -401,7 +388,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
   }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (WORD) * index_count;
+  buffer_desc.ByteWidth = sizeof (WORD) * 6;
   buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
@@ -444,7 +431,6 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self,
 
   return TRUE;
 }
-
 
 GstD3D11OverlayCompositor *
 gst_d3d11_overlay_compositor_new (GstD3D11Device * device,
@@ -623,23 +609,39 @@ gboolean
 gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
     compositor, ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
 {
-  gboolean ret = TRUE;
   GList *iter;
+  ID3D11DeviceContext *context;
+  ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { nullptr, };
+  UINT strides = sizeof (VertexData);
+  UINT offsets = 0;
 
   g_return_val_if_fail (compositor != NULL, FALSE);
   g_return_val_if_fail (rtv != NULL, FALSE);
+
+  context = gst_d3d11_device_get_device_context_handle (compositor->device);
+  context->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  context->IASetInputLayout (compositor->layout);
+  context->IASetIndexBuffer (compositor->index_buffer, DXGI_FORMAT_R16_UINT, 0);
+  context->PSSetSamplers (0, 1, &compositor->sampler);
+  context->VSSetShader (compositor->vs, nullptr, 0);
+  context->PSSetShader (compositor->ps, nullptr, 0);
+  context->RSSetViewports (1, &compositor->viewport);
+  context->OMSetRenderTargets (1, rtv, nullptr);
+  context->OMSetBlendState (compositor->blend, nullptr, 0xffffffff);
 
   for (iter = compositor->overlays; iter; iter = g_list_next (iter)) {
     GstD3D11CompositionOverlay *overlay =
         (GstD3D11CompositionOverlay *) iter->data;
 
-    ret = gst_d3d11_draw_quad_unlocked (overlay->quad,
-        &compositor->viewport, 1, &overlay->srv, 1, rtv, 1,
-        compositor->blend, NULL, &compositor->sampler, 1);
+    context->PSSetShaderResources (0, 1, &overlay->srv);
+    context->IASetVertexBuffers (0,
+        1, &overlay->vertex_buffer, &strides, &offsets);
 
-    if (!ret)
-      break;
+    context->DrawIndexed (6, 0, 0);
   }
 
-  return ret;
+  context->PSSetShaderResources (0, 1, clear_view);
+  context->OMSetRenderTargets (0, nullptr, nullptr);
+
+  return TRUE;
 }
