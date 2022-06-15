@@ -265,13 +265,12 @@ gst_d3d11_window_dispose (GObject * object)
 {
   GstD3D11Window *self = GST_D3D11_WINDOW (object);
 
-  if (self->device) {
+  if (self->device)
     gst_d3d11_window_release_resources (self->device, self);
-  }
 
   g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&self->converter, gst_d3d11_converter_free);
   g_clear_pointer (&self->compositor, gst_d3d11_overlay_compositor_free);
+  gst_clear_object (&self->converter);
 
   gst_clear_buffer (&self->cached_buffer);
   gst_clear_object (&self->device);
@@ -460,8 +459,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&window->converter, gst_d3d11_converter_free);
   g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
+  gst_clear_object (&window->converter);
 
   window->processor_in_use = FALSE;
 
@@ -575,6 +574,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   window->input_rect.top = 0;
   window->input_rect.right = GST_VIDEO_INFO_WIDTH (&window->info);
   window->input_rect.bottom = GST_VIDEO_INFO_HEIGHT (&window->info);
+
+  window->prev_input_rect = window->input_rect;
 
   /* Step 4: Decide render color space and set it on converter/processor */
   {
@@ -721,7 +722,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* configure shader even if video processor is available for fallback */
   window->converter =
       gst_d3d11_converter_new (window->device, &window->info,
-      &window->render_info, nullptr);
+      &window->render_info);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");
@@ -846,13 +847,19 @@ gst_d3d11_window_do_convert (GstD3D11Window * self,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
     ID3D11RenderTargetView * rtv, RECT * input_rect)
 {
-  if (!gst_d3d11_converter_update_src_rect (self->converter, input_rect)) {
-    GST_ERROR_OBJECT (self, "Failed to update src rect");
-    return FALSE;
+  RECT *prev = &self->prev_input_rect;
+
+  if (input_rect->left != prev->left || input_rect->top != prev->top ||
+      input_rect->right != prev->right || input_rect->bottom != prev->bottom) {
+    g_object_set (self->converter, "src-x", (gint) input_rect->left,
+        "src-y", (gint) input_rect->top,
+        "src-width", (gint) (input_rect->right - input_rect->left),
+        "src-height", (gint) (input_rect->bottom - input_rect->top), nullptr);
+
+    *prev = *input_rect;
   }
 
-  if (!gst_d3d11_converter_convert_unlocked (self->converter,
-          srv, &rtv, NULL, NULL)) {
+  if (!gst_d3d11_converter_convert_unlocked (self->converter, srv, &rtv)) {
     GST_ERROR_OBJECT (self, "Couldn't render to backbuffer using converter");
     return FALSE;
   } else {
@@ -934,7 +941,13 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
       viewport.Height = self->render_rect.bottom - self->render_rect.top;
       viewport.MinDepth = 0.0f;
       viewport.MaxDepth = 1.0f;
-      gst_d3d11_converter_update_viewport (self->converter, &viewport);
+
+      g_object_set (self->converter, "dest-x", (gint) self->render_rect.left,
+          "dest-y", (gint) self->render_rect.top,
+          "dest-width",
+          (gint) (self->render_rect.right - self->render_rect.left),
+          "dest-height",
+          (gint) (self->render_rect.bottom - self->render_rect.top), nullptr);
       gst_d3d11_overlay_compositor_update_viewport (self->compositor,
           &viewport);
     }

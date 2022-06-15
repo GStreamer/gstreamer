@@ -1322,7 +1322,6 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 {
   GstD3D11CompositorPad *cpad = GST_D3D11_COMPOSITOR_PAD (pad);
   GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (vagg);
-  RECT rect;
   gint width, height;
   GstVideoInfo *info = &vagg->info;
   GstVideoRectangle frame_rect;
@@ -1333,36 +1332,20 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 #endif
 
   if (!cpad->convert || self->reconfigured) {
-    GstStructure *config;
-
-    if (cpad->convert)
-      gst_d3d11_converter_free (cpad->convert);
-
-    config = gst_structure_new_empty ("config");
-    if (cpad->alpha <= 1.0) {
-      gst_structure_set (config, GST_D3D11_CONVERTER_OPT_ALPHA_VALUE,
-          G_TYPE_DOUBLE, cpad->alpha, nullptr);
-    }
+    gst_clear_object (&cpad->convert);
 
     cpad->convert =
-        gst_d3d11_converter_new (self->device, &pad->info, &vagg->info, config);
-
+        gst_d3d11_converter_new (self->device, &pad->info, &vagg->info);
     if (!cpad->convert) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
       return FALSE;
     }
 
+    g_object_set (cpad->convert, "alpha", cpad->alpha, nullptr);
+
     is_first = TRUE;
   } else if (cpad->alpha_updated) {
-    GstStructure *config;
-
-    config = gst_structure_new_empty ("config");
-    if (cpad->alpha <= 1.0) {
-      gst_structure_set (config, GST_D3D11_CONVERTER_OPT_ALPHA_VALUE,
-          G_TYPE_DOUBLE, cpad->alpha, nullptr);
-    }
-
-    gst_d3d11_converter_update_config (cpad->convert, config);
+    g_object_set (cpad->convert, "alpha", cpad->alpha, nullptr);
     cpad->alpha_updated = FALSE;
   }
 
@@ -1387,6 +1370,12 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
     }
 
     cpad->blend = blend;
+    g_object_set (cpad->convert, "blend-state", blend,
+        "blend-factor-red", cpad->blend_factor[0],
+        "blend-factor-green", cpad->blend_factor[1],
+        "blend-factor-blue", cpad->blend_factor[2],
+        "blend-factor-alpha", cpad->blend_factor[3],
+        "blend-sample-mask", 0xffffffff, nullptr);
   }
 
   if (!is_first && !cpad->position_updated)
@@ -1398,26 +1387,25 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   frame_rect = clamp_rectangle (cpad->xpos + x_offset, cpad->ypos + y_offset,
       width, height, GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
 
-  rect.left = frame_rect.x;
-  rect.top = frame_rect.y;
-  rect.right = frame_rect.x + frame_rect.w;
-  rect.bottom = frame_rect.y + frame_rect.h;
-
 #ifndef GST_DISABLE_GST_DEBUG
   g_object_get (pad, "zorder", &zorder, NULL);
 
   GST_LOG_OBJECT (pad, "Update position, pad-xpos %d, pad-ypos %d, "
       "pad-zorder %d, pad-width %d, pad-height %d, in-resolution %dx%d, "
-      "out-resoution %dx%d, dst-{left,top,right,bottom} %d-%d-%d-%d",
+      "out-resoution %dx%d, dst-{x,y,width,height} %d-%d-%d-%d",
       cpad->xpos, cpad->ypos, zorder, cpad->width, cpad->height,
       GST_VIDEO_INFO_WIDTH (&pad->info), GST_VIDEO_INFO_HEIGHT (&pad->info),
       GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
-      (gint) rect.left, (gint) rect.top, (gint) rect.right, (gint) rect.bottom);
+      frame_rect.x, frame_rect.y, frame_rect.w, frame_rect.h);
 #endif
 
   cpad->position_updated = FALSE;
 
-  return gst_d3d11_converter_update_dest_rect (cpad->convert, &rect);
+  g_object_set (cpad->convert, "dest-x", frame_rect.x,
+      "dest-y", frame_rect.y, "dest-width", frame_rect.w,
+      "dest-height", frame_rect.h, nullptr);
+
+  return TRUE;
 }
 
 static GstStaticCaps pad_template_caps =
@@ -1681,7 +1669,7 @@ gst_d3d11_compositor_pad_clear_resource (GstD3D11Compositor * self,
     gst_buffer_pool_set_active (cpad->fallback_pool, FALSE);
     gst_clear_object (&cpad->fallback_pool);
   }
-  g_clear_pointer (&cpad->convert, gst_d3d11_converter_free);
+  gst_clear_object (&cpad->convert);
   GST_D3D11_CLEAR_COM (cpad->blend);
 
   return TRUE;
@@ -2420,8 +2408,7 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
       }
     }
 
-    if (!gst_d3d11_converter_convert_unlocked (cpad->convert, srv, rtv,
-            cpad->blend, cpad->blend_factor)) {
+    if (!gst_d3d11_converter_convert_unlocked (cpad->convert, srv, rtv)) {
       GST_ERROR_OBJECT (self, "Couldn't convert frame");
       ret = GST_FLOW_ERROR;
       break;

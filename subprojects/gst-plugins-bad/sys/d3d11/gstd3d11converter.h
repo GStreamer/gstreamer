@@ -26,46 +26,50 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstD3D11Converter GstD3D11Converter;
+#define GST_TYPE_D3D11_CONVERTER             (gst_d3d11_converter_get_type())
+#define GST_D3D11_CONVERTER(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_CONVERTER,GstD3D11Converter))
+#define GST_D3D11_CONVERTER_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_CONVERTER,GstD3D11ConverterClass))
+#define GST_D3D11_CONVERTER_GET_CLASS(obj)   (GST_D3D11_CONVERTER_CLASS(G_OBJECT_GET_CLASS(obj)))
+#define GST_IS_D3D11_CONVERTER(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_CONVERTER))
+#define GST_IS_D3D11_CONVERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_CONVERTER))
+#define GST_D3D11_CONVERTER_CAST(obj)        ((GstD3D11Converter*)(obj))
 
-/**
- * GST_D3D11_CONVERTER_OPT_ALPHA_VALUE
- *
- * #G_TYPE_FLOAT, the alpha value color value to use.
- * Default is 1.0
- */
-#define GST_D3D11_CONVERTER_OPT_ALPHA_VALUE "GstD3D11Converter.alpha-value"
+typedef struct _GstD3D11Converter GstD3D11Converter;
+typedef struct _GstD3D11ConverterClass GstD3D11ConverterClass;
+typedef struct _GstD3D11ConverterPrivate GstD3D11ConverterPrivate;
+
+struct _GstD3D11Converter
+{
+  GstObject parent;
+
+  GstD3D11Device *device;
+
+  /*< private >*/
+  GstD3D11ConverterPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstD3D11ConverterClass
+{
+  GstObjectClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+GType               gst_d3d11_converter_get_type (void);
 
 GstD3D11Converter * gst_d3d11_converter_new  (GstD3D11Device * device,
                                               const GstVideoInfo * in_info,
-                                              const GstVideoInfo * out_info,
-                                              GstStructure * config);
-
-void                gst_d3d11_converter_free    (GstD3D11Converter * converter);
+                                              const GstVideoInfo * out_info);
 
 gboolean            gst_d3d11_converter_convert (GstD3D11Converter * converter,
                                                  ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
-                                                 ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
-                                                 ID3D11BlendState *blend,
-                                                 gfloat blend_factor[4]);
+                                                 ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
 
 gboolean            gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
                                                           ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
-                                                          ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES],
-                                                          ID3D11BlendState *blend,
-                                                          gfloat blend_factor[4]);
-
-gboolean            gst_d3d11_converter_update_viewport  (GstD3D11Converter * converter,
-                                                          const D3D11_VIEWPORT * viewport);
-
-gboolean            gst_d3d11_converter_update_src_rect (GstD3D11Converter * converter,
-                                                         const RECT * src_rect);
-
-gboolean            gst_d3d11_converter_update_dest_rect (GstD3D11Converter * converter,
-                                                          const RECT * dest_rect);
-
-gboolean            gst_d3d11_converter_update_config    (GstD3D11Converter * converter,
-                                                          GstStructure * config);
+                                                          ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
 
 G_END_DECLS
 

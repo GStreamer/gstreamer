@@ -305,7 +305,7 @@ gst_d3d11_base_convert_clear_shader_resource (GstD3D11BaseConvert * self)
     GST_D3D11_CLEAR_COM (self->out_texture[i]);
   }
 
-  g_clear_pointer (&self->converter, gst_d3d11_converter_free);
+  gst_clear_object (&self->converter);
   g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
 
   self->processor_in_use = FALSE;
@@ -1720,7 +1720,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (filter);
   const GstVideoInfo *unknown_info;
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
-  D3D11_VIEWPORT view_port;
   gint border_offset_x = 0;
   gint border_offset_y = 0;
 
@@ -1799,9 +1798,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     goto format_unknown;
   }
 
-  self->converter =
-      gst_d3d11_converter_new (filter->device, in_info, out_info, nullptr);
-
+  self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info);
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "couldn't set converter");
     return FALSE;
@@ -1891,14 +1888,11 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     self->out_rect.bottom = GST_VIDEO_INFO_HEIGHT (out_info);
   }
 
-  view_port.TopLeftX = border_offset_x;
-  view_port.TopLeftY = border_offset_y;
-  view_port.Width = GST_VIDEO_INFO_WIDTH (out_info) - self->borders_w;
-  view_port.Height = GST_VIDEO_INFO_HEIGHT (out_info) - self->borders_h;
-  view_port.MinDepth = 0.0f;
-  view_port.MaxDepth = 1.0f;
-
-  gst_d3d11_converter_update_viewport (self->converter, &view_port);
+  g_object_set (self->converter, "dest-x", (gint) self->out_rect.left,
+      "dest-y", (gint) self->out_rect.top,
+      "dest-width", (gint) (self->out_rect.right - self->out_rect.left),
+      "dest-height", (gint) (self->out_rect.bottom - self->out_rect.top),
+      nullptr);
 
   return TRUE;
 
@@ -2137,7 +2131,7 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
 
   if (!gst_d3d11_converter_convert (self->converter,
           copy_input ? self->shader_resource_view : resource_view,
-          target_rtv, NULL, NULL)) {
+          target_rtv)) {
     goto conversion_failed;
   }
 

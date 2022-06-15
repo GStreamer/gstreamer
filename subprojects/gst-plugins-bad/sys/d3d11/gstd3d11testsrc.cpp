@@ -1283,7 +1283,7 @@ gst_d3d11_test_src_clear_resource (GstD3D11TestSrc * self)
   }
 
   g_clear_pointer (&self->render, gst_d3d11_test_src_render_free);
-  g_clear_pointer (&self->converter, gst_d3d11_converter_free);
+  gst_clear_object (&self->converter);
 }
 
 static gboolean
@@ -1297,7 +1297,7 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
   gst_video_info_set_format (&draw_info, GST_VIDEO_FORMAT_RGBA,
       self->info.width, self->info.height);
   self->converter = gst_d3d11_converter_new (self->device,
-      &draw_info, &self->info, nullptr);
+      &draw_info, &self->info);
 
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "Failed to create converter");
@@ -1775,7 +1775,7 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   gst_d3d11_device_lock (self->device);
   gst_d3d11_test_src_draw_pattern (self, context_handle, pattern_rtv);
   gst_d3d11_converter_convert_unlocked (self->converter, pattern_srv,
-      convert_rtv, nullptr, nullptr);
+      convert_rtv);
   gst_d3d11_device_unlock (self->device);
 
   gst_memory_unmap (mem, &render_info);

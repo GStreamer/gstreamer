@@ -108,6 +108,7 @@ struct _GstD3D11Window
 
   /* input resolution */
   RECT input_rect;
+  RECT prev_input_rect;
 
   /* requested rect via gst_d3d11_window_render */
   GstVideoRectangle rect;

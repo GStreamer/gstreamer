@@ -86,8 +86,8 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     gboolean * video_processor_available, GError ** error)
 {
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&window->converter, gst_d3d11_converter_free);
   g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
+  gst_clear_object (&window->converter);
 
   /* We are supporting only RGBA, BGRA or RGB10A2_LE formats but we don't know
    * which format texture will be used at this moment */
@@ -172,7 +172,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
   window->converter =
       gst_d3d11_converter_new (window->device, &window->info,
-      &window->render_info, nullptr);
+      &window->render_info);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");
