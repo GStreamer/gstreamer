@@ -448,6 +448,16 @@ struct _GstD3D11CompositorPad
   GstD3D11CompositorSizingPolicy sizing_policy;
 };
 
+typedef struct
+{
+  ID3D11PixelShader *ps;
+  ID3D11VertexShader *vs;
+  ID3D11InputLayout *layout;
+  ID3D11Buffer *vertex_buffer;
+  ID3D11Buffer *index_buffer;
+  D3D11_VIEWPORT viewport;
+} GstD3D11CompositorQuad;
+
 struct _GstD3D11Compositor
 {
   GstVideoAggregator parent;
@@ -457,8 +467,7 @@ struct _GstD3D11Compositor
   GstBufferPool *fallback_pool;
   GstBuffer *fallback_buf;
 
-  GstD3D11Quad *checker_background;
-  D3D11_VIEWPORT viewport;
+  GstD3D11CompositorQuad *checker_background;
 
   gboolean reconfigured;
 
@@ -1459,6 +1468,7 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
 static GstFlowReturn
 gst_d3d11_compositor_create_output_buffer (GstVideoAggregator * vagg,
     GstBuffer ** outbuffer);
+static void gst_d3d11_compositor_quad_free (GstD3D11CompositorQuad * quad);
 
 #define gst_d3d11_compositor_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D11Compositor, gst_d3d11_compositor,
@@ -1551,7 +1561,7 @@ gst_d3d11_compositor_dispose (GObject * object)
   gst_clear_object (&self->device);
   gst_clear_buffer (&self->fallback_buf);
   gst_clear_object (&self->fallback_pool);
-  g_clear_pointer (&self->checker_background, gst_d3d11_quad_free);
+  g_clear_pointer (&self->checker_background, gst_d3d11_compositor_quad_free);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1722,7 +1732,7 @@ gst_d3d11_compositor_stop (GstAggregator * aggregator)
 {
   GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (aggregator);
 
-  g_clear_pointer (&self->checker_background, gst_d3d11_quad_free);
+  g_clear_pointer (&self->checker_background, gst_d3d11_compositor_quad_free);
   gst_clear_object (&self->device);
 
   return GST_AGGREGATOR_CLASS (parent_class)->stop (aggregator);
@@ -2076,10 +2086,11 @@ typedef struct
   } texture;
 } VertexData;
 
-static GstD3D11Quad *
-gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self)
+static GstD3D11CompositorQuad *
+gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
+    const GstVideoInfo * info)
 {
-  GstD3D11Quad *quad = NULL;
+  GstD3D11CompositorQuad *quad = nullptr;
   VertexData *vertex_data;
   WORD *indices;
   ID3D11Device *device_handle;
@@ -2087,13 +2098,11 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self)
   D3D11_MAPPED_SUBRESOURCE map;
   D3D11_INPUT_ELEMENT_DESC input_desc;
   D3D11_BUFFER_DESC buffer_desc;
-  /* *INDENT-OFF* */
-  ComPtr<ID3D11Buffer> vertex_buffer;
-  ComPtr<ID3D11Buffer> index_buffer;
-  ComPtr<ID3D11PixelShader> ps;
-  ComPtr<ID3D11VertexShader> vs;
-  ComPtr<ID3D11InputLayout> layout;
-  /* *INDENT-ON* */
+  ComPtr < ID3D11Buffer > vertex_buffer;
+  ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11PixelShader > ps;
+  ComPtr < ID3D11VertexShader > vs;
+  ComPtr < ID3D11InputLayout > layout;
   HRESULT hr;
 
   device_handle = gst_d3d11_device_get_device_handle (self->device);
@@ -2204,41 +2213,71 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self)
   indices[5] = 2;               /* top right */
 
   context_handle->Unmap (index_buffer.Get (), 0);
+  quad = g_new0 (GstD3D11CompositorQuad, 1);
+  quad->ps = ps.Detach ();
+  quad->vs = vs.Detach ();
+  quad->layout = layout.Detach ();
+  quad->vertex_buffer = vertex_buffer.Detach ();
+  quad->index_buffer = index_buffer.Detach ();
 
-  quad = gst_d3d11_quad_new (self->device,
-      ps.Get (), vs.Get (), layout.Get (), nullptr, 0,
-      vertex_buffer.Get (), sizeof (VertexData), index_buffer.Get (),
-      DXGI_FORMAT_R16_UINT, 6);
-  if (!quad) {
-    GST_ERROR_OBJECT (self, "Couldn't setup quad");
-    return NULL;
-  }
+  quad->viewport.TopLeftX = 0;
+  quad->viewport.TopLeftY = 0;
+  quad->viewport.Width = GST_VIDEO_INFO_WIDTH (info);
+  quad->viewport.Height = GST_VIDEO_INFO_HEIGHT (info);
+  quad->viewport.MinDepth = 0.0f;
+  quad->viewport.MaxDepth = 1.0f;
 
   return quad;
+}
+
+static void
+gst_d3d11_compositor_quad_free (GstD3D11CompositorQuad * quad)
+{
+  if (!quad)
+    return;
+
+  GST_D3D11_CLEAR_COM (quad->ps);
+  GST_D3D11_CLEAR_COM (quad->vs);
+  GST_D3D11_CLEAR_COM (quad->layout);
+  GST_D3D11_CLEAR_COM (quad->vertex_buffer);
+  GST_D3D11_CLEAR_COM (quad->index_buffer);
+
+  g_free (quad);
 }
 
 static gboolean
 gst_d3d11_compositor_draw_background_checker (GstD3D11Compositor * self,
     ID3D11RenderTargetView * rtv)
 {
+  ID3D11DeviceContext *context =
+      gst_d3d11_device_get_device_context_handle (self->device);
+  UINT offsets = 0;
+  UINT strides = sizeof (VertexData);
+  GstD3D11CompositorQuad *quad;
+
   if (!self->checker_background) {
     GstVideoInfo *info = &GST_VIDEO_AGGREGATOR_CAST (self)->info;
 
-    self->checker_background = gst_d3d11_compositor_create_checker_quad (self);
-
+    self->checker_background =
+        gst_d3d11_compositor_create_checker_quad (self, info);
     if (!self->checker_background)
       return FALSE;
-
-    self->viewport.TopLeftX = 0;
-    self->viewport.TopLeftY = 0;
-    self->viewport.Width = GST_VIDEO_INFO_WIDTH (info);
-    self->viewport.Height = GST_VIDEO_INFO_HEIGHT (info);
-    self->viewport.MinDepth = 0.0f;
-    self->viewport.MaxDepth = 1.0f;
   }
 
-  return gst_d3d11_draw_quad_unlocked (self->checker_background,
-      &self->viewport, 1, NULL, 0, &rtv, 1, NULL, NULL, NULL, 0);
+  quad = self->checker_background;
+  context->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+  context->IASetInputLayout (quad->layout);
+  context->IASetVertexBuffers (0, 1, &quad->vertex_buffer, &strides, &offsets);
+  context->IASetIndexBuffer (quad->index_buffer, DXGI_FORMAT_R16_UINT, 0);
+  context->VSSetShader (quad->vs, nullptr, 0);
+  context->PSSetShader (quad->ps, nullptr, 0);
+  context->RSSetViewports (1, &quad->viewport);
+  context->OMSetRenderTargets (1, &rtv, nullptr);
+  context->OMSetBlendState (nullptr, nullptr, 0xffffffff);
+  context->DrawIndexed (6, 0, 0);
+  context->OMSetRenderTargets (0, nullptr, nullptr);
+
+  return TRUE;
 }
 
 /* Must be called with d3d11 device lock */
@@ -2246,7 +2285,7 @@ static gboolean
 gst_d3d11_compositor_draw_background (GstD3D11Compositor * self,
     ID3D11RenderTargetView * rtv)
 {
-  ID3D11DeviceContext *device_context =
+  ID3D11DeviceContext *context =
       gst_d3d11_device_get_device_context_handle (self->device);
   FLOAT rgba[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
@@ -2269,7 +2308,7 @@ gst_d3d11_compositor_draw_background (GstD3D11Compositor * self,
       return FALSE;
   }
 
-  device_context->ClearRenderTargetView (rtv, rgba);
+  context->ClearRenderTargetView (rtv, rgba);
 
   return TRUE;
 }
@@ -2501,7 +2540,7 @@ gst_d3d11_compositor_create_output_buffer (GstVideoAggregator * vagg,
     gst_buffer_pool_set_active (self->fallback_pool, FALSE);
     gst_clear_object (&self->fallback_pool);
   }
-  g_clear_pointer (&self->checker_background, gst_d3d11_quad_free);
+  g_clear_pointer (&self->checker_background, gst_d3d11_compositor_quad_free);
 
   GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"
       GST_PTR_FORMAT, self->device, data.other_device);
