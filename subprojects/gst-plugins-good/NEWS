@@ -2,13 +2,13 @@ GStreamer 1.20 Release Notes
 
 GStreamer 1.20.0 was originally released on 3 February 2022.
 
-The latest bug-fix release in the 1.20 series is 1.20.2 and was released
-on 2 May 2022.
+The latest bug-fix release in the 1.20 series is 1.20.3 and was released
+on 15 June 2022.
 
 See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
 version of this document.
 
-Last updated: Monday 2 May 2022, 0:30 UTC (log)
+Last updated: Monday 15 June 2022, 17:00 UTC (log)
 
 Introduction
 
@@ -2290,6 +2290,218 @@ List of merge requests and issues fixed in 1.20.2
 
 -   List of Merge Requests applied in 1.20.2
 -   List of Issues fixed in 1.20.2
+
+1.20.3
+
+The third 1.20 bug-fix release (1.20.3) was released on 15 June 2022.
+
+This release only contains bugfixes and it should be safe to upgrade
+from 1.20.x.
+
+Highlighted bugfixes in 1.20.3
+
+-   Security fixes in Matroska, MP4 and AVI demuxers
+-   Fix scrambled video playback with hardware-accelerated VA-API
+    decoders on certain Intel hardware
+-   playbin3/decodebin3 regression fix for unhandled streams
+-   Fragmented MP4 playback fixes
+-   Android H.265 encoder mapping
+-   Playback of MXF files produced by FFmpeg before March 2022
+-   Fix rtmp2sink crashes on 32-bit platforms
+-   WebRTC improvements
+-   D3D11 video decoder and screen recorder fixes
+-   Performance improvements
+-   Support for building against OpenCV 4.6 and other build fixes
+-   Miscellaneous bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   clock: Avoid creating a weakref with every entry (performance
+    improvement)
+-   plugin: add Apache 2 license to list of known licenses to avoid
+    warning
+-   gst_plugin_load_file: force plugin reload if filename differs
+-   Add support for LoongArch
+
+Base Libraries
+
+-   aggregator: Only send events up to CAPS event from
+    gst_aggregator_set_src_caps(), don’t send multiple caps events with
+    the same caps and fix negotiation in muxers
+-   basetransform: handle gst_base_transform_query_caps() returning NULL
+-   basetransform: fix critical if transform_caps() returned NULL
+-   queuearray: Fix potential heap overflow when expanding GstQueueArray
+
+Core Elements
+
+-   multiqueue: fix potential crash on shutdown
+-   multiqueue: fix warning: ‘is_query’ may be used uninitialized in
+    this function
+-   multiqueue: SegFault during flushing with gcc11
+
+gst-plugins-base
+
+-   audioconvert: If no channel-mask can be fixated then use a NONE
+    channel layout
+-   playbin3: Configure combiner on pad-added if needed
+-   parsebin: Fix assertions/regression when dealing with un-handled
+    streams (fixes regression in 1.20.2)
+-   appsink: Fix race condition on caps handling
+-   oggdemux: Protect against invalid framerates
+-   rtcpbuffer: Allow padding on first reduced size packets
+-   gl: check for xlib-xcb.h header to fix build of tests on macOS with
+    homebrew
+-   videoaggregator: unref temporary caps
+-   v4l2videoenc: Setup crop rectangle if needed
+
+Tools
+
+-   gst-play-1.0: Print position even if duration is unknown
+-   gst-device-monitor-1.0: Print string property as-is without
+    additional escaping
+
+gst-plugins-good
+
+-   aacparse: Avoid mismatch between src_caps and output_header_type
+-   avidemux: Fix integer overflow resulting in heap corruption in DIB
+    buffer inversion code (Security fix)
+-   deinterlace: Clean up error handling code
+-   flvdemux: Actually make use of the debug category
+-   gtkglsink: Fix double-free when OpenGL can’t be initialised
+-   jack: Add support for detecting libjack on Windows
+-   matroskademux: Avoid integer-overflow resulting in heap corruption
+    in WavPack header handling code (Security fix)
+-   matroskademux, qtdemux: Fix integer overflows in zlib/bz2/etc
+    decompression code (Security fix)
+-   qtdemux: Don’t use tfdt for parsing subsequent trun boxes
+-   rtpbin: Avoid holding GST_RTP_BIN_LOCK when emitting pad-added
+    signal (to avoid deadlocks)
+-   rtpptdemux: Don’t GST_FLOW_ERROR when ignoring invalid packets
+-   smpte: Fix integer overflow with possible heap corruption in GstMask
+    creation. (Security fix)
+-   smpte: integer overflow with possible heap corruption in GstMask
+    creation (Security fix)
+-   soup: fix soup debug category initialisation
+-   soup: Fix plugin/element init
+-   v4l2: Reset transfer in gst_v4l2_object_acquire_format()
+-   vpxenc: fix crash if encoder produces unmatching timestamp
+-   wavparse: ensure that any pending segment is sent before an EOS
+    event is sent
+
+gst-plugins-bad
+
+-   androidmedia: Add H.265 encoder mapping
+-   avfvideosrc: fix wrong framerate selected for caps
+-   d3d11decoder: Fix for alternate interlacing signalling
+-   d3d11decoder: Do not preallocate texture using downstream d3d11
+    buffer pool
+-   d3d11decoder: Copy HDR10 related caps field manually
+-   d3d11decoder: Work around Intel DXVA driver crash
+-   d3d11screencapture: Set viewport when drawing mouse cursor
+-   d3d11screencapture: Fix missing/outdated cursor shape
+-   d3d11screencapturesrc: Fix crash when d3d11 device is different from
+    owned one
+-   h264decoder: Fix for unhandled low-delay decoding case
+-   matroskademux, qtdemux: Fix integer overflows in zlib/bz2/etc
+    decompression code (Security fix)
+-   mpegtsmux: Make sure to set srcpad caps under all conditions before
+    outputting the first buffer
+-   mpegtsmux: sends segment before caps
+-   mxfdemux: Handle files produced by legacy FFmpeg
+-   nvh264dec,nvh265dec: Don’t realloc bitstream buffer per slice
+-   nvcodec: cuda-converter: fix nvrtc compilation on non-English locale
+    systems
+-   opencv: Allow building against 4.6.x
+-   pcapparse: Set timestamp in DTS, not PTS
+-   rtmp2: fix allocation of GstRtmpMeta which caused crashes on 32-bit
+    platforms
+-   rtmp2sink crash on Android arm 32 - cerbero 1.20.2.0
+-   sdpdemux: Release request pads from rtpbin when freeing a stream
+-   va: Add O_CLOEXEC flag at opening drm device (so subprocesses won’t
+    have access to it)
+-   webrtcbin: Reject answers that don’t contain the same number of
+    m-line as offer
+-   webrtc: datachannel: Notify low buffered amount according to spec
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   vaapi: Do not disable the whole vpp when some va operations not
+    available
+-   vaapidecode, vaapipostproc: Disable DMAbuf from caps negotiation
+-   scrambled video with some Intel graphics cards
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges/videourisource: handle non-1/1 PAR source videos
+
+gst-examples:
+
+-   No changes
+
+Development build environment + gst-full build
+
+-   Update libnice subproject wrap to 0.1.19
+-   meson: use better zlib dependency fallback
+-   meson: Fix deprecation warnings
+
+Cerbero build tool and packaging changes in 1.20.3
+
+-   Set GSTREAMER_1_0_ROOT_[MSVC_]X86_64 root environment variable in
+    System section (not User section)
+-   bootstrap: Add perl-FindBin dep needed by openssl (which is not
+    installed by default on RedHat systems)
+-   Also add build-tools/local/bin to PATH on Linux
+-   Add a variant to control building of the JACK plugin
+-   libnice: update to 0.1.19 (fixes some WebRTC issues)
+-   zlib: update to 1.2.12
+
+Bindings
+
+-   No changes
+
+Contributors to 1.20.3
+
+Adam Doupe, Alicia Boya García, Bastien Nocera, Corentin Damman, Damian
+Hobson-Garcia, Diogo Goncalves, Edward Hervey, Eli Schwartz, Erwann
+Gouesbet, Guillaume Desmottes, He Junyan, Hou Qi, Jakub Adam, James
+Hilliard, Jan Alexander Steffens (heftig), Jan Schmidt, Matthew Waters,
+Nicolas Dufresne, Nirbheek Chauhan, Olivier Crête, Philippe Normand,
+Rabindra Harlalka, Ruben Gonzalez, Sebastian Dröge, Seungha Yang,
+Stéphane Cerveau, Thibault Saunier, Tim-Philipp Müller, Tom Schuring, U.
+Artie Eoff, Víctor Manuel Jáquez Leal, WANG Xuerui, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.20.3
+
+-   List of Merge Requests applied in 1.20.3
+-   List of Issues fixed in 1.20.3
 
 Schedule for 1.22
 
