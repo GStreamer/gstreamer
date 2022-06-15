@@ -515,7 +515,7 @@ static const struct
 const GstDecklinkMode *
 gst_decklink_get_mode (GstDecklinkModeEnum e)
 {
-  if (e < GST_DECKLINK_MODE_AUTO || e > GST_DECKLINK_MODE_PAL_P_WIDESCREEN)
+  if (e < GST_DECKLINK_MODE_AUTO || e > GST_DECKLINK_MODE_8Kp60)
     return NULL;
   return &modes[e];
 }
