@@ -118,29 +118,9 @@ assure uniqueness. In caps, we use a *:* to link them together and write in
 the mode of *FORMAT:MODIFIER*, which represents a totally new single video
 format. For example, `NV12:0x0100000000000002` is a new video format
 combined by video format NV12 and the modifier `0x0100000000000002`. It's
-not NV12 and it's not its subset either.  If no modifier present, we just
-consider it as linear, namely, `NV12:0x0000000000000000` is equivalent to
-NV12. Then, the intersection between the set of
-
-```
-{ NV12:0x0100000000000002, NV12:0x0000000000000000, ARGB:0x0100000000000001 }
-```
-
-and `{ NV12 }` should be
-
-```
-{ NV12:0x0000000000000000 }
-```
-
-While the intersection between the set of
-
-`{ ARGB }` and
-
-```
-{ NV12:0x0100000000000002, NV12:0x0000000000000000, ARGB:0x0100000000000001 }
-```
-
-should be empty.
+not NV12 and it's not its subset either. A modifier must always be present,
+except if the modifier is linear, then it should not be included,
+so `NV12:0x0000000000000000` is invalid, it must be `drm-format=NV12`.
 
 Please note that this form of video format only appears within
 *memory:DMABuf* feature. It must not appear in any other video caps
@@ -246,10 +226,14 @@ SRC template: 'src'
         video/x-raw(memory:DMABuf)
           width:  [ 16, 16384 ]
           height: [ 16, 16384 ]
-          drm-format: { (string)NV12:0x0100000000000001, (string)I420, (string)YV12, \
-                        (string)YUY2:0x0100000000000002, (string)P010_10LE:0x0100000000000002, \
-                        (string)BGRA:0x0100000000000002, (string)RGBA:0x0100000000000002, \
-                        (string)BGR10A2_LE:0x0100000000000002, (string)VUYA:0x0100000000000002 }
+          drm-format: { (string)NV12:0x0100000000000001, \
+                        (string)I420, (string)YV12, \
+                        (string)YUY2:0x0100000000000002, \
+                        (string)P010_10LE:0x0100000000000002, \
+                        (string)BGRA:0x0100000000000002, \
+                        (string)RGBA:0x0100000000000002, \
+                        (string)BGR10A2_LE:0x0100000000000002, \
+                        (string)VUYA:0x0100000000000002 }
 ```
 
 But because sometimes it is impossible to enumerate and list all
@@ -291,8 +275,8 @@ SRC template: 'src'
         video/x-raw(memory:DMABuf)
           width:  [ 16, 16384 ]
           height: [ 16, 16384 ]
-          drm-format: { (string)NV12:0x0100000000000001, (string)NV12, \
-                        (string)I420, (string)YV12, \
+          drm-format: { (string)NV12:0x0100000000000001, \
+                        (string)NV12, (string)I420, (string)YV12, \
                         (string)BGRA:0x0100000000000002 }
 ```
 
