@@ -488,8 +488,10 @@ gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
       direction, "template", template, NULL);
   gst_object_unref (template);
 
-  gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
-  gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
+  if (direction == GST_PAD_SINK) {
+    gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
+    gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
+  }
 
   gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BUFFER |
       GST_PAD_PROBE_TYPE_BUFFER_LIST, webrtc_bin_pad_buffer_cb, NULL, NULL);
