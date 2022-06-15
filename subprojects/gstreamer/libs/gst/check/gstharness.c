@@ -105,7 +105,7 @@
  * with different configurations, by simply doing:
  *
  * |[<!-- language="C" -->
- *   GstHarness * h = gst_harness_new (h, "vp8dec");
+ *   GstHarness * h = gst_harness_new ("vp8dec");
  *   gst_harness_add_src_parse (h, "videotestsrc is-live=1 ! vp8enc", TRUE);
  * ]|
  *
