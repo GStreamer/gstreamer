@@ -28,9 +28,10 @@
 #include <gst/d3d11/gstd3d11config.h>
 #include <gst/d3d11/gstd3d11_fwd.h>
 #include <gst/d3d11/gstd3d11-enumtypes.h>
-#include <gst/d3d11/gstd3d11device.h>
-#include <gst/d3d11/gstd3d11memory.h>
 #include <gst/d3d11/gstd3d11bufferpool.h>
-#include <gst/d3d11/gstd3d11utils.h>
+#include <gst/d3d11/gstd3d11compile.h>
+#include <gst/d3d11/gstd3d11device.h>
 #include <gst/d3d11/gstd3d11format.h>
+#include <gst/d3d11/gstd3d11memory.h>
+#include <gst/d3d11/gstd3d11utils.h>
 

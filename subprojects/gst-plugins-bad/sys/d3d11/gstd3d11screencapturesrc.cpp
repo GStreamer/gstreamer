@@ -39,7 +39,6 @@
 #include "gstd3d11screencapturesrc.h"
 #include "gstd3d11screencapture.h"
 #include "gstd3d11pluginutils.h"
-#include "gstd3d11shader.h"
 #include <wrl.h>
 #include <string.h>
 
@@ -663,13 +662,15 @@ gst_d3d11_screen_capture_prepare_shader (GstD3D11ScreenCaptureSrc * self)
 
   device_handle = gst_d3d11_device_get_device_handle (self->device);
 
-  if (!gst_d3d11_create_vertex_shader (self->device,
-          vs_str, input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+  hr = gst_d3d11_create_vertex_shader_simple (self->device,
+      vs_str, "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to create vertex shader");
     return FALSE;
   }
 
-  if (!gst_d3d11_create_pixel_shader (self->device, ps_str, &ps)) {
+  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_str, "main", &ps);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to create pixel shader");
     return FALSE;
   }

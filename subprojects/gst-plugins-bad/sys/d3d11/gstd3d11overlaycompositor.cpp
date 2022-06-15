@@ -22,7 +22,6 @@
 #endif
 
 #include "gstd3d11overlaycompositor.h"
-#include "gstd3d11shader.h"
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 
@@ -381,7 +380,9 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
     return FALSE;
   }
 
-  if (!gst_d3d11_create_pixel_shader (device, templ_pixel_shader, &ps)) {
+  hr = gst_d3d11_create_pixel_shader_simple (device,
+      templ_pixel_shader, "main", &ps);
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
     return FALSE;
   }
@@ -402,8 +403,9 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  if (!gst_d3d11_create_vertex_shader (device, templ_vertex_shader,
-          input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+  hr = gst_d3d11_create_vertex_shader_simple (device, templ_vertex_shader,
+      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't vertex pixel shader");
     return FALSE;
   }

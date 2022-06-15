@@ -47,7 +47,6 @@
 #endif
 
 #include "gstd3d11screencapture.h"
-#include "gstd3d11shader.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 
@@ -654,14 +653,18 @@ private:
 
     ComPtr<ID3D11VertexShader> vs;
     ComPtr<ID3D11InputLayout> layout;
-    if (!gst_d3d11_create_vertex_shader (device,
-        vs_str, input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+    HRESULT hr;
+
+    hr = gst_d3d11_create_vertex_shader_simple (device,
+        vs_str, "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+    if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Failed to create vertex shader");
       return false;
     }
 
     ComPtr<ID3D11PixelShader> ps;
-    if (!gst_d3d11_create_pixel_shader (device, ps_str, &ps)) {
+    hr = gst_d3d11_create_pixel_shader_simple (device, ps_str, "main", &ps);
+    if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Failed to create pixel shader");
       return false;
     }
@@ -678,7 +681,7 @@ private:
 
     ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
     ComPtr<ID3D11SamplerState> sampler;
-    HRESULT hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
+    hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Failed to create sampler state, hr 0x%x", (guint) hr);
       return false;

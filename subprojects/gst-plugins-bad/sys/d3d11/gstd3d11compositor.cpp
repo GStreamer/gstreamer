@@ -44,7 +44,6 @@
 
 #include "gstd3d11compositor.h"
 #include "gstd3d11converter.h"
-#include "gstd3d11shader.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 #include <wrl.h>
@@ -1823,7 +1822,8 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
     ps_src = checker_ps_src_luma;
   }
 
-  if (!gst_d3d11_create_pixel_shader (self->device, ps_src, &ps)) {
+  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't setup pixel shader");
     return nullptr;
   }
@@ -1837,8 +1837,9 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   input_desc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc.InstanceDataStepRate = 0;
 
-  if (!gst_d3d11_create_vertex_shader (self->device, checker_vs_src,
-          &input_desc, 1, &vs, &layout)) {
+  hr = gst_d3d11_create_vertex_shader_simple (self->device, checker_vs_src,
+      "main", &input_desc, 1, &vs, &layout);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't setup vertex shader");
     return nullptr;
   }

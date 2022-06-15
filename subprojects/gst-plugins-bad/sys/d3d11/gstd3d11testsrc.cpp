@@ -38,7 +38,6 @@
 
 #include "gstd3d11testsrc.h"
 #include "gstd3d11pluginutils.h"
-#include "gstd3d11shader.h"
 #include "gstd3d11converter.h"
 #include <wrl.h>
 #include <string.h>
@@ -324,7 +323,6 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     guint on_smpte)
 {
   HRESULT hr;
-  gboolean ret;
   D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -361,14 +359,16 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  if (!gst_d3d11_create_vertex_shader (self->device, templ_vs_coord,
-          input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+  hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_coord,
+      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile vertext shader");
     return FALSE;
   }
 
-  ret = gst_d3d11_create_pixel_shader (self->device, templ_ps_snow, &ps);
-  if (!ret) {
+  hr = gst_d3d11_create_pixel_shader_simple (self->device,
+      templ_ps_snow, "main", &ps);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
   }
@@ -527,7 +527,6 @@ static gboolean
 setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
 {
   HRESULT hr;
-  gboolean ret;
   D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -565,14 +564,17 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
   input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  if (!gst_d3d11_create_vertex_shader (self->device, templ_vs_color,
-          input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+  hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_coord,
+      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile vertext shader");
     return FALSE;
   }
 
-  ret = gst_d3d11_create_pixel_shader (self->device, templ_ps_smpte, &ps);
-  if (!ret) {
+
+  hr = gst_d3d11_create_pixel_shader_simple (self->device,
+      templ_ps_smpte, "main", &ps);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
   }
@@ -863,7 +865,6 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     guint checker_size)
 {
   HRESULT hr;
-  gboolean ret;
   D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -900,17 +901,18 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  if (!gst_d3d11_create_vertex_shader (self->device, templ_vs_coord,
-          input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+  hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_coord,
+      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile vertext shader");
     return FALSE;
   }
 
   ps_src = g_strdup_printf (templ_ps_checker,
       self->info.width, self->info.height, checker_size);
-  ret = gst_d3d11_create_pixel_shader (self->device, ps_src, &ps);
+  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
   g_free (ps_src);
-  if (!ret) {
+  if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
   }

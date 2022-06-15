@@ -1,5 +1,6 @@
 d3d11_sources = [
   'gstd3d11bufferpool.cpp',
+  'gstd3d11compile.cpp',
   'gstd3d11device.cpp',
   'gstd3d11format.cpp',
   'gstd3d11memory.cpp',
@@ -51,9 +52,21 @@ dxgi_lib = cc.find_library('dxgi', required : false)
 d3dcompiler_lib = cc.find_library('d3dcompiler', required: false)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
 
-if not d3d11_lib.found() or not dxgi_lib.found() or not cc.has_header('d3d11_4.h') or not cc.has_header('dxgi1_6.h')
+if not d3d11_lib.found() or not dxgi_lib.found()
   subdir_done()
 endif
+
+sdk_headers = [
+  'd3d11_4.h',
+  'dxgi1_6.h',
+  'd3dcompiler.h'
+]
+
+foreach h : sdk_headers
+  if not cc.has_header (h)
+    subdir_done ()
+  endif
+endforeach
 
 d3d11_winapi_desktop = cxx.compiles('''#include <winapifamily.h>
     #if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
@@ -83,6 +96,7 @@ if not d3d11_winapi_desktop and not d3d11_winapi_app
   subdir_done()
 endif
 
+extra_deps = []
 d3d11_winapi_only_app = d3d11_winapi_app and not d3d11_winapi_desktop
 d3d11_conf.set10('GST_D3D11_WINAPI_ONLY_APP', d3d11_winapi_only_app)
 d3d11_conf.set10('GST_D3D11_WINAPI_APP', d3d11_winapi_app)
@@ -144,6 +158,10 @@ if have_dxgidebug_h
   extra_comm_args += ['-DHAVE_DXGIDEBUG_H']
 endif
 
+if d3d11_winapi_only_app
+  extra_deps += [d3dcompiler_lib, runtimeobject_lib]
+endif
+
 # MinGW 32bits compiler seems to be complaining about redundant-decls
 # when ComPtr is in use. Let's just disable the warning
 if cc.get_id() != 'msvc'
@@ -186,7 +204,7 @@ gstd3d11 = library('gstd3d11-' + api_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib]
+  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib] + extra_deps
 )
 
 pkgconfig.generate(gstd3d11,

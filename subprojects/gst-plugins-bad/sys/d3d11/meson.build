@@ -12,7 +12,6 @@ d3d11_sources = [
   'gstd3d11mpeg2dec.cpp',
   'gstd3d11overlaycompositor.cpp',
   'gstd3d11pluginutils.cpp',
-  'gstd3d11shader.cpp',
   'gstd3d11testsrc.cpp',
   'gstd3d11upload.cpp',
   'gstd3d11videosink.cpp',
@@ -32,14 +31,13 @@ if host_system != 'windows' or d3d11_option.disabled()
   subdir_done()
 endif
 
-if not gstd3d11_dep.found() or not cc.has_header('dxva.h') or not cc.has_header('d3d9.h') or not cc.has_header('d3dcompiler.h')
+if not gstd3d11_dep.found() or not cc.has_header('dxva.h') or not cc.has_header('d3d9.h')
   if d3d11_option.enabled()
     error('The d3d11 was enabled explicitly, but required dependencies were not found.')
   endif
   subdir_done()
 endif
 
-d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
 winmm_lib = cc.find_library('winmm', required: false)
 
@@ -55,7 +53,7 @@ endif
 if d3d11_winapi_app
   d3d11_sources += ['gstd3d11window_corewindow.cpp',
                     'gstd3d11window_swapchainpanel.cpp']
-  extra_dep += [runtimeobject_lib, d3dcompiler_lib]
+  extra_dep += [runtimeobject_lib]
 endif
 
 if d3d11_winapi_desktop

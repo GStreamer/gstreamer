@@ -23,7 +23,6 @@
 #endif
 
 #include "gstd3d11converter.h"
-#include "gstd3d11shader.h"
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 #include <string.h>
@@ -1159,7 +1158,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
   gint i;
-  gboolean ret;
 
   memset (&sampler_desc, 0, sizeof (sampler_desc));
   memset (input_desc, 0, sizeof (input_desc));
@@ -1196,9 +1194,10 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
           cinfo->build_output_func[i], cinfo->gamma_decode_func,
           cinfo->gamma_encode_func, cinfo->XYZ_convert_func);
 
-      ret = gst_d3d11_create_pixel_shader (device, shader_code, &ps[i]);
+      hr = gst_d3d11_create_pixel_shader_simple (device,
+          shader_code, "main", &ps[i]);
       g_free (shader_code);
-      if (!ret) {
+      if (!gst_d3d11_result (hr, device)) {
         return FALSE;
       }
     }
@@ -1220,8 +1219,9 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  if (!gst_d3d11_create_vertex_shader (device, templ_vertex_shader,
-          input_desc, G_N_ELEMENTS (input_desc), &vs, &layout)) {
+  hr = gst_d3d11_create_vertex_shader_simple (device, templ_vertex_shader,
+      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't vertex pixel shader");
     return FALSE;
   }
