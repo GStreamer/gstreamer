@@ -49,7 +49,8 @@ Just like fourcc common usage, DRM-fourcc describes the underlying format
 of the video frame, such as `DRM_FORMAT_YVU420` or `DRM_FORMAT_NV12`. All
 of them with the prefix `DRM_FORMAT_`. Please refer to `drm_fourcc.h` in
 the kernel for a full list. This list of fourcc formats maps to GStreamer
-video formats.
+video formats, although the GStreamer formats may have a slighly different.
+For example, DRM_FORMAT_ARGB8888 corresponds to GST_VIDEO_FORMAT_BGRA.
 
 
 ## DRM modifier
@@ -115,12 +116,20 @@ sinks might end rendering wrong frames assuming linear access.
 Because DRM-fourcc and DRM-modifier are both necessary to render frames
 DMABuf-backed, we now consider both as a pair and combine them together to
 assure uniqueness. In caps, we use a *:* to link them together and write in
-the mode of *FORMAT:MODIFIER*, which represents a totally new single video
+the mode of *DRM_FORMAT:DRM_MODIFIER*, which represents a totally new single video
 format. For example, `NV12:0x0100000000000002` is a new video format
 combined by video format NV12 and the modifier `0x0100000000000002`. It's
-not NV12 and it's not its subset either. A modifier must always be present,
-except if the modifier is linear, then it should not be included,
-so `NV12:0x0000000000000000` is invalid, it must be `drm-format=NV12`.
+not NV12 and it's not its subset either.
+
+*DRM_FORMAT* can be printed by using
+`GST_FOURCC_FORMAT` and `GST_FOURCC_ARGS` macros from the
+`DRM_FORMAT_*` constants, it is NOT a `GstVideoFormat`, so it would be
+different from the content of the `format` field in a non-dmabuf caps.
+A modifier must always be present, except if the modifier is linear,
+then it should not be included, so `NV12:0x0000000000000000` is
+invalid, it must be `drm-format=NV12`. DRM fourcc are used
+instead of a `GstVideoFormat` to make it easier for non-GStreamer
+developers to understand what the system is trying to achieve.
 
 Please note that this form of video format only appears within
 *memory:DMABuf* feature. It must not appear in any other video caps
@@ -209,7 +218,7 @@ DMA buffer, **unless the modifier is linear**.
 
 If two elements of different modules (for example, VA-API decoder to
 Wayland sink) want to transfer dmabufs, the negotiation should ensure a
-common *drm-format* (FORMAT:MODIFIER).  As we already illustrate how to
+common *drm-format* (*DRM_FORMAT:DRM_MODIFIER*).  As we already illustrate how to
 represent both of them in caps before, so the negotiation here in fact has
 no special operation except finding the intersection.
 
@@ -227,13 +236,13 @@ SRC template: 'src'
           width:  [ 16, 16384 ]
           height: [ 16, 16384 ]
           drm-format: { (string)NV12:0x0100000000000001, \
-                        (string)I420, (string)YV12, \
-                        (string)YUY2:0x0100000000000002, \
-                        (string)P010_10LE:0x0100000000000002, \
-                        (string)BGRA:0x0100000000000002, \
-                        (string)RGBA:0x0100000000000002, \
-                        (string)BGR10A2_LE:0x0100000000000002, \
-                        (string)VUYA:0x0100000000000002 }
+                        (string)YU12, (string)YV12, \
+                        (string)YUYV:0x0100000000000002, \
+                        (string)P010:0x0100000000000002, \
+                        (string)AR24:0x0100000000000002, \
+                        (string)AB24:0x0100000000000002, \
+                        (string)AR39:0x0100000000000002, \
+                        (string)AYUV:0x0100000000000002 }
 ```
 
 But because sometimes it is impossible to enumerate and list all
