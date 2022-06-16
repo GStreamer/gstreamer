@@ -242,8 +242,7 @@ format_is_accepted (GstVaFilter * self, GstVideoFormat format)
 {
   /* https://github.com/intel/media-driver/issues/690
    * https://github.com/intel/media-driver/issues/644 */
-  if (!gst_va_display_is_implementation (self->display,
-          GST_VA_IMPLEMENTATION_INTEL_IHD))
+  if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_IHD))
     return TRUE;
 
   switch (format) {
@@ -1723,8 +1722,7 @@ gst_va_filter_has_compose (GstVaFilter * self)
     return FALSE;
 
   /* HACK(uartie): i965 can't do composition */
-  if (gst_va_display_is_implementation (self->display,
-          GST_VA_IMPLEMENTATION_INTEL_I965))
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_I965))
     return FALSE;
 
   /* some drivers can compose, but may not support blending (e.g. GALLIUM) */

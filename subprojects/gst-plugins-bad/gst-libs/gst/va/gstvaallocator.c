@@ -533,8 +533,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   }
 
   /* HACK(victor): disable tiling for i965 driver for RGB formats */
-  if (gst_va_display_is_implementation (self->display,
-          GST_VA_IMPLEMENTATION_INTEL_I965)
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_I965)
       && GST_VIDEO_INFO_IS_RGB (&self->info)) {
     /* *INDENT-OFF* */
     ext_buf = (VASurfaceAttribExternalBuffers) {
@@ -555,8 +554,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     return FALSE;
 
   /* workaround for missing layered dmabuf formats in i965 */
-  if (gst_va_display_is_implementation (self->display,
-          GST_VA_IMPLEMENTATION_INTEL_I965)
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_I965)
       && (fourcc == VA_FOURCC_YUY2 || fourcc == VA_FOURCC_UYVY)) {
     /* These are not representable as separate planes */
     export_flags = VA_EXPORT_SURFACE_COMPOSED_LAYERS;
