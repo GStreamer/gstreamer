@@ -59,7 +59,6 @@
 #include <string.h>
 #include <gst/base/gstbytereader.h>
 #include <gst/codecparsers/gstjpegparser.h>
-#include <gst/codecparsers/gstjpeg2000sampling.h>
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
 
@@ -110,10 +109,50 @@ G_DEFINE_TYPE (GstJpegParse, gst_jpeg_parse, GST_TYPE_BASE_PARSE);
 GST_ELEMENT_REGISTER_DEFINE (jpegparse, "jpegparse", GST_RANK_NONE,
     GST_TYPE_JPEG_PARSE);
 
-enum
+enum GstJPEGColorspace
 {
-  GST_JPEG2000_COLORSPACE_CMYK = GST_JPEG2000_COLORSPACE_GRAY + 1,
-  GST_JPEG2000_COLORSPACE_YCCK
+  GST_JPEG_COLORSPACE_NONE,
+  GST_JPEG_COLORSPACE_RGB,
+  GST_JPEG_COLORSPACE_YUV,
+  GST_JPEG_COLORSPACE_GRAY,
+  GST_JPEG_COLORSPACE_CMYK,
+  GST_JPEG_COLORSPACE_YCCK,
+};
+
+static const gchar *gst_jpeg_colorspace_strings[] = {
+  [GST_JPEG_COLORSPACE_NONE] = NULL,
+  [GST_JPEG_COLORSPACE_RGB] = "sRGB",
+  [GST_JPEG_COLORSPACE_YUV] = "sYUV",
+  [GST_JPEG_COLORSPACE_GRAY] = "GRAY",
+  [GST_JPEG_COLORSPACE_CMYK] = "CMYK",
+  [GST_JPEG_COLORSPACE_YCCK] = "YCCK",
+};
+
+enum GstJPEGSampling
+{
+  GST_JPEG_SAMPLING_NONE,
+  GST_JPEG_SAMPLING_RGB,
+  GST_JPEG_SAMPLING_BGR,
+  GST_JPEG_SAMPLING_YBR444,
+  GST_JPEG_SAMPLING_YBR422,
+  GST_JPEG_SAMPLING_YBR420,
+  GST_JPEG_SAMPLING_YBR440,
+  GST_JPEG_SAMPLING_YBR410,
+  GST_JPEG_SAMPLING_YBR411,
+  GST_JPEG_SAMPLING_GRAYSCALE,
+};
+
+static const gchar *gst_jpeg_sampling_strings[] = {
+  [GST_JPEG_SAMPLING_NONE] = NULL,
+  [GST_JPEG_SAMPLING_RGB] = "RGB",
+  [GST_JPEG_SAMPLING_BGR] = "BGR",
+  [GST_JPEG_SAMPLING_YBR444] = "YCbCr-4:4:4",
+  [GST_JPEG_SAMPLING_YBR422] = "YCbCr-4:2:2",
+  [GST_JPEG_SAMPLING_YBR420] = "YCbCr-4:2:0",
+  [GST_JPEG_SAMPLING_YBR440] = "YCbCr-4:4:0",
+  [GST_JPEG_SAMPLING_YBR410] = "YCbCr-4:1:0",
+  [GST_JPEG_SAMPLING_YBR411] = "YCbCr-4:1:1",
+  [GST_JPEG_SAMPLING_GRAYSCALE] = "GRAYSCALE",
 };
 
 static void
@@ -177,22 +216,22 @@ static const struct
 {
   gint h[3];
   gint v[3];
-  GstJPEG2000Sampling sampling;
+  enum GstJPEGSampling sampling;
 } subsampling_map[] = {
-  {{1, 1, 1}, {1, 1, 1}, GST_JPEG2000_SAMPLING_YBR444},
-  {{2, 2, 2}, {1, 1, 1}, GST_JPEG2000_SAMPLING_YBR444},
-  {{3, 3, 3}, {1, 1, 1}, GST_JPEG2000_SAMPLING_YBR444},
-  {{1, 1, 1}, {2, 2, 2}, GST_JPEG2000_SAMPLING_YBR444},
-  {{1, 1, 1}, {3, 3, 3}, GST_JPEG2000_SAMPLING_YBR444},
-  /* {{1, 1, 1}, {2, 1, 1}, YUV440}, */
-  /* {{2, 2, 2}, {2, 1, 1}, YUV440}, */
-  /* {{1, 1, 1}, {4, 2, 2}, YUV440}, */
-  {{2, 1, 1}, {1, 1, 1}, GST_JPEG2000_SAMPLING_YBR422},
-  {{2, 1, 1}, {2, 2, 2}, GST_JPEG2000_SAMPLING_YBR422},
-  {{4, 2, 2}, {1, 1, 1}, GST_JPEG2000_SAMPLING_YBR422},
-  {{2, 1, 1}, {2, 1, 1}, GST_JPEG2000_SAMPLING_YBR420},
-  {{4, 1, 1}, {1, 1, 1}, GST_JPEG2000_SAMPLING_YBR411},
-  {{4, 1, 1}, {2, 1, 1}, GST_JPEG2000_SAMPLING_YBR410},
+  {{1, 1, 1}, {1, 1, 1}, GST_JPEG_SAMPLING_YBR444},
+  {{2, 2, 2}, {1, 1, 1}, GST_JPEG_SAMPLING_YBR444},
+  {{3, 3, 3}, {1, 1, 1}, GST_JPEG_SAMPLING_YBR444},
+  {{1, 1, 1}, {2, 2, 2}, GST_JPEG_SAMPLING_YBR444},
+  {{1, 1, 1}, {3, 3, 3}, GST_JPEG_SAMPLING_YBR444},
+  {{1, 1, 1}, {2, 1, 1}, GST_JPEG_SAMPLING_YBR440},
+  {{2, 2, 2}, {2, 1, 1}, GST_JPEG_SAMPLING_YBR440},
+  {{1, 1, 1}, {4, 2, 2}, GST_JPEG_SAMPLING_YBR440},
+  {{2, 1, 1}, {1, 1, 1}, GST_JPEG_SAMPLING_YBR422},
+  {{2, 1, 1}, {2, 2, 2}, GST_JPEG_SAMPLING_YBR422},
+  {{4, 2, 2}, {1, 1, 1}, GST_JPEG_SAMPLING_YBR422},
+  {{2, 1, 1}, {2, 1, 1}, GST_JPEG_SAMPLING_YBR420},
+  {{4, 1, 1}, {1, 1, 1}, GST_JPEG_SAMPLING_YBR411},
+  {{4, 1, 1}, {2, 1, 1}, GST_JPEG_SAMPLING_YBR410},
 };
 /* *INDENT-ON* */
 
@@ -201,8 +240,7 @@ yuv_sampling (GstJpegFrameHdr * frame_hdr)
 {
   int i, h0, h1, h2, v0, v1, v2;
 
-  g_return_val_if_fail (frame_hdr->num_components == 3,
-      GST_JPEG2000_SAMPLING_NONE);
+  g_return_val_if_fail (frame_hdr->num_components == 3, GST_JPEG_SAMPLING_NONE);
 
   h0 = frame_hdr->components[0].horizontal_factor;
   h1 = frame_hdr->components[1].horizontal_factor;
@@ -219,23 +257,13 @@ yuv_sampling (GstJpegFrameHdr * frame_hdr)
       return subsampling_map[i].sampling;
   }
 
-  return GST_JPEG2000_SAMPLING_NONE;
+  return GST_JPEG_SAMPLING_NONE;
 }
 
-static const gchar *colorspace_strings[] = {
-  "CMYK",
-  "YCCK",
-};
-
 static const gchar *
-colorspace_to_string (guint colorspace)
+colorspace_to_string (enum GstJPEGColorspace colorspace)
 {
-  if (colorspace == GST_JPEG2000_COLORSPACE_CMYK)
-    return colorspace_strings[0];
-  else if (colorspace == GST_JPEG2000_COLORSPACE_YCCK)
-    return colorspace_strings[1];
-  else
-    return gst_jpeg2000_colorspace_to_string (colorspace);
+  return gst_jpeg_colorspace_strings[colorspace];
 }
 
 /* https://entropymine.wordpress.com/2018/10/22/how-is-a-jpeg-images-color-type-determined/ */
@@ -252,29 +280,29 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
   parse->width = hdr.width;
   parse->height = hdr.height;
 
-  parse->colorspace = GST_JPEG2000_COLORSPACE_NONE;
-  parse->sampling = GST_JPEG2000_SAMPLING_NONE;
+  parse->colorspace = GST_JPEG_COLORSPACE_NONE;
+  parse->sampling = GST_JPEG_SAMPLING_NONE;
 
   switch (hdr.num_components) {
     case 1:
-      parse->colorspace = GST_JPEG2000_COLORSPACE_GRAY;
-      parse->sampling = GST_JPEG2000_SAMPLING_GRAYSCALE;
+      parse->colorspace = GST_JPEG_COLORSPACE_GRAY;
+      parse->sampling = GST_JPEG_SAMPLING_GRAYSCALE;
       break;
     case 3:
       if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF)) {
-        parse->colorspace = GST_JPEG2000_COLORSPACE_YUV;
+        parse->colorspace = GST_JPEG_COLORSPACE_YUV;
         parse->sampling = yuv_sampling (&hdr);
       } else {
         if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_ADOBE)) {
           if (parse->adobe_transform == 0) {
-            parse->colorspace = GST_JPEG2000_COLORSPACE_RGB;
-            parse->sampling = GST_JPEG2000_SAMPLING_RGB;
+            parse->colorspace = GST_JPEG_COLORSPACE_RGB;
+            parse->sampling = GST_JPEG_SAMPLING_RGB;
           } else if (parse->adobe_transform == 1) {
-            parse->colorspace = GST_JPEG2000_COLORSPACE_YUV;;
+            parse->colorspace = GST_JPEG_COLORSPACE_YUV;;
             parse->sampling = yuv_sampling (&hdr);
           } else {
             GST_DEBUG_OBJECT (parse, "Unknown Adobe color transform code");
-            parse->colorspace = GST_JPEG2000_COLORSPACE_YUV;;
+            parse->colorspace = GST_JPEG_COLORSPACE_YUV;;
             parse->sampling = yuv_sampling (&hdr);
           }
         } else {
@@ -285,14 +313,14 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
           cid2 = hdr.components[2].identifier;
 
           if (cid0 == 1 && cid1 == 2 && cid2 == 3) {
-            parse->colorspace = GST_JPEG2000_COLORSPACE_YUV;
+            parse->colorspace = GST_JPEG_COLORSPACE_YUV;
             parse->sampling = yuv_sampling (&hdr);
           } else if (cid0 == 'R' && cid1 == 'G' && cid2 == 'B') {
-            parse->colorspace = GST_JPEG2000_COLORSPACE_RGB;
-            parse->sampling = GST_JPEG2000_SAMPLING_RGB;
+            parse->colorspace = GST_JPEG_COLORSPACE_RGB;
+            parse->sampling = GST_JPEG_SAMPLING_RGB;
           } else {
             GST_DEBUG_OBJECT (parse, "Unrecognized component IDs");
-            parse->colorspace = GST_JPEG2000_COLORSPACE_YUV;
+            parse->colorspace = GST_JPEG_COLORSPACE_YUV;
             parse->sampling = yuv_sampling (&hdr);
           }
         }
@@ -301,15 +329,15 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
     case 4:
       if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_ADOBE)) {
         if (parse->adobe_transform == 0) {
-          parse->colorspace = GST_JPEG2000_COLORSPACE_CMYK;
+          parse->colorspace = GST_JPEG_COLORSPACE_CMYK;
         } else if (parse->adobe_transform == 2) {
-          parse->colorspace = GST_JPEG2000_COLORSPACE_YCCK;
+          parse->colorspace = GST_JPEG_COLORSPACE_YCCK;
         } else {
           GST_DEBUG_OBJECT (parse, "Unknown Adobe color transform code");
-          parse->colorspace = GST_JPEG2000_COLORSPACE_YCCK;
+          parse->colorspace = GST_JPEG_COLORSPACE_YCCK;
         }
       } else {
-        parse->colorspace = GST_JPEG2000_COLORSPACE_CMYK;
+        parse->colorspace = GST_JPEG_COLORSPACE_CMYK;
       }
       break;
     default:
@@ -569,6 +597,12 @@ gst_jpeg_parse_reset (GstJpegParse * parse)
   }
 }
 
+static const gchar *
+sampling_to_string (enum GstJPEGSampling sampling)
+{
+  return gst_jpeg_sampling_strings[sampling];
+}
+
 static gboolean
 gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
 {
@@ -584,13 +618,13 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
     gst_caps_set_simple (caps, "height", G_TYPE_INT, parse->height, NULL);
   if (parse->sof >= 0)
     gst_caps_set_simple (caps, "sof-marker", G_TYPE_INT, parse->sof, NULL);
-  if (parse->colorspace != GST_JPEG2000_COLORSPACE_NONE) {
+  if (parse->colorspace != GST_JPEG_COLORSPACE_NONE) {
     gst_caps_set_simple (caps, "colorspace", G_TYPE_STRING,
         colorspace_to_string (parse->colorspace), NULL);
   }
-  if (parse->sampling != GST_JPEG2000_SAMPLING_NONE) {
+  if (parse->sampling != GST_JPEG_SAMPLING_NONE) {
     gst_caps_set_simple (caps, "sampling", G_TYPE_STRING,
-        gst_jpeg2000_sampling_to_string (parse->sampling), NULL);
+        sampling_to_string (parse->sampling), NULL);
   }
 
   gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
