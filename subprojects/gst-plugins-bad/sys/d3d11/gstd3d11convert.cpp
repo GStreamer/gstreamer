@@ -1894,6 +1894,9 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       "dest-height", (gint) (self->out_rect.bottom - self->out_rect.top),
       nullptr);
 
+  if (self->borders_w > 0 || self->borders_h > 0)
+    g_object_set (self->converter, "fill-border", TRUE, nullptr);
+
   return TRUE;
 
   /* ERRORS */
@@ -2118,15 +2121,6 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     target_rtv = self->render_target_view;
   } else {
     target_rtv = render_view;
-  }
-
-  /* We need to clear background color as our shader wouldn't touch border
-   * area. Likely output texture was initialized with zeros which is fine for
-   * RGB, but it's not black color in case of YUV */
-  if (self->borders_w || self->borders_h) {
-    gst_d3d11_device_lock (device);
-    clear_rtv_color_all (self, &filter->out_info, context_handle, target_rtv);
-    gst_d3d11_device_unlock (device);
   }
 
   if (!gst_d3d11_converter_convert (self->converter,

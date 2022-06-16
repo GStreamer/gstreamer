@@ -501,6 +501,8 @@ enum
   PROP_BLEND_FACTOR_BLUE,
   PROP_BLEND_FACTOR_ALPHA,
   PROP_BLEND_SAMPLE_MASK,
+  PROP_FILL_BORDER,
+  PROP_BORDER_COLOR,
 };
 
 struct _GstD3D11ConverterPrivate
@@ -539,6 +541,10 @@ struct _GstD3D11ConverterPrivate
   ConvertInfo convert_info;
   PSConstBuffer const_data;
 
+  gboolean clear_background;
+  FLOAT clear_color[4][4];
+  GstD3D11ColorMatrix clear_color_matrix;
+
   GMutex prop_lock;
 
   /* properties */
@@ -553,6 +559,8 @@ struct _GstD3D11ConverterPrivate
   gdouble alpha;
   gfloat blend_factor[4];
   guint blend_sample_mask;
+  gboolean fill_border;
+  guint64 border_color;
 };
 
 static void gst_d3d11_converter_set_property (GObject * object, guint prop_id,
@@ -561,6 +569,8 @@ static void gst_d3d11_converter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_d3d11_converter_dispose (GObject * object);
 static void gst_d3d11_converter_finalize (GObject * object);
+static void
+gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self);
 
 #define gst_d3d11_converter_parent_class parent_class
 G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11Converter, gst_d3d11_converter,
@@ -627,6 +637,14 @@ gst_d3d11_converter_class_init (GstD3D11ConverterClass * klass)
   g_object_class_install_property (object_class, PROP_BLEND_SAMPLE_MASK,
       g_param_spec_uint ("blend-sample-mask", "Blend Sample Mask",
           "Blend sample mask", 0, 0xffffffff, 0xffffffff, param_flags));
+  g_object_class_install_property (object_class, PROP_FILL_BORDER,
+      g_param_spec_boolean ("fill-border", "Fill border",
+          "Fill border with \"border-argb\" if destination rectangle does not "
+          "fill the complete destination image", FALSE, param_flags));
+  g_object_class_install_property (object_class, PROP_BORDER_COLOR,
+      g_param_spec_uint64 ("border-color", "Border Color",
+          "ARGB representation of the border color to use",
+          0, G_MAXUINT64, 0xffff000000000000, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_converter_debug,
       "d3d11converter", 0, "d3d11converter");
@@ -785,6 +803,12 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
     case PROP_BLEND_SAMPLE_MASK:
       priv->blend_sample_mask = g_value_get_uint (value);
       break;
+    case PROP_FILL_BORDER:
+      priv->fill_border = g_value_get_boolean (value);
+      break;
+    case PROP_BORDER_COLOR:
+      priv->border_color = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -845,6 +869,12 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_BLEND_SAMPLE_MASK:
       g_value_set_uint (value, priv->blend_sample_mask);
+      break;
+    case PROP_FILL_BORDER:
+      g_value_set_boolean (value, priv->fill_border);
+      break;
+    case PROP_BORDER_COLOR:
+      g_value_set_uint64 (value, priv->border_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1280,6 +1310,7 @@ static gboolean
 gst_d3d11_converter_update_viewport (GstD3D11Converter * self)
 {
   GstD3D11ConverterPrivate *priv = self->priv;
+  const GstVideoInfo *out_info = &priv->out_info;
 
   priv->viewport[0].TopLeftX = priv->dest_x;
   priv->viewport[0].TopLeftY = priv->dest_y;
@@ -1290,6 +1321,16 @@ gst_d3d11_converter_update_viewport (GstD3D11Converter * self)
       "Update viewport, TopLeftX: %f, TopLeftY: %f, Width: %f, Height %f",
       priv->viewport[0].TopLeftX, priv->viewport[0].TopLeftY,
       priv->viewport[0].Width, priv->viewport[0].Height);
+
+  if (priv->fill_border && (priv->dest_x != 0 || priv->dest_y != 0 ||
+          priv->dest_width != out_info->width ||
+          priv->dest_height != out_info->height)) {
+    GST_DEBUG_OBJECT (self, "Enable background color");
+    priv->clear_background = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (self, "Disable background color");
+    priv->clear_background = FALSE;
+  }
 
   switch (GST_VIDEO_INFO_FORMAT (&priv->out_info)) {
     case GST_VIDEO_FORMAT_NV12:
@@ -2161,6 +2202,110 @@ gst_d3d11_converter_setup_lut (GstD3D11Converter * self,
   return TRUE;
 }
 
+static void
+gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self)
+{
+  GstD3D11ConverterPrivate *priv = self->priv;
+  GstD3D11ColorMatrix *m = &priv->clear_color_matrix;
+  const GstVideoInfo *out_info = &priv->out_info;
+  gdouble a;
+  gdouble rgb[3];
+  gdouble converted[3];
+  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (out_info);
+
+  a = ((priv->border_color & 0xffff000000000000) >> 48) / (gdouble) G_MAXUINT16;
+  rgb[0] =
+      ((priv->border_color & 0x0000ffff00000000) >> 32) / (gdouble) G_MAXUINT16;
+  rgb[1] =
+      ((priv->border_color & 0x00000000ffff0000) >> 16) / (gdouble) G_MAXUINT16;
+  rgb[2] = (priv->border_color & 0x000000000000ffff) / (gdouble) G_MAXUINT16;
+
+  for (guint i = 0; i < 3; i++) {
+    converted[i] = 0;
+    for (guint j = 0; j < 3; j++) {
+      converted[i] += m->matrix[i][j] * rgb[j];
+    }
+    converted[i] += m->offset[i];
+    converted[i] = CLAMP (converted[i], m->min[i], m->max[i]);
+  }
+
+  GST_DEBUG_OBJECT (self, "Calculated background color ARGB: %f, %f, %f, %f",
+      a, converted[0], converted[1], converted[2]);
+
+  if (GST_VIDEO_INFO_IS_RGB (out_info) || GST_VIDEO_INFO_IS_GRAY (out_info)) {
+    for (guint i = 0; i < 3; i++)
+      priv->clear_color[0][i] = converted[i];
+    priv->clear_color[0][3] = a;
+  } else {
+    switch (format) {
+      case GST_VIDEO_FORMAT_VUYA:
+        priv->clear_color[0][0] = converted[2];
+        priv->clear_color[0][1] = converted[1];
+        priv->clear_color[0][2] = converted[0];
+        priv->clear_color[0][3] = a;
+        break;
+      case GST_VIDEO_FORMAT_AYUV:
+      case GST_VIDEO_FORMAT_AYUV64:
+        priv->clear_color[0][0] = a;
+        priv->clear_color[0][1] = converted[0];
+        priv->clear_color[0][2] = converted[1];
+        priv->clear_color[0][3] = converted[2];
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+      case GST_VIDEO_FORMAT_NV21:
+      case GST_VIDEO_FORMAT_P010_10LE:
+      case GST_VIDEO_FORMAT_P012_LE:
+      case GST_VIDEO_FORMAT_P016_LE:
+        priv->clear_color[0][0] = converted[0];
+        priv->clear_color[0][1] = 0;
+        priv->clear_color[0][2] = 0;
+        priv->clear_color[0][3] = 1.0;
+        if (format == GST_VIDEO_FORMAT_NV21) {
+          priv->clear_color[1][0] = converted[2];
+          priv->clear_color[1][1] = converted[1];
+        } else {
+          priv->clear_color[1][0] = converted[1];
+          priv->clear_color[1][1] = converted[2];
+        }
+        priv->clear_color[1][2] = 0;
+        priv->clear_color[1][3] = 1.0;
+        break;
+      case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_YV12:
+      case GST_VIDEO_FORMAT_I420_10LE:
+      case GST_VIDEO_FORMAT_I420_12LE:
+      case GST_VIDEO_FORMAT_Y42B:
+      case GST_VIDEO_FORMAT_I422_10LE:
+      case GST_VIDEO_FORMAT_I422_12LE:
+      case GST_VIDEO_FORMAT_Y444:
+      case GST_VIDEO_FORMAT_Y444_10LE:
+      case GST_VIDEO_FORMAT_Y444_12LE:
+      case GST_VIDEO_FORMAT_Y444_16LE:
+        priv->clear_color[0][0] = converted[0];
+        priv->clear_color[0][1] = 0;
+        priv->clear_color[0][2] = 0;
+        priv->clear_color[0][3] = 1.0;
+        if (format == GST_VIDEO_FORMAT_YV12) {
+          priv->clear_color[1][0] = converted[2];
+          priv->clear_color[2][0] = converted[1];
+        } else {
+          priv->clear_color[1][0] = converted[1];
+          priv->clear_color[2][0] = converted[2];
+        }
+        priv->clear_color[1][1] = 0;
+        priv->clear_color[1][2] = 0;
+        priv->clear_color[1][3] = 1.0;
+        priv->clear_color[2][1] = 0;
+        priv->clear_color[2][2] = 0;
+        priv->clear_color[2][3] = 1.0;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
+  }
+}
+
 GstD3D11Converter *
 gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
     const GstVideoInfo * out_info)
@@ -2200,6 +2345,8 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   self->device = (GstD3D11Device *) gst_object_ref (device);
   priv->fast_path = TRUE;
   priv->const_data.alpha = 1.0;
+  priv->in_info = *in_info;
+  priv->out_info = *out_info;
 
   /* Init properties */
   priv->src_width = GST_VIDEO_INFO_WIDTH (in_info);
@@ -2210,6 +2357,7 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   for (guint i = 0; i < G_N_ELEMENTS (priv->blend_factor); i++)
     priv->blend_factor[i] = 1.0;
   priv->blend_sample_mask = 0xffffffff;
+  priv->border_color = 0xffff000000000000;
 
   if (!GST_VIDEO_INFO_IS_GRAY (in_info) && !GST_VIDEO_INFO_IS_GRAY (out_info)) {
     if (in_info->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN &&
@@ -2247,15 +2395,37 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
       goto conversion_not_supported;
   }
 
+  if (GST_VIDEO_INFO_IS_RGB (out_info)) {
+    GstVideoInfo rgb_info = *out_info;
+    rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+    gst_d3d11_color_range_adjust_matrix_unorm (&rgb_info, out_info,
+        &priv->clear_color_matrix);
+  } else {
+    GstVideoInfo rgb_info;
+    GstVideoInfo yuv_info;
+
+    gst_video_info_set_format (&rgb_info, GST_VIDEO_FORMAT_RGBA64_LE,
+        out_info->width, out_info->height);
+    convert_info_gray_to_yuv (out_info, &yuv_info);
+
+    if (yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
+        yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+      GST_WARNING_OBJECT (self, "Invalid matrix is detected");
+      yuv_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+    }
+
+    gst_d3d11_rgb_to_yuv_matrix_unorm (&rgb_info,
+        &yuv_info, &priv->clear_color_matrix);
+  }
+
+  gst_d3d11_converter_calculate_border_color (self);
+
   ret = gst_d3d11_color_convert_setup_shader (self, in_info, out_info);
   if (!ret) {
     GST_ERROR_OBJECT (self, "Couldn't setup shader");
     gst_object_unref (self);
     return nullptr;
   }
-
-  priv->in_info = *in_info;
-  priv->out_info = *out_info;
 
   return self;
 
@@ -2360,6 +2530,11 @@ gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
 
     context->Unmap (priv->const_buffer, 0);
     priv->update_alpha = FALSE;
+  }
+
+  if (priv->clear_background) {
+    for (guint i = 0; i < priv->num_output_view; i++)
+      context->ClearRenderTargetView (rtv[i], priv->clear_color[i]);
   }
 
   context->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
