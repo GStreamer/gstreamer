@@ -84,30 +84,37 @@ G_DEFINE_TYPE (GstFramePositioner, gst_frame_positioner,
 static GType
 gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
 {
-  GstElement *compositor =
-      gst_element_factory_create (ges_get_compositor_factory (), NULL);
+  static gsize _init = 0;
+  static int operator_value = 0;
+  static GType operator_gtype = G_TYPE_NONE;
 
-  GstPad *compositorPad =
-      gst_element_request_pad_simple (compositor, "sink_%u");
+  if (g_once_init_enter (&_init)) {
+    GstElement *compositor =
+        gst_element_factory_create (ges_get_compositor_factory (), NULL);
 
-  GParamSpec *pspec =
-      g_object_class_find_property (G_OBJECT_GET_CLASS (compositorPad),
-      "operator");
-  GType ret = 0;
+    GstPad *compositorPad =
+        gst_element_request_pad_simple (compositor, "sink_%u");
 
-  if (pspec) {
-    *default_operator_value =
-        g_value_get_enum (g_param_spec_get_default_value (pspec));
-    g_return_val_if_fail (pspec, G_TYPE_NONE);
+    GParamSpec *pspec =
+        g_object_class_find_property (G_OBJECT_GET_CLASS (compositorPad),
+        "operator");
 
-    ret = pspec->value_type;
+    if (pspec) {
+      operator_value =
+          g_value_get_enum (g_param_spec_get_default_value (pspec));
+      operator_gtype = pspec->value_type;
+    }
+
+    gst_element_release_request_pad (compositor, compositorPad);
+    gst_object_unref (compositorPad);
+    gst_object_unref (compositor);
+
+    g_once_init_leave (&_init, 1);
   }
 
-  gst_element_release_request_pad (compositor, compositorPad);
-  gst_object_unref (compositorPad);
-  gst_object_unref (compositor);
+  *default_operator_value = operator_value;
 
-  return ret;
+  return operator_gtype;
 }
 
 static void
