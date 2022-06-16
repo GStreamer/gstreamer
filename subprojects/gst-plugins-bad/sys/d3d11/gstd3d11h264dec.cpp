@@ -95,6 +95,8 @@ typedef struct _GstD3D11H264DecInner
   std::vector<DXVA_Slice_H264_Short> slice_list;
   std::vector<guint8> bitstream_buffer;
 
+  gint crop_x = 0;
+  gint crop_y = 0;
   gint width = 0;
   gint height = 0;
   gint coded_width = 0;
@@ -389,9 +391,12 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
   }
 
   if (inner->width != crop_width || inner->height != crop_height ||
-      inner->coded_width != sps->width || inner->coded_height != sps->height) {
+      inner->coded_width != sps->width || inner->coded_height != sps->height ||
+      inner->crop_x != sps->crop_rect_x || inner->crop_y != sps->crop_rect_y) {
     GST_INFO_OBJECT (self, "resolution changed %dx%d (%dx%d)",
         crop_width, crop_height, sps->width, sps->height);
+    inner->crop_x = sps->crop_rect_x;
+    inner->crop_y = sps->crop_rect_y;
     inner->width = crop_width;
     inner->height = crop_height;
     inner->coded_width = sps->width;
@@ -454,7 +459,7 @@ gst_d3d11_h264_dec_new_sequence (GstH264Decoder * decoder,
      */
     inner->max_dpb_size = max_dpb_size;
     if (!gst_d3d11_decoder_configure (inner->d3d11_decoder,
-            decoder->input_state, &info,
+            decoder->input_state, &info, inner->crop_x, inner->crop_y,
             inner->coded_width, inner->coded_height, max_dpb_size)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return GST_FLOW_NOT_NEGOTIATED;

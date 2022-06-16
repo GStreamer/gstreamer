@@ -76,7 +76,9 @@ gboolean          gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder);
 
 gboolean          gst_d3d11_decoder_configure     (GstD3D11Decoder * decoder,
                                                    GstVideoCodecState * input_state,
-                                                   GstVideoInfo * info,
+                                                   const GstVideoInfo * out_info,
+                                                   gint offset_x,
+                                                   gint offset_y,
                                                    gint coded_width,
                                                    gint coded_height,
                                                    guint dpb_size);

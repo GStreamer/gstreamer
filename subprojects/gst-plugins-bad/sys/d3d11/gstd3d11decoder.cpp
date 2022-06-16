@@ -147,10 +147,14 @@ struct _GstD3D11Decoder
   GstVideoInfo info;
   GstVideoInfo output_info;
   GstDXVACodec codec;
+  gint offset_x;
+  gint offset_y;
   gint coded_width;
   gint coded_height;
   DXGI_FORMAT decoder_format;
   gboolean downstream_supports_d3d11;
+  gboolean need_crop;
+  gboolean use_crop_meta;
 
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;
@@ -172,8 +176,7 @@ struct _GstD3D11Decoder
 
   /* for staging */
   ID3D11Texture2D *staging;
-  gsize staging_texture_offset[GST_VIDEO_MAX_PLANES];
-  gint stating_texture_stride[GST_VIDEO_MAX_PLANES];
+  guint stating_plane_offset[GST_VIDEO_MAX_PLANES];
 
   GUID decoder_profile;
 
@@ -299,11 +302,6 @@ gst_d3d11_decoder_clear_resource (GstD3D11Decoder * self)
 
   GST_D3D11_CLEAR_COM (self->decoder_handle);
   GST_D3D11_CLEAR_COM (self->staging);
-
-  memset (self->staging_texture_offset,
-      0, sizeof (self->staging_texture_offset));
-  memset (self->stating_texture_stride,
-      0, sizeof (self->stating_texture_stride));
 }
 
 static void
@@ -706,28 +704,29 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Device * device,
   return TRUE;
 }
 
-
 gboolean
 gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
-    GstVideoCodecState * input_state, GstVideoInfo * info, gint coded_width,
-    gint coded_height, guint dpb_size)
+    GstVideoCodecState * input_state, const GstVideoInfo * out_info,
+    gint offset_x, gint offset_y, gint coded_width, gint coded_height,
+    guint dpb_size)
 {
   GstD3D11Format d3d11_format;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-  g_return_val_if_fail (info != NULL, FALSE);
+  g_return_val_if_fail (out_info != NULL, FALSE);
   g_return_val_if_fail (input_state != NULL, FALSE);
-  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (info), FALSE);
-  g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info), FALSE);
+  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (out_info), FALSE);
+  g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (out_info),
+      FALSE);
   g_return_val_if_fail (dpb_size > 0, FALSE);
 
   gst_d3d11_decoder_reset (decoder);
 
   if (!gst_d3d11_device_get_format (decoder->device,
-          GST_VIDEO_INFO_FORMAT (info), &d3d11_format) ||
+          GST_VIDEO_INFO_FORMAT (out_info), &d3d11_format) ||
       d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
     return FALSE;
   }
 
@@ -735,13 +734,20 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
   dpb_size += 4;
 
   decoder->input_state = gst_video_codec_state_ref (input_state);
-  decoder->info = decoder->output_info = *info;
+  decoder->info = decoder->output_info = *out_info;
+  decoder->offset_x = offset_x;
+  decoder->offset_y = offset_y;
   decoder->coded_width = coded_width;
   decoder->coded_height = coded_height;
   decoder->dpb_size = dpb_size;
   decoder->decoder_format = d3d11_format.dxgi_format;
 
   decoder->configured = TRUE;
+
+  if (offset_x != 0 || offset_y != 0)
+    decoder->need_crop = TRUE;
+  else
+    decoder->need_crop = FALSE;
 
   return TRUE;
 }
@@ -759,8 +765,8 @@ gst_d3d11_decoder_ensure_staging_texture (GstD3D11Decoder * self)
   device_handle = gst_d3d11_device_get_device_handle (self->device);
 
   /* create stage texture to copy out */
-  desc.Width = self->aligned_width;
-  desc.Height = self->aligned_height;
+  desc.Width = GST_ROUND_UP_2 (self->info.width);
+  desc.Height = GST_ROUND_UP_2 (self->info.height);
   desc.MipLevels = 1;
   desc.Format = self->decoder_format;
   desc.SampleDesc.Count = 1;
@@ -768,11 +774,15 @@ gst_d3d11_decoder_ensure_staging_texture (GstD3D11Decoder * self)
   desc.Usage = D3D11_USAGE_STAGING;
   desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-  hr = device_handle->CreateTexture2D (&desc, NULL, &self->staging);
+  hr = device_handle->CreateTexture2D (&desc, nullptr, &self->staging);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create staging texture");
     return FALSE;
   }
+
+  /* decoder supports single plane (e.g,. YUV packed) or semi-planar */
+  self->stating_plane_offset[0] = 0;
+  self->stating_plane_offset[1] = desc.Height;
 
   return TRUE;
 }
@@ -1396,6 +1406,113 @@ gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
   return view;
 }
 
+static void
+gst_d3d11_decoder_crop_and_copy_texture (GstD3D11Decoder * self,
+    ID3D11Texture2D * src_texture, guint src_subresource,
+    ID3D11Texture2D * dst_texture, guint dst_subresource)
+{
+  GstD3D11Device *device = self->device;
+  ID3D11DeviceContext *context =
+      gst_d3d11_device_get_device_context_handle (device);
+  D3D11_BOX src_box = { 0, };
+
+  src_box.left = self->offset_x;
+  src_box.top = self->offset_y;
+  src_box.right = self->offset_x + self->info.width;
+  src_box.bottom = self->offset_y + self->info.height;
+  src_box.front = 0;
+  src_box.back = 1;
+
+  gst_d3d11_device_lock (device);
+  context->CopySubresourceRegion (dst_texture, dst_subresource,
+      0, 0, 0, src_texture, src_subresource, &src_box);
+  gst_d3d11_device_unlock (device);
+}
+
+static gboolean
+gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
+    GstBuffer * src, GstBuffer * dst)
+{
+  GstD3D11Device *device = self->device;
+  ID3D11DeviceContext *context =
+      gst_d3d11_device_get_device_context_handle (device);
+  GstD3D11Memory *src_dmem;
+  GstMemory *dst_mem;
+  ID3D11Texture2D *src_texture;
+  guint src_subresource;
+  GstMapInfo map;
+  D3D11_MAPPED_SUBRESOURCE d3d11_map;
+  HRESULT hr;
+  GstVideoFrame frame;
+
+  src_dmem = (GstD3D11Memory *) gst_buffer_peek_memory (src, 0);
+  src_texture =
+      (ID3D11Texture2D *) gst_d3d11_memory_get_resource_handle (src_dmem);
+  src_subresource = gst_d3d11_memory_get_subresource_index (src_dmem);
+
+  dst_mem = gst_buffer_peek_memory (dst, 0);
+  if (gst_is_d3d11_memory (dst_mem)) {
+    GstD3D11Memory *dst_dmem = GST_D3D11_MEMORY_CAST (dst_mem);
+    if (dst_dmem->device == self->device &&
+        gst_memory_map (dst_mem, &map,
+            (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
+      ID3D11Texture2D *dst_texture = (ID3D11Texture2D *) map.data;
+      guint dst_subresource = gst_d3d11_memory_get_subresource_index (dst_dmem);
+
+      GST_TRACE_OBJECT (self, "Copying to output D3D11 texture");
+      gst_d3d11_decoder_crop_and_copy_texture (self, src_texture,
+          src_subresource, dst_texture, dst_subresource);
+      gst_memory_unmap (dst_mem, &map);
+
+      return TRUE;
+    }
+  }
+
+  /* fallback copy, copy to our staging texture and copy to output */
+  if (!gst_d3d11_decoder_ensure_staging_texture (self))
+    return FALSE;
+
+  if (!gst_video_frame_map (&frame, &self->output_info, dst, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (self, "Failed to map output buffer");
+    return FALSE;
+  }
+
+  gst_d3d11_decoder_crop_and_copy_texture (self, src_texture, src_subresource,
+      self->staging, 0);
+
+  gst_d3d11_device_lock (device);
+  hr = context->Map (self->staging, 0, D3D11_MAP_READ, 0, &d3d11_map);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Failed to map staging texture");
+    gst_d3d11_device_unlock (device);
+    gst_video_frame_unmap (&frame);
+    return FALSE;
+  }
+
+  g_assert (GST_VIDEO_FRAME_N_PLANES (&frame) <= 2);
+  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&frame); i++) {
+    guint8 *src_data = (guint8 *) d3d11_map.pData +
+        self->stating_plane_offset[i] * d3d11_map.RowPitch;
+    guint8 *dst_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, i);
+    guint width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&frame, i) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, i);
+    gint stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, i);
+    gint height = GST_VIDEO_FRAME_COMP_HEIGHT (&frame, i);
+
+    for (gint j = 0; j < height; j++) {
+      memcpy (dst_data, src_data, width_in_bytes);
+      dst_data += d3d11_map.RowPitch;
+      src_data += stride;
+    }
+  }
+
+  context->Unmap (self->staging, 0);
+  gst_d3d11_device_unlock (device);
+  gst_video_frame_unmap (&frame);
+
+  return TRUE;
+}
+
 gboolean
 gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
     GstVideoDecoder * videodec, gint display_width, gint display_height,
@@ -1428,6 +1545,22 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
     mem = gst_buffer_peek_memory (decoder_buffer, 0);
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
+    if (decoder->need_crop) {
+      GstVideoCropMeta *crop_meta;
+
+      decoder_buffer = gst_buffer_make_writable (decoder_buffer);
+      crop_meta = gst_buffer_get_video_crop_meta (decoder_buffer);
+      if (!crop_meta)
+        crop_meta = gst_buffer_add_video_crop_meta (decoder_buffer);
+
+      crop_meta->x = decoder->offset_x;
+      crop_meta->y = decoder->offset_y;
+      crop_meta->width = decoder->info.width;
+      crop_meta->height = decoder->info.height;
+
+      GST_TRACE_OBJECT (decoder, "Attatching crop meta");
+    }
+
     *output = gst_buffer_ref (decoder_buffer);
 
     return TRUE;
@@ -1436,12 +1569,11 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
   *output = gst_video_decoder_allocate_output_buffer (videodec);
   if (*output == NULL) {
     GST_ERROR_OBJECT (videodec, "Couldn't allocate output buffer");
-
     return FALSE;
   }
 
-  return gst_d3d11_buffer_copy_into (*output,
-      decoder_buffer, &decoder->output_info);
+  return gst_d3d11_decoder_crop_and_copy_buffer (decoder, decoder_buffer,
+      *output);
 }
 
 gboolean
@@ -1610,8 +1742,16 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
 
   has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, nullptr);
-
   use_d3d11_pool = decoder->downstream_supports_d3d11;
+  if (use_d3d11_pool) {
+    decoder->use_crop_meta =
+        gst_query_find_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE,
+        nullptr);
+  } else {
+    decoder->use_crop_meta = FALSE;
+  }
+
+  GST_DEBUG_OBJECT (videodec, "Use crop meta %d", decoder->use_crop_meta);
 
   gst_video_info_from_caps (&vinfo, outcaps);
   n = gst_query_get_n_allocation_pools (query);
@@ -1754,7 +1894,7 @@ gst_d3d11_decoder_set_flushing (GstD3D11Decoder * decoder,
 }
 
 static gboolean
-gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
+gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * self,
     GstVideoDecoder * videodec, GstBuffer * view_buffer,
     gint display_width, gint display_height)
 {
@@ -1766,22 +1906,26 @@ gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
   if (videodec->input_segment.rate < 0)
     return FALSE;
 
-  if (!decoder->can_direct_rendering || !decoder->downstream_supports_d3d11)
+  if (!self->can_direct_rendering || !self->downstream_supports_d3d11)
     return FALSE;
 
   /* different size, need copy */
   /* TODO: crop meta */
-  if (display_width != GST_VIDEO_INFO_WIDTH (&decoder->info) ||
-      display_height != GST_VIDEO_INFO_HEIGHT (&decoder->info))
+  if (display_width != GST_VIDEO_INFO_WIDTH (&self->info) ||
+      display_height != GST_VIDEO_INFO_HEIGHT (&self->info))
+    return FALSE;
+
+  /* We need to crop but downstream does not support crop, need to copy */
+  if (self->need_crop && !self->use_crop_meta)
     return FALSE;
 
   /* we can do direct render in this case, since there is no DPB pool size
    * limit */
-  if (decoder->use_array_of_texture)
+  if (self->use_array_of_texture)
     return TRUE;
 
   /* Let's believe downstream info */
-  if (decoder->wait_on_pool_full)
+  if (self->wait_on_pool_full)
     return TRUE;
 
   /* Check if we are about to full */
@@ -1789,25 +1933,25 @@ gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
 
   /* something went wrong */
   if (!gst_is_d3d11_memory (mem)) {
-    GST_ERROR_OBJECT (decoder, "Not a D3D11 memory");
+    GST_ERROR_OBJECT (self, "Not a D3D11 memory");
     return FALSE;
   }
 
   alloc = GST_D3D11_POOL_ALLOCATOR (mem->allocator);
   if (!gst_d3d11_pool_allocator_get_pool_size (alloc, &max_size,
           &outstanding_size)) {
-    GST_ERROR_OBJECT (decoder, "Couldn't query pool size");
+    GST_ERROR_OBJECT (self, "Couldn't query pool size");
     return FALSE;
   }
 
   /* 2 buffer margin */
   if (max_size <= outstanding_size + 1) {
-    GST_DEBUG_OBJECT (decoder, "memory pool is about to full (%u/%u)",
+    GST_DEBUG_OBJECT (self, "memory pool is about to full (%u/%u)",
         outstanding_size, max_size);
     return FALSE;
   }
 
-  GST_LOG_OBJECT (decoder, "Can do direct rendering");
+  GST_LOG_OBJECT (self, "Can do direct rendering");
 
   return TRUE;
 }

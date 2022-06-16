@@ -394,7 +394,7 @@ gst_d3d11_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
       GST_VIDEO_INFO_INTERLACE_MODE (&info) = GST_VIDEO_INTERLACE_MODE_MIXED;
 
     if (!gst_d3d11_decoder_configure (inner->d3d11_decoder,
-            decoder->input_state, &info,
+            decoder->input_state, &info, 0, 0,
             inner->width, inner->height, max_dpb_size)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return GST_FLOW_NOT_NEGOTIATED;

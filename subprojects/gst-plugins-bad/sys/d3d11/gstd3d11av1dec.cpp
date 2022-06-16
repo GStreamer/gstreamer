@@ -683,7 +683,7 @@ gst_d3d11_av1_dec_new_sequence (GstAV1Decoder * decoder,
         out_format, inner->max_width, inner->max_height);
 
     if (!gst_d3d11_decoder_configure (inner->d3d11_decoder,
-            decoder->input_state, &info, (gint) inner->max_width,
+            decoder->input_state, &info, 0, 0, (gint) inner->max_width,
             (gint) inner->max_height, max_dpb_size)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return GST_FLOW_NOT_NEGOTIATED;
