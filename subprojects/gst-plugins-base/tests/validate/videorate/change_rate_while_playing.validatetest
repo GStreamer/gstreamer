@@ -18,21 +18,21 @@ check-position, expected-position=0.5
 wait, on-clock=true
 
 checkpoint, text="Setting videorate.rate=0.5"
-set-property, playback-time=0.5, target-element-name=videorate, property-name=rate, property-value="0.5"
+set-property, playback-time=0.5, target-element-name=videorate, property-name=rate, property-value=0.5
 crank-clock, repeat=5
 check-position, expected-position=1.0
 
 wait, on-clock=true
 
 checkpoint, text="Setting videorate.rate=0.1"
-set-property, playback-time=1.0, target-element-name=videorate, property-name=rate, property-value="0.1"
+set-property, playback-time=1.0, target-element-name=videorate, property-name=rate, property-value=0.1
 crank-clock, repeat=20
 check-position, expected-position=3.0
 
 wait, on-clock=true
 
 checkpoint, text="Setting videorate.rate=2.0"
-set-property, playback-time=2.0, target-element-name=videorate, property-name=rate, property-value="2.0"
+set-property, playback-time=2.0, target-element-name=videorate, property-name=rate, property-value=2.0
 crank-clock, repeat=10
 check-position, expected-position=4.0
 

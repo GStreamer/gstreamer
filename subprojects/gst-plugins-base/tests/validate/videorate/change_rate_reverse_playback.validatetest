@@ -23,7 +23,7 @@ wait, on-clock=true
 
 # Set videorate.rate = 0.5 and add that info to the expecation files for better readability
 checkpoint, text="Setting videorate.rate=0.5"
-set-property, playback-time=99.0, target-element-name=videorate, property-name=rate, property-value="0.5" # playback-time=99.0 so that the action is executed asap but no on element addition
+set-property, playback-time=99.0, target-element-name=videorate, property-name=rate, property-value=0.5 # playback-time=99.0 so that the action is executed asap but no on element addition
 
 # Cranking 5 times, and let following buffer through
 crank-clock, repeat=5, expected-elapsed-time=0.1
@@ -32,14 +32,14 @@ check-position, expected-position=4.0 # seek.stop - (10*(1/10fps)) = 4.0s
 
 set-vars, rate=(string)0.1
 checkpoint, text="Setting videorate.rate=0.1"
-set-property, playback-time=99.0, target-element-name=videorate, property-name=rate, property-value="0.1"
+set-property, playback-time=99.0, target-element-name=videorate, property-name=rate, property-value=0.1
 crank-clock, repeat=20
 wait, on-clock=true
 check-position, expected-position=2.0 # seek.stop - (20*(1/10fps)) = 2.0s
 
 # Now setting rate=2.0
 checkpoint, text="Setting videorate.rate=2.0"
-set-property, playback-time=-1, target-element-name=videorate, property-name=rate, property-value="2.0"
+set-property, playback-time=-1, target-element-name=videorate, property-name=rate, property-value=2.0
 crank-clock, repeat=10
 wait, on-clock=true
 
