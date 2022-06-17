@@ -2063,7 +2063,8 @@ gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
     } else if (strcmp (a, "AUTOSELECT") == 0) {
       media->autoselect = g_ascii_strcasecmp (v, "yes") == 0;
     } else {
-      /* unhandled: ASSOC-LANGUAGE, INSTREAM-ID, CHARACTERISTICS */
+      /* unhandled: ASSOC-LANGUAGE, INSTREAM-ID, CHARACTERISTICS,
+       * STABLE-RENDITION-ID, CHANNELS */
       GST_FIXME ("EXT-X-MEDIA: unhandled attribute: %s = %s", a, v);
     }
   }
