@@ -122,7 +122,7 @@ typedef struct _GstDXVAResolution
 
 static const GstDXVAResolution gst_dxva_resolutions[] = {
   {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
-  {7680, 4320}, {8192, 4320}
+  {7680, 4320}, {8192, 4320}, {15360, 8640}, {16384, 8640}
 };
 
 gboolean          gst_d3d11_decoder_util_is_legacy_device (GstD3D11Device * device);
