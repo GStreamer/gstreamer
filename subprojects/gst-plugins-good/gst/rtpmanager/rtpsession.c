@@ -79,6 +79,7 @@ enum
 #define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVP
 #define DEFAULT_RTCP_REDUCED_SIZE    FALSE
 #define DEFAULT_RTCP_DISABLE_SR_TIMESTAMP FALSE
+#define DEFAULT_FAVOR_NEW            FALSE
 #define DEFAULT_TWCC_FEEDBACK_INTERVAL GST_CLOCK_TIME_NONE
 
 enum
@@ -540,7 +541,7 @@ rtp_session_class_init (RTPSessionClass * klass)
 
   properties[PROP_FAVOR_NEW] =
       g_param_spec_boolean ("favor-new", "Favor new sources",
-      "Resolve SSRC conflict in favor of new sources", FALSE,
+      "Resolve SSRC conflict in favor of new sources", DEFAULT_FAVOR_NEW,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_RTCP_MIN_INTERVAL] =
@@ -690,6 +691,7 @@ rtp_session_init (RTPSession * sess)
   sess->probation = DEFAULT_PROBATION;
   sess->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
   sess->max_misorder_time = DEFAULT_MAX_MISORDER_TIME;
+  sess->favor_new = DEFAULT_FAVOR_NEW;
 
   /* some default SDES entries */
   sess->sdes = gst_structure_new_empty ("application/x-rtp-source-sdes");
