@@ -2335,6 +2335,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     const gchar *mdi_str = NULL;
     const gchar *cll_str = NULL;
     gboolean codec_data_modified = FALSE;
+    GstStructure *st;
 
     gst_caps_set_simple (caps, "parsed", G_TYPE_BOOLEAN, TRUE,
         "stream-format", G_TYPE_STRING,
@@ -2343,7 +2344,15 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
         gst_h265_parse_get_string (h265parse, FALSE, h265parse->align), NULL);
 
     gst_h265_parse_get_par (h265parse, &par_n, &par_d);
-    if (par_n != 0 && par_d != 0 &&
+
+    width = 0;
+    height = 0;
+    st = gst_caps_get_structure (caps, 0);
+    gst_structure_get_int (st, "width", &width);
+    gst_structure_get_int (st, "height", &height);
+
+    /* If no resolution info, do not consider aspect ratio */
+    if (par_n != 0 && par_d != 0 && width > 0 && height > 0 &&
         (!s || !gst_structure_has_field (s, "pixel-aspect-ratio"))) {
       gint new_par_d = par_d;
       /* Special case for some encoders which provide an 1:2 pixel aspect ratio
