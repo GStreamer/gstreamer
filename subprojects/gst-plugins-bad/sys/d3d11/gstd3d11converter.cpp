@@ -2526,7 +2526,7 @@ gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
     }
 
     const_buffer = (PSConstBuffer *) map.pData;
-    const_buffer->alpha = priv->const_data.alpha;
+    memcpy (const_buffer, &priv->const_data, sizeof (PSConstBuffer));
 
     context->Unmap (priv->const_buffer, 0);
     priv->update_alpha = FALSE;
