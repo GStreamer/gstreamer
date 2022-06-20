@@ -123,7 +123,7 @@ GMainLoop *loop = NULL;
 static const gchar *gstreamer_modules[] = {
   "gstreamer", "gst-plugins-base", "gst-plugins-good", "gst-plugins-ugly",
   "gst-plugins-bad", "gst-editing-services", "gst-libav", "gst-rtsp-server",
-  "gstreamer-vaapi"
+  "gstreamer-vaapi", NULL
 };
 
 static char *_name = NULL;
