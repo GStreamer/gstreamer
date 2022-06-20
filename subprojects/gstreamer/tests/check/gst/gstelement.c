@@ -654,7 +654,6 @@ GST_START_TEST (test_request_pad_templates)
   GHashTableIter iter;
   gpointer key, value;
   const gchar *pad_name, *templ_name;
-  GSList *padname_blacklists = NULL, *item;
   GError *err = NULL;
 
   padnames = g_hash_table_new (g_str_hash, g_str_equal);
@@ -703,23 +702,7 @@ GST_START_TEST (test_request_pad_templates)
   g_hash_table_insert (padnames, (gpointer) "src_%s", (gpointer) "src_%s");
   g_hash_table_insert (padnames, (gpointer) "src_%u_%s",
       (gpointer) "src_%u_%s");
-
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%u%u");
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%u_%d");
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%u_%u_");
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%u_%s_%s");
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%s_%u");
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%s_%s");
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%s_%s_%s");
-  padname_blacklists =
-      g_slist_append (padname_blacklists, (gpointer) "src_%s_blah");
+  g_hash_table_insert (padnames, (gpointer) "src_foo_bar", (gpointer) "src_%s");
 
   test = g_object_new (gst_test_element3_get_type (), NULL);
 
@@ -740,16 +723,6 @@ GST_START_TEST (test_request_pad_templates)
     fail_unless (pad != NULL);
     gst_element_release_request_pad (GST_ELEMENT (test), pad);
     gst_object_unref (pad);
-  }
-
-  item = padname_blacklists;
-
-  /* check invalid request pad name */
-  while (item) {
-    pad_name = (const gchar *) (item->data);
-    item = g_slist_next (item);
-    pad = gst_element_request_pad_simple (GST_ELEMENT (test), pad_name);
-    fail_unless (pad == NULL);
   }
 
   /* check it working with some APIs
@@ -782,9 +755,41 @@ GST_START_TEST (test_request_pad_templates)
   if (err) {
     g_error_free (err);
   }
-  g_slist_free (padname_blacklists);
   g_hash_table_unref (padnames);
   gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_forbidden_pad_template_names)
+{
+  const gchar *pad_name;
+  GSList *padname_blacklists = NULL, *item;
+
+  padname_blacklists =
+      g_slist_append (padname_blacklists, (gpointer) "src_%u%u");
+  padname_blacklists =
+      g_slist_append (padname_blacklists, (gpointer) "src_%u_%s_%s");
+  padname_blacklists =
+      g_slist_append (padname_blacklists, (gpointer) "src_%s_%u");
+  padname_blacklists =
+      g_slist_append (padname_blacklists, (gpointer) "src_%s_%s");
+  padname_blacklists =
+      g_slist_append (padname_blacklists, (gpointer) "src_%s_%s_%s");
+  padname_blacklists =
+      g_slist_append (padname_blacklists, (gpointer) "src_%s_blah");
+
+  item = padname_blacklists;
+
+  /* check invalid request pad name */
+  while (item) {
+    pad_name = (const gchar *) (item->data);
+    item = g_slist_next (item);
+    ASSERT_WARNING (gst_pad_template_new (pad_name, GST_PAD_SRC,
+            GST_PAD_REQUEST, GST_CAPS_ANY));
+  }
+
+  g_slist_free (padname_blacklists);
 }
 
 GST_END_TEST;
@@ -922,6 +927,7 @@ gst_element_suite (void)
   tcase_add_test (tc_chain, test_pad_templates);
   tcase_add_test (tc_chain, test_property_notify_message);
   tcase_add_test (tc_chain, test_request_pad_templates);
+  tcase_add_test (tc_chain, test_forbidden_pad_template_names);
   tcase_add_test (tc_chain, test_foreach_pad);
 
   return s;

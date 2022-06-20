@@ -1052,7 +1052,7 @@ gst_element_is_valid_request_template_name (const gchar * templ_name,
     /* %s is not allowed for multiple specifiers, just a single specifier can be
      * accepted in gst_pad_template_new() and can not be mixed with other
      * specifier '%u' and '%d' */
-    if (*(templ_name_ptr + 1) == 's' && g_strcmp0 (templ_name, name) == 0) {
+    if (*(templ_name_ptr + 1) == 's') {
       return TRUE;
     }
 
