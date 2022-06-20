@@ -31,7 +31,7 @@
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #define V4L2_MIN_KERNEL_VER_MAJOR 5
-#define V4L2_MIN_KERNEL_VER_MINOR 18
+#define V4L2_MIN_KERNEL_VER_MINOR 20
 #define V4L2_MIN_KERNEL_VERSION KERNEL_VERSION(V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR, 0)
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_h265dec_debug);
@@ -134,6 +134,66 @@ static gboolean
 needs_start_codes (GstV4l2CodecH265Dec * self)
 {
   return self->start_code == V4L2_STATELESS_HEVC_START_CODE_ANNEX_B;
+}
+
+static gboolean
+gst_v4l2_decoder_h265_api_check (GstV4l2Decoder * decoder)
+{
+  guint i, ret_size;
+  /* *INDENT-OFF* */
+  #define SET_ID(cid) .id = (cid), .name = #cid
+  struct
+  {
+    const gchar *name;
+    unsigned int id;
+    unsigned int size;
+    gboolean optional;
+  } controls[] = {
+    {
+      SET_ID (V4L2_CID_STATELESS_HEVC_SPS),
+      .size = sizeof(struct v4l2_ctrl_hevc_sps),
+    }, {
+      SET_ID (V4L2_CID_STATELESS_HEVC_PPS),
+      .size = sizeof(struct v4l2_ctrl_hevc_pps),
+    }, {
+      SET_ID (V4L2_CID_STATELESS_HEVC_SCALING_MATRIX),
+      .size = sizeof(struct v4l2_ctrl_hevc_scaling_matrix),
+      .optional = TRUE,
+    }, {
+      SET_ID (V4L2_CID_STATELESS_HEVC_DECODE_PARAMS),
+      .size = sizeof(struct v4l2_ctrl_hevc_decode_params),
+    }, {
+      SET_ID (V4L2_CID_STATELESS_HEVC_SLICE_PARAMS),
+      .size = sizeof(struct v4l2_ctrl_hevc_slice_params),
+      .optional = TRUE,
+    }
+  };
+  #undef SET_ID
+  /* *INDENT-ON* */
+
+  /*
+   * Compatibility check: make sure the pointer controls are
+   * the right size.
+   */
+  for (i = 0; i < G_N_ELEMENTS (controls); i++) {
+    gboolean control_found;
+
+    control_found = gst_v4l2_decoder_query_control_size (decoder,
+        controls[i].id, &ret_size);
+
+    if (!controls[i].optional && !control_found) {
+      GST_WARNING ("Driver is missing %s support.", controls[i].name);
+      return FALSE;
+    }
+
+    if (control_found && ret_size != controls[i].size) {
+      GST_WARNING ("%s control size mismatch: got %d bytes but %d expected.",
+          controls[i].name, ret_size, controls[i].size);
+      return FALSE;
+    }
+  }
+
+  return TRUE;
 }
 
 
@@ -1610,6 +1670,11 @@ gst_v4l2_codec_h265_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
     GST_WARNING ("V4L2 API v%u.%u too old, at least v%u.%u required",
         (version >> 16) & 0xff, (version >> 8) & 0xff,
         V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR);
+
+  if (!gst_v4l2_decoder_h265_api_check (decoder)) {
+    GST_WARNING ("Not registering H265 decoder as it failed ABI check.");
+    goto done;
+  }
 
   gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_H265_DEC,
       (GClassInitFunc) gst_v4l2_codec_h265_dec_subclass_init,
