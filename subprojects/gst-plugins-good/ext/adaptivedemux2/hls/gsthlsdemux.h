@@ -116,6 +116,10 @@ struct _GstHLSDemuxStream
   /* The segment (from the above playlist) currently being used */
   GstM3U8MediaSegment *current_segment;
 
+  /* The partial segment (from the above playlist) currently being used,
+   * if we have advanced to the last 'dummy' segment in a live playlist */
+  GstM3U8PartialSegment *current_partial_segment;
+
   /* Whether we need to typefind the next buffer */
   gboolean do_typefind;
 

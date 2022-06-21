@@ -1512,7 +1512,7 @@ gst_hls_demux_stream_handle_buffer (GstAdaptiveDemux2Stream * stream,
 
   GST_DEBUG_OBJECT (stream,
       "buffer:%p at_eos:%d do_typefind:%d uri:%s", buffer, at_eos,
-      hls_stream->do_typefind, hls_stream->current_segment->uri);
+      hls_stream->do_typefind, GST_STR_NULL (hls_stream->current_segment->uri));
 
   if (buffer == NULL)
     goto out;
@@ -1611,7 +1611,7 @@ gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream)
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (stream, "Finishing fragment uri:%s",
-      hls_stream->current_segment->uri);
+      GST_STR_NULL (hls_stream->current_segment->uri));
 
   /* Drain all pending data */
   if (hls_stream->current_key)
@@ -1821,7 +1821,7 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
       "Current segment sn:%" G_GINT64_FORMAT " stream_time:%" GST_STIME_FORMAT
       " uri:%s", hlsdemux_stream->current_segment->sequence,
       GST_STIME_ARGS (hlsdemux_stream->current_segment->stream_time),
-      hlsdemux_stream->current_segment->uri);
+      GST_STR_NULL (hlsdemux_stream->current_segment->uri));
 
   new_segment =
       gst_hls_media_playlist_advance_fragment (hlsdemux_stream->playlist,
@@ -1838,7 +1838,7 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
         "Advanced to segment sn:%" G_GINT64_FORMAT " stream_time:%"
         GST_STIME_FORMAT " uri:%s", hlsdemux_stream->current_segment->sequence,
         GST_STIME_ARGS (hlsdemux_stream->current_segment->stream_time),
-        hlsdemux_stream->current_segment->uri);
+        GST_STR_NULL (hlsdemux_stream->current_segment->uri));
     return GST_FLOW_OK;
   }
 
@@ -2216,7 +2216,7 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
         "Current segment sn:%" G_GINT64_FORMAT " stream_time:%" GST_STIME_FORMAT
         " uri:%s", stream->current_segment->sequence,
         GST_STIME_ARGS (stream->current_segment->stream_time),
-        stream->current_segment->uri);
+        GST_STR_NULL (stream->current_segment->uri));
 
     /* Use best-effort techniques to find the correponding current media segment
      * in the new playlist. This might be off in some cases, but it doesn't matter
@@ -2272,7 +2272,7 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
         " stream_time:%" GST_STIME_FORMAT " uri:%s",
         stream->current_segment->sequence,
         GST_STIME_ARGS (stream->current_segment->stream_time),
-        stream->current_segment->uri);
+        GST_STR_NULL (stream->current_segment->uri));
   } else {
     GST_DEBUG_OBJECT (stream, "No current segment selected");
   }
@@ -2389,7 +2389,8 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
           gst_hls_media_playlist_seek (hlsdemux_stream->playlist, TRUE,
           GST_SEEK_FLAG_SNAP_NEAREST, stream->current_position);
 
-      if (hlsdemux_stream->current_segment == NULL) {
+      if (hlsdemux_stream->current_segment == NULL
+          && hlsdemux_stream->current_partial_segment == NULL) {
         GST_INFO_OBJECT (stream, "At the end of the current media playlist");
         return GST_FLOW_EOS;
       }
