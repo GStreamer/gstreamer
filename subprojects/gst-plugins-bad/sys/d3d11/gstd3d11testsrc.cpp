@@ -1293,11 +1293,12 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
   GstCaps *draw_caps;
   GstD3D11AllocationParams *params;
   GstD3D11TestSrcRender *render;
+  GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
 
   gst_video_info_set_format (&draw_info, GST_VIDEO_FORMAT_RGBA,
       self->info.width, self->info.height);
   self->converter = gst_d3d11_converter_new (self->device,
-      &draw_info, &self->info);
+      &draw_info, &self->info, &method);
 
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "Failed to create converter");

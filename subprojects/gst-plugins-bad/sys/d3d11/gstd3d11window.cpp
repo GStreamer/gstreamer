@@ -457,6 +457,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
   DXGI_HDR_METADATA_HDR10 hdr10_metadata = { 0, };
   GstDxgiColorSpace in_dxgi_colorspace;
+  GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
 
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
@@ -722,7 +723,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* configure shader even if video processor is available for fallback */
   window->converter =
       gst_d3d11_converter_new (window->device, &window->info,
-      &window->render_info);
+      &window->render_info, &method);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");

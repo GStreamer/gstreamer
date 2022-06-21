@@ -38,6 +38,12 @@ typedef struct _GstD3D11Converter GstD3D11Converter;
 typedef struct _GstD3D11ConverterClass GstD3D11ConverterClass;
 typedef struct _GstD3D11ConverterPrivate GstD3D11ConverterPrivate;
 
+typedef enum
+{
+  GST_D3D11_CONVERTER_METHOD_SHADER = (1 << 0),
+  GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR = (1 << 1),
+} GstD3D11ConverterMethod;
+
 struct _GstD3D11Converter
 {
   GstObject parent;
@@ -61,7 +67,8 @@ GType               gst_d3d11_converter_get_type (void);
 
 GstD3D11Converter * gst_d3d11_converter_new  (GstD3D11Device * device,
                                               const GstVideoInfo * in_info,
-                                              const GstVideoInfo * out_info);
+                                              const GstVideoInfo * out_info,
+                                              GstD3D11ConverterMethod * method);
 
 gboolean            gst_d3d11_converter_convert (GstD3D11Converter * converter,
                                                  ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
@@ -71,6 +78,16 @@ gboolean            gst_d3d11_converter_convert_unlocked (GstD3D11Converter * co
                                                           ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
                                                           ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
 
+gboolean            gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
+                                                        GstBuffer * in_buf,
+                                                        GstBuffer * out_buf);
+
+gboolean            gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Converter * converter,
+                                                                 GstBuffer * in_buf,
+                                                                 GstBuffer * out_buf);
+
 G_END_DECLS
+
+DEFINE_ENUM_FLAG_OPERATORS (GstD3D11ConverterMethod);
 
 #endif /* __GST_D3D11_COLOR_CONVERTER_H__ */

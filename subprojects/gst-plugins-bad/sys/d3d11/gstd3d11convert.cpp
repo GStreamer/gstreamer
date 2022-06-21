@@ -1718,6 +1718,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   gint border_offset_x = 0;
   gint border_offset_y = 0;
+  GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
 
   if (gst_caps_is_equal (incaps, outcaps)) {
     self->same_caps = TRUE;
@@ -1796,7 +1797,8 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     goto format_unknown;
   }
 
-  self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info);
+  self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info,
+      &method);
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "couldn't set converter");
     return FALSE;

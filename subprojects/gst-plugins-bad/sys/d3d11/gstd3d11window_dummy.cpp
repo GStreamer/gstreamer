@@ -86,6 +86,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     gboolean * video_processor_available, GError ** error)
 {
   GstDxgiColorSpace in_space;
+  GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
 
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
   gst_clear_object (&window->compositor);
@@ -172,7 +173,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
   window->converter =
       gst_d3d11_converter_new (window->device, &window->info,
-      &window->render_info);
+      &window->render_info, &method);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");

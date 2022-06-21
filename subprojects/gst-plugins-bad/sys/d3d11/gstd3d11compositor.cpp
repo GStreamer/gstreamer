@@ -878,8 +878,10 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   if (!cpad->convert) {
     GstD3D11Format in_format, out_format;
     GstDxgiColorSpace in_space, out_space;
+    GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
 
-    cpad->convert = gst_d3d11_converter_new (self->device, &pad->info, info);
+    cpad->convert = gst_d3d11_converter_new (self->device, &pad->info, info,
+        &method);
     if (!cpad->convert) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
       return FALSE;
