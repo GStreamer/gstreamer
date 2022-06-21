@@ -45,7 +45,8 @@ gst_adaptive_demux_track_flush (GstAdaptiveDemuxTrack * track)
   gst_event_store_flush (&track->sticky_events);
 
   gst_segment_init (&track->input_segment, GST_FORMAT_TIME);
-  track->lowest_input_time = track->input_time = 0;
+  track->lowest_input_time = GST_CLOCK_STIME_NONE;
+  track->input_time = 0;
   track->input_segment_seqnum = GST_SEQNUM_INVALID;
 
   gst_segment_init (&track->output_segment, GST_FORMAT_TIME);
@@ -470,6 +471,9 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
     }
 
     /* Update track input time and level */
+    if (!GST_CLOCK_STIME_IS_VALID (track->lowest_input_time))
+      track->lowest_input_time = track->input_time;
+
     if (track->input_segment.rate > 0.0) {
       if (input_time > track->input_time) {
         track->input_time = input_time;
@@ -494,11 +498,17 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
      * this item's "buffering running time" */
     item.runningtime_buffering = track->input_time;
 
-    if (GST_CLOCK_STIME_IS_VALID (track->output_time))
-      output_time =
-          MAX (track->output_time, demux->priv->global_output_position);
-    else
-      output_time = track->input_time;
+    /* Configure the track output time if nothing was dequeued yet,
+     * so buffering level is updated correctly */
+    if (!GST_CLOCK_STIME_IS_VALID (track->output_time)) {
+      track->output_time = track->lowest_input_time;
+      GST_LOG_OBJECT (track->sinkpad,
+          "track %s (period %u) set output_time = lowest input_time = %"
+          GST_STIME_FORMAT, track->stream_id, track->period_num,
+          GST_STIME_ARGS (track->output_time));
+    }
+
+    output_time = MAX (track->output_time, demux->priv->global_output_position);
 
     if (track->input_time >= output_time)
       track->level_time = track->input_time - output_time;
