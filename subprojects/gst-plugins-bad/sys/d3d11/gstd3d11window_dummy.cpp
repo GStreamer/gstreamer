@@ -88,7 +88,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   GstDxgiColorSpace in_space;
 
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
+  gst_clear_object (&window->compositor);
   gst_clear_object (&window->converter);
 
   /* We are supporting only RGBA, BGRA or RGB10A2_LE formats but we don't know

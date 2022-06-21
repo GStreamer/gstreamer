@@ -26,17 +26,44 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_D3D11_OVERLAY_COMPOSITOR             (gst_d3d11_overlay_compositor_get_type())
+#define GST_D3D11_OVERLAY_COMPOSITOR(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_OVERLAY_COMPOSITOR,GstD3D11OverlayCompositor))
+#define GST_D3D11_OVERLAY_COMPOSITOR_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_OVERLAY_COMPOSITOR,GstD3D11OverlayCompositorClass))
+#define GST_D3D11_OVERLAY_COMPOSITOR_GET_CLASS(obj)   (GST_D3D11_OVERLAY_COMPOSITOR_CLASS(G_OBJECT_GET_CLASS(obj)))
+#define GST_IS_D3D11_OVERLAY_COMPOSITOR(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_OVERLAY_COMPOSITOR))
+#define GST_IS_D3D11_OVERLAY_COMPOSITOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_OVERLAY_COMPOSITOR))
+#define GST_D3D11_OVERLAY_COMPOSITOR_CAST(obj)        ((GstD3D11OverlayCompositor*)(obj))
+
 typedef struct _GstD3D11OverlayCompositor GstD3D11OverlayCompositor;
+typedef struct _GstD3D11OverlayCompositorClass GstD3D11OverlayCompositorClass;
+typedef struct _GstD3D11OverlayCompositorPrivate GstD3D11OverlayCompositorPrivate;
+
+struct _GstD3D11OverlayCompositor
+{
+  GstObject parent;
+
+  GstD3D11Device *device;
+
+  /*< private >*/
+  GstD3D11OverlayCompositorPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstD3D11OverlayCompositorClass
+{
+  GstObjectClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+GType                       gst_d3d11_overlay_compositor_get_type (void);
 
 GstD3D11OverlayCompositor * gst_d3d11_overlay_compositor_new  (GstD3D11Device * device,
-                                                               GstVideoInfo * out_info);
-
-void                        gst_d3d11_overlay_compositor_free (GstD3D11OverlayCompositor * compositor);
+                                                               const GstVideoInfo * info);
 
 gboolean                    gst_d3d11_overlay_compositor_upload (GstD3D11OverlayCompositor * compositor,
                                                                  GstBuffer * buf);
-
-void                        gst_d3d11_overlay_compositor_free_overlays (GstD3D11OverlayCompositor * compositor);
 
 gboolean                    gst_d3d11_overlay_compositor_update_viewport (GstD3D11OverlayCompositor * compositor,
                                                                           D3D11_VIEWPORT * viewport);

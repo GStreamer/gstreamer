@@ -269,7 +269,7 @@ gst_d3d11_window_dispose (GObject * object)
     gst_d3d11_window_release_resources (self->device, self);
 
   g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&self->compositor, gst_d3d11_overlay_compositor_free);
+  gst_clear_object (&self->compositor);
   gst_clear_object (&self->converter);
 
   gst_clear_buffer (&self->cached_buffer);
@@ -461,7 +461,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
-  g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
+  gst_clear_object (&window->compositor);
   gst_clear_object (&window->converter);
 
   window->processor_in_use = FALSE;
