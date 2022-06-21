@@ -159,6 +159,11 @@ struct _GstAdaptiveDemuxTrack
   /* Unique identifier */
   gchar *stream_id;
 
+  /* Period number this track belongs
+   * to (MAXINT if not assigned to a period yet)
+   */
+  guint period_num;
+
   /* Unique identifier of the internal stream produced
    * by parsebin for the Stream this track comes from */
   gchar *upstream_stream_id;

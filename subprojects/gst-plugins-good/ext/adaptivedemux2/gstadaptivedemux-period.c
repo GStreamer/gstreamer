@@ -192,13 +192,16 @@ gst_adaptive_demux_period_transfer_selection (GstAdaptiveDemux * demux,
       GstAdaptiveDemuxTrack *new_track =
           gst_adaptive_demux_period_find_matching_track (next_period, track);
       if (new_track) {
-        GST_DEBUG_OBJECT (demux, "Selecting replacement track %s",
-            new_track->stream_id);
+        GST_DEBUG_OBJECT (demux,
+            "Selecting replacement track %s (period %u) for track %s (period %d)",
+            new_track->stream_id, new_track->period_num, track->stream_id,
+            track->period_num);
         new_track->selected = TRUE;
         gst_pad_set_active (new_track->sinkpad, TRUE);
       } else {
-        GST_WARNING_OBJECT (demux, "Could not find replacement track for %s",
-            track->stream_id);
+        GST_WARNING_OBJECT (demux,
+            "Could not find replacement track for %s (period %u) in period %u",
+            track->stream_id, track->period_num, current_period->period_num);
         /* FIXME : Pick a default for that type ? Just continue as-is ? */
       }
     }

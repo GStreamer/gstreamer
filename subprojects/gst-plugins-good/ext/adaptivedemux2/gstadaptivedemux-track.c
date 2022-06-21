@@ -103,8 +103,9 @@ track_dequeue_item_locked (GstAdaptiveDemux * demux,
   gst_queue_array_pop_head (track->queue);
 
   GST_LOG_OBJECT (demux,
-      "track %s item running_time %" GST_STIME_FORMAT " end %" GST_STIME_FORMAT,
-      track->stream_id, GST_STIME_ARGS (out_item->runningtime),
+      "track %s (period %u) item running_time %" GST_STIME_FORMAT " end %"
+      GST_STIME_FORMAT, track->stream_id, track->period_num,
+      GST_STIME_ARGS (out_item->runningtime),
       GST_STIME_ARGS (out_item->runningtime_end));
 
   return TRUE;
@@ -135,8 +136,8 @@ track_dequeue_data_locked (GstAdaptiveDemux * demux,
       running_time_buffering = running_time = running_time_end =
           GST_CLOCK_STIME_NONE;
       GST_DEBUG_OBJECT (demux,
-          "track %s dequeued pending sticky event %" GST_PTR_FORMAT,
-          track->stream_id, event);
+          "track %s (period %u) dequeued pending sticky event %" GST_PTR_FORMAT,
+          track->stream_id, track->period_num, event);
       is_pending_sticky = TRUE;
       goto handle_event;
     }
@@ -212,10 +213,10 @@ track_dequeue_data_locked (GstAdaptiveDemux * demux,
       duration = cstop - cstart;
 
       GST_DEBUG_OBJECT (demux,
-          "track %s Starting gap for runningtime %" GST_STIME_FORMAT
+          "track %s (period %u) Starting gap for runningtime %" GST_STIME_FORMAT
           " - clipped position %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
-          track->stream_id, GST_STIME_ARGS (running_time), GST_TIME_ARGS (pos),
-          GST_TIME_ARGS (duration));
+          track->stream_id, track->period_num, GST_STIME_ARGS (running_time),
+          GST_TIME_ARGS (pos), GST_TIME_ARGS (duration));
 
       track->gap_position = pos;
       track->gap_duration = duration;
@@ -504,14 +505,14 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
     else
       track->level_time = 0;
 
-    GST_LOG_OBJECT (demux,
-        "track %s input_time:%" GST_STIME_FORMAT " output_time:%"
+    GST_LOG_OBJECT (track->sinkpad,
+        "track %s (period %u) input_time:%" GST_STIME_FORMAT " output_time:%"
         GST_STIME_FORMAT " level:%" GST_TIME_FORMAT,
-        track->stream_id, GST_STIME_ARGS (track->input_time),
+        track->stream_id, track->period_num, GST_STIME_ARGS (track->input_time),
         GST_STIME_ARGS (track->output_time), GST_TIME_ARGS (track->level_time));
   }
 
-  GST_LOG_OBJECT (demux,
+  GST_LOG_OBJECT (track->sinkpad,
       "track %s item running_time :%" GST_STIME_FORMAT " end :%"
       GST_STIME_FORMAT, track->stream_id, GST_STIME_ARGS (item.runningtime),
       GST_STIME_ARGS (item.runningtime_end));
@@ -855,6 +856,9 @@ gst_adaptive_demux_track_add_elements (GstAdaptiveDemuxTrack * track,
   gchar *internal_name;
   guint i, len;
 
+  /* Store the period number for debugging output */
+  track->period_num = period_num;
+
   internal_name =
       g_strdup_printf ("track-period%d-%s", period_num, track->stream_id);
   len = strlen (internal_name);
@@ -922,6 +926,7 @@ gst_adaptive_demux_track_new (GstAdaptiveDemux * demux,
   track->type = type;
   track->flags = flags;
   track->stream_id = g_strdup (stream_id);
+  track->period_num = (guint) (-1);
   track->generic_caps = caps;
   track->stream_object = gst_stream_new (stream_id, caps, type, flags);
   if (tags) {

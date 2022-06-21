@@ -1867,10 +1867,10 @@ demux_update_buffering_locked (GstAdaptiveDemux * demux)
     GstAdaptiveDemuxTrack *track = (GstAdaptiveDemuxTrack *) tmp->data;
 
     GST_LOG_OBJECT (demux,
-        "Checking track '%s' active:%d selected:%d eos:%d level:%"
+        "Checking track '%s' (period %u) active:%d selected:%d eos:%d level:%"
         GST_TIME_FORMAT " buffering_threshold:%" GST_TIME_FORMAT,
-        track->stream_id, track->active, track->selected, track->eos,
-        GST_TIME_ARGS (track->level_time),
+        track->stream_id, track->period_num, track->active, track->selected,
+        track->eos, GST_TIME_ARGS (track->level_time),
         GST_TIME_ARGS (track->buffering_threshold));
 
     if (track->active && track->selected) {
@@ -3342,8 +3342,9 @@ check_and_handle_selection_update_locked (GstAdaptiveDemux * demux)
         if (slot->pending_track == NULL) {
           slot->pending_track = gst_adaptive_demux_track_ref (track);
           GST_DEBUG_OBJECT (demux,
-              "Track '%s' will be used on output of track '%s'",
-              track->stream_id, slot->track->stream_id);
+              "Track '%s' (period %u) will be used on output of track '%s' (period %u)",
+              track->stream_id, track->period_num,
+              slot->track->stream_id, slot->track->period_num);
         }
       } else {
         /* 2. There is no compatible replacement slot, create a new one */
@@ -3587,11 +3588,13 @@ restart:
             MIN (global_output_position, track->next_position);
       track->waiting_add = FALSE;
     } else if (!track->eos) {
-      GST_DEBUG_OBJECT (demux, "Need timed data on track %s", track->stream_id);
+      GST_DEBUG_OBJECT (demux, "Need timed data on track %s (period %u)",
+          track->stream_id, track->period_num);
       wait_for_data = track->waiting_add = TRUE;
     } else {
-      GST_DEBUG_OBJECT (demux, "Track %s is EOS, not waiting for timed data",
-          track->stream_id);
+      GST_DEBUG_OBJECT (demux,
+          "Track %s (period %u) is EOS, not waiting for timed data",
+          track->stream_id, track->period_num);
     }
   }
 
@@ -3645,8 +3648,9 @@ restart:
 
       if (!mo) {
         GST_DEBUG_OBJECT (demux,
-            "Track '%s' doesn't have any pending data (eos:%d pushed_timed_data:%d)",
-            track->stream_id, track->eos, slot->pushed_timed_data);
+            "Track '%s' (period %u) doesn't have any pending data (eos:%d pushed_timed_data:%d)",
+            track->stream_id, track->period_num, track->eos,
+            slot->pushed_timed_data);
         /* This should only happen if the track is EOS, or exactly in between
          * the parser outputting segment/caps before buffers. */
         g_assert (track->eos || !slot->pushed_timed_data);
@@ -3657,8 +3661,9 @@ restart:
       demux_post_buffering_locked (demux);
       TRACKS_UNLOCK (demux);
 
-      GST_DEBUG_OBJECT (demux, "Track '%s' dequeued %" GST_PTR_FORMAT,
-          track->stream_id, mo);
+      GST_DEBUG_OBJECT (demux,
+          "Track '%s' (period %u) dequeued %" GST_PTR_FORMAT, track->stream_id,
+          track->period_num, mo);
 
       if (GST_IS_EVENT (mo)) {
         GstEvent *event = (GstEvent *) mo;
@@ -3686,7 +3691,8 @@ restart:
             gst_flow_combiner_update_pad_flow (demux->priv->flowcombiner,
             slot->pad, slot->flow_ret);
         GST_DEBUG_OBJECT (slot->pad,
-            "track %s push returned %s (combined %s)", track->stream_id,
+            "track %s (period %u) push returned %s (combined %s)",
+            track->stream_id, track->period_num,
             gst_flow_get_name (slot->flow_ret), gst_flow_get_name (ret));
         slot->pushed_timed_data = TRUE;
       } else {
