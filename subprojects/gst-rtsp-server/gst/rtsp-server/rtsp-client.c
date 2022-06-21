@@ -934,6 +934,23 @@ send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
 }
 
 static void
+send_generic_error_response (GstRTSPClient * client, GstRTSPStatusCode code,
+    GstRTSPContext * ctx)
+{
+  GstRTSPClientClass *klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  GstRTSPStatusCode adjusted_code = code;
+
+  if (klass->adjust_error_code != NULL) {
+    adjusted_code = klass->adjust_error_code (client, ctx, code);
+    if (adjusted_code != code) {
+      GST_DEBUG ("adjusted response error code from %d to %d", code,
+          adjusted_code);
+    }
+  }
+  send_generic_response (client, adjusted_code, ctx);
+}
+
+static void
 send_option_not_supported_response (GstRTSPClient * client,
     GstRTSPContext * ctx, const gchar * unsupported_options)
 {
@@ -1053,7 +1070,7 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
 no_factory:
   {
     GST_ERROR ("client %p: no factory for path %s", client, path);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return NULL;
   }
 no_factory_access:
@@ -1076,7 +1093,7 @@ not_authorized:
 no_media:
   {
     GST_ERROR ("client %p: can't create media", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     gst_rtsp_url_free (url);
     g_object_unref (factory);
     ctx->factory = NULL;
@@ -1085,7 +1102,7 @@ no_media:
 no_thread:
   {
     GST_ERROR ("client %p: can't create thread", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     gst_rtsp_url_free (url);
     g_object_unref (media);
     ctx->media = NULL;
@@ -1096,7 +1113,7 @@ no_thread:
 no_prepare:
   {
     GST_ERROR ("client %p: can't prepare media", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     gst_rtsp_url_free (url);
     g_object_unref (media);
     ctx->media = NULL;
@@ -1523,26 +1540,26 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
 no_session:
   {
     GST_ERROR ("client %p: no session", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     return FALSE;
   }
 no_uri:
   {
     GST_ERROR ("client %p: no uri supplied", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_free (path);
     return FALSE;
   }
 no_aggregate:
   {
     GST_ERROR ("client %p: no aggregate path %s", client, path);
-    send_generic_response (client,
+    send_generic_error_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     g_free (path);
     g_object_unref (sessmedia);
@@ -1552,7 +1569,7 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -1627,13 +1644,13 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     return FALSE;
   }
 bad_request:
   {
     GST_ERROR ("client %p: bad request", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 }
@@ -1679,13 +1696,13 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     return FALSE;
   }
 bad_request:
   {
     GST_ERROR ("client %p: bad request", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 }
@@ -1774,26 +1791,26 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
 no_session:
   {
     GST_ERROR ("client %p: no session", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     return FALSE;
   }
 no_uri:
   {
     GST_ERROR ("client %p: no uri supplied", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_free (path);
     return FALSE;
   }
 no_aggregate:
   {
     GST_ERROR ("client %p: no aggregate path %s", client, path);
-    send_generic_response (client,
+    send_generic_error_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     g_object_unref (sessmedia);
     g_free (path);
@@ -1803,7 +1820,7 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (sessmedia);
     g_object_unref (media);
@@ -1812,8 +1829,8 @@ sig_failed:
 invalid_state:
   {
     GST_ERROR ("client %p: not PLAYING or RECORDING", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
-        ctx);
+    send_generic_error_response (client,
+        GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (sessmedia);
     g_object_unref (media);
@@ -1822,7 +1839,7 @@ invalid_state:
 not_supported:
   {
     GST_ERROR ("client %p: pausing not supported", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (sessmedia);
     g_object_unref (media);
@@ -2196,25 +2213,25 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 no_session:
   {
     GST_ERROR ("client %p: no session", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     return FALSE;
   }
 no_uri:
   {
     GST_ERROR ("client %p: no uri supplied", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 not_found:
   {
     GST_ERROR ("client %p: media not found", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_aggregate:
   {
     GST_ERROR ("client %p: no aggregate path %s", client, path);
-    send_generic_response (client,
+    send_generic_error_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     g_object_unref (sessmedia);
     g_free (path);
@@ -2224,7 +2241,7 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2233,8 +2250,8 @@ sig_failed:
 invalid_state:
   {
     GST_ERROR ("client %p: not PLAYING or READY", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
-        ctx);
+    send_generic_error_response (client,
+        GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2243,8 +2260,8 @@ invalid_state:
 pipeline_error:
   {
     GST_ERROR ("client %p: failed to configure the pipeline", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
-        ctx);
+    send_generic_error_response (client,
+        GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2253,7 +2270,7 @@ pipeline_error:
 unsuspend_failed:
   {
     GST_ERROR ("client %p: unsuspend failed", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2262,7 +2279,7 @@ unsuspend_failed:
 invalid_mode:
   {
     GST_ERROR ("client %p: seek failed", client);
-    send_generic_response (client, code, ctx);
+    send_generic_error_response (client, code, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2271,7 +2288,7 @@ invalid_mode:
 unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support PLAY", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2280,7 +2297,8 @@ unsupported_mode:
 get_rates_error:
   {
     GST_ERROR ("client %p: failed obtaining rate and applied_rate", client);
-    send_generic_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR,
+        ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2289,7 +2307,7 @@ get_rates_error:
 adjust_play_response_failed:
   {
     GST_ERROR ("client %p: failed to adjust play response", client);
-    send_generic_response (client, code, ctx);
+    send_generic_error_response (client, code, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2298,7 +2316,8 @@ adjust_play_response_failed:
 rtp_info_error:
   {
     GST_ERROR ("client %p: failed to add RTP-Info", client);
-    send_generic_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_INTERNAL_SERVER_ERROR,
+        ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     g_object_unref (sessmedia);
@@ -2396,7 +2415,7 @@ done:
 parse_failed:
   {
     GST_ERROR_OBJECT (client, "failed to parse blocksize");
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 }
@@ -3085,19 +3104,20 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 no_uri:
   {
     GST_ERROR ("client %p: no uri", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 no_transport:
   {
     GST_ERROR ("client %p: no transport", client);
-    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT,
+        ctx);
     goto cleanup_path;
   }
 no_pool:
   {
     GST_ERROR ("client %p: no session pool configured", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     goto cleanup_path;
   }
 media_not_found_no_reply:
@@ -3109,13 +3129,13 @@ media_not_found_no_reply:
 media_not_found:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     goto cleanup_session;
   }
 control_not_found:
   {
     GST_ERROR ("client %p: no control in path '%s'", client, path);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     goto cleanup_session;
@@ -3124,7 +3144,7 @@ stream_not_found:
   {
     GST_ERROR ("client %p: stream '%s' not found", client,
         GST_STR_NULL (control));
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     goto cleanup_session;
@@ -3133,7 +3153,7 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     goto cleanup_path;
@@ -3141,7 +3161,7 @@ sig_failed:
 service_unavailable:
   {
     GST_ERROR ("client %p: can't create session", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
     goto cleanup_session;
@@ -3149,7 +3169,7 @@ service_unavailable:
 sessmedia_unavailable:
   {
     GST_ERROR ("client %p: can't create session media", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     goto cleanup_transport;
   }
 configure_media_failed_no_reply:
@@ -3163,13 +3183,15 @@ configure_media_failed_no_reply:
 unsupported_transports:
   {
     GST_ERROR ("client %p: unsupported transports", client);
-    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT,
+        ctx);
     goto cleanup_transport;
   }
 unsupported_client_transport:
   {
     GST_ERROR ("client %p: unsupported client transport", client);
-    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT,
+        ctx);
     goto cleanup_transport;
   }
 unsupported_mode:
@@ -3180,20 +3202,22 @@ unsupported_mode:
             GST_RTSP_TRANSPORT_MODE_PLAY),
         ! !(gst_rtsp_media_get_transport_mode (media) &
             GST_RTSP_TRANSPORT_MODE_RECORD), ct->mode_play, ct->mode_record);
-    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT,
+        ctx);
     goto cleanup_transport;
   }
 unsupported_range_unit:
   {
     GST_ERROR ("Client %p: does not support any range format we support",
         client);
-    send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, ctx);
     goto cleanup_transport;
   }
 keymgmt_error:
   {
     GST_ERROR ("client %p: keymgmt error", client);
-    send_generic_response (client, GST_RTSP_STS_KEY_MANAGEMENT_FAILURE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_KEY_MANAGEMENT_FAILURE,
+        ctx);
     goto cleanup_transport;
   }
   {
@@ -3362,25 +3386,25 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     return FALSE;
   }
 no_uri:
   {
     GST_ERROR ("client %p: no uri", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 no_mount_points:
   {
     GST_ERROR ("client %p: no mount points configured", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_path:
   {
     GST_ERROR ("client %p: can't find path for url", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_media:
@@ -3393,7 +3417,7 @@ no_media:
 unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support DESCRIBE", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     g_free (path);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
@@ -3402,7 +3426,7 @@ unsupported_mode:
 no_sdp:
   {
     GST_ERROR ("client %p: can't create SDP", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_free (path);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
@@ -3555,38 +3579,38 @@ handle_announce_request (GstRTSPClient * client, GstRTSPContext * ctx)
 no_uri:
   {
     GST_ERROR ("client %p: no uri", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 no_mount_points:
   {
     GST_ERROR ("client %p: no mount points configured", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_path:
   {
     GST_ERROR ("client %p: can't find path for url", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     gst_sdp_message_free (sdp);
     return FALSE;
   }
 wrong_content_type:
   {
     GST_ERROR ("client %p: unknown content type", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 no_message:
   {
     GST_ERROR ("client %p: can't find SDP message", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 sdp_parse_failed:
   {
     GST_ERROR ("client %p: failed to parse SDP message", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     gst_sdp_message_free (sdp);
     return FALSE;
   }
@@ -3602,7 +3626,7 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     gst_sdp_message_free (sdp);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
@@ -3611,7 +3635,7 @@ sig_failed:
 unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support ANNOUNCE", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     g_free (path);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
@@ -3621,7 +3645,8 @@ unsupported_mode:
 unhandled_sdp:
   {
     GST_ERROR ("client %p: can't handle SDP", client);
-    send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE,
+        ctx);
     g_free (path);
     gst_rtsp_media_unlock (media);
     g_object_unref (media);
@@ -3712,25 +3737,25 @@ handle_record_request (GstRTSPClient * client, GstRTSPContext * ctx)
 no_session:
   {
     GST_ERROR ("client %p: no session", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     return FALSE;
   }
 no_uri:
   {
     GST_ERROR ("client %p: no uri supplied", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
 not_found:
   {
     GST_ERROR ("client %p: media not found", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_aggregate:
   {
     GST_ERROR ("client %p: no aggregate path %s", client, path);
-    send_generic_response (client,
+    send_generic_error_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     g_free (path);
     return FALSE;
@@ -3739,33 +3764,33 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     return FALSE;
   }
 unsupported_mode:
   {
     GST_ERROR ("client %p: media does not support RECORD", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_METHOD_NOT_ALLOWED, ctx);
     return FALSE;
   }
 invalid_state:
   {
     GST_ERROR ("client %p: not PLAYING or READY", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
-        ctx);
+    send_generic_error_response (client,
+        GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, ctx);
     return FALSE;
   }
 pipeline_error:
   {
     GST_ERROR ("client %p: failed to configure the pipeline", client);
-    send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
-        ctx);
+    send_generic_error_response (client,
+        GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE, ctx);
     return FALSE;
   }
 unsuspend_failed:
   {
     GST_ERROR ("client %p: unsuspend failed", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     return FALSE;
   }
 }
@@ -3816,7 +3841,7 @@ sig_failed:
   {
     GST_ERROR ("client %p: pre signal returned error: %s", client,
         gst_rtsp_status_as_text (sig_result));
-    send_generic_response (client, sig_result, ctx);
+    send_generic_error_response (client, sig_result, ctx);
     gst_rtsp_message_free (ctx->response);
     return FALSE;
   }
@@ -4130,32 +4155,32 @@ done:
 not_supported:
   {
     GST_ERROR ("client %p: version %d not supported", client, version);
-    send_generic_response (client, GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
-        ctx);
+    send_generic_error_response (client,
+        GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED, ctx);
     goto done;
   }
 invalid_command_for_version:
   {
     GST_ERROR ("client %p: invalid command for version", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     goto done;
   }
 bad_request:
   {
     GST_ERROR ("client %p: bad request", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     goto done;
   }
 no_pool:
   {
     GST_ERROR ("client %p: no pool configured", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     goto done;
   }
 session_not_found:
   {
     GST_ERROR ("client %p: session not found", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     goto done;
   }
 not_authorized:
@@ -4175,7 +4200,7 @@ unsupported_requirement:
 not_implemented:
   {
     GST_ERROR ("client %p: method %d not implemented", client, method);
-    send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, ctx);
     goto done;
   }
 }
@@ -5043,11 +5068,12 @@ error_full (GstRTSPWatch * watch, GstRTSPResult result,
     goto done;
 
   if (result == GST_RTSP_ENOMEM) {
-    send_generic_response (client, GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE,
+        ctx);
     goto done;
   }
   if (result == GST_RTSP_EPARSE) {
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    send_generic_error_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     goto done;
   }
 

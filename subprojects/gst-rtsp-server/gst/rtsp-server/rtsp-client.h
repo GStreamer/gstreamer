@@ -115,6 +115,8 @@ struct _GstRTSPClient {
  *    parsed when #GstRTSPClientClass.adjust_play_mode was called. Since 1.18
  * @tunnel_http_response: called when a response to the GET request is about to
  *   be sent for a tunneled connection. The response can be modified. Since: 1.4
+ * @adjust_error_code: called before sending error response to give the
+ *   application the possibility to adjust the error code.
  *
  * The client class structure.
  */
@@ -176,8 +178,10 @@ struct _GstRTSPClientClass {
   GstRTSPStatusCode (*pre_announce_request)      (GstRTSPClient *client, GstRTSPContext *ctx);
   GstRTSPStatusCode (*pre_record_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
 
+  GstRTSPStatusCode (*adjust_error_code)         (GstRTSPClient *client, GstRTSPContext *ctx, GstRTSPStatusCode code);
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE-18];
+  gpointer _gst_reserved[GST_PADDING_LARGE-19];
 };
 
 GST_RTSP_SERVER_API

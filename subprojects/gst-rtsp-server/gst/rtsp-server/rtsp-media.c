@@ -217,6 +217,7 @@ enum
   SIGNAL_UNPREPARED,
   SIGNAL_TARGET_STATE,
   SIGNAL_NEW_STATE,
+  SIGNAL_HANDLE_MESSAGE,
   SIGNAL_LAST
 };
 
@@ -450,6 +451,23 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_signal_new ("new-state", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_state), NULL, NULL, NULL,
       G_TYPE_NONE, 1, G_TYPE_INT);
+
+  /**
+   * GstRTSPMedia::handle-message:
+   * @media: a #GstRTSPMedia
+   * @message: a #GstMessage
+   *
+   * Will be emitted when a message appears on the pipeline bus.
+   *
+   * Returns: a #gboolean indicating if the call was successful or not.
+   *
+   * Since: 1.22
+   */
+  gst_rtsp_media_signals[SIGNAL_HANDLE_MESSAGE] =
+      g_signal_new ("handle-message", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED, G_STRUCT_OFFSET (GstRTSPMediaClass,
+          handle_message), NULL, NULL, NULL, G_TYPE_BOOLEAN, 1,
+      GST_TYPE_MESSAGE);
 
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
 
@@ -3381,19 +3399,20 @@ static gboolean
 bus_message (GstBus * bus, GstMessage * message, GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
-  GstRTSPMediaClass *klass;
+  GQuark detail = 0;
   gboolean ret;
 
-  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+  detail = gst_message_type_to_quark (GST_MESSAGE_TYPE (message));
 
   g_rec_mutex_lock (&priv->state_lock);
-  if (klass->handle_message)
-    ret = klass->handle_message (media, message);
-  else
-    ret = FALSE;
+  g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_HANDLE_MESSAGE], detail,
+      message, &ret);
+  if (!ret) {
+    GST_DEBUG_OBJECT (media, "failed emitting pipeline message");
+  }
   g_rec_mutex_unlock (&priv->state_lock);
 
-  return ret;
+  return TRUE;
 }
 
 static void

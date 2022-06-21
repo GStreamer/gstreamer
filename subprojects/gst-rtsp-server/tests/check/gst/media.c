@@ -863,6 +863,67 @@ GST_START_TEST (test_media_multidyn_prepare)
 
 GST_END_TEST;
 
+static gboolean
+pipeline_error (GstRTSPMedia * media, GstMessage * message, guint * data)
+{
+  GError *gerror = NULL;
+
+  /* verify that the correct error was received */
+  gst_message_parse_error (message, &gerror, NULL);
+  ck_assert_str_eq (GST_MESSAGE_SRC_NAME (message), "src0");
+  ck_assert_ptr_ne (gerror, NULL);
+  ck_assert_int_eq (gerror->domain, GST_STREAM_ERROR);
+  ck_assert_int_eq (gerror->code, GST_STREAM_ERROR_FAILED);
+  ck_assert_str_eq (gerror->message, "Internal data stream error.");
+  (*data)++;
+
+  return TRUE;
+}
+
+GST_START_TEST (test_media_pipeline_error)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+  guint handled_messages = 0;
+
+  pool = gst_rtsp_thread_pool_new ();
+
+  factory = gst_rtsp_media_factory_new ();
+  ck_assert (!gst_rtsp_media_factory_is_shared (factory));
+  ck_assert (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  /* add faulty caps filter to fail linking when preparing media, this will
+   * result in an error being posted on the pipelines bus. */
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc name=src0 ! video/fail_prepare ! rtpvrawpay pt=96 name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  ck_assert (GST_IS_RTSP_MEDIA (media));
+  ck_assert_int_eq (gst_rtsp_media_n_streams (media), 1);
+
+  /* subscribe to pipeline errors */
+  g_signal_connect (media, "handle-message::error", G_CALLBACK (pipeline_error),
+      &handled_messages);
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  ck_assert (!gst_rtsp_media_prepare (media, thread));
+  ck_assert_uint_eq (handled_messages, 1);
+
+  g_object_unref (media);
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+
+  g_object_unref (pool);
+  gst_rtsp_thread_pool_cleanup ();
+}
+
+GST_END_TEST;
+
 
 static Suite *
 rtspmedia_suite (void)
@@ -893,6 +954,7 @@ rtspmedia_suite (void)
   tcase_add_test (tc, test_media_take_pipeline);
   tcase_add_test (tc, test_media_reset);
   tcase_add_test (tc, test_media_multidyn_prepare);
+  tcase_add_test (tc, test_media_pipeline_error);
 
   return s;
 }

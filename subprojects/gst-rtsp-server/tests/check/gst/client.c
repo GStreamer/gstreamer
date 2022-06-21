@@ -2128,7 +2128,79 @@ GST_START_TEST (test_client_play_root_mount_point)
   test_client_play_sub ("/", "rtsp://localhost/stream=0", "rtsp://localhost");
 }
 
-GST_END_TEST static Suite *
+GST_END_TEST;
+
+#define RTSP_CLIENT_TEST_TYPE (rtsp_client_test_get_type ())
+#define RTSP_CLIENT_TEST_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), RTSP_CLIENT_TEST_TYPE, RtspClientTestClass))
+
+typedef struct RtspClientTest
+{
+  GstRTSPClient parent;
+} RtspClientTest;
+
+typedef struct RtspClientTestClass
+{
+  GstRTSPClientClass parent_class;
+} RtspClientTestClass;
+
+GType rtsp_client_test_get_type (void);
+
+G_DEFINE_TYPE (RtspClientTest, rtsp_client_test, GST_TYPE_RTSP_CLIENT);
+
+static void
+rtsp_client_test_init (RtspClientTest * client)
+{
+}
+
+static void
+rtsp_client_test_class_init (RtspClientTestClass * klass)
+{
+}
+
+static GstRTSPStatusCode
+adjust_error_code_cb (GstRTSPClient * client, GstRTSPContext * ctx,
+    GstRTSPStatusCode code)
+{
+  return GST_RTSP_STS_NOT_FOUND;
+}
+
+GST_START_TEST (test_adjust_error_code)
+{
+  RtspClientTest *client;
+  RtspClientTestClass *klass;
+  GstRTSPClientClass *base_klass;
+  GstRTSPMessage request = { 0, };
+
+  client = g_object_new (RTSP_CLIENT_TEST_TYPE, NULL);
+
+  /* invalid request to trigger error response */
+  ck_assert (gst_rtsp_message_init_request (&request, GST_RTSP_INVALID,
+          "foopy://padoop/") == GST_RTSP_OK);
+
+  /* expect non-adjusted error response 400 */
+  gst_rtsp_client_set_send_func (GST_RTSP_CLIENT (client), test_response_400,
+      NULL, NULL);
+  ck_assert (gst_rtsp_client_handle_message (GST_RTSP_CLIENT (client),
+          &request) == GST_RTSP_OK);
+
+  /* override virtual function for adjusting error code */
+  klass = RTSP_CLIENT_TEST_GET_CLASS (client);
+  base_klass = GST_RTSP_CLIENT_CLASS (klass);
+  base_klass->adjust_error_code = adjust_error_code_cb;
+
+  /* expect error adjusted to 404 */
+  gst_rtsp_client_set_send_func (GST_RTSP_CLIENT (client), test_response_404,
+      NULL, NULL);
+  ck_assert (gst_rtsp_client_handle_message (GST_RTSP_CLIENT (client),
+          &request) == GST_RTSP_OK);
+
+  gst_rtsp_message_unset (&request);
+  g_object_unref (client);
+}
+
+GST_END_TEST;
+
+static Suite *
 rtspclient_suite (void)
 {
   Suite *s = suite_create ("rtspclient");
@@ -2188,6 +2260,7 @@ rtspclient_suite (void)
   tcase_add_test (tc, test_scale_and_speed);
   tcase_add_test (tc, test_client_play);
   tcase_add_test (tc, test_client_play_root_mount_point);
+  tcase_add_test (tc, test_adjust_error_code);
 
   return s;
 }
