@@ -1452,15 +1452,12 @@ gst_adaptive_demux2_stream_push_event (GstAdaptiveDemux2Stream * stream,
    * We don't need to care about any other events
    */
   if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-    GstAdaptiveDemux *demux = stream->demux;
     GList *iter;
 
-    TRACKS_LOCK (demux);
     for (iter = stream->tracks; iter; iter = iter->next) {
       GstAdaptiveDemuxTrack *track = (GstAdaptiveDemuxTrack *) iter->data;
       ret &= gst_pad_send_event (track->sinkpad, gst_event_ref (event));
     }
-    TRACKS_UNLOCK (demux);
   }
 
   gst_event_unref (event);
