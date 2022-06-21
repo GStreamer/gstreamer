@@ -1088,7 +1088,7 @@ gst_d3d11_test_src_class_init (GstD3D11TestSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_test_src_set_context);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 test src src", "Source/Video",
+      "Direct3D11 test src", "Source/Video",
       "Creates a test video stream", "Seungha Yang <seungha@centricular.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&template_caps);

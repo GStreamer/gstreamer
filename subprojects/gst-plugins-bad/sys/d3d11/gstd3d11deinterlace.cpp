@@ -1306,7 +1306,7 @@ gst_d3d11_deinterlace_ensure_input_buffer (GstD3D11Deinterlace * self,
     return NULL;
   }
 
-  /* copy metadata, default implemenation of baseclass will copy everything
+  /* copy metadata, default implementation of baseclass will copy everything
    * what we need */
   GST_BASE_TRANSFORM_CLASS (parent_class)->copy_metadata
       (GST_BASE_TRANSFORM_CAST (self), input, new_buf);
@@ -1505,7 +1505,7 @@ gst_d3d11_deinterlace_ensure_output_buffer (GstD3D11Deinterlace * self,
     return NULL;
   }
 
-  /* copy metadata, default implemenation of baseclass will copy everything
+  /* copy metadata, default implementation of baseclass will copy everything
    * what we need */
   GST_BASE_TRANSFORM_CLASS (parent_class)->copy_metadata
       (GST_BASE_TRANSFORM_CAST (self), output, new_buf);

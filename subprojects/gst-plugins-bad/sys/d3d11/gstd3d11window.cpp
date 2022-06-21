@@ -546,7 +546,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   }
 
   if (window->allow_tearing) {
-    GST_DEBUG_OBJECT (window, "device support tearning");
+    GST_DEBUG_OBJECT (window, "device supports tearing");
     swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
   }
 
