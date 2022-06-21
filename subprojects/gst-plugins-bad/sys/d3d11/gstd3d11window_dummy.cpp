@@ -85,6 +85,8 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps,
     gboolean * video_processor_available, GError ** error)
 {
+  GstDxgiColorSpace in_space;
+
   g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
   g_clear_pointer (&window->compositor, gst_d3d11_overlay_compositor_free);
   gst_clear_object (&window->converter);
@@ -114,9 +116,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
   gst_d3d11_device_lock (window->device);
 
-  {
-    const GstDxgiColorSpace *in_color_space =
-        gst_d3d11_video_info_to_dxgi_color_space (&window->info);
+  if (gst_d3d11_video_info_to_dxgi_color_space (&window->info, &in_space)) {
     GstD3D11Format in_format;
     gboolean hardware = FALSE;
     GstD3D11VideoProcessor *processor = NULL;
@@ -132,7 +132,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
         GST_VIDEO_INFO_FORMAT (&window->info), &in_format);
     in_dxgi_format = in_format.dxgi_format;
 
-    if (in_color_space && in_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    if (in_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
       g_object_get (window->device, "hardware", &hardware, NULL);
     }
 
@@ -147,7 +147,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     for (i = 0; i < G_N_ELEMENTS (formats_to_check) && processor; i++) {
       DXGI_FORMAT out_dxgi_format = formats_to_check[i];
       DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
-          (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
+          (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type;
 
       if (!gst_d3d11_video_processor_check_format_conversion (processor,
               in_dxgi_format, in_dxgi_color_space, out_dxgi_format,
@@ -160,7 +160,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
     if (processor) {
       gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
-          (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type);
+          (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type);
       gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
           DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
     }

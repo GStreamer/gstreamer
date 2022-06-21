@@ -428,11 +428,11 @@ static const GstDxgiColorSpace yuv_colorspace_map[] = {
 #define SCORE_PRIMARY_MISMATCH 10
 
 static gint
-get_score (GstVideoInfo * info, const GstDxgiColorSpace * color_map,
+get_score (const GstVideoInfo * info, const GstDxgiColorSpace * color_map,
     gboolean is_yuv)
 {
   gint loss = 0;
-  GstVideoColorimetry *color = &info->colorimetry;
+  const GstVideoColorimetry *color = &info->colorimetry;
 
   if (color->range != color_map->range)
     loss += SCORE_RANGE_MISMATCH;
@@ -449,84 +449,91 @@ get_score (GstVideoInfo * info, const GstDxgiColorSpace * color_map,
   return loss;
 }
 
-static const GstDxgiColorSpace *
-gst_d3d11_video_info_to_dxgi_color_space_rgb (GstVideoInfo * info)
+static gboolean
+gst_d3d11_video_info_to_dxgi_color_space_rgb (const GstVideoInfo * info,
+    GstDxgiColorSpace * color_space)
 {
   gint best_score = G_MAXINT;
   gint score;
   guint i;
-  const GstDxgiColorSpace *colorspace = NULL;
+  const GstDxgiColorSpace *best = nullptr;
 
   for (i = 0; i < G_N_ELEMENTS (rgb_colorspace_map); i++) {
     score = get_score (info, &rgb_colorspace_map[i], FALSE);
 
     if (score < best_score) {
       best_score = score;
-      colorspace = &rgb_colorspace_map[i];
+      best = &rgb_colorspace_map[i];
 
-      if (score == 0)
-        break;
+      if (score == 0) {
+        *color_space = rgb_colorspace_map[i];
+        return TRUE;
+      }
     }
   }
 
-  return colorspace;
+  if (best) {
+    *color_space = *best;
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
-static const GstDxgiColorSpace *
-gst_d3d11_video_info_to_dxgi_color_space_yuv (GstVideoInfo * info)
+static gboolean
+gst_d3d11_video_info_to_dxgi_color_space_yuv (const GstVideoInfo * info,
+    GstDxgiColorSpace * color_space)
 {
   gint best_score = G_MAXINT;
   gint score;
   guint i;
-  const GstDxgiColorSpace *colorspace = NULL;
+  const GstDxgiColorSpace *best = nullptr;
 
   for (i = 0; i < G_N_ELEMENTS (yuv_colorspace_map); i++) {
     score = get_score (info, &yuv_colorspace_map[i], TRUE);
 
     if (score < best_score) {
       best_score = score;
-      colorspace = &yuv_colorspace_map[i];
+      best = &yuv_colorspace_map[i];
 
-      if (score == 0)
-        break;
+      if (score == 0) {
+        *color_space = rgb_colorspace_map[i];
+        return TRUE;
+      }
     }
   }
 
-  return colorspace;
-}
-
-const GstDxgiColorSpace *
-gst_d3d11_video_info_to_dxgi_color_space (GstVideoInfo * info)
-{
-  g_return_val_if_fail (info != NULL, NULL);
-
-  if (GST_VIDEO_INFO_IS_RGB (info)) {
-    return gst_d3d11_video_info_to_dxgi_color_space_rgb (info);
-  } else if (GST_VIDEO_INFO_IS_YUV (info)) {
-    return gst_d3d11_video_info_to_dxgi_color_space_yuv (info);
+  if (best) {
+    *color_space = *best;
+    return TRUE;
   }
 
-  return NULL;
+  return FALSE;
 }
 
-const GstDxgiColorSpace *
-gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
-    IDXGISwapChain3 * swapchain)
+gboolean
+gst_d3d11_video_info_to_dxgi_color_space (const GstVideoInfo * info,
+    GstDxgiColorSpace * color_space)
 {
-  const GstDxgiColorSpace *colorspace = NULL;
-  gint best_score = G_MAXINT;
-  guint i;
+  g_return_val_if_fail (info != nullptr, FALSE);
+  g_return_val_if_fail (color_space != nullptr, FALSE);
+
+  if (GST_VIDEO_INFO_IS_RGB (info))
+    return gst_d3d11_video_info_to_dxgi_color_space_rgb (info, color_space);
+
+  return gst_d3d11_video_info_to_dxgi_color_space_yuv (info, color_space);
+}
+
+gboolean
+gst_d3d11_find_swap_chain_color_space (const GstVideoInfo * info,
+    IDXGISwapChain3 * swapchain, GstDxgiColorSpace * color_space)
+{
   UINT can_support = 0;
   HRESULT hr;
-  GST_DXGI_COLOR_SPACE_TYPE cur_type;
-  /* list of tested display color spaces */
-  static GST_DXGI_COLOR_SPACE_TYPE whitelist[] = {
-    GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709,
-    GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,
-  };
 
   g_return_val_if_fail (info != NULL, FALSE);
   g_return_val_if_fail (swapchain != NULL, FALSE);
+  g_return_val_if_fail (color_space != NULL, FALSE);
 
   if (!GST_VIDEO_INFO_IS_RGB (info)) {
     GST_WARNING ("Swapchain colorspace should be RGB format");
@@ -540,51 +547,30 @@ gst_d3d11_find_swap_chain_color_space (GstVideoInfo * info,
     hr = swapchain->CheckColorSpaceSupport ((DXGI_COLOR_SPACE_TYPE) pq,
         &can_support);
     if (SUCCEEDED (hr) && can_support) {
-      for (i = 0; i < G_N_ELEMENTS (rgb_colorspace_map); i++) {
-        if (rgb_colorspace_map[i].dxgi_color_space_type == pq)
-          return &rgb_colorspace_map[i];
-      }
+      color_space->dxgi_color_space_type = pq;
+      color_space->range = GST_VIDEO_COLOR_RANGE_0_255;
+      color_space->matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      color_space->transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+      color_space->primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      return TRUE;
     }
   }
 
-  for (i = 0; i < G_N_ELEMENTS (rgb_colorspace_map); i++) {
-    can_support = 0;
-    gint score;
-    gboolean valid = FALSE;
-
-    cur_type =
-        (GST_DXGI_COLOR_SPACE_TYPE) rgb_colorspace_map[i].dxgi_color_space_type;
-
-    for (guint j = 0; j < G_N_ELEMENTS (whitelist); j++) {
-      if (whitelist[j] == cur_type) {
-        valid = TRUE;
-        break;
-      }
-    }
-
-    if (!valid)
-      continue;
-
-    hr = swapchain->CheckColorSpaceSupport ((DXGI_COLOR_SPACE_TYPE) cur_type,
-        &can_support);
-
-    if (FAILED (hr))
-      continue;
-
-    if ((can_support & DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) ==
-        DXGI_SWAP_CHAIN_COLOR_SPACE_SUPPORT_FLAG_PRESENT) {
-      score = get_score (info, &rgb_colorspace_map[i], FALSE);
-
-      GST_DEBUG ("colorspace %d supported, score %d", cur_type, score);
-
-      if (score < best_score) {
-        best_score = score;
-        colorspace = &rgb_colorspace_map[i];
-      }
-    }
+  /* otherwise use standard sRGB color space */
+  hr = swapchain->CheckColorSpaceSupport (
+      (DXGI_COLOR_SPACE_TYPE) GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709,
+      &can_support);
+  if (SUCCEEDED (hr) && can_support) {
+    color_space->dxgi_color_space_type =
+        GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+    color_space->range = GST_VIDEO_COLOR_RANGE_0_255;
+    color_space->matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+    color_space->transfer = GST_VIDEO_TRANSFER_BT709;
+    color_space->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+    return TRUE;
   }
 
-  return colorspace;
+  return FALSE;
 }
 
 static void

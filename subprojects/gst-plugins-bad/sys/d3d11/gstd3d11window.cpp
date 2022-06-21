@@ -450,11 +450,13 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     {DXGI_FORMAT_R10G10B10A2_UNORM, GST_VIDEO_FORMAT_RGB10A2_LE, FALSE},
   };
   const GstD3D11WindowDisplayFormat *chosen_format = NULL;
-  const GstDxgiColorSpace *chosen_colorspace = NULL;
+  GstDxgiColorSpace swapchain_colorspace;
+  gboolean found_swapchain_colorspace = FALSE;
   gboolean have_hdr10 = FALSE;
   DXGI_COLOR_SPACE_TYPE native_colorspace_type =
       DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
   DXGI_HDR_METADATA_HDR10 hdr10_metadata = { 0, };
+  GstDxgiColorSpace in_dxgi_colorspace;
 
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);
@@ -625,17 +627,17 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     hr = window->swap_chain->QueryInterface (IID_PPV_ARGS (&swapchain3));
 
     if (gst_d3d11_result (hr, window->device)) {
-      chosen_colorspace =
+      found_swapchain_colorspace =
           gst_d3d11_find_swap_chain_color_space (&window->render_info,
-          swapchain3.Get ());
-      if (chosen_colorspace) {
+          swapchain3.Get (), &swapchain_colorspace);
+      if (found_swapchain_colorspace) {
         native_colorspace_type =
-            (DXGI_COLOR_SPACE_TYPE) chosen_colorspace->dxgi_color_space_type;
+            (DXGI_COLOR_SPACE_TYPE) swapchain_colorspace.dxgi_color_space_type;
         hr = swapchain3->SetColorSpace1 (native_colorspace_type);
         if (!gst_d3d11_result (hr, window->device)) {
           GST_WARNING_OBJECT (window, "Failed to set colorspace %d, hr: 0x%x",
               native_colorspace_type, (guint) hr);
-          chosen_colorspace = NULL;
+          found_swapchain_colorspace = FALSE;
           native_colorspace_type = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
         } else {
           GST_DEBUG_OBJECT (window,
@@ -643,11 +645,11 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
           /* update with selected display color space */
           window->render_info.colorimetry.primaries =
-              chosen_colorspace->primaries;
+              swapchain_colorspace.primaries;
           window->render_info.colorimetry.transfer =
-              chosen_colorspace->transfer;
-          window->render_info.colorimetry.range = chosen_colorspace->range;
-          window->render_info.colorimetry.matrix = chosen_colorspace->matrix;
+              swapchain_colorspace.transfer;
+          window->render_info.colorimetry.range = swapchain_colorspace.range;
+          window->render_info.colorimetry.matrix = swapchain_colorspace.matrix;
         }
       }
     }
@@ -655,16 +657,14 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
   /* otherwise, use most common DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
    * color space */
-  if (!chosen_colorspace) {
+  if (!found_swapchain_colorspace) {
     GST_DEBUG_OBJECT (window, "No selected render color space, use BT709");
     window->render_info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
     window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
     window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-  }
-
-  if (chosen_colorspace) {
-    const GstDxgiColorSpace *in_color_space =
-        gst_d3d11_video_info_to_dxgi_color_space (&window->info);
+    window->render_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+  } else if (gst_d3d11_video_info_to_dxgi_color_space (&window->info,
+          &in_dxgi_colorspace)) {
     GstD3D11Format in_format;
     gboolean hardware = FALSE;
     GstD3D11VideoProcessor *processor = NULL;
@@ -674,7 +674,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         GST_VIDEO_INFO_FORMAT (&window->info), &in_format);
     in_dxgi_format = in_format.dxgi_format;
 
-    if (in_color_space && in_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    if (in_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
       g_object_get (window->device, "hardware", &hardware, NULL);
     }
 
@@ -688,7 +688,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     if (processor) {
       DXGI_FORMAT out_dxgi_format = chosen_format->dxgi_format;
       DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
-          (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
+          (DXGI_COLOR_SPACE_TYPE) in_dxgi_colorspace.dxgi_color_space_type;
       DXGI_COLOR_SPACE_TYPE out_dxgi_color_space = native_colorspace_type;
 
       if (!gst_d3d11_video_processor_check_format_conversion (processor,

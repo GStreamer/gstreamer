@@ -1816,19 +1816,16 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     }
 
     if (processor) {
-      const GstDxgiColorSpace *in_color_space;
-      const GstDxgiColorSpace *out_color_space;
+      GstDxgiColorSpace in_space, out_space;
 
-      in_color_space = gst_d3d11_video_info_to_dxgi_color_space (in_info);
-      out_color_space = gst_d3d11_video_info_to_dxgi_color_space (out_info);
-
-      if (in_color_space && out_color_space) {
+      if (gst_d3d11_video_info_to_dxgi_color_space (in_info, &in_space) &&
+          gst_d3d11_video_info_to_dxgi_color_space (out_info, &out_space)) {
         DXGI_FORMAT in_dxgi_format = self->in_d3d11_format.dxgi_format;
         DXGI_FORMAT out_dxgi_format = self->out_d3d11_format.dxgi_format;
         DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
-            (DXGI_COLOR_SPACE_TYPE) in_color_space->dxgi_color_space_type;
+            (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type;
         DXGI_COLOR_SPACE_TYPE out_dxgi_color_space =
-            (DXGI_COLOR_SPACE_TYPE) out_color_space->dxgi_color_space_type;
+            (DXGI_COLOR_SPACE_TYPE) out_space.dxgi_color_space_type;
 
         if (!gst_d3d11_video_processor_check_format_conversion (processor,
                 in_dxgi_format, in_dxgi_color_space, out_dxgi_format,

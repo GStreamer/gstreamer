@@ -877,6 +877,7 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 
   if (!cpad->convert) {
     GstD3D11Format in_format, out_format;
+    GstDxgiColorSpace in_space, out_space;
 
     cpad->convert = gst_d3d11_converter_new (self->device, &pad->info, info);
     if (!cpad->convert) {
@@ -904,34 +905,28 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
         in_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
         gst_d3d11_device_get_format (self->device,
             GST_VIDEO_INFO_FORMAT (info), &out_format) &&
-        out_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
-      const GstDxgiColorSpace *in_space;
-      const GstDxgiColorSpace *out_space;
+        out_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
+        gst_d3d11_video_info_to_dxgi_color_space (&pad->info, &in_space) &&
+        gst_d3d11_video_info_to_dxgi_color_space (info, &out_space)) {
+      GstD3D11VideoProcessor *processor =
+          gst_d3d11_video_processor_new (self->device,
+          pad->info.width, pad->info.height, info->width,
+          info->height);
 
-      in_space = gst_d3d11_video_info_to_dxgi_color_space (&pad->info);
-      out_space = gst_d3d11_video_info_to_dxgi_color_space (info);
-
-      if (in_space && out_space) {
-        GstD3D11VideoProcessor *processor =
-            gst_d3d11_video_processor_new (self->device,
-            pad->info.width, pad->info.height, info->width,
-            info->height);
-
-        if (processor) {
-          if (gst_d3d11_video_processor_check_format_conversion (processor,
-                  in_format.dxgi_format,
-                  (DXGI_COLOR_SPACE_TYPE) in_space->dxgi_color_space_type,
-                  in_format.dxgi_format,
-                  (DXGI_COLOR_SPACE_TYPE) out_space->dxgi_color_space_type) &&
-              gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
-                  (DXGI_COLOR_SPACE_TYPE) in_space->dxgi_color_space_type) &&
-              gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
-                  (DXGI_COLOR_SPACE_TYPE) out_space->dxgi_color_space_type)) {
-            cpad->processor = processor;
-            GST_DEBUG_OBJECT (pad, "Video processor is available");
-          } else {
-            gst_d3d11_video_processor_free (processor);
-          }
+      if (processor) {
+        if (gst_d3d11_video_processor_check_format_conversion (processor,
+                in_format.dxgi_format,
+                (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type,
+                in_format.dxgi_format,
+                (DXGI_COLOR_SPACE_TYPE) out_space.dxgi_color_space_type) &&
+            gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
+                (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type) &&
+            gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
+                (DXGI_COLOR_SPACE_TYPE) out_space.dxgi_color_space_type)) {
+          cpad->processor = processor;
+          GST_DEBUG_OBJECT (pad, "Video processor is available");
+        } else {
+          gst_d3d11_video_processor_free (processor);
         }
       }
     }
