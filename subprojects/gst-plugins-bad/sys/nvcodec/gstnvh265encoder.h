@@ -23,14 +23,19 @@
 
 G_BEGIN_DECLS
 
-void gst_nv_h265_encoder_register_cuda  (GstPlugin * plugin,
-                                         GstCudaContext * context,
-                                         guint rank);
+GstNvEncoderClassData * gst_nv_h265_encoder_register_cuda  (GstPlugin * plugin,
+                                                            GstCudaContext * context,
+                                                            guint rank);
 
 #ifdef GST_CUDA_HAS_D3D
-void gst_nv_h265_encoder_register_d3d11 (GstPlugin * plugin,
-                                         GstD3D11Device * device,
-                                         guint rank);
+GstNvEncoderClassData * gst_nv_h265_encoder_register_d3d11 (GstPlugin * plugin,
+                                                            GstD3D11Device * device,
+                                                            guint rank);
 #endif
+
+void gst_nv_h265_encoder_register_auto_select (GstPlugin * plugin,
+                                               GList * device_caps_list,
+                                               guint rank);
+
 
 G_END_DECLS

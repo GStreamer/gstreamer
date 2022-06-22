@@ -77,6 +77,8 @@ plugin_init (GstPlugin * plugin)
   gboolean use_h265_sl_dec = FALSE;
   gboolean use_vp8_sl_dec = FALSE;
   gboolean use_vp9_sl_dec = FALSE;
+  GList *h264_enc_cdata = NULL;
+  GList *h265_enc_cdata = NULL;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
@@ -242,6 +244,8 @@ plugin_init (GstPlugin * plugin)
     }
 
     if (nvenc_available) {
+      GstNvEncoderClassData *cdata;
+
 #ifdef GST_CUDA_HAS_D3D
       if (g_win32_check_windows_version (6, 0, 0, G_WIN32_OS_ANY)) {
         gint64 adapter_luid;
@@ -253,20 +257,43 @@ plugin_init (GstPlugin * plugin)
         if (!d3d11_device) {
           GST_WARNING ("Failed to d3d11 create device");
         } else {
-          gst_nv_h264_encoder_register_d3d11 (plugin,
+          cdata = gst_nv_h264_encoder_register_d3d11 (plugin,
               d3d11_device, GST_RANK_NONE);
-          gst_nv_h265_encoder_register_d3d11 (plugin,
+          if (cdata)
+            h264_enc_cdata = g_list_append (h264_enc_cdata, cdata);
+
+          cdata = gst_nv_h265_encoder_register_d3d11 (plugin,
               d3d11_device, GST_RANK_NONE);
+          if (cdata)
+            h265_enc_cdata = g_list_append (h265_enc_cdata, cdata);
+
           gst_object_unref (d3d11_device);
         }
       }
 #endif
-      gst_nv_h264_encoder_register_cuda (plugin, context, GST_RANK_NONE);
-      gst_nv_h265_encoder_register_cuda (plugin, context, GST_RANK_NONE);
+      cdata =
+          gst_nv_h264_encoder_register_cuda (plugin, context, GST_RANK_NONE);
+      if (cdata)
+        h264_enc_cdata = g_list_append (h264_enc_cdata, cdata);
+
+      cdata =
+          gst_nv_h265_encoder_register_cuda (plugin, context, GST_RANK_NONE);
+      if (cdata)
+        h265_enc_cdata = g_list_append (h265_enc_cdata, cdata);
+
       gst_nvenc_plugin_init (plugin, i, cuda_ctx);
     }
 
     gst_object_unref (context);
+  }
+
+  if (h264_enc_cdata) {
+    gst_nv_h264_encoder_register_auto_select (plugin, h264_enc_cdata,
+        GST_RANK_NONE);
+  }
+  if (h265_enc_cdata) {
+    gst_nv_h265_encoder_register_auto_select (plugin, h265_enc_cdata,
+        GST_RANK_NONE);
   }
 
   gst_cuda_memory_copy_register (plugin, GST_RANK_NONE);

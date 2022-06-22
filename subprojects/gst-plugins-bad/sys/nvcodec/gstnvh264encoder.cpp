@@ -31,69 +31,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_encoder_debug);
 #define GST_CAT_DEFAULT gst_nv_h264_encoder_debug
 
-static GTypeClass *parent_class = NULL;
-
-typedef struct
-{
-  gint max_bframes;
-  gint ratecontrol_modes;
-  gint field_encoding;
-  gint monochrome;
-  gint fmo;
-  gint qpelmv;
-  gint bdirect_mode;
-  gint cabac;
-  gint adaptive_transform;
-  gint stereo_mvc;
-  gint temoral_layers;
-  gint hierarchical_pframes;
-  gint hierarchical_bframes;
-  gint level_max;
-  gint level_min;
-  gint separate_colour_plane;
-  gint width_max;
-  gint height_max;
-  gint temporal_svc;
-  gint dyn_res_change;
-  gint dyn_bitrate_change;
-  gint dyn_force_constqp;
-  gint dyn_rcmode_change;
-  gint subframe_readback;
-  gint constrained_encoding;
-  gint intra_refresh;
-  gint custom_vbv_buf_size;
-  gint dynamic_slice_mode;
-  gint ref_pic_invalidation;
-  gint preproc_support;
-  gint async_encoding_support;
-  gint mb_num_max;
-  gint mb_per_sec_max;
-  gint yuv444_encode;
-  gint lossless_encode;
-  gint meonly_mode;
-  gint lookahead;
-  gint temporal_aq;
-  gint supports_10bit_encode;
-  gint num_max_ltr_frames;
-  gint weighted_prediction;
-  gint bframe_ref_mode;
-  gint emphasis_level_map;
-  gint width_min;
-  gint height_min;
-  gint multiple_ref_frames;
-} GstNvH264EncoderDeviceCaps;
-
-typedef struct
-{
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-
-  guint cuda_device_id;
-  gint64 adapter_luid;
-  gboolean d3d11_mode;
-
-  GstNvH264EncoderDeviceCaps dev_caps;
-} GstNvH264EncoderClassData;
+static GTypeClass *parent_class = nullptr;
 
 enum
 {
@@ -180,7 +118,12 @@ typedef struct _GstNvH264Encoder
   gboolean packetized;
   GstH264NalParser *parser;
 
+  GstNvEncoderDeviceMode selected_device_mode;
+
   /* Properties */
+  guint cuda_device_id;
+  gint64 adapter_luid;
+
   GstNvEncoderPreset preset;
   gboolean weighted_pred;
 
@@ -219,11 +162,21 @@ typedef struct _GstNvH264Encoder
 typedef struct _GstNvH264EncoderClass
 {
   GstNvEncoderClass parent_class;
-  GstNvH264EncoderDeviceCaps dev_caps;
 
   guint cuda_device_id;
   gint64 adapter_luid;
-  gboolean d3d11_mode;
+
+  GstNvEncoderDeviceMode device_mode;
+
+  /* representative device caps */
+  GstNvEncoderDeviceCaps device_caps;
+
+  /* auto gpu select mode */
+  guint cuda_device_id_size;
+  guint cuda_device_id_list[8];
+
+  guint adapter_luid_size;
+  gint64 adapter_luid_list[8];
 } GstNvH264EncoderClass;
 
 #define GST_NV_H264_ENCODER(object) ((GstNvH264Encoder *) (object))
@@ -247,6 +200,9 @@ static GstBuffer *gst_nv_h264_encoder_create_output_buffer (GstNvEncoder *
 static GstNvEncoderReconfigure
 gst_nv_h264_encoder_check_reconfigure (GstNvEncoder * encoder,
     NV_ENC_CONFIG * config);
+static gboolean gst_nv_h264_encoder_select_device (GstNvEncoder * encoder,
+    const GstVideoInfo * info, GstBuffer * buffer,
+    GstNvEncoderDeviceData * data);
 
 static void
 gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
@@ -255,8 +211,8 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *videoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
   GstNvEncoderClass *nvenc_class = GST_NV_ENCODER_CLASS (klass);
-  GstNvH264EncoderClassData *cdata = (GstNvH264EncoderClassData *) data;
-  GstNvH264EncoderDeviceCaps *dev_caps = &cdata->dev_caps;
+  GstNvEncoderClassData *cdata = (GstNvEncoderClassData *) data;
+  GstNvEncoderDeviceCaps *dev_caps = &cdata->device_caps;
   GParamFlags param_flags = (GParamFlags) (G_PARAM_READWRITE |
       GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
   GParamFlags conditional_param_flags = (GParamFlags) (G_PARAM_READWRITE |
@@ -269,19 +225,41 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
   object_class->set_property = gst_nv_h264_encoder_set_property;
   object_class->get_property = gst_nv_h264_encoder_get_property;
 
-  if (cdata->d3d11_mode) {
-    g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
-        g_param_spec_int64 ("adapter-luid", "Adapter LUID",
-            "DXGI Adapter LUID (Locally Unique Identifier) of associated GPU",
-            G_MININT64, G_MAXINT64, cdata->adapter_luid,
-            (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-  } else {
-    g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
-        g_param_spec_uint ("cuda-device-id", "CUDA Device ID",
-            "CUDA device ID of associated GPU",
-            0, G_MAXINT, cdata->cuda_device_id,
-            (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+  switch (cdata->device_mode) {
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
+          g_param_spec_uint ("cuda-device-id", "CUDA Device ID",
+              "CUDA device ID of associated GPU",
+              0, G_MAXINT, cdata->cuda_device_id,
+              (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+      break;
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
+          g_param_spec_int64 ("adapter-luid", "Adapter LUID",
+              "DXGI Adapter LUID (Locally Unique Identifier) of associated GPU",
+              G_MININT64, G_MAXINT64, cdata->adapter_luid,
+              (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+      break;
+    case GST_NV_ENCODER_DEVICE_AUTO_SELECT:
+      if (cdata->cuda_device_id_size > 0) {
+        g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
+            g_param_spec_uint ("cuda-device-id", "CUDA Device ID",
+                "CUDA device ID to use",
+                0, G_MAXINT, cdata->cuda_device_id, conditional_param_flags));
+      }
+      if (cdata->adapter_luid_size > 0) {
+        g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
+            g_param_spec_int64 ("adapter-luid", "Adapter LUID",
+                "DXGI Adapter LUID (Locally Unique Identifier) to use",
+                G_MININT64, G_MAXINT64, cdata->adapter_luid,
+                conditional_param_flags));
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
+
   g_object_class_install_property (object_class, PROP_PRESET,
       g_param_spec_enum ("preset", "Encoding Preset",
           "Encoding Preset", GST_TYPE_NV_ENCODER_PRESET,
@@ -415,18 +393,31 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
           "Insert sequence headers (SPS/PPS) per IDR",
           DEFAULT_REPEAT_SEQUENCE_HEADER, param_flags));
 
-  if (cdata->d3d11_mode) {
-    gst_element_class_set_metadata (element_class,
-        "NVENC H.264 Video Encoder Direct3D11 Mode",
-        "Codec/Encoder/Video/Hardware",
-        "Encode H.264 video streams using NVCODEC API Direct3D11 Mode",
-        "Seungha Yang <seungha@centricular.com>");
-  } else {
-    gst_element_class_set_metadata (element_class,
-        "NVENC H.264 Video Encoder CUDA Mode",
-        "Codec/Encoder/Video/Hardware",
-        "Encode H.264 video streams using NVCODEC API CUDA Mode",
-        "Seungha Yang <seungha@centricular.com>");
+  switch (cdata->device_mode) {
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      gst_element_class_set_static_metadata (element_class,
+          "NVENC H.264 Video Encoder CUDA Mode",
+          "Codec/Encoder/Video/Hardware",
+          "Encode H.264 video streams using NVCODEC API CUDA Mode",
+          "Seungha Yang <seungha@centricular.com>");
+      break;
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      gst_element_class_set_static_metadata (element_class,
+          "NVENC H.264 Video Encoder Direct3D11 Mode",
+          "Codec/Encoder/Video/Hardware",
+          "Encode H.264 video streams using NVCODEC API Direct3D11 Mode",
+          "Seungha Yang <seungha@centricular.com>");
+      break;
+    case GST_NV_ENCODER_DEVICE_AUTO_SELECT:
+      gst_element_class_set_static_metadata (element_class,
+          "NVENC H.264 Video Encoder Auto GPU select Mode",
+          "Codec/Encoder/Video/Hardware",
+          "Encode H.264 video streams using NVCODEC API auto GPU select Mode",
+          "Seungha Yang <seungha@centricular.com>");
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
 
   gst_element_class_add_pad_template (element_class,
@@ -445,15 +436,21 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_nv_h264_encoder_create_output_buffer);
   nvenc_class->check_reconfigure =
       GST_DEBUG_FUNCPTR (gst_nv_h264_encoder_check_reconfigure);
+  nvenc_class->select_device =
+      GST_DEBUG_FUNCPTR (gst_nv_h264_encoder_select_device);
 
-  klass->dev_caps = cdata->dev_caps;
+  klass->device_caps = cdata->device_caps;
   klass->cuda_device_id = cdata->cuda_device_id;
   klass->adapter_luid = cdata->adapter_luid;
-  klass->d3d11_mode = cdata->d3d11_mode;
+  klass->device_mode = cdata->device_mode;
+  klass->cuda_device_id_size = cdata->cuda_device_id_size;
+  klass->adapter_luid_size = cdata->adapter_luid_size;
+  memcpy (klass->cuda_device_id_list, cdata->cuda_device_id_list,
+      sizeof (klass->cuda_device_id_list));
+  memcpy (klass->adapter_luid_list, cdata->adapter_luid_list,
+      sizeof (klass->adapter_luid_list));
 
-  gst_caps_unref (cdata->sink_caps);
-  gst_caps_unref (cdata->src_caps);
-  g_free (cdata);
+  gst_nv_encoder_class_data_unref (cdata);
 }
 
 static void
@@ -463,6 +460,9 @@ gst_nv_h264_encoder_init (GstNvH264Encoder * self)
 
   g_mutex_init (&self->prop_lock);
 
+  self->selected_device_mode = klass->device_mode;
+  self->cuda_device_id = klass->cuda_device_id;
+  self->adapter_luid = klass->adapter_luid;
   self->preset = DEFAULT_PRESET;
   self->weighted_pred = DEFAULT_WEIGHTED_PRED;
   self->gop_size = DEFAULT_GOP_SIZE;
@@ -491,19 +491,14 @@ gst_nv_h264_encoder_init (GstNvH264Encoder * self)
   self->max_qp_b = DEFAULT_QP;
   self->const_quality = DEFAULT_CONST_QUALITY;
   self->aud = DEFAULT_AUD;
-  if (klass->dev_caps.cabac)
+  if (klass->device_caps.cabac)
     self->cabac = TRUE;
   self->repeat_sequence_header = DEFAULT_REPEAT_SEQUENCE_HEADER;
 
   self->parser = gst_h264_nal_parser_new ();
 
-  if (klass->d3d11_mode) {
-    gst_nv_encoder_set_dxgi_adapter_luid (GST_NV_ENCODER (self),
-        klass->adapter_luid);
-  } else {
-    gst_nv_encoder_set_cuda_device_id (GST_NV_ENCODER (self),
-        klass->cuda_device_id);
-  }
+  gst_nv_encoder_set_device_mode (GST_NV_ENCODER (self), klass->device_mode,
+      klass->cuda_device_id, klass->adapter_luid);
 }
 
 static void
@@ -621,9 +616,43 @@ gst_nv_h264_encoder_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstNvH264Encoder *self = GST_NV_H264_ENCODER (object);
+  GstNvH264EncoderClass *klass = GST_NV_H264_ENCODER_GET_CLASS (self);
 
   g_mutex_lock (&self->prop_lock);
   switch (prop_id) {
+    case PROP_ADAPTER_LUID:{
+      gint64 adapter_luid = g_value_get_int64 (value);
+      gboolean is_valid = FALSE;
+
+      for (guint i = 0; i < klass->adapter_luid_size; i++) {
+        if (klass->adapter_luid_list[i] == adapter_luid) {
+          self->adapter_luid = adapter_luid;
+          is_valid = TRUE;
+          break;
+        }
+      }
+
+      if (!is_valid)
+        g_warning ("%" G_GINT64_FORMAT " is not a valid adapter luid",
+            adapter_luid);
+      break;
+    }
+    case PROP_CUDA_DEVICE_ID:{
+      guint cuda_device_id = g_value_get_uint (value);
+      gboolean is_valid = FALSE;
+
+      for (guint i = 0; i < klass->cuda_device_id_size; i++) {
+        if (klass->cuda_device_id_list[i] == cuda_device_id) {
+          self->cuda_device_id = cuda_device_id;
+          is_valid = TRUE;
+          break;
+        }
+      }
+
+      if (!is_valid)
+        g_warning ("%d is not a valid cuda device id", cuda_device_id);
+      break;
+    }
     case PROP_PRESET:{
       GstNvEncoderPreset preset = (GstNvEncoderPreset) g_value_get_enum (value);
       if (preset != self->preset) {
@@ -739,14 +768,13 @@ gst_nv_h264_encoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstNvH264Encoder *self = GST_NV_H264_ENCODER (object);
-  GstNvH264EncoderClass *klass = GST_NV_H264_ENCODER_GET_CLASS (self);
 
   switch (prop_id) {
     case PROP_ADAPTER_LUID:
-      g_value_set_int64 (value, klass->adapter_luid);
+      g_value_set_int64 (value, self->adapter_luid);
       break;
     case PROP_CUDA_DEVICE_ID:
-      g_value_set_uint (value, klass->cuda_device_id);
+      g_value_set_uint (value, self->cuda_device_id);
       break;
     case PROP_PRESET:
       g_value_set_enum (value, self->preset);
@@ -915,13 +943,13 @@ gst_nv_h264_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   gboolean profile_support_interlaced = FALSE;
 
   gst_nv_h264_encoder_get_downstream_profiles_and_format (self,
-      downstream_profiles, NULL);
+      downstream_profiles, nullptr);
 
   GST_DEBUG_OBJECT (self, "Downstream specified %" G_GSIZE_FORMAT " profiles",
       downstream_profiles.size ());
 
   if (downstream_profiles.size () == 0)
-    return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+    return gst_video_encoder_proxy_getcaps (encoder, nullptr, filter);
 
   /* *INDENT-OFF* */
   for (const auto &iter: downstream_profiles) {
@@ -944,9 +972,9 @@ gst_nv_h264_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   template_caps = gst_pad_get_pad_template_caps (encoder->sinkpad);
   allowed_caps = gst_caps_copy (template_caps);
 
-  if (klass->dev_caps.field_encoding == 0 || !profile_support_interlaced) {
+  if (klass->device_caps.field_encoding == 0 || !profile_support_interlaced) {
     gst_caps_set_simple (allowed_caps, "interlace-mode", G_TYPE_STRING,
-        "progressive", NULL);
+        "progressive", nullptr);
   }
 
   GValue formats = G_VALUE_INIT;
@@ -986,7 +1014,7 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
 {
   GstNvH264Encoder *self = GST_NV_H264_ENCODER (encoder);
   GstNvH264EncoderClass *klass = GST_NV_H264_ENCODER_GET_CLASS (self);
-  GstNvH264EncoderDeviceCaps *dev_caps = &klass->dev_caps;
+  GstNvEncoderDeviceCaps *dev_caps = &klass->device_caps;
   NV_ENC_RC_PARAMS *rc_params;
   GstVideoInfo *info = &state->info;
   NVENCSTATUS status;
@@ -999,6 +1027,10 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
   GUID selected_profile = NV_ENC_CODEC_PROFILE_AUTOSELECT_GUID;
   gboolean downstream_supports_bframe = FALSE;
   gboolean bframe_aborted = FALSE;
+  gboolean weight_pred_aborted = FALSE;
+  gboolean vbv_buffer_size_aborted = FALSE;
+  gboolean lookahead_aborted = FALSE;
+  gboolean temporal_aq_aborted = FALSE;
 
   self->packetized = FALSE;
 
@@ -1042,6 +1074,52 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
   }
 
   g_mutex_lock (&self->prop_lock);
+
+  if (klass->device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT) {
+    GstNvEncoderDeviceCaps dev_caps;
+
+    gst_nv_encoder_get_encoder_caps (session,
+        &NV_ENC_CODEC_H264_GUID, &dev_caps);
+
+    if (self->bframes > 0 && !dev_caps.max_bframes) {
+      self->bframes = 0;
+      bframe_aborted = TRUE;
+
+      GST_INFO_OBJECT (self, "B-frame was enabled but not support by device");
+    }
+
+    if (self->weighted_pred && !dev_caps.weighted_prediction) {
+      self->weighted_pred = FALSE;
+      weight_pred_aborted = TRUE;
+
+      GST_INFO_OBJECT (self,
+          "Weighted prediction was enabled but not support by device");
+    }
+
+    if (self->vbv_buffer_size && !dev_caps.custom_vbv_buf_size) {
+      self->vbv_buffer_size = 0;
+      vbv_buffer_size_aborted = TRUE;
+
+      GST_INFO_OBJECT (self,
+          "VBV buffer size was specified but not supported by device");
+    }
+
+    if (self->rc_lookahead && !dev_caps.lookahead) {
+      self->rc_lookahead = 0;
+      lookahead_aborted = TRUE;
+
+      GST_INFO_OBJECT (self,
+          "VBV buffer size was specified but not supported by device");
+    }
+
+    if (self->temporal_aq && !dev_caps.temporal_aq) {
+      self->temporal_aq = FALSE;
+      temporal_aq_aborted = TRUE;
+
+      GST_INFO_OBJECT (self,
+          "temporal-aq was enabled but not supported by device");
+    }
+  }
 
   init_params->version = gst_nvenc_get_initialize_params_version ();
   init_params->encodeGUID = NV_ENC_CODEC_H264_GUID;
@@ -1280,6 +1358,14 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
 
   if (bframe_aborted)
     g_object_notify (G_OBJECT (self), "b-frames");
+  if (weight_pred_aborted)
+    g_object_notify (G_OBJECT (self), "weighted-pred");
+  if (vbv_buffer_size_aborted)
+    g_object_notify (G_OBJECT (self), "vbv-buffer-size");
+  if (lookahead_aborted)
+    g_object_notify (G_OBJECT (self), "rc-lookahead");
+  if (temporal_aq_aborted)
+    g_object_notify (G_OBJECT (self), "temporal-aq");
 
   return TRUE;
 }
@@ -1299,14 +1385,14 @@ gst_nv_h264_encoder_set_output_state (GstNvEncoder * encoder,
   std::set < std::string > downstream_profiles;
   std::string caps_str;
   GstTagList *tags;
-  GstBuffer *codec_data = NULL;
+  GstBuffer *codec_data = nullptr;
   GstH264NalUnit sps_nalu, pps_nalu;
   GstH264ParserResult rst;
 
   caps_str = "video/x-h264, alignment = (string) au";
 
   gst_nv_h264_encoder_get_downstream_profiles_and_format (self,
-      downstream_profiles, NULL);
+      downstream_profiles, nullptr);
 
   seq_params.version = gst_nvenc_get_sequence_param_payload_version ();
   seq_params.inBufferSize = sizeof (spspps);
@@ -1420,7 +1506,8 @@ gst_nv_h264_encoder_set_output_state (GstNvEncoder * encoder,
   caps = gst_caps_from_string (caps_str.c_str ());
 
   if (self->packetized) {
-    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, codec_data,
+        nullptr);
     gst_buffer_unref (codec_data);
   }
 
@@ -1432,7 +1519,7 @@ gst_nv_h264_encoder_set_output_state (GstNvEncoder * encoder,
 
   tags = gst_tag_list_new_empty ();
   gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER,
-      "nvh264encoder", NULL);
+      "nvh264encoder", nullptr);
 
   gst_video_encoder_merge_tags (GST_VIDEO_ENCODER (encoder),
       tags, GST_TAG_MERGE_REPLACE);
@@ -1503,7 +1590,7 @@ gst_nv_h264_encoder_check_reconfigure (GstNvEncoder * encoder,
 
   if (self->bitrate_updated) {
     GstNvH264EncoderClass *klass = GST_NV_H264_ENCODER_GET_CLASS (self);
-    if (klass->dev_caps.dyn_bitrate_change > 0) {
+    if (klass->device_caps.dyn_bitrate_change > 0) {
       config->rcParams.averageBitRate = self->bitrate * 1024;
       config->rcParams.maxBitRate = self->max_bitrate * 1024;
       reconfig = GST_NV_ENCODER_RECONFIGURE_BITRATE;
@@ -1521,13 +1608,113 @@ done:
   return reconfig;
 }
 
-static GstNvH264EncoderClassData *
+static gboolean
+gst_nv_h264_encoder_select_device (GstNvEncoder * encoder,
+    const GstVideoInfo * info, GstBuffer * buffer,
+    GstNvEncoderDeviceData * data)
+{
+  GstNvH264Encoder *self = GST_NV_H264_ENCODER (encoder);
+  GstNvH264EncoderClass *klass = GST_NV_H264_ENCODER_GET_CLASS (self);
+  GstMemory *mem;
+
+  memset (data, 0, sizeof (GstNvEncoderDeviceData));
+
+  g_assert (klass->device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT);
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (klass->cuda_device_id_size > 0 && gst_is_cuda_memory (mem)) {
+    GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
+    GstCudaContext *context = cmem->context;
+    guint device_id;
+    gboolean found = FALSE;
+
+    g_object_get (context, "cuda-device-id", &device_id, nullptr);
+
+    data->device_mode = GST_NV_ENCODER_DEVICE_CUDA;
+    self->selected_device_mode = GST_NV_ENCODER_DEVICE_CUDA;
+
+    for (guint i = 0; i < klass->cuda_device_id_size; i++) {
+      if (klass->cuda_device_id_list[i] == device_id) {
+        data->cuda_device_id = device_id;
+        found = TRUE;
+        break;
+      }
+    }
+
+    if (!found) {
+      GST_INFO_OBJECT (self,
+          "Upstream CUDA device is not in supported device list");
+      data->cuda_device_id = self->cuda_device_id;
+    } else {
+      data->device = (GstObject *) gst_object_ref (context);
+    }
+
+    if (data->cuda_device_id != self->cuda_device_id) {
+      self->cuda_device_id = data->cuda_device_id;
+      g_object_notify (G_OBJECT (self), "cuda-device-id");
+    }
+
+    return TRUE;
+  }
+#ifdef GST_CUDA_HAS_D3D
+  if (klass->adapter_luid_size > 0 && gst_is_d3d11_memory (mem)) {
+    GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
+    GstD3D11Device *device = dmem->device;
+    gint64 adapter_luid;
+    gboolean found = FALSE;
+
+    g_object_get (device, "adapter-luid", &adapter_luid, nullptr);
+
+    data->device_mode = GST_NV_ENCODER_DEVICE_D3D11;
+    self->selected_device_mode = GST_NV_ENCODER_DEVICE_D3D11;
+
+    for (guint i = 0; i < klass->cuda_device_id_size; i++) {
+      if (klass->adapter_luid_list[i] == adapter_luid) {
+        data->adapter_luid = adapter_luid;
+        found = TRUE;
+        break;
+      }
+    }
+
+    if (!found) {
+      GST_INFO_OBJECT (self,
+          "Upstream D3D11 device is not in supported device list");
+      data->adapter_luid = self->adapter_luid;
+    } else {
+      data->device = (GstObject *) gst_object_ref (device);
+    }
+
+    if (data->adapter_luid != self->adapter_luid) {
+      self->adapter_luid = data->adapter_luid;
+      g_object_notify (G_OBJECT (self), "adapter-luid");
+    }
+
+    return TRUE;
+  }
+#endif
+
+  if (klass->cuda_device_id_size > 0 &&
+      (self->selected_device_mode != GST_NV_ENCODER_DEVICE_D3D11)) {
+    GST_INFO_OBJECT (self, "Upstream is system memory, use CUDA mode");
+    data->device_mode = GST_NV_ENCODER_DEVICE_CUDA;
+    data->cuda_device_id = self->cuda_device_id;
+  } else {
+    GST_INFO_OBJECT (self, "Upstream is system memory, use D3D11 mode");
+    data->device_mode = GST_NV_ENCODER_DEVICE_D3D11;
+    data->adapter_luid = klass->adapter_luid;
+  }
+
+  self->selected_device_mode = data->device_mode;
+
+  return TRUE;
+}
+
+static GstNvEncoderClassData *
 gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
-    gboolean d3d11_mode)
+    GstNvEncoderDeviceMode device_mode)
 {
   NVENCSTATUS status;
-  GstNvH264EncoderDeviceCaps dev_caps = { 0, };
-  NV_ENC_CAPS_PARAM caps_param = { 0, };
+  GstNvEncoderDeviceCaps dev_caps = { 0, };
   GUID profile_guids[16];
   NV_ENC_BUFFER_FORMAT input_formats[16];
   guint32 profile_guid_count = 0;
@@ -1539,7 +1726,7 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   std::set < std::string > profiles;
   std::string profile_str;
   std::string resolution_str;
-  GstNvH264EncoderClassData *cdata;
+  GstNvEncoderClassData *cdata;
   GstCaps *sink_caps;
   GstCaps *system_caps;
 
@@ -1547,102 +1734,17 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
       profile_guids, G_N_ELEMENTS (profile_guids), &profile_guid_count);
   if (status != NV_ENC_SUCCESS || profile_guid_count == 0) {
     GST_WARNING_OBJECT (device, "Unable to get supported profiles");
-    return NULL;
+    return nullptr;
   }
 
   status = NvEncGetInputFormats (session, NV_ENC_CODEC_H264_GUID, input_formats,
       G_N_ELEMENTS (input_formats), &input_format_count);
   if (status != NV_ENC_SUCCESS || input_format_count == 0) {
     GST_WARNING_OBJECT (device, "Unable to get supported input formats");
-    return NULL;
+    return nullptr;
   }
 
-  caps_param.version = gst_nvenc_get_caps_param_version ();
-
-#define CHECK_CAPS(to_query,val,default_val) G_STMT_START { \
-  gint _val; \
-  caps_param.capsToQuery = to_query; \
-  status = NvEncGetEncodeCaps (session, NV_ENC_CODEC_H264_GUID, &caps_param, \
-      &_val); \
-  if (status != NV_ENC_SUCCESS) { \
-    GST_WARNING_OBJECT (device, "Unable to query %s, status: %" \
-        GST_NVENC_STATUS_FORMAT, G_STRINGIFY (to_query), \
-        GST_NVENC_STATUS_ARGS (status)); \
-    val = default_val; \
-  } else { \
-    GST_DEBUG_OBJECT (device, "%s: %d", G_STRINGIFY (to_query), _val); \
-    val = _val; \
-  } \
-} G_STMT_END
-
-  CHECK_CAPS (NV_ENC_CAPS_NUM_MAX_BFRAMES, dev_caps.max_bframes, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES,
-      dev_caps.ratecontrol_modes, NV_ENC_PARAMS_RC_VBR);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_FIELD_ENCODING, dev_caps.field_encoding, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_MONOCHROME, dev_caps.monochrome, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_FMO, dev_caps.fmo, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_QPELMV, dev_caps.qpelmv, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_BDIRECT_MODE, dev_caps.bdirect_mode, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_CABAC, dev_caps.cabac, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_ADAPTIVE_TRANSFORM,
-      dev_caps.adaptive_transform, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_STEREO_MVC, dev_caps.stereo_mvc, 0);
-  CHECK_CAPS (NV_ENC_CAPS_NUM_MAX_TEMPORAL_LAYERS, dev_caps.temoral_layers, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_HIERARCHICAL_PFRAMES,
-      dev_caps.hierarchical_pframes, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_HIERARCHICAL_BFRAMES,
-      dev_caps.hierarchical_bframes, 0);
-  CHECK_CAPS (NV_ENC_CAPS_LEVEL_MAX, dev_caps.level_max, 0);
-  CHECK_CAPS (NV_ENC_CAPS_LEVEL_MIN, dev_caps.level_min, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SEPARATE_COLOUR_PLANE,
-      dev_caps.separate_colour_plane, 0);
-  CHECK_CAPS (NV_ENC_CAPS_WIDTH_MAX, dev_caps.width_max, 4096);
-  CHECK_CAPS (NV_ENC_CAPS_HEIGHT_MAX, dev_caps.height_max, 4096);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_TEMPORAL_SVC, dev_caps.temporal_svc, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_RES_CHANGE, dev_caps.dyn_res_change, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_BITRATE_CHANGE,
-      dev_caps.dyn_bitrate_change, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_FORCE_CONSTQP,
-      dev_caps.dyn_force_constqp, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_RCMODE_CHANGE,
-      dev_caps.dyn_rcmode_change, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_SUBFRAME_READBACK,
-      dev_caps.subframe_readback, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_CONSTRAINED_ENCODING,
-      dev_caps.constrained_encoding, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_INTRA_REFRESH, dev_caps.intra_refresh, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_CUSTOM_VBV_BUF_SIZE,
-      dev_caps.custom_vbv_buf_size, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYNAMIC_SLICE_MODE,
-      dev_caps.dynamic_slice_mode, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_REF_PIC_INVALIDATION,
-      dev_caps.ref_pic_invalidation, 0);
-  CHECK_CAPS (NV_ENC_CAPS_PREPROC_SUPPORT, dev_caps.preproc_support, 0);
-  /* NOTE: Async is Windows only */
-#ifdef G_OS_WIN32
-  CHECK_CAPS (NV_ENC_CAPS_ASYNC_ENCODE_SUPPORT,
-      dev_caps.async_encoding_support, 0);
-#endif
-  CHECK_CAPS (NV_ENC_CAPS_MB_NUM_MAX, dev_caps.mb_num_max, 0);
-  CHECK_CAPS (NV_ENC_CAPS_MB_PER_SEC_MAX, dev_caps.mb_per_sec_max, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_YUV444_ENCODE, dev_caps.yuv444_encode, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_LOSSLESS_ENCODE, dev_caps.lossless_encode, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_MEONLY_MODE, dev_caps.meonly_mode, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_LOOKAHEAD, dev_caps.lookahead, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_TEMPORAL_AQ, dev_caps.temporal_aq, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_10BIT_ENCODE,
-      dev_caps.supports_10bit_encode, 0);
-  CHECK_CAPS (NV_ENC_CAPS_NUM_MAX_LTR_FRAMES, dev_caps.num_max_ltr_frames, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_WEIGHTED_PREDICTION,
-      dev_caps.weighted_prediction, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_BFRAME_REF_MODE, dev_caps.bframe_ref_mode, 0);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_EMPHASIS_LEVEL_MAP,
-      dev_caps.emphasis_level_map, 0);
-  CHECK_CAPS (NV_ENC_CAPS_WIDTH_MIN, dev_caps.width_min, 16);
-  CHECK_CAPS (NV_ENC_CAPS_HEIGHT_MIN, dev_caps.height_min, 16);
-  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_MULTIPLE_REF_FRAMES,
-      dev_caps.multiple_ref_frames, 0);
-#undef CHECK_CAPS
+  gst_nv_encoder_get_encoder_caps (session, &NV_ENC_CODEC_H264_GUID, &dev_caps);
 
   for (guint32 i = 0; i < input_format_count; i++) {
     switch (input_formats[i]) {
@@ -1660,7 +1762,7 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
 
   if (formats.empty ()) {
     GST_WARNING_OBJECT (device, "Empty supported input format");
-    return NULL;
+    return nullptr;
   }
 #define APPEND_STRING(dst,set,str) G_STMT_START { \
   if (set.find(str) != set.end()) { \
@@ -1701,7 +1803,7 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
 
   if (profiles.empty ()) {
     GST_WARNING_OBJECT (device, "Empty supported h264 profile");
-    return NULL;
+    return nullptr;
   }
 
   if (profiles.size () == 1) {
@@ -1742,27 +1844,38 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_copy (system_caps);
 #ifdef GST_CUDA_HAS_D3D
-  if (d3d11_mode) {
+  if (device_mode == GST_NV_ENCODER_DEVICE_D3D11) {
     gst_caps_set_features (sink_caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
-  } else
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
+  }
 #endif
-  {
+
+  if (device_mode == GST_NV_ENCODER_DEVICE_CUDA) {
     gst_caps_set_features (sink_caps, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, NULL));
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, nullptr));
   }
 
   gst_caps_append (sink_caps, system_caps);
 
-  cdata = g_new0 (GstNvH264EncoderClassData, 1);
+  cdata = gst_nv_encoder_class_data_new ();
   cdata->sink_caps = sink_caps;
   cdata->src_caps = gst_caps_from_string (src_caps_str.c_str ());
-  cdata->dev_caps = dev_caps;
-  cdata->d3d11_mode = d3d11_mode;
-  if (d3d11_mode)
-    g_object_get (device, "adapter-luid", &cdata->adapter_luid, NULL);
-  else
-    g_object_get (device, "cuda-device-id", &cdata->cuda_device_id, NULL);
+  cdata->device_caps = dev_caps;
+  cdata->device_mode = device_mode;
+
+  /* *INDENT-OFF* */
+  for (const auto &iter: formats)
+    cdata->formats = g_list_append (cdata->formats, g_strdup (iter.c_str()));
+
+  for (const auto &iter: profiles)
+    cdata->profiles = g_list_append (cdata->profiles, g_strdup (iter.c_str()));
+  /* *INDENT-ON* */
+
+  if (device_mode == GST_NV_ENCODER_DEVICE_D3D11)
+    g_object_get (device, "adapter-luid", &cdata->adapter_luid, nullptr);
+
+  if (device_mode == GST_NV_ENCODER_DEVICE_CUDA)
+    g_object_get (device, "cuda-device-id", &cdata->cuda_device_id, nullptr);
 
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
@@ -1772,14 +1885,14 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   return cdata;
 }
 
-void
+GstNvEncoderClassData *
 gst_nv_h264_encoder_register_cuda (GstPlugin * plugin, GstCudaContext * context,
     guint rank)
 {
   NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS session_params = { 0, };
   gpointer session;
   NVENCSTATUS status;
-  GstNvH264EncoderClassData *cdata;
+  GstNvEncoderClassData *cdata;
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h264_encoder_debug, "nvh264encoder", 0,
       "nvh264encoder");
@@ -1793,25 +1906,27 @@ gst_nv_h264_encoder_register_cuda (GstPlugin * plugin, GstCudaContext * context,
   status = NvEncOpenEncodeSessionEx (&session_params, &session);
   if (status != NV_ENC_SUCCESS) {
     GST_WARNING_OBJECT (context, "Failed to open session");
-    return;
+    return nullptr;
   }
 
   cdata = gst_nv_h264_encoder_create_class_data (GST_OBJECT (context), session,
-      FALSE);
+      GST_NV_ENCODER_DEVICE_CUDA);
   NvEncDestroyEncoder (session);
 
   if (!cdata)
-    return;
+    return nullptr;
+
+  gst_nv_encoder_class_data_ref (cdata);
 
   GType type;
   gchar *type_name;
   gchar *feature_name;
   GTypeInfo type_info = {
     sizeof (GstNvH264EncoderClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_nv_h264_encoder_class_init,
-    NULL,
+    nullptr,
     cdata,
     sizeof (GstNvH264Encoder),
     0,
@@ -1841,17 +1956,19 @@ gst_nv_h264_encoder_register_cuda (GstPlugin * plugin, GstCudaContext * context,
 
   g_free (type_name);
   g_free (feature_name);
+
+  return cdata;
 }
 
 #ifdef GST_CUDA_HAS_D3D
-void
+GstNvEncoderClassData *
 gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
     guint rank)
 {
   NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS session_params = { 0, };
   gpointer session;
   NVENCSTATUS status;
-  GstNvH264EncoderClassData *cdata;
+  GstNvEncoderClassData *cdata;
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_h264_encoder_debug, "nvh264encoder", 0,
       "nvh264encoder");
@@ -1865,25 +1982,27 @@ gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
   status = NvEncOpenEncodeSessionEx (&session_params, &session);
   if (status != NV_ENC_SUCCESS) {
     GST_WARNING_OBJECT (device, "Failed to open session");
-    return;
+    return nullptr;
   }
 
   cdata = gst_nv_h264_encoder_create_class_data (GST_OBJECT (device), session,
-      TRUE);
+      GST_NV_ENCODER_DEVICE_D3D11);
   NvEncDestroyEncoder (session);
 
   if (!cdata)
-    return;
+    return nullptr;
+
+  gst_nv_encoder_class_data_ref (cdata);
 
   GType type;
   gchar *type_name;
   gchar *feature_name;
   GTypeInfo type_info = {
     sizeof (GstNvH264EncoderClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_nv_h264_encoder_class_init,
-    NULL,
+    nullptr,
     cdata,
     sizeof (GstNvH264Encoder),
     0,
@@ -1913,5 +2032,175 @@ gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
 
   g_free (type_name);
   g_free (feature_name);
+
+  return cdata;
 }
 #endif
+
+void
+gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
+    GList * device_caps_list, guint rank)
+{
+  std::set < std::string > formats;
+  std::set < std::string > profiles;
+  std::string sink_caps_str;
+  std::string src_caps_str;
+  std::string format_str;
+  std::string profile_str;
+  std::string resolution_str;
+  GList *iter;
+  guint adapter_luid_size = 0;
+  gint64 adapter_luid_list[8];
+  guint cuda_device_id_size = 0;
+  guint cuda_device_id_list[8];
+  GstNvEncoderDeviceCaps dev_caps;
+  GstNvEncoderClassData *cdata;
+  GstCaps *sink_caps = nullptr;
+  GstCaps *system_caps;
+
+  GST_DEBUG_CATEGORY_INIT (gst_nv_h264_encoder_debug, "nvh264encoder", 0,
+      "nvh264encoder");
+
+  for (iter = device_caps_list; iter; iter = g_list_next (iter)) {
+    GstNvEncoderClassData *cdata = (GstNvEncoderClassData *) iter->data;
+    GList *walk;
+
+    for (walk = cdata->formats; walk; walk = g_list_next (walk))
+      formats.insert ((gchar *) walk->data);
+
+    for (walk = cdata->profiles; walk; walk = g_list_next (walk))
+      profiles.insert ((gchar *) walk->data);
+
+    if (cdata->device_mode == GST_NV_ENCODER_DEVICE_D3D11 &&
+        adapter_luid_size < G_N_ELEMENTS (adapter_luid_list) - 1) {
+      adapter_luid_list[adapter_luid_size] = cdata->adapter_luid;
+      adapter_luid_size++;
+    }
+
+    if (cdata->device_mode == GST_NV_ENCODER_DEVICE_CUDA &&
+        cuda_device_id_size < G_N_ELEMENTS (cuda_device_id_list) - 1) {
+      cuda_device_id_list[cuda_device_id_size] = cdata->cuda_device_id;
+      cuda_device_id_size++;
+    }
+
+    if (iter == device_caps_list) {
+      dev_caps = cdata->device_caps;
+    } else {
+      gst_nv_encoder_merge_device_caps (&dev_caps, &cdata->device_caps,
+          &dev_caps);
+    }
+  }
+
+  g_list_free_full (device_caps_list,
+      (GDestroyNotify) gst_nv_encoder_class_data_unref);
+  if (formats.empty () || profiles.empty ())
+    return;
+
+#define APPEND_STRING(dst,set,str) G_STMT_START { \
+  if (set.find(str) != set.end()) { \
+    if (!first) \
+      dst += ", "; \
+    dst += str; \
+    first = false; \
+  } \
+} G_STMT_END
+
+  if (formats.size () == 1) {
+    format_str = "format = (string) " + *(formats.begin ());
+  } else {
+    bool first = true;
+
+    format_str = "format = (string) { ";
+    APPEND_STRING (format_str, formats, "NV12");
+    APPEND_STRING (format_str, formats, "Y444");
+    format_str += " }";
+  }
+
+  if (profiles.size () == 1) {
+    profile_str = "profile = (string) " + *(profiles.begin ());
+  } else {
+    bool first = true;
+
+    profile_str = "profile = (string) { ";
+    APPEND_STRING (profile_str, profiles, "main");
+    APPEND_STRING (profile_str, profiles, "high");
+    APPEND_STRING (profile_str, profiles, "progressive-high");
+    APPEND_STRING (profile_str, profiles, "constrained-high");
+    APPEND_STRING (profile_str, profiles, "constrained-baseline");
+    APPEND_STRING (profile_str, profiles, "baseline");
+    APPEND_STRING (profile_str, profiles, "high-4:4:4");
+    profile_str += " }";
+  }
+#undef APPEND_STRING
+
+  resolution_str = "width = (int) [ " +
+      std::to_string (GST_ROUND_UP_16 (dev_caps.width_min))
+      + ", " + std::to_string (dev_caps.width_max) + " ]";
+  resolution_str += ", height = (int) [ " +
+      std::to_string (GST_ROUND_UP_16 (dev_caps.height_min))
+      + ", " + std::to_string (dev_caps.height_max) + " ]";
+
+  sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str;
+
+  if (dev_caps.field_encoding > 0) {
+    sink_caps_str += ", interlace-mode = (string) { interleaved, mixed }";
+  } else {
+    sink_caps_str += ", interlace-mode = (string) progressive";
+  }
+
+  src_caps_str = "video/x-h264, " + resolution_str + ", " + profile_str +
+      ", stream-format = (string) { avc, byte-stream }, alignment = (string) au";
+
+  system_caps = gst_caps_from_string (sink_caps_str.c_str ());
+  sink_caps = gst_caps_new_empty ();
+
+  if (cuda_device_id_size > 0) {
+    GstCaps *cuda_caps = gst_caps_copy (system_caps);
+    gst_caps_set_features (cuda_caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, nullptr));
+    gst_caps_append (sink_caps, cuda_caps);
+  }
+#ifdef GST_CUDA_HAS_D3D
+  if (adapter_luid_size > 0) {
+    GstCaps *d3d11_caps = gst_caps_copy (system_caps);
+    gst_caps_set_features (d3d11_caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
+    gst_caps_append (sink_caps, d3d11_caps);
+  }
+#endif
+
+  gst_caps_append (sink_caps, system_caps);
+
+  cdata = gst_nv_encoder_class_data_new ();
+  cdata->sink_caps = sink_caps;
+  cdata->src_caps = gst_caps_from_string (src_caps_str.c_str ());
+  cdata->device_caps = dev_caps;
+  cdata->device_mode = GST_NV_ENCODER_DEVICE_AUTO_SELECT;
+  cdata->adapter_luid = adapter_luid_list[0];
+  cdata->adapter_luid_size = adapter_luid_size;
+  memcpy (&cdata->adapter_luid_list,
+      adapter_luid_list, sizeof (adapter_luid_list));
+  cdata->cuda_device_id = cuda_device_id_list[0];
+  cdata->cuda_device_id_size = cuda_device_id_size;
+  memcpy (&cdata->cuda_device_id_list,
+      cuda_device_id_list, sizeof (cuda_device_id_list));
+
+  GType type;
+  GTypeInfo type_info = {
+    sizeof (GstNvH264EncoderClass),
+    nullptr,
+    nullptr,
+    (GClassInitFunc) gst_nv_h264_encoder_class_init,
+    nullptr,
+    cdata,
+    sizeof (GstNvH264Encoder),
+    0,
+    (GInstanceInitFunc) gst_nv_h264_encoder_init,
+  };
+
+  type = g_type_register_static (GST_TYPE_NV_ENCODER, "GstNvAutoGpuH264Enc",
+      &type_info, (GTypeFlags) 0);
+
+  if (!gst_element_register (plugin, "nvautogpuh264enc", rank, type))
+    GST_WARNING ("Failed to register plugin 'GstNvAutoGpuH264Enc'");
+}

@@ -62,9 +62,10 @@ struct _GstNvEncoderPrivate
   GstD3D11Device *device;
 #endif
 
+  GstNvEncoderDeviceMode subclass_device_mode;
+  GstNvEncoderDeviceMode selected_device_mode;
   gint64 dxgi_adapter_luid;
   guint cuda_device_id;
-  gboolean d3d11_mode;
 
   NV_ENC_INITIALIZE_PARAMS init_params;
   NV_ENC_CONFIG config;
@@ -84,6 +85,8 @@ struct _GstNvEncoderPrivate
 
   GMutex lock;
   GCond cond;
+
+  GRecMutex context_lock;
 
   GThread *encoding_thread;
 
@@ -159,6 +162,8 @@ gst_nv_encoder_init (GstNvEncoder * self)
   g_mutex_init (&priv->lock);
   g_cond_init (&priv->cond);
 
+  g_rec_mutex_init (&priv->context_lock);
+
   gst_video_encoder_set_min_pts (GST_VIDEO_ENCODER (self),
       GST_SECOND * 60 * 60 * 1000);
 }
@@ -171,6 +176,11 @@ gst_nv_encoder_finalize (GObject * object)
 
   g_array_unref (priv->task_pool);
 
+  g_mutex_clear (&priv->lock);
+  g_cond_clear (&priv->cond);
+
+  g_rec_mutex_clear (&priv->context_lock);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -180,15 +190,24 @@ gst_nv_encoder_set_context (GstElement * element, GstContext * context)
   GstNvEncoder *self = GST_NV_ENCODER (element);
   GstNvEncoderPrivate *priv = self->priv;
 
-#ifdef GST_CUDA_HAS_D3D
-  if (priv->d3d11_mode) {
-    gst_d3d11_handle_set_context_for_adapter_luid (element,
-        context, priv->dxgi_adapter_luid, &priv->device);
-  }
-#endif
+  g_rec_mutex_lock (&priv->context_lock);
 
-  gst_cuda_handle_set_context (element, context, priv->cuda_device_id,
-      &priv->context);
+  switch (priv->selected_device_mode) {
+#ifdef GST_CUDA_HAS_D3D
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      gst_d3d11_handle_set_context_for_adapter_luid (element,
+          context, priv->dxgi_adapter_luid, &priv->device);
+      break;
+#endif
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      gst_cuda_handle_set_context (element, context, priv->cuda_device_id,
+          &priv->context);
+      break;
+    default:
+      break;
+  }
+
+  g_rec_mutex_unlock (&priv->context_lock);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -224,30 +243,44 @@ static gboolean
 gst_nv_encoder_device_lock (GstNvEncoder * self)
 {
   GstNvEncoderPrivate *priv = self->priv;
+  gboolean ret = TRUE;
 
+  switch (priv->selected_device_mode) {
 #ifdef GST_CUDA_HAS_D3D
-  if (priv->d3d11_mode) {
-    gst_d3d11_device_lock (priv->device);
-    return TRUE;
-  }
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      gst_d3d11_device_lock (priv->device);
+      break;
 #endif
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      ret = gst_cuda_context_push (priv->context);
+      break;
+    default:
+      break;
+  }
 
-  return gst_cuda_context_push (priv->context);
+  return ret;
 }
 
 static gboolean
 gst_nv_encoder_device_unlock (GstNvEncoder * self)
 {
-#ifdef GST_CUDA_HAS_D3D
   GstNvEncoderPrivate *priv = self->priv;
+  gboolean ret = TRUE;
 
-  if (priv->d3d11_mode) {
-    gst_d3d11_device_unlock (priv->device);
-    return TRUE;
-  }
+  switch (priv->selected_device_mode) {
+#ifdef GST_CUDA_HAS_D3D
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      gst_d3d11_device_unlock (priv->device);
+      break;
 #endif
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      ret = gst_cuda_context_pop (nullptr);
+      break;
+    default:
+      break;
+  }
 
-  return gst_cuda_context_pop (NULL);
+  return ret;
 }
 
 static GstFlowReturn
@@ -375,16 +408,24 @@ gst_nv_encoder_open (GstVideoEncoder * encoder)
   GstNvEncoder *self = GST_NV_ENCODER (encoder);
   GstNvEncoderPrivate *priv = self->priv;
 
+  switch (priv->selected_device_mode) {
+    case GST_NV_ENCODER_DEVICE_AUTO_SELECT:
+      /* Will open GPU later */
+      return TRUE;
 #ifdef GST_CUDA_HAS_D3D
-  if (priv->d3d11_mode) {
-    return gst_nv_encoder_open_d3d11_device (self);
-  }
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      return gst_nv_encoder_open_d3d11_device (self);
 #endif
-
-  if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (encoder),
-          priv->cuda_device_id, &priv->context)) {
-    GST_ERROR_OBJECT (self, "failed to create CUDA context");
-    return FALSE;
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (encoder),
+              priv->cuda_device_id, &priv->context)) {
+        GST_ERROR_OBJECT (self, "failed to create CUDA context");
+        return FALSE;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
   }
 
   return TRUE;
@@ -414,6 +455,14 @@ gst_nv_encoder_stop (GstVideoEncoder * encoder)
 
   gst_nv_encoder_drain (self, FALSE);
 
+  if (priv->subclass_device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT) {
+    gst_clear_object (&priv->context);
+#ifdef GST_CUDA_HAS_D3D
+    gst_clear_object (&priv->device);
+#endif
+    priv->selected_device_mode = GST_NV_ENCODER_DEVICE_AUTO_SELECT;
+  }
+
   g_clear_pointer (&priv->input_state, gst_video_codec_state_unref);
 
   return TRUE;
@@ -423,16 +472,28 @@ static gboolean
 gst_nv_encoder_handle_context_query (GstNvEncoder * self, GstQuery * query)
 {
   GstNvEncoderPrivate *priv = self->priv;
+  gboolean ret = FALSE;
 
+  g_rec_mutex_lock (&priv->context_lock);
+
+  switch (priv->selected_device_mode) {
 #ifdef GST_CUDA_HAS_D3D
-  if (priv->d3d11_mode) {
-    return gst_d3d11_handle_context_query (GST_ELEMENT (self),
-        query, priv->device);
-  }
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      ret = gst_d3d11_handle_context_query (GST_ELEMENT (self),
+          query, priv->device);
+      break;
 #endif
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      ret = gst_cuda_handle_context_query (GST_ELEMENT (self),
+          query, priv->context);
+      break;
+    default:
+      break;
+  }
 
-  return gst_cuda_handle_context_query (GST_ELEMENT (self),
-      query, priv->context);
+  g_rec_mutex_unlock (&priv->context_lock);
+
+  return ret;
 }
 
 static gboolean
@@ -494,18 +555,34 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   }
 
   features = gst_caps_get_features (caps, 0);
-#ifdef GST_CUDA_HAS_D3D
-  if (priv->d3d11_mode && features && gst_caps_features_contains (features,
-          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-    GST_DEBUG_OBJECT (self, "upstream support d3d11 memory");
-    pool = gst_d3d11_buffer_pool_new (priv->device);
-  }
-#endif
+  min_buffers = gst_nv_encoder_get_task_size (self);
 
-  if (!priv->d3d11_mode && features && gst_caps_features_contains (features,
-          GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
-    GST_DEBUG_OBJECT (self, "upstream support CUDA memory");
-    pool = gst_cuda_buffer_pool_new (priv->context);
+  switch (priv->subclass_device_mode) {
+    case GST_NV_ENCODER_DEVICE_AUTO_SELECT:
+      /* Use upstream pool in case of auto select mode. We don't know which
+       * GPU to use at this moment */
+      gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
+      gst_query_add_allocation_pool (query, nullptr, info.size, min_buffers, 0);
+      return TRUE;
+#ifdef GST_CUDA_HAS_D3D
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      if (features && gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+        GST_DEBUG_OBJECT (self, "upstream support d3d11 memory");
+        pool = gst_d3d11_buffer_pool_new (priv->device);
+      }
+      break;
+#endif
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      if (features && gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
+        GST_DEBUG_OBJECT (self, "upstream support CUDA memory");
+        pool = gst_cuda_buffer_pool_new (priv->context);
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
   }
 
   if (!pool)
@@ -514,7 +591,6 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-  min_buffers = gst_nv_encoder_get_task_size (GST_NV_ENCODER (self));
 
   size = GST_VIDEO_INFO_SIZE (&info);
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers, 0);
@@ -968,15 +1044,20 @@ gst_nv_encoder_open_encode_session (GstNvEncoder * self, gpointer * session)
   session_params.apiVersion = gst_nvenc_get_api_version ();
   NVENCSTATUS status;
 
+  switch (priv->selected_device_mode) {
 #ifdef GST_CUDA_HAS_D3D
-  if (priv->d3d11_mode) {
-    session_params.deviceType = NV_ENC_DEVICE_TYPE_DIRECTX;
-    session_params.device = gst_d3d11_device_get_device_handle (priv->device);
-  } else
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      session_params.deviceType = NV_ENC_DEVICE_TYPE_DIRECTX;
+      session_params.device = gst_d3d11_device_get_device_handle (priv->device);
+      break;
 #endif
-  {
-    session_params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
-    session_params.device = gst_cuda_context_get_handle (priv->context);
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      session_params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
+      session_params.device = gst_cuda_context_get_handle (priv->context);
+      break;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
   }
 
   status = NvEncOpenEncodeSessionEx (&session_params, session);
@@ -1033,12 +1114,20 @@ gst_nv_encoder_create_pool (GstNvEncoder * self, GstVideoCodecState * state)
   GstNvEncoderPrivate *priv = self->priv;
   GstStructure *config;
   GstBufferPool *pool = NULL;
-#ifdef GST_CUDA_HAS_D3D
-  if (priv->d3d11_mode)
-    return gst_nv_encoder_create_d3d11_pool (self, state);
-#endif
 
-  pool = gst_cuda_buffer_pool_new (priv->context);
+  /* At this moment device type must be selected already */
+  switch (priv->selected_device_mode) {
+#ifdef GST_CUDA_HAS_D3D
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      return gst_nv_encoder_create_d3d11_pool (self, state);
+#endif
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      pool = gst_cuda_buffer_pool_new (priv->context);
+      break;
+    default:
+      g_assert_not_reached ();
+      return FALSE;
+  }
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, state->caps,
@@ -1060,7 +1149,7 @@ gst_nv_encoder_create_pool (GstNvEncoder * self, GstVideoCodecState * state)
 }
 
 static gboolean
-gst_nv_encoder_init_session (GstNvEncoder * self)
+gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
 {
   GstNvEncoderPrivate *priv = self->priv;
   GstNvEncoderClass *klass = GST_NV_ENCODER_GET_CLASS (self);
@@ -1076,6 +1165,52 @@ gst_nv_encoder_init_session (GstNvEncoder * self)
 
   memset (&priv->init_params, 0, sizeof (NV_ENC_INITIALIZE_PARAMS));
   memset (&priv->config, 0, sizeof (NV_ENC_CONFIG));
+
+  if (priv->selected_device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT) {
+    GstNvEncoderDeviceData data;
+    gboolean ret;
+
+    if (!in_buf) {
+      GST_DEBUG_OBJECT (self, "Unknown device mode, open session later");
+      return TRUE;
+    }
+
+    if (!klass->select_device (self, info, in_buf, &data)) {
+      GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
+          ("Failed to select device mode"));
+      return FALSE;
+    }
+
+    GST_DEBUG_OBJECT (self,
+        "Selected device mode: %d, cuda-device-id: %d, adapter-luid %"
+        G_GINT64_FORMAT, data.device_mode, data.cuda_device_id,
+        data.adapter_luid);
+
+    g_assert (data.device_mode == GST_NV_ENCODER_DEVICE_CUDA ||
+        data.device_mode == GST_NV_ENCODER_DEVICE_D3D11);
+
+    g_rec_mutex_lock (&priv->context_lock);
+    priv->selected_device_mode = data.device_mode;
+    priv->cuda_device_id = data.cuda_device_id;
+    priv->dxgi_adapter_luid = data.adapter_luid;
+    gst_clear_object (&priv->context);
+    if (data.device_mode == GST_NV_ENCODER_DEVICE_CUDA)
+      priv->context = (GstCudaContext *) data.device;
+#ifdef GST_CUDA_HAS_D3D
+    gst_clear_object (&priv->device);
+    if (data.device_mode == GST_NV_ENCODER_DEVICE_D3D11)
+      priv->device = (GstD3D11Device *) data.device;
+#endif
+
+    ret = gst_nv_encoder_open (GST_VIDEO_ENCODER (self));
+    g_rec_mutex_unlock (&priv->context_lock);
+
+    if (!ret) {
+      GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
+          ("Failed to open device"));
+      return FALSE;
+    }
+  }
 
   priv->internal_pool = gst_nv_encoder_create_pool (self, state);
   if (!priv->internal_pool) {
@@ -1200,7 +1335,7 @@ gst_nv_encoder_reconfigure_session (GstNvEncoder * self)
         "Encoding session was not configured, open session");
     gst_nv_encoder_drain (self, TRUE);
 
-    return gst_nv_encoder_init_session (self);
+    return gst_nv_encoder_init_session (self, nullptr);
   }
 
   params.version = gst_nvenc_get_reconfigure_params_version ();
@@ -1213,7 +1348,7 @@ gst_nv_encoder_reconfigure_session (GstNvEncoder * self)
         GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
     gst_nv_encoder_drain (self, TRUE);
 
-    return gst_nv_encoder_init_session (self);
+    return gst_nv_encoder_init_session (self, nullptr);
   }
 
   return TRUE;
@@ -1230,10 +1365,13 @@ gst_nv_encoder_set_format (GstVideoEncoder * encoder,
 
   g_clear_pointer (&priv->input_state, gst_video_codec_state_unref);
   priv->input_state = gst_video_codec_state_ref (state);
-
   priv->last_flow = GST_FLOW_OK;
 
-  return gst_nv_encoder_init_session (self);
+  /* select device again on next buffer */
+  if (priv->subclass_device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT)
+    priv->selected_device_mode = GST_NV_ENCODER_DEVICE_AUTO_SELECT;
+
+  return gst_nv_encoder_init_session (self, nullptr);
 }
 
 static NV_ENC_BUFFER_FORMAT
@@ -1679,16 +1817,26 @@ gst_nv_encoder_prepare_task_input (GstNvEncoder * self,
     const GstVideoInfo * info, GstBuffer * buffer, gpointer session,
     GstBufferPool * pool, GstNvEncoderTask * task)
 {
-#ifdef GST_CUDA_HAS_D3D
   GstNvEncoderPrivate *priv = self->priv;
-  if (priv->d3d11_mode) {
-    return gst_nv_encoder_prepare_task_input_d3d11 (self, info, buffer,
-        session, pool, task);
-  }
-#endif
+  GstFlowReturn ret = GST_FLOW_ERROR;
 
-  return gst_nv_encoder_prepare_task_input_cuda (self, info, buffer,
-      session, task);
+  switch (priv->selected_device_mode) {
+#ifdef GST_CUDA_HAS_D3D
+    case GST_NV_ENCODER_DEVICE_D3D11:
+      ret = gst_nv_encoder_prepare_task_input_d3d11 (self, info, buffer,
+          session, pool, task);
+      break;
+#endif
+    case GST_NV_ENCODER_DEVICE_CUDA:
+      ret = gst_nv_encoder_prepare_task_input_cuda (self, info, buffer,
+          session, task);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1701,6 +1849,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
   GstFlowReturn ret = GST_FLOW_ERROR;
   GstNvEncoderTask *task = NULL;
   GstNvEncoderReconfigure reconfig;
+  GstBuffer *in_buf = frame->input_buffer;
 
   GST_TRACE_OBJECT (self, "Handle frame");
 
@@ -1715,7 +1864,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
     return ret;
   }
 
-  if (!priv->session && !gst_nv_encoder_init_session (self)) {
+  if (!priv->session && !gst_nv_encoder_init_session (self, in_buf)) {
     GST_ERROR_OBJECT (self, "Encoder object was not configured");
     gst_video_encoder_finish_frame (encoder, frame);
 
@@ -1733,7 +1882,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
     case GST_NV_ENCODER_RECONFIGURE_FULL:
     {
       gst_nv_encoder_drain (self, TRUE);
-      if (!gst_nv_encoder_init_session (self)) {
+      if (!gst_nv_encoder_init_session (self, nullptr)) {
         gst_video_encoder_finish_frame (encoder, frame);
         return GST_FLOW_NOT_NEGOTIATED;
       }
@@ -1763,7 +1912,7 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
 
   g_assert (task->buffer == NULL);
   ret = gst_nv_encoder_prepare_task_input (self, &priv->input_state->info,
-      frame->input_buffer, priv->session, priv->internal_pool, task);
+      in_buf, priv->session, priv->internal_pool, task);
   gst_nv_encoder_device_unlock (self);
 
   if (ret != GST_FLOW_OK) {
@@ -1826,22 +1975,15 @@ gst_nv_encoder_get_task_size (GstNvEncoder * encoder)
 }
 
 void
-gst_nv_encoder_set_cuda_device_id (GstNvEncoder * encoder, guint device_id)
+gst_nv_encoder_set_device_mode (GstNvEncoder * encoder,
+    GstNvEncoderDeviceMode mode, guint cuda_device_id, gint64 adapter_luid)
 {
-  g_return_if_fail (GST_IS_NV_ENCODER (encoder));
+  GstNvEncoderPrivate *priv = encoder->priv;
 
-  encoder->priv->cuda_device_id = device_id;
-  encoder->priv->d3d11_mode = FALSE;
-}
-
-void
-gst_nv_encoder_set_dxgi_adapter_luid (GstNvEncoder * encoder,
-    gint64 adapter_luid)
-{
-  g_return_if_fail (GST_IS_NV_ENCODER (encoder));
-
-  encoder->priv->dxgi_adapter_luid = adapter_luid;
-  encoder->priv->d3d11_mode = TRUE;
+  priv->subclass_device_mode = mode;
+  priv->selected_device_mode = mode;
+  priv->cuda_device_id = cuda_device_id;
+  priv->dxgi_adapter_luid = adapter_luid;
 }
 
 GType
@@ -1994,4 +2136,205 @@ gst_nv_encoder_status_to_string (NVENCSTATUS status)
 #undef CASE
 
   return "Unknown";
+}
+
+GstNvEncoderClassData *
+gst_nv_encoder_class_data_new (void)
+{
+  GstNvEncoderClassData *data = g_new0 (GstNvEncoderClassData, 1);
+  data->ref_count = 1;
+
+  return data;
+}
+
+GstNvEncoderClassData *
+gst_nv_encoder_class_data_ref (GstNvEncoderClassData * cdata)
+{
+  g_atomic_int_add (&cdata->ref_count, 1);
+
+  return cdata;
+}
+
+void
+gst_nv_encoder_class_data_unref (GstNvEncoderClassData * cdata)
+{
+  if (g_atomic_int_dec_and_test (&cdata->ref_count)) {
+    gst_clear_caps (&cdata->sink_caps);
+    gst_clear_caps (&cdata->src_caps);
+    if (cdata->formats)
+      g_list_free_full (cdata->formats, (GDestroyNotify) g_free);
+    if (cdata->profiles)
+      g_list_free_full (cdata->profiles, (GDestroyNotify) g_free);
+    g_free (cdata);
+  }
+}
+
+void
+gst_nv_encoder_get_encoder_caps (gpointer session, const GUID * encode_guid,
+    GstNvEncoderDeviceCaps * device_caps)
+{
+  GstNvEncoderDeviceCaps dev_caps = { 0, };
+  NV_ENC_CAPS_PARAM caps_param = { 0, };
+  NVENCSTATUS status;
+  GUID guid = *encode_guid;
+
+  GST_DEBUG_CATEGORY_INIT (gst_nv_encoder_debug, "nvencoder", 0, "nvencoder");
+
+  caps_param.version = gst_nvenc_get_caps_param_version ();
+
+#define CHECK_CAPS(to_query,val,default_val) G_STMT_START { \
+  gint _val; \
+  caps_param.capsToQuery = to_query; \
+  status = NvEncGetEncodeCaps (session, guid, &caps_param, \
+      &_val); \
+  if (status != NV_ENC_SUCCESS) { \
+    GST_WARNING ("Unable to query %s, status: %" \
+        GST_NVENC_STATUS_FORMAT, G_STRINGIFY (to_query), \
+        GST_NVENC_STATUS_ARGS (status)); \
+    val = default_val; \
+  } else { \
+    GST_DEBUG ("%s: %d", G_STRINGIFY (to_query), _val); \
+    val = _val; \
+  } \
+} G_STMT_END
+
+  CHECK_CAPS (NV_ENC_CAPS_NUM_MAX_BFRAMES, dev_caps.max_bframes, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORTED_RATECONTROL_MODES,
+      dev_caps.ratecontrol_modes, NV_ENC_PARAMS_RC_VBR);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_FIELD_ENCODING, dev_caps.field_encoding, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_MONOCHROME, dev_caps.monochrome, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_FMO, dev_caps.fmo, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_QPELMV, dev_caps.qpelmv, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_BDIRECT_MODE, dev_caps.bdirect_mode, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_CABAC, dev_caps.cabac, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_ADAPTIVE_TRANSFORM,
+      dev_caps.adaptive_transform, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_STEREO_MVC, dev_caps.stereo_mvc, 0);
+  CHECK_CAPS (NV_ENC_CAPS_NUM_MAX_TEMPORAL_LAYERS, dev_caps.temoral_layers, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_HIERARCHICAL_PFRAMES,
+      dev_caps.hierarchical_pframes, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_HIERARCHICAL_BFRAMES,
+      dev_caps.hierarchical_bframes, 0);
+  CHECK_CAPS (NV_ENC_CAPS_LEVEL_MAX, dev_caps.level_max, 0);
+  CHECK_CAPS (NV_ENC_CAPS_LEVEL_MIN, dev_caps.level_min, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SEPARATE_COLOUR_PLANE,
+      dev_caps.separate_colour_plane, 0);
+  CHECK_CAPS (NV_ENC_CAPS_WIDTH_MAX, dev_caps.width_max, 4096);
+  CHECK_CAPS (NV_ENC_CAPS_HEIGHT_MAX, dev_caps.height_max, 4096);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_TEMPORAL_SVC, dev_caps.temporal_svc, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_RES_CHANGE, dev_caps.dyn_res_change, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_BITRATE_CHANGE,
+      dev_caps.dyn_bitrate_change, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_FORCE_CONSTQP,
+      dev_caps.dyn_force_constqp, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYN_RCMODE_CHANGE,
+      dev_caps.dyn_rcmode_change, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_SUBFRAME_READBACK,
+      dev_caps.subframe_readback, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_CONSTRAINED_ENCODING,
+      dev_caps.constrained_encoding, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_INTRA_REFRESH, dev_caps.intra_refresh, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_CUSTOM_VBV_BUF_SIZE,
+      dev_caps.custom_vbv_buf_size, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_DYNAMIC_SLICE_MODE,
+      dev_caps.dynamic_slice_mode, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_REF_PIC_INVALIDATION,
+      dev_caps.ref_pic_invalidation, 0);
+  CHECK_CAPS (NV_ENC_CAPS_PREPROC_SUPPORT, dev_caps.preproc_support, 0);
+  /* NOTE: Async is Windows only */
+#ifdef G_OS_WIN32
+  CHECK_CAPS (NV_ENC_CAPS_ASYNC_ENCODE_SUPPORT,
+      dev_caps.async_encoding_support, 0);
+#endif
+  CHECK_CAPS (NV_ENC_CAPS_MB_NUM_MAX, dev_caps.mb_num_max, 0);
+  CHECK_CAPS (NV_ENC_CAPS_MB_PER_SEC_MAX, dev_caps.mb_per_sec_max, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_YUV444_ENCODE, dev_caps.yuv444_encode, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_LOSSLESS_ENCODE, dev_caps.lossless_encode, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_SAO, dev_caps.sao, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_MEONLY_MODE, dev_caps.meonly_mode, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_LOOKAHEAD, dev_caps.lookahead, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_TEMPORAL_AQ, dev_caps.temporal_aq, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_10BIT_ENCODE,
+      dev_caps.supports_10bit_encode, 0);
+  CHECK_CAPS (NV_ENC_CAPS_NUM_MAX_LTR_FRAMES, dev_caps.num_max_ltr_frames, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_WEIGHTED_PREDICTION,
+      dev_caps.weighted_prediction, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_BFRAME_REF_MODE, dev_caps.bframe_ref_mode, 0);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_EMPHASIS_LEVEL_MAP,
+      dev_caps.emphasis_level_map, 0);
+  CHECK_CAPS (NV_ENC_CAPS_WIDTH_MIN, dev_caps.width_min, 16);
+  CHECK_CAPS (NV_ENC_CAPS_HEIGHT_MIN, dev_caps.height_min, 16);
+  CHECK_CAPS (NV_ENC_CAPS_SUPPORT_MULTIPLE_REF_FRAMES,
+      dev_caps.multiple_ref_frames, 0);
+#undef CHECK_CAPS
+
+  *device_caps = dev_caps;
+}
+
+void
+gst_nv_encoder_merge_device_caps (const GstNvEncoderDeviceCaps * a,
+    const GstNvEncoderDeviceCaps * b, GstNvEncoderDeviceCaps * merged)
+{
+  GstNvEncoderDeviceCaps caps;
+
+#define SELECT_MAX(value) G_STMT_START { \
+  caps.value = MAX (a->value, b->value); \
+} G_STMT_END
+
+#define SELECT_MIN(value) G_STMT_START { \
+  caps.value = MAX (MIN (a->value, b->value), 1); \
+} G_STMT_END
+
+  SELECT_MAX (max_bframes);
+  SELECT_MAX (ratecontrol_modes);
+  SELECT_MAX (field_encoding);
+  SELECT_MAX (monochrome);
+  SELECT_MAX (fmo);
+  SELECT_MAX (qpelmv);
+  SELECT_MAX (bdirect_mode);
+  SELECT_MAX (cabac);
+  SELECT_MAX (adaptive_transform);
+  SELECT_MAX (stereo_mvc);
+  SELECT_MAX (temoral_layers);
+  SELECT_MAX (hierarchical_pframes);
+  SELECT_MAX (hierarchical_bframes);
+  SELECT_MAX (level_max);
+  SELECT_MAX (level_min);
+  SELECT_MAX (separate_colour_plane);
+  SELECT_MAX (width_max);
+  SELECT_MAX (height_max);
+  SELECT_MAX (temporal_svc);
+  SELECT_MAX (dyn_res_change);
+  SELECT_MAX (dyn_bitrate_change);
+  SELECT_MAX (dyn_force_constqp);
+  SELECT_MAX (dyn_rcmode_change);
+  SELECT_MAX (subframe_readback);
+  SELECT_MAX (constrained_encoding);
+  SELECT_MAX (intra_refresh);
+  SELECT_MAX (custom_vbv_buf_size);
+  SELECT_MAX (dynamic_slice_mode);
+  SELECT_MAX (ref_pic_invalidation);
+  SELECT_MAX (preproc_support);
+  SELECT_MAX (async_encoding_support);
+  SELECT_MAX (mb_num_max);
+  SELECT_MAX (mb_per_sec_max);
+  SELECT_MAX (yuv444_encode);
+  SELECT_MAX (lossless_encode);
+  SELECT_MAX (sao);
+  SELECT_MAX (meonly_mode);
+  SELECT_MAX (lookahead);
+  SELECT_MAX (temporal_aq);
+  SELECT_MAX (supports_10bit_encode);
+  SELECT_MAX (num_max_ltr_frames);
+  SELECT_MAX (weighted_prediction);
+  SELECT_MAX (bframe_ref_mode);
+  SELECT_MAX (emphasis_level_map);
+  SELECT_MIN (width_min);
+  SELECT_MIN (height_min);
+  SELECT_MAX (multiple_ref_frames);
+
+#undef SELECT_MAX
+#undef SELECT_MIN
+
+  *merged = caps;
 }

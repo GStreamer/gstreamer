@@ -82,6 +82,88 @@ typedef enum
 
 typedef struct
 {
+  gint max_bframes;
+  gint ratecontrol_modes;
+  gint field_encoding;
+  gint monochrome;
+  gint fmo;
+  gint qpelmv;
+  gint bdirect_mode;
+  gint cabac;
+  gint adaptive_transform;
+  gint stereo_mvc;
+  gint temoral_layers;
+  gint hierarchical_pframes;
+  gint hierarchical_bframes;
+  gint level_max;
+  gint level_min;
+  gint separate_colour_plane;
+  gint width_max;
+  gint height_max;
+  gint temporal_svc;
+  gint dyn_res_change;
+  gint dyn_bitrate_change;
+  gint dyn_force_constqp;
+  gint dyn_rcmode_change;
+  gint subframe_readback;
+  gint constrained_encoding;
+  gint intra_refresh;
+  gint custom_vbv_buf_size;
+  gint dynamic_slice_mode;
+  gint ref_pic_invalidation;
+  gint preproc_support;
+  gint async_encoding_support;
+  gint mb_num_max;
+  gint mb_per_sec_max;
+  gint yuv444_encode;
+  gint lossless_encode;
+  gint sao;
+  gint meonly_mode;
+  gint lookahead;
+  gint temporal_aq;
+  gint supports_10bit_encode;
+  gint num_max_ltr_frames;
+  gint weighted_prediction;
+  gint bframe_ref_mode;
+  gint emphasis_level_map;
+  gint width_min;
+  gint height_min;
+  gint multiple_ref_frames;
+} GstNvEncoderDeviceCaps;
+
+typedef enum
+{
+  GST_NV_ENCODER_DEVICE_D3D11,
+  GST_NV_ENCODER_DEVICE_CUDA,
+  GST_NV_ENCODER_DEVICE_AUTO_SELECT,
+} GstNvEncoderDeviceMode;
+
+typedef struct
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+
+  guint cuda_device_id;
+  gint64 adapter_luid;
+
+  GstNvEncoderDeviceMode device_mode;
+  GstNvEncoderDeviceCaps device_caps;
+
+  GList *formats;
+  GList *profiles;
+
+  /* auto gpu select mode */
+  guint adapter_luid_size;
+  gint64 adapter_luid_list[8];
+
+  guint cuda_device_id_size;
+  guint cuda_device_id_list[8];
+
+  gint ref_count;
+} GstNvEncoderClassData;
+
+typedef struct
+{
   /* without ref */
   GstNvEncoder *encoder;
 
@@ -100,6 +182,14 @@ typedef struct
   gpointer event_handle;
   gboolean is_eos;
 } GstNvEncoderTask;
+
+typedef struct
+{
+  GstNvEncoderDeviceMode device_mode;
+  guint cuda_device_id;
+  gint64 adapter_luid;
+  GstObject *device;
+} GstNvEncoderDeviceData;
 
 struct _GstNvEncoder
 {
@@ -127,6 +217,11 @@ struct _GstNvEncoderClass
 
   GstNvEncoderReconfigure (*check_reconfigure)  (GstNvEncoder * encoder,
                                                  NV_ENC_CONFIG * config);
+
+  gboolean    (*select_device)        (GstNvEncoder * encoder,
+                                       const GstVideoInfo * info,
+                                       GstBuffer * buffer,
+                                       GstNvEncoderDeviceData * data);
 };
 
 GType gst_nv_encoder_get_type (void);
@@ -142,11 +237,25 @@ void gst_nv_encoder_preset_to_guid (GstNvEncoderPreset preset,
 
 NV_ENC_PARAMS_RC_MODE gst_nv_encoder_rc_mode_to_native (GstNvEncoderRCMode rc_mode);
 
-void gst_nv_encoder_set_cuda_device_id (GstNvEncoder * encoder,
-                                        guint device_id);
+void gst_nv_encoder_set_device_mode (GstNvEncoder * encoder,
+                                     GstNvEncoderDeviceMode mode,
+                                     guint cuda_device_id,
+                                     gint64 adapter_luid);
 
-void gst_nv_encoder_set_dxgi_adapter_luid (GstNvEncoder * encoder,
-                                           gint64 adapter_luid);
+GstNvEncoderClassData * gst_nv_encoder_class_data_new (void);
+
+GstNvEncoderClassData * gst_nv_encoder_class_data_ref (GstNvEncoderClassData * cdata);
+
+void gst_nv_encoder_class_data_unref (GstNvEncoderClassData * cdata);
+
+void gst_nv_encoder_get_encoder_caps (gpointer session,
+                                      const GUID * encode_guid,
+                                      GstNvEncoderDeviceCaps * device_caps);
+
+void gst_nv_encoder_merge_device_caps (const GstNvEncoderDeviceCaps * a,
+                                       const GstNvEncoderDeviceCaps * b,
+                                       GstNvEncoderDeviceCaps * merged);
+
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstNvEncoder, gst_object_unref)
 
