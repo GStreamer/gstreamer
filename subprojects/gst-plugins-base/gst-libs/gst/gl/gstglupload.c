@@ -1262,7 +1262,7 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
       return FALSE;
     }
 
-    /* We can't have more then one dmabuf per plane */
+    /* We can't have more than one dmabuf per plane */
     if (length != 1) {
       GST_DEBUG_OBJECT (dmabuf->upload, "data for plane %u spans %u memories",
           i, length);
