@@ -1268,10 +1268,12 @@ gst_deinit (void)
   GST_INFO ("deinitialized GStreamer");
   g_mutex_unlock (&init_lock);
 
+#ifndef GST_DISABLE_GST_DEBUG
   /* Doing this as the very last step to allow the above GST_INFO() to work
    * correctly. It's of course making the above statement a lie: for a short
    * while we're not deinitialized yet */
   _priv_gst_debug_cleanup ();
+#endif
 }
 
 /**
