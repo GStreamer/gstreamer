@@ -260,6 +260,13 @@ GstMemory * gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
                                               const D3D11_BUFFER_DESC * desc);
 
 GST_D3D11_API
+GstMemory * gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * allocator,
+                                               GstD3D11Device * device,
+                                               ID3D11Texture2D * texture,
+                                               gpointer user_data,
+                                               GDestroyNotify notify);
+
+GST_D3D11_API
 gboolean    gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator,
                                             gboolean active);
 
