@@ -1722,7 +1722,6 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
   GstStructure *config;
   GstD3D11AllocationParams *d3d11_params;
   gboolean use_d3d11_pool;
-  gboolean has_videometa;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
@@ -1740,8 +1739,6 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     return FALSE;
   }
 
-  has_videometa = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, nullptr);
   use_d3d11_pool = decoder->downstream_supports_d3d11;
   if (use_d3d11_pool) {
     decoder->use_crop_meta =
@@ -1759,30 +1756,23 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
   /* create our own pool */
-  if (pool) {
-    if (use_d3d11_pool) {
-      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-        GST_DEBUG_OBJECT (videodec,
-            "Downstream pool is not d3d11, will create new one");
-        gst_clear_object (&pool);
-      } else {
-        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
-        if (dpool->device != decoder->device) {
-          GST_DEBUG_OBJECT (videodec, "Different device, will create new one");
-          gst_clear_object (&pool);
-        }
-      }
-    } else if (has_videometa) {
-      /* We will use d3d11 staging buffer pool */
+  if (pool && use_d3d11_pool) {
+    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+      GST_DEBUG_OBJECT (videodec,
+          "Downstream pool is not d3d11, will create new one");
       gst_clear_object (&pool);
+    } else {
+      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+      if (dpool->device != decoder->device) {
+        GST_DEBUG_OBJECT (videodec, "Different device, will create new one");
+        gst_clear_object (&pool);
+      }
     }
   }
 
   if (!pool) {
     if (use_d3d11_pool)
       pool = gst_d3d11_buffer_pool_new (decoder->device);
-    else if (has_videometa)
-      pool = gst_d3d11_staging_buffer_pool_new (decoder->device);
     else
       pool = gst_video_buffer_pool_new ();
 

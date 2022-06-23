@@ -222,6 +222,7 @@ gst_d3d11_upload_propose_allocation (GstBaseTransform * trans,
   GstBufferPool *pool;
   GstCaps *caps;
   guint size;
+  gboolean is_d3d11 = FALSE;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
@@ -248,14 +249,19 @@ gst_d3d11_upload_propose_allocation (GstBaseTransform * trans,
             GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
       GST_DEBUG_OBJECT (filter, "upstream support d3d11 memory");
       pool = gst_d3d11_buffer_pool_new (filter->device);
+      is_d3d11 = TRUE;
     } else {
-      pool = gst_d3d11_staging_buffer_pool_new (filter->device);
+      pool = gst_video_buffer_pool_new ();
     }
 
     config = gst_buffer_pool_get_config (pool);
 
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+    if (!is_d3d11) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    }
 
     size = GST_VIDEO_INFO_SIZE (&info);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);

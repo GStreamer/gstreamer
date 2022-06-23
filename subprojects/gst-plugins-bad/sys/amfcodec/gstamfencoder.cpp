@@ -360,7 +360,7 @@ gst_amf_encoder_try_output (GstAmfEncoder * self, gboolean do_wait)
       ret = gst_amf_encoder_process_output (self, buffer.GetPtr ());
       if (ret != GST_FLOW_OK) {
         GST_INFO_OBJECT (self, "Process output returned %s",
-        gst_flow_get_name (ret));
+            gst_flow_get_name (ret));
       }
     } else if (result == AMF_REPEAT || result == AMF_OK) {
       GST_TRACE_OBJECT (self, "Output is not ready, do_wait %d", do_wait);
@@ -374,7 +374,7 @@ gst_amf_encoder_try_output (GstAmfEncoder * self, gboolean do_wait)
       ret = GST_VIDEO_ENCODER_FLOW_NEED_DATA;
     } else {
       GST_ERROR_OBJECT (self, "query output returned %" GST_AMF_RESULT_FORMAT,
-      GST_AMF_RESULT_ARGS (result));
+          GST_AMF_RESULT_ARGS (result));
       ret = GST_FLOW_ERROR;
     }
   } while (ret == GST_FLOW_OK);
@@ -1014,6 +1014,8 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   guint size;
   GstStructure *config;
   GstCapsFeatures *features;
+  gboolean is_d3d11 = FALSE;
+  guint min_buffers = 0;
 
   gst_query_parse_allocation (query, &caps, nullptr);
   if (!caps) {
@@ -1031,18 +1033,24 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     GST_DEBUG_OBJECT (self, "upstream support d3d11 memory");
     pool = gst_d3d11_buffer_pool_new (device);
+    is_d3d11 = TRUE;
+
+    /* XXX: AMF API does not provide information about internal queue size,
+     * use hardcoded value 16 */
+    min_buffers = 16;
   } else {
-    pool = gst_d3d11_staging_buffer_pool_new (device);
+    pool = gst_video_buffer_pool_new ();
   }
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (!is_d3d11) {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  }
 
   size = GST_VIDEO_INFO_SIZE (&info);
-
-  /* XXX: AMF API does not provide information about internal queue size,
-   * use hardcoded value 16 */
-  gst_buffer_pool_config_set_params (config, caps, size, 16, 0);
+  gst_buffer_pool_config_set_params (config, caps, size, min_buffers, 0);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_WARNING_OBJECT (self, "Failed to set pool config");
@@ -1057,7 +1065,7 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
   gst_structure_free (config);
 
-  gst_query_add_allocation_pool (query, pool, size, 16, 0);
+  gst_query_add_allocation_pool (query, pool, size, min_buffers, 0);
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
   gst_object_unref (pool);
 

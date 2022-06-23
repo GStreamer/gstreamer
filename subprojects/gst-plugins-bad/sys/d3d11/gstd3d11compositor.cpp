@@ -1807,7 +1807,7 @@ gst_d3d11_compositor_propose_allocation (GstAggregator * agg,
       pool = gst_d3d11_buffer_pool_new (self->device);
       is_d3d11 = TRUE;
     } else {
-      pool = gst_d3d11_staging_buffer_pool_new (self->device);
+      pool = gst_video_buffer_pool_new ();
     }
 
     if (!pool) {
@@ -1829,6 +1829,9 @@ gst_d3d11_compositor_propose_allocation (GstAggregator * agg,
 
       gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
       gst_d3d11_allocation_params_free (d3d11_params);
+    } else {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
     }
 
     gst_buffer_pool_config_set_params (config, caps, (guint) size, 0, 0);
@@ -1866,7 +1869,6 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   GstVideoInfo info;
   GstStructure *config;
   gboolean use_d3d11_pool;
-  gboolean has_videometa;
 
   gst_query_parse_allocation (query, &caps, nullptr);
 
@@ -1880,8 +1882,6 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     return FALSE;
   }
 
-  has_videometa = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, nullptr);
   use_d3d11_pool = self->downstream_supports_d3d11;
 
   n = gst_query_get_n_allocation_pools (query);
@@ -1889,22 +1889,17 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
   /* create our own pool */
-  if (pool) {
-    if (use_d3d11_pool) {
-      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-        GST_DEBUG_OBJECT (self,
-            "Downstream pool is not d3d11, will create new one");
-        gst_clear_object (&pool);
-      } else {
-        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
-        if (dpool->device != self->device) {
-          GST_DEBUG_OBJECT (self, "Different device, will create new one");
-          gst_clear_object (&pool);
-        }
-      }
-    } else if (has_videometa) {
-      /* We will use d3d11 staging buffer pool */
+  if (pool && use_d3d11_pool) {
+    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+      GST_DEBUG_OBJECT (self,
+          "Downstream pool is not d3d11, will create new one");
       gst_clear_object (&pool);
+    } else {
+      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+      if (dpool->device != self->device) {
+        GST_DEBUG_OBJECT (self, "Different device, will create new one");
+        gst_clear_object (&pool);
+      }
     }
   }
 
@@ -1913,8 +1908,6 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   if (!pool) {
     if (use_d3d11_pool)
       pool = gst_d3d11_buffer_pool_new (self->device);
-    else if (has_videometa)
-      pool = gst_d3d11_staging_buffer_pool_new (self->device);
     else
       pool = gst_video_buffer_pool_new ();
 

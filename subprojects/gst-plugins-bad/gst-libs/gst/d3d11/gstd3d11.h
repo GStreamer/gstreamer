@@ -33,6 +33,5 @@
 #include <gst/d3d11/gstd3d11bufferpool.h>
 #include <gst/d3d11/gstd3d11utils.h>
 #include <gst/d3d11/gstd3d11format.h>
-#include <gst/d3d11/gstd3d11stagingbufferpool.h>
 
 #endif /* __GST_D3D11_H__ */

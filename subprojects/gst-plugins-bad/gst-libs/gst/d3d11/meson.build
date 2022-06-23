@@ -3,7 +3,6 @@ d3d11_sources = [
   'gstd3d11device.cpp',
   'gstd3d11format.cpp',
   'gstd3d11memory.cpp',
-  'gstd3d11stagingbufferpool.cpp',
   'gstd3d11utils.cpp',
 ]
 

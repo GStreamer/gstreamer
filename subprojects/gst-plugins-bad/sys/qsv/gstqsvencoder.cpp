@@ -1466,7 +1466,7 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
     pool = gst_d3d11_buffer_pool_new (device);
     is_d3d11 = TRUE;
   } else {
-    pool = gst_d3d11_staging_buffer_pool_new (device);
+    pool = gst_video_buffer_pool_new ();
   }
 
   config = gst_buffer_pool_get_config (pool);
@@ -1492,6 +1492,9 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
     gst_d3d11_allocation_params_alignment (d3d11_params, &align);
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
+  } else {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   }
 
   size = GST_VIDEO_INFO_SIZE (&info);

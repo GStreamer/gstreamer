@@ -189,6 +189,7 @@ gst_d3d11_download_propose_allocation (GstBaseTransform * trans,
   GstBufferPool *pool;
   GstCaps *caps;
   guint size;
+  gboolean is_d3d11 = FALSE;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
@@ -216,14 +217,19 @@ gst_d3d11_download_propose_allocation (GstBaseTransform * trans,
             GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
       GST_DEBUG_OBJECT (filter, "upstream support d3d11 memory");
       pool = gst_d3d11_buffer_pool_new (filter->device);
+      is_d3d11 = TRUE;
     } else {
-      pool = gst_d3d11_staging_buffer_pool_new (filter->device);
+      pool = gst_video_buffer_pool_new ();
     }
 
     config = gst_buffer_pool_get_config (pool);
 
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+    if (!is_d3d11) {
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    }
 
     size = GST_VIDEO_INFO_SIZE (&info);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
@@ -261,12 +267,10 @@ static gboolean
 gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   GstBufferPool *pool = NULL;
   GstStructure *config;
   guint min, max, size;
   gboolean update_pool;
-  gboolean has_videometa;
   GstCaps *outcaps = NULL;
 
   gst_query_parse_allocation (query, &outcaps, NULL);
@@ -287,14 +291,8 @@ gst_d3d11_download_decide_allocation (GstBaseTransform * trans,
     update_pool = FALSE;
   }
 
-  has_videometa = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, nullptr);
-
   if (!pool) {
-    if (has_videometa)
-      pool = gst_d3d11_staging_buffer_pool_new (filter->device);
-    else
-      pool = gst_video_buffer_pool_new ();
+    pool = gst_video_buffer_pool_new ();
   }
 
   config = gst_buffer_pool_get_config (pool);

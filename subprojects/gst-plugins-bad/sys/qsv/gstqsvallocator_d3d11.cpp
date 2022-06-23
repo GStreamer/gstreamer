@@ -451,6 +451,7 @@ gst_qsv_d3d11_allocator_download (GstQsvAllocator * allocator,
     const GstVideoInfo * info, gboolean force_copy, GstQsvFrame * frame,
     GstBufferPool * pool)
 {
+  GstD3D11BufferPool *d3d11_pool;
   GstBuffer *src_buf, *dst_buf;
   GstMemory *mem;
   GstD3D11Memory *dmem;
@@ -469,30 +470,19 @@ gst_qsv_d3d11_allocator_download (GstQsvAllocator * allocator,
     return nullptr;
   }
 
-  if (!GST_IS_D3D11_BUFFER_POOL (pool) &&
-      !GST_IS_D3D11_STAGING_BUFFER_POOL (pool)) {
+  if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
     GST_TRACE_OBJECT (allocator, "Output is not d3d11 memory");
     goto fallback;
   }
 
   dmem = GST_D3D11_MEMORY_CAST (mem);
 
-  /* both pool and qsvframe should hold the same d3d11 device already */
-  if (GST_IS_D3D11_BUFFER_POOL (pool)) {
-    GstD3D11BufferPool *d3d11_pool = GST_D3D11_BUFFER_POOL (pool);
-
-    if (d3d11_pool->device != dmem->device) {
-      GST_WARNING_OBJECT (allocator, "Pool holds different device");
-      goto fallback;
-    }
-  } else {
-    GstD3D11StagingBufferPool *d3d11_pool =
-        GST_D3D11_STAGING_BUFFER_POOL (pool);
-
-    if (d3d11_pool->device != dmem->device) {
-      GST_WARNING_OBJECT (allocator, "Staging pool holds different device");
-      goto fallback;
-    }
+  /* both pool and qsvframe should hold the same d3d11 device already,
+   * but checking again */
+  d3d11_pool = GST_D3D11_BUFFER_POOL (pool);
+  if (d3d11_pool->device != dmem->device) {
+    GST_WARNING_OBJECT (allocator, "Pool holds different device");
+    goto fallback;
   }
 
   ret = gst_buffer_pool_acquire_buffer (pool, &dst_buf, nullptr);

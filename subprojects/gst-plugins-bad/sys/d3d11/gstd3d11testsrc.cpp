@@ -1433,12 +1433,8 @@ gst_d3d11_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   guint min, max, size;
   gboolean update_pool;
   GstVideoInfo vinfo;
-  gboolean has_videometa;
 
   gst_query_parse_allocation (query, &caps, nullptr);
-
-  has_videometa = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, nullptr);
 
   if (!caps) {
     GST_ERROR_OBJECT (self, "No output caps");
@@ -1457,26 +1453,19 @@ gst_d3d11_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     update_pool = FALSE;
   }
 
-  if (pool) {
-    if (self->downstream_supports_d3d11) {
-      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-        gst_clear_object (&pool);
-      } else {
-        GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
-        if (dpool->device != self->device)
-          gst_clear_object (&pool);
-      }
-    } else if (has_videometa) {
-      /* We will use staging buffer pool for better performance */
+  if (pool && self->downstream_supports_d3d11) {
+    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
       gst_clear_object (&pool);
+    } else {
+      GstD3D11BufferPool *dpool = GST_D3D11_BUFFER_POOL (pool);
+      if (dpool->device != self->device)
+        gst_clear_object (&pool);
     }
   }
 
   if (!pool) {
     if (self->downstream_supports_d3d11)
       pool = gst_d3d11_buffer_pool_new (self->device);
-    else if (has_videometa)
-      pool = gst_d3d11_staging_buffer_pool_new (self->device);
     else
       pool = gst_video_buffer_pool_new ();
   }
