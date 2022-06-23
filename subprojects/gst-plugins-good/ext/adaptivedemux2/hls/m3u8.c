@@ -1467,6 +1467,8 @@ gst_hls_rendition_stream_unref (GstHLSRenditionStream * media)
 {
   g_assert (media != NULL && media->ref_count > 0);
   if (g_atomic_int_dec_and_test (&media->ref_count)) {
+    if (media->caps)
+      gst_caps_unref (media->caps);
     g_free (media->group_id);
     g_free (media->name);
     g_free (media->uri);
@@ -1795,6 +1797,8 @@ void
 hls_master_playlist_unref (GstHLSMasterPlaylist * playlist)
 {
   if (g_atomic_int_dec_and_test (&playlist->refcount)) {
+    g_list_free_full (playlist->renditions,
+        (GDestroyNotify) gst_hls_rendition_stream_unref);
     g_list_free_full (playlist->variants,
         (GDestroyNotify) gst_hls_variant_stream_unref);
     g_list_free_full (playlist->iframe_variants,
@@ -2134,13 +2138,14 @@ hls_master_playlist_new_from_data (gchar * data, const gchar * base_uri)
                     GST_PTR_FORMAT, media->caps);
               } else {
                 GST_DEBUG ("  Assigning caps %" GST_PTR_FORMAT, media_caps);
-                media->caps = gst_caps_ref (media_caps);
+                gst_caps_replace (&media->caps, media_caps);
               }
             }
           }
           if (!alt_in_variant) {
             GstCaps *new_caps = gst_caps_subtract (stream->caps, media_caps);
             gst_caps_replace (&stream->caps, new_caps);
+            gst_caps_unref (new_caps);
           }
           gst_caps_unref (media_caps);
         }
@@ -2274,7 +2279,9 @@ hls_master_playlist_get_common_caps (GstHLSMasterPlaylist * playlist)
     if (!res) {
       res = gst_caps_copy (stream->caps);
     } else {
-      res = gst_caps_merge_common (res, stream->caps);
+      GstCaps *common_caps = gst_caps_merge_common (res, stream->caps);
+      gst_caps_unref (res);
+      res = common_caps;
       if (!res)
         goto beach;
     }

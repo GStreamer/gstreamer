@@ -683,6 +683,9 @@ gst_hls_demux_stream_update_tracks (GstAdaptiveDemux * demux,
     gst_adaptive_demux_track_unref (track);
   }
 
+  if (variant_caps)
+    gst_caps_unref (variant_caps);
+
   /* Update the stream object with rendition types.
    * FIXME: rendition_type could be removed */
   stream->stream_type = hlsdemux_stream->rendition_type;
@@ -814,6 +817,8 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
     /* Is this rendition active in the current variant ? */
     if (!g_strcmp0 (playlist->media_groups[media->mtype], media->group_id)) {
       GST_DEBUG_OBJECT (demux, "Enabling rendition");
+      if (media_stream->current_rendition)
+        gst_hls_rendition_stream_unref (media_stream->current_rendition);
       media_stream->current_rendition = gst_hls_rendition_stream_ref (media);
     }
 
@@ -821,6 +826,10 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
       streams = g_list_append (streams, media_stream);
   }
 
+  /* Free the list (but not the contents, which are stored
+   * elsewhere */
+  if (streams)
+    g_list_free (streams);
 
   create_main_variant_stream (hlsdemux);
 
@@ -873,6 +882,10 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
     return FALSE;
   }
 
+  if (hlsdemux->master) {
+    gst_hls_master_playlist_unref (hlsdemux->master);
+    hlsdemux->master = NULL;
+  }
   hlsdemux->master = gst_hls_master_playlist_new_from_data (playlist,
       gst_adaptive_demux_get_manifest_ref_uri (demux));
 
@@ -1656,6 +1669,9 @@ gst_hls_demux_stream_finalize (GObject * object)
   if (hls_stream == hlsdemux->main_stream)
     hlsdemux->main_stream = NULL;
 
+  g_free (hls_stream->lang);
+  g_free (hls_stream->name);
+
   if (hls_stream->playlist) {
     gst_hls_media_playlist_unref (hls_stream->playlist);
     hls_stream->playlist = NULL;
@@ -1667,6 +1683,9 @@ gst_hls_demux_stream_finalize (GObject * object)
   gst_buffer_replace (&hls_stream->pending_decrypted_buffer, NULL);
   gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
   gst_buffer_replace (&hls_stream->pending_segment_data, NULL);
+
+  if (hls_stream->moov)
+    gst_isoff_moov_box_free (hls_stream->moov);
 
   if (hls_stream->current_key) {
     g_free (hls_stream->current_key);
@@ -2167,6 +2186,7 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 
   if (GST_ADAPTIVE_DEMUX2_STREAM_NEED_HEADER (stream) && file->init_file) {
     GstM3U8InitFile *header_file = file->init_file;
+    g_free (stream->fragment.header_uri);
     stream->fragment.header_uri = g_strdup (header_file->uri);
     stream->fragment.header_range_start = header_file->offset;
     if (header_file->size != -1) {
