@@ -58,6 +58,8 @@ struct _GstVaFilter
   guint rotation;
   GstVideoOrientationMethod orientation;
 
+  guint32 scale_method;
+
   gboolean crop_enabled;
 
   VARectangle input_region;
@@ -934,6 +936,18 @@ gst_va_filter_get_surface_formats (GstVaFilter * self)
   return ret;
 }
 
+gboolean
+gst_va_filter_set_scale_method (GstVaFilter * self, guint32 method)
+{
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
+  self->scale_method = method;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
 static gboolean
 _from_video_orientation_method (GstVideoOrientationMethod orientation,
     guint * mirror, guint * rotation)
@@ -1617,6 +1631,7 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
     .output_surface_flag = dst->flags,
     .input_color_properties = self->input_color_properties,
     .output_color_properties = self->output_color_properties,
+    .filter_flags = self->scale_method,
     /* output to SDR */
     .output_hdr_metadata = NULL,
   };

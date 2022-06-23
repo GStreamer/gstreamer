@@ -120,6 +120,8 @@ gboolean              gst_va_filter_install_properties    (GstVaFilter * self,
 gboolean              gst_va_filter_install_deinterlace_properties
                                                           (GstVaFilter * self,
                                                            GObjectClass * klass);
+gboolean              gst_va_filter_set_scale_method      (GstVaFilter * self,
+                                                           guint32 method);
 gboolean              gst_va_filter_set_orientation       (GstVaFilter * self,
                                                            GstVideoOrientationMethod orientation);
 GstVideoOrientationMethod gst_va_filter_get_orientation   (GstVaFilter * self);
