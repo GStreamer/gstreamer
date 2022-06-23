@@ -938,7 +938,7 @@ gst_qsv_decoder_prepare_pool (GstQsvDecoder * self, mfxU16 * io_pattern)
   }
 
   gst_video_alignment_reset (&align);
-  align.padding_left = priv->aligned_info.width - priv->info.width;
+  align.padding_right = priv->aligned_info.width - priv->info.width;
   align.padding_bottom = priv->aligned_info.height - priv->info.height;
 
   /* TODO: Add Linux video memory (VA/DMABuf) support */
