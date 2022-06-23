@@ -726,7 +726,7 @@ gst_d3d11_compositor_pad_ensure_fallback_buffer (GstD3D11Compositor * self,
   }
 
   d3d11_params = gst_d3d11_allocation_params_new (self->device,
-      info, (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
+      info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0);
 
   pool = gst_d3d11_buffer_pool_new_with_options (self->device,
       caps, d3d11_params, 0, 0);
@@ -1743,8 +1743,8 @@ gst_d3d11_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
     GstFlowReturn flow_ret;
 
     d3d11_params = gst_d3d11_allocation_params_new (self->device,
-        &info, (GstD3D11AllocationFlags) 0,
-        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+        &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
 
     pool = gst_d3d11_buffer_pool_new_with_options (self->device,
         caps, d3d11_params, 0, 0);
@@ -1825,7 +1825,8 @@ gst_d3d11_compositor_propose_allocation (GstAggregator * agg,
 
       d3d11_params =
           gst_d3d11_allocation_params_new (self->device,
-          &info, (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
+          &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE,
+          0);
 
       gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
       gst_d3d11_allocation_params_free (d3d11_params);
@@ -1925,7 +1926,8 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (self->device,
-          &info, (GstD3D11AllocationFlags) 0, D3D11_BIND_RENDER_TARGET);
+          &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET,
+          0);
     } else {
       guint i;
 

@@ -1306,8 +1306,8 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
 
   draw_caps = gst_video_info_to_caps (&draw_info);
   params = gst_d3d11_allocation_params_new (self->device, &draw_info,
-      (GstD3D11AllocationFlags) 0,
-      D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+      D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
 
   self->render_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
       draw_caps, params, 0, 0);
@@ -1321,7 +1321,7 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
   }
 
   params = gst_d3d11_allocation_params_new (self->device, &self->info,
-      (GstD3D11AllocationFlags) 0, D3D11_BIND_RENDER_TARGET);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET, 0);
   self->convert_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
       caps, params, 0, 0);
   gst_d3d11_allocation_params_free (params);
@@ -1479,8 +1479,8 @@ gst_d3d11_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (self->device, &vinfo,
-          (GstD3D11AllocationFlags) 0,
-          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+          GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
     } else {
       d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
     }

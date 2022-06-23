@@ -880,8 +880,8 @@ gst_qsv_decoder_prepare_d3d11_pool (GstQsvDecoder * self,
   /* Bind to shader resource as well for this texture can be used
    * in generic pixel shader */
   params = gst_d3d11_allocation_params_new (device, info,
-      (GstD3D11AllocationFlags) 0,
-      D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+      D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE, 0);
   gst_d3d11_allocation_params_alignment (params, align);
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);
@@ -1232,9 +1232,10 @@ gst_qsv_decoder_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
    * copying in case of reverse playback */
   if (use_d3d11_pool) {
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-    if (!d3d11_params)
+    if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (device, &vinfo,
-          (GstD3D11AllocationFlags) 0, 0);
+          GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
+    }
     /* Use both render target (for videoprocessor) and shader resource
      * for (pixel shader) bind flags for downstream to be able to use consistent
      * conversion path even when we copy textures */

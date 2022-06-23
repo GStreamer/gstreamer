@@ -635,7 +635,7 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     }
 
     d3d11_params = gst_d3d11_allocation_params_new (self->device,
-        &self->info, (GstD3D11AllocationFlags) 0, bind_flags);
+        &self->info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
 
     self->fallback_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
         caps, d3d11_params, 2, 0);
@@ -908,7 +908,8 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
 
       d3d11_params =
           gst_d3d11_allocation_params_new (self->device,
-          &info, (GstD3D11AllocationFlags) 0, D3D11_BIND_SHADER_RESOURCE);
+          &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE,
+          0);
 
       gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
       gst_d3d11_allocation_params_free (d3d11_params);

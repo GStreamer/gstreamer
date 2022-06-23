@@ -444,7 +444,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
   GstBufferPool *pool = NULL;
   GstCaps *caps = NULL;
   GstVideoAlignment align;
-  GstD3D11AllocationFlags alloc_flags = (GstD3D11AllocationFlags) 0;
+  GstD3D11AllocationFlags alloc_flags = GST_D3D11_ALLOCATION_FLAG_DEFAULT;
   gint bind_flags = D3D11_BIND_DECODER;
   GstVideoInfo *info = &self->info;
   guint pool_size;
@@ -464,7 +464,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
   }
 
   alloc_params = gst_d3d11_allocation_params_new (self->device, info,
-      alloc_flags, bind_flags);
+      alloc_flags, bind_flags, 0);
 
   if (!alloc_params) {
     GST_ERROR_OBJECT (self, "Failed to create allocation param");
@@ -1792,7 +1792,7 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params)
       d3d11_params = gst_d3d11_allocation_params_new (decoder->device, &vinfo,
-          (GstD3D11AllocationFlags) 0, 0);
+          GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
 
     width = GST_VIDEO_INFO_WIDTH (&vinfo);
     height = GST_VIDEO_INFO_HEIGHT (&vinfo);

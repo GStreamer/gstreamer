@@ -891,7 +891,7 @@ gst_d3d11_deinterlace_propose_allocation (GstBaseTransform * trans,
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (self->device, &info,
-        (GstD3D11AllocationFlags) 0, D3D11_BIND_RENDER_TARGET);
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET, 0);
   } else {
     d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
   }
@@ -996,7 +996,7 @@ gst_d3d11_deinterlace_decide_allocation (GstBaseTransform * trans,
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (self->device, &info,
-        (GstD3D11AllocationFlags) 0, D3D11_BIND_RENDER_TARGET);
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET, 0);
   } else {
     d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
   }
@@ -1052,7 +1052,7 @@ gst_d3d11_deinterlace_prepare_fallback_pool (GstD3D11Deinterlace * self,
 
   /* Empty bind flag is allowed for video processor input */
   d3d11_params = gst_d3d11_allocation_params_new (self->device, in_info,
-      (GstD3D11AllocationFlags) 0, 0);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
   self->fallback_in_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
       in_caps, d3d11_params, 0, 0);
   gst_d3d11_allocation_params_free (d3d11_params);
@@ -1064,7 +1064,7 @@ gst_d3d11_deinterlace_prepare_fallback_pool (GstD3D11Deinterlace * self,
 
   /* For processor output, render target bind flag is required */
   d3d11_params = gst_d3d11_allocation_params_new (self->device, out_info,
-      (GstD3D11AllocationFlags) 0, D3D11_BIND_RENDER_TARGET);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET, 0);
   self->fallback_out_pool =
       gst_d3d11_buffer_pool_new_with_options (self->device,
       out_caps, d3d11_params, 0, 0);

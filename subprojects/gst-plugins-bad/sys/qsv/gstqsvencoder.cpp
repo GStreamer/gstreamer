@@ -915,7 +915,7 @@ gst_qsv_encoder_prepare_d3d11_pool (GstQsvEncoder * self,
   priv->internal_pool = gst_d3d11_buffer_pool_new (device);
   config = gst_buffer_pool_get_config (priv->internal_pool);
   params = gst_d3d11_allocation_params_new (device, aligned_info,
-      (GstD3D11AllocationFlags) 0, bind_flags);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);
@@ -1487,7 +1487,7 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
         GST_VIDEO_INFO_HEIGHT (&info);
 
     d3d11_params = gst_d3d11_allocation_params_new (device, &info,
-        (GstD3D11AllocationFlags) 0, 0);
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
 
     gst_d3d11_allocation_params_alignment (d3d11_params, &align);
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);

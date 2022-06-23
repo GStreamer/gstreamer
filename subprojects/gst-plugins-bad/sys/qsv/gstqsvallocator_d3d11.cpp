@@ -222,7 +222,7 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
 
     pool = gst_d3d11_buffer_pool_new (self->device);
     params = gst_d3d11_allocation_params_new (self->device, &info,
-        (GstD3D11AllocationFlags) 0, bind_flags);
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
 
     gst_d3d11_allocation_params_alignment (params, &align);
 

@@ -527,8 +527,8 @@ gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (self->device, &vinfo,
-          (GstD3D11AllocationFlags) 0,
-          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+          GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
     } else {
       d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
     }
@@ -560,7 +560,7 @@ gst_d3d11_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (self->device, &vinfo,
-          (GstD3D11AllocationFlags) 0, D3D11_BIND_RENDER_TARGET);
+          GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET, 0);
     } else {
       d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
     }

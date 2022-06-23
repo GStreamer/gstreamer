@@ -78,6 +78,7 @@ G_BEGIN_DECLS
 
 /**
  * GstD3D11AllocationFlags:
+ * @GST_D3D11_ALLOCATION_FLAG_DEFAULT: Default allocation behavior
  * @GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY: Indicates each allocated texture
  *                                           should be array type. This type of
  *                                           is used for D3D11/DXVA decoders
@@ -87,6 +88,7 @@ G_BEGIN_DECLS
  */
 typedef enum
 {
+  GST_D3D11_ALLOCATION_FLAG_DEFAULT = 0,
   GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 0),
 } GstD3D11AllocationFlags;
 
@@ -142,7 +144,8 @@ GST_D3D11_API
 GstD3D11AllocationParams * gst_d3d11_allocation_params_new      (GstD3D11Device * device,
                                                                  GstVideoInfo * info,
                                                                  GstD3D11AllocationFlags flags,
-                                                                 guint bind_flags);
+                                                                 guint bind_flags,
+                                                                 guint misc_flags);
 
 GST_D3D11_API
 GstD3D11AllocationParams * gst_d3d11_allocation_params_copy     (GstD3D11AllocationParams * src);

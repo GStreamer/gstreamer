@@ -1000,8 +1000,7 @@ gst_nv_encoder_create_d3d11_pool (GstNvEncoder * self,
   GstD3D11AllocationParams *params;
 
   params = gst_d3d11_allocation_params_new (priv->device, &state->info,
-      (GstD3D11AllocationFlags) 0, 0);
-  params->desc[0].MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, D3D11_RESOURCE_MISC_SHARED);
 
   pool = gst_d3d11_buffer_pool_new (priv->device);
 

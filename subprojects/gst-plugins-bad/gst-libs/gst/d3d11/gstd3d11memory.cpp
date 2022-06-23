@@ -46,7 +46,8 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
  * @device: a #GstD3D11Device
  * @info: a #GstVideoInfo
  * @flags: a #GstD3D11AllocationFlags
- * @bind_flags: D3D11_BIND_FLAG value used for creating Direct3D11 texture
+ * @bind_flags: D3D11_BIND_FLAG value used for creating texture
+ * @misc_flags: D3D11_RESOURCE_MISC_FLAG value used for creating texture
  *
  * Create #GstD3D11AllocationParams object which is used by #GstD3D11BufferPool
  * and #GstD3D11Allocator in order to allocate new ID3D11Texture2D
@@ -58,7 +59,7 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
  */
 GstD3D11AllocationParams *
 gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
-    GstD3D11AllocationFlags flags, guint bind_flags)
+    GstD3D11AllocationFlags flags, guint bind_flags, guint misc_flags)
 {
   GstD3D11AllocationParams *ret;
   GstD3D11Format d3d11_format;
@@ -105,6 +106,7 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
       ret->desc[i].SampleDesc.Quality = 0;
       ret->desc[i].Usage = D3D11_USAGE_DEFAULT;
       ret->desc[i].BindFlags = bind_flags;
+      ret->desc[i].MiscFlags = misc_flags;
     }
   } else {
     ret->desc[0].Width = GST_VIDEO_INFO_WIDTH (info);
@@ -116,6 +118,7 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
     ret->desc[0].SampleDesc.Quality = 0;
     ret->desc[0].Usage = D3D11_USAGE_DEFAULT;
     ret->desc[0].BindFlags = bind_flags;
+    ret->desc[0].MiscFlags = misc_flags;
   }
 
   ret->flags = flags;

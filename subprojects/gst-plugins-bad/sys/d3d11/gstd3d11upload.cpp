@@ -378,7 +378,7 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
   if (!d3d11_params) {
     d3d11_params = gst_d3d11_allocation_params_new (filter->device, &vinfo,
-        (GstD3D11AllocationFlags) 0, bind_flags);
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
     /* Set bind flag */
     for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); i++) {

@@ -177,7 +177,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     /* allocate memory with resource format by default */
     priv->d3d11_params =
         gst_d3d11_allocation_params_new (self->device,
-        &info, (GstD3D11AllocationFlags) 0, 0);
+        &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
   }
 
   desc = priv->d3d11_params->desc;
