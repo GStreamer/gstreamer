@@ -1163,6 +1163,9 @@ gst_adaptive_demux_handle_upstream_http_header (GQuark field_id,
         g_free (date_string);
 
         gst_adaptive_demux_clock_set_utc_time (demux->realtime_clock, utc_now);
+
+        g_date_time_unref (utc_now);
+        gst_date_time_unref (datetime);
       }
     }
   }
@@ -3669,10 +3672,11 @@ restart:
         GstEvent *event = (GstEvent *) mo;
         if (GST_EVENT_TYPE (event) == GST_EVENT_GAP)
           slot->pushed_timed_data = TRUE;
-        gst_pad_push_event (slot->pad, event);
+        gst_pad_push_event (slot->pad, gst_event_ref (event));
 
         if (GST_EVENT_IS_STICKY (event))
           gst_event_store_mark_delivered (&track->sticky_events, event);
+        gst_event_unref (event);
       } else if (GST_IS_BUFFER (mo)) {
         GstBuffer *buffer = (GstBuffer *) mo;
 

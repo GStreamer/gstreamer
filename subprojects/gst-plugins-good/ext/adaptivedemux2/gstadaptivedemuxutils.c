@@ -229,7 +229,7 @@ void
 gst_adaptive_demux_loop_start (GstAdaptiveDemuxLoop * loop)
 {
   g_mutex_lock (&loop->lock);
-  if (loop->thread != NULL && !loop->stopped)
+  if (loop->thread != NULL)
     goto done;                  /* Already running */
 
   loop->stopped = FALSE;
@@ -255,9 +255,10 @@ void
 gst_adaptive_demux_loop_stop (GstAdaptiveDemuxLoop * loop, gboolean wait)
 {
   g_mutex_lock (&loop->lock);
-  loop->stopped = TRUE;
 
-  if (loop->loop != NULL) {
+  if (!loop->stopped) {
+    loop->stopped = TRUE;
+
     GSource *s = g_idle_source_new ();
     g_source_set_callback (s, (GSourceFunc) do_quit_cb,
         gst_adaptive_demux_loop_ref (loop),
@@ -268,6 +269,11 @@ gst_adaptive_demux_loop_stop (GstAdaptiveDemuxLoop * loop, gboolean wait)
     if (wait) {
       while (loop->loop != NULL)
         g_cond_wait (&loop->cond, &loop->lock);
+    }
+
+    if (loop->thread != NULL) {
+      g_thread_unref (loop->thread);
+      loop->thread = NULL;
     }
   }
 
