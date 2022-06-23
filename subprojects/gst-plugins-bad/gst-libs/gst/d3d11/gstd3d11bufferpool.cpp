@@ -505,7 +505,7 @@ gst_d3d11_buffer_pool_stop (GstBufferPool * pool)
  *
  * Returns: a #GstBufferPool that allocates buffers with #GstD3D11Memory
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstBufferPool *
 gst_d3d11_buffer_pool_new (GstD3D11Device * device)
@@ -530,7 +530,7 @@ gst_d3d11_buffer_pool_new (GstD3D11Device * device)
  * #GstD3D11AllocationParams on @config or %NULL if @config doesn't contain
  * #GstD3D11AllocationParams
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstD3D11AllocationParams *
 gst_buffer_pool_config_get_d3d11_allocation_params (GstStructure * config)
@@ -551,7 +551,7 @@ gst_buffer_pool_config_get_d3d11_allocation_params (GstStructure * config)
  *
  * Sets @params on @config
  *
- * Since: 1.20
+ * Since: 1.22
  */
 void
 gst_buffer_pool_config_set_d3d11_allocation_params (GstStructure * config,

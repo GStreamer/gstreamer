@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_UTILS_H__
-#define __GST_D3D11_UTILS_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/d3d11/gstd3d11_fwd.h>
@@ -69,11 +68,10 @@ gboolean       _gst_d3d11_result                    (HRESULT hr,
  *
  * Returns: %TRUE if D3D11 API call result is SUCCESS
  *
- * Since: 1.20
+ * Since: 1.22
  */
 #define gst_d3d11_result(result,device) \
     _gst_d3d11_result (result, device, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_UTILS_H__ */

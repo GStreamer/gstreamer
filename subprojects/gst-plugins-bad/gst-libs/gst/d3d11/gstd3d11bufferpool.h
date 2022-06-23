@@ -19,8 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_BUFFER_POOL_H__
-#define __GST_D3D11_BUFFER_POOL_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -70,4 +69,3 @@ void                 gst_buffer_pool_config_set_d3d11_allocation_params (GstStru
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_BUFFER_POOL_H__ */

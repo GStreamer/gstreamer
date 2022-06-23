@@ -78,7 +78,7 @@ _init_context_debug (void)
  *
  * Returns: whether the @device could be set successfully
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
@@ -139,7 +139,7 @@ gst_d3d11_handle_set_context (GstElement * element, GstContext * context,
  *
  * Returns: whether the @device could be set successfully
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_handle_set_context_for_adapter_luid (GstElement * element,
@@ -227,7 +227,7 @@ context_set_d3d11_device (GstContext * context, GstD3D11Device * device)
  * Returns: Whether the @query was successfully responded to from the passed
  *          @device.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_handle_context_query (GstElement * element, GstQuery * query,
@@ -373,7 +373,7 @@ run_d3d11_context_query (GstElement * element, GstD3D11Device ** device)
  *
  * Returns: whether a #GstD3D11Device exists in @device
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
@@ -441,7 +441,7 @@ gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
  *
  * Returns: whether a #GstD3D11Device exists in @device
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_ensure_element_data_for_adapter_luid (GstElement * element,
@@ -499,7 +499,7 @@ gst_d3d11_ensure_element_data_for_adapter_luid (GstElement * element,
  * See also Int64FromLuid method defined in
  * windows.devices.display.core.interop.h Windows SDK header
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gint64
 gst_d3d11_luid_to_int64 (const LUID * luid)

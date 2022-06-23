@@ -1,7 +1,4 @@
-/* gstd3d11config.h */
-
-#ifndef __GST_D3D11_CONFIG_H__
-#define __GST_D3D11_CONFIG_H__
+#pragma once
 
 #include <gst/gst.h>
 
@@ -11,5 +8,3 @@ G_BEGIN_DECLS
 #mesondefine GST_D3D11_WINAPI_APP
 
 G_END_DECLS
-
-#endif  /* __GST_D3D11_CONFIG_H__ */

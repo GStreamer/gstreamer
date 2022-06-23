@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_PRELUDE_H__
-#define __GST_D3D11_PRELUDE_H__
+#pragma once
 
 #include <gst/gst.h>
 
@@ -30,4 +29,3 @@
 # endif
 #endif
 
-#endif /* __GST_D3D11_PRELUDE_H__ */

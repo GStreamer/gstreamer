@@ -127,7 +127,7 @@ gst_d3d11_format_support_get_type (void)
  *
  * Returns: %TRUE if @size can be calculated with given information
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
@@ -183,7 +183,7 @@ gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
  *
  * Returns: a #GstVideoFormat equivalent to @format
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstVideoFormat
 gst_d3d11_dxgi_format_to_gst (DXGI_FORMAT format)
@@ -295,6 +295,16 @@ gst_d3d11_dxgi_format_get_alignment (DXGI_FORMAT format)
   return 0;
 }
 
+/**
+ * gst_d3d11_dxgi_format_to_string:
+ * @format: a DXGI_FORMAT
+ *
+ * Converts @format enum value to its string representation
+ *
+ * Returns: a string representation of @format
+ *
+ * Since: 1.22
+ */
 const gchar *
 gst_d3d11_dxgi_format_to_string (DXGI_FORMAT format)
 {

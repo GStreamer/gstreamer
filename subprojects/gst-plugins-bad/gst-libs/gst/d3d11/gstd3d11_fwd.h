@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_FWD_H__
-#define __GST_D3D11_FWD_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/d3d11/gstd3d11config.h>
@@ -62,4 +61,3 @@ typedef struct _GstD3D11Format GstD3D11Format;
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_FWD_H__ */

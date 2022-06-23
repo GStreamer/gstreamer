@@ -1110,7 +1110,7 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
  * Returns: (transfer full) (nullable): a new #GstD3D11Device for @adapter_index
  * or %NULL when failed to create D3D11 device with given adapter index.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstD3D11Device *
 gst_d3d11_device_new (guint adapter_index, guint flags)
@@ -1132,7 +1132,7 @@ gst_d3d11_device_new (guint adapter_index, guint flags)
  * Returns: (transfer full) (nullable): a new #GstD3D11Device for @adapter_luid
  * or %NULL when failed to create D3D11 device with given adapter luid.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstD3D11Device *
 gst_d3d11_device_new_for_adapter_luid (gint64 adapter_luid, guint flags)
@@ -1153,7 +1153,7 @@ gst_d3d11_device_new_for_adapter_luid (gint64 adapter_luid, guint flags)
  * Returns: (transfer full) (nullable): a new #GstD3D11Device for @device
  * or %NULL if an error occurred
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstD3D11Device *
 gst_d3d11_device_new_wrapped (ID3D11Device * device)
@@ -1178,7 +1178,7 @@ gst_d3d11_device_new_wrapped (ID3D11Device * device)
  *
  * Returns: (transfer none): the ID3D11Device handle
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11Device *
 gst_d3d11_device_get_device_handle (GstD3D11Device * device)
@@ -1198,7 +1198,7 @@ gst_d3d11_device_get_device_handle (GstD3D11Device * device)
  *
  * Returns: (transfer none): the immeidate ID3D11DeviceContext handle
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11DeviceContext *
 gst_d3d11_device_get_device_context_handle (GstD3D11Device * device)
@@ -1217,7 +1217,7 @@ gst_d3d11_device_get_device_context_handle (GstD3D11Device * device)
  *
  * Returns: (transfer none): the IDXGIFactory1 handle
  *
- * Since: 1.20
+ * Since: 1.22
  */
 IDXGIFactory1 *
 gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device)
@@ -1237,7 +1237,7 @@ gst_d3d11_device_get_dxgi_factory_handle (GstD3D11Device * device)
  * Returns: (nullable) (transfer none) : the ID3D11VideoDevice handle or %NULL
  * if ID3D11VideoDevice is unavailable.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11VideoDevice *
 gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
@@ -1271,7 +1271,7 @@ gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
  * Returns: (nullable) (transfer none): the ID3D11VideoContext handle or %NULL
  * if ID3D11VideoContext is unavailable.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11VideoContext *
 gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
@@ -1303,7 +1303,7 @@ gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
  * protected by this method. This call must be paired with
  * gst_d3d11_device_unlock()
  *
- * Since: 1.20
+ * Since: 1.22
  */
 void
 gst_d3d11_device_lock (GstD3D11Device * device)
@@ -1326,7 +1326,7 @@ gst_d3d11_device_lock (GstD3D11Device * device)
  * Release lock for @device. This call must be paired with
  * gst_d3d11_device_lock()
  *
- * Since: 1.20
+ * Since: 1.22
  */
 void
 gst_d3d11_device_unlock (GstD3D11Device * device)

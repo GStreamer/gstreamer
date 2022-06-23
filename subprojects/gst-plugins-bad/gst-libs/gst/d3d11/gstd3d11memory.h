@@ -19,8 +19,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_MEMORY_H__
-#define __GST_D3D11_MEMORY_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -54,7 +53,7 @@ G_BEGIN_DECLS
  *
  * The name of the Direct3D11 memory
  *
- * Since: 1.20
+ * Since: 1.22
  */
 #define GST_D3D11_MEMORY_NAME "D3D11Memory"
 
@@ -63,7 +62,7 @@ G_BEGIN_DECLS
  *
  * Name of the caps feature for indicating the use of #GstD3D11Memory
  *
- * Since: 1.20
+ * Since: 1.22
  */
 #define GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "memory:D3D11Memory"
 
@@ -72,7 +71,7 @@ G_BEGIN_DECLS
  *
  * Flag indicating that we should map the D3D11 resource instead of to system memory.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 #define GST_MAP_D3D11 (GST_MAP_FLAG_LAST << 1)
 
@@ -84,7 +83,7 @@ G_BEGIN_DECLS
  *                                           is used for D3D11/DXVA decoders
  *                                           in general.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 typedef enum
 {
@@ -99,7 +98,7 @@ typedef enum
  * @GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD:   the staging texture needs uploading
  *                                           to the texture
  *
- * Since: 1.20
+ * Since: 1.22
  */
 typedef enum
 {
@@ -134,7 +133,7 @@ struct _GstD3D11AllocationParams
   GstD3D11AllocationFlags flags;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING_LARGE];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_D3D11_API
@@ -142,7 +141,7 @@ GType                      gst_d3d11_allocation_params_get_type (void);
 
 GST_D3D11_API
 GstD3D11AllocationParams * gst_d3d11_allocation_params_new      (GstD3D11Device * device,
-                                                                 GstVideoInfo * info,
+                                                                 const GstVideoInfo * info,
                                                                  GstD3D11AllocationFlags flags,
                                                                  guint bind_flags,
                                                                  guint misc_flags);
@@ -155,7 +154,7 @@ void                       gst_d3d11_allocation_params_free     (GstD3D11Allocat
 
 GST_D3D11_API
 gboolean                   gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * parms,
-                                                                  GstVideoAlignment * align);
+                                                                  const GstVideoAlignment * align);
 
 struct _GstD3D11Memory
 {
@@ -303,4 +302,3 @@ gboolean                gst_d3d11_pool_allocator_get_pool_size (GstD3D11PoolAllo
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_MEMORY_H__ */

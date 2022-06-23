@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_H__
-#define __GST_D3D11_H__
+#pragma once
 
 #ifndef GST_USE_UNSTABLE_API
 #pragma message ("The d3d11 library from gst-plugins-bad is unstable API and may change in future.")
@@ -28,10 +27,10 @@
 #include <gst/gst.h>
 #include <gst/d3d11/gstd3d11config.h>
 #include <gst/d3d11/gstd3d11_fwd.h>
+#include <gst/d3d11/gstd3d11-enumtypes.h>
 #include <gst/d3d11/gstd3d11device.h>
 #include <gst/d3d11/gstd3d11memory.h>
 #include <gst/d3d11/gstd3d11bufferpool.h>
 #include <gst/d3d11/gstd3d11utils.h>
 #include <gst/d3d11/gstd3d11format.h>
 
-#endif /* __GST_D3D11_H__ */

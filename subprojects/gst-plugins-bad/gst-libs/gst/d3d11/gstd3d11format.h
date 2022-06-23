@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_FORMAT_H__
-#define __GST_D3D11_FORMAT_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -94,4 +93,3 @@ const gchar *   gst_d3d11_dxgi_format_to_string           (DXGI_FORMAT format);
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_FORMAT_H__ */

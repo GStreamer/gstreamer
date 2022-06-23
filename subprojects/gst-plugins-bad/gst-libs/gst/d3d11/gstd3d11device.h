@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_DEVICE_H__
-#define __GST_D3D11_DEVICE_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -97,4 +96,3 @@ gboolean              gst_d3d11_device_get_format         (GstD3D11Device * devi
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_DEVICE_H__ */

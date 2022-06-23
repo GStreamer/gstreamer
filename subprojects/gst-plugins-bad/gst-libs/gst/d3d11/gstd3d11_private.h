@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_PRIVATE_H__
-#define __GST_D3D11_PRIVATE_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
@@ -113,4 +112,3 @@ static const GstD3D11Format _gst_d3d11_default_format_map[] = {
 
 G_END_DECLS
 
-#endif /* __GST_D3D11_PRIVATE_H__ */

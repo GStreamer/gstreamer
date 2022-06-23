@@ -55,11 +55,12 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
  *
  * Returns: a #GstD3D11AllocationParams or %NULL if @info is not supported
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstD3D11AllocationParams *
-gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
-    GstD3D11AllocationFlags flags, guint bind_flags, guint misc_flags)
+gst_d3d11_allocation_params_new (GstD3D11Device * device,
+    const GstVideoInfo * info, GstD3D11AllocationFlags flags, guint bind_flags,
+    guint misc_flags)
 {
   GstD3D11AllocationParams *ret;
   GstD3D11Format d3d11_format;
@@ -136,11 +137,11 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device, GstVideoInfo * info,
  *
  * Returns: %TRUE if alignment could be applied
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
-    GstVideoAlignment * align)
+    const GstVideoAlignment * align)
 {
   guint i;
   guint padding_width, padding_height;
@@ -179,7 +180,7 @@ gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
  *
  * Returns: a copy of @src
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstD3D11AllocationParams *
 gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src)
@@ -200,7 +201,7 @@ gst_d3d11_allocation_params_copy (GstD3D11AllocationParams * src)
  *
  * Free @params
  *
- * Since: 1.20
+ * Since: 1.22
  */
 void
 gst_d3d11_allocation_params_free (GstD3D11AllocationParams * params)
@@ -547,7 +548,7 @@ out:
  *
  * Returns: whether @mem is a #GstD3D11Memory
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_is_d3d11_memory (GstMemory * mem)
@@ -581,7 +582,7 @@ gst_d3d11_memory_get_native_type (GstD3D11Memory * mem)
  * this function multiple times. This must be called before any other
  * GstD3D11Memory operation.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 void
 gst_d3d11_memory_init_once (void)
@@ -634,7 +635,7 @@ gst_d3d11_memory_get_resource_handle (GstD3D11Memory * mem)
  *
  * Returns: subresource index corresponding to @mem.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 guint
 gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
@@ -656,7 +657,7 @@ gst_d3d11_memory_get_subresource_index (GstD3D11Memory * mem)
  *
  * Returns: %TRUE if successeed
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_memory_get_texture_desc (GstD3D11Memory * mem,
@@ -813,7 +814,7 @@ done:
  * Returns: the number of ID3D11ShaderResourceView that can be used
  * for processing GPU operation with @mem
  *
- * Since: 1.20
+ * Since: 1.22
  */
 guint
 gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem)
@@ -835,7 +836,7 @@ gst_d3d11_memory_get_shader_resource_view_size (GstD3D11Memory * mem)
  * ID3D11ShaderResourceView or %NULL if ID3D11ShaderResourceView is unavailable
  * for @index
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11ShaderResourceView *
 gst_d3d11_memory_get_shader_resource_view (GstD3D11Memory * mem, guint index)
@@ -951,7 +952,7 @@ done:
  * Returns: the number of ID3D11RenderTargetView that can be used
  * for processing GPU operation with @mem
  *
- * Since: 1.20
+ * Since: 1.22
  */
 guint
 gst_d3d11_memory_get_render_target_view_size (GstD3D11Memory * mem)
@@ -973,7 +974,7 @@ gst_d3d11_memory_get_render_target_view_size (GstD3D11Memory * mem)
  * ID3D11RenderTargetView or %NULL if ID3D11RenderTargetView is unavailable
  * for @index
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11RenderTargetView *
 gst_d3d11_memory_get_render_target_view (GstD3D11Memory * mem, guint index)
@@ -1073,7 +1074,7 @@ done:
  * ID3D11VideoDecoderOutputView or %NULL if ID3D11VideoDecoderOutputView is
  * unavailable
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11VideoDecoderOutputView *
 gst_d3d11_memory_get_decoder_output_view (GstD3D11Memory * mem,
@@ -1166,7 +1167,7 @@ done:
  * ID3D11VideoProcessorInputView or %NULL if ID3D11VideoProcessorInputView is
  * unavailable
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11VideoProcessorInputView *
 gst_d3d11_memory_get_processor_input_view (GstD3D11Memory * mem,
@@ -1249,7 +1250,7 @@ done:
  * ID3D11VideoProcessorOutputView or %NULL if ID3D11VideoProcessorOutputView is
  * unavailable
  *
- * Since: 1.20
+ * Since: 1.22
  */
 ID3D11VideoProcessorOutputView *
 gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
@@ -1544,7 +1545,7 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
  *
  * Returns: a newly allocated #GstD3D11Memory with given parameters.
  *
- * Since: 1.20
+ * Since: 1.22
  */
 GstMemory *
 gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
@@ -1622,6 +1623,22 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
   return GST_MEMORY_CAST (mem);
 }
 
+/**
+ * gst_d3d11_allocator_set_active:
+ * @allocator: a #GstD3D11Allocator
+ * @active: the new active state
+ *
+ * Controls the active state of @allocator. Default #GstD3D11Allocator is
+ * stateless and therefore active state is ignored, but subclass implementation
+ * (e.g., #GstD3D11PoolAllocator) will require explicit active state control
+ * for its internal resource management.
+ *
+ * This method is conceptually identical to gst_buffer_pool_set_active method.
+ *
+ * Returns: %TRUE if active state of @allocator was successfully updated.
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator, gboolean active)
 {
@@ -2156,6 +2173,8 @@ flushing:
  * Creates a new #GstD3D11PoolAllocator instance.
  *
  * Returns: (transfer full): a new #GstD3D11PoolAllocator instance
+ *
+ * Since: 1.22
  */
 GstD3D11PoolAllocator *
 gst_d3d11_pool_allocator_new (GstD3D11Device * device,
@@ -2181,7 +2200,7 @@ gst_d3d11_pool_allocator_new (GstD3D11Device * device,
 /**
  * gst_d3d11_pool_allocator_acquire_memory:
  * @allocator: a #GstD3D11PoolAllocator
- * @memory: (transfer full): a #GstMemory
+ * @memory: (out): a #GstMemory
  *
  * Acquires a #GstMemory from @allocator. @memory should point to a memory
  * location that can hold a pointer to the new #GstMemory.
@@ -2228,7 +2247,7 @@ gst_d3d11_pool_allocator_acquire_memory (GstD3D11PoolAllocator * allocator,
  *
  * Returns: %TRUE if the size of memory pool is known
  *
- * Since: 1.20
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_pool_allocator_get_pool_size (GstD3D11PoolAllocator * allocator,

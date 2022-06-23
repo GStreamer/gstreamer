@@ -6,6 +6,26 @@ d3d11_sources = [
   'gstd3d11utils.cpp',
 ]
 
+d3d11_headers = [
+  'd3d11-prelude.h',
+  'gstd3d11_fwd.h',
+  'gstd3d11.h',
+  'gstd3d11bufferpool.h',
+  'gstd3d11device.h',
+  'gstd3d11format.h',
+  'gstd3d11memory.h',
+  'gstd3d11utils.h',
+]
+
+d3d11_enum_types_headers = [
+  'gstd3d11_fwd.h',
+  'gstd3d11bufferpool.h',
+  'gstd3d11device.h',
+  'gstd3d11format.h',
+  'gstd3d11memory.h',
+  'gstd3d11utils.h',
+]
+
 gstd3d11_dep = dependency('', required : false)
 
 if host_system != 'windows'
@@ -135,13 +155,31 @@ if cc.get_id() != 'msvc'
 endif
 
 configure_file(
-  output: 'gstd3d11config.h',
+  input : 'gstd3d11config.h.meson',
+  output : 'gstd3d11config.h',
+  install_dir : get_option('libdir') + '/gstreamer-1.0/include/gst/d3d11',
+  install_tag : 'devel',
   configuration: d3d11_conf,
 )
 
+d3d11_enums = gnome.mkenums_simple('gstd3d11-enumtypes',
+  sources : d3d11_enum_types_headers,
+  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
+  header_prefix : '#include <gst/d3d11/d3d11-prelude.h>',
+  decorator: 'GST_D3D11_API',
+  identifier_prefix: 'GstD3D11',
+  symbol_prefix: 'gst_d3d11',
+  install_header: true,
+  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/d3d11'))
+
+gstd3d11_c = d3d11_enums[0]
+gstd3d11_h = d3d11_enums[1]
+
+gen_sources = [gstd3d11_h]
+
 pkg_name = 'gstreamer-d3d11-' + api_version
 gstd3d11 = library('gstd3d11-' + api_version,
-  d3d11_sources,
+  d3d11_sources + d3d11_enums,
   c_args : gst_plugins_bad_args + extra_c_args + extra_comm_args,
   cpp_args : gst_plugins_bad_args + extra_comm_args,
   include_directories : [configinc, libsinc],
@@ -151,10 +189,44 @@ gstd3d11 = library('gstd3d11-' + api_version,
   dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib]
 )
 
+pkgconfig.generate(gstd3d11,
+  libraries : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib],
+  variables : pkgconfig_variables,
+  subdirs : pkgconfig_subdirs,
+  extra_cflags : ['-I${libdir}/gstreamer-1.0/include'],
+  name : pkg_name,
+  description : 'GStreamer Direct3D11 library',
+)
+
 library_def = {'lib': gstd3d11}
+if build_gir
+  gir_includes = ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0']
+  gir = {
+    'sources' : d3d11_sources + d3d11_headers + [gstd3d11_h],
+    'namespace' : 'GstD3D11',
+    'nsversion' : api_version,
+    'identifier_prefix' : 'Gst',
+    'symbol_prefix' : 'gst',
+    'export_packages' : pkg_name,
+    'includes' : gir_includes,
+    'install' : true,
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    'dependencies' : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib],
+  }
+  if not static_build
+    d3d11_gir = gnome.generate_gir(gstd3d11, kwargs: gir)
+    gen_sources += d3d11_gir
+  endif
+
+  library_def += {'gir': [gir]}
+endif
 libraries += [[pkg_name, library_def]]
 
-# Still non-public api, should not install headers
+install_headers(d3d11_headers, subdir : 'gstreamer-1.0/gst/d3d11')
+
 gstd3d11_dep = declare_dependency(link_with : gstd3d11,
   include_directories : [libsinc],
-  dependencies : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib])
+  dependencies : [gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib],
+  sources : gen_sources)
+
+meson.override_dependency(pkg_name, gstd3d11_dep)
