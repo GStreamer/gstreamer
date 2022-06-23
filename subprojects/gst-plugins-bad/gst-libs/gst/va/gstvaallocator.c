@@ -594,10 +594,17 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 
   for (i = 0; i < desc.num_objects; i++) {
     gint fd = desc.objects[i].fd;
-    gsize size = desc.objects[i].size > 0 ?
-        desc.objects[i].size : _get_fd_size (fd);
+    /* don't rely on prime descriptor reported size since gallium drivers report
+     * different values */
+    gsize size = _get_fd_size (fd);
     GstMemory *mem = gst_dmabuf_allocator_alloc (allocator, fd, size);
     guint64 *drm_mod = g_new (guint64, 1);
+
+    if (size != desc.objects[i].size) {
+      GST_WARNING_OBJECT (self, "driver bug: fd size (%" G_GSIZE_FORMAT
+          ") differs from object descriptor size (%" G_GUINT32_FORMAT ")",
+          size, desc.objects[i].size);
+    }
 
     object_offset[i] = gst_buffer_get_size (buffer);
     gst_buffer_append_memory (buffer, mem);
