@@ -1684,6 +1684,11 @@ gst_hls_demux_stream_finalize (GObject * object)
     gst_hls_rendition_stream_unref (hls_stream->pending_rendition);
     hls_stream->pending_rendition = NULL;
   }
+
+  if (hls_stream->current_segment) {
+    gst_m3u8_media_segment_unref (hls_stream->current_segment);
+    hls_stream->current_segment = NULL;
+  }
   gst_hls_demux_stream_decrypt_end (hls_stream);
 
   G_OBJECT_CLASS (stream_parent_class)->finalize (object);
