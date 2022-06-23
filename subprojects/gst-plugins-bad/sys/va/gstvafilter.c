@@ -1806,15 +1806,17 @@ gst_va_filter_compose (GstVaFilter * self, GstVaComposeTransaction * tx)
     /* (transfer full), unref it */
     gst_buffer_unref (sample->buffer);
 
+    GST_OBJECT_LOCK (self);
     /* *INDENT-OFF* */
     params = (VAProcPipelineParameterBuffer) {
       .surface = in_surface,
       .surface_region = &sample->input_region,
       .output_region = &sample->output_region,
       .output_background_color = 0xff000000,
-      .filter_flags = sample->flags,
+      .filter_flags = self->scale_method,
     };
     /* *INDENT-ON* */
+    GST_OBJECT_UNLOCK (self);
 
     /* only send blend state when sample is not fully opaque */
     if ((self->pipeline_caps.blend_flags & VA_BLEND_GLOBAL_ALPHA)

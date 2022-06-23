@@ -1049,7 +1049,6 @@ gst_va_compositor_sample_next (gpointer data)
         .height = (pad->height == DEFAULT_PAD_HEIGHT)
             ? GST_VIDEO_INFO_HEIGHT (&vaggpad->info) : pad->height,
       },
-      .flags = generator->comp->scale_method,
       .alpha = pad->alpha,
     };
     /* *INDENT-ON* */
@@ -1132,6 +1131,9 @@ gst_va_compositor_aggregate_frames (GstVideoAggregator * vagg,
   /* *INDENT-ON* */
 
   GST_OBJECT_LOCK (self);
+
+  if (!gst_va_filter_set_scale_method (self->filter, self->scale_method))
+    GST_WARNING_OBJECT (self, "couldn't set filter scale method");
 
   if (!gst_va_filter_compose (self->filter, &tx)) {
     GST_ERROR_OBJECT (self, "couldn't apply filter");

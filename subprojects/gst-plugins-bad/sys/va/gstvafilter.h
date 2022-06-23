@@ -87,9 +87,6 @@ struct _GstVaComposeSample
   /* input buffer (transfer full) */
   GstBuffer *buffer;
 
-  /* scale method flags */
-  guint32 flags;
-
   VARectangle input_region;
   VARectangle output_region;
 
