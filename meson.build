@@ -205,10 +205,14 @@ foreach sp : subprojects
 endforeach
 
 # Check if we need to also build glib-networking for TLS modules
+giomodules = []
 glib_dep = dependency('glib-2.0')
 if glib_dep.type_name() == 'internal'
-  subproject('glib-networking', required : get_option('tls'),
+  subp = subproject('glib-networking', required : get_option('tls'),
              default_options: ['gnutls=auto', 'openssl=auto'])
+  if subp.found()
+    giomodules += subp.get_variable('giomodules', [])
+  endif
 endif
 
 gst_plugins_doc_dep = custom_target('plugins-doc-cache',
@@ -322,7 +326,8 @@ if building_full
                '-e ' + get_option('gst-full-elements'),
                '-t ' + get_option('gst-full-typefind-functions'),
                '-d ' + get_option('gst-full-device-providers'),
-               '-T ' + get_option('gst-full-dynamic-types')
+               '-T ' + get_option('gst-full-dynamic-types'),
+               '--giomodules', ';'.join(giomodules),
                ]
   )
 
@@ -385,12 +390,17 @@ if building_full
     endif
   endif
 
+  giomodules_deps = []
+  foreach module : giomodules
+    giomodules_deps += dependency(module)
+  endforeach
+
   # Build both shared and static library
   gstfull = both_libraries('gstreamer-full-1.0',
     init_static_plugins_c,
     link_args: gstfull_link_args,
     link_whole : exposed_libs,
-    dependencies : [incdir_deps, glib_deps, all_plugins],
+    dependencies : [incdir_deps, glib_deps, all_plugins, giomodules_deps],
     link_depends : link_deps,
     install : true,
   )

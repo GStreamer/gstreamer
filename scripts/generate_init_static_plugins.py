@@ -12,6 +12,7 @@ $typefind_funcs_declaration
 $device_providers_declaration
 $dynamic_types_declaration
 $plugins_declaration
+$giomodules_declaration
 
 void
 gst_init_static_plugins (void)
@@ -23,6 +24,7 @@ gst_init_static_plugins (void)
     $device_providers_registration
     $dynamic_types_registration
     $plugins_registration
+    $giomodules_registration
 
     g_once_init_leave (&initialization_value, 1);
   }
@@ -69,6 +71,8 @@ if __name__ == "__main__":
                         dest="deviceproviders", help="The list of plugin:deviceproviders")
     parser.add_argument('-T', '--dynamic-types', nargs='?', default='',
                         dest="dynamictypes", help="The list of plugin:dynamictypes")
+    parser.add_argument('--giomodules', nargs='?', default='',
+                        dest="giomodules", help="The list of GIO modules")
     options = parser.parse_args()
     if options.output is None:
         output_file = 'gstinitstaticplugins.c'
@@ -85,6 +89,8 @@ if __name__ == "__main__":
     dynamic_types_registration = []
     plugins_declaration = []
     plugins_registration = []
+    giomodules_declaration = []
+    giomodules_registration = []
 
     if ',' in options.plugins or ':' in options.plugins:
         print("Only ';' is allowed in the list of plugins.")
@@ -116,6 +122,13 @@ if __name__ == "__main__":
         plugins_registration += ['GST_PLUGIN_STATIC_REGISTER(%s);' % (plugin_name)]
         plugins_declaration += ['GST_PLUGIN_STATIC_DECLARE(%s);' % (plugin_name)]
 
+    giomodules = options.giomodules.split(';') if options.giomodules else []
+    for module_name in giomodules:
+        if module_name.startswith('gio'):
+            module_name = module_name[3:]
+        giomodules_declaration.append(f'extern void g_io_{module_name}_load (gpointer data);')
+        giomodules_registration.append(f'g_io_{module_name}_load (NULL);')
+
     with open(output_file.strip(), "w") as f:
         static_elements_plugin = ''
         f.write(TEMPLATE.substitute({
@@ -129,4 +142,6 @@ if __name__ == "__main__":
             'dynamic_types_registration': '\n    '.join(dynamic_types_registration),
             'plugins_declaration': '\n'.join(plugins_declaration),
             'plugins_registration': '\n    '.join(plugins_registration),
+            'giomodules_declaration': '\n'.join(giomodules_declaration),
+            'giomodules_registration': '\n    '.join(giomodules_registration),
         }))
