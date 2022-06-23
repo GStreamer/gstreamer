@@ -437,6 +437,11 @@ gst_hlsdemux_handle_content_isobmff (GstHLSDemux * demux,
       {
         GstMoofBox *moof;
 
+        if (hls_stream->moov == NULL) {
+          GST_WARNING ("Received moof with moov in iso-ff stream");
+          break;
+        }
+
         gst_byte_reader_get_sub_reader (&br, &sub, box_size - header_size);
 
         moof = gst_isoff_moof_box_parse (&sub);
