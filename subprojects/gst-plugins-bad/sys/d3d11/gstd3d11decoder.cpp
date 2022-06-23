@@ -1501,8 +1501,8 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
 
     for (gint j = 0; j < height; j++) {
       memcpy (dst_data, src_data, width_in_bytes);
-      dst_data += d3d11_map.RowPitch;
-      src_data += stride;
+      dst_data += stride;
+      src_data += d3d11_map.RowPitch;
     }
   }
 
