@@ -83,6 +83,8 @@ struct _GstVaBaseDec
   GstVideoConverter *convert;
 
   gboolean need_negotiation;
+
+  guint32 hacks;
 };
 
 struct _GstVaBaseDecClass

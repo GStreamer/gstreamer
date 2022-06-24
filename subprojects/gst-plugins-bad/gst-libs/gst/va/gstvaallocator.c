@@ -951,6 +951,8 @@ struct _GstVaAllocator
   GstVideoInfo info;
   guint usage_hint;
 
+  guint32 hacks;
+
   GstVaSurfaceCopy *copy;
 
   GstVaMemoryPool pool;
@@ -1556,7 +1558,8 @@ gst_va_allocator_try (GstAllocator * allocator)
     self->fourcc = 0;
     self->rt_format = gst_va_chroma_from_video_format (self->img_format);
   } else {
-    self->fourcc = gst_va_fourcc_from_video_format (self->surface_format);
+    if (G_LIKELY (!(self->hacks & GST_VA_HACK_SURFACE_NO_FOURCC)))
+      self->fourcc = gst_va_fourcc_from_video_format (self->surface_format);
     self->rt_format = gst_va_chroma_from_video_format (self->surface_format);
   }
 
@@ -1639,6 +1642,17 @@ gst_va_allocator_get_format (GstAllocator * allocator, GstVideoInfo * info,
     *use_derived = self->feat_use_derived;
 
   return TRUE;
+}
+
+void
+gst_va_allocator_set_hacks (GstAllocator * allocator, guint32 hacks)
+{
+  GstVaAllocator *self;
+
+  g_return_if_fail (GST_IS_VA_ALLOCATOR (allocator));
+  self = GST_VA_ALLOCATOR (allocator);
+
+  self->hacks = hacks;
 }
 
 /*============ Utilities =====================================================*/

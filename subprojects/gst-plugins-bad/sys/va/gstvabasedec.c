@@ -228,6 +228,7 @@ _create_allocator (GstVaBaseDec * base, GstCaps * caps)
     GArray *surface_formats =
         gst_va_decoder_get_surface_formats (base->decoder);
     allocator = gst_va_allocator_new (base->display, surface_formats);
+    gst_va_allocator_set_hacks (allocator, base->hacks);
   }
 
   return allocator;

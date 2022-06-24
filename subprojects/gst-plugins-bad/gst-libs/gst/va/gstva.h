@@ -32,6 +32,12 @@ typedef enum
   GST_VA_FEATURE_AUTO,
 } GstVaFeature;
 
+enum
+{
+  /* jpeg decoder in i965 driver cannot create surfaces with fourcc */
+  GST_VA_HACK_SURFACE_NO_FOURCC = 1 << 0,
+};
+
 #include <gst/va/va-prelude.h>
 #include <gst/va/va-enumtypes.h>
 #include <gst/va/gstvadisplay.h>
