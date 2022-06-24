@@ -492,6 +492,30 @@ gst_d3d11_ensure_element_data_for_adapter_luid (GstElement * element,
 }
 
 /**
+ * gst_d3d11_context_new:
+ * @device: (transfer none): a #GstD3D11Device
+ *
+ * Creates a new #GstContext object with @device
+ *
+ * Returns: a #GstContext object
+ *
+ * Since: 1.22
+ */
+
+GstContext *
+gst_d3d11_context_new (GstD3D11Device * device)
+{
+  GstContext *context;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
+
+  context = gst_context_new (GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE, TRUE);
+  context_set_d3d11_device (context, device);
+
+  return context;
+}
+
+/**
  * gst_d3d11_luid_to_int64:
  * @luid: A pointer to LUID struct
  *
