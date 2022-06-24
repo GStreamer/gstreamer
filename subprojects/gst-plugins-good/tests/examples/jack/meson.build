@@ -1,3 +1,7 @@
+if get_option('jack').disabled()
+  subdir_done()
+endif
+
 if libjack_dep.found()
   executable('jack_client', 'jack_client.c',
     dependencies: [gst_dep, gtk_dep, libjack_dep],
