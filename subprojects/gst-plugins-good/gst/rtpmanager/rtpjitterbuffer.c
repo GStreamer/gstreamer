@@ -877,6 +877,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
     GstClockTime internal, external;
     GstClockTime rate_num, rate_denom;
     GstClockTime ntprtptime_period_start;
+    gboolean negative_ntprtptime_period_start;
 
     /* Don't do any of the dts related adjustments further down */
     dts = -1;
@@ -890,23 +891,31 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
     /* Current NTP clock estimation */
     ntptime = gst_clock_get_internal_time (media_clock);
 
-    /* Current RTP time based on the estimated NTP clock */
-    ntprtptime = gst_util_uint64_scale (ntptime, jbuf->clock_rate, GST_SECOND);
+    /* Current RTP time based on the estimated NTP clock and the corresponding
+     * RTP time period start */
+    ntprtptime = ntprtptime_period_start =
+        gst_util_uint64_scale (ntptime, jbuf->clock_rate, GST_SECOND);
     ntprtptime += media_clock_offset;
+    ntprtptime &= 0xffffffff;
+
+    /* If we're in the first period then the start of the period might be
+     * before the clock epoch */
+    if (ntprtptime_period_start >= ntprtptime) {
+      ntprtptime_period_start = ntprtptime_period_start - ntprtptime;
+      negative_ntprtptime_period_start = FALSE;
+    } else {
+      ntprtptime_period_start = ntprtptime - ntprtptime_period_start;
+      negative_ntprtptime_period_start = TRUE;
+    }
 
     GST_TRACE ("Current NTP time %" GST_TIME_FORMAT " (RTP: %" G_GUINT64_FORMAT
         ")", GST_TIME_ARGS (ntptime), ntprtptime);
-
-    /* Start RTP time of the current RTP time period we are in */
-    ntprtptime_period_start = ntprtptime & 0xffffffff00000000;
-
-    /* Current RTP timestamp in this RTP time period */
-    ntprtptime &= 0xffffffff;
-
-    GST_TRACE ("Current NTP RTP time period start %" GST_TIME_FORMAT " (RTP: %"
-        G_GUINT64_FORMAT ")",
+    GST_TRACE ("Current NTP RTP time period start %c%" GST_TIME_FORMAT
+        " (RTP: %c%" G_GUINT64_FORMAT ")",
+        negative_ntprtptime_period_start ? '-' : '+',
         GST_TIME_ARGS (gst_util_uint64_scale (ntprtptime_period_start,
-                GST_SECOND, jbuf->clock_rate)), ntprtptime_period_start);
+                GST_SECOND, jbuf->clock_rate)),
+        negative_ntprtptime_period_start ? '-' : '+', ntprtptime_period_start);
     GST_TRACE ("Current NTP RTP time related to period start %" GST_TIME_FORMAT
         " (RTP: %" G_GUINT64_FORMAT ")",
         GST_TIME_ARGS (gst_util_uint64_scale (ntprtptime, GST_SECOND,
@@ -928,24 +937,44 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
      *
      */
     if (ntprtptime > rtptime && ntprtptime - rtptime >= 0x80000000) {
-      ntprtptime_period_start += 0x100000000;
+      if (negative_ntprtptime_period_start) {
+        negative_ntprtptime_period_start = FALSE;
+        g_assert (ntprtptime_period_start <= 0x100000000);
+        ntprtptime_period_start = 0x100000000 - ntprtptime_period_start;
+      } else {
+        ntprtptime_period_start += 0x100000000;
+      }
     } else if (rtptime > ntprtptime && rtptime - ntprtptime >= 0x80000000) {
-      /* If there was not a full RTP time period yet then assume we're
-       * actually that far away. This can only really happen if the epoch of
-       * the clock is very close to now. */
-      if (ntprtptime_period_start >= 0x100000000)
+      if (negative_ntprtptime_period_start) {
+        ntprtptime_period_start += 0x100000000;
+      } else if (ntprtptime_period_start < 0x100000000) {
+        negative_ntprtptime_period_start = TRUE;
+        ntprtptime_period_start = 0x100000000 - ntprtptime_period_start;
+      } else {
         ntprtptime_period_start -= 0x100000000;
+      }
     }
 
-    GST_TRACE ("Wraparound adjusted NTP RTP time period start %" GST_TIME_FORMAT
-        " (RTP: %" G_GUINT64_FORMAT ")",
+    GST_TRACE ("Wraparound adjusted NTP RTP time period start %c%"
+        GST_TIME_FORMAT " (RTP: %c%" G_GUINT64_FORMAT ")",
+        negative_ntprtptime_period_start ? '-' : '+',
         GST_TIME_ARGS (gst_util_uint64_scale (ntprtptime_period_start,
-                GST_SECOND, jbuf->clock_rate)), ntprtptime_period_start);
+                GST_SECOND, jbuf->clock_rate)),
+        negative_ntprtptime_period_start ? '-' : '+', ntprtptime_period_start);
 
     /* Packet timestamp according to the NTP clock in RTP time units.
      * Note that this does not include any inaccuracy caused by the estimation
      * of the NTP clock unless it is more than 2**31 RTP time units off. */
-    ntprtptime = ntprtptime_period_start + rtptime;
+    if (negative_ntprtptime_period_start) {
+      if (rtptime >= ntprtptime_period_start) {
+        ntprtptime = rtptime - ntprtptime_period_start;
+      } else {
+        /* Packet is timestamped before the NTP clock epoch! */
+        ntprtptime = 0;
+      }
+    } else {
+      ntprtptime = ntprtptime_period_start + rtptime;
+    }
 
     /* Packet timestamp in nanoseconds according to the NTP clock. */
     ntptime = gst_util_uint64_scale (ntprtptime, GST_SECOND, jbuf->clock_rate);
