@@ -210,20 +210,25 @@ GST_START_TEST (test_udpsink_dscp)
   GstElement *udpsink;
   GError *error = NULL;
   GSocket *sock4, *sock6;
+  gboolean have_ipv6;
 
   sock4 =
       g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
       G_SOCKET_PROTOCOL_UDP, &error);
   fail_unless (sock4 != NULL && error == NULL);
+
   sock6 =
       g_socket_new (G_SOCKET_FAMILY_IPV6, G_SOCKET_TYPE_DATAGRAM,
       G_SOCKET_PROTOCOL_UDP, &error);
-  fail_unless (sock6 != NULL && error == NULL);
+  have_ipv6 = sock6 != NULL && error == NULL;
+  g_clear_error (&error);
 
   udpsink = gst_check_setup_element ("udpsink");
   g_signal_emit_by_name (udpsink, "add", "127.0.0.1", 5554, NULL);
   g_object_set (udpsink, "socket", sock4, NULL);
-  g_object_set (udpsink, "socket-v6", sock6, NULL);
+
+  if (have_ipv6)
+    g_object_set (udpsink, "socket-v6", sock6, NULL);
 
   ASSERT_SET_STATE (udpsink, GST_STATE_READY, GST_STATE_CHANGE_SUCCESS);
 
@@ -234,7 +239,7 @@ GST_START_TEST (test_udpsink_dscp)
 
   gst_object_unref (udpsink);
   g_object_unref (sock4);
-  g_object_unref (sock6);
+  g_clear_object (&sock6);
 }
 
 GST_END_TEST;
