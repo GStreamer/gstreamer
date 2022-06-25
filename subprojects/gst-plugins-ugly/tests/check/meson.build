@@ -1,7 +1,7 @@
 # name, condition when to skip the test and extra dependencies
 ugly_tests = [
   [ 'elements/x264enc', not x264_dep.found(), [ x264_dep, gmodule_dep ] ],
-  [ 'elements/xingmux' ],
+  [ 'elements/xingmux', get_option('xingmux').disabled()],
   [ 'generic/states' ],
 ]
 
