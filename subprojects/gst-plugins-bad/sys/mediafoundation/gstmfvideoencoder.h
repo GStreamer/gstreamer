@@ -107,6 +107,8 @@ struct _GstMFVideoEncoder
    * when B-frame is enabled. */
   LONGLONG mf_pts_offset;
 
+  gboolean need_align;
+
 #if GST_MF_HAVE_D3D11
   /* For D3D11 interop. */
   GstD3D11Device *other_d3d11_device;

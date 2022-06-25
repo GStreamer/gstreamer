@@ -316,6 +316,14 @@ gst_mf_video_encoder_init_mft (GstMFVideoEncoder * self)
   }
 #endif
 
+  /* TODO: We support I420/NV12/P010 only for now.
+   * Consider other subsampling once we add it */
+  if ((info->width % 2) != 0 || (info->height % 2) != 0) {
+    self->need_align = TRUE;
+  } else {
+    self->need_align = FALSE;
+  }
+
   hr = MFCreateMediaType (&out_type);
   if (!gst_mf_result (hr))
     return FALSE;
@@ -944,7 +952,7 @@ gst_mf_video_encoder_create_input_sample (GstMFVideoEncoder * self,
   gint i, j;
   GstVideoFrame *vframe = nullptr;
   BYTE *data = nullptr;
-  gboolean need_copy;
+  gboolean need_copy = self->need_align;
 
   vframe = g_new0 (GstVideoFrame, 1);
 
@@ -959,7 +967,9 @@ gst_mf_video_encoder_create_input_sample (GstMFVideoEncoder * self,
     goto error;
 
   /* Check if we can forward this memory to Media Foundation without copy */
-  need_copy = gst_mf_video_encoder_frame_needs_copy (vframe);
+  if (!need_copy)
+    need_copy = gst_mf_video_encoder_frame_needs_copy (vframe);
+
   if (need_copy) {
     GST_TRACE_OBJECT (self, "Copy input buffer into Media Foundation memory");
     hr = MFCreateMemoryBuffer (GST_VIDEO_INFO_SIZE (info), &media_buffer);
