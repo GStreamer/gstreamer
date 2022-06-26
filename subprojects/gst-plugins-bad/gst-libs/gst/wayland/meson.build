@@ -1,6 +1,7 @@
 wl_req = '>= 1.15'
 wl_client_dep = dependency('wayland-client', version: wl_req, required: get_option('wayland'))
 libdrm_dep = dependency('libdrm', version: '>= 2.4.98', required: get_option('wayland'))
+wl_proto_req = '>= 1.26'
 wl_protocol_dep = dependency('wayland-protocols', version: wl_req, required: get_option('wayland'))
 wl_scanner = find_program('wayland-scanner', required: get_option('wayland'))
 # Also used in ext/wayland
@@ -38,7 +39,8 @@ if use_wayland
     ['viewporter', 'stable', ],
     ['linux-dmabuf', 'unstable', 'v1', ],
     ['fullscreen-shell', 'unstable', 'v1', ],
-    ['xdg-shell', 'stable', ]
+    ['xdg-shell', 'stable', ],
+    ['single-pixel-buffer', 'staging', 'v1' ],
   ]
   protocols_files = []
 

@@ -100,6 +100,9 @@ GST_WL_API
 struct zwp_linux_dmabuf_v1 *gst_wl_display_get_dmabuf_v1 (GstWlDisplay * self);
 
 GST_WL_API
+struct wp_single_pixel_buffer_manager_v1 * gst_wl_display_get_single_pixel_buffer_manager_v1 (GstWlDisplay * self);
+
+GST_WL_API
 gboolean gst_wl_display_has_own_display (GstWlDisplay * self);
 
 G_END_DECLS

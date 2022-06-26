@@ -26,6 +26,7 @@
 
 #include "fullscreen-shell-unstable-v1-client-protocol.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
+#include "single-pixel-buffer-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
@@ -48,6 +49,7 @@ typedef struct _GstWlDisplayPrivate
   struct wl_subcompositor *subcompositor;
   struct xdg_wm_base *xdg_wm_base;
   struct zwp_fullscreen_shell_v1 *fullscreen_shell;
+  struct wp_single_pixel_buffer_manager_v1 *single_pixel_buffer;
   struct wl_shm *shm;
   struct wp_viewporter *viewporter;
   struct zwp_linux_dmabuf_v1 *dmabuf;
@@ -145,6 +147,9 @@ gst_wl_display_finalize (GObject * gobject)
 
   if (priv->fullscreen_shell)
     zwp_fullscreen_shell_v1_release (priv->fullscreen_shell);
+
+  if (priv->single_pixel_buffer)
+    wp_single_pixel_buffer_manager_v1_destroy (priv->single_pixel_buffer);
 
   if (priv->compositor)
     wl_compositor_destroy (priv->compositor);
@@ -323,6 +328,10 @@ registry_handle_global (void *data, struct wl_registry *registry,
     priv->dmabuf =
         wl_registry_bind (registry, id, &zwp_linux_dmabuf_v1_interface, 3);
     zwp_linux_dmabuf_v1_add_listener (priv->dmabuf, &dmabuf_listener, self);
+  } else if (g_strcmp0 (interface, "wp_single_pixel_buffer_manager_v1") == 0) {
+    priv->single_pixel_buffer =
+        wl_registry_bind (registry, id,
+        &wp_single_pixel_buffer_manager_v1_interface, 1);
   }
 }
 
@@ -608,6 +617,14 @@ gst_wl_display_get_dmabuf_formats (GstWlDisplay * self)
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
 
   return priv->dmabuf_formats;
+}
+
+struct wp_single_pixel_buffer_manager_v1 *
+gst_wl_display_get_single_pixel_buffer_manager_v1 (GstWlDisplay * self)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+
+  return priv->single_pixel_buffer;
 }
 
 gboolean

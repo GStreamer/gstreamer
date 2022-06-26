@@ -27,6 +27,7 @@
 #include "gstwlwindow.h"
 
 #include "fullscreen-shell-unstable-v1-client-protocol.h"
+#include "single-pixel-buffer-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
@@ -553,13 +554,11 @@ static void
 gst_wl_window_update_borders (GstWlWindow * self)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
-  GstVideoFormat format;
-  GstVideoInfo info;
   gint width, height;
   GstBuffer *buf;
   struct wl_buffer *wlbuf;
+  struct wp_single_pixel_buffer_manager_v1 *single_pixel;
   GstWlBuffer *gwlbuf;
-  GstAllocator *alloc;
 
   if (gst_wl_display_get_viewporter (priv->display)) {
     wp_viewport_set_destination (priv->area_viewport,
@@ -579,19 +578,34 @@ gst_wl_window_update_borders (GstWlWindow * self)
     height = priv->render_rectangle.h;
   }
 
-  /* we want WL_SHM_FORMAT_XRGB8888 */
-  format = GST_VIDEO_FORMAT_BGRx;
-
   /* draw the area_subsurface */
-  gst_video_info_set_format (&info, format, width, height);
+  single_pixel =
+      gst_wl_display_get_single_pixel_buffer_manager_v1 (priv->display);
+  if (width == 1 && height == 1 && single_pixel) {
+    buf = gst_buffer_new_allocate (NULL, 1, NULL);
+    wlbuf =
+        wp_single_pixel_buffer_manager_v1_create_u32_rgba_buffer (single_pixel,
+        0, 0, 0, 0xffffffffU);
+  } else {
+    GstVideoFormat format;
+    GstVideoInfo info;
+    GstAllocator *alloc;
 
-  alloc = gst_shm_allocator_get ();
+    /* we want WL_SHM_FORMAT_XRGB8888 */
+    format = GST_VIDEO_FORMAT_BGRx;
+    gst_video_info_set_format (&info, format, width, height);
+    alloc = gst_shm_allocator_get ();
 
-  buf = gst_buffer_new_allocate (alloc, info.size, NULL);
-  gst_buffer_memset (buf, 0, 0, info.size);
-  wlbuf =
-      gst_wl_shm_memory_construct_wl_buffer (gst_buffer_peek_memory (buf, 0),
-      priv->display, &info);
+    buf = gst_buffer_new_allocate (alloc, info.size, NULL);
+    gst_buffer_memset (buf, 0, 0, info.size);
+
+    wlbuf =
+        gst_wl_shm_memory_construct_wl_buffer (gst_buffer_peek_memory (buf, 0),
+        priv->display, &info);
+
+    g_object_unref (alloc);
+  }
+
   gwlbuf = gst_buffer_add_wl_buffer (buf, wlbuf, priv->display);
   gst_wl_buffer_attach (gwlbuf, priv->area_surface_wrapper);
   wl_surface_damage_buffer (priv->area_surface_wrapper, 0, 0, G_MAXINT32,
@@ -600,7 +614,6 @@ gst_wl_window_update_borders (GstWlWindow * self)
   /* at this point, the GstWlBuffer keeps the buffer
    * alive and will free it on wl_buffer::release */
   gst_buffer_unref (buf);
-  g_object_unref (alloc);
 }
 
 static void
