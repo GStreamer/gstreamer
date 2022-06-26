@@ -82,6 +82,12 @@
 #include "gstd3d11screencapturedevice.h"
 #endif
 
+#include <wrl.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
+
 GST_DEBUG_CATEGORY (gst_d3d11_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_shader_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_plugin_utils_debug);
@@ -111,7 +117,8 @@ plugin_init (GstPlugin * plugin)
 {
   GstRank video_sink_rank = GST_RANK_PRIMARY;
   D3D_FEATURE_LEVEL max_feature_level = D3D_FEATURE_LEVEL_9_3;
-  guint i;
+  HRESULT hr;
+  ComPtr < IDXGIFactory1 > factory;
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug, "d3d11", 0, "direct3d 11 plugin");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_shader_debug,
@@ -150,17 +157,25 @@ plugin_init (GstPlugin * plugin)
         "d3d11deinterlace", 0, "Direct3D11 Deinterlacer");
   }
 
+  hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
+  if (FAILED (hr))
+    return TRUE;
+
   /* Enumerate devices to register decoders per device and to get the highest
    * feature level */
-  /* AMD seems supporting up to 12 cards, and 8 for NVIDIA */
-  for (i = 0; i < 12; i++) {
-    GstD3D11Device *device = NULL;
+  for (guint i = 0;; i++) {
+    ComPtr < IDXGIAdapter1 > adapter;
+    GstD3D11Device *device;
     ID3D11Device *device_handle;
     D3D_FEATURE_LEVEL feature_level;
 
+    hr = factory->EnumAdapters1 (i, &adapter);
+    if (FAILED (hr))
+      break;
+
     device = gst_d3d11_device_new (i, D3D11_CREATE_DEVICE_BGRA_SUPPORT);
     if (!device)
-      break;
+      continue;
 
     device_handle = gst_d3d11_device_get_device_handle (device);
     feature_level = device_handle->GetFeatureLevel ();
