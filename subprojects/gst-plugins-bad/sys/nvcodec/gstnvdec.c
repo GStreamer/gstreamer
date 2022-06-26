@@ -46,6 +46,7 @@ enum
 {
   PROP_0,
   PROP_MAX_DISPLAY_DELAY,
+  PROP_CUDA_DEVICE_ID,
 };
 
 #ifdef HAVE_NVCODEC_GST_GL
@@ -197,10 +198,14 @@ gst_nv_dec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
   GstNvDec *nvdec = GST_NVDEC (object);
+  GstNvDecClass *klass = GST_NVDEC_GET_CLASS (nvdec);
 
   switch (prop_id) {
     case PROP_MAX_DISPLAY_DELAY:
       g_value_set_int (value, nvdec->max_display_delay);
+      break;
+    case PROP_CUDA_DEVICE_ID:
+      g_value_set_uint (value, klass->cuda_device_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -247,6 +252,18 @@ gst_nvdec_class_init (GstNvDecClass * klass)
           "(auto = -1)",
           -1, G_MAXINT, DEFAULT_MAX_DISPLAY_DELAY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstNvDec:cuda-device-id:
+   *
+   * Assigned CUDA device id
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CUDA_DEVICE_ID,
+      g_param_spec_uint ("cuda-device-id", "CUDA device id",
+          "Assigned CUDA device id", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -2050,6 +2067,7 @@ gst_nvdec_subclass_register (GstPlugin * plugin, GType type,
   gchar *type_name;
   GstNvDecClassData *cdata;
   gboolean is_default = TRUE;
+  gint index = 0;
 
   cdata = g_new0 (GstNvDecClassData, 1);
   cdata->sink_caps = gst_caps_ref (sink_caps);
@@ -2066,10 +2084,10 @@ gst_nvdec_subclass_register (GstPlugin * plugin, GType type,
   type_info.class_data = cdata;
 
   type_name = g_strdup_printf ("nv%sdec", codec);
-
-  if (g_type_from_name (type_name) != 0) {
+  while (g_type_from_name (type_name)) {
+    index++;
     g_free (type_name);
-    type_name = g_strdup_printf ("nv%sdevice%ddec", codec, device_id);
+    type_name = g_strdup_printf ("nv%sdevice%ddec", codec, index);
     is_default = FALSE;
   }
 
