@@ -25,16 +25,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_NV_H265_DEC            (gst_nv_h265_dec_get_type())
-#define GST_NV_H265_DEC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_NV_H265_DEC, GstNvH265Dec))
-#define GST_NV_H265_DEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),  GST_TYPE_NV_H265_DEC, GstNvH265DecClass))
-#define GST_NV_H265_DEC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),  GST_TYPE_NV_H265_DEC, GstNvH265DecClass))
-
-typedef struct _GstNvH265Dec GstNvH265Dec;
-typedef struct _GstNvH265DecClass GstNvH265DecClass;
-
-GType gst_nv_h265_dec_get_type (void);
-
 void gst_nv_h265_dec_register (GstPlugin * plugin,
                                guint device_id,
                                guint rank,

@@ -25,16 +25,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_NV_VP9_DEC            (gst_nv_vp9_dec_get_type())
-#define GST_NV_VP9_DEC(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_NV_VP9_DEC, GstNvVp9Dec))
-#define GST_NV_VP9_DEC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),  GST_TYPE_NV_VP9_DEC, GstNvVp9DecClass))
-#define GST_NV_VP9_DEC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),  GST_TYPE_NV_VP9_DEC, GstNvVp9DecClass))
-
-typedef struct _GstNvVp9Dec GstNvVp9Dec;
-typedef struct _GstNvVp9DecClass GstNvVp9DecClass;
-
-GType gst_nv_vp9_dec_get_type (void);
-
 void gst_nv_vp9_dec_register (GstPlugin * plugin,
                               guint device_id,
                               guint rank,

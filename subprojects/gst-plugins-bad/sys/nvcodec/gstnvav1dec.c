@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-nvav1dec
+ * @title: nvav1dec
+ *
+ * GstCodecs based NVIDIA AV1 video decoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/av1/file ! parsebin ! nvav1dec ! videoconvert ! autovideosink
+ * ```
+ *
+ * Since: 1.22
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -66,18 +81,20 @@ typedef struct _GstNvAV1DecClass
   guint cuda_device_id;
 } GstNvAV1DecClass;
 
-typedef struct
+enum
 {
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-  guint cuda_device_id;
-} GstNvAV1DecClassData;
+  PROP_0,
+  PROP_CUDA_DEVICE_ID,
+};
 
 static GTypeClass *parent_class = NULL;
 
 #define GST_NV_AV1_DEC(object) ((GstNvAV1Dec *) (object))
 #define GST_NV_AV1_DEC_GET_CLASS(object) \
     (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstNvAV1DecClass))
+
+static void gst_nv_av1_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static void gst_nv_av1_dec_set_context (GstElement * element,
     GstContext * context);
@@ -108,11 +125,19 @@ static guint gst_nv_av1_dec_get_preferred_output_delay (GstAV1Decoder * decoder,
 
 static void
 gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
-    GstNvAV1DecClassData * cdata)
+    GstNvDecoderClassData * cdata)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstAV1DecoderClass *av1decoder_class = GST_AV1_DECODER_CLASS (klass);
+
+  object_class->get_property = gst_nv_av1_dec_get_property;
+
+  g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
+      g_param_spec_uint ("cuda-device-id", "CUDA device id",
+          "Assigned CUDA device id", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_set_context);
 
@@ -162,6 +187,22 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
 static void
 gst_nv_av1_dec_init (GstNvAV1Dec * self)
 {
+}
+
+static void
+gst_nv_av1_dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstNvAV1DecClass *klass = GST_NV_AV1_DEC_GET_CLASS (object);
+
+  switch (prop_id) {
+    case PROP_CUDA_DEVICE_ID:
+      g_value_set_uint (value, klass->cuda_device_id);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -874,11 +915,11 @@ gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id, guint rank,
     0,
     (GInstanceInitFunc) gst_nv_av1_dec_init,
   };
-  GstNvAV1DecClassData *cdata;
+  GstNvDecoderClassData *cdata;
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_av1_dec_debug, "nvav1dec", 0, "nvav1dec");
 
-  cdata = g_new0 (GstNvAV1DecClassData, 1);
+  cdata = g_new0 (GstNvDecoderClassData, 1);
   cdata->sink_caps = gst_caps_ref (sink_caps);
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;

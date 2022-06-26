@@ -70,6 +70,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION:element-nvh264sldec
+ * @title: nvh264sldec
+ *
+ * GstCodecs based NVIDIA H.264 video decoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/h264/file ! parsebin ! nvh264sldec ! videoconvert ! autovideosink
+ * ```
+ *
+ * Since: 1.18
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -84,7 +99,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_nv_h264_dec_debug);
 #define GST_CAT_DEFAULT gst_nv_h264_dec_debug
 
-struct _GstNvH264Dec
+typedef struct _GstNvH264Dec
 {
   GstH264Decoder parent;
 
@@ -114,18 +129,30 @@ struct _GstNvH264Dec
   gboolean interlaced;
 
   GArray *ref_list;
-};
+} GstNvH264Dec;
 
-struct _GstNvH264DecClass
+typedef struct _GstNvH264DecClass
 {
   GstH264DecoderClass parent_class;
   guint cuda_device_id;
+} GstNvH264DecClass;
+
+enum
+{
+  PROP_0,
+  PROP_CUDA_DEVICE_ID,
 };
 
-#define gst_nv_h264_dec_parent_class parent_class
-G_DEFINE_TYPE (GstNvH264Dec, gst_nv_h264_dec, GST_TYPE_H264_DECODER);
+static GTypeClass *parent_class = NULL;
+
+#define GST_NV_H264_DEC(object) ((GstNvH264Dec *) (object))
+#define GST_NV_H264_DEC_GET_CLASS(object) \
+    (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstNvH264DecClass))
 
 static void gst_nv_h264_decoder_dispose (GObject * object);
+static void gst_nv_h264_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 static void gst_nv_h264_dec_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_nv_h264_dec_open (GstVideoDecoder * decoder);
@@ -158,22 +185,43 @@ gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
     gboolean live);
 
 static void
-gst_nv_h264_dec_class_init (GstNvH264DecClass * klass)
+gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
+    GstNvDecoderClassData * cdata)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstH264DecoderClass *h264decoder_class = GST_H264_DECODER_CLASS (klass);
 
-  /**
-   * GstNvH264Dec
-   *
-   * Since: 1.18
-   */
-
   object_class->dispose = gst_nv_h264_decoder_dispose;
+  object_class->get_property = gst_nv_h264_dec_get_property;
+
+  /**
+   * GstNvH264SLDec:cuda-device-id:
+   *
+   * Assigned CUDA device id
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
+      g_param_spec_uint ("cuda-device-id", "CUDA device id",
+          "Assigned CUDA device id", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_set_context);
+
+  parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
+  gst_element_class_set_static_metadata (element_class,
+      "NVDEC H.264 Stateless Decoder",
+      "Codec/Decoder/Video/Hardware",
+      "NVIDIA H.264 video decoder", "Seungha Yang <seungha@centricular.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_close);
@@ -199,10 +247,11 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass)
   h264decoder_class->get_preferred_output_delay =
       GST_DEBUG_FUNCPTR (gst_nv_h264_dec_get_preferred_output_delay);
 
-  GST_DEBUG_CATEGORY_INIT (gst_nv_h264_dec_debug,
-      "nvh264dec", 0, "Nvidia H.264 Decoder");
+  klass->cuda_device_id = cdata->cuda_device_id;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_NV_H264_DEC, 0);
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
 }
 
 static void
@@ -222,6 +271,22 @@ gst_nv_h264_decoder_dispose (GObject * object)
   g_clear_pointer (&self->ref_list, g_array_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_nv_h264_dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstNvH264DecClass *klass = GST_NV_H264_DEC_GET_CLASS (object);
+
+  switch (prop_id) {
+    case PROP_CUDA_DEVICE_ID:
+      g_value_set_uint (value, klass->cuda_device_id);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -885,68 +950,32 @@ gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
   return 4;
 }
 
-typedef struct
-{
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-  guint cuda_device_id;
-  gboolean is_default;
-} GstNvH264DecClassData;
-
-static void
-gst_nv_h264_dec_subclass_init (gpointer klass, GstNvH264DecClassData * cdata)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstNvH264DecClass *nvdec_class = (GstNvH264DecClass *) (klass);
-  gchar *long_name;
-
-  if (cdata->is_default) {
-    long_name = g_strdup_printf ("NVDEC H.264 Stateless Decoder");
-  } else {
-    long_name = g_strdup_printf ("NVDEC H.264 Stateless Decoder with device %d",
-        cdata->cuda_device_id);
-  }
-
-  gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Decoder/Video/Hardware",
-      "Nvidia H.264 video decoder", "Seungha Yang <seungha@centricular.com>");
-  g_free (long_name);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
-
-  nvdec_class->cuda_device_id = cdata->cuda_device_id;
-
-  gst_caps_unref (cdata->sink_caps);
-  gst_caps_unref (cdata->src_caps);
-  g_free (cdata);
-}
-
 void
 gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
     GstCaps * sink_caps, GstCaps * src_caps, gboolean is_primary)
 {
-  GTypeQuery type_query;
-  GTypeInfo type_info = { 0, };
-  GType subtype;
+  GType type;
   gchar *type_name;
   gchar *feature_name;
-  GstNvH264DecClassData *cdata;
-  gboolean is_default = TRUE;
+  GstNvDecoderClassData *cdata;
+  gint index = 0;
   const GValue *value;
   GstStructure *s;
+  GTypeInfo type_info = {
+    sizeof (GstNvH264DecClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_nv_h264_dec_class_init,
+    NULL,
+    NULL,
+    sizeof (GstNvH264Dec),
+    0,
+    (GInstanceInitFunc) gst_nv_h264_dec_init,
+  };
 
-  /**
-   * element-nvh264sldec
-   *
-   * Since: 1.18
-   */
+  GST_DEBUG_CATEGORY_INIT (gst_nv_h264_dec_debug, "nvh264dec", 0, "nvh264dec");
 
-  cdata = g_new0 (GstNvH264DecClassData, 1);
+  cdata = g_new0 (GstNvDecoderClassData, 1);
   cdata->sink_caps = gst_caps_from_string ("video/x-h264, "
       "stream-format= (string) { avc, avc3, byte-stream }, "
       "alignment= (string) au, "
@@ -965,45 +994,37 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
 
-  g_type_query (GST_TYPE_NV_H264_DEC, &type_query);
-  memset (&type_info, 0, sizeof (type_info));
-  type_info.class_size = type_query.class_size;
-  type_info.instance_size = type_query.instance_size;
-  type_info.class_init = (GClassInitFunc) gst_nv_h264_dec_subclass_init;
-  type_info.class_data = cdata;
-
   if (is_primary) {
-    type_name = g_strdup ("GstNvH264StatelessPrimaryDec");
+    type_name = g_strdup ("GstNvH264Dec");
     feature_name = g_strdup ("nvh264dec");
   } else {
-    type_name = g_strdup ("GstNvH264StatelessDec");
+    type_name = g_strdup ("GstNvH264SLDec");
     feature_name = g_strdup ("nvh264sldec");
   }
 
-  if (g_type_from_name (type_name) != 0) {
+  while (g_type_from_name (type_name)) {
+    index++;
     g_free (type_name);
     g_free (feature_name);
     if (is_primary) {
-      type_name =
-          g_strdup_printf ("GstNvH264StatelessPrimaryDevice%dDec", device_id);
-      feature_name = g_strdup_printf ("nvh264device%ddec", device_id);
+      type_name = g_strdup_printf ("GstNvH264Device%dDec", index);
+      feature_name = g_strdup_printf ("nvh264device%ddec", index);
     } else {
-      type_name = g_strdup_printf ("GstNvH264StatelessDevice%dDec", device_id);
-      feature_name = g_strdup_printf ("nvh264sldevice%ddec", device_id);
+      type_name = g_strdup_printf ("GstNvH264SLDevice%dDec", index);
+      feature_name = g_strdup_printf ("nvh264sldevice%ddec", index);
     }
-
-    is_default = FALSE;
   }
 
-  cdata->is_default = is_default;
-  subtype = g_type_register_static (GST_TYPE_NV_H264_DEC,
+  type_info.class_data = cdata;
+
+  type = g_type_register_static (GST_TYPE_H264_DECODER,
       type_name, &type_info, 0);
 
   /* make lower rank than default device */
-  if (rank > 0 && !is_default)
+  if (rank > 0 && index > 0)
     rank--;
 
-  if (!gst_element_register (plugin, feature_name, rank, subtype))
+  if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
 
   g_free (type_name);

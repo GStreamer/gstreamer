@@ -49,6 +49,13 @@ typedef struct _GstNvDecoderFrame
   gint ref_count;
 } GstNvDecoderFrame;
 
+typedef struct _GstNvDecoderClassData
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  guint cuda_device_id;
+} GstNvDecoderClassData;
+
 GstNvDecoder * gst_nv_decoder_new (GstCudaContext * context);
 
 gboolean       gst_nv_decoder_is_configured (GstNvDecoder * decoder);

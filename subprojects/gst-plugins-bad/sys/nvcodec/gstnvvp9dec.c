@@ -17,6 +17,21 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-nvvp9sldec
+ * @title: nvvp9sldec
+ *
+ * GstCodecs based NVIDIA VP9 video decoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/vp9/file ! parsebin ! nvvp9sldec ! videoconvert ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -31,7 +46,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_nv_vp9_dec_debug);
 #define GST_CAT_DEFAULT gst_nv_vp9_dec_debug
 
-struct _GstNvVp9Dec
+typedef struct _GstNvVp9Dec
 {
   GstVp9Decoder parent;
 
@@ -43,22 +58,28 @@ struct _GstNvVp9Dec
 
   guint width, height;
   GstVP9Profile profile;
-};
+} GstNvVp9Dec;
 
-struct _GstNvVp9DecClass
+typedef struct _GstNvVp9DecClass
 {
   GstVp9DecoderClass parent_class;
   guint cuda_device_id;
+} GstNvVp9DecClass;
+
+enum
+{
+  PROP_0,
+  PROP_CUDA_DEVICE_ID,
 };
 
-#define gst_nv_vp9_dec_parent_class parent_class
+static GTypeClass *parent_class = NULL;
 
-/**
- * GstNvVp9Dec:
- *
- * Since: 1.20
- */
-G_DEFINE_TYPE (GstNvVp9Dec, gst_nv_vp9_dec, GST_TYPE_VP9_DECODER);
+#define GST_NV_VP9_DEC(object) ((GstNvVp9Dec *) (object))
+#define GST_NV_VP9_DEC_GET_CLASS(object) \
+    (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstNvVp9DecClass))
+
+static void gst_nv_vp9_dec_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static void gst_nv_vp9_dec_set_context (GstElement * element,
     GstContext * context);
@@ -85,13 +106,42 @@ static guint gst_nv_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
     gboolean is_live);
 
 static void
-gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass)
+gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
+    GstNvDecoderClassData * cdata)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstVp9DecoderClass *vp9decoder_class = GST_VP9_DECODER_CLASS (klass);
 
+  object_class->get_property = gst_nv_vp9_dec_get_property;
+
+  /**
+   * GstNvVp9SLDec:cuda-device-id:
+   *
+   * Assigned CUDA device id
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
+      g_param_spec_uint ("cuda-device-id", "CUDA device id",
+          "Assigned CUDA device id", 0, G_MAXINT, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_set_context);
+
+  parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
+  gst_element_class_set_metadata (element_class,
+      "NVDEC VP9 Stateless Decoder",
+      "Codec/Decoder/Video/Hardware",
+      "NVIDIA VP9 video decoder", "Seungha Yang <seungha@centricular.com>");
+
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_close);
@@ -113,15 +163,32 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass)
   vp9decoder_class->get_preferred_output_delay =
       GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_get_preferred_output_delay);
 
-  GST_DEBUG_CATEGORY_INIT (gst_nv_vp9_dec_debug,
-      "nvvp9dec", 0, "NVIDIA VP9 Decoder");
+  klass->cuda_device_id = cdata->cuda_device_id;
 
-  gst_type_mark_as_plugin_api (GST_TYPE_NV_VP9_DEC, 0);
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
 }
 
 static void
 gst_nv_vp9_dec_init (GstNvVp9Dec * self)
 {
+}
+
+static void
+gst_nv_vp9_dec_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstNvVp9DecClass *klass = GST_NV_VP9_DEC_GET_CLASS (object);
+
+  switch (prop_id) {
+    case PROP_CUDA_DEVICE_ID:
+      g_value_set_uint (value, klass->cuda_device_id);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -539,66 +606,30 @@ gst_nv_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
   return 4;
 }
 
-typedef struct
-{
-  GstCaps *sink_caps;
-  GstCaps *src_caps;
-  guint cuda_device_id;
-  gboolean is_default;
-} GstNvVp9DecClassData;
-
-static void
-gst_nv_vp9_dec_subclass_init (gpointer klass, GstNvVp9DecClassData * cdata)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstNvVp9DecClass *nvdec_class = (GstNvVp9DecClass *) (klass);
-  gchar *long_name;
-
-  if (cdata->is_default) {
-    long_name = g_strdup_printf ("NVDEC VP9 Stateless Decoder");
-  } else {
-    long_name = g_strdup_printf ("NVDEC VP9 Stateless Decoder with device %d",
-        cdata->cuda_device_id);
-  }
-
-  gst_element_class_set_metadata (element_class, long_name,
-      "Codec/Decoder/Video/Hardware",
-      "NVIDIA VP9 video decoder", "Seungha Yang <seungha@centricular.com>");
-  g_free (long_name);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
-
-  nvdec_class->cuda_device_id = cdata->cuda_device_id;
-
-  gst_caps_unref (cdata->sink_caps);
-  gst_caps_unref (cdata->src_caps);
-  g_free (cdata);
-}
-
 void
 gst_nv_vp9_dec_register (GstPlugin * plugin, guint device_id, guint rank,
     GstCaps * sink_caps, GstCaps * src_caps, gboolean is_primary)
 {
-  GTypeQuery type_query;
-  GTypeInfo type_info = { 0, };
-  GType subtype;
+  GType type;
   gchar *type_name;
   gchar *feature_name;
-  GstNvVp9DecClassData *cdata;
-  gboolean is_default = TRUE;
+  GstNvDecoderClassData *cdata;
+  gint index = 0;
+  GTypeInfo type_info = {
+    sizeof (GstNvVp9DecClass),
+    NULL,
+    NULL,
+    (GClassInitFunc) gst_nv_vp9_dec_class_init,
+    NULL,
+    NULL,
+    sizeof (GstNvVp9Dec),
+    0,
+    (GInstanceInitFunc) gst_nv_vp9_dec_init,
+  };
 
-  /**
-   * element-nvvp9sldec:
-   *
-   * Since: 1.20
-   */
+  GST_DEBUG_CATEGORY_INIT (gst_nv_vp9_dec_debug, "nvvp9dec", 0, "nvvp9dec");
 
-  cdata = g_new0 (GstNvVp9DecClassData, 1);
+  cdata = g_new0 (GstNvDecoderClassData, 1);
   cdata->sink_caps = gst_caps_copy (sink_caps);
   gst_caps_set_simple (cdata->sink_caps,
       "alignment", G_TYPE_STRING, "frame", NULL);
@@ -607,45 +638,37 @@ gst_nv_vp9_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
 
-  g_type_query (GST_TYPE_NV_VP9_DEC, &type_query);
-  memset (&type_info, 0, sizeof (type_info));
-  type_info.class_size = type_query.class_size;
-  type_info.instance_size = type_query.instance_size;
-  type_info.class_init = (GClassInitFunc) gst_nv_vp9_dec_subclass_init;
-  type_info.class_data = cdata;
-
   if (is_primary) {
-    type_name = g_strdup ("GstNvVP9StatelessPrimaryDec");
+    type_name = g_strdup ("GstNvVp9Dec");
     feature_name = g_strdup ("nvvp9dec");
   } else {
-    type_name = g_strdup ("GstNvVP9StatelessDec");
+    type_name = g_strdup ("GstNvVp9SLDec");
     feature_name = g_strdup ("nvvp9sldec");
   }
 
-  if (g_type_from_name (type_name) != 0) {
+  while (g_type_from_name (type_name)) {
+    index++;
     g_free (type_name);
     g_free (feature_name);
     if (is_primary) {
-      type_name =
-          g_strdup_printf ("GstNvVP9StatelessPrimaryDevice%dDec", device_id);
-      feature_name = g_strdup_printf ("nvvp9device%ddec", device_id);
+      type_name = g_strdup_printf ("GstNvVp9Device%dDec", index);
+      feature_name = g_strdup_printf ("nvvp9device%ddec", index);
     } else {
-      type_name = g_strdup_printf ("GstNvVP9StatelessDevice%dDec", device_id);
-      feature_name = g_strdup_printf ("nvvp9sldevice%ddec", device_id);
+      type_name = g_strdup_printf ("GstNvVp9SLDevice%dDec", index);
+      feature_name = g_strdup_printf ("nvvp9sldevice%ddec", index);
     }
-
-    is_default = FALSE;
   }
 
-  cdata->is_default = is_default;
-  subtype = g_type_register_static (GST_TYPE_NV_VP9_DEC,
+  type_info.class_data = cdata;
+
+  type = g_type_register_static (GST_TYPE_VP9_DECODER,
       type_name, &type_info, 0);
 
   /* make lower rank than default device */
-  if (rank > 0 && !is_default)
+  if (rank > 0 && index > 0)
     rank--;
 
-  if (!gst_element_register (plugin, feature_name, rank, subtype))
+  if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
 
   g_free (type_name);
