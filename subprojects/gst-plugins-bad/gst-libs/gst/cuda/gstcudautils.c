@@ -197,18 +197,27 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
     GstCudaContext ** cuda_ctx)
 {
   guint target_device_id = 0;
+  gboolean ret = TRUE;
+  static GRecMutex lock;
+  static gsize init_lock_once = 0;
 
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (cuda_ctx != NULL, FALSE);
 
   _init_debug ();
+  if (g_once_init_enter (&init_lock_once)) {
+    g_rec_mutex_init (&lock);
+    g_once_init_leave (&init_lock_once, 1);
+  }
+
+  g_rec_mutex_lock (&lock);
 
   if (*cuda_ctx)
-    return TRUE;
+    goto out;
 
   find_cuda_context (element, cuda_ctx);
   if (*cuda_ctx)
-    return TRUE;
+    goto out;
 
   if (device_id > 0)
     target_device_id = device_id;
@@ -219,7 +228,7 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
   if (*cuda_ctx == NULL) {
     GST_CAT_ERROR_OBJECT (GST_CAT_CONTEXT, element,
         "Failed to create CUDA context with device-id %d", device_id);
-    return FALSE;
+    ret = FALSE;
   } else {
     GstContext *context;
     GstMessage *msg;
@@ -238,7 +247,10 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
     gst_element_post_message (GST_ELEMENT_CAST (element), msg);
   }
 
-  return TRUE;
+out:
+  g_rec_mutex_unlock (&lock);
+
+  return ret;
 }
 
 /**
