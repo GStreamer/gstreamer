@@ -113,6 +113,7 @@ struct _GstVaVpp
   gboolean add_borders;
   gint borders_h;
   gint borders_w;
+  guint32 scale_method;
 
   gboolean hdr_mapping;
   gboolean has_hdr_meta;
@@ -133,6 +134,7 @@ enum
 {
   PROP_DISABLE_PASSTHROUGH = GST_VA_FILTER_PROP_LAST + 1,
   PROP_ADD_BORDERS,
+  PROP_SCALE_METHOD,
   N_PROPERTIES
 };
 
@@ -241,6 +243,9 @@ _update_properties_unlocked (GstVaVpp * self)
   } else {
     self->op_flags &= ~VPP_CONVERT_DIRECTION;
   }
+
+  if (!gst_va_filter_set_scale_method (btrans->filter, self->scale_method))
+    GST_WARNING_OBJECT (self, "could not set the filter scale method.");
 }
 
 static void
@@ -316,6 +321,9 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
     case PROP_ADD_BORDERS:
       self->add_borders = g_value_get_boolean (value);
       break;
+    case PROP_SCALE_METHOD:
+      self->scale_method = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -379,6 +387,9 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ADD_BORDERS:
       g_value_set_boolean (value, self->add_borders);
+      break;
+    case PROP_SCALE_METHOD:
+      g_value_set_enum (value, self->scale_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2067,7 +2078,21 @@ _install_static_properties (GObjectClass * klass)
       "Add black borders if necessary to keep the display aspect ratio", FALSE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING);
   g_object_class_install_property (klass, PROP_ADD_BORDERS,
-    PROPERTIES (PROP_ADD_BORDERS));
+      PROPERTIES (PROP_ADD_BORDERS));
+
+  /**
+   * GstVaPostProc:scale-method
+   *
+   * Sets the scale method algorithm to use when resizing.
+   *
+   * Since: 1.22
+   */
+  PROPERTIES (PROP_SCALE_METHOD) = g_param_spec_enum ("scale-method",
+      "Scale Method", "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
+      VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+      | GST_PARAM_MUTABLE_PLAYING);
+  g_object_class_install_property (klass, PROP_SCALE_METHOD,
+      PROPERTIES (PROP_SCALE_METHOD));
 }
 
 static void
