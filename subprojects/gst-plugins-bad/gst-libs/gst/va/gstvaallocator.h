@@ -117,7 +117,7 @@ gboolean              gst_va_allocator_get_format         (GstAllocator * alloca
 							   GstVaFeature * use_derived);
 GST_VA_API
 void                  gst_va_allocator_set_hacks          (GstAllocator * allocator,
-                                                           guint32 hack);
+                                                           guint32 hacks);
 
 GST_VA_API
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);
