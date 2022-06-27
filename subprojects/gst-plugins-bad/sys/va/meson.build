@@ -7,7 +7,6 @@ va_sources = [
   'gstvacompositor.c',
   'gstvadecoder.c',
   'gstvadeinterlace.c',
-  'gstvaencoder.c',
   'gstvadevice.c',
   'gstvadisplay_priv.c',
   'gstvaencoder.c',
