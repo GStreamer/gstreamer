@@ -166,6 +166,7 @@ gst_gl_video_mixer_blend_function_get_type (void)
 #define DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE
 #define DEFAULT_PAD_BLEND_FUNCTION_DST_RGB GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
 #define DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
+#define DEFAULT_PAD_CROP 0
 
 enum
 {
@@ -187,6 +188,10 @@ enum
   PROP_INPUT_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
   PROP_INPUT_ZORDER,
   PROP_INPUT_REPEAT_AFTER_EOS,
+  PROP_INPUT_CROP_LEFT,
+  PROP_INPUT_CROP_RIGHT,
+  PROP_INPUT_CROP_TOP,
+  PROP_INPUT_CROP_BOTTOM,
 };
 
 static void gst_gl_video_mixer_input_get_property (GObject * object,
@@ -318,6 +323,54 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
       g_param_spec_double ("blend-constant-color-alpha",
           "Blend Constant Color Alpha", "Blend Constant Color Alpha", 0.0, 1.0,
           0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerInput:crop-left:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the left side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_INPUT_CROP_LEFT,
+      g_param_spec_int ("crop-left", "Crop Left", "Crop left of the picture", 0,
+          G_MAXINT, DEFAULT_PAD_CROP,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerInput:crop-right:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the right side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_INPUT_CROP_RIGHT,
+      g_param_spec_int ("crop-right", "Crop Right", "Crop right of the picture",
+          0, G_MAXINT, DEFAULT_PAD_CROP,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerInput:crop-top:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the top side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_INPUT_CROP_TOP,
+      g_param_spec_int ("crop-top", "Crop Top", "Crop top of the picture", 0,
+          G_MAXINT, DEFAULT_PAD_CROP,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerInput:crop-bottom:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the bottom side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_INPUT_CROP_BOTTOM,
+      g_param_spec_int ("crop-bottom", "Crop Bottom",
+          "Crop bottom of the picture", 0, G_MAXINT, DEFAULT_PAD_CROP,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -567,6 +620,9 @@ struct _GstGLVideoMixerPad
   gdouble blend_constant_color_blue;
   gdouble blend_constant_color_alpha;
 
+  gint crop_left, crop_right;
+  gint crop_top, crop_bottom;
+
   gboolean geometry_change;
   GLuint vertex_buffer;
   gfloat m_matrix[16];
@@ -604,6 +660,10 @@ enum
   PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_GREEN,
   PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_BLUE,
   PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA,
+  PROP_PAD_CROP_LEFT,
+  PROP_PAD_CROP_RIGHT,
+  PROP_PAD_CROP_TOP,
+  PROP_PAD_CROP_BOTTOM,
 };
 
 static void
@@ -716,6 +776,54 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
           "Blend Constant Color Alpha", "Blend Constant Color Alpha", 0.0, 1.0,
           0.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerPad:crop-left:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the left side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_CROP_LEFT,
+      g_param_spec_int ("crop-left", "Crop Left", "Crop left of the picture", 0,
+          G_MAXINT, DEFAULT_PAD_CROP,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerPad:crop-right:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the right side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_CROP_RIGHT,
+      g_param_spec_int ("crop-right", "Crop Right", "Crop right of the picture",
+          0, G_MAXINT, DEFAULT_PAD_CROP,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerPad:crop-top:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the top side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_CROP_TOP,
+      g_param_spec_int ("crop-top", "Crop Top", "Crop top of the picture", 0,
+          G_MAXINT, DEFAULT_PAD_CROP,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstGLVideoMixerPad:crop-bottom:
+   *
+   * Defines how many pixels of the input in input size should be cropped on
+   * the bottom side.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_CROP_BOTTOM,
+      g_param_spec_int ("crop-bottom", "Crop Bottom",
+          "Crop bottom of the picture", 0, G_MAXINT, DEFAULT_PAD_CROP,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -769,6 +877,18 @@ gst_gl_video_mixer_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA:
       g_value_set_double (value, pad->blend_constant_color_alpha);
+      break;
+    case PROP_PAD_CROP_LEFT:
+      g_value_set_int (value, pad->crop_left);
+      break;
+    case PROP_PAD_CROP_RIGHT:
+      g_value_set_int (value, pad->crop_right);
+      break;
+    case PROP_PAD_CROP_TOP:
+      g_value_set_int (value, pad->crop_top);
+      break;
+    case PROP_PAD_CROP_BOTTOM:
+      g_value_set_int (value, pad->crop_bottom);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -832,6 +952,22 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA:
       pad->blend_constant_color_alpha = g_value_get_double (value);
+      break;
+    case PROP_PAD_CROP_LEFT:
+      pad->crop_left = g_value_get_int (value);
+      pad->geometry_change = TRUE;
+      break;
+    case PROP_PAD_CROP_RIGHT:
+      pad->crop_right = g_value_get_int (value);
+      pad->geometry_change = TRUE;
+      break;
+    case PROP_PAD_CROP_TOP:
+      pad->crop_top = g_value_get_int (value);
+      pad->geometry_change = TRUE;
+      break;
+    case PROP_PAD_CROP_BOTTOM:
+      pad->crop_bottom = g_value_get_int (value);
+      pad->geometry_change = TRUE;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1019,12 +1155,27 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
     return;
   }
 
-  pad_width =
-      mix_pad->width <=
-      0 ? GST_VIDEO_INFO_WIDTH (&vagg_pad->info) : mix_pad->width;
-  pad_height =
-      mix_pad->height <=
-      0 ? GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) : mix_pad->height;
+  if (mix_pad->width <= 0) {
+    gint crop = mix_pad->crop_left + mix_pad->crop_right;
+
+    if (GST_VIDEO_INFO_WIDTH (&vagg_pad->info) > crop)
+      pad_width = GST_VIDEO_INFO_WIDTH (&vagg_pad->info) - crop;
+    else
+      pad_width = 0;
+  } else {
+    pad_width = mix_pad->width;
+  }
+
+  if (mix_pad->height <= 0) {
+    gint crop = mix_pad->crop_top + mix_pad->crop_bottom;
+
+    if (GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) > crop)
+      pad_height = GST_VIDEO_INFO_HEIGHT (&vagg_pad->info) - crop;
+    else
+      pad_height = 0;
+  } else {
+    pad_height = mix_pad->height;
+  }
 
   if (!gst_video_calculate_display_ratio (&dar_n, &dar_d, pad_width, pad_height,
           GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
@@ -1624,15 +1775,6 @@ gst_gl_video_mixer_callback (gpointer stuff)
     guint in_tex;
     guint in_width, in_height;
 
-    /* *INDENT-OFF* */
-    gfloat v_vertices[] = {
-      -1.0,-1.0, 0.0f, 0.0f, 0.0f,
-       1.0,-1.0, 0.0f, 1.0f, 0.0f,
-       1.0, 1.0, 0.0f, 1.0f, 1.0f,
-      -1.0, 1.0, 0.0f, 0.0f, 1.0f,
-    };
-    /* *INDENT-ON* */
-
     v_info = &GST_VIDEO_AGGREGATOR_PAD (pad)->info;
     in_width = GST_VIDEO_INFO_WIDTH (v_info);
     in_height = GST_VIDEO_INFO_HEIGHT (v_info);
@@ -1659,6 +1801,14 @@ gst_gl_video_mixer_callback (gpointer stuff)
         || pad->geometry_change || !pad->vertex_buffer) {
       gint pad_width, pad_height;
       gfloat w, h;
+      /* *INDENT-OFF* */
+      gfloat v_vertices[] = {
+        -1.0,-1.0, 0.0f, 0.0f, 0.0f,
+         1.0,-1.0, 0.0f, 1.0f, 0.0f,
+         1.0, 1.0, 0.0f, 1.0f, 1.0f,
+        -1.0, 1.0, 0.0f, 0.0f, 1.0f,
+      };
+      /* *INDENT-ON* */
 
       _mixer_pad_get_output_size (video_mixer, pad,
           GST_VIDEO_INFO_PAR_N (&vagg->info),
@@ -1674,9 +1824,26 @@ gst_gl_video_mixer_callback (gpointer stuff)
       pad->m_matrix[13] =
           2. * (gfloat) pad->ypos / (gfloat) out_height - (1. - h);
 
-      GST_TRACE ("processing texture:%u dimensions:%ux%u, at %f,%f %fx%f with "
-          "alpha:%f", in_tex, in_width, in_height, pad->m_matrix[12],
-          pad->m_matrix[13], pad->m_matrix[0], pad->m_matrix[5], pad->alpha);
+      v_vertices[0 * 5 + 3] = v_vertices[3 * 5 + 3] =
+          pad->crop_left ? ((gfloat) pad->crop_left) /
+          ((gfloat) in_width) : 0.0f;
+      v_vertices[1 * 5 + 3] = v_vertices[2 * 5 + 3] =
+          pad->crop_right ? 1.0 -
+          ((gfloat) pad->crop_right) / ((gfloat) in_width) : 1.0f;
+      v_vertices[0 * 5 + 4] = v_vertices[1 * 5 + 4] =
+          pad->crop_top ? ((gfloat) pad->crop_top) /
+          ((gfloat) in_height) : 0.0f;
+      v_vertices[2 * 5 + 4] = v_vertices[3 * 5 + 4] =
+          pad->crop_bottom ? 1.0 -
+          ((gfloat) pad->crop_bottom) / ((gfloat) in_height) : 1.0f;
+
+      GST_TRACE ("processing texture:%u dimensions:%ux%u with texture "
+          "coordinates %f:%fx%f:%f, at %f,%f %fx%f with alpha:%f "
+          "and crop: %d:%dx%d:%d", in_tex, in_width, in_height,
+          v_vertices[0 * 5 + 3], v_vertices[1 * 5 + 3], v_vertices[0 * 5 + 4],
+          v_vertices[1 * 5 + 4], pad->m_matrix[12], pad->m_matrix[13],
+          pad->m_matrix[0], pad->m_matrix[5], pad->alpha, pad->crop_left,
+          pad->crop_right, pad->crop_top, pad->crop_bottom);
 
       if (!pad->vertex_buffer)
         gl->GenBuffers (1, &pad->vertex_buffer);
