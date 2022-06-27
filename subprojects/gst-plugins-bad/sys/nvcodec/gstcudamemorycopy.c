@@ -224,6 +224,7 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
         GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
     ret = gst_caps_merge (ret, new_caps);
 
+    ret = gst_caps_make_writable (ret);
     _remove_field (ret, "texture-target");
 
     gst_caps_unref (sys_caps);
@@ -252,6 +253,7 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
     new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
 
     ret = gst_caps_merge (ret, new_caps);
+    ret = gst_caps_make_writable (ret);
     _remove_field (ret, "texture-target");
   }
 
