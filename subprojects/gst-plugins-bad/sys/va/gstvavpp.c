@@ -129,6 +129,17 @@ struct CData
   gchar *description;
 };
 
+enum
+{
+  PROP_DISABLE_PASSTHROUGH = GST_VA_FILTER_PROP_LAST + 1,
+  PROP_ADD_BORDERS,
+  N_PROPERTIES
+};
+
+static GParamSpec *properties[N_PROPERTIES - GST_VA_FILTER_PROP_LAST];
+
+#define PROPERTIES(idx) properties[idx - GST_VA_FILTER_PROP_LAST]
+
 /* convertions that disable passthrough */
 enum
 {
@@ -290,7 +301,11 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
       self->auto_contrast = g_value_get_boolean (value);
       g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
-    case GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH:{
+    case GST_VA_FILTER_PROP_HDR:
+      self->hdr_mapping = g_value_get_boolean (value);
+      g_atomic_int_set (&self->rebuild_filters, TRUE);
+      break;
+    case PROP_DISABLE_PASSTHROUGH:{
       gboolean disable_passthrough = g_value_get_boolean (value);
       if (disable_passthrough)
         self->op_flags |= VPP_CONVERT_DUMMY;
@@ -298,12 +313,8 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
         self->op_flags &= ~VPP_CONVERT_DUMMY;
       break;
     }
-    case GST_VA_FILTER_PROP_ADD_BORDERS:
+    case PROP_ADD_BORDERS:
       self->add_borders = g_value_get_boolean (value);
-      break;
-    case GST_VA_FILTER_PROP_HDR:
-      self->hdr_mapping = g_value_get_boolean (value);
-      g_atomic_int_set (&self->rebuild_filters, TRUE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -360,14 +371,14 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
     case GST_VA_FILTER_PROP_AUTO_CONTRAST:
       g_value_set_boolean (value, self->auto_contrast);
       break;
-    case GST_VA_FILTER_PROP_DISABLE_PASSTHROUGH:
-      g_value_set_boolean (value, (self->op_flags & VPP_CONVERT_DUMMY));
-      break;
-    case GST_VA_FILTER_PROP_ADD_BORDERS:
-      g_value_set_boolean (value, self->add_borders);
-      break;
     case GST_VA_FILTER_PROP_HDR:
       g_value_set_boolean (value, self->hdr_mapping);
+      break;
+    case PROP_DISABLE_PASSTHROUGH:
+      g_value_set_boolean (value, (self->op_flags & VPP_CONVERT_DUMMY));
+      break;
+    case PROP_ADD_BORDERS:
+      g_value_set_boolean (value, self->add_borders);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2025,6 +2036,41 @@ gst_va_vpp_sink_event (GstBaseTransform * trans, GstEvent * event)
 }
 
 static void
+_install_static_properties (GObjectClass * klass)
+{
+  /**
+   * GstVaPostProc:disable-passthrough:
+   *
+   * If set to %TRUE the filter will not enable passthrough mode, thus
+   * each frame will be processed. It's useful for cropping, for
+   * example.
+   *
+   * Since: 1.20
+   */
+  PROPERTIES (PROP_DISABLE_PASSTHROUGH) =
+      g_param_spec_boolean ("disable-passthrough", "Disable Passthrough",
+      "Forces passing buffers through the postprocessor", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY);
+  g_object_class_install_property (klass, PROP_DISABLE_PASSTHROUGH,
+      PROPERTIES (PROP_DISABLE_PASSTHROUGH));
+
+  /**
+   * GstVaPostProc:add-borders:
+   *
+   * If set to %TRUE the filter will add black borders if necessary to
+   * keep the display aspect ratio.
+   *
+   * Since: 1.20
+   */
+  PROPERTIES (PROP_ADD_BORDERS) = g_param_spec_boolean ("add-borders",
+      "Add Borders",
+      "Add black borders if necessary to keep the display aspect ratio", FALSE,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING);
+  g_object_class_install_property (klass, PROP_ADD_BORDERS,
+    PROPERTIES (PROP_ADD_BORDERS));
+}
+
+static void
 gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
 {
   GstCaps *doc_caps, *caps = NULL;
@@ -2129,6 +2175,8 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_vpp_update_properties);
 
   gst_va_filter_install_properties (filter, object_class);
+
+  _install_static_properties (object_class);
 
   g_free (long_name);
   g_free (cdata->description);
