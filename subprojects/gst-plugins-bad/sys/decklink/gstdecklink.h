@@ -44,13 +44,16 @@
 # ifdef __MINGW32__
 #  define CONVERT_COM_STRING(s) G_STMT_START { BSTR _s = (BSTR)s; s = (char*) malloc(100); wcstombs(s, _s, 100); ::SysFreeString(_s); } G_STMT_END
 #  define FREE_COM_STRING(s) free(s);
+#  define CONVERT_TO_COM_STRING(s) G_STMT_START { char * _s = (char *)s; s = (BSTR) malloc(100); mbstowcs(s, _s, 100); g_free(_s); } G_STMT_END
 # else
 #  define CONVERT_COM_STRING(s) G_STMT_START { BSTR _s = (BSTR)s; s = _com_util::ConvertBSTRToString(_s); ::SysFreeString(_s); } G_STMT_END
 #  define FREE_COM_STRING(s) G_STMT_START { delete[] s; } G_STMT_END
+#  define CONVERT_TO_COM_STRING(s) G_STMT_START { char * _s = (char *)s; s = _com_util::ConvertStringToBSTR(_s); g_free(_s); } G_STMT_END
 # endif /* __MINGW32__ */
 #else
 #define COMSTR_T const char*
 #define CONVERT_COM_STRING(s)
+#define CONVERT_TO_COM_STRING(s)
 #define FREE_COM_STRING(s)
 #define WINAPI
 #endif /* G_OS_WIN32 */
