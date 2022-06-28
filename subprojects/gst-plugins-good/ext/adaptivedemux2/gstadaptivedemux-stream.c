@@ -104,6 +104,14 @@ gst_adaptive_demux2_stream_finalize (GObject * object)
   if (stream->pad_removed_id)
     g_signal_handler_disconnect (stream->parsebin, stream->pad_removed_id);
 
+  if (stream->parsebin != NULL) {
+    GST_LOG_OBJECT (stream, "Removing parsebin");
+    gst_bin_remove (GST_BIN_CAST (stream->demux), stream->parsebin);
+    gst_element_set_state (stream->parsebin, GST_STATE_NULL);
+    gst_object_unref (stream->parsebin);
+    stream->parsebin = NULL;
+  }
+
   g_free (stream->fragment_bitrates);
 
   g_list_free_full (stream->tracks,
@@ -1045,7 +1053,7 @@ gst_adaptive_demux2_stream_create_parser (GstAdaptiveDemux2Stream * stream)
     if (tsdemux_type)
       g_signal_connect (stream->parsebin, "deep-element-added",
           (GCallback) parsebin_deep_element_added_cb, demux);
-    gst_bin_add (GST_BIN_CAST (demux), stream->parsebin);
+    gst_bin_add (GST_BIN_CAST (demux), gst_object_ref (stream->parsebin));
     stream->parsebin_sink =
         gst_element_get_static_pad (stream->parsebin, "sink");
     stream->pad_added_id = g_signal_connect (stream->parsebin, "pad-added",
