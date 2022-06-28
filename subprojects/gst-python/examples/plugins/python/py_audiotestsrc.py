@@ -86,7 +86,7 @@ class AudioTestSrc(GstBase.BaseSrc):
         self.set_format(Gst.Format.TIME)
 
     def do_set_caps(self, caps):
-        self.info.from_caps(caps)
+        self.info = GstAudio.AudioInfo.new_from_caps(caps)
         self.set_blocksize(self.info.bpf * SAMPLESPERBUFFER)
         return True
 
