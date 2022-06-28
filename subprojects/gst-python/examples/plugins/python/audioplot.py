@@ -29,7 +29,7 @@ except ImportError:
     raise
 
 
-Gst.init(None)
+Gst.init_python()
 
 AUDIO_FORMATS = [f.strip() for f in
                  GstAudio.AUDIO_FORMATS_ALL.strip('{ }').split(',')]

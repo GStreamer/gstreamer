@@ -21,7 +21,7 @@
 #  $ gst-launch-1.0 videotestsrc ! pymysink://
 
 from gi.repository import Gst, GObject, GstBase
-Gst.init(None)
+Gst.init_python()
 
 #
 # Simple Sink element created entirely in python

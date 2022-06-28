@@ -755,7 +755,14 @@ def deinit():
     deinit_pygst()
     return real_deinit()
 
+def init_python():
+    if not Gst.is_initialized():
+        raise NotInitialized("Gst.init_python should never be called before GStreamer itself is initialized")
+
+    init_pygst()
+
 Gst.deinit = deinit
+Gst.init_python = init_python
 
 if not Gst.is_initialized():
     deinit_pygst()

@@ -15,7 +15,7 @@ from gi.repository import Gst, GObject, GstBase, GstVideo
 
 import numpy as np
 
-Gst.init(None)
+Gst.init_python()
 FIXED_CAPS = Gst.Caps.from_string('video/x-raw,format=GRAY8,width=[1,2147483647],height=[1,2147483647]')
 
 class ExampleTransform(GstBase.BaseTransform):
