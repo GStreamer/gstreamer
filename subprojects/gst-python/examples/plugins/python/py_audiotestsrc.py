@@ -22,6 +22,8 @@ except ImportError:
     Gst.error('py_audiotestsrc requires numpy')
     raise
 
+Gst.init_python()
+
 OCAPS = Gst.Caps.from_string (
         'audio/x-raw, format=F32LE, layout=interleaved, rate=44100, channels=2')
 

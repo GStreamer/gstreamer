@@ -20,7 +20,7 @@ gi.require_version('GObject', '2.0')
 
 from gi.repository import Gst, GObject, GstBase
 
-Gst.init(None)
+Gst.init_python()
 
 try:
     from PIL import Image

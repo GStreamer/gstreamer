@@ -17,7 +17,7 @@
 #  $ GST_DEBUG=python:4 gst-launch-1.0 fakesrc num-buffers=10 ! mysink
 
 from gi.repository import Gst, GObject, GstBase
-Gst.init(None)
+Gst.init_python()
 
 #
 # Simple Sink element created entirely in python
