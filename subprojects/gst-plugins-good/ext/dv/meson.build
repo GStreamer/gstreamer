@@ -4,7 +4,6 @@ dv_sources = [
   'gstdvdec.c',
   'gstdvdemux.c',
   'gstsmptetimecode.c',
-  'smpte_test.c',
 ]
 
 dv_dep = dependency('libdv', version : '>= 0.100', required : get_option('dv'),
