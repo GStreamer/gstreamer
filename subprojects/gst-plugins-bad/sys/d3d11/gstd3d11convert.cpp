@@ -70,9 +70,12 @@ struct _GstD3D11BaseConvert
   GstD3D11Converter *converter;
   GstD3D11VideoProcessor *processor;
   gboolean processor_in_use;
+  gboolean same_caps;
+  gboolean downstream_supports_crop_meta;
 
   /* used for border rendering */
   RECT in_rect;
+  RECT prev_in_rect;
   RECT out_rect;
 
   gint borders_h;
@@ -100,15 +103,17 @@ static GstCaps *gst_d3d11_base_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_d3d11_base_convert_fixate_caps (GstBaseTransform *
     base, GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
-static gboolean gst_d3d11_base_convert_filter_meta (GstBaseTransform * trans,
-    GstQuery * query, GType api, const GstStructure * params);
 static gboolean
 gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query);
 static gboolean
 gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
     GstQuery * query);
-
+static GstFlowReturn
+gst_d3d11_base_convert_generate_output (GstBaseTransform * trans,
+    GstBuffer ** buffer);
+static gboolean gst_d3d11_base_convert_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static GstFlowReturn gst_d3d11_base_convert_transform (GstBaseTransform *
     trans, GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
@@ -261,18 +266,20 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
   gst_caps_unref (caps);
 
-  trans_class->passthrough_on_same_caps = TRUE;
+  trans_class->passthrough_on_same_caps = FALSE;
 
   trans_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_transform_caps);
   trans_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_fixate_caps);
-  trans_class->filter_meta =
-      GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_filter_meta);
   trans_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_propose_allocation);
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_decide_allocation);
+  trans_class->generate_output =
+      GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_generate_output);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_transform_meta);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_transform);
 
   bfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_set_info);
@@ -1143,20 +1150,6 @@ gst_d3d11_base_convert_fixate_caps (GstBaseTransform * base,
 }
 
 static gboolean
-gst_d3d11_base_convert_filter_meta (GstBaseTransform * trans,
-    GstQuery * query, GType api, const GstStructure * params)
-{
-  /* This element cannot passthrough the crop meta, because it would convert the
-   * wrong sub-region of the image, and worst, our output image may not be large
-   * enough for the crop to be applied later */
-  if (api == GST_VIDEO_CROP_META_API_TYPE)
-    return FALSE;
-
-  /* propose all other metadata upstream */
-  return TRUE;
-}
-
-static gboolean
 gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
@@ -1178,10 +1171,6 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
     return FALSE;
-
-  /* passthrough, we're done */
-  if (decide_query == NULL)
-    return TRUE;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -1253,9 +1242,10 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   if (!gst_buffer_pool_set_config (pool, config))
     goto config_failed;
 
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
   gst_query_add_allocation_meta (query,
-      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
+      GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, nullptr);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, nullptr);
 
   /* d3d11 buffer pool will update buffer size based on allocated texture,
    * get size from config again */
@@ -1283,6 +1273,7 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
+  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (trans);
   GstCaps *outcaps = NULL;
   GstBufferPool *pool = NULL;
   guint size, min = 0, max = 0;
@@ -1313,6 +1304,11 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
     GST_ERROR_OBJECT (filter, "Unknown format caps %" GST_PTR_FORMAT, outcaps);
     return FALSE;
   }
+
+  self->downstream_supports_crop_meta = gst_query_find_allocation_meta (query,
+      GST_VIDEO_CROP_META_API_TYPE, nullptr);
+  GST_DEBUG_OBJECT (self, "Downstream crop meta support: %d",
+      self->downstream_supports_crop_meta);
 
   if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     dxgi_format = d3d11_format.resource_format[0];
@@ -1723,8 +1719,12 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   gint border_offset_x = 0;
   gint border_offset_y = 0;
 
-  if (gst_base_transform_is_passthrough (GST_BASE_TRANSFORM (filter)))
+  if (gst_caps_is_equal (incaps, outcaps)) {
+    self->same_caps = TRUE;
     return TRUE;
+  } else {
+    self->same_caps = FALSE;
+  }
 
   if (!gst_util_fraction_multiply (in_info->width,
           in_info->height, in_info->par_n, in_info->par_d, &from_dar_n,
@@ -1780,10 +1780,8 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       self->borders_h == 0 &&
       gst_video_colorimetry_is_equal (&in_info->colorimetry,
           &out_info->colorimetry)) {
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
+    self->same_caps = TRUE;
     return TRUE;
-  } else {
-    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), FALSE);
   }
 
   if (!gst_d3d11_device_get_format (filter->device,
@@ -1869,6 +1867,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   self->in_rect.top = 0;
   self->in_rect.right = GST_VIDEO_INFO_WIDTH (in_info);
   self->in_rect.bottom = GST_VIDEO_INFO_HEIGHT (in_info);
+  self->prev_in_rect = self->in_rect;
 
   if (self->borders_w) {
     border_offset_x = self->borders_w / 2;
@@ -1976,7 +1975,7 @@ gst_d3d11_base_convert_prefer_video_processor (GstD3D11BaseConvert * self,
 
 static gboolean
 gst_d3d11_base_convert_transform_using_processor (GstD3D11BaseConvert * self,
-    GstBuffer * inbuf, GstBuffer * outbuf)
+    GstBuffer * inbuf, GstBuffer * outbuf, RECT * in_rect)
 {
   GstD3D11Memory *in_mem, *out_mem;
   ID3D11VideoProcessorInputView *piv;
@@ -2015,7 +2014,262 @@ gst_d3d11_base_convert_transform_using_processor (GstD3D11BaseConvert * self,
   }
 
   return gst_d3d11_video_processor_render (self->processor,
-      &self->in_rect, piv, &self->out_rect, pov);
+      in_rect, piv, &self->out_rect, pov);
+}
+
+static gboolean
+gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
+    const GstVideoCropMeta * meta, GstBuffer * inbuf, GstBuffer * outbuf)
+{
+  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER_CAST (self);
+  GstVideoInfo *info = &filter->in_info;
+  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
+  GstMemory *in_mem, *out_mem;
+  GstD3D11Memory *in_dmem, *out_dmem;
+  GstMapInfo in_map, out_map;
+  GstD3D11Device *device;
+  ID3D11DeviceContext *context;
+  D3D11_BOX src_box = { 0, };
+  guint in_subresource;
+  guint out_subresource;
+  ID3D11Texture2D *in_tex, *out_tex;
+  gboolean ret = FALSE;
+
+  /* Copy into output memory */
+  in_mem = gst_buffer_peek_memory (inbuf, 0);
+  out_mem = gst_buffer_peek_memory (outbuf, 0);
+
+  if (!gst_is_d3d11_memory (in_mem)) {
+    GST_ERROR_OBJECT (self, "Input is not a d3d11 memory");
+    return FALSE;
+  }
+
+  if (!gst_is_d3d11_memory (out_mem)) {
+    GST_ERROR_OBJECT (self, "Output is not a d3d11 memory");
+    return FALSE;
+  }
+
+  in_dmem = GST_D3D11_MEMORY_CAST (in_mem);
+  out_dmem = GST_D3D11_MEMORY_CAST (out_mem);
+
+  if (in_dmem->device != out_dmem->device) {
+    GST_ERROR_OBJECT (self, "Different device");
+    return FALSE;
+  }
+
+  device = in_dmem->device;
+  context = gst_d3d11_device_get_device_context_handle (device);
+
+  src_box.left = meta->x;
+  src_box.top = meta->y;
+  src_box.right = meta->x + meta->width;
+  src_box.bottom = meta->y + meta->height;
+  src_box.front = 0;
+  src_box.back = 1;
+
+  GST_TRACE_OBJECT (self, "Source box left:top:right:bottom = %d, %d, %d, %d",
+      src_box.left, src_box.top, src_box.right, src_box.bottom);
+
+  in_subresource = gst_d3d11_memory_get_subresource_index (in_dmem);
+  out_subresource = gst_d3d11_memory_get_subresource_index (out_dmem);
+
+  gst_d3d11_device_lock (device);
+  if (!gst_memory_map (in_mem, &in_map,
+          (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
+    GST_ERROR_OBJECT (self, "Failed to map input memory");
+    goto out;
+  }
+
+  if (!gst_memory_map (out_mem, &out_map,
+          (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
+    GST_ERROR_OBJECT (self, "Failed to map output memory");
+    gst_memory_unmap (in_mem, &in_map);
+    goto out;
+  }
+
+  in_tex = (ID3D11Texture2D *) in_map.data;
+  out_tex = (ID3D11Texture2D *) out_map.data;
+
+  context->CopySubresourceRegion (out_tex, out_subresource, 0, 0, 0,
+      in_tex, in_subresource, &src_box);
+  gst_memory_unmap (in_mem, &in_map);
+  gst_memory_unmap (out_mem, &out_map);
+
+  if (gst_buffer_n_memory (inbuf) == 1) {
+    gst_d3d11_device_unlock (device);
+    return TRUE;
+  }
+
+  /* Non-native DXGI format YUV cases, copy UV plane(s) */
+  switch (format) {
+      /* semi-planar */
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P012_LE:
+    case GST_VIDEO_FORMAT_P016_LE:
+      src_box.top = GST_ROUND_DOWN_2 (meta->y) / 2;
+      src_box.bottom = GST_ROUND_DOWN_2 (meta->y + meta->height) / 2;
+      break;
+      /* planar */
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+      src_box.left = GST_ROUND_DOWN_2 (meta->x) / 2;
+      src_box.top = GST_ROUND_DOWN_2 (meta->y) / 2;
+      src_box.right = GST_ROUND_DOWN_2 (meta->x + meta->width) / 2;
+      src_box.bottom = GST_ROUND_DOWN_2 (meta->y + meta->height) / 2;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+      src_box.left = GST_ROUND_DOWN_2 (meta->x) / 2;
+      src_box.right = GST_ROUND_DOWN_2 (meta->x + meta->width) / 2;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+      break;
+    default:
+      GST_ERROR_OBJECT (self, "Unexpected format %s",
+          gst_video_format_to_string (format));
+      goto out;
+  }
+
+  GST_TRACE_OBJECT (self, "UV left:top:right:bottom = %d, %d, %d, %d",
+      src_box.left, src_box.top, src_box.right, src_box.bottom);
+
+  for (guint i = 1; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    in_mem = gst_buffer_peek_memory (inbuf, i);
+    out_mem = gst_buffer_peek_memory (outbuf, i);
+
+    if (!gst_is_d3d11_memory (in_mem)) {
+      GST_ERROR_OBJECT (self, "Input is not a d3d11 memory");
+      goto out;
+    }
+
+    if (!gst_is_d3d11_memory (out_mem)) {
+      GST_ERROR_OBJECT (self, "Output is not a d3d11 memory");
+      goto out;
+    }
+
+    in_dmem = GST_D3D11_MEMORY_CAST (in_mem);
+    out_dmem = GST_D3D11_MEMORY_CAST (out_mem);
+
+    if (in_dmem->device != out_dmem->device) {
+      GST_ERROR_OBJECT (self, "Different device");
+      goto out;
+    }
+
+    in_subresource = gst_d3d11_memory_get_subresource_index (in_dmem);
+    out_subresource = gst_d3d11_memory_get_subresource_index (out_dmem);
+
+    if (!gst_memory_map (in_mem, &in_map,
+            (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
+      GST_ERROR_OBJECT (self, "Failed to map input memory");
+      goto out;
+    }
+
+    if (!gst_memory_map (out_mem, &out_map,
+            (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
+      GST_ERROR_OBJECT (self, "Failed to map output memory");
+      gst_memory_unmap (in_mem, &in_map);
+      goto out;
+    }
+
+    in_tex = (ID3D11Texture2D *) in_map.data;
+    out_tex = (ID3D11Texture2D *) out_map.data;
+
+    context->CopySubresourceRegion (out_tex, out_subresource, 0, 0, 0,
+        in_tex, in_subresource, &src_box);
+    gst_memory_unmap (in_mem, &in_map);
+    gst_memory_unmap (out_mem, &out_map);
+  }
+
+  ret = TRUE;
+
+out:
+  gst_d3d11_device_unlock (device);
+  return ret;
+}
+
+static GstFlowReturn
+gst_d3d11_base_convert_generate_output (GstBaseTransform * trans,
+    GstBuffer ** buffer)
+{
+  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (trans);
+  GstBuffer *inbuf;
+  GstVideoCropMeta *crop_meta;
+  GstFlowReturn ret;
+
+  if (!self->same_caps) {
+    return GST_BASE_TRANSFORM_CLASS (parent_class)->generate_output (trans,
+        buffer);
+  }
+
+  /* Retrieve stashed input buffer, if the default submit_input_buffer
+   * was run. Takes ownership back from there */
+  inbuf = trans->queued_buf;
+  trans->queued_buf = nullptr;
+
+  /* This default processing method needs one input buffer to feed to
+   * the transform functions, we can't do anything without it */
+  if (!inbuf)
+    return GST_FLOW_OK;
+
+  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
+
+  /* downstream supports crop meta or no crop meta. Just passthrough it */
+  if (self->downstream_supports_crop_meta || !crop_meta) {
+    *buffer = inbuf;
+    return GST_FLOW_OK;
+  }
+
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
+      inbuf, buffer);
+  if (ret != GST_FLOW_OK || *buffer == nullptr) {
+    GST_WARNING_OBJECT (trans, "Could not get buffer from pool, %s",
+        gst_flow_get_name (ret));
+    gst_buffer_unref (inbuf);
+    return ret;
+  }
+
+  GST_TRACE_OBJECT (self, "Copying cropped buffer");
+  if (!gst_d3d11_base_convert_crop_and_copy (self, crop_meta, inbuf, *buffer)) {
+    gst_buffer_unref (inbuf);
+    gst_clear_buffer (buffer);
+
+    return GST_FLOW_ERROR;
+  }
+
+  gst_buffer_unref (inbuf);
+
+  return GST_FLOW_OK;
+}
+
+static gboolean
+gst_d3d11_base_convert_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  /* Do not copy crop meta in any case.
+   *
+   * 1) When input and output caps are identical,
+   * - If downstream supports crop meta or crop meta is not attached on input
+   *   buffer, then we do passthrough input buffers.
+   *   In that case, this method must not be called already
+   * - Otherwise (downstream does not support crop meta), we do crop input
+   *   and copy cropped area to output buffer
+   * 2) in case of input-caps != output-caps, we specify source rectangle to
+   *   shader or video processor object. Then the conversion object will
+   *   consider source cropping area automatically
+   */
+  if (meta->info->api == GST_VIDEO_CROP_META_API_TYPE)
+    return FALSE;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans,
+      outbuf, meta, inbuf);
 }
 
 static GstFlowReturn
@@ -2035,6 +2289,8 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
   gboolean copy_output = FALSE;
   GstMapInfo in_map[GST_VIDEO_MAX_PLANES];
   GstMapInfo out_map[GST_VIDEO_MAX_PLANES];
+  RECT in_rect;
+  GstVideoCropMeta *crop_meta;
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
@@ -2050,9 +2306,33 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     goto invalid_memory;
   }
 
+  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
+  if (crop_meta) {
+    GST_TRACE_OBJECT (self, "Have crop rect, x:y:w:h = %d:%d:%d:%d",
+        crop_meta->x, crop_meta->y, crop_meta->width, crop_meta->height);
+
+    in_rect.left = crop_meta->x;
+    in_rect.top = crop_meta->y;
+    in_rect.right = crop_meta->x + crop_meta->width;
+    in_rect.bottom = crop_meta->y + crop_meta->height;
+  } else {
+    in_rect = self->in_rect;
+  }
+
+  if (in_rect.left != self->prev_in_rect.left ||
+      in_rect.top != self->prev_in_rect.top ||
+      in_rect.right != self->prev_in_rect.right ||
+      in_rect.bottom != self->prev_in_rect.bottom) {
+    self->prev_in_rect = in_rect;
+    g_object_set (self->converter, "src-x", (gint) in_rect.left,
+        "src-y", (gint) in_rect.top,
+        "src-width", (gint) in_rect.right - in_rect.left,
+        "src-height", (gint) in_rect.bottom - in_rect.top, nullptr);
+  }
+
   if (gst_d3d11_base_convert_prefer_video_processor (self, inbuf, outbuf)) {
-    gboolean ret =
-        gst_d3d11_base_convert_transform_using_processor (self, inbuf, outbuf);
+    gboolean ret = gst_d3d11_base_convert_transform_using_processor (self,
+        inbuf, outbuf, &in_rect);
 
     if (!ret) {
       GST_ERROR_OBJECT (self, "Couldn't convert using video processor");
