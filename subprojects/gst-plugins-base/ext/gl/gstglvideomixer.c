@@ -903,22 +903,31 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
   GstGLVideoMixerPad *pad = GST_GL_VIDEO_MIXER_PAD (object);
   GstGLMixer *mix = GST_GL_MIXER (gst_pad_get_parent (GST_PAD (pad)));
 
+  GST_OBJECT_LOCK (pad);
   switch (prop_id) {
-    case PROP_PAD_XPOS:
-      pad->xpos = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    case PROP_PAD_XPOS:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->xpos;
+      pad->xpos = val;
       break;
-    case PROP_PAD_YPOS:
-      pad->ypos = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    }
+    case PROP_PAD_YPOS:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->ypos;
+      pad->ypos = val;
       break;
-    case PROP_PAD_WIDTH:
-      pad->width = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    }
+    case PROP_PAD_WIDTH:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->width;
+      pad->width = val;
       break;
-    case PROP_PAD_HEIGHT:
-      pad->height = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    }
+    case PROP_PAD_HEIGHT:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->height;
+      pad->height = val;
+    }
       break;
     case PROP_PAD_ALPHA:
       pad->alpha = g_value_get_double (value);
@@ -953,26 +962,35 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
     case PROP_PAD_BLEND_FUNCTION_CONSTANT_COLOR_ALPHA:
       pad->blend_constant_color_alpha = g_value_get_double (value);
       break;
-    case PROP_PAD_CROP_LEFT:
-      pad->crop_left = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    case PROP_PAD_CROP_LEFT:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->crop_left;
+      pad->crop_left = val;
       break;
-    case PROP_PAD_CROP_RIGHT:
-      pad->crop_right = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    }
+    case PROP_PAD_CROP_RIGHT:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->crop_right;
+      pad->crop_right = val;
       break;
-    case PROP_PAD_CROP_TOP:
-      pad->crop_top = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    }
+    case PROP_PAD_CROP_TOP:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->crop_top;
+      pad->crop_top = val;
       break;
-    case PROP_PAD_CROP_BOTTOM:
-      pad->crop_bottom = g_value_get_int (value);
-      pad->geometry_change = TRUE;
+    }
+    case PROP_PAD_CROP_BOTTOM:{
+      gint val = g_value_get_int (value);
+      pad->geometry_change = val != pad->crop_bottom;
+      pad->crop_bottom = val;
       break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  GST_OBJECT_UNLOCK (pad);
 
   gst_object_unref (mix);
 }
