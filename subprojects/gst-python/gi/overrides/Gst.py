@@ -724,13 +724,22 @@ def deinit_pygst():
 real_init = Gst.init
 def init(argv):
     init_pygst()
+
+    if Gst.is_initialized():
+        return True
+
     return real_init(argv)
+
 Gst.init = init
 
 real_init_check = Gst.init_check
 def init_check(argv):
     init_pygst()
+    if Gst.is_initialized():
+        return True
+
     return real_init_check(argv)
+
 Gst.init_check = init_check
 
 real_deinit = Gst.deinit
