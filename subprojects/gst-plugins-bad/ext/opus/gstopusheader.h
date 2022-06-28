@@ -26,6 +26,10 @@
 
 G_BEGIN_DECLS
 
+#define gst_opus_header_is_header gst_opusparse_header_is_header
+#define gst_opus_header_is_id_header gst_opusparse_header_is_id_header
+#define gst_opus_header_is_comment_header gst_opusparse_header_is_comment_header
+
 extern gboolean gst_opus_header_is_header (GstBuffer * buf,
     const char *magic, guint magic_size);
 extern gboolean gst_opus_header_is_id_header (GstBuffer * buf);
