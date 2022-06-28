@@ -733,7 +733,7 @@ gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
     GST_INFO_OBJECT (self,
         "Create dummy window for rendering on shared texture");
     self->window = gst_d3d11_window_dummy_new (self->device);
-    return TRUE;
+    goto done;
   }
 
   if (!self->window_id)
@@ -782,6 +782,7 @@ gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
       break;
   }
 
+done:
   if (!self->window) {
     GST_ERROR_OBJECT (self, "Cannot create d3d11window");
     return FALSE;
