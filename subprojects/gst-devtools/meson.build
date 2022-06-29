@@ -131,7 +131,6 @@ warning_flags = [
   '-Wmissing-include-dirs',
   '-Waddress',
   '-Wno-multichar',
-  '-Wdeclaration-after-statement',
   '-Wvla',
   '-Wpointer-arith',
 ]

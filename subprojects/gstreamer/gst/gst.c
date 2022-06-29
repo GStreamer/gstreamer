@@ -1092,7 +1092,6 @@ void
 gst_deinit (void)
 {
   GstBinClass *bin_class;
-  GstClock *clock;
 
   g_mutex_lock (&init_lock);
 
@@ -1129,9 +1128,9 @@ gst_deinit (void)
     _gst_executable_path = NULL;
   }
 
-  clock = gst_system_clock_obtain ();
+  GstClock *clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
-  gst_object_unref (clock);
+  gst_clear_object (&clock);
 
   _priv_gst_registry_cleanup ();
   _priv_gst_allocator_cleanup ();
