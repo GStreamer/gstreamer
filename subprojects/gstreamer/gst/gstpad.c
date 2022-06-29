@@ -4390,6 +4390,12 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
   GstObject *parent;
   gboolean handled = FALSE;
 
+  if (type & GST_PAD_PROBE_TYPE_BUFFER_LIST) {
+    GST_TRACER_PAD_CHAIN_LIST_PRE (pad, data);
+  } else {
+    GST_TRACER_PAD_CHAIN_PRE (pad, data);
+  }
+
   GST_PAD_STREAM_LOCK (pad);
 
   GST_OBJECT_LOCK (pad);
@@ -4469,6 +4475,13 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
 
   GST_PAD_STREAM_UNLOCK (pad);
 
+out:
+  if (type & GST_PAD_PROBE_TYPE_BUFFER_LIST) {
+    GST_TRACER_PAD_CHAIN_LIST_POST (pad, ret);
+  } else {
+    GST_TRACER_PAD_CHAIN_POST (pad, ret);
+  }
+
   return ret;
 
   /* ERRORS */
@@ -4480,7 +4493,8 @@ flushing:
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    return GST_FLOW_FLUSHING;
+    ret = GST_FLOW_FLUSHING;
+    goto out;
   }
 eos:
   {
@@ -4489,7 +4503,8 @@ eos:
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    return GST_FLOW_EOS;
+    ret = GST_FLOW_EOS;
+    goto out;
   }
 wrong_mode:
   {
@@ -4499,7 +4514,8 @@ wrong_mode:
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto out;
   }
 probe_handled:
   handled = TRUE;
@@ -4523,7 +4539,7 @@ probe_stopped:
     pad->ABI.abi.last_flowret = ret;
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
-    return ret;
+    goto out;
   }
 no_parent:
   {
@@ -4532,7 +4548,8 @@ no_parent:
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_FLUSHING;
+    ret = GST_FLOW_FLUSHING;
+    goto out;
   }
 no_function:
   {
@@ -4542,7 +4559,8 @@ no_function:
     g_critical ("chain on pad %s:%s but it has no chainfunction",
         GST_DEBUG_PAD_NAME (pad));
     GST_PAD_STREAM_UNLOCK (pad);
-    return GST_FLOW_NOT_SUPPORTED;
+    ret = GST_FLOW_NOT_SUPPORTED;
+    goto out;
   }
 }
 
