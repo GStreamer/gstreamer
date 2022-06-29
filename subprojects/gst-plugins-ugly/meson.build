@@ -225,7 +225,6 @@ warning_flags = [
 warning_c_flags = [
   '-Wmissing-prototypes',
   '-Wold-style-definition',
-  '-Wdeclaration-after-statement',
   '-Wnested-externs'
 ]
 

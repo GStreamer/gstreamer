@@ -455,7 +455,6 @@ warning_flags = [
   '-Waddress',
   '-Waggregate-return',
   '-Wno-multichar',
-  '-Wdeclaration-after-statement',
   '-Wvla',
   '-Wpointer-arith',
 ]
