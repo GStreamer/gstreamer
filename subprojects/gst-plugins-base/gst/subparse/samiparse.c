@@ -543,7 +543,7 @@ html_context_parse (HtmlContext * ctxt, gchar * text, gsize text_len)
 
       next = string_token (next, ">", &element);
       next++;
-      if (g_str_has_suffix (next, "/")) {
+      if (g_str_has_suffix (element, "/")) {
         /* handle <blah/> */
         element[strlen (element) - 1] = '\0';
         html_context_handle_element (ctxt, element + 1, TRUE);
