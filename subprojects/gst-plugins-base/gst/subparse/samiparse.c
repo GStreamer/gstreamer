@@ -369,7 +369,7 @@ unescape_string (const gchar * text)
 
       /* unescape &nbsp and &nbsp; */
       if (!g_ascii_strncasecmp (text, "nbsp", 4)) {
-        unescaped = g_string_append_unichar (unescaped, 160);
+        g_string_append_unichar (unescaped, 160);
         text += 4;
         if (*text == ';') {
           text++;
@@ -384,10 +384,9 @@ unescape_string (const gchar * text)
 
         if (!g_ascii_strncasecmp (text, entity->escaped, escaped_len)
             && text[escaped_len] == ';') {
-          unescaped = g_string_append_c (unescaped, '&');
-          unescaped =
-              g_string_append_len (unescaped, entity->escaped, escaped_len);
-          unescaped = g_string_append_c (unescaped, ';');
+          g_string_append_c (unescaped, '&');
+          g_string_append_len (unescaped, entity->escaped, escaped_len);
+          g_string_append_c (unescaped, ';');
           text += escaped_len + 1;
           goto next;
         }
@@ -400,7 +399,7 @@ unescape_string (const gchar * text)
 
         if (!strncmp (text, entity->escaped, escaped_len)
             && text[escaped_len] == ';') {
-          unescaped = g_string_append_unichar (unescaped, entity->unescaped);
+          g_string_append_unichar (unescaped, entity->unescaped);
           text += escaped_len + 1;
           goto next;
         }
@@ -427,7 +426,7 @@ unescape_string (const gchar * text)
           /* error occurred. pass it */
           goto next;
         }
-        unescaped = g_string_append_unichar (unescaped, l);
+        g_string_append_unichar (unescaped, l);
         text = end;
 
         if (*text == ';') {
@@ -437,19 +436,19 @@ unescape_string (const gchar * text)
       }
 
       /* escape & */
-      unescaped = g_string_append (unescaped, "&amp;");
+      g_string_append (unescaped, "&amp;");
 
     next:
       continue;
 
     } else if (g_ascii_isspace (*text)) {
-      unescaped = g_string_append_c (unescaped, ' ');
+      g_string_append_c (unescaped, ' ');
       /* strip whitespace */
       do {
         text++;
       } while ((*text) && g_ascii_isspace (*text));
     } else {
-      unescaped = g_string_append_c (unescaped, *text);
+      g_string_append_c (unescaped, *text);
       text++;
     }
   }
@@ -537,7 +536,8 @@ static void
 html_context_parse (HtmlContext * ctxt, gchar * text, gsize text_len)
 {
   const gchar *next = NULL;
-  ctxt->buf = g_string_append_len (ctxt->buf, text, text_len);
+
+  g_string_append_len (ctxt->buf, text, text_len);
   next = ctxt->buf->str;
   while (TRUE) {
     if (next[0] == '<') {
@@ -896,9 +896,9 @@ parse_sami (ParserState * state, const gchar * line)
 
   if (context->has_result) {
     if (context->rubybuf->len) {
-      context->rubybuf = g_string_append_c (context->rubybuf, '\n');
+      g_string_append_c (context->rubybuf, '\n');
       g_string_prepend (context->resultbuf, context->rubybuf->str);
-      context->rubybuf = g_string_truncate (context->rubybuf, 0);
+      g_string_truncate (context->rubybuf, 0);
     }
 
     ret = g_string_free (context->resultbuf, FALSE);
