@@ -1026,6 +1026,29 @@ GST_START_TEST (test_sami_comment)
 
 GST_END_TEST;
 
+GST_START_TEST (test_sami_self_contained_tags)
+{
+  SubParseInputChunk sami_input[] = {
+    {"<SAMI>\n"
+          "<BODY>\n"
+          "    <SYNC Start=1000>\n"
+          "        <P Class=CC>\n"
+          "            This line has a self-closing format tag<i /> and more.\n",
+          1000 * GST_MSECOND, 2000 * GST_MSECOND,
+        "This line has a self-closing format tag<i></i>and more."},
+    {"    <SYNC Start=2000>\n"
+          "        <P Class=CC>\n"
+          "            This is a third comment.<br>\n"
+          "            This is a fourth comment.\n" "</BODY>\n" "</SAMI>\n",
+          2000 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "This is a third comment.\nThis is a fourth comment."}
+  };
+
+  do_test (sami_input, G_N_ELEMENTS (sami_input), "pango-markup");
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_lrc)
 {
   SubParseInputChunk lrc_input[] = {
@@ -1106,6 +1129,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_sami_html_entities);
   tcase_add_test (tc_chain, test_sami_bad_entities);
   tcase_add_test (tc_chain, test_sami_comment);
+  tcase_add_test (tc_chain, test_sami_self_contained_tags);
   tcase_add_test (tc_chain, test_lrc);
   tcase_add_test (tc_chain, test_raw_conversion);
   return s;
