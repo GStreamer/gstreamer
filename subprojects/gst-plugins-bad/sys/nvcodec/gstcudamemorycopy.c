@@ -59,8 +59,10 @@ typedef struct _GstCudaMemoryCopyClassData
 struct _GstCudaMemoryCopy
 {
   GstCudaBaseTransform parent;
-  gboolean in_nvmm;
-  gboolean out_nvmm;
+  GstCudaBufferCopyType in_type;
+  GstCudaBufferCopyType out_type;
+
+  gboolean downstream_supports_video_meta;
 
 #ifdef HAVE_NVCODEC_GST_GL
   GstGLDisplay *gl_display;
@@ -568,6 +570,12 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
   if (!outcaps)
     return FALSE;
 
+  self->downstream_supports_video_meta =
+      gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+
+  GST_DEBUG_OBJECT (self, "Downstream supports video meta: %d",
+      self->downstream_supports_video_meta);
+
   features = gst_caps_get_features (outcaps, 0);
   if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
@@ -748,27 +756,60 @@ gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info)
 {
-#ifdef HAVE_NVCODEC_NVMM
   GstCudaMemoryCopy *self = GST_CUDA_MEMORY_COPY (btrans);
+  GstCapsFeatures *in_features;
+  GstCapsFeatures *out_features;
 
-  self->in_nvmm = FALSE;
-  self->out_nvmm = FALSE;
+  self->in_type = GST_CUDA_BUFFER_COPY_SYSTEM;
+  self->out_type = GST_CUDA_BUFFER_COPY_SYSTEM;
 
+  in_features = gst_caps_get_features (incaps, 0);
+  out_features = gst_caps_get_features (outcaps, 0);
+  if (in_features && gst_caps_features_contains (in_features,
+          GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
+    self->in_type = GST_CUDA_BUFFER_COPY_CUDA;
+  }
+
+  if (out_features && gst_caps_features_contains (out_features,
+          GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
+    self->out_type = GST_CUDA_BUFFER_COPY_CUDA;
+  }
+#ifdef HAVE_NVCODEC_GST_GL
+  if (in_features && gst_caps_features_contains (in_features,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    self->in_type = GST_CUDA_BUFFER_COPY_GL;
+  }
+
+  if (out_features && gst_caps_features_contains (out_features,
+          GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
+    self->out_type = GST_CUDA_BUFFER_COPY_GL;
+  }
+#endif
+
+#ifdef GST_CUDA_HAS_D3D
+  if (in_features && gst_caps_features_contains (in_features,
+          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+    self->in_type = GST_CUDA_BUFFER_COPY_D3D11;
+  }
+
+  if (out_features && gst_caps_features_contains (out_features,
+          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+    self->out_type = GST_CUDA_BUFFER_COPY_D3D11;
+  }
+#endif
+
+#ifdef HAVE_NVCODEC_NVMM
   if (gst_cuda_nvmm_init_once ()) {
-    GstCapsFeatures *features;
-
-    features = gst_caps_get_features (incaps, 0);
-    if (features && gst_caps_features_contains (features,
+    if (in_features && gst_caps_features_contains (in_features,
             GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY)) {
       GST_DEBUG_OBJECT (self, "Input memory type is NVMM");
-      self->in_nvmm = TRUE;
+      self->in_type = GST_CUDA_BUFFER_COPY_NVMM;
     }
 
-    features = gst_caps_get_features (outcaps, 0);
-    if (features && gst_caps_features_contains (features,
+    if (out_features && gst_caps_features_contains (out_features,
             GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY)) {
       GST_DEBUG_OBJECT (self, "Output memory type is NVMM");
-      self->out_nvmm = TRUE;
+      self->out_type = GST_CUDA_BUFFER_COPY_NVMM;
     }
   }
 #endif
@@ -808,7 +849,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
-  if (self->in_nvmm) {
+  if (self->in_type == GST_CUDA_BUFFER_COPY_NVMM) {
     in_type = GST_CUDA_BUFFER_COPY_NVMM;
     use_device_copy = TRUE;
   } else if (gst_is_cuda_memory (in_mem)) {
@@ -828,7 +869,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     in_type = GST_CUDA_BUFFER_COPY_SYSTEM;
   }
 
-  if (self->out_nvmm) {
+  if (self->out_type == GST_CUDA_BUFFER_COPY_NVMM) {
     out_type = GST_CUDA_BUFFER_COPY_NVMM;
     use_device_copy = TRUE;
   } else if (gst_is_cuda_memory (out_mem)) {
@@ -965,6 +1006,31 @@ gst_cuda_upload_init (GstCudaUpload * self)
 }
 
 static void
+gst_cuda_download_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer)
+{
+  GstCudaMemoryCopy *copy = GST_CUDA_MEMORY_COPY (trans);
+  gboolean old;
+  gboolean new = FALSE;
+
+  GST_BASE_TRANSFORM_CLASS (parent_class)->before_transform (trans, buffer);
+
+  old = gst_base_transform_is_passthrough (trans);
+  if (copy->in_type == copy->out_type ||
+      (copy->in_type == GST_CUDA_BUFFER_COPY_CUDA &&
+          copy->out_type == GST_CUDA_BUFFER_COPY_SYSTEM &&
+          copy->downstream_supports_video_meta)) {
+    new = TRUE;
+  }
+
+  if (new != old) {
+    GST_INFO_OBJECT (trans, "Updated passthrough: %d", new);
+    gst_base_transform_reconfigure_src (trans);
+    gst_base_transform_set_passthrough (trans, new);
+  }
+}
+
+static void
 gst_cuda_download_class_init (GstCudaDownloadClass * klass, gpointer data)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -984,6 +1050,8 @@ gst_cuda_download_class_init (GstCudaDownloadClass * klass, gpointer data)
       "Downloads data from NVIDA GPU via CUDA APIs",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_cuda_download_before_transform);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_transform);
 
   copy_class->uploader = FALSE;
