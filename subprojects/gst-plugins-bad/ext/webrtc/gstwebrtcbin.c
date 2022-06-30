@@ -3346,7 +3346,15 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
 
     /* this only looks at the first structure so we loop over the given caps
      * and add each structure inside it piecemeal */
-    gst_sdp_media_set_media_from_caps (format, media);
+    if (gst_sdp_media_set_media_from_caps (format, media) != GST_SDP_OK) {
+      GST_ERROR_OBJECT (webrtc,
+          "Failed to build media from caps %" GST_PTR_FORMAT
+          " for transceiver %" GST_PTR_FORMAT, format, trans);
+      gst_caps_unref (caps);
+      gst_caps_unref (format);
+      gst_structure_free (extmap);
+      return FALSE;
+    }
 
     gst_caps_unref (format);
   }
@@ -4425,7 +4433,13 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
           gst_structure_remove_fields (s, "rtcp-fb-nack", NULL);
       }
 
-      gst_sdp_media_set_media_from_caps (answer_caps, media);
+      if (gst_sdp_media_set_media_from_caps (answer_caps, media) != GST_SDP_OK) {
+        GST_WARNING_OBJECT (webrtc,
+            "Could not build media from caps %" GST_PTR_FORMAT, answer_caps);
+        gst_clear_caps (&answer_caps);
+        gst_clear_caps (&offer_caps);
+        goto rejected;
+      }
 
       _get_rtx_target_pt_and_ssrc_from_caps (answer_caps, &target_pt,
           &target_ssrc);
