@@ -3657,6 +3657,15 @@ restart:
         /* This should only happen if the track is EOS, or exactly in between
          * the parser outputting segment/caps before buffers. */
         g_assert (track->eos || !slot->pushed_timed_data);
+
+        /* If we drained the track, but there's a pending track on the slot
+         * loop again to activate it */
+        if (slot->pending_track) {
+          GST_DEBUG_OBJECT (demux,
+              "Track '%s' (period %u) drained, but has a pending track to activate",
+              track->stream_id, track->period_num);
+          goto restart;
+        }
         break;
       }
 
