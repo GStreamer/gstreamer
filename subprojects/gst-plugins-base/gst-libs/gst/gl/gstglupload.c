@@ -2544,6 +2544,9 @@ gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer,
   GstGLUploadReturn ret = GST_GL_UPLOAD_ERROR;
   GstBuffer *outbuf = NULL;
   gpointer last_impl = upload->priv->method_impl;
+#if !defined (GST_DISABLE_DEBUG)
+  const UploadMethod *last_method = upload->priv->method;
+#endif
 
   g_return_val_if_fail (GST_IS_GL_UPLOAD (upload), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
@@ -2589,14 +2592,25 @@ restart:
     gst_buffer_replace (&outbuf, NULL);
     goto restart;
   } else if (ret == GST_GL_UPLOAD_DONE || ret == GST_GL_UPLOAD_RECONFIGURE) {
-    if (last_impl != upload->priv->method_impl) {
-      GstCaps *caps = gst_gl_upload_transform_caps (upload, upload->context,
-          GST_PAD_SINK, upload->priv->in_caps, NULL);
-      if (!gst_caps_is_subset (caps, upload->priv->out_caps)) {
+    if (last_impl != upload->priv->method_impl
+        && upload->priv->method_impl != NULL) {
+      /* Transform the input caps using the new method. If they are compatible with the
+       * existing upload method, we can skip reconfiguration */
+      GstCaps *caps =
+          upload->priv->method->transform_caps (upload->priv->method_impl,
+          upload->context, GST_PAD_SINK, upload->priv->in_caps);
+
+      GST_LOG_OBJECT (upload,
+          "Changing uploader from %s to %s with src caps %" GST_PTR_FORMAT
+          " and old src caps %" GST_PTR_FORMAT,
+          last_method != NULL ? last_method->name : "None",
+          upload->priv->method->name, caps, upload->priv->out_caps);
+
+      if (caps == NULL || !gst_caps_is_subset (caps, upload->priv->out_caps)) {
         gst_buffer_replace (&outbuf, NULL);
         ret = GST_GL_UPLOAD_RECONFIGURE;
       }
-      gst_caps_unref (caps);
+      gst_caps_replace (&caps, NULL);
     }
     /* we are done */
   } else {
