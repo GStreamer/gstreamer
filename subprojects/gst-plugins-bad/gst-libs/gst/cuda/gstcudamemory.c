@@ -185,6 +185,8 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
     case GST_VIDEO_FORMAT_BGR:
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RGB10A2_LE:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
       alloc_info->stride[0] = pitch;
       alloc_info->offset[0] = 0;
       break;
