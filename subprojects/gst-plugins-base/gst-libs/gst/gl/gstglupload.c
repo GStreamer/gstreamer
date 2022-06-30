@@ -2358,7 +2358,12 @@ gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
   GstCaps *result, *tmp;
   gint i;
 
-  if (upload->priv->method) {
+  /* If (and only if) there is an upstream filter, we can
+   * save some time by first checking if the configured upload method
+   * generates intersecting caps. If there's no filter, or no
+   * intersection we need to generate a full set of caps from all
+   * uploaders for upstream to choose from */
+  if (upload->priv->method && filter != NULL) {
     tmp = upload->priv->method->transform_caps (upload->priv->method_impl,
         context, direction, caps);
     if (tmp) {
