@@ -39,7 +39,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (alsasink, plugin);
   ret |= GST_ELEMENT_REGISTER (alsamidisrc, plugin);
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
