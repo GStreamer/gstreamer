@@ -239,9 +239,9 @@ gst_adaptive_demux_period_combine_stream_flows (GstAdaptiveDemuxPeriod * period)
   for (iter = period->streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemux2Stream *stream = iter->data;
 
-    /* Streams that are not running do not contribute
-     * to the flow */
-    if (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED)
+    /* Streams that are not running do not contribute to the flow,
+     * so ignore streams with no selected tracks */
+    if (!gst_adaptive_demux2_stream_is_selected (stream))
       continue;
 
     if (stream->last_ret != GST_FLOW_NOT_LINKED) {
