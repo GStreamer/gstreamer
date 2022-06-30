@@ -3814,15 +3814,25 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
 
   /* get media type and payload for the m= line */
   caps_str = gst_structure_get_string (s, "media");
+  if (!caps_str) {
+    GST_ERROR ("ignoring stream without media type");
+    goto error;
+  }
   gst_sdp_media_set_media (media, caps_str);
 
-  gst_structure_get_int (s, "payload", &caps_pt);
+  if (!gst_structure_get_int (s, "payload", &caps_pt)) {
+    GST_ERROR ("ignoring stream without payload type");
+    goto error;
+  }
   tmp = g_strdup_printf ("%d", caps_pt);
   gst_sdp_media_add_format (media, tmp);
   g_free (tmp);
 
   /* get clock-rate, media type and params for the rtpmap attribute */
-  gst_structure_get_int (s, "clock-rate", &caps_rate);
+  if (!gst_structure_get_int (s, "clock-rate", &caps_rate)) {
+    GST_ERROR ("ignoring stream without payload type");
+    goto error;
+  }
   caps_enc = gst_structure_get_string (s, "encoding-name");
   caps_params = gst_structure_get_string (s, "encoding-params");
 
