@@ -630,11 +630,11 @@ rewrite_header_extensions (GstRtpRtxSend * rtx, GstRTPBuffer * rtp)
       } else {
         /* TODO: may need to write mid at different times to the original
          * buffer to account for the difference in timing of acknowledgement
-         * of the rtx ssrc from the original ssrc.  This may add extra data to
+         * of the rtx ssrc from the original ssrc. This may add extra data to
          * the header extension space that needs to be accounted for.
          */
-        memcpy (&map.data[write_offset],
-            &map.data[read_offset - hdr_unit_bytes], read_len + hdr_unit_bytes);
+        memcpy (&map.data[write_offset], &pdata[read_offset - hdr_unit_bytes],
+            read_len + hdr_unit_bytes);
         write_offset += read_len + hdr_unit_bytes;
       }
 

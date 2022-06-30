@@ -677,7 +677,7 @@ rewrite_header_extensions (GstRtpRtxReceive * rtx, GstRTPBuffer * rtp)
          * the header extension space that needs to be accounted for.
          */
         memcpy (&map.data[write_offset],
-            &map.data[read_offset - hdr_unit_bytes], read_len + hdr_unit_bytes);
+            &pdata[read_offset - hdr_unit_bytes], read_len + hdr_unit_bytes);
         write_offset += read_len + hdr_unit_bytes;
       }
 
