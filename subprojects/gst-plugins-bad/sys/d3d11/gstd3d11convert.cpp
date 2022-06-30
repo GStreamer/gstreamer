@@ -50,6 +50,7 @@ static GstStaticCaps src_template_caps =
         GST_D3D11_SRC_FORMATS));
 
 #define DEFAULT_ADD_BORDERS TRUE
+#define DEFAULT_BORDER_COLOR G_GUINT64_CONSTANT(0xffff000000000000)
 
 struct _GstD3D11BaseConvert
 {
@@ -69,6 +70,9 @@ struct _GstD3D11BaseConvert
 
   /* Updated by subclass */
   gboolean add_borders;
+  guint64 border_color;
+
+  GMutex lock;
 };
 
 /**
@@ -85,6 +89,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstD3D11BaseConvert, gst_d3d11_base_convert,
         "d3d11convert"));
 
 static void gst_d3d11_base_convert_dispose (GObject * object);
+static void gst_d3d11_base_convert_finalize (GObject * object);
 static GstCaps *gst_d3d11_base_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_d3d11_base_convert_fixate_caps (GstBaseTransform *
@@ -241,6 +246,7 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
   GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_base_convert_dispose;
+  gobject_class->finalize = gst_d3d11_base_convert_finalize;
 
   caps = gst_d3d11_get_updated_template_caps (&sink_template_caps);
   gst_element_class_add_pad_template (element_class,
@@ -278,6 +284,9 @@ static void
 gst_d3d11_base_convert_init (GstD3D11BaseConvert * self)
 {
   self->add_borders = DEFAULT_ADD_BORDERS;
+  self->border_color = DEFAULT_BORDER_COLOR;
+
+  g_mutex_init (&self->lock);
 }
 
 static void
@@ -285,9 +294,21 @@ gst_d3d11_base_convert_dispose (GObject * object)
 {
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (object);
 
+  g_mutex_lock (&self->lock);
   gst_clear_object (&self->converter);
+  g_mutex_unlock (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_d3d11_base_convert_finalize (GObject * object)
+{
+  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (object);
+
+  g_mutex_clear (&self->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -1399,6 +1420,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     }
   }
 
+  g_mutex_lock (&self->lock);
   gst_clear_object (&self->converter);
 
   GST_DEBUG_OBJECT (self, "Setup convert with format %s -> %s",
@@ -1406,8 +1428,11 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
 
   /* if present, these must match */
-  if (in_info->interlace_mode != out_info->interlace_mode)
-    goto format_mismatch;
+  if (in_info->interlace_mode != out_info->interlace_mode) {
+    GST_ERROR_OBJECT (self, "input and output formats do not match");
+    g_mutex_unlock (&self->lock);
+    return FALSE;
+  }
 
   if (in_info->width == out_info->width && in_info->height == out_info->height
       && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
@@ -1415,6 +1440,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       gst_video_colorimetry_is_equal (&in_info->colorimetry,
           &out_info->colorimetry)) {
     self->same_caps = TRUE;
+    g_mutex_unlock (&self->lock);
     return TRUE;
   }
 
@@ -1422,6 +1448,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       nullptr);
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "Couldn't create converter");
+    g_mutex_unlock (&self->lock);
     return FALSE;
   }
 
@@ -1463,17 +1490,14 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       "dest-height", (gint) (self->out_rect.bottom - self->out_rect.top),
       nullptr);
 
-  if (self->borders_w > 0 || self->borders_h > 0)
-    g_object_set (self->converter, "fill-border", TRUE, nullptr);
+  if (self->borders_w > 0 || self->borders_h > 0) {
+    g_object_set (self->converter, "fill-border", TRUE, "border-color",
+        self->border_color, nullptr);
+  }
+
+  g_mutex_unlock (&self->lock);
 
   return TRUE;
-
-  /* ERRORS */
-format_mismatch:
-  {
-    GST_ERROR_OBJECT (self, "input and output formats do not match");
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -1783,6 +1807,17 @@ gst_d3d11_base_convert_set_add_border (GstD3D11BaseConvert * self,
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
 }
 
+static void
+gst_d3d11_base_convert_set_border_color (GstD3D11BaseConvert * self,
+    guint64 border_color)
+{
+  g_mutex_lock (&self->lock);
+  self->border_color = border_color;
+  if (self->converter)
+    g_object_set (self->converter, "border-color", self->border_color, nullptr);
+  g_mutex_unlock (&self->lock);
+}
+
 /**
  * SECTION:element-d3d11convert
  * @title: d3d11convert
@@ -1811,6 +1846,7 @@ enum
 {
   PROP_CONVERT_0,
   PROP_CONVERT_ADD_BORDERS,
+  PROP_CONVERT_BORDER_COLOR,
 };
 
 struct _GstD3D11Convert
@@ -1837,7 +1873,7 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
   /**
    * GstD3D11Convert:add-borders:
    *
-   * Add black borders if necessary to keep the display aspect ratio
+   * Add borders if necessary to keep the display aspect ratio
    *
    * Since: 1.20
    */
@@ -1845,6 +1881,19 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
       g_param_spec_boolean ("add-borders", "Add Borders",
           "Add black borders if necessary to keep the display aspect ratio",
           DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Convert:border-color:
+   *
+   * Border color to use in ARGB64 format
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CONVERT_BORDER_COLOR,
+      g_param_spec_uint64 ("border-color", "Border color",
+          "Border color to use in ARGB64 format", 0, G_MAXUINT64,
+          DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
@@ -1870,6 +1919,10 @@ gst_d3d11_convert_set_property (GObject * object, guint prop_id,
     case PROP_CONVERT_ADD_BORDERS:
       gst_d3d11_base_convert_set_add_border (base, g_value_get_boolean (value));
       break;
+    case PROP_CONVERT_BORDER_COLOR:
+      gst_d3d11_base_convert_set_border_color (base,
+          g_value_get_uint64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1885,6 +1938,9 @@ gst_d3d11_convert_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_CONVERT_ADD_BORDERS:
       g_value_set_boolean (value, base->add_borders);
+      break;
+    case PROP_CONVERT_BORDER_COLOR:
+      g_value_set_uint64 (value, base->border_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2014,6 +2070,7 @@ enum
 {
   PROP_SCALE_0,
   PROP_SCALE_ADD_BORDERS,
+  PROP_SCALE_BORDER_COLOR,
 };
 
 struct _GstD3D11Scale
@@ -2045,7 +2102,7 @@ gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
   /**
    * GstD3D11Scale:add-borders:
    *
-   * Add black borders if necessary to keep the display aspect ratio
+   * Add borders if necessary to keep the display aspect ratio
    *
    * Since: 1.20
    */
@@ -2053,6 +2110,19 @@ gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
       g_param_spec_boolean ("add-borders", "Add Borders",
           "Add black borders if necessary to keep the display aspect ratio",
           DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Scale:border-color:
+   *
+   * Border color to use in ARGB64 format
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_SCALE_BORDER_COLOR,
+      g_param_spec_uint64 ("border-color", "Border color",
+          "Border color to use in ARGB64 format", 0, G_MAXUINT64,
+          DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
@@ -2078,8 +2148,12 @@ gst_d3d11_scale_set_property (GObject * object, guint prop_id,
   GstD3D11BaseConvert *base = GST_D3D11_BASE_CONVERT (object);
 
   switch (prop_id) {
-    case PROP_CONVERT_ADD_BORDERS:
+    case PROP_SCALE_ADD_BORDERS:
       gst_d3d11_base_convert_set_add_border (base, g_value_get_boolean (value));
+      break;
+    case PROP_SCALE_BORDER_COLOR:
+      gst_d3d11_base_convert_set_border_color (base,
+          g_value_get_uint64 (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2094,8 +2168,11 @@ gst_d3d11_scale_get_property (GObject * object, guint prop_id,
   GstD3D11BaseConvert *base = GST_D3D11_BASE_CONVERT (object);
 
   switch (prop_id) {
-    case PROP_CONVERT_ADD_BORDERS:
+    case PROP_SCALE_ADD_BORDERS:
       g_value_set_boolean (value, base->add_borders);
+      break;
+    case PROP_SCALE_BORDER_COLOR:
+      g_value_set_uint64 (value, base->border_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
