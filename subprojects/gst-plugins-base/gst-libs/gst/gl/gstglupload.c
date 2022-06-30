@@ -554,15 +554,10 @@ _dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     ret = tmp;
   } else {
     gint i, n;
-    GstCaps *tmp;
 
     ret =
         _set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_DMABUF, passthrough);
-    tmp =
-        _set_caps_features_with_passthrough (caps,
-        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, passthrough);
-    gst_caps_append (ret, tmp);
 
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
