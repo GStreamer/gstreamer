@@ -274,9 +274,6 @@ struct _GstD3D11CompositorPad
   GstVideoAggregatorConvertPad parent;
 
   GstD3D11Converter *convert;
-  GstD3D11VideoProcessor *processor;
-
-  GstBuffer *fallback_buf;
 
   gboolean position_updated;
   gboolean alpha_updated;
@@ -284,13 +281,6 @@ struct _GstD3D11CompositorPad
   ID3D11BlendState *blend;
 
   D3D11_RENDER_TARGET_BLEND_DESC desc;
-
-  /* per frame update */
-  ID3D11VideoProcessorInputView *piv;
-
-  /* rectangle for video processor */
-  RECT src_rect;
-  RECT dest_rect;
 
   /* properties */
   gint xpos;
@@ -365,6 +355,8 @@ static gboolean
 gst_d3d11_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg, GstBuffer * buffer,
     GstVideoFrame * prepared_frame);
+static void gst_d3d11_compositor_pad_clean_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame);
 
 #define gst_d3d11_compositor_pad_parent_class parent_pad_class
 G_DEFINE_TYPE (GstD3D11CompositorPad, gst_d3d11_compositor_pad,
@@ -410,6 +402,8 @@ gst_d3d11_compositor_pad_class_init (GstD3D11CompositorPadClass * klass)
 
   vagg_pad_class->prepare_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_pad_prepare_frame);
+  vagg_pad_class->clean_frame =
+      GST_DEBUG_FUNCPTR (gst_d3d11_compositor_pad_clean_frame);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D11_COMPOSITOR_OPERATOR,
       (GstPluginAPIFlags) 0);
@@ -708,143 +702,26 @@ gst_d3d11_compositor_pad_check_frame_obscured (GstVideoAggregatorPad * pad,
 }
 
 static gboolean
-gst_d3d11_compositor_pad_ensure_fallback_buffer (GstD3D11Compositor * self,
-    GstD3D11CompositorPad * pad, GstVideoInfo * info)
-{
-  GstD3D11AllocationParams *d3d11_params;
-  GstBufferPool *pool;
-  GstCaps *caps;
-  GstFlowReturn flow_ret;
-
-  if (pad->fallback_buf)
-    return TRUE;
-
-  caps = gst_video_info_to_caps (info);
-  if (!caps) {
-    GST_ERROR_OBJECT (pad, "Failed to create caps");
-    return FALSE;
-  }
-
-  d3d11_params = gst_d3d11_allocation_params_new (self->device,
-      info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0);
-
-  pool = gst_d3d11_buffer_pool_new_with_options (self->device,
-      caps, d3d11_params, 0, 0);
-  gst_caps_unref (caps);
-  gst_d3d11_allocation_params_free (d3d11_params);
-
-  if (!pool) {
-    GST_ERROR_OBJECT (self, "Failed to create pool");
-    return FALSE;
-  }
-
-  if (!gst_buffer_pool_set_active (pool, TRUE)) {
-    GST_ERROR_OBJECT (self, "Failed to set active");
-    gst_object_unref (pool);
-    return FALSE;
-  }
-
-  flow_ret = gst_buffer_pool_acquire_buffer (pool, &pad->fallback_buf, nullptr);
-  if (flow_ret != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (pad, "Failed to acquire buffer");
-    gst_object_unref (pool);
-    return FALSE;
-  }
-
-  gst_buffer_pool_set_active (pool, FALSE);
-  gst_object_unref (pool);
-
-  return TRUE;
-}
-
-static GstBuffer *
-gst_d3d11_compositor_upload_buffer (GstD3D11Compositor * self,
-    GstD3D11CompositorPad * pad, GstBuffer * buffer,
-    ID3D11VideoProcessorInputView ** piv)
-{
-  GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD_CAST (pad);
-  GstVideoInfo *info;
-  GstD3D11Device *device = self->device;
-  guint n_memory = gst_buffer_n_memory (buffer);
-
-  *piv = nullptr;
-
-  for (guint i = 0; i < n_memory; i++) {
-    GstMemory *mem = gst_buffer_peek_memory (buffer, i);
-    GstD3D11Memory *dmem;
-    D3D11_TEXTURE2D_DESC desc;
-    gboolean srv_available = FALSE;
-
-    if (!gst_is_d3d11_memory (mem))
-      goto do_copy;
-
-    dmem = GST_D3D11_MEMORY_CAST (mem);
-    if (dmem->device != device)
-      goto do_copy;
-
-    gst_d3d11_memory_get_texture_desc (dmem, &desc);
-
-    if ((desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) ==
-        D3D11_BIND_SHADER_RESOURCE) {
-      srv_available = TRUE;
-    }
-
-    if (pad->processor && pad->alpha == 1.0 && n_memory == 1
-        && desc.Usage == D3D11_USAGE_DEFAULT && !srv_available &&
-        gst_d3d11_video_processor_check_bind_flags_for_input_view
-        (desc.BindFlags)) {
-      *piv = gst_d3d11_video_processor_get_input_view (pad->processor, dmem);
-      if (*piv)
-        return buffer;
-    }
-
-    if (desc.ArraySize != 1 || desc.Usage != D3D11_USAGE_DEFAULT ||
-        !srv_available) {
-      goto do_copy;
-    }
-  }
-
-  return buffer;
-
-do_copy:
-  info = &vagg_pad->info;
-
-  if (!gst_d3d11_compositor_pad_ensure_fallback_buffer (self, pad, info))
-    return nullptr;
-
-  if (!gst_d3d11_buffer_copy_into (pad->fallback_buf, buffer, info)) {
-    GST_ERROR_OBJECT (pad, "Failed to copy into fallback buffer");
-    return nullptr;
-  }
-
-  return pad->fallback_buf;
-}
-
-static gboolean
 gst_d3d11_compositor_pad_prepare_frame (GstVideoAggregatorPad * pad,
     GstVideoAggregator * vagg, GstBuffer * buffer,
     GstVideoFrame * prepared_frame)
 {
-  GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (vagg);
-  GstD3D11CompositorPad *cpad = GST_D3D11_COMPOSITOR_PAD (pad);
-  GstBuffer *upload_buf;
-
   /* Skip this frame */
   if (gst_d3d11_compositor_pad_check_frame_obscured (pad, vagg))
     return TRUE;
 
-  upload_buf = gst_d3d11_compositor_upload_buffer (self,
-      cpad, buffer, &cpad->piv);
-  if (!upload_buf)
-    return FALSE;
-
-  if (!gst_video_frame_map (prepared_frame, &pad->info, upload_buf,
-          (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
-    GST_WARNING_OBJECT (pad, "Couldn't map input buffer");
-    return FALSE;
-  }
+  /* don't map/upload now, it will happen in converter object.
+   * Just mark this frame is preparted instead */
+  prepared_frame->buffer = buffer;
 
   return TRUE;
+}
+
+static void
+gst_d3d11_compositor_pad_clean_frame (GstVideoAggregatorPad * vpad,
+    GstVideoAggregator * vagg, GstVideoFrame * prepared_frame)
+{
+  memset (prepared_frame, 0, sizeof (GstVideoFrame));
 }
 
 static gboolean
@@ -876,12 +753,8 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   }
 
   if (!cpad->convert) {
-    GstD3D11Format in_format, out_format;
-    GstDxgiColorSpace in_space, out_space;
-    GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
-
     cpad->convert = gst_d3d11_converter_new (self->device, &pad->info, info,
-        &method);
+        nullptr);
     if (!cpad->convert) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
       return FALSE;
@@ -891,47 +764,6 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
       g_object_set (cpad->convert, "alpha", cpad->alpha, nullptr);
 
     is_first = TRUE;
-
-    cpad->src_rect.left = 0;
-    cpad->src_rect.top = 0;
-    cpad->src_rect.right = pad->info.width;
-    cpad->src_rect.bottom = pad->info.height;
-
-    /* Will use videoprocessor when input has no alpha channel and
-     * alpha == 1.0, mainly for decoder output texture which could not be
-     * bound to shader resource */
-    if (GST_VIDEO_INFO_IS_YUV (&pad->info) &&
-        !GST_VIDEO_INFO_HAS_ALPHA (&pad->info) &&
-        gst_d3d11_device_get_format (self->device,
-            GST_VIDEO_INFO_FORMAT (&pad->info), &in_format) &&
-        in_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
-        gst_d3d11_device_get_format (self->device,
-            GST_VIDEO_INFO_FORMAT (info), &out_format) &&
-        out_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
-        gst_d3d11_video_info_to_dxgi_color_space (&pad->info, &in_space) &&
-        gst_d3d11_video_info_to_dxgi_color_space (info, &out_space)) {
-      GstD3D11VideoProcessor *processor =
-          gst_d3d11_video_processor_new (self->device,
-          pad->info.width, pad->info.height, info->width,
-          info->height);
-
-      if (processor) {
-        if (gst_d3d11_video_processor_check_format_conversion (processor,
-                in_format.dxgi_format,
-                (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type,
-                in_format.dxgi_format,
-                (DXGI_COLOR_SPACE_TYPE) out_space.dxgi_color_space_type) &&
-            gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
-                (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type) &&
-            gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
-                (DXGI_COLOR_SPACE_TYPE) out_space.dxgi_color_space_type)) {
-          cpad->processor = processor;
-          GST_DEBUG_OBJECT (pad, "Video processor is available");
-        } else {
-          gst_d3d11_video_processor_free (processor);
-        }
-      }
-    }
   }
 
   if (cpad->alpha_updated) {
@@ -1008,12 +840,6 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 #endif
 
   cpad->position_updated = FALSE;
-
-  /* rectangle stored for video processor */
-  cpad->dest_rect.left = frame_rect.x;
-  cpad->dest_rect.top = frame_rect.y;
-  cpad->dest_rect.right = frame_rect.x + frame_rect.w;
-  cpad->dest_rect.bottom = frame_rect.y + frame_rect.h;
 
   g_object_set (cpad->convert, "dest-x", frame_rect.x,
       "dest-y", frame_rect.y, "dest-width", frame_rect.w,
@@ -1294,9 +1120,7 @@ static gboolean
 gst_d3d11_compositor_pad_clear_resource (GstD3D11Compositor * self,
     GstD3D11CompositorPad * cpad, gpointer user_data)
 {
-  gst_clear_buffer (&cpad->fallback_buf);
   gst_clear_object (&cpad->convert);
-  g_clear_pointer (&cpad->processor, gst_d3d11_video_processor_free);
   GST_D3D11_CLEAR_COM (cpad->blend);
 
   return TRUE;
@@ -2223,30 +2047,33 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
   ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES] = { nullptr, };
   GstVideoFrame target_frame;
   guint num_rtv = GST_VIDEO_INFO_N_PLANES (&vagg->info);
-  ID3D11VideoProcessorOutputView *pov = nullptr;
 
   if (!self->downstream_supports_d3d11)
     target_buf = self->fallback_buf;
 
+  gst_d3d11_device_lock (self->device);
   if (!gst_video_frame_map (&target_frame, &vagg->info, target_buf,
           (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
     GST_ERROR_OBJECT (self, "Failed to map render target frame");
+    gst_d3d11_device_unlock (self->device);
     return GST_FLOW_ERROR;
   }
 
   if (!gst_d3d11_buffer_get_render_target_view (target_buf, rtv)) {
     GST_ERROR_OBJECT (self, "RTV is unavailable");
     gst_video_frame_unmap (&target_frame);
+    gst_d3d11_device_unlock (self->device);
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d11_device_lock (self->device);
   if (!gst_d3d11_compositor_draw_background (self, rtv, num_rtv)) {
     GST_ERROR_OBJECT (self, "Couldn't draw background");
-    gst_d3d11_device_unlock (self->device);
     gst_video_frame_unmap (&target_frame);
+    gst_d3d11_device_unlock (self->device);
     return GST_FLOW_ERROR;
   }
+
+  gst_video_frame_unmap (&target_frame);
 
   GST_OBJECT_LOCK (self);
   for (iter = GST_ELEMENT (vagg)->sinkpads; iter; iter = g_list_next (iter)) {
@@ -2254,8 +2081,6 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     GstD3D11CompositorPad *cpad = GST_D3D11_COMPOSITOR_PAD (pad);
     GstVideoFrame *prepared_frame =
         gst_video_aggregator_pad_get_prepared_frame (pad);
-    ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES] = { nullptr, };
-    GstBuffer *buffer;
 
     if (!prepared_frame)
       continue;
@@ -2266,47 +2091,15 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
       break;
     }
 
-    buffer = prepared_frame->buffer;
-    if (cpad->piv) {
-      if (!pov) {
-        GstD3D11Memory *dmem =
-            (GstD3D11Memory *) gst_buffer_peek_memory (target_buf, 0);
-        pov = gst_d3d11_video_processor_get_output_view (cpad->processor, dmem);
-      }
-
-      if (!pov) {
-        GST_ERROR_OBJECT (self, "POV is unavailable");
-        ret = GST_FLOW_ERROR;
-        break;
-      }
-
-      if (!gst_d3d11_video_processor_render_unlocked (cpad->processor,
-              &cpad->src_rect, cpad->piv, &cpad->dest_rect, pov)) {
-        GST_ERROR_OBJECT (self, "Failed to convert using processor");
-        ret = GST_FLOW_ERROR;
-        break;
-      }
-
-      GST_TRACE_OBJECT (pad, "Blended using processor");
-    } else {
-      if (!gst_d3d11_buffer_get_shader_resource_view (buffer, srv)) {
-        GST_ERROR_OBJECT (pad, "SRV is unavailable");
-        ret = GST_FLOW_ERROR;
-        break;
-      }
-
-      if (!gst_d3d11_converter_convert_unlocked (cpad->convert, srv, rtv)) {
-        GST_ERROR_OBJECT (self, "Couldn't convert frame");
-        ret = GST_FLOW_ERROR;
-        break;
-      }
-
-      GST_TRACE_OBJECT (pad, "Blended using converter");
+    if (!gst_d3d11_converter_convert_buffer_unlocked (cpad->convert,
+            prepared_frame->buffer, target_buf)) {
+      GST_ERROR_OBJECT (self, "Couldn't convert frame");
+      ret = GST_FLOW_ERROR;
+      break;
     }
   }
   GST_OBJECT_UNLOCK (self);
   gst_d3d11_device_unlock (self->device);
-  gst_video_frame_unmap (&target_frame);
 
   if (ret != GST_FLOW_OK)
     return ret;
