@@ -24,7 +24,7 @@
 #include <gst/d3d11/gstd3d11_fwd.h>
 #include <d3d11_4.h>
 #include <dxgi1_6.h>
-#include "gstd3d11format.h"
+#include <gst/d3d11/gstd3d11format.h>
 
 G_BEGIN_DECLS
 

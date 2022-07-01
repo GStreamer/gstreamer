@@ -24,8 +24,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11.h>
-#include <d3d11_4.h>
-#include <dxgi1_6.h>
+#include <gst/d3d11/gstd3d11_private.h>
 
 G_BEGIN_DECLS
 
@@ -55,13 +54,6 @@ typedef struct _GstD3D11ColorMatrix
   gdouble min[3];
   gdouble max[3];
 } GstD3D11ColorMatrix;
-
-#define GST_D3D11_CLEAR_COM(obj) G_STMT_START { \
-    if (obj) { \
-      (obj)->Release (); \
-      (obj) = NULL; \
-    } \
-  } G_STMT_END
 
 void            gst_d3d11_plugin_utils_init         (D3D_FEATURE_LEVEL feature_level);
 
