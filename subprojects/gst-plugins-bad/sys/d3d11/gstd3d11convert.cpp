@@ -28,7 +28,6 @@
 
 #include "gstd3d11convert.h"
 #include "gstd3d11converter.h"
-#include "gstd3d11videoprocessor.h"
 #include "gstd3d11pluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_convert_debug);
@@ -56,20 +55,7 @@ struct _GstD3D11BaseConvert
 {
   GstD3D11BaseFilter parent;
 
-  GstD3D11Format in_d3d11_format;
-  GstD3D11Format out_d3d11_format;
-
-  ID3D11Texture2D *in_texture[GST_VIDEO_MAX_PLANES];
-  ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
-  guint num_input_view;
-
-  ID3D11Texture2D *out_texture[GST_VIDEO_MAX_PLANES];
-  ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
-  guint num_output_view;
-
   GstD3D11Converter *converter;
-  GstD3D11VideoProcessor *processor;
-  gboolean processor_in_use;
   gboolean same_caps;
   gboolean downstream_supports_crop_meta;
 
@@ -295,35 +281,11 @@ gst_d3d11_base_convert_init (GstD3D11BaseConvert * self)
 }
 
 static void
-gst_d3d11_base_convert_clear_shader_resource (GstD3D11BaseConvert * self)
-{
-  gint i;
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GST_D3D11_CLEAR_COM (self->shader_resource_view[i]);
-    GST_D3D11_CLEAR_COM (self->render_target_view[i]);
-  }
-
-  self->num_input_view = 0;
-  self->num_output_view = 0;
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GST_D3D11_CLEAR_COM (self->in_texture[i]);
-    GST_D3D11_CLEAR_COM (self->out_texture[i]);
-  }
-
-  gst_clear_object (&self->converter);
-  g_clear_pointer (&self->processor, gst_d3d11_video_processor_free);
-
-  self->processor_in_use = FALSE;
-}
-
-static void
 gst_d3d11_base_convert_dispose (GObject * object)
 {
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (object);
 
-  gst_d3d11_base_convert_clear_shader_resource (self);
+  gst_clear_object (&self->converter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1382,343 +1344,14 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
 }
 
 static gboolean
-create_shader_input_resource (GstD3D11BaseConvert * self,
-    GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
-{
-  D3D11_TEXTURE2D_DESC texture_desc;
-  D3D11_SHADER_RESOURCE_VIEW_DESC view_desc;
-  HRESULT hr;
-  ID3D11Device *device_handle;
-  ID3D11Texture2D *tex[GST_VIDEO_MAX_PLANES] = { NULL, };
-  ID3D11ShaderResourceView *view[GST_VIDEO_MAX_PLANES] = { NULL, };
-  gint i;
-
-  if (self->num_input_view)
-    return TRUE;
-
-  memset (&texture_desc, 0, sizeof (texture_desc));
-  memset (&view_desc, 0, sizeof (view_desc));
-
-  device_handle = gst_d3d11_device_get_device_handle (device);
-
-  texture_desc.MipLevels = 1;
-  texture_desc.ArraySize = 1;
-  texture_desc.SampleDesc.Count = 1;
-  texture_desc.SampleDesc.Quality = 0;
-  texture_desc.Usage = D3D11_USAGE_DEFAULT;
-  texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-
-  if (format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      if (format->resource_format[i] == DXGI_FORMAT_UNKNOWN)
-        break;
-
-      texture_desc.Width = GST_VIDEO_INFO_COMP_WIDTH (info, i);
-      texture_desc.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
-      texture_desc.Format = format->resource_format[i];
-
-      hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[i]);
-      if (!gst_d3d11_result (hr, device)) {
-        GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
-        goto error;
-      }
-    }
-  } else {
-    gboolean is_semiplanar = FALSE;
-
-    if (format->dxgi_format == DXGI_FORMAT_NV12 ||
-        format->dxgi_format == DXGI_FORMAT_P010 ||
-        format->dxgi_format == DXGI_FORMAT_P016)
-      is_semiplanar = TRUE;
-
-    texture_desc.Width = GST_VIDEO_INFO_WIDTH (info);
-    texture_desc.Height = GST_VIDEO_INFO_HEIGHT (info);
-    texture_desc.Format = format->dxgi_format;
-
-    /* semiplanar format resolution of should be even number */
-    if (is_semiplanar) {
-      texture_desc.Width = GST_ROUND_UP_2 (texture_desc.Width);
-      texture_desc.Height = GST_ROUND_UP_2 (texture_desc.Height);
-    }
-
-    hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[0]);
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
-      goto error;
-    }
-
-    if (is_semiplanar) {
-      tex[0]->AddRef ();
-      tex[1] = tex[0];
-    }
-  }
-
-  view_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-  view_desc.Texture2D.MipLevels = 1;
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (format->resource_format[i] == DXGI_FORMAT_UNKNOWN)
-      break;
-
-    view_desc.Format = format->resource_format[i];
-    hr = device_handle->CreateShaderResourceView (tex[i], &view_desc, &view[i]);
-
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (self,
-          "Failed to create resource view (0x%x)", (guint) hr);
-      goto error;
-    }
-  }
-
-  self->num_input_view = i;
-
-  GST_DEBUG_OBJECT (self,
-      "%d shader resource view created", self->num_input_view);
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    self->in_texture[i] = tex[i];
-    self->shader_resource_view[i] = view[i];
-  }
-
-  return TRUE;
-
-error:
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GST_D3D11_CLEAR_COM (view[i]);
-  }
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GST_D3D11_CLEAR_COM (tex[i]);
-  }
-
-  return FALSE;
-}
-
-/* 16.0 / 255.0 ~= 0.062745 */
-static const float luma_black_level_limited = 0.062745f;
-
-static inline void
-clear_rtv_color_rgb (GstD3D11BaseConvert * self,
-    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv,
-    gboolean full_range)
-{
-  const FLOAT clear_color_full[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-  const FLOAT clear_color_limited[4] =
-      { luma_black_level_limited, luma_black_level_limited,
-    luma_black_level_limited, 1.0f
-  };
-  const FLOAT *target;
-
-  if (full_range)
-    target = clear_color_full;
-  else
-    target = clear_color_limited;
-
-  context_handle->ClearRenderTargetView (rtv, target);
-}
-
-static inline void
-clear_rtv_color_vuya (GstD3D11BaseConvert * self,
-    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv,
-    gboolean full_range)
-{
-  const FLOAT clear_color_full[4] = { 0.5f, 0.5f, 0.0f, 1.0f };
-  const FLOAT clear_color_limited[4] =
-      { 0.5f, 0.5f, luma_black_level_limited, 1.0f };
-  const FLOAT *target;
-
-  if (full_range)
-    target = clear_color_full;
-  else
-    target = clear_color_limited;
-
-  context_handle->ClearRenderTargetView (rtv, target);
-}
-
-static inline void
-clear_rtv_color_luma (GstD3D11BaseConvert * self,
-    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv,
-    gboolean full_range)
-{
-  const FLOAT clear_color_full[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-  const FLOAT clear_color_limited[4] =
-      { luma_black_level_limited, luma_black_level_limited,
-    luma_black_level_limited, 1.0f
-  };
-  const FLOAT *target;
-
-  if (full_range)
-    target = clear_color_full;
-  else
-    target = clear_color_limited;
-
-  context_handle->ClearRenderTargetView (rtv, target);
-}
-
-static inline void
-clear_rtv_color_chroma (GstD3D11BaseConvert * self,
-    ID3D11DeviceContext * context_handle, ID3D11RenderTargetView * rtv)
-{
-  const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-
-  context_handle->ClearRenderTargetView (rtv, clear_color);
-}
-
-static void
-clear_rtv_color_all (GstD3D11BaseConvert * self, GstVideoInfo * info,
-    ID3D11DeviceContext * context_handle,
-    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
-{
-  gint i;
-  gboolean full_range = info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255;
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (!rtv[i])
-      break;
-
-    if (GST_VIDEO_INFO_IS_RGB (info)) {
-      clear_rtv_color_rgb (self, context_handle, rtv[i], full_range);
-    } else {
-      if (GST_VIDEO_INFO_N_PLANES (info) == 1) {
-        clear_rtv_color_vuya (self, context_handle, rtv[i], full_range);
-      } else {
-        if (i == 0)
-          clear_rtv_color_luma (self, context_handle, rtv[i], full_range);
-        else
-          clear_rtv_color_chroma (self, context_handle, rtv[i]);
-      }
-    }
-  }
-}
-
-static gboolean
-create_shader_output_resource (GstD3D11BaseConvert * self,
-    GstD3D11Device * device, const GstD3D11Format * format, GstVideoInfo * info)
-{
-  D3D11_TEXTURE2D_DESC texture_desc;
-  D3D11_RENDER_TARGET_VIEW_DESC view_desc;
-  HRESULT hr;
-  ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
-  ID3D11Texture2D *tex[GST_VIDEO_MAX_PLANES] = { NULL, };
-  ID3D11RenderTargetView *view[GST_VIDEO_MAX_PLANES] = { NULL, };
-  gint i;
-
-  if (self->num_output_view)
-    return TRUE;
-
-  memset (&texture_desc, 0, sizeof (texture_desc));
-  memset (&view_desc, 0, sizeof (view_desc));
-
-  device_handle = gst_d3d11_device_get_device_handle (device);
-  context_handle = gst_d3d11_device_get_device_context_handle (device);
-
-  texture_desc.MipLevels = 1;
-  texture_desc.ArraySize = 1;
-  texture_desc.SampleDesc.Count = 1;
-  texture_desc.SampleDesc.Quality = 0;
-  texture_desc.Usage = D3D11_USAGE_DEFAULT;
-  texture_desc.BindFlags =
-      D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-
-  if (format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      if (format->resource_format[i] == DXGI_FORMAT_UNKNOWN)
-        break;
-
-      texture_desc.Width = GST_VIDEO_INFO_COMP_WIDTH (info, i);
-      texture_desc.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
-      texture_desc.Format = format->resource_format[i];
-
-      hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[i]);
-      if (!gst_d3d11_result (hr, device)) {
-        GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
-        goto error;
-      }
-    }
-  } else {
-    gboolean is_semiplanar = FALSE;
-
-    if (format->dxgi_format == DXGI_FORMAT_NV12 ||
-        format->dxgi_format == DXGI_FORMAT_P010 ||
-        format->dxgi_format == DXGI_FORMAT_P016)
-      is_semiplanar = TRUE;
-
-    texture_desc.Width = GST_VIDEO_INFO_WIDTH (info);
-    texture_desc.Height = GST_VIDEO_INFO_HEIGHT (info);
-    texture_desc.Format = format->dxgi_format;
-
-    /* semiplanar format resolution of should be even number */
-    if (is_semiplanar) {
-      texture_desc.Width = GST_ROUND_UP_2 (texture_desc.Width);
-      texture_desc.Height = GST_ROUND_UP_2 (texture_desc.Height);
-    }
-
-    hr = device_handle->CreateTexture2D (&texture_desc, NULL, &tex[0]);
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (self, "Failed to create texture (0x%x)", (guint) hr);
-      goto error;
-    }
-
-    if (is_semiplanar) {
-      tex[0]->AddRef ();
-      tex[1] = tex[0];
-    }
-  }
-
-  view_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-  view_desc.Texture2D.MipSlice = 0;
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (format->resource_format[i] == DXGI_FORMAT_UNKNOWN)
-      break;
-
-    view_desc.Format = format->resource_format[i];
-    hr = device_handle->CreateRenderTargetView (tex[i], &view_desc, &view[i]);
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (self,
-          "Failed to create %dth render target view (0x%x)", i, (guint) hr);
-      goto error;
-    }
-  }
-
-  gst_d3d11_device_lock (device);
-  clear_rtv_color_all (self, info, context_handle, view);
-  gst_d3d11_device_unlock (device);
-
-  self->num_output_view = i;
-
-  GST_DEBUG_OBJECT (self, "%d render view created", self->num_output_view);
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    self->out_texture[i] = tex[i];
-    self->render_target_view[i] = view[i];
-  }
-
-  return TRUE;
-
-error:
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GST_D3D11_CLEAR_COM (view[i]);
-  }
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GST_D3D11_CLEAR_COM (tex[i]);
-  }
-
-  return FALSE;
-}
-
-static gboolean
 gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info)
 {
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (filter);
-  const GstVideoInfo *unknown_info;
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   gint border_offset_x = 0;
   gint border_offset_y = 0;
-  GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
 
   if (gst_caps_is_equal (incaps, outcaps)) {
     self->same_caps = TRUE;
@@ -1766,7 +1399,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     }
   }
 
-  gst_d3d11_base_convert_clear_shader_resource (self);
+  gst_clear_object (&self->converter);
 
   GST_DEBUG_OBJECT (self, "Setup convert with format %s -> %s",
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
@@ -1785,73 +1418,11 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     return TRUE;
   }
 
-  if (!gst_d3d11_device_get_format (filter->device,
-          GST_VIDEO_INFO_FORMAT (in_info), &self->in_d3d11_format)) {
-    unknown_info = in_info;
-    goto format_unknown;
-  }
-
-  if (!gst_d3d11_device_get_format (filter->device,
-          GST_VIDEO_INFO_FORMAT (out_info), &self->out_d3d11_format)) {
-    unknown_info = out_info;
-    goto format_unknown;
-  }
-
   self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info,
-      &method);
+      nullptr);
   if (!self->converter) {
-    GST_ERROR_OBJECT (self, "couldn't set converter");
+    GST_ERROR_OBJECT (self, "Couldn't create converter");
     return FALSE;
-  }
-
-  /* If both input and output formats are native DXGI format */
-  if (self->in_d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
-      self->out_d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
-    gboolean hardware = FALSE;
-    GstD3D11VideoProcessor *processor = NULL;
-
-    gst_d3d11_device_lock (filter->device);
-    g_object_get (filter->device, "hardware", &hardware, NULL);
-    if (hardware) {
-      processor = gst_d3d11_video_processor_new (filter->device,
-          in_info->width, in_info->height, out_info->width, out_info->height);
-    }
-
-    if (processor) {
-      GstDxgiColorSpace in_space, out_space;
-
-      if (gst_d3d11_video_info_to_dxgi_color_space (in_info, &in_space) &&
-          gst_d3d11_video_info_to_dxgi_color_space (out_info, &out_space)) {
-        DXGI_FORMAT in_dxgi_format = self->in_d3d11_format.dxgi_format;
-        DXGI_FORMAT out_dxgi_format = self->out_d3d11_format.dxgi_format;
-        DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
-            (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type;
-        DXGI_COLOR_SPACE_TYPE out_dxgi_color_space =
-            (DXGI_COLOR_SPACE_TYPE) out_space.dxgi_color_space_type;
-
-        if (!gst_d3d11_video_processor_check_format_conversion (processor,
-                in_dxgi_format, in_dxgi_color_space, out_dxgi_format,
-                out_dxgi_color_space)) {
-          GST_DEBUG_OBJECT (self, "Conversion is not supported by device");
-          gst_d3d11_video_processor_free (processor);
-          processor = NULL;
-        } else {
-          GST_DEBUG_OBJECT (self, "video processor supports conversion");
-          gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
-              in_dxgi_color_space);
-          gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
-              out_dxgi_color_space);
-        }
-      } else {
-        GST_WARNING_OBJECT (self,
-            "Couldn't determine input and/or output dxgi colorspace");
-        gst_d3d11_video_processor_free (processor);
-        processor = NULL;
-      }
-    }
-
-    self->processor = processor;
-    gst_d3d11_device_unlock (filter->device);
   }
 
   GST_DEBUG_OBJECT (self, "from=%dx%d (par=%d/%d dar=%d/%d), size %"
@@ -1903,117 +1474,6 @@ format_mismatch:
     GST_ERROR_OBJECT (self, "input and output formats do not match");
     return FALSE;
   }
-format_unknown:
-  {
-    GST_ERROR_OBJECT (self,
-        "%s couldn't be converted to d3d11 format",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (unknown_info)));
-    return FALSE;
-  }
-}
-
-static gboolean
-gst_d3d11_base_convert_prefer_video_processor (GstD3D11BaseConvert * self,
-    GstBuffer * inbuf, GstBuffer * outbuf)
-{
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (self);
-  GstMemory *mem;
-  GstD3D11Memory *dmem;
-
-  if (!self->processor) {
-    GST_TRACE_OBJECT (self, "Processor is unavailable");
-    return FALSE;
-  }
-
-  if (gst_buffer_n_memory (inbuf) != 1 || gst_buffer_n_memory (outbuf) != 1) {
-    GST_TRACE_OBJECT (self, "Num memory objects is mismatched, in: %d, out: %d",
-        gst_buffer_n_memory (inbuf), gst_buffer_n_memory (outbuf));
-    return FALSE;
-  }
-
-  mem = gst_buffer_peek_memory (inbuf, 0);
-  g_assert (gst_is_d3d11_memory (mem));
-
-  dmem = (GstD3D11Memory *) mem;
-  if (dmem->device != filter->device) {
-    GST_TRACE_OBJECT (self, "Input memory belongs to different device");
-    return FALSE;
-  }
-
-  /* If we can use shader, and video processor was not used previously,
-   * we prefer to use shader instead of video processor
-   * because video processor implementation is vendor dependent
-   * and not flexible */
-  if (!self->processor_in_use &&
-      gst_d3d11_memory_get_shader_resource_view_size (dmem)) {
-    GST_TRACE_OBJECT (self, "SRV is available");
-    return FALSE;
-  }
-
-  if (!gst_d3d11_video_processor_get_input_view (self->processor, dmem)) {
-    GST_TRACE_OBJECT (self, "PIV is unavailable");
-    return FALSE;
-  }
-
-  mem = gst_buffer_peek_memory (outbuf, 0);
-  g_assert (gst_is_d3d11_memory (mem));
-
-  dmem = (GstD3D11Memory *) mem;
-  if (dmem->device != filter->device) {
-    GST_TRACE_OBJECT (self, "Output memory belongs to different device");
-    return FALSE;
-  }
-
-  if (!gst_d3d11_video_processor_get_output_view (self->processor, dmem)) {
-    GST_TRACE_OBJECT (self, "POV is unavailable");
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_d3d11_base_convert_transform_using_processor (GstD3D11BaseConvert * self,
-    GstBuffer * inbuf, GstBuffer * outbuf, RECT * in_rect)
-{
-  GstD3D11Memory *in_mem, *out_mem;
-  ID3D11VideoProcessorInputView *piv;
-  ID3D11VideoProcessorOutputView *pov;
-
-  in_mem = (GstD3D11Memory *) gst_buffer_peek_memory (inbuf, 0);
-  out_mem = (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, 0);
-
-  piv = gst_d3d11_video_processor_get_input_view (self->processor, in_mem);
-  if (!piv) {
-    GST_ERROR_OBJECT (self, "ID3D11VideoProcessorInputView is unavailable");
-    return FALSE;
-  }
-
-  pov = gst_d3d11_video_processor_get_output_view (self->processor, out_mem);
-  if (!pov) {
-    GST_ERROR_OBJECT (self, "ID3D11VideoProcessorOutputView is unavailable");
-    return FALSE;
-  }
-
-  /* Clear background color with black */
-  if (self->borders_w || self->borders_h) {
-    GstD3D11BaseFilter *bfilter = GST_D3D11_BASE_FILTER_CAST (self);
-    ID3D11DeviceContext *context_handle =
-        gst_d3d11_device_get_device_context_handle (bfilter->device);
-    ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
-
-    if (!gst_d3d11_buffer_get_render_target_view (outbuf, render_view)) {
-      GST_ERROR_OBJECT (self, "ID3D11RenderTargetView is unavailable");
-      return FALSE;
-    }
-
-    gst_d3d11_device_lock (bfilter->device);
-    clear_rtv_color_all (self, &bfilter->out_info, context_handle, render_view);
-    gst_d3d11_device_unlock (bfilter->device);
-  }
-
-  return gst_d3d11_video_processor_render (self->processor,
-      in_rect, piv, &self->out_rect, pov);
 }
 
 static gboolean
@@ -2275,35 +1735,9 @@ static GstFlowReturn
 gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
 {
-  GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (trans);
-  GstD3D11Device *device = filter->device;
-  ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
-  ID3D11ShaderResourceView *resource_view[GST_VIDEO_MAX_PLANES] = { NULL, };
-  ID3D11RenderTargetView *render_view[GST_VIDEO_MAX_PLANES] = { NULL, };
-  ID3D11RenderTargetView **target_rtv;
-  guint i;
-  gboolean copy_input = FALSE;
-  gboolean copy_output = FALSE;
-  GstMapInfo in_map[GST_VIDEO_MAX_PLANES];
-  GstMapInfo out_map[GST_VIDEO_MAX_PLANES];
   RECT in_rect;
   GstVideoCropMeta *crop_meta;
-
-  device_handle = gst_d3d11_device_get_device_handle (device);
-  context_handle = gst_d3d11_device_get_device_context_handle (device);
-
-  if (!gst_d3d11_buffer_map (inbuf, device_handle, in_map, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Couldn't map input buffer");
-    goto invalid_memory;
-  }
-
-  if (!gst_d3d11_buffer_map (outbuf, device_handle, out_map, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (self, "Couldn't map output buffer");
-    gst_d3d11_buffer_unmap (inbuf, in_map);
-    goto invalid_memory;
-  }
 
   crop_meta = gst_buffer_get_video_crop_meta (inbuf);
   if (crop_meta) {
@@ -2329,140 +1763,13 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
         "src-height", (gint) in_rect.bottom - in_rect.top, nullptr);
   }
 
-  if (gst_d3d11_base_convert_prefer_video_processor (self, inbuf, outbuf)) {
-    gboolean ret = gst_d3d11_base_convert_transform_using_processor (self,
-        inbuf, outbuf, &in_rect);
-
-    if (!ret) {
-      GST_ERROR_OBJECT (self, "Couldn't convert using video processor");
-      goto conversion_failed;
-    }
-
-    self->processor_in_use = TRUE;
-
-    GST_TRACE_OBJECT (self, "Conversion done by video processor");
-
-    gst_d3d11_buffer_unmap (inbuf, in_map);
-    gst_d3d11_buffer_unmap (outbuf, out_map);
-
-    return GST_FLOW_OK;
+  if (!gst_d3d11_converter_convert_buffer (self->converter, inbuf, outbuf)) {
+    GST_ELEMENT_ERROR (self, CORE, FAILED, (nullptr),
+        ("Couldn't convert texture"));
+    return GST_FLOW_ERROR;
   }
-
-  /* Ensure shader resource views */
-  if (!gst_d3d11_buffer_get_shader_resource_view (inbuf, resource_view)) {
-    if (!create_shader_input_resource (self, device,
-            &self->in_d3d11_format, &filter->in_info)) {
-      GST_ERROR_OBJECT (self, "Failed to configure fallback input texture");
-      goto fallback_failed;
-    }
-
-    copy_input = TRUE;
-    gst_d3d11_device_lock (device);
-    for (i = 0; i < gst_buffer_n_memory (inbuf); i++) {
-      GstD3D11Memory *mem =
-          (GstD3D11Memory *) gst_buffer_peek_memory (inbuf, i);
-      guint subidx;
-      D3D11_BOX src_box = { 0, };
-      D3D11_TEXTURE2D_DESC src_desc;
-      D3D11_TEXTURE2D_DESC dst_desc;
-
-      subidx = gst_d3d11_memory_get_subresource_index (mem);
-      gst_d3d11_memory_get_texture_desc (mem, &src_desc);
-
-      self->in_texture[i]->GetDesc (&dst_desc);
-
-      src_box.left = 0;
-      src_box.top = 0;
-      src_box.front = 0;
-      src_box.back = 1;
-      src_box.right = MIN (src_desc.Width, dst_desc.Width);
-      src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
-
-      context_handle->CopySubresourceRegion (self->in_texture[i], 0, 0, 0, 0,
-          (ID3D11Resource *) in_map[i].data, subidx, &src_box);
-    }
-    gst_d3d11_device_unlock (device);
-  }
-
-  /* Ensure render target views */
-  if (!gst_d3d11_buffer_get_render_target_view (outbuf, render_view)) {
-    if (!create_shader_output_resource (self, device,
-            &self->out_d3d11_format, &filter->out_info)) {
-      GST_ERROR_OBJECT (self, "Failed to configure fallback output texture");
-      goto fallback_failed;
-    }
-
-    copy_output = TRUE;
-  }
-
-  /* If we need border, clear render target view first */
-  if (copy_output) {
-    target_rtv = self->render_target_view;
-  } else {
-    target_rtv = render_view;
-  }
-
-  if (!gst_d3d11_converter_convert (self->converter,
-          copy_input ? self->shader_resource_view : resource_view,
-          target_rtv)) {
-    goto conversion_failed;
-  }
-
-  if (copy_output) {
-    gst_d3d11_device_lock (device);
-    for (i = 0; i < gst_buffer_n_memory (outbuf); i++) {
-      GstD3D11Memory *mem =
-          (GstD3D11Memory *) gst_buffer_peek_memory (outbuf, i);
-      guint subidx;
-      D3D11_BOX src_box = { 0, };
-      D3D11_TEXTURE2D_DESC src_desc;
-      D3D11_TEXTURE2D_DESC dst_desc;
-
-      self->out_texture[i]->GetDesc (&src_desc);
-      subidx = gst_d3d11_memory_get_subresource_index (mem);
-      gst_d3d11_memory_get_texture_desc (mem, &dst_desc);
-
-      src_box.left = 0;
-      src_box.top = 0;
-      src_box.front = 0;
-      src_box.back = 1;
-      src_box.right = MIN (src_desc.Width, dst_desc.Width);
-      src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
-
-      context_handle->CopySubresourceRegion ((ID3D11Resource *) out_map[i].data,
-          subidx, 0, 0, 0, self->out_texture[i], 0, &src_box);
-    }
-    gst_d3d11_device_unlock (device);
-  }
-
-  gst_d3d11_buffer_unmap (inbuf, in_map);
-  gst_d3d11_buffer_unmap (outbuf, out_map);
 
   return GST_FLOW_OK;
-
-invalid_memory:
-  {
-    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL), ("Invalid memory"));
-    return GST_FLOW_ERROR;
-  }
-fallback_failed:
-  {
-    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
-        ("Couldn't prepare fallback memory"));
-    gst_d3d11_buffer_unmap (inbuf, in_map);
-    gst_d3d11_buffer_unmap (outbuf, out_map);
-
-    return GST_FLOW_ERROR;
-  }
-conversion_failed:
-  {
-    GST_ELEMENT_ERROR (self, CORE, FAILED, (NULL),
-        ("Couldn't convert texture"));
-    gst_d3d11_buffer_unmap (inbuf, in_map);
-    gst_d3d11_buffer_unmap (outbuf, out_map);
-
-    return GST_FLOW_ERROR;
-  }
 }
 
 static void
