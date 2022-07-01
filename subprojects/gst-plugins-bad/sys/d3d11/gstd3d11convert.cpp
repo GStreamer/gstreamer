@@ -72,6 +72,16 @@ struct _GstD3D11BaseConvert
   gboolean add_borders;
   guint64 border_color;
 
+  /* orientation */
+  /* method configured via property */
+  GstVideoOrientationMethod method;
+  /* method parsed from tag */
+  GstVideoOrientationMethod tag_method;
+  /* method currently selected based on "method" and "tag_method" */
+  GstVideoOrientationMethod selected_method;
+  /* method previously selected and used for negotiation */
+  GstVideoOrientationMethod active_method;
+
   GMutex lock;
 };
 
@@ -654,9 +664,11 @@ static GstCaps *
 gst_d3d11_base_convert_fixate_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
+  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (base);
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
   GValue fpar = G_VALUE_INIT, tpar = G_VALUE_INIT;
+  gboolean rotate = FALSE;
 
   othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);
@@ -670,6 +682,19 @@ gst_d3d11_base_convert_fixate_size (GstBaseTransform * base,
    * assume that missing PAR on the sinkpad means 1/1 and
    * missing PAR on the srcpad means undefined
    */
+  g_mutex_lock (&self->lock);
+  switch (self->selected_method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      rotate = TRUE;
+      break;
+    default:
+      rotate = FALSE;
+      break;
+  }
+
   if (direction == GST_PAD_SINK) {
     if (!from_par) {
       g_value_init (&fpar, GST_TYPE_FRACTION);
@@ -682,18 +707,36 @@ gst_d3d11_base_convert_fixate_size (GstBaseTransform * base,
       to_par = &tpar;
     }
   } else {
-    if (!to_par) {
-      g_value_init (&tpar, GST_TYPE_FRACTION);
-      gst_value_set_fraction (&tpar, 1, 1);
-      to_par = &tpar;
+    gint from_par_n, from_par_d;
 
-      gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-          NULL);
-    }
     if (!from_par) {
       g_value_init (&fpar, GST_TYPE_FRACTION);
       gst_value_set_fraction (&fpar, 1, 1);
       from_par = &fpar;
+
+      from_par_n = from_par_d = 1;
+    } else {
+      from_par_n = gst_value_get_fraction_numerator (from_par);
+      from_par_d = gst_value_get_fraction_denominator (from_par);
+    }
+
+    if (!to_par) {
+      gint to_par_n, to_par_d;
+
+      if (rotate) {
+        to_par_n = from_par_d;
+        to_par_d = from_par_n;
+      } else {
+        to_par_n = from_par_n;
+        to_par_d = from_par_d;
+      }
+
+      g_value_init (&tpar, GST_TYPE_FRACTION);
+      gst_value_set_fraction (&tpar, to_par_n, to_par_d);
+      to_par = &tpar;
+
+      gst_structure_set (outs, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+          to_par_n, to_par_d, NULL);
     }
   }
 
@@ -715,6 +758,17 @@ gst_d3d11_base_convert_fixate_size (GstBaseTransform * base,
 
     gst_structure_get_int (outs, "width", &w);
     gst_structure_get_int (outs, "height", &h);
+
+    /* swap dimensions when it's rotated */
+    if (rotate) {
+      gint _tmp = from_w;
+      from_w = from_h;
+      from_h = _tmp;
+
+      _tmp = from_par_n;
+      from_par_n = from_par_d;
+      from_par_d = _tmp;
+    }
 
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
@@ -1081,6 +1135,7 @@ done:
     g_value_unset (&fpar);
   if (to_par == &tpar)
     g_value_unset (&tpar);
+  g_mutex_unlock (&self->lock);
 
   return othercaps;
 }
@@ -1373,17 +1428,43 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   gint border_offset_x = 0;
   gint border_offset_y = 0;
+  gboolean need_flip = FALSE;
+  gint in_width, in_height, in_par_n, in_par_d;
 
-  if (gst_caps_is_equal (incaps, outcaps)) {
+  g_mutex_lock (&self->lock);
+  self->active_method = self->selected_method;
+
+  if (self->active_method != GST_VIDEO_ORIENTATION_IDENTITY)
+    need_flip = TRUE;
+
+  if (!need_flip && gst_caps_is_equal (incaps, outcaps)) {
     self->same_caps = TRUE;
+    g_mutex_unlock (&self->lock);
     return TRUE;
   } else {
     self->same_caps = FALSE;
   }
 
-  if (!gst_util_fraction_multiply (in_info->width,
-          in_info->height, in_info->par_n, in_info->par_d, &from_dar_n,
-          &from_dar_d)) {
+  switch (self->selected_method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      in_width = in_info->height;
+      in_height = in_info->width;
+      in_par_n = in_info->par_d;
+      in_par_d = in_info->par_n;
+      break;
+    default:
+      in_width = in_info->width;
+      in_height = in_info->height;
+      in_par_n = in_info->par_n;
+      in_par_d = in_info->par_d;
+      break;
+  }
+
+  if (!gst_util_fraction_multiply (in_width,
+          in_height, in_par_n, in_par_d, &from_dar_n, &from_dar_d)) {
     from_dar_n = from_dar_d = -1;
   }
 
@@ -1420,7 +1501,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     }
   }
 
-  g_mutex_lock (&self->lock);
   gst_clear_object (&self->converter);
 
   GST_DEBUG_OBJECT (self, "Setup convert with format %s -> %s",
@@ -1434,11 +1514,11 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     return FALSE;
   }
 
-  if (in_info->width == out_info->width && in_info->height == out_info->height
+  if (in_width == out_info->width && in_height == out_info->height
       && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
       self->borders_h == 0 &&
       gst_video_colorimetry_is_equal (&in_info->colorimetry,
-          &out_info->colorimetry)) {
+          &out_info->colorimetry) && !need_flip) {
     self->same_caps = TRUE;
     g_mutex_unlock (&self->lock);
     return TRUE;
@@ -1454,11 +1534,11 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   GST_DEBUG_OBJECT (self, "from=%dx%d (par=%d/%d dar=%d/%d), size %"
       G_GSIZE_FORMAT " -> to=%dx%d (par=%d/%d dar=%d/%d borders=%d:%d), "
-      "size %" G_GSIZE_FORMAT,
+      "size %" G_GSIZE_FORMAT ", orientation: %d",
       in_info->width, in_info->height, in_info->par_n, in_info->par_d,
       from_dar_n, from_dar_d, in_info->size, out_info->width,
       out_info->height, out_info->par_n, out_info->par_d, to_dar_n, to_dar_d,
-      self->borders_w, self->borders_h, out_info->size);
+      self->borders_w, self->borders_h, out_info->size, self->active_method);
 
   self->in_rect.left = 0;
   self->in_rect.top = 0;
@@ -1488,7 +1568,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       "dest-y", (gint) self->out_rect.top,
       "dest-width", (gint) (self->out_rect.right - self->out_rect.left),
       "dest-height", (gint) (self->out_rect.bottom - self->out_rect.top),
-      nullptr);
+      "video-direction", self->active_method, nullptr);
 
   if (self->borders_w > 0 || self->borders_h > 0) {
     g_object_set (self->converter, "fill-border", TRUE, "border-color",
@@ -1818,6 +1898,37 @@ gst_d3d11_base_convert_set_border_color (GstD3D11BaseConvert * self,
   g_mutex_unlock (&self->lock);
 }
 
+static void
+gst_d3d11_base_convert_set_orientation (GstD3D11BaseConvert * self,
+    GstVideoOrientationMethod method, gboolean from_tag)
+{
+  if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
+    GST_WARNING_OBJECT (self, "Unsupported custom orientation");
+    return;
+  }
+
+  g_mutex_lock (&self->lock);
+  if (from_tag)
+    self->tag_method = method;
+  else
+    self->method = method;
+
+  if (self->method == GST_VIDEO_ORIENTATION_AUTO) {
+    self->selected_method = self->tag_method;
+  } else {
+    self->selected_method = self->method;
+  }
+
+  if (self->selected_method != self->active_method) {
+    GST_DEBUG_OBJECT (self, "Rotation orientation %d -> %d",
+        self->active_method, self->selected_method);
+
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
+  }
+
+  g_mutex_unlock (&self->lock);
+}
+
 /**
  * SECTION:element-d3d11convert
  * @title: d3d11convert
@@ -1847,6 +1958,7 @@ enum
   PROP_CONVERT_0,
   PROP_CONVERT_ADD_BORDERS,
   PROP_CONVERT_BORDER_COLOR,
+  PROP_CONVERT_VIDEO_DIRECTION,
 };
 
 struct _GstD3D11Convert
@@ -1854,18 +1966,30 @@ struct _GstD3D11Convert
   GstD3D11BaseConvert parent;
 };
 
-G_DEFINE_TYPE (GstD3D11Convert, gst_d3d11_convert, GST_TYPE_D3D11_BASE_CONVERT);
+static void
+gst_d3d11_convert_video_direction_interface_init (GstVideoDirectionInterface *
+    iface)
+{
+}
+
+G_DEFINE_TYPE_WITH_CODE (GstD3D11Convert, gst_d3d11_convert,
+    GST_TYPE_D3D11_BASE_CONVERT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
+        gst_d3d11_convert_video_direction_interface_init));
 
 static void gst_d3d11_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_d3d11_convert_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean gst_d3d11_convert_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 
 static void
 gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_d3d11_convert_set_property;
   gobject_class->get_property = gst_d3d11_convert_get_property;
@@ -1896,12 +2020,24 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
           DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D11Convert:video-direction:
+   *
+   * Video rotation/flip method to use
+   *
+   * Since: 1.22
+   */
+  g_object_class_override_property (gobject_class, PROP_CONVERT_VIDEO_DIRECTION,
+      "video-direction");
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 colorspace converter and scaler",
-      "Filter/Converter/Scaler/Video/Hardware",
+      "Filter/Converter/Scaler/Effect/Video/Hardware",
       "Resizes video and allow color conversion using Direct3D11",
       "Seungha Yang <seungha.yang@navercorp.com>, "
       "Jeongki Kim <jeongki.kim@jeongki.kim>");
+
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d11_convert_sink_event);
 }
 
 static void
@@ -1923,6 +2059,10 @@ gst_d3d11_convert_set_property (GObject * object, guint prop_id,
       gst_d3d11_base_convert_set_border_color (base,
           g_value_get_uint64 (value));
       break;
+    case PROP_CONVERT_VIDEO_DIRECTION:
+      gst_d3d11_base_convert_set_orientation (base,
+          (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1942,10 +2082,36 @@ gst_d3d11_convert_get_property (GObject * object, guint prop_id,
     case PROP_CONVERT_BORDER_COLOR:
       g_value_set_uint64 (value, base->border_color);
       break;
+    case PROP_CONVERT_VIDEO_DIRECTION:
+      g_value_set_enum (value, base->method);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static gboolean
+gst_d3d11_convert_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstD3D11BaseConvert *base = GST_D3D11_BASE_CONVERT (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:{
+      GstTagList *taglist;
+      GstVideoOrientationMethod method = GST_VIDEO_ORIENTATION_IDENTITY;
+
+      gst_event_parse_tag (event, &taglist);
+      if (gst_video_orientation_from_tag (taglist, &method))
+        gst_d3d11_base_convert_set_orientation (base, method, TRUE);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (gst_d3d11_convert_parent_class)->sink_event
+      (trans, event);
 }
 
 /**

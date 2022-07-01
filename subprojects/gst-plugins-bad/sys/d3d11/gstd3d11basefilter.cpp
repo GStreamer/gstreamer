@@ -275,6 +275,14 @@ gst_d3d11_base_filter_before_transform (GstBaseTransform * trans,
   gboolean update_device = FALSE;
   GstCaps *in_caps = NULL;
   GstCaps *out_caps = NULL;
+  GstClockTime timestamp, stream_time;
+
+  timestamp = GST_BUFFER_PTS (buffer);
+  stream_time =
+      gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME, timestamp);
+
+  if (GST_CLOCK_TIME_IS_VALID (stream_time))
+    gst_object_sync_values (GST_OBJECT (self), stream_time);
 
   mem = gst_buffer_peek_memory (buffer, 0);
   /* Can happens (e.g., d3d11upload) */
