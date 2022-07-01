@@ -20,7 +20,7 @@ import concurrent
 
 class WebRTCSimpleServer(object):
 
-    def __init__(self, loop, options):
+    def __init__(self, options):
         ############### Global data ###############
 
         # Format: {uid: (Peer WebSocketServerProtocol,
@@ -34,11 +34,6 @@ class WebRTCSimpleServer(object):
         # Format: {room_id: {peer1_id, peer2_id, peer3_id, ...}}
         # Room dict with a set of peers in each room
         self.rooms = dict()
-
-        # Event loop
-        self.loop = loop
-        # Websocket Server Instance
-        self.server = None
 
         # Options
         self.addr = options.addr
@@ -112,7 +107,6 @@ class WebRTCSimpleServer(object):
 
     ############### Handler functions ###############
 
-    
     async def connection_handler(self, ws, uid):
         raddr = ws.remote_address
         peer_status = None
@@ -219,7 +213,7 @@ class WebRTCSimpleServer(object):
         if hello != 'HELLO':
             await ws.close(code=1002, reason='invalid protocol')
             raise Exception("Invalid hello from {!r}".format(raddr))
-        if not uid or uid in self.peers or uid.split() != [uid]: # no whitespace
+        if not uid or uid in self.peers or uid.split() != [uid]:  # no whitespace
             await ws.close(code=1002, reason='invalid peer uid')
             raise Exception("Invalid uid {!r} from {!r}".format(uid, raddr))
         # Send back a HELLO
@@ -241,7 +235,7 @@ class WebRTCSimpleServer(object):
         # Create an SSL context to be used by the websocket server
         print('Using TLS with keys in {!r}'.format(self.cert_path))
         chain_pem, key_pem = self.get_ssl_certs()
-        sslctx = ssl.create_default_context()
+        sslctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         try:
             sslctx.load_cert_chain(chain_pem, keyfile=key_pem)
         except FileNotFoundError:
@@ -252,7 +246,7 @@ class WebRTCSimpleServer(object):
         sslctx.verify_mode = ssl.CERT_NONE
         return sslctx
 
-    def run(self):
+    async def run(self):
         async def handler(ws, path):
             '''
             All incoming messages are handled here. @path is unused.
@@ -277,22 +271,30 @@ class WebRTCSimpleServer(object):
                                # https://websockets.readthedocs.io/en/stable/api.html#websockets.protocol.WebSocketCommonProtocol
                                max_queue=16)
 
-        # Setup logging
         logger = logging.getLogger('websockets')
         logger.setLevel(logging.INFO)
-        logger.addHandler(logging.StreamHandler())
+        handler = logging.StreamHandler()
+        logger.addHandler(handler)
 
-        # Run the server
-        self.server = self.loop.run_until_complete(wsd)
-        # Stop the server if certificate changes
-        self.loop.run_until_complete(self.check_server_needs_restart())
+        try:
+            self.exit_future = asyncio.Future()
+            task = asyncio.create_task(self.check_server_needs_restart())
 
-    async def stop(self):
-        print('Stopping server... ', end='')
-        self.server.close()
-        await self.server.wait_closed()
-        self.loop.stop()
-        print('Stopped.')
+            # Run the server
+            async with wsd:
+                await self.exit_future
+                self.exit_future = None
+            print('Stopped.')
+        finally:
+            logger.removeHandler(handler)
+            self.peers = dict()
+            self.sessions = dict()
+            self.rooms = dict()
+
+    def stop(self):
+        if self.exit_future:
+            print('Stopping server... ', end='')
+            self.exit_future.set_result(None)
 
     def check_cert_changed(self):
         chain_pem, key_pem = self.get_ssl_certs()
@@ -313,7 +315,7 @@ class WebRTCSimpleServer(object):
             await asyncio.sleep(10)
             if self.check_cert_changed():
                 print('Certificate changed, stopping server...')
-                await self.stop()
+                self.stop()
                 return
 
 
@@ -330,16 +332,14 @@ def main():
 
     options = parser.parse_args(sys.argv[1:])
 
-    loop = asyncio.get_event_loop()
-
-    r = WebRTCSimpleServer(loop, options)
-
     print('Starting server...')
     while True:
-        r.run()
-        loop.run_forever()
+        r = WebRTCSimpleServer(options)
+        asyncio.run(r.run())
         print('Restarting server...')
+
     print("Goodbye!")
+
 
 if __name__ == "__main__":
     main()
