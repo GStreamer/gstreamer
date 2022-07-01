@@ -39,9 +39,13 @@ using namespace Microsoft::WRL;
 #define CONVERTER_MAX_QUADS 2
 #define GAMMA_LUT_SIZE 4096
 
-/* D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_METADATA_HDR10
- * missing in mingw header */
+/* undefined symbols in ancient MinGW headers */
+/* D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_METADATA_HDR10 */
 #define FEATURE_CAPS_METADATA_HDR10 (0x800)
+/* D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_ROTATION */
+#define FEATURE_CAPS_ROTATION (0x40)
+/* D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_MIRROR */
+#define PROCESSOR_FEATURE_CAPS_MIRROR (0x200)
 
 /* *INDENT-OFF* */
 typedef struct
@@ -511,6 +515,7 @@ enum
   PROP_SRC_CONTENT_LIGHT_LEVEL,
   PROP_DEST_MASTERING_DISPLAY_INFO,
   PROP_DEST_CONTENT_LIGHT_LEVEL,
+  PROP_VIDEO_DIRECTION,
 };
 
 struct _GstD3D11ConverterPrivate
@@ -571,6 +576,12 @@ struct _GstD3D11ConverterPrivate
   RECT dest_rect;
   RECT dest_full_rect;
   gboolean processor_in_use;
+  gboolean processor_direction_not_supported;
+  gboolean enable_mirror;
+  gboolean flip_h;
+  gboolean flip_v;
+  gboolean enable_rotation;
+  D3D11_VIDEO_PROCESSOR_ROTATION rotation;
 
   /* HDR10 */
   gboolean have_in_hdr10;
@@ -586,6 +597,8 @@ struct _GstD3D11ConverterPrivate
 
   GstVideoInfo fallback_info;
   GstBuffer *fallback_inbuf;
+
+  GstVideoOrientationMethod video_direction;
 
   GMutex prop_lock;
 
@@ -709,6 +722,10 @@ gst_d3d11_converter_class_init (GstD3D11ConverterClass * klass)
           "Src Content Light Level",
           "String representation of GstVideoContentLightLevel for dest",
           nullptr, param_flags));
+  g_object_class_install_property (object_class, PROP_VIDEO_DIRECTION,
+      g_param_spec_enum ("video-direction", "Video Direction",
+          "Video direction", GST_TYPE_VIDEO_ORIENTATION_METHOD,
+          GST_VIDEO_ORIENTATION_IDENTITY, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_converter_debug,
       "d3d11converter", 0, "d3d11converter");
@@ -918,6 +935,15 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
       priv->out_cll_str = g_value_dup_string (value);
       priv->out_hdr10_updated = TRUE;
       break;
+    case PROP_VIDEO_DIRECTION:{
+      GstVideoOrientationMethod video_direction =
+          (GstVideoOrientationMethod) g_value_get_enum (value);
+      if (video_direction != priv->video_direction) {
+        priv->video_direction = video_direction;
+        priv->update_src_rect = TRUE;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -996,6 +1022,9 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DEST_CONTENT_LIGHT_LEVEL:
       g_value_set_string (value, priv->out_cll_str);
+      break;
+    case PROP_VIDEO_DIRECTION:
+      g_value_set_enum (value, priv->video_direction);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1339,6 +1368,154 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   return TRUE;
 }
 
+static void
+gst_d3d11_converter_apply_orientation (GstD3D11Converter * self,
+    VertexData * vertex_data, gfloat l, gfloat r, gfloat t, gfloat b)
+{
+  GstD3D11ConverterPrivate *priv = self->priv;
+  gfloat u[4], v[4];
+
+  /*
+   * 1 (l, t) -- 2 (r, t)
+   *     |            |
+   * 0 (l, b) -- 3 (r, b)
+   */
+  u[0] = l;
+  u[1] = l;
+  u[2] = r;
+  u[3] = r;
+
+  v[0] = b;
+  v[1] = t;
+  v[2] = t;
+  v[3] = b;
+
+  switch (priv->video_direction) {
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+    case GST_VIDEO_ORIENTATION_AUTO:
+    case GST_VIDEO_ORIENTATION_CUSTOM:
+    default:
+      break;
+    case GST_VIDEO_ORIENTATION_90R:
+      /*
+       * 1 (l, t) -- 2 (r, t)    1 (l, b) -- 2 (l, t)
+       *     |           |    ->      |          |
+       * 0 (l, b) -- 3 (r, b)    0 (r, b) -- 3 (r, t)
+       */
+      u[0] = r;
+      u[1] = l;
+      u[2] = l;
+      u[3] = r;
+
+      v[0] = b;
+      v[1] = b;
+      v[2] = t;
+      v[3] = t;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      /*
+       * 1 (l, t) -- 2 (r, t)    1 (r, b) -- 2 (l, b)
+       *     |           |    ->      |          |
+       * 0 (l, b) -- 3 (r, b)    0 (r, t) -- 3 (l, t)
+       */
+      u[0] = r;
+      u[1] = r;
+      u[2] = l;
+      u[3] = l;
+
+      v[0] = t;
+      v[1] = b;
+      v[2] = b;
+      v[3] = t;
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      /*
+       * 1 (l, t) -- 2 (r, t)    1 (r, t) -- 2 (r, b)
+       *     |           |    ->      |          |
+       * 0 (l, b) -- 3 (r, b)    0 (l, t) -- 3 (l, b)
+       */
+      u[0] = l;
+      u[1] = r;
+      u[2] = r;
+      u[3] = l;
+
+      v[0] = t;
+      v[1] = t;
+      v[2] = b;
+      v[3] = b;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      /*
+       * 1 (l, t) -- 2 (r, t)    1 (r, t) -- 2 (l, t)
+       *     |           |    ->      |          |
+       * 0 (l, b) -- 3 (r, b)    0 (r, b) -- 3 (l, b)
+       */
+      u[0] = r;
+      u[1] = r;
+      u[2] = l;
+      u[3] = l;
+
+      v[0] = b;
+      v[1] = t;
+      v[2] = t;
+      v[3] = b;
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      /*
+       * 1 (l, t) -- 2 (r, t)    1 (l, b) -- 2 (r, b)
+       *     |           |    ->      |          |
+       * 0 (l, b) -- 3 (r, b)    0 (l, t) -- 3 (r, t)
+       */
+      u[0] = l;
+      u[1] = l;
+      u[2] = r;
+      u[3] = r;
+
+      v[0] = t;
+      v[1] = b;
+      v[2] = b;
+      v[3] = t;
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      /*
+       * 1 (l, t) -- 2 (r, t)    1 (l, t) -- 2 (l, b)
+       *     |           |    ->      |          |
+       * 0 (l, b) -- 3 (r, b)    0 (r, t) -- 3 (r, b)
+       */
+      u[0] = r;
+      u[1] = l;
+      u[2] = l;
+      u[3] = r;
+
+      v[0] = t;
+      v[1] = t;
+      v[2] = b;
+      v[3] = b;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      /*
+       * 1 (l, t) -- 2 (r, t)    1 (r, b) -- 2 (r, t)
+       *     |           |    ->      |          |
+       * 0 (l, b) -- 3 (r, b)    0 (l, b) -- 3 (l, t)
+       */
+      u[0] = l;
+      u[1] = r;
+      u[2] = r;
+      u[3] = l;
+
+      v[0] = b;
+      v[1] = b;
+      v[2] = t;
+      v[3] = t;
+      break;
+  }
+
+  for (guint i = 0; i < 4; i++) {
+    vertex_data[i].texture.u = u[i];
+    vertex_data[i].texture.v = v[i];
+  }
+}
+
 static gboolean
 gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
 {
@@ -1357,6 +1534,69 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
   priv->src_rect.top = priv->src_y;
   priv->src_rect.right = priv->src_x + priv->src_width;
   priv->src_rect.bottom = priv->src_y + priv->src_height;
+
+  if ((priv->supported_methods & GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR)) {
+    priv->processor_direction_not_supported = FALSE;
+    priv->enable_mirror = FALSE;
+    priv->flip_h = FALSE;
+    priv->flip_v = FALSE;
+    priv->enable_rotation = FALSE;
+    priv->rotation = D3D11_VIDEO_PROCESSOR_ROTATION_IDENTITY;
+
+    /* filtering order is rotation -> mirror */
+    switch (priv->video_direction) {
+      case GST_VIDEO_ORIENTATION_IDENTITY:
+      case GST_VIDEO_ORIENTATION_AUTO:
+      case GST_VIDEO_ORIENTATION_CUSTOM:
+      default:
+        break;
+      case GST_VIDEO_ORIENTATION_90R:
+        priv->enable_rotation = TRUE;
+        priv->rotation = D3D11_VIDEO_PROCESSOR_ROTATION_90;
+        break;
+      case GST_VIDEO_ORIENTATION_180:
+        priv->enable_rotation = TRUE;
+        priv->rotation = D3D11_VIDEO_PROCESSOR_ROTATION_180;
+        break;
+      case GST_VIDEO_ORIENTATION_90L:
+        priv->enable_rotation = TRUE;
+        priv->rotation = D3D11_VIDEO_PROCESSOR_ROTATION_270;
+        break;
+      case GST_VIDEO_ORIENTATION_HORIZ:
+        priv->enable_mirror = TRUE;
+        priv->flip_h = TRUE;
+        break;
+      case GST_VIDEO_ORIENTATION_VERT:
+        priv->enable_mirror = TRUE;
+        priv->flip_v = TRUE;
+        break;
+      case GST_VIDEO_ORIENTATION_UL_LR:
+        priv->enable_rotation = TRUE;
+        priv->rotation = D3D11_VIDEO_PROCESSOR_ROTATION_270;
+        priv->enable_mirror = TRUE;
+        priv->flip_v = TRUE;
+        break;
+      case GST_VIDEO_ORIENTATION_UR_LL:
+        priv->enable_rotation = TRUE;
+        priv->rotation = D3D11_VIDEO_PROCESSOR_ROTATION_90;
+        priv->enable_mirror = TRUE;
+        priv->flip_v = TRUE;
+        break;
+    }
+
+    if (priv->enable_rotation &&
+        (priv->processor_caps.FeatureCaps & FEATURE_CAPS_ROTATION) == 0) {
+      GST_WARNING_OBJECT (self, "Device does not support rotation");
+      priv->processor_direction_not_supported = TRUE;
+    }
+
+    if (priv->enable_mirror &&
+        (priv->processor_caps.FeatureCaps & PROCESSOR_FEATURE_CAPS_MIRROR) ==
+        0) {
+      GST_WARNING_OBJECT (self, "Device does not support mirror");
+      priv->processor_direction_not_supported = TRUE;
+    }
+  }
 
   if ((priv->supported_methods & GST_D3D11_CONVERTER_METHOD_SHADER) == 0)
     return TRUE;
@@ -1406,29 +1646,23 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
   vertex_data[0].position.x = -1.0f;
   vertex_data[0].position.y = -1.0f;
   vertex_data[0].position.z = 0.0f;
-  vertex_data[0].texture.u = u0;
-  vertex_data[0].texture.v = v1;
 
   /* top left */
   vertex_data[1].position.x = -1.0f;
   vertex_data[1].position.y = 1.0f;
   vertex_data[1].position.z = 0.0f;
-  vertex_data[1].texture.u = u0;
-  vertex_data[1].texture.v = v0;
 
   /* top right */
   vertex_data[2].position.x = 1.0f;
   vertex_data[2].position.y = 1.0f;
   vertex_data[2].position.z = 0.0f;
-  vertex_data[2].texture.u = u1;
-  vertex_data[2].texture.v = v0;
 
   /* bottom right */
   vertex_data[3].position.x = 1.0f;
   vertex_data[3].position.y = -1.0f;
   vertex_data[3].position.z = 0.0f;
-  vertex_data[3].texture.u = u1;
-  vertex_data[3].texture.v = v1;
+
+  gst_d3d11_converter_apply_orientation (self, vertex_data, u0, u1, v0, v1);
 
   context_handle->Unmap (priv->vertex_buffer, 0);
 
@@ -3461,8 +3695,8 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
   }
 
   priv->processor_in_use = use_processor;
-  if (use_processor) {
-    ID3D11VideoContext *video_ctx = priv->video_context;
+  if (use_processor && !priv->processor_direction_not_supported) {
+    ID3D11VideoContext1 *video_ctx = priv->video_context;
     ID3D11VideoProcessor *proc = priv->processor;
     D3D11_VIDEO_PROCESSOR_STREAM stream = { 0, };
     HRESULT hr;
@@ -3512,6 +3746,16 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
       }
     }
 
+    if ((priv->processor_caps.FeatureCaps & FEATURE_CAPS_ROTATION) != 0) {
+      video_ctx->VideoProcessorSetStreamRotation (proc, 0,
+          priv->enable_rotation, priv->rotation);
+    }
+
+    if ((priv->processor_caps.FeatureCaps & PROCESSOR_FEATURE_CAPS_MIRROR) != 0) {
+      video_ctx->VideoProcessorSetStreamMirror (proc, 0, priv->enable_mirror,
+          priv->flip_h, priv->flip_v);
+    }
+
     stream.Enable = TRUE;
     stream.pInputSurface = piv;
 
@@ -3525,6 +3769,11 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
   }
 
   g_mutex_unlock (&priv->prop_lock);
+
+  if ((priv->supported_methods & GST_D3D11_CONVERTER_METHOD_SHADER) == 0) {
+    GST_ERROR_OBJECT (self, "Conversion is not supported");
+    goto out;
+  }
 
   num_rtv = gst_d3d11_converter_get_rtv (self, out_buf, rtv);
   if (!num_rtv) {
