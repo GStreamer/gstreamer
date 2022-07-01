@@ -1296,9 +1296,7 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
     GstCaps * caps)
 {
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
-  gboolean at_least_one_alpha = FALSE;
   gboolean ret = FALSE;
-  const GstVideoFormatInfo *finfo;
   GstVideoInfo info;
   GList *l;
 
@@ -1313,9 +1311,6 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
     if (GST_VIDEO_INFO_WIDTH (&mpad->info) == 0
         || GST_VIDEO_INFO_HEIGHT (&mpad->info) == 0)
       continue;
-
-    if (mpad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)
-      at_least_one_alpha = TRUE;
   }
   GST_OBJECT_UNLOCK (vagg);
 
@@ -1337,15 +1332,6 @@ gst_video_aggregator_default_negotiated_src_caps (GstAggregator * agg,
   GST_OBJECT_LOCK (vagg);
   vagg->info = info;
   GST_OBJECT_UNLOCK (vagg);
-
-  finfo = info.finfo;
-
-  if (at_least_one_alpha && !(finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
-    GST_ELEMENT_ERROR (vagg, CORE, NEGOTIATION,
-        ("At least one of the input pads contains alpha, but configured caps don't support alpha."),
-        ("Either convert your inputs to not contain alpha or add a videoconvert after the aggregator"));
-    goto unlock_and_return;
-  }
 
   /* Then browse the sinks once more, setting or unsetting conversion if needed */
   gst_element_foreach_sink_pad (GST_ELEMENT_CAST (vagg),
