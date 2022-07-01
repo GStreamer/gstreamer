@@ -69,13 +69,8 @@ typedef struct
   guint64 acquire_key;
   guint64 release_key;
 
-  ID3D11Texture2D *texture;
+  GstBuffer *render_target;
   IDXGIKeyedMutex *keyed_mutex;
-  ID3D11VideoProcessorOutputView *pov;
-  ID3D11RenderTargetView *rtv;
-
-  ID3D11VideoProcessorOutputView *fallback_pov;
-  ID3D11RenderTargetView *fallback_rtv;
 } GstD3D11WindowSharedHandleData;
 
 struct _GstD3D11Window
@@ -85,6 +80,7 @@ struct _GstD3D11Window
   /*< protected >*/
   gboolean initialized;
   GstD3D11Device *device;
+  GstD3D11Allocator *allocator;
   guintptr external_handle;
 
   /* properties */
@@ -97,11 +93,8 @@ struct _GstD3D11Window
 
   GstVideoInfo info;
   GstVideoInfo render_info;
-  GstD3D11VideoProcessor *processor;
   GstD3D11Converter *converter;
   GstD3D11OverlayCompositor *compositor;
-
-  gboolean processor_in_use;
 
   /* calculated rect with aspect ratio and window area */
   RECT render_rect;
@@ -117,8 +110,7 @@ struct _GstD3D11Window
   guint surface_height;
 
   IDXGISwapChain *swap_chain;
-  ID3D11RenderTargetView *rtv;
-  ID3D11VideoProcessorOutputView *pov;
+  GstBuffer *backbuffer;
   DXGI_FORMAT dxgi_format;
 
   GstBuffer *cached_buffer;
@@ -158,7 +150,6 @@ struct _GstD3D11WindowClass
                                            guint display_width,
                                            guint display_height,
                                            GstCaps * caps,
-                                           gboolean * video_processor_available,
                                            GError ** error);
 
   void          (*unprepare)              (GstD3D11Window * window);
@@ -190,7 +181,6 @@ gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
                                                      guint display_width,
                                                      guint display_height,
                                                      GstCaps * caps,
-                                                     gboolean * video_processor_available,
                                                      GError ** error);
 
 GstFlowReturn gst_d3d11_window_render               (GstD3D11Window * window,

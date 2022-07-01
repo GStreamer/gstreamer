@@ -125,10 +125,6 @@ struct _GstD3D11VideoSink
   GstVideoRectangle render_rect;
   gboolean pending_render_rect;
 
-  GstBufferPool *fallback_pool;
-  gboolean have_video_processor;
-  gboolean processor_in_use;
-
   /* For drawing on user texture */
   gboolean drawing;
   GstBuffer *current_buffer;
@@ -596,10 +592,8 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     GST_OBJECT_UNLOCK (self);
   }
 
-  self->have_video_processor = FALSE;
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
-          GST_VIDEO_SINK_HEIGHT (self), caps, &self->have_video_processor,
-          &error)) {
+          GST_VIDEO_SINK_HEIGHT (self), caps, &error)) {
     GstMessage *error_msg;
 
     GST_ERROR_OBJECT (self, "cannot create swapchain");
@@ -610,44 +604,6 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
 
     return FALSE;
   }
-
-  if (self->fallback_pool) {
-    gst_buffer_pool_set_active (self->fallback_pool, FALSE);
-    gst_clear_object (&self->fallback_pool);
-  }
-
-  {
-    GstD3D11AllocationParams *d3d11_params;
-    gint bind_flags = D3D11_BIND_SHADER_RESOURCE;
-
-    if (self->have_video_processor) {
-      /* To create video processor input view, one of following bind flags
-       * is required
-       * NOTE: Any texture arrays which were created with D3D11_BIND_DECODER flag
-       * cannot be used for shader input.
-       *
-       * D3D11_BIND_DECODER
-       * D3D11_BIND_VIDEO_ENCODER
-       * D3D11_BIND_RENDER_TARGET
-       * D3D11_BIND_UNORDERED_ACCESS_VIEW
-       */
-      bind_flags |= D3D11_BIND_RENDER_TARGET;
-    }
-
-    d3d11_params = gst_d3d11_allocation_params_new (self->device,
-        &self->info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
-
-    self->fallback_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
-        caps, d3d11_params, 2, 0);
-    gst_d3d11_allocation_params_free (d3d11_params);
-  }
-
-  if (!self->fallback_pool) {
-    GST_ERROR_OBJECT (self, "Failed to configure fallback pool");
-    return FALSE;
-  }
-
-  self->processor_in_use = FALSE;
 
   if (self->title) {
     gst_d3d11_window_set_title (self->window, self->title);
@@ -837,12 +793,6 @@ gst_d3d11_video_sink_stop (GstBaseSink * sink)
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
 
   GST_DEBUG_OBJECT (self, "Stop");
-
-  if (self->fallback_pool) {
-    gst_buffer_pool_set_active (self->fallback_pool, FALSE);
-    gst_object_unref (self->fallback_pool);
-    self->fallback_pool = NULL;
-  }
 
   if (self->window)
     gst_d3d11_window_unprepare (self->window);
@@ -1050,108 +1000,6 @@ gst_d3d11_video_sink_event (GstBaseSink * sink, GstEvent * event)
   return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
 }
 
-static gboolean
-gst_d3d11_video_sink_upload_frame (GstD3D11VideoSink * self, GstBuffer * inbuf,
-    GstBuffer * outbuf)
-{
-  GstVideoFrame in_frame, out_frame;
-  gboolean ret;
-
-  GST_LOG_OBJECT (self, "Copy to fallback buffer");
-
-  if (!gst_video_frame_map (&in_frame, &self->info, inbuf,
-          (GstMapFlags) (GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)))
-    goto invalid_buffer;
-
-  if (!gst_video_frame_map (&out_frame, &self->info, outbuf,
-          (GstMapFlags) (GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))) {
-    gst_video_frame_unmap (&in_frame);
-    goto invalid_buffer;
-  }
-
-  ret = gst_video_frame_copy (&out_frame, &in_frame);
-
-  gst_video_frame_unmap (&in_frame);
-  gst_video_frame_unmap (&out_frame);
-
-  return ret;
-
-  /* ERRORS */
-invalid_buffer:
-  {
-    GST_ELEMENT_WARNING (self, CORE, NOT_IMPLEMENTED, (NULL),
-        ("invalid video buffer received"));
-    return FALSE;
-  }
-}
-
-static gboolean
-gst_d3d11_video_sink_copy_d3d11_to_d3d11 (GstD3D11VideoSink * self,
-    GstBuffer * inbuf, GstBuffer * outbuf)
-{
-  GST_LOG_OBJECT (self, "Copy to fallback buffer using device memory copy");
-
-  return gst_d3d11_buffer_copy_into (outbuf, inbuf, &self->info);
-}
-
-static gboolean
-gst_d3d11_video_sink_get_fallback_buffer (GstD3D11VideoSink * self,
-    GstBuffer * inbuf, GstBuffer ** fallback_buf, gboolean device_copy)
-{
-  GstBuffer *outbuf = NULL;
-  ID3D11ShaderResourceView *view[GST_VIDEO_MAX_PLANES];
-  GstVideoOverlayCompositionMeta *compo_meta;
-  GstVideoCropMeta *crop_meta;
-
-  if (!self->fallback_pool ||
-      !gst_buffer_pool_set_active (self->fallback_pool, TRUE) ||
-      gst_buffer_pool_acquire_buffer (self->fallback_pool, &outbuf,
-          NULL) != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "fallback pool is unavailable");
-    return FALSE;
-  }
-
-  /* Ensure SRV */
-  if (!gst_d3d11_buffer_get_shader_resource_view (outbuf, view)) {
-    GST_ERROR_OBJECT (self, "fallback SRV is unavailable");
-    goto error;
-  }
-
-  if (device_copy) {
-    if (!gst_d3d11_video_sink_copy_d3d11_to_d3d11 (self, inbuf, outbuf)) {
-      GST_ERROR_OBJECT (self, "cannot copy frame");
-      goto error;
-    }
-  } else if (!gst_d3d11_video_sink_upload_frame (self, inbuf, outbuf)) {
-    GST_ERROR_OBJECT (self, "cannot upload frame");
-    goto error;
-  }
-
-  /* Copy overlaycomposition meta if any */
-  compo_meta = gst_buffer_get_video_overlay_composition_meta (inbuf);
-  if (compo_meta)
-    gst_buffer_add_video_overlay_composition_meta (outbuf, compo_meta->overlay);
-
-  /* And copy crop meta as well */
-  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
-  if (crop_meta) {
-    GstVideoCropMeta *new_crop_meta = gst_buffer_add_video_crop_meta (outbuf);
-
-    new_crop_meta->x = crop_meta->x;
-    new_crop_meta->y = crop_meta->y;
-    new_crop_meta->width = crop_meta->width;
-    new_crop_meta->height = crop_meta->height;
-  }
-
-  *fallback_buf = outbuf;
-
-  return TRUE;
-
-error:
-  gst_buffer_unref (outbuf);
-  return FALSE;
-}
-
 static void
 gst_d3d11_video_sink_check_device_update (GstD3D11VideoSink * self,
     GstBuffer * buf)
@@ -1199,10 +1047,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
   GstD3D11VideoSink *self = GST_D3D11_VIDEO_SINK (sink);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *fallback_buf = NULL;
-  ID3D11Device *device_handle =
-      gst_d3d11_device_get_device_handle (self->device);
-  ID3D11ShaderResourceView *view[GST_VIDEO_MAX_PLANES];
 
   gst_d3d11_video_sink_check_device_update (self, buf);
 
@@ -1221,54 +1065,11 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
       return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  if (!gst_d3d11_buffer_can_access_device (buf, device_handle)) {
-    GST_LOG_OBJECT (self, "Need fallback buffer");
-
-    if (!gst_d3d11_video_sink_get_fallback_buffer (self, buf, &fallback_buf,
-            FALSE)) {
-      return GST_FLOW_ERROR;
-    }
-  } else {
-    gboolean direct_rendering = FALSE;
-
-    /* Check if we can use video processor for conversion */
-    if (gst_buffer_n_memory (buf) == 1 && self->have_video_processor) {
-      GstD3D11Memory *mem = (GstD3D11Memory *) gst_buffer_peek_memory (buf, 0);
-      D3D11_TEXTURE2D_DESC desc;
-
-      gst_d3d11_memory_get_texture_desc (mem, &desc);
-      if ((desc.BindFlags & D3D11_BIND_DECODER) == D3D11_BIND_DECODER) {
-        GST_TRACE_OBJECT (self,
-            "Got VideoProcessor compatible texture, do direct rendering");
-        direct_rendering = TRUE;
-        self->processor_in_use = TRUE;
-      } else if (self->processor_in_use &&
-          (desc.BindFlags & D3D11_BIND_RENDER_TARGET) ==
-          D3D11_BIND_RENDER_TARGET) {
-        direct_rendering = TRUE;
-      }
-    }
-
-    /* Or, SRV should be available */
-    if (!direct_rendering) {
-      if (gst_d3d11_buffer_get_shader_resource_view (buf, view)) {
-        GST_TRACE_OBJECT (self, "SRV is available, do direct rendering");
-        direct_rendering = TRUE;
-      }
-    }
-
-    if (!direct_rendering &&
-        !gst_d3d11_video_sink_get_fallback_buffer (self, buf, &fallback_buf,
-            TRUE)) {
-      return GST_FLOW_ERROR;
-    }
-  }
-
   gst_d3d11_window_show (self->window);
 
   if (self->draw_on_shared_texture) {
     g_rec_mutex_lock (&self->draw_lock);
-    self->current_buffer = fallback_buf ? fallback_buf : buf;
+    self->current_buffer = buf;
     self->drawing = TRUE;
 
     GST_LOG_OBJECT (self, "Begin drawing");
@@ -1279,14 +1080,11 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
     GST_LOG_OBJECT (self, "End drawing");
     self->drawing = FALSE;
-    self->current_buffer = NULL;
+    self->current_buffer = nullptr;
     g_rec_mutex_unlock (&self->draw_lock);
   } else {
-    ret = gst_d3d11_window_render (self->window,
-        fallback_buf ? fallback_buf : buf);
+    ret = gst_d3d11_window_render (self->window, buf);
   }
-
-  gst_clear_buffer (&fallback_buf);
 
   if (ret == GST_D3D11_WINDOW_FLOW_CLOSED) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,

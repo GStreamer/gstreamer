@@ -49,9 +49,7 @@ G_DEFINE_TYPE (GstD3D11WindowDummy, gst_d3d11_window_dummy,
 static void gst_d3d11_window_dummy_on_resize (GstD3D11Window * window,
     guint width, guint height);
 static gboolean gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
-    guint display_width, guint display_height, GstCaps * caps,
-    gboolean * video_processor_available, GError ** error);
-static void gst_d3d11_window_dummy_unprepare (GstD3D11Window * window);
+    guint display_width, guint display_height, GstCaps * caps, GError ** error);
 static gboolean
 gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     GstD3D11WindowSharedHandleData * data);
@@ -67,8 +65,6 @@ gst_d3d11_window_dummy_class_init (GstD3D11WindowDummyClass * klass)
   window_class->on_resize =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_on_resize);
   window_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_prepare);
-  window_class->unprepare =
-      GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_unprepare);
   window_class->open_shared_handle =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_open_shared_handle);
   window_class->release_shared_handle =
@@ -82,13 +78,19 @@ gst_d3d11_window_dummy_init (GstD3D11WindowDummy * self)
 
 static gboolean
 gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
-    guint display_width, guint display_height, GstCaps * caps,
-    gboolean * video_processor_available, GError ** error)
+    guint display_width, guint display_height, GstCaps * caps, GError ** error)
 {
-  GstDxgiColorSpace in_space;
   GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
 
-  g_clear_pointer (&window->processor, gst_d3d11_video_processor_free);
+  if (!window->allocator) {
+    window->allocator =
+        (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
+    if (!window->allocator) {
+      GST_ERROR_OBJECT (window, "Allocator is unavailable");
+      return FALSE;
+    }
+  }
+
   gst_clear_object (&window->compositor);
   gst_clear_object (&window->converter);
 
@@ -116,63 +118,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
   gst_d3d11_device_lock (window->device);
-
-  if (gst_d3d11_video_info_to_dxgi_color_space (&window->info, &in_space)) {
-    GstD3D11Format in_format;
-    gboolean hardware = FALSE;
-    GstD3D11VideoProcessor *processor = NULL;
-    guint i;
-    DXGI_FORMAT formats_to_check[] = {
-      DXGI_FORMAT_R8G8B8A8_UNORM,
-      DXGI_FORMAT_B8G8R8A8_UNORM,
-      DXGI_FORMAT_R10G10B10A2_UNORM
-    };
-    DXGI_FORMAT in_dxgi_format;
-
-    gst_d3d11_device_get_format (window->device,
-        GST_VIDEO_INFO_FORMAT (&window->info), &in_format);
-    in_dxgi_format = in_format.dxgi_format;
-
-    if (in_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
-      g_object_get (window->device, "hardware", &hardware, NULL);
-    }
-
-    if (hardware) {
-      processor =
-          gst_d3d11_video_processor_new (window->device,
-          GST_VIDEO_INFO_WIDTH (&window->info),
-          GST_VIDEO_INFO_HEIGHT (&window->info), display_width, display_height);
-    }
-
-    /* Check if video processor can support all possible output dxgi formats */
-    for (i = 0; i < G_N_ELEMENTS (formats_to_check) && processor; i++) {
-      DXGI_FORMAT out_dxgi_format = formats_to_check[i];
-      DXGI_COLOR_SPACE_TYPE in_dxgi_color_space =
-          (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type;
-
-      if (!gst_d3d11_video_processor_check_format_conversion (processor,
-              in_dxgi_format, in_dxgi_color_space, out_dxgi_format,
-              DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709)) {
-        GST_DEBUG_OBJECT (window, "Conversion is not supported by device");
-        g_clear_pointer (&processor, gst_d3d11_video_processor_free);
-        break;
-      }
-    }
-
-    if (processor) {
-      gst_d3d11_video_processor_set_input_dxgi_color_space (processor,
-          (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type);
-      gst_d3d11_video_processor_set_output_dxgi_color_space (processor,
-          DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
-    }
-
-    window->processor = processor;
-  }
-
-  *video_processor_available = !!window->processor;
-
-  window->converter =
-      gst_d3d11_converter_new (window->device, &window->info,
+  window->converter = gst_d3d11_converter_new (window->device, &window->info,
       &window->render_info, &method);
 
   if (!window->converter) {
@@ -199,22 +145,6 @@ error:
   gst_d3d11_device_unlock (window->device);
 
   return FALSE;
-}
-
-static void
-gst_d3d11_window_dummy_clear_resources (GstD3D11WindowDummy * self)
-{
-  GST_D3D11_CLEAR_COM (self->fallback_pov);
-  GST_D3D11_CLEAR_COM (self->fallback_rtv);
-  GST_D3D11_CLEAR_COM (self->fallback_texture);
-}
-
-static void
-gst_d3d11_window_dummy_unprepare (GstD3D11Window * window)
-{
-  GstD3D11WindowDummy *self = GST_D3D11_WINDOW_DUMMY (window);
-
-  gst_d3d11_window_dummy_clear_resources (self);
 }
 
 static void
@@ -248,107 +178,25 @@ gst_d3d11_window_dummy_on_resize (GstD3D11Window * window,
 }
 
 static gboolean
-gst_d3d11_window_dummy_setup_fallback_texture (GstD3D11Window * window,
-    D3D11_TEXTURE2D_DESC * shared_desc)
-{
-  GstD3D11WindowDummy *self = GST_D3D11_WINDOW_DUMMY (window);
-  D3D11_TEXTURE2D_DESC desc = { 0, };
-  D3D11_RENDER_TARGET_VIEW_DESC rtv_desc;
-  ID3D11Device *device_handle =
-      gst_d3d11_device_get_device_handle (window->device);
-  gboolean need_new_texture = FALSE;
-  HRESULT hr;
-
-  if (!self->fallback_texture) {
-    GST_DEBUG_OBJECT (self,
-        "We have no configured fallback texture, create new one");
-    need_new_texture = TRUE;
-  } else {
-    self->fallback_texture->GetDesc (&desc);
-    if (shared_desc->Format != desc.Format) {
-      GST_DEBUG_OBJECT (self, "Texture formats are different, create new one");
-      need_new_texture = TRUE;
-    } else if (shared_desc->Width > desc.Width ||
-        shared_desc->Height > desc.Height) {
-      GST_DEBUG_OBJECT (self, "Needs larger size of fallback texture");
-      need_new_texture = TRUE;
-    }
-  }
-
-  if (!need_new_texture)
-    return TRUE;
-
-  gst_d3d11_window_dummy_clear_resources (self);
-
-  desc.Width = shared_desc->Width;
-  desc.Height = shared_desc->Height;
-  desc.MipLevels = 1;
-  desc.ArraySize = 1;
-  desc.Format = shared_desc->Format;
-  desc.SampleDesc.Count = 1;
-  desc.SampleDesc.Quality = 0;
-  desc.Usage = D3D11_USAGE_DEFAULT;
-  desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-
-  hr = device_handle->CreateTexture2D (&desc, NULL, &self->fallback_texture);
-  if (!gst_d3d11_result (hr, window->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create fallback texture");
-    return FALSE;
-  }
-
-  rtv_desc.Format = DXGI_FORMAT_UNKNOWN;
-  rtv_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-  rtv_desc.Texture2D.MipSlice = 0;
-
-  hr = device_handle->CreateRenderTargetView (self->fallback_texture, &rtv_desc,
-      &self->fallback_rtv);
-  if (!gst_d3d11_result (hr, window->device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't get render target view from fallback texture");
-    gst_d3d11_window_dummy_clear_resources (self);
-    return FALSE;
-  }
-
-  if (window->processor) {
-    D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC pov_desc;
-
-    pov_desc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
-    pov_desc.Texture2D.MipSlice = 0;
-
-    if (!gst_d3d11_video_processor_create_output_view (window->processor,
-            &pov_desc, self->fallback_texture, &self->fallback_pov)) {
-      GST_ERROR_OBJECT (window,
-          "ID3D11VideoProcessorOutputView is unavailable");
-      gst_d3d11_window_dummy_clear_resources (self);
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-/* *INDENT-OFF* */
-static gboolean
 gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     GstD3D11WindowSharedHandleData * data)
 {
-  GstD3D11WindowDummy *self = GST_D3D11_WINDOW_DUMMY (window);
   GstD3D11Device *device = window->device;
   ID3D11Device *device_handle;
   HRESULT hr;
-  ID3D11Texture2D *texture = NULL;
-  IDXGIKeyedMutex *keyed_mutex = NULL;
-  ID3D11VideoProcessorOutputView *pov = NULL;
-  ID3D11RenderTargetView *rtv = NULL;
+  ComPtr < ID3D11Texture2D > texture;
+  ComPtr < IDXGIKeyedMutex > keyed_mutex;
+  ID3D11RenderTargetView *rtv;
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
   D3D11_TEXTURE2D_DESC desc;
   gboolean use_keyed_mutex = FALSE;
-  gboolean need_fallback_texture = FALSE;
 
   device_handle = gst_d3d11_device_get_device_handle (device);
 
   if ((data->texture_misc_flags & D3D11_RESOURCE_MISC_SHARED_NTHANDLE) ==
       D3D11_RESOURCE_MISC_SHARED_NTHANDLE) {
-    ComPtr<ID3D11Device1> device1_handle;
+    ComPtr < ID3D11Device1 > device1_handle;
 
     hr = device_handle->QueryInterface (IID_PPV_ARGS (&device1_handle));
     if (!gst_d3d11_result (hr, device))
@@ -370,82 +218,47 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
 
   if (use_keyed_mutex) {
     hr = texture->QueryInterface (IID_PPV_ARGS (&keyed_mutex));
-    if (!gst_d3d11_result (hr, device))
-      goto out;
-  }
-
-  if (window->processor) {
-    if (use_keyed_mutex) {
-      D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC pov_desc;
-
-      pov_desc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
-      pov_desc.Texture2D.MipSlice = 0;
-
-      if (!gst_d3d11_video_processor_create_output_view (window->processor,
-          &pov_desc, texture, &pov)) {
-        GST_WARNING_OBJECT (window,
-            "ID3D11VideoProcessorOutputView is unavailable");
-      }
-    } else {
-      /* HACK: If external texture was created without keyed mutext
-       * and we need to used videoprocessor to convert decoder output texture
-       * to external texture, converted texture by videoprocessor seems to be broken
-       * Probably that's because of missing flush/sync API around videoprocessor.
-       * (e.g., ID3D11VideoContext and ID3D11VideoProcessor have no
-       * flushing api such as ID3D11DeviceContext::Flush).
-       * To workaround the case, we need to use fallback texture and copy back
-       * to external texture
-       */
-
-      need_fallback_texture = TRUE;
-
-      GST_TRACE_OBJECT (window,
-          "We are using video processor but keyed mutex is unavailable");
-      if (!gst_d3d11_window_dummy_setup_fallback_texture (window, &desc)) {
-        goto out;
-      }
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (window, "Keyed mutex is unavailable");
+      return FALSE;
     }
   }
 
-  hr = device_handle->CreateRenderTargetView ((ID3D11Resource *) texture,
-      NULL, &rtv);
-  if (!gst_d3d11_result (hr, device))
-    goto out;
+  mem = gst_d3d11_allocator_alloc_wrapped_native_size (window->allocator,
+      device, texture.Get (), nullptr, nullptr);
+  if (!mem) {
+    GST_ERROR_OBJECT (window, "Couldn't allocate memory");
+    return FALSE;
+  }
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+  rtv = gst_d3d11_memory_get_render_target_view (dmem, 0);
+  if (!rtv) {
+    GST_ERROR_OBJECT (window, "Render target view is unavailable");
+    gst_memory_unref (mem);
+    return FALSE;
+  }
 
   if (keyed_mutex) {
-    hr = keyed_mutex->AcquireSync(data->acquire_key, INFINITE);
-    if (!gst_d3d11_result (hr, device))
-      goto out;
+    hr = keyed_mutex->AcquireSync (data->acquire_key, INFINITE);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (window, "Couldn't acquire sync");
+      gst_memory_unref (mem);
+      return FALSE;
+    }
   }
 
   /* Everything is prepared now */
   gst_d3d11_window_dummy_on_resize (window, desc.Width, desc.Height);
 
   /* Move owned resources */
-  data->texture = texture;
-  data->keyed_mutex = keyed_mutex;
-  data->pov = pov;
-  data->rtv = rtv;
-
-  if (need_fallback_texture) {
-    data->fallback_pov = self->fallback_pov;
-    data->fallback_rtv = self->fallback_rtv;
-  } else {
-    data->fallback_pov = nullptr;
-    data->fallback_rtv = nullptr;
-  }
+  data->render_target = gst_buffer_new ();
+  gst_buffer_append_memory (data->render_target, mem);
+  if (keyed_mutex)
+    data->keyed_mutex = keyed_mutex.Detach ();
 
   return TRUE;
-
-out:
-  GST_D3D11_CLEAR_COM (texture);
-  GST_D3D11_CLEAR_COM (keyed_mutex);
-  GST_D3D11_CLEAR_COM (pov);
-  GST_D3D11_CLEAR_COM (rtv);
-
-  return FALSE;
 }
-/* *INDENT-ON* */
 
 static gboolean
 gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
@@ -460,7 +273,7 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
     hr = data->keyed_mutex->ReleaseSync (data->release_key);
     gst_d3d11_result (hr, device);
 
-    data->keyed_mutex->Release ();
+    GST_D3D11_CLEAR_COM (data->keyed_mutex);
   } else {
     /* *INDENT-OFF* */
     ComPtr<ID3D11Query> query;
@@ -482,30 +295,11 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
       return FALSE;
     }
 
-    /* Copy from fallback texture to user's texture */
-    if (data->fallback_rtv) {
-      D3D11_BOX src_box;
-      D3D11_TEXTURE2D_DESC desc;
-      ID3D11DeviceContext *context_handle =
-          gst_d3d11_device_get_device_context_handle (device);
-
-      data->texture->GetDesc (&desc);
-
-      src_box.left = 0;
-      src_box.top = 0;
-      src_box.front = 0;
-      src_box.back = 1;
-      src_box.right = desc.Width;
-      src_box.bottom = desc.Height;
-
-      context_handle->CopySubresourceRegion (data->texture, 0, 0, 0, 0,
-          self->fallback_texture, 0, &src_box);
-    }
     context_handle->End (query.Get ());
 
     /* Wait until all issued GPU commands are finished */
     do {
-      context_handle->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
+      hr = context_handle->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
     } while (!sync_done && (hr == S_OK || hr == S_FALSE));
 
     if (!gst_d3d11_result (hr, device)) {
@@ -514,9 +308,7 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
     }
   }
 
-  GST_D3D11_CLEAR_COM (data->rtv);
-  GST_D3D11_CLEAR_COM (data->pov);
-  GST_D3D11_CLEAR_COM (data->texture);
+  gst_clear_buffer (&data->render_target);
 
   return TRUE;
 }
