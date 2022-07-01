@@ -1692,6 +1692,46 @@ gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * allocator,
   return mem;
 }
 
+GstMemory *
+gst_d3d11_allocator_alloc_wrapped_native_size (GstD3D11Allocator * allocator,
+    GstD3D11Device * device, ID3D11Texture2D * texture, gpointer user_data,
+    GDestroyNotify notify)
+{
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
+  D3D11_TEXTURE2D_DESC desc = { 0, };
+  ID3D11Texture2D *tex = nullptr;
+  HRESULT hr;
+  gsize size;
+
+  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), nullptr);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
+  g_return_val_if_fail (texture != nullptr, nullptr);
+
+  hr = texture->QueryInterface (IID_PPV_ARGS (&tex));
+  if (FAILED (hr)) {
+    GST_WARNING_OBJECT (allocator, "Not a valid texture handle");
+    return nullptr;
+  }
+
+  tex->GetDesc (&desc);
+  mem = gst_d3d11_allocator_alloc_internal (allocator, device, &desc, tex);
+
+  if (!mem)
+    return nullptr;
+
+  /* XXX: This is not correct memory size */
+  size = desc.Width * desc.Height;
+  mem->maxsize = mem->size = size;
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+
+  dmem->priv->user_data = user_data;
+  dmem->priv->notify = notify;
+
+  return mem;
+}
+
 /**
  * gst_d3d11_allocator_set_active:
  * @allocator: a #GstD3D11Allocator
