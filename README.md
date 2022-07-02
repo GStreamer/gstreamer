@@ -54,14 +54,14 @@ binary in your PATH.
 You can find [instructions for Windows below](#windows-prerequisites-setup).
 
 
-On macOS, you might need to execute "Install Certificates.command" from
-the Python folder in the user Applications folder or install it manually:
+On macOS, you might need to execute "Install Certificates.command" from the
+Python folder in the user Applications folder:
 
 ```
-  $ pip3 install certifi
+$ /Applications/Python\ 3.*/Install\ Certificates.command
 ```
 
-It will solve this issue:
+Otherwise you will get this error when downloading meson wraps:
 
 ```
 urllib.error.URLError: urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed
