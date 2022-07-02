@@ -47,6 +47,20 @@ if build_system == 'windows' and meson.version().version_compare('<0.60.0')
   endif
 endif
 
+# On macOS, you have to run "Install Certificates.command" otherwise Python
+# doesn't have access to the latest SSL CA Certificates, and Meson will fail to
+# download wrap files from websites that use, for example, Let's Encrypt.
+# We already recommend this in the README, but add a warning here as well.
+# Can't make this an error because the user might be using XCode's Python
+# 3 which doesn't have this script.
+if build_system == 'darwin'
+  python3_cacert_file = python3.get_path('data') / 'etc/openssl/cert.pem'
+  install_cert_cmd = '/Applications/Python @0@/Install Certificates.command'.format(python3.language_version())
+  if not fs.is_symlink(python3_cacert_file) and fs.is_file(install_cert_cmd)
+    warning('Please run "@0@" so that Python has access to the latest SSL certificates. Meson might fail to download some wraps without it.'.format(install_cert_cmd))
+  endif
+endif
+
 documented_projects = ''
 # Make it possible to use msys2 built zlib which fails
 # when not using the mingw toolchain as it uses unistd.h
