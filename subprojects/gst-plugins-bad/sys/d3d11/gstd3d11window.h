@@ -116,6 +116,8 @@ struct _GstD3D11Window
   GstBuffer *cached_buffer;
   gboolean first_present;
   gboolean allow_tearing;
+
+  GstVideoOrientationMethod method;
 };
 
 struct _GstD3D11WindowClass
@@ -176,6 +178,9 @@ void          gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
 
 void          gst_d3d11_window_set_title            (GstD3D11Window * window,
                                                      const gchar *title);
+
+void          gst_d3d11_window_set_orientation      (GstD3D11Window * window,
+                                                     GstVideoOrientationMethod method);
 
 gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
                                                      guint display_width,

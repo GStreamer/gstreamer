@@ -164,6 +164,20 @@ gst_d3d11_window_dummy_on_resize (GstD3D11Window * window,
     src_rect.w = GST_VIDEO_INFO_WIDTH (&window->render_info);
     src_rect.h = GST_VIDEO_INFO_HEIGHT (&window->render_info);
 
+    switch (window->method) {
+      case GST_VIDEO_ORIENTATION_90R:
+      case GST_VIDEO_ORIENTATION_90L:
+      case GST_VIDEO_ORIENTATION_UL_LR:
+      case GST_VIDEO_ORIENTATION_UR_LL:
+        src_rect.w = GST_VIDEO_INFO_HEIGHT (&window->render_info);
+        src_rect.h = GST_VIDEO_INFO_WIDTH (&window->render_info);
+        break;
+      default:
+        src_rect.w = GST_VIDEO_INFO_WIDTH (&window->render_info);
+        src_rect.h = GST_VIDEO_INFO_HEIGHT (&window->render_info);
+        break;
+    }
+
     gst_video_sink_center_rect (src_rect, dst_rect, &rst_rect, TRUE);
   } else {
     rst_rect = dst_rect;

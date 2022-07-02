@@ -334,8 +334,20 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   if (self->force_aspect_ratio) {
     src_rect.x = 0;
     src_rect.y = 0;
-    src_rect.w = GST_VIDEO_INFO_WIDTH (&self->render_info);
-    src_rect.h = GST_VIDEO_INFO_HEIGHT (&self->render_info);
+
+    switch (self->method) {
+      case GST_VIDEO_ORIENTATION_90R:
+      case GST_VIDEO_ORIENTATION_90L:
+      case GST_VIDEO_ORIENTATION_UL_LR:
+      case GST_VIDEO_ORIENTATION_UR_LL:
+        src_rect.w = GST_VIDEO_INFO_HEIGHT (&self->render_info);
+        src_rect.h = GST_VIDEO_INFO_WIDTH (&self->render_info);
+        break;
+      default:
+        src_rect.w = GST_VIDEO_INFO_WIDTH (&self->render_info);
+        src_rect.h = GST_VIDEO_INFO_HEIGHT (&self->render_info);
+        break;
+    }
 
     gst_video_sink_center_rect (src_rect, dst_rect, &rst_rect, TRUE);
   } else {
@@ -677,9 +689,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   /* call resize to allocated resources */
   klass->on_resize (window, display_width, display_height);
 
-  if (window->requested_fullscreen != window->fullscreen) {
+  if (window->requested_fullscreen != window->fullscreen)
     klass->change_fullscreen_mode (window);
-  }
 
   GST_DEBUG_OBJECT (window, "New swap chain 0x%p created", window->swap_chain);
 
@@ -800,7 +811,8 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
         "dest-width",
         (gint) (self->render_rect.right - self->render_rect.left),
         "dest-height",
-        (gint) (self->render_rect.bottom - self->render_rect.top), nullptr);
+        (gint) (self->render_rect.bottom - self->render_rect.top),
+        "video-direction", self->method, nullptr);
     gst_d3d11_overlay_compositor_update_viewport (self->compositor, &viewport);
   }
 
@@ -973,4 +985,25 @@ gst_d3d11_window_get_native_type_to_string (GstD3D11WindowNativeType type)
   }
 
   return "none";
+}
+
+void
+gst_d3d11_window_set_orientation (GstD3D11Window * window,
+    GstVideoOrientationMethod method)
+{
+  if (method == GST_VIDEO_ORIENTATION_AUTO ||
+      method == GST_VIDEO_ORIENTATION_CUSTOM) {
+    return;
+  }
+
+  gst_d3d11_device_lock (window->device);
+  if (window->method != method) {
+    window->method = method;
+    if (window->swap_chain) {
+      GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (window);
+
+      klass->on_resize (window, window->surface_width, window->surface_height);
+    }
+  }
+  gst_d3d11_device_unlock (window->device);
 }

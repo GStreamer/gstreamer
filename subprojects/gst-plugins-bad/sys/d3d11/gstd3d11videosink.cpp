@@ -61,6 +61,7 @@ enum
   PROP_FULLSCREEN_TOGGLE_MODE,
   PROP_FULLSCREEN,
   PROP_DRAW_ON_SHARED_TEXTURE,
+  PROP_ROTATE_METHOD,
 };
 
 #define DEFAULT_ADAPTER                   -1
@@ -131,6 +132,13 @@ struct _GstD3D11VideoSink
   GRecMutex lock;
 
   gchar *title;
+
+  /* method configured via property */
+  GstVideoOrientationMethod method;
+  /* method parsed from tag */
+  GstVideoOrientationMethod tag_method;
+  /* method currently selected based on "method" and "tag_method" */
+  GstVideoOrientationMethod selected_method;
 };
 
 #define GST_D3D11_VIDEO_SINK_GET_LOCK(d) (&(GST_D3D11_VIDEO_SINK_CAST(d)->lock))
@@ -177,10 +185,11 @@ static gboolean gst_d3d11_video_sink_unlock (GstBaseSink * sink);
 static gboolean gst_d3d11_video_sink_unlock_stop (GstBaseSink * sink);
 static gboolean gst_d3d11_video_sink_event (GstBaseSink * sink,
     GstEvent * event);
-
 static GstFlowReturn
 gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf);
 static gboolean gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self);
+static void gst_d3d11_video_sink_set_orientation (GstD3D11VideoSink * self,
+    GstVideoOrientationMethod method, gboolean from_tag);
 
 #define gst_d3d11_video_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D11VideoSink, gst_d3d11_video_sink,
@@ -268,6 +277,19 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           DEFAULT_DRAW_ON_SHARED_TEXTURE,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:rotate-method:
+   *
+   * Video rotation/flip method to use
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATE_METHOD,
+      g_param_spec_enum ("rotate-method", "Rotate Method",
+          "Rotate method to use",
+          GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstD3D11VideoSink::begin-draw:
@@ -398,6 +420,10 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
     case PROP_DRAW_ON_SHARED_TEXTURE:
       self->draw_on_shared_texture = g_value_get_boolean (value);
       break;
+    case PROP_ROTATE_METHOD:
+      gst_d3d11_video_sink_set_orientation (self,
+          (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -434,6 +460,9 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DRAW_ON_SHARED_TEXTURE:
       g_value_set_boolean (value, self->draw_on_shared_texture);
+      break;
+    case PROP_ROTATE_METHOD:
+      g_value_set_enum (value, self->method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -785,6 +814,8 @@ done:
       "fullscreen", self->fullscreen,
       "enable-navigation-events", self->enable_navigation_events, NULL);
 
+  gst_d3d11_window_set_orientation (self->window, self->selected_method);
+
   g_signal_connect (self->window, "key-event",
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
   g_signal_connect (self->window, "mouse-event",
@@ -981,6 +1012,7 @@ gst_d3d11_video_sink_event (GstBaseSink * sink, GstEvent * event)
     case GST_EVENT_TAG:{
       GstTagList *taglist;
       gchar *title = nullptr;
+      GstVideoOrientationMethod method = GST_VIDEO_ORIENTATION_IDENTITY;
 
       gst_event_parse_tag (event, &taglist);
       gst_tag_list_get_string (taglist, GST_TAG_TITLE, &title);
@@ -1006,6 +1038,12 @@ gst_d3d11_video_sink_event (GstBaseSink * sink, GstEvent * event)
 
         g_free (title);
       }
+
+      if (gst_video_orientation_from_tag (taglist, &method)) {
+        GST_D3D11_VIDEO_SINK_LOCK (self);
+        gst_d3d11_video_sink_set_orientation (self, method, TRUE);
+        GST_D3D11_VIDEO_SINK_UNLOCK (self);
+      }
       break;
     }
     default:
@@ -1013,6 +1051,31 @@ gst_d3d11_video_sink_event (GstBaseSink * sink, GstEvent * event)
   }
 
   return GST_BASE_SINK_CLASS (parent_class)->event (sink, event);
+}
+
+/* called with lock */
+static void
+gst_d3d11_video_sink_set_orientation (GstD3D11VideoSink * self,
+    GstVideoOrientationMethod method, gboolean from_tag)
+{
+  if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
+    GST_WARNING_OBJECT (self, "Unsupported custom orientation");
+    return;
+  }
+
+  if (from_tag)
+    self->tag_method = method;
+  else
+    self->method = method;
+
+  if (self->method == GST_VIDEO_ORIENTATION_AUTO) {
+    self->selected_method = self->tag_method;
+  } else {
+    self->selected_method = self->method;
+  }
+
+  if (self->window)
+    gst_d3d11_window_set_orientation (self->window, self->selected_method);
 }
 
 static void

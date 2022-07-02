@@ -1036,8 +1036,19 @@ gst_d3d11_window_win32_show (GstD3D11Window * window)
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
   gint width, height;
 
-  width = GST_VIDEO_INFO_WIDTH (&window->render_info);
-  height = GST_VIDEO_INFO_HEIGHT (&window->render_info);
+  switch (window->method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      width = GST_VIDEO_INFO_HEIGHT (&window->render_info);
+      height = GST_VIDEO_INFO_WIDTH (&window->render_info);
+      break;
+    default:
+      width = GST_VIDEO_INFO_WIDTH (&window->render_info);
+      height = GST_VIDEO_INFO_HEIGHT (&window->render_info);
+      break;
+  }
 
   if (!self->visible) {
     /* if no parent the real size has to be set now because this has not been done
