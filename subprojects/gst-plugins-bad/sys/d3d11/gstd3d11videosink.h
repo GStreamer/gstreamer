@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_VIDEO_SINK(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_VIDEO_SINK))
 #define GST_IS_D3D11_VIDEO_SINK_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_D3D11_VIDEO_SINK))
 #define GST_D3D11_VIDEO_SINK_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_VIDEO_SINK, GstD3D11VideoSinkClass))
+#define GST_D3D11_VIDEO_SINK_CAST(obj)        ((GstD3D11VideoSink *) obj)
 
 typedef struct _GstD3D11VideoSink GstD3D11VideoSink;
 typedef struct _GstD3D11VideoSinkClass GstD3D11VideoSinkClass;
