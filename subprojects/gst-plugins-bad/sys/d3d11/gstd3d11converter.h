@@ -70,14 +70,6 @@ GstD3D11Converter * gst_d3d11_converter_new  (GstD3D11Device * device,
                                               const GstVideoInfo * out_info,
                                               GstD3D11ConverterMethod * method);
 
-gboolean            gst_d3d11_converter_convert (GstD3D11Converter * converter,
-                                                 ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
-                                                 ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
-
-gboolean            gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
-                                                          ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES],
-                                                          ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES]);
-
 gboolean            gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
                                                         GstBuffer * in_buf,
                                                         GstBuffer * out_buf);

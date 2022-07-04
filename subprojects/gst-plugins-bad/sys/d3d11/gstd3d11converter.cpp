@@ -3128,36 +3128,6 @@ out:
   return ret;
 }
 
-gboolean
-gst_d3d11_converter_convert (GstD3D11Converter * converter,
-    ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
-    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
-{
-  gboolean ret;
-
-  g_return_val_if_fail (GST_IS_D3D11_CONVERTER (converter), FALSE);
-  g_return_val_if_fail (srv != nullptr, FALSE);
-  g_return_val_if_fail (rtv != nullptr, FALSE);
-
-  gst_d3d11_device_lock (converter->device);
-  ret = gst_d3d11_converter_convert_internal (converter, srv, rtv);
-  gst_d3d11_device_unlock (converter->device);
-
-  return ret;
-}
-
-gboolean
-gst_d3d11_converter_convert_unlocked (GstD3D11Converter * converter,
-    ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
-    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
-{
-  g_return_val_if_fail (GST_IS_D3D11_CONVERTER (converter), FALSE);
-  g_return_val_if_fail (srv != nullptr, FALSE);
-  g_return_val_if_fail (rtv != nullptr, FALSE);
-
-  return gst_d3d11_converter_convert_internal (converter, srv, rtv);
-}
-
 static gboolean
 gst_d3d11_converter_check_bind_flags_for_piv (guint bind_flags)
 {
