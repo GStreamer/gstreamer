@@ -171,7 +171,7 @@ enum
 #define DEFAULT_BUF_INITIAL_SZ                               4000
 #define DEFAULT_BUF_OPTIMAL_SZ                               5000
 #define DEFAULT_TIMEBASE_N                                      1
-#define DEFAULT_TIMEBASE_D                                     30
+#define DEFAULT_TIMEBASE_D                                  90000
 #define DEFAULT_BIT_DEPTH                              AOM_BITS_8
 #define DEFAULT_THREADS                                         0
 #define DEFAULT_ROW_MT                                       TRUE
@@ -700,8 +700,13 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   av1enc->aom_cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
   /* Recommended method is to set the timebase to that of the parent
    * container or multimedia framework (ex: 1/1000 for ms, as in FLV) */
-  av1enc->aom_cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
-  av1enc->aom_cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
+  if (GST_VIDEO_INFO_FPS_D (info) != 0 && GST_VIDEO_INFO_FPS_N (info) != 0) {
+    av1enc->aom_cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
+    av1enc->aom_cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
+  } else {
+    av1enc->aom_cfg.g_timebase.num = DEFAULT_TIMEBASE_N;
+    av1enc->aom_cfg.g_timebase.den = DEFAULT_TIMEBASE_D;
+  }
   av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
 
   if (av1enc->threads == DEFAULT_THREADS)
@@ -810,6 +815,7 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   int flags = 0;
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame vframe;
+  aom_codec_pts_t scaled_pts;
 
   if (!aom_img_alloc (&raw, av1enc->format, av1enc->aom_cfg.g_w,
           av1enc->aom_cfg.g_h, 1)) {
@@ -828,8 +834,14 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   }
   av1enc->keyframe_dist++;
 
+  // Convert the pts from nanoseconds to timebase units
+  scaled_pts =
+      gst_util_uint64_scale_int (frame->pts,
+      av1enc->aom_cfg.g_timebase.den,
+      av1enc->aom_cfg.g_timebase.num * (GstClockTime) GST_SECOND);
+
   g_mutex_lock (&av1enc->encoder_lock);
-  if (aom_codec_encode (&av1enc->encoder, &raw, frame->pts, 1, flags)
+  if (aom_codec_encode (&av1enc->encoder, &raw, scaled_pts, 1, flags)
       != AOM_CODEC_OK) {
     gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
     ret = GST_FLOW_ERROR;
