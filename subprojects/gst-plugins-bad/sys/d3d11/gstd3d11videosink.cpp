@@ -39,7 +39,6 @@
 #endif
 
 #include "gstd3d11videosink.h"
-#include "gstd3d11videoprocessor.h"
 #include "gstd3d11pluginutils.h"
 #include <string>
 

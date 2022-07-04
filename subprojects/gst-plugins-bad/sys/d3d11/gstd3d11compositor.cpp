@@ -46,7 +46,6 @@
 #include "gstd3d11converter.h"
 #include "gstd3d11shader.h"
 #include "gstd3d11pluginutils.h"
-#include "gstd3d11videoprocessor.h"
 #include <string.h>
 #include <wrl.h>
 
