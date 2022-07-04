@@ -42,6 +42,7 @@ typedef struct
 
   ID3D11Device *device;
   ID3D11DeviceContext *context;
+  gsize mem_size;
 
   D3D11_TEXTURE2D_DESC desc;
   GstVideoInfo video_info;
@@ -282,13 +283,18 @@ on_need_data (GstAppSrc * appsrc, guint length, gpointer user_data)
    * ID3D11Texture2D object, but in this example, we pass ownership via
    * user data */
   mem = gst_d3d11_allocator_alloc_wrapped (allocator, app_data->d3d11_device,
-      texture, memory_data, (GDestroyNotify) on_memory_freed);
+      texture, app_data->mem_size, memory_data,
+      (GDestroyNotify) on_memory_freed);
   gst_object_unref (allocator);
 
   if (!mem) {
     gst_printerrln ("Couldn't allocate memory");
     exit (1);
   }
+
+  /* update memory size with calculated value by allocator, and reuse it
+   * for later alloc_wrapped() call to avoid allocating staging texture */
+  app_data->mem_size = mem->size;
 
   /* Calculates CPU accessible (via staging texture) memory layout.
    * GstD3D11Memory allows CPU access but application must calculate the layout

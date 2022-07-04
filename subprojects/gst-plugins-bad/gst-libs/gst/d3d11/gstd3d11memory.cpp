@@ -1639,11 +1639,20 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
  * @allocator: a #GstD3D11Allocator
  * @device: a #GstD3D11Device
  * @texture: a ID3D11Texture2D
+ * @size: CPU accessible memory size
  * @user_data: (allow-none): user data
  * @notify: (allow-none): called with @user_data when the memory is freed
  *
  * Allocates memory object with @texture. The refcount of @texture
  * will be increased by one.
+ *
+ * Caller should set valid CPU acessible memory value to @size
+ * (which is typically calculated by using staging texture and Map/Unmap)
+ * or zero is allowed. In that case, allocator will create a temporary staging
+ * texture to get the size and the temporary staging texture will be released.
+ *
+ * Caller must not be confused that @size is CPU accessible size, not raw
+ * texture size.
  *
  * Returns: a newly allocated #GstD3D11Memory with given @texture
  * if successful, or %NULL if @texture is not a valid handle or configuration
@@ -1653,8 +1662,8 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
  */
 GstMemory *
 gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * allocator,
-    GstD3D11Device * device, ID3D11Texture2D * texture, gpointer user_data,
-    GDestroyNotify notify)
+    GstD3D11Device * device, ID3D11Texture2D * texture, gsize size,
+    gpointer user_data, GDestroyNotify notify)
 {
   GstMemory *mem;
   GstD3D11Memory *dmem;
@@ -1678,51 +1687,15 @@ gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * allocator,
   if (!mem)
     return nullptr;
 
-  if (!gst_d3d11_memory_update_size (mem)) {
-    GST_ERROR_OBJECT (allocator, "Failed to calculate size");
-    gst_memory_unref (mem);
-    return nullptr;
+  if (size == 0) {
+    if (!gst_d3d11_memory_update_size (mem)) {
+      GST_ERROR_OBJECT (allocator, "Failed to calculate size");
+      gst_memory_unref (mem);
+      return nullptr;
+    }
+  } else {
+    mem->maxsize = mem->size = size;
   }
-
-  dmem = GST_D3D11_MEMORY_CAST (mem);
-
-  dmem->priv->user_data = user_data;
-  dmem->priv->notify = notify;
-
-  return mem;
-}
-
-GstMemory *
-gst_d3d11_allocator_alloc_wrapped_native_size (GstD3D11Allocator * allocator,
-    GstD3D11Device * device, ID3D11Texture2D * texture, gpointer user_data,
-    GDestroyNotify notify)
-{
-  GstMemory *mem;
-  GstD3D11Memory *dmem;
-  D3D11_TEXTURE2D_DESC desc = { 0, };
-  ID3D11Texture2D *tex = nullptr;
-  HRESULT hr;
-  gsize size;
-
-  g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), nullptr);
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
-  g_return_val_if_fail (texture != nullptr, nullptr);
-
-  hr = texture->QueryInterface (IID_PPV_ARGS (&tex));
-  if (FAILED (hr)) {
-    GST_WARNING_OBJECT (allocator, "Not a valid texture handle");
-    return nullptr;
-  }
-
-  tex->GetDesc (&desc);
-  mem = gst_d3d11_allocator_alloc_internal (allocator, device, &desc, tex);
-
-  if (!mem)
-    return nullptr;
-
-  /* XXX: This is not correct memory size */
-  size = desc.Width * desc.Height;
-  mem->maxsize = mem->size = size;
 
   dmem = GST_D3D11_MEMORY_CAST (mem);
 

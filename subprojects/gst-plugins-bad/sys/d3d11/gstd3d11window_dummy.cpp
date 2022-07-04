@@ -238,8 +238,8 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     }
   }
 
-  mem = gst_d3d11_allocator_alloc_wrapped_native_size (window->allocator,
-      device, texture.Get (), nullptr, nullptr);
+  mem = gst_d3d11_allocator_alloc_wrapped (window->allocator,
+      device, texture.Get (), desc.Width * desc.Height * 4, nullptr, nullptr);
   if (!mem) {
     GST_ERROR_OBJECT (window, "Couldn't allocate memory");
     return FALSE;

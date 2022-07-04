@@ -263,6 +263,7 @@ GST_D3D11_API
 GstMemory * gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * allocator,
                                                GstD3D11Device * device,
                                                ID3D11Texture2D * texture,
+                                               gsize size,
                                                gpointer user_data,
                                                GDestroyNotify notify);
 

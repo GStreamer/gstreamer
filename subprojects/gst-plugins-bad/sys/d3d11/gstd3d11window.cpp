@@ -281,6 +281,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   GstMemory *mem;
   GstD3D11Memory *dmem;
   ID3D11RenderTargetView *rtv;
+  gsize size;
 
   gst_d3d11_device_lock (device);
 
@@ -304,8 +305,19 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
     goto done;
   }
 
-  mem = gst_d3d11_allocator_alloc_wrapped_native_size (self->allocator,
-      self->device, backbuffer.Get (), nullptr, nullptr);
+  backbuffer->GetDesc (&desc);
+  size = desc.Width * desc.Height;
+  /* flip mode swapchain supports only 4 formats, rgba/bgra/rgb10a2/rgba64.
+   * The size passed in alloc_wrapped() is not important here, since we never
+   * try mapping this for CPU access */
+  if (desc.Format == DXGI_FORMAT_R16G16B16A16_FLOAT) {
+    size *= 8;
+  } else {
+    size *= 4;
+  }
+
+  mem = gst_d3d11_allocator_alloc_wrapped (self->allocator,
+      self->device, backbuffer.Get (), size, nullptr, nullptr);
   if (!mem) {
     GST_ERROR_OBJECT (self, "Couldn't allocate wrapped memory");
     goto done;
@@ -322,7 +334,6 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   self->backbuffer = gst_buffer_new ();
   gst_buffer_append_memory (self->backbuffer, mem);
 
-  backbuffer->GetDesc (&desc);
   self->surface_width = desc.Width;
   self->surface_height = desc.Height;
 

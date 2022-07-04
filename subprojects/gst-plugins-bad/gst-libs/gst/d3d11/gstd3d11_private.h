@@ -41,16 +41,6 @@ void  gst_d3d11_device_dxgi_debug  (GstD3D11Device * device,
                                     const gchar * function,
                                     gint line);
 
-/* Memory allocated by this method does not hold correct size.
- * So this is private method and only plugins in -bad are expected to call
- * this method */
-GST_D3D11_API
-GstMemory * gst_d3d11_allocator_alloc_wrapped_native_size (GstD3D11Allocator * allocator,
-                                                           GstD3D11Device * device,
-                                                           ID3D11Texture2D * texture,
-                                                           gpointer user_data,
-                                                           GDestroyNotify notify);
-
 #define GST_D3D11_CLEAR_COM(obj) G_STMT_START { \
     if (obj) { \
       (obj)->Release (); \
