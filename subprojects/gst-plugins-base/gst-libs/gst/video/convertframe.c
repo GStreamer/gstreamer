@@ -115,8 +115,8 @@ fail:
 
 static GstElement *
 build_convert_frame_pipeline (GstElement ** src_element,
-    GstElement ** sink_element, const GstCaps * from_caps,
-    GstVideoCropMeta * cmeta, const GstCaps * to_caps, GError ** err)
+    GstElement ** sink_element, GstCaps * from_caps,
+    GstVideoCropMeta * cmeta, GstCaps * to_caps, GError ** err)
 {
   GstElement *vcrop = NULL, *csp = NULL, *csp2 = NULL, *vscale = NULL;
   GstElement *src = NULL, *sink = NULL, *encoder = NULL, *pipeline;
