@@ -1249,6 +1249,7 @@ gst_video_convert_scale_get_fixed_format (GstBaseTransform * trans,
     result = gst_caps_copy (othercaps);
   }
 
+  result = gst_caps_make_writable (result);
   gst_video_convert_scale_fixate_format (trans, caps, result);
 
   /* fixate remaining fields */
