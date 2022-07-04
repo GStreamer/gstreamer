@@ -1692,17 +1692,12 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   GstClockTime pts;
   GstClockTime next_time;
   GstMapInfo render_info;
-  GstMapInfo convert_infos[GST_VIDEO_MAX_PLANES];
-  ID3D11Device *device_handle =
-      gst_d3d11_device_get_device_handle (self->device);
   ID3D11DeviceContext *context_handle =
       gst_d3d11_device_get_device_context_handle (self->device);
   GstMemory *mem;
   GstD3D11Memory *dmem;
   ID3D11RenderTargetView *pattern_rtv;
-  ID3D11ShaderResourceView *pattern_srv[1];
-  ID3D11RenderTargetView *convert_rtv[GST_VIDEO_MAX_PLANES] = { nullptr };
-  guint num_convert_rtv;
+  gboolean convert_ret;
 
   ret = GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc, offset, size, &buffer);
   if (ret != GST_FLOW_OK)
@@ -1724,52 +1719,34 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   }
 
   mem = gst_buffer_peek_memory (render_buffer, 0);
+
+  gst_d3d11_device_lock (self->device);
   if (!gst_memory_map (mem, &render_info,
           (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
     GST_ERROR_OBJECT (self, "Failed to map render buffer");
+    gst_d3d11_device_unlock (self->device);
     goto error;
   }
 
   dmem = GST_D3D11_MEMORY_CAST (mem);
-
   pattern_rtv = gst_d3d11_memory_get_render_target_view (dmem, 0);
   if (!pattern_rtv) {
     GST_ERROR_OBJECT (self, "RTV is not available");
     gst_memory_unmap (mem, &render_info);
+    gst_d3d11_device_unlock (self->device);
     goto error;
   }
 
-  pattern_srv[0] = gst_d3d11_memory_get_shader_resource_view (dmem, 0);
-  if (!pattern_srv[0]) {
-    GST_ERROR_OBJECT (self, "SRV is not available");
-    gst_memory_unmap (mem, &render_info);
-    goto error;
-  }
-
-  if (!gst_d3d11_buffer_map (convert_buffer,
-          device_handle, convert_infos, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (self, "Failed to map convert buffer");
-    gst_memory_unmap (mem, &render_info);
-    goto error;
-  }
-
-  num_convert_rtv = gst_d3d11_buffer_get_render_target_view (convert_buffer,
-      convert_rtv);
-  if (num_convert_rtv == 0) {
-    GST_ERROR_OBJECT (self, "Output RTV is not available");
-    gst_memory_unmap (mem, &render_info);
-    gst_d3d11_buffer_unmap (convert_buffer, convert_infos);
-    goto error;
-  }
-
-  gst_d3d11_device_lock (self->device);
   gst_d3d11_test_src_draw_pattern (self, context_handle, pattern_rtv);
-  gst_d3d11_converter_convert_unlocked (self->converter, pattern_srv,
-      convert_rtv);
+  gst_memory_unmap (mem, &render_info);
+  convert_ret = gst_d3d11_converter_convert_buffer_unlocked (self->converter,
+      render_buffer, convert_buffer);
   gst_d3d11_device_unlock (self->device);
 
-  gst_memory_unmap (mem, &render_info);
-  gst_d3d11_buffer_unmap (convert_buffer, convert_infos);
+  if (!convert_ret) {
+    GST_ERROR_OBJECT (self, "Failed to convert buffer");
+    goto error;
+  }
 
   if (self->downstream_supports_d3d11) {
     convert_buffer = nullptr;
