@@ -736,16 +736,6 @@ fluiddec_element_init (GstPlugin * plugin)
   fluid_set_log_function (FLUID_DBG, NULL, NULL);
 #endif
 
-#if GST_HAVE_FLUIDSYNTH_VERSION(1, 1, 9)
-  {
-    /* Disable all audio drivers so new_fluid_settings() does not probe them.
-     * This can crash if FluidSynth is already in use. */
-    const char *empty[] = { NULL };
-    if (fluid_audio_driver_register (empty) != FLUID_OK) {
-      GST_WARNING ("Failed to clear audio drivers");
-    }
-  }
-#endif
   return gst_element_register (plugin, "fluiddec",
       GST_RANK_SECONDARY, GST_TYPE_FLUID_DEC);
 }
