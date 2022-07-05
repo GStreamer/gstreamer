@@ -48,6 +48,8 @@ struct _GstProxySink {
 
   /* Whether there are sticky events pending */
   gboolean pending_sticky_events;
+  gboolean sent_stream_start;
+  gboolean sent_caps;
 };
 
 struct _GstProxySinkClass {
