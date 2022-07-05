@@ -200,8 +200,8 @@ gst_fluid_dec_init (GstFluidDec * filter)
   filter->synth = new_fluid_synth (filter->settings);
   filter->sf = -1;
 
-  fluid_synth_set_chorus_on (filter->synth, filter->synth_chorus);
-  fluid_synth_set_reverb_on (filter->synth, filter->synth_reverb);
+  fluid_synth_chorus_on (filter->synth, -1, filter->synth_chorus);
+  fluid_synth_reverb_on (filter->synth, -1, filter->synth_reverb);
   fluid_synth_set_gain (filter->synth, filter->synth_gain);
   fluid_synth_set_polyphony (filter->synth, filter->synth_polyphony);
 }
@@ -634,11 +634,11 @@ gst_fluid_dec_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SYNTH_CHORUS:
       fluiddec->synth_chorus = g_value_get_boolean (value);
-      fluid_synth_set_chorus_on (fluiddec->synth, fluiddec->synth_chorus);
+      fluid_synth_chorus_on (fluiddec->synth, -1, fluiddec->synth_chorus);
       break;
     case PROP_SYNTH_REVERB:
       fluiddec->synth_reverb = g_value_get_boolean (value);
-      fluid_synth_set_reverb_on (fluiddec->synth, fluiddec->synth_reverb);
+      fluid_synth_reverb_on (fluiddec->synth, -1, fluiddec->synth_reverb);
       break;
     case PROP_SYNTH_GAIN:
       fluiddec->synth_gain = g_value_get_double (value);
