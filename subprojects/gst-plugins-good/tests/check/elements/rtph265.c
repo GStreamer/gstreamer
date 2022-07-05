@@ -1128,6 +1128,156 @@ GST_START_TEST (test_rtph265pay_aggregate_verify_nalu_hdr)
 }
 
 GST_END_TEST;
+
+static guint8 h265_hvc1_idr_data[] = {
+  0x00, 0x00, 0x00, 0x1a, 0x28, 0x01, 0xaf, 0x05, 0x38, 0x4a, 0x03, 0x06, 0x7c,
+  0x7a, 0xb1, 0x8b, 0xff, 0xfe, 0xfd, 0xb7, 0xff, 0xff, 0xd1, 0xff, 0x40, 0x06,
+  0xd8, 0xd3, 0xb2, 0xf8
+};
+
+static guint8 h265_hvc1_non_idr_data[] = {
+  0x00, 0x00, 0x00, 0x0d, 0x02, 0x01, 0xd0, 0x09, 0x7e, 0x10, 0xc2, 0x02, 0xbc,
+  0x38, 0x6d, 0xcf, 0x80
+};
+
+GST_START_TEST (test_rtph265pay_delta_unit_flag)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
+      " name=p");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h265,alignment=au,stream-format=hvc1,"
+      "codec_data=(buffer)0104080000009e28000000003ff000fcfff8f800000f032000"
+      "01001740010c01ffff0408000003009e2800000300003fba0240210001002f4201010"
+      "408000003009e2800000300003f90041020b2dd492657ff80008000b5060606040000"
+      "03000400000300782022000100074401c172b02240");
+
+  /* key frame */
+  buffer = wrap_static_buffer_with_pts (h265_hvc1_idr_data,
+      sizeof (h265_hvc1_idr_data), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* delta unit frame */
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      h265_hvc1_non_idr_data, sizeof (h265_hvc1_non_idr_data), 0,
+      sizeof (h265_hvc1_non_idr_data), NULL, NULL);
+  GST_BUFFER_PTS (buffer) = 0;
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+  buffer = gst_harness_pull (h);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtph265pay_delta_unit_flag_config_interval)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
+      " name=p config-interval=-1");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+  guint num_buffers;
+  guint8 *payload = NULL;
+  guint8 nal_type;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h265,alignment=au,stream-format=hvc1,"
+      "codec_data=(buffer)0104080000009e28000000003ff000fcfff8f800000f032000"
+      "01001740010c01ffff0408000003009e2800000300003fba0240210001002f4201010"
+      "408000003009e2800000300003f90041020b2dd492657ff80008000b5060606040000"
+      "03000400000300782022000100074401c172b02240");
+
+  /* key frame */
+  buffer = wrap_static_buffer_with_pts (h265_hvc1_idr_data,
+      sizeof (h265_hvc1_idr_data), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* delta unit */
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      h265_hvc1_non_idr_data, sizeof (h265_hvc1_non_idr_data), 0,
+      sizeof (h265_hvc1_non_idr_data), NULL, NULL);
+  GST_BUFFER_PTS (buffer) = 0;
+  GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* another key frame */
+  buffer = wrap_static_buffer_with_pts (h265_hvc1_idr_data,
+      sizeof (h265_hvc1_idr_data), 0);
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* VSP SPS PPS I P VSP SPS PPS I */
+  num_buffers = gst_harness_buffers_in_queue (h);
+  fail_unless_equals_int (num_buffers, 9);
+
+  for (guint i = 0; i < num_buffers; i++) {
+    buffer = gst_harness_pull (h);
+    fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+    payload = gst_rtp_buffer_get_payload (&rtp);
+    nal_type = (GST_READ_UINT8 (payload) >> 1) & 0x3f;
+    GST_INFO ("nal_type=%d,delta_unit=%d", nal_type,
+        GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+    if (i == 0) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_VPS);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 1) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_SPS);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 2) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_PPS);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 3) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_SLICE_IDR_N_LP);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 4) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_SLICE_TRAIL_R);
+      fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 5) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_VPS);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 6) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_SPS);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 7) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_PPS);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    } else if (i == 8) {
+      fail_unless_equals_int (nal_type, GST_H265_NAL_SLICE_IDR_N_LP);
+      fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer,
+              GST_BUFFER_FLAG_DELTA_UNIT));
+    }
+
+    gst_rtp_buffer_unmap (&rtp);
+    gst_buffer_unref (buffer);
+  }
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 rtph265_suite (void)
 {
@@ -1154,6 +1304,8 @@ rtph265_suite (void)
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_with_discont);
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_until_vcl);
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_verify_nalu_hdr);
+  tcase_add_test (tc_chain, test_rtph265pay_delta_unit_flag);
+  tcase_add_test (tc_chain, test_rtph265pay_delta_unit_flag_config_interval);
 
   return s;
 }

@@ -73,6 +73,9 @@ struct _GstRtpH265Pay
   gboolean send_vps_sps_pps;
   GstClockTime last_vps_sps_pps;
 
+  /* TRUE if the next NALU processed should have the DELTA_UNIT flag */
+  gboolean delta_unit;
+
   /* aggregate buffers with AP */
   GstBufferList *bundle;
   guint bundle_size;
