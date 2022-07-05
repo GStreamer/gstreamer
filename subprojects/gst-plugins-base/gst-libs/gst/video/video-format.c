@@ -6776,7 +6776,7 @@ static void
 get_tile_NV12_10BE (const gint bit_depth,
     gint ts, gint ws, gint hs, gint ty, gint y, gint x,
     const gpointer data, const gint stride,
-    gpointer restrict pdata[2], gint bits[2], guint16 mask[2])
+    void *restrict pdata[2], gint bits[2], guint16 mask[2])
 {
   gint bit_index = bit_depth * x;
   gint line_size = GST_VIDEO_TILE_X_TILES (stride) << ts;
@@ -6814,7 +6814,7 @@ unpack_NV12_10BE_8L128 (const GstVideoFormatInfo * info,
   gint ws, hs, ts;
   gint ty, uv_ty, uv_y;
   guint16 Y = 0, U = 0, V = 0;
-  gpointer restrict pdata[2];
+  void *restrict pdata[2];
   gint bits[2];
   guint16 mask[2];
   int i;
@@ -6869,7 +6869,7 @@ pack_NV12_10BE_8L128 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   gint ws, hs, ts;
   gint ty, uv_ty, uv_y;
   guint16 Y, U, V;
-  gpointer restrict pdata[2];
+  void *restrict pdata[2];
   gint bits[2];
   guint16 mask[2];
   int i;
