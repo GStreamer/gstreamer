@@ -4087,8 +4087,8 @@ GST_START_TEST (test_reject_create_offer_mline_locked_no_caps)
   fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_INTERNAL_FAILURE));
   fail_unless_equals_string (error->message,
-      "Transceiver <webrtctransceiver0> with mid (null) has locked mline 0,"
-      " but no caps. Can't produce offer.");
+      "Trying to add transceiver at line 0 but there is a transceiver with a"
+      " locked mline for this line which doesn't have caps");
   g_clear_error (&error);
   gst_promise_unref (promise);
 

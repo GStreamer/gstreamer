@@ -3200,7 +3200,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
     const GstSDPMedia * last_media, GstWebRTCRTPTransceiver * trans,
     guint media_idx, GString * bundled_mids, guint bundle_idx,
     gchar * bundle_ufrag, gchar * bundle_pwd, GArray * media_mapping,
-    GHashTable * all_mids, GError ** error)
+    GHashTable * all_mids, gboolean * no_more_mlines, GError ** error)
 {
   /* TODO:
    * rtp header extensions
@@ -3258,11 +3258,11 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
 
     if (!caps) {
       if (WEBRTC_TRANSCEIVER (trans)->mline_locked) {
-        g_set_error (error, GST_WEBRTC_ERROR,
-            GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+        GST_WARNING_OBJECT (webrtc,
             "Transceiver <%s> with mid %s has locked mline %u, but no caps. "
-            "Can't produce offer.", GST_OBJECT_NAME (trans), trans->mid,
-            trans->mline);
+            "Can't add more lines after this one.", GST_OBJECT_NAME (trans),
+            trans->mid, trans->mline);
+        *no_more_mlines = TRUE;
       } else {
         GST_WARNING_OBJECT (webrtc, "no caps available for transceiver %"
             GST_PTR_FORMAT ", skipping", trans);
@@ -3676,6 +3676,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
   GList *seen_transceivers = NULL;
   guint media_idx = 0;
   int i;
+  gboolean no_more_mlines = FALSE;
 
   gst_sdp_message_new (&ret);
 
@@ -3780,7 +3781,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
             gst_sdp_media_init (&media);
             if (!sdp_media_from_transceiver (webrtc, &media, last_media, trans,
                     media_idx, bundled_mids, 0, bundle_ufrag, bundle_pwd,
-                    media_mapping, all_mids, error)) {
+                    media_mapping, all_mids, &no_more_mlines, error)) {
               gst_sdp_media_uninit (&media);
               if (!*error)
                 g_set_error_literal (error, GST_WEBRTC_ERROR,
@@ -3856,9 +3857,11 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
     trans = _find_transceiver_for_mline (webrtc, media_idx);
 
     if (trans) {
-      /* We can't have seen it already, because it is locked to this line */
-      g_assert (!g_list_find (seen_transceivers, trans));
-      seen_transceivers = g_list_prepend (seen_transceivers, trans);
+      /* We can't have seen it already, because it is locked to this line,
+       * unless it's a no-more-mlines case
+       */
+      if (!g_list_find (seen_transceivers, trans))
+        seen_transceivers = g_list_prepend (seen_transceivers, trans);
     } else {
       /* Otherwise find a free transceiver */
       for (i = 0; i < webrtc->priv->transceivers->len; i++) {
@@ -3898,6 +3901,15 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
           gst_sdp_media_init (&media);
           if (_add_data_channel_offer (webrtc, ret, &media, bundled_mids, 0,
                   bundle_ufrag, bundle_pwd, all_mids)) {
+            if (no_more_mlines) {
+              g_set_error (error, GST_WEBRTC_ERROR,
+                  GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+                  "Trying to add data channel but there is a"
+                  " transceiver locked to line %d which doesn't have caps",
+                  media_idx);
+              gst_sdp_media_uninit (&media);
+              goto cancel_offer;
+            }
             gst_sdp_message_add_media (ret, &media);
             media_idx++;
             continue;
@@ -3928,6 +3940,15 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       }
     }
 
+    if (no_more_mlines) {
+      g_set_error (error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+          "Trying to add transceiver at line %u but there is a transceiver "
+          "with a locked mline for this line which doesn't have caps",
+          media_idx);
+      goto cancel_offer;
+    }
+
     gst_sdp_media_init (&media);
 
     if (webrtc->bundle_policy == GST_WEBRTC_BUNDLE_POLICY_NONE) {
@@ -3940,7 +3961,7 @@ _create_offer_task (GstWebRTCBin * webrtc, const GstStructure * options,
 
     if (sdp_media_from_transceiver (webrtc, &media, NULL, trans, media_idx,
             bundled_mids, 0, bundle_ufrag, bundle_pwd, media_mapping, all_mids,
-            error)) {
+            &no_more_mlines, error)) {
       /* as per JSEP, a=rtcp-mux-only is only added for new streams */
       gst_sdp_media_add_attribute (&media, "rtcp-mux-only", "");
       gst_sdp_message_add_media (ret, &media);
