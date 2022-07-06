@@ -29,10 +29,19 @@ if not cdparanoia_found and cdparanoia_option.enabled()
 endif
 
 if cdparanoia_found
+  # The cdda/cdda_interface.h header triggers GCC 12+ warnings which
+  # then trickle down when we build the plugin with -Werror.
+  # This wouldn't be needed usually, but cdparanoia's last release
+  # was in 2008.
+  extra_args = cc.get_supported_arguments([
+      '-Wno-discarded-qualifiers',
+      '-Wno-unused-variable'
+  ])
+
   gstcdparanoia = library('gstcdparanoia',
     ['gstcdparanoiasrc.c'],
     include_directories: [configinc, libsinc],
-    c_args : gst_plugins_base_args,
+    c_args : gst_plugins_base_args + extra_args,
     dependencies : cdparanoia_deps + [audio_dep, gst_dep, gst_base_dep],
     install : true,
     install_dir : plugins_install_dir,
