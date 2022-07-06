@@ -562,8 +562,14 @@ gst_openmpt_dec_load_from_buffer (GstNonstreamAudioDecoder * dec,
    * need to query it here, *before* any openmpt_module_select_subsong()
    * calls are done */
   {
+
+#if OPENMPT_API_VERSION_AT_LEAST(0,5,0)
+    gchar const *subsong_cstr =
+        openmpt_module_ctl_get_text (openmpt_dec->mod, "subsong");
+#else
     gchar const *subsong_cstr =
         openmpt_module_ctl_get (openmpt_dec->mod, "subsong");
+#endif
     gchar *endptr;
 
     if (subsong_cstr != NULL) {
