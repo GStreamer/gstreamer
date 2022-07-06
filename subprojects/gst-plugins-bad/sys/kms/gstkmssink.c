@@ -97,6 +97,7 @@ enum
   PROP_DISPLAY_HEIGHT,
   PROP_CONNECTOR_PROPS,
   PROP_PLANE_PROPS,
+  PROP_FD,
   PROP_N,
 };
 
@@ -729,10 +730,14 @@ gst_kms_sink_start (GstBaseSink * bsink)
   pres = NULL;
   plane = NULL;
 
-  if (self->devname || self->bus_id)
-    self->fd = drmOpen (self->devname, self->bus_id);
-  else
-    self->fd = kms_open (&self->devname);
+  /* open our own internal device fd if application did not supply its own */
+  if (self->is_internal_fd) {
+    if (self->devname || self->bus_id)
+      self->fd = drmOpen (self->devname, self->bus_id);
+    else
+      self->fd = kms_open (&self->devname);
+  }
+
   if (self->fd < 0)
     goto open_failed;
 
@@ -838,7 +843,8 @@ bail:
     drmModeFreeResources (res);
 
   if (!ret && self->fd >= 0) {
-    drmClose (self->fd);
+    if (self->is_internal_fd)
+      drmClose (self->fd);
     self->fd = -1;
   }
 
@@ -945,7 +951,8 @@ gst_kms_sink_stop (GstBaseSink * bsink)
   }
 
   if (self->fd >= 0) {
-    drmClose (self->fd);
+    if (self->is_internal_fd)
+      drmClose (self->fd);
     self->fd = -1;
   }
 
@@ -1776,6 +1783,51 @@ gst_kms_sink_query (GstBaseSink * bsink, GstQuery * query)
 }
 
 static void
+_validate_and_set_external_fd (GstKMSSink * self, gint fd)
+{
+  if (self->devname) {
+    GST_WARNING_OBJECT (self, "Can't set fd... %s already set.",
+        g_param_spec_get_name (g_properties[PROP_DRIVER_NAME]));
+    return;
+  }
+
+  if (self->bus_id) {
+    GST_WARNING_OBJECT (self, "Can't set fd... %s already set.",
+        g_param_spec_get_name (g_properties[PROP_BUS_ID]));
+    return;
+  }
+
+  if (self->fd >= 0) {
+    GST_WARNING_OBJECT (self, "Can't set fd... it is already set.");
+    return;
+  }
+
+  if (fd >= 0) {
+    self->devname = drmGetDeviceNameFromFd (fd);
+    if (!self->devname) {
+      GST_WARNING_OBJECT (self, "Failed to verify fd is a DRM fd.");
+      return;
+    }
+
+    self->fd = fd;
+    self->is_internal_fd = FALSE;
+  }
+}
+
+static void
+_invalidate_external_fd (GstKMSSink * self, GParamSpec * pspec)
+{
+  if (self->is_internal_fd)
+    return;
+
+  GST_WARNING_OBJECT (self, "Unsetting fd... %s has priority.",
+      g_param_spec_get_name (pspec));
+
+  self->fd = -1;
+  self->is_internal_fd = TRUE;
+}
+
+static void
 gst_kms_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -1785,10 +1837,12 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DRIVER_NAME:
+      _invalidate_external_fd (sink, pspec);
       g_free (sink->devname);
       sink->devname = g_value_dup_string (value);
       break;
     case PROP_BUS_ID:
+      _invalidate_external_fd (sink, pspec);
       g_free (sink->bus_id);
       sink->bus_id = g_value_dup_string (value);
       break;
@@ -1827,6 +1881,9 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
 
       break;
     }
+    case PROP_FD:
+      _validate_and_set_external_fd (sink, g_value_get_int (value));
+      break;
     default:
       if (!gst_video_overlay_set_property (object, PROP_N, prop_id, value))
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1880,6 +1937,9 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
     case PROP_PLANE_PROPS:
       gst_value_set_structure (value, sink->plane_props);
       break;
+    case PROP_FD:
+      g_value_set_int (value, sink->fd);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1906,6 +1966,7 @@ static void
 gst_kms_sink_init (GstKMSSink * sink)
 {
   sink->fd = -1;
+  sink->is_internal_fd = TRUE;
   sink->conn_id = -1;
   sink->plane_id = -1;
   sink->can_scale = TRUE;
@@ -2077,6 +2138,19 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
       g_param_spec_boxed ("plane-properties", "Connector Plane",
       "Additional properties for the plane",
       GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * kmssink:fd:
+   *
+   * You can supply your own DRM file descriptor.  By default, the sink will
+   * open its own DRM file descriptor.
+   *
+   * Since: 1.22
+   */
+  g_properties[PROP_FD] =
+      g_param_spec_int ("fd", "File Descriptor",
+      "DRM file descriptor", -1, G_MAXINT, -1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);
 
