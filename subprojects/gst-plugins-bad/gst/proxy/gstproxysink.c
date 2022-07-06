@@ -57,6 +57,7 @@ G_DEFINE_TYPE (GstProxySink, gst_proxy_sink, GST_TYPE_ELEMENT);
 GST_ELEMENT_REGISTER_DEFINE (proxysink, "proxysink", GST_RANK_NONE,
     GST_TYPE_PROXY_SINK);
 
+static void gst_proxy_sink_dispose (GObject * object);
 static gboolean gst_proxy_sink_sink_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstFlowReturn gst_proxy_sink_sink_chain (GstPad * pad,
@@ -76,9 +77,12 @@ static gboolean gst_proxy_sink_query (GstElement * element, GstQuery * query);
 static void
 gst_proxy_sink_class_init (GstProxySinkClass * klass)
 {
-  GstElementClass *gstelement_class = (GstElementClass *) klass;
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_proxy_sink_debug, "proxysink", 0, "proxy sink");
+
+  object_class->dispose = gst_proxy_sink_dispose;
 
   gstelement_class->change_state = gst_proxy_sink_change_state;
   gstelement_class->send_event = gst_proxy_sink_send_event;
@@ -107,6 +111,16 @@ gst_proxy_sink_init (GstProxySink * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_SINK);
+}
+
+static void
+gst_proxy_sink_dispose (GObject * object)
+{
+  GstProxySink *self = GST_PROXY_SINK (object);
+
+  g_weak_ref_clear (&self->proxysrc);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstStateChangeReturn
