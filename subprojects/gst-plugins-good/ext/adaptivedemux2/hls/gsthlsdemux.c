@@ -113,6 +113,8 @@ static void
 gst_hls_update_time_mappings (GstHLSDemux * demux,
     GstHLSMediaPlaylist * playlist);
 
+static void gst_hls_prune_time_mappings (GstHLSDemux * demux);
+
 static gboolean gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
 static GstFlowReturn gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream *
     stream, gboolean forward, GstSeekFlags flags, GstClockTimeDiff ts,
@@ -443,6 +445,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   /* properly cleanup pending decryption status */
   if (flags & GST_SEEK_FLAG_FLUSH) {
     gst_hls_demux_clear_all_pending_data (hlsdemux);
+    gst_hls_prune_time_mappings (hlsdemux);
   }
 
   for (walk = demux->input_period->streams; walk; walk = g_list_next (walk)) {
@@ -1190,20 +1193,25 @@ gst_hls_demux_typefind_stream (GstHLSDemux * hlsdemux,
   return TRUE;
 }
 
-GstHLSTimeMap *
-gst_hls_find_time_map (GstHLSDemux * demux, gint64 dsn)
+static GstHLSTimeMap *
+time_map_in_list (GList * list, gint64 dsn)
 {
-  GList *tmp;
+  GList *iter;
 
-  GST_LOG_OBJECT (demux, "dsn:%" G_GINT64_FORMAT, dsn);
+  for (iter = list; iter; iter = iter->next) {
+    GstHLSTimeMap *map = iter->data;
 
-  for (tmp = demux->mappings; tmp; tmp = tmp->next) {
-    GstHLSTimeMap *map = tmp->data;
     if (map->dsn == dsn)
       return map;
   }
 
   return NULL;
+}
+
+GstHLSTimeMap *
+gst_hls_find_time_map (GstHLSDemux * demux, gint64 dsn)
+{
+  return time_map_in_list (demux->mappings, dsn);
 }
 
 /* Compute the stream time for the given internal time, based on the provided
@@ -1916,7 +1924,49 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
   demux->mappings = g_list_append (demux->mappings, map);
 }
 
-/* Got over the DSN from the playlist and add any missing time mapping */
+/* Remove any time mapping which isn't currently used by any stream playlist */
+static void
+gst_hls_prune_time_mappings (GstHLSDemux * hlsdemux)
+{
+  GstAdaptiveDemux *demux = (GstAdaptiveDemux *) hlsdemux;
+  GList *active = NULL;
+  GList *iterstream;
+
+  for (iterstream = demux->input_period->streams; iterstream;
+      iterstream = iterstream->next) {
+    GstAdaptiveDemux2Stream *stream = iterstream->data;
+    GstHLSDemuxStream *hls_stream = (GstHLSDemuxStream *) stream;
+    gint64 dsn = G_MAXINT64;
+    guint idx, len;
+
+    if (!hls_stream->playlist)
+      continue;
+    len = hls_stream->playlist->segments->len;
+    for (idx = 0; idx < len; idx++) {
+      GstM3U8MediaSegment *segment =
+          g_ptr_array_index (hls_stream->playlist->segments, idx);
+
+      if (dsn == G_MAXINT64 || segment->discont_sequence != dsn) {
+        dsn = segment->discont_sequence;
+        if (!time_map_in_list (active, dsn)) {
+          GstHLSTimeMap *map = gst_hls_find_time_map (hlsdemux, dsn);
+          if (map) {
+            GST_DEBUG_OBJECT (demux,
+                "Keeping active time map dsn:%" G_GINT64_FORMAT, map->dsn);
+            /* Move active dsn to active list */
+            hlsdemux->mappings = g_list_remove (hlsdemux->mappings, map);
+            active = g_list_append (active, map);
+          }
+        }
+      }
+    }
+  }
+
+  g_list_free_full (hlsdemux->mappings, g_free);
+  hlsdemux->mappings = active;
+}
+
+/* Go over the DSN from the playlist and add any missing time mapping */
 static void
 gst_hls_update_time_mappings (GstHLSDemux * demux,
     GstHLSMediaPlaylist * playlist)
