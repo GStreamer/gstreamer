@@ -70,6 +70,9 @@ gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInf
 gboolean        gst_d3d11_video_info_to_dxgi_color_space (const GstVideoInfo * info,
                                                           GstDxgiColorSpace * color_space);
 
+gboolean        gst_d3d11_colorimetry_from_dxgi_color_space (DXGI_COLOR_SPACE_TYPE colorspace,
+                                                             GstVideoColorimetry * colorimetry);
+
 gboolean        gst_d3d11_find_swap_chain_color_space (const GstVideoInfo * info,
                                                        IDXGISwapChain3 * swapchain,
                                                        GstDxgiColorSpace * color_space);
