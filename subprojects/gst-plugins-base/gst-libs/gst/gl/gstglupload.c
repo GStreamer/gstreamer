@@ -192,6 +192,7 @@ _caps_intersect_texture_target (GstCaps * caps, GstGLTextureTarget target_mask)
 typedef enum
 {
   METHOD_FLAG_CAN_SHARE_CONTEXT = 1,
+  METHOD_FLAG_CAN_ACCEPT_RAW = 2,       /* This method can accept raw memory input caps */
 } GstGLUploadMethodFlags;
 
 struct _UploadMethod
@@ -827,7 +828,7 @@ _dma_buf_upload_free (gpointer impl)
 
 static const UploadMethod _dma_buf_upload = {
   "Dmabuf",
-  0,
+  METHOD_FLAG_CAN_ACCEPT_RAW,
   &_dma_buf_upload_caps,
   &_dma_buf_upload_new,
   &_dma_buf_upload_transform_caps,
@@ -2229,7 +2230,9 @@ static const UploadMethod *upload_methods[] = { &_gl_memory_upload,
 #if defined(HAVE_NVMM)
   &_nvmm_upload,
 #endif /* HAVE_NVMM */
-  &_upload_meta_upload, &_raw_data_upload
+  &_upload_meta_upload,
+  /* Raw data must always be last / least preferred */
+  &_raw_data_upload
 };
 
 static GMutex upload_global_lock;
@@ -2352,7 +2355,21 @@ gst_gl_upload_transform_caps (GstGLUpload * upload, GstGLContext * context,
   if (upload->priv->method) {
     tmp = upload->priv->method->transform_caps (upload->priv->method_impl,
         context, direction, caps);
+
     if (tmp) {
+      /* If we're generating sink pad caps, make sure to include raw caps if needed by
+       * the current method */
+      if (direction == GST_PAD_SRC
+          && (upload->priv->method->flags & METHOD_FLAG_CAN_ACCEPT_RAW)) {
+        GstCapsFeatures *passthrough =
+            gst_caps_features_from_string
+            (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+        GstCaps *raw_tmp = _set_caps_features_with_passthrough (tmp,
+            GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, passthrough);
+        gst_caps_append (tmp, raw_tmp);
+        gst_caps_features_free (passthrough);
+      }
+
       if (filter) {
         result =
             gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
