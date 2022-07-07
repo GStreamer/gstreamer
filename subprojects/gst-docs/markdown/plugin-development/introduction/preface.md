@@ -78,7 +78,7 @@ site](http://gstreamer.freedesktop.org/documentation/).
 In order to understand this manual, you will need to have a basic
 understanding of the C language. Since GStreamer adheres to the GObject
 programming model, this guide also assumes that you understand the
-basics of [GObject](http://developer.gnome.org/gobject/stable/pt01.html)
+basics of [GObject](https://docs.gtk.org/gobject/concepts.html)
 programming. You may also want to have a look at Eric Harlow's book
 *Developing Linux Applications with GTK+ and GDK*.
 
