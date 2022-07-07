@@ -322,7 +322,7 @@ The `subtitle-font-desc` property allows specifying the font to render
 the subtitles. Since [Pango](http://www.pango.org/) is the library used
 to render fonts, you can check its documentation to see how this font
 should be specified, in particular, the
-[pango-font-description-from-string](http://developer.gnome.org/pango/stable/pango-Fonts.html#pango-font-description-from-string) function.
+[pango-font-description-from-string](https://docs.gtk.org/Pango/type_func.FontDescription.from_string.html) function.
 
 In a nutshell, the format of the string representation is `[FAMILY-LIST]
 [STYLE-OPTIONS] [SIZE]` where `FAMILY-LIST` is a comma separated list of
