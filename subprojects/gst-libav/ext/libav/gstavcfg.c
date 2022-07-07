@@ -91,10 +91,19 @@ register_enum (const AVClass ** obj, const AVOption * top_opt)
   gchar *lower_obj_name = g_ascii_strdown ((*obj)->class_name, -1);
   gchar *enum_name = g_strdup_printf ("%s-%s", lower_obj_name, top_opt->unit);
   gboolean none_default = TRUE;
+  const gchar *enum_name_strip;
 
   g_strcanon (enum_name, G_CSET_a_2_z G_CSET_DIGITS, '-');
 
-  if ((res = g_type_from_name (enum_name)))
+  /* strip leading '-'s */
+  enum_name_strip = enum_name;
+  while (enum_name_strip[0] == '-')
+    enum_name_strip++;
+
+  if (enum_name_strip[0] == '\0')
+    goto done;
+
+  if ((res = g_type_from_name (enum_name_strip)))
     goto done;
 
   while ((opt = av_opt_next (obj, opt))) {
@@ -150,9 +159,8 @@ register_enum (const AVClass ** obj, const AVOption * top_opt)
       }
     }
 
-    res =
-        g_enum_register_static (enum_name, &g_array_index (values, GEnumValue,
-            0));
+    res = g_enum_register_static (enum_name_strip,
+        &g_array_index (values, GEnumValue, 0));
 
     gst_type_mark_as_plugin_api (res, 0);
   }
@@ -177,10 +185,19 @@ register_flags (const AVClass ** obj, const AVOption * top_opt)
   GArray *values = g_array_new (TRUE, TRUE, sizeof (GEnumValue));
   gchar *lower_obj_name = g_ascii_strdown ((*obj)->class_name, -1);
   gchar *flags_name = g_strdup_printf ("%s-%s", lower_obj_name, top_opt->unit);
+  const gchar *flags_name_strip;
 
   g_strcanon (flags_name, G_CSET_a_2_z G_CSET_DIGITS, '-');
 
-  if ((res = g_type_from_name (flags_name)))
+  /* strip leading '-'s */
+  flags_name_strip = flags_name;
+  while (flags_name_strip[0] == '-')
+    flags_name_strip++;
+
+  if (flags_name_strip[0] == '\0')
+    goto done;
+
+  if ((res = g_type_from_name (flags_name_strip)))
     goto done;
 
   while ((opt = av_opt_next (obj, opt))) {
@@ -211,7 +228,7 @@ register_flags (const AVClass ** obj, const AVOption * top_opt)
     g_array_sort (values, (GCompareFunc) cmp_flags_value);
 
     res =
-        g_flags_register_static (flags_name, &g_array_index (values,
+        g_flags_register_static (flags_name_strip, &g_array_index (values,
             GFlagsValue, 0));
 
     gst_type_mark_as_plugin_api (res, 0);
