@@ -907,10 +907,6 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     ret =
         _set_caps_features_with_passthrough (caps,
         GST_CAPS_FEATURE_MEMORY_DMABUF, passthrough);
-    tmp =
-        _set_caps_features_with_passthrough (caps,
-        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, passthrough);
-    gst_caps_append (ret, tmp);
 
     g_value_init (&formats, GST_TYPE_LIST);
     gst_value_deserialize (&formats, format_str);
@@ -1497,13 +1493,8 @@ _directviv_upload_transform_caps (gpointer impl, GstGLContext * context,
     gst_caps_unref (ret);
     ret = tmp;
   } else {
-    GstCaps *tmp;
-    tmp = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+    ret = gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, GST_GL_DIRECTVIV_FORMAT));
-    ret =
-        _set_caps_features_with_passthrough (tmp,
-        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, passthrough);
-    gst_caps_unref (tmp);
   }
 
   gst_caps_features_free (passthrough);
