@@ -27,6 +27,11 @@
 
 #include <windows.h>
 #include <versionhelpers.h>
+#include <mutex>
+
+/* *INDENT-OFF* */
+static std::recursive_mutex _context_lock;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 #ifndef GST_DISABLE_GST_DEBUG
@@ -380,6 +385,9 @@ gst_d3d11_ensure_element_data (GstElement * element, gint adapter,
     GstD3D11Device ** device)
 {
   guint target_adapter = 0;
+  /* *INDENT-OFF* */
+  std::lock_guard<std::recursive_mutex> lk (_context_lock);
+  /* *INDENT-ON* */
 
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
@@ -447,6 +455,10 @@ gboolean
 gst_d3d11_ensure_element_data_for_adapter_luid (GstElement * element,
     gint64 adapter_luid, GstD3D11Device ** device)
 {
+  /* *INDENT-OFF* */
+  std::lock_guard<std::recursive_mutex> lk (_context_lock);
+  /* *INDENT-ON* */
+
   g_return_val_if_fail (element != NULL, FALSE);
   g_return_val_if_fail (device != NULL, FALSE);
 
