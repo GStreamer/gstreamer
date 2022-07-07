@@ -489,6 +489,7 @@ gst_svtav1enc_allocate_svt_buffers (GstSvtAv1Enc * svtav1enc)
   svtav1enc->input_buf->size = sizeof (EbBufferHeaderType);
   svtav1enc->input_buf->p_app_private = NULL;
   svtav1enc->input_buf->pic_type = EB_AV1_INVALID_PICTURE;
+  svtav1enc->input_buf->metadata = NULL;
 
   return TRUE;
 }
@@ -603,6 +604,8 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
     input_buffer->pic_type = EB_AV1_KEY_PICTURE;
   }
 
+  input_buffer->metadata = NULL;
+
   res = svt_av1_enc_send_picture(svtav1enc->svt_encoder, input_buffer);
   if (res != EB_ErrorNone) {
     GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("error in sending picture to encoder"));
@@ -625,6 +628,7 @@ gst_svtav1enc_send_eos (GstSvtAv1Enc * svtav1enc)
   input_buffer.p_app_private = NULL;
   input_buffer.flags = EB_BUFFERFLAG_EOS;
   input_buffer.p_buffer = NULL;
+  input_buffer.metadata = NULL;
 
   ret = svt_av1_enc_send_picture(svtav1enc->svt_encoder, &input_buffer);
 
