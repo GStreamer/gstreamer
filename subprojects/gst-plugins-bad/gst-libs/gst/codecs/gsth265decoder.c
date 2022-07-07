@@ -346,6 +346,77 @@ gst_h265_decoder_drain_output_queue (GstH265Decoder * self, guint num,
   }
 }
 
+static void
+gst_h265_decoder_set_latency (GstH265Decoder * self, const GstH265SPS * sps,
+    gint max_dpb_size)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+  GstCaps *caps;
+  GstClockTime min, max;
+  GstStructure *structure;
+  gint fps_d = 1, fps_n = 0;
+  guint frames_delay;
+
+  caps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SRC_PAD (self));
+  if (!caps)
+    return;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+    if (fps_n == 0) {
+      /* variable framerate: see if we have a max-framerate */
+      gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
+    }
+  }
+  gst_caps_unref (caps);
+
+  /* if no fps or variable, then 25/1 */
+  if (fps_n == 0) {
+    fps_n = 25;
+    fps_d = 1;
+  }
+
+  /* Minimum possible latency could be calculated based on C.5.2.3
+   * 1) # of pictures (marked as "needed for output") in DPB > sps_max_num_reorder_pics
+   *   - We will assume all pictures in DPB are marked as "needed for output"
+   * 2) sps_max_latency_increase_plus1 != 0 and
+   *    PicLatencyCount >= SpsMaxLatencyPictures
+   *   - SpsMaxLatencyPictures is equal to
+   *     "sps_max_num_reorder_pics + sps_max_latency_increase_plus1 - 1"
+   *     and PicLatencyCount of each picture in DPB is increased by 1 per
+   *     decoding loop. Note that PicLatencyCount of the currently decoded
+   *     picture is zero. So, in case that all pictures in DPB are marked as
+   *     "needed for output", Only condition 1) will have an effect
+   *     regardless of sps_max_latency_increase_plus1.
+   *
+   *     For example, assume sps_max_num_reorder_pics is 2 and
+   *     sps_max_latency_increase_plus1 is 1, then SpsMaxLatencyPictures is 2.
+   *     For a picture in DPB to have PicLatencyCount >= SpsMaxLatencyPictures,
+   *     there must be at least 3 pictures including current picture in DPB
+   *     (current picture's PicLatencyCount is zero).
+   *     This is already covered by the condition 1). So, this condition 2)
+   *     will have effect only when there are pictures marked as
+   *     "not needed for output" in DPB.
+   *
+   *  Thus, we can take sps_max_num_reorder_pics as a min latency value
+   */
+  frames_delay = sps->max_num_reorder_pics[sps->max_sub_layers_minus1];
+
+  /* Consider output delay wanted by subclass */
+  frames_delay += priv->preferred_output_delay;
+
+  min = gst_util_uint64_scale_int (frames_delay * GST_SECOND, fps_d, fps_n);
+  max = gst_util_uint64_scale_int ((max_dpb_size + priv->preferred_output_delay)
+      * GST_SECOND, fps_d, fps_n);
+
+  GST_DEBUG_OBJECT (self,
+      "latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT
+      " min-frames-delay %d", GST_TIME_ARGS (min), GST_TIME_ARGS (max),
+      frames_delay);
+
+  gst_video_decoder_set_latency (GST_VIDEO_DECODER (self), min, max);
+}
+
 static GstFlowReturn
 gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
 {
@@ -435,6 +506,7 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
     priv->interlaced_source_flag = interlaced_source_flag;
 
     gst_h265_dpb_set_max_num_pics (priv->dpb, max_dpb_size);
+    gst_h265_decoder_set_latency (self, sps, max_dpb_size);
   }
 
   if (sps->max_latency_increase_plus1[sps->max_sub_layers_minus1]) {
