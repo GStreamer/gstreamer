@@ -833,6 +833,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   GstD3D11DeviceVendor vendor;
   ID3D11VideoDevice *video_device;
   GstVideoInfo *info = &self->info;
+  GstD3D11DeviceLockGuard lk (self->device);
 
   if (self->opened)
     return TRUE;
@@ -844,7 +845,6 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
 
   video_device = self->video_device;
 
-  gst_d3d11_device_lock (self->device);
   if (!gst_d3d11_decoder_get_supported_decoder_profile (self->device,
           self->codec, GST_VIDEO_INFO_FORMAT (info), &selected_profile)) {
     goto error;
@@ -1001,7 +1001,6 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   self->wait_on_pool_full = FALSE;
 
   self->opened = TRUE;
-  gst_d3d11_device_unlock (self->device);
 
   gst_d3d11_decoder_enable_high_precision_timer (self);
 
@@ -1009,7 +1008,6 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
 
 error:
   gst_d3d11_decoder_reset (self);
-  gst_d3d11_device_unlock (self->device);
 
   return FALSE;
 }
@@ -1175,12 +1173,9 @@ gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
     buffer_desc_size++;
   }
 
-  gst_d3d11_device_lock (decoder->device);
-  if (!gst_d3d11_decoder_begin_frame (decoder, output_view, 0, nullptr)) {
-    gst_d3d11_device_unlock (decoder->device);
-
+  GstD3D11DeviceLockGuard lk (decoder->device);
+  if (!gst_d3d11_decoder_begin_frame (decoder, output_view, 0, nullptr))
     return FALSE;
-  }
 
   if (!gst_d3d11_decoder_get_decoder_buffer (decoder,
           D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS, &d3d11_buffer_size,
@@ -1293,18 +1288,13 @@ gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  if (!gst_d3d11_decoder_end_frame (decoder)) {
-    gst_d3d11_device_unlock (decoder->device);
+  if (!gst_d3d11_decoder_end_frame (decoder))
     return FALSE;
-  }
-
-  gst_d3d11_device_unlock (decoder->device);
 
   return TRUE;
 
 error:
   gst_d3d11_decoder_end_frame (decoder);
-  gst_d3d11_device_unlock (decoder->device);
   return FALSE;
 }
 
@@ -1415,6 +1405,7 @@ gst_d3d11_decoder_crop_and_copy_texture (GstD3D11Decoder * self,
   ID3D11DeviceContext *context =
       gst_d3d11_device_get_device_context_handle (device);
   D3D11_BOX src_box = { 0, };
+  GstD3D11DeviceLockGuard lk (device);
 
   src_box.left = self->offset_x;
   src_box.top = self->offset_y;
@@ -1423,10 +1414,8 @@ gst_d3d11_decoder_crop_and_copy_texture (GstD3D11Decoder * self,
   src_box.front = 0;
   src_box.back = 1;
 
-  gst_d3d11_device_lock (device);
   context->CopySubresourceRegion (dst_texture, dst_subresource,
       0, 0, 0, src_texture, src_subresource, &src_box);
-  gst_d3d11_device_unlock (device);
 }
 
 static gboolean
@@ -1472,6 +1461,7 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
   if (!gst_d3d11_decoder_ensure_staging_texture (self))
     return FALSE;
 
+  GstD3D11DeviceLockGuard lk (device);
   if (!gst_video_frame_map (&frame, &self->output_info, dst, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (self, "Failed to map output buffer");
     return FALSE;
@@ -1480,11 +1470,9 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
   gst_d3d11_decoder_crop_and_copy_texture (self, src_texture, src_subresource,
       self->staging, 0);
 
-  gst_d3d11_device_lock (device);
   hr = context->Map (self->staging, 0, D3D11_MAP_READ, 0, &d3d11_map);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Failed to map staging texture");
-    gst_d3d11_device_unlock (device);
     gst_video_frame_unmap (&frame);
     return FALSE;
   }
@@ -1507,7 +1495,6 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
   }
 
   context->Unmap (self->staging, 0);
-  gst_d3d11_device_unlock (device);
   gst_video_frame_unmap (&frame);
 
   return TRUE;

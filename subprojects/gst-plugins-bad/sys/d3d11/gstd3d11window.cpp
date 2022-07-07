@@ -282,12 +282,11 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   GstD3D11Memory *dmem;
   ID3D11RenderTargetView *rtv;
   gsize size;
-
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
 
   gst_clear_buffer (&self->backbuffer);
   if (!self->swap_chain)
-    goto done;
+    return;
 
   swap_chain = self->swap_chain;
   swap_chain->GetDesc (&swap_desc);
@@ -295,14 +294,14 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
       swap_desc.Flags);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't resize buffers, hr: 0x%x", (guint) hr);
-    goto done;
+    return;
   }
 
   hr = swap_chain->GetBuffer (0, IID_PPV_ARGS (&backbuffer));
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self,
         "Cannot get backbuffer from swapchain, hr: 0x%x", (guint) hr);
-    goto done;
+    return;
   }
 
   backbuffer->GetDesc (&desc);
@@ -320,7 +319,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
       self->device, backbuffer.Get (), size, nullptr, nullptr);
   if (!mem) {
     GST_ERROR_OBJECT (self, "Couldn't allocate wrapped memory");
-    goto done;
+    return;
   }
 
   dmem = GST_D3D11_MEMORY_CAST (mem);
@@ -328,7 +327,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   if (!rtv) {
     GST_ERROR_OBJECT (self, "RTV is unavailable");
     gst_memory_unref (mem);
-    goto done;
+    return;
   }
 
   self->backbuffer = gst_buffer_new ();
@@ -379,9 +378,6 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   /* redraw the last scene if cached buffer exits */
   if (self->cached_buffer)
     gst_d3d111_window_present (self, self->cached_buffer, self->backbuffer);
-
-done:
-  gst_d3d11_device_unlock (device);
 }
 
 void
@@ -557,7 +553,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   if (SUCCEEDED (hr) && allow_tearing)
     window->allow_tearing = allow_tearing;
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   window->dxgi_format = chosen_format->dxgi_format;
 
   klass = GST_D3D11_WINDOW_GET_CLASS (window);
@@ -568,7 +564,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create swapchain");
-    goto error;
+    return FALSE;
   }
 
   /* this rect struct will be used to calculate render area */
@@ -675,7 +671,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create converter");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create converter");
-    goto error;
+    return FALSE;
   }
 
   if (have_hdr10_meta) {
@@ -693,9 +689,8 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create overlay compositor");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create overlay compositor");
-    goto error;
+    return FALSE;
   }
-  gst_d3d11_device_unlock (window->device);
 
   /* call resize to allocated resources */
   klass->on_resize (window, display_width, display_height);
@@ -706,11 +701,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   GST_DEBUG_OBJECT (window, "New swap chain 0x%p created", window->swap_chain);
 
   return TRUE;
-
-error:
-  gst_d3d11_device_unlock (window->device);
-
-  return FALSE;
 }
 
 void
@@ -850,19 +840,14 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
 GstFlowReturn
 gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer)
 {
-  GstFlowReturn ret;
-
   g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), GST_FLOW_ERROR);
 
-  gst_d3d11_device_lock (window->device);
+  GstD3D11DeviceLockGuard lk (window->device);
   if (buffer)
     gst_buffer_replace (&window->cached_buffer, buffer);
 
-  ret = gst_d3d111_window_present (window, window->cached_buffer,
+  return gst_d3d111_window_present (window, window->cached_buffer,
       window->backbuffer);
-  gst_d3d11_device_unlock (window->device);
-
-  return ret;
 }
 
 GstFlowReturn
@@ -886,17 +871,15 @@ gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
   data.acquire_key = acquire_key;
   data.release_key = release_key;
 
-  gst_d3d11_device_lock (window->device);
+  GstD3D11DeviceLockGuard (window->device);
   if (!klass->open_shared_handle (window, &data)) {
     GST_ERROR_OBJECT (window, "Couldn't open shared handle");
-    gst_d3d11_device_unlock (window->device);
     return GST_FLOW_OK;
   }
 
   ret = gst_d3d111_window_present (window, buffer, data.render_target);
 
   klass->release_shared_handle (window, &data);
-  gst_d3d11_device_unlock (window->device);
 
   return ret;
 }
@@ -930,9 +913,8 @@ gst_d3d11_window_unlock_stop (GstD3D11Window * window)
   if (klass->unlock_stop)
     ret = klass->unlock_stop (window);
 
-  gst_d3d11_device_lock (window->device);
+  GstD3D11DeviceLockGuard lk (window->device);
   gst_clear_buffer (&window->cached_buffer);
-  gst_d3d11_device_unlock (window->device);
 
   return ret;
 }
@@ -1007,7 +989,7 @@ gst_d3d11_window_set_orientation (GstD3D11Window * window,
     return;
   }
 
-  gst_d3d11_device_lock (window->device);
+  GstD3D11DeviceLockGuard lk (window->device);
   if (window->method != method) {
     window->method = method;
     if (window->swap_chain) {
@@ -1016,5 +998,4 @@ gst_d3d11_window_set_orientation (GstD3D11Window * window,
       klass->on_resize (window, window->surface_width, window->surface_height);
     }
   }
-  gst_d3d11_device_unlock (window->device);
 }

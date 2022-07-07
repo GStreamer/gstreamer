@@ -1596,7 +1596,6 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
   guint in_subresource;
   guint out_subresource;
   ID3D11Texture2D *in_tex, *out_tex;
-  gboolean ret = FALSE;
 
   /* Copy into output memory */
   in_mem = gst_buffer_peek_memory (inbuf, 0);
@@ -1636,18 +1635,18 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
   in_subresource = gst_d3d11_memory_get_subresource_index (in_dmem);
   out_subresource = gst_d3d11_memory_get_subresource_index (out_dmem);
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   if (!gst_memory_map (in_mem, &in_map,
           (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
     GST_ERROR_OBJECT (self, "Failed to map input memory");
-    goto out;
+    return FALSE;
   }
 
   if (!gst_memory_map (out_mem, &out_map,
           (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
     GST_ERROR_OBJECT (self, "Failed to map output memory");
     gst_memory_unmap (in_mem, &in_map);
-    goto out;
+    return FALSE;
   }
 
   in_tex = (ID3D11Texture2D *) in_map.data;
@@ -1658,10 +1657,8 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
   gst_memory_unmap (in_mem, &in_map);
   gst_memory_unmap (out_mem, &out_map);
 
-  if (gst_buffer_n_memory (inbuf) == 1) {
-    gst_d3d11_device_unlock (device);
+  if (gst_buffer_n_memory (inbuf) == 1)
     return TRUE;
-  }
 
   /* Non-native DXGI format YUV cases, copy UV plane(s) */
   switch (format) {
@@ -1698,7 +1695,7 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
     default:
       GST_ERROR_OBJECT (self, "Unexpected format %s",
           gst_video_format_to_string (format));
-      goto out;
+      return FALSE;
   }
 
   GST_TRACE_OBJECT (self, "UV left:top:right:bottom = %d, %d, %d, %d",
@@ -1710,12 +1707,12 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
 
     if (!gst_is_d3d11_memory (in_mem)) {
       GST_ERROR_OBJECT (self, "Input is not a d3d11 memory");
-      goto out;
+      return FALSE;
     }
 
     if (!gst_is_d3d11_memory (out_mem)) {
       GST_ERROR_OBJECT (self, "Output is not a d3d11 memory");
-      goto out;
+      return FALSE;
     }
 
     in_dmem = GST_D3D11_MEMORY_CAST (in_mem);
@@ -1723,7 +1720,7 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
 
     if (in_dmem->device != out_dmem->device) {
       GST_ERROR_OBJECT (self, "Different device");
-      goto out;
+      return FALSE;
     }
 
     in_subresource = gst_d3d11_memory_get_subresource_index (in_dmem);
@@ -1732,14 +1729,14 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
     if (!gst_memory_map (in_mem, &in_map,
             (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
       GST_ERROR_OBJECT (self, "Failed to map input memory");
-      goto out;
+      return FALSE;
     }
 
     if (!gst_memory_map (out_mem, &out_map,
             (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
       GST_ERROR_OBJECT (self, "Failed to map output memory");
       gst_memory_unmap (in_mem, &in_map);
-      goto out;
+      return FALSE;
     }
 
     in_tex = (ID3D11Texture2D *) in_map.data;
@@ -1751,11 +1748,7 @@ gst_d3d11_base_convert_crop_and_copy (GstD3D11BaseConvert * self,
     gst_memory_unmap (out_mem, &out_map);
   }
 
-  ret = TRUE;
-
-out:
-  gst_d3d11_device_unlock (device);
-  return ret;
+  return TRUE;
 }
 
 static GstFlowReturn

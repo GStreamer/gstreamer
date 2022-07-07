@@ -1264,13 +1264,12 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     return FALSE;
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   hr = context_handle->Map (const_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
       &map);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self,
         "Couldn't map constant buffer, hr: 0x%x", (guint) hr);
-    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
@@ -1281,7 +1280,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
       &map);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
@@ -1292,7 +1290,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't map index buffer, hr: 0x%x", (guint) hr);
     context_handle->Unmap (vertex_buffer.Get (), 0);
-    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
@@ -1337,7 +1334,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
-  gst_d3d11_device_unlock (device);
 
   /* holds vertex buffer for crop rect update */
   priv->vertex_buffer = vertex_buffer.Detach ();
@@ -2811,7 +2807,7 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
     return FALSE;
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   /* We don't want auto processing by driver */
   video_context1->VideoProcessorSetStreamAutoProcessingMode
       (processor.Get (), 0, FALSE);
@@ -2819,7 +2815,6 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
       0, (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type);
   video_context1->VideoProcessorSetOutputColorSpace1 (processor.Get (),
       (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type);
-  gst_d3d11_device_unlock (device);
 
   priv->video_device = video_device;
   video_device->AddRef ();
@@ -3795,18 +3790,14 @@ gboolean
 gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf)
 {
-  gboolean ret;
-
   g_return_val_if_fail (GST_IS_D3D11_CONVERTER (converter), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (in_buf), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (out_buf), FALSE);
 
-  gst_d3d11_device_lock (converter->device);
-  ret = gst_d3d11_converter_convert_buffer_internal (converter,
-      in_buf, out_buf);
-  gst_d3d11_device_unlock (converter->device);
+  GstD3D11DeviceLockGuard lk (converter->device);
 
-  return ret;
+  return gst_d3d11_converter_convert_buffer_internal (converter,
+      in_buf, out_buf);
 }
 
 gboolean

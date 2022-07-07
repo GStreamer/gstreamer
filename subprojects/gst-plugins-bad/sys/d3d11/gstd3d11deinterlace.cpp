@@ -1210,7 +1210,7 @@ gst_d3d11_deinterlace_set_caps (GstBaseTransform * trans,
   if (self->method == GST_D3D11_DEINTERLACE_METHOD_BLEND)
     output_rate = D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_HALF;
 
-  gst_d3d11_device_lock (self->device);
+  GstD3D11DeviceLockGuard lk (self->device);
   self->video_context->VideoProcessorSetStreamSourceRect (self->video_proc,
       0, TRUE, &rect);
   self->video_context->VideoProcessorSetStreamDestRect (self->video_proc,
@@ -1221,7 +1221,6 @@ gst_d3d11_deinterlace_set_caps (GstBaseTransform * trans,
       VideoProcessorSetStreamAutoProcessingMode (self->video_proc, 0, FALSE);
   self->video_context->VideoProcessorSetStreamOutputRate (self->video_proc, 0,
       output_rate, TRUE, NULL);
-  gst_d3d11_device_unlock (self->device);
 
   return TRUE;
 }
@@ -1755,13 +1754,12 @@ gst_d3d11_deinterlace_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     proc_stream.ppPastSurfaces = past_surfaces;
   }
 
-  gst_d3d11_device_lock (self->device);
+  GstD3D11DeviceLockGuard lk (self->device);
   self->video_context->VideoProcessorSetStreamFrameFormat (self->video_proc, 0,
       frame_foramt);
 
   hr = self->video_context->VideoProcessorBlt (self->video_proc, pov, 0,
       1, &proc_stream);
-  gst_d3d11_device_unlock (self->device);
 
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to perform deinterlacing");

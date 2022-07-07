@@ -383,8 +383,8 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   GstD3D11MemoryPrivate *priv = dmem->priv;
   GstMapFlags flags = info->flags;
   gpointer ret = NULL;
+  GstD3D11DeviceLockGuard lk (dmem->device);
 
-  gst_d3d11_device_lock (dmem->device);
   GST_D3D11_MEMORY_LOCK (dmem);
 
   memset (info->user_data, 0, sizeof (info->user_data));
@@ -448,7 +448,6 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
 
 out:
   GST_D3D11_MEMORY_UNLOCK (dmem);
-  gst_d3d11_device_unlock (dmem->device);
 
   return ret;
 }
@@ -469,8 +468,8 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 {
   GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
   GstD3D11MemoryPrivate *priv = dmem->priv;
+  GstD3D11DeviceLockGuard lk (dmem->device);
 
-  gst_d3d11_device_lock (dmem->device);
   GST_D3D11_MEMORY_LOCK (dmem);
 
   if ((info->flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
@@ -491,7 +490,6 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 
 out:
   GST_D3D11_MEMORY_UNLOCK (dmem);
-  gst_d3d11_device_unlock (dmem->device);
 }
 
 static GstMemory *
@@ -521,7 +519,8 @@ gst_d3d11_memory_update_size (GstMemory * mem)
     }
   }
 
-  gst_d3d11_device_lock (dmem->device);
+  GstD3D11DeviceLockGuard lk (dmem->device);
+
   if (!gst_d3d11_memory_map_cpu_access (dmem, D3D11_MAP_READ_WRITE)) {
     GST_ERROR_OBJECT (mem->allocator, "Couldn't map staging texture");
     return FALSE;
@@ -540,7 +539,6 @@ gst_d3d11_memory_update_size (GstMemory * mem)
 
 out:
   GST_D3D11_CLEAR_COM (priv->staging);
-  gst_d3d11_device_unlock (dmem->device);
 
   return ret;
 }
@@ -1326,10 +1324,10 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
     return priv->fallback_copy (mem, offset, size);
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
+
   if (!gst_memory_map (mem, &info,
           (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
-    gst_d3d11_device_unlock (device);
 
     GST_WARNING_OBJECT (alloc, "Failed to map memory, try fallback copy");
 
@@ -1362,7 +1360,6 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
   copy = gst_d3d11_allocator_alloc_internal (alloc, device, &dst_desc, nullptr);
   if (!copy) {
     gst_memory_unmap (mem, &info);
-    gst_d3d11_device_unlock (device);
 
     GST_WARNING_OBJECT (alloc,
         "Failed to allocate new d3d11 map memory, try fallback copy");
@@ -1375,7 +1372,6 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
       dmem->priv->texture, dmem->priv->subresource_index, NULL);
   copy->maxsize = copy->size = mem->maxsize;
   gst_memory_unmap (mem, &info);
-  gst_d3d11_device_unlock (device);
 
   /* newly allocated memory holds valid image data. We need download this
    * pixel data into staging memory for CPU access */
@@ -1541,9 +1537,8 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
     return mem;
 
   context_handle = gst_d3d11_device_get_device_context_handle (device);
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   clear_func (context_handle, rtv);
-  gst_d3d11_device_unlock (device);
 
   return mem;
 }

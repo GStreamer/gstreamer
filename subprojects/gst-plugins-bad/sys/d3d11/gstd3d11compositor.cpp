@@ -2046,29 +2046,26 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
   ID3D11RenderTargetView *rtv[GST_VIDEO_MAX_PLANES] = { nullptr, };
   GstVideoFrame target_frame;
   guint num_rtv = GST_VIDEO_INFO_N_PLANES (&vagg->info);
+  GstD3D11DeviceLockGuard lk (self->device);
 
   if (!self->downstream_supports_d3d11)
     target_buf = self->fallback_buf;
 
-  gst_d3d11_device_lock (self->device);
   if (!gst_video_frame_map (&target_frame, &vagg->info, target_buf,
           (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
     GST_ERROR_OBJECT (self, "Failed to map render target frame");
-    gst_d3d11_device_unlock (self->device);
     return GST_FLOW_ERROR;
   }
 
   if (!gst_d3d11_buffer_get_render_target_view (target_buf, rtv)) {
     GST_ERROR_OBJECT (self, "RTV is unavailable");
     gst_video_frame_unmap (&target_frame);
-    gst_d3d11_device_unlock (self->device);
     return GST_FLOW_ERROR;
   }
 
   if (!gst_d3d11_compositor_draw_background (self, rtv, num_rtv)) {
     GST_ERROR_OBJECT (self, "Couldn't draw background");
     gst_video_frame_unmap (&target_frame);
-    gst_d3d11_device_unlock (self->device);
     return GST_FLOW_ERROR;
   }
 
@@ -2098,7 +2095,6 @@ gst_d3d11_compositor_aggregate_frames (GstVideoAggregator * vagg,
     }
   }
   GST_OBJECT_UNLOCK (self);
-  gst_d3d11_device_unlock (self->device);
 
   if (ret != GST_FLOW_OK)
     return ret;

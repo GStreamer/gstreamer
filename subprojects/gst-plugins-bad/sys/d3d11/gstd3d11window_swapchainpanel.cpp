@@ -363,10 +363,9 @@ create_swap_chain_for_composition (GstD3D11WindowSwapChainPanel * self,
     return NULL;
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   hr = factory2->CreateSwapChainForComposition (device_handle,
       desc, output, &swap_chain);
-  gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_WARNING_OBJECT (self, "Cannot create SwapChain Object: 0x%x",

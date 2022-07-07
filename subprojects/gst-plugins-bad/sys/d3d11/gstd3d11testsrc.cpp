@@ -405,12 +405,11 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     return FALSE;
   }
 
-  gst_d3d11_device_lock (self->device);
+  GstD3D11DeviceLockGuard lk (self->device);
   hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
       &map);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map vertex buffer");
-    gst_d3d11_device_unlock (self->device);
     return FALSE;
   }
   vertex_data = (UvVertexData *) map.pData;
@@ -420,7 +419,6 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map index buffer");
     context_handle->Unmap (vertex_buffer.Get (), 0);
-    gst_d3d11_device_unlock (self->device);
     return FALSE;
   }
   indices = (WORD *) map.pData;
@@ -506,7 +504,6 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
-  gst_d3d11_device_unlock (self->device);
 
   quad = g_new0 (GstD3D11TestSrcQuad, 1);
   if (on_smpte)
@@ -602,12 +599,11 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
     return FALSE;
   }
 
-  gst_d3d11_device_lock (self->device);
+  GstD3D11DeviceLockGuard lk (self->device);
   hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
       &map);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map vertex buffer");
-    gst_d3d11_device_unlock (self->device);
     return FALSE;
   }
   vertex_data = (ColorVertexData *) map.pData;
@@ -617,7 +613,6 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map index buffer");
     context_handle->Unmap (vertex_buffer.Get (), 0);
-    gst_d3d11_device_unlock (self->device);
     return FALSE;
   }
   indices = (WORD *) map.pData;
@@ -849,7 +844,6 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
-  gst_d3d11_device_unlock (self->device);
 
   render->quad[0] = quad = g_new0 (GstD3D11TestSrcQuad, 1);
 
@@ -943,12 +937,11 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     return FALSE;
   }
 
-  gst_d3d11_device_lock (self->device);
+  GstD3D11DeviceLockGuard lk (self->device);
   hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
       &map);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map vertex buffer");
-    gst_d3d11_device_unlock (self->device);
     return FALSE;
   }
   vertex_data = (UvVertexData *) map.pData;
@@ -958,7 +951,6 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to map index buffer");
     context_handle->Unmap (vertex_buffer.Get (), 0);
-    gst_d3d11_device_unlock (self->device);
     return FALSE;
   }
   indices = (WORD *) map.pData;
@@ -1001,7 +993,6 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
-  gst_d3d11_device_unlock (self->device);
 
   render->quad[0] = quad = g_new0 (GstD3D11TestSrcQuad, 1);
 
@@ -1698,6 +1689,7 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   GstD3D11Memory *dmem;
   ID3D11RenderTargetView *pattern_rtv;
   gboolean convert_ret;
+  GstD3D11DeviceLockGuard lk (self->device);
 
   ret = GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc, offset, size, &buffer);
   if (ret != GST_FLOW_OK)
@@ -1720,11 +1712,9 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
 
   mem = gst_buffer_peek_memory (render_buffer, 0);
 
-  gst_d3d11_device_lock (self->device);
   if (!gst_memory_map (mem, &render_info,
           (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
     GST_ERROR_OBJECT (self, "Failed to map render buffer");
-    gst_d3d11_device_unlock (self->device);
     goto error;
   }
 
@@ -1733,7 +1723,6 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   if (!pattern_rtv) {
     GST_ERROR_OBJECT (self, "RTV is not available");
     gst_memory_unmap (mem, &render_info);
-    gst_d3d11_device_unlock (self->device);
     goto error;
   }
 
@@ -1741,7 +1730,6 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   gst_memory_unmap (mem, &render_info);
   convert_ret = gst_d3d11_converter_convert_buffer_unlocked (self->converter,
       render_buffer, convert_buffer);
-  gst_d3d11_device_unlock (self->device);
 
   if (!convert_ret) {
     GST_ERROR_OBJECT (self, "Failed to convert buffer");

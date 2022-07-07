@@ -390,10 +390,9 @@ create_swap_chain_for_core_window (GstD3D11WindowCoreWindow * self,
     return NULL;
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   hr = factory2->CreateSwapChainForCoreWindow (device_handle,
       (IUnknown *) core_window, desc, output, &swap_chain);
-  gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_WARNING_OBJECT (self, "Cannot create SwapChain Object: 0x%x",

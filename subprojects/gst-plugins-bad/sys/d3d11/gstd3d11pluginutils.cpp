@@ -948,10 +948,9 @@ gst_d3d11_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
     dst_subidx = gst_d3d11_memory_get_subresource_index (dst_dmem);
     src_subidx = gst_d3d11_memory_get_subresource_index (src_dmem);
 
-    gst_d3d11_device_lock (device);
+    GstD3D11DeviceLockGuard lk (device);
     device_context->CopySubresourceRegion (dst_texture, dst_subidx, 0, 0, 0,
         src_texture, src_subidx, &src_box);
-    gst_d3d11_device_unlock (device);
 
     gst_memory_unmap (src_mem, &src_info);
     gst_memory_unmap (dst_mem, &dst_info);

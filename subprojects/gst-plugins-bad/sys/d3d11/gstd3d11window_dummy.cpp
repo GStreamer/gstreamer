@@ -117,7 +117,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
   window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
-  gst_d3d11_device_lock (window->device);
+  GstD3D11DeviceLockGuard lk (window->device);
   window->converter = gst_d3d11_converter_new (window->device, &window->info,
       &window->render_info, &method);
 
@@ -125,7 +125,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     GST_ERROR_OBJECT (window, "Cannot create converter");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create converter");
-    goto error;
+    return FALSE;
   }
 
   window->compositor =
@@ -134,17 +134,10 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     GST_ERROR_OBJECT (window, "Cannot create overlay compositor");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create overlay compositor");
-    goto error;
+    return FALSE;
   }
 
-  gst_d3d11_device_unlock (window->device);
-
   return TRUE;
-
-error:
-  gst_d3d11_device_unlock (window->device);
-
-  return FALSE;
 }
 
 static void

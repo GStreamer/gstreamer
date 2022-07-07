@@ -888,9 +888,8 @@ create_swap_chain (GstD3D11WindowWin32 * self, GstD3D11Device * device,
   ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
   IDXGIFactory1 *factory = gst_d3d11_device_get_dxgi_factory_handle (device);
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   hr = factory->CreateSwapChain (device_handle, desc, &swap_chain);
-  gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_WARNING_OBJECT (self, "Cannot create SwapChain Object: 0x%x",
@@ -918,10 +917,9 @@ create_swap_chain_for_hwnd (GstD3D11WindowWin32 * self, GstD3D11Device * device,
     return NULL;
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   hr = factory2->CreateSwapChainForHwnd (device_handle, hwnd, desc,
       fullscreen_desc, output, &swap_chain);
-  gst_d3d11_device_unlock (device);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_WARNING_OBJECT (self, "Cannot create SwapChain Object: 0x%x",
@@ -1008,10 +1006,9 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
   }
 
   /* disable alt+enter here. It should be manually handled */
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   gst_d3d11_window_win32_disable_alt_enter (self,
       device, new_swapchain, desc.OutputWindow);
-  gst_d3d11_device_unlock (device);
 
   *swap_chain = new_swapchain;
 

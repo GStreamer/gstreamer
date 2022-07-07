@@ -254,13 +254,12 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     return nullptr;
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   hr = context_handle->Map (vertex_buffer.Get (),
       0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    gst_d3d11_device_unlock (device);
     return nullptr;
   }
 
@@ -310,7 +309,6 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   vertex_data[3].texture.v = 1.0f;
 
   context_handle->Unmap (vertex_buffer.Get (), 0);
-  gst_d3d11_device_unlock (device);
 
   overlay = g_new0 (GstD3D11CompositionOverlay, 1);
   overlay->overlay_rect = gst_video_overlay_rectangle_ref (overlay_rect);
@@ -441,13 +439,12 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
     return FALSE;
   }
 
-  gst_d3d11_device_lock (device);
+  GstD3D11DeviceLockGuard lk (device);
   hr = context_handle->Map (index_buffer.Get (),
       0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't map index buffer, hr: 0x%x", (guint) hr);
-    gst_d3d11_device_unlock (device);
     return FALSE;
   }
 
@@ -463,7 +460,6 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   indices[5] = 2;               /* top right */
 
   context_handle->Unmap (index_buffer.Get (), 0);
-  gst_d3d11_device_unlock (device);
 
   priv->ps = ps.Detach ();
   priv->vs = vs.Detach ();
@@ -623,16 +619,11 @@ gboolean
 gst_d3d11_overlay_compositor_draw (GstD3D11OverlayCompositor * compositor,
     ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
 {
-  gboolean ret = TRUE;
-
   g_return_val_if_fail (compositor != nullptr, FALSE);
   g_return_val_if_fail (rtv != nullptr, FALSE);
 
-  gst_d3d11_device_lock (compositor->device);
-  ret = gst_d3d11_overlay_compositor_draw_unlocked (compositor, rtv);
-  gst_d3d11_device_unlock (compositor->device);
-
-  return ret;
+  GstD3D11DeviceLockGuard lk (compositor->device);
+  return gst_d3d11_overlay_compositor_draw_unlocked (compositor, rtv);
 }
 
 gboolean

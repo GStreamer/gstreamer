@@ -19,12 +19,13 @@
 
 #pragma once
 
-#include <gst/gst.h>
-#include <gst/video/video.h>
-#include <gst/d3d11/gstd3d11_fwd.h>
 #include <d3d11_4.h>
 #include <dxgi1_6.h>
+
+#include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11format.h>
+#include <gst/d3d11/gstd3d11device.h>
 
 G_BEGIN_DECLS
 
@@ -112,3 +113,24 @@ static const GstD3D11Format _gst_d3d11_default_format_map[] = {
 
 G_END_DECLS
 
+#ifdef __cplusplus
+class GstD3D11DeviceLockGuard
+{
+public:
+  explicit GstD3D11DeviceLockGuard(GstD3D11Device * device) : device_ (device)
+  {
+    gst_d3d11_device_lock (device_);
+  }
+
+  ~GstD3D11DeviceLockGuard()
+  {
+    gst_d3d11_device_unlock (device_);
+  }
+
+  GstD3D11DeviceLockGuard(const GstD3D11DeviceLockGuard&) = delete;
+  GstD3D11DeviceLockGuard& operator=(const GstD3D11DeviceLockGuard&) = delete;
+
+private:
+    GstD3D11Device *device_;
+};
+#endif
