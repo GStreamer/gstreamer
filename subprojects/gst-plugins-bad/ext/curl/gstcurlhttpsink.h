@@ -51,6 +51,7 @@ struct _GstCurlHttpSink
   gchar *proxy_passwd;
   gboolean use_content_length;
   gchar *content_type;
+  gchar *discovered_content_type;
   gboolean use_proxy;
   gboolean proxy_headers_set;
   gboolean proxy_auth;

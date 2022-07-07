@@ -98,6 +98,7 @@ static void gst_curl_http_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_curl_http_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static gboolean gst_curl_http_sink_stop (GstBaseSink * bsink);
 static void gst_curl_http_sink_finalize (GObject * gobject);
 static gboolean gst_curl_http_sink_set_header_unlocked
     (GstCurlBaseSink * bcsink);
@@ -123,6 +124,7 @@ gst_curl_http_sink_class_init (GstCurlHttpSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstCurlBaseSinkClass *gstcurlbasesink_class = (GstCurlBaseSinkClass *) klass;
+  GstBaseSinkClass *gstbasesink_class = (GstBaseSinkClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_curl_http_sink_debug, "curlhttpsink", 0,
@@ -144,6 +146,7 @@ gst_curl_http_sink_class_init (GstCurlHttpSinkClass * klass)
   gstcurlbasesink_class->transfer_prepare_poll_wait =
       gst_curl_http_sink_transfer_prepare_poll_wait;
 
+  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_curl_http_sink_stop);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_curl_http_sink_finalize);
 
   gobject_class->set_property = gst_curl_http_sink_set_property;
@@ -171,7 +174,8 @@ gst_curl_http_sink_class_init (GstCurlHttpSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CONTENT_TYPE,
       g_param_spec_string ("content-type", "Content type",
-          "The mime type of the body of the request", NULL,
+          "Content Type to use for the Content-Type header. If not set, "
+          "detected mime type will be used", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
@@ -181,6 +185,7 @@ gst_curl_http_sink_init (GstCurlHttpSink * sink)
   sink->header_list = NULL;
   sink->use_content_length = DEFAULT_USE_CONTENT_LENGTH;
   sink->content_type = NULL;
+  sink->discovered_content_type = NULL;
 
   sink->proxy_port = DEFAULT_PROXY_PORT;
   sink->proxy_headers_set = FALSE;
@@ -200,6 +205,7 @@ gst_curl_http_sink_finalize (GObject * gobject)
   g_free (this->proxy_user);
   g_free (this->proxy_passwd);
   g_free (this->content_type);
+  g_free (this->discovered_content_type);
 
   if (this->header_list) {
     curl_slist_free_all (this->header_list);
@@ -319,6 +325,8 @@ gst_curl_http_sink_set_header_unlocked (GstCurlBaseSink * bcsink)
 {
   GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bcsink);
   gchar *tmp;
+  const gchar *used_content_type;
+
   CURLcode res;
 
   if (sink->header_list) {
@@ -352,9 +360,20 @@ gst_curl_http_sink_set_header_unlocked (GstCurlBaseSink * bcsink)
         "Transfer-Encoding: chunked");
   }
 
-  tmp = g_strdup_printf ("Content-Type: %s", sink->content_type);
-  sink->header_list = curl_slist_append (sink->header_list, tmp);
-  g_free (tmp);
+  if (sink->content_type)
+    used_content_type = sink->content_type;
+  else
+    used_content_type = sink->discovered_content_type;
+
+  if (used_content_type) {
+    tmp = g_strdup_printf ("Content-Type: %s", used_content_type);
+    sink->header_list = curl_slist_append (sink->header_list, tmp);
+    g_free (tmp);
+  } else {
+    GST_WARNING_OBJECT (sink,
+        "No content-type available to set in header, continue without it");
+  }
+
 
 set_headers:
 
@@ -474,16 +493,29 @@ gst_curl_http_sink_set_mime_type (GstCurlBaseSink * bcsink, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   mime_type = gst_structure_get_name (structure);
 
-  g_free (sink->content_type);
+  g_free (sink->discovered_content_type);
   if (!g_strcmp0 (mime_type, "multipart/form-data") &&
       gst_structure_has_field_typed (structure, "boundary", G_TYPE_STRING)) {
     const gchar *boundary;
 
     boundary = gst_structure_get_string (structure, "boundary");
-    sink->content_type = g_strconcat (mime_type, "; boundary=", boundary, NULL);
+    sink->discovered_content_type =
+        g_strconcat (mime_type, "; boundary=", boundary, NULL);
   } else {
-    sink->content_type = g_strdup (mime_type);
+    sink->discovered_content_type = g_strdup (mime_type);
   }
+}
+
+static gboolean
+gst_curl_http_sink_stop (GstBaseSink * bsink)
+{
+  gboolean ret;
+  GstCurlHttpSink *sink = GST_CURL_HTTP_SINK (bsink);
+  ret = GST_BASE_SINK_CLASS (parent_class)->stop (bsink);
+
+  g_clear_pointer (&sink->discovered_content_type, g_free);
+
+  return ret;
 }
 
 static gboolean
