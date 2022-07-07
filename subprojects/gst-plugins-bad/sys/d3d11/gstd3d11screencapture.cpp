@@ -1506,6 +1506,7 @@ struct _GstD3D11ScreenCapture
   guint cached_height;
 
   D3D11DesktopDupObject *dupl_obj;
+  IDXGIOutput *output;
 
   HMONITOR monitor_handle;
   RECT desktop_coordinates;
@@ -1657,6 +1658,8 @@ gst_d3d11_screen_capture_constructed (GObject * object)
 
   g_object_get (self->device, "adapter-luid", &self->adapter_luid, nullptr);
 
+  self->output = output.Detach ();
+
   ret = TRUE;
 
 out:
@@ -1689,6 +1692,8 @@ static void
 gst_d3d11_screen_capture_dispose (GObject * object)
 {
   GstD3D11ScreenCapture *self = GST_D3D11_SCREEN_CAPTURE (object);
+
+  GST_D3D11_CLEAR_COM (self->output);
 
   if (self->dupl_obj) {
     delete self->dupl_obj;
@@ -1828,6 +1833,33 @@ gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
   g_rec_mutex_unlock (&capture->lock);
 
   return TRUE;
+}
+
+gboolean
+gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
+    GstVideoColorimetry * colorimetry)
+{
+  DXGI_COLOR_SPACE_TYPE dxgi_cs;
+
+  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), FALSE);
+  g_return_val_if_fail (colorimetry != nullptr, FALSE);
+
+  dxgi_cs = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+
+  if (capture->output) {
+    ComPtr < IDXGIOutput6 > output;
+    HRESULT hr;
+    DXGI_OUTPUT_DESC1 desc;
+
+    hr = capture->output->QueryInterface (IID_PPV_ARGS (&output));
+    if (SUCCEEDED (hr))
+      hr = output->GetDesc1 (&desc);
+
+    if (SUCCEEDED (hr))
+      dxgi_cs = desc.ColorSpace;
+  }
+
+  return gst_d3d11_colorimetry_from_dxgi_color_space (dxgi_cs, colorimetry);
 }
 
 GstFlowReturn

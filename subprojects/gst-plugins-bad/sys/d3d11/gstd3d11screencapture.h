@@ -43,6 +43,9 @@ gboolean        gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * captu
                                                    guint * width,
                                                    guint * height);
 
+gboolean        gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
+                                                          GstVideoColorimetry * colorimetry);
+
 GstFlowReturn   gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
                                                      GstD3D11Device * device,
                                                      ID3D11Texture2D * texture,
