@@ -2104,6 +2104,8 @@ parse_debug_level (gchar * str, GstDebugLevel * level)
     } else {
       return FALSE;
     }
+  } else if (strcmp (str, "NONE") == 0) {
+    *level = GST_LEVEL_NONE;
   } else if (strcmp (str, "ERROR") == 0) {
     *level = GST_LEVEL_ERROR;
   } else if (strncmp (str, "WARN", 4) == 0) {
