@@ -2149,9 +2149,11 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
     gst_hls_media_playlist_unref (stream->playlist);
     stream->playlist = new_playlist;
   } else {
-    GST_DEBUG_OBJECT (stream, "Setting up initial playlist");
+    if (stream->is_variant) {
+      GST_DEBUG_OBJECT (stream, "Setting up initial playlist");
+      setup_initial_playlist (demux, new_playlist);
+    }
     stream->playlist = new_playlist;
-    setup_initial_playlist (demux, new_playlist);
   }
 
   if (stream->is_variant) {
