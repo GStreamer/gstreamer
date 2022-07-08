@@ -494,15 +494,18 @@ _push_out_one_buffer (GstVaBaseEnc * base)
 {
   GstVideoCodecFrame *frame_out;
   GstFlowReturn ret;
+  guint32 system_frame_number;
 
   frame_out = g_queue_pop_head (&base->output_list);
   gst_video_codec_frame_unref (frame_out);
+
+  system_frame_number = frame_out->system_frame_number;
 
   ret = _push_buffer_to_downstream (base, frame_out);
 
   if (ret != GST_FLOW_OK)
     GST_ERROR_OBJECT (base, "fails to push one buffer, "
-        "system_frame_number %d", frame_out->system_frame_number);
+        "system_frame_number %d", system_frame_number);
 
   return ret;
 }
