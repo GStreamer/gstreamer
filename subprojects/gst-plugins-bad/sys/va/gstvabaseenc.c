@@ -624,11 +624,12 @@ gst_va_base_enc_drain (GstVideoEncoder * venc)
     if (ret != GST_FLOW_OK)
       goto error_and_purge_all;
 
+    frame_enc = NULL;
+
     ret = _push_out_one_buffer (base);
     if (ret != GST_FLOW_OK)
       goto error_and_purge_all;
 
-    frame_enc = NULL;
     if (!base_class->reorder_frame (base, NULL, TRUE, &frame_enc)) {
       ret = GST_FLOW_ERROR;
       goto error_and_purge_all;
