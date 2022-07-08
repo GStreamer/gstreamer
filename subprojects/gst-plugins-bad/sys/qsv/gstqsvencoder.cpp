@@ -1060,9 +1060,8 @@ gst_qsv_encoder_init_encode_session (GstQsvEncoder * self)
     GST_INFO_OBJECT (self, "LowPower - OFF returned %d (%s)",
         QSV_STATUS_ARGS (status));
     param.mfx.LowPower = MFX_CODINGOPTION_UNKNOWN;
+    status = encoder_handle->Query (&param, &param);
   }
-
-  status = encoder_handle->Query (&param, &param);
   QSV_CHECK_STATUS (self, status, MFXVideoENCODE::Query);
 
   status = encoder_handle->QueryIOSurf (&param, &alloc_request);
