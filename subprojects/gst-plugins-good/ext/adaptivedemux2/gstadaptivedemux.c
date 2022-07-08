@@ -3157,6 +3157,9 @@ gst_adaptive_demux_manifest_update_cb (GstAdaptiveDemux * demux)
     }
   }
 
+  if (ret == GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC)
+    gst_adaptive_demux_handle_lost_sync (demux);
+
   if (schedule_again) {
     GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
 
