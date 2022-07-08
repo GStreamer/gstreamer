@@ -352,7 +352,12 @@ gst_gl_context_cocoa_swap_buffers (GstGLContext * context)
 static void
 gst_gl_context_cocoa_destroy_context (GstGLContext *context)
 {
-  /* FIXME: Need to release context and other things? */
+  GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
+
+  if (context_cocoa->priv->gl_context != NULL) {
+    CGLDestroyContext(context_cocoa->priv->gl_context);
+    context_cocoa->priv->gl_context = NULL;
+  }
 }
 
 static guintptr
