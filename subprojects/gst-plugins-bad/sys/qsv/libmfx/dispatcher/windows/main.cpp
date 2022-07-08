@@ -1,5 +1,5 @@
 /*############################################################################
-  # Copyright (C) 2012-2020 Intel Corporation
+  # Copyright (C) Intel Corporation
   #
   # SPDX-License-Identifier: MIT
   ############################################################################*/
@@ -534,6 +534,12 @@ mfxStatus MFXInitEx2(mfxVersion version,
             break;
     }
 
+    #ifdef ONEVPL_EXPERIMENTAL
+    // if GPUCopy is enabled via MFXSetConfigProperty(DeviceCopy), set corresponding
+    //   flag in mfxInitParam for legacy RTs
+    par.GPUCopy = vplParam.DeviceCopy;
+    #endif
+
     // also pass extBuf array (if any) to MFXInitEx for 1.x API
     par.NumExtParam = vplParam.NumExtParam;
     par.ExtParam    = (vplParam.NumExtParam ? vplParam.ExtParam : nullptr);
@@ -750,18 +756,77 @@ mfxStatus MFXJoinSession(mfxSession session, mfxSession child_session) {
 
 } // mfxStatus MFXJoinSession(mfxSession session, mfxSession child_session)
 
+static mfxStatus AllocateCloneHandle(MFX_DISP_HANDLE *parentHandle, MFX_DISP_HANDLE **cloneHandle) {
+    MFX_DISP_HANDLE *ph = parentHandle;
+    MFX_DISP_HANDLE *ch = nullptr;
+
+    if (!ph || !ph->hModule)
+        return MFX_ERR_NULL_PTR;
+
+    // get full path to the DLL of the parent session
+    wchar_t dllName[MFX::msdk_disp_path_len];
+    DWORD nSize = GetModuleFileNameW((HMODULE)(ph->hModule), dllName, msdk_disp_path_len);
+    if (nSize == 0 || nSize == msdk_disp_path_len)
+        return MFX_ERR_UNSUPPORTED;
+
+    try {
+        // requested version matches original session
+        ch = new MFX_DISP_HANDLE(ph->apiVersion);
+    }
+    catch (...) {
+        return MFX_ERR_MEMORY_ALLOC;
+    }
+
+    // initialization param structs are not used when bCloneSession == true
+    mfxInitParam par                = {};
+    mfxInitializationParam vplParam = {};
+
+    // initialization extBufs are not saved at this level
+    // the RT should save these when the parent session is created and may use
+    //   them when creating the cloned session
+    par.NumExtParam = 0;
+
+    // load the selected DLL, fill out function pointer tables and other state
+    mfxStatus sts = ch->LoadSelectedDLL(dllName,
+                                        ph->implType,
+                                        ph->impl,
+                                        ph->implInterface,
+                                        par,
+                                        vplParam,
+                                        true);
+
+    // unload the failed DLL
+    if (sts) {
+        ch->Close();
+        delete ch;
+        return MFX_ERR_UNSUPPORTED;
+    }
+    else {
+        ch->storageID = MFX::MFX_UNKNOWN_KEY;
+    }
+
+    *cloneHandle = ch;
+
+    return MFX_ERR_NONE;
+}
+
 mfxStatus MFXCloneSession(mfxSession session, mfxSession *clone) {
     mfxStatus mfxRes         = MFX_ERR_INVALID_HANDLE;
     MFX_DISP_HANDLE *pHandle = (MFX_DISP_HANDLE *)session;
     mfxVersion apiVersion;
     mfxIMPL impl;
 
+    if (!clone)
+        return MFX_ERR_NULL_PTR;
+    *clone = NULL;
+
     // check error(s)
     if (pHandle) {
         // initialize the clone session
-        // currently supported for 1.x API only
-        // for 2.x runtimes, need to use RT implementation (passthrough)
-        apiVersion = pHandle->apiVersion;
+        // for runtimes with 1.x API, call MFXInit followed by MFXJoinSession
+        // for runtimes with 2.x API, use RT implementation of MFXCloneSession (passthrough)
+        apiVersion = pHandle->actualApiVersion;
+
         if (apiVersion.Major == 1) {
             impl   = pHandle->impl | pHandle->implInterface;
             mfxRes = MFXInit(impl, &apiVersion, clone);
@@ -776,6 +841,43 @@ mfxStatus MFXCloneSession(mfxSession session, mfxSession *clone) {
                 *clone = NULL;
                 return mfxRes;
             }
+        }
+        else if (apiVersion.Major == 2) {
+            int tableIndex = eMFXCloneSession;
+            mfxFunctionPointer pFunc;
+            pFunc = pHandle->callTable[tableIndex];
+            if (!pFunc)
+                return MFX_ERR_UNSUPPORTED;
+
+            // allocate new dispatcher-level session object and initialize state
+            //   (function pointer tables, impl type, etc.)
+            MFX_DISP_HANDLE *cloneHandle;
+            mfxRes = AllocateCloneHandle(pHandle, &cloneHandle);
+            if (mfxRes != MFX_ERR_NONE)
+                return mfxRes;
+
+            // call RT implementation of MFXCloneSession
+            mfxSession cloneRT;
+            mfxRes = (*(mfxStatus(MFX_CDECL *)(mfxSession, mfxSession *))pFunc)(pHandle->session,
+                                                                                &cloneRT);
+
+            if (mfxRes != MFX_ERR_NONE || cloneRT == NULL) {
+                // RT call failed, delete cloned session
+                delete cloneHandle;
+                return MFX_ERR_UNSUPPORTED;
+            }
+            cloneHandle->session = cloneRT;
+
+            // get version of cloned session
+            mfxVersion cloneVersion = {};
+            mfxRes                  = MFXQueryVersion((mfxSession)cloneHandle, &cloneVersion);
+            if (mfxRes != MFX_ERR_NONE) {
+                MFXClose(cloneHandle);
+                return MFX_ERR_UNSUPPORTED;
+            }
+
+            cloneHandle->actualApiVersion = cloneVersion;
+            *clone                        = (mfxSession)cloneHandle;
         }
         else {
             return MFX_ERR_UNSUPPORTED;

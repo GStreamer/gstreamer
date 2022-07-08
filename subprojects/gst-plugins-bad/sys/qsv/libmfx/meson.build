@@ -24,9 +24,7 @@ vpl_sources = [
   'dispatcher/vpl/mfx_dispatcher_vpl.cpp',
 ]
 
-libmfx_extra_args = [
-  '-DONEVPL_EXPERIMENTAL'
-]
+libmfx_extra_args = []
 libmfx_extra_deps = []
 
 libmfx_sources = vpl_sources

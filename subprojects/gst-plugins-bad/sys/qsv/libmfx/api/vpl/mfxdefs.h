@@ -8,7 +8,7 @@
 #define __MFXDEFS_H__
 
 #define MFX_VERSION_MAJOR 2
-#define MFX_VERSION_MINOR 6
+#define MFX_VERSION_MINOR 7
 
 // MFX_VERSION - version of API that 'assumed' by build may be provided externally
 // if it omitted then latest stable API derived from Major.Minor is assumed

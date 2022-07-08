@@ -29,10 +29,70 @@ typedef struct {
 } mfxExtBuffer;
 MFX_PACK_END()
 
+#ifdef ONEVPL_EXPERIMENTAL
+
+#define MFX_REFINTERFACE_VERSION MFX_STRUCT_VERSION(1, 0)
+
+MFX_PACK_BEGIN_STRUCT_W_PTR()
+/*! The structure respresents reference counted interface structure.
+    The memory is allocated and released by the implementation.
+*/
+typedef struct mfxRefInterface {
+    mfxHDL              Context; /*!< The context of the container interface. User should not touch (change, set, null) this pointer. */
+    mfxStructVersion    Version; /*!< The version of the structure. */
+    /*! @brief
+    Increments the internal reference counter of the container. The container is not destroyed until the container 
+    is released using the mfxRefInterface::Release function.
+    mfxRefInterface::AddRef should be used each time a new link to the container is created 
+    (for example, copy structure) for proper  management.
+
+    @param[in]  ref_interface  Valid interface.
+
+    @return
+     MFX_ERR_NONE              If no error. \n
+     MFX_ERR_NULL_PTR          If interface is NULL. \n
+     MFX_ERR_INVALID_HANDLE    If mfxRefInterface->Context is invalid (for example NULL). \n
+     MFX_ERR_UNKNOWN           Any internal error.
+
+    */
+    mfxStatus (MFX_CDECL *AddRef)(struct mfxRefInterface*  ref_interface);
+   /*! @brief
+    Decrements the internal reference counter of the container. mfxRefInterface::Release should be called after using the
+    mfxRefInterface::AddRef function to add a container or when allocation logic requires it. 
+
+    @param[in]  ref_interface  Valid interface.
+
+    @return
+     MFX_ERR_NONE               If no error. \n
+     MFX_ERR_NULL_PTR           If interface is NULL. \n
+     MFX_ERR_INVALID_HANDLE     If mfxRefInterface->Context is invalid (for example NULL). \n
+     MFX_ERR_UNDEFINED_BEHAVIOR If Reference Counter of container is zero before call. \n
+     MFX_ERR_UNKNOWN            Any internal error.
+    */
+    mfxStatus (MFX_CDECL *Release)(struct mfxRefInterface*  ref_interface);
+    /*! @brief
+    Returns current reference counter of mfxRefInterface structure.
+
+    @param[in]   ref_interface  Valid interface.
+    @param[out]  counter  Sets counter to the current reference counter value.
+
+    @return
+     MFX_ERR_NONE               If no error. \n
+     MFX_ERR_NULL_PTR           If interface or counter is NULL. \n
+     MFX_ERR_INVALID_HANDLE     If mfxRefInterface->Context is invalid (for example NULL). \n
+     MFX_ERR_UNKNOWN            Any internal error.
+    */
+    mfxStatus (MFX_CDECL *GetRefCounter)(struct mfxRefInterface*  ref_interface, mfxU32* counter);
+    mfxHDL reserved[4];
+
+}mfxRefInterface;
+MFX_PACK_END()
+#endif
+
 /* Library initialization and deinitialization */
 /*!
     This enumerator itemizes implementation types.
-    The implementation type is a bit OR’ed value of the base type and any decorative flags.
+    The implementation type is a bit OR'ed value of the base type and any decorative flags.
     @note This enumerator is for legacy dispatcher compatibility only. The new dispatcher does not use it.
  */
 typedef mfxI32 mfxIMPL;
@@ -129,7 +189,8 @@ typedef struct _mfxSyncPoint *mfxSyncPoint;
 /*! The GPUCopy enumerator controls usage of GPU accelerated copying between video and system memory in the legacy Intel(r) Media SDK components. */
 enum {
     MFX_GPUCOPY_DEFAULT = 0, /*!< Use default mode for the legacy Intel(r) Media SDK implementation. */
-    MFX_GPUCOPY_ON      = 1, /*!< Enable GPU accelerated copying. */
+    MFX_GPUCOPY_ON      = 1, /*!< The hint to enable GPU accelerated copying when it is supported by the library. 
+                                  If the library doesn't support GPU accelerated copy the operation will be made by CPU. */
     MFX_GPUCOPY_OFF     = 2  /*!< Disable GPU accelerated copying. */
 };
 
@@ -141,7 +202,7 @@ MFX_PACK_BEGIN_STRUCT_W_PTR()
 typedef struct {
     mfxIMPL     Implementation;  /*!< Enumerator that indicates the desired legacy Intel(r) Media SDK implementation. */
     mfxVersion  Version;         /*!< Structure which specifies minimum library version or zero, if not specified. */
-    mfxU16      ExternalThreads; /*!< Desired threading mode. Value 0 means internal threading, 1 – external. */
+    mfxU16      ExternalThreads; /*!< Desired threading mode. Value 0 means internal threading, 1 - external. */
     /*! @internal :unnamed(union) @endinternal */
     union {
         struct {
@@ -156,7 +217,7 @@ typedef struct {
 MFX_PACK_END()
 
 enum {
-    MFX_EXTBUFF_THREADS_PARAM = MFX_MAKEFOURCC('T','H','D','P') /*!< mfxExtThreadsParam buffer ID */
+    MFX_EXTBUFF_THREADS_PARAM = MFX_MAKEFOURCC('T','H','D','P') /*!< mfxExtThreadsParam buffer ID. */
 };
 
 MFX_PACK_BEGIN_USUAL_STRUCT()
@@ -200,6 +261,7 @@ enum {
     MFX_PLATFORM_XEHP_SDV       = 45, /*!< Code name XeHP SDV. */
     MFX_PLATFORM_DG2            = 46, /*!< Code name DG2. */
     MFX_PLATFORM_ATS_M          = 46, /*!< Code name ATS-M, same media functionality as DG2. */
+    MFX_PLATFORM_ALDERLAKE_N    = 55, /*!< Code name Alder Lake N. */
     MFX_PLATFORM_KEEMBAY        = 50, /*!< Code name Keem Bay. */
 };
 
@@ -287,7 +349,12 @@ typedef struct {
         mfxU32 CodecID;                                  /*!< Encoder ID in FourCC format. */
         mfxU16 MaxcodecLevel;                            /*!< Maximum supported codec level. See the CodecProfile enumerator for possible values. */
         mfxU16 BiDirectionalPrediction;                  /*!< Indicates B-frames support. */
+#ifdef ONEVPL_EXPERIMENTAL
+        mfxU16 ReportedStats;                            /*!< Indicates what type of statistics can be reported: block/slice/tile/frame. */
+        mfxU16 reserved[6];                              /*!< Reserved for future use. */
+#else
         mfxU16 reserved[7];                              /*!< Reserved for future use. */
+#endif
         mfxU16 NumProfiles;                              /*!< Number of supported profiles. */
         /*! This structure represents the codec profile description. */
         struct encprofile {
@@ -514,10 +581,21 @@ MFX_PACK_BEGIN_STRUCT_W_PTR()
 */
 typedef struct {
     mfxAccelerationMode    AccelerationMode; /*!< Hardware acceleration stack to use. OS dependent parameter. Use VA for Linux*, DX* for Windows* or HDDL. */
+#ifdef ONEVPL_EXPERIMENTAL
+    mfxU16  DeviceCopy;                      /*!< Enables or disables device's accelerated copying between device and
+                                                  host. See the GPUCopy enumerator for a list of valid values.
+                                                  This parameter is the equivalent of mfxInitParam::GPUCopy. */
+    mfxU16  reserved[2];                     /*!< Reserved for future use. */
+#else
     mfxU16  reserved[3];                     /*!< Reserved for future use. */
-    mfxU16  NumExtParam;                     /*!< The number of extra configuration structures attached to this structure. */
-    mfxExtBuffer **ExtParam;                 /*!< Points to an array of pointers to the extra configuration structures; see the ExtendedBufferID enumerator for a list of extended configurations. */
-    mfxU32      VendorImplID;                /*!< Vendor specific number with given implementation ID. Represents the same field from mfxImplDescription. */
+#endif
+    mfxU16  NumExtParam;                     /*!< The number of extra configuration structures attached to this
+                                                  structure. */
+    mfxExtBuffer **ExtParam;                 /*!< Points to an array of pointers to the extra configuration structures;
+                                                  see the ExtendedBufferID enumerator for a list of extended
+                                                  configurations. */
+    mfxU32      VendorImplID;                /*!< Vendor specific number with given implementation ID. Represents
+                                                  the same field from mfxImplDescription. */
     mfxU32      reserved2[3];                /*!< Reserved for future use. */
 } mfxInitializationParam;
 MFX_PACK_END()

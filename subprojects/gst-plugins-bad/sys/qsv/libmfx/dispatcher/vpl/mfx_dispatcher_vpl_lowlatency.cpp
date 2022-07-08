@@ -29,8 +29,10 @@
 //  MSDK - load from Driver Store, look only for libmfxhw64.dll (32)
 //  MSDK - fallback, load from %windir%\system32 or %windir%\syswow64
 
-// remove this #ifdef if Linux path is implemented (avoid unused variable warnings)
-#if defined(_WIN32) || defined(_WIN64)
+// For Linux:
+//  VPL - load from system paths in LoadLibsFromMultipleDirs(), look only for libmfx-gen.so.1.2
+//  MSDK - load from system paths in LoadLibsFromMultipleDirs(), look only for libmfxhw64.so.1
+
 // library names
 static const CHAR_TYPE *libNameVPL  = LIB_ONEVPL;
 static const CHAR_TYPE *libNameMSDK = LIB_MSDK;
@@ -38,7 +40,6 @@ static const CHAR_TYPE *libNameMSDK = LIB_MSDK;
 // required exports
 static const char *reqFuncVPL  = "MFXInitialize";
 static const char *reqFuncMSDK = "MFXInitEx";
-#endif
 
 LibInfo *LoaderCtxVPL::AddSingleLibrary(STRING_TYPE libPath, LibType libType) {
     LibInfo *libInfo = nullptr;
@@ -58,8 +59,19 @@ LibInfo *LoaderCtxVPL::AddSingleLibrary(STRING_TYPE libPath, LibType libType) {
     if (!pProc)
         return nullptr;
 #else
-    // Linux - not supported
-    return nullptr;
+    // try to open library
+    void *hLib = dlopen(libPath.c_str(), RTLD_LOCAL | RTLD_NOW);
+    if (!hLib)
+        return nullptr;
+
+    // check for required entrypoint function
+    const char *reqFunc  = (libType == LibTypeVPL ? reqFuncVPL : reqFuncMSDK);
+    VPLFunctionPtr pProc = (VPLFunctionPtr)dlsym(hLib, reqFunc);
+    dlclose(hLib);
+
+    // entrypoint function missing - invalid library
+    if (!pProc)
+        return nullptr;
 #endif
 
     // create new LibInfo and add to list
@@ -184,6 +196,59 @@ mfxStatus LoaderCtxVPL::LoadLibsFromSystemDir(LibType libType) {
 #endif
 }
 
+mfxStatus LoaderCtxVPL::LoadLibsFromMultipleDirs(LibType libType) {
+#ifdef __linux__
+    // clang-format off
+
+    // standard paths for RT installation on Linux
+    std::vector<std::string> llSearchDir = {
+        "/usr/lib/x86_64-linux-gnu",
+        "/lib",
+        "/usr/lib",
+        "/lib64",
+        "/usr/lib64",
+    };
+
+    // clang-format on
+
+    const CHAR_TYPE *libName = nullptr;
+
+    if (libType == LibTypeVPL) {
+        libName = libNameVPL;
+    }
+    else if (libType == LibTypeMSDK) {
+        libName = libNameMSDK;
+
+        // additional search directories for MSDK
+        llSearchDir.push_back("/opt/intel/mediasdk/lib");
+        llSearchDir.push_back("/opt/intel/mediasdk/lib64");
+    }
+    else {
+        return MFX_ERR_UNSUPPORTED;
+    }
+
+    for (const auto &searchDir : llSearchDir) {
+        STRING_TYPE libPath;
+        libPath = searchDir;
+        libPath += "/";
+        libPath += libName;
+
+        // try to open library
+        LibInfo *libInfo = AddSingleLibrary(libPath, libType);
+
+        // if successful, add to list and return (stop at first success)
+        if (libInfo) {
+            m_libInfoList.push_back(libInfo);
+            return MFX_ERR_NONE;
+        }
+    }
+
+    return MFX_ERR_UNSUPPORTED;
+#else
+    return MFX_ERR_UNSUPPORTED;
+#endif
+}
+
 mfxStatus LoaderCtxVPL::LoadLibsLowLatency() {
     DISP_LOG_FUNCTION(&m_dispLog);
 
@@ -280,7 +345,53 @@ mfxStatus LoaderCtxVPL::LoadLibsLowLatency() {
 
     return MFX_ERR_UNSUPPORTED;
 #else
-    // Linux - not supported
+    mfxStatus sts = MFX_ERR_NONE;
+
+    // try loading VPL from Linux system directories
+    sts = LoadLibsFromMultipleDirs(LibTypeVPL);
+    if (sts == MFX_ERR_NONE) {
+        LibInfo *libInfo = m_libInfoList.back();
+
+        sts = LoadSingleLibrary(libInfo);
+        if (sts == MFX_ERR_NONE) {
+            LoadAPIExports(libInfo, LibTypeVPL);
+            m_bNeedLowLatencyQuery = false;
+            return MFX_ERR_NONE;
+        }
+        UnloadSingleLibrary(libInfo); // failed - unload and move to next location
+    }
+
+    // try loading MSDK from Linux system directories
+    sts = LoadLibsFromMultipleDirs(LibTypeMSDK);
+    if (sts == MFX_ERR_NONE) {
+        LibInfo *libInfo = m_libInfoList.back();
+
+        sts = LoadSingleLibrary(libInfo);
+        if (sts == MFX_ERR_NONE) {
+            mfxU32 numFunctions = LoadAPIExports(libInfo, LibTypeMSDK);
+
+            if (numFunctions == NumMSDKFunctions) {
+                mfxVariant var = {};
+                var.Type       = MFX_VARIANT_TYPE_PTR;
+                var.Data.Ptr   = (mfxHDL) "mfxhw64";
+
+                auto it = m_configCtxList.begin();
+
+                while (it != m_configCtxList.end()) {
+                    ConfigCtxVPL *config = (*it);
+                    sts = config->SetFilterProperty((const mfxU8 *)"mfxImplDescription.ImplName",
+                                                    var);
+                    if (sts != MFX_ERR_NONE)
+                        return MFX_ERR_UNSUPPORTED;
+                    it++;
+                }
+                m_bNeedLowLatencyQuery = false;
+                return MFX_ERR_NONE;
+            }
+        }
+        UnloadSingleLibrary(libInfo); // failed - unload and move to next location
+    }
+
     return MFX_ERR_UNSUPPORTED;
 #endif
 }

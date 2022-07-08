@@ -303,7 +303,7 @@ mfxStatus MFX_CDECL MFXMemory_GetSurfaceForDecode(mfxSession session, mfxFrameSu
    @brief
      Works in either of four modes:
 
-     @li If the @p in parameter is zero, the function returns the class configurability in the output structure. The output structure has a non-zero value in each field that the implementation can configure using Init.
+     @li If the @p in parameter is zero, the function returns the class configurability in the output structure. The application must set to zero the fields it wants to check for support. If the field is supported, function sets non-zero value to this field, otherwise it would be ignored. It indicates that the SDK implementation can configure the field with Init.
 
      @li If the @p in parameter is non-zero, the function checks the validity of the fields in the input structure. Then the function returns the corrected values in
      the output structure. If there is insufficient information to determine the validity or correction is impossible, the function zeroes the fields.

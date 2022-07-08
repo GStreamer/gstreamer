@@ -1,5 +1,5 @@
 /*############################################################################
-  # Copyright (C) 2012-2020 Intel Corporation
+  # Copyright (C) Intel Corporation
   #
   # SPDX-License-Identifier: MIT
   ############################################################################*/
@@ -122,7 +122,8 @@ struct MFX_DISP_HANDLE : public _mfxSession {
                               mfxIMPL impl,
                               mfxIMPL implInterface,
                               mfxInitParam &par,
-                              mfxInitializationParam &vplParam);
+                              mfxInitializationParam &vplParam,
+                              bool bCloneSession = false);
     // Unload the library's module
     mfxStatus UnLoadSelectedDLL(void);
 

@@ -1,5 +1,5 @@
 /*############################################################################
-  # Copyright (C) 2012-2020 Intel Corporation
+  # Copyright (C) Intel Corporation
   #
   # SPDX-License-Identifier: MIT
   ############################################################################*/
@@ -45,13 +45,12 @@ bool WinRegKey::Open(HKEY hRootKey, const wchar_t *pSubKey, REGSAM samDesired) {
     lRes = RegOpenKeyExW(hRootKey, pSubKey, 0, samDesired, &hTemp);
     if (ERROR_SUCCESS != lRes) {
         DISPATCHER_LOG_OPERATION(SetLastError(lRes));
-        TRACE_WINREG_ERROR(
-            "Opening key \"%s\\%S\" : RegOpenKeyExW()==0x%x\n",
-            (HKEY_LOCAL_MACHINE == hRootKey)
-                ? ("HKEY_LOCAL_MACHINE")
-                : (HKEY_CURRENT_USER == hRootKey) ? ("HKEY_CURRENT_USER") : "UNSUPPORTED_KEY",
-            pSubKey,
-            GetLastError());
+        TRACE_WINREG_ERROR("Opening key \"%s\\%S\" : RegOpenKeyExW()==0x%x\n",
+                           (HKEY_LOCAL_MACHINE == hRootKey)  ? ("HKEY_LOCAL_MACHINE")
+                           : (HKEY_CURRENT_USER == hRootKey) ? ("HKEY_CURRENT_USER")
+                                                             : "UNSUPPORTED_KEY",
+                           pSubKey,
+                           GetLastError());
         return false;
     }
 

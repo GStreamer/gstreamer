@@ -62,9 +62,9 @@ enum {
 MFX_PACK_BEGIN_USUAL_STRUCT()
 /*!
    Specifies quantization tables. The application may specify up to 4 quantization tables. The encoder assigns an ID to each table.
-   That ID is equal to the table index in the Qm array. Table “0” is used for encoding of the Y component, table “1” for the U component, and table “2”
+   That ID is equal to the table index in the Qm array. Table "0" is used for encoding of the Y component, table "1" for the U component, and table "2"
    for the V component. The application may specify fewer tables than the number of components in the image. If two tables are specified,
-   then table “1” is used for both U and V components. If only one table is specified then it is used for all components in the image.
+   then table "1" is used for both U and V components. If only one table is specified then it is used for all components in the image.
    The following table illustrates this behavior.
 
    @internal
@@ -94,8 +94,8 @@ MFX_PACK_END()
 MFX_PACK_BEGIN_USUAL_STRUCT()
 /*!
    Specifies Huffman tables. The application may specify up to 2 quantization table pairs for baseline process. The encoder
-   assigns an ID to each table. That ID is equal to the table index in the DCTables and ACTables arrays. Table “0” is used for encoding of the Y component and 
-   table “1” is used for encoding of the U and V component. The application may specify only one table, in which case the table will be used for all components in the image.
+   assigns an ID to each table. That ID is equal to the table index in the DCTables and ACTables arrays. Table "0" is used for encoding of the Y component and 
+   table "1" is used for encoding of the U and V component. The application may specify only one table, in which case the table will be used for all components in the image.
    The following table illustrates this behavior.
 
    @internal

@@ -21,7 +21,10 @@ ConfigCtxVPL::ConfigCtxVPL()
           m_implLicense(),
           m_implKeywords(),
           m_deviceIdStr(),
-          m_implFunctionName() {
+          m_implFunctionName(),
+          m_extDevLUID8U(),
+          m_extDevNameStr(),
+          m_extBuf() {
     // initially set Type = unset (invalid)
     // if valid property string and value are passed in,
     //   this will be updated
@@ -77,6 +80,7 @@ enum PropIdx {
     ePropEnc_CodecID,
     ePropEnc_MaxcodecLevel,
     ePropEnc_BiDirectionalPrediction,
+    ePropEnc_ReportedStats,
     ePropEnc_Profile,
     ePropEnc_MemHandleType,
     ePropEnc_Width,
@@ -92,10 +96,25 @@ enum PropIdx {
     ePropVPP_InFormat,
     ePropVPP_OutFormat,
 
+    // settable config properties for mfxExtendedDeviceId
+    ePropExtDev_VendorID,
+    ePropExtDev_DeviceID,
+    ePropExtDev_PCIDomain,
+    ePropExtDev_PCIBus,
+    ePropExtDev_PCIDevice,
+    ePropExtDev_PCIFunction,
+    ePropExtDev_DeviceLUID,
+    ePropExtDev_LUIDDeviceNodeMask,
+    ePropExtDev_DRMRenderNodeNum,
+    ePropExtDev_DRMPrimaryNodeNum,
+    ePropExtDev_DeviceName,
+
     // special properties not part of description struct
     ePropSpecial_HandleType,
     ePropSpecial_Handle,
     ePropSpecial_NumThread,
+    ePropSpecial_DeviceCopy,
+    ePropSpecial_ExtBuffer,
     ePropSpecial_DXGIAdapterIndex,
 
     // functions which must report as implemented
@@ -138,6 +157,7 @@ static const PropVariant PropIdxTab[] = {
     { "ePropEnc_CodecID",                   MFX_VARIANT_TYPE_U32 },
     { "ePropEnc_MaxcodecLevel",             MFX_VARIANT_TYPE_U16 },
     { "ePropEnc_BiDirectionalPrediction",   MFX_VARIANT_TYPE_U16 },
+    { "ePropEnc_ReportedStats",             MFX_VARIANT_TYPE_U16 },
     { "ePropEnc_Profile",                   MFX_VARIANT_TYPE_U32 },
     { "ePropEnc_MemHandleType",             MFX_VARIANT_TYPE_U32 },
     { "ePropEnc_Width",                     MFX_VARIANT_TYPE_PTR },
@@ -152,9 +172,23 @@ static const PropVariant PropIdxTab[] = {
     { "ePropVPP_InFormat",                  MFX_VARIANT_TYPE_U32 },
     { "ePropVPP_OutFormat",                 MFX_VARIANT_TYPE_U32 },
 
+    { "ePropExtDev_VendorID",               MFX_VARIANT_TYPE_U16 },
+    { "ePropExtDev_DeviceID",               MFX_VARIANT_TYPE_U16 },
+    { "ePropExtDev_PCIDomain",              MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_PCIBus",                 MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_PCIDevice",              MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_PCIFunction",            MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_DeviceLUID",             MFX_VARIANT_TYPE_PTR },
+    { "ePropExtDev_LUIDDeviceNodeMask",     MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_DRMRenderNodeNum",       MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_DRMPrimaryNodeNum",      MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_DeviceName",             MFX_VARIANT_TYPE_PTR },
+
     { "ePropSpecial_HandleType",            MFX_VARIANT_TYPE_U32 },
     { "ePropSpecial_Handle",                MFX_VARIANT_TYPE_PTR },
     { "ePropSpecial_NumThread",             MFX_VARIANT_TYPE_U32 },
+    { "ePropSpecial_DeviceCopy",            MFX_VARIANT_TYPE_U16 },
+    { "ePropSpecial_ExtBuffer",             MFX_VARIANT_TYPE_PTR },
     { "ePropSpecial_DXGIAdapterIndex",      MFX_VARIANT_TYPE_U32 },
 
     { "ePropFunc_FunctionName",             MFX_VARIANT_TYPE_PTR },
@@ -186,6 +220,11 @@ mfxStatus ConfigCtxVPL::ValidateAndSetProp(mfxI32 idx, mfxVariant value) {
             m_propVar[idx].Type = MFX_VARIANT_TYPE_UNSET;
             return MFX_ERR_NULL_PTR;
         }
+
+        // local ptr for copying from array
+        mfxU8 *pU8 = (mfxU8 *)(value.Data.Ptr);
+
+        mfxExtBuffer *extBuf = nullptr;
 
         // save copy of data passed by pointer, into object of the appropriate type
         switch (idx) {
@@ -235,6 +274,24 @@ mfxStatus ConfigCtxVPL::ValidateAndSetProp(mfxI32 idx, mfxVariant value) {
             case ePropFunc_FunctionName:
                 // no need to save Data.Ptr - parsed in main loop
                 m_implFunctionName = (char *)(value.Data.Ptr);
+                break;
+            case ePropExtDev_DeviceLUID:
+                for (mfxU32 j = 0; j < 8; j++)
+                    m_extDevLUID8U[j] = pU8[j];
+                m_propVar[idx].Data.Ptr = &(m_extDevLUID8U[0]);
+                break;
+            case ePropExtDev_DeviceName:
+                m_extDevNameStr         = (char *)(value.Data.Ptr);
+                m_propVar[idx].Data.Ptr = &(m_extDevNameStr);
+                break;
+            case ePropSpecial_ExtBuffer:
+                // Don't assume anything about the lifetime of input mfxExtBuffer in Data.Ptr
+                // Instead, we copy the full extBuf into a vector owned by ConfixCtxVPL and will pass this to MFXInitialize()
+                // if app calls MFXSetConfigFilterProperty('ExtBuffer') again with a different extBuf, the old copy will be overwritten
+                SetExtBuf((mfxExtBuffer *)(value.Data.Ptr));
+
+                if (GetExtBuf(&extBuf))
+                    m_propVar[idx].Data.Ptr = extBuf;
                 break;
             default:
                 break;
@@ -318,6 +375,11 @@ mfxStatus ConfigCtxVPL::SetFilterPropertyEnc(std::list<std::string> &propParsedS
     else if (nextProp == "BiDirectionalPrediction") {
         return ValidateAndSetProp(ePropEnc_BiDirectionalPrediction, value);
     }
+#ifdef ONEVPL_EXPERIMENTAL
+    else if (nextProp == "ReportedStats") {
+        return ValidateAndSetProp(ePropEnc_ReportedStats, value);
+    }
+#endif
     else if (nextProp != "encprofile") {
         return MFX_ERR_NOT_FOUND;
     }
@@ -431,6 +493,14 @@ mfxStatus ConfigCtxVPL::SetFilterProperty(const mfxU8 *name, mfxVariant value) {
     else if (nextProp == "NumThread") {
         return ValidateAndSetProp(ePropSpecial_NumThread, value);
     }
+#ifdef ONEVPL_EXPERIMENTAL
+    else if (nextProp == "DeviceCopy") {
+        return ValidateAndSetProp(ePropSpecial_DeviceCopy, value);
+    }
+#endif
+    else if (nextProp == "ExtBuffer") {
+        return ValidateAndSetProp(ePropSpecial_ExtBuffer, value);
+    }
     else if (nextProp == "DXGIAdapterIndex") {
 #if defined(_WIN32) || defined(_WIN64)
         // this property is only valid on Windows
@@ -449,6 +519,47 @@ mfxStatus ConfigCtxVPL::SetFilterProperty(const mfxU8 *name, mfxVariant value) {
         }
         return MFX_ERR_NOT_FOUND;
     }
+
+#ifdef ONEVPL_EXPERIMENTAL
+    // extended device ID properties must begin with mfxExtendedDeviceId
+    if (nextProp == "mfxExtendedDeviceId") {
+        nextProp = GetNextProp(propParsedString);
+        if (nextProp == "VendorID") {
+            return ValidateAndSetProp(ePropExtDev_VendorID, value);
+        }
+        else if (nextProp == "DeviceID") {
+            return ValidateAndSetProp(ePropExtDev_DeviceID, value);
+        }
+        else if (nextProp == "PCIDomain") {
+            return ValidateAndSetProp(ePropExtDev_PCIDomain, value);
+        }
+        else if (nextProp == "PCIBus") {
+            return ValidateAndSetProp(ePropExtDev_PCIBus, value);
+        }
+        else if (nextProp == "PCIDevice") {
+            return ValidateAndSetProp(ePropExtDev_PCIDevice, value);
+        }
+        else if (nextProp == "PCIFunction") {
+            return ValidateAndSetProp(ePropExtDev_PCIFunction, value);
+        }
+        else if (nextProp == "DeviceLUID") {
+            return ValidateAndSetProp(ePropExtDev_DeviceLUID, value);
+        }
+        else if (nextProp == "LUIDDeviceNodeMask") {
+            return ValidateAndSetProp(ePropExtDev_LUIDDeviceNodeMask, value);
+        }
+        else if (nextProp == "DRMRenderNodeNum") {
+            return ValidateAndSetProp(ePropExtDev_DRMRenderNodeNum, value);
+        }
+        else if (nextProp == "DRMPrimaryNodeNum") {
+            return ValidateAndSetProp(ePropExtDev_DRMPrimaryNodeNum, value);
+        }
+        else if (nextProp == "DeviceName") {
+            return ValidateAndSetProp(ePropExtDev_DeviceName, value);
+        }
+        return MFX_ERR_NOT_FOUND;
+    }
+#endif
 
     // standard properties must begin with "mfxImplDescription"
     if (nextProp != "mfxImplDescription") {
@@ -595,6 +706,17 @@ mfxStatus ConfigCtxVPL::GetFlatDescriptionsEnc(const mfxImplDescription *libImpl
     EncProfile *encProfile = nullptr;
     EncMemDesc *encMemDesc = nullptr;
 
+#ifdef ONEVPL_EXPERIMENTAL
+    // ReportedStats was added with API 2.7 under ONEVPL_EXPERIMENTAL.
+    // When it is promoted to production API, MFX_ENCODERDESCRIPTION_VERSION should be bumped up
+    //   and we should check mfxEncoderDescription.Version instead to know whether ReportedStats
+    //   is a valid field (taken from reserved[] space).
+    // Until then, best we can do is to check the overall API version for this impl.
+    mfxVersion reqApiVersionReportedStats = {};
+    reqApiVersionReportedStats.Major      = 2;
+    reqApiVersionReportedStats.Minor      = 7;
+#endif
+
     while (codecIdx < libImplDesc->Enc.NumCodecs) {
         EncConfig ec = {};
 
@@ -602,6 +724,14 @@ mfxStatus ConfigCtxVPL::GetFlatDescriptionsEnc(const mfxImplDescription *libImpl
         ec.CodecID                 = encCodec->CodecID;
         ec.MaxcodecLevel           = encCodec->MaxcodecLevel;
         ec.BiDirectionalPrediction = encCodec->BiDirectionalPrediction;
+
+#ifdef ONEVPL_EXPERIMENTAL
+        // see comment above about checking mfxEncoderDescription version once this is moved out
+        //   of experimental API
+        if (libImplDesc->ApiVersion.Version >= reqApiVersionReportedStats.Version)
+            ec.ReportedStats = encCodec->ReportedStats;
+#endif
+
         CHECK_IDX(codecIdx, profileIdx, encCodec->NumProfiles);
 
         encProfile = &(encCodec->Profiles[profileIdx]);
@@ -872,6 +1002,14 @@ mfxStatus ConfigCtxVPL::CheckPropsEnc(const mfxVariant cfgPropsAll[],
                 isCompatible = false;
         }
 
+        if (cfgPropsAll[ePropEnc_ReportedStats].Type != MFX_VARIANT_TYPE_UNSET) {
+            mfxU16 requestedStats = cfgPropsAll[ePropEnc_ReportedStats].Data.U16;
+
+            // ReportedStats is a logical OR of one or more flags: MFX_ENCODESTATS_LEVEL_xxx
+            if ((requestedStats & ec.ReportedStats) != requestedStats)
+                isCompatible = false;
+        }
+
         if (isCompatible == true)
             return MFX_ERR_NONE;
 
@@ -926,6 +1064,81 @@ mfxStatus ConfigCtxVPL::CheckPropsVPP(const mfxVariant cfgPropsAll[],
     return MFX_ERR_UNSUPPORTED;
 }
 
+#ifdef ONEVPL_EXPERIMENTAL
+mfxStatus ConfigCtxVPL::CheckPropsExtDevID(const mfxVariant cfgPropsAll[],
+                                           const mfxExtendedDeviceId *libImplExtDevID) {
+    bool isCompatible = true;
+
+    // check if this implementation includes
+    //   all of the required extended device ID properties
+    CHECK_PROP(ePropExtDev_VendorID, U16, libImplExtDevID->VendorID);
+    CHECK_PROP(ePropExtDev_DeviceID, U16, libImplExtDevID->DeviceID);
+
+    CHECK_PROP(ePropExtDev_PCIDomain, U32, libImplExtDevID->PCIDomain);
+    CHECK_PROP(ePropExtDev_PCIBus, U32, libImplExtDevID->PCIBus);
+    CHECK_PROP(ePropExtDev_PCIDevice, U32, libImplExtDevID->PCIDevice);
+    CHECK_PROP(ePropExtDev_PCIFunction, U32, libImplExtDevID->PCIFunction);
+
+    // check DeviceLUID, require LUIDValid == true
+    if (cfgPropsAll[ePropExtDev_DeviceLUID].Type != MFX_VARIANT_TYPE_UNSET) {
+        // LUID filter is passed as ptr to 8-byte array, which was saved in local copy
+        mfxU8 *pU8 = (mfxU8 *)(cfgPropsAll[ePropExtDev_DeviceLUID].Data.Ptr);
+        if (libImplExtDevID->LUIDValid) {
+            for (mfxU32 j = 0; j < 8; j++) {
+                if (pU8[j] != libImplExtDevID->DeviceLUID[j])
+                    isCompatible = false;
+            }
+        }
+        else {
+            isCompatible = false;
+        }
+    }
+
+    // check LUIDDeviceNodeMask, require LUIDValid == true
+    if (cfgPropsAll[ePropExtDev_LUIDDeviceNodeMask].Type != MFX_VARIANT_TYPE_UNSET) {
+        if (libImplExtDevID->LUIDValid) {
+            CHECK_PROP(ePropExtDev_LUIDDeviceNodeMask, U32, libImplExtDevID->LUIDDeviceNodeMask);
+        }
+        else {
+            isCompatible = false;
+        }
+    }
+
+    // check DRMRenderNodeNum
+    if (cfgPropsAll[ePropExtDev_DRMRenderNodeNum].Type != MFX_VARIANT_TYPE_UNSET) {
+        if (libImplExtDevID->DRMRenderNodeNum != 0) {
+            CHECK_PROP(ePropExtDev_DRMRenderNodeNum, U32, libImplExtDevID->DRMRenderNodeNum);
+        }
+        else {
+            isCompatible = false;
+        }
+    }
+
+    // check DRMPrimaryNodeNum
+    if (cfgPropsAll[ePropExtDev_DRMPrimaryNodeNum].Type != MFX_VARIANT_TYPE_UNSET) {
+        if (libImplExtDevID->DRMRenderNodeNum != 0x7FFFFFFF) {
+            CHECK_PROP(ePropExtDev_DRMPrimaryNodeNum, U32, libImplExtDevID->DRMPrimaryNodeNum);
+        }
+        else {
+            isCompatible = false;
+        }
+    }
+
+    // check string: DeviceName (string match)
+    if (cfgPropsAll[ePropExtDev_DeviceName].Type != MFX_VARIANT_TYPE_UNSET) {
+        std::string filtName = *(std::string *)(cfgPropsAll[ePropExtDev_DeviceName].Data.Ptr);
+        std::string implName = libImplExtDevID->DeviceName;
+        if (filtName != implName)
+            isCompatible = false;
+    }
+
+    if (isCompatible == true)
+        return MFX_ERR_NONE;
+
+    return MFX_ERR_UNSUPPORTED;
+}
+#endif
+
 // implString = string from implDesc - one or more comma-separated tokens
 // filtString = string user is looking for - one or more comma-separated tokens
 // we parse filtString into tokens, then check if all of them are present in implString
@@ -952,13 +1165,17 @@ mfxStatus ConfigCtxVPL::CheckPropString(const mfxChar *implString, const std::st
 
 mfxStatus ConfigCtxVPL::ValidateConfig(const mfxImplDescription *libImplDesc,
                                        const mfxImplementedFunctions *libImplFuncs,
+#ifdef ONEVPL_EXPERIMENTAL
+                                       const mfxExtendedDeviceId *libImplExtDevID,
+#endif
                                        std::list<ConfigCtxVPL *> configCtxList,
                                        LibType libType,
                                        SpecialConfig *specialConfig) {
     mfxU32 idx;
-    bool decRequested = false;
-    bool encRequested = false;
-    bool vppRequested = false;
+    bool decRequested    = false;
+    bool encRequested    = false;
+    bool vppRequested    = false;
+    bool extDevRequested = false;
 
     bool bImplValid = true;
 
@@ -983,6 +1200,10 @@ mfxStatus ConfigCtxVPL::ValidateConfig(const mfxImplDescription *libImplDesc,
     mfxVersion reqVersion = {};
     bool bVerSetMajor     = false;
     bool bVerSetMinor     = false;
+
+    // clear list of extension buffers
+    specialConfig->bIsSet_ExtBuffer = false;
+    specialConfig->ExtBuffers.clear();
 
     // iterate through all filters and populate cfgPropsAll
     auto it = configCtxList.begin();
@@ -1017,6 +1238,8 @@ mfxStatus ConfigCtxVPL::ValidateConfig(const mfxImplDescription *libImplDesc,
                 encRequested = true;
             else if (idx >= ePropVPP_FilterFourCC && idx <= ePropVPP_OutFormat)
                 vppRequested = true;
+            else if (idx >= ePropExtDev_VendorID && idx <= ePropExtDev_DeviceName)
+                extDevRequested = true;
         }
 
         // if already marked invalid, no need to check props again
@@ -1025,6 +1248,17 @@ mfxStatus ConfigCtxVPL::ValidateConfig(const mfxImplDescription *libImplDesc,
         if (bImplValid == true) {
             if (CheckPropsGeneral(cfgPropsAll, libImplDesc))
                 bImplValid = false;
+
+#ifdef ONEVPL_EXPERIMENTAL
+            if (extDevRequested) {
+                // fail if extDevID is not available (null) or if prop is not supported
+                if (!libImplExtDevID || CheckPropsExtDevID(cfgPropsAll, libImplExtDevID))
+                    bImplValid = false;
+            }
+#else
+            if (extDevRequested)
+                bImplValid = false;
+#endif
 
             // MSDK RT compatibility mode (1.x) does not provide Dec/Enc/VPP caps
             // ignore these filters if set (do not use them to _exclude_ the library)
@@ -1058,6 +1292,11 @@ mfxStatus ConfigCtxVPL::ValidateConfig(const mfxImplDescription *libImplDesc,
             specialConfig->bIsSet_NumThread = true;
         }
 
+        if (cfgPropsAll[ePropSpecial_DeviceCopy].Type != MFX_VARIANT_TYPE_UNSET) {
+            specialConfig->DeviceCopy        = cfgPropsAll[ePropSpecial_DeviceCopy].Data.U16;
+            specialConfig->bIsSet_DeviceCopy = true;
+        }
+
         if (cfgPropsAll[ePropSpecial_DXGIAdapterIndex].Type != MFX_VARIANT_TYPE_UNSET) {
             specialConfig->dxgiAdapterIdx =
                 (mfxU32)cfgPropsAll[ePropSpecial_DXGIAdapterIndex].Data.U32;
@@ -1068,6 +1307,12 @@ mfxStatus ConfigCtxVPL::ValidateConfig(const mfxImplDescription *libImplDesc,
             specialConfig->accelerationMode =
                 (mfxAccelerationMode)cfgPropsAll[ePropMain_AccelerationMode].Data.U32;
             specialConfig->bIsSet_accelerationMode = true;
+        }
+
+        if (cfgPropsAll[ePropSpecial_ExtBuffer].Type != MFX_VARIANT_TYPE_UNSET) {
+            specialConfig->ExtBuffers.push_back(
+                (mfxExtBuffer *)cfgPropsAll[ePropSpecial_ExtBuffer].Data.Ptr);
+            specialConfig->bIsSet_ExtBuffer = true;
         }
 
         // special handling for API version which may be passed either as single U32 (Version)
@@ -1142,6 +1387,11 @@ bool ConfigCtxVPL::CheckLowLatencyConfig(std::list<ConfigCtxVPL *> configCtxList
     // for purposes of low-latency enabling, we check the last (most recent) value of each filter
     //   property, in the case that multiple mfxConfig objects were created
     // preferred usage is just to create one mfxConfig and set all of the required props in it
+    // Exception: there can be more than one ExtBuffer attached via multiple mfxConfig objects (API >= 2.7)
+
+    // clear list of extension buffers
+    specialConfig->bIsSet_ExtBuffer = false;
+    specialConfig->ExtBuffers.clear();
 
     auto it = configCtxList.begin();
     while (it != configCtxList.end()) {
@@ -1155,6 +1405,12 @@ bool ConfigCtxVPL::CheckLowLatencyConfig(std::list<ConfigCtxVPL *> configCtxList
 
             cfgPropsAll[idx].Type = config->m_propVar[idx].Type;
             cfgPropsAll[idx].Data = config->m_propVar[idx].Data;
+
+            if (idx == ePropSpecial_ExtBuffer) {
+                specialConfig->ExtBuffers.push_back(
+                    (mfxExtBuffer *)cfgPropsAll[ePropSpecial_ExtBuffer].Data.Ptr);
+                specialConfig->bIsSet_ExtBuffer = true;
+            }
         }
     }
 
@@ -1226,6 +1482,17 @@ bool ConfigCtxVPL::CheckLowLatencyConfig(std::list<ConfigCtxVPL *> configCtxList
                     specialConfig->NumThread        = cfgPropsAll[ePropSpecial_NumThread].Data.U32;
                     specialConfig->bIsSet_NumThread = true;
                 }
+                break;
+
+            case ePropSpecial_DeviceCopy:
+                if (cfgPropsAll[ePropSpecial_DeviceCopy].Type != MFX_VARIANT_TYPE_UNSET) {
+                    specialConfig->DeviceCopy = cfgPropsAll[ePropSpecial_DeviceCopy].Data.U16;
+                    specialConfig->bIsSet_DeviceCopy = true;
+                }
+                break;
+
+            case ePropSpecial_ExtBuffer:
+                // extBufs were already pushed into the overall list, above
                 break;
 
             // will be passed to RT in MFXInitialize(), if unset will be 0

@@ -24,4 +24,8 @@
 
 #include "mfxsurfacepool.h" 
 
+#ifdef ONEVPL_EXPERIMENTAL
+#include "mfxencodestats.h"
+#endif
+
 #endif /* __MFXDEFS_H__ */

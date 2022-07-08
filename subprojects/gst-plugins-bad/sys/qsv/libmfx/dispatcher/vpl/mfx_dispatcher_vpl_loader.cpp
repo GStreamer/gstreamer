@@ -61,6 +61,9 @@ LoaderCtxVPL::LoaderCtxVPL()
     m_specialConfig.bIsSet_accelerationMode = false;
     m_specialConfig.bIsSet_ApiVersion       = false;
     m_specialConfig.bIsSet_dxgiAdapterIdx   = false;
+    m_specialConfig.bIsSet_NumThread        = false;
+    m_specialConfig.bIsSet_DeviceCopy       = false;
+    m_specialConfig.bIsSet_ExtBuffer        = false;
 
     // initial state
     m_bLowLatency           = false;
@@ -96,7 +99,7 @@ mfxStatus LoaderCtxVPL::FullLoadAndQuery() {
     // may be more than one implementation per library
     sts = QueryLibraryCaps();
     if (MFX_ERR_NONE != sts)
-        return sts;
+        return MFX_ERR_NOT_FOUND;
 
     m_bNeedFullQuery        = false;
     m_bNeedUpdateValidImpls = true;
@@ -139,11 +142,12 @@ mfxU32 LoaderCtxVPL::ParseEnvSearchPaths(const CHAR_TYPE *envVarName,
     return (mfxU32)searchDirs.size();
 }
 
-#define NUM_LIB_PREFIXES 2
+#define NUM_LIB_PREFIXES 3
 
 mfxStatus LoaderCtxVPL::SearchDirForLibs(STRING_TYPE searchDir,
                                          std::list<LibInfo *> &libInfoList,
-                                         mfxU32 priority) {
+                                         mfxU32 priority,
+                                         bool bLoadVPLOnly) {
     // okay to call with empty searchDir
     if (searchDir.empty())
         return MFX_ERR_NONE;
@@ -152,15 +156,30 @@ mfxStatus LoaderCtxVPL::SearchDirForLibs(STRING_TYPE searchDir,
     HANDLE hTestFile = nullptr;
     WIN32_FIND_DATAW testFileData;
     DWORD err;
-    STRING_TYPE testFileName[NUM_LIB_PREFIXES] = { searchDir + MAKE_STRING("/libvpl*.dll"),
-                                                   searchDir + MAKE_STRING("/libmfx*.dll") };
+    STRING_TYPE testFileName[NUM_LIB_PREFIXES] = {
+        searchDir + MAKE_STRING("/libvpl*.dll"),
+    #if defined _M_IX86
+        // 32-bit GPU RT names
+        searchDir + MAKE_STRING("/libmfx32-gen.dll"),
+        searchDir + MAKE_STRING("/libmfxhw32.dll")
+    #else
+        // 64-bit GPU RT names
+        searchDir + MAKE_STRING("/libmfx64-gen.dll"),
+        searchDir + MAKE_STRING("/libmfxhw64.dll")
+    #endif
+    };
 
     CHAR_TYPE currDir[MAX_VPL_SEARCH_PATH] = L"";
     if (GetCurrentDirectoryW(MAX_VPL_SEARCH_PATH, currDir))
         SetCurrentDirectoryW(searchDir.c_str());
 
+    // skip search for MSDK runtime (last entry) if bLoadVPLOnly is set
+    mfxU32 numLibPrefixes = NUM_LIB_PREFIXES;
+    if (bLoadVPLOnly)
+        numLibPrefixes--;
+
     // iterate over all candidate files in directory
-    for (mfxU32 i = 0; i < NUM_LIB_PREFIXES; i++) {
+    for (mfxU32 i = 0; i < numLibPrefixes; i++) {
         hTestFile = FindFirstFileW(testFileName[i].c_str(), &testFileData);
         if (hTestFile != INVALID_HANDLE_VALUE) {
             do {
@@ -223,7 +242,8 @@ mfxStatus LoaderCtxVPL::SearchDirForLibs(STRING_TYPE searchDir,
             if (strstr(currFile->d_name, ".so")) {
                 // library names must begin with "libvpl*" or "libmfx*"
                 if ((strstr(currFile->d_name, "libvpl") != currFile->d_name) &&
-                    (strstr(currFile->d_name, "libmfx") != currFile->d_name))
+                    (strcmp(currFile->d_name, "libmfx-gen.so.1.2") != 0) &&
+                    (strcmp(currFile->d_name, "libmfxhw64.so.1") != 0))
                     continue;
 
                 // special case: do not include dispatcher itself (libmfx.so*, libvpl.so*) or tracer library
@@ -448,7 +468,7 @@ mfxStatus LoaderCtxVPL::BuildListOfCandidateLibs() {
     it = searchDirList.begin();
     while (it != searchDirList.end()) {
         STRING_TYPE nextDir = (*it);
-        sts                 = SearchDirForLibs(nextDir, m_libInfoList, LIB_PRIORITY_01);
+        sts                 = SearchDirForLibs(nextDir, m_libInfoList, LIB_PRIORITY_01, true);
         it++;
     }
 
@@ -745,6 +765,10 @@ mfxStatus LoaderCtxVPL::UnloadAllLibraries() {
         it++;
     }
 
+    m_implInfoList.clear();
+    m_libInfoList.clear();
+    m_implIdxNext = 0;
+
     return MFX_ERR_NONE;
 }
 
@@ -1037,6 +1061,9 @@ mfxStatus LoaderCtxVPL::QueryLibraryCaps() {
             for (mfxU32 i = 0; i < maxImplMSDK; i++) {
                 mfxImplDescription *implDesc       = nullptr;
                 mfxImplementedFunctions *implFuncs = nullptr;
+#ifdef ONEVPL_EXPERIMENTAL
+                mfxExtendedDeviceId *implExtDeviceID = nullptr;
+#endif
 
                 LoaderCtxMSDK *msdkCtx = &(libInfo->msdkCtx[i]);
                 if (m_bLowLatency == false) {
@@ -1057,6 +1084,16 @@ mfxStatus LoaderCtxVPL::QueryLibraryCaps() {
                         // this adapter (i) is not supported
                         continue;
                     }
+
+#ifdef ONEVPL_EXPERIMENTAL
+                    sts = LoaderCtxMSDK::QueryExtDeviceID(&(msdkCtx->m_extDeviceID),
+                                                          i,
+                                                          msdkCtx->m_deviceID,
+                                                          msdkCtx->m_luid);
+                    if (sts == MFX_ERR_NONE)
+                        implExtDeviceID = &(msdkCtx->m_extDeviceID);
+
+#endif
                 }
                 else {
                     // unknown API - unable to create session on any adapter
@@ -1079,6 +1116,10 @@ mfxStatus LoaderCtxVPL::QueryLibraryCaps() {
                 // implemented function description, if available
                 implInfo->implFuncs = implFuncs;
 
+#ifdef ONEVPL_EXPERIMENTAL
+                // extended device ID description, if available
+                implInfo->implExtDeviceID = implExtDeviceID;
+#endif
                 // fill out mfxInitializationParam for use in CreateSession (MFXInitialize path)
                 memset(&(implInfo->vplParam), 0, sizeof(mfxInitializationParam));
 
@@ -1121,11 +1162,6 @@ mfxStatus LoaderCtxVPL::QueryLibraryCaps() {
 
                 // update number of valid MSDK adapters
                 numImplMSDK++;
-
-#ifdef __linux__
-                // currently only one adapter on Linux (avoid multiple copies)
-                break;
-#endif
             }
 
             if (numImplMSDK == 0) {
@@ -1139,6 +1175,9 @@ mfxStatus LoaderCtxVPL::QueryLibraryCaps() {
     }
 
     if (m_bLowLatency == false && !m_implInfoList.empty()) {
+        bool bD3D9Requested = (m_specialConfig.bIsSet_accelerationMode &&
+                               m_specialConfig.accelerationMode == MFX_ACCEL_MODE_VIA_D3D9);
+
         std::list<ImplInfo *>::iterator it2 = m_implInfoList.begin();
         while (it2 != m_implInfoList.end()) {
             ImplInfo *implInfo = (*it2);
@@ -1150,21 +1189,38 @@ mfxStatus LoaderCtxVPL::QueryLibraryCaps() {
                 implInfo->adapterIdx = adapterIdx;
             }
 
-            // per spec: if both VPL (HW) and MSDK are installed on the same system, only load
-            //   the VPL library (mark MSDK as invalid)
+            // per spec: if both VPL (HW) and MSDK are installed for the same accelerator, only load
+            //   the VPL implementation (mark MSDK as invalid)
+            // exception: if application requests D3D9, load MSDK if available
             if (implInfo->libInfo->libType == LibTypeMSDK) {
+                mfxImplDescription *msdkImplDesc = (mfxImplDescription *)(implInfo->implDesc);
+                std::string msdkDeviceID         = (msdkImplDesc ? msdkImplDesc->Dev.DeviceID : "");
+
+                // check if VPL impl also exists for this deviceID
                 auto vplIdx = std::find_if(
                     m_implInfoList.begin(),
                     m_implInfoList.end(),
 
-                    [](const ImplInfo *t) {
+                    [&](const ImplInfo *t) {
                         mfxImplDescription *implDesc = (mfxImplDescription *)(t->implDesc);
 
+                        bool bMatchingDeviceID = false;
+                        if (implDesc) {
+                            std::string vplDeviceID = implDesc->Dev.DeviceID;
+                            if (vplDeviceID == msdkDeviceID)
+                                bMatchingDeviceID = true;
+                        }
+
                         return (t->libInfo->libType == LibTypeVPL && implDesc != nullptr &&
-                                implDesc->Impl == MFX_IMPL_TYPE_HARDWARE);
+                                implDesc->Impl == MFX_IMPL_TYPE_HARDWARE && bMatchingDeviceID);
                     });
 
-                if (vplIdx != m_implInfoList.end())
+                if (vplIdx != m_implInfoList.end() && bD3D9Requested == false)
+                    implInfo->validImplIdx = -1;
+
+                // avoid loading VPL RT via compatibility entrypoint
+                if (msdkImplDesc && msdkImplDesc->ApiVersion.Major == 1 &&
+                    msdkImplDesc->ApiVersion.Minor == 255)
                     implInfo->validImplIdx = -1;
             }
 
@@ -1335,10 +1391,7 @@ mfxStatus LoaderCtxVPL::ReleaseImpl(mfxHDL idesc) {
 mfxStatus LoaderCtxVPL::UpdateLowLatency() {
     m_bLowLatency = false;
 
-#if defined(_WIN32) || defined(_WIN64)
-    // only supported on Windows currently
     m_bLowLatency = ConfigCtxVPL::CheckLowLatencyConfig(m_configCtxList, &m_specialConfig);
-#endif
 
     return MFX_ERR_NONE;
 }
@@ -1365,6 +1418,9 @@ mfxStatus LoaderCtxVPL::UpdateValidImplList(void) {
         // compare caps from this library vs. config filters
         sts = ConfigCtxVPL::ValidateConfig((mfxImplDescription *)implInfo->implDesc,
                                            (mfxImplementedFunctions *)implInfo->implFuncs,
+#ifdef ONEVPL_EXPERIMENTAL
+                                           (mfxExtendedDeviceId *)implInfo->implExtDeviceID,
+#endif
                                            m_configCtxList,
                                            implInfo->libInfo->libType,
                                            &m_specialConfig);
@@ -1512,6 +1568,11 @@ mfxStatus LoaderCtxVPL::CreateSession(mfxU32 idx, mfxSession *session) {
             if (m_specialConfig.bIsSet_accelerationMode)
                 implInfo->vplParam.AccelerationMode = m_specialConfig.accelerationMode;
 
+#ifdef ONEVPL_EXPERIMENTAL
+            if (m_specialConfig.bIsSet_DeviceCopy)
+                implInfo->vplParam.DeviceCopy = m_specialConfig.DeviceCopy;
+#endif
+
             // in low latency mode there was no implementation filtering, so check here
             //   for minimum API version
             if (m_bLowLatency && m_specialConfig.bIsSet_ApiVersion) {
@@ -1550,6 +1611,13 @@ mfxStatus LoaderCtxVPL::CreateSession(mfxU32 idx, mfxSession *session) {
                 extThreadsParam.NumThread       = m_specialConfig.NumThread;
 
                 extBufs.push_back((mfxExtBuffer *)&extThreadsParam);
+            }
+
+            // add extBufs provided via mfxConfig filter property "ExtBuffer"
+            if (m_specialConfig.bIsSet_ExtBuffer) {
+                for (auto extBuf : m_specialConfig.ExtBuffers) {
+                    extBufs.push_back((mfxExtBuffer *)extBuf);
+                }
             }
 
             // attach vector of extBufs to mfxInitializationParam

@@ -1,5 +1,5 @@
 /*############################################################################
-  # Copyright (C) 2012-2020 Intel Corporation
+  # Copyright (C) Intel Corporation
   #
   # SPDX-License-Identifier: MIT
   ############################################################################*/
@@ -294,9 +294,9 @@ IMsgHandler *ETWHandlerFactory::GetSink(const wchar_t *sguid) {
 
 ETWHandlerFactory::~ETWHandlerFactory() {
     for
-        each(_storage_type::value_type val in m_storage) {
-            delete val.second;
-        }
+        each (_storage_type::value_type val in m_storage) {
+        delete val.second;
+    }
 }
 
 class EventRegistrator : public IMsgHandler {

@@ -170,7 +170,7 @@ enum PropRanges {
 
 // must match eProp_TotalProps, is checked with static_assert in _config.cpp
 //   (should throw error at compile time if !=)
-#define NUM_TOTAL_FILTER_PROPS 41
+#define NUM_TOTAL_FILTER_PROPS 55
 
 // typedef child structures for easier reading
 typedef struct mfxDecoderDescription::decoder DecCodec;
@@ -202,6 +202,7 @@ struct EncConfig {
     mfxU32 CodecID;
     mfxU16 MaxcodecLevel;
     mfxU16 BiDirectionalPrediction;
+    mfxU16 ReportedStats;
     mfxU32 Profile;
     mfxResourceType MemHandleType;
     mfxRange32U Width;
@@ -240,6 +241,12 @@ struct SpecialConfig {
 
     bool bIsSet_NumThread;
     mfxU32 NumThread;
+
+    bool bIsSet_DeviceCopy;
+    mfxU16 DeviceCopy;
+
+    bool bIsSet_ExtBuffer;
+    std::vector<mfxExtBuffer *> ExtBuffers;
 };
 
 // config class implementation
@@ -257,6 +264,9 @@ public:
     // compare library caps vs. set of configuration filters
     static mfxStatus ValidateConfig(const mfxImplDescription *libImplDesc,
                                     const mfxImplementedFunctions *libImplFuncs,
+#ifdef ONEVPL_EXPERIMENTAL
+                                    const mfxExtendedDeviceId *libImplExtDevID,
+#endif
                                     std::list<ConfigCtxVPL *> configCtxList,
                                     LibType libType,
                                     SpecialConfig *specialConfig);
@@ -306,6 +316,12 @@ private:
 
     static mfxStatus CheckPropString(const mfxChar *implString, const std::string filtString);
 
+#ifdef ONEVPL_EXPERIMENTAL
+    static mfxStatus CheckPropsExtDevID(const mfxVariant cfgPropsAll[],
+                                        const mfxExtendedDeviceId *libImplExtDevID);
+
+#endif
+
     mfxVariant m_propVar[NUM_TOTAL_FILTER_PROPS];
 
     // special containers for properties which are passed by pointer
@@ -316,6 +332,40 @@ private:
     std::string m_implKeywords;
     std::string m_deviceIdStr;
     std::string m_implFunctionName;
+
+    mfxU8 m_extDevLUID8U[8];
+    std::string m_extDevNameStr;
+
+    std::vector<mfxU8> m_extBuf;
+
+    __inline bool SetExtBuf(mfxExtBuffer *extBuf) {
+        if (!extBuf)
+            return false;
+
+        mfxU32 BufferSz = extBuf->BufferSz;
+        if (BufferSz > 0) {
+            m_extBuf.resize(BufferSz);
+            std::copy((mfxU8 *)extBuf, (mfxU8 *)extBuf + BufferSz, m_extBuf.begin());
+            return true;
+        }
+        return false;
+    }
+
+    __inline bool GetExtBuf(mfxExtBuffer **extBuf) {
+        if (!extBuf)
+            return false;
+
+        *extBuf = nullptr;
+        if (!m_extBuf.empty()) {
+            *extBuf = (mfxExtBuffer *)m_extBuf.data();
+            return true;
+        }
+        return false;
+    }
+
+    __inline void ClearExtBuf() {
+        m_extBuf.clear();
+    }
 };
 
 // MSDK compatibility loader implementation
@@ -334,9 +384,23 @@ public:
 
     static mfxStatus QueryAPIVersion(STRING_TYPE libNameFull, mfxVersion *msdkVersion);
 
+#ifdef ONEVPL_EXPERIMENTAL
+    static mfxStatus QueryExtDeviceID(mfxExtendedDeviceId *extDeviceID,
+                                      mfxU32 adapterID,
+                                      mfxU16 deviceID,
+                                      mfxU64 luid);
+#endif
+
     // required by MFXCreateSession
     mfxIMPL m_msdkAdapter;
     mfxIMPL m_msdkAdapterD3D9;
+
+    mfxU16 m_deviceID;
+    mfxU64 m_luid;
+
+#ifdef ONEVPL_EXPERIMENTAL
+    mfxExtendedDeviceId m_extDeviceID;
+#endif
 
 private:
     // session management
@@ -350,6 +414,7 @@ private:
     static mfxAccelerationMode CvtAccelType(mfxIMPL implType, mfxIMPL implMethod);
     static mfxStatus GetDefaultAccelType(mfxU32 adapterID, mfxIMPL *implDefault, mfxU64 *luid);
     static mfxStatus CheckD3D9Support(mfxU64 luid, STRING_TYPE libNameFull, mfxIMPL *implD3D9);
+    static mfxStatus GetRenderNodeDescription(mfxU32 adapterID, mfxU32 &vendorID, mfxU16 &deviceID);
 
     // internal state variables
     STRING_TYPE m_libNameFull;
@@ -514,7 +579,8 @@ private:
 
     mfxStatus SearchDirForLibs(STRING_TYPE searchDir,
                                std::list<LibInfo *> &libInfoList,
-                               mfxU32 priority);
+                               mfxU32 priority,
+                               bool bLoadVPLOnly = false);
 
     mfxU32 LoadAPIExports(LibInfo *libInfo, LibType libType);
     mfxStatus ValidateAPIExports(VPLFunctionPtr *vplFuncTable, mfxVersion reportedVersion);
@@ -525,6 +591,7 @@ private:
                                       const std::vector<DXGI1DeviceInfo> &adapterInfo,
                                       LibType libType);
     mfxStatus LoadLibsFromSystemDir(LibType libType);
+    mfxStatus LoadLibsFromMultipleDirs(LibType libType);
 
     LibInfo *AddSingleLibrary(STRING_TYPE libPath, LibType libType);
     mfxStatus QuerySessionLowLatency(LibInfo *libInfo, mfxU32 adapterID, mfxVersion *ver);

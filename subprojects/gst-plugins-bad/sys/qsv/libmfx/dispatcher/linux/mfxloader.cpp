@@ -1,5 +1,5 @@
 /*############################################################################
-  # Copyright (C) 2017-2020 Intel Corporation
+  # Copyright (C) Intel Corporation
   #
   # SPDX-License-Identifier: MIT
   ############################################################################*/
@@ -120,7 +120,8 @@ public:
     mfxStatus Init(mfxInitParam &par,
                    mfxInitializationParam &vplParam,
                    mfxU16 *pDeviceID,
-                   char *dllName);
+                   char *dllName,
+                   bool bCloneSession = false);
     mfxStatus Close();
 
     inline void *getFunction(Function func) const {
@@ -143,6 +144,23 @@ public:
         return m_version;
     }
 
+    inline void *getHandle() const {
+        return m_dlh.get();
+    }
+
+    inline const char *getLibPath() const {
+        return m_libToLoad.c_str();
+    }
+
+    // special operations to set session pointer and version from MFXCloneSession()
+    inline void setSession(const mfxSession session) {
+        m_session = session;
+    }
+
+    inline void setVersion(const mfxVersion version) {
+        m_version = version;
+    }
+
 private:
     std::shared_ptr<void> m_dlh;
     mfxVersion m_version{};
@@ -150,6 +168,7 @@ private:
     mfxSession m_session = nullptr;
     void *m_table[eFunctionsNum]{};
     void *m_table2[eFunctionsNum2]{};
+    std::string m_libToLoad;
 };
 
 std::shared_ptr<void> make_dlopen(const char *filename, int flags) {
@@ -162,7 +181,8 @@ std::shared_ptr<void> make_dlopen(const char *filename, int flags) {
 mfxStatus LoaderCtx::Init(mfxInitParam &par,
                           mfxInitializationParam &vplParam,
                           mfxU16 *pDeviceID,
-                          char *dllName) {
+                          char *dllName,
+                          bool bCloneSession) {
     mfxStatus mfx_res = MFX_ERR_NONE;
 
     std::vector<std::string> libs;
@@ -191,8 +211,9 @@ mfxStatus LoaderCtx::Init(mfxInitParam &par,
 
     if (dllName) {
         // attempt to load only this DLL, fail if unsuccessful
-        std::string libToLoad(dllName);
-        libs.emplace_back(libToLoad);
+        // this may also be used later by MFXCloneSession()
+        m_libToLoad = dllName;
+        libs.emplace_back(m_libToLoad);
     }
     else {
         mfxIMPL implType = MFX_IMPL_BASETYPE(par.Implementation);
@@ -250,6 +271,12 @@ mfxStatus LoaderCtx::Init(mfxInitParam &par,
 
                 if (wrong_version) {
                     mfx_res = MFX_ERR_UNSUPPORTED;
+                    break;
+                }
+
+                if (bCloneSession == true) {
+                    // success - exit loop since caller will create session with MFXCloneSession()
+                    mfx_res = MFX_ERR_NONE;
                     break;
                 }
 
@@ -365,6 +392,12 @@ mfxStatus MFXInitEx2(mfxVersion version,
     // also pass extBuf array (if any) to MFXInitEx for 1.x API
     par.NumExtParam = vplParam.NumExtParam;
     par.ExtParam    = (vplParam.NumExtParam ? vplParam.ExtParam : nullptr);
+
+#ifdef ONEVPL_EXPERIMENTAL
+    // if GPUCopy is enabled via MFXSetConfigProperty(DeviceCopy), set corresponding
+    //   flag in mfxInitParam for legacy RTs
+    par.GPUCopy = vplParam.DeviceCopy;
+#endif
 
     try {
         std::unique_ptr<MFX::LoaderCtx> loader;
@@ -642,16 +675,49 @@ mfxStatus MFXJoinSession(mfxSession session, mfxSession child_session) {
     return (*proc)(loader->getSession(), child_loader->getSession());
 }
 
+static mfxStatus AllocateCloneLoader(MFX::LoaderCtx *parentLoader, MFX::LoaderCtx **cloneLoader) {
+    // initialization param structs are not used when bCloneSession == true
+    mfxInitParam par                = {};
+    mfxInitializationParam vplParam = {};
+    mfxU16 deviceID                 = 0;
+
+    // initialization extBufs are not saved at this level
+    // the RT should save these when the parent session is created and may use
+    //   them when creating the cloned session
+    par.NumExtParam = 0;
+
+    try {
+        std::unique_ptr<MFX::LoaderCtx> cl;
+
+        cl.reset(new MFX::LoaderCtx{});
+
+        mfxStatus mfx_res =
+            cl->Init(par, vplParam, &deviceID, (char *)parentLoader->getLibPath(), true);
+        if (MFX_ERR_NONE == mfx_res) {
+            *cloneLoader = cl.release();
+        }
+        else {
+            *cloneLoader = nullptr;
+        }
+
+        return mfx_res;
+    }
+    catch (...) {
+        return MFX_ERR_MEMORY_ALLOC;
+    }
+}
+
 mfxStatus MFXCloneSession(mfxSession session, mfxSession *clone) {
-    if (!session)
+    if (!session || !clone)
         return MFX_ERR_INVALID_HANDLE;
 
     MFX::LoaderCtx *loader = (MFX::LoaderCtx *)session;
     mfxVersion version     = loader->getVersion();
+    *clone                 = nullptr;
 
     // initialize the clone session
-    // currently supported for 1.x API only
-    // for 2.x runtimes, need to use RT implementation (passthrough)
+    // for runtimes with 1.x API, call MFXInit followed by MFXJoinSession
+    // for runtimes with 2.x API, use RT implementation of MFXCloneSession (passthrough)
     if (version.Major == 1) {
         mfxStatus mfx_res = MFXInit(loader->getImpl(), &version, clone);
         if (MFX_ERR_NONE != mfx_res) {
@@ -665,6 +731,45 @@ mfxStatus MFXCloneSession(mfxSession session, mfxSession *clone) {
             *clone = nullptr;
             return mfx_res;
         }
+    }
+    else if (version.Major == 2) {
+        MFX::LoaderCtx *loader = (MFX::LoaderCtx *)session;
+
+        // MFXCloneSession not included in function pointer search during init
+        // for bwd-compat, check for it here and fail gracefully if missing
+        void *libHandle = loader->getHandle();
+        auto proc       = (decltype(MFXCloneSession) *)(dlsym(libHandle, "MFXCloneSession"));
+        if (!proc)
+            return MFX_ERR_UNSUPPORTED;
+
+        // allocate new dispatcher-level session object and copy
+        //   state from parent session (function pointer tables, impl type, etc.)
+        MFX::LoaderCtx *cloneLoader;
+        mfxStatus mfx_res = AllocateCloneLoader(loader, &cloneLoader);
+        if (mfx_res != MFX_ERR_NONE)
+            return mfx_res;
+
+        // call RT implementation of MFXCloneSession
+        mfxSession cloneRT;
+        mfx_res = (*proc)(loader->getSession(), &cloneRT);
+
+        if (mfx_res != MFX_ERR_NONE || cloneRT == NULL) {
+            // RT call failed, delete cloned loader (no valid session created)
+            delete cloneLoader;
+            return MFX_ERR_UNSUPPORTED;
+        }
+        cloneLoader->setSession(cloneRT);
+
+        // get version of cloned session
+        mfxVersion cloneVersion = {};
+        mfx_res                 = MFXQueryVersion((mfxSession)cloneLoader, &cloneVersion);
+        cloneLoader->setVersion(cloneVersion);
+        if (mfx_res != MFX_ERR_NONE) {
+            MFXClose((mfxSession)cloneLoader);
+            return mfx_res;
+        }
+
+        *clone = (mfxSession)cloneLoader;
     }
     else {
         return MFX_ERR_UNSUPPORTED;

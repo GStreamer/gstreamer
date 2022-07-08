@@ -1,5 +1,5 @@
 /*############################################################################
-  # Copyright (C) 2012-2020 Intel Corporation
+  # Copyright (C) Intel Corporation
   #
   # SPDX-License-Identifier: MIT
   ############################################################################*/
@@ -69,7 +69,8 @@ mfxStatus MFX_DISP_HANDLE::LoadSelectedDLL(const wchar_t *pPath,
                                            mfxIMPL reqImpl,
                                            mfxIMPL reqImplInterface,
                                            mfxInitParam &par,
-                                           mfxInitializationParam &vplParam) {
+                                           mfxInitializationParam &vplParam,
+                                           bool bCloneSession) {
     mfxStatus mfxRes = MFX_ERR_NONE;
 
     // check error(s)
@@ -88,18 +89,6 @@ mfxStatus MFX_DISP_HANDLE::LoadSelectedDLL(const wchar_t *pPath,
                               DispatcherLog_GetMFXImplString(impl).c_str()));
         loadStatus = MFX_ERR_ABORTED;
         return loadStatus;
-    }
-    // only mfxExtThreadsParam is allowed
-    if (par.NumExtParam) {
-        if ((par.NumExtParam > 1) || !par.ExtParam) {
-            loadStatus = MFX_ERR_ABORTED;
-            return loadStatus;
-        }
-        if ((par.ExtParam[0]->BufferId != MFX_EXTBUFF_THREADS_PARAM) ||
-            (par.ExtParam[0]->BufferSz != sizeof(mfxExtThreadsParam))) {
-            loadStatus = MFX_ERR_ABORTED;
-            return loadStatus;
-        }
     }
 
     // close the handle before initialization
@@ -181,6 +170,11 @@ mfxStatus MFX_DISP_HANDLE::LoadSelectedDLL(const wchar_t *pPath,
             DISPATCHER_LOG_WRN((("can't find DLL: GetLastErr()=0x%x\n"), GetLastError()))
             mfxRes = MFX_ERR_UNSUPPORTED;
         }
+    }
+
+    if (bCloneSession == true) {
+        loadStatus = mfxRes;
+        return mfxRes;
     }
 
     // initialize the loaded DLL

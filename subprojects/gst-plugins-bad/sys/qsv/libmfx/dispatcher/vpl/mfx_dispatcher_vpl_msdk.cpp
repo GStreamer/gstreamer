@@ -102,10 +102,16 @@ static const mfxImplementedFunctions msdkImplFuncs = {
 LoaderCtxMSDK::LoaderCtxMSDK()
         : m_msdkAdapter(),
           m_msdkAdapterD3D9(),
+          m_deviceID(0),
+          m_luid(0),
+#ifdef ONEVPL_EXPERIMENTAL
+          m_extDeviceID(),
+#endif
           m_libNameFull(),
           m_id(),
           m_accelMode(),
-          m_loaderDeviceID(0) {}
+          m_loaderDeviceID(0) {
+}
 
 LoaderCtxMSDK::~LoaderCtxMSDK() {}
 
@@ -241,6 +247,7 @@ mfxStatus LoaderCtxMSDK::QueryMSDKCaps(STRING_TYPE libNameFull,
     mfxSession session = nullptr;
 
     m_libNameFull = libNameFull;
+    m_deviceID    = 0;
 
 #ifdef __linux__
     // require pthreads to be linked in for MSDK RT to load
@@ -248,14 +255,22 @@ mfxStatus LoaderCtxMSDK::QueryMSDKCaps(STRING_TYPE libNameFull,
     if (pthread_key_create(&pkey, NULL) == 0) {
         pthread_key_delete(pkey);
     }
+
+    mfxU32 vendorID = 0;
+    mfxU16 deviceID = 0;
+    sts             = GetRenderNodeDescription(adapterID, vendorID, deviceID);
+    if (sts != MFX_ERR_NONE)
+        return MFX_ERR_UNSUPPORTED;
+
+    // on Linux read deviceID from the render node path
+    m_deviceID = deviceID;
 #endif
 
     // try HW session, default acceleration mode
     mfxIMPL hwImpl      = msdkImplTab[adapterID];
     mfxIMPL implDefault = MFX_IMPL_UNSUPPORTED;
-    mfxU64 luid         = 0;
 
-    sts = GetDefaultAccelType(adapterID, &implDefault, &luid);
+    sts = GetDefaultAccelType(adapterID, &implDefault, &m_luid);
     if (sts != MFX_ERR_NONE)
         return MFX_ERR_UNSUPPORTED;
 
@@ -335,28 +350,30 @@ mfxStatus LoaderCtxMSDK::QueryMSDKCaps(STRING_TYPE libNameFull,
     Dev->MediaAdapterType = MFX_MEDIA_UNKNOWN;
 
     // query for underlying deviceID (requires API >= 1.19)
-    mfxU16 deviceID = 0x0000;
-    if (IsVersionSupported(MAKE_MFX_VERSION(1, 19), m_id.ApiVersion)) {
-        mfxPlatform platform = {};
+    // for Linux, we may already have the deviceID from parsing render node path earlier
+    if (m_deviceID == 0) {
+        if (IsVersionSupported(MAKE_MFX_VERSION(1, 19), m_id.ApiVersion)) {
+            mfxPlatform platform = {};
 
-        sts = MFXVideoCORE_QueryPlatform(session, &platform);
-        if (sts == MFX_ERR_NONE)
-            deviceID = platform.DeviceId;
+            sts = MFXVideoCORE_QueryPlatform(session, &platform);
+            if (sts == MFX_ERR_NONE)
+                m_deviceID = platform.DeviceId;
 
-        // mfxPlatform::MediaAdapterType was added in API 1.31
-        if (IsVersionSupported(MAKE_MFX_VERSION(1, 31), m_id.ApiVersion)) {
-            Dev->MediaAdapterType = platform.MediaAdapterType;
+            // mfxPlatform::MediaAdapterType was added in API 1.31
+            if (IsVersionSupported(MAKE_MFX_VERSION(1, 31), m_id.ApiVersion)) {
+                Dev->MediaAdapterType = platform.MediaAdapterType;
+            }
         }
     }
 
     // if QueryPlatform did not return deviceID, we may have received
     //   it from the loader (MFXInitEx2)
-    if (deviceID == 0)
-        deviceID = m_loaderDeviceID;
+    if (m_deviceID == 0)
+        m_deviceID = m_loaderDeviceID;
 
     // store DeviceID as "DevID" (hex) / "AdapterIdx" (dec) to match GPU RT
     Dev->Version.Version = MFX_DEVICEDESCRIPTION_VERSION;
-    snprintf(Dev->DeviceID, sizeof(Dev->DeviceID), "%x/%d", deviceID, m_id.VendorImplID);
+    snprintf(Dev->DeviceID, sizeof(Dev->DeviceID), "%x/%d", m_deviceID, m_id.VendorImplID);
     Dev->NumSubDevices = 0;
 
     CloseSession(&session);
@@ -366,7 +383,7 @@ mfxStatus LoaderCtxMSDK::QueryMSDKCaps(STRING_TYPE libNameFull,
         mfxIMPL implD3D9;
         m_msdkAdapterD3D9 = MFX_IMPL_UNSUPPORTED;
 
-        sts = CheckD3D9Support(luid, libNameFull, &implD3D9);
+        sts = CheckD3D9Support(m_luid, libNameFull, &implD3D9);
         if (sts == MFX_ERR_NONE) {
             m_msdkAdapterD3D9 = implD3D9;
 
@@ -428,3 +445,108 @@ mfxStatus LoaderCtxMSDK::CheckD3D9Support(mfxU64 luid, STRING_TYPE libNameFull, 
     return MFX_ERR_UNSUPPORTED;
 #endif
 }
+
+mfxStatus LoaderCtxMSDK::GetRenderNodeDescription(mfxU32 adapterID,
+                                                  mfxU32 &vendorID,
+                                                  mfxU16 &deviceID) {
+    vendorID = 0;
+    deviceID = 0;
+
+#if defined(__linux__)
+    mfxU32 DRMRenderNodeNum = 128 + adapterID;
+    std::string nodeStr     = std::to_string(DRMRenderNodeNum);
+
+    std::string vendorPath = "/sys/class/drm/renderD" + nodeStr + "/device/vendor";
+    std::string devPath    = "/sys/class/drm/renderD" + nodeStr + "/device/device";
+
+    // check if vendor == 0x8086
+    FILE *vendorFile = fopen(vendorPath.c_str(), "r");
+    if (vendorFile) {
+        unsigned int u32 = 0;
+        int nRead        = fscanf(vendorFile, "%x", &u32);
+        if (nRead == 1)
+            vendorID = (mfxU32)u32;
+        fclose(vendorFile);
+    }
+
+    if (vendorID != 0x8086)
+        return MFX_ERR_UNSUPPORTED;
+
+    // get deviceID for this node
+    FILE *devFile = fopen(devPath.c_str(), "r");
+    if (devFile) {
+        unsigned int u32 = 0;
+        int nRead        = fscanf(devFile, "%x", &u32);
+        if (nRead == 1)
+            deviceID = (mfxU32)u32;
+        fclose(devFile);
+    }
+
+    if (deviceID == 0)
+        return MFX_ERR_UNSUPPORTED;
+
+    return MFX_ERR_NONE;
+#else
+    return MFX_ERR_UNSUPPORTED;
+#endif
+}
+
+// avoid confusing #ifdef indentation
+// clang-format off
+
+#ifdef ONEVPL_EXPERIMENTAL
+
+mfxStatus LoaderCtxMSDK::QueryExtDeviceID(mfxExtendedDeviceId *extDeviceID,
+                                          mfxU32 adapterID,
+                                          mfxU16 deviceID,
+                                          mfxU64 luid) {
+    // fill extended device ID struct (API >= 2.6)
+    memset(extDeviceID, 0, sizeof(mfxExtendedDeviceId));
+
+    // common properties
+    extDeviceID->Version.Version = MFX_EXTENDEDDEVICEID_VERSION;
+    extDeviceID->VendorID = 0x8086;
+    extDeviceID->DeviceID = deviceID;
+
+    // default - no PCI info
+    // additional dependencies required to obtain these props
+    extDeviceID->PCIDomain   = 0xFFFFFFFF;
+    extDeviceID->PCIBus      = 0xFFFFFFFF;
+    extDeviceID->PCIDevice   = 0xFFFFFFFF;
+    extDeviceID->PCIFunction = 0xFFFFFFFF;
+
+    // default - no LUID
+    extDeviceID->LUIDDeviceNodeMask = 0;
+    extDeviceID->LUIDValid = 0;
+    for (mfxU32 idx = 0; idx < 8; idx++)
+        extDeviceID->DeviceLUID[idx] = 0;
+
+    // default - no DRM node
+    extDeviceID->DRMRenderNodeNum  = 0;
+    extDeviceID->DRMPrimaryNodeNum = 0x7FFFFFFF;
+
+    snprintf(extDeviceID->DeviceName, sizeof(extDeviceID->DeviceName), "%s", strImplName);
+
+#if defined(_WIN32) || defined(_WIN64)
+    // fill in Windows-specific properties
+    if (luid) {
+        extDeviceID->LUIDDeviceNodeMask = 1;
+        extDeviceID->LUIDValid          = 1;
+
+        // map 64-bit LUID into mfxU8[8]
+        mfxU64 luidArr = luid;
+        for (mfxU32 idx = 0; idx < 8; idx++) {
+            extDeviceID->DeviceLUID[idx] = mfxU8((luidArr)&0xFF);
+            luidArr >>= 8;
+        }
+    }
+#elif defined(__linux__)
+    extDeviceID->DRMPrimaryNodeNum = adapterID;
+    extDeviceID->DRMRenderNodeNum  = 128 + adapterID;
+#endif
+
+    return MFX_ERR_NONE;
+}
+#endif // ONEVPL_EXPERIMENTAL
+
+// clang-format on
