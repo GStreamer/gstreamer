@@ -1130,7 +1130,10 @@ gst_qsv_encoder_init_encode_session (GstQsvEncoder * self)
   }
 
   min_delay_frames = priv->task_pool->len;
-  max_delay_frames = priv->surface_pool->len + min_delay_frames;
+  /* takes the number of bframes into account */
+  if (param.mfx.GopRefDist > 1)
+    min_delay_frames += (param.mfx.GopRefDist - 1);
+  max_delay_frames = priv->surface_pool->len + priv->task_pool->len;
 
   min_latency = gst_util_uint64_scale (min_delay_frames * GST_SECOND,
       param.mfx.FrameInfo.FrameRateExtD, param.mfx.FrameInfo.FrameRateExtN);
