@@ -131,7 +131,7 @@
 
 static gboolean gst_initialized = FALSE;
 static gboolean gst_deinitialized = FALSE;
-static GMutex init_lock;
+static GRecMutex init_lock;
 
 GstClockTime _priv_gst_start_time;
 
@@ -405,11 +405,10 @@ gst_init_check (int *argc, char **argv[], GError ** error)
 #endif
   gboolean res;
 
-  g_mutex_lock (&init_lock);
-
+  g_rec_mutex_lock (&init_lock);
   if (gst_initialized) {
     GST_DEBUG ("already initialized gst");
-    g_mutex_unlock (&init_lock);
+    g_rec_mutex_unlock (&init_lock);
     return TRUE;
   }
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -428,7 +427,7 @@ gst_init_check (int *argc, char **argv[], GError ** error)
 
   gst_initialized = res;
 
-  g_mutex_unlock (&init_lock);
+  g_rec_mutex_unlock (&init_lock);
 
   return res;
 }
@@ -1088,10 +1087,10 @@ gst_deinit (void)
 {
   GstBinClass *bin_class;
 
-  g_mutex_lock (&init_lock);
+  g_rec_mutex_lock (&init_lock);
 
   if (!gst_initialized) {
-    g_mutex_unlock (&init_lock);
+    g_rec_mutex_unlock (&init_lock);
     return;
   }
   if (gst_deinitialized) {
@@ -1244,7 +1243,7 @@ gst_deinit (void)
 
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
-  g_mutex_unlock (&init_lock);
+  g_rec_mutex_unlock (&init_lock);
 
 #ifndef GST_DISABLE_GST_DEBUG
   /* Doing this as the very last step to allow the above GST_INFO() to work
