@@ -1804,12 +1804,11 @@ scan_and_update_registry (GstRegistry * default_registry,
   return REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED;
 }
 
-static gboolean
+static void
 ensure_current_registry (GError ** error)
 {
   gchar *registry_file;
   GstRegistry *default_registry;
-  gboolean ret = TRUE;
   gboolean do_update = TRUE;
   gboolean have_cache = TRUE;
 
@@ -1859,9 +1858,7 @@ ensure_current_registry (GError ** error)
   }
 
   g_free (registry_file);
-  GST_INFO ("registry reading and updating done, result = %d", ret);
-
-  return ret;
+  GST_INFO ("registry reading and updating done");
 }
 #endif /* GST_DISABLE_REGISTRY */
 
@@ -1924,13 +1921,11 @@ gst_registry_fork_set_enabled (gboolean enabled)
 gboolean
 gst_update_registry (void)
 {
-  gboolean res;
-
 #ifndef GST_DISABLE_REGISTRY
   if (!_priv_gst_disable_registry) {
     GError *err = NULL;
 
-    res = ensure_current_registry (&err);
+    ensure_current_registry (&err);
     if (err) {
       GST_WARNING ("registry update failed: %s", err->message);
       g_error_free (err);
@@ -1939,12 +1934,10 @@ gst_update_registry (void)
     }
   } else {
     GST_INFO ("registry update disabled by environment");
-    res = TRUE;
   }
 
 #else
   GST_WARNING ("registry update failed: %s", "registry disabled");
-  res = TRUE;
 #endif /* GST_DISABLE_REGISTRY */
 
 #ifndef GST_DISABLE_OPTION_PARSING
@@ -1954,7 +1947,7 @@ gst_update_registry (void)
   }
 #endif
 
-  return res;
+  return TRUE;
 }
 
 /**
