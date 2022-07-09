@@ -804,15 +804,10 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
    * Any errors happening below this point are non-fatal, we therefore mark
    * gstreamer as being initialized, since it is the case from a plugin point of
    * view.
-   *
-   * If anything fails, it will be put back to %FALSE in gst_init_check().
-   * This allows some special plugins that would call gst_init() to not cause a
-   * looping effect (i.e. initializing GStreamer twice).
    */
   gst_initialized = TRUE;
 
-  if (!gst_update_registry ())
-    return FALSE;
+  gst_update_registry ();
 
   GST_INFO ("GLib runtime version: %d.%d.%d", glib_major_version,
       glib_minor_version, glib_micro_version);
