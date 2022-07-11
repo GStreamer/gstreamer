@@ -1476,7 +1476,17 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstFlowReturn ret = GST_FLOW_OK;
 
-  g_assert (hls_stream->current_segment);
+  /* If current segment is not present, this means that a playlist update
+   * happened between the moment ::update_fragment_info() was called and the
+   * moment we received data. And that playlist update couldn't match the
+   * current position. This will happen in live playback when we are downloading
+   * too slowly, therefore we try to "catch up" back to live
+   */
+  if (hls_stream->current_segment == NULL) {
+    GST_WARNING_OBJECT (stream, "Lost sync");
+    return GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC;
+  }
+
   GST_DEBUG_OBJECT (stream,
       "buffer:%p at_eos:%d do_typefind:%d uri:%s", buffer, at_eos,
       hls_stream->do_typefind, hls_stream->current_segment->uri);
@@ -1562,7 +1572,7 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
   if (hls_stream->current_key)
     gst_hls_demux_stream_decrypt_end (hls_stream);
 
-  if (stream->last_ret == GST_FLOW_OK) {
+  if (hls_stream->current_segment && stream->last_ret == GST_FLOW_OK) {
     if (hls_stream->pending_decrypted_buffer) {
       if (hls_stream->current_key) {
         GstMapInfo info;
@@ -1606,6 +1616,12 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
   if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
     return GST_FLOW_OK;
 
+  if (hls_stream->current_segment == NULL) {
+    /* We can't advance, we just return OK for now and let the base class
+     * trigger a new download (or fail and resync itself) */
+    return GST_FLOW_OK;
+  }
+
   if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED) {
     /* We can update the stream current position with a more accurate value
      * before advancing. Note that we don't have any period so we can set the
@@ -1623,6 +1639,9 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+
+  if (hls_stream->current_segment == NULL)
+    return GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC;
 
   if (hls_stream->current_offset == -1)
     hls_stream->current_offset = 0;
@@ -2199,8 +2218,8 @@ gst_hls_demux_stream_update_rendition_playlist (GstHLSDemux * demux,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstHLSRenditionStream *target_rendition =
-      stream->pending_rendition ? stream->pending_rendition : stream->
-      current_rendition;
+      stream->pending_rendition ? stream->
+      pending_rendition : stream->current_rendition;
 
   ret = gst_hls_demux_stream_update_media_playlist (demux, stream,
       &target_rendition->uri, NULL);

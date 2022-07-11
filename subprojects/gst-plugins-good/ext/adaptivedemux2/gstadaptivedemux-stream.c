@@ -297,7 +297,12 @@ gst_adaptive_demux2_stream_finish_download (GstAdaptiveDemux2Stream *
   }
 
   /* Handle all the possible flow returns here: */
-  if (ret == GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT) {
+  if (ret == GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC) {
+    /* We lost sync, seek back to live and return */
+    GST_WARNING_OBJECT (stream, "Lost sync when downloading");
+    gst_adaptive_demux_handle_lost_sync (demux);
+    return;
+  } else if (ret == GST_ADAPTIVE_DEMUX_FLOW_END_OF_FRAGMENT) {
     /* The sub-class wants to stop the fragment immediately */
     stream->fragment.finished = TRUE;
     ret = klass->finish_fragment (demux, stream);
