@@ -375,8 +375,8 @@ struct _GstAdaptiveDemuxPeriod
   gboolean prepared;
 
 
-  /* TRUE if the period no longer receives any data (i.e. it is closed) */
-  gboolean closed;
+  /* TRUE if there is another period after this one */
+  gboolean has_next_period;
   
   /* An increasing unique identifier for the period.
    *

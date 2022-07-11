@@ -1316,8 +1316,8 @@ gst_adaptive_demux_start_new_period (GstAdaptiveDemux * demux)
   }
 
   if (demux->input_period) {
-    GST_DEBUG_OBJECT (demux, "Closing previous period");
-    demux->input_period->closed = TRUE;
+    GST_DEBUG_OBJECT (demux, "Marking that previous period has a next one");
+    demux->input_period->has_next_period = TRUE;
   }
   GST_DEBUG_OBJECT (demux, "Setting up new period");
 
@@ -3605,7 +3605,7 @@ restart:
     goto restart;
 
   if (global_output_position == GST_CLOCK_STIME_NONE
-      && demux->output_period->closed) {
+      && demux->output_period->has_next_period) {
     GST_DEBUG_OBJECT (demux, "Period %d is drained, switching to next period",
         demux->output_period->period_num);
     if (!gst_adaptive_demux_advance_output_period (demux)) {
