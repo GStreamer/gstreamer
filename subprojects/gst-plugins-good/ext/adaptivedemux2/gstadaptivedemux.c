@@ -744,6 +744,7 @@ gst_adaptive_demux_output_slot_free (GstAdaptiveDemux * demux,
   GstEvent *eos = gst_event_new_eos ();
   GST_DEBUG_OBJECT (slot->pad, "Releasing slot");
 
+  /* FIXME: The slot might not have output any data, caps or segment yet */
   gst_event_set_seqnum (eos, demux->priv->segment_seqnum);
   gst_pad_push_event (slot->pad, eos);
   gst_pad_set_active (slot->pad, FALSE);
@@ -3521,6 +3522,7 @@ gst_adaptive_demux_output_loop (GstAdaptiveDemux * demux)
   GList *tmp;
   GstClockTimeDiff global_output_position = GST_CLOCK_STIME_NONE;
   gboolean wait_for_data = FALSE;
+  gboolean all_tracks_empty;
   GstFlowReturn ret;
 
   GST_DEBUG_OBJECT (demux, "enter");
@@ -3539,6 +3541,8 @@ gst_adaptive_demux_output_loop (GstAdaptiveDemux * demux)
 restart:
   ret = GST_FLOW_OK;
   global_output_position = GST_CLOCK_STIME_NONE;
+  all_tracks_empty = TRUE;
+
   if (wait_for_data) {
     GST_DEBUG_OBJECT (demux, "Waiting for data");
     g_cond_wait (&demux->priv->tracks_add, &demux->priv->tracks_lock);
@@ -3583,6 +3587,11 @@ restart:
       gst_adaptive_demux_track_update_next_position (track);
     }
 
+    GST_TRACE_OBJECT (demux,
+        "Looking at track %s (period %u). next_position %" GST_STIME_FORMAT,
+        track->stream_id, track->period_num,
+        GST_STIME_ARGS (track->next_position));
+
     if (track->next_position != GST_CLOCK_STIME_NONE) {
       if (global_output_position == GST_CLOCK_STIME_NONE)
         global_output_position = track->next_position;
@@ -3590,22 +3599,27 @@ restart:
         global_output_position =
             MIN (global_output_position, track->next_position);
       track->waiting_add = FALSE;
+      all_tracks_empty = FALSE;
     } else if (!track->eos) {
       GST_DEBUG_OBJECT (demux, "Need timed data on track %s (period %u)",
           track->stream_id, track->period_num);
+      all_tracks_empty = FALSE;
       wait_for_data = track->waiting_add = TRUE;
     } else {
       GST_DEBUG_OBJECT (demux,
           "Track %s (period %u) is EOS, not waiting for timed data",
           track->stream_id, track->period_num);
+
+      if (gst_queue_array_get_length (track->queue) > 0) {
+        all_tracks_empty = FALSE;
+      }
     }
   }
 
   if (wait_for_data)
     goto restart;
 
-  if (global_output_position == GST_CLOCK_STIME_NONE
-      && demux->output_period->has_next_period) {
+  if (all_tracks_empty && demux->output_period->has_next_period) {
     GST_DEBUG_OBJECT (demux, "Period %d is drained, switching to next period",
         demux->output_period->period_num);
     if (!gst_adaptive_demux_advance_output_period (demux)) {
@@ -3646,7 +3660,8 @@ restart:
     while (global_output_position == GST_CLOCK_STIME_NONE
         || !slot->pushed_timed_data
         || ((track->next_position != GST_CLOCK_STIME_NONE)
-            && track->next_position <= global_output_position)) {
+            && track->next_position <= global_output_position)
+        || ((track->next_position == GST_CLOCK_STIME_NONE) && track->eos)) {
       GstMiniObject *mo = track_dequeue_data_locked (demux, track, TRUE);
 
       if (!mo) {
@@ -3679,13 +3694,27 @@ restart:
 
       if (GST_IS_EVENT (mo)) {
         GstEvent *event = (GstEvent *) mo;
-        if (GST_EVENT_TYPE (event) == GST_EVENT_GAP)
+        if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
           slot->pushed_timed_data = TRUE;
-        gst_pad_push_event (slot->pad, gst_event_ref (event));
+        } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+          /* If there is a pending next period, don't send the EOS */
+          if (demux->output_period->has_next_period) {
+            GST_LOG_OBJECT (demux,
+                "Dropping EOS on track '%s' (period %u) before next period",
+                track->stream_id, track->period_num);
+            gst_event_store_mark_delivered (&track->sticky_events, event);
+            gst_event_unref (event);
+            event = NULL;
+          }
+        }
 
-        if (GST_EVENT_IS_STICKY (event))
-          gst_event_store_mark_delivered (&track->sticky_events, event);
-        gst_event_unref (event);
+        if (event != NULL) {
+          gst_pad_push_event (slot->pad, gst_event_ref (event));
+
+          if (GST_EVENT_IS_STICKY (event))
+            gst_event_store_mark_delivered (&track->sticky_events, event);
+          gst_event_unref (event);
+        }
       } else if (GST_IS_BUFFER (mo)) {
         GstBuffer *buffer = (GstBuffer *) mo;
 
