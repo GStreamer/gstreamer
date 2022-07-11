@@ -1518,6 +1518,19 @@ gst_adaptive_demux2_stream_end_of_manifest (GstAdaptiveDemux2Stream * stream)
 
   GST_DEBUG_OBJECT (stream, "Combined flow %s", gst_flow_get_name (combined));
 
+  if (gst_adaptive_demux_has_next_period (demux)) {
+    if (combined == GST_FLOW_EOS) {
+      GST_DEBUG_OBJECT (stream, "Next period available, advancing");
+      gst_adaptive_demux_advance_period (demux);
+    } else {
+      /* Ensure the 'has_next_period' flag is set on the period before
+       * pushing EOS to the stream, so that the output loop knows not
+       * to actually output the event */
+      GST_DEBUG_OBJECT (stream, "Marking current period has a next one");
+      demux->input_period->has_next_period = TRUE;
+    }
+  }
+
   if (demux->priv->outputs) {
     GstEvent *eos = gst_event_new_eos ();
 
@@ -1529,11 +1542,6 @@ gst_adaptive_demux2_stream_end_of_manifest (GstAdaptiveDemux2Stream * stream)
   } else {
     GST_ERROR_OBJECT (demux, "Can't push EOS on non-exposed pad");
     gst_adaptive_demux2_stream_error (stream);
-  }
-
-  if (combined == GST_FLOW_EOS && gst_adaptive_demux_has_next_period (demux)) {
-    GST_DEBUG_OBJECT (stream, "Next period available, advancing");
-    gst_adaptive_demux_advance_period (demux);
   }
 }
 
