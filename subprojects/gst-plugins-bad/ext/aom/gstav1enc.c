@@ -816,6 +816,8 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoFrame vframe;
   aom_codec_pts_t scaled_pts;
+  GstClockTime pts_rt;
+  unsigned long duration;
 
   if (!aom_img_alloc (&raw, av1enc->format, av1enc->aom_cfg.g_w,
           av1enc->aom_cfg.g_h, 1)) {
@@ -834,19 +836,54 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   }
   av1enc->keyframe_dist++;
 
+  // aom_codec_encode requires pts to be strictly increasing
+  pts_rt =
+      gst_segment_to_running_time (&encoder->input_segment,
+      GST_FORMAT_TIME, frame->pts);
+
+  if (GST_CLOCK_TIME_IS_VALID (av1enc->next_pts)
+      && pts_rt <= av1enc->next_pts) {
+    GST_WARNING_OBJECT (av1enc,
+        "decreasing pts %" GST_TIME_FORMAT " previous buffer was %"
+        GST_TIME_FORMAT " enforce increasing pts", GST_TIME_ARGS (pts_rt),
+        GST_TIME_ARGS (av1enc->next_pts));
+    pts_rt = av1enc->next_pts + 1;
+  }
+
+  av1enc->next_pts = pts_rt;
+
   // Convert the pts from nanoseconds to timebase units
   scaled_pts =
-      gst_util_uint64_scale_int (frame->pts,
+      gst_util_uint64_scale_int (pts_rt,
       av1enc->aom_cfg.g_timebase.den,
       av1enc->aom_cfg.g_timebase.num * (GstClockTime) GST_SECOND);
 
-  g_mutex_lock (&av1enc->encoder_lock);
-  if (aom_codec_encode (&av1enc->encoder, &raw, scaled_pts, 1, flags)
+  if (frame->duration != GST_CLOCK_TIME_NONE) {
+    duration =
+        gst_util_uint64_scale (frame->duration, av1enc->aom_cfg.g_timebase.den,
+        av1enc->aom_cfg.g_timebase.num * (GstClockTime) GST_SECOND);
+
+    if (duration > 0) {
+      av1enc->next_pts += frame->duration;
+    } else {
+      /* We force the path ignoring the duration if we end up with a zero
+       * value for duration after scaling (e.g. duration value too small) */
+      GST_WARNING_OBJECT (av1enc,
+          "Ignoring too small frame duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (frame->duration));
+      duration = 1;
+      av1enc->next_pts += 1;
+    }
+  } else {
+    duration = 1;
+    av1enc->next_pts += 1;
+  }
+
+  if (aom_codec_encode (&av1enc->encoder, &raw, scaled_pts, duration, flags)
       != AOM_CODEC_OK) {
     gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
     ret = GST_FLOW_ERROR;
   }
-  g_mutex_unlock (&av1enc->encoder_lock);
 
   aom_img_free (&raw);
   gst_video_codec_frame_unref (frame);
@@ -867,11 +904,21 @@ gst_av1_enc_finish (GstVideoEncoder * encoder)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstAV1Enc *av1enc = GST_AV1_ENC_CAST (encoder);
+  aom_codec_pts_t scaled_pts;
+  GstClockTime pts = 0;
 
   while (ret == GST_FLOW_OK) {
     GST_DEBUG_OBJECT (encoder, "Calling finish");
     g_mutex_lock (&av1enc->encoder_lock);
-    if (aom_codec_encode (&av1enc->encoder, NULL, 0, 1, 0)
+
+    if (GST_CLOCK_TIME_IS_VALID (av1enc->next_pts))
+      pts = av1enc->next_pts;
+    scaled_pts =
+        gst_util_uint64_scale (pts,
+        av1enc->aom_cfg.g_timebase.den,
+        av1enc->aom_cfg.g_timebase.num * (GstClockTime) GST_SECOND);
+
+    if (aom_codec_encode (&av1enc->encoder, NULL, scaled_pts, 1, 0)
         != AOM_CODEC_OK) {
       gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
       ret = GST_FLOW_ERROR;
@@ -896,6 +943,9 @@ gst_av1_enc_destroy_encoder (GstAV1Enc * av1enc)
     aom_codec_destroy (&av1enc->encoder);
     av1enc->encoder_inited = FALSE;
   }
+
+  av1enc->next_pts = GST_CLOCK_TIME_NONE;
+
   g_mutex_unlock (&av1enc->encoder_lock);
 }
 

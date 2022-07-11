@@ -123,6 +123,9 @@ struct _GstAV1Enc
   aom_img_fmt_t format;
   GMutex encoder_lock;
 
+  /* next pts, in running time */
+  GstClockTime next_pts;
+
   gboolean target_bitrate_set;
 };
 
