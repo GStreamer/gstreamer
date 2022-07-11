@@ -502,7 +502,8 @@ gst_video_aggregator_convert_pad_prepare_frame (GstVideoAggregatorPad * vpad,
       gst_video_converter_free (pad->priv->convert);
     pad->priv->convert = NULL;
 
-    if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)) {
+    if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)
+        || pad->priv->converter_config) {
       pad->priv->convert =
           gst_video_converter_new_with_pool (&vpad->info,
           &pad->priv->conversion_info,
@@ -792,7 +793,8 @@ static void
       gst_video_converter_free (pad->priv->convert);
     pad->priv->convert = NULL;
 
-    if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)) {
+    if (!gst_video_info_is_equal (&vpad->info, &pad->priv->conversion_info)
+        || pad->priv->converter_config) {
       GstStructure *conv_config;
 
       if (pad->priv->converter_config) {
