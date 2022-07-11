@@ -65,7 +65,7 @@ typedef enum
 } GstAV1EncResizeMode;
 
 /**
- * GstAV1EncSuperresMode
+ * GstAV1EncSuperresMode:
  * @GST_AV1_ENC_SUPERRES_NONE: No frame superres allowed
  * @GST_AV1_ENC_SUPERRES_FIXED: All frames are coded at the specified scale and
  *   super-resolved
@@ -83,7 +83,7 @@ typedef enum
 } GstAV1EncSuperresMode;
 
 /**
- * GstAV1EncEndUsageMode
+ * GstAV1EncEndUsageMode:
  * @GST_AV1_ENC_END_USAGE_VBR: Variable Bit Rate Mode
  * @GST_AV1_ENC_END_USAGE_CBR: Constant Bit Rate Mode
  * @GST_AV1_ENC_END_USAGE_CQ: Constrained Quality Mode
@@ -99,6 +99,59 @@ typedef enum
   GST_AV1_ENC_END_USAGE_CQ = 2,
   GST_AV1_ENC_END_USAGE_Q = 3,
 } GstAV1EncEndUsageMode;
+
+/**
+ * GstAV1EncKFMode:
+ * @GST_AV1_ENC_KF_DISABLED: Encoder does not place keyframes
+ * @GST_AV1_ENC_KF_AUTO: Encoder determines optimal keyframe placement automatically
+ *
+ * Determines whether keyframes are placed automatically by the encoder
+ *
+ * Since: 1.22
+ */
+
+typedef enum
+{
+  GST_AV1_ENC_KF_DISABLED = 0,
+  GST_AV1_ENC_KF_AUTO = 1,
+} GstAV1EncKFMode;
+
+/**
+ * GstAV1EncEncPass:
+ * @GST_AV1_ENC_ONE_PASS: Single pass mode
+ * @GST_AV1_ENC_FIRST_PASS: First pass of multi-pass mode
+ * @GST_AV1_ENC_SECOND_PASS: Second pass of multi-pass mode
+ * @GST_AV1_ENC_THIRD_PASS: Third pass of multi-pass mode
+ * Current phase for multi-pass encoding or @GST_AV1_ENC_ONE_PASS for single pass
+ *
+ * Since: 1.22
+ */
+
+typedef enum
+{
+  GST_AV1_ENC_ONE_PASS = 0,
+  GST_AV1_ENC_FIRST_PASS = 1,
+  GST_AV1_ENC_SECOND_PASS = 2,
+  GST_AV1_ENC_THIRD_PASS = 3,
+} GstAV1EncEncPass;
+
+/**
+ * GstAV1EncUsageProfile:
+ * @GST_AV1_ENC_USAGE_GOOD_QUALITY: Good Quality profile
+ * @GST_AV1_ENC_USAGE_REALTIME: Realtime profile
+ * @GST_AV1_ENC_USAGE_ALL_INTRA: All Intra profile
+ *
+ * Usage profile is used to guide the default config for the encoder
+ *
+ * Since: 1.22
+ */
+
+typedef enum
+{
+  GST_AV1_ENC_USAGE_GOOD_QUALITY = 0,
+  GST_AV1_ENC_USAGE_REALTIME = 1,
+  GST_AV1_ENC_USAGE_ALL_INTRA = 2,
+} GstAV1EncUsageProfile;
 
 struct _GstAV1Enc
 {
