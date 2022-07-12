@@ -1129,7 +1129,7 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   GstV4l2Request *prev_request, *request = NULL;
   gsize bytesused;
   gboolean ret = FALSE;
-  guint count = 0;
+  guint num_controls = 0;
 
   /* *INDENT-OFF* */
   /* Reserve space for controls */
@@ -1176,49 +1176,53 @@ gst_v4l2_codec_h264_dec_submit_bitstream (GstV4l2CodecH264Dec * self,
   }
 
   if (self->need_sequence) {
-    control[count].id = V4L2_CID_STATELESS_H264_SPS;
-    control[count].ptr = &self->sps;
-    control[count].size = sizeof (self->sps);
-    count++;
+    control[num_controls].id = V4L2_CID_STATELESS_H264_SPS;
+    control[num_controls].ptr = &self->sps;
+    control[num_controls].size = sizeof (self->sps);
+    num_controls++;
     self->need_sequence = FALSE;
   }
 
   if (self->first_slice) {
-    control[count].id = V4L2_CID_STATELESS_H264_PPS;
-    control[count].ptr = &self->pps;
-    control[count].size = sizeof (self->pps);
-    count++;
+    control[num_controls].id = V4L2_CID_STATELESS_H264_PPS;
+    control[num_controls].ptr = &self->pps;
+    control[num_controls].size = sizeof (self->pps);
+    num_controls++;
 
     if (self->scaling_matrix_present) {
-      control[count].id = V4L2_CID_STATELESS_H264_SCALING_MATRIX;
-      control[count].ptr = &self->scaling_matrix;
-      control[count].size = sizeof (self->scaling_matrix);
-      count++;
+      control[num_controls].id = V4L2_CID_STATELESS_H264_SCALING_MATRIX;
+      control[num_controls].ptr = &self->scaling_matrix;
+      control[num_controls].size = sizeof (self->scaling_matrix);
+      num_controls++;
     }
 
-    control[count].id = V4L2_CID_STATELESS_H264_DECODE_PARAMS;
-    control[count].ptr = &self->decode_params;
-    control[count].size = sizeof (self->decode_params);
-    count++;
+    control[num_controls].id = V4L2_CID_STATELESS_H264_DECODE_PARAMS;
+    control[num_controls].ptr = &self->decode_params;
+    control[num_controls].size = sizeof (self->decode_params);
+    num_controls++;
 
     self->first_slice = FALSE;
   }
 
   /* If it's not slice-based then it doesn't support per-slice controls. */
   if (is_slice_based (self)) {
-    control[count].id = V4L2_CID_STATELESS_H264_SLICE_PARAMS;
-    control[count].ptr = self->slice_params->data;
-    control[count].size = g_array_get_element_size (self->slice_params)
+    control[num_controls].id = V4L2_CID_STATELESS_H264_SLICE_PARAMS;
+    control[num_controls].ptr = self->slice_params->data;
+    control[num_controls].size = g_array_get_element_size (self->slice_params)
         * self->num_slices;
-    count++;
+    num_controls++;
 
-    control[count].id = V4L2_CID_STATELESS_H264_PRED_WEIGHTS;
-    control[count].ptr = &self->pred_weight;
-    control[count].size = sizeof (self->pred_weight);
-    count++;
+    control[num_controls].id = V4L2_CID_STATELESS_H264_PRED_WEIGHTS;
+    control[num_controls].ptr = &self->pred_weight;
+    control[num_controls].size = sizeof (self->pred_weight);
+    num_controls++;
   }
 
-  if (!gst_v4l2_decoder_set_controls (self->decoder, request, control, count)) {
+  if (num_controls > G_N_ELEMENTS (control))
+    g_error ("Set too many controls, increase control[] size");
+
+  if (!gst_v4l2_decoder_set_controls (self->decoder, request, control,
+          num_controls)) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Driver did not accept the bitstream parameters."), (NULL));
     goto done;
