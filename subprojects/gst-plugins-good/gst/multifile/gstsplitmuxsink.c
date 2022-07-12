@@ -3205,9 +3205,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         if (g_queue_is_empty (&splitmux->pending_input_gops)) {
           GST_WARNING_OBJECT (pad,
               "Reference was closed without GOP, dropping");
-          GST_SPLITMUX_UNLOCK (splitmux);
-          GST_PAD_PROBE_INFO_FLOW_RETURN (info) = GST_FLOW_EOS;
-          return GST_PAD_PROBE_DROP;
+          goto drop;
         }
 
         check_completed_gop (splitmux, ctx);
@@ -3258,6 +3256,12 @@ beach:
     mq_stream_buf_free (buf_info);
   GST_PAD_PROBE_INFO_FLOW_RETURN (info) = ret;
   return GST_PAD_PROBE_PASS;
+drop:
+  GST_SPLITMUX_UNLOCK (splitmux);
+  if (buf_info)
+    mq_stream_buf_free (buf_info);
+  GST_PAD_PROBE_INFO_FLOW_RETURN (info) = GST_FLOW_EOS;
+  return GST_PAD_PROBE_DROP;
 }
 
 static void
