@@ -1109,7 +1109,7 @@ gst_leaks_tracer_class_init (GstLeaksTracerClass * klass)
   tr_refings = gst_tracer_record_new ("object-refings.class",
       RECORD_FIELD_TYPE_TS, RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS,
       RECORD_FIELD_DESC, RECORD_FIELD_REF_COUNT, RECORD_FIELD_TRACE, NULL);
-  GST_OBJECT_FLAG_SET (tr_alive, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (tr_refings, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   tr_added = gst_tracer_record_new ("object-added.class",
       RECORD_FIELD_TYPE_NAME, RECORD_FIELD_ADDRESS, NULL);
