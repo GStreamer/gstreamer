@@ -1460,6 +1460,7 @@ gst_v4l2_codec_h264_dec_subinit (GstV4l2CodecH264Dec * self,
   gst_video_info_init (&self->vinfo);
   self->slice_params = g_array_sized_new (FALSE, TRUE,
       sizeof (struct v4l2_ctrl_h264_slice_params), 4);
+  g_array_set_size (self->slice_params, 4);
 }
 
 static void
