@@ -1241,8 +1241,10 @@ gst_glimage_sink_set_context (GstElement * element, GstContext * context)
   GstGLDisplay *display = NULL;
 
   gst_gl_handle_set_context (element, context, &display, &other_context);
-  _set_other_context (gl_sink, other_context);
-  _set_display (gl_sink, display);
+  if (display)
+    _set_display (gl_sink, display);
+  if (other_context)
+    _set_other_context (gl_sink, other_context);
 
   if (gl_sink->display)
     gst_gl_display_filter_gl_api (gl_sink->display, SUPPORTED_GL_APIS);
