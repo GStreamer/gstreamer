@@ -1045,6 +1045,11 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
   for (idx = 0; idx < playlist->segments->len; idx++) {
     GstM3U8MediaSegment *cand = g_ptr_array_index (playlist->segments, idx);
 
+    /* Ignore non-matching DSN if needed */
+    if ((segment->discont_sequence != cand->discont_sequence)
+        && playlist->has_ext_x_dsn)
+      continue;
+
     if (idx == 0 && cand->sequence == segment->sequence + 1) {
       /* Special case for segments just before the 1st one. We add another
        * reference because it now also belongs to the current playlist */
@@ -1055,9 +1060,7 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
       return segment;
     }
 
-    if ((segment->discont_sequence == cand->discont_sequence
-            || !playlist->has_ext_x_dsn)
-        && (cand->sequence == segment->sequence)) {
+    if (cand->sequence == segment->sequence) {
       return cand;
     }
   }
