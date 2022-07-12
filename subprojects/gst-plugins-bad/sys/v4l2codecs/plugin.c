@@ -24,6 +24,7 @@
 
 #include "gstv4l2codecdevice.h"
 #include "gstv4l2codech264dec.h"
+#include "gstv4l2codech265dec.h"
 #include "gstv4l2codecmpeg2dec.h"
 #include "gstv4l2codecvp8dec.h"
 #include "gstv4l2codecvp9dec.h"
@@ -54,6 +55,13 @@ register_video_decoder (GstPlugin * plugin, GstV4l2CodecDevice * device)
         gst_v4l2_codec_h264_dec_register (plugin, decoder, device,
             GST_RANK_PRIMARY + 1);
         break;
+      case V4L2_PIX_FMT_HEVC_SLICE:
+        GST_INFO_OBJECT (decoder, "Registering %s as H265 Decoder",
+            device->name);
+        gst_v4l2_codec_h265_dec_register (plugin, decoder, device,
+            GST_RANK_PRIMARY + 1);
+        break;
+
       case V4L2_PIX_FMT_VP8_FRAME:
         GST_INFO_OBJECT (decoder, "Registering %s as VP8 Decoder",
             device->name);
