@@ -977,6 +977,7 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
+  GstRTSPUrl *url;
   gint path_len;
 
   /* find the longest matching factory for the uri first */
@@ -997,13 +998,20 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
   else
     path_len = strlen (path);
 
+  url = gst_rtsp_url_copy (ctx->uri);
+  /* normalize rtsp://<IP>:<PORT> to rtsp://<IP>:<PORT>/ */
+  if (url->abspath[0] == 0) {
+    g_free (url->abspath);
+    url->abspath = g_strdup ("/");
+  }
+
   if (!paths_are_equal (priv->path, path, path_len)) {
     /* remove any previously cached values before we try to construct a new
      * media for uri */
     clean_cached_media (client, TRUE);
 
     /* prepare the media and add it to the pipeline */
-    if (!(media = gst_rtsp_media_factory_construct (factory, ctx->uri)))
+    if (!(media = gst_rtsp_media_factory_construct (factory, url)))
       goto no_media;
 
     ctx->media = media;
@@ -1032,6 +1040,7 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
     GST_INFO ("reusing cached media %p for path %s", media, priv->path);
   }
 
+  gst_rtsp_url_free (url);
   g_object_unref (factory);
   ctx->factory = NULL;
 
@@ -1068,6 +1077,7 @@ no_media:
   {
     GST_ERROR ("client %p: can't create media", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    gst_rtsp_url_free (url);
     g_object_unref (factory);
     ctx->factory = NULL;
     return NULL;
@@ -1076,6 +1086,7 @@ no_thread:
   {
     GST_ERROR ("client %p: can't create thread", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    gst_rtsp_url_free (url);
     g_object_unref (media);
     ctx->media = NULL;
     g_object_unref (factory);
@@ -1086,6 +1097,7 @@ no_prepare:
   {
     GST_ERROR ("client %p: can't prepare media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    gst_rtsp_url_free (url);
     g_object_unref (media);
     ctx->media = NULL;
     g_object_unref (factory);
