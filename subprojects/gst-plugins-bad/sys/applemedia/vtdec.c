@@ -105,6 +105,8 @@ static void gst_vtdec_session_output_callback (void
     CMTime duration);
 static gboolean compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
     GstBuffer * codec_data, int *length);
+static gboolean compute_hevc_decode_picture_buffer_length (GstVtdec * vtdec,
+    GstBuffer * codec_data, int *length);
 static gboolean gst_vtdec_compute_reorder_queue_length (GstVtdec * vtdec,
     CMVideoCodecType cm_format, GstBuffer * codec_data);
 static void gst_vtdec_set_latency (GstVtdec * vtdec);
@@ -115,6 +117,8 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au,"
+        " width=(int)[1, MAX], height=(int)[1, MAX];"
+        "video/x-h265, stream-format=(string){ hev1, hvc1 }, alignment=au,"
         " width=(int)[1, MAX], height=(int)[1, MAX];"
         "video/mpeg, mpegversion=2, systemstream=false, parsed=true;"
         "image/jpeg;"
@@ -535,6 +539,8 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   caps_name = gst_structure_get_name (structure);
   if (!strcmp (caps_name, "video/x-h264")) {
     cm_format = kCMVideoCodecType_H264;
+  } else if (!strcmp (caps_name, "video/x-h265")) {
+    cm_format = kCMVideoCodecType_HEVC;
   } else if (!strcmp (caps_name, "video/mpeg")) {
     cm_format = kCMVideoCodecType_MPEG2Video;
   } else if (!strcmp (caps_name, "image/jpeg")) {
@@ -551,7 +557,9 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     }
   }
 
-  if (cm_format == kCMVideoCodecType_H264 && state->codec_data == NULL) {
+  if ((cm_format == kCMVideoCodecType_H264
+          || cm_format == kCMVideoCodecType_HEVC)
+      && state->codec_data == NULL) {
     GST_INFO_OBJECT (vtdec, "no codec data, wait for one");
     return TRUE;
   }
@@ -788,7 +796,12 @@ create_format_description_from_codec_data (GstVtdec * vtdec,
   gst_buffer_map (codec_data, &map, GST_MAP_READ);
   atoms = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_data (atoms, CFSTR ("avcC"), map.data, map.size);
+
+  if (cm_format == kCMVideoCodecType_HEVC)
+    gst_vtutil_dict_set_data (atoms, CFSTR ("hvcC"), map.data, map.size);
+  else
+    gst_vtutil_dict_set_data (atoms, CFSTR ("avcC"), map.data, map.size);
+
   gst_vtutil_dict_set_object (extensions,
       CFSTR ("SampleDescriptionExtensionAtoms"), (CFTypeRef *) atoms);
   gst_buffer_unmap (codec_data, &map);
@@ -1148,6 +1161,11 @@ gst_vtdec_compute_reorder_queue_length (GstVtdec * vtdec,
             &vtdec->reorder_queue_length)) {
       return FALSE;
     }
+  } else if (cm_format == kCMVideoCodecType_HEVC) {
+    if (!compute_hevc_decode_picture_buffer_length (vtdec, codec_data,
+            &vtdec->reorder_queue_length)) {
+      return FALSE;
+    }
   } else {
     vtdec->reorder_queue_length = 0;
   }
@@ -1192,6 +1210,34 @@ compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
    * edition of the standard */
   *length = MIN (floor (max_dpb_mb_s / (width_in_mb_s * height_in_mb_s)),
       max_dpb_size_frames);
+  return TRUE;
+}
+
+static gboolean
+compute_hevc_decode_picture_buffer_length (GstVtdec * vtdec,
+    GstBuffer * codec_data, int *length)
+{
+  /* This value should be level dependent (table A.8)
+   * but let's assume the maximum possible one for simplicity. */
+  const gint max_luma_ps = 35651584;
+  const gint max_dpb_pic_buf = 6;
+  gint max_dbp_size, pic_size_samples_y;
+
+  if (vtdec->video_info.width == 0 || vtdec->video_info.height == 0)
+    return FALSE;
+
+  /* A.4.2 */
+  pic_size_samples_y = vtdec->video_info.width * vtdec->video_info.height;
+  if (pic_size_samples_y <= (max_luma_ps >> 2))
+    max_dbp_size = max_dpb_pic_buf * 4;
+  else if (pic_size_samples_y <= (max_luma_ps >> 1))
+    max_dbp_size = max_dpb_pic_buf * 2;
+  else if (pic_size_samples_y <= ((3 * max_luma_ps) >> 2))
+    max_dbp_size = (max_dpb_pic_buf * 4) / 3;
+  else
+    max_dbp_size = max_dpb_pic_buf;
+
+  *length = MIN (max_dbp_size, 16);
   return TRUE;
 }
 

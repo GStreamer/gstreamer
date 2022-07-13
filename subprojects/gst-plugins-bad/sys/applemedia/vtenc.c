@@ -71,7 +71,6 @@
 #include "vtutil.h"
 #include <gst/pbutils/codec-utils.h>
 
-#define VTENC_DEFAULT_USAGE       6     /* Profile: Baseline  Level: 2.1 */
 #define VTENC_DEFAULT_BITRATE     0
 #define VTENC_DEFAULT_FRAME_REORDERING TRUE
 #define VTENC_DEFAULT_REALTIME FALSE
@@ -239,7 +238,6 @@ gst_vtenc_base_init (GstVTEncClass * klass)
         gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
   }
 
-
   src_caps = gst_caps_new_simple (codec_details->mimetype,
       "width", GST_TYPE_INT_RANGE, min_width, max_width,
       "height", GST_TYPE_INT_RANGE, min_height, max_height,
@@ -266,6 +264,11 @@ gst_vtenc_base_init (GstVTEncClass * klass)
     case kCMVideoCodecType_H264:
       gst_structure_set (gst_caps_get_structure (src_caps, 0),
           "stream-format", G_TYPE_STRING, "avc",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
+    case kCMVideoCodecType_HEVC:
+      gst_structure_set (gst_caps_get_structure (src_caps, 0),
+          "stream-format", G_TYPE_STRING, "hvc1",
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case GST_kCMVideoCodecType_Some_AppleProRes:
@@ -720,7 +723,7 @@ gst_vtenc_stop (GstVideoEncoder * enc)
 }
 
 static CFStringRef
-gst_vtenc_profile_level_key (GstVTEnc * self, const gchar * profile,
+gst_vtenc_h264_profile_level_key (GstVTEnc * self, const gchar * profile,
     const gchar * level_arg)
 {
   char level[64];
@@ -763,6 +766,37 @@ gst_vtenc_profile_level_key (GstVTEnc * self, const gchar * profile,
   return ret;
 }
 
+static CFStringRef
+gst_vtenc_hevc_profile_level_key (GstVTEnc * self, const gchar * profile,
+    const gchar * level_arg)
+{
+  gchar *key = NULL;
+  CFStringRef ret = NULL;
+
+  if (profile == NULL || !strcmp (profile, "main"))
+    profile = "Main";
+  else if (!strcmp (profile, "main-10"))
+    profile = "Main10";
+  else if (!strcmp (profile, "main-422-10"))
+    /* TODO: this should probably be guarded with a version check (macOS 12.3+ / iOS 15.4+)
+     * https://developer.apple.com/documentation/videotoolbox/kvtprofilelevel_hevc_main10_autolevel */
+    profile = "Main42210";
+  else {
+    GST_ERROR_OBJECT (self, "invalid profile: %s", profile);
+    return ret;
+  }
+
+  /* VT does not support specific levels for HEVC */
+  key = g_strdup_printf ("HEVC_%s_AutoLevel", profile);
+  ret = CFStringCreateWithBytes (NULL, (const guint8 *) key, strlen (key),
+      kCFStringEncodingASCII, 0);
+
+  GST_INFO_OBJECT (self, "negotiated profile and level %s", key);
+
+  g_free (key);
+  return ret;
+}
+
 static gboolean
 gst_vtenc_negotiate_profile_and_level (GstVTEnc * self, GstStructure * s)
 {
@@ -771,9 +805,16 @@ gst_vtenc_negotiate_profile_and_level (GstVTEnc * self, GstStructure * s)
 
   if (self->profile_level)
     CFRelease (self->profile_level);
-  self->profile_level = gst_vtenc_profile_level_key (self, profile, level);
+
+  if (self->specific_format_id == kCMVideoCodecType_HEVC)
+    self->profile_level =
+        gst_vtenc_hevc_profile_level_key (self, profile, level);
+  else
+    self->profile_level =
+        gst_vtenc_h264_profile_level_key (self, profile, level);
+
   if (self->profile_level == NULL) {
-    GST_ERROR_OBJECT (self, "unsupported h264 profile '%s' or level '%s'",
+    GST_ERROR_OBJECT (self, "unsupported profile '%s' or level '%s'",
         profile, level);
     return FALSE;
   }
@@ -819,6 +860,11 @@ gst_vtenc_negotiate_specific_format_details (GstVideoEncoder * enc)
     switch (self->details->format_id) {
       case kCMVideoCodecType_H264:
         self->specific_format_id = kCMVideoCodecType_H264;
+        if (!gst_vtenc_negotiate_profile_and_level (self, s))
+          goto fail;
+        break;
+      case kCMVideoCodecType_HEVC:
+        self->specific_format_id = kCMVideoCodecType_HEVC;
         if (!gst_vtenc_negotiate_profile_and_level (self, s))
           goto fail;
         break;
@@ -931,35 +977,48 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
 
   switch (self->details->format_id) {
     case kCMVideoCodecType_H264:
+    case kCMVideoCodecType_HEVC:
     {
       CMFormatDescriptionRef fmt;
       CFDictionaryRef atoms;
-      CFStringRef avccKey;
-      CFDataRef avcc;
+      CFStringRef boxKey;
+      CFDataRef box;
       guint8 *codec_data;
       gsize codec_data_size;
       GstBuffer *codec_data_buf;
-      guint8 sps[3];
+      guint8 sps[12];
 
       fmt = CMSampleBufferGetFormatDescription (sbuf);
       atoms = CMFormatDescriptionGetExtension (fmt,
           kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms);
-      avccKey = CFStringCreateWithCString (NULL, "avcC", kCFStringEncodingUTF8);
-      avcc = CFDictionaryGetValue (atoms, avccKey);
-      CFRelease (avccKey);
-      codec_data_size = CFDataGetLength (avcc);
+
+      if (self->details->format_id == kCMVideoCodecType_HEVC)
+        boxKey =
+            CFStringCreateWithCString (NULL, "hvcC", kCFStringEncodingUTF8);
+      else
+        boxKey =
+            CFStringCreateWithCString (NULL, "avcC", kCFStringEncodingUTF8);
+
+      box = CFDictionaryGetValue (atoms, boxKey);
+      CFRelease (boxKey);
+      codec_data_size = CFDataGetLength (box);
       codec_data = g_malloc (codec_data_size);
-      CFDataGetBytes (avcc, CFRangeMake (0, codec_data_size), codec_data);
+      CFDataGetBytes (box, CFRangeMake (0, codec_data_size), codec_data);
       codec_data_buf = gst_buffer_new_wrapped (codec_data, codec_data_size);
 
       gst_structure_set (s, "codec_data", GST_TYPE_BUFFER, codec_data_buf,
           NULL);
 
-      sps[0] = codec_data[1];
-      sps[1] = codec_data[2] & ~0xDF;
-      sps[2] = codec_data[3];
-
-      gst_codec_utils_h264_caps_set_level_and_profile (caps, sps, 3);
+      if (self->details->format_id == kCMVideoCodecType_HEVC) {
+        sps[0] = codec_data[1];
+        sps[11] = codec_data[12];
+        gst_codec_utils_h265_caps_set_level_tier_and_profile (caps, sps, 12);
+      } else {
+        sps[0] = codec_data[1];
+        sps[1] = codec_data[2] & ~0xDF;
+        sps[2] = codec_data[3];
+        gst_codec_utils_h264_caps_set_level_and_profile (caps, sps, 3);
+      }
 
       gst_buffer_unref (codec_data_buf);
     }
@@ -1189,7 +1248,7 @@ gst_vtenc_create_session (GstVTEnc * self)
         (gdouble) self->negotiated_fps_n / (gdouble) self->negotiated_fps_d);
 
     /*
-     * https://developer.apple.com/documentation/videotoolbox/vtcompressionsession/compression_properties/profile_and_level_constants
+     * https://developer.apple.com/documentation/videotoolbox/kvtcompressionpropertykey_profilelevel
      */
     status = VTSessionSetProperty (session,
         kVTCompressionPropertyKey_ProfileLevel, self->profile_level);
@@ -1885,8 +1944,11 @@ gst_vtenc_register (GstPlugin * plugin,
 
 static const GstVTEncoderDetails gst_vtenc_codecs[] = {
   {"H.264", "h264", "video/x-h264", kCMVideoCodecType_H264, FALSE},
+  {"H.265/HEVC", "h265", "video/x-h265", kCMVideoCodecType_HEVC, FALSE},
 #ifndef HAVE_IOS
   {"H.264 (HW only)", "h264_hw", "video/x-h264", kCMVideoCodecType_H264, TRUE},
+  {"H.265/HEVC (HW only)", "h265_hw", "video/x-h265", kCMVideoCodecType_HEVC,
+      TRUE},
 #endif
   {"Apple ProRes", "prores", "video/x-prores",
       GST_kCMVideoCodecType_Some_AppleProRes, FALSE},
