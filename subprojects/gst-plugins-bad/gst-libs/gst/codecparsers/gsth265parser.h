@@ -452,6 +452,8 @@ typedef struct _GstH265TimeCode                 GstH265TimeCode;
 typedef struct _GstH265MasteringDisplayColourVolume GstH265MasteringDisplayColourVolume;
 typedef struct _GstH265ContentLightLevel        GstH265ContentLightLevel;
 typedef struct _GstH265SEIMessage               GstH265SEIMessage;
+typedef struct _GstH265DecoderConfigRecordNalUnitArray GstH265DecoderConfigRecordNalUnitArray;
+typedef struct _GstH265DecoderConfigRecord      GstH265DecoderConfigRecord;
 
 /**
  * GstH265NalUnit:
@@ -1657,6 +1659,303 @@ struct _GstH265SEIMessage
 };
 
 /**
+ * GstH265DecoderConfigRecordNalUnitArray:
+ *
+ * Contains NAL Unit array data as defined in ISO/IEC 14496-15
+ *
+ * Since: 1.24
+ */
+struct _GstH265DecoderConfigRecordNalUnitArray
+{
+  /**
+   * GstH265DecoderConfigRecordNalUnitArray.array_completeness:
+   *
+   * 1: all NAL units of the given type are in this array and none
+   *   are in the stream.
+   * 0: additional NAL units of the indicated type may be in the stream
+   */
+  guint8 array_completeness;
+
+  /**
+   * GstH265DecoderConfigRecordNalUnitArray.nal_unit_type:
+   *
+   * Indicates the type of the NAL units in the following array.
+   * Shall be VPS, SPS, PPS, prefix SEI or suffix SEI
+   */
+  GstH265NalUnitType nal_unit_type;
+
+  /**
+   * GstH265DecoderConfigRecordNalUnitArray.nalu:
+   *
+   * Array of identified #GstH265NalUnit
+   */
+  GArray *nalu;
+};
+
+/**
+ * GstH265DecoderConfigRecord:
+ *
+ * Contains HEVCDecoderConfigurationRecord data as defined in ISO/IEC 14496-15
+ *
+ * Since: 1.24
+ */
+struct _GstH265DecoderConfigRecord
+{
+  /**
+   * GstH265DecoderConfigRecord.configuration_version:
+   *
+   * Indicates configurationVersion, must be 1
+   */
+  guint8 configuration_version;
+
+  /**
+   * GstH265DecoderConfigRecord.general_profile_space:
+   *
+   * general profile space
+   */
+  guint8 general_profile_space;
+
+  /**
+   * GstH265DecoderConfigRecord.general_tier_flag:
+   *
+   * general tier flag
+   */
+  guint8 general_tier_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_profile_idc:
+   *
+   * general profile indiction
+   */
+  guint8 general_profile_idc;
+
+  /**
+   * GstH265DecoderConfigRecord.general_profile_compatibility_flags:
+   *
+   * general profile compatibility flags
+   */
+  guint8 general_profile_compatibility_flags[32];
+
+  /**
+   * GstH265DecoderConfigRecord.general_progressive_source_flag:
+   *
+   * general_progressive_source_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_progressive_source_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_interlaced_source_flag:
+   *
+   * general_interlaced_source_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_interlaced_source_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_non_packed_constraint_flag:
+   *
+   * general_non_packed_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_non_packed_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_frame_only_constraint_flag:
+   *
+   * general_frame_only_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_frame_only_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_max_12bit_constraint_flag:
+   *
+   * general_max_12bit_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_max_12bit_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_max_10bit_constraint_flag:
+   *
+   * general_max_10bit_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_max_10bit_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_max_8bit_constraint_flag:
+   *
+   * general_max_8bit_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_max_8bit_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_max_422chroma_constraint_flag:
+   *
+   * general_max_422chroma_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_max_422chroma_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_max_420chroma_constraint_flag:
+   *
+   * general_max_420chroma_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_max_420chroma_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_max_monochrome_constraint_flag:
+   *
+   * general_max_monochrome_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_max_monochrome_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_intra_constraint_flag:
+   *
+   * general_intra_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_intra_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_one_picture_only_constraint_flag:
+   *
+   * general_one_picture_only_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_one_picture_only_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_lower_bit_rate_constraint_flag:
+   *
+   * general_lower_bit_rate_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_lower_bit_rate_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_max_14bit_constraint_flag:
+   *
+   * general_max_14bit_constraint_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_max_14bit_constraint_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_inbld_flag:
+   *
+   * general_inbld_flag parsed from
+   * HEVCDecoderConfigurationRecord.general_constraint_indicator_flags
+   */
+  guint8 general_inbld_flag;
+
+  /**
+   * GstH265DecoderConfigRecord.general_level_idc:
+   *
+   * general level indication
+   */
+  guint8 general_level_idc;
+
+  /**
+   * GstH265DecoderConfigRecord.min_spatial_segmentation_idc:
+   *
+   * min spatial segmentation indication
+   */
+  guint16 min_spatial_segmentation_idc;
+
+  /**
+   * GstH265DecoderConfigRecord.parallelism_type:
+   *
+   * parallelism type
+   */
+  guint8 parallelism_type;
+
+  /**
+   * GstH265DecoderConfigRecord.chroma_format_idc:
+   *
+   * chroma format indication
+   */
+  guint8 chroma_format_idc;
+
+  /**
+   * GstH265DecoderConfigRecord.bit_depth_luma_minus8:
+   *
+   * bit depth luma minus 8
+   */
+  guint8 bit_depth_luma_minus8;
+
+  /**
+   * GstH265DecoderConfigRecord.bit_depth_chroma_minus8:
+   *
+   * bit depth chroma minus 8
+   */
+  guint8 bit_depth_chroma_minus8;
+
+  /**
+   * GstH265DecoderConfigRecord.avg_frame_rate:
+   *
+   * average frame rate in units of frames per 256 seconds,
+   * or 0 when unspecified
+   */
+  guint16 avg_frame_rate;
+
+  /**
+   * GstH265DecoderConfigRecord.constant_frame_rate:
+   *
+   * constant frame rate.
+   * 1: stream to which this configuration record applies is constante frame rate
+   * 2: representation of each temporal layer in the stream is constant frame rate
+   * 0: unspecified
+   */
+  guint8 constant_frame_rate;
+
+  /**
+   * GstH265DecoderConfigRecord.num_temporal_layers:
+   *
+   * 0: unknown whether the stream is temporally scalable
+   * otherwise: the number of temporal layers
+   */
+  guint8 num_temporal_layers;
+
+  /**
+   * GstH265DecoderConfigRecord.temporal_id_nested:
+   *
+   * 1: all SPSs that activated when the stream to this configuration record
+   *   applies is decoded have sps_temporal_id_nesting_flags equal to 1
+   *   and temporal sub-layer up-switching to any higher temporal layer can
+   *   be performed at any semple
+   * 0: unknown
+   */
+  guint8 temporal_id_nested;
+
+  /**
+   * GstH265DecoderConfigRecord.length_size_minus_one:
+   *
+   * indicates the length in bytes of nal unit length field.
+   * This value shall be one of 0, 1, or 3 corresponding to a length
+   * encoded with 1, 2, or 4 bytes, respectively
+   */
+  guint8 length_size_minus_one;
+
+  /**
+   * GstH265DecoderConfigRecord.nalu_array:
+   *
+   * Array of #GstH265DecoderConfigRecordNalUnitArray
+   */
+  GArray *nalu_array;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+/**
  * GstH265Parser:
  *
  * H265 NAL Parser (opaque structure).
@@ -1864,6 +2163,15 @@ GstBuffer * gst_h265_parser_insert_sei_hevc (GstH265Parser * parser,
 
 GST_CODEC_PARSERS_API
 GstH265Profile gst_h265_get_profile_from_sps (GstH265SPS * sps);
+
+GST_CODEC_PARSERS_API
+void           gst_h265_decoder_config_record_free (GstH265DecoderConfigRecord * config);
+
+GST_CODEC_PARSERS_API
+GstH265ParserResult gst_h265_parser_parse_decoder_config_record (GstH265Parser * parser,
+                                                                 const guint8 * data,
+                                                                 gsize size,
+                                                                 GstH265DecoderConfigRecord ** config);
 
 G_END_DECLS
 #endif

@@ -4741,3 +4741,294 @@ gst_h265_get_profile_from_sps (GstH265SPS * sps)
   /* first profile of the synthetic ptl */
   return gst_h265_profile_tier_level_get_profile (&tmp_ptl);
 }
+
+/* *INDENT-OFF* */
+static void
+gst_clear_h265_decoder_config_record_nalu_array (
+    GstH265DecoderConfigRecordNalUnitArray * array)
+{
+  if (!array)
+    return;
+
+  if (array->nalu)
+    g_array_unref (array->nalu);
+}
+/* *INDENT-ON* */
+
+/**
+ * gst_h265_decoder_config_record_free:
+ * @config: (nullable): a #GstH265DecoderConfigRecord data
+ *
+ * Free @config data
+ *
+ * Since: 1.24
+ */
+void
+gst_h265_decoder_config_record_free (GstH265DecoderConfigRecord * config)
+{
+  if (!config)
+    return;
+
+  if (config->nalu_array)
+    g_array_unref (config->nalu_array);
+
+  g_free (config);
+}
+
+static GstH265DecoderConfigRecord *
+gst_h265_decoder_config_record_new (void)
+{
+  GstH265DecoderConfigRecord *config;
+
+  config = g_new0 (GstH265DecoderConfigRecord, 1);
+  config->nalu_array = g_array_new (FALSE,
+      FALSE, sizeof (GstH265DecoderConfigRecordNalUnitArray));
+  g_array_set_clear_func (config->nalu_array,
+      (GDestroyNotify) gst_clear_h265_decoder_config_record_nalu_array);
+
+  return config;
+}
+
+/**
+ * gst_h265_parser_parse_decoder_config_record:
+ * @parser: a #GstH265Parser
+ * @data: the data to parse
+ * @size: the size of @data
+ * @config: (out): parsed #GstH265DecoderConfigRecord data
+ *
+ * Parses HEVCDecoderConfigurationRecord data and fill into @config.
+ * The caller must free @config via gst_h265_decoder_config_record_free()
+ *
+ * This method does not parse VPS, SPS and PPS and therefore the caller needs to
+ * parse each NAL unit via appropriate parsing method.
+ *
+ * Returns: a #GstH265ParserResult
+ *
+ * Since: 1.24
+ */
+GstH265ParserResult
+gst_h265_parser_parse_decoder_config_record (GstH265Parser * parser,
+    const guint8 * data, gsize size, GstH265DecoderConfigRecord ** config)
+{
+  GstH265DecoderConfigRecord *ret;
+  GstBitReader br;
+  GstH265ParserResult result = GST_H265_PARSER_OK;
+  guint i;
+  guint8 num_of_arrays;
+
+  g_return_val_if_fail (parser != NULL, GST_H265_PARSER_ERROR);
+  g_return_val_if_fail (data != NULL, GST_H265_PARSER_ERROR);
+  g_return_val_if_fail (config != NULL, GST_H265_PARSER_ERROR);
+
+#define READ_CONFIG_UINT8(val, nbits) G_STMT_START { \
+  if (!gst_bit_reader_get_bits_uint8 (&br, (guint8 *) &val, nbits)) { \
+    GST_WARNING ("Failed to read " G_STRINGIFY (val)); \
+    result = GST_H265_PARSER_ERROR; \
+    goto error; \
+  } \
+} G_STMT_END;
+
+#define READ_CONFIG_UINT16(val, nbits) G_STMT_START { \
+  if (!gst_bit_reader_get_bits_uint16 (&br, &val, nbits)) { \
+    GST_WARNING ("Failed to read " G_STRINGIFY (val)); \
+    result = GST_H265_PARSER_ERROR; \
+    goto error; \
+  } \
+} G_STMT_END;
+
+#define SKIP_CONFIG_BITS(nbits) G_STMT_START { \
+  if (!gst_bit_reader_skip (&br, nbits)) { \
+    GST_WARNING ("Failed to skip %d bits", nbits); \
+    result = GST_H265_PARSER_ERROR; \
+    goto error; \
+  } \
+} G_STMT_END;
+
+  *config = NULL;
+
+  if (size < 23) {
+    GST_WARNING ("Too small size hvcC");
+    return GST_H265_PARSER_ERROR;
+  }
+
+  gst_bit_reader_init (&br, data, size);
+
+  ret = gst_h265_decoder_config_record_new ();
+
+  READ_CONFIG_UINT8 (ret->configuration_version, 8);
+  if (ret->configuration_version != 1) {
+    GST_WARNING ("Wrong configurationVersion %d", ret->configuration_version);
+    /* Must be 1 but allows 0 for backward compatibility.
+     * See commit
+     * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/commit/63fee31a3f95021fa0bb2429c723f5356c9b3c4b */
+    if (ret->configuration_version != 0) {
+      result = GST_H265_PARSER_ERROR;
+      goto error;
+    }
+  }
+
+  READ_CONFIG_UINT8 (ret->general_profile_space, 2);
+  READ_CONFIG_UINT8 (ret->general_tier_flag, 1);
+  READ_CONFIG_UINT8 (ret->general_profile_idc, 5);
+
+  for (i = 0; i < 32; i++)
+    READ_CONFIG_UINT8 (ret->general_profile_compatibility_flags[i], 1);
+
+  /* 7.3.3 Profile, tier and level syntax */
+  READ_CONFIG_UINT8 (ret->general_progressive_source_flag, 1);
+  READ_CONFIG_UINT8 (ret->general_interlaced_source_flag, 1);
+  READ_CONFIG_UINT8 (ret->general_non_packed_constraint_flag, 1);
+  READ_CONFIG_UINT8 (ret->general_frame_only_constraint_flag, 1);
+
+  if (ret->general_profile_idc == 4 ||
+      ret->general_profile_compatibility_flags[4] ||
+      ret->general_profile_idc == 5 ||
+      ret->general_profile_compatibility_flags[5] ||
+      ret->general_profile_idc == 6 ||
+      ret->general_profile_compatibility_flags[6] ||
+      ret->general_profile_idc == 7 ||
+      ret->general_profile_compatibility_flags[7] ||
+      ret->general_profile_idc == 8 ||
+      ret->general_profile_compatibility_flags[8] ||
+      ret->general_profile_idc == 9 ||
+      ret->general_profile_compatibility_flags[9] ||
+      ret->general_profile_idc == 10 ||
+      ret->general_profile_compatibility_flags[10] ||
+      ret->general_profile_idc == 11 ||
+      ret->general_profile_compatibility_flags[11]) {
+    READ_CONFIG_UINT8 (ret->general_max_12bit_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_max_10bit_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_max_8bit_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_max_422chroma_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_max_420chroma_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_max_monochrome_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_intra_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_one_picture_only_constraint_flag, 1);
+    READ_CONFIG_UINT8 (ret->general_lower_bit_rate_constraint_flag, 1);
+
+    if (ret->general_profile_idc == 5 ||
+        ret->general_profile_compatibility_flags[5] ||
+        ret->general_profile_idc == 9 ||
+        ret->general_profile_compatibility_flags[9] ||
+        ret->general_profile_idc == 10 ||
+        ret->general_profile_compatibility_flags[10] ||
+        ret->general_profile_idc == 11 ||
+        ret->general_profile_compatibility_flags[11]) {
+      READ_CONFIG_UINT8 (ret->general_max_14bit_constraint_flag, 1);
+      SKIP_CONFIG_BITS (33);
+    } else {
+      SKIP_CONFIG_BITS (34);
+    }
+  } else if (ret->general_profile_idc == 2 ||
+      ret->general_profile_compatibility_flags[2]) {
+    SKIP_CONFIG_BITS (7);
+    READ_CONFIG_UINT8 (ret->general_one_picture_only_constraint_flag, 1);
+
+    SKIP_CONFIG_BITS (35);
+  } else {
+    SKIP_CONFIG_BITS (43);
+  }
+
+  if (ret->general_profile_idc == 1 ||
+      ret->general_profile_compatibility_flags[1] ||
+      ret->general_profile_idc == 2 ||
+      ret->general_profile_compatibility_flags[2] ||
+      ret->general_profile_idc == 3 ||
+      ret->general_profile_compatibility_flags[3] ||
+      ret->general_profile_idc == 4 ||
+      ret->general_profile_compatibility_flags[4] ||
+      ret->general_profile_idc == 5 ||
+      ret->general_profile_compatibility_flags[5] ||
+      ret->general_profile_idc == 9 ||
+      ret->general_profile_compatibility_flags[9] ||
+      ret->general_profile_idc == 11 ||
+      ret->general_profile_compatibility_flags[11]) {
+    READ_CONFIG_UINT8 (ret->general_inbld_flag, 1);
+  } else {
+    SKIP_CONFIG_BITS (1);
+  }
+
+  g_assert (gst_bit_reader_get_pos (&br) == 12 * 8);
+
+  READ_CONFIG_UINT8 (ret->general_level_idc, 8);
+
+  SKIP_CONFIG_BITS (4);
+  READ_CONFIG_UINT16 (ret->min_spatial_segmentation_idc, 12);
+
+  SKIP_CONFIG_BITS (6);
+  READ_CONFIG_UINT8 (ret->parallelism_type, 2);
+
+  SKIP_CONFIG_BITS (6);
+  READ_CONFIG_UINT8 (ret->chroma_format_idc, 2);
+
+  SKIP_CONFIG_BITS (5);
+  READ_CONFIG_UINT8 (ret->bit_depth_luma_minus8, 3);
+
+  SKIP_CONFIG_BITS (5);
+  READ_CONFIG_UINT8 (ret->bit_depth_chroma_minus8, 3);
+
+  READ_CONFIG_UINT16 (ret->avg_frame_rate, 16);
+
+  READ_CONFIG_UINT8 (ret->constant_frame_rate, 2);
+  READ_CONFIG_UINT8 (ret->num_temporal_layers, 3);
+  READ_CONFIG_UINT8 (ret->temporal_id_nested, 1);
+  READ_CONFIG_UINT8 (ret->length_size_minus_one, 2);
+  if (ret->length_size_minus_one == 2) {
+    /* "length_size_minus_one + 1" should be 1, 2, or 4 */
+    GST_WARNING ("Wrong nal-length-size");
+    result = GST_H265_PARSER_ERROR;
+    goto error;
+  }
+
+  READ_CONFIG_UINT8 (num_of_arrays, 8);
+
+  g_assert (gst_bit_reader_get_pos (&br) == 23 * 8);
+  for (i = 0; i < num_of_arrays; i++) {
+    GstH265DecoderConfigRecordNalUnitArray array;
+    GstH265NalUnit nalu;
+    guint16 num_nalu, j;
+    guint offset;
+
+    READ_CONFIG_UINT8 (array.array_completeness, 1);
+    SKIP_CONFIG_BITS (1);
+    READ_CONFIG_UINT8 (array.nal_unit_type, 6);
+
+    READ_CONFIG_UINT16 (num_nalu, 16);
+
+    offset = gst_bit_reader_get_pos (&br) / 8;
+    array.nalu = g_array_sized_new (FALSE, FALSE, sizeof (GstH265NalUnit),
+        num_nalu);
+    for (j = 0; j < num_nalu; j++) {
+      result = gst_h265_parser_identify_nalu_hevc (parser, data, offset, size,
+          2, &nalu);
+      if (result != GST_H265_PARSER_OK) {
+        g_array_unref (array.nalu);
+        goto error;
+      }
+
+      g_array_append_val (array.nalu, nalu);
+      offset = nalu.offset + nalu.size;
+    }
+
+    g_array_append_val (ret->nalu_array, array);
+
+    if (i != num_of_arrays - 1 && !gst_bit_reader_set_pos (&br, offset * 8)) {
+      GST_WARNING ("Not enough byte for NAL reading");
+      result = GST_H265_PARSER_ERROR;
+      goto error;
+    }
+  }
+
+  *config = ret;
+  return GST_H265_PARSER_OK;
+
+error:
+  {
+    gst_h265_decoder_config_record_free (ret);
+    return result;
+  }
+
+#undef READ_CONFIG_UINT8
+#undef READ_CONFIG_UINT16
+#undef SKIP_CONFIG_BITS
+}
