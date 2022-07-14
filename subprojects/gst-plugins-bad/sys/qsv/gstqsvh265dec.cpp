@@ -236,89 +236,73 @@ gst_qsv_h265_dec_parse_codec_data (GstQsvH265Dec * self, const guint8 * data,
     gsize size)
 {
   GstH265Parser *parser = self->parser;
-  guint num_nal_arrays;
-  guint off;
-  guint num_nals, i, j;
   GstH265ParserResult pres;
-  GstH265NalUnit nalu;
   GstH265VPS vps;
   GstH265SPS sps;
   GstH265PPS pps;
+  gboolean ret = FALSE;
+  GstH265DecoderConfigRecord *config = nullptr;
 
-  /* parse the hvcC data */
-  if (size < 23) {
-    GST_WARNING_OBJECT (self, "hvcC too small");
+  pres = gst_h265_parser_parse_decoder_config_record (parser,
+      data, size, &config);
+  if (pres != GST_H265_PARSER_OK) {
+    GST_WARNING_OBJECT (self, "Failed to parse hvcC data");
     return FALSE;
   }
 
-  /* wrong hvcC version */
-  if (data[0] != 0 && data[0] != 1) {
-    return FALSE;
-  }
-
-  self->nal_length_size = (data[21] & 0x03) + 1;
+  self->nal_length_size = config->length_size_minus_one + 1;
   GST_DEBUG_OBJECT (self, "nal length size %u", self->nal_length_size);
 
-  num_nal_arrays = data[22];
-  off = 23;
+  for (guint i = 0; i < config->nalu_array->len; i++) {
+    GstH265DecoderConfigRecordNalUnitArray *array =
+        &g_array_index (config->nalu_array,
+        GstH265DecoderConfigRecordNalUnitArray, i);
 
-  for (i = 0; i < num_nal_arrays; i++) {
-    if (off + 3 >= size) {
-      GST_WARNING_OBJECT (self, "hvcC too small");
-      return FALSE;
-    }
+    for (guint j = 0; j < array->nalu->len; j++) {
+      GstH265NalUnit *nalu = &g_array_index (array->nalu, GstH265NalUnit, j);
 
-    num_nals = GST_READ_UINT16_BE (data + off + 1);
-    off += 3;
-    for (j = 0; j < num_nals; j++) {
-      pres = gst_h265_parser_identify_nalu_hevc (parser,
-          data, off, size, 2, &nalu);
-
-      if (pres != GST_H265_PARSER_OK) {
-        GST_WARNING_OBJECT (self, "hvcC too small");
-        return FALSE;
-      }
-
-      switch (nalu.type) {
+      switch (nalu->type) {
         case GST_H265_NAL_VPS:
-          pres = gst_h265_parser_parse_vps (parser, &nalu, &vps);
+          pres = gst_h265_parser_parse_vps (parser, nalu, &vps);
           if (pres != GST_H265_PARSER_OK) {
             GST_WARNING_OBJECT (self, "Failed to parse VPS");
-            return FALSE;
+            goto out;
           }
 
           gst_qsv_h265_dec_store_nal (self, vps.id,
-              (GstH265NalUnitType) nalu.type, &nalu);
+              (GstH265NalUnitType) nalu->type, nalu);
           break;
         case GST_H265_NAL_SPS:
-          pres = gst_h265_parser_parse_sps (self->parser, &nalu, &sps, FALSE);
+          pres = gst_h265_parser_parse_sps (self->parser, nalu, &sps, FALSE);
           if (pres != GST_H265_PARSER_OK) {
             GST_WARNING_OBJECT (self, "Failed to parse SPS");
-            return FALSE;
+            goto out;
           }
 
           gst_qsv_h265_dec_store_nal (self, sps.id,
-              (GstH265NalUnitType) nalu.type, &nalu);
+              (GstH265NalUnitType) nalu->type, nalu);
           break;
         case GST_H265_NAL_PPS:
-          pres = gst_h265_parser_parse_pps (parser, &nalu, &pps);
+          pres = gst_h265_parser_parse_pps (parser, nalu, &pps);
           if (pres != GST_H265_PARSER_OK) {
             GST_WARNING_OBJECT (self, "Failed to parse PPS");
-            return FALSE;
+            goto out;
           }
 
           gst_qsv_h265_dec_store_nal (self, pps.id,
-              (GstH265NalUnitType) nalu.type, &nalu);
+              (GstH265NalUnitType) nalu->type, nalu);
           break;
         default:
           break;
       }
-
-      off = nalu.offset + nalu.size;
     }
   }
 
-  return TRUE;
+  ret = TRUE;
+
+out:
+  gst_h265_decoder_config_record_free (config);
+  return ret;
 }
 
 static gboolean
