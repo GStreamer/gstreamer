@@ -24,6 +24,10 @@
 #include <unistd.h>             /* for getpid */
 #include "gstosxaudiosink.h"
 
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 120000
+#define kAudioObjectPropertyElementMain kAudioObjectPropertyElementMaster
+#endif
+
 static inline gboolean
 _audio_system_set_runloop (CFRunLoopRef runLoop)
 {
@@ -34,7 +38,7 @@ _audio_system_set_runloop (CFRunLoopRef runLoop)
   AudioObjectPropertyAddress runloopAddress = {
     kAudioHardwarePropertyRunLoop,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectSetPropertyData (kAudioObjectSystemObject,
@@ -62,7 +66,7 @@ _audio_system_get_default_device (gboolean output)
   AudioObjectPropertyAddress defaultDeviceAddress = {
     prop_selector,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
@@ -86,7 +90,7 @@ _audio_system_get_devices (gint * ndevices)
   AudioObjectPropertyAddress audioDevicesAddress = {
     kAudioHardwarePropertyDevices,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyDataSize (kAudioObjectSystemObject,
@@ -126,7 +130,7 @@ _audio_device_is_alive (AudioDeviceID device_id, gboolean output)
   AudioObjectPropertyAddress audioDeviceAliveAddress = {
     kAudioDevicePropertyDeviceIsAlive,
     prop_scope,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyData (device_id,
@@ -167,7 +171,7 @@ _audio_device_get_latency (AudioDeviceID device_id)
   AudioObjectPropertyAddress audioDeviceLatencyAddress = {
     kAudioDevicePropertyLatency,
     kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyData (device_id,
@@ -190,7 +194,7 @@ _audio_device_get_hog (AudioDeviceID device_id)
   AudioObjectPropertyAddress audioDeviceHogModeAddress = {
     kAudioDevicePropertyHogMode,
     kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyData (device_id,
@@ -213,7 +217,7 @@ _audio_device_set_hog (AudioDeviceID device_id, pid_t hog_pid)
   AudioObjectPropertyAddress audioDeviceHogModeAddress = {
     kAudioDevicePropertyHogMode,
     kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectSetPropertyData (device_id,
@@ -239,7 +243,7 @@ _audio_device_set_mixing (AudioDeviceID device_id, gboolean enable_mix)
   AudioObjectPropertyAddress audioDeviceSupportsMixingAddress = {
     kAudioDevicePropertySupportsMixing,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   if (AudioObjectHasProperty (device_id, &audioDeviceSupportsMixingAddress)) {
@@ -291,7 +295,7 @@ _audio_device_get_name (AudioDeviceID device_id, gboolean output)
   AudioObjectPropertyAddress deviceNameAddress = {
     kAudioDevicePropertyDeviceName,
     prop_scope,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   /* Get the length of the device name */
@@ -323,7 +327,7 @@ _audio_device_has_output (AudioDeviceID device_id)
   AudioObjectPropertyAddress streamsAddress = {
     kAudioDevicePropertyStreams,
     kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyDataSize (device_id,
@@ -354,7 +358,7 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id,
   AudioObjectPropertyAddress channelLayoutAddress = {
     kAudioDevicePropertyPreferredChannelLayout,
     prop_scope,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   /* Get the length of the default channel layout structure */
@@ -416,7 +420,7 @@ _audio_device_get_streams (AudioDeviceID device_id, gint * nstreams)
   AudioObjectPropertyAddress streamsAddress = {
     kAudioDevicePropertyStreams,
     kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyDataSize (device_id,
@@ -453,7 +457,7 @@ _audio_stream_get_latency (AudioStreamID stream_id)
   AudioObjectPropertyAddress latencyAddress = {
     kAudioStreamPropertyLatency,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyData (stream_id,
@@ -476,7 +480,7 @@ _audio_stream_get_current_format (AudioStreamID stream_id,
   AudioObjectPropertyAddress formatAddress = {
     kAudioStreamPropertyPhysicalFormat,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyData (stream_id,
@@ -499,7 +503,7 @@ _audio_stream_set_current_format (AudioStreamID stream_id,
   AudioObjectPropertyAddress formatAddress = {
     kAudioStreamPropertyPhysicalFormat,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectSetPropertyData (stream_id,
@@ -522,7 +526,7 @@ _audio_stream_get_formats (AudioStreamID stream_id, gint * nformats)
   AudioObjectPropertyAddress formatsAddress = {
     kAudioStreamPropertyAvailablePhysicalFormats,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyDataSize (stream_id,
@@ -609,7 +613,7 @@ _audio_stream_change_format (AudioStreamID stream_id,
   AudioObjectPropertyAddress formatAddress = {
     kAudioStreamPropertyPhysicalFormat,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   GST_DEBUG ("setting stream format: " CORE_AUDIO_FORMAT,
@@ -715,7 +719,7 @@ _monitorize_spdif (GstCoreAudio * core_audio)
   AudioObjectPropertyAddress propAddress = {
     kAudioDevicePropertyDeviceHasChanged,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   /* Install the property listener */
@@ -740,7 +744,7 @@ _unmonitorize_spdif (GstCoreAudio * core_audio)
   AudioObjectPropertyAddress propAddress = {
     kAudioDevicePropertyDeviceHasChanged,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   /* Remove the property listener */

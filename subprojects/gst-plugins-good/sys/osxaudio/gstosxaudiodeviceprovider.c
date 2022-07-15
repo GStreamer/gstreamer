@@ -29,6 +29,10 @@
 #include "gstosxaudiosink.h"
 #include "gstosxaudiodeviceprovider.h"
 
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 120000
+#define kAudioObjectPropertyElementMain kAudioObjectPropertyElementMaster
+#endif
+
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -108,7 +112,7 @@ _audio_device_get_name (AudioDeviceID device_id, gboolean output)
   AudioObjectPropertyAddress deviceNameAddress = {
     kAudioDevicePropertyDeviceName,
     kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   prop_scope = output ? kAudioDevicePropertyScopeOutput :
@@ -145,7 +149,7 @@ _audio_device_has_output (AudioDeviceID device_id)
   AudioObjectPropertyAddress streamsAddress = {
     kAudioDevicePropertyStreams,
     kAudioDevicePropertyScopeOutput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyDataSize (device_id,
@@ -172,7 +176,7 @@ _audio_device_has_input (AudioDeviceID device_id)
   AudioObjectPropertyAddress streamsAddress = {
     kAudioDevicePropertyStreams,
     kAudioDevicePropertyScopeInput,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyDataSize (device_id,
@@ -200,7 +204,7 @@ _audio_system_get_devices (gint * ndevices)
   AudioObjectPropertyAddress audioDevicesAddress = {
     kAudioHardwarePropertyDevices,
     kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMaster
+    kAudioObjectPropertyElementMain
   };
 
   status = AudioObjectGetPropertyDataSize (kAudioObjectSystemObject,
