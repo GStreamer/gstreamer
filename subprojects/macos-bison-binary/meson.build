@@ -11,11 +11,8 @@ if arch != 'x86_64'
   arch = 'x86_64'
 endif
 
-ret = run_command(py3, files('download-binary.py'), meson.project_version(), arch, tar_hash)
-if ret.returncode() != 0
-  message(ret.stdout())
-  error(ret.stderr())
-endif
+ret = run_command(py3, files('download-binary.py'), meson.project_version(), arch, tar_hash,
+    check: true)
 
 conf = configuration_data()
 conf.set('SRCDIR', meson.project_source_root())
