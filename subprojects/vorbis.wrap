@@ -4,12 +4,12 @@ source_url = https://downloads.xiph.org/releases/vorbis/libvorbis-1.3.7.tar.xz
 source_fallback_url = https://gstreamer.freedesktop.org/data/src/mirror/libvorbis-1.3.7.tar.xz
 source_filename = libvorbis-1.3.7.tar.xz
 source_hash = b33cc4934322bcbf6efcbacf49e3ca01aadbea4114ec9589d1b1e9d20f72954b
-patch_filename = vorbis_1.3.7-2_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/vorbis_1.3.7-2/get_patch
-patch_hash = fe302576cbf8408754b332b539ea1b83f0f96fa9aae50a5d1fea911713d5f21c
+patch_filename = vorbis_1.3.7-4_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/vorbis_1.3.7-4/get_patch
+patch_hash = 979e22b24b16c927040700dfd8319cd6ba29bf52a14dbc66b1cb4ea60504f14a
+wrapdb_version = 1.3.7-4
 
 [provide]
 vorbis = vorbis_dep
 vorbisfile = vorbisfile_dep
 vorbisenc = vorbisenc_dep
-
