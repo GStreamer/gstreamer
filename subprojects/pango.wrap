@@ -1,4 +1,6 @@
-[wrap-git]
-url=https://gitlab.gnome.org/GNOME/pango.git
-push-url=git@gitlab.gnome.org:GNOME/pango.git
-revision=1.48.7
+[wrap-file]
+directory = pango-1.48.11
+source_url = https://download.gnome.org/sources/pango/1.48/pango-1.48.11.tar.xz
+source_filename = pango-1.48.11.tar.xz
+source_hash = 084fd0a74fad05b1b299d194a7366b6593063d370b40272a5d3a1888ceb9ac40
+diff_files = pango-1.48.11/0001-Coretext-fix-clang-build-failure.patch
