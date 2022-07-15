@@ -11,7 +11,7 @@
 #include <QAnimationDriver>
 
 #include <gst/gl/gl.h>
-#include <gst/gl/gstglfuncs.h>
+#include "gstqtgl.h"
 
 #include "qtglrenderer.h"
 #include "gstqtglutility.h"
