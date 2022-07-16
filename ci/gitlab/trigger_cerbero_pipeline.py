@@ -8,7 +8,6 @@ import gitlab
 CERBERO_PROJECT = 'gstreamer/cerbero'
 
 
-
 class Status:
     FAILED = 'failed'
     MANUAL = 'manual'
@@ -40,12 +39,24 @@ if __name__ == "__main__":
         job_token=os.environ.get('CI_JOB_TOKEN'))
 
     cerbero = gl.projects.get(CERBERO_PROJECT)
+
+    # CI_PROJECT_URL is not necessarily the project where the branch we need to
+    # build resides, for instance merge request pipelines can be run on
+    # 'gstreamer' namespace. Fetch the branch name in the same way, just in
+    # case it breaks in the future.
+    if 'CI_MERGE_REQUEST_SOURCE_PROJECT_URL' in os.environ:
+        project_url = os.environ['CI_MERGE_REQUEST_SOURCE_PROJECT_URL']
+        project_branch = os.environ['CI_MERGE_REQUEST_SOURCE_BRANCH_NAME']
+    else:
+        project_url = os.environ['CI_PROJECT_URL']
+        project_branch = os.environ['CI_COMMIT_REF_NAME']
+
     pipe = cerbero.trigger_pipeline(
         token=os.environ['CI_JOB_TOKEN'],
         ref=os.environ["GST_UPSTREAM_BRANCH"],
         variables={
-            "CI_GSTREAMER_URL": os.environ["CI_PROJECT_URL"],
-            "CI_GSTREAMER_REF_NAME": os.environ["CI_COMMIT_REF_NAME"],
+            "CI_GSTREAMER_URL": project_url,
+            "CI_GSTREAMER_REF_NAME": project_branch,
             # This tells cerbero CI that this is a pipeline started via the
             # trigger API, which means it can use a deps cache instead of
             # building from scratch.
