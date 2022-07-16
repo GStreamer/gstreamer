@@ -1516,9 +1516,10 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   if (in_width == out_info->width && in_height == out_info->height
       && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
-      self->borders_h == 0 &&
-      gst_video_colorimetry_is_equal (&in_info->colorimetry,
-          &out_info->colorimetry) && !need_flip) {
+      self->borders_h == 0 && !need_flip &&
+      gst_video_colorimetry_is_equivalent (&in_info->colorimetry,
+          GST_VIDEO_INFO_COMP_DEPTH (in_info, 0),
+          &out_info->colorimetry, GST_VIDEO_INFO_COMP_DEPTH (out_info, 0))) {
     self->same_caps = TRUE;
     g_mutex_unlock (&self->lock);
     return TRUE;
