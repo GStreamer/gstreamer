@@ -4071,6 +4071,41 @@ GST_START_TEST (test_auto_video_frame_unmap)
 
 GST_END_TEST;
 
+static gboolean
+is_equal_primaries_coord (const GstVideoColorPrimariesInfo * a,
+    const GstVideoColorPrimariesInfo * b)
+{
+  return (a->Wx == b->Wx && a->Wy == b->Wy && a->Rx == b->Rx && a->Ry == a->Ry
+      && a->Gx == b->Gx && a->Gy == b->Gy && a->Bx == b->Bx && a->By == b->By);
+}
+
+GST_START_TEST (test_video_color_primaries_equivalent)
+{
+  guint i, j;
+
+  for (i = 0; i <= GST_VIDEO_COLOR_PRIMARIES_EBU3213; i++) {
+    for (j = 0; j <= GST_VIDEO_COLOR_PRIMARIES_EBU3213; j++) {
+      GstVideoColorPrimaries primaries = (GstVideoColorPrimaries) i;
+      GstVideoColorPrimaries other = (GstVideoColorPrimaries) j;
+      const GstVideoColorPrimariesInfo *primaries_info =
+          gst_video_color_primaries_get_info (primaries);
+      const GstVideoColorPrimariesInfo *other_info =
+          gst_video_color_primaries_get_info (other);
+      gboolean equal =
+          gst_video_color_primaries_is_equivalent (primaries, other);
+      gboolean same_coord = is_equal_primaries_coord (primaries_info,
+          other_info);
+
+      if (equal)
+        fail_unless (same_coord);
+      else
+        fail_if (same_coord);
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -4127,6 +4162,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_make_raw_caps);
   tcase_add_test (tc_chain, test_video_extrapolate_stride);
   tcase_add_test (tc_chain, test_auto_video_frame_unmap);
+  tcase_add_test (tc_chain, test_video_color_primaries_equivalent);
 
   return s;
 }
