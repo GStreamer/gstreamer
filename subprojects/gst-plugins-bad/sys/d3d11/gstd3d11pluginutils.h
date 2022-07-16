@@ -38,15 +38,6 @@ typedef enum
   GST_D3D11_DEVICE_VENDOR_XBOX,
 } GstD3D11DeviceVendor;
 
-typedef struct _GstDxgiColorSpace
-{
-  guint dxgi_color_space_type;
-  GstVideoColorRange range;
-  GstVideoColorMatrix matrix;
-  GstVideoTransferFunction transfer;
-  GstVideoColorPrimaries primaries;
-} GstDxgiColorSpace;
-
 typedef struct _GstD3D11ColorMatrix
 {
   gdouble matrix[3][3];
@@ -67,15 +58,9 @@ gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInf
                                                      GstVideoContentLightLevel * cll,
                                                      DXGI_HDR_METADATA_HDR10 * dxgi_hdr10);
 
-gboolean        gst_d3d11_video_info_to_dxgi_color_space (const GstVideoInfo * info,
-                                                          GstDxgiColorSpace * color_space);
-
-gboolean        gst_d3d11_colorimetry_from_dxgi_color_space (DXGI_COLOR_SPACE_TYPE colorspace,
-                                                             GstVideoColorimetry * colorimetry);
-
 gboolean        gst_d3d11_find_swap_chain_color_space (const GstVideoInfo * info,
                                                        IDXGISwapChain3 * swapchain,
-                                                       GstDxgiColorSpace * color_space);
+                                                       DXGI_COLOR_SPACE_TYPE * color_space);
 
 GstBuffer *     gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
                                                        const GstVideoInfo * info,

@@ -91,5 +91,13 @@ guint           gst_d3d11_dxgi_format_get_alignment       (DXGI_FORMAT format);
 GST_D3D11_API
 const gchar *   gst_d3d11_dxgi_format_to_string           (DXGI_FORMAT format);
 
+GST_D3D11_API
+gboolean        gst_video_info_to_dxgi_color_space       (const GstVideoInfo * info,
+                                                          DXGI_COLOR_SPACE_TYPE * color_space);
+
+GST_D3D11_API
+gboolean        gst_video_info_apply_dxgi_color_space    (DXGI_COLOR_SPACE_TYPE color_space,
+                                                          GstVideoInfo * info);
+
 G_END_DECLS
 

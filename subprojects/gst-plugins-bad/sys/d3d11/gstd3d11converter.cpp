@@ -2698,7 +2698,7 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
   ComPtr < ID3D11VideoProcessor > processor;
   UINT support_flags;
   BOOL conversion_supported = TRUE;
-  GstDxgiColorSpace in_space, out_space;
+  DXGI_COLOR_SPACE_TYPE in_space, out_space;
   DXGI_FORMAT in_dxgi_format = priv->in_d3d11_format.dxgi_format;
   DXGI_FORMAT out_dxgi_format = priv->out_d3d11_format.dxgi_format;
   UINT in_format_flags = priv->in_d3d11_format.format_support[0];
@@ -2721,12 +2721,12 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
     return FALSE;
   }
 
-  if (!gst_d3d11_video_info_to_dxgi_color_space (&priv->in_info, &in_space)) {
+  if (!gst_video_info_to_dxgi_color_space (&priv->in_info, &in_space)) {
     GST_WARNING_OBJECT (self, "Unknown input DXGI colorspace");
     return FALSE;
   }
 
-  if (!gst_d3d11_video_info_to_dxgi_color_space (&priv->out_info, &out_space)) {
+  if (!gst_video_info_to_dxgi_color_space (&priv->out_info, &out_space)) {
     GST_WARNING_OBJECT (self, "Unknown output DXGI colorspace");
     return FALSE;
   }
@@ -2787,9 +2787,7 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
   }
 
   hr = enumerator1->CheckVideoProcessorFormatConversion (in_dxgi_format,
-      (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type,
-      out_dxgi_format, (DXGI_COLOR_SPACE_TYPE) out_space.dxgi_color_space_type,
-      &conversion_supported);
+      in_space, out_dxgi_format, out_space, &conversion_supported);
   if (!gst_d3d11_result (hr, device) || !conversion_supported) {
     GST_DEBUG_OBJECT (self, "Conversion is not supported");
     return FALSE;
@@ -2812,9 +2810,9 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
   video_context1->VideoProcessorSetStreamAutoProcessingMode
       (processor.Get (), 0, FALSE);
   video_context1->VideoProcessorSetStreamColorSpace1 (processor.Get (),
-      0, (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type);
+      0, in_space);
   video_context1->VideoProcessorSetOutputColorSpace1 (processor.Get (),
-      (DXGI_COLOR_SPACE_TYPE) in_space.dxgi_color_space_type);
+      out_space);
 
   priv->video_device = video_device;
   video_device->AddRef ();

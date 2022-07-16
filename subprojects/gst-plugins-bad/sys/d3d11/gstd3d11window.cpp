@@ -448,12 +448,10 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     {DXGI_FORMAT_R10G10B10A2_UNORM, GST_VIDEO_FORMAT_RGB10A2_LE, FALSE},
   };
   const GstD3D11WindowDisplayFormat *chosen_format = NULL;
-  GstDxgiColorSpace swapchain_colorspace;
-  gboolean found_swapchain_colorspace = FALSE;
+  DXGI_COLOR_SPACE_TYPE swapchain_colorspace =
+      DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
   gboolean hdr10_aware = FALSE;
   gboolean have_hdr10_meta = FALSE;
-  DXGI_COLOR_SPACE_TYPE native_colorspace_type =
-      DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
   ComPtr < IDXGIFactory5 > factory5;
   IDXGIFactory1 *factory_handle;
   BOOL allow_tearing = FALSE;
@@ -603,34 +601,19 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
   hr = window->swap_chain->QueryInterface (IID_PPV_ARGS (&swapchain3));
   if (gst_d3d11_result (hr, device)) {
-    found_swapchain_colorspace =
-        gst_d3d11_find_swap_chain_color_space (&window->render_info,
-        swapchain3.Get (), &swapchain_colorspace);
-    if (found_swapchain_colorspace) {
-      native_colorspace_type =
-          (DXGI_COLOR_SPACE_TYPE) swapchain_colorspace.dxgi_color_space_type;
-      hr = swapchain3->SetColorSpace1 (native_colorspace_type);
+    if (gst_d3d11_find_swap_chain_color_space (&window->render_info,
+            swapchain3.Get (), &swapchain_colorspace)) {
+      hr = swapchain3->SetColorSpace1 (swapchain_colorspace);
       if (!gst_d3d11_result (hr, window->device)) {
         GST_WARNING_OBJECT (window, "Failed to set colorspace %d, hr: 0x%x",
-            native_colorspace_type, (guint) hr);
-        found_swapchain_colorspace = FALSE;
-        native_colorspace_type = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+            swapchain_colorspace, (guint) hr);
+        swapchain_colorspace = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
       } else {
         ComPtr < IDXGISwapChain4 > swapchain4;
 
-        GST_DEBUG_OBJECT (window, "Set colorspace %d", native_colorspace_type);
-
-        /* update with selected display color space */
-        window->render_info.colorimetry.primaries =
-            swapchain_colorspace.primaries;
-        window->render_info.colorimetry.transfer =
-            swapchain_colorspace.transfer;
-        window->render_info.colorimetry.range = swapchain_colorspace.range;
-        window->render_info.colorimetry.matrix = swapchain_colorspace.matrix;
-
         /* DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 = 12, undefined in old
          * mingw header */
-        if (native_colorspace_type == 12 && have_hdr10_meta) {
+        if (swapchain_colorspace == 12 && have_hdr10_meta) {
           hr = swapchain3.As (&swapchain4);
           if (gst_d3d11_result (hr, device)) {
             DXGI_HDR_METADATA_HDR10 hdr10_metadata = { 0, };
@@ -654,15 +637,11 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     }
   }
 
-  /* otherwise, use most common DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709
-   * color space */
-  if (!found_swapchain_colorspace) {
-    GST_DEBUG_OBJECT (window, "No selected render color space, use BT709");
-    window->render_info.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
-    window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
-    window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-    window->render_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
-  }
+  GST_DEBUG_OBJECT (window, "Set colorspace %d", swapchain_colorspace);
+
+  /* update with selected display color space */
+  gst_video_info_apply_dxgi_color_space (swapchain_colorspace,
+      &window->render_info);
 
   window->converter = gst_d3d11_converter_new (device,
       &window->info, &window->render_info, nullptr);

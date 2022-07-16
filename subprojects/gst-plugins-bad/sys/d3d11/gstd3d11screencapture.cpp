@@ -1843,6 +1843,7 @@ gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
     GstVideoColorimetry * colorimetry)
 {
   DXGI_COLOR_SPACE_TYPE dxgi_cs;
+  GstVideoInfo info;
 
   g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), FALSE);
   g_return_val_if_fail (colorimetry != nullptr, FALSE);
@@ -1862,7 +1863,13 @@ gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
       dxgi_cs = desc.ColorSpace;
   }
 
-  return gst_d3d11_colorimetry_from_dxgi_color_space (dxgi_cs, colorimetry);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_BGRA, 16, 16);
+  if (gst_video_info_apply_dxgi_color_space (dxgi_cs, &info)) {
+    *colorimetry = info.colorimetry;
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 GstFlowReturn

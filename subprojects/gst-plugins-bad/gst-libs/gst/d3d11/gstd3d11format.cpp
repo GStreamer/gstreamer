@@ -440,3 +440,476 @@ gst_d3d11_dxgi_format_to_string (DXGI_FORMAT format)
 
   return "Unknown";
 }
+
+/* Some values are not defined in old MinGW toolchain */
+typedef enum
+{
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 = 0,
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709 = 1,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709 = 2,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020 = 3,
+  GST_DXGI_COLOR_SPACE_RESERVED = 4,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601 = 5,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601 = 6,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601 = 7,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709 = 8,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709 = 9,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020 = 10,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020 = 11,
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 = 12,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020 = 13,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020 = 14,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020 = 15,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020 = 16,
+  GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020 = 17,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020 = 18,
+  GST_DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020 = 19,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709 = 20,
+  GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020 = 21,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P709 = 22,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020 = 23,
+  GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020 = 24,
+} GST_DXGI_COLOR_SPACE_TYPE;
+
+static gboolean
+rgb_to_colorspace (const GstVideoColorimetry * cinfo,
+    DXGI_COLOR_SPACE_TYPE * color_space)
+{
+  /* sRGB */
+  GST_DXGI_COLOR_SPACE_TYPE type = GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
+
+  /* Defined DXGI RGB colorspace
+   * 1) DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 = 0 (sRGB)
+   * 2) DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709 = 1 (scRGB)
+   * 3) DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709 = 2 (BT601/BT709 studio range)
+   * 4) DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020 = 3 (BT2020 SDR studio range)
+   * 5) DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 = 12 (HDR10 full range)
+   * 6) DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020 = 13 (HDR10 studio range)
+   * 7) DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020 = 17 (BT2020 SDR fullrange)
+   * 8) DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709 = 20 (unused)
+   * 9) DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020 = 21 (unused)
+   *
+   * Note that GStreamer does not define gamma2.4. So, 8) and 9) are excluded
+   */
+  if (cinfo->transfer == GST_VIDEO_TRANSFER_GAMMA10) {
+    type = GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709;
+    goto done;
+  }
+
+  /* HLG RGB colorspace is not defined, approximated to HDR10 */
+  if (cinfo->transfer == GST_VIDEO_TRANSFER_SMPTE2084 ||
+      cinfo->transfer == GST_VIDEO_TRANSFER_ARIB_STD_B67) {
+    if (cinfo->range == GST_VIDEO_COLOR_RANGE_16_235) {
+      type = GST_DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020;
+    } else {
+      type = GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020;
+    }
+    goto done;
+  }
+
+  if (cinfo->primaries == GST_VIDEO_COLOR_PRIMARIES_BT2020) {
+    if (cinfo->range == GST_VIDEO_COLOR_RANGE_16_235) {
+      type = GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020;
+    } else {
+      type = GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020;
+    }
+    goto done;
+  }
+
+  if (cinfo->range == GST_VIDEO_COLOR_RANGE_16_235)
+    type = GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709;
+
+done:
+  *color_space = (DXGI_COLOR_SPACE_TYPE) type;
+
+  return TRUE;
+}
+
+static gboolean
+yuv_to_colorspace (const GstVideoColorimetry * cinfo,
+    GstVideoChromaSite chroma_site, DXGI_COLOR_SPACE_TYPE * color_space)
+{
+  /* BT709 */
+  GST_DXGI_COLOR_SPACE_TYPE type =
+      GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709;
+
+  /* Defined DXGI RGB colorspace
+     * 1) DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601 = 5 (common JPG)
+     * 2) DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601 = 6 (BT601 studio range)
+     * 3) DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601 = 7 (BT601 full range)
+     * 4) DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709 = 8 (BT709 studio range)
+     * 5) DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709 = 9 (BT709 full range)
+     * 6) DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020 = 10 (BT2020 4:2:0 studio range)
+     * 7) DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020 = 11 (BT2020 full range)
+     * 8) DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020 = 13 (HDR10 4:2:0 studio range)
+     * 9) DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020 = 15 (BT2020 4:2:2 or 4:4:4: studio range)
+     * 10) DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020 = 16 (HDR10 4:2:2 or 4:4:4 studio range)
+     * 11) DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020 = 18 (HLG studio range)
+     * 12) DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020 = 19 (HLG full range)
+     * 13) DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P709 = 22 (unused)
+     * 14) DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020 = 23 (unused)
+     * 15) DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020 = 24 (unused)
+     *
+     * Note that GStreamer does not define gamma2.4. So, 13) ~ 15) are excluded
+   */
+
+  /* HLG */
+  if (cinfo->transfer == GST_VIDEO_TRANSFER_ARIB_STD_B67) {
+    if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020;
+    } else {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020;
+    }
+    goto done;
+  }
+
+  /* HDR10 */
+  if (cinfo->transfer == GST_VIDEO_TRANSFER_SMPTE2084) {
+    if (chroma_site == GST_VIDEO_CHROMA_SITE_H_COSITED) {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020;
+    } else {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020;
+    }
+    goto done;
+  }
+
+  /* BT2020 */
+  if (cinfo->primaries == GST_VIDEO_COLOR_PRIMARIES_BT2020) {
+    if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020;
+    } else if (chroma_site == GST_VIDEO_CHROMA_SITE_H_COSITED) {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020;
+    } else {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020;
+    }
+    goto done;
+  }
+
+  /* BT601/BT709 primaries are similar. Depends on RGB matrix */
+  if (cinfo->matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
+    if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+      if (cinfo->primaries == GST_VIDEO_COLOR_PRIMARIES_BT709) {
+        type = GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601;
+      } else {
+        type = GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601;
+      }
+    } else {
+      type = GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601;
+    }
+    goto done;
+  }
+
+  if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255)
+    type = GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709;
+
+done:
+  *color_space = (DXGI_COLOR_SPACE_TYPE) type;
+
+  return TRUE;
+}
+
+/**
+ * gst_video_info_to_dxgi_color_space:
+ * @info: a #GstVideoInfo
+ * @color_space: (out): DXGI color space
+ *
+ * Derives DXGI_COLOR_SPACE_TYPE from @info
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_video_info_to_dxgi_color_space (const GstVideoInfo * info,
+    DXGI_COLOR_SPACE_TYPE * color_space)
+{
+  const GstVideoColorimetry *cinfo;
+  GstVideoColorimetry c;
+
+  g_return_val_if_fail (info != nullptr, FALSE);
+  g_return_val_if_fail (color_space != nullptr, FALSE);
+
+  cinfo = &info->colorimetry;
+
+  if (GST_VIDEO_INFO_IS_RGB (info)) {
+    /* ensure RGB matrix if format is already RGB */
+    c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+  } else if (GST_VIDEO_INFO_IS_YUV (info) &&
+      cinfo->matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+    /* Invalid matrix */
+    c.matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
+  } else {
+    c.matrix = cinfo->matrix;
+  }
+
+  switch (cinfo->range) {
+    case GST_VIDEO_COLOR_RANGE_0_255:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      break;
+    case GST_VIDEO_COLOR_RANGE_16_235:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      break;
+    default:
+      if (c.matrix == GST_VIDEO_COLOR_MATRIX_RGB)
+        c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      else
+        c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      break;
+  }
+
+  /* DXGI primaries: BT601, BT709, BT2020 */
+  switch (cinfo->primaries) {
+    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+      break;
+    default:
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+  }
+
+  /* DXGI gamma functions: linear (RGB only), gamma2.2, PQ, and HLG */
+  switch (cinfo->transfer) {
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+      c.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+      break;
+    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+      c.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
+      break;
+    case GST_VIDEO_TRANSFER_GAMMA10:
+      /* Only DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709 supports linear gamma */
+      if (c.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+        c.transfer = GST_VIDEO_TRANSFER_GAMMA10;
+        c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      } else {
+        c.transfer = GST_VIDEO_TRANSFER_GAMMA22;
+      }
+      break;
+    default:
+      /* Simply map the rest of values to gamma 2.2. We don't have any other
+       * choice */
+      c.transfer = GST_VIDEO_TRANSFER_GAMMA22;
+      break;
+  }
+
+  /* DXGI transform matrix: BT601, BT709, and BT2020 */
+  switch (c.matrix) {
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      break;
+    default:
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+      break;
+  }
+
+  if (c.matrix == GST_VIDEO_COLOR_MATRIX_RGB)
+    return rgb_to_colorspace (&c, color_space);
+
+  return yuv_to_colorspace (&c, info->chroma_site, color_space);
+}
+
+static gboolean
+dxgi_color_space_is_rgb (GST_DXGI_COLOR_SPACE_TYPE color_space)
+{
+  switch (color_space) {
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709:
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709:
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709:
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020:
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020:
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020:
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020:
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709:
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020:
+      return TRUE;
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
+/**
+ * gst_video_info_apply_dxgi_color_space:
+ * @color_space: DXGI color space
+ * @info: (inout): a #GstVideoInfo
+ *
+ * Updates color information of @info using @color_space
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_video_info_apply_dxgi_color_space (DXGI_COLOR_SPACE_TYPE color_space,
+    GstVideoInfo * info)
+{
+  GST_DXGI_COLOR_SPACE_TYPE type;
+  GstVideoColorimetry c;
+
+  g_return_val_if_fail (info != nullptr, FALSE);
+
+  type = (GST_DXGI_COLOR_SPACE_TYPE) color_space;
+
+  if (GST_VIDEO_INFO_IS_RGB (info) && !dxgi_color_space_is_rgb (type)) {
+    GST_WARNING ("Invalid DXGI color space mapping");
+    return FALSE;
+  }
+
+  switch (type) {
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      c.transfer = GST_VIDEO_TRANSFER_SRGB;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      c.transfer = GST_VIDEO_TRANSFER_GAMMA10;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709:
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      c.transfer = GST_VIDEO_TRANSFER_BT709;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020:
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) >= 12)
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+      else
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_10;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_RESERVED:
+      GST_WARNING ("Reserved color space");
+      return FALSE;
+    case GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      c.transfer = GST_VIDEO_TRANSFER_BT601;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      c.transfer = GST_VIDEO_TRANSFER_BT601;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      c.transfer = GST_VIDEO_TRANSFER_BT601;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_SMPTE170M;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709:
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P709:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+      c.transfer = GST_VIDEO_TRANSFER_BT709;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+      c.transfer = GST_VIDEO_TRANSFER_BT709;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020:
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) >= 12)
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+      else
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_10;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) >= 12)
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+      else
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_10;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      c.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      c.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      c.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020:
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) >= 12)
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+      else
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_10;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      c.transfer = GST_VIDEO_TRANSFER_SMPTE2084;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
+      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) >= 12)
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_12;
+      else
+        c.transfer = GST_VIDEO_TRANSFER_BT2020_10;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_16_235;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      c.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    case GST_DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020:
+      c.range = GST_VIDEO_COLOR_RANGE_0_255;
+      c.matrix = GST_VIDEO_COLOR_MATRIX_BT2020;
+      c.transfer = GST_VIDEO_TRANSFER_ARIB_STD_B67;
+      c.primaries = GST_VIDEO_COLOR_PRIMARIES_BT2020;
+      break;
+    default:
+      GST_WARNING ("Unknown DXGI color space %d", type);
+      return FALSE;
+  }
+
+  info->colorimetry = c;
+
+  return TRUE;
+}
