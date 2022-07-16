@@ -1739,8 +1739,8 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     same_primaries = TRUE;
   } else {
     same_primaries =
-        convert->in_info.colorimetry.primaries ==
-        convert->out_info.colorimetry.primaries;
+        gst_video_color_primaries_is_equivalent (convert->in_info.
+        colorimetry.primaries, convert->out_info.colorimetry.primaries);
   }
 
   GST_DEBUG ("matrix %d -> %d (%d)", convert->in_info.colorimetry.matrix,
@@ -8214,7 +8214,8 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
 
     in_primaries = convert->in_info.colorimetry.primaries;
     out_primaries = convert->out_info.colorimetry.primaries;
-    same_primaries = in_primaries == out_primaries;
+    same_primaries = gst_video_color_primaries_is_equivalent (in_primaries,
+        out_primaries);
   }
 
   interlaced = GST_VIDEO_INFO_IS_INTERLACED (&convert->in_info);
