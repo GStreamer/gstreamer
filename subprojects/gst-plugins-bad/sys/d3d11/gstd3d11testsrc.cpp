@@ -564,13 +564,12 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
   input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_coord,
+  hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_color,
       "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile vertext shader");
     return FALSE;
   }
-
 
   hr = gst_d3d11_create_pixel_shader_simple (self->device,
       templ_ps_smpte, "main", &ps);
