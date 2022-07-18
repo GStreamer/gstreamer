@@ -2947,7 +2947,10 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   if (!GST_VIDEO_INFO_IS_GRAY (in_info) && !GST_VIDEO_INFO_IS_GRAY (out_info)) {
     if (in_info->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN &&
         out_info->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN &&
-        in_info->colorimetry.transfer != out_info->colorimetry.transfer) {
+        !gst_video_transfer_function_is_equivalent (in_info->
+            colorimetry.transfer, GST_VIDEO_INFO_COMP_DEPTH (in_info, 0),
+            out_info->colorimetry.transfer, GST_VIDEO_INFO_COMP_DEPTH (out_info,
+                0))) {
       GST_DEBUG_OBJECT (self, "Different transfer function %d -> %d",
           in_info->colorimetry.transfer, out_info->colorimetry.transfer);
       priv->fast_path = FALSE;
@@ -2955,7 +2958,8 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
 
     if (in_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
         out_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
-        in_info->colorimetry.primaries != out_info->colorimetry.primaries) {
+        !gst_video_color_primaries_is_equivalent (in_info->
+            colorimetry.primaries, out_info->colorimetry.primaries)) {
       GST_DEBUG_OBJECT (self, "Different primaries %d -> %d",
           in_info->colorimetry.primaries, out_info->colorimetry.primaries);
       priv->fast_path = FALSE;
