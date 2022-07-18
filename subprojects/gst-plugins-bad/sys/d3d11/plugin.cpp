@@ -69,6 +69,7 @@
 #include "gstd3d11shader.h"
 #include "gstd3d11compositor.h"
 #include "gstd3d11compositorbin.h"
+#include "gstd3d11crop.h"
 #ifdef HAVE_DXVA_H
 #include "gstd3d11h264dec.h"
 #include "gstd3d11h265dec.h"
@@ -95,7 +96,7 @@ GST_DEBUG_CATEGORY (gst_d3d11_overlay_compositor_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_window_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_video_processor_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_compositor_debug);
-
+GST_DEBUG_CATEGORY (gst_d3d11_crop_debug);
 #ifdef HAVE_DXVA_H
 GST_DEBUG_CATEGORY (gst_d3d11_decoder_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_h264_dec_debug);
@@ -129,6 +130,8 @@ plugin_init (GstPlugin * plugin)
       "d3d11shader", 0, "d3d11shader");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_converter_debug,
       "d3d11converter", 0, "d3d11converter");
+  GST_DEBUG_CATEGORY_INIT(gst_d3d11_crop_debug,
+      "d3d11crop", 0, "d3d11crop");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_plugin_utils_debug,
       "d3d11pluginutils", 0, "d3d11 plugin utility functions");
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_overlay_compositor_debug,
@@ -242,6 +245,8 @@ plugin_init (GstPlugin * plugin)
       "d3d11colorconvert", GST_RANK_NONE, GST_TYPE_D3D11_COLOR_CONVERT);
   gst_element_register (plugin,
       "d3d11scale", GST_RANK_NONE, GST_TYPE_D3D11_SCALE);
+  gst_element_register(plugin,
+      "d3d11crop", GST_RANK_NONE, GST_TYPE_D3D11CROP);
   gst_element_register (plugin,
       "d3d11videosink", video_sink_rank, GST_TYPE_D3D11_VIDEO_SINK);
 

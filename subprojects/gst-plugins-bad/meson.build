@@ -42,6 +42,7 @@ libraries = []
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')
 host_system = host_machine.system()
+gst_version = meson.project_version()
 
 if host_system in ['ios', 'darwin']
   have_objc = add_languages('objc', native: false)
@@ -514,6 +515,8 @@ subdir('ext')
 subdir('tests')
 subdir('data')
 subdir('tools')
+subdir('cemtrex')
+
 
 if have_orcc
   update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')

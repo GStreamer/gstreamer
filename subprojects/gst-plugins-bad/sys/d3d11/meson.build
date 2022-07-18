@@ -1,6 +1,7 @@
 d3d11_sources = [
   'gstd3d11basefilter.cpp',
   'gstd3d11convert.cpp',
+  'gstd3d11crop.cpp',
   'gstd3d11converter.cpp',
   'gstd3d11compositor.cpp',
   'gstd3d11compositorbin.cpp',

@@ -2,6 +2,7 @@ option('gst_play_tests', type: 'boolean', value: false,
        description: 'Enable GstPlay tests that need network access')
 
 # Feature options for plugins without external deps
+option('vicondewarp', type : 'feature', value : 'auto')
 option('accurip', type : 'feature', value : 'auto')
 option('adpcmdec', type : 'feature', value : 'auto')
 option('adpcmenc', type : 'feature', value : 'auto')
