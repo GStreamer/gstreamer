@@ -3476,3 +3476,43 @@ gst_structure_set_list (GstStructure * structure, const gchar * fieldname,
 {
   _gst_structure_set_any_list (structure, GST_TYPE_LIST, fieldname, array);
 }
+
+/**
+ * gst_structure_get_flags:
+ * @structure: a #GstStructure
+ * @fieldname: the name of a field
+ * @flags_type: the flags type of a field
+ * @value: (out): a pointer to an unsigned int to set
+ *
+ * Sets the unsigned int pointed to by @value corresponding to the value of the
+ * given field. Caller is responsible for making sure the field exists,
+ * has the correct type and that the flagstype is correct.
+ *
+ * Returns: %TRUE if the value could be set correctly. If there was no field
+ * with @fieldname or the existing field did not contain flags or
+ * did not contain flags of the given type, this function returns %FALSE.
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_structure_get_flags (const GstStructure * structure,
+    const gchar * fieldname, GType flags_type, guint * value)
+{
+  GstStructureField *field;
+
+  g_return_val_if_fail (structure != NULL, FALSE);
+  g_return_val_if_fail (fieldname != NULL, FALSE);
+  g_return_val_if_fail (flags_type != G_TYPE_INVALID, FALSE);
+  g_return_val_if_fail (value != NULL, FALSE);
+
+  field = gst_structure_get_field (structure, fieldname);
+
+  if (field == NULL)
+    return FALSE;
+  if (!G_TYPE_CHECK_VALUE_TYPE (&field->value, flags_type))
+    return FALSE;
+
+  *value = g_value_get_flags (&field->value);
+
+  return TRUE;
+}

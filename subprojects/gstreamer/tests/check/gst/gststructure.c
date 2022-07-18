@@ -1018,6 +1018,22 @@ GST_START_TEST (test_flagset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flags)
+{
+  GstStructure *s;
+  GstSeekFlags flags = GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT;
+  guint parsed_flags = 0;
+
+  s = gst_structure_new ("test-struct", "test-seek-flags",
+      GST_TYPE_SEEK_FLAGS, flags, NULL);
+  fail_unless (gst_structure_get_flags (s, "test-seek-flags",
+          GST_TYPE_SEEK_FLAGS, &parsed_flags));
+  fail_unless (flags == (GstSeekFlags) parsed_flags);
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -1050,6 +1066,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_map_in_place);
   tcase_add_test (tc_chain, test_filter_and_map_in_place);
   tcase_add_test (tc_chain, test_flagset);
+  tcase_add_test (tc_chain, test_flags);
   return s;
 }
 
