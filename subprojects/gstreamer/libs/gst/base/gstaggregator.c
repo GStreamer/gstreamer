@@ -1705,7 +1705,6 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     {
       SRC_LOCK (self);
       PAD_LOCK (aggpad);
-      g_assert (aggpad->priv->num_buffers == 0);
       aggpad->priv->eos = TRUE;
       PAD_UNLOCK (aggpad);
       SRC_BROADCAST (self);
@@ -1732,6 +1731,9 @@ gst_aggregator_default_sink_event (GstAggregator * self,
     }
     case GST_EVENT_STREAM_START:
     {
+      PAD_LOCK (aggpad);
+      aggpad->priv->eos = FALSE;
+      PAD_UNLOCK (aggpad);
       goto eat;
     }
     case GST_EVENT_GAP:
