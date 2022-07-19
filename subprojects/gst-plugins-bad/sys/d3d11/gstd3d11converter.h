@@ -40,9 +40,12 @@ typedef struct _GstD3D11ConverterPrivate GstD3D11ConverterPrivate;
 
 typedef enum
 {
-  GST_D3D11_CONVERTER_METHOD_SHADER = (1 << 0),
-  GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR = (1 << 1),
-} GstD3D11ConverterMethod;
+  GST_D3D11_CONVERTER_BACKEND_SHADER = (1 << 0),
+  GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR = (1 << 1),
+} GstD3D11ConverterBackend;
+#define GST_TYPE_D3D11_CONVERTER_BACKEND (gst_d3d11_converter_backend_get_type())
+
+#define GST_D3D11_CONVERTER_OPT_BACKEND "GstD3D11Converter.backend"
 
 struct _GstD3D11Converter
 {
@@ -63,12 +66,14 @@ struct _GstD3D11ConverterClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GType               gst_d3d11_converter_backend_get_type (void);
+
 GType               gst_d3d11_converter_get_type (void);
 
 GstD3D11Converter * gst_d3d11_converter_new  (GstD3D11Device * device,
                                               const GstVideoInfo * in_info,
                                               const GstVideoInfo * out_info,
-                                              GstD3D11ConverterMethod * method);
+                                              GstStructure * config);
 
 gboolean            gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
                                                         GstBuffer * in_buf,
@@ -79,7 +84,5 @@ gboolean            gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Convert
                                                                  GstBuffer * out_buf);
 
 G_END_DECLS
-
-DEFINE_ENUM_FLAG_OPERATORS (GstD3D11ConverterMethod);
 
 #endif /* __GST_D3D11_COLOR_CONVERTER_H__ */

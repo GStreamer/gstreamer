@@ -80,7 +80,7 @@ static gboolean
 gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps, GError ** error)
 {
-  GstD3D11ConverterMethod method = GST_D3D11_CONVERTER_METHOD_SHADER;
+  GstStructure *config;
 
   if (!window->allocator) {
     window->allocator =
@@ -117,9 +117,13 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
   window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
+  config = gst_structure_new ("converter-config",
+      GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
+      GST_D3D11_CONVERTER_BACKEND_SHADER, nullptr);
+
   GstD3D11DeviceLockGuard lk (window->device);
   window->converter = gst_d3d11_converter_new (window->device, &window->info,
-      &window->render_info, &method);
+      &window->render_info, config);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");

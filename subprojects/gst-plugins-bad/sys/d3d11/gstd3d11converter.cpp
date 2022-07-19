@@ -31,6 +31,28 @@
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_converter_debug);
 #define GST_CAT_DEFAULT gst_d3d11_converter_debug
 
+DEFINE_ENUM_FLAG_OPERATORS (GstD3D11ConverterBackend);
+
+GType
+gst_d3d11_converter_backend_get_type (void)
+{
+  static gsize type = 0;
+  static const GFlagsValue values[] = {
+    {GST_D3D11_CONVERTER_BACKEND_SHADER, "GST_D3D11_CONVERTER_BACKEND_SHADER",
+        "shader"},
+    {GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR,
+        "GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR", "video-processor"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_flags_register_static ("GstD3D11ConverterBackend", values);
+    g_once_init_leave (&type, tmp);
+  }
+
+  return (GType) type;
+}
+
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
@@ -528,7 +550,7 @@ struct _GstD3D11ConverterPrivate
   guint num_input_view;
   guint num_output_view;
 
-  GstD3D11ConverterMethod supported_methods;
+  GstD3D11ConverterBackend supported_backend;
 
   ID3D11Buffer *vertex_buffer;
   ID3D11Buffer *index_buffer;
@@ -1531,7 +1553,7 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
   priv->src_rect.right = priv->src_x + priv->src_width;
   priv->src_rect.bottom = priv->src_y + priv->src_height;
 
-  if ((priv->supported_methods & GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR)) {
+  if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR)) {
     priv->processor_direction_not_supported = FALSE;
     priv->enable_mirror = FALSE;
     priv->flip_h = FALSE;
@@ -1594,7 +1616,7 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
     }
   }
 
-  if ((priv->supported_methods & GST_D3D11_CONVERTER_METHOD_SHADER) == 0)
+  if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0)
     return TRUE;
 
   context_handle = gst_d3d11_device_get_device_context_handle (self->device);
@@ -2840,36 +2862,44 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
 
 GstD3D11Converter *
 gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
-    const GstVideoInfo * out_info, GstD3D11ConverterMethod * method)
+    const GstVideoInfo * out_info, GstStructure * config)
 {
   GstD3D11Converter *self;
   GstD3D11ConverterPrivate *priv;
   GstD3D11Format in_d3d11_format;
   GstD3D11Format out_d3d11_format;
-  guint wanted_method;
+  guint wanted_backend = 0;
+  gchar *backend_str;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
   g_return_val_if_fail (out_info != nullptr, nullptr);
 
-  if (method) {
-    wanted_method = *method;
-  } else {
-    wanted_method =
-        GST_D3D11_CONVERTER_METHOD_SHADER |
-        GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR;
+  if (config) {
+    gst_structure_get_flags (config, GST_D3D11_CONVERTER_OPT_BACKEND,
+        GST_TYPE_D3D11_CONVERTER_BACKEND, &wanted_backend);
+    gst_structure_free (config);
   }
 
-  if (wanted_method == 0)
-    return nullptr;
+  if (!wanted_backend) {
+    wanted_backend =
+        GST_D3D11_CONVERTER_BACKEND_SHADER |
+        GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR;
+  }
 
   self = (GstD3D11Converter *) g_object_new (GST_TYPE_D3D11_CONVERTER, nullptr);
   gst_object_ref_sink (self);
   priv = self->priv;
 
-  GST_DEBUG_OBJECT (self, "Setup convert with format %s -> %s",
+  backend_str = g_flags_to_string (GST_TYPE_D3D11_CONVERTER_BACKEND,
+      wanted_backend);
+
+  GST_DEBUG_OBJECT (self,
+      "Setup converter with format %s -> %s, wanted backend: %s",
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
-      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
+      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)),
+      backend_str);
+  g_free (backend_str);
 
   if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (in_info),
           &in_d3d11_format)) {
@@ -2934,14 +2964,14 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
 
   gst_d3d11_converter_calculate_border_color (self);
 
-  if ((wanted_method & GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR) != 0) {
+  if ((wanted_backend & GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR) != 0) {
     if (gst_d3d11_converter_setup_processor (self)) {
       GST_DEBUG_OBJECT (self, "Video processor is available");
-      priv->supported_methods |= GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR;
+      priv->supported_backend |= GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR;
     }
   }
 
-  if ((wanted_method & GST_D3D11_CONVERTER_METHOD_SHADER) == 0)
+  if ((wanted_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0)
     goto out;
 
   if (!GST_VIDEO_INFO_IS_GRAY (in_info) && !GST_VIDEO_INFO_IS_GRAY (out_info)) {
@@ -2987,19 +3017,16 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   if (!gst_d3d11_color_convert_setup_shader (self, in_info, out_info))
     goto out;
 
-  priv->supported_methods |= GST_D3D11_CONVERTER_METHOD_SHADER;
+  priv->supported_backend |= GST_D3D11_CONVERTER_BACKEND_SHADER;
 
 out:
-  if (priv->supported_methods == 0) {
+  if (priv->supported_backend == 0) {
     GST_ERROR_OBJECT (self, "Conversion %s to %s not supported",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
     gst_object_unref (self);
     return nullptr;
   }
-
-  if (method)
-    *method = priv->supported_methods;
 
   return self;
 }
@@ -3590,7 +3617,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
     }
   }
 
-  if (priv->supported_methods == GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR) {
+  if (priv->supported_backend == GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR) {
     piv =
         gst_d3d11_memory_get_processor_input_view (in_dmem,
         priv->video_device, priv->enumerator);
@@ -3599,8 +3626,8 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
         priv->video_device, priv->enumerator);
 
     use_processor = TRUE;
-  } else if ((priv->supported_methods &
-          GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR) != 0 && !need_blend
+  } else if ((priv->supported_backend &
+          GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR) != 0 && !need_blend
       && gst_d3d11_converter_check_bind_flags_for_piv (in_desc.BindFlags)) {
     /* TODO: processor supports alpha blending */
 
@@ -3737,7 +3764,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
 
   g_mutex_unlock (&priv->prop_lock);
 
-  if ((priv->supported_methods & GST_D3D11_CONVERTER_METHOD_SHADER) == 0) {
+  if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0) {
     GST_ERROR_OBJECT (self, "Conversion is not supported");
     goto out;
   }
