@@ -95,6 +95,7 @@ base_tests = [
   [['libs/h264bitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/h265bitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/vkformat.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/av1bitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/vkmemory.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/analyticsmeta.c'], false, [gstanalytics_dep]],
   [['elements/vkcolorconvert.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
