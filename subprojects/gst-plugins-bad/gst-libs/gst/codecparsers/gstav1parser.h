@@ -1535,6 +1535,7 @@ struct _GstAV1FilmGrainParams {
  * @render_height: the frame height to be rendered.
  * @tx_mode: specifies how the transform size is determined.
  * @skip_mode_frame: specifies the frames to use for compound prediction when @skip_mode is 1.
+ * @expected_frame_id: specifies the frame id for each frame used for reference. (Since: 1.24)
  */
 struct _GstAV1FrameHeaderOBU {
   gboolean show_existing_frame;
@@ -1604,6 +1605,15 @@ struct _GstAV1FrameHeaderOBU {
   GstAV1TXModes tx_mode; /* TxMode */
 
   guint8 skip_mode_frame[2]; /* SkipModeFrame */
+
+  /**
+   * _GstAV1FrameHeaderOBU.expected_frame_id:
+   *
+   * Specifies the frames to use for compound prediction.
+   *
+   * Since: 1.24
+   */
+  gint32 expected_frame_id[GST_AV1_REFS_PER_FRAME];
 };
 
 /**
