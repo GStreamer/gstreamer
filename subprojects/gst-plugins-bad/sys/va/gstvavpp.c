@@ -527,8 +527,14 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
     }
   }
 
-  if (!gst_video_info_is_equal (in_info, out_info)) {
-    if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_INFO_FORMAT (out_info))
+  if (gst_video_info_is_equal (in_info, out_info)) {
+    self->op_flags &= ~VPP_CONVERT_FORMAT & ~VPP_CONVERT_SIZE;
+  } else {
+    if ((GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_INFO_FORMAT (out_info))
+        || !gst_video_colorimetry_is_equivalent (&GST_VIDEO_INFO_COLORIMETRY
+            (in_info), GST_VIDEO_INFO_COMP_DEPTH (in_info, 0),
+            &GST_VIDEO_INFO_COLORIMETRY (out_info),
+            GST_VIDEO_INFO_COMP_DEPTH (out_info, 0)))
       self->op_flags |= VPP_CONVERT_FORMAT;
     else
       self->op_flags &= ~VPP_CONVERT_FORMAT;
@@ -539,8 +545,6 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
       self->op_flags |= VPP_CONVERT_SIZE;
     else
       self->op_flags &= ~VPP_CONVERT_SIZE;
-  } else {
-    self->op_flags &= ~VPP_CONVERT_FORMAT & ~VPP_CONVERT_SIZE;
   }
 
   infeat = gst_caps_get_features (incaps, 0);
