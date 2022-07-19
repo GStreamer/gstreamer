@@ -526,7 +526,7 @@ GST_END_TEST;
 static Suite *
 h264bitwriter_suite (void)
 {
-  Suite *s = suite_create ("H264 Parser library");
+  Suite *s = suite_create ("H264 bitwriter library");
 
   TCase *tc_chain = tcase_create ("general");
 

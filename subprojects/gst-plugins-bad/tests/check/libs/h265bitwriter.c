@@ -950,7 +950,7 @@ GST_END_TEST;
 static Suite *
 h265bitwriter_suite (void)
 {
-  Suite *s = suite_create ("H265 Parser library");
+  Suite *s = suite_create ("H265 bitwriter library");
 
   TCase *tc_chain = tcase_create ("general");
 
