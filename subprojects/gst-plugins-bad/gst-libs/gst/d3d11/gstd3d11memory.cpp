@@ -33,6 +33,68 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 
 static GstAllocator *_d3d11_memory_allocator;
 
+GType
+gst_d3d11_allocation_flags_get_type (void)
+{
+  static gsize type = 0;
+  static const GFlagsValue values[] = {
+    {GST_D3D11_ALLOCATION_FLAG_DEFAULT, "GST_D3D11_ALLOCATION_FLAG_DEFAULT",
+        "default"},
+    {GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY,
+        "GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY", "texture-array"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_flags_register_static ("GstD3D11AllocationFlags", values);
+    g_once_init_leave (&type, tmp);
+  }
+
+  return (GType) type;
+}
+
+GType
+gst_d3d11_memory_transfer_get_type (void)
+{
+  static gsize type = 0;
+  static const GFlagsValue values[] = {
+    {GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD,
+        "GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD", "need-download"},
+    {GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD,
+        "GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD", "need-upload"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_flags_register_static ("GstD3D11MemoryTransfer", values);
+    g_once_init_leave (&type, tmp);
+  }
+
+  return (GType) type;
+}
+
+GType
+gst_d3d11_memory_native_type_get_type (void)
+{
+  static gsize type = 0;
+  static const GEnumValue values[] = {
+    {GST_D3D11_MEMORY_NATIVE_TYPE_INVALID,
+        "GST_D3D11_MEMORY_NATIVE_TYPE_INVALID", "invalid"},
+    {GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER, "GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER",
+        "buffer"},
+    {GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D,
+        "GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D", "texture-2d"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&type)) {
+    GType tmp = g_enum_register_static ("GstD3D11MemoryNativeType", values);
+    g_once_init_leave (&type, tmp);
+  }
+
+  return (GType) type;
+}
+
 /* GstD3D11AllocationParams */
 static void gst_d3d11_allocation_params_init (GType type);
 G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,

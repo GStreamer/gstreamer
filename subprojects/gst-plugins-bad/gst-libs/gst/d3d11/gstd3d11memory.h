@@ -91,6 +91,10 @@ typedef enum
   GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 0),
 } GstD3D11AllocationFlags;
 
+GST_D3D11_API
+GType gst_d3d11_allocation_flags_get_type (void);
+#define GST_TYPE_D3D11_ALLOCATION_FLAGS (gst_d3d11_allocation_flags_get_type())
+
 /**
  * GstD3D11MemoryTransfer:
  * @GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD: the texture needs downloading
@@ -106,6 +110,10 @@ typedef enum
   GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
 } GstD3D11MemoryTransfer;
 
+GST_D3D11_API
+GType gst_d3d11_memory_transfer_get_type (void);
+#define GST_TYPE_D3D11_MEMORY_TRANSFER (gst_d3d11_memory_transfer_get_type())
+
 /**
  * GstD3D11MemoryNativeType:
  * @GST_D3D11_MEMORY_NATIVE_TYPE_INVALID: not a valid object type
@@ -120,6 +128,10 @@ typedef enum
   GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER,
   GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D,
 } GstD3D11MemoryNativeType;
+
+GST_D3D11_API
+GType gst_d3d11_memory_native_type_get_type (void);
+#define GST_TYPE_D3D11_MEMORY_NATIVE_TYPE (gst_d3d11_memory_native_type_get_type())
 
 struct _GstD3D11AllocationParams
 {

@@ -180,24 +180,9 @@ configure_file(
   configuration: d3d11_conf,
 )
 
-d3d11_enums = gnome.mkenums_simple('gstd3d11-enumtypes',
-  sources : d3d11_enum_types_headers,
-  body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
-  header_prefix : '#include <gst/d3d11/d3d11-prelude.h>',
-  decorator: 'GST_D3D11_API',
-  identifier_prefix: 'GstD3D11',
-  symbol_prefix: 'gst_d3d11',
-  install_header: true,
-  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/d3d11'))
-
-gstd3d11_c = d3d11_enums[0]
-gstd3d11_h = d3d11_enums[1]
-
-gen_sources = [gstd3d11_h]
-
 pkg_name = 'gstreamer-d3d11-' + api_version
 gstd3d11 = library('gstd3d11-' + api_version,
-  d3d11_sources + d3d11_enums,
+  d3d11_sources,
   c_args : gst_plugins_bad_args + extra_c_args + extra_comm_args,
   cpp_args : gst_plugins_bad_args + extra_comm_args,
   include_directories : [configinc, libsinc],
