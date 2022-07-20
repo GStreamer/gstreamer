@@ -106,7 +106,7 @@ typedef GstObjectClass GstAdaptiveDemux2StreamClass;
 #define GST_ADAPTIVE_DEMUX_FLOW_RESTART_FRAGMENT GST_FLOW_CUSTOM_SUCCESS_2
 
 /* The live stream has lost synchronization and the demuxer needs to be resetted */
-#define GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC GST_FLOW_CUSTOM_ERROR_1
+#define GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC GST_FLOW_CUSTOM_SUCCESS_2 + 1
 
 typedef enum _GstAdaptiveDemux2StreamState GstAdaptiveDemux2StreamState;
 
