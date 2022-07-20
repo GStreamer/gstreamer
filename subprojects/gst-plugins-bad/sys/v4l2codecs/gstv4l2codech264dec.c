@@ -984,6 +984,7 @@ gst_v4l2_codec_h264_dec_start_picture (GstH264Decoder * decoder,
       dpb);
 
   self->first_slice = TRUE;
+  self->num_slices = 0;
 
   return GST_FLOW_OK;
 }
