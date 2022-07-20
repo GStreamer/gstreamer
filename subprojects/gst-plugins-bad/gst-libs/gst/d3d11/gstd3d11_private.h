@@ -111,6 +111,37 @@ static const GstD3D11Format _gst_d3d11_default_format_map[] = {
 
 #define GST_D3D11_N_FORMATS G_N_ELEMENTS(_gst_d3d11_default_format_map)
 
+typedef struct _GstD3D11ColorMatrix
+{
+  gdouble matrix[3][3];
+  gdouble offset[3];
+  gdouble min[3];
+  gdouble max[3];
+} GstD3D11ColorMatrix;
+
+GST_D3D11_API
+gchar *         gst_d3d11_dump_color_matrix (GstD3D11ColorMatrix * matrix);
+
+GST_D3D11_API
+gboolean        gst_d3d11_color_range_adjust_matrix_unorm (const GstVideoInfo * in_info,
+                                                           const GstVideoInfo * out_info,
+                                                           GstD3D11ColorMatrix * matrix);
+
+GST_D3D11_API
+gboolean        gst_d3d11_yuv_to_rgb_matrix_unorm (const GstVideoInfo * in_yuv_info,
+                                                   const GstVideoInfo * out_rgb_info,
+                                                   GstD3D11ColorMatrix * matrix);
+
+GST_D3D11_API
+gboolean        gst_d3d11_rgb_to_yuv_matrix_unorm (const GstVideoInfo * in_rgb_info,
+                                                   const GstVideoInfo * out_yuv_info,
+                                                   GstD3D11ColorMatrix * matrix);
+
+GST_D3D11_API
+gboolean        gst_d3d11_color_primaries_matrix_unorm (const GstVideoColorPrimariesInfo * in_info,
+                                                        const GstVideoColorPrimariesInfo * out_info,
+                                                        GstD3D11ColorMatrix * matrix);
+
 G_END_DECLS
 
 #ifdef __cplusplus

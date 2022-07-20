@@ -59,5 +59,9 @@ typedef struct _GstD3D11StagingBufferPoolPrivate GstD3D11StagingBufferPoolPrivat
 
 typedef struct _GstD3D11Format GstD3D11Format;
 
+typedef struct _GstD3D11Converter GstD3D11Converter;
+typedef struct _GstD3D11ConverterClass GstD3D11ConverterClass;
+typedef struct _GstD3D11ConverterPrivate GstD3D11ConverterPrivate;
+
 G_END_DECLS
 

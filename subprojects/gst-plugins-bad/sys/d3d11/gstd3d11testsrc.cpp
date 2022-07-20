@@ -38,7 +38,6 @@
 
 #include "gstd3d11testsrc.h"
 #include "gstd3d11pluginutils.h"
-#include "gstd3d11converter.h"
 #include <wrl.h>
 #include <string.h>
 

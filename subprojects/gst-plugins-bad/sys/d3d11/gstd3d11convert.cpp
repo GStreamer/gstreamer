@@ -27,7 +27,6 @@
 #endif
 
 #include "gstd3d11convert.h"
-#include "gstd3d11converter.h"
 #include "gstd3d11pluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_convert_debug);

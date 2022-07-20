@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <2019> Seungha Yang <seungha.yang@navercorp.com>
  * Copyright (C) <2019> Jeongki Kim <jeongki.kim@jeongki.kim>
+ * Copyright (C) <2022> Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,8 +23,13 @@
 #  include <config.h>
 #endif
 
+#include "gstd3d11_private.h"
 #include "gstd3d11converter.h"
-#include "gstd3d11pluginutils.h"
+#include "gstd3d11device.h"
+#include "gstd3d11utils.h"
+#include "gstd3d11memory.h"
+#include "gstd3d11compile.h"
+#include "gstd3d11bufferpool.h"
 #include <wrl.h>
 #include <string.h>
 #include <math.h>
@@ -2860,6 +2866,23 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
   return TRUE;
 }
 
+/**
+ * gst_d3d11_converter_new:
+ * @device: a #GstD3D11Device
+ * @in_info: a #GstVideoInfo
+ * @out_info: a #GstVideoInfo
+ * @method: (inout) (optional) (nullable): a #GstD3D11ConverterMethod
+
+ * Create a new converter object to convert between @in_info and @out_info
+ * with @method. When @method is not specified, converter will configure
+ * conversion path for all available method. Otherwise, converter will configure
+ * conversion path only for specified method(s) and set @method will be updated
+ * with supported method.
+ *
+ * Returns: a #GstD3D11Converter or %NULL if conversion is not possible
+ *
+ * Since: 1.22
+ */
 GstD3D11Converter *
 gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
     const GstVideoInfo * out_info, GstStructure * config)
@@ -3815,6 +3838,18 @@ out:
   return ret;
 }
 
+/**
+ * gst_d3d11_converter_convert_buffer:
+ * @converter: a #GstD3D11Converter
+ * @in_buf: a #GstBuffer
+ * @out_buf: a #GstBuffer
+ *
+ * Converts @in_buf into @out_buf
+ *
+ * Returns: %TRUE if conversion is successful
+ *
+ * Since: 1.22
+ */
 gboolean
 gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf)
@@ -3828,6 +3863,21 @@ gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
   return gst_d3d11_converter_convert_buffer_internal (converter,
       in_buf, out_buf);
 }
+
+/**
+ * gst_d3d11_converter_convert_buffer_unlocked:
+ * @converter: a #GstD3D11Converter
+ * @in_buf: a #GstBuffer
+ * @out_buf: a #GstBuffer
+ *
+ * Converts @in_buf into @out_buf. Caller should take d3d11 device lock
+ * in case that multiple threads can perform GPU processing using the
+ * same #GstD3D11Device
+ *
+ * Returns: %TRUE if conversion is successful
+ *
+ * Since: 1.22
+ */
 
 gboolean
 gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Converter * converter,

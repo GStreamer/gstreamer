@@ -43,7 +43,6 @@
 #endif
 
 #include "gstd3d11compositor.h"
-#include "gstd3d11converter.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 #include <wrl.h>

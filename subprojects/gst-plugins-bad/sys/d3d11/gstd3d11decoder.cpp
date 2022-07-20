@@ -52,7 +52,6 @@
 #endif
 
 #include "gstd3d11decoder.h"
-#include "gstd3d11converter.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 #include <string>

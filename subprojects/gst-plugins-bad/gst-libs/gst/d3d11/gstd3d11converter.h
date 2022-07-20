@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) <2019> Seungha Yang <seungha.yang@navercorp.com>
+ * Copyright (C) <2022> Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,12 +18,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_D3D11_COLOR_CONVERTER_H__
-#define __GST_D3D11_COLOR_CONVERTER_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/d3d11/gstd3d11.h>
+#include <gst/d3d11/gstd3d11_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -34,17 +34,31 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_CONVERTER_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_CONVERTER))
 #define GST_D3D11_CONVERTER_CAST(obj)        ((GstD3D11Converter*)(obj))
 
-typedef struct _GstD3D11Converter GstD3D11Converter;
-typedef struct _GstD3D11ConverterClass GstD3D11ConverterClass;
-typedef struct _GstD3D11ConverterPrivate GstD3D11ConverterPrivate;
-
+/**
+ * GstD3D11ConverterMethod:
+ * @GST_D3D11_CONVERTER_METHOD_SHADER: Performs conversion using pixel shader
+ * @GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR: Performs conversion using video processor
+ *
+ * Since: 1.22
+ */
 typedef enum
 {
   GST_D3D11_CONVERTER_BACKEND_SHADER = (1 << 0),
   GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR = (1 << 1),
 } GstD3D11ConverterBackend;
+
+GST_D3D11_API
+GType gst_d3d11_converter_backend_get_type (void);
 #define GST_TYPE_D3D11_CONVERTER_BACKEND (gst_d3d11_converter_backend_get_type())
 
+/**
+ * GST_D3D11_CONVERTER_OPT_BACKEND:
+ *
+ * #GstD3D11ConverterBackend, the conversion backend
+ * (e.g., pixel shader and/or video processor) to use
+ *
+ * Since: 1.22
+ */
 #define GST_D3D11_CONVERTER_OPT_BACKEND "GstD3D11Converter.backend"
 
 struct _GstD3D11Converter
@@ -66,23 +80,23 @@ struct _GstD3D11ConverterClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-GType               gst_d3d11_converter_backend_get_type (void);
-
+GST_D3D11_API
 GType               gst_d3d11_converter_get_type (void);
 
+GST_D3D11_API
 GstD3D11Converter * gst_d3d11_converter_new  (GstD3D11Device * device,
                                               const GstVideoInfo * in_info,
                                               const GstVideoInfo * out_info,
                                               GstStructure * config);
 
+GST_D3D11_API
 gboolean            gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
                                                         GstBuffer * in_buf,
                                                         GstBuffer * out_buf);
 
+GST_D3D11_API
 gboolean            gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Converter * converter,
                                                                  GstBuffer * in_buf,
                                                                  GstBuffer * out_buf);
 
 G_END_DECLS
-
-#endif /* __GST_D3D11_COLOR_CONVERTER_H__ */
