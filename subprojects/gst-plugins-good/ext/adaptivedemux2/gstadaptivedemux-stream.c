@@ -1726,7 +1726,9 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
     }
   }
 
-  switch (ret) {
+  /* Cast to int avoids a compiler warning that
+   * GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC is not in the GstFlowReturn enum */
+  switch ((int) ret) {
     case GST_FLOW_OK:
       break;                    /* all is good, let's go */
     case GST_FLOW_EOS:
