@@ -540,84 +540,80 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
         avail_samples, GST_SECOND, rate * self->in_segment.rate);
   }
 
-  if (self->gapless) {
-    if (self->current_offset != -1) {
-      GST_DEBUG_OBJECT (self,
-          "Got discont in gapless mode: Current running time %" GST_TIME_FORMAT
-          ", current end running time %" GST_TIME_FORMAT
-          ", running time after discont %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (current_rt),
-          GST_TIME_ARGS (current_rt_end), GST_TIME_ARGS (input_rt));
+  if (self->gapless && self->current_offset != -1) {
+    GST_DEBUG_OBJECT (self,
+        "Got discont in gapless mode: Current running time %" GST_TIME_FORMAT
+        ", current end running time %" GST_TIME_FORMAT
+        ", running time after discont %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (current_rt),
+        GST_TIME_ARGS (current_rt_end), GST_TIME_ARGS (input_rt));
+
+    new_offset =
+        gst_util_uint64_scale (current_rt - self->resync_rt,
+        rate * ABS (self->in_segment.rate), GST_SECOND);
+    if (current_rt < self->resync_rt) {
+      guint64 drop_samples;
 
       new_offset =
-          gst_util_uint64_scale (current_rt - self->resync_rt,
-          rate * ABS (self->in_segment.rate), GST_SECOND);
-      if (current_rt < self->resync_rt) {
-        guint64 drop_samples;
+          gst_util_uint64_scale (self->resync_rt -
+          current_rt, rate * ABS (self->in_segment.rate), GST_SECOND);
+      drop_samples = self->current_offset + avail_samples + new_offset;
 
-        new_offset =
-            gst_util_uint64_scale (self->resync_rt -
-            current_rt, rate * ABS (self->in_segment.rate), GST_SECOND);
-        drop_samples = self->current_offset + avail_samples + new_offset;
+      GST_DEBUG_OBJECT (self,
+          "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
+          drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
+                  GST_SECOND, rate)));
+      discont = FALSE;
+    } else if (new_offset > self->current_offset + avail_samples) {
+      guint64 silence_samples =
+          new_offset - (self->current_offset + avail_samples);
+      const GstAudioFormatInfo *info = gst_audio_format_get_info (format);
+      GstClockTime silence_time =
+          gst_util_uint64_scale (silence_samples, GST_SECOND, rate);
 
+      if (silence_time > self->max_silence_time) {
         GST_DEBUG_OBJECT (self,
-            "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
-            drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
-                    GST_SECOND, rate)));
-        discont = FALSE;
-      } else if (new_offset > self->current_offset + avail_samples) {
-        guint64 silence_samples =
-            new_offset - (self->current_offset + avail_samples);
-        const GstAudioFormatInfo *info = gst_audio_format_get_info (format);
-        GstClockTime silence_time =
-            gst_util_uint64_scale (silence_samples, GST_SECOND, rate);
+            "Not inserting %" G_GUINT64_FORMAT " samples of silence (%"
+            GST_TIME_FORMAT " exceeds maximum %" GST_TIME_FORMAT ")",
+            silence_samples, GST_TIME_ARGS (silence_time),
+            GST_TIME_ARGS (self->max_silence_time));
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "Inserting %" G_GUINT64_FORMAT " samples of silence (%"
+            GST_TIME_FORMAT ")", silence_samples, GST_TIME_ARGS (silence_time));
 
-        if (silence_time > self->max_silence_time) {
-          GST_DEBUG_OBJECT (self,
-              "Not inserting %" G_GUINT64_FORMAT " samples of silence (%"
-              GST_TIME_FORMAT " exceeds maximum %" GST_TIME_FORMAT ")",
-              silence_samples, GST_TIME_ARGS (silence_time),
-              GST_TIME_ARGS (self->max_silence_time));
-        } else {
-          GST_DEBUG_OBJECT (self,
-              "Inserting %" G_GUINT64_FORMAT " samples of silence (%"
-              GST_TIME_FORMAT ")", silence_samples,
-              GST_TIME_ARGS (silence_time));
+        /* Insert silence buffers to fill the gap in 1s chunks */
+        while (silence_samples > 0) {
+          guint n_samples = MIN (silence_samples, rate);
+          GstBuffer *silence;
+          GstMapInfo map;
 
-          /* Insert silence buffers to fill the gap in 1s chunks */
-          while (silence_samples > 0) {
-            guint n_samples = MIN (silence_samples, rate);
-            GstBuffer *silence;
-            GstMapInfo map;
+          silence = gst_buffer_new_and_alloc (n_samples * bpf);
+          GST_BUFFER_FLAG_SET (silence, GST_BUFFER_FLAG_GAP);
+          gst_buffer_map (silence, &map, GST_MAP_WRITE);
+          gst_audio_format_info_fill_silence (info, map.data, map.size);
+          gst_buffer_unmap (silence, &map);
 
-            silence = gst_buffer_new_and_alloc (n_samples * bpf);
-            GST_BUFFER_FLAG_SET (silence, GST_BUFFER_FLAG_GAP);
-            gst_buffer_map (silence, &map, GST_MAP_WRITE);
-            gst_audio_format_info_fill_silence (info, map.data, map.size);
-            gst_buffer_unmap (silence, &map);
+          gst_adapter_push (self->adapter, silence);
+          ret =
+              gst_audio_buffer_split_output (self, FALSE, rate, bpf,
+              samples_per_buffer);
+          if (ret != GST_FLOW_OK)
+            return ret;
 
-            gst_adapter_push (self->adapter, silence);
-            ret =
-                gst_audio_buffer_split_output (self, FALSE, rate, bpf,
-                samples_per_buffer);
-            if (ret != GST_FLOW_OK)
-              return ret;
-
-            silence_samples -= n_samples;
-          }
-          discont = FALSE;
+          silence_samples -= n_samples;
         }
-      } else if (new_offset < self->current_offset + avail_samples) {
-        guint64 drop_samples =
-            self->current_offset + avail_samples - new_offset;
-
-        GST_DEBUG_OBJECT (self,
-            "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
-            drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
-                    GST_SECOND, rate)));
-        self->drop_samples = drop_samples;
         discont = FALSE;
       }
+    } else if (new_offset < self->current_offset + avail_samples) {
+      guint64 drop_samples = self->current_offset + avail_samples - new_offset;
+
+      GST_DEBUG_OBJECT (self,
+          "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
+          drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
+                  GST_SECOND, rate)));
+      self->drop_samples = drop_samples;
+      discont = FALSE;
     }
   }
 
