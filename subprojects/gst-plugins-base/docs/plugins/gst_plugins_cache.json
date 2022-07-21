@@ -10364,6 +10364,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "instant-uri": {
+                        "blurb": "When enabled, URI changes are applied immediately",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "mute": {
                         "blurb": "Mute the audio channel without changing the volume",
                         "conditionally-available": false,
@@ -11405,6 +11417,18 @@
                     },
                     "download": {
                         "blurb": "Attempt download buffering when buffering network streams",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "instant-uri": {
+                        "blurb": "When enabled, URI changes are applied immediately",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,

@@ -104,6 +104,7 @@ typedef struct
 
   gboolean buffering;
   gboolean is_live;
+  gboolean initial_file;
 
   GstState desired_state;       /* as per user interaction, PAUSED or PLAYING */
 
@@ -111,6 +112,7 @@ typedef struct
 
   /* configuration */
   gboolean gapless;
+  gboolean instant_uri;
 
   GstPlayTrickMode trick_mode;
   gdouble rate;
@@ -166,8 +168,9 @@ gst_play_printf (const gchar * format, ...)
 
 static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
-    gboolean gapless, gdouble initial_volume, gboolean verbose,
-    const gchar * flags_string, gboolean use_playbin3, gdouble start_position)
+    gboolean gapless, gboolean instant_uri, gdouble initial_volume,
+    gboolean verbose, const gchar * flags_string, gboolean use_playbin3,
+    gdouble start_position)
 {
   GstElement *sink, *playbin;
   GstPlay *play;
@@ -262,6 +265,11 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
         G_CALLBACK (play_about_to_finish), play);
   }
 
+  play->initial_file = TRUE;
+  if (use_playbin3) {
+    play->instant_uri = instant_uri;
+    g_object_set (G_OBJECT (play->playbin), "instant-uri", instant_uri, NULL);
+  }
   if (initial_volume != -1)
     play_set_relative_volume (play, initial_volume - 1.0);
 
@@ -745,7 +753,8 @@ play_uri (GstPlay * play, const gchar * next_uri)
 {
   gchar *loc;
 
-  gst_element_set_state (play->playbin, GST_STATE_READY);
+  if (!play->instant_uri || play->initial_file)
+    gst_element_set_state (play->playbin, GST_STATE_READY);
   play_reset (play);
 
   loc = play_uri_get_display_name (play, next_uri);
@@ -754,23 +763,26 @@ play_uri (GstPlay * play, const gchar * next_uri)
 
   g_object_set (play->playbin, "uri", next_uri, NULL);
 
-  switch (gst_element_set_state (play->playbin, GST_STATE_PAUSED)) {
-    case GST_STATE_CHANGE_FAILURE:
-      /* ignore, we should get an error message posted on the bus */
-      break;
-    case GST_STATE_CHANGE_NO_PREROLL:
-      gst_print ("Pipeline is live.\n");
-      play->is_live = TRUE;
-      break;
-    case GST_STATE_CHANGE_ASYNC:
-      gst_print ("Prerolling...\r");
-      break;
-    default:
-      break;
-  }
+  if (!play->instant_uri || play->initial_file) {
+    switch (gst_element_set_state (play->playbin, GST_STATE_PAUSED)) {
+      case GST_STATE_CHANGE_FAILURE:
+        /* ignore, we should get an error message posted on the bus */
+        break;
+      case GST_STATE_CHANGE_NO_PREROLL:
+        gst_print ("Pipeline is live.\n");
+        play->is_live = TRUE;
+        break;
+      case GST_STATE_CHANGE_ASYNC:
+        gst_print ("Prerolling...\r");
+        break;
+      default:
+        break;
+    }
 
-  if (play->desired_state != GST_STATE_PAUSED)
-    gst_element_set_state (play->playbin, play->desired_state);
+    if (play->desired_state != GST_STATE_PAUSED)
+      gst_element_set_state (play->playbin, play->desired_state);
+  }
+  play->initial_file = FALSE;
 }
 
 /* returns FALSE if we have reached the end of the playlist */
@@ -1589,6 +1601,7 @@ main (int argc, char **argv)
   gboolean print_version = FALSE;
   gboolean interactive = TRUE;
   gboolean gapless = FALSE;
+  gboolean instant_uri = FALSE;
   gboolean shuffle = FALSE;
   gdouble volume = -1;
   gdouble start_position = 0;
@@ -1619,6 +1632,8 @@ main (int argc, char **argv)
         N_("Audio sink to use (default is autoaudiosink)"), NULL},
     {"gapless", 0, 0, G_OPTION_ARG_NONE, &gapless,
         N_("Enable gapless playback"), NULL},
+    {"instant-uri", 0, 0, G_OPTION_ARG_NONE, &instant_uri,
+        N_("Enable instantaneous uri changes (only with playbin3)"), NULL},
     {"shuffle", 0, 0, G_OPTION_ARG_NONE, &shuffle,
         N_("Shuffle playlist"), NULL},
     {"no-interactive", 0, G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE,
@@ -1754,8 +1769,9 @@ main (int argc, char **argv)
     shuffle_uris (uris, num);
 
   /* prepare */
-  play = play_new (uris, audio_sink, video_sink, gapless, volume, verbose,
-      flags, use_playbin3, start_position);
+  play =
+      play_new (uris, audio_sink, video_sink, gapless, instant_uri, volume,
+      verbose, flags, use_playbin3, start_position);
 
   if (play == NULL) {
     gst_printerr
