@@ -563,6 +563,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
           "Dropping %" G_GUINT64_FORMAT " samples (%" GST_TIME_FORMAT ")",
           drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
                   GST_SECOND, rate)));
+      self->drop_samples = drop_samples;
       discont = FALSE;
     } else if (new_offset > self->current_offset + avail_samples) {
       guint64 silence_samples =
