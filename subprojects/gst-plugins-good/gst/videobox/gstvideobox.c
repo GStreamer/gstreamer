@@ -2949,11 +2949,13 @@ gst_video_box_transform_caps (GstBaseTransform * trans,
       gst_structure_set_value (structure, "format", &val);
       g_value_unset (&val);
       g_value_unset (&list);
+
+      /* format list above makes for non-fixed caps;
+       * so basetransform and peers will be enlisted to decide these parts,
+       * otherwise leave as-is for passthrough case */
+      gst_structure_remove_field (structure, "colorimetry");
+      gst_structure_remove_field (structure, "chroma-site");
     }
-
-    gst_structure_remove_field (structure, "colorimetry");
-    gst_structure_remove_field (structure, "chroma-site");
-
     gst_caps_append_structure (to, structure);
   }
 
