@@ -582,7 +582,7 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
   aagg_class->aggregate_one_buffer = gst_audio_interleave_aggregate_one_buffer;
 
   /**
-   * GstInterleave:channel-positions
+   * GstAudioInterleave:channel-positions:
    *
    * Channel positions: This property controls the channel positions
    * that are used on the src caps. The number of elements should be
@@ -606,7 +606,7 @@ gst_audio_interleave_class_init (GstAudioInterleaveClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstInterleave:channel-positions-from-input
+   * GstAudioInterleave:channel-positions-from-input:
    *
    * Channel positions from input: If this property is set to %TRUE the channel
    * positions will be taken from the input caps if valid channel positions for
