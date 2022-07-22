@@ -15459,7 +15459,7 @@ qtdemux_meta_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           _codec ("ONVIF Timed XML MetaData");
           caps =
               gst_caps_new_simple ("application/x-onvif-metadata", "parsed",
-              G_TYPE_BOOLEAN, TRUE, "encoding", G_TYPE_STRING, "utf8", NULL);
+              G_TYPE_BOOLEAN, TRUE, NULL);
         } else {
           GST_DEBUG_OBJECT (qtdemux, "Unknown content encoding: %s",
               content_encoding);

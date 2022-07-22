@@ -34,7 +34,8 @@ G_BEGIN_DECLS
     "subpicture/x-xsub; " \
     "subpicture/x-pgs; " \
     "closedcaption/x-cea-608; " \
-    "closedcaption/x-cea-708"
+    "closedcaption/x-cea-708; " \
+    "application/x-onvif-metadata; "
 
 G_END_DECLS
 
