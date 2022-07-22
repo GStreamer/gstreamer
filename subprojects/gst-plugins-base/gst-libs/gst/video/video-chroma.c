@@ -260,9 +260,9 @@ struct _GstVideoChromaResample
 #define FILT_5_3(a,b)          (5*(a) + 3*(b) + 4) >> 3
 #define FILT_3_5(a,b)          (3*(a) + 5*(b) + 4) >> 3
 
-#define FILT_10_3_2_1(a,b,c,d)      (10*(a) + 3*(b) + 2*(c) + (d) + 8) >> 16
-#define FILT_1_2_3_10(a,b,c,d)      ((a) + 2*(b) + 3*(c) + 10*(d) + 8) >> 16
-#define FILT_1_2_3_4_3_2_1(a,b,c,d,e,f,g) ((a) + 2*((b)+(f)) + 3*((c)+(e)) + 4*(d) + (g) + 8) >> 16
+#define FILT_10_3_2_1(a,b,c,d)      (10*(a) + 3*(b) + 2*(c) + (d) + 8) >> 4
+#define FILT_1_2_3_10(a,b,c,d)      ((a) + 2*(b) + 3*(c) + 10*(d) + 8) >> 4
+#define FILT_1_2_3_4_3_2_1(a,b,c,d,e,f,g) ((a) + 2*((b)+(f)) + 3*((c)+(e)) + 4*(d) + (g) + 8) >> 4
 
 /* 2x horizontal upsampling without cositing
  *
