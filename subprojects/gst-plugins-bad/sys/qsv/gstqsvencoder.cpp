@@ -915,7 +915,8 @@ gst_qsv_encoder_prepare_d3d11_pool (GstQsvEncoder * self,
   priv->internal_pool = gst_d3d11_buffer_pool_new (device);
   config = gst_buffer_pool_get_config (priv->internal_pool);
   params = gst_d3d11_allocation_params_new (device, aligned_info,
-      GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags,
+      D3D11_RESOURCE_MISC_SHARED);
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);

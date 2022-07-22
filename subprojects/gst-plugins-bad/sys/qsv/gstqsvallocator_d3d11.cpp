@@ -23,6 +23,11 @@
 
 #include "gstqsvallocator_d3d11.h"
 #include <string.h>
+#include <wrl.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_qsv_allocator_debug);
 #define GST_CAT_DEFAULT gst_qsv_allocator_debug
@@ -32,6 +37,7 @@ struct _GstQsvD3D11Allocator
   GstQsvAllocator parent;
 
   GstD3D11Device *device;
+  GstD3D11Fence *fence;
 };
 
 #define gst_qsv_d3d11_allocator_parent_class parent_class
@@ -71,6 +77,7 @@ gst_qsv_d3d11_allocator_dispose (GObject * object)
 {
   GstQsvD3D11Allocator *self = GST_QSV_D3D11_ALLOCATOR (object);
 
+  gst_clear_d3d11_fence (&self->fence);
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -272,8 +279,9 @@ error:
 }
 
 static GstBuffer *
-gst_qsv_frame_copy_d3d11 (const GstVideoInfo * info, GstBuffer * src_buf,
-    GstBuffer * dst_buf)
+gst_qsv_frame_copy_d3d11 (GstQsvD3D11Allocator * self,
+    const GstVideoInfo * info, GstBuffer * src_buf, GstBuffer * dst_buf,
+    gboolean shared)
 {
   D3D11_TEXTURE2D_DESC src_desc, dst_desc;
   D3D11_BOX src_box;
@@ -282,14 +290,20 @@ gst_qsv_frame_copy_d3d11 (const GstVideoInfo * info, GstBuffer * src_buf,
   GstMapInfo src_info, dst_info;
   ID3D11Texture2D *src_tex, *dst_tex;
   GstD3D11Device *device;
+  ID3D11Device *device_handle;
   ID3D11DeviceContext *device_context;
+  ComPtr < IDXGIResource > dxgi_resource;
+  ComPtr < ID3D11Texture2D > shared_texture;
+  HANDLE shared_handle;
+  HRESULT hr;
 
-  GST_TRACE ("Copying D3D11 buffer %" GST_PTR_FORMAT, src_buf);
+  GST_TRACE_OBJECT (self, "Copying D3D11 buffer %" GST_PTR_FORMAT, src_buf);
 
   src_mem = gst_buffer_peek_memory (src_buf, 0);
   dst_mem = gst_buffer_peek_memory (dst_buf, 0);
 
-  device = GST_D3D11_MEMORY_CAST (dst_mem)->device;
+  device = GST_D3D11_MEMORY_CAST (src_mem)->device;
+  device_handle = gst_d3d11_device_get_device_handle (device);
   device_context = gst_d3d11_device_get_device_context_handle (device);
 
   if (!gst_memory_map (src_mem,
@@ -316,6 +330,33 @@ gst_qsv_frame_copy_d3d11 (const GstVideoInfo * info, GstBuffer * src_buf,
   subresource_idx =
       gst_d3d11_memory_get_subresource_index (GST_D3D11_MEMORY_CAST (src_mem));
 
+  if (shared) {
+    hr = dst_tex->QueryInterface (IID_PPV_ARGS (&dxgi_resource));
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (self,
+          "IDXGIResource interface is not available, hr: 0x%x", (guint) hr);
+      goto error;
+    }
+
+    hr = dxgi_resource->GetSharedHandle (&shared_handle);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (self, "Failed to get shared handle, hr: 0x%x",
+          (guint) hr);
+      goto error;
+    }
+
+    hr = device_handle->OpenSharedResource (shared_handle,
+        IID_PPV_ARGS (&shared_texture));
+
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (self, "Failed to get shared texture, hr: 0x%x",
+          (guint) hr);
+      goto error;
+    }
+
+    dst_tex = shared_texture.Get ();
+  }
+
   src_box.left = 0;
   src_box.top = 0;
   src_box.front = 0;
@@ -324,14 +365,46 @@ gst_qsv_frame_copy_d3d11 (const GstVideoInfo * info, GstBuffer * src_buf,
   src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
 
   gst_d3d11_device_lock (device);
+  if (shared) {
+    if (self->fence && self->fence->device != device)
+      gst_clear_d3d11_fence (&self->fence);
+
+    if (!self->fence)
+      self->fence = gst_d3d11_device_create_fence (device);
+
+    if (!self->fence) {
+      GST_ERROR_OBJECT (self, "Couldn't crete fence");
+      gst_d3d11_device_unlock (device);
+      goto error;
+    }
+  }
+
   device_context->CopySubresourceRegion (dst_tex, 0,
       0, 0, 0, src_tex, subresource_idx, &src_box);
+
+  if (shared) {
+    if (!gst_d3d11_fence_signal (self->fence) ||
+        !gst_d3d11_fence_wait (self->fence)) {
+      GST_ERROR_OBJECT (self, "Couldn't sync GPU operation");
+      gst_clear_d3d11_fence (&self->fence);
+      gst_d3d11_device_unlock (device);
+      goto error;
+    }
+  }
+
   gst_d3d11_device_unlock (device);
 
   gst_memory_unmap (dst_mem, &dst_info);
   gst_memory_unmap (src_mem, &src_info);
 
   return dst_buf;
+
+error:
+  gst_memory_unmap (dst_mem, &dst_info);
+  gst_memory_unmap (src_mem, &src_info);
+  gst_buffer_unref (dst_buf);
+
+  return nullptr;
 }
 
 static GstBuffer *
@@ -400,6 +473,7 @@ gst_qsv_d3d11_allocator_upload (GstQsvAllocator * allocator,
   D3D11_TEXTURE2D_DESC desc;
   GstBuffer *dst_buf;
   GstFlowReturn flow_ret;
+  gboolean shared_copy = FALSE;
 
   /* 1) D3D11 buffer from the same d3d11device with ours
    * 1-1) Same resolution
@@ -417,7 +491,8 @@ gst_qsv_d3d11_allocator_upload (GstQsvAllocator * allocator,
 
   flow_ret = gst_buffer_pool_acquire_buffer (pool, &dst_buf, nullptr);
   if (flow_ret != GST_FLOW_OK) {
-    GST_WARNING ("Failed to acquire buffer from pool, return %s",
+    GST_WARNING_OBJECT (allocator,
+        "Failed to acquire buffer from pool, return %s",
         gst_flow_get_name (flow_ret));
     return nullptr;
   }
@@ -431,19 +506,29 @@ gst_qsv_d3d11_allocator_upload (GstQsvAllocator * allocator,
   /* FIXME: Add support for shared texture for GPU copy or wrapping
    * texture from different device */
   dmem = GST_D3D11_MEMORY_CAST (mem);
-  if (dmem->device != GST_D3D11_BUFFER_POOL (pool)->device)
-    return gst_qsv_frame_upload_sysmem (info, buffer, dst_buf);
+  if (dmem->device != GST_D3D11_BUFFER_POOL (pool)->device) {
+    gint64 luid, other_luid;
+    g_object_get (dmem->device, "adapter-luid", &luid, nullptr);
+    g_object_get (GST_D3D11_BUFFER_POOL (pool)->device,
+        "adapter-luid", &other_luid, nullptr);
+    if (luid == other_luid) {
+      shared_copy = TRUE;
+    } else {
+      return gst_qsv_frame_upload_sysmem (info, buffer, dst_buf);
+    }
+  }
 
   gst_d3d11_memory_get_texture_desc (dmem, &desc);
 
-  if (desc.Usage == D3D11_USAGE_DEFAULT) {
-    GST_TRACE ("Wrapping D3D11 buffer without copy");
+  if (desc.Usage == D3D11_USAGE_DEFAULT && !shared_copy) {
+    GST_TRACE_OBJECT (allocator, "Wrapping D3D11 buffer without copy");
     gst_buffer_unref (dst_buf);
 
     return gst_buffer_ref (buffer);
   }
 
-  return gst_qsv_frame_copy_d3d11 (info, buffer, dst_buf);
+  return gst_qsv_frame_copy_d3d11 (GST_QSV_D3D11_ALLOCATOR (allocator), info,
+      buffer, dst_buf, shared_copy);
 }
 
 static GstBuffer *
@@ -491,7 +576,8 @@ gst_qsv_d3d11_allocator_download (GstQsvAllocator * allocator,
     return nullptr;
   }
 
-  return gst_qsv_frame_copy_d3d11 (info, src_buf, dst_buf);
+  return gst_qsv_frame_copy_d3d11 (GST_QSV_D3D11_ALLOCATOR (allocator),
+      info, src_buf, dst_buf, FALSE);
 
 fallback:
   GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
