@@ -40,6 +40,8 @@ struct _GstD3D11WindowDummy
   ID3D11Texture2D *fallback_texture;
   ID3D11VideoProcessorOutputView *fallback_pov;
   ID3D11RenderTargetView *fallback_rtv;
+
+  GstD3D11Fence *fence;
 };
 
 #define gst_d3d11_window_dummy_parent_class parent_class
@@ -50,6 +52,7 @@ static void gst_d3d11_window_dummy_on_resize (GstD3D11Window * window,
     guint width, guint height);
 static gboolean gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps, GError ** error);
+static void gst_d3d11_window_dummy_unprepare (GstD3D11Window * window);
 static gboolean
 gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     GstD3D11WindowSharedHandleData * data);
@@ -65,6 +68,8 @@ gst_d3d11_window_dummy_class_init (GstD3D11WindowDummyClass * klass)
   window_class->on_resize =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_on_resize);
   window_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_prepare);
+  window_class->unprepare =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_unprepare);
   window_class->open_shared_handle =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_dummy_open_shared_handle);
   window_class->release_shared_handle =
@@ -142,6 +147,14 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   }
 
   return TRUE;
+}
+
+static void
+gst_d3d11_window_dummy_unprepare (GstD3D11Window * window)
+{
+  GstD3D11WindowDummy *self = GST_D3D11_WINDOW_DUMMY (window);
+
+  gst_clear_d3d11_fence (&self->fence);
 }
 
 static void
@@ -286,34 +299,19 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
 
     GST_D3D11_CLEAR_COM (data->keyed_mutex);
   } else {
-    /* *INDENT-OFF* */
-    ComPtr<ID3D11Query> query;
-    /* *INDENT-ON* */
-    D3D11_QUERY_DESC query_desc;
-    ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
-    ID3D11DeviceContext *context_handle =
-        gst_d3d11_device_get_device_context_handle (device);
-    BOOL sync_done = FALSE;
-
     /* If keyed mutex is not used, let's handle sync manually by using
-     * ID3D11Query. Issued GPU commands might not be finished yet */
-    query_desc.Query = D3D11_QUERY_EVENT;
-    query_desc.MiscFlags = 0;
+     * fence. Issued GPU commands might not be finished yet */
 
-    hr = device_handle->CreateQuery (&query_desc, &query);
-    if (!gst_d3d11_result (hr, device)) {
+    if (!self->fence)
+      self->fence = gst_d3d11_device_create_fence (device);
+
+    if (!self->fence) {
       GST_ERROR_OBJECT (self, "Couldn't Create event query");
       return FALSE;
     }
 
-    context_handle->End (query.Get ());
-
-    /* Wait until all issued GPU commands are finished */
-    do {
-      hr = context_handle->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
-    } while (!sync_done && (hr == S_OK || hr == S_FALSE));
-
-    if (!gst_d3d11_result (hr, device)) {
+    if (!gst_d3d11_fence_signal (self->fence) ||
+        !gst_d3d11_fence_wait (self->fence)) {
       GST_ERROR_OBJECT (self, "Couldn't sync GPU operation");
       return FALSE;
     }

@@ -264,6 +264,7 @@ gst_mf_video_encoder_close (GstVideoEncoder * enc)
 
   gst_clear_object (&self->other_d3d11_device);
   gst_clear_object (&self->d3d11_device);
+  gst_clear_d3d11_fence (&self->fence);
 #endif
 
   return TRUE;
@@ -1064,9 +1065,6 @@ gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
   ComPtr < ID3D11Texture2D > mf_texture;
   ComPtr < IDXGIResource > dxgi_resource;
   ComPtr < ID3D11Texture2D > shared_texture;
-  ComPtr < ID3D11Query > query;
-  D3D11_QUERY_DESC query_desc;
-  BOOL sync_done = FALSE;
   HANDLE shared_handle;
   GstMemory *mem;
   GstD3D11Memory *dmem;
@@ -1171,30 +1169,27 @@ gst_mf_video_encoder_create_input_sample_d3d11 (GstMFVideoEncoder * self,
   src_box.right = MIN (src_desc.Width, dst_desc.Width);
   src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
 
-  /* CopySubresourceRegion() might not be able to guarantee
-   * copying. To ensure it, we will make use of d3d11 query */
-  query_desc.Query = D3D11_QUERY_EVENT;
-  query_desc.MiscFlags = 0;
+  gst_d3d11_device_lock (dmem->device);
+  if (self->fence && self->fence->device != dmem->device)
+    gst_clear_d3d11_fence (&self->fence);
 
-  hr = device_handle->CreateQuery (&query_desc, &query);
-  if (!gst_d3d11_result (hr, dmem->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't Create event query");
+  if (!self->fence)
+    self->fence = gst_d3d11_device_create_fence (dmem->device);
+
+  if (!self->fence) {
+    GST_ERROR_OBJECT (self, "Couldn't create fence object");
+    gst_d3d11_device_unlock (dmem->device);
     gst_memory_unmap (mem, &info);
     return FALSE;
   }
 
-  gst_d3d11_device_lock (dmem->device);
   context_handle->CopySubresourceRegion (shared_texture.Get (), 0, 0, 0, 0,
       texture, subidx, &src_box);
-  context_handle->End (query.Get ());
 
-  /* Wait until all issued GPU commands are finished */
-  do {
-    hr = context_handle->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
-  } while (!sync_done && (hr == S_OK || hr == S_FALSE));
-
-  if (!gst_d3d11_result (hr, dmem->device)) {
+  if (!gst_d3d11_fence_signal (self->fence) ||
+      !gst_d3d11_fence_wait (self->fence)) {
     GST_ERROR_OBJECT (self, "Couldn't sync GPU operation");
+    gst_clear_d3d11_fence (&self->fence);
     gst_d3d11_device_unlock (dmem->device);
     gst_memory_unmap (mem, &info);
 

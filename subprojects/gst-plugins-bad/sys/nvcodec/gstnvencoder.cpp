@@ -60,6 +60,7 @@ struct _GstNvEncoderPrivate
   GstCudaContext *context;
 #ifdef GST_CUDA_HAS_D3D
   GstD3D11Device *device;
+  GstD3D11Fence *fence;
 #endif
 
   GstNvEncoderDeviceMode subclass_device_mode;
@@ -439,6 +440,7 @@ gst_nv_encoder_close (GstVideoEncoder * encoder)
 
   gst_clear_object (&priv->context);
 #ifdef GST_CUDA_HAS_D3D
+  gst_clear_d3d11_fence (&priv->fence);
   gst_clear_object (&priv->device);
 #endif
 
@@ -1558,9 +1560,6 @@ gst_nv_encoder_copy_d3d11 (GstNvEncoder * self,
   GstFlowReturn ret;
   ComPtr < IDXGIResource > dxgi_resource;
   ComPtr < ID3D11Texture2D > shared_texture;
-  ComPtr < ID3D11Query > query;
-  D3D11_QUERY_DESC query_desc;
-  BOOL sync_done = FALSE;
   HANDLE shared_handle;
   GstD3D11Device *device;
   HRESULT hr;
@@ -1639,13 +1638,14 @@ gst_nv_encoder_copy_d3d11 (GstNvEncoder * self,
   src_box.bottom = MIN (src_desc.Height, dst_desc.Height);
 
   if (shared) {
-    query_desc.Query = D3D11_QUERY_EVENT;
-    query_desc.MiscFlags = 0;
+    if (priv->fence && priv->fence->device != device)
+      gst_clear_d3d11_fence (&priv->fence);
 
-    hr = device_handle->CreateQuery (&query_desc, &query);
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (self, "Couldn't Create event query, hr: 0x%x",
-          (guint) hr);
+    if (!priv->fence)
+      priv->fence = gst_d3d11_device_create_fence (device);
+
+    if (!priv->fence) {
+      GST_ERROR_OBJECT (self, "Couldn't crete fence");
       goto error;
     }
 
@@ -1656,15 +1656,11 @@ gst_nv_encoder_copy_d3d11 (GstNvEncoder * self,
       0, 0, 0, src_tex, subresource_idx, &src_box);
 
   if (shared) {
-    device_context->End (query.Get ());
-    do {
-      hr = device_context->GetData (query.Get (), &sync_done, sizeof (BOOL), 0);
-    } while (!sync_done && (hr == S_OK || hr == S_FALSE));
-
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (self, "Couldn't sync GPU operation, hr: 0x%x",
-          (guint) hr);
+    if (!gst_d3d11_fence_signal (priv->fence) ||
+        !gst_d3d11_fence_wait (priv->fence)) {
+      GST_ERROR_OBJECT (self, "Couldn't sync GPU operation");
       gst_d3d11_device_unlock (device);
+      gst_clear_d3d11_fence (&priv->fence);
       goto error;
     }
 

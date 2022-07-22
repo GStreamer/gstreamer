@@ -231,6 +231,7 @@ class D3D11DesktopDupObject
 public:
   D3D11DesktopDupObject ()
     : device_(nullptr)
+    , fence_(nullptr)
     , metadata_buffer_(nullptr)
     , metadata_buffer_size_(0)
     , vertex_buffer_(nullptr)
@@ -246,6 +247,7 @@ public:
     if (vertex_buffer_)
       delete[] vertex_buffer_;
 
+    gst_clear_d3d11_fence (&fence_);
     gst_clear_object (&device_);
   }
 
@@ -545,8 +547,8 @@ public:
   {
     ID3D11DeviceContext *context_handle = nullptr;
     ComPtr <ID3D11Texture2D> tex;
-    ComPtr < ID3D11Query > query;
     HRESULT hr;
+    gboolean is_shared = FALSE;
 
     context_handle = gst_d3d11_device_get_device_context_handle (device);
 
@@ -555,7 +557,6 @@ public:
     } else {
       ID3D11Device *device_handle = nullptr;
       ComPtr < IDXGIResource > dxgi_resource;
-      D3D11_QUERY_DESC query_desc;
       HANDLE shared_handle;
 
       device_handle = gst_d3d11_device_get_device_handle (device);
@@ -573,24 +574,24 @@ public:
       if (!gst_d3d11_result (hr, device))
         return GST_FLOW_ERROR;
 
-      query_desc.Query = D3D11_QUERY_EVENT;
-      query_desc.MiscFlags = 0;
+      if (fence_ && fence_->device != device)
+        gst_clear_d3d11_fence (&fence_);
 
-      hr = device_handle->CreateQuery (&query_desc, &query);
-      if (!gst_d3d11_result (hr, device))
+      if (!fence_)
+        fence_ = gst_d3d11_device_create_fence (device);
+
+      if (!fence_)
         return GST_FLOW_ERROR;
+
+      is_shared = TRUE;
     }
 
     context_handle->CopySubresourceRegion (texture, 0, 0, 0, 0,
-      tex.Get(), 0, cropBox);
+        tex.Get(), 0, cropBox);
 
-    if (query) {
-      BOOL sync_done = FALSE;
-
-      do {
-        hr = context_handle->GetData (query.Get (),
-            &sync_done, sizeof (BOOL), 0);
-      } while (!sync_done && (hr == S_OK || hr == S_FALSE));
+    if (is_shared) {
+      if (!gst_d3d11_fence_signal (fence_) || !gst_d3d11_fence_wait (fence_))
+        return GST_FLOW_ERROR;
     }
 
     return GST_FLOW_OK;
@@ -1471,6 +1472,7 @@ private:
   PTR_INFO ptr_info_;
   DXGI_OUTDUPL_DESC output_desc_;
   GstD3D11Device * device_;
+  GstD3D11Fence * fence_;
 
   ComPtr<ID3D11Texture2D> shared_texture_;
   ComPtr<ID3D11RenderTargetView> rtv_;
