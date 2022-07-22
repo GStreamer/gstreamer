@@ -34,15 +34,19 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_DEVICE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_DEVICE))
 #define GST_D3D11_DEVICE_CAST(obj)        ((GstD3D11Device*)(obj))
 
+#define GST_TYPE_D3D11_FENCE              (gst_d3d11_fence_get_type())
+#define GST_IS_D3D11_FENCE(obj)           (GST_IS_MINI_OBJECT_TYPE(obj, GST_TYPE_D3D11_FENCE))
+#define GST_D3D11_FENCE(obj)              ((GstD3D11Fence *)obj)
+#define GST_D3D11_FENCE_CAST(obj)         (GST_D3D11_FENCE(obj))
+
 #define GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE "gst.d3d11.device.handle"
 
 struct _GstD3D11Device
 {
   GstObject parent;
 
-  GstD3D11DevicePrivate *priv;
-
   /*< private >*/
+  GstD3D11DevicePrivate *priv;
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -93,6 +97,44 @@ GST_D3D11_API
 gboolean              gst_d3d11_device_get_format         (GstD3D11Device * device,
                                                            GstVideoFormat format,
                                                            GstD3D11Format * device_format);
+
+struct _GstD3D11Fence
+{
+  GstMiniObject parent;
+
+  GstD3D11Device *device;
+
+  /*< private >*/
+  GstD3D11FencePrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+GST_D3D11_API
+GType           gst_d3d11_fence_get_type      (void);
+
+GST_D3D11_API
+GstD3D11Fence * gst_d3d11_device_create_fence (GstD3D11Device * device);
+
+GST_D3D11_API
+gboolean        gst_d3d11_fence_signal        (GstD3D11Fence * fence);
+
+GST_D3D11_API
+gboolean        gst_d3d11_fence_wait          (GstD3D11Fence * fence);
+
+static inline void
+gst_d3d11_fence_unref (GstD3D11Fence * fence)
+{
+  gst_mini_object_unref (GST_MINI_OBJECT_CAST (fence));
+}
+
+static inline void
+gst_clear_d3d11_fence (GstD3D11Fence ** fence)
+{
+  if (fence && *fence) {
+    gst_d3d11_fence_unref (*fence);
+    *fence = NULL;
+  }
+}
 
 G_END_DECLS
 

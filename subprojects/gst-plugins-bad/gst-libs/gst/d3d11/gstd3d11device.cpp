@@ -105,7 +105,9 @@ struct _GstD3D11DevicePrivate
   gint64 adapter_luid;
 
   ID3D11Device *device;
+  ID3D11Device5 *device5;
   ID3D11DeviceContext *device_context;
+  ID3D11DeviceContext4 *device_context4;
 
   ID3D11VideoDevice *video_device;
   ID3D11VideoContext *video_context;
@@ -115,6 +117,8 @@ struct _GstD3D11DevicePrivate
 
   GRecMutex extern_lock;
   GMutex resource_lock;
+
+  LARGE_INTEGER frequency;
 
 #if HAVE_D3D11SDKLAYERS_H
   ID3D11Debug *d3d11_debug;
@@ -703,6 +707,8 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
+  GST_D3D11_CLEAR_COM (priv->device5);
+  GST_D3D11_CLEAR_COM (priv->device_context4);
   GST_D3D11_CLEAR_COM (priv->video_device);
   GST_D3D11_CLEAR_COM (priv->video_context);
   GST_D3D11_CLEAR_COM (priv->device);
@@ -951,7 +957,9 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
   ComPtr < IDXGIAdapter1 > adapter;
   ComPtr < IDXGIFactory1 > factory;
   ComPtr < ID3D11Device > device;
+  ComPtr < ID3D11Device5 > device5;
   ComPtr < ID3D11DeviceContext > device_context;
+  ComPtr < ID3D11DeviceContext4 > device_context4;
   HRESULT hr;
   UINT create_flags;
   guint adapter_index = 0;
@@ -1077,6 +1085,14 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
 
   priv = self->priv;
 
+  hr = device.As (&device5);
+  if (SUCCEEDED (hr))
+    hr = device_context.As (&device_context4);
+  if (SUCCEEDED (hr)) {
+    priv->device5 = device5.Detach ();
+    priv->device_context4 = device_context4.Detach ();
+  }
+
   priv->adapter = adapter_index;
   priv->device = device.Detach ();
   priv->device_context = device_context.Detach ();
@@ -1098,6 +1114,9 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
   priv->create_flags = create_flags;
   gst_d3d11_device_setup_format_table (self);
   gst_d3d11_device_setup_debug_layer (self);
+
+  BOOL ret = QueryPerformanceFrequency (&priv->frequency);
+  g_assert (ret);
 
   return self;
 }
@@ -1381,4 +1400,259 @@ gst_d3d11_device_get_format (GstD3D11Device * device, GstVideoFormat format,
     gst_d3d11_format_init (device_format);
 
   return FALSE;
+}
+
+GST_DEFINE_MINI_OBJECT_TYPE (GstD3D11Fence, gst_d3d11_fence);
+
+struct _GstD3D11FencePrivate
+{
+  UINT64 fence_value;
+  ID3D11Fence *fence;
+  ID3D11Query *query;
+  HANDLE event_handle;
+  gboolean signalled;
+  gboolean synced;
+};
+
+static void
+_gst_d3d11_fence_free (GstD3D11Fence * fence)
+{
+  GstD3D11FencePrivate *priv = fence->priv;
+
+  GST_D3D11_CLEAR_COM (priv->fence);
+  GST_D3D11_CLEAR_COM (priv->query);
+  if (priv->event_handle)
+    CloseHandle (priv->event_handle);
+
+  gst_clear_object (&fence->device);
+
+  g_free (priv);
+  g_free (fence);
+}
+
+/**
+ * gst_d3d11_device_create_fence:
+ * @device: a #GstD3D11Device
+ *
+ * Creates fence object (i.e., ID3D11Fence) if available, otherwise
+ * ID3D11Query with D3D11_QUERY_EVENT is created.
+ *
+ * Returns: a #GstD3D11Fence object
+ *
+ * Since: 1.22
+ */
+GstD3D11Fence *
+gst_d3d11_device_create_fence (GstD3D11Device * device)
+{
+  GstD3D11DevicePrivate *priv;
+  ID3D11Fence *fence = nullptr;
+  HRESULT hr = S_OK;
+  GstD3D11Fence *self;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
+
+  priv = device->priv;
+
+  if (priv->device5 && priv->device_context4) {
+    hr = priv->device5->CreateFence (0, D3D11_FENCE_FLAG_NONE,
+        IID_PPV_ARGS (&fence));
+
+    if (!gst_d3d11_result (hr, device))
+      GST_WARNING_OBJECT (device, "Failed to create fence object");
+  }
+
+  self = g_new0 (GstD3D11Fence, 1);
+  self->device = (GstD3D11Device *) gst_object_ref (device);
+  self->priv = g_new0 (GstD3D11FencePrivate, 1);
+  self->priv->fence = fence;
+  if (fence) {
+    self->priv->event_handle = CreateEventEx (nullptr, nullptr,
+        0, EVENT_ALL_ACCESS);
+  }
+
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (self), 0,
+      GST_TYPE_D3D11_FENCE, nullptr, nullptr,
+      (GstMiniObjectFreeFunction) _gst_d3d11_fence_free);
+
+  return self;
+}
+
+/**
+ * gst_d3d11_fence_signal:
+ * @fence: a #GstD3D11Fence
+ *
+ * Sets sync point to fence for waiting.
+ * Must be called with gst_d3d11_device_lock() held
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_d3d11_fence_signal (GstD3D11Fence * fence)
+{
+  HRESULT hr = S_OK;
+  GstD3D11Device *device;
+  GstD3D11DevicePrivate *device_priv;
+  GstD3D11FencePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_FENCE (fence), FALSE);
+
+  device = fence->device;
+  device_priv = device->priv;
+  priv = fence->priv;
+
+  priv->signalled = FALSE;
+  priv->synced = FALSE;
+
+  if (priv->fence) {
+    priv->fence_value++;
+
+    GST_LOG_OBJECT (device, "Signals with fence value %" G_GUINT64_FORMAT,
+        priv->fence_value);
+
+    hr = device_priv->device_context4->Signal (priv->fence, priv->fence_value);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Failed to signal fence value %"
+          G_GUINT64_FORMAT, fence->priv->fence_value);
+      return FALSE;
+    }
+  } else {
+    D3D11_QUERY_DESC desc;
+
+    GST_D3D11_CLEAR_COM (priv->query);
+
+    desc.Query = D3D11_QUERY_EVENT;
+    desc.MiscFlags = 0;
+
+    GST_LOG_OBJECT (device, "Creating query object");
+
+    hr = device_priv->device->CreateQuery (&desc, &priv->query);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Failed to create query object");
+      return FALSE;
+    }
+
+    device_priv->device_context->End (priv->query);
+  }
+
+  priv->signalled = TRUE;
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d11_fence_wait:
+ * @fence: a #GstD3D11Fence
+ *
+ * Waits until previously issued GPU commands have been completed
+ * Must be called with gst_d3d11_device_lock() held
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_d3d11_fence_wait (GstD3D11Fence * fence)
+{
+  HRESULT hr = S_OK;
+  GstD3D11Device *device;
+  GstD3D11DevicePrivate *device_priv;
+  GstD3D11FencePrivate *priv;
+  BOOL timer_ret;
+  LARGE_INTEGER current_time, now;
+
+  g_return_val_if_fail (GST_IS_D3D11_FENCE (fence), FALSE);
+
+  device = fence->device;
+  device_priv = device->priv;
+  priv = fence->priv;
+
+  if (!priv->signalled) {
+    GST_DEBUG_OBJECT (device, "Fence is not signalled, nothing to wait");
+    return TRUE;
+  }
+
+  if (priv->synced) {
+    GST_DEBUG_OBJECT (device, "Already synced");
+    return TRUE;
+  }
+
+  timer_ret = QueryPerformanceCounter (&current_time);
+  g_assert (timer_ret);
+
+  now = current_time;
+
+  if (priv->fence) {
+    GST_LOG_OBJECT (device, "Waiting fence value %" G_GUINT64_FORMAT,
+        priv->fence_value);
+
+    if (fence->priv->fence->GetCompletedValue () < fence->priv->fence_value) {
+      hr = fence->priv->fence->SetEventOnCompletion (fence->priv->fence_value,
+          fence->priv->event_handle);
+      if (!gst_d3d11_result (hr, device)) {
+        GST_WARNING_OBJECT (device, "Failed set event handle");
+        return FALSE;
+      }
+
+      /* 20 seconds should be sufficient time */
+      DWORD ret = WaitForSingleObject (priv->event_handle, 20000);
+      if (ret != WAIT_OBJECT_0) {
+        GST_WARNING_OBJECT (device,
+            "Failed to wait object, ret 0x%x", (guint) ret);
+        return FALSE;
+      }
+    }
+  } else {
+    LONGLONG timeout;
+    BOOL sync_done = FALSE;
+
+    g_assert (priv->query != nullptr);
+
+    /* 20 sec timeout */
+    timeout = now.QuadPart + 20 * device_priv->frequency.QuadPart;
+
+    GST_LOG_OBJECT (device, "Waiting event");
+
+    while (now.QuadPart < timeout && !sync_done) {
+      hr = device_priv->device_context->GetData (priv->query,
+          &sync_done, sizeof (BOOL), 0);
+      if (FAILED (hr)) {
+        GST_WARNING_OBJECT (device, "Failed to get event data");
+        return FALSE;
+      }
+
+      if (sync_done)
+        break;
+
+      g_thread_yield ();
+      timer_ret = QueryPerformanceCounter (&now);
+      g_assert (timer_ret);
+    }
+
+    if (!sync_done) {
+      GST_WARNING_OBJECT (device, "Timeout");
+      return FALSE;
+    }
+
+    GST_D3D11_CLEAR_COM (priv->query);
+  }
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_LOG) {
+    GstClockTime elapsed;
+
+    QueryPerformanceCounter (&now);
+    elapsed = gst_util_uint64_scale (now.QuadPart - current_time.QuadPart,
+        GST_SECOND, device_priv->frequency.QuadPart);
+
+    GST_LOG_OBJECT (device, "Wait done, elapsed %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (elapsed));
+  }
+#endif
+
+  priv->signalled = FALSE;
+  priv->synced = TRUE;
+
+  return TRUE;
 }
