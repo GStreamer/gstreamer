@@ -2417,6 +2417,20 @@ gst_v4l2_object_add_colorspace (GstV4l2Object * v4l2object, GstStructure * s,
       if (colorspace == req_cspace) {
         if (gst_v4l2_object_get_colorspace (v4l2object, &fmt, &cinfo))
           gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
+        if (colorspace == V4L2_COLORSPACE_REC709) {
+          /* support for full-range variants of colorspaces V4L2_COLORSPACE_REC709
+           * (such as Apple's full-range bt709 variant 1:3:5:1) */
+          struct v4l2_format alt_fmt;
+          memcpy (&alt_fmt, &fmt, sizeof (alt_fmt));
+
+          if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type))
+            alt_fmt.fmt.pix_mp.quantization = V4L2_QUANTIZATION_FULL_RANGE;
+          else
+            alt_fmt.fmt.pix.quantization = V4L2_QUANTIZATION_FULL_RANGE;
+
+          if (gst_v4l2_object_get_colorspace (v4l2object, &alt_fmt, &cinfo))
+            gst_v4l2_object_fill_colorimetry_list (&list, &cinfo);
+        }
       }
     }
   }
