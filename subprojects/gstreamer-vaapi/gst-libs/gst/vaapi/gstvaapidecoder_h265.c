@@ -585,6 +585,11 @@ ensure_pps (GstVaapiDecoderH265 * decoder, GstH265PPS * pps)
   GstVaapiParserInfoH265 *const pi = priv->pps[pps->id];
 
   gst_vaapi_parser_info_h265_replace (&priv->active_pps, pi);
+
+  /* Ensure our copy is up-to-date */
+  pi->data.pps = *pps;
+  pi->data.pps.sps = NULL;
+
   return pi ? &pi->data.pps : NULL;
 }
 
@@ -608,6 +613,9 @@ ensure_sps (GstVaapiDecoderH265 * decoder, GstH265SPS * sps)
    * sequence was not ended */
   if (pi && priv->active_sps)
     pi->state |= (priv->active_sps->state & GST_H265_VIDEO_STATE_GOT_I_FRAME);
+
+  /* Ensure our copy is up-to-date */
+  pi->data.sps = *sps;
 
   gst_vaapi_parser_info_h265_replace (&priv->active_sps, pi);
   return pi ? &pi->data.sps : NULL;
