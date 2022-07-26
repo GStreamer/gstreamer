@@ -2702,6 +2702,12 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
 
   frame = _enc_frame (gst_frame);
 
+  if (self->prop.aud) {
+    if ((self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA)
+        && !_add_aud (self, frame))
+      return FALSE;
+  }
+
   /* Repeat the SPS for IDR. */
   if (frame->poc == 0) {
     VAEncSequenceParameterBufferH264 sequence;
@@ -2736,12 +2742,6 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
 
     if ((self->packed_headers & VA_ENC_PACKED_HEADER_SEQUENCE)
         && !_add_sequence_header (self, frame))
-      return FALSE;
-  }
-
-  if (self->prop.aud) {
-    if ((self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA)
-        && !_add_aud (self, frame))
       return FALSE;
   }
 
