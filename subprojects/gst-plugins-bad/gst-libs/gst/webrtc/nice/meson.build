@@ -11,6 +11,8 @@ libgstwebrtcnice_headers = files([
     'nicetransport.h',
 ])
 
+libgstwebrtcnice_dep = dependency('', required : false)
+
 libnice_dep = dependency('nice', version : '>=0.1.17', required : get_option('webrtc'),
                          fallback : ['libnice', 'libnice_dep'],
                          default_options: ['tests=disabled'])
@@ -45,7 +47,7 @@ if libnice_dep.found()
     dependencies: deps,
     install: true,
   )
-  
+
   pkg_name = 'gstreamer-webrtc-nice-1.0'
   libraries += [[pkg_name, {'lib': libgstwebrtcnice}]]
   pkgconfig.generate(libgstwebrtcnice,
