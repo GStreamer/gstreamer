@@ -1458,13 +1458,9 @@ parse_pps (GstVaapiDecoderH265 * decoder, GstVaapiDecoderUnit * unit)
   GstVaapiParserInfoH265 *const pi = unit->parsed_info;
   GstH265PPS *const pps = &pi->data.pps;
   GstH265ParserResult result;
-  guint col_width[19], row_height[21];
 
   GST_DEBUG ("parse PPS");
   priv->parser_state &= GST_H265_VIDEO_STATE_GOT_SPS;
-
-  memset (col_width, 0, sizeof (col_width));
-  memset (row_height, 0, sizeof (row_height));
 
   memset (pps, 0, sizeof (GstH265PPS));
 
