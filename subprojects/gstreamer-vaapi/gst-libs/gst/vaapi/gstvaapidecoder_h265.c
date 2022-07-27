@@ -218,7 +218,7 @@ struct _GstVaapiPictureH265
   GstVaapiPicture base;
   GstH265SliceHdr *last_slice_hdr;
   guint structure;
-  gint32 poc;                   // PicOrderCntVal (8.3.1) 
+  gint32 poc;                   // PicOrderCntVal (8.3.1)
   gint32 poc_lsb;               // slice_pic_order_cnt_lsb
   guint32 pic_latency_cnt;      // PicLatencyCount
   guint output_flag:1;
@@ -587,8 +587,10 @@ ensure_pps (GstVaapiDecoderH265 * decoder, GstH265PPS * pps)
   gst_vaapi_parser_info_h265_replace (&priv->active_pps, pi);
 
   /* Ensure our copy is up-to-date */
-  pi->data.pps = *pps;
-  pi->data.pps.sps = NULL;
+  if (pi) {
+    pi->data.pps = *pps;
+    pi->data.pps.sps = NULL;
+  }
 
   return pi ? &pi->data.pps : NULL;
 }
@@ -615,7 +617,8 @@ ensure_sps (GstVaapiDecoderH265 * decoder, GstH265SPS * sps)
     pi->state |= (priv->active_sps->state & GST_H265_VIDEO_STATE_GOT_I_FRAME);
 
   /* Ensure our copy is up-to-date */
-  pi->data.sps = *sps;
+  if (pi)
+    pi->data.sps = *sps;
 
   gst_vaapi_parser_info_h265_replace (&priv->active_sps, pi);
   return pi ? &pi->data.sps : NULL;
