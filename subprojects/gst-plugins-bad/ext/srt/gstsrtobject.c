@@ -1872,7 +1872,7 @@ gst_srt_object_write (GstSRTObject * srtobject,
 static GstStructure *
 get_stats_for_srtsock (GstSRTObject * srtobject, SRTSOCKET srtsock)
 {
-  GstStructure *s = gst_structure_new_empty ("application/x-srt-statistics");
+  GstStructure *s;
   int ret;
   SRT_TRACEBSTATS stats;
 
@@ -1881,10 +1881,10 @@ get_stats_for_srtsock (GstSRTObject * srtobject, SRTSOCKET srtsock)
     GST_WARNING_OBJECT (srtobject->element,
         "failed to retrieve stats for socket %d (reason %s)",
         srtsock, srt_getlasterror_str ());
-    return s;
+    return NULL;
   }
 
-  gst_structure_set (s,
+  s = gst_structure_new ("application/x-srt-statistics",
       /* number of sent data packets, including retransmissions */
       "packets-sent", G_TYPE_INT64, stats.pktSent,
       /* number of lost packets (sender side) */
@@ -1939,22 +1939,31 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
 
   if (srtobject->sock != SRT_INVALID_SOCK) {
     s = get_stats_for_srtsock (srtobject, srtobject->sock);
-    goto done;
   }
 
-  s = gst_structure_new_empty ("application/x-srt-statistics");
+  if (s == NULL) {
+    s = gst_structure_new_empty ("application/x-srt-statistics");
+  }
 
   if (srtobject->callers) {
     GValueArray *callers_stats = g_value_array_new (1);
     GValue callers_stats_v = G_VALUE_INIT;
-    GList *item;
+    GList *item, *next;
 
-    for (item = srtobject->callers; item; item = item->next) {
+    for (item = srtobject->callers, next = NULL; item; item = next) {
       SRTCaller *caller = item->data;
       GstStructure *tmp;
       GValue *v;
 
+      next = item->next;
+
       tmp = get_stats_for_srtsock (srtobject, caller->sock);
+      if (tmp == NULL) {
+        srtobject->callers = g_list_delete_link (srtobject->callers, item);
+        srt_caller_signal_removed (caller, srtobject);
+        srt_caller_free (caller);
+        continue;
+      }
 
       gst_structure_set (tmp, "caller-address", G_TYPE_SOCKET_ADDRESS,
           caller->sockaddr, NULL);
@@ -1970,7 +1979,6 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
     gst_structure_take_value (s, "callers", &callers_stats_v);
   }
 
-done:
   gst_structure_set (s, is_sender ? "bytes-sent-total" : "bytes-received-total",
       G_TYPE_UINT64, srtobject->bytes, NULL);
 
