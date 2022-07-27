@@ -211,6 +211,79 @@ GST_START_TEST (test_notifies)
 
 GST_END_TEST;
 
+GST_START_TEST (test_stream_type_name)
+{
+  GstStream *stream = NULL;
+  GstStreamType stream_type;
+
+  /* Create and set stream type */
+  stream = gst_stream_new ("here/we/go", NULL, GST_STREAM_TYPE_UNKNOWN, 0);
+  fail_unless (stream != NULL);
+
+  /* Check the stream type names */
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type), "unknown");
+
+  gst_stream_set_stream_type (stream, GST_STREAM_TYPE_AUDIO);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type), "audio");
+
+  gst_stream_set_stream_type (stream, GST_STREAM_TYPE_VIDEO);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type), "video");
+
+  gst_stream_set_stream_type (stream, GST_STREAM_TYPE_CONTAINER);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type),
+      "container");
+
+  gst_stream_set_stream_type (stream, GST_STREAM_TYPE_TEXT);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type), "text");
+
+  /* Check mixed stream type names */
+  gst_stream_set_stream_type (stream,
+      GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type),
+      "video+audio");
+
+  gst_stream_set_stream_type (stream,
+      GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_TEXT);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type),
+      "video+text");
+
+  gst_stream_set_stream_type (stream,
+      GST_STREAM_TYPE_AUDIO | GST_STREAM_TYPE_TEXT);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type),
+      "audio+text");
+
+  gst_stream_set_stream_type (stream,
+      GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO | GST_STREAM_TYPE_TEXT);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type),
+      "video+audio+text");
+
+  gst_stream_set_stream_type (stream,
+      GST_STREAM_TYPE_VIDEO | GST_STREAM_TYPE_AUDIO | GST_STREAM_TYPE_TEXT |
+      GST_STREAM_TYPE_CONTAINER);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type),
+      "container+video+audio+text");
+
+  gst_stream_set_stream_type (stream,
+      GST_STREAM_TYPE_AUDIO | GST_STREAM_TYPE_CONTAINER);
+  stream_type = gst_stream_get_stream_type (stream);
+  fail_unless_equals_string (gst_stream_type_get_name (stream_type),
+      "container+audio");
+
+  gst_object_unref (stream);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_streams_suite (void)
 {
@@ -221,6 +294,7 @@ gst_streams_suite (void)
   tcase_add_test (tc_chain, test_stream_creation);
   tcase_add_test (tc_chain, test_stream_event);
   tcase_add_test (tc_chain, test_notifies);
+  tcase_add_test (tc_chain, test_stream_type_name);
   return s;
 }
 

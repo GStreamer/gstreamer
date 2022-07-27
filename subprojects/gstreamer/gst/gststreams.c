@@ -555,7 +555,6 @@ gst_stream_get_property (GObject * object, guint prop_id,
 const gchar *
 gst_stream_type_get_name (GstStreamType stype)
 {
-  /* FIXME : Make this more flexible */
   switch (stype) {
     case GST_STREAM_TYPE_UNKNOWN:
       return "unknown";
@@ -567,8 +566,32 @@ gst_stream_type_get_name (GstStreamType stype)
       return "container";
     case GST_STREAM_TYPE_TEXT:
       return "text";
-    default:
-      g_return_val_if_reached ("invalid");
-      return "invalid";
+    default:{
+      gchar str[32] = { 0, };
+
+#define _GST_STREAM_TYPE_ALL          \
+        (GST_STREAM_TYPE_AUDIO        \
+         | GST_STREAM_TYPE_VIDEO      \
+         | GST_STREAM_TYPE_CONTAINER  \
+         | GST_STREAM_TYPE_TEXT)
+
+      if ((stype & (~_GST_STREAM_TYPE_ALL)) != 0)
+        break;
+
+      if ((stype & GST_STREAM_TYPE_CONTAINER) != 0)
+        g_strlcat (str, "+container", sizeof (str));
+      if ((stype & GST_STREAM_TYPE_VIDEO) != 0)
+        g_strlcat (str, "+video", sizeof (str));
+      if ((stype & GST_STREAM_TYPE_AUDIO) != 0)
+        g_strlcat (str, "+audio", sizeof (str));
+      if ((stype & GST_STREAM_TYPE_TEXT) != 0)
+        g_strlcat (str, "+text", sizeof (str));
+
+      g_assert (str[0] != '\0');
+
+      return g_intern_string (str + 1);
+    }
   }
+
+  g_return_val_if_reached ("invalid");
 }
