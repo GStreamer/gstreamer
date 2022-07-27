@@ -1140,6 +1140,7 @@ gst_video_flip_set_method (GstVideoFlip * videoflip,
     g_type_class_unref (enum_class);
 
     videoflip->proposed_method = method;
+    videoflip->change_configuring_method = TRUE;
 
     GST_OBJECT_UNLOCK (videoflip);
 
