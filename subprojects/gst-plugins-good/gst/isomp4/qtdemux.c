@@ -1985,7 +1985,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   gint i;
 
   GST_DEBUG_OBJECT (qtdemux, "Resetting demux");
-  gst_pad_stop_task (qtdemux->sinkpad);
 
   if (hard || qtdemux->upstream_format_is_time) {
     qtdemux->state = QTDEMUX_STATE_INITIAL;
