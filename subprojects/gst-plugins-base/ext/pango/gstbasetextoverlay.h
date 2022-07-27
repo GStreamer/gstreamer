@@ -149,6 +149,8 @@ struct _GstBaseTextOverlay {
     GstSegment               segment;
     GstSegment               text_segment;
     GstBuffer               *text_buffer;
+    GstClockTime             text_buffer_running_time;
+    GstClockTime             text_buffer_running_time_end;
     gboolean                 text_linked;
     gboolean                 video_flushing;
     gboolean                 video_eos;
