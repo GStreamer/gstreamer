@@ -1381,7 +1381,7 @@ gst_wasapi2_ring_buffer_set_mute (GstWasapi2RingBuffer * buf, gboolean mute)
   if (buf->volume_object)
     hr = buf->volume_object->SetMute (mute, nullptr);
   else
-    buf->volume_changed = TRUE;
+    buf->mute_changed = TRUE;
   g_mutex_unlock (&buf->volume_lock);
 
   return S_OK;
@@ -1421,7 +1421,7 @@ gst_wasapi2_ring_buffer_set_volume (GstWasapi2RingBuffer * buf, gfloat volume)
   if (buf->volume_object)
     hr = buf->volume_object->SetMasterVolume (volume, nullptr);
   else
-    buf->mute_changed = TRUE;
+    buf->volume_changed = TRUE;
   g_mutex_unlock (&buf->volume_lock);
 
   return hr;
