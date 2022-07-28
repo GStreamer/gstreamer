@@ -704,7 +704,7 @@ gst_aggregator_default_finish_buffer (GstAggregator * self, GstBuffer * buffer)
     return gst_pad_push (self->srcpad, buffer);
   } else {
     GST_INFO_OBJECT (self, "Not pushing (active: %i, flushing: %i)",
-        self->priv->flushing, gst_pad_is_active (self->srcpad));
+        gst_pad_is_active (self->srcpad), self->priv->flushing);
     GST_OBJECT_UNLOCK (self);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
@@ -743,7 +743,7 @@ gst_aggregator_default_finish_buffer_list (GstAggregator * self,
     return gst_pad_push_list (self->srcpad, bufferlist);
   } else {
     GST_INFO_OBJECT (self, "Not pushing (active: %i, flushing: %i)",
-        self->priv->flushing, gst_pad_is_active (self->srcpad));
+        gst_pad_is_active (self->srcpad), self->priv->flushing);
     GST_OBJECT_UNLOCK (self);
     gst_buffer_list_unref (bufferlist);
     return GST_FLOW_OK;
