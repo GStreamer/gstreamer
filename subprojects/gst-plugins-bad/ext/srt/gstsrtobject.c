@@ -973,7 +973,7 @@ thread_func (gpointer data)
           caller->sock);
 
       g_mutex_lock (&srtobject->sock_lock);
-      srtobject->callers = g_list_append (srtobject->callers, caller);
+      srtobject->callers = g_list_prepend (srtobject->callers, caller);
       g_cond_signal (&srtobject->sock_cond);
       g_mutex_unlock (&srtobject->sock_lock);
 
@@ -1661,18 +1661,17 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
     GstBufferList * headers,
     const GstMapInfo * mapinfo, GCancellable * cancellable)
 {
-  GList *callers;
+  GList *item, *next;
 
   g_mutex_lock (&srtobject->sock_lock);
-  callers = srtobject->callers;
-  while (callers != NULL) {
+  for (item = srtobject->callers, next = NULL; item; item = next) {
+    SRTCaller *caller = item->data;
     gssize len = 0;
     const guint8 *msg = mapinfo->data;
     gint sent;
     gint payload_size, optlen = sizeof (payload_size);
 
-    SRTCaller *caller = callers->data;
-    callers = callers->next;
+    next = item->next;
 
     if (g_cancellable_is_cancelled (cancellable)) {
       goto cancelled;
@@ -1714,7 +1713,7 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
     continue;
 
   err:
-    srtobject->callers = g_list_remove (srtobject->callers, caller);
+    srtobject->callers = g_list_delete_link (srtobject->callers, item);
     srt_caller_signal_removed (caller, srtobject);
     srt_caller_free (caller);
   }
