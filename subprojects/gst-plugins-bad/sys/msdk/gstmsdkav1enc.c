@@ -29,6 +29,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * SECTION: element-msdkav1enc
+ * @title: msdkav1enc
+ * @short_description: Intel MSDK AV1 encoder
+ *
+ * AV1 video encoder based on Intel MFX
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc num-buffers=90 ! msdkav1enc ! av1parse ! matroskamux ! filesink location=output.webm
+ * ```
+ *
+ * Since: 1.21
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
