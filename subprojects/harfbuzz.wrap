@@ -1,6 +1,5 @@
-[wrap-git]
+[wrap-file]
 directory = harfbuzz-2.8.2
 source_url = https://github.com/harfbuzz/harfbuzz/releases/download/2.8.2/harfbuzz-2.8.2.tar.xz
 source_filename = harfbuzz-2.8.2.tar.xz
 source_hash = d58461395ce28b9dc03903254374dd70c38c8c28c5046db123c08f7ab9417be7
-diff_files = harfbuzz-2.8.2/0001-Removed-unused-variable-supp_size-from-plan_subset_e.patch
