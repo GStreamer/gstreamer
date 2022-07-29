@@ -974,6 +974,7 @@ out:
         GST_STIME_ARGS (current_segment->stream_time +
             current_segment->duration));
 
+    /* FIXME: Could seek to an INDEPENDENT partial segment in LL-HLS */
     candidate_segment =
         gst_hls_media_playlist_seek (hls_stream->playlist, TRUE,
         GST_SEEK_FLAG_SNAP_NEAREST, low_stream_time);

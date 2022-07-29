@@ -1218,6 +1218,11 @@ gst_hls_media_playlist_seek (GstHLSMediaPlaylist * playlist, gboolean forward,
   for (idx = 0; idx < playlist->segments->len; idx++) {
     GstM3U8MediaSegment *cand = g_ptr_array_index (playlist->segments, idx);
 
+    /* If only full segments was request, skip any segment that
+     * only has EXT-X-PARTs attached */
+    if (cand->partial_only && !(flags & GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL))
+      continue;
+
     if ((forward & snap_after) || snap_nearest) {
       if (cand->stream_time >= ts ||
           (snap_nearest && (ts - cand->stream_time < cand->duration / 2))) {
@@ -1736,7 +1741,8 @@ gst_hls_media_playlist_has_next_fragment (GstHLSMediaPlaylist * m3u8,
 
 GstM3U8MediaSegment *
 gst_hls_media_playlist_advance_fragment (GstHLSMediaPlaylist * m3u8,
-    GstM3U8MediaSegment * current, gboolean forward)
+    GstM3U8MediaSegment * current, gboolean forward,
+    gboolean allow_partial_only_segment)
 {
   GstM3U8MediaSegment *file = NULL;
   guint idx;
@@ -1766,6 +1772,12 @@ gst_hls_media_playlist_advance_fragment (GstHLSMediaPlaylist * m3u8,
     file =
         gst_m3u8_media_segment_ref (g_ptr_array_index (m3u8->segments,
             idx - 1));
+  }
+
+  if (file && file->partial_only && !allow_partial_only_segment) {
+    GST_LOG
+        ("Ignoring segment with only partials as full segment was requested");
+    file = NULL;
   }
 
   if (file)

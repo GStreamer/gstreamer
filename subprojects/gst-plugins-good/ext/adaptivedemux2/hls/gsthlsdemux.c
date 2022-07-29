@@ -514,6 +514,7 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
     }
   }
 
+  /* FIXME: Allow jumping to partial segments in LL-HLS? */
   new_position =
       gst_hls_media_playlist_seek (hls_stream->playlist, forward, flags, ts);
   if (new_position) {
@@ -1350,6 +1351,7 @@ gst_hlsdemux_handle_internal_time (GstHLSDemux * demux,
       GST_DEBUG_OBJECT (hls_stream,
           "Trying to seek to the correct segment for %" GST_STIME_FORMAT,
           GST_STIME_ARGS (current_stream_time));
+      /* FIXME: Allow jumping to partial segments in LL-HLS */
       actual_segment =
           gst_hls_media_playlist_seek (hls_stream->playlist, TRUE,
           GST_SEEK_FLAG_SNAP_NEAREST, current_stream_time);
@@ -1823,9 +1825,10 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
       GST_STIME_ARGS (hlsdemux_stream->current_segment->stream_time),
       GST_STR_NULL (hlsdemux_stream->current_segment->uri));
 
+  /* FIXME: In LL-HLS, handle advancing into the partial-only segment */
   new_segment =
       gst_hls_media_playlist_advance_fragment (hlsdemux_stream->playlist,
-      hlsdemux_stream->current_segment, stream->demux->segment.rate > 0);
+      hlsdemux_stream->current_segment, stream->demux->segment.rate > 0, FALSE);
   if (new_segment) {
     hlsdemux_stream->reset_pts = FALSE;
     if (new_segment->discont_sequence !=
@@ -2224,6 +2227,11 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
     new_segment =
         gst_hls_media_playlist_sync_to_segment (new_playlist,
         stream->current_segment);
+
+    /* FIXME: Handle LL-HLS partial segment sync */
+    if (new_segment && new_segment->partial_only)
+      new_segment = NULL;
+
     if (new_segment) {
       if (new_segment->discont_sequence !=
           stream->current_segment->discont_sequence)
@@ -2385,6 +2393,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       GST_DEBUG_OBJECT (stream,
           "Looking up segment for position %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->current_position));
+      /* FIXME: Look up partial segments in LL-HLS */
       hlsdemux_stream->current_segment =
           gst_hls_media_playlist_seek (hlsdemux_stream->playlist, TRUE,
           GST_SEEK_FLAG_SNAP_NEAREST, stream->current_position);

@@ -65,6 +65,11 @@ typedef enum {
   GST_HLS_PLAYLIST_TYPE_VOD,
 } GstHLSPlaylistType;
 
+/* Extra seek flag extensions for partial segment handling
+ * Values are chosen to avoid collision with the core GST_SEEK_FLAG_*
+ * flags */
+#define GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL (1 << 16)  /* Allow seeking to a partial segment */
+
 /**
  * GstHLSMediaPlaylist:
  *
@@ -271,7 +276,8 @@ gst_hls_media_playlist_has_next_fragment    (GstHLSMediaPlaylist * m3u8,
 GstM3U8MediaSegment *
 gst_hls_media_playlist_advance_fragment     (GstHLSMediaPlaylist * m3u8,
 					     GstM3U8MediaSegment * current,
-					     gboolean  forward);
+					     gboolean  forward,
+					     gboolean allow_partial_only_segment);
 
 GstM3U8MediaSegment *
 gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist *self);
