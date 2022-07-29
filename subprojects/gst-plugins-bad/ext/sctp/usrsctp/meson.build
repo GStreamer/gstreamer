@@ -31,7 +31,6 @@ else
         '-Wno-missing-declarations',
         '-Wno-old-style-definition',
         '-Wno-redundant-decls',
-        '-Wno-error',
     ])
 endif
 
@@ -170,6 +169,7 @@ usrsctp_static = static_library('usrsctp-static', sources,
     c_args: compile_args,
     dependencies: dependencies,
     include_directories: include_dirs,
+    override_options: ['werror=false'],
     install: false)
 
 # Declare dependency
