@@ -81,7 +81,8 @@ libmfx_static = static_library('libmfx-static',
   c_args : libmfx_extra_args,
   cpp_args : libmfx_extra_args,
   dependencies : libmfx_extra_deps,
-  include_directories : libmfx_incl
+  include_directories : libmfx_incl,
+  override_options: ['werror=false'],
 )
 
 libmfx_internal_dep = declare_dependency(
