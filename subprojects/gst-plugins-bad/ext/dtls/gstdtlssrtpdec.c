@@ -62,7 +62,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_dtls_srtp_dec_debug);
 #define gst_dtls_srtp_dec_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDtlsSrtpDec, gst_dtls_srtp_dec,
     GST_TYPE_DTLS_SRTP_BIN, GST_DEBUG_CATEGORY_INIT (gst_dtls_srtp_dec_debug,
-        "dtlssrtpdec", 0, "DTLS Decoder"));
+        "dtlssrtpdec", 0, "DTLS-SRTP Decoder"));
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (dtlssrtpdec, "dtlssrtpdec",
     GST_RANK_NONE, GST_TYPE_DTLS_SRTP_DEC, dtls_element_init (plugin));
 
