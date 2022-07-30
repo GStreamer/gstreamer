@@ -28,7 +28,7 @@
 
 #include "gstdtlscertificate.h"
 
-#include <glib-object.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -52,13 +52,13 @@ typedef struct _GstDtlsAgentPrivate GstDtlsAgentPrivate;
  * GstDtlsAgent needs to be constructed with the "certificate" property set.
  */
 struct _GstDtlsAgent {
-    GObject parent_instance;
+    GstObject parent_instance;
 
     GstDtlsAgentPrivate *priv;
 };
 
 struct _GstDtlsAgentClass {
-    GObjectClass parent_class;
+    GstObjectClass parent_class;
 };
 
 GType gst_dtls_agent_get_type(void) G_GNUC_CONST;

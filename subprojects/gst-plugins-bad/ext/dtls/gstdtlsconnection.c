@@ -107,8 +107,8 @@ struct _GstDtlsConnectionPrivate
   GThreadPool *thread_pool;
 };
 
-G_DEFINE_TYPE_WITH_CODE (GstDtlsConnection, gst_dtls_connection, G_TYPE_OBJECT,
-    G_ADD_PRIVATE (GstDtlsConnection)
+G_DEFINE_TYPE_WITH_CODE (GstDtlsConnection, gst_dtls_connection,
+    GST_TYPE_OBJECT, G_ADD_PRIVATE (GstDtlsConnection)
     GST_DEBUG_CATEGORY_INIT (gst_dtls_connection_debug, "dtlsconnection", 0,
         "DTLS Connection"));
 

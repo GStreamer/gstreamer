@@ -85,13 +85,13 @@ GType gst_dtls_connection_state_get_type (void);
  * Once the DTLS handshake is completed, on-encoder-key and on-decoder-key will be signalled.
  */
 struct _GstDtlsConnection {
-    GObject parent_instance;
+    GstObject parent_instance;
 
     GstDtlsConnectionPrivate *priv;
 };
 
 struct _GstDtlsConnectionClass {
-    GObjectClass parent_class;
+    GstObjectClass parent_class;
 };
 
 GType gst_dtls_connection_get_type(void) G_GNUC_CONST;

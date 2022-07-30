@@ -58,7 +58,7 @@ struct _GstDtlsAgentPrivate
   GstDtlsCertificate *certificate;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GstDtlsAgent, gst_dtls_agent, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_PRIVATE (GstDtlsAgent, gst_dtls_agent, GST_TYPE_OBJECT);
 
 static void gst_dtls_agent_finalize (GObject * gobject);
 static void gst_dtls_agent_set_property (GObject *, guint prop_id,
