@@ -179,9 +179,15 @@ weak_free (GWeakRef * weak)
 static void
 gst_webrtc_nice_stream_constructed (GObject * object)
 {
-  GstWebRTCNiceStream *stream = GST_WEBRTC_NICE_STREAM (object);
+  GstWebRTCNiceStream *stream;
   NiceAgent *agent;
-  GstWebRTCNice *ice = g_weak_ref_get (&stream->priv->ice_weak);
+  GstWebRTCNice *ice;
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
+  stream = GST_WEBRTC_NICE_STREAM (object);
+  ice = g_weak_ref_get (&stream->priv->ice_weak);
+
 
   g_assert (ice != NULL);
   g_object_get (ice, "agent", &agent, NULL);
@@ -191,8 +197,6 @@ gst_webrtc_nice_stream_constructed (GObject * object)
 
   g_object_unref (agent);
   gst_object_unref (ice);
-
-  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static gboolean

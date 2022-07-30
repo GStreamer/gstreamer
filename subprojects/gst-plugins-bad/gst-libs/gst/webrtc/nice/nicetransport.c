@@ -163,11 +163,9 @@ gst_webrtc_nice_transport_finalize (GObject * object)
 {
   GstWebRTCNiceTransport *nice = GST_WEBRTC_NICE_TRANSPORT (object);
   NiceAgent *agent;
-  GstWebRTCNice *webrtc_ice;
+  GstWebRTCNice *webrtc_ice = NULL;
 
-  GWeakRef ice_weak;
-  g_object_get (GST_WEBRTC_NICE_STREAM (nice->stream), "ice", &ice_weak, NULL);
-  webrtc_ice = g_weak_ref_get (&ice_weak);
+  g_object_get (nice->stream, "ice", &webrtc_ice, NULL);
 
   if (webrtc_ice) {
     g_object_get (webrtc_ice, "agent", &agent, NULL);
@@ -196,11 +194,9 @@ gst_webrtc_nice_transport_update_buffer_size (GstWebRTCNiceTransport * nice)
   NiceAgent *agent = NULL;
   GPtrArray *sockets;
   guint i;
-  GstWebRTCNice *webrtc_ice;
+  GstWebRTCNice *webrtc_ice = NULL;
 
-  GWeakRef ice_weak;
-  g_object_get (GST_WEBRTC_NICE_STREAM (nice->stream), "ice", &ice_weak, NULL);
-  webrtc_ice = g_weak_ref_get (&ice_weak);
+  g_object_get (nice->stream, "ice", &webrtc_ice, NULL);
 
   g_assert (webrtc_ice != NULL);
 
@@ -322,20 +318,23 @@ weak_free (GWeakRef * weak)
 static void
 gst_webrtc_nice_transport_constructed (GObject * object)
 {
-  GstWebRTCNiceTransport *nice = GST_WEBRTC_NICE_TRANSPORT (object);
-  GstWebRTCICETransport *ice = GST_WEBRTC_ICE_TRANSPORT (object);
-  NiceComponentType component = _gst_component_to_nice (ice->component);
+  GstWebRTCNiceTransport *nice;
+  GstWebRTCICETransport *ice;
+  NiceComponentType component;
   gboolean controlling_mode;
   guint our_stream_id;
   NiceAgent *agent;
-  GstWebRTCNice *webrtc_ice;
+  GstWebRTCNice *webrtc_ice = NULL;
 
-  GWeakRef ice_weak;
-  g_object_get (GST_WEBRTC_NICE_STREAM (nice->stream), "ice", &ice_weak, NULL);
-  webrtc_ice = g_weak_ref_get (&ice_weak);
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 
+  nice = GST_WEBRTC_NICE_TRANSPORT (object);
+  ice = GST_WEBRTC_ICE_TRANSPORT (object);
+  component = _gst_component_to_nice (ice->component);
+
+  g_object_get (nice->stream, "ice", &webrtc_ice, "stream-id", &our_stream_id,
+      NULL);
   g_assert (webrtc_ice != NULL);
-  g_object_get (nice->stream, "stream-id", &our_stream_id, NULL);
   g_object_get (webrtc_ice, "agent", &agent, NULL);
 
   g_object_get (agent, "controlling-mode", &controlling_mode, NULL);
@@ -364,8 +363,6 @@ gst_webrtc_nice_transport_constructed (GObject * object)
 
   g_object_unref (agent);
   gst_object_unref (webrtc_ice);
-
-  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void

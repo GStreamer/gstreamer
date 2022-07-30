@@ -1257,15 +1257,13 @@ gst_webrtc_nice_get_selected_pair (GstWebRTCICE * ice,
 static void
 _clear_ice_stream (struct NiceStreamItem *item)
 {
-  GWeakRef ice_weak;
-  GstWebRTCNice *ice;
+  GstWebRTCNice *ice = NULL;
+
   if (!item)
     return;
 
   if (item->stream) {
-    g_object_get (GST_WEBRTC_NICE_STREAM (item->stream), "ice", &ice_weak,
-        NULL);
-    ice = g_weak_ref_get (&ice_weak);
+    g_object_get (item->stream, "ice", &ice, NULL);
 
     if (ice != NULL) {
       g_signal_handlers_disconnect_by_data (ice->priv->nice_agent,
