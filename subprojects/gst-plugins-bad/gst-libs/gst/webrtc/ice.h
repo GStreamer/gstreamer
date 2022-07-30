@@ -68,7 +68,7 @@ struct _GstWebRTCICECandidateStats
 typedef void (*GstWebRTCICEOnCandidateFunc) (GstWebRTCICE * ice, guint stream_id, gchar * candidate, gpointer user_data);
 
 struct _GstWebRTCICEClass {
-  GObjectClass parent_class;
+  GstObjectClass parent_class;
   GstWebRTCICEStream * (*add_stream)        (GstWebRTCICE * ice,
                                             guint session_id);
   GstWebRTCICETransport * (*find_transport) (GstWebRTCICE * ice,
