@@ -621,7 +621,6 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
   if (!window->enable_navigation_events)
     return;
 
-  /* FIXME: convert to render coordinate */
   switch (uMsg) {
     case WM_MOUSEMOVE:
       button = 0;

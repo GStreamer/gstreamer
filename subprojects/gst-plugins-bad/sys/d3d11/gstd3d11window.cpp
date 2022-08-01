@@ -396,10 +396,92 @@ void
 gst_d3d11_window_on_mouse_event (GstD3D11Window * window, const gchar * event,
     gint button, gdouble x, gdouble y)
 {
+  RECT render_rect;
+  GstVideoOrientationMethod method;
+  LONG xpos, ypos;
+  gdouble display_w, display_h, src_w, src_h;
+  gint in_w, in_h;
+
   g_return_if_fail (GST_IS_D3D11_WINDOW (window));
 
   if (!window->enable_navigation_events)
     return;
+
+  gst_d3d11_device_lock (window->device);
+  method = window->method;
+  render_rect = window->render_rect;
+  in_w = window->info.width;
+  in_h = window->info.height;
+  gst_d3d11_device_unlock (window->device);
+
+  display_w = render_rect.right - render_rect.left;
+  display_h = render_rect.bottom - render_rect.top;
+  xpos = (LONG) x;
+  ypos = (LONG) y;
+
+  /* if backbuffer surface size is unknown or mouse point located at
+   * outside of render area, ignore it */
+  if (display_w <= 0 || display_h <= 0 || in_w <= 0 || in_h <= 0 ||
+      xpos < render_rect.left || xpos >= render_rect.right ||
+      ypos < render_rect.top || ypos >= render_rect.bottom) {
+    return;
+  }
+
+  switch (method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      src_w = in_h;
+      src_h = in_w;
+      break;
+    default:
+      src_w = in_w;
+      src_h = in_h;
+      break;
+  }
+
+  xpos = ((xpos - render_rect.left) / display_w) * src_w;
+  ypos = ((ypos - render_rect.top) / display_h) * src_h;
+
+  xpos = CLAMP (xpos, 0, (LONG) (src_w - 1));
+  ypos = CLAMP (ypos, 0, (LONG) (src_h - 1));
+
+  /* Reverse rotate/flip if needed */
+  switch (method) {
+    case GST_VIDEO_ORIENTATION_90R:
+      x = ypos;
+      y = src_w - xpos;
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      x = src_h - ypos;
+      y = xpos;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      x = src_h - ypos;
+      y = src_w - xpos;
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      x = ypos;
+      y = xpos;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      x = src_w - xpos;
+      y = src_h - ypos;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      x = src_w - xpos;
+      y = ypos;
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      x = xpos;
+      y = src_h - ypos;
+      break;
+    default:
+      x = xpos;
+      y = ypos;
+      break;
+  }
 
   g_signal_emit (window, d3d11_window_signals[SIGNAL_MOUSE_EVENT], 0,
       event, button, x, y);
