@@ -3774,6 +3774,9 @@ gst_parse_chain_expose (GstParseChain * chain, GList ** endpads,
   if (!group) {
     GstParsePad *p = chain->current_pad;
 
+    if (!p)
+      return FALSE;
+
     if (p->active_stream && p->active_collection == NULL
         && !p->in_a_fallback_collection)
       *uncollected_streams = TRUE;
