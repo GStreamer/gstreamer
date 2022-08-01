@@ -4178,15 +4178,23 @@ gst_value_serialize_gflags (const GValue * value)
   result = g_strdup ("");
   while (flags) {
     fl = g_flags_get_first_value (klass, flags);
-    if (fl != NULL) {
-      tmp = g_strconcat (result, (first ? "" : "+"), fl->value_name, NULL);
-      g_free (result);
-      result = tmp;
-      first = FALSE;
-
-      /* clear flag */
-      flags &= ~fl->value;
+    if (fl == NULL) {
+      if (flags) {
+        g_critical ("Could not serialize invalid flags 0x%x of type %s",
+            flags, G_VALUE_TYPE_NAME (value));
+        g_free (result);
+        result = g_strdup ("0");
+      }
+      break;
     }
+
+    tmp = g_strconcat (result, (first ? "" : "+"), fl->value_name, NULL);
+    g_free (result);
+    result = tmp;
+    first = FALSE;
+
+    /* clear flag */
+    flags &= ~fl->value;
   }
   g_type_class_unref (klass);
 

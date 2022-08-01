@@ -447,6 +447,31 @@ GST_START_TEST (test_serialize_flags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_serialize_flags_invalid)
+{
+  GValue value = { 0 };
+  gchar *string;
+
+  g_value_init (&value, GST_TYPE_SEEK_FLAGS);
+
+  /* Invalid value */
+  g_value_set_flags (&value, 1 << 20);
+  ASSERT_CRITICAL (string = gst_value_serialize (&value));
+  fail_if (string == NULL, "could not serialize invalid flags");
+  fail_unless (strcmp (string, "0") == 0,
+      "resulting value is %s, not 0, for invalid flags", string);
+  g_free (string);
+
+  /* Valid & invalid value */
+  g_value_set_flags (&value, GST_SEEK_FLAG_FLUSH | 1 << 20);
+  ASSERT_CRITICAL (string = gst_value_serialize (&value));
+  fail_if (string == NULL, "could not serialize invalid flags");
+  fail_unless (strcmp (string, "0") == 0,
+      "resulting value is %s, not 0, for invalid flags", string);
+  g_free (string);
+}
+
+GST_END_TEST;
 
 GST_START_TEST (test_deserialize_flags)
 {
@@ -3937,6 +3962,7 @@ gst_value_suite (void)
   tcase_add_test (tc_chain, test_deserialize_bitmask);
   tcase_add_test (tc_chain, test_deserialize_array);
   tcase_add_test (tc_chain, test_serialize_flags);
+  tcase_add_test (tc_chain, test_serialize_flags_invalid);
   tcase_add_test (tc_chain, test_deserialize_flags);
   tcase_add_test (tc_chain, test_serialize_deserialize_format_enum);
   tcase_add_test (tc_chain, test_serialize_deserialize_value_array);
