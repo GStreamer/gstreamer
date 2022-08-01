@@ -678,49 +678,50 @@ static void
 gst_d3d11_video_sink_key_event (GstD3D11Window * window, const gchar * event,
     const gchar * key, GstD3D11VideoSink * self)
 {
-  GstEvent *key_event = NULL;
+  GstEvent *key_event;
 
-  if (self->enable_navigation_events) {
-    GST_LOG_OBJECT (self, "send key event %s, key %s", event, key);
-    if (0 == g_strcmp0 ("key-press", event))
-      key_event =
-          gst_navigation_event_new_key_press (key,
-          GST_NAVIGATION_MODIFIER_NONE);
-    else if (0 == g_strcmp0 ("key-release", event))
-      key_event =
-          gst_navigation_event_new_key_release (key,
-          GST_NAVIGATION_MODIFIER_NONE);
+  if (!self->enable_navigation_events || !event || !key)
+    return;
 
-    if (event)
-      gst_navigation_send_event_simple (GST_NAVIGATION (self), key_event);
+  GST_LOG_OBJECT (self, "send key event %s, key %s", event, key);
+  if (g_strcmp0 ("key-press", event) == 0) {
+    key_event = gst_navigation_event_new_key_press (key,
+        GST_NAVIGATION_MODIFIER_NONE);
+  } else if (g_strcmp0 ("key-release", event) == 0) {
+    key_event = gst_navigation_event_new_key_release (key,
+        GST_NAVIGATION_MODIFIER_NONE);
+  } else {
+    return;
   }
+
+  gst_navigation_send_event_simple (GST_NAVIGATION (self), key_event);
 }
 
 static void
 gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
     gint button, gdouble x, gdouble y, GstD3D11VideoSink * self)
 {
-  GstEvent *mouse_event = NULL;
+  GstEvent *mouse_event;
 
-  if (self->enable_navigation_events) {
-    GST_LOG_OBJECT (self,
-        "send mouse event %s, button %d (%.1f, %.1f)", event, button, x, y);
-    if (0 == g_strcmp0 ("mouse-button-press", event))
-      mouse_event =
-          gst_navigation_event_new_mouse_button_press (button, x, y,
-          GST_NAVIGATION_MODIFIER_NONE);
-    else if (0 == g_strcmp0 ("mouse-button-release", event))
-      mouse_event =
-          gst_navigation_event_new_mouse_button_release (button, x, y,
-          GST_NAVIGATION_MODIFIER_NONE);
-    else if (0 == g_strcmp0 ("mouse-move", event))
-      mouse_event =
-          gst_navigation_event_new_mouse_move (x, y,
-          GST_NAVIGATION_MODIFIER_NONE);
+  if (!self->enable_navigation_events || !event)
+    return;
 
-    if (event)
-      gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);
+  GST_LOG_OBJECT (self,
+      "send mouse event %s, button %d (%.1f, %.1f)", event, button, x, y);
+  if (g_strcmp0 ("mouse-button-press", event) == 0) {
+    mouse_event = gst_navigation_event_new_mouse_button_press (button, x, y,
+        GST_NAVIGATION_MODIFIER_NONE);
+  } else if (g_strcmp0 ("mouse-button-release", event) == 0) {
+    mouse_event = gst_navigation_event_new_mouse_button_release (button, x, y,
+        GST_NAVIGATION_MODIFIER_NONE);
+  } else if (g_strcmp0 ("mouse-move", event) == 0) {
+    mouse_event = gst_navigation_event_new_mouse_move (x, y,
+        GST_NAVIGATION_MODIFIER_NONE);
+  } else {
+    return;
   }
+
+  gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);
 }
 
 static gboolean
