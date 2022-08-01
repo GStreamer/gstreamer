@@ -683,7 +683,7 @@ frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
 {
   GstWaylandSink *self = data;
 
-  GST_LOG ("frame_redraw_cb");
+  GST_LOG_OBJECT (self, "frame_redraw_cb");
 
   g_mutex_lock (&self->render_lock);
   self->redraw_pending = FALSE;
@@ -749,7 +749,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
   g_mutex_lock (&self->render_lock);
 
-  GST_LOG_OBJECT (self, "render buffer %p", buffer);
+  GST_LOG_OBJECT (self, "render buffer %" GST_PTR_FORMAT "", buffer);
 
   if (G_UNLIKELY (!self->window)) {
     /* ask for window handle. Unlock render_lock while doing that because
@@ -771,7 +771,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
   /* drop buffers until we get a frame callback */
   if (self->redraw_pending) {
-    GST_LOG_OBJECT (self, "buffer %p dropped (redraw pending)", buffer);
+    GST_LOG_OBJECT (self, "buffer %" GST_PTR_FORMAT " dropped (redraw pending)",
+        buffer);
     goto done;
   }
 
@@ -783,7 +784,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
   if (G_LIKELY (wlbuffer &&
           gst_wl_buffer_get_display (wlbuffer) == self->display)) {
-    GST_LOG_OBJECT (self, "buffer %p has a wl_buffer from our display, "
+    GST_LOG_OBJECT (self,
+        "buffer %" GST_PTR_FORMAT " has a wl_buffer from our display, "
         "writing directly", buffer);
     to_render = buffer;
     goto render;
@@ -804,7 +806,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
     self->video_info.size = gst_buffer_get_size (buffer);
   }
 
-  GST_LOG_OBJECT (self, "buffer %p does not have a wl_buffer from our "
+  GST_LOG_OBJECT (self,
+      "buffer %" GST_PTR_FORMAT " does not have a wl_buffer from our "
       "display, creating it", buffer);
 
   format = GST_VIDEO_INFO_FORMAT (&self->video_info);
@@ -837,7 +840,8 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
        * memory, so we have to copy the data to shm memory that we know how
        * to handle... */
 
-      GST_LOG_OBJECT (self, "buffer %p cannot have a wl_buffer, "
+      GST_LOG_OBJECT (self,
+          "buffer %" GST_PTR_FORMAT " cannot have a wl_buffer, "
           "copying to wl_shm memory", buffer);
 
       /* self->pool always exists (created in set_caps), but it may not
@@ -938,7 +942,8 @@ no_wl_buffer_shm:
   }
 no_wl_buffer:
   {
-    GST_ERROR_OBJECT (self, "buffer %p cannot have a wl_buffer", buffer);
+    GST_ERROR_OBJECT (self,
+        "buffer %" GST_PTR_FORMAT " cannot have a wl_buffer", buffer);
     ret = GST_FLOW_ERROR;
     goto done;
   }
