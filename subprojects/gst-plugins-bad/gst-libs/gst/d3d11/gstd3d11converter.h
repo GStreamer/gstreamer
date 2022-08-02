@@ -61,6 +61,26 @@ GType gst_d3d11_converter_backend_get_type (void);
  */
 #define GST_D3D11_CONVERTER_OPT_BACKEND "GstD3D11Converter.backend"
 
+/**
+ * GST_D3D11_CONVERTER_OPT_GAMMA_MODE:
+ *
+ * #GstVideoGammaMode, set the gamma mode.
+ * Default is #GST_VIDEO_GAMMA_MODE_NONE
+ *
+ * Since: 1.22
+ */
+#define GST_D3D11_CONVERTER_OPT_GAMMA_MODE "GstD3D11Converter.gamma-mode"
+
+/**
+ * GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE:
+ *
+ * #GstVideoPrimariesMode, set the primaries conversion mode.
+ * Default is #GST_VIDEO_PRIMARIES_MODE_NONE.
+ *
+ * Since: 1.22
+ */
+#define GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE "GstD3D11Converter.primaries-mode"
+
 struct _GstD3D11Converter
 {
   GstObject parent;

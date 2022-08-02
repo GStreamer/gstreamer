@@ -2892,15 +2892,35 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   GstD3D11Format in_d3d11_format;
   GstD3D11Format out_d3d11_format;
   guint wanted_backend = 0;
+  gboolean allow_gamma = FALSE;
+  gboolean allow_primaries = FALSE;
   gchar *backend_str;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
   g_return_val_if_fail (out_info != nullptr, nullptr);
 
+  self = (GstD3D11Converter *) g_object_new (GST_TYPE_D3D11_CONVERTER, nullptr);
+  gst_object_ref_sink (self);
+  priv = self->priv;
+
   if (config) {
+    gint value;
     gst_structure_get_flags (config, GST_D3D11_CONVERTER_OPT_BACKEND,
         GST_TYPE_D3D11_CONVERTER_BACKEND, &wanted_backend);
+
+    if (gst_structure_get_enum (config, GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
+            GST_TYPE_VIDEO_GAMMA_MODE, &value) &&
+        (GstVideoGammaMode) value != GST_VIDEO_GAMMA_MODE_NONE) {
+      allow_gamma = TRUE;
+    }
+
+    if (gst_structure_get_enum (config, GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
+            GST_TYPE_VIDEO_PRIMARIES_MODE, &value) &&
+        (GstVideoPrimariesMode) value != GST_VIDEO_PRIMARIES_MODE_NONE) {
+      allow_primaries = TRUE;
+    }
+
     gst_structure_free (config);
   }
 
@@ -2910,18 +2930,15 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
         GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR;
   }
 
-  self = (GstD3D11Converter *) g_object_new (GST_TYPE_D3D11_CONVERTER, nullptr);
-  gst_object_ref_sink (self);
-  priv = self->priv;
-
   backend_str = g_flags_to_string (GST_TYPE_D3D11_CONVERTER_BACKEND,
       wanted_backend);
 
   GST_DEBUG_OBJECT (self,
-      "Setup converter with format %s -> %s, wanted backend: %s",
+      "Setup converter with format %s -> %s, wanted backend: %s, "
+      "allow gamma conversion: %d, allow primaries conversion: %d ",
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)),
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)),
-      backend_str);
+      backend_str, allow_gamma, allow_primaries);
   g_free (backend_str);
 
   if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (in_info),
@@ -3004,19 +3021,31 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
             colorimetry.transfer, GST_VIDEO_INFO_COMP_DEPTH (in_info, 0),
             out_info->colorimetry.transfer, GST_VIDEO_INFO_COMP_DEPTH (out_info,
                 0))) {
-      GST_DEBUG_OBJECT (self, "Different transfer function %d -> %d",
-          in_info->colorimetry.transfer, out_info->colorimetry.transfer);
-      priv->fast_path = FALSE;
+      if (allow_gamma) {
+        GST_DEBUG_OBJECT (self, "Different transfer function %d -> %d",
+            in_info->colorimetry.transfer, out_info->colorimetry.transfer);
+        priv->fast_path = FALSE;
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "Different transfer function %d -> %d but gamma remap is disabled",
+            in_info->colorimetry.transfer, out_info->colorimetry.transfer);
+      }
     }
 
     if (in_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
         out_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
         !gst_video_color_primaries_is_equivalent (in_info->
             colorimetry.primaries, out_info->colorimetry.primaries)) {
-      GST_DEBUG_OBJECT (self, "Different primaries %d -> %d",
-          in_info->colorimetry.primaries, out_info->colorimetry.primaries);
-      priv->fast_path = FALSE;
-      priv->do_primaries = TRUE;
+      if (allow_primaries) {
+        GST_DEBUG_OBJECT (self, "Different primaries %d -> %d",
+            in_info->colorimetry.primaries, out_info->colorimetry.primaries);
+        priv->fast_path = FALSE;
+        priv->do_primaries = TRUE;
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "Different primaries %d -> %d but chromatic adaptation is disabled",
+            in_info->colorimetry.primaries, out_info->colorimetry.primaries);
+      }
     }
   }
 
