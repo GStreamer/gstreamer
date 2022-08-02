@@ -61,6 +61,8 @@ enum
   PROP_FULLSCREEN,
   PROP_DRAW_ON_SHARED_TEXTURE,
   PROP_ROTATE_METHOD,
+  PROP_GAMMA_MODE,
+  PROP_PRIMARIES_MODE,
 };
 
 #define DEFAULT_ADAPTER                   -1
@@ -69,6 +71,8 @@ enum
 #define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
 #define DEFAULT_FULLSCREEN                FALSE
 #define DEFAULT_DRAW_ON_SHARED_TEXTURE    FALSE
+#define DEFAULT_GAMMA_MODE                GST_VIDEO_GAMMA_MODE_NONE
+#define DEFAULT_PRIMARIES_MODE            GST_VIDEO_PRIMARIES_MODE_NONE
 
 enum
 {
@@ -120,6 +124,8 @@ struct _GstD3D11VideoSink
   GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
   gboolean fullscreen;
   gboolean draw_on_shared_texture;
+  GstVideoGammaMode gamma_mode;
+  GstVideoPrimariesMode primaries_mode;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;
@@ -291,6 +297,32 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D11VideoSink:gamma-mode:
+   *
+   * Gamma conversion mode
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_GAMMA_MODE,
+      g_param_spec_enum ("gamma-mode", "Gamma mode",
+          "Gamma conversion mode", GST_TYPE_VIDEO_GAMMA_MODE,
+          DEFAULT_GAMMA_MODE, (GParamFlags) (GST_PARAM_MUTABLE_READY |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:primaries-mode:
+   *
+   * Primaries conversion mode
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PRIMARIES_MODE,
+      g_param_spec_enum ("primaries-mode", "Primaries Mode",
+          "Primaries conversion mode", GST_TYPE_VIDEO_PRIMARIES_MODE,
+          DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_READY |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D11VideoSink::begin-draw:
    * @videosink: the #d3d11videosink
    *
@@ -374,6 +406,8 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->fullscreen_toggle_mode = DEFAULT_FULLSCREEN_TOGGLE_MODE;
   self->fullscreen = DEFAULT_FULLSCREEN;
   self->draw_on_shared_texture = DEFAULT_DRAW_ON_SHARED_TEXTURE;
+  self->gamma_mode = DEFAULT_GAMMA_MODE;
+  self->primaries_mode = DEFAULT_PRIMARIES_MODE;
 
   g_rec_mutex_init (&self->lock);
 }
@@ -423,6 +457,12 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
       gst_d3d11_video_sink_set_orientation (self,
           (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
       break;
+    case PROP_GAMMA_MODE:
+      self->gamma_mode = (GstVideoGammaMode) g_value_get_enum (value);
+      break;
+    case PROP_PRIMARIES_MODE:
+      self->primaries_mode = (GstVideoPrimariesMode) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -462,6 +502,12 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ROTATE_METHOD:
       g_value_set_enum (value, self->method);
+      break;
+    case PROP_GAMMA_MODE:
+      g_value_set_enum (value, self->gamma_mode);
+      break;
+    case PROP_PRIMARIES_MODE:
+      g_value_set_enum (value, self->primaries_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -558,6 +604,7 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
   GError *error = NULL;
+  GstStructure *config;
 
   GST_DEBUG_OBJECT (self, "Updating window with caps %" GST_PTR_FORMAT, caps);
 
@@ -649,8 +696,14 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     gst_d3d11_window_set_render_rectangle (self->window, &rect);
   }
 
+  config = gst_structure_new ("convert-config",
+      GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
+      GST_TYPE_VIDEO_GAMMA_MODE, self->gamma_mode,
+      GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
+      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode, nullptr);
+
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
-          GST_VIDEO_SINK_HEIGHT (self), caps, &error)) {
+          GST_VIDEO_SINK_HEIGHT (self), caps, config, &error)) {
     GstMessage *error_msg;
 
     GST_D3D11_VIDEO_SINK_UNLOCK (self);

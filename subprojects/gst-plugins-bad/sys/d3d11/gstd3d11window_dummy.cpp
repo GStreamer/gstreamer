@@ -51,7 +51,8 @@ G_DEFINE_TYPE (GstD3D11WindowDummy, gst_d3d11_window_dummy,
 static void gst_d3d11_window_dummy_on_resize (GstD3D11Window * window,
     guint width, guint height);
 static gboolean gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
-    guint display_width, guint display_height, GstCaps * caps, GError ** error);
+    guint display_width, guint display_height, GstCaps * caps,
+    GstStructure * config, GError ** error);
 static void gst_d3d11_window_dummy_unprepare (GstD3D11Window * window);
 static gboolean
 gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
@@ -83,15 +84,17 @@ gst_d3d11_window_dummy_init (GstD3D11WindowDummy * self)
 
 static gboolean
 gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
-    guint display_width, guint display_height, GstCaps * caps, GError ** error)
+    guint display_width, guint display_height, GstCaps * caps,
+    GstStructure * config, GError ** error)
 {
-  GstStructure *config;
-
   if (!window->allocator) {
     window->allocator =
         (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
     if (!window->allocator) {
       GST_ERROR_OBJECT (window, "Allocator is unavailable");
+      if (config)
+        gst_structure_free (config);
+
       return FALSE;
     }
   }
@@ -122,9 +125,15 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
   window->render_info.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
   window->render_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
 
-  config = gst_structure_new ("converter-config",
-      GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
-      GST_D3D11_CONVERTER_BACKEND_SHADER, nullptr);
+  if (config) {
+    gst_structure_set (config, GST_D3D11_CONVERTER_OPT_BACKEND,
+        GST_TYPE_D3D11_CONVERTER_BACKEND, GST_D3D11_CONVERTER_BACKEND_SHADER,
+        nullptr);
+  } else {
+    config = gst_structure_new ("converter-config",
+        GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
+        GST_D3D11_CONVERTER_BACKEND_SHADER, nullptr);
+  }
 
   GstD3D11DeviceLockGuard lk (window->device);
   window->converter = gst_d3d11_converter_new (window->device, &window->info,

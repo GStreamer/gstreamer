@@ -107,7 +107,8 @@ static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
 static void gst_d3d11_window_on_resize_default (GstD3D11Window * window,
     guint width, guint height);
 static gboolean gst_d3d11_window_prepare_default (GstD3D11Window * window,
-    guint display_width, guint display_height, GstCaps * caps, GError ** error);
+    guint display_width, guint display_height, GstCaps * caps,
+    GstStructure * config, GError ** error);
 
 static void
 gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
@@ -496,7 +497,8 @@ typedef struct
 
 gboolean
 gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
-    guint display_height, GstCaps * caps, GError ** error)
+    guint display_height, GstCaps * caps, GstStructure * config,
+    GError ** error)
 {
   GstD3D11WindowClass *klass;
 
@@ -508,12 +510,14 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
   GST_DEBUG_OBJECT (window, "Prepare window, display resolution %dx%d, caps %"
       GST_PTR_FORMAT, display_width, display_height, caps);
 
-  return klass->prepare (window, display_width, display_height, caps, error);
+  return klass->prepare (window, display_width, display_height, caps, config,
+      error);
 }
 
 static gboolean
 gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
-    guint display_height, GstCaps * caps, GError ** error)
+    guint display_height, GstCaps * caps, GstStructure * config,
+    GError ** error)
 {
   GstD3D11Device *device = window->device;
   GstD3D11WindowClass *klass;
@@ -549,6 +553,9 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
         (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
     if (!window->allocator) {
       GST_ERROR_OBJECT (window, "Allocator is unavailable");
+      if (config)
+        gst_structure_free (config);
+
       return FALSE;
     }
   }
@@ -580,6 +587,9 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot determine render format");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot determine render format");
+    if (config)
+      gst_structure_free (config);
+
     return FALSE;
   }
 
@@ -644,6 +654,9 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create swapchain");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create swapchain");
+    if (config)
+      gst_structure_free (config);
+
     return FALSE;
   }
 
@@ -726,7 +739,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       &window->render_info);
 
   window->converter = gst_d3d11_converter_new (device,
-      &window->info, &window->render_info, nullptr);
+      &window->info, &window->render_info, config);
 
   if (!window->converter) {
     GST_ERROR_OBJECT (window, "Cannot create converter");
