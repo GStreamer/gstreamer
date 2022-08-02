@@ -275,6 +275,7 @@ struct _GstD3D11CompositorPad
   gboolean position_updated;
   gboolean alpha_updated;
   gboolean blend_desc_updated;
+  gboolean config_updated;
   ID3D11BlendState *blend;
 
   D3D11_RENDER_TARGET_BLEND_DESC desc;
@@ -287,6 +288,8 @@ struct _GstD3D11CompositorPad
   gdouble alpha;
   GstD3D11CompositorOperator op;
   GstD3D11CompositorSizingPolicy sizing_policy;
+  GstVideoGammaMode gamma_mode;
+  GstVideoPrimariesMode primaries_mode;
 };
 
 typedef struct
@@ -334,6 +337,8 @@ enum
   PROP_PAD_ALPHA,
   PROP_PAD_OPERATOR,
   PROP_PAD_SIZING_POLICY,
+  PROP_PAD_GAMMA_MODE,
+  PROP_PAD_PRIMARIES_MODE,
 };
 
 #define DEFAULT_PAD_XPOS   0
@@ -343,6 +348,8 @@ enum
 #define DEFAULT_PAD_ALPHA  1.0
 #define DEFAULT_PAD_OPERATOR GST_D3D11_COMPOSITOR_OPERATOR_OVER
 #define DEFAULT_PAD_SIZING_POLICY GST_D3D11_COMPOSITOR_SIZING_POLICY_NONE
+#define DEFAULT_PAD_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
+#define DEFAULT_PAD_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 
 static void gst_d3d11_compositor_pad_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -397,6 +404,30 @@ gst_d3d11_compositor_pad_class_init (GstD3D11CompositorPadClass * klass)
           GST_TYPE_D3D11_COMPOSITOR_SIZING_POLICY, DEFAULT_PAD_SIZING_POLICY,
           param_flags));
 
+  /**
+   * GstD3D11CompositorPad:gamma-mode:
+   *
+   * Gamma conversion mode
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_PAD_GAMMA_MODE,
+      g_param_spec_enum ("gamma-mode", "Gamma mode",
+          "Gamma conversion mode", GST_TYPE_VIDEO_GAMMA_MODE,
+          DEFAULT_PAD_GAMMA_MODE, param_flags));
+
+  /**
+   * GstD3D11CompositorPad:primaries-mode:
+   *
+   * Primaries conversion mode
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_PAD_PRIMARIES_MODE,
+      g_param_spec_enum ("primaries-mode", "Primaries Mode",
+          "Primaries conversion mode", GST_TYPE_VIDEO_PRIMARIES_MODE,
+          DEFAULT_PAD_PRIMARIES_MODE, param_flags));
+
   vagg_pad_class->prepare_frame =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_pad_prepare_frame);
   vagg_pad_class->clean_frame =
@@ -419,6 +450,8 @@ gst_d3d11_compositor_pad_init (GstD3D11CompositorPad * pad)
   pad->op = DEFAULT_PAD_OPERATOR;
   pad->sizing_policy = DEFAULT_PAD_SIZING_POLICY;
   pad->desc = blend_templ[DEFAULT_PAD_OPERATOR];
+  pad->gamma_mode = DEFAULT_PAD_GAMMA_MODE;
+  pad->primaries_mode = DEFAULT_PAD_PRIMARIES_MODE;
 }
 
 static void
@@ -479,6 +512,23 @@ gst_d3d11_compositor_pad_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_PAD_GAMMA_MODE:{
+      GstVideoGammaMode mode = (GstVideoGammaMode) g_value_get_enum (value);
+      if (pad->gamma_mode != mode) {
+        pad->gamma_mode = mode;
+        pad->config_updated = TRUE;
+      }
+      break;
+    }
+    case PROP_PAD_PRIMARIES_MODE:{
+      GstVideoPrimariesMode mode =
+          (GstVideoPrimariesMode) g_value_get_enum (value);
+      if (pad->primaries_mode != mode) {
+        pad->primaries_mode = mode;
+        pad->config_updated = TRUE;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -512,6 +562,12 @@ gst_d3d11_compositor_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_SIZING_POLICY:
       g_value_set_enum (value, pad->sizing_policy);
+      break;
+    case PROP_PAD_GAMMA_MODE:
+      g_value_set_enum (value, pad->gamma_mode);
+      break;
+    case PROP_PAD_PRIMARIES_MODE:
+      g_value_set_enum (value, pad->primaries_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -749,21 +805,29 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
     output_has_alpha_comp = TRUE;
   }
 
+  if (cpad->config_updated) {
+    gst_clear_object (&cpad->convert);
+    cpad->config_updated = FALSE;
+  }
+
   if (!cpad->convert) {
+    GstStructure *config = gst_structure_new ("converter-config",
+        GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
+        GST_TYPE_VIDEO_GAMMA_MODE, cpad->gamma_mode,
+        GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
+        GST_TYPE_VIDEO_PRIMARIES_MODE, cpad->primaries_mode, nullptr);
+
     cpad->convert = gst_d3d11_converter_new (self->device, &pad->info, info,
-        nullptr);
+        config);
     if (!cpad->convert) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
       return FALSE;
     }
 
-    if (output_has_alpha_comp)
-      g_object_set (cpad->convert, "alpha", cpad->alpha, nullptr);
-
     is_first = TRUE;
   }
 
-  if (cpad->alpha_updated) {
+  if (cpad->alpha_updated || is_first) {
     if (output_has_alpha_comp) {
       g_object_set (cpad->convert, "alpha", cpad->alpha, nullptr);
     } else {
@@ -779,7 +843,7 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
     cpad->alpha_updated = FALSE;
   }
 
-  if (!cpad->blend || cpad->blend_desc_updated) {
+  if (!cpad->blend || cpad->blend_desc_updated || is_first) {
     HRESULT hr;
     D3D11_BLEND_DESC desc = { 0, };
     ID3D11BlendState *blend = nullptr;
