@@ -62,6 +62,11 @@
 GST_DEBUG_CATEGORY_STATIC (gst_fluid_dec_debug);
 #define GST_CAT_DEFAULT gst_fluid_dec_debug
 
+#if !GST_HAVE_FLUIDSYNTH_VERSION(2, 2, 0)
+#define fluid_synth_chorus_on(synth,fx_group,on) fluid_synth_set_chorus_on(synth,on)
+#define fluid_synth_reverb_on(synth,fx_group,on) fluid_synth_set_reverb_on(synth,on)
+#endif
+
 enum
 {
   /* FILL ME */
