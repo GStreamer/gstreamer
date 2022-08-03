@@ -131,7 +131,7 @@ typedef struct
 typedef struct
 {
   gchar *creation_trace;
-
+  ObjectKind kind;
   GList *refing_infos;
 } ObjectRefingInfos;
 
@@ -321,13 +321,6 @@ typedef struct
   const gchar *type_name;
 } ObjectLog;
 
-static inline gboolean
-object_is_gst_mini_object (gpointer obj)
-{
-  return (G_TYPE_IS_DERIVED (GST_MINI_OBJECT_TYPE (obj)) &&
-      G_TYPE_FUNDAMENTAL (GST_MINI_OBJECT_TYPE (obj)) == G_TYPE_BOXED);
-}
-
 static ObjectLog *
 object_log_new (gpointer obj, ObjectKind kind)
 {
@@ -393,20 +386,27 @@ mini_object_weak_cb (gpointer data, GstMiniObject * object)
 
 static void
 handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
-    gboolean gobject)
+    ObjectKind kind)
 {
-  ObjectKind kind = gobject ? GOBJECT : MINI_OBJECT;    // FIXME: change arg to pass directly
   ObjectRefingInfos *infos;
 
   if (!should_handle_object_type (self, type))
     return;
 
   infos = g_malloc0 (sizeof (ObjectRefingInfos));
-  if (gobject)
-    g_object_weak_ref ((GObject *) object, object_weak_cb, self);
-  else
-    gst_mini_object_weak_ref (GST_MINI_OBJECT_CAST (object),
-        mini_object_weak_cb, self);
+  infos->kind = kind;
+  switch (kind) {
+    case GOBJECT:
+      g_object_weak_ref ((GObject *) object, object_weak_cb, self);
+      break;
+    case MINI_OBJECT:
+      gst_mini_object_weak_ref (GST_MINI_OBJECT_CAST (object),
+          mini_object_weak_cb, self);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   GST_OBJECT_LOCK (self);
   if ((gint) self->trace_flags != -1)
@@ -425,7 +425,8 @@ mini_object_created_cb (GstTracer * tracer, GstClockTime ts,
 {
   GstLeaksTracer *self = GST_LEAKS_TRACER_CAST (tracer);
 
-  handle_object_created (self, object, GST_MINI_OBJECT_TYPE (object), FALSE);
+  handle_object_created (self, object, GST_MINI_OBJECT_TYPE (object),
+      MINI_OBJECT);
 }
 
 static void
@@ -438,7 +439,7 @@ object_created_cb (GstTracer * tracer, GstClockTime ts, GstObject * object)
   if (g_type_is_a (object_type, GST_TYPE_TRACER))
     return;
 
-  handle_object_created (self, object, object_type, TRUE);
+  handle_object_created (self, object, object_type, GOBJECT);
 }
 
 static void
@@ -615,18 +616,25 @@ create_leaks_list (GstLeaksTracer * self)
     GType type;
     guint ref_count;
 
-    if (object_is_gst_mini_object (obj)) {
-      if (GST_MINI_OBJECT_FLAG_IS_SET (obj, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED))
-        continue;
+    switch (((ObjectRefingInfos *) infos)->kind) {
+      case GOBJECT:
+        if (GST_OBJECT_FLAG_IS_SET (obj, GST_OBJECT_FLAG_MAY_BE_LEAKED))
+          continue;
 
-      type = GST_MINI_OBJECT_TYPE (obj);
-      ref_count = ((GstMiniObject *) obj)->refcount;
-    } else {
-      if (GST_OBJECT_FLAG_IS_SET (obj, GST_OBJECT_FLAG_MAY_BE_LEAKED))
-        continue;
+        type = G_OBJECT_TYPE (obj);
+        ref_count = ((GObject *) obj)->ref_count;
+        break;
+      case MINI_OBJECT:
+        if (GST_MINI_OBJECT_FLAG_IS_SET (obj,
+                GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED))
+          continue;
 
-      type = G_OBJECT_TYPE (obj);
-      ref_count = ((GObject *) obj)->ref_count;
+        type = GST_MINI_OBJECT_TYPE (obj);
+        ref_count = ((GstMiniObject *) obj)->refcount;
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
     }
 
     l = g_list_prepend (l, leak_new (obj, type, ref_count, infos));
@@ -660,10 +668,17 @@ process_leak (Leak * leak, GValue * ret_leaks)
     /* for leaked objects, we take ownership of the object instead of
      * reffing ("collecting") it to avoid deadlocks */
     g_value_init (&obj_value, leak->type);
-    if (object_is_gst_mini_object (leak->obj))
-      g_value_take_boxed (&obj_value, leak->obj);
-    else
-      g_value_take_object (&obj_value, leak->obj);
+    switch (leak->infos->kind) {
+      case GOBJECT:
+        g_value_take_object (&obj_value, leak->obj);
+        break;
+      case MINI_OBJECT:
+        g_value_take_boxed (&obj_value, leak->obj);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
     s = gst_structure_new_empty ("object-alive");
     gst_structure_take_value (s, "object", &obj_value);
     gst_structure_set (s, "ref-count", G_TYPE_UINT, leak->ref_count,
@@ -745,7 +760,7 @@ gst_leaks_tracer_finalize (GObject * object)
   GstLeaksTracer *self = GST_LEAKS_TRACER (object);
   gboolean leaks = FALSE;
   GHashTableIter iter;
-  gpointer obj;
+  gpointer obj, infos;
 
   GST_DEBUG_OBJECT (self, "destroying tracer, checking for leaks");
 
@@ -758,12 +773,19 @@ gst_leaks_tracer_finalize (GObject * object)
 
   /* Remove weak references */
   g_hash_table_iter_init (&iter, self->objects);
-  while (g_hash_table_iter_next (&iter, &obj, NULL)) {
-    if (object_is_gst_mini_object (obj))
-      gst_mini_object_weak_unref (GST_MINI_OBJECT_CAST (obj),
-          mini_object_weak_cb, self);
-    else
-      g_object_weak_unref (obj, object_weak_cb, self);
+  while (g_hash_table_iter_next (&iter, &obj, &infos)) {
+    switch (((ObjectRefingInfos *) infos)->kind) {
+      case GOBJECT:
+        g_object_weak_unref (obj, object_weak_cb, self);
+        break;
+      case MINI_OBJECT:
+        gst_mini_object_weak_unref (GST_MINI_OBJECT_CAST (obj),
+            mini_object_weak_cb, self);
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
   }
 
   g_clear_pointer (&self->objects, g_hash_table_unref);
