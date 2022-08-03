@@ -115,10 +115,10 @@ struct _GstHLSDemuxStream
 
   /* The segment (from the above playlist) currently being used */
   GstM3U8MediaSegment *current_segment;
-
-  /* The partial segment (from the above playlist) currently being used,
-   * if we have advanced to the last 'dummy' segment in a live playlist */
-  GstM3U8PartialSegment *current_partial_segment;
+  /* When playing partial segments in LL-HLS, in_partial_segments is TRUE,
+   * and part_no is the current part index in the current_segment */
+  gboolean in_partial_segments;
+  guint part_idx;
 
   /* Whether we need to typefind the next buffer */
   gboolean do_typefind;
