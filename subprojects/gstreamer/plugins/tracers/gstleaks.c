@@ -114,6 +114,12 @@ static guint gst_leaks_tracer_signals[LAST_SIGNAL] = { 0 };
 
 G_LOCK_DEFINE_STATIC (instances);
 
+typedef enum
+{
+  GOBJECT,
+  MINI_OBJECT,
+} ObjectKind;
+
 typedef struct
 {
   gboolean reffed;
@@ -323,16 +329,23 @@ object_is_gst_mini_object (gpointer obj)
 }
 
 static ObjectLog *
-object_log_new (gpointer obj)
+object_log_new (gpointer obj, ObjectKind kind)
 {
   ObjectLog *o = g_new (ObjectLog, 1);
 
   o->object = obj;
 
-  if (object_is_gst_mini_object (obj))
-    o->type_name = g_type_name (GST_MINI_OBJECT_TYPE (obj));
-  else
-    o->type_name = G_OBJECT_TYPE_NAME (obj);
+  switch (kind) {
+    case GOBJECT:
+      o->type_name = G_OBJECT_TYPE_NAME (obj);
+      break;
+    case MINI_OBJECT:
+      o->type_name = g_type_name (GST_MINI_OBJECT_TYPE (obj));
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
 
   return o;
 }
@@ -344,7 +357,8 @@ object_log_free (ObjectLog * obj)
 }
 
 static void
-handle_object_destroyed (GstLeaksTracer * self, gpointer object)
+handle_object_destroyed (GstLeaksTracer * self, gpointer object,
+    ObjectKind kind)
 {
   GST_OBJECT_LOCK (self);
   if (self->done) {
@@ -356,7 +370,7 @@ handle_object_destroyed (GstLeaksTracer * self, gpointer object)
 
   g_hash_table_remove (self->objects, object);
   if (self->removed)
-    g_hash_table_add (self->removed, object_log_new (object));
+    g_hash_table_add (self->removed, object_log_new (object, kind));
 out:
   GST_OBJECT_UNLOCK (self);
 }
@@ -366,7 +380,7 @@ object_weak_cb (gpointer data, GObject * object)
 {
   GstLeaksTracer *self = data;
 
-  handle_object_destroyed (self, object);
+  handle_object_destroyed (self, object, GOBJECT);
 }
 
 static void
@@ -374,15 +388,15 @@ mini_object_weak_cb (gpointer data, GstMiniObject * object)
 {
   GstLeaksTracer *self = data;
 
-  handle_object_destroyed (self, object);
+  handle_object_destroyed (self, object, MINI_OBJECT);
 }
 
 static void
 handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
     gboolean gobject)
 {
+  ObjectKind kind = gobject ? GOBJECT : MINI_OBJECT;    // FIXME: change arg to pass directly
   ObjectRefingInfos *infos;
-
 
   if (!should_handle_object_type (self, type))
     return;
@@ -401,7 +415,7 @@ handle_object_created (GstLeaksTracer * self, gpointer object, GType type,
   g_hash_table_insert (self->objects, object, infos);
 
   if (self->added)
-    g_hash_table_add (self->added, object_log_new (object));
+    g_hash_table_add (self->added, object_log_new (object, kind));
   GST_OBJECT_UNLOCK (self);
 }
 
