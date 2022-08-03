@@ -318,7 +318,7 @@ should_handle_object_type (GstLeaksTracer * self, GType object_type)
 typedef struct
 {
   gpointer object;
-  const gchar *type_name;
+  GQuark type_qname;
 } ObjectLog;
 
 static ObjectLog *
@@ -330,10 +330,10 @@ object_log_new (gpointer obj, ObjectKind kind)
 
   switch (kind) {
     case GOBJECT:
-      o->type_name = G_OBJECT_TYPE_NAME (obj);
+      o->type_qname = g_type_qname (G_OBJECT_TYPE (obj));
       break;
     case MINI_OBJECT:
-      o->type_name = g_type_name (GST_MINI_OBJECT_TYPE (obj));
+      o->type_qname = g_type_qname (GST_MINI_OBJECT_TYPE (obj));
       break;
     default:
       g_assert_not_reached ();
@@ -1061,16 +1061,18 @@ process_checkpoint (GstTracerRecord * record, const gchar * record_type,
   while (g_hash_table_iter_next (&iter, &o, NULL)) {
     ObjectLog *obj = o;
 
+    const gchar *type_name = g_quark_to_string (obj->type_qname);
+
     if (!ret) {
       /* log to the debug log */
-      gst_tracer_record_log (record, obj->type_name, obj->object);
+      gst_tracer_record_log (record, type_name, obj->object);
     } else {
       GValue s_value = G_VALUE_INIT;
       GValue addr_value = G_VALUE_INIT;
       gchar *address = g_strdup_printf ("%p", obj->object);
       GstStructure *s = gst_structure_new_empty (record_type);
       /* copy type_name because it's owned by @obj */
-      gst_structure_set (s, "type-name", G_TYPE_STRING, obj->type_name, NULL);
+      gst_structure_set (s, "type-name", G_TYPE_STRING, type_name, NULL);
       /* avoid copy of @address */
       g_value_init (&addr_value, G_TYPE_STRING);
       g_value_take_string (&addr_value, address);
