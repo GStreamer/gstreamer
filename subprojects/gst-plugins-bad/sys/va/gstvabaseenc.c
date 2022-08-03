@@ -1100,3 +1100,32 @@ gst_va_base_enc_add_codec_tag (GstVaBaseEnc * base, const gchar * codec_name)
   gst_video_encoder_merge_tags (venc, tags, GST_TAG_MERGE_REPLACE);
   gst_tag_list_unref (tags);
 }
+
+/* *INDENT-OFF* */
+#define UPDATE_PROPERTY                         \
+  GST_OBJECT_LOCK (base);                       \
+  if (*old_val == new_val) {                    \
+    GST_OBJECT_UNLOCK (base);                   \
+    return;                                     \
+  }                                             \
+  *old_val = new_val;                                                   \
+  GST_OBJECT_UNLOCK (base);                                             \
+  if (pspec)                                                            \
+    g_object_notify_by_pspec (G_OBJECT (base), pspec);                  \
+
+void
+gst_va_base_enc_update_property_uint (GstVaBaseEnc * base, guint32 * old_val,
+    guint32 new_val, GParamSpec * pspec)
+{
+  UPDATE_PROPERTY
+}
+
+void
+gst_va_base_enc_update_property_bool (GstVaBaseEnc * base, gboolean * old_val,
+    gboolean new_val, GParamSpec * pspec)
+{
+  UPDATE_PROPERTY
+}
+
+#undef UPDATE_PROPERTY
+/* *INDENT-ON* */

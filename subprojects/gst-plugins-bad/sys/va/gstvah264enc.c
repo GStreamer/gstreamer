@@ -431,6 +431,13 @@ _calculate_bitrate_hrd (GstVaH264Enc * self)
   self->rc.cpb_length_bits = cpb_bits_size;
 }
 
+#define update_property(type, obj, old_val, new_val, prop_id)           \
+  gst_va_base_enc_update_property_##type (obj, old_val, new_val, properties[prop_id])
+#define update_property_uint(obj, old_val, new_val, prop_id)    \
+  update_property (uint, obj, old_val, new_val, prop_id)
+#define update_property_bool(obj, old_val, new_val, prop_id)    \
+  update_property (bool, obj, old_val, new_val, prop_id)
+
 /* Estimates a good enough bitrate if none was supplied */
 static void
 _ensure_rate_control (GstVaH264Enc * self)
@@ -482,7 +489,7 @@ _ensure_rate_control (GstVaH264Enc * self)
 
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint bitrate;
-  guint32 rc_mode, quality_level;
+  guint32 rc_ctrl, rc_mode, quality_level;
 
   quality_level = gst_va_encoder_get_quality_level (base->encoder,
       base->profile, base->entrypoint);
@@ -491,23 +498,27 @@ _ensure_rate_control (GstVaH264Enc * self)
         "fallback to %d", self->rc.target_usage, quality_level);
     self->rc.target_usage = quality_level;
 
-    self->prop.target_usage = self->rc.target_usage;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TARGET_USAGE]);
+    update_property_uint (base, &self->prop.target_usage, self->rc.target_usage,
+        PROP_TARGET_USAGE);
   }
 
-  if (self->prop.rc_ctrl != VA_RC_NONE) {
+  GST_OBJECT_LOCK (self);
+  rc_ctrl = self->prop.rc_ctrl;
+  GST_OBJECT_UNLOCK (self);
+
+  if (rc_ctrl != VA_RC_NONE) {
     rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
         base->profile, base->entrypoint);
-    if (!(rc_mode & self->prop.rc_ctrl)) {
+    if (!(rc_mode & rc_ctrl)) {
       guint32 defval =
           G_PARAM_SPEC_ENUM (properties[PROP_RATE_CONTROL])->default_value;
       GST_INFO_OBJECT (self, "The rate control mode %s is not supported, "
-          "fallback to %s mode",
-          _rate_control_get_name (self->prop.rc_ctrl),
+          "fallback to %s mode", _rate_control_get_name (rc_ctrl),
           _rate_control_get_name (defval));
       self->rc.rc_ctrl_mode = defval;
-      self->prop.rc_ctrl = self->rc.rc_ctrl_mode;
-      g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_RATE_CONTROL]);
+
+      update_property_uint (base, &self->prop.rc_ctrl, self->rc.rc_ctrl_mode,
+          PROP_RATE_CONTROL);
     }
   } else {
     self->rc.rc_ctrl_mode = VA_RC_NONE;
@@ -518,8 +529,8 @@ _ensure_rate_control (GstVaH264Enc * self)
         "set it to the max_qp", self->rc.min_qp, self->rc.max_qp);
     self->rc.min_qp = self->rc.max_qp;
 
-    self->prop.min_qp = self->rc.min_qp;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_MIN_QP]);
+    update_property_uint (base, &self->prop.min_qp, self->rc.min_qp,
+        PROP_MIN_QP);
   }
 
   /* Make all the qp in the valid range */
@@ -562,7 +573,10 @@ _ensure_rate_control (GstVaH264Enc * self)
     self->rc.qp_b = self->rc.max_qp;
   }
 
+  GST_OBJECT_LOCK (self);
   bitrate = self->prop.bitrate;
+  GST_OBJECT_UNLOCK (self);
+
   /* Calculate a bitrate is not set. */
   if ((self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
           || self->rc.rc_ctrl_mode == VA_RC_VCM) && bitrate == 0) {
@@ -625,30 +639,15 @@ _ensure_rate_control (GstVaH264Enc * self)
   if (self->rc.rc_ctrl_mode != VA_RC_CQP)
     _calculate_bitrate_hrd (self);
 
-  /* notifications */
-  if (self->rc.cpb_size != self->prop.cpb_size) {
-    self->prop.cpb_size = self->rc.cpb_size;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CPB_SIZE]);
-  }
-
-  if (self->prop.target_percentage != self->rc.target_percentage) {
-    self->prop.target_percentage = self->rc.target_percentage;
-    g_object_notify_by_pspec (G_OBJECT (self),
-        properties[PROP_TARGET_PERCENTAGE]);
-  }
-
-  if (self->prop.qp_i != self->rc.qp_i) {
-    self->prop.qp_i = self->rc.qp_i;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_QP_I]);
-  }
-  if (self->prop.qp_p != self->rc.qp_p) {
-    self->prop.qp_p = self->rc.qp_p;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_QP_P]);
-  }
-  if (self->prop.qp_b != self->rc.qp_b) {
-    self->prop.qp_b = self->rc.qp_b;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_QP_B]);
-  }
+  /* update & notifications */
+  update_property_uint (base, &self->prop.bitrate, bitrate, PROP_BITRATE);
+  update_property_uint (base, &self->prop.cpb_size, self->rc.cpb_size,
+      PROP_CPB_SIZE);
+  update_property_uint (base, &self->prop.target_percentage,
+      self->rc.target_percentage, PROP_TARGET_PERCENTAGE);
+  update_property_uint (base, &self->prop.qp_i, self->rc.qp_i, PROP_QP_I);
+  update_property_uint (base, &self->prop.qp_p, self->rc.qp_p, PROP_QP_P);
+  update_property_uint (base, &self->prop.qp_b, self->rc.qp_b, PROP_QP_B);
 }
 
 static guint
@@ -731,10 +730,8 @@ _validate_parameters (GstVaH264Enc * self)
   if (self->num_slices > ((self->mb_width * self->mb_height + 1) / 2))
     self->num_slices = ((self->mb_width * self->mb_height + 1) / 2);
 
-  if (self->prop.num_slices != self->num_slices) {
-    self->prop.num_slices = self->num_slices;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_NUM_SLICES]);
-  }
+  update_property_uint (base, &self->prop.num_slices,
+      self->num_slices, PROP_NUM_SLICES);
 
   /* Ensure trellis. */
   if (self->use_trellis &&
@@ -744,10 +741,8 @@ _validate_parameters (GstVaH264Enc * self)
     self->use_trellis = FALSE;
   }
 
-  if (self->prop.use_trellis != self->use_trellis) {
-    self->prop.use_trellis = self->use_trellis;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TRELLIS]);
-  }
+  update_property_bool (base, &self->prop.use_trellis, self->use_trellis,
+      PROP_TRELLIS);
 }
 
 /* Get log2_max_frame_num_minus4, log2_max_pic_order_cnt_lsb_minus4
@@ -948,10 +943,8 @@ _generate_gop_structure (GstVaH264Enc * self)
     GST_INFO_OBJECT (self, "Lowering the GOP size to %d", self->gop.idr_period);
   }
 
-  if (self->gop.idr_period != self->prop.key_int_max) {
-    self->prop.key_int_max = self->gop.idr_period;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_KEY_INT_MAX]);
-  }
+  update_property_uint (base, &self->prop.key_int_max, self->gop.idr_period,
+      PROP_KEY_INT_MAX);
 
   /* Prefer have more than 1 refs for the GOP which is not very small. */
   if (self->gop.idr_period > 8) {
@@ -1137,17 +1130,11 @@ create_poc:
   _create_gop_frame_types (self);
   _print_gop_structure (self);
 
-  /* notifications */
-  if (self->prop.num_ref_frames != self->gop.num_ref_frames) {
-    self->prop.num_ref_frames = self->gop.num_ref_frames;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_NUM_REF_FRAMES]);
-  }
-
-  if (self->prop.num_iframes != self->gop.num_iframes) {
-    self->prop.num_iframes = self->gop.num_iframes;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_IFRAMES]);
-  }
-
+  /* updates & notifications */
+  update_property_uint (base, &self->prop.num_ref_frames,
+      self->gop.num_ref_frames, PROP_NUM_REF_FRAMES);
+  update_property_uint (base, &self->prop.num_iframes, self->gop.num_iframes,
+      PROP_IFRAMES);
 }
 
 static void
@@ -1423,8 +1410,8 @@ _decide_profile (GstVaH264Enc * self)
     GST_INFO_OBJECT (self, "Disable dct8x8, profile %s does not support it",
         gst_va_profile_name (base->profile));
     self->use_dct8x8 = FALSE;
-    self->prop.use_dct8x8 = FALSE;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_DCT8X8]);
+    update_property_bool (base, &self->prop.use_dct8x8, self->use_dct8x8,
+        PROP_DCT8X8);
   }
 
   if (self->use_cabac && (!g_strstr_len (profile_name, -1, "main")
@@ -1432,8 +1419,8 @@ _decide_profile (GstVaH264Enc * self)
     GST_INFO_OBJECT (self, "Disable cabac, profile %s does not support it",
         gst_va_profile_name (base->profile));
     self->use_cabac = FALSE;
-    self->prop.use_cabac = FALSE;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_CABAC]);
+    update_property_bool (base, &self->prop.use_cabac, self->use_cabac,
+        PROP_CABAC);
   }
 
   if (self->gop.num_bframes > 0 && g_strstr_len (profile_name, -1, "baseline")) {
@@ -1467,10 +1454,7 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
 
   GST_VA_BASE_ENC_CLASS (parent_class)->reset_state (base);
 
-  self->level_idc = 0;
-  self->level_str = NULL;
-  self->mb_width = 0;
-  self->mb_height = 0;
+  GST_OBJECT_LOCK (self);
   self->use_cabac = self->prop.use_cabac;
   self->use_dct8x8 = self->prop.use_dct8x8;
   self->use_trellis = self->prop.use_trellis;
@@ -1478,24 +1462,10 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->num_slices = self->prop.num_slices;
 
   self->gop.idr_period = self->prop.key_int_max;
-  self->gop.i_period = 0;
-  self->gop.total_idr_count = 0;
-  self->gop.ip_period = 0;
   self->gop.num_bframes = self->prop.num_bframes;
   self->gop.b_pyramid = self->prop.b_pyramid;
-  self->gop.highest_pyramid_level = 0;
   self->gop.num_iframes = self->prop.num_iframes;
-  memset (self->gop.frame_types, 0, sizeof (self->gop.frame_types));
-  self->gop.cur_frame_index = 0;
-  self->gop.cur_frame_num = 0;
-  self->gop.max_frame_num = 0;
-  self->gop.log2_max_frame_num = 0;
-  self->gop.max_pic_order_cnt = 0;
-  self->gop.log2_max_pic_order_cnt = 0;
   self->gop.num_ref_frames = self->prop.num_ref_frames;
-  self->gop.ref_num_list0 = 0;
-  self->gop.ref_num_list1 = 0;
-  self->gop.num_reorder_frames = 0;
 
   self->rc.rc_ctrl_mode = self->prop.rc_ctrl;
   self->rc.min_qp = self->prop.min_qp;
@@ -1504,13 +1474,36 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->rc.qp_p = self->prop.qp_p;
   self->rc.qp_b = self->prop.qp_b;
   self->rc.mbbrc = self->prop.mbbrc;
-  self->rc.max_bitrate = 0;
-  self->rc.target_bitrate = 0;
+
   self->rc.target_percentage = self->prop.target_percentage;
   self->rc.target_usage = self->prop.target_usage;
+  self->rc.cpb_size = self->prop.cpb_size;
+  GST_OBJECT_UNLOCK (self);
+
+  self->level_idc = 0;
+  self->level_str = NULL;
+  self->mb_width = 0;
+  self->mb_height = 0;
+
+  self->gop.i_period = 0;
+  self->gop.total_idr_count = 0;
+  self->gop.ip_period = 0;
+  self->gop.highest_pyramid_level = 0;
+  memset (self->gop.frame_types, 0, sizeof (self->gop.frame_types));
+  self->gop.cur_frame_index = 0;
+  self->gop.cur_frame_num = 0;
+  self->gop.max_frame_num = 0;
+  self->gop.log2_max_frame_num = 0;
+  self->gop.max_pic_order_cnt = 0;
+  self->gop.log2_max_pic_order_cnt = 0;
+  self->gop.ref_num_list0 = 0;
+  self->gop.ref_num_list1 = 0;
+  self->gop.num_reorder_frames = 0;
+
+  self->rc.max_bitrate = 0;
+  self->rc.target_bitrate = 0;
   self->rc.max_bitrate_bits = 0;
   self->rc.target_bitrate_bits = 0;
-  self->rc.cpb_size = self->prop.cpb_size;
   self->rc.cpb_length_bits = 0;
 
   memset (&self->sequence_hdr, 0, sizeof (GstH264SPS));
@@ -1562,17 +1555,12 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   _generate_gop_structure (self);
   _calculate_coded_size (self);
 
-  /* notifications */
+  /* updates & notifications */
   /* num_bframes are modified several times before */
-  if (self->prop.num_bframes != self->gop.num_bframes) {
-    self->prop.num_bframes = self->gop.num_bframes;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_BFRAMES]);
-  }
-
-  if (self->prop.b_pyramid != self->gop.b_pyramid) {
-    self->prop.b_pyramid = self->gop.b_pyramid;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_B_PYRAMID]);
-  }
+  update_property_uint (base, &self->prop.num_bframes, self->gop.num_bframes,
+      PROP_BFRAMES);
+  update_property_bool (base, &self->prop.b_pyramid, self->gop.b_pyramid,
+      PROP_B_PYRAMID);
 
   if (!_init_packed_headers (self))
     return FALSE;

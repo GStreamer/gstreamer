@@ -129,6 +129,15 @@ gboolean              gst_va_base_enc_add_trellis_parameter (GstVaBaseEnc * base
 void                  gst_va_base_enc_add_codec_tag       (GstVaBaseEnc * base,
                                                            const gchar * codec_name);
 
+void                  gst_va_base_enc_update_property_uint (GstVaBaseEnc * base,
+                                                            guint32 * old_val,
+                                                            guint32 new_val,
+                                                            GParamSpec * pspec);
+void                  gst_va_base_enc_update_property_bool (GstVaBaseEnc * base,
+                                                            gboolean * old_val,
+                                                            gboolean new_val,
+                                                            GParamSpec * pspec);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaBaseEnc, gst_object_unref)
 
 G_END_DECLS
