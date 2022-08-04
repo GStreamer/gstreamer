@@ -103,7 +103,7 @@ struct CData
   GstCaps *src_caps;
 };
 
-GType                 gst_va_base_enc_get_type             (void);
+GType                 gst_va_base_enc_get_type            (void);
 
 gboolean              gst_va_base_enc_add_rate_control_parameter (GstVaBaseEnc * base,
                                                                   GstVaEncodePicture * picture,
@@ -116,18 +116,18 @@ gboolean              gst_va_base_enc_add_rate_control_parameter (GstVaBaseEnc *
                                                                   guint32 mbbrc);
 gboolean              gst_va_base_enc_add_quality_level_parameter (GstVaBaseEnc * base,
                                                                    GstVaEncodePicture * picture,
-                                                                   guint target_usage); 
+                                                                   guint target_usage);
 gboolean              gst_va_base_enc_add_frame_rate_parameter (GstVaBaseEnc * base,
                                                                 GstVaEncodePicture * picture);
-gboolean              gst_va_base_enc_add_hrd_parameter    (GstVaBaseEnc * base,
-                                                            GstVaEncodePicture * picture,
-                                                            guint32 rc_mode,
-                                                            guint cpb_length_bits);
+gboolean              gst_va_base_enc_add_hrd_parameter   (GstVaBaseEnc * base,
+                                                           GstVaEncodePicture * picture,
+                                                           guint32 rc_mode,
+                                                           guint cpb_length_bits);
 gboolean              gst_va_base_enc_add_trellis_parameter (GstVaBaseEnc * base,
                                                              GstVaEncodePicture * picture,
                                                              gboolean use_trellis);
-void                  gst_va_base_enc_add_codec_tag        (GstVaBaseEnc * base,
-                                                            const gchar * codec_name);
+void                  gst_va_base_enc_add_codec_tag       (GstVaBaseEnc * base,
+                                                           const gchar * codec_name);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaBaseEnc, gst_object_unref)
 
