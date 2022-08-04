@@ -1278,6 +1278,17 @@ gst_hlsdemux_handle_internal_time (GstHLSDemux * demux,
   g_return_val_if_fail (current_segment != NULL, GST_HLS_PARSER_RESULT_ERROR);
 
   current_stream_time = current_segment->stream_time;
+  if (hls_stream->in_partial_segments) {
+    /* If the current partial segment is valid, update the stream current position to the partial
+     * segment stream_time, otherwise leave it alone and fix it up later when we resync */
+    if (current_segment->partial_segments
+        && hls_stream->part_idx < current_segment->partial_segments->len) {
+      GstM3U8PartialSegment *part =
+          g_ptr_array_index (current_segment->partial_segments,
+          hls_stream->part_idx);
+      current_stream_time = part->stream_time;
+    }
+  }
 
   GST_DEBUG_OBJECT (hls_stream,
       "Got internal time %" GST_TIME_FORMAT " for current segment stream time %"
@@ -1334,15 +1345,19 @@ gst_hlsdemux_handle_internal_time (GstHLSDemux * demux,
       GST_STIME_ARGS (real_stream_time), GST_STIME_ARGS (difference));
 
   if (ABS (difference) > 10 * GST_MSECOND) {
-    /* Update the value */
-    GST_DEBUG_OBJECT (hls_stream,
-        "Updating current stream time to %" GST_STIME_FORMAT,
-        GST_STIME_ARGS (real_stream_time));
-    current_segment->stream_time = real_stream_time;
+    /* FIXME: LL-HLS could recalculate stream times on parts.
+     * For now, only do it at the first part in a segment */
+    if (!hls_stream->in_partial_segments || hls_stream->part_idx == 0) {
+      /* Update the value */
+      GST_DEBUG_OBJECT (hls_stream,
+          "Updating current stream time to %" GST_STIME_FORMAT,
+          GST_STIME_ARGS (real_stream_time));
+      current_segment->stream_time = real_stream_time;
 
-    gst_hls_media_playlist_recalculate_stream_time (hls_stream->playlist,
-        hls_stream->current_segment);
-    gst_hls_media_playlist_dump (hls_stream->playlist);
+      gst_hls_media_playlist_recalculate_stream_time (hls_stream->playlist,
+          hls_stream->current_segment);
+      gst_hls_media_playlist_dump (hls_stream->playlist);
+    }
 
     if (ABS (difference) > (hls_stream->current_segment->duration / 2)) {
       GstAdaptiveDemux2Stream *stream = (GstAdaptiveDemux2Stream *) hls_stream;
@@ -1676,7 +1691,22 @@ gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream)
     /* We can update the stream current position with a more accurate value
      * before advancing. Note that we don't have any period so we can set the
      * stream_time as-is on the stream current position */
-    stream->current_position = hls_stream->current_segment->stream_time;
+    if (hls_stream->in_partial_segments) {
+      GstM3U8MediaSegment *cur_segment = hls_stream->current_segment;
+
+      /* If the current partial segment is valid, update the stream current position, otherwise
+       * leave it alone and fix it up later when we resync */
+      if (cur_segment->partial_segments
+          && hls_stream->part_idx < cur_segment->partial_segments->len) {
+        GstM3U8PartialSegment *part =
+            g_ptr_array_index (cur_segment->partial_segments,
+            hls_stream->part_idx);
+        stream->current_position = part->stream_time;
+      }
+    } else {
+      stream->current_position = hls_stream->current_segment->stream_time;
+    }
+
     return gst_adaptive_demux2_stream_advance_fragment (stream,
         hls_stream->current_segment->duration);
   }
@@ -2299,15 +2329,15 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
        * beyond the end of that partial segment (when we advance past the live
        * edge and increment part_idx, then the segment completes without
        * adding any more partial segments) */
-      if (new_segment->partial_only) {
+      if (!new_segment->partial_only) {
         if (new_segment->partial_segments == NULL) {
           GST_DEBUG_OBJECT (stream,
-              "Partial segments we were playing became unavailable. Resyncing");
+              "Partial segments we were playing became unavailable. Will try and resync");
           stream->in_partial_segments = FALSE;
           new_segment = NULL;
         } else if (stream->part_idx >= new_segment->partial_segments->len) {
           GST_DEBUG_OBJECT (stream,
-              "After playlist reload, there are no more partial segments to play. Resyncing");
+              "After playlist reload, there are no more partial segments to play in the current segment. Resyncing");
           stream->in_partial_segments = FALSE;
           new_segment = NULL;
         }
@@ -2723,6 +2753,13 @@ gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream * stream,
 
   /* Fast-Path, no changes possible */
   if (hlsdemux->master == NULL || hlsdemux->master->is_simple)
+    return FALSE;
+
+  /* Currently playing partial segments, disallow bitrate
+   * switches - unless exactly at the first partial
+   * segment in a full segment (implying we are about to play
+   * a partial segment but didn't yet */
+  if (hls_stream->in_partial_segments && hls_stream->part_idx > 0)
     return FALSE;
 
   if (hls_stream->is_variant) {
