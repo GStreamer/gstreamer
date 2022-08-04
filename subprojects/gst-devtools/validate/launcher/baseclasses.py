@@ -1197,10 +1197,6 @@ class GstValidateTest(Test):
     def get_valgrind_suppressions(self):
         result = super(GstValidateTest, self).get_valgrind_suppressions()
         result.extend(utils.get_gst_build_valgrind_suppressions())
-        gst_sup = self.get_valgrind_suppression_file('common', 'gst.supp')
-        if gst_sup:
-            result.append(gst_sup)
-
         return result
 
 
