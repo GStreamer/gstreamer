@@ -743,13 +743,14 @@ gst_alpha_set_argb_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
   gint i, j;
   gint p[4], o[4];
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -775,6 +776,7 @@ gst_alpha_set_argb_argb (const GstVideoFrame * in_frame,
       dest += 4;
       src += 4;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -784,7 +786,7 @@ gst_alpha_chroma_key_argb_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint i, j;
   gint a, y, u, v;
   gint r, g, b;
@@ -802,6 +804,7 @@ gst_alpha_chroma_key_argb_argb (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -852,6 +855,7 @@ gst_alpha_chroma_key_argb_argb (const GstVideoFrame * in_frame,
       src += 4;
       dest += 4;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -861,7 +865,7 @@ gst_alpha_set_ayuv_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
   gint y, x;
   gint matrix[12];
@@ -870,6 +874,7 @@ gst_alpha_set_ayuv_argb (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -898,6 +903,7 @@ gst_alpha_set_ayuv_argb (const GstVideoFrame * in_frame,
       dest += 4;
       src += 4;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -907,7 +913,7 @@ gst_alpha_chroma_key_ayuv_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint i, j;
   gint a, y, u, v;
   gint r, g, b;
@@ -925,6 +931,7 @@ gst_alpha_chroma_key_ayuv_argb (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -967,6 +974,7 @@ gst_alpha_chroma_key_ayuv_argb (const GstVideoFrame * in_frame,
       src += 4;
       dest += 4;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -976,12 +984,13 @@ gst_alpha_set_ayuv_ayuv (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 256), 0, 256);
   gint y, x;
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -997,6 +1006,7 @@ gst_alpha_set_ayuv_ayuv (const GstVideoFrame * in_frame,
         dest += 4;
         src += 4;
       }
+      dest += out_stride - width * 4;
     }
   } else {
     gint matrix[12];
@@ -1015,6 +1025,7 @@ gst_alpha_set_ayuv_ayuv (const GstVideoFrame * in_frame,
         dest += 4;
         src += 4;
       }
+      dest += out_stride - width * 4;
     }
   }
 }
@@ -1025,7 +1036,7 @@ gst_alpha_chroma_key_ayuv_ayuv (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint i, j;
   gint a, y, u, v;
   gint smin, smax;
@@ -1040,6 +1051,7 @@ gst_alpha_chroma_key_ayuv_ayuv (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1070,6 +1082,7 @@ gst_alpha_chroma_key_ayuv_ayuv (const GstVideoFrame * in_frame,
         src += 4;
         dest += 4;
       }
+      dest += out_stride - width * 4;
     }
   } else {
     gint matrix[12];
@@ -1100,6 +1113,7 @@ gst_alpha_chroma_key_ayuv_ayuv (const GstVideoFrame * in_frame,
         src += 4;
         dest += 4;
       }
+      dest += out_stride - width * 4;
     }
   }
 }
@@ -1110,7 +1124,7 @@ gst_alpha_set_rgb_ayuv (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   gint i, j;
   gint matrix[12];
@@ -1120,6 +1134,7 @@ gst_alpha_set_rgb_ayuv (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1148,6 +1163,7 @@ gst_alpha_set_rgb_ayuv (const GstVideoFrame * in_frame,
       dest += 4;
       src += bpp;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -1157,7 +1173,7 @@ gst_alpha_chroma_key_rgb_ayuv (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint i, j;
   gint a, y, u, v;
   gint r, g, b;
@@ -1176,6 +1192,7 @@ gst_alpha_chroma_key_rgb_ayuv (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1219,6 +1236,7 @@ gst_alpha_chroma_key_rgb_ayuv (const GstVideoFrame * in_frame,
       src += bpp;
       dest += 4;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -1228,7 +1246,7 @@ gst_alpha_set_rgb_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   gint i, j;
   gint p[4], o[3];
@@ -1236,6 +1254,7 @@ gst_alpha_set_rgb_argb (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1262,6 +1281,7 @@ gst_alpha_set_rgb_argb (const GstVideoFrame * in_frame,
       dest += 4;
       src += bpp;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -1271,7 +1291,7 @@ gst_alpha_chroma_key_rgb_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint i, j;
   gint a, y, u, v;
   gint r, g, b;
@@ -1290,6 +1310,7 @@ gst_alpha_chroma_key_rgb_argb (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1341,6 +1362,7 @@ gst_alpha_chroma_key_rgb_argb (const GstVideoFrame * in_frame,
       src += bpp;
       dest += 4;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -1349,7 +1371,7 @@ gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   const guint8 *srcY, *srcY_tmp;
   const guint8 *srcU, *srcU_tmp;
@@ -1359,6 +1381,7 @@ gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   gint v_subs, h_subs;
 
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1415,6 +1438,7 @@ gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
         srcU = srcU_tmp;
         srcV = srcV_tmp;
       }
+      dest += out_stride - width * 4;
     }
   } else {
     gint matrix[12];
@@ -1452,6 +1476,7 @@ gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
         srcU = srcU_tmp;
         srcV = srcV_tmp;
       }
+      dest += out_stride - width * 4;
     }
   }
 }
@@ -1461,7 +1486,7 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   const guint8 *srcY, *srcY_tmp;
   const guint8 *srcU, *srcU_tmp;
@@ -1481,6 +1506,7 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   guint noise_level2 = alpha->noise_level2;
 
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1549,6 +1575,7 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
         srcU = srcU_tmp;
         srcV = srcV_tmp;
       }
+      dest += out_stride - width * 4;
     }
   } else {
     gint matrix[12];
@@ -1589,6 +1616,7 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
         srcU = srcU_tmp;
         srcV = srcV_tmp;
       }
+      dest += out_stride - width * 4;
     }
   }
 }
@@ -1598,7 +1626,7 @@ gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   const guint8 *srcY, *srcY_tmp;
   const guint8 *srcU, *srcU_tmp;
@@ -1612,6 +1640,7 @@ gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
   gint p[4];
 
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1684,6 +1713,7 @@ gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
       srcU = srcU_tmp;
       srcV = srcV_tmp;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -1692,7 +1722,7 @@ gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   const guint8 *srcY, *srcY_tmp;
   const guint8 *srcU, *srcU_tmp;
@@ -1715,6 +1745,7 @@ gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
   gint p[4];
 
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1794,6 +1825,7 @@ gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
       srcU = srcU_tmp;
       srcV = srcV_tmp;
     }
+    dest += out_stride - width * 4;
   }
 }
 
@@ -1803,7 +1835,7 @@ gst_alpha_set_packed_422_ayuv (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   gint i, j;
   gint y, u, v;
@@ -1813,6 +1845,7 @@ gst_alpha_set_packed_422_ayuv (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -1873,6 +1906,7 @@ gst_alpha_set_packed_422_ayuv (const GstVideoFrame * in_frame,
       }
 
       src = src_tmp + src_stride;
+      dest += out_stride - width * 4;
     }
   } else {
     for (i = 0; i < height; i++) {
@@ -1915,6 +1949,7 @@ gst_alpha_set_packed_422_ayuv (const GstVideoFrame * in_frame,
       }
 
       src = src_tmp + src_stride;
+      dest += out_stride - width * 4;
     }
   }
 }
@@ -1925,7 +1960,7 @@ gst_alpha_chroma_key_packed_422_ayuv (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint i, j;
   gint a, y, u, v;
   gint smin, smax;
@@ -1943,6 +1978,7 @@ gst_alpha_chroma_key_packed_422_ayuv (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -2016,6 +2052,7 @@ gst_alpha_chroma_key_packed_422_ayuv (const GstVideoFrame * in_frame,
       }
 
       src = src_tmp + src_stride;
+      dest += out_stride - width * 4;
     }
   } else {
     for (i = 0; i < height; i++) {
@@ -2070,6 +2107,7 @@ gst_alpha_chroma_key_packed_422_ayuv (const GstVideoFrame * in_frame,
       }
 
       src = src_tmp + src_stride;
+      dest += out_stride - width * 4;
     }
   }
 }
@@ -2080,7 +2118,7 @@ gst_alpha_set_packed_422_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint s_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
   gint i, j;
   gint p[4], o[4];
@@ -2091,6 +2129,7 @@ gst_alpha_set_packed_422_argb (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -2151,6 +2190,7 @@ gst_alpha_set_packed_422_argb (const GstVideoFrame * in_frame,
     }
 
     src = src_tmp + src_stride;
+    dest += out_stride - width * 4;
   }
 }
 
@@ -2160,7 +2200,7 @@ gst_alpha_chroma_key_packed_422_argb (const GstVideoFrame * in_frame,
 {
   const guint8 *src;
   guint8 *dest;
-  gint width, height;
+  gint width, height, out_stride;
   gint i, j;
   gint a, y, u, v;
   gint r, g, b;
@@ -2180,6 +2220,7 @@ gst_alpha_chroma_key_packed_422_argb (const GstVideoFrame * in_frame,
 
   src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
+  out_stride = GST_VIDEO_FRAME_PLANE_STRIDE (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
   height = GST_VIDEO_FRAME_HEIGHT (in_frame);
@@ -2273,6 +2314,7 @@ gst_alpha_chroma_key_packed_422_argb (const GstVideoFrame * in_frame,
     }
 
     src = src_tmp + src_stride;
+    dest += out_stride - width * 4;
   }
 }
 
