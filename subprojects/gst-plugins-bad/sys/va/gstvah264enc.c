@@ -142,7 +142,7 @@ struct _GstVaH264Enc
     /* kbps */
     guint bitrate;
     /* VA_RC_XXX */
-    guint rc_ctrl;
+    guint32 rc_ctrl;
     guint key_int_max;
     guint32 num_ref_frames;
     gboolean b_pyramid;
@@ -482,8 +482,7 @@ _ensure_rate_control (GstVaH264Enc * self)
 
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint bitrate;
-  guint32 rc_mode;
-  guint32 quality_level;
+  guint32 rc_mode, quality_level;
 
   quality_level = gst_va_encoder_get_quality_level (base->encoder,
       base->profile, base->entrypoint);
