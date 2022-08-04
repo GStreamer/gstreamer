@@ -174,6 +174,7 @@ struct _GstVaH264Enc
   gboolean use_cabac;
   gboolean use_dct8x8;
   gboolean use_trellis;
+  gboolean aud;
   guint32 num_slices;
   guint32 packed_headers;
 
@@ -1474,6 +1475,7 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->use_cabac = self->prop.use_cabac;
   self->use_dct8x8 = self->prop.use_dct8x8;
   self->use_trellis = self->prop.use_trellis;
+  self->aud = self->prop.aud;
   self->num_slices = self->prop.num_slices;
 
   self->gop.idr_period = self->prop.key_int_max;
@@ -2702,7 +2704,7 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
 
   frame = _enc_frame (gst_frame);
 
-  if (self->prop.aud) {
+  if (self->aud) {
     if ((self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA)
         && !_add_aud (self, frame))
       return FALSE;
