@@ -215,10 +215,11 @@ _gst_adaptive_demux_loop_thread (GstAdaptiveDemuxLoop * loop)
   loop->loop = NULL;
 
   g_cond_broadcast (&loop->cond);
-  g_mutex_unlock (&loop->lock);
 
   g_main_context_unref (loop->context);
   loop->context = NULL;
+
+  g_mutex_unlock (&loop->lock);
 
   gst_adaptive_demux_loop_unref (loop);
 
@@ -380,12 +381,13 @@ gst_adaptive_demux_loop_call_delayed (GstAdaptiveDemuxLoop * loop,
 void
 gst_adaptive_demux_loop_cancel_call (GstAdaptiveDemuxLoop * loop, guint cb_id)
 {
-  GSource *s;
 
   g_mutex_lock (&loop->lock);
-  s = g_main_context_find_source_by_id (loop->context, cb_id);
-  if (s)
-    g_source_destroy (s);
+  if (loop->context) {
+    GSource *s = g_main_context_find_source_by_id (loop->context, cb_id);
+    if (s)
+      g_source_destroy (s);
+  }
   g_mutex_unlock (&loop->lock);
 }
 
