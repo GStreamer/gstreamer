@@ -31,7 +31,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 #define GST_CAT_DEFAULT gst_d3d11_allocator_debug
 
-static GstAllocator *_d3d11_memory_allocator;
+static GstD3D11Allocator *_d3d11_memory_allocator;
 
 GType
 gst_d3d11_allocation_flags_get_type (void)
@@ -652,10 +652,12 @@ gst_d3d11_memory_init_once (void)
         "Direct3D11 Texture Allocator");
 
     _d3d11_memory_allocator =
-        (GstAllocator *) g_object_new (GST_TYPE_D3D11_ALLOCATOR, NULL);
+        (GstD3D11Allocator *) g_object_new (GST_TYPE_D3D11_ALLOCATOR, NULL);
     gst_object_ref_sink (_d3d11_memory_allocator);
+    gst_object_ref (_d3d11_memory_allocator);
 
-    gst_allocator_register (GST_D3D11_MEMORY_NAME, _d3d11_memory_allocator);
+    gst_allocator_register (GST_D3D11_MEMORY_NAME,
+        GST_ALLOCATOR_CAST (_d3d11_memory_allocator));
   } GST_D3D11_CALL_ONCE_END;
 }
 
@@ -1600,8 +1602,8 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
 
 /**
  * gst_d3d11_allocator_alloc:
- * @allocator: a #GstD3D11Allocator
- * @device: a #GstD3D11Device
+ * @allocator: (transfer none) (allow-none): a #GstD3D11Allocator
+ * @device: (transfer none): a #GstD3D11Device
  * @desc: a D3D11_TEXTURE2D_DESC struct
  *
  * Returns: a newly allocated #GstD3D11Memory with given parameters.
@@ -1613,6 +1615,11 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
     GstD3D11Device * device, const D3D11_TEXTURE2D_DESC * desc)
 {
   GstMemory *mem;
+
+  if (!allocator) {
+    gst_d3d11_memory_init_once ();
+    allocator = _d3d11_memory_allocator;
+  }
 
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), NULL);
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
@@ -1633,8 +1640,8 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
 
 /**
  * gst_d3d11_allocator_alloc_buffer:
- * @allocator: a #GstD3D11Allocator
- * @device: a #GstD3D11Device
+ * @allocator: (transfer none) (allow-none): a #GstD3D11Allocator
+ * @device: (transfer none): a #GstD3D11Device
  * @desc: a D3D11_BUFFER_DESC struct
  *
  * Returns: a newly allocated #GstD3D11Memory with given parameters.
@@ -1649,6 +1656,11 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
   ID3D11Buffer *buffer;
   ID3D11Device *device_handle;
   HRESULT hr;
+
+  if (!allocator) {
+    gst_d3d11_memory_init_once ();
+    allocator = _d3d11_memory_allocator;
+  }
 
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), nullptr);
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
@@ -1686,8 +1698,8 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
 
 /**
  * gst_d3d11_allocator_alloc_wrapped:
- * @allocator: a #GstD3D11Allocator
- * @device: a #GstD3D11Device
+ * @allocator: (transfer none) (allow-none): a #GstD3D11Allocator
+ * @device: (transfer none): a #GstD3D11Device
  * @texture: a ID3D11Texture2D
  * @size: CPU accessible memory size
  * @user_data: (allow-none): user data
@@ -1720,6 +1732,11 @@ gst_d3d11_allocator_alloc_wrapped (GstD3D11Allocator * allocator,
   D3D11_TEXTURE2D_DESC desc = { 0, };
   ID3D11Texture2D *tex = nullptr;
   HRESULT hr;
+
+  if (!allocator) {
+    gst_d3d11_memory_init_once ();
+    allocator = _d3d11_memory_allocator;
+  }
 
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), nullptr);
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
@@ -1926,9 +1943,8 @@ gst_d3d11_pool_allocator_start (GstD3D11PoolAllocator * self)
     GstMemory *mem;
 
     priv->texture->AddRef ();
-    mem =
-        gst_d3d11_allocator_alloc_wrapped_internal (GST_D3D11_ALLOCATOR_CAST
-        (_d3d11_memory_allocator), self->device, &priv->desc, priv->texture);
+    mem = gst_d3d11_allocator_alloc_wrapped_internal (_d3d11_memory_allocator,
+        self->device, &priv->desc, priv->texture);
 
     if (i == 0) {
       if (!gst_d3d11_memory_update_size (mem)) {
@@ -2187,9 +2203,8 @@ gst_d3d11_pool_allocator_alloc (GstD3D11PoolAllocator * self, GstMemory ** mem)
 
   /* increment the allocation counter */
   g_atomic_int_add (&priv->cur_mems, 1);
-  new_mem =
-      gst_d3d11_allocator_alloc_internal (GST_D3D11_ALLOCATOR_CAST
-      (_d3d11_memory_allocator), self->device, &priv->desc, nullptr);
+  new_mem = gst_d3d11_allocator_alloc_internal (_d3d11_memory_allocator,
+      self->device, &priv->desc, nullptr);
   if (!new_mem) {
     GST_ERROR_OBJECT (self, "Failed to allocate new memory");
     g_atomic_int_add (&priv->cur_mems, -1);
