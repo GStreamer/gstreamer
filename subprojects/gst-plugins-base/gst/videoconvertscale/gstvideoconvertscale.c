@@ -107,9 +107,6 @@ typedef struct
 
   gint borders_h;
   gint borders_w;
-
-  gboolean scales;
-  gboolean converts;
 } GstVideoConvertScalePrivate;
 
 #define gst_video_convert_scale_parent_class parent_class
@@ -118,7 +115,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstVideoConvertScale, gst_video_convert_scale,
 GST_ELEMENT_REGISTER_DEFINE (videoconvertscale, "videoconvertscale",
     GST_RANK_SECONDARY, GST_TYPE_VIDEO_CONVERT_SCALE);
 
-#define PRIV(self) ((GstVideoConvertScalePrivate*)gst_video_convert_scale_get_instance_private(((GstVideoConvertScale*) self)))
+#define PRIV(self) gst_video_convert_scale_get_instance_private(((GstVideoConvertScale*) self))
 
 #define GST_CAT_DEFAULT video_convertscale_debug
 GST_DEBUG_CATEGORY_STATIC (video_convertscale_debug);
@@ -429,8 +426,6 @@ gst_video_convert_scale_init (GstVideoConvertScale * self)
   priv->matrix_mode = DEFAULT_PROP_MATRIX_MODE;
   priv->gamma_mode = DEFAULT_PROP_GAMMA_MODE;
   priv->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
-  priv->scales = TRUE;
-  priv->converts = TRUE;
 }
 
 static void
@@ -574,14 +569,12 @@ gst_video_convert_scale_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_video_convert_caps_remove_format_and_rangify_size_info (GstVideoConvertScale
-    * self, GstCaps * caps)
+gst_video_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
 {
   GstCaps *ret;
   GstStructure *structure;
   GstCapsFeatures *features;
   gint i, n;
-  GstVideoConvertScalePrivate *priv = PRIV (self);
 
   ret = gst_caps_new_empty ();
 
@@ -603,21 +596,15 @@ gst_video_convert_caps_remove_format_and_rangify_size_info (GstVideoConvertScale
             || gst_caps_features_is_equal (features, features_format_interlaced)
             || gst_caps_features_is_equal (features,
                 features_format_interlaced_sysmem))) {
-
-      if (priv->scales) {
-        gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-        /* if pixel aspect ratio, make a range of it */
-        if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-          gst_structure_set (structure, "pixel-aspect-ratio",
-              GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
-        }
+      gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+        gst_structure_set (structure, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
       }
-
-      if (priv->converts) {
-        gst_structure_remove_fields (structure, "format", "colorimetry",
-            "chroma-site", NULL);
-      }
+      gst_structure_remove_fields (structure, "format", "colorimetry",
+          "chroma-site", NULL);
     }
     gst_caps_append_structure_full (ret, structure,
         gst_caps_features_copy (features));
@@ -632,13 +619,12 @@ gst_video_convert_scale_transform_caps (GstBaseTransform * trans,
 {
   gint i;
   GstCaps *ret;
-  GstVideoConvertScale *self = GST_VIDEO_CONVERT_SCALE (trans);
 
   GST_DEBUG_OBJECT (trans,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  ret = gst_video_convert_caps_remove_format_and_rangify_size_info (self, caps);
+  ret = gst_video_convert_caps_remove_format_and_rangify_size_info (caps);
   if (filter) {
     GstCaps *intersection;
 
@@ -1800,40 +1786,4 @@ gst_video_convert_scale_src_event (GstBaseTransform * trans, GstEvent * event)
   ret = GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
 
   return ret;
-}
-
-void
-gst_video_convert_scale_set_scales (GstVideoConvertScale * self,
-    gboolean scales)
-{
-  GstVideoConvertScalePrivate *priv = PRIV (self);
-
-  if (!scales)
-    g_assert (priv->converts);
-
-  priv->scales = scales;
-}
-
-void
-gst_video_convert_scale_set_converts (GstVideoConvertScale * self,
-    gboolean converts)
-{
-  GstVideoConvertScalePrivate *priv = PRIV (self);
-
-  if (!converts)
-    g_assert (priv->scales);
-
-  priv->converts = converts;
-}
-
-gboolean
-gst_video_convert_scale_get_scales (GstVideoConvertScale * self)
-{
-  return PRIV (self)->scales;
-}
-
-gboolean
-gst_video_convert_scale_get_converts (GstVideoConvertScale * self)
-{
-  return PRIV (self)->converts;
 }

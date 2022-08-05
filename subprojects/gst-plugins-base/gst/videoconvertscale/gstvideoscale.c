@@ -51,7 +51,6 @@
 #endif
 
 #define DEFAULT_PROP_GAMMA_DECODE FALSE
-#define DEFAULT_PROP_DISABLE_CONVERSION FALSE
 
 #include "gstvideoscale.h"
 
@@ -62,8 +61,7 @@ GST_ELEMENT_REGISTER_DEFINE (videoscale, "videoscale",
 enum
 {
   PROP_0,
-  PROP_GAMMA_DECODE,
-  PROP_DISABLE_CONVERSION,
+  PROP_GAMMA_DECODE
 };
 
 static void
@@ -80,11 +78,6 @@ gst_video_scale_get_property (GObject * object, guint prop_id,
 
       break;
     }
-    case PROP_DISABLE_CONVERSION:
-      g_value_set_boolean (value,
-          !gst_video_convert_scale_get_converts (GST_VIDEO_CONVERT_SCALE
-              (object)));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -105,10 +98,6 @@ gst_video_scale_set_property (GObject * object, guint prop_id,
 
       break;
     }
-    case PROP_DISABLE_CONVERSION:
-      gst_video_convert_scale_set_converts (GST_VIDEO_CONVERT_SCALE (object),
-          !g_value_get_boolean (value));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -129,17 +118,6 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
       g_param_spec_boolean ("gamma-decode", "Gamma Decode",
           "Decode gamma before scaling", DEFAULT_PROP_GAMMA_DECODE,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  /**
-   * videoscale::disable-conversion:
-   *
-   * Since: 1.22
-   */
-  g_object_class_install_property (gobject_class, PROP_DISABLE_CONVERSION,
-      g_param_spec_boolean ("disable-conversion", "Disable Conversion",
-          "Disables colorspace conversions", DEFAULT_PROP_DISABLE_CONVERSION,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_READY));
 }
 
 static void

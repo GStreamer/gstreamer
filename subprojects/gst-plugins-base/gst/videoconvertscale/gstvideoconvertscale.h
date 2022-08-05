@@ -69,11 +69,6 @@ typedef enum {
   GST_VIDEO_SCALE_MITCHELL
 } GstVideoScaleMethod;
 
-void gst_video_convert_scale_set_scales (GstVideoConvertScale *self, gboolean scales);
-void gst_video_convert_scale_set_converts (GstVideoConvertScale *self, gboolean converts);
-gboolean gst_video_convert_scale_get_scales (GstVideoConvertScale *self);
-gboolean gst_video_convert_scale_get_converts (GstVideoConvertScale *self);
-
 GST_ELEMENT_REGISTER_DECLARE (videoconvertscale);
 
 G_END_DECLS

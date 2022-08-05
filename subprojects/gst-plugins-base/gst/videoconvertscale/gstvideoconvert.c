@@ -46,65 +46,10 @@ G_DEFINE_TYPE (GstVideoConvert, gst_video_convert,
 GST_ELEMENT_REGISTER_DEFINE (videoconvert, "videoconvert",
     GST_RANK_MARGINAL, gst_video_convert_get_type ());
 
-enum
-{
-  PROP_0,
-  PROP_DISABLE_SCALING,
-};
-
-#define DEFAULT_PROP_DISABLE_SCALING FALSE
-
-static void
-gst_video_convert_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case PROP_DISABLE_SCALING:
-      g_value_set_boolean (value,
-          !gst_video_convert_scale_get_scales (GST_VIDEO_CONVERT_SCALE
-              (object)));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_video_convert_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    case PROP_DISABLE_SCALING:
-      gst_video_convert_scale_set_scales (GST_VIDEO_CONVERT_SCALE (object),
-          !g_value_get_boolean (value));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static void
 gst_video_convert_class_init (GstVideoConvertClass * klass)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
-
-  gobject_class->set_property = gst_video_convert_set_property;
-  gobject_class->get_property = gst_video_convert_get_property;
-
   ((GstVideoConvertScaleClass *) klass)->any_memory = TRUE;
-
-  /**
-   * videoconvert::disable-scaling:
-   *
-   * Since: 1.22
-   */
-  g_object_class_install_property (gobject_class, PROP_DISABLE_SCALING,
-      g_param_spec_boolean ("disable-scaling", "Disable Scaling",
-          "Disables frame scaling", DEFAULT_PROP_DISABLE_SCALING,
-          G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_READY));
 }
 
 static void
