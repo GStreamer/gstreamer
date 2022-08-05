@@ -3577,6 +3577,80 @@ _complete_src_caps (GstCaps * srccaps)
   return caps;
 }
 
+/* bug in mesa gallium which adds P010_10LE. Admit only 420 chroma formats */
+static GstCaps *
+_fix_sink_caps (GstVaDisplay * display, GstCaps * sinkcaps)
+{
+  GstCaps *caps;
+  guint i, j;
+
+  if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (display, MESA_GALLIUM))
+    return gst_caps_ref (sinkcaps);
+
+  caps = gst_caps_copy (sinkcaps);
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    GstStructure *st = gst_caps_get_structure (caps, i);
+    const GValue *formats = gst_structure_get_value (st, "format");
+    GArray *fmts;
+    guint num;
+
+    /* let's accept it as is */
+    if (G_VALUE_HOLDS_STRING (formats))
+      continue;
+
+    g_assert (GST_VALUE_HOLDS_LIST (formats));
+
+    num = gst_value_list_get_size (formats);
+    fmts = g_array_sized_new (FALSE, FALSE, sizeof (GstVideoFormat), num);
+    for (j = 0; j < num; j++) {
+      const gchar *format =
+          g_value_get_string (gst_value_list_get_value (formats, j));
+      GstVideoFormat f = gst_video_format_from_string (format);
+      if (f != GST_VIDEO_FORMAT_UNKNOWN
+          && gst_va_chroma_from_video_format (f) == VA_RT_FORMAT_YUV420)
+        g_array_append_val (fmts, f);
+    }
+
+    if (fmts->len == 0) {
+      GST_ERROR ("No valid formats in sink caps template.");
+      g_array_unref (fmts);
+      return caps;
+    }
+
+    if (fmts->len == 1) {
+      GValue v = G_VALUE_INIT;
+
+      /* let's accept it as is */
+      g_value_init (&v, G_TYPE_STRING);
+      g_value_set_string (&v,
+          gst_video_format_to_string (g_array_index (fmts, GstVideoFormat, 0)));
+      gst_structure_set_value (st, "format", &v);
+      g_value_unset (&v);
+    } else {
+      GValue val = G_VALUE_INIT;
+      gst_value_array_init (&val, fmts->len);
+
+      for (j = 0; j < fmts->len; j++) {
+        GValue v = G_VALUE_INIT;
+
+        g_value_init (&v, G_TYPE_STRING);
+        g_value_set_string (&v,
+            gst_video_format_to_string (g_array_index (fmts, GstVideoFormat,
+                    j)));
+        gst_value_array_append_value (&val, &v);
+        g_value_unset (&v);
+      }
+
+      gst_structure_set_value (st, "format", &val);
+      g_value_unset (&val);
+    }
+
+    g_array_unref (fmts);
+  }
+
+  return caps;
+}
+
 gboolean
 gst_va_h264_enc_register (GstPlugin * plugin, GstVaDevice * device,
     GstCaps * sink_caps, GstCaps * src_caps, guint rank,
@@ -3605,7 +3679,7 @@ gst_va_h264_enc_register (GstPlugin * plugin, GstVaDevice * device,
   cdata->entrypoint = entrypoint;
   cdata->description = NULL;
   cdata->render_device_path = g_strdup (device->render_device_path);
-  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->sink_caps = _fix_sink_caps (device->display, sink_caps);
   cdata->src_caps = _complete_src_caps (src_caps);
 
   /* class data will be leaked if the element never gets instantiated */
