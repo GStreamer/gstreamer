@@ -72,9 +72,9 @@ typedef enum
 static GType
 gst_d3d11_test_src_pattern_get_type (void)
 {
-  static gsize pattern_type = 0;
+  static GType pattern_type = 0;
 
-  if (g_once_init_enter (&pattern_type)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
     static const GEnumValue pattern_types[] = {
       {GST_D3D11_TEST_SRC_SMPTE, "SMPTE 100% color bars", "smpte"},
       {GST_D3D11_TEST_SRC_SNOW, "Random (television snow)", "snow"},
@@ -89,12 +89,12 @@ gst_d3d11_test_src_pattern_get_type (void)
       {GST_D3D11_TEST_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
       {0, nullptr, nullptr},
     };
-    GType tmp = g_enum_register_static ("GstD3D11TestSrcPattern",
-        pattern_types);
-    g_once_init_leave (&pattern_type, tmp);
-  }
 
-  return (GType) pattern_type;
+    pattern_type = g_enum_register_static ("GstD3D11TestSrcPattern",
+        pattern_types);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return pattern_type;
 }
 
 typedef struct

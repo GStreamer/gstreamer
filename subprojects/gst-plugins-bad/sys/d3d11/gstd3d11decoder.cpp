@@ -387,14 +387,13 @@ gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder)
 static GQuark
 gst_d3d11_decoder_view_id_quark (void)
 {
-  static gsize id_quark = 0;
+  static GQuark id_quark = 0;
 
-  if (g_once_init_enter (&id_quark)) {
-    GQuark quark = g_quark_from_string ("GstD3D11DecoderViewId");
-    g_once_init_leave (&id_quark, quark);
-  }
+  GST_D3D11_CALL_ONCE_BEGIN {
+    id_quark = g_quark_from_string ("GstD3D11DecoderViewId");
+  } GST_D3D11_CALL_ONCE_END;
 
-  return (GQuark) id_quark;
+  return id_quark;
 }
 
 static gboolean

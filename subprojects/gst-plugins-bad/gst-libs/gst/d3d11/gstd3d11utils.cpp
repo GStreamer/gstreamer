@@ -39,18 +39,13 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 static GstDebugCategory *
 ensure_debug_category (void)
 {
-  static gsize cat_gonce = 0;
+  static GstDebugCategory *cat = nullptr;
 
-  if (g_once_init_enter (&cat_gonce)) {
-    gsize cat_done;
+  GST_D3D11_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("d3d11utils", 0, "d3d11 utility functions");
+  } GST_D3D11_CALL_ONCE_END;
 
-    cat_done = (gsize) _gst_debug_category_new ("d3d11utils", 0,
-        "d3d11 utility functions");
-
-    g_once_init_leave (&cat_gonce, cat_done);
-  }
-
-  return (GstDebugCategory *) cat_gonce;
+  return cat;
 }
 #else
 #define ensure_debug_category() /* NOOP */
@@ -59,12 +54,9 @@ ensure_debug_category (void)
 static void
 _init_context_debug (void)
 {
-  static gsize _init = 0;
-
-  if (g_once_init_enter (&_init)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
     GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
-    g_once_init_leave (&_init, 1);
-  }
+  } GST_D3D11_CALL_ONCE_END;
 }
 
 /**

@@ -54,7 +54,6 @@ using namespace Microsoft::WRL;
 
 #if HAVE_D3D11SDKLAYERS_H
 #include <d3d11sdklayers.h>
-static GModule *d3d11_debug_module = NULL;
 
 /* mingw header does not define D3D11_RLDO_IGNORE_INTERNAL
  * D3D11_RLDO_SUMMARY = 0x1,
@@ -68,8 +67,7 @@ static GModule *d3d11_debug_module = NULL;
 #include <dxgidebug.h>
 typedef HRESULT (WINAPI * DXGIGetDebugInterface_t) (REFIID riid,
     void **ppDebug);
-static GModule *dxgi_debug_module = NULL;
-static DXGIGetDebugInterface_t GstDXGIGetDebugInterface = NULL;
+static DXGIGetDebugInterface_t GstDXGIGetDebugInterface = nullptr;
 
 #endif
 
@@ -134,17 +132,14 @@ struct _GstD3D11DevicePrivate
 static void
 debug_init_once (void)
 {
-  static gsize init_once = 0;
-
-  if (g_once_init_enter (&init_once)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_device_debug,
         "d3d11device", 0, "d3d11 device object");
 #if defined(HAVE_D3D11SDKLAYERS_H) || defined(HAVE_DXGIDEBUG_H)
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_debug_layer_debug,
         "d3d11debuglayer", 0, "native d3d11 and dxgi debug");
 #endif
-    g_once_init_leave (&init_once, 1);
-  }
+  } GST_D3D11_CALL_ONCE_END;
 }
 
 #define gst_d3d11_device_parent_class parent_class
@@ -160,26 +155,24 @@ static void gst_d3d11_device_finalize (GObject * object);
 static gboolean
 gst_d3d11_device_enable_d3d11_debug (void)
 {
-  static gsize _init = 0;
-
+  static GModule *d3d11_debug_module = nullptr;
   /* If all below libraries are unavailable, d3d11 device would fail with
    * D3D11_CREATE_DEVICE_DEBUG flag */
-  if (g_once_init_enter (&_init)) {
-    d3d11_debug_module =
-        g_module_open ("d3d11sdklayers.dll", G_MODULE_BIND_LAZY);
+  static const gchar *sdk_dll_names[] = {
+    "d3d11sdklayers.dll",
+    "d3d11_1sdklayers.dll",
+    "d3d11_2sdklayers.dll",
+    "d3d11_3sdklayers.dll",
+  };
 
-    if (!d3d11_debug_module)
-      d3d11_debug_module =
-          g_module_open ("d3d11_1sdklayers.dll", G_MODULE_BIND_LAZY);
-    if (!d3d11_debug_module)
-      d3d11_debug_module =
-          g_module_open ("d3d11_2sdklayers.dll", G_MODULE_BIND_LAZY);
-    if (!d3d11_debug_module)
-      d3d11_debug_module =
-          g_module_open ("d3d11_3sdklayers.dll", G_MODULE_BIND_LAZY);
-
-    g_once_init_leave (&_init, 1);
+  GST_D3D11_CALL_ONCE_BEGIN {
+    for (guint i = 0; i < G_N_ELEMENTS (sdk_dll_names); i++) {
+      d3d11_debug_module = g_module_open (sdk_dll_names[i], G_MODULE_BIND_LAZY);
+      if (d3d11_debug_module)
+        return;
+    }
   }
+  GST_D3D11_CALL_ONCE_END;
 
   if (d3d11_debug_module)
     return TRUE;
@@ -265,27 +258,24 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
 static gboolean
 gst_d3d11_device_enable_dxgi_debug (void)
 {
-  static gsize _init = 0;
-  gboolean ret = FALSE;
+  static GModule *dxgi_debug_module = nullptr;
 
-  /* If all below libraries are unavailable, d3d11 device would fail with
-   * D3D11_CREATE_DEVICE_DEBUG flag */
-  if (g_once_init_enter (&_init)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
 #if (!GST_D3D11_WINAPI_ONLY_APP)
     dxgi_debug_module = g_module_open ("dxgidebug.dll", G_MODULE_BIND_LAZY);
 
     if (dxgi_debug_module)
       g_module_symbol (dxgi_debug_module,
           "DXGIGetDebugInterface", (gpointer *) & GstDXGIGetDebugInterface);
-    if (GstDXGIGetDebugInterface)
-      ret = TRUE;
 #else
-    ret = TRUE;
+    GstDXGIGetDebugInterface = DXGIGetDebugInterface1;
 #endif
-    g_once_init_leave (&_init, 1);
-  }
+  } GST_D3D11_CALL_ONCE_END;
 
-  return ret;
+  if (!GstDXGIGetDebugInterface)
+    return FALSE;
+
+  return TRUE;
 }
 
 static HRESULT
@@ -429,19 +419,16 @@ gst_d3d11_device_init (GstD3D11Device * self)
 static gboolean
 is_windows_8_or_greater (void)
 {
-  static gsize version_once = 0;
   static gboolean ret = FALSE;
 
-  if (g_once_init_enter (&version_once)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
 #if (!GST_D3D11_WINAPI_ONLY_APP)
     if (IsWindows8OrGreater ())
       ret = TRUE;
 #else
     ret = TRUE;
 #endif
-
-    g_once_init_leave (&version_once, 1);
-  }
+  } GST_D3D11_CALL_ONCE_END;
 
   return ret;
 }

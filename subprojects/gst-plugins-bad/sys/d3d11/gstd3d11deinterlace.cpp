@@ -106,9 +106,9 @@ typedef enum
 static GType
 gst_d3d11_deinterlace_method_type (void)
 {
-  static gsize method_type = 0;
+  static GType method_type = 0;
 
-  if (g_once_init_enter (&method_type)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
     static const GFlagsValue method_types[] = {
       {GST_D3D11_DEINTERLACE_METHOD_BLEND,
           "Blend: Blending top/bottom field pictures into one frame. "
@@ -123,14 +123,14 @@ gst_d3d11_deinterlace_method_type (void)
       {GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION,
           "Motion Compensation: Recreating missing lines by using motion vector. "
             "Framerate will be doubled (e,g, 60i -> 60p)", "mocomp"},
-      {0, NULL, NULL},
+      {0, nullptr, nullptr},
     };
-    GType tmp = g_flags_register_static ("GstD3D11DeinterlaceMethod",
-        method_types);
-    g_once_init_leave (&method_type, tmp);
-  }
 
-  return (GType) method_type;
+    method_type = g_flags_register_static ("GstD3D11DeinterlaceMethod",
+        method_types);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return method_type;
 }
 
 typedef struct

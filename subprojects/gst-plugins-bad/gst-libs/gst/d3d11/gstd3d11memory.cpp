@@ -36,7 +36,7 @@ static GstAllocator *_d3d11_memory_allocator;
 GType
 gst_d3d11_allocation_flags_get_type (void)
 {
-  static gsize type = 0;
+  static GType type = 0;
   static const GFlagsValue values[] = {
     {GST_D3D11_ALLOCATION_FLAG_DEFAULT, "GST_D3D11_ALLOCATION_FLAG_DEFAULT",
         "default"},
@@ -45,18 +45,17 @@ gst_d3d11_allocation_flags_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&type)) {
-    GType tmp = g_flags_register_static ("GstD3D11AllocationFlags", values);
-    g_once_init_leave (&type, tmp);
-  }
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_flags_register_static ("GstD3D11AllocationFlags", values);
+  } GST_D3D11_CALL_ONCE_END;
 
-  return (GType) type;
+  return type;
 }
 
 GType
 gst_d3d11_memory_transfer_get_type (void)
 {
-  static gsize type = 0;
+  static GType type = 0;
   static const GFlagsValue values[] = {
     {GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD,
         "GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD", "need-download"},
@@ -65,18 +64,17 @@ gst_d3d11_memory_transfer_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&type)) {
-    GType tmp = g_flags_register_static ("GstD3D11MemoryTransfer", values);
-    g_once_init_leave (&type, tmp);
-  }
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_flags_register_static ("GstD3D11MemoryTransfer", values);
+  } GST_D3D11_CALL_ONCE_END;
 
-  return (GType) type;
+  return type;
 }
 
 GType
 gst_d3d11_memory_native_type_get_type (void)
 {
-  static gsize type = 0;
+  static GType type = 0;
   static const GEnumValue values[] = {
     {GST_D3D11_MEMORY_NATIVE_TYPE_INVALID,
         "GST_D3D11_MEMORY_NATIVE_TYPE_INVALID", "invalid"},
@@ -87,12 +85,11 @@ gst_d3d11_memory_native_type_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&type)) {
-    GType tmp = g_enum_register_static ("GstD3D11MemoryNativeType", values);
-    g_once_init_leave (&type, tmp);
-  }
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D11MemoryNativeType", values);
+  } GST_D3D11_CALL_ONCE_END;
 
-  return (GType) type;
+  return type;
 }
 
 /* GstD3D11AllocationParams */
@@ -650,10 +647,7 @@ gst_d3d11_memory_get_native_type (GstD3D11Memory * mem)
 void
 gst_d3d11_memory_init_once (void)
 {
-  static gsize _init = 0;
-
-  if (g_once_init_enter (&_init)) {
-
+  GST_D3D11_CALL_ONCE_BEGIN {
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_allocator_debug, "d3d11allocator", 0,
         "Direct3D11 Texture Allocator");
 
@@ -662,8 +656,7 @@ gst_d3d11_memory_init_once (void)
     gst_object_ref_sink (_d3d11_memory_allocator);
 
     gst_allocator_register (GST_D3D11_MEMORY_NAME, _d3d11_memory_allocator);
-    g_once_init_leave (&_init, 1);
-  }
+  } GST_D3D11_CALL_ONCE_END;
 }
 
 /**

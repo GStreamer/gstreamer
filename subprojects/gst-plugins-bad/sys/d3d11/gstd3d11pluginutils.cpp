@@ -36,9 +36,7 @@ static guint _gst_d3d11_texture_max_dimension = 16384;
 void
 gst_d3d11_plugin_utils_init (D3D_FEATURE_LEVEL feature_level)
 {
-  static gsize _init_once = 0;
-
-  if (g_once_init_enter (&_init_once)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
     /* https://docs.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-devices-downlevel-intro */
     if (feature_level >= D3D_FEATURE_LEVEL_11_0)
       _gst_d3d11_texture_max_dimension = 16384;
@@ -46,9 +44,8 @@ gst_d3d11_plugin_utils_init (D3D_FEATURE_LEVEL feature_level)
       _gst_d3d11_texture_max_dimension = 8192;
     else
       _gst_d3d11_texture_max_dimension = 4096;
-
-    g_once_init_leave (&_init_once, 1);
   }
+  GST_D3D11_CALL_ONCE_END;
 }
 
 GstCaps *
@@ -75,19 +72,16 @@ gst_d3d11_get_updated_template_caps (GstStaticCaps * template_caps)
 gboolean
 gst_d3d11_is_windows_8_or_greater (void)
 {
-  static gsize version_once = 0;
   static gboolean ret = FALSE;
 
-  if (g_once_init_enter (&version_once)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
 #if (!GST_D3D11_WINAPI_ONLY_APP)
     if (IsWindows8OrGreater ())
       ret = TRUE;
 #else
     ret = TRUE;
 #endif
-
-    g_once_init_leave (&version_once, 1);
-  }
+  } GST_D3D11_CALL_ONCE_END;
 
   return ret;
 }

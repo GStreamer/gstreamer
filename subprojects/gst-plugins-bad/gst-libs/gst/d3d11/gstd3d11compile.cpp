@@ -24,6 +24,7 @@
 #include "gstd3d11compile.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
+#include "gstd3d11_private.h"
 #include <gmodule.h>
 #include <wrl.h>
 #include <string.h>
@@ -37,18 +38,13 @@ using namespace Microsoft::WRL;
 static GstDebugCategory *
 ensure_debug_category (void)
 {
-  static gsize cat_gonce = 0;
+  static GstDebugCategory *cat = nullptr;
 
-  if (g_once_init_enter (&cat_gonce)) {
-    gsize cat_done;
+  GST_D3D11_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("d3d11compile", 0, "d3d11compile");
+  } GST_D3D11_CALL_ONCE_END;
 
-    cat_done = (gsize) _gst_debug_category_new ("d3d11compile", 0,
-        "d3d11compile");
-
-    g_once_init_leave (&cat_gonce, cat_done);
-  }
-
-  return (GstDebugCategory *) cat_gonce;
+  return cat;
 }
 #else
 #define ensure_debug_category() /* NOOP */
@@ -67,9 +63,7 @@ static pD3DCompile GstD3DCompileFunc = nullptr;
 gboolean
 gst_d3d11_compile_init (void)
 {
-  static gsize init_once = 0;
-
-  if (g_once_init_enter (&init_once)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
 #if GST_D3D11_WINAPI_ONLY_APP
     /* Assuming that d3d compiler library is available */
     GstD3DCompileFunc = D3DCompile;
@@ -103,9 +97,8 @@ gst_d3d11_compile_init (void)
     if (!GstD3DCompileFunc)
       GST_WARNING ("D3D11 compiler library is unavailable");
 #endif
-
-    g_once_init_leave (&init_once, 1);
   }
+  GST_D3D11_CALL_ONCE_END;
 
   if (!GstD3DCompileFunc)
     return FALSE;

@@ -74,9 +74,9 @@ static guint d3d11_window_signals[SIGNAL_LAST] = { 0, };
 GType
 gst_d3d11_window_fullscreen_toggle_mode_type (void)
 {
-  static gsize mode_type = 0;
+  static GType mode_type = 0;
 
-  if (g_once_init_enter (&mode_type)) {
+  GST_D3D11_CALL_ONCE_BEGIN {
     static const GFlagsValue mode_types[] = {
       {GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE,
           "GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE", "none"},
@@ -84,14 +84,14 @@ gst_d3d11_window_fullscreen_toggle_mode_type (void)
           "GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_ALT_ENTER", "alt-enter"},
       {GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY,
           "GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_PROPERTY", "property"},
-      {0, NULL, NULL},
+      {0, nullptr, nullptr},
     };
-    GType tmp = g_flags_register_static ("GstD3D11WindowFullscreenToggleMode",
-        mode_types);
-    g_once_init_leave (&mode_type, tmp);
-  }
 
-  return (GType) mode_type;
+    mode_type = g_flags_register_static ("GstD3D11WindowFullscreenToggleMode",
+        mode_types);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return mode_type;
 }
 
 #define gst_d3d11_window_parent_class parent_class

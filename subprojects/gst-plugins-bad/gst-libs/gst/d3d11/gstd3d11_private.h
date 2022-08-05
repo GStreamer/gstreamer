@@ -145,6 +145,8 @@ gboolean        gst_d3d11_color_primaries_matrix_unorm (const GstVideoColorPrima
 G_END_DECLS
 
 #ifdef __cplusplus
+#include <mutex>
+
 class GstD3D11DeviceLockGuard
 {
 public:
@@ -162,6 +164,13 @@ public:
   GstD3D11DeviceLockGuard& operator=(const GstD3D11DeviceLockGuard&) = delete;
 
 private:
-    GstD3D11Device *device_;
+  GstD3D11Device *device_;
 };
-#endif
+
+#define GST_D3D11_CALL_ONCE_BEGIN \
+    static std::once_flag __once_flag; \
+    std::call_once (__once_flag, [&]()
+
+#define GST_D3D11_CALL_ONCE_END )
+
+#endif /* __cplusplus */

@@ -34,18 +34,13 @@
 static GstDebugCategory *
 ensure_debug_category (void)
 {
-  static gsize cat_gonce = 0;
+  static GstDebugCategory *cat = nullptr;
 
-  if (g_once_init_enter (&cat_gonce)) {
-    gsize cat_done;
+  GST_D3D11_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("d3d11format", 0, "d3d11 specific formats");
+  } GST_D3D11_CALL_ONCE_END;
 
-    cat_done = (gsize) _gst_debug_category_new ("d3d11format", 0,
-        "d3d11 specific formats");
-
-    g_once_init_leave (&cat_gonce, cat_done);
-  }
-
-  return (GstDebugCategory *) cat_gonce;
+  return cat;
 }
 #else
 #define ensure_debug_category() /* NOOP */
@@ -54,7 +49,7 @@ ensure_debug_category (void)
 GType
 gst_d3d11_format_support_get_type (void)
 {
-  static gsize support_type = 0;
+  static GType support_type = 0;
   static const GFlagsValue support_values[] = {
     {D3D11_FORMAT_SUPPORT_BUFFER, "BUFFER", "buffer"},
     {D3D11_FORMAT_SUPPORT_IA_VERTEX_BUFFER, "IA_VERTEX_BUFFER",
@@ -103,13 +98,12 @@ gst_d3d11_format_support_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&support_type)) {
-    GType tmp = g_flags_register_static ("GstD3D11FormatSupport",
+  GST_D3D11_CALL_ONCE_BEGIN {
+    support_type = g_flags_register_static ("GstD3D11FormatSupport",
         support_values);
-    g_once_init_leave (&support_type, tmp);
-  }
+  } GST_D3D11_CALL_ONCE_END;
 
-  return (GType) support_type;
+  return support_type;
 }
 
 /**

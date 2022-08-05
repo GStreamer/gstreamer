@@ -42,7 +42,7 @@ DEFINE_ENUM_FLAG_OPERATORS (GstD3D11ConverterBackend);
 GType
 gst_d3d11_converter_backend_get_type (void)
 {
-  static gsize type = 0;
+  static GType type = 0;
   static const GFlagsValue values[] = {
     {GST_D3D11_CONVERTER_BACKEND_SHADER, "GST_D3D11_CONVERTER_BACKEND_SHADER",
         "shader"},
@@ -51,12 +51,11 @@ gst_d3d11_converter_backend_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&type)) {
-    GType tmp = g_flags_register_static ("GstD3D11ConverterBackend", values);
-    g_once_init_leave (&type, tmp);
-  }
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_flags_register_static ("GstD3D11ConverterBackend", values);
+  } GST_D3D11_CALL_ONCE_END;
 
-  return (GType) type;
+  return type;
 }
 
 /* *INDENT-OFF* */
