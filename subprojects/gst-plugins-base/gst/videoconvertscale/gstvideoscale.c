@@ -107,17 +107,26 @@ gst_video_scale_set_property (GObject * object, guint prop_id,
 static void
 gst_video_scale_class_init (GstVideoScaleClass * klass)
 {
-  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoConvertScaleClass *convertscale_class =
+      GST_VIDEO_CONVERT_SCALE_CLASS (klass);
 
   gobject_class->set_property = gst_video_scale_set_property;
   gobject_class->get_property = gst_video_scale_get_property;
-
-  ((GstVideoConvertScaleClass *) klass)->any_memory = TRUE;
 
   g_object_class_install_property (gobject_class, PROP_GAMMA_DECODE,
       g_param_spec_boolean ("gamma-decode", "Gamma Decode",
           "Decode gamma before scaling", DEFAULT_PROP_GAMMA_DECODE,
           G_PARAM_CONSTRUCT | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_element_class_set_static_metadata (element_class,
+      "Video scaler", "Filter/Converter/Video/Scaler",
+      "Resizes video", "Wim Taymans <wim.taymans@gmail.com>");
+
+  convertscale_class->any_memory = TRUE;
+  convertscale_class->converts = FALSE;
+  convertscale_class->scales = TRUE;
 }
 
 static void

@@ -49,7 +49,19 @@ GST_ELEMENT_REGISTER_DEFINE (videoconvert, "videoconvert",
 static void
 gst_video_convert_class_init (GstVideoConvertClass * klass)
 {
-  ((GstVideoConvertScaleClass *) klass)->any_memory = TRUE;
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoConvertScaleClass *convertscale_class =
+      GST_VIDEO_CONVERT_SCALE_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class,
+      "Video colorspace converter",
+      "Filter/Converter/Video/Colorspace",
+      "Resizes video and allow color conversion",
+      "Wim Taymans <wim.taymans@gmail.com>");
+
+  convertscale_class->any_memory = TRUE;
+  convertscale_class->converts = TRUE;
+  convertscale_class->scales = FALSE;
 }
 
 static void

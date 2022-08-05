@@ -378,7 +378,7 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Video colorspace converter and scaler",
       "Filter/Converter/Video/Scaler/Colorspace",
-      "Resizes video and allow color conversion",
+      "Converts video from one colorspace to another",
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
@@ -404,6 +404,10 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   filter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_convert_scale_set_info);
   filter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_convert_scale_transform_frame);
+
+  klass->any_memory = FALSE;
+  klass->converts = TRUE;
+  klass->scales = TRUE;
 }
 
 static void
@@ -569,8 +573,10 @@ gst_video_convert_scale_get_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_video_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
+gst_video_convert_caps_remove_format_and_rangify_size_info (GstVideoConvertScale
+    * self, GstCaps * caps)
 {
+  GstVideoConvertScaleClass *klass = GST_VIDEO_CONVERT_SCALE_GET_CLASS (self);
   GstCaps *ret;
   GstStructure *structure;
   GstCapsFeatures *features;
@@ -596,15 +602,20 @@ gst_video_convert_caps_remove_format_and_rangify_size_info (GstCaps * caps)
             || gst_caps_features_is_equal (features, features_format_interlaced)
             || gst_caps_features_is_equal (features,
                 features_format_interlaced_sysmem))) {
-      gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-      /* if pixel aspect ratio, make a range of it */
-      if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-        gst_structure_set (structure, "pixel-aspect-ratio",
-            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+      if (klass->scales) {
+        gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+        /* if pixel aspect ratio, make a range of it */
+        if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+          gst_structure_set (structure, "pixel-aspect-ratio",
+              GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
+        }
       }
-      gst_structure_remove_fields (structure, "format", "colorimetry",
-          "chroma-site", NULL);
+
+      if (klass->converts) {
+        gst_structure_remove_fields (structure, "format", "colorimetry",
+            "chroma-site", NULL);
+      }
     }
     gst_caps_append_structure_full (ret, structure,
         gst_caps_features_copy (features));
@@ -617,6 +628,7 @@ static GstCaps *
 gst_video_convert_scale_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
+  GstVideoConvertScale *self = GST_VIDEO_CONVERT_SCALE (trans);
   gint i;
   GstCaps *ret;
 
@@ -624,7 +636,7 @@ gst_video_convert_scale_transform_caps (GstBaseTransform * trans,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  ret = gst_video_convert_caps_remove_format_and_rangify_size_info (caps);
+  ret = gst_video_convert_caps_remove_format_and_rangify_size_info (self, caps);
   if (filter) {
     GstCaps *intersection;
 

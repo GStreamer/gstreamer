@@ -38,6 +38,8 @@ struct _GstVideoConvertScaleClass
   GstVideoFilterClass parent;
 
   gboolean any_memory;
+  gboolean scales;
+  gboolean converts;
 };
 
 /**
