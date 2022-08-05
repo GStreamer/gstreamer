@@ -115,7 +115,7 @@ struct _GstD3D11DevicePrivate
   IDXGIFactory1 *factory;
   GArray *format_table;
 
-  GRecMutex extern_lock;
+  CRITICAL_SECTION extern_lock;
   GMutex resource_lock;
 
   LARGE_INTEGER frequency;
@@ -420,7 +420,7 @@ gst_d3d11_device_init (GstD3D11Device * self)
   priv->format_table = g_array_sized_new (FALSE, FALSE,
       sizeof (GstD3D11Format), GST_D3D11_N_FORMATS);
 
-  g_rec_mutex_init (&priv->extern_lock);
+  InitializeCriticalSection (&priv->extern_lock);
   g_mutex_init (&priv->resource_lock);
 
   self->priv = priv;
@@ -752,7 +752,7 @@ gst_d3d11_device_finalize (GObject * object)
   GST_LOG_OBJECT (self, "finalize");
 
   g_array_unref (priv->format_table);
-  g_rec_mutex_clear (&priv->extern_lock);
+  DeleteCriticalSection (&priv->extern_lock);
   g_mutex_clear (&priv->resource_lock);
   g_free (priv->description);
 
@@ -1334,7 +1334,7 @@ gst_d3d11_device_lock (GstD3D11Device * device)
   priv = device->priv;
 
   GST_TRACE_OBJECT (device, "device locking");
-  g_rec_mutex_lock (&priv->extern_lock);
+  EnterCriticalSection (&priv->extern_lock);
   GST_TRACE_OBJECT (device, "device locked");
 }
 
@@ -1356,7 +1356,7 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
 
   priv = device->priv;
 
-  g_rec_mutex_unlock (&priv->extern_lock);
+  LeaveCriticalSection (&priv->extern_lock);
   GST_TRACE_OBJECT (device, "device unlocked");
 }
 
