@@ -263,7 +263,6 @@ gst_d3d11_window_dispose (GObject * object)
 
   gst_clear_buffer (&self->cached_buffer);
   gst_clear_object (&self->device);
-  gst_clear_object (&self->allocator);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -316,7 +315,7 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
     size *= 4;
   }
 
-  mem = gst_d3d11_allocator_alloc_wrapped (self->allocator,
+  mem = gst_d3d11_allocator_alloc_wrapped (nullptr,
       self->device, backbuffer.Get (), size, nullptr, nullptr);
   if (!mem) {
     GST_ERROR_OBJECT (self, "Couldn't allocate wrapped memory");
@@ -547,18 +546,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   GstStructure *s;
   const gchar *cll_str = nullptr;
   const gchar *mdcv_str = nullptr;
-
-  if (!window->allocator) {
-    window->allocator =
-        (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
-    if (!window->allocator) {
-      GST_ERROR_OBJECT (window, "Allocator is unavailable");
-      if (config)
-        gst_structure_free (config);
-
-      return FALSE;
-    }
-  }
 
   /* Step 1: Clear old resources and objects */
   gst_clear_buffer (&window->cached_buffer);

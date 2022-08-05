@@ -87,18 +87,6 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps,
     GstStructure * config, GError ** error)
 {
-  if (!window->allocator) {
-    window->allocator =
-        (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
-    if (!window->allocator) {
-      GST_ERROR_OBJECT (window, "Allocator is unavailable");
-      if (config)
-        gst_structure_free (config);
-
-      return FALSE;
-    }
-  }
-
   gst_clear_object (&window->compositor);
   gst_clear_object (&window->converter);
 
@@ -257,7 +245,7 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     }
   }
 
-  mem = gst_d3d11_allocator_alloc_wrapped (window->allocator,
+  mem = gst_d3d11_allocator_alloc_wrapped (nullptr,
       device, texture.Get (), desc.Width * desc.Height * 4, nullptr, nullptr);
   if (!mem) {
     GST_ERROR_OBJECT (window, "Couldn't allocate memory");

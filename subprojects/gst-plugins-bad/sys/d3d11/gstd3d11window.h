@@ -78,7 +78,6 @@ struct _GstD3D11Window
   /*< protected >*/
   gboolean initialized;
   GstD3D11Device *device;
-  GstD3D11Allocator *allocator;
   guintptr external_handle;
 
   /* properties */

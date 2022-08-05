@@ -132,7 +132,6 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
   }
 
   if (request->Info.FourCC == MFX_FOURCC_P8) {
-    GstD3D11Allocator *d3d11_alloc = nullptr;
     D3D11_BUFFER_DESC desc;
     GstVideoInfo info;
     GstMemory *mem;
@@ -141,23 +140,13 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
     guint size;
 
-    d3d11_alloc =
-        (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
-    if (!d3d11_alloc) {
-      GST_ERROR_OBJECT (self, "D3D11 allocator is unavailable");
-
-      return MFX_ERR_MEMORY_ALLOC;
-    }
-
     memset (&desc, 0, sizeof (D3D11_BUFFER_DESC));
 
     desc.ByteWidth = request->Info.Width * request->Info.Height;
     desc.Usage = D3D11_USAGE_STAGING;
     desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
 
-    mem = gst_d3d11_allocator_alloc_buffer (d3d11_alloc, self->device, &desc);
-    gst_object_unref (d3d11_alloc);
-
+    mem = gst_d3d11_allocator_alloc_buffer (nullptr, self->device, &desc);
     if (!mem) {
       GST_ERROR_OBJECT (self, "Failed to allocate buffer");
       return MFX_ERR_MEMORY_ALLOC;

@@ -44,7 +44,6 @@ typedef struct
   GMainLoop *loop;
   GstElement *pipeline;
   GstD3D11Device *d3d11_device;
-  GstD3D11Allocator *d3d11_allocator;
 
   ID3D11Device *device;
   ID3D11DeviceContext *context;
@@ -404,7 +403,7 @@ handle_window_resize (AppData * app_data)
 
   backbuffer->GetDesc (&desc);
 
-  mem = gst_d3d11_allocator_alloc_wrapped (app_data->d3d11_allocator,
+  mem = gst_d3d11_allocator_alloc_wrapped (nullptr,
       app_data->d3d11_device, backbuffer.Get (),
       /* This might not be correct CPU accessible (staging) texture size
        * but it's fine since we don't use this memory for CPU access */
@@ -546,15 +545,6 @@ main (gint argc, gchar ** argv)
     exit (1);
   }
 
-  /* Gets d3d11 memory allocator which will be used to wrap swapchain
-   * backbuffer */
-  app_data.d3d11_allocator = (GstD3D11Allocator *)
-      gst_allocator_find (GST_D3D11_MEMORY_NAME);
-  if (!app_data.d3d11_allocator) {
-    gst_printerrln ("D3D11 allocator is unavailable");
-    exit (1);
-  }
-
   /* Creates window and swapchain */
   app_data.hwnd = create_window ();
   if (!app_data.hwnd) {
@@ -603,7 +593,6 @@ main (gint argc, gchar ** argv)
   if (app_data.hwnd)
     DestroyWindow (app_data.hwnd);
 
-  gst_clear_object (&app_data.d3d11_allocator);
   gst_clear_object (&app_data.d3d11_device);
   gst_clear_object (&app_data.pipeline);
 

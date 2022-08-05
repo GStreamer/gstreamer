@@ -221,7 +221,6 @@ on_need_data (GstAppSrc * appsrc, guint length, gpointer user_data)
   ComPtr < ID3D11RenderTargetView > rtv;
   FLOAT clear_color[4] = { 1.0, 1.0, 1.0, 1.0 };
   GstMemory *mem;
-  GstD3D11Allocator *allocator;
   GstD3D11Memory *dmem;
   MemoryUserData *memory_data;
   GstBuffer *buffer;
@@ -265,13 +264,6 @@ on_need_data (GstAppSrc * appsrc, guint length, gpointer user_data)
   app_data->context->ClearRenderTargetView (rtv.Get (), clear_color);
   gst_d3d11_device_unlock (app_data->d3d11_device);
 
-  /* Find global default D3D11 allocator */
-  allocator = (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
-  if (!allocator) {
-    gst_printerrln ("D3D11 allocator is unavailable");
-    exit (1);
-  }
-
   /* Demonstrating application-side texture pool.
    * GstD3D11BufferPool can be used instead */
   memory_data = g_new0 (MemoryUserData, 1);
@@ -282,10 +274,9 @@ on_need_data (GstAppSrc * appsrc, guint length, gpointer user_data)
   /* gst_d3d11_allocator_alloc_wrapped() method does not take ownership of
    * ID3D11Texture2D object, but in this example, we pass ownership via
    * user data */
-  mem = gst_d3d11_allocator_alloc_wrapped (allocator, app_data->d3d11_device,
+  mem = gst_d3d11_allocator_alloc_wrapped (nullptr, app_data->d3d11_device,
       texture, app_data->mem_size, memory_data,
       (GDestroyNotify) on_memory_freed);
-  gst_object_unref (allocator);
 
   if (!mem) {
     gst_printerrln ("Couldn't allocate memory");

@@ -218,7 +218,6 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
 {
   GstD3D11Memory *dmem;
   GstD3D11Device *device;
-  GstD3D11Allocator *alloc = NULL;
   GstBuffer *staging_buffer = NULL;
   gint stride[GST_VIDEO_MAX_PLANES] = { 0, };
   gsize offset[GST_VIDEO_MAX_PLANES] = { 0, };
@@ -245,12 +244,6 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
     return NULL;
   }
 
-  alloc = (GstD3D11Allocator *) gst_allocator_find (GST_D3D11_MEMORY_NAME);
-  if (!alloc) {
-    GST_ERROR ("D3D11 allocator is not available");
-    return NULL;
-  }
-
   staging_buffer = gst_buffer_new ();
   for (i = 0; i < gst_buffer_n_memory (buffer); i++) {
     D3D11_TEXTURE2D_DESC staging_desc;
@@ -263,7 +256,7 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
     fill_staging_desc (&desc, &staging_desc);
 
     new_mem = (GstD3D11Memory *)
-        gst_d3d11_allocator_alloc (alloc, mem->device, &staging_desc);
+        gst_d3d11_allocator_alloc (nullptr, mem->device, &staging_desc);
     if (!new_mem) {
       GST_ERROR ("Failed to allocate memory");
       goto error;
@@ -295,14 +288,10 @@ gst_d3d11_allocate_staging_buffer_for (GstBuffer * buffer,
       GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
       offset, stride);
 
-  if (alloc)
-    gst_object_unref (alloc);
-
   return staging_buffer;
 
 error:
   gst_clear_buffer (&staging_buffer);
-  gst_clear_object (&alloc);
 
   return NULL;
 }
