@@ -490,6 +490,7 @@ static gboolean have_factory (GstDecodebin3 * dbin, GstCaps * caps,
     GstElementFactoryListType ftype);
 #endif
 
+static void reset_input (GstDecodebin3 * dbin, DecodebinInput * input);
 static void free_input (GstDecodebin3 * dbin, DecodebinInput * input);
 static DecodebinInput *create_new_input (GstDecodebin3 * dbin, gboolean main);
 static gboolean set_input_group_id (DecodebinInput * input, guint32 * group_id);
@@ -637,10 +638,63 @@ gst_decodebin3_init (GstDecodebin3 * dbin)
 }
 
 static void
+gst_decodebin3_reset (GstDecodebin3 * dbin)
+{
+  GList *tmp;
+
+  GST_DEBUG_OBJECT (dbin, "Resetting");
+
+  /* Free output streams */
+  for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
+    DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
+    free_output_stream (dbin, output);
+  }
+  g_list_free (dbin->output_streams);
+  dbin->output_streams = NULL;
+
+  /* Free multiqueue slots */
+  for (tmp = dbin->slots; tmp; tmp = tmp->next) {
+    MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
+    free_multiqueue_slot (dbin, slot);
+  }
+  g_list_free (dbin->slots);
+  dbin->slots = NULL;
+  dbin->current_group_id = GST_GROUP_ID_INVALID;
+
+  /* Reset the inputs */
+  reset_input (dbin, dbin->main_input);
+  for (tmp = dbin->other_inputs; tmp; tmp = tmp->next) {
+    reset_input (dbin, tmp->data);
+  }
+
+  /* Reset multiqueue to default interleave */
+  g_object_set (dbin->multiqueue, "min-interleave-time",
+      dbin->default_mq_min_interleave, NULL);
+  dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
+  dbin->upstream_selected = FALSE;
+
+  g_list_free_full (dbin->requested_selection, g_free);
+  dbin->requested_selection = NULL;
+
+  g_list_free_full (dbin->active_selection, g_free);
+  dbin->active_selection = NULL;
+
+  g_list_free (dbin->to_activate);
+  dbin->to_activate = NULL;
+
+  g_list_free (dbin->pending_select_streams);
+  dbin->pending_select_streams = NULL;
+
+  dbin->selection_updated = FALSE;
+}
+
+static void
 gst_decodebin3_dispose (GObject * object)
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) object;
   GList *walk, *next;
+
+  gst_decodebin3_reset (dbin);
 
   if (dbin->factories) {
     gst_plugin_feature_list_free (dbin->factories);
@@ -654,17 +708,8 @@ gst_decodebin3_dispose (GObject * object)
     g_list_free (dbin->decodable_factories);
     dbin->decodable_factories = NULL;
   }
-  g_list_free_full (dbin->requested_selection, g_free);
-  g_list_free_full (dbin->active_selection, g_free);
-  g_list_free (dbin->to_activate);
-  g_list_free (dbin->pending_select_streams);
 
-  dbin->requested_selection = NULL;
-  dbin->active_selection = NULL;
-  dbin->to_activate = NULL;
-  dbin->pending_select_streams = NULL;
-
-  g_clear_object (&dbin->collection);
+  gst_clear_object (&dbin->collection);
 
   if (dbin->main_input) {
     free_input (dbin, dbin->main_input);
@@ -1085,19 +1130,19 @@ beach:
 
 /* Call with INPUT LOCK */
 static void
-free_input (GstDecodebin3 * dbin, DecodebinInput * input)
+reset_input (GstDecodebin3 * dbin, DecodebinInput * input)
 {
-  GST_DEBUG ("Freeing input %p", input);
+  GST_LOG_OBJECT (dbin, "Resetting input %p", input);
 
   gst_ghost_pad_set_target (GST_GHOST_PAD (input->ghost_sink), NULL);
-  gst_element_remove_pad (GST_ELEMENT (dbin), input->ghost_sink);
+
   if (input->parsebin) {
     g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
     g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
     g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
-    gst_object_unref (input->parsebin);
-    gst_object_unref (input->parsebin_sink);
+    gst_clear_object (&input->parsebin);
+    gst_clear_object (&input->parsebin_sink);
   }
   if (input->identity) {
     GstPad *idpad = gst_element_get_static_pad (input->identity, "src");
@@ -1105,10 +1150,23 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
     gst_object_unref (idpad);
     remove_input_stream (dbin, stream);
     gst_element_set_state (input->identity, GST_STATE_NULL);
-    gst_object_unref (input->identity);
+    gst_clear_object (&input->identity);
   }
   if (input->collection)
-    gst_object_unref (input->collection);
+    gst_clear_object (&input->collection);
+
+  input->group_id = GST_GROUP_ID_INVALID;
+}
+
+/* Call with INPUT LOCK */
+static void
+free_input (GstDecodebin3 * dbin, DecodebinInput * input)
+{
+  reset_input (dbin, input);
+
+  GST_LOG_OBJECT (dbin, "Freeing input %p", input);
+
+  gst_element_remove_pad (GST_ELEMENT (dbin), input->ghost_sink);
   g_free (input);
 }
 
@@ -3417,35 +3475,7 @@ gst_decodebin3_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-    {
-      GList *tmp;
-
-      /* Free output streams */
-      for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
-        DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
-        free_output_stream (dbin, output);
-      }
-      g_list_free (dbin->output_streams);
-      dbin->output_streams = NULL;
-      /* Free multiqueue slots */
-      for (tmp = dbin->slots; tmp; tmp = tmp->next) {
-        MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
-        free_multiqueue_slot (dbin, slot);
-      }
-      g_list_free (dbin->slots);
-      dbin->slots = NULL;
-      dbin->current_group_id = GST_GROUP_ID_INVALID;
-      /* Free inputs */
-      /* Reset the main input group id since it will get a new id on a new stream */
-      dbin->main_input->group_id = GST_GROUP_ID_INVALID;
-      /* Reset multiqueue to default interleave */
-      g_object_set (dbin->multiqueue, "min-interleave-time",
-          dbin->default_mq_min_interleave, NULL);
-      dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
-      dbin->upstream_selected = FALSE;
-      g_list_free_full (dbin->active_selection, g_free);
-      dbin->active_selection = NULL;
-    }
+      gst_decodebin3_reset (dbin);
       break;
     default:
       break;
