@@ -2106,10 +2106,14 @@ is_selection_done (GstDecodebin3 * dbin)
   for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
     DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
     if (output->slot) {
-      GST_DEBUG_OBJECT (dbin, "Adding stream %s",
-          gst_stream_get_stream_id (output->slot->active_stream));
-
-      gst_message_streams_selected_add (msg, output->slot->active_stream);
+      const gchar *output_streamid =
+          gst_stream_get_stream_id (output->slot->active_stream);
+      GST_DEBUG_OBJECT (dbin, "Adding stream %s", output_streamid);
+      if (stream_in_list (dbin->requested_selection, output_streamid))
+        gst_message_streams_selected_add (msg, output->slot->active_stream);
+      else
+        GST_WARNING_OBJECT (dbin,
+            "Output slot still active for old selection ?");
     } else
       GST_WARNING_OBJECT (dbin, "No valid slot for output %p", output);
   }
