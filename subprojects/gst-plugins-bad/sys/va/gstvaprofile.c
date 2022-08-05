@@ -48,9 +48,8 @@ static const struct ProfileMap
       "mpegversion = (int) 4, profile = (string) advanced-simple"),
   P (MPEG4, Main, "main", "video/mpeg",
       "mpegversion = (int) 4, profile = (string) main, "),
-  P (H264, Main, "main", "video/x-h264", "profile = (string) { main, baseline }"),
-  P (H264, High, "high", "video/x-h264",
-      "profile = (string) { high, progressive-high, constrained-high }"),
+  P (H264, Main, "main", "video/x-h264", "profile = (string) main"),
+  P (H264, High, "high", "video/x-h264", "profile = (string) high"),
   P (VC1, Simple, "simple", "video/x-wmv",
       "wmvversion = (int) 3, profile = (string) simple"),
   P (VC1, Main, "main", "video/x-wmv",
@@ -63,7 +62,7 @@ static const struct ProfileMap
       "profile = (string) baseline"),
   P (JPEG, Baseline, "", "image/jpeg", "sof-marker = (int) 0"),
   P (H264, ConstrainedBaseline, "constrained-baseline", "video/x-h264",
-      "profile = (string) { constrained-baseline, baseline }"),
+      "profile = (string) constrained-baseline"),
   P (VP8, Version0_3, "", "video/x-vp8", NULL),
   /* Unsupported profiles by current GstH264Decoder */
   /* P (H264, MultiviewHigh, "video/x-h264", */

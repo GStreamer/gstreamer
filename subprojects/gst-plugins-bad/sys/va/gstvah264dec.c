@@ -758,13 +758,28 @@ gst_va_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
   return GST_FLOW_OK;
 }
 
+static inline void
+_append_str (GValue * list, const gchar * str)
+{
+  GValue v = G_VALUE_INIT;
+
+  g_value_init (&v, G_TYPE_STRING);
+  g_value_set_string (&v, str);
+  gst_value_list_append_value (list, &v);
+  g_value_unset (&v);
+}
+
 static GstCaps *
 _complete_sink_caps (GstCaps * sinkcaps)
 {
   GstCaps *caps = gst_caps_copy (sinkcaps);
   GValue val = G_VALUE_INIT;
+  const GValue *profiles;
+  GstStructure *st;
   const gchar *streamformat[] = { "avc", "avc3", "byte-stream" };
-  gint i;
+  const gchar *high_synthetic[] = { "progressive-high", "constrained-high" };
+  guint i, j, siz;
+  gboolean baseline = FALSE;
 
   g_value_init (&val, G_TYPE_STRING);
   g_value_set_string (&val, "au");
@@ -772,15 +787,33 @@ _complete_sink_caps (GstCaps * sinkcaps)
   g_value_unset (&val);
 
   gst_value_list_init (&val, G_N_ELEMENTS (streamformat));
-  for (i = 0; i < G_N_ELEMENTS (streamformat); i++) {
-    GValue v = G_VALUE_INIT;
-
-    g_value_init (&v, G_TYPE_STRING);
-    g_value_set_string (&v, streamformat[i]);
-    gst_value_list_append_value (&val, &v);
-    g_value_unset (&v);
-  }
+  for (i = 0; i < G_N_ELEMENTS (streamformat); i++)
+    _append_str (&val, streamformat[i]);
   gst_caps_set_value (caps, "stream-format", &val);
+  g_value_unset (&val);
+
+  /* add synthetic profiles */
+  st = gst_caps_get_structure (caps, 0);
+  profiles = gst_structure_get_value (st, "profile");
+  siz = gst_value_list_get_size (profiles);
+  gst_value_list_init (&val, siz);
+  for (i = 0; i < siz; i++) {
+    const gchar *profile =
+        g_value_get_string (gst_value_list_get_value (profiles, i));
+
+    _append_str (&val, profile);
+
+    if (g_strcmp0 (profile, "high") == 0) {
+      for (j = 0; j < G_N_ELEMENTS (high_synthetic); j++)
+        _append_str (&val, high_synthetic[j]);
+    }
+    if (!baseline && ((g_strcmp0 (profile, "main") == 0)
+            || g_strcmp0 (profile, "constrained-baseline") == 0)) {
+      _append_str (&val, "baseline");
+      baseline = TRUE;
+    }
+  }
+  gst_caps_set_value (caps, "profile", &val);
   g_value_unset (&val);
 
   return caps;
