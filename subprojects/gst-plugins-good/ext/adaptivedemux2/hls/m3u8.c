@@ -1342,6 +1342,7 @@ gst_hls_media_playlist_recalculate_stream_time (GstHLSMediaPlaylist * playlist,
 
   GST_DEBUG ("Re-calculating stream times from segment #%d %" GST_TIME_FORMAT,
       idx, GST_TIME_ARGS (anchor->stream_time));
+  gst_m3u8_media_segment_fill_partial_stream_times (anchor);
 
   /* Forward */
   prev = anchor;
