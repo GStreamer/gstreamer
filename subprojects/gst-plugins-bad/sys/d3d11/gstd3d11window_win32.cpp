@@ -60,8 +60,8 @@ struct _GstD3D11WindowWin32
 {
   GstD3D11Window parent;
 
-  GMutex lock;
-  GCond cond;
+  SRWLOCK lock;
+  CONDITION_VARIABLE cond;
 
   GMainContext *main_context;
   GMainLoop *loop;
@@ -101,7 +101,6 @@ G_DEFINE_TYPE (GstD3D11WindowWin32, gst_d3d11_window_win32,
 
 static void gst_d3d11_window_win32_constructed (GObject * object);
 static void gst_d3d11_window_win32_dispose (GObject * object);
-static void gst_d3d11_window_win32_finalize (GObject * object);
 
 static void gst_d3d11_window_win32_show (GstD3D11Window * window);
 static void gst_d3d11_window_win32_update_swap_chain (GstD3D11Window * window);
@@ -140,7 +139,6 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
 
   gobject_class->constructed = gst_d3d11_window_win32_constructed;
   gobject_class->dispose = gst_d3d11_window_win32_dispose;
-  gobject_class->finalize = gst_d3d11_window_win32_finalize;
 
   window_class->show = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_show);
   window_class->update_swap_chain =
@@ -163,9 +161,6 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
 static void
 gst_d3d11_window_win32_init (GstD3D11WindowWin32 * self)
 {
-  g_mutex_init (&self->lock);
-  g_cond_init (&self->cond);
-
   self->main_context = g_main_context_new ();
 }
 
@@ -180,13 +175,13 @@ gst_d3d11_window_win32_constructed (GObject * object)
     goto done;
   }
 
-  g_mutex_lock (&self->lock);
+  AcquireSRWLockExclusive (&self->lock);
   self->loop = g_main_loop_new (self->main_context, FALSE);
   self->thread = g_thread_new ("GstD3D11WindowWin32",
       (GThreadFunc) gst_d3d11_window_win32_thread_func, self);
   while (!g_main_loop_is_running (self->loop))
-    g_cond_wait (&self->cond, &self->lock);
-  g_mutex_unlock (&self->lock);
+    SleepConditionVariableSRW (&self->cond, &self->lock, INFINITE, 0);
+  ReleaseSRWLockExclusive (&self->lock);
 
 done:
   G_OBJECT_CLASS (parent_class)->constructed (object);
@@ -299,17 +294,6 @@ gst_d3d11_window_win32_set_title (GstD3D11Window * window, const gchar * title)
   }
 }
 
-static void
-gst_d3d11_window_win32_finalize (GObject * object)
-{
-  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (object);
-
-  g_mutex_clear (&self->lock);
-  g_cond_clear (&self->cond);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
-
 static gboolean
 running_cb (gpointer user_data)
 {
@@ -317,9 +301,9 @@ running_cb (gpointer user_data)
 
   GST_TRACE_OBJECT (self, "Main loop running now");
 
-  g_mutex_lock (&self->lock);
-  g_cond_signal (&self->cond);
-  g_mutex_unlock (&self->lock);
+  AcquireSRWLockExclusive (&self->lock);
+  WakeConditionVariable (&self->cond);
+  ReleaseSRWLockExclusive (&self->lock);
 
   return G_SOURCE_REMOVE;
 }
@@ -834,7 +818,7 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       MoveWindow (self->internal_hwnd, 0, 0, LOWORD (lParam), HIWORD (lParam),
           FALSE);
     } else if (uMsg == WM_CLOSE || uMsg == WM_DESTROY) {
-      g_mutex_lock (&self->lock);
+      GstD3D11SRWLockGuard lk (&self->lock);
       GST_WARNING_OBJECT (self, "external window is closing");
       gst_d3d11_window_win32_release_external_handle (self->external_hwnd);
       self->external_hwnd = NULL;
@@ -846,7 +830,6 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       self->internal_hwnd_thread = NULL;
 
       self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_CLOSED;
-      g_mutex_unlock (&self->lock);
     } else {
       gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
           lParam);

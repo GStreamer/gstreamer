@@ -85,7 +85,7 @@ struct _GstD3D11BaseConvert
   /* method previously selected and used for negotiation */
   GstVideoOrientationMethod active_method;
 
-  GMutex lock;
+  SRWLOCK lock;
 };
 
 /**
@@ -102,7 +102,6 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstD3D11BaseConvert, gst_d3d11_base_convert,
         "d3d11convert"));
 
 static void gst_d3d11_base_convert_dispose (GObject * object);
-static void gst_d3d11_base_convert_finalize (GObject * object);
 static GstCaps *gst_d3d11_base_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_d3d11_base_convert_fixate_caps (GstBaseTransform *
@@ -259,7 +258,6 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
   GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_base_convert_dispose;
-  gobject_class->finalize = gst_d3d11_base_convert_finalize;
 
   caps = gst_d3d11_get_updated_template_caps (&sink_template_caps);
   gst_element_class_add_pad_template (element_class,
@@ -300,8 +298,6 @@ gst_d3d11_base_convert_init (GstD3D11BaseConvert * self)
   self->border_color = DEFAULT_BORDER_COLOR;
   self->gamma_mode = DEFAULT_GAMMA_MODE;
   self->primaries_mode = DEFAULT_PRIMARIES_MODE;
-
-  g_mutex_init (&self->lock);
 }
 
 static void
@@ -309,21 +305,9 @@ gst_d3d11_base_convert_dispose (GObject * object)
 {
   GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (object);
 
-  g_mutex_lock (&self->lock);
   gst_clear_object (&self->converter);
-  g_mutex_unlock (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
-gst_d3d11_base_convert_finalize (GObject * object)
-{
-  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (object);
-
-  g_mutex_clear (&self->lock);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -687,7 +671,7 @@ gst_d3d11_base_convert_fixate_size (GstBaseTransform * base,
    * assume that missing PAR on the sinkpad means 1/1 and
    * missing PAR on the srcpad means undefined
    */
-  g_mutex_lock (&self->lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   switch (self->selected_method) {
     case GST_VIDEO_ORIENTATION_90R:
     case GST_VIDEO_ORIENTATION_90L:
@@ -1140,7 +1124,6 @@ done:
     g_value_unset (&fpar);
   if (to_par == &tpar)
     g_value_unset (&tpar);
-  g_mutex_unlock (&self->lock);
 
   return othercaps;
 }
@@ -1465,7 +1448,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   gint in_width, in_height, in_par_n, in_par_d;
   GstStructure *config;
 
-  g_mutex_lock (&self->lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   self->active_method = self->selected_method;
 
   if (self->active_method != GST_VIDEO_ORIENTATION_IDENTITY)
@@ -1473,7 +1456,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   if (!need_flip && gst_caps_is_equal (incaps, outcaps)) {
     self->same_caps = TRUE;
-    g_mutex_unlock (&self->lock);
     return TRUE;
   } else {
     self->same_caps = FALSE;
@@ -1544,7 +1526,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   /* if present, these must match */
   if (in_info->interlace_mode != out_info->interlace_mode) {
     GST_ERROR_OBJECT (self, "input and output formats do not match");
-    g_mutex_unlock (&self->lock);
     return FALSE;
   }
 
@@ -1553,7 +1534,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       self->borders_h == 0 && !need_flip &&
       !gst_d3d11_base_convert_needs_color_convert (self, in_info, out_info)) {
     self->same_caps = TRUE;
-    g_mutex_unlock (&self->lock);
     return TRUE;
   }
 
@@ -1567,7 +1547,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       config);
   if (!self->converter) {
     GST_ERROR_OBJECT (self, "Couldn't create converter");
-    g_mutex_unlock (&self->lock);
     return FALSE;
   }
 
@@ -1613,8 +1592,6 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     g_object_set (self->converter, "fill-border", TRUE, "border-color",
         self->border_color, nullptr);
   }
-
-  g_mutex_unlock (&self->lock);
 
   return TRUE;
 }
@@ -1923,11 +1900,10 @@ static void
 gst_d3d11_base_convert_set_border_color (GstD3D11BaseConvert * self,
     guint64 border_color)
 {
-  g_mutex_lock (&self->lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   self->border_color = border_color;
   if (self->converter)
     g_object_set (self->converter, "border-color", self->border_color, nullptr);
-  g_mutex_unlock (&self->lock);
 }
 
 static void
@@ -1939,7 +1915,7 @@ gst_d3d11_base_convert_set_orientation (GstD3D11BaseConvert * self,
     return;
   }
 
-  g_mutex_lock (&self->lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   if (from_tag)
     self->tag_method = method;
   else
@@ -1957,28 +1933,25 @@ gst_d3d11_base_convert_set_orientation (GstD3D11BaseConvert * self,
 
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
   }
-
-  g_mutex_unlock (&self->lock);
 }
 
 static void
 gst_d3d11_base_convert_set_gamma_mode (GstD3D11BaseConvert * self,
     GstVideoGammaMode mode)
 {
-  g_mutex_lock (&self->lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   if (self->gamma_mode != mode) {
     GST_DEBUG_OBJECT (self, "Gamma mode %d -> %d", self->gamma_mode, mode);
     self->gamma_mode = mode;
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
   }
-  g_mutex_unlock (&self->lock);
 }
 
 static void
 gst_d3d11_base_convert_set_primaries_mode (GstD3D11BaseConvert * self,
     GstVideoPrimariesMode mode)
 {
-  g_mutex_lock (&self->lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   if (self->primaries_mode != mode) {
     gboolean prev_enabled = TRUE;
     gboolean new_enabled = TRUE;
@@ -1997,7 +1970,6 @@ gst_d3d11_base_convert_set_primaries_mode (GstD3D11BaseConvert * self,
     if (prev_enabled != new_enabled)
       gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
   }
-  g_mutex_unlock (&self->lock);
 }
 
 /**

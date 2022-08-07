@@ -159,7 +159,7 @@ struct _GstD3D11Decoder
   GstVideoCodecState *output_state;
 
   /* Protect internal pool */
-  GMutex internal_pool_lock;
+  SRWLOCK internal_pool_lock;
 
   GstBufferPool *internal_pool;
   /* Internal pool params */
@@ -221,7 +221,6 @@ gst_d3d11_decoder_class_init (GstD3D11DecoderClass * klass)
 static void
 gst_d3d11_decoder_init (GstD3D11Decoder * self)
 {
-  g_mutex_init (&self->internal_pool_lock);
 }
 
 static void
@@ -292,12 +291,11 @@ gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
 static void
 gst_d3d11_decoder_clear_resource (GstD3D11Decoder * self)
 {
-  g_mutex_lock (&self->internal_pool_lock);
+  GstD3D11SRWLockGuard lk (&self->internal_pool_lock);
   if (self->internal_pool) {
     gst_buffer_pool_set_active (self->internal_pool, FALSE);
     gst_clear_object (&self->internal_pool);
   }
-  g_mutex_unlock (&self->internal_pool_lock);
 
   GST_D3D11_CLEAR_COM (self->decoder_handle);
   GST_D3D11_CLEAR_COM (self->staging);
@@ -339,15 +337,13 @@ gst_d3d11_decoder_dispose (GObject * obj)
 static void
 gst_d3d11_decoder_finalize (GObject * obj)
 {
+#if HAVE_WINMM
   GstD3D11Decoder *self = GST_D3D11_DECODER (obj);
 
-#if HAVE_WINMM
   /* Restore clock precision */
   if (self->timer_resolution)
     timeEndPeriod (self->timer_resolution);
 #endif
-
-  g_mutex_clear (&self->internal_pool_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -447,12 +443,11 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
   GstVideoInfo *info = &self->info;
   guint pool_size;
 
-  g_mutex_lock (&self->internal_pool_lock);
+  GstD3D11SRWLockGuard lk (&self->internal_pool_lock);
   if (self->internal_pool) {
     gst_buffer_pool_set_active (self->internal_pool, FALSE);
     gst_clear_object (&self->internal_pool);
   }
-  g_mutex_unlock (&self->internal_pool_lock);
 
   if (!self->use_array_of_texture) {
     alloc_flags = GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY;
@@ -516,9 +511,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
     goto error;
   }
 
-  g_mutex_lock (&self->internal_pool_lock);
   self->internal_pool = pool;
-  g_mutex_unlock (&self->internal_pool_lock);
 
   return TRUE;
 
@@ -1860,10 +1853,9 @@ gst_d3d11_decoder_set_flushing (GstD3D11Decoder * decoder,
 {
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  g_mutex_lock (&decoder->internal_pool_lock);
+  GstD3D11SRWLockGuard lk (&decoder->internal_pool_lock);
   if (decoder->internal_pool)
     gst_buffer_pool_set_flushing (decoder->internal_pool, flushing);
-  g_mutex_unlock (&decoder->internal_pool_lock);
 
   return TRUE;
 }

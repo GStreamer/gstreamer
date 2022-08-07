@@ -114,7 +114,7 @@ struct _GstD3D11DevicePrivate
   GArray *format_table;
 
   CRITICAL_SECTION extern_lock;
-  GMutex resource_lock;
+  SRWLOCK resource_lock;
 
   LARGE_INTEGER frequency;
 
@@ -411,7 +411,6 @@ gst_d3d11_device_init (GstD3D11Device * self)
       sizeof (GstD3D11Format), GST_D3D11_N_FORMATS);
 
   InitializeCriticalSection (&priv->extern_lock);
-  g_mutex_init (&priv->resource_lock);
 
   self->priv = priv;
 }
@@ -740,7 +739,6 @@ gst_d3d11_device_finalize (GObject * object)
 
   g_array_unref (priv->format_table);
   DeleteCriticalSection (&priv->extern_lock);
-  g_mutex_clear (&priv->resource_lock);
   g_free (priv->description);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1253,7 +1251,7 @@ gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   priv = device->priv;
-  g_mutex_lock (&priv->resource_lock);
+  GstD3D11SRWLockGuard lk (&priv->resource_lock);
   if (!priv->video_device) {
     HRESULT hr;
     ID3D11VideoDevice *video_device = NULL;
@@ -1262,7 +1260,6 @@ gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
     if (gst_d3d11_result (hr, device))
       priv->video_device = video_device;
   }
-  g_mutex_unlock (&priv->resource_lock);
 
   return priv->video_device;
 }
@@ -1287,7 +1284,7 @@ gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   priv = device->priv;
-  g_mutex_lock (&priv->resource_lock);
+  GstD3D11SRWLockGuard lk (&priv->resource_lock);
   if (!priv->video_context) {
     HRESULT hr;
     ID3D11VideoContext *video_context = NULL;
@@ -1296,7 +1293,6 @@ gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
     if (gst_d3d11_result (hr, device))
       priv->video_context = video_context;
   }
-  g_mutex_unlock (&priv->resource_lock);
 
   return priv->video_context;
 }

@@ -626,7 +626,7 @@ struct _GstD3D11ConverterPrivate
 
   GstVideoOrientationMethod video_direction;
 
-  GMutex prop_lock;
+  SRWLOCK prop_lock;
 
   /* properties */
   gint src_x;
@@ -762,7 +762,6 @@ gst_d3d11_converter_init (GstD3D11Converter * self)
 {
   self->priv = (GstD3D11ConverterPrivate *)
       gst_d3d11_converter_get_instance_private (self);
-  g_mutex_init (&self->priv->prop_lock);
 }
 
 static void
@@ -812,8 +811,6 @@ gst_d3d11_converter_finalize (GObject * object)
   g_free (priv->out_mdcv_str);
   g_free (priv->in_cll_str);
   g_free (priv->out_cll_str);
-
-  g_mutex_clear (&priv->prop_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -867,7 +864,7 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
   GstD3D11Converter *self = GST_D3D11_CONVERTER (object);
   GstD3D11ConverterPrivate *priv = self->priv;
 
-  g_mutex_lock (&priv->prop_lock);
+  GstD3D11SRWLockGuard (&priv->prop_lock);
   switch (prop_id) {
     case PROP_SRC_X:
       update_src_rect (self, &priv->src_x, value);
@@ -974,7 +971,6 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  g_mutex_unlock (&priv->prop_lock);
 }
 
 static void
@@ -984,7 +980,7 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
   GstD3D11Converter *self = GST_D3D11_CONVERTER (object);
   GstD3D11ConverterPrivate *priv = self->priv;
 
-  g_mutex_lock (&priv->prop_lock);
+  GstD3D11SRWLockGuard (&priv->prop_lock);
   switch (prop_id) {
     case PROP_SRC_X:
       g_value_set_int (value, priv->src_x);
@@ -1056,7 +1052,6 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-  g_mutex_unlock (&priv->prop_lock);
 }
 
 static gboolean
@@ -3096,7 +3091,6 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   UINT offsets = 0;
   UINT vertex_stride = sizeof (VertexData);
   ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { nullptr, };
-  gboolean ret = TRUE;
 
   priv = self->priv;
   cinfo = &priv->convert_info;
@@ -3107,11 +3101,9 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   resource.As (&texture);
   texture->GetDesc (&desc);
 
-  g_mutex_lock (&priv->prop_lock);
   if (priv->update_dest_rect && !gst_d3d11_converter_update_dest_rect (self)) {
     GST_ERROR_OBJECT (self, "Failed to update dest rect");
-    ret = FALSE;
-    goto out;
+    return FALSE;
   }
 
   if (priv->update_src_rect ||
@@ -3125,8 +3117,7 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
 
     if (!gst_d3d11_converter_update_src_rect (self)) {
       GST_ERROR_OBJECT (self, "Cannot update src rect");
-      ret = FALSE;
-      goto out;
+      return FALSE;
     }
   }
 
@@ -3140,8 +3131,7 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
     if (!gst_d3d11_result (hr, self->device)) {
       GST_ERROR_OBJECT (self,
           "Couldn't map constant buffer, hr: 0x%x", (guint) hr);
-      ret = FALSE;
-      goto out;
+      return FALSE;
     }
 
     const_buffer = (PSConstBuffer *) map.pData;
@@ -3197,10 +3187,7 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   context->PSSetShaderResources (0, 4, clear_view);
   context->OMSetRenderTargets (0, nullptr, nullptr);
 
-out:
-  g_mutex_unlock (&priv->prop_lock);
-
-  return ret;
+  return TRUE;
 }
 
 static gboolean
@@ -3652,7 +3639,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
     return FALSE;
   }
 
-  g_mutex_lock (&priv->prop_lock);
+  GstD3D11SRWLockGuard (&priv->prop_lock);
   gst_d3d11_converter_update_hdr10_meta (self);
 
   if (priv->blend && priv->blend_desc.RenderTarget[0].BlendEnable) {
@@ -3706,14 +3693,12 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
   if (use_processor) {
     if (!pov) {
       GST_ERROR_OBJECT (self, "POV is unavailable");
-      g_mutex_unlock (&priv->prop_lock);
       goto out;
     }
 
     if (!piv) {
       if (!gst_d3d11_converter_ensure_fallback_inbuf (self, in_buf, in_info)) {
         GST_ERROR_OBJECT (self, "Couldn't copy into fallback texture");
-        g_mutex_unlock (&priv->prop_lock);
         goto out;
       }
 
@@ -3723,7 +3708,6 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
       if (!gst_d3d11_converter_map_buffer (self,
               in_buf, in_info, (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
         GST_ERROR_OBJECT (self, "Couldn't map fallback buffer");
-        g_mutex_unlock (&priv->prop_lock);
         in_buf = nullptr;
         goto out;
       }
@@ -3733,7 +3717,6 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
           priv->video_device, priv->enumerator);
       if (!piv) {
         GST_ERROR_OBJECT (self, "Couldn't get POV from fallback buffer");
-        g_mutex_unlock (&priv->prop_lock);
         goto out;
       }
     }
@@ -3748,13 +3731,11 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
 
     if (priv->update_dest_rect && !gst_d3d11_converter_update_dest_rect (self)) {
       GST_ERROR_OBJECT (self, "Failed to update dest rect");
-      g_mutex_unlock (&priv->prop_lock);
       goto out;
     }
 
     if (priv->update_src_rect && !gst_d3d11_converter_update_src_rect (self)) {
       GST_ERROR_OBJECT (self, "Cannot update src rect");
-      g_mutex_unlock (&priv->prop_lock);
       goto out;
     }
 
@@ -3807,13 +3788,10 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
     GST_TRACE_OBJECT (self, "Converting using processor");
 
     hr = video_ctx->VideoProcessorBlt (proc, pov, 0, 1, &stream);
-    g_mutex_unlock (&priv->prop_lock);
 
-    ret = gst_d3d11_result (hr, self->device);;
+    ret = gst_d3d11_result (hr, self->device);
     goto out;
   }
-
-  g_mutex_unlock (&priv->prop_lock);
 
   if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0) {
     GST_ERROR_OBJECT (self, "Conversion is not supported");
