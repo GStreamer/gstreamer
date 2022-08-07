@@ -1484,6 +1484,8 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
    */
   if (hls_stream->current_segment == NULL) {
     GST_WARNING_OBJECT (stream, "Lost sync");
+    /* Drop the buffer */
+    gst_buffer_unref (buffer);
     return GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC;
   }
 
