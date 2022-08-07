@@ -2493,6 +2493,15 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       hlsdemux_stream->current_segment =
           gst_hls_media_playlist_get_starting_segment
           (hlsdemux_stream->playlist);
+
+      if (hlsdemux_stream->current_segment->partial_only) {
+        /* FIXME: We might find an independent partial segment
+         * that's still old enough (beyond the part_hold_back threshold)
+         * but closer to the live edge than the start of the segment */
+        hlsdemux_stream->in_partial_segments = TRUE;
+        hlsdemux_stream->part_idx = 0;
+      }
+
     } else {
       if (gst_hls_media_playlist_has_lost_sync (hlsdemux_stream->playlist,
               stream->current_position)) {
