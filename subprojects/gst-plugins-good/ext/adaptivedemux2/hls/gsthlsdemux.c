@@ -1303,7 +1303,7 @@ gst_hlsdemux_handle_internal_time (GstHLSDemux * demux,
     g_assert (current_stream_time >= 0);
 
     if (hls_stream->parser_type == GST_HLS_PARSER_ISOBMFF)
-      hls_stream->presentation_offset = internal_time;
+      hls_stream->presentation_offset = internal_time - current_stream_time;
 
     map->stream_time = current_stream_time;
     map->internal_time = internal_time;
