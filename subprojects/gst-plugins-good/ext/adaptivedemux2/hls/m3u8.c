@@ -478,6 +478,12 @@ gst_hls_media_playlist_dump (GstHLSMediaPlaylist * self)
       GST_DEBUG ("    date/time    : %s", datestring);
       g_free (datestring);
     }
+    if (segment->init_file) {
+      GST_DEBUG ("    init file : %s %" G_GUINT64_FORMAT " %" G_GINT64_FORMAT,
+          segment->init_file->uri, segment->init_file->offset,
+          segment->init_file->size);
+    }
+
     GST_DEBUG ("    uri         : %s %" G_GUINT64_FORMAT " %" G_GINT64_FORMAT,
         segment->uri, segment->offset, segment->size);
 
