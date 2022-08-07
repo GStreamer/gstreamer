@@ -295,29 +295,26 @@ gst_d3d11_allocation_params_init (GType type)
 
 /* GstD3D11Memory */
 #define GST_D3D11_MEMORY_GET_LOCK(m) (&(GST_D3D11_MEMORY_CAST(m)->priv->lock))
-#define GST_D3D11_MEMORY_LOCK(m) G_STMT_START { \
-  GST_TRACE("Locking %p from thread %p", (m), g_thread_self()); \
-  g_mutex_lock(GST_D3D11_MEMORY_GET_LOCK(m)); \
-  GST_TRACE("Locked %p from thread %p", (m), g_thread_self()); \
-} G_STMT_END
-
-#define GST_D3D11_MEMORY_UNLOCK(m) G_STMT_START { \
-  GST_TRACE("Unlocking %p from thread %p", (m), g_thread_self()); \
-  g_mutex_unlock(GST_D3D11_MEMORY_GET_LOCK(m)); \
-} G_STMT_END
 
 struct _GstD3D11MemoryPrivate
 {
   ID3D11Texture2D *texture;
   ID3D11Buffer *buffer;
 
-  ID3D11Resource *staging;
+  GstD3D11MemoryNativeType native_type;
 
   D3D11_TEXTURE2D_DESC desc;
   D3D11_BUFFER_DESC buffer_desc;
 
   guint subresource_index;
 
+  /* protected by device lock */
+  ID3D11Resource *staging;
+  D3D11_MAPPED_SUBRESOURCE map;
+  gint cpu_map_count;
+
+  /* protects resource objects */
+  SRWLOCK lock;
   ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
   guint num_shader_resource_views;
 
@@ -329,13 +326,6 @@ struct _GstD3D11MemoryPrivate
 
   ID3D11VideoProcessorInputView *processor_input_view;
   ID3D11VideoProcessorOutputView *processor_output_view;
-
-  D3D11_MAPPED_SUBRESOURCE map;
-
-  GstD3D11MemoryNativeType native_type;
-
-  GMutex lock;
-  gint cpu_map_count;
 
   GDestroyNotify notify;
   gpointer user_data;
@@ -441,10 +431,7 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
   GstD3D11MemoryPrivate *priv = dmem->priv;
   GstMapFlags flags = info->flags;
-  gpointer ret = NULL;
   GstD3D11DeviceLockGuard lk (dmem->device);
-
-  GST_D3D11_MEMORY_LOCK (dmem);
 
   memset (info->user_data, 0, sizeof (info->user_data));
   info->user_data[0] = GUINT_TO_POINTER (dmem->priv->subresource_index);
@@ -453,7 +440,7 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
     if (priv->native_type == GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER) {
       /* FIXME: handle non-staging buffer */
       g_assert (priv->buffer != nullptr);
-      ret = priv->buffer;
+      return priv->buffer;
     } else {
       gst_d3d11_memory_upload (dmem);
       GST_MEMORY_FLAG_UNSET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
@@ -463,8 +450,7 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
             GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
       g_assert (priv->texture != NULL);
-      ret = priv->texture;
-      goto out;
+      return priv->texture;
     }
   }
 
@@ -479,7 +465,7 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
             &priv->desc);
         if (!priv->staging) {
           GST_ERROR_OBJECT (mem->allocator, "Couldn't create staging texture");
-          goto out;
+          return nullptr;
         }
 
         /* first memory, always need download to staging */
@@ -492,7 +478,7 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
     map_type = gst_d3d11_map_flags_to_d3d11 (flags);
     if (!gst_d3d11_memory_map_cpu_access (dmem, map_type)) {
       GST_ERROR_OBJECT (mem->allocator, "Couldn't map staging texture");
-      goto out;
+      return nullptr;
     }
   }
 
@@ -503,12 +489,7 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   GST_MEMORY_FLAG_UNSET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
   priv->cpu_map_count++;
-  ret = dmem->priv->map.pData;
-
-out:
-  GST_D3D11_MEMORY_UNLOCK (dmem);
-
-  return ret;
+  return dmem->priv->map.pData;
 }
 
 /* Must be called with d3d11 device lock */
@@ -529,13 +510,11 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
   GstD3D11MemoryPrivate *priv = dmem->priv;
   GstD3D11DeviceLockGuard lk (dmem->device);
 
-  GST_D3D11_MEMORY_LOCK (dmem);
-
   if ((info->flags & GST_MAP_D3D11) == GST_MAP_D3D11) {
     if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
       GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
-    goto out;
+    return;
   }
 
   if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
@@ -543,12 +522,9 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 
   priv->cpu_map_count--;
   if (priv->cpu_map_count > 0)
-    goto out;
+    return;
 
   gst_d3d11_memory_unmap_cpu_access (dmem);
-
-out:
-  GST_D3D11_MEMORY_UNLOCK (dmem);
 }
 
 static GstMemory *
@@ -567,7 +543,6 @@ gst_d3d11_memory_update_size (GstMemory * mem)
   gint stride[GST_VIDEO_MAX_PLANES];
   gsize size;
   D3D11_TEXTURE2D_DESC *desc = &priv->desc;
-  gboolean ret = FALSE;
 
   if (!priv->staging) {
     priv->staging = gst_d3d11_allocate_staging_texture (dmem->device,
@@ -579,7 +554,6 @@ gst_d3d11_memory_update_size (GstMemory * mem)
   }
 
   GstD3D11DeviceLockGuard lk (dmem->device);
-
   if (!gst_d3d11_memory_map_cpu_access (dmem, D3D11_MAP_READ_WRITE)) {
     GST_ERROR_OBJECT (mem->allocator, "Couldn't map staging texture");
     return FALSE;
@@ -590,16 +564,14 @@ gst_d3d11_memory_update_size (GstMemory * mem)
   if (!gst_d3d11_dxgi_format_get_size (desc->Format, desc->Width, desc->Height,
           priv->map.RowPitch, offset, stride, &size)) {
     GST_ERROR_OBJECT (mem->allocator, "Couldn't calculate memory size");
-    goto out;
+    GST_D3D11_CLEAR_COM (priv->staging);
+    return FALSE;
   }
 
-  mem->maxsize = mem->size = size;
-  ret = TRUE;
-
-out:
   GST_D3D11_CLEAR_COM (priv->staging);
+  mem->maxsize = mem->size = size;
 
-  return ret;
+  return TRUE;
 }
 
 /**
@@ -840,7 +812,6 @@ static gboolean
 gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
 {
   GstD3D11MemoryPrivate *priv = mem->priv;
-  gboolean ret = FALSE;
 
   if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
     return FALSE;
@@ -851,18 +822,11 @@ gst_d3d11_memory_ensure_shader_resource_view (GstD3D11Memory * mem)
     return FALSE;
   }
 
-  GST_D3D11_MEMORY_LOCK (mem);
-  if (priv->num_shader_resource_views) {
-    ret = TRUE;
-    goto done;
-  }
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
+  if (priv->num_shader_resource_views)
+    return TRUE;
 
-  ret = create_shader_resource_views (mem);
-
-done:
-  GST_D3D11_MEMORY_UNLOCK (mem);
-
-  return ret;
+  return create_shader_resource_views (mem);
 }
 
 /**
@@ -978,7 +942,6 @@ static gboolean
 gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem)
 {
   GstD3D11MemoryPrivate *priv = mem->priv;
-  gboolean ret = FALSE;
 
   if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
     return FALSE;
@@ -989,18 +952,11 @@ gst_d3d11_memory_ensure_render_target_view (GstD3D11Memory * mem)
     return FALSE;
   }
 
-  GST_D3D11_MEMORY_LOCK (mem);
-  if (priv->num_render_target_views) {
-    ret = TRUE;
-    goto done;
-  }
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
+  if (priv->num_render_target_views)
+    return TRUE;
 
-  ret = create_render_target_views (mem);
-
-done:
-  GST_D3D11_MEMORY_UNLOCK (mem);
-
-  return ret;
+  return create_render_target_views (mem);
 }
 
 /**
@@ -1063,7 +1019,6 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   GstD3D11Allocator *allocator;
   D3D11_VIDEO_DECODER_OUTPUT_VIEW_DESC desc;
   HRESULT hr;
-  gboolean ret = FALSE;
 
   if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
     return FALSE;
@@ -1076,12 +1031,12 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
     return FALSE;
   }
 
-  GST_D3D11_MEMORY_LOCK (mem);
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
   if (dmem_priv->decoder_output_view) {
     dmem_priv->decoder_output_view->GetDesc (&desc);
     if (IsEqualGUID (desc.DecodeProfile, *decoder_profile) &&
         dmem_priv->decoder_handle == decoder) {
-      goto succeeded;
+      return TRUE;
     } else {
       /* Shouldn't happen, but try again anyway */
       GST_WARNING_OBJECT (allocator,
@@ -1090,9 +1045,6 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
       GST_D3D11_CLEAR_COM (dmem_priv->decoder_handle);
     }
   }
-
-  if (dmem_priv->decoder_output_view)
-    goto succeeded;
 
   desc.DecodeProfile = *decoder_profile;
   desc.ViewDimension = D3D11_VDOV_DIMENSION_TEXTURE2D;
@@ -1103,7 +1055,7 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   if (!gst_d3d11_result (hr, mem->device)) {
     GST_ERROR_OBJECT (allocator,
         "Could not create decoder output view, hr: 0x%x", (guint) hr);
-    goto done;
+    return FALSE;
   }
 
   /* XXX: decoder output view is bound to video device, not decoder handle
@@ -1112,13 +1064,7 @@ gst_d3d11_memory_ensure_decoder_output_view (GstD3D11Memory * mem,
   dmem_priv->decoder_handle = decoder;
   decoder->AddRef ();
 
-succeeded:
-  ret = TRUE;
-
-done:
-  GST_D3D11_MEMORY_UNLOCK (mem);
-
-  return ret;
+  return TRUE;
 }
 
 /**
@@ -1176,7 +1122,6 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
   GstD3D11Allocator *allocator;
   D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC desc;
   HRESULT hr;
-  gboolean ret = FALSE;
 
   if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
     return FALSE;
@@ -1189,9 +1134,9 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
     return FALSE;
   }
 
-  GST_D3D11_MEMORY_LOCK (mem);
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
   if (dmem_priv->processor_input_view)
-    goto succeeded;
+    return TRUE;
 
   desc.FourCC = 0;
   desc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
@@ -1203,16 +1148,10 @@ gst_d3d11_memory_ensure_processor_input_view (GstD3D11Memory * mem,
   if (!gst_d3d11_result (hr, mem->device)) {
     GST_ERROR_OBJECT (allocator,
         "Could not create processor input view, hr: 0x%x", (guint) hr);
-    goto done;
+    return FALSE;
   }
 
-succeeded:
-  ret = TRUE;
-
-done:
-  GST_D3D11_MEMORY_UNLOCK (mem);
-
-  return ret;
+  return TRUE;
 }
 
 /**
@@ -1252,7 +1191,6 @@ gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
   GstD3D11Allocator *allocator;
   D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC desc;
   HRESULT hr;
-  gboolean ret;
 
   if (mem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
     return FALSE;
@@ -1274,9 +1212,9 @@ gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
     return FALSE;
   }
 
-  GST_D3D11_MEMORY_LOCK (mem);
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
   if (priv->processor_output_view)
-    goto succeeded;
+    return TRUE;
 
   desc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
   desc.Texture2D.MipSlice = 0;
@@ -1286,16 +1224,10 @@ gst_d3d11_memory_ensure_processor_output_view (GstD3D11Memory * mem,
   if (!gst_d3d11_result (hr, mem->device)) {
     GST_ERROR_OBJECT (allocator,
         "Could not create processor input view, hr: 0x%x", (guint) hr);
-    goto done;
+    return FALSE;
   }
 
-succeeded:
-  ret = TRUE;
-
-done:
-  GST_D3D11_MEMORY_UNLOCK (mem);
-
-  return ret;
+  return TRUE;
 }
 
 /**
@@ -1489,7 +1421,6 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_D3D11_CLEAR_COM (dmem_priv->decoder_handle);
 
   gst_clear_object (&dmem->device);
-  g_mutex_clear (&dmem_priv->lock);
 
   if (dmem_priv->notify)
     dmem_priv->notify (dmem_priv->user_data);
@@ -1510,7 +1441,6 @@ gst_d3d11_allocator_alloc_wrapped_internal (GstD3D11Allocator * self,
 
   gst_memory_init (GST_MEMORY_CAST (mem),
       (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (self), NULL, 0, 0, 0, 0);
-  g_mutex_init (&mem->priv->lock);
   mem->priv->texture = texture;
   mem->priv->desc = *desc;
   mem->priv->native_type = GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D;
@@ -1684,7 +1614,6 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
 
   gst_memory_init (GST_MEMORY_CAST (mem),
       (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (allocator), nullptr, 0, 0, 0, 0);
-  g_mutex_init (&mem->priv->lock);
   mem->priv->buffer = buffer;
   mem->priv->buffer_desc = *desc;
   mem->priv->native_type = GST_D3D11_MEMORY_NATIVE_TYPE_BUFFER;
@@ -1803,8 +1732,8 @@ gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator, gboolean active)
 }
 
 /* GstD3D11PoolAllocator */
-#define GST_D3D11_POOL_ALLOCATOR_LOCK(alloc)   (g_rec_mutex_lock(&alloc->priv->lock))
-#define GST_D3D11_POOL_ALLOCATOR_UNLOCK(alloc) (g_rec_mutex_unlock(&alloc->priv->lock))
+#define GST_D3D11_POOL_ALLOCATOR_GET_LOCK(alloc) \
+  (&(GST_D3D11_POOL_ALLOCATOR_CAST(alloc)->priv->lock))
 #define GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(alloc)  (g_atomic_int_get (&alloc->priv->flushing))
 
 struct _GstD3D11PoolAllocatorPrivate
@@ -1819,7 +1748,7 @@ struct _GstD3D11PoolAllocatorPrivate
 
   /* This lock will protect all below variables apart from atomic ones
    * (identical to GstBufferPool::priv::rec_lock) */
-  GRecMutex lock;
+  CRITICAL_SECTION lock;
   gboolean started;
   gboolean active;
 
@@ -1869,7 +1798,8 @@ gst_d3d11_pool_allocator_init (GstD3D11PoolAllocator * allocator)
 
   priv = allocator->priv = (GstD3D11PoolAllocatorPrivate *)
       gst_d3d11_pool_allocator_get_instance_private (allocator);
-  g_rec_mutex_init (&priv->lock);
+
+  InitializeCriticalSection (&priv->lock);
 
   priv->poll = gst_poll_new_timer ();
   priv->queue = gst_atomic_queue_new (16);
@@ -1904,7 +1834,7 @@ gst_d3d11_pool_allocator_finalize (GObject * object)
   gst_d3d11_pool_allocator_stop (self);
   gst_atomic_queue_unref (priv->queue);
   gst_poll_free (priv->poll);
-  g_rec_mutex_clear (&priv->lock);
+  DeleteCriticalSection (&priv->lock);
 
   GST_D3D11_CLEAR_COM (priv->texture);
 
@@ -2010,14 +1940,16 @@ gst_d3d11_pool_allocator_set_active (GstD3D11Allocator * allocator,
 
   GST_LOG_OBJECT (self, "active %d", active);
 
-  GST_D3D11_POOL_ALLOCATOR_LOCK (self);
+  GstD3D11CSLockGuard lk (GST_D3D11_POOL_ALLOCATOR_GET_LOCK (self));
   /* just return if we are already in the right state */
   if (priv->active == active)
-    goto was_ok;
+    return TRUE;
 
   if (active) {
-    if (!gst_d3d11_pool_allocator_start (self))
-      goto start_failed;
+    if (!gst_d3d11_pool_allocator_start (self)) {
+      GST_ERROR_OBJECT (self, "start failed");
+      return FALSE;
+    }
 
     /* flush_stop may release memory objects, setting to active to avoid running
      * do_stop while activating the pool */
@@ -2036,35 +1968,16 @@ gst_d3d11_pool_allocator_set_active (GstD3D11Allocator * allocator,
     GST_LOG_OBJECT (self, "outstanding memories %d, (in queue %d)",
         outstanding, gst_atomic_queue_length (priv->queue));
     if (outstanding == 0) {
-      if (!gst_d3d11_pool_allocator_stop (self))
-        goto stop_failed;
+      if (!gst_d3d11_pool_allocator_stop (self)) {
+        GST_ERROR_OBJECT (self, "stop failed");
+        return FALSE;
+      }
     }
 
     priv->active = FALSE;
   }
 
-  GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
-
   return TRUE;
-
-was_ok:
-  {
-    GST_DEBUG_OBJECT (self, "allocator was in the right state");
-    GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
-    return TRUE;
-  }
-start_failed:
-  {
-    GST_ERROR_OBJECT (self, "start failed");
-    GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
-    return FALSE;
-  }
-stop_failed:
-  {
-    GST_ERROR_OBJECT (self, "stop failed");
-    GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
-    return FALSE;
-  }
 }
 
 static void
@@ -2137,13 +2050,11 @@ dec_outstanding (GstD3D11PoolAllocator * self)
     /* all memory objects are returned to the pool, see if we need to free them */
     if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)) {
       /* take the lock so that set_active is not run concurrently */
-      GST_D3D11_POOL_ALLOCATOR_LOCK (self);
+      GstD3D11CSLockGuard lk (GST_D3D11_POOL_ALLOCATOR_GET_LOCK (self));
       /* now that we have the lock, check if we have been de-activated with
        * outstanding buffers */
       if (!self->priv->active)
         gst_d3d11_pool_allocator_stop (self);
-
-      GST_D3D11_POOL_ALLOCATOR_UNLOCK (self);
     }
   }
 }

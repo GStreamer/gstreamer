@@ -167,6 +167,46 @@ private:
   GstD3D11Device *device_;
 };
 
+class GstD3D11CSLockGuard
+{
+public:
+  explicit GstD3D11CSLockGuard(CRITICAL_SECTION * cs) : cs_ (cs)
+  {
+    EnterCriticalSection (cs_);
+  }
+
+  ~GstD3D11CSLockGuard()
+  {
+    LeaveCriticalSection (cs_);
+  }
+
+  GstD3D11CSLockGuard(const GstD3D11CSLockGuard&) = delete;
+  GstD3D11CSLockGuard& operator=(const GstD3D11CSLockGuard&) = delete;
+
+private:
+  CRITICAL_SECTION *cs_;
+};
+
+class GstD3D11SRWLockGuard
+{
+public:
+  explicit GstD3D11SRWLockGuard(SRWLOCK * lock) : lock_ (lock)
+  {
+    AcquireSRWLockExclusive (lock_);
+  }
+
+  ~GstD3D11SRWLockGuard()
+  {
+    ReleaseSRWLockExclusive (lock_);
+  }
+
+  GstD3D11SRWLockGuard(const GstD3D11SRWLockGuard&) = delete;
+  GstD3D11SRWLockGuard& operator=(const GstD3D11SRWLockGuard&) = delete;
+
+private:
+  SRWLOCK *lock_;
+};
+
 #define GST_D3D11_CALL_ONCE_BEGIN \
     static std::once_flag __once_flag; \
     std::call_once (__once_flag, [&]()
