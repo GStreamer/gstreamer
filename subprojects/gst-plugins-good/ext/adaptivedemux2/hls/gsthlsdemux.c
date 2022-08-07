@@ -2186,21 +2186,17 @@ gst_hls_update_time_mappings (GstHLSDemux * demux,
 static void
 setup_initial_playlist (GstHLSDemux * demux, GstHLSMediaPlaylist * playlist)
 {
-  guint idx, len = playlist->segments->len;
   GstM3U8MediaSegment *segment;
-  GstClockTimeDiff pos = 0;
 
   GST_DEBUG_OBJECT (demux,
       "Setting up initial variant segment and time mapping");
 
   /* This is the initial variant playlist. We will use it to base all our timing
    * from. */
-
-  for (idx = 0; idx < len; idx++) {
-    segment = g_ptr_array_index (playlist->segments, idx);
-
-    segment->stream_time = pos;
-    pos += segment->duration;
+  segment = g_ptr_array_index (playlist->segments, 0);
+  if (segment) {
+    segment->stream_time = 0;
+    gst_hls_media_playlist_recalculate_stream_time (playlist, segment);
   }
 }
 
