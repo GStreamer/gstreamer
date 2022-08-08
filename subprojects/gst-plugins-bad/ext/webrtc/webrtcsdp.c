@@ -118,6 +118,12 @@ _check_sdp_crypto (SDPSource source, GstWebRTCSessionDescription * sdp,
     const GstSDPMedia *media = gst_sdp_message_get_media (sdp->sdp, i);
     const gchar *media_fingerprint =
         gst_sdp_media_get_attribute_val (media, "fingerprint");
+    GstWebRTCRTPTransceiverDirection direction =
+        _get_direction_from_media (media);
+
+    /* Skip inactive media */
+    if (direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE)
+      continue;
 
     if (!IS_EMPTY_SDP_ATTRIBUTE (message_fingerprint)
         && !IS_EMPTY_SDP_ATTRIBUTE (media_fingerprint)) {
