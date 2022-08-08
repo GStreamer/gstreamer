@@ -1270,12 +1270,13 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
       GST_ERROR ("Invalid descriptor");
       return NULL;
     }
-    if (wa_descriptor && wa_descriptor->block_align != 0)
-      block_align = wa_descriptor->block_align;
-    else
-      block_align =
-          (GST_ROUND_UP_8 (descriptor->quantization_bits) *
-          descriptor->channel_count) / 8;
+
+    /* XXX: block align value can be carried via audio essential descriptor but
+     * there are some files with broken block align value.
+     * Calculates the value always */
+    block_align =
+        (GST_ROUND_UP_8 (descriptor->quantization_bits) *
+        descriptor->channel_count) / 8;
 
     audio_format =
         gst_audio_format_build_integer (block_align !=
@@ -1302,12 +1303,12 @@ mxf_bwf_create_caps (MXFMetadataTimelineTrack * track,
       return NULL;
     }
 
-    if (wa_descriptor && wa_descriptor->block_align != 0)
-      block_align = wa_descriptor->block_align;
-    else
-      block_align =
-          (GST_ROUND_UP_8 (descriptor->quantization_bits) *
-          descriptor->channel_count) / 8;
+    /* XXX: block align value can be carried via audio essential descriptor but
+     * there are some files with broken block align value.
+     * Calculates the value always */
+    block_align =
+        (GST_ROUND_UP_8 (descriptor->quantization_bits) *
+        descriptor->channel_count) / 8;
 
     audio_format =
         gst_audio_format_build_integer (block_align !=
