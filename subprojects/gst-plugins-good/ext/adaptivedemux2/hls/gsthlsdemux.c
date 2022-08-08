@@ -1475,6 +1475,7 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *pending_header_data = NULL;
 
   /* If current segment is not present, this means that a playlist update
    * happened between the moment ::update_fragment_info() was called and the
@@ -1506,6 +1507,11 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
     GstHLSParserResult parse_ret;
 
     if (hls_stream->pending_segment_data) {
+      if (hls_stream->pending_data_is_header) {
+        /* Keep a copy of the header data in case we need to requeue it
+         * due to GST_ADAPTIVE_DEMUX_FLOW_RESTART_FRAGMENT below */
+        pending_header_data = gst_buffer_ref (hls_stream->pending_segment_data);
+      }
       buffer = gst_buffer_append (hls_stream->pending_segment_data, buffer);
       hls_stream->pending_segment_data = NULL;
     }
@@ -1533,6 +1539,16 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
         /* Resync, drop buffer and return */
         gst_buffer_unref (buffer);
         ret = GST_ADAPTIVE_DEMUX_FLOW_RESTART_FRAGMENT;
+        /* If we had a pending set of header data, requeue it */
+        if (pending_header_data != NULL) {
+          g_assert (hls_stream->pending_segment_data == NULL);
+
+          GST_DEBUG_OBJECT (hls_stream,
+              "Requeueing header data %" GST_PTR_FORMAT
+              " before returning RESTART_FRAGMENT", pending_header_data);
+          hls_stream->pending_segment_data = pending_header_data;
+          pending_header_data = NULL;
+        }
         goto out;
       case GST_HLS_PARSER_RESULT_DONE:
         /* Done parsing, carry on */
@@ -1556,6 +1572,12 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
   ret = gst_adaptive_demux2_stream_push_buffer (stream, buffer);
 
 out:
+  if (pending_header_data != NULL) {
+    /* Throw away the pending header data now. If it wasn't consumed above,
+     * we won't need it */
+    gst_buffer_unref (pending_header_data);
+  }
+
   GST_DEBUG_OBJECT (stream, "Returning %s", gst_flow_get_name (ret));
   return ret;
 }
