@@ -325,7 +325,8 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_INBAND_FEC,
       g_param_spec_boolean ("inband-fec", "In-band FEC",
-          "Enable forward error correction", DEFAULT_INBAND_FEC,
+          "Enable in-band forward error correction (use in combination with "
+          "the packet-loss-percentage property)", DEFAULT_INBAND_FEC,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_DTX,
