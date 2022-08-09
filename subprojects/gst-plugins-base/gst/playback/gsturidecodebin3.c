@@ -688,7 +688,7 @@ add_output_pad (GstURIDecodeBin3 * dec, GstPad * target_pad)
 
   output->uridecodebin = dec;
   output->target_pad = target_pad;
-  output->current_group_id = (guint) - 1;
+  output->current_group_id = GST_GROUP_ID_INVALID;
   pad_name = gst_pad_get_name (target_pad);
   output->ghost_pad = gst_ghost_pad_new (pad_name, target_pad);
   g_free (pad_name);
@@ -1173,7 +1173,22 @@ uri_src_probe (GstPad * pad, GstPadProbeInfo * info, GstSourcePad * srcpad)
     case GST_EVENT_STREAM_START:
     {
       GstStream *stream = NULL;
+      guint group_id = GST_GROUP_ID_INVALID;
+
       srcpad->saw_eos = FALSE;
+      gst_event_parse_group_id (event, &group_id);
+      /* Unify group id */
+      if (handler->play_item->group_id == GST_GROUP_ID_INVALID) {
+        GST_DEBUG_OBJECT (pad,
+            "Setting play item to group_id %" G_GUINT32_FORMAT, group_id);
+        handler->play_item->group_id = group_id;
+      } else if (handler->play_item->group_id != group_id) {
+        GST_DEBUG_OBJECT (pad, "Updating event group-id to %" G_GUINT32_FORMAT,
+            handler->play_item->group_id);
+        event = gst_event_make_writable (event);
+        GST_PAD_PROBE_INFO_DATA (info) = event;
+        gst_event_set_group_id (event, handler->play_item->group_id);
+      }
       gst_event_parse_stream (event, &stream);
       if (stream) {
         GST_DEBUG_OBJECT (srcpad->src_pad, "Got GstStream %" GST_PTR_FORMAT,

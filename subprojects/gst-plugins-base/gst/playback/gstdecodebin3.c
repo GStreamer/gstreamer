@@ -1036,6 +1036,10 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstPad * peer,
     GST_DEBUG_OBJECT (dbin, "Resetting parsebin since it's pull-based");
     reset_input_parsebin (dbin, input);
   }
+  /* In all cases we will be receiving new stream-start and data */
+  input->group_id = GST_GROUP_ID_INVALID;
+  input->drained = FALSE;
+  recalculate_group_id (dbin);
 
   INPUT_UNLOCK (dbin);
 }
