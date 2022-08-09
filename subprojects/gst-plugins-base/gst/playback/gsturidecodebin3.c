@@ -1113,9 +1113,17 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
   /* and set new one as input item */
   uridecodebin->input_item = new_item;
 
+  /* If the new source is already drained, propagate about-to-finish */
+  if (new_item->pending_about_to_finish) {
+    emit_and_handle_about_to_finish (uridecodebin, new_item);
+  }
+
+  /* Finally propagate pending buffering message */
   if (new_item->main_item->handler->pending_buffering_msg) {
     GstMessage *msg = new_item->main_item->handler->pending_buffering_msg;
     new_item->main_item->handler->pending_buffering_msg = NULL;
+    GST_DEBUG_OBJECT (uridecodebin,
+        "Posting pending buffering message %" GST_PTR_FORMAT, msg);
     PLAY_ITEMS_UNLOCK (uridecodebin);
     GST_BIN_CLASS (parent_class)->handle_message ((GstBin *) uridecodebin, msg);
     PLAY_ITEMS_LOCK (uridecodebin);
