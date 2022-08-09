@@ -7800,7 +7800,7 @@
                         "writable": true
                     },
                     "inband-fec": {
-                        "blurb": "Enable forward error correction",
+                        "blurb": "Enable in-band forward error correction (use in combination with the packet-loss-percentage property)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
