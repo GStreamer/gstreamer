@@ -1258,10 +1258,8 @@ _init_packed_headers (GstVaH264Enc * self)
 
   self->packed_headers = 0;
 
-  packed_headers = gst_va_encoder_get_packed_headers (base->encoder,
-      base->profile, base->entrypoint);
-
-  if (packed_headers == 0)
+  if (!gst_va_encoder_get_packed_headers (base->encoder, base->profile,
+          base->entrypoint, &packed_headers))
     return FALSE;
 
   if (desired_packed_headers & ~packed_headers) {

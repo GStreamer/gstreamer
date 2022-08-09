@@ -756,31 +756,33 @@ gst_va_encoder_get_rtformat (GstVaEncoder * self,
   return attrib.value;
 }
 
-guint32
+gboolean
 gst_va_encoder_get_packed_headers (GstVaEncoder * self, VAProfile profile,
-    VAEntrypoint entrypoint)
+    VAEntrypoint entrypoint, guint * packed_headers)
 {
   VAStatus status;
   VADisplay dpy;
   VAConfigAttrib attrib = {.type = VAConfigAttribEncPackedHeaders };
 
   if (profile == VAProfileNone)
-    return 0;
+    return FALSE;
 
   dpy = gst_va_display_get_va_dpy (self->display);
   status = vaGetConfigAttributes (dpy, profile, entrypoint, &attrib, 1);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "Failed to query packed headers: %s",
         vaErrorStr (status));
-    return 0;
+    return FALSE;
   }
 
   if (attrib.value == VA_ATTRIB_NOT_SUPPORTED) {
     GST_WARNING_OBJECT (self, "Driver does not support any packed headers");
-    return 0;
+    return FALSE;
   }
 
-  return attrib.value;
+  if (packed_headers)
+    *packed_headers = attrib.value;
+  return TRUE;
 }
 
 /* Add packed header such as SPS, PPS, SEI, etc. If adding slice header,

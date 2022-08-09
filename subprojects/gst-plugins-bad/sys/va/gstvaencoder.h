@@ -80,9 +80,10 @@ gboolean              gst_va_encoder_has_trellis          (GstVaEncoder * self,
 guint32               gst_va_encoder_get_rtformat         (GstVaEncoder * self,
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint);
-guint32               gst_va_encoder_get_packed_headers   (GstVaEncoder * self,
+gboolean               gst_va_encoder_get_packed_headers  (GstVaEncoder * self,
                                                            VAProfile profile,
-                                                           VAEntrypoint entrypoint);
+                                                           VAEntrypoint entrypoint,
+                                                           guint32 * packed_headers);
 gboolean              gst_va_encoder_get_rate_control_enum (GstVaEncoder * self,
                                                             GEnumValue ratectl[16]);
 gboolean              gst_va_encoder_add_param            (GstVaEncoder * self,
