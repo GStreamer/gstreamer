@@ -1877,6 +1877,7 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   if (device_mode == GST_NV_ENCODER_DEVICE_CUDA)
     g_object_get (device, "cuda-device-id", &cdata->cuda_device_id, nullptr);
 
+  /* class data will be leaked if the element never gets instantiated */
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
@@ -2184,6 +2185,12 @@ gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
   cdata->cuda_device_id_size = cuda_device_id_size;
   memcpy (&cdata->cuda_device_id_list,
       cuda_device_id_list, sizeof (cuda_device_id_list));
+
+  /* class data will be leaked if the element never gets instantiated */
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   GType type;
   GTypeInfo type_info = {
