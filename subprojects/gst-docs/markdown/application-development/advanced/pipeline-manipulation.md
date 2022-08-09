@@ -416,7 +416,7 @@ main (gint   argc,
     g_error ("Could not create 'videoconvert' element");
 
   vs = gst_element_factory_make ("videoscale", "vs");
-  if (csp == NULL)
+  if (vs == NULL)
     g_error ("Could not create 'videoscale' element");
 
   sink = gst_element_factory_make ("autovideosink", "sink");
