@@ -1255,8 +1255,15 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
 shutdown:
   {
     GST_LOG_OBJECT (pad, "Shutting down");
+    /* We are shutting down, we both want to remove this probe and propagate a
+     * GST_FLOW_FLUSHING upstream (to cause tasks to stop) */
+    if (srcpad->block_probe_id)
+      gst_pad_remove_probe (pad, srcpad->block_probe_id);
+    srcpad->block_probe_id = 0;
     PLAY_ITEMS_UNLOCK (handler->uridecodebin);
-    return GST_PAD_PROBE_REMOVE;
+    GST_PAD_PROBE_INFO_FLOW_RETURN (info) = GST_FLOW_FLUSHING;
+    gst_mini_object_unref (GST_PAD_PROBE_INFO_DATA (info));
+    return GST_PAD_PROBE_HANDLED;
   }
 }
 
