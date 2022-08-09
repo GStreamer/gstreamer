@@ -1623,6 +1623,7 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
     frame->poc =
         ((self->gop.cur_frame_index * 2) % self->gop.max_pic_order_cnt);
 
+    /* TODO: move most this logic onto vabaseenc class  */
     if (self->gop.cur_frame_index == 0) {
       g_assert (frame->poc == 0);
       GST_LOG_OBJECT (self, "system_frame_number: %d, an IDR frame, starts"
@@ -1630,6 +1631,8 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
 
       g_queue_clear_full (&base->ref_list,
           (GDestroyNotify) gst_video_codec_frame_unref);
+
+      GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (gst_frame);
     }
 
     frame->type = self->gop.frame_types[self->gop.cur_frame_index].slice_type;
