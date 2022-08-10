@@ -17,18 +17,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-/* TODO/FIXME:
- *
- * * BUFFERING MESSAGES
- * ** How/Where do we deal with buffering messages from a new/prerolling
- *    source ? Ideally we want to re-use the same sourcebin ?
- * ** Remember last buffering messages per source handler, if the SourceEntry
- *    group_id is the one being currently outputted on the source ghostpads,
- *    post the (last) buffering messages.
- *    If no group_id is being outputted (still prerolling), then output
- *    the messages directly
- */
-
 /**
  * SECTION:element-uridecodebin3
  * @title: uridecodebin3
@@ -1779,6 +1767,7 @@ gst_uri_decode_bin3_set_uri (GstURIDecodeBin3 * dec, const gchar * uri)
 
   item = next_inactive_play_item (dec);
   play_item_set_uri (item, uri);
+
   if (dec->instant_uri && item != dec->input_item) {
     GList *old_pads = get_all_play_item_source_pads (dec->input_item);
     GList *iter;
