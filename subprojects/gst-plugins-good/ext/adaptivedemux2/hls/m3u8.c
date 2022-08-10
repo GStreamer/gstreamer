@@ -2228,6 +2228,7 @@ remove_uncommon (GQuark field_id, GValue * value, GstStructure * st2)
 
   g_value_reset (value);
   g_value_copy (&dest, value);
+  g_value_reset (&dest);
 
   return TRUE;
 }
