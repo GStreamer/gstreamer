@@ -48,10 +48,14 @@
  * ### Show the GStreamer website homepage as played with GstPlayer in a GTK+ window
  *
  * ```
- * gst-play-1.0 --videosink gtkglsink wpe://https://gstreamer.freedesktop.org
+ * export GST_PLUGIN_FEATURE_RANK="wpesrc:MAX"
+ * gst-play-1.0 --videosink gtkglsink web+https://gstreamer.freedesktop.org
  * ```
  *
- * The `web://` URI protocol is also supported, as an alias to `wpe://`. Since: 1.20
+ * Until 1.20 the `web://` URI protocol was supported, along with `wpe://`.
+ *
+ * The supported URI protocols are `web+http://`, `web+https://` and `web+file://`.
+ * Since: 1.22
  *
  * ### Composite WPE with a video stream in a single OpenGL scene
  *
@@ -134,7 +138,6 @@ struct _GstWpeSrc
   GstElement *video_src;
   GHashTable *audio_src_pads;
   GstFlowCombiner *flow_combiner;
-  gchar *uri;
 };
 
 enum
@@ -377,7 +380,7 @@ gst_wpe_src_uri_get_type (GType)
 static const gchar *const *
 gst_wpe_src_get_protocols (GType)
 {
-  static const char *protocols[] = { "wpe", "web", NULL };
+  static const gchar *protocols[] = {"web+http", "web+https", "web+file", NULL};
   return protocols;
 }
 
@@ -385,22 +388,36 @@ static gchar *
 gst_wpe_src_get_uri (GstURIHandler * handler)
 {
   GstWpeSrc *src = GST_WPE_SRC (handler);
+  gchar *ret = NULL;
 
-  return g_strdup (src->uri);
+  g_object_get(src->video_src, "location", &ret, NULL);
+
+  return ret;
 }
 
 static gboolean
-gst_wpe_src_set_uri (GstURIHandler * handler, const gchar * uri,
+gst_wpe_src_set_uri (GstURIHandler * handler, const gchar * uristr,
     GError ** error)
 {
+  gboolean res = TRUE;
+  gchar *location;
   GstWpeSrc *src = GST_WPE_SRC (handler);
+  const gchar *protocol;
+  GstUri *uri;
 
-  if (src->uri) {
-    g_free (src->uri);
-  }
-  src->uri = g_strdup (uri);
-  gst_wpe_src_set_location(src, uri + 6);
-  return TRUE;
+  protocol = gst_uri_get_protocol (uristr);
+  g_return_val_if_fail (g_str_has_prefix (protocol, "web+"), FALSE);
+
+  uri = gst_uri_from_string (uristr);
+  gst_uri_set_scheme (uri, protocol + 4);
+
+  location = gst_uri_to_string (uri);
+  gst_wpe_src_set_location (src, location);
+
+  gst_uri_unref (uri);
+  g_free (location);
+
+  return res;
 }
 
 static void
@@ -484,7 +501,6 @@ gst_wpe_src_finalize (GObject *object)
     g_hash_table_unref (src->audio_src_pads);
     gst_flow_combiner_free (src->flow_combiner);
     gst_object_unref (src->fd_allocator);
-    g_free (src->uri);
 
     GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
