@@ -2673,16 +2673,22 @@ retry_failover_protection:
     }
 
     gst_hls_demux_set_current_variant (demux, previous_variant);
+
     /*  Try a lower bitrate (or stop if we just tried the lowest) */
     if (previous_variant->iframe) {
       lowest_ivariant = demux->master->iframe_variants->data;
-      if (new_bandwidth == lowest_ivariant->bandwidth)
+      if (new_bandwidth == lowest_ivariant->bandwidth) {
+        gst_hls_variant_stream_unref (previous_variant);
         return FALSE;
+      }
     } else {
       lowest_variant = demux->master->variants->data;
-      if (new_bandwidth == lowest_variant->bandwidth)
+      if (new_bandwidth == lowest_variant->bandwidth) {
+        gst_hls_variant_stream_unref (previous_variant);
         return FALSE;
+      }
     }
+    gst_hls_variant_stream_unref (previous_variant);
     return gst_hls_demux_change_playlist (demux, new_bandwidth - 1, changed);
   }
 
