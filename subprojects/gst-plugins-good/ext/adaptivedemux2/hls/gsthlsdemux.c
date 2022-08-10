@@ -1119,10 +1119,14 @@ caps_to_parser_type (const GstCaps * caps)
  *
  * Will also setup the appropriate parser (tsreader) if needed
  *
+ * Consumes the input buffer when it returns FALSE, but
+ * replaces / returns the input buffer in the `buffer` parameter
+ * when it returns TRUE.
+ *
  * Returns TRUE if we are done with typefinding */
 static gboolean
 gst_hls_demux_typefind_stream (GstHLSDemux * hlsdemux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer, gboolean at_eos,
+    GstAdaptiveDemux2Stream * stream, GstBuffer ** out_buffer, gboolean at_eos,
     GstFlowReturn * ret)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
@@ -1130,10 +1134,15 @@ gst_hls_demux_typefind_stream (GstHLSDemux * hlsdemux,
   guint buffer_size;
   GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
   GstMapInfo info;
+  GstBuffer *buffer = *out_buffer;
 
-  if (hls_stream->pending_typefind_buffer)
-    buffer = gst_buffer_append (hls_stream->pending_typefind_buffer, buffer);
-  hls_stream->pending_typefind_buffer = NULL;
+  if (hls_stream->pending_typefind_buffer) {
+    /* Append to the existing typefind buffer and create a new one that
+     * we'll return (or consume below) */
+    buffer = *out_buffer =
+        gst_buffer_append (hls_stream->pending_typefind_buffer, buffer);
+    hls_stream->pending_typefind_buffer = NULL;
+  }
 
   gst_buffer_map (buffer, &info, GST_MAP_READ);
   buffer_size = info.size;
@@ -1159,9 +1168,10 @@ gst_hls_demux_typefind_stream (GstHLSDemux * hlsdemux,
       *ret = GST_FLOW_NOT_NEGOTIATED;
     } else {
       GST_LOG_OBJECT (stream, "Not enough data to typefind");
-      hls_stream->pending_typefind_buffer = buffer;
+      hls_stream->pending_typefind_buffer = buffer;     /* Transfer the ref */
       *ret = GST_FLOW_OK;
     }
+    *out_buffer = NULL;
     return FALSE;
   }
 
@@ -1175,6 +1185,7 @@ gst_hls_demux_typefind_stream (GstHLSDemux * hlsdemux,
           "Unsupported stream type %" GST_PTR_FORMAT, caps);
       GST_MEMDUMP_OBJECT (stream, "unknown data", info.data,
           MIN (info.size, 128));
+      gst_buffer_unref (buffer);
       *ret = GST_FLOW_ERROR;
       return FALSE;
     }
@@ -1188,7 +1199,7 @@ gst_hls_demux_typefind_stream (GstHLSDemux * hlsdemux,
 
   gst_buffer_unmap (buffer, &info);
 
-  /* We are done with typefinding */
+  /* We are done with typefinding. Doesn't consume the input buffer */
   *ret = GST_FLOW_OK;
   return TRUE;
 }
@@ -1499,8 +1510,10 @@ gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
 
   /* If we need to do typefind and we're not done with it (or we errored), return */
   if (G_UNLIKELY (hls_stream->do_typefind) &&
-      !gst_hls_demux_typefind_stream (hlsdemux, stream, buffer, at_eos, &ret))
+      !gst_hls_demux_typefind_stream (hlsdemux, stream, &buffer, at_eos,
+          &ret)) {
     goto out;
+  }
   g_assert (hls_stream->pending_typefind_buffer == NULL);
 
   if (hls_stream->process_buffer_content) {
