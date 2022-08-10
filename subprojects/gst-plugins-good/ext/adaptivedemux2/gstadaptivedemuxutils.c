@@ -59,7 +59,7 @@ struct _GstAdaptiveDemuxLoop
 GstAdaptiveDemuxClock *
 gst_adaptive_demux_clock_new (void)
 {
-  GstAdaptiveDemuxClock *clock = g_slice_new (GstAdaptiveDemuxClock);
+  GstAdaptiveDemuxClock *clock = g_slice_new0 (GstAdaptiveDemuxClock);
   GstClockType clock_type = GST_CLOCK_TYPE_OTHER;
   GObjectClass *gobject_class;
 
