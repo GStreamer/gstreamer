@@ -509,6 +509,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
         data = NULL;
         date_time = NULL;
         duration = 0;
+        g_free (title);
         title = NULL;
         discontinuity = FALSE;
         size = offset = -1;
@@ -552,9 +553,9 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
         if (last_init_file)
           file->init_file = gst_m3u8_init_file_ref (last_init_file);
 
-        date_time = NULL;
+        date_time = NULL;       /* Ownership was passed to the segment */
         duration = 0;
-        title = NULL;
+        title = NULL;           /* Ownership was passed to the segment */
         discontinuity = FALSE;
         size = offset = -1;
         g_ptr_array_add (self->segments, file);
@@ -737,8 +738,12 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
     data = g_utf8_next_char (end);      /* skip \n */
   }
 
+  /* Clean up date that wasn't freed / handed to a segment */
   g_free (current_key);
   current_key = NULL;
+  if (date_time)
+    g_date_time_unref (date_time);
+  g_free (title);
 
   g_free (input_data);
 
