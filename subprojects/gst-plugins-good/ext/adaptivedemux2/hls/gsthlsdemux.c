@@ -1932,6 +1932,14 @@ gst_hls_time_map_new (void)
 }
 
 static void
+gst_hls_time_map_free (GstHLSTimeMap * map)
+{
+  if (map->pdt)
+    g_date_time_unref (map->pdt);
+  g_free (map);
+}
+
+static void
 gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
     GstClockTimeDiff stream_time, GDateTime * pdt)
 {
@@ -2018,7 +2026,7 @@ gst_hls_prune_time_mappings (GstHLSDemux * hlsdemux)
     }
   }
 
-  g_list_free_full (hlsdemux->mappings, g_free);
+  g_list_free_full (hlsdemux->mappings, (GDestroyNotify) gst_hls_time_map_free);
   hlsdemux->mappings = active;
 }
 
@@ -2556,7 +2564,7 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
     demux->pending_variant = NULL;
   }
 
-  g_list_free_full (demux->mappings, g_free);
+  g_list_free_full (demux->mappings, (GDestroyNotify) gst_hls_time_map_free);
   demux->mappings = NULL;
 
   gst_hls_demux_clear_all_pending_data (demux);
