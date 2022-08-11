@@ -1460,7 +1460,11 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
 
       if (cand->datetime
           && g_date_time_difference (cand->datetime, segment->datetime) >= 0) {
-        GST_DEBUG ("Picking by date time");
+#ifndef GST_DISABLE_GST_DEBUG
+        gchar *pdtstring = g_date_time_format_iso8601 (cand->datetime);
+        GST_DEBUG ("Picking segment with datetime %s", pdtstring);
+        g_free (pdtstring);
+#endif
         *matched_pdt = TRUE;
         return cand;
       }
@@ -1655,8 +1659,9 @@ gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
 
 retry_without_dsn:
   /* The new playlist is supposed to be an update of the reference playlist,
-   * therefore we will try from the last segment of the reference playlist and
-   * go backwards */
+   * or a more recently fetched playlist from another rendition. In either case,
+   * it's best to start from the last segment of the (older) reference playlist and
+   * go backwards to find an overlap */
   for (idx = reference->segments->len - 1; idx; idx--) {
     cand = g_ptr_array_index (reference->segments, idx);
     res = find_segment_in_playlist (playlist, cand, &is_before, &matched_pdt);
