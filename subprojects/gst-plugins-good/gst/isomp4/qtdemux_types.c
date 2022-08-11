@@ -232,6 +232,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_adrm, "AAX DRM key data", 0},
   {FOURCC_vttc, "VTTCueBox 14496-30", QT_FLAG_CONTAINER},
   {FOURCC_metx, "XML MetaData Sample Entry", 0},
+  {FOURCC_cstb, "Correct Start Time Box", 0},
   {0, "unknown", 0,},
 };
 

@@ -420,6 +420,9 @@ G_BEGIN_DECLS
 
 #define FOURCC_metx     GST_MAKE_FOURCC('m','e','t','x')
 
+/* ONVIF Export File Format */
+#define FOURCC_cstb     GST_MAKE_FOURCC('c','s','t','b')
+
 G_END_DECLS
 
 #endif /* __FOURCC_H__ */

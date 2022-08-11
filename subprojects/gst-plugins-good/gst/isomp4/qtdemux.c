@@ -2067,6 +2067,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     gst_caps_replace (&qtdemux->media_caps, NULL);
     qtdemux->timescale = 0;
     qtdemux->got_moov = FALSE;
+    qtdemux->start_utc_time = GST_CLOCK_TIME_NONE;
     qtdemux->cenc_aux_info_offset = 0;
     qtdemux->cenc_aux_info_sizes = NULL;
     qtdemux->cenc_aux_sample_count = 0;
@@ -3052,6 +3053,57 @@ qtdemux_parse_sidx (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
     check_update_duration (qtdemux, sidx_parser.cumulative_pts);
   }
   gst_isoff_qt_sidx_parser_clear (&sidx_parser);
+}
+
+static void
+qtdemux_parse_cstb (GstQTDemux * qtdemux, GstByteReader * data)
+{
+  guint64 start_time;
+  guint32 entry_count;
+
+  GST_DEBUG_OBJECT (qtdemux, "Parsing CorrectStartTime box");
+
+  qtdemux->start_utc_time = GST_CLOCK_TIME_NONE;
+
+  if (gst_byte_reader_get_remaining (data) < 4) {
+    GST_WARNING_OBJECT (qtdemux, "Too small CorrectStartTime box");
+    return;
+  }
+
+  entry_count = gst_byte_reader_get_uint32_be_unchecked (data);
+  if (entry_count == 0)
+    return;
+
+  /* XXX: We assume that all start times are the same as different start times
+   * would violate the MP4 synchronization model, so we just take the first
+   * one here and apply it to all tracks.
+   */
+
+  if (gst_byte_reader_get_remaining (data) < entry_count * 12) {
+    GST_WARNING_OBJECT (qtdemux, "Too small CorrectStartTime box");
+    return;
+  }
+
+  /* Skip track id */
+  gst_byte_reader_skip_unchecked (data, 4);
+
+  /* In 100ns intervals */
+  start_time = gst_byte_reader_get_uint64_be_unchecked (data);
+
+  /* Convert from Jan 1 1601 to Jan 1 1970 */
+  if (start_time < 11644473600 * G_GUINT64_CONSTANT (10000000)) {
+    GST_WARNING_OBJECT (qtdemux, "Start UTC time before UNIX epoch");
+    return;
+  }
+  start_time -= 11644473600 * G_GUINT64_CONSTANT (10000000);
+
+  /* Convert to GstClockTime */
+  start_time *= 100;
+
+  GST_DEBUG_OBJECT (qtdemux, "Start UTC time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (start_time));
+
+  qtdemux->start_utc_time = start_time;
 }
 
 /* caller verifies at least 8 bytes in buf */
@@ -4701,6 +4753,34 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       gst_buffer_unref (sidx);
       break;
     }
+    case FOURCC_meta:
+    {
+      GstBuffer *meta = NULL;
+      GNode *node, *child;
+      GstByteReader child_data;
+      ret = gst_qtdemux_pull_atom (qtdemux, cur_offset, length, &meta);
+      if (ret != GST_FLOW_OK)
+        goto beach;
+      qtdemux->offset += length;
+      gst_buffer_map (meta, &map, GST_MAP_READ);
+
+      node = g_node_new (map.data);
+
+      qtdemux_parse_node (qtdemux, node, map.data, map.size);
+
+      /* Parse ONVIF Export File Format CorrectStartTime box if available */
+      if ((child =
+              qtdemux_tree_get_child_by_type_full (node, FOURCC_cstb,
+                  &child_data))) {
+        qtdemux_parse_cstb (qtdemux, &child_data);
+      }
+
+      g_node_destroy (node);
+
+      gst_buffer_unmap (meta, &map);
+      gst_buffer_unref (meta);
+      break;
+    }
     default:
     {
       GstBuffer *unknown = NULL;
@@ -6210,6 +6290,15 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   /* we're going to modify the metadata */
   buf = gst_buffer_make_writable (buf);
 
+  if (qtdemux->start_utc_time != GST_CLOCK_TIME_NONE) {
+    static GstStaticCaps unix_caps = GST_STATIC_CAPS ("timestamp/x-unix");
+    GstCaps *caps = gst_static_caps_get (&unix_caps);
+    gst_buffer_add_reference_timestamp_meta (buf, caps,
+        pts + qtdemux->start_utc_time - stream->cslg_shift,
+        GST_CLOCK_TIME_NONE);
+    gst_caps_unref (caps);
+  }
+
   GST_BUFFER_DTS (buf) = dts;
   GST_BUFFER_PTS (buf) = pts;
   GST_BUFFER_DURATION (buf) = duration;
@@ -7353,6 +7442,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
               if (demux->moov_node)
                 g_node_destroy (demux->moov_node);
               demux->moov_node = NULL;
+              demux->start_utc_time = GST_CLOCK_TIME_NONE;
             }
 
             demux->last_moov_offset = demux->offset;
@@ -7475,6 +7565,21 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
         } else if (fourcc == FOURCC_sidx) {
           GST_DEBUG_OBJECT (demux, "Parsing [sidx]");
           qtdemux_parse_sidx (demux, data, demux->neededbytes);
+        } else if (fourcc == FOURCC_meta) {
+          GNode *node, *child;
+          GstByteReader child_data;
+
+          node = g_node_new ((gpointer) data);
+          qtdemux_parse_node (demux, node, data, demux->neededbytes);
+
+          /* Parse ONVIF Export File Format CorrectStartTime box if available */
+          if ((child =
+                  qtdemux_tree_get_child_by_type_full (node, FOURCC_cstb,
+                      &child_data))) {
+            qtdemux_parse_cstb (demux, &child_data);
+          }
+
+          g_node_destroy (node);
         } else {
           switch (fourcc) {
             case FOURCC_styp:
