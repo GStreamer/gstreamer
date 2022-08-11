@@ -591,9 +591,11 @@ error_encode:
     return ret;
   }
 error_push_buffer:
-  GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-      ("Failed to push the buffer."), (NULL));
-  return ret;
+  {
+    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
+        ("Failed to push the buffer."), (NULL));
+    return ret;
+  }
 }
 
 static GstFlowReturn
