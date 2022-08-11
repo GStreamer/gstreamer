@@ -1691,6 +1691,8 @@ gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream)
   }
 
   if (ret == GST_FLOW_OK || ret == GST_FLOW_NOT_LINKED) {
+    GstClockTime duration = hls_stream->current_segment->duration;
+
     /* We can update the stream current position with a more accurate value
      * before advancing. Note that we don't have any period so we can set the
      * stream_time as-is on the stream current position */
@@ -1705,13 +1707,13 @@ gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream)
             g_ptr_array_index (cur_segment->partial_segments,
             hls_stream->part_idx);
         stream->current_position = part->stream_time;
+        duration = part->duration;
       }
     } else {
       stream->current_position = hls_stream->current_segment->stream_time;
     }
 
-    return gst_adaptive_demux2_stream_advance_fragment (stream,
-        hls_stream->current_segment->duration);
+    return gst_adaptive_demux2_stream_advance_fragment (stream, duration);
   }
   return ret;
 }
