@@ -3575,11 +3575,13 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
       goto invalid_track;
 
   /* obtain stream defaults */
-  qtdemux_parse_trex (qtdemux, *stream,
-      default_sample_duration, default_sample_size, default_sample_flags);
+  if (qtdemux_parse_trex (qtdemux, *stream,
+          default_sample_duration, default_sample_size, default_sample_flags)) {
 
-  (*stream)->stsd_sample_description_id =
-      (*stream)->def_sample_description_index - 1;
+    /* Default sample description index is only valid if trex parsing succeeded */
+    (*stream)->stsd_sample_description_id =
+        (*stream)->def_sample_description_index - 1;
+  }
 
   if (flags & TF_SAMPLE_DESCRIPTION_INDEX) {
     guint32 sample_description_index;
