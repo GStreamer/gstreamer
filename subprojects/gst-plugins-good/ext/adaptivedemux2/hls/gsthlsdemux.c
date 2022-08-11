@@ -2330,11 +2330,13 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
           GST_DEBUG_OBJECT (stream,
               "Partial segments we were playing became unavailable. Will try and resync");
           stream->in_partial_segments = FALSE;
+          gst_m3u8_media_segment_unref (new_segment);
           new_segment = NULL;
         } else if (stream->part_idx >= new_segment->partial_segments->len) {
           GST_DEBUG_OBJECT (stream,
               "After playlist reload, there are no more partial segments to play in the current segment. Resyncing");
           stream->in_partial_segments = FALSE;
+          gst_m3u8_media_segment_unref (new_segment);
           new_segment = NULL;
         }
       }
