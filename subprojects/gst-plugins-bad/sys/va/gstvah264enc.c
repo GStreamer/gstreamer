@@ -441,7 +441,7 @@ _calculate_bitrate_hrd (GstVaH264Enc * self)
   update_property (bool, obj, old_val, new_val, prop_id)
 
 /* Estimates a good enough bitrate if none was supplied */
-static void
+static gboolean
 _ensure_rate_control (GstVaH264Enc * self)
 {
   /* User can specify the properties of: "bitrate", "target-percentage",
@@ -604,6 +604,7 @@ _ensure_rate_control (GstVaH264Enc * self)
 
   /* Adjust the setting based on RC mode. */
   switch (self->rc.rc_ctrl_mode) {
+    case VA_RC_NONE:
     case VA_RC_CQP:
       self->rc.max_bitrate = 0;
       self->rc.target_bitrate = 0;
@@ -636,9 +637,17 @@ _ensure_rate_control (GstVaH264Enc * self)
         self->gop.b_pyramid = FALSE;
       }
       break;
+    default:
+      GST_WARNING_OBJECT (self, "Unsupported rate control");
+      return FALSE;
+      break;
   }
 
-  if (self->rc.rc_ctrl_mode != VA_RC_CQP)
+  GST_DEBUG_OBJECT (self, "Max bitrate: %u bits/sec, "
+      "Target bitrate: %u bits/sec", self->rc.max_bitrate,
+      self->rc.target_bitrate);
+
+  if (self->rc.rc_ctrl_mode != VA_RC_NONE && self->rc.rc_ctrl_mode != VA_RC_CQP)
     _calculate_bitrate_hrd (self);
 
   /* update & notifications */
@@ -650,6 +659,8 @@ _ensure_rate_control (GstVaH264Enc * self)
   update_property_uint (base, &self->prop.qp_i, self->rc.qp_i, PROP_QP_I);
   update_property_uint (base, &self->prop.qp_p, self->rc.qp_p, PROP_QP_P);
   update_property_uint (base, &self->prop.qp_b, self->rc.qp_b, PROP_QP_B);
+
+  return TRUE;
 }
 
 static guint
@@ -1545,7 +1556,8 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
 
   _validate_parameters (self);
 
-  _ensure_rate_control (self);
+  if (!_ensure_rate_control (self))
+    return FALSE;
 
   if (!_calculate_level (self))
     return FALSE;

@@ -342,7 +342,6 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   /* *INDENT-OFF* */
   VAConfigAttrib attribs[3] = {
     { .type = VAConfigAttribRTFormat, .value = rt_format, },
-    { .type = VAConfigAttribRateControl, .value = rc_ctrl, },
   };
   /* *INDENT-ON* */
   VAConfigID config = VA_INVALID_ID;
@@ -363,6 +362,12 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
     GST_ERROR_OBJECT (self, "Unsupported profile: %s, entrypoint: %d",
         gst_va_profile_name (profile), self->entrypoint);
     return FALSE;
+  }
+
+  if (rc_ctrl != VA_RC_NONE) {
+    attribs[attrib_idx].type = VAConfigAttribRateControl;
+    attribs[attrib_idx].value = rc_ctrl;
+    attrib_idx++;
   }
 
   if (packed_headers > 0) {
