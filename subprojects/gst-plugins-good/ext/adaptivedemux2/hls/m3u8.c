@@ -1830,8 +1830,8 @@ retry_without_dsn:
    * or a more recently fetched playlist from another rendition. In either case,
    * it's best to start from the last segment of the (older) reference playlist and
    * go backwards to find an overlap */
-  for (idx = reference->segments->len - 1; idx; idx--) {
-    cand = g_ptr_array_index (reference->segments, idx);
+  for (idx = reference->segments->len; idx; idx--) {
+    cand = g_ptr_array_index (reference->segments, idx - 1);
     res = find_segment_in_playlist (playlist, cand, &is_before, &matched_pdt);
     if (res)
       break;
@@ -1957,6 +1957,7 @@ gst_hls_media_playlist_advance_fragment (GstHLSMediaPlaylist * m3u8,
   if (file && file->partial_only && !allow_partial_only_segment) {
     GST_LOG
         ("Ignoring segment with only partials as full segment was requested");
+    gst_m3u8_media_segment_unref (file);
     file = NULL;
   }
 
