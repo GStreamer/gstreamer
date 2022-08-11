@@ -1534,7 +1534,7 @@ gst_hls_demux_stream_handle_buffer (GstAdaptiveDemux2Stream * stream,
 
   GST_DEBUG_OBJECT (stream,
       "buffer:%p at_eos:%d do_typefind:%d uri:%s", buffer, at_eos,
-      hls_stream->do_typefind, GST_STR_NULL (hls_stream->current_segment->uri));
+      hls_stream->do_typefind, GST_STR_NULL (stream->fragment.uri));
 
   if (buffer == NULL)
     goto out;
@@ -1632,8 +1632,9 @@ gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream)
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstFlowReturn ret = GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (stream, "Finishing fragment uri:%s",
-      GST_STR_NULL (hls_stream->current_segment->uri));
+  GST_DEBUG_OBJECT (stream, "Finishing %ssegment uri:%s",
+      hls_stream->in_partial_segments ? "partial " : "",
+      GST_STR_NULL (stream->fragment.uri));
 
   /* Drain all pending data */
   if (hls_stream->current_key)
@@ -2612,6 +2613,10 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
     }
 
     stream->need_header = TRUE;
+
+    GST_DEBUG_OBJECT (stream, "Need header uri: %s %" G_GUINT64_FORMAT " %"
+        G_GINT64_FORMAT, stream->fragment.header_uri,
+        stream->fragment.header_range_start, stream->fragment.header_range_end);
   }
 
   /* set up our source for download */
