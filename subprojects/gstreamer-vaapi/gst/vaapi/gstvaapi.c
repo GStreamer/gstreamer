@@ -200,17 +200,17 @@ plugin_init (GstPlugin * plugin)
   decoders = display_get_decoder_codecs (display);
   if (decoders) {
     gst_vaapidecode_register (plugin, decoders);
+    gst_element_register (plugin, "vaapidecodebin",
+        GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
     g_array_unref (decoders);
   }
 
-  if (_gst_vaapi_has_video_processing)
+  if (_gst_vaapi_has_video_processing) {
     gst_vaapioverlay_register (plugin, display);
 
-  gst_element_register (plugin, "vaapipostproc",
-      GST_RANK_NONE, GST_TYPE_VAAPIPOSTPROC);
-
-  gst_element_register (plugin, "vaapidecodebin",
-      GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
+    gst_element_register (plugin, "vaapipostproc",
+        GST_RANK_NONE, GST_TYPE_VAAPIPOSTPROC);
+  }
 
   rank = GST_RANK_SECONDARY;
   if (g_getenv ("WAYLAND_DISPLAY"))
