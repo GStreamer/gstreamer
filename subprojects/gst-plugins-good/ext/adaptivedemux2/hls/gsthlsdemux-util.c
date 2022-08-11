@@ -962,7 +962,6 @@ out:
   g_free (original_content);
 
   if (out_of_bounds) {
-    GstM3U8MediaSegment *candidate_segment;
 
     /* The computed stream time falls outside of the guesstimated stream time,
      * reassess which segment we really are in */
@@ -974,22 +973,31 @@ out:
         GST_STIME_ARGS (current_segment->stream_time +
             current_segment->duration));
 
-    /* FIXME: Could seek to an INDEPENDENT partial segment in LL-HLS */
-    candidate_segment =
-        gst_hls_media_playlist_seek (hls_stream->playlist, TRUE,
-        GST_SEEK_FLAG_SNAP_NEAREST, low_stream_time);
-    if (candidate_segment) {
-      g_assert (candidate_segment != current_segment);
+    GstM3U8SeekResult seek_result;
+
+    if (gst_hls_media_playlist_find_position (hls_stream->playlist,
+            low_stream_time, hls_stream->in_partial_segments, &seek_result)) {
+      g_assert (seek_result.segment != current_segment);
       GST_DEBUG_OBJECT (hls_stream,
           "Stream time corresponds to segment %" GST_STIME_FORMAT
           " duration %" GST_TIME_FORMAT,
-          GST_STIME_ARGS (candidate_segment->stream_time),
-          GST_TIME_ARGS (candidate_segment->duration));
+          GST_STIME_ARGS (seek_result.segment->stream_time),
+          GST_TIME_ARGS (seek_result.segment->duration));
+
+      /* When we land in the middle of a partial segment, actually
+       * use the full segment position to resync the playlist */
+      if (seek_result.found_partial_segment) {
+        hls_stream->current_segment->stream_time =
+            seek_result.segment->stream_time;
+      } else {
+        hls_stream->current_segment->stream_time = seek_result.stream_time;
+      }
+
       /* Recalculate everything and ask parent class to restart */
-      hls_stream->current_segment->stream_time = candidate_segment->stream_time;
       gst_hls_media_playlist_recalculate_stream_time (hls_stream->playlist,
           hls_stream->current_segment);
-      gst_m3u8_media_segment_unref (candidate_segment);
+      gst_m3u8_media_segment_unref (seek_result.segment);
+      ret = GST_HLS_PARSER_RESULT_RESYNC;
     }
   }
 

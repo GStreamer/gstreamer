@@ -1359,25 +1359,27 @@ gst_hlsdemux_handle_internal_time (GstHLSDemux * demux,
       gst_hls_media_playlist_dump (hls_stream->playlist);
     }
 
+    /* FIXME: When playing partial segments, the threshold should be
+     * half the part duration */
     if (ABS (difference) > (hls_stream->current_segment->duration / 2)) {
       GstAdaptiveDemux2Stream *stream = (GstAdaptiveDemux2Stream *) hls_stream;
-      GstM3U8MediaSegment *actual_segment;
+      GstM3U8SeekResult seek_result;
 
       /* We are at the wrong segment, try to figure out the *actual* segment */
       GST_DEBUG_OBJECT (hls_stream,
-          "Trying to seek to the correct segment for %" GST_STIME_FORMAT,
-          GST_STIME_ARGS (current_stream_time));
-      /* FIXME: Allow jumping to partial segments in LL-HLS */
-      actual_segment =
-          gst_hls_media_playlist_seek (hls_stream->playlist, TRUE,
-          GST_SEEK_FLAG_SNAP_NEAREST, current_stream_time);
+          "Trying to find the correct segment in the playlist for %"
+          GST_STIME_FORMAT, GST_STIME_ARGS (current_stream_time));
+      if (gst_hls_media_playlist_find_position (hls_stream->playlist,
+              current_stream_time, hls_stream->in_partial_segments,
+              &seek_result)) {
 
-      if (actual_segment) {
         GST_DEBUG_OBJECT (hls_stream, "Synced to position %" GST_STIME_FORMAT,
-            GST_STIME_ARGS (actual_segment->stream_time));
+            GST_STIME_ARGS (seek_result.stream_time));
+
         gst_m3u8_media_segment_unref (hls_stream->current_segment);
-        hls_stream->current_segment = actual_segment;
-        hls_stream->in_partial_segments = FALSE;
+        hls_stream->current_segment = seek_result.segment;
+        hls_stream->in_partial_segments = seek_result.found_partial_segment;
+        hls_stream->part_idx = seek_result.part_idx;
 
         /* Ask parent class to restart this fragment */
         return GST_HLS_PARSER_RESULT_RESYNC;
@@ -2499,11 +2501,11 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       if (hlsdemux_stream->current_segment->partial_only) {
         /* FIXME: We might find an independent partial segment
          * that's still old enough (beyond the part_hold_back threshold)
-         * but closer to the live edge than the start of the segment */
+         * but closer to the live edge than the start of the segment. This
+         * check should be done inside get_starting_segment() */
         hlsdemux_stream->in_partial_segments = TRUE;
         hlsdemux_stream->part_idx = 0;
       }
-
     } else {
       if (gst_hls_media_playlist_has_lost_sync (hlsdemux_stream->playlist,
               stream->current_position)) {
@@ -2513,21 +2515,28 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       GST_DEBUG_OBJECT (stream,
           "Looking up segment for position %" GST_TIME_FORMAT,
           GST_TIME_ARGS (stream->current_position));
-      /* FIXME: Look up partial segments in LL-HLS */
-      hlsdemux_stream->current_segment =
-          gst_hls_media_playlist_seek (hlsdemux_stream->playlist, TRUE,
-          GST_SEEK_FLAG_SNAP_NEAREST, stream->current_position);
 
-      if (hlsdemux_stream->current_segment == NULL) {
+      GstM3U8SeekResult seek_result;
+      if (!gst_hls_media_playlist_find_position (hlsdemux_stream->playlist,
+              stream->current_position, hlsdemux_stream->in_partial_segments,
+              &seek_result)) {
         GST_INFO_OBJECT (stream, "At the end of the current media playlist");
         return GST_FLOW_EOS;
       }
 
-      /* Update time mapping. If it already exists it will be ignored */
-      gst_hls_demux_add_time_mapping (hlsdemux,
-          hlsdemux_stream->current_segment->discont_sequence,
-          hlsdemux_stream->current_segment->stream_time,
-          hlsdemux_stream->current_segment->datetime);
+      hlsdemux_stream->current_segment = seek_result.segment;
+      hlsdemux_stream->in_partial_segments = seek_result.found_partial_segment;
+      hlsdemux_stream->part_idx = seek_result.part_idx;
+
+      /* If on a full segment, update time mapping. If it already exists it will be ignored.
+       * Don't add time mappings for partial segments, wait for a full segment boundary */
+      if (!hlsdemux_stream->in_partial_segments
+          || hlsdemux_stream->part_idx == 0) {
+        gst_hls_demux_add_time_mapping (hlsdemux,
+            hlsdemux_stream->current_segment->discont_sequence,
+            hlsdemux_stream->current_segment->stream_time,
+            hlsdemux_stream->current_segment->datetime);
+      }
     }
   }
 

@@ -1207,6 +1207,14 @@ gst_hls_media_playlist_has_same_data (GstHLSMediaPlaylist * self,
   return ret;
 }
 
+/* gst_hls_media_playlist_seek() is used when performing
+ * an actual seek. It finds a suitable segment (or partial segment
+ * for LL-HLS) at which to resume playback. Only partial segments
+ * in the last 2 target durations of the live edge are considered
+ * when playing live, otherwise we might start playing a partial
+ * segment group that disappears before we're done with it.
+ * We want a segment or partial that contains a keyframe if possible
+ */
 GstM3U8MediaSegment *
 gst_hls_media_playlist_seek (GstHLSMediaPlaylist * playlist, gboolean forward,
     GstSeekFlags flags, GstClockTimeDiff ts)
@@ -1260,6 +1268,166 @@ out:
   }
 
   return res;
+}
+
+static gboolean
+gst_hls_media_playlist_find_partial_position (GstHLSMediaPlaylist * playlist,
+    GstM3U8MediaSegment * seg, GstClockTimeDiff ts,
+    GstM3U8SeekResult * seek_result)
+{
+  guint i;
+
+  /* As with full segment search below, we more often want to find our position
+   * near the end of a live playlist, so iterate segments backward */
+  for (i = seg->partial_segments->len; i > 0; i--) {
+    guint part_idx = i - 1;
+    GstM3U8PartialSegment *cand =
+        g_ptr_array_index (seg->partial_segments, part_idx);
+
+    GST_DEBUG ("partial segment %d ts:%" GST_STIME_FORMAT " end:%"
+        GST_STIME_FORMAT, part_idx, GST_STIME_ARGS (cand->stream_time),
+        GST_STIME_ARGS (cand->stream_time + cand->duration));
+
+    /* If the target timestamp is before this partial segment, or in the first half, this
+     * is the partial segment to land in */
+    if (cand->stream_time + (cand->duration / 2) >= ts &&
+        cand->stream_time <= ts + (cand->duration / 2)) {
+      GST_DEBUG ("choosing partial segment %d", part_idx);
+      seek_result->segment = gst_m3u8_media_segment_ref (seg);
+      seek_result->found_partial_segment = TRUE;
+      seek_result->part_idx = part_idx;
+      seek_result->stream_time = cand->stream_time;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+/* gst_hls_media_playlist_find_position() is used
+ * when finding the segment or partial segment that corresponds
+ * to our current playback position.
+ * If we're "playing partial segments", we want to find the partial segment
+   whose stream_time matches the target position most closely (or fail
+   if there's no partial segment, since the target partial segment was
+   removed from the playlist and we lost sync.
+ * If not currently playing partial segment, find the segment with a
+ * stream_time that matches, or the partial segment exactly at the start
+ * of the 'partial_only' segment.
+ */
+gboolean
+gst_hls_media_playlist_find_position (GstHLSMediaPlaylist * playlist,
+    GstClockTimeDiff ts, gboolean in_partial_segments,
+    GstM3U8SeekResult * seek_result)
+{
+  guint i;
+  GstM3U8MediaSegment *seg = NULL;
+
+  GST_DEBUG ("ts:%" GST_STIME_FORMAT
+      " in_partial_segments %d (live %d) playlist uri: %s", GST_STIME_ARGS (ts),
+      in_partial_segments, GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist),
+      playlist->uri);
+
+  /* The *common* case is that we want to find our position in a live playback
+   * scenario, when we're playing close to the live edge, so start at the end
+   * of the segments and go backward */
+  for (i = playlist->segments->len; i != 0; i--) {
+    guint seg_idx = i - 1;
+    GstM3U8MediaSegment *cand = g_ptr_array_index (playlist->segments, seg_idx);
+
+    GST_DEBUG ("segment %d ts:%" GST_STIME_FORMAT " end:%" GST_STIME_FORMAT
+        " partial only: %d",
+        seg_idx, GST_STIME_ARGS (cand->stream_time),
+        GST_STIME_ARGS (cand->stream_time + cand->duration),
+        cand->partial_only);
+
+    /* Ignore any (disallowed by the spec) partial_only segment if
+     * the playlist is no longer live */
+    if (cand->partial_only && !GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist))
+      continue;
+
+    /* If the target stream time is definitely past the end
+     * of this segment, no earlier segment (with lower stream time)
+     * could match, so we fail */
+    if (ts >= cand->stream_time + (3 * cand->duration / 2)) {
+      break;
+    }
+
+    if (in_partial_segments || cand->partial_only) {
+      if (cand->partial_segments == NULL) {
+        GstClockTime partial_targetduration = playlist->partial_targetduration;
+
+        /* Default, if the playlist fails to give us a part duration (REQUIRED attribute, but
+         * maybe it got removed) */
+        if (!GST_CLOCK_TIME_IS_VALID (partial_targetduration)) {
+          partial_targetduration = 200 * GST_MSECOND;
+        }
+
+        /* If we want to match a partial segment but this segment doesn't have
+         * any, then the partial segment we want got removed from the playlist,
+         * so we need to fail, except in the specific case that our target
+         * timestamp is within half a part duration of the segment start
+         * itself (ie, we wanted the *first* partial segment
+         */
+        if (cand->stream_time + (partial_targetduration / 2) >= ts &&
+            cand->stream_time <= ts + (partial_targetduration / 2)) {
+          GST_DEBUG ("choosing full segment %d", seg_idx);
+          seek_result->stream_time = seg->stream_time;
+          seek_result->segment = gst_m3u8_media_segment_ref (seg);
+          seek_result->found_partial_segment = FALSE;
+          return TRUE;
+        }
+
+        GST_DEBUG ("Couldn't find a matching partial segment");
+        return FALSE;
+      }
+
+      /* If our partial segment target ts is within half a partial duration
+       * of this segment start/finish, check the partial segments for a match */
+      if (gst_hls_media_playlist_find_partial_position (playlist, cand, ts,
+              seek_result)) {
+        GST_DEBUG ("Returning partial segment sn:%" G_GINT64_FORMAT
+            " part %u stream_time:%" GST_STIME_FORMAT, cand->sequence,
+            seek_result->part_idx, GST_STIME_ARGS (seek_result->stream_time));
+        return TRUE;
+      }
+    }
+
+    /* Otherwise, we're doing a full segment match so check that the timestamp is
+     * within half a segment duration of this segment stream_time */
+    if (cand->stream_time + (cand->duration / 2) >= ts &&
+        cand->stream_time <= ts + (cand->duration / 2)) {
+      GST_DEBUG ("choosing segment %d", seg_idx);
+      seg = cand;
+      break;
+    }
+  }
+
+  if (seg == NULL) {
+    GST_DEBUG ("Couldn't find a matching segment");
+    return FALSE;
+  }
+
+  /* The partial_only segment case should have been handled above
+   * by gst_hls_media_playlist_find_partial_position(). If it
+   * wasn't, it implies the segment we're looking for was not
+   * present in the available partial segments at all,
+   * so we need to return FALSE */
+  if (seg->partial_only) {
+    GST_DEBUG
+        ("Couldn't find a matching partial segment in the partial_only segment");
+    return FALSE;
+  }
+
+  seek_result->stream_time = seg->stream_time;
+  seek_result->segment = gst_m3u8_media_segment_ref (seg);
+  seek_result->found_partial_segment = FALSE;
+
+  GST_DEBUG ("Returning segment sn:%" G_GINT64_FORMAT " stream_time:%"
+      GST_STIME_FORMAT " duration:%" GST_TIME_FORMAT, seg->sequence,
+      GST_STIME_ARGS (seg->stream_time), GST_TIME_ARGS (seg->duration));
+
+  return TRUE;
 }
 
 /* Recalculate all segment DSN based on the DSN of the provided anchor segment

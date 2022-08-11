@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstHLSMediaPlaylist GstHLSMediaPlaylist;
 typedef struct _GstHLSTimeMap GstHLSTimeMap;
+typedef struct _GstM3U8SeekResult GstM3U8SeekResult;
 typedef struct _GstM3U8MediaSegment GstM3U8MediaSegment;
 typedef struct _GstM3U8PartialSegment GstM3U8PartialSegment;
 typedef struct _GstM3U8InitFile GstM3U8InitFile;
@@ -69,6 +70,16 @@ typedef enum {
  * Values are chosen to avoid collision with the core GST_SEEK_FLAG_*
  * flags */
 #define GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL (1 << 16)  /* Allow seeking to a partial segment */
+
+struct _GstM3U8SeekResult {
+  /* stream time of the segment or partial segment */
+  GstClockTimeDiff stream_time;
+
+  GstM3U8MediaSegment	*segment;
+
+  gboolean found_partial_segment;
+  guint part_idx;
+};
 
 /**
  * GstHLSMediaPlaylist:
@@ -305,6 +316,12 @@ gst_hls_media_playlist_seek                 (GstHLSMediaPlaylist *playlist,
 					     gboolean forward,
 					     GstSeekFlags flags,
 					     GstClockTimeDiff ts);
+
+gboolean
+gst_hls_media_playlist_find_position (GstHLSMediaPlaylist *playlist,
+               GstClockTimeDiff ts, gboolean in_partial_segments,
+               GstM3U8SeekResult *seek_result);
+
 void
 gst_hls_media_playlist_dump                 (GstHLSMediaPlaylist* self);
 
