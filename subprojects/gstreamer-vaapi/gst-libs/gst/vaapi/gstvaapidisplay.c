@@ -557,6 +557,13 @@ ensure_profiles (GstVaapiDisplay * display)
   }
   success = TRUE;
 
+  if (priv->encoders->len == 0)
+    g_clear_pointer (&priv->encoders, g_ptr_array_unref);
+  if (priv->decoders->len == 0)
+    g_clear_pointer (&priv->decoders, g_ptr_array_unref);
+  if (priv->codecs->len == 0)
+    g_clear_pointer (&priv->codecs, g_array_unref);
+
 cleanup:
   g_free (profiles);
   g_free (entrypoints);

@@ -1605,6 +1605,8 @@ gst_vaapidecode_register (GstPlugin * plugin, GArray * decoders)
       sink_caps_str = g_strconcat (gst_vaapidecode_sink_caps_str, "; ",
           vaapi_decode_map[i].caps_str, NULL);
       g_clear_pointer (&gst_vaapidecode_sink_caps_str, g_free);
+      if (!sink_caps_str)
+        break;
       gst_vaapidecode_sink_caps_str = sink_caps_str;
     }
 
