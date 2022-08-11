@@ -375,6 +375,31 @@ queue_fec_packet (GstRTPST_2022_1_FecEnc * enc, FecPacket * fec, gboolean row)
   }
 }
 
+static void
+gst_2d_fec_push_item_unlocked (GstRTPST_2022_1_FecEnc * enc)
+{
+  GstFlowReturn ret;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  Item *item = g_queue_pop_head (&enc->queued_column_packets);
+
+  GST_LOG_OBJECT (enc,
+      "Pushing column FEC packet, target media seq: %u, seq base: %u, "
+      "media seqnum: %u", item->target_media_seq, item->seq_base,
+      enc->last_media_seqnum);
+  gst_rtp_buffer_map (item->buffer, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_timestamp (&rtp, enc->last_media_timestamp);
+  gst_rtp_buffer_unmap (&rtp);
+  GST_OBJECT_UNLOCK (enc);
+  ret = gst_pad_push (enc->column_fec_srcpad, gst_buffer_ref (item->buffer));
+  GST_OBJECT_LOCK (enc);
+
+  if (ret != GST_FLOW_OK && ret != GST_FLOW_FLUSHING)
+    GST_WARNING_OBJECT (enc->column_fec_srcpad,
+        "Failed to push column FEC packet: %s", gst_flow_get_name (ret));
+
+  free_item (item);
+}
+
 static GstFlowReturn
 gst_rtpst_2022_1_fecenc_sink_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -441,31 +466,12 @@ gst_rtpst_2022_1_fecenc_sink_chain (GstPad * pad, GstObject * parent,
 
   gst_rtp_buffer_unmap (&rtp);
 
-  if (g_queue_get_length (&enc->queued_column_packets) > 0) {
+  {
     Item *item = g_queue_peek_head (&enc->queued_column_packets);
-
-    if (item->target_media_seq == enc->last_media_seqnum) {
-      GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-
-      g_queue_pop_head (&enc->queued_column_packets);
-      GST_LOG_OBJECT (enc,
-          "Pushing column FEC packet, seq base: %u, media seqnum: %u",
-          item->seq_base, enc->last_media_seqnum);
-      gst_rtp_buffer_map (item->buffer, GST_MAP_WRITE, &rtp);
-      gst_rtp_buffer_set_timestamp (&rtp, enc->last_media_timestamp);
-      gst_rtp_buffer_unmap (&rtp);
-      GST_OBJECT_UNLOCK (enc);
-      ret =
-          gst_pad_push (enc->column_fec_srcpad, gst_buffer_ref (item->buffer));
-      GST_OBJECT_LOCK (enc);
-
-      if (ret != GST_FLOW_OK && ret != GST_FLOW_FLUSHING)
-        GST_WARNING_OBJECT (enc->column_fec_srcpad,
-            "Failed to push column FEC packet: %s", gst_flow_get_name (ret));
-
-      free_item (item);
-    }
+    if (item && item->target_media_seq == enc->last_media_seqnum)
+      gst_2d_fec_push_item_unlocked (enc);
   }
+
   GST_OBJECT_UNLOCK (enc);
 
   ret = gst_pad_push (enc->srcpad, buffer);
@@ -687,8 +693,21 @@ gst_2d_fec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstRTPST_2022_1_FecEnc *enc = GST_RTPST_2022_1_FECENC_CAST (parent);
   gboolean ret;
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP)
-    gst_rtpst_2022_1_fecenc_reset (enc, TRUE);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtpst_2022_1_fecenc_reset (enc, TRUE);
+      break;
+    case GST_EVENT_EOS:
+      gst_pad_push_event (enc->row_fec_srcpad, gst_event_ref (event));
+      GST_OBJECT_LOCK (enc);
+      while (g_queue_peek_head (&enc->queued_column_packets))
+        gst_2d_fec_push_item_unlocked (enc);
+      GST_OBJECT_UNLOCK (enc);
+      gst_pad_push_event (enc->column_fec_srcpad, gst_event_ref (event));
+      break;
+    default:
+      break;
+  }
 
   ret = gst_pad_event_default (pad, parent, event);
 
