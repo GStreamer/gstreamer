@@ -13596,7 +13596,8 @@ qtdemux_reuse_and_configure_stream (GstQTDemux * qtdemux,
 
   /* unset new_stream to prevent stream-start event, unless we are EOS in which
    * case we need to force one through */
-  newstream->new_stream = GST_PAD_IS_EOS (newstream->pad);
+  newstream->new_stream = newstream->pad != NULL
+      && GST_PAD_IS_EOS (newstream->pad);
 
   return gst_qtdemux_configure_stream (qtdemux, newstream);
 }
