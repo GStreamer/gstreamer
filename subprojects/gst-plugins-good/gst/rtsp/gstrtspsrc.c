@@ -2385,41 +2385,13 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
     if (g_str_has_prefix (control_path, "rtsp://"))
       stream->conninfo.location = g_strdup (control_path);
     else {
+      const gchar *base;
+
+      base = get_aggregate_control (src);
       if (g_strcmp0 (control_path, "*") == 0)
-        control_path = "";
-      /* handle url with query */
-      if (src->conninfo.url && src->conninfo.url->query) {
-        stream->conninfo.location =
-            gst_rtsp_url_get_request_uri_with_control (src->conninfo.url,
-            control_path);
-      } else {
-        const gchar *base;
-        gboolean has_slash;
-        const gchar *slash;
-        const gchar *actual_control_path = NULL;
-
-        base = get_aggregate_control (src);
-        has_slash = g_str_has_suffix (base, "/");
-        /* manage existence or non-existence of / in control path */
-        if (control_path && strlen (control_path) > 0) {
-          gboolean control_has_slash = g_str_has_prefix (control_path, "/");
-
-          actual_control_path = control_path;
-          if (has_slash && control_has_slash) {
-            if (strlen (control_path) == 1) {
-              actual_control_path = NULL;
-            } else {
-              actual_control_path = control_path + 1;
-            }
-          } else {
-            has_slash = has_slash || control_has_slash;
-          }
-        }
-        slash = (!has_slash && (actual_control_path != NULL)) ? "/" : "";
-        /* concatenate the two strings, insert / when not present */
-        stream->conninfo.location =
-            g_strdup_printf ("%s%s%s", base, slash, control_path);
-      }
+        control_path = g_strdup (base);
+      else
+        stream->conninfo.location = gst_uri_join_strings (base, control_path);
     }
   }
   GST_DEBUG_OBJECT (src, " setup: %s",
