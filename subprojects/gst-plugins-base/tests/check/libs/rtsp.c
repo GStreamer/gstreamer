@@ -41,9 +41,9 @@ GST_START_TEST (test_rtsp_url_basic)
   fail_unless (url->family == GST_RTSP_FAM_INET);
   fail_unless (!url->user);
   fail_unless (!url->passwd);
-  fail_unless (!strcmp (url->host, "localhost"));
+  fail_unless_equals_string (url->host, "localhost");
   /* fail_unless (url->port == GST_RTSP_DEFAULT_PORT); */
-  fail_unless (!strcmp (url->abspath, "/foo/bar"));
+  fail_unless_equals_string (url->abspath, "/foo/bar");
   fail_unless (!url->query);
 
   gst_rtsp_url_free (url);
@@ -69,14 +69,14 @@ GST_START_TEST (test_rtsp_url_query)
   fail_unless (url->family == GST_RTSP_FAM_INET);
   fail_unless (!url->user);
   fail_unless (!url->passwd);
-  fail_unless (!strcmp (url->host, "localhost"));
-  fail_unless (!strcmp (url->abspath, "/foo/bar/"));
-  fail_unless (!strcmp (url->query, "baz=fooo"));
+  fail_unless_equals_string (url->host, "localhost");
+  fail_unless_equals_string (url->abspath, "/foo/bar/");
+  fail_unless_equals_string (url->query, "baz=fooo");
   uri = gst_rtsp_url_get_request_uri (url);
-  fail_unless (!strcmp (uri, original_uri));
+  fail_unless_equals_string (uri, original_uri);
   g_free (uri);
   uri = gst_rtsp_url_get_request_uri_with_control (url, "/video/stream1");
-  fail_unless (!strcmp (uri, original_uri_with_control));
+  fail_unless_equals_string (uri, original_uri_with_control);
   g_free (uri);
 
   gst_rtsp_url_free (url);
@@ -97,9 +97,9 @@ GST_START_TEST (test_rtsp_url_components_1)
   comps = gst_rtsp_url_decode_path_components (url);
   fail_unless (comps != NULL);
   fail_unless (g_strv_length (comps) == 3);
-  fail_unless (!strcmp (comps[0], ""));
-  fail_unless (!strcmp (comps[1], "foo"));
-  fail_unless (!strcmp (comps[2], "bar"));
+  fail_unless_equals_string (comps[0], "");
+  fail_unless_equals_string (comps[1], "foo");
+  fail_unless_equals_string (comps[2], "bar");
 
   g_strfreev (comps);
   gst_rtsp_url_free (url);
@@ -120,9 +120,9 @@ GST_START_TEST (test_rtsp_url_components_2)
   comps = gst_rtsp_url_decode_path_components (url);
   fail_unless (comps != NULL);
   fail_unless (g_strv_length (comps) == 3);
-  fail_unless (!strcmp (comps[0], ""));
-  fail_unless (!strcmp (comps[1], "foo/bar"));
-  fail_unless (!strcmp (comps[2], "qux baz"));
+  fail_unless_equals_string (comps[0], "");
+  fail_unless_equals_string (comps[1], "foo/bar");
+  fail_unless_equals_string (comps[2], "qux baz");
 
   g_strfreev (comps);
   gst_rtsp_url_free (url);
@@ -143,9 +143,9 @@ GST_START_TEST (test_rtsp_url_components_3)
   comps = gst_rtsp_url_decode_path_components (url);
   fail_unless (comps != NULL);
   fail_unless (g_strv_length (comps) == 3);
-  fail_unless (!strcmp (comps[0], ""));
-  fail_unless (!strcmp (comps[1], "foo%00bar"));
-  fail_unless (!strcmp (comps[2], "qux baz"));
+  fail_unless_equals_string (comps[0], "");
+  fail_unless_equals_string (comps[1], "foo%00bar");
+  fail_unless_equals_string (comps[2], "qux baz");
 
   g_strfreev (comps);
   gst_rtsp_url_free (url);
