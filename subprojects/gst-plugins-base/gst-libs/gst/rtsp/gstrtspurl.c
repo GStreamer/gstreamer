@@ -319,8 +319,27 @@ gst_rtsp_url_get_port (const GstRTSPUrl * url, guint16 * port)
 gchar *
 gst_rtsp_url_get_request_uri (const GstRTSPUrl * url)
 {
+  gchar *uri;
+  const gchar *pre_host;
+  const gchar *post_host;
+  const gchar *pre_query;
+  const gchar *query;
 
-  return gst_rtsp_url_get_request_uri_with_control (url, NULL);
+  g_return_val_if_fail (url != NULL, NULL);
+
+  pre_host = url->family == GST_RTSP_FAM_INET6 ? "[" : "";
+  post_host = url->family == GST_RTSP_FAM_INET6 ? "]" : "";
+  pre_query = url->query ? "?" : "";
+  query = url->query ? url->query : "";
+
+  if (url->port != 0) {
+    uri = g_strdup_printf ("rtsp://%s%s%s:%u%s%s%s", pre_host, url->host,
+        post_host, url->port, url->abspath, pre_query, query);
+  } else {
+    uri = g_strdup_printf ("rtsp://%s%s%s%s%s%s", pre_host, url->host,
+        post_host, url->abspath, pre_query, query);
+  }
+  return uri;
 }
 
 /**
@@ -340,57 +359,16 @@ gchar *
 gst_rtsp_url_get_request_uri_with_control (const GstRTSPUrl * url,
     const gchar * control_path)
 {
-
+  gchar *url_string;
   gchar *uri;
-  const gchar *pre_host;
-  const gchar *post_host;
-  const gchar *pre_query;
-  const gchar *query;
-  gboolean has_slash;
-  const gchar *slash;
-  const gchar *actual_control_path = NULL;
 
   g_return_val_if_fail (url != NULL, NULL);
 
-  has_slash = g_str_has_suffix (url->abspath, "/");
+  /* FIXME: Use GUri here once we can depend on GLib 2.66 */
 
-  if (control_path && strlen (control_path) > 0) {
-    gboolean control_has_slash;
-
-    /* treat wild card as empty control path */
-    if (g_strcmp0 (control_path, "*") == 0)
-      control_path = "";
-    control_has_slash = g_str_has_prefix (control_path, "/");
-    actual_control_path = control_path;
-    if (has_slash && control_has_slash) {
-      if (strlen (control_path) == 1) {
-        actual_control_path = NULL;
-      } else {
-        actual_control_path = control_path + 1;
-      }
-    } else {
-      has_slash = has_slash || control_has_slash;
-    }
-  }
-  slash = (!has_slash && (actual_control_path != NULL)) ? "/" : "";
-  if (!actual_control_path)
-    actual_control_path = "";
-
-  pre_host = url->family == GST_RTSP_FAM_INET6 ? "[" : "";
-  post_host = url->family == GST_RTSP_FAM_INET6 ? "]" : "";
-  pre_query = url->query ? "?" : "";
-  query = url->query ? url->query : "";
-
-  if (url->port != 0) {
-    uri =
-        g_strdup_printf ("rtsp://%s%s%s:%u%s%s%s%s%s", pre_host,
-        url->host, post_host, url->port, url->abspath,
-        slash, actual_control_path, pre_query, query);
-  } else {
-    uri =
-        g_strdup_printf ("rtsp://%s%s%s%s%s%s%s%s", pre_host, url->host,
-        post_host, url->abspath, slash, actual_control_path, pre_query, query);
-  }
+  url_string = gst_rtsp_url_get_request_uri (url);
+  uri = gst_uri_join_strings (url_string, control_path);
+  g_clear_pointer (&url_string, g_free);
 
   return uri;
 }
