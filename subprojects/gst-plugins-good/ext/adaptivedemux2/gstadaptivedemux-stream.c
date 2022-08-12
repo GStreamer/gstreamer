@@ -1639,6 +1639,9 @@ gst_adaptive_demux2_stream_handle_playlist_eos (GstAdaptiveDemux2Stream *
       GST_DEBUG_OBJECT (stream,
           "Live playlist EOS - waiting for manifest update");
       stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_MANIFEST_UPDATE;
+      /* Clear the stream last_ret EOS state, since we're not actually EOS */
+      if (stream->last_ret == GST_FLOW_EOS)
+        stream->last_ret = GST_FLOW_OK;
       gst_adaptive_demux2_stream_wants_manifest_update (demux);
       return;
     }
@@ -1733,6 +1736,7 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
       break;                    /* all is good, let's go */
     case GST_FLOW_EOS:
       GST_DEBUG_OBJECT (stream, "EOS, checking to stop download loop");
+      stream->last_ret = ret;
       gst_adaptive_demux2_stream_handle_playlist_eos (stream);
       return FALSE;
     case GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC:

@@ -3647,6 +3647,8 @@ restart:
    *   * Pop next pending data from track and update pending position
    *
    */
+  gboolean need_restart = FALSE;
+
   for (tmp = demux->priv->outputs; tmp; tmp = tmp->next) {
     OutputSlot *slot = (OutputSlot *) tmp->data;
     GstAdaptiveDemuxTrack *track = slot->track;
@@ -3708,6 +3710,8 @@ restart:
             gst_event_store_mark_delivered (&track->sticky_events, event);
             gst_event_unref (event);
             event = NULL;
+            /* We'll need to re-check if all tracks are empty again above */
+            need_restart = TRUE;
           }
         }
 
@@ -3755,6 +3759,9 @@ restart:
   /* Store global output position */
   if (global_output_position != GST_CLOCK_STIME_NONE)
     demux->priv->global_output_position = global_output_position;
+
+  if (need_restart)
+    goto restart;
 
   if (global_output_position == GST_CLOCK_STIME_NONE) {
     if (!demux->priv->flushing) {
