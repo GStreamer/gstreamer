@@ -565,7 +565,6 @@ gst_player_new (GstPlayerVideoRenderer * video_renderer,
 {
   static GOnce once = G_ONCE_INIT;
   GstPlayer *self;
-  GstPlayerVideoRenderer *renderer = NULL;
 
   g_once (&once, gst_player_init_once, NULL);
 
@@ -576,9 +575,11 @@ gst_player_new (GstPlayerVideoRenderer * video_renderer,
   self->play = gst_play_new (NULL);
 
   if (video_renderer != NULL) {
+    GstPlayerVideoRenderer *renderer;
     renderer = gst_player_wrapped_video_renderer_new (video_renderer, self);
     g_object_set (self->play, "video-renderer",
         GST_PLAY_VIDEO_RENDERER (renderer), NULL);
+    g_object_unref (renderer);
   }
 
   if (signal_dispatcher != NULL) {
