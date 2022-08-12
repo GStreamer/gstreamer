@@ -290,8 +290,9 @@ gst_hls_media_playlist_advance_fragment     (GstHLSMediaPlaylist * m3u8,
 					     gboolean  forward,
 					     gboolean allow_partial_only_segment);
 
-GstM3U8MediaSegment *
-gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist *self);
+gboolean
+gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist *self, gboolean low_latency,
+    GstM3U8SeekResult *seek_result);
 
 GstClockTime
 gst_hls_media_playlist_get_duration         (GstHLSMediaPlaylist * m3u8);
@@ -311,11 +312,12 @@ gboolean
 gst_hls_media_playlist_has_lost_sync        (GstHLSMediaPlaylist * m3u8,
 					     GstClockTime position);
 
-GstM3U8MediaSegment *
-gst_hls_media_playlist_seek                 (GstHLSMediaPlaylist *playlist,
+gboolean
+gst_hls_media_playlist_seek (GstHLSMediaPlaylist *playlist,
 					     gboolean forward,
 					     GstSeekFlags flags,
-					     GstClockTimeDiff ts);
+					     GstClockTimeDiff ts,
+					     GstM3U8SeekResult *seek_result);
 
 gboolean
 gst_hls_media_playlist_find_position (GstHLSMediaPlaylist *playlist,

@@ -675,11 +675,15 @@ GST_START_TEST (test_advance_fragment)
 {
   GstHLSMediaPlaylist *pl;
   GstM3U8MediaSegment *mf;
+  GstM3U8SeekResult seek_result;
 
   pl = load_m3u8 (BYTE_RANGES_PLAYLIST);
 
   /* Check the next fragment */
-  mf = gst_hls_media_playlist_get_starting_segment (pl);
+  fail_unless (gst_hls_media_playlist_get_starting_segment (pl, FALSE,
+          &seek_result) == TRUE);
+
+  mf = seek_result.segment;
   fail_unless (mf != NULL);
   assert_equals_int (mf->discont, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");

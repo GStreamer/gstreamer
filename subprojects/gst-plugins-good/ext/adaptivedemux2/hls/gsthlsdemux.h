@@ -95,6 +95,11 @@ struct _GstHLSDemuxStream
   /* A stream either variants or renditions */
   gboolean is_variant;
 
+  /* A copy of the demuxer flag, stored when the
+   * stream is created, so it can't change after
+   * the stream starts downloading things */
+  gboolean llhls_enabled;
+
   /* Rendition-specific fields */
   GstStreamType rendition_type;	/* FIXME: Also used by variant streams */
   gchar *lang;
@@ -191,6 +196,9 @@ struct _GstHLSDemux2
 
   /* Initial bitrate to use before any bandwidth measurement */
   guint start_bitrate;
+
+  /* Whether LL-HLS (Low Latency HLS) features are enabled */
+  gboolean llhls_enabled;
 
   /* Decryption key cache: url => GstHLSKey */
   GHashTable *keys;

@@ -67,9 +67,11 @@ enum
   PROP_0,
 
   PROP_START_BITRATE,
+  PROP_LLHLS_ENABLED,
 };
 
 #define DEFAULT_START_BITRATE 0
+#define DEFAULT_LLHLS_ENABLED TRUE
 
 /* Maximum values for mpeg-ts DTS values */
 #define MPEG_TS_MAX_PTS (((((guint64)1) << 33) * (guint64)100000) / 9)
@@ -233,6 +235,9 @@ gst_hls_demux_set_property (GObject * object, guint prop_id,
     case PROP_START_BITRATE:
       demux->start_bitrate = g_value_get_uint (value);
       break;
+    case PROP_LLHLS_ENABLED:
+      demux->llhls_enabled = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -248,6 +253,9 @@ gst_hls_demux_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_START_BITRATE:
       g_value_set_uint (value, demux->start_bitrate);
+      break;
+    case PROP_LLHLS_ENABLED:
+      g_value_set_boolean (value, demux->llhls_enabled);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -277,6 +285,11 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
           0, G_MAXUINT, DEFAULT_START_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_LLHLS_ENABLED,
+      g_param_spec_boolean ("llhls-enabled", "Enable LL-HLS support",
+          "Enable support for LL-HLS (Low Latency HLS) downloads",
+          DEFAULT_LLHLS_ENABLED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 
   gst_element_class_add_static_pad_template (element_class, &sinktemplate);
@@ -302,6 +315,7 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
 static void
 gst_hls_demux2_init (GstHLSDemux * demux)
 {
+  demux->llhls_enabled = DEFAULT_LLHLS_ENABLED;
   demux->keys = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
   g_mutex_init (&demux->keys_lock);
 }
@@ -497,7 +511,6 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
   GstFlowReturn ret = GST_FLOW_OK;
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
   GstHLSDemux *hlsdemux = (GstHLSDemux *) stream->demux;
-  GstM3U8MediaSegment *new_position;
 
   GST_DEBUG_OBJECT (stream,
       "is_variant:%d media:%p current_variant:%p forward:%d ts:%"
@@ -514,17 +527,22 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
     }
   }
 
-  /* FIXME: Allow jumping to partial segments in LL-HLS? */
-  new_position =
-      gst_hls_media_playlist_seek (hls_stream->playlist, forward, flags, ts);
-  if (new_position) {
+  /* Allow jumping to partial segments in the last 2 segments in LL-HLS */
+  if (hls_stream->llhls_enabled)
+    flags |= GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
+
+  GstM3U8SeekResult seek_result;
+  if (gst_hls_media_playlist_seek (hls_stream->playlist, forward, flags, ts,
+          &seek_result)) {
     if (hls_stream->current_segment)
       gst_m3u8_media_segment_unref (hls_stream->current_segment);
-    hls_stream->current_segment = new_position;
-    hls_stream->in_partial_segments = FALSE;
+    hls_stream->current_segment = seek_result.segment;
+    hls_stream->in_partial_segments = seek_result.found_partial_segment;
+    hls_stream->part_idx = seek_result.part_idx;
+
     hls_stream->reset_pts = TRUE;
     if (final_ts)
-      *final_ts = new_position->stream_time;
+      *final_ts = seek_result.stream_time;
   } else {
     GST_WARNING_OBJECT (stream, "Seeking failed");
     ret = GST_FLOW_ERROR;
@@ -547,6 +565,8 @@ create_common_hls_stream (GstHLSDemux * demux, const gchar * name)
   GstAdaptiveDemux2Stream *stream;
 
   stream = g_object_new (GST_TYPE_HLS_DEMUX_STREAM, "name", name, NULL);
+  GST_HLS_DEMUX_STREAM (stream)->llhls_enabled = demux->llhls_enabled;
+
   gst_adaptive_demux2_add_stream ((GstAdaptiveDemux *) demux, stream);
 
   return stream;
@@ -943,9 +963,21 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   ret = gst_hls_demux_setup_streams (demux);
 
   if (simple_media_playlist) {
+    GstM3U8SeekResult seek_result;
+
     hlsdemux->main_stream->playlist = simple_media_playlist;
-    hlsdemux->main_stream->current_segment =
-        gst_hls_media_playlist_get_starting_segment (simple_media_playlist);
+
+    if (!gst_hls_media_playlist_get_starting_segment (simple_media_playlist,
+            hlsdemux->main_stream->llhls_enabled, &seek_result)) {
+      GST_DEBUG_OBJECT (hlsdemux->main_stream,
+          "Failed to find a segment to start at");
+      return FALSE;
+    }
+    hlsdemux->main_stream->current_segment = seek_result.segment;
+    hlsdemux->main_stream->in_partial_segments =
+        seek_result.found_partial_segment;
+    hlsdemux->main_stream->part_idx = seek_result.part_idx;
+
     setup_initial_playlist (hlsdemux, simple_media_playlist);
     gst_hls_update_time_mappings (hlsdemux, simple_media_playlist);
     gst_hls_media_playlist_dump (simple_media_playlist);
@@ -1687,6 +1719,7 @@ gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream)
   if (hls_stream->current_segment == NULL) {
     /* We can't advance, we just return OK for now and let the base class
      * trigger a new download (or fail and resync itself) */
+    GST_DEBUG_OBJECT (stream, "Can't advance - current_segment is NULL");
     return GST_FLOW_OK;
   }
 
@@ -1905,7 +1938,7 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
   new_segment =
       gst_hls_media_playlist_advance_fragment (hlsdemux_stream->playlist,
       hlsdemux_stream->current_segment, stream->demux->segment.rate > 0,
-      TRUE /* FIXME: Only in LL-HLS mode */ );
+      hlsdemux_stream->llhls_enabled);
 
   if (new_segment) {
     hlsdemux_stream->reset_pts = FALSE;
@@ -2225,23 +2258,32 @@ gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux)
 
     if (hls_stream->is_variant) {
       GstHLSTimeMap *map;
+      GstM3U8SeekResult seek_result;
+
       /* Resynchronize the variant stream */
       g_assert (stream->current_position != GST_CLOCK_STIME_NONE);
-      hls_stream->current_segment =
-          gst_hls_media_playlist_get_starting_segment (hls_stream->playlist);
-      hls_stream->current_segment->stream_time = stream->current_position;
-      gst_hls_media_playlist_recalculate_stream_time (hls_stream->playlist,
-          hls_stream->current_segment);
-      GST_DEBUG_OBJECT (stream,
-          "Resynced variant playlist to %" GST_STIME_FORMAT,
-          GST_STIME_ARGS (stream->current_position));
-      map =
-          gst_hls_find_time_map (hlsdemux,
-          hls_stream->current_segment->discont_sequence);
-      if (map)
-        map->internal_time = GST_CLOCK_TIME_NONE;
-      gst_hls_update_time_mappings (hlsdemux, hls_stream->playlist);
-      gst_hls_media_playlist_dump (hls_stream->playlist);
+      if (gst_hls_media_playlist_get_starting_segment (hls_stream->playlist,
+              hls_stream->llhls_enabled, &seek_result)) {
+        hls_stream->current_segment = seek_result.segment;
+        hls_stream->in_partial_segments = seek_result.found_partial_segment;
+        hls_stream->part_idx = seek_result.part_idx;
+
+        hls_stream->current_segment->stream_time = stream->current_position;
+        gst_hls_media_playlist_recalculate_stream_time (hls_stream->playlist,
+            hls_stream->current_segment);
+        GST_DEBUG_OBJECT (stream,
+            "Resynced variant playlist to %" GST_STIME_FORMAT,
+            GST_STIME_ARGS (stream->current_position));
+        map =
+            gst_hls_find_time_map (hlsdemux,
+            hls_stream->current_segment->discont_sequence);
+        if (map)
+          map->internal_time = GST_CLOCK_TIME_NONE;
+        gst_hls_update_time_mappings (hlsdemux, hls_stream->playlist);
+        gst_hls_media_playlist_dump (hls_stream->playlist);
+      } else {
+        GST_ERROR_OBJECT (stream, "Failed to locate a segment to restart at!");
+      }
     } else {
       /* Force playlist update for the rendition streams, it will resync to the
        * variant stream on the next round */
@@ -2314,7 +2356,7 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
         GST_STIME_ARGS (stream->current_segment->stream_time),
         GST_STR_NULL (stream->current_segment->uri));
 
-    /* Use best-effort techniques to find the correponding current media segment
+    /* Use best-effort techniques to find the corresponding current media segment
      * in the new playlist. This might be off in some cases, but it doesn't matter
      * since we will be checking the embedded timestamp later */
     new_segment =
@@ -2496,18 +2538,17 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
   if (hlsdemux_stream->current_segment == NULL) {
     GST_LOG_OBJECT (stream, "No current segment");
     if (stream->current_position == GST_CLOCK_TIME_NONE) {
-      GST_DEBUG_OBJECT (stream, "Setting up initial segment");
-      hlsdemux_stream->current_segment =
-          gst_hls_media_playlist_get_starting_segment
-          (hlsdemux_stream->playlist);
+      GstM3U8SeekResult seek_result;
 
-      if (hlsdemux_stream->current_segment->partial_only) {
-        /* FIXME: We might find an independent partial segment
-         * that's still old enough (beyond the part_hold_back threshold)
-         * but closer to the live edge than the start of the segment. This
-         * check should be done inside get_starting_segment() */
-        hlsdemux_stream->in_partial_segments = TRUE;
-        hlsdemux_stream->part_idx = 0;
+      GST_DEBUG_OBJECT (stream, "Setting up initial segment");
+
+      if (gst_hls_media_playlist_get_starting_segment
+          (hlsdemux_stream->playlist, hlsdemux_stream->llhls_enabled,
+              &seek_result)) {
+        hlsdemux_stream->current_segment = seek_result.segment;
+        hlsdemux_stream->in_partial_segments =
+            seek_result.found_partial_segment;
+        hlsdemux_stream->part_idx = seek_result.part_idx;
       }
     } else {
       if (gst_hls_media_playlist_has_lost_sync (hlsdemux_stream->playlist,

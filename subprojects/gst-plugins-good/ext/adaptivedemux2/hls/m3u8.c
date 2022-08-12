@@ -1215,28 +1215,116 @@ gst_hls_media_playlist_has_same_data (GstHLSMediaPlaylist * self,
  * segment group that disappears before we're done with it.
  * We want a segment or partial that contains a keyframe if possible
  */
-GstM3U8MediaSegment *
+gboolean
 gst_hls_media_playlist_seek (GstHLSMediaPlaylist * playlist, gboolean forward,
-    GstSeekFlags flags, GstClockTimeDiff ts)
+    GstSeekFlags flags, GstClockTimeDiff ts, GstM3U8SeekResult * seek_result)
 {
   gboolean snap_nearest =
       (flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST;
   gboolean snap_after =
       (flags & GST_SEEK_FLAG_SNAP_AFTER) == GST_SEEK_FLAG_SNAP_AFTER;
+  gboolean want_keyunit = (flags & GST_SEEK_FLAG_KEY_UNIT);
   guint idx;
   GstM3U8MediaSegment *res = NULL;
+  guint res_part_idx = 0;
+  GstClockTime partial_window_start = GST_CLOCK_TIME_NONE;
 
-  GST_DEBUG ("ts:%" GST_STIME_FORMAT " forward:%d playlist uri: %s",
+  GST_DEBUG ("target ts:%" GST_STIME_FORMAT " forward:%d playlist uri: %s",
       GST_STIME_ARGS (ts), forward, playlist->uri);
+
+  /* Can't seek if there's no segments */
+  if (playlist->segments->len < 1)
+    return FALSE;
+
+  /* Calculate the threshold at which we might start inspecting partial segments */
+  if (flags & GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL) {
+    GstM3U8MediaSegment *last_seg =
+        g_ptr_array_index (playlist->segments, playlist->segments->len - 1);
+    GstClockTime playlist_end = last_seg->stream_time + last_seg->duration;
+
+    if (playlist_end >= 2 * playlist->targetduration)
+      partial_window_start = playlist_end - 2 * playlist->targetduration;
+    else
+      partial_window_start = last_seg->stream_time;
+
+    GST_DEBUG ("Partial segment threshold %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (partial_window_start));
+  }
 
   for (idx = 0; idx < playlist->segments->len; idx++) {
     GstM3U8MediaSegment *cand = g_ptr_array_index (playlist->segments, idx);
 
-    /* If only full segments was request, skip any segment that
-     * only has EXT-X-PARTs attached */
-    if (cand->partial_only && !(flags & GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL))
-      continue;
+    if (flags & GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL &&
+        GST_CLOCK_TIME_IS_VALID (partial_window_start) &&
+        cand->stream_time + cand->duration > partial_window_start) {
+      /* Permitted to land at a partial segment, but only do so if
+       * they are in the last 2 target durations of the playlist, so we can
+       * be fairly sure we'll have to time download them all before
+       * they get removed.
+       *
+       * 6.2.2: EXT-X-PART tags SHOULD be removed from the Playlist after they are
+       * greater than three Target Durations from the end of the Playlist.
+       * Clients MUST be able to download the Partial Segment for at least
+       * three Target Durations after the EXT-X-PART tag is removed from the
+       * Playlist.
+       */
+      if (cand->partial_segments != NULL) {
+        guint part_idx;
+        guint last_independent_idx = 0;
 
+        for (part_idx = 0; part_idx < cand->partial_segments->len; part_idx++) {
+          GstM3U8PartialSegment *part =
+              g_ptr_array_index (cand->partial_segments, part_idx);
+
+          GST_LOG ("Inspecting partial segment sn:%" G_GINT64_FORMAT
+              " idx %u stream_time:%" GST_STIME_FORMAT " duration:%"
+              GST_TIME_FORMAT, cand->sequence, part_idx,
+              GST_STIME_ARGS (part->stream_time),
+              GST_TIME_ARGS (part->duration));
+
+          if ((forward & snap_after) || snap_nearest) {
+            if (!want_keyunit || part->independent) {
+              if (part->stream_time >= ts ||
+                  (snap_nearest
+                      && (ts - part->stream_time < part->duration / 2))) {
+                res = cand;
+                res_part_idx = part_idx;
+                goto partial_seg_out;
+              }
+            }
+          } else if (!forward && snap_after) {
+            GstClockTime next_pos = cand->stream_time + cand->duration;
+
+            if (!want_keyunit || part->independent) {
+              if (next_pos <= ts && ts < next_pos + cand->duration) {
+                res = cand;
+                res_part_idx = part_idx;
+                goto partial_seg_out;
+              }
+            }
+          } else if (part->stream_time <= ts
+              && ts < part->stream_time + part->duration) {
+            res = cand;
+            if (!want_keyunit || part->independent)
+              res_part_idx = part_idx;
+            else
+              res_part_idx = last_independent_idx;
+            goto partial_seg_out;
+          }
+
+          if (part->independent)
+            last_independent_idx = part_idx;
+        }
+      }
+    } else if (cand->partial_only) {
+      /* If only full segments were requested or we're still outside the partial segment
+       * window, skip the last segment if it only has EXT-X-PARTs attached */
+      continue;
+    }
+
+    /* For full segment alignment, we ignore the KEY_UNIT flag and assume
+     * all segments have a keyframe, since HLS doesn't give us reliable info
+     * about that */
     if ((forward & snap_after) || snap_nearest) {
       if (cand->stream_time >= ts ||
           (snap_nearest && (ts - cand->stream_time < cand->duration / 2))) {
@@ -1262,12 +1350,37 @@ out:
     GST_DEBUG ("Returning segment sn:%" G_GINT64_FORMAT " stream_time:%"
         GST_STIME_FORMAT " duration:%" GST_TIME_FORMAT, res->sequence,
         GST_STIME_ARGS (res->stream_time), GST_TIME_ARGS (res->duration));
-    gst_m3u8_media_segment_ref (res);
-  } else {
-    GST_DEBUG ("Couldn't find a match");
+
+    seek_result->stream_time = res->stream_time;
+    seek_result->segment = gst_m3u8_media_segment_ref (res);
+    seek_result->found_partial_segment = res->partial_only;
+    seek_result->part_idx = 0;
+    return TRUE;
   }
 
-  return res;
+  GST_DEBUG ("Couldn't find a match");
+  return FALSE;
+
+partial_seg_out:
+  if (res && res->partial_segments != NULL
+      && res_part_idx < res->partial_segments->len) {
+    GstM3U8PartialSegment *part =
+        g_ptr_array_index (res->partial_segments, res_part_idx);
+
+    GST_DEBUG ("Returning partial segment sn:%" G_GINT64_FORMAT
+        " part_idx %u stream_time:%" GST_STIME_FORMAT " duration:%"
+        GST_TIME_FORMAT, res->sequence, res_part_idx,
+        GST_STIME_ARGS (part->stream_time), GST_TIME_ARGS (part->duration));
+
+    seek_result->stream_time = part->stream_time;
+    seek_result->segment = gst_m3u8_media_segment_ref (res);
+    seek_result->found_partial_segment = TRUE;
+    seek_result->part_idx = res_part_idx;
+    return TRUE;
+  }
+
+  GST_DEBUG ("Couldn't find a match");
+  return FALSE;
 }
 
 static gboolean
@@ -1780,10 +1893,11 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
   return res;
 }
 
-GstM3U8MediaSegment *
-gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self)
+gboolean
+gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
+    gboolean low_latency, GstM3U8SeekResult * seek_result)
 {
-  GstM3U8MediaSegment *res;
+  GstM3U8MediaSegment *res = NULL;
 
   GST_DEBUG ("playlist %s", self->uri);
 
@@ -1791,20 +1905,79 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self)
     /* For non-live, we just grab the first one */
     res = g_ptr_array_index (self->segments, 0);
   } else {
-    /* Live playlist */
-    res =
-        g_ptr_array_index (self->segments,
-        MAX ((gint) self->segments->len - GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE -
-            1, 0));
+    GstClockTime hold_back = GST_CLOCK_TIME_NONE;
+    /* Live playlist. If low-latency, use the PART-HOLD-BACK specified distance
+     * from the end, otherwise HOLD-BACK distance or if that's not provided,
+     * then 3 target durations */
+    if (low_latency) {
+      if (GST_CLOCK_TIME_IS_VALID (self->part_hold_back))
+        hold_back = self->part_hold_back;
+      else if (GST_CLOCK_TIME_IS_VALID (self->partial_targetduration))
+        hold_back = 3 * self->partial_targetduration;
+    } else {
+      if (GST_CLOCK_TIME_IS_VALID (self->hold_back))
+        hold_back = self->hold_back;
+      else if (GST_CLOCK_TIME_IS_VALID (self->targetduration))
+        hold_back = 3 * self->targetduration;
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (hold_back)) {
+      GstSeekFlags flags = GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_KEY_UNIT;
+      GstM3U8MediaSegment *last_seg =
+          g_ptr_array_index (self->segments, self->segments->len - 1);
+      GstClockTime playlist_duration =
+          last_seg->stream_time + last_seg->duration;
+      GstClockTime target_ts;
+
+      /* Clamp the hold back so we don't go below zero */
+      if (hold_back > playlist_duration)
+        hold_back = playlist_duration;
+
+      target_ts = playlist_duration - hold_back;
+
+      GST_DEBUG ("Hold back is %" GST_TIME_FORMAT
+          " Looking for a segment before %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (hold_back), GST_TIME_ARGS (target_ts));
+
+      if (low_latency)
+        flags |= GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
+
+      if (gst_hls_media_playlist_seek (self, TRUE, flags, target_ts,
+              seek_result)) {
+#ifndef GST_DISABLE_GST_DEBUG
+        GstClockTime distance_from_edge =
+            playlist_duration - seek_result->stream_time;
+
+        GST_DEBUG ("Found starting position %" GST_TIME_FORMAT " which is %"
+            GST_TIME_FORMAT " from the live edge",
+            GST_TIME_ARGS (seek_result->stream_time),
+            GST_TIME_ARGS (distance_from_edge));
+#endif
+        return TRUE;
+      }
+    }
+
+    /* Worst case fallback, start 3 fragments from the end */
+    if (res == NULL) {
+      res =
+          g_ptr_array_index (self->segments,
+          MAX ((gint) self->segments->len -
+              GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE - 1, 0));
+    }
   }
 
   if (res) {
     GST_DEBUG ("Using segment sn:%" G_GINT64_FORMAT " dsn:%" G_GINT64_FORMAT,
         res->sequence, res->discont_sequence);
-    gst_m3u8_media_segment_ref (res);
+
+    seek_result->stream_time = res->stream_time;
+    seek_result->segment = gst_m3u8_media_segment_ref (res);
+    seek_result->found_partial_segment = FALSE;
+    seek_result->part_idx = 0;
+    return TRUE;
   }
 
-  return res;
+  return FALSE;
 }
 
 /* Calls this to carry over stream time, DSN, ... from one playlist to another.
