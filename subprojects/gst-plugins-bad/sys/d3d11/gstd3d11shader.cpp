@@ -179,7 +179,11 @@ gst_d3d11_create_pixel_shader (GstD3D11Device * device,
     GST_ERROR ("could not create pixel shader, hr: 0x%x", (guint) hr);
     return FALSE;
   }
+  //ps_blob->AddRef();
 
+  //int count = ps_blob->Release();
+  ps_blob.Reset();
+  GST_DEBUG("Reset pixel shader");
   return TRUE;
 }
 
@@ -226,7 +230,8 @@ gst_d3d11_create_vertex_shader (GstD3D11Device * device, const gchar * source,
 
   *shader = vs.Detach ();
   *layout = in_layout.Detach ();
-
+  vs_blob.Reset();
+  GST_DEBUG("Reset vertex shader");
   return TRUE;
 }
 
