@@ -20,16 +20,6 @@ d3d11_headers = [
   'gstd3d11utils.h',
 ]
 
-d3d11_enum_types_headers = [
-  'gstd3d11_fwd.h',
-  'gstd3d11bufferpool.h',
-  'gstd3d11converter.h',
-  'gstd3d11device.h',
-  'gstd3d11format.h',
-  'gstd3d11memory.h',
-  'gstd3d11utils.h',
-]
-
 gstd3d11_dep = dependency('', required : false)
 
 if host_system != 'windows'
@@ -208,7 +198,7 @@ library_def = {'lib': gstd3d11}
 if build_gir
   gir_includes = ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0']
   gir = {
-    'sources' : d3d11_sources + d3d11_headers + [gstd3d11_h],
+    'sources' : d3d11_sources + d3d11_headers,
     'namespace' : 'GstD3D11',
     'nsversion' : api_version,
     'identifier_prefix' : 'Gst',
