@@ -58,7 +58,7 @@ GST_START_TEST (test_rtsp_url_query)
   gchar *uri;
   const gchar *original_uri = "rtsp://localhost/foo/bar/?baz=fooo";
   const gchar *original_uri_with_control =
-      "rtsp://localhost/foo/bar/video/stream1?baz=fooo";
+      "rtsp://localhost/foo/bar/video/stream1";
 
   res = gst_rtsp_url_parse (original_uri, &url);
   fail_unless (res == GST_RTSP_OK);
@@ -75,7 +75,7 @@ GST_START_TEST (test_rtsp_url_query)
   uri = gst_rtsp_url_get_request_uri (url);
   fail_unless_equals_string (uri, original_uri);
   g_free (uri);
-  uri = gst_rtsp_url_get_request_uri_with_control (url, "/video/stream1");
+  uri = gst_rtsp_url_get_request_uri_with_control (url, "video/stream1");
   fail_unless_equals_string (uri, original_uri_with_control);
   g_free (uri);
 
