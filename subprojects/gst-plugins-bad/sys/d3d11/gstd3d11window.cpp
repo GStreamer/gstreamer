@@ -630,6 +630,11 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   if (SUCCEEDED (hr) && allow_tearing)
     window->allow_tearing = allow_tearing;
 
+  if (window->allow_tearing) {
+    GST_DEBUG_OBJECT (window, "device supports tearing");
+    swapchain_flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+  }
+
   GstD3D11DeviceLockGuard lk (device);
   window->dxgi_format = chosen_format->dxgi_format;
 
