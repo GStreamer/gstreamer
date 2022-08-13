@@ -157,6 +157,7 @@ struct _GstPlayer
 
   /* legacy */
   GstPlayerSignalDispatcher *signal_dispatcher;
+  GstPlayerVideoRenderer *video_renderer;
 };
 
 struct _GstPlayerClass
@@ -175,11 +176,12 @@ static void gst_player_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_player_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_player_constructed (GObject * object);
 
 static void
-gst_player_init (G_GNUC_UNUSED GstPlayer * self)
+gst_player_init (GstPlayer * self)
 {
-
+  self->play = gst_play_new (NULL);
 }
 
 static void
@@ -207,12 +209,13 @@ gst_player_class_init (GstPlayerClass * klass)
   gobject_class->set_property = gst_player_set_property;
   gobject_class->get_property = gst_player_get_property;
   gobject_class->finalize = gst_player_finalize;
+  gobject_class->constructed = gst_player_constructed;
 
   param_specs[PROP_VIDEO_RENDERER] =
       g_param_spec_object ("video-renderer",
       "Video Renderer", "Video renderer to use for rendering videos",
       GST_TYPE_PLAYER_VIDEO_RENDERER,
-      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   param_specs[PROP_SIGNAL_DISPATCHER] =
       g_param_spec_object ("signal-dispatcher",
@@ -377,6 +380,8 @@ gst_player_finalize (GObject * object)
 
   if (self->signal_dispatcher)
     g_object_unref (self->signal_dispatcher);
+  if (self->video_renderer)
+    g_object_unref (self->video_renderer);
   if (self->signal_adapter)
     g_object_unref (self->signal_adapter);
   if (self->play)
@@ -395,6 +400,9 @@ gst_player_set_property (GObject * object, guint prop_id,
     case PROP_SIGNAL_DISPATCHER:
       self->signal_dispatcher = g_value_dup_object (value);
       break;
+    case PROP_VIDEO_RENDERER:
+      self->video_renderer = g_value_dup_object (value);
+      break;
     default:
       g_object_set_property (G_OBJECT (self->play),
           g_param_spec_get_name (pspec), value);
@@ -409,6 +417,9 @@ gst_player_get_property (GObject * object, guint prop_id,
   GstPlayer *self = GST_PLAYER (object);
 
   switch (prop_id) {
+    case PROP_VIDEO_RENDERER:
+      g_value_set_object (value, self->video_renderer);
+      break;
     case PROP_MEDIA_INFO:
       g_value_take_object (value, gst_player_get_media_info (self));
       break;
@@ -546,56 +557,33 @@ seek_done_cb (GstPlaySignalAdapter * adapter, GstClockTime time,
   g_signal_emit (self, signals[SIGNAL_SEEK_DONE], 0, time);
 }
 
-/**
- * gst_player_new:
- * @video_renderer: (transfer full) (allow-none): GstPlayerVideoRenderer to use
- * @signal_dispatcher: (transfer full) (allow-none): GstPlayerSignalDispatcher to use
- *
- * Creates a new #GstPlayer instance that uses @signal_dispatcher to dispatch
- * signals to some event loop system, or emits signals directly if NULL is
- * passed. See gst_player_g_main_context_signal_dispatcher_new().
- *
- * Video is going to be rendered by @video_renderer, or if %NULL is provided
- * no special video set up will be done and some default handling will be
- * performed.
- *
- * Returns: (transfer full): a new #GstPlayer instance
- */
-GstPlayer *
-gst_player_new (GstPlayerVideoRenderer * video_renderer,
-    GstPlayerSignalDispatcher * signal_dispatcher)
+static void
+gst_player_constructed (GObject * object)
 {
-  static GOnce once = G_ONCE_INIT;
-  GstPlayer *self;
+  GstPlayer *self = GST_PLAYER (object);
+  GstPlayerVideoRenderer *renderer = NULL;
 
-  g_once (&once, gst_player_init_once, NULL);
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 
-  self =
-      g_object_new (GST_TYPE_PLAYER, "signal-dispatcher", signal_dispatcher,
-      NULL);
-
-  self->play = gst_play_new (NULL);
-
-  if (video_renderer != NULL) {
-    GstPlayerVideoRenderer *renderer;
-    renderer = gst_player_wrapped_video_renderer_new (video_renderer, self);
+  if (self->video_renderer != NULL) {
+    renderer =
+        gst_player_wrapped_video_renderer_new (self->video_renderer, self);
     g_object_set (self->play, "video-renderer",
         GST_PLAY_VIDEO_RENDERER (renderer), NULL);
     g_object_unref (renderer);
   }
 
-  if (signal_dispatcher != NULL) {
+  if (self->signal_dispatcher != NULL) {
     GMainContext *context = NULL;
 
-    g_object_get (signal_dispatcher, "application-context", &context, NULL);
+    g_object_get (self->signal_dispatcher, "application-context", &context,
+        NULL);
     self->signal_adapter =
         gst_play_signal_adapter_new_with_main_context (self->play, context);
     g_main_context_unref (context);
   } else {
     self->signal_adapter = gst_play_signal_adapter_new (self->play);
   }
-
-  gst_object_ref_sink (self);
 
   g_signal_connect (self->signal_adapter, "uri-loaded",
       G_CALLBACK (uri_loaded_cb), self);
@@ -622,6 +610,37 @@ gst_player_new (GstPlayerVideoRenderer * video_renderer,
       self);
   g_signal_connect (self->signal_adapter, "seek-done",
       G_CALLBACK (seek_done_cb), self);
+}
+
+/**
+ * gst_player_new:
+ * @video_renderer: (transfer full) (allow-none): GstPlayerVideoRenderer to use
+ * @signal_dispatcher: (transfer full) (allow-none): GstPlayerSignalDispatcher to use
+ *
+ * Creates a new #GstPlayer instance that uses @signal_dispatcher to dispatch
+ * signals to some event loop system, or emits signals directly if NULL is
+ * passed. See gst_player_g_main_context_signal_dispatcher_new().
+ *
+ * Video is going to be rendered by @video_renderer, or if %NULL is provided
+ * no special video set up will be done and some default handling will be
+ * performed.
+ *
+ * Returns: (transfer full): a new #GstPlayer instance
+ */
+GstPlayer *
+gst_player_new (GstPlayerVideoRenderer * video_renderer,
+    GstPlayerSignalDispatcher * signal_dispatcher)
+{
+  static GOnce once = G_ONCE_INIT;
+  GstPlayer *self;
+
+  g_once (&once, gst_player_init_once, NULL);
+
+  self =
+      g_object_new (GST_TYPE_PLAYER, "signal-dispatcher", signal_dispatcher,
+      "video-renderer", video_renderer, NULL);
+
+  gst_object_ref_sink (self);
 
   if (video_renderer)
     g_object_unref (video_renderer);
