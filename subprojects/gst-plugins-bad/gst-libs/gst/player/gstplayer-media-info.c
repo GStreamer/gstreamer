@@ -149,9 +149,21 @@ gst_player_video_info_init (G_GNUC_UNUSED GstPlayerVideoInfo * info)
 }
 
 static void
+gst_player_video_info_finalize (GObject * object)
+{
+  GstPlayerVideoInfo *info = GST_PLAYER_VIDEO_INFO (object);
+
+  g_clear_object (&info->info);
+
+  G_OBJECT_CLASS (gst_player_video_info_parent_class)->finalize (object);
+}
+
+static void
 gst_player_video_info_class_init (G_GNUC_UNUSED GstPlayerVideoInfoClass * klass)
 {
-  /* nothing to do here */
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->finalize = gst_player_video_info_finalize;
 }
 
 /**
