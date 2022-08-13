@@ -598,11 +598,16 @@ gst_play_set_playbin_video_sink (GstPlay * self)
 {
   GstElement *video_sink = NULL;
 
-  if (self->video_renderer != NULL)
+  if (self->video_renderer != NULL) {
     video_sink =
         gst_play_video_renderer_create_video_sink (self->video_renderer, self);
-  if (video_sink)
+  }
+
+  if (video_sink) {
+    gst_object_ref_sink (video_sink);
     g_object_set (self->playbin, "video-sink", video_sink, NULL);
+    gst_object_unref (video_sink);
+  }
 }
 
 static void
