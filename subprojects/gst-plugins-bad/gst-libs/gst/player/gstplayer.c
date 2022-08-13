@@ -377,6 +377,8 @@ gst_player_finalize (GObject * object)
 
   if (self->signal_dispatcher)
     g_object_unref (self->signal_dispatcher);
+  if (self->signal_adapter)
+    g_object_unref (self->signal_adapter);
   if (self->play)
     gst_object_unref (self->play);
 
