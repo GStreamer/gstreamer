@@ -24,6 +24,8 @@
 #include "config.h"
 #endif
 
+#include <ctype.h>              /* isspace() */
+#include <stdio.h>              /* sscanf() */
 #include <stdlib.h>             /* atoi() */
 #include <string.h>
 
