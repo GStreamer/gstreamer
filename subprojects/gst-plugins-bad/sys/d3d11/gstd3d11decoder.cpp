@@ -242,8 +242,10 @@ struct _GstD3D11Decoder
   GstVideoCodecState *input_state;
   GstVideoCodecState *output_state;
 
-  /* Protect internal pool */
-  SRWLOCK internal_pool_lock;
+  SRWLOCK lock;
+  /* performance frequency */
+  LARGE_INTEGER frequency;
+  gboolean flushing;
 
   GstBufferPool *internal_pool;
   /* Internal pool params */
@@ -337,6 +339,9 @@ gst_d3d11_decoder_constructed (GObject * object)
   self->video_context = video_context;
   video_context->AddRef ();
 
+  BOOL ret = QueryPerformanceFrequency (&self->frequency);
+  g_assert (ret);
+
   return;
 }
 
@@ -375,7 +380,7 @@ gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
 static void
 gst_d3d11_decoder_clear_resource (GstD3D11Decoder * self)
 {
-  GstD3D11SRWLockGuard lk (&self->internal_pool_lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   if (self->internal_pool) {
     gst_buffer_pool_set_active (self->internal_pool, FALSE);
     gst_clear_object (&self->internal_pool);
@@ -395,6 +400,7 @@ gst_d3d11_decoder_reset (GstD3D11Decoder * self)
 
   self->configured = FALSE;
   self->opened = FALSE;
+  self->flushing = FALSE;
 
   self->use_array_of_texture = FALSE;
   self->downstream_supports_d3d11 = FALSE;
@@ -519,7 +525,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
   GstVideoInfo *info = &self->info;
   guint pool_size;
 
-  GstD3D11SRWLockGuard lk (&self->internal_pool_lock);
+  GstD3D11SRWLockGuard lk (&self->lock);
   if (self->internal_pool) {
     gst_buffer_pool_set_active (self->internal_pool, FALSE);
     gst_clear_object (&self->internal_pool);
@@ -1077,49 +1083,60 @@ error:
   return FALSE;
 }
 
-static gboolean
-gst_d3d11_decoder_begin_frame (GstD3D11Decoder * decoder,
+static GstFlowReturn
+gst_d3d11_decoder_begin_frame (GstD3D11Decoder * self,
     ID3D11VideoDecoderOutputView * output_view, guint content_key_size,
     gconstpointer content_key)
 {
   ID3D11VideoContext *video_context;
   guint retry_count = 0;
   HRESULT hr;
-  guint retry_threshold = 100;
+  BOOL timer_ret;
+  LARGE_INTEGER now;
+  LONGLONG timeout;
 
-  /* if we have high resolution timer, do more retry */
-  if (decoder->timer_resolution)
-    retry_threshold = 500;
+  video_context = self->video_context;
 
-  video_context = decoder->video_context;
+  timer_ret = QueryPerformanceCounter (&now);
+  g_assert (timer_ret);
+
+  /* 20 sec timeout should be sufficient */
+  timeout = now.QuadPart + 20 * self->frequency.QuadPart;
 
   do {
-    GST_LOG_OBJECT (decoder, "Try begin frame, retry count %d", retry_count);
-    hr = video_context->DecoderBeginFrame (decoder->decoder_handle,
+    if (self->flushing) {
+      GST_DEBUG_OBJECT (self, "We are flushing");
+      return GST_FLOW_FLUSHING;
+    }
+
+    GST_LOG_OBJECT (self, "Try begin frame, retry count %d", retry_count);
+    hr = video_context->DecoderBeginFrame (self->decoder_handle,
         output_view, content_key_size, content_key);
 
     /* HACK: Do retry with 1ms sleep per failure, since DXVA/D3D11
      * doesn't provide API for "GPU-IS-READY-TO-DECODE" like signal.
      */
-    if (hr == E_PENDING && retry_count < retry_threshold) {
-      GST_LOG_OBJECT (decoder, "GPU is busy, try again. Retry count %d",
+    if (hr == E_PENDING) {
+      GST_LOG_OBJECT (self, "GPU is busy, try again. Retry count %d",
           retry_count);
-      g_usleep (1000);
+      Sleep (1);
     } else {
-      if (gst_d3d11_result (hr, decoder->device))
-        GST_LOG_OBJECT (decoder, "Succeeded with retry count %d", retry_count);
+      if (gst_d3d11_result (hr, self->device))
+        GST_LOG_OBJECT (self, "Succeeded with retry count %d", retry_count);
       break;
     }
 
     retry_count++;
-  } while (TRUE);
+    timer_ret = QueryPerformanceCounter (&now);
+    g_assert (timer_ret);
+  } while (now.QuadPart < timeout);
 
-  if (!gst_d3d11_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (decoder, "Failed to begin frame, hr: 0x%x", (guint) hr);
-    return FALSE;
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to begin frame, hr: 0x%x", (guint) hr);
+    return GST_FLOW_ERROR;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -1203,7 +1220,7 @@ gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * decoder,
   return TRUE;
 }
 
-gboolean
+GstFlowReturn
 gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
     ID3D11VideoDecoderOutputView * output_view,
     GstD3D11DecodeInputStreamArgs * input_args)
@@ -1212,10 +1229,11 @@ gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
   gpointer d3d11_buffer;
   D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4];
   guint buffer_desc_size;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-  g_return_val_if_fail (output_view != nullptr, FALSE);
-  g_return_val_if_fail (input_args != nullptr, FALSE);
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), GST_FLOW_ERROR);
+  g_return_val_if_fail (output_view != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (input_args != nullptr, GST_FLOW_ERROR);
 
   memset (buffer_desc, 0, sizeof (buffer_desc));
 
@@ -1239,8 +1257,9 @@ gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
   }
 
   GstD3D11DeviceLockGuard lk (decoder->device);
-  if (!gst_d3d11_decoder_begin_frame (decoder, output_view, 0, nullptr))
-    return FALSE;
+  ret = gst_d3d11_decoder_begin_frame (decoder, output_view, 0, nullptr);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   if (!gst_d3d11_decoder_get_decoder_buffer (decoder,
           D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS, &d3d11_buffer_size,
@@ -1354,13 +1373,13 @@ gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
   }
 
   if (!gst_d3d11_decoder_end_frame (decoder))
-    return FALSE;
+    return GST_FLOW_ERROR;
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 error:
   gst_d3d11_decoder_end_frame (decoder);
-  return FALSE;
+  return GST_FLOW_ERROR;
 }
 
 GstBuffer *
@@ -1931,9 +1950,10 @@ gst_d3d11_decoder_set_flushing (GstD3D11Decoder * decoder,
 {
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
 
-  GstD3D11SRWLockGuard lk (&decoder->internal_pool_lock);
+  GstD3D11SRWLockGuard lk (&decoder->lock);
   if (decoder->internal_pool)
     gst_buffer_pool_set_flushing (decoder->internal_pool, flushing);
+  decoder->flushing = flushing;
 
   return TRUE;
 }

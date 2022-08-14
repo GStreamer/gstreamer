@@ -724,10 +724,8 @@ gst_d3d11_mpeg2_dec_end_picture (GstMpeg2Decoder * decoder,
     input_args.inverse_quantization_matrix_size = sizeof (DXVA_QmatrixData);
   }
 
-  if (!gst_d3d11_decoder_decode_frame (inner->d3d11_decoder, view, &input_args))
-    return GST_FLOW_ERROR;
-
-  return GST_FLOW_OK;
+  return gst_d3d11_decoder_decode_frame (inner->d3d11_decoder,
+      view, &input_args);
 }
 
 static GstFlowReturn

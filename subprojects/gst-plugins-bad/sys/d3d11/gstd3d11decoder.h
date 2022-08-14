@@ -83,7 +83,7 @@ gboolean          gst_d3d11_decoder_configure     (GstD3D11Decoder * decoder,
                                                    gint coded_height,
                                                    guint dpb_size);
 
-gboolean          gst_d3d11_decoder_decode_frame  (GstD3D11Decoder * decoder,
+GstFlowReturn     gst_d3d11_decoder_decode_frame  (GstD3D11Decoder * decoder,
                                                    ID3D11VideoDecoderOutputView * output_view,
                                                    GstD3D11DecodeInputStreamArgs * input_args);
 
