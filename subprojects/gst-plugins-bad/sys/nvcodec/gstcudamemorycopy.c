@@ -206,33 +206,27 @@ static GstCaps *
 create_transform_caps (GstCaps * caps, gboolean to_cuda)
 {
   GstCaps *ret = NULL;
+  GstCaps *new_caps = NULL;
 
   if (to_cuda) {
-    GstCaps *sys_caps = gst_caps_simplify (_set_caps_features (caps,
-            GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY));
-    GstCaps *new_caps;
-
-    ret = gst_caps_copy (sys_caps);
+    /* SRC -> SINK of cudadownload or SINK -> SRC of cudaupload */
+    ret = gst_caps_copy (caps);
 
 #ifdef HAVE_NVCODEC_NVMM
     if (gst_cuda_nvmm_init_once ()) {
-      new_caps = _set_caps_features (sys_caps,
+      new_caps = _set_caps_features (caps,
           GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY);
       ret = gst_caps_merge (ret, new_caps);
     }
 #endif
 
-    new_caps = _set_caps_features (sys_caps,
-        GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
+    new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY);
     ret = gst_caps_merge (ret, new_caps);
 
     ret = gst_caps_make_writable (ret);
     _remove_field (ret, "texture-target");
-
-    gst_caps_unref (sys_caps);
   } else {
-    GstCaps *new_caps;
-
+    /* SINK -> SRC of cudadownload or SRC -> SINK of cudaupload */
     ret = gst_caps_ref (caps);
 
 #ifdef HAVE_NVCODEC_NVMM
@@ -253,8 +247,8 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
 #endif
 
     new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-
     ret = gst_caps_merge (ret, new_caps);
+
     ret = gst_caps_make_writable (ret);
     _remove_field (ret, "texture-target");
   }
