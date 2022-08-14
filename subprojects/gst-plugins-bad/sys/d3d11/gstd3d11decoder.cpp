@@ -55,10 +55,15 @@
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 #include <string>
+#include <wrl.h>
 
 #ifdef HAVE_WINMM
 #include <mmsystem.h>
 #endif
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_decoder_debug);
 #define GST_CAT_DEFAULT gst_d3d11_decoder_debug
@@ -122,6 +127,85 @@ static const GUID *profile_av1_list[] = {
   &GST_GUID_D3D11_DECODER_PROFILE_AV1_VLD_PROFILE0,
   /* TODO: add more profile */
 };
+
+DEFINE_GUID (IID_GST_D3D11_DECODER_VIEW_DATA, 0xe1fd3e17, 0x1e33,
+    0x4198, 0x9e, 0x48, 0xdb, 0x01, 0x55, 0x2b, 0xf1, 0x78);
+
+/* *INDENT-OFF* */
+class IGstD3D11DecoderViewData: public IUnknown
+{
+public:
+  static HRESULT
+  CreateInstance (guint8 index, IGstD3D11DecoderViewData ** data)
+  {
+    IGstD3D11DecoderViewData *self;
+
+    self = new IGstD3D11DecoderViewData (index);
+    if (!self)
+      return E_OUTOFMEMORY;
+
+    *data = self;
+
+    return S_OK;
+  }
+
+  STDMETHODIMP_ (ULONG)
+  AddRef (void)
+  {
+    return InterlockedIncrement (&ref_count_);
+  }
+
+  STDMETHODIMP_ (ULONG)
+  Release (void)
+  {
+    ULONG ref_count;
+
+    ref_count = InterlockedDecrement (&ref_count_);
+
+    if (ref_count == 0)
+      delete this;
+
+    return ref_count;
+  }
+
+  STDMETHODIMP
+  QueryInterface (REFIID riid, void ** object)
+  {
+    if (riid == IID_IUnknown) {
+      *object = static_cast<IUnknown *>
+          (static_cast<IGstD3D11DecoderViewData *> (this));
+    } else if (riid == IID_GST_D3D11_DECODER_VIEW_DATA) {
+      *object = this;
+    } else {
+      *object = nullptr;
+      return E_NOINTERFACE;
+    }
+
+    AddRef ();
+
+    return S_OK;
+  }
+
+  guint8
+  GetViewIndex (void)
+  {
+    return index_;
+  }
+
+private:
+  IGstD3D11DecoderViewData (guint8 index) : index_(index), ref_count_(1)
+  {
+  }
+
+  virtual ~IGstD3D11DecoderViewData (void)
+  {
+  }
+
+private:
+  guint8 index_;
+  ULONG ref_count_;
+};
+/* *INDENT-ON* */
 
 enum
 {
@@ -380,24 +464,15 @@ gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder)
   return decoder->configured;
 }
 
-static GQuark
-gst_d3d11_decoder_view_id_quark (void)
-{
-  static GQuark id_quark = 0;
-
-  GST_D3D11_CALL_ONCE_BEGIN {
-    id_quark = g_quark_from_string ("GstD3D11DecoderViewId");
-  } GST_D3D11_CALL_ONCE_END;
-
-  return id_quark;
-}
-
 static gboolean
 gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
     GstBuffer * buffer)
 {
   GstD3D11Memory *mem;
-  gpointer val = NULL;
+  ID3D11Resource *texture;
+  ComPtr < IGstD3D11DecoderViewData > data;
+  UINT size;
+  HRESULT hr;
 
   mem = (GstD3D11Memory *) gst_buffer_peek_memory (buffer, 0);
   if (!gst_d3d11_memory_get_decoder_output_view (mem, self->video_device,
@@ -409,24 +484,25 @@ gst_d3d11_decoder_ensure_output_view (GstD3D11Decoder * self,
   if (!self->use_array_of_texture)
     return TRUE;
 
-  val = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-      gst_d3d11_decoder_view_id_quark ());
-  if (!val) {
-    g_assert (self->next_view_id < 128);
-    g_assert (self->next_view_id > 0);
+  size = sizeof (IGstD3D11DecoderViewData *);
 
-    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
-        gst_d3d11_decoder_view_id_quark (),
-        GUINT_TO_POINTER (self->next_view_id), NULL);
+  texture = gst_d3d11_memory_get_resource_handle (mem);
+  texture->GetPrivateData (IID_GST_D3D11_DECODER_VIEW_DATA,
+      &size, data.GetAddressOf ());
+
+  if (!data) {
+    g_assert (self->next_view_id < 127);
+
+    hr = IGstD3D11DecoderViewData::CreateInstance (self->next_view_id, &data);
+    g_assert (SUCCEEDED (hr));
+
+    texture->SetPrivateDataInterface (IID_GST_D3D11_DECODER_VIEW_DATA,
+        data.Get ());
 
     self->next_view_id++;
-    /* valid view range is [0, 126], but 0 is not used to here
-     * (it's NULL as well) */
-    self->next_view_id %= 128;
-    if (self->next_view_id == 0)
-      self->next_view_id = 1;
+    /* valid view range is [0, 126] */
+    self->next_view_id %= 127;
   }
-
 
   return TRUE;
 }
@@ -473,12 +549,10 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
   if (!self->use_array_of_texture) {
     alloc_params->desc[0].ArraySize = pool_size;
   } else {
-    /* Valid view id is [0, 126], but we will use [1, 127] range so that
-     * it can be used by qdata, because zero is equal to null */
-    self->next_view_id = 1;
+    self->next_view_id = 0;
 
-    /* our pool size can be increased as much as possbile */
-    pool_size = 0;
+    /* Valid view id range is [0, 126] */
+    pool_size = 127;
   }
 
   gst_video_alignment_reset (&align);
@@ -1367,18 +1441,22 @@ gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
 
   if (index) {
     if (decoder->use_array_of_texture) {
-      guint8 id;
-      gpointer val = gst_mini_object_get_qdata (GST_MINI_OBJECT (mem),
-          gst_d3d11_decoder_view_id_quark ());
-      if (!val) {
-        GST_ERROR_OBJECT (decoder, "memory has no qdata");
-        return NULL;
+      ID3D11Resource *texture;
+      ComPtr < IGstD3D11DecoderViewData > data;
+      UINT size;
+
+      texture = gst_d3d11_memory_get_resource_handle (dmem);
+      size = sizeof (IGstD3D11DecoderViewData *);
+
+      texture->GetPrivateData (IID_GST_D3D11_DECODER_VIEW_DATA,
+          &size, data.GetAddressOf ());
+
+      if (!data) {
+        GST_ERROR_OBJECT (decoder, "memory has no private data");
+        return nullptr;
       }
 
-      id = (guint8) GPOINTER_TO_UINT (val);
-      g_assert (id < 128);
-
-      *index = (id - 1);
+      *index = data->GetViewIndex ();
     } else {
       *index = gst_d3d11_memory_get_subresource_index (dmem);
     }
