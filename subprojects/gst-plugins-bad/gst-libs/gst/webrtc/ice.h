@@ -41,6 +41,8 @@ struct _GstWebRTCICE
   GstWebRTCICEConnectionState        ice_connection_state;
   guint                              min_rtp_port;
   guint                              max_rtp_port;
+
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstWebRTCICECandidateStats
@@ -53,6 +55,8 @@ struct _GstWebRTCICECandidateStats
   const gchar                      *relay_proto;
   guint                             prio;
   gchar                            *url;
+
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**
@@ -61,7 +65,7 @@ struct _GstWebRTCICECandidateStats
  * @stream_id: The stream id
  * @candidate: The discovered candidate
  * @user_data: User data that was set by #gst_webrtc_ice_set_on_ice_candidate
- * 
+ *
  * Callback function to be triggered on discovery of a new candidate
  * Since: 1.22
  */
@@ -115,6 +119,7 @@ struct _GstWebRTCICEClass {
                                             GstWebRTCICEStream * stream,
                                             GstWebRTCICECandidateStats ** local_stats,
                                             GstWebRTCICECandidateStats ** remote_stats);
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_WEBRTC_API
