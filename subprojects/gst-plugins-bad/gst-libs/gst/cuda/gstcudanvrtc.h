@@ -27,10 +27,11 @@
 
 #include "cuda-prelude.h"
 #include <gst/gst.h>
-#include "gstcudaloader.h"
-#include "gstnvrtcloader.h"
 
 G_BEGIN_DECLS
+
+GST_CUDA_API
+gboolean  gst_cuda_nvrtc_load_library (void);
 
 GST_CUDA_API
 gchar *   gst_cuda_nvrtc_compile (const gchar * source);

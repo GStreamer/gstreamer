@@ -22,7 +22,6 @@
 #endif
 
 #include <gst/cuda/gstcudaloader.h>
-#include <gst/cuda/gstnvrtcloader.h>
 #include <gst/cuda/gstcudanvrtc.h>
 
 #include "gstcudafilter.h"
@@ -40,7 +39,7 @@ gst_cuda_filter_plugin_init (GstPlugin * plugin)
 {
   gchar *test_ptx = NULL;
 
-  if (!gst_nvrtc_load_library ())
+  if (!gst_cuda_nvrtc_load_library ())
     return;
 
   test_ptx = gst_cuda_nvrtc_compile (nvrtc_test_source);

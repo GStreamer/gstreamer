@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cuda-prelude.h"
-#include <nvrtc.h>
 #include <cuda.h>
 #include <cudaGL.h>
 
@@ -201,38 +200,5 @@ CUresult CUDAAPI CuD3D11GetDevices(unsigned int * pCudaDeviceCount,
                                    gpointer pD3D11Device,
                                    CUD3D11DeviceList deviceList);
 #endif
-
-/* nvrtc.h */
-GST_CUDA_API
-nvrtcResult  NvrtcCompileProgram (nvrtcProgram prog,
-                                 int numOptions,
-                                 const char** options);
-
-GST_CUDA_API
-nvrtcResult  NvrtcCreateProgram  (nvrtcProgram* prog,
-                                 const char* src,
-                                 const char* name,
-                                 int numHeaders,
-                                 const char** headers,
-                                 const char** includeNames);
-
-GST_CUDA_API
-nvrtcResult  NvrtcDestroyProgram (nvrtcProgram* prog);
-
-GST_CUDA_API
-nvrtcResult  NvrtcGetPTX         (nvrtcProgram prog,
-                                 char* ptx);
-
-GST_CUDA_API
-nvrtcResult  NvrtcGetPTXSize     (nvrtcProgram prog,
-                                 size_t* ptxSizeRet);
-
-GST_CUDA_API
-nvrtcResult  NvrtcGetProgramLog (nvrtcProgram prog,
-                                char* log);
-
-GST_CUDA_API
-nvrtcResult  NvrtcGetProgramLogSize (nvrtcProgram prog,
-                                    size_t* logSizeRet);
 
 G_END_DECLS
