@@ -244,10 +244,10 @@ gst_webrtc_ice_set_tos (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
  * gst_webrtc_ice_get_local_candidates:
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
- * Returns: (transfer full) (element-type GstWebRTCICECandidateStats): List of local candidates
+ * Returns: (transfer full)(array zero-terminated=1): List of local candidates
  * Since: 1.22
  */
-GArray *
+GstWebRTCICECandidateStats *
 gst_webrtc_ice_get_local_candidates (GstWebRTCICE * ice,
     GstWebRTCICEStream * stream)
 {
@@ -262,10 +262,10 @@ gst_webrtc_ice_get_local_candidates (GstWebRTCICE * ice,
  * gst_webrtc_ice_get_remote_candidates:
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
- * Returns: (transfer full) (element-type GstWebRTCICECandidateStats): List of remote candidates
+ * Returns: (transfer full) (array zero-terminated=1): List of remote candidates
  * Since: 1.22
  */
-GArray *
+GstWebRTCICECandidateStats *
 gst_webrtc_ice_get_remote_candidates (GstWebRTCICE * ice,
     GstWebRTCICEStream * stream)
 {

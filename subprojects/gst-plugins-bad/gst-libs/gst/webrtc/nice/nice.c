@@ -1189,7 +1189,7 @@ _populate_candidate_list_stats (GstWebRTCNice * ice, GSList * cands,
   }
 }
 
-static GArray *
+static GstWebRTCICECandidateStats *
 gst_webrtc_nice_get_local_candidates (GstWebRTCICE * ice,
     GstWebRTCICEStream * stream)
 {
@@ -1197,7 +1197,7 @@ gst_webrtc_nice_get_local_candidates (GstWebRTCICE * ice,
   GSList *cands = NULL;
 
   GArray *result =
-      g_array_new (FALSE, TRUE, sizeof (GstWebRTCICECandidateStats));
+      g_array_new (TRUE, TRUE, sizeof (GstWebRTCICECandidateStats));
 
   cands = nice_agent_get_local_candidates (nice->priv->nice_agent,
       stream->stream_id, NICE_COMPONENT_TYPE_RTP);
@@ -1205,10 +1205,10 @@ gst_webrtc_nice_get_local_candidates (GstWebRTCICE * ice,
   _populate_candidate_list_stats (nice, cands, stream, result, TRUE);
   g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
 
-  return result;
+  return (GstWebRTCICECandidateStats *) g_array_free (result, FALSE);
 }
 
-static GArray *
+static GstWebRTCICECandidateStats *
 gst_webrtc_nice_get_remote_candidates (GstWebRTCICE * ice,
     GstWebRTCICEStream * stream)
 {
@@ -1216,7 +1216,7 @@ gst_webrtc_nice_get_remote_candidates (GstWebRTCICE * ice,
   GSList *cands = NULL;
 
   GArray *result =
-      g_array_new (FALSE, TRUE, sizeof (GstWebRTCICECandidateStats));
+      g_array_new (TRUE, TRUE, sizeof (GstWebRTCICECandidateStats));
 
   cands = nice_agent_get_remote_candidates (nice->priv->nice_agent,
       stream->stream_id, NICE_COMPONENT_TYPE_RTP);
@@ -1224,7 +1224,7 @@ gst_webrtc_nice_get_remote_candidates (GstWebRTCICE * ice,
   _populate_candidate_list_stats (nice, cands, stream, result, FALSE);
   g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
 
-  return result;
+  return (GstWebRTCICECandidateStats *) g_array_free (result, FALSE);
 }
 
 static gboolean
