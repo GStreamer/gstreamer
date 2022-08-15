@@ -281,7 +281,7 @@ gst_webrtc_ice_get_remote_candidates (GstWebRTCICE * ice,
  * @stream: The #GstWebRTCICEStream
  * @local_stats: A pointer to #GstWebRTCICECandidateStats for local candidate
  * @remote_stats: A pointer to #GstWebRTCICECandidateStats for remote candidate
- * 
+ *
  * Returns: FALSE on failure, otherwise @local_stats @remote_stats will be set
  * Since: 1.22
  */
@@ -300,7 +300,7 @@ gst_webrtc_ice_get_selected_pair (GstWebRTCICE * ice,
 /**
  * gst_webrtc_ice_candidate_stats_free:
  * @stats: The #GstWebRTCICECandidateStats to be free'd
- * 
+ *
  * Helper function to free #GstWebRTCICECandidateStats
  * Since: 1.22
  */
@@ -314,6 +314,31 @@ gst_webrtc_ice_candidate_stats_free (GstWebRTCICECandidateStats * stats)
 
   g_free (stats);
 }
+
+/**
+ * gst_webrtc_ice_candidate_stats_copy:
+ * @stats: The #GstWebRTCICE
+ *
+ * Returns: (transfer full): A copy of @stats
+ * Since: 1.22
+ */
+GstWebRTCICECandidateStats *
+gst_webrtc_ice_candidate_stats_copy (GstWebRTCICECandidateStats * stats)
+{
+  GstWebRTCICECandidateStats *copy =
+      g_malloc (sizeof (GstWebRTCICECandidateStats));
+
+  *copy = *stats;
+
+  copy->ipaddr = g_strdup (stats->ipaddr);
+  copy->url = g_strdup (stats->url);
+
+  return copy;
+}
+
+G_DEFINE_BOXED_TYPE (GstWebRTCICECandidateStats, gst_webrtc_ice_candidate_stats,
+    (GBoxedCopyFunc) gst_webrtc_ice_candidate_stats_copy,
+    (GBoxedFreeFunc) gst_webrtc_ice_candidate_stats_free);
 
 /**
  * gst_webrtc_ice_set_on_ice_candidate:

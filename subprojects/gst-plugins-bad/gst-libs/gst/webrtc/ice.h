@@ -212,7 +212,13 @@ gboolean                    gst_webrtc_ice_get_selected_pair        (GstWebRTCIC
 GST_WEBRTC_API
 void                        gst_webrtc_ice_candidate_stats_free     (GstWebRTCICECandidateStats * stats);
 
+GST_WEBRTC_API
+GType                       gst_webrtc_ice_candidate_stats_get_type (void);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCICE, gst_object_unref)
+
+GST_WEBRTC_API
+GstWebRTCICECandidateStats * gst_webrtc_ice_candidate_stats_copy (GstWebRTCICECandidateStats *stats);
 
 G_END_DECLS
 
