@@ -39,6 +39,10 @@ G_BEGIN_DECLS
  */
 #define GST_PLAY_SIGNAL_ADAPTER_CAST(obj)        ((GstPlaySignalAdapter*)(obj))
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPlaySignalAdapter, g_object_unref)
+#endif
+
 GST_PLAY_API
 GType                  gst_play_signal_adapter_get_type               (void);
 

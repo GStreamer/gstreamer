@@ -49,6 +49,10 @@ struct _GstPlayVideoRendererInterface {
   GstElement * (*create_video_sink) (GstPlayVideoRenderer * self, GstPlay * play);
 };
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPlayVideoRenderer, g_object_unref)
+#endif
+
 GST_PLAY_API
 GType        gst_play_video_renderer_get_type       (void);
 

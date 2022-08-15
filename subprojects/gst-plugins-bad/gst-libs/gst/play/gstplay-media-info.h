@@ -215,6 +215,10 @@ const gchar * gst_play_subtitle_info_get_language (const GstPlaySubtitleInfo* in
 typedef struct _GstPlayMediaInfo GstPlayMediaInfo;
 typedef struct _GstPlayMediaInfoClass GstPlayMediaInfoClass;
 
+#ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPlayMediaInfo, g_object_unref)
+#endif
+
 GST_PLAY_API
 GType         gst_play_media_info_get_type (void);
 
