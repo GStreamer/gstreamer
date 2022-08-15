@@ -690,11 +690,11 @@ GST_END_TEST;
 
 GST_START_TEST (test_meta_custom)
 {
-  GstBuffer *buffer;
+  GstBuffer *buffer, *trans_buf;
   const GstMetaInfo *info;
-  GstCustomMeta *meta;
+  GstCustomMeta *meta, *trans_meta;
   GstMeta *it;
-  GstStructure *s, *expected;
+  GstStructure *s, *trans_s, *expected;
   gpointer state = NULL;
   const gchar *tags[] = { "test-tag", NULL };
 
@@ -718,9 +718,19 @@ GST_START_TEST (test_meta_custom)
   gst_structure_free (expected);
 
   gst_structure_set (s, "test-field", G_TYPE_INT, 42, NULL);
+
   gst_buffer_ref (buffer);
+
   ASSERT_CRITICAL (gst_structure_set (s, "test-field", G_TYPE_INT, 43, NULL));
+
+  /* Test that a copied buffer's meta structure has the correct refcount */
+  trans_buf = gst_buffer_copy (buffer);
+  trans_meta = gst_buffer_get_custom_meta (trans_buf, "test-custom");
+  trans_s = gst_custom_meta_get_structure (trans_meta);
+  gst_structure_set (trans_s, "test-field", G_TYPE_INT, 43, NULL);
+
   gst_buffer_unref (buffer);
+
   expected = gst_structure_new ("test-custom",
       "test-field", G_TYPE_INT, 42, NULL);
   fail_unless (gst_structure_is_equal (s, expected));
@@ -734,6 +744,7 @@ GST_START_TEST (test_meta_custom)
 
   /* clean up */
   gst_buffer_unref (buffer);
+  gst_buffer_unref (trans_buf);
 }
 
 GST_END_TEST;

@@ -199,8 +199,8 @@ typedef gboolean (*GstMetaTransformFunction) (GstBuffer *transbuf,
  * @user_data: user data passed when registering the meta
  *
  * Function called for each @meta in @buffer as a result of performing a
- * transformation on @transbuf. Additional @type specific transform data
- * is passed to the function as @data.
+ * transformation that yields @transbuf. Additional @type specific transform
+ * data is passed to the function as @data.
  *
  * Implementations should check the @type of the transform and parse
  * additional type specific fields in @data that should be used to update
