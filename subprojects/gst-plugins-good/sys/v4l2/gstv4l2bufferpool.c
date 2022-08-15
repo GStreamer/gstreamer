@@ -1959,7 +1959,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
   GstBufferPool *bpool = GST_BUFFER_POOL_CAST (pool);
   GstV4l2Object *obj = pool->obj;
 
-  GST_DEBUG_OBJECT (pool, "process buffer %p", buf);
+  GST_DEBUG_OBJECT (pool, "process buffer %p", *buf);
 
   if (GST_BUFFER_POOL_IS_FLUSHING (pool))
     return GST_FLOW_FLUSHING;
