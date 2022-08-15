@@ -279,8 +279,8 @@ gst_webrtc_ice_get_remote_candidates (GstWebRTCICE * ice,
  * gst_webrtc_ice_get_selected_pair:
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
- * @local_stats: A pointer to #GstWebRTCICECandidateStats for local candidate
- * @remote_stats: A pointer to #GstWebRTCICECandidateStats for remote candidate
+ * @local_stats: (out) (transfer full): A pointer to #GstWebRTCICECandidateStats for local candidate
+ * @remote_stats: (out) (transfer full): pointer to #GstWebRTCICECandidateStats for remote candidate
  *
  * Returns: FALSE on failure, otherwise @local_stats @remote_stats will be set
  * Since: 1.22
