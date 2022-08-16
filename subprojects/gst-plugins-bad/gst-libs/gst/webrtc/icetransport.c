@@ -22,8 +22,10 @@
  * @short_description: RTCIceTransport object
  * @title: GstWebRTCICETransport
  * @see_also: #GstWebRTCRTPSender, #GstWebRTCRTPReceiver, #GstWebRTCDTLSTransport
+ * @symbols:
+ * - GstWebRTCICETransport
  *
- * <https://www.w3.org/TR/webrtc/#rtcicetransport>
+ * See the [specification](https://www.w3.org/TR/webrtc/#rtcicetransport)
  */
 
 #ifdef HAVE_CONFIG_H

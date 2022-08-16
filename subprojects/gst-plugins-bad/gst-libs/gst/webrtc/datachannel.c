@@ -22,6 +22,8 @@
  * SECTION:gstwebrtc-datachannel
  * @short_description: RTCDataChannel object
  * @title: GstWebRTCDataChannel
+ * @symbols:
+ * - GstWebRTCDataChannel
  *
  * <https://www.w3.org/TR/webrtc/#rtcdatachannel>
  *

@@ -22,6 +22,8 @@
  * @short_description: RTCDtlsTransport object
  * @title: GstWebRTCDTLSTransport
  * @see_also: #GstWebRTCRTPSender, #GstWebRTCRTPReceiver, #GstWebRTCICETransport
+ * @symbols:
+ * - GstWebRTCDTLSTransport
  *
  * <https://www.w3.org/TR/webrtc/#rtcdtlstransport>
  */

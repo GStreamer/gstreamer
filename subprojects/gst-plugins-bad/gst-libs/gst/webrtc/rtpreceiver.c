@@ -22,6 +22,8 @@
  * @short_description: RTCRtpReceiver object
  * @title: GstWebRTCRTPReceiver
  * @see_also: #GstWebRTCRTPSender, #GstWebRTCRTPTransceiver
+ * @symbols:
+ * - GstWebRTCRTPReceiver
  *
  * <https://www.w3.org/TR/webrtc/#rtcrtpreceiver-interface>
  */
