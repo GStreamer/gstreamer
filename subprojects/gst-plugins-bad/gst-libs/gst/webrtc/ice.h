@@ -75,129 +75,127 @@ typedef void (*GstWebRTCICEOnCandidateFunc) (GstWebRTCICE * ice, guint stream_id
 
 struct _GstWebRTCICEClass {
   GstObjectClass parent_class;
-  GstWebRTCICEStream * (*add_stream)        (GstWebRTCICE * ice,
-                                            guint session_id);
-  GstWebRTCICETransport * (*find_transport) (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream,
-                                            GstWebRTCICEComponent component);
-  gboolean (*gather_candidates)             (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream);
-  void (*add_candidate)                     (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream,
-                                            const gchar * candidate);
-  gboolean (*set_local_credentials)         (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream,
-                                            gchar * ufrag,
-                                            gchar * pwd);
-  gboolean (*set_remote_credentials)        (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream,
-                                            gchar * ufrag,
-                                            gchar * pwd);
-  gboolean (*add_turn_server)               (GstWebRTCICE * ice,
-                                            const gchar * uri);
-  void (*set_is_controller)                 (GstWebRTCICE * ice,
-                                            gboolean controller);
-  gboolean (*get_is_controller)             (GstWebRTCICE * ice);
-  void (*set_force_relay)                   (GstWebRTCICE * ice,
-                                            gboolean force_relay);
-  void (*set_stun_server)                   (GstWebRTCICE * ice,
-                                            const gchar * uri);
-  gchar * (*get_stun_server)                (GstWebRTCICE * ice);
-  void (*set_turn_server)                   (GstWebRTCICE * ice,
-                                            const gchar * uri);
-  gchar * (*get_turn_server)                (GstWebRTCICE * ice);
-  void (*set_tos)                           (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream,
-                                            guint tos);
-  void (*set_on_ice_candidate)              (GstWebRTCICE * ice,
-                                            GstWebRTCICEOnCandidateFunc func,
-                                            gpointer user_data,
-                                            GDestroyNotify notify);
-  GstWebRTCICECandidateStats*
-        (*get_local_candidates)             (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream);
-  GstWebRTCICECandidateStats*
-        (get_remote_candidates)             (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream);
-  gboolean (*get_selected_pair)             (GstWebRTCICE * ice,
-                                            GstWebRTCICEStream * stream,
-                                            GstWebRTCICECandidateStats ** local_stats,
-                                            GstWebRTCICECandidateStats ** remote_stats);
+  GstWebRTCICEStream * (*add_stream)                   (GstWebRTCICE * ice,
+                                                        guint session_id);
+  GstWebRTCICETransport * (*find_transport)            (GstWebRTCICE * ice,
+                                                        GstWebRTCICEStream * stream,
+                                                        GstWebRTCICEComponent component);
+  gboolean (*gather_candidates)                        (GstWebRTCICE * ice,
+                                                        GstWebRTCICEStream * stream);
+  void (*add_candidate)                                (GstWebRTCICE * ice,
+                                                        GstWebRTCICEStream * stream,
+                                                        const gchar * candidate);
+  gboolean (*set_local_credentials)                    (GstWebRTCICE * ice,
+                                                        GstWebRTCICEStream * stream,
+                                                        gchar * ufrag,
+                                                        gchar * pwd);
+  gboolean (*set_remote_credentials)                   (GstWebRTCICE * ice,
+                                                        GstWebRTCICEStream * stream,
+                                                        gchar * ufrag,
+                                                        gchar * pwd);
+  gboolean (*add_turn_server)                          (GstWebRTCICE * ice,
+                                                        const gchar * uri);
+  void (*set_is_controller)                            (GstWebRTCICE * ice,
+                                                        gboolean controller);
+  gboolean (*get_is_controller)                        (GstWebRTCICE * ice);
+  void (*set_force_relay)                              (GstWebRTCICE * ice,
+                                                        gboolean force_relay);
+  void (*set_stun_server)                              (GstWebRTCICE * ice,
+                                                        const gchar * uri);
+  gchar * (*get_stun_server)                           (GstWebRTCICE * ice);
+  void (*set_turn_server)                              (GstWebRTCICE * ice,
+                                                        const gchar * uri);
+  gchar * (*get_turn_server)                           (GstWebRTCICE * ice);
+  void (*set_tos)                                      (GstWebRTCICE * ice,
+                                                        GstWebRTCICEStream * stream,
+                                                        guint tos);
+  void (*set_on_ice_candidate)                         (GstWebRTCICE * ice,
+                                                        GstWebRTCICEOnCandidateFunc func,
+                                                        gpointer user_data,
+                                                        GDestroyNotify notify);
+  GstWebRTCICECandidateStats* (*get_local_candidates) (GstWebRTCICE * ice,
+                                                       GstWebRTCICEStream * stream);
+  GstWebRTCICECandidateStats* (*get_remote_candidates)(GstWebRTCICE * ice,
+                                                       GstWebRTCICEStream * stream);
+  gboolean (*get_selected_pair)                       (GstWebRTCICE * ice,
+                                                       GstWebRTCICEStream * stream,
+                                                       GstWebRTCICECandidateStats ** local_stats,
+                                                       GstWebRTCICECandidateStats ** remote_stats);
   gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_WEBRTC_API
 GstWebRTCICEStream *        gst_webrtc_ice_add_stream               (GstWebRTCICE * ice,
-                                                                         guint session_id);
+                                                                     guint session_id);
 
 GST_WEBRTC_API
 GstWebRTCICETransport *     gst_webrtc_ice_find_transport           (GstWebRTCICE * ice,
-                                                                         GstWebRTCICEStream * stream,
-                                                                         GstWebRTCICEComponent component);
+                                                                     GstWebRTCICEStream * stream,
+                                                                     GstWebRTCICEComponent component);
 
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_gather_candidates        (GstWebRTCICE * ice,
-                                                                         GstWebRTCICEStream * stream);
+                                                                     GstWebRTCICEStream * stream);
 
 /* FIXME: GstStructure-ize the candidate */
 GST_WEBRTC_API
 void                        gst_webrtc_ice_add_candidate            (GstWebRTCICE * ice,
-                                                                         GstWebRTCICEStream * stream,
-                                                                         const gchar * candidate);
+                                                                     GstWebRTCICEStream * stream,
+                                                                     const gchar * candidate);
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_set_local_credentials    (GstWebRTCICE * ice,
-                                                                         GstWebRTCICEStream * stream,
-                                                                         gchar * ufrag,
-                                                                         gchar * pwd);
+                                                                     GstWebRTCICEStream * stream,
+                                                                     gchar * ufrag,
+                                                                     gchar * pwd);
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_set_remote_credentials   (GstWebRTCICE * ice,
-                                                                         GstWebRTCICEStream * stream,
-                                                                         gchar * ufrag,
-                                                                         gchar * pwd);
+                                                                     GstWebRTCICEStream * stream,
+                                                                     gchar * ufrag,
+                                                                     gchar * pwd);
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_add_turn_server          (GstWebRTCICE * ice,
-                                                                         const gchar * uri);
+                                                                     const gchar * uri);
 
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_set_is_controller        (GstWebRTCICE * ice,
-                                                                         gboolean controller);
+                                                                     gboolean controller);
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_get_is_controller        (GstWebRTCICE * ice);
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_set_force_relay          (GstWebRTCICE * ice,
-                                                                         gboolean force_relay);
+                                                                     gboolean force_relay);
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_set_stun_server          (GstWebRTCICE * ice,
-                                                                         const gchar * uri);
+                                                                     const gchar * uri);
 
 GST_WEBRTC_API
 gchar *                     gst_webrtc_ice_get_stun_server          (GstWebRTCICE * ice);
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_set_turn_server          (GstWebRTCICE * ice,
-                                                                         const gchar * uri);
+                                                                     const gchar * uri);
 
 GST_WEBRTC_API
 gchar *                     gst_webrtc_ice_get_turn_server          (GstWebRTCICE * ice);
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_set_on_ice_candidate     (GstWebRTCICE * ice,
-                                                                      GstWebRTCICEOnCandidateFunc func,
-                                                                      gpointer user_data,
-                                                                      GDestroyNotify notify);
+                                                                     GstWebRTCICEOnCandidateFunc func,
+                                                                     gpointer user_data,
+                                                                     GDestroyNotify notify);
 
 GST_WEBRTC_API
 void                        gst_webrtc_ice_set_tos                  (GstWebRTCICE * ice,
-                                                                        GstWebRTCICEStream * stream,
-                                                                        guint tos);
+                                                                     GstWebRTCICEStream * stream,
+                                                                     guint tos);
 
 GST_WEBRTC_API
 GstWebRTCICECandidateStats* gst_webrtc_ice_get_local_candidates     (GstWebRTCICE * ice,
@@ -222,7 +220,7 @@ GType                       gst_webrtc_ice_candidate_stats_get_type (void);
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstWebRTCICE, gst_object_unref)
 
 GST_WEBRTC_API
-GstWebRTCICECandidateStats * gst_webrtc_ice_candidate_stats_copy (GstWebRTCICECandidateStats *stats);
+GstWebRTCICECandidateStats * gst_webrtc_ice_candidate_stats_copy   (GstWebRTCICECandidateStats *stats);
 
 G_END_DECLS
 
