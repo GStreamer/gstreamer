@@ -37,6 +37,9 @@ GST_VA_API
 guint                 gst_va_chroma_from_video_format     (GstVideoFormat format);
 
 GST_VA_API
+guint                 gst_va_chroma_from_va_fourcc        (guint va_fourcc);
+
+GST_VA_API
 const VAImageFormat * gst_va_image_format_from_video_format (GstVideoFormat format);
 
 GST_VA_API

@@ -252,6 +252,14 @@ gst_va_chroma_from_video_format (GstVideoFormat format)
   return map ? map->va_rtformat : 0;
 }
 
+guint
+gst_va_chroma_from_va_fourcc (guint va_fourcc)
+{
+  const struct FormatMap *map = get_format_map_from_va_fourcc (va_fourcc);
+
+  return map ? map->va_rtformat : 0;
+}
+
 const VAImageFormat *
 gst_va_image_format_from_video_format (GstVideoFormat format)
 {

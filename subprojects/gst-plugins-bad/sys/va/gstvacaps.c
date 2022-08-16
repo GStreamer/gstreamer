@@ -264,10 +264,64 @@ gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
   return caps;
 }
 
-static void
-_add_jpeg_fields (GstCaps * caps, guint32 rt_formats)
+/* the purpose of this function is to find broken configurations in
+ * JPEG decoders: if the driver doesn't expose a pixel format for a
+ * config with a specific sampling, that sampling is not valid */
+static inline gboolean
+_config_has_pixel_formats (GstVaDisplay * display, VAProfile profile,
+    VAEntrypoint entrypoint, guint32 rt_format)
 {
-  guint i;
+  guint i, fourcc, count;
+  gboolean found = FALSE;
+  VAConfigAttrib attrs = {
+    .type = VAConfigAttribRTFormat,
+    .value = rt_format,
+  };
+  VAConfigID config;
+  VADisplay dpy = gst_va_display_get_va_dpy (display);
+  VASurfaceAttrib *attr_list;
+  VAStatus status;
+
+  status = vaCreateConfig (dpy, profile, entrypoint, &attrs, 1, &config);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (display, "Failed to create JPEG config");
+    return FALSE;
+  }
+  attr_list = gst_va_get_surface_attribs (display, config, &count);
+  if (!attr_list)
+    goto bail;
+
+  /* XXX: JPEG decoders handle RGB16 and RGB32 chromas, but they use
+   * RGBP pixel format, which its chroma is RGBP (not 16 nor 32). So
+   * if the requested chroma is 16 or 32 it's locally overloaded as
+   * RGBP. */
+  if (rt_format == VA_RT_FORMAT_RGB16 || rt_format == VA_RT_FORMAT_RGB32)
+    rt_format = VA_RT_FORMAT_RGBP;
+
+  for (i = 0; i < count; i++) {
+    if (attr_list[i].type == VASurfaceAttribPixelFormat) {
+      fourcc = attr_list[i].value.value.i;
+      /* ignore pixel formats without requested chroma */
+      found = (gst_va_chroma_from_va_fourcc (fourcc) == rt_format);
+      if (found)
+        break;
+    }
+  }
+  g_free (attr_list);
+
+bail:
+  status = vaDestroyConfig (dpy, config);
+  if (status != VA_STATUS_SUCCESS)
+    GST_WARNING_OBJECT (display, "Failed to destroy JPEG config");
+
+  return found;
+}
+
+static void
+_add_jpeg_fields (GstVaDisplay * display, GstCaps * caps, VAProfile profile,
+    VAEntrypoint entrypoint, guint32 rt_formats)
+{
+  guint i, size;
   GValue colorspace = G_VALUE_INIT, sampling = G_VALUE_INIT;
   gboolean rgb, gray, yuv;
 
@@ -278,7 +332,11 @@ _add_jpeg_fields (GstCaps * caps, guint32 rt_formats)
 
   for (i = 0; rt_formats && i < G_N_ELEMENTS (va_rt_format_list); i++) {
     if (rt_formats & va_rt_format_list[i]) {
-#define APPEND_YUV do { \
+      if (!_config_has_pixel_formats (display, profile, entrypoint,
+              va_rt_format_list[i]))
+        continue;
+
+#define APPEND_YUV do {                                                 \
         if (!yuv) { _value_list_append_string (&colorspace, "sYUV"); yuv = TRUE; } \
       } while (0)
 
@@ -323,17 +381,19 @@ _add_jpeg_fields (GstCaps * caps, guint32 rt_formats)
     }
   }
 
-  if (gst_value_list_get_size (&colorspace) == 1) {
+  size = gst_value_list_get_size (&colorspace);
+  if (size == 1) {
     gst_caps_set_value (caps, "colorspace",
         gst_value_list_get_value (&colorspace, 0));
-  } else {
+  } else if (size > 1) {
     gst_caps_set_value (caps, "colorspace", &colorspace);
   }
 
-  if (gst_value_list_get_size (&sampling) == 1) {
+  size = gst_value_list_get_size (&sampling);
+  if (size == 1) {
     gst_caps_set_value (caps, "sampling",
         gst_value_list_get_value (&sampling, 0));
-  } else {
+  } else if (size > 1) {
     gst_caps_set_value (caps, "sampling", &sampling);
   }
 
@@ -397,7 +457,7 @@ gst_va_create_coded_caps (GstVaDisplay * display, VAProfile profile,
     return NULL;
 
   if (rt_formats > 0 && gst_va_profile_codec (profile) == JPEG)
-    _add_jpeg_fields (caps, rt_formats);
+    _add_jpeg_fields (display, caps, profile, entrypoint, rt_formats);
 
   if (max_width == -1 || max_height == -1)
     return caps;
