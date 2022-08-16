@@ -111,6 +111,7 @@ struct _GstHLSDemuxStream
 
   /* Whether the underlying playlist was fetched on creation */
   gboolean playlist_fetched;
+  GstClockTime playlist_last_update_time;
 
   /* The media playlist currently used */
   GstHLSMediaPlaylist *playlist;

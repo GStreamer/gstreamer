@@ -2147,6 +2147,18 @@ out:
 }
 
 GstClockTime
+gst_hls_media_playlist_get_end_stream_time (GstHLSMediaPlaylist * m3u8)
+{
+  if (m3u8->segments->len == 0)
+    return GST_CLOCK_TIME_NONE;
+
+  GstM3U8MediaSegment *last =
+      g_ptr_array_index (m3u8->segments, m3u8->segments->len - 1);
+
+  return last->stream_time + last->duration;
+}
+
+GstClockTime
 gst_hls_media_playlist_get_duration (GstHLSMediaPlaylist * m3u8)
 {
   GstClockTime duration = GST_CLOCK_TIME_NONE;

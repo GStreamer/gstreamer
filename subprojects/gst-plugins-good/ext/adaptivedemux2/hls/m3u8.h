@@ -295,6 +295,9 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist *self, gboolean
     GstM3U8SeekResult *seek_result);
 
 GstClockTime
+gst_hls_media_playlist_get_end_stream_time  (GstHLSMediaPlaylist * m3u8);
+
+GstClockTime
 gst_hls_media_playlist_get_duration         (GstHLSMediaPlaylist * m3u8);
 
 gchar *

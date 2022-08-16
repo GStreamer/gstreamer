@@ -2308,6 +2308,8 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
     GST_WARNING_OBJECT (stream, "Could not get playlist '%s'", *uri);
     return GST_FLOW_ERROR;
   }
+  stream->playlist_last_update_time =
+      gst_adaptive_demux2_get_monotonic_time (GST_ADAPTIVE_DEMUX (demux));
 
   /* Check if a redirect happened */
   if (g_strcmp0 (*uri, new_playlist->uri)) {
@@ -2363,7 +2365,8 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
         gst_hls_media_playlist_sync_to_segment (new_playlist,
         stream->current_segment);
 
-    /* FIXME: Handle LL-HLS partial segment sync */
+    /* Handle LL-HLS partial segment sync by checking our partial segment
+     * still makes sense */
     if (stream->in_partial_segments && new_segment) {
       /* We must be either playing the trailing open-ended partial segment,
        * or if we're playing partials from a complete segment, check that we
@@ -2529,10 +2532,20 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
     if (ret != GST_FLOW_OK)
       return ret;
   }
-
+#ifndef GST_DISABLE_GST_DEBUG
+  GstClockTimeDiff live_edge_dist =
+      GST_CLOCK_TIME_IS_VALID (stream->current_position) ?
+      gst_hls_media_playlist_get_end_stream_time (hlsdemux_stream->playlist) -
+      stream->current_position : GST_CLOCK_TIME_NONE;
+  GstClockTime playlist_age =
+      gst_adaptive_demux2_get_monotonic_time (GST_ADAPTIVE_DEMUX (demux)) -
+      hlsdemux_stream->playlist_last_update_time;
   GST_DEBUG_OBJECT (stream,
-      "Updating fragment information, current_position:%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (stream->current_position));
+      "Updating fragment information, current_position:%" GST_TIME_FORMAT
+      " which is %" GST_STIME_FORMAT " from live edge. Playlist age %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (stream->current_position),
+      GST_STIME_ARGS (live_edge_dist), GST_TIME_ARGS (playlist_age));
+#endif
 
   /* Find the current segment if we don't already have it */
   if (hlsdemux_stream->current_segment == NULL) {
