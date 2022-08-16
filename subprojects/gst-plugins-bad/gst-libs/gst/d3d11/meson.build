@@ -13,6 +13,7 @@ d3d11_headers = [
   'gstd3d11_fwd.h',
   'gstd3d11.h',
   'gstd3d11bufferpool.h',
+  'gstd3d11compile.h',
   'gstd3d11converter.h',
   'gstd3d11device.h',
   'gstd3d11format.h',
