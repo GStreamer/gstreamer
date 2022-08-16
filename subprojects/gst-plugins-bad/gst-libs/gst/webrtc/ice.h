@@ -39,6 +39,8 @@ struct _GstWebRTCICE
 
   GstWebRTCICEGatheringState         ice_gathering_state;
   GstWebRTCICEConnectionState        ice_connection_state;
+
+  /*< protected >*/
   guint                              min_rtp_port;
   guint                              max_rtp_port;
 
