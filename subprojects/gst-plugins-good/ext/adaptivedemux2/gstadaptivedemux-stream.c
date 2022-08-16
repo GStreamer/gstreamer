@@ -85,7 +85,6 @@ gst_adaptive_demux2_stream_finalize (GObject * object)
   if (stream->download_request)
     download_request_unref (stream->download_request);
 
-  stream->cancelled = TRUE;
   g_clear_error (&stream->last_error);
 
   gst_adaptive_demux2_stream_fragment_clear (&stream->fragment);
@@ -697,7 +696,7 @@ gst_adaptive_demux2_stream_push_buffer (GstAdaptiveDemux2Stream * stream,
     gst_pad_send_event (stream->parsebin_sink, buffer_gap);
   }
 
-  if (G_UNLIKELY (stream->cancelled)) {
+  if (G_UNLIKELY (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED)) {
     GST_LOG_OBJECT (demux, "Stream was cancelled");
     return GST_FLOW_FLUSHING;
   }
@@ -716,7 +715,8 @@ gst_adaptive_demux2_stream_parse_buffer (GstAdaptiveDemux2Stream * stream,
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* do not make any changes if the stream is cancelled */
-  if (G_UNLIKELY (stream->cancelled)) {
+  if (G_UNLIKELY (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED)) {
+    GST_DEBUG_OBJECT (stream, "Stream was stopped. Aborting");
     gst_buffer_unref (buffer);
     return GST_FLOW_FLUSHING;
   }
@@ -746,7 +746,8 @@ gst_adaptive_demux2_stream_parse_buffer (GstAdaptiveDemux2Stream * stream,
 
     if (ret == GST_FLOW_FLUSHING) {
       /* do not make any changes if the stream is cancelled */
-      if (G_UNLIKELY (stream->cancelled)) {
+      if (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED) {
+        GST_DEBUG_OBJECT (stream, "Stream was stopped. Aborting");
         return ret;
       }
     }
@@ -1158,6 +1159,12 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
   guint last_status_code = request->status_code;
   gboolean live;
 
+  if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_DOWNLOADING) {
+    GST_DEBUG_OBJECT (stream, "Stream state changed to %d. Aborting",
+        stream->state);
+    return;
+  }
+
   stream->download_active = FALSE;
   stream->last_status_code = last_status_code;
 
@@ -1336,8 +1343,11 @@ on_download_complete (DownloadRequest * request, DownloadRequestState state,
 
   stream->download_active = FALSE;
 
-  if (G_UNLIKELY (stream->cancelled))
+  if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_DOWNLOADING) {
+    GST_DEBUG_OBJECT (stream, "Stream state changed to %d. Aborting",
+        stream->state);
     return;
+  }
 
   GST_DEBUG_OBJECT (stream,
       "Stream %p %s download for %s is complete with state %d",
@@ -1726,9 +1736,6 @@ gst_adaptive_demux2_stream_handle_playlist_eos (GstAdaptiveDemux2Stream *
       gst_adaptive_demux2_stream_wants_manifest_update (demux);
       return;
     }
-
-    if (stream->replaced)
-      return;
   }
 
   gst_adaptive_demux2_stream_end_of_manifest (stream);
@@ -1765,6 +1772,9 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
     case GST_ADAPTIVE_DEMUX2_STREAM_STATE_EOS:
       GST_ERROR_OBJECT (stream,
           "Unexpected stream state EOS. The stream should not be running now.");
+      return FALSE;
+    case GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED:
+      /* The stream was stopped. Just finish up */
       return FALSE;
     default:
       GST_ERROR_OBJECT (stream, "Unexpected stream state %d", stream->state);
@@ -1838,9 +1848,8 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
 
     case GST_FLOW_FLUSHING:
       /* Flushing is normal, the target track might have been unselected */
-      if (G_UNLIKELY (stream->cancelled))
-        return FALSE;
-
+      GST_DEBUG_OBJECT (stream, "Got flushing return. Stopping callback.");
+      return FALSE;
     default:
       if (ret <= GST_FLOW_ERROR) {
         GST_WARNING_OBJECT (demux, "Error while downloading fragment");
@@ -2004,8 +2013,6 @@ gst_adaptive_demux2_stream_start (GstAdaptiveDemux2Stream * stream)
       stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_RESTART) {
     GST_LOG_OBJECT (stream, "Activating stream. Current state %d",
         stream->state);
-    stream->cancelled = FALSE;
-    stream->replaced = FALSE;
     stream->last_ret = GST_FLOW_OK;
 
     if (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED)

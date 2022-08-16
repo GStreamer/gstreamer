@@ -329,8 +329,6 @@ struct _GstAdaptiveDemux2Stream
 
   gboolean pending_tracks; /* if we need to discover tracks dynamically for this stream */
   gboolean download_finished;
-  gboolean cancelled;
-  gboolean replaced; /* replaced in a bitrate switch (used with cancelled) */
 
   gboolean starting_fragment;
   gboolean first_fragment_buffer;
