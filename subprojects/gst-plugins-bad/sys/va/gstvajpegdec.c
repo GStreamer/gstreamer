@@ -373,7 +373,12 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
-  if (gst_va_chroma_from_video_format (format) != base->rt_format)
+  /* @XXX: validate if the preferred format has the same requested
+   * chroma, except for i965, since NV12 is either for both 4:2:0 and
+   * 4:2:2 */
+  if (!(GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, INTEL_I965)
+          && format == GST_VIDEO_FORMAT_NV12)
+      && (gst_va_chroma_from_video_format (format) != base->rt_format))
     return FALSE;
 
   /* hack for RGBP rt_format */
