@@ -748,7 +748,7 @@ gst_splitmux_pad_loop (GstPad * pad)
   SplitMuxSrcPad *splitpad = (SplitMuxSrcPad *) (pad);
   GstSplitMuxSrc *splitmux = (GstSplitMuxSrc *) gst_pad_get_parent (pad);
   GstDataQueueItem *item = NULL;
-  GstSplitMuxPartReader *reader;
+  GstSplitMuxPartReader *reader = NULL;
   GstPad *part_pad;
   GstFlowReturn ret;
 
@@ -762,8 +762,14 @@ gst_splitmux_pad_loop (GstPad * pad)
     return;
   }
   part_pad = gst_object_ref (splitpad->part_pad);
-  reader = splitpad->reader;
   GST_OBJECT_UNLOCK (splitpad);
+
+  SPLITMUX_SRC_LOCK (splitmux);
+  reader = splitpad->reader ? gst_object_ref (splitpad->reader) : NULL;
+  SPLITMUX_SRC_UNLOCK (splitmux);
+
+  if (reader == NULL)
+    goto flushing;
 
   GST_LOG_OBJECT (splitpad, "Popping data queue item from %" GST_PTR_FORMAT
       " pad %" GST_PTR_FORMAT, reader, part_pad);
@@ -806,6 +812,7 @@ gst_splitmux_pad_loop (GstPad * pad)
   }
   g_slice_free (GstDataQueueItem, item);
 
+  gst_object_unref (reader);
   gst_object_unref (part_pad);
   gst_object_unref (splitmux);
   return;
@@ -816,6 +823,8 @@ error:
       ("Error reading part file %s", GST_STR_NULL (reader->path)));
 flushing:
   gst_pad_pause_task (pad);
+  if (reader != NULL)
+    gst_object_unref (reader);
   gst_object_unref (part_pad);
   gst_object_unref (splitmux);
   return;
@@ -1001,14 +1010,12 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
 
   SPLITMUX_SRC_UNLOCK (splitmux);
 
-  /* Stop and destroy all parts. We don't need the lock here,
+  /* Stop all part readers. We don't need the lock here,
    * because all parts were created in _start()  */
   for (i = 0; i < splitmux->num_created_parts; i++) {
     if (splitmux->parts[i] == NULL)
       continue;
     gst_splitmux_part_reader_unprepare (splitmux->parts[i]);
-    g_object_unref (splitmux->parts[i]);
-    splitmux->parts[i] = NULL;
   }
   SPLITMUX_SRC_LOCK (splitmux);
 
@@ -1025,6 +1032,14 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   }
   g_list_free (pads_list);
   SPLITMUX_SRC_LOCK (splitmux);
+
+  /* Now the pad task is stopped we can destroy the readers */
+  for (i = 0; i < splitmux->num_created_parts; i++) {
+    if (splitmux->parts[i] == NULL)
+      continue;
+    g_object_unref (splitmux->parts[i]);
+    splitmux->parts[i] = NULL;
+  }
 
   g_free (splitmux->parts);
   splitmux->parts = NULL;
