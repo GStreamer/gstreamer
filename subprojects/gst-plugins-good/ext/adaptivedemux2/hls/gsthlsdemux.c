@@ -528,7 +528,8 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
   }
 
   /* Allow jumping to partial segments in the last 2 segments in LL-HLS */
-  if (hls_stream->llhls_enabled)
+  if (hls_stream->llhls_enabled
+      && GST_HLS_MEDIA_PLAYLIST_IS_LIVE (hls_stream->playlist))
     flags |= GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
 
   GstM3U8SeekResult seek_result;
@@ -1950,7 +1951,9 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
     hlsdemux_stream->current_segment = new_segment;
 
     /* In LL-HLS, handle advancing into the partial-only segment */
-    if (new_segment->partial_only) {
+    if (hlsdemux_stream->llhls_enabled
+        && GST_HLS_MEDIA_PLAYLIST_IS_LIVE (hlsdemux_stream->playlist)
+        && new_segment->partial_only) {
       hlsdemux_stream->in_partial_segments = TRUE;
       hlsdemux_stream->part_idx = 0;
 
