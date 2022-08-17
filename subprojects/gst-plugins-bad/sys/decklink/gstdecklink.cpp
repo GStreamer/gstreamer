@@ -1090,20 +1090,35 @@ public:
       VideoInputFormatChanged (BMDVideoInputFormatChangedEvents,
       IDeckLinkDisplayMode * mode, BMDDetectedVideoInputFormatFlags formatFlags)
   {
-    /* use the user-set format, defaulting to 8BitYUV */
-    BMDPixelFormat pixelFormat = m_input->format;
+    BMDPixelFormat pixelFormat = bmdFormatUnspecified;
 
     GST_INFO ("Video input format changed");
 
-    if (m_input->format == bmdFormat8BitYUV) {
-      /* user-set format was auto or 8BitYUV */
-      if (formatFlags & bmdDetectedVideoInputRGB444) {
+    /* Detect input format */
+    if ((formatFlags & bmdDetectedVideoInputRGB444)
+        && (formatFlags & bmdDetectedVideoInput8BitDepth)) {
+      /* Cannot detect ARGB vs BGRA, so assume ARGB unless user sets BGRA */
+      if (m_input->format == bmdFormat8BitBGRA) {
+        pixelFormat = bmdFormat8BitBGRA;
+      } else {
         pixelFormat = bmdFormat8BitARGB;
-      } else if (formatFlags & bmdDetectedVideoInputYCbCr422) {
-        if (formatFlags & bmdDetectedVideoInput10BitDepth) {
-          pixelFormat = bmdFormat10BitYUV;
-        }
       }
+    } else if (formatFlags & bmdDetectedVideoInputYCbCr422) {
+      if (formatFlags & bmdDetectedVideoInput10BitDepth) {
+        pixelFormat = bmdFormat10BitYUV;
+      } else if (formatFlags & bmdDetectedVideoInput8BitDepth) {
+        pixelFormat = bmdFormat8BitYUV;
+      }
+    }
+
+    if (pixelFormat == bmdFormatUnspecified) {
+      GST_ERROR ("Video input format is not supported");
+      return E_FAIL;
+    }
+
+    if (!m_input->auto_format && (m_input->format != pixelFormat)) {
+      GST_ERROR ("Video input format does not match the user-set format");
+      return E_FAIL;
     }
 
     g_mutex_lock (&m_input->lock);

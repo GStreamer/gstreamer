@@ -440,6 +440,7 @@ struct _GstDecklinkInput {
   /* Configured mode or NULL */
   const GstDecklinkMode *mode;
   BMDPixelFormat format;
+  gboolean auto_format;
 
   /* Set by the audio source */
   void (*got_audio_packet) (GstElement *videosrc, IDeckLinkAudioInputPacket * packet, GstClockTime capture_time, GstClockTime stream_time, GstClockTime stream_duration, GstClockTime hardware_time, GstClockTime hardware_duration, gboolean no_signal);
