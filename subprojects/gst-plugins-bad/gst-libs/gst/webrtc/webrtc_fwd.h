@@ -50,13 +50,23 @@ typedef struct _GstWebRTCDTLSTransportClass GstWebRTCDTLSTransportClass;
 
 /**
  * GstWebRTCICE:
+ *
+ * Since: 1.22
  */
 typedef struct _GstWebRTCICE GstWebRTCICE;
 typedef struct _GstWebRTCICEClass GstWebRTCICEClass;
+
+/**
+ * GstWebRTCICECandidateStats:
+ *
+ * Since: 1.22
+ */
 typedef struct _GstWebRTCICECandidateStats GstWebRTCICECandidateStats;
 
 /**
  * GstWebRTCICEStream:
+ *
+ * Since: 1.22
  */
 typedef struct _GstWebRTCICEStream GstWebRTCICEStream;
 typedef struct _GstWebRTCICEStreamClass GstWebRTCICEStreamClass;
