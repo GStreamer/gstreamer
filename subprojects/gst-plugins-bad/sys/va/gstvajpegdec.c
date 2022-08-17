@@ -499,9 +499,11 @@ _fixup_sink_caps (GstVaDisplay * display, GstCaps * caps)
       g_value_init (&samp, G_TYPE_STRING);
       g_value_set_string (&samp, sampling_list[i]);
       gst_value_list_append_value (&sampling, &samp);
+      g_value_unset (&samp);
     }
 
     gst_caps_set_value (ret, "sampling", &sampling);
+    g_value_unset (&sampling);
     return ret;
   }
   return gst_caps_ref (caps);
@@ -525,18 +527,19 @@ _fixup_src_caps (GstVaDisplay * display, GstCaps * caps)
       if (gst_caps_features_is_equal (f,
               GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
         /* rgbp is not correctly mapped into memory */
-        guint i, siz;
+        guint i, size;
         GValue out = G_VALUE_INIT;
         const GValue *in = gst_structure_get_value (s, "format");
 
-        siz = gst_value_list_get_size (in);
-        gst_value_list_init (&out, siz);
-        for (i = 0; i < siz; i++) {
+        size = gst_value_list_get_size (in);
+        gst_value_list_init (&out, size);
+        for (i = 0; i < size; i++) {
           const GValue *fmt = gst_value_list_get_value (in, i);
           if (g_strcmp0 (g_value_get_string (fmt), "RGBP") != 0)
             gst_value_list_append_value (&out, fmt);
         }
         gst_structure_set_value (s, "format", &out);
+        g_value_unset (&out);
       } else if (gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
         /* dmabuf exportation only handles NV12 */
         gst_structure_set (s, "format", G_TYPE_STRING, "NV12", NULL);
