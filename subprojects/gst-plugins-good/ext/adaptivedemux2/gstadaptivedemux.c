@@ -203,6 +203,8 @@ static GstStateChangeReturn gst_adaptive_demux_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_adaptive_demux_query (GstElement * element,
     GstQuery * query);
+static gboolean gst_adaptive_demux_send_event (GstElement * element,
+    GstEvent * event);
 
 static void gst_adaptive_demux_handle_message (GstBin * bin, GstMessage * msg);
 
@@ -214,6 +216,10 @@ static gboolean gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static gboolean gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
+    GstEvent * event);
+static gboolean gst_adaptive_demux_handle_select_streams_event (GstAdaptiveDemux
+    * demux, GstEvent * event);
 
 static gboolean
 gst_adaptive_demux_push_src_event (GstAdaptiveDemux * demux, GstEvent * event);
@@ -529,6 +535,7 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
 
   gstelement_class->change_state = gst_adaptive_demux_change_state;
   gstelement_class->query = gst_adaptive_demux_query;
+  gstelement_class->send_event = gst_adaptive_demux_send_event;
 
   gstbin_class->handle_message = gst_adaptive_demux_handle_message;
 
@@ -1418,6 +1425,32 @@ gst_adaptive_demux_query (GstElement * element, GstQuery * query)
   }
 
   return GST_ELEMENT_CLASS (parent_class)->query (element, query);
+}
+
+static gboolean
+gst_adaptive_demux_send_event (GstElement * element, GstEvent * event)
+{
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (element);
+  gboolean res = FALSE;
+
+  GST_DEBUG_OBJECT (demux, "Received event %" GST_PTR_FORMAT, event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      res = gst_adaptive_demux_handle_seek_event (demux, event);
+      break;
+    }
+    case GST_EVENT_SELECT_STREAMS:
+    {
+      res = gst_adaptive_demux_handle_select_streams_event (demux, event);
+      break;
+    }
+    default:
+      res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
+      break;
+  }
+  return res;
 }
 
 /* MANIFEST_LOCK held. Find the stream that owns the given element */
@@ -2601,6 +2634,29 @@ select_streams_done:
 }
 
 static gboolean
+gst_adaptive_demux_handle_select_streams_event (GstAdaptiveDemux * demux,
+    GstEvent * event)
+{
+  GList *streams;
+  gboolean selection_handled;
+
+  if (GST_EVENT_SEQNUM (event) ==
+      g_atomic_int_get (&demux->priv->requested_selection_seqnum)) {
+    GST_DEBUG_OBJECT (demux, "Already handled/handling select-streams %d",
+        GST_EVENT_SEQNUM (event));
+    return TRUE;
+  }
+
+  gst_event_parse_select_streams (event, &streams);
+  selection_handled =
+      handle_stream_selection (demux, streams, GST_EVENT_SEQNUM (event));
+  g_list_free_full (streams, g_free);
+
+  gst_event_unref (event);
+  return selection_handled;
+}
+
+static gboolean
 gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
@@ -2651,21 +2707,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
     }
     case GST_EVENT_SELECT_STREAMS:
     {
-      GList *streams;
-      gboolean selection_handled;
-
-      if (GST_EVENT_SEQNUM (event) ==
-          g_atomic_int_get (&demux->priv->requested_selection_seqnum)) {
-        GST_DEBUG_OBJECT (demux, "Already handled/handling select-streams %d",
-            GST_EVENT_SEQNUM (event));
-        return TRUE;
-      }
-
-      gst_event_parse_select_streams (event, &streams);
-      selection_handled =
-          handle_stream_selection (demux, streams, GST_EVENT_SEQNUM (event));
-      g_list_free_full (streams, g_free);
-      return selection_handled;
+      return gst_adaptive_demux_handle_select_streams_event (demux, event);
     }
     default:
       break;
