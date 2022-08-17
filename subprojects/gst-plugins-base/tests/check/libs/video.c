@@ -2739,6 +2739,11 @@ GST_START_TEST (test_video_convert)
           GST_VIDEO_CONVERTER_OPT_DEST_WIDTH, G_TYPE_INT, 300,
           GST_VIDEO_CONVERTER_OPT_DEST_HEIGHT, G_TYPE_INT, 220, NULL));
 
+  g_assert (gst_video_info_is_equal (&ininfo,
+          gst_video_converter_get_in_info (convert)));
+  g_assert (gst_video_info_is_equal (&outinfo,
+          gst_video_converter_get_out_info (convert)));
+
   gst_video_converter_frame (convert, &inframe, &outframe);
   gst_video_converter_free (convert);
 

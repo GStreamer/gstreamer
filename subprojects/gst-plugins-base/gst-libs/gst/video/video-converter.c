@@ -8264,3 +8264,35 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   GST_DEBUG ("no fastpath found");
   return FALSE;
 }
+
+/**
+ * gst_video_converter_get_in_info:
+ * @in_info: a #GstVideoConverter
+ *
+ * Retrieve the input format of @convert.
+ *
+ * Returns: (transfer none): a #GstVideoInfo
+ *
+ * Since: 1.22
+ */
+const GstVideoInfo *
+gst_video_converter_get_in_info (GstVideoConverter * convert)
+{
+  return &convert->in_info;
+}
+
+/**
+ * gst_video_converter_get_out_info:
+ * @in_info: a #GstVideoConverter
+ *
+ * Retrieve the output format of @convert.
+ *
+ * Returns: (transfer none): a #GstVideoInfo
+ *
+ * Since: 1.22
+ */
+const GstVideoInfo *
+gst_video_converter_get_out_info (GstVideoConverter * convert)
+{
+  return &convert->out_info;
+}
