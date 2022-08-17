@@ -190,7 +190,7 @@ measure the amount of framedrops they have. (see [qos](additional/design/qos.md)
 ## SEEK
 
 A seek event is issued by the application to configure the playback
-range of a stream. It is called form the application thread and travels
+range of a stream. It is called from the application thread and travels
 upstream.
 
 The seek event contains the new start and stop position of playback
