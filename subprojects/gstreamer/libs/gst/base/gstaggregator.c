@@ -495,12 +495,14 @@ gst_aggregator_check_pads_ready (GstAggregator * self,
             || GST_IS_QUERY (g_queue_peek_tail (&pad->priv->data)))) {
       PAD_UNLOCK (pad);
       have_event_or_query = TRUE;
+      GST_LOG_OBJECT (pad, "Have pending serialized query/event");
       break;
     }
 
     if (self->priv->ignore_inactive_pads && self->priv->peer_latency_live &&
         pad->priv->waited_once && pad->priv->first_buffer && !pad->priv->eos) {
       PAD_UNLOCK (pad);
+      GST_LOG_OBJECT (pad, "Ignoring inactive pad");
       continue;
     }
 
@@ -514,17 +516,24 @@ gst_aggregator_check_pads_ready (GstAggregator * self,
 
       /* Only consider this pad as worth waiting for if it's not already EOS.
        * There's no point in waiting for buffers on EOS pads */
-      if (!pad->priv->eos)
+      if (!pad->priv->eos) {
+        GST_LOG_OBJECT (pad, "Have no buffer and not EOS yet");
         have_buffer = FALSE;
-      else
+      } else {
+        GST_LOG_OBJECT (pad, "Have no buffer and already EOS");
         n_ready++;
-    } else if (self->priv->peer_latency_live) {
-      /* In live mode, having a single pad with buffers is enough to
-       * generate a start time from it. In non-live mode all pads need
-       * to have a buffer
-       */
-      self->priv->first_buffer = FALSE;
-      n_ready++;
+      }
+    } else {
+      GST_TRACE_OBJECT (pad, "Have %" GST_TIME_FORMAT " queued in %u buffers",
+          GST_TIME_ARGS (pad->priv->time_level), pad->priv->num_buffers);
+      if (self->priv->peer_latency_live) {
+        /* In live mode, having a single pad with buffers is enough to
+         * generate a start time from it. In non-live mode all pads need
+         * to have a buffer
+         */
+        self->priv->first_buffer = FALSE;
+        n_ready++;
+      }
     }
 
     PAD_UNLOCK (pad);
@@ -563,7 +572,7 @@ no_sinkpads:
   }
 pad_not_ready:
   {
-    GST_LOG_OBJECT (pad, "pad not ready to be aggregated yet");
+    GST_LOG_OBJECT (self, "pad not ready to be aggregated yet");
     GST_OBJECT_UNLOCK (self);
 
     if (have_event_or_query_ret)
@@ -573,7 +582,7 @@ pad_not_ready:
   }
 pad_not_ready_but_event_or_query:
   {
-    GST_LOG_OBJECT (pad,
+    GST_LOG_OBJECT (self,
         "pad not ready to be aggregated yet, need to handle serialized event or query first");
     GST_OBJECT_UNLOCK (self);
 
@@ -2986,6 +2995,9 @@ gst_aggregator_pad_has_space (GstAggregator * self, GstAggregatorPad * aggpad)
 {
   guint64 max_time_level;
 
+  GST_TRACE_OBJECT (aggpad, "Have %" GST_TIME_FORMAT " queued in %u buffers",
+      GST_TIME_ARGS (aggpad->priv->time_level), aggpad->priv->num_buffers);
+
   /* Empty queue always has space */
   if (aggpad->priv->num_buffers == 0 && aggpad->priv->clipped_buffer == NULL)
     return TRUE;
@@ -3003,6 +3015,9 @@ gst_aggregator_pad_has_space (GstAggregator * self, GstAggregatorPad * aggpad)
    * minimum upstream latency to allow queue free sources with lower then
    * upstream latency. */
   max_time_level = self->priv->latency + self->priv->upstream_latency_min;
+
+  GST_TRACE_OBJECT (aggpad, "Maximum queue level %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (max_time_level));
 
   /* Allow no more buffers than the latency */
   return (aggpad->priv->time_level <= max_time_level);
