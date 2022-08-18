@@ -609,9 +609,15 @@ downloadhelper_new (GstAdaptiveDemuxClock * clock)
       g_async_queue_new_full ((GDestroyNotify) g_object_unref);
   dh->transfer_requests_source = NULL;
 
+  /* libsoup 3.0 (not 2.74 or 3.1) dispatches using a single source attached
+   * when the session is created, so we need to ensure it matches here. */
+  g_main_context_push_thread_default (dh->transfer_context);
+
   /* Set 10 second timeout. Any longer is likely
    * an attempt to reuse an already closed connection */
   dh->session = _soup_session_new_with_options ("timeout", 10, NULL);
+
+  g_main_context_pop_thread_default (dh->transfer_context);
 
   return dh;
 }
