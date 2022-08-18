@@ -222,7 +222,7 @@ typedef struct _GstD3D11Deinterlace
 
   GstD3D11DeinterlaceMethod method;
 
-  GRecMutex lock;
+  CRITICAL_SECTION lock;
   GQueue past_frame_queue;
   GQueue future_frame_queue;
   GstBuffer *to_process;
@@ -259,10 +259,6 @@ static GstElementClass *parent_class = NULL;
 #define GST_D3D11_DEINTERLACE_GET_CLASS(object) \
     (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object), \
     GstD3D11DeinterlaceClass))
-#define GST_D3D11_DEINTERLACE_LOCK(self) \
-    g_rec_mutex_lock (&GST_D3D11_DEINTERLACE (self)->lock);
-#define GST_D3D11_DEINTERLACE_UNLOCK(self) \
-    g_rec_mutex_unlock (&GST_D3D11_DEINTERLACE (self)->lock);
 
 static gboolean
 gst_d3d11_deinterlace_update_method (GstD3D11Deinterlace * self);
@@ -420,7 +416,7 @@ gst_d3d11_deinterlace_init (GstD3D11Deinterlace * self)
 
   g_queue_init (&self->past_frame_queue);
   g_queue_init (&self->future_frame_queue);
-  g_rec_mutex_init (&self->lock);
+  InitializeCriticalSection (&self->lock);
 }
 
 static void
@@ -567,7 +563,7 @@ gst_d3d11_deinterlace_finalize (GObject * object)
 {
   GstD3D11Deinterlace *self = GST_D3D11_DEINTERLACE (object);
 
-  g_rec_mutex_clear (&self->lock);
+  DeleteCriticalSection (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -630,7 +626,8 @@ gst_d3d11_deinterlace_reset_history (GstD3D11Deinterlace * self)
 static void
 gst_d3d11_deinterlace_reset (GstD3D11Deinterlace * self)
 {
-  GST_D3D11_DEINTERLACE_LOCK (self);
+  GstD3D11CSLockGuard lk (&self->lock);
+
   if (self->fallback_in_pool) {
     gst_buffer_pool_set_active (self->fallback_in_pool, FALSE);
     gst_object_unref (self->fallback_in_pool);
@@ -648,8 +645,6 @@ gst_d3d11_deinterlace_reset (GstD3D11Deinterlace * self)
 
   gst_d3d11_deinterlace_reset_history (self);
   self->default_buffer_duration = GST_CLOCK_TIME_NONE;
-
-  GST_D3D11_DEINTERLACE_UNLOCK (self);
 }
 
 static void
@@ -1809,9 +1804,9 @@ gst_d3d11_deinterlace_sink_event (GstBaseTransform * trans, GstEvent * event)
       gst_d3d11_deinterlace_drain (self);
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_D3D11_DEINTERLACE_LOCK (self);
+      EnterCriticalSection (&self->lock);
       gst_d3d11_deinterlace_reset_history (self);
-      GST_D3D11_DEINTERLACE_UNLOCK (self);
+      LeaveCriticalSection (&self->lock);
       break;
     default:
       break;
@@ -1890,7 +1885,8 @@ gst_d3d11_deinterlace_drain (GstD3D11Deinterlace * self)
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *outbuf = NULL;
 
-  GST_D3D11_DEINTERLACE_LOCK (self);
+  EnterCriticalSection (&self->lock);
+
   if (gst_base_transform_is_passthrough (trans)) {
     /* If we were passthrough, nothing to do */
     goto done;
@@ -1910,16 +1906,16 @@ gst_d3d11_deinterlace_drain (GstD3D11Deinterlace * self)
       ret = gst_d3d11_deinterlace_generate_output (trans, &outbuf);
       if (outbuf != NULL) {
         /* Release lock during push buffer */
-        GST_D3D11_DEINTERLACE_UNLOCK (self);
+        LeaveCriticalSection (&self->lock);
         ret = gst_pad_push (trans->srcpad, outbuf);
-        GST_D3D11_DEINTERLACE_LOCK (self);
+        EnterCriticalSection (&self->lock);
       }
     } while (ret == GST_FLOW_OK && outbuf != NULL);
   }
 
 done:
   gst_d3d11_deinterlace_reset_history (self);
-  GST_D3D11_DEINTERLACE_UNLOCK (self);
+  LeaveCriticalSection (&self->lock);
 
   return ret;
 }

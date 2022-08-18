@@ -1518,7 +1518,7 @@ struct _GstD3D11ScreenCapture
   gboolean prepared;
   gint64 adapter_luid;
 
-  GRecMutex lock;
+  CRITICAL_SECTION lock;
 };
 
 static void gst_d3d11_screen_capture_constructed (GObject * object);
@@ -1557,7 +1557,7 @@ gst_d3d11_screen_capture_class_init (GstD3D11ScreenCaptureClass * klass)
 static void
 gst_d3d11_screen_capture_init (GstD3D11ScreenCapture * self)
 {
-  g_rec_mutex_init (&self->lock);
+  InitializeCriticalSection (&self->lock);
 
   memset (&self->desktop_coordinates, 0, sizeof (RECT));
 }
@@ -1715,7 +1715,7 @@ gst_d3d11_screen_capture_finalize (GObject * object)
 {
   GstD3D11ScreenCapture *self = GST_D3D11_SCREEN_CAPTURE (object);
 
-  g_rec_mutex_clear (&self->lock);
+  DeleteCriticalSection (&self->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1789,10 +1789,10 @@ gst_d3d11_screen_capture_prepare (GstD3D11ScreenCapture * capture)
   g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), GST_FLOW_ERROR);
   g_return_val_if_fail (capture->device != nullptr, GST_FLOW_ERROR);
 
-  g_rec_mutex_lock (&capture->lock);
+  GstD3D11CSLockGuard lk (&capture->lock);
+
   if (capture->prepared) {
     GST_DEBUG_OBJECT (capture, "Already prepared");
-    g_rec_mutex_unlock (&capture->lock);
     return GST_FLOW_OK;
   }
 
@@ -1805,13 +1805,11 @@ gst_d3d11_screen_capture_prepare (GstD3D11ScreenCapture * capture)
 
     delete capture->dupl_obj;
     capture->dupl_obj = nullptr;
-    g_rec_mutex_unlock (&capture->lock);
 
     return ret;
   }
 
   capture->prepared = TRUE;
-  g_rec_mutex_unlock (&capture->lock);
 
   return GST_FLOW_OK;
 }
@@ -1824,7 +1822,7 @@ gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
   g_return_val_if_fail (width != nullptr, FALSE);
   g_return_val_if_fail (height != nullptr, FALSE);
 
-  g_rec_mutex_lock (&capture->lock);
+  GstD3D11CSLockGuard lk (&capture->lock);
   *width = 0;
   *height = 0;
 
@@ -1835,7 +1833,6 @@ gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
 
   *width = capture->cached_width;
   *height = capture->cached_height;
-  g_rec_mutex_unlock (&capture->lock);
 
   return TRUE;
 }
@@ -1903,13 +1900,12 @@ gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
     shared_device = TRUE;
   }
 
-  g_rec_mutex_lock (&capture->lock);
+  GstD3D11CSLockGuard lk (&capture->lock);
   if (!capture->prepared)
     ret = gst_d3d11_screen_capture_prepare (capture);
 
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (capture, "We are not prepared");
-    g_rec_mutex_unlock (&capture->lock);
     return ret;
   }
 
@@ -1921,7 +1917,6 @@ gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
         "Capture area (%u, %u, %u, %u) doesn't fit into screen size %ux%u",
         crop_box->left, crop_box->right, crop_box->top,
         crop_box->bottom, width, height);
-    g_rec_mutex_unlock (&capture->lock);
 
     return GST_D3D11_SCREEN_CAPTURE_FLOW_SIZE_CHANGED;
   }
@@ -1942,7 +1937,6 @@ gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
       GST_ERROR_OBJECT (capture, "Unexpected failure during capture");
     }
 
-    g_rec_mutex_unlock (&capture->lock);
     return ret;
   }
 
@@ -1964,7 +1958,6 @@ out:
     gst_d3d11_device_unlock (device);
 
   gst_d3d11_device_unlock (capture->device);
-  g_rec_mutex_unlock (&capture->lock);
 
   return ret;
 }
