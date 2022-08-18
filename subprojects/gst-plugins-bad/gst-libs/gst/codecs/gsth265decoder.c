@@ -515,6 +515,8 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
     priv->SpsMaxLatencyPictures =
         sps->max_num_reorder_pics[sps->max_sub_layers_minus1] +
         sps->max_latency_increase_plus1[sps->max_sub_layers_minus1] - 1;
+  } else {
+    priv->SpsMaxLatencyPictures = 0;
   }
 
   return GST_FLOW_OK;
