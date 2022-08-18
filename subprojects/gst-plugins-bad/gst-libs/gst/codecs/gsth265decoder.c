@@ -507,6 +507,8 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
 
     gst_h265_dpb_set_max_num_pics (priv->dpb, max_dpb_size);
     gst_h265_decoder_set_latency (self, sps, max_dpb_size);
+
+    GST_DEBUG_OBJECT (self, "Set DPB max size %d", max_dpb_size);
   }
 
   if (sps->max_latency_increase_plus1[sps->max_sub_layers_minus1]) {
@@ -514,8 +516,6 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
         sps->max_num_reorder_pics[sps->max_sub_layers_minus1] +
         sps->max_latency_increase_plus1[sps->max_sub_layers_minus1] - 1;
   }
-
-  GST_DEBUG_OBJECT (self, "Set DPB max size %d", max_dpb_size);
 
   return GST_FLOW_OK;
 }
@@ -1237,8 +1237,6 @@ gst_h265_decoder_calculate_poc (GstH265Decoder * self,
   gint32 MaxPicOrderCntLsb = 1 << (sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
   gboolean is_irap;
 
-  GST_DEBUG_OBJECT (self, "decode PicOrderCntVal");
-
   priv->prev_poc_lsb = priv->poc_lsb;
   priv->prev_poc_msb = priv->poc_msb;
 
@@ -1284,7 +1282,7 @@ gst_h265_decoder_calculate_poc (GstH265Decoder * self,
     priv->prev_tid0pic_poc_msb = 0;
   }
 
-  GST_DEBUG_OBJECT (self,
+  GST_LOG_OBJECT (self,
       "PicOrderCntVal %d, (lsb %d)", picture->pic_order_cnt,
       picture->pic_order_cnt_lsb);
 
