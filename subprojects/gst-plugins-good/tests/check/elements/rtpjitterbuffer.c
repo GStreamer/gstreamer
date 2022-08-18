@@ -886,6 +886,74 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
 
 GST_END_TEST;
 
+GST_START_TEST (test_out_of_order_loss_not_reported)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
+  GstClockID id;
+  GstBuffer *buf;
+  gint latency_ms = 100;
+  guint next_seqnum;
+  guint first_packet;
+  guint late_packet;
+  guint third_packet;
+
+  testclock = gst_harness_get_testclock (h);
+  g_object_set (h->element, "do-lost", TRUE, NULL);
+  next_seqnum = construct_deterministic_initial_state (h, latency_ms);
+
+  /* hop over 2 packets and make another one (gap of 2) */
+  first_packet = next_seqnum;
+  late_packet = next_seqnum + 1;
+  third_packet = next_seqnum + 2;
+  push_test_buffer (h, first_packet);
+
+  /* push the third packet without moving the time */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, generate_test_buffer (third_packet)));
+
+  /* verify that the jitterbuffer waits for the latest moment it can push the
+   * @late_packet packet out.
+   */
+  gst_test_clock_wait_for_next_pending_id (testclock, &id);
+  fail_unless_equals_uint64 (late_packet * TEST_BUF_DURATION +
+      latency_ms * GST_MSECOND, gst_clock_id_get_time (id));
+  gst_clock_id_unref (id);
+
+  /* @late_packet now arrives just in time for the latency */
+  gst_harness_set_time (h, late_packet * TEST_BUF_DURATION +
+      latency_ms * GST_MSECOND);
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, generate_test_buffer (late_packet)));
+  fail_unless (gst_harness_crank_single_clock_wait (h));
+
+  /* verify that @first_packet made it through */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (get_rtp_seq_num (buf), first_packet);
+  gst_buffer_unref (buf);
+
+  /* verify that @late_packet made it through */
+  buf = gst_harness_pull (h);
+  fail_unless_equals_int (get_rtp_seq_num (buf), late_packet);
+  gst_buffer_unref (buf);
+
+  /* verify that @third_packet made it through */
+  buf = gst_harness_pull (h);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT));
+  fail_unless_equals_int (get_rtp_seq_num (buf), third_packet);
+  gst_buffer_unref (buf);
+
+  fail_unless (verify_jb_stats (h->element,
+          gst_structure_new ("application/x-rtp-jitterbuffer-stats",
+              "num-pushed", G_TYPE_UINT64, (guint64) third_packet + 1,
+              "num-lost", G_TYPE_UINT64, (guint64) 0, NULL)));
+
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_late_packets_still_makes_lost_events)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
@@ -3384,6 +3452,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_lost_event);
   tcase_add_test (tc_chain, test_only_one_lost_event_on_large_gaps);
   tcase_add_test (tc_chain, test_two_lost_one_arrives_in_time);
+  tcase_add_test (tc_chain, test_out_of_order_loss_not_reported);
   tcase_add_test (tc_chain, test_late_packets_still_makes_lost_events);
   tcase_add_test (tc_chain, test_lost_event_uses_pts);
   tcase_add_test (tc_chain, test_lost_event_with_backwards_rtptime);
