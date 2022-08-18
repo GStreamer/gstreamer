@@ -327,6 +327,33 @@ static void gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *
   }
 }
 
+static gboolean
+gst_parse_separate_prop_from_children (const gchar *name, gchar **children, gchar **property)
+{
+  static const gchar *separator = "::";
+  const gchar *prop = NULL;
+
+  g_return_val_if_fail (name, FALSE);
+  g_return_val_if_fail (children, FALSE);
+  g_return_val_if_fail (property, FALSE);
+
+  /* Given "child1::child2::prop" isolate "prop" */
+  prop = g_strrstr (name, separator);
+  if (!prop) {
+    GST_WARNING ("%s is not a valid childproxy path", name);
+    return FALSE;
+  }
+
+  /* Make a copy of prop skipping "::" */
+  *property = g_strdup (prop + 2);
+
+  /* Extract "child1::child2" from "child1::child2::prop" */
+  *children =
+    g_strndup (name, strlen (name) - strlen (prop));
+
+  return TRUE;
+}
+
 static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
     const gchar * name, gpointer data)
 {
@@ -367,10 +394,54 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
     const gchar *obj_name = GST_OBJECT_NAME(object);
     gint len = strlen (obj_name);
 
-    /* do a delayed set */
-    if ((strlen (set->name) > (len + 2)) && !strncmp (set->name, obj_name, len) && !strncmp (&set->name[len], "::", 2)) {
-      gst_parse_add_delayed_set (GST_ELEMENT(child_proxy), set->name, set->value_str);
+    /*
+     * We've been notified that a new child has beed added, but the
+     * property was still not found. Three things could be happening:
+     *
+     * 1. The target property is of the form obj_name::child_name::property
+     * and is for a child that does not (yet) exist:
+     *    We need to add the delayed property setting handler on that new child.
+     *
+     * 2. The target property is of the form obj_name::property or
+     * obj_name::child_name::property and the child already exists:
+     *    We warn about a nonexistent property
+     *
+     * 3. The target property is of the form other_obj_name::child_name::property
+     * or other_obj_name::property:
+     *    We ignore this case as another delayed set will catch it.
+     */
+
+    /* Cases 1,2: The child just added corresponds to this delayed set */
+    if ((strlen (set->name) > (len+2)) && !strncmp (set->name, obj_name, len)
+	&& !strncmp (&set->name[len], "::", 2)) {
+      gchar *children = NULL;
+      gchar *prop = NULL;
+      GObject *child = NULL;
+
+      if (!gst_parse_separate_prop_from_children (set->name, &children, &prop)) {
+	/* Malformed property name, ignore */
+	return;
+      }
+
+      child = gst_child_proxy_get_child_by_name_recurse (child_proxy, children);
+      g_free (children);
+      g_free (prop);
+
+      /* Case 1: A child in the hierarchy does not exist yet, add a new delayed set */
+      if (NULL == child) {
+	gst_parse_add_delayed_set (GST_ELEMENT (child_proxy), set->name, set->value_str);
+      }
+      /* Case 2: The target child exists already but there's no such property */
+      else {
+	gst_object_unref (child);
+	GST_ELEMENT_WARNING(GST_ELEMENT (child_proxy), PARSE, NO_SUCH_PROPERTY,
+          (_("No such property.")), (_("no property \"%s\" in element \"%s\""),
+        set->name, GST_ELEMENT_NAME(child_proxy)));
+      }
     }
+    /* Case 3: The child just added does not correspond to this delayed set, just ignore
+     * else { }
+     */
   }
 
 out:
@@ -564,8 +635,30 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
     proxied_property_t *pp = tmp->data;
 
     if (!gst_child_proxy_lookup (GST_CHILD_PROXY (ret), pp->name, &target, &pspec)) {
-      /* do a delayed set */
-      gst_parse_add_delayed_set (ret, pp->name, pp->value);
+      /* the property was not found. if the target child doesn't exist
+         then we do a delayed set waiting for new elements to be added. If
+         the child was found, we fail since the property doesn't exist.
+      */
+      gchar *children = NULL;
+      gchar *property = NULL;
+      if (!gst_parse_separate_prop_from_children (pp->name, &children, &property)) {
+	/* malformed childproxy path, skip */
+	continue;
+      }
+
+      target = gst_child_proxy_get_child_by_name_recurse (GST_CHILD_PROXY (ret), children);
+      g_free (children);
+      g_free (property);
+
+      if (target == NULL) {
+	gst_parse_add_delayed_set (ret, pp->name, pp->value);
+      } else {
+	gst_object_unref (target);
+	SET_ERROR (graph->error, GST_PARSE_ERROR_NO_SUCH_PROPERTY,	\
+          _("no property \"%s\" in element \"%s\""), pp->name, \
+          GST_ELEMENT_NAME (ret));
+	goto done;
+      }
     } else {
       GValue v = { 0, };
 
@@ -598,6 +691,50 @@ done:
   return ret;
 }
 
+static gboolean gst_parse_child_proxy_find_child (
+    GstChildProxy * child_proxy, const gchar *name)
+{
+  gchar **names = NULL, **current = NULL;
+  GObject *obj = NULL;
+  gboolean found = FALSE;
+
+  obj = G_OBJECT (g_object_ref (child_proxy));
+
+  current = names = g_strsplit (name, "::", -1);
+
+  /* find the owner of the property */
+  while (current[1]) {
+    GObject *next = NULL;
+
+    /* Cannot ask for the child of a non-childproxy */
+    if (!GST_IS_CHILD_PROXY (obj)) {
+      break;
+    }
+
+    next = gst_child_proxy_get_child_by_name (GST_CHILD_PROXY (obj),
+        current[0]);
+
+    /* The child doesn't exist yet */
+    if (!next) {
+      break;
+    }
+
+    gst_object_unref (obj);
+    obj = next;
+    current++;
+  }
+
+  gst_object_unref (obj);
+  g_strfreev (names);
+
+  /* The remaining name is the property, we have found the object */
+  if (current[1] == NULL) {
+    found = TRUE;
+  }
+
+  return found;
+}
+
 static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *graph)
 {
   GParamSpec *pspec = NULL;
@@ -613,8 +750,15 @@ static void gst_parse_element_set (gchar *value, GstElement *element, graph_t *g
 
   if (GST_IS_CHILD_PROXY (element) && strstr (value, "::") != NULL) {
     if (!gst_child_proxy_lookup (GST_CHILD_PROXY (element), value, &target, &pspec)) {
-      /* do a delayed set */
-      gst_parse_add_delayed_set (element, value, pos);
+      /* the property was not found. if the target child doesn't exist
+         then we do a delayed set waiting for new elements to be added. If
+         the child was found, we fail since the property doesn't exist.
+      */
+      if (!gst_parse_child_proxy_find_child (GST_CHILD_PROXY (element), value)) {
+	gst_parse_add_delayed_set (element, value, pos);
+      } else {
+	goto error;
+      }
     }
   } else {
     pspec = g_object_class_find_property (G_OBJECT_GET_CLASS (element), value);
