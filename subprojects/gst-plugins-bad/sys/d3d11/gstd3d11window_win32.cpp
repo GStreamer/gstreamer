@@ -80,7 +80,6 @@ struct _GstD3D11WindowWin32
   GstD3D11WindowWin32OverlayState overlay_state;
 
   HDC device_handle;
-  gboolean first_present;
   gboolean have_swapchain1;
 
   /* atomic */
@@ -1067,7 +1066,7 @@ gst_d3d11_window_win32_present (GstD3D11Window * window, guint present_flags)
     DXGI_PRESENT_PARAMETERS present_params = { 0, };
 
     /* the first present should not specify dirty-rect */
-    if (!window->first_present) {
+    if (!window->first_present && !window->emit_present) {
       present_params.DirtyRectsCount = 1;
       present_params.pDirtyRects = &window->render_rect;
     }

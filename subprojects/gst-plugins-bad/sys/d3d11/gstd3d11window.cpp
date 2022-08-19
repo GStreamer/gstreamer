@@ -54,18 +54,20 @@ enum
   PROP_FULLSCREEN,
   PROP_WINDOW_HANDLE,
   PROP_RENDER_STATS,
+  PROP_EMIT_PRESENT,
 };
 
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS  TRUE
 #define DEFAULT_FORCE_ASPECT_RATIO        TRUE
 #define DEFAULT_FULLSCREEN_TOGGLE_MODE    GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE
 #define DEFAULT_FULLSCREEN                FALSE
-#define DEFAULT_RENDER_STATS              FALSE
+#define DEFAULT_EMIT_PRESENT              FALSE
 
 enum
 {
   SIGNAL_KEY_EVENT,
   SIGNAL_MOUSE_EVENT,
+  SIGNAL_PRESENT,
   SIGNAL_LAST
 };
 
@@ -163,6 +165,11 @@ gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
           (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
               G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (gobject_class, PROP_EMIT_PRESENT,
+      g_param_spec_boolean ("emit-present", "Emit Present",
+          "Emit present signal", DEFAULT_EMIT_PRESENT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   d3d11_window_signals[SIGNAL_KEY_EVENT] =
       g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
@@ -172,6 +179,11 @@ gst_d3d11_window_class_init (GstD3D11WindowClass * klass)
       g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL,
       G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+
+  d3d11_window_signals[SIGNAL_PRESENT] =
+      g_signal_new ("present", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 2, GST_TYPE_D3D11_DEVICE, G_TYPE_POINTER);
 }
 
 static void
@@ -181,7 +193,7 @@ gst_d3d11_window_init (GstD3D11Window * self)
   self->enable_navigation_events = DEFAULT_ENABLE_NAVIGATION_EVENTS;
   self->fullscreen_toggle_mode = GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE;
   self->fullscreen = DEFAULT_FULLSCREEN;
-  self->render_stats = DEFAULT_RENDER_STATS;
+  self->emit_present = DEFAULT_EMIT_PRESENT;
 }
 
 static void
@@ -219,6 +231,9 @@ gst_d3d11_window_set_property (GObject * object, guint prop_id,
     case PROP_WINDOW_HANDLE:
       self->external_handle = (guintptr) g_value_get_pointer (value);
       break;
+    case PROP_EMIT_PRESENT:
+      self->emit_present = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -243,6 +258,9 @@ gst_d3d11_window_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FULLSCREEN:
       g_value_set_boolean (value, self->fullscreen);
+      break;
+    case PROP_EMIT_PRESENT:
+      g_value_set_boolean (value, self->emit_present);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -844,6 +862,17 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
+  /* We use flip mode swapchain and will not redraw borders.
+   * So backbuffer should be cleared manually in order to remove artifact of
+   * previous client's rendering on present signal */
+  if (self->emit_present) {
+    const FLOAT clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    ID3D11DeviceContext *context =
+        gst_d3d11_device_get_device_context_handle (self->device);
+
+    context->ClearRenderTargetView (rtv, clear_color);
+  }
+
   crop_meta = gst_buffer_get_video_crop_meta (buffer);
   if (crop_meta) {
     input_rect.left = crop_meta->x;
@@ -895,8 +924,13 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
   if (self->allow_tearing && self->fullscreen)
     present_flags |= DXGI_PRESENT_ALLOW_TEARING;
 
-  if (klass->present)
+  if (klass->present) {
+    if (self->emit_present) {
+      g_signal_emit (self, d3d11_window_signals[SIGNAL_PRESENT], 0,
+          self->device, rtv, nullptr);
+    }
     ret = klass->present (self, present_flags);
+  }
 
   self->first_present = FALSE;
 

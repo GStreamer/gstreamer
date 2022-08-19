@@ -452,7 +452,7 @@ gst_d3d11_window_core_window_present (GstD3D11Window * window,
   IDXGISwapChain1 *swap_chain = (IDXGISwapChain1 *) window->swap_chain;
 
   /* the first present should not specify dirty-rect */
-  if (!window->first_present) {
+  if (!window->first_present && !window->emit_present) {
     present_params.DirtyRectsCount = 1;
     present_params.pDirtyRects = &window->render_rect;
   }

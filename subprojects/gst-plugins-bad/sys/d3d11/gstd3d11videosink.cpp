@@ -78,6 +78,7 @@ enum
 {
   /* signals */
   SIGNAL_BEGIN_DRAW,
+  SIGNAL_PRESENT,
 
   /* actions */
   SIGNAL_DRAW,
@@ -350,6 +351,31 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
       G_STRUCT_OFFSET (GstD3D11VideoSinkClass, draw), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 4, G_TYPE_POINTER, G_TYPE_UINT, G_TYPE_UINT64,
       G_TYPE_UINT64);
+
+  /**
+   * GstD3D11VideoSink::present
+   * @videosink: the #GstD3D11VideoSink
+   * @device: a #GstD3D11Device handle
+   * @render_target: a ID3D11RenderTargetView handle of swapchain's backbuffer
+   *
+   * Emitted just before presenting a texture via the IDXGISwapChain::Present.
+   * The client can perform additional rendering on the given @render_target,
+   * or can read the content already rendered on the swapchain's backbuffer.
+   *
+   * This signal will be emitted with gst_d3d11_device_lock() taken and
+   * client should perform GPU operation from the thread where this signal
+   * emitted.
+   *
+   * If a client wants to listen this signal, the client must connect this
+   * signal before the first present. Otherwise this signal will not be
+   * emitted.
+   *
+   * Since: 1.22
+   */
+  gst_d3d11_video_sink_signals[SIGNAL_PRESENT] =
+      g_signal_new ("present", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 2, GST_TYPE_D3D11_DEVICE, G_TYPE_POINTER);
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_set_context);
@@ -763,6 +789,14 @@ gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
   gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);
 }
 
+static void
+gst_d3d11_video_sink_present (GstD3D11Window * window, GstD3D11Device * device,
+    ID3D11RenderTargetView * rtv, GstD3D11VideoSink * self)
+{
+  g_signal_emit (self, gst_d3d11_video_sink_signals[SIGNAL_PRESENT], 0,
+      device, rtv);
+}
+
 static gboolean
 gst_d3d11_video_sink_start (GstBaseSink * sink)
 {
@@ -784,6 +818,7 @@ static gboolean
 gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
 {
   GstD3D11WindowNativeType window_type = GST_D3D11_WINDOW_NATIVE_TYPE_HWND;
+  gboolean emit_present = FALSE;
 
   if (self->window)
     return TRUE;
@@ -847,11 +882,18 @@ done:
     return FALSE;
   }
 
+  /* Emits present signal only if signal is connected for performance reason */
+  if (g_signal_has_handler_pending (self,
+          gst_d3d11_video_sink_signals[SIGNAL_PRESENT], 0, FALSE)) {
+    emit_present = TRUE;
+  }
+
   g_object_set (self->window,
       "force-aspect-ratio", self->force_aspect_ratio,
       "fullscreen-toggle-mode", self->fullscreen_toggle_mode,
       "fullscreen", self->fullscreen,
-      "enable-navigation-events", self->enable_navigation_events, NULL);
+      "enable-navigation-events", self->enable_navigation_events,
+      "emit-present", emit_present, nullptr);
 
   gst_d3d11_window_set_orientation (self->window, self->selected_method);
 
@@ -859,6 +901,8 @@ done:
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
   g_signal_connect (self->window, "mouse-event",
       G_CALLBACK (gst_d3d11_video_mouse_key_event), self);
+  g_signal_connect (self->window, "present",
+      G_CALLBACK (gst_d3d11_video_sink_present), self);
 
   return TRUE;
 }

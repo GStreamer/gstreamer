@@ -86,7 +86,7 @@ struct _GstD3D11Window
   GstD3D11WindowFullscreenToggleMode fullscreen_toggle_mode;
   gboolean requested_fullscreen;
   gboolean fullscreen;
-  gboolean render_stats;
+  gboolean emit_present;
 
   GstVideoInfo info;
   GstVideoInfo render_info;
