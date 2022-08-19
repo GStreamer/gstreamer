@@ -1177,27 +1177,30 @@ _populate_candidate_stats (GstWebRTCNice * ice, NiceCandidate * cand,
 
 static void
 _populate_candidate_list_stats (GstWebRTCNice * ice, GSList * cands,
-    GstWebRTCICEStream * stream, GArray * result, gboolean is_local)
+    GstWebRTCICEStream * stream, GPtrArray * result, gboolean is_local)
 {
   GSList *item;
 
   for (item = cands; item != NULL; item = item->next) {
-    GstWebRTCICECandidateStats stats;
+    GstWebRTCICECandidateStats *stats =
+        g_malloc0 (sizeof (GstWebRTCICECandidateStats));
     NiceCandidate *c = item->data;
-    _populate_candidate_stats (ice, c, stream, &stats, is_local);
-    g_array_append_val (result, stats);
+    _populate_candidate_stats (ice, c, stream, stats, is_local);
+    g_ptr_array_add (result, stats);
   }
+
+  g_ptr_array_add (result, NULL);
 }
 
-static GstWebRTCICECandidateStats *
+static GstWebRTCICECandidateStats **
 gst_webrtc_nice_get_local_candidates (GstWebRTCICE * ice,
     GstWebRTCICEStream * stream)
 {
   GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
   GSList *cands = NULL;
 
-  GArray *result =
-      g_array_new (TRUE, TRUE, sizeof (GstWebRTCICECandidateStats));
+  /* TODO: Use a g_ptr_array_new_null_terminated once when we depend on GLib 2.74 */
+  GPtrArray *result = g_ptr_array_new ();
 
   cands = nice_agent_get_local_candidates (nice->priv->nice_agent,
       stream->stream_id, NICE_COMPONENT_TYPE_RTP);
@@ -1205,18 +1208,18 @@ gst_webrtc_nice_get_local_candidates (GstWebRTCICE * ice,
   _populate_candidate_list_stats (nice, cands, stream, result, TRUE);
   g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
 
-  return (GstWebRTCICECandidateStats *) g_array_free (result, FALSE);
+  return (GstWebRTCICECandidateStats **) g_ptr_array_free (result, FALSE);
 }
 
-static GstWebRTCICECandidateStats *
+static GstWebRTCICECandidateStats **
 gst_webrtc_nice_get_remote_candidates (GstWebRTCICE * ice,
     GstWebRTCICEStream * stream)
 {
   GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
   GSList *cands = NULL;
 
-  GArray *result =
-      g_array_new (TRUE, TRUE, sizeof (GstWebRTCICECandidateStats));
+  /* TODO: Use a g_ptr_array_new_null_terminated once when we depend on GLib 2.74 */
+  GPtrArray *result = g_ptr_array_new ();
 
   cands = nice_agent_get_remote_candidates (nice->priv->nice_agent,
       stream->stream_id, NICE_COMPONENT_TYPE_RTP);
@@ -1224,7 +1227,7 @@ gst_webrtc_nice_get_remote_candidates (GstWebRTCICE * ice,
   _populate_candidate_list_stats (nice, cands, stream, result, FALSE);
   g_slist_free_full (cands, (GDestroyNotify) nice_candidate_free);
 
-  return (GstWebRTCICECandidateStats *) g_array_free (result, FALSE);
+  return (GstWebRTCICECandidateStats **) g_ptr_array_free (result, FALSE);
 }
 
 static gboolean

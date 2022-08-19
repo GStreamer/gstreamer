@@ -113,9 +113,9 @@ struct _GstWebRTCICEClass {
                                                         GstWebRTCICEOnCandidateFunc func,
                                                         gpointer user_data,
                                                         GDestroyNotify notify);
-  GstWebRTCICECandidateStats* (*get_local_candidates) (GstWebRTCICE * ice,
+  GstWebRTCICECandidateStats** (*get_local_candidates)(GstWebRTCICE * ice,
                                                        GstWebRTCICEStream * stream);
-  GstWebRTCICECandidateStats* (*get_remote_candidates)(GstWebRTCICE * ice,
+  GstWebRTCICECandidateStats**(*get_remote_candidates)(GstWebRTCICE * ice,
                                                        GstWebRTCICEStream * stream);
   gboolean (*get_selected_pair)                       (GstWebRTCICE * ice,
                                                        GstWebRTCICEStream * stream,
@@ -198,11 +198,11 @@ void                        gst_webrtc_ice_set_tos                  (GstWebRTCIC
                                                                      guint tos);
 
 GST_WEBRTC_API
-GstWebRTCICECandidateStats* gst_webrtc_ice_get_local_candidates     (GstWebRTCICE * ice,
+GstWebRTCICECandidateStats** gst_webrtc_ice_get_local_candidates    (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream);
 
 GST_WEBRTC_API
-GstWebRTCICECandidateStats* gst_webrtc_ice_get_remote_candidates    (GstWebRTCICE * ice,
+GstWebRTCICECandidateStats** gst_webrtc_ice_get_remote_candidates   (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream);
 
 GST_WEBRTC_API
