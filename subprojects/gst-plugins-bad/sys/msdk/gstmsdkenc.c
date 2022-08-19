@@ -83,7 +83,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_MSDK_CAPS_STR
-        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "NV12"))
+        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "NV12") "; "
+        GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE ("NV12"))
     );
 #else
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",

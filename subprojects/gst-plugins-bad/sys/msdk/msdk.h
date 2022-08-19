@@ -78,14 +78,18 @@ G_BEGIN_DECLS
 #define GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE(vaformat) \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:VAMemory", vaformat) ", " \
   "interlace-mode = (string) progressive"
-#else
-#define GST_MSDK_CAPS_MAKE_WITH_DMABUF_FEATURE(dmaformat) ""
-#define GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE(vaformat) ""
-#endif
 
 #define GST_MSDK_CAPS_STR(format,dmaformat) \
   GST_MSDK_CAPS_MAKE (format) "; " \
   GST_MSDK_CAPS_MAKE_WITH_DMABUF_FEATURE (dmaformat)
+#else
+#define GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE(d3d11format) \
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES("memory:D3D11Memory", d3d11format) ", " \
+  "interlace-mode = (string) progressive"
+
+#define GST_MSDK_CAPS_STR(format,dmaformat) \
+  GST_MSDK_CAPS_MAKE (format)
+#endif
 
 #if (MFX_VERSION < 2000)
 typedef void * mfxLoader;
