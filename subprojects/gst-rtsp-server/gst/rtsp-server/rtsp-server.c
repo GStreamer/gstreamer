@@ -1217,6 +1217,7 @@ no_connection:
     GST_ERROR ("could not create connection from socket %p: %s", socket, str);
     g_free (str);
     g_object_unref (socket);
+    g_object_unref (client);
     return FALSE;
   }
 }
