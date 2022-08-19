@@ -29,6 +29,12 @@ have_d3d11compiler_h = cc.has_header('d3dcompiler.h')
 d3d9_dep = cc.find_library('d3d9', required : false)
 have_d3d9_h = cc.has_header('d3d9.h')
 
+d2d_dep = cc.find_library('d2d1', required: false)
+have_d2d_h = cc.has_header('d2d1.h', required: false)
+
+dwrite_dep = cc.find_library('dwrite', required: false)
+have_dwrite_h = cc.has_header('dwrite.h')
+
 if d3d11_lib.found() and dxgi_lib.found() and d3dcompiler_lib.found() and have_d3d11_h and have_dxgi_h and have_d3d11compiler_h
   executable('d3d11videosink-shared-texture',
     ['d3d11videosink-shared-texture.cpp', 'd3d11device.cpp'],
@@ -63,6 +69,16 @@ if d3d11_lib.found() and dxgi_lib.found() and d3dcompiler_lib.found() and have_d
       dependencies: [gst_dep, gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib, gstd3d11_dep, gstapp_dep],
       install: false,
     )
+
+    if d2d_dep.found() and have_d2d_h and dwrite_dep.found() and have_dwrite_h
+      executable('d3d11videosink-present', ['d3d11videosink-present.cpp'],
+        c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+        cpp_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+        include_directories : [configinc, libsinc],
+        dependencies: [gst_dep, gstbase_dep, gstvideo_dep, d3d11_lib, dxgi_lib, gstd3d11_dep, d2d_dep, dwrite_dep],
+        install: false,
+      )
+    endif
   endif
 
   if d3d_dep.found() and have_d3d9_h
