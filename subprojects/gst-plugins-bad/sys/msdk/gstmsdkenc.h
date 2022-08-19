@@ -137,6 +137,7 @@ struct _GstMsdkEnc
   gboolean use_video_memory;
   gboolean use_dmabuf;
   gboolean use_va;
+  gboolean use_d3d11;
   gboolean initialized;
 
   /* element properties */

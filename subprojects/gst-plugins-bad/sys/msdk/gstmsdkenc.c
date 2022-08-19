@@ -54,6 +54,8 @@
 #ifndef _WIN32
 #include "gstmsdkallocator_libva.h"
 #include <gst/va/gstvaallocator.h>
+#else
+#include <gst/d3d11/gstd3d11.h>
 #endif
 
 static inline void *
@@ -1338,6 +1340,61 @@ gst_msdk_create_va_pool (GstMsdkEnc * thiz, GstCaps * caps, guint num_buffers)
   GST_LOG_OBJECT (thiz, "Creating va pool");
   return pool;
 }
+#else
+static GstBufferPool *
+gst_msdk_create_d3d11_pool (GstMsdkEnc * thiz, guint num_buffers)
+{
+  GstBufferPool *pool = NULL;
+  GstD3D11Device *device;
+  GstStructure *config;
+  GstD3D11AllocationParams *params;
+  GstD3D11Format device_format;
+  guint bind_flags = 0;
+  GstCaps *aligned_caps = NULL;
+  GstVideoInfo *info = &thiz->input_state->info;
+  GstVideoInfo aligned_info;
+  gint aligned_width;
+  gint aligned_height;
+
+  device = gst_msdk_context_get_d3d11_device (thiz->context);
+
+  aligned_width = GST_ROUND_UP_16 (info->width);
+  if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
+    aligned_height = GST_ROUND_UP_32 (info->height);
+  } else {
+    aligned_height = GST_ROUND_UP_16 (info->height);
+  }
+
+  gst_video_info_set_interlaced_format (&aligned_info,
+      GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_INTERLACE_MODE (info),
+      aligned_width, aligned_height);
+
+  gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (&aligned_info),
+      &device_format);
+  if ((device_format.format_support[0] & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
+      D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
+    bind_flags = D3D11_BIND_RENDER_TARGET;
+  }
+
+  aligned_caps = gst_video_info_to_caps (&aligned_info);
+
+  pool = gst_d3d11_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (pool);
+  params = gst_d3d11_allocation_params_new (device, &aligned_info,
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags,
+      D3D11_RESOURCE_MISC_SHARED);
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+  gst_d3d11_allocation_params_free (params);
+  gst_buffer_pool_config_set_params (config, aligned_caps,
+      GST_VIDEO_INFO_SIZE (&aligned_info), num_buffers, 0);
+  gst_buffer_pool_set_config (pool, config);
+
+  gst_caps_unref (aligned_caps);
+  GST_LOG_OBJECT (thiz, "Creating d3d11 pool");
+
+  return pool;
+}
 #endif
 
 static GstBufferPool *
@@ -1359,12 +1416,10 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
 #ifndef _WIN32
   pool = gst_msdk_create_va_pool (thiz, caps, num_buffers);
 #else
-  /* Currently use system pool for windows path */
+  pool = gst_msdk_create_d3d11_pool (thiz, num_buffers);
+#endif
   if (!thiz->use_video_memory)
     pool = gst_video_buffer_pool_new ();
-  else
-    GST_ERROR_OBJECT (thiz, "D3D11 video memory pool not implemented");
-#endif
   if (!pool)
     goto error_no_pool;
 
@@ -1458,6 +1513,18 @@ sinkpad_is_va (GstMsdkEnc * thiz)
 
   return FALSE;
 }
+#else
+static gboolean
+sinkpad_is_d3d11 (GstMsdkEnc * thiz)
+{
+  GstCapsFeatures *features =
+      gst_caps_get_features (thiz->input_state->caps, 0);
+  if (gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY))
+    return TRUE;
+
+  return FALSE;
+}
 #endif
 
 static gboolean
@@ -1477,16 +1544,14 @@ gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
     }
     thiz->input_state = gst_video_codec_state_ref (state);
   }
-
-  /* TODO: Currently d3d allocator is not implemented.
-   * So encoder uses system memory by default on Windows.
-   */
 #ifndef _WIN32
   thiz->use_video_memory = TRUE;
   if (sinkpad_is_va (thiz))
     thiz->use_va = TRUE;
 #else
-  thiz->use_video_memory = FALSE;
+  thiz->use_video_memory = TRUE;
+  if (sinkpad_is_d3d11 (thiz))
+    thiz->use_d3d11 = TRUE;
 #endif
 
   GST_INFO_OBJECT (encoder, "This MSDK encoder uses %s memory",
@@ -1913,7 +1978,7 @@ gst_msdkenc_finish (GstVideoEncoder * encoder)
   return GST_FLOW_OK;
 }
 
-
+#ifndef _WIN32
 static gboolean
 gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 {
@@ -1969,6 +2034,89 @@ gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   return GST_VIDEO_ENCODER_CLASS (parent_class)->propose_allocation (encoder,
       query);
 }
+#else
+static gboolean
+gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
+{
+  GstMsdkEnc *thiz = GST_MSDKENC (encoder);
+  GstVideoInfo info;
+  GstBufferPool *pool = NULL;
+  GstD3D11Device *device;
+  GstCaps *caps;
+  guint size;
+  GstCapsFeatures *features;
+  guint num_buffers;
+  GstStructure *config;
+  gboolean is_d3d11 = FALSE;
+
+  if (!thiz->input_state)
+    return FALSE;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+
+  if (!caps) {
+    GST_INFO_OBJECT (encoder, "failed to get caps");
+    return FALSE;
+  }
+
+  if (!gst_video_info_from_caps (&info, caps)) {
+    GST_INFO_OBJECT (encoder, "failed to get video info");
+    return FALSE;
+  }
+
+  features = gst_caps_get_features (caps, 0);
+  if (features && gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+    GST_DEBUG_OBJECT (thiz, "upstream support d3d11 memory");
+    device = gst_msdk_context_get_d3d11_device (thiz->context);
+    pool = gst_d3d11_buffer_pool_new (device);
+    is_d3d11 = TRUE;
+  } else {
+    pool = gst_video_buffer_pool_new ();
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  if (is_d3d11) {
+    GstD3D11AllocationParams *d3d11_params;
+    GstVideoAlignment align;
+
+    /* d3d11 buffer pool doesn't support generic video alignment
+     * because memory layout of CPU accessible staging texture is uncontrollable.
+     * Do D3D11 specific handling */
+    gst_msdk_set_video_alignment (&info, 0, 0, &align);
+
+    d3d11_params = gst_d3d11_allocation_params_new (device, &info,
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
+
+    gst_d3d11_allocation_params_alignment (d3d11_params, &align);
+    gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
+    gst_d3d11_allocation_params_free (d3d11_params);
+  } else {
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  }
+
+  num_buffers = gst_msdkenc_maximum_delayed_frames (thiz) + 1;
+  gst_buffer_pool_config_set_params (config,
+      caps, GST_VIDEO_INFO_SIZE (&info), num_buffers, 0);
+  gst_buffer_pool_set_config (pool, config);
+
+  /* d3d11 buffer pool will update actual CPU accessible buffer size based on
+   * allocated staging texture per gst_buffer_pool_set_config() call,
+   * need query again to get the size */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, NULL, &size, NULL, NULL);
+  gst_structure_free (config);
+
+  gst_query_add_allocation_pool (query, pool, size, num_buffers, 0);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_object_unref (pool);
+
+  return TRUE;
+}
+#endif
 
 static gboolean
 gst_msdkenc_query (GstVideoEncoder * encoder, GstQuery * query,
