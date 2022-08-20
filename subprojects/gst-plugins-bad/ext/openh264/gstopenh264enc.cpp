@@ -711,11 +711,12 @@ gst_openh264enc_get_profile_from_caps (GstCaps *outcaps, GstCaps *allowed_caps)
 
   gst_structure_set (s, "profile", G_TYPE_STRING, profile, NULL);
   if (!g_strcmp0 (profile, "constrained-baseline") ||
-       !g_strcmp0 (profile, "baseline"))
+      !g_strcmp0 (profile, "baseline"))
     return PRO_BASELINE;
-   else if (!g_strcmp0 (profile, "main"))
+  else if (!g_strcmp0 (profile, "main"))
     return PRO_MAIN;
-   else if (!g_strcmp0 (profile, "high"))
+  else if (!g_strcmp0 (profile, "high") ||
+      !g_strcmp0 (profile, "constrained-high"))
     return PRO_HIGH;
 
   g_assert_not_reached ();
