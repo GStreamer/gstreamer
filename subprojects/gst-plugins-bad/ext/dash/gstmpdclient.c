@@ -79,7 +79,7 @@ gst_mpd_client_get_adaptation_set_with_id (GList * adaptation_sets, guint id)
   return NULL;
 }
 
-static GstMPDNode *
+GstMPDRepresentationNode *
 gst_mpd_client_get_representation_with_id (GList * representations,
     gchar * rep_id)
 {
@@ -89,8 +89,21 @@ gst_mpd_client_get_representation_with_id (GList * representations,
   for (list = g_list_first (representations); list; list = g_list_next (list)) {
     representation = (GstMPDRepresentationNode *) list->data;
     if (!g_strcmp0 (representation->id, rep_id))
-      return GST_MPD_NODE (representation);
+      return GST_MPD_REPRESENTATION_NODE (representation);
   }
+  return NULL;
+}
+
+static GstMPDNode *
+gst_mpd_client_get_representation_with_id_filter (GList * representations,
+    gchar * rep_id)
+{
+  GstMPDRepresentationNode *representation =
+      gst_mpd_client_get_representation_with_id (representations, rep_id);
+
+  if (representation != NULL)
+    return GST_MPD_NODE (representation);
+
   return NULL;
 }
 
@@ -3243,8 +3256,8 @@ gst_mpd_client_set_representation_node (GstMPDClient * client,
       (period_node->AdaptationSets, adaptation_set_id));
   g_return_val_if_fail (adap_set_node != NULL, NULL);
   rep_node =
-      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
-      (adap_set_node->Representations, representation_id));
+      gst_mpd_client_get_representation_with_id (adap_set_node->Representations,
+      representation_id);
   if (!rep_node) {
     rep_node = gst_mpd_representation_node_new ();
     if (representation_id)
@@ -3252,7 +3265,8 @@ gst_mpd_client_set_representation_node (GstMPDClient * client,
     else
       rep_node->id =
           _generate_new_string_id (adap_set_node->Representations,
-          "representation_%.2d", gst_mpd_client_get_representation_with_id);
+          "representation_%.2d",
+          gst_mpd_client_get_representation_with_id_filter);
     GST_DEBUG_OBJECT (client, "Add a new representation with id %s",
         rep_node->id);
     adap_set_node->Representations =
@@ -3289,8 +3303,8 @@ gst_mpd_client_set_segment_list (GstMPDClient * client,
   g_return_val_if_fail (adaptation_set != NULL, FALSE);
 
   representation =
-      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
-      (adaptation_set->Representations, rep_id));
+      gst_mpd_client_get_representation_with_id
+      (adaptation_set->Representations, rep_id);
   if (!representation->SegmentList) {
     representation->SegmentList = gst_mpd_segment_list_node_new ();
   }
@@ -3326,8 +3340,8 @@ gst_mpd_client_set_segment_template (GstMPDClient * client,
   g_return_val_if_fail (adaptation_set != NULL, FALSE);
 
   representation =
-      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
-      (adaptation_set->Representations, rep_id));
+      gst_mpd_client_get_representation_with_id
+      (adaptation_set->Representations, rep_id);
   if (!representation->SegmentTemplate) {
     representation->SegmentTemplate = gst_mpd_segment_template_node_new ();
   }
@@ -3365,8 +3379,8 @@ gst_mpd_client_add_segment_url (GstMPDClient * client,
   g_return_val_if_fail (adaptation_set != NULL, FALSE);
 
   representation =
-      GST_MPD_REPRESENTATION_NODE (gst_mpd_client_get_representation_with_id
-      (adaptation_set->Representations, rep_id));
+      gst_mpd_client_get_representation_with_id
+      (adaptation_set->Representations, rep_id);
 
   if (!representation->SegmentList) {
     representation->SegmentList = gst_mpd_segment_list_node_new ();

@@ -844,6 +844,14 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream = (GstDashDemuxStream *)
         gst_adaptive_demux_stream_new (GST_ADAPTIVE_DEMUX_CAST (demux), srcpad);
     stream->active_stream = active_stream;
+
+    if (active_stream->cur_representation) {
+      stream->last_representation_id =
+          g_strdup (stream->active_stream->cur_representation->id);
+    } else {
+      stream->last_representation_id = NULL;
+    }
+
     s = gst_caps_get_structure (caps, 0);
     stream->allow_sidx =
         gst_mpd_client_has_isoff_ondemand_profile (demux->client);
@@ -1332,6 +1340,43 @@ gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemuxStream * stream)
 
   if (gst_mpd_client_get_next_fragment_timestamp (dashdemux->client,
           dashstream->index, &ts)) {
+    /* For live streams, check whether the underlying representation changed
+     * (due to a manifest update with no matching representation) */
+    if (gst_mpd_client_is_live (dashdemux->client)
+        && !GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream)) {
+      if (dashstream->active_stream
+          && dashstream->active_stream->cur_representation) {
+        /* id specifies an identifier for this Representation. The
+         * identifier shall be unique within a Period unless the
+         * Representation is functionally identically to another
+         * Representation in the same Period. */
+        if (g_strcmp0 (dashstream->active_stream->cur_representation->id,
+                dashstream->last_representation_id)) {
+          GstCaps *caps;
+          stream->need_header = TRUE;
+
+          GST_INFO_OBJECT (dashdemux,
+              "Representation changed from %s to %s - updating to bitrate %d",
+              GST_STR_NULL (dashstream->last_representation_id),
+              GST_STR_NULL (dashstream->active_stream->cur_representation->id),
+              dashstream->active_stream->cur_representation->bandwidth);
+
+          caps =
+              gst_dash_demux_get_input_caps (dashdemux,
+              dashstream->active_stream);
+          gst_adaptive_demux_stream_set_caps (stream, caps);
+
+          /* Update the stored last representation id */
+          g_free (dashstream->last_representation_id);
+          dashstream->last_representation_id =
+              g_strdup (dashstream->active_stream->cur_representation->id);
+        }
+      } else {
+        g_free (dashstream->last_representation_id);
+        dashstream->last_representation_id = NULL;
+      }
+    }
+
     if (GST_ADAPTIVE_DEMUX_STREAM_NEED_HEADER (stream)) {
       gst_adaptive_demux_stream_fragment_clear (&stream->fragment);
       gst_dash_demux_stream_update_headers_info (stream);
@@ -2236,6 +2281,10 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemuxStream * stream,
       gst_adaptive_demux_stream_set_caps (stream, caps);
       ret = TRUE;
 
+      /* Update the stored last representation id */
+      g_free (dashstream->last_representation_id);
+      dashstream->last_representation_id =
+          g_strdup (active_stream->cur_representation->id);
     } else {
       GST_WARNING_OBJECT (demux, "Can not switch representation, aborting...");
     }
@@ -2468,7 +2517,8 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
       streams = demux->streams;
     }
 
-    /* update the streams to play from the next segment */
+    /* update the streams to preserve the current representation if there is one,
+     * and to play from the next segment */
     for (iter = streams, streams_iter = new_client->active_streams;
         iter && streams_iter;
         iter = g_list_next (iter), streams_iter = g_list_next (streams_iter)) {
@@ -2483,6 +2533,37 @@ gst_dash_demux_update_manifest_data (GstAdaptiveDemux * demux,
         gst_mpd_client_free (new_client);
         gst_buffer_unmap (buffer, &mapinfo);
         return GST_FLOW_EOS;
+      }
+
+      if (new_stream->cur_adapt_set
+          && demux_stream->last_representation_id != NULL) {
+
+        GList *rep_list = new_stream->cur_adapt_set->Representations;
+        GstMPDRepresentationNode *rep_node =
+            gst_mpd_client_get_representation_with_id (rep_list,
+            demux_stream->last_representation_id);
+        if (rep_node != NULL) {
+          if (gst_mpd_client_setup_representation (new_client, new_stream,
+                  rep_node)) {
+            GST_DEBUG_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (demux_stream),
+                "Found and set up matching representation %s in new manifest",
+                demux_stream->last_representation_id);
+          } else {
+            GST_ERROR_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (demux_stream),
+                "Failed to set up representation %s in new manifest",
+                demux_stream->last_representation_id);
+            gst_mpd_client_free (new_client);
+            gst_buffer_unmap (buffer, &mapinfo);
+            return GST_FLOW_EOS;
+          }
+        } else {
+          /* If we failed to find the current representation,
+           * then update_fragment_info() will reconfigure to the
+           * new settings after the current download finishes */
+          GST_WARNING_OBJECT (GST_ADAPTIVE_DEMUX_STREAM_PAD (demux_stream),
+              "Failed to find representation %s in new manifest",
+              demux_stream->last_representation_id);
+        }
       }
 
       if (gst_mpd_client_get_next_fragment_timestamp (dashdemux->client,
@@ -3560,6 +3641,7 @@ gst_dash_demux_stream_free (GstAdaptiveDemuxStream * stream)
     gst_isoff_moof_box_free (dash_stream->moof);
   if (dash_stream->moof_sync_samples)
     g_array_free (dash_stream->moof_sync_samples, TRUE);
+  g_free (dash_stream->last_representation_id);
 }
 
 static GstDashDemuxClockDrift *

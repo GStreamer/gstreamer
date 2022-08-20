@@ -99,6 +99,8 @@ gboolean gst_mpd_client_has_previous_period (GstMPDClient * client);
 /* Representation selection */
 gint gst_mpd_client_get_rep_idx_with_max_bandwidth (GList *Representations, gint64 max_bandwidth, gint max_video_width, gint max_video_height, gint max_video_framerate_n, gint max_video_framerate_d);
 gint gst_mpd_client_get_rep_idx_with_min_bandwidth (GList * Representations);
+GstMPDRepresentationNode* gst_mpd_client_get_representation_with_id (GList * representations, gchar * rep_id);
+
 
 GstDateTime *
 gst_mpd_client_get_availability_start_time (GstMPDClient * client);
