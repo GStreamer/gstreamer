@@ -116,36 +116,32 @@ gst_hls_update_time_mappings (GstHLSDemux * demux,
 static void gst_hls_prune_time_mappings (GstHLSDemux * demux);
 
 static gboolean gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
+
 static GstFlowReturn gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream *
     stream, gboolean forward, GstSeekFlags flags, GstClockTimeDiff ts,
     GstClockTimeDiff * final_ts);
+
 static gboolean
-gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-static GstFlowReturn gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-static GstFlowReturn gst_hls_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer);
+gst_hls_demux_stream_start_fragment (GstAdaptiveDemux2Stream * stream);
+static GstFlowReturn
+gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream);
+static GstFlowReturn gst_hls_demux_stream_data_received (GstAdaptiveDemux2Stream
+    * stream, GstBuffer * buffer);
 
 static gboolean gst_hls_demux_stream_has_next_fragment (GstAdaptiveDemux2Stream
     * stream);
-static GstFlowReturn gst_hls_demux_advance_fragment (GstAdaptiveDemux2Stream *
+static GstFlowReturn
+gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream);
+static GstFlowReturn
+gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream);
+static gboolean gst_hls_demux_stream_can_start (GstAdaptiveDemux2Stream *
     stream);
-static GstFlowReturn gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream
-    * stream);
-static gboolean gst_hls_demux_stream_can_start (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-static void gst_hls_demux_stream_update_tracks (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-static gboolean gst_hls_demux_select_bitrate (GstAdaptiveDemux2Stream * stream,
-    guint64 bitrate);
-static void gst_hls_demux_reset (GstAdaptiveDemux * demux);
-static gboolean gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux,
-    gint64 * start, gint64 * stop);
-static GstClockTime gst_hls_demux_get_presentation_offset (GstAdaptiveDemux *
-    demux, GstAdaptiveDemux2Stream * stream);
-static void gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
-    GstHLSVariantStream * variant);
+static void gst_hls_demux_stream_create_tracks (GstAdaptiveDemux2Stream *
+    stream);
+static gboolean gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream *
+    stream, guint64 bitrate);
+static GstClockTime
+gst_hls_demux_stream_get_presentation_offset (GstAdaptiveDemux2Stream * stream);
 
 static void gst_hls_demux_stream_finalize (GObject * object);
 
@@ -161,8 +157,31 @@ static void
 gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstAdaptiveDemux2StreamClass *adaptivedemux2stream_class =
+      GST_ADAPTIVE_DEMUX2_STREAM_CLASS (klass);
 
   gobject_class->finalize = gst_hls_demux_stream_finalize;
+
+  adaptivedemux2stream_class->update_fragment_info =
+      gst_hls_demux_stream_update_fragment_info;
+  adaptivedemux2stream_class->has_next_fragment =
+      gst_hls_demux_stream_has_next_fragment;
+  adaptivedemux2stream_class->advance_fragment =
+      gst_hls_demux_stream_advance_fragment;
+  adaptivedemux2stream_class->select_bitrate =
+      gst_hls_demux_stream_select_bitrate;
+  adaptivedemux2stream_class->can_start = gst_hls_demux_stream_can_start;
+  adaptivedemux2stream_class->create_tracks =
+      gst_hls_demux_stream_create_tracks;
+
+  adaptivedemux2stream_class->start_fragment =
+      gst_hls_demux_stream_start_fragment;
+  adaptivedemux2stream_class->finish_fragment =
+      gst_hls_demux_stream_finish_fragment;
+  adaptivedemux2stream_class->data_received =
+      gst_hls_demux_stream_data_received;
+  adaptivedemux2stream_class->get_presentation_offset =
+      gst_hls_demux_stream_get_presentation_offset;
 }
 
 static void
@@ -180,6 +199,12 @@ typedef struct _GstHLSDemux2Class GstHLSDemux2Class;
 #define gst_hls_demux2_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstHLSDemux2, gst_hls_demux2, GST_TYPE_ADAPTIVE_DEMUX,
     hls2_element_init ());
+
+static void gst_hls_demux_reset (GstAdaptiveDemux * demux);
+static gboolean gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux,
+    gint64 * start, gint64 * stop);
+static void gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
+    GstHLSVariantStream * variant);
 
 static void
 gst_hls_demux_finalize (GObject * obj)
@@ -263,8 +288,6 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
 
   adaptivedemux_class->is_live = gst_hls_demux_is_live;
   adaptivedemux_class->get_live_seek_range = gst_hls_demux_get_live_seek_range;
-  adaptivedemux_class->get_presentation_offset =
-      gst_hls_demux_get_presentation_offset;
   adaptivedemux_class->get_duration = gst_hls_demux_get_duration;
   adaptivedemux_class->get_manifest_update_interval =
       gst_hls_demux_get_manifest_update_interval;
@@ -273,19 +296,6 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
   adaptivedemux_class->reset = gst_hls_demux_reset;
   adaptivedemux_class->seek = gst_hls_demux_seek;
   adaptivedemux_class->stream_seek = gst_hls_demux_stream_seek;
-  adaptivedemux_class->stream_has_next_fragment =
-      gst_hls_demux_stream_has_next_fragment;
-  adaptivedemux_class->stream_advance_fragment = gst_hls_demux_advance_fragment;
-  adaptivedemux_class->stream_update_fragment_info =
-      gst_hls_demux_update_fragment_info;
-  adaptivedemux_class->stream_select_bitrate = gst_hls_demux_select_bitrate;
-  adaptivedemux_class->stream_can_start = gst_hls_demux_stream_can_start;
-  adaptivedemux_class->stream_update_tracks =
-      gst_hls_demux_stream_update_tracks;
-
-  adaptivedemux_class->start_fragment = gst_hls_demux_start_fragment;
-  adaptivedemux_class->finish_fragment = gst_hls_demux_finish_fragment;
-  adaptivedemux_class->data_received = gst_hls_demux_data_received;
 }
 
 static void
@@ -617,16 +627,15 @@ get_caps_of_stream_type (GstCaps * full_caps, GstStreamType streamtype)
 }
 
 static void
-gst_hls_demux_stream_update_tracks (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_hls_demux_stream_create_tracks (GstAdaptiveDemux2Stream * stream)
 {
-  GstHLSDemux *hlsdemux = (GstHLSDemux *) demux;
+  GstHLSDemux *hlsdemux = (GstHLSDemux *) stream->demux;
   GstHLSDemuxStream *hlsdemux_stream = (GstHLSDemuxStream *) stream;
   guint i;
   GstStreamType uriless_types = 0;
   GstCaps *variant_caps = NULL;
 
-  GST_DEBUG_OBJECT (demux, "Update tracks of variant stream");
+  GST_DEBUG_OBJECT (stream, "Update tracks of variant stream");
 
   if (hlsdemux->master->have_codecs) {
     variant_caps = gst_hls_master_playlist_get_common_caps (hlsdemux->master);
@@ -662,7 +671,7 @@ gst_hls_demux_stream_update_tracks (GstAdaptiveDemux * demux,
 
     if (embedded_media) {
       GstTagList *tags = gst_stream_get_tags (gst_stream);
-      GST_DEBUG_OBJECT (demux, "Adding track '%s' to main variant stream",
+      GST_DEBUG_OBJECT (stream, "Adding track '%s' to main variant stream",
           embedded_media->name);
       track =
           new_track_for_rendition (hlsdemux, embedded_media, manifest_caps,
@@ -673,10 +682,10 @@ gst_hls_demux_stream_update_tracks (GstAdaptiveDemux * demux,
           g_strdup_printf ("main-%s-%d", gst_stream_type_get_name (stream_type),
           i);
 
-      GST_DEBUG_OBJECT (demux, "Adding track '%s' to main variant stream",
+      GST_DEBUG_OBJECT (stream, "Adding track '%s' to main variant stream",
           stream_id);
       track =
-          gst_adaptive_demux_track_new (demux, stream_type,
+          gst_adaptive_demux_track_new (stream->demux, stream_type,
           flags, stream_id, manifest_caps, NULL);
       g_free (stream_id);
     }
@@ -1037,11 +1046,10 @@ out:
 }
 
 static gboolean
-gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_hls_demux_stream_start_fragment (GstAdaptiveDemux2Stream * stream)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
   const GstHLSKey *key;
   GstHLSMediaPlaylist *m3u8;
 
@@ -1069,14 +1077,14 @@ gst_hls_demux_start_fragment (GstAdaptiveDemux * demux,
 
 key_failed:
   {
-    GST_ELEMENT_ERROR (demux, STREAM, DECRYPT_NOKEY,
+    GST_ELEMENT_ERROR (hlsdemux, STREAM, DECRYPT_NOKEY,
         ("Couldn't retrieve key for decryption"), (NULL));
-    GST_WARNING_OBJECT (demux, "Failed to decrypt data");
+    GST_WARNING_OBJECT (hlsdemux, "Failed to decrypt data");
     return FALSE;
   }
 decrypt_start_failed:
   {
-    GST_ELEMENT_ERROR (demux, STREAM, DECRYPT, ("Failed to start decrypt"),
+    GST_ELEMENT_ERROR (hlsdemux, STREAM, DECRYPT, ("Failed to start decrypt"),
         ("Couldn't set key and IV or plugin was built without crypto library"));
     return FALSE;
   }
@@ -1480,11 +1488,11 @@ out_resync:
 }
 
 static GstFlowReturn
-gst_hls_demux_handle_buffer (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer, gboolean at_eos)
+gst_hls_demux_stream_handle_buffer (GstAdaptiveDemux2Stream * stream,
+    GstBuffer * buffer, gboolean at_eos)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *pending_header_data = NULL;
 
@@ -1596,8 +1604,7 @@ out:
 }
 
 static GstFlowReturn
-gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_hls_demux_stream_finish_fragment (GstAdaptiveDemux2Stream * stream)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);   // FIXME: pass HlsStream into function
   GstFlowReturn ret = GST_FLOW_OK;
@@ -1626,7 +1633,7 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
       }
 
       ret =
-          gst_hls_demux_handle_buffer (demux, stream,
+          gst_hls_demux_stream_handle_buffer (stream,
           hls_stream->pending_decrypted_buffer, TRUE);
       hls_stream->pending_decrypted_buffer = NULL;
     }
@@ -1636,14 +1643,14 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
         GstBuffer *buf = hls_stream->pending_typefind_buffer;
         hls_stream->pending_typefind_buffer = NULL;
 
-        gst_hls_demux_handle_buffer (demux, stream, buf, TRUE);
+        gst_hls_demux_stream_handle_buffer (stream, buf, TRUE);
       }
 
       if (hls_stream->pending_segment_data) {
         GstBuffer *buf = hls_stream->pending_segment_data;
         hls_stream->pending_segment_data = NULL;
 
-        ret = gst_hls_demux_handle_buffer (demux, stream, buf, TRUE);
+        ret = gst_hls_demux_stream_handle_buffer (stream, buf, TRUE);
       }
     }
   }
@@ -1664,18 +1671,18 @@ gst_hls_demux_finish_fragment (GstAdaptiveDemux * demux,
      * before advancing. Note that we don't have any period so we can set the
      * stream_time as-is on the stream current position */
     stream->current_position = hls_stream->current_segment->stream_time;
-    return gst_adaptive_demux2_stream_advance_fragment (demux, stream,
+    return gst_adaptive_demux2_stream_advance_fragment (stream,
         hls_stream->current_segment->duration);
   }
   return ret;
 }
 
 static GstFlowReturn
-gst_hls_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer)
+gst_hls_demux_stream_data_received (GstAdaptiveDemux2Stream * stream,
+    GstBuffer * buffer)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
 
   if (hls_stream->current_segment == NULL)
     return GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC;
@@ -1707,7 +1714,7 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
     decrypted_buffer =
         gst_hls_demux_decrypt_fragment (hlsdemux, hls_stream, buffer, &err);
     if (err) {
-      GST_ELEMENT_ERROR (demux, STREAM, DECODE, ("Failed to decrypt buffer"),
+      GST_ELEMENT_ERROR (hlsdemux, STREAM, DECODE, ("Failed to decrypt buffer"),
           ("decryption failed %s", err->message));
       g_error_free (err);
       return GST_FLOW_ERROR;
@@ -1720,7 +1727,7 @@ gst_hls_demux_data_received (GstAdaptiveDemux * demux,
       return GST_FLOW_OK;
   }
 
-  return gst_hls_demux_handle_buffer (demux, stream, buffer, FALSE);
+  return gst_hls_demux_stream_handle_buffer (stream, buffer, FALSE);
 }
 
 static void
@@ -1794,7 +1801,7 @@ gst_hls_demux_stream_has_next_fragment (GstAdaptiveDemux2Stream * stream)
 }
 
 static GstFlowReturn
-gst_hls_demux_advance_fragment (GstAdaptiveDemux2Stream * stream)
+gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
 {
   GstHLSDemuxStream *hlsdemux_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
   GstHLSDemux *hlsdemux = (GstHLSDemux *) stream->demux;
@@ -2330,7 +2337,7 @@ gst_hls_demux_stream_update_variant_playlist (GstHLSDemux * demux,
 }
 
 static GstFlowReturn
-gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
+gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstHLSDemuxStream *hlsdemux_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
@@ -2456,14 +2463,13 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 }
 
 static gboolean
-gst_hls_demux_stream_can_start (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_hls_demux_stream_can_start (GstAdaptiveDemux2Stream * stream)
 {
-  GstHLSDemux *hlsdemux = (GstHLSDemux *) demux;
+  GstHLSDemux *hlsdemux = (GstHLSDemux *) stream->demux;
   GstHLSDemuxStream *hls_stream = (GstHLSDemuxStream *) stream;
   GList *tmp;
 
-  GST_DEBUG_OBJECT (demux, "is_variant:%d mappings:%p", hls_stream->is_variant,
+  GST_DEBUG_OBJECT (stream, "is_variant:%d mappings:%p", hls_stream->is_variant,
       hlsdemux->mappings);
 
   /* Variant streams can always start straight away */
@@ -2556,7 +2562,8 @@ gst_hls_demux_update_rendition_stream (GstHLSDemux * hlsdemux,
 }
 
 static gboolean
-gst_hls_demux_select_bitrate (GstAdaptiveDemux2Stream * stream, guint64 bitrate)
+gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream * stream,
+    guint64 bitrate)
 {
   GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (stream->demux);
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (stream->demux);
@@ -2964,10 +2971,9 @@ gst_hls_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
 }
 
 static GstClockTime
-gst_hls_demux_get_presentation_offset (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_hls_demux_stream_get_presentation_offset (GstAdaptiveDemux2Stream * stream)
 {
-  GstHLSDemux *hlsdemux = (GstHLSDemux *) demux;
+  GstHLSDemux *hlsdemux = (GstHLSDemux *) stream->demux;
   GstHLSDemuxStream *hls_stream = (GstHLSDemuxStream *) stream;
 
   GST_DEBUG_OBJECT (stream, "presentation_offset %" GST_TIME_FORMAT,

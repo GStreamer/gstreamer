@@ -25,8 +25,15 @@
 #ifndef _GST_ADAPTIVE_DEMUX_PRIVATE_H_
 #define _GST_ADAPTIVE_DEMUX_PRIVATE_H_
 
+#include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstflowcombiner.h>
+
+#include "gstadaptivedemux-types.h"
+#include "gstadaptivedemux.h"
+#include "gstadaptivedemuxutils.h"
+
+G_BEGIN_DECLS
 
 #define NUM_LOOKBACK_FRAGMENTS 3
 #define MAX_DOWNLOAD_ERROR_COUNT 3
@@ -166,10 +173,8 @@ GstFlowReturn gst_adaptive_demux_update_manifest (GstAdaptiveDemux *demux);
 void gst_adaptive_demux2_stream_wants_manifest_update (GstAdaptiveDemux * demux);
 
 void gst_adaptive_demux2_stream_parse_error (GstAdaptiveDemux2Stream *stream, GError * err);
-GstClockTime gst_adaptive_demux2_stream_get_fragment_waiting_time (GstAdaptiveDemux *
-    demux, GstAdaptiveDemux2Stream * stream);
-GstClockTime gst_adaptive_demux2_stream_get_presentation_offset (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
+GstClockTime gst_adaptive_demux2_stream_get_fragment_waiting_time (GstAdaptiveDemux2Stream * stream);
+GstClockTime gst_adaptive_demux2_stream_get_presentation_offset (GstAdaptiveDemux2Stream * stream);
 GstClockTime gst_adaptive_demux_get_period_start_time (GstAdaptiveDemux * demux);
 
 gboolean gst_adaptive_demux_is_live (GstAdaptiveDemux * demux);
@@ -177,10 +182,7 @@ gboolean gst_adaptive_demux_is_live (GstAdaptiveDemux * demux);
 void gst_adaptive_demux2_stream_on_manifest_update (GstAdaptiveDemux2Stream * stream);
 void gst_adaptive_demux2_stream_on_output_space_available (GstAdaptiveDemux2Stream *stream);
 
-gboolean gst_adaptive_demux2_stream_has_next_fragment (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-GstFlowReturn gst_adaptive_demux2_stream_update_fragment_info (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
+gboolean gst_adaptive_demux2_stream_has_next_fragment (GstAdaptiveDemux2Stream * stream);
 GstFlowReturn gst_adaptive_demux2_stream_seek (GstAdaptiveDemux * demux,
     GstAdaptiveDemux2Stream * stream, gboolean forward, GstSeekFlags flags,
     GstClockTimeDiff ts, GstClockTimeDiff * final_ts);
@@ -193,6 +195,7 @@ gboolean gst_adaptive_demux2_stream_is_selected_locked (GstAdaptiveDemux2Stream 
 gboolean gst_adaptive_demux_has_next_period (GstAdaptiveDemux * demux);
 void gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux);
 
+GstFlowReturn gst_adaptive_demux2_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream);
 void gst_adaptive_demux2_stream_stop (GstAdaptiveDemux2Stream * stream);
 
 gboolean gst_adaptive_demux_handle_lost_sync (GstAdaptiveDemux * demux);
@@ -239,5 +242,7 @@ GstFlowReturn            gst_adaptive_demux_period_combine_stream_flows (GstAdap
 
 gboolean                 gst_adaptive_demux_period_has_pending_tracks (GstAdaptiveDemuxPeriod * period);
 void      gst_adaptive_demux_period_check_input_wakeup_locked (GstAdaptiveDemuxPeriod * period, GstClockTimeDiff current_output_position);
+
+G_END_DECLS
 
 #endif

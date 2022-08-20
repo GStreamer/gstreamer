@@ -229,8 +229,6 @@ static void gst_adaptive_demux_reset (GstAdaptiveDemux * demux);
 static gboolean gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
     gboolean first_and_live);
 
-static gboolean gst_adaptive_demux2_stream_select_bitrate (GstAdaptiveDemux *
-    demux, GstAdaptiveDemux2Stream * stream, guint64 bitrate);
 static GstFlowReturn
 gst_adaptive_demux_update_manifest_default (GstAdaptiveDemux * demux);
 
@@ -242,19 +240,6 @@ static void gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux *
 static void gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux);
 static void gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux,
     gboolean stop_updates);
-static GstFlowReturn
-gst_adaptive_demux2_stream_data_received_default (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer);
-static GstFlowReturn
-gst_adaptive_demux2_stream_finish_fragment_default (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-static GstFlowReturn
-gst_adaptive_demux2_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstClockTime duration);
-
-static void
-gst_adaptive_demux2_stream_update_tracks (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
 
 static gboolean
 gst_adaptive_demux_requires_periodical_playlist_update_default (GstAdaptiveDemux
@@ -532,19 +517,15 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
   gst_element_class_add_static_pad_template (gstelement_class,
       &gst_adaptive_demux_subtitlesrc_template);
 
-
   gstelement_class->change_state = gst_adaptive_demux_change_state;
   gstelement_class->query = gst_adaptive_demux_query;
   gstelement_class->send_event = gst_adaptive_demux_send_event;
 
   gstbin_class->handle_message = gst_adaptive_demux_handle_message;
 
-  klass->data_received = gst_adaptive_demux2_stream_data_received_default;
-  klass->finish_fragment = gst_adaptive_demux2_stream_finish_fragment_default;
   klass->update_manifest = gst_adaptive_demux_update_manifest_default;
   klass->requires_periodical_playlist_update =
       gst_adaptive_demux_requires_periodical_playlist_update_default;
-  klass->stream_update_tracks = gst_adaptive_demux2_stream_update_tracks;
   gst_type_mark_as_plugin_api (GST_TYPE_ADAPTIVE_DEMUX, 0);
 }
 
@@ -1468,123 +1449,6 @@ find_stream_for_element_locked (GstAdaptiveDemux * demux, GstObject * o)
   return NULL;
 }
 
-/* TRACKS_LOCK held */
-static GstAdaptiveDemuxTrack *
-gst_adaptive_demux2_stream_find_track_of_type (GstAdaptiveDemux2Stream * stream,
-    GstStreamType stream_type)
-{
-  GList *iter;
-
-  for (iter = stream->tracks; iter; iter = iter->next) {
-    GstAdaptiveDemuxTrack *track = iter->data;
-
-    if (track->type == stream_type)
-      return track;
-  }
-
-  return NULL;
-}
-
-/* MANIFEST and TRACKS lock held */
-static void
-gst_adaptive_demux2_stream_update_tracks (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
-{
-  guint i;
-
-  GST_DEBUG_OBJECT (stream, "Updating track information from collection");
-
-  for (i = 0; i < gst_stream_collection_get_size (stream->stream_collection);
-      i++) {
-    GstStream *gst_stream =
-        gst_stream_collection_get_stream (stream->stream_collection, i);
-    GstStreamType stream_type = gst_stream_get_stream_type (gst_stream);
-    GstAdaptiveDemuxTrack *track;
-
-    if (stream_type == GST_STREAM_TYPE_UNKNOWN)
-      continue;
-    track = gst_adaptive_demux2_stream_find_track_of_type (stream, stream_type);
-    if (!track) {
-      GST_DEBUG_OBJECT (stream,
-          "We don't have an existing track to handle stream %" GST_PTR_FORMAT,
-          gst_stream);
-      continue;
-    }
-
-    if (track->upstream_stream_id)
-      g_free (track->upstream_stream_id);
-    track->upstream_stream_id =
-        g_strdup (gst_stream_get_stream_id (gst_stream));
-  }
-
-}
-
-static gboolean
-tags_have_language_info (GstTagList * tags)
-{
-  const gchar *language = NULL;
-
-  if (tags == NULL)
-    return FALSE;
-
-  if (gst_tag_list_peek_string_index (tags, GST_TAG_LANGUAGE_CODE, 0,
-          &language))
-    return TRUE;
-  if (gst_tag_list_peek_string_index (tags, GST_TAG_LANGUAGE_NAME, 0,
-          &language))
-    return TRUE;
-
-  return FALSE;
-}
-
-static gboolean
-can_handle_collection (GstAdaptiveDemux2Stream * stream,
-    GstStreamCollection * collection)
-{
-  guint i;
-  guint nb_audio, nb_video, nb_text;
-  gboolean have_audio_languages = TRUE;
-  gboolean have_text_languages = TRUE;
-
-  nb_audio = nb_video = nb_text = 0;
-
-  for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
-    GstStream *gst_stream = gst_stream_collection_get_stream (collection, i);
-    GstTagList *tags = gst_stream_get_tags (gst_stream);
-
-    GST_DEBUG_OBJECT (stream,
-        "Internal collection stream #%d %" GST_PTR_FORMAT, i, gst_stream);
-    switch (gst_stream_get_stream_type (gst_stream)) {
-      case GST_STREAM_TYPE_AUDIO:
-        have_audio_languages &= tags_have_language_info (tags);
-        nb_audio++;
-        break;
-      case GST_STREAM_TYPE_VIDEO:
-        nb_video++;
-        break;
-      case GST_STREAM_TYPE_TEXT:
-        have_text_languages &= tags_have_language_info (tags);
-        nb_text++;
-        break;
-      default:
-        break;
-    }
-  }
-
-  /* Check that we either have at most 1 of each track type, or that
-   * we have language tags for each to tell which is which */
-  if (nb_video > 1 ||
-      (nb_audio > 1 && !have_audio_languages) ||
-      (nb_text > 1 && !have_text_languages)) {
-    GST_WARNING
-        ("Collection can't be handled (nb_audio:%d, nb_video:%d, nb_text:%d)",
-        nb_audio, nb_video, nb_text);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
 static void
 gst_adaptive_demux_handle_stream_collection_msg (GstAdaptiveDemux * demux,
     GstMessage * msg)
@@ -1606,60 +1470,38 @@ gst_adaptive_demux_handle_stream_collection_msg (GstAdaptiveDemux * demux,
   if (!collection)
     goto beach;
 
-  /* Check whether the collection is "sane" or not.
-   *
-   * In the context of adaptive streaming, we can only handle multiplexed
-   * content that provides at most one stream of valid types (audio, video,
-   * text). Without this we cannot reliably match the output of this multiplex
-   * to the various tracks.
-   *
-   * FIXME : In the future and *IF* we encounter such streams, we could envision
-   * supporting multiple streams of the same type if, and only if, they have
-   * tags that allow differentiating them (ex: languages).
-   */
-  if (!can_handle_collection (stream, collection)) {
+  TRACKS_LOCK (demux);
+
+  if (!gst_adaptive_demux2_stream_handle_collection (stream, collection,
+          &pending_tracks_activated)) {
+    TRACKS_UNLOCK (demux);
+
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
         (_("Stream format can't be handled")),
         ("The streams provided by the multiplex are ambiguous"));
     goto beach;
   }
 
-  /* Store the collection on the stream */
-  gst_object_replace ((GstObject **) & stream->stream_collection,
-      (GstObject *) collection);
-
-  /* IF there are pending tracks, ask the subclass to handle that */
-  if (stream->pending_tracks) {
-    GstAdaptiveDemuxClass *demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-    g_assert (demux_class->stream_update_tracks);
-    demux_class->stream_update_tracks (demux, stream);
-    TRACKS_LOCK (demux);
-    stream->pending_tracks = FALSE;
-    pending_tracks_activated = TRUE;
+  if (pending_tracks_activated) {
+    /* If pending tracks were handled, then update the demuxer collection */
     if (gst_adaptive_demux_update_collection (demux, demux->input_period) &&
-        demux->input_period == demux->output_period)
+        demux->input_period == demux->output_period) {
       gst_adaptive_demux_post_collection (demux);
-  } else {
-    g_assert (stream->tracks);
-    TRACKS_LOCK (demux);
-    /* If we already have assigned tracks, update the pending upstream stream_id
-     * for each of them based on the collection information. */
-    gst_adaptive_demux2_stream_update_tracks (demux, stream);
-  }
+    }
 
-  /* If we discovered pending tracks and we no longer have any, we can ensure
-   * selected tracks are started */
-  if (pending_tracks_activated
-      && !gst_adaptive_demux_period_has_pending_tracks (demux->input_period)) {
-    GList *iter = demux->input_period->streams;
-    for (; iter; iter = iter->next) {
-      GstAdaptiveDemux2Stream *new_stream = iter->data;
+    /* If we discovered pending tracks and we no longer have any, we can ensure
+     * selected tracks are started */
+    if (!gst_adaptive_demux_period_has_pending_tracks (demux->input_period)) {
+      GList *iter = demux->input_period->streams;
+      for (; iter; iter = iter->next) {
+        GstAdaptiveDemux2Stream *new_stream = iter->data;
 
-      /* The stream that posted this collection was already started. If a
-       * different stream is now selected, start it */
-      if (stream != new_stream
-          && gst_adaptive_demux2_stream_is_selected_locked (new_stream))
-        gst_adaptive_demux2_stream_start (new_stream);
+        /* The stream that posted this collection was already started. If a
+         * different stream is now selected, start it */
+        if (stream != new_stream
+            && gst_adaptive_demux2_stream_is_selected_locked (new_stream))
+          gst_adaptive_demux2_stream_start (new_stream);
+      }
     }
   }
   TRACKS_UNLOCK (demux);
@@ -1743,21 +1585,6 @@ gst_adaptive_demux_handle_message (GstBin * bin, GstMessage * msg)
 
 /* must be called with manifest_lock taken */
 GstClockTime
-gst_adaptive_demux2_stream_get_presentation_offset (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
-{
-  GstAdaptiveDemuxClass *klass;
-
-  klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-
-  if (klass->get_presentation_offset == NULL)
-    return 0;
-
-  return klass->get_presentation_offset (demux, stream);
-}
-
-/* must be called with manifest_lock taken */
-GstClockTime
 gst_adaptive_demux_get_period_start_time (GstAdaptiveDemux * demux)
 {
   GstAdaptiveDemuxClass *klass;
@@ -1813,7 +1640,7 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
       /* TODO we only need the first timestamp, maybe create a simple function to
        * get the current PTS of a fragment ? */
       GST_DEBUG_OBJECT (stream, "Calling update_fragment_info");
-      gst_adaptive_demux2_stream_update_fragment_info (demux, stream);
+      gst_adaptive_demux2_stream_update_fragment_info (stream);
 
       GST_DEBUG_OBJECT (stream,
           "Got stream time %" GST_STIME_FORMAT,
@@ -3008,130 +2835,6 @@ gst_adaptive_demux2_stream_queue_event (GstAdaptiveDemux2Stream * stream,
   stream->pending_events = g_list_append (stream->pending_events, event);
 }
 
-static guint64
-_update_average_bitrate (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, guint64 new_bitrate)
-{
-  gint index = stream->moving_index % NUM_LOOKBACK_FRAGMENTS;
-
-  stream->moving_bitrate -= stream->fragment_bitrates[index];
-  stream->fragment_bitrates[index] = new_bitrate;
-  stream->moving_bitrate += new_bitrate;
-
-  stream->moving_index += 1;
-
-  if (stream->moving_index > NUM_LOOKBACK_FRAGMENTS)
-    return stream->moving_bitrate / NUM_LOOKBACK_FRAGMENTS;
-  return stream->moving_bitrate / stream->moving_index;
-}
-
-static guint64
-gst_adaptive_demux2_stream_update_current_bitrate (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
-{
-  guint64 average_bitrate;
-  guint64 fragment_bitrate;
-  guint connection_speed, min_bitrate, max_bitrate, target_download_rate;
-
-  fragment_bitrate = stream->last_bitrate;
-  GST_DEBUG_OBJECT (stream, "Download bitrate is : %" G_GUINT64_FORMAT " bps",
-      fragment_bitrate);
-
-  average_bitrate = _update_average_bitrate (demux, stream, fragment_bitrate);
-
-  GST_INFO_OBJECT (stream,
-      "last fragment bitrate was %" G_GUINT64_FORMAT, fragment_bitrate);
-  GST_INFO_OBJECT (stream,
-      "Last %u fragments average bitrate is %" G_GUINT64_FORMAT,
-      NUM_LOOKBACK_FRAGMENTS, average_bitrate);
-
-  /* Conservative approach, make sure we don't upgrade too fast */
-  GST_OBJECT_LOCK (demux);
-  stream->current_download_rate = MIN (average_bitrate, fragment_bitrate);
-
-  /* If this is the/a video stream update the overall demuxer
-   * reported bitrate and notify, to give the application a
-   * chance to choose a new connection-bitrate */
-  if ((stream->stream_type & GST_STREAM_TYPE_VIDEO) != 0) {
-    demux->current_download_rate = stream->current_download_rate;
-    GST_OBJECT_UNLOCK (demux);
-    g_object_notify (G_OBJECT (demux), "current-bandwidth");
-    GST_OBJECT_LOCK (demux);
-  }
-
-  connection_speed = demux->connection_speed;
-  min_bitrate = demux->min_bitrate;
-  max_bitrate = demux->max_bitrate;
-  GST_OBJECT_UNLOCK (demux);
-
-  if (connection_speed) {
-    GST_LOG_OBJECT (stream, "connection-speed is set to %u kbps, using it",
-        connection_speed / 1000);
-    return connection_speed;
-  }
-
-  /* No explicit connection_speed, so choose the new variant to use as a
-   * fraction of the measured download rate */
-  target_download_rate =
-      CLAMP (stream->current_download_rate, 0,
-      G_MAXUINT) * demux->bandwidth_target_ratio;
-
-  GST_DEBUG_OBJECT (stream, "Bitrate after target ratio limit (%0.2f): %u",
-      demux->bandwidth_target_ratio, target_download_rate);
-
-#if 0
-  /* Debugging code, modulate the bitrate every few fragments */
-  {
-    static guint ctr = 0;
-    if (ctr % 3 == 0) {
-      GST_INFO_OBJECT (stream, "Halving reported bitrate for debugging");
-      target_download_rate /= 2;
-    }
-    ctr++;
-  }
-#endif
-
-  if (min_bitrate > 0 && target_download_rate < min_bitrate) {
-    target_download_rate = min_bitrate;
-    GST_LOG_OBJECT (stream, "Bitrate adjusted due to min-bitrate : %u bits/s",
-        min_bitrate);
-  }
-
-  if (max_bitrate > 0 && target_download_rate > max_bitrate) {
-    target_download_rate = max_bitrate;
-    GST_LOG_OBJECT (stream, "Bitrate adjusted due to max-bitrate : %u bits/s",
-        max_bitrate);
-  }
-
-  GST_DEBUG_OBJECT (stream, "Returning target download rate of %u bps",
-      target_download_rate);
-
-  return target_download_rate;
-}
-
-/* must be called with manifest_lock taken */
-static GstFlowReturn
-gst_adaptive_demux2_stream_finish_fragment_default (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
-{
-  /* No need to advance, this isn't a real fragment */
-  if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
-    return GST_FLOW_OK;
-
-  return gst_adaptive_demux2_stream_advance_fragment (demux, stream,
-      stream->fragment.duration);
-}
-
-/* must be called with manifest_lock taken.
- * Can temporarily release manifest_lock
- */
-static GstFlowReturn
-gst_adaptive_demux2_stream_data_received_default (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer)
-{
-  return gst_adaptive_demux2_stream_push_buffer (stream, buffer);
-}
-
 static gboolean
 gst_adaptive_demux_requires_periodical_playlist_update_default (GstAdaptiveDemux
     * demux)
@@ -3877,181 +3580,6 @@ gst_adaptive_demux2_stream_seek (GstAdaptiveDemux * demux,
   return GST_FLOW_ERROR;
 }
 
-/* must be called from the scheduler */
-gboolean
-gst_adaptive_demux2_stream_has_next_fragment (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
-{
-  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-  gboolean ret = TRUE;
-
-  if (klass->stream_has_next_fragment)
-    ret = klass->stream_has_next_fragment (stream);
-
-  return ret;
-}
-
-/* must be called from the scheduler */
-/* Called from: the ::finish_fragment() handlers when an *actual* fragment is
- * done
- *
- * @duration: Is the duration of the advancement starting from
- * stream->current_position which might not be the fragment duration after a
- * seek.
- */
-GstFlowReturn
-gst_adaptive_demux2_stream_advance_fragment (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstClockTime duration)
-{
-  if (stream->last_ret != GST_FLOW_OK)
-    return stream->last_ret;
-
-  stream->last_ret =
-      gst_adaptive_demux2_stream_advance_fragment_unlocked (demux, stream,
-      duration);
-
-  return stream->last_ret;
-}
-
-/* must be called with manifest_lock taken */
-static GstFlowReturn
-gst_adaptive_demux2_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstClockTime duration)
-{
-  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-  GstFlowReturn ret;
-
-  g_return_val_if_fail (klass->stream_advance_fragment != NULL, GST_FLOW_ERROR);
-
-  GST_LOG_OBJECT (stream,
-      "stream_time %" GST_STIME_FORMAT " duration:%" GST_TIME_FORMAT,
-      GST_STIME_ARGS (stream->fragment.stream_time), GST_TIME_ARGS (duration));
-
-  stream->download_error_count = 0;
-  g_clear_error (&stream->last_error);
-
-#if 0
-  /* FIXME - url has no indication of byte ranges for subsegments */
-  /* FIXME: Reenable statistics sending? */
-  gst_element_post_message (GST_ELEMENT_CAST (demux),
-      gst_message_new_element (GST_OBJECT_CAST (demux),
-          gst_structure_new (GST_ADAPTIVE_DEMUX_STATISTICS_MESSAGE_NAME,
-              "manifest-uri", G_TYPE_STRING,
-              demux->manifest_uri, "uri", G_TYPE_STRING,
-              stream->fragment.uri, "fragment-start-time",
-              GST_TYPE_CLOCK_TIME, stream->download_start_time,
-              "fragment-stop-time", GST_TYPE_CLOCK_TIME,
-              gst_util_get_timestamp (), "fragment-size", G_TYPE_UINT64,
-              stream->download_total_bytes, "fragment-download-time",
-              GST_TYPE_CLOCK_TIME, stream->last_download_time, NULL)));
-#endif
-
-  /* Don't update to the end of the segment if in reverse playback */
-  GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
-  if (GST_CLOCK_TIME_IS_VALID (duration) && demux->segment.rate > 0) {
-    stream->parse_segment.position += duration;
-    stream->current_position += duration;
-
-    GST_DEBUG_OBJECT (stream,
-        "stream position now %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (stream->current_position));
-  }
-  GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
-
-  /* When advancing with a non 1.0 rate on live streams, we need to check
-   * the live seeking range again to make sure we can still advance to
-   * that position */
-  if (demux->segment.rate != 1.0 && gst_adaptive_demux_is_live (demux)) {
-    if (!gst_adaptive_demux2_stream_in_live_seek_range (demux, stream))
-      ret = GST_FLOW_EOS;
-    else
-      ret = klass->stream_advance_fragment (stream);
-  } else if (gst_adaptive_demux_is_live (demux)
-      || gst_adaptive_demux2_stream_has_next_fragment (demux, stream)) {
-    ret = klass->stream_advance_fragment (stream);
-  } else {
-    ret = GST_FLOW_EOS;
-  }
-
-  stream->download_start_time =
-      GST_TIME_AS_USECONDS (gst_adaptive_demux2_get_monotonic_time (demux));
-
-  /* Always check if we need to switch bitrate on OK, or when live
-   * (it's normal to have EOS on advancing in live when we hit the
-   * end of the manifest) */
-  if (ret == GST_FLOW_OK || gst_adaptive_demux_is_live (demux)) {
-    GST_DEBUG_OBJECT (stream, "checking if stream requires bitrate change");
-    if (gst_adaptive_demux2_stream_select_bitrate (demux, stream,
-            gst_adaptive_demux2_stream_update_current_bitrate (demux,
-                stream))) {
-      GST_DEBUG_OBJECT (stream, "Bitrate changed. Returning FLOW_SWITCH");
-      stream->need_header = TRUE;
-      ret = (GstFlowReturn) GST_ADAPTIVE_DEMUX_FLOW_SWITCH;
-    }
-  }
-
-  return ret;
-}
-
-/* must be called with manifest_lock taken */
-static gboolean
-gst_adaptive_demux2_stream_select_bitrate (GstAdaptiveDemux *
-    demux, GstAdaptiveDemux2Stream * stream, guint64 bitrate)
-{
-  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-
-  if (klass->stream_select_bitrate)
-    return klass->stream_select_bitrate (stream, bitrate);
-  return FALSE;
-}
-
-/* must be called with manifest_lock taken */
-GstFlowReturn
-gst_adaptive_demux2_stream_update_fragment_info (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
-{
-  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-  GstFlowReturn ret;
-
-  g_return_val_if_fail (klass->stream_update_fragment_info != NULL,
-      GST_FLOW_ERROR);
-
-  /* Make sure the sub-class will update bitrate, or else
-   * we will later */
-  stream->fragment.finished = FALSE;
-
-  GST_LOG_OBJECT (stream, "position %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (stream->current_position));
-
-  ret = klass->stream_update_fragment_info (stream);
-
-  GST_LOG_OBJECT (stream, "ret:%s uri:%s",
-      gst_flow_get_name (ret), stream->fragment.uri);
-  if (ret == GST_FLOW_OK) {
-    GST_LOG_OBJECT (stream,
-        "stream_time %" GST_STIME_FORMAT " duration:%" GST_TIME_FORMAT,
-        GST_STIME_ARGS (stream->fragment.stream_time),
-        GST_TIME_ARGS (stream->fragment.duration));
-    GST_LOG_OBJECT (stream,
-        "range start:%" G_GINT64_FORMAT " end:%" G_GINT64_FORMAT,
-        stream->fragment.range_start, stream->fragment.range_end);
-  }
-
-  return ret;
-}
-
-/* must be called with manifest_lock taken */
-GstClockTime
-gst_adaptive_demux2_stream_get_fragment_waiting_time (GstAdaptiveDemux *
-    demux, GstAdaptiveDemux2Stream * stream)
-{
-  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-
-  if (klass->stream_get_fragment_waiting_time)
-    return klass->stream_get_fragment_waiting_time (stream);
-  return 0;
-}
-
 static void
 handle_manifest_download_complete (DownloadRequest * request,
     DownloadRequestState state, GstAdaptiveDemux * demux)
@@ -4158,29 +3686,6 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
   ret = klass->update_manifest (demux);
 
   return ret;
-}
-
-void
-gst_adaptive_demux2_stream_fragment_clear (GstAdaptiveDemux2StreamFragment * f)
-{
-  g_free (f->uri);
-  f->uri = NULL;
-  f->range_start = 0;
-  f->range_end = -1;
-
-  g_free (f->header_uri);
-  f->header_uri = NULL;
-  f->header_range_start = 0;
-  f->header_range_end = -1;
-
-  g_free (f->index_uri);
-  f->index_uri = NULL;
-  f->index_range_start = 0;
-  f->index_range_end = -1;
-
-  f->stream_time = GST_CLOCK_STIME_NONE;
-  f->duration = GST_CLOCK_TIME_NONE;
-  f->finished = FALSE;
 }
 
 /* must be called with manifest_lock taken */

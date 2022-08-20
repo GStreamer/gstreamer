@@ -351,18 +351,12 @@ static void gst_dash_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_dash_demux_dispose (GObject * obj);
 
-/* GstAdaptiveDemux */
-static GstClockTime gst_dash_demux_get_duration (GstAdaptiveDemux * ademux);
-static gboolean gst_dash_demux_is_live (GstAdaptiveDemux * ademux);
-static void gst_dash_demux_reset (GstAdaptiveDemux * ademux);
-static gboolean gst_dash_demux_process_manifest (GstAdaptiveDemux * ademux,
-    GstBuffer * buf);
-static gboolean gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
+/* GstAdaptiveDemuxStream */
 static GstFlowReturn
 gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream);
-static GstFlowReturn gst_dash_demux_stream_seek (GstAdaptiveDemux2Stream *
-    stream, gboolean forward, GstSeekFlags flags, GstClockTimeDiff ts,
-    GstClockTimeDiff * final_ts);
+static GstClockTime
+gst_dash_demux_stream_get_presentation_offset (GstAdaptiveDemux2Stream *
+    stream);
 static gboolean gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemux2Stream
     * stream);
 static GstFlowReturn
@@ -371,25 +365,35 @@ static gboolean
 gst_dash_demux_stream_advance_subfragment (GstAdaptiveDemux2Stream * stream);
 static gboolean gst_dash_demux_stream_select_bitrate (GstAdaptiveDemux2Stream *
     stream, guint64 bitrate);
+static GstClockTime
+gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemux2Stream *
+    stream);
+static GstFlowReturn
+gst_dash_demux_stream_data_received (GstAdaptiveDemux2Stream * stream,
+    GstBuffer * buffer);
+static gboolean gst_dash_demux_stream_fragment_start (GstAdaptiveDemux2Stream *
+    stream);
+static GstFlowReturn
+gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux2Stream * stream);
+static gboolean
+gst_dash_demux_stream_need_another_chunk (GstAdaptiveDemux2Stream * stream);
+
+/* GstAdaptiveDemux */
+static GstClockTime gst_dash_demux_get_duration (GstAdaptiveDemux * ademux);
+static gboolean gst_dash_demux_is_live (GstAdaptiveDemux * ademux);
+static void gst_dash_demux_reset (GstAdaptiveDemux * ademux);
+static gboolean gst_dash_demux_process_manifest (GstAdaptiveDemux * ademux,
+    GstBuffer * buf);
+static gboolean gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek);
+static GstFlowReturn gst_dash_demux_stream_seek (GstAdaptiveDemux2Stream *
+    stream, gboolean forward, GstSeekFlags flags, GstClockTimeDiff ts,
+    GstClockTimeDiff * final_ts);
 static gint64 gst_dash_demux_get_manifest_update_interval (GstAdaptiveDemux *
     demux);
 static GstFlowReturn gst_dash_demux_update_manifest_data (GstAdaptiveDemux *
     demux, GstBuffer * buf);
-static GstClockTime
-gst_dash_demux_stream_get_fragment_waiting_time (GstAdaptiveDemux2Stream *
-    stream);
 static void gst_dash_demux_advance_period (GstAdaptiveDemux * demux);
 static gboolean gst_dash_demux_has_next_period (GstAdaptiveDemux * demux);
-static GstFlowReturn gst_dash_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer);
-static gboolean
-gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-static GstFlowReturn
-gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream);
-static gboolean gst_dash_demux_need_another_chunk (GstAdaptiveDemux2Stream *
-    stream);
 
 /* GstDashDemux2 */
 static gboolean gst_dash_demux_setup_all_streams (GstDashDemux2 * demux);
@@ -464,8 +468,32 @@ static void
 gst_dash_demux_stream_class_init (GstDashDemux2StreamClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstAdaptiveDemux2StreamClass *adaptivedemux2stream_class =
+      GST_ADAPTIVE_DEMUX2_STREAM_CLASS (klass);
 
   gobject_class->finalize = gst_dash_demux_stream_finalize;
+
+  adaptivedemux2stream_class->update_fragment_info =
+      gst_dash_demux_stream_update_fragment_info;
+  adaptivedemux2stream_class->has_next_fragment =
+      gst_dash_demux_stream_has_next_fragment;
+  adaptivedemux2stream_class->advance_fragment =
+      gst_dash_demux_stream_advance_fragment;
+  adaptivedemux2stream_class->get_fragment_waiting_time =
+      gst_dash_demux_stream_get_fragment_waiting_time;
+  adaptivedemux2stream_class->select_bitrate =
+      gst_dash_demux_stream_select_bitrate;
+  adaptivedemux2stream_class->get_presentation_offset =
+      gst_dash_demux_stream_get_presentation_offset;
+
+  adaptivedemux2stream_class->start_fragment =
+      gst_dash_demux_stream_fragment_start;
+  adaptivedemux2stream_class->finish_fragment =
+      gst_dash_demux_stream_fragment_finished;
+  adaptivedemux2stream_class->data_received =
+      gst_dash_demux_stream_data_received;
+  adaptivedemux2stream_class->need_another_chunk =
+      gst_dash_demux_stream_need_another_chunk;
 }
 
 
@@ -547,11 +575,10 @@ gst_dash_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
 }
 
 static GstClockTime
-gst_dash_demux_get_presentation_offset (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_dash_demux_stream_get_presentation_offset (GstAdaptiveDemux2Stream * stream)
 {
   GstDashDemux2Stream *dashstream = (GstDashDemux2Stream *) stream;
-  GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (demux);
+  GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
 
   return gst_mpd_client2_get_stream_presentation_offset (dashdemux->client,
       dashstream->index);
@@ -628,30 +655,12 @@ gst_dash_demux2_class_init (GstDashDemux2Class * klass)
 
   gstadaptivedemux_class->has_next_period = gst_dash_demux_has_next_period;
   gstadaptivedemux_class->advance_period = gst_dash_demux_advance_period;
-  gstadaptivedemux_class->stream_has_next_fragment =
-      gst_dash_demux_stream_has_next_fragment;
-  gstadaptivedemux_class->stream_advance_fragment =
-      gst_dash_demux_stream_advance_fragment;
-  gstadaptivedemux_class->stream_get_fragment_waiting_time =
-      gst_dash_demux_stream_get_fragment_waiting_time;
+
   gstadaptivedemux_class->stream_seek = gst_dash_demux_stream_seek;
-  gstadaptivedemux_class->stream_select_bitrate =
-      gst_dash_demux_stream_select_bitrate;
-  gstadaptivedemux_class->stream_update_fragment_info =
-      gst_dash_demux_stream_update_fragment_info;
   gstadaptivedemux_class->get_live_seek_range =
       gst_dash_demux_get_live_seek_range;
-  gstadaptivedemux_class->get_presentation_offset =
-      gst_dash_demux_get_presentation_offset;
   gstadaptivedemux_class->get_period_start_time =
       gst_dash_demux_get_period_start_time;
-
-  gstadaptivedemux_class->start_fragment = gst_dash_demux_stream_fragment_start;
-  gstadaptivedemux_class->finish_fragment =
-      gst_dash_demux_stream_fragment_finished;
-  gstadaptivedemux_class->data_received = gst_dash_demux_data_received;
-  gstadaptivedemux_class->need_another_chunk =
-      gst_dash_demux_need_another_chunk;
 }
 
 static void
@@ -1827,10 +1836,10 @@ gst_dash_demux_stream_get_target_time (GstDashDemux2 * dashdemux,
   GstClockTime deadline;
   GstClockTime upstream_earliest_time;
   GstClockTime earliest_time = GST_CLOCK_TIME_NONE;
-  gdouble play_rate = gst_adaptive_demux_play_rate (stream->demux);
+  gdouble play_rate = gst_adaptive_demux_play_rate (demux);
   GstClockTime period_start = gst_dash_demux_get_period_start_time (demux);
   GstClockTime pts_offset =
-      gst_dash_demux_get_presentation_offset (demux, stream);
+      gst_dash_demux_stream_get_presentation_offset (stream);
 
   g_assert (min_skip > 0);
 
@@ -2706,10 +2715,9 @@ _gst_buffer_split (GstBuffer * buffer, gint offset, gsize size)
 }
 
 static gboolean
-gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_dash_demux_stream_fragment_start (GstAdaptiveDemux2Stream * stream)
 {
-  GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (demux);
+  GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstDashDemux2Stream *dashstream = (GstDashDemux2Stream *) stream;
 
   GST_LOG_OBJECT (stream, "Actual position %" GST_TIME_FORMAT,
@@ -2725,7 +2733,7 @@ gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
    * buffer. We need offsets to be consistent between moof and mdat
    */
   if (dashstream->is_isobmff && dashdemux->allow_trickmode_key_units
-      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (demux)
+      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)
       && dashstream->active_stream->mimeType == GST_STREAM_VIDEO)
     stream->discont = TRUE;
 
@@ -2733,11 +2741,10 @@ gst_dash_demux_stream_fragment_start (GstAdaptiveDemux * demux,
 }
 
 static GstFlowReturn
-gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux2Stream * stream)
 {
   GstClockTime consumed_duration;
-  GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (demux);
+  GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstDashDemux2Stream *dashstream = (GstDashDemux2Stream *) stream;
 
   /* We need to mark every first buffer of a key unit as discont,
@@ -2747,7 +2754,7 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
    * buffer. We need offsets to be consistent between moof and mdat
    */
   if (dashstream->is_isobmff && dashdemux->allow_trickmode_key_units
-      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (demux)
+      && GST_ADAPTIVE_DEMUX_IN_TRICKMODE_KEY_UNITS (stream->demux)
       && dashstream->active_stream->mimeType == GST_STREAM_VIDEO)
     stream->discont = TRUE;
 
@@ -2774,20 +2781,20 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
     consumed_duration =
         (stream->fragment.stream_time + stream->fragment.duration) -
         stream->current_position;
-    GST_LOG_OBJECT (demux, "Consumed duration after seeking: %"
+    GST_LOG_OBJECT (stream, "Consumed duration after seeking: %"
         GST_TIMEP_FORMAT, &consumed_duration);
   } else {
     consumed_duration = stream->fragment.duration;
   }
 
-  return gst_adaptive_demux2_stream_advance_fragment (demux, stream,
+  return gst_adaptive_demux2_stream_advance_fragment (stream,
       consumed_duration);
 }
 
 static gboolean
-gst_dash_demux_need_another_chunk (GstAdaptiveDemux2Stream * stream)
+gst_dash_demux_stream_need_another_chunk (GstAdaptiveDemux2Stream * stream)
 {
-  GstDashDemux2 *dashdemux = (GstDashDemux2 *) stream->demux;
+  GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (stream->demux);
   GstAdaptiveDemux *demux = stream->demux;
   GstDashDemux2Stream *dashstream = (GstDashDemux2Stream *) stream;
   gboolean playing_forward = (demux->segment.rate > 0.0);
@@ -3371,9 +3378,9 @@ gst_dash_demux_find_sync_samples (GstAdaptiveDemux * demux,
 
 
 static GstFlowReturn
-gst_dash_demux_handle_isobmff (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream)
+gst_dash_demux_stream_handle_isobmff (GstAdaptiveDemux2Stream * stream)
 {
+  GstAdaptiveDemux *demux = stream->demux;
   GstDashDemux2Stream *dash_stream = (GstDashDemux2Stream *) stream;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer;
@@ -3527,22 +3534,22 @@ gst_dash_demux_handle_isobmff (GstAdaptiveDemux * demux,
 
   if (sidx_advance) {
     ret =
-        gst_adaptive_demux2_stream_advance_fragment (demux, stream,
+        gst_adaptive_demux2_stream_advance_fragment (stream,
         SIDX_CURRENT_ENTRY (dash_stream)->duration);
     if (ret != GST_FLOW_OK)
       return ret;
 
     /* If we still have data available, recurse and use it up if possible */
     if (gst_adapter_available (dash_stream->adapter) > 0)
-      return gst_dash_demux_handle_isobmff (demux, stream);
+      return gst_dash_demux_stream_handle_isobmff (stream);
   }
 
   return ret;
 }
 
 static GstFlowReturn
-gst_dash_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer)
+gst_dash_demux_stream_data_received (GstAdaptiveDemux2Stream * stream,
+    GstBuffer * buffer)
 {
   GstDashDemux2Stream *dash_stream = (GstDashDemux2Stream *) stream;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -3574,7 +3581,7 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
 
   if (dash_stream->is_isobmff || stream->downloading_index) {
     /* SIDX index is also ISOBMMF */
-    ret = gst_dash_demux_handle_isobmff (demux, stream);
+    ret = gst_dash_demux_stream_handle_isobmff (stream);
   } else if (dash_stream->sidx_parser.status == GST_ISOFF_SIDX_PARSER_FINISHED) {
     gsize available;
 
@@ -3622,7 +3629,7 @@ gst_dash_demux_data_received (GstAdaptiveDemux * demux,
         if (has_next) {
           GstFlowReturn new_ret;
           new_ret =
-              gst_adaptive_demux2_stream_advance_fragment (demux, stream,
+              gst_adaptive_demux2_stream_advance_fragment (stream,
               SIDX_CURRENT_ENTRY (dash_stream)->duration);
 
           /* only overwrite if it was OK before */
