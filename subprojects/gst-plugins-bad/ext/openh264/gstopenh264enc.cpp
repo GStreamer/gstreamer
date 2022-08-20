@@ -234,10 +234,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 /* class initialization */
 
 G_DEFINE_TYPE_WITH_CODE (GstOpenh264Enc, gst_openh264enc,
-    GST_TYPE_VIDEO_ENCODER,
-    G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL);
-    GST_DEBUG_CATEGORY_INIT (gst_openh264enc_debug_category, "openh264enc", 0,
-        "debug category for openh264enc element"));
+    GST_TYPE_VIDEO_ENCODER, G_IMPLEMENT_INTERFACE (GST_TYPE_PRESET, NULL));
 GST_ELEMENT_REGISTER_DEFINE_CUSTOM (openh264enc, openh264enc_element_init);
 
 static void
@@ -1057,13 +1054,16 @@ gst_openh264enc_finish (GstVideoEncoder * encoder)
 
   return GST_FLOW_OK;
 }
+
 static gboolean
 openh264enc_element_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_openh264enc_debug_category, "openh264enc", 0,
+      "debug category for openh264enc element");
   if (openh264_element_init (plugin))
     return gst_element_register (plugin, "openh264enc", GST_RANK_MARGINAL,
-                                 GST_TYPE_OPENH264ENC);
+        GST_TYPE_OPENH264ENC);
 
- GST_ERROR ("Incorrect library version loaded, expecting %s", g_strCodecVer);
- return FALSE;
+  GST_ERROR ("Incorrect library version loaded, expecting %s", g_strCodecVer);
+  return FALSE;
 }
