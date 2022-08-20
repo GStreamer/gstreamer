@@ -128,6 +128,8 @@ struct _GstDashDemux2Stream
   GstClockTime target_time;
   /* Average skip-ahead time (only in trickmode-key-units) */
   GstClockTime average_skip_size;
+
+  gchar *last_representation_id;
 };
 
 /**
