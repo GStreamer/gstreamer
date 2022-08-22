@@ -67,6 +67,8 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define MFX_TIME_IS_VALID(time) ((time) != MFX_TIMESTAMP_UNKNOWN)
 
+#define GST_MSDK_FRAME_SURFACE gst_msdk_frame_surface_quark_get ()
+
 #define gst_msdkdec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkDec, gst_msdkdec, GST_TYPE_VIDEO_DECODER);
 
@@ -287,6 +289,76 @@ failed_unref_buffer:
 
   GST_ERROR_OBJECT (thiz, "failed to handle buffer");
   return NULL;
+}
+
+static GstMsdkSurface *
+allocate_output_surface (GstMsdkDec * thiz)
+{
+  GstMsdkSurface *msdk_surface = NULL;
+  GstBuffer *out_buffer = NULL;
+#ifndef _WIN32
+  GstMemory *mem = NULL;
+  mfxFrameSurface1 *mfx_surface = NULL;
+#endif
+
+  /* Free un-unsed msdk surfaces firstly, hence the associated mfx
+   * surfaces will be moved from used list to available list */
+  gst_msdkdec_free_unlocked_msdk_surfaces (thiz);
+#ifndef _WIN32
+  if ((gst_buffer_pool_acquire_buffer (thiz->alloc_pool, &out_buffer, NULL))
+      != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (thiz, "Failed to allocate output buffer");
+    return NULL;
+  }
+
+  mem = gst_buffer_peek_memory (out_buffer, 0);
+  msdk_surface = g_slice_new0 (GstMsdkSurface);
+
+  if ((mfx_surface = gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem),
+              GST_MSDK_FRAME_SURFACE))) {
+    msdk_surface->surface = mfx_surface;
+    msdk_surface->from_qdata = TRUE;
+  } else {
+    GST_ERROR ("No available surfaces");
+    g_slice_free (GstMsdkSurface, msdk_surface);
+    return NULL;
+  }
+#else
+  if (!gst_buffer_pool_is_active (thiz->pool) &&
+      !gst_buffer_pool_set_active (thiz->pool, TRUE)) {
+    GST_ERROR_OBJECT (thiz, "Failed to activate buffer pool");
+    return NULL;
+  }
+
+  if ((gst_buffer_pool_acquire_buffer (thiz->pool, &out_buffer, NULL))
+      != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (thiz, "Failed to allocate output buffer");
+    gst_buffer_pool_set_active (thiz->pool, FALSE);
+    return NULL;
+  }
+
+  GstVideoCodecState *output_state =
+      gst_video_decoder_get_output_state (GST_VIDEO_DECODER (thiz));
+
+  msdk_surface =
+      gst_msdk_import_sys_mem_to_msdk_surface (out_buffer, &output_state->info);
+
+  gst_video_codec_state_unref (output_state);
+
+  if (!msdk_surface)
+    return NULL;
+#endif
+
+  msdk_surface->buf = out_buffer;
+
+  if (!thiz->sfc)
+    gst_msdk_update_mfx_frame_info_from_mfx_video_param
+        (&msdk_surface->surface->Info, &thiz->param);
+
+  thiz->locked_msdk_surfaces =
+      g_list_append (thiz->locked_msdk_surfaces, msdk_surface);
+
+  return msdk_surface;
 }
 
 static void

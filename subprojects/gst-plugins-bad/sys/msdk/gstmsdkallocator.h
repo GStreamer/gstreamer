@@ -78,6 +78,9 @@ GstMsdkSurface *
 gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
     GstVideoInfo * vinfo, guint map_flag);
 
+GQuark
+gst_msdk_frame_surface_quark_get (void);
+
 G_END_DECLS
 
 #endif /* GST_MSDK_ALLOCATOR_H_ */

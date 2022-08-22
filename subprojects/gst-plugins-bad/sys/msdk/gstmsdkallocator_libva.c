@@ -40,17 +40,6 @@
 #include <gst/va/gstvaallocator.h>
 
 #define GST_MSDK_FRAME_SURFACE gst_msdk_frame_surface_quark_get ()
-static GQuark
-gst_msdk_frame_surface_quark_get (void)
-{
-  static gsize g_quark;
-
-  if (g_once_init_enter (&g_quark)) {
-    gsize quark = (gsize) g_quark_from_static_string ("GstMsdkFrameSurface");
-    g_once_init_leave (&g_quark, quark);
-  }
-  return g_quark;
-}
 
 mfxStatus
 gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,

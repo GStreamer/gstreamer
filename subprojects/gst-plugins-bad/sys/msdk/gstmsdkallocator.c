@@ -151,3 +151,15 @@ gst_msdk_import_sys_mem_to_msdk_surface (GstBuffer * buf,
 
   return msdk_surface;
 }
+
+GQuark
+gst_msdk_frame_surface_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("GstMsdkFrameSurface");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
