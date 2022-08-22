@@ -311,10 +311,8 @@ _gst_egl_image_create (GstGLContext * context, guint target,
   EGLContext egl_context = EGL_NO_CONTEXT;
   EGLImageKHR img = EGL_NO_IMAGE_KHR;
   GstGLDisplayEGL *display_egl;
-  gint plat_major, plat_minor;
   guint attrib_len = 0;
 
-  gst_gl_context_get_gl_platform_version (context, &plat_major, &plat_minor);
 
   display_egl = gst_gl_display_egl_from_gl_display (context->display);
   if (!display_egl) {
@@ -333,6 +331,9 @@ _gst_egl_image_create (GstGLContext * context, guint target,
     while (attribs[attrib_len++] != EGL_NONE) {
     }
 #ifdef EGL_VERSION_1_5
+  gint plat_major, plat_minor;
+  gst_gl_context_get_gl_platform_version (context, &plat_major, &plat_minor);
+
   if (GST_GL_CHECK_GL_VERSION (plat_major, plat_minor, 1, 5)) {
     EGLImageKHR (*gst_eglCreateImage) (EGLDisplay dpy, EGLContext ctx,
         EGLenum target, EGLClientBuffer buffer, const EGLAttrib * attrib_list);
@@ -359,7 +360,7 @@ _gst_egl_image_create (GstGLContext * context, guint target,
     g_free (egl_attribs);
   } else
 #endif
-  {
+  if (gst_gl_context_check_feature (context, "EGL_KHR_image_base")) {
     EGLImageKHR (*gst_eglCreateImageKHR) (EGLDisplay dpy, EGLContext ctx,
         EGLenum target, EGLClientBuffer buffer, const EGLint * attrib_list);
     EGLint *egl_attribs = NULL;
@@ -368,8 +369,8 @@ _gst_egl_image_create (GstGLContext * context, guint target,
     gst_eglCreateImageKHR = gst_gl_context_get_proc_address (context,
         "eglCreateImageKHR");
     if (!gst_eglCreateImageKHR) {
-      GST_WARNING_OBJECT (context, "\"eglCreateImageKHR\" not exposed by the "
-          "implementation");
+      GST_ERROR_OBJECT (context, "\"eglCreateImageKHR\" not exposed by the "
+          "implementation as required by EGL_KHR_image_base");
       return EGL_NO_IMAGE_KHR;
     }
 
@@ -383,6 +384,9 @@ _gst_egl_image_create (GstGLContext * context, guint target,
         egl_attribs);
 
     g_free (egl_attribs);
+  } else {
+    GST_INFO_OBJECT (context, "EGLImage creation not supported");
+    return EGL_NO_IMAGE_KHR;
   }
 
   return img;
@@ -395,16 +399,31 @@ _gst_egl_image_destroy (GstGLContext * context, EGLImageKHR image)
   EGLDisplay egl_display = EGL_DEFAULT_DISPLAY;
   GstGLDisplayEGL *display_egl;
 
-  gst_eglDestroyImage = gst_gl_context_get_proc_address (context,
-      "eglDestroyImage");
-  if (!gst_eglDestroyImage) {
+#ifdef EGL_VERSION_1_5
+  gint plat_major, plat_minor;
+  gst_gl_context_get_gl_platform_version (context, &plat_major, &plat_minor);
+
+  if (GST_GL_CHECK_GL_VERSION (plat_major, plat_minor, 1, 5)) {
+    gst_eglDestroyImage = gst_gl_context_get_proc_address (context,
+        "eglDestroyImage");
+    if (!gst_eglDestroyImage) {
+      GST_ERROR_OBJECT (context, "\"eglDestroyImage\" not exposed by the "
+          "implementation as required by EGL >= 1.5");
+      return;
+    }
+  } else
+#endif
+  if (gst_gl_context_check_feature (context, "EGL_KHR_image_base")) {
     gst_eglDestroyImage = gst_gl_context_get_proc_address (context,
         "eglDestroyImageKHR");
     if (!gst_eglDestroyImage) {
       GST_ERROR_OBJECT (context, "\"eglDestroyImage\" not exposed by the "
-          "implementation");
+          "implementation as required by EGL_KHR_image_base");
       return;
     }
+  } else {
+    GST_ERROR_OBJECT (context, "Destruction of EGLImage not supported.");
+    return;
   }
 
   display_egl = gst_gl_display_egl_from_gl_display (context->display);
