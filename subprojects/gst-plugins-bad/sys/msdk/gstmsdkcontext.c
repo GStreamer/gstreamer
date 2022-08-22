@@ -48,6 +48,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_debug_msdkcontext);
 struct _GstMsdkContextPrivate
 {
   MsdkSession session;
+  GstBufferPool *alloc_pool;
   GList *cached_alloc_responses;
   gboolean hardware;
   gboolean has_frame_allocator;
@@ -915,6 +916,18 @@ gst_msdk_context_put_surface_available (GstMsdkContext * context,
         g_list_prepend (msdk_resp->surfaces_avail, surface);
   }
   g_mutex_unlock (&priv->mutex);
+}
+
+void
+gst_msdk_context_set_alloc_pool (GstMsdkContext * context, GstBufferPool * pool)
+{
+  context->priv->alloc_pool = gst_object_ref (pool);
+}
+
+GstBufferPool *
+gst_msdk_context_get_alloc_pool (GstMsdkContext * context)
+{
+  return context->priv->alloc_pool;
 }
 
 GstMsdkContextJobType

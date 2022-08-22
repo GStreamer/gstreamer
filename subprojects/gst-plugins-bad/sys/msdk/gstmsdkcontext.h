@@ -144,6 +144,12 @@ gst_msdk_context_put_surface_locked (GstMsdkContext * context, mfxFrameAllocResp
 void
 gst_msdk_context_put_surface_available (GstMsdkContext * context, mfxFrameAllocResponse * resp, mfxFrameSurface1 * surface);
 
+void
+gst_msdk_context_set_alloc_pool (GstMsdkContext * context, GstBufferPool * pool);
+
+GstBufferPool *
+gst_msdk_context_get_alloc_pool (GstMsdkContext * context);
+
 GstMsdkContextJobType
 gst_msdk_context_get_job_type (GstMsdkContext * context);
 
