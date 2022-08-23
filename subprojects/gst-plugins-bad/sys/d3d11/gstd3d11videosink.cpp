@@ -63,6 +63,7 @@ enum
   PROP_ROTATE_METHOD,
   PROP_GAMMA_MODE,
   PROP_PRIMARIES_MODE,
+  PROP_DISPLAY_FORMAT,
 };
 
 #define DEFAULT_ADAPTER                   -1
@@ -73,6 +74,32 @@ enum
 #define DEFAULT_DRAW_ON_SHARED_TEXTURE    FALSE
 #define DEFAULT_GAMMA_MODE                GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PRIMARIES_MODE            GST_VIDEO_PRIMARIES_MODE_NONE
+#define DEFAULT_DISPLAY_FORMAT            DXGI_FORMAT_UNKNOWN
+
+#define GST_TYPE_D3D11_VIDEO_SINK_DISPLAY_FORMAT (gst_d3d11_video_sink_display_format_type())
+static GType
+gst_d3d11_video_sink_display_format_type (void)
+{
+  static GType format_type = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    static const GEnumValue format_types[] = {
+      {DXGI_FORMAT_UNKNOWN, "DXGI_FORMAT_UNKNOWN", "unknown"},
+      {DXGI_FORMAT_R10G10B10A2_UNORM,
+          "DXGI_FORMAT_R10G10B10A2_UNORM", "r10g10b10a2-unorm"},
+      {DXGI_FORMAT_R8G8B8A8_UNORM,
+          "DXGI_FORMAT_R8G8B8A8_UNORM", "r8g8b8a8-unorm"},
+      {DXGI_FORMAT_B8G8R8A8_UNORM,
+          "DXGI_FORMAT_B8G8R8A8_UNORM", "b8g8r8a8-unorm"},
+      {0, nullptr, nullptr},
+    };
+
+    format_type = g_enum_register_static ("GstD3D11VideoSinkDisplayFormat",
+        format_types);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return format_type;
+}
 
 enum
 {
@@ -127,6 +154,7 @@ struct _GstD3D11VideoSink
   gboolean draw_on_shared_texture;
   GstVideoGammaMode gamma_mode;
   GstVideoPrimariesMode primaries_mode;
+  DXGI_FORMAT display_format;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;
@@ -312,6 +340,19 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D11VideoSink:display-format:
+   *
+   * Swapchain display format
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_DISPLAY_FORMAT,
+      g_param_spec_enum ("display-format", "Display Format",
+          "Swapchain display format", GST_TYPE_D3D11_VIDEO_SINK_DISPLAY_FORMAT,
+          DEFAULT_DISPLAY_FORMAT, (GParamFlags) (G_PARAM_READWRITE |
+              GST_PARAM_MUTABLE_READY | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D11VideoSink::begin-draw:
    * @videosink: the #d3d11videosink
    *
@@ -409,6 +450,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
 
   gst_type_mark_as_plugin_api (GST_D3D11_WINDOW_TOGGLE_MODE_GET_TYPE,
       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_VIDEO_SINK_DISPLAY_FORMAT,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -422,6 +465,7 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->draw_on_shared_texture = DEFAULT_DRAW_ON_SHARED_TEXTURE;
   self->gamma_mode = DEFAULT_GAMMA_MODE;
   self->primaries_mode = DEFAULT_PRIMARIES_MODE;
+  self->display_format = DEFAULT_DISPLAY_FORMAT;
 
   InitializeCriticalSection (&self->lock);
 }
@@ -477,6 +521,9 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
     case PROP_PRIMARIES_MODE:
       self->primaries_mode = (GstVideoPrimariesMode) g_value_get_enum (value);
       break;
+    case PROP_DISPLAY_FORMAT:
+      self->display_format = (DXGI_FORMAT) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -521,6 +568,9 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PRIMARIES_MODE:
       g_value_set_enum (value, self->primaries_mode);
+      break;
+    case PROP_DISPLAY_FORMAT:
+      g_value_set_enum (value, self->display_format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -715,7 +765,8 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
       GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode, nullptr);
 
   if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
-          GST_VIDEO_SINK_HEIGHT (self), caps, config, &error)) {
+          GST_VIDEO_SINK_HEIGHT (self), caps, config, self->display_format,
+          &error)) {
     GstMessage *error_msg;
 
     LeaveCriticalSection (&self->lock);
