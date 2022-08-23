@@ -792,12 +792,11 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
    * we're converting between equivalent transfer functions, do passthrough */
   tmp_info = *in_info;
   tmp_info.colorimetry.transfer = out_info->colorimetry.transfer;
-  if (gst_video_info_is_equal (&tmp_info, out_info)) {
-    if (gst_video_transfer_function_is_equivalent (in_info->colorimetry.
-            transfer, in_info->finfo->bits, out_info->colorimetry.transfer,
-            out_info->finfo->bits)) {
-      gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
-    }
+  if (gst_video_info_is_equal (&tmp_info, out_info) &&
+      gst_video_transfer_function_is_equivalent (in_info->colorimetry.transfer,
+          in_info->finfo->bits, out_info->colorimetry.transfer,
+          out_info->finfo->bits)) {
+    gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   } else {
     GstStructure *options;
     GST_CAT_DEBUG_OBJECT (CAT_PERFORMANCE, filter, "setup videoscaling");
