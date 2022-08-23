@@ -730,7 +730,7 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
         pointer_x, pointer_y);
     gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
         gst_navigation_event_new_mouse_move (pointer_x, pointer_y,
-            e.xmotion.state));
+            e.xmotion.state & GST_NAVIGATION_MODIFIER_MASK));
 
     g_mutex_lock (&ximagesink->flow_lock);
     g_mutex_lock (&ximagesink->x_lock);
@@ -756,14 +756,16 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
             e.xbutton.button, e.xbutton.x, e.xbutton.x);
         gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
             gst_navigation_event_new_mouse_button_press (e.xbutton.button,
-                e.xbutton.x, e.xbutton.y, e.xbutton.state));
+                e.xbutton.x, e.xbutton.y,
+                e.xbutton.state & GST_NAVIGATION_MODIFIER_MASK));
         break;
       case ButtonRelease:
         GST_DEBUG ("ximagesink button %d release over window at %d,%d",
             e.xbutton.button, e.xbutton.x, e.xbutton.x);
         gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
             gst_navigation_event_new_mouse_button_release (e.xbutton.button,
-                e.xbutton.x, e.xbutton.y, e.xbutton.state));
+                e.xbutton.x, e.xbutton.y,
+                e.xbutton.state & GST_NAVIGATION_MODIFIER_MASK));
         break;
       case KeyPress:
       case KeyRelease:
@@ -788,8 +790,10 @@ gst_x_image_sink_handle_xevents (GstXImageSink * ximagesink)
             e.xkey.keycode, e.xkey.x, e.xkey.y, key_str);
         gst_navigation_send_event_simple (GST_NAVIGATION (ximagesink),
             (e.type == KeyPress) ?
-            gst_navigation_event_new_key_press (key_str, e.xkey.state) :
-            gst_navigation_event_new_key_release (key_str, e.xkey.state));
+            gst_navigation_event_new_key_press (key_str,
+                e.xkey.state & GST_NAVIGATION_MODIFIER_MASK) :
+            gst_navigation_event_new_key_release (key_str,
+                e.xkey.state & GST_NAVIGATION_MODIFIER_MASK));
         break;
       default:
         GST_DEBUG_OBJECT (ximagesink, "ximagesink unhandled X event (%d)",
