@@ -258,6 +258,184 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
 }
 
 mfxStatus
+gst_msdk_frame_alloc_2 (mfxHDL pthis, mfxFrameAllocRequest * req,
+    mfxFrameAllocResponse * resp)
+{
+  mfxStatus status = MFX_ERR_NONE;
+  gint i;
+  GstMsdkSurface *msdk_surface = NULL;
+  mfxMemId *mids = NULL;
+  GstMsdkContext *context = (GstMsdkContext *) pthis;
+  GstMsdkAllocResponse *msdk_resp = NULL;
+  mfxU32 fourcc = req->Info.FourCC;
+  mfxU16 surfaces_num = req->NumFrameSuggested;
+  GList *tmp_list = NULL;
+  GList *l;
+  GstMsdkSurface *tmp_surface = NULL;
+  VAStatus va_status;
+
+  /* MFX_MAKEFOURCC('V','P','8','S') is used for MFX_FOURCC_VP9_SEGMAP surface
+   * in MSDK and this surface is an internal surface. The external allocator
+   * shouldn't be used for this surface allocation
+   *
+   * See https://github.com/Intel-Media-SDK/MediaSDK/issues/762
+   */
+  if (req->Type & MFX_MEMTYPE_INTERNAL_FRAME
+      && fourcc == MFX_MAKEFOURCC ('V', 'P', '8', 'S'))
+    return MFX_ERR_UNSUPPORTED;
+
+  if (req->Type & MFX_MEMTYPE_EXTERNAL_FRAME) {
+    GstMsdkAllocResponse *cached =
+        gst_msdk_context_get_cached_alloc_responses_by_request (context, req);
+    if (cached) {
+      /* check if enough frames were allocated */
+      if (req->NumFrameSuggested > cached->response.NumFrameActual)
+        return MFX_ERR_MEMORY_ALLOC;
+
+      *resp = cached->response;
+      g_atomic_int_inc (&cached->refcount);
+      return MFX_ERR_NONE;
+    }
+  }
+
+  /* The VA API does not define any surface types and the application can use either
+   * MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET or
+   * MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET to indicate data in video memory.
+   */
+  if (!(req->Type & (MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET |
+              MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET)))
+    return MFX_ERR_UNSUPPORTED;
+
+  mids = (mfxMemId *) g_slice_alloc0 (surfaces_num * sizeof (mfxMemId));
+  msdk_resp = g_slice_new0 (GstMsdkAllocResponse);
+
+  if (fourcc != MFX_FOURCC_P8) {
+    GstBufferPool *pool;
+    GstVideoFormat format;
+    GstStructure *config;
+    GstVideoInfo info;
+    GstCaps *caps;
+    GstVideoAlignment align;
+
+    format = gst_msdk_get_video_format_from_mfx_fourcc (fourcc);
+    gst_video_info_set_format (&info, format, req->Info.CropW, req->Info.CropH);
+
+    gst_video_alignment_reset (&align);
+    gst_msdk_set_video_alignment
+        (&info, req->Info.Width, req->Info.Height, &align);
+    gst_video_info_align (&info, &align);
+
+    caps = gst_video_info_to_caps (&info);
+
+    pool = gst_msdk_context_get_alloc_pool (context);
+    if (!pool) {
+      goto error_alloc;
+    }
+
+    config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+    gst_buffer_pool_config_set_params (config, caps,
+        GST_VIDEO_INFO_SIZE (&info), surfaces_num, surfaces_num);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+    gst_buffer_pool_config_set_va_alignment (config, &align);
+
+    if (!gst_buffer_pool_set_config (pool, config)) {
+      GST_ERROR ("Failed to set pool config");
+      gst_object_unref (pool);
+      goto error_alloc;
+    }
+
+    if (!gst_buffer_pool_set_active (pool, TRUE)) {
+      GST_ERROR ("Failed to activate pool");
+      gst_object_unref (pool);
+      goto error_alloc;
+    }
+
+    for (i = 0; i < surfaces_num; i++) {
+      GstBuffer *buf;
+
+      if (gst_buffer_pool_acquire_buffer (pool, &buf, NULL) != GST_FLOW_OK) {
+        GST_ERROR ("Failed to allocate buffer");
+        gst_buffer_pool_set_active (pool, FALSE);
+        gst_object_unref (pool);
+        goto error_alloc;
+      }
+
+      msdk_surface = gst_msdk_import_to_msdk_surface (buf, context, &info, 0);
+
+      if (!msdk_surface) {
+        GST_ERROR ("Failed to get GstMsdkSurface");
+        gst_buffer_pool_set_active (pool, FALSE);
+        gst_object_unref (pool);
+        goto error_alloc;
+      }
+
+      msdk_surface->buf = buf;
+      mids[i] = msdk_surface->surface->Data.MemId;
+      tmp_list = g_list_prepend (tmp_list, msdk_surface);
+    }
+  } else {
+    /* This path is to handle a special case when requesting MFX_FOURCC_P208, We keep
+     * this to avoid failure when building gst-msdk plugins using old version of MediaSDK.
+     * These buffers will be used inside the driver and released by
+     * gst_msdk_frame_free functions. Application doesn't need to handle these buffers.
+     * See https://github.com/Intel-Media-SDK/samples/issues/13 for more details.
+     */
+    VAContextID context_id = req->AllocId;
+    gint width32 = 32 * ((req->Info.Width + 31) >> 5);
+    gint height32 = 32 * ((req->Info.Height + 31) >> 5);
+    guint64 codedbuf_size = (width32 * height32) * 400LL / (16 * 16);
+
+    for (i = 0; i < surfaces_num; i++) {
+      VABufferID coded_buf;
+      GstMsdkMemoryID msdk_mid;
+
+      va_status = vaCreateBuffer (gst_msdk_context_get_handle (context),
+          context_id, VAEncCodedBufferType, codedbuf_size, 1, NULL, &coded_buf);
+
+      status = gst_msdk_get_mfx_status_from_va_status (va_status);
+      if (status < MFX_ERR_NONE) {
+        GST_ERROR ("failed to create buffer");
+        return status;
+      }
+
+      msdk_mid.surface = coded_buf;
+      msdk_mid.fourcc = fourcc;
+
+      /* Don't use image for P208 */
+      msdk_mid.image.image_id = VA_INVALID_ID;
+      msdk_mid.image.buf = VA_INVALID_ID;
+
+      mids[i] = (mfxMemId *) & msdk_mid;
+    }
+  }
+
+  resp->mids = mids;
+  resp->NumFrameActual = surfaces_num;
+
+  msdk_resp->response = *resp;
+  msdk_resp->request = *req;
+  msdk_resp->refcount = 1;
+
+  gst_msdk_context_add_alloc_response (context, msdk_resp);
+
+  /* We need to put all the buffers back to the pool */
+  for (l = tmp_list; l; l = l->next) {
+    tmp_surface = (GstMsdkSurface *) l->data;
+    gst_buffer_unref (tmp_surface->buf);
+  }
+
+  return status;
+
+error_alloc:
+  g_slice_free1 (surfaces_num * sizeof (mfxMemId), mids);
+  g_slice_free (GstMsdkAllocResponse, msdk_resp);
+  return MFX_ERR_MEMORY_ALLOC;
+}
+
+mfxStatus
 gst_msdk_frame_free (mfxHDL pthis, mfxFrameAllocResponse * resp)
 {
   GstMsdkContext *context = (GstMsdkContext *) pthis;
