@@ -1862,7 +1862,7 @@ gst_mpd_client2_get_last_fragment_timestamp_end (GstMPDClient2 * client,
 
   if (!stream->segments) {
     stream_period = gst_mpd_client2_get_stream_period (client);
-    *ts = stream_period->start + stream_period->duration;
+    *ts = stream_period->duration;
   } else {
     segment_idx = gst_mpd_client2_get_segments_counts (client, stream) - 1;
     if (segment_idx >= stream->segments->len) {
@@ -1875,14 +1875,15 @@ gst_mpd_client2_get_last_fragment_timestamp_end (GstMPDClient2 * client,
     if (currentChunk->repeat >= 0) {
       *ts =
           currentChunk->start + (currentChunk->duration * (1 +
-              currentChunk->repeat));
+              currentChunk->repeat)) -
+          gst_mpd_client2_get_period_start_time (client);
     } else {
       /* 5.3.9.6.1: negative repeat means repeat till the end of the
        * period, or the next update of the MPD (which I think is
        * implicit, as this will all get deleted/recreated), or the
        * start of the next segment, if any. */
       stream_period = gst_mpd_client2_get_stream_period (client);
-      *ts = stream_period->start + stream_period->duration;
+      *ts = stream_period->duration;
     }
   }
 
@@ -1909,7 +1910,8 @@ gst_mpd_client2_get_next_fragment_timestamp (GstMPDClient2 * client,
 
     *ts =
         currentChunk->start +
-        (currentChunk->duration * stream->segment_repeat_index);
+        (currentChunk->duration * stream->segment_repeat_index) -
+        gst_mpd_client2_get_period_start_time (client);
   } else {
     GstClockTime duration =
         gst_mpd_client2_get_segment_duration (client, stream, NULL);
@@ -2067,7 +2069,8 @@ gst_mpd_client2_get_next_fragment (GstMPDClient2 * client,
 
     fragment->timestamp =
         currentChunk->start +
-        stream->segment_repeat_index * currentChunk->duration;
+        stream->segment_repeat_index * currentChunk->duration -
+        gst_mpd_client2_get_period_start_time (client);
     fragment->duration = currentChunk->duration;
     if (currentChunk->SegmentURL) {
       if (currentChunk->SegmentURL->mediaRange) {
