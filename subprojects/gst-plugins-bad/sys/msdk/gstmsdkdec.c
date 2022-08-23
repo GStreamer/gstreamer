@@ -154,8 +154,9 @@ free_surface (GstMsdkSurface * s)
   g_slice_free (GstMsdkSurface, s);
 }
 
-static void
-gst_msdkdec_free_unlocked_msdk_surfaces (GstMsdkDec * thiz)
+static gboolean
+gst_msdkdec_free_unlocked_msdk_surfaces (GstMsdkDec * thiz,
+    gboolean check_avail_surface)
 {
   GList *l;
   GstMsdkSurface *surface;
@@ -163,13 +164,27 @@ gst_msdkdec_free_unlocked_msdk_surfaces (GstMsdkDec * thiz)
   for (l = thiz->locked_msdk_surfaces; l;) {
     GList *next = l->next;
     surface = l->data;
-    if (surface->surface->Data.Locked == 0) {
+    if (surface->surface->Data.Locked == 0 &&
+        GST_MINI_OBJECT_REFCOUNT_VALUE (surface->buf) == 1) {
       free_surface (surface);
       thiz->locked_msdk_surfaces =
           g_list_delete_link (thiz->locked_msdk_surfaces, l);
+
+      /* When check_avail_surface flag is enabled, it means we only
+       * need to find one available surface instead of releasing all
+       * the unlocked surfaces, so we can return TEUR here.
+       */
+      if (check_avail_surface)
+        return TRUE;
     }
     l = next;
   }
+  /* We need to check if all surfaces are in used */
+  if (g_list_length (thiz->locked_msdk_surfaces) ==
+      thiz->alloc_resp.NumFrameActual)
+    return FALSE;
+  else
+    return TRUE;
 }
 
 static GstMsdkSurface *
@@ -181,10 +196,28 @@ allocate_output_surface (GstMsdkDec * thiz)
   GstMemory *mem = NULL;
   mfxFrameSurface1 *mfx_surface = NULL;
 #endif
+  gint n = 0;
+  guint retry_times = gst_util_uint64_scale_ceil (GST_USECOND,
+      thiz->param.mfx.FrameInfo.FrameRateExtD,
+      thiz->param.mfx.FrameInfo.FrameRateExtN);
 
   /* Free un-unsed msdk surfaces firstly, hence the associated mfx
    * surfaces will be moved from used list to available list */
-  gst_msdkdec_free_unlocked_msdk_surfaces (thiz);
+  if (!gst_msdkdec_free_unlocked_msdk_surfaces (thiz, FALSE)) {
+    while (n < retry_times) {
+      /* It is MediaSDK/oneVPL's requirement that only the pre-allocated
+       * surfaces can be used during the whole decoding process.
+       * In the case of decoder plus multi-encoders, it is possible
+       * that all surfaces are used by downstreams and no more surfaces
+       * available for decoder. So here we need to wait until there is at
+       * least one surface is free for decoder.
+       */
+      n++;
+      g_usleep (1000);
+      if (gst_msdkdec_free_unlocked_msdk_surfaces (thiz, TRUE))
+        break;
+    }
+  }
 #ifndef _WIN32
   if ((gst_buffer_pool_acquire_buffer (thiz->alloc_pool, &out_buffer, NULL))
       != GST_FLOW_OK) {
@@ -1126,7 +1159,7 @@ release_msdk_surfaces (GstMsdkDec * thiz)
   GList *l;
   GstMsdkSurface *surface;
   gint locked = 0;
-  gst_msdkdec_free_unlocked_msdk_surfaces (thiz);
+  gst_msdkdec_free_unlocked_msdk_surfaces (thiz, FALSE);
 
   for (l = thiz->locked_msdk_surfaces; l; l = l->next) {
     surface = (GstMsdkSurface *) l->data;
