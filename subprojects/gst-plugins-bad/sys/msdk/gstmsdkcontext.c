@@ -737,25 +737,6 @@ gst_msdk_context_get_cached_alloc_responses_by_request (GstMsdkContext *
 }
 
 static void
-create_surfaces (GstMsdkContext * context, GstMsdkAllocResponse * resp)
-{
-  gint i;
-  mfxMemId *mem_id;
-  mfxFrameSurface1 *surface;
-
-  for (i = 0; i < resp->response.NumFrameActual; i++) {
-    mem_id = resp->response.mids[i];
-    surface = (mfxFrameSurface1 *) g_slice_new0 (mfxFrameSurface1);
-    if (!surface) {
-      GST_ERROR ("failed to allocate surface");
-      break;
-    }
-    surface->Data.MemId = mem_id;
-    resp->surfaces_avail = g_list_prepend (resp->surfaces_avail, surface);
-  }
-}
-
-static void
 free_surface (gpointer surface)
 {
   g_slice_free1 (sizeof (mfxFrameSurface1), surface);
@@ -775,8 +756,6 @@ gst_msdk_context_add_alloc_response (GstMsdkContext * context,
 {
   context->priv->cached_alloc_responses =
       g_list_prepend (context->priv->cached_alloc_responses, resp);
-
-  create_surfaces (context, resp);
 }
 
 gboolean

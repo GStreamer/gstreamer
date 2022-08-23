@@ -45,7 +45,7 @@ struct _GstMsdkMemoryID {
   mfxU32 fourcc;
 
 #ifndef _WIN32
-  VASurfaceID *surface;
+  VASurfaceID surface;
   VAImage image;
   VADRMPRIMESurfaceDescriptor desc;
 #else

@@ -79,7 +79,7 @@ struct _GstMsdkDec
   gboolean do_copy;
   gboolean initialized;
   gboolean sfc;
-  gboolean ds_has_no_msdk_allocator;
+  gboolean ds_has_known_allocator;
 
   /* for packetization */
   GstAdapter *adapter;
