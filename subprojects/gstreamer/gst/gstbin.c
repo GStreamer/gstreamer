@@ -2586,9 +2586,16 @@ no_preroll:
 
 locked:
   {
-    GST_DEBUG_OBJECT (element,
-        "element is locked, return previous return %s",
-        gst_element_state_change_return_get_name (ret));
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+      GST_DEBUG_OBJECT (element,
+          "element is locked, and previous state change failed, return %s",
+          gst_element_state_change_return_get_name (GST_STATE_CHANGE_SUCCESS));
+      ret = GST_STATE_CHANGE_SUCCESS;
+    } else {
+      GST_DEBUG_OBJECT (element,
+          "element is locked, return previous return %s",
+          gst_element_state_change_return_get_name (ret));
+    }
     GST_STATE_UNLOCK (element);
     return ret;
   }
