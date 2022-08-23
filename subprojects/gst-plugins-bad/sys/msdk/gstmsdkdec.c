@@ -582,6 +582,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
 #endif
 
     gst_msdk_frame_alloc (thiz->context, &request, &thiz->alloc_resp);
+    thiz->alloc_pool = gst_msdk_context_get_alloc_pool (thiz->context);
   }
 
   /* update the prealloc_buffer count, which will be used later
@@ -1009,12 +1010,7 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
         GST_MINI_OBJECT_FLAG_SET (surface->buf, GST_MINI_OBJECT_FLAG_LOCKABLE);
         frame->output_buffer = gst_buffer_ref (surface->buf);
       } else {
-        if (!gst_video_frame_copy (&surface->copy, &surface->data)) {
-          GST_ERROR_OBJECT (thiz, "Failed to copy surface data");
-          gst_video_frame_unmap (&surface->copy);
-          gst_video_frame_unmap (&surface->data);
-          return GST_FLOW_ERROR;
-        }
+        gst_video_frame_copy (&surface->copy, &surface->data);
         frame->output_buffer = gst_buffer_ref (surface->copy.buffer);
         unmap_frame (thiz, surface);
       }
@@ -1800,6 +1796,105 @@ error_pool_config:
   }
 }
 
+#ifndef _WIN32
+static GstBufferPool *
+gst_msdk_create_va_pool (GstMsdkDec * thiz, GstVideoInfo * info,
+    guint num_buffers)
+{
+  GstBufferPool *pool = NULL;
+  GstAllocator *allocator;
+  GArray *formats = NULL;
+  GstAllocationParams alloc_params = { 0, 31, 0, 0 };
+  GstVaDisplay *display = NULL;
+  GstCaps *caps = NULL;
+
+  display = (GstVaDisplay *) gst_msdk_context_get_va_display (thiz->context);
+
+  if (thiz->use_dmabuf)
+    allocator = gst_va_dmabuf_allocator_new (display);
+  else {
+    formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+    g_array_append_val (formats, GST_VIDEO_INFO_FORMAT (info));
+    allocator = gst_va_allocator_new (display, formats);
+  }
+
+  if (!allocator) {
+    GST_ERROR_OBJECT (thiz, "Failed to create allocator");
+    if (formats)
+      g_array_unref (formats);
+    return NULL;
+  }
+
+  caps = gst_video_info_to_caps (info);
+  pool =
+      gst_va_pool_new_with_config (caps,
+      GST_VIDEO_INFO_SIZE (info), num_buffers, num_buffers,
+      VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO,
+      allocator, &alloc_params);
+
+  gst_object_unref (allocator);
+  gst_caps_unref (caps);
+  GST_LOG_OBJECT (thiz, "Creating va pool");
+  return pool;
+}
+#endif
+
+static GstBufferPool *
+gst_msdkdec_create_buffer_pool2 (GstMsdkDec * thiz, GstVideoInfo * info,
+    guint num_buffers)
+{
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+  GstCaps *caps;
+  GstVideoAlignment align;
+  GstVideoInfo vinfo = *info;
+
+  gst_msdk_set_video_alignment (&vinfo, 0, 0, &align);
+  gst_video_info_align (&vinfo, &align);
+
+  if (thiz->do_copy)
+    pool = gst_video_buffer_pool_new ();
+  else {
+#ifndef _WIN32
+    pool = gst_msdk_create_va_pool (thiz, &vinfo, num_buffers);
+#else
+    if (!thiz->use_video_memory)
+      pool = gst_video_buffer_pool_new ();
+    else
+      GST_ERROR_OBJECT (thiz, "D3D11 video memory pool not implemented");
+#endif
+  }
+
+  if (!pool)
+    goto error_no_pool;
+
+  caps = gst_video_info_to_caps (&vinfo);
+  config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+  gst_buffer_pool_config_set_params (config, caps,
+      GST_VIDEO_INFO_SIZE (&vinfo), num_buffers, 0);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_add_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
+  gst_buffer_pool_config_set_video_alignment (config, &align);
+
+  if (!gst_buffer_pool_set_config (pool, config))
+    goto error_pool_config;
+
+  return pool;
+
+error_no_pool:
+  {
+    GST_INFO_OBJECT (thiz, "Failed to create bufferpool");
+    return NULL;
+  }
+error_pool_config:
+  {
+    GST_INFO_OBJECT (thiz, "Failed to set config");
+    gst_object_unref (pool);
+    return NULL;
+  }
+}
+
 static gboolean
 gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
@@ -1927,6 +2022,10 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
         GST_VIDEO_INFO_WIDTH (&output_state->info);
     GST_VIDEO_INFO_HEIGHT (&thiz->non_msdk_pool_info) =
         GST_VIDEO_INFO_HEIGHT (&output_state->info);
+
+    /* When downstream allocator is unknown and negotiaed caps is raw,
+     * we need to create other pool with system memory for copy use
+     */
     gst_video_codec_state_unref (output_state);
   }
 
