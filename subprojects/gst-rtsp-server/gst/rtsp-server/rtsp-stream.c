@@ -2644,16 +2644,20 @@ check_transport_backlog (GstRTSPStream * stream, GstRTSPStreamTransport * trans)
     gboolean is_rtp;
     gboolean popped;
 
-    popped =
-        gst_rtsp_stream_transport_backlog_pop (trans, &buffer, &buffer_list,
-        &is_rtp);
+    is_rtp = gst_rtsp_stream_transport_backlog_peek_is_rtp (trans);
 
-    g_assert (popped == TRUE);
+    if (!gst_rtsp_stream_transport_check_back_pressure (trans, is_rtp)) {
+      popped =
+          gst_rtsp_stream_transport_backlog_pop (trans, &buffer, &buffer_list,
+          &is_rtp);
 
-    send_ret = push_data (stream, trans, buffer, buffer_list, is_rtp);
+      g_assert (popped == TRUE);
 
-    gst_clear_buffer (&buffer);
-    gst_clear_buffer_list (&buffer_list);
+      send_ret = push_data (stream, trans, buffer, buffer_list, is_rtp);
+
+      gst_clear_buffer (&buffer);
+      gst_clear_buffer_list (&buffer_list);
+    }
   }
 
   gst_rtsp_stream_transport_unlock_backlog (trans);

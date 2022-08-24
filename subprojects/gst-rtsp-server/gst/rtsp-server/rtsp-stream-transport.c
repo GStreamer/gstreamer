@@ -953,6 +953,25 @@ gst_rtsp_stream_transport_backlog_pop (GstRTSPStreamTransport * trans,
 /* Not MT-safe, caller should ensure consistent locking.
  * See gst_rtsp_stream_transport_lock_backlog() */
 gboolean
+gst_rtsp_stream_transport_backlog_peek_is_rtp (GstRTSPStreamTransport * trans)
+{
+  BackLogItem *item;
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_val_if_fail (!gst_rtsp_stream_transport_backlog_is_empty (trans),
+      FALSE);
+
+  priv = trans->priv;
+
+  item = (BackLogItem *) gst_queue_array_peek_head_struct (priv->items);
+
+  return item->is_rtp;
+}
+
+
+/* Not MT-safe, caller should ensure consistent locking.
+ * See gst_rtsp_stream_transport_lock_backlog() */
+gboolean
 gst_rtsp_stream_transport_backlog_is_empty (GstRTSPStreamTransport * trans)
 {
   return gst_queue_array_is_empty (trans->priv->items);
