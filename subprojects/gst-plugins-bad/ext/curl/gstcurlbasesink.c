@@ -144,6 +144,7 @@ static void gst_curl_base_sink_wait_for_transfer_thread_to_send_unlocked
 static void gst_curl_base_sink_data_sent_notify (GstCurlBaseSink * sink);
 static void gst_curl_base_sink_wait_for_response (GstCurlBaseSink * sink);
 static void gst_curl_base_sink_got_response_notify (GstCurlBaseSink * sink);
+static void gst_curl_base_sink_transfer_thread_close (GstCurlBaseSink * sink);
 
 static void handle_transfer (GstCurlBaseSink * sink);
 static size_t transfer_data_buffer (void *curl_ptr, TransferBuffer * buf,
@@ -295,7 +296,7 @@ gst_curl_base_sink_transfer_thread_notify_unlocked (GstCurlBaseSink * sink)
   g_cond_signal (&sink->transfer_cond->cond);
 }
 
-void
+static void
 gst_curl_base_sink_transfer_thread_close (GstCurlBaseSink * sink)
 {
   GST_OBJECT_LOCK (sink);

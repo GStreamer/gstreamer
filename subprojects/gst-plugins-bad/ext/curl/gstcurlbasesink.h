@@ -111,7 +111,6 @@ GType gst_curl_base_sink_get_type (void);
 
 void gst_curl_base_sink_transfer_thread_notify_unlocked
     (GstCurlBaseSink * sink);
-void gst_curl_base_sink_transfer_thread_close (GstCurlBaseSink * sink);
 void gst_curl_base_sink_set_live (GstCurlBaseSink * sink, gboolean live);
 gboolean gst_curl_base_sink_is_live (GstCurlBaseSink * sink);
 
