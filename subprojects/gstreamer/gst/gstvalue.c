@@ -375,7 +375,7 @@ _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
         g_string_append_len (s, ", ", 2);
       }
     } else {
-      GST_WARNING ("Could not serialize list/array value of type '%s'",
+      g_critical ("Could not serialize list/array value of type '%s'",
           G_VALUE_TYPE_NAME (v));
     }
   }
@@ -442,7 +442,7 @@ _gst_value_serialize_g_value_array (const GValue * value, const gchar * begin,
         g_string_append_len (s, ", ", 2);
       }
     } else {
-      GST_WARNING ("Could not serialize list/array value of type '%s'",
+      g_critical ("Could not serialize list/array value of type '%s'",
           G_VALUE_TYPE_NAME (v));
     }
   }
