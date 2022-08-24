@@ -1134,7 +1134,7 @@ gst_v4l2_allocator_import_dmabuf (GstV4l2Allocator * allocator,
   if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
     group->buffer.bytesused = group->planes[0].bytesused;
     group->buffer.length = group->planes[0].length;
-    group->buffer.m.fd = group->planes[0].m.userptr;
+    group->buffer.m.fd = group->planes[0].m.fd;
 
     /* FIXME Check if data_offset > 0 and fail for non-multi-planar */
     g_assert (group->planes[0].data_offset == 0);
