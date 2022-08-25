@@ -26,19 +26,20 @@
 #include "gstd3d11memory.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
-#include "gstd3d11_private.h"
+#include "gstd3d11-private.h"
 
 #include <string.h>
 
 /**
  * SECTION:gstd3d11bufferpool
  * @title: GstD3D11BufferPool
- * @short_description: buffer pool for #GstD3D11Memory objects
- * @see_also: #GstBufferPool, #GstGLMemory
+ * @short_description: buffer pool for GstD3D11Memory object
+ * @see_also: #GstBufferPool, #GstD3D11Memory
  *
- * a #GstD3D11BufferPool is an object that allocates buffers with #GstD3D11Memory
+ * This GstD3D11BufferPool is an object that allocates buffers
+ * with #GstD3D11Memory
  *
- * A #GstGLBufferPool is created with gst_d3d11_buffer_pool_new()
+ * Since: 1.22
  */
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_buffer_pool_debug);

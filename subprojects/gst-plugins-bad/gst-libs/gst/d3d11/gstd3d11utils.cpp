@@ -23,11 +23,19 @@
 
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
-#include "gstd3d11_private.h"
+#include "gstd3d11-private.h"
 
 #include <windows.h>
 #include <versionhelpers.h>
 #include <mutex>
+
+/**
+ * SECTION:gstd3d11utils
+ * @title: GstD3D11Utils
+ * @short_description: Direct3D11 specific utility methods
+ *
+ * Since: 1.22
+ */
 
 /* *INDENT-OFF* */
 static std::recursive_mutex _context_lock;
@@ -505,7 +513,6 @@ gst_d3d11_ensure_element_data_for_adapter_luid (GstElement * element,
  *
  * Since: 1.22
  */
-
 GstContext *
 gst_d3d11_context_new (GstD3D11Device * device)
 {
@@ -523,7 +530,7 @@ gst_d3d11_context_new (GstD3D11Device * device)
  * gst_d3d11_luid_to_int64:
  * @luid: A pointer to LUID struct
  *
- * Converts from a LUID to a 64-bit signed integer.
+ * Converts @luid to a 64-bit signed integer.
  * See also Int64FromLuid method defined in
  * windows.devices.display.core.interop.h Windows SDK header
  *
@@ -542,6 +549,21 @@ gst_d3d11_luid_to_int64 (const LUID * luid)
   return val.QuadPart;
 }
 
+/**
+ * _gst_d3d11_result:
+ * @result: HRESULT D3D11 API return code
+ * @device: (nullable): Associated #GstD3D11Device
+ * @cat: a #GstDebugCategory
+ * @file: the file that checking the result code
+ * @function: the function that checking the result code
+ * @line: the line that checking the result code
+ *
+ * Prints debug message if @result code indicates the operation was failed.
+ *
+ * Returns: %TRUE if D3D11 API call result is SUCCESS
+ *
+ * Since: 1.22
+ */
 gboolean
 _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line)

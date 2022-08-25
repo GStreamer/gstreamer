@@ -133,15 +133,20 @@ GST_D3D11_API
 GType gst_d3d11_memory_native_type_get_type (void);
 #define GST_TYPE_D3D11_MEMORY_NATIVE_TYPE (gst_d3d11_memory_native_type_get_type())
 
+/**
+ * GstD3D11AllocationParams:
+ *
+ * Contains set of parameters for #GstD3D11Memory allocation
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11AllocationParams
 {
   /* Texture description per plane */
   D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES];
-
   GstVideoInfo info;
   GstVideoInfo aligned_info;
   GstD3D11Format d3d11_format;
-
   GstD3D11AllocationFlags flags;
 
   /*< private >*/
@@ -168,6 +173,13 @@ GST_D3D11_API
 gboolean                   gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * parms,
                                                                   const GstVideoAlignment * align);
 
+/**
+ * GstD3D11Memory:
+ *
+ * Represents information about a Direct3D11 memory object
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11Memory
 {
   GstMemory mem;
@@ -237,19 +249,30 @@ ID3D11VideoProcessorOutputView *  gst_d3d11_memory_get_processor_output_view (Gs
                                                                               ID3D11VideoDevice * video_device,
                                                                               ID3D11VideoProcessorEnumerator * enumerator);
 
+/**
+ * GstD3D11Allocator:
+ *
+ * A Direct3D11 memory allocator
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11Allocator
 {
-  GstAllocator allocator;
+  GstAllocator parent;
 
   /*< private >*/
   GstD3D11AllocatorPrivate *priv;
-
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D11AllocatorClass:
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11AllocatorClass
 {
-  GstAllocatorClass allocator_class;
+  GstAllocatorClass parent_class;
 
   gboolean (*set_actvie)   (GstD3D11Allocator * allocator,
                             gboolean active);
@@ -283,22 +306,35 @@ GST_D3D11_API
 gboolean    gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator,
                                             gboolean active);
 
+/**
+ * GstD3D11PoolAllocator:
+ *
+ * Allocates #GstD3D11Memory objects and pooling allocated memory
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11PoolAllocator
 {
-  GstD3D11Allocator allocator;
+  GstD3D11Allocator parent;
 
   /*< public >*/
   GstD3D11Device *device;
 
   /*< private >*/
   GstD3D11PoolAllocatorPrivate *priv;
-
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D11PoolAllocatorClass:
+ *
+ * Opaque GstD3D11PoolAllocatorClass struct
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11PoolAllocatorClass
 {
-  GstD3D11AllocatorClass allocator_class;
+  GstD3D11AllocatorClass parent_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

@@ -43,6 +43,13 @@ G_BEGIN_DECLS
 #define GST_D3D11_ALL_FORMATS \
     "{ " GST_D3D11_COMMON_FORMATS " ," GST_D3D11_EXTRA_IN_FORMATS " }"
 
+/**
+ * GstD3D11Format:
+ *
+ * Represent video format information in Direct3D11 term.
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11Format
 {
   GstVideoFormat format;

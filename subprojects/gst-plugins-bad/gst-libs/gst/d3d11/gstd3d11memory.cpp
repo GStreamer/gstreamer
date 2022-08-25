@@ -26,7 +26,15 @@
 #include "gstd3d11memory.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
-#include "gstd3d11_private.h"
+#include "gstd3d11-private.h"
+
+/**
+ * SECTION:gstd3d11memory
+ * @title: GstD3D11Memory
+ * @short_description: Direct3D11 memory abstraction layer
+ *
+ * Since: 1.22
+ */
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 #define GST_CAT_DEFAULT gst_d3d11_allocator_debug
@@ -237,7 +245,7 @@ gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
  * gst_d3d11_allocation_params_copy:
  * @src: a #GstD3D11AllocationParams
  *
- * Returns: a copy of @src
+ * Returns: (transfer full): a copy of @src
  *
  * Since: 1.22
  */

@@ -25,9 +25,17 @@
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
 #include "gstd3d11memory.h"
-#include "gstd3d11_private.h"
+#include "gstd3d11-private.h"
 
 #include <string.h>
+
+/**
+ * SECTION:gstd3d11format
+ * @title: GstD3D11Format
+ * @short_description: Bridge of Direct3D11 and GStreamer video format representation
+ *
+ * Since: 1.22
+ */
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()

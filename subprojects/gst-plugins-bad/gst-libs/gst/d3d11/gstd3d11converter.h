@@ -35,9 +35,9 @@ G_BEGIN_DECLS
 #define GST_D3D11_CONVERTER_CAST(obj)        ((GstD3D11Converter*)(obj))
 
 /**
- * GstD3D11ConverterMethod:
- * @GST_D3D11_CONVERTER_METHOD_SHADER: Performs conversion using pixel shader
- * @GST_D3D11_CONVERTER_METHOD_VIDEO_PROCESSOR: Performs conversion using video processor
+ * GstD3D11ConverterBackend:
+ * @GST_D3D11_CONVERTER_BACKEND_SHADER: Performs conversion using pixel shader
+ * @GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR: Performs conversion using video processor
  *
  * Since: 1.22
  */
@@ -81,6 +81,13 @@ GType gst_d3d11_converter_backend_get_type (void);
  */
 #define GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE "GstD3D11Converter.primaries-mode"
 
+/**
+ * GstD3D11Converter:
+ *
+ * Opaque GstD3D11Converter struct
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11Converter
 {
   GstObject parent;
@@ -92,6 +99,13 @@ struct _GstD3D11Converter
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D11ConverterClass:
+ *
+ * Opaque GstD3D11ConverterClass struct
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11ConverterClass
 {
   GstObjectClass parent_class;

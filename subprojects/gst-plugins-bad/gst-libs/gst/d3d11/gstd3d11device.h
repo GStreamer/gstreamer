@@ -39,8 +39,22 @@ G_BEGIN_DECLS
 #define GST_D3D11_FENCE(obj)              ((GstD3D11Fence *)obj)
 #define GST_D3D11_FENCE_CAST(obj)         (GST_D3D11_FENCE(obj))
 
+/**
+ * GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE:
+ *
+ * The name used in #GstContext queries for requesting a #GstD3D11Device
+ *
+ * Since: 1.22
+ */
 #define GST_D3D11_DEVICE_HANDLE_CONTEXT_TYPE "gst.d3d11.device.handle"
 
+/**
+ * GstD3D11Device:
+ *
+ * Opaque GstD3D11Device struct
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11Device
 {
   GstObject parent;
@@ -50,6 +64,13 @@ struct _GstD3D11Device
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D11DeviceClass:
+ *
+ * Opaque GstD3D11DeviceClass struct
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11DeviceClass
 {
   GstObjectClass parent_class;
@@ -98,6 +119,13 @@ gboolean              gst_d3d11_device_get_format         (GstD3D11Device * devi
                                                            GstVideoFormat format,
                                                            GstD3D11Format * device_format);
 
+/**
+ * GstD3D11Fence:
+ *
+ * An abstraction of the ID3D11Fence interface
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11Fence
 {
   GstMiniObject parent;

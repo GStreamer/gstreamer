@@ -24,10 +24,20 @@
 #include "gstd3d11compile.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
-#include "gstd3d11_private.h"
+#include "gstd3d11-private.h"
 #include <gmodule.h>
 #include <wrl.h>
 #include <string.h>
+
+/**
+ * SECTION:gstd3d11compile
+ * @title: GstD3D11Compile
+ * @short_description: HLSL compiler and utility
+ *
+ * A set of HLSL compile helper methods
+ *
+ * Since: 1.22
+ */
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -59,6 +69,8 @@ static pD3DCompile GstD3DCompileFunc = nullptr;
  * Loads HLSL compiler library
  *
  * Returns: %TRUE if HLSL compiler library is available
+ *
+ * Since: 1.22
  */
 gboolean
 gst_d3d11_compile_init (void)
@@ -123,6 +135,8 @@ gst_d3d11_compile_init (void)
  * Compiles HLSL code or an effect file into bytecode for a given target
  *
  * Returns: HRESULT return code
+ *
+ * Since: 1.22
  */
 HRESULT
 gst_d3d11_compile (LPCVOID src_data, SIZE_T src_data_size, LPCSTR source_name,
@@ -147,6 +161,8 @@ gst_d3d11_compile (LPCVOID src_data, SIZE_T src_data_size, LPCSTR source_name,
  * Compiles pixel shader code and creates ID3D11PixelShader
  *
  * Returns: HRESULT return code
+ *
+ * Since: 1.22
  */
 HRESULT
 gst_d3d11_create_pixel_shader_simple (GstD3D11Device * device,
@@ -220,6 +236,8 @@ gst_d3d11_create_pixel_shader_simple (GstD3D11Device * device,
  * ID3D11InputLayout
  *
  * Returns: HRESULT return code
+ *
+ * Since: 1.22
  */
 HRESULT
 gst_d3d11_create_vertex_shader_simple (GstD3D11Device * device,

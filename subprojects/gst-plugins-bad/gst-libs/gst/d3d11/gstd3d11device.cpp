@@ -25,7 +25,7 @@
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11format.h"
-#include "gstd3d11_private.h"
+#include "gstd3d11-private.h"
 #include "gstd3d11memory.h"
 #include <gmodule.h>
 #include <wrl.h>
@@ -35,8 +35,8 @@
 
 /**
  * SECTION:gstd3d11device
- * @short_description: Direct3D11 device abstraction
  * @title: GstD3D11Device
+ * @short_description: Direct3D11 device abstraction
  *
  * #GstD3D11Device wraps ID3D11Device and ID3D11DeviceContext for GPU resources
  * to be able to be shared among various elements. Caller can get native

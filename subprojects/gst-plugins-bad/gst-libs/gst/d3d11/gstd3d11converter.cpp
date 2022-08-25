@@ -23,7 +23,7 @@
 #  include <config.h>
 #endif
 
-#include "gstd3d11_private.h"
+#include "gstd3d11-private.h"
 #include "gstd3d11converter.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
@@ -33,6 +33,17 @@
 #include <wrl.h>
 #include <string.h>
 #include <math.h>
+
+/**
+ * SECTION:gstd3d11converter
+ * @title: GstD3D11Converter
+ * @short_description: Direct3D11 video converter object
+ *
+ * This object performs various video conversion operation
+ * via Direct3D11 API
+ *
+ * Since: 1.22
+ */
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_converter_debug);
 #define GST_CAT_DEFAULT gst_d3d11_converter_debug

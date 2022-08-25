@@ -34,6 +34,13 @@ G_BEGIN_DECLS
 #define GST_IS_D3D11_BUFFER_POOL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_D3D11_BUFFER_POOL))
 #define GST_D3D11_BUFFER_POOL_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_D3D11_BUFFER_POOL, GstD3D11BufferPoolClass))
 
+/**
+ * GstD3D11BufferPool:
+ *
+ * Opaque GstD3D11BufferPool struct
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11BufferPool
 {
   GstBufferPool parent;
@@ -42,13 +49,19 @@ struct _GstD3D11BufferPool
 
   /*< private >*/
   GstD3D11BufferPoolPrivate *priv;
-
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D11BufferPoolClass:
+ *
+ * Opaque GstD3D11BufferPoolClass struct
+ *
+ * Since: 1.22
+ */
 struct _GstD3D11BufferPoolClass
 {
-  GstBufferPoolClass bufferpool_class;
+  GstBufferPoolClass parent_class;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
