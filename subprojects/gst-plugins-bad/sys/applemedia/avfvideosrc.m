@@ -1089,7 +1089,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   /* crank up to 11. This is what the presets do, but we don't use the presets
    * in ios >= 7.0 */
   gst_structure_fixate_field_nearest_int (structure, "height", G_MAXINT);
-  gst_structure_fixate_field_nearest_fraction (structure, "framerate", G_MAXINT, 1);
+  gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
 
   return gst_caps_fixate (new_caps);
 }
