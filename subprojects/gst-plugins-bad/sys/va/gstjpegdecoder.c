@@ -450,7 +450,8 @@ gst_jpeg_decoder_handle_frame (GstVideoDecoder * decoder,
         offset = seg_scan.offset - 2;
         seg.size = offset - seg.offset;
 
-        if (decode_scan (self, &seg) != GST_FLOW_OK)
+        ret = decode_scan (self, &seg);
+        if (ret != GST_FLOW_OK)
           goto unmap_and_error;
 
         break;
@@ -462,12 +463,16 @@ gst_jpeg_decoder_handle_frame (GstVideoDecoder * decoder,
         GST_FIXME_OBJECT (self, "Arithmetic coding mode unsupported");
         goto unmap_and_error;
       case GST_JPEG_MARKER_DHT:
-        if (!decode_huffman_table (self, &seg))
+        if (!decode_huffman_table (self, &seg)) {
+          ret = GST_FLOW_ERROR;
           goto unmap_and_error;
+        }
         break;
       case GST_JPEG_MARKER_DQT:
-        if (!decode_quant_table (self, &seg))
+        if (!decode_quant_table (self, &seg)) {
+          ret = GST_FLOW_ERROR;
           goto unmap_and_error;
+        }
         break;
 
       case GST_JPEG_MARKER_DRI:
@@ -481,7 +486,8 @@ gst_jpeg_decoder_handle_frame (GstVideoDecoder * decoder,
         /* SOFn (Start Of Frame) */
         if (marker >= GST_JPEG_MARKER_SOF_MIN &&
             marker <= GST_JPEG_MARKER_SOF_MAX) {
-          if (decode_frame (self, &seg, frame) != GST_FLOW_OK)
+          ret = decode_frame (self, &seg, frame);
+          if (ret != GST_FLOW_OK)
             goto unmap_and_error;
         }
         break;
