@@ -823,7 +823,8 @@ _add_element_details (GString * json, GString * other_types,
       gst_element_factory_create (GST_ELEMENT_FACTORY (feature), NULL);
   char s[20];
 
-  g_assert (element);
+  if (!element)
+    g_error ("Couldn't not make `%s`", GST_OBJECT_NAME (feature));
 
   g_string_append_printf (json,
       "\"%s\": {"
