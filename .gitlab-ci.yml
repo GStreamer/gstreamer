@@ -663,7 +663,7 @@ valgrind ges:
     - '.build_ccache_vars'
   variables:
     MESON_ARGS: *simple_build
-    MESON_BUILDTYPE_ARGS: "-Ddoc=enabled"
+    MESON_BUILDTYPE_ARGS: "-Ddoc=enabled -Drs=enabled"
     # Disable werror for the docs build, we don't need it
     MESON_GST_WERROR: ''
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"

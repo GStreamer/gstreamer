@@ -117,7 +117,7 @@ subprojects = [
   ['pygobject', { 'option': get_option('python'), 'match_gst_version': false, 'sysdep': 'pygobject-3.0', 'sysdep_version': '>= 3.8' }],
   ['gst-python', { 'option': get_option('python')}],
   ['gst-examples', { 'option': get_option('gst-examples'), 'match_gst_versions': false}],
-  ['gst-plugins-rs', { 'option': get_option('rs'), 'match_gst_version': false}],
+  ['gst-plugins-rs', { 'option': get_option('rs'), 'build-hotdoc': true, 'match_gst_version': false}],
 ]
 
 symlink = '''

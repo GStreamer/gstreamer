@@ -67,13 +67,13 @@ if built_subprojects != ''
         if sub.get_variable('build_hotdoc')
             message('Building @0@ documentation'.format(project_name))
 
-            foreach lib: sub.get_variable('libs_doc')
+            foreach lib: sub.get_variable('libs_doc', [])
               hotdoc_subprojects += [lib]
               libs += lib.full_path() + pathsep
               deps += [lib]
             endforeach
 
-            foreach plugin_doc: sub.get_variable('plugins_doc')
+            foreach plugin_doc: sub.get_variable('plugins_doc', [])
               plugins_doc += plugin_doc.full_path() + pathsep
               hotdoc_subprojects += [plugin_doc]
               deps += [plugin_doc]
