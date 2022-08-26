@@ -60,6 +60,17 @@ gst_msdk_frame_unlock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
 mfxStatus
 gst_msdk_frame_get_hdl (mfxHDL pthis, mfxMemId mid, mfxHDL * hdl)
 {
+  GstMsdkMemoryID *mem_id;
+  mfxHDLPair *pair;
+
+  if (!hdl || !mid)
+    return MFX_ERR_INVALID_HANDLE;
+
+  mem_id = (GstMsdkMemoryID *) mid;
+  pair = (mfxHDLPair *) hdl;
+  pair->first = (mfxHDL) mem_id->texture;
+  pair->second = (mfxHDL) GUINT_TO_POINTER (mem_id->subresource_index);
+
   return MFX_ERR_NONE;
 }
 
