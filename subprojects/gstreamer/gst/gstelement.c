@@ -1759,9 +1759,9 @@ gst_element_get_metadata (GstElement * element, const gchar * key)
  *
  * Retrieves a list of the pad templates associated with @element_class. The
  * list must not be modified by the calling code.
- * > If you use this function in the #GInstanceInitFunc of an object class
+ * > If you use this function in the GInstanceInitFunc of an object class
  * > that has subclasses, make sure to pass the g_class parameter of the
- * > #GInstanceInitFunc here.
+ * > GInstanceInitFunc here.
  *
  * Returns: (transfer none) (element-type Gst.PadTemplate): the #GList of
  *     pad templates.
@@ -1801,9 +1801,9 @@ gst_element_get_pad_template_list (GstElement * element)
  * @name: the name of the #GstPadTemplate to get.
  *
  * Retrieves a padtemplate from @element_class with the given name.
- * > If you use this function in the #GInstanceInitFunc of an object class
+ * > If you use this function in the GInstanceInitFunc of an object class
  * > that has subclasses, make sure to pass the g_class parameter of the
- * > #GInstanceInitFunc here.
+ * > GInstanceInitFunc here.
  *
  * Returns: (transfer none) (nullable): the #GstPadTemplate with the
  *     given name, or %NULL if none was found. No unreferencing is

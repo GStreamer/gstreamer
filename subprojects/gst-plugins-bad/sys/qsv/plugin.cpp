@@ -21,6 +21,12 @@
 #include "config.h"
 #endif
 
+/**
+ * plugin-qsv:
+ *
+ * Since: 1.22
+ */
+
 #include <gst/gst.h>
 #include <mfx.h>
 #include "gstqsvav1enc.h"

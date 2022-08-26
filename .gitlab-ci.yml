@@ -24,7 +24,7 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2022-09-02.0'
+  FEDORA_TAG:  '2022-09-14.0'
   INDENT_TAG: '2022-03-07.1'
   WINDOWS_TAG: "2022-09-02.0"
 
@@ -658,25 +658,28 @@ valgrind ges:
 # ---- Integration ----- #
 
 .documentation:
-  image: $FEDORA_DOCS_IMAGE
-  extends:
-    - '.build_ccache_vars'
+  extends: '.build fedora x86_64'
   variables:
     MESON_ARGS: *simple_build
-    MESON_BUILDTYPE_ARGS: "-Ddoc=enabled -Drs=enabled"
+    MESON_BUILDTYPE_ARGS: "-Ddoc=enabled -Drs=enabled -Dgst-docs:fatal_warnings=true"
     # Disable werror for the docs build, we don't need it
     MESON_GST_WERROR: ''
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
-  # FIXME: should rebuild the image with newer versions!
-  - pip3 install --upgrade hotdoc
-  - pip3 install --upgrade meson
-  - *build
+  - export PATH=/usr/local/cargo/bin/:/usr/local/bin/:$PATH
+  - export RUSTUP_HOME='/usr/local/rustup'
+
+  - ci/scripts/handle-subprojects-cache.py subprojects/
+  - echo $MESON_ARGS
+  - meson build/ $MESON_ARGS
+  - ccache --show-stats
+
   - ./gst-env.py ninja -C build/ plugins_doc_caches
   # Ignore modifications to wrap files made by meson
   - git checkout subprojects/*.wrap
   - ./ci/scripts/check-documentation-diff.py
-  - ./gst-env.py hotdoc run --conf-file=build/subprojects/gst-docs/GStreamer-doc.json --fatal-warnings
+
+  - ./gst-env.py ninja -C build subprojects/gst-docs/GStreamer-doc
   - mv build/subprojects/gst-docs/GStreamer-doc/html documentation/
 
   artifacts:
@@ -694,7 +697,8 @@ documentation:
   stage: integrate
   extends:
     - '.documentation'
-  needs: []
+  needs:
+    - "fedora amd64 docker"
   rules:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == "main"'
 
@@ -707,7 +711,7 @@ build documentation:
     - '.documentation'
   stage: build
   needs:
-    - "trigger"
+    - "fedora amd64 docker"
   rules:
     # Never run post merge, we have the `documentation` always running for that
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'

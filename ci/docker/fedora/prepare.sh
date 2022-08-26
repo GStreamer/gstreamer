@@ -4,7 +4,7 @@ set -eux
 # We need them to cleanly build our doc.
 sed -i "s/tsflags=nodocs//g" /etc/dnf/dnf.conf
 
-dnf install -y git-core ninja-build dnf-plugins-core python3-pip
+dnf install -y git-core dnf-plugins-core python3-pip
 
 # Configure git for various usage
 git config --global user.email "gstreamer@gstreamer.net"
@@ -41,6 +41,8 @@ dnf install -y \
     glslc \
     gtk3 \
     gtk3-devel \
+    gtk4 \
+    gtk4-devel \
     gtest \
     gtest-devel \
     graphene \
@@ -202,7 +204,10 @@ dnf builddep -y gstreamer1 \
     python3-gstreamer1
 
 dnf remove -y meson
-pip3 install meson==0.60.3 hotdoc python-gitlab
+# FIXME: Install ninja from rpm when we update our base image as we fail building
+# documentation with rust plugins as we the version from F31 we hit:
+# `ninja: error: build.ninja:26557: multiple outputs aren't (yet?) supported by depslog; bring this up on the mailing list if it affects you
+pip3 install meson==0.60.3 hotdoc python-gitlab ninja tomli
 
 
 # Remove gst-devel packages installed by builddep above
@@ -210,13 +215,13 @@ dnf remove -y "gstreamer1*devel"
 
 # FIXME: Why does installing directly with dnf doesn't actually install
 # the documentation files?
-dnf download glib2-doc gdk-pixbuf2-devel*x86_64* gtk3-devel-docs
+dnf download glib2-doc gdk-pixbuf2-devel*x86_64* gtk3-devel-docs gtk4-devel-docs
 rpm -i --reinstall *.rpm
 rm -f *.rpm
 
 # Install Rust
-RUSTUP_VERSION=1.24.3
-RUST_VERSION=1.55.0
+RUSTUP_VERSION=1.25.1
+RUST_VERSION=1.63.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 dnf install -y wget
@@ -233,6 +238,7 @@ chmod +x rustup-init;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
+cargo install cargo-c --version 0.9.12+cargo-0.64
 rustup --version
 cargo --version
 rustc --version
