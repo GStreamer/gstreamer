@@ -1639,8 +1639,9 @@ done:
   return TRUE;
 }
 
+/* This function will be removed later */
 static GstMsdkSurface *
-gst_msdkenc_get_surface_from_pool (GstMsdkEnc * thiz, GstBufferPool * pool,
+gst_msdkenc_get_surface_from_pool_old (GstMsdkEnc * thiz, GstBufferPool * pool,
     GstBufferPoolAcquireParams * params)
 {
   GstBuffer *new_buffer;
@@ -1671,10 +1672,92 @@ gst_msdkenc_get_surface_from_pool (GstMsdkEnc * thiz, GstBufferPool * pool,
 }
 
 static GstMsdkSurface *
+gst_msdkenc_get_surface_from_pool (GstMsdkEnc * thiz,
+    GstVideoCodecFrame * frame, GstBuffer * buf)
+{
+  GstBuffer *upload_buf;
+  GstMsdkSurface *msdk_surface = NULL;
+  GstVideoFrame src_frame, dst_frame;
+
+  if (!gst_buffer_pool_is_active (thiz->msdk_pool) &&
+      !gst_buffer_pool_set_active (thiz->msdk_pool, TRUE)) {
+    GST_ERROR_OBJECT (thiz->msdk_pool, "failed to activate buffer pool");
+    return NULL;
+  }
+
+  if (gst_buffer_pool_acquire_buffer (thiz->msdk_pool, &upload_buf,
+          NULL) != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (thiz->msdk_pool, "failed to acquire a buffer from pool");
+    return NULL;
+  }
+
+  if (!gst_video_frame_map (&src_frame, &thiz->input_state->info, buf,
+          GST_MAP_READ)) {
+    GST_WARNING ("Failed to map src frame");
+    gst_buffer_unref (upload_buf);
+    return NULL;
+  }
+
+  if (!gst_video_frame_map (&dst_frame, &thiz->aligned_info, upload_buf,
+          GST_MAP_WRITE)) {
+    GST_WARNING ("Failed to map dst frame");
+    gst_video_frame_unmap (&src_frame);
+    gst_buffer_unref (upload_buf);
+    return NULL;
+  }
+
+  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&src_frame); i++) {
+    guint src_width_in_bytes, src_height;
+    guint dst_width_in_bytes, dst_height;
+    guint width_in_bytes, height;
+    guint src_stride, dst_stride;
+    guint8 *src_data, *dst_data;
+
+    src_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&src_frame, i) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&src_frame, i);
+    src_height = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, i);
+    src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&src_frame, i);
+
+    dst_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&dst_frame, i) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&src_frame, i);
+    dst_height = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, i);
+    dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&dst_frame, i);
+
+    width_in_bytes = MIN (src_width_in_bytes, dst_width_in_bytes);
+    height = MIN (src_height, dst_height);
+
+    src_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&src_frame, i);
+    dst_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&dst_frame, i);
+
+    for (guint j = 0; j < height; j++) {
+      memcpy (dst_data, src_data, width_in_bytes);
+      dst_data += dst_stride;
+      src_data += src_stride;
+    }
+  }
+
+  gst_video_frame_unmap (&dst_frame);
+  gst_video_frame_unmap (&src_frame);
+
+  if (thiz->use_video_memory) {
+    msdk_surface = gst_msdk_import_to_msdk_surface (upload_buf, thiz->context,
+        &thiz->aligned_info, GST_MAP_READ);
+  } else {
+    msdk_surface =
+        gst_msdk_import_sys_mem_to_msdk_surface (upload_buf,
+        thiz->aligned_info);
+  }
+
+  gst_buffer_replace (&frame->input_buffer, upload_buf);
+  gst_buffer_unref (upload_buf);
+
+  return msdk_surface;
+}
+
+static GstMsdkSurface *
 gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
     GstVideoCodecFrame * frame)
 {
-  GstVideoFrame src_frame, out_frame;
   GstMsdkSurface *msdk_surface;
   GstBuffer *inbuf;
 
@@ -1695,46 +1778,8 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
    * just copy frame to msdk buffer and take a surface from it.
    */
-  if (!(msdk_surface =
-          gst_msdkenc_get_surface_from_pool (thiz, thiz->msdk_pool, NULL)))
-    goto error;
 
-  if (!gst_video_frame_map (&src_frame, &thiz->input_state->info, inbuf,
-          GST_MAP_READ)) {
-    GST_ERROR_OBJECT (thiz, "failed to map the frame for source");
-    goto error;
-  }
-
-  if (!gst_video_frame_map (&out_frame, &thiz->aligned_info, msdk_surface->buf,
-          GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (thiz, "failed to map the frame for destination");
-    gst_video_frame_unmap (&src_frame);
-    goto error;
-  }
-
-  if (!gst_video_frame_copy (&out_frame, &src_frame)) {
-    GST_ERROR_OBJECT (thiz, "failed to copy frame");
-    gst_video_frame_unmap (&out_frame);
-    gst_video_frame_unmap (&src_frame);
-    goto error;
-  }
-
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&src_frame);
-
-  gst_buffer_replace (&frame->input_buffer, msdk_surface->buf);
-  gst_buffer_unref (msdk_surface->buf);
-  msdk_surface->buf = NULL;
-
-  return msdk_surface;
-
-error:
-  if (msdk_surface) {
-    if (msdk_surface->buf)
-      gst_buffer_unref (msdk_surface->buf);
-    g_slice_free (GstMsdkSurface, msdk_surface);
-  }
-  return NULL;
+  return gst_msdkenc_get_surface_from_pool (thiz, frame, inbuf);
 }
 
 static GstFlowReturn
@@ -1770,7 +1815,7 @@ gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     if (!vpp_surface)
       goto invalid_surface;
     surface =
-        gst_msdkenc_get_surface_from_pool (thiz, thiz->msdk_converted_pool,
+        gst_msdkenc_get_surface_from_pool_old (thiz, thiz->msdk_converted_pool,
         NULL);
     if (!surface)
       goto invalid_surface;
