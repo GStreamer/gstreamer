@@ -1062,7 +1062,7 @@ if build_gstgl
     'gl_apis=' + ' '.join(enabled_gl_apis),
   ]
 
-  library_def = {'lib': pbutils}
+  library_def = {'lib': gstgl}
   pkg_name = 'gstreamer-gl-1.0'
   pkgconfig.generate(gstgl,
     libraries : [gstvideo, gst_base_dep, gst_dep],
