@@ -108,7 +108,7 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
         '../gst/*/*.[ch]',
       ],
       gst_c_source_filters: excludes,
-      dependencies: [gst_dep, plugins],
+      dependencies: [gst_dep],
       gst_order_generated_subpages: true,
       install: false,
       disable_incremental_build: true,

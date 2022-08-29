@@ -251,7 +251,7 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
             join_paths(root_rel, 'gst/*/*.[ch]'),
             join_paths(root_rel, 'gst/rtmp2/*/*.[ch]'),
         ],
-        dependencies: [gst_dep, plugins],
+        dependencies: [gst_dep],
         install: false,
         disable_incremental_build: true,
         gst_cache_file: plugins_cache,

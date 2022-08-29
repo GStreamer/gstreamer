@@ -108,7 +108,7 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
             join_paths(root_rel, 'gst/*/*.[ch]'),
         ],
         gst_c_source_filters: excludes,
-        dependencies: [gst_dep, plugins],
+        dependencies: [gst_dep],
         gst_order_generated_subpages: true,
         disable_incremental_build: true,
         gst_cache_file: plugins_cache,

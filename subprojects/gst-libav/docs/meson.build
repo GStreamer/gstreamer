@@ -83,6 +83,6 @@ plugins_doc = [hotdoc.generate_doc('libav',
     gst_c_sources: ['../ext/*/*.[ch]',],
     gst_cache_file: plugins_cache,
     gst_plugin_name: 'libav',
-    dependencies: [gst_dep, gstlibav_plugin, gst_plugins_doc_dep],
+    dependencies: [gst_dep],
     disable_incremental_build: true,
 )]

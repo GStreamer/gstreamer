@@ -128,7 +128,7 @@ foreach plugin_name: list_plugin_res.stdout().split(':')
         gst_index: 'plugins/index.md',
         gst_smart_index: true,
         gst_c_sources: ['../plugins/*/*.[ch]',],
-        dependencies: [gst_dep, plugins],
+        dependencies: [gst_dep],
         gst_order_generated_subpages: true,
         gst_cache_file: plugins_cache,
         gst_plugin_name: plugin_name,
