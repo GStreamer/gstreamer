@@ -1301,16 +1301,12 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
   GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
   GstD3D11Memory *copy_dmem;
   GstD3D11Device *device = dmem->device;
-  ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (device);
   D3D11_TEXTURE2D_DESC dst_desc = { 0, };
   D3D11_TEXTURE2D_DESC src_desc = { 0, };
   GstMemory *copy = NULL;
   GstMapInfo info;
-  HRESULT hr;
-  UINT bind_flags = 0;
-  UINT supported_flags = 0;
 
   if (dmem->priv->native_type != GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D)
     return priv->fallback_copy (mem, offset, size);
@@ -1339,20 +1335,7 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
   dst_desc.SampleDesc.Count = 1;
   dst_desc.ArraySize = 1;
   dst_desc.Usage = D3D11_USAGE_DEFAULT;
-
-  /* If supported, use bind flags for SRV/RTV */
-  hr = device_handle->CheckFormatSupport (src_desc.Format, &supported_flags);
-  if (gst_d3d11_result (hr, device)) {
-    if ((supported_flags & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
-        D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
-      bind_flags |= D3D11_BIND_SHADER_RESOURCE;
-    }
-
-    if ((supported_flags & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
-        D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
-      bind_flags |= D3D11_BIND_RENDER_TARGET;
-    }
-  }
+  dst_desc.BindFlags = src_desc.BindFlags;
 
   copy = gst_d3d11_allocator_alloc_internal (alloc, device, &dst_desc, nullptr);
   if (!copy) {
