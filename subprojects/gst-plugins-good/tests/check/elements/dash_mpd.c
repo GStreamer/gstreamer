@@ -5732,11 +5732,10 @@ GST_START_TEST (dash_mpdparser_duration)
   fail_unless (_mpd_helper_parse_duration ("P35D", &v) == FALSE);
   fail_unless (_mpd_helper_parse_duration ("P-1Y", &v) == FALSE);
   fail_unless (_mpd_helper_parse_duration ("PT-1H", &v) == FALSE);
-  fail_unless (_mpd_helper_parse_duration ("PT25H", &v) == FALSE);
+  fail_unless (_mpd_helper_parse_duration ("PT25H", &v) == TRUE);
   fail_unless (_mpd_helper_parse_duration ("PT-1M", &v) == FALSE);
-  fail_unless (_mpd_helper_parse_duration ("PT65M", &v) == FALSE);
+  fail_unless (_mpd_helper_parse_duration ("PT65M", &v) == TRUE);
   fail_unless (_mpd_helper_parse_duration ("PT-1S", &v) == FALSE);
-  /* seconds are allowed to be larger than 60 */
   fail_unless (_mpd_helper_parse_duration ("PT65S", &v) == TRUE);
 
   fail_unless (_mpd_helper_parse_duration ("PT1.1H", &v) == FALSE);

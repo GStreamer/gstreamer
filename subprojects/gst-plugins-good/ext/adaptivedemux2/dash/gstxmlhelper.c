@@ -198,10 +198,6 @@ _mpd_helper_parse_duration (const char *str, guint64 * value)
             goto error;
           }
           hours = read;
-          if (hours >= 24) {
-            GST_WARNING ("Hour out of range");
-            goto error;
-          }
           break;
         case 'M':
           if (minutes != -1 || seconds != -1) {
@@ -209,10 +205,6 @@ _mpd_helper_parse_duration (const char *str, guint64 * value)
             goto error;
           }
           minutes = read;
-          if (minutes >= 60) {
-            GST_WARNING ("Minute out of range");
-            goto error;
-          }
           break;
         case 'S':
           if (have_ms) {
