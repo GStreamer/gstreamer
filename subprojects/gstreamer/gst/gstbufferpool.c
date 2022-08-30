@@ -1262,7 +1262,9 @@ default_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
  * @params: (transfer none) (allow-none): parameters.
  *
  * Acquires a buffer from @pool. @buffer should point to a memory location that
- * can hold a pointer to the new buffer.
+ * can hold a pointer to the new buffer. When the pool is empty, this function
+ * will by default block until a buffer is released into the pool again or when
+ * the pool is set to flushing or deactivated.
  *
  * @params can contain optional parameters to influence the allocation.
  *
