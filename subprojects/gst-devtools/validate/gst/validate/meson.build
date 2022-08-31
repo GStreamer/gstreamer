@@ -98,7 +98,7 @@ validate_gen_sources = []
 if build_gir
     gst_validate_gir_extra_args = gir_init_section + [ '--c-include=gst/validate/validate.h' ]
     gir = {
-            'sources' : runner_file + gstvalidate_headers + gst_validate_enums,
+            'sources' : runner_file + gstvalidate_sources + gstvalidate_headers + gst_validate_enums,
             'nsversion' : '1.0',
             'namespace' : 'GstValidate',
             'symbol_prefix' : 'gst_validate',
