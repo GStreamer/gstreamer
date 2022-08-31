@@ -797,8 +797,6 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
       gst_register_core_elements, VERSION, GST_LICENSE, PACKAGE,
       GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
-  init_static_plugins ();
-
   /*
    * Any errors happening below this point are non-fatal, we therefore mark
    * gstreamer as being initialized, since it is the case from a plugin point of
@@ -806,6 +804,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
    */
   gst_initialized = TRUE;
 
+  init_static_plugins ();
   gst_update_registry ();
 
   GST_INFO ("GLib runtime version: %d.%d.%d", glib_major_version,
