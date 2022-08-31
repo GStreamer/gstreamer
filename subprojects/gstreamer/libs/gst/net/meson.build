@@ -63,6 +63,7 @@ if build_gir
   library_def += {'gir': [gir]}
   if not static_build
     gst_net_gir = gnome.generate_gir(gst_net, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gst_net_gir]}
     gst_net_gen_sources += [gst_net_gir]
   endif
 endif

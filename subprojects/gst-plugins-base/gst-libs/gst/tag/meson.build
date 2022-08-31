@@ -112,6 +112,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     tag_gir = gnome.generate_gir(gsttag, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [tag_gir]}
     tag_gen_sources += [tag_gir]
   endif
 endif

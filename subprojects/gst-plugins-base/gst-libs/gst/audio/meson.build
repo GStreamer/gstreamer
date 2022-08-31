@@ -178,6 +178,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     audio_gir = gnome.generate_gir(gstaudio, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [audio_gir]}
     audio_gen_sources += [audio_gir]
   endif
 endif

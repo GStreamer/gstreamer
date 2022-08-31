@@ -1,0 +1,763 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="GObject" version="2.0"/>
+  <include name="Gst" version="1.0"/>
+  <include name="GstPbutils" version="1.0"/>
+  <package name="gstreamer-transcoder-1.0"/>
+  <namespace name="GstTranscoder" version="1.0" shared-library="libgsttranscoder-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst_">
+    <class name="Transcoder" c:symbol-prefix="transcoder" c:type="GstTranscoder" parent="Gst.Object" glib:type-name="GstTranscoder" glib:get-type="gst_transcoder_get_type" glib:type-struct="TranscoderClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <constructor name="new" c:identifier="gst_transcoder_new">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a new #GstTranscoder instance</doc>
+          <type name="Transcoder" c:type="GstTranscoder*"/>
+        </return-value>
+        <parameters>
+          <parameter name="source_uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The URI of the media stream to transcode</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="dest_uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The URI of the destination of the transcoded stream</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="encoding_profile" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The serialized #GstEncodingProfile defining the output
+format. Have a look at the #GstEncodingProfile documentation to find more
+about the serialization format.</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_full" c:identifier="gst_transcoder_new_full">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a new #GstTranscoder instance</doc>
+          <type name="Transcoder" c:type="GstTranscoder*"/>
+        </return-value>
+        <parameters>
+          <parameter name="source_uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The URI of the media stream to transcode</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="dest_uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The URI of the destination of the transcoded stream</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="profile" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The #GstEncodingProfile defining the output format
+have a look at the #GstEncodingProfile documentation to find more
+about the serialization format.</doc>
+            <type name="GstPbutils.EncodingProfile" c:type="GstEncodingProfile*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <function name="is_transcoder_message" c:identifier="gst_transcoder_is_transcoder_message" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #gboolean indicating whether the passes message represents a #GstTranscoder message or not.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <method name="get_avoid_reencoding" c:identifier="gst_transcoder_get_avoid_reencoding">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">%TRUE if the transcoder tries to avoid reencoding streams where
+reencoding is not strictly needed, %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The #GstTranscoder to check whether reencoding is avoided or not.</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_dest_uri" c:identifier="gst_transcoder_get_dest_uri">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets the URI of the destination of the transcoded stream.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a string containing the URI of the
+destination of the transcoded stream. g_free() after usage.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_duration" c:identifier="gst_transcoder_get_duration">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Retrieves the duration of the media stream that self represents.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the duration of the transcoding media stream, in
+nanoseconds.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_message_bus" c:identifier="gst_transcoder_get_message_bus" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">GstTranscoder API exposes a #GstBus instance which purpose is to provide data
+structures representing transcoder-internal events in form of #GstMessage-s of
+type GST_MESSAGE_APPLICATION.
+
+Each message carries a "transcoder-message" field of type #GstTranscoderMessage.
+Further fields of the message data are specific to each possible value of
+that enumeration.
+
+Applications can consume the messages asynchronously within their own
+event-loop / UI-thread etc. Note that in case the application does not
+consume the messages, the bus will accumulate these internally and eventually
+fill memory. To avoid that, the bus has to be set "flushing".</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The transcoder message bus instance</doc>
+          <type name="Gst.Bus" c:type="GstBus*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transcoder" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_pipeline" c:identifier="gst_transcoder_get_pipeline">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The internal uritranscodebin instance</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_position" c:identifier="gst_transcoder_get_position">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the absolute position time, in nanoseconds, of the
+transcoding stream.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_position_update_interval" c:identifier="gst_transcoder_get_position_update_interval">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">current position update interval in milliseconds</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_signal_adapter" c:identifier="gst_transcoder_get_signal_adapter" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets the #GstTranscoderSignalAdapter attached to @self if it is attached to
+the right #GMainContext. If no #GstTranscoderSignalAdapter has been created
+yet, it will be created and returned, other calls will return that same
+adapter until it is destroyed, at which point, a new one can be attached the
+same way.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The #GstTranscoderSignalAdapter to
+connect signal handlers to.</doc>
+          <type name="TranscoderSignalAdapter" c:type="GstTranscoderSignalAdapter*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance to emit signals for.</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+          <parameter name="context" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GMainContext on which the main-loop will process
+                      transcoder bus messages on. Can be NULL (thread-default
+                      context will be used then).</doc>
+            <type name="GLib.MainContext" c:type="GMainContext*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_source_uri" c:identifier="gst_transcoder_get_source_uri">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets the URI of the currently-transcoding stream.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a string containing the URI of the
+source stream. g_free() after usage.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_sync_signal_adapter" c:identifier="gst_transcoder_get_sync_signal_adapter" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets the #GstTranscoderSignalAdapter attached to @self to emit signals from
+its thread of emission.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The #GstTranscoderSignalAdapter to connect signal
+handlers to.</doc>
+          <type name="TranscoderSignalAdapter" c:type="GstTranscoderSignalAdapter*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance to emit signals synchronously
+for.</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="run" c:identifier="gst_transcoder_run" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Run the transcoder task synchonously. You can connect
+to the 'position' signal to get information about the
+progress of the transcoding.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The GstTranscoder to run</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="run_async" c:identifier="gst_transcoder_run_async">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Run the transcoder task asynchronously. You should connect
+to the 'done' signal to be notified about when the
+transcoding is done, and to the 'error' signal to be
+notified about any error.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The GstTranscoder to run</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_avoid_reencoding" c:identifier="gst_transcoder_set_avoid_reencoding">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The #GstTranscoder to set whether reencoding should be avoided or not.</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+          <parameter name="avoid_reencoding" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">%TRUE if the transcoder should try to avoid reencoding
+streams where * reencoding is not strictly needed, %FALSE otherwise.</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_cpu_usage" c:identifier="gst_transcoder_set_cpu_usage">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Sets @cpu_usage as target percentage CPU usage of the process running the
+transcoding task. It will modulate the transcoding speed to reach that target
+usage.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The GstTranscoder to limit CPU usage on.</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+          <parameter name="cpu_usage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The percentage of the CPU the process running the transcoder
+should try to use. It takes into account the number of cores available.</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_position_update_interval" c:identifier="gst_transcoder_set_position_update_interval">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Set interval in milliseconds between two position-updated signals.
+Pass 0 to stop updating the position.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">#GstTranscoder instance</doc>
+            <type name="Transcoder" c:type="GstTranscoder*"/>
+          </instance-parameter>
+          <parameter name="interval" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">interval in ms</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="avoid-reencoding" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">See #encodebin:avoid-reencoding</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="dest-uri" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="duration" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="pipeline" transfer-ownership="none">
+        <type name="Gst.Element"/>
+      </property>
+      <property name="position" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="position-update-interval" writable="1" transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="profile" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="GstPbutils.EncodingProfile"/>
+      </property>
+      <property name="src-uri" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+    </class>
+    <record name="TranscoderClass" c:type="GstTranscoderClass" glib:is-gtype-struct-for="Transcoder">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+    </record>
+    <enumeration name="TranscoderError" glib:type-name="GstTranscoderError" glib:get-type="gst_transcoder_error_get_type" c:type="GstTranscoderError" glib:error-domain="gst-transcoder-error-quark">
+      <member name="failed" value="0" c:identifier="GST_TRANSCODER_ERROR_FAILED" glib:nick="failed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">generic error.</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_transcoder_error_get_name">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets a string representing the given error.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a string with the given error.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="error" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a #GstTranscoderError</doc>
+            <type name="TranscoderError" c:type="GstTranscoderError"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="quark" c:identifier="gst_transcoder_error_quark">
+        <return-value transfer-ownership="none">
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+      </function>
+    </enumeration>
+    <enumeration name="TranscoderMessage" version="1.20" glib:type-name="GstTranscoderMessage" glib:get-type="gst_transcoder_message_get_type" c:type="GstTranscoderMessage">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Types of messages that will be posted on the transcoder API bus.
+
+See also #gst_transcoder_get_message_bus()</doc>
+      <member name="position_updated" value="0" c:identifier="GST_TRANSCODER_MESSAGE_POSITION_UPDATED" glib:nick="position-updated">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Sink position changed</doc>
+      </member>
+      <member name="duration_changed" value="1" c:identifier="GST_TRANSCODER_MESSAGE_DURATION_CHANGED" glib:nick="duration-changed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Duration of stream changed</doc>
+      </member>
+      <member name="state_changed" value="2" c:identifier="GST_TRANSCODER_MESSAGE_STATE_CHANGED" glib:nick="state-changed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Pipeline state changed</doc>
+      </member>
+      <member name="done" value="3" c:identifier="GST_TRANSCODER_MESSAGE_DONE" glib:nick="done">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Transcoding is done</doc>
+      </member>
+      <member name="error" value="4" c:identifier="GST_TRANSCODER_MESSAGE_ERROR" glib:nick="error">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Message contains an error</doc>
+      </member>
+      <member name="warning" value="5" c:identifier="GST_TRANSCODER_MESSAGE_WARNING" glib:nick="warning">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Message contains an error</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_transcoder_message_get_name" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Returns (transfer none): The message name</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a #GstTranscoderMessage</doc>
+            <type name="TranscoderMessage" c:type="GstTranscoderMessage"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_duration" c:identifier="gst_transcoder_message_parse_duration" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given duration @msg and extract the corresponding #GstClockTime</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="duration" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting duration</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_error" c:identifier="gst_transcoder_message_parse_error" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given error @msg and extract the corresponding #GError</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting error</doc>
+            <type name="GLib.Error" c:type="GError*"/>
+          </parameter>
+          <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the error</doc>
+            <type name="Gst.Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_position" c:identifier="gst_transcoder_message_parse_position" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given position @msg and extract the corresponding #GstClockTime</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="position" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting position</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_state" c:identifier="gst_transcoder_message_parse_state" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given state @msg and extract the corresponding #GstTranscoderState</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting state</doc>
+            <type name="TranscoderState" c:type="GstTranscoderState*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_warning" c:identifier="gst_transcoder_message_parse_warning" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given error @msg and extract the corresponding #GError warning</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting warning</doc>
+            <type name="GLib.Error" c:type="GError*"/>
+          </parameter>
+          <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the warning</doc>
+            <type name="Gst.Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <class name="TranscoderSignalAdapter" c:symbol-prefix="transcoder_signal_adapter" c:type="GstTranscoderSignalAdapter" version="1.20" parent="GObject.Object" glib:type-name="GstTranscoderSignalAdapter" glib:get-type="gst_transcoder_signal_adapter_get_type" glib:type-struct="TranscoderSignalAdapterClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.h">Transforms #GstTranscoder bus messages to signals from the adapter object.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.h"/>
+      <method name="get_transcoder" c:identifier="gst_transcoder_signal_adapter_get_transcoder" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.c">The #GstTranscoder @self is tracking</doc>
+          <type name="Transcoder" c:type="GstTranscoder*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.c">The #GstTranscoderSignalAdapter</doc>
+            <type name="TranscoderSignalAdapter" c:type="GstTranscoderSignalAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="transcoder" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.c">The #GstTranscoder tracked by the adapter.</doc>
+        <type name="Transcoder"/>
+      </property>
+      <glib:signal name="done" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="duration-changed" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="error" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="GLib.Error"/>
+          </parameter>
+          <parameter name="p0" transfer-ownership="none">
+            <type name="Gst.Structure"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="position-updated" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="state-changed" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="TranscoderState"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="warning" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="GLib.Error"/>
+          </parameter>
+          <parameter name="p0" transfer-ownership="none">
+            <type name="Gst.Structure"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+    </class>
+    <record name="TranscoderSignalAdapterClass" c:type="GstTranscoderSignalAdapterClass" glib:is-gtype-struct-for="TranscoderSignalAdapter" version="1.20">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.h"/>
+      <field name="parent_class">
+        <type name="GObject.ObjectClass" c:type="GObjectClass"/>
+      </field>
+    </record>
+    <enumeration name="TranscoderState" version="1.20" glib:type-name="GstTranscoderState" glib:get-type="gst_transcoder_state_get_type" c:type="GstTranscoderState">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">High level representation of the transcoder pipeline state.</doc>
+      <member name="stopped" value="0" c:identifier="GST_TRANSCODER_STATE_STOPPED" glib:nick="stopped">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">the transcoder is stopped.</doc>
+      </member>
+      <member name="paused" value="1" c:identifier="GST_TRANSCODER_STATE_PAUSED" glib:nick="paused">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">the transcoder is paused.</doc>
+      </member>
+      <member name="playing" value="2" c:identifier="GST_TRANSCODER_STATE_PLAYING" glib:nick="playing">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">the transcoder is currently transcoding a
+stream.</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_transcoder_state_get_name" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets a string representing the given state.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a string with the name of the state.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="state" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a #GstTranscoderState</doc>
+            <type name="TranscoderState" c:type="GstTranscoderState"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <function name="transcoder_error_get_name" c:identifier="gst_transcoder_error_get_name" moved-to="TranscoderError.get_name">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets a string representing the given error.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a string with the given error.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="error" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a #GstTranscoderError</doc>
+          <type name="TranscoderError" c:type="GstTranscoderError"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="transcoder_error_quark" c:identifier="gst_transcoder_error_quark" moved-to="TranscoderError.quark">
+      <return-value transfer-ownership="none">
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </return-value>
+    </function>
+    <function name="transcoder_message_get_name" c:identifier="gst_transcoder_message_get_name" moved-to="TranscoderMessage.get_name" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Returns (transfer none): The message name</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="message" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a #GstTranscoderMessage</doc>
+          <type name="TranscoderMessage" c:type="GstTranscoderMessage"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="transcoder_message_parse_duration" c:identifier="gst_transcoder_message_parse_duration" moved-to="TranscoderMessage.parse_duration" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given duration @msg and extract the corresponding #GstClockTime</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="duration" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting duration</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="transcoder_message_parse_error" c:identifier="gst_transcoder_message_parse_error" moved-to="TranscoderMessage.parse_error" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given error @msg and extract the corresponding #GError</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting error</doc>
+          <type name="GLib.Error" c:type="GError*"/>
+        </parameter>
+        <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the error</doc>
+          <type name="Gst.Structure" c:type="GstStructure**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="transcoder_message_parse_position" c:identifier="gst_transcoder_message_parse_position" moved-to="TranscoderMessage.parse_position" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given position @msg and extract the corresponding #GstClockTime</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="position" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting position</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="transcoder_message_parse_state" c:identifier="gst_transcoder_message_parse_state" moved-to="TranscoderMessage.parse_state" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given state @msg and extract the corresponding #GstTranscoderState</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting state</doc>
+          <type name="TranscoderState" c:type="GstTranscoderState*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="transcoder_message_parse_warning" c:identifier="gst_transcoder_message_parse_warning" moved-to="TranscoderMessage.parse_warning" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Parse the given error @msg and extract the corresponding #GError warning</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="error" direction="out" caller-allocates="1" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the resulting warning</doc>
+          <type name="GLib.Error" c:type="GError*"/>
+        </parameter>
+        <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">(transfer full): A GstStructure containing extra details about the warning</doc>
+          <type name="Gst.Structure" c:type="GstStructure**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="transcoder_state_get_name" c:identifier="gst_transcoder_state_get_name" moved-to="TranscoderState.get_name" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets a string representing the given state.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a string with the name of the state.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="state" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">a #GstTranscoderState</doc>
+          <type name="TranscoderState" c:type="GstTranscoderState"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

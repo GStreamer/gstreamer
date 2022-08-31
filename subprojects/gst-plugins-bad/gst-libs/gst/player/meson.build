@@ -65,6 +65,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     player_gir = gnome.generate_gir(gstplayer, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [player_gir]}
     gen_sources += player_gir
   endif
 endif

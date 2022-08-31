@@ -1111,6 +1111,8 @@ if build_gstgl
     library_def += {'gir': [gir]}
     if not static_build
       gl_gir = gnome.generate_gir(gstgl, kwargs: gir)
+      library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gl_gir]}
+      library_def += {'gir': [gir]}
       gen_sources += [gl_gir]
     endif
   endif
@@ -1156,6 +1158,7 @@ if build_gstgl
       if not static_build
         gir += {'includes': gir['includes'] + [gl_gir[0]]}
         gl_x11_gir = gnome.generate_gir(gstgl, kwargs: gir)
+        library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gl_x11_gir]}
       endif
     endif
     gstglx11_dep = declare_dependency(dependencies : [gstgl_dep, x11_dep, xcb_dep],
@@ -1193,6 +1196,7 @@ if build_gstgl
       if not static_build
         gir += {'includes': gir['includes'] + [gl_gir[0]]}
         gl_wayland_gir = gnome.generate_gir(gstgl, kwargs: gir)
+        library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gl_wayland_gir]}
       endif
     endif
     gstglwayland_dep = declare_dependency(dependencies : [gstgl_dep],
@@ -1228,6 +1232,7 @@ if build_gstgl
       if not static_build
         gir += {'includes': gir['includes'] + [gl_gir[0]]}
         gl_egl_gir = gnome.generate_gir(gstgl, kwargs: gir)
+        library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gl_egl_gir]}
       endif
     endif
     gstglegl_dep = declare_dependency(dependencies : [gstgl_dep],

@@ -1,0 +1,2901 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstAudio" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
+  <include name="GstPbutils" version="1.0"/>
+  <include name="GstTag" version="1.0"/>
+  <include name="GstVideo" version="1.0"/>
+  <package name="gstreamer-play-1.0"/>
+  <c:include name="gst/play/play.h"/>
+  <namespace name="GstPlay" version="1.0" shared-library="libgstplay-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <function-macro name="IS_PLAY" c:identifier="GST_IS_PLAY" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_AUDIO_INFO" c:identifier="GST_IS_PLAY_AUDIO_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_AUDIO_INFO_CLASS" c:identifier="GST_IS_PLAY_AUDIO_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_CLASS" c:identifier="GST_IS_PLAY_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_MEDIA_INFO" c:identifier="GST_IS_PLAY_MEDIA_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_MEDIA_INFO_CLASS" c:identifier="GST_IS_PLAY_MEDIA_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_SIGNAL_ADAPTER" c:identifier="GST_IS_PLAY_SIGNAL_ADAPTER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_SIGNAL_ADAPTER_CLASS" c:identifier="GST_IS_PLAY_SIGNAL_ADAPTER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_STREAM_INFO" c:identifier="GST_IS_PLAY_STREAM_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_STREAM_INFO_CLASS" c:identifier="GST_IS_PLAY_STREAM_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_SUBTITLE_INFO" c:identifier="GST_IS_PLAY_SUBTITLE_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_SUBTITLE_INFO_CLASS" c:identifier="GST_IS_PLAY_SUBTITLE_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_VIDEO_INFO" c:identifier="GST_IS_PLAY_VIDEO_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_VIDEO_INFO_CLASS" c:identifier="GST_IS_PLAY_VIDEO_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER" c:identifier="GST_IS_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_CLASS" c:identifier="GST_IS_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLAY_VIDEO_RENDERER" c:identifier="GST_IS_PLAY_VIDEO_RENDERER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-renderer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY" c:identifier="GST_PLAY" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_AUDIO_INFO" c:identifier="GST_PLAY_AUDIO_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_AUDIO_INFO_CLASS" c:identifier="GST_PLAY_AUDIO_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_CAST" c:identifier="GST_PLAY_CAST" version="1.20" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_CLASS" c:identifier="GST_PLAY_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_DEPRECATED_FOR" c:identifier="GST_PLAY_DEPRECATED_FOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/play-prelude.h"/>
+      <parameters>
+        <parameter name="f">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_GET_CLASS" c:identifier="GST_PLAY_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_MEDIA_INFO" c:identifier="GST_PLAY_MEDIA_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_MEDIA_INFO_CLASS" c:identifier="GST_PLAY_MEDIA_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_SIGNAL_ADAPTER" c:identifier="GST_PLAY_SIGNAL_ADAPTER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_SIGNAL_ADAPTER_CAST" c:identifier="GST_PLAY_SIGNAL_ADAPTER_CAST" version="1.20" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_SIGNAL_ADAPTER_CLASS" c:identifier="GST_PLAY_SIGNAL_ADAPTER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_SIGNAL_ADAPTER_GET_CLASS" c:identifier="GST_PLAY_SIGNAL_ADAPTER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_STREAM_INFO" c:identifier="GST_PLAY_STREAM_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_STREAM_INFO_CLASS" c:identifier="GST_PLAY_STREAM_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_SUBTITLE_INFO" c:identifier="GST_PLAY_SUBTITLE_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_SUBTITLE_INFO_CLASS" c:identifier="GST_PLAY_SUBTITLE_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_INFO" c:identifier="GST_PLAY_VIDEO_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_INFO_CLASS" c:identifier="GST_PLAY_VIDEO_INFO_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_OVERLAY_VIDEO_RENDERER" c:identifier="GST_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_CAST" c:identifier="GST_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_CAST" version="1.20" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_CLASS" c:identifier="GST_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_GET_CLASS" c:identifier="GST_PLAY_VIDEO_OVERLAY_VIDEO_RENDERER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_RENDERER" c:identifier="GST_PLAY_VIDEO_RENDERER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-renderer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLAY_VIDEO_RENDERER_GET_INTERFACE" c:identifier="GST_PLAY_VIDEO_RENDERER_GET_INTERFACE" version="1.20" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-renderer.h"/>
+      <parameters>
+        <parameter name="inst">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <class name="Play" c:symbol-prefix="play" c:type="GstPlay" version="1.20" parent="Gst.Object" glib:type-name="GstPlay" glib:get-type="gst_play_get_type" glib:type-struct="PlayClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-types.h"/>
+      <constructor name="new" c:identifier="gst_play_new" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Creates a new #GstPlay instance.
+
+Video is going to be rendered by @video_renderer, or if %NULL is provided
+no special video set up will be done and some default handling will be
+performed.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a new #GstPlay instance</doc>
+          <type name="Play" c:type="GstPlay*"/>
+        </return-value>
+        <parameters>
+          <parameter name="video_renderer" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">GstPlayVideoRenderer to use</doc>
+            <type name="PlayVideoRenderer" c:type="GstPlayVideoRenderer*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <function name="config_get_position_update_interval" c:identifier="gst_play_config_get_position_update_interval" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">current position update interval in milliseconds</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_get_seek_accurate" c:identifier="gst_play_config_get_seek_accurate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if accurate seeking is enabled</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_get_user_agent" c:identifier="gst_play_config_get_user_agent" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Return the user agent which has been configured using
+gst_play_config_set_user_agent() if any.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the configured agent, or %NULL</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_position_update_interval" c:identifier="gst_play_config_set_position_update_interval" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">set desired interval in milliseconds between two position-updated messages.
+pass 0 to stop updating the position.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="interval" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">interval in ms</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_seek_accurate" c:identifier="gst_play_config_set_seek_accurate" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Enable or disable accurate seeking. When enabled, elements will try harder
+to seek as accurately as possible to the requested seek position. Generally
+it will be slower especially for formats that don't have any indexes or
+timestamp markers in the stream.
+
+If accurate seeking is disabled, elements will seek as close as the request
+position without slowing down seeking too much.
+
+Accurate seeking is disabled by default.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="accurate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">accurate seek or not</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_user_agent" c:identifier="gst_play_config_set_user_agent" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Set the user agent to pass to the server if @play needs to connect
+to a server during playback. This is typically used when playing HTTP
+or RTSP streams.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="agent" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the string to use as user agent</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_audio_streams" c:identifier="gst_play_get_audio_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A #GList of
+matching #GstPlayAudioInfo.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="PlayAudioInfo"/>
+          </type>
+        </return-value>
+        <parameters>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_subtitle_streams" c:identifier="gst_play_get_subtitle_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A #GList of
+matching #GstPlaySubtitleInfo.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="PlaySubtitleInfo"/>
+          </type>
+        </return-value>
+        <parameters>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_video_streams" c:identifier="gst_play_get_video_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A #GList of
+matching #GstPlayVideoInfo.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="PlayVideoInfo"/>
+          </type>
+        </return-value>
+        <parameters>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="is_play_message" c:identifier="gst_play_is_play_message" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #gboolean indicating wheter the passes message represents a #GstPlay message or not.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="visualizations_free" c:identifier="gst_play_visualizations_free" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">Frees a %NULL terminated array of #GstPlayVisualization.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="viss" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">a %NULL terminated array of #GstPlayVisualization to free</doc>
+            <type name="PlayVisualization" c:type="GstPlayVisualization**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="visualizations_get" c:identifier="gst_play_visualizations_get" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">
+ a %NULL terminated array containing all available
+ visualizations. Use gst_play_visualizations_free() after
+ usage.</doc>
+          <array c:type="GstPlayVisualization**">
+            <type name="PlayVisualization"/>
+          </array>
+        </return-value>
+      </function>
+      <method name="get_audio_video_offset" c:identifier="gst_play_get_audio_video_offset" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Retrieve the current value of audio-video-offset property</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The current value of audio-video-offset in nanoseconds</doc>
+          <type name="gint64" c:type="gint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_color_balance" c:identifier="gst_play_get_color_balance" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Retrieve the current value of the indicated @type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The current value of @type, between [0,1]. In case of
+  error -1 is returned.</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlayColorBalanceType</doc>
+            <type name="PlayColorBalanceType" c:type="GstPlayColorBalanceType"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_config" c:identifier="gst_play_get_config" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Get a copy of the current configuration of the play. This configuration
+can either be modified and used for the gst_play_set_config() call
+or it must be freed after usage.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a copy of the current configuration of @play. Use
+gst_structure_free() after usage or gst_play_set_config().</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_current_audio_track" c:identifier="gst_play_get_current_audio_track" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A Function to get current audio #GstPlayAudioInfo instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">current audio track.
+
+The caller should free it with g_object_unref()</doc>
+          <type name="PlayAudioInfo" c:type="GstPlayAudioInfo*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_current_subtitle_track" c:identifier="gst_play_get_current_subtitle_track" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A Function to get current subtitle #GstPlaySubtitleInfo instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">current subtitle track.
+
+The caller should free it with g_object_unref()</doc>
+          <type name="PlaySubtitleInfo" c:type="GstPlaySubtitleInfo*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_current_video_track" c:identifier="gst_play_get_current_video_track" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A Function to get current video #GstPlayVideoInfo instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">current video track.
+
+The caller should free it with g_object_unref()</doc>
+          <type name="PlayVideoInfo" c:type="GstPlayVideoInfo*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_current_visualization" c:identifier="gst_play_get_current_visualization" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Name of the currently enabled
+  visualization.
+  g_free() after usage.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_duration" c:identifier="gst_play_get_duration" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Retrieves the duration of the media stream that self represents.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the duration of the currently-playing media stream, in
+nanoseconds.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_media_info" c:identifier="gst_play_get_media_info" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A Function to get the current media info #GstPlayMediaInfo instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">media info instance.
+
+The caller should free it with g_object_unref()</doc>
+          <type name="PlayMediaInfo" c:type="GstPlayMediaInfo*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_message_bus" c:identifier="gst_play_get_message_bus" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">GstPlay API exposes a #GstBus instance which purpose is to provide data
+structures representing play-internal events in form of #GstMessage&lt;!-- --&gt;s of
+type GST_MESSAGE_APPLICATION.
+
+Each message carries a "play-message" field of type #GstPlayMessage.
+Further fields of the message data are specific to each possible value of
+that enumeration.
+
+Applications can consume the messages asynchronously within their own
+event-loop / UI-thread etc. Note that in case the application does not
+consume the messages, the bus will accumulate these internally and eventually
+fill memory. To avoid that, the bus has to be set "flushing".</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The play message bus instance</doc>
+          <type name="Gst.Bus" c:type="GstBus*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_multiview_flags" c:identifier="gst_play_get_multiview_flags" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Retrieve the current value of the indicated @type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The current value of @type, Default: 0x00000000 "none</doc>
+          <type name="GstVideo.VideoMultiviewFlags" c:type="GstVideoMultiviewFlags"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_multiview_mode" c:identifier="gst_play_get_multiview_mode" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Retrieve the current value of the indicated @type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The current value of @type, Default: -1 "none"</doc>
+          <type name="GstVideo.VideoMultiviewFramePacking" c:type="GstVideoMultiviewFramePacking"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_mute" c:identifier="gst_play_get_mute" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the currently-playing stream is muted.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_pipeline" c:identifier="gst_play_get_pipeline" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The internal playbin instance.
+
+The caller should free it with g_object_unref()</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_position" c:identifier="gst_play_get_position" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the absolute position time, in nanoseconds, of the
+currently-playing stream.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_rate" c:identifier="gst_play_get_rate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">current playback rate</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_subtitle_uri" c:identifier="gst_play_get_subtitle_uri" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">current subtitle URI</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">URI of the current external subtitle.
+  g_free() after usage.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_subtitle_video_offset" c:identifier="gst_play_get_subtitle_video_offset" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Retrieve the current value of subtitle-video-offset property</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The current value of subtitle-video-offset in nanoseconds</doc>
+          <type name="gint64" c:type="gint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_uri" c:identifier="gst_play_get_uri" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Gets the URI of the currently-playing stream.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string containing the URI of the
+currently-playing stream. g_free() after usage.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_video_snapshot" c:identifier="gst_play_get_video_snapshot" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Get a snapshot of the currently selected video stream, if any. The format can be
+selected with @format and optional configuration is possible with @config
+Currently supported settings are:
+- width, height of type G_TYPE_INT
+- pixel-aspect-ratio of type GST_TYPE_FRACTION
+ Except for GST_PLAY_THUMBNAIL_RAW_NATIVE format, if no config is set, pixel-aspect-ratio would be 1/1</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Current video snapshot sample or %NULL on failure</doc>
+          <type name="Gst.Sample" c:type="GstSample*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">output format of the video snapshot</doc>
+            <type name="PlaySnapshotFormat" c:type="GstPlaySnapshotFormat"/>
+          </parameter>
+          <parameter name="config" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Additional configuration</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_volume" c:identifier="gst_play_get_volume" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Returns the current volume level, as a percentage between 0 and 1.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the volume as percentage between 0 and 1.</doc>
+          <type name="gdouble" c:type="gdouble"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="has_color_balance" c:identifier="gst_play_has_color_balance" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Checks whether the @play has color balance support available.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if @play has color balance support. Otherwise,
+  %FALSE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="pause" c:identifier="gst_play_pause" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Pauses the current stream.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="play" c:identifier="gst_play_play" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Request to play the loaded stream.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="seek" c:identifier="gst_play_seek" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Seeks the currently-playing stream to the absolute @position time
+in nanoseconds.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="position" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">position to seek in nanoseconds</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_audio_track" c:identifier="gst_play_set_audio_track" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE or %FALSE
+
+Sets the audio track @stream_index.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="stream_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">stream index</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_audio_track_enabled" c:identifier="gst_play_set_audio_track_enabled" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Enable or disable the current audio track.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="enabled" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">TRUE or FALSE</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_audio_video_offset" c:identifier="gst_play_set_audio_video_offset" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets audio-video-offset property by value of @offset</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#gint64 in nanoseconds</doc>
+            <type name="gint64" c:type="gint64"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_color_balance" c:identifier="gst_play_set_color_balance" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets the current value of the indicated channel @type to the passed
+value.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlayColorBalanceType</doc>
+            <type name="PlayColorBalanceType" c:type="GstPlayColorBalanceType"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The new value for the @type, ranged [0,1]</doc>
+            <type name="gdouble" c:type="gdouble"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_config" c:identifier="gst_play_set_config" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Set the configuration of the play. If the play is already configured, and
+the configuration haven't change, this function will return %TRUE. If the
+play is not in the GST_PLAY_STATE_STOPPED, this method will return %FALSE
+and active configuration will remain.
+
+@config is a #GstStructure that contains the configuration parameters for
+the play.
+
+This function takes ownership of @config.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE when the configuration could be set.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="config" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstStructure</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_multiview_flags" c:identifier="gst_play_set_multiview_flags" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets the current value of the indicated mode @type to the passed
+value.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The new value for the @type</doc>
+            <type name="GstVideo.VideoMultiviewFlags" c:type="GstVideoMultiviewFlags"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_multiview_mode" c:identifier="gst_play_set_multiview_mode" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets the current value of the indicated mode @type to the passed
+value.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="mode" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">The new value for the @type</doc>
+            <type name="GstVideo.VideoMultiviewFramePacking" c:type="GstVideoMultiviewFramePacking"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_mute" c:identifier="gst_play_set_mute" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the currently-playing stream should be muted.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="val" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Mute state the should be set</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_rate" c:identifier="gst_play_set_rate" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Playback at specified rate</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="rate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">playback rate</doc>
+            <type name="gdouble" c:type="gdouble"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_subtitle_track" c:identifier="gst_play_set_subtitle_track" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE or %FALSE
+
+Sets the subtitle stack @stream_index.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="stream_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">stream index</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_subtitle_track_enabled" c:identifier="gst_play_set_subtitle_track_enabled" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Enable or disable the current subtitle track.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="enabled" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">TRUE or FALSE</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_subtitle_uri" c:identifier="gst_play_set_subtitle_uri" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets the external subtitle URI. This should be combined with a call to
+gst_play_set_subtitle_track_enabled(@play, TRUE) so the subtitles are actually
+rendered.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">subtitle URI</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_subtitle_video_offset" c:identifier="gst_play_set_subtitle_video_offset" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets subtitle-video-offset property by value of @offset</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="offset" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#gint64 in nanoseconds</doc>
+            <type name="gint64" c:type="gint64"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_uri" c:identifier="gst_play_set_uri" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets the next URI to play.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">next URI to play.</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_video_track" c:identifier="gst_play_set_video_track" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE or %FALSE
+
+Sets the video track @stream_index.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="stream_index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">stream index</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_video_track_enabled" c:identifier="gst_play_set_video_track_enabled" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Enable or disable the current video track.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="enabled" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">TRUE or FALSE</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_visualization" c:identifier="gst_play_set_visualization" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if the visualizations was set correctly. Otherwise,
+%FALSE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="name" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">visualization element obtained from
+#gst_play_visualizations_get()</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_visualization_enabled" c:identifier="gst_play_set_visualization_enabled" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Enable or disable the visualization.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="enabled" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">TRUE or FALSE</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_volume" c:identifier="gst_play_set_volume" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Sets the volume level of the stream as a percentage between 0 and 1.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+          <parameter name="val" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the new volume level, as a percentage between 0 and 1</doc>
+            <type name="gdouble" c:type="gdouble"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="stop" c:identifier="gst_play_stop" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Stops playing the current stream and resets to the first position
+in the stream.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">#GstPlay instance</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="audio-video-offset" writable="1" transfer-ownership="none">
+        <type name="gint64" c:type="gint64"/>
+      </property>
+      <property name="current-audio-track" transfer-ownership="none">
+        <type name="PlayAudioInfo"/>
+      </property>
+      <property name="current-subtitle-track" transfer-ownership="none">
+        <type name="PlaySubtitleInfo"/>
+      </property>
+      <property name="current-video-track" transfer-ownership="none">
+        <type name="PlayVideoInfo"/>
+      </property>
+      <property name="duration" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="media-info" transfer-ownership="none">
+        <type name="PlayMediaInfo"/>
+      </property>
+      <property name="mute" writable="1" transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="pipeline" transfer-ownership="none">
+        <type name="Gst.Element"/>
+      </property>
+      <property name="position" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="rate" writable="1" transfer-ownership="none">
+        <type name="gdouble" c:type="gdouble"/>
+      </property>
+      <property name="subtitle-video-offset" writable="1" transfer-ownership="none">
+        <type name="gint64" c:type="gint64"/>
+      </property>
+      <property name="suburi" writable="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="uri" writable="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="video-multiview-flags" writable="1" transfer-ownership="none">
+        <type name="GstVideo.VideoMultiviewFlags"/>
+      </property>
+      <property name="video-multiview-mode" writable="1" transfer-ownership="none">
+        <type name="GstVideo.VideoMultiviewFramePacking"/>
+      </property>
+      <property name="video-renderer" writable="1" transfer-ownership="none">
+        <type name="PlayVideoRenderer"/>
+      </property>
+      <property name="volume" writable="1" transfer-ownership="none">
+        <type name="gdouble" c:type="gdouble"/>
+      </property>
+    </class>
+    <class name="PlayAudioInfo" c:symbol-prefix="play_audio_info" c:type="GstPlayAudioInfo" version="1.20" parent="PlayStreamInfo" glib:type-name="GstPlayAudioInfo" glib:get-type="gst_play_audio_info_get_type" glib:type-struct="PlayAudioInfoClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h">#GstPlayStreamInfo specific to audio streams.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <method name="get_bitrate" c:identifier="gst_play_audio_info_get_bitrate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the audio bitrate in #GstPlayAudioInfo or -1 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayAudioInfo</doc>
+            <type name="PlayAudioInfo" c:type="const GstPlayAudioInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_channels" c:identifier="gst_play_audio_info_get_channels" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the number of audio channels in #GstPlayAudioInfo or 0 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayAudioInfo</doc>
+            <type name="PlayAudioInfo" c:type="const GstPlayAudioInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_language" c:identifier="gst_play_audio_info_get_language" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the language of the stream, or %NULL if unknown.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayAudioInfo</doc>
+            <type name="PlayAudioInfo" c:type="const GstPlayAudioInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_max_bitrate" c:identifier="gst_play_audio_info_get_max_bitrate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the audio maximum bitrate in #GstPlayAudioInfo or -1 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayAudioInfo</doc>
+            <type name="PlayAudioInfo" c:type="const GstPlayAudioInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_sample_rate" c:identifier="gst_play_audio_info_get_sample_rate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the audio sample rate in #GstPlayAudioInfo or 0 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayAudioInfo</doc>
+            <type name="PlayAudioInfo" c:type="const GstPlayAudioInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </class>
+    <record name="PlayAudioInfoClass" c:type="GstPlayAudioInfoClass" disguised="1" glib:is-gtype-struct-for="PlayAudioInfo">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+    </record>
+    <record name="PlayClass" c:type="GstPlayClass" disguised="1" glib:is-gtype-struct-for="Play">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-types.h"/>
+    </record>
+    <enumeration name="PlayColorBalanceType" version="1.20" glib:type-name="GstPlayColorBalanceType" glib:get-type="gst_play_color_balance_type_get_type" c:type="GstPlayColorBalanceType">
+      <member name="hue" value="3" c:identifier="GST_PLAY_COLOR_BALANCE_HUE" glib:nick="hue">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">hue or color balance.</doc>
+      </member>
+      <member name="brightness" value="0" c:identifier="GST_PLAY_COLOR_BALANCE_BRIGHTNESS" glib:nick="brightness">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">brightness or black level.</doc>
+      </member>
+      <member name="saturation" value="2" c:identifier="GST_PLAY_COLOR_BALANCE_SATURATION" glib:nick="saturation">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">color saturation or chroma
+gain.</doc>
+      </member>
+      <member name="contrast" value="1" c:identifier="GST_PLAY_COLOR_BALANCE_CONTRAST" glib:nick="contrast">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">contrast or luma gain.</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_play_color_balance_type_get_name" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Gets a string representing the given color balance type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the color
+  balance type.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayColorBalanceType</doc>
+            <type name="PlayColorBalanceType" c:type="GstPlayColorBalanceType"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <enumeration name="PlayError" version="1.20" glib:type-name="GstPlayError" glib:get-type="gst_play_error_get_type" c:type="GstPlayError" glib:error-domain="gst-play-error-quark">
+      <member name="failed" value="0" c:identifier="GST_PLAY_ERROR_FAILED" glib:nick="failed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">generic error.</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_play_error_get_name" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Gets a string representing the given error.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the given error.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="error" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayError</doc>
+            <type name="PlayError" c:type="GstPlayError"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="quark" c:identifier="gst_play_error_quark" version="1.20">
+        <return-value transfer-ownership="none">
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+      </function>
+    </enumeration>
+    <class name="PlayMediaInfo" c:symbol-prefix="play_media_info" c:type="GstPlayMediaInfo" version="1.20" parent="GObject.Object" glib:type-name="GstPlayMediaInfo" glib:get-type="gst_play_media_info_get_type" glib:type-struct="PlayMediaInfoClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h">Structure containing the media information of a URI.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <method name="get_audio_streams" c:identifier="gst_play_media_info_get_audio_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A #GList of
+matching #GstPlayAudioInfo.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="PlayAudioInfo"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_container_format" c:identifier="gst_play_media_info_get_container_format" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the container format or %NULL if unknown.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_duration" c:identifier="gst_play_media_info_get_duration" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">duration of the media.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_image_sample" c:identifier="gst_play_media_info_get_image_sample" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">Function to get the image (or preview-image) stored in taglist.
+Application can use `gst_sample_*_()` API's to get caps, buffer etc.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">GstSample or %NULL.</doc>
+          <type name="Gst.Sample" c:type="GstSample*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_number_of_audio_streams" c:identifier="gst_play_media_info_get_number_of_audio_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">number of audio streams.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_number_of_streams" c:identifier="gst_play_media_info_get_number_of_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">number of total streams.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_number_of_subtitle_streams" c:identifier="gst_play_media_info_get_number_of_subtitle_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">number of subtitle streams.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_number_of_video_streams" c:identifier="gst_play_media_info_get_number_of_video_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">number of video streams.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_stream_list" c:identifier="gst_play_media_info_get_stream_list" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A #GList of
+matching #GstPlayStreamInfo.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="PlayStreamInfo"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_subtitle_streams" c:identifier="gst_play_media_info_get_subtitle_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A #GList of
+matching #GstPlaySubtitleInfo.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="PlaySubtitleInfo"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_tags" c:identifier="gst_play_media_info_get_tags" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the tags contained in media info.</doc>
+          <type name="Gst.TagList" c:type="GstTagList*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_title" c:identifier="gst_play_media_info_get_title" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the media title or %NULL if unknown.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_uri" c:identifier="gst_play_media_info_get_uri" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the URI associated with #GstPlayMediaInfo.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_video_streams" c:identifier="gst_play_media_info_get_video_streams" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A #GList of
+matching #GstPlayVideoInfo.</doc>
+          <type name="GLib.List" c:type="GList*">
+            <type name="PlayVideoInfo"/>
+          </type>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="is_live" c:identifier="gst_play_media_info_is_live" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">%TRUE if the media is live.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="is_seekable" c:identifier="gst_play_media_info_is_seekable" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">%TRUE if the media is seekable.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayMediaInfo</doc>
+            <type name="PlayMediaInfo" c:type="const GstPlayMediaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </class>
+    <record name="PlayMediaInfoClass" c:type="GstPlayMediaInfoClass" disguised="1" glib:is-gtype-struct-for="PlayMediaInfo">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+    </record>
+    <enumeration name="PlayMessage" version="1.20" glib:type-name="GstPlayMessage" glib:get-type="gst_play_message_get_type" c:type="GstPlayMessage">
+      <doc-version xml:space="preserve">
+
+Types of messages that will be posted on the play API bus.
+
+See also #gst_play_get_message_bus()</doc-version>
+      <member name="uri_loaded" value="0" c:identifier="GST_PLAY_MESSAGE_URI_LOADED" glib:nick="uri-loaded">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Source element was initalized for set URI</doc>
+      </member>
+      <member name="position_updated" value="1" c:identifier="GST_PLAY_MESSAGE_POSITION_UPDATED" glib:nick="position-updated">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Sink position changed</doc>
+      </member>
+      <member name="duration_changed" value="2" c:identifier="GST_PLAY_MESSAGE_DURATION_CHANGED" glib:nick="duration-changed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Duration of stream changed</doc>
+      </member>
+      <member name="state_changed" value="3" c:identifier="GST_PLAY_MESSAGE_STATE_CHANGED" glib:nick="state-changed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">State changed, see #GstPlayState</doc>
+      </member>
+      <member name="buffering" value="4" c:identifier="GST_PLAY_MESSAGE_BUFFERING" glib:nick="buffering">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Pipeline is in buffering state, message contains the percentage value of the decoding buffer</doc>
+      </member>
+      <member name="end_of_stream" value="5" c:identifier="GST_PLAY_MESSAGE_END_OF_STREAM" glib:nick="end-of-stream">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Sink has received EOS</doc>
+      </member>
+      <member name="error" value="6" c:identifier="GST_PLAY_MESSAGE_ERROR" glib:nick="error">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Message contains an error</doc>
+      </member>
+      <member name="warning" value="7" c:identifier="GST_PLAY_MESSAGE_WARNING" glib:nick="warning">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Message contains an error</doc>
+      </member>
+      <member name="video_dimensions_changed" value="8" c:identifier="GST_PLAY_MESSAGE_VIDEO_DIMENSIONS_CHANGED" glib:nick="video-dimensions-changed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Video sink received format in different dimensions than before</doc>
+      </member>
+      <member name="media_info_updated" value="9" c:identifier="GST_PLAY_MESSAGE_MEDIA_INFO_UPDATED" glib:nick="media-info-updated">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">A media-info property has changed, message contains current #GstPlayMediaInfo</doc>
+      </member>
+      <member name="volume_changed" value="10" c:identifier="GST_PLAY_MESSAGE_VOLUME_CHANGED" glib:nick="volume-changed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">The volume of the audio ouput has changed</doc>
+      </member>
+      <member name="mute_changed" value="11" c:identifier="GST_PLAY_MESSAGE_MUTE_CHANGED" glib:nick="mute-changed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Audio muting flag has been toggled</doc>
+      </member>
+      <member name="seek_done" value="12" c:identifier="GST_PLAY_MESSAGE_SEEK_DONE" glib:nick="seek-done">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">Any pending seeking operation has been completed</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_play_message_get_name" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the message.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="message_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayMessage</doc>
+            <type name="PlayMessage" c:type="GstPlayMessage"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_buffering_percent" c:identifier="gst_play_message_parse_buffering_percent" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given buffering-percent @msg and extract the corresponding value</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="percent" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting buffering percent</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_duration_updated" c:identifier="gst_play_message_parse_duration_updated" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given duration @msg and extract the corresponding #GstClockTime</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="duration" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting duration</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_error" c:identifier="gst_play_message_parse_error" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting error</doc>
+            <type name="GLib.Error" c:type="GError**"/>
+          </parameter>
+          <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the error</doc>
+            <type name="Gst.Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_media_info_updated" c:identifier="gst_play_message_parse_media_info_updated" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding media information</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="info" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting media info</doc>
+            <type name="PlayMediaInfo" c:type="GstPlayMediaInfo**"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_muted_changed" c:identifier="gst_play_message_parse_muted_changed" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding audio muted state</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="muted" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting audio muted state</doc>
+            <type name="gboolean" c:type="gboolean*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_position_updated" c:identifier="gst_play_message_parse_position_updated" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given position @msg and extract the corresponding #GstClockTime</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="position" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting position</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_state_changed" c:identifier="gst_play_message_parse_state_changed" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given state @msg and extract the corresponding #GstPlayState</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting play state</doc>
+            <type name="PlayState" c:type="GstPlayState*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_type" c:identifier="gst_play_message_parse_type" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract its #GstPlayMessage type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="type" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting message type</doc>
+            <type name="PlayMessage" c:type="GstPlayMessage*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_video_dimensions_changed" c:identifier="gst_play_message_parse_video_dimensions_changed" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding video dimensions</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="width" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting video width</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="height" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting video height</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_volume_changed" c:identifier="gst_play_message_parse_volume_changed" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding audio volume</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="volume" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting audio volume</doc>
+            <type name="gdouble" c:type="gdouble*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="parse_warning" c:identifier="gst_play_message_parse_warning" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError warning</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+            <type name="Gst.Message" c:type="GstMessage*"/>
+          </parameter>
+          <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting warning</doc>
+            <type name="GLib.Error" c:type="GError**"/>
+          </parameter>
+          <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the warning</doc>
+            <type name="Gst.Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <class name="PlaySignalAdapter" c:symbol-prefix="play_signal_adapter" c:type="GstPlaySignalAdapter" version="1.20" parent="GObject.Object" glib:type-name="GstPlaySignalAdapter" glib:get-type="gst_play_signal_adapter_get_type" glib:type-struct="PlaySignalAdapterClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-types.h"/>
+      <constructor name="new" c:identifier="gst_play_signal_adapter_new" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">A bus-watching #GSource will be created and attached to the the
+thread-default #GMainContext. The attached callback will emit the
+corresponding signal for the message received. Matching signals for play
+messages from the bus will be emitted by it on the created adapter object.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">A new #GstPlaySignalAdapter to connect signal handlers to.</doc>
+          <type name="PlaySignalAdapter" c:type="GstPlaySignalAdapter*"/>
+        </return-value>
+        <parameters>
+          <parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">#GstPlay instance to emit signals for.</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_sync_emit" c:identifier="gst_play_signal_adapter_new_sync_emit" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">Create an adapter that synchronously emits its signals, from the thread in
+which the messages have been posted.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">A new #GstPlaySignalAdapter to connect signal handlers to.</doc>
+          <type name="PlaySignalAdapter" c:type="GstPlaySignalAdapter*"/>
+        </return-value>
+        <parameters>
+          <parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">#GstPlay instance to emit signals for.</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_with_main_context" c:identifier="gst_play_signal_adapter_new_with_main_context" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">A bus-watching #GSource will be created and attached to the @context. The
+attached callback will emit the corresponding signal for the message
+received. Matching signals for play messages from the bus will be emitted by
+it on the created adapter object.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">A new #GstPlaySignalAdapter to connect signal handlers to.</doc>
+          <type name="PlaySignalAdapter" c:type="GstPlaySignalAdapter*"/>
+        </return-value>
+        <parameters>
+          <parameter name="play" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">#GstPlay instance to emit signals for.</doc>
+            <type name="Play" c:type="GstPlay*"/>
+          </parameter>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">A #GMainContext on which the main-loop will process play bus messages on.</doc>
+            <type name="GLib.MainContext" c:type="GMainContext*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="get_play" c:identifier="gst_play_signal_adapter_get_play" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">The #GstPlay owning this signal adapter.</doc>
+          <type name="Play" c:type="GstPlay*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">#GstPlaySignalAdapter instance</doc>
+            <type name="PlaySignalAdapter" c:type="GstPlaySignalAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="play" transfer-ownership="none">
+        <type name="Play"/>
+      </property>
+      <glib:signal name="buffering" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="duration-changed" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="end-of-stream" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="error" when="last" no-recurse="1" no-hooks="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">Emitted on errors.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="error" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">The error</doc>
+            <type name="GLib.Error"/>
+          </parameter>
+          <parameter name="details" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">Additional error details</doc>
+            <type name="Gst.Structure"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="media-info-updated" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="PlayMediaInfo"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="mute-changed" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="position-updated" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="seek-done" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="state-changed" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="PlayState"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="uri-loaded" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="video-dimensions-changed" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="p0" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="volume-changed" when="last" no-recurse="1" no-hooks="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="gdouble" c:type="gdouble"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="warning" when="last" no-recurse="1" no-hooks="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">Emitted on warnings.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="error" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">The warning</doc>
+            <type name="GLib.Error"/>
+          </parameter>
+          <parameter name="details" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-signal-adapter.c">Additional warning details</doc>
+            <type name="Gst.Structure"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+    </class>
+    <record name="PlaySignalAdapterClass" c:type="GstPlaySignalAdapterClass" disguised="1" glib:is-gtype-struct-for="PlaySignalAdapter">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-types.h"/>
+    </record>
+    <enumeration name="PlaySnapshotFormat" version="1.20" c:type="GstPlaySnapshotFormat">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <member name="raw_native" value="0" c:identifier="GST_PLAY_THUMBNAIL_RAW_NATIVE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">raw native format.</doc>
+      </member>
+      <member name="raw_xrgb" value="1" c:identifier="GST_PLAY_THUMBNAIL_RAW_xRGB">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">raw xRGB format.</doc>
+      </member>
+      <member name="raw_bgrx" value="2" c:identifier="GST_PLAY_THUMBNAIL_RAW_BGRx">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">raw BGRx format.</doc>
+      </member>
+      <member name="jpg" value="3" c:identifier="GST_PLAY_THUMBNAIL_JPG">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">jpeg format.</doc>
+      </member>
+      <member name="png" value="4" c:identifier="GST_PLAY_THUMBNAIL_PNG">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">png format.</doc>
+      </member>
+    </enumeration>
+    <enumeration name="PlayState" version="1.20" glib:type-name="GstPlayState" glib:get-type="gst_play_state_get_type" c:type="GstPlayState">
+      <member name="stopped" value="0" c:identifier="GST_PLAY_STATE_STOPPED" glib:nick="stopped">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">the play is stopped.</doc>
+      </member>
+      <member name="buffering" value="1" c:identifier="GST_PLAY_STATE_BUFFERING" glib:nick="buffering">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">the play is buffering.</doc>
+      </member>
+      <member name="paused" value="2" c:identifier="GST_PLAY_STATE_PAUSED" glib:nick="paused">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">the play is paused.</doc>
+      </member>
+      <member name="playing" value="3" c:identifier="GST_PLAY_STATE_PLAYING" glib:nick="playing">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h">the play is currently playing a
+stream.</doc>
+      </member>
+      <function name="get_name" c:identifier="gst_play_state_get_name" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Gets a string representing the given state.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the state.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="state" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayState</doc>
+            <type name="PlayState" c:type="GstPlayState"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <class name="PlayStreamInfo" c:symbol-prefix="play_stream_info" c:type="GstPlayStreamInfo" version="1.20" parent="GObject.Object" abstract="1" glib:type-name="GstPlayStreamInfo" glib:get-type="gst_play_stream_info_get_type" glib:type-struct="PlayStreamInfoClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h">Base structure for information concerning a media stream. Depending on
+the stream type, one can find more media-specific information in
+#GstPlayVideoInfo, #GstPlayAudioInfo, #GstPlaySubtitleInfo.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <method name="get_caps" c:identifier="gst_play_stream_info_get_caps" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the #GstCaps of the stream or %NULL if
+unknown.</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayStreamInfo</doc>
+            <type name="PlayStreamInfo" c:type="const GstPlayStreamInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_codec" c:identifier="gst_play_stream_info_get_codec" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">A string describing codec used in #GstPlayStreamInfo.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">codec string or %NULL on unknown.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayStreamInfo</doc>
+            <type name="PlayStreamInfo" c:type="const GstPlayStreamInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_index" c:identifier="gst_play_stream_info_get_index" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">Function to get stream index from #GstPlayStreamInfo instance or -1 if
+unknown.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the stream index of this stream.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayStreamInfo</doc>
+            <type name="PlayStreamInfo" c:type="const GstPlayStreamInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_stream_type" c:identifier="gst_play_stream_info_get_stream_type" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">Function to return human readable name for the stream type
+of the given @info (ex: "audio", "video", "subtitle")</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a human readable name</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayStreamInfo</doc>
+            <type name="PlayStreamInfo" c:type="const GstPlayStreamInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_tags" c:identifier="gst_play_stream_info_get_tags" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the tags contained in this stream.</doc>
+          <type name="Gst.TagList" c:type="GstTagList*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayStreamInfo</doc>
+            <type name="PlayStreamInfo" c:type="const GstPlayStreamInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </class>
+    <record name="PlayStreamInfoClass" c:type="GstPlayStreamInfoClass" disguised="1" glib:is-gtype-struct-for="PlayStreamInfo">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+    </record>
+    <class name="PlaySubtitleInfo" c:symbol-prefix="play_subtitle_info" c:type="GstPlaySubtitleInfo" version="1.20" parent="PlayStreamInfo" glib:type-name="GstPlaySubtitleInfo" glib:get-type="gst_play_subtitle_info_get_type" glib:type-struct="PlaySubtitleInfoClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h">#GstPlayStreamInfo specific to subtitle streams.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <method name="get_language" c:identifier="gst_play_subtitle_info_get_language" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the language of the stream, or %NULL if unknown.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlaySubtitleInfo</doc>
+            <type name="PlaySubtitleInfo" c:type="const GstPlaySubtitleInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </class>
+    <record name="PlaySubtitleInfoClass" c:type="GstPlaySubtitleInfoClass" disguised="1" glib:is-gtype-struct-for="PlaySubtitleInfo">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+    </record>
+    <class name="PlayVideoInfo" c:symbol-prefix="play_video_info" c:type="GstPlayVideoInfo" version="1.20" parent="PlayStreamInfo" glib:type-name="GstPlayVideoInfo" glib:get-type="gst_play_video_info_get_type" glib:type-struct="PlayVideoInfoClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h">#GstPlayStreamInfo specific to video streams.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+      <method name="get_bitrate" c:identifier="gst_play_video_info_get_bitrate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the current bitrate of video in #GstPlayVideoInfo or -1 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayVideoInfo</doc>
+            <type name="PlayVideoInfo" c:type="const GstPlayVideoInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_framerate" c:identifier="gst_play_video_info_get_framerate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayVideoInfo</doc>
+            <type name="PlayVideoInfo" c:type="const GstPlayVideoInfo*"/>
+          </instance-parameter>
+          <parameter name="fps_n" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">Numerator of frame rate</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="fps_d" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">Denominator of frame rate</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_height" c:identifier="gst_play_video_info_get_height" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the height of video in #GstPlayVideoInfo or -1 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayVideoInfo</doc>
+            <type name="PlayVideoInfo" c:type="const GstPlayVideoInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_max_bitrate" c:identifier="gst_play_video_info_get_max_bitrate" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the maximum bitrate of video in #GstPlayVideoInfo or -1 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayVideoInfo</doc>
+            <type name="PlayVideoInfo" c:type="const GstPlayVideoInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_pixel_aspect_ratio" c:identifier="gst_play_video_info_get_pixel_aspect_ratio" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">Returns the pixel aspect ratio in @par_n and @par_d</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayVideoInfo</doc>
+            <type name="PlayVideoInfo" c:type="const GstPlayVideoInfo*"/>
+          </instance-parameter>
+          <parameter name="par_n" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">numerator</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="par_d" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">denominator</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_width" c:identifier="gst_play_video_info_get_width" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">the width of video in #GstPlayVideoInfo or -1 if unknown.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.c">a #GstPlayVideoInfo</doc>
+            <type name="PlayVideoInfo" c:type="const GstPlayVideoInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </class>
+    <record name="PlayVideoInfoClass" c:type="GstPlayVideoInfoClass" disguised="1" glib:is-gtype-struct-for="PlayVideoInfo">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-media-info.h"/>
+    </record>
+    <class name="PlayVideoOverlayVideoRenderer" c:symbol-prefix="play_video_overlay_video_renderer" c:type="GstPlayVideoOverlayVideoRenderer" version="1.20" parent="GObject.Object" glib:type-name="GstPlayVideoOverlayVideoRenderer" glib:get-type="gst_play_video_overlay_video_renderer_get_type" glib:type-struct="PlayVideoOverlayVideoRendererClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+      <implements name="PlayVideoRenderer"/>
+      <function name="new" c:identifier="gst_play_video_overlay_video_renderer_new" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+        <return-value transfer-ownership="full">
+          <type name="PlayVideoRenderer" c:type="GstPlayVideoRenderer*"/>
+        </return-value>
+        <parameters>
+          <parameter name="window_handle" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">Window handle to use or %NULL</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="new_with_sink" c:identifier="gst_play_video_overlay_video_renderer_new_with_sink" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+        <return-value transfer-ownership="full">
+          <type name="PlayVideoRenderer" c:type="GstPlayVideoRenderer*"/>
+        </return-value>
+        <parameters>
+          <parameter name="window_handle" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">Window handle to use or %NULL</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="video_sink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the custom video_sink element to be set for the video renderer</doc>
+            <type name="Gst.Element" c:type="GstElement*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <method name="expose" c:identifier="gst_play_video_overlay_video_renderer_expose" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">Tell an overlay that it has been exposed. This will redraw the current frame
+in the drawable even if the pipeline is PAUSED.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">a #GstPlayVideoOverlayVideoRenderer instance.</doc>
+            <type name="PlayVideoOverlayVideoRenderer" c:type="GstPlayVideoOverlayVideoRenderer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_render_rectangle" c:identifier="gst_play_video_overlay_video_renderer_get_render_rectangle" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">Return the currently configured render rectangle. See gst_play_video_overlay_video_renderer_set_render_rectangle()
+for details.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">a #GstPlayVideoOverlayVideoRenderer instance</doc>
+            <type name="PlayVideoOverlayVideoRenderer" c:type="GstPlayVideoOverlayVideoRenderer*"/>
+          </instance-parameter>
+          <parameter name="x" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the horizontal offset of the render area inside the window</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="y" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the vertical offset of the render area inside the window</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="width" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the width of the render area inside the window</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="height" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the height of the render area inside the window</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_window_handle" c:identifier="gst_play_video_overlay_video_renderer_get_window_handle" version="1.20">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">The currently set, platform specific window
+handle</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">#GstPlayVideoRenderer instance</doc>
+            <type name="PlayVideoOverlayVideoRenderer" c:type="GstPlayVideoOverlayVideoRenderer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_render_rectangle" c:identifier="gst_play_video_overlay_video_renderer_set_render_rectangle" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">Configure a subregion as a video target within the window set by
+gst_play_video_overlay_video_renderer_set_window_handle(). If this is not
+used or not supported the video will fill the area of the window set as the
+overlay to 100%. By specifying the rectangle, the video can be overlaid to
+a specific region of that window only. After setting the new rectangle one
+should call gst_play_video_overlay_video_renderer_expose() to force a
+redraw. To unset the region pass -1 for the @width and @height parameters.
+
+This method is needed for non fullscreen video overlay in UI toolkits that
+do not support subwindows.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">a #GstPlayVideoOverlayVideoRenderer instance</doc>
+            <type name="PlayVideoOverlayVideoRenderer" c:type="GstPlayVideoOverlayVideoRenderer*"/>
+          </instance-parameter>
+          <parameter name="x" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the horizontal offset of the render area inside the window</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="y" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the vertical offset of the render area inside the window</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="width" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the width of the render area inside the window</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="height" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">the height of the render area inside the window</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_window_handle" c:identifier="gst_play_video_overlay_video_renderer_set_window_handle" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">Sets the platform specific window handle into which the video
+should be rendered</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">#GstPlayVideoRenderer instance</doc>
+            <type name="PlayVideoOverlayVideoRenderer" c:type="GstPlayVideoOverlayVideoRenderer*"/>
+          </instance-parameter>
+          <parameter name="window_handle" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.c">handle referencing to the platform specific window</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="video-sink" writable="1" transfer-ownership="none">
+        <type name="Gst.Element"/>
+      </property>
+      <property name="window-handle" writable="1" construct="1" transfer-ownership="none">
+        <type name="gpointer" c:type="gpointer"/>
+      </property>
+    </class>
+    <record name="PlayVideoOverlayVideoRendererClass" c:type="GstPlayVideoOverlayVideoRendererClass" disguised="1" glib:is-gtype-struct-for="PlayVideoOverlayVideoRenderer">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-overlay-video-renderer.h"/>
+    </record>
+    <interface name="PlayVideoRenderer" c:symbol-prefix="play_video_renderer" c:type="GstPlayVideoRenderer" version="1.20" glib:type-name="GstPlayVideoRenderer" glib:get-type="gst_play_video_renderer_get_type" glib:type-struct="PlayVideoRendererInterface">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-renderer.h"/>
+      <virtual-method name="create_video_sink" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-renderer.h"/>
+        <return-value>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="PlayVideoRenderer" c:type="GstPlayVideoRenderer*"/>
+          </instance-parameter>
+          <parameter name="play" transfer-ownership="none">
+            <type name="Play" c:type="GstPlay*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+    </interface>
+    <record name="PlayVideoRendererInterface" c:type="GstPlayVideoRendererInterface" glib:is-gtype-struct-for="PlayVideoRenderer">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-renderer.h"/>
+      <field name="parent_iface">
+        <type name="GObject.TypeInterface" c:type="GTypeInterface"/>
+      </field>
+      <field name="create_video_sink" introspectable="0">
+        <callback name="create_video_sink" introspectable="0">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-video-renderer.h"/>
+          <return-value>
+            <type name="Gst.Element" c:type="GstElement*"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <type name="PlayVideoRenderer" c:type="GstPlayVideoRenderer*"/>
+            </parameter>
+            <parameter name="play" transfer-ownership="none">
+              <type name="Play" c:type="GstPlay*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <record name="PlayVisualization" c:type="GstPlayVisualization" version="1.20" glib:type-name="GstPlayVisualization" glib:get-type="gst_play_visualization_get_type" c:symbol-prefix="play_visualization">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h">A #GstPlayVisualization descriptor.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h"/>
+      <field name="name" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h">name of the visualization.</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </field>
+      <field name="description" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h">description of the visualization.</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </field>
+      <method name="copy" c:identifier="gst_play_visualization_copy" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">Makes a copy of the #GstPlayVisualization. The result must be
+freed using gst_play_visualization_free().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">an allocated copy of @vis.</doc>
+          <type name="PlayVisualization" c:type="GstPlayVisualization*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="vis" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">#GstPlayVisualization instance</doc>
+            <type name="PlayVisualization" c:type="const GstPlayVisualization*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_play_visualization_free" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">Frees a #GstPlayVisualization.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="vis" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay-visualization.c">#GstPlayVisualization instance</doc>
+            <type name="PlayVisualization" c:type="GstPlayVisualization*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <function name="play_color_balance_type_get_name" c:identifier="gst_play_color_balance_type_get_name" moved-to="PlayColorBalanceType.get_name" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Gets a string representing the given color balance type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the color
+  balance type.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayColorBalanceType</doc>
+          <type name="PlayColorBalanceType" c:type="GstPlayColorBalanceType"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_error_get_name" c:identifier="gst_play_error_get_name" moved-to="PlayError.get_name" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Gets a string representing the given error.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the given error.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="error" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayError</doc>
+          <type name="PlayError" c:type="GstPlayError"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_error_quark" c:identifier="gst_play_error_quark" moved-to="PlayError.quark" version="1.20">
+      <return-value transfer-ownership="none">
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </return-value>
+    </function>
+    <function name="play_message_get_name" c:identifier="gst_play_message_get_name" moved-to="PlayMessage.get_name" version="1.20">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the message.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="message_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayMessage</doc>
+          <type name="PlayMessage" c:type="GstPlayMessage"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_buffering_percent" c:identifier="gst_play_message_parse_buffering_percent" moved-to="PlayMessage.parse_buffering_percent" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given buffering-percent @msg and extract the corresponding value</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="percent" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting buffering percent</doc>
+          <type name="guint" c:type="guint*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_duration_updated" c:identifier="gst_play_message_parse_duration_updated" moved-to="PlayMessage.parse_duration_updated" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given duration @msg and extract the corresponding #GstClockTime</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="duration" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting duration</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_error" c:identifier="gst_play_message_parse_error" moved-to="PlayMessage.parse_error" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting error</doc>
+          <type name="GLib.Error" c:type="GError**"/>
+        </parameter>
+        <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the error</doc>
+          <type name="Gst.Structure" c:type="GstStructure**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_media_info_updated" c:identifier="gst_play_message_parse_media_info_updated" moved-to="PlayMessage.parse_media_info_updated" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding media information</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="info" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting media info</doc>
+          <type name="PlayMediaInfo" c:type="GstPlayMediaInfo**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_muted_changed" c:identifier="gst_play_message_parse_muted_changed" moved-to="PlayMessage.parse_muted_changed" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding audio muted state</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="muted" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting audio muted state</doc>
+          <type name="gboolean" c:type="gboolean*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_position_updated" c:identifier="gst_play_message_parse_position_updated" moved-to="PlayMessage.parse_position_updated" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given position @msg and extract the corresponding #GstClockTime</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="position" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting position</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_state_changed" c:identifier="gst_play_message_parse_state_changed" moved-to="PlayMessage.parse_state_changed" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given state @msg and extract the corresponding #GstPlayState</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="state" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting play state</doc>
+          <type name="PlayState" c:type="GstPlayState*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_type" c:identifier="gst_play_message_parse_type" moved-to="PlayMessage.parse_type" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract its #GstPlayMessage type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="type" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting message type</doc>
+          <type name="PlayMessage" c:type="GstPlayMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_video_dimensions_changed" c:identifier="gst_play_message_parse_video_dimensions_changed" moved-to="PlayMessage.parse_video_dimensions_changed" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding video dimensions</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="width" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting video width</doc>
+          <type name="guint" c:type="guint*"/>
+        </parameter>
+        <parameter name="height" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting video height</doc>
+          <type name="guint" c:type="guint*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_volume_changed" c:identifier="gst_play_message_parse_volume_changed" moved-to="PlayMessage.parse_volume_changed" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given @msg and extract the corresponding audio volume</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="volume" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting audio volume</doc>
+          <type name="gdouble" c:type="gdouble*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_message_parse_warning" c:identifier="gst_play_message_parse_warning" moved-to="PlayMessage.parse_warning" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Parse the given error @msg and extract the corresponding #GError warning</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstMessage</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="error" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">the resulting warning</doc>
+          <type name="GLib.Error" c:type="GError**"/>
+        </parameter>
+        <parameter name="details" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">A #GstStructure containing additional details about the warning</doc>
+          <type name="Gst.Structure" c:type="GstStructure**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="play_state_get_name" c:identifier="gst_play_state_get_name" moved-to="PlayState.get_name" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Gets a string representing the given state.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a string with the name of the state.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="state" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlayState</doc>
+          <type name="PlayState" c:type="GstPlayState"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

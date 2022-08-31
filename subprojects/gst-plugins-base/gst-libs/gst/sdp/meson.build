@@ -49,6 +49,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     sdp_gir = gnome.generate_gir(gstsdp, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [sdp_gir]}
     sdp_gen_sources += [sdp_gir]
   endif
 endif

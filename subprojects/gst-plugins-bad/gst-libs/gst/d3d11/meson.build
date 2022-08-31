@@ -212,6 +212,7 @@ if build_gir
   }
   if not static_build
     d3d11_gir = gnome.generate_gir(gstd3d11, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [d3d11_gir]}
     gen_sources += d3d11_gir
   endif
 

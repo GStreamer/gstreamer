@@ -1,0 +1,2681 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstSdp" version="1.0"/>
+  <package name="gstreamer-webrtc-1.0"/>
+  <c:include name="gst/webrtc/webrtc.h"/>
+  <namespace name="GstWebRTC" version="1.0" shared-library="libgstwebrtc-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <function-macro name="IS_WEBRTC_DATA_CHANNEL" c:identifier="GST_IS_WEBRTC_DATA_CHANNEL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_DATA_CHANNEL_CLASS" c:identifier="GST_IS_WEBRTC_DATA_CHANNEL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_DTLS_TRANSPORT" c:identifier="GST_IS_WEBRTC_DTLS_TRANSPORT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/dtlstransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_DTLS_TRANSPORT_CLASS" c:identifier="GST_IS_WEBRTC_DTLS_TRANSPORT_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/dtlstransport.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE" c:identifier="GST_IS_WEBRTC_ICE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE_CLASS" c:identifier="GST_IS_WEBRTC_ICE_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE_STREAM" c:identifier="GST_IS_WEBRTC_ICE_STREAM" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE_STREAM_CLASS" c:identifier="GST_IS_WEBRTC_ICE_STREAM_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE_TRANSPORT" c:identifier="GST_IS_WEBRTC_ICE_TRANSPORT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_ICE_TRANSPORT_CLASS" c:identifier="GST_IS_WEBRTC_ICE_TRANSPORT_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_RECEIVER" c:identifier="GST_IS_WEBRTC_RTP_RECEIVER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpreceiver.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_RECEIVER_CLASS" c:identifier="GST_IS_WEBRTC_RTP_RECEIVER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpreceiver.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_SENDER" c:identifier="GST_IS_WEBRTC_RTP_SENDER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_SENDER_CLASS" c:identifier="GST_IS_WEBRTC_RTP_SENDER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_TRANSCEIVER" c:identifier="GST_IS_WEBRTC_RTP_TRANSCEIVER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_RTP_TRANSCEIVER_CLASS" c:identifier="GST_IS_WEBRTC_RTP_TRANSCEIVER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_SCTP_TRANSPORT" c:identifier="GST_IS_WEBRTC_SCTP_TRANSPORT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/sctptransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_WEBRTC_SCTP_TRANSPORT_CLASS" c:identifier="GST_IS_WEBRTC_SCTP_TRANSPORT_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/sctptransport.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DATA_CHANNEL" c:identifier="GST_WEBRTC_DATA_CHANNEL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DATA_CHANNEL_CLASS" c:identifier="GST_WEBRTC_DATA_CHANNEL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DATA_CHANNEL_GET_CLASS" c:identifier="GST_WEBRTC_DATA_CHANNEL_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DEPRECATED_FOR" c:identifier="GST_WEBRTC_DEPRECATED_FOR" introspectable="0">
+      <attribute name="doc.skip" value="true"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+      <parameters>
+        <parameter name="f">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DTLS_TRANSPORT" c:identifier="GST_WEBRTC_DTLS_TRANSPORT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/dtlstransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DTLS_TRANSPORT_CLASS" c:identifier="GST_WEBRTC_DTLS_TRANSPORT_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/dtlstransport.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_DTLS_TRANSPORT_GET_CLASS" c:identifier="GST_WEBRTC_DTLS_TRANSPORT_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/dtlstransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE" c:identifier="GST_WEBRTC_ICE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_CLASS" c:identifier="GST_WEBRTC_ICE_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_GET_CLASS" c:identifier="GST_WEBRTC_ICE_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_STREAM" c:identifier="GST_WEBRTC_ICE_STREAM" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_STREAM_CLASS" c:identifier="GST_WEBRTC_ICE_STREAM_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_STREAM_GET_CLASS" c:identifier="GST_WEBRTC_ICE_STREAM_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_TRANSPORT" c:identifier="GST_WEBRTC_ICE_TRANSPORT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_TRANSPORT_CLASS" c:identifier="GST_WEBRTC_ICE_TRANSPORT_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_ICE_TRANSPORT_GET_CLASS" c:identifier="GST_WEBRTC_ICE_TRANSPORT_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_RECEIVER" c:identifier="GST_WEBRTC_RTP_RECEIVER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpreceiver.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_RECEIVER_CLASS" c:identifier="GST_WEBRTC_RTP_RECEIVER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpreceiver.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_RECEIVER_GET_CLASS" c:identifier="GST_WEBRTC_RTP_RECEIVER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpreceiver.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_SENDER" c:identifier="GST_WEBRTC_RTP_SENDER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_SENDER_CLASS" c:identifier="GST_WEBRTC_RTP_SENDER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_SENDER_GET_CLASS" c:identifier="GST_WEBRTC_RTP_SENDER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_TRANSCEIVER" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_TRANSCEIVER_CLASS" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_RTP_TRANSCEIVER_GET_CLASS" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_SCTP_TRANSPORT" c:identifier="GST_WEBRTC_SCTP_TRANSPORT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/sctptransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_SCTP_TRANSPORT_CLASS" c:identifier="GST_WEBRTC_SCTP_TRANSPORT_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/sctptransport.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="WEBRTC_SCTP_TRANSPORT_GET_CLASS" c:identifier="GST_WEBRTC_SCTP_TRANSPORT_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/sctptransport.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <enumeration name="WebRTCBundlePolicy" version="1.16" glib:type-name="GstWebRTCBundlePolicy" glib:get-type="gst_webrtc_bundle_policy_get_type" c:type="GstWebRTCBundlePolicy">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+for more information.</doc>
+      <member name="none" value="0" c:identifier="GST_WEBRTC_BUNDLE_POLICY_NONE" glib:nick="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">none</doc>
+      </member>
+      <member name="balanced" value="1" c:identifier="GST_WEBRTC_BUNDLE_POLICY_BALANCED" glib:nick="balanced">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">balanced</doc>
+      </member>
+      <member name="max_compat" value="2" c:identifier="GST_WEBRTC_BUNDLE_POLICY_MAX_COMPAT" glib:nick="max-compat">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">max-compat</doc>
+      </member>
+      <member name="max_bundle" value="3" c:identifier="GST_WEBRTC_BUNDLE_POLICY_MAX_BUNDLE" glib:nick="max-bundle">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">max-bundle</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCDTLSSetup" glib:type-name="GstWebRTCDTLSSetup" glib:get-type="gst_webrtc_dtls_setup_get_type" c:type="GstWebRTCDTLSSetup">
+      <member name="none" value="0" c:identifier="GST_WEBRTC_DTLS_SETUP_NONE" glib:nick="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">none</doc>
+      </member>
+      <member name="actpass" value="1" c:identifier="GST_WEBRTC_DTLS_SETUP_ACTPASS" glib:nick="actpass">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">actpass</doc>
+      </member>
+      <member name="active" value="2" c:identifier="GST_WEBRTC_DTLS_SETUP_ACTIVE" glib:nick="active">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">sendonly</doc>
+      </member>
+      <member name="passive" value="3" c:identifier="GST_WEBRTC_DTLS_SETUP_PASSIVE" glib:nick="passive">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">recvonly</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCDTLSTransport" c:symbol-prefix="webrtc_dtls_transport" c:type="GstWebRTCDTLSTransport" parent="Gst.Object" glib:type-name="GstWebRTCDTLSTransport" glib:get-type="gst_webrtc_dtls_transport_get_type" glib:type-struct="WebRTCDTLSTransportClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+      <property name="certificate" writable="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="client" writable="1" transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="remote-certificate" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="session-id" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="state" transfer-ownership="none">
+        <type name="WebRTCDTLSTransportState"/>
+      </property>
+      <property name="transport" transfer-ownership="none">
+        <type name="WebRTCICETransport"/>
+      </property>
+    </class>
+    <record name="WebRTCDTLSTransportClass" c:type="GstWebRTCDTLSTransportClass" disguised="1" glib:is-gtype-struct-for="WebRTCDTLSTransport">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+    </record>
+    <enumeration name="WebRTCDTLSTransportState" glib:type-name="GstWebRTCDTLSTransportState" glib:get-type="gst_webrtc_dtls_transport_state_get_type" c:type="GstWebRTCDTLSTransportState">
+      <member name="new" value="0" c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_NEW" glib:nick="new">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">new</doc>
+      </member>
+      <member name="closed" value="1" c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_CLOSED" glib:nick="closed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">closed</doc>
+      </member>
+      <member name="failed" value="2" c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_FAILED" glib:nick="failed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">failed</doc>
+      </member>
+      <member name="connecting" value="3" c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTING" glib:nick="connecting">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connecting</doc>
+      </member>
+      <member name="connected" value="4" c:identifier="GST_WEBRTC_DTLS_TRANSPORT_STATE_CONNECTED" glib:nick="connected">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connected</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCDataChannel" c:symbol-prefix="webrtc_data_channel" c:type="GstWebRTCDataChannel" version="1.18" parent="GObject.Object" abstract="1" glib:type-name="GstWebRTCDataChannel" glib:get-type="gst_webrtc_data_channel_get_type" glib:type-struct="WebRTCDataChannelClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+      <method name="close" c:identifier="gst_webrtc_data_channel_close">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Close the @channel.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="send_data" c:identifier="gst_webrtc_data_channel_send_data">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Send @data as a data message over @channel.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GBytes or %NULL</doc>
+            <type name="GLib.Bytes" c:type="GBytes*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="send_data_full" c:identifier="gst_webrtc_data_channel_send_data_full" version="1.22" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Send @data as a data message over @channel.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">TRUE if @channel is open and data could be queued</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GBytes or %NULL</doc>
+            <type name="GLib.Bytes" c:type="GBytes*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="send_string" c:identifier="gst_webrtc_data_channel_send_string">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Send @str as a string message over @channel.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+          <parameter name="str" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a string or %NULL</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="send_string_full" c:identifier="gst_webrtc_data_channel_send_string_full" version="1.22" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Send @str as a string message over @channel.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">TRUE if @channel is open and data could be queued</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="channel" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GstWebRTCDataChannel</doc>
+            <type name="WebRTCDataChannel" c:type="GstWebRTCDataChannel*"/>
+          </instance-parameter>
+          <parameter name="str" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a string or %NULL</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="buffered-amount" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="buffered-amount-low-threshold" writable="1" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="id" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="label" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="max-packet-lifetime" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="max-retransmits" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="negotiated" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="ordered" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="priority" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="WebRTCPriorityType"/>
+      </property>
+      <property name="protocol" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="ready-state" transfer-ownership="none">
+        <type name="WebRTCDataChannelState"/>
+      </property>
+      <glib:signal name="close" when="last" action="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">Close the data channel</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="on-buffered-amount-low" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="on-close" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="on-error" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="error" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">the #GError thrown</doc>
+            <type name="GLib.Error"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-message-data" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GBytes of the data received</doc>
+            <type name="GLib.Bytes"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-message-string" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">the data received as a string</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-open" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="send-data" when="last" action="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">a #GBytes with the data</doc>
+            <type name="GLib.Bytes"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="send-string" when="last" action="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/datachannel.c">the data to send as a string</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+    </class>
+    <record name="WebRTCDataChannelClass" c:type="GstWebRTCDataChannelClass" disguised="1" glib:is-gtype-struct-for="WebRTCDataChannel">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+    </record>
+    <enumeration name="WebRTCDataChannelState" version="1.16" glib:type-name="GstWebRTCDataChannelState" glib:get-type="gst_webrtc_data_channel_state_get_type" c:type="GstWebRTCDataChannelState">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcdatachannelstate&gt;</doc>
+      <member name="connecting" value="1" c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CONNECTING" glib:nick="connecting">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connecting</doc>
+      </member>
+      <member name="open" value="2" c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_OPEN" glib:nick="open">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">open</doc>
+      </member>
+      <member name="closing" value="3" c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSING" glib:nick="closing">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">closing</doc>
+      </member>
+      <member name="closed" value="4" c:identifier="GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED" glib:nick="closed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCError" version="1.20" glib:type-name="GstWebRTCError" glib:get-type="gst_webrtc_error_get_type" c:type="GstWebRTCError" glib:error-domain="gst-webrtc-error-quark">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;https://www.w3.org/TR/webrtc/#dom-rtcerrordetailtype&gt; for more information.</doc>
+      <member name="data_channel_failure" value="0" c:identifier="GST_WEBRTC_ERROR_DATA_CHANNEL_FAILURE" glib:nick="data-channel-failure">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">data-channel-failure</doc>
+      </member>
+      <member name="dtls_failure" value="1" c:identifier="GST_WEBRTC_ERROR_DTLS_FAILURE" glib:nick="dtls-failure">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">dtls-failure</doc>
+      </member>
+      <member name="fingerprint_failure" value="2" c:identifier="GST_WEBRTC_ERROR_FINGERPRINT_FAILURE" glib:nick="fingerprint-failure">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">fingerprint-failure</doc>
+      </member>
+      <member name="sctp_failure" value="3" c:identifier="GST_WEBRTC_ERROR_SCTP_FAILURE" glib:nick="sctp-failure">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">sctp-failure</doc>
+      </member>
+      <member name="sdp_syntax_error" value="4" c:identifier="GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR" glib:nick="sdp-syntax-error">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">sdp-syntax-error</doc>
+      </member>
+      <member name="hardware_encoder_not_available" value="5" c:identifier="GST_WEBRTC_ERROR_HARDWARE_ENCODER_NOT_AVAILABLE" glib:nick="hardware-encoder-not-available">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">hardware-encoder-not-available</doc>
+      </member>
+      <member name="encoder_error" value="6" c:identifier="GST_WEBRTC_ERROR_ENCODER_ERROR" glib:nick="encoder-error">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">encoder-error</doc>
+      </member>
+      <member name="invalid_state" value="7" c:identifier="GST_WEBRTC_ERROR_INVALID_STATE" glib:nick="invalid-state">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">invalid-state (part of WebIDL specification)</doc>
+      </member>
+      <member name="internal_failure" value="8" c:identifier="GST_WEBRTC_ERROR_INTERNAL_FAILURE" glib:nick="internal-failure">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">GStreamer-specific failure, not matching any other value from the specification</doc>
+      </member>
+      <member name="invalid_modification" value="9" c:identifier="GST_WEBRTC_ERROR_INVALID_MODIFICATION" glib:nick="invalid-modification">
+      </member>
+      <member name="type_error" value="10" c:identifier="GST_WEBRTC_ERROR_TYPE_ERROR" glib:nick="type-error">
+      </member>
+      <function name="quark" c:identifier="gst_webrtc_error_quark" version="1.20">
+        <return-value transfer-ownership="none">
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+      </function>
+    </enumeration>
+    <enumeration name="WebRTCFECType" version="1.14.1" glib:type-name="GstWebRTCFECType" glib:get-type="gst_webrtc_fec_type_get_type" c:type="GstWebRTCFECType">
+      <member name="none" value="0" c:identifier="GST_WEBRTC_FEC_TYPE_NONE" glib:nick="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">none</doc>
+      </member>
+      <member name="ulp_red" value="1" c:identifier="GST_WEBRTC_FEC_TYPE_ULP_RED" glib:nick="ulp-red">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">ulpfec + red</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCICE" c:symbol-prefix="webrtc_ice" c:type="GstWebRTCICE" version="1.22" parent="Gst.Object" abstract="1" glib:type-name="GstWebRTCICE" glib:get-type="gst_webrtc_ice_get_type" glib:type-struct="WebRTCICEClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <virtual-method name="add_candidate" invoker="add_candidate" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="candidate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The ICE candidate</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="promise" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A #GstPromise for task notifications (Since: 1.24)</doc>
+            <type name="Gst.Promise" c:type="GstPromise*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="add_stream" invoker="add_stream" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream, or %NULL</doc>
+          <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="session_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The session id</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="add_turn_server" invoker="add_turn_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN server</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="find_transport" invoker="find_transport" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICETransport, or %NULL</doc>
+          <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="component" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEComponent</doc>
+            <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="gather_candidates" invoker="gather_candidates" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_http_proxy" invoker="get_http_proxy" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">Get HTTP Proxy to be used when connecting to TURN server.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
+  http://[username:password@]hostname[:port]
+
+Get HTTP Proxy to be used when connecting to TURN server.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_is_controller" invoker="get_is_controller" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE if set as controller, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_local_candidates">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_remote_candidates">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_selected_pair" invoker="get_selected_pair" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on failure, otherwise @local_stats @remote_stats will be set</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="local_stats" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A pointer to #GstWebRTCICECandidateStats for local candidate</doc>
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+          </parameter>
+          <parameter name="remote_stats" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">pointer to #GstWebRTCICECandidateStats for remote candidate</doc>
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_stun_server" invoker="get_stun_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the STUN sever</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_turn_server" invoker="get_turn_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN sever</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_force_relay" invoker="set_force_relay" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="force_relay" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE to enable force relay</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_http_proxy" invoker="set_http_proxy" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Set HTTP Proxy to be used when connecting to TURN server.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
+  http://[username:password@]hostname[:port]</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_is_controller" invoker="set_is_controller" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="controller" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE to set as controller</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_local_credentials" invoker="set_local_credentials" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="ufrag" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE username</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="pwd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE password</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_on_ice_candidate" invoker="set_on_ice_candidate" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="func" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEOnCandidateFunc callback function</doc>
+            <type name="WebRTCICEOnCandidateFunc" c:type="GstWebRTCICEOnCandidateFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">User data passed to the callback function</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">a #GDestroyNotify when the candidate is no longer needed</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_remote_credentials" invoker="set_remote_credentials" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="ufrag" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE username</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="pwd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE password</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_stun_server" invoker="set_stun_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the STUN server</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_tos" invoker="set_tos" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="tos" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ToS to be set</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_turn_server" invoker="set_turn_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN sever</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <method name="add_candidate" c:identifier="gst_webrtc_ice_add_candidate" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="candidate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The ICE candidate</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="promise" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A #GstPromise for task notifications (Since: 1.24)</doc>
+            <type name="Gst.Promise" c:type="GstPromise*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_stream" c:identifier="gst_webrtc_ice_add_stream" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream, or %NULL</doc>
+          <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="session_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The session id</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_turn_server" c:identifier="gst_webrtc_ice_add_turn_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN server</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="find_transport" c:identifier="gst_webrtc_ice_find_transport" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICETransport, or %NULL</doc>
+          <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="component" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEComponent</doc>
+            <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="gather_candidates" c:identifier="gst_webrtc_ice_gather_candidates" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_http_proxy" c:identifier="gst_webrtc_ice_get_http_proxy" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
+  http://[username:password@]hostname[:port]
+
+Get HTTP Proxy to be used when connecting to TURN server.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_is_controller" c:identifier="gst_webrtc_ice_get_is_controller" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE if set as controller, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_local_candidates" c:identifier="gst_webrtc_ice_get_local_candidates" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">List of local candidates</doc>
+          <array c:type="GstWebRTCICECandidateStats**">
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats*"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_remote_candidates" c:identifier="gst_webrtc_ice_get_remote_candidates" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">List of remote candidates</doc>
+          <array c:type="GstWebRTCICECandidateStats**">
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats*"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_selected_pair" c:identifier="gst_webrtc_ice_get_selected_pair" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on failure, otherwise @local_stats @remote_stats will be set</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="local_stats" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A pointer to #GstWebRTCICECandidateStats for local candidate</doc>
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+          </parameter>
+          <parameter name="remote_stats" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">pointer to #GstWebRTCICECandidateStats for remote candidate</doc>
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_stun_server" c:identifier="gst_webrtc_ice_get_stun_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the STUN sever</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_turn_server" c:identifier="gst_webrtc_ice_get_turn_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN sever</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_force_relay" c:identifier="gst_webrtc_ice_set_force_relay" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="force_relay" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE to enable force relay</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_http_proxy" c:identifier="gst_webrtc_ice_set_http_proxy" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Set HTTP Proxy to be used when connecting to TURN server.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
+  http://[username:password@]hostname[:port]</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_is_controller" c:identifier="gst_webrtc_ice_set_is_controller" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="controller" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE to set as controller</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_local_credentials" c:identifier="gst_webrtc_ice_set_local_credentials" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="ufrag" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE username</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="pwd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE password</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_on_ice_candidate" c:identifier="gst_webrtc_ice_set_on_ice_candidate" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="func" transfer-ownership="none" scope="notified" closure="1" destroy="2">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEOnCandidateFunc callback function</doc>
+            <type name="WebRTCICEOnCandidateFunc" c:type="GstWebRTCICEOnCandidateFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">User data passed to the callback function</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="notify" transfer-ownership="none" scope="async">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">a #GDestroyNotify when the candidate is no longer needed</doc>
+            <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_remote_credentials" c:identifier="gst_webrtc_ice_set_remote_credentials" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="ufrag" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE username</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="pwd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE password</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_stun_server" c:identifier="gst_webrtc_ice_set_stun_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the STUN server</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_tos" c:identifier="gst_webrtc_ice_set_tos" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </parameter>
+          <parameter name="tos" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ToS to be set</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_turn_server" c:identifier="gst_webrtc_ice_set_turn_server" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN sever</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="max-rtp-port" version="1.20" writable="1" construct="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Maximum port for local rtp port range.
+min-rtp-port must be &lt;= max-rtp-port</doc>
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="min-rtp-port" version="1.20" writable="1" construct="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Minimum port for local rtp port range.
+min-rtp-port must be &lt;= max-rtp-port</doc>
+        <type name="guint" c:type="guint"/>
+      </property>
+      <field name="parent">
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+      <field name="ice_gathering_state">
+        <type name="WebRTCICEGatheringState" c:type="GstWebRTCICEGatheringState"/>
+      </field>
+      <field name="ice_connection_state">
+        <type name="WebRTCICEConnectionState" c:type="GstWebRTCICEConnectionState"/>
+      </field>
+      <field name="min_rtp_port">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="max_rtp_port">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="_gst_reserved">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <glib:signal name="add-local-ip-address" when="last" action="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Add a local IP address to use for ICE candidate gathering.  If none
+are supplied, they will be discovered automatically. Calling this signal
+stops automatic ICE gathering.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">whether the address could be added.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="address" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The local IP address</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+    </class>
+    <record name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats" version="1.22" glib:type-name="GstWebRTCICECandidateStats" glib:get-type="gst_webrtc_ice_candidate_stats_get_type" c:symbol-prefix="webrtc_ice_candidate_stats">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <field name="ipaddr" writable="1">
+        <type name="utf8" c:type="gchar*"/>
+      </field>
+      <field name="port" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="stream_id" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="type" writable="1">
+        <type name="utf8" c:type="const gchar*"/>
+      </field>
+      <field name="proto" writable="1">
+        <type name="utf8" c:type="const gchar*"/>
+      </field>
+      <field name="relay_proto" writable="1">
+        <type name="utf8" c:type="const gchar*"/>
+      </field>
+      <field name="prio" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="url" writable="1">
+        <type name="utf8" c:type="gchar*"/>
+      </field>
+      <field name="_gst_reserved" writable="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="copy" c:identifier="gst_webrtc_ice_candidate_stats_copy" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A copy of @stats</doc>
+          <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stats" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_webrtc_ice_candidate_stats_free" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">Helper function to free #GstWebRTCICECandidateStats</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stats" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICECandidateStats to be free'd</doc>
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="WebRTCICEClass" c:type="GstWebRTCICEClass" glib:is-gtype-struct-for="WebRTCICE">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="add_stream">
+        <callback name="add_stream">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream, or %NULL</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="session_id" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The session id</doc>
+              <type name="guint" c:type="guint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="find_transport">
+        <callback name="find_transport">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICETransport, or %NULL</doc>
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+            <parameter name="component" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEComponent</doc>
+              <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="gather_candidates">
+        <callback name="gather_candidates">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="add_candidate">
+        <callback name="add_candidate">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+            <parameter name="candidate" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The ICE candidate</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+            <parameter name="promise" transfer-ownership="none" nullable="1" allow-none="1">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A #GstPromise for task notifications (Since: 1.24)</doc>
+              <type name="Gst.Promise" c:type="GstPromise*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_local_credentials">
+        <callback name="set_local_credentials">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+            <parameter name="ufrag" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE username</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+            <parameter name="pwd" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE password</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_remote_credentials">
+        <callback name="set_remote_credentials">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+            <parameter name="ufrag" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE username</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+            <parameter name="pwd" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ICE password</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="add_turn_server">
+        <callback name="add_turn_server">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on error, TRUE otherwise</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="uri" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN server</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_is_controller">
+        <callback name="set_is_controller">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="controller" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE to set as controller</doc>
+              <type name="gboolean" c:type="gboolean"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_is_controller">
+        <callback name="get_is_controller">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE if set as controller, FALSE otherwise</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_force_relay">
+        <callback name="set_force_relay">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="force_relay" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">TRUE to enable force relay</doc>
+              <type name="gboolean" c:type="gboolean"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_stun_server">
+        <callback name="set_stun_server">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the STUN server</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_stun_server">
+        <callback name="get_stun_server">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the STUN sever</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_turn_server">
+        <callback name="set_turn_server">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="uri" transfer-ownership="none" nullable="1" allow-none="1">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN sever</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_turn_server">
+        <callback name="get_turn_server">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the TURN sever</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_http_proxy">
+        <callback name="set_http_proxy">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="uri" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
+  http://[username:password@]hostname[:port]</doc>
+              <type name="utf8" c:type="const gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_http_proxy">
+        <callback name="get_http_proxy">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">URI of the HTTP proxy of the form
+  http://[username:password@]hostname[:port]
+
+Get HTTP Proxy to be used when connecting to TURN server.</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_tos">
+        <callback name="set_tos">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+            <parameter name="tos" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">ToS to be set</doc>
+              <type name="guint" c:type="guint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_on_ice_candidate">
+        <callback name="set_on_ice_candidate">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="func" transfer-ownership="none" scope="notified" closure="2" destroy="3">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEOnCandidateFunc callback function</doc>
+              <type name="WebRTCICEOnCandidateFunc" c:type="GstWebRTCICEOnCandidateFunc"/>
+            </parameter>
+            <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="2">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">User data passed to the callback function</doc>
+              <type name="gpointer" c:type="gpointer"/>
+            </parameter>
+            <parameter name="notify" transfer-ownership="none" scope="async">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">a #GDestroyNotify when the candidate is no longer needed</doc>
+              <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_local_candidates">
+        <callback name="get_local_candidates">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="full">
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_remote_candidates">
+        <callback name="get_remote_candidates">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="full">
+            <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_selected_pair">
+        <callback name="get_selected_pair">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">FALSE on failure, otherwise @local_stats @remote_stats will be set</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICE</doc>
+              <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+            </parameter>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">The #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+            <parameter name="local_stats" direction="out" caller-allocates="0" transfer-ownership="full">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">A pointer to #GstWebRTCICECandidateStats for local candidate</doc>
+              <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+            </parameter>
+            <parameter name="remote_stats" direction="out" caller-allocates="0" transfer-ownership="full">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.c">pointer to #GstWebRTCICECandidateStats for remote candidate</doc>
+              <type name="WebRTCICECandidateStats" c:type="GstWebRTCICECandidateStats**"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <enumeration name="WebRTCICEComponent" glib:type-name="GstWebRTCICEComponent" glib:get-type="gst_webrtc_ice_component_get_type" c:type="GstWebRTCICEComponent">
+      <member name="rtp" value="0" c:identifier="GST_WEBRTC_ICE_COMPONENT_RTP" glib:nick="rtp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">RTP component</doc>
+      </member>
+      <member name="rtcp" value="1" c:identifier="GST_WEBRTC_ICE_COMPONENT_RTCP" glib:nick="rtcp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">RTCP component</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCICEConnectionState" glib:type-name="GstWebRTCICEConnectionState" glib:get-type="gst_webrtc_ice_connection_state_get_type" c:type="GstWebRTCICEConnectionState">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtciceconnectionstate&gt;</doc>
+      <member name="new" value="0" c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_NEW" glib:nick="new">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">new</doc>
+      </member>
+      <member name="checking" value="1" c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_CHECKING" glib:nick="checking">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">checking</doc>
+      </member>
+      <member name="connected" value="2" c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_CONNECTED" glib:nick="connected">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connected</doc>
+      </member>
+      <member name="completed" value="3" c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_COMPLETED" glib:nick="completed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">completed</doc>
+      </member>
+      <member name="failed" value="4" c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_FAILED" glib:nick="failed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">failed</doc>
+      </member>
+      <member name="disconnected" value="5" c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_DISCONNECTED" glib:nick="disconnected">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">disconnected</doc>
+      </member>
+      <member name="closed" value="6" c:identifier="GST_WEBRTC_ICE_CONNECTION_STATE_CLOSED" glib:nick="closed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCICEGatheringState" glib:type-name="GstWebRTCICEGatheringState" glib:get-type="gst_webrtc_ice_gathering_state_get_type" c:type="GstWebRTCICEGatheringState">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcicegatheringstate&gt;</doc>
+      <member name="new" value="0" c:identifier="GST_WEBRTC_ICE_GATHERING_STATE_NEW" glib:nick="new">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">new</doc>
+      </member>
+      <member name="gathering" value="1" c:identifier="GST_WEBRTC_ICE_GATHERING_STATE_GATHERING" glib:nick="gathering">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">gathering</doc>
+      </member>
+      <member name="complete" value="2" c:identifier="GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE" glib:nick="complete">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">complete</doc>
+      </member>
+    </enumeration>
+    <callback name="WebRTCICEOnCandidateFunc" c:type="GstWebRTCICEOnCandidateFunc" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">Callback function to be triggered on discovery of a new candidate</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="ice" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">The #GstWebRTCICE</doc>
+          <type name="WebRTCICE" c:type="GstWebRTCICE*"/>
+        </parameter>
+        <parameter name="stream_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">The stream id</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="candidate" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">The discovered candidate</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1" closure="3">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/ice.h">User data that was set by #gst_webrtc_ice_set_on_ice_candidate</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+      </parameters>
+    </callback>
+    <enumeration name="WebRTCICERole" glib:type-name="GstWebRTCICERole" glib:get-type="gst_webrtc_ice_role_get_type" c:type="GstWebRTCICERole">
+      <member name="controlled" value="0" c:identifier="GST_WEBRTC_ICE_ROLE_CONTROLLED" glib:nick="controlled">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">controlled</doc>
+      </member>
+      <member name="controlling" value="1" c:identifier="GST_WEBRTC_ICE_ROLE_CONTROLLING" glib:nick="controlling">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">controlling</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCICEStream" c:symbol-prefix="webrtc_ice_stream" c:type="GstWebRTCICEStream" version="1.22" parent="Gst.Object" abstract="1" glib:type-name="GstWebRTCICEStream" glib:get-type="gst_webrtc_ice_stream_get_type" glib:type-struct="WebRTCICEStreamClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+      <virtual-method name="find_transport" invoker="find_transport" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICETransport, or %NULL</doc>
+          <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </instance-parameter>
+          <parameter name="component" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">The #GstWebRTCICEComponent</doc>
+            <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="gather_candidates" invoker="gather_candidates" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <method name="find_transport" c:identifier="gst_webrtc_ice_stream_find_transport" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICETransport, or %NULL</doc>
+          <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </instance-parameter>
+          <parameter name="component" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">The #GstWebRTCICEComponent</doc>
+            <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="gather_candidates" c:identifier="gst_webrtc_ice_stream_gather_candidates" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">FALSE on error, TRUE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICEStream</doc>
+            <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="stream-id" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <field name="parent">
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+      <field name="stream_id">
+        <type name="guint" c:type="guint"/>
+      </field>
+    </class>
+    <record name="WebRTCICEStreamClass" c:type="GstWebRTCICEStreamClass" glib:is-gtype-struct-for="WebRTCICEStream">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="find_transport">
+        <callback name="find_transport">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+          <return-value transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICETransport, or %NULL</doc>
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </return-value>
+          <parameters>
+            <parameter name="stream" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+            <parameter name="component" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">The #GstWebRTCICEComponent</doc>
+              <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="gather_candidates">
+        <callback name="gather_candidates">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">FALSE on error, TRUE otherwise</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="ice" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icestream.c">the #GstWebRTCICEStream</doc>
+              <type name="WebRTCICEStream" c:type="GstWebRTCICEStream*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <class name="WebRTCICETransport" c:symbol-prefix="webrtc_ice_transport" c:type="GstWebRTCICETransport" parent="Gst.Object" abstract="1" glib:type-name="GstWebRTCICETransport" glib:get-type="gst_webrtc_ice_transport_get_type" glib:type-struct="WebRTCICETransportClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+      <virtual-method name="gather_candidates">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="transport" transfer-ownership="none">
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <method name="connection_state_change" c:identifier="gst_webrtc_ice_transport_connection_state_change">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </instance-parameter>
+          <parameter name="new_state" transfer-ownership="none">
+            <type name="WebRTCICEConnectionState" c:type="GstWebRTCICEConnectionState"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="gathering_state_change" c:identifier="gst_webrtc_ice_transport_gathering_state_change">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </instance-parameter>
+          <parameter name="new_state" transfer-ownership="none">
+            <type name="WebRTCICEGatheringState" c:type="GstWebRTCICEGatheringState"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="new_candidate" c:identifier="gst_webrtc_ice_transport_new_candidate">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </instance-parameter>
+          <parameter name="stream_id" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="component" transfer-ownership="none">
+            <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+          </parameter>
+          <parameter name="attr" transfer-ownership="none">
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="selected_pair_change" c:identifier="gst_webrtc_ice_transport_selected_pair_change">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="ice" transfer-ownership="none">
+            <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="component" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="WebRTCICEComponent"/>
+      </property>
+      <property name="gathering-state" transfer-ownership="none">
+        <type name="WebRTCICEGatheringState"/>
+      </property>
+      <property name="state" transfer-ownership="none">
+        <type name="WebRTCICEConnectionState"/>
+      </property>
+      <field name="parent">
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+      <field name="role">
+        <type name="WebRTCICERole" c:type="GstWebRTCICERole"/>
+      </field>
+      <field name="component">
+        <type name="WebRTCICEComponent" c:type="GstWebRTCICEComponent"/>
+      </field>
+      <field name="state">
+        <type name="WebRTCICEConnectionState" c:type="GstWebRTCICEConnectionState"/>
+      </field>
+      <field name="gathering_state">
+        <type name="WebRTCICEGatheringState" c:type="GstWebRTCICEGatheringState"/>
+      </field>
+      <field name="src">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="sink">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="_padding">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <glib:signal name="on-new-candidate" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="object" transfer-ownership="none">
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="on-selected-candidate-pair-change" when="last">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+    </class>
+    <record name="WebRTCICETransportClass" c:type="GstWebRTCICETransportClass" glib:is-gtype-struct-for="WebRTCICETransport">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+      <field name="parent_class">
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="gather_candidates">
+        <callback name="gather_candidates">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/icetransport.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="transport" transfer-ownership="none">
+              <type name="WebRTCICETransport" c:type="GstWebRTCICETransport*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_padding">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <enumeration name="WebRTCICETransportPolicy" version="1.16" glib:type-name="GstWebRTCICETransportPolicy" glib:get-type="gst_webrtc_ice_transport_policy_get_type" c:type="GstWebRTCICETransportPolicy">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See https://tools.ietf.org/html/draft-ietf-rtcweb-jsep-24#section-4.1.1
+for more information.</doc>
+      <member name="all" value="0" c:identifier="GST_WEBRTC_ICE_TRANSPORT_POLICY_ALL" glib:nick="all">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">all</doc>
+      </member>
+      <member name="relay" value="1" c:identifier="GST_WEBRTC_ICE_TRANSPORT_POLICY_RELAY" glib:nick="relay">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">relay</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCKind" version="1.20" glib:type-name="GstWebRTCKind" glib:get-type="gst_webrtc_kind_get_type" c:type="GstWebRTCKind">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">https://w3c.github.io/mediacapture-main/#dom-mediastreamtrack-kind</doc>
+      <member name="unknown" value="0" c:identifier="GST_WEBRTC_KIND_UNKNOWN" glib:nick="unknown">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind has not yet been set</doc>
+      </member>
+      <member name="audio" value="1" c:identifier="GST_WEBRTC_KIND_AUDIO" glib:nick="audio">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind is audio</doc>
+      </member>
+      <member name="video" value="2" c:identifier="GST_WEBRTC_KIND_VIDEO" glib:nick="video">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Kind is audio</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCPeerConnectionState" glib:type-name="GstWebRTCPeerConnectionState" glib:get-type="gst_webrtc_peer_connection_state_get_type" c:type="GstWebRTCPeerConnectionState">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcpeerconnectionstate&gt;</doc>
+      <member name="new" value="0" c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_NEW" glib:nick="new">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">new</doc>
+      </member>
+      <member name="connecting" value="1" c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_CONNECTING" glib:nick="connecting">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connecting</doc>
+      </member>
+      <member name="connected" value="2" c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_CONNECTED" glib:nick="connected">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connected</doc>
+      </member>
+      <member name="disconnected" value="3" c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_DISCONNECTED" glib:nick="disconnected">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">disconnected</doc>
+      </member>
+      <member name="failed" value="4" c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_FAILED" glib:nick="failed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">failed</doc>
+      </member>
+      <member name="closed" value="5" c:identifier="GST_WEBRTC_PEER_CONNECTION_STATE_CLOSED" glib:nick="closed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCPriorityType" version="1.16" glib:type-name="GstWebRTCPriorityType" glib:get-type="gst_webrtc_priority_type_get_type" c:type="GstWebRTCPriorityType">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcprioritytype&gt;</doc>
+      <member name="very_low" value="1" c:identifier="GST_WEBRTC_PRIORITY_TYPE_VERY_LOW" glib:nick="very-low">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">very-low</doc>
+      </member>
+      <member name="low" value="2" c:identifier="GST_WEBRTC_PRIORITY_TYPE_LOW" glib:nick="low">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">low</doc>
+      </member>
+      <member name="medium" value="3" c:identifier="GST_WEBRTC_PRIORITY_TYPE_MEDIUM" glib:nick="medium">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">medium</doc>
+      </member>
+      <member name="high" value="4" c:identifier="GST_WEBRTC_PRIORITY_TYPE_HIGH" glib:nick="high">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">high</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCRTPReceiver" c:symbol-prefix="webrtc_rtp_receiver" c:type="GstWebRTCRTPReceiver" parent="Gst.Object" glib:type-name="GstWebRTCRTPReceiver" glib:get-type="gst_webrtc_rtp_receiver_get_type" glib:type-struct="WebRTCRTPReceiverClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">An object to track the receiving aspect of the stream
+
+Mostly matches the WebRTC RTCRtpReceiver interface.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+      <property name="transport" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpreceiver.c">The DTLS transport for this receiver</doc>
+        <type name="WebRTCDTLSTransport"/>
+      </property>
+    </class>
+    <record name="WebRTCRTPReceiverClass" c:type="GstWebRTCRTPReceiverClass" disguised="1" glib:is-gtype-struct-for="WebRTCRTPReceiver">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+    </record>
+    <class name="WebRTCRTPSender" c:symbol-prefix="webrtc_rtp_sender" c:type="GstWebRTCRTPSender" parent="Gst.Object" glib:type-name="GstWebRTCRTPSender" glib:get-type="gst_webrtc_rtp_sender_get_type" glib:type-struct="WebRTCRTPSenderClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">An object to track the sending aspect of the stream
+
+Mostly matches the WebRTC RTCRtpSender interface.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+      <method name="set_priority" c:identifier="gst_webrtc_rtp_sender_set_priority" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.c">Sets the content of the IPv4 Type of Service (ToS), also known as DSCP
+(Differentiated Services Code Point).
+This also sets the Traffic Class field of IPv6.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="sender" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.c">a #GstWebRTCRTPSender</doc>
+            <type name="WebRTCRTPSender" c:type="GstWebRTCRTPSender*"/>
+          </instance-parameter>
+          <parameter name="priority" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.c">The priority of this sender</doc>
+            <type name="WebRTCPriorityType" c:type="GstWebRTCPriorityType"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="priority" version="1.20" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.c">The priority from which to set the DSCP field on packets</doc>
+        <type name="WebRTCPriorityType"/>
+      </property>
+      <property name="transport" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtpsender.c">The DTLS transport for this sender</doc>
+        <type name="WebRTCDTLSTransport"/>
+      </property>
+    </class>
+    <record name="WebRTCRTPSenderClass" c:type="GstWebRTCRTPSenderClass" disguised="1" glib:is-gtype-struct-for="WebRTCRTPSender">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+    </record>
+    <class name="WebRTCRTPTransceiver" c:symbol-prefix="webrtc_rtp_transceiver" c:type="GstWebRTCRTPTransceiver" parent="Gst.Object" abstract="1" glib:type-name="GstWebRTCRTPTransceiver" glib:get-type="gst_webrtc_rtp_transceiver_get_type" glib:type-struct="WebRTCRTPTransceiverClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">Mostly matches the WebRTC RTCRtpTransceiver interface.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+      <property name="codec-preferences" version="1.20" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.c">Caps representing the codec preferences.</doc>
+        <type name="Gst.Caps"/>
+      </property>
+      <property name="current-direction" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.c">The transceiver's current directionality, or none if the
+transceiver is stopped or has never participated in an exchange
+of offers and answers. To change the transceiver's
+directionality, set the value of the direction property.</doc>
+        <type name="WebRTCRTPTransceiverDirection"/>
+      </property>
+      <property name="direction" version="1.18" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.c">Direction of the transceiver.</doc>
+        <type name="WebRTCRTPTransceiverDirection"/>
+      </property>
+      <property name="kind" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.c">The kind of media this transceiver transports</doc>
+        <type name="WebRTCKind"/>
+      </property>
+      <property name="mid" version="1.20" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtptransceiver.c">The media ID of the m-line associated with this transceiver. This
+association is established, when possible, whenever either a
+local or remote description is applied. This field is null if
+neither a local or remote description has been applied, or if its
+associated m-line is rejected by either a remote offer or any
+answer.</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="mlineindex" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="receiver" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="WebRTCRTPReceiver"/>
+      </property>
+      <property name="sender" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="WebRTCRTPSender"/>
+      </property>
+    </class>
+    <record name="WebRTCRTPTransceiverClass" c:type="GstWebRTCRTPTransceiverClass" disguised="1" glib:is-gtype-struct-for="WebRTCRTPTransceiver">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+    </record>
+    <enumeration name="WebRTCRTPTransceiverDirection" glib:type-name="GstWebRTCRTPTransceiverDirection" glib:get-type="gst_webrtc_rtp_transceiver_direction_get_type" c:type="GstWebRTCRTPTransceiverDirection">
+      <member name="none" value="0" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE" glib:nick="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">none</doc>
+      </member>
+      <member name="inactive" value="1" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE" glib:nick="inactive">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">inactive</doc>
+      </member>
+      <member name="sendonly" value="2" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY" glib:nick="sendonly">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">sendonly</doc>
+      </member>
+      <member name="recvonly" value="3" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY" glib:nick="recvonly">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">recvonly</doc>
+      </member>
+      <member name="sendrecv" value="4" c:identifier="GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV" glib:nick="sendrecv">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">sendrecv</doc>
+      </member>
+    </enumeration>
+    <class name="WebRTCSCTPTransport" c:symbol-prefix="webrtc_sctp_transport" c:type="GstWebRTCSCTPTransport" parent="Gst.Object" abstract="1" glib:type-name="GstWebRTCSCTPTransport" glib:get-type="gst_webrtc_sctp_transport_get_type" glib:type-struct="WebRTCSCTPTransportClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+      <property name="max-channels" transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="max-message-size" transfer-ownership="none">
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="state" transfer-ownership="none">
+        <type name="WebRTCSCTPTransportState"/>
+      </property>
+      <property name="transport" transfer-ownership="none">
+        <type name="WebRTCDTLSTransport"/>
+      </property>
+    </class>
+    <record name="WebRTCSCTPTransportClass" c:type="GstWebRTCSCTPTransportClass" disguised="1" glib:is-gtype-struct-for="WebRTCSCTPTransport">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h"/>
+    </record>
+    <enumeration name="WebRTCSCTPTransportState" version="1.16" glib:type-name="GstWebRTCSCTPTransportState" glib:get-type="gst_webrtc_sctp_transport_state_get_type" c:type="GstWebRTCSCTPTransportState">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcsctptransportstate&gt;</doc>
+      <member name="new" value="0" c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_NEW" glib:nick="new">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">new</doc>
+      </member>
+      <member name="connecting" value="1" c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTING" glib:nick="connecting">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connecting</doc>
+      </member>
+      <member name="connected" value="2" c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CONNECTED" glib:nick="connected">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">connected</doc>
+      </member>
+      <member name="closed" value="3" c:identifier="GST_WEBRTC_SCTP_TRANSPORT_STATE_CLOSED" glib:nick="closed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">closed</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCSDPType" glib:type-name="GstWebRTCSDPType" glib:get-type="gst_webrtc_sdp_type_get_type" c:type="GstWebRTCSDPType">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#rtcsdptype&gt;</doc>
+      <member name="offer" value="1" c:identifier="GST_WEBRTC_SDP_TYPE_OFFER" glib:nick="offer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">offer</doc>
+      </member>
+      <member name="pranswer" value="2" c:identifier="GST_WEBRTC_SDP_TYPE_PRANSWER" glib:nick="pranswer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">pranswer</doc>
+      </member>
+      <member name="answer" value="3" c:identifier="GST_WEBRTC_SDP_TYPE_ANSWER" glib:nick="answer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">answer</doc>
+      </member>
+      <member name="rollback" value="4" c:identifier="GST_WEBRTC_SDP_TYPE_ROLLBACK" glib:nick="rollback">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">rollback</doc>
+      </member>
+      <function name="to_string" c:identifier="gst_webrtc_sdp_type_to_string">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">the string representation of @type or "unknown" when @type is not
+     recognized.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a #GstWebRTCSDPType</doc>
+            <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <record name="WebRTCSessionDescription" c:type="GstWebRTCSessionDescription" glib:type-name="GstWebRTCSessionDescription" glib:get-type="gst_webrtc_session_description_get_type" c:symbol-prefix="webrtc_session_description">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h">See &lt;https://www.w3.org/TR/webrtc/#rtcsessiondescription-class&gt;</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h"/>
+      <field name="type" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h">the #GstWebRTCSDPType of the description</doc>
+        <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+      </field>
+      <field name="sdp" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h">the #GstSDPMessage of the description</doc>
+        <type name="GstSdp.SDPMessage" c:type="GstSDPMessage*"/>
+      </field>
+      <constructor name="new" c:identifier="gst_webrtc_session_description_new">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a new #GstWebRTCSessionDescription from @type
+     and @sdp</doc>
+          <type name="WebRTCSessionDescription" c:type="GstWebRTCSessionDescription*"/>
+        </return-value>
+        <parameters>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a #GstWebRTCSDPType</doc>
+            <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+          </parameter>
+          <parameter name="sdp" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a #GstSDPMessage</doc>
+            <type name="GstSdp.SDPMessage" c:type="GstSDPMessage*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="copy" c:identifier="gst_webrtc_session_description_copy">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a new copy of @src</doc>
+          <type name="WebRTCSessionDescription" c:type="GstWebRTCSessionDescription*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="src" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a #GstWebRTCSessionDescription</doc>
+            <type name="WebRTCSessionDescription" c:type="const GstWebRTCSessionDescription*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_webrtc_session_description_free">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">Free @desc and all associated resources</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="desc" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a #GstWebRTCSessionDescription</doc>
+            <type name="WebRTCSessionDescription" c:type="GstWebRTCSessionDescription*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <enumeration name="WebRTCSignalingState" glib:type-name="GstWebRTCSignalingState" glib:get-type="gst_webrtc_signaling_state_get_type" c:type="GstWebRTCSignalingState">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;http://w3c.github.io/webrtc-pc/#dom-rtcsignalingstate&gt;</doc>
+      <member name="stable" value="0" c:identifier="GST_WEBRTC_SIGNALING_STATE_STABLE" glib:nick="stable">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">stable</doc>
+      </member>
+      <member name="closed" value="1" c:identifier="GST_WEBRTC_SIGNALING_STATE_CLOSED" glib:nick="closed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">closed</doc>
+      </member>
+      <member name="have_local_offer" value="2" c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_LOCAL_OFFER" glib:nick="have-local-offer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">have-local-offer</doc>
+      </member>
+      <member name="have_remote_offer" value="3" c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_OFFER" glib:nick="have-remote-offer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">have-remote-offer</doc>
+      </member>
+      <member name="have_local_pranswer" value="4" c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_LOCAL_PRANSWER" glib:nick="have-local-pranswer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">have-local-pranswer</doc>
+      </member>
+      <member name="have_remote_pranswer" value="5" c:identifier="GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_PRANSWER" glib:nick="have-remote-pranswer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">have-remote-pranswer</doc>
+      </member>
+    </enumeration>
+    <enumeration name="WebRTCStatsType" glib:type-name="GstWebRTCStatsType" glib:get-type="gst_webrtc_stats_type_get_type" c:type="GstWebRTCStatsType">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">See &lt;https://w3c.github.io/webrtc-stats/#dom-rtcstatstype&gt;</doc>
+      <member name="codec" value="1" c:identifier="GST_WEBRTC_STATS_CODEC" glib:nick="codec">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">codec</doc>
+      </member>
+      <member name="inbound_rtp" value="2" c:identifier="GST_WEBRTC_STATS_INBOUND_RTP" glib:nick="inbound-rtp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">inbound-rtp</doc>
+      </member>
+      <member name="outbound_rtp" value="3" c:identifier="GST_WEBRTC_STATS_OUTBOUND_RTP" glib:nick="outbound-rtp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">outbound-rtp</doc>
+      </member>
+      <member name="remote_inbound_rtp" value="4" c:identifier="GST_WEBRTC_STATS_REMOTE_INBOUND_RTP" glib:nick="remote-inbound-rtp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">remote-inbound-rtp</doc>
+      </member>
+      <member name="remote_outbound_rtp" value="5" c:identifier="GST_WEBRTC_STATS_REMOTE_OUTBOUND_RTP" glib:nick="remote-outbound-rtp">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">remote-outbound-rtp</doc>
+      </member>
+      <member name="csrc" value="6" c:identifier="GST_WEBRTC_STATS_CSRC" glib:nick="csrc">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">csrc</doc>
+      </member>
+      <member name="peer_connection" value="7" c:identifier="GST_WEBRTC_STATS_PEER_CONNECTION" glib:nick="peer-connection">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">peer-connection</doc>
+      </member>
+      <member name="data_channel" value="8" c:identifier="GST_WEBRTC_STATS_DATA_CHANNEL" glib:nick="data-channel">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">data-channel</doc>
+      </member>
+      <member name="stream" value="9" c:identifier="GST_WEBRTC_STATS_STREAM" glib:nick="stream">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">stream</doc>
+      </member>
+      <member name="transport" value="10" c:identifier="GST_WEBRTC_STATS_TRANSPORT" glib:nick="transport">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">transport</doc>
+      </member>
+      <member name="candidate_pair" value="11" c:identifier="GST_WEBRTC_STATS_CANDIDATE_PAIR" glib:nick="candidate-pair">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">candidate-pair</doc>
+      </member>
+      <member name="local_candidate" value="12" c:identifier="GST_WEBRTC_STATS_LOCAL_CANDIDATE" glib:nick="local-candidate">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">local-candidate</doc>
+      </member>
+      <member name="remote_candidate" value="13" c:identifier="GST_WEBRTC_STATS_REMOTE_CANDIDATE" glib:nick="remote-candidate">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">remote-candidate</doc>
+      </member>
+      <member name="certificate" value="14" c:identifier="GST_WEBRTC_STATS_CERTIFICATE" glib:nick="certificate">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/webrtc_fwd.h">certificate</doc>
+      </member>
+    </enumeration>
+    <function name="webrtc_error_quark" c:identifier="gst_webrtc_error_quark" moved-to="WebRTCError.quark" version="1.20">
+      <return-value transfer-ownership="none">
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </return-value>
+    </function>
+    <function name="webrtc_sdp_type_to_string" c:identifier="gst_webrtc_sdp_type_to_string" moved-to="WebRTCSDPType.to_string">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">the string representation of @type or "unknown" when @type is not
+     recognized.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/webrtc/rtcsessiondescription.c">a #GstWebRTCSDPType</doc>
+          <type name="WebRTCSDPType" c:type="GstWebRTCSDPType"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

@@ -1,0 +1,345 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <namespace name="CudaGst" version="1.0" shared-library="libgstcuda-1.0.so.0" c:identifier-prefixes="CU" c:symbol-prefixes="cu,cuda">
+    <alias name="array" c:type="CUarray">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
+    <alias name="context" c:type="CUcontext">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
+    <alias name="device" c:type="CUdevice">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gint" c:type="gint"/>
+    </alias>
+    <alias name="deviceptr" c:type="CUdeviceptr">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="guintptr" c:type="guintptr"/>
+    </alias>
+    <alias name="function" c:type="CUfunction">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
+    <alias name="graphicsResource" c:type="CUgraphicsResource">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
+    <alias name="mipmappedArray" c:type="CUmipmappedArray">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
+    <alias name="module" c:type="CUmodule">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
+    <alias name="stream" c:type="CUstream">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gpointer" c:type="gpointer"/>
+    </alias>
+    <alias name="texObject" c:type="CUtexObject">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="guint64" c:type="guint64"/>
+    </alias>
+    <record name="DA_MEMCPY2D" c:type="CUDA_MEMCPY2D">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <field name="srcXInBytes" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="srcY" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="srcMemoryType" writable="1">
+        <type name="memorytype" c:type="CUmemorytype"/>
+      </field>
+      <field name="srcHost" writable="1">
+        <type name="gpointer" c:type="gconstpointer"/>
+      </field>
+      <field name="srcDevice" writable="1">
+        <type name="deviceptr" c:type="CUdeviceptr"/>
+      </field>
+      <field name="srcArray" writable="1">
+        <type name="array" c:type="CUarray"/>
+      </field>
+      <field name="srcPitch" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="dstXInBytes" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="dstY" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="dstMemoryType" writable="1">
+        <type name="memorytype" c:type="CUmemorytype"/>
+      </field>
+      <field name="dstHost" writable="1">
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
+      <field name="dstDevice" writable="1">
+        <type name="deviceptr" c:type="CUdeviceptr"/>
+      </field>
+      <field name="dstArray" writable="1">
+        <type name="array" c:type="CUarray"/>
+      </field>
+      <field name="dstPitch" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="WidthInBytes" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="Height" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+    </record>
+    <record name="DA_RESOURCE_DESC" c:type="CUDA_RESOURCE_DESC">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <field name="resType" writable="1">
+        <type name="resourcetype" c:type="CUresourcetype"/>
+      </field>
+      <union name="res" c:type="res">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+        <record name="array" c:type="array">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+          <field name="hArray" writable="1">
+            <type name="array" c:type="CUarray"/>
+          </field>
+        </record>
+        <record name="mipmap" c:type="mipmap">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+          <field name="hMipmappedArray" writable="1">
+            <type name="mipmappedArray" c:type="CUmipmappedArray"/>
+          </field>
+        </record>
+        <record name="linear" c:type="linear">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+          <field name="devPtr" writable="1">
+            <type name="deviceptr" c:type="CUdeviceptr"/>
+          </field>
+          <field name="format" writable="1">
+            <type name="array_format" c:type="CUarray_format"/>
+          </field>
+          <field name="numChannels" writable="1">
+            <type name="guint" c:type="guint"/>
+          </field>
+          <field name="sizeInBytes" writable="1">
+            <type name="gsize" c:type="gsize"/>
+          </field>
+        </record>
+        <record name="pitch2D" c:type="pitch2D">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+          <field name="devPtr" writable="1">
+            <type name="deviceptr" c:type="CUdeviceptr"/>
+          </field>
+          <field name="format" writable="1">
+            <type name="array_format" c:type="CUarray_format"/>
+          </field>
+          <field name="numChannels" writable="1">
+            <type name="guint" c:type="guint"/>
+          </field>
+          <field name="width" writable="1">
+            <type name="gsize" c:type="gsize"/>
+          </field>
+          <field name="height" writable="1">
+            <type name="gsize" c:type="gsize"/>
+          </field>
+          <field name="pitchInBytes" writable="1">
+            <type name="gsize" c:type="gsize"/>
+          </field>
+        </record>
+        <record name="reserved" c:type="reserved">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+          <field name="reserved" writable="1">
+            <array zero-terminated="0" fixed-size="32">
+              <type name="gint" c:type="gint"/>
+            </array>
+          </field>
+        </record>
+      </union>
+      <field name="flags" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+    </record>
+    <record name="DA_RESOURCE_VIEW_DESC" c:type="CUDA_RESOURCE_VIEW_DESC">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <field name="format" writable="1">
+        <type name="resourceViewFormat" c:type="CUresourceViewFormat"/>
+      </field>
+      <field name="width" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="height" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="depth" writable="1">
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="firstMipmapLevel" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="lastMipmapLevel" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="firstLayer" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="lastLayer" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="reserved" writable="1">
+        <array zero-terminated="0" fixed-size="16">
+          <type name="guint" c:type="guint"/>
+        </array>
+      </field>
+    </record>
+    <record name="DA_TEXTURE_DESC" c:type="CUDA_TEXTURE_DESC">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <field name="addressMode" writable="1">
+        <array zero-terminated="0" fixed-size="3">
+          <type name="address_mode" c:type="CUaddress_mode"/>
+        </array>
+      </field>
+      <field name="filterMode" writable="1">
+        <type name="filter_mode" c:type="CUfilter_mode"/>
+      </field>
+      <field name="flags" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="maxAnisotropy" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="mipmapFilterMode" writable="1">
+        <type name="filter_mode" c:type="CUfilter_mode"/>
+      </field>
+      <field name="mipmapLevelBias" writable="1">
+        <type name="gfloat" c:type="gfloat"/>
+      </field>
+      <field name="minMipmapLevelClamp" writable="1">
+        <type name="gfloat" c:type="gfloat"/>
+      </field>
+      <field name="maxMipmapLevelClamp" writable="1">
+        <type name="gfloat" c:type="gfloat"/>
+      </field>
+      <field name="borderColor" writable="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gfloat" c:type="gfloat"/>
+        </array>
+      </field>
+      <field name="reserved" writable="1">
+        <array zero-terminated="0" fixed-size="12">
+          <type name="gint" c:type="gint"/>
+        </array>
+      </field>
+    </record>
+    <enumeration name="GLDeviceList" c:type="CUGLDeviceList">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cudaGL.h"/>
+      <member name="gl_device_list_all" value="1" c:identifier="CU_GL_DEVICE_LIST_ALL">
+      </member>
+    </enumeration>
+    <constant name="TRSF_READ_AS_INTEGER" value="1" c:type="CU_TRSF_READ_AS_INTEGER">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <constant name="VERSION" value="10000" c:type="CUDA_VERSION">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <enumeration name="address_mode" c:type="CUaddress_mode">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="wrap" value="0" c:identifier="CU_TR_ADDRESS_MODE_WRAP">
+      </member>
+      <member name="clamp" value="1" c:identifier="CU_TR_ADDRESS_MODE_CLAMP">
+      </member>
+      <member name="mirror" value="2" c:identifier="CU_TR_ADDRESS_MODE_MIRROR">
+      </member>
+      <member name="border" value="3" c:identifier="CU_TR_ADDRESS_MODE_BORDER">
+      </member>
+    </enumeration>
+    <enumeration name="array_format" c:type="CUarray_format">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="int8" value="1" c:identifier="CU_AD_FORMAT_UNSIGNED_INT8">
+      </member>
+      <member name="int16" value="2" c:identifier="CU_AD_FORMAT_UNSIGNED_INT16">
+      </member>
+    </enumeration>
+    <enumeration name="device_attribute" c:type="CUdevice_attribute">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="texture_alignment" value="14" c:identifier="CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT">
+      </member>
+      <member name="compute_capability_major" value="75" c:identifier="CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR">
+      </member>
+      <member name="compute_capability_minor" value="76" c:identifier="CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR">
+      </member>
+    </enumeration>
+    <enumeration name="filter_mode" c:type="CUfilter_mode">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="point" value="0" c:identifier="CU_TR_FILTER_MODE_POINT">
+      </member>
+      <member name="linear" value="1" c:identifier="CU_TR_FILTER_MODE_LINEAR">
+      </member>
+    </enumeration>
+    <enumeration name="graphicsMapResourceFlags" c:type="CUgraphicsMapResourceFlags">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="none" value="0" c:identifier="CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE">
+      </member>
+      <member name="read_only" value="1" c:identifier="CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY">
+      </member>
+      <member name="write_discard" value="2" c:identifier="CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD">
+      </member>
+    </enumeration>
+    <enumeration name="graphicsRegisterFlags" c:type="CUgraphicsRegisterFlags">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="none" value="0" c:identifier="CU_GRAPHICS_REGISTER_FLAGS_NONE">
+      </member>
+      <member name="read_only" value="1" c:identifier="CU_GRAPHICS_REGISTER_FLAGS_READ_ONLY">
+      </member>
+      <member name="write_discard" value="2" c:identifier="CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD">
+      </member>
+      <member name="surface_load_store" value="4" c:identifier="CU_GRAPHICS_REGISTER_FLAGS_SURFACE_LOAD_STORE">
+      </member>
+      <member name="texture_gather" value="8" c:identifier="CU_GRAPHICS_REGISTER_FLAGS_TEXTURE_GATHER">
+      </member>
+    </enumeration>
+    <enumeration name="memorytype" c:type="CUmemorytype">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="host" value="1" c:identifier="CU_MEMORYTYPE_HOST">
+      </member>
+      <member name="device" value="2" c:identifier="CU_MEMORYTYPE_DEVICE">
+      </member>
+      <member name="array" value="3" c:identifier="CU_MEMORYTYPE_ARRAY">
+      </member>
+      <member name="unified" value="4" c:identifier="CU_MEMORYTYPE_UNIFIED">
+      </member>
+    </enumeration>
+    <enumeration name="resourceViewFormat" c:type="CUresourceViewFormat">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="res_view_format_none" value="0" c:identifier="CU_RES_VIEW_FORMAT_NONE">
+      </member>
+    </enumeration>
+    <enumeration name="resourcetype" c:type="CUresourcetype">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="array" value="0" c:identifier="CU_RESOURCE_TYPE_ARRAY">
+      </member>
+      <member name="mipmapped_array" value="1" c:identifier="CU_RESOURCE_TYPE_MIPMAPPED_ARRAY">
+      </member>
+      <member name="linear" value="2" c:identifier="CU_RESOURCE_TYPE_LINEAR">
+      </member>
+      <member name="pitch2d" value="3" c:identifier="CU_RESOURCE_TYPE_PITCH2D">
+      </member>
+    </enumeration>
+    <enumeration name="result" c:type="CUresult">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="success" value="0" c:identifier="CUDA_SUCCESS">
+      </member>
+    </enumeration>
+    <enumeration name="stream_flags" c:type="CUstream_flags">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
+      <member name="default" value="0" c:identifier="CU_STREAM_DEFAULT">
+      </member>
+      <member name="non_blocking" value="1" c:identifier="CU_STREAM_NON_BLOCKING">
+      </member>
+    </enumeration>
+  </namespace>
+</repository>

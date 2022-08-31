@@ -314,6 +314,7 @@ if build_gir
   # creating another gir which links against gst-full.
   if not static_build
     gst_gir = gnome.generate_gir(libgst, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gst_gir]}
     gst_gen_sources += gst_gir
   endif
 endif

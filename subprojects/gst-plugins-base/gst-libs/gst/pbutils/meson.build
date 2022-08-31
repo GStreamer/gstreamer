@@ -88,6 +88,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     pbutils_gir = gnome.generate_gir(pbutils, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [pbutils_gir]}
     pbutils_gen_sources += [pbutils_gir]
   endif
 endif

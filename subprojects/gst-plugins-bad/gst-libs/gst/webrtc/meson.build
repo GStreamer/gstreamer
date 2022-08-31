@@ -88,6 +88,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     webrtc_gir = gnome.generate_gir(gstwebrtc, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [webrtc_gir]}
     webrtc_gen_sources += webrtc_gir
   endif
 endif

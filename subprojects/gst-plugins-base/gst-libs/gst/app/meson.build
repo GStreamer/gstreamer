@@ -57,6 +57,7 @@ if build_gir
   library_def += {'gir': [gir]}
   if not static_build
     app_gir = gnome.generate_gir(gstapp, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [app_gir]}
     app_gen_sources += app_gir
   endif
 endif

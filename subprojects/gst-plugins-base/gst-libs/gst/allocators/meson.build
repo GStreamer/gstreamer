@@ -48,6 +48,7 @@ if build_gir
   library_def += {'gir': [gir]}
   if not static_build
     allocators_gir = gnome.generate_gir(gstallocators, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [allocators_gir]}
     allocators_gen_sources += allocators_gir
   endif
 endif

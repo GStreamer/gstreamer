@@ -118,9 +118,11 @@ if build_gir
   }
   if not static_build
     cudagst_gir = gnome.generate_gir(gstcuda, kwargs: cuda_gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [cudagst_gir]}
 
     gir += {'includes': gir['includes'] + [cudagst_gir[0]]}
     gst_cuda_gir = gnome.generate_gir(gstcuda, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [gst_cuda_gir]}
     gen_sources += gst_cuda_gir
   endif
 

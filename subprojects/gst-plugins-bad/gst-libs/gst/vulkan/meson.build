@@ -376,6 +376,7 @@ if build_gir
   library_def += {'gir': [gir]}
   if not static_build
     vulkan_gir = gnome.generate_gir(gstvulkan, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [vulkan_gir]}
     gen_sources += vulkan_gir
   endif
 endif
@@ -414,6 +415,7 @@ if enabled_vulkan_winsys.contains('xcb')
     if not static_build
       gir += {'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', vulkan_gir[0]] + extra_gir_includes}
       vulkan_xcb_gir = gnome.generate_gir(gstvulkan, kwargs: gir)
+      library_def += {'gir_targets':  library_def.get('gir_targets', []) + [vulkan_xcb_gir]}
     endif
 
     gir += {'includes' :['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', 'GstVulkan-1.0'] + extra_gir_includes}
@@ -449,6 +451,7 @@ if enabled_vulkan_winsys.contains('wayland')
     if not static_build
       gir += {'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', vulkan_gir[0]] + extra_gir_includes}
       vulkan_wayland_gir += gnome.generate_gir(gstvulkan, kwargs: gir)
+      library_def += {'gir_targets':  library_def.get('gir_targets', []) + [vulkan_wayland_gir]}
     endif
     gir += {'includes' :['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0', 'GstVulkan-1.0'] + extra_gir_includes}
     library_def += {'gir':  library_def['gir'] + [gir]}

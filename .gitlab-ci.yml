@@ -750,12 +750,18 @@ valgrind ges:
   - meson build/ $MESON_ARGS
   - ccache --show-stats
 
+  - ninja -C build/ update_girs
+  # Ignore modifications to wrap files made by meson
+  - git checkout subprojects/*.wrap
+  - ./ci/scripts/check-diff.py "gir files"
+
   - ./gst-env.py ninja -C build/ plugins_doc_caches
   # Ignore modifications to wrap files made by meson
   - git checkout subprojects/*.wrap
-  - ./ci/scripts/check-documentation-diff.py
+  - ./ci/scripts/check-diff.py
 
   - ./gst-env.py ninja -C build subprojects/gst-docs/GStreamer-doc
+
   - mv build/subprojects/gst-docs/GStreamer-doc/html documentation/
 
   artifacts:
@@ -763,7 +769,7 @@ valgrind ges:
     expire_in: "7 days"
     paths:
     - documentation/
-    - plugins-cache-diffs/
+    - diffs/
 
 #
 # This jobs runs in gstreamer namespace when after the merge into main branch.

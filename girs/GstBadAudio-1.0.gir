@@ -1,0 +1,1479 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstAudio" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
+  <package name="gstreamer-bad-audio-1.0"/>
+  <namespace name="GstBadAudio" version="1.0" shared-library="libgstbadaudio-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <function-macro name="IS_NONSTREAM_AUDIO_DECODER" c:identifier="GST_IS_NONSTREAM_AUDIO_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_NONSTREAM_AUDIO_DECODER_CLASS" c:identifier="GST_IS_NONSTREAM_AUDIO_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLANAR_AUDIO_ADAPTER" c:identifier="GST_IS_PLANAR_AUDIO_ADAPTER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_PLANAR_AUDIO_ADAPTER_CLASS" c:identifier="GST_IS_PLANAR_AUDIO_ADAPTER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="NONSTREAM_AUDIO_DECODER" c:identifier="GST_NONSTREAM_AUDIO_DECODER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="NONSTREAM_AUDIO_DECODER_CAST" c:identifier="GST_NONSTREAM_AUDIO_DECODER_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="NONSTREAM_AUDIO_DECODER_CLASS" c:identifier="GST_NONSTREAM_AUDIO_DECODER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="NONSTREAM_AUDIO_DECODER_GET_CLASS" c:identifier="GST_NONSTREAM_AUDIO_DECODER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="NONSTREAM_AUDIO_DECODER_LOCK_MUTEX" c:identifier="GST_NONSTREAM_AUDIO_DECODER_LOCK_MUTEX" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Locks the decoder mutex.
+
+Internally, the mutex is locked before one of the class vfuncs are
+called, when position and duration queries are handled, and when
+properties are set/retrieved.
+
+Derived classes should call lock during decoder related modifications
+(for example, setting/clearing filter banks), when at the same time
+audio might get decoded. An example are configuration changes that
+happen when properties are set. Properties might be set from another
+thread, so while the derived decoder is reconfigured, the mutex
+should be locked.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">base nonstream audio codec instance</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="NONSTREAM_AUDIO_DECODER_SINK_NAME" value="sink" c:type="GST_NONSTREAM_AUDIO_DECODER_SINK_NAME">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">The name of the template for the sink pad.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="NONSTREAM_AUDIO_DECODER_SINK_PAD" c:identifier="GST_NONSTREAM_AUDIO_DECODER_SINK_PAD" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Gives the pointer to the sink #GstPad object of the element.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">base nonstream audio codec instance</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="NONSTREAM_AUDIO_DECODER_SRC_NAME" value="src" c:type="GST_NONSTREAM_AUDIO_DECODER_SRC_NAME">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">The name of the template for the source pad.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="NONSTREAM_AUDIO_DECODER_SRC_PAD" c:identifier="GST_NONSTREAM_AUDIO_DECODER_SRC_PAD" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Gives the pointer to the source #GstPad object of the element.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">base nonstream audio codec instance</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="NONSTREAM_AUDIO_DECODER_UNLOCK_MUTEX" c:identifier="GST_NONSTREAM_AUDIO_DECODER_UNLOCK_MUTEX" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <class name="NonstreamAudioDecoder" c:symbol-prefix="nonstream_audio_decoder" c:type="GstNonstreamAudioDecoder" parent="Gst.Element" abstract="1" glib:type-name="GstNonstreamAudioDecoder" glib:get-type="gst_nonstream_audio_decoder_get_type" glib:type-struct="NonstreamAudioDecoderClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">This base class is for decoders which do not operate on a streaming model.
+That is: they load the encoded media at once, as part of an initialization,
+and afterwards can decode samples (sometimes referred to as "rendering the
+samples").
+
+This sets it apart from GstAudioDecoder, which is a base class for
+streaming audio decoders.
+
+The base class is conceptually a mix between decoder and parser. This is
+unavoidable, since virtually no format that isn't streaming based has a
+clear distinction between parsing and decoding. As a result, this class
+also handles seeking.
+
+Non-streaming audio formats tend to have some characteristics unknown to
+more "regular" bitstreams. These include subsongs and looping.
+
+Subsongs are a set of songs-within-a-song. An analogy would be a multitrack
+recording, where each track is its own song. The first subsong is typically
+the "main" one. Subsongs were popular for video games to enable context-
+aware music; for example, subsong `#0` would be the "main" song, `#1` would be
+an alternate song playing when a fight started, `#2` would be heard during
+conversations etc. The base class is designed to always have at least one
+subsong. If the subclass doesn't provide any, the base class creates a
+"pseudo" subsong, which is actually the whole song.
+Downstream is informed about the subsong using a table of contents (TOC),
+but only if there are at least 2 subsongs.
+
+Looping refers to jumps within the song, typically backwards to the loop
+start (although bi-directional looping is possible). The loop is defined
+by a chronological start and end; once the playback position reaches the
+loop end, it jumps back to the loop start.
+Depending on the subclass, looping may not be possible at all, or it
+may only be possible to enable/disable it (that is, either no looping, or
+an infinite amount of loops), or it may allow for defining a finite number
+of times the loop is repeated.
+Looping can affect output in two ways. Either, the playback position is
+reset to the start of the loop, similar to what happens after a seek event.
+Or, it is not reset, so the pipeline sees playback steadily moving forwards,
+the playback position monotonically increasing. However, seeking must
+always happen within the confines of the defined subsong duration; for
+example, if a subsong is 2 minutes long, steady playback is at 5 minutes
+(because infinite looping is enabled), then seeking will still place the
+position within the 2 minute period.
+Loop count 0 means no looping. Loop count -1 means infinite looping.
+Nonzero positive values indicate how often a loop shall occur.
+
+If the initial subsong and loop count are set to values the subclass does
+not support, the subclass has a chance to correct these values.
+@get_property then reports the corrected versions.
+
+The base class operates as follows:
+* Unloaded mode
+  - Initial values are set. If a current subsong has already been
+    defined (for example over the command line with gst-launch), then
+    the subsong index is copied over to current_subsong .
+    Same goes for the num-loops and output-mode properties.
+    Media is NOT loaded yet.
+  - Once the sinkpad is activated, the process continues. The sinkpad is
+    activated in push mode, and the class accumulates the incoming media
+    data in an adapter inside the sinkpad's chain function until either an
+    EOS event is received from upstream, or the number of bytes reported
+    by upstream is reached. Then it loads the media, and starts the decoder
+    output task.
+  - If upstream cannot respond to the size query (in bytes) of @load_from_buffer
+    fails, an error is reported, and the pipeline stops.
+  - If there are no errors, @load_from_buffer is called to load the media. The
+    subclass must at least call gst_nonstream_audio_decoder_set_output_format()
+    there, and is free to make use of the initial subsong, output mode, and
+    position. If the actual output mode or position differs from the initial
+    value,it must set the initial value to the actual one (for example, if
+    the actual starting position is always 0, set *initial_position to 0).
+    If loading is unsuccessful, an error is reported, and the pipeline
+    stops. Otherwise, the base class calls @get_current_subsong to retrieve
+    the actual current subsong, @get_subsong_duration to report the current
+    subsong's duration in a duration event and message, and @get_subsong_tags
+    to send tags downstream in an event (these functions are optional; if
+    set to NULL, the associated operation is skipped). Afterwards, the base
+    class switches to loaded mode, and starts the decoder output task.
+
+* Loaded mode&lt;/title&gt;
+  - Inside the decoder output task, the base class repeatedly calls @decode,
+    which returns a buffer with decoded, ready-to-play samples. If the
+    subclass reached the end of playback, @decode returns FALSE, otherwise
+    TRUE.
+  - Upon reaching a loop end, subclass either ignores that, or loops back
+    to the beginning of the loop. In the latter case, if the output mode is set
+    to LOOPING, the subclass must call gst_nonstream_audio_decoder_handle_loop()
+    *after* the playback position moved to the start of the loop. In
+    STEADY mode, the subclass must *not* call this function.
+    Since many decoders only provide a callback for when the looping occurs,
+    and that looping occurs inside the decoding operation itself, the following
+    mechanism for subclass is suggested: set a flag inside such a callback.
+    Then, in the next @decode call, before doing the decoding, check this flag.
+    If it is set, gst_nonstream_audio_decoder_handle_loop() is called, and the
+    flag is cleared.
+    (This function call is necessary in LOOPING mode because it updates the
+    current segment and makes sure the next buffer that is sent downstream
+    has its DISCONT flag set.)
+  - When the current subsong is switched, @set_current_subsong is called.
+    If it fails, a warning is reported, and nothing else is done. Otherwise,
+    it calls @get_subsong_duration to get the new current subsongs's
+    duration, @get_subsong_tags to get its tags, reports a new duration
+    (i.e. it sends a duration event downstream and generates a duration
+    message), updates the current segment, and sends the subsong's tags in
+    an event downstream. (If @set_current_subsong has been set to NULL by
+    the subclass, attempts to set a current subsong are ignored; likewise,
+    if @get_subsong_duration is NULL, no duration is reported, and if
+    @get_subsong_tags is NULL, no tags are sent downstream.)
+  - When an attempt is made to switch the output mode, it is checked against
+    the bitmask returned by @get_supported_output_modes. If the proposed
+    new output mode is supported, the current segment is updated
+    (it is open-ended in STEADY mode, and covers the (sub)song length in
+    LOOPING mode), and the subclass' @set_output_mode function is called
+    unless it is set to NULL. Subclasses should reset internal loop counters
+    in this function.
+
+The relationship between (sub)song duration, output mode, and number of loops
+is defined this way (this is all done by the base class automatically):
+
+* Segments have their duration and stop values set to GST_CLOCK_TIME_NONE in
+  STEADY mode, and to the duration of the (sub)song in LOOPING mode.
+
+* The duration that is returned to a DURATION query is always the duration
+  of the (sub)song, regardless of number of loops or output mode. The same
+  goes for DURATION messages and tags.
+
+* If the number of loops is &gt;0 or -1, durations of TOC entries are set to
+  the duration of the respective subsong in LOOPING mode and to G_MAXINT64 in
+  STEADY mode. If the number of loops is 0, entry durations are set to the
+  subsong duration regardless of the output mode.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <virtual-method name="decide_allocation">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="query" transfer-ownership="none">
+            <type name="Gst.Query" c:type="GstQuery*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="decode">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <type name="Gst.Buffer" c:type="GstBuffer**"/>
+          </parameter>
+          <parameter name="num_samples" transfer-ownership="none">
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_current_subsong">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_main_tags">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Gst.TagList" c:type="GstTagList*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_num_loops">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_num_subsongs">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_subsong_duration">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="subsong" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_subsong_tags">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Gst.TagList" c:type="GstTagList*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="subsong" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="get_supported_output_modes">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="load_from_buffer">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="source_data" transfer-ownership="none">
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="initial_subsong" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="initial_subsong_mode" transfer-ownership="none">
+            <type name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode"/>
+          </parameter>
+          <parameter name="initial_position" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+          <parameter name="initial_output_mode" transfer-ownership="none">
+            <type name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode*"/>
+          </parameter>
+          <parameter name="initial_num_loops" transfer-ownership="none">
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="load_from_custom">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="initial_subsong" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="initial_subsong_mode" transfer-ownership="none">
+            <type name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode"/>
+          </parameter>
+          <parameter name="initial_position" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+          <parameter name="initial_output_mode" transfer-ownership="none">
+            <type name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode*"/>
+          </parameter>
+          <parameter name="initial_num_loops" transfer-ownership="none">
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="negotiate">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="propose_allocation">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="query" transfer-ownership="none">
+            <type name="Gst.Query" c:type="GstQuery*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="seek">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="new_position" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_current_subsong">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="subsong" transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="initial_position" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_num_loops">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="num_loops" transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_output_mode">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="mode" transfer-ownership="none">
+            <type name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode"/>
+          </parameter>
+          <parameter name="current_position" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_subsong_mode">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="mode" transfer-ownership="none">
+            <type name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode"/>
+          </parameter>
+          <parameter name="initial_position" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="tell">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <method name="allocate_output_buffer" c:identifier="gst_nonstream_audio_decoder_allocate_output_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Allocates an output buffer with the internally configured buffer pool.
+
+This function may only be called from within @load_from_buffer,
+@load_from_custom, and @decode.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Newly allocated output buffer, or NULL
+if allocation failed</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Decoder instance</doc>
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Size of the output buffer, in bytes</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_downstream_info" c:identifier="gst_nonstream_audio_decoder_get_downstream_info">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Gets sample format, sample rate, channel count from the allowed srcpad caps.
+
+This is useful for when the subclass wishes to adjust one or more output
+parameters to whatever downstream is supporting. For example, the output
+sample rate is often a freely adjustable value in module players.
+
+This function tries to find a value inside the srcpad peer's caps for
+@format, @sample_rate, @num_chnanels . Any of these can be NULL; they
+(and the corresponding downstream caps) are then skipped while retrieving
+information. Non-fixated caps are fixated first; the value closest to
+their present value is then chosen. For example, if the variables pointed
+to by the arguments are GST_AUDIO_FORMAT_16, 48000 Hz, and 2 channels,
+and the downstream caps are:
+
+"audio/x-raw, format={S16LE,S32LE}, rate=[1,32000], channels=[1,MAX]"
+
+Then @format and @channels stay the same, while @sample_rate is set to 32000 Hz.
+This way, the initial values the the variables pointed to by the arguments
+are set to can be used as default output values. Note that if no downstream
+caps can be retrieved, then this function does nothing, therefore it is
+necessary to ensure that @format, @sample_rate, and @channels have valid
+initial values.
+
+Decoder lock is not held by this function, so it can be called from within
+any of the class vfuncs.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">a #GstNonstreamAudioDecoder</doc>
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">#GstAudioFormat value to fill with a sample format</doc>
+            <type name="GstAudio.AudioFormat" c:type="GstAudioFormat*"/>
+          </parameter>
+          <parameter name="sample_rate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Integer to fill with a sample rate</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="num_channels" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Integer to fill with a channel count</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="handle_loop" c:identifier="gst_nonstream_audio_decoder_handle_loop">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Reports that a loop has been completed and creates a new appropriate
+segment for the next loop.
+
+@new_position exists because a loop may not start at the beginning.
+
+This function is only useful for subclasses which can be in the
+GST_NONSTREAM_AUDIO_OUTPUT_MODE_LOOPING output mode, since in the
+GST_NONSTREAM_AUDIO_OUTPUT_MODE_STEADY output mode, this function
+does nothing. See #GstNonstreamAudioOutputMode for more details.
+
+The subclass calls this during playback when it loops. It produces
+a new segment with updated base time and internal time values, to allow
+for seamless looping. It does *not* check the number of elapsed loops;
+this is up the subclass.
+
+Note that if this function is called, then it must be done after the
+last samples of the loop have been decoded and pushed downstream.
+
+This function must be called with the decoder mutex lock held, since it
+is typically called from within @decode (which in turn are called with
+the lock already held).</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">a #GstNonstreamAudioDecoder
+@new_position New position the next loop starts with</doc>
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="new_position" transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_output_format" c:identifier="gst_nonstream_audio_decoder_set_output_format">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Sets the output caps by means of a GstAudioInfo structure.
+
+This must be called latest in the first @decode call, to ensure src caps are
+set before decoded samples are sent downstream. Typically, this is called
+from inside @load_from_buffer or @load_from_custom.
+
+This function must be called with the decoder mutex lock held, since it
+is typically called from within the aforementioned vfuncs (which in turn
+are called with the lock already held).</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">TRUE if setting the output format succeeded, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">a #GstNonstreamAudioDecoder</doc>
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="audio_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Valid audio info structure containing the output format</doc>
+            <type name="GstAudio.AudioInfo" c:type="const GstAudioInfo*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_output_format_simple" c:identifier="gst_nonstream_audio_decoder_set_output_format_simple">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Convenience function; sets the output caps by means of common parameters.
+
+Internally, this fills a GstAudioInfo structure and calls
+gst_nonstream_audio_decoder_set_output_format().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">TRUE if setting the output format succeeded, FALSE otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dec" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">a #GstNonstreamAudioDecoder</doc>
+            <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+          </instance-parameter>
+          <parameter name="sample_rate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Output sample rate to use, in Hz</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="sample_format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Output sample format to use</doc>
+            <type name="GstAudio.AudioFormat" c:type="GstAudioFormat"/>
+          </parameter>
+          <parameter name="num_channels" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.c">Number of output channels to use</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="current-subsong" writable="1" transfer-ownership="none">
+        <type name="guint" c:type="guint"/>
+      </property>
+      <property name="num-loops" writable="1" transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </property>
+      <property name="output-mode" introspectable="0" writable="1" transfer-ownership="none">
+        <type/>
+      </property>
+      <property name="subsong-mode" introspectable="0" writable="1" transfer-ownership="none">
+        <type/>
+      </property>
+      <field name="element">
+        <type name="Gst.Element" c:type="GstElement"/>
+      </field>
+      <field name="sinkpad">
+        <type name="Gst.Pad" c:type="GstPad*"/>
+      </field>
+      <field name="srcpad">
+        <type name="Gst.Pad" c:type="GstPad*"/>
+      </field>
+      <field name="upstream_size">
+        <type name="gint64" c:type="gint64"/>
+      </field>
+      <field name="loaded_mode">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="input_data_adapter">
+        <type name="GstBase.Adapter" c:type="GstAdapter*"/>
+      </field>
+      <field name="current_subsong">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="subsong_mode">
+        <type name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode"/>
+      </field>
+      <field name="subsong_duration">
+        <type name="Gst.ClockTime" c:type="GstClockTime"/>
+      </field>
+      <field name="output_mode">
+        <type name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode"/>
+      </field>
+      <field name="num_loops">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="output_format_changed">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="output_audio_info">
+        <type name="GstAudio.AudioInfo" c:type="GstAudioInfo"/>
+      </field>
+      <field name="cur_pos_in_samples">
+        <type name="guint64" c:type="guint64"/>
+      </field>
+      <field name="num_decoded_samples">
+        <type name="guint64" c:type="guint64"/>
+      </field>
+      <field name="cur_segment">
+        <type name="Gst.Segment" c:type="GstSegment"/>
+      </field>
+      <field name="discont">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="toc">
+        <type name="Gst.Toc" c:type="GstToc*"/>
+      </field>
+      <field name="allocator">
+        <type name="Gst.Allocator" c:type="GstAllocator*"/>
+      </field>
+      <field name="allocation_params">
+        <type name="Gst.AllocationParams" c:type="GstAllocationParams"/>
+      </field>
+      <field name="mutex">
+        <type name="GLib.Mutex" c:type="GMutex"/>
+      </field>
+    </class>
+    <record name="NonstreamAudioDecoderClass" c:type="GstNonstreamAudioDecoderClass" glib:is-gtype-struct-for="NonstreamAudioDecoder">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Subclasses can override any of the available optional virtual methods or not, as
+needed. At minimum, @load_from_buffer (or @load_from_custom), @get_supported_output_modes,
+and @decode need to be overridden.
+
+All functions are called with a locked decoder mutex.
+
+&gt; If GST_ELEMENT_ERROR, GST_ELEMENT_WARNING, or GST_ELEMENT_INFO are called from
+&gt; inside one of these functions, it is strongly recommended to unlock the decoder mutex
+&gt; before and re-lock it after these macros to prevent potential deadlocks in case the
+&gt; application does something with the element when it receives an ERROR/WARNING/INFO
+&gt; message. Same goes for gst_element_post_message() calls and non-serialized events.
+
+By default, this class works by reading media data from the sinkpad, and then commencing
+playback. Some decoders cannot be given data from a memory block, so the usual way of
+reading all upstream data and passing it to @load_from_buffer doesn't work then. In this case,
+set the value of loads_from_sinkpad to FALSE. This changes the way this class operates;
+it does not require a sinkpad to exist anymore, and will call @load_from_custom instead.
+One example of a decoder where this makes sense is UADE (Unix Amiga Delitracker Emulator).
+For some formats (such as TFMX), it needs to do the file loading by itself.
+Since most decoders can read input data from a memory block, the default value of
+loads_from_sinkpad is TRUE.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <field name="element_class">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">The parent class structure</doc>
+        <type name="Gst.ElementClass" c:type="GstElementClass"/>
+      </field>
+      <field name="loads_from_sinkpad">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="seek">
+        <callback name="seek">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="new_position" transfer-ownership="none">
+              <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="tell">
+        <callback name="tell">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="load_from_buffer">
+        <callback name="load_from_buffer">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="source_data" transfer-ownership="none">
+              <type name="Gst.Buffer" c:type="GstBuffer*"/>
+            </parameter>
+            <parameter name="initial_subsong" transfer-ownership="none">
+              <type name="guint" c:type="guint"/>
+            </parameter>
+            <parameter name="initial_subsong_mode" transfer-ownership="none">
+              <type name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode"/>
+            </parameter>
+            <parameter name="initial_position" transfer-ownership="none">
+              <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+            </parameter>
+            <parameter name="initial_output_mode" transfer-ownership="none">
+              <type name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode*"/>
+            </parameter>
+            <parameter name="initial_num_loops" transfer-ownership="none">
+              <type name="gint" c:type="gint*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="load_from_custom">
+        <callback name="load_from_custom">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="initial_subsong" transfer-ownership="none">
+              <type name="guint" c:type="guint"/>
+            </parameter>
+            <parameter name="initial_subsong_mode" transfer-ownership="none">
+              <type name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode"/>
+            </parameter>
+            <parameter name="initial_position" transfer-ownership="none">
+              <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+            </parameter>
+            <parameter name="initial_output_mode" transfer-ownership="none">
+              <type name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode*"/>
+            </parameter>
+            <parameter name="initial_num_loops" transfer-ownership="none">
+              <type name="gint" c:type="gint*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_main_tags">
+        <callback name="get_main_tags">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="full">
+            <type name="Gst.TagList" c:type="GstTagList*"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_current_subsong">
+        <callback name="set_current_subsong">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="subsong" transfer-ownership="none">
+              <type name="guint" c:type="guint"/>
+            </parameter>
+            <parameter name="initial_position" transfer-ownership="none">
+              <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_current_subsong">
+        <callback name="get_current_subsong">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_num_subsongs">
+        <callback name="get_num_subsongs">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_subsong_duration">
+        <callback name="get_subsong_duration">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="subsong" transfer-ownership="none">
+              <type name="guint" c:type="guint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_subsong_tags">
+        <callback name="get_subsong_tags">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="full">
+            <type name="Gst.TagList" c:type="GstTagList*"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="subsong" transfer-ownership="none">
+              <type name="guint" c:type="guint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_subsong_mode">
+        <callback name="set_subsong_mode">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="mode" transfer-ownership="none">
+              <type name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode"/>
+            </parameter>
+            <parameter name="initial_position" transfer-ownership="none">
+              <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_num_loops">
+        <callback name="set_num_loops">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="num_loops" transfer-ownership="none">
+              <type name="gint" c:type="gint"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_num_loops">
+        <callback name="get_num_loops">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gint" c:type="gint"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="get_supported_output_modes">
+        <callback name="get_supported_output_modes">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="guint" c:type="guint"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_output_mode">
+        <callback name="set_output_mode">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="mode" transfer-ownership="none">
+              <type name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode"/>
+            </parameter>
+            <parameter name="current_position" transfer-ownership="none">
+              <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="decode">
+        <callback name="decode">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="buffer" transfer-ownership="none">
+              <type name="Gst.Buffer" c:type="GstBuffer**"/>
+            </parameter>
+            <parameter name="num_samples" transfer-ownership="none">
+              <type name="guint" c:type="guint*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="negotiate">
+        <callback name="negotiate">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="decide_allocation">
+        <callback name="decide_allocation">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="query" transfer-ownership="none">
+              <type name="Gst.Query" c:type="GstQuery*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="propose_allocation">
+        <callback name="propose_allocation">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="dec" transfer-ownership="none">
+              <type name="NonstreamAudioDecoder" c:type="GstNonstreamAudioDecoder*"/>
+            </parameter>
+            <parameter name="query" transfer-ownership="none">
+              <type name="Gst.Query" c:type="GstQuery*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <enumeration name="NonstreamAudioOutputMode" c:type="GstNonstreamAudioOutputMode">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">The output mode defines how the output behaves with regards to looping. Either the playback position is
+moved back to the beginning of the loop, acting like a backwards seek, or it increases steadily, as if
+loop were "unrolled".</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <member name="looping" value="0" c:identifier="GST_NONSTREAM_AUDIO_OUTPUT_MODE_LOOPING">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Playback position is moved back to the beginning of the loop</doc>
+      </member>
+      <member name="steady" value="1" c:identifier="GST_NONSTREAM_AUDIO_OUTPUT_MODE_STEADY">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Playback position increases steadily, even when looping</doc>
+      </member>
+    </enumeration>
+    <enumeration name="NonstreamAudioSubsongMode" c:type="GstNonstreamAudioSubsongMode">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">The subsong mode defines how the decoder shall handle subsongs.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h"/>
+      <member name="single" value="0" c:identifier="GST_NONSTREAM_AUDIO_SUBSONG_MODE_SINGLE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Only the current subsong is played</doc>
+      </member>
+      <member name="all" value="1" c:identifier="GST_NONSTREAM_AUDIO_SUBSONG_MODE_ALL">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">All subsongs are played (current subsong index is ignored)</doc>
+      </member>
+      <member name="decoder_default" value="2" c:identifier="GST_NONSTREAM_AUDIO_SUBSONG_MODE_DECODER_DEFAULT">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstnonstreamaudiodecoder.h">Use decoder specific default behavior</doc>
+      </member>
+    </enumeration>
+    <function-macro name="PLANAR_AUDIO_ADAPTER" c:identifier="GST_PLANAR_AUDIO_ADAPTER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLANAR_AUDIO_ADAPTER_CLASS" c:identifier="GST_PLANAR_AUDIO_ADAPTER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PLANAR_AUDIO_ADAPTER_GET_CLASS" c:identifier="GST_PLANAR_AUDIO_ADAPTER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <class name="PlanarAudioAdapter" c:symbol-prefix="planar_audio_adapter" c:type="GstPlanarAudioAdapter" parent="GObject.Object" glib:type-name="GstPlanarAudioAdapter" glib:get-type="gst_planar_audio_adapter_get_type" glib:type-struct="PlanarAudioAdapterClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">This class is similar to GstAdapter, but it is made to work with
+non-interleaved (planar) audio buffers. Before using, an audio format
+must be configured with gst_planar_audio_adapter_configure()</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+      <constructor name="new" c:identifier="gst_planar_audio_adapter_new">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Creates a new #GstPlanarAudioAdapter. Free with g_object_unref().</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a new #GstPlanarAudioAdapter</doc>
+          <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+        </return-value>
+      </constructor>
+      <method name="available" c:identifier="gst_planar_audio_adapter_available">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Gets the maximum amount of samples available, that is it returns the maximum
+value that can be supplied to gst_planar_audio_adapter_get_buffer() without
+that function returning %NULL.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">number of samples available in @adapter</doc>
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="clear" c:identifier="gst_planar_audio_adapter_clear">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Removes all buffers from @adapter.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="configure" c:identifier="gst_planar_audio_adapter_configure">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Sets up the @adapter to handle audio data of the specified audio format.
+Note that this will internally clear the adapter and re-initialize it.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstAudioInfo describing the format of the audio data</doc>
+            <type name="GstAudio.AudioInfo" c:type="const GstAudioInfo*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="distance_from_discont" c:identifier="gst_planar_audio_adapter_distance_from_discont">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="dts_at_discont" c:identifier="gst_planar_audio_adapter_dts_at_discont">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Get the DTS that was on the last buffer with the GST_BUFFER_FLAG_DISCONT
+flag, or GST_CLOCK_TIME_NONE.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">The DTS at the last discont or GST_CLOCK_TIME_NONE.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="flush" c:identifier="gst_planar_audio_adapter_flush">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Flushes the first @to_flush samples in the @adapter. The caller must ensure
+that at least this many samples are available.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="to_flush" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">the number of samples to flush</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_buffer" c:identifier="gst_planar_audio_adapter_get_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Returns a #GstBuffer containing the first @nsamples of the @adapter, but
+does not flush them from the adapter.
+Use gst_planar_audio_adapter_take_buffer() for flushing at the same time.
+
+The map @flags can be used to give an optimization hint to this function.
+When the requested buffer is meant to be mapped only for reading, it might
+be possible to avoid copying memory in some cases.
+
+Caller owns a reference to the returned buffer. gst_buffer_unref() after
+usage.
+
+Free-function: gst_buffer_unref</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstBuffer containing the first
+    @nsamples of the adapter, or %NULL if @nsamples samples are not
+    available. gst_buffer_unref() when no longer needed.</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="nsamples" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">the number of samples to get</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">hint the intended use of the returned buffer</doc>
+            <type name="Gst.MapFlags" c:type="GstMapFlags"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="offset_at_discont" c:identifier="gst_planar_audio_adapter_offset_at_discont">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Get the offset that was on the last buffer with the GST_BUFFER_FLAG_DISCONT
+flag, or GST_BUFFER_OFFSET_NONE.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">The offset at the last discont or GST_BUFFER_OFFSET_NONE.</doc>
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="prev_dts" c:identifier="gst_planar_audio_adapter_prev_dts">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Get the dts that was before the current sample in the adapter. When
+@distance is given, the amount of bytes between the dts and the current
+position is returned.
+
+The dts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
+the adapter is first created or when it is cleared. This also means that
+before the first sample with a dts is removed from the adapter, the dts
+and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">The previously seen dts.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="distance" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">pointer to location for distance, or %NULL</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="prev_offset" c:identifier="gst_planar_audio_adapter_prev_offset">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Get the offset that was before the current sample in the adapter. When
+@distance is given, the amount of samples between the offset and the current
+position is returned.
+
+The offset is reset to GST_BUFFER_OFFSET_NONE and the distance is set to 0
+when the adapter is first created or when it is cleared. This also means that
+before the first sample with an offset is removed from the adapter, the
+offset and distance returned are GST_BUFFER_OFFSET_NONE and 0 respectively.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">The previous seen offset.</doc>
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="distance" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">pointer to a location for distance, or %NULL</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="prev_pts" c:identifier="gst_planar_audio_adapter_prev_pts">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Get the pts that was before the current sample in the adapter. When
+@distance is given, the amount of samples between the pts and the current
+position is returned.
+
+The pts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
+the adapter is first created or when it is cleared. This also means that before
+the first sample with a pts is removed from the adapter, the pts
+and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">The previously seen pts.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="distance" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">pointer to location for distance, or %NULL</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="pts_at_discont" c:identifier="gst_planar_audio_adapter_pts_at_discont">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Get the PTS that was on the last buffer with the GST_BUFFER_FLAG_DISCONT
+flag, or GST_CLOCK_TIME_NONE.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">The PTS at the last discont or GST_CLOCK_TIME_NONE.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="push" c:identifier="gst_planar_audio_adapter_push">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Adds the data from @buf to the data stored inside @adapter and takes
+ownership of the buffer.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="buf" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstBuffer to queue in the adapter</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="take_buffer" c:identifier="gst_planar_audio_adapter_take_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">Returns a #GstBuffer containing the first @nsamples bytes of the
+@adapter. The returned bytes will be flushed from the adapter.
+
+See gst_planar_audio_adapter_get_buffer() for more details.
+
+Caller owns a reference to the returned buffer. gst_buffer_unref() after
+usage.
+
+Free-function: gst_buffer_unref</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstBuffer containing the first
+    @nsamples of the adapter, or %NULL if @nsamples samples are not
+    available. gst_buffer_unref() when no longer needed.</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="adapter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">a #GstPlanarAudioAdapter</doc>
+            <type name="PlanarAudioAdapter" c:type="GstPlanarAudioAdapter*"/>
+          </instance-parameter>
+          <parameter name="nsamples" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">the number of samples to take</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.c">hint the intended use of the returned buffer</doc>
+            <type name="Gst.MapFlags" c:type="GstMapFlags"/>
+          </parameter>
+        </parameters>
+      </method>
+    </class>
+    <record name="PlanarAudioAdapterClass" c:type="GstPlanarAudioAdapterClass" disguised="1" glib:is-gtype-struct-for="PlanarAudioAdapter">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/audio/gstplanaraudioadapter.h"/>
+    </record>
+  </namespace>
+</repository>

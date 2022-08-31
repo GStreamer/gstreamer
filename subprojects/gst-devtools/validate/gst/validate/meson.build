@@ -117,6 +117,7 @@ if build_gir
 
     if not static_build
       validate_gir = gnome.generate_gir(gstvalidate, kwargs: gir)
+      library_def += {'gir_targets':  library_def.get('gir_targets', []) + [validate_gir]}
       validate_gen_sources += [validate_gir]
     endif
 endif

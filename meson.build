@@ -225,6 +225,23 @@ gst_plugins_doc_dep = custom_target('plugins-doc-cache',
   capture: true,
 )
 
+gir_files = []
+gir_targets = []
+foreach pkgname_library : all_libraries
+  lib_def = pkgname_library[1]
+  foreach gir_target: lib_def.get('gir_targets', [])
+    gir_files += [gir_target[0].full_path()]
+    gir_targets += gir_target
+  endforeach
+endforeach
+
+custom_target('update_girs',
+  command: [find_program('scripts/update-girs.py'), meson.build_root()] + gir_files,
+  output: 'update_girs',
+  capture: true,
+  depends: gir_targets
+)
+
 if meson.is_cross_build() or build_machine.system() == 'windows'
     if get_option('doc').enabled()
         error('Documentation enabled but building the doc while cross building or building on windows is not supported yet.')

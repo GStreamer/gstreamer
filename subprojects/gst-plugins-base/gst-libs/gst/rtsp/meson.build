@@ -79,6 +79,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     rtsp_gir = gnome.generate_gir(gst_rtsp, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [rtsp_gir]}
     rtsp_gen_sources += [rtsp_gir]
   endif
 endif

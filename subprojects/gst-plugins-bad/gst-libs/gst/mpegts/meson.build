@@ -76,6 +76,7 @@ if build_gir
   library_def += {'gir': [gir]}
   if not static_build
     mpegts_gir = gnome.generate_gir(gstmpegts, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [mpegts_gir]}
     gen_sources += mpegts_gir
   endif
 endif

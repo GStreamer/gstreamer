@@ -174,6 +174,7 @@ if build_gir
   library_def += {'gir': [gir]}
   if not static_build
     video_gir = gnome.generate_gir(gstvideo, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [video_gir]}
     video_gen_sources += [video_gir]
   endif
 endif
