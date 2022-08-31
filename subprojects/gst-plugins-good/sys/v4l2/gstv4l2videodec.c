@@ -684,7 +684,15 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
     ret = gst_v4l2_video_dec_setup_capture (decoder);
     if (ret != GST_FLOW_OK) {
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-      return;
+
+      /* if caps negotiation failed, avoid trying it repeatly */
+      if (ret == GST_FLOW_NOT_NEGOTIATED) {
+        GST_ERROR_OBJECT (decoder,
+            "capture configuration change fail, return negotiation fail");
+        goto beach;
+      } else {
+        return;
+      }
     }
     g_atomic_int_set (&self->capture_configuration_change, FALSE);
   }
