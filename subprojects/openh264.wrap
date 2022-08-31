@@ -1,4 +1,6 @@
-[wrap-git]
-directory=openh264
-url=https://github.com/cisco/openh264.git
-revision=0819f288dc5fc24fb34089113bc230aea65c8375
+[wrap-file]
+directory = openh264-2.3.0
+source_url = https://github.com/cisco/openh264/archive/refs/tags/v2.3.0.tar.gz
+source_fallback_url = https://gstreamer.freedesktop.org/data/src/mirror/openh264-2.3.0.tar.gz
+source_filename = openh264-2.3.0.tar.gz
+source_hash = 99b0695272bee73a3b3a5fcb1afef462c11a142d1dc35a2c61fef5a4b7d60bc0

@@ -24,9 +24,9 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2022-07-31.0'
+  FEDORA_TAG:  '2022-09-02.0'
   INDENT_TAG: '2022-03-07.1'
-  WINDOWS_TAG: "2022-08-18.0"
+  WINDOWS_TAG: "2022-09-02.0"
 
   GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
   FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
