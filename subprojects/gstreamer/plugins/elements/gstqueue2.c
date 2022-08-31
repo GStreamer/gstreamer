@@ -218,6 +218,9 @@ static GParamSpec *obj_props[PROP_LAST] = { NULL, };
 } G_STMT_END
 
 #define GST_QUEUE2_WAIT_DEL_CHECK(q, res, label) G_STMT_START {         \
+  if (res != GST_FLOW_OK) {                                             \
+    goto label;                                                         \
+  }                                                                     \
   STATUS (queue, q->sinkpad, "wait for DEL");                           \
   q->waiting_del = TRUE;                                                \
   g_cond_wait (&q->item_del, &queue->qlock);                              \
@@ -230,6 +233,9 @@ static GParamSpec *obj_props[PROP_LAST] = { NULL, };
 } G_STMT_END
 
 #define GST_QUEUE2_WAIT_ADD_CHECK(q, res, label) G_STMT_START {         \
+  if (res != GST_FLOW_OK) {                                             \
+    goto label;                                                         \
+  }                                                                     \
   STATUS (queue, q->srcpad, "wait for ADD");                            \
   q->waiting_add = TRUE;                                                \
   g_cond_wait (&q->item_add, &q->qlock);                                  \
