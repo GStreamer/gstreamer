@@ -70,7 +70,7 @@
  *
  * ## Example launch line
  * |[
- * gst-launch-1.0 audiotestsrc ! audio/x-raw, channels=4 ! audioconvert mix-matrix="<<1.0, 0.0, 0.0, 0.0>, <0.0, 1.0, 0.0, 0.0>>" ! audio/x-raw,channels=2 ! autoaudiosink
+ * gst-launch-1.0 audiotestsrc ! audio/x-raw, channels=4 ! audioconvert mix-matrix="<<(float)1.0, (float)0.0, (float)0.0, (float)0.0>, <(float)0.0, (float)1.0, (float)0.0, (float)0.0>>" ! audio/x-raw,channels=2 ! autoaudiosink
  * ]|
  *
  * > If an empty mix matrix is specified, a (potentially truncated)
