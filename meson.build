@@ -173,8 +173,17 @@ foreach sp : subprojects
   endif
 
   if subproj.found()
-    plugins = subproj.get_variable('plugins', [])
+    plugins = subproj.get_variable('gst_plugins', [])
     all_plugins += plugins
+    if subproj.get_variable('gst_plugins', []).length() != subproj.get_variable('plugins', plugins).length()
+      warning(f'DEPRECATED use of the `plugins` variable in @project_name@.')
+      warning('The variable should now be called `gst_plugins` and use:')
+      warning('`declare_dependency( link_with: <plugin_target>, variable: {\'full_path\': <plugin_target>.full_path()})` instead')
+      foreach plugin: subproj.get_variable('plugins', [])
+        all_plugins += [declare_dependency(link_with: plugin, variables: {'full_path': plugin.full_path()})]
+      endforeach
+    endif
+
     all_libraries += subproj.get_variable('libraries', [])
     if not get_option('tools').disabled()
       all_tools += subproj.get_variable('gst_tools', {})
@@ -185,9 +194,7 @@ foreach sp : subprojects
     subprojects_names += [project_name]
 
     if not meson.is_cross_build() and build_infos.get('build-hotdoc', false)
-      if plugins.length() > 0
-        plugins_doc_caches += [subproj.get_variable('plugins_doc_dep', [])]
-      endif
+      plugins_doc_caches += [subproj.get_variable('plugins_doc_dep', [])]
       if documented_projects != ''
         documented_projects += ','
       endif
@@ -252,10 +259,14 @@ endif
 
 all_plugins_paths = []
 all_plugins_dirs = []
+plugins_names = []
 foreach plugin: all_plugins
-  all_plugins_paths += plugin.full_path()
-  all_plugins_dirs += fs.parent(plugin.full_path())
+  plugin_path = plugin.get_variable('full_path')
+  all_plugins_paths += plugin_path
+  all_plugins_dirs += fs.parent(plugin_path)
+  plugins_names += plugin_path
 endforeach
+
 # Work around meson bug: https://github.com/mesonbuild/meson/pull/6770
 pathsep = host_machine.system() == 'windows' ? ';' : ':'
 all_plugins_paths = pathsep.join(all_plugins_paths)
@@ -295,10 +306,6 @@ if building_full
   gst_c_args = ['-DHAVE_CONFIG_H']
 
   # Generate a .c file which declare and register all built plugins
-  plugins_names = []
-  foreach plugin: all_plugins
-    plugins_names += plugin.full_path()
-  endforeach
   all_plugin_names = ';'.join(plugins_names)
 
   static_plugins = get_option('gst-full-plugins')
@@ -380,10 +387,9 @@ if building_full
   # Build both shared and static library
   gstfull = both_libraries('gstreamer-full-1.0',
     init_static_plugins_c,
-    link_with : all_plugins,
     link_args: gstfull_link_args,
     link_whole : exposed_libs,
-    dependencies : incdir_deps + glib_deps,
+    dependencies : [incdir_deps, glib_deps, all_plugins],
     link_depends : link_deps,
     install : true,
   )
