@@ -810,6 +810,9 @@ write_one (GstPluginLoader * l)
         continue;
       /* Failed to write -> child died */
       goto fail_and_cleanup;
+    } else if (G_UNLIKELY (res == 0)) {
+      /* FD closed -> child died */
+      goto fail_and_cleanup;
     }
     to_write -= res;
     out += res;
@@ -1074,6 +1077,9 @@ read_one (GstPluginLoader * l)
         continue;
       GST_LOG ("Failed reading packet header");
       return FALSE;
+    } else if (G_UNLIKELY (res == 0)) {
+      GST_LOG ("Failed reading packet header: Unexpected EOF");
+      return FALSE;
     }
     to_read -= res;
     in += res;
@@ -1110,6 +1116,9 @@ read_one (GstPluginLoader * l)
         if (errno == EAGAIN || errno == EINTR)
           continue;
         GST_ERROR ("Packet payload read failed");
+        return FALSE;
+      } else if (G_UNLIKELY (res == 0)) {
+        GST_ERROR ("Packet payload read failed: Unexpected EOF");
         return FALSE;
       }
       to_read -= res;
