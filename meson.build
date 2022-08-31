@@ -261,7 +261,14 @@ pathsep = host_machine.system() == 'windows' ? ';' : ':'
 all_plugins_paths = pathsep.join(all_plugins_paths)
 
 devenv = environment()
-devenv.prepend('GST_PLUGIN_PATH', all_plugins_dirs)
+if not building_full
+  devenv.prepend('GST_PLUGIN_PATH', all_plugins_dirs)
+else
+  # Make sure the current build directory is first in PATH so we prefer tools
+  # built here that links on gst-full instead instead of those built in
+  # subprojects.
+  devenv.prepend('PATH', meson.current_build_dir())
+endif
 devenv.set('CURRENT_GST', meson.current_source_dir())
 devenv.set('GST_VERSION', meson.project_version())
 devenv.set('GST_ENV', 'gst-' + meson.project_version())
