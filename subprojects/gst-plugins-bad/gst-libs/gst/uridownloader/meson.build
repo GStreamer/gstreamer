@@ -26,5 +26,5 @@ gsturidownloader_dep = declare_dependency(link_with : gsturidownloader,
   include_directories : [libsinc],
   dependencies : [gstbase_dep])
 
-libraries += [[pkg_name, {'lib': gsturidownloader}]]
+gst_libraries += [[pkg_name, {'lib': gsturidownloader}]]
 meson.override_dependency(pkg_name, gsturidownloader_dep)

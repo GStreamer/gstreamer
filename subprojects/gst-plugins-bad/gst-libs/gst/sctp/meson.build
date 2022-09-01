@@ -22,7 +22,7 @@ libgstsctp = library('gstsctp-' + api_version,
 )
 
 pkg_name = 'gstreamer-sctp-1.0'
-libraries += [[pkg_name, {'lib': libgstsctp}]]
+gst_libraries += [[pkg_name, {'lib': libgstsctp}]]
 pkgconfig.generate(libgstsctp,
   libraries : [gst_dep],
   variables : pkgconfig_variables,

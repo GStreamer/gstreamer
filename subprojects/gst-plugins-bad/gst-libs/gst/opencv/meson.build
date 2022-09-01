@@ -39,7 +39,7 @@ if opencv_dep.found()
     dependencies : [gstbase_dep, gstvideo_dep, opencv_dep],
   )
 
-  libraries += [[pkg_name, {'lib': gstopencv}]]
+  gst_libraries += [[pkg_name, {'lib': gstopencv}]]
   gstopencv_dep = declare_dependency(link_with: gstopencv,
     include_directories : [libsinc],
     dependencies : [gstvideo_dep, opencv_dep])

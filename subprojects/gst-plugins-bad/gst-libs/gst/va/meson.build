@@ -62,7 +62,7 @@ gstva = library('gstva-' + api_version,
 )
 
 pkg_name = 'gstreamer-va-' + api_version
-libraries += [[pkg_name, {'lib': gstva}]]
+gst_libraries += [[pkg_name, {'lib': gstva}]]
 
 gstva_dep = declare_dependency(link_with : gstva,
   include_directories : [libsinc],

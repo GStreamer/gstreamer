@@ -44,7 +44,7 @@ if build_gir
     gen_sources += audio_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gstbadaudio_dep = declare_dependency(link_with : gstbadaudio,
   include_directories : [libsinc],

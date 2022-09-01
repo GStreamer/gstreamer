@@ -35,7 +35,7 @@ pkgconfig.generate(gstriff,
 )
 
 riff_gen_sources  = []
-libraries += [[pkg_name, {'lib': gstriff}]]
+gst_libraries += [[pkg_name, {'lib': gstriff}]]
 
 # *** GIR DISABLED for this library ***
 # This library does not respect the type naming conventions required to be

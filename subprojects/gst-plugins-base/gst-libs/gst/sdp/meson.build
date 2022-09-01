@@ -52,7 +52,7 @@ if build_gir
     sdp_gen_sources += [sdp_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 sdp_dep = declare_dependency(link_with: gstsdp,
   include_directories : [libsinc],

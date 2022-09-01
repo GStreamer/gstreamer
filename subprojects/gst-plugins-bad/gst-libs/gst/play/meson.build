@@ -65,7 +65,7 @@ if build_gir
     gen_sources += play_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gstplay_dep = declare_dependency(link_with : gstplay,
   include_directories : [libsinc],

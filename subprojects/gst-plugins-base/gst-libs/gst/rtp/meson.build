@@ -77,7 +77,7 @@ if build_gir
     rtp_gen_sources += [rtp_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 rtp_dep = declare_dependency(link_with : gst_rtp,
   include_directories : [libsinc],

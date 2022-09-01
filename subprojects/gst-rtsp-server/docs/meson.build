@@ -41,7 +41,7 @@ plugins_cache = join_paths(meson.current_source_dir(), 'plugins', 'gst_plugins_c
 if plugins.length() == 0
     message('All rtsp-server plugins have been disabled')
 elif plugins_cache_generator.found()
-    plugins_doc_dep = custom_target('rtsp-server-plugins-doc-cache',
+    gst_plugins_doc_dep = custom_target('rtsp-server-plugins-doc-cache',
         command: [plugins_cache_generator, plugins_cache, '@OUTPUT@', '@INPUT@'],
         input: plugins,
         output: 'gst_plugins_cache.json',

@@ -49,7 +49,7 @@ if libnice_dep.found()
   )
 
   pkg_name = 'gstreamer-webrtc-nice-1.0'
-  libraries += [[pkg_name, {'lib': libgstwebrtcnice}]]
+  gst_libraries += [[pkg_name, {'lib': libgstwebrtcnice}]]
   pkgconfig.generate(libgstwebrtcnice,
     libraries : [deps],
     variables : pkgconfig_variables,

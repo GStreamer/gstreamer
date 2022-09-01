@@ -184,7 +184,7 @@ foreach sp : subprojects
       endforeach
     endif
 
-    all_libraries += subproj.get_variable('libraries', [])
+    all_libraries += subproj.get_variable('gst_libraries', [])
     if not get_option('tools').disabled()
       all_tools += subproj.get_variable('gst_tools', {})
     endif
@@ -194,7 +194,7 @@ foreach sp : subprojects
     subprojects_names += [project_name]
 
     if not meson.is_cross_build() and build_infos.get('build-hotdoc', false)
-      plugins_doc_caches += [subproj.get_variable('plugins_doc_dep', [])]
+      plugins_doc_caches += [subproj.get_variable('gst_plugins_doc_dep', [])]
       if documented_projects != ''
         documented_projects += ','
       endif
@@ -210,7 +210,7 @@ if glib_dep.type_name() == 'internal'
              default_options: ['gnutls=auto', 'openssl=auto'])
 endif
 
-plugins_doc_dep = custom_target('plugins-doc-cache',
+gst_plugins_doc_dep = custom_target('plugins-doc-cache',
   command: [python3, '-c', 'print("Built all doc caches")'],
   input: plugins_doc_caches,
   output: 'plugins_doc_caches',

@@ -71,5 +71,5 @@ gstcodecparsers_dep = declare_dependency(link_with : gstcodecparsers,
   include_directories : [libsinc],
   dependencies : [gstbase_dep])
 
-libraries += [[pkg_name, {'lib': gstcodecparsers}]]
+gst_libraries += [[pkg_name, {'lib': gstcodecparsers}]]
 meson.override_dependency(pkg_name, gstcodecparsers_dep)

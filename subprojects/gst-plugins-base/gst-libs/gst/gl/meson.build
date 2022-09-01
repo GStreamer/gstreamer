@@ -1105,7 +1105,7 @@ if build_gstgl
       gen_sources += [gl_gir]
     endif
   endif
-  libraries += [[pkg_name, library_def]]
+  gst_libraries += [[pkg_name, library_def]]
   gstgl_dep = declare_dependency(link_with : gstgl,
     include_directories : [libsinc, compat_includes],
     sources: gen_sources,
@@ -1142,7 +1142,7 @@ if build_gstgl
         'dependencies' : [video_dep, gst_dep, gst_base_dep]
       }
       gir_dict = gir + {'includes': gir['includes'] + ['GstGL-1.0']}
-      libraries += [[pkg_name, {'gir': gir_dict}]]
+      gst_libraries += [[pkg_name, {'gir': gir_dict}]]
       if not static_build
         gir += {'includes': gir['includes'] + [gl_gir[0]]}
         gl_x11_gir = gnome.generate_gir(gstgl, kwargs: gir)
@@ -1179,7 +1179,7 @@ if build_gstgl
       }
 
       gir_dict = gir + {'includes': gir['includes'] + ['GstGL-1.0']}
-      libraries += [[pkg_name, {'gir': gir_dict}]]
+      gst_libraries += [[pkg_name, {'gir': gir_dict}]]
       if not static_build
         gir += {'includes': gir['includes'] + [gl_gir[0]]}
         gl_wayland_gir = gnome.generate_gir(gstgl, kwargs: gir)
@@ -1214,7 +1214,7 @@ if build_gstgl
         'dependencies' : [video_dep, gst_dep, gst_base_dep]
       }
       gir_dict = gir + {'includes': gir['includes'] + ['GstGL-1.0']}
-      libraries += [[pkg_name, {'gir': gir_dict}]]
+      gst_libraries += [[pkg_name, {'gir': gir_dict}]]
       if not static_build
         gir += {'includes': gir['includes'] + [gl_gir[0]]}
         gl_egl_gir = gnome.generate_gir(gstgl, kwargs: gir)

@@ -121,7 +121,7 @@ if build_gir
       validate_gen_sources += [validate_gir]
     endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 validate_dep = declare_dependency(link_with : gstvalidate,
   include_directories : [inc_dirs],

@@ -217,7 +217,7 @@ if build_gir
 
   library_def += {'gir': [gir]}
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 install_headers(d3d11_headers, subdir : 'gstreamer-1.0/gst/d3d11')
 

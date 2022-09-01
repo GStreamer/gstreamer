@@ -91,7 +91,7 @@ if build_gir
     pbutils_gen_sources += [pbutils_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 pbutils_dep = declare_dependency(link_with : pbutils,
   include_directories : [libsinc],

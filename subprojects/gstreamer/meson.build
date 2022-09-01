@@ -623,7 +623,7 @@ if host_system == 'darwin'
 endif
 
 static_build = get_option('default_library') == 'static'
-libraries = []
+gst_libraries = []
 subdir('gst')
 subdir('libs')
 subdir('plugins')

@@ -29,7 +29,7 @@ endif
 
 plugins_cache = join_paths(meson.current_source_dir(), 'gst_plugins_cache.json')
 if plugins_cache_generator.found()
-    plugins_doc_dep = custom_target('vaapi-plugins-doc-cache',
+    gst_plugins_doc_dep = custom_target('vaapi-plugins-doc-cache',
         command: [plugins_cache_generator, plugins_cache, '@OUTPUT@', '@INPUT@'],
         input: plugins,
         output: 'gst_plugins_cache.json',

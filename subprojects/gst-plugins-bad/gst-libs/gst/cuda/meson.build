@@ -86,7 +86,7 @@ if build_gir
 
   library_def += {'gir': [gir, cuda_gir]}
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 pkgconfig.generate(gstcuda,
   libraries : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep],

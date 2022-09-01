@@ -38,5 +38,5 @@ gstphotography_dep = declare_dependency(link_with : gstphotography,
   dependencies : [gst_dep],
   sources : [photoenum_h])
 
-libraries += [[pkg_name, {'lib': gstphotography}]]
+gst_libraries += [[pkg_name, {'lib': gstphotography}]]
 meson.override_dependency(pkg_name, gstphotography_dep)

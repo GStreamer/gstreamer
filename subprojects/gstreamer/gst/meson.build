@@ -302,7 +302,7 @@ if build_gir
     gst_gen_sources += gst_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gst_compile_args = []
 if get_option('default_library') == 'static'

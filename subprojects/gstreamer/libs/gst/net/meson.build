@@ -66,7 +66,7 @@ if build_gir
     gst_net_gen_sources += [gst_net_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gst_net_dep = declare_dependency(link_with : gst_net,
   include_directories : [libsinc],

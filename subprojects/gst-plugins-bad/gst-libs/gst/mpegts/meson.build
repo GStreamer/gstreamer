@@ -75,7 +75,7 @@ if build_gir
     gen_sources += mpegts_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gstmpegts_dep = declare_dependency(link_with : gstmpegts,
   include_directories : [libsinc],

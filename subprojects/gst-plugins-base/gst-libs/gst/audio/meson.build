@@ -181,7 +181,7 @@ if build_gir
     audio_gen_sources += [audio_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 audio_dep = declare_dependency(link_with : gstaudio,
   include_directories : [libsinc],

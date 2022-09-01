@@ -98,7 +98,7 @@ if build_gir
     rtsp_server_gen_sources += [rtsp_server_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gst_rtsp_server_dep = declare_dependency(link_with : gst_rtsp_server,
   include_directories : rtspserver_incs,

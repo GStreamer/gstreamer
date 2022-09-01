@@ -36,7 +36,7 @@ configure_file(
 
 plugins_cache_generator = find_program(join_paths(meson.current_build_dir(), 'gst-plugins-doc-cache-generator'))
 plugins_cache = join_paths(meson.current_source_dir(), 'plugins', 'gst_plugins_cache.json')
-plugins_doc_dep = custom_target('build-doc-cache',
+gst_plugins_doc_dep = custom_target('build-doc-cache',
     command: [plugins_cache_generator, plugins_cache, '@OUTPUT@', '@INPUT@'],
     input: plugins,
     output: 'gst_plugins_cache.json',
@@ -169,7 +169,7 @@ plugins_doc = [
         gst_index: 'plugins/index.md',
         gst_smart_index: true,
         gst_c_sources: ['../plugins/elements/*.c', '../plugins/elements/*.h'],
-        dependencies: [plugins_doc_dep],
+        dependencies: [gst_plugins_doc_dep],
         gst_cache_file: plugins_cache,
         gst_plugin_name: 'coreelements',
     ),
@@ -180,7 +180,7 @@ plugins_doc = [
         gst_index: 'plugins/coretracers/index.md',
         gst_smart_index: true,
         gst_c_sources: ['../plugins/tracers/*.c', '../plugins/tracers/*.h'],
-        dependencies: [plugins_doc_dep],
+        dependencies: [gst_plugins_doc_dep],
         gst_cache_file: plugins_cache,
         gst_plugin_name: 'coretracers',
     )

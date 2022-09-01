@@ -50,7 +50,7 @@ if build_gir
     allocators_gen_sources += allocators_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 allocators_dep = declare_dependency(link_with: gstallocators,
   include_directories : [libsinc],

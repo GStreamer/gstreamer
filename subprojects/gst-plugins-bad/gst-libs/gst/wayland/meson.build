@@ -78,7 +78,7 @@ if use_wayland
   )
 
   pkg_name = 'gstreamer-wayland-1.0'
-  libraries += [[pkg_name, {'lib': gstwayland}]]
+  gst_libraries += [[pkg_name, {'lib': gstwayland}]]
   pkgconfig.generate(gstwayland,
     libraries : [gst_dep, gstvideo_dep],
     variables : pkgconfig_variables,

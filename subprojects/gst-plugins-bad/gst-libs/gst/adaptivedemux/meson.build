@@ -12,7 +12,7 @@ gstadaptivedemux = library('gstadaptivedemux-' + api_version,
   install : true,
   dependencies : [gstbase_dep, gsturidownloader_dep],
 )
-libraries += [[pkg_name, {'lib': gstadaptivedemux}]]
+gst_libraries += [[pkg_name, {'lib': gstadaptivedemux}]]
 
 gstadaptivedemux_dep = declare_dependency(link_with : gstadaptivedemux,
   include_directories : [libsinc],

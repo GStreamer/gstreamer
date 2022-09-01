@@ -43,7 +43,7 @@ pkgconfig.generate(gstfft,
   name : pkg_name,
   description : 'FFT implementation',
 )
-libraries += [[pkg_name, {'lib': gstfft}]]
+gst_libraries += [[pkg_name, {'lib': gstfft}]]
 
 fft_dep = declare_dependency(link_with: gstfft,
   include_directories : [libsinc],

@@ -60,7 +60,7 @@ if build_gir
     app_gen_sources += app_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 app_dep = declare_dependency(link_with: gstapp,
   include_directories : [libsinc],

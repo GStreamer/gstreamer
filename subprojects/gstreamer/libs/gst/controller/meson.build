@@ -79,7 +79,7 @@ if build_gir
     gst_controller_gen_sources += [gst_controller_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gst_controller_dep = declare_dependency(link_with : gst_controller,
   include_directories : [libsinc],

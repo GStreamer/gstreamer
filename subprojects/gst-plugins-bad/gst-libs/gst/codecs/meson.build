@@ -75,7 +75,7 @@ if build_gir
     gen_sources += codecs_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gstcodecs_dep = declare_dependency(link_with : gstcodecs,
   include_directories : [libsinc],

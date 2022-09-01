@@ -84,7 +84,7 @@ if build_gir
     gst_check_gen_sources += gst_check_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gst_check_dep = declare_dependency(link_with : gst_check,
   include_directories : [libsinc],

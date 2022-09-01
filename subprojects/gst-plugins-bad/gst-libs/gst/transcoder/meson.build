@@ -56,7 +56,7 @@ if build_gir
     transcoder_gen_sources += transcoder_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 gst_transcoder_dep = declare_dependency(link_with: gst_transcoder,
   dependencies : [gst_dep, gstpbutils_dep],

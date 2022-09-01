@@ -225,7 +225,7 @@ endif
 # GESImageSource is unused and is internal only so it gets stripped out when we statically
 # link GES. We keep the header for backward compatibility reasons.
 install_headers(ges_headers + files('ges-image-source.h'), subdir : 'gstreamer-1.0/ges')
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 ges_dep = declare_dependency(link_with : libges,
   include_directories : [configinc],

@@ -91,7 +91,7 @@ if build_gir
     webrtc_gen_sources += webrtc_gir
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 install_headers(webrtc_headers, subdir : 'gstreamer-1.0/gst/webrtc')
 

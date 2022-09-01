@@ -150,12 +150,12 @@ if get_option('default_library') == 'shared'
 endif
 pkgconfig_subdirs = ['gstreamer-1.0']
 
-plugins_doc_dep = []
+gst_plugins_doc_dep = []
 plugins = []
 i18n = import('i18n')
 
 static_build = get_option('default_library') == 'static'
-libraries = []
+gst_libraries = []
 
 python_mod = import('python')
 python3 = python_mod.find_installation()

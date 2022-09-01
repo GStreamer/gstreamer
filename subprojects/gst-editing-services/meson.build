@@ -266,7 +266,7 @@ pkgconfig = import('pkgconfig')
 pkgconfig_subdirs = ['gstreamer-1.0']
 
 configinc = include_directories('.')
-libraries = []
+gst_libraries = []
 
 subdir('ges')
 subdir('plugins')

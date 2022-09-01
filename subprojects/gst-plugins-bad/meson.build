@@ -37,7 +37,7 @@ osxversion = curversion + 1
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 static_build = get_option('default_library') == 'static'
 plugins = []
-libraries = []
+gst_libraries = []
 
 cc = meson.get_compiler('c')
 cxx = meson.get_compiler('cpp')

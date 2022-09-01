@@ -115,7 +115,7 @@ if build_gir
     tag_gen_sources += [tag_gir]
   endif
 endif
-libraries += [[pkg_name, library_def]]
+gst_libraries += [[pkg_name, library_def]]
 
 tag_dep = declare_dependency(link_with: gsttag,
   include_directories : [libsinc],
