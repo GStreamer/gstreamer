@@ -2332,6 +2332,8 @@ _priv_gst_value_get_abbrs (gint * n_abbrs)
       ,
       {"datetime", GST_TYPE_DATE_TIME}
       ,
+      {"gdatetime", G_TYPE_DATE_TIME}
+      ,
       {"bitmask", GST_TYPE_BITMASK}
       ,
       {"flagset", GST_TYPE_FLAG_SET}
@@ -7283,9 +7285,9 @@ gst_value_deserialize_date (GValue * dest, const gchar * s)
   return TRUE;
 }
 
-/*************
+/***************
  * GstDateTime *
- *************/
+ ***************/
 
 static gint
 gst_value_compare_date_time (const GValue * value1, const GValue * value2)
@@ -7348,6 +7350,60 @@ gst_value_transform_string_date (const GValue * src_value, GValue * dest_value)
   gst_value_deserialize_date (dest_value, src_value->data[0].v_pointer);
 }
 
+/*************
+ * GDateTime *
+ *************/
+
+static gint
+gst_value_compare_g_date_time (const GValue * value1, const GValue * value2)
+{
+  const GDateTime *date1 = (const GDateTime *) g_value_get_boxed (value1);
+  const GDateTime *date2 = (const GDateTime *) g_value_get_boxed (value2);
+
+  if (date1 == date2)
+    return GST_VALUE_EQUAL;
+
+  if ((date1 == NULL) && (date2 != NULL)) {
+    return GST_VALUE_LESS_THAN;
+  }
+  if ((date2 == NULL) && (date1 != NULL)) {
+    return GST_VALUE_LESS_THAN;
+  }
+
+  return g_date_time_compare (date1, date2);
+}
+
+static gchar *
+gst_value_serialize_g_date_time (const GValue * val)
+{
+  GDateTime *date = (GDateTime *) g_value_get_boxed (val);
+
+  if (date == NULL)
+    return g_strdup ("null");
+
+  return g_date_time_format_iso8601 (date);
+}
+
+static gboolean
+gst_value_deserialize_g_date_time (GValue * dest, const gchar * s)
+{
+  GDateTime *datetime;
+
+  if (!s || strcmp (s, "null") == 0) {
+    return FALSE;
+  }
+
+  /* The Gstreamer iso8601 parser is a bit more forgiving */
+  datetime =
+      gst_date_time_to_g_date_time (gst_date_time_new_from_iso8601_string (s));
+  if (datetime != NULL) {
+    g_value_take_boxed (dest, datetime);
+    return TRUE;
+  }
+  GST_WARNING ("Failed to deserialize date time string '%s' to GLibDateTime",
+      s);
+  return FALSE;
+}
 
 /*********
  * bytes *
@@ -8142,6 +8198,7 @@ _priv_gst_value_initialize (void)
   REGISTER_SERIALIZATION (G_TYPE_DATE, date);
   REGISTER_SERIALIZATION (G_TYPE_BYTES, bytes);
   REGISTER_SERIALIZATION (gst_date_time_get_type (), date_time);
+  REGISTER_SERIALIZATION (G_TYPE_DATE_TIME, g_date_time);
   REGISTER_SERIALIZATION (gst_bitmask_get_type (), bitmask);
   REGISTER_SERIALIZATION (gst_structure_get_type (), structure);
   REGISTER_SERIALIZATION (gst_flagset_get_type (), flagset);
