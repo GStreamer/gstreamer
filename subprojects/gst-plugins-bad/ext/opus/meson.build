@@ -17,6 +17,5 @@ if opus_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstopus, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstopus]
 endif

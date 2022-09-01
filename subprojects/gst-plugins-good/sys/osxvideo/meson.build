@@ -23,6 +23,5 @@ if have_objc and osxvideo_opengl_dep.found() and osxvideo_cocoa_dep.found()
     dependencies : [gstvideo_dep, osxvideo_opengl_dep, osxvideo_cocoa_dep],
     install : true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstosxvideo, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstosxvideo]
 endif

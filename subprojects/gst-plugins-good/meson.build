@@ -512,6 +512,10 @@ configure_file(output : 'config.h', configuration : cdata)
 plugin_names = []
 gst_plugins = []
 foreach plugin: plugins
+  # gstsoup is a special case because of the way we build the static/dynamic libraries
+  if plugin.name() not in ['gstsoup', 'gstadaptivedemux2']
+    pkgconfig.generate(plugin, install_dir: plugins_pkgconfig_install_dir)
+  endif
   dep = declare_dependency(link_with: plugin, variables: {'full_path': plugin.full_path()})
   meson.override_dependency(plugin.name(), dep)
   gst_plugins += [dep]

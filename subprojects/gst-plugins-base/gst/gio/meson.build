@@ -16,5 +16,4 @@ gstgio = library('gstgio',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstgio, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstgio]

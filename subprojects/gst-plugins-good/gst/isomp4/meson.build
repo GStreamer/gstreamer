@@ -29,7 +29,6 @@ gstisomp4 = library('gstisomp4',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstisomp4, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstisomp4]
 
 install_data(sources: 'GstQTMux.prs', install_dir: presetdir)

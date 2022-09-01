@@ -34,5 +34,4 @@ gstsid = library('gstsid', 'gstsiddec.cc',
   dependencies : [gstaudio_dep, sidplay_dep],
   install : true,
   install_dir : plugins_install_dir)
-pkgconfig.generate(gstsid, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstsid]

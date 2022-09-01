@@ -12,5 +12,4 @@ gstautoconvert = library('gstautoconvert',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstautoconvert, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstautoconvert]

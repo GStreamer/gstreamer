@@ -19,5 +19,4 @@ gstaudioparsers = library('gstaudioparsers',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstaudioparsers, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstaudioparsers]

@@ -18,7 +18,6 @@ if dv_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstdv, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstdv]
   # FIXME
   #executable('smpte_test',

@@ -87,5 +87,4 @@ gstd3d11 = library('gstd3d11',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstd3d11, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstd3d11]

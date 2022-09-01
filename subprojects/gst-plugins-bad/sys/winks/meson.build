@@ -26,6 +26,5 @@ if host_system == 'windows' and not winks_option.disabled()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstwinks, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstwinks]
 endif

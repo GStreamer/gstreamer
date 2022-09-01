@@ -23,7 +23,6 @@ if have_tinyalsa
     install: true,
     install_dir: plugins_install_dir
   )
-  pkgconfig.generate(gsttinyalsa, install_dir: plugins_pkgconfig_install_dir)
   plugins += [gsttinyalsa]
 elif get_option('tinyalsa').enabled()
   error('tinyalsa plugin enabled but TinyALSA library or headers not found')

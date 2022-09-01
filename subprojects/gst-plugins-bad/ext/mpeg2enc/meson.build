@@ -34,6 +34,5 @@ if mjpegtools_dep.found() and mpeg2enc_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstmpeg2enc, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstmpeg2enc]
 endif

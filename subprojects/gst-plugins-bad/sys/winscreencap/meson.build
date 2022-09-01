@@ -27,6 +27,5 @@ if d3d_dep.found() and gdi_dep.found() and have_d3d9_h
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstwinscreencap, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstwinscreencap]
 endif

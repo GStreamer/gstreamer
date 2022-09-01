@@ -160,6 +160,5 @@ if have_qt_windowing
     override_options : ['cpp_std=c++11'],
     install: true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstqmlgl, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstqmlgl]
 endif

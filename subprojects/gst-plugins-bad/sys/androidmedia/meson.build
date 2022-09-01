@@ -83,7 +83,6 @@ if have_jni_h or have_mlsdk
                     gstphotography_dep, gmodule_dep, orc_dep, extra_deps],
     install : true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstandroidmedia, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstandroidmedia]
 
   install_data(androidmedia_java_sources,

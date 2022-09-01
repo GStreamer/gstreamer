@@ -5,5 +5,4 @@ gstpython = library('gstpython',
     install : true,
     install_dir : '@0@/gstreamer-1.0'.format(get_option('libdir')),
 )
-pkgconfig.generate(gstpython, install_dir : plugins_pkgconfig_install_dir)
 plugins = [gstpython]

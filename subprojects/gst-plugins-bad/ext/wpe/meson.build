@@ -38,5 +38,4 @@ if giounix_dep.found()
   subdir('wpe-extension')
 endif
 
-pkgconfig.generate(gstwpe, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstwpe]

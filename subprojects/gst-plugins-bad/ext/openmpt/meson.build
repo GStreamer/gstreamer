@@ -8,6 +8,5 @@ if openmpt_dep.found()
     install: true,
     install_dir: plugins_install_dir,
   )
-  pkgconfig.generate(gstopenmpt, install_dir: plugins_pkgconfig_install_dir)
   plugins += [gstopenmpt]
 endif

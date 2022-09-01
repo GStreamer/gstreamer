@@ -14,5 +14,4 @@ gstvideoconvertscale = library('gstvideoconvertscale',
   install_dir : plugins_install_dir,
 )
 
-pkgconfig.generate(gstvideoconvertscale, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstvideoconvertscale]

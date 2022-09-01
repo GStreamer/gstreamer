@@ -16,5 +16,4 @@ gstcamerabin = library('gstcamerabin',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstcamerabin, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstcamerabin]

@@ -27,6 +27,5 @@ if onnxrt_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstonnx, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstonnx]
  endif

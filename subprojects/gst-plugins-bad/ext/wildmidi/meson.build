@@ -30,7 +30,6 @@ if wildmidi_dep.found()
     install: true,
     install_dir: plugins_install_dir,
   )
-  pkgconfig.generate(gstwildmidi, install_dir: plugins_pkgconfig_install_dir)
   plugins += [gstwildmidi]
 elif get_option('wildmidi').enabled()
   error('WildMidi plugin explicitly enabled, but required library or headers not found.')

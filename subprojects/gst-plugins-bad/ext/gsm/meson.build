@@ -24,6 +24,5 @@ if gsm_dep.found() and have_gsm_create
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstgsm, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstgsm]
 endif

@@ -13,6 +13,5 @@ if faac_dep.found() and have_faac_h
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstfaac, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstfaac]
 endif

@@ -96,6 +96,5 @@ gstdeinterlace = library('gstdeinterlace',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstdeinterlace, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstdeinterlace]
 

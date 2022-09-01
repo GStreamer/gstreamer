@@ -34,5 +34,4 @@ lame = library('gstlame',
   install_dir : plugins_install_dir,
 )
 
-pkgconfig.generate(lame, install_dir : plugins_pkgconfig_install_dir)
 plugins += [lame]

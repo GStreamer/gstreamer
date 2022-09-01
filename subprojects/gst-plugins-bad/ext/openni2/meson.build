@@ -13,6 +13,5 @@ if openni2_dep.found()
     install: true,
     install_dir: plugins_install_dir,
   )
-  pkgconfig.generate(gstopenni2, install_dir: plugins_pkgconfig_install_dir)
   plugins += [gstopenni2]
 endif

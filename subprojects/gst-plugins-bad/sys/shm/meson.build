@@ -40,6 +40,5 @@ if shm_enabled
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstshm, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstshm]
 endif

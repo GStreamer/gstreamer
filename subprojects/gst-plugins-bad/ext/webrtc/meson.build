@@ -27,6 +27,5 @@ gstwebrtc_plugin = library('gstwebrtc',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstwebrtc_plugin, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstwebrtc_plugin]
 

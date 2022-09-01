@@ -22,6 +22,5 @@ if kate_dep.found()
     dependencies : [gstbase_dep, gstvideo_dep, gsttag_dep, kate_dep],
     install : true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstkate, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstkate]
 endif

@@ -120,6 +120,5 @@ if applemedia_found_deps
         install : true,
         install_dir : plugins_install_dir,
     )
-    pkgconfig.generate(gstapplemedia, install_dir : plugins_pkgconfig_install_dir)
     plugins += [gstapplemedia]
 endif

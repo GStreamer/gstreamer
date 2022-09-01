@@ -9,6 +9,5 @@ if neon_dep.found()
     dependencies : [gstbase_dep, neon_dep],
     install : true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstneon, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstneon]
 endif

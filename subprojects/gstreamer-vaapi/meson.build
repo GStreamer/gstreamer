@@ -243,6 +243,7 @@ plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
 plugin_names = []
 gst_plugins = []
 foreach plugin: plugins
+  pkgconfig.generate(plugin, install_dir: plugins_pkgconfig_install_dir)
   dep = declare_dependency(link_with: plugin, variables: {'full_path': plugin.full_path()})
   meson.override_dependency(plugin.name(), dep)
   gst_plugins += [dep]

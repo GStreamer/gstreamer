@@ -171,5 +171,4 @@ gstmediafoundation = library('gstmediafoundation',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstmediafoundation, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstmediafoundation]

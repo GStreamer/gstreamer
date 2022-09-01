@@ -33,6 +33,5 @@ if have_dsound
     dependencies : [gstaudio_dep] + directsoundsink_dep,
     install : true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstdirectsoundsink, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstdirectsoundsink]
 endif

@@ -11,6 +11,5 @@ if cairo_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstcairo, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstcairo]
 endif

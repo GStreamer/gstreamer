@@ -24,6 +24,5 @@ if openssl_dep.found() and libcrypto_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstdtls, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstdtls]
 endif

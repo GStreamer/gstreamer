@@ -18,5 +18,4 @@ gstasf = library('gstasf',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstasf, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstasf]

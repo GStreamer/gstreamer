@@ -17,7 +17,6 @@ if have_gme
     install: true,
     install_dir: plugins_install_dir,
   )
-  pkgconfig.generate(gstgme, install_dir: plugins_pkgconfig_install_dir)
   plugins += [gstgme]
 elif get_option('gme').enabled()
   error('libgme plugin was enabled but required dependencies not found.')

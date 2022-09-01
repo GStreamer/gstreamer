@@ -33,6 +33,5 @@ if have_ladspa_h
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstladspa, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstladspa]
 endif

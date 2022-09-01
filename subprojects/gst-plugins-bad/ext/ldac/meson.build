@@ -14,6 +14,5 @@ if ldac_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstldac, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstldac]
 endif

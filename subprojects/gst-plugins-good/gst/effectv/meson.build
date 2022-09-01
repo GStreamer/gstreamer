@@ -12,5 +12,4 @@ gsteffectv = library('gsteffectv',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gsteffectv, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gsteffectv]

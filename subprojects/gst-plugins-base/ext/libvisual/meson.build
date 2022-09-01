@@ -17,6 +17,5 @@ if libvisual_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstlibvisual, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstlibvisual]
 endif

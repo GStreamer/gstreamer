@@ -26,6 +26,5 @@ if have_opensles_h and opensles_dep.found()
     dependencies : [gstaudio_dep, opensles_dep],
     install : true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstopensles, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstopensles]
 endif

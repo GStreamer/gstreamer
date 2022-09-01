@@ -23,6 +23,5 @@ gstaes = library('gstaes',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstaes, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstaes]
 aes_dep = declare_dependency(include_directories : include_directories('.'))

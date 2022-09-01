@@ -655,6 +655,7 @@ install_data('gst-element-check-1.0.m4', install_dir : join_paths(get_option('da
 plugin_names = []
 gst_plugins = []
 foreach plugin: plugins
+  pkgconfig.generate(plugin, install_dir: plugins_pkgconfig_install_dir)
   dep = declare_dependency(link_with: plugin, variables: {'full_path': plugin.full_path()})
   meson.override_dependency(plugin.name(), dep)
   gst_plugins += [dep]

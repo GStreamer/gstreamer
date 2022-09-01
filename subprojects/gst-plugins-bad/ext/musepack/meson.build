@@ -10,7 +10,6 @@ if mpcdec_dep.found() and cc.has_header_symbol('mpc/mpcdec.h', 'mpc_demux_init',
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstmusepack, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstmusepack]
 elif get_option('musepack').enabled()
   error('Could not find libmpcdec header files, but Musepack was enabled via options')

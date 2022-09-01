@@ -14,5 +14,4 @@ nle = library('gstnle', nle_sources,
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(nle, install_dir : plugins_pkgconfig_install_dir)
 plugins += [nle]

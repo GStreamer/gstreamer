@@ -23,6 +23,5 @@ if libgudev_dep.found() and libusb_dep.found() and has_uvcvideo_h
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstuvch264, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstuvch264]
 endif

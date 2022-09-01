@@ -6,5 +6,4 @@ gstspectrum = library('gstspectrum',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstspectrum, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstspectrum]

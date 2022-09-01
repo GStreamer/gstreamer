@@ -40,6 +40,5 @@ if have_osxaudio
     dependencies : [gstaudio_dep, osxaudio_dep],
     install : true,
     install_dir : plugins_install_dir)
-  pkgconfig.generate(gstosxaudio, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstosxaudio]
 endif

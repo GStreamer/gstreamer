@@ -6,5 +6,4 @@ gsty4menc = library('gsty4menc',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gsty4menc, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gsty4menc]

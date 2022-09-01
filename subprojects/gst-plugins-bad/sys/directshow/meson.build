@@ -70,5 +70,4 @@ gstdirectshow = library('gstdirectshow',
   install_dir: plugins_install_dir,
   override_options: ['cpp_std=none']
 )
-pkgconfig.generate(gstdirectshow, install_dir: plugins_pkgconfig_install_dir)
 plugins += [gstdirectshow]

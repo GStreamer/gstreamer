@@ -151,5 +151,4 @@ gstopengl = library('gstopengl',
   install : true,
   install_dir : plugins_install_dir)
 
-pkgconfig.generate(gstopengl, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstopengl]

@@ -16,7 +16,6 @@ if a52_dep.found()
       install : true,
       install_dir : plugins_install_dir,
     )
-    pkgconfig.generate(a52dec, install_dir : plugins_pkgconfig_install_dir)
     plugins += [a52dec]
   elif a52dec_opt.enabled()
     error('a52dec plugin enabled but a52.h not found')  

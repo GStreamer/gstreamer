@@ -18,6 +18,5 @@ if gtk_dep.found() and gtk_wayland_dep.found() and use_wayland
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstgtkwayland, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstgtkwayland]
 endif

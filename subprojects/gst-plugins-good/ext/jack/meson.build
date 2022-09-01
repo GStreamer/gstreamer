@@ -98,5 +98,4 @@ gstjack = library('gstjack',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstjack, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstjack]

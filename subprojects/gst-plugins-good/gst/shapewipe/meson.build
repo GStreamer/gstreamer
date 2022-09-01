@@ -6,5 +6,4 @@ gstshapewipe = library('gstshapewipe',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstshapewipe, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstshapewipe]

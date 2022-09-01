@@ -79,7 +79,6 @@ if not static_build
       dependencies : validate_deps)
   plugins += gstvalidatetracer
 
-  pkgconfig.generate(gstvalidatetracer, install_dir : plugins_pkgconfig_install_dir)
 else
   warning('Statically building GstValidate as a tracer is not supported yet.')
 endif

@@ -10,5 +10,4 @@ rtspsink = library('gstrtspclientsink',
   dependencies : [gstrtsp_dep, gstsdp_dep, gst_rtsp_server_dep],
   install : true,
   install_dir : plugins_install_dir)
-pkgconfig.generate(rtspsink, install_dir : plugins_pkgconfig_install_dir)
 plugins += [rtspsink]

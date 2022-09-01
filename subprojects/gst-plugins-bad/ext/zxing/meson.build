@@ -13,6 +13,5 @@ if zxing_dep.found()
 	  install_dir : plugins_install_dir,
           override_options : ['cpp_std=c++11'],
 	)
-	pkgconfig.generate(gstzxing, install_dir : plugins_pkgconfig_install_dir)
 	plugins += [gstzxing]
 endif

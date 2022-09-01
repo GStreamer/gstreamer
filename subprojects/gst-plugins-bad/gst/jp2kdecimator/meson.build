@@ -11,5 +11,4 @@ gstjp2kdecimator = library('gstjp2kdecimator',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstjp2kdecimator, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstjp2kdecimator]

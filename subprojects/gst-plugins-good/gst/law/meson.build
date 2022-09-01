@@ -6,7 +6,6 @@ gstalaw = library('gstalaw',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstalaw, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstalaw]
 
 gstmulaw = library('gstmulaw',
@@ -17,5 +16,4 @@ gstmulaw = library('gstmulaw',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstmulaw, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstmulaw]

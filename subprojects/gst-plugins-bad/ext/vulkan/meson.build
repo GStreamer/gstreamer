@@ -51,5 +51,4 @@ gstvulkan_plugin = library('gstvulkan',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstvulkan_plugin, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstvulkan_plugin]

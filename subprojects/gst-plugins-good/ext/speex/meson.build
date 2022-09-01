@@ -21,6 +21,5 @@ if speex_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstspeex, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstspeex]
 endif

@@ -19,6 +19,5 @@ if spandsp_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstspandsp, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstspandsp]
 endif

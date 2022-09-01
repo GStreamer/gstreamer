@@ -8,6 +8,5 @@ if zbar_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstzbar, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstzbar]
 endif

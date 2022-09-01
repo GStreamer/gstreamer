@@ -12,6 +12,5 @@ if bs2b_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstbs2b, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstbs2b]
 endif

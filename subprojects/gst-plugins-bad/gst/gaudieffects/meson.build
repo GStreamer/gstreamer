@@ -37,5 +37,4 @@ gstgaudioeffects = library('gstgaudieffects',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstgaudioeffects, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstgaudioeffects]

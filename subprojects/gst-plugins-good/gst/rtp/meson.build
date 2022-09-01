@@ -124,5 +124,4 @@ gstrtp = library('gstrtp',
   install : true,
   install_dir : plugins_install_dir,
 )
-pkgconfig.generate(gstrtp, install_dir : plugins_pkgconfig_install_dir)
 plugins += [gstrtp]

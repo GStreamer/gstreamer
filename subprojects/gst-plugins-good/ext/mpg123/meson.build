@@ -9,6 +9,5 @@ if mpg123_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstmpg123, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstmpg123]
 endif

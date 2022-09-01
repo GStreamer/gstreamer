@@ -18,6 +18,5 @@ if libxml_dep.found() and pango_dep.found() and cairo_dep.found() and pangocairo
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstttmlsubs, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstttmlsubs]
 endif

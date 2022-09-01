@@ -37,6 +37,5 @@ if avtp_dep.found()
     install : true,
     install_dir : plugins_install_dir,
   )
-  pkgconfig.generate(gstavtp, install_dir : plugins_pkgconfig_install_dir)
   plugins += [gstavtp]
 endif
