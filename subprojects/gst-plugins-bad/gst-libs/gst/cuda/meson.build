@@ -1,13 +1,13 @@
-cuda_sources = [
+cuda_sources = files([
   'gstcudaloader.c',
   'gstcudacontext.c',
   'gstcudautils.c',
   'gstcudamemory.c',
   'gstcudabufferpool.c',
   'gstcudanvrtc.c',
-]
+])
 
-cuda_headers = [
+cuda_headers = files([
     'cuda-prelude.h',
     'gstcudabufferpool.h',
     'gstcudacontext.h',
@@ -15,7 +15,7 @@ cuda_headers = [
     'gstcudamemory.h',
     'gstcudanvrtc.h',
     'gstcudautils.h',
-]
+])
 
 gstcuda_dep = dependency('', required : false)
 
@@ -73,7 +73,7 @@ if build_gir
     'export_packages' : pkg_name,
     'includes' : gir_includes,
     'install' : true,
-    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
+    'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API', '-I' + meson.current_source_dir() / 'stub'],
     'dependencies' : [gstbase_dep, gstvideo_dep, gstglproto_dep],
   }
   if not static_build
