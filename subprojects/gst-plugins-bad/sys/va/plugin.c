@@ -191,7 +191,7 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
       case H264:
         if (!gst_va_h264_enc_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE, entrypoint)) {
-          GST_WARNING ("Failed to register H264 decoder: %s",
+          GST_WARNING ("Failed to register H264 encoder: %s",
               device->render_device_path);
         }
         break;
