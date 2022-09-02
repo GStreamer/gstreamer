@@ -174,12 +174,13 @@ foreach sp : subprojects
 
   if subproj.found()
     plugins = subproj.get_variable('gst_plugins', [])
+    legacy_plugins = subproj.get_variable('plugins', [])
     all_plugins += plugins
-    if subproj.get_variable('gst_plugins', []).length() != subproj.get_variable('plugins', plugins).length()
+    if plugins.length() == 0 and legacy_plugins.length() > 0
       warning(f'DEPRECATED use of the `plugins` variable in @project_name@.')
       warning('The variable should now be called `gst_plugins` and use:')
       warning('`declare_dependency( link_with: <plugin_target>, variable: {\'full_path\': <plugin_target>.full_path()})` instead')
-      foreach plugin: subproj.get_variable('plugins', [])
+      foreach plugin: legacy_plugins
         all_plugins += [declare_dependency(link_with: plugin, variables: {'full_path': plugin.full_path()})]
       endforeach
     endif
