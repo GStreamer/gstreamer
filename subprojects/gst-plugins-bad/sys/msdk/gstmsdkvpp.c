@@ -100,6 +100,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
     "{ NV12, BGRA, YUY2, UYVY, VUYA, P010_10LE" EXT_SINK_FORMATS "}"
 #define SUPPORTED_VA_FORMAT \
     "{ NV12, VUYA, P010_10LE }"
+#define SUPPORTED_D3D11_FORMAT \
+    "{ NV12, VUYA, P010_10LE }"
 #define SRC_SYSTEM_FORMAT \
     "{ NV12, BGRA, YUY2, UYVY, VUYA, BGRx, P010_10LE" EXT_FORMATS EXT_SRC_FORMATS "}"
 #define SRC_DMABUF_FORMAT       \
@@ -112,8 +114,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #define VA_SINK_CAPS_STR \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", SUPPORTED_VA_FORMAT)
 #else
-#define DMABUF_SINK_CAPS_STR ""
-#define VA_SINK_CAPS_STR ""
+#define D3D11_SINK_CAPS_STR \
+  GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE (SUPPORTED_D3D11_FORMAT)
 #endif
 
 #ifndef _WIN32
@@ -123,10 +125,11 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #define VA_SRC_CAPS_STR \
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", SUPPORTED_VA_FORMAT)
 #else
-#define DMABUF_SRC_CAPS_STR ""
-#define VA_SRC_CAPS_STR ""
+#define D3D11_SRC_CAPS_STR \
+  GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE (SUPPORTED_D3D11_FORMAT)
 #endif
 
+#ifndef _WIN32
 static GstStaticPadTemplate gst_msdkvpp_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -143,7 +146,23 @@ static GstStaticPadTemplate gst_msdkvpp_src_factory =
         GST_VIDEO_CAPS_MAKE (SRC_SYSTEM_FORMAT) ", "
         "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
         VA_SRC_CAPS_STR));
+#else
+static GstStaticPadTemplate gst_msdkvpp_sink_factory =
+    GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SUPPORTED_SYSTEM_FORMAT)
+        ", " "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
+        D3D11_SINK_CAPS_STR));
 
+static GstStaticPadTemplate gst_msdkvpp_src_factory =
+    GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SRC_SYSTEM_FORMAT) ", "
+        "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
+        D3D11_SRC_CAPS_STR));
+#endif
 enum
 {
   PROP_0,
