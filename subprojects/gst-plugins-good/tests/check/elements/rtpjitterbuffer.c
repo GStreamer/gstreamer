@@ -3371,6 +3371,28 @@ GST_START_TEST (test_reset_timers_does_not_stall)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reset_timers_does_not_stall_2)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  BufferArrayCtx bufs[] = {
+    /* *INDENT-OFF* */
+    {278, 21920, FALSE,  31695},
+    { 37,  5920, FALSE,  89911},
+    {173, 13600, FALSE, 108078},
+    { 30, 27200, FALSE, 190920},
+    {-20, 43840,  TRUE, 150552},
+    { 42,  4480, FALSE, 131498},
+    /* *INDENT-ON* */
+  };
+
+  g_object_set (h->element, "latency", 200,
+      "do-retransmission", TRUE, "do-lost", TRUE, NULL);
+  fail_unless (check_for_stall (h, bufs, G_N_ELEMENTS (bufs)));
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_multiple_lost_do_not_stall)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
@@ -3508,6 +3530,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_drop_messages_interval);
 
   tcase_add_test (tc_chain, test_reset_timers_does_not_stall);
+  tcase_add_test (tc_chain, test_reset_timers_does_not_stall_2);
   tcase_add_test (tc_chain, test_multiple_lost_do_not_stall);
   tcase_add_test (tc_chain, test_reset_using_rtx_packets_does_not_stall);
   tcase_add_test (tc_chain, test_gap_using_rtx_does_not_stall);
