@@ -3408,12 +3408,12 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
    * sequence number, let's allow at least 10k packets in any case. */
   while (rtp_jitter_buffer_is_full (priv->jbuf) &&
       priv->srcresult == GST_FLOW_OK) {
-    RtpTimer *timer = rtp_timer_queue_peek_earliest (priv->timers);
-    while (timer) {
-      timer->timeout = -1;
-      if (timer->type == RTP_TIMER_DEADLINE)
+    RtpTimer *earliest_timer = rtp_timer_queue_peek_earliest (priv->timers);
+    while (earliest_timer) {
+      earliest_timer->timeout = -1;
+      if (earliest_timer->type == RTP_TIMER_DEADLINE)
         break;
-      timer = rtp_timer_get_next (timer);
+      earliest_timer = rtp_timer_get_next (earliest_timer);
     }
 
     update_current_timer (jitterbuffer);
