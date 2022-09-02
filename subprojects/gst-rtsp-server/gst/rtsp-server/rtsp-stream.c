@@ -1507,8 +1507,10 @@ again:
         || multicast) {
       GstRTSPAddressFlags flags;
 
-      if (addr)
+      if (addr) {
+        g_assert (*server_addr_out == NULL);
         rejected_addresses = g_list_prepend (rejected_addresses, addr);
+      }
 
       if (!pool)
         goto no_pool;
@@ -1558,9 +1560,15 @@ again:
   if (!g_socket_bind (rtp_socket, rtp_sockaddr, FALSE, NULL)) {
     GST_DEBUG_OBJECT (stream, "rtp bind() failed, will try again");
     g_object_unref (rtp_sockaddr);
-    if (transport_settings_defined)
+    if (transport_settings_defined) {
       goto transport_settings_error;
-    goto again;
+    } else if (*server_addr_out && ((pool
+                && gst_rtsp_address_pool_has_unicast_addresses (pool))
+            || multicast)) {
+      goto no_address;
+    } else {
+      goto again;
+    }
   }
   g_object_unref (rtp_sockaddr);
 
