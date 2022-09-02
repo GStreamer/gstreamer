@@ -3534,7 +3534,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   /* update rtx timers */
   if (priv->do_retransmission)
     update_rtx_timers (jitterbuffer, seqnum, dts, pts, do_next_seqnum, is_rtx,
-        timer);
+        g_steal_pointer (&timer));
 
   /* we had an unhandled SR, handle it now */
   if (priv->last_sr)
