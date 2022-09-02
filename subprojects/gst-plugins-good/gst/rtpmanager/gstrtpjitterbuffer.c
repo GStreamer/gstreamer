@@ -3395,8 +3395,12 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     priv->last_known_ntpnstime = inband_ntp_time;
   }
 
-  if (is_rtx)
+  if (is_rtx) {
+    /* For RTX there must be a corresponding timer or it would be an
+     * unsolicited RTX packet that would be dropped */
+    g_assert (timer != NULL);
     timer->num_rtx_received++;
+  }
 
   /* At 2^15, we would detect a seqnum rollover too early, therefore
    * limit the queue size. But let's not limit it to a number that is
@@ -3428,7 +3432,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     /* priv->last_popped_seqnum >= seqnum, we're too late. */
     if (G_UNLIKELY (gap <= 0)) {
       if (priv->do_retransmission) {
-        if (is_rtx && timer) {
+        if (is_rtx) {
+          /* For RTX there must be a corresponding timer or it would be an
+           * unsolicited RTX packet that would be dropped */
+          g_assert (timer != NULL);
+
           update_rtx_stats (jitterbuffer, timer, dts, FALSE);
           /* Only count the retranmitted packet too late if it has been
            * considered lost. If the original packet arrived before the
@@ -3510,8 +3518,12 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
   if (G_UNLIKELY (duplicate)) {
-    if (is_rtx && timer)
+    if (is_rtx) {
+      /* For RTX there must be a corresponding timer or it would be an
+       * unsolicited RTX packet that would be dropped */
+      g_assert (timer != NULL);
       update_rtx_stats (jitterbuffer, timer, dts, FALSE);
+    }
     goto duplicate;
   }
 
