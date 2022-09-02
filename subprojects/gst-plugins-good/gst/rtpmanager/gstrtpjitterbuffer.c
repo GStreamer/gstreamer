@@ -3161,13 +3161,13 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         do_next_seqnum = FALSE;
 
         /* If an out of order packet arrives before its lost timer has expired
-         * remove it to avoid false positive statistics. */
-        RtpTimer *timer = rtp_timer_queue_find (priv->timers, seqnum);
-        if (timer && timer->queued && timer->type == RTP_TIMER_LOST) {
+         * remove it to avoid false positive statistics. If this is an RTX
+         * packet then the timer will be updated later as part of update_rtx_timers() */
+        if (!is_rtx && timer && timer->type == RTP_TIMER_LOST) {
           rtp_timer_queue_unschedule (priv->timers, timer);
           GST_DEBUG_OBJECT (jitterbuffer,
               "removing lost timer for late seqnum #%u", seqnum);
-          rtp_timer_free (timer);
+          rtp_timer_free (g_steal_pointer (&timer));
         }
       }
 
