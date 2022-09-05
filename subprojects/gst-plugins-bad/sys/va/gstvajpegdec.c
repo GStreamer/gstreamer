@@ -383,7 +383,8 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
   if (base->output_state)
     gst_video_codec_state_unref (base->output_state);
 
-  /* hack for RGBP rt_format */
+  /* hack for RGBP rt_format, because only RGBP is exposed as pixel
+   * format */
   if (base->rt_format == RT_FORMAT_RGB)
     base->rt_format = VA_RT_FORMAT_RGBP;
 
