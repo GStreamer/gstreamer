@@ -93,3 +93,26 @@ gst_rtsp_context_pop_current (GstRTSPContext * ctx)
   l = g_slist_delete_link (l, l);
   g_private_set (&current_context, l);
 }
+
+/**
+ * gst_rtsp_context_set_token:
+ * @ctx: a #GstRTSPContext
+ * @token: a #GstRTSPToken
+ *
+ * Set the token for @ctx.
+ *
+ * Since: 1.22
+ **/
+void
+gst_rtsp_context_set_token (GstRTSPContext * ctx, GstRTSPToken * token)
+{
+  g_return_if_fail (ctx != NULL);
+  g_return_if_fail (ctx == gst_rtsp_context_get_current ());
+  g_return_if_fail (GST_IS_RTSP_TOKEN (token));
+
+  if (ctx->token != NULL)
+    gst_rtsp_token_unref (ctx->token);
+
+  gst_rtsp_token_ref (token);
+  ctx->token = token;
+}
