@@ -333,6 +333,25 @@ gst_va_jpeg_dec_output_picture (GstJpegDecoder * decoder,
   return gst_video_decoder_finish_frame (vdec, frame);
 }
 
+/* @XXX: Checks for drivers that can do color convertion to nv12
+ * regardless the input chroma, while it's YUV.  */
+static gboolean
+has_internal_nv12_color_convertion (GstVaBaseDec * base, GstVideoFormat format)
+{
+  if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, INTEL_I965)
+      && !GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, INTEL_IHD))
+    return FALSE;
+
+  if (base->rt_format != VA_RT_FORMAT_YUV420
+      && base->rt_format != VA_RT_FORMAT_YUV422)
+    return FALSE;
+
+  if (format != GST_VIDEO_FORMAT_NV12)
+    return FALSE;
+
+  return TRUE;
+}
+
 static gboolean
 gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
 {
@@ -373,11 +392,7 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
-  /* @XXX: validate if the preferred format has the same requested
-   * chroma, except for i965, since NV12 is either for both 4:2:0 and
-   * 4:2:2 */
-  if (!(GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, INTEL_I965)
-          && format == GST_VIDEO_FORMAT_NV12)
+  if (!has_internal_nv12_color_convertion (base, format)
       && (gst_va_chroma_from_video_format (format) != base->rt_format))
     return FALSE;
 
