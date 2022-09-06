@@ -19,14 +19,7 @@ The easiest way to build the webrtc plugin and all the plugins it needs, is to [
 For hacking on the webrtc plugin, you may want to build manually using the git repositories:
 
  - http://gitlab.freedesktop.org/gstreamer/gstreamer
- - http://gitlab.freedesktop.org/gstreamer/gst-plugins-base
- - http://gitlab.freedesktop.org/gstreamer/gst-plugins-good
- - http://gitlab.freedesktop.org/gstreamer/gst-plugins-bad
  - http://gitlab.freedesktop.org/libnice/libnice
-
-Or with Meson gst-build:
-
-https://gitlab.freedesktop.org/gstreamer/gst-build/
 
 You may need to install the following packages using your package manager:
 

@@ -1,6 +1,6 @@
 # GStreamer documentation
 
-This is the released version of the [GStreamer documentation](https://gitlab.freedesktop.org/gstreamer/gst-docs), it contains
+This is the released version of the [GStreamer documentation](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-docs), it contains
 two folders:
 
 * html/: The static website documentation which can be hosted anywhere and

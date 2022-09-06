@@ -50,7 +50,7 @@ example.
 #### Building the tutorials
 
 The tutorials code are in the
-[gst-docs](https://gitlab.freedesktop.org/gstreamer/gst-docs/) in the
+[gst-docs](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-docs) in the
 `examples/tutorials/xcode iOS` folder. We recommend that you open the project
 in Xcode, take a look at the sources and build them. This should
 confirm that the installation works and give some insight on how

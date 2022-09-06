@@ -47,12 +47,12 @@ the `configure` script from inside the `gst-sdk-shell` environment.
 
 The source code for the tutorials can be copied and pasted from the
 tutorial pages into a text file, but, for convenience, it is also available
-in a GIT repository in the `examples/tutorials` subdirectory.
+in a GIT repository in the `subprojects/gst-docs/examples/tutorials` subdirectory.
 
 The GIT repository can be cloned with:
 
 ```
-git clone https://gitlab.freedesktop.org/gstreamer/gst-docs
+git clone https://gitlab.freedesktop.org/gstreamer/gstreamer
 ```
 
 #### Building the tutorials

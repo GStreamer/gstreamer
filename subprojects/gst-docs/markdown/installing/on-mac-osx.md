@@ -77,7 +77,7 @@ following [link](https://developer.apple.com/library/mac/#documentation/MacOSX/C
 
 The tutorials code, along with project files and a solution file for
 them all, are in the
-[gst-docs](https://gitlab.freedesktop.org/gstreamer/gst-docs/) in the
+[gst-docs](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gst-docs) in the
 `examples/tutorials` subdirectory.
 
 To start building the tutorials, create a new folder in your Documents
