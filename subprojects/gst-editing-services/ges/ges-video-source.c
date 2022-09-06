@@ -117,6 +117,7 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
   const gchar *positioner_props[]
   = { "alpha", "posx", "posy", "width", "height", "operator", NULL };
   const gchar *videoflip_props[] = { "video-direction", NULL };
+  gchar *ename = NULL;
 
   g_ptr_array_add (elements, gst_element_factory_make ("queue", NULL));
 
@@ -136,17 +137,25 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
   g_object_set (videoflip, "video-direction", GST_VIDEO_ORIENTATION_AUTO, NULL);
   g_ptr_array_add (elements, videoflip);
 
-  if (needs_converters) {
-    g_ptr_array_add (elements, gst_element_factory_make ("videoscale",
-            "track-element-videoscale"));
-    g_ptr_array_add (elements, gst_element_factory_make ("videoconvert",
-            "track-element-videoconvert"));
-  }
-  g_ptr_array_add (elements, gst_element_factory_make ("videorate",
-          "track-element-videorate"));
 
-  capsfilter =
-      gst_element_factory_make ("capsfilter", "track-element-capsfilter");
+  if (needs_converters) {
+    ename =
+        g_strdup_printf ("ges%s-videoscale", GES_TIMELINE_ELEMENT_NAME (self));
+    g_ptr_array_add (elements, gst_element_factory_make ("videoscale", ename));
+    g_free (ename);
+    ename = g_strdup_printf ("ges%s-convert", GES_TIMELINE_ELEMENT_NAME (self));
+    g_ptr_array_add (elements, gst_element_factory_make ("videoconvert",
+            ename));
+    g_free (ename);
+  }
+  ename = g_strdup_printf ("ges%s-rate", GES_TIMELINE_ELEMENT_NAME (self));
+  g_ptr_array_add (elements, gst_element_factory_make ("videorate", ename));
+
+  g_free (ename);
+  ename =
+      g_strdup_printf ("ges%s-capsfilter", GES_TIMELINE_ELEMENT_NAME (self));
+  capsfilter = gst_element_factory_make ("capsfilter", ename);
+  g_free (ename);
   g_ptr_array_add (elements, capsfilter);
 
   ges_frame_positioner_set_source_and_filter (GST_FRAME_POSITIONNER
