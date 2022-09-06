@@ -336,9 +336,9 @@ _add_jpeg_fields (GstVaDisplay * display, GstCaps * caps, VAProfile profile,
               va_rt_format_list[i]))
         continue;
 
-#define APPEND_YUV do {                                                 \
+#define APPEND_YUV G_STMT_START \
         if (!yuv) { _value_list_append_string (&colorspace, "sYUV"); yuv = TRUE; } \
-      } while (0)
+      G_STMT_END
 
       switch (va_rt_format_list[i]) {
         case VA_RT_FORMAT_YUV420:
