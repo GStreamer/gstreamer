@@ -2734,23 +2734,22 @@ _pick_available_pt (GArray * media_mapping, guint * ret)
   int i;
 
   for (i = 96; i <= 127; i++) {
+    gboolean available = TRUE;
     int j;
 
     for (j = 0; j < media_mapping->len; j++) {
       struct media_payload_map_item *item;
 
       item = &g_array_index (media_mapping, struct media_payload_map_item, j);
-      if (item->media_pt == i)
-        continue;
-      if (item->red_pt == i)
-        continue;
-      if (item->rtx_pt == i)
-        continue;
-      if (item->ulpfec_pt == i)
-        continue;
-      if (item->red_rtx_pt == i)
-        continue;
 
+      if (item->media_pt == i || item->red_pt == i || item->rtx_pt == i
+          || item->ulpfec_pt == i || item->red_rtx_pt == i) {
+        available = FALSE;
+        break;
+      }
+    }
+
+    if (available) {
       *ret = i;
       return TRUE;
     }
