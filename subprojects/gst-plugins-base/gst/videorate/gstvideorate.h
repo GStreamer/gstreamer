@@ -58,6 +58,7 @@ struct _GstVideoRate
   gboolean force_variable_rate;
   gboolean updating_caps;
   guint64 max_duplication_time;
+  guint64 max_closing_segment_duplication_duration;
 
   /* segment handling */
   GstSegment segment;

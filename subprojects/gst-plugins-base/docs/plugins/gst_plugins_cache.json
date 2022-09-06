@@ -14153,6 +14153,20 @@
                         "type": "guint64",
                         "writable": false
                     },
+                    "max-closing-segment-duplication-duration": {
+                        "blurb": "Maximum duration of duplicated buffers to close current segment",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1000000000",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "max-duplication-time": {
                         "blurb": "Do not duplicate frames if the gap exceeds this period (in ns) (0 = disabled)",
                         "conditionally-available": false,
