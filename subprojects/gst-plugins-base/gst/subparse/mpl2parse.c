@@ -37,11 +37,12 @@ static gchar *
 mpl2_parse_line (ParserState * state, const gchar * line, guint line_num)
 {
   GString *markup;
+  const char *orig_line = line;
   gint dc_start, dc_stop;
 
   /* parse subtitle file line */
   if (sscanf (line, "[%u][%u]", &dc_start, &dc_stop) != 2) {
-    GST_WARNING ("failed to extract timestamps for line '%s'", line);
+    GST_WARNING ("failed to extract timestamps for line '%s'", orig_line);
     return NULL;
   }
 
@@ -50,8 +51,18 @@ mpl2_parse_line (ParserState * state, const gchar * line, guint line_num)
   state->duration = (GST_SECOND / 10 * dc_stop) - state->start_time;
 
   /* skip brackets with timestamps */
-  line = strchr (line, ']') + 1;
-  line = strchr (line, ']') + 1;
+  line = strchr (line, ']');
+  if (!line) {
+    GST_WARNING ("invalid, timestamp missing first \']\' for '%s'", orig_line);
+    return NULL;
+  }
+  line += 1;
+  line = strchr (line, ']');
+  if (!line) {
+    GST_WARNING ("invalid, timestamp missing second \']\' for '%s'", orig_line);
+    return NULL;
+  }
+  line += 1;
 
   markup = g_string_new (NULL);
 
