@@ -2274,10 +2274,9 @@ update_timer_offsets (GstRtpJitterBuffer * jitterbuffer)
         test->timeout = GST_CLOCK_TIME_NONE;
         test->offset = 0;
       }
-      /* as we apply the offset on all timers, the order of timers won't
-       * change and we can skip updating the timer queue */
     }
 
+    rtp_timer_queue_reschedule (priv->timers, test);
     test = rtp_timer_get_next (test);
   }
 }
