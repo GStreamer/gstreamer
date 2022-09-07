@@ -6805,7 +6805,7 @@ register_action_types (void)
       "Sets pipeline to PAUSED. You can add a 'duration'\n"
       "parameter so the pipeline goes back to playing after that duration\n"
       "(in second)",
-      GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK & GST_VALIDATE_ACTION_TYPE_ASYNC);
+      GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK | GST_VALIDATE_ACTION_TYPE_ASYNC);
 
   REGISTER_ACTION_TYPE ("play", _execute_play, NULL,
       "Sets the pipeline state to PLAYING", GST_VALIDATE_ACTION_TYPE_NONE);
@@ -7526,7 +7526,7 @@ register_action_types (void)
           },
         {NULL}
       }),
-      "Check current pipeline position.\n",
+      "Run external command.\n",
       GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL);
 
     REGISTER_ACTION_TYPE("foreach", NULL,
