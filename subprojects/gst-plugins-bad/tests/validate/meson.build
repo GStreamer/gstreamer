@@ -5,6 +5,7 @@ endif
 
 tests = [
     {'path': 'opencv/cvtracker'},
+    {'path': 'testsrcbin/caps_spec'},
     {'path': 'wpe/load_bytes_first', 'skip': not building_wpe},
 ]
 

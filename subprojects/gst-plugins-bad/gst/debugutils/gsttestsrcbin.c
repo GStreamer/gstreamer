@@ -23,17 +23,56 @@
  * SECTION:element-testsrcbin
  * @title: testsrc
  *
- * This is a simple GstBin source that wraps audiotestsrc/videotestsrc
- * following specification passed in the URI (it implements the #GstURIHandler interface)
+ * This is a simple GstBin source that wraps audiotestsrc/videotestsrc following
+ * specification passed in the URI (it implements the #GstURIHandler interface)
  * in the form of `testbin://audio+video` or setting the "stream-types" property
  * with the same format.
  *
- * This element also provides GstStream and GstStreamCollection and
- * thus the element is useful for testing the new playbin3 infrastructure.
+ * This element also provides GstStream and GstStreamCollection and thus the
+ * element is useful for testing the new playbin3 infrastructure.
  *
- * Example pipeline:
+ * ## The `uri` format
+ *
+ * `testbin://<stream1 definition>[+<stream2 definition>]`
+ *
+ * With **<stream definition>**:
+ *
+ *  `<media-type>,<element-properties>,[caps=<media caps>]`
+ *
+ * where:
+ *
+ * - `<media-type>`: Adds a new source of type `<media-type>`. Supported
+ *   values:
+ *      * `video`: A #videotestsrc element will be used
+ *      * `audio`: An #audiotestsrc will be used
+ *   you can use it as many time as wanted to expose new streams.
+ * - `<element-properties>`: `key=value` list of properties to be set on the
+ *   source element. See #videotestsrc properties for the video case and
+ *   #audiotestsrc properties for the audio case.
+ * - `<media caps>`: Caps to be set in the #capsfilter that follows source elements
+ *   for example to force the video source to output a full HD stream, you can use
+ *   `video/x-raw,width=1920,height=1080`.
+ *
+ * Note that stream definitions are interpreted as serialized #GstStructure.
+ *
+ * ## Examples pipeline:
+ *
+ * ### One audio stream with volume=0.5 and a white video stream in full HD at 30fps
+ *
  * ```
- * gst-launch-1.0 playbin uri=testbin://audio,volume=0.5+video,pattern=white
+ * gst-launch-1.0 playbin3 uri="testbin://audio,volume=0.5+video,pattern=white,caps=[video/x-raw,width=1920,height=1080,framerate=30/1]"
+ * ```
+
+ * ### Single full HD stream
+ *
+ * ```
+ * gst-launch-1.0 playbin3 uri="testbin://video,pattern=green,caps=[video/x-raw,width=1920,height=1080,framerate=30/1]"
+ * ```
+ *
+ * ### Two audio streams
+ *
+ * ```
+ * gst-launch-1.0 playbin3 uri="testbin://audio+audio"
  * ```
  */
 #include <gst/gst.h>
@@ -202,6 +241,9 @@ gst_test_src_bin_set_element_property (GQuark property_id, const GValue * value,
   if (property_id == g_quark_from_static_string ("__streamobj__"))
     return TRUE;
 
+  if (property_id == g_quark_from_static_string ("caps"))
+    return TRUE;
+
   if (G_VALUE_HOLDS_STRING (value))
     gst_util_set_object_arg (element, g_quark_to_string (property_id),
         g_value_get_string (value));
@@ -252,20 +294,64 @@ gst_test_src_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
   return gst_pad_event_default (pad, parent, event);
 }
 
-static void
+static gboolean
 gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
     GstStaticPadTemplate * template, GstStreamType stype,
-    GstStreamCollection * collection, gint * n_stream, GstStructure * props)
+    GstStreamCollection * collection, gint * n_stream, GstStructure * props,
+    GError ** error)
 {
-  GstElement *src = gst_element_factory_make (srcfactory, NULL);
-  GstPad *proxypad, *ghost, *pad = gst_element_get_static_pad (src, "src");
-  gchar *stream_id = g_strdup_printf ("%s_stream_%d", srcfactory, *n_stream);
-  gchar *pad_name = g_strdup_printf (template->name_template, *n_stream);
-  GstStream *stream = gst_stream_new (stream_id, NULL, stype,
-      (*n_stream == 0) ? GST_STREAM_FLAG_SELECT : GST_STREAM_FLAG_UNSELECT);
-  GstEvent *stream_start =
-      gst_event_new_stream_start (gst_stream_get_stream_id (stream));
+  GstElement *src;
+  GstElement *capsfilter;
+  GstPad *proxypad, *ghost, *pad;
+  gchar *stream_id;
+  gchar *pad_name;
+  GstCaps *caps = NULL;
+  GstStream *stream;
+  GstEvent *stream_start;
   GstPadTemplate *templ;
+  const GValue *caps_value = gst_structure_get_value (props, "caps");
+
+  if (caps_value) {
+    if (GST_VALUE_HOLDS_CAPS (caps_value)) {
+      caps = gst_caps_copy (gst_value_get_caps (caps_value));
+    } else if (GST_VALUE_HOLDS_STRUCTURE (caps_value)) {
+      caps =
+          gst_caps_new_full (gst_structure_copy (gst_value_get_structure
+              (caps_value)), NULL);
+    } else if (G_VALUE_HOLDS_STRING (caps_value)) {
+      caps = gst_caps_from_string (g_value_get_string (caps_value));
+      if (!caps) {
+        if (error) {
+          *error =
+              g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+              "Invalid caps string: %s", g_value_get_string (caps_value));
+        }
+
+        return FALSE;
+      }
+    } else {
+      if (error) {
+        *error =
+            g_error_new (GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+            "Invalid type %s for `caps`", G_VALUE_TYPE_NAME (caps_value));
+      }
+
+      return FALSE;
+    }
+  }
+
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
+  if (caps) {
+    g_object_set (capsfilter, "caps", caps, NULL);
+    gst_caps_unref (caps);
+  }
+
+  src = gst_element_factory_make (srcfactory, NULL);
+  pad = gst_element_get_static_pad (src, "src");
+  stream_id = g_strdup_printf ("%s_stream_%d", srcfactory, *n_stream);
+  stream = gst_stream_new (stream_id, caps, stype,
+      (*n_stream == 0) ? GST_STREAM_FLAG_SELECT : GST_STREAM_FLAG_UNSELECT);
+  stream_start = gst_event_new_stream_start (gst_stream_get_stream_id (stream));
 
   gst_structure_foreach (props,
       (GstStructureForeachFunc) gst_test_src_bin_set_element_property, src);
@@ -282,12 +368,21 @@ gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
 
   g_free (stream_id);
 
-  gst_bin_add (GST_BIN (self), src);
+  gst_bin_add_many (GST_BIN (self), src, capsfilter, NULL);
+  if (!gst_element_link (src, capsfilter)) {
+    g_error ("Could not link src with capsfilter?!");
+  }
 
+  gst_object_unref (pad);
+
+  pad = gst_element_get_static_pad (capsfilter, "src");
+  pad_name = g_strdup_printf (template->name_template, *n_stream);
   templ = gst_static_pad_template_get (template);
   ghost = gst_ghost_pad_new_from_template (pad_name, pad, templ);
   gst_object_unref (templ);
   g_free (pad_name);
+  gst_object_unref (pad);
+
   proxypad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (ghost)));
   gst_flow_combiner_add_pad (self->flow_combiner, ghost);
   gst_pad_set_chain_function (proxypad,
@@ -295,12 +390,17 @@ gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
   gst_pad_set_event_function (ghost,
       (GstPadEventFunction) gst_test_src_event_function);
   gst_object_unref (proxypad);
+  gst_pad_store_sticky_event (ghost, stream_start);
   gst_element_add_pad (GST_ELEMENT (self), ghost);
-  gst_object_unref (pad);
+  gst_element_sync_state_with_parent (capsfilter);
   gst_element_sync_state_with_parent (src);
   *n_stream += 1;
 
   gst_structure_set (props, "__src__", GST_TYPE_OBJECT, src, NULL);
+
+  gst_clear_caps (&caps);
+
+  return TRUE;
 }
 
 static void
@@ -357,6 +457,7 @@ static gboolean
 gst_test_src_bin_create_sources (GstTestSrcBin * self)
 {
   gint i, n_audio = 0, n_video = 0;
+  GError *error = NULL;
   GstStreamCollection *collection = gst_stream_collection_new (NULL);
   GstCaps *streams_def, *prev_streams_def;
 
@@ -366,6 +467,9 @@ gst_test_src_bin_create_sources (GstTestSrcBin * self)
   self->next_streams_def = NULL;
   self->streams_def = NULL;
   GST_OBJECT_UNLOCK (self);
+
+  GST_INFO_OBJECT (self, "Create sources %" GST_PTR_FORMAT,
+      self->next_streams_def);
 
   self->group_id = gst_util_group_id_next ();
   for (i = 0; i < gst_caps_get_size (streams_def); i++) {
@@ -385,15 +489,22 @@ gst_test_src_bin_create_sources (GstTestSrcBin * self)
       continue;
     }
 
-    if (gst_structure_has_name (stream_def, "video"))
-      gst_test_src_bin_setup_src (self, "videotestsrc", &video_src_template,
-          GST_STREAM_TYPE_VIDEO, collection, &n_video, stream_def);
-    else if (gst_structure_has_name (stream_def, "audio"))
-      gst_test_src_bin_setup_src (self, "audiotestsrc", &audio_src_template,
-          GST_STREAM_TYPE_AUDIO, collection, &n_audio, stream_def);
-    else
+    if (gst_structure_has_name (stream_def, "video")) {
+      if (!gst_test_src_bin_setup_src (self, "videotestsrc",
+              &video_src_template, GST_STREAM_TYPE_VIDEO, collection, &n_video,
+              stream_def, &error)) {
+        goto failed;
+      }
+    } else if (gst_structure_has_name (stream_def, "audio")) {
+      if (!gst_test_src_bin_setup_src (self, "audiotestsrc",
+              &audio_src_template, GST_STREAM_TYPE_AUDIO, collection, &n_audio,
+              stream_def, &error)) {
+        goto failed;
+      }
+    } else {
       GST_ERROR_OBJECT (self, "Unknown type %s",
           gst_structure_get_name (stream_def));
+    }
   }
 
   if (prev_streams_def) {
@@ -426,6 +537,9 @@ gst_test_src_bin_create_sources (GstTestSrcBin * self)
   return TRUE;
 
 failed:
+  gst_element_post_message (GST_ELEMENT (self),
+      gst_message_new_error (GST_OBJECT (self), error, NULL)
+      );
   return FALSE;
 }
 
