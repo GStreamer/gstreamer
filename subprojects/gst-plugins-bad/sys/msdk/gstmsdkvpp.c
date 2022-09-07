@@ -69,6 +69,8 @@
 #undef EXT_FORMATS
 #define EXT_FORMATS     ", BGR10A2_LE"
 #endif
+#else
+#include <gst/d3d11/gstd3d11.h>
 #endif
 
 #if (MFX_VERSION >= 2004)
@@ -466,11 +468,63 @@ gst_msdk_create_va_pool (GstVideoInfo * info, GstMsdkContext * msdk_context,
 
   return pool;
 }
+#else
+static GstBufferPool *
+gst_msdk_create_d3d11_pool (GstMsdkVPP * thiz, GstVideoInfo * info,
+    guint num_buffers, gboolean propose)
+{
+  GstBufferPool *pool = NULL;
+  GstD3D11Device *device;
+  GstStructure *config;
+  GstD3D11AllocationParams *params;
+  GstD3D11Format device_format;
+  guint bind_flags = 0;
+  GstCaps *aligned_caps = NULL;
+  GstVideoInfo aligned_info;
+  gint aligned_width;
+  gint aligned_height;
+
+  device = gst_msdk_context_get_d3d11_device (thiz->context);
+
+  aligned_width = GST_ROUND_UP_16 (info->width);
+  aligned_height = GST_ROUND_UP_32 (info->height);
+
+  gst_video_info_set_interlaced_format (&aligned_info,
+      GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_INTERLACE_MODE (info),
+      aligned_width, aligned_height);
+
+  gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (&aligned_info),
+      &device_format);
+  if (!propose
+      && ((device_format.format_support[0] & D3D11_FORMAT_SUPPORT_RENDER_TARGET)
+          == D3D11_FORMAT_SUPPORT_RENDER_TARGET)) {
+    bind_flags = D3D11_BIND_RENDER_TARGET;
+  }
+
+  aligned_caps = gst_video_info_to_caps (&aligned_info);
+
+  pool = gst_d3d11_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (pool);
+  params = gst_d3d11_allocation_params_new (device, &aligned_info,
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags,
+      D3D11_RESOURCE_MISC_SHARED);
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+  gst_d3d11_allocation_params_free (params);
+  gst_buffer_pool_config_set_params (config, aligned_caps,
+      GST_VIDEO_INFO_SIZE (&aligned_info), num_buffers, 0);
+  gst_buffer_pool_set_config (pool, config);
+
+  gst_caps_unref (aligned_caps);
+  GST_LOG_OBJECT (thiz, "Creating d3d11 pool");
+
+  return pool;
+}
 #endif
 
 static GstBufferPool *
 gst_msdkvpp_create_buffer_pool (GstMsdkVPP * thiz, GstPadDirection direction,
-    GstCaps * caps, guint min_num_buffers)
+    GstCaps * caps, guint min_num_buffers, gboolean propose)
 {
   GstBufferPool *pool = NULL;
   GstStructure *config;
@@ -498,12 +552,10 @@ gst_msdkvpp_create_buffer_pool (GstMsdkVPP * thiz, GstPadDirection direction,
   pool = gst_msdk_create_va_pool (&info, thiz->context, use_dmabuf,
       min_num_buffers);
 #else
-  /* Currently use system pool for windows path */
+  pool = gst_msdk_create_d3d11_pool (thiz, &info, min_num_buffers, propose);
+#endif
   if (!thiz->use_video_memory)
     pool = gst_video_buffer_pool_new ();
-  else
-    GST_ERROR_OBJECT (thiz, "D3D video memory pool is not implemented");
-#endif
 
   if (!pool)
     goto error_no_pool;
@@ -607,7 +659,9 @@ create_src_pool (GstMsdkVPP * thiz, GstQuery * query, GstCaps * caps)
   min_buffers += thiz->async_depth + request.NumFrameSuggested;
   request.NumFrameSuggested = min_buffers;
 
-  pool = gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, caps, min_buffers);
+  pool =
+      gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SRC, caps, min_buffers,
+      FALSE);
   if (!pool)
     return NULL;
   /* we do not support dynamic buffer count change */
@@ -700,14 +754,14 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
     /* alwys provide a new pool for upstream to help re-negotiation
      * more info here: https://bugzilla.gnome.org/show_bug.cgi?id=748344 */
     pool = gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SINK, caps,
-        min_buffers);
+        min_buffers, TRUE);
   }
 
   /* Update the internal pool if any allocation attribute changed */
   if (!gst_video_info_is_equal (&thiz->sinkpad_buffer_pool_info, &info)) {
     gst_object_unref (thiz->sinkpad_buffer_pool);
     thiz->sinkpad_buffer_pool = gst_msdkvpp_create_buffer_pool (thiz,
-        GST_PAD_SINK, caps, min_buffers);
+        GST_PAD_SINK, caps, min_buffers, FALSE);
   }
 
   /* get the size and allocator params from configured pool and set it in query */
@@ -1298,11 +1352,8 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
 
   thiz->sinkpad_info = in_info;
   thiz->srcpad_info = out_info;
-#ifndef _WIN32
+
   thiz->use_video_memory = TRUE;
-#else
-  thiz->use_video_memory = FALSE;
-#endif
 
   /* check for deinterlace requirement */
   deinterlace = gst_msdkvpp_is_deinterlace_enabled (thiz, &in_info);
@@ -1325,7 +1376,7 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
 
   thiz->sinkpad_buffer_pool =
       gst_msdkvpp_create_buffer_pool (thiz, GST_PAD_SINK, caps,
-      thiz->in_num_surfaces);
+      thiz->in_num_surfaces, FALSE);
   if (!thiz->sinkpad_buffer_pool) {
     GST_ERROR_OBJECT (thiz, "Failed to ensure the sinkpad buffer pool");
     return FALSE;
@@ -1415,6 +1466,12 @@ gst_msdkvpp_fixate_caps (GstBaseTransform * trans,
     gst_caps_set_features (result, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
     *use_dmabuf = TRUE;
+  }
+#else
+  if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+          direction == GST_PAD_SRC ? GST_PAD_SINK : GST_PAD_SRC, result)) {
+    gst_caps_set_features (result, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
   }
 #endif
 
