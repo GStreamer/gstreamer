@@ -20,6 +20,7 @@ tests = [
     'compositor/renogotiate_failing_unsupported_src_format',
     'giosrc/read-growing-file',
     'encodebin/set-encoder-properties',
+    'uridecodebin/expose_raw_pad_caps',
 ]
 
 env = environment()

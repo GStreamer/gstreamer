@@ -1478,23 +1478,23 @@ no_source:
 }
 
 /**
- * has_all_raw_caps:
+ * has_raw_caps:
  * @pad: a #GstPad
  * @all_raw: pointer to hold the result
  *
  * check if the caps of the pad are all raw. The caps are all raw if
  * all of its structures contain audio/x-raw or video/x-raw.
  *
- * Returns: %FALSE @pad has no caps. Else TRUE and @all_raw set t the result.
+ * Returns: %FALSE @pad caps are not set and raw
  */
 static gboolean
-has_all_raw_caps (GstPad * pad, GstCaps * rawcaps, gboolean * all_raw)
+has_raw_caps (GstPad * pad, GstCaps * rawcaps)
 {
   GstCaps *caps, *intersection;
   gint capssize;
   gboolean res = FALSE;
 
-  caps = gst_pad_query_caps (pad, NULL);
+  caps = gst_pad_get_current_caps (pad);
   if (caps == NULL)
     return FALSE;
 
@@ -1506,11 +1506,8 @@ has_all_raw_caps (GstPad * pad, GstCaps * rawcaps, gboolean * all_raw)
     goto done;
 
   intersection = gst_caps_intersect (caps, rawcaps);
-  *all_raw = !gst_caps_is_empty (intersection)
-      && (gst_caps_get_size (intersection) == capssize);
+  res = !gst_caps_is_empty (intersection);
   gst_caps_unref (intersection);
-
-  res = TRUE;
 
 done:
   gst_caps_unref (caps);
@@ -1593,16 +1590,15 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
-        if (!has_all_raw_caps (pad, rawcaps, is_raw)) {
+        if (!has_raw_caps (pad, rawcaps)) {
           gst_object_unref (pad);
           g_value_reset (&item);
           break;
-        }
-
-        /* caps on source pad are all raw, we can add the pad */
-        if (*is_raw) {
+        } else {
+          /* caps on source pad are all raw, we can add the pad */
           GstElement *outelem;
 
+          *is_raw = TRUE;
           if (use_queue) {
             GstPad *sinkpad;
 
@@ -2169,7 +2165,6 @@ static void
 source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
 {
   GstElement *decoder;
-  gboolean is_raw;
   GstCaps *rawcaps;
   GstPad *sinkpad;
 
@@ -2182,7 +2177,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
     rawcaps = DEFAULT_CAPS;
 
   /* if this is a pad with all raw caps, we can expose it */
-  if (has_all_raw_caps (pad, rawcaps, &is_raw) && is_raw) {
+  if (has_raw_caps (pad, rawcaps)) {
     /* it's all raw, create output pads. */
     GST_URI_DECODE_BIN_UNLOCK (bin);
     gst_caps_unref (rawcaps);
