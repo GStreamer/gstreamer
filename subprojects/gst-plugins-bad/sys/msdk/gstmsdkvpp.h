@@ -97,8 +97,6 @@ struct _GstMsdkVPP
   gboolean use_video_memory;
   gboolean use_sinkpad_dmabuf;
   gboolean use_srcpad_dmabuf;
-  gboolean use_sinkpad_va;
-  gboolean use_srcpad_va;
   gboolean shared_context;
   gboolean add_video_meta;
   gboolean need_vpp;
