@@ -11097,6 +11097,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "post-stream-topology": {
+                        "blurb": "Post stream-topology messages",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "ring-buffer-max-size": {
                         "blurb": "Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled)",
                         "conditionally-available": false,

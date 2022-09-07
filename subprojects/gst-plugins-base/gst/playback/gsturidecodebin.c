@@ -119,6 +119,7 @@ struct _GstURIDecodeBin
   gboolean expose_allstreams;   /* Whether to expose unknown type streams or not */
 
   guint64 ring_buffer_max_size; /* 0 means disabled */
+  gboolean post_stream_topology;
 };
 
 struct _GstURIDecodeBinClass
@@ -186,6 +187,7 @@ enum
 #define DEFAULT_FORCE_SW_DECODERS   FALSE
 #define DEFAULT_EXPOSE_ALL_STREAMS  TRUE
 #define DEFAULT_RING_BUFFER_MAX_SIZE 0
+#define DEFAULT_POST_STREAM_TOPOLOGY FALSE
 
 enum
 {
@@ -201,7 +203,8 @@ enum
   PROP_USE_BUFFERING,
   PROP_FORCE_SW_DECODERS,
   PROP_EXPOSE_ALL_STREAMS,
-  PROP_RING_BUFFER_MAX_SIZE
+  PROP_RING_BUFFER_MAX_SIZE,
+  PROP_POST_STREAM_TOPOLOGY
 };
 
 static guint gst_uri_decode_bin_signals[LAST_SIGNAL] = { 0 };
@@ -530,6 +533,19 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstURIDecodeBin:post-stream-topology
+   *
+   * Post stream-topology messages on the bus every time the topology changes.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_POST_STREAM_TOPOLOGY,
+      g_param_spec_boolean ("post-stream-topology", "Post Stream Topology",
+          "Post stream-topology messages",
+          DEFAULT_POST_STREAM_TOPOLOGY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstURIDecodeBin::unknown-type:
    * @bin: The uridecodebin.
    * @pad: the new pad containing caps that cannot be resolved to a 'final'.
@@ -850,6 +866,9 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
     case PROP_RING_BUFFER_MAX_SIZE:
       dec->ring_buffer_max_size = g_value_get_uint64 (value);
       break;
+    case PROP_POST_STREAM_TOPOLOGY:
+      dec->post_stream_topology = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -912,6 +931,9 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RING_BUFFER_MAX_SIZE:
       g_value_set_uint64 (value, dec->ring_buffer_max_size);
+      break;
+    case PROP_POST_STREAM_TOPOLOGY:
+      g_value_set_boolean (value, dec->post_stream_topology);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1879,9 +1901,11 @@ make_decoder (GstURIDecodeBin * decoder)
   if (decoder->caps)
     g_object_set (decodebin, "caps", decoder->caps, NULL);
 
-  /* Propagate expose-all-streams and connection-speed properties */
+  /* Propagate expose-all-streams, connection-speed properties
+   * and post_stream_topology */
   g_object_set (decodebin, "expose-all-streams", decoder->expose_allstreams,
-      "connection-speed", decoder->connection_speed / 1000, NULL);
+      "connection-speed", decoder->connection_speed / 1000,
+      "post-stream-topology", decoder->post_stream_topology, NULL);
 
   if (!decoder->is_stream || decoder->is_adaptive) {
     /* propagate the use-buffering property but only when we are not already
@@ -2176,8 +2200,10 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   if (!rawcaps)
     rawcaps = DEFAULT_CAPS;
 
-  /* if this is a pad with all raw caps, we can expose it */
-  if (has_raw_caps (pad, rawcaps)) {
+  /* if this is a pad with all raw caps, we can expose it.
+   * But if stream-topology needs to be posted, we need to
+   * plug a decodebin so it can build the topology for us to forward. */
+  if (!bin->post_stream_topology && has_raw_caps (pad, rawcaps)) {
     /* it's all raw, create output pads. */
     GST_URI_DECODE_BIN_UNLOCK (bin);
     gst_caps_unref (rawcaps);
