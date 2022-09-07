@@ -786,11 +786,12 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
 }
 
 static GstMsdkSurface *
-get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
-    GstBufferPoolAcquireParams * params)
+gst_msdkvpp_get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
+    GstBuffer * buf)
 {
-  GstBuffer *new_buffer;
+  GstBuffer *upload_buf;
   GstMsdkSurface *msdk_surface = NULL;
+  GstVideoFrame src_frame, dst_frame;
 
   if (!gst_buffer_pool_is_active (pool) &&
       !gst_buffer_pool_set_active (pool, TRUE)) {
@@ -798,20 +799,69 @@ get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
     return NULL;
   }
 
-  if (gst_buffer_pool_acquire_buffer (pool, &new_buffer, params) != GST_FLOW_OK) {
+  if (gst_buffer_pool_acquire_buffer (pool, &upload_buf, NULL) != GST_FLOW_OK) {
     GST_ERROR_OBJECT (pool, "failed to acquire a buffer from pool");
     return NULL;
   }
-#ifndef _WIN32
-  msdk_surface = gst_msdk_import_to_msdk_surface (new_buffer, thiz->context,
-      &thiz->sinkpad_info, 0);
-#else
-  msdk_surface = gst_msdk_import_sys_mem_to_msdk_surface
-      (new_buffer, thiz->sinkpad_buffer_pool_info);
-#endif
+
+  if (!gst_video_frame_map (&src_frame, &thiz->sinkpad_info, buf, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (thiz, "failed to map the frame for source");
+    gst_buffer_unref (upload_buf);
+    return NULL;
+  }
+
+  if (!gst_video_frame_map (&dst_frame, &thiz->sinkpad_buffer_pool_info,
+          upload_buf, GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (thiz, "failed to map the frame for destination");
+    gst_video_frame_unmap (&src_frame);
+    gst_buffer_unref (upload_buf);
+    return NULL;
+  }
+
+  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&src_frame); i++) {
+    guint src_width_in_bytes, src_height;
+    guint dst_width_in_bytes, dst_height;
+    guint width_in_bytes, height;
+    guint src_stride, dst_stride;
+    guint8 *src_data, *dst_data;
+
+    src_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&src_frame, i) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&src_frame, i);
+    src_height = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, i);
+    src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&src_frame, i);
+
+    dst_width_in_bytes = GST_VIDEO_FRAME_COMP_WIDTH (&dst_frame, i) *
+        GST_VIDEO_FRAME_COMP_PSTRIDE (&src_frame, i);
+    dst_height = GST_VIDEO_FRAME_COMP_HEIGHT (&src_frame, i);
+    dst_stride = GST_VIDEO_FRAME_COMP_STRIDE (&dst_frame, i);
+
+    width_in_bytes = MIN (src_width_in_bytes, dst_width_in_bytes);
+    height = MIN (src_height, dst_height);
+
+    src_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&src_frame, i);
+    dst_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&dst_frame, i);
+
+    for (guint j = 0; j < height; j++) {
+      memcpy (dst_data, src_data, width_in_bytes);
+      dst_data += dst_stride;
+      src_data += src_stride;
+    }
+  }
+
+  gst_video_frame_unmap (&dst_frame);
+  gst_video_frame_unmap (&src_frame);
+
+  if (thiz->use_video_memory) {
+    msdk_surface = gst_msdk_import_to_msdk_surface (upload_buf, thiz->context,
+        &thiz->sinkpad_info, GST_MAP_READ);
+  } else {
+    msdk_surface =
+        gst_msdk_import_sys_mem_to_msdk_surface (upload_buf,
+        thiz->sinkpad_buffer_pool_info);
+  }
 
   if (msdk_surface)
-    msdk_surface->buf = new_buffer;
+    msdk_surface->buf = upload_buf;
 
   return msdk_surface;
 }
@@ -819,7 +869,6 @@ get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
 static GstMsdkSurface *
 get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
 {
-  GstVideoFrame src_frame, out_frame;
   GstMsdkSurface *msdk_surface = NULL;
 
   if (gst_msdk_is_msdk_buffer (inbuf)) {
@@ -828,49 +877,20 @@ get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
     msdk_surface->buf = gst_buffer_ref (inbuf);
     return msdk_surface;
   }
-#ifndef _WIN32
+
   msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
-      &thiz->sinkpad_info, 0);
+      &thiz->sinkpad_info, GST_MAP_READ);
   if (msdk_surface) {
     msdk_surface->buf = gst_buffer_ref (inbuf);
     return msdk_surface;
   }
-#endif
 
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
    * just copy frame to msdk buffer and take a surface from it.
    */
-  if (!(msdk_surface =
-          get_surface_from_pool (thiz, thiz->sinkpad_buffer_pool, NULL)))
-    goto error;
 
-  if (!gst_video_frame_map (&src_frame, &thiz->sinkpad_info, inbuf,
-          GST_MAP_READ)) {
-    GST_ERROR_OBJECT (thiz, "failed to map the frame for source");
-    goto error;
-  }
-
-  if (!gst_video_frame_map (&out_frame, &thiz->sinkpad_buffer_pool_info,
-          msdk_surface->buf, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (thiz, "failed to map the frame for destination");
-    gst_video_frame_unmap (&src_frame);
-    goto error;
-  }
-
-  if (!gst_video_frame_copy (&out_frame, &src_frame)) {
-    GST_ERROR_OBJECT (thiz, "failed to copy frame");
-    gst_video_frame_unmap (&out_frame);
-    gst_video_frame_unmap (&src_frame);
-    goto error;
-  }
-
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&src_frame);
-
-  return msdk_surface;
-
-error:
-  return NULL;
+  return gst_msdkvpp_get_surface_from_pool (thiz, thiz->sinkpad_buffer_pool,
+      inbuf);
 }
 
 static GstFlowReturn
