@@ -150,6 +150,9 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
 static gboolean _action_set_done (GstValidateAction * action);
 static GList *_find_elements_defined_in_action (GstValidateScenario * scenario,
     GstValidateAction * action);
+static GstValidateAction *gst_validate_create_subaction (GstValidateScenario *
+    scenario, GstStructure * lvariables, GstValidateAction * action,
+    GstStructure * nstruct, gint it, gint max);
 
 /* GstValidateSinkInformation tracks information for all sinks in the pipeline */
 typedef struct
@@ -2782,6 +2785,7 @@ stop_waiting_signal (GstStructure * data)
 {
   guint sigid = 0;
   GstElement *target;
+  GstStructure *check = NULL;
   GstValidateAction *action;
   GstValidateScenario *scenario;
 
@@ -2799,6 +2803,21 @@ stop_waiting_signal (GstStructure * data)
   if (!sigid)
     scenario->priv->signal_handler_id = 0;
   SCENARIO_UNLOCK (scenario);
+
+  if (gst_structure_get (action->structure, "check", GST_TYPE_STRUCTURE,
+          &check, NULL)) {
+    GstValidateAction *subact =
+        gst_validate_create_subaction (scenario, NULL, action,
+        check, 0, 0);
+    GstValidateActionType *subact_type = _find_action_type (subact->type);
+    if (!(subact_type->flags & GST_VALIDATE_ACTION_TYPE_CHECK)) {
+      gst_validate_error_structure (action,
+          "`check` action %s is not marked as 'check'", subact->type);
+    }
+
+    gst_validate_execute_action (subact_type, subact);
+    gst_validate_action_unref (subact);
+  }
 
   gst_validate_action_set_done (action);
   gst_validate_action_unref (action);
@@ -6832,6 +6851,13 @@ register_action_types (void)
           .types = "boolean",
           NULL
         },
+        {
+          .name = "check",
+          .description = "The check action to execute when non blocking signal is received",
+          .mandatory = FALSE,
+          .types = "structure",
+          NULL
+        },
         {NULL}
       }),
       "Waits for signal 'signal-name', message 'message-type', or during 'duration' seconds",
@@ -6971,7 +6997,7 @@ register_action_types (void)
         "The properties values to check will be defined as:\n\n"
         "    element-name.padname::property-name\n\n"
         "> NOTE: `.padname` is not needed if checking an element property\n\n",
-      GST_VALIDATE_ACTION_TYPE_NONE);
+      GST_VALIDATE_ACTION_TYPE_CHECK);
 
   REGISTER_ACTION_TYPE ("set-properties", _execute_set_or_check_properties,
       ((GstValidateActionParameter []) {
@@ -7069,7 +7095,7 @@ register_action_types (void)
       "Check the value of property of an element or klass of elements in the pipeline.\n"
       "Besides property-name and value, either 'target-element-name' or\n"
       "'target-element-klass' needs to be defined",
-      GST_VALIDATE_ACTION_TYPE_NONE);
+      GST_VALIDATE_ACTION_TYPE_CHECK);
 
   REGISTER_ACTION_TYPE ("set-debug-threshold",
       _execute_set_debug_threshold,
@@ -7254,7 +7280,7 @@ register_action_types (void)
       " This allows checking the checksum of a buffer after a 'seek' or after a"
       " GESTimeline 'commit'"
       " for example",
-      GST_VALIDATE_ACTION_TYPE_NON_BLOCKING);
+      GST_VALIDATE_ACTION_TYPE_NON_BLOCKING | GST_VALIDATE_ACTION_TYPE_CHECK);
 
     REGISTER_ACTION_TYPE ("crank-clock", _execute_crank_clock,
       ((GstValidateActionParameter []) {
@@ -7368,7 +7394,10 @@ register_action_types (void)
               NULL },
         {NULL}
       }),
-      "Check current pipeline position.\n", GST_VALIDATE_ACTION_TYPE_NONE);
+      "Check current pipeline position.\n",
+      /* FIXME: Make MT safe so it can be marked as GST_VALIDATE_ACTION_TYPE_CHECK */
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
 
   REGISTER_ACTION_TYPE("run-command", _run_command,
       ((GstValidateActionParameter[]) {

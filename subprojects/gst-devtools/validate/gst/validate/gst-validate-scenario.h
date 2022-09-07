@@ -228,6 +228,17 @@ typedef enum
     GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL = 1 << 7,
     GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE = 1 << 8,
     GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG = 1 << 9,
+    /**
+     * GST_VALIDATE_ACTION_TYPE_CHECK:
+     *
+     * The action is checking some state from objects in the pipeline. It means that it can
+     * be used as 'check' in different action which have a `check` "sub action", such as the 'wait' action type.
+     * This implies that the action can be executed from any thread and not only from the scenario thread as other
+     * types.
+     *
+     * Since: 1.22
+     */
+    GST_VALIDATE_ACTION_TYPE_CHECK = 1 << 10,
 } GstValidateActionTypeFlags;
 
 typedef struct _GstValidateActionTypePrivate GstValidateActionTypePrivate;
