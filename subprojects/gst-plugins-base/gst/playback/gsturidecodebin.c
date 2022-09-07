@@ -464,7 +464,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstURIDecodeBin::download:
+   * GstURIDecodeBin:download:
    *
    * For certain media type, enable download buffering.
    */
@@ -473,7 +473,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           "Attempt download buffering when buffering network streams",
           DEFAULT_DOWNLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstURIDecodeBin::use-buffering:
+   * GstURIDecodeBin:use-buffering:
    *
    * Emit BUFFERING messages based on low-/high-percent thresholds of the
    * demuxed or parsed data.
@@ -487,7 +487,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           DEFAULT_USE_BUFFERING, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstURIDecodeBin::force-sw-decoders:
+   * GstURIDecodeBin:force-sw-decoders:
    *
    * While auto-plugging, if set to %TRUE, those decoders within
    * "Hardware" klass will be ignored. Otherwise they will be tried.
@@ -501,7 +501,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstURIDecodeBin::expose-all-streams:
+   * GstURIDecodeBin:expose-all-streams:
    *
    * Expose streams of unknown type.
    *
@@ -517,7 +517,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstURIDecodeBin::ring-buffer-max-size:
+   * GstURIDecodeBin:ring-buffer-max-size:
    *
    * The maximum size of the ring buffer in kilobytes. If set to 0, the ring
    * buffer is disabled. Default is 0.
