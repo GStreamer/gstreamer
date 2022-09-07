@@ -3252,6 +3252,67 @@ done:
 }
 
 static GstValidateExecuteActionReturn
+_execute_check_pad_caps (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+  GList *elements = NULL;
+  GstPad *pad = NULL;
+  GstStructure *expected_struct = NULL;
+  GstCaps *expected = NULL, *current_caps = NULL;
+  const gchar *pad_name, *comparison_type =
+      gst_structure_get_string (action->structure, "comparision-mode");
+
+  DECLARE_AND_GET_PIPELINE (scenario, action);
+
+  REPORT_UNLESS (elements =
+      _find_elements_defined_in_action (scenario, action), done,
+      "Could not find any element from %" GST_PTR_FORMAT, action->structure);
+
+  REPORT_UNLESS (g_list_length (elements) == 1, done,
+      "More than one element found from %" GST_PTR_FORMAT, action->structure);
+
+  pad_name = gst_structure_get_string (action->structure, "pad");
+  REPORT_UNLESS (pad =
+      gst_element_get_static_pad (elements->data, pad_name), done,
+      "Could not find pad %s in %" GST_PTR_FORMAT, pad_name, elements->data);
+
+  current_caps = gst_pad_get_current_caps (pad);
+  if (gst_structure_get (action->structure, "expected-caps", GST_TYPE_STRUCTURE,
+          &expected_struct, NULL))
+    expected = gst_caps_new_full (gst_structure_copy (expected_struct), NULL);
+  else
+    gst_structure_get (action->structure, "expected-caps", GST_TYPE_CAPS,
+        &expected, NULL);
+
+  if (!comparison_type || !g_strcmp0 (comparison_type, "intersect")) {
+    REPORT_UNLESS (expected, done, "Can't intersect with NULL expected caps");
+    REPORT_UNLESS (gst_caps_can_intersect (expected, current_caps), done,
+        "Caps can't intesect. Expected: \n - %" GST_PTR_FORMAT "\nGot:\n - %"
+        GST_PTR_FORMAT, expected, current_caps);
+  } else if (!g_strcmp0 (comparison_type, "equal")) {
+    REPORT_UNLESS ((expected == NULL && current_caps == NULL)
+        || gst_caps_is_equal (expected, current_caps), done,
+        "Caps do not match. Expected: %" GST_PTR_FORMAT " got %" GST_PTR_FORMAT,
+        expected, current_caps);
+  } else {
+    REPORT_UNLESS (FALSE, done, "Invalid caps `comparision-type`: '%s'",
+        comparison_type);
+  }
+
+done:
+  g_clear_object (&pipeline);
+  g_clear_object (&pad);
+  g_list_free_full (elements, gst_object_unref);
+  gst_clear_structure (&expected_struct);
+  gst_clear_caps (&current_caps);
+  gst_clear_caps (&expected);
+
+  return res;
+
+}
+
+static GstValidateExecuteActionReturn
 _execute_check_position (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
@@ -7398,6 +7459,54 @@ register_action_types (void)
       /* FIXME: Make MT safe so it can be marked as GST_VALIDATE_ACTION_TYPE_CHECK */
       GST_VALIDATE_ACTION_TYPE_NONE);
 
+  REGISTER_ACTION_TYPE("check-current-pad-caps", _execute_check_pad_caps,
+      ((GstValidateActionParameter[]) {
+        {
+           .name = "expected-caps",
+           .description = "The expected caps. If not present, expected no caps to be set",
+           .mandatory = FALSE,
+           .types = "GstCaps,GstStructure",
+           NULL
+        },
+        {
+          .name = "target-element-name",
+          .description = "The name of the GstElement to send a send force-key-unit to",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "target-element-factory-name",
+          .description = "The factory name of the GstElements to get pad from",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "target-element-klass",
+          .description = "The klass of the GstElements to get pad from",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "pad",
+          .description = "The name of the GstPad to get pad from",
+          .mandatory = FALSE,
+          .types = "string",
+          NULL
+        },
+        {
+          .name = "comparison-type",
+          .description = "",
+          .mandatory = FALSE,
+          .types = "string in [intersect, equal]",
+          NULL
+        },
+        {NULL}
+      }),
+      "Check current pipeline position.\n",
+      GST_VALIDATE_ACTION_TYPE_NONE | GST_VALIDATE_ACTION_TYPE_CHECK );
 
   REGISTER_ACTION_TYPE("run-command", _run_command,
       ((GstValidateActionParameter[]) {
