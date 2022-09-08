@@ -73,7 +73,6 @@ struct _GstTestSrcBin
   GstBin parent;
 
   gchar *uri;
-  GstStreamCollection *collection;
   gint group_id;
   GstFlowCombiner *flow_combiner;
   GstCaps *streams_def;
@@ -266,6 +265,7 @@ gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
       (*n_stream == 0) ? GST_STREAM_FLAG_SELECT : GST_STREAM_FLAG_UNSELECT);
   GstEvent *stream_start =
       gst_event_new_stream_start (gst_stream_get_stream_id (stream));
+  GstPadTemplate *templ;
 
   gst_structure_foreach (props,
       (GstStructureForeachFunc) gst_test_src_bin_set_element_property, src);
@@ -284,9 +284,10 @@ gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
 
   gst_bin_add (GST_BIN (self), src);
 
-  ghost =
-      gst_ghost_pad_new_from_template (pad_name, pad,
-      gst_static_pad_template_get (template));
+  templ = gst_static_pad_template_get (template);
+  ghost = gst_ghost_pad_new_from_template (pad_name, pad, templ);
+  gst_object_unref (templ);
+  g_free (pad_name);
   proxypad = GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (ghost)));
   gst_flow_combiner_add_pad (self->flow_combiner, ghost);
   gst_pad_set_chain_function (proxypad,
@@ -369,8 +370,7 @@ gst_test_src_bin_create_sources (GstTestSrcBin * self)
   self->group_id = gst_util_group_id_next ();
   for (i = 0; i < gst_caps_get_size (streams_def); i++) {
     GstStream *stream;
-    GstStructure *stream_def =
-        gst_caps_get_structure (streams_def, i);
+    GstStructure *stream_def = gst_caps_get_structure (streams_def, i);
 
     if ((stream =
             gst_test_check_prev_stream_def (self, prev_streams_def,
@@ -419,6 +419,7 @@ gst_test_src_bin_create_sources (GstTestSrcBin * self)
 
   gst_element_post_message (GST_ELEMENT (self),
       gst_message_new_stream_collection (GST_OBJECT (self), collection));
+  gst_object_unref (collection);
 
   gst_element_no_more_pads (GST_ELEMENT (self));
 
@@ -596,9 +597,12 @@ gst_test_src_bin_finalize (GObject * object)
 {
   GstTestSrcBin *self = GST_TEST_SRC_BIN (object);
 
+  G_OBJECT_CLASS (gst_test_src_bin_parent_class)->finalize (object);
+
   g_free (self->uri);
   gst_clear_caps (&self->streams_def);
   gst_flow_combiner_free (self->flow_combiner);
+
 }
 
 static void
