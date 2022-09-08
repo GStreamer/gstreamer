@@ -6259,8 +6259,10 @@ gst_validate_action_set_done (GstValidateAction * action)
   g_assert (!action->priv->pending_set_done);
   action->priv->pending_set_done = TRUE;
 
-  if (scenario && scenario->priv->wait_message_action == action)
+  if (scenario && scenario->priv->wait_message_action == action) {
+    gst_validate_action_unref (scenario->priv->wait_message_action);
     scenario->priv->wait_message_action = NULL;
+  }
   gst_clear_object (&scenario);
 
   g_main_context_invoke_full (action->priv->context,
