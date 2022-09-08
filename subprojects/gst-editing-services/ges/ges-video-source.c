@@ -113,7 +113,7 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
     gboolean needs_converters)
 {
   GESTrackElement *trksrc = GES_TRACK_ELEMENT (self);
-  GstElement *positioner, *videoflip, *capsfilter;
+  GstElement *positioner, *videoflip, *capsfilter, *videorate;
   const gchar *positioner_props[]
   = { "alpha", "posx", "posy", "width", "height", "operator", NULL };
   const gchar *videoflip_props[] = { "video-direction", NULL };
@@ -149,7 +149,10 @@ ges_video_source_create_filters (GESVideoSource * self, GPtrArray * elements,
     g_free (ename);
   }
   ename = g_strdup_printf ("ges%s-rate", GES_TIMELINE_ELEMENT_NAME (self));
-  g_ptr_array_add (elements, gst_element_factory_make ("videorate", ename));
+  videorate = gst_element_factory_make ("videorate", ename);
+  g_object_set (videorate, "max-closing-segment-duplication-duration",
+      GST_CLOCK_TIME_NONE, NULL);
+  g_ptr_array_add (elements, videorate);
 
   g_free (ename);
   ename =
