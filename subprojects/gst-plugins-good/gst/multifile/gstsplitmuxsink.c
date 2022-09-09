@@ -3178,11 +3178,13 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         }
         break;
       case SPLITMUX_INPUT_STATE_WAITING_GOP_COLLECT:{
-        /* We're collecting a GOP, this is only ever called for non-reference
+        /* We're collecting a GOP, this is normally only called for non-reference
          * contexts as the reference context would be waiting inside
          * check_completed_gop() */
-
-        g_assert (!ctx->is_reference);
+        if (G_UNLIKELY (ctx->is_reference)) {
+          check_completed_gop (splitmux, ctx);
+          break;
+        }
 
         /* If we overran the target timestamp, it might be time to process
          * the GOP, otherwise bail out for more data. */
