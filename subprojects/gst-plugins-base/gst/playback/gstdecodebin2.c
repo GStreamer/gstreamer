@@ -1701,7 +1701,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (!dbin->expose_allstreams && gst_caps_is_fixed (caps)) {
     guint i;
     const GList *tmps;
-    gboolean dontuse = FALSE;
+    gboolean dontuse = FALSE, found_finals = FALSE;
 
     GST_DEBUG ("Checking if we can abort early");
 
@@ -1737,8 +1737,11 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
               gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE], 0, dpad, tcaps,
               &apcontinue);
 
-          /* If autoplug-continue returns TRUE and the caps are not final, don't use them */
-          if (apcontinue && !are_final_caps (dbin, tcaps))
+          /* If autoplug-continue returns TRUE and the caps are not final, and
+           * we haven't found any way to output finals yet, don't use them */
+          if (are_final_caps (dbin, tcaps))
+            found_finals = TRUE;
+          else if (apcontinue && !found_finals)
             dontuse = TRUE;
           gst_caps_unref (tcaps);
         }
