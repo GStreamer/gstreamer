@@ -57,7 +57,8 @@ pygi_override_dir = get_option('pygi-overrides-dir')
 
 if pygi_override_dir == ''
   pygi_override_dir = python.get_install_dir(
-    subdir : join_paths('gi', 'overrides')
+    subdir : join_paths('gi', 'overrides'),
+    pure: false
   )
 endif
 
