@@ -278,48 +278,15 @@ if not get_option('examples').disabled()
 endif
 subdir('docs')
 
-override_detector = '''
-import sys
-import os
-
-prefix = sys.argv[1]
-version = sys.version_info
-
-# If we are installing in the same prefix as PyGobject
-# make sure to install in the right place.
-import gi.overrides
-
-overrides_path = os.path.dirname(gi.overrides.__file__)
-if os.path.commonprefix([overrides_path, prefix]) == prefix:
-    print(overrides_path)
-    exit(0)
-
-# Otherwise follow python's way of install site packages inside
-# the provided prefix
-if os.name == 'posix':
-    print(os.path.join(
-        prefix, 'lib', 'python%d.%d' % (version.major, version.minor),
-        'site-packages', 'gi', 'overrides'))
-else:
-    print(os.path.join(
-        prefix, 'Lib', 'Python%d%d' % (version.major, version.minor),
-        'site-packages', 'gi', 'overrides'))
-'''
 pygi_override_dir = get_option('pygi-overrides-dir')
 if pygi_override_dir == ''
-    cres = run_command(python3, '-c', override_detector, get_option('prefix'), check: false)
-    if cres.returncode() == 0
-      pygi_override_dir = cres.stdout().strip()
-    endif
-    if cres.stderr() != ''
-        message(cres.stderr())
-    endif
+  pygi_override_dir = python3.get_install_dir(
+    subdir : join_paths('gi', 'overrides')
+  )
 endif
 
-if pygi_override_dir != ''
-  message('pygobject overrides directory ' + pygi_override_dir)
-  subdir('bindings/python')
-endif
+message('pygobject overrides directory = @0@'.format(pygi_override_dir))
+subdir('bindings/python')
 
 # Set release date
 if gst_version_nano == 0
