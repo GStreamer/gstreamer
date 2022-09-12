@@ -71,6 +71,10 @@ if cc.get_id() == 'msvc'
   c_std_arg = ['c_std=c11']
 endif
 
+if libva_dep.version().version_compare('>= 1.15')
+  va_sources += 'gstvaav1enc.c'
+endif
+
 gstva = library('gstva',
   va_sources,
   c_args : gst_plugins_bad_args + extra_args,
