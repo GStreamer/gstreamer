@@ -114,6 +114,11 @@ static gboolean gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
     GstVideoInfo * out_info);
 static GstFlowReturn gst_cuda_memory_copy_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
+#ifdef GST_CUDA_HAS_D3D
+static gboolean
+gst_cuda_memory_copy_ensure_d3d11_interop (GstCudaContext * context,
+    GstD3D11Device * device);
+#endif
 
 static void
 gst_cuda_memory_copy_class_init (GstCudaMemoryCopyClass * klass)
@@ -147,12 +152,51 @@ static void
 gst_cuda_memory_copy_set_context (GstElement * element, GstContext * context)
 {
   /* CUDA context is handled by parent class, handle only non-CUDA context */
-#ifdef HAVE_NVCODEC_GST_GL
+#if defined (HAVE_NVCODEC_GST_GL) || defined (GST_CUDA_HAS_D3D)
   GstCudaMemoryCopy *self = GST_CUDA_MEMORY_COPY (element);
 
+#ifdef HAVE_NVCODEC_GST_GL
   gst_gl_handle_set_context (element, context, &self->gl_display,
       &self->other_gl_context);
-#endif
+#endif /* HAVE_NVCODEC_GST_GL */
+
+#ifdef GST_CUDA_HAS_D3D
+  GstCudaBaseTransform *base = GST_CUDA_BASE_TRANSFORM (element);
+  if (gst_d3d11_handle_set_context (element, context, -1, &self->d3d11_device)) {
+    gboolean compatible = TRUE;
+
+    if (base->context) {
+      if (!gst_cuda_memory_copy_ensure_d3d11_interop (base->context,
+              self->d3d11_device)) {
+        GST_INFO_OBJECT (self, "%" GST_PTR_FORMAT
+            " is not CUDA compatible with %" GST_PTR_FORMAT,
+            self->d3d11_device, base->context);
+        compatible = FALSE;
+      }
+    } else {
+      guint device_count = 0;
+      CUdevice device_list[1] = { 0, };
+      CUresult cuda_ret;
+
+      cuda_ret = CuD3D11GetDevices (&device_count, device_list, 1,
+          gst_d3d11_device_get_device_handle (self->d3d11_device),
+          CU_D3D11_DEVICE_LIST_ALL);
+      if (cuda_ret != CUDA_SUCCESS || device_count == 0) {
+        GST_INFO_OBJECT (self, "%" GST_PTR_FORMAT " is not CUDA compatible",
+            self->d3d11_device);
+        compatible = FALSE;
+      }
+    }
+
+    if (!compatible) {
+      gst_clear_object (&self->d3d11_device);
+    } else {
+      GST_INFO_OBJECT (self, "%" GST_PTR_FORMAT " is CUDA compatible",
+          self->d3d11_device);
+    }
+  }
+#endif /* GST_CUDA_HAS_D3D */
+#endif /* defined (HAVE_NVCODEC_GST_GL) || defined (GST_CUDA_HAS_D3D) */
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -790,6 +834,10 @@ gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     self->out_type = GST_CUDA_BUFFER_COPY_D3D11;
   }
+
+  /* Clear d3d11 device, this set_info() might be called to update
+   * cuda context and therefore d3d11 device object should be updated as well */
+  gst_clear_object (&self->d3d11_device);
 #endif
 
 #ifdef HAVE_NVCODEC_NVMM
