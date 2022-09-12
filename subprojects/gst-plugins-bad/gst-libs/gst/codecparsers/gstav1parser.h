@@ -1536,6 +1536,7 @@ struct _GstAV1FilmGrainParams {
  * @tx_mode: specifies how the transform size is determined.
  * @skip_mode_frame: specifies the frames to use for compound prediction when @skip_mode is 1.
  * @expected_frame_id: specifies the frame id for each frame used for reference. (Since: 1.24)
+ * @ref_global_motion_params: specifies the global motion parameters of the reference. (Since: 1.24)
  */
 struct _GstAV1FrameHeaderOBU {
   gboolean show_existing_frame;
@@ -1614,6 +1615,15 @@ struct _GstAV1FrameHeaderOBU {
    * Since: 1.24
    */
   gint32 expected_frame_id[GST_AV1_REFS_PER_FRAME];
+
+  /**
+   * _GstAV1FrameHeaderOBU.ref_global_motion_params:
+   *
+   * Specifies the global motion parameters of the reference.
+   *
+   * Since: 1.24
+   */
+  GstAV1GlobalMotionParams ref_global_motion_params;
 };
 
 /**
