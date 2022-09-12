@@ -21,7 +21,15 @@
 /**
  * element-cudaupload:
  *
- * Uploads data to NVIDA GPU via CUDA APIs
+ * Uploads data to NVIDIA GPU via CUDA APIs
+ *
+ * Since: 1.20
+ */
+
+/**
+ * element-cudadownload:
+ *
+ * Downloads data from NVIDIA GPU via CUDA APIs
  *
  * Since: 1.20
  */
