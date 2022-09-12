@@ -3,6 +3,7 @@ gst_tester = executable('gst-tester-' + apiversion,
     c_args : gst_c_args,
     include_directories : [configinc],
     install: true,
+    install_tag: 'bin-devel',
     dependencies : [gio_dep],
 )
 

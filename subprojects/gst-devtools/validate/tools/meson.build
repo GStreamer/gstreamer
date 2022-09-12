@@ -50,13 +50,13 @@ endif
 if not get_option('tools').disabled()
 
   foreach tool, data: gst_tools
-    if data.has_key('config_data')
-    else
+    if not data.has_key('config_data')
       exe_name = '@0@-@1@'.format(tool, apiversion)
       executable(
         exe_name,
         data.get('files'),
         install: true,
+        install_tag: 'bin-devel',
         include_directories : inc_dirs,
         dependencies : data.get('deps'),
         c_args : [gst_c_args] + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],

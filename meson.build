@@ -443,6 +443,7 @@ if building_full
       exe_name = '@0@-@1@'.format(tool, apiversion)
       extra_args = data.get('extra_c_args', [])
       sources = data.get('files')
+      install_tag = data.get('install_tag', 'bin')
       deps = []
       foreach d : data.get('deps', [])
         if d not in exposed_deps
@@ -453,6 +454,7 @@ if building_full
       executable(exe_name,
         sources,
         install: true,
+        install_tag: install_tag,
         include_directories : [configinc],
         dependencies : [gst_full_dep] + deps,
         c_args: extra_args + gst_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],

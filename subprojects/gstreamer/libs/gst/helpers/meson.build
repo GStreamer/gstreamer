@@ -19,6 +19,7 @@ if bashcomp_found
     include_directories : [configinc],
     dependencies : [gst_dep],
     install_dir : helpers_install_dir,
+    install_tag : 'bin',
     install: true,
   )
 endif

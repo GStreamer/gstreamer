@@ -7,4 +7,4 @@ configure_file(input : 'gst.in',
     output : 'gst',
     install_dir : bash_helpers_dir,
     configuration : bash_helper_conf,
-    install_tag : 'runtime')
+    install_tag : 'bin')
