@@ -182,7 +182,7 @@ gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
       continue;
     }
 
-    cuda_ret = CuD3D11GetDevice (&other_dev, adapter);
+    cuda_ret = CuD3D11GetDevice (&other_dev, (IDXGIAdapter *) adapter);
     IDXGIAdapter1_Release (adapter);
 
     if (cuda_ret == CUDA_SUCCESS && other_dev == cuda_device) {

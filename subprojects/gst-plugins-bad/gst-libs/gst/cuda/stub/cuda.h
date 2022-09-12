@@ -132,13 +132,6 @@ typedef struct
   gsize Height;
 } CUDA_MEMCPY2D;
 
-typedef enum
-{
-  CU_D3D11_DEVICE_LIST_ALL = 0x01,
-  CU_D3D11_DEVICE_LIST_CURRENT_FRAME = 0x02,
-  CU_D3D11_DEVICE_LIST_NEXT_FRAME = 0x03,
-} CUD3D11DeviceList;
-
 typedef struct
 {
   CUaddress_mode addressMode[3];

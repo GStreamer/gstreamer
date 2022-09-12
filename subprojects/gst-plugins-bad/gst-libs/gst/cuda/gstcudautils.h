@@ -162,10 +162,10 @@ gboolean        gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsRe
                                                                guint buffer,
                                                                CUgraphicsRegisterFlags flags);
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 GST_CUDA_API
 gboolean        gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource * resource,
-                                                                    gpointer d3d11_resource,
+                                                                    ID3D11Resource * d3d11_resource,
                                                                     CUgraphicsRegisterFlags flags);
 #endif
 

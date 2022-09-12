@@ -4,6 +4,16 @@
 #include <cuda.h>
 #include <cudaGL.h>
 
+#ifdef G_OS_WIN32
+#ifndef INITGUID
+#include <initguid.h>
+#endif /* INITGUID */
+
+#include <d3d11.h>
+#include <dxgi.h>
+#include <cudaD3D11.h>
+#endif /* G_OS_WIN32 */
+
 G_BEGIN_DECLS
 
 /* cuda.h */
@@ -182,23 +192,23 @@ CUresult CUDAAPI CuGLGetDevices (unsigned int * pCudaDeviceCount,
                                  CUGLDeviceList deviceList);
 
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 /* cudaD3D11.h */
 GST_CUDA_API
 CUresult CUDAAPI CuGraphicsD3D11RegisterResource(CUgraphicsResource * pCudaResource,
-                                                 gpointer pD3DResource,
+                                                 ID3D11Resource * pD3DResource,
                                                  unsigned int Flags);
 
 GST_CUDA_API
 CUresult CUDAAPI CuD3D11GetDevice(CUdevice * device,
-                                  gpointer pAdapter);
+                                  IDXGIAdapter * pAdapter);
 
 GST_CUDA_API
 CUresult CUDAAPI CuD3D11GetDevices(unsigned int * pCudaDeviceCount,
                                    CUdevice* pCudaDevices,
                                    unsigned int cudaDeviceCount,
-                                   gpointer pD3D11Device,
-                                   CUD3D11DeviceList deviceList);
+                                   ID3D11Device * pD3D11Device,
+                                   CUd3d11DeviceList deviceList);
 #endif
 
 G_END_DECLS

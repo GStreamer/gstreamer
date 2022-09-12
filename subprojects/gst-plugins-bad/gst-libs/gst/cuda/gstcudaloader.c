@@ -123,13 +123,15 @@ typedef struct _GstNvCodecCudaVTable
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       CUGLDeviceList deviceList);
 
+#ifdef G_OS_WIN32
   CUresult (CUDAAPI * CuGraphicsD3D11RegisterResource) (CUgraphicsResource *
-      pCudaResource, gpointer pD3DResource, unsigned int Flags);
+      pCudaResource, ID3D11Resource * pD3DResource, unsigned int Flags);
   CUresult (CUDAAPI * CuD3D11GetDevice) (CUdevice * device,
-      gpointer pAdapter);
+      IDXGIAdapter * pAdapter);
   CUresult (CUDAAPI * CuD3D11GetDevices) (unsigned int *pCudaDeviceCount,
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
-      gpointer pD3D11Device, CUD3D11DeviceList deviceList);
+      ID3D11Device * pD3D11Device, CUd3d11DeviceList deviceList);
+#endif
 } GstNvCodecCudaVTable;
 /* *INDENT-ON* */
 
@@ -223,7 +225,7 @@ gst_cuda_load_library (void)
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
   LOAD_SYMBOL (cuGLGetDevices, CuGLGetDevices);
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   /* cudaD3D11.h */
   LOAD_SYMBOL (cuGraphicsD3D11RegisterResource,
       CuGraphicsD3D11RegisterResource);
@@ -590,10 +592,10 @@ CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
 }
 
 /* cudaD3D11.h */
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 CUresult CUDAAPI
 CuGraphicsD3D11RegisterResource (CUgraphicsResource * pCudaResource,
-    gpointer pD3DResource, unsigned int Flags)
+    ID3D11Resource * pD3DResource, unsigned int Flags)
 {
   g_assert (gst_cuda_vtable.CuGraphicsD3D11RegisterResource != NULL);
 
@@ -602,7 +604,7 @@ CuGraphicsD3D11RegisterResource (CUgraphicsResource * pCudaResource,
 }
 
 CUresult CUDAAPI
-CuD3D11GetDevice (CUdevice * device, gpointer pAdapter)
+CuD3D11GetDevice (CUdevice * device, IDXGIAdapter * pAdapter)
 {
   g_assert (gst_cuda_vtable.CuD3D11GetDevice != NULL);
 
@@ -611,9 +613,8 @@ CuD3D11GetDevice (CUdevice * device, gpointer pAdapter)
 
 CUresult CUDAAPI
 CuD3D11GetDevices (unsigned int *pCudaDeviceCount,
-    CUdevice * pCudaDevices,
-    unsigned int cudaDeviceCount,
-    gpointer pD3D11Device, CUD3D11DeviceList deviceList)
+    CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
+    ID3D11Device * pD3D11Device, CUd3d11DeviceList deviceList)
 {
   g_assert (gst_cuda_vtable.CuD3D11GetDevices != NULL);
 

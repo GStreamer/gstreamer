@@ -23,6 +23,20 @@ if host_system not in ['windows', 'linux']
   subdir_done()
 endif
 
+cuda_win32_headers = [
+  'initguid.h',
+  'd3d11.h',
+  'dxgi.h',
+]
+
+if host_system == 'windows'
+  foreach h : cuda_win32_headers
+    if not cc.has_header(h)
+      subdir_done()
+    endif
+  endforeach
+endif
+
 cuda_stubinc = include_directories('./stub')
 extra_c_args = ['-DGST_USE_UNSTABLE_API']
 
