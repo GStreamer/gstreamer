@@ -3969,7 +3969,10 @@ gst_adaptive_demux2_stream_advance_fragment_unlocked (GstAdaptiveDemux * demux,
   stream->download_start_time =
       GST_TIME_AS_USECONDS (gst_adaptive_demux2_get_monotonic_time (demux));
 
-  if (ret == GST_FLOW_OK) {
+  /* Always check if we need to switch bitrate on OK, or when live
+   * (it's normal to have EOS on advancing in live when we hit the
+   * end of the manifest) */
+  if (ret == GST_FLOW_OK || gst_adaptive_demux_is_live (demux)) {
     GST_DEBUG_OBJECT (stream, "checking if stream requires bitrate change");
     if (gst_adaptive_demux2_stream_select_bitrate (demux, stream,
             gst_adaptive_demux2_stream_update_current_bitrate (demux,
