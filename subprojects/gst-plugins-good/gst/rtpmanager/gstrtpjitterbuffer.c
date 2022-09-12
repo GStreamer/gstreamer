@@ -3489,9 +3489,16 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
     ext_time = gst_rtp_buffer_ext_timestamp (&ext_time, rtptime);
 
-    ntp_time =
-        priv->last_known_ntpnstime + gst_util_uint64_scale (ext_time -
-        priv->last_known_ext_rtptime, GST_SECOND, priv->clock_rate);
+    if (ext_time >= priv->last_known_ext_rtptime) {
+      ntp_time =
+          priv->last_known_ntpnstime + gst_util_uint64_scale (ext_time -
+          priv->last_known_ext_rtptime, GST_SECOND, priv->clock_rate);
+    } else {
+      ntp_time =
+          priv->last_known_ntpnstime -
+          gst_util_uint64_scale (priv->last_known_ext_rtptime - ext_time,
+          GST_SECOND, priv->clock_rate);
+    }
   }
 
   if (priv->add_reference_timestamp_meta && GST_CLOCK_TIME_IS_VALID (ntp_time)
