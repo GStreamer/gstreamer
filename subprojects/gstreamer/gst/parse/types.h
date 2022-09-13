@@ -24,6 +24,13 @@ typedef struct {
   reference_t last;
 } chain_t;
 
+typedef struct {
+  gchar *factory_name;
+  GSList *values;
+  GSList *presets;
+} element_t;
+
+
 typedef struct _graph_t graph_t;
 struct _graph_t {
   chain_t *chain; /* links are supposed to be done now */
@@ -55,12 +62,16 @@ G_GNUC_INTERNAL  link_t *__gst_parse_link_new (void);
 G_GNUC_INTERNAL  void	__gst_parse_link_free (link_t *data);
 G_GNUC_INTERNAL  chain_t *__gst_parse_chain_new (void);
 G_GNUC_INTERNAL  void	__gst_parse_chain_free (chain_t *data);
+G_GNUC_INTERNAL  element_t *__gst_parse_element_new (void);
+G_GNUC_INTERNAL  void	__gst_parse_element_free (element_t *data);
 #  define gst_parse_strdup __gst_parse_strdup
 #  define gst_parse_strfree __gst_parse_strfree
 #  define gst_parse_link_new __gst_parse_link_new
 #  define gst_parse_link_free __gst_parse_link_free
 #  define gst_parse_chain_new __gst_parse_chain_new
 #  define gst_parse_chain_free __gst_parse_chain_free
+#  define gst_parse_element_new __gst_parse_element_new
+#  define gst_parse_element_free __gst_parse_element_free
 #else /* __GST_PARSE_TRACE */
 #  define gst_parse_strdup g_strdup
 #  define gst_parse_strfree g_free
@@ -68,6 +79,8 @@ G_GNUC_INTERNAL  void	__gst_parse_chain_free (chain_t *data);
 #  define gst_parse_link_free(l) g_slice_free (link_t, l)
 #  define gst_parse_chain_new() g_slice_new0 (chain_t)
 #  define gst_parse_chain_free(c) g_slice_free (chain_t, c)
+#  define gst_parse_element_new() g_slice_new0 (element_t)
+#  define gst_parse_element_free(e) g_slice_free (element_t, e)
 #endif /* __GST_PARSE_TRACE */
 
 static inline void

@@ -379,6 +379,7 @@ GST_START_TEST (expected_to_fail_pipes)
   const gchar **s;
 
   for (s = expected_failures; *s != NULL; s++) {
+    GST_ERROR ("Running %s", *s);
     expected_fail_pipe (*s);
   }
 }
