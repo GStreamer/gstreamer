@@ -44,6 +44,8 @@
 
 #include "gstvajpegdec.h"
 
+#include <gst/va/gstvavideoformat.h>
+
 #include "gstvabasedec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_jpegdec_debug);

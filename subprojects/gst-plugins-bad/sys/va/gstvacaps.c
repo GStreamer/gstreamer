@@ -24,6 +24,7 @@
 
 #include "gstvacaps.h"
 
+#include <gst/va/gstvavideoformat.h>
 #include <va/va_drmcommon.h>
 
 #include "gstvadisplay_priv.h"

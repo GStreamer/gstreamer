@@ -24,6 +24,8 @@
 
 #include "gstvadisplay_priv.h"
 
+#include <gst/va/gstvavideoformat.h>
+
 #include "gstvaprofile.h"
 
 GArray *

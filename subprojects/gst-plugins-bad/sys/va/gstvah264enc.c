@@ -54,6 +54,7 @@
 
 #include <gst/codecparsers/gsth264bitwriter.h>
 #include <gst/va/gstva.h>
+#include <gst/va/gstvavideoformat.h>
 #include <gst/va/vasurfaceimage.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>

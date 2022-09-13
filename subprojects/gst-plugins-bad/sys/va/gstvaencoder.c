@@ -25,6 +25,8 @@
 
 #include "gstvaencoder.h"
 
+#include <gst/va/gstvavideoformat.h>
+
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "vacompat.h"

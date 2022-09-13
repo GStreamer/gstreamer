@@ -21,6 +21,7 @@
 #include "gstvabasedec.h"
 
 #include <gst/va/gstva.h>
+#include <gst/va/gstvavideoformat.h>
 
 #include "gstvacaps.h"
 

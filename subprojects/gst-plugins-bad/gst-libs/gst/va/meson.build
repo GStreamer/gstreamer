@@ -18,7 +18,6 @@ va_headers = files(
   'gstvadisplay_wrapped.h',
   'gstvapool.h',
   'gstvautils.h',
-  'gstvavideoformat.h',
   'va-prelude.h',
   'va_fwd.h',
 )
