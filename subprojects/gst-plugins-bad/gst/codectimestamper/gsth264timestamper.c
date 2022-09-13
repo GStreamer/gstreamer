@@ -20,8 +20,31 @@
 /**
  * SECTION:element-h264timestamper
  * @title: h264timestamper
+ * @short_description: A timestamp correction element for H.264 streams
  *
- * A timestamp correction element for H.264 stream.
+ * `h264timestamper` updates the DTS (Decoding Time Stamp) of each frame
+ * based on H.264 SPS codec setup data, specifically the frame reordering
+ * information written in the SPS indicating the maximum number of B-frames
+ * allowed.
+ *
+ * In order to determine the DTS of each frame, this element may need to hold
+ * back a few frames in case the codec data indicates that frame reordering is
+ * allowed for the given stream. That means this element may introduce additional
+ * latency for the DTS decision.
+ *
+ * This element can be useful if downstream elements require correct DTS
+ * information but upstream elements either do not provide it at all or the
+ * upstream DTS information is unreliable.
+ *
+ * For example, mp4 muxers typically require both DTS and PTS on the input
+ * buffers, but in case where the input H.264 data comes from Matroska files or
+ * RTP/RTSP streams DTS timestamps may be absent and this element may need to
+ * be used to clean up the DTS timestamps before handing it to the mp4 muxer.
+ *
+ * This is particularly the case where the H.264 stream contains B-frames
+ * (i.e. frame reordering is required), as streams without correct DTS information
+ * will confuse the muxer element and will result in unexpected (or bogus)
+ * duration/framerate/timestamp values in the muxed container stream.
  *
  * ## Example launch line
  * ```
