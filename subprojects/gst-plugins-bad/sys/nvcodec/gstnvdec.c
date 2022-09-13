@@ -546,8 +546,8 @@ parser_sequence_callback (GstNvDec * nvdec, CUVIDEOFORMAT * format)
     }
 
     GST_DEBUG_OBJECT (nvdec, "creating decoder");
-    create_info.ulWidth = width;
-    create_info.ulHeight = height;
+    create_info.ulWidth = format->coded_width;
+    create_info.ulHeight = format->coded_height;
     create_info.ulNumDecodeSurfaces = nvdec->num_decode_surface;
     create_info.CodecType = format->codec;
     create_info.ChromaFormat = format->chroma_format;
