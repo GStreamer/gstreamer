@@ -1,8 +1,10 @@
 /* GStreamer
+
  *
  * Copyright (C) 2013 Collabora Ltd.
  *  Author: Thibault Saunier <thibault.saunier@collabora.com>
- * Copyright (C) 2018-2020 Igalia S.L
+ * Copyright (C) 2018-2022 Igalia S.L
+ *  Author: Thibault Saunier <tsaunier@igalia.com>
 
  *
  * gst-validate-scenario.c - Validate Scenario class
@@ -346,9 +348,12 @@ _reporter_iface_init (GstValidateReporterInterface * iface)
   iface->get_pipeline = _get_pipeline;
 }
 
+static GQuark chain_qdata;
 G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
     GST_TYPE_OBJECT, G_ADD_PRIVATE (GstValidateScenario)
-    G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init));
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
+    chain_qdata = g_quark_from_static_string ("__validate_scenario_chain_data")
+    );
 
 /* GstValidateAction implementation */
 static GType _gst_validate_action_type = 0;
@@ -3494,80 +3499,94 @@ out:
 
 }
 
+typedef struct _ChainWrapperFunctionData ChainWrapperFunctionData;
 typedef GstFlowReturn (*ChainWrapperFunction) (GstPad * pad, GstObject * parent,
-    GstBuffer * buffer, gpointer * user_data, gboolean * remove_wrapper);
+    GstBuffer * buffer, ChainWrapperFunctionData * data);
 
-typedef struct _ChainWrapperFunctionData
+struct _ChainWrapperFunctionData
 {
   GstPadChainFunction wrapped_chain_func;
   gpointer wrapped_chain_data;
   GDestroyNotify wrapped_chain_notify;
   ChainWrapperFunction wrapper_function;
   gpointer wrapper_function_user_data;
-} ChainWrapperFunctionData;
+
+  GMutex actions_lock;
+  GList *actions;
+
+};
+
+static void
+chain_wrapper_function_free (ChainWrapperFunctionData * data)
+{
+  g_list_free_full (data->actions, (GDestroyNotify) gst_validate_action_unref);
+  g_mutex_clear (&data->actions_lock);
+}
 
 static GstFlowReturn
 _pad_chain_wrapper (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
-  ChainWrapperFunctionData *data = pad->chaindata;
-  GstFlowReturn ret;
-  gboolean remove_wrapper = FALSE;
+  ChainWrapperFunctionData *data =
+      g_object_get_qdata (G_OBJECT (pad), chain_qdata);
 
-  pad->chainfunc = data->wrapped_chain_func;
-  pad->chaindata = data->wrapped_chain_data;
-  pad->chainnotify = data->wrapped_chain_notify;
-
-  ret = data->wrapper_function (pad, parent, buffer,
-      data->wrapper_function_user_data, &remove_wrapper);
-
-  if (!remove_wrapper) {
-    /* The chain function may have changed during the calling (e.g. if it was
-     * a nested wrapper that decided to remove itself) so we need to update the
-     * wrapped function just in case. */
-    data->wrapped_chain_func = pad->chainfunc;
-    data->wrapped_chain_data = pad->chaindata;
-    data->wrapped_chain_notify = pad->chainnotify;
-
-    /* Restore the wrapper as chain function */
-    pad->chainfunc = _pad_chain_wrapper;
-    pad->chaindata = data;
-    pad->chainnotify = g_free;
-  } else
-    g_free (data);
-
-  return ret;
+  return data->wrapper_function (pad, parent, buffer,
+      g_object_get_qdata (G_OBJECT (pad), chain_qdata));
 }
 
 static void
 wrap_pad_chain_function (GstPad * pad, ChainWrapperFunction new_function,
-    gpointer user_data)
+    GstValidateAction * action)
 {
-  ChainWrapperFunctionData *data = g_new (ChainWrapperFunctionData, 1);
-  data->wrapped_chain_func = pad->chainfunc;
-  data->wrapped_chain_data = pad->chaindata;
-  data->wrapped_chain_notify = pad->chainnotify;
-  data->wrapper_function = new_function;
-  data->wrapper_function_user_data = user_data;
+  ChainWrapperFunctionData *data =
+      g_object_get_qdata (G_OBJECT (pad), chain_qdata);
 
+  if (data) {
+    g_mutex_lock (&data->actions_lock);
+    data->actions = g_list_append (data->actions, action);
+    g_mutex_unlock (&data->actions_lock);
+
+    return;
+  }
+
+  data = g_new0 (ChainWrapperFunctionData, 1);
+  data->actions = g_list_append (data->actions, action);
+
+  g_object_set_qdata_full (G_OBJECT (pad), chain_qdata, data,
+      (GDestroyNotify) chain_wrapper_function_free);
+
+  data->wrapped_chain_func = pad->chainfunc;
+  data->wrapper_function = new_function;
   pad->chainfunc = _pad_chain_wrapper;
-  pad->chaindata = data;
-  pad->chainnotify = g_free;
 }
 
 static GstFlowReturn
-appsrc_push_chain_wrapper (GstPad * pad, GstObject * parent, GstBuffer * buffer,
-    gpointer * user_data, gboolean * remove_wrapper)
+appsrc_push_chain_wrapper (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer, ChainWrapperFunctionData * data)
 {
-  GstValidateAction *action = (GstValidateAction *) user_data;
-  GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
+  GstValidateAction *action;
+  GstValidateScenario *scenario;
   GstFlowReturn ret;
+
+  g_mutex_lock (&data->actions_lock);
+  if (data->actions) {
+    action = data->actions->data;
+    data->actions = g_list_remove (data->actions, action);
+    g_mutex_unlock (&data->actions_lock);
+
+    scenario = gst_validate_action_get_scenario (action);
+  } else {
+    g_mutex_unlock (&data->actions_lock);
+
+    return data->wrapped_chain_func (pad, parent, buffer);
+  }
+
   GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK (scenario);
-  ret = pad->chainfunc (pad, parent, buffer);
+  ret = data->wrapped_chain_func (pad, parent, buffer);
   gst_validate_action_set_done (action);
   gst_validate_action_unref (action);
-  *remove_wrapper = TRUE;
   GST_VALIDATE_SCENARIO_EOS_HANDLING_UNLOCK (scenario);
   g_object_unref (scenario);
+
   return ret;
 }
 
