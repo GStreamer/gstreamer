@@ -1080,12 +1080,16 @@ appsrc-push,
     file-name=(string),
     target-element-name=(string),
     [caps=(caps)],
+    [dts=(GstClockTime)],
+    [duration=(GstClockTime)],
     [offset=(uint64)],
+    [pts=(GstClockTime)],
+    [segment=((GstStructure)segment,[start=(GstClockTime)][stop=(GstClockTime)][base=(GstClockTime)][offset=(GstClockTime)][time=(GstClockTime)][postion=(GstClockTime)][duration=(GstClockTime)])],
     [size=(uint64)],
     [playback-time=(double,string)];
 ```
 
-Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the next action is not run until the buffer has been pushed.
+Queues a sample in an appsrc. If the pipeline state allows flow of buffers,  the next action is not run until the buffer has been pushed.
  * Implementer namespace: core
 
 ### Parameters
@@ -1104,9 +1108,33 @@ Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the 
 
   Default: (null)
 
+* `dts`:(optional): Buffer DTS
+
+  Possible types: `GstClockTime`
+
+  Default: (null)
+
+* `duration`:(optional): Buffer duration
+
+  Possible types: `GstClockTime`
+
+  Default: (null)
+
 * `offset`:(optional): Offset within the file where the buffer will start
 
   Possible types: `uint64`
+
+  Default: (null)
+
+* `pts`:(optional): Buffer PTS
+
+  Possible types: `GstClockTime`
+
+  Default: (null)
+
+* `segment`:(optional): The GstSegment to configure as part of the sample
+
+  Possible types: `(GstStructure)segment,[start=(GstClockTime)][stop=(GstClockTime)][base=(GstClockTime)][offset=(GstClockTime)][time=(GstClockTime)][postion=(GstClockTime)][duration=(GstClockTime)]`
 
   Default: (null)
 

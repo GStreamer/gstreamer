@@ -3621,7 +3621,7 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   GstBuffer *buffer;
   guint64 offset = 0;
   guint64 size = 0, read;
-  gint push_buffer_ret;
+  gint push_sample_ret;
   gboolean wait;
   GFileInfo *finfo = NULL;
   GFile *f = NULL;
@@ -3629,6 +3629,9 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   GstPad *peer_pad = NULL;
   GInputStream *stream = NULL;
   GstValidateExecuteActionReturn res;
+  GstSegment segment;
+  GstCaps *caps = NULL;
+  GstSample *sample;
 
   /* We will only wait for the the buffer to be pushed if we are in a state
    * that allows flow of buffers (>=PAUSED). Otherwise the buffer will just
@@ -3675,7 +3678,15 @@ _execute_appsrc_push (GstValidateScenario * scenario,
       "Could read enough data, only read: %" G_GUINT64_FORMAT, read);
 
   buffer = gst_buffer_new_wrapped (file_contents, size);
-  file_contents = NULL;
+  gst_validate_action_get_clocktime (scenario,
+      action, "pts", &GST_BUFFER_PTS (buffer)
+      );
+  gst_validate_action_get_clocktime (scenario,
+      action, "dts", &GST_BUFFER_DTS (buffer)
+      );
+  gst_validate_action_get_clocktime (scenario,
+      action, "duration", &GST_BUFFER_DURATION (buffer)
+      );
 
   {
     const GValue *caps_value;
@@ -7262,6 +7273,24 @@ register_action_types (void)
           .description = "Caps for the buffer to be pushed",
           .mandatory = FALSE,
           .types = "caps"
+        },
+        {
+          .name = "pts",
+          .description = "Buffer PTS",
+          .mandatory = FALSE,
+          .types = "GstClockTime"
+        },
+        {
+          .name = "dts",
+          .description = "Buffer DTS",
+          .mandatory = FALSE,
+          .types = "GstClockTime"
+        },
+        {
+          .name = "duration",
+          .description = "Buffer duration",
+          .mandatory = FALSE,
+          .types = "GstClockTime"
         },
         {NULL}
       }),
