@@ -74,6 +74,13 @@ struct _GstVideoRate
   int max_rate;
   gdouble rate;
   gdouble pending_rate;
+
+  GstCaps *in_caps;
+  /* Only set right after caps were set so that we still have a reference to
+   * the caps matching the content of `->prevbuf`, this way, if we get an EOS
+   * right after a CAPS, we can reset to those caps and close the segment with
+   * it */
+  GstCaps *prev_caps;
 };
 
 GST_ELEMENT_REGISTER_DECLARE (videorate);

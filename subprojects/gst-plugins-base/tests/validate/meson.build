@@ -20,6 +20,7 @@ tests = [
     'videorate/duplicate_on_eos',
     'videorate/duplicate_on_eos_disbaled',
     'videorate/duplicate_on_eos_half_sec',
+    'videorate/fill_segment_after_caps_changed_before_eos',
     'compositor/renogotiate_failing_unsupported_src_format',
     'giosrc/read-growing-file',
     'encodebin/set-encoder-properties',

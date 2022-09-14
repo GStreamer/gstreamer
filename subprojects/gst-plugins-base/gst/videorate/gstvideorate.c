@@ -609,12 +609,9 @@ gst_video_rate_setcaps (GstBaseTransform * trans, GstCaps * in_caps,
     videorate->wanted_diff = 0;
 
 done:
-  /* After a setcaps, our caps may have changed. In that case, we can't use
-   * the old buffer, if there was one (it might have different dimensions) */
-  GST_DEBUG_OBJECT (videorate, "swapping old buffers");
-  gst_video_rate_swap_prev (videorate, NULL, GST_CLOCK_TIME_NONE);
-  videorate->last_ts = GST_CLOCK_TIME_NONE;
-  videorate->average = 0;
+  if (ret) {
+    gst_caps_replace (&videorate->in_caps, in_caps);
+  }
 
   return ret;
 
@@ -627,7 +624,7 @@ no_framerate:
 }
 
 static void
-gst_video_rate_reset (GstVideoRate * videorate)
+gst_video_rate_reset (GstVideoRate * videorate, gboolean on_flush)
 {
   GST_DEBUG_OBJECT (videorate, "resetting internal variables");
 
@@ -642,6 +639,10 @@ gst_video_rate_reset (GstVideoRate * videorate)
   videorate->discont = TRUE;
   videorate->average = 0;
   videorate->force_variable_rate = FALSE;
+  if (!on_flush) {
+    /* Do not clear caps on flush events as those are still valid */
+    gst_clear_caps (&videorate->in_caps);
+  }
   gst_video_rate_swap_prev (videorate, NULL, 0);
 
   gst_segment_init (&videorate->segment, GST_FORMAT_TIME);
@@ -650,7 +651,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
 static void
 gst_video_rate_init (GstVideoRate * videorate)
 {
-  gst_video_rate_reset (videorate);
+  gst_video_rate_reset (videorate, FALSE);
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
   videorate->drop_only = DEFAULT_DROP_ONLY;
@@ -789,9 +790,14 @@ gst_video_rate_swap_prev (GstVideoRate * videorate, GstBuffer * buffer,
     gint64 time)
 {
   GST_LOG_OBJECT (videorate, "swap_prev: storing buffer %p in prev", buffer);
-  if (videorate->prevbuf)
-    gst_buffer_unref (videorate->prevbuf);
-  videorate->prevbuf = buffer != NULL ? gst_buffer_ref (buffer) : NULL;
+
+  gst_buffer_replace (&videorate->prevbuf, buffer);
+  /* Ensure that ->prev_caps always match ->prevbuf */
+  if (!buffer)
+    gst_caps_replace (&videorate->prev_caps, NULL);
+  else if (videorate->prev_caps != videorate->in_caps)
+    gst_caps_replace (&videorate->prev_caps, videorate->in_caps);
+
   videorate->prev_ts = time;
 }
 
@@ -876,6 +882,8 @@ gst_video_rate_duplicate_to_close_segment (GstVideoRate * videorate)
     return count;
   }
 
+  GST_DEBUG_OBJECT (videorate, "Pushing buffers to close segment");
+
   res = GST_FLOW_OK;
   /* fill up to the end of current segment */
   while (res == GST_FLOW_OK
@@ -887,8 +895,52 @@ gst_video_rate_duplicate_to_close_segment (GstVideoRate * videorate)
 
     count++;
   }
+  GST_DEBUG_OBJECT (videorate, "----> Pushed %d buffers to close segment",
+      count);
 
   return count;
+}
+
+/* WORKAROUND: This works around BaseTransform limitation as instead of rolling
+ * back caps, we should be able to push caps only when we are sure we are ready
+ * to do so. Right now, BaseTransform doesn't let us do anything like that
+ * so we rollback to previous caps when strictly required (though we now it
+ * might not be so safe).
+ *
+ * To be used only when wanting to 'close' a segment, this function will reset
+ * caps to previous caps, which will match the content of `prevbuf` in that case
+ *
+ * Returns: The previous GstCaps if we rolled back to previous buffers, NULL
+ * otherwise.
+ *
+ * NOTE: When some caps are returned, we should reset them back after
+ * closing the segment is done.
+ */
+static GstCaps *
+gst_video_rate_rollback_to_prev_caps_if_needed (GstVideoRate * videorate)
+{
+  GstCaps *prev_caps = NULL;
+
+  if (videorate->prev_caps && videorate->prev_caps != videorate->in_caps) {
+    if (videorate->in_caps)
+      prev_caps = gst_caps_ref (videorate->in_caps);
+
+    if (!gst_pad_send_event (GST_BASE_TRANSFORM_SINK_PAD (videorate),
+            gst_event_new_caps (videorate->prev_caps)
+        )) {
+
+      GST_WARNING_OBJECT (videorate, "Could not send previous caps to close "
+          " segment, not closing it");
+
+      gst_video_rate_swap_prev (videorate, NULL, GST_CLOCK_TIME_NONE);
+      videorate->last_ts = GST_CLOCK_TIME_NONE;
+      videorate->average = 0;
+    }
+
+    gst_clear_caps (&videorate->prev_caps);
+  }
+
+  return prev_caps;
 }
 
 static gboolean
@@ -903,12 +955,14 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
     {
       GstSegment segment;
       gint seqnum;
+      GstCaps *rolled_back_caps;
 
       gst_event_copy_segment (event, &segment);
       if (segment.format != GST_FORMAT_TIME)
         goto format_error;
 
-      GST_DEBUG_OBJECT (videorate, "handle NEWSEGMENT");
+      rolled_back_caps =
+          gst_video_rate_rollback_to_prev_caps_if_needed (videorate);
 
       /* close up the previous segment, if appropriate */
       if (videorate->prevbuf) {
@@ -921,6 +975,26 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
         }
         /* clean up for the new one; _chain will resume from the new start */
         gst_video_rate_swap_prev (videorate, NULL, 0);
+      }
+
+      if (rolled_back_caps) {
+        GST_DEBUG_OBJECT (videorate,
+            "Resetting rolled back caps %" GST_PTR_FORMAT, rolled_back_caps);
+        if (!gst_pad_send_event (GST_BASE_TRANSFORM_SINK_PAD (videorate),
+                gst_event_new_caps (rolled_back_caps)
+            )) {
+
+          GST_WARNING_OBJECT (videorate, "Could not resend caps after closing "
+              " segment");
+
+          GST_ELEMENT_ERROR (videorate, CORE, NEGOTIATION,
+              ("Could not resend caps after closing segment"), (NULL));
+          gst_caps_unref (rolled_back_caps);
+
+          return FALSE;
+        }
+
+        gst_caps_unref (rolled_back_caps);
       }
 
       videorate->base_ts = 0;
@@ -951,9 +1025,13 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_EOS:{
       gint count = 0;
       GstFlowReturn res = GST_FLOW_OK;
+      GstCaps *rolled_back_caps;
 
       GST_DEBUG_OBJECT (videorate, "Got %s",
           gst_event_type_get_name (GST_EVENT_TYPE (event)));
+
+      rolled_back_caps =
+          gst_video_rate_rollback_to_prev_caps_if_needed (videorate);
 
       /* If the segment has a stop position, fill the segment */
       if (GST_CLOCK_TIME_IS_VALID (videorate->segment.stop)) {
@@ -993,6 +1071,22 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
         }
       }
 
+      if (rolled_back_caps) {
+        GST_DEBUG_OBJECT (videorate,
+            "Resetting rolled back caps %" GST_PTR_FORMAT, rolled_back_caps);
+
+        if (!gst_pad_send_event (GST_BASE_TRANSFORM_SINK_PAD (videorate),
+                gst_event_new_caps (rolled_back_caps)
+            )) {
+
+          /* Not erroring out on EOS as it won't be too bad in any case */
+          GST_WARNING_OBJECT (videorate, "Could not resend caps after closing "
+              " segment on EOS (ignoring the error)");
+        }
+
+        gst_caps_unref (rolled_back_caps);
+      }
+
       if (count > 1) {
         videorate->dup += count - 1;
         if (!videorate->silent)
@@ -1009,7 +1103,7 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       /* also resets the segment */
       GST_DEBUG_OBJECT (videorate, "Got FLUSH_STOP");
-      gst_video_rate_reset (videorate);
+      gst_video_rate_reset (videorate, TRUE);
       break;
     case GST_EVENT_GAP:
       /* no gaps after videorate, ignore the event */
@@ -1545,6 +1639,18 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
   videorate = GST_VIDEO_RATE (trans);
 
+  if (videorate->prev_caps != videorate->in_caps) {
+    /* After caps where set we didn't reset the state so we could close
+     * the segment from previous caps if necessary, we got a buffer after the
+     * new caps so we can reset now */
+    GST_DEBUG_OBJECT (videorate, "Clearing old buffers now that we had a buffer"
+        " after receiving caps");
+    gst_video_rate_swap_prev (videorate, NULL, GST_CLOCK_TIME_NONE);
+    gst_clear_caps (&videorate->prev_caps);
+    videorate->last_ts = GST_CLOCK_TIME_NONE;
+    videorate->average = 0;
+  }
+
   /* make sure the denominators are not 0 */
   if (videorate->from_rate_denominator == 0 ||
       videorate->to_rate_denominator == 0)
@@ -1853,14 +1959,14 @@ invalid_buffer:
 static gboolean
 gst_video_rate_start (GstBaseTransform * trans)
 {
-  gst_video_rate_reset (GST_VIDEO_RATE (trans));
+  gst_video_rate_reset (GST_VIDEO_RATE (trans), FALSE);
   return TRUE;
 }
 
 static gboolean
 gst_video_rate_stop (GstBaseTransform * trans)
 {
-  gst_video_rate_reset (GST_VIDEO_RATE (trans));
+  gst_video_rate_reset (GST_VIDEO_RATE (trans), FALSE);
   return TRUE;
 }
 
