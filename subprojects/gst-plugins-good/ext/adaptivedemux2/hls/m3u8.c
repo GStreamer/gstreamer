@@ -1459,7 +1459,7 @@ gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
   first = g_ptr_array_index (m3u8->segments, 0);
   *start = first->stream_time;
 
-  if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (m3u8)) {
+  if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (m3u8) && m3u8->segments->len > 1) {
     /* min_distance is used to make sure the seek range is never closer than
        GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE fragments from the end of a live
        playlist - see 6.3.3. "Playing the Playlist file" of the HLS draft */
