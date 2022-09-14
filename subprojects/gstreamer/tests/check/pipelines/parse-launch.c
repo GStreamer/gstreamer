@@ -102,7 +102,6 @@ static const gchar *test_lines[] = {
   "fakesrc name=100 fakesink name=101 silent=true 100. ! 101.", /* linking with named reference on both sides */
   "fakesrc ! 1__dentity ! fakesink silent=true",        /* using a freshly registered element type */
   "fakesrc ! tee name=t  t.src_12 ! queue ! fakesink  t.src_3 ! queue ! fakesink",
-  "fakesrc name=foo name=fin  fin. ! fakesink", /* testing assignments are executed in correct order (left-to-right) */
   "( fakesrc ) ! fakesink",     /* ghostPad creation on-the-fly, infix notation link */
   "( fakesrc name=dasrc ) dasrc. ! fakesink",   /* ghostPad creation on-the-fly, named link */
 /*  "(name=mabin fakesrc) mabin. ! fakesink", FIXME: linking to named bin does not work yet */
@@ -366,8 +365,6 @@ static const gchar *expected_failures[] = {
   "fakesrc ! fakesink s.ch1",
   /* unlinked src/sink URI */
   "http://eff.org fakesrc ! fakesink",
-  /* catch assignments evaluated in wrong order */
-  "fakesrc name=ss name=st  ss. ! fakesink",
   /* unbalanced brackets */
   "(", ")", ")  (",
   /* END: */
