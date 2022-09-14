@@ -3678,6 +3678,7 @@ _execute_appsrc_push (GstValidateScenario * scenario,
       "Could read enough data, only read: %" G_GUINT64_FORMAT, read);
 
   buffer = gst_buffer_new_wrapped (file_contents, size);
+  file_contents = NULL;
   gst_validate_action_get_clocktime (scenario,
       action, "pts", &GST_BUFFER_PTS (buffer)
       );
@@ -3690,7 +3691,6 @@ _execute_appsrc_push (GstValidateScenario * scenario,
 
   {
     const GValue *caps_value;
-    GstCaps *caps = NULL;
     caps_value = gst_structure_get_value (action->structure, "caps");
     if (caps_value) {
       if (G_VALUE_HOLDS_STRING (caps_value)) {
@@ -3702,8 +3702,6 @@ _execute_appsrc_push (GstValidateScenario * scenario,
       }
 
       REPORT_UNLESS (caps, err, "Could not get caps value");
-      g_object_set (target, "caps", caps, NULL);
-      gst_caps_unref (caps);
     }
   }
 
@@ -3718,9 +3716,45 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   /* Keep the action alive until set done is called. */
   gst_validate_action_ref (action);
 
-  g_signal_emit_by_name (target, "push-buffer", buffer, &push_buffer_ret);
+  sample = gst_sample_new (buffer, caps, NULL, NULL);
+  gst_clear_caps (&caps);
   gst_buffer_unref (buffer);
-  REPORT_UNLESS (push_buffer_ret == GST_FLOW_OK, err,
+  if (gst_structure_has_field (action->structure, "segment")) {
+    GstFormat format;
+    GstStructure *segment_struct;
+    GstClockTime tmp;
+
+    REPORT_UNLESS (gst_structure_get (action->structure, "segment",
+            GST_TYPE_STRUCTURE, &segment_struct, NULL), err,
+        "Segment field not in right format (expected GstStructure).");
+
+    if (!gst_structure_get (segment_struct, "format", GST_TYPE_FORMAT, &format,
+            NULL))
+      g_object_get (target, "format", &format, NULL);
+
+    gst_segment_init (&segment, format);
+    if (gst_validate_utils_get_clocktime (segment_struct, "base", &tmp))
+      segment.base = tmp;
+    if (gst_validate_utils_get_clocktime (segment_struct, "offset", &tmp))
+      segment.offset = tmp;
+    if (gst_validate_utils_get_clocktime (segment_struct, "time", &tmp))
+      segment.time = tmp;
+    if (gst_validate_utils_get_clocktime (segment_struct, "position", &tmp))
+      segment.position = tmp;
+    if (gst_validate_utils_get_clocktime (segment_struct, "duration", &tmp))
+      segment.duration = tmp;
+    if (gst_validate_utils_get_clocktime (segment_struct, "start", &tmp))
+      segment.start = tmp;
+    if (gst_validate_utils_get_clocktime (segment_struct, "stop", &tmp))
+      segment.stop = tmp;
+    gst_structure_get_double (segment_struct, "rate", &segment.rate);
+
+    gst_sample_set_segment (sample, &segment);
+  }
+
+  g_signal_emit_by_name (target, "push-sample", sample, &push_sample_ret);
+  gst_sample_unref (sample);
+  REPORT_UNLESS (push_sample_ret == GST_FLOW_OK, err,
       "push-buffer signal failed in action.");
 
   if (wait) {
@@ -7292,9 +7326,23 @@ register_action_types (void)
           .mandatory = FALSE,
           .types = "GstClockTime"
         },
+        {
+          .name = "segment",
+          .description = "The GstSegment to configure as part of the sample",
+          .mandatory = FALSE,
+          .types = "(GstStructure)segment,"
+                      "[start=(GstClockTime)]"
+                      "[stop=(GstClockTime)]"
+                      "[base=(GstClockTime)]"
+                      "[offset=(GstClockTime)]"
+                      "[time=(GstClockTime)]"
+                      "[postion=(GstClockTime)]"
+                      "[duration=(GstClockTime)]"
+        },
         {NULL}
       }),
-      "Queues a buffer in an appsrc. If the pipeline state allows flow of buffers, the next action is not run until the buffer has been pushed.",
+      "Queues a sample in an appsrc. If the pipeline state allows flow of buffers, "
+      " the next action is not run until the buffer has been pushed.",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("appsrc-eos", _execute_appsrc_eos,
