@@ -215,7 +215,7 @@ gst_codec_timestamper_set_caps (GstCodecTimestamper * self, GstCaps * caps)
 
   gst_structure_get_fraction (s, "framerate", &priv->fps_n, &priv->fps_d);
 
-  if (priv->fps_n <= 0 && priv->fps_d <= 0) {
+  if (priv->fps_n <= 0 || priv->fps_d <= 0) {
     GST_WARNING_OBJECT (self, "Unknown frame rate, assume 25/1");
     priv->fps_n = 25;
     priv->fps_d = 1;
