@@ -2142,6 +2142,22 @@ restart:
       effective_video_format =
           ::GetQuarterSizedVideoFormat(effective_video_format);
     }
+    switch (self->video_format) {
+      case NTV2_FORMAT_1080psf_2500_2:
+        if (current_video_format == NTV2_FORMAT_1080i_5000)
+          current_video_format = NTV2_FORMAT_1080psf_2500_2;
+        break;
+      case NTV2_FORMAT_1080psf_2997_2:
+        if (current_video_format == NTV2_FORMAT_1080i_5994)
+          current_video_format = NTV2_FORMAT_1080psf_2997_2;
+        break;
+      case NTV2_FORMAT_1080psf_3000_2:
+        if (current_video_format == NTV2_FORMAT_1080i_6000)
+          current_video_format = NTV2_FORMAT_1080psf_3000_2;
+        break;
+      default:
+        break;
+    }
 
     if (current_video_format == ::NTV2_FORMAT_UNKNOWN || !all_quads_equal) {
       if (self->video_format_setting == GST_AJA_VIDEO_FORMAT_AUTO)
