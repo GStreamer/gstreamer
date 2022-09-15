@@ -20,8 +20,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <unistd.h>
-
+#include <gst/audio/audio-format.h>
 #include <gst/check/gstcheck.h>
 
 /* For ease of programming we use globals to keep refs for our floating
@@ -29,17 +28,11 @@
  * get_peer, and then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define AFORMAT "S16BE"
-#else
-#define AFORMAT "S16LE"
-#endif
-
 #define AUDIO_CAPS_STRING "audio/x-raw, " \
-                           "format = (string) " AFORMAT ", "\
-                           "layout = (string) interleaved, " \
-                           "rate = (int) 16000, " \
-                           "channels = (int) 1 "
+                          "format = (string) " GST_AUDIO_NE (S16) ", " \
+                          "layout = (string) interleaved, " \
+                          "rate = (int) 16000, " \
+                          "channels = (int) 1 "
 
 
 #define AMRWB_CAPS_STRING "audio/AMR-WB"
@@ -88,13 +81,14 @@ cleanup_voamrwbenc (GstElement * voamrwbenc)
 }
 
 static void
-do_test (void)
+do_test (gsize sample_count)
 {
   GstElement *voamrwbenc;
   GstBuffer *inbuffer, *outbuffer;
   GstCaps *caps;
   gint i, num_buffers;
-  const gint nbuffers = 10;
+  const gsize buffer_size = sample_count * 2;
+  const gsize nbuffers = (sample_count + 319) / 320;
 
   voamrwbenc = setup_voamrwbenc ();
   fail_unless (gst_element_set_state (voamrwbenc,
@@ -102,9 +96,9 @@ do_test (void)
       "could not set to playing");
 
   /* corresponds to audio buffer mentioned in the caps */
-  inbuffer = gst_buffer_new_and_alloc (320 * nbuffers * 2);
+  inbuffer = gst_buffer_new_allocate (NULL, buffer_size, NULL);
   /* makes valgrind's memcheck happier */
-  gst_buffer_memset (inbuffer, 0, 0, 1024 * nbuffers * 2 * 2);
+  gst_buffer_memset (inbuffer, 0, 0, buffer_size);
   caps = gst_caps_from_string (AUDIO_CAPS_STRING);
 
   gst_check_setup_events (mysrcpad, voamrwbenc, caps, GST_FORMAT_TIME);
@@ -156,13 +150,26 @@ do_test (void)
   buffers = NULL;
 }
 
-GST_START_TEST (test_enc)
+GST_START_TEST (test_enc_aligned)
 {
-  do_test ();
+  do_test (3200);
 }
 
 GST_END_TEST;
 
+GST_START_TEST (test_enc_minus_one)
+{
+  do_test (3199);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_enc_plus_one)
+{
+  do_test (3201);
+}
+
+GST_END_TEST;
 
 static Suite *
 voamrwbenc_suite (void)
@@ -171,7 +178,9 @@ voamrwbenc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_enc);
+  tcase_add_test (tc_chain, test_enc_aligned);
+  tcase_add_test (tc_chain, test_enc_minus_one);
+  tcase_add_test (tc_chain, test_enc_plus_one);
 
   return s;
 }

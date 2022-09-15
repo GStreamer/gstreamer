@@ -69,6 +69,7 @@ base_tests = [
   [['elements/switchbin.c'], get_option('switchbin').disabled()],
   [['elements/videoframe-audiolevel.c'], get_option('videoframe_audiolevel').disabled()],
   [['elements/viewfinderbin.c']],
+  [['elements/voamrwbenc.c'], not voamrwbenc_dep.found(), [voamrwbenc_dep]],
   [['elements/vp9parse.c'], false, [gstcodecparsers_dep]],
   [['elements/av1parse.c'], false, [gstcodecparsers_dep]],
   [['elements/wasapi.c'], host_machine.system() != 'windows', ],

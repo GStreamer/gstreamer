@@ -40,6 +40,8 @@
 
 #include "gstvoamrwbenc.h"
 
+#include <string.h>
+
 #define MR660  0
 #define MR885  1
 #define MR1265 2
@@ -289,18 +291,22 @@ gst_voamrwbenc_handle_frame (GstAudioEncoder * benc, GstBuffer * buffer)
 
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
-  if (G_UNLIKELY (map.size < buffer_size)) {
-    GST_DEBUG_OBJECT (amrwbenc, "discarding trailing data %d", (gint) map.size);
-    gst_buffer_unmap (buffer, &map);
-    ret = gst_audio_encoder_finish_frame (benc, NULL, -1);
-    goto done;
-  }
-
   out = gst_buffer_new_and_alloc (buffer_size);
   gst_buffer_map (out, &omap, GST_MAP_WRITE);
+
   /* encode */
-  outsize = E_IF_encode (amrwbenc->handle, amrwbenc->bandmode,
-      (const short *) map.data, (unsigned char *) omap.data, 0);
+  if (G_UNLIKELY (map.size < buffer_size)) {
+    short input_buffer[L_FRAME16k] = { 0, };
+
+    GST_DEBUG_OBJECT (amrwbenc, "add silence to packet of size %d",
+        (gint) map.size);
+    memcpy ((void *) input_buffer, map.data, map.size);
+    outsize = E_IF_encode (amrwbenc->handle, amrwbenc->bandmode,
+        (const short *) input_buffer, (unsigned char *) omap.data, 0);
+  } else {
+    outsize = E_IF_encode (amrwbenc->handle, amrwbenc->bandmode,
+        (const short *) map.data, (unsigned char *) omap.data, 0);
+  }
 
   GST_LOG_OBJECT (amrwbenc, "encoded to %d bytes", outsize);
   gst_buffer_unmap (out, &omap);
