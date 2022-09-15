@@ -156,14 +156,6 @@ if host_machine.system() != 'windows'
   ]
 endif
 
-foo='''
-if HAVE_ORC
-check_orc = orc/deinterlace orc/videomixer orc/videobox
-else
-check_orc =
-endif
-'''
-
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
@@ -235,6 +227,7 @@ endforeach
 
 # orc tests
 orc_tests = [
+  ['orc_audiopanorama', files('../../gst/audiofx/audiopanoramaorc.orc')],
   ['orc_deinterlace', files('../../gst/deinterlace/tvtime.orc')],
   ['orc_videomixer', files('../../gst/videomixer/videomixerorc.orc')],
   ['orc_videobox', files('../../gst/videobox/gstvideoboxorc.orc')],

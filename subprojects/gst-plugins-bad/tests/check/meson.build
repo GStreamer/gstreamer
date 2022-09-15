@@ -232,6 +232,9 @@ endforeach
 # orc tests
 orc_tests = [
   ['orc_bayer', files('../../gst/bayer/gstbayerorc.orc')],
+  ['orc_fieldanalysis', files('../../gst/fieldanalysis/gstfieldanalysisorc.orc')],
+  ['orc_gaudieffects', files('../../gst/gaudieffects/gstgaudieffectsorc.orc')],
+  ['orc_scenechange', files('../../gst/videofilters/gstscenechangeorc.orc')],
 ]
 
 orc_test_dep = dependency('', required : false)
