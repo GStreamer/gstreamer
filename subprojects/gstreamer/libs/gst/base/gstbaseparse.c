@@ -1577,6 +1577,16 @@ gst_base_parse_sink_query_default (GstBaseParse * parse, GstQuery * query)
   pad = GST_BASE_PARSE_SINK_PAD (parse);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_BITRATE:
+    {
+      if (parse->priv->avg_bitrate) {
+        gst_query_set_bitrate (query, parse->priv->avg_bitrate);
+        res = TRUE;
+      } else {
+        res = gst_pad_query_default (pad, GST_OBJECT_CAST (parse), query);
+      }
+      break;
+    }
     case GST_QUERY_CAPS:
     {
       GstBaseParseClass *bclass;
