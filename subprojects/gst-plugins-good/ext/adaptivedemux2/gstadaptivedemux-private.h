@@ -217,6 +217,7 @@ GstMiniObject * track_dequeue_data_locked (GstAdaptiveDemux * demux, GstAdaptive
 void gst_adaptive_demux_track_flush (GstAdaptiveDemuxTrack * track);
 void gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track, GstClockTime drain_running_time);
 void gst_adaptive_demux_track_update_next_position (GstAdaptiveDemuxTrack * track);
+void gst_adaptive_demux_track_update_level_locked (GstAdaptiveDemuxTrack * track);
 
 /* Period functions */
 GstAdaptiveDemuxPeriod * gst_adaptive_demux_period_new (GstAdaptiveDemux * demux);
@@ -238,5 +239,6 @@ void                     gst_adaptive_demux_period_stop_tasks (GstAdaptiveDemuxP
 GstFlowReturn            gst_adaptive_demux_period_combine_stream_flows (GstAdaptiveDemuxPeriod * period);
 
 gboolean                 gst_adaptive_demux_period_has_pending_tracks (GstAdaptiveDemuxPeriod * period);
+void      gst_adaptive_demux_period_check_input_wakeup_locked (GstAdaptiveDemuxPeriod * period, GstClockTimeDiff current_output_position);
 
 #endif

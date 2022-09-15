@@ -210,9 +210,6 @@ struct _GstAdaptiveDemuxTrack
   /* The track received EOS */
   gboolean eos;
 
-  /* Level to wait until download can commence */
-  GstClockTime waiting_del_level;
-
   /* Input segment and time (in running time) */
   GstSegment input_segment;
   GstClockTimeDiff input_time;
@@ -324,6 +321,9 @@ struct _GstAdaptiveDemux2Stream
   GstAdaptiveDemux2StreamState state;
   guint pending_cb_id;
   gboolean download_active;
+  /* The (global output) time at which this stream should be woken
+   * to download more input */
+  GstClockTimeDiff next_input_wakeup_time;
 
   guint last_status_code;
 
@@ -395,6 +395,11 @@ struct _GstAdaptiveDemuxPeriod
 
   /* Whether tracks were changed and need re-matching against outputs */
   gboolean tracks_changed;
+
+  /* The time at which to wake up input streams for more
+   * data - the earliest of all waiting input stream thresholds,
+   * or GST_CLOCK_STIME_NONE if noone is waiting */
+  GstClockTimeDiff next_input_wakeup_time;
 };
 
 /**

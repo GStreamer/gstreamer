@@ -40,6 +40,7 @@ gst_adaptive_demux_period_new (GstAdaptiveDemux * demux)
 
   period->demux = demux;
   period->period_num = demux->priv->n_periods++;
+  period->next_input_wakeup_time = GST_CLOCK_STIME_NONE;
 
   g_queue_push_tail (demux->priv->periods, period);
 
@@ -291,4 +292,40 @@ gst_adaptive_demux_period_has_pending_tracks (GstAdaptiveDemuxPeriod * period)
       return TRUE;
   }
   return FALSE;
+}
+
+/* Called from the output thread, holding the tracks lock */
+void
+gst_adaptive_demux_period_check_input_wakeup_locked (GstAdaptiveDemuxPeriod *
+    period, GstClockTimeDiff current_output_position)
+{
+  /* Fast case: It's not time to wake up yet */
+  if (period->next_input_wakeup_time == GST_CLOCK_STIME_NONE ||
+      period->next_input_wakeup_time > current_output_position) {
+    return;
+  }
+
+  /* Slow case: Somewhere there's a stream that needs waking up */
+  GList *iter;
+  GstClockTimeDiff next_input_wakeup_time = GST_CLOCK_STIME_NONE;
+
+  for (iter = period->streams; iter; iter = g_list_next (iter)) {
+    GstAdaptiveDemux2Stream *stream = iter->data;
+
+    if (stream->next_input_wakeup_time == GST_CLOCK_STIME_NONE)
+      continue;
+
+    if (stream->next_input_wakeup_time < current_output_position) {
+      GST_LOG_OBJECT (stream, "Waking for more input at time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (current_output_position));
+      gst_adaptive_demux2_stream_on_output_space_available (stream);
+    } else if (next_input_wakeup_time == GST_CLOCK_STIME_NONE ||
+        /* Otherwise this stream will need waking in the future, accumulate
+         * the earliest stream wakeup time */
+        stream->next_input_wakeup_time < next_input_wakeup_time) {
+      next_input_wakeup_time = stream->next_input_wakeup_time;
+    }
+  }
+
+  period->next_input_wakeup_time = next_input_wakeup_time;
 }

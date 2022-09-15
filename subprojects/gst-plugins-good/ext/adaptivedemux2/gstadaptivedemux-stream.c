@@ -59,6 +59,7 @@ gst_adaptive_demux2_stream_init (GstAdaptiveDemux2Stream * stream)
   stream->download_request = download_request_new ();
   stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED;
   stream->last_ret = GST_FLOW_OK;
+  stream->next_input_wakeup_time = GST_CLOCK_STIME_NONE;
 
   stream->fragment_bitrates =
       g_malloc0 (sizeof (guint64) * NUM_LOOKBACK_FRAGMENTS);
@@ -840,10 +841,10 @@ gst_adaptive_demux2_stream_wait_for_output_space (GstAdaptiveDemux * demux,
     if (track->level_time < high_threshold) {
       if (track->active) {
         need_to_wait = FALSE;
-        GST_DEBUG_OBJECT (demux,
-            "stream %p track %s has level %" GST_TIME_FORMAT
+        GST_DEBUG_OBJECT (stream,
+            "track %s has level %" GST_TIME_FORMAT
             " - needs more data (target %" GST_TIME_FORMAT
-            ") (fragment duration %" GST_TIME_FORMAT ")", stream,
+            ") (fragment duration %" GST_TIME_FORMAT ")",
             track->stream_id, GST_TIME_ARGS (track->level_time),
             GST_TIME_ARGS (high_threshold), GST_TIME_ARGS (fragment_duration));
         continue;
@@ -852,34 +853,67 @@ gst_adaptive_demux2_stream_wait_for_output_space (GstAdaptiveDemux * demux,
       have_filled_inactive = TRUE;
     }
 
-    GST_DEBUG_OBJECT (demux,
-        "stream %p track %s active (%d) has level %" GST_TIME_FORMAT,
-        stream, track->stream_id, track->active,
-        GST_TIME_ARGS (track->level_time));
+    GST_DEBUG_OBJECT (stream,
+        "track %s active (%d) has level %" GST_TIME_FORMAT,
+        track->stream_id, track->active, GST_TIME_ARGS (track->level_time));
   }
 
   /* If there are no tracks, don't wait (we might need data to create them),
    * or if there are active tracks that need more data to hit the threshold,
    * don't wait. Otherwise it means all active tracks are full and we should wait */
   if (!have_any_tracks) {
-    GST_DEBUG_OBJECT (demux, "stream %p has no tracks - not waiting", stream);
+    GST_DEBUG_OBJECT (stream, "no tracks created yet - not waiting");
     need_to_wait = FALSE;
   } else if (!have_active_tracks && !have_filled_inactive) {
-    GST_DEBUG_OBJECT (demux,
-        "stream %p has inactive tracks that need more data - not waiting",
-        stream);
+    GST_DEBUG_OBJECT (stream,
+        "have only inactive tracks that need more data - not waiting");
     need_to_wait = FALSE;
   }
 
   if (need_to_wait) {
+    stream->next_input_wakeup_time = GST_CLOCK_STIME_NONE;
+
     for (iter = stream->tracks; iter; iter = iter->next) {
       GstAdaptiveDemuxTrack *track = (GstAdaptiveDemuxTrack *) iter->data;
-      track->waiting_del_level = high_threshold;
-      GST_DEBUG_OBJECT (demux,
-          "Waiting for queued data on stream %p track %s to drop below %"
+
+      GST_DEBUG_OBJECT (stream,
+          "Waiting for queued data on track %s to drop below %"
           GST_TIME_FORMAT " (fragment duration %" GST_TIME_FORMAT ")",
-          stream, track->stream_id, GST_TIME_ARGS (track->waiting_del_level),
+          track->stream_id, GST_TIME_ARGS (high_threshold),
           GST_TIME_ARGS (fragment_duration));
+
+      /* we want to get woken up when the global output position reaches
+       * a point where the input is closer than "high_threshold" to needing
+       * output, so we can put more data in */
+      GstClockTimeDiff wakeup_time = track->input_time - high_threshold;
+
+      if (stream->next_input_wakeup_time == GST_CLOCK_STIME_NONE ||
+          wakeup_time < stream->next_input_wakeup_time) {
+        stream->next_input_wakeup_time = wakeup_time;
+
+        GST_DEBUG_OBJECT (stream,
+            "Track %s level %" GST_TIME_FORMAT ". Input at position %"
+            GST_TIME_FORMAT " next wakeup should be %" GST_TIME_FORMAT " now %"
+            GST_TIME_FORMAT, track->stream_id,
+            GST_TIME_ARGS (track->level_time),
+            GST_TIME_ARGS (track->input_time), GST_TIME_ARGS (wakeup_time),
+            GST_TIME_ARGS (demux->priv->global_output_position));
+      }
+    }
+
+    if (stream->next_input_wakeup_time != GST_CLOCK_TIME_NONE) {
+      GST_DEBUG_OBJECT (stream,
+          "Next input wakeup time is now %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (stream->next_input_wakeup_time));
+
+      /* If this stream needs waking up sooner than any other current one,
+       * update the period wakeup time, which is what the output loop
+       * will check */
+      GstAdaptiveDemuxPeriod *period = stream->period;
+      if (period->next_input_wakeup_time == GST_CLOCK_STIME_NONE ||
+          period->next_input_wakeup_time > stream->next_input_wakeup_time) {
+        period->next_input_wakeup_time = stream->next_input_wakeup_time;
+      }
     }
   }
 
@@ -1582,6 +1616,26 @@ gst_adaptive_demux2_stream_on_output_space_available_cb (GstAdaptiveDemux2Stream
   if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_OUTPUT_SPACE)
     return G_SOURCE_REMOVE;
 
+  GstAdaptiveDemux *demux = stream->demux;
+  TRACKS_LOCK (demux);
+
+  GList *iter;
+  for (iter = stream->tracks; iter; iter = iter->next) {
+    GstAdaptiveDemuxTrack *track = (GstAdaptiveDemuxTrack *) iter->data;
+
+    /* We need to recompute the track's level_time value, as the
+     * global output position may have advanced and reduced the
+     * value, even without anything being dequeued yet */
+    gst_adaptive_demux_track_update_level_locked (track);
+
+    GST_DEBUG_OBJECT (stream, "track %s woken level %" GST_TIME_FORMAT
+        " input position %" GST_TIME_FORMAT " at %" GST_TIME_FORMAT,
+        track->stream_id, GST_TIME_ARGS (track->level_time),
+        GST_TIME_ARGS (track->input_time),
+        GST_TIME_ARGS (demux->priv->global_output_position));
+  }
+  TRACKS_UNLOCK (demux);
+
   while (gst_adaptive_demux2_stream_load_a_fragment (stream));
 
   return G_SOURCE_REMOVE;
@@ -1592,12 +1646,8 @@ gst_adaptive_demux2_stream_on_output_space_available (GstAdaptiveDemux2Stream *
     stream)
 {
   GstAdaptiveDemux *demux = stream->demux;
-  GList *iter;
 
-  for (iter = stream->tracks; iter; iter = iter->next) {
-    GstAdaptiveDemuxTrack *tmp_track = (GstAdaptiveDemuxTrack *) iter->data;
-    tmp_track->waiting_del_level = 0;
-  }
+  stream->next_input_wakeup_time = GST_CLOCK_STIME_NONE;
 
   GST_LOG_OBJECT (stream, "Scheduling output_space_available() call");
 
@@ -1959,6 +2009,8 @@ gst_adaptive_demux2_stream_stop (GstAdaptiveDemux2Stream * stream)
   stream->downloading_header = stream->downloading_index = FALSE;
   stream->download_request = download_request_new ();
   stream->download_active = FALSE;
+
+  stream->next_input_wakeup_time = GST_CLOCK_STIME_NONE;
 }
 
 gboolean

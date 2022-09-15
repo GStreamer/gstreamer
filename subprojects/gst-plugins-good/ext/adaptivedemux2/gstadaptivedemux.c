@@ -3799,8 +3799,13 @@ restart:
   }
 
   /* Store global output position */
-  if (global_output_position != GST_CLOCK_STIME_NONE)
+  if (global_output_position != GST_CLOCK_STIME_NONE) {
     demux->priv->global_output_position = global_output_position;
+
+    /* And see if any streams need to be woken for more input */
+    gst_adaptive_demux_period_check_input_wakeup_locked (demux->input_period,
+        global_output_position);
+  }
 
   if (need_restart)
     goto restart;

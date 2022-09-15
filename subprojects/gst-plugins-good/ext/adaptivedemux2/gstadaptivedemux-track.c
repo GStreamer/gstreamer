@@ -287,47 +287,19 @@ handle_event:
 
   /* Update track buffering levels */
   if (GST_CLOCK_STIME_IS_VALID (running_time_buffering)) {
-    GstClockTimeDiff output_time;
-
     track->output_time = running_time_buffering;
 
     GST_LOG_OBJECT (demux,
         "track %s buffering time:%" GST_STIME_FORMAT,
         track->stream_id, GST_STIME_ARGS (running_time_buffering));
 
-    if (GST_CLOCK_STIME_IS_VALID (track->output_time))
-      output_time =
-          MAX (track->output_time, demux->priv->global_output_position);
-    else
-      output_time = track->input_time;
-
-    if (track->input_time >= output_time)
-      track->level_time = track->input_time - output_time;
-    else
-      track->level_time = 0;
-
-    GST_LOG_OBJECT (demux,
-        "track %s input_time:%" GST_STIME_FORMAT " output_time:%"
-        GST_STIME_FORMAT " level:%" GST_TIME_FORMAT,
-        track->stream_id, GST_STIME_ARGS (track->input_time),
-        GST_STIME_ARGS (output_time), GST_TIME_ARGS (track->level_time));
+    gst_adaptive_demux_track_update_level_locked (track);
   } else {
     GST_LOG_OBJECT (demux, "track %s popping untimed item %" GST_PTR_FORMAT,
         track->stream_id, res);
   }
 
   track->level_bytes -= item_size;
-
-  /* FIXME: This logic should be in adaptive demux, not the track */
-  if (track->level_time < track->waiting_del_level) {
-    /* Wake up download loop */
-    GstAdaptiveDemux2Stream *stream =
-        find_stream_for_track_locked (demux, track);
-
-    g_assert (stream != NULL);
-
-    gst_adaptive_demux2_stream_on_output_space_available (stream);
-  }
 
   return res;
 }
@@ -444,7 +416,7 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
   item.runningtime_buffering = GST_CLOCK_STIME_NONE;
 
   if (timestamp != GST_CLOCK_TIME_NONE) {
-    GstClockTimeDiff output_time, input_time;
+    GstClockTimeDiff input_time;
 
     /* Set the running time of the item */
     input_time = item.runningtime_end = item.runningtime =
@@ -508,18 +480,7 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
           GST_STIME_ARGS (track->output_time));
     }
 
-    output_time = MAX (track->output_time, demux->priv->global_output_position);
-
-    if (track->input_time >= output_time)
-      track->level_time = track->input_time - output_time;
-    else
-      track->level_time = 0;
-
-    GST_LOG_OBJECT (track->sinkpad,
-        "track %s (period %u) input_time:%" GST_STIME_FORMAT " output_time:%"
-        GST_STIME_FORMAT " level:%" GST_TIME_FORMAT,
-        track->stream_id, track->period_num, GST_STIME_ARGS (track->input_time),
-        GST_STIME_ARGS (track->output_time), GST_TIME_ARGS (track->level_time));
+    gst_adaptive_demux_track_update_level_locked (track);
   }
 
   GST_LOG_OBJECT (track->sinkpad,
@@ -798,6 +759,30 @@ gst_adaptive_demux_track_update_next_position (GstAdaptiveDemuxTrack * track)
       "Track '%s' doesn't have any pending timed data", track->stream_id);
 }
 
+/* TRACKS_LOCK held. Recomputes the level_time for the track */
+void
+gst_adaptive_demux_track_update_level_locked (GstAdaptiveDemuxTrack * track)
+{
+  GstAdaptiveDemux *demux = track->demux;
+  GstClockTimeDiff output_time;
+
+  if (GST_CLOCK_STIME_IS_VALID (track->output_time))
+    output_time = MAX (track->output_time, demux->priv->global_output_position);
+  else
+    output_time = MIN (track->input_time, demux->priv->global_output_position);
+
+  if (track->input_time >= output_time)
+    track->level_time = track->input_time - output_time;
+  else
+    track->level_time = 0;
+
+  GST_LOG_OBJECT (track->sinkpad,
+      "track %s (period %u) input_time:%" GST_STIME_FORMAT " output_time:%"
+      GST_STIME_FORMAT " level:%" GST_TIME_FORMAT,
+      track->stream_id, track->period_num, GST_STIME_ARGS (track->input_time),
+      GST_STIME_ARGS (track->output_time), GST_TIME_ARGS (track->level_time));
+}
+
 static void
 _demux_track_free (GstAdaptiveDemuxTrack * track)
 {
@@ -955,7 +940,6 @@ gst_adaptive_demux_track_new (GstAdaptiveDemux * demux,
   gst_event_store_init (&track->sticky_events);
 
   track->waiting_add = TRUE;
-  track->waiting_del_level = 0;
 
   /* We have no fragment duration yet, so the buffering threshold is just the
    * low watermark in time for now */
