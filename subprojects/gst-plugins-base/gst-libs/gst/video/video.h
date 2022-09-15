@@ -35,6 +35,7 @@ typedef struct _GstVideoAlignment GstVideoAlignment;
 #include <gst/video/video-converter.h>
 #include <gst/video/video-scaler.h>
 #include <gst/video/video-multiview.h>
+#include <gst/video/video-info-dma.h>
 
 G_BEGIN_DECLS
 
