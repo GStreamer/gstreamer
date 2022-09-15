@@ -44,6 +44,7 @@
   * 2. Field encoding.
   * 3. The stereo encoding such as the frame-packing or MVC.
   * 4. Weight prediction of B frame.
+  * 5. latency calculation.
   */
 
 #ifdef HAVE_CONFIG_H
