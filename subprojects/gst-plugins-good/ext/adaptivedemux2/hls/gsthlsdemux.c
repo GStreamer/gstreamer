@@ -1948,8 +1948,7 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
 #endif
   GstHLSTimeMap *map;
   GList *tmp;
-
-  g_assert (stream_time >= 0);
+  GstClockTime offset = 0;
 
   /* Check if we don't already have a mapping for the given dsn */
   for (tmp = demux->mappings; tmp; tmp = tmp->next) {
@@ -1979,11 +1978,28 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
   g_free (datestring);
 #endif
 
+  if (stream_time < 0) {
+    offset = -stream_time;
+    stream_time = 0;
+    /* Handle negative stream times. This can happen for example when the server
+     * returns an older playlist.
+     *
+     * Shift the values accordingly to end up with non-negative reference stream
+     * time */
+    GST_DEBUG_OBJECT (demux,
+        "Shifting values before storage (offset : %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (offset));
+  }
+
   map = gst_hls_time_map_new ();
   map->dsn = dsn;
   map->stream_time = stream_time;
-  if (pdt)
-    map->pdt = g_date_time_ref (pdt);
+  if (pdt) {
+    if (offset)
+      map->pdt = g_date_time_add (pdt, offset / GST_USECOND);
+    else
+      map->pdt = g_date_time_ref (pdt);
+  }
 
   demux->mappings = g_list_append (demux->mappings, map);
 }
