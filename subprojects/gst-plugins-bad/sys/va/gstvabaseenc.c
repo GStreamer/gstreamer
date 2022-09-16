@@ -59,7 +59,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaBaseEnc, gst_va_base_enc,
 /* *INDENT-ON* */
 
 static void
-gst_va_base_enc_reset_state (GstVaBaseEnc * base)
+gst_va_base_enc_reset_state_default (GstVaBaseEnc * base)
 {
   GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
 
@@ -119,9 +119,8 @@ static gboolean
 gst_va_base_enc_start (GstVideoEncoder * venc)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
-  GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
 
-  klass->reset_state (base);
+  gst_va_base_enc_reset_state (base);
 
   base->input_frame_count = 0;
   base->output_frame_count = 0;
@@ -902,7 +901,7 @@ gst_va_base_enc_class_init (GstVaBaseEncClass * klass)
   encoder_class->finish = GST_DEBUG_FUNCPTR (gst_va_base_enc_finish);
   encoder_class->flush = GST_DEBUG_FUNCPTR (gst_va_base_enc_flush);
 
-  klass->reset_state = GST_DEBUG_FUNCPTR (gst_va_base_enc_reset_state);
+  klass->reset_state = GST_DEBUG_FUNCPTR (gst_va_base_enc_reset_state_default);
 
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
       "Device Path", "DRM device path", NULL,
@@ -1099,6 +1098,15 @@ gst_va_base_enc_add_codec_tag (GstVaBaseEnc * base, const gchar * codec_name)
 
   gst_video_encoder_merge_tags (venc, tags, GST_TAG_MERGE_REPLACE);
   gst_tag_list_unref (tags);
+}
+
+void
+gst_va_base_enc_reset_state (GstVaBaseEnc * base)
+{
+  GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
+
+  g_assert (klass->reset_state);
+  klass->reset_state (base);
 }
 
 /* *INDENT-OFF* */

@@ -128,6 +128,7 @@ gboolean              gst_va_base_enc_add_trellis_parameter (GstVaBaseEnc * base
                                                              gboolean use_trellis);
 void                  gst_va_base_enc_add_codec_tag       (GstVaBaseEnc * base,
                                                            const gchar * codec_name);
+void                  gst_va_base_enc_reset_state         (GstVaBaseEnc * base);
 
 void                  gst_va_base_enc_update_property_uint (GstVaBaseEnc * base,
                                                             guint32 * old_val,

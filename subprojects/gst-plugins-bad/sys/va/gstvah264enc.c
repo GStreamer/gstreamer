@@ -1517,7 +1517,7 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   guint max_ref_frames;
   GstVideoCodecState *output_state;
 
-  gst_va_h264_enc_reset_state (base);
+  gst_va_base_enc_reset_state (base);
 
   base->width = GST_VIDEO_INFO_WIDTH (&base->input_state->info);
   base->height = GST_VIDEO_INFO_HEIGHT (&base->input_state->info);
