@@ -725,7 +725,7 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   GstNvDecoderFrame *frame;
   GArray *dpb_array;
   gint num_ref_pic;
-  gint i, j;
+  gint i, j, k;
   const GstH265ScalingList *scaling_list = NULL;
 
   /* both NVDEC and h265parser are using the same order */
@@ -819,7 +819,6 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
     }
 
     other_frame = gst_nv_h265_dec_get_decoder_frame_from_picture (self, other);
-
     if (other_frame)
       picture_index = other_frame->index;
 
@@ -829,62 +828,52 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
 
     num_ref_pic++;
   }
-
   g_array_unref (dpb_array);
 
-  for (i = num_ref_pic; i < G_N_ELEMENTS (h265_params->RefPicIdx); i++)
-    h265_params->RefPicIdx[i] = -1;
+  for (i = 0, j = 0; i < num_ref_pic; i++) {
+    GstH265Picture *other = NULL;
 
-  for (i = 0; i < decoder->NumPocStCurrBefore; i++) {
-    GstH265Picture *other;
+    while (!other && j < decoder->NumPocStCurrBefore)
+      other = decoder->RefPicSetStCurrBefore[j++];
 
-    if (!decoder->RefPicSetStCurrBefore[i]) {
-      GST_ERROR_OBJECT (self, "Empty RefPicSetStCurrBefore[%d]", i);
-      return GST_FLOW_ERROR;
-    }
-
-    other = decoder->RefPicSetStCurrBefore[i];
-
-    for (j = 0; j < num_ref_pic; j++) {
-      if (h265_params->PicOrderCntVal[j] == other->pic_order_cnt) {
-        h265_params->RefPicSetStCurrBefore[i] = j;
-        break;
+    if (other) {
+      for (k = 0; k < num_ref_pic; k++) {
+        if (h265_params->PicOrderCntVal[k] == other->pic_order_cnt) {
+          h265_params->RefPicSetStCurrBefore[i] = k;
+          break;
+        }
       }
     }
   }
 
-  for (i = 0; i < decoder->NumPocStCurrAfter; i++) {
-    GstH265Picture *other;
+  for (i = 0, j = 0; i < num_ref_pic; i++) {
+    GstH265Picture *other = NULL;
 
-    if (!decoder->RefPicSetStCurrAfter[i]) {
-      GST_ERROR_OBJECT (self, "Empty RefPicSetStCurrAfter[%d]", i);
-      return GST_FLOW_ERROR;
-    }
+    while (!other && j < decoder->NumPocStCurrAfter)
+      other = decoder->RefPicSetStCurrAfter[j++];
 
-    other = decoder->RefPicSetStCurrAfter[i];
-
-    for (j = 0; j < num_ref_pic; j++) {
-      if (h265_params->PicOrderCntVal[j] == other->pic_order_cnt) {
-        h265_params->RefPicSetStCurrAfter[i] = j;
-        break;
+    if (other) {
+      for (k = 0; k < num_ref_pic; k++) {
+        if (h265_params->PicOrderCntVal[k] == other->pic_order_cnt) {
+          h265_params->RefPicSetStCurrAfter[i] = k;
+          break;
+        }
       }
     }
   }
 
-  for (i = 0; i < decoder->NumPocLtCurr; i++) {
-    GstH265Picture *other;
+  for (i = 0, j = 0; i < num_ref_pic; i++) {
+    GstH265Picture *other = NULL;
 
-    if (!decoder->RefPicSetLtCurr[i]) {
-      GST_ERROR_OBJECT (self, "Empty RefPicSetLtCurr[%d]", i);
-      return GST_FLOW_ERROR;
-    }
+    while (!other && j < decoder->NumPocLtCurr)
+      other = decoder->RefPicSetLtCurr[j++];
 
-    other = decoder->RefPicSetLtCurr[i];
-
-    for (j = 0; j < num_ref_pic; j++) {
-      if (h265_params->PicOrderCntVal[j] == other->pic_order_cnt) {
-        h265_params->RefPicSetLtCurr[i] = j;
-        break;
+    if (other) {
+      for (k = 0; k < num_ref_pic; k++) {
+        if (h265_params->PicOrderCntVal[k] == other->pic_order_cnt) {
+          h265_params->RefPicSetLtCurr[i] = k;
+          break;
+        }
       }
     }
   }
