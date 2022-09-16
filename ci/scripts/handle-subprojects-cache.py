@@ -73,10 +73,19 @@ def copy_cache(options):
     subprocess.check_call(['meson', 'subprojects', 'update', '--reset'])
 
 
+def upgrade_meson():
+    # MESON_COMMIT variable can be set when creating a pipeline to test meson pre releases
+    meson_commit = os.environ.get('MESON_COMMIT')
+    if meson_commit:
+        url = f'git+https://github.com/mesonbuild/meson.git@{meson_commit}'
+        subprocess.check_call(['pip3', 'install', '--upgrade', url])
+
+
 if __name__ == "__main__":
     options = PARSER.parse_args()
 
     if options.build:
         create_cache_in_image(options)
     else:
+        upgrade_meson()
         copy_cache(options)
