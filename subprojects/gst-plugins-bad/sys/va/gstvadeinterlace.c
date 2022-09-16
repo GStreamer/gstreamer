@@ -645,14 +645,12 @@ gst_va_deinterlace_query (GstBaseTransform * trans, GstPadDirection direction,
 {
   GstVaDeinterlace *self = GST_VA_DEINTERLACE (trans);
 
-  if (direction == GST_PAD_SRC && GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
+  if (direction == GST_PAD_SRC && GST_QUERY_TYPE (query) == GST_QUERY_LATENCY
+      && !gst_base_transform_is_passthrough (trans)) {
     GstPad *peer;
     GstClockTime latency, min, max;
     gboolean res = FALSE;
     gboolean live;
-
-    if (gst_base_transform_is_passthrough (trans))
-      return FALSE;
 
     peer = gst_pad_get_peer (GST_BASE_TRANSFORM_SINK_PAD (trans));
     if (!peer)
