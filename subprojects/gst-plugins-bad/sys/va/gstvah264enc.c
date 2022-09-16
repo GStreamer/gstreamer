@@ -1564,6 +1564,9 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   if (!_init_packed_headers (self))
     return FALSE;
 
+  self->aud = self->aud && self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA;
+  update_property_bool (base, &self->prop.aud, self->aud, PROP_AUD);
+
   max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
   if (!gst_va_encoder_open (base->encoder, base->profile, base->entrypoint,
           GST_VIDEO_INFO_FORMAT (&base->input_state->info), base->rt_format,
@@ -2693,11 +2696,8 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
 
   frame = _enc_frame (gst_frame);
 
-  if (self->aud) {
-    if ((self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA)
-        && !_add_aud (self, frame))
-      return FALSE;
-  }
+  if (self->aud && !_add_aud (self, frame))
+    return FALSE;
 
   /* Repeat the SPS for IDR. */
   if (frame->poc == 0) {
