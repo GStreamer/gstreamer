@@ -3225,12 +3225,6 @@ gst_va_h264_enc_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_va_h264_enc_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
 gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
 {
   GstCaps *src_doc_caps, *sink_doc_caps;
@@ -3286,7 +3280,6 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   gst_pad_template_set_documentation_caps (src_pad_templ, src_doc_caps);
   gst_caps_unref (src_doc_caps);
 
-  object_class->dispose = gst_va_h264_enc_dispose;
   object_class->set_property = gst_va_h264_enc_set_property;
   object_class->get_property = gst_va_h264_enc_get_property;
 
