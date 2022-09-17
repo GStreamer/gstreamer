@@ -1570,8 +1570,9 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
   if (!gst_va_encoder_open (base->encoder, base->profile, base->entrypoint,
           GST_VIDEO_INFO_FORMAT (&base->input_state->info), base->rt_format,
-          self->mb_width * 16, self->mb_height * 16, base->codedbuf_size,
-          max_ref_frames, self->rc.rc_ctrl_mode, self->packed_headers)) {
+          GST_ROUND_UP_16 (base->width), GST_ROUND_UP_16 (base->height),
+          base->codedbuf_size, max_ref_frames, self->rc.rc_ctrl_mode,
+          self->packed_headers)) {
     GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
     return FALSE;
   }
