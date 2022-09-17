@@ -6715,8 +6715,8 @@ register_action_types (void)
       },
       {
         .name = "allow-errors",
-        .description = "Ignore error messages and keep executing the scenario when it happens.\n By default "
-          "a 'stop' action is generated one ERROR messages",
+        .description = "Ignore error messages and keep executing the\n"
+          "scenario when it happens. By default a 'stop' action is generated on ERROR messages",
         .mandatory = FALSE,
         .types = "boolean",
         .possible_variables = NULL,
@@ -6882,7 +6882,8 @@ register_action_types (void)
         {
           .name = "non-blocking",
           .description = "**Only for signals**."
-            " Ensures that the signal is emitted without a blocking waiting.",
+            "Make the action non blocking meaning that next actions will be\n"
+            "executed without waiting for the signal to be emitted.",
           .mandatory = FALSE,
           .types = "string",
           NULL
@@ -6901,13 +6902,13 @@ register_action_types (void)
             "`message-type`). Example: "
             "wait, on-client=true, message-type=buffering, expected-values=[values, buffer-percent=100]",
           .mandatory = FALSE,
-          .types = "GstStructure",
+          .types = "structure",
           NULL
         },
         {
           .name = "on-clock",
-          .description = "Wait until the test clock get a new pending entry"
-            " see #gst_test_clock_wait_for_next_pending_id.",
+          .description = "Wait until the test clock gets a new pending entry.\n"
+            "See #gst_test_clock_wait_for_next_pending_id.",
           .mandatory = FALSE,
           .types = "boolean",
           NULL
@@ -7029,7 +7030,7 @@ register_action_types (void)
         },
         {
           .name = "interpolation-mode",
-          .description = "The name of the GstInterpolationMode to on the source",
+          .description = "The name of the GstInterpolationMode to set on the source",
           .types = "string",
           .mandatory = FALSE,
           .def = "linear",
@@ -7042,10 +7043,12 @@ register_action_types (void)
         },
         {NULL}
       }),
-        "Sets GstTimedValue on pads on elements properties using GstControlBindings \n"
+        "Sets GstTimedValue on pads on elements properties using GstControlBindings\n"
         "and GstControlSource as defined in the parameters.\n"
         "The properties values to set will be defined as:\n\n"
-        "    element-name.padname::property-name=new-value\n\n"
+        "```\n"
+        "element-name.padname::property-name=new-value\n"
+        "```\n\n"
         "> NOTE: `.padname` is not needed if setting a property on an element\n\n"
         "This action also adds necessary control source/control bindings.\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
@@ -7056,7 +7059,9 @@ register_action_types (void)
       }),
         "Check elements and pads properties values.\n"
         "The properties values to check will be defined as:\n\n"
-        "    element-name.padname::property-name\n\n"
+        "```\n"
+        "element-name.padname::property-name\n"
+        "```\n\n"
         "> NOTE: `.padname` is not needed if checking an element property\n\n",
       GST_VALIDATE_ACTION_TYPE_CHECK);
 
@@ -7066,8 +7071,10 @@ register_action_types (void)
       }),
         "Set elements and pads properties values.\n"
         "The properties values to set will be defined as:\n\n"
-        "    element-name.padname::property-name\n\n"
-        "> NOTE: `.padname` is not needed if checking an element property\n\n",
+        "```\n"
+        "    element-name.padname::property-name\n"
+        "```\n\n"
+        "> NOTE: `.padname` is not needed if set an element property\n\n",
       GST_VALIDATE_ACTION_TYPE_NONE);
 
   REGISTER_ACTION_TYPE ("set-property", _execute_set_or_check_property,
@@ -7192,7 +7199,7 @@ register_action_types (void)
         },
         {
           .name = "params",
-          .description = "The signal parametters",
+          .description = "The signal parameters",
           .mandatory = FALSE,
           .types = "ValueArray",
           NULL
@@ -7465,7 +7472,7 @@ register_action_types (void)
            .name = "expected-caps",
            .description = "The expected caps. If not present, expected no caps to be set",
            .mandatory = FALSE,
-           .types = "GstCaps,GstStructure",
+           .types = "caps,structure",
            NULL
         },
         {
@@ -7505,14 +7512,14 @@ register_action_types (void)
         },
         {NULL}
       }),
-      "Check current pipeline position.\n",
+      "Check currently set caps on a particular pad.\n",
       GST_VALIDATE_ACTION_TYPE_NONE | GST_VALIDATE_ACTION_TYPE_CHECK );
 
   REGISTER_ACTION_TYPE("run-command", _run_command,
       ((GstValidateActionParameter[]) {
           {
             .name = "argv",
-            .description = "The subprocess arguments",
+            .description = "The subprocess arguments, include the program name itself",
             .mandatory = TRUE,
             .types = "(string){array,}",
             NULL
@@ -7521,12 +7528,12 @@ register_action_types (void)
             .name = "env",
             .description = "Extra environment variables to set",
             .mandatory = FALSE,
-            .types = "GstStructure",
+            .types = "structure",
             NULL
           },
         {NULL}
       }),
-      "Run external command.\n",
+      "Run an external command.\n",
       GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL);
 
     REGISTER_ACTION_TYPE("foreach", NULL,
@@ -7534,14 +7541,14 @@ register_action_types (void)
             { .name = "actions",
                 .description = "The array of actions to repeat",
                 .mandatory = TRUE,
-                .types = "strv",
+                .types = "{array of [structures]}",
                 NULL },
             { NULL } }),
         "Run actions defined in the `actions` array the number of times specified\n"
-        " with an iterator parameter passed in. The iterator can be\n"
-        " a range like :`i=[start, end, step]` or array of values\n"
-        " such as: `values=<value1, value2>`.\n"
-        "One and only iterator field is required as parameter.",
+        "with an iterator parameter passed in. The iterator can be\n"
+        "a range like: `i=[start, end, step]` or array of values\n"
+        "such as: `values=<value1, value2>`.\n"
+        "One and only one iterator field is supported as parameter.",
         GST_VALIDATE_ACTION_TYPE_NONE);
     type->prepare = gst_validate_foreach_prepare;
 

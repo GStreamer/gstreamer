@@ -1,10 +1,10 @@
 # GstValidate action types
-
 ## meta
 
 
 ``` validate-scenario
 meta,
+    [allow-errors=(boolean)],
     [duration=(double, int)],
     [handles-states=(boolean)],
     [ignore-eos=(boolean)],
@@ -27,6 +27,13 @@ NOTE: it used to be called "description"
  * Is config action (meaning it will be executing right at the beginning of the execution of the pipeline)
 
 ### Parameters
+
+* `allow-errors`:(optional): Ignore error messages and keep executing the
+scenario when it happens. By default a 'stop' action is generated on ERROR messages
+
+  Possible types: `boolean`
+
+  Default: false
 
 * `duration`:(optional): Lets the user know the time the scenario needs to be fully executed
 
@@ -407,9 +414,14 @@ int: To use the actual index to use`
 
 ``` validate-scenario
 wait,
+    [check=(structure)],
     [duration=(double or string (GstClockTime))],
+    [expected-values=(structure)],
     [message-type=(string)],
+    [non-blocking=(string)],
+    [on-clock=(boolean)],
     [signal-name=(string)],
+    [target-element-factory-name=(string)],
     [target-element-name=(string)],
     [playback-time=(double,string)];
 ```
@@ -419,9 +431,21 @@ Waits for signal 'signal-name', message 'message-type', or during 'duration' sec
 
 ### Parameters
 
+* `check`:(optional): The check action to execute when non blocking signal is received
+
+  Possible types: `structure`
+
+  Default: (null)
+
 * `duration`:(optional): the duration while no other action will be executed
 
   Possible types: `double or string (GstClockTime)`
+
+  Default: (null)
+
+* `expected-values`:(optional): Expected values in the message structure (valid only when `message-type`). Example: wait, on-client=true, message-type=buffering, expected-values=[values, buffer-percent=100]
+
+  Possible types: `structure`
 
   Default: (null)
 
@@ -431,7 +455,27 @@ Waits for signal 'signal-name', message 'message-type', or during 'duration' sec
 
   Default: (null)
 
-* `signal-name`:(optional): The name of the signal to wait for on @target-element-name
+* `non-blocking`:(optional): **Only for signals**.Make the action non blocking meaning that next actions will be
+executed without waiting for the signal to be emitted.
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `on-clock`:(optional): Wait until the test clock gets a new pending entry.
+See #gst_test_clock_wait_for_next_pending_id.
+
+  Possible types: `boolean`
+
+  Default: (null)
+
+* `signal-name`:(optional): The name of the signal to wait for on @target-element-name. To ensure that the signal is executed without blocking while waiting for it you can set the field 'non-blocking=true'.
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `target-element-factory-name`:(optional): The name factory for which to wait @signal-name on
 
   Possible types: `string`
 
@@ -521,6 +565,24 @@ Changes the ranking of a particular plugin feature(s)
 
   Possible types: `string, int`
 
+## remove-feature
+
+
+``` validate-scenario
+remove-feature,
+    name=(string);
+```
+
+Remove a plugin feature(s) or a plugin from the registry
+ * Implementer namespace: core
+ * Is config action (meaning it will be executing right at the beginning of the execution of the pipeline)
+
+### Parameters
+
+* `name`:(mandatory): The name of a GstFeature or GstPlugin to remove
+
+  Possible types: `string`
+
 ## set-feature-rank
 
 
@@ -558,7 +620,7 @@ Changes the state of the pipeline to any GstState
 
 ### Parameters
 
-* `state`:(mandatory): A GstState as a string, should be in:
+* `state`:(mandatory): A GstState as a string, should be in: 
     * ['null', 'ready', 'paused', 'playing']
 
   Possible types: `string`
@@ -623,6 +685,160 @@ For example you can define vars for buffer checksum to be used in the "check-las
 
   Default: (null)
 
+## set-timed-value-properties
+
+
+``` validate-scenario
+set-timed-value-properties,
+    timestamp=(string or float (GstClockTime)),
+    [binding-type=(string)],
+    [interpolation-mode=(string)],
+    [source-type=(string)],
+    [playback-time=(double,string)];
+```
+
+Sets GstTimedValue on pads on elements properties using GstControlBindings
+and GstControlSource as defined in the parameters.
+The properties values to set will be defined as:
+
+```
+element-name.padname::property-name=new-value
+```
+
+> NOTE: `.padname` is not needed if setting a property on an element
+
+This action also adds necessary control source/control bindings.
+
+ * Implementer namespace: core
+
+### Parameters
+
+* `timestamp`:(mandatory): The timestamp of the keyframe
+
+  Possible types: `string or float (GstClockTime)`
+
+* `binding-type`:(optional): The name of the type of binding to use
+
+  Possible types: `string`
+
+  Default: direct
+
+* `interpolation-mode`:(optional): The name of the GstInterpolationMode to set on the source
+
+  Possible types: `string`
+
+  Default: linear
+
+* `source-type`:(optional): The name of the type of ControlSource to use
+
+  Possible types: `string`
+
+  Default: GstInterpolationControlSource
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## check-properties
+
+
+``` validate-scenario
+check-properties,
+    [playback-time=(double,string)];
+```
+
+Check elements and pads properties values.
+The properties values to check will be defined as:
+
+```
+element-name.padname::property-name
+```
+
+> NOTE: `.padname` is not needed if checking an element property
+
+
+ * Implementer namespace: core
+
+### Parameters
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## set-properties
+
+
+``` validate-scenario
+set-properties,
+    [playback-time=(double,string)];
+```
+
+Set elements and pads properties values.
+The properties values to set will be defined as:
+
+```
+    element-name.padname::property-name
+```
+
+> NOTE: `.padname` is not needed if set an element property
+
+
+ * Implementer namespace: core
+
+### Parameters
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
 ## set-property
 
 
@@ -630,6 +846,7 @@ For example you can define vars for buffer checksum to be used in the "check-las
 set-property,
     property-name=(string),
     property-value=(The same type of @property-name),
+    [on-all-instances=(boolean)],
     [target-element-factory-name=(string)],
     [target-element-klass=(string)],
     [target-element-name=(string)],
@@ -650,6 +867,12 @@ Besides property-name and value, either 'target-element-name' or
 * `property-value`:(mandatory): The value of @property-name to be set on the element
 
   Possible types: `The same type of @property-name`
+
+* `on-all-instances`:(optional): Whether to set property on all instances matching the requirements
+
+  Possible types: `boolean`
+
+  Default: (null)
 
 * `target-element-factory-name`:(optional): The name factory for which to set a property on built elements
 
@@ -806,6 +1029,7 @@ See gst_debug_set_threshold_from_string
 emit-signal,
     signal-name=(string),
     target-element-name=(string),
+    [params=(ValueArray)],
     [playback-time=(double,string)];
 ```
 
@@ -821,6 +1045,12 @@ Emits a signal to an element in the pipeline
 * `target-element-name`:(mandatory): The name of the GstElement to emit a signal on
 
   Possible types: `string`
+
+* `params`:(optional): The signal parameters
+
+  Possible types: `ValueArray`
+
+  Default: (null)
 
 * `playback-time`:(optional): The playback time at which the action will be executed
 
@@ -1107,11 +1337,8 @@ Checks the last-sample checksum or frame number (set on its  GstVideoTimeCodeMet
 
 ``` validate-scenario
 crank-clock,
-    [checksum=(string)],
     [expected-elapsed-time=(GstClockTime)],
     [expected-time=(GstClockTime)],
-    [sinkpad-caps=(string)],
-    [timecode-frame-number=(string)],
     [playback-time=(double,string)];
 ```
 
@@ -1119,12 +1346,6 @@ Crank the clock, possibly checking how much time was supposed to be waited on th
  * Implementer namespace: core
 
 ### Parameters
-
-* `checksum`:(optional): The reference checksum of the buffer.
-
-  Possible types: `string`
-
-  Default: (null)
 
 * `expected-elapsed-time`:(optional): Check time elapsed during the clock cranking
 
@@ -1135,18 +1356,6 @@ Crank the clock, possibly checking how much time was supposed to be waited on th
 * `expected-time`:(optional): Expected clock time after cranking
 
   Possible types: `GstClockTime`
-
-  Default: (null)
-
-* `sinkpad-caps`:(optional): The caps (as string) of the sink to check.
-
-  Possible types: `string`
-
-  Default: (null)
-
-* `timecode-frame-number`:(optional): The frame number of the buffer as specified on its GstVideoTimeCodeMeta
-
-  Possible types: `string`
 
   Default: (null)
 
@@ -1278,14 +1487,6 @@ If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a
 ``` validate-scenario
 check-position,
     expected-position=(GstClockTime),
-    [all-headers=(boolean)],
-    [count=(int)],
-    [pad=(string)],
-    [running-time=(double or string)],
-    [srcpad=(string)],
-    [target-element-factory-name=(string)],
-    [target-element-klass=(string)],
-    [target-element-name=(string)],
     [playback-time=(double,string)];
 ```
 
@@ -1299,60 +1500,173 @@ Check current pipeline position.
 
   Possible types: `GstClockTime`
 
-* `all-headers`:(optional): TRUE to produce headers when starting a new key unit
-
-  Possible types: `boolean`
-
-  Default: FALSE
-
-* `count`:(optional): integer that can be used to number key units
-
-  Possible types: `int`
-
-  Default: 0
-
-* `pad`:(optional): The name of the GstPad to send a send force-key-unit to
-
-  Possible types: `string`
-
-  Default: sink
-
-* `running-time`:(optional): The running_time can be set to request a new key unit at a specific running_time.
-If not set, GST_CLOCK_TIME_NONE will be used so upstream elements will produce a new key unit as soon as possible.
+* `playback-time`:(optional): The playback time at which the action will be executed
 
   Possible variables:
 
-  * position: The current position in the stream
+  * `position`: The current position in the stream
 
-  * duration: The duration of the stream
+  * `duration`: The duration of the stream
 
-  Possible types: `double or string`
+  Possible types: `double,string`
 
-  Default: (null)
+  Default: 0.0
 
-* `srcpad`:(optional): The name of the GstPad to send a send force-key-unit to
-
-  Possible types: `string`
-
-  Default: src
-
-* `target-element-factory-name`:(optional): The factory name of the GstElements to send a send force-key-unit to
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
 
   Possible types: `string`
 
   Default: (null)
 
-* `target-element-klass`:(optional): The klass of the GstElements to send a send force-key-unit to
+## check-current-pad-caps
+
+
+``` validate-scenario
+check-current-pad-caps,
+    [comparison-type=(string in [intersect, equal])],
+    [expected-caps=(caps,structure)],
+    [pad=(string)],
+    [target-element-factory-name=(string)],
+    [target-element-klass=(string)],
+    [target-element-name=(string)],
+    [playback-time=(double,string)];
+```
+
+Check currently set caps on a particular pad.
+
+ * Implementer namespace: core
+
+### Parameters
+
+* `comparison-type`:(optional): __No description__
+
+  Possible types: `string in [intersect, equal]`
+
+  Default: (null)
+
+* `expected-caps`:(optional): The expected caps. If not present, expected no caps to be set
+
+  Possible types: `caps,structure`
+
+  Default: (null)
+
+* `pad`:(optional): The name of the GstPad to get pad from
 
   Possible types: `string`
 
-  Default: Video/Encoder
+  Default: (null)
+
+* `target-element-factory-name`:(optional): The factory name of the GstElements to get pad from
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `target-element-klass`:(optional): The klass of the GstElements to get pad from
+
+  Possible types: `string`
+
+  Default: (null)
 
 * `target-element-name`:(optional): The name of the GstElement to send a send force-key-unit to
 
   Possible types: `string`
 
   Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## run-command
+
+
+``` validate-scenario
+run-command,
+    argv=((string){array,}),
+    [env=(structure)],
+    [playback-time=(double,string)];
+```
+
+Run an external command.
+
+ * Implementer namespace: core
+
+### Parameters
+
+* `argv`:(mandatory): The subprocess arguments, include the program name itself
+
+  Possible types: `(string){array,}`
+
+* `env`:(optional): Extra environment variables to set
+
+  Possible types: `structure`
+
+  Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+     optional                   : Don't raise an error if this action hasn't been executed or failed
+                                  ### Possible types:
+                                    boolean
+                                  Default: false
+
+## foreach
+
+
+``` validate-scenario
+foreach,
+    actions=({array of [structures]}),
+    [playback-time=(double,string)];
+```
+
+Run actions defined in the `actions` array the number of times specified
+with an iterator parameter passed in. The iterator can be
+a range like: `i=[start, end, step]` or array of values
+such as: `values=<value1, value2>`.
+One and only one iterator field is supported as parameter.
+ * Implementer namespace: core
+
+### Parameters
+
+* `actions`:(mandatory): The array of actions to repeat
+
+  Possible types: `{array of [structures]}`
 
 * `playback-time`:(optional): The playback time at which the action will be executed
 
