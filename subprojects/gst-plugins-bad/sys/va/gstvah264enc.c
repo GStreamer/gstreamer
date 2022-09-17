@@ -127,7 +127,7 @@ struct _GstVaH264EncClass
   GstVaBaseEncClass parent_class;
 
   GType rate_control_type;
-  char rate_control_type_name[34];
+  char rate_control_type_name[64];
   GEnumValue rate_control[16];
 };
 /* *INDENT-ON* */
@@ -3304,9 +3304,10 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
             vah264enc_class->rate_control)) {
       g_snprintf (vah264enc_class->rate_control_type_name,
           G_N_ELEMENTS (vah264enc_class->rate_control_type_name) - 1,
-          "GstVaEncoderRateControl_%" GST_FOURCC_FORMAT "%s",
+          "GstVaEncoderRateControl_%" GST_FOURCC_FORMAT "%s_%s",
           GST_FOURCC_ARGS (va_enc_class->codec),
-          (va_enc_class->entrypoint == VAEntrypointEncSliceLP) ? "_LP" : "");
+          (va_enc_class->entrypoint == VAEntrypointEncSliceLP) ? "_LP" : "",
+          g_path_get_basename (va_enc_class->render_device_path));
       vah264enc_class->rate_control_type =
           g_enum_register_static (vah264enc_class->rate_control_type_name,
           vah264enc_class->rate_control);
