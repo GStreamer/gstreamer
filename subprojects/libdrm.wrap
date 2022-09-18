@@ -1,5 +1,20 @@
 [wrap-file]
-directory=libdrm-2.4.109
-source_url=https://dri.freedesktop.org/libdrm/libdrm-2.4.109.tar.xz
-source_filename=libdrm-2.4.109.tar.xz
-source_hash=629352e08c1fe84862ca046598d8a08ce14d26ab25ee1f4704f993d074cb7f26
+directory = libdrm-2.4.111
+source_url = https://dri.freedesktop.org/libdrm/libdrm-2.4.111.tar.xz
+source_filename = libdrm-2.4.111.tar.xz
+source_hash = 1ad7164f77424de6f4ecba7c262bde196a214c6e19a6fbf497f0815f4d7ab2a9
+wrapdb_version = 2.4.111-1
+
+[provide]
+libdrm = ext_libdrm
+libdrm_amdgpu = ext_libdrm_amdgpu
+libdrm_etnaviv = ext_libdrm_etnaviv
+libdrm_exynos = ext_libdrm_exynos
+libdrm_freedreno = ext_libdrm_freedreno
+libdrm_intel = ext_libdrm_intel
+libdrm_libkms = ext_libdrm_libkms
+libdrm_nouveau = ext_libdrm_nouveau
+libdrm_omap = ext_libdrm_omap
+libdrm_radeon = ext_libdrm_radeon
+libdrm_tegra = ext_libdrm_tegra
+
