@@ -1954,11 +1954,11 @@ gst_va_vpp_src_event (GstBaseTransform * trans, GstEvent * event)
             new_x = GST_VIDEO_INFO_HEIGHT (in_info) - 1 - y;
             new_y = x;
             break;
-          case GST_VIDEO_ORIENTATION_UR_LL:
+          case GST_VIDEO_ORIENTATION_UL_LR:
             new_x = GST_VIDEO_INFO_HEIGHT (in_info) - 1 - y;
             new_y = GST_VIDEO_INFO_WIDTH (in_info) - 1 - x;
             break;
-          case GST_VIDEO_ORIENTATION_UL_LR:
+          case GST_VIDEO_ORIENTATION_UR_LL:
             new_x = y;
             new_y = x;
             break;
@@ -2006,38 +2006,20 @@ gst_va_vpp_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
   GstTagList *taglist;
-  gchar *orientation;
+  GstVideoOrientationMethod method;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:
       gst_event_parse_tag (event, &taglist);
 
-      if (!gst_tag_list_get_string (taglist, "image-orientation", &orientation))
-        break;
-
       if (self->direction != GST_VIDEO_ORIENTATION_AUTO)
         break;
 
-      GST_DEBUG_OBJECT (self, "tag orientation %s", orientation);
+      if (!gst_video_orientation_from_tag (taglist, &method))
+        break;
 
       GST_OBJECT_LOCK (self);
-      if (!g_strcmp0 ("rotate-0", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_IDENTITY;
-      else if (!g_strcmp0 ("rotate-90", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_90R;
-      else if (!g_strcmp0 ("rotate-180", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_180;
-      else if (!g_strcmp0 ("rotate-270", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_90L;
-      else if (!g_strcmp0 ("flip-rotate-0", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_HORIZ;
-      else if (!g_strcmp0 ("flip-rotate-90", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_UL_LR;
-      else if (!g_strcmp0 ("flip-rotate-180", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_VERT;
-      else if (!g_strcmp0 ("flip-rotate-270", orientation))
-        self->tag_direction = GST_VIDEO_ORIENTATION_UR_LL;
-
+      self->tag_direction = method;
       _update_properties_unlocked (self);
       GST_OBJECT_UNLOCK (self);
 
