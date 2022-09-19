@@ -1,6 +1,6 @@
 shout2_sources = ['gstshout2.c']
 
-shout2_dep = dependency('shout', version : '>= 2.4.2', required : get_option('shout2'))
+shout2_dep = dependency('shout', version : '>= 2.4.3', required : get_option('shout2'))
 
 if shout2_dep.found()
   shout2_extra_args = []
