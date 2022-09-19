@@ -8267,7 +8267,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
 
 /**
  * gst_video_converter_get_in_info:
- * @in_info: a #GstVideoConverter
+ * @convert: a #GstVideoConverter
  *
  * Retrieve the input format of @convert.
  *
@@ -8283,7 +8283,7 @@ gst_video_converter_get_in_info (GstVideoConverter * convert)
 
 /**
  * gst_video_converter_get_out_info:
- * @in_info: a #GstVideoConverter
+ * @convert: a #GstVideoConverter
  *
  * Retrieve the output format of @convert.
  *
