@@ -3948,7 +3948,11 @@ atom_trak_add_audio_entry (AtomTRAK * trak, AtomsContext * context,
   return mp4a;
 }
 
-/* return number of centiframes per second */
+/* Compute a timescale, rounding framerates when the denominator is not
+ * well-known (1001, 1).
+ *
+ * Returns 10000 for variable framerates.
+ */
 guint
 atom_framerate_to_timescale (gint n, gint d)
 {
@@ -3962,7 +3966,11 @@ atom_framerate_to_timescale (gint n, gint d)
         &d);
   }
 
-  return gst_util_uint64_scale (n, 100, d);
+  if (d == 1001) {
+    return n;
+  } else {
+    return gst_util_uint64_scale (n, 100, d);
+  }
 }
 
 static SampleTableEntryTMCD *
