@@ -1707,7 +1707,10 @@ gst_mpd_client2_stream_seek (GstMPDClient2 * client, GstActiveStream * stream,
         GstClockTime chunk_time;
 
         selectedChunk = segment;
-        repeat_index = (ts - segment->start) / segment->duration;
+        repeat_index =
+            ((ts - segment->start) +
+            ((GstMediaSegment *) stream->segments->pdata[0])->start) /
+            segment->duration;
 
         chunk_time = segment->start + segment->duration * repeat_index;
 
