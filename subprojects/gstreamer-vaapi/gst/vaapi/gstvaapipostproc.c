@@ -1977,7 +1977,7 @@ gst_vaapipostproc_sink_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVaapiPostproc *const postproc = GST_VAAPIPOSTPROC (trans);
   GstTagList *taglist;
-  gchar *orientation;
+  GstVideoOrientationMethod method;
   gboolean ret;
   gboolean do_reconf;
 
@@ -1987,33 +1987,12 @@ gst_vaapipostproc_sink_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_TAG:
       gst_event_parse_tag (event, &taglist);
 
-      if (gst_tag_list_get_string (taglist, "image-orientation", &orientation)) {
-        do_reconf = TRUE;
-        if (!g_strcmp0 ("rotate-0", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_IDENTITY;
-        else if (!g_strcmp0 ("rotate-90", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_90R;
-        else if (!g_strcmp0 ("rotate-180", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_180;
-        else if (!g_strcmp0 ("rotate-270", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_90L;
-        else if (!g_strcmp0 ("flip-rotate-0", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_HORIZ;
-        else if (!g_strcmp0 ("flip-rotate-90", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_UL_LR;
-        else if (!g_strcmp0 ("flip-rotate-180", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_VERT;
-        else if (!g_strcmp0 ("flip-rotate-270", orientation))
-          postproc->tag_video_direction = GST_VIDEO_ORIENTATION_UR_LL;
-        else
-          do_reconf = FALSE;
+      do_reconf = gst_video_orientation_from_tag (taglist, &method);
 
-        g_free (orientation);
-
-        if (do_reconf) {
-          postproc->flags |= GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION;
-          gst_base_transform_reconfigure_src (trans);
-        }
+      if (do_reconf) {
+        postproc->tag_video_direction = method;
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_VIDEO_DIRECTION;
+        gst_base_transform_reconfigure_src (trans);
       }
       break;
     default:
