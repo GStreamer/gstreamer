@@ -720,9 +720,7 @@ gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
   }
 
   /* Sub class should open the encoder if reconfig succeeds. */
-  g_assert (gst_va_encoder_is_open (base->encoder));
-
-  return TRUE;
+  return gst_va_encoder_is_open (base->encoder);
 }
 
 static gboolean
