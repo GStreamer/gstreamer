@@ -318,20 +318,22 @@ gst_adaptive_demux_loop_pause_and_lock (GstAdaptiveDemuxLoop * loop)
 gboolean
 gst_adaptive_demux_loop_unlock_and_unpause (GstAdaptiveDemuxLoop * loop)
 {
+  gboolean stopped;
+
   g_main_context_pop_thread_default (loop->context);
   g_rec_mutex_unlock (&loop->context_lock);
 
   g_mutex_lock (&loop->lock);
   loop->paused = FALSE;
 
-  if (loop->stopped) {
-    g_mutex_unlock (&loop->lock);
-    return FALSE;
-  }
+  stopped = loop->stopped;
 
-  /* Wake up the loop to run again */
+  /* Wake up the loop to run again, regardless of stopped state */
   g_cond_broadcast (&loop->cond);
   g_mutex_unlock (&loop->lock);
+
+  if (stopped)
+    return FALSE;
 
   return TRUE;
 }
