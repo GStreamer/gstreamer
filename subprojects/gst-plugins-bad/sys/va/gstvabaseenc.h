@@ -33,6 +33,8 @@ G_BEGIN_DECLS
 #define GST_IS_VA_BASE_ENC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),  GST_TYPE_VA_BASE_ENC))
 #define GST_VA_BASE_ENC_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),  GST_TYPE_VA_BASE_ENC, GstVaBaseEncClass))
 
+#define GST_VA_BASE_ENC_ENTRYPOINT(obj) (GST_VA_BASE_ENC_GET_CLASS(obj)->entrypoint)
+
 typedef struct _GstVaBaseEnc GstVaBaseEnc;
 typedef struct _GstVaBaseEncClass GstVaBaseEncClass;
 typedef struct _GstVaBaseEncPrivate GstVaBaseEncPrivate;
@@ -45,7 +47,6 @@ struct _GstVaBaseEnc
   GstVaEncoder *encoder;
 
   VAProfile profile;
-  VAEntrypoint entrypoint;
   gint width;
   gint height;
   guint rt_format;

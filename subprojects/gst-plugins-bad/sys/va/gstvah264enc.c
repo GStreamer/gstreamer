@@ -493,7 +493,7 @@ _ensure_rate_control (GstVaH264Enc * self)
   guint32 rc_ctrl, rc_mode, quality_level;
 
   quality_level = gst_va_encoder_get_quality_level (base->encoder,
-      base->profile, base->entrypoint);
+      base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->rc.target_usage > quality_level) {
     GST_INFO_OBJECT (self, "User setting target-usage: %d is not supported, "
         "fallback to %d", self->rc.target_usage, quality_level);
@@ -509,7 +509,7 @@ _ensure_rate_control (GstVaH264Enc * self)
 
   if (rc_ctrl != VA_RC_NONE) {
     rc_mode = gst_va_encoder_get_rate_control_mode (base->encoder,
-        base->profile, base->entrypoint);
+        base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
     if (!(rc_mode & rc_ctrl)) {
       guint32 defval =
           G_PARAM_SPEC_ENUM (properties[PROP_RATE_CONTROL])->default_value;
@@ -724,7 +724,7 @@ _validate_parameters (GstVaH264Enc * self)
    * hardware. */
   g_assert (self->num_slices >= 1);
   max_slices = gst_va_encoder_get_max_slice_num (base->encoder,
-      base->profile, base->entrypoint);
+      base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (self->num_slices > max_slices)
     self->num_slices = max_slices;
   /* The stream size limit. */
@@ -737,7 +737,7 @@ _validate_parameters (GstVaH264Enc * self)
   /* Ensure trellis. */
   if (self->use_trellis &&
       !gst_va_encoder_has_trellis (base->encoder, base->profile,
-          base->entrypoint)) {
+          GST_VA_BASE_ENC_ENTRYPOINT (base))) {
     GST_INFO_OBJECT (self, "The trellis is not supported");
     self->use_trellis = FALSE;
   }
@@ -968,7 +968,7 @@ _generate_gop_structure (GstVaH264Enc * self)
   }
 
   if (!gst_va_encoder_get_max_num_reference (base->encoder, base->profile,
-          base->entrypoint, &list0, &list1)) {
+          GST_VA_BASE_ENC_ENTRYPOINT (base), &list0, &list1)) {
     GST_INFO_OBJECT (self, "Failed to get the max num reference");
     list0 = 1;
     list1 = 0;
@@ -1260,7 +1260,7 @@ _init_packed_headers (GstVaH264Enc * self)
   self->packed_headers = 0;
 
   if (!gst_va_encoder_get_packed_headers (base->encoder, base->profile,
-          base->entrypoint, &packed_headers))
+          GST_VA_BASE_ENC_ENTRYPOINT (base), &packed_headers))
     return FALSE;
 
   if (desired_packed_headers & ~packed_headers) {
@@ -1367,11 +1367,11 @@ _decide_profile (GstVaH264Enc * self)
       continue;
 
     if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
-            profile, base->entrypoint))
+            profile, GST_VA_BASE_ENC_ENTRYPOINT (base)))
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
-                profile, base->entrypoint)) == 0)
+                profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
     base->profile = profile;
@@ -1390,11 +1390,11 @@ _decide_profile (GstVaH264Enc * self)
       continue;
 
     if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
-            profile, base->entrypoint))
+            profile, GST_VA_BASE_ENC_ENTRYPOINT (base)))
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
-                profile, base->entrypoint)) == 0)
+                profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
     base->profile = profile;
@@ -1568,7 +1568,8 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   update_property_bool (base, &self->prop.aud, self->aud, PROP_AUD);
 
   max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
-  if (!gst_va_encoder_open (base->encoder, base->profile, base->entrypoint,
+  if (!gst_va_encoder_open (base->encoder, base->profile,
+          GST_VA_BASE_ENC_ENTRYPOINT (base),
           GST_VIDEO_INFO_FORMAT (&base->input_state->info), base->rt_format,
           GST_ROUND_UP_16 (base->width), GST_ROUND_UP_16 (base->height),
           base->codedbuf_size, max_ref_frames, self->rc.rc_ctrl_mode,

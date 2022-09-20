@@ -61,14 +61,11 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaBaseEnc, gst_va_base_enc,
 static void
 gst_va_base_enc_reset_state_default (GstVaBaseEnc * base)
 {
-  GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
-
   base->frame_duration = GST_CLOCK_TIME_NONE;
 
   base->width = 0;
   base->height = 0;
   base->profile = VAProfileNone;
-  base->entrypoint = klass->entrypoint;
   base->rt_format = 0;
   base->codedbuf_size = 0;
 }
