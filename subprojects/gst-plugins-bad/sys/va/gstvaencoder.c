@@ -535,6 +535,28 @@ gst_va_encoder_new (GstVaDisplay * display, guint32 codec,
 }
 
 gboolean
+gst_va_encoder_get_reconstruct_pool_config (GstVaEncoder * self,
+    GstCaps ** caps, guint * max_surfaces)
+{
+  GstStructure *config;
+  gboolean ret;
+
+  g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
+
+  if (!gst_va_encoder_is_open (self))
+    return FALSE;
+
+  if (!self->recon_pool)
+    return FALSE;
+
+  config = gst_buffer_pool_get_config (self->recon_pool);
+  ret = gst_buffer_pool_config_get_params (config, caps, NULL, NULL,
+      max_surfaces);
+  gst_structure_free (config);
+  return ret;
+}
+
+gboolean
 gst_va_encoder_has_profile (GstVaEncoder * self, VAProfile profile)
 {
   VAProfile p;

@@ -56,6 +56,9 @@ gboolean              gst_va_encoder_open                 (GstVaEncoder * self,
                                                            guint rc_ctrl,
                                                            guint32 packed_headers);
 gboolean              gst_va_encoder_close                (GstVaEncoder * self);
+gboolean              gst_va_encoder_get_reconstruct_pool_config (GstVaEncoder * self,
+                                                                  GstCaps ** caps,
+                                                                  guint * max_surfaces);
 gboolean              gst_va_encoder_has_profile          (GstVaEncoder * self,
                                                            VAProfile profile);
 gint                  gst_va_encoder_get_max_slice_num    (GstVaEncoder * self,
