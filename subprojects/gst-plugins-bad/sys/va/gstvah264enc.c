@@ -1290,7 +1290,7 @@ _init_packed_headers (GstVaH264Enc * self)
 
 
 static gboolean
-_decide_profile (GstVaH264Enc * self)
+_decide_profile (GstVaH264Enc * self, VAProfile * _profile, guint * _rt_format)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   gboolean ret = FALSE;
@@ -1388,8 +1388,8 @@ _decide_profile (GstVaH264Enc * self)
                 profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
-    base->profile = profile;
-    base->rt_format = rt_format;
+    *_profile = profile;
+    *_rt_format = rt_format;
     ret = TRUE;
     goto out;
   }
@@ -1410,8 +1410,8 @@ _decide_profile (GstVaH264Enc * self)
                 profile, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
-    base->profile = profile;
-    base->rt_format = rt_format;
+    *_profile = profile;
+    *_rt_format = rt_format;
     ret = TRUE;
   }
 
@@ -1420,7 +1420,7 @@ _decide_profile (GstVaH264Enc * self)
 
   if (self->use_dct8x8 && !g_strstr_len (profile_name, -1, "high")) {
     GST_INFO_OBJECT (self, "Disable dct8x8, profile %s does not support it",
-        gst_va_profile_name (base->profile));
+        gst_va_profile_name (profile));
     self->use_dct8x8 = FALSE;
     update_property_bool (base, &self->prop.use_dct8x8, self->use_dct8x8,
         PROP_DCT8X8);
@@ -1429,7 +1429,7 @@ _decide_profile (GstVaH264Enc * self)
   if (self->use_cabac && (!g_strstr_len (profile_name, -1, "main")
           && !g_strstr_len (profile_name, -1, "high"))) {
     GST_INFO_OBJECT (self, "Disable cabac, profile %s does not support it",
-        gst_va_profile_name (base->profile));
+        gst_va_profile_name (profile));
     self->use_cabac = FALSE;
     update_property_bool (base, &self->prop.use_cabac, self->use_cabac,
         PROP_CABAC);
@@ -1437,7 +1437,7 @@ _decide_profile (GstVaH264Enc * self)
 
   if (self->gop.num_bframes > 0 && g_strstr_len (profile_name, -1, "baseline")) {
     GST_INFO_OBJECT (self, "No B frames, profile %s does not support it",
-        gst_va_profile_name (base->profile));
+        gst_va_profile_name (profile));
     self->gop.num_bframes = 0;
     self->gop.b_pyramid = 0;
   }
@@ -1527,14 +1527,46 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
 {
   GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
   GstVaH264Enc *self = GST_VA_H264_ENC (base);
-  GstCaps *out_caps;
-  guint max_ref_frames;
-  GstVideoCodecState *output_state;
+  GstCaps *out_caps, *reconf_caps = NULL;
+  GstVideoCodecState *output_state = NULL;
+  GstVideoFormat format, reconf_format = GST_VIDEO_FORMAT_UNKNOWN;
+  VAProfile profile = VAProfileNone;
+  gboolean do_renegotiation = TRUE, do_reopen, need_negotiation;
+  guint max_ref_frames, max_surfaces = 0, rt_format = 0, codedbuf_size;
+  gint width, height;
+
+  width = GST_VIDEO_INFO_WIDTH (&base->input_state->info);
+  height = GST_VIDEO_INFO_HEIGHT (&base->input_state->info);
+  format = GST_VIDEO_INFO_FORMAT (&base->input_state->info);
+  codedbuf_size = base->codedbuf_size;
+
+  need_negotiation =
+      !gst_va_encoder_get_reconstruct_pool_config (base->encoder, &reconf_caps,
+      &max_surfaces);
+  if (!need_negotiation && reconf_caps) {
+    GstVideoInfo vi;
+    if (!gst_video_info_from_caps (&vi, reconf_caps))
+      return FALSE;
+    reconf_format = GST_VIDEO_INFO_FORMAT (&vi);
+  }
+
+  if (!_decide_profile (self, &profile, &rt_format))
+    return FALSE;
+
+  /* first check */
+  do_reopen = !(base->profile == profile && base->rt_format == rt_format
+      && format == reconf_format && width == base->width
+      && height == base->height && self->prop.rc_ctrl == self->rc.rc_ctrl_mode);
+
+  if (do_reopen && gst_va_encoder_is_open (base->encoder))
+    gst_va_encoder_close (base->encoder);
 
   gst_va_base_enc_reset_state (base);
 
-  base->width = GST_VIDEO_INFO_WIDTH (&base->input_state->info);
-  base->height = GST_VIDEO_INFO_HEIGHT (&base->input_state->info);
+  base->profile = profile;
+  base->rt_format = rt_format;
+  base->width = width;
+  base->height = height;
 
   self->mb_width = GST_ROUND_UP_16 (base->width) / 16;
   self->mb_height = GST_ROUND_UP_16 (base->height) / 16;
@@ -1555,9 +1587,6 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
       base->width, base->height, self->mb_width, self->mb_height,
       GST_TIME_ARGS (base->frame_duration));
 
-  if (!_decide_profile (self))
-    return FALSE;
-
   _validate_parameters (self);
 
   if (!_ensure_rate_control (self))
@@ -1567,6 +1596,7 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
     return FALSE;
 
   _generate_gop_structure (self);
+
   _calculate_coded_size (self);
 
   /* updates & notifications */
@@ -1586,9 +1616,16 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   update_property_bool (base, &self->prop.cc, self->cc, PROP_CC);
 
   max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
-  if (!gst_va_encoder_open (base->encoder, base->profile,
-          GST_VIDEO_INFO_FORMAT (&base->input_state->info), base->rt_format,
-          GST_ROUND_UP_16 (base->width), GST_ROUND_UP_16 (base->height),
+
+  /* second check after calculations */
+  do_reopen |=
+      !(max_ref_frames == max_surfaces && codedbuf_size == base->codedbuf_size);
+  if (do_reopen && gst_va_encoder_is_open (base->encoder))
+    gst_va_encoder_close (base->encoder);
+
+  if (!gst_va_encoder_is_open (base->encoder)
+      && !gst_va_encoder_open (base->encoder, base->profile,
+          format, base->rt_format, base->width, base->height,
           base->codedbuf_size, max_ref_frames, self->rc.rc_ctrl_mode,
           self->packed_headers)) {
     GST_ERROR_OBJECT (self, "Failed to open the VA encoder.");
@@ -1609,6 +1646,19 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   gst_caps_set_simple (out_caps, "width", G_TYPE_INT, base->width,
       "height", G_TYPE_INT, base->height, "alignment", G_TYPE_STRING, "au",
       "stream-format", G_TYPE_STRING, "byte-stream", NULL);
+
+  if (!need_negotiation) {
+    output_state = gst_video_encoder_get_output_state (venc);
+    do_renegotiation = TRUE;
+    if (output_state) {
+      do_renegotiation = !gst_caps_is_subset (output_state->caps, out_caps);
+      gst_video_codec_state_unref (output_state);
+    }
+    if (!do_renegotiation) {
+      gst_caps_unref (out_caps);
+      return TRUE;
+    }
+  }
 
   GST_DEBUG_OBJECT (self, "output caps is %" GST_PTR_FORMAT, out_caps);
 
