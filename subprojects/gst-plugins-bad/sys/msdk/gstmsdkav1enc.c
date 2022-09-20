@@ -143,11 +143,6 @@ gst_msdkav1enc_configure (GstMsdkEnc * encoder)
       break;
   }
 
-  encoder->param.mfx.FrameInfo.Width =
-      GST_ROUND_UP_128 (encoder->param.mfx.FrameInfo.CropW);
-  encoder->param.mfx.FrameInfo.Height =
-      GST_ROUND_UP_32 (encoder->param.mfx.FrameInfo.CropH);
-
   /* Always turn on this flag for AV1 */
   /* encoder->param.mfx.LowPower = MFX_CODINGOPTION_ON; */
 
