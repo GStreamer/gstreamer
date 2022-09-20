@@ -853,8 +853,8 @@ mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
       sawpcrpid = TRUE;
   }
 
-  /* If the pcr is not shared with an existing stream, we'll have one extra stream */
-  if (!sawpcrpid)
+  /* If we have a PCR PID and the pcr is not shared with an existing stream, we'll have one extra stream */
+  if (!sawpcrpid && !base->ignore_pcr)
     nbstreams += 1;
 
   if (nbstreams != g_list_length (oldprogram->stream_list)) {
