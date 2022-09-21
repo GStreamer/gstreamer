@@ -351,6 +351,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->index_offset = 0;
   demux->seekable = FALSE;
   demux->need_segment = FALSE;
+  demux->upstream_format_is_time = FALSE;
   demux->segment_seqnum = 0;
   demux->requested_seek_time = GST_CLOCK_TIME_NONE;
   demux->seek_offset = -1;
@@ -4683,10 +4684,14 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             GST_TIME_ARGS (demux->common.segment.position));
         clace_time = demux->common.segment.position;
       }
-      segment->start = clace_time;
-      segment->stop = demux->common.segment.stop;
-      segment->time = segment->start - demux->stream_start_time;
-      segment->position = segment->start - demux->stream_start_time;
+
+      /* We shouldn't modify upstream driven TIME FORMAT segment */
+      if (!demux->upstream_format_is_time) {
+        segment->start = clace_time;
+        segment->stop = demux->common.segment.stop;
+        segment->time = segment->start - demux->stream_start_time;
+        segment->position = segment->start - demux->stream_start_time;
+      }
       GST_DEBUG_OBJECT (demux,
           "generated segment starting at %" GST_TIME_FORMAT ": %"
           GST_SEGMENT_FORMAT, GST_TIME_ARGS (lace_time), segment);
@@ -6218,6 +6223,17 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (demux, "still starting");
         goto exit;
       }
+
+      if (segment->format == GST_FORMAT_TIME) {
+        demux->upstream_format_is_time = TRUE;
+        demux->segment_seqnum = gst_event_get_seqnum (event);
+        gst_segment_copy_into (segment, &demux->common.segment);
+        GST_DEBUG_OBJECT (demux, "Got segment in TIME format: %" GST_PTR_FORMAT,
+            event);
+        goto exit;
+      }
+
+      demux->upstream_format_is_time = FALSE;
 
       /* we only expect a BYTE segment, e.g. following a seek */
       if (segment->format != GST_FORMAT_BYTES) {

@@ -107,6 +107,10 @@ typedef struct _GstMatroskaDemux {
   GstPad                  *deferred_seek_pad;
   gboolean                 need_segment;
   guint32                  segment_seqnum;
+  /* If TRUE, matroskamux received upstream newsegment in TIME format
+   * which likely means that upstream is driving the pipeline (such as
+   * adaptive demuxers) */
+  gboolean                 upstream_format_is_time;
 
   /* reverse playback */
   GArray                  *seek_index;
