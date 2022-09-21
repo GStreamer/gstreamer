@@ -3,3 +3,6 @@ directory=orc
 url=https://gitlab.freedesktop.org/gstreamer/orc.git
 push-url=git@gitlab.freedesktop.org:gstreamer/orc.git
 revision=8ef6d657ccc1e98476ebc5d101c6729e6b916f78
+
+[provide]
+orc-0.4 = orc_dep

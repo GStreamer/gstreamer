@@ -119,7 +119,19 @@ elif build_system == 'darwin'
   subproject('macos-bison-binary')
 endif
 
-orc_subproject = subproject('orc', required: get_option('orc'))
+orc_option = get_option('orc')
+# There is a check below to keep this in sync with subprojects/gst-plugins-base/meson.build
+orc_req = '>= 0.4.24'
+orc_source_option = get_option('orc-source')
+orc_subproject = disabler()
+if orc_option.allowed()
+  if orc_source_option == 'subproject'
+    orc_subproject = subproject('orc', required: orc_option)
+  else
+    dependency('orc-0.4', version: orc_req, required: orc_option,
+               allow_fallback: orc_source_option == 'auto')
+  endif
+endif
 
 foreach custom_subproj: get_option('custom_subprojects').split(',')
     if custom_subproj != ''
@@ -155,6 +167,14 @@ foreach sp : subprojects
       endif
   else
     subproj = subproject(project_name, required: is_required, default_options: default_options)
+  endif
+
+  if project_name == 'gst-plugins-base'
+    gst_base_orc_req = subproj.get_variable('orc_req', '')
+    if gst_base_orc_req != orc_req
+      error('orc_req is "@0@" but it should be "@1@" from subprojects/gst-plugins-base/meson.build'
+            .format(orc_req, gst_base_orc_req))
+    endif
   endif
 
   if subproj.found()
