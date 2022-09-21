@@ -1,6 +1,6 @@
 project('gstreamer', 'c',
   version : '1.21.0.1',
-  meson_version : '>= 0.60',
+  meson_version : '>= 0.62',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -609,15 +609,14 @@ if get_option('default_library') == 'shared'
   # If we don't build static plugins there is no need to generate pc files
   plugins_pkgconfig_install_dir = disabler()
 endif
-pkgconfig_variables = ['exec_prefix=${prefix}',
-    'toolsdir=${exec_prefix}/bin',
-    'pluginsdir=${libdir}/gstreamer-1.0',
-    'datarootdir=${prefix}/share',
-    'datadir=${datarootdir}',
-    'girdir=${datadir}/gir-1.0',
-    'typelibdir=${libdir}/girepository-1.0',
-    'libexecdir=${prefix}/libexec',
-    'pluginscannerdir=${libexecdir}/gstreamer-1.0']
+pkgconfig_variables = [
+  'exec_prefix=${prefix}',
+  'toolsdir=${exec_prefix}/bin',
+  'pluginsdir=${libdir}/gstreamer-1.0',
+  'girdir=${datadir}/gir-1.0',
+  'typelibdir=${libdir}/girepository-1.0',
+  'pluginscannerdir=${libexecdir}/gstreamer-1.0'
+]
 pkgconfig_uninstalled_variables = ['exec_prefix=${prefix}',
 	'gstreamerdir=${prefix}/subprojects/gstreamer',
     'bashhelpersdir=${gstreamerdir}/data/bash-completion/helpers',

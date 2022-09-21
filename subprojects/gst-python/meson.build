@@ -1,6 +1,6 @@
 project('gst-python', 'c',
   version : '1.21.0.1',
-  meson_version : '>= 0.60',
+  meson_version : '>= 0.62',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
                       'buildtype=debugoptimized' ])

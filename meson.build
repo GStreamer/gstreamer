@@ -1,6 +1,6 @@
 project('gstreamer-full', 'c',
   version : '1.21.0.1',
-  meson_version : '>= 0.60.0',
+  meson_version : '>= 0.62.0',
   default_options : ['buildtype=debugoptimized',
                      # Needed due to https://github.com/mesonbuild/meson/issues/1889,
                      # but this can cause problems in the future. Remove it
@@ -32,21 +32,6 @@ endif
 
 # Install gst-indent pre-commit hook
 run_command(python3, '-c', 'import shutil; shutil.copy("scripts/git-hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")', check: false)
-
-# Ensure that the user does not have Strawberry Perl in PATH, since it ships
-# with a pkg-config.bat and broken pkgconfig files for libffi and zlib. Will
-# cause a build error, such as in
-# https://gitlab.freedesktop.org/gstreamer/gst-build/-/issues/41
-ensure_no_strawberry_perl = '''
-import os
-assert(r'Strawberry\perl\bin' not in os.environ['PATH'])
-'''
-if build_system == 'windows' and meson.version().version_compare('<0.60.0')
-  cmdres = run_command(python3, '-c', ensure_no_strawberry_perl, check: false)
-  if cmdres.returncode() != 0
-    error('You have Strawberry Perl in PATH which is known to cause build issues with Meson < 0.60.0. Please remove it from PATH, uninstall it, or upgrade Meson.')
-  endif
-endif
 
 # On macOS, you have to run "Install Certificates.command" otherwise Python
 # doesn't have access to the latest SSL CA Certificates, and Meson will fail to

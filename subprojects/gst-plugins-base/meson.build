@@ -1,6 +1,6 @@
 project('gst-plugins-base', 'c',
   version : '1.21.0.1',
-  meson_version : '>= 0.60',
+  meson_version : '>= 0.62',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
 
@@ -460,14 +460,14 @@ if get_option('default_library') == 'shared'
   plugins_pkgconfig_install_dir = disabler()
 endif
 
-pkgconfig_variables = ['exec_prefix=${prefix}',
-    'toolsdir=${exec_prefix}/bin',
-    'pluginsdir=${libdir}/gstreamer-1.0',
-    'datarootdir=${prefix}/share',
-    'datadir=${datarootdir}',
-    'girdir=${datadir}/gir-1.0',
-    'typelibdir=${libdir}/girepository-1.0',
-    'libexecdir=${prefix}/libexec']
+pkgconfig_variables = [
+  'exec_prefix=${prefix}',
+  'toolsdir=${exec_prefix}/bin',
+  'pluginsdir=${libdir}/gstreamer-1.0',
+  'girdir=${datadir}/gir-1.0',
+  'typelibdir=${libdir}/girepository-1.0',
+  'pluginscannerdir=${libexecdir}/gstreamer-1.0'
+]
 pkgconfig_subdirs = ['gstreamer-1.0']
 
 meson_pkg_config_file_fixup_script = find_program('scripts/meson-pkg-config-file-fixup.py')
