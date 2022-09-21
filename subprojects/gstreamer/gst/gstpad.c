@@ -5850,6 +5850,17 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
 
       switch (event_type) {
         case GST_EVENT_STREAM_START:
+          /* Take the stream lock to unset the EOS status. This is to ensure
+           * there isn't any other serialized event passing through while this
+           * EOS status is being unset */
+          /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
+          GST_OBJECT_UNLOCK (pad);
+          GST_PAD_STREAM_LOCK (pad);
+          need_unlock = TRUE;
+          GST_OBJECT_LOCK (pad);
+          if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+            goto flushing;
+
           /* Remove sticky EOS events */
           GST_LOG_OBJECT (pad, "Removing pending EOS events");
           remove_event_by_type (pad, GST_EVENT_EOS);
@@ -5858,23 +5869,21 @@ gst_pad_send_event_unchecked (GstPad * pad, GstEvent * event,
           GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_EOS);
           break;
         default:
+          if (serialized) {
+            /* Take the stream lock to check the EOS status and drop the event
+             * if that is the case. */
+            /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
+            GST_OBJECT_UNLOCK (pad);
+            GST_PAD_STREAM_LOCK (pad);
+            need_unlock = TRUE;
+            GST_OBJECT_LOCK (pad);
+            if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
+              goto flushing;
+
+            if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
+              goto eos;
+          }
           break;
-      }
-
-      if (serialized) {
-        if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
-          goto eos;
-
-        /* lock order: STREAM_LOCK, LOCK, recheck flushing. */
-        GST_OBJECT_UNLOCK (pad);
-        GST_PAD_STREAM_LOCK (pad);
-        need_unlock = TRUE;
-        GST_OBJECT_LOCK (pad);
-        if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
-          goto flushing;
-
-        if (G_UNLIKELY (GST_PAD_IS_EOS (pad)))
-          goto eos;
       }
       break;
   }
