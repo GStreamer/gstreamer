@@ -3216,7 +3216,7 @@ set_env_var (GQuark field_id, GValue * value,
 static GstValidateExecuteActionReturn
 _run_command (GstValidateScenario * scenario, GstValidateAction * action)
 {
-  gchar **argv = NULL, *_stderr;
+  gchar **argv = NULL, *_stderr = NULL;
   GError *error = NULL;
   const GValue *env = NULL;
   GSubprocess *subproc = NULL;
@@ -3253,6 +3253,8 @@ _run_command (GstValidateScenario * scenario, GstValidateAction * action)
 
   REPORT_UNLESS (g_subprocess_get_exit_status (subproc) == 0,
       done, "Sub command failed. Stderr: %s", _stderr);
+
+  g_free (_stderr);
 
   res = GST_VALIDATE_EXECUTE_ACTION_OK;
 
@@ -3757,6 +3759,8 @@ _execute_appsrc_push (GstValidateScenario * scenario,
     if (gst_validate_utils_get_clocktime (segment_struct, "stop", &tmp))
       segment.stop = tmp;
     gst_structure_get_double (segment_struct, "rate", &segment.rate);
+
+    gst_structure_free (segment_struct);
 
     gst_sample_set_segment (sample, &segment);
   }
