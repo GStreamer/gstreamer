@@ -71,30 +71,40 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-vp9")
     );
 
-static GstStaticPadTemplate gst_vp9_dec_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-        ("{ I420, YV12, Y42B, Y444, GBR, I420_10LE, I422_10LE }"))
-    );
+#define GST_VP9_DEC_VIDEO_FORMATS_8BIT "I420, YV12, Y42B, Y444, GBR"
+#define GST_VP9_DEC_VIDEO_FORMATS_10BIT "I420_10LE, I422_10LE"
 
 #define parent_class gst_vp9_dec_parent_class
 G_DEFINE_TYPE (GstVP9Dec, gst_vp9_dec, GST_TYPE_VPX_DEC);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vp9dec, "vp9dec", GST_RANK_PRIMARY,
     gst_vp9_dec_get_type (), vpx_element_init (plugin));
 
+static GstCaps *
+gst_vp9_dec_get_src_caps (void)
+{
+#define CAPS_8BIT GST_VIDEO_CAPS_MAKE ("{ " GST_VP9_DEC_VIDEO_FORMATS_8BIT " }")
+#define CAPS_10BIT GST_VIDEO_CAPS_MAKE ( "{ " GST_VP9_DEC_VIDEO_FORMATS_8BIT ", " \
+    GST_VP9_DEC_VIDEO_FORMATS_10BIT "}")
+
+  return gst_caps_from_string ((vpx_codec_get_caps (&vpx_codec_vp9_dx_algo)
+          & VPX_CODEC_CAP_HIGHBITDEPTH) ? CAPS_10BIT : CAPS_8BIT);
+}
+
 static void
 gst_vp9_dec_class_init (GstVP9DecClass * klass)
 {
   GstElementClass *element_class;
   GstVPXDecClass *vpx_class;
+  GstCaps *caps;
 
   element_class = GST_ELEMENT_CLASS (klass);
   vpx_class = GST_VPX_DEC_CLASS (klass);
 
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vp9_dec_src_template);
+  caps = gst_vp9_dec_get_src_caps ();
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
+  gst_clear_caps (&caps);
+
   gst_element_class_add_static_pad_template (element_class,
       &gst_vp9_dec_sink_template);
 

@@ -87,15 +87,8 @@ enum
   PROP_FRAME_PARALLEL_DECODING,
 };
 
-/* FIXME: Y42B do not work yet it seems */
-static GstStaticPadTemplate gst_vp9_enc_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    /*GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ I420, YV12, Y42B, Y444 }")) */
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-        ("{ I420, YV12, Y444, I420_10LE, I422_10LE }"))
-    );
+#define GST_VP9_ENC_VIDEO_FORMATS_8BIT "I420, YV12, Y444"
+#define GST_VP9_ENC_VIDEO_FORMATS_10BIT "I420_10LE, I422_10LE"
 
 static GstStaticPadTemplate gst_vp9_enc_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -130,12 +123,24 @@ static gboolean gst_vp9_enc_configure_encoder (GstVPXEnc * encoder,
 
 #define DEFAULT_BITS_PER_PIXEL 0.0289
 
+static GstCaps *
+gst_vp9_enc_get_sink_caps (void)
+{
+#define CAPS_8BIT GST_VIDEO_CAPS_MAKE ("{ " GST_VP9_ENC_VIDEO_FORMATS_8BIT " }")
+#define CAPS_10BIT GST_VIDEO_CAPS_MAKE ( "{ " GST_VP9_ENC_VIDEO_FORMATS_8BIT ", " \
+    GST_VP9_ENC_VIDEO_FORMATS_10BIT "}")
+
+  return gst_caps_from_string ((vpx_codec_get_caps (gst_vp9_enc_get_algo (NULL))
+          & VPX_CODEC_CAP_HIGHBITDEPTH) ? CAPS_10BIT : CAPS_8BIT);
+}
+
 static void
 gst_vp9_enc_class_init (GstVP9EncClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstVPXEncClass *vpx_encoder_class;
+  GstCaps *caps;
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
@@ -213,8 +218,11 @@ gst_vp9_enc_class_init (GstVP9EncClass * klass)
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_vp9_enc_src_template);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_vp9_enc_sink_template);
+
+  caps = gst_vp9_enc_get_sink_caps ();
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
+  gst_clear_caps (&caps);
 
   gst_element_class_set_static_metadata (element_class,
       "On2 VP9 Encoder",
