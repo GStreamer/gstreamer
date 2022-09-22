@@ -1,6 +1,10 @@
 include:
-  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/fedora.yml"
-  - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/debian.yml"
+  - project: 'freedesktop/ci-templates'
+    ref: 14731f78c23c7b523a85a26a068ade9ac1ecd2f3
+    file: '/templates/fedora.yml'
+  - project: 'freedesktop/ci-templates'
+    ref: 14731f78c23c7b523a85a26a068ade9ac1ecd2f3
+    file: '/templates/debian.yml'
   ###
   # IMPORTANT
   # These are the version tags for the docker images the CI runs against.
