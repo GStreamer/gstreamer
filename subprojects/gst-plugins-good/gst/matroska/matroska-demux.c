@@ -1841,10 +1841,15 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
 
       res = TRUE;
       if (format == GST_FORMAT_TIME) {
-        GST_OBJECT_LOCK (demux);
-        gst_query_set_duration (query, GST_FORMAT_TIME,
-            demux->common.segment.duration);
-        GST_OBJECT_UNLOCK (demux);
+        res = gst_pad_query_default (pad, GST_OBJECT_CAST (demux), query);
+        if (!res) {
+          GST_OBJECT_LOCK (demux);
+          gst_query_set_duration (query, GST_FORMAT_TIME,
+              demux->common.segment.duration);
+          GST_OBJECT_UNLOCK (demux);
+
+          res = TRUE;
+        }
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
         GST_OBJECT_LOCK (demux);
@@ -1864,22 +1869,26 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       GstFormat fmt;
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
-      GST_OBJECT_LOCK (demux);
       if (fmt == GST_FORMAT_TIME) {
         gboolean seekable;
 
-        if (demux->streaming) {
-          /* assuming we'll be able to get an index ... */
-          seekable = demux->seekable;
-        } else {
-          seekable = TRUE;
-        }
+        res = gst_pad_query_default (pad, GST_OBJECT_CAST (demux), query);
+        if (!res) {
+          GST_OBJECT_LOCK (demux);
+          if (demux->streaming) {
+            /* assuming we'll be able to get an index ... */
+            seekable = demux->seekable;
+          } else {
+            seekable = TRUE;
+          }
 
-        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
-            0, demux->common.segment.duration);
+          gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
+              0, demux->common.segment.duration);
+          GST_OBJECT_UNLOCK (demux);
+        }
         res = TRUE;
       }
-      GST_OBJECT_UNLOCK (demux);
+
       break;
     }
     case GST_QUERY_SEGMENT:
