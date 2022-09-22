@@ -1,6 +1,13 @@
 include:
   - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/fedora.yml"
   - remote: "https://gitlab.freedesktop.org/freedesktop/ci-templates/-/raw/14731f78c23c7b523a85a26a068ade9ac1ecd2f3/templates/debian.yml"
+  ###
+  # IMPORTANT
+  # These are the version tags for the docker images the CI runs against.
+  # If you are hacking on them or need a them to rebuild, you need to change
+  # the appropriate version string in this file which will cause a rebuild.
+  ###
+  - local: '.gitlab-image-tags.yml'
 
 stages:
   - 'trigger'
@@ -17,26 +24,6 @@ variables:
 
   # Branch to track for modules that have no ref specified in the manifest
   GST_UPSTREAM_BRANCH: 'main'
-
-  ###
-  # IMPORTANT
-  # These are the version tags for the docker images the CI runs against.
-  # If you are hacking on them or need a them to rebuild, its enough
-  # to change any part of the string of the image you want.
-  ###
-  FEDORA_TAG:  '2022-09-22.0'
-  INDENT_TAG: '2022-03-07.1'
-  WINDOWS_TAG: "2022-09-17.0"
-
-  GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
-  FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
-
-  FEDORA_AMD64_SUFFIX:  'amd64/fedora'
-  INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
-  WINDOWS_AMD64_SUFFIX: 'amd64/windows'
-
-  WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
-  WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
   MESON_BUILDTYPE_ARGS: --default-library=both
   DEFAULT_MESON_ARGS: >
