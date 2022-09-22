@@ -28,7 +28,6 @@ G_BEGIN_DECLS
 typedef struct _GstVaDecodePicture GstVaDecodePicture;
 struct _GstVaDecodePicture
 {
-  GstVaDisplay *display;
   GArray *buffers;
   GArray *slices;
   GstBuffer *gstbuffer;
