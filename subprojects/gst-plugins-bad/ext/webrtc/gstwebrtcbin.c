@@ -5762,6 +5762,12 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
         continue;
       }
 
+      if (!pad->trans) {
+        GST_LOG_OBJECT (pad, "doesn't have a transceiver");
+        tmp = tmp->next;
+        continue;
+      }
+
       if (pad->trans->mline >= gst_sdp_message_medias_len (sd->sdp->sdp)) {
         GST_DEBUG_OBJECT (pad, "not mentioned in this description. Skipping");
         tmp = tmp->next;
@@ -5774,12 +5780,6 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
         /* FIXME: arrange for an appropriate flow return */
         GST_FIXME_OBJECT (pad, "Media has been rejected.  Need to arrange for "
             "a more correct flow return.");
-        tmp = tmp->next;
-        continue;
-      }
-
-      if (!pad->trans) {
-        GST_LOG_OBJECT (pad, "doesn't have a transceiver");
         tmp = tmp->next;
         continue;
       }
