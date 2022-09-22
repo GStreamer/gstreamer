@@ -23,7 +23,9 @@
  */
 
 #include <string.h>
+#ifndef _MSC_VER
 #include <unistd.h>
+#endif
 #include <gst/gst.h>
 #include <gst/controller/gsttimedvaluecontrolsource.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
