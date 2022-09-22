@@ -29,6 +29,16 @@ variables:
   # Branch to track for modules that have no ref specified in the manifest
   GST_UPSTREAM_BRANCH: 'main'
 
+  GST_UPSTREAM_REPO: 'gstreamer/gstreamer'
+  FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
+
+  FEDORA_AMD64_SUFFIX: 'amd64/fedora'
+  INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
+  WINDOWS_AMD64_SUFFIX: 'amd64/windows'
+
+  WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+  WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$GST_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
+
   MESON_BUILDTYPE_ARGS: --default-library=both
   DEFAULT_MESON_ARGS: >
     -Dlibnice:tests=disabled
