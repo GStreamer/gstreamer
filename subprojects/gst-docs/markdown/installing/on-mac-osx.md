@@ -91,16 +91,113 @@ switch the tutorial to build selecting one of the available schemes.
 
 ### Creating new projects
 
-The GStreamer binaries provides a
+#### XCode
+
+The GStreamer binaries provide a
 [framework](https://developer.apple.com/library/mac/#documentation/MacOSX/Conceptual/BPFrameworks/Tasks/IncludingFrameworks.html)
-that you can drag and drop to XCode to start using it, or using the
-linker option ***-framework GStreamer****.*
+that you can drag and drop to XCode to start using it. There is a small
+exception to the regular use of frameworks, and you will need to manually
+include the headers (`/Library/Frameworks/GStreamer.framework/Headers`) and
+libraries (`/Library/Frameworks/GStreamer.framework/Libraries`) search path. In
+XCode you will need to do the following:
 
-There is a small exception to the regular use of frameworks, and you
-will need to manually include the headers search
-path  `/Library/Frameworks/GStreamer.framework/Headers`
+  - Add `GStreamer.framework` to **General → Frameworks and Libraries**
+  - Add the libraries path to **Build Settings → Library Search Paths**
+  - Add the headers path to **Build Settings → System Header Search Paths**
+  - Disable hardened runtime **Build Settings → Enable Hardened Runtime**. This
+    is needed because the `GStreamer.framework` is not signed.
 
-  - XCode: Add the headers path to **Search Paths → Header Search
-    Paths**
-  - GCC: Using the compiler
-    option **-I/Library/Frameworks/GStreamer.framework/Headers**
+#### Manual compilation
+
+If instead of XCode you use GCC (or CLANG) directly you can follow a similar
+approach by providing the header and libraries search path to the compiler and
+linker. Here's a very simple example to show you how:
+
+Let's say we have a file `main.c` that requires GStreamer and looks like this:
+
+```
+#include <gst/gst.h>
+
+int
+main(int argc, char *argv[])
+{
+  gst_init(NULL, NULL);
+
+  return 0;
+}
+```
+
+We can compile it and link it with the following commands:
+
+```
+# Compile
+$ clang -c main.c -o main.o -I/Library/Frameworks/GStreamer.framework/Headers
+
+# Link
+$ clang -o main main.o -L/Library/Frameworks/GStreamer.framework/Libraries -F/Library/Frameworks -framework GStreamer
+```
+
+Note how we use `-I/Library/Frameworks/GStreamer.framework/Headers` to specify
+the headers search path (same as with XCode) and in the linking step we specify
+`-L/Library/Frameworks/GStreamer.framework/Libraries` to indicate the libraries
+search path (as we also did in XCode), `-F/Library/Frameworks` to tell the
+linker where to find frameworks and finally `-framework GStreamer` to specify
+the GStreamer framework.
+
+Finally, we can even inspect the generated executable and verify it's pointing
+to our GStreamer framework:
+
+```
+$ otool -L main
+main:
+        @rpath/GStreamer.framework/Versions/1.0/lib/GStreamer (compatibility version 0.0.0, current version 0.0.0)
+        /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1311.100.3)
+```
+
+#### Manual compilation (with pkg-config)
+
+The `GStreamer.framework` also comes with some developer tools such as
+`pkg-config`. `pkg-config` is a tool used to query what compiler and linker
+flags an application requires if they want to use a certain library. So we will
+now build the same example we used above with `pkg-config` and asking for the
+required GStreamer flags.
+
+```
+# Tell pkg-config where to find the .pc files
+$ export PKG_CONFIG_PATH=/Library/Frameworks/GStreamer.framework/Libraries/pkgconfig/
+
+# We will use the pkg-config provided by the GStreamer.framework
+$ export PATH=/Library/Frameworks/GStreamer.framework/Commands/:$PATH
+
+# Compile
+$ clang -c main.c -o main.o `pkg-config --cflags gstreamer-1.0`
+
+# Link
+$ clang -o main main.o `pkg-config --libs gstreamer-1.0`
+```
+
+It's important to use the `pkg-config` provided by the `GStreamer.framework`
+(not the one provided by Homebrew for example), that's why we set `PATH` to find
+`pkg-config` from the right location.
+
+Note how we have used `pkg-config --cflags gstreamer-1.0` to obtain all the
+compilation flags and then `pkg-config --libs gstreamer-1.0` to get all the
+linker flags.
+
+The commands above should have generated an executable that, as before, we can
+inspect:
+
+```
+$ otool -L main
+main:
+        @rpath/libgstreamer-1.0.0.dylib (compatibility version 2101.0.0, current version 2101.0.0)
+        @rpath/libgobject-2.0.0.dylib (compatibility version 6201.0.0, current version 6201.6.0)
+        @rpath/libglib-2.0.0.dylib (compatibility version 6201.0.0, current version 6201.6.0)
+        @rpath/libintl.8.dylib (compatibility version 10.0.0, current version 10.5.0)
+        /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1311.100.3)
+```
+
+You can see how the dependencies are different from the ones we saw above. The
+reason is because in this case we have linked directly to the GStreamer
+libraries included in the framework instead of the framework itself (there's a
+slight difference there).
