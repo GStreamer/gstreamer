@@ -1897,10 +1897,10 @@ static void
 _get_scale_factor (GstVaVpp * self, gdouble * w_factor, gdouble * h_factor)
 {
   GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
-  gdouble w = GST_VIDEO_INFO_WIDTH (&btrans->in_info);
-  gdouble h = GST_VIDEO_INFO_HEIGHT (&btrans->in_info);
+  gdouble w = GST_VIDEO_INFO_WIDTH (&btrans->out_info);
+  gdouble h = GST_VIDEO_INFO_HEIGHT (&btrans->out_info);
 
-  switch (self->direction) {
+  switch (gst_va_filter_get_orientation (btrans->filter)) {
     case GST_VIDEO_ORIENTATION_90R:
     case GST_VIDEO_ORIENTATION_90L:
     case GST_VIDEO_ORIENTATION_UR_LL:
@@ -1914,10 +1914,10 @@ _get_scale_factor (GstVaVpp * self, gdouble * w_factor, gdouble * h_factor)
       break;
   }
 
-  *w_factor = GST_VIDEO_INFO_WIDTH (&btrans->out_info);
+  *w_factor = GST_VIDEO_INFO_WIDTH (&btrans->in_info);
   *w_factor /= w;
 
-  *h_factor = GST_VIDEO_INFO_HEIGHT (&btrans->out_info);
+  *h_factor = GST_VIDEO_INFO_HEIGHT (&btrans->in_info);
   *h_factor /= h;
 }
 
@@ -1945,35 +1945,35 @@ gst_va_vpp_src_event (GstBaseTransform * trans, GstEvent * event)
           break;
 
         /* video-direction compensation */
-        switch (self->direction) {
+        switch (gst_va_filter_get_orientation (btrans->filter)) {
           case GST_VIDEO_ORIENTATION_90R:
             new_x = y;
-            new_y = GST_VIDEO_INFO_WIDTH (in_info) - 1 - x;
+            new_y = GST_VIDEO_INFO_WIDTH (out_info) - 1 - x;
             break;
           case GST_VIDEO_ORIENTATION_90L:
-            new_x = GST_VIDEO_INFO_HEIGHT (in_info) - 1 - y;
+            new_x = GST_VIDEO_INFO_HEIGHT (out_info) - 1 - y;
             new_y = x;
             break;
           case GST_VIDEO_ORIENTATION_UL_LR:
-            new_x = GST_VIDEO_INFO_HEIGHT (in_info) - 1 - y;
-            new_y = GST_VIDEO_INFO_WIDTH (in_info) - 1 - x;
-            break;
-          case GST_VIDEO_ORIENTATION_UR_LL:
             new_x = y;
             new_y = x;
             break;
+          case GST_VIDEO_ORIENTATION_UR_LL:
+            new_x = GST_VIDEO_INFO_HEIGHT (out_info) - 1 - y;
+            new_y = GST_VIDEO_INFO_WIDTH (out_info) - 1 - x;
+            break;
           case GST_VIDEO_ORIENTATION_180:
             /* FIXME: is this correct? */
-            new_x = GST_VIDEO_INFO_WIDTH (in_info) - 1 - x;
-            new_y = GST_VIDEO_INFO_HEIGHT (in_info) - 1 - y;
+            new_x = GST_VIDEO_INFO_WIDTH (out_info) - 1 - x;
+            new_y = GST_VIDEO_INFO_HEIGHT (out_info) - 1 - y;
             break;
           case GST_VIDEO_ORIENTATION_HORIZ:
-            new_x = GST_VIDEO_INFO_WIDTH (in_info) - 1 - x;
+            new_x = GST_VIDEO_INFO_WIDTH (out_info) - 1 - x;
             new_y = y;
             break;
           case GST_VIDEO_ORIENTATION_VERT:
             new_x = x;
-            new_y = GST_VIDEO_INFO_HEIGHT (in_info) - 1 - y;
+            new_y = GST_VIDEO_INFO_HEIGHT (out_info) - 1 - y;
             break;
           default:
             new_x = x;
