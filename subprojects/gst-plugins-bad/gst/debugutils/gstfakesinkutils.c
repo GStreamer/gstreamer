@@ -24,22 +24,20 @@
 
 /* TODO complete the types */
 void
-gst_fake_sink_proxy_properties (GstElement * self,
-    GstElement * child, guint property_id_offset)
+gst_util_proxy_class_properties (GObjectClass * object_class,
+    GObjectClass * target_class, guint property_id_offset)
 {
-  GObjectClass *object_class;
   GParamSpec **properties;
   guint n_properties, i;
 
-  object_class = G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS (self));
-  properties = g_object_class_list_properties (G_OBJECT_GET_CLASS (child),
+  properties = g_object_class_list_properties (G_OBJECT_CLASS (target_class),
       &n_properties);
 
   for (i = 0; i < n_properties; i++) {
     guint property_id = i + property_id_offset;
 
-    if (properties[i]->owner_type != G_OBJECT_TYPE (child) &&
-        properties[i]->owner_type != GST_TYPE_BASE_SINK)
+    if (properties[i]->owner_type == G_TYPE_OBJECT
+        || properties[i]->owner_type == GST_TYPE_OBJECT)
       continue;
 
     if (G_IS_PARAM_SPEC_BOOLEAN (properties[i])) {

@@ -26,7 +26,10 @@
 
 G_BEGIN_DECLS
 
-void gst_fake_sink_proxy_properties (GstElement * self, GstElement * child, guint property_id_offset);
+void
+gst_util_proxy_class_properties (GObjectClass *object_class,
+                                 GObjectClass *target_class,
+                                 guint property_id_offset);
 
 G_END_DECLS
 

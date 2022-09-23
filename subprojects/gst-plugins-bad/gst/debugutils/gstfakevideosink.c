@@ -70,10 +70,78 @@ gst_fake_video_sink_allocation_meta_flags_get_type (void)
   return id;
 }
 
+typedef enum
+{
+  FAKE_SINK_STATE_ERROR_NONE = 0,
+  FAKE_SINK_STATE_ERROR_NULL_READY,
+  FAKE_SINK_STATE_ERROR_READY_PAUSED,
+  FAKE_SINK_STATE_ERROR_PAUSED_PLAYING,
+  FAKE_SINK_STATE_ERROR_PLAYING_PAUSED,
+  FAKE_SINK_STATE_ERROR_PAUSED_READY,
+  FAKE_SINK_STATE_ERROR_READY_NULL
+} GstFakeSinkStateError;
+
+#define DEFAULT_DROP_OUT_OF_SEGMENT TRUE
+#define DEFAULT_STATE_ERROR FAKE_SINK_STATE_ERROR_NONE
+#define DEFAULT_SILENT TRUE
+#define DEFAULT_DUMP FALSE
+#define DEFAULT_SIGNAL_HANDOFFS FALSE
+#define DEFAULT_LAST_MESSAGE NULL
+#define DEFAULT_CAN_ACTIVATE_PUSH TRUE
+#define DEFAULT_CAN_ACTIVATE_PULL FALSE
+#define DEFAULT_NUM_BUFFERS -1
+
+/**
+ * GstFakeVideoSinkStateError:
+ *
+ * Proxy for GstFakeSinkError.
+ *
+ * Since: 1.22
+ */
+
+#define GST_TYPE_FAKE_VIDEO_SINK_STATE_ERROR (gst_fake_video_sink_state_error_get_type())
+static GType
+gst_fake_video_sink_state_error_get_type (void)
+{
+  static GType fakevideosink_state_error_type = 0;
+  static const GEnumValue fakevideosink_state_error[] = {
+    {FAKE_SINK_STATE_ERROR_NONE, "No state change errors", "none"},
+    {FAKE_SINK_STATE_ERROR_NULL_READY,
+        "Fail state change from NULL to READY", "null-to-ready"},
+    {FAKE_SINK_STATE_ERROR_READY_PAUSED,
+        "Fail state change from READY to PAUSED", "ready-to-paused"},
+    {FAKE_SINK_STATE_ERROR_PAUSED_PLAYING,
+        "Fail state change from PAUSED to PLAYING", "paused-to-playing"},
+    {FAKE_SINK_STATE_ERROR_PLAYING_PAUSED,
+        "Fail state change from PLAYING to PAUSED", "playing-to-paused"},
+    {FAKE_SINK_STATE_ERROR_PAUSED_READY,
+        "Fail state change from PAUSED to READY", "paused-to-ready"},
+    {FAKE_SINK_STATE_ERROR_READY_NULL,
+        "Fail state change from READY to NULL", "ready-to-null"},
+    {0, NULL, NULL},
+  };
+
+  if (!fakevideosink_state_error_type) {
+    fakevideosink_state_error_type =
+        g_enum_register_static ("GstFakeVideoSinkStateError",
+        fakevideosink_state_error);
+  }
+  return fakevideosink_state_error_type;
+}
+
 enum
 {
   PROP_0,
   PROP_ALLOCATION_META_FLAGS,
+  PROP_STATE_ERROR,
+  PROP_SILENT,
+  PROP_DUMP,
+  PROP_SIGNAL_HANDOFFS,
+  PROP_DROP_OUT_OF_SEGMENT,
+  PROP_LAST_MESSAGE,
+  PROP_CAN_ACTIVATE_PUSH,
+  PROP_CAN_ACTIVATE_PULL,
+  PROP_NUM_BUFFERS,
   PROP_LAST
 };
 
@@ -85,6 +153,8 @@ enum
 };
 
 static guint gst_fake_video_sink_signals[LAST_SIGNAL] = { 0 };
+
+static GParamSpec *pspec_last_message = NULL;
 
 #define ALLOCATION_META_DEFAULT_FLAGS GST_ALLOCATION_FLAG_CROP_META | GST_ALLOCATION_FLAG_OVERLAY_COMPOSITION_META
 
@@ -137,23 +207,17 @@ gst_fake_video_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static void
-gst_fake_video_sink_proxy_properties (GstFakeVideoSink * self,
-    GstElement * child)
-{
-  static gsize initialized = 0;
-
-  if (g_once_init_enter (&initialized)) {
-    gst_fake_sink_proxy_properties (GST_ELEMENT_CAST (self), child, PROP_LAST);
-    g_once_init_leave (&initialized, 1);
-  }
-}
-
-static void
 gst_fake_video_sink_proxy_handoff (GstElement * element, GstBuffer * buffer,
     GstPad * pad, GstFakeVideoSink * self)
 {
   g_signal_emit (self, gst_fake_video_sink_signals[SIGNAL_HANDOFF], 0,
       buffer, self->sinkpad);
+}
+
+static void
+gst_fake_video_sink_proxy_last_message (GstElement * element)
+{
+  g_object_notify_by_pspec ((GObject *) element, pspec_last_message);
 }
 
 static void
@@ -195,7 +259,8 @@ gst_fake_video_sink_init (GstFakeVideoSink * self)
 
     self->child = child;
 
-    gst_fake_video_sink_proxy_properties (self, child);
+    g_signal_connect (child, "notify::last-message",
+        G_CALLBACK (gst_fake_video_sink_proxy_last_message), self);
     g_signal_connect (child, "handoff",
         G_CALLBACK (gst_fake_video_sink_proxy_handoff), self);
     g_signal_connect (child, "preroll-handoff",
@@ -247,6 +312,7 @@ gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GObjectClass *base_sink_class;
 
   object_class->get_property = gst_fake_video_sink_get_property;
   object_class->set_property = gst_fake_video_sink_set_property;
@@ -269,7 +335,6 @@ gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
           GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
           ALLOCATION_META_DEFAULT_FLAGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
 
   /**
    * GstFakeVideoSink::handoff:
@@ -303,6 +368,53 @@ gst_fake_video_sink_class_init (GstFakeVideoSinkClass * klass)
           preroll_handoff), NULL, NULL, NULL, G_TYPE_NONE, 2,
       GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, GST_TYPE_PAD);
 
+  g_object_class_install_property (object_class, PROP_STATE_ERROR,
+      g_param_spec_enum ("state-error", "State Error",
+          "Generate a state change error", GST_TYPE_FAKE_VIDEO_SINK_STATE_ERROR,
+          DEFAULT_STATE_ERROR, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  pspec_last_message = g_param_spec_string ("last-message", "Last Message",
+      "The message describing current status", DEFAULT_LAST_MESSAGE,
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  g_object_class_install_property (object_class, PROP_LAST_MESSAGE,
+      pspec_last_message);
+  g_object_class_install_property (object_class, PROP_SIGNAL_HANDOFFS,
+      g_param_spec_boolean ("signal-handoffs", "Signal handoffs",
+          "Send a signal before unreffing the buffer", DEFAULT_SIGNAL_HANDOFFS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_DROP_OUT_OF_SEGMENT,
+      g_param_spec_boolean ("drop-out-of-segment",
+          "Drop out-of-segment buffers",
+          "Drop and don't render / hand off out-of-segment buffers",
+          DEFAULT_DROP_OUT_OF_SEGMENT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_SILENT,
+      g_param_spec_boolean ("silent", "Silent",
+          "Don't produce last_message events", DEFAULT_SILENT,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_DUMP,
+      g_param_spec_boolean ("dump", "Dump", "Dump buffer contents to stdout",
+          DEFAULT_DUMP,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
+          G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_CAN_ACTIVATE_PUSH,
+      g_param_spec_boolean ("can-activate-push", "Can activate push",
+          "Can activate in push mode", DEFAULT_CAN_ACTIVATE_PUSH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_CAN_ACTIVATE_PULL,
+      g_param_spec_boolean ("can-activate-pull", "Can activate pull",
+          "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (object_class, PROP_NUM_BUFFERS,
+      g_param_spec_int ("num-buffers", "num-buffers",
+          "Number of buffers to accept going EOS", -1, G_MAXINT,
+          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  base_sink_class = g_type_class_ref (GST_TYPE_BASE_SINK);
+  gst_util_proxy_class_properties (object_class, base_sink_class, PROP_LAST);
+  g_type_class_unref (base_sink_class);
+
   gst_type_mark_as_plugin_api (GST_TYPE_FAKE_VIDEO_SINK_ALLOCATION_META_FLAGS,
       0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FAKE_VIDEO_SINK_STATE_ERROR, 0);
 }
