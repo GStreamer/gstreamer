@@ -975,20 +975,20 @@ _h265_bit_writer_sps (const GstH265SPS * sps,
 
   if (sps->sps_range_extension_flag) {
     WRITE_BITS (bw,
-        sps->sps_extnsion_params.transform_skip_rotation_enabled_flag, 1);
+        sps->sps_extension_params.transform_skip_rotation_enabled_flag, 1);
     WRITE_BITS (bw,
-        sps->sps_extnsion_params.transform_skip_context_enabled_flag, 1);
-    WRITE_BITS (bw, sps->sps_extnsion_params.implicit_rdpcm_enabled_flag, 1);
-    WRITE_BITS (bw, sps->sps_extnsion_params.explicit_rdpcm_enabled_flag, 1);
+        sps->sps_extension_params.transform_skip_context_enabled_flag, 1);
+    WRITE_BITS (bw, sps->sps_extension_params.implicit_rdpcm_enabled_flag, 1);
+    WRITE_BITS (bw, sps->sps_extension_params.explicit_rdpcm_enabled_flag, 1);
     WRITE_BITS (bw,
-        sps->sps_extnsion_params.extended_precision_processing_flag, 1);
-    WRITE_BITS (bw, sps->sps_extnsion_params.intra_smoothing_disabled_flag, 1);
+        sps->sps_extension_params.extended_precision_processing_flag, 1);
+    WRITE_BITS (bw, sps->sps_extension_params.intra_smoothing_disabled_flag, 1);
     WRITE_BITS (bw,
-        sps->sps_extnsion_params.high_precision_offsets_enabled_flag, 1);
+        sps->sps_extension_params.high_precision_offsets_enabled_flag, 1);
     WRITE_BITS (bw,
-        sps->sps_extnsion_params.persistent_rice_adaptation_enabled_flag, 1);
+        sps->sps_extension_params.persistent_rice_adaptation_enabled_flag, 1);
     WRITE_BITS (bw,
-        sps->sps_extnsion_params.cabac_bypass_alignment_enabled_flag, 1);
+        sps->sps_extension_params.cabac_bypass_alignment_enabled_flag, 1);
   }
 
   if (sps->sps_multilayer_extension_flag) {

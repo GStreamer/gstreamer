@@ -574,7 +574,7 @@ _fill_picture_range_ext_parameter (GstVaH265Dec * decoder,
 {
   VAPictureParameterBufferHEVCRext *pic_param = &decoder->pic_param.rext;
 
-  GstH265SPSExtensionParams *sps_ext = &sps->sps_extnsion_params;
+  GstH265SPSExtensionParams *sps_ext = &sps->sps_extension_params;
   GstH265PPSExtensionParams *pps_ext = &pps->pps_extension_params;
 
   /* *INDENT-OFF* */

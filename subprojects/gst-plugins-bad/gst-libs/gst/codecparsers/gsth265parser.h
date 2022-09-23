@@ -1183,7 +1183,7 @@ struct _GstH265SPS
   guint8 strong_intra_smoothing_enabled_flag;
   guint8 vui_parameters_present_flag;
 
-  /* if vui_parameters_present_flat */
+  /* if vui_parameters_present_flag */
   GstH265VUIParams vui_params;
 
   guint8 sps_extension_flag;
@@ -1196,7 +1196,12 @@ struct _GstH265SPS
   guint8 sps_extension_4bits;
 
   /* if sps_range_extension_flag */
-  GstH265SPSExtensionParams sps_extnsion_params;
+  /**
+   * _GstH265SPS.sps_extension_params:
+   *
+   * Since: 1.22
+   */
+  GstH265SPSExtensionParams sps_extension_params;
   /* if sps_scc_extension_flag */
   GstH265SPSSccExtensionParams sps_scc_extension_params;
 

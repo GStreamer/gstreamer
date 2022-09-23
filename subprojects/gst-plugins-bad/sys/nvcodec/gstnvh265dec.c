@@ -552,7 +552,7 @@ gst_nv_h265_dec_picture_params_from_sps (GstNvH265Dec * self,
 #define COPY_FIELD_WITH_PREFIX(f) \
   (params)->G_PASTE(sps_,f) = (sps)->f
 #define COPY_FIELD_EXTENSION(f) \
-  (params)->f = (sps)->sps_extnsion_params.f
+  (params)->f = (sps)->sps_extension_params.f
 
   params->pic_width_in_luma_samples = sps->width;
   params->pic_height_in_luma_samples = sps->height;

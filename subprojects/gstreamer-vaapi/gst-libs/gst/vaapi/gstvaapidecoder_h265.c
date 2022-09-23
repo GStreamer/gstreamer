@@ -2057,23 +2057,23 @@ fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture,
 #define COPY_REXT_BFM(a, s, f) \
 		pic_rext_param->a.bits.f = s.f
 
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         transform_skip_rotation_enabled_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         transform_skip_context_enabled_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         implicit_rdpcm_enabled_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         explicit_rdpcm_enabled_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         extended_precision_processing_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         intra_smoothing_disabled_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         high_precision_offsets_enabled_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         persistent_rice_adaptation_enabled_flag);
-    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extnsion_params,
+    COPY_REXT_BFM (range_extension_pic_fields, sps->sps_extension_params,
         cabac_bypass_alignment_enabled_flag);
 
     COPY_REXT_BFM (range_extension_pic_fields, pps->pps_extension_params,

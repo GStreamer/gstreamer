@@ -2128,20 +2128,21 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
 
   if (sps->sps_range_extension_flag) {
     READ_UINT8 (&nr,
-        sps->sps_extnsion_params.transform_skip_rotation_enabled_flag, 1);
+        sps->sps_extension_params.transform_skip_rotation_enabled_flag, 1);
     READ_UINT8 (&nr,
-        sps->sps_extnsion_params.transform_skip_context_enabled_flag, 1);
-    READ_UINT8 (&nr, sps->sps_extnsion_params.implicit_rdpcm_enabled_flag, 1);
-    READ_UINT8 (&nr, sps->sps_extnsion_params.explicit_rdpcm_enabled_flag, 1);
+        sps->sps_extension_params.transform_skip_context_enabled_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extension_params.implicit_rdpcm_enabled_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extension_params.explicit_rdpcm_enabled_flag, 1);
     READ_UINT8 (&nr,
-        sps->sps_extnsion_params.extended_precision_processing_flag, 1);
-    READ_UINT8 (&nr, sps->sps_extnsion_params.intra_smoothing_disabled_flag, 1);
+        sps->sps_extension_params.extended_precision_processing_flag, 1);
+    READ_UINT8 (&nr, sps->sps_extension_params.intra_smoothing_disabled_flag,
+        1);
     READ_UINT8 (&nr,
-        sps->sps_extnsion_params.high_precision_offsets_enabled_flag, 1);
+        sps->sps_extension_params.high_precision_offsets_enabled_flag, 1);
     READ_UINT8 (&nr,
-        sps->sps_extnsion_params.persistent_rice_adaptation_enabled_flag, 1);
+        sps->sps_extension_params.persistent_rice_adaptation_enabled_flag, 1);
     READ_UINT8 (&nr,
-        sps->sps_extnsion_params.cabac_bypass_alignment_enabled_flag, 1);
+        sps->sps_extension_params.cabac_bypass_alignment_enabled_flag, 1);
   }
 
   if (sps->sps_multilayer_extension_flag) {
@@ -2166,22 +2167,25 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
           128 - sps->sps_scc_extension_params.palette_max_size);
 
       READ_UINT8 (&nr,
-          sps->sps_scc_extension_params.
-          sps_palette_predictor_initializers_present_flag, 1);
-      if (sps->sps_scc_extension_params.
-          sps_palette_predictor_initializers_present_flag) {
+          sps->
+          sps_scc_extension_params.sps_palette_predictor_initializers_present_flag,
+          1);
+      if (sps->
+          sps_scc_extension_params.sps_palette_predictor_initializers_present_flag)
+      {
         guint comp;
         READ_UE_MAX (&nr,
-            sps->sps_scc_extension_params.
-            sps_num_palette_predictor_initializer_minus1,
+            sps->
+            sps_scc_extension_params.sps_num_palette_predictor_initializer_minus1,
             sps->sps_scc_extension_params.palette_max_size +
             sps->sps_scc_extension_params.delta_palette_max_predictor_size - 1);
 
         for (comp = 0; comp < (sps->chroma_format_idc == 0 ? 1 : 3); comp++) {
           guint num_bits;
           guint num =
-              sps->sps_scc_extension_params.
-              sps_num_palette_predictor_initializer_minus1 + 1;
+              sps->
+              sps_scc_extension_params.sps_num_palette_predictor_initializer_minus1
+              + 1;
 
           num_bits = (comp == 0 ? sps->bit_depth_luma_minus8 + 8 :
               sps->bit_depth_chroma_minus8 + 8);
@@ -2482,10 +2486,12 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
     READ_UINT8 (&nr,
         pps->pps_scc_extension_params.pps_curr_pic_ref_enabled_flag, 1);
     READ_UINT8 (&nr,
-        pps->pps_scc_extension_params.
-        residual_adaptive_colour_transform_enabled_flag, 1);
-    if (pps->pps_scc_extension_params.
-        residual_adaptive_colour_transform_enabled_flag) {
+        pps->
+        pps_scc_extension_params.residual_adaptive_colour_transform_enabled_flag,
+        1);
+    if (pps->
+        pps_scc_extension_params.residual_adaptive_colour_transform_enabled_flag)
+    {
       READ_UINT8 (&nr,
           pps->pps_scc_extension_params.pps_slice_act_qp_offsets_present_flag,
           1);
@@ -2498,10 +2504,12 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
     }
 
     READ_UINT8 (&nr,
-        pps->pps_scc_extension_params.
-        pps_palette_predictor_initializers_present_flag, 1);
-    if (pps->pps_scc_extension_params.
-        pps_palette_predictor_initializers_present_flag) {
+        pps->
+        pps_scc_extension_params.pps_palette_predictor_initializers_present_flag,
+        1);
+    if (pps->
+        pps_scc_extension_params.pps_palette_predictor_initializers_present_flag)
+    {
       READ_UE_MAX (&nr,
           pps->pps_scc_extension_params.pps_num_palette_predictor_initializer,
           sps->sps_scc_extension_params.palette_max_size +
@@ -2532,8 +2540,8 @@ gst_h265_parse_pps (GstH265Parser * parser, GstH265NalUnit * nalu,
             comp++) {
           guint num_bits;
           guint num =
-              pps->pps_scc_extension_params.
-              pps_num_palette_predictor_initializer;
+              pps->
+              pps_scc_extension_params.pps_num_palette_predictor_initializer;
 
           num_bits = (comp == 0 ?
               pps->pps_scc_extension_params.luma_bit_depth_entry_minus8 + 8 :

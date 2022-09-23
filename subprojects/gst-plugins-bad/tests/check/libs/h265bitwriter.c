@@ -365,7 +365,7 @@ static const GstH265SPS sps = {
   .sps_3d_extension_flag = 0,
   .sps_scc_extension_flag = 0,
 
-  .sps_extnsion_params = {
+  .sps_extension_params = {
     .transform_skip_rotation_enabled_flag = 0,
     .transform_skip_context_enabled_flag = 0,
     .implicit_rdpcm_enabled_flag = 0,
@@ -785,15 +785,15 @@ GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
   CHECK_FIELD (sps_multilayer_extension_flag);
   CHECK_FIELD (sps_3d_extension_flag);
   CHECK_FIELD (sps_scc_extension_flag);
-  CHECK_FIELD (sps_extnsion_params.transform_skip_rotation_enabled_flag);
-  CHECK_FIELD (sps_extnsion_params.transform_skip_context_enabled_flag);
-  CHECK_FIELD (sps_extnsion_params.implicit_rdpcm_enabled_flag);
-  CHECK_FIELD (sps_extnsion_params.explicit_rdpcm_enabled_flag);
-  CHECK_FIELD (sps_extnsion_params.extended_precision_processing_flag);
-  CHECK_FIELD (sps_extnsion_params.intra_smoothing_disabled_flag);
-  CHECK_FIELD (sps_extnsion_params.high_precision_offsets_enabled_flag);
-  CHECK_FIELD (sps_extnsion_params.persistent_rice_adaptation_enabled_flag);
-  CHECK_FIELD (sps_extnsion_params.cabac_bypass_alignment_enabled_flag);
+  CHECK_FIELD (sps_extension_params.transform_skip_rotation_enabled_flag);
+  CHECK_FIELD (sps_extension_params.transform_skip_context_enabled_flag);
+  CHECK_FIELD (sps_extension_params.implicit_rdpcm_enabled_flag);
+  CHECK_FIELD (sps_extension_params.explicit_rdpcm_enabled_flag);
+  CHECK_FIELD (sps_extension_params.extended_precision_processing_flag);
+  CHECK_FIELD (sps_extension_params.intra_smoothing_disabled_flag);
+  CHECK_FIELD (sps_extension_params.high_precision_offsets_enabled_flag);
+  CHECK_FIELD (sps_extension_params.persistent_rice_adaptation_enabled_flag);
+  CHECK_FIELD (sps_extension_params.cabac_bypass_alignment_enabled_flag);
 #undef CHECK_FIELD
 
   memset (header_data, 0, sizeof (header_data));
