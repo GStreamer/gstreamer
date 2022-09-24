@@ -385,7 +385,7 @@ static gboolean s_loadFailedWithTLSErrors(WebKitWebView*,  gchar* failing_uri, G
     return FALSE;
 }
 
-static void s_loadProgressChaned(GObject* object, GParamSpec*, gpointer data)
+static void s_loadProgressChanged(GObject* object, GParamSpec*, gpointer data)
 {
     GstElement* src = GST_ELEMENT_CAST (data);
     // The src element is locked already so we can't call
@@ -473,7 +473,7 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
 
     g_signal_connect(webkit.view, "load-failed", G_CALLBACK(s_loadFailed), src);
     g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailedWithTLSErrors), src);
-    g_signal_connect(webkit.view, "notify::estimated-load-progress", G_CALLBACK(s_loadProgressChaned), src);
+    g_signal_connect(webkit.view, "notify::estimated-load-progress", G_CALLBACK(s_loadProgressChanged), src);
 
     auto* settings = webkit_web_view_get_settings(webkit.view);
     webkit_settings_set_enable_webaudio(settings, TRUE);
