@@ -59,6 +59,10 @@ public:
     void disconnectLoadFailedSignal();
     void waitLoadCompletion();
 
+    GstWpeVideoSrc *src() const { return m_src; }
+
+    void notifyLoadFinished();
+
 protected:
     void handleExportedImage(gpointer);
     void handleExportedBuffer(struct wpe_fdo_shm_exported_buffer*);
@@ -67,7 +71,6 @@ private:
     struct wpe_view_backend* backend() const;
     void frameComplete();
     void loadUriUnlocked(const gchar*);
-    void notifyLoadFinished();
 
     void releaseImage(gpointer);
     void releaseSHMBuffer(gpointer);
@@ -121,6 +124,7 @@ private:
         gulong extension_msg_sigid;
     } audio {0, 0};
 
+    GstWpeVideoSrc *m_src { nullptr };
 };
 
 class WPEContextThread {

@@ -399,7 +399,26 @@ static void s_loadProgressChanged(GObject* object, GParamSpec*, gpointer data)
     gst_object_unref (bus);
 }
 
+static void s_webProcessCrashed(WebKitWebView*, WebKitWebProcessTerminationReason reason, gpointer data)
+{
+    auto &view = *static_cast<WPEView *>(data);
+    auto *src = view.src();
+    gchar *reason_str =
+        g_enum_to_string (WEBKIT_TYPE_WEB_PROCESS_TERMINATION_REASON, reason);
+
+    // In case the crash happened while doing the initial URL loading, unlock
+    // the load completion waiting.
+    view.notifyLoadFinished();
+
+    // TODO: Emit a signal here and fallback to error system if signal wasn't handled by application?
+
+    GST_ELEMENT_ERROR(GST_ELEMENT_CAST(src), RESOURCE, FAILED, (NULL), ("%s", reason_str));
+
+    g_free (reason_str);
+}
+
 WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
+  : m_src(src)
 {
 #ifdef G_OS_UNIX
 {
@@ -474,6 +493,7 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
     g_signal_connect(webkit.view, "load-failed", G_CALLBACK(s_loadFailed), src);
     g_signal_connect(webkit.view, "load-failed-with-tls-errors", G_CALLBACK(s_loadFailedWithTLSErrors), src);
     g_signal_connect(webkit.view, "notify::estimated-load-progress", G_CALLBACK(s_loadProgressChanged), src);
+    g_signal_connect(webkit.view, "web-process-terminated", G_CALLBACK(s_webProcessCrashed), this);
 
     auto* settings = webkit_web_view_get_settings(webkit.view);
     webkit_settings_set_enable_webaudio(settings, TRUE);
