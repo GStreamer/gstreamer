@@ -929,6 +929,7 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplateWithPresentationTimeOffset)
   GstMediaFragmentInfo fragment;
   GstClockTime expectedDuration;
   GstClockTime expectedTimestamp;
+  GstClockTime expectedPeriodStart, periodStartTime;
   GstMPDClient2 *mpdclient;
   GstMPDPeriodNode *periodNode;
   GstMPDSegmentTemplateNode *segmentTemplate;
@@ -969,11 +970,16 @@ GST_START_TEST (dash_mpdparser_period_segmentTemplateWithPresentationTimeOffset)
       "$RepresentationID$/TestInitialization");
   assert_equals_string (segmentTemplate->bitstreamSwitching, "true");
 
+  expectedPeriodStart = duration_to_ms (0, 0, 0, 0, 1, 0, 0);
+  periodStartTime = gst_mpd_client2_get_period_start_time (mpdclient);
+  assert_equals_uint64 (periodStartTime, expectedPeriodStart * GST_MSECOND);
+
   ret = gst_mpd_client2_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 4, 0);
-  /* start = Period@start + S@t - presentationTimeOffset */
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 1, 0);
+  /* start = S@t - presentationTimeOffset, but in this case that's a negative number */
+  expectedTimestamp =
+      duration_to_ms (0, 0, 0, 0, 0, 1, 0) - expectedPeriodStart;
   assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
   assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
   /* the $Time$ expansion uses the @t value, without including
@@ -4418,7 +4424,7 @@ GST_START_TEST (dash_mpdparser_fragments)
   GstClockTime nextFragmentDuration;
   GstClockTime nextFragmentTimestamp;
   GstClockTime nextFragmentTimestampEnd;
-  GstClockTime periodStartTime;
+  GstClockTime expectedPeriodStart, periodStartTime;
   GstClockTime expectedDuration;
   GstClockTime expectedTimestamp;
   GstClockTime expectedTimestampEnd;
@@ -4458,10 +4464,17 @@ GST_START_TEST (dash_mpdparser_fragments)
   activeStream = gst_mpd_client2_get_active_stream_by_index (mpdclient, 0);
   fail_if (activeStream == NULL);
 
+  expectedPeriodStart = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+  periodStartTime = gst_mpd_client2_get_period_start_time (mpdclient);
+  assert_equals_uint64 (periodStartTime, expectedPeriodStart * GST_MSECOND);
+
   /* expected duration of the next fragment */
   expectedDuration = duration_to_ms (0, 0, 0, 3, 3, 20, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
-  expectedTimestampEnd = duration_to_ms (0, 0, 0, 3, 3, 20, 0);
+  /* Reported timestamps do not include the periodStartTime */
+  expectedTimestamp =
+      duration_to_ms (0, 0, 0, 0, 0, 0, 0) - expectedPeriodStart;
+  expectedTimestampEnd =
+      duration_to_ms (0, 0, 0, 3, 3, 20, 0) - expectedPeriodStart;
 
   ret = gst_mpd_client2_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
@@ -4471,9 +4484,6 @@ GST_START_TEST (dash_mpdparser_fragments)
   assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
   assert_equals_uint64 (fragment.timestamp, expectedTimestamp * GST_MSECOND);
   gst_mpdparser_media_fragment_info_clear (&fragment);
-
-  periodStartTime = gst_mpd_client2_get_period_start_time (mpdclient);
-  assert_equals_uint64 (periodStartTime, 10 * GST_SECOND);
 
   nextFragmentDuration =
       gst_mpd_client2_get_next_fragment_duration (mpdclient, activeStream);
@@ -4650,6 +4660,7 @@ GST_START_TEST (dash_mpdparser_segment_list)
   GstActiveStream *activeStream;
   GstMediaFragmentInfo fragment;
   GstClockTime expectedDuration;
+  GstClockTime expectedPeriodStart, periodStartTime;
   GstClockTime expectedTimestamp;
   const gchar *xml =
       "<?xml version=\"1.0\"?>"
@@ -4699,10 +4710,14 @@ GST_START_TEST (dash_mpdparser_segment_list)
    * We expect it to be limited to period duration.
    */
   expectedDuration = duration_to_ms (0, 0, 0, 3, 3, 20, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+  expectedPeriodStart = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
 
   ret = gst_mpd_client2_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
+  periodStartTime = gst_mpd_client2_get_period_start_time (mpdclient);
+  assert_equals_uint64 (periodStartTime, expectedPeriodStart * GST_MSECOND);
+
   assert_equals_string (fragment.uri, "/TestMedia");
   assert_equals_int64 (fragment.range_start, 100);
   assert_equals_int64 (fragment.range_end, 200);
@@ -4812,9 +4827,10 @@ GST_START_TEST (dash_mpdparser_segment_template)
   /*
    * Period starts at 10s.
    * MPD has a duration of 3h3m30s, so period duration is 3h3m20s.
-   * We expect the last fragment to end at period start + period duration: 3h3m30s
+   * the returned timestamp doesn't include the period start so
+   * we expect the last fragment to end at period duration: 3h3m20s
    */
-  expectedTimestamp = duration_to_ms (0, 0, 0, 3, 3, 30, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 3, 3, 20, 0);
   ret = gst_mpd_client2_get_last_fragment_timestamp_end (mpdclient, 0,
       &lastFragmentTimestampEnd);
   assert_equals_int (ret, TRUE);
@@ -4837,6 +4853,7 @@ GST_START_TEST (dash_mpdparser_segment_timeline)
   GstActiveStream *activeStream;
   GstMediaFragmentInfo fragment;
   GstClockTime expectedDuration;
+  GstClockTime expectedPeriodStart, periodStartTime;
   GstClockTime expectedTimestamp;
   GstFlowReturn flow;
   GstDateTime *segmentAvailability;
@@ -4896,10 +4913,15 @@ GST_START_TEST (dash_mpdparser_segment_timeline)
 
   /* expected duration of the next fragment */
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 2, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 13, 0);
+  expectedPeriodStart = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 3, 0);
 
   ret = gst_mpd_client2_get_next_fragment (mpdclient, 0, &fragment);
   assert_equals_int (ret, TRUE);
+
+  periodStartTime = gst_mpd_client2_get_period_start_time (mpdclient);
+  assert_equals_uint64 (periodStartTime, expectedPeriodStart * GST_MSECOND);
+
   assert_equals_string (fragment.uri, "/TestMedia0");
   assert_equals_string (fragment.index_uri, "/TestIndex0");
   assert_equals_uint64 (fragment.duration, expectedDuration * GST_MSECOND);
@@ -4964,7 +4986,7 @@ GST_START_TEST (dash_mpdparser_segment_timeline)
 
   /* third segment has a small gap after the second ends  (t=10) */
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 3, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 20, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
 
   /* check third segment */
   ret = gst_mpd_client2_get_next_fragment (mpdclient, 0, &fragment);
@@ -5140,6 +5162,7 @@ GST_START_TEST (dash_mpdparser_multipleSegmentURL)
   GstActiveStream *activeStream;
   GstMediaFragmentInfo fragment;
   GstClockTime expectedDuration;
+  GstClockTime expectedPeriodStart, periodStartTime;
   GstClockTime expectedTimestamp;
   GstFlowReturn flow;
 
@@ -5198,11 +5221,14 @@ GST_START_TEST (dash_mpdparser_multipleSegmentURL)
   fail_if (activeStream == NULL);
 
   expectedDuration = duration_to_ms (0, 0, 0, 0, 0, 20, 0);
-  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+  expectedPeriodStart = duration_to_ms (0, 0, 0, 0, 0, 10, 0);
+  expectedTimestamp = duration_to_ms (0, 0, 0, 0, 0, 0, 0);
 
   /* the representation contains 2 segments. The first is partially
    * clipped, and the second entirely (and thus discarded).
    */
+  periodStartTime = gst_mpd_client2_get_period_start_time (mpdclient);
+  assert_equals_uint64 (periodStartTime, expectedPeriodStart * GST_MSECOND);
 
   /* check first segment */
   ret = gst_mpd_client2_get_next_fragment (mpdclient, 0, &fragment);
