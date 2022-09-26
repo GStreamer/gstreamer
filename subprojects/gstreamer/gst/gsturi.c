@@ -2166,6 +2166,9 @@ gst_uri_set_scheme (GstUri * uri, const gchar * scheme)
     return scheme == NULL;
   g_return_val_if_fail (GST_IS_URI (uri) && gst_uri_is_writable (uri), FALSE);
 
+  if (uri->scheme == scheme)
+    return TRUE;
+
   g_free (uri->scheme);
   uri->scheme = g_strdup (scheme);
 
@@ -2208,6 +2211,8 @@ gst_uri_set_userinfo (GstUri * uri, const gchar * userinfo)
     return userinfo == NULL;
   g_return_val_if_fail (GST_IS_URI (uri) && gst_uri_is_writable (uri), FALSE);
 
+  if (uri->userinfo == userinfo)
+    return TRUE;
   g_free (uri->userinfo);
   uri->userinfo = g_strdup (userinfo);
 
@@ -2249,6 +2254,9 @@ gst_uri_set_host (GstUri * uri, const gchar * host)
   if (!uri)
     return host == NULL;
   g_return_val_if_fail (GST_IS_URI (uri) && gst_uri_is_writable (uri), FALSE);
+
+  if (uri->host == host)
+    return TRUE;
 
   g_free (uri->host);
   uri->host = g_strdup (host);
@@ -2669,6 +2677,9 @@ gst_uri_set_query_table (GstUri * uri, GHashTable * query_table)
     return query_table == NULL;
   g_return_val_if_fail (GST_IS_URI (uri) && gst_uri_is_writable (uri), FALSE);
 
+  if (uri->query == query_table)
+    return TRUE;
+
   old_table = uri->query;
   if (query_table)
     uri->query = g_hash_table_ref (query_table);
@@ -2852,6 +2863,9 @@ gst_uri_set_fragment (GstUri * uri, const gchar * fragment)
   if (!uri)
     return fragment == NULL;
   g_return_val_if_fail (GST_IS_URI (uri) && gst_uri_is_writable (uri), FALSE);
+
+  if (uri->fragment == fragment)
+    return TRUE;
 
   g_free (uri->fragment);
   uri->fragment = g_strdup (fragment);
