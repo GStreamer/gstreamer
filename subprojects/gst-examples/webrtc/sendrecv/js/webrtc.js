@@ -64,7 +64,13 @@ function handleIncomingError(error) {
 }
 
 function getVideoElement() {
-    return document.getElementById("stream");
+    var div = document.getElementById("video");
+    var video_tag = document.createElement("video");
+    video_tag.textContent = "Your browser doesn't support video";
+    video_tag.autoplay = true;
+    video_tag.playsinline = true;
+    div.appendChild(video_tag);
+    return video_tag
 }
 
 function setStatus(text) {
@@ -91,11 +97,8 @@ function resetVideo() {
             }
         });
 
-    // Reset the video element and stop showing the last received frame
-    var videoElement = getVideoElement();
-    videoElement.pause();
-    videoElement.src = "";
-    videoElement.load();
+    // Remove all video players
+    document.getElementById("video").innerHTML = "";
 }
 
 // SDP offer received from peer, set remote description and create an answer
@@ -264,10 +267,10 @@ function websocketServerConnect() {
 }
 
 function onRemoteTrack(event) {
-    if (getVideoElement().srcObject !== event.streams[0]) {
-        console.log('Incoming stream');
-        getVideoElement().srcObject = event.streams[0];
-    }
+    var videoElem = getVideoElement();
+    if (event.track.kind === 'audio')
+        videoElem.style = 'display: none;';
+    videoElem.srcObject = new MediaStream([event.track]);
 }
 
 function errorUserMediaHandler() {
