@@ -140,6 +140,8 @@
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_sink_debug);
 #define GST_CAT_DEFAULT gst_decklink_video_sink_debug
 
+#define DEFAULT_PERSISTENT_ID (-1)
+
 class GStreamerVideoOutputCallback:public IDeckLinkVideoOutputCallback
 {
 public:
@@ -521,6 +523,7 @@ enum
   PROP_CC_LINE,
   PROP_AFD_BAR_LINE,
   PROP_MAPPING_FORMAT,
+  PROP_PERSISTENT_ID
 };
 
 static void gst_decklink_video_sink_set_property (GObject * object,
@@ -610,6 +613,22 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_DEVICE_NUMBER,
       g_param_spec_int ("device-number", "Device number",
           "Output device instance to use", 0, G_MAXINT, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+  /**
+   * GstDecklinkVideoSink:persistent-id
+   *
+   * Decklink device to use. Higher priority than "device-number".
+   * BMDDeckLinkPersistentID is a device speciﬁc, 32-bit unique identiﬁer.
+   * It is stable even when the device is plugged in a diﬀerent connector,
+   * across reboots, and when plugged into diﬀerent computers.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PERSISTENT_ID,
+      g_param_spec_int64 ("persistent-id", "Persistent id",
+          "Output device instance to use. Higher priority than \"device-number\".",
+          DEFAULT_PERSISTENT_ID, G_MAXINT64, DEFAULT_PERSISTENT_ID,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
@@ -723,6 +742,7 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
 {
   self->mode = GST_DECKLINK_MODE_NTSC;
   self->device_number = 0;
+  self->persistent_id = DEFAULT_PERSISTENT_ID;
   self->video_format = GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV;
   self->profile_id = GST_DECKLINK_PROFILE_ID_DEFAULT;
   /* VITC is legacy, we should expect RP188 in modern use cases */
@@ -789,6 +809,9 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
       self->mapping_format =
           (GstDecklinkMappingFormat) g_value_get_enum (value);
       break;
+    case PROP_PERSISTENT_ID:
+      self->persistent_id = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -839,6 +862,9 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
       break;
     case PROP_MAPPING_FORMAT:
       g_value_set_enum (value, self->mapping_format);
+      break;
+    case PROP_PERSISTENT_ID:
+      g_value_set_int64 (value, self->persistent_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1673,7 +1699,7 @@ gst_decklink_video_sink_open (GstBaseSink * bsink)
   GST_DEBUG_OBJECT (self, "Starting");
 
   self->output =
-      gst_decklink_acquire_nth_output (self->device_number,
+      gst_decklink_acquire_nth_output (self->device_number, self->persistent_id,
       GST_ELEMENT_CAST (self), FALSE);
   if (!self->output) {
     GST_ERROR_OBJECT (self, "Failed to acquire output");
@@ -1718,7 +1744,7 @@ gst_decklink_video_sink_close (GstBaseSink * bsink)
     g_mutex_unlock (&self->output->lock);
 
     self->output->output->DisableVideoOutput ();
-    gst_decklink_release_nth_output (self->device_number,
+    gst_decklink_release_nth_output (self->device_number, self->persistent_id,
         GST_ELEMENT_CAST (self), FALSE);
     self->output = NULL;
   }

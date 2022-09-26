@@ -57,6 +57,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_src_debug);
 #define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
 #endif
 
+#define DEFAULT_PERSISTENT_ID (-1)
+
 enum
 {
   PROP_0,
@@ -66,7 +68,8 @@ enum
   PROP_DISCONT_WAIT,
   PROP_BUFFER_SIZE,
   PROP_CHANNELS,
-  PROP_HW_SERIAL_NUMBER
+  PROP_HW_SERIAL_NUMBER,
+  PROP_PERSISTENT_ID
 };
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -180,6 +183,23 @@ gst_decklink_audio_src_class_init (GstDecklinkAudioSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+    /**
+   * GstDecklinkAudioSrc:persistent-id
+   *
+   * Decklink device to use. Higher priority than "device-number".
+   * BMDDeckLinkPersistentID is a device speciﬁc, 32-bit unique identiﬁer.
+   * It is stable even when the device is plugged in a diﬀerent connector,
+   * across reboots, and when plugged into diﬀerent computers.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PERSISTENT_ID,
+      g_param_spec_int64 ("persistent-id", "Persistent id",
+          "Output device instance to use. Higher priority than \"device-number\".",
+          DEFAULT_PERSISTENT_ID, G_MAXINT64, DEFAULT_PERSISTENT_ID,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   g_object_class_install_property (gobject_class, PROP_ALIGNMENT_THRESHOLD,
       g_param_spec_uint64 ("alignment-threshold", "Alignment Threshold",
           "Timestamp alignment threshold in nanoseconds", 0,
@@ -246,6 +266,8 @@ gst_decklink_audio_src_init (GstDecklinkAudioSrc * self)
   self->skipped_last = 0;
   self->skip_from_timestamp = GST_CLOCK_TIME_NONE;
   self->skip_to_timestamp = GST_CLOCK_TIME_NONE;
+
+  self->persistent_id = DEFAULT_PERSISTENT_ID;
 }
 
 void
@@ -273,6 +295,9 @@ gst_decklink_audio_src_set_property (GObject * object, guint property_id,
       break;
     case PROP_CHANNELS:
       self->channels = (GstDecklinkAudioChannelsEnum) g_value_get_enum (value);
+      break;
+    case PROP_PERSISTENT_ID:
+      self->persistent_id = g_value_get_int64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -310,6 +335,9 @@ gst_decklink_audio_src_get_property (GObject * object, guint property_id,
         g_value_set_string (value, self->input->hw_serial_number);
       else
         g_value_set_string (value, NULL);
+      break;
+    case PROP_PERSISTENT_ID:
+      g_value_set_int64 (value, self->persistent_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -939,7 +967,7 @@ gst_decklink_audio_src_open (GstDecklinkAudioSrc * self)
   GST_DEBUG_OBJECT (self, "Opening");
 
   self->input =
-      gst_decklink_acquire_nth_input (self->device_number,
+      gst_decklink_acquire_nth_input (self->device_number, self->persistent_id,
       GST_ELEMENT_CAST (self), TRUE);
   if (!self->input) {
     GST_ERROR_OBJECT (self, "Failed to acquire input");
@@ -986,7 +1014,7 @@ gst_decklink_audio_src_close (GstDecklinkAudioSrc * self)
     self->input->got_audio_packet = NULL;
     g_mutex_unlock (&self->input->lock);
 
-    gst_decklink_release_nth_input (self->device_number,
+    gst_decklink_release_nth_input (self->device_number, self->persistent_id,
         GST_ELEMENT_CAST (self), TRUE);
     self->input = NULL;
   }

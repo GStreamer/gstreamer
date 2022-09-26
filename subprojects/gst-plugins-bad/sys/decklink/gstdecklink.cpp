@@ -34,6 +34,7 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_decklink_debug);
 #define GST_CAT_DEFAULT gst_decklink_debug
+#define DEFAULT_PERSISTENT_ID (-1)
 
 GType
 gst_decklink_mode_get_type (void)
@@ -1033,6 +1034,18 @@ static ProfileSetOperationResult gst_decklink_configure_profile (Device *
 static MappingFormatSetOperationResult gst_decklink_configure_mapping_format (Device *
     device, GstDecklinkMappingFormat mapping_format);
 
+static gboolean
+persistent_id_is_equal_input (const Device * a, const gint64 * b)
+{
+  return a->input.persistent_id == *b;
+}
+
+static gboolean
+persistent_id_is_equal_output (const Device * a, const gint64 * b)
+{
+  return a->output.persistent_id == *b;
+}
+
 class GStreamerDecklinkInputCallback:public IDeckLinkInputCallback
 {
 private:
@@ -1541,9 +1554,9 @@ static GPtrArray *devices;      /* array of Device */
 
 static GstDecklinkDevice *
 gst_decklink_device_new (const gchar * model_name, const gchar * display_name,
-    const gchar * serial_number, gboolean supports_format_detection,
-    GstCaps * video_caps, guint max_channels, gboolean video, gboolean capture,
-    guint device_number)
+    const gchar * serial_number, gint64 persistent_id,
+    gboolean supports_format_detection, GstCaps * video_caps,
+    guint max_channels, gboolean video, gboolean capture, guint device_number)
 {
   GstDevice *ret;
   gchar *name;
@@ -1592,6 +1605,10 @@ gst_decklink_device_new (const gchar * model_name, const gchar * display_name,
     gst_structure_set (properties, "serial-number", G_TYPE_STRING,
         serial_number, NULL);
 
+  if (persistent_id)
+    gst_structure_set (properties, "persistent-id", G_TYPE_INT64,
+        persistent_id, NULL);
+
   ret = GST_DEVICE (g_object_new (GST_TYPE_DECKLINK_DEVICE,
           "display-name", name,
           "device-class", device_class, "caps", caps, "properties", properties,
@@ -1603,9 +1620,17 @@ gst_decklink_device_new (const gchar * model_name, const gchar * display_name,
 
   GST_DECKLINK_DEVICE (ret)->video = video;
   GST_DECKLINK_DEVICE (ret)->capture = capture;
-  GST_DECKLINK_DEVICE (ret)->device_number = device_number;
+  GST_DECKLINK_DEVICE (ret)->persistent_id = persistent_id;
 
   return GST_DECKLINK_DEVICE (ret);
+}
+
+static gint
+compare_persistent_id (gconstpointer a, gconstpointer b)
+{
+  const Device *const dev1 = *(Device **) a;
+  const Device *const dev2 = *(Device **) b;
+  return dev1->input.persistent_id - dev2->input.persistent_id;
 }
 
 static gpointer
@@ -1646,6 +1671,7 @@ init_devices (gpointer data)
     gchar *model_name = NULL;
     gchar *display_name = NULL;
     gchar *serial_number = NULL;
+    gint64 persistent_id = 0;
     gboolean supports_format_detection = 0;
     gint64 max_channels = 2;
     GstCaps *video_input_caps = gst_caps_new_empty ();
@@ -1776,12 +1802,28 @@ init_devices (gpointer data)
     } else {
       bool tmp_bool = false;
       int64_t tmp_int = 2;
+      int64_t tmp_int_persistent_id = 0;
 
       dev->input.attributes->GetInt (BMDDeckLinkMaximumAudioChannels, &tmp_int);
       dev->input.attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
           &tmp_bool);
       supports_format_detection = tmp_bool;
       max_channels = tmp_int;
+
+      ret =
+          dev->input.attributes->GetInt (BMDDeckLinkPersistentID,
+          &tmp_int_persistent_id);
+      if (ret == S_OK) {
+        persistent_id = tmp_int_persistent_id;
+        dev->output.persistent_id = persistent_id;
+        dev->input.persistent_id = persistent_id;
+        GST_DEBUG ("device %d has persistent id %" G_GINT64_FORMAT, i, persistent_id);
+      } else {
+        persistent_id = i;
+        dev->output.persistent_id = i;
+        dev->input.persistent_id = i;
+        GST_DEBUG ("device %d does not have persistent id. Value set to %d", i, i);
+      }
     }
 
     decklink->GetModelName ((COMSTR_T *) & model_name);
@@ -1794,22 +1836,22 @@ init_devices (gpointer data)
     if (capture) {
       dev->devices[0] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          supports_format_detection, video_input_caps, max_channels, TRUE, TRUE,
-          i);
+          persistent_id, supports_format_detection, video_input_caps,
+          max_channels, TRUE, TRUE, i);
       dev->devices[1] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          supports_format_detection, video_input_caps, max_channels, FALSE,
-          TRUE, i);
+          persistent_id, supports_format_detection, video_input_caps,
+          max_channels, FALSE, TRUE, i);
     }
     if (output) {
       dev->devices[2] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          supports_format_detection, video_output_caps, max_channels, TRUE,
-          FALSE, i);
+          persistent_id, supports_format_detection, video_output_caps,
+          max_channels, TRUE, FALSE, i);
       dev->devices[3] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          supports_format_detection, video_output_caps, max_channels, FALSE,
-          FALSE, i);
+          persistent_id, supports_format_detection, video_output_caps,
+          max_channels, FALSE, FALSE, i);
     }
 
     if (model_name)
@@ -1837,6 +1879,8 @@ init_devices (gpointer data)
   GST_INFO ("Detected %u devices", devices->len);
 
   iterator->Release ();
+
+  g_ptr_array_sort (devices, compare_persistent_id);
 
   return NULL;
 }
@@ -1875,15 +1919,27 @@ gst_decklink_get_devices (void)
 }
 
 GstDecklinkOutput *
-gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio)
+gst_decklink_acquire_nth_output (gint n, gint64 persistent_id,
+    GstElement * sink, gboolean is_audio)
 {
   GstDecklinkOutput *output;
   Device *device;
+  guint found_index;
 
   g_once (&devices_once, init_devices, NULL);
 
   if (devices == NULL)
     return NULL;
+
+  if (persistent_id != DEFAULT_PERSISTENT_ID) {
+    if (g_ptr_array_find_with_equal_func (devices, &persistent_id,
+            (GEqualFunc) persistent_id_is_equal_output, &found_index)) {
+      n = found_index;
+      GST_DEBUG ("Persistent ID: %" G_GINT64_FORMAT ", used", persistent_id);
+    } else {
+      return NULL;
+    }
+  }
 
   if (n < 0 || (guint) n >= devices->len)
     return NULL;
@@ -1924,13 +1980,25 @@ gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio)
 }
 
 void
-gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio)
+gst_decklink_release_nth_output (gint n, gint64 persistent_id,
+    GstElement * sink, gboolean is_audio)
 {
   GstDecklinkOutput *output;
   Device *device;
+  guint found_index;
 
   if (devices == NULL)
     return;
+
+  if (persistent_id != DEFAULT_PERSISTENT_ID) {
+    if (g_ptr_array_find_with_equal_func (devices, &persistent_id,
+            (GEqualFunc) persistent_id_is_equal_output, &found_index)) {
+      n = found_index;
+      GST_DEBUG ("Persistent ID: %" G_GINT64_FORMAT ", used", persistent_id);
+    } else {
+      return;
+    }
+  }
 
   if (n < 0 || (guint) n >= devices->len)
     return;
@@ -1953,15 +2021,27 @@ gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio)
 }
 
 GstDecklinkInput *
-gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
+gst_decklink_acquire_nth_input (gint n, gint64 persistent_id, GstElement * src,
+    gboolean is_audio)
 {
   GstDecklinkInput *input;
   Device *device;
+  guint found_index;
 
   g_once (&devices_once, init_devices, NULL);
 
   if (devices == NULL)
     return NULL;
+
+  if (persistent_id != DEFAULT_PERSISTENT_ID) {
+    if (g_ptr_array_find_with_equal_func (devices, &persistent_id,
+            (GEqualFunc) persistent_id_is_equal_input, &found_index)) {
+      n = found_index;
+      GST_DEBUG ("Persistent ID: %" G_GINT64_FORMAT ", used", persistent_id);
+    } else {
+      return NULL;
+    }
+  }
 
   if (n < 0 || (guint) n >= devices->len)
     return NULL;
@@ -2001,13 +2081,25 @@ gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio)
 }
 
 void
-gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio)
+gst_decklink_release_nth_input (gint n, gint64 persistent_id, GstElement * src,
+    gboolean is_audio)
 {
   GstDecklinkInput *input;
   Device *device;
+  guint found_index;
 
   if (devices == NULL)
     return;
+
+  if (persistent_id != DEFAULT_PERSISTENT_ID) {
+    if (g_ptr_array_find_with_equal_func (devices, &persistent_id,
+            (GEqualFunc) persistent_id_is_equal_input, &found_index)) {
+      n = found_index;
+      GST_DEBUG ("Persistent ID: %" G_GINT64_FORMAT ", used", persistent_id);
+    } else {
+      return;
+    }
+  }
 
   if (n < 0 || (guint) n >= devices->len)
     return;

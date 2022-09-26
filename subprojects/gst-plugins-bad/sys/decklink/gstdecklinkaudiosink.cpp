@@ -52,6 +52,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_audio_sink_debug);
 // Microseconds for audiobasesink compatibility...
 #define DEFAULT_BUFFER_TIME (50 * GST_MSECOND / 1000)
 
+#define DEFAULT_PERSISTENT_ID (-1)
+
 enum
 {
   PROP_0,
@@ -60,6 +62,7 @@ enum
   PROP_ALIGNMENT_THRESHOLD,
   PROP_DISCONT_WAIT,
   PROP_BUFFER_TIME,
+  PROP_PERSISTENT_ID
 };
 
 static void gst_decklink_audio_sink_set_property (GObject * object,
@@ -141,6 +144,23 @@ gst_decklink_audio_sink_class_init (GstDecklinkAudioSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
+    /**
+   * GstDecklinkAudioSink:persistent-id
+   *
+   * Decklink device to use. Higher priority than "device-number".
+   * BMDDeckLinkPersistentID is a device speciﬁc, 32-bit unique identiﬁer.
+   * It is stable even when the device is plugged in a diﬀerent connector,
+   * across reboots, and when plugged into diﬀerent computers.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_PERSISTENT_ID,
+      g_param_spec_int64 ("persistent-id", "Persistent id",
+          "Output device instance to use. Higher priority than \"device-number\".",
+          DEFAULT_PERSISTENT_ID, G_MAXINT64, DEFAULT_PERSISTENT_ID,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+              G_PARAM_CONSTRUCT)));
+
   g_object_class_install_property (gobject_class, PROP_HW_SERIAL_NUMBER,
       g_param_spec_string ("hw-serial-number", "Hardware serial number",
           "The serial number (hardware ID) of the Decklink card",
@@ -188,6 +208,8 @@ gst_decklink_audio_sink_init (GstDecklinkAudioSink * self)
       DEFAULT_DISCONT_WAIT);
   self->buffer_time = DEFAULT_BUFFER_TIME * 1000;
 
+  self->persistent_id = DEFAULT_PERSISTENT_ID;
+
   gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
 }
 
@@ -217,6 +239,9 @@ gst_decklink_audio_sink_set_property (GObject * object, guint property_id,
       GST_OBJECT_LOCK (self);
       self->buffer_time = g_value_get_uint64 (value) * 1000;
       GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_PERSISTENT_ID:
+      self->persistent_id = g_value_get_int64 (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -256,6 +281,9 @@ gst_decklink_audio_sink_get_property (GObject * object, guint property_id,
       GST_OBJECT_LOCK (self);
       g_value_set_uint64 (value, self->buffer_time / 1000);
       GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_PERSISTENT_ID:
+      g_value_set_int64 (value, self->persistent_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -799,7 +827,7 @@ gst_decklink_audio_sink_open (GstBaseSink * bsink)
   GST_DEBUG_OBJECT (self, "Starting");
 
   self->output =
-      gst_decklink_acquire_nth_output (self->device_number,
+      gst_decklink_acquire_nth_output (self->device_number, self->persistent_id,
       GST_ELEMENT_CAST (self), TRUE);
   if (!self->output) {
     GST_ERROR_OBJECT (self, "Failed to acquire output");
@@ -827,7 +855,7 @@ gst_decklink_audio_sink_close (GstBaseSink * bsink)
     g_mutex_unlock (&self->output->lock);
 
     self->output->output->DisableAudioOutput ();
-    gst_decklink_release_nth_output (self->device_number,
+    gst_decklink_release_nth_output (self->device_number, self->persistent_id,
         GST_ELEMENT_CAST (self), TRUE);
     self->output = NULL;
   }

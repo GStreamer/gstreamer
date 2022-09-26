@@ -401,6 +401,7 @@ struct _GstDecklinkOutput {
   IDeckLinkKeyer *keyer;
 
   gchar *hw_serial_number;
+  gint64 persistent_id;
 
   GstClock *clock;
   GstClockTime clock_start_time, clock_last_time, clock_epoch;
@@ -431,6 +432,7 @@ struct _GstDecklinkInput {
   IDeckLinkProfileAttributes *attributes;
 
   gchar *hw_serial_number;
+  gint64 persistent_id;
 
   /* Everything below protected by mutex */
   GMutex lock;
@@ -452,11 +454,11 @@ struct _GstDecklinkInput {
   void (*start_streams) (GstElement *videosrc);
 };
 
-GstDecklinkOutput * gst_decklink_acquire_nth_output (gint n, GstElement * sink, gboolean is_audio);
-void                gst_decklink_release_nth_output (gint n, GstElement * sink, gboolean is_audio);
+GstDecklinkOutput * gst_decklink_acquire_nth_output (gint n, gint64 persistent_id, GstElement * sink, gboolean is_audio);
+void                gst_decklink_release_nth_output (gint n, gint64 persistent_id, GstElement * sink, gboolean is_audio);
 
-GstDecklinkInput *  gst_decklink_acquire_nth_input (gint n, GstElement * src, gboolean is_audio);
-void                gst_decklink_release_nth_input (gint n, GstElement * src, gboolean is_audio);
+GstDecklinkInput *  gst_decklink_acquire_nth_input (gint n, gint64 persistent_id, GstElement * src, gboolean is_audio);
+void                gst_decklink_release_nth_input (gint n, gint64 persistent_id, GstElement * src, gboolean is_audio);
 
 const GstDecklinkMode * gst_decklink_find_mode_for_caps (GstCaps * caps);
 const GstDecklinkMode * gst_decklink_find_mode_and_format_for_caps (GstCaps * caps, BMDPixelFormat * format);
@@ -479,7 +481,7 @@ struct _GstDecklinkDevice
   GstDevice parent;
   gboolean video;
   gboolean capture;
-  guint device_number;
+  gint64 persistent_id;
 };
 
 GType gst_decklink_device_get_type (void);
