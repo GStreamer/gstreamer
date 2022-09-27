@@ -316,6 +316,9 @@ gst_v4l2_codec_find_devices (void)
   client = g_udev_client_new (NULL);
   udev_devices = g_udev_client_query_by_subsystem (client, "media");
 
+  if (!udev_devices)
+    GST_DEBUG ("Found no media devices");
+
   for (d = udev_devices; d; d = g_list_next (d)) {
     GUdevDevice *udev = (GUdevDevice *) d->data;
     const gchar *path = g_udev_device_get_device_file (udev);
