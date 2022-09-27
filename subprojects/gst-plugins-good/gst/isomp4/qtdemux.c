@@ -6395,6 +6395,7 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
       /* gaps can only be sent after segment is activated (segment.stop is no longer -1) */
       while (GST_CLOCK_TIME_IS_VALID (stream->segment.stop) &&
           GST_CLOCK_TIME_IS_VALID (stream->segment.position) &&
+          stream->segment.position < (G_MAXUINT64 - gap_threshold) &&
           stream->segment.position + gap_threshold < min_time) {
         GstEvent *gap =
             gst_event_new_gap (stream->segment.position, gap_threshold);
