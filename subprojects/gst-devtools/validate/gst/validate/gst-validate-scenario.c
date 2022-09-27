@@ -376,6 +376,8 @@ struct _GstValidateActionPrivate
   gboolean pending_set_done;
 
   GMainContext *context;
+
+  GValue it_value;
 };
 
 static JsonNode *
@@ -449,6 +451,11 @@ _action_copy (GstValidateAction * act)
   GST_VALIDATE_ACTION_N_REPEATS (copy) = GST_VALIDATE_ACTION_N_REPEATS (act);
   GST_VALIDATE_ACTION_RANGE_NAME (copy) = GST_VALIDATE_ACTION_RANGE_NAME (act);
 
+  if (act->priv->it_value.g_type != 0) {
+    g_value_init (&copy->priv->it_value, G_VALUE_TYPE (&act->priv->it_value));
+    g_value_copy (&act->priv->it_value, &copy->priv->it_value);
+  }
+
   return copy;
 }
 
@@ -486,6 +493,8 @@ _action_free (GstValidateAction * action)
   if (action->priv->main_structure)
     gst_structure_free (action->priv->main_structure);
 
+  if (action->priv->it_value.g_type != 0)
+    g_value_reset (&action->priv->it_value);
   g_weak_ref_clear (&action->priv->scenario);
   g_free (GST_VALIDATE_ACTION_FILENAME (action));
   g_free (GST_VALIDATE_ACTION_DEBUG (action));
@@ -3942,11 +3951,17 @@ gst_validate_action_default_prepare_func (GstValidateAction * action)
   if (!gst_validate_action_setup_repeat (scenario, action))
     goto err;
 
-  if (GST_VALIDATE_ACTION_N_REPEATS (action))
-    gst_structure_set (scenario->priv->vars,
-        GST_VALIDATE_ACTION_RANGE_NAME (action) ?
-        GST_VALIDATE_ACTION_RANGE_NAME (action) : "repeat", G_TYPE_INT,
-        action->repeat, NULL);
+  if (GST_VALIDATE_ACTION_N_REPEATS (action)) {
+    if (action->priv->it_value.g_type != 0) {
+      gst_structure_set_value (scenario->priv->vars,
+          GST_VALIDATE_ACTION_RANGE_NAME (action), &action->priv->it_value);
+    } else {
+      gst_structure_set (scenario->priv->vars,
+          GST_VALIDATE_ACTION_RANGE_NAME (action) ?
+          GST_VALIDATE_ACTION_RANGE_NAME (action) : "repeat", G_TYPE_INT,
+          action->repeat, NULL);
+    }
+  }
   gst_validate_structure_resolve_variables (action, action->structure,
       scenario->priv->vars, GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_ALL);
   for (i = 0; type->parameters[i].name; i++) {
@@ -4122,16 +4137,26 @@ gst_validate_foreach_prepare (GstValidateAction * action)
   i = g_list_index (scenario->priv->actions, action);
   for (it = min; it < max; it = it + step) {
     GstStructure *lvariables = gst_structure_new_empty ("vars");
+    const GValue *it_value = NULL;
 
-    if (it_array)
+    if (it_array) {
+      it_value = gst_value_array_get_value (it_array, it);
+
       gst_structure_set_value (lvariables,
-          GST_VALIDATE_ACTION_RANGE_NAME (action),
-          gst_value_array_get_value (it_array, it));
+          GST_VALIDATE_ACTION_RANGE_NAME (action), it_value);
+
+    }
 
     for (tmp = actions; tmp; tmp = tmp->next) {
-      scenario->priv->actions = g_list_insert (scenario->priv->actions,
+      GstValidateAction *subact =
           gst_validate_create_subaction (scenario, lvariables, action,
-              gst_structure_copy (tmp->data), it, max), i++);
+          gst_structure_copy (tmp->data), it, max);
+      scenario->priv->actions =
+          g_list_insert (scenario->priv->actions, subact, i++);
+      if (it_value) {
+        g_value_init (&subact->priv->it_value, G_VALUE_TYPE (it_value));
+        g_value_copy (it_value, &subact->priv->it_value);
+      }
     }
   }
   g_list_free_full (actions, (GDestroyNotify) gst_structure_free);
