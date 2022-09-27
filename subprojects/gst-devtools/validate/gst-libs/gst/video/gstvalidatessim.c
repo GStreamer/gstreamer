@@ -163,26 +163,63 @@ gst_validate_ssim_save_out (GstValidateSsim * self, GstBuffer * buffer,
   if (gst_validate_ssim_convert (self, &self->priv->outconverter_info,
           &frame, &converted)) {
     cairo_status_t status;
-    cairo_surface_t *surface;
     gchar *bn1 = g_path_get_basename (ref_file);
     gchar *bn2 = g_path_get_basename (file);
-    gchar *fname = g_strdup_printf ("%s.VS.%s.result.png", bn1, bn2);
+    gchar *fname =
+        g_strdup_printf ("original_%s.VS.nok_%s.result.png", bn1, bn2);
     gchar *outfile = g_build_path (G_DIR_SEPARATOR_S, outfolder, fname, NULL);
+    cairo_surface_t *out_surface = NULL;
 
-    surface =
-        cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA
-        (&converted, 0), CAIRO_FORMAT_RGB24, GST_VIDEO_FRAME_WIDTH (&converted),
-        GST_VIDEO_FRAME_HEIGHT (&converted),
-        GST_VIDEO_FRAME_PLANE_STRIDE (&converted, 0));
+    if (g_str_has_suffix (file, ".png")) {
+      cairo_t *context;
+      cairo_surface_t *ref_surface =
+          cairo_image_surface_create_from_png (ref_file);
+      cairo_surface_t *nok_surface = cairo_image_surface_create_from_png (file);
+      cairo_surface_t *diff_surface =
+          cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA
+          (&converted, 0), CAIRO_FORMAT_RGB24,
+          GST_VIDEO_FRAME_WIDTH (&converted),
+          GST_VIDEO_FRAME_HEIGHT (&converted),
+          GST_VIDEO_FRAME_PLANE_STRIDE (&converted, 0));
 
-    if ((status = cairo_surface_write_to_png (surface, outfile)) !=
+      out_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+          GST_VIDEO_FRAME_WIDTH (&frame) * 2,
+          GST_VIDEO_FRAME_HEIGHT (&frame) * 2);
+
+      context = cairo_create (out_surface);
+      cairo_set_operator (context, CAIRO_OPERATOR_OVER);
+      cairo_set_source_surface (context, ref_surface, 0, 0);
+      cairo_paint (context);
+
+      cairo_translate (context, GST_VIDEO_FRAME_WIDTH (&converted), 0);
+      cairo_set_source_surface (context, nok_surface, 0, 0);
+      cairo_paint (context);
+
+      cairo_translate (context, -GST_VIDEO_FRAME_WIDTH (&converted) / 2,
+          GST_VIDEO_FRAME_HEIGHT (&converted));
+      cairo_set_source_surface (context, diff_surface, 0, 0);
+      cairo_paint (context);
+
+      cairo_surface_destroy (ref_surface);
+      cairo_surface_destroy (nok_surface);
+      cairo_surface_destroy (diff_surface);
+    } else {
+      out_surface =
+          cairo_image_surface_create_for_data (GST_VIDEO_FRAME_PLANE_DATA
+          (&converted, 0), CAIRO_FORMAT_RGB24,
+          GST_VIDEO_FRAME_WIDTH (&converted),
+          GST_VIDEO_FRAME_HEIGHT (&converted),
+          GST_VIDEO_FRAME_PLANE_STRIDE (&converted, 0));
+    }
+
+    if ((status = cairo_surface_write_to_png (out_surface, outfile)) !=
         CAIRO_STATUS_SUCCESS) {
       GST_VALIDATE_REPORT (self, GENERAL_INPUT_ERROR,
           "Could not save '%s', cairo status is '%s'", outfile,
           cairo_status_to_string (status));
     }
 
-    cairo_surface_destroy (surface);
+    cairo_surface_destroy (out_surface);
     gst_video_frame_unmap (&frame);
     gst_video_frame_unmap (&converted);
     g_free (bn1);
