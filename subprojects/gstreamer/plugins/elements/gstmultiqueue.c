@@ -885,6 +885,7 @@ gst_multi_queue_init (GstMultiQueue * mqueue)
   mqueue->high_time = GST_CLOCK_STIME_NONE;
 
   g_mutex_init (&mqueue->qlock);
+  g_mutex_init (&mqueue->reconf_lock);
   g_mutex_init (&mqueue->buffering_post_lock);
 }
 
@@ -899,6 +900,7 @@ gst_multi_queue_finalize (GObject * object)
 
   /* free/unref instance data */
   g_mutex_clear (&mqueue->qlock);
+  g_mutex_clear (&mqueue->reconf_lock);
   g_mutex_clear (&mqueue->buffering_post_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -1199,8 +1201,10 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
     GST_LOG_OBJECT (element, "name : %s (id %d)", GST_STR_NULL (name), temp_id);
   }
 
+  g_mutex_lock (&mqueue->reconf_lock);
   /* Create a new single queue, add the sink and source pad and return the sink pad */
   squeue = gst_single_queue_new (mqueue, temp_id);
+  g_mutex_unlock (&mqueue->reconf_lock);
 
   new_pad = squeue ? g_weak_ref_get (&squeue->sinkpad) : NULL;
   /* request pad assumes the element is owning the ref of the pad it returns */
@@ -1247,6 +1251,11 @@ gst_multi_queue_release_pad (GstElement * element, GstPad * pad)
   /* FIXME: The removal of the singlequeue should probably not happen until it
    * finishes draining */
 
+  /* Take the reconfiguration lock before removing the singlequeue from
+   * the list, to prevent overlapping release/request from causing
+   * problems */
+  g_mutex_lock (&mqueue->reconf_lock);
+
   /* remove it from the list */
   mqueue->queues = g_list_delete_link (mqueue->queues, tmp);
   mqueue->queues_cookie++;
@@ -1263,6 +1272,8 @@ gst_multi_queue_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (element, sinkpad);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
+
+  g_mutex_unlock (&mqueue->reconf_lock);
 }
 
 static GstStateChangeReturn

@@ -78,6 +78,8 @@ struct _GstMultiQueue {
 			/* queues lock). Protects nbqueues, queues, global */
 			/* GstMultiQueueSize, counter and highid */
 
+  GMutex   reconf_lock;	/* Reconfiguration lock, held during request/release pads */
+
   gint numwaiting;	/* number of not-linked pads waiting */
 
   gboolean buffering_percent_changed;
