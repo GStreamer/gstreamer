@@ -323,6 +323,7 @@ gst_pulsering_destroy_stream (GstPulseRingBuffer * pbuf)
     pa_stream_set_write_callback (pbuf->stream, NULL, NULL);
     pa_stream_set_underflow_callback (pbuf->stream, NULL, NULL);
     pa_stream_set_overflow_callback (pbuf->stream, NULL, NULL);
+    pa_stream_set_latency_update_callback (pbuf->stream, NULL, NULL);
 
     pa_stream_unref (pbuf->stream);
     pbuf->stream = NULL;
