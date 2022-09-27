@@ -660,7 +660,7 @@ gst_decodebin3_dispose (GObject * object)
   if (dbin->decodable_factories)
     g_list_free (dbin->decodable_factories);
   g_list_free_full (dbin->requested_selection, g_free);
-  g_list_free (dbin->active_selection);
+  g_list_free_full (dbin->active_selection, g_free);
   g_list_free (dbin->to_activate);
   g_list_free (dbin->pending_select_streams);
   g_clear_object (&dbin->collection);
@@ -1695,8 +1695,9 @@ get_output_for_slot (MultiQueueSlot * slot)
     output->slot = slot;
     GST_DEBUG ("Linking slot %p to new output %p", slot, output);
     slot->output = output;
+    GST_DEBUG ("Adding '%s' to active_selection", stream_id);
     dbin->active_selection =
-        g_list_append (dbin->active_selection, (gchar *) stream_id);
+        g_list_append (dbin->active_selection, (gchar *) g_strdup (stream_id));
   } else
     GST_DEBUG ("Not creating any output for slot %p", slot);
 
@@ -2536,8 +2537,10 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   slot->output = NULL;
   output->slot = NULL;
   /* Remove sid from active selection */
+  GST_DEBUG ("Removing '%s' from active_selection", sid);
   for (tmp = dbin->active_selection; tmp; tmp = tmp->next)
     if (!g_strcmp0 (sid, tmp->data)) {
+      g_free (tmp->data);
       dbin->active_selection = g_list_delete_link (dbin->active_selection, tmp);
       break;
     }
@@ -2555,7 +2558,7 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
       /* Pass target stream id to requested selection */
       dbin->requested_selection =
           g_list_append (dbin->requested_selection, g_strdup (tmp->data));
-      dbin->to_activate = g_list_remove (dbin->to_activate, tmp->data);
+      dbin->to_activate = g_list_delete_link (dbin->to_activate, tmp);
       break;
     }
   }
@@ -2565,8 +2568,9 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
         target_slot, tsid);
     target_slot->output = output;
     output->slot = target_slot;
+    GST_DEBUG ("Adding '%s' to active_selection", tsid);
     dbin->active_selection =
-        g_list_append (dbin->active_selection, (gchar *) tsid);
+        g_list_append (dbin->active_selection, (gchar *) g_strdup (tsid));
     SELECTION_UNLOCK (dbin);
 
     /* Wakeup the target slot so that it retries to send events/buffers
@@ -3069,6 +3073,8 @@ gst_decodebin3_change_state (GstElement * element, GstStateChange transition)
       g_object_set (dbin->multiqueue, "min-interleave-time",
           dbin->default_mq_min_interleave, NULL);
       dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
+      g_list_free_full (dbin->active_selection, g_free);
+      dbin->active_selection = NULL;
     }
       break;
     default:
