@@ -532,7 +532,6 @@ pkgconfig_variables = ['exec_prefix=${prefix}',
     'toolsdir=${exec_prefix}/bin',
     'pluginsdir=${libdir}/gstreamer-1.0',
     'datarootdir=${prefix}/share',
-    'datadir=${datarootdir}',
     'girdir=${datadir}/gir-1.0',
     'typelibdir=${libdir}/girepository-1.0']
 
