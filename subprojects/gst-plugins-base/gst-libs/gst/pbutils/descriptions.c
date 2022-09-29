@@ -332,7 +332,9 @@ static const FormatInfo formats[] = {
   {"video/x-wmv", NULL, FLAG_VIDEO, ""},
   {"video/x-xan", NULL, FLAG_VIDEO, ""},
   {"video/x-tscc", NULL, FLAG_VIDEO, ""},
-  {"application/x-onvif-metadata", "ONVIF XML Timed MetaData", FLAG_METADATA, ""}
+  /* metadata */
+  {"application/x-onvif-metadata", "ONVIF Timed Metadata", FLAG_METADATA, ""},
+  {"meta/x-klv", "KLV Metadata", FLAG_METADATA, ""},
 };
 
 static const gchar *

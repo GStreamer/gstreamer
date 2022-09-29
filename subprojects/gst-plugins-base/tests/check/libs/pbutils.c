@@ -272,7 +272,7 @@ static const struct FlagDescEntry
   {"video/x-h264", F_VIDEO},
   {"audio/mpeg,mpegversion=4", F_AUDIO},
   {"image/jpeg", F_IMAGE | F_VIDEO},
-  // FIXME: {"meta/x-klv", F_META},
+  {"meta/x-klv", F_META},
   {"application/x-onvif-metadata", F_META},
   {"random/x-nonsense, sense=false", 0},
 };
