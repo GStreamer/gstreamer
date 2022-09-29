@@ -172,6 +172,7 @@ gst_gaussianblur_set_info (GstVideoFilter * filter, GstCaps * incaps,
   /* get stride */
   gb->stride = GST_VIDEO_INFO_COMP_STRIDE (in_info, 0);
   n_elems = gb->stride * gb->height;
+  g_free (gb->tempim);
   gb->tempim = g_malloc (sizeof (gfloat) * n_elems);
 
   return TRUE;
