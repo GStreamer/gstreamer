@@ -1175,12 +1175,10 @@ event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GstElement *next;
 
   if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_DATA (info)) != GST_EVENT_EOS)
-    return GST_PAD_PROBE_PASS;
+    return GST_PAD_PROBE_OK;
 
   gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));
 
-  /* push current effect back into the queue */
-  g_queue_push_tail (&effects, gst_object_ref (cur_effect));
   /* take next effect from the queue */
   next = g_queue_pop_head (&effects);
   if (next == NULL) {
@@ -1198,6 +1196,10 @@ event_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GST_DEBUG_OBJECT (pipeline, "removing %" GST_PTR_FORMAT, cur_effect);
   gst_bin_remove (GST_BIN (pipeline), cur_effect);
 
+  /* push current effect back into the queue */
+  g_queue_push_tail (&effects, g_steal_pointer (&cur_effect));
+
+  /* add, link and start the new effect */
   GST_DEBUG_OBJECT (pipeline, "adding   %" GST_PTR_FORMAT, next);
   gst_bin_add (GST_BIN (pipeline), next);
 
@@ -1280,16 +1282,14 @@ main (int argc, char **argv)
   GOptionContext *ctx;
   GError *err = NULL;
   GMainLoop *loop;
-  GstElement *src, *q1, *q2, *effect, *filter1, *filter2, *sink;
+  GstElement *src, *q1, *q2, *effect, *filter, *sink;
   gchar **effect_names, **e;
 
   ctx = g_option_context_new ("");
-  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
-    g_print ("Error initializing: %s\n", err->message);
-    g_clear_error (&err);
-    g_option_context_free (ctx);
+    g_error ("Error initializing: %s\n", err->message);
     return 1;
   }
   g_option_context_free (ctx);
@@ -1305,7 +1305,7 @@ main (int argc, char **argv)
     el = gst_element_factory_make (*e, NULL);
     if (el) {
       g_print ("Adding effect '%s'\n", *e);
-      g_queue_push_tail (&effects, el);
+      g_queue_push_tail (&effects, gst_object_ref_sink (el));
     }
   }
 
@@ -1314,8 +1314,8 @@ main (int argc, char **argv)
   src = gst_element_factory_make ("videotestsrc", NULL);
   g_object_set (src, "is-live", TRUE, NULL);
 
-  filter1 = gst_element_factory_make ("capsfilter", NULL);
-  gst_util_set_object_arg (G_OBJECT (filter1), "caps",
+  filter = gst_element_factory_make ("capsfilter", NULL);
+  gst_util_set_object_arg (G_OBJECT (filter), "caps",
       "video/x-raw, width=320, height=240, "
       "format={ I420, YV12, YUY2, UYVY, AYUV, Y41B, Y42B, "
       "YVYU, Y444, v210, v216, NV12, NV21, UYVP, A420, YUV9, YVU9, IYU1 }");
@@ -1333,20 +1333,19 @@ main (int argc, char **argv)
 
   q2 = gst_element_factory_make ("queue", NULL);
 
-  filter2 = gst_element_factory_make ("capsfilter", NULL);
-  gst_util_set_object_arg (G_OBJECT (filter2), "caps",
-      "video/x-raw, width=320, height=240, "
-      "format={ RGBx, BGRx, xRGB, xBGR, RGBA, BGRA, ARGB, ABGR, RGB, BGR }");
-
   sink = gst_element_factory_make ("ximagesink", NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, filter1, q1, conv_before, effect,
+  gst_bin_add_many (GST_BIN (pipeline), src, filter, q1, conv_before, effect,
       conv_after, q2, sink, NULL);
 
-  gst_element_link_many (src, filter1, q1, conv_before, effect, conv_after,
+  gst_element_link_many (src, filter, q1, conv_before, effect, conv_after,
       q2, sink, NULL);
 
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  if (gst_element_set_state (pipeline,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    g_error ("Error starting pipeline");
+    return 1;
+  }
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -1357,7 +1356,15 @@ main (int argc, char **argv)
   g_main_loop_run (loop);
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
+
+  gst_object_unref (blockpad);
+  gst_bus_remove_watch (GST_ELEMENT_BUS (pipeline));
   gst_object_unref (pipeline);
+  g_main_loop_unref (loop);
+
+  g_queue_clear_full (&effects, (GDestroyNotify) gst_object_unref);
+  gst_object_unref (cur_effect);
+  g_strfreev (effect_names);
 
   return 0;
 }
