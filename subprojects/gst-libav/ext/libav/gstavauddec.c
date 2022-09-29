@@ -358,6 +358,9 @@ settings_changed (GstFFMpegAudDec * ffmpegdec, AVFrame * frame)
   GstAudioLayout layout;
   gint channels = av_get_channel_layout_nb_channels (frame->channel_layout);
 
+  if (channels == 0)
+    channels = frame->channels;
+
   format = gst_ffmpeg_smpfmt_to_audioformat (frame->format, &layout);
   if (format == GST_AUDIO_FORMAT_UNKNOWN)
     return TRUE;
