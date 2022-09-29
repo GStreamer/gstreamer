@@ -245,6 +245,56 @@ GST_START_TEST (test_pb_utils_init)
 
 GST_END_TEST;
 
+#define F_AUDIO GST_PBUTILS_CAPS_DESCRIPTION_FLAG_AUDIO
+#define F_VIDEO GST_PBUTILS_CAPS_DESCRIPTION_FLAG_VIDEO
+#define F_SUB GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE
+#define F_IMAGE GST_PBUTILS_CAPS_DESCRIPTION_FLAG_IMAGE
+#define F_AV (F_AUDIO | F_VIDEO)
+#define F_AVS (F_AUDIO | F_VIDEO | F_SUB)
+#define F_AVSI (F_AUDIO | F_VIDEO | F_SUB | F_IMAGE)
+#define F_CONTAINER GST_PBUTILS_CAPS_DESCRIPTION_FLAG_CONTAINER
+#define F_AV_CONTAINER (F_CONTAINER | F_AV)
+#define F_AVS_CONTAINER (F_CONTAINER | F_AVS)
+#define F_AVSI_CONTAINER (F_CONTAINER | F_AVSI)
+#define F_TAG GST_PBUTILS_CAPS_DESCRIPTION_FLAG_TAG
+
+/* *INDENT-OFF* */
+static const struct FlagDescEntry
+{
+  const gchar *caps_string;
+  GstPbUtilsCapsDescriptionFlags flags;
+} flag_descs[] = {
+  {"application/x-binary", 0},
+  {"audio/x-wav", F_AUDIO | F_CONTAINER},
+  {"video/quicktime", F_AVSI_CONTAINER},
+  {"video/x-flv", F_AV_CONTAINER},
+  {"video/x-h264", F_VIDEO},
+  {"audio/mpeg,mpegversion=4", F_AUDIO},
+  {"image/jpeg", F_IMAGE | F_VIDEO},
+  {"random/x-nonsense, sense=false", 0},
+};
+/* *INDENT-ON* */
+
+GST_START_TEST (test_pb_utils_get_caps_description_flags)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (flag_descs); ++i) {
+    GstPbUtilsCapsDescriptionFlags flags;
+    const struct FlagDescEntry *e;
+    GstCaps *caps;
+
+    e = &flag_descs[i];
+    caps = gst_caps_from_string (e->caps_string);
+    flags = gst_pb_utils_get_caps_description_flags (caps);
+    gst_caps_unref (caps);
+    GST_DEBUG ("%s: expecting 0x%x, got 0x%x", e->caps_string, e->flags, flags);
+    fail_unless_equals_int (flags, e->flags);
+  }
+}
+
+GST_END_TEST;
+
 static const gchar *caps_strings[] = {
   /* formats with static descriptions */
   "application/ogg", "application/vnd.rn-realmedia", "video/x-fli",
@@ -1496,6 +1546,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_init);
   tcase_add_test (tc_chain, test_pb_utils_post_missing_messages);
   tcase_add_test (tc_chain, test_pb_utils_taglist_add_codec_info);
+  tcase_add_test (tc_chain, test_pb_utils_get_caps_description_flags);
   tcase_add_test (tc_chain, test_pb_utils_get_codec_description);
   tcase_add_test (tc_chain, test_pb_utils_install_plugins);
   tcase_add_test (tc_chain, test_pb_utils_installer_details);

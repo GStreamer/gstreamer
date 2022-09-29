@@ -1332,19 +1332,19 @@ gst_pb_utils_get_caps_description_flags (const GstCaps * caps)
   /* A separate flags type is used because internally more flags are needed
    * for filtering purposes, e.g. the SYSTEMSTREAM flag */
   if (info) {
-    if ((info->flags | FLAG_CONTAINER))
+    if ((info->flags & FLAG_CONTAINER))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_CONTAINER;
-    if ((info->flags | FLAG_AUDIO))
+    if ((info->flags & FLAG_AUDIO))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_AUDIO;
-    if ((info->flags | FLAG_VIDEO))
+    if ((info->flags & FLAG_VIDEO))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_VIDEO;
-    if ((info->flags | FLAG_IMAGE))
+    if ((info->flags & FLAG_IMAGE))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_IMAGE;
-    if ((info->flags | FLAG_SUB))
+    if ((info->flags & FLAG_SUB))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE;
-    if ((info->flags | FLAG_TAG))
+    if ((info->flags & FLAG_TAG))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_TAG;
-    if ((info->flags | FLAG_GENERIC))
+    if ((info->flags & FLAG_GENERIC))
       flags |= GST_PBUTILS_CAPS_DESCRIPTION_FLAG_GENERIC;
   }
 
