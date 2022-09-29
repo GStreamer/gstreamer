@@ -941,6 +941,8 @@ _init_xmp_tag_map (gpointer user_data)
   XmpTag *xmpinfo;
   GstXmpSchema *schema;
 
+  gst_tag_register_musicbrainz_tags ();
+
   __xmp_schemas = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   /* add the maps */
