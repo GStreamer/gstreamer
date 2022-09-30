@@ -274,7 +274,8 @@ splitmux_part_is_eos_locked (GstSplitMuxPartReader * part)
   GList *cur;
   for (cur = g_list_first (part->pads); cur != NULL; cur = g_list_next (cur)) {
     GstSplitMuxPartPad *part_pad = SPLITMUX_PART_PAD_CAST (cur->data);
-    if (!part_pad->is_eos)
+    if (GST_PAD_LAST_FLOW_RETURN (part_pad->target) != GST_FLOW_NOT_LINKED
+        && !part_pad->is_eos)
       return FALSE;
   }
 
