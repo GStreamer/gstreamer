@@ -1152,6 +1152,9 @@ uri_src_probe (GstPad * pad, GstPadProbeInfo * info, GstSourcePad * srcpad)
       if (peer) {
         gst_pad_send_event (peer, event);
         gst_object_unref (peer);
+      } else {
+        /* No peer, just drop it (since we're returning HANDLED below) */
+        gst_event_unref (event);
       }
 
       PLAY_ITEMS_LOCK (handler->uridecodebin);
