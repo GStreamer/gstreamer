@@ -1228,7 +1228,7 @@ gst_xwindow_set_event_handling (GstXWindow * window, gboolean handle_events)
 #ifdef HAVE_XI2
     if (context->use_xi2) {
       XIEventMask mask_data;
-      unsigned char mask[2];
+      unsigned char mask[2] = { 0, };
 
       gst_xwindow_select_touch_events (context, window);
 
