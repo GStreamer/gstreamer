@@ -1979,10 +1979,8 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
               "last EOS for input, forwarding and removing slot");
           peer = gst_pad_get_peer (pad);
           if (peer) {
-            gst_pad_send_event (peer, ev);
+            gst_pad_send_event (peer, gst_event_ref (ev));
             gst_object_unref (peer);
-          } else {
-            gst_event_unref (ev);
           }
           SELECTION_LOCK (dbin);
           /* FIXME : Shouldn't we try to re-assign the output instead of just
