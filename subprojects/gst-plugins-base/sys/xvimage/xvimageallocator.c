@@ -383,6 +383,13 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
         context->xv_port_id, im_format, NULL, padded_width, padded_height,
         &mem->SHMInfo);
     if (!mem->xvimage || error_caught) {
+
+      /* If the memory was allocated, drop it */
+      if (mem->xvimage) {
+        XFree (mem->xvimage);
+        mem->xvimage = NULL;
+      }
+
       g_mutex_unlock (&context->lock);
 
       /* Reset error flag */
