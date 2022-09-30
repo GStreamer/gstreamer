@@ -43,7 +43,7 @@ struct _GstPlaySinkAudioConvert
 {
   GstPlaySinkConvertBin parent;
 
-  /* < pseudo public > */
+  /* < private > */
   GstElement *volume;
   gboolean use_converters;
   gboolean use_volume;

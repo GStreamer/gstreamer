@@ -39,6 +39,7 @@ enum
   PROP_0,
   PROP_USE_CONVERTERS,
   PROP_USE_VOLUME,
+  PROP_VOLUME_ELEMENT,
 };
 
 static gboolean
@@ -153,6 +154,9 @@ gst_play_sink_audio_convert_get_property (GObject * object, guint prop_id,
     case PROP_USE_VOLUME:
       g_value_set_boolean (value, self->use_volume);
       break;
+    case PROP_VOLUME_ELEMENT:
+      g_value_set_object (value, self->volume);
+      break;
     default:
       break;
   }
@@ -184,6 +188,11 @@ gst_play_sink_audio_convert_class_init (GstPlaySinkAudioConvertClass * klass)
       g_param_spec_boolean ("use-volume", "Use volume",
           "Whether to use a volume element", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_VOLUME_ELEMENT,
+      g_param_spec_object ("volume-element", "Volume element",
+          "Retrieve the soft-volume element used when use-volume=TRUE",
+          GST_TYPE_ELEMENT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Player Sink Audio Converter", "Audio/Bin/Converter",
