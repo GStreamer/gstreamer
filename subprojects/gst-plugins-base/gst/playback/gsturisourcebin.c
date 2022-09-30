@@ -903,9 +903,13 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       remove_buffering_msgs (urisrc,
           GST_OBJECT_CAST (child_info->output_slot->queue));
 
-      /* Mark this custom EOS */
+      /* Mark this custom EOS, replacing the event in the probe data */
+      ev = gst_event_make_writable (ev);
+      GST_PAD_PROBE_INFO_DATA (info) = ev;
+
       gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (ev), CUSTOM_EOS_QUARK,
           (gchar *) CUSTOM_EOS_QUARK_DATA, NULL);
+
       if (all_streams_eos) {
         GST_DEBUG_OBJECT (urisrc, "POSTING ABOUT TO FINISH");
         g_signal_emit (urisrc,
