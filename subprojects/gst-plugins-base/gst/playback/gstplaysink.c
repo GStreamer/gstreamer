@@ -2866,11 +2866,9 @@ gen_audio_chain (GstPlaySink * playsink, gboolean raw)
     prev = chain->conv;
 
     if (!have_volume && (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
-      GstPlaySinkAudioConvert *conv =
-          GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
+      g_object_get (chain->conv, "volume-element", &chain->volume, NULL);
 
-      if (conv->volume) {
-        chain->volume = conv->volume;
+      if (chain->volume) {
         have_volume = TRUE;
 
         chain->notify_volume_id =
@@ -2981,10 +2979,8 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
   GstElement *elem;
   GstPlayAudioChain *chain;
   GstStateChangeReturn ret;
-  GstPlaySinkAudioConvert *conv;
 
   chain = playsink->audiochain;
-  conv = GST_PLAY_SINK_AUDIO_CONVERT_CAST (chain->conv);
 
   /* if we have a filter, and raw-ness changed, we have to force a rebuild */
   if (chain->filter && chain->chain.raw != raw)
@@ -3008,6 +3004,11 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
 
   /* Disconnect signals */
   disconnect_audio_chain (chain, playsink);
+  /* Drop any existing volume handler and check again */
+  if (chain->volume) {
+    gst_object_unref (chain->volume);
+    playsink->audiochain->volume = NULL;
+  }
 
   /* check if the sink, or something within the sink, implements the
    * streamvolume interface. If it does we don't need to add a volume element.  */
@@ -3038,28 +3039,28 @@ setup_audio_chain (GstPlaySink * playsink, gboolean raw)
     playsink->mute_changed = FALSE;
 
     g_object_set (chain->conv, "use-volume", FALSE, NULL);
-  } else if (conv) {
+  } else if (chain->conv) {
     /* no volume, we need to add a volume element when we can */
     g_object_set (chain->conv, "use-volume",
         ! !(playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME), NULL);
     GST_DEBUG_OBJECT (playsink, "the sink has no volume property");
 
-    if (conv->volume && (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME)) {
-      chain->volume = conv->volume;
+    if (playsink->flags & GST_PLAY_FLAG_SOFT_VOLUME) {
+      g_object_get (chain->conv, "volume-element", &chain->volume, NULL);
+      if (chain->volume) {
+        chain->notify_volume_id =
+            g_signal_connect (chain->volume, "notify::volume",
+            G_CALLBACK (notify_volume_cb), playsink);
 
-      chain->notify_volume_id =
-          g_signal_connect (chain->volume, "notify::volume",
-          G_CALLBACK (notify_volume_cb), playsink);
+        chain->notify_mute_id = g_signal_connect (chain->volume, "notify::mute",
+            G_CALLBACK (notify_mute_cb), playsink);
 
-      chain->notify_mute_id = g_signal_connect (chain->volume, "notify::mute",
-          G_CALLBACK (notify_mute_cb), playsink);
-
-      /* configure with the latest volume and mute */
-      g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume, NULL);
-      g_object_set (G_OBJECT (chain->volume), "mute", playsink->mute, NULL);
+        /* configure with the latest volume and mute */
+        g_object_set (G_OBJECT (chain->volume), "volume", playsink->volume,
+            NULL);
+        g_object_set (G_OBJECT (chain->volume), "mute", playsink->mute, NULL);
+      }
     }
-
-    GST_DEBUG_OBJECT (playsink, "reusing existing volume element");
   }
   return TRUE;
 }
@@ -4989,6 +4990,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       GST_PLAY_SINK_UNLOCK (playsink);
       /* fall through */
     case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_PLAY_SINK_LOCK (playsink);
       if (playsink->audiochain && playsink->audiochain->sink_volume) {
         /* remove our links to the volume elements when they were
          * provided by a sink */
@@ -5007,6 +5009,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
         gst_object_unref (playsink->videochain->ts_offset);
         playsink->videochain->ts_offset = NULL;
       }
+      GST_PLAY_SINK_UNLOCK (playsink);
 
       GST_OBJECT_LOCK (playsink);
       if (playsink->overlay_element)
