@@ -1123,8 +1123,7 @@ gst_bin_do_deep_add_remove (GstBin * bin, gint sig_id, const gchar * sig_name,
     do {
       ires = gst_iterator_foreach (it, bin_deep_iterator_foreach, &elements);
       if (ires != GST_ITERATOR_DONE) {
-        g_queue_foreach (&elements, (GFunc) gst_object_unref, NULL);
-        g_queue_clear (&elements);
+        g_queue_clear_full (&elements, (GDestroyNotify) gst_object_unref);
       }
       if (ires == GST_ITERATOR_RESYNC)
         gst_iterator_resync (it);
