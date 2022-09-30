@@ -1141,7 +1141,7 @@ gst_xwindow_select_touch_events (GstXvContext * context, GstXWindow * window)
   /* Find suitable touch screen devices, and select touch events for each */
   for (i = 0; i < ndevices; i++) {
     XIEventMask mask_data;
-    GstXvTouchDevice temp, *device;
+    GstXvTouchDevice temp;
     gboolean has_touch = FALSE;
 
     if (devices[i].use != XISlavePointer)
@@ -1186,11 +1186,11 @@ gst_xwindow_select_touch_events (GstXvContext * context, GstXWindow * window)
               "pressure-sensitive (abs)" : "pressure-sensitive (rel)"),
           temp.id, temp.name);
 
-      device = g_new (GstXvTouchDevice, 1);
-      *device = temp;
-      device->name = g_strdup (device->name);
+      GstXvTouchDevice device = temp;
+      device.name = g_strdup (temp.name);
+
       window->touch_devices =
-          g_array_append_vals (window->touch_devices, device, 1);
+          g_array_append_val (window->touch_devices, device);
 
       mask_data.deviceid = temp.id;
       mask_data.mask_len = mask_len;
