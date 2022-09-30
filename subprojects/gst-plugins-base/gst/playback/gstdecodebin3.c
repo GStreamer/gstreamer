@@ -2032,8 +2032,11 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
         if (gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (ev),
                 CUSTOM_EOS_QUARK)) {
           /* remove custom-eos */
+          ev = gst_event_make_writable (ev);
+          GST_PAD_PROBE_INFO_DATA (info) = ev;
           gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (ev),
               CUSTOM_EOS_QUARK, NULL, NULL);
+
           GST_LOG_OBJECT (pad, "Received custom EOS");
           ret = GST_PAD_PROBE_HANDLED;
           SELECTION_LOCK (dbin);
@@ -2086,6 +2089,10 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
           dbin->slots = g_list_remove (dbin->slots, slot);
           SELECTION_UNLOCK (dbin);
 
+          /* FIXME: Removing the slot is async, which means actually
+           * unlinking the pad is async. Other things like stream-start
+           * might flow through this (now unprobed) link before it actually
+           * gets released */
           free_multiqueue_slot_async (dbin, slot);
           ret = GST_PAD_PROBE_REMOVE;
         } else if (gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (ev),
