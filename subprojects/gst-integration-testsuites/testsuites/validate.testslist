@@ -943,6 +943,7 @@ validate.test.mp4.qtdemux_reverse_playback_full_gop.reverse_playback_full_gop
 validate.test.mp4.redirect.play_15s
 validate.test.nle.urisource.play
 validate.test.playbin.check_active_stream
+validate.test.playbin3.ignore_raw_audio_from_demuxer
 validate.test.playbin3.sourcebin_check_mixed_static_and_dyanmic_pads
 validate.test.rtp.h264.payloader_fail_nego_force_profile
 validate.test.rtp.h264.payloader_nego_profile

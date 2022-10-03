@@ -197,6 +197,16 @@ check_parser_caps_filter (GstDecodebin3 * dbin, GstCaps * caps)
 {
   GList *tmp;
   gboolean res = FALSE;
+  GstCaps *default_raw = gst_static_caps_get (&default_raw_caps);
+
+  if (gst_caps_can_intersect (caps, default_raw)) {
+    GST_INFO_OBJECT (dbin, "Dealing with raw stream from the demuxer, "
+        " we can handle them even if we won't expose then");
+    gst_caps_unref (default_raw);
+
+    return TRUE;
+  }
+  gst_caps_unref (default_raw);
 
   g_mutex_lock (&dbin->factories_lock);
   gst_decode_bin_update_factories_list (dbin);
@@ -223,7 +233,7 @@ check_parser_caps_filter (GstDecodebin3 * dbin, GstCaps * caps)
   }
 beach:
   g_mutex_unlock (&dbin->factories_lock);
-  GST_DEBUG_OBJECT (dbin, "Can intersect : %d", res);
+  GST_DEBUG_OBJECT (dbin, "Can intersect %" GST_PTR_FORMAT ": %d", caps, res);
   return res;
 }
 
@@ -341,9 +351,9 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
       GstCaps *prop = NULL;
       gst_query_parse_accept_caps (q, &prop);
       /* Fast check against target caps */
-      if (gst_caps_can_intersect (prop, input->dbin->caps))
+      if (gst_caps_can_intersect (prop, input->dbin->caps)) {
         gst_query_set_accept_caps_result (q, TRUE);
-      else {
+      } else {
         gboolean accepted = check_parser_caps_filter (input->dbin, prop);
         /* check against caps filter */
         gst_query_set_accept_caps_result (q, accepted);
