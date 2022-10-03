@@ -298,7 +298,7 @@ static GstFlowReturn gst_rtp_session_send_rtcp (RTPSession * sess,
     RTPSource * src, GstBuffer * buffer, gboolean eos, gpointer user_data);
 static GstFlowReturn gst_rtp_session_sync_rtcp (RTPSession * sess,
     GstBuffer * buffer, gpointer user_data);
-static gint gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
+static GstCaps *gst_rtp_session_caps (RTPSession * sess, guint8 payload,
     gpointer user_data);
 static void gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data);
 static void gst_rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
@@ -328,7 +328,7 @@ static RTPSessionCallbacks callbacks = {
   gst_rtp_session_send_rtp,
   gst_rtp_session_sync_rtcp,
   gst_rtp_session_send_rtcp,
-  gst_rtp_session_clock_rate,
+  gst_rtp_session_caps,
   gst_rtp_session_reconsider,
   gst_rtp_session_request_key_unit,
   gst_rtp_session_request_time,
@@ -1678,41 +1678,12 @@ no_caps:
 }
 
 /* called when the session manager needs the clock rate */
-static gint
-gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
-    gpointer user_data)
+static GstCaps *
+gst_rtp_session_caps (RTPSession * sess, guint8 payload, gpointer user_data)
 {
-  gint result = -1;
-  GstRtpSession *rtpsession;
-  GstCaps *caps;
-  const GstStructure *s;
+  GstRtpSession *rtpsession = GST_RTP_SESSION_CAST (user_data);
 
-  rtpsession = GST_RTP_SESSION_CAST (user_data);
-
-  caps = gst_rtp_session_get_caps_for_pt (rtpsession, payload);
-
-  if (!caps)
-    goto done;
-
-  s = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (s, "clock-rate", &result))
-    goto no_clock_rate;
-
-  gst_caps_unref (caps);
-
-  GST_DEBUG_OBJECT (rtpsession, "parsed clock-rate %d", result);
-
-done:
-
-  return result;
-
-  /* ERRORS */
-no_clock_rate:
-  {
-    gst_caps_unref (caps);
-    GST_DEBUG_OBJECT (rtpsession, "No clock-rate in caps!");
-    goto done;
-  }
+  return gst_rtp_session_get_caps_for_pt (rtpsession, payload);
 }
 
 /* called when the session manager asks us to reconsider the timeout */

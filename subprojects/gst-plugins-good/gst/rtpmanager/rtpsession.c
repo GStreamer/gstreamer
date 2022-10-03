@@ -1224,9 +1224,9 @@ rtp_session_set_callbacks (RTPSession * sess, RTPSessionCallbacks * callbacks,
     sess->callbacks.sync_rtcp = callbacks->sync_rtcp;
     sess->sync_rtcp_user_data = user_data;
   }
-  if (callbacks->clock_rate) {
-    sess->callbacks.clock_rate = callbacks->clock_rate;
-    sess->clock_rate_user_data = user_data;
+  if (callbacks->caps) {
+    sess->callbacks.caps = callbacks->caps;
+    sess->caps_user_data = user_data;
   }
   if (callbacks->reconsider) {
     sess->callbacks.reconsider = callbacks->reconsider;
@@ -1331,7 +1331,7 @@ rtp_session_set_sync_rtcp_callback (RTPSession * sess,
 }
 
 /**
- * rtp_session_set_clock_rate_callback:
+ * rtp_session_set_caps_callback:
  * @sess: an #RTPSession
  * @callback: callback to set
  * @user_data: user data passed in the callback
@@ -1339,13 +1339,13 @@ rtp_session_set_sync_rtcp_callback (RTPSession * sess,
  * Configure only the clock_rate callback to be notified of the clock_rate action.
  */
 void
-rtp_session_set_clock_rate_callback (RTPSession * sess,
-    RTPSessionClockRate callback, gpointer user_data)
+rtp_session_set_caps_callback (RTPSession * sess,
+    RTPSessionCaps callback, gpointer user_data)
 {
   g_return_if_fail (RTP_IS_SESSION (sess));
 
-  sess->callbacks.clock_rate = callback;
-  sess->clock_rate_user_data = user_data;
+  sess->callbacks.caps = callback;
+  sess->caps_user_data = user_data;
 }
 
 /**
@@ -1549,30 +1549,26 @@ source_push_rtp (RTPSource * source, gpointer data, RTPSession * session)
   return result;
 }
 
-static gint
-source_clock_rate (RTPSource * source, guint8 pt, RTPSession * session)
+static GstCaps *
+source_caps (RTPSource * source, guint8 pt, RTPSession * session)
 {
-  gint result;
+  GstCaps *result = NULL;
 
   RTP_SESSION_UNLOCK (session);
 
-  if (session->callbacks.clock_rate)
-    result =
-        session->callbacks.clock_rate (session, pt,
-        session->clock_rate_user_data);
-  else
-    result = -1;
+  if (session->callbacks.caps)
+    result = session->callbacks.caps (session, pt, session->caps_user_data);
 
   RTP_SESSION_LOCK (session);
 
-  GST_DEBUG ("got clock-rate %d for pt %d", result, pt);
+  GST_DEBUG ("got caps %" GST_PTR_FORMAT " for pt %d", result, pt);
 
   return result;
 }
 
 static RTPSourceCallbacks callbacks = {
   (RTPSourcePushRTP) source_push_rtp,
-  (RTPSourceClockRate) source_clock_rate,
+  (RTPSourceCaps) source_caps,
 };
 
 
@@ -1924,7 +1920,8 @@ obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created,
 
     source->validated = TRUE;
     source->internal = TRUE;
-    source->probation = FALSE;
+    source->probation = 0;
+    source->curr_probation = 0;
     rtp_source_set_sdes_struct (source, gst_structure_copy (sess->sdes));
     rtp_source_set_callbacks (source, &callbacks, sess);
 

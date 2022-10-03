@@ -345,7 +345,7 @@ rtp_source_finalize (GObject * object)
 
   g_free (src->bye_reason);
 
-  gst_caps_replace (&src->send_caps, NULL);
+  gst_caps_replace (&src->caps, NULL);
 
   g_list_free_full (src->conflicting_addresses,
       (GDestroyNotify) rtp_conflicting_address_free);
@@ -649,7 +649,7 @@ rtp_source_set_callbacks (RTPSource * src, RTPSourceCallbacks * cb,
   g_return_if_fail (RTP_IS_SOURCE (src));
 
   src->callbacks.push_rtp = cb->push_rtp;
-  src->callbacks.clock_rate = cb->clock_rate;
+  src->callbacks.caps = cb->caps;
   src->user_data = user_data;
 }
 
@@ -829,7 +829,7 @@ rtp_source_update_send_caps (RTPSource * src, GstCaps * caps)
   gboolean rtx;
 
   /* nothing changed, return */
-  if (caps == NULL || src->send_caps == caps)
+  if (caps == NULL || src->caps == caps)
     return;
 
   s = gst_caps_get_structure (caps, 0);
@@ -869,7 +869,7 @@ rtp_source_update_send_caps (RTPSource * src, GstCaps * caps)
   GST_DEBUG ("got %sseqnum-offset %" G_GINT32_FORMAT, rtx ? "rtx " : "",
       src->seqnum_offset);
 
-  gst_caps_replace (&src->send_caps, caps);
+  gst_caps_replace (&src->caps, caps);
 
   if (rtx) {
     src->media_ssrc = ssrc;
@@ -940,7 +940,7 @@ push_packet (RTPSource * src, GstBuffer * buffer)
 }
 
 static void
-fetch_clock_rate_from_payload (RTPSource * src, guint8 payload)
+fetch_caps_for_payload (RTPSource * src, guint8 payload)
 {
   if (src->payload == -1) {
     /* first payload received, nothing was in the caps, lock on to this payload */
@@ -954,16 +954,40 @@ fetch_clock_rate_from_payload (RTPSource * src, guint8 payload)
     src->stats.transit = -1;
   }
 
-  if (src->clock_rate == -1) {
-    gint clock_rate = -1;
+  if (src->clock_rate == -1 || !src->caps) {
+    GstCaps *caps = NULL;
 
-    if (src->callbacks.clock_rate)
-      clock_rate = src->callbacks.clock_rate (src, payload, src->user_data);
+    if (src->callbacks.caps) {
+      caps = src->callbacks.caps (src, payload, src->user_data);
+    }
 
-    GST_DEBUG ("got clock-rate %d", clock_rate);
+    GST_DEBUG ("got caps %" GST_PTR_FORMAT, caps);
 
-    src->clock_rate = clock_rate;
-    gst_rtp_packet_rate_ctx_reset (&src->packet_rate_ctx, clock_rate);
+    if (caps) {
+      const GstStructure *s;
+      gint clock_rate = -1;
+      const gchar *encoding_name;
+
+      s = gst_caps_get_structure (caps, 0);
+
+      if (gst_structure_get_int (s, "clock-rate", &clock_rate)) {
+        src->clock_rate = clock_rate;
+        gst_rtp_packet_rate_ctx_reset (&src->packet_rate_ctx, clock_rate);
+      } else {
+        GST_DEBUG ("No clock-rate in caps!");
+      }
+
+      encoding_name = gst_structure_get_string (s, "encoding-name");
+      /* Disable probation for RTX sources as packets will arrive very
+       * irregularly and waiting for a second packet usually exceeds the
+       * deadline of the retransmission */
+      if (g_strcmp0 (encoding_name, "rtx") == 0) {
+        src->probation = src->curr_probation = 0;
+      }
+    }
+
+    gst_caps_replace (&src->caps, caps);
+    gst_clear_caps (&caps);
   }
 }
 
@@ -1280,7 +1304,7 @@ rtp_source_process_rtp (RTPSource * src, RTPPacketInfo * pinfo)
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (pinfo != NULL, GST_FLOW_ERROR);
 
-  fetch_clock_rate_from_payload (src, pinfo->pt);
+  fetch_caps_for_payload (src, pinfo->pt);
 
   if (!update_receiver_stats (src, pinfo, TRUE))
     return GST_FLOW_OK;
@@ -1572,7 +1596,7 @@ rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
   if (src->clock_rate == -1 && src->pt_set) {
     GST_INFO ("no clock-rate, getting for pt %u and SSRC %u", src->pt,
         src->ssrc);
-    fetch_clock_rate_from_payload (src, src->pt);
+    fetch_caps_for_payload (src, src->pt);
   }
 
   if (src->clock_rate != -1) {
