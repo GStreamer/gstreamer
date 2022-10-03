@@ -352,7 +352,7 @@ static GstPad *gst_rtp_session_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_rtp_session_release_pad (GstElement * element, GstPad * pad);
 
-static gboolean gst_rtp_session_sink_setcaps (GstPad * pad,
+static gboolean gst_rtp_session_setcaps_recv_rtp (GstPad * pad,
     GstRtpSession * rtpsession, GstCaps * caps);
 static gboolean gst_rtp_session_setcaps_send_rtp (GstPad * pad,
     GstRtpSession * rtpsession, GstCaps * caps);
@@ -1749,7 +1749,7 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
 
       /* process */
       gst_event_parse_caps (event, &caps);
-      gst_rtp_session_sink_setcaps (pad, rtpsession, caps);
+      gst_rtp_session_setcaps_recv_rtp (pad, rtpsession, caps);
       ret = gst_pad_push_event (rtpsession->recv_rtp_src, event);
       break;
     }
@@ -1967,7 +1967,7 @@ gst_rtp_session_iterate_internal_links (GstPad * pad, GstObject * parent)
 }
 
 static gboolean
-gst_rtp_session_sink_setcaps (GstPad * pad, GstRtpSession * rtpsession,
+gst_rtp_session_setcaps_recv_rtp (GstPad * pad, GstRtpSession * rtpsession,
     GstCaps * caps)
 {
   GST_RTP_SESSION_LOCK (rtpsession);
