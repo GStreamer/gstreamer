@@ -67,6 +67,7 @@ typedef struct _SessionData
   int ref;
   GstElement *rtpbin;
   guint sessionNum;
+  guint pt, rtxPt;
   GstCaps *caps;
   GstElement *output;
 } SessionData;
@@ -129,6 +130,8 @@ make_audio_session (guint sessionNum)
       "media", G_TYPE_STRING, "audio",
       "clock-rate", G_TYPE_INT, 8000,
       "encoding-name", G_TYPE_STRING, "PCMA", NULL);
+  ret->pt = 8;
+  ret->rtxPt = 98;
 
   return ret;
 }
@@ -154,6 +157,8 @@ make_video_session (guint sessionNum)
       "media", G_TYPE_STRING, "video",
       "clock-rate", G_TYPE_INT, 90000,
       "encoding-name", G_TYPE_STRING, "THEORA", NULL);
+  ret->pt = 96;
+  ret->rtxPt = 99;
 
   return ret;
 }
@@ -167,10 +172,22 @@ request_pt_map (GstElement * rtpbin, guint session, guint pt,
   g_print ("Looking for caps for pt %u in session %u, have %u\n", pt, session,
       data->sessionNum);
   if (session == data->sessionNum) {
-    caps_str = gst_caps_to_string (data->caps);
+    GstCaps *caps;
+
+    if (pt == data->pt) {
+      caps = gst_caps_ref (data->caps);
+    } else if (pt == data->rtxPt) {
+      caps = gst_caps_copy (data->caps);
+      gst_caps_set_simple (caps, "encoding-name", G_TYPE_STRING, "rtx", NULL);
+    } else {
+      return NULL;
+    }
+
+    caps_str = gst_caps_to_string (caps);
     g_print ("Returning %s\n", caps_str);
     g_free (caps_str);
-    return gst_caps_ref (data->caps);
+
+    return caps;
   }
   return NULL;
 }
@@ -254,14 +271,22 @@ request_aux_receiver (GstElement * rtpbin, guint sessid, SessionData * session)
   GstPad *pad;
   gchar *name;
   GstStructure *pt_map;
+  gchar *media_pt;
 
-  GST_INFO ("creating AUX receiver");
+  if (sessid != session->sessionNum)
+    return NULL;
+
+  GST_INFO ("creating AUX receiver for session %u", sessid);
   bin = gst_bin_new (NULL);
   rtx = gst_element_factory_make ("rtprtxreceive", NULL);
+
+  media_pt = g_strdup_printf ("%d", session->pt);
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
-      "8", G_TYPE_UINT, 98, "96", G_TYPE_UINT, 99, NULL);
+      media_pt, G_TYPE_UINT, session->rtxPt, NULL);
   g_object_set (rtx, "payload-type-map", pt_map, NULL);
   gst_structure_free (pt_map);
+  g_free (media_pt);
+
   gst_bin_add (GST_BIN (bin), rtx);
 
   pad = gst_element_get_static_pad (rtx, "src");
