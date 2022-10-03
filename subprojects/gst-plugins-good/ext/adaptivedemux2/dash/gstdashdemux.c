@@ -874,7 +874,8 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
     track = gst_adaptive_demux_track_new (GST_ADAPTIVE_DEMUX_CAST (demux),
         streamtype, GST_STREAM_FLAG_NONE, stream_id, codec_caps, tags);
 
-    stream = gst_dash_demux_stream_new (demux->client->period_idx, stream_id);
+    stream =
+        gst_dash_demux_stream_new (demux->client->period_idx, track->stream_id);
     GST_ADAPTIVE_DEMUX2_STREAM_CAST (stream)->stream_type = streamtype;
 
     g_free (stream_id);
