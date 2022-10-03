@@ -3214,7 +3214,7 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
     sess->internal_ssrc_set = TRUE;
     sess->internal_ssrc_from_caps_or_property = TRUE;
     if (source) {
-      rtp_source_update_caps (source, caps);
+      rtp_source_update_send_caps (source, caps);
 
       if (created)
         on_new_sender_ssrc (sess, source);
@@ -3226,7 +3226,7 @@ rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
       source =
           obtain_internal_source (sess, ssrc, &created, GST_CLOCK_TIME_NONE);
       if (source) {
-        rtp_source_update_caps (source, caps);
+        rtp_source_update_send_caps (source, caps);
 
         if (created)
           on_new_sender_ssrc (sess, source);

@@ -345,7 +345,7 @@ rtp_source_finalize (GObject * object)
 
   g_free (src->bye_reason);
 
-  gst_caps_replace (&src->caps, NULL);
+  gst_caps_replace (&src->send_caps, NULL);
 
   g_list_free_full (src->conflicting_addresses,
       (GDestroyNotify) rtp_conflicting_address_free);
@@ -820,7 +820,7 @@ rtp_source_get_bye_reason (RTPSource * src)
  * Parse @caps and store all relevant information in @source.
  */
 void
-rtp_source_update_caps (RTPSource * src, GstCaps * caps)
+rtp_source_update_send_caps (RTPSource * src, GstCaps * caps)
 {
   GstStructure *s;
   guint val;
@@ -828,7 +828,7 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
   gboolean rtx;
 
   /* nothing changed, return */
-  if (caps == NULL || src->caps == caps)
+  if (caps == NULL || src->send_caps == caps)
     return;
 
   s = gst_caps_get_structure (caps, 0);
@@ -858,7 +858,7 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
   GST_DEBUG ("got %sseqnum-offset %" G_GINT32_FORMAT, rtx ? "rtx " : "",
       src->seqnum_offset);
 
-  gst_caps_replace (&src->caps, caps);
+  gst_caps_replace (&src->send_caps, caps);
 }
 
 /**

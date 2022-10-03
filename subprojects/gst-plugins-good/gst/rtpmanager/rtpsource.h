@@ -158,7 +158,7 @@ struct _RTPSource {
   GSocketAddress *rtcp_from;
 
   gint          payload;
-  GstCaps      *caps;
+  GstCaps      *send_caps;
   gint          clock_rate;
   gint32        seqnum_offset;
 
@@ -230,7 +230,7 @@ void            rtp_source_mark_bye            (RTPSource *src, const gchar *rea
 gboolean        rtp_source_is_marked_bye       (RTPSource *src);
 gchar *         rtp_source_get_bye_reason      (RTPSource *src);
 
-void            rtp_source_update_caps         (RTPSource *src, GstCaps *caps);
+void            rtp_source_update_send_caps    (RTPSource *src, GstCaps *caps);
 
 /* SDES info */
 const GstStructure *
