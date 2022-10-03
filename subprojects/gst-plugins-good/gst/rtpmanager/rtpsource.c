@@ -825,6 +825,7 @@ rtp_source_update_send_caps (RTPSource * src, GstCaps * caps)
   GstStructure *s;
   guint val;
   gint ival;
+  guint ssrc, rtx_ssrc = -1;
   gboolean rtx;
 
   /* nothing changed, return */
@@ -833,7 +834,17 @@ rtp_source_update_send_caps (RTPSource * src, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  rtx = (gst_structure_get_uint (s, "rtx-ssrc", &val) && val == src->ssrc);
+  if (!gst_structure_get_uint (s, "ssrc", &ssrc))
+    return;
+  gst_structure_get_uint (s, "rtx-ssrc", &rtx_ssrc);
+
+  if (src->ssrc != ssrc && src->ssrc != rtx_ssrc) {
+    GST_WARNING ("got ssrc %u/%u that doesn't match with this source's ssrc %u",
+        ssrc, rtx_ssrc, src->ssrc);
+    return;
+  }
+
+  rtx = (rtx_ssrc == src->ssrc);
 
   if (gst_structure_get_int (s, rtx ? "rtx-payload" : "payload", &ival))
     src->payload = ival;
@@ -859,6 +870,12 @@ rtp_source_update_send_caps (RTPSource * src, GstCaps * caps)
       src->seqnum_offset);
 
   gst_caps_replace (&src->send_caps, caps);
+
+  if (rtx) {
+    src->media_ssrc = ssrc;
+  } else {
+    src->media_ssrc = -1;
+  }
 }
 
 /**

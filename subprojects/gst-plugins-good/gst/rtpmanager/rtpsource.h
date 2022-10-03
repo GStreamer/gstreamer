@@ -137,6 +137,9 @@ struct _RTPSource {
   /*< private >*/
   guint32       ssrc;
 
+  /* If not -1 then this is the SSRC of the corresponding media RTPSource */
+  guint32       media_ssrc;
+
   guint16       generation;
   GHashTable    *reported_in_sr_of;     /* set of SSRCs */
 

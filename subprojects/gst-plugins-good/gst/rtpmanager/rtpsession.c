@@ -4167,7 +4167,8 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
         /* this is an internal source that is not using our suggested ssrc.
          * since there must be another source using this ssrc, we can remove
          * this one instead of making it a receiver forever */
-        if (source->ssrc != sess->suggested_ssrc) {
+        if (source->ssrc != sess->suggested_ssrc
+            && source->media_ssrc != sess->suggested_ssrc) {
           rtp_source_mark_bye (source, "timed out");
           /* do not schedule bye here, since we are inside the RTCP timeout
            * processing and scheduling bye will interfere with SR/RR sending */
