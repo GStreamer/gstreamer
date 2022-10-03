@@ -1796,7 +1796,7 @@ gst_dash_demux_stream_has_next_fragment (GstAdaptiveDemuxStream * stream)
 
 /* The goal here is to figure out, once we have pushed a keyframe downstream,
  * what the next ideal keyframe to download is.
- * 
+ *
  * This is done based on:
  * * the current internal position (i.e. actual_position)
  * * the reported downstream position (QoS feedback)
@@ -3753,7 +3753,7 @@ struct Rfc5322TimeZone
 
 /*
  Parse an RFC5322 (section 3.3) date-time from the Date: field in the
- HTTP response. 
+ HTTP response.
  See https://tools.ietf.org/html/rfc5322#section-3.3
 */
 static GstDateTime *

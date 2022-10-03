@@ -2379,7 +2379,7 @@ gst_adaptive_demux_stream_push_buffer (GstAdaptiveDemuxStream * stream,
   GstEvent *pending_caps = NULL, *pending_segment = NULL, *pending_tags = NULL;
   GList *pending_events = NULL;
 
-  /* FIXME : 
+  /* FIXME :
    * This is duplicating *exactly* the same thing as what is done at the beginning
    * of _src_chain if starting_fragment is TRUE */
   if (stream->first_fragment_buffer) {
@@ -2661,7 +2661,7 @@ _src_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     if (!stream->downloading_header && !stream->downloading_index) {
       /* If this is the first buffer of a fragment (not the headers or index)
-       * and we don't have a birate from the sub-class, then see if we
+       * and we don't have a bitrate from the sub-class, then see if we
        * can work it out from the fragment size and duration */
       if (stream->fragment.bitrate == 0 &&
           stream->fragment.duration != 0 &&
