@@ -3968,28 +3968,16 @@ gst_util_fraction_compare (gint a_n, gint a_d, gint b_n, gint b_d)
 }
 
 static gchar *
-gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
+gst_element_decorate_stream_id_internal (GstElement * element,
     const gchar * stream_id)
 {
   GstEvent *upstream_event;
   gchar *upstream_stream_id = NULL, *new_stream_id;
   GstPad *sinkpad;
 
-  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
-  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
-  g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
-
-  g_return_val_if_fail (parent->numsinkpads <= 1, NULL);
-
-  /* If the element has multiple source pads it must
-   * provide a stream-id for every source pad, otherwise
-   * all source pads will have the same and are not
-   * distinguishable */
-  g_return_val_if_fail (parent->numsrcpads <= 1 || stream_id, NULL);
-
   /* First try to get the upstream stream-start stream-id from the sinkpad.
    * This will only work for non-source elements */
-  sinkpad = gst_element_get_static_pad (parent, "sink");
+  sinkpad = gst_element_get_static_pad (element, "sink");
   if (sinkpad) {
     upstream_event =
         gst_pad_get_sticky_event (sinkpad, GST_EVENT_STREAM_START, 0);
@@ -4013,7 +4001,7 @@ gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
     /* Try to generate one from the URI query and
      * if it fails take a random number instead */
     query = gst_query_new_uri ();
-    if (gst_element_query (parent, query)) {
+    if (gst_element_query (element, query)) {
       gst_query_parse_uri (query, &uri);
     }
 
@@ -4028,7 +4016,7 @@ gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
       g_checksum_free (cs);
     } else {
       /* Just get some random number if the URI query fails */
-      GST_FIXME_OBJECT (pad, "Creating random stream-id, consider "
+      GST_FIXME_OBJECT (element, "Creating random stream-id, consider "
           "implementing a deterministic way of creating a stream-id");
       upstream_stream_id =
           g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
@@ -4047,6 +4035,139 @@ gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
   g_free (upstream_stream_id);
 
   return new_stream_id;
+}
+
+/**
+ * gst_element_decorate_stream_id_printf_valist:
+ * @element: The  #GstElement to create a stream-id for
+ * @format: (not nullable): The stream-id
+ * @var_args: parameters for the @format string
+ *
+ * Creates a stream-id for @element by combining the upstream information with
+ * the @format.
+ *
+ * This function generates an unique stream-id by getting the upstream
+ * stream-start event stream ID and appending @format to it. If the element
+ * has no sinkpad it will generate an upstream stream-id by doing an URI query
+ * on the element and in the worst case just uses a random number. Source
+ * elements that don't implement the URI handler interface should ideally
+ * generate a unique, deterministic stream-id manually instead.
+ *
+ * Since stream IDs are sorted alphabetically, any numbers in the stream ID
+ * should be printed with a fixed number of characters, preceded by 0's, such as
+ * by using the format \%03u instead of \%u.
+ *
+ * Returns: (transfer full): A stream-id for @element.
+ *
+ * Since: 1.24
+ */
+gchar *
+gst_element_decorate_stream_id_printf_valist (GstElement * element,
+    const gchar * format, va_list var_args)
+{
+  gchar *stream_id, *res;
+
+  g_return_val_if_fail (format, NULL);
+
+  stream_id = g_strdup_vprintf (format, var_args);
+
+  res = gst_element_decorate_stream_id_internal (element, stream_id);
+
+  g_free (stream_id);
+
+  return res;
+}
+
+/**
+ * gst_element_decorate_stream_id_printf:
+ * @element: The  #GstElement to create a stream-id for
+ * @format: (not nullable): The stream-id
+ *
+ * Creates a stream-id for @element by combining the upstream information with
+ * the @format.
+ *
+ * This function generates an unique stream-id by getting the upstream
+ * stream-start event stream ID and appending the stream-id to it. If the element
+ * has no sinkpad it will generate an upstream stream-id by doing an URI query
+ * on the element and in the worst case just uses a random number. Source
+ * elements that don't implement the URI handler interface should ideally
+ * generate a unique, deterministic stream-id manually instead.
+ *
+ * Since stream IDs are sorted alphabetically, any numbers in the stream ID
+ * should be printed with a fixed number of characters, preceded by 0's, such as
+ * by using the format \%03u instead of \%u.
+ *
+ * Returns: (transfer full): A stream-id for @element.
+ *
+ * Since: 1.24
+ */
+gchar *
+gst_element_decorate_stream_id_printf (GstElement * element,
+    const gchar * format, ...)
+{
+  gchar *res;
+  va_list var_args;
+
+  g_return_val_if_fail (format, NULL);
+
+  va_start (var_args, format);
+  res =
+      gst_element_decorate_stream_id_printf_valist (element, format, var_args);
+  va_end (var_args);
+
+  return res;
+}
+
+
+/**
+ * gst_element_decorate_stream_id:
+ * @element: The  #GstElement to create a stream-id for
+ * @stream_id: (not nullable): The stream-id
+ *
+ * Creates a stream-id for @element by combining the upstream information with
+ * the @stream_id.
+ *
+ * This function generates an unique stream-id by getting the upstream
+ * stream-start event stream ID and appending @stream_id to it. If the element
+ * has no sinkpad it will generate an upstream stream-id by doing an URI query
+ * on the element and in the worst case just uses a random number. Source
+ * elements that don't implement the URI handler interface should ideally
+ * generate a unique, deterministic stream-id manually instead.
+ *
+ * Since stream IDs are sorted alphabetically, any numbers in the stream ID
+ * should be printed with a fixed number of characters, preceded by 0's, such as
+ * by using the format \%03u instead of \%u.
+ *
+ * Returns: (transfer full): A stream-id for @element.
+ *
+ * Since: 1.24
+ */
+gchar *
+gst_element_decorate_stream_id (GstElement * element, const gchar * stream_id)
+{
+  g_return_val_if_fail (stream_id, NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+
+  return gst_element_decorate_stream_id_internal (element, stream_id);
+}
+
+static gchar *
+gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
+    const gchar * stream_id)
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), NULL);
+  g_return_val_if_fail (GST_IS_ELEMENT (parent), NULL);
+
+  g_return_val_if_fail (parent->numsinkpads <= 1, NULL);
+
+  /* If the element has multiple source pads it must
+   * provide a stream-id for every source pad, otherwise
+   * all source pads will have the same and are not
+   * distinguishable */
+  g_return_val_if_fail (parent->numsrcpads <= 1 || stream_id, NULL);
+
+  return gst_element_decorate_stream_id_internal (parent, stream_id);
 }
 
 /**
