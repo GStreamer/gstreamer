@@ -1,7 +1,107 @@
+2022-09-21 19:19:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Use implicit builtin dirs in pkgconfig generation
+	  Starting with Meson 0.62, meson automatically populates the variables
+	  list in the pkgconfig file if you reference builtin directories in the
+	  pkgconfig file (whether via a custom pkgconfig variable or elsewhere).
+	  We need this, because ${prefix}/libexec is a hard-coded value which is
+	  incorrect on, for example, Debian.
+	  Bump requirement to 0.62, and remove version compares that retained
+	  support for older Meson versions.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1245
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3061>
+
+2021-03-24 14:20:18 -0500  Zebediah Figura <z.figura12@gmail.com>
+
+	* meson.build:
+	  meson: Build with -Wl,-z,nodelete to prevent unloading of dynamic libraries and plugins
+	  GLib made the unfortunate decision to prevent libgobject from ever being
+	  unloaded, which means that now any library which registers a static type
+	  can't ever be unloaded either (and any library that depends on those,
+	  ad nauseam).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/778>
+
+2022-09-01 11:51:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Namespace the plugins_doc_dep/libraries variables
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2683>
+
+2022-04-06 12:56:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Bump GLib requirement to >= 2.62
+	  Can't require 2.64 yet because of
+	  https://gitlab.freedesktop.org/gstreamer/cerbero/-/issues/323
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2568>
+
+2022-03-30 11:06:02 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Use gmodule-no-export-2.0
+	  We don't need `-Wl,--export-dynamic`, that's used only for executables
+	  that needs to export an API to be used by plugins they load.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-25 15:00:20 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	* omx/meson.build:
+	* tests/check/meson.build:
+	* tools/meson.build:
+	  Remove glib and gobject dependencies everywhere
+	  They are part of gst_dep already and we have to make sure to always have
+	  gst_dep. The order in dependencies matters, because it is also the order
+	  in which Meson will set -I args. We want gstreamer's config.h to take
+	  precedence over glib's private config.h when it's a subproject.
+	  While at it, remove useless fallback args for gmodule/gio dependencies,
+	  only gstreamer core needs it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-18 13:42:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Bump all meson requirements to 0.60
+	  Lots of new warnings ever since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1977>
+
+2022-02-21 11:37:26 -0500  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* config/meson.build:
+	* meson.build:
+	  devenv: Add some missing GStreamer specific env variables
+	  This should make "meson devenv" closer to what "gst-env.py" sets.
+	  - GST_VALIDATE_SCENARIOS_PATH
+	  - GST_VALIDATE_APPS_DIR
+	  - GST_OMX_CONFIG_DIR
+	  - GST_ENCODING_TARGET_PATH
+	  - GST_PRESET_PATH
+	  - GST_PLUGIN_SCANNER
+	  - GST_PTP_HELPER
+	  - _GI_OVERRIDES_PATH
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1768>
+
+2022-02-04 11:15:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1635>
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-omx.doap:

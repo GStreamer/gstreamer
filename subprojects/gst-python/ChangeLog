@@ -1,7 +1,177 @@
+2022-09-21 19:19:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Use implicit builtin dirs in pkgconfig generation
+	  Starting with Meson 0.62, meson automatically populates the variables
+	  list in the pkgconfig file if you reference builtin directories in the
+	  pkgconfig file (whether via a custom pkgconfig variable or elsewhere).
+	  We need this, because ${prefix}/libexec is a hard-coded value which is
+	  incorrect on, for example, Debian.
+	  Bump requirement to 0.62, and remove version compares that retained
+	  support for older Meson versions.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1245
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3061>
+
+2022-09-12 09:46:43 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gi/overrides/meson.build:
+	  meson: Set install_tag on some targets
+	  Trying to follow recommendation from Meson documentation:
+	  https://mesonbuild.com/Installing.html#installation-tags
+	  Move tools into 'bin' or 'bin-devel' categories to keep only libs and
+	  plugins in the default 'runtime' category. This simplifies distribution
+	  of GStreamer application skipping parts that are not needed, similarly
+	  to what Cerbero does by hardcoding huge list of files.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3017>
+
+2022-09-01 15:11:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugin/meson.build:
+	  meson: Call pkgconfig.generate in the loop where we declare plugins dependencies
+	  Removing some copy pasted code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-06-28 16:38:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/plugins/python/py_audiotestsrc.py:
+	  python: Fix the audiotestsrc example
+	  Since 830d1595b94ee855b664b2101f0832fbd0181b9c AudioInfo::from_caps has been hidden in python
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2675>
+
+2022-06-28 16:35:58 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/plugins/python/audioplot.py:
+	* examples/plugins/python/exampleTransform.py:
+	* examples/plugins/python/identity.py:
+	* examples/plugins/python/mixer.py:
+	* examples/plugins/python/py_audiotestsrc.py:
+	* examples/plugins/python/sinkelement.py:
+	* gi/overrides/Gst.py:
+	  python: Add a Gst.init_python function to be called from plugins
+	  Plugins know that they will be initialized after Gst was initialized
+	  so they can call the initialization function dedicated for the python
+	  bindings
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2675>
+
+2022-06-28 11:02:37 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	  python: Do not call gst_init when it is already is_initialized
+	  GStreamer plugins written in python need to call `Gst.init` to ensure
+	  that GStreamer is initialized so when loading a python plugin, we might
+	  be recursively calling `gst_init` which is not a good idea.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/940
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2675>
+
+2022-04-21 09:51:50 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* plugin/gstpythonplugin.c:
+	  pythonplugin: fails silently on plugin issue
+	  If a gst python plugin fails to load, the meta plugin
+	  should continue to try loading the following.
+	  If no plugin can be loaded, the meta plugin should
+	  not be blacklisted by returning false.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2253>
+
+2022-04-15 18:58:49 +0200  Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+	* meson.build:
+	  gst-python: fix build on systems without C++ compiler
+	  Fix the following build failure on systems without C++ compiler:
+	  The following exception(s) were encountered:
+	  Running "/home/autobuild/autobuild/instance-0/output-1/host/bin/i686-buildroot-linux-gnu-g++ --version" gave "[Errno 2] No such file or directory: '/home/autobuild/autobuild/instance-0/output-1/host/bin/i686-buildroot-linux-gnu-g++'"
+	  Fixes:
+	  - http://autobuild.buildroot.org/results/eebf65036f79d21d347714d62afecd0108393308
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2200>
+
+2022-03-30 11:06:02 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Use gmodule-no-export-2.0
+	  We don't need `-Wl,--export-dynamic`, that's used only for executables
+	  that needs to export an API to be used by plugins they load.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-25 15:00:20 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* plugin/meson.build:
+	  Remove glib and gobject dependencies everywhere
+	  They are part of gst_dep already and we have to make sure to always have
+	  gst_dep. The order in dependencies matters, because it is also the order
+	  in which Meson will set -I args. We want gstreamer's config.h to take
+	  precedence over glib's private config.h when it's a subproject.
+	  While at it, remove useless fallback args for gmodule/gio dependencies,
+	  only gstreamer core needs it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-29 18:43:56 +0200  Thibault Saunier <tsaunier@igalia.com>
+
+	* testsuite/python.supp:
+	  python: Add a suppression file for a leak in PyGObject
+	  And ensure that the CI runs GES valgrind test when we change the
+	  overrides as many GES tests are implemented in python
+	  Proper fix is at: https://gitlab.gnome.org/GNOME/pygobject/-/merge_requests/204
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2060>
+
+2021-12-06 19:27:24 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/plugins/python/sinkelement.py:
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	  python: Add support for the GstURIHandlerInterface
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1423>
+
+2022-03-18 13:42:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Bump all meson requirements to 0.60
+	  Lots of new warnings ever since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1977>
+
+2022-03-11 18:08:14 -0500  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gi/overrides/meson.build:
+	  Meson: Set install_tag on some files
+	  Meson tries to guess the tag (runtime, devel, etc) for every installed
+	  file, but it cannot guess them all. There is a list at the end of
+	  meson-log.txt of files we need to tag manually.
+	  See https://mesonbuild.com/Installing.html#installation-tags.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934>
+
+2022-02-04 15:53:45 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* gi/overrides/gstmodule.c:
+	  gst-python: gstmodule.c: fix build with 3.11
+	  https://docs.python.org/fr/3.10/whatsnew/3.10.html
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1639>
+
+2022-02-21 11:37:26 -0500  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gi/overrides/meson.build:
+	  devenv: Add some missing GStreamer specific env variables
+	  This should make "meson devenv" closer to what "gst-env.py" sets.
+	  - GST_VALIDATE_SCENARIOS_PATH
+	  - GST_VALIDATE_APPS_DIR
+	  - GST_OMX_CONFIG_DIR
+	  - GST_ENCODING_TARGET_PATH
+	  - GST_PRESET_PATH
+	  - GST_PLUGIN_SCANNER
+	  - GST_PTP_HELPER
+	  - _GI_OVERRIDES_PATH
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1768>
+
+2022-02-04 11:15:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1635>
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-python.doap:

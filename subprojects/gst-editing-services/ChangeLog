@@ -1,7 +1,272 @@
+2022-09-21 19:19:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Use implicit builtin dirs in pkgconfig generation
+	  Starting with Meson 0.62, meson automatically populates the variables
+	  list in the pkgconfig file if you reference builtin directories in the
+	  pkgconfig file (whether via a custom pkgconfig variable or elsewhere).
+	  We need this, because ${prefix}/libexec is a hard-coded value which is
+	  incorrect on, for example, Debian.
+	  Bump requirement to 0.62, and remove version compares that retained
+	  support for older Meson versions.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1245
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3061>
+
+2022-09-08 11:38:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-source.c:
+	  ges-video-source: Remove limit on frame duplication on EOS in videorate
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1352
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3000>
+
+2022-09-06 17:24:51 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nlecomposition: Minor debug enhancement
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3000>
+
+2022-09-06 17:24:22 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ges/ges-video-source.c:
+	  ges: Enhance element names in video uri sources
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3000>
+
+2022-08-29 10:17:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  doc: Do not build plugins to build the doc
+	  It is not actually necessary
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2954>
+
+2021-03-24 14:20:18 -0500  Zebediah Figura <z.figura12@gmail.com>
+
+	* meson.build:
+	  meson: Build with -Wl,-z,nodelete to prevent unloading of dynamic libraries and plugins
+	  GLib made the unfortunate decision to prevent libgobject from ever being
+	  unloaded, which means that now any library which registers a static type
+	  can't ever be unloaded either (and any library that depends on those,
+	  ad nauseam).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/778>
+
+2022-09-10 19:16:39 +0200  Christoph Reiter <reiter.christoph@gmail.com>
+
+	* meson.build:
+	  meson: use python.get_install_dir() to find the pygobject overrides dir
+	  Instead of trying to hardcode site-packages paths for different platforms
+	  just use python.get_install_dir() from meson and let it deal with the rest.
+	  Also no longer try to import pygobject, which would otherwise not be
+	  required at build time.
+	  python.get_install_dir() was at the beginning broken on Windows, but
+	  that was fixed in 0.60 via https://github.com/mesonbuild/meson/pull/9156
+	  and since ges now requires >0.60 this can be ignored.
+	  This change was motivated by the install path being wrong under MSYS2, where
+	  the unix install layout is used and the detection code not taking that into
+	  account.
+	  This MR is a continuation of https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/merge_requests/230
+	  see the discussion there for extra context.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3012>
+
+2022-09-01 15:11:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* plugins/ges/meson.build:
+	* plugins/nle/meson.build:
+	  meson: Call pkgconfig.generate in the loop where we declare plugins dependencies
+	  Removing some copy pasted code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-09-01 11:51:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	* ges/meson.build:
+	* meson.build:
+	  meson: Namespace the plugins_doc_dep/libraries variables
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-08-31 18:44:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Rename plugins list and make them "dependency" objects
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-08-02 06:54:38 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ges/ges-utils.c:
+	  ges: Update outdated comment
+	  d3d11compositor is a videoaggregator subclass and no more wrapper bin
+	  since the MR
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2631
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2825>
+
+2022-01-22 02:24:23 +0100  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-uri-clip.c:
+	* tests/check/ges/clip.c:
+	  ges: preserve discovery order
+	  The previous code was storing container children in reverse
+	  addition order, this was mitigated by the fact that track elements
+	  were also stored in reverse order, thus restoring the original
+	  order, but it seems more consistent to preserve order throughout,
+	  the extra cost of append operations is negligible.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1549>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2683>
+
+2022-06-16 22:40:21 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ges/gstframepositioner.c:
+	  ges/gstframepositioner: don't create one compositor per frame meta
+	  Instead, cache the looked up operator property
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2623>
+
+2022-04-06 12:56:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Bump GLib requirement to >= 2.62
+	  Can't require 2.64 yet because of
+	  https://gitlab.freedesktop.org/gstreamer/cerbero/-/issues/323
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2568>
+
+2022-05-13 10:23:54 +1000  Matthew Waters <matthew@centricular.com>
+
+	* ges/ges-video-uri-source.c:
+	  ges/videourisource: handle non-1/1 PAR source videos
+	  The automatic scaling done by framepositioner does not account for the
+	  par of the video source.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2423>
+
+2022-05-06 12:17:14 +0300  George Kiagiadakis <george.kiagiadakis@collabora.com>
+
+	* ges/ges-enums.c:
+	* ges/ges-enums.h:
+	* ges/ges-video-transition.c:
+	  ges-video-transition: add a new "fade-in" transition type
+	  This transition is meant to be very similar to crossfade, but
+	  instead of fading out the background video at the same time as the
+	  foreground fades in, the background video stays at 100% opacity
+	  during the whole transition.
+	  This essentially "restores" the old crossfade behaviour that was changed in:
+	  https://gitlab.freedesktop.org/gstreamer/gst-editing-services/-/commit/eb48faf34234811faec1699692a2c096daaceefd
+	  but using a new type enum, so that both behaviours are available,
+	  letting applications choose.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2385>
+
+2022-03-30 11:06:02 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Use gmodule-no-export-2.0
+	  We don't need `-Wl,--export-dynamic`, that's used only for executables
+	  that needs to export an API to be used by plugins they load.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-25 15:00:20 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Remove glib and gobject dependencies everywhere
+	  They are part of gst_dep already and we have to make sure to always have
+	  gst_dep. The order in dependencies matters, because it is also the order
+	  in which Meson will set -I args. We want gstreamer's config.h to take
+	  precedence over glib's private config.h when it's a subproject.
+	  While at it, remove useless fallback args for gmodule/gio dependencies,
+	  only gstreamer core needs it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-31 12:49:48 +0200  Xabier Rodriguez Calvar <calvaris@igalia.com>
+
+	* ges/ges-smart-video-mixer.c:
+	* ges/ges-smart-video-mixer.h:
+	  ges-smart-video-mixer: use the proper pad to get the positioner meta
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2094>
+
+2021-09-11 12:17:56 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* tools/meson.build:
+	  tools: Add support for building gstreamer tools against gst-full
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1581>
+
+2022-03-28 13:47:52 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* tools/utils.c:
+	  ges: remove memory leak with description
+	  free the capsdesc
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2047>
+
+2022-03-28 13:20:40 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nle: clear seek event properly
+	  Use gst_clear_event instead of g_clear_object
+	  avoiding a failing gobject unref
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2047>
+
+2022-03-14 09:06:46 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* bindings/python/gi/overrides/GES.py:
+	* bindings/python/gi/overrides/__init__.py:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline-element.h:
+	  Fix license as GES is released under the LGPL2+ license
+	  This was a mistake that some of the licensing notice in a few files was
+	  referring to GPL3+ and it needs fixing
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1956>
+
+2022-03-18 13:42:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Bump all meson requirements to 0.60
+	  Lots of new warnings ever since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1977>
+
+2022-02-21 11:37:26 -0500  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* bindings/python/meson.build:
+	* tests/validate/meson.build:
+	  devenv: Add some missing GStreamer specific env variables
+	  This should make "meson devenv" closer to what "gst-env.py" sets.
+	  - GST_VALIDATE_SCENARIOS_PATH
+	  - GST_VALIDATE_APPS_DIR
+	  - GST_OMX_CONFIG_DIR
+	  - GST_ENCODING_TARGET_PATH
+	  - GST_PRESET_PATH
+	  - GST_PLUGIN_SCANNER
+	  - GST_PTP_HELPER
+	  - _GI_OVERRIDES_PATH
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1768>
+
+2022-02-19 03:26:00 +0900  Seungha Yang <seungha@centricular.com>
+
+	* tests/check/scenarios/complex_effect_bin_desc/flow-expectations/log-videosink-sink-expected:
+	* tests/check/scenarios/seek_with_stop/flow-expectations/log-videosink-sink-expected:
+	  scenarios: Update for videoaggregator rounding behavior change
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1747>
+
+2022-02-10 10:13:27 +0100  Stéphane Cerveau <scerveau@collabora.com>
+
+	* meson.build:
+	  ges: add missing plugin summary
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1682>
+
+2022-02-04 11:15:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1635>
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:

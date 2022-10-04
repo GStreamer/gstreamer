@@ -1,7 +1,452 @@
+2022-09-21 19:19:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Use implicit builtin dirs in pkgconfig generation
+	  Starting with Meson 0.62, meson automatically populates the variables
+	  list in the pkgconfig file if you reference builtin directories in the
+	  pkgconfig file (whether via a custom pkgconfig variable or elsewhere).
+	  We need this, because ${prefix}/libexec is a hard-coded value which is
+	  incorrect on, for example, Debian.
+	  Bump requirement to 0.62, and remove version compares that retained
+	  support for older Meson versions.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1245
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3061>
+
+2022-09-14 15:45:28 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Make appsrc-push push a sample
+	  Allowing setting a segment to the sample
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3052>
+
+2022-09-14 15:36:41 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-action-types.md:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Handle buffer pts/dts/duration in the appsrc-push action
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3052>
+
+2022-09-14 15:31:20 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Simplify the way we override appsrc src pad chain
+	  When pushing several buffers while the pipeline is in NULL state, meaning
+	  that the action are executed "interlaced", previous code was deadlocking.
+	  This new implementation makes it so the override is always on and we
+	  expect all buffers to go through to be associated to a function, which
+	  is a safe assumption.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3052>
+
+2022-09-08 18:25:07 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Fix a leak when done waiting for an ASYNC action
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3000>
+
+2022-09-12 09:46:43 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* validate/tools/meson.build:
+	  meson: Set install_tag on some targets
+	  Trying to follow recommendation from Meson documentation:
+	  https://mesonbuild.com/Installing.html#installation-tags
+	  Move tools into 'bin' or 'bin-devel' categories to keep only libs and
+	  plugins in the default 'runtime' category. This simplifies distribution
+	  of GStreamer application skipping parts that are not needed, similarly
+	  to what Cerbero does by hardcoding huge list of files.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3017>
+
+2022-09-16 22:05:18 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst-validate-action-types.md:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Update action types documentation
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3040>
+
+2021-03-24 14:20:18 -0500  Zebediah Figura <z.figura12@gmail.com>
+
+	* meson.build:
+	  meson: Build with -Wl,-z,nodelete to prevent unloading of dynamic libraries and plugins
+	  GLib made the unfortunate decision to prevent libgobject from ever being
+	  unloaded, which means that now any library which registers a static type
+	  can't ever be unloaded either (and any library that depends on those,
+	  ad nauseam).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/778>
+
+2022-09-07 15:43:11 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Some minor fixes
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3007>
+
+2022-09-07 15:41:53 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add a 'check-current-pad-caps' check action type
+	  Allowing to check that a specific pad has some specific caps set
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3007>
+
+2022-09-07 15:19:05 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/gst/validate/gst-validate-scenario.h:
+	  validate: Add a 'check' field to waits to allow running check actions after it get executed
+	  Adding the notion of 'check' action types
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3007>
+
+2022-09-01 15:11:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	  meson: Call pkgconfig.generate in the loop where we declare plugins dependencies
+	  Removing some copy pasted code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-09-01 11:51:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	* validate/gst/validate/meson.build:
+	  meson: Namespace the plugins_doc_dep/libraries variables
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-08-31 18:44:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Rename plugins list and make them "dependency" objects
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-08-31 10:31:40 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/meson.build:
+	  validate: Fix gir generation
+	  It broke in https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2555
+	  where we stopped parsing some .c files
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2965>
+
+2022-08-04 21:12:08 +0300  Jordan Petridis <jordan@centricular.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: don't look for the common supression file
+	  We no longer have a common submodule
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2841>
+
+2022-08-05 20:16:00 +0900  Seungha Yang <seungha@centricular.com>
+
+	* validate/launcher/testsuites/check.py:
+	  Revert "videoconvertscale: Add properties to disable scaling/converting in videoconvert/videoscale"
+	  This reverts commit cd7a91cef1c6a2e24d440126b7f2ab543fb205c5.
+	  Reverting properties, scaling in videoconvert and converting in
+	  videoscale will be disabled by the other commit
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2778>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2683>
+
+2022-04-06 12:56:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	* validate/gst/validate/validate.c:
+	  Bump GLib requirement to >= 2.62
+	  Can't require 2.64 yet because of
+	  https://gitlab.freedesktop.org/gstreamer/cerbero/-/issues/323
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2568>
+
+2022-05-30 14:00:55 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/meson.build:
+	  validate: Fix running as a tracer
+	  We need to rebuild runner.c as this is where the plugin is defined
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2555>
+
+2022-04-21 10:38:24 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate: Do not print Known error tests
+	  Those are passing tests in practice and it doesn't give any useful information
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2264>
+
+2022-04-19 18:38:12 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	  validate:pipeline-monitor: Minor cleanup setting unused variable
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/898>
+
+2022-04-14 09:48:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/testsuites/check.py:
+	  videoconvertscale: Add properties to disable scaling/converting in videoconvert/videoscale
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/898>
+
+2022-04-14 09:09:35 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/tools/gst-validate.c:
+	  validate: scenario: Add a 'allow-error' configuration
+	  This new configuration allows the scenario to keep running even
+	  after receiving an "error" message on the bus.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/898>
+
+2022-03-25 10:20:24 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* validate/gst/validate/gettext.h:
+	  Delete unused i18n headers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2028>
+
+2022-04-01 21:47:59 +0800  Haihua Hu <jared.hu@nxp.com>
+
+	* validate/launcher/baseclasses.py:
+	  ximagesink/xvimagesink: use GST_XINITTHREADS to ensure call to XInitThreads
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2098>
+
+2022-03-30 11:06:02 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Use gmodule-no-export-2.0
+	  We don't need `-Wl,--export-dynamic`, that's used only for executables
+	  that needs to export an API to be used by plugins they load.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-25 15:00:20 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	* validate/gst-libs/gst/video/meson.build:
+	* validate/gst/validate/meson.build:
+	* validate/plugins/fault_injection/meson.build:
+	* validate/plugins/gapplication/meson.build:
+	* validate/plugins/gtk/meson.build:
+	* validate/plugins/ssim/meson.build:
+	  Remove glib and gobject dependencies everywhere
+	  They are part of gst_dep already and we have to make sure to always have
+	  gst_dep. The order in dependencies matters, because it is also the order
+	  in which Meson will set -I args. We want gstreamer's config.h to take
+	  precedence over glib's private config.h when it's a subproject.
+	  While at it, remove useless fallback args for gmodule/gio dependencies,
+	  only gstreamer core needs it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2021-09-11 12:17:56 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson_options.txt:
+	* validate/tools/meson.build:
+	  tools: Add support for building gstreamer tools against gst-full
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1581>
+
+2022-03-28 21:15:15 +1100  Matthew Waters <matthew@centricular.com>
+
+	* validate/gst/validate/gst-validate-media-info.c:
+	  validate/media-info: silence unsed variable warning
+	  Fixes:
+	  ../validate/gst/validate/gst-validate-media-info.c:714:28: error: variable 'total_sink_count' set but not used [-Werror,-Wunused-but-set-variable]
+	  guint id, ncounters = 0, total_sink_count = 0;
+	  ^
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2046>
+
+2022-01-04 14:53:06 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Support args in the `emit-signal` action
+	  This was never needed before but it is generally useful and there
+	  was a todo about it
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1492>
+
+2022-03-18 09:07:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: Totally hide media descriptor node types from the API
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1986>
+
+2022-03-18 13:42:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Bump all meson requirements to 0.60
+	  Lots of new warnings ever since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1977>
+
+2022-03-07 17:21:48 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gssim.h:
+	* validate/gst-libs/gst/video/gstvalidatessim.h:
+	* validate/gst/validate/gst-validate-bin-monitor.h:
+	* validate/gst/validate/gst-validate-element-monitor.h:
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-media-info.h:
+	* validate/gst/validate/gst-validate-mockdecryptor.h:
+	* validate/gst/validate/gst-validate-monitor.h:
+	* validate/gst/validate/gst-validate-override-registry.h:
+	* validate/gst/validate/gst-validate-override.h:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.h:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.h:
+	* validate/gst/validate/gst-validate-runner.h:
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/media-descriptor-parser.c:
+	* validate/gst/validate/media-descriptor-parser.h:
+	* validate/gst/validate/media-descriptor-writer.c:
+	* validate/gst/validate/media-descriptor-writer.h:
+	* validate/gst/validate/media-descriptor.c:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: Cleanup ABI and make it ready to be stabilized this cycle
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-03-07 16:29:19 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/meson.build:
+	  validate: Introspect gst-validate-runner.c
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-03-02 22:21:40 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Add getters for ValidateReports
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-03-02 12:52:37 +0000  Philippe Normand <philn@igalia.com>
+
+	* validate/gst/validate/gst-validate-override.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-report.h:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Change IssueId type to guint32
+	  Which is a bit more bindings-friendly.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-03-02 10:54:17 +0000  Philippe Normand <philn@igalia.com>
+
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: ssim: Respect requested dump recurrence parameter
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-03-02 10:27:10 +0000  Philippe Normand <philn@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Keep scenario alive enough when executing actions
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-03-02 13:11:43 +0000  Philippe Normand <philn@igalia.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.h:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-runner.c:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: Introspection annotation cleanups
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-02-28 10:58:41 +0000  Philippe Normand <philn@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.h:
+	* validate/gst/validate/media-descriptor.h:
+	  validate: Fix padding and constants
+	  Without this the Rust -sys validate crate tests don't pass.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-02-28 10:57:55 +0000  Philippe Normand <philn@igalia.com>
+
+	* validate/gst/validate/validate.h:
+	  validate: Expose all public headers in main header
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-02-28 10:56:59 +0000  Philippe Normand <philn@igalia.com>
+
+	* validate/gst/validate/meson.build:
+	  validate: Fix pkgconfig name
+	  Making it consistent with the reset of GStreamer. This also means that
+	  anyone wanting to target -validate >= 1.22 needs to change the way they
+	  link against it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1810>
+
+2022-03-15 13:57:11 +0100  Corentin Noël <tintou@noel.tf>
+
+	* validate/gst/validate/gst-validate-runner.c:
+	  validate: Fix typo in get_reports
+	  Return without s isn't taken into account for the introspection.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1965>
+
+2022-02-21 10:49:15 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* debug-viewer/GstDebugViewer/Common/Main.py:
+	* debug-viewer/gst-debug-viewer:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  Remove the uninstalled term
+	  Remove the symbolic link `gst-uninstalled` which points to `gst-env`.
+	  The `uninstalled` is the old name and the project should stick to a
+	  single name for the procedure.
+	  Remove the term from all the files, exceptions are variables from
+	  dependencies like `uninstalled_variables` from pkgconfig and
+	  `meson-uninstalled`.
+	  Adjust mentions of the script in the documentation and README.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1743>
+
+2022-02-17 15:25:21 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* docs/gst-validate-environment-variables.md:
+	  Add documentation for GST_VALIDATE_APPS_DIR
+	  Add documentation for the environment variable, explaining what it is
+	  used for and the default search locations.
+	  Fixes: 4d569b51ed2 add a way to specify an application directory.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1743>
+
+2022-02-17 11:35:49 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* docs/gst-validate-environment-variables.md:
+	  Improve environment variable documentation
+	  At GST_VALIDATE_FILE:
+	  s/will be outputed/are output/
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1743>
+
+2022-02-17 11:32:14 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* docs/gst-validate-environment-variables.md:
+	  Add documentation for GST_VALIDATE_PLUGIN_PATH
+	  Add documentation for the environment variable, explaining what it is
+	  used for and the default search locations.
+	  Fixes: 83d6978f80 Implement fault_injection as a Gs(tValidate)Plugin
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1743>
+
+2022-02-21 11:37:26 -0500  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* validate/data/scenarios/meson.build:
+	  devenv: Add some missing GStreamer specific env variables
+	  This should make "meson devenv" closer to what "gst-env.py" sets.
+	  - GST_VALIDATE_SCENARIOS_PATH
+	  - GST_VALIDATE_APPS_DIR
+	  - GST_OMX_CONFIG_DIR
+	  - GST_ENCODING_TARGET_PATH
+	  - GST_PRESET_PATH
+	  - GST_PLUGIN_SCANNER
+	  - GST_PTP_HELPER
+	  - _GI_OVERRIDES_PATH
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1768>
+
+2022-02-04 11:15:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1635>
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-devtools.doap:

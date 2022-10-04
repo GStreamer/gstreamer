@@ -1,7 +1,241 @@
+2022-09-21 19:19:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Use implicit builtin dirs in pkgconfig generation
+	  Starting with Meson 0.62, meson automatically populates the variables
+	  list in the pkgconfig file if you reference builtin directories in the
+	  pkgconfig file (whether via a custom pkgconfig variable or elsewhere).
+	  We need this, because ${prefix}/libexec is a hard-coded value which is
+	  incorrect on, for example, Debian.
+	  Bump requirement to 0.62, and remove version compares that retained
+	  support for older Meson versions.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1245
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3061>
+
+2022-08-29 10:17:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  doc: Do not build plugins to build the doc
+	  It is not actually necessary
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2954>
+
+2021-03-24 14:20:18 -0500  Zebediah Figura <z.figura12@gmail.com>
+
+	* meson.build:
+	  meson: Build with -Wl,-z,nodelete to prevent unloading of dynamic libraries and plugins
+	  GLib made the unfortunate decision to prevent libgobject from ever being
+	  unloaded, which means that now any library which registers a static type
+	  can't ever be unloaded either (and any library that depends on those,
+	  ad nauseam).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/778>
+
+2018-10-18 12:32:03 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Print full option-string applied to x264_encoder in debug log
+	  x264 encoder transfers all options applied to the encoder
+	  to the SEI payload when the headers(SPS, PPS) is requested.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3014>
+
+2018-10-17 23:38:22 +0900  Yeongjin Jeong <yeongjin.jeong@navercorp.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Don't assume the order of nal unit
+	  Just for extra safety, let's check the index of the nal unit
+	  through the enum value of the nal type provided by x264.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3014>
+
+2022-09-01 15:11:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/a52dec/meson.build:
+	* ext/amrnb/meson.build:
+	* ext/amrwbdec/meson.build:
+	* ext/cdio/meson.build:
+	* ext/dvdread/meson.build:
+	* ext/mpeg2dec/meson.build:
+	* ext/sidplay/meson.build:
+	* ext/x264/meson.build:
+	* gst/asfdemux/meson.build:
+	* gst/dvdlpcmdec/meson.build:
+	* gst/dvdsub/meson.build:
+	* gst/realmedia/meson.build:
+	* gst/xingmux/meson.build:
+	* meson.build:
+	  meson: Call pkgconfig.generate in the loop where we declare plugins dependencies
+	  Removing some copy pasted code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-09-01 11:51:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Namespace the plugins_doc_dep/libraries variables
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-08-31 18:44:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Rename plugins list and make them "dependency" objects
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-05-31 15:18:03 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  docs: disable in static build
+	  Following gst-plugins-base, disable docs if static_build
+	  in:
+	  - gstreamer
+	  - gst-plugins-good
+	  - gst-plugins-ugly
+	  - gst-libav
+	  - gstreamer-vaapi
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2529>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2683>
+
+2022-06-25 19:50:10 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/meson.build:
+	  tests: skip unit tests for dependency-less elements that have been disabled
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/issues/1136
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2660>
+
+2022-04-06 12:56:30 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Bump GLib requirement to >= 2.62
+	  Can't require 2.64 yet because of
+	  https://gitlab.freedesktop.org/gstreamer/cerbero/-/issues/323
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2568>
+
+2022-03-25 10:18:34 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Always define ENABLE_NLS
+	  GLib guarantees libintl API is always available, provided by
+	  proxy-libintl as last resort. GLib itself unconditionally define
+	  ENABLE_NLS.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2028>
+
+2022-03-25 10:20:24 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gst-libs/gst/gettext.h:
+	* gst-libs/gst/gst-i18n-plugin.h:
+	  Delete unused i18n headers
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2028>
+
+2022-03-25 09:59:23 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/dvdread/dvdreadsrc.c:
+	* gst/asfdemux/gstasf.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfelement.c:
+	  Replace gst-i18n-*.h with gi18n-lib.h
+	  GLib guarantees libintl is always present, using proxy-libintl as
+	  last resort. There is no need to mock gettex API any more.
+	  This fix static build on Windows because G_INTL_STATIC_COMPILATION must
+	  be defined before including libintl.h, and glib does it for us as part
+	  as including glib.h.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2028>
+
+2022-04-15 16:53:25 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Don't try to fixate ANY allowed caps
+	  Instead fall back to the template caps.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2197>
+
+2022-03-30 11:06:02 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Use gmodule-no-export-2.0
+	  We don't need `-Wl,--export-dynamic`, that's used only for executables
+	  that needs to export an API to be used by plugins they load.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-25 15:00:20 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* ext/dvdread/meson.build:
+	* meson.build:
+	  Remove glib and gobject dependencies everywhere
+	  They are part of gst_dep already and we have to make sure to always have
+	  gst_dep. The order in dependencies matters, because it is also the order
+	  in which Meson will set -I args. We want gstreamer's config.h to take
+	  precedence over glib's private config.h when it's a subproject.
+	  While at it, remove useless fallback args for gmodule/gio dependencies,
+	  only gstreamer core needs it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-18 13:42:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Bump all meson requirements to 0.60
+	  Lots of new warnings ever since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1977>
+
+2022-02-23 11:10:11 +0100  Sebastian Fricke <sebastian.fricke@collabora.com>
+
+	* README.md:
+	  Maintain build instructions at a single location
+	  Do not maintain similar build instructions within each gst-plugins-*
+	  subproject and the subproject/gstreamer subproject. Use the build
+	  instructions from the mono-repository and link to them via hyperlink.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1743>
+
+2022-02-21 11:37:26 -0500  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* ext/amrnb/meson.build:
+	* ext/x264/meson.build:
+	  devenv: Add some missing GStreamer specific env variables
+	  This should make "meson devenv" closer to what "gst-env.py" sets.
+	  - GST_VALIDATE_SCENARIOS_PATH
+	  - GST_VALIDATE_APPS_DIR
+	  - GST_OMX_CONFIG_DIR
+	  - GST_ENCODING_TARGET_PATH
+	  - GST_PRESET_PATH
+	  - GST_PLUGIN_SCANNER
+	  - GST_PTP_HELPER
+	  - _GI_OVERRIDES_PATH
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1768>
+
+2022-02-21 23:29:23 +0100  Ruben Gonzalez <rgonzalez@fluendo.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/x264/gstx264enc.c:
+	  x264enc: Update long-name and description
+	  Update x264enc long-name to be more than just the name. Then the
+	  description also was updated to be longer than the long-name, and
+	  similar to the plugin description.
+	  Finally, as I am here, H264 was replaced by H.264 and x264 is only a
+	  plugin (not plugins).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1771>
+
+2021-10-01 20:27:28 +0900  Seungha Yang <seungha@centricular.com>
+
+	* meson.build:
+	  meson: Do hard build error for some MSVC warnings
+	  Handle various MSVC warnings as errors for development version.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1006>
+
+2022-02-04 11:15:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1635>
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* README:
 	* RELEASE:

@@ -1,7 +1,192 @@
+2022-09-29 12:42:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: fix unnecessary reconfiguration if the audio layout isn't specified
+	  It would constantly want to renegotiate (and spam the debug log) even
+	  though the channel layout hasn't actually changed. We use the same
+	  fallback in gst_ffmpegauddec_negotiate() already.
+	  This happens with WMA files for example.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3103>
+
+2022-09-21 19:19:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Use implicit builtin dirs in pkgconfig generation
+	  Starting with Meson 0.62, meson automatically populates the variables
+	  list in the pkgconfig file if you reference builtin directories in the
+	  pkgconfig file (whether via a custom pkgconfig variable or elsewhere).
+	  We need this, because ${prefix}/libexec is a hard-coded value which is
+	  incorrect on, for example, Debian.
+	  Bump requirement to 0.62, and remove version compares that retained
+	  support for older Meson versions.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1245
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3061>
+
+2022-08-26 08:43:34 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	  Build documentation for rust plugins
+	  - Update the docker image we use, starting using the standard one adding
+	  `gtk4-doc` as required by rust plugins
+	  - Update the plugins_doc_caches as required, some more plugins are built
+	  with the new image
+	  - Install ninja from pip as the version from F31 is too old
+	  - Avoid buildings all GSreamer plugins when building the doc as it takes
+	  time and resources for no good reason
+	  - Stop linking to `GInstanceInitFunc` as it is not present in latest GLib
+	  documentation, leading to warnings in hotdoc.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2954>
+
+2022-08-29 10:17:45 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  doc: Do not build plugins to build the doc
+	  It is not actually necessary
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2954>
+
+2021-03-24 14:20:18 -0500  Zebediah Figura <z.figura12@gmail.com>
+
+	* meson.build:
+	  meson: Build with -Wl,-z,nodelete to prevent unloading of dynamic libraries and plugins
+	  GLib made the unfortunate decision to prevent libgobject from ever being
+	  unloaded, which means that now any library which registers a static type
+	  can't ever be unloaded either (and any library that depends on those,
+	  ad nauseam).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/778>
+
+2022-09-01 15:11:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* ext/libav/meson.build:
+	  meson: Call pkgconfig.generate in the loop where we declare plugins dependencies
+	  Removing some copy pasted code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-09-01 11:51:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Namespace the plugins_doc_dep/libraries variables
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-08-31 18:44:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Rename plugins list and make them "dependency" objects
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-05-31 15:18:03 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  docs: disable in static build
+	  Following gst-plugins-base, disable docs if static_build
+	  in:
+	  - gstreamer
+	  - gst-plugins-good
+	  - gst-plugins-ugly
+	  - gst-libav
+	  - gstreamer-vaapi
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2529>
+
+2022-07-07 22:16:30 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  libav: Fix for APNG encoder property registration
+	  The AVClass name of Animated PNG in FFmpeg 5.x is "(A)PNG"
+	  and it will be converted to "-a-png" through
+	  g_ascii_strdown() and g_strcanon(). But GLib disallow leading '-'
+	  character for a GType name. Strip leading '-' to workaround it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2724>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2683>
+
+2022-06-08 19:18:48 +0300  Vivia Nikolaidou <vivia@ahiru.eu>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec, video.c, h265parse: Workaround for broken field-based interlaced encoders
+	  Some encoders (e.g. Makito) have H265 field-based interlacing, but then
+	  also specify an 1:2 pixel aspect ratio. That makes it kind-of work with
+	  decoders that don't properly support field-based decoding, but makes us
+	  end up with the wrong aspect ratio if we implement everything properly.
+	  As a workaround, detect 1:2 pixel aspect ratio for field-based
+	  interlacing, and check if making that 1:1 would make the new display
+	  aspect ratio common. In that case, we override it with 1:1.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2577>
+
+2022-04-15 16:38:46 +0200  Guillaume Desmottes <guillaume.desmottes@onestream.live>
+
+	* ext/libav/gstavviddec.c:
+	  libav: fix frame leak on negotiation error
+	  The function owns a reference on the frame. Drop it if negotiation
+	  failed as we are already doing for the other error cases.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2196>
+
+2022-04-04 23:32:56 +0200  Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+	* meson.build:
+	  gst-libav: fix build on systems without C++ compiler
+	  Fix the following build failure on systems without C++ compiler:
+	  The following exception(s) were encountered:
+	  Running "/nvmedata/autobuild/instance-9/output-1/host/bin/or1k-buildroot-linux-musl-g++ --version" gave "[Errno 2] No such file or directory: '/nvmedata/autobuild/instance-9/output-1/host/bin/or1k-buildroot-linux-musl-g++'"
+	  Fixes:
+	  - http://autobuild.buildroot.org/results/8ac0ba5eaaf7571857b4d8cfabf1488d640dc59a
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2112>
+
+2022-03-29 09:36:06 +0200  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Remove vc1/wmv3 override
+	  FFMPEG 5+ doesn't allow overriding the codec anymore (causes a segfault if you
+	  attempt to do that). But the best part is ... that with the current caps
+	  implementation in pad template and gst_ffmpeg_caps_to_codecid() we would never
+	  replace it by anything different than the existing codec id.
+	  Fixes #1054
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2052>
+
+2022-03-18 13:42:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Bump all meson requirements to 0.60
+	  Lots of new warnings ever since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1977>
+
+2021-10-05 13:43:50 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavaudenc.c:
+	  avaudenc: Add support for AV_PKT_DATA_SKIP_SAMPLES side data
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1028>
+
+2019-09-10 17:30:07 +0200  Carlos Rafael Giani <crg7475@mailbox.org>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: Add clipping meta support for gapless playback
+	  Co-authored-by: Sebastian Dröge <sebastian@centricular.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1028>
+
+2021-10-01 20:27:28 +0900  Seungha Yang <seungha@centricular.com>
+
+	* meson.build:
+	  meson: Do hard build error for some MSVC warnings
+	  Handle various MSVC warnings as errors for development version.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1006>
+
+2022-02-04 11:15:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1635>
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:

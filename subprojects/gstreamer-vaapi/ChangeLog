@@ -1,7 +1,254 @@
+2022-09-21 19:19:45 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Use implicit builtin dirs in pkgconfig generation
+	  Starting with Meson 0.62, meson automatically populates the variables
+	  list in the pkgconfig file if you reference builtin directories in the
+	  pkgconfig file (whether via a custom pkgconfig variable or elsewhere).
+	  We need this, because ${prefix}/libexec is a hard-coded value which is
+	  incorrect on, for example, Debian.
+	  Bump requirement to 0.62, and remove version compares that retained
+	  support for older Meson versions.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1245
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3061>
+
+2022-09-01 15:11:31 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Call pkgconfig.generate in the loop where we declare plugins dependencies
+	  Removing some copy pasted code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-09-01 11:51:48 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/meson.build:
+	  meson: Namespace the plugins_doc_dep/libraries variables
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-08-31 18:44:14 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* meson.build:
+	  meson: Rename plugins list and make them "dependency" objects
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2970>
+
+2022-05-31 15:18:03 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* docs/meson.build:
+	* meson.build:
+	  docs: disable in static build
+	  Following gst-plugins-base, disable docs if static_build
+	  in:
+	  - gstreamer
+	  - gst-plugins-good
+	  - gst-plugins-ugly
+	  - gst-libav
+	  - gstreamer-vaapi
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2529>
+
+2022-08-11 21:22:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapi: plugin: Handle when no encoders/decoders available.
+	  Nouveau driver currently only exposes postproc entry. But
+	  vaapidecodebin is registered independent if there are decoders or not,
+	  exposing a segmentation fault.
+	  This patch removes the encoder/decoder/codec arrays if no entries are
+	  found, and if no decoders are found vaapidecodebin is not
+	  registered. Also for vaapipostproc if no postproc entry is found.
+	  Also, if general decoder, used by vaapidecodebin, doesn't have a sink
+	  pad string, don't register the glib type.
+	  Fixes: #1349
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2865>
+
+2022-07-27 08:45:45 -0400  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  vaapi: h265dec: avoid possible NULL deref
+	  Check "pi" before attempting to dereference it.
+	  Captured by static analysis.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2801>
+
+2022-07-26 12:12:50 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  vaapi: h264dec: Remove dead code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2795>
+
+2022-07-26 12:22:10 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  vaapi: h265dec: Refresh our sps/pps copy
+	  The decoder uses a copy of the SPS/PPS. Since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2575
+	  the SPS/PPS is updated when the slice header is parsed. As a side
+	  effect, the H265 decoder was using an partially filled copy.
+	  Fixes: 5ae05bb42a ("codecparsers: Defering computation of pps and sps fields")
+	  Fixes: #1343
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2795>
+
+2022-06-09 20:00:35 +0800  He Junyan <junyan.he@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	  vaapi: Do not disable the whole vpp when some va operations not available.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2578>
+
+2022-05-26 12:08:44 -0400  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* tests/check/elements/vaapioverlay.c:
+	  tests: vaapi: remove unused header
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2503>
+
+2022-05-26 12:06:43 -0400  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* tests/check/elements/vaapioverlay.c:
+	  tests: vaapi: fix memleak in vaapioverlay test
+	  Need to unmap the frame to ensure vaapioverlay can destruct/dispose.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2503>
+
+2022-04-12 15:23:08 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapivalue.c:
+	  Fix `transfer` gobject-introspection annotation typos
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2160>
+
+2022-03-30 11:06:02 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* meson.build:
+	  Use gmodule-no-export-2.0
+	  We don't need `-Wl,--export-dynamic`, that's used only for executables
+	  that needs to export an API to be used by plugins they load.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2022-03-25 15:00:20 -0400  Xavier Claessens <xavier.claessens@collabora.com>
+
+	* gst-libs/gst/vaapi/gstvaapifilter.c:
+	* meson.build:
+	  Remove glib and gobject dependencies everywhere
+	  They are part of gst_dep already and we have to make sure to always have
+	  gst_dep. The order in dependencies matters, because it is also the order
+	  in which Meson will set -I args. We want gstreamer's config.h to take
+	  precedence over glib's private config.h when it's a subproject.
+	  While at it, remove useless fallback args for gmodule/gio dependencies,
+	  only gstreamer core needs it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2031>
+
+2021-09-11 12:17:56 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson_options.txt:
+	  tools: Add support for building gstreamer tools against gst-full
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1581>
+
+2022-03-18 16:59:32 +0000  Thibault Saunier <tsaunier@igalia.com>
+
+	* tests/check/elements/vaapipostproc.c:
+	  navigation: Add support for key Modifiers in all relevant events
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2010>
+
+2022-02-14 16:08:23 +0100  Vivienne Watermeier <vwatermeier@igalia.com>
+
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapisink.c:
+	* tests/check/elements/vaapipostproc.c:
+	  all: Use new navigation interface and API
+	  Use and implement the new navigation interface in all relevant sink elements,
+	  and use API functions everywhere instead of directy accessing the event structure.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1633>
+
+2022-03-16 13:17:21 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_av1.c:
+	  codecs: av1: Fix state when we show existing keyframe
+	  Showing existing keyframe have special meaning in AV1. All the references
+	  frame will be refreshed with the original keyframe information. The refresh
+	  process (7.20) is implemented by saving data from the frame_header into the
+	  state. To fix this special case, load all the relevant information into the
+	  frame_header.
+	  As there is nothing happening in between this and the loading of the key-frame
+	  into the state, this patch also remove the separate API function, using it
+	  internally instead.
+	  Fixes #1090
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1971>
+
+2022-03-18 13:42:27 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* meson.build:
+	  meson: Bump all meson requirements to 0.60
+	  Lots of new warnings ever since
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1934
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1977>
+
+2022-03-08 14:54:34 +0800  GuYanjie <yanjie.gu@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapidecoder_h265.c:
+	  vaapih265dec: fixed st_rps_bits setting in h265 decoding.
+	  According to va_dec_hevc.h, pic_param->st_rps_bits should be set
+	  for accelorater to skip parsing the *short_term_ref_pic_set
+	  (num_short_term_ref_pic_sets) structure.
+	  Also modified fill_picture to get parser info as a parameter,
+	  in order to get slide_hdr->short_term_ref_pic_set_size.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1886>
+
+2021-11-19 18:47:24 -0800  Haihao Xiang <haihao.xiang@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiblend.c:
+	* gst/vaapi/gstvaapioverlay.c:
+	* gst/vaapi/gstvaapioverlay.h:
+	  vaapioverlay: inline sinkpad scaling support
+	  Often, users will need to scale inputs (e.g.
+	  with vaapipostproc) before they are submitted
+	  to the vaapioverlay.  However, this results in
+	  multiple VPP passes/operations in the pipeline
+	  which creates unnecessary process overhead.
+	  This change allows for inputs to be submitted
+	  at original scale to vaapioverlay with per-sinkpad
+	  scale dimensions specified so they can be scaled
+	  and blended/composited in a single VPP pass/operation
+	  to avoid the unnecessary process overhead.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1380>
+
+2021-11-19 14:46:34 -0800  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* gst-libs/gst/vaapi/gstvaapiblend.c:
+	  vaapioverlay: use vpp blend state iif using alpha
+	  Don't set VAAPI vpp blend flags if alpha == 1.0,
+	  i.e. fully opaque.  This can avoid extra processing
+	  overhead on some drivers that apply blending
+	  unconditionally when flags are present, even if the
+	  end result is the same without blend flags (i.e. all
+	  opaque alpha channels).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1380>
+
+2022-02-09 06:01:34 +0100  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* meson.build:
+	* meson_options.txt:
+	  vaapi: Use meson's features for option selection.
+	  Modernize option selection, so if a required dependency is missing,
+	  produce a meaningful error message.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1676>
+
+2021-09-30 17:42:19 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* meson.build:
+	  build: Add libva dependency fallback.
+	  Then libva can be subproject and used by either gstreamer-vaapi,
+	  va and msdk in gst-plugins-bad.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1397>
+
+2022-02-04 11:15:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1635>
+
 === release 1.20.0 ===
 
 2022-02-03 19:53:25 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gstreamer-vaapi.doap:
