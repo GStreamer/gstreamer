@@ -220,6 +220,14 @@ gst_ffmpegauddec_start (GstAudioDecoder * decoder)
     return FALSE;
   }
   ffmpegdec->context->opaque = ffmpegdec;
+
+  /* FIXME: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1474 */
+  if ((oclass->in_plugin->capabilities & AV_CODEC_CAP_DELAY) != 0
+      && (oclass->in_plugin->id == AV_CODEC_ID_WMAV1
+          || oclass->in_plugin->id == AV_CODEC_ID_WMAV2)) {
+    ffmpegdec->context->flags2 |= AV_CODEC_FLAG2_SKIP_MANUAL;
+  }
+
   GST_OBJECT_UNLOCK (ffmpegdec);
 
   return TRUE;
@@ -602,11 +610,14 @@ gst_ffmpegauddec_drain (GstFFMpegAudDec * ffmpegdec, gboolean force)
   if (avcodec_send_packet (ffmpegdec->context, NULL))
     goto send_packet_failed;
 
-  do {
-    got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
-    if (got_frame)
-      got_any_frames = TRUE;
-  } while (got_frame);
+  /* FIXME: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1474 */
+  if (!(ffmpegdec->context->flags2 & AV_CODEC_FLAG2_SKIP_MANUAL)) {
+    do {
+      got_frame = gst_ffmpegauddec_frame (ffmpegdec, &ret);
+      if (got_frame)
+        got_any_frames = TRUE;
+    } while (got_frame);
+  }
   avcodec_flush_buffers (ffmpegdec->context);
 
   /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
