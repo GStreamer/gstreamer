@@ -689,7 +689,16 @@ if need_win_x11 != 'no'
 endif
 
 if need_win_dispmanx != 'no'
-  if bcm_host_dep.found()
+  have_dispmanx_window_t = cc.has_type(
+      'EGL_DISPMANX_WINDOW_T',
+      prefix: '''
+#include <bcm_host.h>
+#include <EGL/egl.h>
+''',
+      dependencies: [gl_lib_deps, egl_dep, bcm_host_dep],
+      include_directories: gl_includes)
+
+  if have_dispmanx_window_t and bcm_host_dep.found()
     if not egl_dep.found()
       error('dispmanx requires the use of egl')
     endif
