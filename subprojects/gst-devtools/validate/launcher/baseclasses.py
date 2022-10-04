@@ -19,6 +19,7 @@
 
 """ Class representing tests and test managers. """
 
+from enum import Enum
 import importlib.util
 import json
 import os
@@ -43,7 +44,7 @@ import uuid
 from itertools import cycle
 from fractions import Fraction
 
-from .utils import which
+from .utils import GstCaps, which
 from . import reporters
 from . import loggable
 from .loggable import Loggable
@@ -1218,6 +1219,12 @@ class GstValidateTest(Test):
         return result
 
 
+class VariableFramerateMode(Enum):
+    DISABLED = 1
+    ENABLED = 2
+    AUTO = 3
+
+
 class GstValidateEncodingTestInterface(object):
     DURATION_TOLERANCE = GST_SECOND / 4
 
@@ -1243,7 +1250,9 @@ class GstValidateEncodingTestInterface(object):
 
     def _get_profile_full(self, muxer, venc, aenc, video_restriction=None,
                           audio_restriction=None, audio_presence=0,
-                          video_presence=0, variable_framerate=False):
+                          video_presence=0,
+                          variable_framerate=VariableFramerateMode.DISABLED):
+
         ret = ""
         if muxer:
             ret += muxer
@@ -1254,9 +1263,14 @@ class GstValidateEncodingTestInterface(object):
             ret += venc
             props = ""
             if video_presence:
-                props += 'presence=%s,' % str(video_presence)
-            if variable_framerate:
-                props += 'variable-framerate=true,'
+                props += 'presence=%s|' % str(video_presence)
+            if variable_framerate == VariableFramerateMode.AUTO:
+                if video_restriction and "framerate" in video_restriction:
+                    variable_framerate = VariableFramerateMode.DISABLED
+                else:
+                    variable_framerate = VariableFramerateMode.ENABLED
+            if variable_framerate == VariableFramerateMode.ENABLED:
+                props += 'variable-framerate=true|'
             if props:
                 ret = ret + '|' + props[:-1]
         if aenc:
@@ -1270,7 +1284,7 @@ class GstValidateEncodingTestInterface(object):
         return ret.replace("::", ":")
 
     def get_profile(self, video_restriction=None, audio_restriction=None,
-            variable_framerate=False):
+            variable_framerate=VariableFramerateMode.DISABLED):
         vcaps = self.combination.get_video_caps()
         acaps = self.combination.get_audio_caps()
         if video_restriction is None:

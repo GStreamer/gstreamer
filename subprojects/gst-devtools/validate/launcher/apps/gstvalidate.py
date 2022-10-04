@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import argparse
+from fractions import Fraction
 import os
 import copy
 import sys
@@ -34,7 +35,7 @@ from launcher.loggable import Loggable, error
 from launcher.baseclasses import GstValidateTest, Test, \
     ScenarioManager, NamedDic, GstValidateTestsGenerator, \
     GstValidateMediaDescriptor, GstValidateEncodingTestInterface, \
-    GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination
+    GstValidateBaseTestManager, MediaDescriptor, MediaFormatCombination, VariableFramerateMode
 
 from launcher.utils import path2url, url2path, DEFAULT_TIMEOUT, which, \
     GST_SECOND, Result, Protocols, mkdir, printc, Colors, get_data_file, \
@@ -819,7 +820,18 @@ class GstValidateTranscodingTest(GstValidateTest, GstValidateEncodingTestInterfa
         if urllib.parse.urlparse(self.dest_file).scheme == "":
             self.dest_file = path2url(self.dest_file)
 
-        profile = self.get_profile()
+        variable_framerate = VariableFramerateMode.DISABLED
+        if self.media_descriptor.get_num_tracks("video") == 1:
+            caps, = [c for (t, c) in self.media_descriptor.get_tracks_caps() if t == 'video']
+            framerate = None
+            for struct, _ in GstCaps.new_from_str(caps):
+                framerate = struct.get("framerate", None)
+                if framerate is not None and \
+                        framerate.numerator == 0 and framerate.denominator == 1:
+                    variable_framerate = VariableFramerateMode.AUTO
+                    break
+
+        profile = self.get_profile(variable_framerate=variable_framerate)
         self.add_arguments("-o", profile)
 
     def build_arguments(self):
