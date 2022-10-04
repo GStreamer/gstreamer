@@ -2176,7 +2176,7 @@ class _TestsLauncher(Loggable):
                         self.reporter.after_test(test)
                         return False
 
-                    if retry_on_failures or test.max_retries:
+                    if retry_on_failures or test.max_retries and not self.options.no_retry_on_failures:
                         if not self.options.redirect_logs:
                             test.copy_logfiles()
                         to_retry.append(test)

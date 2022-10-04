@@ -522,6 +522,8 @@ class LauncherConfig(Loggable):
                             " at the same time")
         parser.add_argument('--retry-on-failures', dest="retry_on_failures", action="store_true",
                             help="Re-try tests that produce unexpected results")
+        parser.add_argument('--no-retry-on-failures', dest="no_retry_on_failures", action="store_true",
+                            help="Disable retrying on failure, event for known to be flaky tests.")
         parser.add_argument('--html', dest="html", action="store_true",
                             help="Write logs as html")
         dir_group = parser.add_argument_group(
