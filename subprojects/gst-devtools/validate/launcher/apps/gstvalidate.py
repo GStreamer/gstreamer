@@ -66,16 +66,16 @@ GST_VALIDATE_CAPS_TO_PROTOCOL = [("application/x-hls", Protocols.HLS),
                                  ("application/dash+xml", Protocols.DASH)]
 
 
-def expand_vars_in_list_recurse(l, data):
-    for i, v in enumerate(l):
+def expand_vars_in_list_recurse(lines, data):
+    for i, v in enumerate(lines):
         if isinstance(v, dict):
-            l[i] = expand_vars_in_dict_recurse(v, data)
+            lines[i] = expand_vars_in_dict_recurse(v, data)
         elif isinstance(v, str):
-            l[i] = v % data
+            lines[i] = v % data
         elif isinstance(v, list):
-            l[i] = expand_vars_in_list_recurse(v, data)
+            lines[i] = expand_vars_in_list_recurse(v, data)
 
-    return l
+    return lines
 
 
 def expand_vars_in_dict_recurse(dico, data):
