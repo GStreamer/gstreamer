@@ -2736,6 +2736,7 @@ static GstFlowReturn
 gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
     GstAdaptiveDemux2Stream * stream)
 {
+  GstClockTime consumed_duration;
   GstDashDemux2 *dashdemux = GST_DASH_DEMUX_CAST (demux);
   GstDashDemux2Stream *dashstream = (GstDashDemux2Stream *) stream;
 
@@ -2768,8 +2769,19 @@ gst_dash_demux_stream_fragment_finished (GstAdaptiveDemux * demux,
   if (G_UNLIKELY (stream->downloading_header || stream->downloading_index))
     return GST_FLOW_OK;
 
+  if (GST_CLOCK_TIME_IS_VALID (stream->start_position) &&
+      stream->start_position == stream->current_position) {
+    consumed_duration =
+        (stream->fragment.stream_time + stream->fragment.duration) -
+        stream->current_position;
+    GST_LOG_OBJECT (demux, "Consumed duration after seeking: %"
+        GST_TIMEP_FORMAT, &consumed_duration);
+  } else {
+    consumed_duration = stream->fragment.duration;
+  }
+
   return gst_adaptive_demux2_stream_advance_fragment (demux, stream,
-      stream->fragment.duration);
+      consumed_duration);
 }
 
 static gboolean

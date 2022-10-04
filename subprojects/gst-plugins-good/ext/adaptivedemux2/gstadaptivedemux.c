@@ -3894,9 +3894,13 @@ gst_adaptive_demux2_stream_has_next_fragment (GstAdaptiveDemux * demux,
 }
 
 /* must be called from the scheduler */
-/* Called from:
- *  the ::finish_fragment() handlers when an *actual* fragment is done
- *   */
+/* Called from: the ::finish_fragment() handlers when an *actual* fragment is
+ * done
+ *
+ * @duration: Is the duration of the advancement starting from
+ * stream->current_position which might not be the fragment duration after a
+ * seek.
+ */
 GstFlowReturn
 gst_adaptive_demux2_stream_advance_fragment (GstAdaptiveDemux * demux,
     GstAdaptiveDemux2Stream * stream, GstClockTime duration)

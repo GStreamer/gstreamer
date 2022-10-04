@@ -1,0 +1,41 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1, stream=(GstStream)"\(GstStream\)\ video-0";
+event caps: video/x-raw, colorimetry=(string)2:4:0:0, format=(string)I420, framerate=(fraction)0/1, height=(int)446, interlace-mode=(string)progressive, multiview-flags=(GstVideoMultiviewFlagsSet)0:ffffffff:/right-view-first/left-flipped/left-flopped/right-flipped/right-flopped/half-aspect/mixed-mono, multiview-mode=(string)mono, pixel-aspect-ratio=(fraction)1/1, width=(int)928;
+event segment: format=TIME, start=0:00:00.014000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event stream-collection: stream-collection, collection=(GstStreamCollection)"\(GstStreamCollection\)\ streamcollection0";
+buffer: content-id=0, pts=0:00:00.014000000, flags=discont, meta=GstVideoMeta
+event flush-start: (no structure)
+event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
+event segment: format=TIME, start=0:00:05.700000000, offset=0:00:00.000000000, stop=0:00:07.000000000, flags=0x01, time=0:00:05.700000000, base=0:00:00.000000000, position=0:00:00.000000000
+buffer: content-id=1, pts=0:00:05.700000000, flags=discont, meta=GstVideoMeta
+buffer: content-id=2, pts=0:00:05.727000000, meta=GstVideoMeta
+buffer: content-id=3, pts=0:00:05.777000000, meta=GstVideoMeta
+buffer: content-id=4, pts=0:00:05.811000000, meta=GstVideoMeta
+buffer: content-id=5, pts=0:00:05.861000000, meta=GstVideoMeta
+buffer: content-id=6, pts=0:00:05.894000000, meta=GstVideoMeta
+buffer: content-id=7, pts=0:00:05.944000000, meta=GstVideoMeta
+buffer: content-id=8, pts=0:00:05.977000000, meta=GstVideoMeta
+buffer: content-id=9, pts=0:00:06.027000000, meta=GstVideoMeta
+buffer: content-id=10, pts=0:00:06.061000000, meta=GstVideoMeta
+buffer: content-id=11, pts=0:00:06.111000000, meta=GstVideoMeta
+buffer: content-id=12, pts=0:00:06.144000000, meta=GstVideoMeta
+buffer: content-id=13, pts=0:00:06.194000000, meta=GstVideoMeta
+buffer: content-id=14, pts=0:00:06.227000000, meta=GstVideoMeta
+buffer: content-id=15, pts=0:00:06.277000000, meta=GstVideoMeta
+buffer: content-id=16, pts=0:00:06.311000000, meta=GstVideoMeta
+buffer: content-id=17, pts=0:00:06.361000000, meta=GstVideoMeta
+buffer: content-id=18, pts=0:00:06.394000000, meta=GstVideoMeta
+buffer: content-id=19, pts=0:00:06.444000000, meta=GstVideoMeta
+buffer: content-id=20, pts=0:00:06.477000000, meta=GstVideoMeta
+buffer: content-id=21, pts=0:00:06.527000000, meta=GstVideoMeta
+buffer: content-id=22, pts=0:00:06.561000000, meta=GstVideoMeta
+buffer: content-id=23, pts=0:00:06.611000000, meta=GstVideoMeta
+buffer: content-id=24, pts=0:00:06.644000000, meta=GstVideoMeta
+buffer: content-id=25, pts=0:00:06.694000000, meta=GstVideoMeta
+buffer: content-id=26, pts=0:00:06.727000000, meta=GstVideoMeta
+buffer: content-id=27, pts=0:00:06.777000000, meta=GstVideoMeta
+buffer: content-id=28, pts=0:00:06.811000000, meta=GstVideoMeta
+buffer: content-id=29, pts=0:00:06.861000000, meta=GstVideoMeta
+buffer: content-id=30, pts=0:00:06.894000000, meta=GstVideoMeta
+buffer: content-id=31, pts=0:00:06.944000000, meta=GstVideoMeta
+buffer: content-id=32, pts=0:00:06.977000000, meta=GstVideoMeta
+event eos: (no structure)

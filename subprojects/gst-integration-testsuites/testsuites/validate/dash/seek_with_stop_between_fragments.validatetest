@@ -1,0 +1,16 @@
+meta,
+    handles-states=true,
+    needs-http-server=true,
+    ignore-eos=true,
+    args = {
+        "uridecodebin3 uri=http://127.0.0.1:8079/defaults/dash/webm/output.mpd ! fakevideosink sync=true name=i",
+    },
+    configs = {
+       "$(validateflow), pad=i:sink, ignored-event-types={ tag }, buffers-checksum=as-id",
+    }
+
+pause
+seek, flags=flush+accurate, start=5.70, stop=7.00
+play
+crank-clock, repeat=33
+stop
