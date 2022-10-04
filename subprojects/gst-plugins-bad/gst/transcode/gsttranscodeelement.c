@@ -29,7 +29,7 @@
 
 #include <gst/pbutils/missing-plugins.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_transcodebin_debug);
+GST_DEBUG_CATEGORY (gst_transcodebin_debug);
 #define GST_CAT_DEFAULT gst_transcodebin_debug
 
 void

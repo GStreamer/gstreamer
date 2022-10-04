@@ -29,8 +29,6 @@
 
 #include <gst/pbutils/missing-plugins.h>
 
-
-
 /**
  * GstTranscodeBin!sink_%u:
  *
@@ -109,6 +107,7 @@ typedef struct
   GstElement *video_filter;
 
   GPtrArray *transcoding_streams;
+  gboolean upstream_selected;
 } GstTranscodeBin;
 
 typedef struct
@@ -126,6 +125,9 @@ typedef struct
 G_DEFINE_TYPE (GstTranscodeBin, gst_transcode_bin, GST_TYPE_BIN);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (transcodebin, "transcodebin", GST_RANK_NONE,
       GST_TYPE_TRANSCODE_BIN, transcodebin_element_init (plugin));
+
+static GstPad *
+get_encodebin_pad_from_stream (GstTranscodeBin * self, GstStream * stream);
 
 enum
 {
@@ -316,17 +318,52 @@ done:
   return res;
 }
 
+static TranscodingStream *
+setup_stream (GstTranscodeBin * self, GstStream * stream)
+{
+  TranscodingStream *res = NULL;
+  GstPad *encodebin_pad = get_encodebin_pad_from_stream (self, stream);
+
+  if (encodebin_pad) {
+    GST_INFO_OBJECT (self,
+        "Going to transcode stream %s (encodebin pad: %" GST_PTR_FORMAT ")",
+        gst_stream_get_stream_id (stream), encodebin_pad);
+
+    res = transcoding_stream_new (stream, encodebin_pad);
+    GST_OBJECT_LOCK (self);
+    g_ptr_array_add (self->transcoding_streams, res);
+    GST_OBJECT_UNLOCK (self);
+  }
+
+  return res;
+}
+
 static void
 gst_transcode_bin_link_encodebin_pad (GstTranscodeBin * self, GstPad * pad,
-    const gchar * stream_id)
+    GstEvent * sstart)
 {
   GstCaps *caps;
   GstPadLinkReturn lret;
-  TranscodingStream *stream = find_stream (self, stream_id, NULL);
+  const gchar *stream_id;
+  TranscodingStream *stream;
+
+  gst_event_parse_stream_start (sstart, &stream_id);
+  stream = find_stream (self, stream_id, NULL);
 
   if (!stream) {
-    GST_ERROR_OBJECT (self, "%s -> Got not stream, decodebin3 bug?", stream_id);
-    return;
+    if (self->upstream_selected) {
+      GstStream *tmpstream;
+
+      gst_event_parse_stream (sstart, &tmpstream);
+
+      stream = setup_stream (self, tmpstream);
+    }
+
+    if (!stream) {
+      GST_ERROR_OBJECT (self, "Could not find any stream with ID: %s",
+          stream_id);
+      return;
+    }
   }
 
   caps = gst_pad_query_caps (pad, NULL);
@@ -371,15 +408,13 @@ static GstPadProbeReturn
 wait_stream_start_probe (GstPad * pad,
     GstPadProbeInfo * info, GstTranscodeBin * self)
 {
-  const gchar *stream_id;
-
   if (GST_EVENT_TYPE (info->data) != GST_EVENT_STREAM_START)
     return GST_PAD_PROBE_OK;
 
-  gst_event_parse_stream_start (info->data, &stream_id);
-  GST_INFO_OBJECT (self, "Got pad %" GST_PTR_FORMAT " with stream ID: %s",
-      pad, stream_id);
-  gst_transcode_bin_link_encodebin_pad (self, pad, stream_id);
+  GST_INFO_OBJECT (self,
+      "Got pad %" GST_PTR_FORMAT " with stream:: %" GST_PTR_FORMAT, pad,
+      info->data);
+  gst_transcode_bin_link_encodebin_pad (self, pad, info->data);
 
   return GST_PAD_PROBE_REMOVE;
 }
@@ -399,7 +434,7 @@ decodebin_pad_added_cb (GstElement * decodebin, GstPad * pad,
     gst_event_parse_stream_start (sstart_event, &stream_id);
     GST_INFO_OBJECT (self, "Got pad %" GST_PTR_FORMAT " with stream ID: %s",
         pad, stream_id);
-    gst_transcode_bin_link_encodebin_pad (self, pad, stream_id);
+    gst_transcode_bin_link_encodebin_pad (self, pad, sstart_event);
     return;
   }
 
@@ -549,8 +584,7 @@ caps_is_raw (GstCaps * caps, GstStreamType stype)
 }
 
 static GstPad *
-get_encodebin_pad_from_stream (GstTranscodeBin * self,
-    GstEncodingProfile * profile, GstStream * stream)
+get_encodebin_pad_from_stream (GstTranscodeBin * self, GstStream * stream)
 {
   GstCaps *caps = gst_stream_get_caps (stream);
   GstPad *sinkpad = get_encodebin_pad_for_caps (self, caps);
@@ -597,22 +631,9 @@ select_stream_cb (GstElement * decodebin,
 
   for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
     GstStream *tmpstream = gst_stream_collection_get_stream (collection, i);
-    GstPad *encodebin_pad =
-        get_encodebin_pad_from_stream (self, self->profile, tmpstream);
 
-    if (encodebin_pad) {
-      if (stream == tmpstream)
-        transcode_stream = TRUE;
-
-      GST_INFO_OBJECT (self,
-          "Going to transcode stream %s (encodebin pad: %" GST_PTR_FORMAT,
-          gst_stream_get_stream_id (tmpstream), encodebin_pad);
-
-      GST_OBJECT_LOCK (self);
-      g_ptr_array_add (self->transcoding_streams,
-          transcoding_stream_new (tmpstream, encodebin_pad));
-      GST_OBJECT_UNLOCK (self);
-    }
+    if (setup_stream (self, tmpstream) && stream == tmpstream)
+      transcode_stream = TRUE;
   }
 
   GST_OBJECT_LOCK (self);
@@ -737,6 +758,38 @@ remove_all_children (GstTranscodeBin * self)
   }
 }
 
+static gboolean
+sink_event_function (GstPad * sinkpad, GstTranscodeBin * self, GstEvent * event)
+{
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+    {
+      GstQuery *q = gst_query_new_selectable ();
+
+      /* Query whether upstream can handle stream selection or not */
+      if (gst_pad_peer_query (sinkpad, q)) {
+        GST_FIXME_OBJECT (self, "We force `transcodebin` to upstream selection"
+            " mode if *any* of the inputs is. This means things might break if"
+            " there's a mix");
+        gst_query_parse_selectable (q, &self->upstream_selected);
+        GST_DEBUG_OBJECT (sinkpad, "Upstream is selectable : %d",
+            self->upstream_selected);
+      } else {
+        self->upstream_selected = FALSE;
+        GST_DEBUG_OBJECT (sinkpad, "Upstream does not handle SELECTABLE query");
+      }
+      gst_query_unref (q);
+
+      break;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (sinkpad, GST_OBJECT (self), event);
+}
+
 static GstStateChangeReturn
 gst_transcode_bin_change_state (GstElement * element, GstStateChange transition)
 {
@@ -851,6 +904,7 @@ gst_transcode_bin_request_pad (GstElement * element, GstPadTemplate * temp,
   }
 
   gpad = gst_ghost_pad_new_from_template (name, decodebin_pad, temp);
+  gst_pad_set_event_function (gpad, (GstPadEventFunction) sink_event_function);
   gst_element_add_pad (element, GST_PAD (gpad));
   gst_object_unref (decodebin_pad);
 
