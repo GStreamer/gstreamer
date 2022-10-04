@@ -8,6 +8,7 @@ KNOWN_ISSUES = {
             r"^validate\.((?!glvideomixer).)*$",
             r"^validate\.((?!launch_pipeline).)*$",
             r"^validate\.((?!rtsp*).)*$",
+            r"^validate\.((?!dash*).)*$",
         ],
         "max_retries": 2,
     },

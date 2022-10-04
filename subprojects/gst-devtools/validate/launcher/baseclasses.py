@@ -881,6 +881,24 @@ class GstValidateTest(Test):
         else:
             self.scenario = scenario
 
+    def needs_http_server(self):
+        if self.media_descriptor is None:
+            return False
+
+        protocol = self.media_descriptor.get_protocol()
+        uri = self.media_descriptor.get_uri()
+        uri_requires_http_server = False
+        if uri:
+            if 'http-server-port' in uri:
+                expanded_uri = uri % {
+                    'http-server-port': self.options.http_server_port}
+                uri_requires_http_server = expanded_uri.find(
+                    "127.0.0.1:%s" % self.options.http_server_port) != -1
+        if protocol in [Protocols.HTTP, Protocols.HLS, Protocols.DASH] or uri_requires_http_server:
+            return True
+
+        return False
+
     def kill_subprocess(self):
         Test.kill_subprocess(self)
 

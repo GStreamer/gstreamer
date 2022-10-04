@@ -5441,7 +5441,8 @@ _parse_scenario (GFile * f, GKeyFile * kf)
   gboolean ret = FALSE;
   gchar *path = g_file_get_path (f);
 
-  if (g_str_has_suffix (path, GST_VALIDATE_SCENARIO_SUFFIX)) {
+  if (g_str_has_suffix (path, GST_VALIDATE_SCENARIO_SUFFIX)
+      || g_str_has_suffix (path, GST_VALIDATE_VALIDATE_TEST_SUFFIX)) {
     GstStructure *meta = NULL;
     GList *tmp, *structures = gst_validate_structs_parse_from_gfile (f,
         (GstValidateGetIncludePathsFunc)
