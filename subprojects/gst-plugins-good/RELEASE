@@ -1,17 +1,15 @@
-This is GStreamer gst-plugins-good 1.20.0.
+This is GStreamer gst-plugins-good 1.21.1.
 
-The GStreamer team is thrilled to announce a new major feature release
-of your favourite cross-platform multimedia framework!
+GStreamer 1.21 is the unstable development branch leading up to the next major
+stable version which will be 1.22.
 
-As always, this release is again packed with new features, bug fixes and
-other improvements.
+The 1.21 development series adds new features on top of the 1.20 series and is
+part of the API and ABI-stable 1.x release series of the GStreamer multimedia
+framework.
 
-The 1.20 release series adds new features on top of the 1.18 series and is
-part of the API and ABI-stable 1.x release series.
+Full release notes will one day be found at:
 
-Full release notes can be found at:
-
-  https://gstreamer.freedesktop.org/releases/1.20/
+  https://gstreamer.freedesktop.org/releases/1.22/
 
 Binaries for Android, iOS, Mac OS X and Windows will usually be provided
 shortly after the release.
@@ -80,7 +78,8 @@ for more details.
 For help and support, please subscribe to and send questions to the
 gstreamer-devel mailing list (see below for details).
 
-There is also a #gstreamer IRC channel on the OFTC IRC network.
+There is also a #gstreamer IRC channel on the OFTC IRC network, which is
+also bridged into the Matrix network.
 
 Please do not submit support requests in GitLab, we only use it
 for bug tracking and merge requests review.
