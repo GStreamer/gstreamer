@@ -258,22 +258,21 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
 static gboolean
 gst_d3d11_device_enable_dxgi_debug (void)
 {
+#if (!GST_D3D11_WINAPI_ONLY_APP)
   static GModule *dxgi_debug_module = nullptr;
 
   GST_D3D11_CALL_ONCE_BEGIN {
-#if (!GST_D3D11_WINAPI_ONLY_APP)
     dxgi_debug_module = g_module_open ("dxgidebug.dll", G_MODULE_BIND_LAZY);
 
     if (dxgi_debug_module)
       g_module_symbol (dxgi_debug_module,
           "DXGIGetDebugInterface", (gpointer *) & GstDXGIGetDebugInterface);
-#else
-    GstDXGIGetDebugInterface = DXGIGetDebugInterface1;
-#endif
-  } GST_D3D11_CALL_ONCE_END;
+  }
+  GST_D3D11_CALL_ONCE_END;
 
   if (!GstDXGIGetDebugInterface)
     return FALSE;
+#endif
 
   return TRUE;
 }
