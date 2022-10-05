@@ -1344,12 +1344,19 @@ _validate_turn_server (GstWebRTCNice * ice, const gchar * s)
     }
   }
 
-out:
   g_list_free (keys);
   g_free (user);
   g_free (pass);
 
   return uri;
+
+out:
+  g_list_free (keys);
+  g_free (user);
+  g_free (pass);
+  gst_uri_unref (uri);
+
+  return NULL;
 }
 
 static void
