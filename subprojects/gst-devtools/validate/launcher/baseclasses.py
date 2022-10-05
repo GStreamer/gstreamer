@@ -165,6 +165,7 @@ class Test(Loggable):
         copied_test = copy.copy(self)
         if nth:
             copied_test.classname += '_it' + str(nth)
+            copied_test._uuid = None
             copied_test.options = copy.copy(self.options)
             copied_test.options.logsdir = os.path.join(copied_test.options.logsdir, str(nth))
             os.makedirs(copied_test.options.logsdir, exist_ok=True)
