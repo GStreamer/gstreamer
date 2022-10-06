@@ -93,6 +93,47 @@ gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
   return klass->get_colorimetry (capture, colorimetry);
 }
 
+gboolean
+gst_d3d11_screen_capture_unlock (GstD3D11ScreenCapture * capture)
+{
+  GstD3D11ScreenCaptureClass *klass;
+
+  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), FALSE);
+  klass = GST_D3D11_SCREEN_CAPTURE_GET_CLASS (capture);
+
+  if (klass->unlock)
+    return klass->unlock (capture);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_screen_capture_unlock_stop (GstD3D11ScreenCapture * capture)
+{
+  GstD3D11ScreenCaptureClass *klass;
+
+  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), FALSE);
+  klass = GST_D3D11_SCREEN_CAPTURE_GET_CLASS (capture);
+
+  if (klass->unlock_stop)
+    return klass->unlock_stop (capture);
+
+  return TRUE;
+}
+
+void
+gst_d3d11_screen_capture_show_border (GstD3D11ScreenCapture * capture,
+    gboolean show)
+{
+  GstD3D11ScreenCaptureClass *klass;
+
+  g_return_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture));
+  klass = GST_D3D11_SCREEN_CAPTURE_GET_CLASS (capture);
+
+  if (klass->show_border)
+    klass->show_border (capture, show);
+}
+
 GstFlowReturn
 gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
     GstD3D11Device * device, ID3D11Texture2D * texture,

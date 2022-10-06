@@ -47,6 +47,26 @@ if d3d11_winapi_only_app and (not d3dcompiler_lib.found() or not runtimeobject_l
   subdir_done()
 endif
 
+win11_sdk = cxx.compiles('''
+    #include<windows.h>
+    #include<winstring.h>
+    #include<roapi.h>
+    #include<windows.graphics.capture.h>,
+    #include<windows.graphics.capture.interop.h>
+    #include<windows.graphics.directx.direct3d11.h>
+    #include<windows.graphics.directx.direct3d11.interop.h>
+    #include<wrl.h>
+    using namespace Microsoft::WRL;
+    using namespace ABI::Windows::Graphics::Capture;
+    ComPtr<IDirect3D11CaptureFramePoolStatics> pool_statics;
+    ComPtr<IDirect3D11CaptureFramePoolStatics2> pool_statics2;
+    ComPtr<IDirect3D11CaptureFramePool> pool;
+    ComPtr<IGraphicsCaptureSession> session;
+    ComPtr<IGraphicsCaptureSession2> session2;
+    ComPtr<IGraphicsCaptureSession3> session3;
+    ''',
+    name: 'building with Windows 11 SDK')
+
 # if build target is Windows 10 and WINAPI_PARTITION_APP is allowed,
 # we can build UWP only modules as well
 if d3d11_winapi_app
@@ -66,6 +86,11 @@ if d3d11_winapi_desktop
   if winmm_lib.found() and cc.has_header('mmsystem.h')
     extra_args += ['-DHAVE_WINMM']
     extra_dep += [winmm_lib]
+  endif
+
+  if win11_sdk
+    d3d11_sources += ['gstd3d11winrtcapture.cpp']
+    extra_args += ['-DHAVE_WINRT_CAPTURE']
   endif
 endif
 

@@ -38,6 +38,9 @@
 
 #include "gstd3d11screencapturesrc.h"
 #include "gstd3d11dxgicapture.h"
+#ifdef HAVE_WINRT_CAPTURE
+#include "gstd3d11winrtcapture.h"
+#endif
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 #include <string.h>
@@ -59,14 +62,44 @@ enum
   PROP_CROP_Y,
   PROP_CROP_WIDTH,
   PROP_CROP_HEIGHT,
-
-  PROP_LAST,
+  PROP_WINDOW_HANDLE,
+  PROP_SHOW_BORDER,
+  PROP_CAPTURE_API,
+  PROP_ADAPTER,
 };
 
-static GParamSpec *properties[PROP_LAST];
+typedef enum
+{
+  GST_D3D11_SCREEN_CAPTURE_API_DXGI,
+  GST_D3D11_SCREEN_CAPTURE_API_WGC,
+} GstD3D11ScreenCaptureAPI;
+
+#ifdef HAVE_WINRT_CAPTURE
+#define GST_TYPE_D3D11_SCREEN_CAPTURE_API (gst_d3d11_screen_capture_api_get_type())
+static GType
+gst_d3d11_screen_capture_api_get_type (void)
+{
+  static GType api_type = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    static const GEnumValue api_types[] = {
+      {GST_D3D11_SCREEN_CAPTURE_API_DXGI, "DXGI Desktop Duplication", "dxgi"},
+      {GST_D3D11_SCREEN_CAPTURE_API_WGC, "Windows Graphics Capture", "wgc"},
+      {0, nullptr, nullptr},
+    };
+
+    api_type = g_enum_register_static ("GstD3D11ScreenCaptureAPI", api_types);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return api_type;
+}
+#endif
 
 #define DEFAULT_MONITOR_INDEX -1
 #define DEFAULT_SHOW_CURSOR FALSE
+#define DEFAULT_SHOW_BORDER FALSE
+#define DEFAULT_CAPTURE_API GST_D3D11_SCREEN_CAPTURE_API_DXGI
+#define DEFAULT_ADAPTER -1
 
 static GstStaticCaps template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
@@ -89,7 +122,11 @@ struct _GstD3D11ScreenCaptureSrc
   gint64 adapter_luid;
   gint monitor_index;
   HMONITOR monitor_handle;
+  HWND window_handle;
   gboolean show_cursor;
+  gboolean show_border;
+  GstD3D11ScreenCaptureAPI capture_api;
+  gint adapter;
 
   guint crop_x;
   guint crop_y;
@@ -108,9 +145,12 @@ struct _GstD3D11ScreenCaptureSrc
   ID3D11InputLayout *layout;
   ID3D11SamplerState *sampler;
   ID3D11BlendState *blend;
+
+  CRITICAL_SECTION lock;
 };
 
 static void gst_d3d11_screen_capture_src_dispose (GObject * object);
+static void gst_d3d11_screen_capture_src_finalize (GObject * object);
 static void gst_d3d11_screen_capture_src_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_d3d11_screen_capture_src_get_property (GObject * object,
@@ -150,61 +190,93 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
   GstCaps *caps;
 
   gobject_class->dispose = gst_d3d11_screen_capture_src_dispose;
+  gobject_class->finalize = gst_d3d11_screen_capture_src_finalize;
   gobject_class->set_property = gst_d3d11_screen_capture_src_set_property;
   gobject_class->get_property = gst_d3d11_screen_capture_src_get_property;
 
-  properties[PROP_MONITOR_INDEX] =
+  g_object_class_install_property (gobject_class, PROP_MONITOR_INDEX,
       g_param_spec_int ("monitor-index", "Monitor Index",
-      "Zero-based index for monitor to capture (-1 = primary monitor)",
-      -1, G_MAXINT, DEFAULT_MONITOR_INDEX,
-      (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          "Zero-based index for monitor to capture (-1 = primary monitor)",
+          -1, G_MAXINT, DEFAULT_MONITOR_INDEX,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
-  properties[PROP_MONITOR_HANDLE] =
+  g_object_class_install_property (gobject_class, PROP_MONITOR_HANDLE,
       g_param_spec_uint64 ("monitor-handle", "Monitor Handle",
-      "A HMONITOR handle of monitor to capture",
-      0, G_MAXUINT64, 0,
-      (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
-          G_PARAM_STATIC_STRINGS));
+          "A HMONITOR handle of monitor to capture",
+          0, G_MAXUINT64, 0,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
-  properties[PROP_SHOW_CURSOR] =
+  g_object_class_install_property (gobject_class, PROP_SHOW_CURSOR,
       g_param_spec_boolean ("show-cursor",
-      "Show Mouse Cursor", "Whether to show mouse cursor",
-      DEFAULT_SHOW_CURSOR,
-      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Show Mouse Cursor", "Whether to show mouse cursor",
+          DEFAULT_SHOW_CURSOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  properties[PROP_CROP_X] =
+  g_object_class_install_property (gobject_class, PROP_CROP_X,
       g_param_spec_uint ("crop-x", "Crop X",
-      "Horizontal coordinate of top left corner for the screen capture area",
-      0, G_MAXUINT, 0,
-      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Horizontal coordinate of top left corner for the screen capture area",
+          0, G_MAXUINT, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  properties[PROP_CROP_Y] =
+  g_object_class_install_property (gobject_class, PROP_CROP_Y,
       g_param_spec_uint ("crop-y", "Crop Y",
-      "Vertical coordinate of top left corner for the screen capture area",
-      0, G_MAXUINT, 0,
-      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Vertical coordinate of top left corner for the screen capture area",
+          0, G_MAXUINT, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  properties[PROP_CROP_WIDTH] =
+  g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
       g_param_spec_uint ("crop-width", "Crop Width",
-      "Width of screen capture area (0 = maximum)",
-      0, G_MAXUINT, 0,
-      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Width of screen capture area (0 = maximum)",
+          0, G_MAXUINT, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  properties[PROP_CROP_HEIGHT] =
+  g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
       g_param_spec_uint ("crop-height", "Crop Height",
-      "Height of screen capture area (0 = maximum)",
-      0, G_MAXUINT, 0,
-      (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "Height of screen capture area (0 = maximum)",
+          0, G_MAXUINT, 0,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  g_object_class_install_properties (gobject_class, PROP_LAST, properties);
+#ifdef HAVE_WINRT_CAPTURE
+  if (gst_d3d11_winrt_capture_load_library ()) {
+    g_object_class_install_property (gobject_class, PROP_WINDOW_HANDLE,
+        g_param_spec_uint64 ("window-handle", "Window Handle",
+            "A HWND handle of window to capture",
+            0, G_MAXUINT64, 0,
+            (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+                GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property (gobject_class, PROP_SHOW_BORDER,
+        g_param_spec_boolean ("show-border", "Show Border",
+            "Show border lines to capture area when WGC mode is selected",
+            DEFAULT_SHOW_BORDER,
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READWRITE
+                | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property (gobject_class, PROP_CAPTURE_API,
+        g_param_spec_enum ("capture-api", "Capture API", "Capture API to use",
+            GST_TYPE_D3D11_SCREEN_CAPTURE_API,
+            DEFAULT_CAPTURE_API,
+            (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+                GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property (gobject_class, PROP_ADAPTER,
+        g_param_spec_int ("adapter", "Adapter",
+            "DXGI Adapter index for creating device when WGC mode is selected "
+            "(-1 for default)",
+            -1, G_MAXINT32, DEFAULT_ADAPTER,
+            (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+                GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
+  }
+#endif
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_set_context);
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 screen capture src", "Source/Video",
-      "Capture desktop image by using Desktop Duplication API",
+      "Captures desktop screen",
       "Seungha Yang <seungha@centricular.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&template_caps);
@@ -228,7 +300,6 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_unlock_stop);
   basesrc_class->query =
       GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_src_query);
-
   basesrc_class->create =
       GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_create);
 }
@@ -241,8 +312,13 @@ gst_d3d11_screen_capture_src_init (GstD3D11ScreenCaptureSrc * self)
 
   self->monitor_index = DEFAULT_MONITOR_INDEX;
   self->show_cursor = DEFAULT_SHOW_CURSOR;
+  self->show_border = DEFAULT_SHOW_BORDER;
+  self->capture_api = DEFAULT_CAPTURE_API;
+  self->adapter = DEFAULT_ADAPTER;
   self->min_latency = GST_CLOCK_TIME_NONE;
   self->max_latency = GST_CLOCK_TIME_NONE;
+
+  InitializeCriticalSection (&self->lock);
 }
 
 static void
@@ -257,10 +333,21 @@ gst_d3d11_screen_capture_src_dispose (GObject * object)
 }
 
 static void
+gst_d3d11_screen_capture_src_finalize (GObject * object)
+{
+  GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (object);
+
+  DeleteCriticalSection (&self->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
 gst_d3d11_screen_capture_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (object);
+  GstD3D11CSLockGuard lk (&self->lock);
 
   switch (prop_id) {
     case PROP_MONITOR_INDEX:
@@ -283,6 +370,20 @@ gst_d3d11_screen_capture_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CROP_HEIGHT:
       self->crop_h = g_value_get_uint (value);
+      break;
+    case PROP_WINDOW_HANDLE:
+      self->window_handle = (HWND) g_value_get_uint64 (value);
+      break;
+    case PROP_SHOW_BORDER:
+      self->show_border = g_value_get_boolean (value);
+      if (self->capture)
+        gst_d3d11_screen_capture_show_border (self->capture, self->show_border);
+      break;
+    case PROP_CAPTURE_API:
+      self->capture_api = (GstD3D11ScreenCaptureAPI) g_value_get_enum (value);
+      break;
+    case PROP_ADAPTER:
+      self->adapter = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -318,6 +419,18 @@ gst_d3d11_screen_capture_src_get_property (GObject * object, guint prop_id,
     case PROP_CROP_HEIGHT:
       g_value_set_uint (value, self->crop_h);
       break;
+    case PROP_WINDOW_HANDLE:
+      g_value_set_uint64 (value, (guint64) self->window_handle);
+      break;
+    case PROP_SHOW_BORDER:
+      g_value_set_boolean (value, self->show_border);
+      break;
+    case PROP_CAPTURE_API:
+      g_value_set_enum (value, self->capture_api);
+      break;
+    case PROP_ADAPTER:
+      g_value_set_int (value, self->adapter);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -329,9 +442,15 @@ gst_d3d11_screen_capture_src_set_context (GstElement * element,
     GstContext * context)
 {
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (element);
+  GstD3D11CSLockGuard lk (&self->lock);
 
-  gst_d3d11_handle_set_context_for_adapter_luid (element,
-      context, self->adapter_luid, &self->device);
+  if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_DXGI) {
+    gst_d3d11_handle_set_context_for_adapter_luid (element,
+        context, self->adapter_luid, &self->device);
+  } else {
+    gst_d3d11_handle_set_context (element,
+        context, self->adapter, &self->device);
+  }
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -375,7 +494,7 @@ gst_d3d11_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   GstVideoColorimetry color;
 
   if (!self->capture) {
-    GST_DEBUG_OBJECT (self, "Duplication object is not configured yet");
+    GST_DEBUG_OBJECT (self, "capture object is not configured yet");
     return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
   }
 
@@ -728,72 +847,130 @@ gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
   ComPtr < IDXGIAdapter1 > adapter;
   DXGI_ADAPTER_DESC desc;
   HRESULT hr;
+  GstD3D11ScreenCapture *capture = nullptr;
+  GstD3D11ScreenCaptureAPI capture_api = self->capture_api;
 
-  if (monitor) {
-    hr = gst_d3d11_screen_capture_find_output_for_monitor (monitor,
-        &adapter, nullptr);
-  } else if (self->monitor_index < 0) {
-    hr = gst_d3d11_screen_capture_find_primary_monitor (&monitor,
-        &adapter, nullptr);
+  EnterCriticalSection (&self->lock);
+  if (self->window_handle) {
+    self->capture_api = GST_D3D11_SCREEN_CAPTURE_API_WGC;
   } else {
-    hr = gst_d3d11_screen_capture_find_nth_monitor (self->monitor_index,
-        &monitor, &adapter, nullptr);
+    if (monitor) {
+      hr = gst_d3d11_screen_capture_find_output_for_monitor (monitor,
+          &adapter, nullptr);
+    } else if (self->monitor_index < 0) {
+      hr = gst_d3d11_screen_capture_find_primary_monitor (&monitor,
+          &adapter, nullptr);
+    } else {
+      hr = gst_d3d11_screen_capture_find_nth_monitor (self->monitor_index,
+          &monitor, &adapter, nullptr);
+    }
+
+    if (FAILED (hr))
+      goto error;
   }
 
-  if (FAILED (hr))
-    goto error;
+  if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_DXGI) {
+    hr = adapter->GetDesc (&desc);
+    if (FAILED (hr))
+      goto error;
 
-  hr = adapter->GetDesc (&desc);
-  if (FAILED (hr))
-    goto error;
+    self->adapter_luid = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
+    gst_clear_object (&self->device);
 
-  self->adapter_luid = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
-  gst_clear_object (&self->device);
-
-  if (!gst_d3d11_ensure_element_data_for_adapter_luid (GST_ELEMENT_CAST (self),
-          self->adapter_luid, &self->device)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("D3D11 device for LUID %" G_GINT64_FORMAT " is unavailble",
-            self->adapter_luid), (nullptr));
-
-    return FALSE;
+    gst_d3d11_ensure_element_data_for_adapter_luid (GST_ELEMENT_CAST (self),
+        self->adapter_luid, &self->device);
+  } else {
+    gst_clear_object (&self->device);
+    gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self),
+        self->adapter, &self->device);
   }
 
-  self->capture = gst_d3d11_dxgi_capture_new (self->device, monitor);
-  if (!self->capture)
+  if (!self->device)
+    goto no_device;
+
+#ifdef HAVE_WINRT_CAPTURE
+  if (self->window_handle) {
+    capture = gst_d3d11_winrt_capture_new (self->device, nullptr,
+        self->window_handle);
+  } else if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_WGC) {
+    capture = gst_d3d11_winrt_capture_new (self->device, monitor, nullptr);
+  }
+#endif
+
+  if (!capture)
+    capture = gst_d3d11_dxgi_capture_new (self->device, monitor);
+
+  if (!capture)
     goto error;
 
   /* Check if we can open device */
-  ret = gst_d3d11_screen_capture_prepare (self->capture);
+  ret = gst_d3d11_screen_capture_prepare (capture);
   switch (ret) {
     case GST_D3D11_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR:
     case GST_FLOW_OK:
       break;
     case GST_D3D11_SCREEN_CAPTURE_FLOW_UNSUPPORTED:
-      goto unsupported;
-    default:
-      goto error;
+#ifdef HAVE_WINRT_CAPTURE
+    /* Try WinRT capture if DXGI capture does not work */
+    if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_DXGI) {
+      self->capture_api = GST_D3D11_SCREEN_CAPTURE_API_WGC;
+      gst_clear_object (&capture);
+      GST_WARNING_OBJECT (self, "DXGI capture is not available");
+      capture = gst_d3d11_winrt_capture_new (self->device, monitor, nullptr);
+      if (capture && gst_d3d11_screen_capture_prepare (capture) == GST_FLOW_OK) {
+        GST_INFO_OBJECT (self, "Fallback to Windows Graphics Capture");
+        break;
+      }
+    }
+#endif
+    goto unsupported;
+  default:
+    goto error;
   }
 
-  if (!gst_d3d11_screen_capture_prepare_shader (self))
+  if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_DXGI &&
+      !gst_d3d11_screen_capture_prepare_shader (self)) {
     goto error;
+  }
 
   self->last_frame_no = -1;
   self->min_latency = self->max_latency = GST_CLOCK_TIME_NONE;
 
+  gst_d3d11_screen_capture_show_border (capture, self->show_border);
+  self->capture = capture;
+
+  LeaveCriticalSection (&self->lock);
+  if (self->capture_api != capture_api) {
+    GST_INFO_OBJECT (self, "Updated capture api: %d", self->capture_api);
+    g_object_notify (G_OBJECT (self), "capture-api");
+  }
+
   return TRUE;
+
+no_device:
+  {
+    LeaveCriticalSection (&self->lock);
+    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+        ("D3D11 device is not available"), (nullptr));
+    return FALSE;
+  }
 
 error:
   {
+    gst_clear_object (&capture);
+    LeaveCriticalSection (&self->lock);
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("Failed to prepare capture object with given configuration, "
-            "monitor-index: %d, monitor-handle: %p",
-            self->monitor_index, self->monitor_handle), (nullptr));
+            "monitor-index: %d, monitor-handle: %p, window-handle: %p",
+            self->monitor_index, self->monitor_handle, self->window_handle),
+        (nullptr));
     return FALSE;
   }
 
 unsupported:
   {
+    gst_clear_object (&capture);
+    LeaveCriticalSection (&self->lock);
     GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ,
         ("Failed to prepare capture object with given configuration, "
             "monitor-index: %d, monitor-handle: %p",
@@ -807,6 +984,7 @@ static gboolean
 gst_d3d11_screen_capture_src_stop (GstBaseSrc * bsrc)
 {
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
+  GstD3D11CSLockGuard lk (&self->lock);
 
   if (self->pool) {
     gst_buffer_pool_set_active (self->pool, FALSE);
@@ -831,6 +1009,9 @@ gst_d3d11_screen_capture_src_unlock (GstBaseSrc * bsrc)
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
 
   GST_OBJECT_LOCK (self);
+  if (self->capture)
+    gst_d3d11_screen_capture_unlock (self->capture);
+
   if (self->clock_id) {
     GST_DEBUG_OBJECT (self, "Waking up waiting clock");
     gst_clock_id_unschedule (self->clock_id);
@@ -847,6 +1028,9 @@ gst_d3d11_screen_capture_src_unlock_stop (GstBaseSrc * bsrc)
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
 
   GST_OBJECT_LOCK (self);
+  if (self->capture)
+    gst_d3d11_screen_capture_unlock_stop (self->capture);
+
   self->flushing = FALSE;
   GST_OBJECT_UNLOCK (self);
 
@@ -1078,6 +1262,9 @@ again:
     default:
       break;
   }
+
+  if (ret != GST_FLOW_OK)
+    goto out;
 
   if (!self->downstream_supports_d3d11) {
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (bsrc,

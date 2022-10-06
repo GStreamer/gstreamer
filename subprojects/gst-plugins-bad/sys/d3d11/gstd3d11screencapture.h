@@ -59,6 +59,13 @@ struct _GstD3D11ScreenCaptureClass
   gboolean      (*get_colorimetry) (GstD3D11ScreenCapture * capture,
                                     GstVideoColorimetry * colorimetry);
 
+  gboolean      (*unlock)          (GstD3D11ScreenCapture * capture);
+
+  gboolean      (*unlock_stop)     (GstD3D11ScreenCapture * capture);
+
+  void          (*show_border)     (GstD3D11ScreenCapture * capture,
+                                    gboolean show);
+
   GstFlowReturn (*do_capture)      (GstD3D11ScreenCapture * capture,
                                     GstD3D11Device * device,
                                     ID3D11Texture2D * texture,
@@ -83,17 +90,24 @@ gboolean        gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * captu
 gboolean        gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
                                                           GstVideoColorimetry * colorimetry);
 
-GstFlowReturn   gst_d3d11_screen_capture_do_capture (GstD3D11ScreenCapture * capture,
-                                                     GstD3D11Device * device,
-                                                     ID3D11Texture2D * texture,
-                                                     ID3D11RenderTargetView * rtv,
-                                                     ID3D11VertexShader * vs,
-                                                     ID3D11PixelShader * ps,
-                                                     ID3D11InputLayout * layout,
-                                                     ID3D11SamplerState * sampler,
-                                                     ID3D11BlendState * blend,
-                                                     D3D11_BOX * crop_box,
-                                                     gboolean draw_mouse);
+gboolean        gst_d3d11_screen_capture_unlock      (GstD3D11ScreenCapture * capture);
+
+gboolean        gst_d3d11_screen_capture_unlock_stop (GstD3D11ScreenCapture * capture);
+
+void            gst_d3d11_screen_capture_show_border (GstD3D11ScreenCapture * capture,
+                                                      gboolean show);
+
+GstFlowReturn   gst_d3d11_screen_capture_do_capture  (GstD3D11ScreenCapture * capture,
+                                                      GstD3D11Device * device,
+                                                      ID3D11Texture2D * texture,
+                                                      ID3D11RenderTargetView * rtv,
+                                                      ID3D11VertexShader * vs,
+                                                      ID3D11PixelShader * ps,
+                                                      ID3D11InputLayout * layout,
+                                                      ID3D11SamplerState * sampler,
+                                                      ID3D11BlendState * blend,
+                                                      D3D11_BOX * crop_box,
+                                                      gboolean draw_mouse);
 
 HRESULT         gst_d3d11_screen_capture_find_output_for_monitor (HMONITOR monitor,
                                                                   IDXGIAdapter1 ** adapter,
