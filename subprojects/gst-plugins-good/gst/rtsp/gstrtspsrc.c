@@ -7402,6 +7402,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     GstRTSPConnInfo *conninfo;
     gchar *transports;
     gint retry = 0;
+    gboolean tried_non_compliant_url = FALSE;
     guint mask = 0;
     gboolean selected;
     GstCaps *caps;
@@ -7594,6 +7595,47 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
           continue;
         else
           goto retry;
+      case GST_RTSP_STS_BAD_REQUEST:
+      case GST_RTSP_STS_NOT_FOUND:
+        /* There are various non-compliant servers that don't require control
+         * URLs that are not resolved correctly but instead are just appended.
+         * See e.g.
+         *   https://gitlab.freedesktop.org/gstreamer/gst-plugins-good/-/issues/922
+         *   https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1447
+         */
+        if (!tried_non_compliant_url && stream->control_url
+            && !g_str_has_prefix (stream->control_url, "rtsp://")) {
+          const gchar *base;
+
+          gst_rtsp_message_unset (&request);
+          gst_rtsp_message_unset (&response);
+          gst_rtspsrc_stream_free_udp (stream);
+
+          g_free (stream->conninfo.location);
+          base = get_aggregate_control (src);
+
+          /* Make sure to not accumulate too many `/` */
+          if ((g_str_has_suffix (base, "/")
+                  && !g_str_has_suffix (stream->control_url, "/"))
+              || (!g_str_has_suffix (base, "/")
+                  && g_str_has_suffix (stream->control_url, "/"))
+              )
+            stream->conninfo.location =
+                g_strconcat (base, stream->control_url, NULL);
+          else if (g_str_has_suffix (base, "/")
+              && g_str_has_suffix (stream->control_url, "/"))
+            stream->conninfo.location =
+                g_strconcat (base, stream->control_url + 1, NULL);
+          else
+            stream->conninfo.location =
+                g_strconcat (base, "/", stream->control_url, NULL);
+
+          tried_non_compliant_url = TRUE;
+
+          goto retry;
+        }
+
+        /* fall through */
       default:
         /* cleanup of leftover transport and move to the next stream */
         gst_rtspsrc_stream_free_udp (stream);
