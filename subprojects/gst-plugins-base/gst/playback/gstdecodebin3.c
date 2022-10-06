@@ -657,19 +657,34 @@ gst_decodebin3_dispose (GObject * object)
   GstDecodebin3 *dbin = (GstDecodebin3 *) object;
   GList *walk, *next;
 
-  if (dbin->factories)
+  if (dbin->factories) {
     gst_plugin_feature_list_free (dbin->factories);
-  if (dbin->decoder_factories)
+    dbin->factories = NULL;
+  }
+  if (dbin->decoder_factories) {
     g_list_free (dbin->decoder_factories);
-  if (dbin->decodable_factories)
+    dbin->decoder_factories = NULL;
+  }
+  if (dbin->decodable_factories) {
     g_list_free (dbin->decodable_factories);
+    dbin->decodable_factories = NULL;
+  }
   g_list_free_full (dbin->requested_selection, g_free);
   g_list_free_full (dbin->active_selection, g_free);
   g_list_free (dbin->to_activate);
   g_list_free (dbin->pending_select_streams);
+
+  dbin->requested_selection = NULL;
+  dbin->active_selection = NULL;
+  dbin->to_activate = NULL;
+  dbin->pending_select_streams = NULL;
+
   g_clear_object (&dbin->collection);
 
-  free_input (dbin, dbin->main_input);
+  if (dbin->main_input) {
+    free_input (dbin, dbin->main_input);
+    dbin->main_input = NULL;
+  }
 
   for (walk = dbin->other_inputs; walk; walk = next) {
     DecodebinInput *input = walk->data;
