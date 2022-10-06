@@ -2,6 +2,7 @@ subdir('audiofx')
 subdir('cairo')
 subdir('level')
 subdir('qt')
+subdir('qt6')
 
 if is_variable('gstrpicamsrc')
   subdir('rpicamsrc')
