@@ -5462,6 +5462,42 @@ GST_START_TEST (test_invalid_add_media_in_answer)
 
 GST_END_TEST;
 
+#define VALID_TURN_SERVER_URL1   "turn://testuser:testpass@test.com:1234"
+#define VALID_TURN_SERVER_URL2   "turns://1665056262%3Atestuser:T4VwcehYgPAa5bpFAO14gVE19so=@test.com:1234"
+#define INVALID_TURN_SERVER_URL1 "testuser@testpass@test.com:1234"      /* protocol of uri is missing */
+#define INVALID_TURN_SERVER_URL2 "turns://testuser:testpass/@test.com:1234"     /* unescaped character in password */
+#define INVALID_TURN_SERVER_URL3 "turns://test.com:1234"        /* 'user:pass' is missing */
+
+GST_START_TEST (test_add_turn_server)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  gboolean ret = FALSE;
+
+  g_signal_emit_by_name (t->webrtc1, "add-turn-server",
+      VALID_TURN_SERVER_URL1, &ret);
+  fail_unless (ret != FALSE);
+
+  g_signal_emit_by_name (t->webrtc1, "add-turn-server",
+      VALID_TURN_SERVER_URL2, &ret);
+  fail_unless (ret != FALSE);
+
+  g_signal_emit_by_name (t->webrtc1, "add-turn-server",
+      INVALID_TURN_SERVER_URL1, &ret);
+  fail_unless (ret != TRUE);
+
+  g_signal_emit_by_name (t->webrtc1, "add-turn-server",
+      INVALID_TURN_SERVER_URL2, &ret);
+  fail_unless (ret != TRUE);
+
+  g_signal_emit_by_name (t->webrtc1, "add-turn-server",
+      INVALID_TURN_SERVER_URL3, &ret);
+  fail_unless (ret != TRUE);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_data_channel_recreate_offer)
 {
   GstHarness *h;
@@ -5567,6 +5603,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_simulcast_fec_rtx);
     tcase_add_test (tc, test_bundle_multiple_media_rtx_payload_mapping);
     tcase_add_test (tc, test_invalid_add_media_in_answer);
+    tcase_add_test (tc, test_add_turn_server);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
