@@ -471,6 +471,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src_%u",
 
 
 static void gst_decodebin3_dispose (GObject * object);
+static void gst_decodebin3_finalize (GObject * object);
 static void gst_decodebin3_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_decodebin3_get_property (GObject * object, guint prop_id,
@@ -553,6 +554,7 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
   GstBinClass *bin_klass = (GstBinClass *) klass;
 
   gobject_klass->dispose = gst_decodebin3_dispose;
+  gobject_klass->finalize = gst_decodebin3_finalize;
   gobject_klass->set_property = gst_decodebin3_set_property;
   gobject_klass->get_property = gst_decodebin3_get_property;
 
@@ -679,6 +681,18 @@ gst_decodebin3_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_decodebin3_finalize (GObject * object)
+{
+  GstDecodebin3 *dbin = (GstDecodebin3 *) object;
+
+  g_mutex_clear (&dbin->factories_lock);
+  g_mutex_clear (&dbin->selection_lock);
+  g_mutex_clear (&dbin->input_lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
