@@ -56,10 +56,11 @@ if d3d11_winapi_app
 endif
 
 if d3d11_winapi_desktop
-  d3d11_sources += ['gstd3d11window_win32.cpp']
-  d3d11_sources += ['gstd3d11screencapture.cpp',
+  d3d11_sources += ['gstd3d11dxgicapture.cpp',
+                    'gstd3d11screencapture.cpp',
                     'gstd3d11screencapturedevice.cpp',
-                    'gstd3d11screencapturesrc.cpp']
+                    'gstd3d11screencapturesrc.cpp',
+                    'gstd3d11window_win32.cpp']
 
   # multimedia clock is desktop only API
   if winmm_lib.found() and cc.has_header('mmsystem.h')

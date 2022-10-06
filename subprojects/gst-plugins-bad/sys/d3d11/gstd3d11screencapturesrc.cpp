@@ -37,7 +37,7 @@
 #endif
 
 #include "gstd3d11screencapturesrc.h"
-#include "gstd3d11screencapture.h"
+#include "gstd3d11dxgicapture.h"
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 #include <string.h>
@@ -759,7 +759,7 @@ gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
     return FALSE;
   }
 
-  self->capture = gst_d3d11_screen_capture_new (self->device, monitor);
+  self->capture = gst_d3d11_dxgi_capture_new (self->device, monitor);
   if (!self->capture)
     goto error;
 

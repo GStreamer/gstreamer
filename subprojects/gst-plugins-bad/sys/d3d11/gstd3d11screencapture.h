@@ -1,6 +1,6 @@
 /*
  * GStreamer
- * Copyright (C) 2020 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2022 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,16 +26,53 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_D3D11_SCREEN_CAPTURE             (gst_d3d11_screen_capture_get_type())
+#define GST_D3D11_SCREEN_CAPTURE(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_D3D11_SCREEN_CAPTURE,GstD3D11ScreenCapture))
+#define GST_D3D11_SCREEN_CAPTURE_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_D3D11_SCREEN_CAPTURE,GstD3D11ScreenCaptureClass))
+#define GST_D3D11_SCREEN_CAPTURE_GET_CLASS(obj)   (GST_D3D11_SCREEN_CAPTURE_CLASS(G_OBJECT_GET_CLASS(obj)))
+#define GST_IS_D3D11_SCREEN_CAPTURE(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_D3D11_SCREEN_CAPTURE))
+#define GST_IS_D3D11_SCREEN_CAPTURE_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_D3D11_SCREEN_CAPTURE))
+#define GST_D3D11_SCREEN_CAPTURE_CAST(obj)        ((GstD3D11ScreenCapture*)(obj))
+
+typedef struct _GstD3D11ScreenCapture GstD3D11ScreenCapture;
+typedef struct _GstD3D11ScreenCaptureClass GstD3D11ScreenCaptureClass;
+
 #define GST_D3D11_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR GST_FLOW_CUSTOM_SUCCESS
 #define GST_D3D11_SCREEN_CAPTURE_FLOW_SIZE_CHANGED GST_FLOW_CUSTOM_SUCCESS_1
 #define GST_D3D11_SCREEN_CAPTURE_FLOW_UNSUPPORTED GST_FLOW_CUSTOM_ERROR
 
-#define GST_TYPE_D3D11_SCREEN_CAPTURE (gst_d3d11_screen_capture_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D11ScreenCapture, gst_d3d11_screen_capture,
-    GST, D3D11_SCREEN_CAPTURE, GstObject);
+struct _GstD3D11ScreenCapture
+{
+  GstObject parent;
+};
 
-GstD3D11ScreenCapture * gst_d3d11_screen_capture_new (GstD3D11Device * device,
-                                                      HMONITOR monitor_handle);
+struct _GstD3D11ScreenCaptureClass
+{
+  GstObjectClass parent_class;
+
+  GstFlowReturn (*prepare) (GstD3D11ScreenCapture * capture);
+
+  gboolean      (*get_size) (GstD3D11ScreenCapture * capture,
+                             guint * width,
+                             guint * height);
+
+  gboolean      (*get_colorimetry) (GstD3D11ScreenCapture * capture,
+                                    GstVideoColorimetry * colorimetry);
+
+  GstFlowReturn (*do_capture)      (GstD3D11ScreenCapture * capture,
+                                    GstD3D11Device * device,
+                                    ID3D11Texture2D * texture,
+                                    ID3D11RenderTargetView * rtv,
+                                    ID3D11VertexShader * vs,
+                                    ID3D11PixelShader * ps,
+                                    ID3D11InputLayout * layout,
+                                    ID3D11SamplerState * sampler,
+                                    ID3D11BlendState * blend,
+                                    D3D11_BOX * crop_box,
+                                    gboolean draw_mouse);
+};
+
+GType           gst_d3d11_screen_capture_get_type (void);
 
 GstFlowReturn   gst_d3d11_screen_capture_prepare (GstD3D11ScreenCapture * capture);
 
@@ -70,6 +107,8 @@ HRESULT         gst_d3d11_screen_capture_find_nth_monitor (guint index,
                                                            HMONITOR * monitor,
                                                            IDXGIAdapter1 ** adapter,
                                                            IDXGIOutput ** output);
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstD3D11ScreenCapture, gst_object_unref)
 
 G_END_DECLS
 
