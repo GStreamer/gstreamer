@@ -961,40 +961,49 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
       if (segment.format != GST_FORMAT_TIME)
         goto format_error;
 
-      rolled_back_caps =
-          gst_video_rate_rollback_to_prev_caps_if_needed (videorate);
+      segment.start = (gint64) (segment.start / videorate->rate);
+      segment.position = (gint64) (segment.position / videorate->rate);
+      if (GST_CLOCK_TIME_IS_VALID (segment.stop))
+        segment.stop = (gint64) (segment.stop / videorate->rate);
+      segment.time = (gint64) (segment.time / videorate->rate);
 
-      /* close up the previous segment, if appropriate */
-      if (videorate->prevbuf) {
-        /* fill up to the end of current segment */
-        gint count = gst_video_rate_duplicate_to_close_segment (videorate);
-        if (count > 1) {
-          videorate->dup += count - 1;
-          if (!videorate->silent)
-            gst_video_rate_notify_duplicate (videorate);
+
+      if (!gst_segment_is_equal (&segment, &videorate->segment)) {
+        rolled_back_caps =
+            gst_video_rate_rollback_to_prev_caps_if_needed (videorate);
+
+        /* close up the previous segment, if appropriate */
+        if (videorate->prevbuf) {
+          /* fill up to the end of current segment */
+          gint count = gst_video_rate_duplicate_to_close_segment (videorate);
+          if (count > 1) {
+            videorate->dup += count - 1;
+            if (!videorate->silent)
+              gst_video_rate_notify_duplicate (videorate);
+          }
+          /* clean up for the new one; _chain will resume from the new start */
+          gst_video_rate_swap_prev (videorate, NULL, 0);
         }
-        /* clean up for the new one; _chain will resume from the new start */
-        gst_video_rate_swap_prev (videorate, NULL, 0);
-      }
 
-      if (rolled_back_caps) {
-        GST_DEBUG_OBJECT (videorate,
-            "Resetting rolled back caps %" GST_PTR_FORMAT, rolled_back_caps);
-        if (!gst_pad_send_event (GST_BASE_TRANSFORM_SINK_PAD (videorate),
-                gst_event_new_caps (rolled_back_caps)
-            )) {
+        if (rolled_back_caps) {
+          GST_DEBUG_OBJECT (videorate,
+              "Resetting rolled back caps %" GST_PTR_FORMAT, rolled_back_caps);
+          if (!gst_pad_send_event (GST_BASE_TRANSFORM_SINK_PAD (videorate),
+                  gst_event_new_caps (rolled_back_caps)
+              )) {
 
-          GST_WARNING_OBJECT (videorate, "Could not resend caps after closing "
-              " segment");
+            GST_WARNING_OBJECT (videorate,
+                "Could not resend caps after closing " " segment");
 
-          GST_ELEMENT_ERROR (videorate, CORE, NEGOTIATION,
-              ("Could not resend caps after closing segment"), (NULL));
+            GST_ELEMENT_ERROR (videorate, CORE, NEGOTIATION,
+                ("Could not resend caps after closing segment"), (NULL));
+            gst_caps_unref (rolled_back_caps);
+
+            return FALSE;
+          }
+
           gst_caps_unref (rolled_back_caps);
-
-          return FALSE;
         }
-
-        gst_caps_unref (rolled_back_caps);
       }
 
       videorate->base_ts = 0;
@@ -1002,12 +1011,6 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
       videorate->next_ts = GST_CLOCK_TIME_NONE;
 
       /* We just want to update the accumulated stream_time  */
-
-      segment.start = (gint64) (segment.start / videorate->rate);
-      segment.position = (gint64) (segment.position / videorate->rate);
-      if (GST_CLOCK_TIME_IS_VALID (segment.stop))
-        segment.stop = (gint64) (segment.stop / videorate->rate);
-      segment.time = (gint64) (segment.time / videorate->rate);
 
       gst_segment_copy_into (&segment, &videorate->segment);
       GST_DEBUG_OBJECT (videorate, "updated segment: %" GST_SEGMENT_FORMAT,
