@@ -194,6 +194,10 @@ gst_avf_video_source_device_type_get_type (void)
   BOOL captureScreen;
   BOOL captureScreenCursor;
   BOOL captureScreenMouseClicks;
+  guint cropX;
+  guint cropY;
+  guint cropWidth;
+  guint cropHeight;
 
   BOOL useVideoMeta;
   GstGLContextHelper *ctxh;
@@ -214,6 +218,10 @@ gst_avf_video_source_device_type_get_type (void)
 @property BOOL captureScreen;
 @property BOOL captureScreenCursor;
 @property BOOL captureScreenMouseClicks;
+@property guint cropX;
+@property guint cropY;
+@property guint cropWidth;
+@property guint cropHeight;
 
 - (BOOL)openScreenInput;
 - (BOOL)openDeviceInput;
@@ -294,7 +302,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 @implementation GstAVFVideoSrcImpl
 
 @synthesize deviceIndex, deviceName, position, orientation, deviceType, doStats,
-    fps, captureScreen, captureScreenCursor, captureScreenMouseClicks;
+    fps, captureScreen, captureScreenCursor, captureScreenMouseClicks, cropX, cropY, cropWidth, cropHeight;
 
 - (id)init
 {
@@ -393,6 +401,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
   return NO;
 #else
   CGDirectDisplayID displayId;
+  int screenHeight, screenWidth;
 
   GST_DEBUG_OBJECT (element, "Opening screen input");
 
@@ -402,7 +411,6 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
   AVCaptureScreenInput *screenInput =
       [[AVCaptureScreenInput alloc] initWithDisplayID:displayId];
-
 
   @try {
     [screenInput setValue:[NSNumber numberWithBool:captureScreenCursor]
@@ -415,6 +423,24 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
     }
     GST_WARNING ("Capturing cursor is only supported in OS X >= 10.8");
   }
+
+  screenHeight = CGDisplayPixelsHigh (displayId);
+  screenWidth = CGDisplayPixelsWide (displayId);
+
+  if (cropX + cropWidth > screenWidth || cropY + cropHeight > screenHeight) {
+    GST_WARNING ("Capture region outside of screen bounds, ignoring");
+  } else {
+    /* If width/height is not specified, assume max possible values */
+    int rectWidth = cropWidth ? cropWidth : (screenWidth - cropX);
+    int rectHeight = cropHeight ? cropHeight : (screenHeight - cropY);
+
+    /* cropRect (0,0) is bottom left, which feels counterintuitive.
+     * Make cropY relative to the top edge instead */
+    CGRect cropRect = CGRectMake (cropX, screenHeight - cropY - rectHeight,
+                                  rectWidth, rectHeight);
+    [screenInput setCropRect:cropRect];
+  }
+
   screenInput.capturesMouseClicks = captureScreenMouseClicks;
   input = screenInput;
   return YES;
@@ -771,7 +797,14 @@ checked:
 
   if (captureScreen) {
 #if !HAVE_IOS
-    CGRect rect = CGDisplayBounds ([self getDisplayIdFromDeviceIndex]);
+    CGRect rect;
+    AVCaptureScreenInput *screenInput = (AVCaptureScreenInput *)input;
+    if (CGRectIsEmpty (screenInput.cropRect)) {
+      rect = CGDisplayBounds ([self getDisplayIdFromDeviceIndex]);
+    } else {
+      rect = screenInput.cropRect;
+    }
+
     float scale = [self getScaleFactorFromDeviceIndex];
     for (NSNumber *pixel_format in pixel_formats) {
       GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
@@ -1244,6 +1277,10 @@ enum
   PROP_CAPTURE_SCREEN,
   PROP_CAPTURE_SCREEN_CURSOR,
   PROP_CAPTURE_SCREEN_MOUSE_CLICKS,
+  PROP_CAPTURE_SCREEN_CROP_X,
+  PROP_CAPTURE_SCREEN_CROP_Y,
+  PROP_CAPTURE_SCREEN_CROP_WIDTH,
+  PROP_CAPTURE_SCREEN_CROP_HEIGHT,
 #endif
 };
 
@@ -1353,6 +1390,22 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
       g_param_spec_boolean ("capture-screen-mouse-clicks", "Enable mouse clicks capture",
           "Enable mouse clicks capture while capturing screen", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_X,
+      g_param_spec_uint ("screen-crop-x", "Screen capture crop X",
+          "Horizontal coordinate of top left corner of the screen capture area", 
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_Y,
+      g_param_spec_uint ("screen-crop-y", "Screen capture crop Y",
+          "Vertical coordinate of top left corner of the screen capture area", 
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_WIDTH,
+      g_param_spec_uint ("screen-crop-width", "Screen capture crop width",
+          "Width of the screen capture area (0 = maximum)", 
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_HEIGHT,
+      g_param_spec_uint ("screen-crop-height", "Screen capture crop height",
+          "Height of the screen capture area (0 = maximum)", 
+          0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   GST_DEBUG_CATEGORY_INIT (gst_avf_video_src_debug, "avfvideosrc",
@@ -1394,6 +1447,18 @@ gst_avf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_CAPTURE_SCREEN_MOUSE_CLICKS:
       g_value_set_boolean (value, impl.captureScreenMouseClicks);
       break;
+    case PROP_CAPTURE_SCREEN_CROP_X:
+      g_value_set_uint (value, impl.cropX);
+      break;
+    case PROP_CAPTURE_SCREEN_CROP_Y:
+      g_value_set_uint (value, impl.cropY);
+      break;
+    case PROP_CAPTURE_SCREEN_CROP_WIDTH:
+      g_value_set_uint (value, impl.cropWidth);
+      break;
+    case PROP_CAPTURE_SCREEN_CROP_HEIGHT:
+      g_value_set_uint (value, impl.cropHeight);
+      break;
 #endif
     case PROP_DEVICE_INDEX:
       g_value_set_int (value, impl.deviceIndex);
@@ -1402,13 +1467,13 @@ gst_avf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_string (value, impl.deviceName);
       break;
     case PROP_POSITION:
-      g_value_set_enum(value, impl.position);
+      g_value_set_enum (value, impl.position);
       break;
     case PROP_ORIENTATION:
-      g_value_set_enum(value, impl.orientation);
+      g_value_set_enum (value, impl.orientation);
       break;
     case PROP_DEVICE_TYPE:
-      g_value_set_enum(value, impl.deviceType);
+      g_value_set_enum (value, impl.deviceType);
       break;
     case PROP_DO_STATS:
       g_value_set_boolean (value, impl.doStats);
@@ -1440,6 +1505,18 @@ gst_avf_video_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CAPTURE_SCREEN_MOUSE_CLICKS:
       impl.captureScreenMouseClicks = g_value_get_boolean (value);
+      break;
+    case PROP_CAPTURE_SCREEN_CROP_X:
+      impl.cropX = g_value_get_uint (value);
+      break;
+    case PROP_CAPTURE_SCREEN_CROP_Y:
+      impl.cropY = g_value_get_uint (value);
+      break;
+    case PROP_CAPTURE_SCREEN_CROP_WIDTH:
+      impl.cropWidth = g_value_get_uint (value);
+      break;
+    case PROP_CAPTURE_SCREEN_CROP_HEIGHT:
+      impl.cropHeight = g_value_get_uint (value);
       break;
 #endif
     case PROP_DEVICE_INDEX:
