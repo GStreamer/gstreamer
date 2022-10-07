@@ -640,7 +640,7 @@ valgrind ges:
   script:
   # FIXME: should rebuild the image with newer versions!
   - pip3 install --upgrade hotdoc
-  - pip3 install --upgrade meson
+  - pip3 install --upgrade meson==0.60.*
   - *build
   - ./gst-env.py ninja -C build/ plugins_doc_caches
   # Ignore modifications to wrap files made by meson
