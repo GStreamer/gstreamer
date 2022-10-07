@@ -35,7 +35,7 @@ dash_sources = [
 
 xml2_dep = dependency('libxml-2.0',
   version : '>= 2.8',
-  fallback : ['libxml2', 'xml2lib_dep'],
+  fallback : 'libxml2',
   required : get_option('dash')
 )
 
