@@ -154,6 +154,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_src_debug);
 #define ABSDIFF(x, y) ( (x) > (y) ? ((x) - (y)) : ((y) - (x)) )
 #endif
 
+#define NO_SIGNL_RESET_COUNT (10)
+
 enum
 {
   PROP_0,
@@ -672,6 +674,23 @@ gst_decklink_video_src_start (GstDecklinkVideoSrc * self)
 }
 
 static void
+gst_decklink_reset_time_mapping(GstDecklinkVideoSrc * self)
+{
+    self->window_fill = 0;
+    self->window_filled = FALSE;
+    self->window_skip = 1;
+    self->window_skip_count = 0;
+    self->current_time_mapping.xbase = 0;
+    self->current_time_mapping.b = 0;
+    self->current_time_mapping.num = 1;
+    self->current_time_mapping.den = 1;
+    self->next_time_mapping.xbase = 0;
+    self->next_time_mapping.b = 0;
+    self->next_time_mapping.num = 1;
+    self->next_time_mapping.den = 1;
+}
+
+static void
 gst_decklink_video_src_update_time_mapping (GstDecklinkVideoSrc * self,
     GstClockTime capture_time, GstClockTime stream_time)
 {
@@ -811,6 +830,9 @@ gst_decklink_video_src_got_frame (GstElement * element,
     return;
   }
 
+  if (no_signal)
+    self->no_signal_count++;
+
   if (self->drop_no_signal_frames && no_signal) {
     CaptureFrame f;
     memset (&f, 0, sizeof (f));
@@ -821,6 +843,13 @@ gst_decklink_video_src_got_frame (GstElement * element,
     g_mutex_unlock (&self->lock);
 
     return;
+  }
+
+  if (!no_signal) {
+    if (self->no_signal_count > NO_SIGNL_RESET_COUNT) {
+      gst_decklink_reset_time_mapping(self);
+    }
+    self->no_signal_count = 0;
   }
 
   gst_decklink_video_src_update_time_mapping (self, capture_time, stream_time);

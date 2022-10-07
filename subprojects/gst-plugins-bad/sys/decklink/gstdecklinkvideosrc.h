@@ -69,6 +69,7 @@ struct _GstDecklinkVideoSrc
   guint64 processed;
   guint64 dropped;
   guint64 first_stream_time;
+  guint64 no_signal_count;
 
   GstVideoInfo info;
   GstDecklinkVideoFormat video_format;
