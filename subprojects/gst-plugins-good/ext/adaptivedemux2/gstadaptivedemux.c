@@ -2942,15 +2942,15 @@ gst_adaptive_demux_stop_tasks (GstAdaptiveDemux * demux, gboolean stop_updates)
     gst_adaptive_demux_stop_manifest_update_task (demux);
 
   TRACKS_LOCK (demux);
+  if (demux->input_period)
+    gst_adaptive_demux_period_stop_tasks (demux->input_period);
+
   demux->priv->flushing = TRUE;
   g_cond_signal (&demux->priv->tracks_add);
   gst_task_stop (demux->priv->output_task);
   TRACKS_UNLOCK (demux);
 
   gst_task_join (demux->priv->output_task);
-
-  if (demux->input_period)
-    gst_adaptive_demux_period_stop_tasks (demux->input_period);
 
   demux->priv->qos_earliest_time = GST_CLOCK_TIME_NONE;
 }
