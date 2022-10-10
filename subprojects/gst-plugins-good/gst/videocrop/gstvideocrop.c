@@ -123,26 +123,27 @@ static GstFlowReturn gst_video_crop_transform_ip (GstBaseTransform * trans,
 static gboolean
 gst_video_crop_src_event (GstBaseTransform * trans, GstEvent * event)
 {
-  GstNavigationEventType type;
-  double pointer_x;
-  double pointer_y;
+  double x, y, new_x, new_y;
 
   GstVideoCrop *vcrop = GST_VIDEO_CROP (trans);
   GST_OBJECT_LOCK (vcrop);
 
-  type = gst_navigation_event_get_type (event);
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION &&
-      (vcrop->crop_left != 0 || vcrop->crop_top != 0) &&
-      (type == GST_NAVIGATION_EVENT_MOUSE_MOVE
-          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
-          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE)) {
-    if (gst_navigation_event_get_coordinates (event, &pointer_x, &pointer_y)) {
-      event = gst_event_make_writable (event);
-      gst_navigation_event_set_coordinates (event, pointer_x + vcrop->crop_left,
-          pointer_y + vcrop->crop_top);
-    } else {
-      GST_WARNING_OBJECT (vcrop, "Failed to read navigation event");
-    }
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+      if ((vcrop->crop_left != 0 || vcrop->crop_top != 0)
+          && gst_navigation_event_get_coordinates (event, &x, &y)) {
+
+        new_x = x + vcrop->crop_left;
+        new_y = y + vcrop->crop_top;
+
+        event = gst_event_make_writable (event);
+
+        GST_TRACE_OBJECT (vcrop, "from %fx%f to %fx%f", x, y, new_x, new_y);
+        gst_navigation_event_set_coordinates (event, new_x, new_y);
+      }
+      break;
+    default:
+      break;
   }
 
   GST_OBJECT_UNLOCK (vcrop);

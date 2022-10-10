@@ -3189,29 +3189,25 @@ static gboolean
 gst_video_box_src_event (GstBaseTransform * trans, GstEvent * event)
 {
   GstVideoBox *video_box = GST_VIDEO_BOX (trans);
-  GstNavigationEventType type;
-  gdouble pointer_x;
-  gdouble pointer_y;
+  gdouble x, y, new_x, new_y;
 
   GST_OBJECT_LOCK (video_box);
-  type = gst_navigation_event_get_type (event);
-  if (GST_EVENT_TYPE (event) == GST_EVENT_NAVIGATION &&
-      (video_box->box_left != 0 || video_box->box_top != 0) &&
-      (type == GST_NAVIGATION_EVENT_MOUSE_MOVE
-          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS
-          || type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE)) {
-    if (gst_navigation_event_get_coordinates (event, &pointer_x, &pointer_y)) {
-      gdouble new_pointer_x, new_pointer_y;
 
-      event = gst_event_make_writable (event);
-      new_pointer_x = pointer_x + video_box->box_left;
-      new_pointer_y = pointer_y + video_box->box_top;
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NAVIGATION:
+      if ((video_box->box_left != 0 || video_box->box_top != 0)
+          && gst_navigation_event_get_coordinates (event, &x, &y)) {
 
-      gst_navigation_event_set_coordinates (event, new_pointer_x,
-          new_pointer_y);
-    } else {
-      GST_WARNING_OBJECT (video_box, "Failed to read navigation event");
-    }
+        event = gst_event_make_writable (event);
+        new_x = x + video_box->box_left;
+        new_y = y + video_box->box_top;
+
+        GST_TRACE_OBJECT (video_box, "from %fx%f to %fx%f", x, y, new_x, new_y);
+        gst_navigation_event_set_coordinates (event, new_x, new_y);
+      }
+      break;
+    default:
+      break;
   }
   GST_OBJECT_UNLOCK (video_box);
 

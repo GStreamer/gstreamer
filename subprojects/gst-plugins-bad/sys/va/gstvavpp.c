@@ -1939,10 +1939,10 @@ gst_va_vpp_src_event (GstBaseTransform * trans, GstEvent * event)
           || gst_va_filter_get_orientation (btrans->filter) !=
           GST_VIDEO_ORIENTATION_IDENTITY) {
 
-        event = gst_event_make_writable (event);
-
         if (!gst_navigation_event_get_coordinates (event, &x, &y))
           break;
+
+        event = gst_event_make_writable (event);
 
         /* video-direction compensation */
         switch (gst_va_filter_get_orientation (btrans->filter)) {
