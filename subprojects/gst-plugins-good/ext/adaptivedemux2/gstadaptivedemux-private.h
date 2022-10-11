@@ -73,7 +73,6 @@ struct _GstAdaptiveDemuxPrivate
 
   /* Adaptive scheduling and parsing task */
   GstAdaptiveDemuxLoop *scheduler_task;
-  GMutex scheduler_lock;
 
   /* Callback / timer id for the next manifest update */
   guint manifest_updates_cb;

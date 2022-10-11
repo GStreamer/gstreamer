@@ -574,7 +574,6 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
   g_rec_mutex_init (&demux->priv->manifest_lock);
 
   demux->priv->scheduler_task = gst_adaptive_demux_loop_new ();
-  g_mutex_init (&demux->priv->scheduler_lock);
 
   g_mutex_init (&demux->priv->api_lock);
   g_mutex_init (&demux->priv->segment_lock);
@@ -646,7 +645,6 @@ gst_adaptive_demux_finalize (GObject * object)
 
   g_mutex_clear (&demux->priv->buffering_lock);
 
-  g_mutex_clear (&demux->priv->scheduler_lock);
   gst_adaptive_demux_loop_unref (demux->priv->scheduler_task);
 
   /* The input period is present after a reset, clear it now */
