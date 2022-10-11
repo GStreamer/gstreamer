@@ -1842,63 +1842,62 @@ gst_srt_object_write (GstSRTObject * srtobject,
 }
 
 static GstStructure *
-get_stats_for_srtsock (SRTSOCKET srtsock, gboolean is_sender)
+get_stats_for_srtsock (GstSRTObject * srtobject, SRTSOCKET srtsock)
 {
   GstStructure *s = gst_structure_new_empty ("application/x-srt-statistics");
   int ret;
   SRT_TRACEBSTATS stats;
 
   ret = srt_bstats (srtsock, &stats, 0);
-
-  if (ret >= 0) {
-    if (is_sender) {
-      gst_structure_set (s,
-          /* number of sent data packets, including retransmissions */
-          "packets-sent", G_TYPE_INT64, stats.pktSent,
-          /* number of lost packets (sender side) */
-          "packets-sent-lost", G_TYPE_INT, stats.pktSndLoss,
-          /* number of retransmitted packets */
-          "packets-retransmitted", G_TYPE_INT, stats.pktRetrans,
-          /* number of received ACK packets */
-          "packet-ack-received", G_TYPE_INT, stats.pktRecvACK,
-          /* number of received NAK packets */
-          "packet-nack-received", G_TYPE_INT, stats.pktRecvNAK,
-          /* time duration when UDT is sending data (idle time exclusive) */
-          "send-duration-us", G_TYPE_INT64, stats.usSndDuration,
-          /* number of sent data bytes, including retransmissions */
-          "bytes-sent", G_TYPE_UINT64, stats.byteSent,
-          /* number of retransmitted bytes */
-          "bytes-retransmitted", G_TYPE_UINT64, stats.byteRetrans,
-          /* number of too-late-to-send dropped bytes */
-          "bytes-sent-dropped", G_TYPE_UINT64, stats.byteSndDrop,
-          /* number of too-late-to-send dropped packets */
-          "packets-sent-dropped", G_TYPE_INT, stats.pktSndDrop,
-          /* sending rate in Mb/s */
-          "send-rate-mbps", G_TYPE_DOUBLE, stats.mbpsSendRate,
-          /* busy sending time (i.e., idle time exclusive) */
-          "send-duration-us", G_TYPE_UINT64, stats.usSndDuration,
-          "negotiated-latency-ms", G_TYPE_INT, stats.msSndTsbPdDelay, NULL);
-    } else {
-      gst_structure_set (s,
-          "packets-received", G_TYPE_INT64, stats.pktRecvTotal,
-          "packets-received-lost", G_TYPE_INT, stats.pktRcvLossTotal,
-          /* number of sent ACK packets */
-          "packet-ack-sent", G_TYPE_INT, stats.pktSentACK,
-          /* number of sent NAK packets */
-          "packet-nack-sent", G_TYPE_INT, stats.pktSentNAK,
-          "bytes-received", G_TYPE_UINT64, stats.byteRecvTotal,
-          "bytes-received-lost", G_TYPE_UINT64, stats.byteRcvLossTotal,
-          "receive-rate-mbps", G_TYPE_DOUBLE, stats.mbpsRecvRate,
-          "negotiated-latency-ms", G_TYPE_INT, stats.msRcvTsbPdDelay, NULL);
-    }
-
-    gst_structure_set (s,
-        /* estimated bandwidth, in Mb/s */
-        "bandwidth-mbps", G_TYPE_DOUBLE, stats.mbpsBandwidth,
-        "rtt-ms", G_TYPE_DOUBLE, stats.msRTT, NULL);
-
+  if (ret < 0) {
+    GST_WARNING_OBJECT (srtobject->element,
+        "failed to retrieve stats for socket %d (reason %s)",
+        srtsock, srt_getlasterror_str ());
+    return s;
   }
 
+  gst_structure_set (s,
+      /* number of sent data packets, including retransmissions */
+      "packets-sent", G_TYPE_INT64, stats.pktSent,
+      /* number of lost packets (sender side) */
+      "packets-sent-lost", G_TYPE_INT, stats.pktSndLoss,
+      /* number of retransmitted packets */
+      "packets-retransmitted", G_TYPE_INT, stats.pktRetrans,
+      /* number of received ACK packets */
+      "packet-ack-received", G_TYPE_INT, stats.pktRecvACK,
+      /* number of received NAK packets */
+      "packet-nack-received", G_TYPE_INT, stats.pktRecvNAK,
+      /* time duration when UDT is sending data (idle time exclusive) */
+      "send-duration-us", G_TYPE_INT64, stats.usSndDuration,
+      /* number of sent data bytes, including retransmissions */
+      "bytes-sent", G_TYPE_UINT64, stats.byteSent,
+      /* number of retransmitted bytes */
+      "bytes-retransmitted", G_TYPE_UINT64, stats.byteRetrans,
+      /* number of too-late-to-send dropped bytes */
+      "bytes-sent-dropped", G_TYPE_UINT64, stats.byteSndDrop,
+      /* number of too-late-to-send dropped packets */
+      "packets-sent-dropped", G_TYPE_INT, stats.pktSndDrop,
+      /* sending rate in Mb/s */
+      "send-rate-mbps", G_TYPE_DOUBLE, stats.mbpsSendRate,
+      /* busy sending time (i.e., idle time exclusive) */
+      "send-duration-us", G_TYPE_UINT64, stats.usSndDuration,
+      "negotiated-latency-ms", G_TYPE_INT, stats.msSndTsbPdDelay,
+      "packets-received", G_TYPE_INT64, stats.pktRecvTotal,
+      "packets-received-lost", G_TYPE_INT, stats.pktRcvLossTotal,
+      /* number of sent ACK packets */
+      "packet-ack-sent", G_TYPE_INT, stats.pktSentACK,
+      /* number of sent NAK packets */
+      "packet-nack-sent", G_TYPE_INT, stats.pktSentNAK,
+      "bytes-received", G_TYPE_UINT64, stats.byteRecvTotal,
+      "bytes-received-lost", G_TYPE_UINT64, stats.byteRcvLossTotal,
+      "receive-rate-mbps", G_TYPE_DOUBLE, stats.mbpsRecvRate,
+      "negotiated-latency-ms", G_TYPE_INT, stats.msRcvTsbPdDelay,
+      /* estimated bandwidth, in Mb/s */
+      "bandwidth-mbps", G_TYPE_DOUBLE, stats.mbpsBandwidth,
+      "rtt-ms", G_TYPE_DOUBLE, stats.msRTT, NULL);
+
+  GST_DEBUG_OBJECT (srtobject->element,
+      "retreived stats for socket %d: %" GST_PTR_FORMAT, srtsock, s);
   return s;
 }
 
@@ -1911,7 +1910,7 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
   g_mutex_lock (&srtobject->sock_lock);
 
   if (srtobject->sock != SRT_INVALID_SOCK) {
-    s = get_stats_for_srtsock (srtobject->sock, is_sender);
+    s = get_stats_for_srtsock (srtobject, srtobject->sock);
     goto done;
   }
 
@@ -1927,7 +1926,7 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
       GstStructure *tmp;
       GValue *v;
 
-      tmp = get_stats_for_srtsock (caller->sock, is_sender);
+      tmp = get_stats_for_srtsock (srtobject, caller->sock);
 
       gst_structure_set (tmp, "caller-address", G_TYPE_SOCKET_ADDRESS,
           caller->sockaddr, NULL);
