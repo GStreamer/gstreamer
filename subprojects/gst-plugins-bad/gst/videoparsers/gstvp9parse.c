@@ -61,6 +61,10 @@ struct _GstVp9Parse
 
   /* per frame status */
   gboolean discont;
+
+  GstClockTime super_frame_pts;
+  GstClockTime super_frame_dts;
+  GstClockTime super_frame_duration;
 };
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -90,6 +94,8 @@ static GstCaps *gst_vp9_parse_get_sink_caps (GstBaseParse * parse,
 static void gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps);
 static GstFlowReturn gst_vp9_parse_parse_frame (GstVp9Parse * self,
     GstBaseParseFrame * frame, GstVp9FrameHdr * frame_hdr);
+static GstFlowReturn gst_vp9_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 static void
 gst_vp9_parse_class_init (GstVp9ParseClass * klass)
@@ -100,6 +106,8 @@ gst_vp9_parse_class_init (GstVp9ParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_vp9_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_vp9_parse_stop);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vp9_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_vp9_parse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_vp9_parse_set_sink_caps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_vp9_parse_get_sink_caps);
 
@@ -124,6 +132,14 @@ gst_vp9_parse_init (GstVp9Parse * self)
 }
 
 static void
+gst_vp9_parse_reset_super_frame (GstVp9Parse * self)
+{
+  self->super_frame_pts = GST_CLOCK_TIME_NONE;
+  self->super_frame_dts = GST_CLOCK_TIME_NONE;
+  self->super_frame_duration = GST_CLOCK_TIME_NONE;
+}
+
+static void
 gst_vp9_parse_reset (GstVp9Parse * self)
 {
   self->width = 0;
@@ -135,6 +151,7 @@ gst_vp9_parse_reset (GstVp9Parse * self)
   self->profile = GST_VP9_PROFILE_UNDEFINED;
   self->bit_depth = (GstVp9BitDepth) 0;
   self->codec_alpha = FALSE;
+  gst_vp9_parse_reset_super_frame (self);
 }
 
 static gboolean
@@ -415,6 +432,36 @@ gst_vp9_parse_process_frame (GstVp9Parse * self, GstVp9FrameHdr * frame_hdr)
 }
 
 static GstFlowReturn
+gst_vp9_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstVp9Parse *self = GST_VP9_PARSE (parse);
+
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
+  if (!frame->buffer)
+    return GST_FLOW_OK;
+
+  /* The super frame may contain more than one frames inside its buffer.
+     When splitting a super frame into frames, the base parse class only
+     assign the PTS to the first frame and leave the others' PTS invalid.
+     But in fact, all decode only frames should have invalid PTS while
+     showable frames should have correct PTS setting. */
+  if (self->align != GST_VP9_PARSE_ALIGN_FRAME)
+    return GST_FLOW_OK;
+
+  if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
+    GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
+  } else {
+    GST_BUFFER_PTS (frame->buffer) = self->super_frame_pts;
+    GST_BUFFER_DURATION (frame->buffer) = self->super_frame_duration;
+  }
+  GST_BUFFER_DTS (frame->buffer) = self->super_frame_dts;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
 gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     gint * skipsize)
 {
@@ -460,6 +507,10 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     goto done;
   }
 
+  self->super_frame_pts = GST_BUFFER_PTS (buffer);
+  self->super_frame_dts = GST_BUFFER_DTS (buffer);
+  self->super_frame_duration = GST_BUFFER_DURATION (buffer);
+
   for (i = 0; i < superframe_info.frames_in_superframe; i++) {
     guint32 frame_size;
 
@@ -489,6 +540,7 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
        * Real data is either taken from input by baseclass or
        * a replacement output buffer is provided anyway. */
       gst_vp9_parse_parse_frame (self, &subframe, &frame_hdr);
+
       ret = gst_base_parse_finish_frame (parse, &subframe, frame_size);
     } else {
       /* FIXME: need to parse all frames belong to this superframe? */
@@ -497,6 +549,8 @@ gst_vp9_parse_handle_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
 
     offset += frame_size;
   }
+
+  gst_vp9_parse_reset_super_frame (self);
 
 done:
   gst_buffer_unmap (buffer, &map);
