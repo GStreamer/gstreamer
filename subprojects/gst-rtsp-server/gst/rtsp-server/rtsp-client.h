@@ -178,6 +178,19 @@ struct _GstRTSPClientClass {
   GstRTSPStatusCode (*pre_announce_request)      (GstRTSPClient *client, GstRTSPContext *ctx);
   GstRTSPStatusCode (*pre_record_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
 
+  /**
+   * GstRTSPClientClass::adjust_error_code:
+   * @client: a #GstRTSPClient
+   * @ctx: a #GstRTSPContext
+   * @code: a #GstRTSPStatusCode
+   *
+   * Called before sending error response to give the application the
+   * possibility to adjust the error code.
+   *
+   * Returns: a #GstRTSPStatusCode, containing the adjusted error code.
+   *
+   * Since: 1.22
+   */
   GstRTSPStatusCode (*adjust_error_code)         (GstRTSPClient *client, GstRTSPContext *ctx, GstRTSPStatusCode code);
 
   /*< private >*/
