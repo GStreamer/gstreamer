@@ -486,16 +486,16 @@ GQuark gst_webrtc_error_quark (void);
  * Since: 1.20
  */
 /**
- * GST_WEBRTC_ERROR_TYPE_ERROR:
+ * GST_WEBRTC_ERROR_INVALID_MODIFICATION:
  *
- * type-error (maps to JavaScript TypeError)
+ * invalid-modification (part of WebIDL specification)
  *
  * Since: 1.22
  */
 /**
- * GST_WEBRTC_ERROR_INVALID_MODIFICATION:
+ * GST_WEBRTC_ERROR_TYPE_ERROR:
  *
- * invalid-modification (part of WebIDL specification)
+ * type-error (maps to JavaScript TypeError)
  *
  * Since: 1.22
  */
@@ -509,9 +509,9 @@ typedef enum /*<underscore_name=gst_webrtc_error>*/
   GST_WEBRTC_ERROR_HARDWARE_ENCODER_NOT_AVAILABLE,
   GST_WEBRTC_ERROR_ENCODER_ERROR,
   GST_WEBRTC_ERROR_INVALID_STATE,
-  GST_WEBRTC_ERROR_TYPE_ERROR,
   GST_WEBRTC_ERROR_INTERNAL_FAILURE,
   GST_WEBRTC_ERROR_INVALID_MODIFICATION,
+  GST_WEBRTC_ERROR_TYPE_ERROR,
 } GstWebRTCError;
 
 #endif /* __GST_WEBRTC_FWD_H__ */
