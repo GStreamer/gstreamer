@@ -73,8 +73,8 @@ enum
 
 #define gst_oss4_source_parent_class parent_class
 G_DEFINE_TYPE (GstOss4Source, gst_oss4_source, GST_TYPE_AUDIO_SRC);
-GST_ELEMENT_REGISTER_DEFINE (oss4src, "oss4src", GST_RANK_SECONDARY + 1,
-    GST_TYPE_OSS4_SOURCE);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oss4src, "oss4src",
+    GST_RANK_SECONDARY + 1, GST_TYPE_OSS4_SOURCE, oss4_element_init (plugin));
 
 static void gst_oss4_source_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);

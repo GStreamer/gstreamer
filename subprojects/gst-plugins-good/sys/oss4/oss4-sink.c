@@ -104,8 +104,8 @@ enum
 #define gst_oss4_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOss4Sink, gst_oss4_sink,
     GST_TYPE_AUDIO_SINK, G_IMPLEMENT_INTERFACE (GST_TYPE_STREAM_VOLUME, NULL));
-GST_ELEMENT_REGISTER_DEFINE (oss4sink, "oss4sink", GST_RANK_SECONDARY + 1,
-    GST_TYPE_OSS4_SINK);
+GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (oss4sink, "oss4sink",
+    GST_RANK_SECONDARY + 1, GST_TYPE_OSS4_SINK, oss4_element_init (plugin));
 
 static void
 gst_oss4_sink_dispose (GObject * object)
