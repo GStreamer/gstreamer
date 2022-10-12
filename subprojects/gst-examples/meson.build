@@ -1,4 +1,4 @@
-project('gst-examples', 'c', version : '1.20.4', license : 'LGPL')
+project('gst-examples', 'c', version : '1.20.4.1', license : 'LGPL')
 
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required : false)
