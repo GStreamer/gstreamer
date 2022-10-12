@@ -3372,6 +3372,7 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux, GstMXFKLV * klv)
   if (g_list_find_custom (demux->pending_index_table_segments, segment,
           (GCompareFunc) compare_index_table_segment)) {
     GST_DEBUG_OBJECT (demux, "Already in pending list");
+    mxf_index_table_segment_reset (segment);
     g_free (segment);
     return GST_FLOW_OK;
   }
@@ -3380,6 +3381,7 @@ gst_mxf_demux_handle_index_table_segment (GstMXFDemux * demux, GstMXFKLV * klv)
     if (g_array_binary_search (table->segments, segment,
             (GCompareFunc) compare_index_table_segment, NULL)) {
       GST_DEBUG_OBJECT (demux, "Already handled");
+      mxf_index_table_segment_reset (segment);
       g_free (segment);
       return GST_FLOW_OK;
     }
