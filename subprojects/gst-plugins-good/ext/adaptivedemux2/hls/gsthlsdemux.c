@@ -1844,6 +1844,11 @@ gst_hls_demux_stream_finalize (GObject * object)
   gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
   gst_buffer_replace (&hls_stream->pending_segment_data, NULL);
 
+  if (hls_stream->preloader) {
+    gst_hls_demux_preloader_free (hls_stream->preloader);
+    hls_stream->preloader = NULL;
+  }
+
   if (hls_stream->moov)
     gst_isoff_moov_box_free (hls_stream->moov);
 
@@ -2298,6 +2303,61 @@ gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux)
   }
 }
 
+static void
+gst_hls_demux_stream_update_preloads (GstHLSDemuxStream * hlsdemux_stream)
+{
+  GstHLSMediaPlaylist *playlist = hlsdemux_stream->playlist;
+  GstAdaptiveDemux *demux =
+      GST_ADAPTIVE_DEMUX2_STREAM_CAST (hlsdemux_stream)->demux;
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+
+  gboolean preloads_allowed = hlsdemux->llhls_enabled
+      && GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist);
+
+  if (playlist->preload_hints == NULL || !preloads_allowed) {
+    if (hlsdemux_stream->preloader != NULL) {
+      /* Cancel any preloads, the new playlist doesn't have them */
+      gst_hls_demux_preloader_cancel (hlsdemux_stream->preloader,
+          M3U8_PRELOAD_HINT_ALL);
+    }
+    /* Nothing to preload */
+    return;
+  }
+
+  if (hlsdemux_stream->preloader == NULL) {
+    GstAdaptiveDemux *demux =
+        GST_ADAPTIVE_DEMUX2_STREAM (hlsdemux_stream)->demux;
+    hlsdemux_stream->preloader =
+        gst_hls_demux_preloader_new (demux->download_helper);
+    if (hlsdemux_stream->preloader == NULL) {
+      GST_WARNING_OBJECT (hlsdemux_stream, "Failed to create preload handler");
+      return;
+    }
+  }
+
+  /* The HLS spec says any extra preload hint of each type should be ignored */
+  GstM3U8PreloadHintType seen_types = 0;
+  guint idx;
+  for (idx = 0; idx < playlist->preload_hints->len; idx++) {
+    GstM3U8PreloadHint *hint = g_ptr_array_index (playlist->preload_hints, idx);
+    switch (hint->hint_type) {
+      case M3U8_PRELOAD_HINT_MAP:
+      case M3U8_PRELOAD_HINT_PART:
+        if (seen_types & hint->hint_type) {
+          continue;             /* Ignore preload hint type we've already seen */
+        }
+        seen_types |= hint->hint_type;
+        break;
+      default:
+        GST_FIXME_OBJECT (hlsdemux_stream, "Ignoring unknown preload type %d",
+            hint->hint_type);
+        continue;               /* Unknown hint type, ignore it */
+    }
+    gst_hls_demux_preloader_load (hlsdemux_stream->preloader, hint,
+        playlist->uri);
+  }
+}
+
 static GstFlowReturn
 gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
     GstHLSDemuxStream * stream, gchar ** uri, GError ** err)
@@ -2427,6 +2487,11 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
       setup_initial_playlist (demux, new_playlist);
     }
     stream->playlist = new_playlist;
+  }
+
+  if (!GST_HLS_MEDIA_PLAYLIST_IS_LIVE (stream->playlist)) {
+    /* Make sure to cancel any preloads if a playlist isn't live after reload */
+    gst_hls_demux_stream_update_preloads (stream);
   }
 
   if (stream->is_variant) {
@@ -2581,6 +2646,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
               stream->current_position, hlsdemux_stream->in_partial_segments,
               &seek_result)) {
         GST_INFO_OBJECT (stream, "At the end of the current media playlist");
+        gst_hls_demux_stream_update_preloads (hlsdemux_stream);
         return GST_FLOW_EOS;
       }
 
@@ -2620,6 +2686,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
        * hit the live edge and need to wait for a playlist update */
       if (file->partial_only) {
         GST_INFO_OBJECT (stream, "At the end of the current media playlist");
+        gst_hls_demux_stream_update_preloads (hlsdemux_stream);
         return GST_FLOW_EOS;
       }
 

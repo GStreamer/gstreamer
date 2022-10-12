@@ -30,6 +30,8 @@
 #include "m3u8.h"
 #include "gstisoff.h"
 #include "gstadaptivedemux.h"
+#include "gsthlsdemux-preloader.h"
+
 #if defined(HAVE_OPENSSL)
 #include <openssl/evp.h>
 #elif defined(HAVE_NETTLE)
@@ -125,6 +127,9 @@ struct _GstHLSDemuxStream
    * and part_no is the current part index in the current_segment */
   gboolean in_partial_segments;
   guint part_idx;
+
+  /* Preload helper, that manages blocking preload downloads */
+  GstHLSDemuxPreloader *preloader;
 
   /* Whether we need to typefind the next buffer */
   gboolean do_typefind;

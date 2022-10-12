@@ -1,5 +1,6 @@
 hls_sources = [
   'hls/gsthlsdemux.c',
+  'hls/gsthlsdemux-preloader.c',
   'hls/gsthlsdemux-util.c',
   'hls/gsthlselement.c',
   'hls/m3u8.c',
