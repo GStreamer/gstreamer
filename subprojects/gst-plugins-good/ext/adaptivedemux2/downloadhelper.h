@@ -32,6 +32,9 @@ typedef enum DownloadFlags DownloadFlags;
 
 #define HTTP_STATUS_IS_SUCCESSFUL(s) ((s) >= 200 && (s) < 300)
 
+/* RFC8673 recommended last-byte-pos value of 2^^53-1 */
+#define RFC8673_LAST_BYTE_POS (9007199254740991)
+
 enum DownloadFlags
 {
   DOWNLOAD_FLAG_NONE = 0,
