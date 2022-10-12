@@ -1,7 +1,44 @@
+2022-03-28 13:47:52 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* tools/utils.c:
+	  ges: remove memory leak with description
+	  free the capsdesc
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3140>
+
+2022-03-28 13:20:40 +0200  Stéphane Cerveau <scerveau@collabora.com>
+
+	* plugins/nle/nlecomposition.c:
+	  nle: clear seek event properly
+	  Use gst_clear_event instead of g_clear_object
+	  avoiding a failing gobject unref
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3140>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2702>
+
+2022-06-16 22:40:21 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ges/gstframepositioner.c:
+	  ges/gstframepositioner: don't create one compositor per frame meta
+	  Instead, cache the looked up operator property
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2639>
+
+2022-06-16 00:59:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2619>
+
 === release 1.20.3 ===
 
 2022-06-15 23:36:18 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:

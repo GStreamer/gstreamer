@@ -1,7 +1,52 @@
+2022-10-04 21:27:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: address regression with WMA files ..
+	  By outputting lead-in samples that FFmpeg now would like us to ignore,
+	  and discarding trailing samples that it would now like us to output.
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1474
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1348
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3125>
+
+2022-09-29 12:42:21 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: fix unnecessary reconfiguration if the audio layout isn't specified
+	  It would constantly want to renegotiate (and spam the debug log) even
+	  though the channel layout hasn't actually changed. We use the same
+	  fallback in gst_ffmpegauddec_negotiate() already.
+	  This happens with WMA files for example.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3105>
+
+2022-07-07 22:16:30 +0900  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  libav: Fix for APNG encoder property registration
+	  The AVClass name of Animated PNG in FFmpeg 5.x is "(A)PNG"
+	  and it will be converted to "-a-png" through
+	  g_ascii_strdown() and g_strcanon(). But GLib disallow leading '-'
+	  character for a GType name. Strip leading '-' to workaround it.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2733>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2702>
+
+2022-06-16 00:59:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2619>
+
 === release 1.20.3 ===
 
 2022-06-15 23:36:18 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:

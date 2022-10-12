@@ -1,7 +1,31 @@
+2022-08-11 21:22:12 +0200  Víctor Manuel Jáquez Leal <vjaquez@igalia.com>
+
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapidecode.c:
+	  vaapi: plugin: Handle when no encoders/decoders available.
+	  Nouveau driver currently only exposes postproc entry. But
+	  vaapidecodebin is registered independent if there are decoders or not,
+	  exposing a segmentation fault.
+	  This patch removes the encoder/decoder/codec arrays if no entries are
+	  found, and if no decoders are found vaapidecodebin is not
+	  registered. Also for vaapipostproc if no postproc entry is found.
+	  Also, if general decoder, used by vaapidecodebin, doesn't have a sink
+	  pad string, don't register the glib type.
+	  Fixes: #1349
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2906>
+
+2022-06-16 00:59:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2619>
+
 === release 1.20.3 ===
 
 2022-06-15 23:36:18 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gstreamer-vaapi.doap:

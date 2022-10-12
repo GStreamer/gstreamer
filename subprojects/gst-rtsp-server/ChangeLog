@@ -1,7 +1,69 @@
+2022-08-24 19:50:19 +0800  Bruce Liang <Bruce.Liang@Abilitycorp.com.tw>
+
+	* gst/rtsp-server/rtsp-server-internal.h:
+	* gst/rtsp-server/rtsp-stream-transport.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  gst-rtsp-server: Fix pushing backlog to client
+	  Check back pressure of a stream transport before popping buffer from its backlog.
+	  If the stream transport is not experiencing back pressure, the buffer can be popped from backlog and pushed to client.
+	  Fixes:#1298
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2998>
+
+2022-09-02 16:31:54 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: stream: Don't loop forever if binding to the multicast address fails
+	  The address/port is pre-defined by the caller of the function, so
+	  retrying is only going to loop forever.
+	  Ideally the multicast address should be checked after allocating but
+	  this doesn't happen currently, so it's better to error out cleanly then
+	  to loop forever trying the same address.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2997>
+
+2022-05-25 18:40:30 +0530  Nirbheek Chauhan <nirbheek@centricular.com>
+
+	* gst/rtsp-sink/gstrtspclientsink.c:
+	  rtsp+rtmp: Forward warning added to tls-validation-flags to our users
+	  With the 2.72 release, glib-networking developers have decided that
+	  TLS certificate validation cannot be implemented correctly by them, so
+	  they've deprecated it.
+	  In a nutshell: a cert can have several validation errors, but there
+	  are no guarantees that the TLS backend will return all those errors,
+	  and things are made even more complicated by the fact that the list of
+	  errors might refer to certs that are added for backwards-compat and
+	  won't actually be used by the TLS library.
+	  Our best option is to ignore the deprecation and pass the warning onto
+	  users so they can make an appropriate security decision regarding
+	  this.
+	  We can't deprecate the tls-validation-flags property because it is
+	  very useful when connecting to RTSP cameras that will never get
+	  updates to fix certificate errors.
+	  Relevant upstream merge requests / issues:
+	  https://gitlab.gnome.org/GNOME/glib/-/merge_requests/2214
+	  https://gitlab.gnome.org/GNOME/glib-networking/-/issues/179
+	  https://gitlab.gnome.org/GNOME/glib-networking/-/merge_requests/193
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2818>
+
+2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  coding style: allow declarations after statement
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1243/
+	  and https://gitlab.freedesktop.org/gstreamer/gstreamer-project/-/issues/78
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2702>
+
+2022-06-16 00:59:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2619>
+
 === release 1.20.3 ===
 
 2022-06-15 23:36:18 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

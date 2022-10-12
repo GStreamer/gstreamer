@@ -1,7 +1,46 @@
+2022-06-28 16:38:09 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/plugins/python/py_audiotestsrc.py:
+	  python: Fix the audiotestsrc example
+	  Since 830d1595b94ee855b664b2101f0832fbd0181b9c AudioInfo::from_caps has been hidden in python
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2737>
+
+2022-06-28 16:35:58 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* examples/plugins/python/audioplot.py:
+	* examples/plugins/python/exampleTransform.py:
+	* examples/plugins/python/identity.py:
+	* examples/plugins/python/mixer.py:
+	* examples/plugins/python/py_audiotestsrc.py:
+	* examples/plugins/python/sinkelement.py:
+	* gi/overrides/Gst.py:
+	  python: Add a Gst.init_python function to be called from plugins
+	  Plugins know that they will be initialized after Gst was initialized
+	  so they can call the initialization function dedicated for the python
+	  bindings
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2737>
+
+2022-06-28 11:02:37 -0400  Thibault Saunier <tsaunier@igalia.com>
+
+	* gi/overrides/Gst.py:
+	  python: Do not call gst_init when it is already is_initialized
+	  GStreamer plugins written in python need to call `Gst.init` to ensure
+	  that GStreamer is initialized so when loading a python plugin, we might
+	  be recursively calling `gst_init` which is not a good idea.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/940
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2737>
+
+2022-06-16 00:59:00 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2619>
+
 === release 1.20.3 ===
 
 2022-06-15 23:36:18 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-python.doap:
