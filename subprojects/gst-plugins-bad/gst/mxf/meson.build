@@ -18,6 +18,7 @@ mxf_sources = [
   'mxfvc3.c',
   'mxfprores.c',
   'mxfvanc.c',
+  'mxfcustom.c',
 #  'mxfdms1.c',
 ]
 

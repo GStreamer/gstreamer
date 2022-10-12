@@ -38,6 +38,7 @@
 #include "mxfvc3.h"
 #include "mxfprores.h"
 #include "mxfvanc.h"
+#include "mxfcustom.h"
 
 GST_DEBUG_CATEGORY (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
@@ -77,6 +78,7 @@ mxf_element_init (GstPlugin * plugin)
     mxf_vc3_init ();
     mxf_prores_init ();
     mxf_vanc_init ();
+    mxf_custom_init ();
     g_once_init_leave (&res, TRUE);
   }
 }
