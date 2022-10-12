@@ -1,4 +1,4 @@
-project('gstreamer-sharp', ['cs', 'c'], version: '1.20.3.1',
+project('gstreamer-sharp', ['cs', 'c'], version: '1.20.4',
     meson_version : '>= 0.59', license: 'LGPL')
 
 if host_machine.system() == 'osx'

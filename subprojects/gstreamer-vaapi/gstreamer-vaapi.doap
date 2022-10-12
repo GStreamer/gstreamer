@@ -27,6 +27,16 @@
 
  <release>
   <Version>
+   <revision>1.20.4</revision>
+   <branch>1.20</branch>
+   <name></name>
+   <created>2022-10-12</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gstreamer-vaapi/gstreamer-vaapi-1.20.4.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.20.3</revision>
    <branch>1.20</branch>
    <name></name>

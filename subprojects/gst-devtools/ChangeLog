@@ -1,3 +1,18 @@
+=== release 1.20.4 ===
+
+2022-10-12 16:39:47 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-devtools.doap:
+	* meson.build:
+	  Release 1.20.4
+
+2022-10-12 16:39:40 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.4
+
 2022-06-29 10:55:13 +0100  Tim-Philipp Müller <tim@centricular.com>
 
 	* meson.build:
