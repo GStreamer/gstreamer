@@ -184,10 +184,15 @@ gst_m3u8_partial_segment_ref   (GstM3U8PartialSegment *part);
 void
 gst_m3u8_partial_segment_unref (GstM3U8PartialSegment *part);
 
+/* Set up as flags, so we can form a bitmask
+ * of seen hint types */
 enum _GstM3U8PreloadHintType {
-  M3U8_PRELOAD_HINT_MAP,
-  M3U8_PRELOAD_HINT_PART,
+  M3U8_PRELOAD_HINT_NONE = (0 << 0),
+  M3U8_PRELOAD_HINT_MAP = (1 << 0),
+  M3U8_PRELOAD_HINT_PART = (1 << 1),
 };
+
+#define M3U8_PRELOAD_HINT_ALL (M3U8_PRELOAD_HINT_PART | M3U8_PRELOAD_HINT_MAP)
 
 /**
  * GstM3U8PreloadHint:
@@ -210,6 +215,9 @@ gst_m3u8_preload_hint_ref  (GstM3U8PreloadHint *hint);
 
 void
 gst_m3u8_preload_hint_unref (GstM3U8PreloadHint *hint);
+
+gboolean
+gst_m3u8_preload_hint_equal (GstM3U8PreloadHint *hint1, GstM3U8PreloadHint *hint2);
 
 /**
  * GstM3U8MediaSegment:

@@ -164,6 +164,25 @@ gst_m3u8_preload_hint_unref (GstM3U8PreloadHint * hint)
   }
 }
 
+gboolean
+gst_m3u8_preload_hint_equal (GstM3U8PreloadHint * hint1,
+    GstM3U8PreloadHint * hint2)
+{
+  if (hint1->hint_type != hint2->hint_type)
+    return FALSE;
+
+  if (!g_str_equal (hint1->uri, hint2->uri))
+    return FALSE;
+
+  if (hint1->offset != hint2->offset)
+    return FALSE;
+
+  if (hint1->size != hint2->size)
+    return FALSE;
+
+  return TRUE;
+}
+
 static GstM3U8InitFile *
 gst_m3u8_init_file_new (gchar * uri, gint64 size, gint64 offset)
 {
