@@ -772,7 +772,7 @@ gst_vp9_parse_parse_frame (GstVp9Parse * self, GstBaseParseFrame * frame,
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
   if (self->align == GST_VP9_PARSE_ALIGN_FRAME) {
-    if (!frame_hdr->show_frame)
+    if (!frame_hdr->show_frame && !frame_hdr->show_existing_frame)
       GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DECODE_ONLY);
     else
       GST_BUFFER_FLAG_UNSET (buffer, GST_BUFFER_FLAG_DECODE_ONLY);
