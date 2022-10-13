@@ -616,6 +616,9 @@ main (gint argc, gchar ** argv)
   context.sink = gst_element_factory_make ("d3d11videosink", nullptr);
   g_assert (context.sink);
 
+  /* Enables present signal */
+  g_object_set (context.sink, "emit-present", TRUE, nullptr);
+
   /* D2D <-> DXGI interop requires BGRA format */
   g_object_set (context.sink, "display-format", DXGI_FORMAT_B8G8R8A8_UNORM,
       nullptr);
