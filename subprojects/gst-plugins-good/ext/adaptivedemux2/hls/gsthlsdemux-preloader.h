@@ -42,5 +42,7 @@ void gst_hls_demux_preloader_free (GstHLSDemuxPreloader *preloader);
 void gst_hls_demux_preloader_load (GstHLSDemuxPreloader *preloader, GstM3U8PreloadHint *hint, const gchar *referrer_uri);
 void gst_hls_demux_preloader_cancel (GstHLSDemuxPreloader *preloader, GstM3U8PreloadHintType hint_types);
 
+gboolean gst_hls_demux_preloader_provide_request (GstHLSDemuxPreloader *preloader, DownloadRequest *target_req);
+
 G_END_DECLS
 #endif /* __GST_HLS_DEMUX_PRELOADER_H__ */
