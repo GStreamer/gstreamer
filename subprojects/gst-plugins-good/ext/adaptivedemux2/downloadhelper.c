@@ -550,6 +550,10 @@ on_request_sent (GObject * source, GAsyncResult * result, gpointer user_data)
     request->state = DOWNLOAD_REQUEST_STATE_HEADERS_RECEIVED;
     request->status_code = _soup_message_get_status (msg);
     request->headers = handle_response_headers (transfer);
+    GST_TRACE ("request URI %s range %" G_GINT64_FORMAT " %"
+        G_GINT64_FORMAT " headers: %" GST_PTR_FORMAT,
+        request->uri, request->range_start, request->range_end,
+        request->headers);
 
     if (SOUP_STATUS_IS_SUCCESSFUL (request->status_code)
         || SOUP_STATUS_IS_REDIRECTION (request->status_code)) {
