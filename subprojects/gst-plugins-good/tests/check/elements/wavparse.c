@@ -21,10 +21,12 @@
 
 #include <gst/check/gstcheck.h>
 
+#define CORRUPT_HEADER_WAV_PATH GST_TEST_FILES_PATH G_DIR_SEPARATOR_S \
+    "corruptheadertestsrc.wav"
 #define SIMPLE_WAV_PATH GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "audiotestsrc.wav"
 
 static GstElement *
-create_pipeline (GstPadMode mode)
+create_file_pipeline (const char *path, GstPadMode mode)
 {
   GstElement *pipeline;
   GstElement *src, *q = NULL;
@@ -43,7 +45,7 @@ create_pipeline (GstPadMode mode)
 
   gst_bin_add_many (GST_BIN (pipeline), src, wavparse, fakesink, q, NULL);
 
-  g_object_set (src, "location", SIMPLE_WAV_PATH, NULL);
+  g_object_set (src, "location", path, NULL);
 
   if (mode == GST_PAD_MODE_PUSH)
     fail_unless (gst_element_link_many (src, q, wavparse, fakesink, NULL));
@@ -60,7 +62,7 @@ do_test_simple_file (GstPadMode mode)
   GstElement *pipeline;
   GstMessage *msg;
 
-  pipeline = create_pipeline (mode);
+  pipeline = create_file_pipeline (SIMPLE_WAV_PATH, mode);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   fail_unless_equals_int (ret, GST_STATE_CHANGE_ASYNC);
@@ -88,6 +90,37 @@ GST_END_TEST;
 GST_START_TEST (test_simple_file_push)
 {
   do_test_simple_file (FALSE);
+}
+
+GST_END_TEST;
+
+static void
+do_test_corrupt_header_file (GstPadMode mode)
+{
+  GstStateChangeReturn ret;
+  GstElement *pipeline;
+  GstMessage *msg;
+
+  pipeline = create_file_pipeline (CORRUPT_HEADER_WAV_PATH, mode);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless_equals_int (ret, GST_STATE_CHANGE_ASYNC);
+
+  ret = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  fail_unless_equals_int (ret, GST_STATE_CHANGE_FAILURE);
+
+  msg = gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipeline),
+      GST_CLOCK_TIME_NONE, GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ERROR);
+
+  gst_message_unref (msg);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_corrupt_header_file_push)
+{
+  do_test_corrupt_header_file (GST_PAD_MODE_PUSH);
 }
 
 GST_END_TEST;
@@ -166,7 +199,7 @@ GST_START_TEST (test_seek)
   GstClockTime seek_position = (20 * GST_MSECOND);
   GstClockTime first_ts = GST_CLOCK_TIME_NONE;
 
-  pipeline = create_pipeline (GST_PAD_MODE_PULL);
+  pipeline = create_file_pipeline (SIMPLE_WAV_PATH, GST_PAD_MODE_PULL);
   wavparse = gst_bin_get_by_name (GST_BIN (pipeline), "wavparse");
   fail_unless (wavparse);
   fakesink = gst_bin_get_by_name (GST_BIN (pipeline), "fakesink");
@@ -248,6 +281,7 @@ wavparse_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_empty_file_pull);
   tcase_add_test (tc_chain, test_empty_file_push);
+  tcase_add_test (tc_chain, test_corrupt_header_file_push);
   tcase_add_test (tc_chain, test_simple_file_pull);
   tcase_add_test (tc_chain, test_simple_file_push);
   tcase_add_test (tc_chain, test_seek);
