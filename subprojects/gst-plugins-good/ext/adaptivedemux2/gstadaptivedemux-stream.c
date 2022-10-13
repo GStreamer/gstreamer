@@ -1326,7 +1326,8 @@ on_download_progress (DownloadRequest * request, DownloadRequestState state,
         G_GUINT64_FORMAT " bytes", gst_buffer_get_size (buffer),
         request->content_received, request->content_length);
 
-    /* Drop the request lock when parsing data. FIXME: Check and comment why this is needed */
+    /* Drop the request lock when parsing data. That allows the DownloadHelper to
+     * add more data while we're parsing (if more arrives) */
     download_request_unlock (request);
     ret = gst_adaptive_demux2_stream_parse_buffer (stream, buffer);
     download_request_lock (request);
