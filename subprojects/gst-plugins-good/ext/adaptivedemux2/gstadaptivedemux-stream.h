@@ -107,6 +107,19 @@ struct _GstAdaptiveDemux2StreamClass
   GstFlowReturn (*update_fragment_info) (GstAdaptiveDemux2Stream * stream);
 
   /**
+   * submit_request:
+   * @stream: #GstAdaptiveDemux2Stream
+   * @download_req: #DownloadRequest
+   *
+   * Requests the stream submit the provided download request for processing,
+   * either through the DownloadHelper (default), or through some sub-class
+   * mechanism
+   *
+   * Returns: #GST_FLOW_OK in success, #GST_FLOW_ERROR on error
+   */
+  GstFlowReturn (*submit_request) (GstAdaptiveDemux2Stream * stream, DownloadRequest * download_req);
+
+  /**
    * finish_fragment:
    * @stream: #GstAdaptiveDemux2Stream
    *

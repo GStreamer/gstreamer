@@ -50,6 +50,9 @@ gst_adaptive_demux2_stream_update_current_bitrate (GstAdaptiveDemux2Stream *
     stream);
 static void gst_adaptive_demux2_stream_update_track_ids (GstAdaptiveDemux2Stream
     * stream);
+static GstFlowReturn
+gst_adaptive_demux2_stream_submit_request_default (GstAdaptiveDemux2Stream *
+    stream, DownloadRequest * download_req);
 
 #define gst_adaptive_demux2_stream_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstAdaptiveDemux2Stream, gst_adaptive_demux2_stream,
@@ -64,6 +67,7 @@ gst_adaptive_demux2_stream_class_init (GstAdaptiveDemux2StreamClass * klass)
 
   klass->data_received = gst_adaptive_demux2_stream_data_received_default;
   klass->finish_fragment = gst_adaptive_demux2_stream_finish_fragment_default;
+  klass->submit_request = gst_adaptive_demux2_stream_submit_request_default;
 }
 
 static GType tsdemux_type = 0;
@@ -193,9 +197,8 @@ static void
 gst_adaptive_demux2_stream_handle_playlist_eos (GstAdaptiveDemux2Stream *
     stream);
 static GstFlowReturn
-gst_adaptive_demux2_stream_begin_download_uri (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, const gchar * uri, gint64 start,
-    gint64 end);
+gst_adaptive_demux2_stream_begin_download_uri (GstAdaptiveDemux2Stream * stream,
+    const gchar * uri, gint64 start, gint64 end);
 
 #ifndef GST_DISABLE_GST_DEBUG
 static const char *
@@ -213,7 +216,6 @@ uritype (GstAdaptiveDemux2Stream * s)
 static gboolean
 schedule_another_chunk (GstAdaptiveDemux2Stream * stream)
 {
-  GstAdaptiveDemux *demux = stream->demux;
   DownloadRequest *request = stream->download_request;
   GstFlowReturn ret;
 
@@ -256,7 +258,7 @@ schedule_another_chunk (GstAdaptiveDemux2Stream * stream)
       " chunk_size %" G_GINT64_FORMAT, uri, range_start, chunk_end, chunk_size);
 
   ret =
-      gst_adaptive_demux2_stream_begin_download_uri (demux, stream, uri,
+      gst_adaptive_demux2_stream_begin_download_uri (stream, uri,
       range_start, chunk_end);
   if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (stream,
@@ -1389,18 +1391,40 @@ on_download_complete (DownloadRequest * request, DownloadRequestState state,
   gst_adaptive_demux2_stream_finish_download (stream, ret, NULL);
 }
 
+static GstFlowReturn
+gst_adaptive_demux2_stream_submit_request_default (GstAdaptiveDemux2Stream *
+    stream, DownloadRequest * download_req)
+{
+  GstAdaptiveDemux *demux = stream->demux;
+
+  if (!downloadhelper_submit_request (demux->download_helper,
+          demux->manifest_uri, DOWNLOAD_FLAG_NONE, download_req, NULL))
+    return GST_FLOW_ERROR;
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_adaptive_demux2_stream_submit_request (GstAdaptiveDemux2Stream * stream,
+    DownloadRequest * download_req)
+{
+  GstAdaptiveDemux2StreamClass *klass =
+      GST_ADAPTIVE_DEMUX2_STREAM_GET_CLASS (stream);
+  g_assert (klass->submit_request != NULL);
+  return klass->submit_request (stream, download_req);
+}
+
 /* must be called from the scheduler context
  *
  * Will submit the request only, which will complete asynchronously
  */
 static GstFlowReturn
-gst_adaptive_demux2_stream_begin_download_uri (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, const gchar * uri, gint64 start,
-    gint64 end)
+gst_adaptive_demux2_stream_begin_download_uri (GstAdaptiveDemux2Stream * stream,
+    const gchar * uri, gint64 start, gint64 end)
 {
   DownloadRequest *request = stream->download_request;
 
-  GST_DEBUG_OBJECT (demux,
+  GST_DEBUG_OBJECT (stream,
       "Downloading %s uri: %s, range:%" G_GINT64_FORMAT " - %" G_GINT64_FORMAT,
       uritype (stream), uri, start, end);
 
@@ -1424,13 +1448,15 @@ gst_adaptive_demux2_stream_begin_download_uri (GstAdaptiveDemux * demux,
         (DownloadRequestEventCallback) on_download_progress, stream);
   }
 
-  if (!downloadhelper_submit_request (demux->download_helper,
-          demux->manifest_uri, DOWNLOAD_FLAG_NONE, request, NULL))
-    return GST_FLOW_ERROR;
 
   stream->download_active = TRUE;
+  GstFlowReturn ret =
+      gst_adaptive_demux2_stream_submit_request (stream, request);
+  if (ret != GST_FLOW_OK) {
+    stream->download_active = FALSE;
+  }
 
-  return GST_FLOW_OK;
+  return ret;
 }
 
 /* must be called from the scheduler context */
@@ -1469,7 +1495,7 @@ gst_adaptive_demux2_stream_download_fragment (GstAdaptiveDemux2Stream * stream)
 
     stream->downloading_header = TRUE;
 
-    return gst_adaptive_demux2_stream_begin_download_uri (demux, stream,
+    return gst_adaptive_demux2_stream_begin_download_uri (stream,
         stream->fragment.header_uri, stream->fragment.header_range_start,
         stream->fragment.header_range_end);
   }
@@ -1483,7 +1509,7 @@ gst_adaptive_demux2_stream_download_fragment (GstAdaptiveDemux2Stream * stream)
 
     stream->downloading_index = TRUE;
 
-    return gst_adaptive_demux2_stream_begin_download_uri (demux, stream,
+    return gst_adaptive_demux2_stream_begin_download_uri (stream,
         stream->fragment.index_uri, stream->fragment.index_range_start,
         stream->fragment.index_range_end);
   }
@@ -1516,14 +1542,14 @@ gst_adaptive_demux2_stream_download_fragment (GstAdaptiveDemux2Stream * stream)
     GST_DEBUG_OBJECT (stream,
         "Starting chunked download %s %" G_GINT64_FORMAT "-%" G_GINT64_FORMAT,
         url, range_start, chunk_end);
-    return gst_adaptive_demux2_stream_begin_download_uri (demux, stream, url,
+    return gst_adaptive_demux2_stream_begin_download_uri (stream, url,
         range_start, chunk_end);
   }
 
   /* regular single chunk download */
   stream->fragment.chunk_size = 0;
 
-  return gst_adaptive_demux2_stream_begin_download_uri (demux, stream, url,
+  return gst_adaptive_demux2_stream_begin_download_uri (stream, url,
       stream->fragment.range_start, stream->fragment.range_end);
 
 no_url_error:
