@@ -103,7 +103,7 @@ void download_request_unref (DownloadRequest *request);
 void download_request_lock (DownloadRequest *request);
 void download_request_unlock (DownloadRequest *request);
 
-void download_request_despatch_progresss (DownloadRequest *request);
+void download_request_despatch_progress (DownloadRequest *request);
 void download_request_despatch_completion (DownloadRequest *request);
 
 G_END_DECLS

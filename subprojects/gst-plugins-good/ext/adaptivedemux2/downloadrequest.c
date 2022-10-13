@@ -147,7 +147,7 @@ download_request_set_callbacks (DownloadRequest * request,
 
 /* Called with request lock held */
 void
-download_request_despatch_progresss (DownloadRequest * request)
+download_request_despatch_progress (DownloadRequest * request)
 {
   DownloadRequestPrivate *priv = DOWNLOAD_REQUEST_PRIVATE (request);
   if (priv->progress_cb)

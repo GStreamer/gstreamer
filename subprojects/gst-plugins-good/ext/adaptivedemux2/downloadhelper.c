@@ -126,7 +126,7 @@ transfer_report_progress_cb (gpointer task)
   if (request->send_progress) {
     GST_LOG ("Despatching progress for transfer %p request %p", transfer,
         request);
-    download_request_despatch_progresss (request);
+    download_request_despatch_progress (request);
   }
   transfer->progress_pending = FALSE;
   download_request_unlock (request);
