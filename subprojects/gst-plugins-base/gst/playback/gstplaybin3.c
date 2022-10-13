@@ -1089,17 +1089,20 @@ static void
 init_combiners (GstPlayBin3 * playbin)
 {
   playbin->combiner[PLAYBIN_STREAM_AUDIO].stream_type = GST_STREAM_TYPE_AUDIO;
-  playbin->combiner[PLAYBIN_STREAM_AUDIO].inputpads = g_ptr_array_new ();
+  playbin->combiner[PLAYBIN_STREAM_AUDIO].inputpads =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
   playbin->combiner[PLAYBIN_STREAM_AUDIO].streams =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 
   playbin->combiner[PLAYBIN_STREAM_VIDEO].stream_type = GST_STREAM_TYPE_VIDEO;
-  playbin->combiner[PLAYBIN_STREAM_VIDEO].inputpads = g_ptr_array_new ();
+  playbin->combiner[PLAYBIN_STREAM_VIDEO].inputpads =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
   playbin->combiner[PLAYBIN_STREAM_VIDEO].streams =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 
   playbin->combiner[PLAYBIN_STREAM_TEXT].stream_type = GST_STREAM_TYPE_TEXT;
-  playbin->combiner[PLAYBIN_STREAM_TEXT].inputpads = g_ptr_array_new ();
+  playbin->combiner[PLAYBIN_STREAM_TEXT].inputpads =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
   playbin->combiner[PLAYBIN_STREAM_TEXT].streams =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
 }
@@ -2832,7 +2835,6 @@ remove_combiner (GstPlayBin3 * playbin, GstSourceCombine * combine)
     GstPad *sinkpad = g_ptr_array_index (combine->inputpads, n);
 
     gst_element_release_request_pad (combine->combiner, sinkpad);
-    gst_object_unref (sinkpad);
   }
   g_ptr_array_set_size (combine->inputpads, 0);
 
