@@ -353,11 +353,13 @@ finish_transfer:
         G_GINT64_FORMAT, status_code, request->uri,
         request->range_start, request->range_end);
 
-    if (SOUP_STATUS_IS_SUCCESSFUL (status_code)
-        || SOUP_STATUS_IS_REDIRECTION (status_code))
-      request->state = DOWNLOAD_REQUEST_STATE_COMPLETE;
-    else
-      request->state = DOWNLOAD_REQUEST_STATE_ERROR;
+    if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT) {
+      if (SOUP_STATUS_IS_SUCCESSFUL (status_code)
+          || SOUP_STATUS_IS_REDIRECTION (status_code))
+        request->state = DOWNLOAD_REQUEST_STATE_COMPLETE;
+      else
+        request->state = DOWNLOAD_REQUEST_STATE_ERROR;
+    }
   }
   request->download_end_time = now;
 
