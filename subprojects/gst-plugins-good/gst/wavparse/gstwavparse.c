@@ -2498,20 +2498,32 @@ gst_wavparse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:
-      if (wav->state == GST_WAVPARSE_START || !wav->caps) {
+      if (!wav->caps) {
         GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE, (NULL),
             ("No valid input found before end of stream"));
       } else {
-        /* add pad if needed so EOS is seen downstream */
-        if (G_UNLIKELY (wav->first)) {
-          wav->first = FALSE;
-          gst_wavparse_add_src_pad (wav, NULL);
+        switch (wav->state) {
+          case GST_WAVPARSE_START:
+            GST_ELEMENT_ERROR (wav, STREAM, WRONG_TYPE, (NULL),
+                ("No valid input found before end of stream"));
+            break;
+          case GST_WAVPARSE_HEADER:
+            GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
+                ("No audio data chunk found before end of stream"));
+            break;
+          case GST_WAVPARSE_DATA:
+            /* add pad if needed so EOS is seen downstream */
+            if (G_UNLIKELY (wav->first)) {
+              wav->first = FALSE;
+              gst_wavparse_add_src_pad (wav, NULL);
+            }
+            /* stream leftover data in current segment */
+            gst_wavparse_flush_data (wav);
+            break;
+          default:
+            g_assert_not_reached ();
         }
-
-        /* stream leftover data in current segment */
-        gst_wavparse_flush_data (wav);
       }
-
       /* fall-through */
     case GST_EVENT_FLUSH_STOP:
     {
