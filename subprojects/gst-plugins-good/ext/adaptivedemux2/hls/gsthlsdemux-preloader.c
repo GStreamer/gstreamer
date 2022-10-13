@@ -65,8 +65,8 @@ gst_hls_demux_preload_request_free (GstHLSDemuxPreloadRequest * req)
   gst_m3u8_preload_hint_unref (req->hint);
 
   if (req->download_request != NULL) {
-    /* The download request must have been cancelled by the preload helper */
-    g_assert (req->download_request->in_use == FALSE);
+    /* The download request must have been cancelled by the preload helper,
+     * but cancellation is async, so we can't verify */
     download_request_unref (req->download_request);
   }
 
@@ -376,6 +376,9 @@ gst_hls_demux_preloader_release_request (GstHLSDemuxPreloader * preloader,
           G_GINT64_FORMAT " size %" G_GINT64_FORMAT, hint->hint_type, hint->uri,
           hint->offset, hint->size);
 
+      /* We don't want any callbacks to happen after we cancel here */
+      download_request_set_callbacks (preload_req->download_request,
+          NULL, NULL, NULL, NULL, NULL);
       downloadhelper_cancel_request (preloader->download_helper,
           preload_req->download_request);
     }
