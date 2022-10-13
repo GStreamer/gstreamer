@@ -136,6 +136,9 @@ static GstFlowReturn
 gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream);
 static GstFlowReturn
 gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream);
+static GstFlowReturn
+gst_hls_demux_stream_submit_request (GstAdaptiveDemux2Stream * stream,
+    DownloadRequest * download_req);
 static gboolean gst_hls_demux_stream_can_start (GstAdaptiveDemux2Stream *
     stream);
 static void gst_hls_demux_stream_create_tracks (GstAdaptiveDemux2Stream *
@@ -166,6 +169,8 @@ gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
 
   adaptivedemux2stream_class->update_fragment_info =
       gst_hls_demux_stream_update_fragment_info;
+  adaptivedemux2stream_class->submit_request =
+      gst_hls_demux_stream_submit_request;
   adaptivedemux2stream_class->has_next_fragment =
       gst_hls_demux_stream_has_next_fragment;
   adaptivedemux2stream_class->stream_seek = gst_hls_demux_stream_seek;
@@ -2356,6 +2361,24 @@ gst_hls_demux_stream_update_preloads (GstHLSDemuxStream * hlsdemux_stream)
     gst_hls_demux_preloader_load (hlsdemux_stream->preloader, hint,
         playlist->uri);
   }
+}
+
+static GstFlowReturn
+gst_hls_demux_stream_submit_request (GstAdaptiveDemux2Stream * stream,
+    DownloadRequest * download_req)
+{
+  GstHLSDemuxStream *hlsdemux_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
+
+  /* See if the request can be satisfied from a preload */
+  if (hlsdemux_stream->preloader != NULL) {
+    if (gst_hls_demux_preloader_provide_request (hlsdemux_stream->preloader,
+            download_req))
+      return GST_FLOW_OK;
+  }
+
+  return
+      GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->submit_request
+      (stream, download_req);
 }
 
 static GstFlowReturn
