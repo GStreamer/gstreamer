@@ -256,7 +256,8 @@ on_read_ready (GObject * source, GAsyncResult * result, gpointer user_data)
 
   GstClockTime now = gst_adaptive_demux_clock_get_time (dh->clock);
 
-  g_input_stream_read_all_finish (in, result, &bytes_read, &error);
+  gboolean read_failed =
+      g_input_stream_read_all_finish (in, result, &bytes_read, &error);
 
   download_request_lock (request);
 
@@ -279,9 +280,7 @@ on_read_ready (GObject * source, GAsyncResult * result, gpointer user_data)
     return;
   }
 
-  if (!bytes_read) {
-    goto finish_transfer;
-  } else {
+  if (bytes_read > 0) {
     GstBuffer *gst_buffer =
         gst_buffer_new_wrapped (transfer->read_buffer, bytes_read);
 
@@ -328,17 +327,20 @@ on_read_ready (GObject * source, GAsyncResult * result, gpointer user_data)
 
       transfer_task_report_progress (transfer_task);
     }
-
-    /* Resubmit the read request to get more */
-    if (!new_read_buffer (transfer))
-      goto finish_transfer;
-
-    g_main_context_push_thread_default (dh->transfer_context);
-    g_input_stream_read_all_async (in, transfer->read_buffer,
-        transfer->read_buffer_size, G_PRIORITY_DEFAULT, transfer->cancellable,
-        on_read_ready, transfer_task);
-    g_main_context_pop_thread_default (dh->transfer_context);
+  } else if (read_failed) {
+    /* The read failed and returned 0 bytes: We're done */
+    goto finish_transfer;
   }
+
+  /* Resubmit the read request to get more */
+  if (!new_read_buffer (transfer))
+    goto finish_transfer;
+
+  g_main_context_push_thread_default (dh->transfer_context);
+  g_input_stream_read_all_async (in, transfer->read_buffer,
+      transfer->read_buffer_size, G_PRIORITY_DEFAULT, transfer->cancellable,
+      on_read_ready, transfer_task);
+  g_main_context_pop_thread_default (dh->transfer_context);
 
   download_request_unlock (request);
   return;
