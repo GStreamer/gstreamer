@@ -367,18 +367,18 @@ download_request_get_caps (DownloadRequest * request)
   return caps;
 }
 
-gboolean
+void
 download_request_add_buffer (DownloadRequest * request, GstBuffer * buffer)
 {
   DownloadRequestPrivate *priv = DOWNLOAD_REQUEST_PRIVATE (request);
 
-  g_return_val_if_fail (request != NULL, FALSE);
-  g_return_val_if_fail (buffer != NULL, FALSE);
+  g_return_if_fail (request != NULL);
+  g_return_if_fail (buffer != NULL);
 
   if (request->state == DOWNLOAD_REQUEST_STATE_COMPLETE) {
     GST_WARNING ("Download request is completed, could not add more buffers");
     gst_buffer_unref (buffer);
-    return FALSE;
+    return;
   }
 
   GST_DEBUG ("Adding new buffer %" GST_PTR_FORMAT " to the request data",
@@ -391,6 +391,4 @@ download_request_add_buffer (DownloadRequest * request, GstBuffer * buffer)
     priv->buffer = buffer;
   else
     priv->buffer = gst_buffer_append (priv->buffer, buffer);
-
-  return TRUE;
 }

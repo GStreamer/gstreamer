@@ -83,7 +83,7 @@ void download_request_set_caps (DownloadRequest * request, GstCaps * caps);
 
 GstCaps * download_request_get_caps (DownloadRequest * request);
 
-gboolean download_request_add_buffer (DownloadRequest *request, GstBuffer *buffer);
+void download_request_add_buffer (DownloadRequest *request, GstBuffer *buffer);
 GstBuffer * download_request_take_buffer (DownloadRequest *request);
 
 DownloadRequest * download_request_new (void);
