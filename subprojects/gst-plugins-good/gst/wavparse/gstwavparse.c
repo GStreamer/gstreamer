@@ -2333,6 +2333,11 @@ gst_wavparse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GST_LOG_OBJECT (wav, "adapter_push %" G_GSIZE_FORMAT " bytes",
       gst_buffer_get_size (buf));
 
+  /* Hold a reference to the buffer, as we access buffer properties in the
+     `GST_WAVPARSE_DATA` case below and `gst_adapter_push` steals a reference
+     to the buffer. */
+  gst_buffer_ref (buf);
+
   gst_adapter_push (wav->adapter, buf);
 
   switch (wav->state) {
@@ -2364,7 +2369,7 @@ gst_wavparse_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         goto done;
       break;
     default:
-      g_return_val_if_reached (GST_FLOW_ERROR);
+      g_assert_not_reached ();
   }
 done:
   if (G_UNLIKELY (wav->abort_buffering)) {
@@ -2373,6 +2378,8 @@ done:
     /* sort of demux/parse error */
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL), ("unhandled buffer size"));
   }
+
+  gst_buffer_unref (buf);
 
   return ret;
 }
