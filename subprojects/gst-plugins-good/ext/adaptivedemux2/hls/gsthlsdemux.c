@@ -2374,6 +2374,18 @@ gst_hls_demux_stream_submit_request (GstAdaptiveDemux2Stream * stream,
     if (gst_hls_demux_preloader_provide_request (hlsdemux_stream->preloader,
             download_req))
       return GST_FLOW_OK;
+
+    /* We're about to request something, but it wasn't the active preload,
+     * so make sure that's been stopped / cancelled so we're not downloading
+     * two things in parallel. This usually means the playlist refresh
+     * took too long and the preload became obsolete */
+    if (stream->downloading_header) {
+      gst_hls_demux_preloader_cancel (hlsdemux_stream->preloader,
+          M3U8_PRELOAD_HINT_MAP);
+    } else {
+      gst_hls_demux_preloader_cancel (hlsdemux_stream->preloader,
+          M3U8_PRELOAD_HINT_PART);
+    }
   }
 
   return
