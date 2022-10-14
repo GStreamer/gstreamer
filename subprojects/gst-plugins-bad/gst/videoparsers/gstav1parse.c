@@ -1736,8 +1736,13 @@ again:
       break;
 
     check_new_tu = FALSE;
-    res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete,
-        &check_new_tu);
+    if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
+        || self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
+      res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete,
+          &check_new_tu);
+    } else {
+      res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete, NULL);
+    }
     if (res != GST_AV1_PARSER_OK)
       break;
 
