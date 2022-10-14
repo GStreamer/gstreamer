@@ -861,13 +861,13 @@ gst_rtmp2_sink_render (GstBaseSink * sink, GstBuffer * buffer)
     g_cond_wait (&self->cond, &self->lock);
   }
 
-  if (G_UNLIKELY (!is_running (self))) {
-    gst_buffer_unref (message);
-    ret = GST_FLOW_FLUSHING;
-  } else if (G_UNLIKELY (!self->connection)) {
+  if (G_UNLIKELY (!self->connection)) {
     gst_buffer_unref (message);
     /* send_connect_error has sent an ERROR message */
     ret = GST_FLOW_ERROR;
+  } else if (G_UNLIKELY (!is_running (self))) {
+    gst_buffer_unref (message);
+    ret = GST_FLOW_FLUSHING;
   } else {
     send_streamheader (self);
     send_message (self, message);
