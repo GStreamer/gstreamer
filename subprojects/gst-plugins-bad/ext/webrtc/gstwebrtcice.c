@@ -580,6 +580,7 @@ get_candidate_address (const gchar * candidate, gchar ** prefix,
     gchar ** address, gchar ** postfix)
 {
   char **tokens = NULL;
+  char *tmp_address = NULL;
 
   if (!g_str_has_prefix (candidate, "a=candidate:")) {
     GST_ERROR ("candidate \"%s\" does not start with \"a=candidate:\"",
@@ -598,13 +599,17 @@ get_candidate_address (const gchar * candidate, gchar ** prefix,
     goto failure;
   }
 
+  tmp_address = tokens[4];
   if (address)
-    *address = g_strdup (tokens[4]);
+    *address = g_strdup (tmp_address);
   tokens[4] = NULL;
+
   if (prefix)
     *prefix = g_strjoinv (" ", tokens);
   if (postfix)
     *postfix = g_strdup (tokens[5]);
+
+  tokens[4] = tmp_address;
 
   g_strfreev (tokens);
   return TRUE;
