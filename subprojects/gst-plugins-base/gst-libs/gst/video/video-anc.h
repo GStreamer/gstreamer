@@ -255,7 +255,7 @@ GST_VIDEO_API const GstMetaInfo *gst_video_afd_meta_get_info (void);
  *
  * Since: 1.18
  *
- * Returns: The first #GstVideoAFDMeta present on @b, or %NULL if
+ * Returns: (nullable): The first #GstVideoAFDMeta present on @b, or %NULL if
  * no #GstVideoAFDMeta are present
  */
 #define gst_buffer_get_video_afd_meta(b) \
@@ -316,7 +316,7 @@ GST_VIDEO_API const GstMetaInfo *gst_video_bar_meta_get_info (void);
  *
  * Since: 1.18
  *
- * Returns: The first #GstVideoBarMeta present on @b, or %NULL if
+ * Returns: (nullable): The first #GstVideoBarMeta present on @b, or %NULL if
  * no #GstVideoBarMeta are present
  */
 #define gst_buffer_get_video_bar_meta(b) \
@@ -407,7 +407,7 @@ const GstMetaInfo *gst_video_caption_meta_get_info (void);
  *
  * Since: 1.16
  *
- * Returns: The first #GstVideoCaptionMeta present on @b, or %NULL if
+ * Returns: (nullable): The first #GstVideoCaptionMeta present on @b, or %NULL if
  * no #GstVideoCaptionMeta are present
  */
 #define gst_buffer_get_video_caption_meta(b) \

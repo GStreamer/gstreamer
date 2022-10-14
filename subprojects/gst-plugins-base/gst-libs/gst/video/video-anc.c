@@ -326,7 +326,7 @@ gst_video_vbi_parser_get_ancillary (GstVideoVBIParser * parser,
  *
  * Since: 1.16
  *
- * Returns: The new #GstVideoVBIParser or %NULL if the @format and/or @pixel_width
+ * Returns: (nullable): The new #GstVideoVBIParser or %NULL if the @format and/or @pixel_width
  * is not supported.
  */
 GstVideoVBIParser *
@@ -607,7 +607,7 @@ gst_video_vbi_encoder_free (GstVideoVBIEncoder * encoder)
  *
  * Since: 1.16
  *
- * Returns: The new #GstVideoVBIEncoder or %NULL if the @format and/or @pixel_width
+ * Returns: (nullable): The new #GstVideoVBIEncoder or %NULL if the @format and/or @pixel_width
  * is not supported.
  */
 GstVideoVBIEncoder *

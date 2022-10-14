@@ -86,7 +86,7 @@ const GstMetaInfo *gst_video_sei_user_data_unregistered_meta_get_info (void);
  *
  * Gets the GstVideoSEIUserDataUnregisteredMeta that might be present on @b.
  *
- * Returns: The first #GstVideoSEIUserDataUnregisteredMeta present on @b, or %NULL if
+ * Returns: (nullable): The first #GstVideoSEIUserDataUnregisteredMeta present on @b, or %NULL if
  * no #GstVideoSEIUserDataUnregisteredMeta are present
  *
  * Since: 1.22

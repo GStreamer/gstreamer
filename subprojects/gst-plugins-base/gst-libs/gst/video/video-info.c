@@ -63,7 +63,7 @@ ensure_debug_category (void)
  *
  * Copy a GstVideoInfo structure.
  *
- * Returns: a new #GstVideoInfo. free with gst_video_info_free.
+ * Returns: (transfer full): a new #GstVideoInfo. free with gst_video_info_free.
  *
  * Since: 1.6
  */
@@ -97,7 +97,7 @@ G_DEFINE_BOXED_TYPE (GstVideoInfo, gst_video_info,
  * Allocate a new #GstVideoInfo that is also initialized with
  * gst_video_info_init().
  *
- * Returns: a new #GstVideoInfo. free with gst_video_info_free().
+ * Returns: (transfer full): a new #GstVideoInfo. free with gst_video_info_free().
  *
  * Since: 1.6
  */
@@ -295,7 +295,7 @@ static const gchar *interlace_mode[] = {
  *
  * Convert @mode to its string representation.
  *
- * Returns: @mode as a string or NULL if @mode in invalid.
+ * Returns: @mode as a string.
  *
  * Since: 1.6
  */
@@ -343,7 +343,7 @@ static const gchar *field_order[] = {
  *
  * Convert @order to its string representation.
  *
- * Returns: @order as a string or NULL if @order in invalid.
+ * Returns: @order as a string.
  *
  * Since: 1.12
  */
@@ -575,7 +575,7 @@ alternate_no_feature:
  *
  * Parse @caps to generate a #GstVideoInfo.
  *
- * Returns: A #GstVideoInfo, or %NULL if @caps couldn't be parsed
+ * Returns: (transfer full) (nullable): A #GstVideoInfo, or %NULL if @caps couldn't be parsed
  * Since: 1.20
  */
 GstVideoInfo *
@@ -656,7 +656,7 @@ gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
  *
  * Convert the values of @info into a #GstCaps.
  *
- * Returns: a new #GstCaps containing the info of @info.
+ * Returns: (transfer full): a new #GstCaps containing the info of @info.
  */
 GstCaps *
 gst_video_info_to_caps (const GstVideoInfo * info)
@@ -1423,7 +1423,7 @@ done:
  * gst_video_info_align_full:
  * @info: a #GstVideoInfo
  * @align: alignment parameters
- * @plane_size: (out) (allow-none): array used to store the plane sizes
+ * @plane_size: (out) (optional): array used to store the plane sizes
  *
  * Extra padding will be added to the right side when stride alignment padding
  * is required and @align will be updated with the new padding values.

@@ -2309,7 +2309,7 @@ convert_get_alpha_mode (GstVideoConverter * convert)
  * The optional @pool can be used to spawn threads, this is useful when
  * creating new converters rapidly, for example when updating cropping.
  *
- * Returns: a #GstVideoConverter or %NULL if conversion is not possible.
+ * Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.
  *
  * Since: 1.20
  */
@@ -2552,7 +2552,7 @@ no_pack_func:
  * Create a new converter object to convert between @in_info and @out_info
  * with @config.
  *
- * Returns: a #GstVideoConverter or %NULL if conversion is not possible.
+ * Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.
  *
  * Since: 1.6
  */

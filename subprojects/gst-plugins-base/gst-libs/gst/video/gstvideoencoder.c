@@ -786,8 +786,8 @@ parse_fail:
 /**
  * gst_video_encoder_proxy_getcaps:
  * @enc: a #GstVideoEncoder
- * @caps: (allow-none): initial caps
- * @filter: (allow-none): filter caps
+ * @caps: (nullable): initial caps
+ * @filter: (nullable): filter caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to resolution/format/... combinations supported by downstream
@@ -2773,15 +2773,16 @@ done:
  *
  * Get the current #GstVideoCodecState
  *
- * Returns: (transfer full): #GstVideoCodecState describing format of video data.
+ * Returns: (transfer full) (nullable): #GstVideoCodecState describing format of video data.
  */
 GstVideoCodecState *
 gst_video_encoder_get_output_state (GstVideoEncoder * encoder)
 {
-  GstVideoCodecState *state;
+  GstVideoCodecState *state = NULL;
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-  state = gst_video_codec_state_ref (encoder->priv->output_state);
+  if (encoder->priv->output_state)
+    state = gst_video_codec_state_ref (encoder->priv->output_state);
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   return state;
@@ -2791,7 +2792,7 @@ gst_video_encoder_get_output_state (GstVideoEncoder * encoder)
  * gst_video_encoder_set_output_state:
  * @encoder: a #GstVideoEncoder
  * @caps: (transfer full): the #GstCaps to use for the output
- * @reference: (allow-none) (transfer none): An optional reference @GstVideoCodecState
+ * @reference: (nullable) (transfer none): An optional reference @GstVideoCodecState
  *
  * Creates a new #GstVideoCodecState with the specified caps as the output state
  * for the encoder.
@@ -2812,7 +2813,7 @@ gst_video_encoder_get_output_state (GstVideoEncoder * encoder)
  * The new output state will only take effect (set on pads and buffers) starting
  * from the next call to #gst_video_encoder_finish_frame().
  *
- * Returns: (transfer full): the newly configured output state.
+ * Returns: (transfer full) (nullable): the newly configured output state.
  */
 GstVideoCodecState *
 gst_video_encoder_set_output_state (GstVideoEncoder * encoder, GstCaps * caps,
@@ -2873,9 +2874,9 @@ gst_video_encoder_set_latency (GstVideoEncoder * encoder,
 /**
  * gst_video_encoder_get_latency:
  * @encoder: a #GstVideoEncoder
- * @min_latency: (out) (allow-none): address of variable in which to store the
+ * @min_latency: (out) (optional): address of variable in which to store the
  *     configured minimum latency, or %NULL
- * @max_latency: (out) (allow-none): address of variable in which to store the
+ * @max_latency: (out) (optional): address of variable in which to store the
  *     configured maximum latency, or %NULL
  *
  * Query the configured encoding latency. Results will be returned via
@@ -2899,7 +2900,7 @@ gst_video_encoder_get_latency (GstVideoEncoder * encoder,
  *
  * Get the oldest unfinished pending #GstVideoCodecFrame
  *
- * Returns: (transfer full): oldest unfinished pending #GstVideoCodecFrame
+ * Returns: (transfer full) (nullable): oldest unfinished pending #GstVideoCodecFrame
  */
 GstVideoCodecFrame *
 gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
@@ -2921,7 +2922,7 @@ gst_video_encoder_get_oldest_frame (GstVideoEncoder * encoder)
  *
  * Get a pending unfinished #GstVideoCodecFrame
  *
- * Returns: (transfer full): pending unfinished #GstVideoCodecFrame identified by @frame_number.
+ * Returns: (transfer full) (nullable): pending unfinished #GstVideoCodecFrame identified by @frame_number.
  */
 GstVideoCodecFrame *
 gst_video_encoder_get_frame (GstVideoEncoder * encoder, int frame_number)
@@ -2970,7 +2971,7 @@ gst_video_encoder_get_frames (GstVideoEncoder * encoder)
 /**
  * gst_video_encoder_merge_tags:
  * @encoder: a #GstVideoEncoder
- * @tags: (allow-none): a #GstTagList to merge, or NULL to unset
+ * @tags: (nullable): a #GstTagList to merge, or NULL to unset
  *     previously-set tags
  * @mode: the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE
  *
@@ -3013,9 +3014,9 @@ gst_video_encoder_merge_tags (GstVideoEncoder * encoder,
 /**
  * gst_video_encoder_get_allocator:
  * @encoder: a #GstVideoEncoder
- * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * @allocator: (out) (optional) (nullable) (transfer full): the #GstAllocator
  * used
- * @params: (out) (allow-none) (transfer full): the
+ * @params: (out) (optional) (transfer full): the
  * #GstAllocationParams of @allocator
  *
  * Lets #GstVideoEncoder sub-classes to know the memory @allocator

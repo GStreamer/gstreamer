@@ -2036,8 +2036,8 @@ gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 /**
  * gst_video_decoder_proxy_getcaps:
  * @decoder: a #GstVideoDecoder
- * @caps: (allow-none): initial caps
- * @filter: (allow-none): filter caps
+ * @caps: (nullable): initial caps
+ * @filter: (nullable): filter caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to resolution/format/... combinations supported by downstream
@@ -4006,7 +4006,7 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
  *
  * Get the #GstVideoCodecState currently describing the output stream.
  *
- * Returns: (transfer full): #GstVideoCodecState describing format of video data.
+ * Returns: (transfer full) (nullable): #GstVideoCodecState describing format of video data.
  */
 GstVideoCodecState *
 gst_video_decoder_get_output_state (GstVideoDecoder * decoder)
@@ -4074,7 +4074,7 @@ _set_interlaced_output_state (GstVideoDecoder * decoder,
  * @fmt: a #GstVideoFormat
  * @width: The width in pixels
  * @height: The height in pixels
- * @reference: (allow-none) (transfer none): An optional reference #GstVideoCodecState
+ * @reference: (nullable) (transfer none): An optional reference #GstVideoCodecState
  *
  * Creates a new #GstVideoCodecState with the specified @fmt, @width and @height
  * as the output state for the decoder.
@@ -4091,7 +4091,7 @@ _set_interlaced_output_state (GstVideoDecoder * decoder,
  * The new output state will only take effect (set on pads and buffers) starting
  * from the next call to #gst_video_decoder_finish_frame().
  *
- * Returns: (transfer full): the newly configured output state.
+ * Returns: (transfer full) (nullable): the newly configured output state.
  */
 GstVideoCodecState *
 gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
@@ -4109,12 +4109,12 @@ gst_video_decoder_set_output_state (GstVideoDecoder * decoder,
  * @width: The width in pixels
  * @height: The height in pixels
  * @interlace_mode: A #GstVideoInterlaceMode
- * @reference: (allow-none) (transfer none): An optional reference #GstVideoCodecState
+ * @reference: (nullable) (transfer none): An optional reference #GstVideoCodecState
  *
  * Same as #gst_video_decoder_set_output_state() but also allows you to also set
  * the interlacing mode.
  *
- * Returns: (transfer full): the newly configured output state.
+ * Returns: (transfer full) (nullable): the newly configured output state.
  *
  * Since: 1.16.
  */
@@ -4134,7 +4134,7 @@ gst_video_decoder_set_interlaced_output_state (GstVideoDecoder * decoder,
  *
  * Get the oldest pending unfinished #GstVideoCodecFrame
  *
- * Returns: (transfer full): oldest pending unfinished #GstVideoCodecFrame.
+ * Returns: (transfer full) (nullable): oldest pending unfinished #GstVideoCodecFrame.
  */
 GstVideoCodecFrame *
 gst_video_decoder_get_oldest_frame (GstVideoDecoder * decoder)
@@ -4156,7 +4156,7 @@ gst_video_decoder_get_oldest_frame (GstVideoDecoder * decoder)
  *
  * Get a pending unfinished #GstVideoCodecFrame
  *
- * Returns: (transfer full): pending unfinished #GstVideoCodecFrame identified by @frame_number.
+ * Returns: (transfer full) (nullable): pending unfinished #GstVideoCodecFrame identified by @frame_number.
  */
 GstVideoCodecFrame *
 gst_video_decoder_get_frame (GstVideoDecoder * decoder, int frame_number)
@@ -4565,7 +4565,7 @@ gst_video_decoder_negotiate (GstVideoDecoder * decoder)
  * You should use gst_video_decoder_allocate_output_frame() instead of this
  * function, if possible at all.
  *
- * Returns: (transfer full): allocated buffer, or NULL if no buffer could be
+ * Returns: (transfer full) (nullable): allocated buffer, or NULL if no buffer could be
  *     allocated (e.g. when downstream is flushing or shutting down)
  */
 GstBuffer *
@@ -5084,9 +5084,9 @@ gst_video_decoder_set_latency (GstVideoDecoder * decoder,
 /**
  * gst_video_decoder_get_latency:
  * @decoder: a #GstVideoDecoder
- * @min_latency: (out) (allow-none): address of variable in which to store the
+ * @min_latency: (out) (optional): address of variable in which to store the
  *     configured minimum latency, or %NULL
- * @max_latency: (out) (allow-none): address of variable in which to store the
+ * @max_latency: (out) (optional): address of variable in which to store the
  *     configured mximum latency, or %NULL
  *
  * Query the configured decoder latency. Results will be returned via
@@ -5107,7 +5107,7 @@ gst_video_decoder_get_latency (GstVideoDecoder * decoder,
 /**
  * gst_video_decoder_merge_tags:
  * @decoder: a #GstVideoDecoder
- * @tags: (allow-none): a #GstTagList to merge, or NULL to unset
+ * @tags: (nullable): a #GstTagList to merge, or NULL to unset
  *     previously-set tags
  * @mode: the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE
  *
@@ -5150,7 +5150,7 @@ gst_video_decoder_merge_tags (GstVideoDecoder * decoder,
  * gst_video_decoder_get_buffer_pool:
  * @decoder: a #GstVideoDecoder
  *
- * Returns: (transfer full): the instance of the #GstBufferPool used
+ * Returns: (transfer full) (nullable): the instance of the #GstBufferPool used
  * by the decoder; free it after use it
  */
 GstBufferPool *
@@ -5167,9 +5167,9 @@ gst_video_decoder_get_buffer_pool (GstVideoDecoder * decoder)
 /**
  * gst_video_decoder_get_allocator:
  * @decoder: a #GstVideoDecoder
- * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * @allocator: (out) (optional) (nullable) (transfer full): the #GstAllocator
  * used
- * @params: (out) (allow-none) (transfer full): the
+ * @params: (out) (optional) (transfer full): the
  * #GstAllocationParams of @allocator
  *
  * Lets #GstVideoDecoder sub-classes to know the memory @allocator

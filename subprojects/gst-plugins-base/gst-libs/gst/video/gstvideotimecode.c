@@ -759,7 +759,7 @@ gst_video_time_code_new_from_date_time (guint fps_n, guint fps_d,
  * The resulting config->latest_daily_jam is set to
  * midnight, and timecode is set to the given time.
  *
- * Returns: the #GstVideoTimeCode representation of @dt, or %NULL if
+ * Returns: (nullable): the #GstVideoTimeCode representation of @dt, or %NULL if
  *   no valid timecode could be created.
  *
  * Since: 1.16

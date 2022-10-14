@@ -160,7 +160,7 @@ gst_video_meta_get_info (void)
  * Buffers can contain multiple #GstVideoMeta metadata items when dealing with
  * multiview buffers.
  *
- * Returns: (transfer none): the #GstVideoMeta with lowest id (usually 0) or %NULL when there
+ * Returns: (transfer none) (nullable): the #GstVideoMeta with lowest id (usually 0) or %NULL when there
  * is no such metadata on @buffer.
  */
 GstVideoMeta *
@@ -193,7 +193,7 @@ gst_buffer_get_video_meta (GstBuffer * buffer)
  * Buffers can contain multiple #GstVideoMeta metadata items when dealing with
  * multiview buffers.
  *
- * Returns: (transfer none): the #GstVideoMeta with @id or %NULL when there is no such metadata
+ * Returns: (transfer none) (nullable): the #GstVideoMeta with @id or %NULL when there is no such metadata
  * on @buffer.
  */
 GstVideoMeta *
@@ -924,7 +924,7 @@ gst_video_region_of_interest_meta_get_info (void)
  * Buffers can contain multiple #GstVideoRegionOfInterestMeta metadata items if
  * multiple regions of interests are marked on a frame.
  *
- * Returns: (transfer none): the #GstVideoRegionOfInterestMeta with @id or %NULL when there is
+ * Returns: (transfer none) (nullable): the #GstVideoRegionOfInterestMeta with @id or %NULL when there is
  * no such metadata on @buffer.
  */
 GstVideoRegionOfInterestMeta *
@@ -1178,7 +1178,7 @@ gst_buffer_add_video_time_code_meta (GstBuffer * buffer,
  * Attaches #GstVideoTimeCodeMeta metadata to @buffer with the given
  * parameters.
  *
- * Returns: (transfer none): the #GstVideoTimeCodeMeta on @buffer, or
+ * Returns: (transfer none) (nullable): the #GstVideoTimeCodeMeta on @buffer, or
  * (since 1.16) %NULL if the timecode was invalid.
  *
  * Since: 1.10
