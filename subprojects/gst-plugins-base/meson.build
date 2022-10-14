@@ -30,11 +30,7 @@ endif
 glib_req = '>= 2.56.0'
 orc_req = '>= 0.4.24'
 
-if gst_version_is_stable
-  gst_req = '>= @0@.@1@.0'.format(gst_version_major, gst_version_minor)
-else
-  gst_req = '>= ' + gst_version
-endif
+gst_req = '>= 1.20.4' # for _gst_meta_tag_memory_reference
 
 api_version = '1.0'
 soversion = 0
