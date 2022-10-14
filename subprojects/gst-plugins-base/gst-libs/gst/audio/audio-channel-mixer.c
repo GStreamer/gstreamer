@@ -817,8 +817,7 @@ DEFINE_FLOAT_MIX_FUNC (double, planar, planar);
  *
  * Create a new channel mixer object for the given parameters.
  *
- * Returns: a new #GstAudioChannelMixer object, or %NULL if @format isn't supported,
- *   @matrix is invalid, or @matrix is %NULL and @in_channels != @out_channels.
+ * Returns: a new #GstAudioChannelMixer object.
  *   Free with gst_audio_channel_mixer_free() after usage.
  *
  * Since: 1.14
@@ -980,7 +979,7 @@ gst_audio_channel_mixer_new_with_matrix (GstAudioChannelMixerFlags flags,
  *
  * Create a new channel mixer object for the given parameters.
  *
- * Returns: a new #GstAudioChannelMixer object, or %NULL if @format isn't supported.
+ * Returns: a new #GstAudioChannelMixer object.
  *   Free with gst_audio_channel_mixer_free() after usage.
  */
 GstAudioChannelMixer *

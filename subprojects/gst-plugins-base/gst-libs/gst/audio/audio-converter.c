@@ -1320,7 +1320,7 @@ converter_resample (GstAudioConverter * convert,
  * @config contains extra configuration options, see `GST_AUDIO_CONVERTER_OPT_*`
  * parameters for details about the options and values.
  *
- * Returns: a #GstAudioConverter or %NULL if conversion is not possible.
+ * Returns: (nullable): a #GstAudioConverter or %NULL if conversion is not possible.
  */
 GstAudioConverter *
 gst_audio_converter_new (GstAudioConverterFlags flags, GstAudioInfo * in_info,

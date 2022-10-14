@@ -1272,7 +1272,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
 /**
  * gst_audio_decoder_finish_subframe:
  * @dec: a #GstAudioDecoder
- * @buf: (transfer full) (allow-none): decoded data
+ * @buf: (transfer full) (nullable): decoded data
  *
  * Collects decoded data and pushes it downstream. This function may be called
  * multiple times for a given input frame.
@@ -1306,7 +1306,7 @@ gst_audio_decoder_finish_subframe (GstAudioDecoder * dec, GstBuffer * buf)
 /**
  * gst_audio_decoder_finish_frame:
  * @dec: a #GstAudioDecoder
- * @buf: (transfer full) (allow-none): decoded data
+ * @buf: (transfer full) (nullable): decoded data
  * @frames: number of decoded frames represented by decoded data
  *
  * Collects decoded data and pushes it downstream.
@@ -2762,8 +2762,8 @@ gst_audio_decoder_propose_allocation_default (GstAudioDecoder * dec,
 /**
  * gst_audio_decoder_proxy_getcaps:
  * @decoder: a #GstAudioDecoder
- * @caps: (allow-none): initial caps
- * @filter: (allow-none): filter caps
+ * @caps: (nullable): initial caps
+ * @filter: (nullable): filter caps
  *
  * Returns caps that express @caps (or sink template caps if @caps == NULL)
  * restricted to rate/channels/... combinations supported by downstream
@@ -3414,8 +3414,8 @@ gst_audio_decoder_set_latency (GstAudioDecoder * dec,
 /**
  * gst_audio_decoder_get_latency:
  * @dec: a #GstAudioDecoder
- * @min: (out) (allow-none): a pointer to storage to hold minimum latency
- * @max: (out) (allow-none): a pointer to storage to hold maximum latency
+ * @min: (out) (optional): a pointer to storage to hold minimum latency
+ * @max: (out) (optional): a pointer to storage to hold maximum latency
  *
  * Sets the variables pointed to by @min and @max to the currently configured
  * latency.
@@ -3457,7 +3457,7 @@ gst_audio_decoder_get_parse_state (GstAudioDecoder * dec,
 /**
  * gst_audio_decoder_set_allocation_caps:
  * @dec: a #GstAudioDecoder
- * @allocation_caps: (allow-none): a #GstCaps or %NULL
+ * @allocation_caps: (nullable): a #GstCaps or %NULL
  *
  * Sets a caps in allocation query which are different from the set
  * pad's caps. Use this function before calling
@@ -3706,7 +3706,7 @@ gst_audio_decoder_get_needs_format (GstAudioDecoder * dec)
 /**
  * gst_audio_decoder_merge_tags:
  * @dec: a #GstAudioDecoder
- * @tags: (allow-none): a #GstTagList to merge, or NULL
+ * @tags: (nullable): a #GstTagList to merge, or NULL
  * @mode: the #GstTagMergeMode to use, usually #GST_TAG_MERGE_REPLACE
  *
  * Sets the audio decoder tags and how they should be merged with any
@@ -3796,9 +3796,9 @@ fallback:
 /**
  * gst_audio_decoder_get_allocator:
  * @dec: a #GstAudioDecoder
- * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
+ * @allocator: (out) (optional) (nullable) (transfer full): the #GstAllocator
  * used
- * @params: (out) (allow-none) (transfer full): the
+ * @params: (out) (optional) (transfer full): the
  * #GstAllocationParams of @allocator
  *
  * Lets #GstAudioDecoder sub-classes to know the memory @allocator

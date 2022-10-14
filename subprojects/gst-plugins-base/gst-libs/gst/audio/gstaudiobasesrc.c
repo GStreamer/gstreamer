@@ -1086,7 +1086,7 @@ got_error:
  * the ::create_ringbuffer vmethod and will set @src as the parent of the
  * returned buffer (see gst_object_set_parent()).
  *
- * Returns: (transfer none): The new ringbuffer of @src.
+ * Returns: (transfer none) (nullable): The new ringbuffer of @src.
  */
 GstAudioRingBuffer *
 gst_audio_base_src_create_ringbuffer (GstAudioBaseSrc * src)
