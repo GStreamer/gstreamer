@@ -37,13 +37,19 @@ struct _GstHLSDemuxPreloadRequest
   GstHLSDemuxPreloader *preloader;      /* Parent preloader */
   GstM3U8PreloadHint *hint;
 
+  /* Incoming download tracking for the resource */
   DownloadRequest *download_request;
   gboolean download_is_finished;        /* TRUE if the input download request completed / failed */
   guint64 download_cur_offset;  /* offset of the next expected received data */
-  guint64 download_content_length;      /* Content length (filled in when response headers arrive */
+  guint64 download_content_length;      /* Content length (filled in when response headers arrive) */
+  GstClockTime request_latency; /* original HTTP request to data latency */
+  GstClockTime download_first_data_time;        /* Arrival timestamp of the first data in the download chunk */
+  guint64 download_first_data_offset;   /* First data byte offset of the download chunk */
 
-  /* FIXME: Support multiple target requests? I don't think that can happen in practice,
-   * since we only download one segment at a time, and MAP requests are distinct from PART requests. */
+  /* Target tracking for the stream download to deliver data blocks to */
+  /* Each active preload only needs one target to output to at a time,
+   * since we only download one segment at a time, and MAP requests are distinct from PART requests,
+   * so 1 preload = 1 download request by the stream */
   guint64 target_cur_offset;    /* offset of the next delivered target data */
   DownloadRequest *target_request;
 };
@@ -55,6 +61,9 @@ gst_hls_demux_preload_request_new (GstHLSDemuxPreloader * preloader,
   GstHLSDemuxPreloadRequest *req = g_new0 (GstHLSDemuxPreloadRequest, 1);
   req->preloader = preloader;
   req->hint = gst_m3u8_preload_hint_ref (hint);
+  req->request_latency = GST_CLOCK_TIME_NONE;
+  req->download_first_data_time = GST_CLOCK_TIME_NONE;
+  req->download_first_data_offset = GST_BUFFER_OFFSET_NONE;
 
   return req;
 };
@@ -167,35 +176,56 @@ gst_hls_demux_preloader_despatch (GstHLSDemuxPreloadRequest * preload_req,
     gboolean input_is_finished)
 {
   GstHLSDemuxPreloader *preloader = preload_req->preloader;
+  DownloadRequest *download_req = preload_req->download_request;
 
   if (input_is_finished)
     preload_req->download_is_finished = TRUE;
   else
     input_is_finished = preload_req->download_is_finished;
 
+  download_request_lock (download_req);
+
+  /* Update timestamp tracking */
+  if (preload_req->request_latency == GST_CLOCK_TIME_NONE) {
+    if (GST_CLOCK_TIME_IS_VALID (download_req->download_request_time) &&
+        GST_CLOCK_TIME_IS_VALID (download_req->download_start_time)) {
+
+      preload_req->request_latency =
+          download_req->download_start_time -
+          download_req->download_request_time;
+    }
+  }
+
+  if (preload_req->download_first_data_time == GST_CLOCK_TIME_NONE &&
+      download_request_get_bytes_available (download_req) > 0) {
+    /* Got the first data of this download burst */
+    preload_req->download_first_data_time = download_req->download_start_time;
+    preload_req->download_first_data_offset =
+        download_request_get_cur_offset (download_req);
+  }
+
+  download_request_unlock (download_req);
+
   /* If there is a target request, see if any of our data should be
    * transferred to it, and if it should be despatched as complete */
   if (preload_req->target_request != NULL) {
     gboolean output_is_finished = input_is_finished;
     gboolean despatch_progress = FALSE;
+    DownloadRequest *target_req = preload_req->target_request;
 
-    download_request_lock (preload_req->target_request);
-    download_request_lock (preload_req->download_request);
+    download_request_lock (target_req);
+    download_request_lock (download_req);
 
-    DownloadRequestState target_state = preload_req->download_request->state;
+    DownloadRequestState target_state = download_req->state;
 
     /* Transfer the http status code */
-    preload_req->target_request->status_code =
-        preload_req->download_request->status_code;
+    target_req->status_code = download_req->status_code;
 
-    GstBuffer *target_buf =
-        download_request_take_buffer_range (preload_req->download_request,
+    GstBuffer *target_buf = download_request_take_buffer_range (download_req,
         preload_req->target_cur_offset,
-        preload_req->target_request->range_end);
+        target_req->range_end);
 
     if (target_buf != NULL) {
-      DownloadRequest *req = preload_req->target_request;
-
       /* Deliver data to the target, and update our tracked output position */
       preload_req->target_cur_offset =
           GST_BUFFER_OFFSET (target_buf) + gst_buffer_get_size (target_buf);
@@ -203,50 +233,129 @@ gst_hls_demux_preloader_despatch (GstHLSDemuxPreloadRequest * preload_req,
       GST_LOG ("Adding %" G_GSIZE_FORMAT " bytes at offset %" G_GUINT64_FORMAT
           " to target download request uri %s range %" G_GINT64_FORMAT " - %"
           G_GINT64_FORMAT, gst_buffer_get_size (target_buf),
-          GST_BUFFER_OFFSET (target_buf), req->uri, req->range_start,
-          req->range_end);
+          GST_BUFFER_OFFSET (target_buf), target_req->uri,
+          target_req->range_start, target_req->range_end);
 
-      download_request_add_buffer (req, target_buf);
+      download_request_add_buffer (target_req, target_buf);
       despatch_progress = TRUE; /* Added a buffer, despatch progress callback */
 
-      if (req->range_end != -1
-          && preload_req->target_cur_offset > req->range_end) {
+      /* Transfer timing from the input download as best we can, so the receiver can
+       * calculate bitrates. If all preload requests filled one target download,
+       * we could just transfer the timestamps, but to handle the case of an
+       * ongoing chunked connection needs fancier accounting based on the
+       * arrival times of each data burst */
+      if (target_req->download_start_time == GST_CLOCK_TIME_NONE) {
+        if (preload_req->download_first_data_time >
+            preload_req->request_latency) {
+          target_req->download_request_time =
+              preload_req->download_first_data_time -
+              preload_req->request_latency;
+        } else {
+          target_req->download_request_time = 0;
+        }
+
+        target_req->download_start_time = preload_req->download_first_data_time;
+        target_req->download_newest_data_time =
+            download_req->download_newest_data_time;
+      }
+
+      if (target_req->range_end != -1
+          && preload_req->target_cur_offset > target_req->range_end) {
         /* We've delivered all data to satisfy the requested byte range - the target request is complete */
         if (target_state == DOWNLOAD_REQUEST_STATE_LOADING) {
           target_state = DOWNLOAD_REQUEST_STATE_COMPLETE;
           GST_LOG ("target download request uri %s range %" G_GINT64_FORMAT
               " - %" G_GINT64_FORMAT " is fully satisfied. Completing",
-              req->uri, req->range_start, req->range_end);
+              target_req->uri, target_req->range_start, target_req->range_end);
         }
+
         output_is_finished = TRUE;
+
+        /* If there's unconsumed data left in the input download, then update
+         * our variable that tracks the first data arrival time in in a prorata
+         * fashion (because there's more partial segment data already downloaded
+         * and we need to preserve a reasonable bitrate estimate. If there's no
+         * data, but the connection is continuing, then it's returned to a blocking
+         * read state that'll send more data in the future when
+         * a new live segment becomes available, so reset our variable as if that
+         * download was starting again */
+        guint64 data_avail =
+            download_request_get_bytes_available (download_req);
+        if (data_avail > 0) {
+          /* burst first data offset must have been set by now */
+          g_assert (preload_req->download_first_data_offset !=
+              GST_BUFFER_OFFSET_NONE);
+
+          /* Calculate how long it took to download the data we have output/discarded
+           * based on the average bitrate so far.
+           * time_to_download = total_download_time * consumed_bytes / total_download_bytes */
+          guint64 new_cur_offset =
+              download_request_get_cur_offset (download_req);
+          GstClockTime data_time_offset =
+              gst_util_uint64_scale (download_req->download_newest_data_time -
+              preload_req->download_first_data_time,
+              new_cur_offset - preload_req->download_first_data_offset,
+              new_cur_offset + data_avail -
+              preload_req->download_first_data_offset);
+
+          preload_req->download_first_data_time += data_time_offset;
+          preload_req->download_first_data_offset = new_cur_offset;
+
+          GST_LOG ("Advancing request timing tracking by %" GST_TIMEP_FORMAT
+              " to time %" GST_TIMEP_FORMAT " @ offset %" G_GUINT64_FORMAT,
+              &data_time_offset,
+              &preload_req->download_first_data_time,
+              preload_req->download_first_data_offset);
+
+          /* Say that this target download finished when the first
+           * byte of the remaining data arrived */
+          target_req->download_end_time = preload_req->download_first_data_time;
+        } else {
+          /* Reset the download start time */
+          preload_req->download_first_data_time = GST_CLOCK_TIME_NONE;
+          preload_req->download_first_data_offset = GST_BUFFER_OFFSET_NONE;
+
+          /* Say that this request finished when the most recent data arrived */
+          target_req->download_end_time =
+              download_req->download_newest_data_time;
+        }
       }
+    }
+
+    if (input_is_finished
+        && target_req->download_end_time == GST_CLOCK_TIME_NONE) {
+      /* No download end time was set yet - use the input download end time */
+      target_req->download_end_time = download_req->download_end_time;
     }
 
     /* Update the target request's state, which may have been adjusted from the
      * input request's state */
-    preload_req->target_request->state = target_state;
+    target_req->state = target_state;
 
-    /* FIXME: Transfer timing from the input download as best we can, so the receiver can
-     * calculate bitrates */
+    if (target_req->headers == NULL && download_req->headers != NULL) {
+      target_req->headers = gst_structure_copy (download_req->headers);
+    }
+
+    if (target_req->redirect_uri == NULL && download_req->redirect_uri != NULL) {
+      target_req->redirect_uri = g_strdup (download_req->redirect_uri);
+      target_req->redirect_permanent = download_req->redirect_permanent;
+    }
 
     /* We're done with the input download request . */
-    download_request_unlock (preload_req->download_request);
+    download_request_unlock (download_req);
 
     if (output_is_finished) {
-      DownloadRequest *req = preload_req->target_request;
-
       GST_DEBUG ("Finishing target preload request uri: %s, start: %"
-          G_GINT64_FORMAT " end: %" G_GINT64_FORMAT, req->uri, req->range_start,
-          req->range_end);
+          G_GINT64_FORMAT " end: %" G_GINT64_FORMAT, target_req->uri,
+          target_req->range_start, target_req->range_end);
 
-      download_request_despatch_completion (req);
-      download_request_unlock (req);
+      download_request_despatch_completion (target_req);
+      download_request_unlock (target_req);
 
-      download_request_unref (req);
+      download_request_unref (target_req);
       preload_req->target_request = NULL;
     } else if (despatch_progress) {
-      DownloadRequest *req = preload_req->target_request;
-      download_request_despatch_progress (req);
+      download_request_despatch_progress (target_req);
     }
 
     /* Unlock if the target request didn't get released above */
@@ -256,8 +365,8 @@ gst_hls_demux_preloader_despatch (GstHLSDemuxPreloadRequest * preload_req,
   }
 
   if (input_is_finished) {
-    if (preload_req->download_request == NULL
-        || download_request_get_bytes_available (preload_req->download_request)
+    if (download_req == NULL
+        || download_request_get_bytes_available (download_req)
         == 0) {
       GstM3U8PreloadHint *hint = preload_req->hint;
       GST_DEBUG ("Removing finished+drained preload type %d uri: %s, start: %"
