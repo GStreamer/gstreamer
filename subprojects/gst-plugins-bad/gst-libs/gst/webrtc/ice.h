@@ -71,7 +71,7 @@ struct _GstWebRTCICECandidateStats
  * Callback function to be triggered on discovery of a new candidate
  * Since: 1.22
  */
-typedef void (*GstWebRTCICEOnCandidateFunc) (GstWebRTCICE * ice, guint stream_id, gchar * candidate, gpointer user_data);
+typedef void (*GstWebRTCICEOnCandidateFunc) (GstWebRTCICE * ice, guint stream_id, const gchar * candidate, gpointer user_data);
 
 struct _GstWebRTCICEClass {
   GstObjectClass parent_class;
@@ -87,12 +87,12 @@ struct _GstWebRTCICEClass {
                                                         const gchar * candidate);
   gboolean (*set_local_credentials)                    (GstWebRTCICE * ice,
                                                         GstWebRTCICEStream * stream,
-                                                        gchar * ufrag,
-                                                        gchar * pwd);
+                                                        const gchar * ufrag,
+                                                        const gchar * pwd);
   gboolean (*set_remote_credentials)                   (GstWebRTCICE * ice,
                                                         GstWebRTCICEStream * stream,
-                                                        gchar * ufrag,
-                                                        gchar * pwd);
+                                                        const gchar * ufrag,
+                                                        const gchar * pwd);
   gboolean (*add_turn_server)                          (GstWebRTCICE * ice,
                                                         const gchar * uri);
   void (*set_is_controller)                            (GstWebRTCICE * ice,
@@ -147,14 +147,14 @@ void                        gst_webrtc_ice_add_candidate            (GstWebRTCIC
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_set_local_credentials    (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream,
-                                                                     gchar * ufrag,
-                                                                     gchar * pwd);
+                                                                     const gchar * ufrag,
+                                                                     const gchar * pwd);
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_set_remote_credentials   (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream,
-                                                                     gchar * ufrag,
-                                                                     gchar * pwd);
+                                                                     const gchar * ufrag,
+                                                                     const gchar * pwd);
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_add_turn_server          (GstWebRTCICE * ice,

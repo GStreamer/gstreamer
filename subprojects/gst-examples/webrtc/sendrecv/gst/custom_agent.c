@@ -36,7 +36,7 @@ customice_agent_add_candidate (GstWebRTCICE * ice,
 
 gboolean
 customice_agent_set_remote_credentials (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, gchar * ufrag, gchar * pwd)
+    GstWebRTCICEStream * stream, const gchar * ufrag, const gchar * pwd)
 {
   GstWebRTCICE *c_ice = GST_WEBRTC_ICE (CUSTOMICE_AGENT (ice)->nice_agent);
   return gst_webrtc_ice_set_remote_credentials (c_ice, stream, ufrag, pwd);
@@ -51,7 +51,7 @@ customice_agent_add_turn_server (GstWebRTCICE * ice, const gchar * uri)
 
 gboolean
 customice_agent_set_local_credentials (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, gchar * ufrag, gchar * pwd)
+    GstWebRTCICEStream * stream, const gchar * ufrag, const gchar * pwd)
 {
   GstWebRTCICE *c_ice = GST_WEBRTC_ICE (CUSTOMICE_AGENT (ice)->nice_agent);
   return gst_webrtc_ice_set_local_credentials (c_ice, stream, ufrag, pwd);

@@ -913,7 +913,7 @@ gst_webrtc_nice_add_candidate (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
 
 static gboolean
 gst_webrtc_nice_set_remote_credentials (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, gchar * ufrag, gchar * pwd)
+    GstWebRTCICEStream * stream, const gchar * ufrag, const gchar * pwd)
 {
   struct NiceStreamItem *item;
   GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
@@ -975,7 +975,7 @@ gst_webrtc_nice_add_local_ip_address (GstWebRTCNice * ice,
 
 static gboolean
 gst_webrtc_nice_set_local_credentials (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, gchar * ufrag, gchar * pwd)
+    GstWebRTCICEStream * stream, const gchar * ufrag, const gchar * pwd)
 {
   struct NiceStreamItem *item;
   GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);

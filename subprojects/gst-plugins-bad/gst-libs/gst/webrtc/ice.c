@@ -63,6 +63,7 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstWebRTCICE, gst_webrtc_ice,
  * @session_id: The session id
  *
  * Returns: (transfer full) (nullable): The #GstWebRTCICEStream, or %NULL
+ *
  * Since: 1.22
  */
 GstWebRTCICEStream *
@@ -81,6 +82,7 @@ gst_webrtc_ice_add_stream (GstWebRTCICE * ice, guint session_id)
  * @component: The #GstWebRTCICEComponent
  *
  * Returns: (transfer full) (nullable): The #GstWebRTCICETransport, or %NULL
+ *
  * Since: 1.22
  */
 GstWebRTCICETransport *
@@ -99,6 +101,7 @@ gst_webrtc_ice_find_transport (GstWebRTCICE * ice,
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
  * @candidate: The ICE candidate
+ *
  * Since: 1.22
  */
 void
@@ -117,12 +120,14 @@ gst_webrtc_ice_add_candidate (GstWebRTCICE * ice,
  * @stream: The #GstWebRTCICEStream
  * @ufrag: ICE username
  * @pwd: ICE password
+ *
  * Returns: FALSE on error, TRUE otherwise
+ *
  * Since: 1.22
  */
 gboolean
 gst_webrtc_ice_set_remote_credentials (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, gchar * ufrag, gchar * pwd)
+    GstWebRTCICEStream * stream, const gchar * ufrag, const gchar * pwd)
 {
   g_return_val_if_fail (GST_IS_WEBRTC_ICE (ice), FALSE);
   g_assert (GST_WEBRTC_ICE_GET_CLASS (ice)->set_remote_credentials);
@@ -135,7 +140,9 @@ gst_webrtc_ice_set_remote_credentials (GstWebRTCICE * ice,
  * gst_webrtc_ice_add_turn_server:
  * @ice: The #GstWebRTCICE
  * @uri: URI of the TURN server
+ *
  * Returns: FALSE on error, TRUE otherwise
+ *
  * Since: 1.22
  */
 gboolean
@@ -153,12 +160,14 @@ gst_webrtc_ice_add_turn_server (GstWebRTCICE * ice, const gchar * uri)
  * @stream: The #GstWebRTCICEStream
  * @ufrag: ICE username
  * @pwd: ICE password
+ *
  * Returns: FALSE on error, TRUE otherwise
+ *
  * Since: 1.22
  */
 gboolean
 gst_webrtc_ice_set_local_credentials (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, gchar * ufrag, gchar * pwd)
+    GstWebRTCICEStream * stream, const gchar * ufrag, const gchar * pwd)
 {
   g_return_val_if_fail (GST_IS_WEBRTC_ICE (ice), FALSE);
   g_assert (GST_WEBRTC_ICE_GET_CLASS (ice)->set_local_credentials);
@@ -172,6 +181,7 @@ gst_webrtc_ice_set_local_credentials (GstWebRTCICE * ice,
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
  * Returns: FALSE on error, TRUE otherwise
+ *
  * Since: 1.22
  */
 gboolean
@@ -188,6 +198,7 @@ gst_webrtc_ice_gather_candidates (GstWebRTCICE * ice,
  * gst_webrtc_ice_set_is_controller:
  * @ice: The #GstWebRTCICE
  * @controller: TRUE to set as controller
+ *
  * Since: 1.22
  */
 void
@@ -203,6 +214,7 @@ gst_webrtc_ice_set_is_controller (GstWebRTCICE * ice, gboolean controller)
  * gst_webrtc_ice_get_is_controller:
  * @ice: The #GstWebRTCICE
  * Returns: TRUE if set as controller, FALSE otherwise
+ *
  * Since: 1.22
  */
 gboolean
@@ -218,6 +230,7 @@ gst_webrtc_ice_get_is_controller (GstWebRTCICE * ice)
  * gst_webrtc_ice_set_force_relay:
  * @ice: The #GstWebRTCICE
  * @force_relay: TRUE to enable force relay
+ *
  * Since: 1.22
  */
 void
@@ -234,6 +247,7 @@ gst_webrtc_ice_set_force_relay (GstWebRTCICE * ice, gboolean force_relay)
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
  * @tos: ToS to be set
+ *
  * Since: 1.22
  */
 void
@@ -252,6 +266,7 @@ gst_webrtc_ice_set_tos (GstWebRTCICE * ice, GstWebRTCICEStream * stream,
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
  * Returns: (transfer full)(array zero-terminated=1): List of local candidates
+ *
  * Since: 1.22
  */
 GstWebRTCICECandidateStats **
@@ -270,6 +285,7 @@ gst_webrtc_ice_get_local_candidates (GstWebRTCICE * ice,
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
  * Returns: (transfer full) (array zero-terminated=1): List of remote candidates
+ *
  * Since: 1.22
  */
 GstWebRTCICECandidateStats **
@@ -290,6 +306,7 @@ gst_webrtc_ice_get_remote_candidates (GstWebRTCICE * ice,
  * @remote_stats: (out) (transfer full): pointer to #GstWebRTCICECandidateStats for remote candidate
  *
  * Returns: FALSE on failure, otherwise @local_stats @remote_stats will be set
+ *
  * Since: 1.22
  */
 gboolean
@@ -309,6 +326,7 @@ gst_webrtc_ice_get_selected_pair (GstWebRTCICE * ice,
  * @stats: The #GstWebRTCICECandidateStats to be free'd
  *
  * Helper function to free #GstWebRTCICECandidateStats
+ *
  * Since: 1.22
  */
 void
@@ -327,6 +345,7 @@ gst_webrtc_ice_candidate_stats_free (GstWebRTCICECandidateStats * stats)
  * @stats: The #GstWebRTCICE
  *
  * Returns: (transfer full): A copy of @stats
+ *
  * Since: 1.22
  */
 GstWebRTCICECandidateStats *
@@ -353,6 +372,7 @@ G_DEFINE_BOXED_TYPE (GstWebRTCICECandidateStats, gst_webrtc_ice_candidate_stats,
  * @func: The #GstWebRTCICEOnCandidateFunc callback function
  * @user_data: User data passed to the callback function
  * @notify: a #GDestroyNotify when the candidate is no longer needed
+ *
  * Since: 1.22
  */
 void
@@ -369,7 +389,8 @@ gst_webrtc_ice_set_on_ice_candidate (GstWebRTCICE * ice,
 /**
  * gst_webrtc_ice_set_stun_server:
  * @ice: The #GstWebRTCICE
- * @uri: URI of the STUN server
+ * @uri: (nullable): URI of the STUN server
+ *
  * Since: 1.22
  */
 void
@@ -384,7 +405,9 @@ gst_webrtc_ice_set_stun_server (GstWebRTCICE * ice, const gchar * uri_s)
 /**
  * gst_webrtc_ice_get_stun_server:
  * @ice: The #GstWebRTCICE
- * Returns: URI of the STUN sever
+ *
+ * Returns: (nullable): URI of the STUN sever
+ *
  * Since: 1.22
  */
 gchar *
@@ -399,7 +422,8 @@ gst_webrtc_ice_get_stun_server (GstWebRTCICE * ice)
 /**
  * gst_webrtc_ice_set_turn_server:
  * @ice: The #GstWebRTCICE
- * @uri: URI of the TURN sever
+ * @uri: (nullable): URI of the TURN sever
+ *
  * Since: 1.22
  */
 void
@@ -414,7 +438,9 @@ gst_webrtc_ice_set_turn_server (GstWebRTCICE * ice, const gchar * uri_s)
 /**
  * gst_webrtc_ice_get_turn_server:
  * @ice: The #GstWebRTCICE
- * Returns: URI of the TURN sever
+ *
+ * Returns: (nullable): URI of the TURN sever
+ *
  * Since: 1.22
  */
 gchar *
