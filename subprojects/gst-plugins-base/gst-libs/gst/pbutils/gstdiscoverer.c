@@ -2545,7 +2545,7 @@ gst_discoverer_discover_uri_async (GstDiscoverer * discoverer,
  * gst_discoverer_discover_uri:
  * @discoverer: A #GstDiscoverer
  * @uri: The URI to run on.
- * @err: (out) (allow-none): If an error occurred, this field will be filled in.
+ * @err: (out) (optional): If an error occurred, this field will be filled in.
  *
  * Synchronously discovers the given @uri.
  *
@@ -2607,7 +2607,7 @@ gst_discoverer_discover_uri (GstDiscoverer * discoverer, const gchar * uri,
  * gst_discoverer_new:
  * @timeout: timeout per file, in nanoseconds. Allowed are values between
  *     one second (#GST_SECOND) and one hour (3600 * #GST_SECOND)
- * @err: a pointer to a #GError. can be %NULL
+ * @err: (optional): a pointer to a #GError. can be %NULL
  *
  * Creates a new #GstDiscoverer with the provided timeout.
  *

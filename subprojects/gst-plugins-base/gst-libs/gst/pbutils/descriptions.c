@@ -925,13 +925,13 @@ caps_are_rtp_caps (const GstCaps * caps, const gchar * media, gchar ** format)
  *
  * Returns a localised string describing a source element handling the protocol
  * specified in @protocol, for use in error dialogs or other messages to be
- * seen by the user. Should never return NULL unless @protocol is invalid.
+ * seen by the user.
  *
  * This function is mainly for internal use, applications would typically
  * use gst_missing_plugin_message_get_description() to get a description of
  * a missing feature from a missing-plugin message.
  *
- * Returns: a newly-allocated description string, or NULL on error. Free
+ * Returns: a newly-allocated description string. Free
  *          string with g_free() when not needed any longer.
  */
 gchar *
@@ -975,13 +975,13 @@ gst_pb_utils_get_source_description (const gchar * protocol)
  *
  * Returns a localised string describing a sink element handling the protocol
  * specified in @protocol, for use in error dialogs or other messages to be
- * seen by the user. Should never return NULL unless @protocol is invalid.
+ * seen by the user.
  *
  * This function is mainly for internal use, applications would typically
  * use gst_missing_plugin_message_get_description() to get a description of
  * a missing feature from a missing-plugin message.
  *
- * Returns: a newly-allocated description string, or NULL on error. Free
+ * Returns: a newly-allocated description string. Free
  *          string with g_free() when not needed any longer.
  */
 gchar *
@@ -1010,13 +1010,12 @@ gst_pb_utils_get_sink_description (const gchar * protocol)
  *
  * Returns a localised string describing an decoder for the format specified
  * in @caps, for use in error dialogs or other messages to be seen by the user.
- * Should never return NULL unless @factory_name or @caps are invalid.
  *
  * This function is mainly for internal use, applications would typically
  * use gst_missing_plugin_message_get_description() to get a description of
  * a missing feature from a missing-plugin message.
  *
- * Returns: a newly-allocated description string, or NULL on error. Free
+ * Returns: a newly-allocated description string. Free
  *          string with g_free() when not needed any longer.
  */
 gchar *
@@ -1065,13 +1064,12 @@ gst_pb_utils_get_decoder_description (const GstCaps * caps)
  *
  * Returns a localised string describing an encoder for the format specified
  * in @caps, for use in error dialogs or other messages to be seen by the user.
- * Should never return NULL unless @factory_name or @caps are invalid.
  *
  * This function is mainly for internal use, applications would typically
  * use gst_missing_plugin_message_get_description() to get a description of
  * a missing feature from a missing-plugin message.
  *
- * Returns: a newly-allocated description string, or NULL on error. Free
+ * Returns: a newly-allocated description string. Free
  *          string with g_free() when not needed any longer.
  */
 gchar *
@@ -1116,14 +1114,13 @@ gst_pb_utils_get_encoder_description (const GstCaps * caps)
  * @factory_name: the name of the element, e.g. "giosrc"
  *
  * Returns a localised string describing the given element, for use in
- * error dialogs or other messages to be seen by the user. Should never
- * return NULL unless @factory_name is invalid.
+ * error dialogs or other messages to be seen by the user.
  *
  * This function is mainly for internal use, applications would typically
  * use gst_missing_plugin_message_get_description() to get a description of
  * a missing feature from a missing-plugin message.
  *
- * Returns: a newly-allocated description string, or NULL on error. Free
+ * Returns: a newly-allocated description string. Free
  *          string with g_free() when not needed any longer.
  */
 gchar *
@@ -1145,7 +1142,7 @@ gst_pb_utils_get_element_description (const gchar * factory_name)
 /**
  * gst_pb_utils_add_codec_description_to_tag_list:
  * @taglist: a #GstTagList
- * @codec_tag: (allow-none): a GStreamer codec tag such as #GST_TAG_AUDIO_CODEC,
+ * @codec_tag: (nullable): a GStreamer codec tag such as #GST_TAG_AUDIO_CODEC,
  *             #GST_TAG_VIDEO_CODEC or #GST_TAG_CODEC. If none is specified,
  *             the function will attempt to detect the appropriate category.
  * @caps: the (fixed) #GstCaps for which a codec tag should be added.
@@ -1204,7 +1201,7 @@ gst_pb_utils_add_codec_description_to_tag_list (GstTagList * taglist,
  * Also see the convenience function
  * gst_pb_utils_add_codec_description_to_tag_list().
  *
- * Returns: a newly-allocated description string, or NULL on error. Free
+ * Returns: (nullable): a newly-allocated description string, or NULL on error. Free
  *          string with g_free() when not needed any longer.
  */
 gchar *
@@ -1305,7 +1302,8 @@ pb_utils_get_file_extension_from_caps (const GstCaps * caps)
 gchar *
 gst_pb_utils_get_file_extension_from_caps (const GstCaps * caps)
 {
-  return g_strdup (pb_utils_get_file_extension_from_caps (caps));
+  const gchar *extension = pb_utils_get_file_extension_from_caps (caps);
+  return extension ? g_strdup (extension) : NULL;
 }
 
 /**

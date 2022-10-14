@@ -1876,7 +1876,7 @@ gst_codec_utils_opus_parse_caps (GstCaps * caps,
  *
  * Creates Opus caps from the given parameters.
  *
- * Returns: The #GstCaps, or %NULL if the parameters would lead to
+ * Returns: (transfer full) (nullable): The #GstCaps, or %NULL if the parameters would lead to
  * invalid Opus caps.
  *
  * Since: 1.8
@@ -2042,7 +2042,7 @@ _gst_caps_set_buffer_array (GstCaps * caps, const gchar * field,
  * Creates Opus caps from the given OpusHead @header and comment header
  * @comments.
  *
- * Returns: The #GstCaps.
+ * Returns: (transfer full) (nullable): The #GstCaps.
  *
  * Since: 1.8
  */
@@ -2102,7 +2102,7 @@ gst_codec_utils_opus_create_caps_from_header (GstBuffer * header,
  *
  * Creates OpusHead header from the given parameters.
  *
- * Returns: The #GstBuffer containing the OpusHead.
+ * Returns: (transfer full) (nullable): The #GstBuffer containing the OpusHead.
  *
  * Since: 1.8
  */
