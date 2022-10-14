@@ -235,6 +235,10 @@ download_request_take_buffer (DownloadRequest * request)
   return buffer;
 }
 
+/* Extract the byte range of the download, matching the
+ * requested range against the GST_BUFFER_OFFSET() values of the
+ * data buffer, which tracks the byte position in the
+ * original resource */
 GstBuffer *
 download_request_take_buffer_range (DownloadRequest * request,
     gint64 target_range_start, gint64 target_range_end)
@@ -263,15 +267,20 @@ download_request_take_buffer_range (DownloadRequest * request,
   gint64 avail_start = GST_BUFFER_OFFSET (input_buffer);
   gint64 avail_end = avail_start + gst_buffer_get_size (input_buffer) - 1;
 
+  target_range_start = MAX (avail_start, target_range_start);
+
   if (target_range_start <= avail_end) {
     /* There's at least 1 byte available that belongs to this target request, but
      * does this buffer need splitting in two? */
     if (target_range_end != -1 && target_range_end < avail_end) {
-      /* Yes, it does. Cut off the front of the buffer */
+      /* Yes, it does. Drop the front of the buffer if needed and take the piece we want */
+      guint64 start_offset = target_range_start - avail_start;
+
       buffer =
-          gst_buffer_copy_region (input_buffer, GST_BUFFER_COPY_MEMORY, 0,
-          target_range_end - avail_start);
-      GST_BUFFER_OFFSET (buffer) = GST_BUFFER_OFFSET (input_buffer);
+          gst_buffer_copy_region (input_buffer, GST_BUFFER_COPY_MEMORY,
+          start_offset, target_range_end - avail_start);
+      GST_BUFFER_OFFSET (buffer) =
+          GST_BUFFER_OFFSET (input_buffer) + start_offset;
 
       /* Put the rest of the buffer back */
       priv->buffer =
@@ -280,8 +289,20 @@ download_request_take_buffer_range (DownloadRequest * request,
 
       /* Release the original buffer. The sub-buffers are holding their own refs as needed */
       gst_buffer_unref (input_buffer);
+    } else if (target_range_start != avail_start) {
+      /* We want to the end of the buffer, but need to drop a piece at the front */
+      guint64 start_offset = target_range_start - avail_start;
+
+      buffer =
+          gst_buffer_copy_region (input_buffer, GST_BUFFER_COPY_MEMORY,
+          start_offset, -1);
+      GST_BUFFER_OFFSET (buffer) =
+          GST_BUFFER_OFFSET (input_buffer) + start_offset;
+
+      /* Release the original buffer. The sub-buffer is holding its own ref as needed */
+      gst_buffer_unref (input_buffer);
     } else {
-      /* No, return the entire buffer */
+      /* No, return the entire buffer as-is */
       buffer = input_buffer;
     }
   }
