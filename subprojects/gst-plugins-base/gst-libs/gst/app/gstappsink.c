@@ -386,7 +386,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * This function blocks until a preroll sample or EOS is received or the appsink
    * element is set to the READY/NULL state.
    *
-   * Returns: a #GstSample or NULL when the appsink is stopped or EOS.
+   * Returns: (nullable): a #GstSample or NULL when the appsink is stopped or EOS.
    */
   gst_app_sink_signals[SIGNAL_PULL_PREROLL] =
       g_signal_new ("pull-preroll", G_TYPE_FROM_CLASS (klass),
@@ -411,7 +411,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * If an EOS event was received before any buffers, this function returns
    * %NULL. Use gst_app_sink_is_eos () to check for the EOS condition.
    *
-   * Returns: a #GstSample or NULL when the appsink is stopped or EOS.
+   * Returns: (nullable): a #GstSample or NULL when the appsink is stopped or EOS.
    */
   gst_app_sink_signals[SIGNAL_PULL_SAMPLE] =
       g_signal_new ("pull-sample", G_TYPE_FROM_CLASS (klass),
@@ -443,7 +443,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * This function blocks until a preroll sample or EOS is received, the appsink
    * element is set to the READY/NULL state, or the timeout expires.
    *
-   * Returns: a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
+   * Returns: (nullable): a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
    *
    * Since: 1.10
    */
@@ -473,7 +473,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * this function returns %NULL. Use gst_app_sink_is_eos () to check
    * for the EOS condition.
    *
-   * Returns: a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
+   * Returns: (nullable): a #GstSample or NULL when the appsink is stopped or EOS or the timeout expires.
    *
    * Since: 1.10
    */
@@ -511,7 +511,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
    * Note that future releases may extend this API to return other object types
    * so make sure that your code is checking for the actual type it is handling.
    *
-   * Returns: (transfer full): a #GstSample or a #GstEvent or NULL when the appsink is stopped or EOS or the timeout expires.
+   * Returns: (nullable) (transfer full): a #GstSample or a #GstEvent or NULL when the appsink is stopped or EOS or the timeout expires.
    *
    * Since: 1.20
    */
@@ -1272,7 +1272,7 @@ gst_app_sink_set_caps (GstAppSink * appsink, const GstCaps * caps)
  *
  * Get the configured caps on @appsink.
  *
- * Returns: the #GstCaps accepted by the sink. gst_caps_unref() after usage.
+ * Returns: (nullable) (transfer full): the #GstCaps accepted by the sink. gst_caps_unref() after usage.
  */
 GstCaps *
 gst_app_sink_get_caps (GstAppSink * appsink)
@@ -1682,7 +1682,7 @@ gst_app_sink_pull_sample (GstAppSink * appsink)
  * Note that future releases may extend this API to return other object types
  * so make sure that your code is checking for the actual type it is handling.
  *
- * Returns: (transfer full): a #GstSample, or a #GstEvent or NULL when the appsink is stopped or EOS.
+ * Returns: (transfer full) (nullable): a #GstSample, or a #GstEvent or NULL when the appsink is stopped or EOS.
  *          Call gst_mini_object_unref() after usage.
  *
  * Since: 1.20
@@ -1862,7 +1862,7 @@ gst_app_sink_try_pull_sample (GstAppSink * appsink, GstClockTime timeout)
  * Note that future releases may extend this API to return other object types
  * so make sure that your code is checking for the actual type it is handling.
  *
- * Returns: (transfer full): a #GstSample, or #GstEvent or NULL when the appsink is stopped or EOS or the timeout expires.
+ * Returns: (transfer full) (nullable): a #GstSample, or #GstEvent or NULL when the appsink is stopped or EOS or the timeout expires.
  * Call gst_mini_object_unref() after usage.
  *
  * Since: 1.20

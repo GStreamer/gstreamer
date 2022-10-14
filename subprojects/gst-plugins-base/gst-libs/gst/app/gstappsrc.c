@@ -1872,7 +1872,7 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
  *
  * Get the configured caps on @appsrc.
  *
- * Returns: the #GstCaps produced by the source. gst_caps_unref() after usage.
+ * Returns: (nullable) (transfer full): the #GstCaps produced by the source. gst_caps_unref() after usage.
  */
 GstCaps *
 gst_app_src_get_caps (GstAppSrc * appsrc)
