@@ -68,6 +68,7 @@ struct _DownloadRequest
 
   guint64 download_request_time;  /* Epoch time when the download started */
   guint64 download_start_time;    /* Epoch time when the first data for the download arrived */
+  guint64 download_newest_data_time; /* Epoch time when the most recent data for the download arrived */
   guint64 download_end_time;      /* Epoch time when the download finished */
 };
 
@@ -87,6 +88,7 @@ void download_request_add_buffer (DownloadRequest *request, GstBuffer *buffer);
 GstBuffer * download_request_take_buffer (DownloadRequest *request);
 GstBuffer * download_request_take_buffer_range (DownloadRequest *request, gint64 range_start, gint64 range_end);
 guint64 download_request_get_bytes_available (DownloadRequest *request);
+guint64 download_request_get_cur_offset (DownloadRequest *request);
 
 DownloadRequest * download_request_new (void);
 DownloadRequest * download_request_new_uri (const gchar * uri);

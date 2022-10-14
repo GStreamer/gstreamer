@@ -328,6 +328,22 @@ download_request_get_bytes_available (DownloadRequest * request)
   return ret;
 }
 
+guint64
+download_request_get_cur_offset (DownloadRequest * request)
+{
+  DownloadRequestPrivate *priv = DOWNLOAD_REQUEST_PRIVATE (request);
+  guint64 ret = GST_BUFFER_OFFSET_NONE;
+
+  g_rec_mutex_lock (&priv->lock);
+
+  if (priv->buffer != NULL)
+    ret = GST_BUFFER_OFFSET (priv->buffer);
+
+  g_rec_mutex_unlock (&priv->lock);
+
+  return ret;
+}
+
 void
 download_request_set_uri (DownloadRequest * request, const gchar * uri,
     gint64 range_start, gint64 range_end)

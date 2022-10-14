@@ -309,19 +309,20 @@ on_read_ready (GObject * source, GAsyncResult * result, gpointer user_data)
       }
     }
 
-    if (request->download_start_time == GST_CLOCK_TIME_NONE) {
-      GST_LOG ("Got first data for URI %s", request->uri);
-      request->download_start_time = now;
-    }
-
     if (gst_buffer != NULL) {
       /* Unsent means cancellation is in progress, so don't override
        * the state. Otherwise make sure it is LOADING */
       if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT)
         request->state = DOWNLOAD_REQUEST_STATE_LOADING;
 
-      GST_LOG ("Adding %u bytes to buffer",
-          (guint) (gst_buffer_get_size (gst_buffer)));
+      if (request->download_start_time == GST_CLOCK_TIME_NONE) {
+        GST_LOG ("Got first data for URI %s", request->uri);
+        request->download_start_time = now;
+      }
+      request->download_newest_data_time = now;
+
+      GST_LOG ("Adding %u bytes to buffer (request URI %s)",
+          (guint) (gst_buffer_get_size (gst_buffer)), request->uri);
 
       download_request_add_buffer (request, gst_buffer);
 
