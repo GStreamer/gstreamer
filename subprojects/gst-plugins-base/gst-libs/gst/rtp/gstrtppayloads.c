@@ -185,7 +185,7 @@ static const GstRTPPayloadInfo info[] = {
  * mostly used to get the default clock-rate and bandwidth for static payload
  * types specified with @payload_type.
  *
- * Returns: a #GstRTPPayloadInfo or NULL when no info could be found.
+ * Returns: (nullable): a #GstRTPPayloadInfo or NULL when no info could be found.
  */
 const GstRTPPayloadInfo *
 gst_rtp_payload_info_for_pt (guint8 payload_type)
@@ -213,7 +213,7 @@ gst_rtp_payload_info_for_pt (guint8 payload_type)
  *
  * The search for @encoding_name will be performed in a case insensitive way.
  *
- * Returns: a #GstRTPPayloadInfo or NULL when no info could be found.
+ * Returns: (nullable): a #GstRTPPayloadInfo or NULL when no info could be found.
  */
 const GstRTPPayloadInfo *
 gst_rtp_payload_info_for_name (const gchar * media, const gchar * encoding_name)

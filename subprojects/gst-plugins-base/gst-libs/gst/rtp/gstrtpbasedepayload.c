@@ -305,7 +305,7 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
    * The returned @ext must be configured with the correct @ext_id and with the
    * necessary attributes as required by the extension implementation.
    *
-   * Returns: (transfer full): the #GstRTPHeaderExtension for @ext_id, or %NULL
+   * Returns: (transfer full) (nullable): the #GstRTPHeaderExtension for @ext_id, or %NULL
    *
    * Since: 1.20
    */
@@ -1429,7 +1429,7 @@ gst_rtp_base_depayload_do_push (GstRTPBaseDepayload * filter, gboolean is_list,
 /**
  * gst_rtp_base_depayload_push:
  * @filter: a #GstRTPBaseDepayload
- * @out_buf: a #GstBuffer
+ * @out_buf: (transfer full): a #GstBuffer
  *
  * Push @out_buf to the peer of @filter. This function takes ownership of
  * @out_buf.
@@ -1455,7 +1455,7 @@ gst_rtp_base_depayload_push (GstRTPBaseDepayload * filter, GstBuffer * out_buf)
 /**
  * gst_rtp_base_depayload_push_list:
  * @filter: a #GstRTPBaseDepayload
- * @out_list: a #GstBufferList
+ * @out_list: (transfer full): a #GstBufferList
  *
  * Push @out_list to the peer of @filter. This function takes ownership of
  * @out_list.

@@ -1863,7 +1863,7 @@ gst_rtcp_packet_bye_get_reason_len (GstRTCPPacket * packet)
  *
  * Get the reason in @packet.
  *
- * Returns: The reason for the BYE @packet or NULL if the packet did not contain
+ * Returns: (nullable): The reason for the BYE @packet or NULL if the packet did not contain
  * a reason string. The string must be freed with g_free() after usage.
  */
 gchar *

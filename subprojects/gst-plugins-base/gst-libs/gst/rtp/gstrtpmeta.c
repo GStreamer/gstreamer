@@ -34,8 +34,8 @@
 /**
  * gst_buffer_add_rtp_source_meta:
  * @buffer: a #GstBuffer
- * @ssrc: (allow-none) (transfer none): pointer to the SSRC
- * @csrc: (allow-none) (transfer none): pointer to the CSRCs
+ * @ssrc: (nullable) (transfer none): pointer to the SSRC
+ * @csrc: (nullable) (transfer none) (array length=csrc_count): pointer to the CSRCs
  * @csrc_count: number of elements in @csrc
  *
  * Attaches RTP source information to @buffer.
@@ -81,7 +81,7 @@ gst_buffer_add_rtp_source_meta (GstBuffer * buffer, const guint32 * ssrc,
  *
  * Find the #GstRTPSourceMeta on @buffer.
  *
- * Returns: (transfer none): the #GstRTPSourceMeta or %NULL when there
+ * Returns: (transfer none) (nullable): the #GstRTPSourceMeta or %NULL when there
  * is no such metadata on @buffer.
  *
  * Since: 1.16
@@ -137,7 +137,7 @@ gst_rtp_source_meta_get_source_count (const GstRTPSourceMeta * meta)
 /**
  * gst_rtp_source_meta_set_ssrc:
  * @meta: a #GstRTPSourceMeta
- * @ssrc: (allow-none) (transfer none): pointer to the SSRC
+ * @ssrc: (nullable) (transfer none): pointer to the SSRC
  *
  * Sets @ssrc in @meta. If @ssrc is %NULL the ssrc of @meta will be unset.
  *
@@ -161,7 +161,7 @@ gst_rtp_source_meta_set_ssrc (GstRTPSourceMeta * meta, guint32 * ssrc)
 /**
  * gst_rtp_source_meta_append_csrc:
  * @meta: a #GstRTPSourceMeta
- * @csrc: the csrcs to append
+ * @csrc: (array length=csrc_count): the csrcs to append
  * @csrc_count: number of elements in @csrc
  *
  * Appends @csrc to the list of contributing sources in @meta.

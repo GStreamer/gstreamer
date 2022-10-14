@@ -467,7 +467,7 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * The returned @ext must be configured with the correct @ext_id and with the
    * necessary attributes as required by the extension implementation.
    *
-   * Returns: (transfer full): the #GstRTPHeaderExtension for @ext_id, or %NULL
+   * Returns: (transfer full) (nullable): the #GstRTPHeaderExtension for @ext_id, or %NULL
    *
    * Since: 1.20
    */

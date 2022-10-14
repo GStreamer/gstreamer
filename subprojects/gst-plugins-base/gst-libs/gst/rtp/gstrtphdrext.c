@@ -205,7 +205,7 @@ gst_rtp_header_extension_init (GstRTPHeaderExtension * ext)
  * gst_rtp_header_extension_get_uri:
  * @ext: a #GstRTPHeaderExtension
  *
- * Returns: the RTP extension URI for this object
+ * Returns: (nullable): the RTP extension URI for this object
  *
  * Since: 1.20
  */
