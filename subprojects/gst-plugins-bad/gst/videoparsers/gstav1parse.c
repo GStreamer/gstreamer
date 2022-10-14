@@ -1562,6 +1562,19 @@ out:
   return ret;
 }
 
+static void
+gst_av1_parse_create_subframe (GstBaseParseFrame * frame,
+    GstBaseParseFrame * subframe, GstBuffer * buffer)
+{
+  gst_base_parse_frame_init (subframe);
+  subframe->flags |= frame->flags;
+  subframe->offset = frame->offset;
+  subframe->overhead = frame->overhead;
+  /* Just ref the input buffer. The base parse will check that
+     pointer, and it will be replaced by its out_buffer later. */
+  subframe->buffer = gst_buffer_ref (buffer);
+}
+
 static GstFlowReturn
 gst_av1_parse_handle_to_small_and_equal_align (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize)
@@ -1572,47 +1585,69 @@ gst_av1_parse_handle_to_small_and_equal_align (GstBaseParse * parse,
   GstFlowReturn ret = GST_FLOW_OK;
   GstAV1ParserResult res = GST_AV1_PARSER_INVALID_OPERATION;
   GstBuffer *buffer = gst_buffer_ref (frame->buffer);
-  guint32 total_consumed, consumed;
+  guint32 offset, consumed_before_push, consumed;
   gboolean frame_complete;
+  GstBaseParseFrame subframe;
 
   if (!gst_buffer_map (buffer, &map_info, GST_MAP_READ)) {
     GST_ERROR_OBJECT (parse, "Couldn't map incoming buffer");
     return GST_FLOW_ERROR;
   }
 
-  total_consumed = 0;
+  consumed_before_push = 0;
+  offset = 0;
   frame_complete = FALSE;
 again:
-  while (total_consumed < map_info.size) {
+  while (offset < map_info.size) {
     res = gst_av1_parser_identify_one_obu (self->parser,
-        map_info.data + total_consumed, map_info.size - total_consumed,
-        &obu, &consumed);
+        map_info.data + offset, map_info.size - offset, &obu, &consumed);
     if (res == GST_AV1_PARSER_OK)
       res = gst_av1_parse_handle_one_obu (self, &obu, &frame_complete, NULL);
     if (res != GST_AV1_PARSER_OK)
       break;
 
-    if (obu.obu_type == GST_AV1_OBU_TEMPORAL_DELIMITER && total_consumed) {
+    if (obu.obu_type == GST_AV1_OBU_TEMPORAL_DELIMITER
+        && consumed_before_push > 0) {
       GST_DEBUG_OBJECT (self, "Encounter TD inside one %s aligned"
           " buffer, should not happen normally.",
           gst_av1_parse_alignment_to_string (self->in_align));
-      frame_complete = TRUE;
+
       if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B)
         gst_av1_parser_reset_annex_b (self->parser);
-      /* Not include this TD obu, it should belong to the next TU or frame */
-      break;
+
+      /* Not include this TD obu, it should belong to the next TU or frame,
+         we push all the data we already got. */
+      gst_av1_parse_create_subframe (frame, &subframe, buffer);
+      ret = gst_av1_parse_push_data (self, &subframe,
+          consumed_before_push, TRUE);
+      if (ret != GST_FLOW_OK)
+        goto out;
+
+      /* Begin to find the next. */
+      frame_complete = FALSE;
+      consumed_before_push = 0;
+      continue;
     }
 
     gst_av1_parse_cache_one_obu (self, buffer, &obu,
-        map_info.data + total_consumed, consumed, frame_complete);
+        map_info.data + offset, consumed, frame_complete);
 
-    total_consumed += consumed;
+    offset += consumed;
+    consumed_before_push += consumed;
 
-    if (self->align == GST_AV1_PARSE_ALIGN_OBU)
-      break;
+    if ((self->align == GST_AV1_PARSE_ALIGN_OBU) ||
+        (self->align == GST_AV1_PARSE_ALIGN_FRAME && frame_complete)) {
+      gst_av1_parse_create_subframe (frame, &subframe, buffer);
+      ret = gst_av1_parse_push_data (self, &subframe,
+          consumed_before_push, frame_complete);
+      if (ret != GST_FLOW_OK)
+        goto out;
 
-    if (self->align == GST_AV1_PARSE_ALIGN_FRAME && frame_complete)
-      break;
+      /* Begin to find the next. */
+      frame_complete = FALSE;
+      consumed_before_push = 0;
+      continue;
+    }
   }
 
   if (res == GST_AV1_PARSER_BITSTREAM_ERROR ||
@@ -1638,7 +1673,7 @@ again:
     goto out;
   } else if (res == GST_AV1_PARSER_DROP) {
     GST_DEBUG_OBJECT (parse, "Drop %d data", consumed);
-    total_consumed += consumed;
+    offset += consumed;
     gst_av1_parse_reset_obu_data_state (self);
     res = GST_AV1_PARSER_OK;
     goto again;
@@ -1649,18 +1684,18 @@ again:
     goto out;
   }
 
-  g_assert (total_consumed >= map_info.size || frame_complete
-      || self->align == GST_AV1_PARSE_ALIGN_OBU);
-
-  if (total_consumed >= map_info.size && !frame_complete
+  /* If the total buffer exhausted but frame is not complete, we just
+     push the left data and consider it as a frame. */
+  if (consumed_before_push > 0 && !frame_complete
       && self->align == GST_AV1_PARSE_ALIGN_FRAME) {
-    /* Warning and still consider this frame as complete */
+    g_assert (offset >= map_info.size);
+    /* Warning and still consider the frame is complete */
     GST_WARNING_OBJECT (self, "Exhaust the buffer but still incomplete frame,"
         " should not happend in %s alignment",
         gst_av1_parse_alignment_to_string (self->in_align));
   }
 
-  ret = gst_av1_parse_push_data (self, frame, total_consumed, frame_complete);
+  ret = gst_av1_parse_push_data (self, frame, consumed_before_push, TRUE);
 
 out:
   gst_buffer_unmap (buffer, &map_info);
