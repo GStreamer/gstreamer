@@ -604,8 +604,9 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
 
       if (collection) {
         g_mutex_lock (&play->selection_lock);
-        gst_object_replace ((GstObject **) & play->collection,
-            (GstObject *) collection);
+        if (play->collection)
+          gst_object_unref (play->collection);
+        play->collection = collection;
         g_mutex_unlock (&play->selection_lock);
       }
       break;
