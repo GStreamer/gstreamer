@@ -127,6 +127,10 @@ struct _GstAV1Parse
   gboolean header;
   gboolean keyframe;
   gboolean show_frame;
+
+  GstClockTime buffer_pts;
+  GstClockTime buffer_dts;
+  GstClockTime buffer_duration;
 };
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -273,6 +277,8 @@ static gboolean gst_av1_parse_set_sink_caps (GstBaseParse * parse,
     GstCaps * caps);
 static GstCaps *gst_av1_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
+static GstFlowReturn gst_av1_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 /* Clear the parse state related to data kind OBUs. */
 static void
@@ -281,6 +287,14 @@ gst_av1_parse_reset_obu_data_state (GstAV1Parse * self)
   self->last_shown_frame_temporal_id = -1;
   self->last_shown_frame_spatial_id = -1;
   self->within_one_frame = FALSE;
+}
+
+static void
+gst_av1_parse_reset_tu_timestamp (GstAV1Parse * self)
+{
+  self->buffer_pts = GST_CLOCK_TIME_NONE;
+  self->buffer_dts = GST_CLOCK_TIME_NONE;
+  self->buffer_duration = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -307,6 +321,7 @@ gst_av1_parse_reset (GstAV1Parse * self)
   g_clear_pointer (&self->parser, gst_av1_parser_free);
   gst_adapter_clear (self->cache_out);
   gst_adapter_clear (self->frame_cache);
+  gst_av1_parse_reset_tu_timestamp (self);
 }
 
 static void
@@ -345,6 +360,8 @@ gst_av1_parse_class_init (GstAV1ParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_av1_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_av1_parse_stop);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_av1_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_av1_parse_pre_push_frame);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_av1_parse_set_sink_caps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_av1_parse_get_sink_caps);
 
@@ -1594,11 +1611,17 @@ gst_av1_parse_handle_to_small_and_equal_align (GstBaseParse * parse,
     return GST_FLOW_ERROR;
   }
 
+  self->buffer_pts = GST_BUFFER_PTS (buffer);
+  self->buffer_dts = GST_BUFFER_DTS (buffer);
+  self->buffer_duration = GST_BUFFER_DURATION (buffer);
+
   consumed_before_push = 0;
   offset = 0;
   frame_complete = FALSE;
 again:
   while (offset < map_info.size) {
+    GST_BUFFER_OFFSET (buffer) = offset;
+
     res = gst_av1_parser_identify_one_obu (self->parser,
         map_info.data + offset, map_info.size - offset, &obu, &consumed);
     if (res == GST_AV1_PARSER_OK)
@@ -1700,6 +1723,7 @@ again:
 out:
   gst_buffer_unmap (buffer, &map_info);
   gst_buffer_unref (buffer);
+  gst_av1_parse_reset_tu_timestamp (self);
   return ret;
 }
 
@@ -2054,4 +2078,58 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
   }
 
   return ret;
+}
+
+static GstFlowReturn
+gst_av1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstAV1Parse *self = GST_AV1_PARSE (parse);
+
+  frame->flags |= GST_BASE_PARSE_FRAME_FLAG_CLIP;
+
+  if (!frame->buffer)
+    return GST_FLOW_OK;
+
+  if (self->align == GST_AV1_PARSE_ALIGN_FRAME) {
+    /* When the input align to TU, it may may contain more than one frames
+       inside its buffer. When splitting a TU into frames, the base parse
+       class only assign the PTS to the first frame and leave the others'
+       PTS invalid. But in fact, all decode only frames should have invalid
+       PTS while showable frames should have correct PTS setting. */
+    if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
+        || self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
+      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
+        GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
+        GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
+      } else {
+        GST_BUFFER_PTS (frame->buffer) = self->buffer_pts;
+        GST_BUFFER_DURATION (frame->buffer) = self->buffer_duration;
+      }
+
+      GST_BUFFER_DTS (frame->buffer) = self->buffer_dts;
+    } else {
+      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
+        GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
+        GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
+      }
+    }
+  } else if (self->align == GST_AV1_PARSE_ALIGN_OBU) {
+    /* When we split a big frame or TU into OBUs, all OBUs should have the
+       same PTS and DTS of the input buffer, and should not have duration. */
+    if (self->in_align >= GST_AV1_PARSE_ALIGN_FRAME) {
+      GST_BUFFER_PTS (frame->buffer) = self->buffer_pts;
+      GST_BUFFER_DTS (frame->buffer) = self->buffer_dts;
+      GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
+    }
+  }
+
+  GST_LOG_OBJECT (parse, "Adjust the frame buffer PTS/DTS/duration."
+      " The buffer of size %" G_GSIZE_FORMAT " now with dts %"
+      GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT ", duration %"
+      GST_TIME_FORMAT, gst_buffer_get_size (frame->buffer),
+      GST_TIME_ARGS (GST_BUFFER_DTS (frame->buffer)),
+      GST_TIME_ARGS (GST_BUFFER_PTS (frame->buffer)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (frame->buffer)));
+
+  return GST_FLOW_OK;
 }
