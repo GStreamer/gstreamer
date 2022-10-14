@@ -145,7 +145,7 @@ G_STMT_START {                                    \
 
 /**
  * gst_rtsp_transport_new:
- * @transport: location to hold the new #GstRTSPTransport
+ * @transport: (out) (transfer full): location to hold the new #GstRTSPTransport
  *
  * Allocate a new initialized #GstRTSPTransport. Use gst_rtsp_transport_free()
  * after usage.
@@ -168,7 +168,7 @@ gst_rtsp_transport_new (GstRTSPTransport ** transport)
 
 /**
  * gst_rtsp_transport_init:
- * @transport: a #GstRTSPTransport
+ * @transport: (out caller-allocates): a #GstRTSPTransport
  *
  * Initialize @transport so that it can be used.
  *
@@ -205,7 +205,7 @@ gst_rtsp_transport_init (GstRTSPTransport * transport)
 /**
  * gst_rtsp_transport_get_mime:
  * @trans: a #GstRTSPTransMode
- * @mime: location to hold the result
+ * @mime: (out) (transfer none): location to hold the result
  *
  * Get the mime type of the transport mode @trans. This mime type is typically
  * used to generate #GstCaps events.
@@ -433,7 +433,7 @@ rtsp_transport_ltrans_as_text (const GstRTSPTransport * transport)
 /**
  * gst_rtsp_transport_parse:
  * @str: a transport string
- * @transport: a #GstRTSPTransport
+ * @transport: (out caller-allocates): a #GstRTSPTransport
  *
  * Parse the RTSP transport string @str into @transport.
  *
@@ -592,8 +592,8 @@ invalid_transport:
  * Convert @transport into a string that can be used to signal the transport in
  * an RTSP SETUP response.
  *
- * Returns: a string describing the RTSP transport or %NULL when the transport
- * is invalid.
+ * Returns: (transfer full) (nullable): a string describing the RTSP transport
+ * or %NULL when the transport is invalid.
  */
 gchar *
 gst_rtsp_transport_as_text (GstRTSPTransport * transport)

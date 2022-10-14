@@ -453,7 +453,7 @@ collect_addresses (GSocket * socket, gchar ** ip, guint16 * port,
  * @ip: the IP address of the other end
  * @port: the port used by the other end
  * @initial_buffer: data already read from @fd
- * @conn: (out) (transfer full): storage for a #GstRTSPConnection
+ * @conn: (out) (transfer full) (nullable): storage for a #GstRTSPConnection
  *
  * Create a new #GstRTSPConnection for handling communication on the existing
  * socket @socket. The @initial_buffer contains zero terminated data already
@@ -477,6 +477,8 @@ gst_rtsp_connection_create_from_socket (GSocket * socket, const gchar * ip,
   g_return_val_if_fail (G_IS_SOCKET (socket), GST_RTSP_EINVAL);
   g_return_val_if_fail (ip != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+
+  *conn = NULL;
 
   if (!collect_addresses (socket, &local_ip, NULL, FALSE, &err))
     goto getnameinfo_failed;
@@ -531,7 +533,7 @@ newconn_failed:
 /**
  * gst_rtsp_connection_accept:
  * @socket: a socket
- * @conn: (out) (transfer full): storage for a #GstRTSPConnection
+ * @conn: (out) (transfer full) (nullable): storage for a #GstRTSPConnection
  * @cancellable: a #GCancellable to cancel the operation
  *
  * Accept a new connection on @socket and create a new #GstRTSPConnection for
@@ -551,6 +553,8 @@ gst_rtsp_connection_accept (GSocket * socket, GstRTSPConnection ** conn,
 
   g_return_val_if_fail (G_IS_SOCKET (socket), GST_RTSP_EINVAL);
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+
+  *conn = NULL;
 
   client_sock = g_socket_accept (socket, cancellable, &err);
   if (!client_sock)
@@ -593,7 +597,7 @@ getnameinfo_failed:
 /**
  * gst_rtsp_connection_get_tls:
  * @conn: a #GstRTSPConnection
- * @error: #GError for error reporting, or NULL to ignore.
+ * @error: (optional): #GError for error reporting, or NULL to ignore.
  *
  * Get the TLS connection of @conn.
  *
@@ -707,7 +711,7 @@ gst_rtsp_connection_get_tls_validation_flags (GstRTSPConnection * conn)
 /**
  * gst_rtsp_connection_set_tls_database:
  * @conn: a #GstRTSPConnection
- * @database: a #GTlsDatabase
+ * @database: (nullable): a #GTlsDatabase
  *
  * Sets the anchor certificate authorities database. This certificate
  * database will be used to verify the server's certificate in case it
@@ -741,7 +745,7 @@ gst_rtsp_connection_set_tls_database (GstRTSPConnection * conn,
  * after a server certificate can't be verified with the default
  * certificate database.
  *
- * Returns: (transfer full): the anchor certificate authorities database, or NULL if no
+ * Returns: (transfer full) (nullable): the anchor certificate authorities database, or NULL if no
  * database has been previously set. Use g_object_unref() to release the
  * certificate database.
  *
@@ -763,7 +767,7 @@ gst_rtsp_connection_get_tls_database (GstRTSPConnection * conn)
 /**
  * gst_rtsp_connection_set_tls_interaction:
  * @conn: a #GstRTSPConnection
- * @interaction: a #GTlsInteraction
+ * @interaction: (nullable): a #GTlsInteraction
  *
  * Sets a #GTlsInteraction object to be used when the connection or certificate
  * database need to interact with the user. This will be used to prompt the
@@ -797,7 +801,7 @@ gst_rtsp_connection_set_tls_interaction (GstRTSPConnection * conn,
  * database need to interact with the user. This will be used to prompt the
  * user for passwords where necessary.
  *
- * Returns: (transfer full): a reference on the #GTlsInteraction. Use
+ * Returns: (transfer full) (nullable): a reference on the #GTlsInteraction. Use
  * g_object_unref() to release.
  *
  * Since: 1.6
@@ -1743,7 +1747,7 @@ clear_write_socket_timeout (GstRTSPConnection * conn)
 /**
  * gst_rtsp_connection_write_usec:
  * @conn: a #GstRTSPConnection
- * @data: the data to write
+ * @data: (array length=size): the data to write
  * @size: the size of @data
  * @timeout: a timeout value or 0
  *
@@ -2722,7 +2726,7 @@ invalid_format:
 /**
  * gst_rtsp_connection_read_usec:
  * @conn: a #GstRTSPConnection
- * @data: the data to read
+ * @data: (array length=size): the data to read
  * @size: the size of @data
  * @timeout: a timeout value in microseconds
  *
@@ -2803,7 +2807,7 @@ no_message:
 /**
  * gst_rtsp_connection_receive_usec:
  * @conn: a #GstRTSPConnection
- * @message: the message to read
+ * @message: (out caller-allocates): the message to read
  * @timeout: a timeout value or 0
  *
  * Attempt to read into @message from the connected @conn, blocking up to
@@ -2991,7 +2995,7 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
  * gst_rtsp_connection_poll_usec:
  * @conn: a #GstRTSPConnection
  * @events: a bitmask of #GstRTSPEvent flags to check
- * @revents: location for result flags
+ * @revents: (out caller-allocates): location for result flags
  * @timeout: a timeout in microseconds
  *
  * Wait up to the specified @timeout for the connection to become available for
@@ -3484,7 +3488,7 @@ gst_rtsp_connection_set_ip (GstRTSPConnection * conn, const gchar * ip)
  *
  * Get the file descriptor for reading.
  *
- * Returns: (transfer none): the file descriptor used for reading or %NULL on
+ * Returns: (transfer none) (nullable): the file descriptor used for reading or %NULL on
  * error. The file descriptor remains valid until the connection is closed.
  */
 GSocket *
@@ -3502,7 +3506,7 @@ gst_rtsp_connection_get_read_socket (const GstRTSPConnection * conn)
  *
  * Get the file descriptor for writing.
  *
- * Returns: (transfer none): the file descriptor used for writing or NULL on
+ * Returns: (transfer none) (nullable): the file descriptor used for writing or NULL on
  * error. The file descriptor remains valid until the connection is closed.
  */
 GSocket *
@@ -3571,7 +3575,7 @@ gst_rtsp_connection_is_tunneled (const GstRTSPConnection * conn)
  *
  * Get the tunnel session id the connection.
  *
- * Returns: returns a non-empty string if @conn is being tunneled over HTTP.
+ * Returns: (nullable): returns a non-empty string if @conn is being tunneled over HTTP.
  */
 const gchar *
 gst_rtsp_connection_get_tunnelid (const GstRTSPConnection * conn)
@@ -3626,7 +3630,7 @@ gst_rtsp_connection_get_ignore_x_server_reply (const GstRTSPConnection * conn)
 /**
  * gst_rtsp_connection_do_tunnel:
  * @conn: a #GstRTSPConnection
- * @conn2: a #GstRTSPConnection or %NULL
+ * @conn2: (nullable): a #GstRTSPConnection or %NULL
  *
  * If @conn received the first tunnel connection and @conn2 received
  * the second tunnel connection, link the two connections together so that
@@ -4371,7 +4375,7 @@ static GSourceFuncs gst_rtsp_source_funcs = {
  *
  * @conn must exist for the entire lifetime of the watch.
  *
- * Returns: a #GstRTSPWatch that can be used for asynchronous RTSP
+ * Returns: (transfer full): a #GstRTSPWatch that can be used for asynchronous RTSP
  * communication. Free with gst_rtsp_watch_unref () after usage.
  */
 GstRTSPWatch *
@@ -4466,7 +4470,7 @@ gst_rtsp_watch_reset (GstRTSPWatch * watch)
 /**
  * gst_rtsp_watch_attach:
  * @watch: a #GstRTSPWatch
- * @context: a GMainContext (if NULL, the default context will be used)
+ * @context: (nullable): a GMainContext (if NULL, the default context will be used)
  *
  * Adds a #GstRTSPWatch to a context so that it will be executed within that context.
  *
@@ -4798,7 +4802,7 @@ too_much_backlog:
  * @watch: a #GstRTSPWatch
  * @data: (array length=size) (transfer full): the data to queue
  * @size: the size of @data
- * @id: (out) (allow-none): location for a message ID or %NULL
+ * @id: (out) (optional): location for a message ID or %NULL
  *
  * Write @data using the connection of the @watch. If it cannot be sent
  * immediately, it will be queued for transmission in @watch. The contents of
@@ -4835,7 +4839,7 @@ gst_rtsp_watch_write_data (GstRTSPWatch * watch, const guint8 * data,
  * gst_rtsp_watch_send_message:
  * @watch: a #GstRTSPWatch
  * @message: a #GstRTSPMessage
- * @id: (out) (allow-none): location for a message ID or %NULL
+ * @id: (out) (optional): location for a message ID or %NULL
  *
  * Send a @message using the connection of the @watch. If it cannot be sent
  * immediately, it will be queued for transmission in @watch. The contents of
@@ -4861,7 +4865,7 @@ gst_rtsp_watch_send_message (GstRTSPWatch * watch, GstRTSPMessage * message,
  * @watch: a #GstRTSPWatch
  * @messages: (array length=n_messages): the messages to send
  * @n_messages: the number of messages to send
- * @id: (out) (allow-none): location for a message ID or %NULL
+ * @id: (out) (optional): location for a message ID or %NULL
  *
  * Sends @messages using the connection of the @watch. If they cannot be sent
  * immediately, they will be queued for transmission in @watch. The contents of
@@ -5056,7 +5060,7 @@ gst_rtsp_connection_connect_with_response (GstRTSPConnection * conn,
 /**
  * gst_rtsp_connection_read:
  * @conn: a #GstRTSPConnection
- * @data: the data to read
+ * @data: (array length=size): the data to read
  * @size: the size of @data
  * @timeout: a timeout value or %NULL
  *
@@ -5080,7 +5084,7 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
 /**
  * gst_rtsp_connection_write:
  * @conn: a #GstRTSPConnection
- * @data: the data to write
+ * @data: (array length=size): the data to write
  * @size: the size of @data
  * @timeout: a timeout value or %NULL
  *
@@ -5154,7 +5158,7 @@ gst_rtsp_connection_send_messages (GstRTSPConnection * conn,
 /**
  * gst_rtsp_connection_receive:
  * @conn: a #GstRTSPConnection
- * @message: the message to read
+ * @message: (out caller-allocates): the message to read
  * @timeout: a timeout value or %NULL
  *
  * Attempt to read into @message from the connected @conn, blocking up to
@@ -5178,7 +5182,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
  * gst_rtsp_connection_poll:
  * @conn: a #GstRTSPConnection
  * @events: a bitmask of #GstRTSPEvent flags to check
- * @revents: location for result flags
+ * @revents: (out): location for result flags
  * @timeout: a timeout
  *
  * Wait up to the specified @timeout for the connection to become available for

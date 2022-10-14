@@ -136,7 +136,7 @@ gst_rtsp_message_new (GstRTSPMessage ** msg)
 
 /**
  * gst_rtsp_message_init:
- * @msg: a #GstRTSPMessage
+ * @msg: (out caller-allocates): a #GstRTSPMessage
  *
  * Initialize @msg. This function is mostly used when @msg is allocated on the
  * stack. The reverse operation of this is gst_rtsp_message_unset().
@@ -201,7 +201,7 @@ gst_rtsp_message_new_request (GstRTSPMessage ** msg, GstRTSPMethod method,
 
 /**
  * gst_rtsp_message_init_request:
- * @msg: a #GstRTSPMessage
+ * @msg: (out caller-allocates): a #GstRTSPMessage
  * @method: the request method to use
  * @uri: (transfer none): the uri of the request
  *
@@ -231,9 +231,9 @@ gst_rtsp_message_init_request (GstRTSPMessage * msg, GstRTSPMethod method,
 /**
  * gst_rtsp_message_parse_request:
  * @msg: a #GstRTSPMessage
- * @method: (out) (allow-none): location to hold the method
- * @uri: (out) (allow-none) (transfer none): location to hold the uri
- * @version: (out) (allow-none) (transfer none): location to hold the version
+ * @method: (out) (optional): location to hold the method
+ * @uri: (out) (optional) (transfer none): location to hold the uri
+ * @version: (out) (optional) (transfer none): location to hold the version
  *
  * Parse the request message @msg and store the values @method, @uri and
  * @version. The result locations can be %NULL if one is not interested in its
@@ -265,8 +265,8 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
  * gst_rtsp_message_new_response:
  * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  * @code: the status code
- * @reason: (transfer none) (allow-none): the status reason or %NULL
- * @request: (transfer none) (allow-none): the request that triggered the response or %NULL
+ * @reason: (transfer none) (optional): the status reason or %NULL
+ * @request: (transfer none) (optional): the request that triggered the response or %NULL
  *
  * Create a new response #GstRTSPMessage with @code and @reason and store the
  * result message in @msg. Free with gst_rtsp_message_free().
@@ -295,10 +295,10 @@ gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
 
 /**
  * gst_rtsp_message_init_response:
- * @msg: a #GstRTSPMessage
+ * @msg: (out caller-allocates): a #GstRTSPMessage
  * @code: the status code
- * @reason: (transfer none) (allow-none): the status reason or %NULL
- * @request: (transfer none) (allow-none): the request that triggered the response or %NULL
+ * @reason: (transfer none) (optional): the status reason or %NULL
+ * @request: (transfer none) (optional): the request that triggered the response or %NULL
  *
  * Initialize @msg with @code and @reason.
  *
@@ -365,9 +365,9 @@ gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
 /**
  * gst_rtsp_message_parse_response:
  * @msg: a #GstRTSPMessage
- * @code: (out) (allow-none): location to hold the status code
- * @reason: (out) (allow-none) (transfer none): location to hold the status reason
- * @version: (out) (allow-none) (transfer none): location to hold the version
+ * @code: (out) (optional): location to hold the status code
+ * @reason: (out) (optional) (transfer none): location to hold the status reason
+ * @version: (out) (optional) (transfer none): location to hold the version
  *
  * Parse the response message @msg and store the values @code, @reason and
  * @version. The result locations can be %NULL if one is not interested in its
@@ -421,7 +421,7 @@ gst_rtsp_message_new_data (GstRTSPMessage ** msg, guint8 channel)
 
 /**
  * gst_rtsp_message_init_data:
- * @msg: a #GstRTSPMessage
+ * @msg: (out caller-allocates): a #GstRTSPMessage
  * @channel: a channel
  *
  * Initialize a new data #GstRTSPMessage for @channel.
@@ -444,7 +444,7 @@ gst_rtsp_message_init_data (GstRTSPMessage * msg, guint8 channel)
 /**
  * gst_rtsp_message_parse_data:
  * @msg: a #GstRTSPMessage
- * @channel: (out): location to hold the channel
+ * @channel: (out) (optional): location to hold the channel
  *
  * Parse the data message @msg and store the channel in @channel.
  *
@@ -539,7 +539,7 @@ gst_rtsp_message_free (GstRTSPMessage * msg)
 /**
  * gst_rtsp_message_copy:
  * @msg: a #GstRTSPMessage
- * @copy: (out) (transfer full): pointer to new #GstRTSPMessage
+ * @copy: (out) (nullable) (transfer full): pointer to new #GstRTSPMessage
  *
  * Allocate a new copy of @msg and store the result in @copy. The value in
  * @copy should be release with gst_rtsp_message_free function.
@@ -553,6 +553,10 @@ gst_rtsp_message_copy (const GstRTSPMessage * msg, GstRTSPMessage ** copy)
 {
   GstRTSPResult ret;
   GstRTSPMessage *cp;
+
+  g_return_val_if_fail (copy != NULL, GST_RTSP_EINVAL);
+
+  *copy = NULL;
 
   if (msg == NULL)
     return GST_RTSP_EINVAL;
@@ -684,7 +688,7 @@ gst_rtsp_message_remove_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
  * gst_rtsp_message_get_header:
  * @msg: a #GstRTSPMessage
  * @field: a #GstRTSPHeaderField
- * @value: (out) (transfer none): pointer to hold the result
+ * @value: (out) (transfer none) (optional) (nullable): pointer to hold the result
  * @indx: the index of the header
  *
  * Get the @indx header value with key @field from @msg. The result in @value
@@ -701,6 +705,9 @@ gst_rtsp_message_get_header (const GstRTSPMessage * msg,
   gint cnt = 0;
 
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+
+  if (value)
+    *value = NULL;
 
   /* no header initialized, there are no headers */
   if (msg->hdr_fields == NULL)
@@ -858,7 +865,7 @@ gst_rtsp_message_remove_header_by_name (GstRTSPMessage * msg,
  * gst_rtsp_message_get_header_by_name:
  * @msg: a #GstRTSPMessage
  * @header: a #GstRTSPHeaderField
- * @value: (out) (transfer none): pointer to hold the result
+ * @value: (out) (transfer none) (optional) (nullable): pointer to hold the result
  * @index: the index of the header
  *
  * Get the @index header value with key @header from @msg. The result in @value
@@ -878,6 +885,9 @@ gst_rtsp_message_get_header_by_name (GstRTSPMessage * msg,
 
   g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (header != NULL, GST_RTSP_EINVAL);
+
+  if (value)
+    *value = NULL;
 
   pos = gst_rtsp_message_find_header_by_name (msg, header, index);
 
@@ -1445,7 +1455,7 @@ parse_auth_credentials (GPtrArray * auth_credentials, const gchar * header,
  *
  * Parses the credentials given in a WWW-Authenticate or Authorization header.
  *
- * Returns: (array zero-terminated=1):
+ * Returns: (transfer full) (array zero-terminated=1):
  *     %NULL-terminated array of GstRTSPAuthCredential or %NULL.
  *
  * Since: 1.12

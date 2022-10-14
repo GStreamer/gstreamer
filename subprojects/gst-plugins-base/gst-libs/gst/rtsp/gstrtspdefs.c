@@ -313,7 +313,7 @@ gst_rtsp_strresult (GstRTSPResult result)
  *
  * Convert @method to a string.
  *
- * Returns: a string representation of @method.
+ * Returns: (nullable): a string representation of @method.
  */
 const gchar *
 gst_rtsp_method_as_text (GstRTSPMethod method)
@@ -364,7 +364,7 @@ gst_rtsp_version_as_text (GstRTSPVersion version)
  *
  * Convert @field to a string.
  *
- * Returns: a string representation of @field.
+ * Returns: (nullable): a string representation of @field.
  */
 const gchar *
 gst_rtsp_header_as_text (GstRTSPHeaderField field)
@@ -602,7 +602,7 @@ done:
 
 /**
  * gst_rtsp_generate_digest_auth_response:
- * @algorithm: (allow-none): Hash algorithm to use, or %NULL for MD5
+ * @algorithm: (nullable): Hash algorithm to use, or %NULL for MD5
  * @method: Request method, e.g. PLAY
  * @realm: Realm
  * @username: Username
@@ -615,7 +615,7 @@ done:
  *
  * Currently only supported algorithm "md5".
  *
- * Returns: Authentication response or %NULL if unsupported
+ * Returns: (nullable): Authentication response or %NULL if unsupported
  *
  * Since: 1.12
  */
@@ -643,7 +643,7 @@ gst_rtsp_generate_digest_auth_response (const gchar * algorithm,
 
 /**
  * gst_rtsp_generate_digest_auth_response_from_md5:
- * @algorithm: (allow-none): Hash algorithm to use, or %NULL for MD5
+ * @algorithm: (nullable): Hash algorithm to use, or %NULL for MD5
  * @method: Request method, e.g. PLAY
  * @md5: The md5 sum of username:realm:password
  * @uri: Original request URI
@@ -657,7 +657,7 @@ gst_rtsp_generate_digest_auth_response (const gchar * algorithm,
  *
  * Currently only supported algorithm "md5".
  *
- * Returns: Authentication response or %NULL if unsupported
+ * Returns: (nullable): Authentication response or %NULL if unsupported
  *
  * Since: 1.16
  */
