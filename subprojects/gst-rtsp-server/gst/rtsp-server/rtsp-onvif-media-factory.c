@@ -360,7 +360,7 @@ gst_rtsp_onvif_media_factory_init (GstRTSPOnvifMediaFactory * factory)
 /**
  * gst_rtsp_onvif_media_factory_set_backchannel_launch:
  * @factory: a #GstRTSPMediaFactory
- * @launch: the launch description
+ * @launch: (nullable): the launch description
  *
  * The gst_parse_launch() line to use for constructing the ONVIF backchannel
  * pipeline in the default prepare vmethod if requested by the client.
@@ -400,7 +400,7 @@ gst_rtsp_onvif_media_factory_set_backchannel_launch (GstRTSPOnvifMediaFactory *
  * Get the gst_parse_launch() pipeline description that will be used in the
  * default prepare vmethod for generating the ONVIF backchannel pipeline.
  *
- * Returns: (transfer full): the configured backchannel launch description. g_free() after
+ * Returns: (transfer full) (nullable): the configured backchannel launch description. g_free() after
  * usage.
  *
  * Since: 1.14

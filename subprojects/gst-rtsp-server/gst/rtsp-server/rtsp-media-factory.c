@@ -1375,7 +1375,7 @@ weak_ref_free (GWeakRef * ref)
  * After the media is constructed, it can be configured and then prepared
  * with gst_rtsp_media_prepare ().
  *
- * Returns: (transfer full): a new #GstRTSPMedia if the media could be prepared.
+ * Returns: (transfer full) (nullable): a new #GstRTSPMedia if the media could be prepared.
  */
 GstRTSPMedia *
 gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
@@ -1534,7 +1534,7 @@ gst_rtsp_media_factory_set_clock (GstRTSPMediaFactory * factory,
  * Returns the clock that is going to be used by the pipelines
  * of all medias created from this factory.
  *
- * Returns: (transfer full): The GstClock
+ * Returns: (transfer full) (nullable): The GstClock
  *
  * Since: 1.8
  */
@@ -1987,7 +1987,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
  * implementation of this function returns the bin created from the
  * launch parameter.
  *
- * Returns: (transfer floating): a new #GstElement.
+ * Returns: (transfer floating) (nullable): a new #GstElement.
  */
 GstElement *
 gst_rtsp_media_factory_create_element (GstRTSPMediaFactory * factory,

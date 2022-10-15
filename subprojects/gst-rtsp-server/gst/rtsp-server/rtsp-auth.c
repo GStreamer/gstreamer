@@ -1231,6 +1231,7 @@ gst_rtsp_auth_make_basic (const gchar * user, const gchar * pass)
 
 /**
  * gst_rtsp_auth_set_realm:
+ * @realm: (nullable): The realm to set
  *
  * Set the @realm of @auth
  *
@@ -1251,7 +1252,7 @@ gst_rtsp_auth_set_realm (GstRTSPAuth * auth, const gchar * realm)
 /**
  * gst_rtsp_auth_get_realm:
  *
- * Returns: (transfer full): the @realm of @auth
+ * Returns: (transfer full) (nullable): the @realm of @auth
  *
  * Since: 1.16
  */

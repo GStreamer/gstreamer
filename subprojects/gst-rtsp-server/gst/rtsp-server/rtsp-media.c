@@ -4316,7 +4316,7 @@ not_prepared:
  * Get the #GstNetTimeProvider for the clock used by @media. The time provider
  * will listen on @address and @port for client time requests.
  *
- * Returns: (transfer full): the #GstNetTimeProvider of @media.
+ * Returns: (transfer full) (nullable): the #GstNetTimeProvider of @media.
  */
 GstNetTimeProvider *
 gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,

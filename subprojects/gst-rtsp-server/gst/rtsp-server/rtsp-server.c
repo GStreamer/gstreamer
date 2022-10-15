@@ -434,7 +434,7 @@ gst_rtsp_server_set_service (GstRTSPServer * server, const gchar * service)
  *
  * Get the service on which the server will accept connections.
  *
- * Returns: (transfer full) (nullable): the service. use g_free() after usage.
+ * Returns: (transfer full): the service. use g_free() after usage.
  */
 gchar *
 gst_rtsp_server_get_service (GstRTSPServer * server)
@@ -1318,7 +1318,7 @@ watch_destroyed (GstRTSPServer * server)
 /**
  * gst_rtsp_server_create_source:
  * @server: a #GstRTSPServer
- * @cancellable: (allow-none): a #GCancellable or %NULL.
+ * @cancellable: (nullable): a #GCancellable or %NULL.
  * @error: (out): a #GError
  *
  * Create a #GSource for @server. The new source will have a default
@@ -1380,7 +1380,7 @@ no_socket:
 /**
  * gst_rtsp_server_attach:
  * @server: a #GstRTSPServer
- * @context: (allow-none): a #GMainContext
+ * @context: (nullable): a #GMainContext
  *
  * Attaches @server to @context. When the mainloop for @context is run, the
  * server will be dispatched. When @context is %NULL, the default context will be
@@ -1427,7 +1427,7 @@ no_source:
 /**
  * gst_rtsp_server_client_filter:
  * @server: a #GstRTSPServer
- * @func: (scope call) (allow-none): a callback
+ * @func: (scope call) (nullable): a callback
  * @user_data: user data passed to @func
  *
  * Call @func for each client managed by @server. The result value of @func

@@ -1993,7 +1993,7 @@ gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
  *
  * Get the RTP session of this stream.
  *
- * Returns: (transfer full): The RTP session of this stream. Unref after usage.
+ * Returns: (transfer full) (nullable): The RTP session of this stream. Unref after usage.
  */
 GObject *
 gst_rtsp_stream_get_rtpsession (GstRTSPStream * stream)
@@ -2019,7 +2019,7 @@ gst_rtsp_stream_get_rtpsession (GstRTSPStream * stream)
  *
  * Get the SRTP encoder for this stream.
  *
- * Returns: (transfer full): The SRTP encoder for this stream. Unref after usage.
+ * Returns: (transfer full) (nullable): The SRTP encoder for this stream. Unref after usage.
  */
 GstElement *
 gst_rtsp_stream_get_srtp_encoder (GstRTSPStream * stream)

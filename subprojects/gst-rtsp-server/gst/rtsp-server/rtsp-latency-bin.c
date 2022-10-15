@@ -336,7 +336,7 @@ gst_rtsp_latency_bin_change_state (GstElement * element, GstStateChange
  * Create a bin that encapsulates an @element and prevents it from affecting
  * latency on the whole pipeline.
  *
- * Returns: A newly created #GstRTSPLatencyBin element, or %NULL on failure
+ * Returns: (nullable): A newly created #GstRTSPLatencyBin element, or %NULL on failure
  */
 GstElement *
 gst_rtsp_latency_bin_new (GstElement * element)
