@@ -168,7 +168,7 @@ gst_gl_display_class_init (GstGLDisplayClass * klass)
    * It can be called in any thread and it is emitted with
    * display's object lock held.
    *
-   * Returns: (transfer full): the new context.
+   * Returns: (transfer full) (nullable): the new context.
    */
   gst_gl_display_signals[CREATE_CONTEXT] =
       g_signal_new ("create-context", G_TYPE_FROM_CLASS (klass),
@@ -566,7 +566,7 @@ gst_gl_display_get_handle_type (GstGLDisplay * display)
 /**
  * gst_context_set_gl_display:
  * @context: a #GstContext
- * @display: (transfer none): resulting #GstGLDisplay
+ * @display: (transfer none) (nullable): resulting #GstGLDisplay
  *
  * Sets @display on @context
  *
@@ -592,7 +592,7 @@ gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
 /**
  * gst_context_get_gl_display:
  * @context: a #GstContext
- * @display: (out) (transfer full): resulting #GstGLDisplay
+ * @display: (out) (optional) (nullable) (transfer full): resulting #GstGLDisplay
  *
  * Returns: Whether @display was in @context
  *
@@ -622,7 +622,7 @@ gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
  * @display: a #GstGLDisplay
  * @other_context: (transfer none): other #GstGLContext to share resources with.
  * @p_context: (transfer full) (out): resulting #GstGLContext
- * @error: (allow-none): resulting #GError
+ * @error: (optional): resulting #GError
  *
  * It requires the display's object lock to be held.
  *
@@ -674,7 +674,7 @@ gst_gl_display_create_context (GstGLDisplay * display,
  * gst_gl_display_create_window:
  * @display: a #GstGLDisplay
  *
- * Returns: (transfer full): a new #GstGLWindow for @display or %NULL.
+ * Returns: (transfer full) (nullable): a new #GstGLWindow for @display or %NULL.
  */
 /* XXX: previous versions had documentation requiring the OBJECT lock to be
  * held when this fuction is called so that needs to always work. */
@@ -746,7 +746,7 @@ gst_gl_display_remove_window (GstGLDisplay * display, GstGLWindow * window)
  * first argument to @compare_func is the #GstGLWindow being checked and the
  * second argument is @data.
  *
- * Returns: (transfer none): The first #GstGLWindow that causes a match
+ * Returns: (transfer none) (nullable): The first #GstGLWindow that causes a match
  *          from @compare_func
  *
  * Since: 1.12
@@ -776,7 +776,7 @@ gst_gl_display_find_window (GstGLDisplay * display, gpointer data,
  * first argument to @compare_func is the #GstGLWindow being checked and the
  * second argument is @data.
  *
- * Returns: (transfer full): The first #GstGLWindow that causes a match
+ * Returns: (transfer full) (nullable): The first #GstGLWindow that causes a match
  *          from @compare_func
  *
  * Since: 1.18
@@ -852,7 +852,7 @@ _get_gl_context_for_thread_unlocked (GstGLDisplay * display, GThread * thread)
  * @display: a #GstGLDisplay
  * @thread: a #GThread
  *
- * Returns: (transfer full): the #GstGLContext current on @thread or %NULL
+ * Returns: (transfer full) (nullable): the #GstGLContext current on @thread or %NULL
  *
  * Must be called with the object lock held.
  *

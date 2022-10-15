@@ -90,7 +90,7 @@ gst_gl_display_egl_device_get_handle (GstGLDisplay * display)
  *
  * Create a new #GstGLDisplayEGLDevice with an EGLDevice supported device
  *
- * Returns: (transfer full): a new #GstGLDisplayEGLDevice or %NULL
+ * Returns: (transfer full) (nullable): a new #GstGLDisplayEGLDevice or %NULL
  *
  * Since: 1.18
  */

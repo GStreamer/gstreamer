@@ -1444,7 +1444,7 @@ gst_gl_view_convert_get_property (GObject * object, guint prop_id,
  * Converts the data contained by @inbuf using the formats specified by the
  * #GstCaps passed to gst_gl_view_convert_set_caps()
  *
- * Returns: (transfer full): a converted #GstBuffer or %NULL
+ * Returns: (transfer full) (nullable): a converted #GstBuffer or %NULL
  *
  * Since: 1.6
  */

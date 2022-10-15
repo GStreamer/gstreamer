@@ -388,7 +388,7 @@ gst_gl_buffer_pool_finalize (GObject * object)
  * gst_buffer_pool_set_config() will cause this function to return a new
  * #GstGLAllocationParams which may or may not contain the same information.
  *
- * Returns: (transfer full): a copy of the #GstGLAllocationParams being used by the @pool
+ * Returns: (transfer full) (nullable): a copy of the #GstGLAllocationParams being used by the @pool
  *
  * Since: 1.20
  */
@@ -408,7 +408,7 @@ gst_gl_buffer_pool_get_gl_allocation_params (GstGLBufferPool * pool)
  * gst_buffer_pool_config_get_gl_allocation_params:
  * @config: a buffer pool config
  *
- * Returns: (transfer full): the currently set #GstGLAllocationParams or %NULL
+ * Returns: (transfer full) (nullable): the currently set #GstGLAllocationParams or %NULL
  */
 GstGLAllocationParams *
 gst_buffer_pool_config_get_gl_allocation_params (GstStructure * config)
@@ -425,7 +425,7 @@ gst_buffer_pool_config_get_gl_allocation_params (GstStructure * config)
 /**
  * gst_buffer_pool_config_set_gl_allocation_params:
  * @config: a buffer pool config
- * @params: (transfer none): a #GstGLAllocationParams
+ * @params: (transfer none) (nullable): a #GstGLAllocationParams
  *
  * Sets @params on @config
  */

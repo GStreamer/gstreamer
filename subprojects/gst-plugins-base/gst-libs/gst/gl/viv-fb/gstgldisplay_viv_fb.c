@@ -71,7 +71,7 @@ gst_gl_display_viv_fb_finalize (GObject * object)
  *
  * Create a new #GstGLDisplayVivFB from the FB display index.
  *
- * Returns: (transfer full): a new #GstGLDisplayVivFB or %NULL
+ * Returns: (transfer full) (nullable): a new #GstGLDisplayVivFB or %NULL
  */
 GstGLDisplayVivFB *
 gst_gl_display_viv_fb_new (gint disp_idx)

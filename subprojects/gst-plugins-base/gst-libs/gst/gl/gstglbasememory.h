@@ -261,7 +261,7 @@ void                    gst_gl_allocation_params_copy_data  (GstGLAllocationPara
  *
  * Note: not called with a GL context current
  *
- * Returns: a newly allocated #GstGLBaseMemory from @allocator and @params
+ * Returns: (transfer full) (nullable): a newly allocated #GstGLBaseMemory from @allocator and @params
  *
  * Since: 1.8
  */
@@ -318,7 +318,7 @@ typedef void                (*GstGLBaseMemoryAllocatorUnmapFunction)        (Gst
  *
  * Also see gst_memory_copy();
  *
- * Returns: the newly copied #GstGLMemory or %NULL
+ * Returns: (transfer full) (nullable): the newly copied #GstGLMemory or %NULL
  *
  * Since: 1.8
  */

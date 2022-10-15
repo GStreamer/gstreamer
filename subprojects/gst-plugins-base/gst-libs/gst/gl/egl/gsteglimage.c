@@ -452,7 +452,7 @@ _destroy_egl_image (GstEGLImage * image, gpointer user_data)
  * @gl_mem: a #GstGLMemory
  * @attribs: additional attributes to add to the `eglCreateImage`() call.
  *
- * Returns: (transfer full): a #GstEGLImage wrapping @gl_mem or %NULL on failure
+ * Returns: (transfer full) (nullable): a #GstEGLImage wrapping @gl_mem or %NULL on failure
  */
 GstEGLImage *
 gst_egl_image_from_texture (GstGLContext * context, GstGLMemory * gl_mem,
@@ -641,7 +641,7 @@ get_egl_stride (const GstVideoInfo * info, gint plane)
  * With NV12, two EGL images are created, one with R format, one
  * with RG format etc.
  *
- * Returns: a #GstEGLImage wrapping @dmabuf or %NULL on failure
+ * Returns: (nullable): a #GstEGLImage wrapping @dmabuf or %NULL on failure
  */
 GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
@@ -927,7 +927,7 @@ gst_egl_image_check_dmabuf_direct (GstGLContext * context,
  * is that this function creates one EGL image for all planes, not one for
  * a single plane.
  *
- * Returns: a #GstEGLImage wrapping @dmabuf or %NULL on failure
+ * Returns: (nullable): a #GstEGLImage wrapping @dmabuf or %NULL on failure
  *
  * Since: 1.18
  */
@@ -1094,7 +1094,7 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
  * is that this function creates one EGL image for all planes, not one for
  * a single plane.
  *
- * Returns: a #GstEGLImage wrapping @dmabuf or %NULL on failure
+ * Returns: (nullable): a #GstEGLImage wrapping @dmabuf or %NULL on failure
  */
 GstEGLImage *
 gst_egl_image_from_dmabuf_direct (GstGLContext * context,

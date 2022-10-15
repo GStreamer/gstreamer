@@ -494,7 +494,7 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
  * gst_gl_context_get_current_gl_context:
  * @context_type: a #GstGLPlatform specifying the type of context to retrieve
  *
- * Returns: The OpenGL context handle current in the calling thread or %NULL
+ * Returns: (nullable): The OpenGL context handle current in the calling thread or %NULL
  *
  * Since: 1.6
  */
@@ -543,7 +543,7 @@ gst_gl_context_get_current_gl_context (GstGLPlatform context_type)
  *
  * See also gst_gl_context_get_proc_address().
  *
- * Returns: a function pointer for @name, or %NULL
+ * Returns: (nullable): a function pointer for @name, or %NULL
  *
  * Since: 1.6
  */
@@ -807,7 +807,7 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
  * gst_gl_context_get_thread:
  * @context: a #GstGLContext
  *
- * Returns: (transfer full): The #GThread, @context is current in or NULL
+ * Returns: (transfer full) (nullable): The #GThread, @context is current in or NULL
  *
  * Since: 1.6
  */
@@ -877,7 +877,7 @@ gst_gl_context_get_gl_api (GstGLContext * context)
  * void (GSTGLAPI *PFN_glGetIntegerv) (GLenum name, GLint * ret)
  * ]|
  *
- * Returns: a function pointer or %NULL
+ * Returns: (nullable): a function pointer or %NULL
  *
  * Since: 1.4
  */
@@ -908,7 +908,7 @@ gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
  *
  * See also: gst_gl_context_get_proc_address()
  *
- * Returns: an address pointing to @name or %NULL
+ * Returns: (nullable): an address pointing to @name or %NULL
  *
  * Since: 1.4
  */
@@ -1770,7 +1770,7 @@ gst_gl_context_check_feature (GstGLContext * context, const gchar * feature)
  *
  * See also gst_gl_context_activate().
  *
- * Returns: (transfer none): the #GstGLContext active in the current thread or %NULL
+ * Returns: (transfer none) (nullable): the #GstGLContext active in the current thread or %NULL
  *
  * Since: 1.6
  */

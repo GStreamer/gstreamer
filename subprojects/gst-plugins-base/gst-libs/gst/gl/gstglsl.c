@@ -237,7 +237,7 @@ _is_valid_version_profile (GstGLSLVersion version, GstGLSLProfile profile)
  * @version: a #GstGLSLVersion
  * @profile: a #GstGLSLVersion
  *
- * Returns: the combined GLSL `#version` string for @version and @profile
+ * Returns: (nullable): the combined GLSL `#version` string for @version and @profile
  */
 gchar *
 gst_glsl_version_profile_to_string (GstGLSLVersion version,

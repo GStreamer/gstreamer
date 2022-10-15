@@ -266,7 +266,7 @@ _new_with_stages_va_list (GstGLContext * context, GError ** error,
 /**
  * gst_gl_shader_new_link_with_stages:
  * @context: a #GstGLContext
- * @error: a #GError
+ * @error: (optional): a #GError
  * @...: a NULL terminated list of #GstGLSLStage's
  *
  * Each stage will attempt to be compiled and attached to @shader.  Then
@@ -302,7 +302,7 @@ gst_gl_shader_new_link_with_stages (GstGLContext * context, GError ** error,
 /**
  * gst_gl_shader_new_with_stages:
  * @context: a #GstGLContext
- * @error: a #GError
+ * @error: (optional): a #GError
  * @...: a NULL terminated list of #GstGLSLStage's
  *
  * Each stage will attempt to be compiled and attached to @shader.  On error,
@@ -344,7 +344,7 @@ gst_gl_shader_new (GstGLContext * context)
 /**
  * gst_gl_shader_new_default:
  * @context: a #GstGLContext
- * @error: a #GError that is filled on failure
+ * @error: (optional): a #GError that is filled on failure
  *
  * Note: must be called in the GL thread
  *
@@ -594,7 +594,7 @@ gst_gl_shader_attach (GstGLShader * shader, GstGLSLStage * stage)
  * gst_gl_shader_compile_attach_stage:
  * @shader: a #GstGLShader
  * @stage: a #GstGLSLStage to attach
- * @error: a #GError
+ * @error: (optional): a #GError
  *
  * Compiles @stage and attaches it to @shader.
  *
@@ -626,7 +626,7 @@ gst_gl_shader_compile_attach_stage (GstGLShader * shader, GstGLSLStage * stage,
 /**
  * gst_gl_shader_link:
  * @shader: a #GstGLShader
- * @error: a #GError
+ * @error: (optional): a #GError
  *
  * Links the current list of #GstGLSLStage's in @shader.
  *

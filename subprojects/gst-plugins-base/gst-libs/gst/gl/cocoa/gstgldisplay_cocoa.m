@@ -228,7 +228,7 @@ gst_gl_display_cocoa_finalize (GObject * object)
  *
  * Create a new #GstGLDisplayCocoa.
  *
- * Returns: (transfer full): a new #GstGLDisplayCocoa or %NULL
+ * Returns: (transfer full): a new #GstGLDisplayCocoa
  */
 GstGLDisplayCocoa *
 gst_gl_display_cocoa_new (void)

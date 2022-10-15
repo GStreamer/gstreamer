@@ -125,7 +125,7 @@ gst_gl_display_egl_finalize (GObject * object)
  * %GST_GL_DISPLAY_TYPE_ANY, then @display must be 0. @type must not be
  * %GST_GL_DISPLAY_TYPE_NONE.
  *
- * Returns: A `EGLDisplay` or `EGL_NO_DISPLAY`
+ * Returns: (nullable): A `EGLDisplay` or `EGL_NO_DISPLAY`
  *
  * Since: 1.12
  */
@@ -248,23 +248,26 @@ default_display:
  *
  * Create a new #GstGLDisplayEGL using the default EGL_DEFAULT_DISPLAY.
  *
- * Returns: (transfer full): a new #GstGLDisplayEGL or %NULL
+ * Returns: (transfer full) (nullable): a new #GstGLDisplayEGL or %NULL
  */
 GstGLDisplayEGL *
 gst_gl_display_egl_new (void)
 {
   GstGLDisplayEGL *ret;
+  gpointer display;
 
   init_debug ();
 
+  display = gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
+
+  if (!display) {
+    GST_INFO ("Failed to open EGL display connection");
+    return NULL;
+  }
+
   ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
   gst_object_ref_sink (ret);
-  ret->display =
-      gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_ANY, 0);
-
-  if (!ret->display) {
-    GST_INFO ("Failed to open EGL display connection");
-  }
+  ret->display = display;
 
   return ret;
 }
@@ -314,7 +317,7 @@ _ref_if_set (gpointer data, gpointer user_data)
  * This function will return the same value for multiple calls with the same
  * @display.
  *
- * Returns: (transfer full): a new #GstGLDisplayEGL
+ * Returns: (transfer full) (nullable): a new #GstGLDisplayEGL
  *
  * Since: 1.12
  */

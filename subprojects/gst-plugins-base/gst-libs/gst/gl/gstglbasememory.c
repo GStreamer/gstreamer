@@ -666,7 +666,7 @@ gst_gl_allocation_params_init (GstGLAllocationParams * params,
  * @src: the #GstGLAllocationParams to initialize
  *
  * Returns: (transfer full): a copy of the #GstGLAllocationParams specified by
- *          @src or %NULL on failure
+ *          @src
  *
  * Since: 1.8
  */
@@ -751,7 +751,7 @@ G_DEFINE_BOXED_TYPE (GstGLAllocationParams, gst_gl_allocation_params,
  * @allocator: a #GstGLBaseMemoryAllocator
  * @params: the #GstGLAllocationParams to allocate the memory with
  *
- * Returns: a new #GstGLBaseMemory from @allocator with the requested @params.
+ * Returns: (transfer full) (nullable): a new #GstGLBaseMemory from @allocator with the requested @params.
  *
  * Since: 1.8
  */

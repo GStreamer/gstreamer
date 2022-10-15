@@ -91,7 +91,7 @@ gst_gl_display_x11_finalize (GObject * object)
  * Create a new #GstGLDisplayX11 from the x11 display name.  See `XOpenDisplay`()
  * for details on what is a valid name.
  *
- * Returns: (transfer full): a new #GstGLDisplayX11 or %NULL
+ * Returns: (transfer full) (nullable): a new #GstGLDisplayX11 or %NULL
  */
 GstGLDisplayX11 *
 gst_gl_display_x11_new (const gchar * name)

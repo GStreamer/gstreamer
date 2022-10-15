@@ -92,7 +92,7 @@ gst_gl_display_wayland_finalize (GObject * object)
  * Create a new #GstGLDisplayWayland from the wayland display name.  See `wl_display_connect`()
  * for details on what is a valid name.
  *
- * Returns: (transfer full): a new #GstGLDisplayWayland or %NULL
+ * Returns: (transfer full) (nullable): a new #GstGLDisplayWayland or %NULL
  */
 GstGLDisplayWayland *
 gst_gl_display_wayland_new (const gchar * name)
