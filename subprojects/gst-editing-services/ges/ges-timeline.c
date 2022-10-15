@@ -857,7 +857,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * Simplified version of #GESTimeline::select-tracks-for-object which only
    * allows @track_element to be added to a single #GESTrack.
    *
-   * Returns: (transfer full): A track to put @track_element into, or %NULL if
+   * Returns: (transfer full) (nullable): A track to put @track_element into, or %NULL if
    * it should be discarded.
    *
    * Since: 1.18
@@ -2178,12 +2178,12 @@ ges_timeline_new (void)
 /**
  * ges_timeline_new_from_uri:
  * @uri: The URI to load from
- * @error: (out) (allow-none): An error to be set if loading fails, or
+ * @error: (out) (optional): An error to be set if loading fails, or
  * %NULL to ignore
  *
  * Creates a timeline from the given URI.
  *
- * Returns: (transfer floating) (nullable): A new timeline if the uri was loaded
+ * Returns: (transfer floating): A new timeline if the uri was loaded
  * successfully, or %NULL if the uri could not be loaded.
  */
 GESTimeline *

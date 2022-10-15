@@ -194,7 +194,7 @@ ges_text_overlay_create_element (GESTrackElement * track_element)
 /**
  * ges_text_overlay_set_text:
  * @self: the #GESTextOverlay* to set text on
- * @text: the text to render. an internal copy of this text will be
+ * @text: (nullable): the text to render. an internal copy of this text will be
  * made.
  *
  * Sets the text this track element will render.
@@ -216,7 +216,7 @@ ges_text_overlay_set_text (GESTextOverlay * self, const gchar * text)
 /**
  * ges_text_overlay_set_font_desc:
  * @self: the #GESTextOverlay
- * @font_desc: the pango font description
+ * @font_desc: (nullable): the pango font description
  *
  * Sets the pango font description of the text this track element
  * will render.
@@ -331,7 +331,7 @@ ges_text_overlay_set_ypos (GESTextOverlay * self, gdouble position)
  *
  * Get the text currently set on @source.
  *
- * Returns: The text currently set on @source.
+ * Returns: (nullable): The text currently set on @source.
  */
 const gchar *
 ges_text_overlay_get_text (GESTextOverlay * self)
@@ -345,7 +345,7 @@ ges_text_overlay_get_text (GESTextOverlay * self)
  *
  * Get the pango font description currently set on @source.
  *
- * Returns: The pango font description currently set on @source.
+ * Returns: (nullable): The pango font description currently set on @source.
  */
 const char *
 ges_text_overlay_get_font_desc (GESTextOverlay * self)

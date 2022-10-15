@@ -917,7 +917,7 @@ ges_layer_add_asset_full (GESLayer * layer,
  *
  * See ges_layer_add_asset_full(), which also gives an error.
  *
- * Returns: (transfer none): The newly created clip.
+ * Returns: (transfer none) (nullable): The newly created clip.
  */
 GESClip *
 ges_layer_add_asset (GESLayer * layer,

@@ -1585,8 +1585,7 @@ ges_timeline_element_trim (GESTimelineElement * self, GstClockTime start)
  * @self, but should be thought of as an intermediate object used for a
  * single paste operation.
  *
- * Returns: (transfer floating): The newly create element,
- * copied from @self.
+ * Returns: (transfer floating): The newly create element, copied from @self.
  */
 G_GNUC_BEGIN_IGNORE_DEPRECATIONS;       /* Start ignoring GParameter deprecation */
 GESTimelineElement *
@@ -1668,7 +1667,7 @@ ges_timeline_element_get_toplevel_parent (GESTimelineElement * self)
  *
  * Gets the #GESTimelineElement:name for the element.
  *
- * Returns: (transfer full): The name of @self.
+ * Returns: (transfer full) (nullable): The name of @self.
  */
 gchar *
 ges_timeline_element_get_name (GESTimelineElement * self)
@@ -1681,7 +1680,7 @@ ges_timeline_element_get_name (GESTimelineElement * self)
 /**
  * ges_timeline_element_set_name:
  * @self: A #GESTimelineElement
- * @name: (allow-none): The name @self should take
+ * @name: (nullable): The name @self should take
  *
  * Sets the #GESTimelineElement:name for the element. If %NULL is given
  * for @name, then the library will instead generate a new name based on
@@ -2372,7 +2371,7 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
  * @edge: The edge of @self where the edit should occur
  * @position: The edit position: a new location for the edge of @self
  * (in nanoseconds) in the timeline coordinates
- * @error: (nullable): Return location for an error
+ * @error: (optional): Return location for an error
  *
  * Edits the element within its timeline by adjusting its
  * #GESTimelineElement:start, #GESTimelineElement:duration or

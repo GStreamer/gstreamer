@@ -33,7 +33,7 @@
  *
  * Get the last buffer @playsink showed
  *
- * Returns: (transfer full): A #GstSample containing the last frame from
+ * Returns: (transfer full) (nullable): A #GstSample containing the last frame from
  * @playsink in the format defined by the @caps
  *
  * Deprecated: 1.18: Use the "convert-sample" action signal of

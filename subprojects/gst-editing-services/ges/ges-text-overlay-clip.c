@@ -257,7 +257,7 @@ ges_text_overlay_clip_init (GESTextOverlayClip * self)
 /**
  * ges_text_overlay_clip_set_text:
  * @self: the #GESTextOverlayClip* to set text on
- * @text: the text to render. an internal copy of this text will be
+ * @text: (nullable): the text to render. an internal copy of this text will be
  * made.
  *
  * Sets the text this clip will render.
@@ -288,7 +288,7 @@ ges_text_overlay_clip_set_text (GESTextOverlayClip * self, const gchar * text)
 /**
  * ges_text_overlay_clip_set_font_desc:
  * @self: the #GESTextOverlayClip*
- * @font_desc: the pango font description
+ * @font_desc: (nullable): the pango font description
  *
  * Sets the pango font description of the text
  *
@@ -459,7 +459,7 @@ ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
  *
  * Get the text currently set on @self.
  *
- * Returns: The text currently set on @self.
+ * Returns: (nullable): The text currently set on @self.
  *
  */
 const gchar *
@@ -474,7 +474,7 @@ ges_text_overlay_clip_get_text (GESTextOverlayClip * self)
  *
  * Get the pango font description used by @self.
  *
- * Returns: The pango font description used by @self.
+ * Returns: (nullable): The pango font description used by @self.
  */
 const char *
 ges_text_overlay_clip_get_font_desc (GESTextOverlayClip * self)

@@ -280,7 +280,7 @@ ges_title_clip_init (GESTitleClip * self)
 /**
  * ges_title_clip_set_text:
  * @self: the #GESTitleClip* to set text on
- * @text: the text to render. an internal copy of this text will be
+ * @text: (nullable): the text to render. an internal copy of this text will be
  * made.
  *
  * Sets the text this clip will render.
@@ -303,7 +303,7 @@ ges_title_clip_set_text (GESTitleClip * self, const gchar * text)
 /**
  * ges_title_clip_set_font_desc:
  * @self: the #GESTitleClip*
- * @font_desc: the pango font description
+ * @font_desc: (nullable): the pango font description
  *
  * Sets the pango font description of the text.
  *
@@ -466,7 +466,7 @@ ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
  *
  * Get the text currently set on @self.
  *
- * Returns: The text currently set on @self.
+ * Returns: (transfer full) (nullable): The text currently set on @self.
  *
  * Deprecated:1.6: use #ges_timeline_element_get_children_properties instead.
  * See #GESTitleSource for more information about exposed properties
@@ -488,7 +488,7 @@ ges_title_clip_get_text (GESTitleClip * self)
  *
  * Get the pango font description used by @self.
  *
- * Returns: The pango font description used by @self.
+ * Returns: (transfer full) (nullable): The pango font description used by @self.
  *
  * Deprecated:1.6: use #ges_timeline_element_get_children_properties instead.
  * See #GESTitleSource for more information about exposed properties

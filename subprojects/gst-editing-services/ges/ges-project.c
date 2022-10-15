@@ -575,7 +575,7 @@ ges_project_class_init (GESProjectClass * klass)
    * }
    * ]|
    *
-   * Returns: (transfer full) (allow-none): The new URI of @wrong_asset
+   * Returns: (transfer full) (nullable): The new URI of @wrong_asset
    */
   _signals[MISSING_URI_SIGNAL] =
       g_signal_new ("missing-uri", G_TYPE_FROM_CLASS (klass),
@@ -996,7 +996,7 @@ ges_project_remove_asset (GESProject * project, GESAsset * asset)
  * @extractable_type: The extractable_type of the asset
  * to retrieve from @object
  *
- * Returns: (transfer full) (allow-none): The #GESAsset with
+ * Returns: (transfer full) (nullable): The #GESAsset with
  * @id or %NULL if no asset with @id as an ID
  */
 GESAsset *

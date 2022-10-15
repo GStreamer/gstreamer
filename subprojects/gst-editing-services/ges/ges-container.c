@@ -986,7 +986,7 @@ ges_container_ungroup (GESContainer * container, gboolean recursive)
 
 /**
  * ges_container_group:
- * @containers: (transfer none)(element-type GESContainer) (allow-none):
+ * @containers: (transfer none) (element-type GESContainer) (nullable):
  * The #GESContainer-s to group
  *
  * Groups the containers into a single container by merging them. The
@@ -1000,7 +1000,7 @@ ges_container_ungroup (GESContainer * container, gboolean recursive)
  * elements is not a #GESClip, this method will try to create a #GESGroup
  * instead.
  *
- * Returns: (transfer floating): The container created by merging
+ * Returns: (transfer floating) (nullable): The container created by merging
  * @containers, or %NULL if they could not be merged into a single
  * container.
  */

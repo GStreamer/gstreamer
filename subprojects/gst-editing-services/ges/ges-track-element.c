@@ -1317,7 +1317,7 @@ ges_track_element_get_nleobject (GESTrackElement * object)
  * Get the #GstElement that the track element's underlying nleobject
  * controls.
  *
- * Returns: (transfer none): The #GstElement being controlled by the
+ * Returns: (transfer none) (nullable): The #GstElement being controlled by the
  * nleobject that @object wraps.
  */
 GstElement *

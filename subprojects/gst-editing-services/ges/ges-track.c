@@ -1333,7 +1333,7 @@ ges_track_remove_element (GESTrack * track, GESTrackElement * object)
  *
  * Get the #GESTrack:caps of the track.
  *
- * Returns: The caps of @track.
+ * Returns: (nullable): The caps of @track.
  */
 const GstCaps *
 ges_track_get_caps (GESTrack * track)
@@ -1443,7 +1443,7 @@ ges_track_set_create_element_for_gap_func (GESTrack * track,
  *
  * Gets the #GESTrack:restriction-caps of the track.
  *
- * Returns: (transfer full): The restriction-caps of @track.
+ * Returns: (transfer full) (nullable): The restriction-caps of @track.
  *
  * Since: 1.18
  */

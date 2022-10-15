@@ -1544,7 +1544,7 @@ ges_asset_get_id (GESAsset * self)
 /**
  * ges_asset_extract:
  * @self: The #GESAsset to extract an object from
- * @error: (allow-none): An error to be set in case something goes wrong,
+ * @error: (optional): An error to be set in case something goes wrong,
  * or %NULL to ignore
  *
  * Extracts a new #GESAsset:extractable-type object from the asset. The

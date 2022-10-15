@@ -240,7 +240,7 @@ ges_title_source_create_source (GESSource * source)
 /**
  * ges_title_source_set_text:
  * @self: the #GESTitleSource* to set text on
- * @text: the text to render. an internal copy of this text will be
+ * @text: (nullable): the text to render. an internal copy of this text will be
  * made.
  *
  * Sets the text this track element will render.
@@ -265,7 +265,7 @@ ges_title_source_set_text (GESTitleSource * self, const gchar * text)
 /**
  * ges_title_source_set_font_desc:
  * @self: the #GESTitleSource
- * @font_desc: the pango font description
+ * @font_desc: (nullable): the pango font description
  *
  * Set the pango font description this source will use to render
  * the text.
@@ -392,7 +392,7 @@ ges_title_source_set_ypos (GESTitleSource * self, gdouble position)
  *
  * Get the text currently set on the @source.
  *
- * Returns: (transfer full): The text currently set on the @source.
+ * Returns: (transfer full) (nullable): The text currently set on the @source.
  *
  * Deprecated: 1.16: Use ges_timeline_element_get_child_property instead
  * (this actually returns a newly allocated string)
@@ -414,7 +414,7 @@ ges_title_source_get_text (GESTitleSource * source)
  *
  * Get the pango font description used by @source.
  *
- * Returns: (transfer full): The pango font description used by this
+ * Returns: (transfer full) (nullable): The pango font description used by this
  * @source.
  *
  * Deprecated: 1.16: Use ges_timeline_element_get_child_property instead
