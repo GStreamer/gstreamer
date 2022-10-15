@@ -192,7 +192,7 @@ gst_queue_array_clear (GstQueueArray * array)
  *
  * Returns the head of the queue @array and removes it from the queue.
  *
- * Returns: pointer to element or struct, or NULL if @array was empty. The
+ * Returns: (nullable): pointer to element or struct, or NULL if @array was empty. The
  *    data pointed to by the returned pointer stays valid only as long as
  *    the queue array is not modified further!
  *
@@ -250,7 +250,7 @@ gst_queue_array_pop_head (GstQueueArray * array)
  *
  * Returns the head of the queue @array without removing it from the queue.
  *
- * Returns: pointer to element or struct, or NULL if @array was empty. The
+ * Returns: (nullable): pointer to element or struct, or NULL if @array was empty. The
  *    data pointed to by the returned pointer stays valid only as long as
  *    the queue array is not modified further!
  *
@@ -294,7 +294,7 @@ gst_queue_array_peek_head (GstQueueArray * array)
  *
  * Returns the item at @idx in @array, but does not remove it from the queue.
  *
- * Returns: The item, or %NULL if @idx was out of bounds
+ * Returns: (nullable): The item, or %NULL if @idx was out of bounds
  *
  * Since: 1.16
  */
@@ -314,7 +314,7 @@ gst_queue_array_peek_nth (GstQueueArray * array, guint idx)
  *
  * Returns the item at @idx in @array, but does not remove it from the queue.
  *
- * Returns: The item, or %NULL if @idx was out of bounds
+ * Returns: (nullable): The item, or %NULL if @idx was out of bounds
  *
  * Since: 1.16
  */
