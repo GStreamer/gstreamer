@@ -456,7 +456,7 @@ gst_net_time_provider_initable_iface_init (gpointer g_iface)
  *
  * Allows network clients to get the current time of @clock.
  *
- * Returns: (transfer full): the new #GstNetTimeProvider, or NULL on error
+ * Returns: (transfer full) (nullable): the new #GstNetTimeProvider, or NULL on error
  */
 GstNetTimeProvider *
 gst_net_time_provider_new (GstClock * clock, const gchar * address, gint port)
@@ -471,7 +471,8 @@ gst_net_time_provider_new (GstClock * clock, const gchar * address, gint port)
       "address", address, "port", port, NULL);
 
   /* Clear floating flag */
-  g_object_ref_sink (ret);
+  if (ret)
+    g_object_ref_sink (ret);
 
   return ret;
 }

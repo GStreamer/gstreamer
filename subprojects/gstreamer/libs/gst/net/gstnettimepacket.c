@@ -47,7 +47,7 @@ G_DEFINE_BOXED_TYPE (GstNetTimePacket, gst_net_time_packet,
 
 /**
  * gst_net_time_packet_new:
- * @buffer: (array): a buffer from which to construct the packet, or NULL
+ * @buffer: (array zero-terminated="0" fixed-size="16") (nullable): a buffer from which to construct the packet, or NULL
  *
  * Creates a new #GstNetTimePacket from a buffer received over the network. The
  * caller is responsible for ensuring that @buffer is at least
@@ -58,7 +58,7 @@ G_DEFINE_BOXED_TYPE (GstNetTimePacket, gst_net_time_packet,
  *
  * MT safe. Caller owns return value (gst_net_time_packet_free to free).
  *
- * Returns: The new #GstNetTimePacket.
+ * Returns: (transfer full): The new #GstNetTimePacket.
  */
 GstNetTimePacket *
 gst_net_time_packet_new (const guint8 * buffer)
@@ -98,7 +98,7 @@ gst_net_time_packet_free (GstNetTimePacket * packet)
  *
  * Make a copy of @packet.
  *
- * Returns: a copy of @packet, free with gst_net_time_packet_free().
+ * Returns: (transfer full): a copy of @packet, free with gst_net_time_packet_free().
  */
 GstNetTimePacket *
 gst_net_time_packet_copy (const GstNetTimePacket * packet)
@@ -123,7 +123,7 @@ gst_net_time_packet_copy (const GstNetTimePacket * packet)
  *
  * MT safe. Caller owns return value (g_free to free).
  *
- * Returns: A newly allocated sequence of #GST_NET_TIME_PACKET_SIZE bytes.
+ * Returns: (transfer full) (array zero-terminated="0" fixed-size="16"): A newly allocated sequence of #GST_NET_TIME_PACKET_SIZE bytes.
  */
 guint8 *
 gst_net_time_packet_serialize (const GstNetTimePacket * packet)
@@ -143,7 +143,7 @@ gst_net_time_packet_serialize (const GstNetTimePacket * packet)
 /**
  * gst_net_time_packet_receive:
  * @socket: socket to receive the time packet on
- * @src_address: (out): address of variable to return sender address
+ * @src_address: (out) (optional) (transfer full): address of variable to return sender address
  * @error: return address for a #GError, or NULL
  *
  * Receives a #GstNetTimePacket over a socket. Handles interrupted system

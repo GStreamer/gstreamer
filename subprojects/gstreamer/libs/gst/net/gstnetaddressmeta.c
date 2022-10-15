@@ -130,7 +130,7 @@ gst_buffer_add_net_address_meta (GstBuffer * buffer, GSocketAddress * addr)
  *
  * Find the #GstNetAddressMeta on @buffer.
  *
- * Returns: (transfer none): the #GstNetAddressMeta or %NULL when there
+ * Returns: (transfer none) (nullable): the #GstNetAddressMeta or %NULL when there
  * is no such metadata on @buffer.
  */
 GstNetAddressMeta *
