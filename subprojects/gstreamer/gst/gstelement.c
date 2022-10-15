@@ -417,7 +417,7 @@ gst_element_set_clock_func (GstElement * element, GstClock * clock)
 /**
  * gst_element_set_clock:
  * @element: a #GstElement to set the clock for.
- * @clock: (transfer none) (allow-none): the #GstClock to set for the element.
+ * @clock: (transfer none) (nullable): the #GstClock to set for the element.
  *
  * Sets the clock for the element. This function increases the
  * refcount on the clock. Any previously set clock on the object

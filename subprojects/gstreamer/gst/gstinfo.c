@@ -3377,7 +3377,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
  * Fetches the current logs per thread from the ring buffer logger. See
  * gst_debug_add_ring_buffer_logger() for details.
  *
- * Returns: (transfer full) (array zero-terminated): NULL-terminated array of
+ * Returns: (transfer full) (array zero-terminated=1): NULL-terminated array of
  * strings with the debug output per thread
  *
  * Since: 1.14

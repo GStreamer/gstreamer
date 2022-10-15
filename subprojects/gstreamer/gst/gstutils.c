@@ -1117,7 +1117,7 @@ gst_pad_check_link (GstPad * srcpad, GstPad * sinkpad)
  * gst_element_get_compatible_pad:
  * @element: (transfer none): a #GstElement in which the pad should be found.
  * @pad: (transfer none): the #GstPad to find a compatible one for.
- * @caps: (allow-none): the #GstCaps to use as a filter.
+ * @caps: (nullable): the #GstCaps to use as a filter.
  *
  * Looks for an unlinked pad to which the given pad can link. It is not
  * guaranteed that linking the pads will work, though it should work in most
@@ -1779,10 +1779,10 @@ release_and_unref_pad (GstElement * element, GstPad * pad, gboolean requestpad)
 /**
  * gst_element_link_pads_full:
  * @src: a #GstElement containing the source pad.
- * @srcpadname: (allow-none): the name of the #GstPad in source element
+ * @srcpadname: (nullable): the name of the #GstPad in source element
  *     or %NULL for any pad.
  * @dest: (transfer none): the #GstElement containing the destination pad.
- * @destpadname: (allow-none): the name of the #GstPad in destination element,
+ * @destpadname: (nullable): the name of the #GstPad in destination element,
  * or %NULL for any pad.
  * @flags: the #GstPadLinkCheck to be performed when linking pads.
  *
@@ -2102,10 +2102,10 @@ gst_element_link_pads_full (GstElement * src, const gchar * srcpadname,
 /**
  * gst_element_link_pads:
  * @src: a #GstElement containing the source pad.
- * @srcpadname: (allow-none): the name of the #GstPad in source element
+ * @srcpadname: (nullable): the name of the #GstPad in source element
  *     or %NULL for any pad.
  * @dest: (transfer none): the #GstElement containing the destination pad.
- * @destpadname: (allow-none): the name of the #GstPad in destination element,
+ * @destpadname: (nullable): the name of the #GstPad in destination element,
  * or %NULL for any pad.
  *
  * Links the two named pads of the source and destination elements.
@@ -2126,12 +2126,12 @@ gst_element_link_pads (GstElement * src, const gchar * srcpadname,
 /**
  * gst_element_link_pads_filtered:
  * @src: a #GstElement containing the source pad.
- * @srcpadname: (allow-none): the name of the #GstPad in source element
+ * @srcpadname: (nullable): the name of the #GstPad in source element
  *     or %NULL for any pad.
  * @dest: (transfer none): the #GstElement containing the destination pad.
- * @destpadname: (allow-none): the name of the #GstPad in destination element
+ * @destpadname: (nullable): the name of the #GstPad in destination element
  *     or %NULL for any pad.
- * @filter: (transfer none) (allow-none): the #GstCaps to filter the link,
+ * @filter: (transfer none) (nullable): the #GstCaps to filter the link,
  *     or %NULL for no filter.
  *
  * Links the two named pads of the source and destination elements. Side effect
@@ -2274,7 +2274,7 @@ gst_element_link_many (GstElement * element_1, GstElement * element_2, ...)
  * gst_element_link_filtered:
  * @src: a #GstElement containing the source pad.
  * @dest: (transfer none): the #GstElement containing the destination pad.
- * @filter: (transfer none) (allow-none): the #GstCaps to filter the link,
+ * @filter: (transfer none) (nullable): the #GstCaps to filter the link,
  *     or %NULL for no filter.
  *
  * Links @src to @dest using the given caps as filtercaps.
@@ -2451,7 +2451,7 @@ gst_element_unlink (GstElement * src, GstElement * dest)
  * gst_element_query_position:
  * @element: a #GstElement to invoke the position query on.
  * @format: the #GstFormat requested
- * @cur: (out) (allow-none): a location in which to store the current
+ * @cur: (out) (optional): a location in which to store the current
  *     position, or %NULL.
  *
  * Queries an element (usually top-level pipeline or playbin element) for the
@@ -2494,7 +2494,7 @@ gst_element_query_position (GstElement * element, GstFormat format,
  * gst_element_query_duration:
  * @element: a #GstElement to invoke the duration query on.
  * @format: the #GstFormat requested
- * @duration: (out) (allow-none): A location in which to store the total duration, or %NULL.
+ * @duration: (out) (optional): A location in which to store the total duration, or %NULL.
  *
  * Queries an element (usually top-level pipeline or playbin element) for the
  * total stream duration in nanoseconds. This query will only work once the
@@ -2558,6 +2558,8 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
     *dest_val = src_val;
     return TRUE;
   }
+
+  *dest_val = -1;
 
   query = gst_query_new_convert (src_format, src_val, dest_format);
   ret = gst_element_query (element, query);
@@ -2661,7 +2663,7 @@ gst_pad_get_parent_element (GstPad * pad)
  * gst_object_default_error:
  * @source: the #GstObject that initiated the error.
  * @error: (in): the GError.
- * @debug: (in) (allow-none): an additional debug information string, or %NULL
+ * @debug: (in) (nullable): an additional debug information string, or %NULL
  *
  * A default error function that uses g_printerr() to display the error message
  * and the optional debug string..
@@ -2875,7 +2877,7 @@ gst_pad_proxy_query_caps (GstPad * pad, GstQuery * query)
  * gst_pad_query_position:
  * @pad: a #GstPad to invoke the position query on.
  * @format: the #GstFormat requested
- * @cur: (out) (allow-none): A location in which to store the current position, or %NULL.
+ * @cur: (out) (optional): A location in which to store the current position, or %NULL.
  *
  * Queries a pad for the stream position.
  *
@@ -2906,7 +2908,7 @@ gst_pad_query_position (GstPad * pad, GstFormat format, gint64 * cur)
  * @pad: a #GstPad on whose peer to invoke the position query on.
  *       Must be a sink pad.
  * @format: the #GstFormat requested
- * @cur: (out) (allow-none): a location in which to store the current
+ * @cur: (out) (optional): a location in which to store the current
  *     position, or %NULL.
  *
  * Queries the peer of a given sink pad for the stream position.
@@ -2937,7 +2939,7 @@ gst_pad_peer_query_position (GstPad * pad, GstFormat format, gint64 * cur)
  * gst_pad_query_duration:
  * @pad: a #GstPad to invoke the duration query on.
  * @format: the #GstFormat requested
- * @duration: (out) (allow-none): a location in which to store the total
+ * @duration: (out) (optional): a location in which to store the total
  *     duration, or %NULL.
  *
  * Queries a pad for the total stream duration.
@@ -2969,7 +2971,7 @@ gst_pad_query_duration (GstPad * pad, GstFormat format, gint64 * duration)
  * @pad: a #GstPad on whose peer pad to invoke the duration query on.
  *       Must be a sink pad.
  * @format: the #GstFormat requested
- * @duration: (out) (allow-none): a location in which to store the total
+ * @duration: (out) (optional): a location in which to store the total
  *     duration, or %NULL.
  *
  * Queries the peer pad of a given sink pad for the total stream duration.
@@ -3025,6 +3027,8 @@ gst_pad_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
     return TRUE;
   }
 
+  *dest_val = -1;
+
   query = gst_query_new_convert (src_format, src_val, dest_format);
   if ((ret = gst_pad_query (pad, query)))
     gst_query_parse_convert (query, NULL, NULL, NULL, dest_val);
@@ -3059,6 +3063,8 @@ gst_pad_peer_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
   g_return_val_if_fail (dest_format != GST_FORMAT_UNDEFINED, FALSE);
   g_return_val_if_fail (dest_val != NULL, FALSE);
 
+  *dest_val = -1;
+
   query = gst_query_new_convert (src_format, src_val, dest_format);
   if ((ret = gst_pad_peer_query (pad, query)))
     gst_query_parse_convert (query, NULL, NULL, NULL, dest_val);
@@ -3070,7 +3076,7 @@ gst_pad_peer_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
 /**
  * gst_pad_query_caps:
  * @pad: a  #GstPad to get the capabilities of.
- * @filter: (allow-none): suggested #GstCaps, or %NULL
+ * @filter: (nullable): suggested #GstCaps, or %NULL
  *
  * Gets the capabilities this pad can produce or consume.
  * Note that this method doesn't necessarily return the caps set by sending a
@@ -3121,7 +3127,7 @@ gst_pad_query_caps (GstPad * pad, GstCaps * filter)
 /**
  * gst_pad_peer_query_caps:
  * @pad: a  #GstPad to get the capabilities of.
- * @filter: (allow-none): a #GstCaps filter, or %NULL.
+ * @filter: (nullable): a #GstCaps filter, or %NULL.
  *
  * Gets the capabilities of the peer connected to this pad. Similar to
  * gst_pad_query_caps().
@@ -3423,7 +3429,7 @@ gst_parse_bin_from_description (const gchar * bin_description,
  * @bin_description: command line describing the bin
  * @ghost_unlinked_pads: whether to automatically create ghost pads
  *     for unlinked source or sink pads within the bin
- * @context: (transfer none) (allow-none): a parse context allocated with
+ * @context: (transfer none) (nullable): a parse context allocated with
  *     gst_parse_context_new(), or %NULL
  * @flags: parsing options, or #GST_PARSE_FLAG_NONE
  * @err: where to store the error message in case of an error, or %NULL
@@ -4047,7 +4053,7 @@ gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
  * gst_pad_create_stream_id_printf_valist:
  * @pad: A source #GstPad
  * @parent: Parent #GstElement of @pad
- * @stream_id: (allow-none): The stream-id
+ * @stream_id: (nullable): The stream-id
  * @var_args: parameters for the @stream_id format string
  *
  * Creates a stream-id for the source #GstPad @pad by combining the
@@ -4086,7 +4092,7 @@ gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent,
  * gst_pad_create_stream_id_printf:
  * @pad: A source #GstPad
  * @parent: Parent #GstElement of @pad
- * @stream_id: (allow-none): The stream-id
+ * @stream_id: (nullable): The stream-id
  * @...: parameters for the @stream_id format string
  *
  * Creates a stream-id for the source #GstPad @pad by combining the
@@ -4124,7 +4130,7 @@ gst_pad_create_stream_id_printf (GstPad * pad, GstElement * parent,
  * gst_pad_create_stream_id:
  * @pad: A source #GstPad
  * @parent: Parent #GstElement of @pad
- * @stream_id: (allow-none): The stream-id
+ * @stream_id: (nullable): The stream-id
  *
  * Creates a stream-id for the source #GstPad @pad by combining the
  * upstream information with the optional @stream_id of the stream
@@ -4547,7 +4553,7 @@ gst_type_mark_as_plugin_api (GType type, GstPluginAPIFlags flags)
 /**
  * gst_type_is_plugin_api:
  * @type: a GType
- * @flags: (out) (nullable): What #GstPluginAPIFlags the plugin was marked with
+ * @flags: (out) (optional): What #GstPluginAPIFlags the plugin was marked with
  *
  * Checks if @type is plugin API. See gst_type_mark_as_plugin_api() for
  * details.

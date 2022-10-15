@@ -2141,8 +2141,8 @@ gst_buffer_memset (GstBuffer * buffer, gsize offset, guint8 val, gsize size)
  * duration and offset end fields are also copied. If not they will be set
  * to #GST_CLOCK_TIME_NONE and #GST_BUFFER_OFFSET_NONE.
  *
- * Returns: (transfer full): the new #GstBuffer or %NULL if the arguments were
- *     invalid.
+ * Returns: (transfer full) (nullable): the new #GstBuffer or %NULL if copying
+ *     failed.
  */
 GstBuffer *
 gst_buffer_copy_region (GstBuffer * buffer, GstBufferCopyFlags flags,

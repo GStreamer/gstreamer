@@ -605,7 +605,7 @@ gst_tag_get_type (const gchar * tag)
  * Returns the human-readable name of this tag, You must not change or free
  * this string.
  *
- * Returns: (nullable): the human-readable name of this tag
+ * Returns: the human-readable name of this tag
  */
 const gchar *
 gst_tag_get_nick (const gchar * tag)
@@ -630,7 +630,7 @@ gst_tag_get_nick (const gchar * tag)
  * Returns the human-readable description of this tag, You must not change or
  * free this string.
  *
- * Returns: (nullable): the human-readable description of this tag
+ * Returns: the human-readable description of this tag
  */
 const gchar *
 gst_tag_get_description (const gchar * tag)
@@ -863,8 +863,8 @@ gst_tag_list_get_scope (const GstTagList * list)
  *
  * Serializes a tag list to a string.
  *
- * Returns: (nullable): a newly-allocated string, or %NULL in case of
- *     an error. The string must be freed with g_free() when no longer
+ * Returns: (transfer full): a newly-allocated string.
+ *     The string must be freed with g_free() when no longer
  *     needed.
  */
 gchar *
@@ -881,7 +881,7 @@ gst_tag_list_to_string (const GstTagList * list)
  *
  * Deserializes a tag list.
  *
- * Returns: (nullable): a new #GstTagList, or %NULL in case of an
+ * Returns: (transfer full) (nullable): a new #GstTagList, or %NULL in case of an
  * error.
  */
 GstTagList *
@@ -1148,8 +1148,8 @@ gst_tag_list_insert (GstTagList * into, const GstTagList * from,
 
 /**
  * gst_tag_list_merge:
- * @list1: (allow-none): first list to merge
- * @list2: (allow-none): second list to merge
+ * @list1: (nullable): first list to merge
+ * @list2: (nullable): second list to merge
  * @mode: the mode to use
  *
  * Merges the two given lists into a new list. If one of the lists is %NULL, a
@@ -2078,7 +2078,7 @@ gst_tag_list_get_sample_index (const GstTagList * list,
  *
  * When you are finished with the taglist, call gst_tag_list_unref() on it.
  *
- * Returns: the new #GstTagList
+ * Returns: (transfer full): the new #GstTagList
  */
 GstTagList *(gst_tag_list_copy) (const GstTagList * taglist)
 {

@@ -577,7 +577,7 @@ gst_clear_structure (GstStructure ** structure_ptr)
  * gst_structure_take:
  * @oldstr_ptr: (inout) (transfer full) (nullable): pointer to a place of
  *     a #GstStructure to take
- * @newstr: (transfer full) (allow-none): a new #GstStructure
+ * @newstr: (transfer full) (nullable): a new #GstStructure
  *
  * Atomically modifies a pointer to point to a new structure.
  * The #GstStructure @oldstr_ptr is pointing to is freed and
@@ -1962,8 +1962,8 @@ gst_structure_get_fraction (const GstStructure * structure,
  * gst_structure_get_flagset:
  * @structure: a #GstStructure
  * @fieldname: the name of a field
- * @value_flags: (out) (allow-none): a pointer to a guint for the flags field
- * @value_mask: (out) (allow-none): a pointer to a guint for the mask field
+ * @value_flags: (out) (optional): a pointer to a guint for the flags field
+ * @value_mask: (out) (optional): a pointer to a guint for the mask field
  *
  * Read the GstFlagSet flags and mask out of the structure into the
  * provided pointers.
@@ -2390,7 +2390,7 @@ gst_structure_new_from_string (const gchar * string)
 /**
  * gst_structure_from_string: (constructor):
  * @string: a string representation of a #GstStructure.
- * @end: (out) (allow-none) (transfer none) (skip): pointer to store the end of the string in.
+ * @end: (out) (optional) (transfer none) (skip): pointer to store the end of the string in.
  *
  * Creates a #GstStructure from a string representation.
  * If end is not %NULL, a pointer to the place inside the given string
@@ -3132,7 +3132,7 @@ gst_structure_is_equal (const GstStructure * structure1,
  *
  * Intersects @struct1 and @struct2 and returns the intersection.
  *
- * Returns: (nullable): Intersection of @struct1 and @struct2
+ * Returns: (transfer full) (nullable): Intersection of @struct1 and @struct2
  */
 GstStructure *
 gst_structure_intersect (const GstStructure * struct1,
