@@ -155,31 +155,17 @@ gst_validate_element_monitor_init (GstValidateElementMonitor * element_monitor)
  * @runner: (transfer none): a #GstValidateRunner
  * @parent: (nullable): The parent of the new monitor
  *
- * Returns: (transfer full): A #GstValidateElementMonitor or NULL
+ * Returns: (transfer full): A #GstValidateElementMonitor
  */
 GstValidateElementMonitor *
 gst_validate_element_monitor_new (GstElement * element,
     GstValidateRunner * runner, GstValidateMonitor * parent)
 {
-  GstValidateElementMonitor *monitor;
-  GstElement *target;
+  g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
+  g_return_val_if_fail (runner != NULL, NULL);
 
-  g_return_val_if_fail (element != NULL, NULL);
-
-  monitor = g_object_new (GST_TYPE_VALIDATE_ELEMENT_MONITOR, "object", element,
+  return g_object_new (GST_TYPE_VALIDATE_ELEMENT_MONITOR, "object", element,
       "validate-runner", runner, "validate-parent", parent, NULL);
-
-  target =
-      GST_ELEMENT (gst_validate_monitor_get_target (GST_VALIDATE_MONITOR
-          (monitor)));
-
-  if (!target) {
-    g_object_unref (monitor);
-    return NULL;
-  }
-
-  gst_object_unref (target);
-  return monitor;
 }
 
 static GstElement *

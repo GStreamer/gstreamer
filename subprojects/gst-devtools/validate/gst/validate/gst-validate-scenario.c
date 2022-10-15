@@ -324,7 +324,7 @@ gst_validate_scenario_intercept_report (GstValidateReporter * reporter,
  * gst_validate_scenario_get_pipeline:
  * @scenario: The scenario to retrieve a pipeline from
  *
- * Returns: (transfer full): The #GstPipeline the scenario is running
+ * Returns: (transfer full) (nullable): The #GstPipeline the scenario is running
  * against
  */
 GstElement *
@@ -5378,7 +5378,7 @@ gst_validate_scenario_from_structs (GstValidateRunner * runner,
  * @pipeline: The pipeline to run the scenario on
  * @scenario_name: The name (or path) of the scenario to run
  *
- * Returns: (transfer full): A #GstValidateScenario or NULL
+ * Returns: (transfer full) (nullable): A #GstValidateScenario or NULL
  */
 GstValidateScenario *
 gst_validate_scenario_factory_create (GstValidateRunner *
@@ -6375,7 +6375,7 @@ gst_validate_action_set_done (GstValidateAction * action)
  *
  * Retrieve the scenario from which @action is executed.
  *
- * Returns: (transfer full): The scenario from which the action is being executed.
+ * Returns: (transfer full) (nullable): The scenario from which the action is being executed.
  */
 GstValidateScenario *
 gst_validate_action_get_scenario (GstValidateAction * action)

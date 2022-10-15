@@ -77,7 +77,7 @@ _get_reporting_level (GstValidateReporter * monitor)
  * gst_validate_monitor_get_pipeline:
  * @monitor: The monitor to get the pipeline from
  *
- * Returns: (transfer full)(nullable): The pipeline in which @monitor
+ * Returns: (transfer full) (nullable): The pipeline in which @monitor
  * target is in.
  */
 GstPipeline *
@@ -90,7 +90,7 @@ gst_validate_monitor_get_pipeline (GstValidateMonitor * monitor)
  * gst_validate_monitor_get_target:
  * @monitor: The monitor to get the target from
  *
- * Returns: (transfer full)(nullable): The target object
+ * Returns: (transfer full) (nullable): The target object
  */
 GstObject *
 gst_validate_monitor_get_target (GstValidateMonitor * monitor)
@@ -317,7 +317,7 @@ gst_validate_monitor_setup (GstValidateMonitor * monitor)
  * gst_validate_monitor_get_element
  * @monitor: The monitor
  *
- * Returns: (transfer none): The GstElement associated with @monitor
+ * Returns: (transfer none) (nullable): The GstElement associated with @monitor
  */
 GstElement *
 gst_validate_monitor_get_element (GstValidateMonitor * monitor)
@@ -331,6 +331,12 @@ gst_validate_monitor_get_element (GstValidateMonitor * monitor)
   return element;
 }
 
+/**
+ * gst_validate_monitor_get_element_name
+ * @monitor: The monitor
+ *
+ * Returns: (transfer full) (nullable): The name of the element associated with @monitor
+ */
 gchar *
 gst_validate_monitor_get_element_name (GstValidateMonitor * monitor)
 {

@@ -194,25 +194,18 @@ gst_validate_bin_monitor_init (GstValidateBinMonitor * bin_monitor)
  * @runner: (transfer none): a #GstValidateRunner
  * @parent: (nullable): The parent of the new monitor
  *
- * Returns: (transfer full): A #GstValidateBinMonitor or NULL
+ * Returns: (transfer full): A #GstValidateBinMonitor
  */
 GstValidateBinMonitor *
 gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
     GstValidateMonitor * parent)
 {
-  GstValidateBinMonitor *monitor =
+  g_return_val_if_fail (GST_IS_BIN (bin), NULL);
+  g_return_val_if_fail (runner != NULL, NULL);
+
+  return
       g_object_new (GST_TYPE_VALIDATE_BIN_MONITOR, "object",
       bin, "validate-runner", runner, "validate-parent", parent, NULL);
-  GstObject *target =
-      gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
-
-  if (target == NULL) {
-    g_object_unref (monitor);
-    return NULL;
-  }
-  gst_object_unref (target);
-
-  return monitor;
 }
 
 static void

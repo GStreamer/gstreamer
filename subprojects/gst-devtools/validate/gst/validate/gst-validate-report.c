@@ -209,14 +209,14 @@ MAKE_GETTER_COPY (gchar *, reporter_name, g_strdup);
 /**
  * gst_validate_report_get_trace:
  *
- * Returns: (transfer full): report backtrace
+ * Returns: (transfer full) (nullable): report backtrace
  * Since: 1.22
  */
 MAKE_GETTER_COPY (gchar *, trace, g_strdup);
 /**
  * gst_validate_report_get_dotfile_name:
  *
- * Returns: (transfer full): report dot file name
+ * Returns: (transfer full) (nullable): report dot file name
  * Since: 1.22
  */
 MAKE_GETTER_COPY (gchar *, dotfile_name, g_strdup);
@@ -744,6 +744,12 @@ gst_validate_report_deinit (void)
   g_clear_object (&server_connection);
 }
 
+/**
+ * gst_validate_issue_from_id:
+ * @issue_id: The issue id
+ *
+ * Returns: (nullable): The issue if found or NULL otherwise
+ */
 GstValidateIssue *
 gst_validate_issue_from_id (GstValidateIssueId issue_id)
 {
