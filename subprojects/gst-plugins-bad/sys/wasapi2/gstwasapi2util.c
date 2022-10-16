@@ -490,3 +490,73 @@ gst_wasapi2_can_automatic_stream_routing (void)
   return ret;
 #endif
 }
+
+gboolean
+gst_wasapi2_can_process_loopback (void)
+{
+#ifdef GST_WASAPI2_WINAPI_ONLY_APP
+  /* FIXME: Needs WinRT (Windows.System.Profile) API call
+   * for OS version check */
+  return FALSE;
+#else
+  static gboolean ret = FALSE;
+  static gsize version_once = 0;
+
+  if (g_once_init_enter (&version_once)) {
+    OSVERSIONINFOEXW osverinfo;
+    typedef NTSTATUS (WINAPI fRtlGetVersion) (PRTL_OSVERSIONINFOEXW);
+    fRtlGetVersion *RtlGetVersion = NULL;
+    HMODULE hmodule = NULL;
+
+    memset (&osverinfo, 0, sizeof (OSVERSIONINFOEXW));
+    osverinfo.dwOSVersionInfoSize = sizeof (OSVERSIONINFOEXW);
+
+    hmodule = LoadLibraryW (L"ntdll.dll");
+    if (hmodule)
+      RtlGetVersion =
+          (fRtlGetVersion *) GetProcAddress (hmodule, "RtlGetVersion");
+
+    if (RtlGetVersion) {
+      RtlGetVersion (&osverinfo);
+
+      /* Process loopback requires Windows 10 build 20348
+       * https://learn.microsoft.com/en-us/windows/win32/api/audioclientactivationparams/ns-audioclientactivationparams-audioclient_process_loopback_params
+       *
+       * Note: "Windows 10 build 20348" would mean "Windows server 2022" or
+       * "Windows 11", since build number of "Windows 10 version 21H2" is
+       * still 19044.XXX
+       */
+      if (osverinfo.dwMajorVersion > 10 ||
+          (osverinfo.dwMajorVersion == 10 && osverinfo.dwBuildNumber >= 20348))
+        ret = TRUE;
+    }
+
+    if (hmodule)
+      FreeLibrary (hmodule);
+
+    g_once_init_leave (&version_once, 1);
+  }
+
+  GST_INFO ("Process loopback support: %d", ret);
+
+  return ret;
+#endif
+}
+
+WAVEFORMATEX *
+gst_wasapi2_get_default_mix_format (void)
+{
+  WAVEFORMATEX *format;
+
+  /* virtual loopback device might not provide mix format. Create our default
+   * mix format */
+  format = CoTaskMemAlloc (sizeof (WAVEFORMATEX));
+  format->wFormatTag = WAVE_FORMAT_PCM;
+  format->nChannels = 2;
+  format->nSamplesPerSec = 44100;
+  format->wBitsPerSample = 16;
+  format->nBlockAlign = format->nChannels * format->wBitsPerSample / 8;
+  format->nAvgBytesPerSec = format->nSamplesPerSec * format->nBlockAlign;
+
+  return format;
+}

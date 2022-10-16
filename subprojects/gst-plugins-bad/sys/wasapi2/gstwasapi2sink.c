@@ -333,7 +333,7 @@ gst_wasapi2_sink_create_ringbuffer (GstAudioBaseSink * sink)
 
   ringbuffer =
       gst_wasapi2_ring_buffer_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
-      self->low_latency, self->device_id, self->dispatcher, name);
+      self->low_latency, self->device_id, self->dispatcher, name, 0);
 
   g_free (name);
 

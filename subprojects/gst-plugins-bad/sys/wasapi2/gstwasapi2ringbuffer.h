@@ -34,7 +34,8 @@ GstAudioRingBuffer *   gst_wasapi2_ring_buffer_new (GstWasapi2ClientDeviceClass 
                                                     gboolean low_latency,
                                                     const gchar *device_id,
                                                     gpointer dispatcher,
-                                                    const gchar * name);
+                                                    const gchar * name,
+                                                    guint loopback_target_pid);
 
 GstCaps *              gst_wasapi2_ring_buffer_get_caps (GstWasapi2RingBuffer * buf);
 

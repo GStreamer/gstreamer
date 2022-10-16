@@ -145,6 +145,7 @@ struct _GstWasapi2RingBuffer
   gdouble volume;
   gpointer dispatcher;
   gboolean can_auto_routing;
+  guint loopback_target_pid;
 
   GstWasapi2Client *client;
   GstWasapi2Client *loopback_client;
@@ -380,7 +381,7 @@ gst_wasapi2_ring_buffer_open_device (GstAudioRingBuffer * buf)
   }
 
   self->client = gst_wasapi2_client_new (self->device_class,
-      -1, self->device_id, self->dispatcher);
+      -1, self->device_id, self->loopback_target_pid, self->dispatcher);
   if (!self->client) {
     gst_wasapi2_ring_buffer_post_open_error (self);
     return FALSE;
@@ -389,10 +390,10 @@ gst_wasapi2_ring_buffer_open_device (GstAudioRingBuffer * buf)
   g_object_get (self->client, "auto-routing", &self->can_auto_routing, nullptr);
 
   /* Open another render client to feed silence */
-  if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE) {
+  if (gst_wasapi2_device_class_is_loopback (self->device_class)) {
     self->loopback_client =
         gst_wasapi2_client_new (GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
-        -1, self->device_id, self->dispatcher);
+        -1, self->device_id, 0, self->dispatcher);
 
     if (!self->loopback_client) {
       gst_wasapi2_ring_buffer_post_open_error (self);
@@ -480,19 +481,25 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
       ", expected position %" G_GUINT64_FORMAT, to_read, position,
       self->expected_position);
 
-  if (self->is_first) {
-    self->expected_position = position + to_read;
-    self->is_first = FALSE;
-  } else {
-    if (position > self->expected_position) {
-      guint gap_frames;
+  /* XXX: position might not be increased in case of process loopback  */
+  if (!gst_wasapi2_device_class_is_process_loopback (self->device_class)) {
+    if (self->is_first) {
+      self->expected_position = position + to_read;
+      self->is_first = FALSE;
+    } else {
+      if (position > self->expected_position) {
+        guint gap_frames;
 
-      gap_frames = (guint) (position - self->expected_position);
-      GST_WARNING_OBJECT (self, "Found %u frames gap", gap_frames);
-      gap_size = gap_frames * GST_AUDIO_INFO_BPF (info);
+        gap_frames = (guint) (position - self->expected_position);
+        GST_WARNING_OBJECT (self, "Found %u frames gap", gap_frames);
+        gap_size = gap_frames * GST_AUDIO_INFO_BPF (info);
+      }
+
+      self->expected_position = position + to_read;
     }
-
-    self->expected_position = position + to_read;
+  } else if (self->mute) {
+    /* volume clinet might not be available in case of process loopback */
+    flags |= AUDCLNT_BUFFERFLAGS_SILENT;
   }
 
   /* Fill gap data if any */
@@ -679,6 +686,8 @@ gst_wasapi2_ring_buffer_io_callback (GstWasapi2RingBuffer * self)
   switch (self->device_class) {
     case GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE:
     case GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE:
+    case GST_WASAPI2_CLIENT_DEVICE_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE:
+    case GST_WASAPI2_CLIENT_DEVICE_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE:
       hr = gst_wasapi2_ring_buffer_read (self);
       break;
     case GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER:
@@ -694,7 +703,8 @@ gst_wasapi2_ring_buffer_io_callback (GstWasapi2RingBuffer * self)
    * loopback capture client doesn't seem to be able to recover status from this
    * situation */
   if (self->can_auto_routing &&
-      self->device_class != GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE &&
+      !gst_wasapi2_device_class_is_loopback (self->device_class) &&
+      !gst_wasapi2_device_class_is_process_loopback (self->device_class) &&
       (hr == AUDCLNT_E_ENDPOINT_CREATE_FAILED
           || hr == AUDCLNT_E_DEVICE_INVALIDATED)) {
     GST_WARNING_OBJECT (self,
@@ -777,8 +787,8 @@ gst_wasapi2_ring_buffer_loopback_callback (GstWasapi2RingBuffer * self)
   HRESULT hr = E_FAIL;
 
   g_return_val_if_fail (GST_IS_WASAPI2_RING_BUFFER (self), E_FAIL);
-  g_return_val_if_fail (self->device_class ==
-      GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE, E_FAIL);
+  g_return_val_if_fail (gst_wasapi2_device_class_is_loopback
+      (self->device_class), E_FAIL);
 
   if (!self->running) {
     GST_INFO_OBJECT (self, "We are not running now");
@@ -852,7 +862,7 @@ gst_wasapi2_ring_buffer_initialize_audio_client3 (GstWasapi2RingBuffer * self,
 static HRESULT
 gst_wasapi2_ring_buffer_initialize_audio_client (GstWasapi2RingBuffer * self,
     IAudioClient * client_handle, WAVEFORMATEX * mix_format, guint * period,
-    DWORD extra_flags)
+    DWORD extra_flags, GstWasapi2ClientDeviceClass device_class)
 {
   GstAudioRingBuffer *ringbuffer = GST_AUDIO_RING_BUFFER_CAST (self);
   REFERENCE_TIME default_period, min_period;
@@ -862,23 +872,35 @@ gst_wasapi2_ring_buffer_initialize_audio_client (GstWasapi2RingBuffer * self,
 
   stream_flags |= extra_flags;
 
-  hr = client_handle->GetDevicePeriod (&default_period, &min_period);
-  if (!gst_wasapi2_result (hr)) {
-    GST_WARNING_OBJECT (self, "Couldn't get device period info");
-    return hr;
+  if (!gst_wasapi2_device_class_is_process_loopback (device_class)) {
+    hr = client_handle->GetDevicePeriod (&default_period, &min_period);
+    if (!gst_wasapi2_result (hr)) {
+      GST_WARNING_OBJECT (self, "Couldn't get device period info");
+      return hr;
+    }
+
+    GST_INFO_OBJECT (self, "wasapi2 default period: %" G_GINT64_FORMAT
+        ", min period: %" G_GINT64_FORMAT, default_period, min_period);
+
+    hr = client_handle->Initialize (AUDCLNT_SHAREMODE_SHARED, stream_flags,
+        /* hnsBufferDuration should be same as hnsPeriodicity
+         * when AUDCLNT_STREAMFLAGS_EVENTCALLBACK is used.
+         * And in case of shared mode, hnsPeriodicity should be zero, so
+         * this value should be zero as well */
+        0,
+        /* This must always be 0 in shared mode */
+        0, mix_format, nullptr);
+  } else {
+    /* XXX: virtual device will not report device period.
+     * Use hardcoded period 20ms, same as Microsoft sample code
+     * https://github.com/microsoft/windows-classic-samples/tree/main/Samples/ApplicationLoopback
+     */
+    default_period = (20 * GST_MSECOND) / 100;
+    hr = client_handle->Initialize (AUDCLNT_SHAREMODE_SHARED,
+        AUDCLNT_STREAMFLAGS_LOOPBACK | AUDCLNT_STREAMFLAGS_EVENTCALLBACK,
+        default_period,
+        AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM, mix_format, nullptr);
   }
-
-  GST_INFO_OBJECT (self, "wasapi2 default period: %" G_GINT64_FORMAT
-      ", min period: %" G_GINT64_FORMAT, default_period, min_period);
-
-  hr = client_handle->Initialize (AUDCLNT_SHAREMODE_SHARED, stream_flags,
-      /* hnsBufferDuration should be same as hnsPeriodicity
-       * when AUDCLNT_STREAMFLAGS_EVENTCALLBACK is used.
-       * And in case of shared mode, hnsPeriodicity should be zero, so
-       * this value should be zero as well */
-      0,
-      /* This must always be 0 in shared mode */
-      0, mix_format, nullptr);
 
   if (!gst_wasapi2_result (hr)) {
     GST_WARNING_OBJECT (self, "Couldn't initialize audioclient");
@@ -923,7 +945,7 @@ gst_wasapi2_ring_buffer_prepare_loopback_client (GstWasapi2RingBuffer * self)
   }
 
   hr = gst_wasapi2_ring_buffer_initialize_audio_client (self, client_handle,
-      mix_format, &period, 0);
+      mix_format, &period, 0, GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER);
 
   if (!gst_wasapi2_result (hr)) {
     GST_ERROR_OBJECT (self, "Failed to initialize audio client");
@@ -970,7 +992,7 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
   if (!self->client && !gst_wasapi2_ring_buffer_open_device (buf))
     return FALSE;
 
-  if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE) {
+  if (gst_wasapi2_device_class_is_loopback (self->device_class)) {
     if (!gst_wasapi2_ring_buffer_prepare_loopback_client (self)) {
       GST_ERROR_OBJECT (self, "Failed to prepare loopback client");
       goto error;
@@ -991,8 +1013,12 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
   /* TODO: convert given caps to mix format */
   hr = client_handle->GetMixFormat (&mix_format);
   if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (self, "Failed to get mix format");
-    goto error;
+    if (gst_wasapi2_device_class_is_process_loopback (self->device_class)) {
+      mix_format = gst_wasapi2_get_default_mix_format ();
+    } else {
+      GST_ERROR_OBJECT (self, "Failed to get mix format");
+      goto error;
+    }
   }
 
   /* Only use audioclient3 when low-latency is requested because otherwise
@@ -1002,7 +1028,8 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
   if (self->low_latency &&
       /* AUDCLNT_STREAMFLAGS_LOOPBACK is not allowed for
        * InitializeSharedAudioStream */
-      self->device_class != GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE) {
+      !gst_wasapi2_device_class_is_loopback (self->device_class) &&
+      !gst_wasapi2_device_class_is_process_loopback (self->device_class)) {
     hr = gst_wasapi2_ring_buffer_initialize_audio_client3 (self, client_handle,
         mix_format, &period);
   }
@@ -1015,11 +1042,11 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
    */
   if (FAILED (hr)) {
     DWORD extra_flags = 0;
-    if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE)
+    if (gst_wasapi2_device_class_is_loopback (self->device_class))
       extra_flags = AUDCLNT_STREAMFLAGS_LOOPBACK;
 
     hr = gst_wasapi2_ring_buffer_initialize_audio_client (self, client_handle,
-        mix_format, &period, extra_flags);
+        mix_format, &period, extra_flags, self->device_class);
   }
 
   if (!gst_wasapi2_result (hr)) {
@@ -1090,25 +1117,24 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   hr = client_handle->GetService (IID_PPV_ARGS (&audio_volume));
   if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (self, "ISimpleAudioVolume is unavailable");
-    goto error;
-  }
-
-  g_mutex_lock (&self->volume_lock);
-  self->volume_object = audio_volume.Detach ();
-
-  if (self->mute_changed) {
-    self->volume_object->SetMute (self->mute, nullptr);
-    self->mute_changed = FALSE;
+    GST_WARNING_OBJECT (self, "ISimpleAudioVolume is unavailable");
   } else {
-    self->volume_object->SetMute (FALSE, nullptr);
-  }
+    g_mutex_lock (&self->volume_lock);
+    self->volume_object = audio_volume.Detach ();
 
-  if (self->volume_changed) {
-    self->volume_object->SetMasterVolume (self->volume, nullptr);
-    self->volume_changed = FALSE;
+    if (self->mute_changed) {
+      self->volume_object->SetMute (self->mute, nullptr);
+      self->mute_changed = FALSE;
+    } else {
+      self->volume_object->SetMute (FALSE, nullptr);
+    }
+
+    if (self->volume_changed) {
+      self->volume_object->SetMasterVolume (self->volume, nullptr);
+      self->volume_changed = FALSE;
+    }
+    g_mutex_unlock (&self->volume_lock);
   }
-  g_mutex_unlock (&self->volume_lock);
 
   buf->size = spec->segtotal * spec->segsize;
   buf->memory = (guint8 *) g_malloc (buf->size);
@@ -1327,7 +1353,7 @@ gst_wasapi2_ring_buffer_delay (GstAudioRingBuffer * buf)
 GstAudioRingBuffer *
 gst_wasapi2_ring_buffer_new (GstWasapi2ClientDeviceClass device_class,
     gboolean low_latency, const gchar * device_id, gpointer dispatcher,
-    const gchar * name)
+    const gchar * name, guint loopback_target_pid)
 {
   GstWasapi2RingBuffer *self;
 
@@ -1343,6 +1369,7 @@ gst_wasapi2_ring_buffer_new (GstWasapi2ClientDeviceClass device_class,
   self->low_latency = low_latency;
   self->device_id = g_strdup (device_id);
   self->dispatcher = dispatcher;
+  self->loopback_target_pid = loopback_target_pid;
 
   return GST_AUDIO_RING_BUFFER_CAST (self);
 }

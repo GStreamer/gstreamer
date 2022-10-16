@@ -31,7 +31,36 @@ typedef enum
   GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE = 0,
   GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
   GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE,
+  GST_WASAPI2_CLIENT_DEVICE_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE,
+  GST_WASAPI2_CLIENT_DEVICE_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE,
 } GstWasapi2ClientDeviceClass;
+
+static inline gboolean
+gst_wasapi2_device_class_is_loopback (GstWasapi2ClientDeviceClass device_class)
+{
+  switch (device_class) {
+    case GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE:
+      return TRUE;
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
+static inline gboolean
+gst_wasapi2_device_class_is_process_loopback (GstWasapi2ClientDeviceClass device_class)
+{
+  switch (device_class) {
+    case GST_WASAPI2_CLIENT_DEVICE_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE:
+    case GST_WASAPI2_CLIENT_DEVICE_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE:
+      return TRUE;
+    default:
+      break;
+  }
+
+  return FALSE;
+}
 
 #define GST_TYPE_WASAPI2_CLIENT_DEVICE_CLASS (gst_wasapi2_client_device_class_get_type())
 GType gst_wasapi2_client_device_class_get_type (void);
@@ -43,6 +72,7 @@ G_DECLARE_FINAL_TYPE (GstWasapi2Client,
 GstWasapi2Client * gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
                                            gint device_index,
                                            const gchar * device_id,
+                                           guint target_pid,
                                            gpointer dispatcher);
 
 gboolean           gst_wasapi2_client_ensure_activation (GstWasapi2Client * client);
