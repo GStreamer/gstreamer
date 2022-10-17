@@ -1684,14 +1684,13 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
     msdk_surface->surface = gst_msdk_get_surface_from_buffer (inbuf);
     return msdk_surface;
   }
-#ifndef _WIN32
+
   msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
-      &thiz->input_state->info, 0);
+      &thiz->input_state->info, GST_MAP_READ);
   if (msdk_surface) {
     msdk_surface->buf = gst_buffer_ref (inbuf);
     return msdk_surface;
   }
-#endif
 
   /* If upstream hasn't accpeted the proposed msdk bufferpool,
    * just copy frame to msdk buffer and take a surface from it.

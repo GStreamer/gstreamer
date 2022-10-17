@@ -30,7 +30,21 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <gst/d3d11/gstd3d11.h>
 #include "gstmsdkallocator.h"
+
+#define GST_MSDK_FRAME_SURFACE gst_msdk_frame_surface_quark_get ()
+static GQuark
+gst_msdk_frame_surface_quark_get (void)
+{
+  static gsize g_quark;
+
+  if (g_once_init_enter (&g_quark)) {
+    gsize quark = (gsize) g_quark_from_static_string ("GstMsdkFrameSurface");
+    g_once_init_leave (&g_quark, quark);
+  }
+  return g_quark;
+}
 
 mfxStatus
 gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
@@ -72,6 +86,62 @@ gst_msdk_frame_get_hdl (mfxHDL pthis, mfxMemId mid, mfxHDL * hdl)
   pair->second = (mfxHDL) GUINT_TO_POINTER (mem_id->subresource_index);
 
   return MFX_ERR_NONE;
+}
+
+GstMsdkSurface *
+gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
+    GstVideoInfo * vinfo, guint map_flag)
+{
+  GstMemory *mem = NULL;
+  mfxFrameInfo frame_info = { 0, };
+  GstMsdkSurface *msdk_surface = NULL;
+  mfxFrameSurface1 *mfx_surface = NULL;
+  GstMsdkMemoryID *msdk_mid = NULL;
+  GstMapInfo map_info;
+
+  mem = gst_buffer_peek_memory (buf, 0);
+  msdk_surface = g_slice_new0 (GstMsdkSurface);
+
+  if (!gst_is_d3d11_memory (mem) || gst_buffer_n_memory (buf) > 1) {
+    /* d3d11 buffer should hold single memory object */
+    g_slice_free (GstMsdkSurface, msdk_surface);
+    return NULL;
+  }
+
+  if (!gst_buffer_map (buf, &map_info, map_flag | GST_MAP_D3D11)) {
+    GST_ERROR ("Failed to map buffer");
+    g_slice_free (GstMsdkSurface, msdk_surface);
+    return NULL;
+  }
+
+  /* If buffer has qdata pointing to mfxFrameSurface1, directly extract it */
+  if ((mfx_surface = gst_mini_object_get_qdata (GST_MINI_OBJECT_CAST (mem),
+              GST_MSDK_FRAME_SURFACE))) {
+    msdk_surface->from_qdata = TRUE;
+    msdk_surface->surface = mfx_surface;
+    gst_buffer_unmap (buf, &map_info);
+    return msdk_surface;
+  }
+
+  mfx_surface = g_slice_new0 (mfxFrameSurface1);
+  msdk_mid = g_slice_new0 (GstMsdkMemoryID);
+  mfx_surface->Data.MemId = (mfxMemId) msdk_mid;
+
+  msdk_mid->texture = (ID3D11Texture2D *) (gpointer) map_info.data;
+  msdk_mid->subresource_index = GPOINTER_TO_UINT (map_info.user_data[0]);
+
+  gst_buffer_unmap (buf, &map_info);
+
+  gst_msdk_set_mfx_frame_info_from_video_info (&frame_info, vinfo);
+  mfx_surface->Info = frame_info;
+
+  /* Set mfxFrameSurface1 as qdata in buffer */
+  gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (mem),
+      GST_MSDK_FRAME_SURFACE, mfx_surface, NULL);
+
+  msdk_surface->surface = mfx_surface;
+
+  return msdk_surface;
 }
 
 void

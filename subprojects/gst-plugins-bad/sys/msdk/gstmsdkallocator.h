@@ -49,9 +49,8 @@ struct _GstMsdkMemoryID {
   VAImage image;
   VADRMPRIMESurfaceDescriptor desc;
 #else
-  /* TODO: This is just to avoid compile errors on Windows.
-   * Implement handling Windows-specific video-memory.
-   */
+  ID3D11Texture2D *texture;
+  guint subresource_index;
   gint pitch;
   guint offset;
 #endif
