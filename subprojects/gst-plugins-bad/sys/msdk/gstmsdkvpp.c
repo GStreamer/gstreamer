@@ -734,7 +734,7 @@ get_surface_from_pool (GstMsdkVPP * thiz, GstBufferPool * pool,
   }
 #ifndef _WIN32
   msdk_surface = gst_msdk_import_to_msdk_surface (new_buffer, thiz->context,
-      &thiz->sinkpad_info);
+      &thiz->sinkpad_info, 0);
 #else
   msdk_surface = gst_msdk_import_sys_mem_to_msdk_surface
       (new_buffer, thiz->sinkpad_buffer_pool_info);
@@ -760,7 +760,7 @@ get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
   }
 #ifndef _WIN32
   msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
-      &thiz->sinkpad_info);
+      &thiz->sinkpad_info, 0);
   if (msdk_surface) {
     msdk_surface->buf = gst_buffer_ref (inbuf);
     return msdk_surface;
@@ -846,7 +846,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   } else {
 #ifndef _WIN32
     out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
-        &thiz->srcpad_info);
+        &thiz->srcpad_info, 0);
 #else
     out_surface =
         gst_msdk_import_sys_mem_to_msdk_surface (outbuf, thiz->srcpad_info);
@@ -940,7 +940,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 #ifndef _WIN32
         out_surface =
             gst_msdk_import_to_msdk_surface (outbuf_new, thiz->context,
-            &thiz->srcpad_buffer_pool_info);
+            &thiz->srcpad_buffer_pool_info, 0);
 #else
         out_surface =
             gst_msdk_import_sys_mem_to_msdk_surface (outbuf_new,

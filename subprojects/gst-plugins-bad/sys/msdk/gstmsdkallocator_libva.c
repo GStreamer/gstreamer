@@ -764,9 +764,10 @@ _get_va_surface (GstBuffer * buf, GstVideoInfo * info,
   return va_surface;
 }
 
+/* Currently parameter map_flag is not useful on Linux */
 GstMsdkSurface *
 gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
-    GstVideoInfo * vinfo)
+    GstVideoInfo * vinfo, guint map_flag)
 {
   VASurfaceID va_surface = VA_INVALID_ID;
   GstMemory *mem = NULL;

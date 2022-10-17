@@ -1658,7 +1658,7 @@ gst_msdkenc_get_surface_from_pool (GstMsdkEnc * thiz, GstBufferPool * pool,
   }
 #ifndef _WIN32
   msdk_surface = gst_msdk_import_to_msdk_surface (new_buffer, thiz->context,
-      &thiz->aligned_info);
+      &thiz->aligned_info, 0);
 #else
   msdk_surface =
       gst_msdk_import_sys_mem_to_msdk_surface (new_buffer, thiz->aligned_info);
@@ -1686,7 +1686,7 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
   }
 #ifndef _WIN32
   msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
-      &thiz->input_state->info);
+      &thiz->input_state->info, 0);
   if (msdk_surface) {
     msdk_surface->buf = gst_buffer_ref (inbuf);
     return msdk_surface;

@@ -75,6 +75,10 @@ mfxStatus gst_msdk_frame_get_hdl(mfxHDL pthis, mfxMemId mid, mfxHDL *hdl);
 
 void gst_msdk_set_frame_allocator (GstMsdkContext * context);
 
+GstMsdkSurface *
+gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
+    GstVideoInfo * vinfo, guint map_flag);
+
 G_END_DECLS
 
 #endif /* GST_MSDK_ALLOCATOR_H_ */
