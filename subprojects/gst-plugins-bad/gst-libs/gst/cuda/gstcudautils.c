@@ -367,8 +367,7 @@ gst_cuda_handle_context_query (GstElement * element,
  * gst_context_new_cuda_context:
  * @cuda_ctx: (transfer none): a #GstCudaContext
  *
- * Returns: (transfer full) (nullable): a new #GstContext embedding the @cuda_ctx
- * or %NULL
+ * Returns: (transfer full): a new #GstContext embedding the @cuda_ctx
  *
  * Since: 1.22
  */
@@ -571,7 +570,7 @@ gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource)
  *
  * Map previously registered resource with map flags
  *
- * Returns: the `CUgraphicsResource` if successful or %NULL when failed
+ * Returns: (nullable): the `CUgraphicsResource` if successful or %NULL when failed
  *
  * Since: 1.22
  */

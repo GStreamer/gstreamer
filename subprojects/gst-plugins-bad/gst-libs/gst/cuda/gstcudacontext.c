@@ -374,7 +374,8 @@ gst_cuda_context_finalize (GObject * object)
  *
  * Create #GstCudaContext with given device_id
  *
- * Returns: a new #GstCudaContext or %NULL on failure
+ * Returns: (transfer full) (nullable): a new #GstCudaContext or %NULL on
+ * failure
  *
  * Since: 1.22
  */
@@ -390,13 +391,16 @@ gst_cuda_context_new (guint device_id)
   }
 
   self = gst_cuda_context_new_wrapped (ctx, device_id);
-  if (!self)
+  if (!self) {
+    CuCtxDestroy (ctx);
     return NULL;
+  }
 
   self->priv->owns_context = TRUE;
 
   if (!gst_cuda_result (CuCtxPopCurrent (&old_ctx))) {
     GST_ERROR ("Could not pop current context");
+    g_object_unref (self);
 
     return NULL;
   }
@@ -522,7 +526,7 @@ gst_cuda_context_can_access_peer (GstCudaContext * ctx, GstCudaContext * peer)
  * represented by @handle and @device stay alive while the returned
  * #GstCudaContext is active.
  *
- * Returns: (transfer full): A newly created #GstCudaContext
+ * Returns: (transfer full) (nullable): A newly created #GstCudaContext
  *
  * Since: 1.22
  */
@@ -538,7 +542,7 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
   g_return_val_if_fail (device >= 0, NULL);
 
   if (!init_cuda_ctx ())
-    return FALSE;
+    return NULL;
 
   if (!gst_cuda_result (CuDeviceGetAttribute (&tex_align,
               CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT, device))) {
