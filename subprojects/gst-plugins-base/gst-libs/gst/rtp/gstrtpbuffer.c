@@ -1326,7 +1326,7 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
   ext = *exttimestamp;
 
   if (ext == -1) {
-    result = timestamp;
+    result = (G_GUINT64_CONSTANT (1) << 32) + timestamp;
   } else {
     /* pick wraparound counter from previous timestamp and add to new timestamp */
     result = timestamp + (ext & ~(G_GUINT64_CONSTANT (0xffffffff)));
