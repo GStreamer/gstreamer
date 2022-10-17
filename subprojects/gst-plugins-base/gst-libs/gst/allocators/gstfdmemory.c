@@ -246,9 +246,8 @@ gst_fd_allocator_init (GstFdAllocator * allocator)
  *
  * Return a new fd allocator.
  *
- * Returns: (transfer full): a new fd allocator, or NULL if the allocator
- *    isn't available. Use gst_object_unref() to release the allocator after
- *    usage
+ * Returns: (transfer full): a new fd allocator. Use gst_object_unref() to
+ * release the allocator after usage
  *
  * Since: 1.6
  */
@@ -272,7 +271,7 @@ gst_fd_allocator_new (void)
  *
  * Return a %GstMemory that wraps a generic file descriptor.
  *
- * Returns: (transfer full): a GstMemory based on @allocator.
+ * Returns: (transfer full) (nullable): a GstMemory based on @allocator.
  * When the buffer will be released the allocator will close the @fd unless
  * the %GST_FD_MEMORY_FLAG_DONT_CLOSE flag is specified.
  * The memory is only mmapped on gst_buffer_map() request.

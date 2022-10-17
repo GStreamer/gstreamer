@@ -121,9 +121,8 @@ gst_dmabuf_allocator_init (GstDmaBufAllocator * allocator)
  *
  * Return a new dmabuf allocator.
  *
- * Returns: (transfer full): a new dmabuf allocator, or NULL if the allocator
- *    isn't available. Use gst_object_unref() to release the allocator after
- *    usage
+ * Returns: (transfer full): a new dmabuf allocator. Use gst_object_unref() to
+ * release the allocator after usage
  *
  * Since: 1.2
  */
@@ -146,7 +145,7 @@ gst_dmabuf_allocator_new (void)
  *
  * Return a %GstMemory that wraps a dmabuf file descriptor.
  *
- * Returns: (transfer full): a GstMemory based on @allocator.
+ * Returns: (transfer full) (nullable): a GstMemory based on @allocator.
  * When the buffer will be released dmabuf allocator will close the @fd.
  * The memory is only mmapped on gst_buffer_map() request.
  *
@@ -169,7 +168,7 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
  *
  * Return a %GstMemory that wraps a dmabuf file descriptor.
  *
- * Returns: (transfer full): a GstMemory based on @allocator.
+ * Returns: (transfer full) (nullable): a GstMemory based on @allocator.
  *
  * When the buffer will be released the allocator will close the @fd unless
  * the %GST_FD_MEMORY_FLAG_DONT_CLOSE flag is specified.
