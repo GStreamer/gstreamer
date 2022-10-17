@@ -355,6 +355,8 @@ build clang fedora x86_64:
       when: manual
     - changes:
         *modules_changes
+    - changes:
+        - subprojects/win-*/*
   script:
     # Make sure powershell exits on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
