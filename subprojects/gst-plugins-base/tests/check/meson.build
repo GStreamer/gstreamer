@@ -10,6 +10,7 @@ base_tests = [
   [ 'libs/audiosink.c' ],
   [ 'libs/baseaudiovisualizer.c' ],
   [ 'libs/discoverer.c' ],
+  [ 'libs/dsd.c' ],
   [ 'libs/fft.c' ],
   [ 'libs/libsabi.c', false, [ gstgl_dep, gstglx11_dep, gstglwayland_dep, gstglegl_dep ] ],
   [ 'libs/mikey.c' ],

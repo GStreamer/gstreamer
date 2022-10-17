@@ -24,6 +24,8 @@ audio_src = files([
   'gstaudioutilsprivate.c',
   'streamvolume.c',
   'gstaudiostreamalign.c',
+  'gstdsd.c',
+  'gstdsdformat.c',
 ])
 
 audio_mkenum_headers = files([
@@ -41,6 +43,8 @@ audio_mkenum_headers = files([
   'gstaudiocdsrc.h',
   'gstaudiobasesink.h',
   'gstaudiostreamalign.h',
+  'gstdsd.h',
+  'gstdsdformat.h',
 ])
 
 # FIXME: check headers

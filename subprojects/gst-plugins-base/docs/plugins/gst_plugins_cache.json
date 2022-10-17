@@ -2121,6 +2121,44 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
+    "dsd": {
+        "description": "elements for processing DSD audio",
+        "elements": {
+            "dsdconvert": {
+                "author": "Carlos Rafael Giani <crg7475@mailbox.org>",
+                "description": "Convert between different DSD grouping formats",
+                "hierarchy": [
+                    "GstDsdConvert",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/Converter/Audio",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/x-dsd:\n         format: { DSDU32BE, DSDU16BE, DSDU8, DSDU32LE, DSDU16LE }\n           rate: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n reversed-bytes: { (boolean)false, (boolean)true }\n       channels: [ 1, 2147483647 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/x-dsd:\n         format: { DSDU32BE, DSDU16BE, DSDU8, DSDU32LE, DSDU16LE }\n           rate: [ 1, 2147483647 ]\n         layout: { (string)interleaved, (string)non-interleaved }\n reversed-bytes: { (boolean)false, (boolean)true }\n       channels: [ 1, 2147483647 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "secondary"
+            }
+        },
+        "filename": "gstdsd",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Base Plug-ins",
+        "source": "gst-plugins-base",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "encoding": {
         "description": "various encoding-related elements",
         "elements": {
