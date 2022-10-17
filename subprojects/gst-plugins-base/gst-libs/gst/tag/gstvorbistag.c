@@ -117,7 +117,7 @@ static const GstTagEntryMatch tag_matches[] = {
  *
  * Looks up the GStreamer tag for a vorbiscomment tag.
  *
- * Returns: The corresponding GStreamer tag or NULL if none exists.
+ * Returns: (nullable): The corresponding GStreamer tag or NULL if none exists.
  */
 const gchar *
 gst_tag_from_vorbis_tag (const gchar * vorbis_tag)
@@ -146,7 +146,7 @@ gst_tag_from_vorbis_tag (const gchar * vorbis_tag)
  *
  * Looks up the vorbiscomment tag for a GStreamer tag.
  *
- * Returns: The corresponding vorbiscomment tag or NULL if none exists.
+ * Returns: (nullable): The corresponding vorbiscomment tag or NULL if none exists.
  */
 const gchar *
 gst_tag_to_vorbis_tag (const gchar * gst_tag)
@@ -417,7 +417,7 @@ decode_failed:
  * Creates a new tag list that contains the information parsed out of a
  * vorbiscomment packet.
  *
- * Returns: A new #GstTagList with all tags that could be extracted from the
+ * Returns: (transfer full) (nullable): A new #GstTagList with all tags that could be extracted from the
  *          given vorbiscomment buffer or NULL on error.
  */
 GstTagList *
@@ -513,7 +513,7 @@ error:
  * Creates a new tag list that contains the information parsed out of a
  * vorbiscomment packet.
  *
- * Returns: A new #GstTagList with all tags that could be extracted from the
+ * Returns: (transfer full) (nullable): A new #GstTagList with all tags that could be extracted from the
  *          given vorbiscomment buffer or NULL on error.
  */
 GstTagList *
@@ -787,7 +787,7 @@ write_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
  *
  * Creates a new vorbiscomment buffer from a tag list.
  *
- * Returns: A new #GstBuffer containing a vorbiscomment buffer with all tags
+ * Returns: (transfer full): A new #GstBuffer containing a vorbiscomment buffer with all tags
  *          that could be converted from the given tag list.
  */
 GstBuffer *

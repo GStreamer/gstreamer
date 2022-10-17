@@ -202,7 +202,7 @@ static const gchar jurisdictions[] =
  * (e.g. to tag an audio track appropriately in a video or audio editor, or
  * an image in a camera application).
  *
- * Returns: (transfer full): NULL-terminated array of license strings. Free
+ * Returns: (transfer full) (array zero-terminated=1): NULL-terminated array of license strings. Free
  *     with g_strfreev() when no longer needed.
  */
 gchar **
@@ -346,7 +346,7 @@ gst_tag_get_license_flags (const gchar * license_ref)
  * Get the nick name of a license, which is a short (untranslated) string
  * such as e.g. "CC BY-NC-ND 2.0 UK".
  *
- * Returns: the nick name of the license, or NULL if the license is unknown
+ * Returns: (nullable): the nick name of the license, or NULL if the license is unknown
  */
 const gchar *
 gst_tag_get_license_nick (const gchar * license_ref)
@@ -391,7 +391,7 @@ gst_tag_get_license_nick (const gchar * license_ref)
  * Get the title of a license, which is a short translated description
  * of the license's features (generally not very pretty though).
  *
- * Returns: the title of the license, or NULL if the license is unknown or
+ * Returns: (nullable): the title of the license, or NULL if the license is unknown or
  *    no title is available.
  */
 const gchar *
@@ -417,7 +417,7 @@ gst_tag_get_license_title (const gchar * license_ref)
  * Get the description of a license, which is a translated description
  * of the license's main features.
  *
- * Returns: the description of the license, or NULL if the license is unknown
+ * Returns: (nullable): the description of the license, or NULL if the license is unknown
  *    or a description is not available.
  */
 const gchar *
@@ -448,7 +448,7 @@ gst_tag_get_license_description (const gchar * license_ref)
  * dk, es, fi, fr, hr, hu, il, in, it, jp, kr, mk, mt, mx, my, nl, pe, pl,
  * pt, scotland, se, si, tw, uk, us, za.
  *
- * Returns: the jurisdiction code of the license, or NULL if the license is
+ * Returns: (nullable): the jurisdiction code of the license, or NULL if the license is
  *    unknown or is not specific to a particular jurisdiction.
  */
 const gchar *
@@ -470,7 +470,7 @@ gst_tag_get_license_jurisdiction (const gchar * license_ref)
  *
  * Get the version of a license.
  *
- * Returns: the version of the license, or NULL if the license is not known or
+ * Returns: (nullable): the version of the license, or NULL if the license is not known or
  *    has no version
  */
 const gchar *

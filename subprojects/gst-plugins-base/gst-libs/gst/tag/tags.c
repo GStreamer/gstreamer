@@ -330,7 +330,7 @@ gst_tag_parse_extended_comment (const gchar * ext_comment, gchar ** key,
  * are specified, the current locale will be tried. If that also doesn't work,
  * WINDOWS-1252/ISO-8859-1 is assumed (which will almost always succeed).
  *
- * Returns: a newly-allocated string in UTF-8 encoding, or NULL
+ * Returns: (nullable): a newly-allocated string in UTF-8 encoding, or NULL
  */
 gchar *
 gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
@@ -516,7 +516,7 @@ beach:
  * This function will do various checks and typefind the encoded image
  * data (we can't trust the declared mime type).
  *
- * Returns: a newly-allocated image sample for use in tag lists, or NULL
+ * Returns: (transfer full) (nullable): a newly-allocated image sample for use in tag lists, or NULL
  */
 GstSample *
 gst_tag_image_data_to_image_sample (const guint8 * image_data,

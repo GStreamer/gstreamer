@@ -79,7 +79,7 @@ static const gchar *schema_list[] = {
  *
  * Gets the list of supported schemas in the xmp lib
  *
- * Returns: (transfer none): a %NULL terminated array of strings with the
+ * Returns: (transfer none) (array zero-terminated=1): a %NULL terminated array of strings with the
  *     schema names
  */
 const gchar **
@@ -1175,7 +1175,7 @@ read_one_tag (GstTagList * list, XmpTag * xmptag,
  *
  * Parse a xmp packet into a taglist.
  *
- * Returns: new taglist or %NULL, free the list when done
+ * Returns: (transfer full) (nullable): new taglist or %NULL, free the list when done
  */
 GstTagList *
 gst_tag_list_from_xmp_buffer (GstBuffer * buffer)
@@ -1700,14 +1700,14 @@ write_one_tag (const GstTagList * list, XmpTag * xmp_tag, gpointer user_data)
  * gst_tag_list_to_xmp_buffer:
  * @list: tags
  * @read_only: does the container forbid inplace editing
- * @schemas: (array zero-terminated):
+ * @schemas: (array zero-terminated=1):
  *     %NULL terminated array of schemas to be used on serialization
  *
  * Formats a taglist as a xmp packet using only the selected
  * schemas. An empty list (%NULL) means that all schemas should
  * be used
  *
- * Returns: new buffer or %NULL, unref the buffer when done
+ * Returns: (transfer full) (nullable): new buffer or %NULL, unref the buffer when done
  */
 GstBuffer *
 gst_tag_list_to_xmp_buffer (const GstTagList * list, gboolean read_only,
