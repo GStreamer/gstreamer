@@ -752,6 +752,10 @@ _add_factory_details (GString * json, GstElementFactory * factory)
       gchar *val;
       gchar *key = *k;
 
+      /* "long-name" can be varying depending on environment, skip this */
+      if (g_strcmp0 (key, "long-name") == 0)
+        continue;
+
       val = json_strescape (gst_element_factory_get_metadata (factory, key));
       g_string_append_printf (json, "%s\"%s\": \"%s\"", f ? "" : ",", key, val);
       f = FALSE;
