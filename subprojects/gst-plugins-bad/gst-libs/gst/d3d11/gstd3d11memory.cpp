@@ -120,7 +120,7 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D11AllocationParams,
  * and #GstD3D11Allocator in order to allocate new ID3D11Texture2D
  * object with given configuration
  *
- * Returns: a #GstD3D11AllocationParams or %NULL if @info is not supported
+ * Returns: (transfer full) (nullable): a #GstD3D11AllocationParams or %NULL if @info is not supported
  *
  * Since: 1.22
  */
@@ -645,7 +645,7 @@ gst_d3d11_memory_init_once (void)
  * gst_d3d11_memory_get_resource_handle:
  * @mem: a #GstD3D11Memory
  *
- * Returns: (transfer none): a ID3D11Resource handle. Caller must not release
+ * Returns: (transfer none) (nullable): a ID3D11Resource handle. Caller must not release
  * returned handle.
  *
  * Since: 1.22
@@ -1527,7 +1527,7 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
  * @device: (transfer none): a #GstD3D11Device
  * @desc: a D3D11_TEXTURE2D_DESC struct
  *
- * Returns: a newly allocated #GstD3D11Memory with given parameters.
+ * Returns: (transfer full) (nullable): a newly allocated #GstD3D11Memory with given parameters.
  *
  * Since: 1.22
  */
@@ -1565,7 +1565,7 @@ gst_d3d11_allocator_alloc (GstD3D11Allocator * allocator,
  * @device: (transfer none): a #GstD3D11Device
  * @desc: a D3D11_BUFFER_DESC struct
  *
- * Returns: a newly allocated #GstD3D11Memory with given parameters.
+ * Returns: (transfer full) (nullable): a newly allocated #GstD3D11Memory with given parameters.
  *
  * Since: 1.22
  */
@@ -1636,7 +1636,7 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
  * Caller must not be confused that @size is CPU accessible size, not raw
  * texture size.
  *
- * Returns: a newly allocated #GstD3D11Memory with given @texture
+ * Returns: (transfer full) (nullable): a newly allocated #GstD3D11Memory with given @texture
  * if successful, or %NULL if @texture is not a valid handle or configuration
  * is not supported.
  *

@@ -2884,7 +2884,7 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
  * conversion path only for specified method(s) and set @method will be updated
  * with supported method.
  *
- * Returns: a #GstD3D11Converter or %NULL if conversion is not possible
+ * Returns: (transfer full) (nullable): a #GstD3D11Converter or %NULL if conversion is not possible
  *
  * Since: 1.22
  */
