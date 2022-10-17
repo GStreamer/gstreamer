@@ -8,6 +8,7 @@ srtp_sources = [
 
 srtp_cargs = []
 if get_option('srtp').disabled()
+  srtp_dep = dependency('', required : false)
   subdir_done()
 endif
 
