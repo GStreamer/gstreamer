@@ -1,4 +1,4 @@
-project('win-nasm', version : '2.14.02')
+project('win-nasm', version : '2.15.04')
 
 py3 = import('python3').find_python()
 
@@ -10,9 +10,9 @@ message('Downloading and extracting nasm binaries for Windows...')
 
 arch = host_machine.cpu_family()
 if arch == 'x86_64'
-  zip_hash = '18918ac906e29417b936466e7a2517068206c8db8c04b9762a5befa18bfea5f0'
+  zip_hash = '94204ab5d60324669f71387c2d536cacb37341d27f236358c2ba84bf16c23f6e'
 else
-  zip_hash = '250f9b5eeb2111e8c7b494a977490985b8604fe7518a6f5041cde37cc727a067'
+  zip_hash = '2b8a00d9fa348e7b68bac0497e25be44db83c64d6681478fdcbfa03fca36ad76'
 endif
 
 ret = run_command(py3, files('download-binary.py'), meson.project_version(), arch, zip_hash)
