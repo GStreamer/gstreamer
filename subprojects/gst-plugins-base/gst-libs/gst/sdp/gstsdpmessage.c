@@ -263,7 +263,7 @@ gst_sdp_message_new_from_text (const gchar * text, GstSDPMessage ** msg)
 
 /**
  * gst_sdp_message_init:
- * @msg: a #GstSDPMessage
+ * @msg: (out caller-allocates): a #GstSDPMessage
  *
  * Initialize @msg so that its contents are as if it was freshly allocated
  * with gst_sdp_message_new(). This function is mostly used to initialize a message
@@ -340,16 +340,12 @@ gst_sdp_message_uninit (GstSDPMessage * msg)
 GstSDPResult
 gst_sdp_message_copy (const GstSDPMessage * msg, GstSDPMessage ** copy)
 {
-  GstSDPResult ret;
   GstSDPMessage *cp;
   guint i, len;
 
-  if (msg == NULL)
-    return GST_SDP_EINVAL;
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
 
-  ret = gst_sdp_message_new (copy);
-  if (ret != GST_SDP_OK)
-    return ret;
+  gst_sdp_message_new (copy);
 
   cp = *copy;
 
@@ -489,7 +485,7 @@ gst_sdp_address_is_multicast (const gchar * nettype, const gchar * addrtype,
  *
  * Convert the contents of @msg to a text string.
  *
- * Returns: A dynamically allocated string representing the SDP description.
+ * Returns: (transfer full): A dynamically allocated string representing the SDP description.
  */
 gchar *
 gst_sdp_message_as_text (const GstSDPMessage * msg)
@@ -624,7 +620,7 @@ hex_to_int (gchar c)
 /**
  * gst_sdp_message_parse_uri:
  * @uri: the start of the uri
- * @msg: the result #GstSDPMessage
+ * @msg: (out caller-allocates): the result #GstSDPMessage
  *
  * Parse the null-terminated @uri and store the result in @msg.
  *
@@ -736,7 +732,7 @@ static const gchar hex[16] = "0123456789ABCDEF";
  *
  *  Where each value is url encoded.
  *
- * Returns: a uri for @msg.
+ * Returns: (transfer full): a uri for @msg.
  */
 gchar *
 gst_sdp_message_as_uri (const gchar * scheme, const GstSDPMessage * msg)
@@ -1631,7 +1627,7 @@ DEFINE_ARRAY_GETTER (attribute, attributes, GstSDPAttribute);
  *
  * Get the @nth attribute with key @key in @msg.
  *
- * Returns: the attribute value of the @nth attribute with @key.
+ * Returns: (nullable): the attribute value of the @nth attribute with @key.
  */
 const gchar *
 gst_sdp_message_get_attribute_val_n (const GstSDPMessage * msg,
@@ -1663,7 +1659,7 @@ gst_sdp_message_get_attribute_val_n (const GstSDPMessage * msg,
  *
  * Get the first attribute with key @key in @msg.
  *
- * Returns: the attribute value of the first attribute with @key.
+ * Returns: (nullable): the attribute value of the first attribute with @key.
  */
 const gchar *
 gst_sdp_message_get_attribute_val (const GstSDPMessage * msg, const gchar * key)
@@ -1820,7 +1816,7 @@ gst_sdp_media_new (GstSDPMedia ** media)
 
 /**
  * gst_sdp_media_init:
- * @media: a #GstSDPMedia
+ * @media: (out caller-allocates): a #GstSDPMedia
  *
  * Initialize @media so that its contents are as if it was freshly allocated
  * with gst_sdp_media_new(). This function is mostly used to initialize a media
@@ -1910,16 +1906,12 @@ gst_sdp_media_free (GstSDPMedia * media)
 GstSDPResult
 gst_sdp_media_copy (const GstSDPMedia * media, GstSDPMedia ** copy)
 {
-  GstSDPResult ret;
   GstSDPMedia *cp;
   guint i, len;
 
-  if (media == NULL)
-    return GST_SDP_EINVAL;
+  g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
 
-  ret = gst_sdp_media_new (copy);
-  if (ret != GST_SDP_OK)
-    return ret;
+  gst_sdp_media_new (copy);
 
   cp = *copy;
 
@@ -1966,7 +1958,7 @@ gst_sdp_media_copy (const GstSDPMedia * media, GstSDPMedia ** copy)
  *
  * Convert the contents of @media to a text string.
  *
- * Returns: A dynamically allocated string representing the media.
+ * Returns: (transfer full): A dynamically allocated string representing the media.
  */
 gchar *
 gst_sdp_media_as_text (const GstSDPMedia * media)
@@ -2803,7 +2795,7 @@ gst_sdp_media_get_attribute (const GstSDPMedia * media, guint idx)
  *
  * Get the @nth attribute value for @key in @media.
  *
- * Returns: the @nth attribute value.
+ * Returns: (nullable): the @nth attribute value.
  */
 const gchar *
 gst_sdp_media_get_attribute_val_n (const GstSDPMedia * media, const gchar * key,
@@ -2835,7 +2827,7 @@ gst_sdp_media_get_attribute_val_n (const GstSDPMedia * media, const gchar * key,
  *
  * Get the first attribute value for @key in @media.
  *
- * Returns: the first attribute value for @key.
+ * Returns: (nullable): the first attribute value for @key.
  */
 const gchar *
 gst_sdp_media_get_attribute_val (const GstSDPMedia * media, const gchar * key)
@@ -3129,7 +3121,7 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
  * gst_sdp_message_parse_buffer:
  * @data: (array length=size): the start of the buffer
  * @size: the size of the buffer
- * @msg: the result #GstSDPMessage
+ * @msg: (out caller-allocates): the result #GstSDPMessage
  *
  * Parse the contents of @size bytes pointed to by @data and store the result in
  * @msg.
@@ -3585,7 +3577,7 @@ gst_sdp_media_caps_adjust_h264 (GstCaps * caps)
  *
  * Note that the extmap, ssrc and rid attributes are set only by gst_sdp_media_attributes_to_caps().
  *
- * Returns: a #GstCaps, or %NULL if an error happened
+ * Returns: (transfer full) (nullable): a #GstCaps, or %NULL if an error happened
  *
  * Since: 1.8
  */
@@ -3774,7 +3766,7 @@ no_rate:
 /**
  * gst_sdp_media_set_media_from_caps:
  * @caps: a #GstCaps
- * @media: a #GstSDPMedia
+ * @media: (out caller-allocates): a #GstSDPMedia
  *
  * Mapping of caps to SDP fields:
  *
