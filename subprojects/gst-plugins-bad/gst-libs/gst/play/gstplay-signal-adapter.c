@@ -420,6 +420,14 @@ gst_play_signal_adapter_class_init (GstPlaySignalAdapterClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
       NULL, NULL, G_TYPE_NONE, 0, G_TYPE_INVALID);
 
+  /**
+   * GstPlaySignalAdapter::error:
+   * @adapter: The #GstPlaySignalAdapter
+   * @error: The error
+   * @details: (nullable): Additional error details
+   *
+   * Emitted on errors.
+   */
   signals[SIGNAL_ERROR] =
       g_signal_new ("error", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
@@ -445,6 +453,14 @@ gst_play_signal_adapter_class_init (GstPlaySignalAdapterClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
       NULL, NULL, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
+  /**
+   * GstPlaySignalAdapter::warning:
+   * @adapter: The #GstPlaySignalAdapter
+   * @error: The warning
+   * @details: (nullable): Additional warning details
+   *
+   * Emitted on warnings.
+   */
   signals[SIGNAL_WARNING] =
       g_signal_new ("warning", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_NO_RECURSE | G_SIGNAL_NO_HOOKS, 0, NULL,
