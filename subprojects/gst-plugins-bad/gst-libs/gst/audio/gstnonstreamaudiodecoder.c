@@ -2464,7 +2464,8 @@ gst_nonstream_audio_decoder_get_downstream_info (GstNonstreamAudioDecoder * dec,
  * This function may only be called from within @load_from_buffer,
  * @load_from_custom, and @decode.
  *
- * Returns: Newly allocated output buffer, or NULL if allocation failed
+ * Returns: (transfer full) (nullable): Newly allocated output buffer, or NULL
+ * if allocation failed
  */
 GstBuffer *
 gst_nonstream_audio_decoder_allocate_output_buffer (GstNonstreamAudioDecoder *
