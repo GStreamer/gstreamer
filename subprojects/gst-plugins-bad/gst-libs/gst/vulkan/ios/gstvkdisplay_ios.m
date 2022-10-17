@@ -65,7 +65,7 @@ gst_vulkan_display_ios_finalize (GObject * object)
  *
  * Create a new #GstVulkanDisplayIos.
  *
- * Returns: (transfer full): a new #GstVulkanDisplayIos or %NULL
+ * Returns: (transfer full): a new #GstVulkanDisplayIos
  */
 GstVulkanDisplayIos *
 gst_vulkan_display_ios_new (void)

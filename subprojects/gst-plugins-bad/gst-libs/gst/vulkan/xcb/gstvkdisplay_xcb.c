@@ -82,12 +82,12 @@ _get_screen_from_connection (xcb_connection_t * connection, int screen_no)
 
 /**
  * gst_vulkan_display_xcb_new:
- * @name: (allow-none): a display name
+ * @name: (nullable): a display name
  *
  * Create a new #GstVulkanDisplayXCB from the xcb display name.  See XOpenDisplay\()
  * for details on what is a valid name.
  *
- * Returns: (transfer full): a new #GstVulkanDisplayXCB or %NULL
+ * Returns: (transfer full) (nullable): a new #GstVulkanDisplayXCB or %NULL
  *
  * Since: 1.18
  */

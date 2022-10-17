@@ -97,7 +97,7 @@ gst_vulkan_queue_dispose (GObject * object)
  * gst_vulkan_queue_get_device
  * @queue: a #GstVulkanQueue
  *
- * Returns: (transfer full): the #GstVulkanDevice for @queue
+ * Returns: (transfer full) (nullable): the #GstVulkanDevice for @queue
  *
  * Since: 1.18
  */
@@ -112,7 +112,7 @@ gst_vulkan_queue_get_device (GstVulkanQueue * queue)
 /**
  * gst_vulkan_queue_create_command_pool:
  * @queue: a #GstVulkanQueue
- * @error: a #GError
+ * @error: (optional): a #GError
  *
  * Returns: (transfer full): a new #GstVUlkanCommandPool or %NULL
  *

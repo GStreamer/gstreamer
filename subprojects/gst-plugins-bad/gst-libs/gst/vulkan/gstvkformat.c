@@ -419,7 +419,7 @@ FIXME: implement:
  * gst_vulkan_format_get_info:
  * @format: a valid `VkFormat`
  *
- * Returns: the #GstVulkanFormatInfo for @format or %NULL
+ * Returns: (nullable): the #GstVulkanFormatInfo for @format or %NULL
  *
  * Since: 1.18
  */

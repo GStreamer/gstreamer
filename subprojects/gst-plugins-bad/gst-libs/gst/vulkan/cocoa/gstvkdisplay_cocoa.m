@@ -221,7 +221,7 @@ gst_vulkan_display_cocoa_finalize (GObject * object)
  *
  * Create a new #GstVulkanDisplayCocoa.
  *
- * Returns: (transfer full): a new #GstVulkanDisplayCocoa or %NULL
+ * Returns: (transfer full): a new #GstVulkanDisplayCocoa
  */
 GstVulkanDisplayCocoa *
 gst_vulkan_display_cocoa_new (void)

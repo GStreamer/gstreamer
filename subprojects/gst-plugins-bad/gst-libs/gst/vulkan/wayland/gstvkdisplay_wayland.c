@@ -105,12 +105,12 @@ gst_vulkan_display_wayland_finalize (GObject * object)
 
 /**
  * gst_vulkan_display_wayland_new:
- * @name: (allow-none): a display name
+ * @name: (nullable): a display name
  *
  * Create a new #GstVulkanDisplayWayland from the wayland display name.  See `wl_display_connect`()
  * for details on what is a valid name.
  *
- * Returns: (transfer full): a new #GstVulkanDisplayWayland or %NULL
+ * Returns: (transfer full) (nullable): a new #GstVulkanDisplayWayland or %NULL
  *
  * Since: 1.18
  */
@@ -118,16 +118,19 @@ GstVulkanDisplayWayland *
 gst_vulkan_display_wayland_new (const gchar * name)
 {
   GstVulkanDisplayWayland *ret;
+  struct wl_display *display;
 
-  ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_WAYLAND, NULL);
-  gst_object_ref_sink (ret);
-  ret->display = wl_display_connect (name);
+  display = wl_display_connect (name);
 
-  if (!ret->display) {
+  if (!display) {
     GST_ERROR ("Failed to open Wayland display connection with name, \'%s\'",
         name);
     return NULL;
   }
+
+  ret = g_object_new (GST_TYPE_VULKAN_DISPLAY_WAYLAND, NULL);
+  gst_object_ref_sink (ret);
+  ret->display = display;
 
   /* connecting the listeners after attaching the event source will race with
    * the source and the source may eat an event that we're waiting for and

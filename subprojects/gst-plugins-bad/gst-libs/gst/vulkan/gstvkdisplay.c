@@ -206,7 +206,7 @@ gst_vulkan_display_finalize (GObject * object)
  * @instance: a #GstVulkanInstance
  * @type: the #GstVulkanDisplayType to create
  *
- * Returns: (transfer full): a new #GstVulkanDisplay or %NULL if e.g. @type is
+ * Returns: (transfer full) (nullable): a new #GstVulkanDisplay or %NULL if e.g. @type is
  * unsupported
  *
  * Since: 1.18
@@ -326,7 +326,7 @@ gst_vulkan_display_get_handle_type (GstVulkanDisplay * display)
  * gst_vulkan_display_create_window:
  * @display: a #GstVulkanDisplay
  *
- * Returns: (transfer full): a new #GstVulkanWindow for @display or %NULL.
+ * Returns: (transfer full) (nullable): a new #GstVulkanWindow for @display or %NULL.
  *
  * Since: 1.18
  */
@@ -400,7 +400,7 @@ window_weak_list_to_strong (GstVulkanDisplay * display)
  * first argument to @compare_func is the #GstVulkanWindow being checked and the
  * second argument is @data.
  *
- * Returns: (transfer full): The first #GstVulkanWindow that causes a match
+ * Returns: (transfer full) (nullable): The first #GstVulkanWindow that causes a match
  *          from @compare_func
  *
  * Since: 1.18
@@ -633,7 +633,7 @@ gst_vulkan_display_choose_type (GstVulkanInstance * instance)
  * gst_vulkan_display_type_to_extension_string:
  * @type: a #GstVulkanDisplayType
  *
- * Returns: the Vulkan extension string required for creating a VkSurfaceKHR
+ * Returns: (nullable): the Vulkan extension string required for creating a VkSurfaceKHR
  * using a window system handle or %NULL
  *
  * Since: 1.18

@@ -64,7 +64,7 @@ gst_vulkan_display_android_finalize (GObject * object)
  *
  * Create a new #GstVulkanDisplayAndroid.
  *
- * Returns: (transfer full): a new #GstVulkanDisplayAndroid or %NULL
+ * Returns: (transfer full): a new #GstVulkanDisplayAndroid
  */
 GstVulkanDisplayAndroid *
 gst_vulkan_display_android_new (void)
