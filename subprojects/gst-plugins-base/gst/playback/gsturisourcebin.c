@@ -1720,6 +1720,8 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
   gboolean res = TRUE;
   GstPad *pad;
   GValue item = { 0, };
+  guint nb_raw = 0;
+  guint nb_pads = 0;
   GstCaps *rawcaps = DEFAULT_CAPS;
 
   *have_out = FALSE;
@@ -1740,6 +1742,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
         *have_out = FALSE;
         *is_raw = FALSE;
         *is_dynamic = FALSE;
+        nb_pads = nb_raw = 0;
         gst_iterator_resync (pads_iter);
         break;
       case GST_ITERATOR_OK:
@@ -1754,10 +1757,12 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
           break;
         }
 
+        nb_pads++;
         /* caps on source pad are all raw, we can add the pad */
         if (*is_raw) {
           GstPad *output_pad;
 
+          nb_raw++;
           GST_URI_SOURCE_BIN_LOCK (urisrc);
           if (use_queue) {
             OutputSlotInfo *slot = get_output_slot (urisrc, FALSE, FALSE, NULL);
@@ -1807,6 +1812,9 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
     }
     walk = g_list_next (walk);
   }
+
+  if (nb_pads && nb_pads == nb_raw)
+    *is_raw = TRUE;
 
   return res;
 no_slot:
