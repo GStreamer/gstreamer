@@ -66,7 +66,7 @@ gst_h264_picture_new (void)
 /**
  * gst_h264_picture_set_user_data:
  * @picture: a #GstH264Picture
- * @user_data: private data
+ * @user_data: (nullable): private data
  * @notify: (closure user_data): a #GDestroyNotify
  *
  * Sets @user_data on the picture and the #GDestroyNotify that will be called when
@@ -95,7 +95,7 @@ gst_h264_picture_set_user_data (GstH264Picture * picture, gpointer user_data,
  * Gets private data set on the picture via
  * gst_h264_picture_set_user_data() previously.
  *
- * Returns: (transfer none): The previously set user_data
+ * Returns: (transfer none) (nullable): The previously set user_data
  */
 gpointer
 gst_h264_picture_get_user_data (GstH264Picture * picture)
@@ -461,7 +461,7 @@ gst_h264_dpb_get_long_ref_by_long_term_pic_num (GstH264Dpb * dpb,
  *
  * Find a short term reference picture which has the lowest frame_num_wrap
  *
- * Returns: (transfer full): a #GstH264Picture
+ * Returns: (transfer full) (nullable): a #GstH264Picture
  */
 GstH264Picture *
 gst_h264_dpb_get_lowest_frame_num_short_ref (GstH264Dpb * dpb)
@@ -593,7 +593,7 @@ gst_h264_dpb_get_size (GstH264Dpb * dpb)
  * @dpb: a #GstH264Dpb
  * @system_frame_number The system frame number
  *
- * Returns: (transfer full): the picture identified with the specified
+ * Returns: (transfer full) (nullable): the picture identified with the specified
  * @system_frame_number, or %NULL if DPB does not contain a #GstH264Picture
  * corresponding to the @system_frame_number
  *

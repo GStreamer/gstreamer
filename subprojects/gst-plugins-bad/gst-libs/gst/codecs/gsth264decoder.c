@@ -3260,7 +3260,7 @@ gst_h264_decoder_set_process_ref_pic_lists (GstH264Decoder * decoder,
  * Retrive DPB and return a #GstH264Picture corresponding to
  * the @system_frame_number
  *
- * Returns: (transfer full): a #GstH264Picture if successful, or %NULL otherwise
+ * Returns: (transfer full) (nullable): a #GstH264Picture if successful, or %NULL otherwise
  *
  * Since: 1.18
  */

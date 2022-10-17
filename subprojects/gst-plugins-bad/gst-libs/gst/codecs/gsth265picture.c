@@ -67,7 +67,7 @@ gst_h265_picture_new (void)
 /**
  * gst_h265_picture_set_user_data:
  * @picture: a #GstH265Picture
- * @user_data: private data
+ * @user_data: (nullable): private data
  * @notify: (closure user_data): a #GDestroyNotify
  *
  * Sets @user_data on the picture and the #GDestroyNotify that will be called when
@@ -96,7 +96,7 @@ gst_h265_picture_set_user_data (GstH265Picture * picture, gpointer user_data,
  * Gets private data set on the picture via
  * gst_h265_picture_set_user_data() previously.
  *
- * Returns: (transfer none): The previously set user_data
+ * Returns: (transfer none) (nullable): The previously set user_data
  */
 gpointer
 gst_h265_picture_get_user_data (GstH265Picture * picture)
@@ -454,7 +454,7 @@ gst_h265_dpb_get_size (GstH265Dpb * dpb)
  * @dpb: a #GstH265Dpb
  * @system_frame_number The system frame number
  *
- * Returns: (transfer full): the picture identified with the specified
+ * Returns: (transfer full) (nullable): the picture identified with the specified
  * @system_frame_number, or %NULL if DPB does not contain a #GstH265Picture
  * corresponding to the @system_frame_number
  *

@@ -113,7 +113,7 @@ struct _GstVp9DecoderClass
    * current #GstVideoCodecFrame without additional processing for the current
    * frame.
    *
-   * Returns: (transfer full): a #GstVp9Picture or %NULL if failed to duplicate
+   * Returns: (transfer full) (nullable): a #GstVp9Picture or %NULL if failed to duplicate
    * @picture.
    *
    * Since: 1.18
