@@ -308,6 +308,7 @@ remove_peer_from_pipeline (const gchar * peer_id)
     return;
 
   gst_bin_remove (GST_BIN (pipeline), webrtc);
+  gst_element_set_state (GST_ELEMENT (webrtc), GST_STATE_NULL);
   gst_object_unref (webrtc);
 
   qname = g_strdup_printf ("queue-%s", peer_id);
@@ -321,6 +322,7 @@ remove_peer_from_pipeline (const gchar * peer_id)
   gst_object_unref (sinkpad);
 
   gst_bin_remove (GST_BIN (pipeline), q);
+  gst_element_set_state (GST_ELEMENT (q), GST_STATE_NULL);
   gst_object_unref (q);
 
   tee = gst_bin_get_by_name (GST_BIN (pipeline), "audiotee");
