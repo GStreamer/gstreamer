@@ -473,13 +473,13 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
   if (custom_ice) {
     custom_agent = GST_WEBRTC_ICE (customice_agent_new ("custom"));
     webrtc1 = gst_element_factory_make_full ("webrtcbin", "name", "sendrecv",
-        "bundle-policy", "max-bundle",
         "stun-server", STUN_SERVER, "ice-agent", custom_agent, NULL);
   } else {
     webrtc1 = gst_element_factory_make_full ("webrtcbin", "name", "sendrecv",
-        "bundle-policy", "max-bundle", "stun-server", STUN_SERVER, NULL);
+        "stun-server", STUN_SERVER, NULL);
   }
   g_assert_nonnull (webrtc1);
+  gst_util_set_object_arg (G_OBJECT (webrtc1), "bundle-policy", "max-bundle");
 
   gst_bin_add_many (GST_BIN (pipe1), audio_bin, video_bin, webrtc1, NULL);
 
