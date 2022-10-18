@@ -55,10 +55,12 @@ struct _GstRtpUlpFecDec {
   RtpStorage *storage;
   gsize packets_recovered;
   gsize packets_unrecovered;
+  gboolean passthrough;
 
   /* internal stuff */
   GstFlowReturn chain_return_val;
   gboolean unset_discont_flag;
+  gboolean needs_discont;
   gboolean have_caps_ssrc;
   gboolean have_caps_pt;
   guint32 caps_ssrc;

@@ -85,10 +85,12 @@ enum
   PROP_STORAGE,
   PROP_RECOVERED,
   PROP_UNRECOVERED,
+  PROP_PASSTHROUGH,
   N_PROPERTIES
 };
 
 #define DEFAULT_FEC_PT 0
+#define DEFAULT_PASSTHROUGH FALSE
 
 static GParamSpec *klass_properties[N_PROPERTIES] = { NULL, };
 
@@ -378,6 +380,7 @@ gst_rtp_ulpfec_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   if (G_LIKELY (GST_FLOW_OK == self->chain_return_val)) {
     GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+    gboolean passthrough;
     buf = gst_buffer_make_writable (buf);
 
     if (G_UNLIKELY (self->unset_discont_flag)) {
@@ -385,8 +388,20 @@ gst_rtp_ulpfec_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
 
+    GST_OBJECT_LOCK (self);
+    if (G_UNLIKELY (self->needs_discont)) {
+      self->needs_discont = FALSE;
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    }
+    passthrough = self->passthrough;
+    GST_OBJECT_UNLOCK (self);
+
     gst_rtp_buffer_map (buf, GST_MAP_WRITE, &rtp);
-    gst_rtp_buffer_set_seq (&rtp, self->next_seqnum++);
+    if (passthrough) {
+      self->next_seqnum = gst_rtp_buffer_get_seq (&rtp) + 1;
+    } else {
+      gst_rtp_buffer_set_seq (&rtp, self->next_seqnum++);
+    }
     gst_rtp_buffer_unmap (&rtp);
 
     return gst_pad_push (self->srcpad, buf);
@@ -442,6 +457,13 @@ gst_rtp_ulpfec_dec_handle_packet_loss (GstRtpUlpFecDec * self, guint16 seqnum,
         gst_rtp_buffer_set_seq (&rtp, self->next_seqnum++);
         gst_rtp_buffer_unmap (&rtp);
 
+        GST_OBJECT_LOCK (self);
+        if (G_UNLIKELY (self->needs_discont)) {
+          self->needs_discont = FALSE;
+          GST_BUFFER_FLAG_SET (sent_buffer, GST_BUFFER_FLAG_DISCONT);
+        }
+        GST_OBJECT_UNLOCK (self);
+
         ret = FALSE;
         self->unset_discont_flag = TRUE;
         self->chain_return_val = gst_pad_push (self->srcpad, sent_buffer);
@@ -481,6 +503,18 @@ gst_rtp_ulpfec_dec_handle_sink_event (GstPad * pad, GstObject * parent,
     guint seqnum;
     GstClockTime timestamp, duration;
     GstStructure *s;
+    gboolean passthrough;
+
+    GST_OBJECT_LOCK (self);
+    passthrough = self->passthrough;
+    GST_OBJECT_UNLOCK (self);
+
+    if (passthrough) {
+      GST_TRACE_OBJECT (self,
+          "in passthrough mode, ignoring packet loss event");
+      forward = TRUE;
+      goto out;
+    }
 
     event = gst_event_make_writable (event);
     s = gst_event_writable_structure (event);
@@ -555,6 +589,7 @@ gst_rtp_ulpfec_dec_handle_sink_event (GstPad * pad, GstObject * parent,
     self->caps_pt = caps_pt;
   }
 
+out:
   if (forward)
     return gst_pad_push_event (self->srcpad, event);
   gst_event_unref (event);
@@ -577,6 +612,7 @@ gst_rtp_ulpfec_dec_init (GstRtpUlpFecDec * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->fec_pt = DEFAULT_FEC_PT;
+  self->passthrough = DEFAULT_PASSTHROUGH;
 
   self->next_seqnum = g_random_int_range (0, G_MAXINT16);
 
@@ -642,6 +678,20 @@ gst_rtp_ulpfec_dec_set_property (GObject * object, guint prop_id,
       if (self->storage)
         g_object_ref (self->storage);
       break;
+    case PROP_PASSTHROUGH:{
+      gboolean newval = g_value_get_boolean (value);
+      GST_OBJECT_LOCK (self);
+      /* if we changing into non-passthrough mode, then the sequence numbers may
+       * be completely different and we need to advertise that with a discont */
+      GST_INFO_OBJECT (self, "passthrough changing from %u to %u",
+          self->passthrough, newval);
+      if (self->passthrough && !newval) {
+        self->needs_discont = TRUE;
+      }
+      self->passthrough = newval;
+      GST_OBJECT_UNLOCK (self);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -666,6 +716,9 @@ gst_rtp_ulpfec_dec_get_property (GObject * object, guint prop_id,
       break;
     case PROP_UNRECOVERED:
       g_value_set_uint (value, (guint) self->packets_unrecovered);
+      break;
+    case PROP_PASSTHROUGH:
+      g_value_set_boolean (value, self->passthrough);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -712,6 +765,19 @@ gst_rtp_ulpfec_dec_class_init (GstRtpUlpFecDecClass * klass)
       g_param_spec_uint ("unrecovered", "unrecovered",
       "The number of unrecovered packets", 0, G_MAXUINT, 0,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstRtpUlpFecDec:passthrough:
+   *
+   * Whether to push data through without any modification.  If passthrough is
+   * enabled, then no packets will ever be recovered.
+   *
+   * Since: 1.22
+   */
+  klass_properties[PROP_PASSTHROUGH] =
+      g_param_spec_boolean ("passthrough", "Passthrough",
+      "Whether to passthrough all data as-is without modification and "
+      "never attempt to recover packets", DEFAULT_PASSTHROUGH,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES,
       klass_properties);

@@ -16373,6 +16373,18 @@
                     }
                 },
                 "properties": {
+                    "passthrough": {
+                        "blurb": "Whether to passthrough all data as-is without modification and never attempt to recover packets",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "pt": {
                         "blurb": "FEC packets payload type",
                         "conditionally-available": false,
