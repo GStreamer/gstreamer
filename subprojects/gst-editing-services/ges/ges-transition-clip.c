@@ -188,6 +188,7 @@ extractable_set_asset (GESExtractable * self, GESAsset * asset)
       }
     }
     ges_transition_clip_update_vtype_internal (GES_CLIP (self), value, FALSE);
+    g_object_notify (G_OBJECT (self), "vtype");
   }
 
   if (!prev_asset)

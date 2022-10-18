@@ -176,7 +176,37 @@ GST_START_TEST (test_transition_properties)
 
 GST_END_TEST;
 
+static void
+notify_vtype_cb (GESTransitionClip * clip, GParamSpec * pspec,
+    GESVideoStandardTransitionType * vtype)
+{
+  g_object_get (clip, "vtype", vtype, NULL);
+}
 
+GST_START_TEST (test_transition_notify_vtype)
+{
+  GESTransitionClip *tclip;
+  GESAsset *asset;
+  GESVideoStandardTransitionType vtype =
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
+
+  tclip = ges_transition_clip_new (vtype);
+  g_signal_connect (tclip, "notify::vtype", G_CALLBACK (notify_vtype_cb),
+      &vtype);
+
+  g_object_set (tclip, "vtype", GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE,
+      NULL);
+  assert_equals_int (vtype, GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE);
+
+  asset = ges_asset_request (GES_TYPE_TRANSITION_CLIP, "fade-in", NULL);
+  g_assert (ges_extractable_set_asset (GES_EXTRACTABLE (tclip), asset));
+  assert_equals_int (vtype, GES_VIDEO_STANDARD_TRANSITION_TYPE_FADE_IN);
+
+  gst_object_unref (asset);
+  gst_object_unref (tclip);
+}
+
+GST_END_TEST;
 
 static Suite *
 ges_suite (void)
@@ -188,6 +218,7 @@ ges_suite (void)
 
   tcase_add_test (tc_chain, test_transition_basic);
   tcase_add_test (tc_chain, test_transition_properties);
+  tcase_add_test (tc_chain, test_transition_notify_vtype);
 
   return s;
 }
