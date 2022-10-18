@@ -1070,7 +1070,6 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
   GstMsdkEncClass *klass = GST_MSDKENC_GET_CLASS (thiz);
   GstVideoCodecFrame *frame;
   GList *list;
-  mfxU64 pts;
 
   if (!task->sync_point)
     return GST_FLOW_OK;
@@ -1116,18 +1115,9 @@ gst_msdkenc_finish_frame (GstMsdkEnc * thiz, MsdkEncTask * task,
     }
 
     frame->output_buffer = out_buf;
-    /* This is a workaround for output pts, because oneVPL cannot return the
-     * correct pts for each display frame. We just use the input frame's pts
-     * as output ones as oneVPL return each coded frames as display.
-     */
-    if (klass->get_timestamp) {
-      pts = klass->get_timestamp (thiz);
-      frame->pts = gst_util_uint64_scale (pts, GST_SECOND, 90000);
-    } else {
-      frame->pts =
-          gst_util_uint64_scale (task->output_bitstream.TimeStamp, GST_SECOND,
-          90000);
-    }
+    frame->pts =
+        gst_util_uint64_scale (task->output_bitstream.TimeStamp, GST_SECOND,
+        90000);
     frame->dts =
         gst_util_uint64_scale (task->output_bitstream.DecodeTimeStamp,
         GST_SECOND, 90000);
@@ -1775,9 +1765,6 @@ gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     if (frame->pts != GST_CLOCK_TIME_NONE) {
       surface->surface->Data.TimeStamp =
           gst_util_uint64_scale (frame->pts, 90000, GST_SECOND);
-
-      if (klass->set_timestamp)
-        klass->set_timestamp (thiz, surface->surface->Data.TimeStamp);
     } else {
       surface->surface->Data.TimeStamp = MFX_TIMESTAMP_UNKNOWN;
     }
