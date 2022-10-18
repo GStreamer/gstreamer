@@ -389,9 +389,6 @@ add_peer_to_pipeline (const gchar * peer_id, gboolean offer)
   g_assert_true (ret);
   ret = gst_element_sync_state_with_parent (webrtc);
   g_assert_true (ret);
-
-  gst_object_unref (q);
-  gst_object_unref (webrtc);
 }
 
 static void
