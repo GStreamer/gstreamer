@@ -932,17 +932,43 @@ gst_webrtc_nice_set_remote_credentials (GstWebRTCICE * ice,
   return TRUE;
 }
 
+typedef struct
+{
+  GstWebRTCNice *ice;
+  GstUri *turn_server;
+} AddTurnServerToStreamData;
+
+static gboolean
+_add_turn_server_foreach_stream_func (struct NiceStreamItem *item,
+    gpointer data)
+{
+  AddTurnServerToStreamData *add_data = (AddTurnServerToStreamData *) data;
+  _add_turn_server (add_data->ice, item, add_data->turn_server);
+  return TRUE;
+}
+
 static gboolean
 gst_webrtc_nice_add_turn_server (GstWebRTCICE * ice, const gchar * uri)
 {
   gboolean ret = FALSE;
   GstUri *valid_uri;
   GstWebRTCNice *nice = GST_WEBRTC_NICE (ice);
+  gboolean inserted;
+  AddTurnServerToStreamData add_data;
 
   if (!(valid_uri = _validate_turn_server (nice, uri)))
     goto done;
 
-  g_hash_table_insert (nice->priv->turn_servers, g_strdup (uri), valid_uri);
+  inserted =
+      g_hash_table_insert (nice->priv->turn_servers, g_strdup (uri), valid_uri);
+
+  /* add the turn server to any streams that were already created */
+  if (inserted) {
+    add_data.ice = nice;
+    add_data.turn_server = valid_uri;
+    _nice_stream_item_foreach (nice, _add_turn_server_foreach_stream_func,
+        &add_data);
+  }
 
   ret = TRUE;
 
