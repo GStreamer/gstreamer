@@ -61,7 +61,8 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkav1dec_debug);
 #define VA_SRC_CAPS_STR \
     ";" GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("{ NV12 }")
 #else
-#define VA_SRC_CAPS_STR ""
+#define D3D11_SRC_CAPS_STR \
+    ";" GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE ("{ NV12 }")
 #endif
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -70,11 +71,19 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-av1")
     );
 
+#ifndef _WIN32
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT)
         VA_SRC_CAPS_STR));
+#else
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT)
+        D3D11_SRC_CAPS_STR));
+#endif
 
 #define gst_msdkav1dec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkAV1Dec, gst_msdkav1dec, GST_TYPE_MSDKDEC);

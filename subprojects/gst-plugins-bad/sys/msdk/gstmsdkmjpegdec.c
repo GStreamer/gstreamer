@@ -71,14 +71,23 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define VA_SRC_CAPS_STR \
     "; "  GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("{ NV12 }")
 #else
-#define VA_SRC_CAPS_STR ""
+#define D3D11_SRC_CAPS_STR \
+    "; "  GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE ("{ NV12 }")
 #endif
 
+#ifndef _WIN32
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_MSDK_CAPS_STR ("{ NV12, YUY2 }", "{ NV12, YUY2 }")
         VA_SRC_CAPS_STR));
+#else
+static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_MSDK_CAPS_STR ("{ NV12, YUY2 }", "{ NV12, YUY2 }")
+        D3D11_SRC_CAPS_STR));
+#endif
 
 #define gst_msdkmjpegdec_parent_class parent_class
 G_DEFINE_TYPE (GstMsdkMJPEGDec, gst_msdkmjpegdec, GST_TYPE_MSDKDEC);
