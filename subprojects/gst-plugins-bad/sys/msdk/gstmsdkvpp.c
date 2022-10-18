@@ -938,14 +938,16 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       } else {
         release_out_surface (thiz, out_surface);
 #ifndef _WIN32
-        out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
-            &thiz->srcpad_info);
+        out_surface =
+            gst_msdk_import_to_msdk_surface (outbuf_new, thiz->context,
+            &thiz->srcpad_buffer_pool_info);
 #else
         out_surface =
-            gst_msdk_import_sys_mem_to_msdk_surface (outbuf, thiz->srcpad_info);
+            gst_msdk_import_sys_mem_to_msdk_surface (outbuf_new,
+            thiz->srcpad_buffer_pool_info);
 #endif
         if (out_surface) {
-          out_surface->buf = gst_buffer_ref (outbuf);
+          out_surface->buf = gst_buffer_ref (outbuf_new);
           create_new_surface = TRUE;
         } else {
           GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
