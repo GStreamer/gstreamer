@@ -254,13 +254,9 @@ gst_webrtc_bin_pad_finalize (GObject * object)
 {
   GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (object);
 
-  if (pad->trans)
-    gst_object_unref (pad->trans);
-  pad->trans = NULL;
-
-  if (pad->received_caps)
-    gst_caps_unref (pad->received_caps);
-  pad->received_caps = NULL;
+  gst_clear_object (&pad->trans);
+  gst_clear_caps (&pad->received_caps);
+  g_clear_pointer (&pad->msid, g_free);
 
   G_OBJECT_CLASS (gst_webrtc_bin_pad_parent_class)->finalize (object);
 }
@@ -457,31 +453,175 @@ gst_webrtc_bin_pad_init (GstWebRTCBinPad * pad)
 }
 
 static GstWebRTCBinPad *
-gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction)
+gst_webrtc_bin_pad_new (const gchar * name, GstPadDirection direction,
+    char *msid)
 {
   GstWebRTCBinPad *pad;
   GstPadTemplate *template;
+  GType pad_type;
 
-  if (direction == GST_PAD_SINK)
+  if (direction == GST_PAD_SINK) {
     template = gst_static_pad_template_get (&sink_template);
-  else if (direction == GST_PAD_SRC)
+    pad_type = GST_TYPE_WEBRTC_BIN_SINK_PAD;
+  } else if (direction == GST_PAD_SRC) {
     template = gst_static_pad_template_get (&src_template);
-  else
+    pad_type = GST_TYPE_WEBRTC_BIN_SRC_PAD;
+  } else {
     g_assert_not_reached ();
+  }
 
   pad =
-      g_object_new (gst_webrtc_bin_pad_get_type (), "name", name, "direction",
+      g_object_new (pad_type, "name", name, "direction",
       direction, "template", template, NULL);
   gst_object_unref (template);
 
-  if (direction == GST_PAD_SINK) {
-    gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
-    gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
-  }
+  pad->msid = msid;
 
   GST_DEBUG_OBJECT (pad, "new visible pad with direction %s",
       direction == GST_PAD_SRC ? "src" : "sink");
   return pad;
+}
+
+enum
+{
+  PROP_SINK_PAD_MSID = 1,
+};
+
+/**
+ * GstWebRTCBinSinkPad:
+ *
+ * Since: 1.22
+ */
+struct _GstWebRTCBinSinkPad
+{
+  GstWebRTCBinPad pad;
+};
+
+G_DEFINE_TYPE (GstWebRTCBinSinkPad, gst_webrtc_bin_sink_pad,
+    GST_TYPE_WEBRTC_BIN_PAD);
+
+static void
+gst_webrtc_bin_sink_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (object);
+
+  switch (prop_id) {
+    case PROP_SINK_PAD_MSID:
+      g_value_set_string (value, pad->msid);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_webrtc_bin_sink_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (object);
+
+  switch (prop_id) {
+    case PROP_SINK_PAD_MSID:
+      g_free (pad->msid);
+      pad->msid = g_value_dup_string (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_webrtc_bin_sink_pad_class_init (GstWebRTCBinSinkPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->get_property = gst_webrtc_bin_sink_pad_get_property;
+  gobject_class->set_property = gst_webrtc_bin_sink_pad_set_property;
+
+  /**
+   * GstWebRTCBinSinkPad:msid:
+   *
+   * The MediaStream Identifier to use for this pad (MediaStreamTrack).
+   * Fallback is the RTP SDES cname value if not provided.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_SINK_PAD_MSID,
+      g_param_spec_string ("msid", "MSID",
+          "Local MediaStream ID to use for this pad (NULL = unset)", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_webrtc_bin_sink_pad_init (GstWebRTCBinSinkPad * pad)
+{
+  gst_pad_set_event_function (GST_PAD (pad), gst_webrtcbin_sink_event);
+  gst_pad_set_query_function (GST_PAD (pad), gst_webrtcbin_sink_query);
+}
+
+enum
+{
+  PROP_SRC_PAD_MSID = 1,
+};
+
+/**
+ * GstWebRTCBinSrcPad:
+ *
+ * Since: 1.22
+ */
+struct _GstWebRTCBinSrcPad
+{
+  GstWebRTCBinPad pad;
+};
+
+G_DEFINE_TYPE (GstWebRTCBinSrcPad, gst_webrtc_bin_src_pad,
+    GST_TYPE_WEBRTC_BIN_PAD);
+
+static void
+gst_webrtc_bin_src_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstWebRTCBinPad *pad = GST_WEBRTC_BIN_PAD (object);
+
+  switch (prop_id) {
+    case PROP_SRC_PAD_MSID:
+      g_value_set_string (value, pad->msid);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_webrtc_bin_src_pad_class_init (GstWebRTCBinSrcPadClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+
+  gobject_class->get_property = gst_webrtc_bin_src_pad_get_property;
+
+  /**
+   * GstWebRTCBinSrcPad:msid:
+   *
+   * The MediaStream Identifier the remote peer used for this pad (MediaStreamTrack).
+   * Will be NULL if not advertised in the remote SDP.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_SRC_PAD_MSID,
+      g_param_spec_string ("msid", "MSID",
+          "Remote MediaStream ID in use for this pad (NULL = not advertised)",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_webrtc_bin_src_pad_init (GstWebRTCBinSrcPad * pad)
+{
 }
 
 #define gst_webrtc_bin_parent_class parent_class
@@ -2867,15 +3007,27 @@ _media_add_rtx_ssrc (GQuark field_id, const GValue * value, RtxSsrcData * data)
   gchar *str;
   GstStructure *sdes;
   const gchar *cname;
+  GstWebRTCBinPad *sink_pad;
+  const char *msid = NULL;
 
   g_object_get (data->webrtc->rtpbin, "sdes", &sdes, NULL);
   /* http://www.freesoft.org/CIE/RFC/1889/24.htm */
   cname = gst_structure_get_string (sdes, "cname");
 
+  sink_pad =
+      _find_pad_for_transceiver (data->webrtc, GST_PAD_SINK,
+      GST_WEBRTC_RTP_TRANSCEIVER (data->trans));
+  if (sink_pad)
+    msid = sink_pad->msid;
+  /* fallback to cname if no msid provided */
+  if (!msid)
+    msid = cname;
+
   /* https://tools.ietf.org/html/draft-ietf-mmusic-msid-16 */
+  /* FIXME: the ssrc is not present in RFC8830, do we still need that? */
   str =
       g_strdup_printf ("%u msid:%s %s", g_value_get_uint (value),
-      cname, GST_OBJECT_NAME (data->trans));
+      msid, GST_OBJECT_NAME (data->trans));
   gst_sdp_media_add_attribute (data->media, "ssrc", str);
   g_free (str);
 
@@ -2883,6 +3035,7 @@ _media_add_rtx_ssrc (GQuark field_id, const GValue * value, RtxSsrcData * data)
   gst_sdp_media_add_attribute (data->media, "ssrc", str);
   g_free (str);
 
+  gst_clear_object (&sink_pad);
   gst_structure_free (sdes);
 
   return TRUE;
@@ -2911,10 +3064,22 @@ _media_add_ssrcs (GstSDPMedia * media, GstCaps * caps, GstWebRTCBin * webrtc,
 
     if (gst_structure_get_uint (s, "ssrc", &ssrc)) {
       gchar *str;
+      GstWebRTCBinPad *sink_pad;
+      const char *msid = NULL;
+
+      sink_pad =
+          _find_pad_for_transceiver (webrtc, GST_PAD_SINK,
+          GST_WEBRTC_RTP_TRANSCEIVER (trans));
+      if (sink_pad)
+        msid = sink_pad->msid;
+      /* fallback to cname if no msid provided */
+      if (!msid)
+        msid = cname;
 
       /* https://tools.ietf.org/html/draft-ietf-mmusic-msid-16 */
+      /* FIXME: the ssrc is not present in RFC8830, do we still need that? */
       str =
-          g_strdup_printf ("%u msid:%s %s", ssrc, cname,
+          g_strdup_printf ("%u msid:%s %s", ssrc, msid,
           GST_OBJECT_NAME (trans));
       gst_sdp_media_add_attribute (media, "ssrc", str);
       g_free (str);
@@ -2922,6 +3087,8 @@ _media_add_ssrcs (GstSDPMedia * media, GstCaps * caps, GstWebRTCBin * webrtc,
       str = g_strdup_printf ("%u cname:%s", ssrc, cname);
       gst_sdp_media_add_attribute (media, "ssrc", str);
       g_free (str);
+
+      gst_clear_object (&sink_pad);
     }
   }
 
@@ -4697,7 +4864,7 @@ gst_webrtc_bin_create_answer (GstWebRTCBin * webrtc,
 
 static GstWebRTCBinPad *
 _create_pad_for_sdp_media (GstWebRTCBin * webrtc, GstPadDirection direction,
-    GstWebRTCRTPTransceiver * trans, guint serial)
+    GstWebRTCRTPTransceiver * trans, guint serial, char *msid)
 {
   GstWebRTCBinPad *pad;
   gchar *pad_name;
@@ -4712,7 +4879,7 @@ _create_pad_for_sdp_media (GstWebRTCBin * webrtc, GstPadDirection direction,
   pad_name =
       g_strdup_printf ("%s_%u", direction == GST_PAD_SRC ? "src" : "sink",
       serial);
-  pad = gst_webrtc_bin_pad_new (pad_name, direction);
+  pad = gst_webrtc_bin_pad_new (pad_name, direction, msid);
   g_free (pad_name);
 
   pad->trans = gst_object_ref (trans);
@@ -5420,11 +5587,20 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   WebRTCTransceiver *trans = WEBRTC_TRANSCEIVER (rtp_trans);
   GstWebRTCRTPTransceiverDirection prev_dir = rtp_trans->current_direction;
   GstWebRTCRTPTransceiverDirection new_dir;
+  const GstSDPMedia *local_media, *remote_media;
   const GstSDPMedia *media = gst_sdp_message_get_media (sdp, media_idx);
   GstWebRTCDTLSSetup new_setup;
+  char *local_msid = NULL;
   gboolean new_rtcp_rsize;
   ReceiveState receive_state = RECEIVE_STATE_UNSET;
   int i;
+
+  local_media =
+      gst_sdp_message_get_media (webrtc->current_local_description->sdp,
+      media_idx);
+  remote_media =
+      gst_sdp_message_get_media (webrtc->current_remote_description->sdp,
+      media_idx);
 
   rtp_trans->mline = media_idx;
 
@@ -5452,16 +5628,8 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   }
 
   {
-    const GstSDPMedia *local_media, *remote_media;
     GstWebRTCRTPTransceiverDirection local_dir, remote_dir;
     GstWebRTCDTLSSetup local_setup, remote_setup;
-
-    local_media =
-        gst_sdp_message_get_media (webrtc->current_local_description->sdp,
-        media_idx);
-    remote_media =
-        gst_sdp_message_get_media (webrtc->current_remote_description->sdp,
-        media_idx);
 
     local_setup = _get_dtls_setup_from_media (local_media);
     remote_setup = _get_dtls_setup_from_media (remote_media);
@@ -5555,16 +5723,30 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
       GstWebRTCBinPad *pad =
           _find_pad_for_transceiver (webrtc, GST_PAD_SINK, rtp_trans);
+      local_msid = _get_msid_from_media (local_media);
 
       if (pad) {
         GST_DEBUG_OBJECT (webrtc, "found existing send pad %" GST_PTR_FORMAT
-            " for transceiver %" GST_PTR_FORMAT, pad, trans);
+            " for transceiver %" GST_PTR_FORMAT " with msid \'%s\'", pad, trans,
+            pad->msid);
+        if (g_strcmp0 (pad->msid, local_msid) != 0) {
+          GST_DEBUG_OBJECT (webrtc, "send pad %" GST_PTR_FORMAT
+              " transceiver %" GST_PTR_FORMAT " changing msid from \'%s\'"
+              " to \'%s\'", pad, trans, pad->msid, local_msid);
+          g_clear_pointer (&pad->msid, g_free);
+          pad->msid = local_msid;
+          g_object_notify (G_OBJECT (pad), "msid");
+          local_msid = NULL;
+        } else {
+          g_clear_pointer (&local_msid, g_free);
+        }
         gst_object_unref (pad);
       } else {
         GST_DEBUG_OBJECT (webrtc,
             "creating new send pad for transceiver %" GST_PTR_FORMAT, trans);
         pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, rtp_trans,
-            G_MAXUINT);
+            G_MAXUINT, local_msid);
+        local_msid = NULL;
         _connect_input_stream (webrtc, pad);
         _add_pad (webrtc, pad);
       }
@@ -5573,15 +5755,30 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV) {
       GstWebRTCBinPad *pad =
           _find_pad_for_transceiver (webrtc, GST_PAD_SRC, rtp_trans);
+      char *remote_msid = _get_msid_from_media (remote_media);
+
       if (pad) {
         GST_DEBUG_OBJECT (webrtc, "found existing receive pad %" GST_PTR_FORMAT
-            " for transceiver %" GST_PTR_FORMAT, pad, trans);
+            " for transceiver %" GST_PTR_FORMAT " with msid \'%s\'", pad, trans,
+            pad->msid);
+        if (g_strcmp0 (pad->msid, remote_msid) != 0) {
+          GST_DEBUG_OBJECT (webrtc, "receive pad %" GST_PTR_FORMAT
+              " transceiver %" GST_PTR_FORMAT " changing msid from \'%s\'"
+              " to \'%s\'", pad, trans, pad->msid, remote_msid);
+          g_clear_pointer (&pad->msid, g_free);
+          pad->msid = remote_msid;
+          remote_msid = NULL;
+          g_object_notify (G_OBJECT (pad), "msid");
+        } else {
+          g_clear_pointer (&remote_msid, g_free);
+        }
         gst_object_unref (pad);
       } else {
         GST_DEBUG_OBJECT (webrtc,
             "creating new receive pad for transceiver %" GST_PTR_FORMAT, trans);
         pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SRC, rtp_trans,
-            G_MAXUINT);
+            G_MAXUINT, remote_msid);
+        remote_msid = NULL;
 
         if (!trans->stream) {
           TransportStream *item;
@@ -5597,7 +5794,6 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
          * as soon as the pad is added */
         _add_pad_to_list (webrtc, pad);
       }
-
     }
 
     rtp_trans->mline = media_idx;
@@ -7058,7 +7254,8 @@ on_rtpbin_pad_added (GstElement * rtpbin, GstPad * new_pad,
        * or somesuch */
       gst_clear_object (&pad);
       pad =
-          _create_pad_for_sdp_media (webrtc, GST_PAD_SRC, rtp_trans, G_MAXUINT);
+          _create_pad_for_sdp_media (webrtc, GST_PAD_SRC, rtp_trans, G_MAXUINT,
+          NULL);
       GST_TRACE_OBJECT (webrtc,
           "duplicate output ssrc? created new pad %" GST_PTR_FORMAT " for %"
           GST_PTR_FORMAT " for rtp pad %s", pad, rtp_trans, new_pad_name);
@@ -7940,7 +8137,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
       }
     }
   }
-  pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial);
+  pad = _create_pad_for_sdp_media (webrtc, GST_PAD_SINK, trans, serial, NULL);
 
   pad->block_id = gst_pad_add_probe (GST_PAD (pad), GST_PAD_PROBE_TYPE_BLOCK |
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
@@ -8265,8 +8462,9 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
   element_class->change_state = gst_webrtc_bin_change_state;
 
   gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &sink_template, GST_TYPE_WEBRTC_BIN_PAD);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
+      &sink_template, GST_TYPE_WEBRTC_BIN_SINK_PAD);
+  gst_element_class_add_static_pad_template_with_gtype (element_class,
+      &src_template, GST_TYPE_WEBRTC_BIN_SRC_PAD);
 
   gst_element_class_set_metadata (element_class, "WebRTC Bin",
       "Filter/Network/WebRTC", "A bin for webrtc connections",
@@ -8764,6 +8962,8 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       NULL, GST_TYPE_WEBRTC_DATA_CHANNEL, 2, G_TYPE_STRING, GST_TYPE_STRUCTURE);
 
   gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_BIN_PAD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_BIN_SINK_PAD, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_WEBRTC_BIN_SRC_PAD, 0);
 }
 
 static void

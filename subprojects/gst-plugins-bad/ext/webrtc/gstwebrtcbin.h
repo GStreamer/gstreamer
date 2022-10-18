@@ -38,6 +38,8 @@ GType gst_webrtc_bin_pad_get_type(void);
 typedef struct _GstWebRTCBinPad GstWebRTCBinPad;
 typedef struct _GstWebRTCBinPadClass GstWebRTCBinPadClass;
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstWebRTCBinPad, gst_object_unref);
+
 struct _GstWebRTCBinPad
 {
   GstGhostPad           parent;
@@ -46,12 +48,21 @@ struct _GstWebRTCBinPad
   gulong                block_id;
 
   GstCaps              *received_caps;
+  char                 *msid;
 };
 
 struct _GstWebRTCBinPadClass
 {
   GstGhostPadClass      parent_class;
 };
+
+G_DECLARE_FINAL_TYPE (GstWebRTCBinSinkPad, gst_webrtc_bin_sink_pad, GST,
+    WEBRTC_BIN_SINK_PAD, GstWebRTCBinPad);
+#define GST_TYPE_WEBRTC_BIN_SINK_PAD (gst_webrtc_bin_sink_pad_get_type())
+
+G_DECLARE_FINAL_TYPE (GstWebRTCBinSrcPad, gst_webrtc_bin_src_pad, GST,
+    WEBRTC_BIN_SRC_PAD, GstWebRTCBinPad);
+#define GST_TYPE_WEBRTC_BIN_SRC_PAD (gst_webrtc_bin_src_pad_get_type())
 
 GType gst_webrtc_bin_get_type(void);
 #define GST_TYPE_WEBRTC_BIN            (gst_webrtc_bin_get_type())

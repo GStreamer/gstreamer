@@ -47,7 +47,7 @@
 
 typedef enum
 {
-  STATE_NEW,
+  STATE_NEW = 1,
   STATE_NEGOTIATION_NEEDED,
   STATE_OFFER_CREATED,
   STATE_OFFER_SET,
@@ -776,27 +776,56 @@ test_webrtc_create_offer (struct test_webrtc *t)
 }
 
 static TestState
-test_webrtc_wait_for_state_mask (struct test_webrtc *t, TestState state)
+test_webrtc_check_for_state_mask_unlocked (struct test_webrtc *t,
+    TestState state)
 {
   guint i;
+
+  GST_LOG ("attempting to check for state mask 0x%x", state);
+  for (i = 0; i < t->states->len; i++) {
+    TestState val = g_array_index (t->states, TestState, i);
+
+    if (((1 << val) & state) != 0) {
+      GST_DEBUG ("found state 0x%x in wait mask 0x%x at idx %u", val, state, i);
+      g_array_remove_range (t->states, 0, i + 1);
+      return val;
+    }
+  }
+
+  return 0;
+}
+
+static TestState
+test_webrtc_check_for_state_mask (struct test_webrtc *t, TestState state)
+{
+  TestState ret;
+
+  g_mutex_lock (&t->lock);
+  ret = test_webrtc_check_for_state_mask_unlocked (t, state);
+  g_mutex_unlock (&t->lock);
+
+  return ret;
+}
+
+static TestState
+test_webrtc_wait_for_state_mask (struct test_webrtc *t, TestState state)
+{
+  TestState ret = 0;
 
   g_mutex_lock (&t->lock);
 
   GST_LOG ("attempting to wait for state mask 0x%x", state);
   while (TRUE) {
-    for (i = 0; i < t->states->len; i++) {
-      TestState val = g_array_index (t->states, TestState, i);
+    ret = test_webrtc_check_for_state_mask_unlocked (t, state);
 
-      if (((1 << val) & state) != 0) {
-        GST_DEBUG ("found state 0x%x in wait mask 0x%x at idx %u", val, state,
-            i);
-        g_array_remove_range (t->states, 0, i + 1);
-        g_mutex_unlock (&t->lock);
-        return val;
-      }
-    }
+    if (ret)
+      break;
+
     g_cond_wait (&t->cond, &t->lock);
   }
+  g_mutex_unlock (&t->lock);
+
+  return ret;
 }
 
 static TestState
@@ -3862,7 +3891,7 @@ GST_START_TEST (test_codec_preferences_incompatible_extmaps)
   t->on_ice_candidate = NULL;
   t->on_offer_created = offer_created_produced_error;
 
-  test_validate_sdp_full (t, NULL, NULL, STATE_OFFER_CREATED, TRUE);
+  test_validate_sdp_full (t, NULL, NULL, 1 << STATE_ERROR, TRUE);
 
   test_webrtc_free (t);
 }
@@ -3895,7 +3924,7 @@ GST_START_TEST (test_codec_preferences_invalid_extmap)
   t->on_ice_candidate = NULL;
   t->on_offer_created = offer_created_produced_error;
 
-  test_validate_sdp_full (t, NULL, NULL, STATE_OFFER_CREATED, TRUE);
+  test_validate_sdp_full (t, NULL, NULL, 1 << STATE_ERROR, TRUE);
 
   test_webrtc_free (t);
 }
@@ -5540,6 +5569,141 @@ GST_START_TEST (test_data_channel_recreate_offer)
 
 GST_END_TEST;
 
+static void
+validate_msid (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  char **expected_msid = user_data;
+  int i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+    gboolean have_msid = FALSE;
+    char *prev_msid = NULL;
+    int j;
+
+    for (j = 0; j < gst_sdp_media_attributes_len (media); j++) {
+      const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, j);
+      const char *start;
+
+      if (!attr->value)
+        continue;
+
+      start = strstr (attr->value, "msid:");
+      if (start) {
+        const char *end;
+        char *msid;
+
+        start += strlen ("msid:");
+        end = strstr (start, " ");
+        msid = g_strndup (start, end - start);
+        fail_unless (end, "Invalid msid attribute");
+        fail_if (have_msid && g_strcmp0 (prev_msid, msid) != 0,
+            "different values for multiple msid values at mline %u, "
+            "prev msid %s, msid %s", i, prev_msid, msid);
+        have_msid = TRUE;
+        fail_unless_equals_string (msid, expected_msid[i]);
+        g_clear_pointer (&prev_msid, g_free);
+        prev_msid = msid;
+      }
+    }
+    g_clear_pointer (&prev_msid, g_free);
+    fail_unless (have_msid, "no msid attribute in media %u", i);
+  }
+}
+
+static void
+_pad_added_src_check_msid (struct test_webrtc *t, GstElement * element,
+    GstPad * pad, gpointer user_data)
+{
+  const char *expected_msid = user_data;
+  char *msid;
+
+  if (GST_PAD_DIRECTION (pad) != GST_PAD_SRC)
+    return;
+
+  g_object_get (pad, "msid", &msid, NULL);
+  fail_unless_equals_string (msid, expected_msid);
+  g_clear_pointer (&msid, g_free);
+
+  test_webrtc_signal_state_unlocked (t, STATE_CUSTOM);
+}
+
+GST_START_TEST (test_msid)
+{
+  struct test_webrtc *t = create_audio_test ();
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+  guint media_format_count[] = { 1, 5 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (2),
+      &media_formats);
+  const gchar *expected_offer_msid[] = { "a1", "a1", };
+  VAL_SDP_INIT (offer_msid, validate_msid, expected_offer_msid, &count);
+  const gchar *expected_offer_setup[] = { "actpass", "actpass", };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup,
+      &offer_msid);
+  const gchar *expected_offer_direction[] = { "sendrecv", "sendrecv", };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_setup[] = { "active", "active", };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &count);
+  const gchar *expected_answer_direction[] = { "recvonly", "recvonly", };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  GstPad *pad;
+  GstHarness *src;
+  GstElement *rtpbin2;
+
+  t->on_pad_added = _pad_added_src_check_msid;
+  t->pad_added_data = (gpointer) "a1";
+
+  rtpbin2 = gst_bin_get_by_name (GST_BIN (t->webrtc2), "rtpbin");
+  fail_unless (rtpbin2 != NULL);
+  g_signal_connect (rtpbin2, "new-jitterbuffer",
+      G_CALLBACK (new_jitterbuffer_set_fast_start), NULL);
+  g_object_unref (rtpbin2);
+
+  g_signal_connect (t->webrtc1, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+  g_signal_connect (t->webrtc2, "on-new-transceiver",
+      G_CALLBACK (on_new_transceiver_set_rtx_fec), NULL);
+
+  src = gst_harness_new_with_element (t->webrtc1, "sink_1", NULL);
+  add_audio_test_src_harness (src, 0x12345678);
+  t->harnesses = g_list_prepend (t->harnesses, src);
+
+  pad = gst_element_get_static_pad (t->webrtc1, "sink_0");
+  g_object_set (pad, "msid", "a1", NULL);
+  gst_clear_object (&pad);
+
+  pad = gst_element_get_static_pad (t->webrtc1, "sink_1");
+  g_object_set (pad, "msid", "a1", NULL);
+  gst_clear_object (&pad);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE);
+
+  while (TRUE) {
+    gst_harness_push_from_src (src);
+
+    if (test_webrtc_check_for_state_mask (t, 1 << STATE_CUSTOM))
+      break;
+
+    g_usleep (10 * 1000);
+  }
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -5604,6 +5768,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_multiple_media_rtx_payload_mapping);
     tcase_add_test (tc, test_invalid_add_media_in_answer);
     tcase_add_test (tc, test_add_turn_server);
+    tcase_add_test (tc, test_msid);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);
