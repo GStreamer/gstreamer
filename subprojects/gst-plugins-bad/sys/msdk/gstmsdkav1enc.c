@@ -220,103 +220,6 @@ profile_to_string (gint profile)
   return NULL;
 }
 
-static gint
-gst_msdkav1enc_find_show_frame (GstMsdkAV1Enc * thiz, guint8 * data, gsize size,
-    gsize * offset)
-{
-  guint8 *end;
-  guint32 consumed;
-  GstAV1OBU obu;
-  GstAV1ParserResult res;
-
-  if (!data || !size)
-    return -1;
-
-  end = data + size;
-  *offset = 0;
-  while (data < end) {
-    res = gst_av1_parser_identify_one_obu (thiz->parser,
-        data, end - data, &obu, &consumed);
-    if (res != GST_AV1_PARSER_OK)
-      return -1;
-
-    *offset += consumed;
-    switch (obu.obu_type) {
-      case GST_AV1_OBU_FRAME_HEADER:
-        /* check show_existing_frame flag */
-        if (0x80 & *(obu.data))
-          return 1;
-      case GST_AV1_OBU_FRAME:
-        /* check show_frame flag */
-        if (0x10 & *(obu.data))
-          return 1;
-      default:
-        break;
-    }
-    data += consumed;
-  }
-  return 0;
-}
-
-static gboolean
-gst_msdkav1enc_pre_finish (GstMsdkEnc * encoder, GstBuffer ** buf,
-    guint8 * data, gsize size)
-{
-  GstMsdkAV1Enc *thiz = GST_MSDKAV1ENC (encoder);
-  gsize offset = 0;
-  gint ret = 0;
-  gsize avail_size;
-  GstBuffer *adapt_buf = NULL;
-
-  *buf = NULL;
-
-  if (data && size) {
-    adapt_buf = gst_buffer_new_allocate (NULL, size, NULL);
-    gst_buffer_fill (adapt_buf, 0, data, size);
-    gst_adapter_push (thiz->adapter, adapt_buf);
-  }
-
-  avail_size = gst_adapter_available (thiz->adapter);
-  if (avail_size) {
-    guint8 *parse_data = (guint8 *) gst_adapter_map (thiz->adapter, avail_size);
-    ret = gst_msdkav1enc_find_show_frame (thiz,
-        parse_data, avail_size, &offset);
-
-    gst_adapter_unmap (thiz->adapter);
-
-    if (ret == 1) {
-      *buf = gst_adapter_take_buffer (thiz->adapter, offset);
-      return TRUE;
-    } else if (ret == 0) {
-      return TRUE;
-    } else {
-      return FALSE;
-    }
-  }
-
-  return TRUE;
-}
-
-static void
-gst_msdkav1enc_flush_frames (GstMsdkEnc * encoder)
-{
-  GstVideoCodecFrame *frame;
-  GstBuffer *out_buf = NULL;
-
-  while (1) {
-    if (!gst_msdkav1enc_pre_finish (encoder, &out_buf, NULL, 0))
-      break;
-    if (!out_buf)
-      break;
-    frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (encoder));
-    frame->output_buffer = out_buf;
-    gst_video_codec_frame_unref (frame);
-    gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (encoder), frame);
-  }
-
-  return;
-}
-
 static GstCaps *
 gst_msdkav1enc_set_src_caps (GstMsdkEnc * encoder)
 {
@@ -407,14 +310,6 @@ gst_msdkav1enc_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_msdkav1enc_finalize (GObject * object)
 {
-  GstMsdkAV1Enc *thiz = GST_MSDKAV1ENC (object);
-
-  if (thiz->parser)
-    gst_av1_parser_free (thiz->parser);
-
-  if (thiz->adapter)
-    gst_adapter_clear (thiz->adapter);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -438,8 +333,6 @@ gst_msdkav1enc_class_init (GstMsdkAV1EncClass * klass)
   encoder_class->set_src_caps = gst_msdkav1enc_set_src_caps;
   encoder_class->qp_max = 255;
   encoder_class->qp_min = 0;
-  encoder_class->pre_finish = gst_msdkav1enc_pre_finish;
-  encoder_class->flush_frames = gst_msdkav1enc_flush_frames;
 
   gst_msdkenc_install_common_properties (encoder_class);
 
@@ -483,6 +376,4 @@ gst_msdkav1enc_init (GstMsdkAV1Enc * thiz)
   thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
   thiz->b_pyramid = PROP_B_PYRAMID_DEFAULT;
   thiz->p_pyramid = PROP_P_PYRAMID_DEFAULT;
-  thiz->adapter = gst_adapter_new ();
-  thiz->parser = gst_av1_parser_new ();
 }

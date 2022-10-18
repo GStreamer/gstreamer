@@ -64,9 +64,6 @@ struct _GstMsdkAV1Enc
   mfxExtAV1BitstreamParam ext_av1_bs_param;
   mfxExtAV1ResolutionParam ext_av1_res_param;
   mfxExtAV1TileParam ext_av1_tile_param;
-
-  GstAdapter *adapter;
-  GstAV1Parser *parser;
 };
 
 struct _GstMsdkAV1EncClass

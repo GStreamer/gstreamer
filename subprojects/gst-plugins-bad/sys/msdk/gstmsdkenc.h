@@ -194,10 +194,6 @@ struct _GstMsdkEncClass
   /* Allow sub class set extra frame parameters */
   void (*set_extra_params) (GstMsdkEnc * encoder, GstVideoCodecFrame * frame);
 
-  gboolean (*pre_finish) (GstMsdkEnc * encoder, GstBuffer **buf,
-                               guint8 *data, gsize size);
-  void (*flush_frames) (GstMsdkEnc * encoder);
-
   guint qp_max;
   guint qp_min;
 };
