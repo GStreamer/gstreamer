@@ -4984,7 +4984,8 @@ _set_internal_rtpbin_element_props_from_stream (GstWebRTCBin * webrtc,
 
       try_match_transceiver_with_fec_decoder (webrtc, trans);
       if (trans->ulpfecdec) {
-        g_object_set (trans->ulpfecdec, "pt", ulpfec_pt, NULL);
+        g_object_set (trans->ulpfecdec, "passthrough", ulpfec_pt == 0, "pt",
+            ulpfec_pt, NULL);
       }
 
       if (trans->redenc) {
