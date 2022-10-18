@@ -156,6 +156,14 @@ struct _GstAudioRingBufferSpec
   gpointer _gst_reserved[GST_PADDING];
 };
 
+#define GST_AUDIO_RING_BUFFER_SPEC_FORMAT_TYPE(spec)   ((spec)->type)
+#define GST_AUDIO_RING_BUFFER_SPEC_INFO(spec)          ((spec)->info)
+#define GST_AUDIO_RING_BUFFER_SPEC_LATENCY_TIME(spec)  ((spec)->latency_time)
+#define GST_AUDIO_RING_BUFFER_SPEC_BUFFER_TIME(spec)   ((spec)->buffer_time)
+#define GST_AUDIO_RING_BUFFER_SPEC_SEGSIZE(spec)       ((spec)->segsize)
+#define GST_AUDIO_RING_BUFFER_SPEC_SEGTOTAL(spec)      ((spec)->segtotal)
+#define GST_AUDIO_RING_BUFFER_SPEC_SEGLATENCY(spec)    ((spec)->seglatency)
+
 #define GST_AUDIO_RING_BUFFER_GET_COND(buf) (&(((GstAudioRingBuffer *)buf)->cond))
 #define GST_AUDIO_RING_BUFFER_WAIT(buf)     (g_cond_wait (GST_AUDIO_RING_BUFFER_GET_COND (buf), GST_OBJECT_GET_LOCK (buf)))
 #define GST_AUDIO_RING_BUFFER_SIGNAL(buf)   (g_cond_signal (GST_AUDIO_RING_BUFFER_GET_COND (buf)))
