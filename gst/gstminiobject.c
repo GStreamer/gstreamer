@@ -217,7 +217,7 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
 gboolean
 gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
 {
-  gint access_mode, state, newstate;
+  guint access_mode, state, newstate;
 
   g_return_val_if_fail (object != NULL, FALSE);
   g_return_val_if_fail (GST_MINI_OBJECT_IS_LOCKABLE (object), FALSE);
@@ -228,7 +228,7 @@ gst_mini_object_lock (GstMiniObject * object, GstLockFlags flags)
 
   do {
     access_mode = flags & FLAG_MASK;
-    newstate = state = g_atomic_int_get (&object->lockstate);
+    newstate = state = (guint) g_atomic_int_get (&object->lockstate);
 
     GST_CAT_TRACE (GST_CAT_LOCKING, "lock %p: state %08x, access_mode %d",
         object, state, access_mode);
@@ -281,14 +281,14 @@ lock_failed:
 void
 gst_mini_object_unlock (GstMiniObject * object, GstLockFlags flags)
 {
-  gint access_mode, state, newstate;
+  guint access_mode, state, newstate;
 
   g_return_if_fail (object != NULL);
   g_return_if_fail (GST_MINI_OBJECT_IS_LOCKABLE (object));
 
   do {
     access_mode = flags & FLAG_MASK;
-    newstate = state = g_atomic_int_get (&object->lockstate);
+    newstate = state = (guint) g_atomic_int_get (&object->lockstate);
 
     GST_CAT_TRACE (GST_CAT_LOCKING, "unlock %p: state %08x, access_mode %d",
         object, state, access_mode);
