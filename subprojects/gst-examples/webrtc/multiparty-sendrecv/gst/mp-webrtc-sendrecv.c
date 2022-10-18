@@ -119,6 +119,39 @@ get_string_from_json_object (JsonObject * object)
   return text;
 }
 
+static gboolean
+bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+    {
+      GError *error = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (message, &error, &debug);
+      g_error ("Error on bus: %s (debug: %s)", error->message, debug);
+      g_error_free (error);
+      g_free (debug);
+      break;
+    }
+    case GST_MESSAGE_WARNING:
+    {
+      GError *error = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_warning (message, &error, &debug);
+      g_warning ("Warning on bus: %s (debug: %s)", error->message, debug);
+      g_error_free (error);
+      g_free (debug);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return G_SOURCE_CONTINUE;
+}
+
 static void
 handle_media_stream (GstPad * pad, GstElement * pipe, const char *convert_name,
     const char *sink_name)
@@ -413,6 +446,7 @@ start_pipeline (void)
 {
   GstStateChangeReturn ret;
   GError *error = NULL;
+  GstBus *bus = NULL;
 
   /* NOTE: webrtcbin currently does not support dynamic addition/removal of
    * streams, so we use a separate webrtcbin for each peer, but all of them are
@@ -427,6 +461,10 @@ start_pipeline (void)
     g_error_free (error);
     goto err;
   }
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, bus_watch_cb, NULL);
+  gst_object_unref (bus);
 
   gst_print ("Starting pipeline, not transmitting yet\n");
   ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
