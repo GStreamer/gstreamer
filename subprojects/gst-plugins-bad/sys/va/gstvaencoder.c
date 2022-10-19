@@ -28,16 +28,9 @@
 #include <gst/va/gstvavideoformat.h>
 
 #include "gstvacaps.h"
+#include "gstvaprofile.h"
 #include "gstvadisplay_priv.h"
 #include "vacompat.h"
-
-typedef struct _GstVaProfileConfig GstVaProfileConfig;
-
-struct _GstVaProfileConfig
-{
-  VAProfile profile;
-  VAEntrypoint entrypoint;
-};
 
 struct _GstVaEncoder
 {
@@ -187,14 +180,19 @@ static void
 gst_va_encoder_init (GstVaEncoder * self)
 {
   self->profile = VAProfileNone;
-  self->entrypoint = 0;
+  self->config = VA_INVALID_ID;
+}
+
+static void
+gst_va_encoder_reset (GstVaEncoder * self)
+{
+  self->profile = VAProfileNone;
   self->config = VA_INVALID_ID;
   self->context = VA_INVALID_ID;
   self->rt_format = 0;
   self->coded_width = 0;
   self->coded_height = 0;
   self->codedbuf_size = 0;
-  g_clear_pointer (&self->recon_pool, gst_object_unref);
 }
 
 static inline gboolean
@@ -239,7 +237,7 @@ gst_va_encoder_close (GstVaEncoder * self)
   recon_pool = self->recon_pool;
   self->recon_pool = NULL;
 
-  gst_va_encoder_init (self);
+  gst_va_encoder_reset (self);
   GST_OBJECT_UNLOCK (self);
 
   gst_buffer_pool_set_active (recon_pool, FALSE);
@@ -337,9 +335,9 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
 
 gboolean
 gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
-    VAEntrypoint entrypoint, GstVideoFormat video_format, guint rt_format,
-    gint coded_width, gint coded_height, gint codedbuf_size,
-    guint max_reconstruct_surfaces, guint rc_ctrl, guint32 packed_headers)
+    GstVideoFormat video_format, guint rt_format, gint coded_width,
+    gint coded_height, gint codedbuf_size, guint max_reconstruct_surfaces,
+    guint rc_ctrl, guint32 packed_headers)
 {
   /* *INDENT-OFF* */
   VAConfigAttrib attribs[3] = {
@@ -361,9 +359,9 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   if (gst_va_encoder_is_open (self))
     return TRUE;
 
-  if (!gst_va_encoder_has_profile_and_entrypoint (self, profile, entrypoint)) {
-    GST_ERROR_OBJECT (self, "Unsupported profile: %d, entrypoint: %d",
-        profile, entrypoint);
+  if (!gst_va_encoder_has_profile (self, profile)) {
+    GST_ERROR_OBJECT (self, "Unsupported profile: %s, entrypoint: %d",
+        gst_va_profile_name (profile), self->entrypoint);
     return FALSE;
   }
 
@@ -375,7 +373,7 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
 
   dpy = gst_va_display_get_va_dpy (self->display);
 
-  status = vaCreateConfig (dpy, profile, entrypoint, attribs, attrib_idx,
+  status = vaCreateConfig (dpy, profile, self->entrypoint, attribs, attrib_idx,
       &config);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateConfig: %s", vaErrorStr (status));
@@ -498,35 +496,19 @@ gst_va_encoder_class_init (GstVaEncoderClass * klass)
 static gboolean
 gst_va_encoder_initialize (GstVaEncoder * self, guint32 codec)
 {
-  GArray *enc_profiles = NULL;
-  gint i;
-
   if (self->available_profiles)
     return FALSE;
 
-  enc_profiles = gst_va_display_get_profiles (self->display, codec,
-      self->entrypoint);
-
-  if (!enc_profiles)
-    return FALSE;
-
   self->available_profiles =
-      g_array_new (FALSE, FALSE, sizeof (GstVaProfileConfig));
+      gst_va_display_get_profiles (self->display, codec, self->entrypoint);
 
-  if (enc_profiles) {
-    for (i = 0; i < enc_profiles->len; i++) {
-      GstVaProfileConfig config;
-
-      config.profile = g_array_index (enc_profiles, VAProfile, i);
-      config.entrypoint = self->entrypoint;
-      g_array_append_val (self->available_profiles, config);
-    }
-  }
-
-  g_clear_pointer (&enc_profiles, g_array_unref);
-
-  if (self->available_profiles->len == 0)
+  if (!self->available_profiles)
     return FALSE;
+
+  if (self->available_profiles->len == 0) {
+    g_clear_pointer (&self->available_profiles, g_array_unref);
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -548,31 +530,20 @@ gst_va_encoder_new (GstVaDisplay * display, guint32 codec,
 }
 
 gboolean
-gst_va_encoder_has_profile_and_entrypoint (GstVaEncoder * self,
-    VAProfile profile, VAEntrypoint entrypoint)
+gst_va_encoder_has_profile (GstVaEncoder * self, VAProfile profile)
 {
-  GstVaProfileConfig *config;
+  VAProfile p;
   gint i;
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
 
-  if (profile == VAProfileNone)
-    return FALSE;
-
   for (i = 0; i < self->available_profiles->len; i++) {
-    config = &g_array_index (self->available_profiles, GstVaProfileConfig, i);
-    if (config->profile == profile) {
-      if (entrypoint == 0)
-        break;
-
-      if (config->entrypoint == entrypoint)
-        break;
-    }
+    p = g_array_index (self->available_profiles, VAProfile, i);
+    if (p == profile)
+      return TRUE;
   }
-  if (i == self->available_profiles->len)
-    return FALSE;
 
-  return TRUE;
+  return FALSE;
 }
 
 gint32

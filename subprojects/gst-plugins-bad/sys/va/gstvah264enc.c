@@ -1366,8 +1366,7 @@ _decide_profile (GstVaH264Enc * self)
     if (profile == VAProfileNone)
       continue;
 
-    if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
-            profile, GST_VA_BASE_ENC_ENTRYPOINT (base)))
+    if (!gst_va_encoder_has_profile (base->encoder, profile))
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
@@ -1389,8 +1388,7 @@ _decide_profile (GstVaH264Enc * self)
     if (profile == VAProfileNone)
       continue;
 
-    if (!gst_va_encoder_has_profile_and_entrypoint (base->encoder,
-            profile, GST_VA_BASE_ENC_ENTRYPOINT (base)))
+    if (!gst_va_encoder_has_profile (base->encoder, profile))
       continue;
 
     if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
@@ -1569,7 +1567,6 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
 
   max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
   if (!gst_va_encoder_open (base->encoder, base->profile,
-          GST_VA_BASE_ENC_ENTRYPOINT (base),
           GST_VIDEO_INFO_FORMAT (&base->input_state->info), base->rt_format,
           GST_ROUND_UP_16 (base->width), GST_ROUND_UP_16 (base->height),
           base->codedbuf_size, max_ref_frames, self->rc.rc_ctrl_mode,

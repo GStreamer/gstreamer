@@ -47,7 +47,6 @@ struct _GstVaEncodePicture
 gboolean              gst_va_encoder_is_open              (GstVaEncoder * self);
 gboolean              gst_va_encoder_open                 (GstVaEncoder * self,
                                                            VAProfile profile,
-                                                           VAEntrypoint entrypoint,
                                                            GstVideoFormat video_format,
                                                            guint rt_format,
                                                            gint coded_width,
@@ -57,9 +56,8 @@ gboolean              gst_va_encoder_open                 (GstVaEncoder * self,
                                                            guint rc_ctrl,
                                                            guint32 packed_headers);
 gboolean              gst_va_encoder_close                (GstVaEncoder * self);
-gboolean              gst_va_encoder_has_profile_and_entrypoint (GstVaEncoder * self,
-                                                                 VAProfile profile,
-                                                                 VAEntrypoint entrypoint);
+gboolean              gst_va_encoder_has_profile          (GstVaEncoder * self,
+                                                           VAProfile profile);
 gint                  gst_va_encoder_get_max_slice_num    (GstVaEncoder * self,
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint);
