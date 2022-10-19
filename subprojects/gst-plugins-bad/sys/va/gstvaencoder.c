@@ -461,7 +461,7 @@ gst_va_encoder_class_init (GstVaEncoderClass * klass)
   gobject_class->dispose = gst_va_encoder_dispose;
 
   g_properties[PROP_DISPLAY] =
-      g_param_spec_object ("display", "GstVaDisplay", "GstVADisplay object",
+      g_param_spec_object ("display", "GstVaDisplay", "GstVaDisplay object",
       GST_TYPE_VA_DISPLAY,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
@@ -476,7 +476,7 @@ gst_va_encoder_class_init (GstVaEncoderClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_properties[PROP_CHROMA] =
-      g_param_spec_uint ("va-rt-format", "VARTFormat", "VA RT Fromat or chroma",
+      g_param_spec_uint ("va-rt-format", "VARTFormat", "VA RT Format",
       VA_RT_FORMAT_YUV420, VA_RT_FORMAT_PROTECTED, VA_RT_FORMAT_YUV420,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
