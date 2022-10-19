@@ -15,10 +15,6 @@ else
   zip_hash = '2b8a00d9fa348e7b68bac0497e25be44db83c64d6681478fdcbfa03fca36ad76'
 endif
 
-ret = run_command(py3, files('download-binary.py'), meson.project_version(), arch, zip_hash)
-if ret.returncode() != 0
-  message(ret.stdout())
-  error(ret.stderr())
-endif
+ret = run_command(py3, files('download-binary.py'), meson.project_version(), arch, zip_hash, check: true)
 
 meson.override_find_program('nasm', find_program(join_paths('nasm-@0@'.format(meson.project_version()), 'nasm')))
