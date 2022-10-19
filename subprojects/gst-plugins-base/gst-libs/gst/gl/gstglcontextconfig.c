@@ -21,7 +21,7 @@
 /**
  * SECTION:gstglcontextconfig
  * @short_description: OpenGL context configuration values
- * @title: GstGLContext
+ * @title: GstGLContextConfig
  * @see_also: #GstGLContext, #GstGLWindow
  *
  * A common list of well-known values for what a config retrievable from or set
