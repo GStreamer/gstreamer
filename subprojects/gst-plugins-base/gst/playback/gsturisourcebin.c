@@ -146,7 +146,6 @@ struct _GstURISourceBin
   gboolean is_adaptive;
   gboolean demuxer_handles_buffering;   /* If TRUE: Don't use buffering elements */
   gboolean source_streams_aware;        /* if TRUE: Don't block output pads */
-  gboolean need_queue;
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
@@ -1529,8 +1528,6 @@ gen_source_element (GstURISourceBin * urisrc)
 
   GST_LOG_OBJECT (urisrc, "source is stream: %d", urisrc->is_stream);
 
-  urisrc->need_queue = IS_QUEUE_URI (urisrc->uri);
-  GST_LOG_OBJECT (urisrc, "source needs queue: %d", urisrc->need_queue);
 
   source_class = G_OBJECT_GET_CLASS (source);
 
@@ -1689,14 +1686,14 @@ post_missing_plugin_error (GstElement * urisrc, const gchar * element_name)
 }
 
 /**
- * analyse_source:
+ * analyse_source_and_expose_raw_pads:
  * @urisrc: a #GstURISourceBin
- * @is_raw: are all pads raw data
+ * @all_pads_raw: are all pads raw data
  * @have_out: does the source have output
  * @is_dynamic: is this a dynamic source
- * @use_queue: put a queue before raw output pads
  *
- * Check the source of @urisrc and collect information about it.
+ * Check the source of @urisrc and collect information about it. Any pad
+ * exposing raw data will be exposed directly.
  *
  * @is_raw will be set to TRUE if the source only produces raw pads. When this
  * function returns, all of the raw pad of the source will be added
@@ -1710,8 +1707,8 @@ post_missing_plugin_error (GstElement * urisrc, const gchar * element_name)
  * Returns: FALSE if a fatal error occurred while scanning.
  */
 static gboolean
-analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
-    gboolean * have_out, gboolean * is_dynamic, gboolean use_queue)
+analyse_source_and_expose_raw_pads (GstURISourceBin * urisrc,
+    gboolean * all_pads_raw, gboolean * have_out, gboolean * is_dynamic)
 {
   GstElementClass *elemclass;
   GList *walk;
@@ -1723,10 +1720,15 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
   guint nb_raw = 0;
   guint nb_pads = 0;
   GstCaps *rawcaps = DEFAULT_CAPS;
+  gboolean pad_is_raw;
+  gboolean use_queue;
 
   *have_out = FALSE;
-  *is_raw = FALSE;
+  *all_pads_raw = FALSE;
   *is_dynamic = FALSE;
+
+  /* Add buffering elements on raw pads only is very specific conditions */
+  use_queue = urisrc->use_buffering && IS_QUEUE_URI (urisrc->uri);
 
   pads_iter = gst_element_iterate_src_pads (urisrc->source);
   while (!done) {
@@ -1740,7 +1742,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
       case GST_ITERATOR_RESYNC:
         /* reset results and resync */
         *have_out = FALSE;
-        *is_raw = FALSE;
+        *all_pads_raw = FALSE;
         *is_dynamic = FALSE;
         nb_pads = nb_raw = 0;
         gst_iterator_resync (pads_iter);
@@ -1751,7 +1753,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
         *have_out = TRUE;
 
         /* if FALSE, this pad has no caps and we continue with the next pad. */
-        if (!has_all_raw_caps (pad, rawcaps, is_raw)) {
+        if (!has_all_raw_caps (pad, rawcaps, &pad_is_raw)) {
           gst_object_unref (pad);
           g_value_reset (&item);
           break;
@@ -1759,7 +1761,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
 
         nb_pads++;
         /* caps on source pad are all raw, we can add the pad */
-        if (*is_raw) {
+        if (pad_is_raw) {
           GstPad *output_pad;
 
           nb_raw++;
@@ -1814,7 +1816,7 @@ analyse_source (GstURISourceBin * urisrc, gboolean * is_raw,
   }
 
   if (nb_pads && nb_pads == nb_raw)
-    *is_raw = TRUE;
+    *all_pads_raw = TRUE;
 
   return res;
 no_slot:
@@ -2279,7 +2281,7 @@ is_live_source (GstElement * source)
 static gboolean
 setup_source (GstURISourceBin * urisrc)
 {
-  gboolean is_raw, have_out, is_dynamic;
+  gboolean all_pads_raw, have_out, is_dynamic;
 
   GST_DEBUG_OBJECT (urisrc, "setup source");
 
@@ -2310,12 +2312,12 @@ setup_source (GstURISourceBin * urisrc)
    * if so, we can create streams for the pads and be done with it.
    * Also check that is has source pads, if not, we assume it will
    * do everything itself.  */
-  if (!analyse_source (urisrc, &is_raw, &have_out, &is_dynamic,
-          urisrc->need_queue && urisrc->use_buffering))
+  if (!analyse_source_and_expose_raw_pads (urisrc, &all_pads_raw, &have_out,
+          &is_dynamic))
     goto invalid_source;
 
   if (!is_dynamic) {
-    if (is_raw) {
+    if (all_pads_raw) {
       GST_DEBUG_OBJECT (urisrc, "Source provides all raw data");
       /* source provides raw data, we added the pads and we can now signal a
        * no_more pads because we are done. */
@@ -2332,7 +2334,7 @@ setup_source (GstURISourceBin * urisrc)
         G_CALLBACK (source_new_pad), urisrc);
   }
 
-  if (is_raw) {
+  if (all_pads_raw) {
     GST_DEBUG_OBJECT (urisrc,
         "Got raw srcpads on a dynamic source, using them as is.");
 
