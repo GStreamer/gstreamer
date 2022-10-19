@@ -283,8 +283,10 @@ gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
    * also set name as early as we can
    */
   device_provider = g_object_new (factory->type, NULL);
-  if (G_UNLIKELY (device_provider == NULL))
-    goto no_device_provider;
+  if (G_UNLIKELY (!device_provider)) {
+    gst_object_unref (factory);
+    g_return_val_if_fail (device_provider != NULL, NULL);
+  }
 
   /* fill in the pointer to the factory in the device provider class. The
    * class will not be unreffed currently.
@@ -325,12 +327,6 @@ load_failed:
 no_type:
   {
     GST_WARNING_OBJECT (factory, "factory has no type");
-    gst_object_unref (factory);
-    return NULL;
-  }
-no_device_provider:
-  {
-    GST_WARNING_OBJECT (factory, "could not create device provider");
     gst_object_unref (factory);
     return NULL;
   }

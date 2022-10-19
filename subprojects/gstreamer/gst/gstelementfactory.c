@@ -493,9 +493,10 @@ gst_element_factory_create_with_properties (GstElementFactory * factory,
 
   element = (GstElement *) g_object_new_with_properties (factory->type, n,
       names, values);
-
-  if (G_UNLIKELY (element == NULL))
-    goto no_element;
+  if (G_UNLIKELY (!element)) {
+    gst_object_unref (factory);
+    g_return_val_if_fail (element != NULL, NULL);
+  }
 
   /* fill in the pointer to the factory in the element class. The
    * class will not be unreffed currently.
@@ -532,12 +533,6 @@ load_failed:
 no_type:
   {
     GST_WARNING_OBJECT (factory, "factory has no type");
-    gst_object_unref (factory);
-    return NULL;
-  }
-no_element:
-  {
-    GST_WARNING_OBJECT (factory, "could not create element");
     gst_object_unref (factory);
     return NULL;
   }
