@@ -2321,11 +2321,9 @@ setup_source (GstURISourceBin * urisrc)
        * no_more pads because we are done. */
       gst_element_no_more_pads (GST_ELEMENT_CAST (urisrc));
       return TRUE;
-    } else if (!have_out) {
-      GST_DEBUG_OBJECT (urisrc, "Source has no output pads");
-
-      return TRUE;
     }
+    if (!have_out)
+      goto no_pads;
   } else {
     GST_DEBUG_OBJECT (urisrc, "Source has dynamic output pads");
     /* connect a handler for the new-pad signal */
@@ -2390,6 +2388,12 @@ invalid_source:
   {
     GST_ELEMENT_ERROR (urisrc, CORE, FAILED,
         (_("Source element is invalid.")), (NULL));
+    return FALSE;
+  }
+no_pads:
+  {
+    GST_ELEMENT_ERROR (urisrc, CORE, FAILED,
+        (_("Source element has no pads.")), (NULL));
     return FALSE;
   }
 streaming_failed:
