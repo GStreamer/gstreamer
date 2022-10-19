@@ -573,10 +573,13 @@ gst_element_factory_create_valist (GstElementFactory * factory,
       GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
           (factory)));
 
-  g_return_val_if_fail (newfactory != NULL, NULL);
-  g_return_val_if_fail (newfactory->type != G_TYPE_INVALID, NULL);
+  if (newfactory == NULL)
+    goto load_failed;
 
   factory = newfactory;
+
+  if (factory->type == G_TYPE_INVALID)
+    goto no_type;
 
   if (!first) {
     element =
@@ -602,6 +605,19 @@ gst_element_factory_create_valist (GstElementFactory * factory,
 out:
   gst_object_unref (factory);
   return element;
+
+  /* ERRORS */
+load_failed:
+  {
+    GST_WARNING_OBJECT (factory, "loading plugin returned NULL!");
+    return NULL;
+  }
+no_type:
+  {
+    GST_WARNING_OBJECT (factory, "factory has no type");
+    gst_object_unref (factory);
+    return NULL;
+  }
 }
 
 /**
