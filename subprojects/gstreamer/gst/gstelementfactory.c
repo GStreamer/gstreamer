@@ -488,7 +488,7 @@ gst_element_factory_create_with_properties (GstElementFactory * factory,
 
   GST_INFO ("creating element \"%s\"", GST_OBJECT_NAME (factory));
 
-  if (factory->type == 0)
+  if (factory->type == G_TYPE_INVALID)
     goto no_type;
 
   element = (GstElement *) g_object_new_with_properties (factory->type, n,
@@ -574,7 +574,7 @@ gst_element_factory_create_valist (GstElementFactory * factory,
           (factory)));
 
   g_return_val_if_fail (newfactory != NULL, NULL);
-  g_return_val_if_fail (newfactory->type != 0, NULL);
+  g_return_val_if_fail (newfactory->type != G_TYPE_INVALID, NULL);
 
   factory = newfactory;
 

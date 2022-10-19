@@ -136,7 +136,7 @@ gst_meta_api_type_register (const gchar * api, const gchar ** tags)
   GST_CAT_DEBUG (GST_CAT_META, "register API \"%s\"", api);
   type = g_pointer_type_register_static (api);
 
-  if (type != 0) {
+  if (type != G_TYPE_INVALID) {
     gint i;
 
     for (i = 0; tags[i]; i++) {
@@ -391,7 +391,7 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
    * that this fails because it was already registered. Don't warn,
    * glib did this for us already. */
   type = g_pointer_type_register_static (impl);
-  if (type == 0)
+  if (type == G_TYPE_INVALID)
     return NULL;
 
   info = (GstMetaInfo *) g_slice_new (GstMetaInfoImpl);

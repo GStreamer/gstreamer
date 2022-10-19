@@ -270,7 +270,7 @@ gst_device_provider_factory_get (GstDeviceProviderFactory * factory)
 
   GST_INFO ("getting device provider \"%s\"", GST_OBJECT_NAME (factory));
 
-  if (factory->type == 0)
+  if (factory->type == G_TYPE_INVALID)
     goto no_type;
 
   device_provider = g_atomic_pointer_get (&newfactory->provider);
