@@ -2233,12 +2233,8 @@ remove_source (GstURISourceBin * urisrc)
   urisrc->out_slots = NULL;
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
-  if (urisrc->demuxer) {
-    GST_DEBUG_OBJECT (urisrc, "removing old adaptive demux element");
-    gst_element_set_state (urisrc->demuxer, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (urisrc), urisrc->demuxer);
-    urisrc->demuxer = NULL;
-  }
+  if (urisrc->demuxer)
+    remove_demuxer (urisrc);
 }
 
 /* is called when a dynamic source element created a new pad. */
@@ -2304,9 +2300,6 @@ setup_source (GstURISourceBin * urisrc)
 
   if (is_live_source (urisrc->source))
     urisrc->is_stream = FALSE;
-
-  /* remove the old demuxer now, if any */
-  remove_demuxer (urisrc);
 
   /* see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
@@ -3001,7 +2994,6 @@ gst_uri_source_bin_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("paused to ready");
-      remove_demuxer (urisrc);
       remove_source (urisrc);
       g_list_free_full (urisrc->buffering_status,
           (GDestroyNotify) gst_message_unref);
@@ -3011,7 +3003,6 @@ gst_uri_source_bin_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_DEBUG ("ready to null");
-      remove_demuxer (urisrc);
       remove_source (urisrc);
       break;
     default:
