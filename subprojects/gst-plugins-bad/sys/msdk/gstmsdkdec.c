@@ -1036,14 +1036,7 @@ gst_msdkdec_context_prepare (GstMsdkDec * thiz)
     return TRUE;
   }
 
-  /* TODO: Currently d3d allocator is not implemented.
-   * So decoder uses system memory by default on Windows.
-   */
-#ifndef _WIN32
   thiz->use_video_memory = TRUE;
-#else
-  thiz->use_video_memory = FALSE;
-#endif
 
   GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
       thiz->context);
@@ -1733,6 +1726,31 @@ gst_msdk_create_va_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   GST_LOG_OBJECT (thiz, "Creating va pool");
   return pool;
 }
+#else
+static GstBufferPool *
+gst_msdk_create_d3d11_pool (GstMsdkDec * thiz, GstVideoInfo * info,
+    guint num_buffers)
+{
+  GstBufferPool *pool = NULL;
+  GstD3D11Device *device;
+  GstStructure *config;
+  GstD3D11AllocationParams *params;
+
+  device = gst_msdk_context_get_d3d11_device (thiz->context);
+
+  pool = gst_d3d11_buffer_pool_new (device);
+  config = gst_buffer_pool_get_config (pool);
+  params = gst_d3d11_allocation_params_new (device, info,
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
+
+  params->desc[0].BindFlags |=
+      (D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE);
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+  gst_d3d11_allocation_params_free (params);
+
+  return pool;
+}
 #endif
 
 static GstBufferPool *
@@ -1748,16 +1766,13 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   gst_msdk_set_video_alignment (&vinfo, 0, 0, &align);
   gst_video_info_align (&vinfo, &align);
 
-  if (thiz->do_copy)
+  if (thiz->do_copy || !thiz->use_video_memory)
     pool = gst_video_buffer_pool_new ();
   else {
 #ifndef _WIN32
     pool = gst_msdk_create_va_pool (thiz, &vinfo, num_buffers);
 #else
-    if (!thiz->use_video_memory)
-      pool = gst_video_buffer_pool_new ();
-    else
-      GST_ERROR_OBJECT (thiz, "D3D11 video memory pool not implemented");
+    pool = gst_msdk_create_d3d11_pool (thiz, &vinfo, num_buffers);
 #endif
   }
 
@@ -2294,7 +2309,5 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->input_state = NULL;
   thiz->pool = NULL;
   thiz->context = NULL;
-#ifndef _WIN32
   thiz->use_video_memory = TRUE;
-#endif
 }
