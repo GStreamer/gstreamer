@@ -417,7 +417,7 @@ collect_value (GParamSpec *pspec, gchar *value_str, GValue *v)
 {
   gboolean got_value = FALSE;
 
-  GST_CAT_ERROR (GST_CAT_PIPELINE, "parsing property %s as a %s",
+  GST_CAT_LOG (GST_CAT_PIPELINE, "parsing property %s as a %s",
       pspec->name, g_type_name (pspec->value_type));
 
   g_value_init (v, pspec->value_type);
