@@ -8402,6 +8402,10 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       PROP_TURN_SERVER,
       g_param_spec_string ("turn-server", "TURN Server",
           "The TURN server of the form turn(s)://username:password@host:port. "
+          "To use time-limited credentials, the form must be turn(s)://timestamp:"
+          "username:password@host:port. Please note that the ':' character of "
+          "the 'timestamp:username' and the 'password' encoded by base64 should "
+          "be escaped to be parsed properly. "
           "This is a convenience property, use #GstWebRTCBin::add-turn-server "
           "if you wish to use multiple TURN servers",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
