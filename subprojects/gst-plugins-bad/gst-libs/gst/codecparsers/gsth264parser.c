@@ -1507,9 +1507,9 @@ gst_h264_parser_identify_nalu_unchecked (GstH264NalParser * nalparser,
   nalu->size = size - nalu->offset;
 
   if (!gst_h264_parse_nalu_header (nalu)) {
-    GST_WARNING ("error parsing \"NAL unit header\"");
+    GST_DEBUG ("not enough data to parse \"NAL unit header\"");
     nalu->size = 0;
-    return GST_H264_PARSER_BROKEN_DATA;
+    return GST_H264_PARSER_NO_NAL;
   }
 
   nalu->valid = TRUE;

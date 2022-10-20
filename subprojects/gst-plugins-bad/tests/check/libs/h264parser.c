@@ -825,6 +825,28 @@ GST_START_TEST (test_h264_decoder_config_record)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h264_parse_partial_nal_header)
+{
+  GstH264ParserResult res;
+  GstH264NalUnit nalu;
+  GstH264NalParser *const parser = gst_h264_nal_parser_new ();
+  const guint8 buf[] = { 0x00, 0x00, 0x00, 0x01, 0x0e };
+  guint buf_size = sizeof (buf);
+
+  /* Test that incomplete prefix NAL do return NO_NAL_END and not BROKEN_NAL.
+   * This also covers for SLICE_EXT. */
+  res = gst_h264_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  assert_equals_int (res, GST_H264_PARSER_NO_NAL);
+  assert_equals_int (nalu.type, GST_H264_NAL_PREFIX_UNIT);
+  assert_equals_int (nalu.size, 0);
+
+  gst_h264_nal_parser_free (parser);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 h264parser_suite (void)
 {
@@ -840,6 +862,7 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_parse_invalid_sei);
   tcase_add_test (tc_chain, test_h264_create_sei);
   tcase_add_test (tc_chain, test_h264_decoder_config_record);
+  tcase_add_test (tc_chain, test_h264_parse_partial_nal_header);
 
   return s;
 }
