@@ -1915,9 +1915,12 @@ _add_supported_attributes_to_caps (GstWebRTCBin * webrtc,
       if (!gst_structure_has_field (s, "rtcp-fb-nack"))
         gst_structure_set (s, "rtcp-fb-nack", G_TYPE_BOOLEAN, TRUE, NULL);
 
-    if (kind == GST_WEBRTC_KIND_VIDEO
-        && !gst_structure_has_field (s, "rtcp-fb-nack-pli"))
-      gst_structure_set (s, "rtcp-fb-nack-pli", G_TYPE_BOOLEAN, TRUE, NULL);
+    if (kind == GST_WEBRTC_KIND_VIDEO) {
+      if (!gst_structure_has_field (s, "rtcp-fb-nack-pli"))
+        gst_structure_set (s, "rtcp-fb-nack-pli", G_TYPE_BOOLEAN, TRUE, NULL);
+      if (!gst_structure_has_field (s, "rtcp-fb-ccm-fir"))
+        gst_structure_set (s, "rtcp-fb-ccm-fir", G_TYPE_BOOLEAN, TRUE, NULL);
+    }
     if (!gst_structure_has_field (s, "rtcp-fb-transport-cc"))
       gst_structure_set (s, "rtcp-fb-transport-cc", G_TYPE_BOOLEAN, TRUE, NULL);
 
