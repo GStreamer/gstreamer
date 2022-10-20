@@ -46,6 +46,8 @@ struct _GstVaBaseEnc
   GstVaDisplay *display;
   GstVaEncoder *encoder;
 
+  gboolean reconf;
+
   VAProfile profile;
   gint width;
   gint height;

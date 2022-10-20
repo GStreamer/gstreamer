@@ -68,6 +68,7 @@ gst_va_base_enc_reset_state_default (GstVaBaseEnc * base)
   base->profile = VAProfileNone;
   base->rt_format = 0;
   base->codedbuf_size = 0;
+  g_atomic_int_set (&base->reconf, FALSE);
 }
 
 static void
@@ -508,98 +509,6 @@ _push_out_one_buffer (GstVaBaseEnc * base)
 }
 
 static GstFlowReturn
-gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
-    GstVideoCodecFrame * frame)
-{
-  GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
-  GstVaBaseEncClass *base_class = GST_VA_BASE_ENC_GET_CLASS (base);
-  GstFlowReturn ret;
-  GstBuffer *in_buf = NULL;
-  GstVideoCodecFrame *frame_encode = NULL;
-
-  GST_LOG_OBJECT (venc,
-      "handle frame id %d, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
-      frame->system_frame_number,
-      GST_TIME_ARGS (GST_BUFFER_DTS (frame->input_buffer)),
-      GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)));
-
-  ret = gst_va_base_enc_import_input_buffer (base,
-      frame->input_buffer, &in_buf);
-  if (ret != GST_FLOW_OK)
-    goto error_buffer_invalid;
-
-  gst_buffer_replace (&frame->input_buffer, in_buf);
-  gst_clear_buffer (&in_buf);
-
-  if (!base_class->new_frame (base, frame))
-    goto error_new_frame;
-
-  if (!base_class->reorder_frame (base, frame, FALSE, &frame_encode))
-    goto error_reorder;
-
-  /* pass it to reorder list and we should not use it again. */
-  frame = NULL;
-
-  while (frame_encode) {
-    ret = base_class->encode_frame (base, frame_encode, FALSE);
-    if (ret != GST_FLOW_OK)
-      goto error_encode;
-
-    while (g_queue_get_length (&base->output_list) > 0) {
-      ret = _push_out_one_buffer (base);
-      if (ret != GST_FLOW_OK)
-        goto error_push_buffer;
-    }
-
-    frame_encode = NULL;
-    if (!base_class->reorder_frame (base, NULL, FALSE, &frame_encode))
-      goto error_reorder;
-  }
-
-  return ret;
-
-error_buffer_invalid:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to import the input frame."), (NULL));
-    gst_clear_buffer (&in_buf);
-    gst_clear_buffer (&frame->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame);
-    return ret;
-  }
-error_new_frame:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to create the input frame."), (NULL));
-    gst_clear_buffer (&frame->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame);
-    return GST_FLOW_ERROR;
-  }
-error_reorder:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to reorder the input frame."), (NULL));
-    gst_clear_buffer (&frame->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame);
-    return GST_FLOW_ERROR;
-  }
-error_encode:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to encode the frame."), (NULL));
-    gst_clear_buffer (&frame_encode->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame_encode);
-    return ret;
-  }
-error_push_buffer:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to push the buffer."), (NULL));
-    return ret;
-  }
-}
-
-static GstFlowReturn
 gst_va_base_enc_drain (GstVideoEncoder * venc)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
@@ -688,6 +597,120 @@ error_and_purge_all:
   return ret;
 }
 
+static gboolean
+gst_va_base_enc_reset (GstVaBaseEnc * base)
+{
+  GstVaBaseEncClass *base_class = GST_VA_BASE_ENC_GET_CLASS (base);
+
+  GST_DEBUG_OBJECT (base, "Reconfiguration");
+  if (gst_va_base_enc_drain (GST_VIDEO_ENCODER (base)) != GST_FLOW_OK)
+    return FALSE;
+
+  if (!base_class->reconfig (base)) {
+    GST_ERROR_OBJECT (base, "Error at reconfiguration error");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
+    GstVideoCodecFrame * frame)
+{
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
+  GstVaBaseEncClass *base_class = GST_VA_BASE_ENC_GET_CLASS (base);
+  GstFlowReturn ret;
+  GstBuffer *in_buf = NULL;
+  GstVideoCodecFrame *frame_encode = NULL;
+
+  GST_LOG_OBJECT (venc,
+      "handle frame id %d, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
+      frame->system_frame_number,
+      GST_TIME_ARGS (GST_BUFFER_DTS (frame->input_buffer)),
+      GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)));
+
+  if (g_atomic_int_compare_and_exchange (&base->reconf, TRUE, FALSE)) {
+    if (!gst_va_base_enc_reset (base))
+      return GST_FLOW_ERROR;
+  }
+
+  ret = gst_va_base_enc_import_input_buffer (base,
+      frame->input_buffer, &in_buf);
+  if (ret != GST_FLOW_OK)
+    goto error_buffer_invalid;
+
+  gst_buffer_replace (&frame->input_buffer, in_buf);
+  gst_clear_buffer (&in_buf);
+
+  if (!base_class->new_frame (base, frame))
+    goto error_new_frame;
+
+  if (!base_class->reorder_frame (base, frame, FALSE, &frame_encode))
+    goto error_reorder;
+
+  /* pass it to reorder list and we should not use it again. */
+  frame = NULL;
+
+  while (frame_encode) {
+    ret = base_class->encode_frame (base, frame_encode, FALSE);
+    if (ret != GST_FLOW_OK)
+      goto error_encode;
+
+    while (g_queue_get_length (&base->output_list) > 0) {
+      ret = _push_out_one_buffer (base);
+      if (ret != GST_FLOW_OK)
+        goto error_push_buffer;
+    }
+
+    frame_encode = NULL;
+    if (!base_class->reorder_frame (base, NULL, FALSE, &frame_encode))
+      goto error_reorder;
+  }
+
+  return ret;
+
+error_buffer_invalid:
+  {
+    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
+        ("Failed to import the input frame."), (NULL));
+    gst_clear_buffer (&in_buf);
+    gst_clear_buffer (&frame->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame);
+    return ret;
+  }
+error_new_frame:
+  {
+    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
+        ("Failed to create the input frame."), (NULL));
+    gst_clear_buffer (&frame->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame);
+    return GST_FLOW_ERROR;
+  }
+error_reorder:
+  {
+    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
+        ("Failed to reorder the input frame."), (NULL));
+    gst_clear_buffer (&frame->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame);
+    return GST_FLOW_ERROR;
+  }
+error_encode:
+  {
+    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
+        ("Failed to encode the frame."), (NULL));
+    gst_clear_buffer (&frame_encode->output_buffer);
+    gst_video_encoder_finish_frame (venc, frame_encode);
+    return ret;
+  }
+error_push_buffer:
+  {
+    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
+        ("Failed to push the buffer."), (NULL));
+    return ret;
+  }
+}
+
 static GstFlowReturn
 gst_va_base_enc_finish (GstVideoEncoder * venc)
 {
@@ -698,7 +721,6 @@ static gboolean
 gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
-  GstVaBaseEncClass *base_class = GST_VA_BASE_ENC_GET_CLASS (base);
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -706,18 +728,8 @@ gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
     gst_video_codec_state_unref (base->input_state);
   base->input_state = gst_video_codec_state_ref (state);
 
-  if (gst_va_base_enc_drain (venc) != GST_FLOW_OK)
+  if (!gst_va_base_enc_reset (base))
     return FALSE;
-
-  if (!gst_va_encoder_close (base->encoder)) {
-    GST_ERROR_OBJECT (base, "Failed to close the VA encoder");
-    return FALSE;
-  }
-
-  if (!base_class->reconfig (base)) {
-    GST_ERROR_OBJECT (base, "Reconfig the encoder error");
-    return FALSE;
-  }
 
   /* Sub class should open the encoder if reconfig succeeds. */
   return gst_va_encoder_is_open (base->encoder);
