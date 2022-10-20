@@ -3242,14 +3242,8 @@ static void
 gst_va_h264_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstVaH264Enc *const self = GST_VA_H264_ENC (object);
+  GstVaH264Enc *self = GST_VA_H264_ENC (object);
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
-
-  if (base->encoder && gst_va_encoder_is_open (base->encoder)) {
-    GST_ERROR_OBJECT (object,
-        "failed to set any property after encoding started");
-    return;
-  }
 
   GST_OBJECT_LOCK (self);
 
@@ -3280,12 +3274,15 @@ gst_va_h264_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_QP_I:
       self->prop.qp_i = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_QP_P:
       self->prop.qp_p = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_QP_B:
       self->prop.qp_b = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_DCT8X8:
       self->prop.use_dct8x8 = g_value_get_boolean (value);
@@ -3323,15 +3320,19 @@ gst_va_h264_enc_set_property (GObject * object, guint prop_id,
     }
     case PROP_BITRATE:
       self->prop.bitrate = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_TARGET_PERCENTAGE:
       self->prop.target_percentage = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_TARGET_USAGE:
       self->prop.target_usage = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_RATE_CONTROL:
       self->prop.rc_ctrl = g_value_get_enum (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_CPB_SIZE:
       self->prop.cpb_size = g_value_get_uint (value);
@@ -3341,6 +3342,15 @@ gst_va_h264_enc_set_property (GObject * object, guint prop_id,
   }
 
   GST_OBJECT_UNLOCK (self);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (!g_atomic_int_get (&GST_VA_BASE_ENC (self)->reconf)
+      && base->encoder && gst_va_encoder_is_open (base->encoder)) {
+    GST_WARNING_OBJECT (self, "Property `%s` change ignored while processing.",
+        pspec->name);
+  }
+#endif
+
 }
 
 static void
@@ -3441,6 +3451,8 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   gchar *long_name;
   const gchar *name, *desc;
   gint n_props = N_PROPERTIES;
+  GParamFlags param_flags =
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT;
 
   if (cdata->entrypoint == VAEntrypointEncSlice) {
     desc = "VA-API based H.264 video encoder";
@@ -3532,8 +3544,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_KEY_INT_MAX] = g_param_spec_uint ("key-int-max",
       "Key frame maximal interval",
       "The maximal distance between two keyframes. It decides the size of GOP"
-      " (0: auto-calculate)", 0, MAX_GOP_SIZE, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      " (0: auto-calculate)", 0, MAX_GOP_SIZE, 0, param_flags);
 
   /**
    * GstVaH264Enc:b-frames:
@@ -3542,7 +3553,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_BFRAMES] = g_param_spec_uint ("b-frames", "B Frames",
       "Number of B frames between I and P reference frames", 0, 31, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags);
 
   /**
    * GstVaH264Enc:i-frames:
@@ -3551,8 +3562,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_IFRAMES] = g_param_spec_uint ("i-frames", "I Frames",
       "Force the number of I frames insertion within one GOP, not including the "
-      "first IDR frame", 0, 1023, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "first IDR frame", 0, 1023, 0, param_flags);
 
   /**
    * GstVaH264Enc:ref-frames:
@@ -3562,7 +3572,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_NUM_REF_FRAMES] = g_param_spec_uint ("ref-frames",
       "Number of Reference Frames",
       "Number of reference frames, including both the forward and the backward",
-      0, 16, 3, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 16, 3, param_flags);
 
   /**
    * GstVaH264Enc:b-pyramid:
@@ -3571,15 +3581,15 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_B_PYRAMID] = g_param_spec_boolean ("b-pyramid", "b pyramid",
       "Enable the b-pyramid reference structure in the GOP", FALSE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags);
+
   /**
    * GstVaH264Enc:num-slices:
    *
    * The number of slices per frame.
    */
   properties[PROP_NUM_SLICES] = g_param_spec_uint ("num-slices",
-      "Number of Slices", "Number of slices per frame", 1, 200, 1,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Number of Slices", "Number of slices per frame", 1, 200, 1, param_flags);
 
   /**
    * GstVaH264Enc:max-qp:
@@ -3587,8 +3597,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    * The maximum quantizer value.
    */
   properties[PROP_MAX_QP] = g_param_spec_uint ("max-qp", "Maximum QP",
-      "Maximum quantizer value for each frame", 0, 51, 51,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Maximum quantizer value for each frame", 0, 51, 51, param_flags);
 
   /**
    * GstVaH264Enc:min-qp:
@@ -3596,8 +3605,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    * The minimum quantizer value.
    */
   properties[PROP_MIN_QP] = g_param_spec_uint ("min-qp", "Minimum QP",
-      "Minimum quantizer value for each frame", 0, 51, 1,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Minimum quantizer value for each frame", 0, 51, 1, param_flags);
 
   /**
    * GstVaH264Enc:qpi:
@@ -3610,7 +3618,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_QP_I] = g_param_spec_uint ("qpi", "I Frame QP",
       "The quantizer value for I frame. In CQP mode, it specifies the QP of I "
       "frame, in other mode, it specifies the init QP of all frames", 0, 51, 26,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH264Enc:qpp:
@@ -3620,8 +3628,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_QP_P] = g_param_spec_uint ("qpp",
       "The quantizer value for P frame",
       "The quantizer value for P frame. Available only in CQP mode",
-      0, 51, 26,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 51, 26, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH264Enc:qpb:
@@ -3631,8 +3638,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_QP_B] = g_param_spec_uint ("qpb",
       "The quantizer value for B frame",
       "The quantizer value for B frame. Available only in CQP mode",
-      0, 51, 26,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 51, 26, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH264Enc:dct8x8:
@@ -3640,10 +3646,8 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    * Enable adaptive use of 8x8 transforms in I-frames. This improves
    * the compression ratio but requires high profile at least.
    */
-  properties[PROP_DCT8X8] = g_param_spec_boolean ("dct8x8",
-      "Enable 8x8 DCT",
-      "Enable adaptive use of 8x8 transforms in I-frames", TRUE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+  properties[PROP_DCT8X8] = g_param_spec_boolean ("dct8x8", "Enable 8x8 DCT",
+      "Enable adaptive use of 8x8 transforms in I-frames", TRUE, param_flags);
 
   /**
    * GstVaH264Enc:cabac:
@@ -3652,8 +3656,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    * but requires main profile at least.
    */
   properties[PROP_CABAC] = g_param_spec_boolean ("cabac", "Enable CABAC",
-      "Enable CABAC entropy coding mode", TRUE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Enable CABAC entropy coding mode", TRUE, param_flags);
 
   /**
    * GstVaH264Enc:trellis:
@@ -3662,8 +3665,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    * quantization algorithm.
    */
   properties[PROP_TRELLIS] = g_param_spec_boolean ("trellis", "Enable trellis",
-      "Enable the trellis quantization method", FALSE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Enable the trellis quantization method", FALSE, param_flags);
 
   /**
    * GstVaH264Enc:aud:
@@ -3671,8 +3673,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    * Insert the AU (Access Unit) delimeter for each frame.
    */
   properties[PROP_AUD] = g_param_spec_boolean ("aud", "Insert AUD",
-      "Insert AU (Access Unit) delimeter for each frame", FALSE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Insert AU (Access Unit) delimeter for each frame", FALSE, param_flags);
 
   /**
    * GstVaH264Enc:cc-insert:
@@ -3692,8 +3693,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_MBBRC] = g_param_spec_enum ("mbbrc",
       "Macroblock level Bitrate Control",
       "Macroblock level Bitrate Control. Not available in CQP mode",
-      GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO, param_flags);
 
   /**
    * GstVaH264Enc:bitrate:
@@ -3709,8 +3709,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_BITRATE] = g_param_spec_uint ("bitrate", "Bitrate (kbps)",
       "The desired bitrate expressed in kbps (0: auto-calculate)",
-      0, 2000 * 1024, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 2000 * 1024, 0, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH264Enc:target-percentage:
@@ -3725,8 +3724,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_TARGET_PERCENTAGE] = g_param_spec_uint ("target-percentage",
       "target bitrate percentage",
       "The percentage for 'target bitrate'/'maximum bitrate' (Only in VBR)",
-      50, 100, 66,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      50, 100, 66, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH264Enc:target-usage:
@@ -3740,7 +3738,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_TARGET_USAGE] = g_param_spec_uint ("target-usage",
       "target usage",
       "The target usage to control and balance the encoding speed/quality",
-      1, 7, 4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      1, 7, 4, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH264Enc:cpb-size:
@@ -3750,15 +3748,15 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_CPB_SIZE] = g_param_spec_uint ("cpb-size",
       "max CPB size in Kb",
       "The desired max CPB size in Kb (0: auto-calculate)", 0, 2000 * 1024, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   if (vah264enc_class->rate_control_type > 0) {
     properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",
         "rate control mode", "The desired rate control mode for the encoder",
         vah264enc_class->rate_control_type,
         vah264enc_class->rate_control[0].value,
-        GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READWRITE
-        | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+        GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_PLAYING
+        | param_flags);
   } else {
     n_props--;
     properties[PROP_RATE_CONTROL] = NULL;
