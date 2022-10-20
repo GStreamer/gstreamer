@@ -1450,6 +1450,26 @@ GST_START_TEST (test_h265_decoder_config_record)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h265_parse_partial_nal)
+{
+  GstH265ParserResult res;
+  GstH265NalUnit nalu;
+  GstH265Parser *parser = gst_h265_parser_new ();
+  const guint8 *buf = slice_eos_slice_eob;
+  const guint buf_size = 5;
+
+  res = gst_h265_parser_identify_nalu (parser, buf, 0, buf_size, &nalu);
+
+  /* H.265 parser is a bit different then H.264 one, and will return
+   * NO_NAL if there is a start code but not enough bytes to hold the
+   * header. */
+  assert_equals_int (res, GST_H265_PARSER_NO_NAL);
+
+  gst_h265_parser_free (parser);
+}
+
+GST_END_TEST;
+
 static Suite *
 h265parser_suite (void)
 {
@@ -1474,6 +1494,7 @@ h265parser_suite (void)
   tcase_add_test (tc_chain, test_h265_create_sei);
   tcase_add_test (tc_chain, test_h265_split_hevc);
   tcase_add_test (tc_chain, test_h265_decoder_config_record);
+  tcase_add_test (tc_chain, test_h265_parse_partial_nal);
 
   return s;
 }
