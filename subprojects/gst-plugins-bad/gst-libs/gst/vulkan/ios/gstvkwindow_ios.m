@@ -178,7 +178,7 @@ gst_vulkan_window_ios_create_window (GstVulkanWindowIos * window_ios)
     return FALSE;
   }
 
-  _invoke_on_main ((GstVulkanWindowFunc) _create_window,
+  _gst_vk_invoke_on_main ((GstVulkanWindowFunc) _create_window,
       gst_object_ref (window_ios), gst_object_unref);
 
   /* XXX: Maybe we need an async create_window/get_surface()? */
@@ -315,7 +315,7 @@ gst_vulkan_window_ios_set_window_handle (GstVulkanWindow * window,
 @end
 
 void
-_invoke_on_main (GstVulkanWindowFunc func, gpointer data, GDestroyNotify notify)
+_gst_vk_invoke_on_main (GstVulkanWindowFunc func, gpointer data, GDestroyNotify notify)
 {
   if ([NSThread isMainThread]) {
     func (data);

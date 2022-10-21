@@ -263,8 +263,8 @@ _close_window (gpointer * data)
 static void
 gst_gl_window_cocoa_close (GstGLWindow * window)
 {
-  _invoke_on_main ((GstGLWindowCB) _close_window, gst_object_ref (window),
-      (GDestroyNotify) gst_object_unref);
+  _gst_gl_invoke_on_main ((GstGLWindowCB) _close_window,
+      gst_object_ref (window), (GDestroyNotify) gst_object_unref);
 }
 
 static guintptr
@@ -346,8 +346,8 @@ gst_gl_window_cocoa_show (GstGLWindow * window)
     }
 
     if (!priv->external_view && !priv->visible)
-      _invoke_on_main ((GstGLWindowCB) _show_window, gst_object_ref (window),
-          (GDestroyNotify) gst_object_unref);
+      _gst_gl_invoke_on_main ((GstGLWindowCB) _show_window,
+          gst_object_ref (window), (GDestroyNotify) gst_object_unref);
   }
 }
 
@@ -579,8 +579,8 @@ gst_gl_window_cocoa_set_render_rectangle (GstGLWindow * window, gint x, gint y, 
  render->rect.w = width;
  render->rect.h = height;
 
- _invoke_on_main ((GstGLWindowCB) _set_render_rectangle, render,
-                  (GDestroyNotify) _free_set_render_rectangle);
+ _gst_gl_invoke_on_main ((GstGLWindowCB) _set_render_rectangle, render,
+     (GDestroyNotify) _free_set_render_rectangle);
 
  return TRUE;
 }
@@ -732,7 +732,7 @@ close_window_cb (gpointer data)
 @end
 
 void
-_invoke_on_main (GstGLWindowCB func, gpointer data, GDestroyNotify notify)
+_gst_gl_invoke_on_main (GstGLWindowCB func, gpointer data, GDestroyNotify notify)
 {
   if ([NSThread isMainThread]) {
     func (data);
