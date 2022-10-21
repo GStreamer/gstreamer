@@ -225,6 +225,9 @@ gst_hls_media_playlist_seek                 (GstHLSMediaPlaylist *playlist,
 void
 gst_hls_media_playlist_dump                 (GstHLSMediaPlaylist* self);
 
+GstClockTime
+gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *playlist);
+
 typedef enum
 {
   GST_HLS_RENDITION_STREAM_TYPE_INVALID = -1,

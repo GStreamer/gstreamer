@@ -149,6 +149,19 @@ gst_adaptive_demux2_stream_add_track (GstAdaptiveDemux2Stream * stream,
     return FALSE;
   }
 
+  if (stream->demux->buffering_low_watermark_time)
+    track->buffering_threshold = stream->demux->buffering_low_watermark_time;
+  else if (GST_CLOCK_TIME_IS_VALID (stream->recommended_buffering_threshold))
+    track->buffering_threshold =
+        MIN (10 * GST_SECOND, stream->recommended_buffering_threshold);
+  else {
+    /* Using a starting default, can be overriden later in
+     * ::update_stream_info() */
+    GST_DEBUG_OBJECT (stream,
+        "Setting default 10s buffering threshold on new track");
+    track->buffering_threshold = 10 * GST_SECOND;
+  }
+
   stream->tracks =
       g_list_append (stream->tracks, gst_adaptive_demux_track_ref (track));
   if (stream->demux) {
@@ -762,6 +775,7 @@ gst_adaptive_demux2_stream_parse_buffer (GstAdaptiveDemux2Stream * stream,
  */
 static void
 calculate_track_thresholds (GstAdaptiveDemux * demux,
+    GstAdaptiveDemux2Stream * stream,
     GstClockTime fragment_duration, GstClockTime * low_threshold,
     GstClockTime * high_threshold)
 {
@@ -771,6 +785,15 @@ calculate_track_thresholds (GstAdaptiveDemux * demux,
       (demux->buffering_low_watermark_time != 0
           && demux->buffering_low_watermark_time > *low_threshold)) {
     *low_threshold = demux->buffering_low_watermark_time;
+  }
+
+  if (*low_threshold == 0) {
+    /* This implies both low level properties were 0, the default is 10s unless
+     * the subclass has specified a recommended buffering threshold */
+    *low_threshold = 10 * GST_SECOND;
+    if (GST_CLOCK_TIME_IS_VALID (stream->recommended_buffering_threshold))
+      *low_threshold =
+          MIN (stream->recommended_buffering_threshold, *low_threshold);
   }
 
   *high_threshold =
@@ -800,9 +823,11 @@ calculate_track_thresholds (GstAdaptiveDemux * demux,
       (*low_threshold != 0 && *low_threshold > *high_threshold)) {
     *high_threshold = *low_threshold;
   }
+
   GST_OBJECT_UNLOCK (demux);
 }
 
+#define ABSDIFF(a,b) ((a) < (b) ? (b) - (a) : (a) - (b))
 static gboolean
 gst_adaptive_demux2_stream_wait_for_output_space (GstAdaptiveDemux * demux,
     GstAdaptiveDemux2Stream * stream, GstClockTime fragment_duration)
@@ -816,8 +841,13 @@ gst_adaptive_demux2_stream_wait_for_output_space (GstAdaptiveDemux * demux,
   GstClockTime low_threshold = 0, high_threshold = 0;
   GList *iter;
 
-  calculate_track_thresholds (demux, fragment_duration,
+  calculate_track_thresholds (demux, stream, fragment_duration,
       &low_threshold, &high_threshold);
+  GST_DEBUG_OBJECT (stream,
+      "Thresholds low:%" GST_TIME_FORMAT " high:%" GST_TIME_FORMAT
+      " recommended:%" GST_TIME_FORMAT, GST_TIME_ARGS (low_threshold),
+      GST_TIME_ARGS (high_threshold),
+      GST_TIME_ARGS (stream->recommended_buffering_threshold));
 
   /* If there are no tracks at all, don't wait. If there are no active
    * tracks, keep filling until at least one track is full. If there
@@ -826,8 +856,9 @@ gst_adaptive_demux2_stream_wait_for_output_space (GstAdaptiveDemux * demux,
   for (iter = stream->tracks; iter; iter = iter->next) {
     GstAdaptiveDemuxTrack *track = (GstAdaptiveDemuxTrack *) iter->data;
 
-    /* Update the buffering threshold */
-    if (low_threshold != track->buffering_threshold) {
+    /* Update the buffering threshold if it changed by more than a second */
+    if (ABSDIFF (low_threshold, track->buffering_threshold) > GST_SECOND) {
+      GST_DEBUG_OBJECT (stream, "Updating threshold");
       /* The buffering threshold for this track changed, make sure to
        * re-check buffering status */
       update_buffering = TRUE;

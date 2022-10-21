@@ -122,7 +122,7 @@ GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 #define DEFAULT_MAX_BUFFERING_TIME (30 *  GST_SECOND)
 
 #define DEFAULT_BUFFERING_HIGH_WATERMARK_TIME (30 * GST_SECOND)
-#define DEFAULT_BUFFERING_LOW_WATERMARK_TIME (10 * GST_SECOND)
+#define DEFAULT_BUFFERING_LOW_WATERMARK_TIME 0  /* Automatic */
 #define DEFAULT_BUFFERING_HIGH_WATERMARK_FRAGMENTS 0.0
 #define DEFAULT_BUFFERING_LOW_WATERMARK_FRAGMENTS 0.0
 
@@ -486,7 +486,7 @@ gst_adaptive_demux_class_init (GstAdaptiveDemuxClass * klass)
       PROP_BUFFERING_LOW_WATERMARK_TIME,
       g_param_spec_uint64 ("low-watermark-time",
           "Low buffering watermark size (ns)",
-          "Low watermark for parsed data below which downloads are resumed (in ns, 0=disable)",
+          "Low watermark for parsed data below which downloads are resumed (in ns, 0=automatic)",
           0, G_MAXUINT64, DEFAULT_BUFFERING_LOW_WATERMARK_TIME,
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_PLAYING |
           G_PARAM_STATIC_STRINGS));

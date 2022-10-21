@@ -359,6 +359,9 @@ struct _GstAdaptiveDemux2Stream
 
   /* OR'd set of stream types in this stream */
   GstStreamType stream_type;
+
+  /* The buffering threshold recommended by the subclass */
+  GstClockTime recommended_buffering_threshold;
 };
 
 /**

@@ -1473,6 +1473,18 @@ gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
   return TRUE;
 }
 
+GstClockTime
+gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
+    playlist)
+{
+  if (!playlist->duration || !GST_CLOCK_TIME_IS_VALID (playlist->duration)
+      || playlist->segments->len == 0)
+    return GST_CLOCK_TIME_NONE;
+
+  /* The recommended buffering threshold is 1.5 average segment duration */
+  return 3 * (playlist->duration / playlist->segments->len) / 2;
+}
+
 GstHLSRenditionStream *
 gst_hls_rendition_stream_ref (GstHLSRenditionStream * media)
 {

@@ -2425,6 +2425,10 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 
   stream->fragment.duration = file->duration;
 
+  stream->recommended_buffering_threshold =
+      gst_hls_media_playlist_recommended_buffering_threshold
+      (hlsdemux_stream->playlist);
+
   if (discont)
     stream->discont = TRUE;
 
