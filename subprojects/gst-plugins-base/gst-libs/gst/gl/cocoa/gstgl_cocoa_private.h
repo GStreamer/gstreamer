@@ -61,7 +61,7 @@ struct _GstGLContextCocoaPrivate
 gboolean gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa);
 
 G_GNUC_INTERNAL
-void _invoke_on_main (GstGLWindowCB func, gpointer data, GDestroyNotify notify);
+void _gst_gl_invoke_on_main (GstGLWindowCB func, gpointer data, GDestroyNotify notify);
 
 G_END_DECLS
 

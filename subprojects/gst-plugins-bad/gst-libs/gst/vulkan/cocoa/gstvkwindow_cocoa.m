@@ -155,8 +155,8 @@ gst_vulkan_window_cocoa_show (GstVulkanWindow * window)
   GstVulkanWindowCocoaPrivate *priv = GET_PRIV (window_cocoa);
 
   if (!priv->visible)
-    _invoke_on_main ((GstVulkanWindowFunc) _show_window, gst_object_ref (window),
-        (GDestroyNotify) gst_object_unref);
+    _gst_vk_invoke_on_main ((GstVulkanWindowFunc) _show_window,
+        gst_object_ref (window), (GDestroyNotify) gst_object_unref);
 }
 
 static void
@@ -197,7 +197,7 @@ _create_window (GstVulkanWindowCocoa * window_cocoa)
 gboolean
 gst_vulkan_window_cocoa_create_window (GstVulkanWindowCocoa * window_cocoa)
 {
-  _invoke_on_main ((GstVulkanWindowFunc) _create_window,
+  _gst_vk_invoke_on_main ((GstVulkanWindowFunc) _create_window,
       gst_object_ref (window_cocoa), gst_object_unref);
 
   g_usleep(1000000);
@@ -277,8 +277,8 @@ _close_window (gpointer * data)
 static void
 gst_vulkan_window_cocoa_close (GstVulkanWindow * window)
 {
-  _invoke_on_main ((GstVulkanWindowFunc) _close_window, gst_object_ref (window),
-      (GDestroyNotify) gst_object_unref);
+  _gst_vk_invoke_on_main ((GstVulkanWindowFunc) _close_window,
+      gst_object_ref (window), (GDestroyNotify) gst_object_unref);
 
   GST_VULKAN_WINDOW_CLASS (parent_class)->close (window);
 }
@@ -359,7 +359,7 @@ gst_vulkan_window_cocoa_close (GstVulkanWindow * window)
 @end
 
 void
-_invoke_on_main (GstVulkanWindowFunc func, gpointer data, GDestroyNotify notify)
+_gst_vk_invoke_on_main (GstVulkanWindowFunc func, gpointer data, GDestroyNotify notify)
 {
   if ([NSThread isMainThread]) {
     func (data);

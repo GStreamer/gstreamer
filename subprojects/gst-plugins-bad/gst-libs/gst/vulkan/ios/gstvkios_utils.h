@@ -35,7 +35,7 @@ G_BEGIN_DECLS
 typedef void (*GstVulkanWindowFunc) (gpointer data);
 
 G_GNUC_INTERNAL
-void _invoke_on_main (GstVulkanWindowFunc func, gpointer data, GDestroyNotify notify);
+void _gst_vk_invoke_on_main (GstVulkanWindowFunc func, gpointer data, GDestroyNotify notify);
 
 G_END_DECLS
 
