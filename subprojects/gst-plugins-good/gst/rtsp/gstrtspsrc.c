@@ -3646,8 +3646,39 @@ on_timeout_common (GObject * session, GObject * source, GstRTSPStream * stream)
   GST_WARNING_OBJECT (src, "source %08x, stream %08x in session %u timed out",
       ssrc, stream->ssrc, stream->id);
 
-  if (ssrc == stream->ssrc)
-    gst_rtspsrc_do_stream_eos (src, stream);
+  if (ssrc == stream->ssrc) {
+    GList *walk;
+    gboolean all_eos = TRUE;
+
+    GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", stream->id);
+    stream->eos = TRUE;
+
+    /* Only EOS all streams at once if they're all EOS. Otherwise it is
+     * possible for timed out streams to reappear at a later time time: they
+     * might just be inactive currently.
+     */
+
+    for (walk = src->streams; walk; walk = g_list_next (walk)) {
+      GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+
+      /* Skip streams that were not set up at all */
+      if (!stream->setup)
+        continue;
+
+      if (!stream->eos) {
+        all_eos = FALSE;
+        break;
+      }
+    }
+
+    if (all_eos) {
+      GST_DEBUG_OBJECT (src, "sending EOS on all streams");
+      for (walk = src->streams; walk; walk = g_list_next (walk)) {
+        GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+        gst_rtspsrc_stream_push_event (src, stream, gst_event_new_eos ());
+      }
+    }
+  }
 }
 
 static void
@@ -3688,6 +3719,8 @@ on_ssrc_active (GObject * session, GObject * source, GstRTSPStream * stream)
 {
   GST_DEBUG_OBJECT (stream->parent, "source in session %u is active",
       stream->id);
+
+  stream->eos = FALSE;
 }
 
 static void
