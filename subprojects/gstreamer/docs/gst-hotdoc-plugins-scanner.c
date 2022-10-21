@@ -406,8 +406,15 @@ _add_properties (GString * json, GString * other_types,
       } else if (G_IS_PARAM_SPEC_FLAGS (spec)) {
         _serialize_flags (other_types, spec->value_type);
       } else if (G_IS_PARAM_SPEC_OBJECT (spec)) {
+        GType inst_type = spec->value_type;
+        GObject *obj = g_value_get_object (&value);
+
+        if (obj) {
+          inst_type = G_OBJECT_TYPE (obj);
+        }
+
         _serialize_object (other_types, seen_other_types, spec->value_type,
-            spec->value_type);
+            inst_type);
       }
     }
 
