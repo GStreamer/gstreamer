@@ -101,6 +101,13 @@ struct _GstQsvDecoderPrivate
   guint next_task_index;
 };
 
+/**
+ * GstQsvDecoder:
+ *
+ * Base class for Intel Quick Sync video decoders
+ *
+ * Since: 1.22
+ */
 #define gst_qsv_decoder_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstQsvDecoder, gst_qsv_decoder,
     GST_TYPE_VIDEO_DECODER, G_ADD_PRIVATE (GstQsvDecoder);
@@ -178,6 +185,8 @@ gst_qsv_decoder_class_init (GstQsvDecoderClass * klass)
   videodec_class->drain = GST_DEBUG_FUNCPTR (gst_qsv_decoder_drain);
   videodec_class->finish = GST_DEBUG_FUNCPTR (gst_qsv_decoder_finish);
   videodec_class->flush = GST_DEBUG_FUNCPTR (gst_qsv_decoder_flush);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_DECODER, (GstPluginAPIFlags) 0);
 }
 
 static void

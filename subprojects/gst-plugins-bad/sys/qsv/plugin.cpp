@@ -22,7 +22,18 @@
 #endif
 
 /**
- * plugin-qsv:
+ * SECTION:plugin-qsv
+ *
+ * Intel Quick Sync plugin.
+ *
+ * This plugin consists of various video encoder and decoder elements.
+ * Depending on the hardware it runs on, some elements might not be registered
+ * in case that underlying hardware doesn't support the for feature.
+ *
+ * To get a list of all available elements, user can run
+ * ```sh
+ * gst-inspect-1.0 qsv
+ * ```
  *
  * Since: 1.22
  */

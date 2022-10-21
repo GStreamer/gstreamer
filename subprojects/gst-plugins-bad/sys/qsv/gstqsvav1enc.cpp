@@ -17,6 +17,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-qsvav1enc
+ * @title: qsvav1enc
+ *
+ * Intel Quick Sync AV1 encoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! qsvav1enc ! av1parse ! matroskamux ! filesink location=out.mkv
+ * ```
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -35,14 +49,36 @@
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_av1_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_av1_enc_debug
 
+/**
+ * GstQsvAV1EncRateControl:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_QSV_AV1_ENC_RATE_CONTROL (gst_qsv_av1_enc_rate_control_get_type ())
 static GType
 gst_qsv_av1_enc_rate_control_get_type (void)
 {
   static GType rate_control_type = 0;
   static const GEnumValue rate_controls[] = {
+    /**
+     * GstQsvAV1EncRateControl::cbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_CBR, "Constant Bitrate", "cbr"},
+
+    /**
+     * GstQsvAV1EncRateControl::vbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_VBR, "Variable Bitrate", "vbr"},
+
+    /**
+     * GstQsvAV1EncRateControl::cqp:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_CQP, "Constant Quantizer", "cqp"},
     {0, nullptr, nullptr}
   };
@@ -74,6 +110,19 @@ enum
 #define DEFAULT_BITRATE 2000
 #define DEFAULT_MAX_BITRATE 0
 #define DEFAULT_RATE_CONTROL MFX_RATECONTROL_VBR
+
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) { NV12, P010_10LE }, " \
+    "width = (int) [ 16, 8192 ], height = (int) [16, 8192 ]"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:VAMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "video/x-av1, width = (int) [ 16, 8192 ], height = (int) [ 16, 8192 ], " \
+    "alignment = (string) tu"
 
 typedef struct _GstQsvAV1EncClassData
 {
@@ -140,6 +189,8 @@ gst_qsv_av1_enc_class_init (GstQsvAV1EncClass * klass, gpointer data)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstQsvEncoderClass *qsvenc_class = GST_QSV_ENCODER_CLASS (klass);
   GstQsvAV1EncClassData *cdata = (GstQsvAV1EncClassData *) data;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   qsvenc_class->codec_id = MFX_CODEC_AV1;
   qsvenc_class->impl_index = cdata->impl_index;
@@ -206,18 +257,28 @@ gst_qsv_av1_enc_class_init (GstQsvAV1EncClass * klass, gpointer data)
       "Seungha Yang <seungha@centricular.com>");
 #endif
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   qsvenc_class->set_format = GST_DEBUG_FUNCPTR (gst_qsv_av1_enc_set_format);
   qsvenc_class->set_output_state =
       GST_DEBUG_FUNCPTR (gst_qsv_av1_enc_set_output_state);
   qsvenc_class->check_reconfigure =
       GST_DEBUG_FUNCPTR (gst_qsv_av1_enc_check_reconfigure);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_AV1_ENC_RATE_CONTROL,
+      (GstPluginAPIFlags) 0);
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
@@ -780,6 +841,9 @@ gst_qsv_av1_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);

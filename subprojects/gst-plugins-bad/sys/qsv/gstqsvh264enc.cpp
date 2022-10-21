@@ -17,6 +17,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-qsvh264enc
+ * @title: qsvh264enc
+ *
+ * Intel Quick Sync H.264 encoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! qsvh264enc ! h264parse ! matroskamux ! filesink location=out.mkv
+ * ```
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -45,16 +59,38 @@ typedef enum
   GST_QSV_H264_ENC_SEI_DISABLED,
 } GstQsvH264EncSeiInsertMode;
 
+/**
+ * GstQsvH264EncSeiInsertMode:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_QSV_H264_ENC_SEI_INSERT_MODE (gst_qsv_h264_enc_sei_insert_mode_get_type ())
 static GType
 gst_qsv_h264_enc_sei_insert_mode_get_type (void)
 {
   static GType sei_insert_mode_type = 0;
   static const GEnumValue insert_modes[] = {
+    /**
+     * GstQsvH264EncSeiInsertMode::insert:
+     *
+     * Since: 1.22
+     */
     {GST_QSV_H264_ENC_SEI_INSERT, "Insert SEI", "insert"},
+
+    /**
+     * GstQsvH264EncSeiInsertMode::insert-and-drop:
+     *
+     * Since: 1.22
+     */
     {GST_QSV_H264_ENC_SEI_INSERT_AND_DROP,
           "Insert SEI and remove corresponding meta from output buffer",
         "insert-and-drop"},
+
+    /**
+     * GstQsvH264EncSeiInsertMode::disabled:
+     *
+     * Since: 1.22
+     */
     {GST_QSV_H264_ENC_SEI_DISABLED, "Disable SEI insertion", "disabled"},
     {0, nullptr, nullptr}
   };
@@ -68,22 +104,86 @@ gst_qsv_h264_enc_sei_insert_mode_get_type (void)
   return sei_insert_mode_type;
 }
 
+/**
+ * GstQsvH264EncRateControl:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_QSV_H264_ENC_RATE_CONTROL (gst_qsv_h264_enc_rate_control_get_type ())
 static GType
 gst_qsv_h264_enc_rate_control_get_type (void)
 {
   static GType rate_control_type = 0;
   static const GEnumValue rate_controls[] = {
+    /**
+     * GstQsvH264EncRateControl::cbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_CBR, "Constant Bitrate", "cbr"},
+
+    /**
+     * GstQsvH264EncRateControl::vbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_VBR, "Variable Bitrate", "vbr"},
+
+    /**
+     * GstQsvH264EncRateControl::cqp:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_CQP, "Constant Quantizer", "cqp"},
+
+    /**
+     * GstQsvH264EncRateControl::avbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_AVBR, "Average Variable Bitrate", "avbr"},
-    {MFX_RATECONTROL_LA, "VBR with look ahead (Non HRD compliant)", "la_vbr"},
+
+    /**
+     * GstQsvH264EncRateControl::la-vbr:
+     *
+     * Since: 1.22
+     */
+    {MFX_RATECONTROL_LA, "VBR with look ahead (Non HRD compliant)", "la-vbr"},
+
+    /**
+     * GstQsvH264EncRateControl::icq:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_ICQ, "Intelligent CQP", "icq"},
+
+    /**
+     * GstQsvH264EncRateControl::vcm:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_VCM, "Video Conferencing Mode (Non HRD compliant)", "vcm"},
+
+    /**
+     * GstQsvH264EncRateControl::la-icq:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_LA_ICQ, "Intelligent CQP with LA (Non HRD compliant)",
-        "la_icq"},
-    {MFX_RATECONTROL_LA_HRD, "HRD compliant LA", "la_hrd"},
+        "la-icq"},
+
+    /**
+     * GstQsvH264EncRateControl::la-hrd:
+     *
+     * Since: 1.22
+     */
+    {MFX_RATECONTROL_LA_HRD, "HRD compliant LA", "la-hrd"},
+
+    /**
+     * GstQsvH264EncRateControl::qvbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_QVBR, "VBR with CQP", "qvbr"},
     {0, nullptr, nullptr}
   };
@@ -97,16 +197,44 @@ gst_qsv_h264_enc_rate_control_get_type (void)
   return rate_control_type;
 }
 
+/**
+ * GstQsvH264EncRCLookAheadDS:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_QSV_H264_ENC_RC_LOOKAHEAD_DS (gst_qsv_h264_enc_rc_lookahead_ds_get_type ())
 static GType
 gst_qsv_h264_enc_rc_lookahead_ds_get_type (void)
 {
   static GType rc_lookahead_ds_type = 0;
   static const GEnumValue rc_lookahead_ds[] = {
+    /**
+     * GstQsvH264EncRCLookAheadDS::unknown
+     *
+     * Since: 1.22
+     */
     {MFX_LOOKAHEAD_DS_UNKNOWN, "Unknown", "unknown"},
+
+    /**
+     * GstQsvH264EncRCLookAheadDS::off
+     *
+     * Since: 1.22
+     */
     {MFX_LOOKAHEAD_DS_OFF, "Do not use down sampling", "off"},
+
+    /**
+     * GstQsvH264EncRCLookAheadDS::2x
+     *
+     * Since: 1.22
+     */
     {MFX_LOOKAHEAD_DS_2x,
         "Down sample frames two times before estimation", "2x"},
+
+    /**
+     * GstQsvH264EncRCLookAheadDS::4x
+     *
+     * Since: 1.22
+     */
     {MFX_LOOKAHEAD_DS_4x,
         "Down sample frames four times before estimation", "4x"},
     {0, nullptr, nullptr}
@@ -168,6 +296,21 @@ enum
 #define DEFAULT_QVBR_QUALITY 0
 #define DEFAULT_DISABLE_HRD_CONFORMANCE FALSE
 #define DEFAULT_CC_INSERT GST_QSV_H264_ENC_SEI_INSERT
+
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) NV12, " \
+    "width = (int) [ 16, 8192 ], height = (int) [ 16, 8192 ]"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:VAMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "video/x-h264, width = (int) [ 16, 8192 ], height = (int) [ 16, 8192 ], " \
+    "stream-format = (string) { avc, byte-stream }, alignment = (string) au, " \
+    "profile = (string) { high, main, constrained-baseline, " \
+    "progressive-high, constrained-high, baseline }"
 
 typedef struct _GstQsvH264EncClassData
 {
@@ -270,6 +413,8 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
   GstVideoEncoderClass *encoder_class = GST_VIDEO_ENCODER_CLASS (klass);
   GstQsvEncoderClass *qsvenc_class = GST_QSV_ENCODER_CLASS (klass);
   GstQsvH264EncClassData *cdata = (GstQsvH264EncClassData *) data;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   qsvenc_class->codec_id = MFX_CODEC_AVC;
   qsvenc_class->impl_index = cdata->impl_index;
@@ -430,12 +575,19 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
       "Seungha Yang <seungha@centricular.com>");
 #endif
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   encoder_class->start = GST_DEBUG_FUNCPTR (gst_qsv_h264_enc_start);
   encoder_class->transform_meta =
@@ -451,6 +603,13 @@ gst_qsv_h264_enc_class_init (GstQsvH264EncClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_qsv_h264_enc_create_output_buffer);
   qsvenc_class->check_reconfigure =
       GST_DEBUG_FUNCPTR (gst_qsv_h264_enc_check_reconfigure);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_H264_ENC_SEI_INSERT_MODE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_H264_ENC_RATE_CONTROL,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_H264_ENC_RC_LOOKAHEAD_DS,
+      (GstPluginAPIFlags) 0);
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
@@ -1905,6 +2064,9 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);

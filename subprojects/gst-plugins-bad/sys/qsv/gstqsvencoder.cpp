@@ -41,13 +41,35 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_encoder_debug);
 #define GST_CAT_DEFAULT gst_qsv_encoder_debug
 
+/**
+ * GstQsvCodingOption:
+ *
+ * Since: 1.22
+ */
 GType
 gst_qsv_coding_option_get_type (void)
 {
   static GType coding_opt_type = 0;
   static const GEnumValue coding_opts[] = {
+    /**
+     * GstQsvCodingOption::unknown:
+     *
+     * Since: 1.22
+     */
     {MFX_CODINGOPTION_UNKNOWN, "Unknown", "unknown"},
+
+    /**
+     * GstQsvCodingOption::on:
+     *
+     * Since: 1.22
+     */
     {MFX_CODINGOPTION_ON, "On", "on"},
+
+    /**
+     * GstQsvCodingOption::off:
+     *
+     * Since: 1.22
+     */
     {MFX_CODINGOPTION_OFF, "Off", "off"},
     {0, nullptr, nullptr}
   };
@@ -130,6 +152,13 @@ struct _GstQsvEncoderPrivate
   gboolean low_latency;
 };
 
+/**
+ * GstQsvEncoder:
+ *
+ * Base class for Intel Quick Sync video encoders
+ *
+ * Since: 1.22
+ */
 #define gst_qsv_encoder_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstQsvEncoder, gst_qsv_encoder,
     GST_TYPE_VIDEO_ENCODER, G_ADD_PRIVATE (GstQsvEncoder);
@@ -217,6 +246,10 @@ gst_qsv_encoder_class_init (GstQsvEncoderClass * klass)
   videoenc_class->src_query = GST_DEBUG_FUNCPTR (gst_qsv_encoder_src_query);
   videoenc_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_qsv_encoder_propose_allocation);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_ENCODER, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_CODING_OPTION,
+      (GstPluginAPIFlags) 0);
 }
 
 static void

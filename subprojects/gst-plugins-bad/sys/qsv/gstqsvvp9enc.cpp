@@ -17,6 +17,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-qsvvp9enc
+ * @title: qsvvp9enc
+ *
+ * Intel Quick Sync VP9 encoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! qsvvp9enc ! vp9parse ! matroskamux ! filesink location=out.mkv
+ * ```
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -36,15 +50,43 @@
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_vp9_enc_debug);
 #define GST_CAT_DEFAULT gst_qsv_vp9_enc_debug
 
+/**
+ * GstQsvVP9EncRateControl:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_QSV_VP9_ENC_RATE_CONTROL (gst_qsv_vp9_enc_rate_control_get_type ())
 static GType
 gst_qsv_vp9_enc_rate_control_get_type (void)
 {
   static GType rate_control_type = 0;
   static const GEnumValue rate_controls[] = {
+    /**
+     * GstQsvVP9EncRateControl::cbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_CBR, "Constant Bitrate", "cbr"},
+
+    /**
+     * GstQsvVP9EncRateControl::vbr:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_VBR, "Variable Bitrate", "vbr"},
+
+    /**
+     * GstQsvVP9EncRateControl::cqp:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_CQP, "Constant Quantizer", "cqp"},
+
+    /**
+     * GstQsvVP9EncRateControl::icq:
+     *
+     * Since: 1.22
+     */
     {MFX_RATECONTROL_ICQ, "Intelligent CQP", "icq"},
     {0, nullptr, nullptr}
   };
@@ -78,6 +120,20 @@ enum
 #define DEFAULT_MAX_BITRATE 0
 #define DEFAULT_RATE_CONTROL MFX_RATECONTROL_VBR
 #define DEFAULT_IQC_QUALITY 0
+
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) { NV12, P010_10LE, VUYA, Y410 }, " \
+    "width = (int) [16, 8192 ], " \
+    "height = (int) [16, 8192 ]"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:VAMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "video/x-vp9, width = (int) [16, 8192 ], height = (int) [16, 8192 ], " \
+    "profile = (string) { 0, 2, 1, 3 }"
 
 typedef struct _GstQsvVP9EncClassData
 {
@@ -150,6 +206,8 @@ gst_qsv_vp9_enc_class_init (GstQsvVP9EncClass * klass, gpointer data)
   GstVideoEncoderClass *encoder_class = GST_VIDEO_ENCODER_CLASS (klass);
   GstQsvEncoderClass *qsvenc_class = GST_QSV_ENCODER_CLASS (klass);
   GstQsvVP9EncClassData *cdata = (GstQsvVP9EncClassData *) data;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   qsvenc_class->codec_id = MFX_CODEC_VP9;
   qsvenc_class->impl_index = cdata->impl_index;
@@ -221,12 +279,19 @@ gst_qsv_vp9_enc_class_init (GstQsvVP9EncClass * klass, gpointer data)
       "Seungha Yang <seungha@centricular.com>");
 #endif
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   encoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_qsv_vp9_enc_getcaps);
 
@@ -235,6 +300,9 @@ gst_qsv_vp9_enc_class_init (GstQsvVP9EncClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_qsv_vp9_enc_set_output_state);
   qsvenc_class->check_reconfigure =
       GST_DEBUG_FUNCPTR (gst_qsv_vp9_enc_check_reconfigure);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QSV_VP9_ENC_RATE_CONTROL,
+      (GstPluginAPIFlags) 0);
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
@@ -1020,6 +1088,9 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);

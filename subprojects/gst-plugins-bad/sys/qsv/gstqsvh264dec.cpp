@@ -17,6 +17,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-qsvh264dec
+ * @title: qsvh264dec
+ *
+ * Intel Quick Sync H.264 decoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 filesrc location=/path/to/h264/file ! parsebin ! qsvh264dec ! videoconvert ! autovideosink
+ * ```
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -34,6 +48,21 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_dec_debug);
 #define GST_CAT_DEFAULT gst_qsv_h264_dec_debug
+
+#define DOC_SINK_CAPS \
+    "video/x-h264, width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], " \
+    "stream-format = (string) { byte-stream, avc, avc3 }, " \
+    "alignment = (string) au, " \
+    "profile = (string) { high, progressive-high, constrained-high, main, " \
+    "constrained-baseline, baseline }"
+
+#define DOC_SRC_CAPS_COMM \
+    "format = (string) NV12, " \
+    "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ]"
+
+#define DOC_SRC_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SRC_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SRC_CAPS_COMM
 
 typedef struct _GstQsvH264Dec
 {
@@ -71,6 +100,8 @@ gst_qsv_h264_dec_class_init (GstQsvH264DecClass * klass, gpointer data)
   GstVideoDecoderClass *videodec_class = GST_VIDEO_DECODER_CLASS (klass);
   GstQsvDecoderClass *qsvdec_class = GST_QSV_DECODER_CLASS (klass);
   GstQsvDecoderClassData *cdata = (GstQsvDecoderClassData *) data;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
 
@@ -90,12 +121,19 @@ gst_qsv_h264_dec_class_init (GstQsvH264DecClass * klass, gpointer data)
       "Seungha Yang <seungha@centricular.com>");
 #endif
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   videodec_class->start = GST_DEBUG_FUNCPTR (gst_qsv_h264_dec_start);
   videodec_class->stop = GST_DEBUG_FUNCPTR (gst_qsv_h264_dec_stop);
@@ -537,6 +575,9 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);

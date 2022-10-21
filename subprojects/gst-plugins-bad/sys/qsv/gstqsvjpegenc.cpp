@@ -17,6 +17,20 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-qsvjpegenc
+ * @title: qsvvp9enc
+ *
+ * Intel Quick Sync JPEG encoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! qsvjpegenc ! qtmux ! filesink location=out.mp4
+ * ```
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -43,6 +57,18 @@ enum
 };
 
 #define DEFAULT_JPEG_QUALITY 85
+
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) { NV12, BGRA }, " \
+    "width = (int) [ 16, 8192 ], height = (int) [ 16, 8192 ]"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw(memory:VAMemory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "image/jpeg, width = (int) [ 16, 8192 ], height = (int) [ 16, 8192 ]"
 
 typedef struct _GstQsvJpegEncClassData
 {
@@ -101,6 +127,8 @@ gst_qsv_jpeg_enc_class_init (GstQsvJpegEncClass * klass, gpointer data)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstQsvEncoderClass *qsvenc_class = GST_QSV_ENCODER_CLASS (klass);
   GstQsvJpegEncClassData *cdata = (GstQsvJpegEncClassData *) data;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   qsvenc_class->codec_id = MFX_CODEC_JPEG;
   qsvenc_class->impl_index = cdata->impl_index;
@@ -135,12 +163,19 @@ gst_qsv_jpeg_enc_class_init (GstQsvJpegEncClass * klass, gpointer data)
       "Seungha Yang <seungha@centricular.com>");
 #endif
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   qsvenc_class->set_format = GST_DEBUG_FUNCPTR (gst_qsv_jpeg_enc_set_format);
   qsvenc_class->set_output_state =
@@ -511,6 +546,9 @@ gst_qsv_jpeg_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
