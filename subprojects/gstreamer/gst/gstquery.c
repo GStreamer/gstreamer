@@ -1399,7 +1399,6 @@ gst_query_set_uri (GstQuery * query, const gchar * uri)
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
   g_return_if_fail (gst_query_is_writable (query));
-  g_return_if_fail (gst_uri_is_valid (uri));
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure, GST_QUARK (URI), G_TYPE_STRING, uri, NULL);
@@ -1444,7 +1443,6 @@ gst_query_set_uri_redirection (GstQuery * query, const gchar * uri)
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_URI);
   g_return_if_fail (gst_query_is_writable (query));
-  g_return_if_fail (gst_uri_is_valid (uri));
 
   structure = GST_QUERY_STRUCTURE (query);
   gst_structure_id_set (structure, GST_QUARK (URI_REDIRECTION),
