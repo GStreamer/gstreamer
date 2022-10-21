@@ -1921,7 +1921,7 @@ gst_mf_video_encoder_register_internal (GstPlugin * plugin, guint rank,
   if (rank > 0 && !is_default)
     rank--;
 
-  if (!is_default)
+  if (!is_default || !device_caps->d3d11_aware)
     gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
