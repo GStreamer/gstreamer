@@ -78,6 +78,13 @@ enum
 #define DEFAULT_DISPLAY_FORMAT            DXGI_FORMAT_UNKNOWN
 #define DEFAULT_EMIT_PRESENT              FALSE
 
+/**
+ * GstD3D11VideoSinkDisplayFormat:
+ *
+ * Swapchain's DXGI format
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_D3D11_VIDEO_SINK_DISPLAY_FORMAT (gst_d3d11_video_sink_display_format_type())
 static GType
 gst_d3d11_video_sink_display_format_type (void)
@@ -86,11 +93,34 @@ gst_d3d11_video_sink_display_format_type (void)
 
   GST_D3D11_CALL_ONCE_BEGIN {
     static const GEnumValue format_types[] = {
+      /**
+       * GstD3D11VideoSinkDisplayFormat::unknown:
+       *
+       * Since: 1.22
+       */
       {DXGI_FORMAT_UNKNOWN, "DXGI_FORMAT_UNKNOWN", "unknown"},
+
+      /**
+       * GstD3D11VideoSinkDisplayFormat::r10g10b10a2-unorm:
+       *
+       * Since: 1.22
+       */
       {DXGI_FORMAT_R10G10B10A2_UNORM,
           "DXGI_FORMAT_R10G10B10A2_UNORM", "r10g10b10a2-unorm"},
+
+      /**
+       * GstD3D11VideoSinkDisplayFormat::r8g8b8a8-unorm:
+       *
+       * Since: 1.22
+       */
       {DXGI_FORMAT_R8G8B8A8_UNORM,
           "DXGI_FORMAT_R8G8B8A8_UNORM", "r8g8b8a8-unorm"},
+
+      /**
+       * GstD3D11VideoSinkDisplayFormat::b8g8r8a8-unorm:
+       *
+       * Since: 1.22
+       */
       {DXGI_FORMAT_B8G8R8A8_UNORM,
           "DXGI_FORMAT_B8G8R8A8_UNORM", "b8g8r8a8-unorm"},
       {0, nullptr, nullptr},
@@ -412,14 +442,14 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
   /**
    * GstD3D11VideoSink::present
    * @videosink: the #GstD3D11VideoSink
-   * @device: a #GstD3D11Device handle
+   * @device: a GstD3D11Device object
    * @render_target: a ID3D11RenderTargetView handle of swapchain's backbuffer
    *
    * Emitted just before presenting a texture via the IDXGISwapChain::Present.
    * The client can perform additional rendering on the given @render_target,
    * or can read the content already rendered on the swapchain's backbuffer.
    *
-   * This signal will be emitted with gst_d3d11_device_lock() taken and
+   * This signal will be emitted with gst_d3d11_device_lock taken and
    * client should perform GPU operation from the thread where this signal
    * emitted.
    *
@@ -428,7 +458,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
   gst_d3d11_video_sink_signals[SIGNAL_PRESENT] =
       g_signal_new ("present", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
-      G_TYPE_NONE, 2, GST_TYPE_D3D11_DEVICE, G_TYPE_POINTER);
+      G_TYPE_NONE, 2, GST_TYPE_OBJECT, G_TYPE_POINTER);
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_set_context);

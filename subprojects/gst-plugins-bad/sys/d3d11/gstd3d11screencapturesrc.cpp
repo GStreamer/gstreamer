@@ -75,6 +75,11 @@ typedef enum
 } GstD3D11ScreenCaptureAPI;
 
 #ifdef HAVE_WINRT_CAPTURE
+/**
+ * GstD3D11ScreenCaptureAPI:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_D3D11_SCREEN_CAPTURE_API (gst_d3d11_screen_capture_api_get_type())
 static GType
 gst_d3d11_screen_capture_api_get_type (void)
@@ -83,7 +88,18 @@ gst_d3d11_screen_capture_api_get_type (void)
 
   GST_D3D11_CALL_ONCE_BEGIN {
     static const GEnumValue api_types[] = {
+      /**
+       * GstD3D11ScreenCaptureAPI::dxgi:
+       *
+       * Since: 1.22
+       */
       {GST_D3D11_SCREEN_CAPTURE_API_DXGI, "DXGI Desktop Duplication", "dxgi"},
+
+      /**
+       * GstD3D11ScreenCaptureAPI::wgc:
+       *
+       * Since: 1.22
+       */
       {GST_D3D11_SCREEN_CAPTURE_API_WGC, "Windows Graphics Capture", "wgc"},
       {0, nullptr, nullptr},
     };
@@ -214,24 +230,52 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
           DEFAULT_SHOW_CURSOR,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D11ScreenCaptureSrc:crop-x:
+   *
+   * Horizontal coordinate of top left corner for the screen capture area
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CROP_X,
       g_param_spec_uint ("crop-x", "Crop X",
           "Horizontal coordinate of top left corner for the screen capture area",
           0, G_MAXUINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D11ScreenCaptureSrc:crop-y:
+   *
+   * Vertical coordinate of top left corner for the screen capture area
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CROP_Y,
       g_param_spec_uint ("crop-y", "Crop Y",
           "Vertical coordinate of top left corner for the screen capture area",
           0, G_MAXUINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D11ScreenCaptureSrc:crop-width:
+   *
+   * Width of screen capture area (0 = maximum)
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CROP_WIDTH,
       g_param_spec_uint ("crop-width", "Crop Width",
           "Width of screen capture area (0 = maximum)",
           0, G_MAXUINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D11ScreenCaptureSrc:crop-height:
+   *
+   * Height of screen capture area (0 = maximum)
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (gobject_class, PROP_CROP_HEIGHT,
       g_param_spec_uint ("crop-height", "Crop Height",
           "Height of screen capture area (0 = maximum)",
@@ -240,6 +284,13 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
 
 #ifdef HAVE_WINRT_CAPTURE
   if (gst_d3d11_winrt_capture_load_library ()) {
+    /**
+     * GstD3D11ScreenCaptureSrc:window-handle:
+     *
+     * HWND window handle to capture
+     *
+     * Since: 1.22
+     */
     g_object_class_install_property (gobject_class, PROP_WINDOW_HANDLE,
         g_param_spec_uint64 ("window-handle", "Window Handle",
             "A HWND handle of window to capture",
@@ -247,6 +298,14 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
             (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
                 GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
 
+    /**
+     * GstD3D11ScreenCaptureSrc:show-border:
+     *
+     * Show border lines to capture area when WGC mode is selected.
+     * This feature requires Windows11 or newer
+     *
+     * Since: 1.22
+     */
     g_object_class_install_property (gobject_class, PROP_SHOW_BORDER,
         g_param_spec_boolean ("show-border", "Show Border",
             "Show border lines to capture area when WGC mode is selected",
@@ -254,13 +313,29 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READWRITE
                 | G_PARAM_STATIC_STRINGS)));
 
+    /**
+     * GstD3D11ScreenCaptureSrc:capture-api:
+     *
+     * Capture API to use
+     *
+     * Since: 1.22
+     */
     g_object_class_install_property (gobject_class, PROP_CAPTURE_API,
         g_param_spec_enum ("capture-api", "Capture API", "Capture API to use",
             GST_TYPE_D3D11_SCREEN_CAPTURE_API,
             DEFAULT_CAPTURE_API,
             (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
                 GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
+    gst_type_mark_as_plugin_api (GST_TYPE_D3D11_SCREEN_CAPTURE_API,
+        (GstPluginAPIFlags) 0);
 
+    /**
+     * GstD3D11ScreenCaptureSrc:adapter:
+     *
+     * DXGI Adapter index for creating device when WGC mode is selected
+     *
+     * Since: 1.22
+     */
     g_object_class_install_property (gobject_class, PROP_ADAPTER,
         g_param_spec_int ("adapter", "Adapter",
             "DXGI Adapter index for creating device when WGC mode is selected "

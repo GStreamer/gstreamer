@@ -68,6 +68,11 @@ typedef enum
   GST_D3D11_TEST_SRC_CHECKERS8,
 } GstD3D11TestSrcPattern;
 
+/**
+ * GstD3D11TestSrcPattern:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_D3D11_TEST_SRC_PATTERN (gst_d3d11_test_src_pattern_get_type ())
 static GType
 gst_d3d11_test_src_pattern_get_type (void)

@@ -91,6 +91,11 @@ typedef enum
   GST_D3D11_COMPOSITOR_OPERATOR_OVER,
 } GstD3D11CompositorOperator;
 
+/**
+ * GstD3D11CompositorOperator:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_D3D11_COMPOSITOR_OPERATOR (gst_d3d11_compositor_operator_get_type())
 static GType
 gst_d3d11_compositor_operator_get_type (void)
@@ -393,6 +398,14 @@ gst_d3d11_compositor_pad_class_init (GstD3D11CompositorPadClass * klass)
   g_object_class_install_property (object_class, PROP_PAD_ALPHA,
       g_param_spec_double ("alpha", "Alpha", "Alpha of the picture", 0.0, 1.0,
           DEFAULT_PAD_ALPHA, param_flags));
+
+  /**
+   * GstD3D11CompositorPad:operator:
+   *
+   * Blending operator to use for blending this pad over the previous ones
+   *
+   * Since: 1.22
+   */
   g_object_class_install_property (object_class, PROP_PAD_OPERATOR,
       g_param_spec_enum ("operator", "Operator",
           "Blending operator to use for blending this pad over the previous ones",

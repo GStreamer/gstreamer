@@ -2283,6 +2283,81 @@ gst_d3d11_decoder_class_data_free (GstD3D11DecoderClassData * data)
   g_free (data);
 }
 
+typedef struct _GstD3D11DecoderDocCaps
+{
+  GstDXVACodec codec;
+  const gchar *sink_caps;
+  const gchar *src_caps;
+} GstD3D11DecoderDocCaps;
+
+/* *INDENT-OFF* */
+static const GstD3D11DecoderDocCaps doc_caps_list[] = {
+  {
+    GST_DXVA_CODEC_MPEG2,
+    "video/mpeg, width = (int) [ 1, 1920 ], height = (int) [ 1, 1920 ], "
+    "mpegversion = (int) 2, systemstream = (boolean) false, "
+    "profile = (string) { main, simple }",
+
+    "video/x-raw(memory:D3D11Memory), format = (string) NV12, "
+    "width = (int) [ 1, 1920 ], height = (int) [ 1, 1920 ]; "
+    "video/x-raw, format = (string) NV12, "
+    "width = (int) [ 1, 1920 ], height = (int) [ 1, 1920 ]"},
+  {
+    GST_DXVA_CODEC_H264,
+    "video/x-h264, width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ], "
+    "stream-format = (string) { avc, avc3, byte-stream }, "
+    "alignment = (string) au, "
+    "profile = (string) { high, progressive-high, constrained-high, main, "
+    "constrained-baseline, baseline }",
+
+    "video/x-raw(memory:D3D11Memory), format = (string) NV12, "
+    "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ]; "
+    "video/x-raw, format = (string) NV12, "
+    "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ]"
+  },
+  {
+    GST_DXVA_CODEC_H265,
+    "video/x-h265, width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ], "
+    "stream-format = (string) { hev1, hvc1, byte-stream }, "
+    "alignment = (string) au, profile = (string) { main, main-10 }",
+
+    "video/x-raw(memory:D3D11Memory), format = (string) { NV12, P010_10LE }, "
+    "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]; "
+    "video/x-raw, format = (string) { NV12, P010_10LE }, "
+    "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]"
+  },
+  {
+    GST_DXVA_CODEC_VP8,
+    "video/x-vp8, width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ]",
+
+    "video/x-raw(memory:D3D11Memory), format = (string) NV12, "
+    "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ]; "
+    "video/x-raw, format = (string) NV12, "
+    "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ]"
+  },
+  {
+    GST_DXVA_CODEC_VP9,
+    "video/x-vp9, width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ], "
+    "alignment = (string) frame, profile = (string) { 0, 2 }",
+
+    "video/x-raw(memory:D3D11Memory), format = (string) { NV12, P010_10LE }, "
+    "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]; "
+    "video/x-raw, format = (string) { NV12, P010_10LE }, "
+    "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]"
+  },
+  {
+    GST_DXVA_CODEC_AV1,
+    "video/x-av1, width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ], "
+    "alignment = (string) frame, profile = (string) main",
+
+    "video/x-raw(memory:D3D11Memory), format = (string) { NV12, P010_10LE }, "
+    "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]; "
+    "video/x-raw, format = (string) { NV12, P010_10LE }, "
+    "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]"
+  },
+};
+/* *INDENT-ON* */
+
 void
 gst_d3d11_decoder_proxy_class_init (GstElementClass * klass,
     GstD3D11DecoderClassData * data, const gchar * author)
@@ -2292,22 +2367,24 @@ gst_d3d11_decoder_proxy_class_init (GstElementClass * klass,
   std::string long_name;
   std::string description;
   const gchar *codec_name;
+  GParamFlags param_flags = (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
+  const GstD3D11DecoderDocCaps *d3d11_doc_caps = nullptr;
 
   g_object_class_install_property (gobject_class, PROP_DECODER_ADAPTER_LUID,
       g_param_spec_int64 ("adapter-luid", "Adapter LUID",
           "DXGI Adapter LUID (Locally Unique Identifier) of created device",
-          G_MININT64, G_MAXINT64, cdata->adapter_luid,
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+          G_MININT64, G_MAXINT64, 0, param_flags));
 
   g_object_class_install_property (gobject_class, PROP_DECODER_DEVICE_ID,
       g_param_spec_uint ("device-id", "Device Id",
-          "DXGI Device ID", 0, G_MAXUINT32, 0,
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+          "DXGI Device ID", 0, G_MAXUINT32, 0, param_flags));
 
   g_object_class_install_property (gobject_class, PROP_DECODER_VENDOR_ID,
       g_param_spec_uint ("vendor-id", "Vendor Id",
-          "DXGI Vendor ID", 0, G_MAXUINT32, 0,
-          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+          "DXGI Vendor ID", 0, G_MAXUINT32, 0, param_flags));
 
   codec_name = gst_dxva_codec_to_string (cdata->codec);
   long_name = "Direct3D11/DXVA " + std::string (codec_name) + " " +
@@ -2318,12 +2395,28 @@ gst_d3d11_decoder_proxy_class_init (GstElementClass * klass,
   gst_element_class_set_metadata (klass, long_name.c_str (),
       "Codec/Decoder/Video/Hardware", description.c_str (), author);
 
-  gst_element_class_add_pad_template (klass,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          data->sink_caps));
-  gst_element_class_add_pad_template (klass,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          data->src_caps));
+  for (guint i = 0; i < G_N_ELEMENTS (doc_caps_list); i++) {
+    if (doc_caps_list[i].codec == cdata->codec) {
+      d3d11_doc_caps = &doc_caps_list[i];
+      break;
+    }
+  }
+
+  g_assert (d3d11_doc_caps);
+
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, data->sink_caps);
+  doc_caps = gst_caps_from_string (d3d11_doc_caps->sink_caps);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (klass, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, data->src_caps);
+  doc_caps = gst_caps_from_string (d3d11_doc_caps->src_caps);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (klass, pad_templ);
 
   gst_d3d11_decoder_class_data_free (data);
 }
