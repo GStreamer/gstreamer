@@ -683,8 +683,8 @@ gst_d3d11_winrt_capture_thread_func (GstD3D11WinRTCapture * self)
     /* hold list of capture objects to send target window closed event */
     AcquireSRWLockExclusive (&capture_list_lock);
     g_object_weak_ref (G_OBJECT (self),
-      (GWeakNotify) gst_d3d11_winrt_capture_weak_ref_notify, nullptr);
-      capture_list = g_list_append (capture_list, self);
+        (GWeakNotify) gst_d3d11_winrt_capture_weak_ref_notify, nullptr);
+    capture_list = g_list_append (capture_list, self);
     ReleaseSRWLockExclusive (&capture_list_lock);
 
     self->hidden_window = gst_d3d11_winrt_create_hidden_window (self);
@@ -908,8 +908,7 @@ again:
   if (size.Width != self->pool_size.Width ||
       size.Height != self->pool_size.Height) {
     GST_DEBUG_OBJECT (self, "Size changed %dx%d -> %dx%d",
-        self->pool_size.Width, self->pool_size.Height,
-        size.Width, size.Height);
+        self->pool_size.Width, self->pool_size.Height, size.Width, size.Height);
     self->pool_size = size;
     frame = nullptr;
     hr = inner->pool->Recreate (inner->d3d_device.Get (),
@@ -989,4 +988,3 @@ gst_d3d11_winrt_capture_new (GstD3D11Device * device, HMONITOR monitor_handle,
 
   return GST_D3D11_SCREEN_CAPTURE_CAST (self);
 }
-

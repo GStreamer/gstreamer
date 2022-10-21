@@ -276,8 +276,7 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
 
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 screen capture src", "Source/Video",
-      "Captures desktop screen",
-      "Seungha Yang <seungha@centricular.com>");
+      "Captures desktop screen", "Seungha Yang <seungha@centricular.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&template_caps);
   gst_element_class_add_pad_template (element_class,
@@ -911,21 +910,22 @@ gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
       break;
     case GST_D3D11_SCREEN_CAPTURE_FLOW_UNSUPPORTED:
 #ifdef HAVE_WINRT_CAPTURE
-    /* Try WinRT capture if DXGI capture does not work */
-    if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_DXGI) {
-      self->capture_api = GST_D3D11_SCREEN_CAPTURE_API_WGC;
-      gst_clear_object (&capture);
-      GST_WARNING_OBJECT (self, "DXGI capture is not available");
-      capture = gst_d3d11_winrt_capture_new (self->device, monitor, nullptr);
-      if (capture && gst_d3d11_screen_capture_prepare (capture) == GST_FLOW_OK) {
-        GST_INFO_OBJECT (self, "Fallback to Windows Graphics Capture");
-        break;
+      /* Try WinRT capture if DXGI capture does not work */
+      if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_DXGI) {
+        self->capture_api = GST_D3D11_SCREEN_CAPTURE_API_WGC;
+        gst_clear_object (&capture);
+        GST_WARNING_OBJECT (self, "DXGI capture is not available");
+        capture = gst_d3d11_winrt_capture_new (self->device, monitor, nullptr);
+        if (capture
+            && gst_d3d11_screen_capture_prepare (capture) == GST_FLOW_OK) {
+          GST_INFO_OBJECT (self, "Fallback to Windows Graphics Capture");
+          break;
+        }
       }
-    }
 #endif
-    goto unsupported;
-  default:
-    goto error;
+      goto unsupported;
+    default:
+      goto error;
   }
 
   if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_DXGI &&
