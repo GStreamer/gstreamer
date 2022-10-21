@@ -473,6 +473,13 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   if (ext_profile)
     gst_caps_set_simple (src_caps, "profile", G_TYPE_STRING, ext_profile, NULL);
 
+  /* An AAC-LC-only decoder will not decode a stream that uses explicit
+   * hierarchical signaling */
+  if (signaling_mode == 2 && aot != AOT_AAC_LC) {
+    gst_structure_remove_field (gst_caps_get_structure (src_caps, 0),
+        "base-profile");
+  }
+
   ret = gst_audio_encoder_set_output_format (enc, src_caps);
   gst_caps_unref (src_caps);
 
