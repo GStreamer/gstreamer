@@ -32,17 +32,6 @@ endif
 
 qsv_platform_deps = []
 if host_system == 'windows'
-  # TODO: We can cross-compile this plugin using MinGW but there's an issue.
-  # Re-enable cross-compile once it's investigated and addressed
-  # https://gitlab.freedesktop.org/gstreamer/cerbero/-/merge_requests/854
-  if cc.get_id() != 'msvc'
-    if qsv_option.enabled()
-      error('qsv plugin supports only MSVC build')
-    else
-      subdir_done()
-    endif
-  endif
-
   if not gstd3d11_dep.found()
     if qsv_option.enabled()
       error('The qsv was enabled explicitly, but required d3d11 was not found')

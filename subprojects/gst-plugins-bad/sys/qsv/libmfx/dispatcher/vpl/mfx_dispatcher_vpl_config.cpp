@@ -1515,15 +1515,27 @@ bool ConfigCtxVPL::CheckLowLatencyConfig(std::list<ConfigCtxVPL *> configCtxList
     return bLowLatency;
 }
 
+#include <gst/gst.h>
+
 bool ConfigCtxVPL::ParseDeviceIDx86(mfxChar *cDeviceID, mfxU32 &deviceID, mfxU32 &adapterIdx) {
     std::string strDevID(cDeviceID);
+    // XXX: std::regex is crashing on Windows + gcc
+#if 0
     std::regex reDevIDAll("[0-9a-fA-F]+/[0-9]+");
     std::regex reDevIDMin("[0-9a-fA-F]+");
+#else
+    static const gchar *reDevIDAll = "[0-9a-fA-F]+/[0-9]+";
+    static const gchar *reDevIDMin = "[0-9a-fA-F]+";
+
+    if (!cDeviceID)
+        return false;
+#endif
 
     deviceID   = DEVICE_ID_UNKNOWN;
     adapterIdx = ADAPTER_IDX_UNKNOWN;
 
     bool bHasAdapterIdx = false;
+#if 0
     if (std::regex_match(strDevID, reDevIDAll)) {
         // check for DeviceID in format "devID/adapterIdx"
         //   devID = hex value
@@ -1539,6 +1551,25 @@ bool ConfigCtxVPL::ParseDeviceIDx86(mfxChar *cDeviceID, mfxU32 &deviceID, mfxU32
         // invalid format
         return false;
     }
+#else
+    if (g_regex_match_simple(reDevIDAll, cDeviceID,
+        (GRegexCompileFlags)0, (GRegexMatchFlags)0)) {
+        // check for DeviceID in format "devID/adapterIdx"
+        //   devID = hex value
+        //   adapterIdx = decimal integer
+        bHasAdapterIdx = true;
+    }
+    else if (g_regex_match_simple(reDevIDMin, cDeviceID,
+        (GRegexCompileFlags)0, (GRegexMatchFlags)0)) {
+        // check for DeviceID in format "devID"
+        //   (no adpaterIdx)
+        bHasAdapterIdx = false;
+    }
+    else {
+        // invalid format
+        return false;
+    }
+#endif
 
     // get deviceID (value before the slash, if present)
     try {
