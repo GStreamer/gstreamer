@@ -285,6 +285,19 @@ enum
 #define DEFAULT_AUD TRUE
 #define DEFAULT_CABAC TRUE
 
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) NV12, " \
+    "width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ]"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "video/x-h264, width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ], " \
+    "profile = (string) { main, high, constrained-baseline, baseline }, " \
+    "stream-format = (string) { avc, byte-stream }, alignment = (string) au"
+
 typedef struct _GstAmfH264Enc
 {
   GstAmfEncoder parent;
@@ -351,6 +364,8 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
   GstAmfH264EncDeviceCaps *dev_caps = &cdata->dev_caps;
   GParamFlags param_flags = (GParamFlags) (G_PARAM_READWRITE |
       GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS);
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
 
@@ -361,7 +376,8 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
   g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
       g_param_spec_int64 ("adapter-luid", "Adapter LUID",
           "DXGI Adapter LUID (Locally Unique Identifier) of associated GPU",
-          G_MININT64, G_MAXINT64, cdata->adapter_luid, param_flags));
+          G_MININT64, G_MAXINT64, 0, (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   g_object_class_install_property (object_class, PROP_USAGE,
       g_param_spec_enum ("usage", "Usage",
           "Target usage", GST_TYPE_AMF_H264_ENC_USAGE,
@@ -419,12 +435,19 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
       "Encode H.264 video streams using AMF API",
       "Seungha Yang <seungha@centricular.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_amf_h264_enc_getcaps);
 
