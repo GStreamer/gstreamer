@@ -501,9 +501,10 @@ _push_out_one_buffer (GstVaBaseEnc * base)
 
   ret = _push_buffer_to_downstream (base, frame_out);
 
-  if (ret != GST_FLOW_OK)
-    GST_ERROR_OBJECT (base, "fails to push one buffer, "
-        "system_frame_number %d", system_frame_number);
+  if (ret != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (base, "fails to push one buffer, system_frame_number "
+        "%d: %s", system_frame_number, gst_flow_get_name (ret));
+  }
 
   return ret;
 }
@@ -673,7 +674,8 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
 error_buffer_invalid:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to import the input frame."), (NULL));
+        ("Failed to import the input frame: %s.", gst_flow_get_name (ret)),
+        (NULL));
     gst_clear_buffer (&in_buf);
     gst_clear_buffer (&frame->output_buffer);
     gst_video_encoder_finish_frame (venc, frame);
@@ -698,7 +700,7 @@ error_reorder:
 error_encode:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to encode the frame."), (NULL));
+        ("Failed to encode the frame %s.", gst_flow_get_name (ret)), (NULL));
     gst_clear_buffer (&frame_encode->output_buffer);
     gst_video_encoder_finish_frame (venc, frame_encode);
     return ret;
@@ -706,7 +708,7 @@ error_encode:
 error_push_buffer:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to push the buffer."), (NULL));
+        ("Failed to push the buffer: %s.", gst_flow_get_name (ret)), (NULL));
     return ret;
   }
 }
