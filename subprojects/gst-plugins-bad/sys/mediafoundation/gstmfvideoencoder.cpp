@@ -41,6 +41,13 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_video_encoder_debug);
 #define GST_CAT_DEFAULT gst_mf_video_encoder_debug
 
+/**
+ * GstMFVideoEncoder:
+ *
+ * Base class for MediaFoundation video encoders
+ *
+ * Since: 1.22
+ */
 #define gst_mf_video_encoder_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstMFVideoEncoder, gst_mf_video_encoder,
     GST_TYPE_VIDEO_ENCODER);

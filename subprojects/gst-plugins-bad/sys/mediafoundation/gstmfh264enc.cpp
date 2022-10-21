@@ -62,6 +62,11 @@ enum
   GST_MF_H264_ENC_RC_MODE_QUALITY,
 };
 
+/**
+ * GstMFH264EncRCMode:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_MF_H264_ENC_RC_MODE (gst_mf_h264_enc_rc_mode_get_type())
 static GType
 gst_mf_h264_enc_rc_mode_get_type (void)
@@ -90,6 +95,11 @@ enum
   GST_MF_H264_ENC_ADAPTIVE_MODE_FRAMERATE,
 };
 
+/**
+ * GstMFH264EncAdaptiveMode:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_MF_H264_ENC_ADAPTIVE_MODE (gst_mf_h264_enc_adaptive_mode_get_type())
 static GType
 gst_mf_h264_enc_adaptive_mode_get_type (void)
@@ -117,6 +127,11 @@ enum
   GST_MF_H264_ENC_CONTENT_TYPE_FIXED_CAMERA_ANGLE,
 };
 
+/**
+ * GstMFH264EncContentType:
+ *
+ * Since: 1.18
+ */
 #define GST_TYPE_MF_H264_ENC_CONTENT_TYPE (gst_mf_h264_enc_content_type_get_type())
 static GType
 gst_mf_h264_enc_content_type_get_type (void)
@@ -189,6 +204,19 @@ enum
 #define DEFAULT_QP_B 26
 #define DEFAULT_REF 2
 
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) NV12, " \
+    "width = (int) [ 64, 8192 ], height = (int) [ 64, 8192 ]"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "video/x-h264, width = (int) [ 64, 8192 ], height = (int) [ 64, 8192 ], " \
+    "stream-format = (string) byte-stream, alignment = (string) au, " \
+    "profile = (string) { high, main, constrained-baseline, baseline }"
+
 typedef struct _GstMFH264Enc
 {
   GstMFVideoEncoder parent;
@@ -253,6 +281,8 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   GstMFVideoEncoderDeviceCaps *device_caps = &cdata->device_caps;
   gchar *long_name;
   gchar *classification;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
@@ -266,6 +296,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   if (device_caps->rc_mode) {
+    /**
+     * GstMFH264Enc:rc-mode:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_RC_MODE,
         g_param_spec_enum ("rc-mode", "Rate Control Mode",
             "Rate Control Mode",
@@ -283,6 +318,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   /* quality and qp has the identical meaning but scale is different
    * use qp if available */
   if (device_caps->quality && !device_caps->qp) {
+    /**
+     * GstMFH264Enc:quality:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_QUALITY,
         g_param_spec_uint ("quality", "Quality",
             "Quality applied when rc-mode is qvbr",
@@ -292,6 +332,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->adaptive_mode) {
+    /**
+     * GstMFH264Enc:adaptive-mode:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_ADAPTIVE_MODE,
         g_param_spec_enum ("adaptive-mode", "Adaptive Mode",
             "Adaptive Mode", GST_TYPE_MF_H264_ENC_ADAPTIVE_MODE,
@@ -307,6 +352,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->buffer_size) {
+    /**
+     * GstMFH264Enc:vbv-buffer-size:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_BUFFER_SIZE,
         g_param_spec_uint ("vbv-buffer-size", "VBV Buffer Size",
             "VBV(HRD) Buffer Size in bytes (0 = MFT default)",
@@ -316,6 +366,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->max_bitrate) {
+    /**
+     * GstMFH264Enc:max-bitrate:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
         g_param_spec_uint ("max-bitrate", "Max Bitrate",
             "The maximum bitrate applied when rc-mode is \"pcvbr\" in kbit/sec",
@@ -325,6 +380,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->quality_vs_speed) {
+    /**
+     * GstMFH264Enc:quality-vs-speed:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_QUALITY_VS_SPEED,
         g_param_spec_uint ("quality-vs-speed", "Quality Vs Speed",
             "Quality and speed tradeoff, [0, 33]: Low complexity, "
@@ -335,6 +395,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->cabac) {
+    /**
+     * GstMFH264Enc:cabac:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_CABAC,
         g_param_spec_boolean ("cabac", "Use CABAC",
             "Enable CABAC entropy coding",
@@ -344,6 +409,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->sps_id) {
+    /**
+     * GstMFH264Enc:sps-id:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_SPS_ID,
         g_param_spec_uint ("sps-id", "SPS Id",
             "The SPS id to use", 0, 31,
@@ -353,6 +423,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->pps_id) {
+    /**
+     * GstMFH264Enc:pps-id:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_PPS_ID,
         g_param_spec_uint ("pps-id", "PPS Id",
             "The PPS id to use", 0, 255,
@@ -362,6 +437,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->bframes) {
+    /**
+     * GstMFH264Enc:bframes:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_BFRAMES,
         g_param_spec_uint ("bframes", "bframes",
             "The maximum number of consecutive B frames", 0, 2,
@@ -371,6 +451,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->gop_size) {
+    /**
+     * GstMFH264Enc:gop-size:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
         g_param_spec_int ("gop-size", "GOP size",
             "The number of pictures from one GOP header to the next. "
@@ -382,6 +467,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->threads) {
+    /**
+     * GstMFH264Enc:threads:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_THREADS,
         g_param_spec_uint ("threads", "Threads",
             "The number of worker threads used by a encoder, (0 = MFT default)",
@@ -391,6 +481,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->content_type) {
+    /**
+     * GstMFH264Enc:content-type:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_CONTENT_TYPE,
         g_param_spec_enum ("content-type", "Content Type",
             "Indicates the type of video content",
@@ -406,6 +501,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->qp) {
+    /**
+     * GstMFH264Enc:qp:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_QP,
         g_param_spec_uint ("qp", "qp",
             "QP applied when rc-mode is \"qvbr\"", 16, 51,
@@ -415,6 +515,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->low_latency) {
+    /**
+     * GstMFH264Enc:low-latency:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
         g_param_spec_boolean ("low-latency", "Low Latency",
             "Enable low latency encoding",
@@ -424,6 +529,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->min_qp) {
+    /**
+     * GstMFH264Enc:min-qp:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_MIN_QP,
         g_param_spec_uint ("min-qp", "Min QP",
             "The minimum allowed QP applied to all rc-mode", 0, 51,
@@ -433,6 +543,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->max_qp) {
+    /**
+     * GstMFH264Enc:max-qp:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_MAX_QP,
         g_param_spec_uint ("max-qp", "Max QP",
             "The maximum allowed QP applied to all rc-mode", 0, 51,
@@ -442,6 +557,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->frame_type_qp) {
+    /**
+     * GstMFH264Enc:qp-i:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_QP_I,
         g_param_spec_uint ("qp-i", "QP I",
             "QP applied to I frames", 0, 51,
@@ -449,6 +569,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
                 G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    /**
+     * GstMFH264Enc:qp-p:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_QP_P,
         g_param_spec_uint ("qp-p", "QP P",
             "QP applied to P frames", 0, 51,
@@ -456,6 +581,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
             (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
                 G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    /**
+     * GstMFH264Enc:qp-b:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_QP_B,
         g_param_spec_uint ("qp-b", "QP B",
             "QP applied to B frames", 0, 51,
@@ -465,6 +595,11 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   }
 
   if (device_caps->max_num_ref) {
+    /**
+     * GstMFH264Enc:ref:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_REF,
         g_param_spec_uint ("ref", "Reference Frames",
             "The number of reference frames",
@@ -498,8 +633,9 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
     g_object_class_install_property (gobject_class, PROP_ADAPTER_LUID,
         g_param_spec_int64 ("adapter-luid", "Adapter LUID",
             "DXGI Adapter LUID (Locally Unique Identifier) of created device",
-            G_MININT64, G_MAXINT64, device_caps->adapter_luid,
-            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_MININT64, G_MAXINT64, 0,
+            (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+                GST_PARAM_CONDITIONALLY_AVAILABLE |
                 G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   }
 
@@ -514,12 +650,19 @@ gst_mf_h264_enc_class_init (GstMFH264EncClass * klass, gpointer data)
   g_free (long_name);
   g_free (classification);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   mfenc_class->set_option = GST_DEBUG_FUNCPTR (gst_mf_h264_enc_set_option);
   mfenc_class->set_src_caps = GST_DEBUG_FUNCPTR (gst_mf_h264_enc_set_src_caps);

@@ -33,6 +33,13 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY (gst_mf_audio_decoder_debug);
 #define GST_CAT_DEFAULT gst_mf_audio_decoder_debug
 
+/**
+ * GstMFAudioDecoder:
+ *
+ * Base class for MediaFoundation audio decoders
+ *
+ * Since: 1.22
+ */
 #define gst_mf_audio_decoder_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstMFAudioDecoder, gst_mf_audio_decoder,
     GST_TYPE_AUDIO_DECODER,

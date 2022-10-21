@@ -52,6 +52,11 @@ enum
   GST_MF_VP9_ENC_RC_MODE_QUALITY,
 };
 
+/**
+ * GstMFVP9EncRCMode:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_MF_VP9_ENC_RC_MODE (gst_mf_vp9_enc_rc_mode_get_type())
 static GType
 gst_mf_vp9_enc_rc_mode_get_type (void)
@@ -76,6 +81,11 @@ enum
   GST_MF_VP9_ENC_CONTENT_TYPE_FIXED_CAMERA_ANGLE,
 };
 
+/**
+ * GstMFVP9EncContentType:
+ *
+ * Since: 1.22
+ */
 #define GST_TYPE_MF_VP9_ENC_CONTENT_TYPE (gst_mf_vp9_enc_content_type_get_type())
 static GType
 gst_mf_vp9_enc_content_type_get_type (void)
@@ -119,6 +129,17 @@ enum
 #define DEFAULT_THREADS 0
 #define DEFAULT_CONTENT_TYPE GST_MF_VP9_ENC_CONTENT_TYPE_UNKNOWN
 #define DEFAULT_LOW_LATENCY FALSE
+
+#define DOC_SINK_CAPS_COMM \
+    "format = (string) NV12, " \
+    "width = (int) [ 64, 8192 ], height = (int) [ 64, 8192 ]"
+
+#define DOC_SINK_CAPS \
+    "video/x-raw(memory:D3D11Memory), " DOC_SINK_CAPS_COMM "; " \
+    "video/x-raw, " DOC_SINK_CAPS_COMM
+
+#define DOC_SRC_CAPS \
+    "video/x-vp9, width = (int) [ 64, 8192 ], height = (int) [ 64, 8192 ]"
 
 typedef struct _GstMFVP9Enc
 {
@@ -169,6 +190,8 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   GstMFVideoEncoderDeviceCaps *device_caps = &cdata->device_caps;
   gchar *long_name;
   gchar *classification;
+  GstPadTemplate *pad_templ;
+  GstCaps *doc_caps;
 
   parent_class = (GstElementClass *) g_type_class_peek_parent (klass);
 
@@ -182,6 +205,11 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   if (device_caps->rc_mode) {
+    /**
+     * GstMFVP9Enc:rc-mode:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_RC_MODE,
         g_param_spec_enum ("rc-mode", "Rate Control Mode",
             "Rate Control Mode",
@@ -197,6 +225,11 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   }
 
   if (device_caps->max_bitrate) {
+    /**
+     * GstMFVP9Enc:max-bitrate:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
         g_param_spec_uint ("max-bitrate", "Max Bitrate",
             "The maximum bitrate applied when rc-mode is \"pcvbr\" in kbit/sec "
@@ -207,6 +240,11 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   }
 
   if (device_caps->quality_vs_speed) {
+    /**
+     * GstMFVP9Enc:quality-vs-speed:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_QUALITY_VS_SPEED,
         g_param_spec_uint ("quality-vs-speed", "Quality Vs Speed",
             "Quality and speed tradeoff, [0, 33]: Low complexity, "
@@ -217,6 +255,11 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   }
 
   if (device_caps->gop_size) {
+    /**
+     * GstMFVP9Enc:gop-size:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_GOP_SIZE,
         g_param_spec_int ("gop-size", "GOP size",
             "The number of pictures from one GOP header to the next. "
@@ -228,6 +271,11 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   }
 
   if (device_caps->threads) {
+    /**
+     * GstMFVP9Enc:threads:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_THREADS,
         g_param_spec_uint ("threads", "Threads",
             "The number of worker threads used by a encoder, "
@@ -238,6 +286,11 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   }
 
   if (device_caps->content_type) {
+    /**
+     * GstMFVP9Enc:content-type:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_CONTENT_TYPE,
         g_param_spec_enum ("content-type", "Content Type",
             "Indicates the type of video content",
@@ -253,6 +306,11 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   }
 
   if (device_caps->low_latency) {
+    /**
+     * GstMFVP9Enc:low-latency:
+     *
+     * Since: 1.18
+     */
     g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
         g_param_spec_boolean ("low-latency", "Low Latency",
             "Enable low latency encoding",
@@ -285,8 +343,9 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
     g_object_class_install_property (gobject_class, PROP_ADAPTER_LUID,
         g_param_spec_int64 ("adapter-luid", "Adapter LUID",
             "DXGI Adapter LUID (Locally Unique Identifier) of created device",
-            G_MININT64, G_MAXINT64, device_caps->adapter_luid,
-            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+            G_MININT64, G_MAXINT64, 0,
+            (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+                GST_PARAM_CONDITIONALLY_AVAILABLE |
                 G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
   }
 
@@ -301,12 +360,19 @@ gst_mf_vp9_enc_class_init (GstMFVP9EncClass * klass, gpointer data)
   g_free (long_name);
   g_free (classification);
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  pad_templ = gst_pad_template_new ("sink",
+      GST_PAD_SINK, GST_PAD_ALWAYS, cdata->sink_caps);
+  doc_caps = gst_caps_from_string (DOC_SINK_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
+
+  pad_templ = gst_pad_template_new ("src",
+      GST_PAD_SRC, GST_PAD_ALWAYS, cdata->src_caps);
+  doc_caps = gst_caps_from_string (DOC_SRC_CAPS);
+  gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+  gst_caps_unref (doc_caps);
+  gst_element_class_add_pad_template (element_class, pad_templ);
 
   encoder_class->set_option = GST_DEBUG_FUNCPTR (gst_mf_vp9_enc_set_option);
   encoder_class->set_src_caps = GST_DEBUG_FUNCPTR (gst_mf_vp9_enc_set_src_caps);
