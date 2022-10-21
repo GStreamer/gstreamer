@@ -281,7 +281,8 @@ print_factory_details_info (GstElementFactory * factory, GstPlugin * plugin)
     g_strfreev (keys);
   }
 
-  if (!seen_doc_uri && plugin != NULL) {
+  if (!seen_doc_uri && plugin != NULL &&
+      !gst_element_factory_get_skip_documentation (factory)) {
     const gchar *module = gst_plugin_get_source (plugin);
 
     if (g_strv_contains (gstreamer_modules, module)) {
