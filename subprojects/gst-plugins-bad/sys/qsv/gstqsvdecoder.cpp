@@ -149,6 +149,9 @@ gst_qsv_decoder_class_init (GstQsvDecoderClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoDecoderClass *videodec_class = GST_VIDEO_DECODER_CLASS (klass);
+  GParamFlags param_flags = (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+      GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
+      G_PARAM_STATIC_STRINGS);
 
   object_class->get_property = gst_qsv_decoder_get_property;
   object_class->dispose = gst_qsv_decoder_dispose;
@@ -158,15 +161,11 @@ gst_qsv_decoder_class_init (GstQsvDecoderClass * klass)
   g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
       g_param_spec_int64 ("adapter-luid", "Adapter LUID",
           "DXGI Adapter LUID (Locally Unique Identifier) of created device",
-          G_MININT64, G_MAXINT64, 0,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
-              G_PARAM_STATIC_STRINGS)));
+          G_MININT64, G_MAXINT64, 0, param_flags));
 #else
   g_object_class_install_property (object_class, PROP_DEVICE_PATH,
       g_param_spec_string ("device-path", "Device Path",
-          "DRM device path", nullptr,
-          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-              G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+          "DRM device path", nullptr, param_flags));
 #endif
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_qsv_decoder_set_context);
