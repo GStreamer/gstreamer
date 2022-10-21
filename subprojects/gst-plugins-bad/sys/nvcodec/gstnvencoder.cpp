@@ -94,6 +94,11 @@ struct _GstNvEncoderPrivate
   GstFlowReturn last_flow;
 };
 
+/**
+ * GstNvEncoder:
+ *
+ * Since: 1.22
+ */
 #define gst_nv_encoder_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstNvEncoder, gst_nv_encoder,
     GST_TYPE_VIDEO_ENCODER);
@@ -143,6 +148,12 @@ gst_nv_encoder_class_init (GstNvEncoderClass * klass)
   videoenc_class->flush = GST_DEBUG_FUNCPTR (gst_nv_encoder_flush);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_encoder_debug, "nvencoder", 0, "nvencoder");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_PRESET,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_RC_MODE,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -1982,6 +1993,11 @@ gst_nv_encoder_set_device_mode (GstNvEncoder * encoder,
   priv->dxgi_adapter_luid = adapter_luid;
 }
 
+/**
+ * GstNvEncoderPreset:
+ *
+ * Since: 1.22
+ */
 GType
 gst_nv_encoder_preset_get_type (void)
 {
@@ -2045,6 +2061,11 @@ gst_nv_encoder_preset_to_guid (GstNvEncoderPreset preset, GUID * guid)
   *guid = NV_ENC_PRESET_DEFAULT_GUID;
 }
 
+/**
+ * GstNvEncoderRCMode:
+ *
+ * Since: 1.22
+ */
 GType
 gst_nv_encoder_rc_mode_get_type (void)
 {

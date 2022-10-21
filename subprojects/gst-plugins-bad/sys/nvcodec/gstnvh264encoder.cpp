@@ -17,6 +17,30 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * element-nvcudah264enc:
+ *
+ * NVIDIA CUDA mode H.264 encoder
+ *
+ * Since: 1.22
+ */
+
+/**
+ * element-nvd3d11h264enc:
+ *
+ * NVIDIA Direct3D11 mode H.264 encoder
+ *
+ * Since: 1.22
+ */
+
+/**
+ * element-nvautogpuh264enc:
+ *
+ * NVIDIA auto GPU select mode H.264 encoder
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -230,29 +254,34 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
       g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
           g_param_spec_uint ("cuda-device-id", "CUDA Device ID",
               "CUDA device ID of associated GPU",
-              0, G_MAXINT, cdata->cuda_device_id,
-              (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+              0, G_MAXINT, 0,
+              (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+                  G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
       break;
     case GST_NV_ENCODER_DEVICE_D3D11:
       g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
           g_param_spec_int64 ("adapter-luid", "Adapter LUID",
               "DXGI Adapter LUID (Locally Unique Identifier) of associated GPU",
-              G_MININT64, G_MAXINT64, cdata->adapter_luid,
-              (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+              G_MININT64, G_MAXINT64, 0,
+              (GParamFlags) (GST_PARAM_DOC_SHOW_DEFAULT |
+                  G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
       break;
     case GST_NV_ENCODER_DEVICE_AUTO_SELECT:
       if (cdata->cuda_device_id_size > 0) {
         g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
             g_param_spec_uint ("cuda-device-id", "CUDA Device ID",
                 "CUDA device ID to use",
-                0, G_MAXINT, cdata->cuda_device_id, conditional_param_flags));
+                0, G_MAXINT, 0,
+                (GParamFlags) (conditional_param_flags |
+                    GST_PARAM_DOC_SHOW_DEFAULT)));
       }
       if (cdata->adapter_luid_size > 0) {
         g_object_class_install_property (object_class, PROP_ADAPTER_LUID,
             g_param_spec_int64 ("adapter-luid", "Adapter LUID",
                 "DXGI Adapter LUID (Locally Unique Identifier) to use",
-                G_MININT64, G_MAXINT64, cdata->adapter_luid,
-                conditional_param_flags));
+                G_MININT64, G_MAXINT64, 0,
+                (GParamFlags) (conditional_param_flags |
+                    GST_PARAM_DOC_SHOW_DEFAULT)));
       }
       break;
     default:
@@ -1952,6 +1981,9 @@ gst_nv_h264_encoder_register_cuda (GstPlugin * plugin, GstCudaContext * context,
   if (rank > 0 && index != 0)
     rank--;
 
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
+
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
 
@@ -2027,6 +2059,9 @@ gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
 
   if (rank > 0 && index != 0)
     rank--;
+
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
 
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);

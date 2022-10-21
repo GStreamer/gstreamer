@@ -102,6 +102,11 @@ typedef struct _GstCudaDownloadClass
   GstCudaMemoryCopyClass parent_class;
 } GstCudaDownloadClass;
 
+/**
+ * GstCudaMemoryCopy:
+ *
+ * Since: 1.22
+ */
 #define gst_cuda_memory_copy_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstCudaMemoryCopy, gst_cuda_memory_copy,
     GST_TYPE_CUDA_BASE_TRANSFORM);
@@ -149,6 +154,9 @@ gst_cuda_memory_copy_class_init (GstCudaMemoryCopyClass * klass)
   trans_class->query = GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_query);
 
   btrans_class->set_info = GST_DEBUG_FUNCPTR (gst_cuda_memory_copy_set_info);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CUDA_MEMORY_COPY,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
