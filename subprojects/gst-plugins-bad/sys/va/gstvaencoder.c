@@ -847,7 +847,7 @@ _get_codec_caps (GstVaEncoder * self)
   if (!gst_va_encoder_is_open (self)
       && GST_IS_VA_DISPLAY_WRAPPED (self->display)) {
     if (gst_va_caps_from_profiles (self->display, self->available_profiles,
-            self->entrypoint, &sinkpad_caps, &srcpad_caps)) {
+            self->entrypoint, &srcpad_caps, &sinkpad_caps)) {
       gst_caps_replace (&self->sinkpad_caps, sinkpad_caps);
       gst_caps_replace (&self->srcpad_caps, srcpad_caps);
       gst_caps_unref (srcpad_caps);
