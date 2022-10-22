@@ -220,12 +220,13 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   GstCaps *allowed_caps;
   GstCaps *src_caps;
   AACENC_ERROR err;
-  gint transmux = 0, aot = AOT_AAC_LC;
+  gint transmux = 0;
   gint mpegversion = 4;
+  gint aot = AOT_AAC_LC;
+  const gchar *profile_str = "lc";
   CHANNEL_MODE channel_mode;
   AACENC_InfoStruct enc_info = { 0 };
   gint bitrate, signaling_mode;
-  const gchar *ext_profile;
 
   if (self->enc && !self->is_drained) {
     /* drain */
@@ -259,15 +260,19 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       if (strcmp (str, "lc") == 0) {
         GST_DEBUG_OBJECT (self, "using AAC-LC profile for output");
         aot = AOT_AAC_LC;
+        profile_str = "lc";
       } else if (strcmp (str, "he-aac-v1") == 0) {
         GST_DEBUG_OBJECT (self, "using SBR (HE-AACv1) profile for output");
         aot = AOT_SBR;
+        profile_str = "he-aac-v1";
       } else if (strcmp (str, "he-aac-v2") == 0) {
         GST_DEBUG_OBJECT (self, "using PS (HE-AACv2) profile for output");
         aot = AOT_PS;
+        profile_str = "he-aac-v2";
       } else if (strcmp (str, "ld") == 0) {
         GST_DEBUG_OBJECT (self, "using AAC-LD profile for output");
         aot = AOT_ER_AAC_LD;
+        profile_str = "ld";
       }
     }
 
@@ -466,12 +471,8 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
       enc_info.confSize);
 
   /* The above only parses the "base" profile, which is always going to be LC.
-   * Let's retrieve the extension AOT and set it as our profile in the caps. */
-  ext_profile = gst_codec_utils_aac_get_extension_profile (enc_info.confBuf,
-      enc_info.confSize);
-
-  if (ext_profile)
-    gst_caps_set_simple (src_caps, "profile", G_TYPE_STRING, ext_profile, NULL);
+   * Set actual profile. */
+  gst_caps_set_simple (src_caps, "profile", G_TYPE_STRING, profile_str, NULL);
 
   /* An AAC-LC-only decoder will not decode a stream that uses explicit
    * hierarchical signaling */
