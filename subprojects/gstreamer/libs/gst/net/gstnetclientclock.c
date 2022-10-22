@@ -1426,7 +1426,7 @@ gst_net_client_clock_get_internal_time (GstClock * clock)
 
 /**
  * gst_net_client_clock_new:
- * @name: a name for the clock
+ * @name: (nullable): a name for the clock
  * @remote_address: the address or hostname of the remote clock provider
  * @remote_port: the port of the remote clock provider
  * @base_time: initial time of the clock
@@ -1474,7 +1474,7 @@ gst_ntp_clock_init (GstNtpClock * self)
 
 /**
  * gst_ntp_clock_new:
- * @name: a name for the clock
+ * @name: (nullable): a name for the clock
  * @remote_address: the address or hostname of the remote clock provider
  * @remote_port: the port of the remote clock provider
  * @base_time: initial time of the clock
