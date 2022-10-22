@@ -296,7 +296,7 @@ guint8 *
 dvb_text_from_utf8 (const gchar * text, gsize * out_size)
 {
   GError *error = NULL;
-  gchar *out_text;
+  gchar *out_text = NULL;
   guint8 *out_buffer;
   guint encoding;
   GIConv giconv = (GIConv) - 1;
@@ -304,7 +304,8 @@ dvb_text_from_utf8 (const gchar * text, gsize * out_size)
   /* We test character maps one-by-one. Start with the default */
   encoding = _ICONV_ISO6937;
   giconv = _get_iconv (_ICONV_UTF8, encoding);
-  out_text = g_convert_with_iconv (text, -1, giconv, NULL, out_size, &error);
+  if (giconv != (GIConv) - 1)
+    out_text = g_convert_with_iconv (text, -1, giconv, NULL, out_size, &error);
 
   if (out_text) {
     GST_DEBUG ("Using default ISO6937 encoding");
