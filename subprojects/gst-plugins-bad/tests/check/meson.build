@@ -35,6 +35,7 @@ base_tests = [
   [['elements/cudaconvert.c'], false, [gstgl_dep, gmodule_dep]],
   [['elements/cudafilter.c'], false, [gstgl_dep, gmodule_dep]],
   [['elements/d3d11colorconvert.c'], host_machine.system() != 'windows', ],
+  [['elements/fdkaac.c'], not fdkaac_dep.found(), ],
   [['elements/gdpdepay.c'], get_option('gdp').disabled()],
   [['elements/gdppay.c'], get_option('gdp').disabled()],
   [['elements/h263parse.c'], false, [libparser_dep, gstcodecparsers_dep]],
