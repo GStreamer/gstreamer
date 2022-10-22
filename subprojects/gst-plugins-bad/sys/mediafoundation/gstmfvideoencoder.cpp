@@ -1955,9 +1955,8 @@ gst_mf_video_encoder_register (GstPlugin * plugin, guint rank, GUID * subtype,
           gst_mf_video_encoder_enum (enum_flags, subtype, 0, &device_caps,
           device, &sink_template, &src_template);
 
-      /* No more MFT to enumerate */
       if (!transform)
-        break;
+        continue;
 
       /* Failed to open MFT */
       if (!sink_template) {
