@@ -28060,6 +28060,44 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
+    "xingmux": {
+        "description": "Add XING tags to mpeg audio files",
+        "elements": {
+            "xingmux": {
+                "author": "Christophe Fergeau <teuf@gnome.org>",
+                "description": "Adds a Xing header to the beginning of a VBR MP3 file",
+                "hierarchy": [
+                    "GstXingMux",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Formatter/Muxer/Metadata",
+                "long-name": "MP3 Xing muxer",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "audio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "audio/mpeg:\n    mpegversion: 1\n          layer: [ 1, 3 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "marginal"
+            }
+        },
+        "filename": "gstxingmux",
+        "license": "LGPL",
+        "other-types": {},
+        "package": "GStreamer Good Plug-ins",
+        "source": "gst-plugins-good",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "y4menc": {
         "description": "Encodes a YUV frame into the yuv4mpeg format (mjpegtools)",
         "elements": {

@@ -41,6 +41,7 @@ option('videofilter', type : 'feature', value : 'auto')
 option('videomixer', type : 'feature', value : 'auto')
 option('wavenc', type : 'feature', value : 'auto')
 option('wavparse', type : 'feature', value : 'auto')
+option('xingmux', type : 'feature', value : 'auto')
 option('y4m', type : 'feature', value : 'auto')
 
 # Feature options for plugins with external deps

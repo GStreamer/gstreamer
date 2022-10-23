@@ -6,7 +6,7 @@ foreach plugin : ['alpha', 'apetag', 'audiofx', 'audioparsers', 'auparse',
                   'monoscope', 'multifile', 'multipart', 'replaygain', 'rtp',
                   'rtpmanager', 'rtsp', 'shapewipe', 'smpte', 'spectrum',
                   'udp', 'videobox', 'videocrop', 'videofilter', 'videomixer',
-                  'wavenc', 'wavparse', 'y4m']
+                  'wavenc', 'wavparse', 'xingmux', 'y4m']
   if not get_option(plugin).disabled()
     subdir(plugin)
   endif

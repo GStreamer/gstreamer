@@ -75,6 +75,7 @@ good_tests = [
   [ 'pipelines/wavenc', get_option('wavenc').disabled()],
   [ 'elements/wavparse', get_option('wavparse').disabled(), [gstriff_dep] ],
   [ 'elements/wavpackparse', get_option('audioparsers').disabled()],
+  [ 'elements/xingmux', get_option('xingmux').disabled()],
   [ 'elements/y4menc', get_option('y4m').disabled()],
   [ 'pipelines/effectv', get_option('effectv').disabled()],
   [ 'elements/equalizer', get_option('equalizer').disabled()],

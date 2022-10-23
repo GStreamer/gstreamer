@@ -44,8 +44,8 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/mpeg, " "mpegversion = (int) 1," "layer = (int) 3")
     );
 
-GstElement *
-setup_xingmux ()
+static GstElement *
+setup_xingmux (void)
 {
   GstElement *xingmux;
   GstCaps *caps;
@@ -65,7 +65,7 @@ setup_xingmux ()
   return xingmux;
 }
 
-void
+static void
 cleanup_xingmux (GstElement * xingmux)
 {
   GST_DEBUG ("cleanup_xingmux");
@@ -139,7 +139,7 @@ GST_START_TEST (test_xing_remux)
 
 GST_END_TEST;
 
-Suite *
+static Suite *
 xingmux_suite (void)
 {
   Suite *s = suite_create ("xingmux");
