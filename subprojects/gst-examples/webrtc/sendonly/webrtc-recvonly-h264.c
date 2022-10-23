@@ -354,7 +354,7 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       RTP_PAYLOAD_TYPE
       ",clock-rate=90000,packetization-mode=(string)1, profile-level-id=(string)42c016");
   g_signal_emit_by_name (receiver_entry->webrtcbin, "add-transceiver",
-      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY, video_caps, NULL, &trans);
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY, video_caps, &trans);
   gst_caps_unref (video_caps);
   gst_object_unref (trans);
 
