@@ -80,6 +80,8 @@ struct _GstInputSelector {
   gboolean eos;
   gboolean eos_sent;
   gboolean flushing;
+
+  GstClockTime upstream_latency;
 };
 
 struct _GstInputSelectorClass {
