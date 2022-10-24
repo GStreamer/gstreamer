@@ -14,10 +14,7 @@ include:
   - local: '.gitlab-image-tags.yml'
 
 stages:
-  - 'trigger'
-  - 'build docker'
   - 'preparation'
-  - 'pre-build'
   - 'build'
   - 'test'
   # Use the resulting binaries
@@ -103,7 +100,7 @@ default:
 # This is an empty job that is used to trigger the pipeline.
 trigger:
   image: alpine:latest
-  stage: 'trigger'
+  stage: 'preparation'
   variables:
     GIT_STRATEGY: none
   script:
@@ -132,7 +129,7 @@ fedora amd64 docker:
   extends:
     - '.fedora image'
     - '.fdo.container-build@fedora'
-  stage: 'build docker'
+  stage: 'preparation'
   needs:
     - "trigger"
   tags:
@@ -150,12 +147,12 @@ gst-indent amd64 docker:
   extends:
     - '.gst-indent image'
     - '.fdo.container-build@debian'
-  stage: 'build docker'
+  stage: 'preparation'
   # Do not depend on the trigger, as we want to run indent always
   needs: []
 
 windows amd64 docker:
-  stage: "build docker"
+  stage: "preparation"
   needs:
     - "trigger"
   timeout: '3h'
