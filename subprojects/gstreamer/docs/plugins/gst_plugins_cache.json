@@ -1332,6 +1332,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "drop-backwards": {
+                        "blurb": "Drop backwards buffers on pad switch",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "n-pads": {
                         "blurb": "The number of sink pads",
                         "conditionally-available": false,

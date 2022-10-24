@@ -101,13 +101,15 @@ enum
   PROP_ACTIVE_PAD,
   PROP_SYNC_STREAMS,
   PROP_SYNC_MODE,
-  PROP_CACHE_BUFFERS
+  PROP_CACHE_BUFFERS,
+  PROP_DROP_BACKWARDS
 };
 
 #define DEFAULT_SYNC_STREAMS TRUE
 #define DEFAULT_SYNC_MODE GST_INPUT_SELECTOR_SYNC_MODE_ACTIVE_SEGMENT
 #define DEFAULT_CACHE_BUFFERS FALSE
 #define DEFAULT_PAD_ALWAYS_OK TRUE
+#define DEFAULT_DROP_BACKWARDS FALSE
 
 enum
 {
@@ -577,6 +579,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       gst_selector_pad_reset (selpad);
+      sel->last_output_ts = GST_CLOCK_TIME_NONE;
       break;
     case GST_EVENT_SEGMENT:
     {
@@ -1041,6 +1044,8 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   GstPad *active_sinkpad;
   GstPad *prev_active_sinkpad = NULL;
   GstSelectorPad *selpad;
+  GstSegment seg;
+  GstClockTime running_time = GST_CLOCK_TIME_NONE;
 
   sel = GST_INPUT_SELECTOR (parent);
   selpad = GST_SELECTOR_PAD_CAST (pad);
@@ -1165,7 +1170,25 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     prev_active_sinkpad = NULL;
   }
 
+  seg = selpad->segment;
+  if (seg.format == GST_FORMAT_TIME)
+    running_time =
+        gst_segment_to_running_time (&seg, GST_FORMAT_TIME,
+        GST_BUFFER_DTS_OR_PTS (buf));
+
   if (selpad->discont) {
+    GST_INPUT_SELECTOR_LOCK (sel);
+    if (sel->sync_streams && sel->drop_backwards
+        && GST_CLOCK_TIME_IS_VALID (running_time)) {
+      /* Just switched. Make sure timestamps don't go backwards */
+      if (running_time < sel->last_output_ts
+          && GST_CLOCK_TIME_IS_VALID (sel->last_output_ts)) {
+        GST_DEBUG_OBJECT (pad, "Discarding buffer %p with backwards timestamp",
+            buf);
+        goto ignore;
+      }
+    }
+    GST_INPUT_SELECTOR_UNLOCK (sel);
     buf = gst_buffer_make_writable (buf);
 
     GST_DEBUG_OBJECT (pad, "Marking discont buffer %p", buf);
@@ -1176,6 +1199,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   /* forward */
   GST_LOG_OBJECT (pad, "Forwarding buffer %p with timestamp %" GST_TIME_FORMAT,
       buf, GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
+  sel->last_output_ts = running_time;
 
   /* Only make the buffer read-only when necessary */
   if (sel->sync_streams && sel->cache_buffers)
@@ -1344,6 +1368,22 @@ gst_input_selector_class_init (GstInputSelectorClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_READY));
 
+  /**
+   * GstInputSelector:drop-backwards
+   *
+   * If set to %TRUE and GstInputSelector:sync-streams is also set to %TRUE,
+   * every time the input is switched, buffers that would go backwards related
+   * to the last output buffer pre-switch will be dropped.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_DROP_BACKWARDS,
+      g_param_spec_boolean ("drop-backwards", "Drop Backwards Buffers",
+          "Drop backwards buffers on pad switch",
+          DEFAULT_DROP_BACKWARDS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
   gst_element_class_set_static_metadata (gstelement_class, "Input selector",
       "Generic", "N-to-1 input stream selector",
       "Julien Moutte <julien@moutte.net>, "
@@ -1386,6 +1426,7 @@ gst_input_selector_init (GstInputSelector * sel)
   sel->eos = FALSE;
 
   sel->upstream_latency = 0;
+  sel->last_output_ts = GST_CLOCK_TIME_NONE;
 
   /* lets give a change for downstream to do something on
    * active-pad change before we start pushing new buffers */
@@ -1514,6 +1555,11 @@ gst_input_selector_set_property (GObject * object, guint prop_id,
       sel->cache_buffers = g_value_get_boolean (value);
       GST_INPUT_SELECTOR_UNLOCK (object);
       break;
+    case PROP_DROP_BACKWARDS:
+      GST_INPUT_SELECTOR_LOCK (object);
+      sel->drop_backwards = g_value_get_boolean (value);
+      GST_INPUT_SELECTOR_UNLOCK (object);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1560,6 +1606,11 @@ gst_input_selector_get_property (GObject * object, guint prop_id,
     case PROP_CACHE_BUFFERS:
       GST_INPUT_SELECTOR_LOCK (object);
       g_value_set_boolean (value, sel->cache_buffers);
+      GST_INPUT_SELECTOR_UNLOCK (object);
+      break;
+    case PROP_DROP_BACKWARDS:
+      GST_INPUT_SELECTOR_LOCK (object);
+      g_value_set_boolean (value, sel->drop_backwards);
       GST_INPUT_SELECTOR_UNLOCK (object);
       break;
     default:
@@ -1940,6 +1991,7 @@ gst_input_selector_reset (GstInputSelector * sel)
   }
   sel->have_group_id = TRUE;
   sel->upstream_latency = 0;
+  sel->last_output_ts = GST_CLOCK_TIME_NONE;
   GST_INPUT_SELECTOR_UNLOCK (sel);
 }
 

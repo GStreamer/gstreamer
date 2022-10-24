@@ -72,6 +72,7 @@ struct _GstInputSelector {
   gboolean sync_streams;
   GstInputSelectorSyncMode sync_mode;
   gboolean cache_buffers;
+  gboolean drop_backwards;
 
   gboolean have_group_id;
 
@@ -82,6 +83,7 @@ struct _GstInputSelector {
   gboolean flushing;
 
   GstClockTime upstream_latency;
+  GstClockTime last_output_ts;
 };
 
 struct _GstInputSelectorClass {
