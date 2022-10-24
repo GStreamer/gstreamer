@@ -22,6 +22,7 @@
 use {
     anyhow::{anyhow, bail, Context},
     async_tungstenite::{gio::connect_async, tungstenite},
+    clap::Parser,
     futures::channel::mpsc,
     futures::sink::{Sink, SinkExt},
     futures::stream::{Stream, StreamExt},
@@ -33,7 +34,6 @@ use {
     serde_json::json,
     std::sync::{Arc, Mutex, Weak},
     std::time::Duration,
-    structopt::StructOpt,
     tungstenite::Message as WsMessage,
 };
 
@@ -51,7 +51,7 @@ macro_rules! upgrade_weak {
     };
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct VideoParameter {
     encoder: &'static str,
     encoding_name: &'static str,
@@ -85,15 +85,15 @@ impl std::str::FromStr for VideoParameter {
     }
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Parser)]
 pub struct Args {
-    #[structopt(short, long, default_value = "wss://janus.conf.meetecho.com/ws:8989")]
+    #[clap(short, long, default_value = "wss://janus.conf.meetecho.com/ws:8989")]
     server: String,
-    #[structopt(short, long, default_value = "1234")]
+    #[clap(short, long, default_value = "1234")]
     room_id: u32,
-    #[structopt(short, long, default_value = "1234")]
+    #[clap(short, long, default_value = "1234")]
     feed_id: u32,
-    #[structopt(short, long, default_value = "vp8")]
+    #[clap(short, long, default_value = "vp8")]
     webrtc_video_codec: VideoParameter,
 }
 
@@ -407,7 +407,7 @@ pub struct JanusGateway {
 
 impl JanusGateway {
     pub async fn new(pipeline: gst::Bin) -> Result<Self, anyhow::Error> {
-        let args = Args::from_args();
+        let args = Args::parse();
         let request = Request::builder()
             .uri(&args.server)
             .header("Sec-WebSocket-Protocol", "janus-protocol")

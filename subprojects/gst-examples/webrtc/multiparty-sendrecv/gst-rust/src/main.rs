@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex, Weak};
 
 use rand::prelude::*;
 
-use structopt::StructOpt;
+use clap::Parser;
 
 use async_std::prelude::*;
 use async_std::task;
@@ -45,11 +45,11 @@ macro_rules! upgrade_weak {
     };
 }
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, clap::Parser)]
 struct Args {
-    #[structopt(short, long, default_value = "wss://webrtc.nirbheek.in:8443")]
+    #[clap(short, long, default_value = "wss://webrtc.nirbheek.in:8443")]
     server: String,
-    #[structopt(short, long)]
+    #[clap(short, long)]
     room_id: u32,
 }
 
@@ -989,7 +989,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
     check_plugins()?;
 
-    let args = Args::from_args();
+    let args = Args::parse();
 
     // Connect to the given server
     let (mut ws, _) = async_tungstenite::async_std::connect_async(&args.server).await?;
