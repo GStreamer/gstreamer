@@ -289,6 +289,7 @@ gst indent:
     - '.fdo.suffixed-image@fedora'
     - '.build'
   needs:
+    - "trigger"
     - "fedora amd64 docker"
   variables:
     MESON_ARGS: *simple_build
@@ -299,6 +300,7 @@ build fedora x86_64:
     - '.fdo.suffixed-image@fedora'
     - '.build fedora x86_64'
   needs:
+    - "trigger"
     - "fedora amd64 docker"
   script:
     - *build
@@ -313,6 +315,7 @@ build nodebug fedora x86_64:
     - '.fdo.suffixed-image@fedora'
     - '.build'
   needs:
+    - "trigger"
     - "fedora amd64 docker"
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dsharp=enabled -Dgstreamer:gst_debug=false -Domx=enabled -Dgst-omx:target=generic ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
@@ -331,6 +334,7 @@ build clang fedora x86_64:
     - 'windows'
     - '2022'
   needs:
+    - "trigger"
     - "windows amd64 docker"
   timeout: '45min'
   variables:
@@ -493,6 +497,7 @@ build msys2 :
     - '.fdo.suffixed-image@fedora'
     - '.test'
   needs:
+    - "trigger"
     - "fedora amd64 docker"
   tags: ['gstreamer']
 
@@ -697,6 +702,7 @@ documentation:
   extends:
     - '.documentation'
   needs:
+    - "trigger"
     - "fedora amd64 docker"
   rules:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == "main"'
@@ -710,6 +716,7 @@ build documentation:
     - '.documentation'
   stage: build
   needs:
+    - "trigger"
     - "fedora amd64 docker"
   rules:
     # Never run post merge, we have the `documentation` always running for that
@@ -743,6 +750,7 @@ cerbero trigger:
     - '.fedora image'
     - '.fdo.suffixed-image@fedora'
   needs:
+    - "trigger"
     - "fedora amd64 docker"
   script:
     - ci/gitlab/trigger_cerbero_pipeline.py
