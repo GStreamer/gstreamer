@@ -279,6 +279,10 @@ void
 gst_hls_media_playlist_recalculate_stream_time (GstHLSMediaPlaylist *playlist,
 						GstM3U8MediaSegment *anchor);
 
+void
+gst_hls_media_playlist_recalculate_stream_time_from_part (GstHLSMediaPlaylist *playlist,
+						GstM3U8MediaSegment *anchor, guint part_idx);
+
 GstM3U8MediaSegment *
 gst_hls_media_playlist_sync_to_segment      (GstHLSMediaPlaylist * m3u8,
 					     GstM3U8MediaSegment * segment);

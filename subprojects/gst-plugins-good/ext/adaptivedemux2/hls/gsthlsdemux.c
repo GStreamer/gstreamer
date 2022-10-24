@@ -1383,23 +1383,41 @@ gst_hlsdemux_handle_internal_time (GstHLSDemux * demux,
       GST_STIME_ARGS (real_stream_time), GST_STIME_ARGS (difference));
 
   if (ABS (difference) > 10 * GST_MSECOND) {
-    /* FIXME: LL-HLS could recalculate stream times on parts.
-     * For now, only do it at the first part in a segment */
-    if (!hls_stream->in_partial_segments || hls_stream->part_idx == 0) {
-      /* Update the value */
-      GST_DEBUG_OBJECT (hls_stream,
-          "Updating current stream time to %" GST_STIME_FORMAT,
-          GST_STIME_ARGS (real_stream_time));
-      current_segment->stream_time = real_stream_time;
+    GstClockTimeDiff wrong_position_threshold =
+        hls_stream->current_segment->duration / 2;
 
+    /* Update the value */
+    GST_DEBUG_OBJECT (hls_stream,
+        "Updating current stream time to %" GST_STIME_FORMAT,
+        GST_STIME_ARGS (real_stream_time));
+
+    /* For LL-HLS, make sure to update and recalculate stream time from
+     * the right partial segment if playing one */
+    if (hls_stream->in_partial_segments && hls_stream->part_idx != 0) {
+      if (current_segment->partial_segments
+          && hls_stream->part_idx < current_segment->partial_segments->len) {
+        GstM3U8PartialSegment *part =
+            g_ptr_array_index (current_segment->partial_segments,
+            hls_stream->part_idx);
+        part->stream_time = real_stream_time;
+
+        gst_hls_media_playlist_recalculate_stream_time_from_part
+            (hls_stream->playlist, hls_stream->current_segment,
+            hls_stream->part_idx);
+
+        /* When playing partial segments, the "Wrong position" threshold should be
+         * half the part duration */
+        wrong_position_threshold = part->duration / 2;
+      }
+    } else {
+      /* Aligned to the start of the segment, update there */
+      current_segment->stream_time = real_stream_time;
       gst_hls_media_playlist_recalculate_stream_time (hls_stream->playlist,
           hls_stream->current_segment);
-      gst_hls_media_playlist_dump (hls_stream->playlist);
     }
+    gst_hls_media_playlist_dump (hls_stream->playlist);
 
-    /* FIXME: When playing partial segments, the threshold should be
-     * half the part duration */
-    if (ABS (difference) > (hls_stream->current_segment->duration / 2)) {
+    if (ABS (difference) > wrong_position_threshold) {
       GstAdaptiveDemux2Stream *stream = (GstAdaptiveDemux2Stream *) hls_stream;
       GstM3U8SeekResult seek_result;
 

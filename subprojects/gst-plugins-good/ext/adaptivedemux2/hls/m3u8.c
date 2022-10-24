@@ -1667,6 +1667,35 @@ gst_hls_media_playlist_recalculate_stream_time (GstHLSMediaPlaylist * playlist,
   }
 }
 
+void
+gst_hls_media_playlist_recalculate_stream_time_from_part (GstHLSMediaPlaylist *
+    playlist, GstM3U8MediaSegment * anchor, guint part_idx)
+{
+  g_assert (anchor->partial_segments != NULL
+      && part_idx < anchor->partial_segments->len);
+
+  GstClockTimeDiff last_stream_time;
+  GstM3U8PartialSegment *part =
+      g_ptr_array_index (anchor->partial_segments, part_idx);
+  GstM3U8PartialSegment *cand, *prev;
+  gint iter;
+
+  /* Work backward from the target partial segment, assigning stream times until
+   * we update the segment time itself, then recalculate all stream times */
+  prev = part;
+  last_stream_time = part->stream_time;
+  for (iter = part_idx - 1; iter >= 0; iter--) {
+    cand = g_ptr_array_index (anchor->partial_segments, iter);
+    last_stream_time = cand->stream_time = prev->stream_time - cand->duration;
+    GST_DEBUG ("Backward partial segment iter %d %" GST_STIME_FORMAT, iter,
+        GST_STIME_ARGS (cand->stream_time));
+    prev = cand;
+  }
+  anchor->stream_time = last_stream_time;
+
+  gst_hls_media_playlist_recalculate_stream_time (playlist, anchor);
+}
+
 /* If a segment with the same URI, size, offset, SN and DSN is present in the
  * playlist, returns that one */
 static GstM3U8MediaSegment *
