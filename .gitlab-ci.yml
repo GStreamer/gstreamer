@@ -130,8 +130,7 @@ fedora amd64 docker:
     - '.fedora image'
     - '.fdo.container-build@fedora'
   stage: 'preparation'
-  needs:
-    - "trigger"
+  needs: []
   tags:
     - 'packet.net'
 
@@ -702,7 +701,6 @@ documentation:
   extends:
     - '.documentation'
   needs:
-    - "trigger"
     - "fedora amd64 docker"
   rules:
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == "main"'
