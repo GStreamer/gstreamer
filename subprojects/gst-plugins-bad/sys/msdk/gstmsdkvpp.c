@@ -110,7 +110,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, \
       SUPPORTED_DMABUF_FORMAT) ";"
 #define VA_SINK_CAPS_STR \
-  GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE (SUPPORTED_VA_FORMAT)
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", SUPPORTED_VA_FORMAT)
 #else
 #define DMABUF_SINK_CAPS_STR ""
 #define VA_SINK_CAPS_STR ""
@@ -121,7 +121,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, \
       SRC_DMABUF_FORMAT) ";"
 #define VA_SRC_CAPS_STR \
-  GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE (SUPPORTED_VA_FORMAT)
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", SUPPORTED_VA_FORMAT)
 #else
 #define DMABUF_SRC_CAPS_STR ""
 #define VA_SRC_CAPS_STR ""
@@ -1389,20 +1389,20 @@ gst_msdkvpp_fixate_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "fixated to %" GST_PTR_FORMAT, result);
   gst_caps_unref (othercaps);
 
-  /* We let msdkvpp srcpad first query if downstream has dmabuf type caps,
-   * if not, will check the type of va memory.
+  /* We let msdkvpp srcpad first query if downstream has va memory type caps,
+   * if not, will check the type of dma memory.
    */
 #ifndef _WIN32
-  if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_DMABUF,
-          direction == GST_PAD_SRC ? GST_PAD_SINK : GST_PAD_SRC, result)) {
-    gst_caps_set_features (result, 0,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
-    *use_dmabuf = TRUE;
-  } else if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_VA,
+  if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_VA,
           direction == GST_PAD_SRC ? GST_PAD_SINK : GST_PAD_SRC, result)) {
     gst_caps_set_features (result, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VA, NULL));
     *use_va = TRUE;
+  } else if (pad_accept_memory (thiz, GST_CAPS_FEATURE_MEMORY_DMABUF,
+          direction == GST_PAD_SRC ? GST_PAD_SINK : GST_PAD_SRC, result)) {
+    gst_caps_set_features (result, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_DMABUF, NULL));
+    *use_dmabuf = TRUE;
   }
 #endif
 
