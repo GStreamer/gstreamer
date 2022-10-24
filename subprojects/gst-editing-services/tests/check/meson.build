@@ -75,7 +75,7 @@ foreach t : ges_tests
   endif
 endforeach
 
-if gstvalidate_dep.found()
+if gstvalidate_dep.found() and not get_option('tools').disabled()
   # filename: is .validatetest
   scenarios = {
     'check_video_track_restriction_scale': false,
