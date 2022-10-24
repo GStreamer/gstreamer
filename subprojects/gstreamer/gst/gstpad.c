@@ -5507,8 +5507,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
           GST_PAD_PROBE_TYPE_BLOCK, event, probe_stopped);
       /* recheck sticky events because the probe might have cause a relink */
       if (GST_PAD_HAS_PENDING_EVENTS (pad) && GST_PAD_IS_SRC (pad)
-          && (GST_EVENT_IS_SERIALIZED (event)
-              || GST_EVENT_IS_STICKY (event))) {
+          && (GST_EVENT_IS_SERIALIZED (event))) {
         PushStickyData data = { GST_FLOW_OK, FALSE, event };
         GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
@@ -5525,8 +5524,7 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
 
   /* recheck sticky events because the probe might have cause a relink */
   if (GST_PAD_HAS_PENDING_EVENTS (pad) && GST_PAD_IS_SRC (pad)
-      && (GST_EVENT_IS_SERIALIZED (event)
-          || GST_EVENT_IS_STICKY (event))) {
+      && (GST_EVENT_IS_SERIALIZED (event))) {
     PushStickyData data = { GST_FLOW_OK, FALSE, event };
     GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PENDING_EVENTS);
 
@@ -5684,15 +5682,17 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
         break;
     }
   }
-  if (GST_PAD_IS_SRC (pad) && (serialized || sticky)) {
-    /* all serialized or sticky events on the srcpad trigger push of
-     * sticky events */
+  if (GST_PAD_IS_SRC (pad) && serialized) {
+    /* All serialized events on the srcpad trigger push of sticky events.
+     *
+     * Note that we do not do this for non-serialized sticky events since it
+     * could potentially block. */
     res = (check_sticky (pad, event) == GST_FLOW_OK);
   }
-  if (!sticky) {
+  if (!serialized || !sticky) {
     GstFlowReturn ret;
 
-    /* other events are pushed right away */
+    /* non-serialized and non-sticky events are pushed right away. */
     ret = gst_pad_push_event_unchecked (pad, event, type);
     /* dropped events by a probe are not an error */
     res = (ret == GST_FLOW_OK || ret == GST_FLOW_CUSTOM_SUCCESS
