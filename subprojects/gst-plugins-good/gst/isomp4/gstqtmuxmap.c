@@ -236,7 +236,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
         GST_STATIC_CAPS (MPEG4V_CAPS "; " H264_CAPS ";" H265_CAPS ";"
             "video/x-mp4-part," COMMON_VIDEO_CAPS "; "
             "video/x-av1, " "alignment = (string) \"tu\", "
-            COMMON_VIDEO_CAPS ";"),
+            COMMON_VIDEO_CAPS "; " VP9_CAPS "; "),
         GST_STATIC_CAPS (MP123_CAPS "; "
             AAC_CAPS " ; " AC3_CAPS " ; " ALAC_CAPS " ; " OPUS_CAPS),
         GST_STATIC_CAPS (TEXT_UTF8),
