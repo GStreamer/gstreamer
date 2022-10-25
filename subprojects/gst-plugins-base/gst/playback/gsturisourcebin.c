@@ -2162,49 +2162,39 @@ free_output_slot_async (GstURISourceBin * urisrc, OutputSlotInfo * slot)
 }
 
 static void
+unexpose_raw_pad_func (const GValue * item, GstURISourceBin * urisrc)
+{
+  GstPad *pad = g_value_get_object (item);
+  ChildSrcPadInfo *info =
+      g_object_get_data (G_OBJECT (pad), "urisourcebin.srcpadinfo");
+
+  if (info && info->output_pad != NULL)
+    remove_output_pad (urisrc, info->output_pad);
+}
+
+static void
 unexpose_src_pads (GstURISourceBin * urisrc, GstElement * element)
 {
   GstIterator *pads_iter;
-  GValue item = { 0, };
-  gboolean done = FALSE;
 
   pads_iter = gst_element_iterate_src_pads (element);
-  while (!done) {
-    switch (gst_iterator_next (pads_iter, &item)) {
-      case GST_ITERATOR_ERROR:
-        /* FALLTHROUGH */
-      case GST_ITERATOR_DONE:
-        done = TRUE;
-        break;
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (pads_iter);
-        break;
-      case GST_ITERATOR_OK:
-      {
-        ChildSrcPadInfo *info;
-        GstPad *pad = g_value_get_object (&item);
-
-        if (!(info =
-                g_object_get_data (G_OBJECT (pad), "urisourcebin.srcpadinfo")))
-          break;
-
-        if (info->output_pad != NULL)
-          remove_output_pad (urisrc, info->output_pad);
-
-        g_value_reset (&item);
-        break;
-      }
-    }
-  }
-  g_value_unset (&item);
+  gst_iterator_foreach (pads_iter,
+      (GstIteratorForeachFunction) unexpose_raw_pad_func, urisrc);
   gst_iterator_free (pads_iter);
+}
+
+static void
+remove_typefind (GstElement * typefind, GstURISourceBin * urisrc)
+{
+  unexpose_src_pads (urisrc, typefind);
+  gst_element_set_state (typefind, GST_STATE_NULL);
+  gst_bin_remove (GST_BIN_CAST (urisrc), typefind);
 }
 
 /* remove source and all related elements */
 static void
 remove_source (GstURISourceBin * urisrc)
 {
-
   if (urisrc->source) {
     GstElement *source = urisrc->source;
 
@@ -2221,17 +2211,8 @@ remove_source (GstURISourceBin * urisrc)
   }
 
   if (urisrc->typefinds) {
-    GList *iter, *next;
-    GST_DEBUG_OBJECT (urisrc, "removing old typefind element");
-    for (iter = urisrc->typefinds; iter; iter = next) {
-      GstElement *typefind = iter->data;
-
-      next = g_list_next (iter);
-
-      unexpose_src_pads (urisrc, typefind);
-      gst_element_set_state (typefind, GST_STATE_NULL);
-      gst_bin_remove (GST_BIN_CAST (urisrc), typefind);
-    }
+    GST_DEBUG_OBJECT (urisrc, "removing old typefind elements");
+    g_list_foreach (urisrc->typefinds, (GFunc) remove_typefind, urisrc);
     g_list_free (urisrc->typefinds);
     urisrc->typefinds = NULL;
   }
