@@ -469,6 +469,14 @@ gst_alpha_combine_set_alpha_format (GstAlphaCombine * self, GstCaps * caps)
   return TRUE;
 }
 
+static void
+gst_alpha_combine_handle_gap (GstAlphaCombine * self)
+{
+  GstBuffer *gap_buffer = gst_buffer_new ();
+  GST_BUFFER_FLAG_SET (gap_buffer, GST_BUFFER_FLAG_GAP);
+  gst_alpha_combine_push_alpha_buffer (self, gap_buffer);
+}
+
 static gboolean
 gst_alpha_combine_sink_event (GstPad * pad, GstObject * object,
     GstEvent * event)
@@ -519,6 +527,12 @@ gst_alpha_combine_alpha_event (GstPad * pad, GstObject * object,
       GstCaps *caps;
       gst_event_parse_caps (event, &caps);
       gst_alpha_combine_set_alpha_format (self, caps);
+      break;
+    }
+    case GST_EVENT_GAP:
+    {
+      gst_alpha_combine_handle_gap (self);
+      break;
     }
     default:
       break;
