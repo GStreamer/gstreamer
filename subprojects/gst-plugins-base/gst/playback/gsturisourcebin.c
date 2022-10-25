@@ -1526,10 +1526,20 @@ gen_source_element (GstURISourceBin * urisrc)
   }
   gst_query_unref (query);
 
-  GST_LOG_OBJECT (urisrc, "source is stream: %d", urisrc->is_stream);
-
-
   source_class = G_OBJECT_GET_CLASS (source);
+
+  if (urisrc->is_stream) {
+    /* Live sources are not streamable */
+    pspec = g_object_class_find_property (source_class, "is-live");
+    if (pspec && G_PARAM_SPEC_VALUE_TYPE (pspec) == G_TYPE_BOOLEAN) {
+      gboolean is_live;
+      g_object_get (G_OBJECT (source), "is-live", &is_live, NULL);
+      if (is_live)
+        urisrc->is_stream = FALSE;
+    }
+  }
+
+  GST_LOG_OBJECT (urisrc, "source is stream: %d", urisrc->is_stream);
 
   pspec = g_object_class_find_property (source_class, "connection-speed");
   if (pspec != NULL) {
@@ -2254,23 +2264,6 @@ source_new_pad (GstElement * element, GstPad * pad, GstURISourceBin * urisrc)
   }
 }
 
-static gboolean
-is_live_source (GstElement * source)
-{
-  GObjectClass *source_class = NULL;
-  gboolean is_live = FALSE;
-  GParamSpec *pspec;
-
-  source_class = G_OBJECT_GET_CLASS (source);
-  pspec = g_object_class_find_property (source_class, "is-live");
-  if (!pspec || G_PARAM_SPEC_VALUE_TYPE (pspec) != G_TYPE_BOOLEAN)
-    return FALSE;
-
-  g_object_get (G_OBJECT (source), "is-live", &is_live, NULL);
-
-  return is_live;
-}
-
 /* construct and run the source and demuxer elements until we found
  * all the streams or until a preroll queue has been filled.
 */
@@ -2297,9 +2290,6 @@ setup_source (GstURISourceBin * urisrc)
 
   g_signal_emit (urisrc, gst_uri_source_bin_signals[SIGNAL_SOURCE_SETUP],
       0, urisrc->source);
-
-  if (is_live_source (urisrc->source))
-    urisrc->is_stream = FALSE;
 
   /* see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
