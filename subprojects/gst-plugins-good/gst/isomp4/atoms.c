@@ -5766,3 +5766,50 @@ build_uuid_xmp_atom (GstBuffer * xmp_data)
   return build_atom_info_wrapper ((Atom *) uuid, atom_uuid_copy_data,
       atom_uuid_free);
 }
+
+/* https://www.webmproject.org/vp9/mp4/#vp-codec-configuration-box */
+AtomInfo *
+build_vpcC_extension (guint8 profile, guint8 level, guint8 bit_depth,
+    guint8 chroma_subsampling, gboolean video_full_range,
+    guint8 colour_primaries, guint8 transfer_characteristics,
+    guint8 matrix_coefficients)
+{
+  AtomData *atom_data;
+  guint8 *data_block;
+  guint data_block_len;
+  GstByteWriter bw;
+  gboolean hdl = TRUE;
+  guint8 val = 0;
+
+  gst_byte_writer_init (&bw);
+  /* version, always 1 */
+  hdl &= gst_byte_writer_put_uint8 (&bw, 1);
+  /* flags of 24 bits */
+  hdl &= gst_byte_writer_put_uint8 (&bw, 0);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 0);
+  hdl &= gst_byte_writer_put_uint8 (&bw, 0);
+  hdl &= gst_byte_writer_put_uint8 (&bw, profile);
+  hdl &= gst_byte_writer_put_uint8 (&bw, level);
+  val |= (bit_depth & 0xF) << 4;
+  val |= (chroma_subsampling & 0x3) << 1;
+  val |= !(!video_full_range);
+  hdl &= gst_byte_writer_put_uint8 (&bw, val);
+  hdl &= gst_byte_writer_put_uint8 (&bw, colour_primaries);
+  hdl &= gst_byte_writer_put_uint8 (&bw, transfer_characteristics);
+  hdl &= gst_byte_writer_put_uint8 (&bw, matrix_coefficients);
+  /* codec initialization data, currently unused */
+  hdl &= gst_byte_writer_put_uint16_le (&bw, 0);
+
+  if (!hdl) {
+    GST_WARNING ("error creating header");
+    return NULL;
+  }
+
+  data_block_len = gst_byte_writer_get_size (&bw);
+  data_block = gst_byte_writer_reset_and_get_data (&bw);
+  atom_data = atom_data_new_from_data (FOURCC_vpcC, data_block, data_block_len);
+  g_free (data_block);
+
+  return build_atom_info_wrapper ((Atom *) atom_data, atom_data_copy_data,
+      atom_data_free);
+}

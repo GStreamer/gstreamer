@@ -93,6 +93,12 @@
   "svqversion = (int) 3, " \
   COMMON_VIDEO_CAPS
 
+#define VP9_CAPS \
+  "video/x-vp9, " \
+  "profile = (string) { 0, 1, 2, 3 }, " \
+  "chroma-format = (string) { 4:2:0, 4:2:2, 4:4:4 }, " \
+  COMMON_VIDEO_CAPS
+
 #define COMMON_AUDIO_CAPS(c, r) \
   "channels = (int) [ 1, " G_STRINGIFY (c) " ], " \
   "rate = (int) [ 1, " G_STRINGIFY (r) " ]"
@@ -201,8 +207,7 @@ GstQTMuxFormatProp gst_qt_mux_format_list[] = {
             COMMON_VIDEO_CAPS_NO_FRAMERATE "; "
             "video/x-vp8, "
             COMMON_VIDEO_CAPS "; "
-            "video/x-vp9, "
-            COMMON_VIDEO_CAPS "; "
+            VP9_CAPS "; "
             "video/x-dirac, "
             COMMON_VIDEO_CAPS "; " "video/x-qt-part, " COMMON_VIDEO_CAPS "; "
             "video/x-av1, " "alignment = (string) \"tu\", "

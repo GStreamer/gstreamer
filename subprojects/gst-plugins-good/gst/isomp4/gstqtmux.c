@@ -6484,7 +6484,66 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
   } else if (strcmp (mimetype, "video/x-vp8") == 0) {
     entry.fourcc = FOURCC_vp08;
   } else if (strcmp (mimetype, "video/x-vp9") == 0) {
+    const char *profile_str, *chroma_format_str, *colorimetry_str;
+    guint bitdepth_luma, bitdepth_chroma;
+    guint8 profile = -1, chroma_format = -1;
+    gboolean video_full_range;
+    GstVideoColorimetry cinfo = { 0, };
+
     entry.fourcc = FOURCC_vp09;
+
+    profile_str = gst_structure_get_string (structure, "profile");
+    if (g_strcmp0 (profile_str, "0") == 0) {
+      profile = 0;
+    } else if (g_strcmp0 (profile_str, "1") == 0) {
+      profile = 1;
+    } else if (g_strcmp0 (profile_str, "2") == 0) {
+      profile = 2;
+    } else if (g_strcmp0 (profile_str, "3") == 0) {
+      profile = 3;
+    }
+
+    colorimetry_str = gst_structure_get_string (structure, "colorimetry");
+    gst_video_colorimetry_from_string (&cinfo, colorimetry_str);
+    video_full_range = cinfo.range == GST_VIDEO_COLOR_RANGE_0_255;
+
+    chroma_format_str = gst_structure_get_string (structure, "chroma-format");
+    if (g_strcmp0 (chroma_format_str, "4:2:0") == 0) {
+      const char *chroma_site_str;
+      GstVideoChromaSite chroma_site;
+
+      chroma_site_str = gst_structure_get_string (structure, "chroma-site");
+      chroma_site = gst_video_chroma_site_from_string (chroma_site_str);
+      if (chroma_site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
+        chroma_format = 0;
+      } else if (chroma_site == GST_VIDEO_CHROMA_SITE_COSITED) {
+        chroma_format = 1;
+      } else {
+        chroma_format = 1;
+      }
+    } else if (g_strcmp0 (chroma_format_str, "4:2:2") == 0) {
+      chroma_format = 2;
+    } else if (g_strcmp0 (chroma_format_str, "4:4:4") == 0) {
+      chroma_format = 3;
+    }
+
+    gst_structure_get (structure, "bit-depth-luma", G_TYPE_UINT,
+        &bitdepth_luma, "bit-depth-chroma", G_TYPE_UINT, &bitdepth_chroma,
+        NULL);
+
+    if (profile == 0xFF || chroma_format == 0xFF
+        || bitdepth_luma != bitdepth_chroma || bitdepth_luma == 0) {
+      GST_WARNING_OBJECT (qtmux, "cannot construct vpcC atom from "
+          "incomplete caps");
+    } else {
+      ext_atom = build_vpcC_extension (profile, /* XXX: level */ 10,
+          bitdepth_luma, chroma_format, video_full_range,
+          gst_video_color_primaries_to_iso (cinfo.primaries),
+          gst_video_transfer_function_to_iso (cinfo.transfer),
+          gst_video_color_matrix_to_iso (cinfo.matrix));
+      if (ext_atom)
+        ext_atom_list = g_list_append (ext_atom_list, ext_atom);
+    }
   } else if (strcmp (mimetype, "video/x-dirac") == 0) {
     entry.fourcc = FOURCC_drac;
   } else if (strcmp (mimetype, "video/x-qt-part") == 0) {
