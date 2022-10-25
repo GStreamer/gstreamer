@@ -90,35 +90,46 @@ typedef struct _OutputSlotInfo OutputSlotInfo;
     g_mutex_unlock (&GST_URI_SOURCE_BIN_CAST(ubin)->buffering_lock);		\
 } G_STMT_END
 
-/* Track a source pad from a child that
- * is linked or needs linking to an output
- * slot, or source pads that are directly
- * exposed as ghost pads */
+/* Track a source pad from a child (source, typefind, demuxer) that is linked or
+ * needs linking to an output slot, or source pads that are directly exposed as
+ * ghost pads */
 struct _ChildSrcPadInfo
 {
+  /* Source pad this info is attached to (not reffed, since the pad owns the
+   * ChildSrcPadInfo as qdata) */
+  GstPad *src_pad;
+
+  /* The output GhostPad if this info is for a directly exposed pad (raw or
+   * not), rather than linked through a slot. */
+  GstPad *output_pad;
+
+  /* Configured output slot, if any buffering/download is required */
+  OutputSlotInfo *output_slot;
+
+  /* ADAPTIVE DEMUXER SPECIFIC */
   guint blocking_probe_id;
   guint event_probe_id;
 
-  /* Source pad this info is attached to (not reffed, since
-   * the pad owns the ChildSrcPadInfo as qdata */
-  GstPad *src_pad;
-  GstCaps *cur_caps;            /* holds ref */
-  GstPad *ghost_pad;            /* ghostpad if any */
+  /* Current caps of the adaptive demuxer source pad. Used to link new pending
+   * pads to a compatible (old) output slot.
+   *
+   * NOTE : This will eventually go away once only streams-aware elements are
+   * allowed within urisourcebin
+   */
+  GstCaps *cur_caps;
 
-  /* Configured output slot, if any */
-  OutputSlotInfo *output_slot;
-
-  /* If this info is for a directly exposed pad,
-   * rather than linked through a slot it's here: */
-  GstPad *output_pad;
 };
 
+/* Output Slot:
+ *
+ * Buffered output
+ */
 struct _OutputSlotInfo
 {
   ChildSrcPadInfo *linked_info; /* demux source pad info feeding this slot, if any */
   GstElement *queue;            /* queue2 or downloadbuffer */
-  GstPad *sinkpad;              /* Sink pad of the queue eleemnt */
-  GstPad *srcpad;               /* Output ghost pad */
+  GstPad *queue_sinkpad;        /* Sink pad of the queue eleemnt */
+  GstPad *output_pad;           /* Output ghost pad */
   gboolean is_eos;              /* Did EOS get fed into the buffering element */
 
   gulong bitrate_changed_id;    /* queue bitrate changed notification */
@@ -663,11 +674,11 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
   /* If the demuxer handles buffering and is streams-aware, we can expose it
      as-is directly. We still add an event probe to deal with EOS */
   if (urisrc->demuxer_handles_buffering && urisrc->source_streams_aware) {
-    info->ghost_pad = create_output_pad (urisrc, pad);
+    info->output_pad = gst_object_ref (create_output_pad (urisrc, pad));
     GST_DEBUG_OBJECT (element,
         "New streams-aware demuxer pad %s:%s , exposing directly",
         GST_DEBUG_PAD_NAME (pad));
-    expose_output_pad (urisrc, info->ghost_pad);
+    expose_output_pad (urisrc, info->output_pad);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
   } else {
     GST_DEBUG_OBJECT (element, "new demuxer pad, name: <%s>. "
@@ -720,9 +731,10 @@ pending_pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   /* If the demuxer handles buffering, we can expose it as-is */
   if (urisrc->demuxer_handles_buffering) {
-    GstPad *ghostpad = create_output_pad (urisrc, pad);
+    g_assert (child_info->output_pad == NULL);
+    child_info->output_pad = gst_object_ref (create_output_pad (urisrc, pad));
     GST_DEBUG_OBJECT (pad, "Demuxer handles buffering, exposing as-is");
-    expose_output_pad (urisrc, ghostpad);
+    expose_output_pad (urisrc, child_info->output_pad);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     goto done;
   }
@@ -745,9 +757,9 @@ pending_pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   child_info->output_slot = slot;
   slot->linked_info = child_info;
-  gst_pad_link (pad, slot->sinkpad);
+  gst_pad_link (pad, slot->queue_sinkpad);
 
-  output_pad = gst_object_ref (slot->srcpad);
+  output_pad = gst_object_ref (slot->output_pad);
 
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
@@ -771,7 +783,7 @@ link_pending_pad_to_output (GstURISourceBin * urisrc, OutputSlotInfo * slot)
   GstCaps *cur_caps;
 
   /* Look for a suitable pending pad */
-  cur_caps = gst_pad_get_current_caps (slot->sinkpad);
+  cur_caps = gst_pad_get_current_caps (slot->queue_sinkpad);
 
   GST_DEBUG_OBJECT (urisrc,
       "Looking for a pending pad with caps %" GST_PTR_FORMAT, cur_caps);
@@ -800,19 +812,20 @@ link_pending_pad_to_output (GstURISourceBin * urisrc, OutputSlotInfo * slot)
 
   if (out_info) {
     /* Block any upstream stuff while we switch out the pad */
-    guint block_id =
-        gst_pad_add_probe (slot->sinkpad, GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM,
+    guint block_id = gst_pad_add_probe (slot->queue_sinkpad,
+        GST_PAD_PROBE_TYPE_BLOCK_UPSTREAM,
         NULL, NULL, NULL);
     GST_DEBUG_OBJECT (urisrc, "Linking pending pad %" GST_PTR_FORMAT
         " to existing output slot %p", out_info->src_pad, slot);
 
     if (in_info) {
-      gst_pad_unlink (in_info->src_pad, slot->sinkpad);
+      gst_pad_unlink (in_info->src_pad, slot->queue_sinkpad);
       in_info->output_slot = NULL;
       slot->linked_info = NULL;
     }
 
-    if (gst_pad_link (out_info->src_pad, slot->sinkpad) == GST_PAD_LINK_OK) {
+    if (gst_pad_link (out_info->src_pad,
+            slot->queue_sinkpad) == GST_PAD_LINK_OK) {
       out_info->output_slot = slot;
       slot->linked_info = out_info;
 
@@ -828,7 +841,7 @@ link_pending_pad_to_output (GstURISourceBin * urisrc, OutputSlotInfo * slot)
       GST_ERROR_OBJECT (urisrc,
           "Failed to link new demuxer pad to the output slot we tried");
     }
-    gst_pad_remove_probe (slot->sinkpad, block_id);
+    gst_pad_remove_probe (slot->queue_sinkpad, block_id);
   }
 
   return res;
@@ -1095,7 +1108,7 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
     for (cur = urisrc->out_slots; cur != NULL; cur = g_slist_next (cur)) {
       slot = (OutputSlotInfo *) (cur->data);
       if (slot->linked_info == NULL) {
-        cur_caps = gst_pad_get_current_caps (slot->sinkpad);
+        cur_caps = gst_pad_get_current_caps (slot->queue_sinkpad);
         if (cur_caps == NULL || gst_caps_is_equal (caps, cur_caps)) {
           GST_LOG_OBJECT (urisrc, "Found existing slot %p to link to", slot);
           gst_caps_unref (cur_caps);
@@ -1191,13 +1204,13 @@ get_output_slot (GstURISourceBin * urisrc, gboolean do_download,
   gst_bin_add (GST_BIN_CAST (urisrc), queue);
   gst_element_sync_state_with_parent (queue);
 
-  slot->sinkpad = gst_element_get_static_pad (queue, "sink");
+  slot->queue_sinkpad = gst_element_get_static_pad (queue, "sink");
 
   /* get the new raw srcpad */
   srcpad = gst_element_get_static_pad (queue, "src");
   g_object_set_data (G_OBJECT (srcpad), "urisourcebin.slotinfo", slot);
 
-  slot->srcpad = create_output_pad (urisrc, srcpad);
+  slot->output_pad = create_output_pad (urisrc, srcpad);
 
   gst_object_unref (srcpad);
 
@@ -1244,7 +1257,7 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
           seqnum = gst_event_get_seqnum (event);
           eos = gst_event_new_eos ();
           gst_event_set_seqnum (eos, seqnum);
-          gst_pad_push_event (slot->srcpad, eos);
+          gst_pad_push_event (slot->output_pad, eos);
         } else {
           /* Do not clear output slot yet. A new input was
            * connected. We should just drop this EOS */
@@ -1256,7 +1269,7 @@ source_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
       seqnum = gst_event_get_seqnum (event);
       eos = gst_event_new_eos ();
       gst_event_set_seqnum (eos, seqnum);
-      gst_pad_push_event (slot->srcpad, eos);
+      gst_pad_push_event (slot->output_pad, eos);
       free_output_slot_async (urisrc, slot);
     }
 
@@ -1400,19 +1413,14 @@ pad_removed_cb (GstElement * element, GstPad * pad, GstURISourceBin * urisrc)
     s = gst_event_writable_structure (event);
     gst_structure_set (s, "urisourcebin-custom-eos", G_TYPE_BOOLEAN, TRUE,
         NULL);
-    gst_pad_send_event (slot->sinkpad, event);
+    gst_pad_send_event (slot->queue_sinkpad, event);
   } else if (info->output_pad != NULL) {
     GST_LOG_OBJECT (element,
         "Pad %" GST_PTR_FORMAT " was removed. Unexposing %" GST_PTR_FORMAT,
         pad, info->output_pad);
     remove_output_pad (urisrc, info->output_pad);
   } else {
-    GST_LOG_OBJECT (urisrc, "Removed pad has no output slot or pad");
-    if (urisrc->source_streams_aware) {
-      GST_DEBUG_OBJECT (info->ghost_pad,
-          "Streams-aware, removing pad immediately");
-      gst_element_remove_pad ((GstElement *) urisrc, info->ghost_pad);
-    }
+    GST_WARNING_OBJECT (urisrc, "Removed pad has no output slot or pad");
   }
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
@@ -1771,10 +1779,10 @@ analyse_source_and_expose_raw_pads (GstURISourceBin * urisrc,
             if (!slot)
               goto no_slot;
 
-            gst_pad_link (pad, slot->sinkpad);
+            gst_pad_link (pad, slot->queue_sinkpad);
 
             /* get the new raw srcpad */
-            output_pad = gst_object_ref (slot->srcpad);
+            output_pad = gst_object_ref (slot->output_pad);
 
             GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
@@ -2001,13 +2009,14 @@ handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
     GST_URI_SOURCE_BIN_LOCK (urisrc);
     slot = get_output_slot (urisrc, do_download, FALSE, NULL);
 
-    if (slot == NULL || gst_pad_link (srcpad, slot->sinkpad) != GST_PAD_LINK_OK)
+    if (slot == NULL
+        || gst_pad_link (srcpad, slot->queue_sinkpad) != GST_PAD_LINK_OK)
       goto could_not_link;
 
     gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
         pre_queue_event_probe, urisrc, NULL);
 
-    output_pad = gst_object_ref (slot->srcpad);
+    output_pad = gst_object_ref (slot->output_pad);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
     expose_output_pad (urisrc, output_pad);
@@ -2126,11 +2135,11 @@ free_output_slot (OutputSlotInfo * slot, GstURISourceBin * urisrc)
   remove_buffering_msgs (urisrc, GST_OBJECT_CAST (slot->queue));
   gst_bin_remove (GST_BIN_CAST (urisrc), slot->queue);
 
-  gst_object_unref (slot->sinkpad);
+  gst_object_unref (slot->queue_sinkpad);
 
   /* deactivate and remove the srcpad */
-  gst_pad_set_active (slot->srcpad, FALSE);
-  gst_element_remove_pad (GST_ELEMENT_CAST (urisrc), slot->srcpad);
+  gst_pad_set_active (slot->output_pad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT_CAST (urisrc), slot->output_pad);
 
   g_free (slot);
 }
