@@ -646,6 +646,7 @@ gst_vp9_parser_new (void)
     return NULL;
 
   parser->priv = priv;
+  parser->subsampling_x = parser->subsampling_y = -1;
 
   return parser;
 }
