@@ -38,26 +38,28 @@ if __name__ == "__main__":
                        private_token=os.environ.get('GITLAB_API_TOKEN'),
                        job_token=os.environ.get('CI_JOB_TOKEN'))
 
-    cerbero = None
-    cerbero_name = None
+    def get_matching_user_project(project, branch):
+        cerbero = gl.projects.get(project)
+        # Search for matching branches, return only if the branch name matches
+        # exactly
+        for b in cerbero.branches.list(search=cerbero_branch, iterator=True):
+            if branch == b.name:
+                return cerbero
+        return None
+
     # We do not want to run on (often out of date) user upstream branch
     if os.environ["CI_COMMIT_REF_NAME"] != os.environ['GST_UPSTREAM_BRANCH']:
         try:
             cerbero_name = f'{os.environ["CI_PROJECT_NAMESPACE"]}/cerbero'
-            cerbero = gl.projects.get(cerbero_name)
-            if os.environ["CI_COMMIT_REF_NAME"] in [b.name for b in cerbero.branches.list()]:
-                cerbero_branch = os.environ["CI_COMMIT_REF_NAME"]
-            else:
-                # No branch with a same name on the user cerbero repo... trigger
-                # on upstream project
-                cerbero = None
+            cerbero_branch = os.environ["CI_COMMIT_REF_NAME"]
+            cerbero = get_matching_user_project(cerbero_name, cerbero_branch)
         except gitlab.exceptions.GitlabGetError:
             pass
 
     if cerbero is None:
         cerbero_name = CERBERO_PROJECT
-        cerbero = gl.projects.get(cerbero_name)
         cerbero_branch = os.environ["GST_UPSTREAM_BRANCH"]
+        cerbero = gl.projects.get(cerbero_name)
 
     fprint(f"-> Triggering on branch {cerbero_branch} in {cerbero_name}\n")
 
