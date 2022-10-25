@@ -291,6 +291,9 @@ static gboolean gst_uri_source_bin_query (GstElement * element,
 static GstStateChangeReturn gst_uri_source_bin_change_state (GstElement *
     element, GstStateChange transition);
 
+static void handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad,
+    GstCaps * caps);
+static gboolean setup_typefind (GstURISourceBin * urisrc, GstPad * srcpad);
 static void remove_demuxer (GstURISourceBin * bin);
 static void expose_output_pad (GstURISourceBin * urisrc, GstPad * pad);
 static OutputSlotInfo *get_output_slot (GstURISourceBin * urisrc,
@@ -1654,32 +1657,6 @@ done:
   return res;
 }
 
-/**
- * has_all_raw_caps:
- * @pad: a #GstPad
- * @all_raw: pointer to hold the result
- *
- * check if the caps of the pad are all raw. The caps are all raw if
- * all of its structures contain audio/x-raw or video/x-raw.
- *
- * Returns: %FALSE @pad has no caps. Else TRUE and @all_raw set t the result.
- */
-static gboolean
-has_all_raw_caps (GstPad * pad, GstCaps * rawcaps, gboolean * all_raw)
-{
-  GstCaps *caps;
-  gboolean res = FALSE;
-
-  caps = gst_pad_query_caps (pad, NULL);
-
-  GST_DEBUG_OBJECT (pad, "have caps %" GST_PTR_FORMAT, caps);
-
-  res = is_all_raw_caps (caps, rawcaps, all_raw);
-
-  gst_caps_unref (caps);
-  return res;
-}
-
 static void
 post_missing_plugin_error (GstElement * urisrc, const gchar * element_name)
 {
@@ -1700,8 +1677,11 @@ post_missing_plugin_error (GstElement * urisrc, const gchar * element_name)
  * @have_out: does the source have output
  * @is_dynamic: is this a dynamic source
  *
- * Check the source of @urisrc and collect information about it. Any pad
- * exposing raw data will be exposed directly.
+ * Check the source of @urisrc and collect information about it.
+ *
+ * All pads will be handled directly. Raw pads are exposed as-is. Pads without
+ * any caps will have a typefind appended to them, and other pads will be
+ * analysed further.
  *
  * @is_raw will be set to TRUE if the source only produces raw pads. When this
  * function returns, all of the raw pad of the source will be added
@@ -1756,28 +1736,34 @@ analyse_source_and_expose_raw_pads (GstURISourceBin * urisrc,
         gst_iterator_resync (pads_iter);
         break;
       case GST_ITERATOR_OK:
+      {
+        GstCaps *padcaps;
+
         pad = g_value_dup_object (&item);
         /* we now officially have an output pad */
         *have_out = TRUE;
-
-        /* if FALSE, this pad has no caps and we continue with the next pad. */
-        if (!has_all_raw_caps (pad, rawcaps, &pad_is_raw)) {
-          gst_object_unref (pad);
-          g_value_reset (&item);
-          break;
-        }
-
         nb_pads++;
-        /* caps on source pad are all raw, we can add the pad */
-        if (pad_is_raw) {
+        padcaps = gst_pad_query_caps (pad, NULL);
+
+        if (!is_all_raw_caps (padcaps, rawcaps, &pad_is_raw)) {
+          /* if FALSE, this pad has no caps, we setup typefinding on it */
+          if (!setup_typefind (urisrc, pad)) {
+            res = FALSE;
+            done = TRUE;
+          }
+        } else if (pad_is_raw) {
+          /* caps on source pad are all raw, we can add the pad */
           GstPad *output_pad;
 
           nb_raw++;
           GST_URI_SOURCE_BIN_LOCK (urisrc);
           if (use_queue) {
             OutputSlotInfo *slot = get_output_slot (urisrc, FALSE, FALSE, NULL);
-            if (!slot)
+            if (!slot) {
+              gst_caps_unref (padcaps);
+              gst_object_unref (pad);
               goto no_slot;
+            }
 
             gst_pad_link (pad, slot->queue_sinkpad);
 
@@ -1795,12 +1781,15 @@ analyse_source_and_expose_raw_pads (GstURISourceBin * urisrc,
 
             expose_raw_output_pad (urisrc, pad, output_pad);
           }
-          gst_object_unref (pad);
         } else {
-          gst_object_unref (pad);
+          /* The caps are non-raw, we handle it directly */
+          handle_new_pad (urisrc, pad, padcaps);
         }
+        gst_caps_unref (padcaps);
+        gst_object_unref (pad);
         g_value_reset (&item);
         break;
+      }
     }
   }
   g_value_unset (&item);
@@ -1923,6 +1912,10 @@ no_demuxer:
   }
 }
 
+/* Called when:
+ * * Source element adds a new pad
+ * * typefind has found a type
+ */
 static void
 handle_new_pad (GstURISourceBin * urisrc, GstPad * srcpad, GstCaps * caps)
 {
@@ -2297,50 +2290,6 @@ setup_source (GstURISourceBin * urisrc)
         G_CALLBACK (source_new_pad), urisrc);
   }
 
-  if (all_pads_raw) {
-    GST_DEBUG_OBJECT (urisrc,
-        "Got raw srcpads on a dynamic source, using them as is.");
-
-    return TRUE;
-  } else if (urisrc->is_stream) {
-    GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
-    /* do the stream things here */
-    if (!setup_typefind (urisrc, NULL))
-      goto streaming_failed;
-  } else {
-    GstIterator *pads_iter;
-    gboolean done = FALSE;
-
-    /* Expose all non-raw srcpads */
-    pads_iter = gst_element_iterate_src_pads (urisrc->source);
-    while (!done) {
-      GValue item = { 0, };
-      GstPad *pad;
-
-      switch (gst_iterator_next (pads_iter, &item)) {
-        case GST_ITERATOR_ERROR:
-          GST_WARNING_OBJECT (urisrc, "Error iterating pads on source element");
-          /* FALLTHROUGH */
-        case GST_ITERATOR_DONE:
-          done = TRUE;
-          break;
-        case GST_ITERATOR_RESYNC:
-          /* reset results and resync */
-          gst_iterator_resync (pads_iter);
-          break;
-        case GST_ITERATOR_OK:
-          pad = g_value_get_object (&item);
-          if (!setup_typefind (urisrc, pad)) {
-            gst_iterator_free (pads_iter);
-            goto streaming_failed;
-          }
-          g_value_reset (&item);
-          break;
-      }
-    }
-    gst_iterator_free (pads_iter);
-  }
-
   return TRUE;
 
   /* ERRORS */
@@ -2359,11 +2308,6 @@ no_pads:
   {
     GST_ELEMENT_ERROR (urisrc, CORE, FAILED,
         (_("Source element has no pads.")), (NULL));
-    return FALSE;
-  }
-streaming_failed:
-  {
-    /* message was posted */
     return FALSE;
   }
 }
