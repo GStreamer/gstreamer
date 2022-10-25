@@ -90,7 +90,7 @@ gst_vulkan_result_to_string (VkResult result)
 /**
  * gst_vulkan_error_to_g_error: (skip)
  * @result: a VkResult
- * @error: (inout) (optional): a #GError to fill
+ * @error: (out) (optional) (transfer full): a #GError to fill
  * @format: the printf-like format to write into the #GError
  * @...: arguments for @format
  *

@@ -622,7 +622,7 @@ gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
  * @display: a #GstGLDisplay
  * @other_context: (transfer none): other #GstGLContext to share resources with.
  * @p_context: (transfer full) (out): resulting #GstGLContext
- * @error: (optional): resulting #GError
+ * @error: resulting #GError
  *
  * It requires the display's object lock to be held.
  *

@@ -895,7 +895,7 @@ gst_mikey_message_new (void)
  * gst_mikey_message_new_from_bytes:
  * @bytes: a #GBytes
  * @info: a #GstMIKEYDecryptInfo
- * @error: (optional): a #GError
+ * @error: a #GError
  *
  * Make a new #GstMIKEYMessage from @bytes.
  *
@@ -2048,7 +2048,7 @@ invalid_data:
  * @data: (array length=size) (element-type guint8): bytes to read
  * @size: length of @data
  * @info: #GstMIKEYDecryptInfo
- * @error: (optional): a #GError
+ * @error: a #GError
  *
  * Parse @size bytes from @data into a #GstMIKEYMessage. @info contains the
  * parameters to decrypt and verify the data.

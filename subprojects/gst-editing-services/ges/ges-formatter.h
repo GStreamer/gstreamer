@@ -56,7 +56,7 @@ typedef gboolean (*GESFormatterCanLoadURIMethod) (GESFormatter *dummy_instance, 
  * @formatter: a #GESFormatter
  * @timeline: a #GESTimeline
  * @uri: the URI to load from
- * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
+ * @error: An error to be set in case something wrong happens or %NULL
  *
  * Virtual method for loading a timeline from a given URI.
  *
@@ -76,7 +76,7 @@ typedef gboolean (*GESFormatterLoadFromURIMethod) (GESFormatter *formatter,
  * @timeline: a #GESTimeline
  * @uri: the URI to save to
  * @overwrite: Whether the file should be overwritten in case it exists
- * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
+ * @error: An error to be set in case something wrong happens or %NULL
  *
  * Virtual method for saving a timeline to a uri.
  *

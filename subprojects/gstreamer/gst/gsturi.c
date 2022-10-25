@@ -617,7 +617,7 @@ gst_uri_protocol_is_supported (const GstURIType type, const gchar * protocol)
  * @type: Whether to create a source or a sink
  * @uri: URI to create an element for
  * @elementname: (nullable): Name of created element, can be %NULL.
- * @error: (optional): address where to store error information, or %NULL.
+ * @error: address where to store error information, or %NULL.
  *
  * Creates an element for handling the given URI.
  *
@@ -787,7 +787,7 @@ gst_uri_handler_get_uri (GstURIHandler * handler)
  * gst_uri_handler_set_uri:
  * @handler: A #GstURIHandler
  * @uri: URI to set
- * @error: (optional): address where to store a #GError in case of
+ * @error: address where to store a #GError in case of
  *    an error, or %NULL
  *
  * Tries to set the URI of the given handler.

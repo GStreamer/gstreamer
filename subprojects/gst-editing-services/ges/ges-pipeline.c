@@ -1331,8 +1331,7 @@ ges_pipeline_get_thumbnail (GESPipeline * self, GstCaps * caps)
  * native size
  * @format: The desired mime type (for example, "image/jpeg")
  * @location: The path to save the thumbnail to
- * @error: (out) (optional) (transfer full): An error to be set in case
- * something goes wrong, or %NULL to ignore
+ * @error: An error to be set in case something goes wrong, or %NULL to ignore
  *
  * Saves the currently displayed image of the pipeline in preview to the
  * given location, in the specified dimensions and format.

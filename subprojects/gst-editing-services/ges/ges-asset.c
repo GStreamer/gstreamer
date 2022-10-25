@@ -1544,7 +1544,7 @@ ges_asset_get_id (GESAsset * self)
 /**
  * ges_asset_extract:
  * @self: The #GESAsset to extract an object from
- * @error: (optional): An error to be set in case something goes wrong,
+ * @error: An error to be set in case something goes wrong,
  * or %NULL to ignore
  *
  * Extracts a new #GESAsset:extractable-type object from the asset. The
@@ -1578,8 +1578,7 @@ ges_asset_extract (GESAsset * self, GError ** error)
 /**
  * ges_asset_request_finish:
  * @res: The task result to fetch the asset from
- * @error: (out) (allow-none) (transfer full): An error to be set in case
- * something goes wrong, or %NULL to ignore
+ * @error: An error to be set in case something goes wrong, or %NULL to ignore
  *
  * Fetches an asset requested by ges_asset_request_async(), which
  * finalises the request.

@@ -265,8 +265,8 @@ gst_rtsp_message_parse_request (GstRTSPMessage * msg,
  * gst_rtsp_message_new_response:
  * @msg: (out) (transfer full): a location for the new #GstRTSPMessage
  * @code: the status code
- * @reason: (transfer none) (optional): the status reason or %NULL
- * @request: (transfer none) (optional): the request that triggered the response or %NULL
+ * @reason: (transfer none) (nullable): the status reason or %NULL
+ * @request: (transfer none) (nullable): the request that triggered the response or %NULL
  *
  * Create a new response #GstRTSPMessage with @code and @reason and store the
  * result message in @msg. Free with gst_rtsp_message_free().
@@ -297,8 +297,8 @@ gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
  * gst_rtsp_message_init_response:
  * @msg: (out caller-allocates): a #GstRTSPMessage
  * @code: the status code
- * @reason: (transfer none) (optional): the status reason or %NULL
- * @request: (transfer none) (optional): the request that triggered the response or %NULL
+ * @reason: (transfer none) (nullable): the status reason or %NULL
+ * @request: (transfer none) (nullable): the request that triggered the response or %NULL
  *
  * Initialize @msg with @code and @reason.
  *

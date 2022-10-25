@@ -2178,7 +2178,7 @@ ges_timeline_new (void)
 /**
  * ges_timeline_new_from_uri:
  * @uri: The URI to load from
- * @error: (out) (optional): An error to be set if loading fails, or
+ * @error: An error to be set if loading fails, or
  * %NULL to ignore
  *
  * Creates a timeline from the given URI.
@@ -2202,7 +2202,7 @@ ges_timeline_new_from_uri (const gchar * uri, GError ** error)
  * ges_timeline_load_from_uri:
  * @timeline: An empty #GESTimeline into which to load the formatter
  * @uri: The URI to load from
- * @error: (out) (allow-none): An error to be set if loading fails, or
+ * @error: An error to be set if loading fails, or
  * %NULL to ignore
  *
  * Loads the contents of URI into the timeline.
@@ -2233,7 +2233,7 @@ ges_timeline_load_from_uri (GESTimeline * timeline, const gchar * uri,
  * @uri: The location to save to
  * @formatter_asset: (allow-none): The formatter asset to use, or %NULL
  * @overwrite: %TRUE to overwrite file if it exists
- * @error: (out) (allow-none): An error to be set if saving fails, or
+ * @error: An error to be set if saving fails, or
  * %NULL to ignore
  *
  * Saves the timeline to the given location. If @formatter_asset is %NULL,

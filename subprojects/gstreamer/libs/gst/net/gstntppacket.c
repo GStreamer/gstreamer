@@ -78,7 +78,7 @@ gst_clock_time_to_ntp_timestamp_fraction (GstClockTime gst)
 
 /**
  * gst_ntp_packet_new:
- * @buffer: (array zero-terminated="0" fixed-size="48"): a buffer from which to construct the packet, or NULL
+ * @buffer: (array zero-terminated=0 fixed-size=48): a buffer from which to construct the packet, or NULL
  * @error: a #GError
  *
  * Creates a new #GstNtpPacket from a buffer received over the network. The
@@ -208,7 +208,7 @@ gst_ntp_packet_copy (const GstNtpPacket * packet)
  *
  * MT safe. Caller owns return value (g_free to free).
  *
- * Returns: (transfer full) (array zero-terminated="0" fixed-size="48"): A newly allocated sequence of #GST_NTP_PACKET_SIZE bytes.
+ * Returns: (transfer full) (array zero-terminated=0 fixed-size=48): A newly allocated sequence of #GST_NTP_PACKET_SIZE bytes.
  */
 guint8 *
 gst_ntp_packet_serialize (const GstNtpPacket * packet)

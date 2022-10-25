@@ -1064,7 +1064,7 @@ ges_project_list_assets (GESProject * project, GType filter)
  * from which the timeline as been loaded or default to the best formatter
  * as defined in #ges_find_formatter_for_uri
  * @overwrite: %TRUE to overwrite file if it exists
- * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
+ * @error: An error to be set in case something wrong happens or %NULL
  *
  * Save the timeline of @project to @uri. You should make sure that @timeline
  * is one of the timelines that have been extracted from @project
@@ -1172,7 +1172,7 @@ ges_project_new (const gchar * uri)
  * ges_project_load:
  * @project: A #GESProject that has an @uri set already
  * @timeline: A blank timeline to load @project into
- * @error: (out) (allow-none): An error to be set in case something wrong happens or %NULL
+ * @error: An error to be set in case something wrong happens or %NULL
  *
  * Loads @project into @timeline
  *

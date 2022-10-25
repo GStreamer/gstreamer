@@ -851,7 +851,7 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
  * gst_rtsp_server_create_socket:
  * @server: a #GstRTSPServer
  * @cancellable: (allow-none): a #GCancellable
- * @error: (out): a #GError
+ * @error: a #GError
  *
  * Create a #GSocket for @server. The socket will listen on the
  * configured service.
@@ -1319,7 +1319,7 @@ watch_destroyed (GstRTSPServer * server)
  * gst_rtsp_server_create_source:
  * @server: a #GstRTSPServer
  * @cancellable: (nullable): a #GCancellable or %NULL.
- * @error: (out): a #GError
+ * @error: a #GError
  *
  * Create a #GSource for @server. The new source will have a default
  * #GSocketSourceFunc of gst_rtsp_server_io_func().

@@ -3342,7 +3342,7 @@ ges_clip_set_top_effect_index (GESClip * clip, GESBaseEffect * effect,
  * @clip: The #GESClip to split
  * @position: The timeline position at which to perform the split, between
  * the start and end of the clip
- * @error: (optional) (nullable): Return location for an error
+ * @error: Return location for an error
  *
  * Splits a clip at the given timeline position into two clips. The clip
  * must already have a #GESClip:layer.
@@ -4402,7 +4402,7 @@ ges_clip_get_timeline_time_from_source_frame (GESClip * clip,
  * @clip: A #GESClip
  * @child: A child of @clip
  * @track: The track to add @child to
- * @error: (optional) (nullable): Return location for an error
+ * @error: Return location for an error
  *
  * Adds the track element child of the clip to a specific track.
  *

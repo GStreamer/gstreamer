@@ -2371,7 +2371,7 @@ ges_timeline_element_get_layer_priority (GESTimelineElement * self)
  * @edge: The edge of @self where the edit should occur
  * @position: The edit position: a new location for the edge of @self
  * (in nanoseconds) in the timeline coordinates
- * @error: (optional): Return location for an error
+ * @error: Return location for an error
  *
  * Edits the element within its timeline by adjusting its
  * #GESTimelineElement:start, #GESTimelineElement:duration or

@@ -47,7 +47,7 @@ G_DEFINE_BOXED_TYPE (GstNetTimePacket, gst_net_time_packet,
 
 /**
  * gst_net_time_packet_new:
- * @buffer: (array zero-terminated="0" fixed-size="16") (nullable): a buffer from which to construct the packet, or NULL
+ * @buffer: (array zero-terminated=0 fixed-size=16) (nullable): a buffer from which to construct the packet, or NULL
  *
  * Creates a new #GstNetTimePacket from a buffer received over the network. The
  * caller is responsible for ensuring that @buffer is at least
@@ -123,7 +123,7 @@ gst_net_time_packet_copy (const GstNetTimePacket * packet)
  *
  * MT safe. Caller owns return value (g_free to free).
  *
- * Returns: (transfer full) (array zero-terminated="0" fixed-size="16"): A newly allocated sequence of #GST_NET_TIME_PACKET_SIZE bytes.
+ * Returns: (transfer full) (array zero-terminated=0 fixed-size=16): A newly allocated sequence of #GST_NET_TIME_PACKET_SIZE bytes.
  */
 guint8 *
 gst_net_time_packet_serialize (const GstNetTimePacket * packet)

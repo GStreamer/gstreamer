@@ -597,7 +597,7 @@ getnameinfo_failed:
 /**
  * gst_rtsp_connection_get_tls:
  * @conn: a #GstRTSPConnection
- * @error: (optional): #GError for error reporting, or NULL to ignore.
+ * @error: #GError for error reporting, or NULL to ignore.
  *
  * Get the TLS connection of @conn.
  *
