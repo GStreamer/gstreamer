@@ -135,10 +135,6 @@ struct _GstURISourceBin
 
   GMutex lock;                  /* lock for constructing */
 
-  GMutex factories_lock;
-  guint32 factories_cookie;
-  GList *factories;             /* factories we can use for selecting elements */
-
   gchar *uri;
   guint64 connection_speed;
 
@@ -476,9 +472,6 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
 static void
 gst_uri_source_bin_init (GstURISourceBin * urisrc)
 {
-  /* first filter out the interesting element factories */
-  g_mutex_init (&urisrc->factories_lock);
-
   g_mutex_init (&urisrc->lock);
 
   g_mutex_init (&urisrc->buffering_lock);
@@ -511,12 +504,9 @@ gst_uri_source_bin_finalize (GObject * obj)
 
   remove_demuxer (urisrc);
   g_mutex_clear (&urisrc->lock);
-  g_mutex_clear (&urisrc->factories_lock);
   g_mutex_clear (&urisrc->buffering_lock);
   g_mutex_clear (&urisrc->buffering_post_lock);
   g_free (urisrc->uri);
-  if (urisrc->factories)
-    gst_plugin_feature_list_free (urisrc->factories);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
