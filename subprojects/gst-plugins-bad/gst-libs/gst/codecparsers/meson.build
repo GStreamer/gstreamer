@@ -33,8 +33,6 @@ codecparser_headers = [
   'gstmpegvideometa.h',
   'gstvp9parser.h',
   'gstav1parser.h',
-  'gsth264bitwriter.h',
-  'gsth265bitwriter.h',
 ]
 install_headers(codecparser_headers, subdir : 'gstreamer-1.0/gst/codecparsers')
 
