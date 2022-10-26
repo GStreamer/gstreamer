@@ -47,6 +47,7 @@ if __name__ == "__main__":
                 return cerbero
         return None
 
+    cerbero = None
     # We do not want to run on (often out of date) user upstream branch
     if os.environ["CI_COMMIT_REF_NAME"] != os.environ['GST_UPSTREAM_BRANCH']:
         try:
