@@ -98,7 +98,7 @@ static GstFlowReturn gst_ffmpegviddec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_ffmpegviddec_drain (GstVideoDecoder * decoder);
 
 static gboolean picture_changed (GstFFMpegVidDec * ffmpegdec,
-    AVFrame * picture);
+    AVFrame * picture, gboolean one_field);
 static gboolean context_changed (GstFFMpegVidDec * ffmpegdec,
     AVCodecContext * context);
 
@@ -1034,11 +1034,14 @@ no_frame:
 }
 
 static gboolean
-picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture)
+picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
+    gboolean one_field)
 {
   gint pic_field_order = 0;
 
-  if (picture->interlaced_frame) {
+  if (one_field) {
+    pic_field_order = ffmpegdec->pic_field_order;
+  } else if (picture->interlaced_frame) {
     if (picture->repeat_pict)
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
     if (picture->top_field_first)
@@ -1066,7 +1069,7 @@ context_changed (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context)
 
 static gboolean
 update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
-    AVFrame * picture)
+    AVFrame * picture, gboolean one_field)
 {
   gint pic_field_order = 0;
 
@@ -1077,7 +1080,7 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
   }
 
-  if (!picture_changed (ffmpegdec, picture)
+  if (!picture_changed (ffmpegdec, picture, one_field)
       && !context_changed (ffmpegdec, context))
     return FALSE;
 
@@ -1277,8 +1280,9 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   GstStructure *in_s;
   GstVideoInterlaceMode interlace_mode;
   gint caps_height;
+  gboolean one_field = ! !(flags & GST_VIDEO_BUFFER_FLAG_ONEFIELD);
 
-  if (!update_video_context (ffmpegdec, context, picture))
+  if (!update_video_context (ffmpegdec, context, picture, one_field))
     return TRUE;
 
   caps_height = ffmpegdec->pic_height;
