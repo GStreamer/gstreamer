@@ -1876,6 +1876,11 @@ make_demuxer (GstURISourceBin * urisrc, GstCaps * caps)
       continue;
 
     demuxer = gst_element_factory_create (factory, NULL);
+    if (!GST_OBJECT_FLAG_IS_SET (demuxer, GST_BIN_FLAG_STREAMS_AWARE)) {
+      GST_DEBUG_OBJECT (urisrc, "Ignoring non-streams-aware adaptive demuxer");
+      gst_object_unref (demuxer);
+      continue;
+    }
     break;
   }
   gst_plugin_feature_list_free (eligible);
