@@ -23,5 +23,6 @@ endif
 
 env = environment()
 env.prepend('GST_VALIDATE_SCENARIOS_PATH', meson.current_source_dir() / 'validate/scenarios')
-env.prepend('GST_VALIDATE_APPS_DIR', meson.current_source_dir() / 'validate')
+env.prepend('GST_VALIDATE_APPS_DIR', meson.current_source_dir() / 'validate' /
+    'apps')
 meson.add_devenv(env)
