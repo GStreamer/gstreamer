@@ -549,6 +549,7 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
   gst_segment_init (&demux->segment, GST_FORMAT_TIME);
   demux->instant_rate_multiplier = 1.0;
 
+  GST_OBJECT_FLAG_SET (demux, GST_BIN_FLAG_STREAMS_AWARE);
   gst_bin_set_suppressed_flags (GST_BIN_CAST (demux),
       GST_ELEMENT_FLAG_SOURCE | GST_ELEMENT_FLAG_SINK);
 
