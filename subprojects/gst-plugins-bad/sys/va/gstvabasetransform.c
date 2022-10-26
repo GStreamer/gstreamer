@@ -879,11 +879,11 @@ gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
 
 invalid_buffer:
   {
-    GST_ELEMENT_WARNING (self, CORE, NOT_IMPLEMENTED, (NULL),
+    GST_ELEMENT_WARNING (self, STREAM, FORMAT, (NULL),
         ("invalid video buffer received"));
     if (buffer)
       gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
+    return GST_FLOW_ERROR;
   }
 }
 
