@@ -456,6 +456,33 @@ gst_ffmpegviddec_get_palette (GstFFMpegVidDec * ffmpegdec,
   }
 }
 
+static gboolean
+gst_ffmpegviddec_needs_reset (GstFFMpegVidDec * ffmpegdec,
+    GstVideoCodecState * state)
+{
+  GstCaps *last_caps, *new_caps;
+  gboolean needs_reset;
+
+  if (ffmpegdec->last_caps == NULL)
+    return TRUE;
+
+  last_caps = gst_caps_copy (ffmpegdec->last_caps);
+  new_caps = gst_caps_copy (state->caps);
+
+  /* Simply ignore framerate for now, this could easily be evolved per CODEC if
+   * future issue are found.*/
+  gst_structure_remove_field (gst_caps_get_structure (last_caps, 0),
+      "framerate");
+  gst_structure_remove_field (gst_caps_get_structure (new_caps, 0),
+      "framerate");
+
+  needs_reset = !gst_caps_is_equal (last_caps, new_caps);
+
+  gst_caps_unref (last_caps);
+  gst_caps_unref (new_caps);
+
+  return needs_reset;
+}
 
 static gboolean
 gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
@@ -469,14 +496,14 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   ffmpegdec = (GstFFMpegVidDec *) decoder;
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
-  if (ffmpegdec->last_caps != NULL &&
-      gst_caps_is_equal (ffmpegdec->last_caps, state->caps)) {
-    return TRUE;
-  }
-
   GST_DEBUG_OBJECT (ffmpegdec, "setcaps called");
 
   GST_OBJECT_LOCK (ffmpegdec);
+
+  if (!gst_ffmpegviddec_needs_reset (ffmpegdec, state)) {
+    gst_caps_replace (&ffmpegdec->last_caps, state->caps);
+    goto update_state;
+  }
 
   /* close old session */
   if (ffmpegdec->opened) {
@@ -600,6 +627,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   if (!gst_ffmpegviddec_open (ffmpegdec))
     goto open_failed;
 
+update_state:
   if (ffmpegdec->input_state)
     gst_video_codec_state_unref (ffmpegdec->input_state);
   ffmpegdec->input_state = gst_video_codec_state_ref (state);
