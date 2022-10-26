@@ -2464,6 +2464,88 @@ done:
   return ret;
 }
 
+/* https://www.webmproject.org/vp9/mp4/#codecs-parameter-string */
+static char *
+vp9_caps_get_mime_codec (GstCaps * caps)
+{
+  GstStructure *caps_st;
+  const char *profile_str, *chroma_format_str, *colorimetry_str;
+  guint bitdepth_luma, bitdepth_chroma;
+  guint8 profile = -1, chroma_format = -1, level = -1;
+  gboolean video_full_range;
+  GstVideoColorimetry cinfo = { 0, };
+  GString *codec_string;
+
+  caps_st = gst_caps_get_structure (caps, 0);
+  codec_string = g_string_new ("vp09");
+
+  profile_str = gst_structure_get_string (caps_st, "profile");
+  if (g_strcmp0 (profile_str, "0") == 0) {
+    profile = 0;
+  } else if (g_strcmp0 (profile_str, "1") == 0) {
+    profile = 1;
+  } else if (g_strcmp0 (profile_str, "2") == 0) {
+    profile = 2;
+  } else if (g_strcmp0 (profile_str, "3") == 0) {
+    profile = 3;
+  } else {
+    goto done;
+  }
+
+  /* XXX: hardcoded level */
+  level = 10;
+
+  gst_structure_get (caps_st, "bit-depth-luma", G_TYPE_UINT,
+      &bitdepth_luma, "bit-depth-chroma", G_TYPE_UINT, &bitdepth_chroma, NULL);
+
+  if (bitdepth_luma == 0)
+    goto done;
+  if (bitdepth_luma != bitdepth_chroma)
+    goto done;
+
+  /* mandatory elements */
+  g_string_append_printf (codec_string, ".%02u.%02u.%02u", profile, level,
+      bitdepth_luma);
+
+  colorimetry_str = gst_structure_get_string (caps_st, "colorimetry");
+  if (!colorimetry_str)
+    goto done;
+  if (!gst_video_colorimetry_from_string (&cinfo, colorimetry_str))
+    goto done;
+  video_full_range = cinfo.range == GST_VIDEO_COLOR_RANGE_0_255;
+
+  chroma_format_str = gst_structure_get_string (caps_st, "chroma-format");
+  if (g_strcmp0 (chroma_format_str, "4:2:0") == 0) {
+    const char *chroma_site_str;
+    GstVideoChromaSite chroma_site;
+
+    chroma_site_str = gst_structure_get_string (caps_st, "chroma-site");
+    chroma_site = gst_video_chroma_site_from_string (chroma_site_str);
+    if (chroma_site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
+      chroma_format = 0;
+    } else if (chroma_site == GST_VIDEO_CHROMA_SITE_COSITED) {
+      chroma_format = 1;
+    } else {
+      chroma_format = 1;
+    }
+  } else if (g_strcmp0 (chroma_format_str, "4:2:2") == 0) {
+    chroma_format = 2;
+  } else if (g_strcmp0 (chroma_format_str, "4:4:4") == 0) {
+    chroma_format = 3;
+  } else {
+    goto done;
+  }
+
+  /* optional but all or nothing */
+  g_string_append_printf (codec_string, ".%02u.%02u.%02u.%02u.%02u",
+      chroma_format, gst_video_color_primaries_to_iso (cinfo.primaries),
+      gst_video_transfer_function_to_iso (cinfo.transfer),
+      gst_video_color_matrix_to_iso (cinfo.matrix), video_full_range);
+
+done:
+  return g_string_free (codec_string, FALSE);
+}
+
 /**
  * gst_codec_utils_caps_get_mime_codec:
  * @caps: A #GstCaps to convert to mime codec
@@ -2530,10 +2612,7 @@ gst_codec_utils_caps_get_mime_codec (GstCaps * caps)
      * available in the mime codec for vp8. */
     mime_codec = g_strdup ("vp08");
   } else if (g_strcmp0 (media_type, "video/x-vp9") == 0) {
-    /* TODO: most browsers won't play the video unless more codec information is
-     * available in the mime codec for vp9. This is documented in
-     * https://www.webmproject.org/vp9/mp4/ */
-    mime_codec = g_strdup ("vp09");
+    mime_codec = vp9_caps_get_mime_codec (caps);
   } else if (g_strcmp0 (media_type, "image/jpeg") == 0) {
     mime_codec = g_strdup ("mjpg");
   } else if (g_strcmp0 (media_type, "audio/mpeg") == 0) {
