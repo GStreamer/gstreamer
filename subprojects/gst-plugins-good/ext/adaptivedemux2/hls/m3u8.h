@@ -343,7 +343,8 @@ void
 gst_hls_media_playlist_dump                 (GstHLSMediaPlaylist* self);
 
 GstClockTime
-gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *playlist);
+gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
+    playlist, gboolean low_latency);
 
 typedef enum
 {

@@ -2836,7 +2836,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 
   stream->recommended_buffering_threshold =
       gst_hls_media_playlist_recommended_buffering_threshold
-      (hlsdemux_stream->playlist);
+      (hlsdemux_stream->playlist, hlsdemux_stream->llhls_enabled);
 
   if (discont)
     stream->discont = TRUE;

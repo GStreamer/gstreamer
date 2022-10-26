@@ -2373,14 +2373,38 @@ gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
 
 GstClockTime
 gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
-    playlist)
+    playlist, gboolean low_latency)
 {
   if (!playlist->duration || !GST_CLOCK_TIME_IS_VALID (playlist->duration)
       || playlist->segments->len == 0)
     return GST_CLOCK_TIME_NONE;
 
   /* The recommended buffering threshold is 1.5 average segment duration */
-  return 3 * (playlist->duration / playlist->segments->len) / 2;
+  GstClockTime threshold =
+      3 * (playlist->duration / playlist->segments->len) / 2;
+
+  if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist)) {
+    /* For live playlists, reduce the recommended buffering threshold 
+     * to match the starting hold back distance if needed, otherwise
+     * we'll hit the live edge and have to wait before we hit 100% */
+    if (GST_CLOCK_TIME_IS_VALID (playlist->hold_back)
+        && threshold > playlist->hold_back)
+      threshold = playlist->hold_back;
+    else if (GST_CLOCK_TIME_IS_VALID (playlist->targetduration)
+        && threshold > playlist->targetduration)
+      threshold = 3 * playlist->targetduration;
+
+    if (low_latency) {
+      if (GST_CLOCK_TIME_IS_VALID (playlist->part_hold_back)
+          && threshold > playlist->part_hold_back)
+        threshold = playlist->part_hold_back;
+      else if (GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)
+          && threshold > playlist->partial_targetduration)
+        threshold = 3 * playlist->partial_targetduration;
+    }
+  }
+
+  return threshold;
 }
 
 GstHLSRenditionStream *
