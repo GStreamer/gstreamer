@@ -504,12 +504,12 @@ _regroup_raw_caps (GstCaps * caps)
   va_caps = gst_caps_simplify (va_caps);
   dma_caps = gst_caps_simplify (dma_caps);
 
-  sys_caps = gst_caps_merge (sys_caps, va_caps);
-  sys_caps = gst_caps_merge (sys_caps, dma_caps);
+  va_caps = gst_caps_merge (va_caps, dma_caps);
+  va_caps = gst_caps_merge (va_caps, sys_caps);
 
   gst_caps_unref (caps);
 
-  return sys_caps;
+  return va_caps;
 }
 
 gboolean
