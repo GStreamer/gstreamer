@@ -3651,6 +3651,22 @@ class TestComplexEditing(common.GESTimelineConfigTest):
             c0, 0, GES.EditMode.EDIT_NORMAL, GES.Edge.EDGE_NONE, 10, 30,
             [c0], [c1], {c0 : {"start": 27}}, [], [])
 
+    def test_disable_timeline_editing_apis(self):
+        track = self.add_video_track()
+        self.assertEqual(self.timeline.props.auto_transition, True)
+        self.timeline.disable_edit_apis(True)
+        self.assertEqual(self.timeline.props.auto_transition, False)
+
+        c0 = self.add_clip("c0", 0, [track], 0, 10)
+        # Without disabling edit API adding clip would fail
+        c1 = self.add_clip("c1", 0, [track], 0, 10)
+        self.assertTimelineConfig()
+
+        c1.set_start(1)
+        c1.set_duration(1)
+        self.assertEqual(c1.get_start(), 1)
+        self.assertEqual(c1.get_duration(), 1)
+
 
 class TestTransitions(common.GESSimpleTimelineTest):
 

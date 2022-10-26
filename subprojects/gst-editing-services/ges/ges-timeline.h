@@ -160,4 +160,9 @@ GES_API
 GESFrameNumber ges_timeline_get_frame_at (GESTimeline *self,
                                           GstClockTime timestamp);
 
+GES_API
+void ges_timeline_disable_edit_apis (GESTimeline * self, gboolean disable_edit_apis);
+GES_API
+gboolean ges_timeline_get_edit_apis_disabled (GESTimeline * self);
+
 G_END_DECLS

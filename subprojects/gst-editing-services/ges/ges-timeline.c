@@ -115,6 +115,10 @@
  * transition object will be kept, but with its timing and layer adjusted
  * accordingly.
  *
+ * NOTE: if you know what you are doing and want to be in full control of the
+ * timeline layout, you can disable the edit APIs with
+ * #ges_timeline_disable_edit_apis.
+ *
  * ## Saving
  *
  * To save/load a timeline, you can use the ges_timeline_load_from_uri()
@@ -234,6 +238,7 @@ struct _GESTimelinePrivate
   GstStreamCollection *stream_collection;
 
   gboolean rendering_smartly;
+  gboolean disable_edit_apis;
 };
 
 /* private structure to contain our track-related information */
@@ -2947,7 +2952,7 @@ ges_timeline_commit_sync (GESTimeline * timeline)
  * Freezes the timeline from being committed. This is usually needed while the
  * timeline is being rendered to ensure that not change to the timeline are
  * taken into account during that moment. Once the rendering is done, you
- * should call #ges_timeline_thaw_commit so that comiting becomes possible
+ * should call #ges_timeline_thaw_commit so that committing becomes possible
  * again and any call to `commit()` that happened during the rendering is
  * actually taken into account.
  *
@@ -3038,6 +3043,7 @@ ges_timeline_set_auto_transition (GESTimeline * timeline,
   GESLayer *layer;
 
   g_return_if_fail (GES_IS_TIMELINE (timeline));
+  g_return_if_fail (!timeline->priv->disable_edit_apis);
   CHECK_THREAD (timeline);
 
   timeline->priv->auto_transition = auto_transition;
@@ -3386,4 +3392,65 @@ ges_timeline_get_frame_at (GESTimeline * self, GstClockTime timestamp)
   timeline_get_framerate (self, &fps_n, &fps_d);
 
   return gst_util_uint64_scale (timestamp, fps_n, fps_d * GST_SECOND);
+}
+
+/**
+ * ges_timeline_disable_edit_apis:
+ * @self: A #GESTimeline
+ * @disable_edit_apis: %TRUE to disable all the edit APIs so the user is in full
+ * control of ensuring timeline state validity %FALSE otherwise.
+ *
+ * WARNING: When using that mode, GES won't guarantee the coherence of the
+ * timeline. You need to ensure that the rules described in the [Overlaps and
+ * auto transitions](#overlaps-and-autotransitions) section are respected any time
+ * the timeline is [commited](ges_timeline_commit) (otherwise playback will most
+ * probably fail in different ways).
+ *
+ * When disabling editing APIs, GES won't be able to enforce the rules that
+ * makes the timeline overall state to be valid but some feature won't be
+ * usable:
+ *   * #GESTimeline:snapping-distance
+ *   * #GESTimeline:auto-transition
+ *
+ * Since: 1.22
+ */
+void
+ges_timeline_disable_edit_apis (GESTimeline * self, gboolean disable_edit_apis)
+{
+  CHECK_THREAD (self);
+  g_return_if_fail (GES_IS_TIMELINE (self));
+
+  if (disable_edit_apis) {
+    if (self->priv->snapping_distance > 0) {
+      GST_INFO_OBJECT (self,
+          "Disabling snapping as we are disabling edit APIs");
+
+      ges_timeline_set_snapping_distance (self, 0);
+    }
+
+    if (self->priv->auto_transition || self->priv->auto_transitions) {
+      GST_INFO_OBJECT (self,
+          "Disabling auto transitions as we are disabling auto edit APIs");
+      ges_timeline_set_auto_transition (self, FALSE);
+    }
+  }
+
+  self->priv->disable_edit_apis = disable_edit_apis;
+}
+
+/**
+ * ges_timeline_get_edit_apis_disabled:
+ * @self: A #GESTimeline
+ *
+ * Returns: %TRUE if edit APIs are disabled, %FALSE otherwise.
+ *
+ * Since: 1.22
+ */
+gboolean
+ges_timeline_get_edit_apis_disabled (GESTimeline * self)
+{
+  CHECK_THREAD (self);
+  g_return_val_if_fail (GES_IS_TIMELINE (self), FALSE);
+
+  return self->priv->disable_edit_apis;
 }

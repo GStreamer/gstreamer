@@ -929,6 +929,11 @@ timeline_tree_can_move_elements (GNode * root, GHashTable * moving,
     GError ** error)
 {
   TreeIterationData data = tree_iteration_data_init;
+
+  if (ges_timeline_get_edit_apis_disabled (root->data)) {
+    return TRUE;
+  }
+
   data.moving = moving;
   data.root = root;
   data.res = TRUE;
@@ -1702,6 +1707,10 @@ timeline_tree_can_move_element (GNode * root,
   GHashTable *move_edits, *trim_edits, *moving;
   GHashTableIter iter;
   gpointer key, value;
+
+  if (ges_timeline_get_edit_apis_disabled (root->data)) {
+    return TRUE;
+  }
 
   if (layer_prio == GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY
       && priority != layer_prio) {
