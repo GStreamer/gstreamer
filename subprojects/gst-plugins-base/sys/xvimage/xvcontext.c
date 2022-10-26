@@ -30,6 +30,9 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
+/* for getpid */
+#include <unistd.h>
+
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
@@ -1038,6 +1041,11 @@ gst_xvcontext_create_xwindow (GstXvContext * context, gint width, gint height)
 
     g_free (hints);
   }
+
+  unsigned long pid = getpid ();
+  Atom _NET_WM_PID = XInternAtom (context->disp, "_NET_WM_PID", 0);
+  XChangeProperty (context->disp, window->win,
+      _NET_WM_PID, _NET_WM_PID, 32, 0, (unsigned char *) &pid, 1);
 
   window->gc = XCreateGC (context->disp, window->win, 0, NULL);
 

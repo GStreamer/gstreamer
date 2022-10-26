@@ -112,6 +112,9 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
+/* For getpid */
+#include <unistd.h>
+
 /* for XkbKeycodeToKeysym */
 #include <X11/XKBlib.h>
 
@@ -433,6 +436,12 @@ gst_x_image_sink_xwindow_set_title (GstXImageSink * ximagesink,
         XSetClassHint (ximagesink->xcontext->disp, xwindow->win, hint);
       }
       XFree (hint);
+
+      unsigned long pid = getpid ();
+      Atom _NET_WM_PID =
+          XInternAtom (ximagesink->xcontext->disp, "_NET_WM_PID", 0);
+      XChangeProperty (ximagesink->xcontext->disp, xwindow->win,
+          _NET_WM_PID, _NET_WM_PID, 32, 0, (unsigned char *) &pid, 1);
     }
   }
 }
