@@ -446,6 +446,9 @@ struct _GstVideoDecoderPrivate
   gint64 min_latency;
   gint64 max_latency;
 
+  /* Tracks whether the latency message was posted at least once */
+  gboolean posted_latency_msg;
+
   /* upstream stream tags (global tags are passed through as-is) */
   GstTagList *upstream_tags;
 
@@ -2383,6 +2386,8 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
 
     priv->dropped = 0;
     priv->processed = 0;
+
+    priv->posted_latency_msg = FALSE;
 
     priv->decode_frame_number = 0;
     priv->base_picture_number = 0;
@@ -5073,24 +5078,41 @@ gst_video_decoder_get_estimate_rate (GstVideoDecoder * dec)
  * @min_latency: minimum latency
  * @max_latency: maximum latency
  *
- * Lets #GstVideoDecoder sub-classes tell the baseclass what the decoder
- * latency is. Will also post a LATENCY message on the bus so the pipeline
- * can reconfigure its global latency.
+ * Lets #GstVideoDecoder sub-classes tell the baseclass what the decoder latency
+ * is. If the provided values changed from previously provided ones, this will
+ * also post a LATENCY message on the bus so the pipeline can reconfigure its
+ * global latency.
  */
 void
 gst_video_decoder_set_latency (GstVideoDecoder * decoder,
     GstClockTime min_latency, GstClockTime max_latency)
 {
+  gboolean post_message = FALSE;
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
   g_return_if_fail (max_latency >= min_latency);
 
+  GST_DEBUG_OBJECT (decoder,
+      "min_latency:%" GST_TIME_FORMAT " max_latency:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
   GST_OBJECT_LOCK (decoder);
-  decoder->priv->min_latency = min_latency;
-  decoder->priv->max_latency = max_latency;
+  if (decoder->priv->min_latency != min_latency) {
+    decoder->priv->min_latency = min_latency;
+    post_message = TRUE;
+  }
+  if (decoder->priv->max_latency != max_latency) {
+    decoder->priv->max_latency = max_latency;
+    post_message = TRUE;
+  }
+  if (!decoder->priv->posted_latency_msg) {
+    decoder->priv->posted_latency_msg = TRUE;
+    post_message = TRUE;
+  }
   GST_OBJECT_UNLOCK (decoder);
 
-  gst_element_post_message (GST_ELEMENT_CAST (decoder),
-      gst_message_new_latency (GST_OBJECT_CAST (decoder)));
+  if (post_message)
+    gst_element_post_message (GST_ELEMENT_CAST (decoder),
+        gst_message_new_latency (GST_OBJECT_CAST (decoder)));
 }
 
 /**
