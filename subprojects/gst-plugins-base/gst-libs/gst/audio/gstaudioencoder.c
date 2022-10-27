@@ -172,6 +172,9 @@ typedef struct _GstAudioEncoderContext
   GstClockTime min_latency;
   GstClockTime max_latency;
 
+  /* Tracks whether the latency message was posted at least once */
+  gboolean posted_latency_msg;
+
   GList *headers;
   gboolean new_headers;
 
@@ -487,6 +490,7 @@ gst_audio_encoder_reset (GstAudioEncoder * enc, gboolean full)
 
     memset (&enc->priv->ctx, 0, sizeof (enc->priv->ctx));
     gst_audio_info_init (&enc->priv->ctx.info);
+    enc->priv->ctx.posted_latency_msg = FALSE;
     GST_OBJECT_UNLOCK (enc);
 
     if (enc->priv->upstream_tags) {
@@ -2308,27 +2312,43 @@ gst_audio_encoder_get_lookahead (GstAudioEncoder * enc)
  * @min: minimum latency
  * @max: maximum latency
  *
- * Sets encoder latency.
+ * Sets encoder latency. If the provided values changed from
+ * previously provided ones, this will also post a LATENCY message on the bus
+ * so the pipeline can reconfigure its global latency.
  */
 void
 gst_audio_encoder_set_latency (GstAudioEncoder * enc,
     GstClockTime min, GstClockTime max)
 {
+  gboolean post_message = FALSE;
+
   g_return_if_fail (GST_IS_AUDIO_ENCODER (enc));
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min));
   g_return_if_fail (min <= max);
 
-  GST_OBJECT_LOCK (enc);
-  enc->priv->ctx.min_latency = min;
-  enc->priv->ctx.max_latency = max;
-  GST_OBJECT_UNLOCK (enc);
-
-  GST_LOG_OBJECT (enc, "set to %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
+  GST_DEBUG_OBJECT (enc,
+      "min_latency:%" GST_TIME_FORMAT " max_latency:%" GST_TIME_FORMAT,
       GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
+  GST_OBJECT_LOCK (enc);
+  if (enc->priv->ctx.min_latency != min) {
+    enc->priv->ctx.min_latency = min;
+    post_message = TRUE;
+  }
+  if (enc->priv->ctx.max_latency != max) {
+    enc->priv->ctx.max_latency = max;
+    post_message = TRUE;
+  }
+  if (!enc->priv->ctx.posted_latency_msg) {
+    enc->priv->ctx.posted_latency_msg = TRUE;
+    post_message = TRUE;
+  }
+  GST_OBJECT_UNLOCK (enc);
+
   /* post latency message on the bus */
-  gst_element_post_message (GST_ELEMENT (enc),
-      gst_message_new_latency (GST_OBJECT (enc)));
+  if (post_message)
+    gst_element_post_message (GST_ELEMENT (enc),
+        gst_message_new_latency (GST_OBJECT (enc)));
 }
 
 /**
