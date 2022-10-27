@@ -616,6 +616,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_EOS:{
+      guint32 seqnum = gst_event_get_seqnum (event);
       gst_event_replace (&event, NULL);
 
       if (!gst_concat_pad_wait (spad, self)) {
@@ -632,6 +633,7 @@ gst_concat_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
         if (!next) {
           event = gst_event_new_eos ();
+          gst_event_set_seqnum (event, seqnum);
         } else {
           gst_element_post_message (GST_ELEMENT_CAST (self),
               gst_message_new_duration_changed (GST_OBJECT_CAST (self)));
