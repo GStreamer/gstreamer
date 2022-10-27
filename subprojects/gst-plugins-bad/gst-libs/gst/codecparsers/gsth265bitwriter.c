@@ -2267,8 +2267,10 @@ gst_h265_bit_writer_convert_to_nal (guint nal_prefix_size,
     goto error;
 
   if (raw_size % 8) {
-    if (!nal_writer_put_bits_uint8 (&nw, *(raw_data + raw_size / 8),
-            raw_size % 8))
+    guint8 data = *(raw_data + raw_size / 8);
+
+    if (!nal_writer_put_bits_uint8 (&nw,
+            data >> (8 - raw_size % 8), raw_size % 8))
       goto error;
   }
 
