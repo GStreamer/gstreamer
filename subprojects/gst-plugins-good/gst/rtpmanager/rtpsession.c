@@ -2742,9 +2742,13 @@ rtp_session_process_app (RTPSession * sess, GstRTCPPacket * packet,
 
 static gboolean
 rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
-    guint32 media_ssrc, gboolean fir, GstClockTime current_time)
+    const guint32 * ssrcs, guint num_ssrcs, gboolean fir,
+    GstClockTime current_time)
 {
   guint32 round_trip = 0;
+  gint i;
+
+  g_return_val_if_fail (ssrcs != NULL && num_ssrcs > 0, FALSE);
 
   rtp_source_get_last_rb (src, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
       &round_trip);
@@ -2770,14 +2774,17 @@ rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
 
   src->last_keyframe_request = current_time;
 
-  GST_LOG ("received %s request from %X about %X %p(%p)", fir ? "FIR" : "PLI",
-      rtp_source_get_ssrc (src), media_ssrc, sess->callbacks.process_rtp,
-      sess->callbacks.request_key_unit);
+  for (i = 0; i < num_ssrcs; ++i) {
+    GST_LOG ("received %s request from %X about %X %p(%p)",
+        fir ? "FIR" : "PLI",
+        rtp_source_get_ssrc (src), ssrcs[i], sess->callbacks.process_rtp,
+        sess->callbacks.request_key_unit);
 
-  RTP_SESSION_UNLOCK (sess);
-  sess->callbacks.request_key_unit (sess, media_ssrc, fir,
-      sess->request_key_unit_user_data);
-  RTP_SESSION_LOCK (sess);
+    RTP_SESSION_UNLOCK (sess);
+    sess->callbacks.request_key_unit (sess, ssrcs[i], fir,
+        sess->request_key_unit_user_data);
+    RTP_SESSION_LOCK (sess);
+  }
 
   return TRUE;
 }
@@ -2799,19 +2806,19 @@ rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
       return;
   }
 
-  rtp_session_request_local_key_unit (sess, src, media_ssrc, FALSE,
+  rtp_session_request_local_key_unit (sess, src, &media_ssrc, 1, FALSE,
       current_time);
 }
 
 static void
 rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
-    guint32 media_ssrc, guint8 * fci_data, guint fci_length,
-    GstClockTime current_time)
+    guint8 * fci_data, guint fci_length, GstClockTime current_time)
 {
   RTPSource *src;
   guint32 ssrc;
   guint position = 0;
-  gboolean our_request = FALSE;
+  guint32 ssrcs[32];
+  guint num_ssrcs = 0;
 
   if (!sess->callbacks.request_key_unit)
     return;
@@ -2849,15 +2856,14 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
     if (own == NULL)
       continue;
 
-    if (own->internal) {
-      our_request = TRUE;
-      break;
+    if (own->internal && num_ssrcs < 32) {
+      ssrcs[num_ssrcs++] = ssrc;
     }
   }
-  if (!our_request)
+  if (num_ssrcs == 0)
     return;
 
-  rtp_session_request_local_key_unit (sess, src, media_ssrc, TRUE,
+  rtp_session_request_local_key_unit (sess, src, ssrcs, num_ssrcs, TRUE,
       current_time);
 }
 
@@ -3022,8 +3028,8 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
           case GST_RTCP_PSFB_TYPE_FIR:
             if (src)
               src->stats.recv_fir_count++;
-            rtp_session_process_fir (sess, sender_ssrc, media_ssrc, fci_data,
-                fci_length, current_time);
+            rtp_session_process_fir (sess, sender_ssrc, fci_data, fci_length,
+                current_time);
             break;
           default:
             break;

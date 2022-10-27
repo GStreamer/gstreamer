@@ -988,6 +988,7 @@ GST_START_TEST (test_receive_regular_pli)
 {
   SessionHarness *h = session_harness_new ();
   GstEvent *ev;
+  const GstStructure *s;
 
   /* PLI packet */
   guint8 rtcp_pkt[] = {
@@ -1017,6 +1018,9 @@ GST_START_TEST (test_receive_regular_pli)
   fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
   fail_unless_equals_int (GST_EVENT_CUSTOM_UPSTREAM, GST_EVENT_TYPE (ev));
   fail_unless (gst_video_event_is_force_key_unit (ev));
+  s = gst_event_get_structure (ev);
+  fail_unless (s);
+  fail_unless (G_VALUE_HOLDS_UINT (gst_structure_get_value (s, "ssrc")));
   gst_event_unref (ev);
 
   session_harness_free (h);
@@ -1028,6 +1032,7 @@ GST_START_TEST (test_receive_pli_no_sender_ssrc)
 {
   SessionHarness *h = session_harness_new ();
   GstEvent *ev;
+  const GstStructure *s;
 
   /* PLI packet */
   guint8 rtcp_pkt[] = {
@@ -1057,6 +1062,9 @@ GST_START_TEST (test_receive_pli_no_sender_ssrc)
   fail_unless ((ev = gst_harness_pull_upstream_event (h->send_rtp_h)) != NULL);
   fail_unless_equals_int (GST_EVENT_CUSTOM_UPSTREAM, GST_EVENT_TYPE (ev));
   fail_unless (gst_video_event_is_force_key_unit (ev));
+  s = gst_event_get_structure (ev);
+  fail_unless (s);
+  fail_unless (G_VALUE_HOLDS_UINT (gst_structure_get_value (s, "ssrc")));
   gst_event_unref (ev);
 
   session_harness_free (h);
