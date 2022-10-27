@@ -180,6 +180,8 @@ typedef struct _GstAudioDecoderContext
   /* MT-protected (with LOCK) */
   GstClockTime min_latency;
   GstClockTime max_latency;
+  /* Tracks whether the latency message was posted at least once */
+  gboolean posted_latency_msg;
 
   GstAllocator *allocator;
   GstAllocationParams params;
@@ -555,6 +557,7 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
     memset (&dec->priv->ctx, 0, sizeof (dec->priv->ctx));
 
     gst_audio_info_init (&dec->priv->ctx.info);
+    dec->priv->ctx.posted_latency_msg = FALSE;
     GST_OBJECT_UNLOCK (dec);
     dec->priv->ctx.had_output_data = FALSE;
     dec->priv->ctx.had_input_data = FALSE;
@@ -3391,24 +3394,43 @@ gst_audio_decoder_get_max_errors (GstAudioDecoder * dec)
  * @min: minimum latency
  * @max: maximum latency
  *
- * Sets decoder latency.
+ * Sets decoder latency. If the provided values changed from
+ * previously provided ones, this will also post a LATENCY message on the bus
+ * so the pipeline can reconfigure its global latency.
  */
 void
 gst_audio_decoder_set_latency (GstAudioDecoder * dec,
     GstClockTime min, GstClockTime max)
 {
+  gboolean post_message = FALSE;
+
   g_return_if_fail (GST_IS_AUDIO_DECODER (dec));
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min));
   g_return_if_fail (min <= max);
 
+  GST_DEBUG_OBJECT (dec,
+      "min_latency:%" GST_TIME_FORMAT " max_latency:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
   GST_OBJECT_LOCK (dec);
-  dec->priv->ctx.min_latency = min;
-  dec->priv->ctx.max_latency = max;
+  if (dec->priv->ctx.min_latency != min) {
+    dec->priv->ctx.min_latency = min;
+    post_message = TRUE;
+  }
+  if (dec->priv->ctx.max_latency != max) {
+    dec->priv->ctx.max_latency = max;
+    post_message = TRUE;
+  }
+  if (!dec->priv->ctx.posted_latency_msg) {
+    dec->priv->ctx.posted_latency_msg = TRUE;
+    post_message = TRUE;
+  }
   GST_OBJECT_UNLOCK (dec);
 
   /* post latency message on the bus */
-  gst_element_post_message (GST_ELEMENT (dec),
-      gst_message_new_latency (GST_OBJECT (dec)));
+  if (post_message)
+    gst_element_post_message (GST_ELEMENT (dec),
+        gst_message_new_latency (GST_OBJECT (dec)));
 }
 
 /**

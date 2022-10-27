@@ -183,6 +183,9 @@ struct _GstAppSrcPrivate
 
   guint64 min_latency;
   guint64 max_latency;
+  /* Tracks whether the latency message was posted at least once */
+  gboolean posted_latency_msg;
+
   gboolean emit_signals;
   guint min_percent;
   gboolean handle_segment_change;
@@ -1103,6 +1106,7 @@ gst_app_src_stop (GstBaseSrc * bsrc)
   priv->is_eos = FALSE;
   priv->flushing = TRUE;
   priv->started = FALSE;
+  priv->posted_latency_msg = FALSE;
   gst_app_src_flush_queued (appsrc, TRUE);
   g_cond_broadcast (&priv->cond);
   g_mutex_unlock (&priv->mutex);
@@ -2323,6 +2327,10 @@ gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
   }
   if (do_max && priv->max_latency != max) {
     priv->max_latency = max;
+    changed = TRUE;
+  }
+  if (!priv->posted_latency_msg) {
+    priv->posted_latency_msg = TRUE;
     changed = TRUE;
   }
   g_mutex_unlock (&priv->mutex);

@@ -384,6 +384,8 @@ struct _GstAggregatorPrivate
 
   GstClockTime sub_latency_min; /* protected by src_lock */
   GstClockTime sub_latency_max; /* protected by src_lock */
+  /* Tracks whether the latency message was posted at least once */
+  gboolean posted_latency_msg;
 
   GstClockTime upstream_latency_min;    /* protected by src_lock */
 
@@ -1914,6 +1916,7 @@ gst_aggregator_stop (GstAggregator * agg)
   agg->priv->has_peer_latency = FALSE;
   agg->priv->peer_latency_live = FALSE;
   agg->priv->peer_latency_min = agg->priv->peer_latency_max = 0;
+  agg->priv->posted_latency_msg = FALSE;
 
   if (agg->priv->tags)
     gst_tag_list_unref (agg->priv->tags);
@@ -3699,7 +3702,7 @@ gst_aggregator_merge_tags (GstAggregator * self,
  *
  * Lets #GstAggregator sub-classes tell the baseclass what their internal
  * latency is. Will also post a LATENCY message on the bus so the pipeline
- * can reconfigure its global latency.
+ * can reconfigure its global latency if the values changed.
  */
 void
 gst_aggregator_set_latency (GstAggregator * self,
@@ -3718,6 +3721,10 @@ gst_aggregator_set_latency (GstAggregator * self,
   }
   if (self->priv->sub_latency_max != max_latency) {
     self->priv->sub_latency_max = max_latency;
+    changed = TRUE;
+  }
+  if (!self->priv->posted_latency_msg) {
+    self->priv->posted_latency_msg = TRUE;
     changed = TRUE;
   }
 

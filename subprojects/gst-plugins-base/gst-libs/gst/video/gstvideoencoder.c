@@ -134,6 +134,9 @@ struct _GstVideoEncoderPrivate
   gint64 min_latency;
   gint64 max_latency;
 
+  /* Tracks whether the latency message was posted at least once */
+  gboolean posted_latency_msg;
+
   /* FIXME 2.0: Use a GQueue or similar, see GstVideoCodecFrame::events */
   GList *current_frame_events;
 
@@ -512,6 +515,8 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 
     priv->dropped = 0;
     priv->processed = 0;
+
+    priv->posted_latency_msg = FALSE;
   } else {
     GList *l;
 
@@ -2853,22 +2858,41 @@ gst_video_encoder_set_output_state (GstVideoEncoder * encoder, GstCaps * caps,
  * @min_latency: minimum latency
  * @max_latency: maximum latency
  *
- * Informs baseclass of encoding latency.
+ * Informs baseclass of encoding latency. If the provided values changed from
+ * previously provided ones, this will also post a LATENCY message on the bus
+ * so the pipeline can reconfigure its global latency.
  */
 void
 gst_video_encoder_set_latency (GstVideoEncoder * encoder,
     GstClockTime min_latency, GstClockTime max_latency)
 {
+  gboolean post_message = FALSE;
+
   g_return_if_fail (GST_CLOCK_TIME_IS_VALID (min_latency));
   g_return_if_fail (max_latency >= min_latency);
 
+  GST_DEBUG_OBJECT (encoder,
+      "min_latency:%" GST_TIME_FORMAT " max_latency:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
   GST_OBJECT_LOCK (encoder);
-  encoder->priv->min_latency = min_latency;
-  encoder->priv->max_latency = max_latency;
+  if (encoder->priv->min_latency != min_latency) {
+    encoder->priv->min_latency = min_latency;
+    post_message = TRUE;
+  }
+  if (encoder->priv->max_latency != max_latency) {
+    encoder->priv->max_latency = max_latency;
+    post_message = TRUE;
+  }
+  if (!encoder->priv->posted_latency_msg) {
+    encoder->priv->posted_latency_msg = TRUE;
+    post_message = TRUE;
+  }
   GST_OBJECT_UNLOCK (encoder);
 
-  gst_element_post_message (GST_ELEMENT_CAST (encoder),
-      gst_message_new_latency (GST_OBJECT_CAST (encoder)));
+  if (post_message)
+    gst_element_post_message (GST_ELEMENT_CAST (encoder),
+        gst_message_new_latency (GST_OBJECT_CAST (encoder)));
 }
 
 /**
