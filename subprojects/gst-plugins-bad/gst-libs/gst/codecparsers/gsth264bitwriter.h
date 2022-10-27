@@ -49,29 +49,30 @@ GST_CODEC_PARSERS_API
 GstH264BitWriterResult     gst_h264_bit_writer_sps       (const GstH264SPS * sps,
                                                           gboolean start_code,
                                                           guint8 * data,
-                                                          gsize * size);
+                                                          guint * size);
 GST_CODEC_PARSERS_API
 GstH264BitWriterResult     gst_h264_bit_writer_pps       (const GstH264PPS * pps,
                                                           gboolean start_code,
                                                           guint8 * data,
-                                                          gsize * size);
+                                                          guint * size);
 GST_CODEC_PARSERS_API
 GstH264BitWriterResult     gst_h264_bit_writer_slice_hdr (const GstH264SliceHdr * slice,
                                                           gboolean start_code,
                                                           GstH264NalUnitType nal_type,
                                                           gboolean is_ref,
                                                           guint8 * data,
-                                                          gsize * size);
+                                                          guint * size,
+                                                          guint * trail_bits_num);
 GST_CODEC_PARSERS_API
 GstH264BitWriterResult     gst_h264_bit_writer_sei       (GArray * sei_messages,
                                                           gboolean start_code,
                                                           guint8 * data,
-                                                          gsize * size);
+                                                          guint * size);
 GST_CODEC_PARSERS_API
 GstH264BitWriterResult     gst_h264_bit_writer_aud       (guint8 primary_pic_type,
                                                           gboolean start_code,
                                                           guint8 * data,
-                                                          gsize * size);
+                                                          guint * size);
 GST_CODEC_PARSERS_API
 GstH264BitWriterResult     gst_h264_bit_writer_convert_to_nal (guint nal_prefix_size,
                                                                gboolean packetized,
@@ -80,7 +81,7 @@ GstH264BitWriterResult     gst_h264_bit_writer_convert_to_nal (guint nal_prefix_
                                                                const guint8 * raw_data,
                                                                gsize raw_size,
                                                                guint8 * nal_data,
-                                                               guint32 * nal_size);
+                                                               guint * nal_size);
 
 G_END_DECLS
 

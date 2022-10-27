@@ -2033,7 +2033,7 @@ static gboolean
 _add_sequence_header (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
-  gsize size;
+  guint size;
 #define SPS_SIZE 4 + GST_ROUND_UP_8 (MAX_SPS_HDR_SIZE + MAX_VUI_PARAMS_SIZE + \
     2 * MAX_HRD_PARAMS_SIZE) / 8
   guint8 packed_sps[SPS_SIZE] = { 0, };
@@ -2047,7 +2047,7 @@ _add_sequence_header (GstVaH264Enc * self, GstVaH264EncFrame * frame)
   }
 
   if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
-          VAEncPackedHeaderSequence, packed_sps, size, FALSE)) {
+          VAEncPackedHeaderSequence, packed_sps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed sequence header");
     return FALSE;
   }
@@ -2299,7 +2299,7 @@ _add_picture_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
 #define PPS_SIZE 4 + GST_ROUND_UP_8 (MAX_PPS_HDR_SIZE) / 8
   guint8 packed_pps[PPS_SIZE] = { 0, };
 #undef PPS_SIZE
-  gsize size;
+  guint size;
 
   size = sizeof (packed_pps);
   if (gst_h264_bit_writer_pps (pps, TRUE, packed_pps,
@@ -2309,7 +2309,7 @@ _add_picture_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
   }
 
   if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
-          VAEncPackedHeaderPicture, packed_pps, size, FALSE)) {
+          VAEncPackedHeaderPicture, packed_pps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed picture header");
     return FALSE;
   }
@@ -2562,7 +2562,7 @@ _add_slice_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   GstH264SliceHdr slice_hdr;
-  gsize size;
+  guint size, trail_bits;
   GstH264NalUnitType nal_type = GST_H264_NAL_SLICE;
 #define SLICE_HDR_SIZE 4 + GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8
   guint8 packed_slice_hdr[SLICE_HDR_SIZE] = { 0, };
@@ -2636,14 +2636,16 @@ _add_slice_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
   }
 
   size = sizeof (packed_slice_hdr);
+  trail_bits = 0;
   if (gst_h264_bit_writer_slice_hdr (&slice_hdr, TRUE, nal_type, frame->is_ref,
-          packed_slice_hdr, &size) != GST_H264_BIT_WRITER_OK) {
+          packed_slice_hdr, &size, &trail_bits) != GST_H264_BIT_WRITER_OK) {
     GST_ERROR_OBJECT (self, "Failed to generate the slice header");
     return FALSE;
   }
 
   if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
-          VAEncPackedHeaderSlice, packed_slice_hdr, size, FALSE)) {
+          VAEncPackedHeaderSlice, packed_slice_hdr, size * 8 + trail_bits,
+          FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed slice header");
     return FALSE;
   }
@@ -2656,7 +2658,7 @@ _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint8 aud_data[8] = { };
-  gsize size;
+  guint size;
   guint8 primary_pic_type = 0;
 
   switch (frame->type) {
@@ -2682,7 +2684,7 @@ _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
   }
 
   if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
-          VAEncPackedHeaderRawData, aud_data, size, FALSE)) {
+          VAEncPackedHeaderRawData, aud_data, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the AUD");
     return FALSE;
   }

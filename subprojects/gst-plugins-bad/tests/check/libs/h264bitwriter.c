@@ -171,8 +171,8 @@ GST_START_TEST (test_h264_bitwriter_sps_pps_slice_hdr)
   GstH264SliceHdr slice_parsed;
   guint8 header_data[128] = { 0, };
   guint8 header_nal[128] = { 0, };
-  gsize size;
-  guint32 nal_size;
+  guint size, trail_bits;
+  guint nal_size;
   guint i;
 
   size = sizeof (header_data);
@@ -181,9 +181,9 @@ GST_START_TEST (test_h264_bitwriter_sps_pps_slice_hdr)
 
   nal_size = sizeof (header_nal);
   ret = gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      header_data, size, header_nal, &nal_size);
+      header_data, size * 8, header_nal, &nal_size);
   fail_if (ret != GST_H264_BIT_WRITER_OK);
-  fail_if (nal_size < GST_ROUND_UP_8 (size) / 8);
+  fail_if (nal_size < size);
 
   /* Parse it again */
   res = gst_h264_parser_identify_nalu (parser, header_nal, 0,
@@ -281,9 +281,9 @@ GST_START_TEST (test_h264_bitwriter_sps_pps_slice_hdr)
 
   nal_size = sizeof (header_nal);
   ret = gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      header_data, size, header_nal, &nal_size);
+      header_data, size * 8, header_nal, &nal_size);
   fail_if (ret != GST_H264_BIT_WRITER_OK);
-  fail_if (nal_size < GST_ROUND_UP_8 (size) / 8);
+  fail_if (nal_size < size);
 
   /* Parse it again */
   res = gst_h264_parser_identify_nalu (parser, header_nal, 0,
@@ -320,15 +320,16 @@ GST_START_TEST (test_h264_bitwriter_sps_pps_slice_hdr)
   memset (header_nal, 0, sizeof (header_nal));
 
   size = sizeof (header_data);
+  trail_bits = 0;
   ret = gst_h264_bit_writer_slice_hdr (&slice_hdr, TRUE, GST_H264_NAL_SLICE,
-      FALSE, header_data, &size);
+      FALSE, header_data, &size, &trail_bits);
   fail_if (ret != GST_H264_BIT_WRITER_OK);
 
   nal_size = sizeof (header_nal);
-  ret = gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      header_data, GST_ROUND_UP_8 (size), header_nal, &nal_size);
+  ret = gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, TRUE,
+      header_data, size * 8 + trail_bits, header_nal, &nal_size);
   fail_if (ret != GST_H264_BIT_WRITER_OK);
-  fail_if (nal_size < GST_ROUND_UP_8 (size) / 8);
+  fail_if (nal_size < size);
 
   /* Parse it again */
   res = gst_h264_parser_identify_nalu (parser, header_nal, 0,
@@ -393,8 +394,8 @@ GST_START_TEST (test_h264_bitwriter_sei)
   GArray *msg_array;
   GArray *sei_parsed = NULL;
   GstH264SEIMessage *sei_msg_parsed;
-  gsize size;
-  guint32 size_nal;
+  guint size;
+  guint size_nal;
   guint8 sei_data[128] = { 0, };
   guint8 sei_nal[128] = { 0, };
 
@@ -459,7 +460,7 @@ GST_START_TEST (test_h264_bitwriter_sei)
 
   size_nal = sizeof (sei_nal);
   ret = gst_h264_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      sei_data, size, sei_nal, &size_nal);
+      sei_data, size * 8, sei_nal, &size_nal);
   fail_if (ret != GST_H264_BIT_WRITER_OK);
 
   /* Parse it again. */
