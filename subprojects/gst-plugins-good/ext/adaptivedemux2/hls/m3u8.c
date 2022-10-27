@@ -1526,9 +1526,14 @@ gst_hls_media_playlist_find_position (GstHLSMediaPlaylist * playlist,
     }
 
     /* Otherwise, we're doing a full segment match so check that the timestamp is
-     * within half a segment duration of this segment stream_time */
-    if (cand->stream_time + (cand->duration / 2) >= ts &&
-        cand->stream_time <= ts + (cand->duration / 2)) {
+     * within half a segment duration of this segment stream_time. The maximum
+     * of the current segment or target duration is used, because the partial-only
+     * last segment might be quite small (as it's still being created), which
+     * can cause a missed match otherwise */
+    GstClockTimeDiff match_threshold =
+        MAX (cand->duration, playlist->targetduration) / 2;
+    if (cand->stream_time + match_threshold >= ts
+        && cand->stream_time <= ts + match_threshold) {
       GST_DEBUG ("choosing segment %d", seg_idx);
       seg = cand;
       break;
