@@ -979,12 +979,13 @@ gst_hls_media_playlist_find_by_uri (GstHLSMediaPlaylist * playlist,
  */
 static GstM3U8MediaSegment *
 find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
-    GstM3U8MediaSegment * segment, gboolean * is_before)
+    GstM3U8MediaSegment * segment, gboolean * is_before, gboolean * matched_pdt)
 {
   GstM3U8MediaSegment *res = NULL;
   guint idx;
 
   *is_before = FALSE;
+  *matched_pdt = FALSE;
 
   /* The easy one. Happens when stream times need to be re-synced in an existing
    * playlist */
@@ -1027,6 +1028,7 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
           g_ptr_array_insert (playlist->segments, 0,
               gst_m3u8_media_segment_ref (segment));
           *is_before = TRUE;
+          *matched_pdt = TRUE;
           return segment;
         }
         if (ddiff > 0) {
@@ -1039,6 +1041,7 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
       if (cand->datetime
           && g_date_time_difference (cand->datetime, segment->datetime) >= 0) {
         GST_DEBUG ("Picking by date time");
+        *matched_pdt = TRUE;
         return cand;
       }
     }
@@ -1122,7 +1125,8 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
       GST_TIME_ARGS (segment->duration), segment->sequence,
       segment->discont_sequence, segment->uri, playlist->uri);
 
-  res = find_segment_in_playlist (playlist, segment, &is_before);
+  gboolean matched_pdt = FALSE;
+  res = find_segment_in_playlist (playlist, segment, &is_before, &matched_pdt);
 
   /* For live playlists we re-calculate all stream times based on the existing
    * stream time. Non-live playlists have their stream time calculated at
@@ -1130,8 +1134,26 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
   if (res) {
     if (!is_before)
       gst_m3u8_media_segment_ref (res);
-    if (res->stream_time == GST_CLOCK_STIME_NONE)
-      res->stream_time = segment->stream_time;
+    if (res->stream_time == GST_CLOCK_STIME_NONE) {
+      GstClockTimeDiff stream_time_offset = 0;
+      /* If there is a PDT on both segments, adjust the stream time
+       * by the difference to align them precisely (hopefully).
+       */
+      if (matched_pdt) {
+        /* If matched_pdt is TRUE, there must be PDT present in both segments */
+        g_assert (res->datetime);
+        g_assert (segment->datetime);
+
+        stream_time_offset =
+            g_date_time_difference (res->datetime,
+            segment->datetime) * GST_USECOND;
+
+        GST_DEBUG ("Transferring stream time %" GST_STIMEP_FORMAT
+            " adjusted by PDT offset %" GST_STIMEP_FORMAT,
+            &segment->stream_time, &stream_time_offset);
+      }
+      res->stream_time = segment->stream_time + stream_time_offset;
+    }
     if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist))
       gst_hls_media_playlist_recalculate_stream_time (playlist, res);
     /* If the playlist didn't specify a reference discont sequence number, we
@@ -1206,6 +1228,7 @@ gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
   GstM3U8MediaSegment *cand = NULL;
   guint idx;
   gboolean is_before;
+  gboolean matched_pdt = FALSE;
 
   g_return_val_if_fail (playlist && reference, FALSE);
 
@@ -1215,7 +1238,7 @@ retry_without_dsn:
    * go backwards */
   for (idx = reference->segments->len - 1; idx; idx--) {
     cand = g_ptr_array_index (reference->segments, idx);
-    res = find_segment_in_playlist (playlist, cand, &is_before);
+    res = find_segment_in_playlist (playlist, cand, &is_before, &matched_pdt);
     if (res)
       break;
   }
@@ -1223,7 +1246,7 @@ retry_without_dsn:
   if (res == NULL) {
     if (playlist->has_ext_x_dsn) {
       /* There is a possibility that the server doesn't have coherent DSN
-       * accross variants/renditions. If we reach this section, this means that
+       * across variants/renditions. If we reach this section, this means that
        * we have already attempted matching by PDT, URI, stream time. The last
        * matching would have been by MSN/DSN, therefore try it again without
        * taking DSN into account. */
@@ -1236,8 +1259,26 @@ retry_without_dsn:
   }
 
   /* Carry over reference stream time */
-  if (res->stream_time == GST_CLOCK_STIME_NONE)
-    res->stream_time = cand->stream_time;
+  if (res->stream_time == GST_CLOCK_STIME_NONE) {
+    GstClockTimeDiff stream_time_offset = 0;
+    /* If there is a PDT on both segments, adjust the stream time
+     * by the difference to align them precisely (hopefully).
+     */
+    if (matched_pdt) {
+      /* If matched_pdt is TRUE, there must be PDT present in both segments */
+      g_assert (playlist->ext_x_pdt_present && res->datetime);
+      g_assert (reference->ext_x_pdt_present && cand->datetime);
+
+      stream_time_offset =
+          g_date_time_difference (res->datetime, cand->datetime) * GST_USECOND;
+      GST_DEBUG ("Transferring stream time %" GST_STIMEP_FORMAT
+          " adjusted by PDT offset %" GST_STIMEP_FORMAT, &cand->stream_time,
+          &stream_time_offset);
+
+    }
+    res->stream_time = cand->stream_time + stream_time_offset;
+  }
+
   if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist))
     gst_hls_media_playlist_recalculate_stream_time (playlist, res);
   /* If the playlist didn't specify a reference discont sequence number, we
