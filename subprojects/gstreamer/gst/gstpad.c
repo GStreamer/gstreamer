@@ -4969,11 +4969,11 @@ flushing:
   }
 wrong_mode:
   {
-    g_critical ("getrange on pad %s:%s but it was not activated in pull mode",
-        GST_DEBUG_PAD_NAME (pad));
     pad->ABI.abi.last_flowret = GST_FLOW_ERROR;
     GST_OBJECT_UNLOCK (pad);
     GST_PAD_STREAM_UNLOCK (pad);
+    g_critical ("getrange on pad %s:%s but it was not activated in pull mode",
+        GST_DEBUG_PAD_NAME (pad));
     return GST_FLOW_ERROR;
   }
 events_error:
