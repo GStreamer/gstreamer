@@ -513,7 +513,7 @@ GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
   GstH265SliceHdr slice_parsed;
   guint8 header_data[2048] = { 0, };
   guint8 header_nal[2048] = { 0, };
-  gsize size;
+  guint size;
   guint32 nal_size;
   guint i, j;
 
@@ -523,9 +523,9 @@ GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
 
   nal_size = sizeof (header_nal);
   ret = gst_h265_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      header_data, size, header_nal, &nal_size);
+      header_data, size * 8, header_nal, &nal_size);
   fail_if (ret != GST_H265_BIT_WRITER_OK);
-  fail_if (nal_size < GST_ROUND_UP_8 (size) / 8);
+  fail_if (nal_size < size);
 
   /* Parse it again */
   res = gst_h265_parser_identify_nalu (parser, header_nal, 0,
@@ -612,9 +612,9 @@ GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
 
   nal_size = sizeof (header_nal);
   ret = gst_h265_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      header_data, size, header_nal, &nal_size);
+      header_data, size * 8, header_nal, &nal_size);
   fail_if (ret != GST_H265_BIT_WRITER_OK);
-  fail_if (nal_size < GST_ROUND_UP_8 (size) / 8);
+  fail_if (nal_size < size);
 
   /* Parse it again */
   res = gst_h265_parser_identify_nalu (parser, header_nal, 0,
@@ -805,9 +805,9 @@ GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
 
   nal_size = sizeof (header_nal);
   ret = gst_h265_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      header_data, size, header_nal, &nal_size);
+      header_data, size * 8, header_nal, &nal_size);
   fail_if (ret != GST_H265_BIT_WRITER_OK);
-  fail_if (nal_size < GST_ROUND_UP_8 (size) / 8);
+  fail_if (nal_size < size);
 
   /* Parse it again */
   res = gst_h265_parser_identify_nalu (parser, header_nal, 0,
@@ -906,9 +906,9 @@ GST_START_TEST (test_h265_bitwriter_vps_sps_pps_slice_hdr)
 
   nal_size = sizeof (header_nal);
   ret = gst_h265_bit_writer_convert_to_nal (4, FALSE, TRUE, FALSE,
-      header_data, GST_ROUND_UP_8 (size), header_nal, &nal_size);
+      header_data, size * 8, header_nal, &nal_size);
   fail_if (ret != GST_H265_BIT_WRITER_OK);
-  fail_if (nal_size < GST_ROUND_UP_8 (size) / 8);
+  fail_if (nal_size < size);
 
   /* Parse it again */
   res = gst_h265_parser_identify_nalu (parser, header_nal, 0,

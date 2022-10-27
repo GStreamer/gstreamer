@@ -49,35 +49,35 @@ GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_vps      (const GstH265VPS * vps,
                                                         gboolean start_code,
                                                         guint8 * data,
-                                                        gsize * size);
+                                                        guint * size);
 GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_sps      (const GstH265SPS * sps,
                                                         gboolean start_code,
                                                         guint8 * data,
-                                                        gsize * size);
+                                                        guint * size);
 GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_pps      (const GstH265PPS * pps,
                                                         gboolean start_code,
                                                         guint8 * data,
-                                                        gsize * size);
+                                                        guint * size);
 GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_slice_hdr (const GstH265SliceHdr * slice,
                                                          gboolean start_code,
                                                          guint32 nal_type,
                                                          guint8 * data,
-                                                         gsize * size);
+                                                         guint * size);
 GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_sei       (GArray * sei_messages,
                                                          GstH265NalUnitType nal_type,
                                                          gboolean start_code,
                                                          guint8 * data,
-                                                         gsize * size);
+                                                         guint * size);
 
 GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_aud       (guint8 pic_type,
                                                          gboolean start_code,
                                                          guint8 * data,
-                                                         gsize * size);
+                                                         guint * size);
 
 GST_CODEC_PARSERS_API
 GstH265BitWriterResult    gst_h265_bit_writer_convert_to_nal (guint nal_prefix_size,
@@ -87,7 +87,7 @@ GstH265BitWriterResult    gst_h265_bit_writer_convert_to_nal (guint nal_prefix_s
                                                               const guint8 * raw_data,
                                                               gsize raw_size,
                                                               guint8 * nal_data,
-                                                              guint32 * nal_size);
+                                                              guint * nal_size);
 G_END_DECLS
 
 #endif /* __GST_H265_BIT_WRITER_H__ */
