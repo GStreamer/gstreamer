@@ -350,7 +350,7 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
   GArray *surface_formats = NULL;
   VAStatus status;
   GstBufferPool *recon_pool = NULL;
-  guint attrib_idx = 2;
+  guint attrib_idx = 1;
 
   g_return_val_if_fail (GST_IS_VA_ENCODER (self), FALSE);
   g_return_val_if_fail (codedbuf_size > 0, FALSE);
