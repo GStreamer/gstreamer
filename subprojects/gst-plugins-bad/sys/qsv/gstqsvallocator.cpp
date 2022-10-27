@@ -206,6 +206,9 @@ gst_qsv_allocator_alloc_default (GstQsvAllocator * self, gboolean dummy_alloc,
     case MFX_FOURCC_P010:
       format = GST_VIDEO_FORMAT_P010_10LE;
       break;
+    case MFX_FOURCC_P016:
+      format = GST_VIDEO_FORMAT_P016_LE;
+      break;
     case MFX_FOURCC_AYUV:
       format = GST_VIDEO_FORMAT_VUYA;
       break;
@@ -762,7 +765,7 @@ gst_qsv_allocator_download_default (GstQsvAllocator * self,
     return nullptr;
   }
 
-  if (!gst_video_frame_map (&dst_frame, &frame->info, buffer, GST_MAP_WRITE)) {
+  if (!gst_video_frame_map (&dst_frame, info, buffer, GST_MAP_WRITE)) {
     gst_qsv_allocator_unlock ((mfxHDL) self, (mfxMemId) frame, &dummy);
     gst_buffer_unref (buffer);
     GST_ERROR_OBJECT (self, "Failed to map output buffer");
@@ -784,7 +787,8 @@ gst_qsv_allocator_download_default (GstQsvAllocator * self,
 
 GstBuffer *
 gst_qsv_allocator_download_frame (GstQsvAllocator * allocator,
-    gboolean force_copy, GstQsvFrame * frame, GstBufferPool * pool)
+    gboolean force_copy, GstQsvFrame * frame, const GstVideoInfo * pool_info,
+    GstBufferPool * pool)
 {
   GstQsvAllocatorClass *klass;
 
@@ -793,14 +797,14 @@ gst_qsv_allocator_download_frame (GstQsvAllocator * allocator,
   g_return_val_if_fail (GST_IS_BUFFER_POOL (pool), nullptr);
 
   if (GST_QSV_MEM_TYPE_IS_SYSTEM (frame->mem_type)) {
-    return gst_qsv_allocator_download_default (allocator, &frame->info,
+    return gst_qsv_allocator_download_default (allocator, pool_info,
         force_copy, frame, pool);
   }
 
   klass = GST_QSV_ALLOCATOR_GET_CLASS (allocator);
   g_assert (klass->download);
 
-  return klass->download (allocator, &frame->info, force_copy, frame, pool);
+  return klass->download (allocator, pool_info, force_copy, frame, pool);
 }
 
 mfxFrameAllocator *

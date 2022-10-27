@@ -106,6 +106,9 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     case MFX_FOURCC_P010:
       dxgi_format = DXGI_FORMAT_P010;
       break;
+    case MFX_FOURCC_P016:
+      dxgi_format = DXGI_FORMAT_P016;
+      break;
     case MFX_FOURCC_AYUV:
       dxgi_format = DXGI_FORMAT_AYUV;
       break;

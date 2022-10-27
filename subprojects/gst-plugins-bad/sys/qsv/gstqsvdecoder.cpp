@@ -142,6 +142,8 @@ static GstFlowReturn gst_qsv_decoder_drain (GstVideoDecoder * decoder);
 
 static void gst_qsv_decoder_surface_clear (GstQsvDecoderSurface * surface);
 static void gst_qsv_decoder_task_clear (GstQsvDecoderTask * task);
+static gboolean gst_qsv_decoder_negotiate_internal (GstVideoDecoder * decoder,
+    const mfxFrameInfo * frame_info);
 
 static void
 gst_qsv_decoder_class_init (GstQsvDecoderClass * klass)
@@ -592,6 +594,7 @@ gst_qsv_decoder_finish_frame (GstQsvDecoder * self, GstQsvDecoderTask * task,
 {
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (self);
   GstQsvDecoderPrivate *priv = self->priv;
+  GstQsvDecoderClass *klass = GST_QSV_DECODER_GET_CLASS (self);
   mfxStatus status;
   GstVideoCodecFrame *frame;
   GstClockTime pts = GST_CLOCK_TIME_NONE;
@@ -643,6 +646,37 @@ gst_qsv_decoder_finish_frame (GstQsvDecoder * self, GstQsvDecoderTask * task,
     return GST_FLOW_ERROR;
   }
 
+  /* Handle non-keyframe resolution change */
+  if (klass->codec_id == MFX_CODEC_VP9) {
+    guint width, height;
+
+    if (surface->surface.Info.CropW > 0 && surface->surface.Info.CropH > 0) {
+      width = surface->surface.Info.CropW;
+      height = surface->surface.Info.CropH;
+    } else {
+      width = surface->surface.Info.Width;
+      height = surface->surface.Info.Height;
+    }
+
+    if (width != (guint) priv->output_state->info.width ||
+        height != (guint) priv->output_state->info.height) {
+      GST_DEBUG_OBJECT (self,
+          "VP9 resolution change %dx%d -> %dx%d, negotiate again",
+          priv->output_state->info.width, priv->output_state->info.height,
+          width, height);
+      if (!gst_qsv_decoder_negotiate_internal (vdec, &surface->surface.Info)) {
+        GST_ERROR_OBJECT (self, "Could not negotiate with downstream");
+        return GST_FLOW_NOT_NEGOTIATED;
+      }
+    }
+
+    /* TODO: Use crop meta if supported by downstream.
+     * Most d3d11 elements supports crop meta */
+    if (width != (guint) priv->info.width
+        || height != (guint) priv->info.height)
+      force_copy = TRUE;
+  }
+
   pts = gst_qsv_timestamp_to_gst (surface->surface.Data.TimeStamp);
   pool = gst_video_decoder_get_buffer_pool (vdec);
   if (!pool) {
@@ -663,7 +697,7 @@ gst_qsv_decoder_finish_frame (GstQsvDecoder * self, GstQsvDecoderTask * task,
 
   /* TODO: Handle non-zero crop-{x,y} position via crop meta or similar */
   buffer = gst_qsv_allocator_download_frame (priv->allocator, force_copy,
-      surface->frame, pool);
+      surface->frame, &priv->output_state->info, pool);
   gst_object_unref (pool);
   gst_qsv_decoder_task_clear (task);
 
@@ -761,15 +795,13 @@ gst_qsv_decoder_decode_frame (GstQsvDecoder * self, mfxBitstream * bitstream,
 
     switch (status) {
       case MFX_ERR_NONE:
-      case MFX_WRN_VIDEO_PARAM_CHANGED:{
+      case MFX_WRN_VIDEO_PARAM_CHANGED:
         if (surface->surface.Data.Locked > 0)
           surface = nullptr;
 
         if (bitstream && bitstream->DataLength == 0)
           return GST_FLOW_OK;
-
         break;
-      }
       case MFX_ERR_MORE_SURFACE:
         return GST_FLOW_OK;
       case MFX_ERR_INCOMPATIBLE_VIDEO_PARAM:
@@ -1072,68 +1104,27 @@ error:
 }
 
 static gboolean
-gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
+gst_qsv_decoder_negotiate_internal (GstVideoDecoder * decoder,
+    const mfxFrameInfo * frame_info)
 {
   GstQsvDecoder *self = GST_QSV_DECODER (decoder);
   GstQsvDecoderPrivate *priv = self->priv;
-  GstQsvDecoderClass *klass = GST_QSV_DECODER_GET_CLASS (self);
   guint width, height;
-  guint coded_width, coded_height;
-  guint aligned_width, aligned_height;
-  mfxVideoParam *param = &priv->video_param;
-  mfxFrameInfo *frame_info = &param->mfx.FrameInfo;
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  GstVideoInterlaceMode interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
-  width = coded_width = frame_info->Width;
-  height = coded_height = frame_info->Height;
+  width = frame_info->Width;
+  height = frame_info->Height;
 
   if (frame_info->CropW > 0 && frame_info->CropH > 0) {
     width = frame_info->CropW;
     height = frame_info->CropH;
   }
 
-  switch (frame_info->FourCC) {
-    case MFX_FOURCC_NV12:
-      format = GST_VIDEO_FORMAT_NV12;
-      break;
-    case MFX_FOURCC_P010:
-      format = GST_VIDEO_FORMAT_P010_10LE;
-      break;
-    default:
-      break;
-  }
-
-  if (format == GST_VIDEO_FORMAT_UNKNOWN) {
-    GST_ERROR_OBJECT (self, "Unknown video format");
-    return FALSE;
-  }
-
-  aligned_width = GST_ROUND_UP_16 (coded_width);
-  if (klass->codec_id == MFX_CODEC_AVC) {
-    if (frame_info->PicStruct == MFX_PICSTRUCT_PROGRESSIVE) {
-      aligned_height = GST_ROUND_UP_16 (coded_height);
-    } else {
-      aligned_height = GST_ROUND_UP_32 (coded_height);
-      /* In theory, tff/bff can be altered in a sequence */
-      interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
-    }
-  } else {
-    aligned_height = GST_ROUND_UP_16 (coded_height);
-  }
-
-  frame_info->Width = aligned_width;
-  frame_info->Height = aligned_height;
-
-  gst_video_info_set_interlaced_format (&priv->info, format,
-      interlace_mode, width, height);
-  gst_video_info_set_interlaced_format (&priv->aligned_info, format,
-      interlace_mode, aligned_width, aligned_height);
-
   g_clear_pointer (&priv->output_state, gst_video_codec_state_unref);
   priv->output_state =
       gst_video_decoder_set_interlaced_output_state (GST_VIDEO_DECODER (self),
-      format, interlace_mode, width, height, priv->input_state);
+      GST_VIDEO_INFO_FORMAT (&priv->info),
+      GST_VIDEO_INFO_INTERLACE_MODE (&priv->info),
+      width, height, priv->input_state);
 
   priv->output_state->caps = gst_video_info_to_caps (&priv->output_state->info);
   priv->use_video_memory = FALSE;
@@ -1176,6 +1167,72 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
       "Negotiating with %" GST_PTR_FORMAT, priv->output_state->caps);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
+}
+
+static gboolean
+gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
+{
+  GstQsvDecoder *self = GST_QSV_DECODER (decoder);
+  GstQsvDecoderPrivate *priv = self->priv;
+  GstQsvDecoderClass *klass = GST_QSV_DECODER_GET_CLASS (self);
+  guint width, height;
+  guint coded_width, coded_height;
+  guint aligned_width, aligned_height;
+  mfxVideoParam *param = &priv->video_param;
+  mfxFrameInfo *frame_info = &param->mfx.FrameInfo;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  GstVideoInterlaceMode interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+  width = coded_width = frame_info->Width;
+  height = coded_height = frame_info->Height;
+
+  if (frame_info->CropW > 0 && frame_info->CropH > 0) {
+    width = frame_info->CropW;
+    height = frame_info->CropH;
+  }
+
+  switch (frame_info->FourCC) {
+    case MFX_FOURCC_NV12:
+      format = GST_VIDEO_FORMAT_NV12;
+      break;
+    case MFX_FOURCC_P010:
+      format = GST_VIDEO_FORMAT_P010_10LE;
+      break;
+    case MFX_FOURCC_P016:
+      format = GST_VIDEO_FORMAT_P016_LE;
+      break;
+    default:
+      break;
+  }
+
+  if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self, "Unknown video format");
+    return FALSE;
+  }
+
+  aligned_width = GST_ROUND_UP_16 (coded_width);
+  if (klass->codec_id == MFX_CODEC_AVC) {
+    if (frame_info->PicStruct == MFX_PICSTRUCT_PROGRESSIVE) {
+      aligned_height = GST_ROUND_UP_16 (coded_height);
+    } else {
+      aligned_height = GST_ROUND_UP_32 (coded_height);
+      /* In theory, tff/bff can be altered in a sequence */
+      interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
+    }
+  } else {
+    aligned_height = GST_ROUND_UP_16 (coded_height);
+  }
+
+  frame_info->Width = aligned_width;
+  frame_info->Height = aligned_height;
+
+  gst_video_info_set_interlaced_format (&priv->info, format,
+      interlace_mode, width, height);
+  gst_video_info_set_interlaced_format (&priv->aligned_info, format,
+      interlace_mode, aligned_width, aligned_height);
+
+  return gst_qsv_decoder_negotiate_internal (decoder,
+      &priv->video_param.mfx.FrameInfo);
 }
 
 #ifdef G_OS_WIN32

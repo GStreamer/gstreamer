@@ -117,6 +117,7 @@ GstQsvFrame *       gst_qsv_allocator_acquire_frame   (GstQsvAllocator * allocat
 GstBuffer *         gst_qsv_allocator_download_frame  (GstQsvAllocator * allocator,
                                                        gboolean force_copy,
                                                        GstQsvFrame * frame,
+                                                       const GstVideoInfo *pool_info,
                                                        GstBufferPool * pool);
 
 mfxFrameAllocator * gst_qsv_allocator_get_allocator_handle (GstQsvAllocator * allocator);

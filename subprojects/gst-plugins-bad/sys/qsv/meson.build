@@ -9,6 +9,7 @@ qsv_sources = [
   'gstqsvh265enc.cpp',
   'gstqsvjpegenc.cpp',
   'gstqsvutils.cpp',
+  'gstqsvvp9dec.cpp',
   'gstqsvvp9enc.cpp',
   'plugin.cpp',
 ]
