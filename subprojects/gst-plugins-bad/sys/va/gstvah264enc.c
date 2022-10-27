@@ -102,6 +102,7 @@ enum
   PROP_RATE_CONTROL,
   PROP_CPB_SIZE,
   PROP_AUD,
+  PROP_CC,
   N_PROPERTIES
 };
 
@@ -159,6 +160,7 @@ struct _GstVaH264Enc
     gboolean use_dct8x8;
     gboolean use_trellis;
     gboolean aud;
+    gboolean cc;
     guint32 mbbrc;
     guint32 num_slices;
     guint32 cpb_size;
@@ -177,6 +179,7 @@ struct _GstVaH264Enc
   gboolean use_dct8x8;
   gboolean use_trellis;
   gboolean aud;
+  gboolean cc;
   guint32 num_slices;
   guint32 packed_headers;
 
@@ -1468,6 +1471,7 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->use_dct8x8 = self->prop.use_dct8x8;
   self->use_trellis = self->prop.use_trellis;
   self->aud = self->prop.aud;
+  self->cc = self->prop.cc;
   self->num_slices = self->prop.num_slices;
 
   self->gop.idr_period = self->prop.key_int_max;
@@ -1577,6 +1581,9 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
 
   self->aud = self->aud && self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA;
   update_property_bool (base, &self->prop.aud, self->aud, PROP_AUD);
+
+  self->cc = self->cc && self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA;
+  update_property_bool (base, &self->prop.cc, self->cc, PROP_CC);
 
   max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
   if (!gst_va_encoder_open (base->encoder, base->profile,
@@ -2692,6 +2699,124 @@ _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
   return TRUE;
 }
 
+static void
+_create_sei_cc_message (GstVideoCaptionMeta * cc_meta,
+    GstH264SEIMessage * sei_msg)
+{
+  guint8 *data;
+  GstH264RegisteredUserData *user_data;
+
+  sei_msg->payloadType = GST_H264_SEI_REGISTERED_USER_DATA;
+
+  user_data = &sei_msg->payload.registered_user_data;
+
+  user_data->country_code = 181;
+  user_data->size = 10 + cc_meta->size;
+
+  data = g_malloc (user_data->size);
+
+  /* 16-bits itu_t_t35_provider_code */
+  data[0] = 0;
+  data[1] = 49;
+  /* 32-bits ATSC_user_identifier */
+  data[2] = 'G';
+  data[3] = 'A';
+  data[4] = '9';
+  data[5] = '4';
+  /* 8-bits ATSC1_data_user_data_type_code */
+  data[6] = 3;
+  /* 8-bits:
+   * 1 bit process_em_data_flag (0)
+   * 1 bit process_cc_data_flag (1)
+   * 1 bit additional_data_flag (0)
+   * 5-bits cc_count
+   */
+  data[7] = ((cc_meta->size / 3) & 0x1f) | 0x40;
+  /* 8 bits em_data, unused */
+  data[8] = 255;
+
+  memcpy (data + 9, cc_meta->data, cc_meta->size);
+
+  /* 8 marker bits */
+  data[user_data->size - 1] = 255;
+
+  user_data->data = data;
+}
+
+static gboolean
+_create_sei_cc_data (GPtrArray * cc_list, guint8 * sei_data, guint * data_size)
+{
+  GArray *msg_list = NULL;
+  GstH264BitWriterResult ret;
+  gint i;
+
+  msg_list = g_array_new (TRUE, TRUE, sizeof (GstH264SEIMessage));
+  g_array_set_clear_func (msg_list, (GDestroyNotify) gst_h264_sei_clear);
+  g_array_set_size (msg_list, cc_list->len);
+
+  for (i = 0; i < cc_list->len; i++) {
+    GstH264SEIMessage *msg = &g_array_index (msg_list, GstH264SEIMessage, i);
+    _create_sei_cc_message (g_ptr_array_index (cc_list, i), msg);
+  }
+
+  ret = gst_h264_bit_writer_sei (msg_list, TRUE, sei_data, data_size);
+
+  g_array_unref (msg_list);
+
+  return (ret == GST_H264_BIT_WRITER_OK);
+}
+
+static void
+_add_sei_cc (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
+{
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+  GstVaH264EncFrame *frame;
+  GPtrArray *cc_list = NULL;
+  GstVideoCaptionMeta *cc_meta;
+  gpointer iter = NULL;
+  guint8 *packed_sei = NULL;
+  guint sei_size = 0;
+
+  frame = _enc_frame (gst_frame);
+
+  /* SEI header size */
+  sei_size = 6;
+  while ((cc_meta = (GstVideoCaptionMeta *)
+          gst_buffer_iterate_meta_filtered (gst_frame->input_buffer, &iter,
+              GST_VIDEO_CAPTION_META_API_TYPE))) {
+    if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
+      continue;
+
+    if (!cc_list)
+      cc_list = g_ptr_array_new ();
+
+    g_ptr_array_add (cc_list, cc_meta);
+    /* Add enough SEI message size for bitwriter. */
+    sei_size += cc_meta->size + 50;
+  }
+
+  if (!cc_list)
+    goto out;
+
+  packed_sei = g_malloc0 (sei_size);
+
+  if (!_create_sei_cc_data (cc_list, packed_sei, &sei_size)) {
+    GST_WARNING_OBJECT (self, "Failed to write the SEI CC data");
+    goto out;
+  }
+
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+          VAEncPackedHeaderRawData, packed_sei, sei_size * 8, FALSE)) {
+    GST_WARNING_OBJECT (self, "Failed to add SEI CC data");
+    goto out;
+  }
+
+out:
+  g_clear_pointer (&cc_list, g_ptr_array_unref);
+  if (packed_sei)
+    g_free (packed_sei);
+}
+
 static gboolean
 _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
 {
@@ -2807,6 +2932,11 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
       && frame->type == GST_H264_I_SLICE
       && !_add_picture_header (self, frame, &pps))
     return FALSE;
+
+  if (self->cc) {
+    /* CC errors are not fatal */
+    _add_sei_cc (self, gst_frame);
+  }
 
   slice_of_mbs = self->mb_width * self->mb_height / self->num_slices;
   slice_mod_mbs = self->mb_width * self->mb_height % self->num_slices;
@@ -3044,6 +3174,7 @@ gst_va_h264_enc_init (GTypeInstance * instance, gpointer g_class)
   self->prop.use_cabac = TRUE;
   self->prop.use_trellis = FALSE;
   self->prop.aud = FALSE;
+  self->prop.cc = TRUE;
   self->prop.mbbrc = 0;
   self->prop.bitrate = 0;
   self->prop.target_percentage = 66;
@@ -3117,6 +3248,9 @@ gst_va_h264_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_AUD:
       self->prop.aud = g_value_get_boolean (value);
+      break;
+    case PROP_CC:
+      self->prop.cc = g_value_get_boolean (value);
       break;
     case PROP_MBBRC:{
       /* Macroblock-level rate control.
@@ -3212,6 +3346,9 @@ gst_va_h264_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUD:
       g_value_set_boolean (value, self->prop.aud);
+      break;
+    case PROP_CC:
+      g_value_set_boolean (value, self->prop.cc);
       break;
     case PROP_MBBRC:
       g_value_set_enum (value, self->prop.mbbrc);
@@ -3484,6 +3621,17 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_AUD] = g_param_spec_boolean ("aud", "Insert AUD",
       "Insert AU (Access Unit) delimeter for each frame", FALSE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * GstVaH264Enc:cc-insert:
+   *
+   * Closed Caption Insert mode.
+   * Only CEA-708 RAW format is supported for now.
+   */
+  properties[PROP_CC] = g_param_spec_boolean ("cc-insert",
+      "Insert Closed Captions",
+      "Insert CEA-708 Closed Captions",
+      TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:mbbrc:
