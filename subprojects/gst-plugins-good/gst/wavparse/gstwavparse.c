@@ -1925,7 +1925,9 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
     GstTypeFindProbability prob;
     GstCaps *tf_caps;
 
-    tf_caps = gst_type_find_helper_for_buffer (GST_OBJECT (wav), buf, &prob);
+    tf_caps =
+        gst_type_find_helper_for_buffer_with_extension (GST_OBJECT (wav), buf,
+        "dts", &prob);
     if (tf_caps != NULL) {
       GST_LOG ("typefind caps = %" GST_PTR_FORMAT ", P=%d", tf_caps, prob);
       if (gst_wavparse_have_dts_caps (tf_caps, prob)) {
