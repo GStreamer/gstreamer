@@ -749,8 +749,8 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
   g_object_class_install_property (object_class, PROP_BITRATE,
       g_param_spec_int ("bitrate",
           "Bitrate",
-          "Target Audio Bitrate (0 = fixed value based on "
-          " sample rate and channel count)",
+          "Target Audio Bitrate. Only applicable if rate-control=cbr. "
+          "(0 = fixed value based on sample rate and channel count)",
           0, G_MAXINT, DEFAULT_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -765,7 +765,7 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
       g_param_spec_int ("peak-bitrate",
           "Peak Bitrate",
           "Peak Bitrate to adjust maximum bits per audio frame. "
-          "Bitrate is in bits/second. (0 = Not set)",
+          "Bitrate is in bits/second. Only applicable if rate-control=vbr. (0 = Not set)",
           0, G_MAXINT, DEFAULT_PEAK_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
