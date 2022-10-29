@@ -41,6 +41,38 @@ G_BEGIN_DECLS
 typedef struct _GstFdkAacEnc GstFdkAacEnc;
 typedef struct _GstFdkAacEncClass GstFdkAacEncClass;
 
+/**
+ * GstFdkAacVbrPreset:
+ * @GST_FDK_AAC_VBR_PRESET_VERY_LOW: Very Low Variable Bitrate.
+ * @GST_FDK_AAC_VBR_PRESET_LOW: Low Variable Bitrate.
+ * @GST_FDK_AAC_VBR_PRESET_MEDIUM: Medium Variable Bitrate.
+ * @GST_FDK_AAC_VBR_PRESET_HIGH: High Variable Bitrate.
+ * @GST_FDK_AAC_VBR_PRESET_VERY_HIGH: Very High Variable Bitrate.
+ *
+ * Since: 1.22
+ */
+typedef enum
+{
+  GST_FDK_AAC_VBR_PRESET_VERY_LOW = 1,
+  GST_FDK_AAC_VBR_PRESET_LOW,
+  GST_FDK_AAC_VBR_PRESET_MEDIUM,
+  GST_FDK_AAC_VBR_PRESET_HIGH,
+  GST_FDK_AAC_VBR_PRESET_VERY_HIGH
+} GstFdkAacVbrPreset;
+
+/**
+ * GstFdkAacRateControl:
+ * @GST_FDK_AAC_RATE_CONTROL_CONSTANT_BITRATE: Constant Bitrate.
+ * @GST_FDK_AAC_RATE_CONTROL_VARIABLE_BITRATE: Variable Bitrate.
+ *
+ * Since: 1.22
+ */
+typedef enum
+{
+  GST_FDK_AAC_RATE_CONTROL_CONSTANT_BITRATE = 0,
+  GST_FDK_AAC_RATE_CONTROL_VARIABLE_BITRATE,
+} GstFdkAacRateControl;
+
 struct _GstFdkAacEnc {
   GstAudioEncoder element;
 
@@ -54,6 +86,9 @@ struct _GstFdkAacEnc {
 
   guint peak_bitrate;
   gboolean afterburner;
+
+  GstFdkAacRateControl rate_control;
+  GstFdkAacVbrPreset vbr_preset;
 };
 
 struct _GstFdkAacEncClass {

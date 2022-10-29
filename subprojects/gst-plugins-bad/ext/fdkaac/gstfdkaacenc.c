@@ -30,7 +30,6 @@
 
 /* TODO:
  * - Add support for other AOT / profiles
- * - Expose more properties, e.g. vbr
  * - Signal encoder delay
  * - LOAS / LATM support
  */
@@ -40,11 +39,15 @@ enum
   PROP_0,
   PROP_AFTERBURNER,
   PROP_BITRATE,
-  PROP_PEAK_BITRATE
+  PROP_PEAK_BITRATE,
+  PROP_RATE_CONTROL,
+  PROP_VBR_PRESET,
 };
 
 #define DEFAULT_BITRATE (0)
 #define DEFAULT_PEAK_BITRATE (0)
+#define DEFAULT_RATE_CONTROL (GST_FDK_AAC_RATE_CONTROL_CONSTANT_BITRATE)
+#define DEFAULT_VBR_PRESET (GST_FDK_AAC_VBR_PRESET_MEDIUM)
 
 #define SAMPLE_RATES " 8000, " \
                     "11025, " \
@@ -102,6 +105,45 @@ G_DEFINE_TYPE (GstFdkAacEnc, gst_fdkaacenc, GST_TYPE_AUDIO_ENCODER);
 GST_ELEMENT_REGISTER_DEFINE (fdkaacenc, "fdkaacenc", GST_RANK_PRIMARY,
     GST_TYPE_FDKAACENC);
 
+#define GST_FDK_AAC_VBR_PRESET (gst_fdk_aac_vbr_preset_get_type ())
+static GType
+gst_fdk_aac_vbr_preset_get_type (void)
+{
+  static GType fdk_aac_vbr_preset_type = 0;
+  static const GEnumValue vbr_preset_types[] = {
+    {GST_FDK_AAC_VBR_PRESET_VERY_LOW, "Very Low Variable Bitrate", "very-low"},
+    {GST_FDK_AAC_VBR_PRESET_LOW, "Low Variable Bitrate", "low"},
+    {GST_FDK_AAC_VBR_PRESET_MEDIUM, "Medium Variable Bitrate", "medium"},
+    {GST_FDK_AAC_VBR_PRESET_HIGH, "High Variable Bitrate", "high"},
+    {GST_FDK_AAC_VBR_PRESET_VERY_HIGH, "Very High Variable Bitrate",
+        "very-high"},
+    {0, NULL, NULL}
+  };
+
+  if (!fdk_aac_vbr_preset_type)
+    fdk_aac_vbr_preset_type =
+        g_enum_register_static ("GstFdkAacVbrPreset", vbr_preset_types);
+
+  return fdk_aac_vbr_preset_type;
+}
+
+#define GST_FDK_AAC_RATE_CONTROL (gst_fdk_aac_rate_control_get_type ())
+static GType
+gst_fdk_aac_rate_control_get_type (void)
+{
+  static GType fdk_aac_rate_control_type = 0;
+  static const GEnumValue rate_control_types[] = {
+    {GST_FDK_AAC_RATE_CONTROL_CONSTANT_BITRATE, "Constant Bitrate", "cbr"},
+    {GST_FDK_AAC_RATE_CONTROL_VARIABLE_BITRATE, "Variable Bitrate", "vbr"},
+  };
+
+  if (!fdk_aac_rate_control_type)
+    fdk_aac_rate_control_type =
+        g_enum_register_static ("GstFdkAacRateControl", rate_control_types);
+
+  return fdk_aac_rate_control_type;
+}
+
 static void
 gst_fdkaacenc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -117,6 +159,12 @@ gst_fdkaacenc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PEAK_BITRATE:
       self->peak_bitrate = g_value_get_int (value);
+      break;
+    case PROP_RATE_CONTROL:
+      self->rate_control = g_value_get_enum (value);
+      break;
+    case PROP_VBR_PRESET:
+      self->vbr_preset = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -140,6 +188,12 @@ gst_fdkaacenc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PEAK_BITRATE:
       g_value_set_int (value, self->peak_bitrate);
+      break;
+    case PROP_RATE_CONTROL:
+      g_value_set_enum (value, self->rate_control);
+      break;
+    case PROP_VBR_PRESET:
+      g_value_set_enum (value, self->vbr_preset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -242,6 +296,7 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   CHANNEL_MODE channel_mode;
   AACENC_InfoStruct enc_info = { 0 };
   gint bitrate, signaling_mode;
+  guint bitrate_mode;
 
   if (self->enc && !self->is_drained) {
     /* drain */
@@ -439,6 +494,23 @@ gst_fdkaacenc_set_format (GstAudioEncoder * enc, GstAudioInfo * info)
   if ((err = aacEncoder_SetParam (self->enc, AACENC_BITRATE,
               bitrate)) != AACENC_OK) {
     GST_ERROR_OBJECT (self, "Unable to set bitrate %d: %d", bitrate, err);
+    return FALSE;
+  }
+
+  if (self->rate_control == GST_FDK_AAC_RATE_CONTROL_CONSTANT_BITRATE) {
+    /*
+     * Note that the `bitrate` property is honoured only when using
+     * constant bit rate.
+     */
+    bitrate_mode = 0;           // Constant Bitrate
+  } else {
+    bitrate_mode = self->vbr_preset;
+  }
+
+  if ((err = aacEncoder_SetParam (self->enc, AACENC_BITRATEMODE,
+              bitrate_mode)) != AACENC_OK) {
+    GST_ERROR_OBJECT (self, "Unable to set bitrate mode %d: %d",
+        bitrate_mode, err);
     return FALSE;
   }
 
@@ -651,6 +723,8 @@ gst_fdkaacenc_init (GstFdkAacEnc * self)
   self->is_drained = TRUE;
   self->afterburner = FALSE;
   self->peak_bitrate = DEFAULT_PEAK_BITRATE;
+  self->rate_control = DEFAULT_RATE_CONTROL;
+  self->vbr_preset = DEFAULT_VBR_PRESET;
 
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (self), TRUE);
 }
@@ -706,6 +780,33 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
       g_param_spec_boolean ("afterburner", "Afterburner - Quality Parameter",
           "Additional quality control parameter. Can cause workload increase.",
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstFdkAacEnc:rate-control:
+   *
+   * Rate Control.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_RATE_CONTROL,
+      g_param_spec_enum ("rate-control", "Rate Control",
+          "Whether Constant or Variable Bitrate should be used.",
+          GST_FDK_AAC_RATE_CONTROL, DEFAULT_RATE_CONTROL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstFdkAacEnc:vbr-preset:
+   *
+   * AAC Variable Bitrate configurations.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (object_class, PROP_VBR_PRESET,
+      g_param_spec_enum ("vbr-preset", "Variable Bitrate Preset",
+          "AAC Variable Bitrate configurations. Requires rate-control as vbr.",
+          GST_FDK_AAC_VBR_PRESET, DEFAULT_VBR_PRESET,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
 
@@ -715,4 +816,7 @@ gst_fdkaacenc_class_init (GstFdkAacEncClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_fdkaacenc_debug, "fdkaacenc", 0,
       "fdkaac encoder");
+
+  gst_type_mark_as_plugin_api (GST_FDK_AAC_VBR_PRESET, 0);
+  gst_type_mark_as_plugin_api (GST_FDK_AAC_RATE_CONTROL, 0);
 }
