@@ -686,23 +686,18 @@ gst_vp9_parse_update_src_caps (GstVp9Parse * self, GstCaps * caps)
     }
   }
 
-  if (self->color_space != GST_VP9_CS_SRGB) {
-    if (self->parser->subsampling_x == 1 && self->parser->subsampling_y == 1)
-      chroma_format = "4:2:0";
-    else if (self->parser->subsampling_x == 1 &&
-        self->parser->subsampling_y == 0)
-      chroma_format = "4:2:2";
-    else if (self->parser->subsampling_x == 0 &&
-        self->parser->subsampling_y == 1)
-      chroma_format = "4:4:0";
-    else if (self->parser->subsampling_x == 0 &&
-        self->parser->subsampling_y == 0)
-      chroma_format = "4:4:4";
+  if (self->parser->subsampling_x == 1 && self->parser->subsampling_y == 1)
+    chroma_format = "4:2:0";
+  else if (self->parser->subsampling_x == 1 && self->parser->subsampling_y == 0)
+    chroma_format = "4:2:2";
+  else if (self->parser->subsampling_x == 0 && self->parser->subsampling_y == 1)
+    chroma_format = "4:4:0";
+  else if (self->parser->subsampling_x == 0 && self->parser->subsampling_y == 0)
+    chroma_format = "4:4:4";
 
-    if (chroma_format)
-      gst_caps_set_simple (final_caps,
-          "chroma-format", G_TYPE_STRING, chroma_format, NULL);
-  }
+  if (chroma_format)
+    gst_caps_set_simple (final_caps,
+        "chroma-format", G_TYPE_STRING, chroma_format, NULL);
 
   switch (self->bit_depth) {
     case GST_VP9_BIT_DEPTH_8:
