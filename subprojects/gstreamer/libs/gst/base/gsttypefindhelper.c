@@ -303,12 +303,12 @@ prioritize_extension (GstObject * obj, GList * type_list,
 /**
  * gst_type_find_helper_get_range:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @parent: (allow-none): the parent of @obj or %NULL
+ * @parent: (nullable): the parent of @obj or %NULL
  * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
  *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
- * @extension: (allow-none): extension of the media, or %NULL
- * @prob: (out) (allow-none): location to store the probability of the found
+ * @extension: (nullable): extension of the media, or %NULL
+ * @prob: (out) (optional): location to store the probability of the found
  *     caps, or %NULL
  *
  * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
@@ -345,13 +345,13 @@ gst_type_find_helper_get_range (GstObject * obj, GstObject * parent,
 /**
  * gst_type_find_helper_get_range_full:
  * @obj: A #GstObject that will be passed as first argument to @func
- * @parent: (allow-none): the parent of @obj or %NULL
+ * @parent: (nullable): the parent of @obj or %NULL
  * @func: (scope call): A generic #GstTypeFindHelperGetRangeFunction that will
  *        be used to access data at random offsets when doing the typefinding
  * @size: The length in bytes
- * @extension: (allow-none): extension of the media, or %NULL
+ * @extension: (nullable): extension of the media, or %NULL
  * @caps: (out) (transfer full): returned caps
- * @prob: (out) (allow-none): location to store the probability of the found
+ * @prob: (out) (optional): location to store the probability of the found
  *     caps, or %NULL
  *
  * Utility function to do pull-based typefinding. Unlike gst_type_find_helper()
@@ -568,10 +568,10 @@ buf_helper_find_suggest (gpointer data, guint probability, GstCaps * caps)
 
 /**
  * gst_type_find_helper_for_data:
- * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
+ * @obj: (nullable): object doing the typefinding, or %NULL (used for logging)
  * @data: (transfer none) (array length=size): * a pointer with data to typefind
  * @size: the size of @data
- * @prob: (out) (allow-none): location to store the probability of the found
+ * @prob: (out) (optional): location to store the probability of the found
  *     caps, or %NULL
  *
  * Tries to find what type of data is contained in the given @data, the
@@ -601,11 +601,11 @@ gst_type_find_helper_for_data (GstObject * obj, const guint8 * data, gsize size,
 
 /**
  * gst_type_find_helper_for_data_with_extension:
- * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
+ * @obj: (nullable): object doing the typefinding, or %NULL (used for logging)
  * @data: (transfer none) (array length=size): * a pointer with data to typefind
  * @size: the size of @data
- * @extension: (allow-none): extension of the media, or %NULL
- * @prob: (out) (allow-none): location to store the probability of the found
+ * @extension: (nullable): extension of the media, or %NULL
+ * @prob: (out) (optional): location to store the probability of the found
  *     caps, or %NULL
  *
  * Tries to find what type of data is contained in the given @data, the
@@ -683,9 +683,9 @@ gst_type_find_helper_for_data_with_extension (GstObject * obj,
 
 /**
  * gst_type_find_helper_for_buffer:
- * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
+ * @obj: (nullable): object doing the typefinding, or %NULL (used for logging)
  * @buf: (in) (transfer none): a #GstBuffer with data to typefind
- * @prob: (out) (allow-none): location to store the probability of the found
+ * @prob: (out) (optional): location to store the probability of the found
  *     caps, or %NULL
  *
  * Tries to find what type of data is contained in the given #GstBuffer, the
@@ -714,10 +714,10 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
 
 /**
  * gst_type_find_helper_for_buffer_with_extension:
- * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
+ * @obj: (nullable): object doing the typefinding, or %NULL (used for logging)
  * @buf: (in) (transfer none): a #GstBuffer with data to typefind
- * @extension: (allow-none): extension of the media, or %NULL
- * @prob: (out) (allow-none): location to store the probability of the found
+ * @extension: (nullable): extension of the media, or %NULL
+ * @prob: (out) (optional): location to store the probability of the found
  *     caps, or %NULL
  *
  * Tries to find what type of data is contained in the given #GstBuffer, the
@@ -768,7 +768,7 @@ gst_type_find_helper_for_buffer_with_extension (GstObject * obj,
 
 /**
  * gst_type_find_helper_for_extension:
- * @obj: (allow-none): object doing the typefinding, or %NULL (used for logging)
+ * @obj: (nullable): object doing the typefinding, or %NULL (used for logging)
  * @extension: an extension
  *
  * Tries to find the best #GstCaps associated with @extension.
