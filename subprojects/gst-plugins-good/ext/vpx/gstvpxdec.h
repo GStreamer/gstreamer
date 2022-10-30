@@ -31,6 +31,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideodecoder.h>
+#include "gstvpxcompat.h"
 
 /* FIXME: Undef HAVE_CONFIG_H because vpx_codec.h uses it,
  * which causes compilation failures */

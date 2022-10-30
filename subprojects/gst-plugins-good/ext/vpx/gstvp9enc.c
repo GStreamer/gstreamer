@@ -395,6 +395,7 @@ gst_vp9_get_vpx_colorspace (GstVPXEnc * encoder, GstVideoColorimetry * in_cinfo,
   gchar *colorimetry_str;
   guint i;
 
+  /* *INDENT-OFF* */
   static const struct
   {
     const gchar *str;
@@ -406,6 +407,7 @@ gst_vp9_get_vpx_colorspace (GstVPXEnc * encoder, GstVideoColorimetry * in_cinfo,
     GST_VIDEO_COLORIMETRY_SMPTE240M, VPX_CS_SMPTE_240}, {
     GST_VIDEO_COLORIMETRY_BT2020, VPX_CS_BT_2020}
   };
+  /* *INDENT-ON* */
 
   /* We support any range, all mapped CSC are by default reduced range. */
   cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
@@ -533,33 +535,33 @@ gst_vp9_enc_set_image_format (GstVPXEnc * enc, vpx_image_t * image)
 {
   switch (enc->input_state->info.finfo->format) {
     case GST_VIDEO_FORMAT_I420:
-      image->fmt = VPX_IMG_FMT_I420;
+      image->fmt = GST_VPX_IMG_FMT_I420;
       image->bps = 12;
       image->x_chroma_shift = image->y_chroma_shift = 1;
       break;
     case GST_VIDEO_FORMAT_YV12:
-      image->fmt = VPX_IMG_FMT_YV12;
+      image->fmt = GST_VPX_IMG_FMT_YV12;
       image->bps = 12;
       image->x_chroma_shift = image->y_chroma_shift = 1;
       break;
     case GST_VIDEO_FORMAT_Y42B:
-      image->fmt = VPX_IMG_FMT_I422;
+      image->fmt = GST_VPX_IMG_FMT_I422;
       image->bps = 16;
       image->x_chroma_shift = 1;
       image->y_chroma_shift = 0;
       break;
     case GST_VIDEO_FORMAT_Y444:
-      image->fmt = VPX_IMG_FMT_I444;
+      image->fmt = GST_VPX_IMG_FMT_I444;
       image->bps = 24;
       image->x_chroma_shift = image->y_chroma_shift = 0;
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
-      image->fmt = VPX_IMG_FMT_I42016;
+      image->fmt = GST_VPX_IMG_FMT_I42016;
       image->bps = 15;
       image->x_chroma_shift = image->y_chroma_shift = 1;
       break;
     case GST_VIDEO_FORMAT_I422_10LE:
-      image->fmt = VPX_IMG_FMT_I42216;
+      image->fmt = GST_VPX_IMG_FMT_I42216;
       image->bps = 20;
       image->x_chroma_shift = 1;
       image->y_chroma_shift = 0;
