@@ -1666,9 +1666,13 @@ gst_vpx_enc_get_downstream_profile (GstVPXEnc * encoder, GstVideoInfo * info)
       min_profile = 1;
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
       min_profile = 2;
       break;
     case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
       min_profile = 3;
       break;
     default:

@@ -72,7 +72,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 #define GST_VP9_DEC_VIDEO_FORMATS_8BIT "I420, YV12, Y42B, Y444, GBR"
-#define GST_VP9_DEC_VIDEO_FORMATS_10BIT "I420_10LE, I422_10LE"
+#define GST_VP9_DEC_VIDEO_FORMATS_HIGHBIT \
+    "I420_10LE, I420_12LE, I422_10LE, I422_12LE, Y444_10LE, Y444_12LE, GBR_10LE, GBR_12LE"
 
 #define parent_class gst_vp9_dec_parent_class
 G_DEFINE_TYPE (GstVP9Dec, gst_vp9_dec, GST_TYPE_VPX_DEC);
@@ -83,11 +84,11 @@ static GstCaps *
 gst_vp9_dec_get_src_caps (void)
 {
 #define CAPS_8BIT GST_VIDEO_CAPS_MAKE ("{ " GST_VP9_DEC_VIDEO_FORMATS_8BIT " }")
-#define CAPS_10BIT GST_VIDEO_CAPS_MAKE ( "{ " GST_VP9_DEC_VIDEO_FORMATS_8BIT ", " \
-    GST_VP9_DEC_VIDEO_FORMATS_10BIT "}")
+#define CAPS_HIGHBIT GST_VIDEO_CAPS_MAKE ( "{ " GST_VP9_DEC_VIDEO_FORMATS_8BIT ", " \
+    GST_VP9_DEC_VIDEO_FORMATS_HIGHBIT "}")
 
   return gst_caps_from_string ((vpx_codec_get_caps (&vpx_codec_vp9_dx_algo)
-          & VPX_CODEC_CAP_HIGHBITDEPTH) ? CAPS_10BIT : CAPS_8BIT);
+          & VPX_CODEC_CAP_HIGHBITDEPTH) ? CAPS_HIGHBIT : CAPS_8BIT);
 }
 
 static void
@@ -147,7 +148,7 @@ static gboolean
 gst_vp9_dec_get_valid_format (GstVPXDec * dec, vpx_image_t * img,
     GstVideoFormat * fmt)
 {
-  switch (img->fmt) {
+  switch ((gst_vpx_img_fmt_t) img->fmt) {
     case GST_VPX_IMG_FMT_I420:
       *fmt = GST_VIDEO_FORMAT_I420;
       return TRUE;
@@ -176,24 +177,47 @@ gst_vp9_dec_get_valid_format (GstVPXDec * dec, vpx_image_t * img,
       if (img->bit_depth == 10) {
         *fmt = GST_VIDEO_FORMAT_I420_10LE;
         return TRUE;
+      } else if (img->bit_depth == 12) {
+        *fmt = GST_VIDEO_FORMAT_I420_12LE;
+        return TRUE;
       }
-      GST_FIXME_OBJECT (dec, "Please add 16-bit I420 format");
       GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
-          (NULL), ("Unsupported frame format - 16-bit 4:2:0 planar"));
+          (NULL), ("Unsupported frame format - %d-bit 4:2:0 planar",
+              img->bit_depth));
       return FALSE;
     case GST_VPX_IMG_FMT_I42216:
       if (img->bit_depth == 10) {
         *fmt = GST_VIDEO_FORMAT_I422_10LE;
         return TRUE;
+      } else if (img->bit_depth == 12) {
+        *fmt = GST_VIDEO_FORMAT_I422_12LE;
+        return TRUE;
       }
-      GST_FIXME_OBJECT (dec, "Please add 16-bit Y42B format");
       GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
-          (NULL), ("Unsupported frame format - 16-bit 4:2:2 planar"));
+          (NULL), ("Unsupported frame format - %d-bit 4:2:2 planar",
+              img->bit_depth));
       return FALSE;
     case GST_VPX_IMG_FMT_I44416:
-      GST_FIXME_OBJECT (dec, "Please add 16-bit Y444 format");
+      if (img->cs == VPX_CS_SRGB) {
+        if (img->bit_depth == 10) {
+          *fmt = GST_VIDEO_FORMAT_GBR_10LE;
+          return TRUE;
+        } else if (img->bit_depth == 12) {
+          *fmt = GST_VIDEO_FORMAT_GBR_12LE;
+          return TRUE;
+        }
+      } else {
+        if (img->bit_depth == 10) {
+          *fmt = GST_VIDEO_FORMAT_Y444_10LE;
+          return TRUE;
+        } else if (img->bit_depth == 12) {
+          *fmt = GST_VIDEO_FORMAT_Y444_12LE;
+          return TRUE;
+        }
+      }
       GST_ELEMENT_WARNING (dec, STREAM, NOT_IMPLEMENTED,
-          (NULL), ("Unsupported frame format - 16-bit 4:4:4 planar"));
+          (NULL), ("Unsupported frame format - %d-bit 4:4:4 planar",
+              img->bit_depth));
       return FALSE;
     case GST_VPX_IMG_FMT_I44016:
       GST_FIXME_OBJECT (dec, "Please add 16-bit 4:4:0 planar frame format");

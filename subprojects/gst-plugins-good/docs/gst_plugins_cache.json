@@ -26525,7 +26525,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, Y42B, Y444, GBR, I420_10LE, I422_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, Y42B, Y444, GBR, I420_10LE, I420_12LE, I422_10LE, I422_12LE, Y444_10LE, Y444_12LE, GBR_10LE, GBR_12LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -26553,7 +26553,7 @@
                 "long-name": "On2 VP9 Encoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { I420, YV12, Y444, I420_10LE, I422_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw:\n         format: { I420, YV12, Y444, I420_10LE, I420_12LE, I422_10LE, I422_12LE, Y444_10LE, Y444_12LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     },
