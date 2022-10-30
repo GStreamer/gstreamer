@@ -824,8 +824,12 @@ gst_vp9_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
 
   /* if all of decoder's capability related values are provided
    * by upstream, update src caps now */
-  if (self->width > 0 && self->height > 0 && profile)
+  if (self->width > 0 && self->height > 0 && profile &&
+      /* Other profiles defines multiple bitdepth/subsampling
+       * Delaying src caps update for non profile-0 streams */
+      self->profile == GST_VP9_PROFILE_0) {
     gst_vp9_parse_update_src_caps (self, in_caps);
+  }
 
   gst_caps_unref (in_caps);
 
