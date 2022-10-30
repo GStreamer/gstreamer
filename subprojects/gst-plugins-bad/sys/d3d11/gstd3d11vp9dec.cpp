@@ -823,13 +823,13 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
   const GUID *profile0_guid = NULL;
   GstCaps *sink_caps = NULL;
   GstCaps *src_caps = NULL;
+  GstCaps *d3d11_caps = NULL;
   guint max_width = 0;
   guint max_height = 0;
   guint resolution;
   gboolean have_profile2 = FALSE;
   gboolean have_profile0 = FALSE;
   DXGI_FORMAT format = DXGI_FORMAT_UNKNOWN;
-  GValue vp9_profiles = G_VALUE_INIT;
 
   have_profile2 = gst_d3d11_decoder_get_supported_decoder_profile (device,
       GST_DXVA_CODEC_VP9, GST_VIDEO_FORMAT_P010_10LE, &profile2_guid);
@@ -890,47 +890,32 @@ gst_d3d11_vp9_dec_register (GstPlugin * plugin, GstD3D11Device * device,
     return;
   }
 
-  sink_caps = gst_caps_from_string ("video/x-vp9, alignment = (string) frame");
-  src_caps = gst_caps_from_string ("video/x-raw("
-      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY "); video/x-raw");
-
-  g_value_init (&vp9_profiles, GST_TYPE_LIST);
-
-  if (have_profile0) {
-    GValue vp9_profile_val = G_VALUE_INIT;
-
-    g_value_init (&vp9_profile_val, G_TYPE_STRING);
-    g_value_set_string (&vp9_profile_val, "0");
-    gst_value_list_append_and_take_value (&vp9_profiles, &vp9_profile_val);
-  }
-
-  if (have_profile2) {
-    GValue format_list = G_VALUE_INIT;
-    GValue format_value = G_VALUE_INIT;
-    GValue vp9_profile_val = G_VALUE_INIT;
-
-    g_value_init (&format_list, GST_TYPE_LIST);
-
-    g_value_init (&format_value, G_TYPE_STRING);
-    g_value_set_string (&format_value, "NV12");
-    gst_value_list_append_and_take_value (&format_list, &format_value);
-
-    g_value_init (&format_value, G_TYPE_STRING);
-    g_value_set_string (&format_value, "P010_10LE");
-    gst_value_list_append_and_take_value (&format_list, &format_value);
-
-    gst_caps_set_value (src_caps, "format", &format_list);
-    g_value_unset (&format_list);
-
-    g_value_init (&vp9_profile_val, G_TYPE_STRING);
-    g_value_set_string (&vp9_profile_val, "2");
-    gst_value_list_append_and_take_value (&vp9_profiles, &vp9_profile_val);
+  if (have_profile0 && have_profile2) {
+    sink_caps = gst_caps_from_string ("video/x-vp9, "
+        "alignment = (string) frame, profile = (string) 0; "
+        "video/x-vp9, alignment = (string) frame, profile = (string) 2, "
+        "bit-depth-luma = (uint) 10, bit-depth-chroma = (uint) 10");
+    src_caps = gst_caps_from_string ("video/x-raw, "
+        "format = (string) { NV12, P010_10LE }");
+  } else if (have_profile0) {
+    sink_caps = gst_caps_from_string ("video/x-vp9, "
+        "alignment = (string) frame, profile = (string) 0");
+    src_caps = gst_caps_from_string ("video/x-raw, " "format = (string) NV12");
+  } else if (have_profile2) {
+    sink_caps = gst_caps_from_string ("video/x-vp9, "
+        "alignment = (string) frame, profile = (string) 2, "
+        "bit-depth-luma = (uint) 10, bit-depth-chroma = (uint) 10");
+    src_caps = gst_caps_from_string ("video/x-raw, "
+        "format = (string) P010_10LE");
   } else {
-    gst_caps_set_simple (src_caps, "format", G_TYPE_STRING, "NV12", NULL);
+    g_assert_not_reached ();
+    return;
   }
 
-  gst_caps_set_value (sink_caps, "profile", &vp9_profiles);
-  g_value_unset (&vp9_profiles);
+  d3d11_caps = gst_caps_copy (src_caps);
+  gst_caps_set_features_simple (d3d11_caps,
+      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, NULL));
+  src_caps = gst_caps_merge (d3d11_caps, src_caps);
 
   /* To cover both landscape and portrait, select max value */
   resolution = MAX (max_width, max_height);
