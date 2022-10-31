@@ -419,8 +419,6 @@ gst_msdk_context_new_with_va_display (GstObject * display_obj,
     return NULL;
 
   obj = g_object_new (GST_TYPE_MSDK_CONTEXT, NULL);
-  if (!obj)
-    return NULL;
 
   priv = obj->priv;
   priv->display = g_object_ref (va_display);
