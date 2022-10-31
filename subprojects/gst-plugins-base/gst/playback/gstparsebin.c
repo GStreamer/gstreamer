@@ -1219,6 +1219,7 @@ copy_sticky_events (GstPad * pad, GstEvent ** eventptr, gpointer user_data)
       GstStreamCollection *collection = NULL;
       gst_event_parse_stream_collection (event, &collection);
       gst_parse_pad_update_stream_collection (ppad, collection);
+      gst_object_unref (collection);
       break;
     }
     default:
@@ -4124,6 +4125,7 @@ gst_parse_pad_event (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       gst_element_post_message (GST_ELEMENT (parsepad->parsebin),
           gst_message_new_stream_collection (GST_OBJECT (parsepad->parsebin),
               collection));
+      gst_object_unref (collection);
       break;
     }
     case GST_EVENT_EOS:{
