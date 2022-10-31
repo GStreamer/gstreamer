@@ -421,7 +421,7 @@ gst_msdk_context_new_with_va_display (GstObject * display_obj,
   obj = g_object_new (GST_TYPE_MSDK_CONTEXT, NULL);
 
   priv = obj->priv;
-  priv->display = g_object_ref (va_display);
+  priv->display = gst_object_ref (va_display);
 
   priv->job_type = job_type;
   priv->hardware = hardware;
