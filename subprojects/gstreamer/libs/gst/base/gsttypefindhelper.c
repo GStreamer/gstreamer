@@ -94,8 +94,8 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
 
   helper = (GstTypeFindHelper *) data;
 
-  GST_LOG_OBJECT (helper->obj, "'%s' called peek (%" G_GINT64_FORMAT
-      ", %u)", GST_OBJECT_NAME (helper->factory), offset, size);
+  GST_LOG_OBJECT (helper->obj, "Typefind factory called peek (%" G_GINT64_FORMAT
+      ", %u)", offset, size);
 
   if (size == 0)
     return NULL;
@@ -229,8 +229,8 @@ helper_find_suggest (gpointer data, guint probability, GstCaps * caps)
   GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
   GST_LOG_OBJECT (helper->obj,
-      "'%s' called suggest (%u, %" GST_PTR_FORMAT ")",
-      GST_OBJECT_NAME (helper->factory), probability, caps);
+      "Typefind factory called suggest (%u, %" GST_PTR_FORMAT ")",
+      probability, caps);
 
   if (probability > helper->best_probability) {
     gst_caps_replace (&helper->caps, caps);
@@ -243,8 +243,8 @@ helper_find_get_length (gpointer data)
 {
   GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
-  GST_LOG_OBJECT (helper->obj, "'%s' called get_length, returning %"
-      G_GUINT64_FORMAT, GST_OBJECT_NAME (helper->factory), helper->size);
+  GST_LOG_OBJECT (helper->obj, "Typefind factory called get_length, returning %"
+      G_GUINT64_FORMAT, helper->size);
 
   return helper->size;
 }
@@ -495,9 +495,22 @@ typedef struct
   gsize size;
   GstTypeFindProbability best_probability;
   GstCaps *caps;
-  GstTypeFindFactory *factory;  /* for logging */
   GstObject *obj;               /* for logging */
 } GstTypeFindBufHelper;
+
+/**
+ * GstTypeFindData:
+ *
+ * The opaque #GstTypeFindData structure.
+ *
+ * Since: 1.22
+ *
+ */
+struct _GstTypeFindData
+{
+  GstTypeFind find;
+  GstTypeFindBufHelper helper;
+};
 
 /*
  * buf_helper_find_peek:
@@ -516,15 +529,15 @@ buf_helper_find_peek (gpointer data, gint64 off, guint size)
   GstTypeFindBufHelper *helper;
 
   helper = (GstTypeFindBufHelper *) data;
-  GST_LOG_OBJECT (helper->obj, "'%s' called peek (%" G_GINT64_FORMAT ", %u)",
-      GST_OBJECT_NAME (helper->factory), off, size);
+  GST_LOG_OBJECT (helper->obj,
+      "Typefind factory called peek (%" G_GINT64_FORMAT ", %u)", off, size);
 
   if (size == 0)
     return NULL;
 
   if (off < 0) {
-    GST_LOG_OBJECT (helper->obj, "'%s' wanted to peek at end; not supported",
-        GST_OBJECT_NAME (helper->factory));
+    GST_LOG_OBJECT (helper->obj,
+        "Typefind factory wanted to peek at end; not supported");
     return NULL;
   }
 
@@ -556,8 +569,8 @@ buf_helper_find_suggest (gpointer data, guint probability, GstCaps * caps)
   GstTypeFindBufHelper *helper = (GstTypeFindBufHelper *) data;
 
   GST_LOG_OBJECT (helper->obj,
-      "'%s' called suggest (%u, %" GST_PTR_FORMAT ")",
-      GST_OBJECT_NAME (helper->factory), probability, caps);
+      "Typefind factory called suggest (%u, %" GST_PTR_FORMAT ")",
+      probability, caps);
 
   /* Note: not >= as we call typefinders in order of rank, highest first */
   if (probability > helper->best_probability) {
@@ -638,6 +651,7 @@ gst_type_find_helper_for_data_with_extension (GstObject * obj,
     GstTypeFindProbability * prob)
 {
   GstTypeFindBufHelper helper;
+  GstTypeFindFactory *factory;
   GstTypeFind find;
   GList *l, *type_list;
   GstCaps *result = NULL;
@@ -662,8 +676,8 @@ gst_type_find_helper_for_data_with_extension (GstObject * obj,
   type_list = prioritize_extension (obj, type_list, extension);
 
   for (l = type_list; l; l = l->next) {
-    helper.factory = GST_TYPE_FIND_FACTORY (l->data);
-    gst_type_find_factory_call_function (helper.factory, &find);
+    factory = GST_TYPE_FIND_FACTORY (l->data);
+    gst_type_find_factory_call_function (factory, &find);
     if (helper.best_probability >= GST_TYPE_FIND_MAXIMUM)
       break;
   }
@@ -1027,4 +1041,115 @@ gst_type_find_list_factories_for_caps (GstObject * obj, GstCaps * caps)
   gst_plugin_feature_list_free (type_list);
 
   return g_list_reverse (factories);
+}
+
+/**
+ * gst_type_find_data_new: (skip)
+ * @obj: (nullable): object doing the typefinding, or %NULL (used for logging)
+ * @data: (transfer none) (array length=size): a pointer with data to typefind
+ * @size: the size of @data
+ *
+ * Free-function: gst_type_find_data_free
+ *
+ * Returns: (transfer full): the #GstTypeFindData. The caller should free
+ *          the returned #GstTypeFindData with gst_type_find_data_free().
+ *
+ * Since: 1.22
+ *
+ */
+GstTypeFindData *
+gst_type_find_data_new (GstObject * obj, const guint8 * data, gsize size)
+{
+  GstTypeFindData *find_data;
+
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (size != 0, NULL);
+
+  find_data = g_new0 (GstTypeFindData, 1);
+
+  find_data->helper.data = data;
+  find_data->helper.size = size;
+  find_data->helper.best_probability = GST_TYPE_FIND_NONE;
+  find_data->helper.caps = NULL;
+  find_data->helper.obj = obj;
+
+  find_data->find.data = (gpointer) (&find_data->helper);
+  find_data->find.peek = buf_helper_find_peek;
+  find_data->find.suggest = buf_helper_find_suggest;
+  find_data->find.get_length = NULL;
+
+  return find_data;
+}
+
+/**
+ * gst_type_find_data_get_probability: (skip)
+ * @data: GstTypeFindData *
+ *
+ * Returns #GstCaps associated with #GstTypeFindData
+ *
+ * Returns: (transfer full) (nullable): #GstCaps.
+ *
+ * Since: 1.22
+ *
+ */
+GstCaps *
+gst_type_find_data_get_caps (GstTypeFindData * data)
+{
+  g_return_val_if_fail (data != NULL, NULL);
+
+  return gst_caps_ref (data->helper.caps);
+}
+
+/**
+ * gst_type_find_data_get_probability: (skip)
+ * @data: GstTypeFindData *
+ *
+ * Returns #GstTypeFindProbability associated with #GstTypeFindData
+ *
+ * Returns: (transfer full): #GstTypeFindProbability.
+ *
+ * Since: 1.22
+ *
+ */
+GstTypeFindProbability
+gst_type_find_data_get_probability (GstTypeFindData * data)
+{
+  g_return_val_if_fail (data != NULL, GST_TYPE_FIND_NONE);
+
+  return data->helper.best_probability;
+}
+
+/**
+ * gst_type_find_data_get_typefind: (skip)
+ * @data: GstTypeFindData *
+ *
+ * Returns #GstTypeFind associated with #GstTypeFindData
+ *
+ * Returns: (transfer full) (nullable): #GstTypeFind.
+ *
+ * Since: 1.22
+ *
+ */
+GstTypeFind *
+gst_type_find_data_get_typefind (GstTypeFindData * data)
+{
+  g_return_val_if_fail (data != NULL, NULL);
+
+  return &data->find;
+}
+
+/**
+ * gst_type_find_data_get_probability: (skip)
+ * @data: GstTypeFindData * to free
+ *
+ * Since: 1.22
+ *
+ */
+void
+gst_type_find_data_free (GstTypeFindData * data)
+{
+  if (data && data->helper.caps)
+    gst_caps_unref (data->helper.caps);
+
+  g_free (data);
 }

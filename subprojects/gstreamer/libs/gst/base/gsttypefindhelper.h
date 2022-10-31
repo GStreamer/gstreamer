@@ -29,6 +29,15 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstTypeFindData GstTypeFindData;
+
+GstTypeFindData * gst_type_find_data_new (GstObject * obj,
+    const guint8 * data, gsize size);
+GstCaps * gst_type_find_data_get_caps (GstTypeFindData * data);
+GstTypeFindProbability gst_type_find_data_get_probability (GstTypeFindData * data);
+GstTypeFind * gst_type_find_data_get_typefind (GstTypeFindData * data);
+void gst_type_find_data_free (GstTypeFindData * data);
+
 GST_BASE_API
 GstCaps * gst_type_find_helper (GstPad *src, guint64 size);
 
