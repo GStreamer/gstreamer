@@ -726,29 +726,19 @@ gst_type_find_helper_for_data_with_caps (GstObject * obj,
     const guint8 * data, gsize size, GstCaps * caps,
     GstTypeFindProbability * prob)
 {
-  GstTypeFind find;
-  GstTypeFindBufHelper helper;
+  GstTypeFind *find;
+  GstTypeFindData *find_data;
+  GstTypeFindFactory *factory;
   GList *l, *factories = NULL;
   GstCaps *result = NULL;
-  GstTypeFindProbability last_found_probability = GST_TYPE_FIND_NONE;
+  GstTypeFindProbability found_probability, last_found_probability;
 
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (size != 0, NULL);
 
-  helper.data = data;
-  helper.size = size;
-  helper.best_probability = GST_TYPE_FIND_NONE;
-  helper.caps = NULL;
-  helper.obj = obj;
-
-  if (helper.data == NULL || helper.size == 0)
-    return NULL;
-
-  find.data = &helper;
-  find.peek = buf_helper_find_peek;
-  find.suggest = buf_helper_find_suggest;
-  find.get_length = NULL;
+  find_data = gst_type_find_data_new (obj, data, size);
+  find = gst_type_find_data_get_typefind (find_data);
 
   factories = gst_type_find_list_factories_for_caps (obj, caps);
   if (!factories) {
@@ -757,13 +747,20 @@ gst_type_find_helper_for_data_with_caps (GstObject * obj,
     goto out;
   }
 
-  for (l = factories; l; l = l->next) {
-    helper.factory = GST_TYPE_FIND_FACTORY (l->data);
-    gst_type_find_factory_call_function (helper.factory, &find);
+  found_probability = GST_TYPE_FIND_NONE;
+  last_found_probability = GST_TYPE_FIND_NONE;
 
-    if (helper.best_probability > last_found_probability) {
-      last_found_probability = helper.best_probability;
-      result = helper.caps;
+  for (l = factories; l; l = l->next) {
+    factory = GST_TYPE_FIND_FACTORY (l->data);
+
+    gst_type_find_factory_call_function (factory, find);
+
+    found_probability = gst_type_find_data_get_probability (find_data);
+
+    if (found_probability > last_found_probability) {
+      last_found_probability = found_probability;
+      result = gst_type_find_data_get_caps (find_data);
+
       GST_DEBUG_OBJECT (obj, "Found %" GST_PTR_FORMAT " (probability = %u)",
           result, (guint) last_found_probability);
       if (last_found_probability >= GST_TYPE_FIND_MAXIMUM)
@@ -775,10 +772,12 @@ gst_type_find_helper_for_data_with_caps (GstObject * obj,
     *prob = last_found_probability;
 
   GST_LOG_OBJECT (obj, "Returning %" GST_PTR_FORMAT " (probability = %u)",
-      result, (guint) helper.best_probability);
+      result, (guint) last_found_probability);
 
 out:
   g_list_free_full (factories, (GDestroyNotify) gst_object_unref);
+
+  gst_type_find_data_free (find_data);
 
   return result;
 }
