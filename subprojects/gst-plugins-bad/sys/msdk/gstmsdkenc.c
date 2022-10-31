@@ -1435,16 +1435,18 @@ done:
   return ret;
 }
 
+#ifndef _WIN32
 static gboolean
 sinkpad_is_va (GstMsdkEnc * thiz)
 {
-  GstCapsFeatures *const features =
+  GstCapsFeatures *features =
       gst_caps_get_features (thiz->input_state->caps, 0);
-  if (gst_caps_features_contains (features, "memory:VAMemory"))
+  if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA))
     return TRUE;
 
   return FALSE;
 }
+#endif
 
 static gboolean
 gst_msdkenc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
