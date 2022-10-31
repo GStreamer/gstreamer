@@ -1509,6 +1509,8 @@ gst_adaptive_demux_handle_stream_collection_msg (GstAdaptiveDemux * demux,
 beach:
   GST_MANIFEST_UNLOCK (demux);
 
+  if (collection)
+    gst_object_unref (collection);
   gst_message_unref (msg);
   msg = NULL;
 }

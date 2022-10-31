@@ -53,6 +53,9 @@ _demux_period_free (GstAdaptiveDemuxPeriod * period)
   /* Disable and remove all streams and tracks. */
   g_list_free_full (period->streams, (GDestroyNotify) gst_object_unref);
 
+  if (period->collection)
+    gst_object_unref (period->collection);
+
   /* Theoretically all tracks should have gone by now */
   GST_DEBUG ("Disabling and removing all tracks");
   g_list_free_full (period->tracks,
