@@ -836,8 +836,8 @@ gst_d3d11_decoder_ensure_staging_texture (GstD3D11Decoder * self)
   device_handle = gst_d3d11_device_get_device_handle (self->device);
 
   /* create stage texture to copy out */
-  desc.Width = GST_ROUND_UP_2 (self->info.width);
-  desc.Height = GST_ROUND_UP_2 (self->info.height);
+  desc.Width = self->aligned_width;
+  desc.Height = self->aligned_height;
   desc.MipLevels = 1;
   desc.Format = self->decoder_format;
   desc.SampleDesc.Count = 1;
@@ -1495,10 +1495,12 @@ gst_d3d11_decoder_crop_and_copy_texture (GstD3D11Decoder * self,
   D3D11_BOX src_box = { 0, };
   GstD3D11DeviceLockGuard lk (device);
 
-  src_box.left = self->offset_x;
-  src_box.top = self->offset_y;
-  src_box.right = self->offset_x + self->info.width;
-  src_box.bottom = self->offset_y + self->info.height;
+  /* NOTE: this may be incorrect for non-4:2:0 formats, but we do support
+   * only 4:2:0 8/10 bits streams at the moment */
+  src_box.left = GST_ROUND_UP_2 (self->offset_x);
+  src_box.top = GST_ROUND_UP_2 (self->offset_y);
+  src_box.right = GST_ROUND_UP_2 (self->offset_x + self->info.width);
+  src_box.bottom = GST_ROUND_UP_2 (self->offset_y + self->info.height);
   src_box.front = 0;
   src_box.back = 1;
 
