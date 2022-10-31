@@ -1741,6 +1741,11 @@ gst_hls_demux_stream_finalize (GObject * object)
     hls_stream->playlist = NULL;
   }
 
+  if (hls_stream->init_file) {
+    gst_m3u8_init_file_unref (hls_stream->init_file);
+    hls_stream->init_file = NULL;
+  }
+
   if (hls_stream->pending_encrypted_data)
     g_object_unref (hls_stream->pending_encrypted_data);
 
@@ -2387,7 +2392,20 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 
   discont = file->discont || stream->discont;
 
-  if (GST_ADAPTIVE_DEMUX2_STREAM_NEED_HEADER (stream) && file->init_file) {
+  gboolean need_header = GST_ADAPTIVE_DEMUX2_STREAM_NEED_HEADER (stream);
+
+  /* Check if the MAP header file changed and update it */
+  if (file->init_file != NULL
+      && !gst_m3u8_init_file_equal (hlsdemux_stream->init_file,
+          file->init_file)) {
+    GST_DEBUG_OBJECT (stream, "MAP header info changed. Updating");
+    if (hlsdemux_stream->init_file != NULL)
+      gst_m3u8_init_file_unref (hlsdemux_stream->init_file);
+    hlsdemux_stream->init_file = gst_m3u8_init_file_ref (file->init_file);
+    need_header = TRUE;
+  }
+
+  if (file->init_file && need_header) {
     GstM3U8InitFile *header_file = file->init_file;
     g_free (stream->fragment.header_uri);
     stream->fragment.header_uri = g_strdup (header_file->uri);
@@ -2398,6 +2416,8 @@ gst_hls_demux_update_fragment_info (GstAdaptiveDemux2Stream * stream)
     } else {
       stream->fragment.header_range_end = -1;
     }
+
+    stream->need_header = TRUE;
   }
 
   /* set up our source for download */

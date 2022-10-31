@@ -110,6 +110,9 @@ struct _GstHLSDemuxStream
   /* The media playlist currently used */
   GstHLSMediaPlaylist *playlist;
 
+  /* The current header / init_file data */
+  GstM3U8InitFile *init_file;
+
   /* The segment (from the above playlist) currently being used */
   GstM3U8MediaSegment *current_segment;
 
