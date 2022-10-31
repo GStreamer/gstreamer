@@ -158,6 +158,10 @@ struct _GstM3U8InitFile
   guint ref_count;      /* ATOMIC */
 };
 
+GstM3U8InitFile *gst_m3u8_init_file_ref (GstM3U8InitFile * ifile);
+void gst_m3u8_init_file_unref (GstM3U8InitFile * ifile);
+gboolean gst_m3u8_init_file_equal (const GstM3U8InitFile * ifile1, const GstM3U8InitFile *ifile2);
+
 GstM3U8MediaSegment *
 gst_m3u8_media_segment_ref   (GstM3U8MediaSegment * mfile);
 

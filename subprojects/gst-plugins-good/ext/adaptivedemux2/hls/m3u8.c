@@ -38,7 +38,6 @@
 
 #define GST_CAT_DEFAULT hls2_debug
 
-static void gst_m3u8_init_file_unref (GstM3U8InitFile * self);
 static gchar *uri_join (const gchar * uri, const gchar * path);
 
 GstHLSMediaPlaylist *
@@ -124,7 +123,7 @@ gst_m3u8_init_file_new (gchar * uri)
   return file;
 }
 
-static GstM3U8InitFile *
+GstM3U8InitFile *
 gst_m3u8_init_file_ref (GstM3U8InitFile * ifile)
 {
   g_assert (ifile != NULL && ifile->ref_count > 0);
@@ -133,7 +132,7 @@ gst_m3u8_init_file_ref (GstM3U8InitFile * ifile)
   return ifile;
 }
 
-static void
+void
 gst_m3u8_init_file_unref (GstM3U8InitFile * self)
 {
   g_return_if_fail (self != NULL && self->ref_count > 0);
@@ -142,6 +141,28 @@ gst_m3u8_init_file_unref (GstM3U8InitFile * self)
     g_free (self->uri);
     g_free (self);
   }
+}
+
+gboolean
+gst_m3u8_init_file_equal (const GstM3U8InitFile * ifile1,
+    const GstM3U8InitFile * ifile2)
+{
+  if (ifile1 == ifile2)
+    return TRUE;
+
+  if (ifile1 == NULL && ifile2 != NULL)
+    return FALSE;
+  if (ifile1 != NULL && ifile2 == NULL)
+    return FALSE;
+
+  if (!g_str_equal (ifile1->uri, ifile2->uri))
+    return FALSE;
+  if (ifile1->offset != ifile2->offset)
+    return FALSE;
+  if (ifile1->size != ifile2->size)
+    return FALSE;
+
+  return TRUE;
 }
 
 static gboolean
