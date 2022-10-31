@@ -2070,9 +2070,6 @@ setup_source (GstURISourceBin * urisrc)
 
   GST_DEBUG_OBJECT (urisrc, "setup source");
 
-  /* delete old src */
-  remove_source (urisrc);
-
   /* create and configure an element that can handle the uri */
   if (!(urisrc->source = gen_source_element (urisrc)))
     goto no_source;
