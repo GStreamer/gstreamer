@@ -2735,10 +2735,6 @@ gst_uri_source_bin_change_state (GstElement * element,
       urisrc->buffering_status = NULL;
       urisrc->last_buffering_pct = -1;
       break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_DEBUG ("ready to null");
-      remove_source (urisrc);
-      break;
     default:
       break;
   }
