@@ -493,3 +493,38 @@ gst_ffmpeg_auto_max_threads (void)
 
   return (int) (n_threads);
 }
+
+
+GType
+gst_av_codec_compliance_get_type (void)
+{
+  static gsize compliance_type = 0;
+
+  if (g_once_init_enter (&compliance_type)) {
+    static const GEnumValue types[] = {
+      {GST_AV_CODEC_COMPLIANCE_AUTO,
+          "The decoder automatically decides. If the pipeline is live, it will"
+            "use `normal` mode, and `strict` otherwise.", "auto"},
+      {GST_AV_CODEC_COMPLIANCE_VERY_STRICT,
+          "VeryStrict: Strictly conform to an older more strict version "
+            "of the spec or reference software", "very-strict"},
+      {GST_AV_CODEC_COMPLIANCE_STRICT,
+          "Strict: Strictly conform to all the things in the spec no matter "
+            "what consequences", "strict"},
+      {GST_AV_CODEC_COMPLIANCE_NORMAL, "Normal", "normal"},
+      {GST_AV_CODEC_COMPLIANCE_UNOFFICIAL,
+            "Unofficial: Allow unofficial extensions "
+            "(decoder will not differentiate this with \"normal\")",
+          "unofficial"},
+      {GST_AV_CODEC_COMPLIANCE_EXPERIMENTAL,
+            "Experimental: Allow nonstandardized experimental things "
+            "(decoder will not differentiate this with \"normal\")",
+          "experimental"},
+      {0, NULL, NULL},
+    };
+    GType tmp = g_enum_register_static ("GstAvCodecCompliance", types);
+    g_once_init_leave (&compliance_type, tmp);
+  }
+
+  return (GType) compliance_type;
+}

@@ -114,4 +114,18 @@ av_smp_format_depth(enum AVSampleFormat smp_fmt);
 GstBuffer *
 new_aligned_buffer (gint size);
 
+typedef enum
+{
+  GST_AV_CODEC_COMPLIANCE_AUTO = G_MAXINT,
+  GST_AV_CODEC_COMPLIANCE_VERY_STRICT = FF_COMPLIANCE_VERY_STRICT,
+  GST_AV_CODEC_COMPLIANCE_STRICT = FF_COMPLIANCE_STRICT,
+  GST_AV_CODEC_COMPLIANCE_NORMAL = FF_COMPLIANCE_NORMAL,
+  GST_AV_CODEC_COMPLIANCE_UNOFFICIAL = FF_COMPLIANCE_UNOFFICIAL,
+  GST_AV_CODEC_COMPLIANCE_EXPERIMENTAL = FF_COMPLIANCE_EXPERIMENTAL,
+} GstAvCodecCompliance;
+
+#define GST_TYPE_AV_CODEC_COMPLIANCE (gst_av_codec_compliance_get_type())
+GType gst_av_codec_compliance_get_type (void);
+
+
 #endif /* __GST_FFMPEG_UTILS_H__ */

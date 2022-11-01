@@ -48,6 +48,7 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 #define DEFAULT_STRIDE_ALIGN            31
 #define DEFAULT_ALLOC_PARAM             { 0, DEFAULT_STRIDE_ALIGN, 0, 0, }
 #define DEFAULT_THREAD_TYPE             0
+#define DEFAULT_STD_COMPLIANCE   GST_AV_CODEC_COMPLIANCE_AUTO
 
 enum
 {
@@ -59,6 +60,7 @@ enum
   PROP_MAX_THREADS,
   PROP_OUTPUT_CORRUPT,
   PROP_THREAD_TYPE,
+  PROP_STD_COMPLIANCE,
   PROP_LAST
 };
 
@@ -293,6 +295,18 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
             DEFAULT_THREAD_TYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
+  /**
+   * GstFFMpegVidDec::std-compliance:
+   *
+   * Specifies standard compliance mode to use
+   *
+   * Since: 1.20
+   */
+  g_object_class_install_property (gobject_class, PROP_STD_COMPLIANCE,
+      g_param_spec_enum ("std-compliance", "Standard Compliance",
+          "Standard compliance mode to use", GST_TYPE_AV_CODEC_COMPLIANCE,
+          DEFAULT_STD_COMPLIANCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   viddec_class->set_format = gst_ffmpegviddec_set_format;
   viddec_class->handle_frame = gst_ffmpegviddec_handle_frame;
   viddec_class->start = gst_ffmpegviddec_start;
@@ -308,6 +322,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_LOWRES, 0);
   gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_SKIPFRAME, 0);
   gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_THREAD_TYPE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AV_CODEC_COMPLIANCE, 0);
 }
 
 static void
@@ -492,6 +507,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   GstFFMpegVidDecClass *oclass;
   GstClockTime latency = GST_CLOCK_TIME_NONE;
   gboolean ret = FALSE;
+  gboolean is_live;
+  GstQuery *query;
 
   ffmpegdec = (GstFFMpegVidDec *) decoder;
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
@@ -568,23 +585,21 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   ffmpegdec->context->lowres = ffmpegdec->lowres;
   ffmpegdec->context->skip_frame = ffmpegdec->skip_frame;
 
+
+  query = gst_query_new_latency ();
+  is_live = FALSE;
+  /* Check if upstream is live. If it isn't we can enable frame based
+   * threading, which is adding latency */
+  if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec), query)) {
+    gst_query_parse_latency (query, &is_live, NULL, NULL);
+  }
+  gst_query_unref (query);
+
   if (ffmpegdec->thread_type) {
     GST_DEBUG_OBJECT (ffmpegdec, "Use requested thread type 0x%x",
         ffmpegdec->thread_type);
     ffmpegdec->context->thread_type = ffmpegdec->thread_type;
   } else {
-    GstQuery *query;
-    gboolean is_live;
-
-    query = gst_query_new_latency ();
-    is_live = FALSE;
-    /* Check if upstream is live. If it isn't we can enable frame based
-     * threading, which is adding latency */
-    if (gst_pad_peer_query (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec), query)) {
-      gst_query_parse_latency (query, &is_live, NULL, NULL);
-    }
-    gst_query_unref (query);
-
     if (is_live)
       ffmpegdec->context->thread_type = FF_THREAD_SLICE;
     else
@@ -602,6 +617,19 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
       ffmpegdec->context->thread_count = 0;
   } else
     ffmpegdec->context->thread_count = ffmpegdec->max_threads;
+
+  if (ffmpegdec->std_compliance == GST_AV_CODEC_COMPLIANCE_AUTO) {
+    /* Normal yields lower latency, but fails some compliance check */
+    if (is_live || ffmpegdec->context->thread_type == FF_THREAD_SLICE) {
+      ffmpegdec->context->strict_std_compliance =
+          GST_AV_CODEC_COMPLIANCE_NORMAL;
+    } else {
+      ffmpegdec->context->strict_std_compliance =
+          GST_AV_CODEC_COMPLIANCE_STRICT;
+    }
+  } else {
+    ffmpegdec->context->strict_std_compliance = ffmpegdec->std_compliance;
+  }
 
   if (oclass->in_plugin->id == AV_CODEC_ID_H264) {
     GstStructure *s = gst_caps_get_structure (state->caps, 0);
@@ -2417,6 +2445,9 @@ gst_ffmpegviddec_set_property (GObject * object,
     case PROP_THREAD_TYPE:
       ffmpegdec->thread_type = g_value_get_flags (value);
       break;
+    case PROP_STD_COMPLIANCE:
+      ffmpegdec->std_compliance = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2452,6 +2483,9 @@ gst_ffmpegviddec_get_property (GObject * object,
       break;
     case PROP_THREAD_TYPE:
       g_value_set_flags (value, ffmpegdec->thread_type);
+      break;
+    case PROP_STD_COMPLIANCE:
+      g_value_set_enum (value, ffmpegdec->std_compliance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

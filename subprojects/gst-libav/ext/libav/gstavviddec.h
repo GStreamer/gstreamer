@@ -69,6 +69,7 @@ struct _GstFFMpegVidDec
   int max_threads;
   gboolean output_corrupt;
   guint thread_type;
+  GstAvCodecCompliance std_compliance;
 
   GstCaps *last_caps;
 
