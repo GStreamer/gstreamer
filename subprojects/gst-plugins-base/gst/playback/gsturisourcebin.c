@@ -102,6 +102,10 @@ struct _ChildSrcPadInfo
   /* An optional typefind */
   GstElement *typefind;
 
+  /* An optional demuxer */
+  GstElement *demuxer;
+  gboolean demuxer_handles_buffering;
+
   /* list of output slots */
   GList *outputs;
 };
@@ -147,7 +151,6 @@ struct _GstURISourceBin
 
   gboolean is_stream;
   gboolean is_adaptive;
-  gboolean demuxer_handles_buffering;   /* If TRUE: Don't use buffering elements */
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
@@ -158,8 +161,6 @@ struct _GstURISourceBin
   GstElement *source;
 
   GList *src_infos;             /* List of ChildSrcPadInfo for the source */
-
-  GstElement *demuxer;          /* Adaptive demuxer if any */
 
   guint numpads;
 
@@ -286,7 +287,6 @@ static GstStateChangeReturn gst_uri_source_bin_change_state (GstElement *
 static void handle_new_pad (ChildSrcPadInfo * info, GstPad * srcpad,
     GstCaps * caps);
 static gboolean setup_typefind (ChildSrcPadInfo * info);
-static void remove_demuxer (GstURISourceBin * bin);
 static void expose_output_pad (GstURISourceBin * urisrc, GstPad * pad);
 static OutputSlotInfo *new_output_slot (ChildSrcPadInfo * info,
     gboolean do_download, gboolean is_adaptive, gboolean no_buffering,
@@ -498,8 +498,6 @@ gst_uri_source_bin_init (GstURISourceBin * urisrc)
   urisrc->low_watermark = DEFAULT_LOW_WATERMARK;
   urisrc->high_watermark = DEFAULT_HIGH_WATERMARK;
 
-  urisrc->demuxer_handles_buffering = FALSE;
-
   GST_OBJECT_FLAG_SET (urisrc,
       GST_ELEMENT_FLAG_SOURCE | GST_BIN_FLAG_STREAMS_AWARE);
   gst_bin_set_suppressed_flags (GST_BIN (urisrc),
@@ -511,7 +509,6 @@ gst_uri_source_bin_finalize (GObject * obj)
 {
   GstURISourceBin *urisrc = GST_URI_SOURCE_BIN (obj);
 
-  remove_demuxer (urisrc);
   g_mutex_clear (&urisrc->lock);
   g_mutex_clear (&urisrc->buffering_lock);
   g_mutex_clear (&urisrc->buffering_post_lock);
@@ -653,6 +650,11 @@ free_child_src_pad_info (ChildSrcPadInfo * info, GstURISourceBin * urisrc)
   }
 
   gst_object_unref (info->src_pad);
+  if (info->demuxer) {
+    GST_DEBUG_OBJECT (urisrc, "Removing demuxer");
+    gst_element_set_state (info->demuxer, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (urisrc), info->demuxer);
+  }
 
   g_list_foreach (info->outputs, (GFunc) free_output_slot, urisrc);
   g_list_free (info->outputs);
@@ -702,7 +704,7 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
   /* If the demuxer handles buffering and is streams-aware, we can expose it
      as-is directly. We still add an event probe to deal with EOS */
   slot =
-      new_output_slot (info, FALSE, FALSE, urisrc->demuxer_handles_buffering,
+      new_output_slot (info, FALSE, FALSE, info->demuxer_handles_buffering,
       pad);
   output_pad = gst_object_ref (slot->output_pad);
 
@@ -1654,19 +1656,6 @@ restart:
   return res;
 }
 
-/* Remove any adaptive demuxer element */
-static void
-remove_demuxer (GstURISourceBin * bin)
-{
-  if (bin->demuxer) {
-    GST_DEBUG_OBJECT (bin, "removing old demuxer element");
-    gst_element_set_state (bin->demuxer, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN_CAST (bin), bin->demuxer);
-    bin->demuxer = NULL;
-    bin->demuxer_handles_buffering = FALSE;
-  }
-}
-
 /* make a demuxer and connect to all the signals */
 static GstElement *
 make_demuxer (GstURISourceBin * urisrc, ChildSrcPadInfo * info, GstCaps * caps)
@@ -1785,20 +1774,19 @@ handle_new_pad (ChildSrcPadInfo * info, GstPad * srcpad, GstCaps * caps)
     GstPadLinkReturn link_res;
     GstQuery *query;
 
-    urisrc->demuxer = make_demuxer (urisrc, info, caps);
-    if (!urisrc->demuxer)
+    info->demuxer = make_demuxer (urisrc, info, caps);
+    if (!info->demuxer)
       goto no_demuxer;
-    gst_bin_add (GST_BIN_CAST (urisrc), urisrc->demuxer);
+    gst_bin_add (GST_BIN_CAST (urisrc), info->demuxer);
 
     /* Query the demuxer to see if it can handle buffering */
     query = gst_query_new_buffering (GST_FORMAT_TIME);
-    urisrc->demuxer_handles_buffering =
-        gst_element_query (urisrc->demuxer, query);
+    info->demuxer_handles_buffering = gst_element_query (info->demuxer, query);
     gst_query_unref (query);
     GST_DEBUG_OBJECT (urisrc, "Demuxer handles buffering : %d",
-        urisrc->demuxer_handles_buffering);
+        info->demuxer_handles_buffering);
 
-    sinkpad = gst_element_get_static_pad (urisrc->demuxer, "sink");
+    sinkpad = gst_element_get_static_pad (info->demuxer, "sink");
     if (sinkpad == NULL)
       goto no_demuxer_sink;
 
@@ -1808,7 +1796,7 @@ handle_new_pad (ChildSrcPadInfo * info, GstPad * srcpad, GstCaps * caps)
     if (link_res != GST_PAD_LINK_OK)
       goto could_not_link;
 
-    gst_element_sync_state_with_parent (urisrc->demuxer);
+    gst_element_sync_state_with_parent (info->demuxer);
   } else if (!urisrc->is_stream) {
     OutputSlotInfo *slot;
     GstPad *output_pad;
@@ -2015,9 +2003,6 @@ remove_source (GstURISourceBin * urisrc)
     urisrc->src_infos = NULL;
   }
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
-
-  if (urisrc->demuxer)
-    remove_demuxer (urisrc);
 }
 
 /* is called when a dynamic source element created a new pad. */
