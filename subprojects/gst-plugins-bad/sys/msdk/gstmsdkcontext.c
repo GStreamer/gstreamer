@@ -330,7 +330,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Failed to query the session attributes (%s)",
         msdk_status_to_string (status));
-    g_object_unref (obj);
+    gst_object_unref (obj);
     return NULL;
   }
 
@@ -345,7 +345,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
     if (status != MFX_ERR_NONE || !handle) {
       GST_ERROR ("Failed to get session handle (%s)",
           msdk_status_to_string (status));
-      g_object_unref (obj);
+      gst_object_unref (obj);
       return NULL;
     }
   }
@@ -357,7 +357,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
   if (status != MFX_ERR_NONE) {
     GST_ERROR ("Failed to create a child mfx session (%s)",
         msdk_status_to_string (status));
-    g_object_unref (obj);
+    gst_object_unref (obj);
     return NULL;
   }
 
@@ -370,7 +370,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
       GST_ERROR ("Failed to set a HW handle (%s)",
           msdk_status_to_string (status));
       MFXClose (child_msdk_session.session);
-      g_object_unref (obj);
+      gst_object_unref (obj);
       return NULL;
     }
   }
@@ -382,7 +382,7 @@ gst_msdk_context_new_with_parent (GstMsdkContext * parent)
     GST_ERROR ("Failed to join two sessions (%s)",
         msdk_status_to_string (status));
     MFXClose (child_msdk_session.session);
-    g_object_unref (obj);
+    gst_object_unref (obj);
     return NULL;
   }
 #endif
@@ -428,7 +428,7 @@ gst_msdk_context_new_with_va_display (GstObject * display_obj,
   priv->session =
       msdk_open_session (hardware ? MFX_IMPL_HARDWARE_ANY : MFX_IMPL_SOFTWARE);
   if (!priv->session.session) {
-    g_object_unref (obj);
+    gst_object_unref (obj);
     return NULL;
   }
 
@@ -439,7 +439,7 @@ gst_msdk_context_new_with_va_display (GstObject * display_obj,
     if (status != MFX_ERR_NONE) {
       GST_ERROR ("Setting VAAPI handle failed (%s)",
           msdk_status_to_string (status));
-      g_object_unref (obj);
+      gst_object_unref (obj);
       return NULL;
     }
   }
