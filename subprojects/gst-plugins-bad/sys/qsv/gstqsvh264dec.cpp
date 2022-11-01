@@ -50,7 +50,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_dec_debug);
 #define GST_CAT_DEFAULT gst_qsv_h264_dec_debug
 
 #define DOC_SINK_CAPS \
-    "video/x-h264, width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ], " \
+    "video/x-h264, width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ], " \
     "stream-format = (string) { byte-stream, avc, avc3 }, " \
     "alignment = (string) au, " \
     "profile = (string) { high, progressive-high, constrained-high, main, " \
@@ -58,7 +58,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_qsv_h264_dec_debug);
 
 #define DOC_SRC_CAPS_COMM \
     "format = (string) NV12, " \
-    "width = (int) [ 16, 4096 ], height = (int) [ 16, 4096 ]"
+    "width = (int) [ 1, 4096 ], height = (int) [ 1, 4096 ]"
 
 #define DOC_SRC_CAPS \
     "video/x-raw(memory:D3D11Memory), " DOC_SRC_CAPS_COMM "; " \
@@ -436,29 +436,19 @@ gst_qsv_h264_dec_process_input (GstQsvDecoder * decoder,
   return new_buf;
 }
 
-typedef struct
-{
-  guint width;
-  guint height;
-} Resolution;
-
 void
 gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
     GstObject * device, mfxSession session)
 {
   mfxVideoParam param;
   mfxInfoMFX *mfx;
-  static const Resolution resolutions_to_check[] = {
-    {1280, 720}, {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
-    {7680, 4320}, {8192, 4320}
-  };
-  Resolution max_resolution;
+  GstQsvResolution max_resolution;
 
   GST_DEBUG_CATEGORY_INIT (gst_qsv_h264_dec_debug,
       "qsvh264dec", 0, "qsvh264dec");
 
   memset (&param, 0, sizeof (mfxVideoParam));
-  memset (&max_resolution, 0, sizeof (Resolution));
+  memset (&max_resolution, 0, sizeof (GstQsvResolution));
 
   param.AsyncDepth = 4;
   param.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
@@ -478,17 +468,17 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->CodecProfile = MFX_PROFILE_AVC_MAIN;
 
   /* Check max-resolution */
-  for (guint i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
-    mfx->FrameInfo.Width = GST_ROUND_UP_16 (resolutions_to_check[i].width);
-    mfx->FrameInfo.Height = GST_ROUND_UP_16 (resolutions_to_check[i].height);
-    mfx->FrameInfo.CropW = resolutions_to_check[i].width;
-    mfx->FrameInfo.CropH = resolutions_to_check[i].height;
+  for (guint i = 0; i < G_N_ELEMENTS (gst_qsv_resolutions); i++) {
+    mfx->FrameInfo.Width = GST_ROUND_UP_16 (gst_qsv_resolutions[i].width);
+    mfx->FrameInfo.Height = GST_ROUND_UP_16 (gst_qsv_resolutions[i].height);
+    mfx->FrameInfo.CropW = gst_qsv_resolutions[i].width;
+    mfx->FrameInfo.CropH = gst_qsv_resolutions[i].height;
 
     if (MFXVideoDECODE_Query (session, &param, &param) != MFX_ERR_NONE)
       break;
 
-    max_resolution.width = resolutions_to_check[i].width;
-    max_resolution.height = resolutions_to_check[i].height;
+    max_resolution.width = gst_qsv_resolutions[i].width;
+    max_resolution.height = gst_qsv_resolutions[i].height;
   }
 
   if (max_resolution.width == 0 || max_resolution.height == 0)
@@ -502,8 +492,8 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   guint resolution = MAX (max_resolution.width, max_resolution.height);
   std::string src_caps_str = "video/x-raw, format=(string) NV12";
 
-  src_caps_str += ", width=(int) [ 16, " + std::to_string (resolution) + " ]";
-  src_caps_str += ", height=(int) [ 16, " + std::to_string (resolution) + " ]";
+  src_caps_str += ", width=(int) [ 1, " + std::to_string (resolution) + " ]";
+  src_caps_str += ", height=(int) [ 1, " + std::to_string (resolution) + " ]";
 
   GstCaps *src_caps = gst_caps_from_string (src_caps_str.c_str ());
 
@@ -518,8 +508,8 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
 #endif
 
   std::string sink_caps_str = "video/x-h264";
-  sink_caps_str += ", width=(int) [ 16, " + std::to_string (resolution) + " ]";
-  sink_caps_str += ", height=(int) [ 16, " + std::to_string (resolution) + " ]";
+  sink_caps_str += ", width=(int) [ 1, " + std::to_string (resolution) + " ]";
+  sink_caps_str += ", height=(int) [ 1, " + std::to_string (resolution) + " ]";
 
   sink_caps_str += ", stream-format=(string) { byte-stream, avc, avc3 }";
   sink_caps_str += ", alignment=(string) au";

@@ -133,23 +133,13 @@ gst_qsv_vp9_dec_init (GstQsvVP9Dec * self)
 {
 }
 
-typedef struct
-{
-  guint width;
-  guint height;
-} Resolution;
-
 void
 gst_qsv_vp9_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
     GstObject * device, mfxSession session)
 {
   mfxVideoParam param;
   mfxInfoMFX *mfx;
-  static const Resolution resolutions_to_check[] = {
-    {1280, 720}, {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
-    {7680, 4320}, {8192, 4320}, {15360, 8640}, {16384, 8640}
-  };
-  Resolution max_resolution;
+  GstQsvResolution max_resolution;
   std::vector < std::string > supported_formats;
   gboolean have_profile_2 = FALSE;
   gboolean have_profile_2_12bits = FALSE;
@@ -157,7 +147,7 @@ gst_qsv_vp9_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   GST_DEBUG_CATEGORY_INIT (gst_qsv_vp9_dec_debug, "qsvvp9dec", 0, "qsvvp9dec");
 
   memset (&param, 0, sizeof (mfxVideoParam));
-  memset (&max_resolution, 0, sizeof (Resolution));
+  memset (&max_resolution, 0, sizeof (GstQsvResolution));
 
   param.AsyncDepth = 4;
   param.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
@@ -177,17 +167,17 @@ gst_qsv_vp9_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->CodecProfile = MFX_PROFILE_VP9_0;
 
   /* Check max-resolution */
-  for (guint i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
-    mfx->FrameInfo.Width = GST_ROUND_UP_16 (resolutions_to_check[i].width);
-    mfx->FrameInfo.Height = GST_ROUND_UP_16 (resolutions_to_check[i].height);
-    mfx->FrameInfo.CropW = resolutions_to_check[i].width;
-    mfx->FrameInfo.CropH = resolutions_to_check[i].height;
+  for (guint i = 0; i < G_N_ELEMENTS (gst_qsv_resolutions); i++) {
+    mfx->FrameInfo.Width = GST_ROUND_UP_16 (gst_qsv_resolutions[i].width);
+    mfx->FrameInfo.Height = GST_ROUND_UP_16 (gst_qsv_resolutions[i].height);
+    mfx->FrameInfo.CropW = gst_qsv_resolutions[i].width;
+    mfx->FrameInfo.CropH = gst_qsv_resolutions[i].height;
 
     if (MFXVideoDECODE_Query (session, &param, &param) != MFX_ERR_NONE)
       break;
 
-    max_resolution.width = resolutions_to_check[i].width;
-    max_resolution.height = resolutions_to_check[i].height;
+    max_resolution.width = gst_qsv_resolutions[i].width;
+    max_resolution.height = gst_qsv_resolutions[i].height;
   }
 
   if (max_resolution.width == 0 || max_resolution.height == 0)

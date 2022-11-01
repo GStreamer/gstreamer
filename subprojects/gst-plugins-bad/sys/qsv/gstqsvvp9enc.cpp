@@ -835,32 +835,22 @@ done:
   return ret;
 }
 
-typedef struct
-{
-  guint width;
-  guint height;
-} Resolution;
-
 void
 gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
     GstObject * device, mfxSession session)
 {
   mfxVideoParam param;
   mfxInfoMFX *mfx;
-  static const Resolution resolutions_to_check[] = {
-    {1280, 720}, {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
-    {7680, 4320}, {8192, 4320}
-  };
   std::vector < mfxU16 > supported_profiles;
   std::vector < std::string > supported_formats;
-  Resolution max_resolution;
+  GstQsvResolution max_resolution;
   mfxExtVP9Param vp9_param;
   mfxExtBuffer *ext_bufs[1];
 
   GST_DEBUG_CATEGORY_INIT (gst_qsv_vp9_enc_debug, "qsvvp9enc", 0, "qsvvp9enc");
 
   memset (&param, 0, sizeof (mfxVideoParam));
-  memset (&max_resolution, 0, sizeof (Resolution));
+  memset (&max_resolution, 0, sizeof (GstQsvResolution));
 
   ext_bufs[0] = (mfxExtBuffer *) & vp9_param;
 
@@ -945,24 +935,24 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.Shift = 0;
 
   /* Check max-resolution */
-  for (guint i = 0; i < G_N_ELEMENTS (resolutions_to_check); i++) {
+  for (guint i = 0; i < G_N_ELEMENTS (gst_qsv_resolutions); i++) {
     mfx->FrameInfo.Width = mfx->FrameInfo.CropW =
-        GST_ROUND_UP_16 (resolutions_to_check[i].width);
+        GST_ROUND_UP_16 (gst_qsv_resolutions[i].width);
     mfx->FrameInfo.Height = mfx->FrameInfo.CropH =
-        GST_ROUND_UP_16 (resolutions_to_check[i].height);
+        GST_ROUND_UP_16 (gst_qsv_resolutions[i].height);
 
     gst_qsv_vp9_enc_init_vp9_param (&vp9_param);
 
-    vp9_param.FrameWidth = resolutions_to_check[i].width;
-    vp9_param.FrameHeight = resolutions_to_check[i].height;
+    vp9_param.FrameWidth = gst_qsv_resolutions[i].width;
+    vp9_param.FrameHeight = gst_qsv_resolutions[i].height;
 
     vp9_param.WriteIVFHeaders = MFX_CODINGOPTION_OFF;
 
     if (MFXVideoENCODE_Query (session, &param, &param) != MFX_ERR_NONE)
       break;
 
-    max_resolution.width = resolutions_to_check[i].width;
-    max_resolution.height = resolutions_to_check[i].height;
+    max_resolution.width = gst_qsv_resolutions[i].width;
+    max_resolution.height = gst_qsv_resolutions[i].height;
   }
 
   GST_INFO ("Maximum supported resolution: %dx%d",

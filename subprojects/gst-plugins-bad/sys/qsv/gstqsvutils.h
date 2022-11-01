@@ -64,4 +64,15 @@ gst_qsv_timestamp_from_gst (GstClockTime timestamp)
   return gst_util_uint64_scale (timestamp, 90000, GST_SECOND);
 }
 
+typedef struct _GstQsvResolution
+{
+  guint width;
+  guint height;
+} GstQsvResolution;
+
+static const GstQsvResolution gst_qsv_resolutions[] = {
+  {1920, 1088}, {2560, 1440}, {3840, 2160}, {4096, 2160},
+  {7680, 4320}, {8192, 4320}, {15360, 8640}, {16384, 8640}
+};
+
 G_END_DECLS
