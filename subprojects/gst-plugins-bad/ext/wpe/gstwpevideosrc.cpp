@@ -53,7 +53,7 @@
  * Saves the first 50 video frames generated for the GStreamer website as PNG files in /tmp.
  *
  * ```shell
- * gst-play-1.0 --videosink gtkglsink wpe://https://gstreamer.freedesktop.org
+ * gst-play-1.0 --videosink gtkglsink web+https://gstreamer.freedesktop.org
  * ```
  * Shows the GStreamer website homepage as played with GstPlayer in a GTK+ window.
  *
