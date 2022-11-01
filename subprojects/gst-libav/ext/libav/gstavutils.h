@@ -114,6 +114,11 @@ av_smp_format_depth(enum AVSampleFormat smp_fmt);
 GstBuffer *
 new_aligned_buffer (gint size);
 
+/**
+ * GstAvCodecCompliance:
+ *
+ * Since: 1.22
+ */
 typedef enum
 {
   GST_AV_CODEC_COMPLIANCE_AUTO = G_MAXINT,

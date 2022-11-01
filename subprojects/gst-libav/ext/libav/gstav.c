@@ -61,7 +61,7 @@ gst_ffmpeg_avcodec_is_ffmpeg (void)
 }
 
 int
-gst_ffmpeg_avcodec_open (AVCodecContext * avctx, AVCodec * codec)
+gst_ffmpeg_avcodec_open (AVCodecContext * avctx, const AVCodec * codec)
 {
   int ret;
 

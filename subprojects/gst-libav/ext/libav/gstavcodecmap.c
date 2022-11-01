@@ -244,7 +244,7 @@ gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
  * but I'm too lazy today. Maybe later.
  */
 static GstCaps *
-gst_ff_vid_caps_new (AVCodecContext * context, AVCodec * codec,
+gst_ff_vid_caps_new (AVCodecContext * context, const AVCodec * codec,
     enum AVCodecID codec_id, gboolean encode, const char *mimetype,
     const char *fieldname, ...)
 {
@@ -2562,7 +2562,7 @@ gst_ffmpeg_codectype_to_audio_caps (AVCodecContext * context,
 
 GstCaps *
 gst_ffmpeg_codectype_to_video_caps (AVCodecContext * context,
-    enum AVCodecID codec_id, gboolean encode, AVCodec * codec)
+    enum AVCodecID codec_id, gboolean encode, const AVCodec * codec)
 {
   GstCaps *caps;
 

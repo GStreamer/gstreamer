@@ -48,15 +48,15 @@ gst_ffmpeg_codecid_to_caps   (enum AVCodecID    codec_id,
  */
 
 GstCaps *
-gst_ffmpeg_codectype_to_audio_caps (AVCodecContext *context, 
+gst_ffmpeg_codectype_to_audio_caps (AVCodecContext *context,
                               enum AVCodecID codec_id,
 				    gboolean encode,
 				    AVCodec *codec);
 GstCaps *
-gst_ffmpeg_codectype_to_video_caps (AVCodecContext *context, 
+gst_ffmpeg_codectype_to_video_caps (AVCodecContext *context,
                               enum AVCodecID codec_id,
 				    gboolean encode,
-				    AVCodec *codec);
+				    const AVCodec *codec);
 
 /*
  * caps_to_codecid () transforms a GstCaps that belongs to

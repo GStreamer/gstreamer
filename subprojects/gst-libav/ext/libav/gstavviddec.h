@@ -25,7 +25,22 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_FFMPEGVIDDEC           (gst_ffmpegviddec_get_type())
+#define GST_FFMPEGVIDDEC(obj)           (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FFMPEGVIDDEC,GstFFMpegVidDec))
+#define GST_FFMPEGVIDDEC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_FFMPEGVIDDEC,GstFFMpegVidDecClass))
+#define GST_FFMPEGVIDDEC_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_FFMPEGVIDDEC, GstFFMpegVidDecClass))
+#define GST_IS_FFMPEGVIDDEC(obj)        (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FFMPEGVIDDEC))
+#define GST_IS_FFMPEGVIDDEC_CLASS(obj)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FFMPEGVIDDEC))
+
+/**
+ * GstFFMpegVidDec:
+ *
+ * The #GstFFMpegVidDec data structure.
+ *
+ * Since: 1.22
+ */
 typedef struct _GstFFMpegVidDec GstFFMpegVidDec;
+
 struct _GstFFMpegVidDec
 {
   GstVideoDecoder parent;
@@ -87,8 +102,10 @@ struct _GstFFMpegVidDecClass
 {
   GstVideoDecoderClass parent_class;
 
-  AVCodec *in_plugin;
+  const AVCodec *in_plugin;
 };
+
+GType gst_ffmpegviddec_get_type (void);
 
 G_END_DECLS
 

@@ -65,9 +65,6 @@ enum
 };
 
 /* A number of function prototypes are given so we can refer to them later. */
-static void gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass);
-static void gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass);
-static void gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec);
 static void gst_ffmpegviddec_finalize (GObject * object);
 
 static gboolean gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
@@ -104,9 +101,10 @@ static gboolean picture_changed (GstFFMpegVidDec * ffmpegdec,
 static gboolean context_changed (GstFFMpegVidDec * ffmpegdec,
     AVCodecContext * context);
 
-#define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("avdec-params")
+G_DEFINE_ABSTRACT_TYPE (GstFFMpegVidDec, gst_ffmpegviddec,
+    GST_TYPE_VIDEO_DECODER);
 
-static GstElementClass *parent_class = NULL;
+#define parent_class gst_ffmpegviddec_parent_class
 
 #define GST_FFMPEGVIDDEC_TYPE_LOWRES (gst_ffmpegviddec_lowres_get_type())
 static GType
@@ -189,17 +187,40 @@ dup_caps_with_alternate (GstCaps * caps)
 }
 
 static void
-gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
+gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->set_property = gst_ffmpegviddec_set_property;
+  gobject_class->get_property = gst_ffmpegviddec_get_property;
+
+  /**
+   * GstFFMpegVidDec:std-compliance:
+   *
+   * Specifies standard compliance mode to use
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_STD_COMPLIANCE,
+      g_param_spec_enum ("std-compliance", "Standard Compliance",
+          "Standard compliance mode to use", GST_TYPE_AV_CODEC_COMPLIANCE,
+          DEFAULT_STD_COMPLIANCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_ffmpegviddec_subclass_init (GstFFMpegVidDecClass * klass,
+    gconstpointer class_data)
+{
+  GstVideoDecoderClass *viddec_class = GST_VIDEO_DECODER_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstPadTemplate *sinktempl, *srctempl;
   GstCaps *sinkcaps, *srccaps;
-  AVCodec *in_plugin;
+  const AVCodec *in_plugin;
   gchar *longname, *description;
+  int caps;
 
-  in_plugin =
-      (AVCodec *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
-      GST_FFDEC_PARAMS_QDATA);
+  in_plugin = class_data;
   g_assert (in_plugin != NULL);
 
   /* construct the element details struct */
@@ -239,16 +260,6 @@ gst_ffmpegviddec_base_init (GstFFMpegVidDecClass * klass)
   gst_caps_unref (srccaps);
 
   klass->in_plugin = in_plugin;
-}
-
-static void
-gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
-{
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstVideoDecoderClass *viddec_class = GST_VIDEO_DECODER_CLASS (klass);
-  int caps;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_ffmpegviddec_finalize;
 
@@ -295,18 +306,6 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
             DEFAULT_THREAD_TYPE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
-  /**
-   * GstFFMpegVidDec::std-compliance:
-   *
-   * Specifies standard compliance mode to use
-   *
-   * Since: 1.20
-   */
-  g_object_class_install_property (gobject_class, PROP_STD_COMPLIANCE,
-      g_param_spec_enum ("std-compliance", "Standard Compliance",
-          "Standard compliance mode to use", GST_TYPE_AV_CODEC_COMPLIANCE,
-          DEFAULT_STD_COMPLIANCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   viddec_class->set_format = gst_ffmpegviddec_set_format;
   viddec_class->handle_frame = gst_ffmpegviddec_handle_frame;
   viddec_class->start = gst_ffmpegviddec_start;
@@ -323,10 +322,16 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_SKIPFRAME, 0);
   gst_type_mark_as_plugin_api (GST_FFMPEGVIDDEC_TYPE_THREAD_TYPE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_AV_CODEC_COMPLIANCE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FFMPEGVIDDEC, 0);
 }
 
 static void
 gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
+{
+}
+
+static void
+gst_ffmpegviddec_subinit (GstFFMpegVidDec * ffmpegdec)
 {
   GstFFMpegVidDecClass *klass =
       (GstFFMpegVidDecClass *) G_OBJECT_GET_CLASS (ffmpegdec);
@@ -352,7 +357,7 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
 static void
 gst_ffmpegviddec_finalize (GObject * object)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) object;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (object);
 
   av_frame_free (&ffmpegdec->picture);
   avcodec_free_context (&ffmpegdec->context);
@@ -391,7 +396,7 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
   GstFFMpegVidDecClass *oclass;
   guint i;
 
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
 
   GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
 
@@ -425,7 +430,7 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
   GstFFMpegVidDecClass *oclass;
   guint i;
 
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
 
   if (gst_ffmpeg_avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0)
     goto could_not_open;
@@ -510,8 +515,8 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   gboolean is_live;
   GstQuery *query;
 
-  ffmpegdec = (GstFFMpegVidDec *) decoder;
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  ffmpegdec = GST_FFMPEGVIDDEC (decoder);
+  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
 
   GST_DEBUG_OBJECT (ffmpegdec, "setcaps called");
 
@@ -889,7 +894,7 @@ gst_ffmpegviddec_can_direct_render (GstFFMpegVidDec * ffmpegdec)
   if (!ffmpegdec->direct_rendering)
     return FALSE;
 
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
   return ((oclass->in_plugin->capabilities & AV_CODEC_CAP_DR1) ==
       AV_CODEC_CAP_DR1);
 }
@@ -907,7 +912,7 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   GstFlowReturn ret;
   int create_buffer_flags = 0;
 
-  ffmpegdec = (GstFFMpegVidDec *) context->opaque;
+  ffmpegdec = GST_FFMPEGVIDDEC (context->opaque);
 
   GST_DEBUG_OBJECT (ffmpegdec, "getting buffer picture %p", picture);
 
@@ -2014,7 +2019,7 @@ no_codec:
 static GstFlowReturn
 gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean got_frame = FALSE;
 
@@ -2049,7 +2054,7 @@ static GstFlowReturn
 gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
   guint8 *data;
   gint size;
   gboolean got_frame;
@@ -2156,10 +2161,10 @@ send_packet_failed:
 static gboolean
 gst_ffmpegviddec_start (GstVideoDecoder * decoder)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
   GstFFMpegVidDecClass *oclass;
 
-  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
 
   GST_OBJECT_LOCK (ffmpegdec);
   avcodec_free_context (&ffmpegdec->context);
@@ -2178,7 +2183,7 @@ gst_ffmpegviddec_start (GstVideoDecoder * decoder)
 static gboolean
 gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
 
   GST_OBJECT_LOCK (ffmpegdec);
   gst_ffmpegviddec_close (ffmpegdec, FALSE);
@@ -2233,7 +2238,7 @@ gst_ffmpegviddec_finish (GstVideoDecoder * decoder)
 static gboolean
 gst_ffmpegviddec_flush (GstVideoDecoder * decoder)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
 
   if (ffmpegdec->opened) {
     GST_LOG_OBJECT (decoder, "flushing buffers");
@@ -2246,7 +2251,7 @@ gst_ffmpegviddec_flush (GstVideoDecoder * decoder)
 static gboolean
 gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
   GstVideoCodecState *state;
   GstBufferPool *pool;
   guint size, min, max;
@@ -2418,7 +2423,7 @@ static void
 gst_ffmpegviddec_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) object;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (object);
 
   switch (prop_id) {
     case PROP_LOWRES:
@@ -2458,7 +2463,7 @@ static void
 gst_ffmpegviddec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) object;
+  GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (object);
 
   switch (prop_id) {
     case PROP_LOWRES:
@@ -2498,14 +2503,14 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
 {
   GTypeInfo typeinfo = {
     sizeof (GstFFMpegVidDecClass),
-    (GBaseInitFunc) gst_ffmpegviddec_base_init,
     NULL,
-    (GClassInitFunc) gst_ffmpegviddec_class_init,
+    NULL,
+    (GClassInitFunc) gst_ffmpegviddec_subclass_init,
     NULL,
     NULL,
     sizeof (GstFFMpegVidDec),
     0,
-    (GInstanceInitFunc) gst_ffmpegviddec_init,
+    (GInstanceInitFunc) gst_ffmpegviddec_subinit,
   };
   GType type;
   AVCodec *in_plugin;
@@ -2634,10 +2639,10 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
 
     if (!type) {
       /* create the gtype now */
+      typeinfo.class_data = in_plugin;
       type =
-          g_type_register_static (GST_TYPE_VIDEO_DECODER, type_name, &typeinfo,
+          g_type_register_static (GST_TYPE_FFMPEGVIDDEC, type_name, &typeinfo,
           0);
-      g_type_set_qdata (type, GST_FFDEC_PARAMS_QDATA, (gpointer) in_plugin);
     }
 
     /* (Ronald) MPEG-4 gets a higher priority because it has been well-
