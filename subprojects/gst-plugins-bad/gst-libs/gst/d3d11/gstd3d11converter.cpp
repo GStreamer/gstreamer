@@ -601,6 +601,8 @@ struct _GstD3D11ConverterPrivate
   FLOAT clear_color[4][4];
   GstD3D11ColorMatrix clear_color_matrix;
 
+  GstVideoConverter *unpack_convert;
+
   /* video processor */
   D3D11_VIDEO_COLOR background_color;
   ID3D11VideoDevice *video_device;
@@ -822,6 +824,9 @@ gst_d3d11_converter_finalize (GObject * object)
   g_free (priv->out_mdcv_str);
   g_free (priv->in_cll_str);
   g_free (priv->out_cll_str);
+
+  if (priv->unpack_convert)
+    gst_video_converter_free (priv->unpack_convert);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -3014,6 +3019,12 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
       GST_DEBUG_OBJECT (self, "Video processor is available");
       priv->supported_backend |= GST_D3D11_CONVERTER_BACKEND_VIDEO_PROCESSOR;
     }
+
+    /* Always use converter */
+    if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2) {
+      GST_DEBUG_OBJECT (self, "Use video processor only");
+      goto out;
+    }
   }
 
   if ((wanted_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0)
@@ -3056,6 +3067,28 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
 
   if (!gst_d3d11_converter_prepare_output (self, out_info))
     goto out;
+
+  /* XXX: hard to make sampling of packed 4:2:2 format, use software
+   * converter to convert YUV2 to Y42B */
+  if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2) {
+    GstVideoInfo tmp_info;
+
+    gst_video_info_set_interlaced_format (&tmp_info, GST_VIDEO_FORMAT_Y42B,
+        GST_VIDEO_INFO_INTERLACE_MODE (in_info),
+        GST_VIDEO_INFO_WIDTH (in_info), GST_VIDEO_INFO_HEIGHT (in_info));
+    tmp_info.chroma_site = in_info->chroma_site;
+    tmp_info.colorimetry = in_info->colorimetry;
+    tmp_info.fps_n = in_info->fps_n;
+    tmp_info.fps_d = in_info->fps_d;
+    tmp_info.par_n = in_info->par_n;
+    tmp_info.par_d = in_info->par_d;
+
+    priv->unpack_convert =
+        gst_video_converter_new (in_info, &tmp_info, nullptr);
+
+    priv->fallback_info = tmp_info;
+    in_info = &priv->fallback_info;
+  }
 
   if (!gst_d3d11_converter_prepare_sample_texture (self, in_info, out_info))
     goto out;
@@ -3303,7 +3336,7 @@ gst_d3d11_converter_copy_buffer (GstD3D11Converter * self, GstBuffer * in_buf)
   GstD3D11ConverterPrivate *priv = self->priv;
   GstVideoFrame frame, fallback_frame;
   GstVideoInfo *fallback_info = &priv->fallback_info;
-  gboolean ret;
+  gboolean ret = TRUE;
 
   if (!gst_video_frame_map (&frame, &priv->in_info, in_buf, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Failed to map input buffer");
@@ -3314,7 +3347,30 @@ gst_d3d11_converter_copy_buffer (GstD3D11Converter * self, GstBuffer * in_buf)
   if (fallback_info->width != GST_VIDEO_FRAME_WIDTH (&frame) ||
       fallback_info->height != GST_VIDEO_FRAME_HEIGHT (&frame)) {
     gst_clear_buffer (&priv->fallback_inbuf);
-    *fallback_info = frame.info;
+
+    if (GST_VIDEO_INFO_FORMAT (&priv->in_info) == GST_VIDEO_FORMAT_YUY2 &&
+        priv->unpack_convert) {
+      gst_video_info_set_interlaced_format (fallback_info,
+          GST_VIDEO_FORMAT_Y42B, GST_VIDEO_INFO_INTERLACE_MODE (&frame.info),
+          GST_VIDEO_INFO_WIDTH (&frame.info),
+          GST_VIDEO_INFO_HEIGHT (&frame.info));
+      fallback_info->chroma_site = frame.info.chroma_site;
+      fallback_info->colorimetry = frame.info.colorimetry;
+      fallback_info->fps_n = frame.info.fps_n;
+      fallback_info->fps_d = frame.info.fps_d;
+      fallback_info->par_n = frame.info.par_n;
+      fallback_info->par_d = frame.info.par_d;
+
+      if (priv->unpack_convert)
+        gst_video_converter_free (priv->unpack_convert);
+
+      priv->unpack_convert =
+          gst_video_converter_new (&frame.info, fallback_info, nullptr);
+
+      g_assert (priv->unpack_convert);
+    } else {
+      *fallback_info = frame.info;
+    }
   }
 
   if (!priv->fallback_inbuf &&
@@ -3328,7 +3384,11 @@ gst_d3d11_converter_copy_buffer (GstD3D11Converter * self, GstBuffer * in_buf)
     goto error;
   }
 
-  ret = gst_video_frame_copy (&fallback_frame, &frame);
+  if (priv->unpack_convert) {
+    gst_video_converter_frame (priv->unpack_convert, &frame, &fallback_frame);
+  } else {
+    ret = gst_video_frame_copy (&fallback_frame, &frame);
+  }
   gst_video_frame_unmap (&fallback_frame);
   gst_video_frame_unmap (&frame);
 
@@ -3609,8 +3669,9 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
   }
 
   /* But allows input copying */
-  if (!gst_d3d11_converter_ensure_d3d11_buffer (self, in_buf)) {
-    GST_LOG_OBJECT (self, "Input is not d3d11 buffer");
+  if (!gst_d3d11_converter_ensure_d3d11_buffer (self, in_buf) ||
+      (GST_VIDEO_INFO_FORMAT (&priv->in_info) == GST_VIDEO_FORMAT_YUY2 &&
+          priv->unpack_convert)) {
     if (!gst_d3d11_converter_copy_buffer (self, in_buf)) {
       GST_ERROR_OBJECT (self, "Couldn't copy into fallback buffer");
       return FALSE;

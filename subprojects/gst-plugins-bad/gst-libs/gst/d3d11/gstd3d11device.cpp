@@ -507,7 +507,9 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_P010_10LE:
       case GST_VIDEO_FORMAT_P012_LE:
-      case GST_VIDEO_FORMAT_P016_LE:{
+      case GST_VIDEO_FORMAT_P016_LE:
+      case GST_VIDEO_FORMAT_YUY2:
+      {
         gboolean supported = TRUE;
 
         if (is_windows_8_or_greater ())
