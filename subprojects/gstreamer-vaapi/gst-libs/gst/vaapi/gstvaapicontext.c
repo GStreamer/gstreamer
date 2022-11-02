@@ -333,7 +333,7 @@ config_create (GstVaapiContext * context)
         string_of_va_chroma_format (va_chroma_format));
     goto cleanup;
   }
-  attrib->value = va_chroma_format;
+  attrib->value = value;
   attrib = &attribs[++attrib_index];
   g_assert (attrib_index < G_N_ELEMENTS (attribs));
 
