@@ -912,16 +912,33 @@ gst_qsv_decoder_prepare_d3d11_pool (GstQsvDecoder * self,
   GstStructure *config;
   GstD3D11AllocationParams *params;
   GstD3D11Device *device = GST_D3D11_DEVICE_CAST (priv->device);
+  guint bind_flags = 0;
+  GstD3D11Format d3d11_format;
 
   GST_DEBUG_OBJECT (self, "Use d3d11 memory pool");
 
   priv->internal_pool = gst_d3d11_buffer_pool_new (device);
   config = gst_buffer_pool_get_config (priv->internal_pool);
+
+  gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
+      &d3d11_format);
+
+  /* May not support DOV, specifically RGB output case */
+  if ((d3d11_format.format_support[0] &
+          (guint) D3D11_FORMAT_SUPPORT_DECODER_OUTPUT) != 0) {
+    bind_flags |= D3D11_BIND_DECODER;
+  } else if ((d3d11_format.format_support[0] &
+          (guint) D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
+    bind_flags |= D3D11_BIND_RENDER_TARGET;
+  }
   /* Bind to shader resource as well for this texture can be used
    * in generic pixel shader */
+  if ((d3d11_format.format_support[0] & (guint)
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0)
+    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+
   params = gst_d3d11_allocation_params_new (device, info,
-      GST_D3D11_ALLOCATION_FLAG_DEFAULT,
-      D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE, 0);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   gst_d3d11_allocation_params_alignment (params, align);
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);
@@ -1201,8 +1218,23 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
     case MFX_FOURCC_P016:
       format = GST_VIDEO_FORMAT_P016_LE;
       break;
+    case MFX_FOURCC_RGB4:
+      format = GST_VIDEO_FORMAT_BGRA;
+      break;
     default:
       break;
+  }
+
+  if (klass->codec_id == MFX_CODEC_JPEG) {
+    if (param->mfx.JPEGChromaFormat == MFX_CHROMAFORMAT_YUV422) {
+      format = GST_VIDEO_FORMAT_YUY2;
+      frame_info->FourCC = MFX_FOURCC_YUY2;
+      frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+    } else if (param->mfx.JPEGColorFormat == MFX_JPEG_COLORFORMAT_RGB) {
+      format = GST_VIDEO_FORMAT_BGRA;
+      frame_info->FourCC = MFX_FOURCC_RGB4;
+      frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+    }
   }
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -1296,17 +1328,31 @@ gst_qsv_decoder_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   /* Decoder will use internal pool to output but this pool is required for
    * copying in case of reverse playback */
   if (use_d3d11_pool) {
+    guint bind_flags = 0;
+    GstD3D11Format d3d11_format;
+
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (device, &vinfo,
           GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
     }
+
+    gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (&vinfo),
+        &d3d11_format);
+
     /* Use both render target (for videoprocessor) and shader resource
      * for (pixel shader) bind flags for downstream to be able to use consistent
      * conversion path even when we copy textures */
-    d3d11_params->desc[0].BindFlags |=
-        (D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE);
+    if ((d3d11_format.format_support[0] &
+            (guint) D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
+      bind_flags |= D3D11_BIND_RENDER_TARGET;
+    }
 
+    if ((d3d11_format.format_support[0] & (guint)
+            D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0)
+      bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+
+    d3d11_params->desc[0].BindFlags |= bind_flags;
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
   }

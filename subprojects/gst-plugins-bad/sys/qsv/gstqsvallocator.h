@@ -73,6 +73,7 @@ typedef enum
   GST_QSV_VIDEO_MEMORY = (1 << 1),
   GST_QSV_ENCODER_IN_MEMORY = (1 << 2),
   GST_QSV_DECODER_OUT_MEMORY = (1 << 3),
+  GST_QSV_PROCESS_TARGET = (1 << 4),
 } GstQsvMemoryType;
 
 #define GST_QSV_MEM_TYPE_IS_SYSTEM(type) ((type & GST_QSV_SYSTEM_MEMORY) != 0)

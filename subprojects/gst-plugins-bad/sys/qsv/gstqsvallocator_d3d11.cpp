@@ -121,6 +121,9 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     case MFX_FOURCC_BGR4:
       dxgi_format = DXGI_FORMAT_R8G8B8A8_UNORM;
       break;
+    case MFX_FOURCC_YUY2:
+      dxgi_format = DXGI_FORMAT_YUY2;
+      break;
     default:
       /* TODO: add more formats */
       break;
@@ -189,6 +192,11 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     if ((request->Type & MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET) != 0) {
       bind_flags |= D3D11_BIND_DECODER;
       mem_type |= GST_QSV_DECODER_OUT_MEMORY;
+    }
+
+    if ((request->Type & MFX_MEMTYPE_VIDEO_MEMORY_PROCESSOR_TARGET) != 0) {
+      bind_flags |= D3D11_BIND_RENDER_TARGET;
+      mem_type |= GST_QSV_PROCESS_TARGET;
     }
 
     if (mem_type == GST_QSV_VIDEO_MEMORY) {

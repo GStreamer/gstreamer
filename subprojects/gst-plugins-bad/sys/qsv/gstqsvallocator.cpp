@@ -215,6 +215,12 @@ gst_qsv_allocator_alloc_default (GstQsvAllocator * self, gboolean dummy_alloc,
     case MFX_FOURCC_Y410:
       format = GST_VIDEO_FORMAT_Y410;
       break;
+    case MFX_FOURCC_YUY2:
+      format = GST_VIDEO_FORMAT_YUY2;
+      break;
+    case MFX_FOURCC_RGB4:
+      format = GST_VIDEO_FORMAT_BGRA;
+      break;
     default:
       /* TODO: add more formats */
       break;
@@ -407,6 +413,7 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
   switch (GST_VIDEO_INFO_FORMAT (&frame->info)) {
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_P016_LE:
       ptr->Pitch = (mfxU16) stride;
       ptr->Y = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       ptr->UV = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 1);
@@ -437,6 +444,12 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
       ptr->G = ptr->R + 1;
       ptr->B = ptr->R + 2;
       ptr->A = ptr->R + 3;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      ptr->Pitch = (mfxU16) stride;
+      ptr->Y = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
+      ptr->U = ptr->Y + 1;
+      ptr->V = ptr->Y + 3;
       break;
     default:
       break;
@@ -485,10 +498,8 @@ gst_qsv_allocator_get_hdl (mfxHDL pthis, mfxMemId mid, mfxHDL * handle)
   GstQsvFrame *frame = GST_QSV_FRAME_CAST (mid);
   GstMapInfo map_info;
 
-  if (!GST_QSV_MEM_TYPE_IS_VIDEO (frame->mem_type)) {
-    GST_ERROR_OBJECT (self, "Unexpected call");
+  if (!GST_QSV_MEM_TYPE_IS_VIDEO (frame->mem_type))
     return MFX_ERR_UNSUPPORTED;
-  }
 
   g_mutex_lock (&frame->lock);
   if (!frame->buffer) {
@@ -673,7 +684,8 @@ gst_qsv_allocator_acquire_frame (GstQsvAllocator * allocator,
 
     if ((mem_type & GST_QSV_ENCODER_IN_MEMORY) != 0) {
       map_flags |= GST_MAP_READ;
-    } else if ((mem_type & GST_QSV_DECODER_OUT_MEMORY) != 0) {
+    } else if ((mem_type & GST_QSV_DECODER_OUT_MEMORY) != 0 ||
+        (mem_type & GST_QSV_PROCESS_TARGET) != 0) {
       map_flags |= GST_MAP_WRITE;
     } else {
       GST_ERROR_OBJECT (allocator,

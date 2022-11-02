@@ -45,6 +45,7 @@
 #include "gstqsvh264enc.h"
 #include "gstqsvh265dec.h"
 #include "gstqsvh265enc.h"
+#include "gstqsvjpegdec.h"
 #include "gstqsvjpegenc.h"
 #include "gstqsvvp9dec.h"
 #include "gstqsvvp9enc.h"
@@ -257,6 +258,7 @@ plugin_init (GstPlugin * plugin)
 
     gst_qsv_h264_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
     gst_qsv_h265_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
+    gst_qsv_jpeg_dec_register (plugin, GST_RANK_SECONDARY, i, device, session);
     gst_qsv_vp9_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
 
     gst_qsv_h264_enc_register (plugin, GST_RANK_NONE, i, device, session);
