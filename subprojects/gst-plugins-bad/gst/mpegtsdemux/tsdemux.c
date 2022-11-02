@@ -2231,6 +2231,9 @@ gst_ts_demux_update_program (MpegTSBase * base, MpegTSBaseProgram * program)
         gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
       }
     }
+    if (stream->pad)
+      gst_pad_push_event (stream->pad,
+          gst_event_new_stream_collection (program->collection));
   }
 }
 
@@ -2317,6 +2320,9 @@ gst_ts_demux_program_started (MpegTSBase * base, MpegTSBaseProgram * program)
         GST_DEBUG_OBJECT (stream->pad, "sparse stream, pushing GAP event");
         gst_pad_push_event (stream->pad, gst_event_new_gap (0, 0));
       }
+      if (stream->pad)
+        gst_pad_push_event (stream->pad,
+            gst_event_new_stream_collection (program->collection));
     }
 
     gst_element_no_more_pads ((GstElement *) demux);
