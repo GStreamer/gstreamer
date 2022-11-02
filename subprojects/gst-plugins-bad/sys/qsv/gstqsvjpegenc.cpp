@@ -59,7 +59,7 @@ enum
 #define DEFAULT_JPEG_QUALITY 85
 
 #define DOC_SINK_CAPS_COMM \
-    "format = (string) { NV12, BGRA }, " \
+    "format = (string) { NV12, YUY2, BGRA }, " \
     "width = (int) [ 16, 16384 ], height = (int) [ 16, 16384 ]"
 
 #define DOC_SINK_CAPS \
@@ -290,6 +290,12 @@ gst_qsv_jpeg_enc_set_format (GstQsvEncoder * encoder,
       frame_info->BitDepthLuma = 8;
       frame_info->BitDepthChroma = 8;
       break;
+    case GST_VIDEO_FORMAT_YUY2:
+      frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+      frame_info->FourCC = MFX_FOURCC_YUY2;
+      frame_info->BitDepthLuma = 8;
+      frame_info->BitDepthChroma = 8;
+      break;
     case GST_VIDEO_FORMAT_BGRA:
       frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
       frame_info->FourCC = MFX_FOURCC_RGB4;
@@ -411,11 +417,16 @@ gst_qsv_jpeg_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   supported_formats.push_back ("NV12");
 
+  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+  mfx->FrameInfo.FourCC = MFX_FOURCC_YUY2;
+  status = MFXVideoENCODE_Query (session, &param, &param);
+  if (status == MFX_ERR_NONE)
+    supported_formats.push_back ("YUY2");
+
   mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
   mfx->FrameInfo.FourCC = MFX_FOURCC_RGB4;
   status = MFXVideoENCODE_Query (session, &param, &param);
 
-  /* TODO: Add YUY2 support, d3d11 doesn't support the format yet */
   if (status == MFX_ERR_NONE)
     supported_formats.push_back ("BGRA");
 
