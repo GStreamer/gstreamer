@@ -166,6 +166,7 @@ gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
       gst_hls_demux_stream_update_fragment_info;
   adaptivedemux2stream_class->has_next_fragment =
       gst_hls_demux_stream_has_next_fragment;
+  adaptivedemux2stream_class->stream_seek = gst_hls_demux_stream_seek;
   adaptivedemux2stream_class->advance_fragment =
       gst_hls_demux_stream_advance_fragment;
   adaptivedemux2stream_class->select_bitrate =
@@ -295,7 +296,6 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
   adaptivedemux_class->update_manifest = gst_hls_demux_update_manifest;
   adaptivedemux_class->reset = gst_hls_demux_reset;
   adaptivedemux_class->seek = gst_hls_demux_seek;
-  adaptivedemux_class->stream_seek = gst_hls_demux_stream_seek;
 }
 
 static void

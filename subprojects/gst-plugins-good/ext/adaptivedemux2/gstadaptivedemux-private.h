@@ -183,8 +183,8 @@ void gst_adaptive_demux2_stream_on_manifest_update (GstAdaptiveDemux2Stream * st
 void gst_adaptive_demux2_stream_on_output_space_available (GstAdaptiveDemux2Stream *stream);
 
 gboolean gst_adaptive_demux2_stream_has_next_fragment (GstAdaptiveDemux2Stream * stream);
-GstFlowReturn gst_adaptive_demux2_stream_seek (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, gboolean forward, GstSeekFlags flags,
+GstFlowReturn gst_adaptive_demux2_stream_seek (GstAdaptiveDemux2Stream * stream,
+    gboolean forward, GstSeekFlags flags,
     GstClockTimeDiff ts, GstClockTimeDiff * final_ts);
 gboolean gst_adaptive_demux_get_live_seek_range (GstAdaptiveDemux * demux,
     gint64 * range_start, gint64 * range_stop);

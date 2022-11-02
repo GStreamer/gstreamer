@@ -1941,7 +1941,7 @@ gst_adaptive_demux2_stream_next_download (GstAdaptiveDemux2Stream * stream)
 
     if (GST_CLOCK_STIME_IS_VALID (stream_time)) {
       /* TODO check return */
-      gst_adaptive_demux2_stream_seek (demux, stream, demux->segment.rate >= 0,
+      gst_adaptive_demux2_stream_seek (stream, demux->segment.rate >= 0,
           0, stream_time, &stream_time);
       stream->current_position = stream->start_position;
 
@@ -2195,6 +2195,20 @@ gst_adaptive_demux2_stream_has_next_fragment (GstAdaptiveDemux2Stream * stream)
     ret = klass->has_next_fragment (stream);
 
   return ret;
+}
+
+/* must be called from the scheduler */
+GstFlowReturn
+gst_adaptive_demux2_stream_seek (GstAdaptiveDemux2Stream * stream,
+    gboolean forward, GstSeekFlags flags,
+    GstClockTimeDiff ts, GstClockTimeDiff * final_ts)
+{
+  GstAdaptiveDemux2StreamClass *klass =
+      GST_ADAPTIVE_DEMUX2_STREAM_GET_CLASS (stream);
+
+  if (klass->stream_seek)
+    return klass->stream_seek (stream, forward, flags, ts, final_ts);
+  return GST_FLOW_ERROR;
 }
 
 static gboolean

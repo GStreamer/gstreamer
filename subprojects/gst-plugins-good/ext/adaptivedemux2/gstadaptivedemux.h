@@ -400,12 +400,6 @@ struct _GstAdaptiveDemuxClass
    */
   void          (*advance_period)  (GstAdaptiveDemux * demux);
 
-  GstFlowReturn (*stream_seek)     (GstAdaptiveDemux2Stream * stream,
-				    gboolean                 forward,
-				    GstSeekFlags             flags,
-				    GstClockTimeDiff         target_ts,
-				    GstClockTimeDiff       * final_ts);
-
   /**
    * get_live_seek_range:
    * @demux: #GstAdaptiveDemux

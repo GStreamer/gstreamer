@@ -477,6 +477,7 @@ gst_dash_demux_stream_class_init (GstDashDemux2StreamClass * klass)
       gst_dash_demux_stream_update_fragment_info;
   adaptivedemux2stream_class->has_next_fragment =
       gst_dash_demux_stream_has_next_fragment;
+  adaptivedemux2stream_class->stream_seek = gst_dash_demux_stream_seek;
   adaptivedemux2stream_class->advance_fragment =
       gst_dash_demux_stream_advance_fragment;
   adaptivedemux2stream_class->get_fragment_waiting_time =
@@ -656,7 +657,6 @@ gst_dash_demux2_class_init (GstDashDemux2Class * klass)
   gstadaptivedemux_class->has_next_period = gst_dash_demux_has_next_period;
   gstadaptivedemux_class->advance_period = gst_dash_demux_advance_period;
 
-  gstadaptivedemux_class->stream_seek = gst_dash_demux_stream_seek;
   gstadaptivedemux_class->get_live_seek_range =
       gst_dash_demux_get_live_seek_range;
   gstadaptivedemux_class->get_period_start_time =

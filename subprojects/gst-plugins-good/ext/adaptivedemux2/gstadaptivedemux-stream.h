@@ -131,6 +131,12 @@ struct _GstAdaptiveDemux2StreamClass
   gboolean      (*has_next_fragment)  (GstAdaptiveDemux2Stream * stream);
   GstFlowReturn (*advance_fragment) (GstAdaptiveDemux2Stream * stream);
 
+  GstFlowReturn (*stream_seek)     (GstAdaptiveDemux2Stream * stream,
+				    gboolean                 forward,
+				    GstSeekFlags             flags,
+				    GstClockTimeDiff         target_ts,
+				    GstClockTimeDiff       * final_ts);
+
   /**
    * can_start:
    * @stream: a #GstAdaptiveDemux2Stream

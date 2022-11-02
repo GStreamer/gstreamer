@@ -2206,15 +2206,24 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
    * different positions, so just pick one and align all others to that
    * position.
    */
-  if (IS_SNAP_SEEK (flags) && demux_class->stream_seek) {
-    GstAdaptiveDemux2Stream *stream = NULL;
+
+  GstAdaptiveDemux2Stream *stream = NULL;
+  GList *iter;
+  /* Pick a random active stream on which to do the stream seek */
+  for (iter = demux->output_period->streams; iter; iter = iter->next) {
+    GstAdaptiveDemux2Stream *cand = iter->data;
+    if (gst_adaptive_demux2_stream_is_selected_locked (cand)) {
+      stream = cand;
+      break;
+    }
+  }
+
+  if (stream && IS_SNAP_SEEK (flags)) {
     GstClockTimeDiff ts;
     GstSeekFlags stream_seek_flags = flags;
-    GList *iter;
 
-    /* snap-seek on the stream that received the event and then
+    /* snap-seek on the chosen stream and then
      * use the resulting position to seek on all streams */
-
     if (rate >= 0) {
       if (start_type != GST_SEEK_TYPE_NONE)
         ts = start;
@@ -2233,16 +2242,13 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
       }
     }
 
-    /* Pick a random active stream on which to do the stream seek */
-    for (iter = demux->output_period->streams; iter; iter = iter->next) {
-      GstAdaptiveDemux2Stream *cand = iter->data;
-      if (gst_adaptive_demux2_stream_is_selected_locked (cand)) {
-        stream = cand;
-        break;
-      }
-    }
-    if (stream) {
-      demux_class->stream_seek (stream, rate >= 0, stream_seek_flags, ts, &ts);
+    if (gst_adaptive_demux2_stream_seek (stream, rate >= 0, stream_seek_flags,
+            ts, &ts) != GST_FLOW_OK) {
+      GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
+
+      GST_API_UNLOCK (demux);
+      gst_event_unref (event);
+      return FALSE;
     }
 
     /* replace event with a new one without snapping to seek on all streams */
@@ -3565,19 +3571,6 @@ gst_adaptive_demux_is_live (GstAdaptiveDemux * demux)
   if (klass->is_live)
     return klass->is_live (demux);
   return FALSE;
-}
-
-/* must be called from the scheduler */
-GstFlowReturn
-gst_adaptive_demux2_stream_seek (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, gboolean forward, GstSeekFlags flags,
-    GstClockTimeDiff ts, GstClockTimeDiff * final_ts)
-{
-  GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
-
-  if (klass->stream_seek)
-    return klass->stream_seek (stream, forward, flags, ts, final_ts);
-  return GST_FLOW_ERROR;
 }
 
 static void
