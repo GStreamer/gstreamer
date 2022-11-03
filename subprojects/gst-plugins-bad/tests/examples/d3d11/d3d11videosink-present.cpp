@@ -476,12 +476,6 @@ on_present (GstElement * sink, GstD3D11Device * device,
       &text_brush);
   g_assert (SUCCEEDED (hr));
 
-  D2D1_RECT_F rect;
-  rect.top = 0;
-  rect.bottom = 0;
-  rect.right = desc.Width;
-  rect.bottom = desc.Height / 5.0f;
-
   d2d_target->BeginDraw ();
   /* Draw text */
   d2d_target->DrawTextLayout (D2D1::Point2F (0, 0),
@@ -512,7 +506,6 @@ framerate_calculate_probe (GstPad * pad, GstPadProbeInfo * info,
     std::swap (context->render_timestamp, empty_queue);
   }
 
-out:
   ReleaseSRWLockExclusive (&context->lock);
 
   return GST_PAD_PROBE_OK;

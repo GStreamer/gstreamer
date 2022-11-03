@@ -186,7 +186,7 @@ create_video_processor (AppData * data)
   ComPtr < ID3D11VideoContext1 > video_context;
   ComPtr < ID3D11VideoProcessorEnumerator > proc_enum;
   ComPtr < ID3D11VideoProcessor > processor;
-  D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc = { 0, };
+  D3D11_VIDEO_PROCESSOR_CONTENT_DESC desc;
   HRESULT hr;
 
   hr = data->device->QueryInterface (IID_PPV_ARGS (&video_device));
