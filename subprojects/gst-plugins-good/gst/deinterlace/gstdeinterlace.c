@@ -781,16 +781,17 @@ gst_deinterlace_pop_history (GstDeinterlace * self)
 static void
 gst_deinterlace_delete_meta_at (GstDeinterlace * self, gint idx)
 {
-  if (self->field_history[idx].frame) {
-    if (self->field_history[idx].tc) {
-      gst_video_time_code_free (self->field_history[idx].tc);
-      self->field_history[idx].tc = NULL;
-    }
-    if (self->field_history[idx].caption) {
-      g_free (self->field_history[idx].caption->data);
-      g_free (self->field_history[idx].caption);
-      self->field_history[idx].caption = NULL;
-    }
+  GST_DEBUG_OBJECT (self, "idx:%d frame %p", idx,
+      self->field_history[idx].frame);
+
+  if (self->field_history[idx].tc) {
+    gst_video_time_code_free (self->field_history[idx].tc);
+    self->field_history[idx].tc = NULL;
+  }
+  if (self->field_history[idx].caption) {
+    g_free (self->field_history[idx].caption->data);
+    g_free (self->field_history[idx].caption);
+    self->field_history[idx].caption = NULL;
   }
 }
 
