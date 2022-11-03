@@ -144,7 +144,7 @@ static gboolean
 gst_image_sequence_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
     GError ** err)
 {
-  gchar *hostname = NULL, *location = NULL, *tmp;
+  gchar *hostname = NULL, *location = NULL, *path, *tmp;
   gboolean ret = FALSE;
   GstImageSequenceSrc *self = GST_IMAGE_SEQUENCE_SRC (handler);
   GstUri *ruri = gst_uri_from_string (uri);
@@ -160,9 +160,11 @@ gst_image_sequence_src_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   LOCK (self);
   g_clear_pointer (&self->uri, gst_uri_unref);
   self->uri = ruri;
-  tmp = gst_filename_to_uri (gst_uri_get_path (ruri), err);
+  path = gst_uri_get_path (ruri);
+  tmp = gst_filename_to_uri (path, err);
   location = g_filename_from_uri (tmp, &hostname, err);
   g_free (tmp);
+  g_free (path);
   query = gst_uri_get_query_table (ruri);
   if (!location || (err != NULL && *err != NULL)) {
     GST_WARNING_OBJECT (self, "Invalid URI '%s' for imagesequencesrc: %s", uri,
@@ -606,7 +608,7 @@ gst_image_sequence_src_create (GstPushSrc * src, GstBuffer ** buffer)
   if (!ret)
     goto handle_error;
 
-  buf = gst_buffer_new_wrapped_full (0, data, size, 0, size, NULL, g_free);
+  buf = gst_buffer_new_wrapped (data, size);
 
   if (!self->caps) {
     GstCaps *caps;
