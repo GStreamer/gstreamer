@@ -2068,6 +2068,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->got_moov = FALSE;
     qtdemux->start_utc_time = GST_CLOCK_TIME_NONE;
     qtdemux->cenc_aux_info_offset = 0;
+    g_free (qtdemux->cenc_aux_info_sizes);
     qtdemux->cenc_aux_info_sizes = NULL;
     qtdemux->cenc_aux_sample_count = 0;
     if (qtdemux->protection_system_ids) {
@@ -8616,10 +8617,10 @@ gst_qtdemux_request_protection_context (GstQTDemux * qtdemux,
 
   g_value_init (&event_list, GST_TYPE_LIST);
   for (; walk; walk = g_list_previous (walk)) {
-    GValue *event_value = g_new0 (GValue, 1);
-    g_value_init (event_value, GST_TYPE_EVENT);
-    g_value_set_boxed (event_value, walk->data);
-    gst_value_list_append_and_take_value (&event_list, event_value);
+    GValue event_value = G_VALUE_INIT;
+    g_value_init (&event_value, GST_TYPE_EVENT);
+    g_value_set_boxed (&event_value, walk->data);
+    gst_value_list_append_and_take_value (&event_list, &event_value);
   }
 
   /*  2a) Query downstream with GST_QUERY_CONTEXT for the context and
