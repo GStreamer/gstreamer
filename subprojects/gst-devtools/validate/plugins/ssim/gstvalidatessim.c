@@ -180,6 +180,8 @@ runner_stopping (GstValidateRunner * runner, ValidateSsimOverride * self)
     else
       npassed++;
 
+    g_free (ref_path);
+
     min_avg = MIN (min_avg, mssim);
     min_min = MIN (lowest, min_min);
     total_avg += mssim;

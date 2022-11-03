@@ -769,6 +769,7 @@ _file_get_structures (GFile * file, gchar ** err,
               /* We let the last attempt fail and report an error in the
                * including code path */
             }
+            g_strfreev (include_dirs);
           }
 
           included_path = g_file_get_path (included);
