@@ -135,6 +135,7 @@ gst_fdk_aac_rate_control_get_type (void)
   static const GEnumValue rate_control_types[] = {
     {GST_FDK_AAC_RATE_CONTROL_CONSTANT_BITRATE, "Constant Bitrate", "cbr"},
     {GST_FDK_AAC_RATE_CONTROL_VARIABLE_BITRATE, "Variable Bitrate", "vbr"},
+    {0, NULL, NULL}
   };
 
   if (!fdk_aac_rate_control_type)
