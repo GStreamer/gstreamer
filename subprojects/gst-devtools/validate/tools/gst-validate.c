@@ -448,16 +448,19 @@ main (int argc, gchar ** argv)
   gst_validate_init ();
 
   if (list_scenarios || output_file) {
+    int ret = 0;
     g_option_context_free (ctx);
     if (gst_validate_list_scenarios (argv + 1, argc - 1, output_file))
-      return 1;
-    return 0;
+      ret = 1;
+    g_free (output_file);
+    return ret;
   }
 
   if (inspect_action_type) {
     _register_playbin_actions ();
 
     if (!gst_validate_print_action_types ((const gchar **) argv + 1, argc - 1)) {
+      g_option_context_free (ctx);
       GST_ERROR ("Could not print all wanted types");
       return -1;
     }
@@ -467,6 +470,7 @@ main (int argc, gchar ** argv)
 
   if (print_issue_types) {
     gst_validate_print_issues ();
+    g_option_context_free (ctx);
     return 0;
   }
 
