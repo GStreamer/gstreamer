@@ -147,6 +147,10 @@ register_enum (const AVClass ** obj, const AVOption * top_opt)
     while (i < values->len) {
       if (cur_val_set) {
         if (g_array_index (values, GEnumValue, i).value == cur_val) {
+          GEnumValue val = g_array_index (values, GEnumValue, i);
+          /* Don't leak the strings */
+          g_free ((gchar *) val.value_name);
+          g_free ((gchar *) val.value_nick);
           g_array_remove_index (values, i);
         } else {
           cur_val = g_array_index (values, GEnumValue, i).value;
