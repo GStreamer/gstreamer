@@ -141,8 +141,8 @@ gst_mss_demux_update_manifest_data (GstAdaptiveDemux * demux,
     GstBuffer * buffer);
 static gboolean gst_mss_demux_get_live_seek_range (GstAdaptiveDemux * demux,
     gint64 * start, gint64 * stop);
-static GstFlowReturn gst_mss_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer);
+static GstFlowReturn gst_mss_demux_stream_data_received (GstAdaptiveDemux2Stream
+    * stream, GstBuffer * buffer);
 static gboolean
 gst_mss_demux_requires_periodical_playlist_update (GstAdaptiveDemux * demux);
 GstStreamType gst_stream_type_from_mss_type (GstMssStreamType mtype);
@@ -150,6 +150,24 @@ GstStreamType gst_stream_type_from_mss_type (GstMssStreamType mtype);
 static void
 gst_mss_demux_stream_class_init (GstMssDemuxStreamClass * klass)
 {
+  GstAdaptiveDemux2StreamClass *adaptivedemux2stream_class =
+      GST_ADAPTIVE_DEMUX2_STREAM_CLASS (klass);
+
+  adaptivedemux2stream_class->stream_seek = gst_mss_demux_stream_seek;
+
+  adaptivedemux2stream_class->get_fragment_waiting_time =
+      gst_mss_demux_stream_get_fragment_waiting_time;
+  adaptivedemux2stream_class->advance_fragment =
+      gst_mss_demux_stream_advance_fragment;
+  adaptivedemux2stream_class->has_next_fragment =
+      gst_mss_demux_stream_has_next_fragment;
+  adaptivedemux2stream_class->select_bitrate =
+      gst_mss_demux_stream_select_bitrate;
+  adaptivedemux2stream_class->update_fragment_info =
+      gst_mss_demux_stream_update_fragment_info;
+
+  adaptivedemux2stream_class->data_received =
+      gst_mss_demux_stream_data_received;
 }
 
 static void
@@ -188,22 +206,12 @@ gst_mss_demux2_class_init (GstMssDemuxClass * klass)
       gst_mss_demux_get_manifest_update_interval;
   gstadaptivedemux_class->reset = gst_mss_demux_reset;
   gstadaptivedemux_class->seek = gst_mss_demux_seek;
-  gstadaptivedemux_class->stream_seek = gst_mss_demux_stream_seek;
-  gstadaptivedemux_class->stream_advance_fragment =
-      gst_mss_demux_stream_advance_fragment;
-  gstadaptivedemux_class->stream_has_next_fragment =
-      gst_mss_demux_stream_has_next_fragment;
-  gstadaptivedemux_class->stream_select_bitrate =
-      gst_mss_demux_stream_select_bitrate;
-  gstadaptivedemux_class->stream_update_fragment_info =
-      gst_mss_demux_stream_update_fragment_info;
-  gstadaptivedemux_class->stream_get_fragment_waiting_time =
-      gst_mss_demux_stream_get_fragment_waiting_time;
+
   gstadaptivedemux_class->update_manifest_data =
       gst_mss_demux_update_manifest_data;
+
   gstadaptivedemux_class->get_live_seek_range =
       gst_mss_demux_get_live_seek_range;
-  gstadaptivedemux_class->data_received = gst_mss_demux_data_received;
   gstadaptivedemux_class->requires_periodical_playlist_update =
       gst_mss_demux_requires_periodical_playlist_update;
 
@@ -650,10 +658,10 @@ gst_mss_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
 }
 
 static GstFlowReturn
-gst_mss_demux_data_received (GstAdaptiveDemux * demux,
-    GstAdaptiveDemux2Stream * stream, GstBuffer * buffer)
+gst_mss_demux_stream_data_received (GstAdaptiveDemux2Stream * stream,
+    GstBuffer * buffer)
 {
-  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (demux);
+  GstMssDemux *mssdemux = GST_MSS_DEMUX_CAST (stream->demux);
   GstMssDemuxStream *mssstream = (GstMssDemuxStream *) stream;
   gsize available;
 
