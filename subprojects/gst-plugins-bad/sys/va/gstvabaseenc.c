@@ -238,7 +238,8 @@ _try_import_buffer (GstVaBaseEnc * base, GstBuffer * inbuf)
 
   /* The VA buffer. */
   surface = gst_va_buffer_get_surface (inbuf);
-  if (surface != VA_INVALID_ID)
+  if (surface != VA_INVALID_ID &&
+      (gst_va_buffer_peek_display (inbuf) == base->display))
     return TRUE;
 
   /* TODO: DMA buffer. */
