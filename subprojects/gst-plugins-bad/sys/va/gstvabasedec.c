@@ -283,12 +283,22 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
   guint size = 0, min, max;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   gboolean ret = TRUE;
+  gboolean dont_use_other_pool = FALSE;
   GstCaps *va_caps = NULL;
 
   /* If others provide a valid allocator, just use it. */
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &other_allocator,
         &other_params);
+    GstVaDisplay *display;
+
+    display = gst_va_allocator_peek_display (other_allocator);
+    /* We should not use allocator and pool from other display. */
+    if (display != base->display) {
+      gst_clear_object (&other_allocator);
+      dont_use_other_pool = TRUE;
+    }
+
     update_allocator = TRUE;
   } else {
     gst_allocation_params_init (&other_params);
@@ -298,6 +308,8 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &other_pool, &size, &min,
         &max);
+    if (dont_use_other_pool)
+      gst_clear_object (&other_pool);
 
     min += base->min_buffers;
     size = MAX (size, GST_VIDEO_INFO_SIZE (info));
@@ -479,6 +491,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   guint size = 0, min, max;
   gboolean update_pool = FALSE, update_allocator = FALSE;
   gboolean has_videometa, has_video_crop_meta;
+  gboolean dont_use_other_pool = FALSE;
   gboolean ret = TRUE;
 
   g_assert (base->min_buffers > 0);
@@ -506,13 +519,20 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   if (gst_query_get_n_allocation_params (query) > 0) {
+    GstVaDisplay *display;
+
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &other_params);
-    if (allocator && !(GST_IS_VA_DMABUF_ALLOCATOR (allocator)
-            || GST_IS_VA_ALLOCATOR (allocator))) {
+    display = gst_va_allocator_peek_display (allocator);
+    if (!display) {
       /* save the allocator for the other pool */
       other_allocator = allocator;
       allocator = NULL;
+    } else if (display != base->display) {
+      /* The allocator and pool belong to other display, we should not use. */
+      gst_clear_object (&allocator);
+      dont_use_other_pool = TRUE;
     }
+
     update_allocator = TRUE;
   } else {
     gst_allocation_params_init (&other_params);
@@ -528,6 +548,8 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             "may need other pool for copy frames %" GST_PTR_FORMAT, pool);
         other_pool = pool;
         pool = NULL;
+      } else if (dont_use_other_pool) {
+        gst_clear_object (&pool);
       }
     }
 
