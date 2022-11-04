@@ -157,8 +157,8 @@ gst_d3dvideosink_class_init (GstD3DVideoSinkClass * klass)
           (GParamFlags) G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
-      "Direct3D video sink", "Sink/Video",
-      "Display data using a Direct3D video renderer",
+      "Direct3D9 video sink", "Sink/Video",
+      "Display data using a Direct3D9 video renderer",
       "David Hoyt <dhoyt@hoytsoft.org>, Roland Krikava <info@bluedigits.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);
