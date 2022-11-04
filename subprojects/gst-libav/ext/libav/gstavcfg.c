@@ -79,7 +79,9 @@ gst_ffmpeg_cfg_init (void)
 static gint
 cmp_enum_value (GEnumValue * val1, GEnumValue * val2)
 {
-  return val1->value - val2->value;
+  if (val1->value == val2->value)
+    return 0;
+  return (val1->value > val2->value) ? 1 : -1;
 }
 
 static GType
@@ -176,9 +178,11 @@ done:
 }
 
 static gint
-cmp_flags_value (GEnumValue * val1, GEnumValue * val2)
+cmp_flags_value (GFlagsValue * val1, GFlagsValue * val2)
 {
-  return val1->value - val2->value;
+  if (val1->value == val2->value)
+    return 0;
+  return (val1->value > val2->value) ? 1 : -1;
 }
 
 static GType
