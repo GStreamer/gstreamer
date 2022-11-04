@@ -5470,6 +5470,7 @@ _parse_scenario (GFile * f, GKeyFile * kf)
       gst_structure_foreach (meta,
           (GstStructureForeachFunc) _add_description, &kfg);
       gst_structure_free (meta);
+      g_free (kfg.group_name);
     } else {
       g_key_file_set_string (kf, path, "noinfo", "nothing");
     }
