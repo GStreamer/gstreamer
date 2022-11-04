@@ -97,7 +97,15 @@ gst_dshow_new_pin_mediatype_from_enum_mediatypes (IPin * pin, IEnumMediaTypes *e
     return NULL;
   }
 
+  /* FORMAT_None or GUID_NULL format type does hold format data */
+  if (pin_mediatype->mediatype->formattype == FORMAT_None ||
+      pin_mediatype->mediatype->formattype == GUID_NULL) {
+    return NULL;
+  }
+
   video_info = (VIDEOINFOHEADER *) pin_mediatype->mediatype->pbFormat;
+  if (!video_info)
+    return NULL;
 
   pin_mediatype->defaultWidth = video_info->bmiHeader.biWidth;
   pin_mediatype->defaultHeight = video_info->bmiHeader.biHeight;
