@@ -87,15 +87,17 @@ static GstBuffer *
 gst_qsv_va_allocator_upload (GstQsvAllocator * allocator,
     const GstVideoInfo * info, GstBuffer * buffer, GstBufferPool * pool)
 {
+  GstQsvVaAllocator *self = GST_QSV_VA_ALLOCATOR (allocator);
   GstVideoFrame src_frame, dst_frame;
   VASurfaceID surface;
   GstBuffer *dst_buf;
   GstFlowReturn ret;
 
-  /* TODO: handle buffer from different VA display */
   surface = gst_va_buffer_get_surface (buffer);
-  if (surface != VA_INVALID_ID)
+  if (surface != VA_INVALID_ID && gst_va_buffer_peek_display (buffer) ==
+      self->display) {
     return gst_buffer_ref (buffer);
+  }
 
   ret = gst_buffer_pool_acquire_buffer (pool, &dst_buf, nullptr);
   if (ret != GST_FLOW_OK) {
