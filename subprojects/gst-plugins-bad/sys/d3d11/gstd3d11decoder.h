@@ -97,6 +97,7 @@ ID3D11VideoDecoderOutputView * gst_d3d11_decoder_get_output_view_from_buffer (Gs
 
 gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decoder,
                                                          GstVideoDecoder * videodec,
+                                                         GstVideoCodecState * in_state,
                                                          gint display_width,
                                                          gint display_height,
                                                          GstBuffer * decoder_buffer,

@@ -1225,8 +1225,9 @@ gst_d3d11_av1_dec_output_picture (GstAV1Decoder * decoder,
   }
 
   if (!gst_d3d11_decoder_process_output (inner->d3d11_decoder, vdec,
-          picture->frame_hdr.render_width, picture->frame_hdr.render_height,
-          view_buffer, &frame->output_buffer)) {
+          picture->discont_state, picture->frame_hdr.render_width,
+          picture->frame_hdr.render_height, view_buffer,
+          &frame->output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     goto error;
   }

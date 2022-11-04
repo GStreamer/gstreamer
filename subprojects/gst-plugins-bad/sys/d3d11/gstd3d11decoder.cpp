@@ -1592,13 +1592,19 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
 
 gboolean
 gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
-    GstVideoDecoder * videodec, gint display_width, gint display_height,
+    GstVideoDecoder * videodec, GstVideoCodecState * input_state,
+    gint display_width, gint display_height,
     GstBuffer * decoder_buffer, GstBuffer ** output)
 {
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (decoder_buffer), FALSE);
   g_return_val_if_fail (output != NULL, FALSE);
+
+  if (input_state) {
+    g_clear_pointer (&decoder->input_state, gst_video_codec_state_unref);
+    decoder->input_state = gst_video_codec_state_ref (input_state);
+  }
 
   if (display_width != GST_VIDEO_INFO_WIDTH (&decoder->output_info) ||
       display_height != GST_VIDEO_INFO_HEIGHT (&decoder->output_info)) {
@@ -1611,6 +1617,11 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
 
     if (!gst_video_decoder_negotiate (videodec)) {
       GST_ERROR_OBJECT (videodec, "Failed to re-negotiate with new frame size");
+      return FALSE;
+    }
+  } else if (input_state) {
+    if (!gst_video_decoder_negotiate (videodec)) {
+      GST_ERROR_OBJECT (videodec, "Could not re-negotiate with updated state");
       return FALSE;
     }
   }
