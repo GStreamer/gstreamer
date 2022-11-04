@@ -236,7 +236,7 @@ lv2_plugin_discover (GstPlugin * plugin)
         "can-do-presets", G_TYPE_BOOLEAN, can_do_presets, NULL);
 
     g_value_init (&value, GST_TYPE_STRUCTURE);
-    g_value_set_boxed (&value, lv2_meta);
+    g_value_take_boxed (&value, lv2_meta);
     gst_structure_set_value (lv2_meta_all, type_name, &value);
     g_value_unset (&value);
 
