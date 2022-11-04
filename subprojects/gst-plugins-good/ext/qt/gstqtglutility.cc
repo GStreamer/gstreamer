@@ -183,7 +183,7 @@ gst_qt_get_gl_wrapcontext (GstGLDisplay * display,
   GstGLAPI G_GNUC_UNUSED gl_api;
   guintptr G_GNUC_UNUSED gl_handle;
   GstGLContext *current;
-  GError *error;
+  GError *error = NULL;
 
   g_return_val_if_fail (display != NULL && wrap_glcontext != NULL, FALSE);
 
