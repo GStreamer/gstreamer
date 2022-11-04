@@ -503,7 +503,7 @@ gst_av_codec_compliance_get_type (void)
   if (g_once_init_enter (&compliance_type)) {
     static const GEnumValue types[] = {
       {GST_AV_CODEC_COMPLIANCE_AUTO,
-          "The decoder automatically decides. If the pipeline is live, it will"
+          "The decoder automatically decides. If the pipeline is live, it will "
             "use `normal` mode, and `strict` otherwise.", "auto"},
       {GST_AV_CODEC_COMPLIANCE_VERY_STRICT,
           "VeryStrict: Strictly conform to an older more strict version "
