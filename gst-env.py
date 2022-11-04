@@ -14,6 +14,7 @@ import pathlib
 import signal
 from functools import lru_cache
 from pathlib import PurePath, Path
+from sys import exit
 
 from typing import Any
 
