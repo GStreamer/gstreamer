@@ -1902,6 +1902,30 @@ gst_va_allocator_set_hacks (GstAllocator * allocator, guint32 hacks)
   self->hacks = hacks;
 }
 
+/**
+ * gst_va_allocator_peek_display:
+ * @allocator: a #GstAllocator
+ *
+ * Returns: (type #GstVaDisplay) (transfer none): the display which this
+ *     @allocator belongs to. The reference of the display is unchanged.
+ *
+ * Since: 1.22
+ */
+GstVaDisplay *
+gst_va_allocator_peek_display (GstAllocator * allocator)
+{
+  if (!allocator)
+    return NULL;
+
+  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
+    return GST_VA_DMABUF_ALLOCATOR (allocator)->display;
+  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
+    return GST_VA_ALLOCATOR (allocator)->display;
+  }
+
+  return NULL;
+}
+
 /*============ Utilities =====================================================*/
 
 /**
