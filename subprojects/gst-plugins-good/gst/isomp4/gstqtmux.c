@@ -4046,10 +4046,9 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
 
         if (qpad->trak->edts
             && g_slist_length (qpad->trak->edts->elst.entries) > 1) {
+          GST_OBJECT_UNLOCK (qtmux);
           GST_ELEMENT_ERROR (qtmux, STREAM, MUX, (NULL),
               ("Can't support gaps in prefill mode"));
-
-          GST_OBJECT_UNLOCK (qtmux);
 
           return GST_FLOW_ERROR;
         }
@@ -5502,6 +5501,7 @@ find_best_pad (GstQTMux * qtmux)
        * to be written at */
       block_idx = current_block_idx = prefill_get_block_index (qtmux, qtpad);
       if (!qtpad->samples || block_idx >= qtpad->samples->len) {
+        GST_OBJECT_UNLOCK (qtmux);
         GST_ELEMENT_ERROR (qtmux, RESOURCE, SETTINGS,
             ("Failed to create samples in prefill mode"), (NULL));
         return NULL;
