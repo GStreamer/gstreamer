@@ -1960,6 +1960,31 @@ gst_va_memory_get_surface (GstMemory * mem)
 }
 
 /**
+ * gst_va_memory_peek_display:
+ * @mem: a #GstMemory
+ *
+ * Returns: (type #GstVaDisplay) (transfer none): the display which
+ *     this @mem belongs to. The reference of the display is unchanged.
+ *
+ * Since: 1.22
+ */
+GstVaDisplay *
+gst_va_memory_peek_display (GstMemory * mem)
+{
+  GstAllocator *allocator;
+
+  if (!mem)
+    return NULL;
+
+  allocator = GST_MEMORY_CAST (mem)->allocator;
+  /* no allocator, not VA kind memory. */
+  if (!allocator)
+    return NULL;
+
+  return gst_va_allocator_peek_display (allocator);
+}
+
+/**
  * gst_va_buffer_get_surface:
  * @buffer: a #GstBuffer
  *

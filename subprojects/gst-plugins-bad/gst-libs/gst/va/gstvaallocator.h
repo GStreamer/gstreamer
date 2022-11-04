@@ -124,6 +124,8 @@ GstVaDisplay *        gst_va_allocator_peek_display       (GstAllocator * alloca
 GST_VA_API
 VASurfaceID           gst_va_memory_get_surface           (GstMemory * mem);
 GST_VA_API
+GstVaDisplay *        gst_va_memory_peek_display          (GstMemory * mem);
+GST_VA_API
 VASurfaceID           gst_va_buffer_get_surface           (GstBuffer * buffer);
 
 GST_VA_API
