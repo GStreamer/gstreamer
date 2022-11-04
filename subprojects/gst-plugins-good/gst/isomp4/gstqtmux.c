@@ -2695,7 +2695,8 @@ prefill_raw_audio_prepare_buf_func (GstQTMuxPad * qtpad, GstBuffer * buf,
       qtpad->sample_size : gst_adapter_available (qtpad->raw_audio_adapter));
   GST_BUFFER_PTS (buf) = input_timestamp;
   GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buf) = gst_util_uint64_scale (nsamples, GST_SECOND,
+      atom_trak_get_timescale (qtpad->trak));
 
   qtpad->raw_audio_adapter_offset += nsamples;
 
