@@ -22,6 +22,7 @@
 
 #include <gst/codecs/codecs-prelude.h>
 #include <gst/codecparsers/gstav1parser.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -83,6 +84,9 @@ struct _GstAV1Picture
   gboolean show_frame;
   gboolean showable_frame;
   gboolean apply_grain;
+
+  /* decoder input state if this picture is discont point */
+  GstVideoCodecState *discont_state;
 
   gpointer user_data;
   GDestroyNotify notify;

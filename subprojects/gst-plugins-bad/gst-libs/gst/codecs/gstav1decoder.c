@@ -48,6 +48,8 @@ struct _GstAV1DecoderPrivate
   guint preferred_output_delay;
   GstQueueArray *output_queue;
   gboolean is_live;
+
+  gboolean input_state_changed;
 };
 
 typedef struct
@@ -83,6 +85,7 @@ static gboolean gst_av1_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_av1_decoder_stop (GstVideoDecoder * decoder);
 static gboolean gst_av1_decoder_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
+static gboolean gst_av1_decoder_negotiate (GstVideoDecoder * decoder);
 static GstFlowReturn gst_av1_decoder_finish (GstVideoDecoder * decoder);
 static gboolean gst_av1_decoder_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_av1_decoder_drain (GstVideoDecoder * decoder);
@@ -102,6 +105,7 @@ gst_av1_decoder_class_init (GstAV1DecoderClass * klass)
   decoder_class->start = GST_DEBUG_FUNCPTR (gst_av1_decoder_start);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_av1_decoder_stop);
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_av1_decoder_set_format);
+  decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_av1_decoder_negotiate);
   decoder_class->finish = GST_DEBUG_FUNCPTR (gst_av1_decoder_finish);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_av1_decoder_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_av1_decoder_drain);
@@ -210,6 +214,8 @@ gst_av1_decoder_set_format (GstVideoDecoder * decoder,
 
   GST_DEBUG_OBJECT (decoder, "Set format");
 
+  priv->input_state_changed = TRUE;
+
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
 
@@ -225,6 +231,17 @@ gst_av1_decoder_set_format (GstVideoDecoder * decoder,
   gst_query_unref (query);
 
   return TRUE;
+}
+
+static gboolean
+gst_av1_decoder_negotiate (GstVideoDecoder * decoder)
+{
+  GstAV1Decoder *self = GST_AV1_DECODER (decoder);
+
+  /* output state must be updated by subclass using new input state already */
+  self->priv->input_state_changed = FALSE;
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
 static void
@@ -730,6 +747,14 @@ out:
         gst_video_decoder_release_frame (decoder, frame);
       } else {
         GstAV1DecoderOutputFrame output_frame;
+
+        /* If subclass didn't update output state at this point,
+         * marking this picture as a discont and stores current input state */
+        if (priv->input_state_changed) {
+          priv->current_picture->discont_state =
+              gst_video_codec_state_ref (self->input_state);
+          priv->input_state_changed = FALSE;
+        }
 
         output_frame.frame = frame;
         output_frame.picture = priv->current_picture;

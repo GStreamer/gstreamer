@@ -161,6 +161,9 @@ struct _GstH264Picture
 
   GstVideoBufferFlags buffer_flags;
 
+  /* decoder input state if this picture is discont point */
+  GstVideoCodecState *discont_state;
+
   gpointer user_data;
   GDestroyNotify notify;
 };

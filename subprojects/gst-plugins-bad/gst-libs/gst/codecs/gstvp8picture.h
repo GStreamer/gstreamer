@@ -22,6 +22,7 @@
 
 #include <gst/codecs/codecs-prelude.h>
 #include <gst/codecparsers/gstvp8parser.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -34,6 +35,7 @@ typedef struct _GstVp8Picture GstVp8Picture;
 
 struct _GstVp8Picture
 {
+  /*< private >*/
   GstMiniObject parent;
 
   GstClockTime pts;
@@ -45,6 +47,9 @@ struct _GstVp8Picture
   /* raw data and size (does not have ownership) */
   const guint8 * data;
   gsize size;
+
+  /* decoder input state if this picture is discont point */
+  GstVideoCodecState *discont_state;
 
   gpointer user_data;
   GDestroyNotify notify;

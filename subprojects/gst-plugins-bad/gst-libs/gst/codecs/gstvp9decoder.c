@@ -84,6 +84,8 @@ struct _GstVp9DecoderPrivate
   guint preferred_output_delay;
   GstQueueArray *output_queue;
   gboolean is_live;
+
+  gboolean input_state_changed;
 };
 
 typedef struct
@@ -104,6 +106,7 @@ static gboolean gst_vp9_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_vp9_decoder_stop (GstVideoDecoder * decoder);
 static gboolean gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
+static gboolean gst_vp9_decoder_negotiate (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vp9_decoder_finish (GstVideoDecoder * decoder);
 static gboolean gst_vp9_decoder_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vp9_decoder_drain (GstVideoDecoder * decoder);
@@ -125,6 +128,7 @@ gst_vp9_decoder_class_init (GstVp9DecoderClass * klass)
   decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp9_decoder_start);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp9_decoder_stop);
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_vp9_decoder_set_format);
+  decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_vp9_decoder_negotiate);
   decoder_class->finish = GST_DEBUG_FUNCPTR (gst_vp9_decoder_finish);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_vp9_decoder_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_vp9_decoder_drain);
@@ -264,6 +268,8 @@ gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
 
   GST_DEBUG_OBJECT (decoder, "Set format");
 
+  priv->input_state_changed = TRUE;
+
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
 
@@ -275,6 +281,17 @@ gst_vp9_decoder_set_format (GstVideoDecoder * decoder,
   gst_query_unref (query);
 
   return TRUE;
+}
+
+static gboolean
+gst_vp9_decoder_negotiate (GstVideoDecoder * decoder)
+{
+  GstVp9Decoder *self = GST_VP9_DECODER (decoder);
+
+  /* output state must be updated by subclass using new input state already */
+  self->priv->input_state_changed = FALSE;
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
 static void
@@ -529,6 +546,13 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
 
     ret = gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
   } else {
+    /* If subclass didn't update output state at this point,
+     * marking this picture as a discont and stores current input state */
+    if (priv->input_state_changed) {
+      picture->discont_state = gst_video_codec_state_ref (self->input_state);
+      priv->input_state_changed = FALSE;
+    }
+
     output_frame.frame = frame;
     output_frame.picture = picture;
     output_frame.self = self;

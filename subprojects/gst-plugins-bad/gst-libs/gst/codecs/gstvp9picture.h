@@ -22,6 +22,7 @@
 
 #include <gst/codecs/codecs-prelude.h>
 #include <gst/codecs/gstvp9statefulparser.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -45,6 +46,9 @@ struct _GstVp9Picture
   /* raw data and size (does not have ownership) */
   const guint8 * data;
   gsize size;
+
+  /* decoder input state if this picture is discont point */
+  GstVideoCodecState *discont_state;
 
   gpointer user_data;
   GDestroyNotify notify;

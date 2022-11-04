@@ -267,6 +267,8 @@ struct _GstMpeg2DecoderPrivate
   GstQueueArray *output_queue;
   /* used for low-latency vs. high throughput mode decision */
   gboolean is_live;
+
+  gboolean input_state_changed;
 };
 
 #define UPDATE_FLOW_RETURN(ret,new_ret) G_STMT_START { \
@@ -293,6 +295,7 @@ static gboolean gst_mpeg2_decoder_start (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2_decoder_stop (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2_decoder_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
+static gboolean gst_mpeg2_decoder_negotiate (GstVideoDecoder * decoder);
 static GstFlowReturn gst_mpeg2_decoder_finish (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2_decoder_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_mpeg2_decoder_drain (GstVideoDecoder * decoder);
@@ -314,6 +317,7 @@ gst_mpeg2_decoder_class_init (GstMpeg2DecoderClass * klass)
   decoder_class->start = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_start);
   decoder_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_stop);
   decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_set_format);
+  decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_negotiate);
   decoder_class->finish = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_finish);
   decoder_class->flush = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_flush);
   decoder_class->drain = GST_DEBUG_FUNCPTR (gst_mpeg2_decoder_drain);
@@ -379,6 +383,8 @@ gst_mpeg2_decoder_set_format (GstVideoDecoder * decoder,
 
   GST_DEBUG_OBJECT (decoder, "Set format");
 
+  priv->input_state_changed = TRUE;
+
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
 
@@ -393,6 +399,17 @@ gst_mpeg2_decoder_set_format (GstVideoDecoder * decoder,
   gst_query_unref (query);
 
   return TRUE;
+}
+
+static gboolean
+gst_mpeg2_decoder_negotiate (GstVideoDecoder * decoder)
+{
+  GstMpeg2Decoder *self = GST_MPEG2_DECODER (decoder);
+
+  /* output state must be updated by subclass using new input state already */
+  self->priv->input_state_changed = FALSE;
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
 
 static GstFlowReturn
@@ -816,6 +833,14 @@ gst_mpeg2_decoder_start_current_picture (GstMpeg2Decoder * decoder,
   GstMpeg2DecoderClass *klass = GST_MPEG2_DECODER_GET_CLASS (decoder);
   GstMpeg2Picture *prev_picture, *next_picture;
   GstFlowReturn ret;
+
+  /* If subclass didn't update output state at this point,
+   * marking this picture as a discont and stores current input state */
+  if (priv->input_state_changed) {
+    priv->current_picture->discont_state =
+        gst_video_codec_state_ref (decoder->input_state);
+    priv->input_state_changed = FALSE;
+  }
 
   if (!klass->start_picture)
     return GST_FLOW_OK;

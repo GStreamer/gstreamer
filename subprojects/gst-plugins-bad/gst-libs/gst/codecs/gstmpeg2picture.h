@@ -94,6 +94,9 @@ struct _GstMpeg2Picture
   GstMpegVideoPictureStructure structure;
   GstMpegVideoPictureType type;
 
+  /* decoder input state if this picture is discont point */
+  GstVideoCodecState *discont_state;
+
   gpointer user_data;
   GDestroyNotify notify;
 };
