@@ -4162,6 +4162,8 @@ gst_validate_foreach_prepare (GstValidateAction * action)
         g_value_copy (it_value, &subact->priv->it_value);
       }
     }
+
+    gst_structure_free (lvariables);
   }
   g_list_free_full (actions, (GDestroyNotify) gst_structure_free);
 
