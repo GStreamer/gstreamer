@@ -656,6 +656,7 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   GstVideoInfo info;
   guint min, max, size = 0, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
   gboolean update_pool, update_allocator, has_videometa, copy_frames;
+  gboolean dont_use_other_pool = FALSE;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -668,13 +669,20 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   }
 
   if (gst_query_get_n_allocation_params (query) > 0) {
+    GstVaDisplay *display;
+
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &other_params);
-    if (allocator && !(GST_IS_VA_DMABUF_ALLOCATOR (allocator)
-            || GST_IS_VA_ALLOCATOR (allocator))) {
+    display = gst_va_allocator_peek_display (allocator);
+    if (!display) {
       /* save the allocator for the other pool */
       other_allocator = allocator;
       allocator = NULL;
+    } else if (display != self->display) {
+      /* The allocator and pool belong to other display, we should not use. */
+      gst_clear_object (&allocator);
+      dont_use_other_pool = TRUE;
     }
+
     update_allocator = TRUE;
   } else {
     update_allocator = FALSE;
@@ -689,6 +697,8 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
             "may need other pool for copy frames %" GST_PTR_FORMAT, pool);
         other_pool = pool;
         pool = NULL;
+      } else if (dont_use_other_pool) {
+        gst_clear_object (&pool);
       }
     }
 
@@ -911,7 +921,8 @@ _try_import_buffer (GstVaCompositor * self, GstVideoInfo * info,
   gboolean ret;
 
   surface = gst_va_buffer_get_surface (inbuf);
-  if (surface != VA_INVALID_ID)
+  if (surface != VA_INVALID_ID &&
+      (gst_va_buffer_peek_display (inbuf) == self->display))
     return TRUE;
 
   g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
