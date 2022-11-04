@@ -370,8 +370,8 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
 
   pi_texture = 0;
   data = nil;
-  width = frame.size.width;
-  height = frame.size.height;
+  width = frame.size.width * [[NSScreen mainScreen] backingScaleFactor];
+  height = frame.size.height * [[NSScreen mainScreen] backingScaleFactor];
   drawingBounds = NSMakeRect(0, 0, width, height);
 
   GST_LOG ("Width: %d Height: %d", width, height);
@@ -395,7 +395,7 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
 - (void) reshape {
   NSRect bounds;
   gdouble frame_par, view_par;
-  gint view_height, view_width, c_height, c_width, c_x, c_y;
+  gint view_height, view_width, c_height, c_width, c_x, c_y, scale_factor;
 
   [super reshape];
 
@@ -410,6 +410,7 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
   bounds = [self bounds];
   view_width = bounds.size.width;
   view_height = bounds.size.height;
+  scale_factor = [[NSScreen mainScreen] backingScaleFactor];
 
   frame_par = (gdouble) width / height;
   view_par = (gdouble) view_width / view_height;
@@ -433,8 +434,8 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
     c_y = (view_height - c_height) / 2;
   }
 
-  drawingBounds = NSMakeRect(c_x, c_y, c_width, c_height);
-  glViewport (c_x, c_y, (GLint) c_width, (GLint) c_height);
+  drawingBounds = NSMakeRect(c_x * scale_factor, c_y * scale_factor,
+    c_width * scale_factor, c_height * scale_factor);
 }
 
 - (void) initTextures {
@@ -543,6 +544,9 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
 
   /* Black background */
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+  glViewport ((GLint) drawingBounds.origin.x, (GLint) drawingBounds.origin.y,
+    (GLint) drawingBounds.size.width, (GLint) drawingBounds.size.height);
 
   if (!initDone) {
     [actualContext flushBuffer];
