@@ -346,6 +346,7 @@ gst_ffmpegviddec_subinit (GstFFMpegVidDec * ffmpegdec)
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
   ffmpegdec->output_corrupt = DEFAULT_OUTPUT_CORRUPT;
   ffmpegdec->thread_type = DEFAULT_THREAD_TYPE;
+  ffmpegdec->std_compliance = DEFAULT_STD_COMPLIANCE;
 
   GST_PAD_SET_ACCEPT_TEMPLATE (GST_VIDEO_DECODER_SINK_PAD (ffmpegdec));
   gst_video_decoder_set_use_default_pad_acceptcaps (GST_VIDEO_DECODER_CAST
