@@ -2127,3 +2127,28 @@ gst_va_buffer_get_aux_surface (GstBuffer * buffer)
 
   return surface_buffer->surface;
 }
+
+/**
+ * gst_va_buffer_peek_display:
+ * @buffer: a #GstBuffer
+ *
+ * Returns: (type #GstVaDisplay) (transfer none): the display which this
+ *     @buffer belongs to. The reference of the display is unchanged.
+ *
+ * Since: 1.22
+ */
+GstVaDisplay *
+gst_va_buffer_peek_display (GstBuffer * buffer)
+{
+  GstMemory *mem;
+
+  if (!buffer)
+    return NULL;
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  /* Buffer without mem, not VA kind memory. */
+  if (!mem)
+    return NULL;
+
+  return gst_va_memory_peek_display (mem);
+}
