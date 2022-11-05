@@ -299,8 +299,10 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   GstMemory *mem;
   GstD3D11Memory *dmem;
   ID3D11RenderTargetView *rtv;
+  ID3D11DeviceContext *context;
   gsize size;
   GstD3D11DeviceLockGuard lk (device);
+  const FLOAT clear_color[] = { 0.0, 0.0, 0.0, 1.0 };
 
   gst_clear_buffer (&self->backbuffer);
   if (!self->swap_chain)
@@ -347,6 +349,9 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
     gst_memory_unref (mem);
     return;
   }
+
+  context = gst_d3d11_device_get_device_context_handle (self->device);
+  context->ClearRenderTargetView (rtv, clear_color);
 
   self->backbuffer = gst_buffer_new ();
   gst_buffer_append_memory (self->backbuffer, mem);
