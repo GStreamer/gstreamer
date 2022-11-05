@@ -262,7 +262,6 @@ gst_identity_class_init (GstIdentityClass * klass)
    * GstIdentity::handoff:
    * @identity: the identity instance
    * @buffer: the buffer that just has been received
-   * @pad: the pad that received it
    *
    * This signal gets emitted before passing the buffer downstream.
    */
