@@ -145,6 +145,51 @@ gst_caps_set_format_array (GstCaps * caps, GArray * formats)
   return TRUE;
 }
 
+/* Fix raw frames ill reported by drivers.
+ *
+ * Mesa Gallium reports P010 and P016 for H264 encoder:
+ * https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/19443
+ *
+ * Intel i965: reports I420 and YV12
+ * XXX: add issue or pr
+ */
+static gboolean
+fix_raw_formats (GstVaDisplay * display, VAConfigID config, GArray * formats)
+{
+  VADisplay dpy;
+  VAStatus status;
+  VAProfile profile;
+  VAEntrypoint entrypoint;
+  VAConfigAttrib *attribs;
+  GstVideoFormat format;
+  int num;
+
+  if (!(GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965) ||
+          GST_VA_DISPLAY_IS_IMPLEMENTATION (display, MESA_GALLIUM)))
+    return TRUE;
+
+  dpy = gst_va_display_get_va_dpy (display);
+  attribs = g_new (VAConfigAttrib, vaMaxNumConfigAttributes (dpy));
+  status = vaQueryConfigAttributes (dpy, config, &profile, &entrypoint, attribs,
+      &num);
+  g_free (attribs);
+
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (display, "vaQueryConfigAttributes: %s",
+        vaErrorStr (status));
+    return FALSE;
+  }
+
+  if (gst_va_profile_codec (profile) != H264
+      || entrypoint != VAEntrypointEncSlice)
+    return TRUE;
+
+  formats = g_array_set_size (formats, 0);
+  format = GST_VIDEO_FORMAT_NV12;
+  g_array_append_val (formats, format);
+  return TRUE;
+}
+
 GstCaps *
 gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
 {
@@ -194,6 +239,9 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   /* if driver doesn't report surface formats for current
    * chroma. Gallium AMD bug for 4:2:2 */
   if (formats->len == 0)
+    goto bail;
+
+  if (!fix_raw_formats (display, config, formats))
     goto bail;
 
   base_caps = gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
