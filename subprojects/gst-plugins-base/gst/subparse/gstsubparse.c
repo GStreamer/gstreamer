@@ -785,9 +785,11 @@ subrip_fix_up_markup (gchar ** p_txt, gconstpointer allowed_tags_ptr)
           last = g_ptr_array_index (open_tags, num_open_tags - 1);
         if (num_open_tags == 0
             || g_ascii_strncasecmp (end_tag - 1, last, strlen (last))) {
-          GST_LOG ("broken input, closing tag '%s' is not open", end_tag - 1);
-          memmove (next_tag, end_tag + 1, strlen (end_tag) + 1);
-          next_tag -= strlen (end_tag);
+          GST_LOG ("broken input, closing tag '%s' is not open", next_tag);
+          /* Move everything after the tag end, including closing \0 */
+          memmove (next_tag, end_tag + 1, strlen (end_tag));
+          cur = next_tag;
+          continue;
         } else {
           --num_open_tags;
           g_ptr_array_remove_index (open_tags, num_open_tags);
