@@ -491,6 +491,8 @@ gst_decodebin3_select_stream (GstDecodebin3 * dbin,
 
 static GstPad *gst_decodebin3_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * name, const GstCaps * caps);
+static void handle_stream_collection (GstDecodebin3 * dbin,
+    GstStreamCollection * collection, DecodebinInput * input);
 static void gst_decodebin3_handle_message (GstBin * bin, GstMessage * message);
 static GstStateChangeReturn gst_decodebin3_change_state (GstElement * element,
     GstStateChange transition);
@@ -1060,6 +1062,30 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
          inputs is. This means things might break if there's a mix */
       if (input->upstream_selected)
         dbin->upstream_selected = TRUE;
+      break;
+    }
+    case GST_EVENT_STREAM_COLLECTION:
+    {
+      GstStreamCollection *collection = NULL;
+      gst_event_parse_stream_collection (event, &collection);
+      if (collection) {
+        INPUT_LOCK (dbin);
+        handle_stream_collection (dbin, collection, input);
+        gst_object_unref (collection);
+        INPUT_UNLOCK (dbin);
+        SELECTION_LOCK (dbin);
+        /* Post the (potentially) updated collection */
+        if (dbin->collection) {
+          GstMessage *msg;
+          msg =
+              gst_message_new_stream_collection ((GstObject *) dbin,
+              dbin->collection);
+          SELECTION_UNLOCK (dbin);
+          gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
+          update_requested_selection (dbin);
+        } else
+          SELECTION_UNLOCK (dbin);
+      }
       break;
     }
     case GST_EVENT_CAPS:
