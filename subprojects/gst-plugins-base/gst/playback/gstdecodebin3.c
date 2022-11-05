@@ -303,10 +303,6 @@ struct _DecodebinInput
    * FIXME : When do we reset it if re-used ?
    */
   gboolean drained;
-
-  /* HACK : Remove these fields */
-  /* List of PendingPad structures */
-  GList *pending_pads;
 };
 
 /* Multiqueue Slots */
@@ -361,18 +357,6 @@ struct _DecodebinOutputStream
   /* keyframe dropping probe */
   gulong drop_probe_id;
 };
-
-/* Pending pads from parsebin */
-typedef struct _PendingPad
-{
-  GstDecodebin3 *dbin;
-  DecodebinInput *input;
-  GstPad *pad;
-
-  gulong buffer_probe;
-  gulong event_probe;
-  gboolean saw_eos;
-} PendingPad;
 
 /* properties */
 enum
@@ -1935,21 +1919,9 @@ check_all_slot_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
     break;
   }
 
-  if (all_drained) {
-    INPUT_LOCK (dbin);
-    if (!pending_pads_are_eos (dbin->main_input))
-      all_drained = FALSE;
-
-    if (all_drained) {
-      for (iter = dbin->other_inputs; iter; iter = iter->next) {
-        if (!pending_pads_are_eos ((DecodebinInput *) iter->data)) {
-          all_drained = FALSE;
-          break;
-        }
-      }
-    }
-    INPUT_UNLOCK (dbin);
-  }
+  /* Also check with the inputs, data might be pending */
+  if (all_drained)
+    all_drained = all_inputs_are_eos (dbin);
 
   if (all_drained) {
     GST_DEBUG_OBJECT (dbin,
