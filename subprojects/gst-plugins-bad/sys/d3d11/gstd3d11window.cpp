@@ -290,6 +290,8 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
   ID3D11Texture2D *backbuffer = NULL;
   GstVideoRectangle src_rect, dst_rect, rst_rect;
   IDXGISwapChain *swap_chain;
+  ID3D11DeviceContext *context;
+  const FLOAT clear_color[] = { 0.0, 0.0, 0.0, 1.0 };
 
   gst_d3d11_device_lock (window->device);
   if (!window->swap_chain)
@@ -354,6 +356,9 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * window, guint width,
 
     goto done;
   }
+
+  context = gst_d3d11_device_get_device_context_handle (window->device);
+  context->ClearRenderTargetView (window->rtv, clear_color);
 
   if (window->processor) {
     D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC pov_desc;
