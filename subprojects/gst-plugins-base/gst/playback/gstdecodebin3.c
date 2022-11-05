@@ -973,6 +973,7 @@ static void
 free_input (GstDecodebin3 * dbin, DecodebinInput * input)
 {
   GST_DEBUG ("Freeing input %p", input);
+  INPUT_LOCK (dbin);
   gst_ghost_pad_set_target (GST_GHOST_PAD (input->ghost_sink), NULL);
   gst_element_remove_pad (GST_ELEMENT (dbin), input->ghost_sink);
   if (input->parsebin) {
@@ -986,6 +987,7 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
   if (input->collection)
     gst_object_unref (input->collection);
   g_free (input);
+  INPUT_UNLOCK (dbin);
 }
 
 static void
