@@ -819,7 +819,8 @@ done:
 
 gboolean
 gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
-    GstNvDecoderFrame * frame, GstBuffer ** buffer)
+    GstVideoCodecState * input_state, GstNvDecoderFrame * frame,
+    GstBuffer ** buffer)
 {
   GstBuffer *outbuf = NULL;
   gboolean ret = FALSE;
@@ -828,6 +829,13 @@ gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), GST_FLOW_ERROR);
   g_return_val_if_fail (frame != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != NULL, GST_FLOW_ERROR);
+
+  if (input_state) {
+    if (!gst_nv_decoder_negotiate (decoder, videodec, input_state)) {
+      GST_ERROR_OBJECT (videodec, "Couldn't re-negotiate with updated state");
+      return FALSE;
+    }
+  }
 
   outbuf = gst_video_decoder_allocate_output_buffer (videodec);
   if (!outbuf) {

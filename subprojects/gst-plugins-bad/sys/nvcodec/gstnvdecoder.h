@@ -80,6 +80,7 @@ gboolean gst_nv_decoder_decode_picture (GstNvDecoder * decoder,
 
 gboolean gst_nv_decoder_finish_frame   (GstNvDecoder * decoder,
                                         GstVideoDecoder * videodec,
+                                        GstVideoCodecState * input_state,
                                         GstNvDecoderFrame *frame,
                                         GstBuffer ** buffer);
 

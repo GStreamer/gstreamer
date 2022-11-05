@@ -478,8 +478,8 @@ gst_nv_vp8_dec_output_picture (GstVp8Decoder * decoder,
     goto error;
   }
 
-  if (!gst_nv_decoder_finish_frame (self->decoder, vdec, decoder_frame,
-          &frame->output_buffer)) {
+  if (!gst_nv_decoder_finish_frame (self->decoder, vdec, picture->discont_state,
+          decoder_frame, &frame->output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to handle output picture");
     goto error;
   }
