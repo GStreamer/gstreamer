@@ -990,7 +990,7 @@ gst_mf_source_reader_new (GstMFSourceType type, gint device_index,
   gst_object_ref_sink (self);
 
   if (!self->opened) {
-    GST_WARNING_OBJECT (self, "Couldn't open device");
+    GST_DEBUG_OBJECT (self, "Couldn't open device");
     gst_object_unref (self);
     return nullptr;
   }

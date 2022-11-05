@@ -31,6 +31,7 @@
 
 #if GST_MF_WINAPI_DESKTOP
 #include "gstwin32devicewatcher.h"
+#include "gstmfcapturedshow.h"
 
 #ifndef INITGUID
 #include <initguid.h>
@@ -265,11 +266,11 @@ gst_mf_device_provider_finalize (GObject * object)
   G_OBJECT_CLASS (gst_mf_device_provider_parent_class)->finalize (object);
 }
 
-static GList *
-gst_mf_device_provider_probe (GstDeviceProvider * provider)
+static void
+gst_mf_device_provider_probe_internal (GstDeviceProvider * provider,
+    gboolean try_dshow, GList ** list)
 {
   GstMFDeviceProvider *self = GST_MF_DEVICE_PROVIDER (provider);
-  GList *list = nullptr;
   gint i;
 
   for (i = 0;; i++) {
@@ -280,8 +281,18 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
     gchar *device_name = nullptr;
     gchar *device_path = nullptr;
 
+#if GST_MF_WINAPI_DESKTOP
+    if (try_dshow) {
+      obj = gst_mf_capture_dshow_new (GST_MF_SOURCE_TYPE_VIDEO, i,
+          nullptr, nullptr);
+    } else {
+      obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
+          i, nullptr, nullptr, nullptr);
+    }
+#else
     obj = gst_mf_source_object_new (GST_MF_SOURCE_TYPE_VIDEO,
         i, nullptr, nullptr, nullptr);
+#endif
     if (!obj)
       break;
 
@@ -314,7 +325,7 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
         "display-name", device_name, "caps", caps,
         "device-class", "Source/Video", "properties", props, nullptr);
 
-    list = g_list_append (list, device);
+    *list = g_list_append (*list, device);
 
   next:
     if (caps)
@@ -325,6 +336,17 @@ gst_mf_device_provider_probe (GstDeviceProvider * provider)
     g_free (device_name);
     gst_object_unref (obj);
   }
+}
+
+static GList *
+gst_mf_device_provider_probe (GstDeviceProvider * provider)
+{
+  GList *list = nullptr;
+
+  gst_mf_device_provider_probe_internal (provider, FALSE, &list);
+#if GST_MF_WINAPI_DESKTOP
+  gst_mf_device_provider_probe_internal (provider, TRUE, &list);
+#endif
 
   return list;
 }

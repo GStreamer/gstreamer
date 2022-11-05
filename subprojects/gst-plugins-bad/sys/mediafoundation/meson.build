@@ -20,6 +20,7 @@ mf_sources = [
 ]
 
 mf_desktop_sources = [
+  'gstmfcapturedshow.cpp',
   'gstmfsourcereader.cpp',
   'gstwin32devicewatcher.cpp',
 ]

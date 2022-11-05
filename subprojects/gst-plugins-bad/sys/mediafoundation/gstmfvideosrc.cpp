@@ -45,6 +45,10 @@
 #include "gstmfsourceobject.h"
 #include <string.h>
 
+#if GST_MF_WINAPI_DESKTOP
+#include "gstmfcapturedshow.h"
+#endif
+
 GST_DEBUG_CATEGORY (gst_mf_video_src_debug);
 #define GST_CAT_DEFAULT gst_mf_video_src_debug
 
@@ -75,6 +79,8 @@ struct _GstMFVideoSrc
 
   guint64 n_frames;
   GstClockTime latency;
+
+  gboolean use_dshow;
 
   /* properties */
   gchar *device_path;
@@ -268,6 +274,15 @@ gst_mf_video_src_start (GstBaseSrc * src)
 
   self->n_frames = 0;
   self->latency = 0;
+  self->use_dshow = FALSE;
+
+  if (!self->source) {
+#if GST_MF_WINAPI_DESKTOP
+    self->use_dshow = TRUE;
+    self->source = gst_mf_capture_dshow_new (GST_MF_SOURCE_TYPE_VIDEO,
+        self->device_index, self->device_name, self->device_path);
+#endif
+  }
 
   if (!self->source) {
     GST_ERROR_OBJECT (self, "Couldn't create capture object");
@@ -415,6 +430,7 @@ gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
   GstMFVideoSrc *self = GST_MF_VIDEO_SRC (pushsrc);
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buf = nullptr;
+  GstSample *sample = nullptr;
   GstClock *clock;
   GstClockTime running_time = GST_CLOCK_TIME_NONE;
   GstClockTimeDiff diff;
@@ -429,7 +445,9 @@ gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     self->started = TRUE;
   }
 
-  if (GST_VIDEO_INFO_FORMAT (&self->info) != GST_VIDEO_FORMAT_ENCODED) {
+  if (self->use_dshow) {
+    ret = gst_mf_source_object_get_sample (self->source, &sample);
+  } else if (GST_VIDEO_INFO_FORMAT (&self->info) != GST_VIDEO_FORMAT_ENCODED) {
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (self), 0,
         GST_VIDEO_INFO_SIZE (&self->info), &buf);
 
@@ -443,6 +461,23 @@ gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
 
   if (ret != GST_FLOW_OK)
     return ret;
+
+  /* DirectShow capture object will set caps if it's got updated */
+  if (sample) {
+    if (gst_sample_get_caps (sample)) {
+      if (!gst_base_src_negotiate (GST_BASE_SRC (self))) {
+        GST_ERROR_OBJECT (self, "Failed to negotiate with new caps");
+        gst_sample_unref (sample);
+        return GST_FLOW_NOT_NEGOTIATED;
+      } else {
+        GST_DEBUG_OBJECT (self, "Renegotiated");
+      }
+    }
+
+    buf = gst_sample_get_buffer (sample);
+    gst_buffer_ref (buf);
+    gst_sample_unref (sample);
+  }
 
   GST_BUFFER_OFFSET (buf) = self->n_frames;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET (buf) + 1;

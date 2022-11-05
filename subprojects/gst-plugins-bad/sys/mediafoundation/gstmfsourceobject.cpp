@@ -232,6 +232,21 @@ gst_mf_source_object_create (GstMFSourceObject * object, GstBuffer ** buffer)
   return klass->create (object, buffer);
 }
 
+GstFlowReturn
+gst_mf_source_object_get_sample (GstMFSourceObject * object,
+    GstSample ** sample)
+{
+  GstMFSourceObjectClass *klass;
+
+  g_return_val_if_fail (GST_IS_MF_SOURCE_OBJECT (object), GST_FLOW_ERROR);
+  g_return_val_if_fail (sample != nullptr, GST_FLOW_ERROR);
+
+  klass = GST_MF_SOURCE_OBJECT_GET_CLASS (object);
+  g_assert (klass->get_sample != nullptr);
+
+  return klass->get_sample (object, sample);
+}
+
 void
 gst_mf_source_object_set_flushing (GstMFSourceObject * object,
     gboolean flushing)
