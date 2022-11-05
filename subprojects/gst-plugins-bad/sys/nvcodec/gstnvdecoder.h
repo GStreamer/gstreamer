@@ -102,8 +102,7 @@ gboolean gst_nv_decoder_handle_context_query (GstNvDecoder * decoder,
 
 gboolean gst_nv_decoder_negotiate            (GstNvDecoder * decoder,
                                               GstVideoDecoder * videodec,
-                                              GstVideoCodecState * input_state,
-                                              GstVideoCodecState ** output_state);
+                                              GstVideoCodecState * input_state);
 
 gboolean gst_nv_decoder_decide_allocation    (GstNvDecoder * decoder,
                                               GstVideoDecoder * videodec,

@@ -1454,8 +1454,7 @@ gst_nv_decoder_ensure_gl_context (GstNvDecoder * decoder, GstElement * videodec)
 
 gboolean
 gst_nv_decoder_negotiate (GstNvDecoder * decoder,
-    GstVideoDecoder * videodec, GstVideoCodecState * input_state,
-    GstVideoCodecState ** output_state)
+    GstVideoDecoder * videodec, GstVideoCodecState * input_state)
 {
   GstVideoCodecState *state;
   GstVideoInfo *info;
@@ -1463,7 +1462,6 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
   g_return_val_if_fail (input_state != NULL, FALSE);
-  g_return_val_if_fail (output_state != NULL, FALSE);
 
   if (!decoder->configured) {
     GST_ERROR_OBJECT (videodec, "Should configure decoder first");
@@ -1476,9 +1474,8 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
       GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info), input_state);
   state->caps = gst_video_info_to_caps (&state->info);
 
-  if (*output_state)
-    gst_video_codec_state_unref (*output_state);
-  *output_state = state;
+  /* decoder baseclass will hold other reference to output state */
+  gst_video_codec_state_unref (state);
 
   decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
 

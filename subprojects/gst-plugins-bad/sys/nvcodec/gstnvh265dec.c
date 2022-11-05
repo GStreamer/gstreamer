@@ -102,8 +102,6 @@ typedef struct _GstNvH265Dec
 {
   GstH265Decoder parent;
 
-  GstVideoCodecState *output_state;
-
   GstCudaContext *context;
   GstNvDecoder *decoder;
   CUVIDPICPARAMS params;
@@ -311,7 +309,6 @@ gst_nv_h265_dec_close (GstVideoDecoder * decoder)
 {
   GstNvH265Dec *self = GST_NV_H265_DEC (decoder);
 
-  g_clear_pointer (&self->output_state, gst_video_codec_state_unref);
   gst_clear_object (&self->decoder);
   gst_clear_object (&self->context);
 
@@ -332,8 +329,7 @@ gst_nv_h265_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "negotiate");
 
-  gst_nv_decoder_negotiate (self->decoder, decoder, h265dec->input_state,
-      &self->output_state);
+  gst_nv_decoder_negotiate (self->decoder, decoder, h265dec->input_state);
 
   /* TODO: add support D3D11 memory */
 
