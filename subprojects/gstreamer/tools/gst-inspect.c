@@ -284,8 +284,11 @@ print_factory_details_info (GstElementFactory * factory, GstPlugin * plugin)
   if (!seen_doc_uri && plugin != NULL &&
       !gst_element_factory_get_skip_documentation (factory)) {
     const gchar *module = gst_plugin_get_source (plugin);
+    const gchar *origin = gst_plugin_get_origin (plugin);
 
-    if (g_strv_contains (gstreamer_modules, module)) {
+    /* gst-plugins-rs has per-plugin module names so need to check origin there */
+    if (g_strv_contains (gstreamer_modules, module)
+        || (origin != NULL && g_str_has_suffix (origin, "/gst-plugins-rs"))) {
       GList *features;
 
       features =
@@ -1486,6 +1489,7 @@ print_plugin_info (GstPlugin * plugin)
   const gchar *release_date = gst_plugin_get_release_date_string (plugin);
   const gchar *filename = gst_plugin_get_filename (plugin);
   const gchar *module = gst_plugin_get_source (plugin);
+  const gchar *origin = gst_plugin_get_origin (plugin);
 
   n_print ("%sPlugin Details%s:\n", HEADING_COLOR, RESET_COLOR);
 
@@ -1504,7 +1508,9 @@ print_plugin_info (GstPlugin * plugin)
   n_print ("%s%-25s%s%s%s%s\n", PROP_NAME_COLOR, "Source module", RESET_COLOR,
       PROP_VALUE_COLOR, module, RESET_COLOR);
 
-  if (g_strv_contains (gstreamer_modules, module)) {
+  /* gst-plugins-rs has per-plugin module names so need to check origin there */
+  if (g_strv_contains (gstreamer_modules, module)
+      || (origin != NULL && g_str_has_suffix (origin, "/gst-plugins-rs"))) {
     n_print ("%s%-25s%s%s%s/%s/%s\n", PROP_NAME_COLOR, "Documentation",
         RESET_COLOR, PROP_VALUE_COLOR, GST_DOC_BASE_URL, plugin_name,
         RESET_COLOR);
