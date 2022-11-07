@@ -205,10 +205,15 @@ gst indent:
 # build setup templates
 #
 .build_template: &build
+  - date -R
   - ci/scripts/handle-subprojects-cache.py subprojects/
+  - date -R
   - echo $MESON_ARGS
+  - date -R
   - meson build/ $MESON_ARGS
+  - date -R
   - ninja -C build/
+  - date -R
   - ccache --show-stats
 
 .build_ccache_vars:
