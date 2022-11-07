@@ -121,7 +121,7 @@ libs_doc = [hotdoc.generate_doc('gstreamer',
     gi_index: 'gst/gi-index.md',
     gi_smart_index: true,
     gi_c_source_roots: [join_paths(meson.current_source_dir(), '../gst/'), ],
-    dependencies: [gst_dep, glib_dep, gobject_dep, gmodule_dep, hotdoc_plugin_scanner],
+    dependencies: [gst_dep, glib_dep, gobject_dep, gmodule_dep],
     extra_assets: [join_paths(meson.current_source_dir(), 'images')],
 )]
 
@@ -147,7 +147,7 @@ foreach lib: libs
       gi_index: join_paths('libs/', name, 'index.md'),
       gi_smart_index: true,
       gi_order_generated_subpages: true,
-      dependencies: deps + [hotdoc_plugin_scanner],
+      dependencies: deps,
       install: false,
   )]
 endforeach
