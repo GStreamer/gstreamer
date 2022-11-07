@@ -343,7 +343,6 @@ transport_stream_add_ssrc_map_item (TransportStream * stream,
     GstWebRTCRTPTransceiverDirection direction, guint32 ssrc, guint media_idx)
 {
   SsrcMapItem *ret = NULL;
-  char *dir_str = gst_webrtc_rtp_transceiver_direction_to_string (direction);
 
   g_return_val_if_fail (direction ==
       GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY
@@ -351,13 +350,13 @@ transport_stream_add_ssrc_map_item (TransportStream * stream,
   g_return_val_if_fail (ssrc != 0, NULL);
 
   GST_INFO_OBJECT (stream, "Adding mapping for rtp session %u media_idx %u "
-      "direction %s ssrc %u", stream->session_id, media_idx, dir_str, ssrc);
+      "direction %s ssrc %u", stream->session_id, media_idx,
+      gst_webrtc_rtp_transceiver_direction_to_string (direction), ssrc);
 
   /* XXX: duplicates? */
   ret = ssrcmap_item_new (direction, ssrc, media_idx);
 
   g_ptr_array_add (stream->ssrcmap, ret);
-  g_free (dir_str);
 
   return ret;
 }

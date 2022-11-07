@@ -81,15 +81,14 @@ _check_valid_state_for_sdp_change (GstWebRTCSignalingState state,
     return TRUE;
 
   {
-    gchar *state_str = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+    const gchar *state_str =
+        _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
         state);
-    gchar *type_str = _enum_value_to_string (GST_TYPE_WEBRTC_SDP_TYPE, type);
-    g_set_error (error, GST_WEBRTC_ERROR,
-        GST_WEBRTC_ERROR_INVALID_STATE,
+    const gchar *type_str =
+        _enum_value_to_string (GST_TYPE_WEBRTC_SDP_TYPE, type);
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
         "Not in the correct state (%s) for setting %s %s description",
         state_str, _sdp_source_to_string (source), type_str);
-    g_free (state_str);
-    g_free (type_str);
   }
 
   return FALSE;
@@ -425,12 +424,10 @@ void
 _media_replace_direction (GstSDPMedia * media,
     GstWebRTCRTPTransceiverDirection direction)
 {
-  gchar *dir_str;
+  const gchar *dir_str;
   int i;
 
-  dir_str =
-      _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-      direction);
+  dir_str = gst_webrtc_rtp_transceiver_direction_to_string (direction);
 
   for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
     const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
@@ -443,14 +440,12 @@ _media_replace_direction (GstSDPMedia * media,
       GST_TRACE ("replace %s with %s", attr->key, dir_str);
       gst_sdp_attribute_set (&new_attr, dir_str, "");
       gst_sdp_media_replace_attribute (media, i, &new_attr);
-      g_free (dir_str);
       return;
     }
   }
 
   GST_TRACE ("add %s", dir_str);
   gst_sdp_media_add_attribute (media, dir_str, "");
-  g_free (dir_str);
 }
 
 GstWebRTCRTPTransceiverDirection
@@ -556,7 +551,7 @@ _intersect_dtls_setup (GstWebRTCDTLSSetup offer)
 void
 _media_replace_setup (GstSDPMedia * media, GstWebRTCDTLSSetup setup)
 {
-  gchar *setup_str;
+  const gchar *setup_str;
   int i;
 
   setup_str = _enum_value_to_string (GST_TYPE_WEBRTC_DTLS_SETUP, setup);
@@ -569,14 +564,12 @@ _media_replace_setup (GstSDPMedia * media, GstWebRTCDTLSSetup setup)
       GST_TRACE ("replace setup:%s with setup:%s", attr->value, setup_str);
       gst_sdp_attribute_set (&new_attr, "setup", setup_str);
       gst_sdp_media_replace_attribute (media, i, &new_attr);
-      g_free (setup_str);
       return;
     }
   }
 
   GST_TRACE ("add setup:%s", setup_str);
   gst_sdp_media_add_attribute (media, "setup", setup_str);
-  g_free (setup_str);
 }
 
 GstWebRTCDTLSSetup

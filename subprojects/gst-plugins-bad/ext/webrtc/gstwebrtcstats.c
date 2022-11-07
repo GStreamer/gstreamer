@@ -58,7 +58,7 @@ static void
 _set_base_stats (GstStructure * s, GstWebRTCStatsType type, double ts,
     const char *id)
 {
-  gchar *name = _enum_value_to_string (GST_TYPE_WEBRTC_STATS_TYPE,
+  const gchar *name = _enum_value_to_string (GST_TYPE_WEBRTC_STATS_TYPE,
       type);
 
   g_return_if_fail (name != NULL);
@@ -66,8 +66,6 @@ _set_base_stats (GstStructure * s, GstWebRTCStatsType type, double ts,
   gst_structure_set_name (s, name);
   gst_structure_set (s, "type", GST_TYPE_WEBRTC_STATS_TYPE, type, "timestamp",
       G_TYPE_DOUBLE, ts, "id", G_TYPE_STRING, id, NULL);
-
-  g_free (name);
 }
 
 static GstStructure *

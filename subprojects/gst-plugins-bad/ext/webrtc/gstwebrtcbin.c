@@ -1441,7 +1441,7 @@ _update_ice_gathering_state_task (GstWebRTCBin * webrtc, gpointer data)
   }
 
   if (new_state != webrtc->ice_gathering_state) {
-    gchar *old_s, *new_s;
+    const gchar *old_s, *new_s;
 
     old_s = _enum_value_to_string (GST_TYPE_WEBRTC_ICE_GATHERING_STATE,
         old_state);
@@ -1449,8 +1449,6 @@ _update_ice_gathering_state_task (GstWebRTCBin * webrtc, gpointer data)
         new_state);
     GST_INFO_OBJECT (webrtc, "ICE gathering state change from %s(%u) to %s(%u)",
         old_s, old_state, new_s, new_state);
-    g_free (old_s);
-    g_free (new_s);
 
     webrtc->ice_gathering_state = new_state;
     PC_UNLOCK (webrtc);
@@ -1477,7 +1475,7 @@ _update_ice_connection_state_task (GstWebRTCBin * webrtc, gpointer data)
   new_state = _collate_ice_connection_states (webrtc);
 
   if (new_state != old_state) {
-    gchar *old_s, *new_s;
+    const gchar *old_s, *new_s;
 
     old_s = _enum_value_to_string (GST_TYPE_WEBRTC_ICE_CONNECTION_STATE,
         old_state);
@@ -1486,8 +1484,6 @@ _update_ice_connection_state_task (GstWebRTCBin * webrtc, gpointer data)
     GST_INFO_OBJECT (webrtc,
         "ICE connection state change from %s(%u) to %s(%u)", old_s, old_state,
         new_s, new_state);
-    g_free (old_s);
-    g_free (new_s);
 
     webrtc->ice_connection_state = new_state;
     PC_UNLOCK (webrtc);
@@ -1514,7 +1510,7 @@ _update_peer_connection_state_task (GstWebRTCBin * webrtc, gpointer data)
   new_state = _collate_peer_connection_states (webrtc);
 
   if (new_state != old_state) {
-    gchar *old_s, *new_s;
+    const gchar *old_s, *new_s;
 
     old_s = _enum_value_to_string (GST_TYPE_WEBRTC_PEER_CONNECTION_STATE,
         old_state);
@@ -1523,8 +1519,6 @@ _update_peer_connection_state_task (GstWebRTCBin * webrtc, gpointer data)
     GST_INFO_OBJECT (webrtc,
         "Peer connection state change from %s(%u) to %s(%u)", old_s, old_state,
         new_s, new_state);
-    g_free (old_s);
-    g_free (new_s);
 
     webrtc->peer_connection_state = new_state;
     PC_UNLOCK (webrtc);
@@ -1672,26 +1666,11 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
          * nor answer matches t's direction, return "true". */
 
         if (local_dir != trans->direction && remote_dir != trans->direction) {
-          gchar *local_str, *remote_str, *dir_str;
-
-          local_str =
-              _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-              local_dir);
-          remote_str =
-              _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-              remote_dir);
-          dir_str =
-              _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-              trans->direction);
-
           GST_LOG_OBJECT (webrtc, "transceiver direction (%s) doesn't match "
-              "description (local %s remote %s)", dir_str, local_str,
-              remote_str);
-
-          g_free (dir_str);
-          g_free (local_str);
-          g_free (remote_str);
-
+              "description (local %s remote %s)",
+              gst_webrtc_rtp_transceiver_direction_to_string (trans->direction),
+              gst_webrtc_rtp_transceiver_direction_to_string (local_dir),
+              gst_webrtc_rtp_transceiver_direction_to_string (remote_dir));
           return TRUE;
         }
       } else if (webrtc->current_local_description->type ==
@@ -1707,30 +1686,12 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
         intersect_dir = _intersect_answer_directions (remote_dir, local_dir);
 
         if (intersect_dir != trans->direction) {
-          gchar *local_str, *remote_str, *inter_str, *dir_str;
-
-          local_str =
-              _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-              local_dir);
-          remote_str =
-              _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-              remote_dir);
-          dir_str =
-              _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-              trans->direction);
-          inter_str =
-              _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-              intersect_dir);
-
           GST_LOG_OBJECT (webrtc, "transceiver direction (%s) doesn't match "
               "description intersected direction %s (local %s remote %s)",
-              dir_str, local_str, inter_str, remote_str);
-
-          g_free (dir_str);
-          g_free (local_str);
-          g_free (remote_str);
-          g_free (inter_str);
-
+              gst_webrtc_rtp_transceiver_direction_to_string (trans->direction),
+              gst_webrtc_rtp_transceiver_direction_to_string (local_dir),
+              gst_webrtc_rtp_transceiver_direction_to_string (intersect_dir),
+              gst_webrtc_rtp_transceiver_direction_to_string (remote_dir));
           return TRUE;
         }
       }
@@ -2289,7 +2250,6 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
     GstWebRTCRTPTransceiverDirection direction, guint mline, GstWebRTCKind kind,
     GstCaps * codec_preferences)
 {
-  char *dir_str = gst_webrtc_rtp_transceiver_direction_to_string (direction);
   WebRTCTransceiver *trans;
   GstWebRTCRTPTransceiver *rtp_trans;
   GstWebRTCRTPSender *sender;
@@ -2308,8 +2268,9 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
   rtp_trans->stopped = FALSE;
 
   GST_LOG_OBJECT (webrtc, "created new transceiver %" GST_PTR_FORMAT " with "
-      "direction %s (%d), mline %u, kind %s (%d)", rtp_trans, dir_str,
-      direction, mline, gst_webrtc_kind_to_string (kind), kind);
+      "direction %s (%d), mline %u, kind %s (%d)", rtp_trans,
+      gst_webrtc_rtp_transceiver_direction_to_string (direction), direction,
+      mline, gst_webrtc_kind_to_string (kind), kind);
 
   g_signal_connect_object (sender, "notify::priority",
       G_CALLBACK (gst_webrtc_bin_attach_tos), webrtc, G_CONNECT_SWAPPED);
@@ -2321,8 +2282,6 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
 
   g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_NEW_TRANSCEIVER_SIGNAL],
       0, trans);
-
-  g_free (dir_str);
 
   return trans;
 }
@@ -3215,7 +3174,7 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
    * multiple dtls fingerprints https://tools.ietf.org/html/draft-ietf-mmusic-4572-update-05
    */
   GstSDPMessage *last_offer = _get_latest_self_generated_sdp (webrtc);
-  gchar *direction, *ufrag, *pwd, *mid = NULL;
+  gchar *ufrag, *pwd, *mid = NULL;
   gboolean bundle_only;
   guint rtp_session_idx;
   GstCaps *caps;
@@ -3328,11 +3287,8 @@ sdp_media_from_transceiver (GstWebRTCBin * webrtc, GstSDPMedia * media,
   gst_sdp_media_add_attribute (media, "rtcp-mux", "");
   gst_sdp_media_add_attribute (media, "rtcp-rsize", NULL);
 
-  direction =
-      _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-      trans->direction);
-  gst_sdp_media_add_attribute (media, direction, "");
-  g_free (direction);
+  gst_sdp_media_add_attribute (media,
+      gst_webrtc_rtp_transceiver_direction_to_string (trans->direction), "");
 
   caps = gst_caps_make_writable (caps);
 
@@ -5567,23 +5523,12 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
   }
 
   if (new_dir != prev_dir) {
-    gchar *prev_dir_s, *new_dir_s;
     guint rtp_session_id = bundled ? bundle_idx : media_idx;
 
-    prev_dir_s =
-        _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-        prev_dir);
-    new_dir_s =
-        _enum_value_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-        new_dir);
-
     GST_DEBUG_OBJECT (webrtc, "transceiver %" GST_PTR_FORMAT
-        " direction change from %s to %s", rtp_trans, prev_dir_s, new_dir_s);
-
-    g_free (prev_dir_s);
-    prev_dir_s = NULL;
-    g_free (new_dir_s);
-    new_dir_s = NULL;
+        " direction change from %s to %s", rtp_trans,
+        gst_webrtc_rtp_transceiver_direction_to_string (prev_dir),
+        gst_webrtc_rtp_transceiver_direction_to_string (new_dir));
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE) {
       GstWebRTCBinPad *pad;
@@ -6059,25 +6004,23 @@ check_locked_mlines (GstWebRTCBin * webrtc, GstWebRTCSessionDescription * sdp,
     if (rtp_trans->kind != GST_WEBRTC_KIND_UNKNOWN) {
       if (!g_strcmp0 (gst_sdp_media_get_media (media), "audio") &&
           rtp_trans->kind != GST_WEBRTC_KIND_AUDIO) {
-        char *trans_kind = gst_webrtc_kind_to_string (rtp_trans->kind);
         g_set_error (error, GST_WEBRTC_ERROR,
             GST_WEBRTC_ERROR_INTERNAL_FAILURE,
             "m-line %d with transceiver <%s> was locked to %s, but SDP has "
-            "%s media", i, GST_OBJECT_NAME (rtp_trans), trans_kind,
+            "%s media", i, GST_OBJECT_NAME (rtp_trans),
+            gst_webrtc_kind_to_string (rtp_trans->kind),
             gst_sdp_media_get_media (media));
-        g_free (trans_kind);
         return FALSE;
       }
 
       if (!g_strcmp0 (gst_sdp_media_get_media (media), "video") &&
           rtp_trans->kind != GST_WEBRTC_KIND_VIDEO) {
-        char *trans_kind = gst_webrtc_kind_to_string (rtp_trans->kind);
         g_set_error (error, GST_WEBRTC_ERROR,
             GST_WEBRTC_ERROR_INTERNAL_FAILURE,
             "m-line %d with transceiver <%s> was locked to %s, but SDP has "
-            "%s media", i, GST_OBJECT_NAME (rtp_trans), trans_kind,
+            "%s media", i, GST_OBJECT_NAME (rtp_trans),
+            gst_webrtc_kind_to_string (rtp_trans->kind),
             gst_sdp_media_get_media (media));
-        g_free (trans_kind);
         return FALSE;
       }
     }
@@ -6158,17 +6101,15 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   guint i;
 
   {
-    gchar *state = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+    const gchar *state = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
         webrtc->signaling_state);
-    gchar *type_str =
+    const gchar *type_str =
         _enum_value_to_string (GST_TYPE_WEBRTC_SDP_TYPE, sd->sdp->type);
     gchar *sdp_text = gst_sdp_message_as_text (sd->sdp->sdp);
     GST_INFO_OBJECT (webrtc, "Attempting to set %s %s in the %s state",
         _sdp_source_to_string (sd->source), type_str, state);
     GST_TRACE_OBJECT (webrtc, "SDP contents\n%s", sdp_text);
     g_free (sdp_text);
-    g_free (state);
-    g_free (type_str);
   }
 
   if (!validate_sdp (webrtc->signaling_state, sd->source, sd->sdp, &error))
@@ -6505,18 +6446,15 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
    * signalingstatechange at connection.
    */
   if (signalling_state_changed) {
-    gchar *from = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+    const gchar *from = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
         webrtc->signaling_state);
-    gchar *to = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+    const gchar *to = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
         new_signaling_state);
     GST_TRACE_OBJECT (webrtc, "notify signaling-state from %s "
         "to %s", from, to);
     PC_UNLOCK (webrtc);
     g_object_notify (G_OBJECT (webrtc), "signaling-state");
     PC_LOCK (webrtc);
-
-    g_free (from);
-    g_free (to);
   }
 
   if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
@@ -7894,13 +7832,10 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
       /* Reject transceivers that are only for receiving ... */
       if (trans->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY ||
           trans->direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE) {
-        gchar *direction =
-            g_enum_to_string (GST_TYPE_WEBRTC_RTP_TRANSCEIVER_DIRECTION,
-            trans->direction);
         GST_ERROR_OBJECT (element, "Tried to request a new sink pad %s for"
             " existing m-line %d, but the transceiver's direction is %s",
-            name, serial, direction);
-        g_free (direction);
+            name, serial,
+            gst_webrtc_rtp_transceiver_direction_to_string (trans->direction));
         goto error_out;
       }
 

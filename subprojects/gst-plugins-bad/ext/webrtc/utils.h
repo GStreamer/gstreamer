@@ -59,7 +59,7 @@ struct pad_block *      _create_pad_block           (GstElement * element,
                                                      GDestroyNotify notify);
 
 G_GNUC_INTERNAL
-gchar *                 _enum_value_to_string       (GType type, guint value);
+const gchar *                 _enum_value_to_string       (GType type, guint value);
 G_GNUC_INTERNAL
 const gchar *           _g_checksum_to_webrtc_string (GChecksumType type);
 G_GNUC_INTERNAL
