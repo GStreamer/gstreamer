@@ -507,7 +507,7 @@ check fedora:
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
-  parallel: 4
+  parallel: 8
   variables:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
     TEST_SUITE: "validate ges"
