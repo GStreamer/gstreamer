@@ -5,9 +5,9 @@ around the end of December 2022.
 
 1.21.x is the unstable development version that is being developed in
 the git master branch and which will eventually result in 1.22, and
-1.21.1 is the current development release in that series
+1.21.2 is the current development release in that series
 
-It is expected that feature freeze will be around November 2021,
+It is expected that feature freeze will be around 18 November 2022,
 followed by several 1.21 pre-releases and the new 1.22 stable release
 around the end of December 2022.
 
@@ -17,7 +17,7 @@ around the end of December 2022.
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Tuesday 4 October 2022, 00:00 UTC (log)
+Last updated: Monday 7 November 2022, 17:00 UTC (log)
 
 Introduction
 
@@ -256,43 +256,54 @@ Known Issues
 
     -   FIXME
 
+-   GStreamer may fail to build the hotdoc documentation with the Meson
+    0.64.0 release owing to a Meson bug. This should only affect systems
+    where hotdoc is installed, and will be fixed in Meson 0.64.1 by
+    Meson PR 10982 in combination with GStreamer MR 3352. In the
+    meantime, users can pass -Ddoc=disabled or downgrade to an older
+    Meson version (< 0.64.0).
+
 Contributors
 
-Ádám Balázs, Adam Doupe, Adrian Fiergolski, Adrian Perez de Castro,
-Aleix Conchillo Flaqué, Alicia Boya García, Alireza Miryazdi, Andoni
-Morales Alastruey, Andrew Pritchard, Bastian Krause, Bastien Nocera,
-Benjamin Gaignard, Brad Hards, Branko Subasic, Bruce Liang, Camilo Celis
-Guzman, Carlos Falgueras García, Carlos Rafael Giani, Célestin Marot,
-Christopher Obbard, Christoph Reiter, Chris Wiggins, Chun-wei Fan,
-Corentin Damman, Corentin Noël, Damian Hobson-Garcia, Daniel Almeida,
-Daniel Morin, Daniel Stone, Danny Smith, David Svensson Fors, Devin
-Anderson, Diogo Goncalves, Dmitry Osipenko, Dongil Park, Doug Nazar,
-Edward Hervey, Eli Schwartz, Elliot Chen, Enrique Ocaña González, Eric
-Knapp, Erwann Gouesbet, Fabian Orccon, Fabrice Fontaine, Fan F He,
-fduncanh, Filip Hanes, Florian Zwoch, Fuga Kato, George Kiagiadakis,
-Guillaume Desmottes, Gu Yanjie, Haihao Xiang, Haihua Hu, Havard Graff,
-Heiko Becker, He Junyan, Hoonhee Lee, Hosang Lee, Hou Qi, Ignacio Casal
-Quinteiro, Ignazio Pillai, Igor V. Kovalenko, Jakub Adam, James Cowgill,
-James Hilliard, Jan Alexander Steffens (heftig), Jan Schmidt, Jianhui
-Dai, jinsl00000, Johan Sternerup, Jonas Bonn, Jonas Danielsson, Jordan
-Petridis, Joseph Donofry, Jose Quaresma, Junsoo Park, Khem Raj, Krystian
-Wojtas, László Károlyi, Loïc Le Page, Ludvig Rappe, Marc Leeman, Marek
-Vasut, Mark Nauwelaerts, Martin Dørum, Martin Reboredo, Mart Raudsepp,
-Mathieu Duponchelle, Matt Crane, Matthew Waters, Matthias Clasen,
-Matthias Fuchs, Mengkejiergeli Ba, MGlolenstine, Mikhail Fludkov, Ming
-Qian, Myles Inglis, Nicolas Dufresne, Nirbheek Chauhan, Olivier Crête,
-Patricia Muscalu, Paweł Stawicki, Philippe Normand, Philipp Zabel,
-Pierre Bourré, Piotr Brzeziński, Rabindra Harlalka, Rafael Caricio,
-Rafael Sobral, Raul Tambre, Robert Mader, Robert Rosengren, Rouven
-Czerwinski, Ruben Gonzalez, Sanchayan Maity, Sangchul Lee, Sebastian
+Ádám Balázs, Adam Doupe, Adrian Fiergolski, Adrian Perez de Castro, Alba
+Mendez, Aleix Conchillo Flaqué, Aleksandr Slobodeniuk, Alicia Boya
+García, Alireza Miryazdi, Andoni Morales Alastruey, Andrew Pritchard,
+Arun Raghavan, Bastian Krause, Bastien Nocera, Benjamin Gaignard, Brad
+Hards, Branko Subasic, Bruce Liang, Camilo Celis Guzman, Carlos
+Falgueras García, Carlos Rafael Giani, Célestin Marot, Christopher
+Obbard, Christoph Reiter, Chris Wiggins, Chun-wei Fan, Corentin Damman,
+Corentin Noël, Damian Hobson-Garcia, Daniel Almeida, Daniel Morin,
+Daniel Stone, Daniels Umanovskis, Danny Smith, David Svensson Fors,
+Devin Anderson, Diogo Goncalves, Dmitry Osipenko, Dongil Park, Doug
+Nazar, Edward Hervey, Eli Schwartz, Elliot Chen, Enrique Ocaña González,
+Eric Knapp, Erwann Gouesbet, Fabian Orccon, Fabrice Fontaine, Fan F He,
+fduncanh, Filip Hanes, Florian Zwoch, François Laignel, Fuga Kato,
+George Kiagiadakis, Guillaume Desmottes, Gu Yanjie, Haihao Xiang, Haihua
+Hu, Havard Graff, Heiko Becker, He Junyan, Hoonhee Lee, Hosang Lee, Hou
+Qi, Ignacio Casal Quinteiro, Ignazio Pillai, Igor V. Kovalenko, Jakub
+Adam, James Cowgill, James Hilliard, Jan Alexander Steffens (heftig),
+Jan Schmidt, Jianhui Dai, jinsl00000, Johan Sternerup, Jonas Bonn, Jonas
+Danielsson, Jordan Petridis, Joseph Donofry, Jose Quaresma, Julian
+Bouzas, Junsoo Park, Justin Chadwell, Khem Raj, Krystian Wojtas, László
+Károlyi, Linus Svensson, Loic Le Page, Loïc Le Page, Ludvig Rappe, Marc
+Leeman, Marek Vasut, Marijn Suijten, Mark Nauwelaerts, Martin Dørum,
+Martin Reboredo, Mart Raudsepp, Mathieu Duponchelle, Matt Crane, Matthew
+Waters, Matthias Clasen, Matthias Fuchs, Mengkejiergeli Ba, MG
+Lolenstine, Michael Gruner, Michal Kubiak, Mikhail Fludkov, Ming Qian,
+Myles Inglis, Nicolas Dufresne, Nirbheek Chauhan, Olivier Crête,
+Patricia Muscalu, Patrick Griffis, Paweł Stawicki, Peter Stensson,
+Philippe Normand, Philipp Zabel, Pierre Bourré, Piotr Brzeziński,
+Piotrek Brzeziński, Rabindra Harlalka, Rafael Caricio, Rafael Sobral,
+Raul Tambre, Robert Mader, Robert Rosengren, Rouven Czerwinski, Ruben
+Gonzalez, Sam Van Den Berge, Sanchayan Maity, Sangchul Lee, Sebastian
 Dröge, Sebastian Fricke, Sebastian Groß, Sebastian Mueller, Sebastian
 Wick, Sergei Kovalev, Seungha Yang, Sherrill Lin, Shingo Kitagawa,
 Stéphane Cerveau, Thibault Saunier, Tim Mooney, Tim-Philipp Müller,
 Tomasz Andrzejak, Tom Schuring, Tong Wu, toor, Tristan Matthews, Tulio
 Beloqui, U. Artie Eoff, Víctor Manuel Jáquez Leal, Vincent Cheah Beng
-Keat, Vivia Nikolaidou, Vivienne Watermeier, WANG Xuerui, Wonchul Lee,
-Wu Tong, Xabier Rodriguez Calvar, Xavier Claessens, Yatin Maan, Yeongjin
-Jeong, Zebediah Figura, Zhao Zhili, Zhiyuan Liu,
+Keat, Vivia Nikolaidou, Vivienne Watermeier, WANG Xuerui, Wojciech
+Kapsa, Wonchul Lee, Wu Tong, Xabier Rodriguez Calvar, Xavier Claessens,
+Yatin Maan, Yeongjin Jeong, Zebediah Figura, Zhao Zhili, Zhiyuan Liu,
 
 … and many others who have contributed bug reports, translations, sent
 suggestions or helped testing.

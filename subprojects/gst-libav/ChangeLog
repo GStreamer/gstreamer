@@ -1,3 +1,18 @@
+=== release 1.21.2 ===
+
+2022-11-07 23:53:59 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.21.2
+
+2022-11-07 23:53:57 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.21.2
+
 2022-11-04 14:17:39 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
 
 	* docs/gst_plugins_cache.json:
