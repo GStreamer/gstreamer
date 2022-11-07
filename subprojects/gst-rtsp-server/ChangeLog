@@ -1,7 +1,71 @@
+2022-10-25 09:39:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  Fix various warnings from gobject-introspection
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3261>
+
+2022-10-15 12:40:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-auth.c:
+	* gst/rtsp-server/rtsp-latency-bin.c:
+	* gst/rtsp-server/rtsp-media-factory.c:
+	* gst/rtsp-server/rtsp-media.c:
+	* gst/rtsp-server/rtsp-onvif-media-factory.c:
+	* gst/rtsp-server/rtsp-server.c:
+	* gst/rtsp-server/rtsp-stream.c:
+	  rtsp-server: Add/fix various annotations
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3194>
+
+2022-10-14 08:53:18 +0200  Edward Hervey <edward@centricular.com>
+
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-client: Remove duplicate documentation
+	  Confuses the documentation builder, since it's documented twice it complains
+	  about a missing "Since:" marker whereas it's present in the documentation
+	  comment further down
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3180>
+
+2022-08-19 16:16:26 +0200  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: Free client if no connection could be created
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3164>
+
+2022-10-11 14:55:48 +0200  Peter Stensson <petest@axis.com>
+
+	* gst/rtsp-server/rtsp-client.h:
+	  rtsp-server: Add since marker for adjust_error_code
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3157>
+
+2022-06-21 09:51:55 +0200  Peter Stensson <petest@axis.com>
+
+	* gst/rtsp-server/rtsp-client.c:
+	* gst/rtsp-server/rtsp-client.h:
+	* gst/rtsp-server/rtsp-media.c:
+	* tests/check/gst/client.c:
+	* tests/check/gst/media.c:
+	  rtsp-server: Add support for adjusting request response on pipeline errors
+	  The idea is to give the application the possibility to adjust the error
+	  code when responding to a request. For that purpose the pipeline's bus
+	  messages are emitted to subscribers through a signal handle-message.
+	  The subscribers can then check those messages for errors and adjust
+	  the response error code by overriding the virtual method
+	  adjust_error_code().
+	  Fixes #1294
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/2972>
+
+2022-10-04 03:57:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/plugins/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3115>
+
 === release 1.21.1 ===
 
 2022-10-04 01:14:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/plugins/gst_plugins_cache.json:

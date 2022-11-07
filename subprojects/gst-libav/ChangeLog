@@ -1,7 +1,144 @@
+2022-11-04 14:17:39 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavutils.c:
+	  avutils: Add missing space in doc
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3330>
+
+2022-11-04 14:15:34 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	* ext/libav/gstavviddec.c:
+	  avviddec: Initialize std_compliance to default
+	  This was missed in the initial patch.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3330>
+
+2022-11-04 08:00:03 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  libav: avcfg: Avoid brittle comparision
+	  Subtracting a gint from another (or a guint from another) has no guarantees that
+	  it will result in a gint.
+	  Therefore do the actual comparision instead.
+	  Also use the *actual* type for comparing flags (the field value types are different)
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3319>
+
+2022-11-04 07:59:10 +0100  Edward Hervey <edward@centricular.com>
+
+	* ext/libav/gstavcfg.c:
+	  libav: avcfg: Don't leak duplicate enumvalue entries
+	  If we discard the duplicates, we also need to free the allocated strings.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3319>
+
+2022-11-02 11:09:17 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* docs/gst_plugins_cache.json:
+	  doc: avviddec: Update plugin cache
+	  This is to add std-compliance property and GstFFMpegVidDec base class.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3311>
+
+2022-11-01 11:13:23 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstav.c:
+	* ext/libav/gstav.h:
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavcodecmap.h:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Introduce a class for shared properties
+	  Without a parent class,the documentation would need to be duplicated for
+	  every CODECs. This patch adds an abstract class in between GstVideoDecoder
+	  and the element.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3311>
+
+2022-11-01 09:35:11 -0400  Seungha Yang <seungha@centricular.com>
+
+	* ext/libav/gstavutils.c:
+	* ext/libav/gstavutils.h:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Expose std-compliance option
+	  Default compliance mode (i.e., FF_COMPLIANCE_NORMAL) might not
+	  strictly follow specification. This property will allow user
+	  to specifiy expected compliance mode.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3311>
+
+2022-10-26 16:30:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avdec_h265: Fix endless renegoation with alternate interlacing
+	  The picture parameter picture->top_field_first is reused in this mode
+	  to signal the TOP fields. As a side effect, it will change every frame
+	  and current code assumed that if this changes then a renegotiation is
+	  needed. Fixed this by ignoring that change whenever we are decoding one field
+	  only.
+	  Fixes #1523
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3276>
+
+2022-10-26 10:44:01 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Avoid flushing on framerate changes
+	  A framerate change does not require flushing the decoder and causes
+	  issues with some specific fragmented files if the two fragments have
+	  different framerate.
+	  Fixes #1522
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3270>
+
+2022-10-18 11:37:30 +0000  Devin Anderson <danderson@microsoft.com>
+
+	* ext/libav/gstavdemux.c:
+	  gst-libav: Fix synchronization issues and errors created by the forwarding of segment events by demuxer.
+	  In order to play nicely with `ffmpeg`, demuxers in `gst-libav` have to make
+	  buffers available to `ffmpeg` while taking the blocking I/O model in `ffmpeg`
+	  into account, which results in buffers not being sent downstream until `ffmpeg`
+	  has processed them in its separate thread.
+	  In constrast, many `gstreamer` events are simply forwarded downstream.
+	  Currently `GST_EVENT_SEGMENT` events are forwarded downstream without any
+	  processing, which can potentially result in:
+	  * `GST_EVENT_SEGMENT` events being out of sync with buffers
+	  * `GST_EVENT_SEGMENT` events going out that are incorrect because they apply
+	  to data seen by the demuxer, but not necessarily seen by downstream elements
+	  I came across this bug when I was attempting to enable G723.1 demuxing/decoding
+	  using the G723.1 demuxer and decoder provided by `ffmpeg`.  I wrote tests to
+	  verify support for the functionality, and found that, in push mode,
+	  `GST_EVENT_SEGMENT` events pushed to the demuxer by the upstream `filesrc`
+	  element would be forwarded to the decoder without modification, resulting in
+	  an internal data streaming error.  With this patch, tests work in both push and
+	  pull mode.
+	  This patch solves the problem by disabling the forwarding of
+	  `GST_EVENT_SEGMENT` events downstream (an initial `GST_EVENT_SEGMENT` event is
+	  still pushed downstream by the demuxer).  It's possible there's a better way to
+	  do this, but, having looked at how a few different `gstreamer` demuxers deal
+	  with `GST_EVENT_SEGMENT` events, it seems like the processing is somewhat
+	  specific to the demuxer implementation, whereas `gst-libav` has one general way
+	  of handling the situation for any `ffmpeg` demuxer.  Perhaps there's a better
+	  way to solve this using the `ffmpeg` API to take advantage of specific demuxer
+	  details.  IDK.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3218>
+
+2022-10-04 21:27:36 +0200  Mathieu Duponchelle <mathieu@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	  avauddec: address regression with WMA files ..
+	  By outputting lead-in samples that FFmpeg now would like us to ignore,
+	  and discarding trailing samples that it would now like us to output.
+	  See https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1474
+	  Fixes: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1348
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3117>
+
+2022-10-04 03:57:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3115>
+
 === release 1.21.1 ===
 
 2022-10-04 01:14:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:

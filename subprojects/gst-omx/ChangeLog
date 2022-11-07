@@ -1,7 +1,14 @@
+2022-10-04 03:57:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3115>
+
 === release 1.21.1 ===
 
 2022-10-04 01:14:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-omx.doap:

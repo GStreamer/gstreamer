@@ -1,7 +1,30 @@
+2022-10-23 20:32:35 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* gst/meson.build:
+	* gst/xingmux/gstxingmux.c:
+	* gst/xingmux/gstxingmux.h:
+	* gst/xingmux/meson.build:
+	* gst/xingmux/plugin.c:
+	* meson_options.txt:
+	* tests/check/elements/xingmux.c:
+	* tests/check/elements/xingmux_testdata.h:
+	* tests/check/meson.build:
+	  xingmux: move from gst-plugins-ugly to gst-plugins-good
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/-/issues/415
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3251>
+
+2022-10-04 03:57:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3115>
+
 === release 1.21.1 ===
 
 2022-10-04 01:14:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-plugins-ugly.doap:

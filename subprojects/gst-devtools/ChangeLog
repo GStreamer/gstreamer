@@ -1,7 +1,111 @@
+2022-11-04 11:23:12 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/tools/gst-validate.c:
+	  gst-validate-1.0: Don't leak arguments and context
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3319>
+
+2022-11-04 11:02:49 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Don't leak temporary path value
+	  It's only use in the structure iterator
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3319>
+
+2022-11-04 11:02:27 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate-scenario: Don't leak temporary local variables structures
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3319>
+
+2022-11-03 14:05:59 +0100  Edward Hervey <edward@centricular.com>
+
+	* validate/gst/validate/gst-validate-utils.c:
+	* validate/plugins/ssim/gstvalidatessim.c:
+	  validate: plug some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3319>
+
+2022-10-15 11:38:02 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* validate/gst/validate/gst-validate-bin-monitor.c:
+	* validate/gst/validate/gst-validate-element-monitor.c:
+	* validate/gst/validate/gst-validate-monitor.c:
+	* validate/gst/validate/gst-validate-pad-monitor.c:
+	* validate/gst/validate/gst-validate-pipeline-monitor.c:
+	* validate/gst/validate/gst-validate-report.c:
+	* validate/gst/validate/gst-validate-reporter.c:
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Add/fix various annotations
+	  And fix monitor constructors to correctly check for valid arguments.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3194>
+
+2022-09-21 11:44:59 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate: Plug some leaks
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3059>
+
+2022-10-05 12:57:02 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	  validate:launcher: Cleanup test uuid when copying it
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3122>
+
+2022-10-04 19:17:15 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/baseclasses.py:
+	* validate/launcher/main.py:
+	  validate: launcher: Add a argument to avoid rereuning flaky tests
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3122>
+
+2022-10-04 19:16:44 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate: launcher: Keep variable framerate from input when possible
+	  But disable it if forcing a framerate for some reason
+	  Fixing our support for variable framerate in the encoding profile
+	  serialization format.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3122>
+
+2022-10-04 19:16:04 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/launcher/apps/gstvalidate.py:
+	  validate: launcher: Fix some pep8 issues
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3122>
+
+2022-10-04 19:14:49 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-internal.h:
+	* validate/gst/validate/gst-validate-scenario.c:
+	* validate/launcher/apps/gstvalidate.py:
+	* validate/launcher/baseclasses.py:
+	  validate: Handle testfiles that need an HTTP server
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3122>
+
+2022-09-27 16:35:31 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst-libs/gst/video/gstvalidatessim.c:
+	  validate:ssim: Show original/nok/diff images on error images
+	  This way the user can easily see how off the image is very easily
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3122>
+
+2022-09-27 12:51:33 -0300  Thibault Saunier <tsaunier@igalia.com>
+
+	* validate/gst/validate/gst-validate-scenario.c:
+	  validate:scenario: Fix setting iterating variable from arrays
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3122>
+
+2022-10-04 03:57:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3115>
+
 === release 1.21.1 ===
 
 2022-10-04 01:14:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-devtools.doap:

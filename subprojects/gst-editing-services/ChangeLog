@@ -1,7 +1,63 @@
+2022-10-24 14:40:55 -0500  Patrick Griffis <pgriffis@igalia.com>
+
+	* tests/check/meson.build:
+	  build: Fix building ges with tools disabled
+	  If you configure with `tools=disabled` then ges_launch is undefined.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3259>
+
+2022-10-25 09:39:07 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-clip.c:
+	* ges/ges-formatter.h:
+	* ges/ges-pipeline.c:
+	* ges/ges-project.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	  Fix various warnings from gobject-introspection
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3261>
+
+2022-10-17 19:45:30 -0500  Fabian Orccon <forccon@fluendo.com>
+
+	* ges/ges-transition-clip.c:
+	* tests/check/ges/transition.c:
+	  ges: transition: Notify vtype change on ges_extractable_set_asset call
+	  Fixes #1454
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3215>
+
+2022-10-15 19:36:47 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-asset.c:
+	* ges/ges-clip.c:
+	* ges/ges-container.c:
+	* ges/ges-layer.c:
+	* ges/ges-meta-container.c:
+	* ges/ges-pipeline.c:
+	* ges/ges-project.c:
+	* ges/ges-screenshot.c:
+	* ges/ges-text-overlay-clip.c:
+	* ges/ges-text-overlay.c:
+	* ges/ges-timeline-element.c:
+	* ges/ges-timeline.c:
+	* ges/ges-title-clip.c:
+	* ges/ges-title-source.c:
+	* ges/ges-track-element.c:
+	* ges/ges-track.c:
+	* ges/ges-utils.c:
+	  ges: Add/fix various annotations
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3194>
+
+2022-10-04 03:57:31 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3115>
+
 === release 1.21.1 ===
 
 2022-10-04 01:14:01 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:
