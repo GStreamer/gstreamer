@@ -899,6 +899,9 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) parent;
   DecodebinInput *input = g_object_get_data (G_OBJECT (pad), "decodebin.input");
+  GstStreamCollection *collection = NULL;
+  gulong probe_id = 0;
+  GstMessage *msg;
 
   g_return_if_fail (input);
 
@@ -906,65 +909,68 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
       ". Removing parsebin.", pad);
 
   INPUT_LOCK (dbin);
-  if (input->parsebin == NULL) {
+  if (input->parsebin == NULL ||
+      GST_OBJECT_PARENT (GST_OBJECT (input->parsebin)) != GST_OBJECT (dbin)) {
     INPUT_UNLOCK (dbin);
     return;
   }
 
-  if (GST_OBJECT_PARENT (GST_OBJECT (input->parsebin)) == GST_OBJECT (dbin)) {
-    GstStreamCollection *collection = NULL;
-    gulong probe_id = gst_pad_add_probe (input->parsebin_sink,
-        GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
-        (GstPadProbeCallback) query_duration_drop_probe, input, NULL);
-
-    /* Clear stream-collection corresponding to current INPUT and post new
-     * stream-collection message, if needed */
-    if (input->collection) {
-      gst_object_unref (input->collection);
-      input->collection = NULL;
-    }
-
-    SELECTION_LOCK (dbin);
-    collection = get_merged_collection (dbin);
-    if (collection && collection != dbin->collection) {
-      GstMessage *msg;
-      GST_DEBUG_OBJECT (dbin, "Update Stream Collection");
-
-      if (dbin->collection)
-        gst_object_unref (dbin->collection);
-      dbin->collection = collection;
-      dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
-
-      msg =
-          gst_message_new_stream_collection ((GstObject *) dbin,
-          dbin->collection);
-
-      SELECTION_UNLOCK (dbin);
-      gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
-      update_requested_selection (dbin);
-    } else {
-      if (collection)
-        gst_object_unref (collection);
-      SELECTION_UNLOCK (dbin);
-    }
-
-    gst_bin_remove (GST_BIN (dbin), input->parsebin);
-    gst_element_set_state (input->parsebin, GST_STATE_NULL);
-    g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
-    g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
-    g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
-    gst_pad_remove_probe (input->parsebin_sink, probe_id);
-    gst_object_unref (input->parsebin);
-    gst_object_unref (input->parsebin_sink);
-
-    input->parsebin = NULL;
-    input->parsebin_sink = NULL;
-
-    if (!input->is_main) {
-      dbin->other_inputs = g_list_remove (dbin->other_inputs, input);
-      free_input_async (dbin, input);
-    }
+  /* Clear stream-collection corresponding to current INPUT and post new
+   * stream-collection message, if needed */
+  if (input->collection) {
+    gst_object_unref (input->collection);
+    input->collection = NULL;
   }
+
+  SELECTION_LOCK (dbin);
+  collection = get_merged_collection (dbin);
+  if (!collection) {
+    SELECTION_UNLOCK (dbin);
+    goto beach;
+  }
+  if (collection == dbin->collection) {
+    SELECTION_UNLOCK (dbin);
+    gst_object_unref (collection);
+    goto beach;
+  }
+
+  GST_DEBUG_OBJECT (dbin, "Update Stream Collection");
+
+  if (dbin->collection)
+    gst_object_unref (dbin->collection);
+  dbin->collection = collection;
+  dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
+
+  msg =
+      gst_message_new_stream_collection ((GstObject *) dbin, dbin->collection);
+
+  /* Drop duration queries that the application might be doing while this message is posted */
+  probe_id = gst_pad_add_probe (input->parsebin_sink,
+      GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
+      (GstPadProbeCallback) query_duration_drop_probe, input, NULL);
+
+  SELECTION_UNLOCK (dbin);
+  gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
+  update_requested_selection (dbin);
+
+  gst_bin_remove (GST_BIN (dbin), input->parsebin);
+  gst_element_set_state (input->parsebin, GST_STATE_NULL);
+  g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
+  g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
+  g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
+  gst_pad_remove_probe (input->parsebin_sink, probe_id);
+  gst_object_unref (input->parsebin);
+  gst_object_unref (input->parsebin_sink);
+
+  input->parsebin = NULL;
+  input->parsebin_sink = NULL;
+
+  if (!input->is_main) {
+    dbin->other_inputs = g_list_remove (dbin->other_inputs, input);
+    free_input_async (dbin, input);
+  }
+
+beach:
   INPUT_UNLOCK (dbin);
   return;
 }
