@@ -80,7 +80,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, format = { "
-        "I422_10LE, I420_10LE, Y42B, I420, NV12 }"));
+        "Y444_12LE, I422_12LE, I420_12LE,"
+        "Y444_10LE, I422_10LE, I420_10LE, Y444, Y42B, I420, NV12 }"));
 
 #define gst_video_codec_test_sink_parent_class parent_class
 G_DEFINE_TYPE (GstVideoCodecTestSink, gst_video_codec_test_sink,
@@ -315,6 +316,11 @@ gst_video_codec_test_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
       self->process = gst_video_codec_test_sink_process_i42x;
       break;
     case GST_VIDEO_FORMAT_NV12:
