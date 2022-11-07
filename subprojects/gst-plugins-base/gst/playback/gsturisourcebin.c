@@ -216,7 +216,7 @@ enum
 #define DEFAULT_USE_BUFFERING       TRUE
 #define DEFAULT_RING_BUFFER_MAX_SIZE 0
 #define DEFAULT_LOW_WATERMARK       0.01
-#define DEFAULT_HIGH_WATERMARK      0.99
+#define DEFAULT_HIGH_WATERMARK      0.60
 
 #define ACTUAL_DEFAULT_BUFFER_SIZE  10 * 1024 * 1024    /* The value used for byte limits when buffer-size == -1 */
 #define ACTUAL_DEFAULT_BUFFER_DURATION  5 * GST_SECOND  /* The value used for time limits when buffer-duration == -1 */

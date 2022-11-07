@@ -11594,7 +11594,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "0.99",
+                        "default": "0.6",
                         "max": "1",
                         "min": "0",
                         "mutable": "null",
