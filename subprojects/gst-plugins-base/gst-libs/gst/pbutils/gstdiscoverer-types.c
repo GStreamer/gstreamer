@@ -510,7 +510,7 @@ gst_discoverer_info_get_streams (GstDiscovererInfo * info, GType streamtype)
  *
  * Finds all the #GstDiscovererAudioInfo contained in @info
  *
- * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
+ * Returns: (transfer full) (element-type GstPbutils.DiscovererAudioInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
  */
@@ -526,7 +526,7 @@ gst_discoverer_info_get_audio_streams (GstDiscovererInfo * info)
  *
  * Finds all the #GstDiscovererVideoInfo contained in @info
  *
- * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
+ * Returns: (transfer full) (element-type GstPbutils.DiscovererVideoInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
  */
@@ -542,7 +542,7 @@ gst_discoverer_info_get_video_streams (GstDiscovererInfo * info)
  *
  * Finds all the #GstDiscovererSubtitleInfo contained in @info
  *
- * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
+ * Returns: (transfer full) (element-type GstPbutils.DiscovererSubtitleInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
  */
@@ -559,7 +559,7 @@ gst_discoverer_info_get_subtitle_streams (GstDiscovererInfo * info)
  *
  * Finds all the #GstDiscovererContainerInfo contained in @info
  *
- * Returns: (transfer full) (element-type GstPbutils.DiscovererStreamInfo): A #GList of
+ * Returns: (transfer full) (element-type GstPbutils.DiscovererContainerInfo): A #GList of
  * matching #GstDiscovererStreamInfo. The caller should free it with
  * gst_discoverer_stream_info_list_free().
  */
