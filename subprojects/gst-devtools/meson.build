@@ -174,6 +174,8 @@ if not get_option('debug_viewer').disabled()
 endif
 subdir('docs')
 
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+
 plugin_names = []
 gst_plugins = []
 foreach plugin: plugins

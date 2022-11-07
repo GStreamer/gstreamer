@@ -496,6 +496,8 @@ if orc_subproject.found() and orc_update_targets.length() > 0
   alias_target('update-orc-dist', orc_update_targets)
 endif
 
+subdir('scripts')
+
 dotnet_format = find_program('dotnet-format', required: false)
 if dotnet_format.found()
     run_target('csharp_format_check',

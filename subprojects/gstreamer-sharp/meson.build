@@ -183,3 +183,5 @@ if bindinator.get_variable('found')
 else
     warning('Bindinator not usable as some required dependencies are not avalaible.')
 endif
+
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())

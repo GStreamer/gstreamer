@@ -236,6 +236,8 @@ endif
 
 configure_file(output: 'config.h', configuration: cdata)
 
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+
 gst_plugins = []
 foreach plugin: plugins
   pkgconfig.generate(plugin, install_dir: plugins_pkgconfig_install_dir)

@@ -144,3 +144,5 @@ run_target('release',
             meson.current_build_dir()],
   depends: [gstreamer_doc]
 )
+
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())

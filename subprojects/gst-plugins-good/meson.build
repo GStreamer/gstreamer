@@ -520,6 +520,8 @@ endif
 
 configure_file(output : 'config.h', configuration : cdata)
 
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+
 plugin_names = []
 gst_plugins = []
 foreach plugin: plugins

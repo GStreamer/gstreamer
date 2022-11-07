@@ -87,6 +87,8 @@ cdata.set('PYTHON_VERSION', '"@0@"'.format(python_dep.version()))
 configure_file(output : 'config.h', configuration : cdata)
 configinc = include_directories('.')
 
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+
 pkgconfig = import('pkgconfig')
 plugins_install_dir = join_paths(libdir, 'gstreamer-1.0')
 plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')

@@ -237,6 +237,8 @@ endif
 
 configure_file(output: 'config.h', configuration: cdata)
 
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+
 pkgconfig = import('pkgconfig')
 plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
 

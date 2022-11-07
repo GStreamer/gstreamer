@@ -550,6 +550,8 @@ endif
 # Use core_conf after all subdirs have set values
 configure_file(output : 'config.h', configuration : core_conf)
 
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+
 plugin_names = []
 gst_plugins = []
 foreach plugin: plugins
