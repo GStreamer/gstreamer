@@ -60,7 +60,7 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_NONE, GST_TYPE_DSHOWVIDEOSRC);
 
   gst_device_provider_register (plugin, "dshowdeviceprovider",
-      GST_RANK_MARGINAL, GST_TYPE_DSHOW_DEVICE_PROVIDER);
+      GST_RANK_NONE, GST_TYPE_DSHOW_DEVICE_PROVIDER);
 
   return TRUE;
 }
