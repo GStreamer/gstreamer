@@ -72,6 +72,10 @@ struct _GstSDPStream {
   guint         ttl;
   gboolean      multicast;
 
+  /* source-filter */
+  gchar        *src_list;
+  gchar        *src_incl_list;
+
   /* our udp sink back to the server */
   GstElement   *udpsink;
   GstPad       *rtcppad;
