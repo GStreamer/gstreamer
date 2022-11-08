@@ -705,7 +705,7 @@ gst_va_mpeg2_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  type_name = g_strdup ("GstVaMpeg2dec");
+  type_name = g_strdup ("GstVaMpeg2Dec");
   feature_name = g_strdup ("vampeg2dec");
 
   /* The first decoder to be registered should use a constant name,
