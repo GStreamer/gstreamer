@@ -240,7 +240,7 @@ gst_allocator_register (const gchar * name, GstAllocator * allocator)
 
 /**
  * gst_allocator_find:
- * @name: (allow-none): the name of the allocator
+ * @name: (nullable): the name of the allocator
  *
  * Find a previously registered allocator with @name. When @name is %NULL, the
  * default allocator will be returned.
@@ -290,9 +290,9 @@ gst_allocator_set_default (GstAllocator * allocator)
 
 /**
  * gst_allocator_alloc:
- * @allocator: (transfer none) (allow-none): a #GstAllocator to use
+ * @allocator: (transfer none) (nullable): a #GstAllocator to use
  * @size: size of the visible memory area
- * @params: (transfer none) (allow-none): optional parameters
+ * @params: (transfer none) (nullable): optional parameters
  *
  * Use @allocator to allocate a new memory block with memory that is at least
  * @size big.
@@ -643,8 +643,8 @@ _priv_gst_allocator_cleanup (void)
  * @maxsize: allocated size of @data
  * @offset: offset in @data
  * @size: size of valid data
- * @user_data: (allow-none): user_data
- * @notify: (allow-none) (scope async) (closure user_data): called with @user_data when the memory is freed
+ * @user_data: (nullable): user_data
+ * @notify: (nullable) (scope async) (closure user_data): called with @user_data when the memory is freed
  *
  * Allocate a new memory block that wraps the given @data.
  *
