@@ -67,8 +67,8 @@ static GParamSpec *properties[PROP_LAST];
 
 static GstStaticCaps template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "BGRA") ";"
-    GST_VIDEO_CAPS_MAKE ("BGRA"));
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "BGRA") ", pixel-aspect-ratio = 1/1;"
+    GST_VIDEO_CAPS_MAKE ("BGRA") ", pixel-aspect-ratio = 1/1");
 
 struct _GstD3D11ScreenCaptureSrc
 {
