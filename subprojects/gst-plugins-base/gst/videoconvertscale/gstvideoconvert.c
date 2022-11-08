@@ -56,7 +56,7 @@ gst_video_convert_class_init (GstVideoConvertClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Video colorspace converter",
       "Filter/Converter/Video/Colorspace",
-      "Resizes video and allow color conversion",
+      "Converts video from one colorspace to another",
       "Wim Taymans <wim.taymans@gmail.com>");
 
   convertscale_class->any_memory = TRUE;

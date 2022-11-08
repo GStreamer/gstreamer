@@ -13699,7 +13699,7 @@
         "elements": {
             "videoconvert": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
-                "description": "Resizes video and allow color conversion",
+                "description": "Converts video from one colorspace to another",
                 "hierarchy": [
                     "GstVideoConvert",
                     "GstVideoConvertScale",
@@ -13728,7 +13728,7 @@
             },
             "videoconvertscale": {
                 "author": "Wim Taymans <wim.taymans@gmail.com>",
-                "description": "Converts video from one colorspace to another",
+                "description": "Resizes video and converts from one colorspace to another",
                 "hierarchy": [
                     "GstVideoConvertScale",
                     "GstVideoFilter",

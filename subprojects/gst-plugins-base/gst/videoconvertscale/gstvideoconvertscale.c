@@ -378,7 +378,7 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "Video colorspace converter and scaler",
       "Filter/Converter/Video/Scaler/Colorspace",
-      "Converts video from one colorspace to another",
+      "Resizes video and converts from one colorspace to another",
       "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
