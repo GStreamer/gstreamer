@@ -233,7 +233,8 @@ gst_allocator_register (const gchar * name, GstAllocator * allocator)
   g_rw_lock_writer_lock (&lock);
   /* The ref will never be released */
   GST_OBJECT_FLAG_SET (allocator, GST_OBJECT_FLAG_MAY_BE_LEAKED);
-  g_hash_table_insert (allocators, (gpointer) name, (gpointer) allocator);
+  g_hash_table_insert (allocators, (gpointer) g_strdup (name),
+      (gpointer) allocator);
   g_rw_lock_writer_unlock (&lock);
 }
 
@@ -599,7 +600,7 @@ void
 _priv_gst_allocator_initialize (void)
 {
   g_rw_lock_init (&lock);
-  allocators = g_hash_table_new_full (g_str_hash, g_str_equal, NULL,
+  allocators = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
       gst_object_unref);
 
 #ifdef HAVE_GETPAGESIZE
