@@ -26,10 +26,10 @@
  * events at sources and process them at sinks. This elements supports tracing
  * the entire pipeline latency and per element latency. By default, only
  * pipeline latency is traced. The 'flags' parameter can be used to enabled
- * element tracing.
+ * element tracing and/or the latency reported by each element.
  *
  * ```
- * GST_TRACERS="latency(flags=pipeline+element)" GST_DEBUG=GST_TRACER:7 ./...
+ * GST_TRACERS="latency(flags=pipeline+element+reported)" GST_DEBUG=GST_TRACER:7 ./...
  * ```
  */
 /* TODO(ensonic): if there are two sources feeding into a mixer/muxer and later
