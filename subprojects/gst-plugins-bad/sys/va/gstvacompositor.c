@@ -1400,10 +1400,20 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
   vagg_class->create_output_buffer =
       GST_DEBUG_FUNCPTR (gst_va_compositor_create_output_buffer);
 
+  /**
+   * GstVaCompositor:device-path:
+   *
+   * It shows the DRM device path used for the VA operation, if any.
+   */
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
       "Device Path", "DRM device path", NULL,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * GstVaCompositor:scale-method:
+   *
+   * Sets the scale method algorithm to use when resizing.
+   */
   properties[PROP_SCALE_METHOD] = g_param_spec_enum ("scale-method",
       "Scale Method", "Scale method to use", GST_TYPE_VA_SCALE_METHOD,
       VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);

@@ -901,6 +901,11 @@ gst_va_base_enc_class_init (GstVaBaseEncClass * klass)
 
   klass->reset_state = GST_DEBUG_FUNCPTR (gst_va_base_enc_reset_state_default);
 
+  /**
+   * GstVaBaseEnc:device-path:
+   *
+   * It shows the DRM device path used for the VA operation, if any.
+   */
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
       "Device Path", "DRM device path", NULL,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);

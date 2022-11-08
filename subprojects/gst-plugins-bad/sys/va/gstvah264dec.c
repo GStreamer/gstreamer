@@ -936,6 +936,13 @@ gst_va_h264_dec_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
+  /**
+   * GstVaH264Dec:device-path:
+   *
+   * It shows the DRM device path used for the VA operation, if any.
+   *
+   * Since: 1.22
+   */
   gst_va_base_dec_class_init (GST_VA_BASE_DEC_CLASS (g_class), H264,
       cdata->render_device_path, cdata->sink_caps, cdata->src_caps,
       src_doc_caps, sink_doc_caps);

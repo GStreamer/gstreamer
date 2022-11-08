@@ -469,6 +469,11 @@ gst_va_jpeg_dec_class_init (gpointer g_class, gpointer class_data)
   jpegdecoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_va_jpeg_dec_output_picture);
 
+  /**
+   * GstVaJpegDec:device-path:
+   *
+   * It shows the DRM device path used for the VA operation, if any.
+   */
   gst_va_base_dec_class_init (GST_VA_BASE_DEC_CLASS (g_class), JPEG,
       cdata->render_device_path, cdata->sink_caps, cdata->src_caps,
       src_doc_caps, sink_doc_caps);
