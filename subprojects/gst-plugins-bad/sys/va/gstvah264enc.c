@@ -3475,7 +3475,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   g_free (cdata);
 
   /**
-   * GstVaEncoder:key-int-max:
+   * GstVaH264Enc:key-int-max:
    *
    * The maximal distance between two keyframes.
    */
@@ -3552,8 +3552,10 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   /**
    * GstVaH264Enc:qpi:
    *
-   * The quantizer value for I frame. In CQP mode, it specifies the QP of
-   * I frame, in other mode, it specifies the init QP of all frames.
+   * The quantizer value for I frame.
+   *
+   * In CQP mode, it specifies the QP of I frame, in other mode, it specifies
+   * the init QP of all frames.
    */
   properties[PROP_QP_I] = g_param_spec_uint ("qpi", "I Frame QP",
       "The quantizer value for I frame. In CQP mode, it specifies the QP of I "
@@ -3563,22 +3565,22 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   /**
    * GstVaH264Enc:qpp:
    *
-   * The quantizer value for P frame. This is available only in CQP mode.
+   * The quantizer value for P frame. Available only in CQP mode.
    */
   properties[PROP_QP_P] = g_param_spec_uint ("qpp",
       "The quantizer value for P frame",
-      "The quantizer value for P frame. This is available only in CQP mode",
+      "The quantizer value for P frame. Available only in CQP mode",
       0, 51, 26,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:qpb:
    *
-   * The quantizer value for B frame. This is available only in CQP mode.
+   * The quantizer value for B frame. Available only in CQP mode.
    */
   properties[PROP_QP_B] = g_param_spec_uint ("qpb",
       "The quantizer value for B frame",
-      "The quantizer value for B frame. This is available only in CQP mode",
+      "The quantizer value for B frame. Available only in CQP mode",
       0, 51, 26,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
@@ -3606,8 +3608,8 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   /**
    * GstVaH264Enc:trellis:
    *
-   * It enable the trellis quantization method.
-   * Trellis is an improved quantization algorithm.
+   * It enable the trellis quantization method. Trellis is an improved
+   * quantization algorithm.
    */
   properties[PROP_TRELLIS] = g_param_spec_boolean ("trellis", "Enable trellis",
       "Enable the trellis quantization method", FALSE,
@@ -3625,8 +3627,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   /**
    * GstVaH264Enc:cc-insert:
    *
-   * Closed Caption Insert mode.
-   * Only CEA-708 RAW format is supported for now.
+   * Closed Caption Insert mode. Only CEA-708 RAW format is supported for now.
    */
   properties[PROP_CC] = g_param_spec_boolean ("cc-insert",
       "Insert Closed Captions",
@@ -3636,26 +3637,25 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   /**
    * GstVaH264Enc:mbbrc:
    *
-   * Macroblock level bitrate control.
-   * This is not compatible with Constant QP rate control.
+   * Macroblock level bitrate control. Not available in CQP mode.
    */
   properties[PROP_MBBRC] = g_param_spec_enum ("mbbrc",
       "Macroblock level Bitrate Control",
-      "Macroblock level Bitrate Control. It is not compatible with CQP",
+      "Macroblock level Bitrate Control. Not available in CQP mode",
       GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
    * GstVaH264Enc:bitrate:
    *
-   * The desired target bitrate, expressed in kbps.
-   * This is not available in CQP mode.
+   * The desired target bitrate, expressed in kbps. Not available in CQP mode.
    *
-   * CBR: This applies equally to the minimum, maximum and target bitrate.
-   * VBR: This applies to the target bitrate. The driver will use the
-   * "target-percentage" together to calculate the minimum and maximum bitrate.
-   * VCM: This applies to the target bitrate. The minimum and maximum bitrate
-   * are not needed.
+   * * **CBR**: This applies equally to the minimum, maximum and target bitrate.
+   * * **VBR**: This applies to the target bitrate. The driver will use the
+   *   "target-percentage" together to calculate the minimum and maximum
+   *   bitrate.
+   * * **VCM**: This applies to the target bitrate. The minimum and maximum
+   *   bitrate are not needed.
    */
   properties[PROP_BITRATE] = g_param_spec_uint ("bitrate", "Bitrate (kbps)",
       "The desired bitrate expressed in kbps (0: auto-calculate)",
@@ -3665,10 +3665,11 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   /**
    * GstVaH264Enc:target-percentage:
    *
-   * The target percentage of the max bitrate, and expressed in uint,
-   * equal to "target percentage"*100.
-   * "target percentage" = "target bitrate" * 100 / "max bitrate"
-   * This is available only when rate-control is VBR.
+   * The target percentage of the max bitrate, and expressed in uint, equal to
+   * "target percentage" * 100. Available only when rate-control is VBR.
+   *
+   * "target percentage" = "target bitrate" * 100 /  "max bitrate"
+   *
    * The driver uses it to calculate the minimum and maximum bitrate.
    */
   properties[PROP_TARGET_PERCENTAGE] = g_param_spec_uint ("target-percentage",
@@ -3680,9 +3681,11 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
   /**
    * GstVaH264Enc:target-usage:
    *
-   * The target usage of the encoder. It controls and balances the encoding
-   * speed and the encoding quality. The lower value has better quality but
-   * slower speed, the higher value has faster speed but lower quality.
+   * The target usage of the encoder.
+   *
+   * It controls and balances the encoding speed and the encoding quality. The
+   * lower value has better quality but slower speed, the higher value has
+   * faster speed but lower quality.
    */
   properties[PROP_TARGET_USAGE] = g_param_spec_uint ("target-usage",
       "target usage",
