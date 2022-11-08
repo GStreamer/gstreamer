@@ -676,6 +676,21 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     dmabuf->out_caps = out_caps;
     if (!gst_video_info_from_caps (out_info, out_caps))
       return FALSE;
+
+    /*
+     * When we zero-copy tiles, we need to propagate the strides, which contains
+     * the tile dimension. This is because the shader needs to know the padded
+     * size in order to correctly sample into these special buffer.
+     */
+    if (meta && GST_VIDEO_FORMAT_INFO_IS_TILED (out_info->finfo)) {
+      out_info->width = meta->width;
+      out_info->height = meta->height;
+
+      for (i = 0; i < meta->n_planes; i++) {
+        out_info->offset[i] = meta->offset[i];
+        out_info->stride[i] = meta->stride[i];
+      }
+    }
   }
 
   if (dmabuf->params)

@@ -3055,6 +3055,18 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
       gst_gl_color_convert_reset_shader (convert);
   }
 
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (convert->in_info.finfo)) {
+    GstVideoMeta *vmeta = gst_buffer_get_video_meta (convert->inbuf);
+    gsize stride;
+
+    stride = GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0);
+
+    if (vmeta && vmeta->stride[0] != stride) {
+      GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0) = vmeta->stride[0];
+      gst_gl_color_convert_reset_shader (convert);
+    }
+  }
+
   if (!_init_convert (convert)) {
     convert->priv->result = FALSE;
     return;
