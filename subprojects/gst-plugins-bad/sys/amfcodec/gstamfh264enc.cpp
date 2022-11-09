@@ -347,7 +347,7 @@ static gboolean gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component);
 static gboolean gst_amf_h264_enc_set_output_state (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component);
-static gboolean gst_amf_h264_enc_set_surfrace_prop (GstAmfEncoder * encoder,
+static gboolean gst_amf_h264_enc_set_surface_prop (GstAmfEncoder * encoder,
     GstVideoCodecFrame * frame, gpointer surface);
 static GstBuffer *gst_amf_h264_enc_create_output_buffer (GstAmfEncoder *
     encoder, gpointer data, gboolean * sync_point);
@@ -455,7 +455,7 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
   amf_class->set_output_state =
       GST_DEBUG_FUNCPTR (gst_amf_h264_enc_set_output_state);
   amf_class->set_surface_prop =
-      GST_DEBUG_FUNCPTR (gst_amf_h264_enc_set_surfrace_prop);
+      GST_DEBUG_FUNCPTR (gst_amf_h264_enc_set_surface_prop);
   amf_class->create_output_buffer =
       GST_DEBUG_FUNCPTR (gst_amf_h264_enc_create_output_buffer);
   amf_class->check_reconfigure =
@@ -1210,7 +1210,7 @@ gst_amf_h264_enc_set_output_state (GstAmfEncoder * encoder,
 }
 
 static gboolean
-gst_amf_h264_enc_set_surfrace_prop (GstAmfEncoder * encoder,
+gst_amf_h264_enc_set_surface_prop (GstAmfEncoder * encoder,
     GstVideoCodecFrame * frame, gpointer surface)
 {
   GstAmfH264Enc *self = GST_AMF_H264_ENC (encoder);
