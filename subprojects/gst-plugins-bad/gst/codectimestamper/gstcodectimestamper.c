@@ -62,6 +62,7 @@ struct _GstCodecTimestamperPrivate
   GstClockTime last_dts;
   GstClockTime dts_offset;
   GstClockTime time_adjustment;
+  GstClockTime last_pts;
 
   GstClockTime latency;
 };
@@ -299,6 +300,7 @@ gst_codec_timestamper_flush (GstCodecTimestamper * self)
 
   priv->time_adjustment = GST_CLOCK_TIME_NONE;
   priv->last_dts = GST_CLOCK_TIME_NONE;
+  priv->last_pts = GST_CLOCK_TIME_NONE;
   g_rec_mutex_lock (&priv->lock);
   priv->latency = GST_CLOCK_TIME_NONE;
   g_rec_mutex_unlock (&priv->lock);
@@ -482,6 +484,7 @@ gst_codec_timestamper_drain (GstCodecTimestamper * self)
 
   priv->time_adjustment = GST_CLOCK_TIME_NONE;
   priv->last_dts = GST_CLOCK_TIME_NONE;
+  priv->last_pts = GST_CLOCK_TIME_NONE;
 }
 
 static gint
@@ -538,6 +541,14 @@ gst_codec_timestamper_chain (GstPad * pad, GstObject * parent,
 
     gst_buffer_unref (buffer);
     return ret;
+  }
+
+  /* workaround h264/5parse producing pts=NONE buffers when provided with
+   * the same timestamps on sequential buffers */
+  if (GST_CLOCK_TIME_IS_VALID (pts)) {
+    priv->last_pts = pts;
+  } else if (GST_CLOCK_TIME_IS_VALID (priv->last_pts)) {
+    pts = priv->last_pts;
   }
 
   frame.pts = pts;
@@ -603,6 +614,7 @@ gst_codec_timestamper_reset (GstCodecTimestamper * self)
   priv->latency = GST_CLOCK_TIME_NONE;
   priv->window_size = 0;
   priv->last_dts = GST_CLOCK_TIME_NONE;
+  priv->last_pts = GST_CLOCK_TIME_NONE;
 
   if (priv->current_frame_events) {
     g_list_free_full (priv->current_frame_events,
