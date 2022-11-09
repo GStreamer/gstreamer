@@ -168,7 +168,7 @@ public:
     if (callback_)
       callback_ (SampleTime, pBuffer, BufferLen, user_data_);
 
-    return E_NOTIMPL;
+    return S_OK;
   }
 
 private:
