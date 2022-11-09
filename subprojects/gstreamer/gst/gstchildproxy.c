@@ -57,7 +57,7 @@ static guint signals[LAST_SIGNAL] = { 0 };
 
 /**
  * gst_child_proxy_get_child_by_name_recurse:
- * @parent: the parent object to get the child from
+ * @child_proxy: the parent object to get the child from
  * @name: the full-path child's name
  *
  * Looks up a child element by the given full-path name.
