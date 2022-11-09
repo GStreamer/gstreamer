@@ -845,6 +845,7 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if (!gst_va_filter_process (btrans->filter, &src, &dst)) {
     gst_buffer_set_flags (outbuf, GST_BUFFER_FLAG_CORRUPTED);
+    res = GST_BASE_TRANSFORM_FLOW_DROPPED;
   }
 
   gst_buffer_unref (buf);
