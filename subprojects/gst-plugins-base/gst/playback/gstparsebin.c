@@ -3634,8 +3634,10 @@ retry:
     GstParsePad *parsepad = (GstParsePad *) tmp->data;
     gchar *padname;
 
-    //if (!parsepad->blocked)
-    //continue;
+    if (parsepad->exposed) {
+      GST_DEBUG_OBJECT (parsepad, "Pad is already exposed, not doing anything");
+      continue;
+    }
 
     /* 1. rewrite name */
     padname = g_strdup_printf ("src_%u", parsebin->nbpads);
@@ -3649,20 +3651,12 @@ retry:
         parsepad);
 
     /* 2. activate and add */
-    if (!parsepad->exposed) {
-      parsepad->exposed = TRUE;
-      if (!gst_element_add_pad (GST_ELEMENT (parsebin),
-              GST_PAD_CAST (parsepad))) {
-        /* not really fatal, we can try to add the other pads */
-        g_warning ("error adding pad to ParseBin");
-        parsepad->exposed = FALSE;
-        continue;
-      }
-#if 0
-      /* HACK: Send an empty gap event to push sticky events */
-      gst_pad_push_event (GST_PAD (parsepad),
-          gst_event_new_gap (0, GST_CLOCK_TIME_NONE));
-#endif
+    parsepad->exposed = TRUE;
+    if (!gst_element_add_pad (GST_ELEMENT (parsebin), GST_PAD_CAST (parsepad))) {
+      /* not really fatal, we can try to add the other pads */
+      g_warning ("error adding pad to ParseBin");
+      parsepad->exposed = FALSE;
+      continue;
     }
 
     GST_INFO_OBJECT (parsepad, "added new parsed pad");
