@@ -1208,11 +1208,22 @@ gst_vtenc_create_session (GstVTEnc * self)
   const GstVTEncoderDetails *codec_details =
       GST_VTENC_CLASS_GET_CODEC_DETAILS (G_OBJECT_GET_CLASS (self));
 
+  /* Apple's M1 hardware encoding fails when provided with an interlaced ProRes source.
+   * It's most likely a bug in VideoToolbox, as no such limitation has been officially mentioned anywhere.
+   * For now let's disable HW encoding entirely when such case occurs. */
+  gboolean enable_hw = !(GST_VIDEO_INFO_IS_INTERLACED (&self->video_info)
+      && codec_details->format_id == GST_kCMVideoCodecType_Some_AppleProRes);
+
+  if (!enable_hw)
+    GST_WARNING_OBJECT (self,
+        "Interlaced content detected, disabling HW-accelerated encoding due to https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1429");
+
   encoder_spec =
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
   gst_vtutil_dict_set_boolean (encoder_spec,
-      kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder, true);
+      kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder,
+      enable_hw);
   if (codec_details->require_hardware)
     gst_vtutil_dict_set_boolean (encoder_spec,
         kVTVideoEncoderSpecification_RequireHardwareAcceleratedVideoEncoder,
