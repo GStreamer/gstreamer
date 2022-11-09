@@ -847,7 +847,8 @@ new_source_handler (GstURIDecodeBin3 * uridecodebin, gboolean is_main)
       "use-buffering", uridecodebin->use_buffering,
       "buffer-duration", uridecodebin->buffer_duration,
       "buffer-size", uridecodebin->buffer_size,
-      "ring-buffer-max-size", uridecodebin->ring_buffer_max_size, NULL);
+      "ring-buffer-max-size", uridecodebin->ring_buffer_max_size,
+      "parse-streams", TRUE, NULL);
 
   handler->pad_added_id =
       g_signal_connect (handler->urisourcebin, "pad-added",
