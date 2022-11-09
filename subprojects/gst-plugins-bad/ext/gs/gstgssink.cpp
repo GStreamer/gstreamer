@@ -112,6 +112,7 @@ enum {
   PROP_START_DATE,
   PROP_SERVICE_ACCOUNT_CREDENTIALS,
   PROP_METADATA,
+  PROP_CONTENT_TYPE,
 };
 
 class GSWriteStream;
@@ -131,6 +132,7 @@ struct _GstGsSink {
   gboolean post_messages;
   GstGsSinkNext next_file;
   const gchar* content_type;
+  gchar* content_type_prop;
   size_t nb_percent_format;
   gboolean percent_s_is_first;
   GstStructure* metadata;
@@ -333,6 +335,23 @@ static void gst_gs_sink_class_init(GstGsSinkClass* klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         GST_PARAM_MUTABLE_READY)));
 
+  /**
+   * GstGsSink:content-type:
+   *
+   * The Content-Type of the object.
+   * If not set we use the name of the input caps.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_CONTENT_TYPE,
+      g_param_spec_string(
+          "content-type", "Content-Type",
+          "The Content-Type of the object",
+          NULL,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        GST_PARAM_MUTABLE_READY)));
+
   gobject_class->finalize = gst_gs_sink_finalize;
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR(gst_gs_sink_start);
@@ -365,6 +384,7 @@ static void gst_gs_sink_init(GstGsSink* sink) {
   sink->start_date = NULL;
   sink->next_file = DEFAULT_NEXT_FILE;
   sink->content_type = NULL;
+  sink->content_type_prop = NULL;
   sink->nb_percent_format = 0;
   sink->percent_s_is_first = FALSE;
 
@@ -391,6 +411,7 @@ static void gst_gs_sink_finalize(GObject* object) {
     sink->start_date = NULL;
   }
   sink->content_type = NULL;
+  g_clear_pointer(&sink->content_type_prop, g_free);
   g_clear_pointer(&sink->metadata, gst_structure_free);
 
   G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -489,6 +510,10 @@ static void gst_gs_sink_set_property(GObject* object,
       g_clear_pointer(&sink->metadata, gst_structure_free);
       sink->metadata = (GstStructure*)g_value_dup_boxed(value);
       break;
+    case PROP_CONTENT_TYPE:
+      g_clear_pointer(&sink->content_type_prop, g_free);
+      sink->content_type_prop = g_value_dup_string(value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
       break;
@@ -528,6 +553,9 @@ static void gst_gs_sink_get_property(GObject* object,
       break;
     case PROP_METADATA:
       g_value_set_boxed(value, sink->metadata);
+      break;
+    case PROP_CONTENT_TYPE:
+      g_value_set_string(value, sink->content_type_prop);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -691,12 +719,18 @@ static GstFlowReturn gst_gs_sink_write_buffer(GstGsSink* sink,
   GstMapInfo map = {0};
   gchar* object_name = NULL;
   gchar* buffer_date = NULL;
+  const gchar* content_type;
 
   if (!gst_buffer_map(buffer, &map, GST_MAP_READ))
     return GST_FLOW_ERROR;
 
+  if (sink->content_type_prop)
+    content_type = sink->content_type_prop;
+  else
+    content_type = sink->content_type;
+
   gcs::ObjectMetadata metadata =
-      gcs::ObjectMetadata().set_content_type(sink->content_type);
+      gcs::ObjectMetadata().set_content_type(content_type);
 
   if (sink->metadata) {
     struct AddMetadataIter it = {sink, &metadata};
@@ -861,7 +895,9 @@ static gboolean gst_gs_sink_set_caps(GstBaseSink* bsink, GstCaps* caps) {
 
   sink->content_type = gst_structure_get_name(s);
 
-  GST_INFO_OBJECT(sink, "Content type: %s", sink->content_type);
+  /* TODO: we could automatically convert some caps such as 'video/quicktime,variant=iso' to 'video/mp4' */
+
+  GST_INFO_OBJECT(sink, "Content-Type: caps: %s property: %s", sink->content_type, sink->content_type_prop);
 
   return TRUE;
 }
