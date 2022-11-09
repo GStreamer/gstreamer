@@ -5746,7 +5746,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
           "Cannot intersect dtls setup attributes for media %u", media_idx);
       return;
     }
-
+#if 0
     if (prev_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE
         && new_dir != GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE
         && prev_dir != new_dir) {
@@ -5756,7 +5756,7 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
           media_idx);
       return;
     }
-
+#endif
     if (!bundled || bundle_idx == media_idx) {
       new_rtcp_rsize = _media_has_attribute_key (local_media, "rtcp-rsize")
           && _media_has_attribute_key (remote_media, "rtcp-rsize");
