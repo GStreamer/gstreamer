@@ -122,9 +122,6 @@ struct GstD3D11WinRTCaptureInner
 {
   ~GstD3D11WinRTCaptureInner()
   {
-    if (item)
-      item->remove_Closed (closed_token);
-
     CLOSE_COM (session);
     CLOSE_COM (pool);
     CLOSE_COM (item);
@@ -144,7 +141,6 @@ struct GstD3D11WinRTCaptureInner
   ComPtr < IGraphicsCaptureItem > item;
   ComPtr < IDirect3D11CaptureFramePool > pool;
   ComPtr < IGraphicsCaptureSession > session;
-  EventRegistrationToken closed_token;
 
   bool closed = false;
 };
@@ -439,17 +435,6 @@ gst_d3d11_winrt_configure (GstD3D11WinRTCapture * self)
   if (!gst_d3d11_result (hr, device)) {
     GST_WARNING_OBJECT (self, "Could not create item");
     goto error;
-  }
-
-  {
-    /* FIXME: This callback does not work for some reasons */
-    auto closed_handler = Callback < ITypedEventHandler < GraphicsCaptureItem *,
-        IInspectable * >>(inner, &GstD3D11WinRTCaptureInner::OnClosed);
-    hr = inner->item->add_Closed (closed_handler.Get (), &inner->closed_token);
-    if (!gst_d3d11_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Could not install closed callback");
-      goto error;
-    }
   }
 
   hr = device_handle->QueryInterface (IID_PPV_ARGS (&dxgi_device));
