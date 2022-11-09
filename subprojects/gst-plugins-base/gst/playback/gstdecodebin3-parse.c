@@ -49,7 +49,7 @@ _custom_eos_quark_get (void)
   return g_quark;
 }
 
-/* Streams that come from parsebin */
+/* Streams that come from parsebin or identity */
 /* FIXME : All this is hardcoded. Switch to tree of chains */
 struct _DecodebinInputStream
 {
@@ -59,7 +59,7 @@ struct _DecodebinInputStream
 
   DecodebinInput *input;
 
-  GstPad *srcpad;               /* From parsebin */
+  GstPad *srcpad;               /* From parsebin or identity */
 
   /* id of the pad event probe */
   gulong output_event_probe_id;
@@ -540,23 +540,31 @@ parsebin_pad_added_cb (GstElement * demux, GstPad * pad, DecodebinInput * input)
   SELECTION_UNLOCK (dbin);
 }
 
+static DecodebinInputStream *
+find_input_stream_for_pad (GstDecodebin3 * dbin, GstPad * pad)
+{
+  GList *tmp;
+
+  for (tmp = dbin->input_streams; tmp; tmp = tmp->next) {
+    DecodebinInputStream *cand = (DecodebinInputStream *) tmp->data;
+    if (cand->srcpad == pad)
+      return cand;
+  }
+  return NULL;
+}
+
 static void
 parsebin_pad_removed_cb (GstElement * demux, GstPad * pad, DecodebinInput * inp)
 {
   GstDecodebin3 *dbin = inp->dbin;
   DecodebinInputStream *input = NULL;
   MultiQueueSlot *slot;
-  GList *tmp;
+
+  if (!GST_PAD_IS_SRC (pad))
+    return;
 
   GST_DEBUG_OBJECT (pad, "removed");
-
-  for (tmp = dbin->input_streams; tmp; tmp = tmp->next) {
-    DecodebinInputStream *cand = (DecodebinInputStream *) tmp->data;
-    if (cand->srcpad == pad) {
-      input = cand;
-      break;
-    }
-  }
+  input = find_input_stream_for_pad (dbin, pad);
   g_assert (input);
 
   /* If there are no pending pads, this means we will definitely not need this

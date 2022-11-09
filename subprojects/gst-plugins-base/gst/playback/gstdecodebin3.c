@@ -67,7 +67,11 @@
 /*
  * Global design
  *
- * 1) From sink pad to elementary streams (GstParseBin)
+ * 1) From sink pad to elementary streams (GstParseBin or identity)
+ *
+ * Note : If the incoming streams are push-based-only and are compatible with
+ * either the output caps or a potential decoder, the usage of parsebin is
+ * replaced by a simple passthrough identity element.
  *
  * The input sink pads are fed to GstParseBin. GstParseBin will feed them
  * through typefind. When the caps are detected (or changed) we recursively
@@ -293,7 +297,9 @@ struct _DecodebinInput
 
   guint group_id;
 
+  /* Either parsebin or identity is used */
   GstElement *parsebin;
+  GstElement *identity;
 
   gulong pad_added_sigid;
   gulong pad_removed_sigid;
@@ -860,16 +866,30 @@ static GstPadLinkReturn
 gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) parent;
+  GstQuery *query;
+  gboolean pull_mode = FALSE;
   GstPadLinkReturn res = GST_PAD_LINK_OK;
   DecodebinInput *input = g_object_get_data (G_OBJECT (pad), "decodebin.input");
 
   g_return_val_if_fail (input, GST_PAD_LINK_REFUSED);
 
-  GST_LOG_OBJECT (parent, "Got link on input pad %" GST_PTR_FORMAT
-      ". Creating parsebin if needed", pad);
+  GST_LOG_OBJECT (parent, "Got link on input pad %" GST_PTR_FORMAT, pad);
 
+  query = gst_query_new_scheduling ();
+  if (gst_pad_query (peer, query)
+      && gst_query_has_scheduling_mode_with_flags (query, GST_PAD_MODE_PULL,
+          GST_SCHEDULING_FLAG_SEEKABLE))
+    pull_mode = TRUE;
+  gst_query_unref (query);
+
+  GST_DEBUG_OBJECT (dbin, "Upstream can do pull-based : %d", pull_mode);
+
+  /* If upstream *can* do pull-based, we always use a parsebin. If not, we will
+   * delay that decision to a later stage (caps/stream/collection event
+   * processing) to figure out if one is really needed or whether an identity
+   * element will be enough */
   INPUT_LOCK (dbin);
-  if (!ensure_input_parsebin (dbin, input))
+  if (pull_mode && !ensure_input_parsebin (dbin, input))
     res = GST_PAD_LINK_REFUSED;
   INPUT_UNLOCK (dbin);
 
@@ -909,11 +929,6 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
       ". Removing parsebin.", pad);
 
   INPUT_LOCK (dbin);
-  if (input->parsebin == NULL ||
-      GST_OBJECT_PARENT (GST_OBJECT (input->parsebin)) != GST_OBJECT (dbin)) {
-    INPUT_UNLOCK (dbin);
-    return;
-  }
 
   /* Clear stream-collection corresponding to current INPUT and post new
    * stream-collection message, if needed */
@@ -944,26 +959,40 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
   msg =
       gst_message_new_stream_collection ((GstObject *) dbin, dbin->collection);
 
-  /* Drop duration queries that the application might be doing while this message is posted */
-  probe_id = gst_pad_add_probe (input->parsebin_sink,
-      GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
-      (GstPadProbeCallback) query_duration_drop_probe, input, NULL);
+  if (input->parsebin)
+    /* Drop duration queries that the application might be doing while this message is posted */
+    probe_id = gst_pad_add_probe (input->parsebin_sink,
+        GST_PAD_PROBE_TYPE_QUERY_UPSTREAM,
+        (GstPadProbeCallback) query_duration_drop_probe, input, NULL);
 
   SELECTION_UNLOCK (dbin);
   gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
   update_requested_selection (dbin);
 
-  gst_bin_remove (GST_BIN (dbin), input->parsebin);
-  gst_element_set_state (input->parsebin, GST_STATE_NULL);
-  g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
-  g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
-  g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
-  gst_pad_remove_probe (input->parsebin_sink, probe_id);
-  gst_object_unref (input->parsebin);
-  gst_object_unref (input->parsebin_sink);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (input->ghost_sink), NULL);
+  if (input->parsebin) {
+    gst_bin_remove (GST_BIN (dbin), input->parsebin);
+    gst_element_set_state (input->parsebin, GST_STATE_NULL);
+    g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
+    g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
+    g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
+    gst_pad_remove_probe (input->parsebin_sink, probe_id);
+    gst_object_unref (input->parsebin);
+    gst_object_unref (input->parsebin_sink);
 
-  input->parsebin = NULL;
-  input->parsebin_sink = NULL;
+    input->parsebin = NULL;
+    input->parsebin_sink = NULL;
+  }
+  if (input->identity) {
+    GstPad *idpad = gst_element_get_static_pad (input->identity, "src");
+    DecodebinInputStream *stream = find_input_stream_for_pad (dbin, idpad);
+    gst_object_unref (idpad);
+    remove_input_stream (dbin, stream);
+    gst_element_set_state (input->identity, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (dbin), input->identity);
+    gst_object_unref (input->identity);
+    input->identity = NULL;
+  }
 
   if (!input->is_main) {
     dbin->other_inputs = g_list_remove (dbin->other_inputs, input);
@@ -989,6 +1018,14 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
     gst_object_unref (input->parsebin);
     gst_object_unref (input->parsebin_sink);
+  }
+  if (input->identity) {
+    GstPad *idpad = gst_element_get_static_pad (input->identity, "src");
+    DecodebinInputStream *stream = find_input_stream_for_pad (dbin, idpad);
+    gst_object_unref (idpad);
+    remove_input_stream (dbin, stream);
+    gst_element_set_state (input->identity, GST_STATE_NULL);
+    gst_object_unref (input->identity);
   }
   if (input->collection)
     gst_object_unref (input->collection);
@@ -1022,6 +1059,80 @@ sink_query_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstQuery * query)
     return TRUE;
   }
   return gst_pad_query_default (sinkpad, GST_OBJECT (dbin), query);
+}
+
+static gboolean
+is_parsebin_required_for_input (GstDecodebin3 * dbin, DecodebinInput * input,
+    GstCaps * newcaps, GstPad * sinkpad)
+{
+  gboolean parsebin_needed = TRUE;
+  GstStream *stream;
+
+  stream = gst_pad_get_stream (sinkpad);
+
+  if (stream == NULL) {
+    /* If upstream didn't provide a `GstStream` we will need to create a
+     * parsebin to handle that stream */
+    GST_DEBUG_OBJECT (sinkpad,
+        "Need to create parsebin since upstream doesn't provide GstStream");
+  } else if (gst_caps_can_intersect (newcaps, dbin->caps)) {
+    /* If the incoming caps match decodebin3 output, no processing is needed */
+    GST_FIXME_OBJECT (sinkpad, "parsebin not needed (matches output caps) !");
+    parsebin_needed = FALSE;
+  } else {
+    GList *decoder_list;
+    /* If the incoming caps are compatible with a decoder, we don't need to
+     * process it before */
+    g_mutex_lock (&dbin->factories_lock);
+    gst_decode_bin_update_factories_list (dbin);
+    decoder_list =
+        gst_element_factory_list_filter (dbin->decoder_factories, newcaps,
+        GST_PAD_SINK, TRUE);
+    g_mutex_unlock (&dbin->factories_lock);
+    if (decoder_list) {
+      GST_FIXME_OBJECT (sinkpad, "parsebin not needed (available decoders) !");
+      gst_plugin_feature_list_free (decoder_list);
+      parsebin_needed = FALSE;
+    }
+  }
+  if (stream)
+    gst_object_unref (stream);
+
+  return parsebin_needed;
+}
+
+static void
+setup_identify_for_input (GstDecodebin3 * dbin, DecodebinInput * input,
+    GstPad * sinkpad)
+{
+  GstPad *idsrc, *idsink;
+  DecodebinInputStream *inputstream;
+
+  GST_DEBUG_OBJECT (sinkpad, "Adding identity for new input stream");
+
+  input->identity = gst_element_factory_make ("identity", NULL);
+  /* We drop allocation queries due to our usage of multiqueue just
+   * afterwards. It is just too dangerous.
+   *
+   * If application users want to have optimal raw source <=> sink allocations
+   * they should not use decodebin3
+   */
+  g_object_set (input->identity, "drop-allocation", TRUE, NULL);
+  input->identity = gst_object_ref (input->identity);
+  idsink = gst_element_get_static_pad (input->identity, "sink");
+  idsrc = gst_element_get_static_pad (input->identity, "src");
+  gst_bin_add (GST_BIN (dbin), input->identity);
+
+  SELECTION_LOCK (dbin);
+  inputstream = create_input_stream (dbin, idsrc, input);
+  /* Forward any existing GstStream directly on the input stream */
+  inputstream->active_stream = gst_pad_get_stream (sinkpad);
+  SELECTION_UNLOCK (dbin);
+
+  gst_object_unref (idsrc);
+  gst_object_unref (idsink);
+  gst_ghost_pad_set_target (GST_GHOST_PAD (input->ghost_sink), idsink);
+  gst_element_sync_state_with_parent (input->identity);
 }
 
 static gboolean
@@ -1059,6 +1170,7 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
     case GST_EVENT_STREAM_COLLECTION:
     {
       GstStreamCollection *collection = NULL;
+
       gst_event_parse_stream_collection (event, &collection);
       if (collection) {
         INPUT_LOCK (dbin);
@@ -1078,30 +1190,58 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
         } else
           SELECTION_UNLOCK (dbin);
       }
+
+      /* If we are waiting to create an identity passthrough, do it now */
+      if (!input->parsebin && !input->identity)
+        setup_identify_for_input (dbin, input, sinkpad);
       break;
     }
     case GST_EVENT_CAPS:
     {
+      GstCaps *newcaps = NULL;
+
+      gst_event_parse_caps (event, &newcaps);
+      if (!newcaps)
+        break;
+      GST_DEBUG_OBJECT (sinkpad, "new caps %" GST_PTR_FORMAT, newcaps);
+
+      /* No parsebin or identity present, check if we can avoid creating one */
+      if (!input->parsebin && !input->identity) {
+        if (is_parsebin_required_for_input (dbin, input, newcaps, sinkpad)) {
+          GST_DEBUG_OBJECT (sinkpad, "parsebin is required for input");
+          ensure_input_parsebin (dbin, input);
+          break;
+        }
+        GST_DEBUG_OBJECT (sinkpad,
+            "parsebin not required. Will create identity passthrough element once we get the collection");
+        break;
+      }
+
+      if (input->identity) {
+        if (is_parsebin_required_for_input (dbin, input, newcaps, sinkpad)) {
+          GST_ERROR_OBJECT (sinkpad,
+              "Switching from passthrough to parsebin on inputs is not supported !");
+          gst_event_unref (event);
+          return FALSE;
+        }
+        /* Nothing else to do here */
+        break;
+      }
+
+      /* Check if the parsebin present can handle the new caps */
+      g_assert (input->parsebin);
       GST_DEBUG_OBJECT (sinkpad,
           "New caps, checking if they are compatible with existing parsebin");
-      if (input->parsebin_sink) {
-        GstCaps *newcaps = NULL;
-
-        gst_event_parse_caps (event, &newcaps);
-        GST_DEBUG_OBJECT (sinkpad, "new caps %" GST_PTR_FORMAT, newcaps);
-
-        if (newcaps
-            && !gst_pad_query_accept_caps (input->parsebin_sink, newcaps)) {
-          GST_DEBUG_OBJECT (sinkpad,
-              "Parsebin doesn't accept the new caps %" GST_PTR_FORMAT, newcaps);
-          GST_STATE_LOCK (dbin);
-          /* Reset parsebin so that it reconfigures itself for the new stream format */
-          gst_element_set_state (input->parsebin, GST_STATE_NULL);
-          gst_element_sync_state_with_parent (input->parsebin);
-          GST_STATE_UNLOCK (dbin);
-        } else {
-          GST_DEBUG_OBJECT (sinkpad, "Parsebin accepts new caps");
-        }
+      if (!gst_pad_query_accept_caps (input->parsebin_sink, newcaps)) {
+        GST_DEBUG_OBJECT (sinkpad,
+            "Parsebin doesn't accept the new caps %" GST_PTR_FORMAT, newcaps);
+        GST_STATE_LOCK (dbin);
+        /* Reset parsebin so that it reconfigures itself for the new stream format */
+        gst_element_set_state (input->parsebin, GST_STATE_NULL);
+        gst_element_sync_state_with_parent (input->parsebin);
+        GST_STATE_UNLOCK (dbin);
+      } else {
+        GST_DEBUG_OBJECT (sinkpad, "Parsebin accepts new caps");
       }
       break;
     }
