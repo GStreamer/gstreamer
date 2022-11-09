@@ -1617,8 +1617,8 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
     return FALSE;
   }
 
-  GST_TRACE_OBJECT (self, "Created VABufferID %#x with %u filters", *buffer,
-      num_filters);
+  GST_TRACE_OBJECT (self, "Created VABufferID %#x with %u filters: "
+      "src %#x / dst %#x", *buffer, num_filters, src->surface, dst->surface);
 
   return TRUE;
 }
@@ -1668,7 +1668,8 @@ gst_va_filter_process (GstVaFilter * self, GstVaSample * src, GstVaSample * dst)
 
   status = vaRenderPicture (dpy, self->context, &buffer, 1);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaRenderPicture: %s", vaErrorStr (status));
+    GST_ERROR_OBJECT (self, "vaRenderPicture: %s with buffer %#x",
+        vaErrorStr (status), buffer);
     goto fail_end_pic;
   }
 
