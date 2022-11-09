@@ -27,6 +27,7 @@
 #include "gstcudafilter.h"
 #include "gstcudaconvert.h"
 #include "gstcudascale.h"
+#include "gstcudaconvertscale.h"
 
 /* *INDENT-OFF* */
 const gchar *nvrtc_test_source =
@@ -53,4 +54,6 @@ gst_cuda_filter_plugin_init (GstPlugin * plugin)
       GST_TYPE_CUDA_CONVERT);
   gst_element_register (plugin, "cudascale", GST_RANK_NONE,
       GST_TYPE_CUDA_SCALE);
+  gst_element_register (plugin, "cudaconvertscale", GST_RANK_NONE,
+      GST_TYPE_CUDA_CONVERT_SCALE);
 }

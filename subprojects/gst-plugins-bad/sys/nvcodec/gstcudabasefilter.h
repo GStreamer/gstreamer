@@ -51,6 +51,8 @@ struct _GstCudaBaseFilterClass
 
 GType gst_cuda_base_filter_get_type (void);
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstCudaBaseFilter, gst_object_unref)
+
 G_END_DECLS
 
 #endif /* __GST_CUDA_BASE_FILTER_H__ */
