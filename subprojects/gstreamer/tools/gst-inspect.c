@@ -744,6 +744,15 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
         } else if (param->value_type == GST_TYPE_ARRAY) {
           GstParamSpecArray *parray = GST_PARAM_SPEC_ARRAY_LIST (param);
 
+          if (GST_VALUE_HOLDS_ARRAY (&value)) {
+            gchar *def = gst_value_serialize (&value);
+
+            n_print ("%sDefault%s: \"%s\"\n", PROP_ATTR_VALUE_COLOR,
+                RESET_COLOR, def);
+
+            g_free (def);
+          }
+
           if (parray->element_spec) {
             n_print ("%sGstValueArray of GValues of type%s %s\"%s\"%s",
                 PROP_VALUE_COLOR, RESET_COLOR, DATATYPE_COLOR,
