@@ -21342,6 +21342,21 @@
                         "return-type": "GstFlowReturn",
                         "when": "last"
                     },
+                    "push-backchannel-sample": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "guint"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GstSample"
+                            }
+                        ],
+                        "return-type": "GstFlowReturn",
+                        "when": "last"
+                    },
                     "request-rtcp-key": {
                         "args": [
                             {

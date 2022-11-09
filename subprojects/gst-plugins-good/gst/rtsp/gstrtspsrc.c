@@ -151,6 +151,7 @@ enum
   SIGNAL_GET_PARAMETER,
   SIGNAL_GET_PARAMETERS,
   SIGNAL_SET_PARAMETER,
+  SIGNAL_PUSH_BACKCHANNEL_SAMPLE,
   LAST_SIGNAL
 };
 
@@ -465,6 +466,9 @@ static gboolean set_parameter (GstRTSPSrc * src, const gchar * name,
     const gchar * value, const gchar * content_type, GstPromise * promise);
 
 static GstFlowReturn gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src,
+    guint id, GstSample * sample);
+
+static GstFlowReturn gst_rtspsrc_push_backchannel_sample (GstRTSPSrc * src,
     guint id, GstSample * sample);
 
 typedef struct
@@ -1226,15 +1230,34 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   /**
    * GstRTSPSrc::push-backchannel-buffer:
    * @rtspsrc: a #GstRTSPSrc
+   * @id: stream ID where the sample should be sent
    * @sample: RTP sample to send back
    *
+   * Deprecated: 1.22: Use action signal GstRTSPSrc::push-backchannel-sample instead.
+   * IMPORTANT: Please note that this signal decrements the reference count 
+   *            of sample internally! So it cannot be used from other
+   *            language bindings in general.
    *
    */
   gst_rtspsrc_signals[SIGNAL_PUSH_BACKCHANNEL_BUFFER] =
       g_signal_new ("push-backchannel-buffer", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTSPSrcClass,
-          push_backchannel_buffer), NULL, NULL, NULL,
-      GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_SAMPLE);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION | G_SIGNAL_DEPRECATED,
+      G_STRUCT_OFFSET (GstRTSPSrcClass, push_backchannel_buffer), NULL, NULL,
+      NULL, GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_SAMPLE);
+
+  /**
+   * GstRTSPSrc::push-backchannel-sample:
+   * @rtspsrc: a #GstRTSPSrc
+   * @id: stream ID where the sample should be sent
+   * @sample: RTP sample to send back
+   *
+   * Since: 1.22
+   */
+  gst_rtspsrc_signals[SIGNAL_PUSH_BACKCHANNEL_SAMPLE] =
+      g_signal_new ("push-backchannel-sample", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION | G_SIGNAL_DEPRECATED,
+      G_STRUCT_OFFSET (GstRTSPSrcClass, push_backchannel_buffer), NULL, NULL,
+      NULL, GST_TYPE_FLOW_RETURN, 2, G_TYPE_UINT, GST_TYPE_SAMPLE);
 
   /**
    * GstRTSPSrc::get-parameter:
@@ -1307,6 +1330,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
 
   klass->push_backchannel_buffer = gst_rtspsrc_push_backchannel_buffer;
+  klass->push_backchannel_sample = gst_rtspsrc_push_backchannel_sample;
   klass->get_parameter = GST_DEBUG_FUNCPTR (get_parameter);
   klass->get_parameters = GST_DEBUG_FUNCPTR (get_parameters);
   klass->set_parameter = GST_DEBUG_FUNCPTR (set_parameter);
@@ -3331,6 +3355,19 @@ static GstFlowReturn
 gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src, guint id,
     GstSample * sample)
 {
+  GstFlowReturn res;
+
+  res = gst_rtspsrc_push_backchannel_sample (src, id, sample);
+
+  gst_sample_unref (sample);
+
+  return res;
+}
+
+static GstFlowReturn
+gst_rtspsrc_push_backchannel_sample (GstRTSPSrc * src, guint id,
+    GstSample * sample)
+{
   GstFlowReturn res = GST_FLOW_OK;
   GstRTSPStream *stream;
 
@@ -3376,8 +3413,6 @@ gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src, guint id,
   }
 
 out:
-  gst_sample_unref (sample);
-
   return res;
 }
 

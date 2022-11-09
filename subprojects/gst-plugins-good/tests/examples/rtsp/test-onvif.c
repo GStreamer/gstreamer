@@ -14,15 +14,21 @@ new_sample (GstElement * appsink, GstElement * rtspsrc)
 
   g_assert (stream_id != -1);
 
+  /* get the sample from appsink */
   g_signal_emit_by_name (appsink, "pull-sample", &sample);
 
   if (!sample)
-    goto out;
+    goto nosample;
 
-  g_signal_emit_by_name (rtspsrc, "push-backchannel-buffer", stream_id, sample,
+  g_signal_emit_by_name (rtspsrc, "push-backchannel-sample", stream_id, sample,
       &ret);
 
-out:
+  /* Action signal callbacks don't take ownership of the arguments passed, so we must unref the sample here.
+   * (The "push-backchannel-buffer" callback unrefs the sample, which is wrong and doesn't work with bindings
+   * but could not be changed, hence the new "push-backchannel-sample" callback that behaves correctly.)  */
+  gst_sample_unref (sample);
+
+nosample:
   return ret;
 }
 

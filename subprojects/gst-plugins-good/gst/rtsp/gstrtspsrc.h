@@ -339,6 +339,7 @@ struct _GstRTSPSrcClass {
   gboolean (*get_parameters) (GstRTSPSrc *rtsp, gchar **parameters, const gchar *content_type, GstPromise *promise);
   gboolean (*set_parameter) (GstRTSPSrc *rtsp, const gchar *name, const gchar *value, const gchar *content_type, GstPromise *promise);
   GstFlowReturn (*push_backchannel_buffer) (GstRTSPSrc *src, guint id, GstSample *sample);
+  GstFlowReturn (*push_backchannel_sample) (GstRTSPSrc *src, guint id, GstSample *sample);
 };
 
 GType gst_rtspsrc_get_type(void);
