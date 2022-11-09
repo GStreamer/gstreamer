@@ -47,7 +47,7 @@ if d3d11_winapi_only_app and (not d3dcompiler_lib.found() or not runtimeobject_l
   subdir_done()
 endif
 
-win11_sdk = cxx.compiles('''
+have_wgc = cxx.compiles('''
     #include<windows.h>
     #include<winstring.h>
     #include<roapi.h>
@@ -65,7 +65,7 @@ win11_sdk = cxx.compiles('''
     ComPtr<IGraphicsCaptureSession2> session2;
     ComPtr<IGraphicsCaptureSession3> session3;
     ''',
-    name: 'building with Windows 11 SDK')
+    name: 'Windows Graphics Capture support in Windows SDK')
 
 # if build target is Windows 10 and WINAPI_PARTITION_APP is allowed,
 # we can build UWP only modules as well
@@ -88,7 +88,7 @@ if d3d11_winapi_desktop
     extra_dep += [winmm_lib]
   endif
 
-  if win11_sdk
+  if have_wgc
     d3d11_sources += ['gstd3d11winrtcapture.cpp']
     extra_args += ['-DHAVE_WINRT_CAPTURE']
   endif
