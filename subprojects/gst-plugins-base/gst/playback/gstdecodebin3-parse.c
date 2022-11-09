@@ -366,6 +366,7 @@ parsebin_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_OK;
 }
 
+/* Call with selection lock */
 static DecodebinInputStream *
 create_input_stream (GstDecodebin3 * dbin, GstPad * pad, DecodebinInput * input)
 {
@@ -375,7 +376,7 @@ create_input_stream (GstDecodebin3 * dbin, GstPad * pad, DecodebinInput * input)
 
   res->dbin = dbin;
   res->input = input;
-  res->srcpad = pad;
+  res->srcpad = gst_object_ref (pad);
 
   /* Put probe on output source pad (for detecting EOS/STREAM_START/FLUSH) */
   res->output_event_probe_id =
@@ -391,9 +392,7 @@ create_input_stream (GstDecodebin3 * dbin, GstPad * pad, DecodebinInput * input)
       (GstPadProbeCallback) parsebin_buffer_probe, input, NULL);
 
   /* Add to list of current input streams */
-  SELECTION_LOCK (dbin);
   dbin->input_streams = g_list_append (dbin->input_streams, res);
-  SELECTION_UNLOCK (dbin);
   GST_DEBUG_OBJECT (pad, "Done creating input stream");
 
   return res;
@@ -421,6 +420,7 @@ remove_input_stream (GstDecodebin3 * dbin, DecodebinInputStream * stream)
     }
     if (stream->buffer_probe_id)
       gst_pad_remove_probe (stream->srcpad, stream->buffer_probe_id);
+    gst_object_unref (stream->srcpad);
   }
 
   slot = get_slot_for_input (dbin, stream);
@@ -535,7 +535,9 @@ parsebin_pad_added_cb (GstElement * demux, GstPad * pad, DecodebinInput * input)
   GST_DEBUG_OBJECT (dbin, "New pad %s:%s (input:%p)", GST_DEBUG_PAD_NAME (pad),
       input);
 
+  SELECTION_LOCK (dbin);
   create_input_stream (dbin, pad, input);
+  SELECTION_UNLOCK (dbin);
 }
 
 static void
@@ -564,7 +566,6 @@ parsebin_pad_removed_cb (GstElement * demux, GstPad * pad, DecodebinInput * inp)
 
   SELECTION_LOCK (dbin);
   slot = get_slot_for_input (dbin, input);
-  input->srcpad = NULL;
   remove_input_stream (dbin, input);
 
   if (slot && g_list_find (dbin->slots, slot) && slot->is_drained) {
