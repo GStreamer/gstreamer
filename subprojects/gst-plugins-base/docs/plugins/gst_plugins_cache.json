@@ -11616,6 +11616,18 @@
                         "type": "gdouble",
                         "writable": true
                     },
+                    "parse-streams": {
+                        "blurb": "Extract the elementary streams of non-raw sources",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "ring-buffer-max-size": {
                         "blurb": "Max. amount of data in the ring buffer (bytes, 0 = ring buffer disabled)",
                         "conditionally-available": false,
