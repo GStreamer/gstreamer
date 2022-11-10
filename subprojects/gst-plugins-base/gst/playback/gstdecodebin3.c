@@ -253,10 +253,6 @@ struct _GstDecodebin3
   /* End of variables protected by selection_lock */
   gboolean upstream_selected;
 
-  /* List of pending collections.
-   * FIXME : Is this really needed ? */
-  GList *pending_collection;
-
   /* Factories */
   GMutex factories_lock;
   guint32 factories_cookie;
@@ -1814,8 +1810,6 @@ handle_stream_collection (GstDecodebin3 * dbin,
      * When all streams from active collection are drained in multiqueue output ? */
     gst_object_unref (dbin->collection);
     dbin->collection = collection;
-    /* dbin->pending_collection = */
-    /*     g_list_append (dbin->pending_collection, collection); */
   }
   dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
   SELECTION_UNLOCK (dbin);
