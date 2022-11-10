@@ -1061,9 +1061,15 @@ warning_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg, gpointer user_data)
   GST_WARNING_OBJECT (self, "Warning: %s (%s, %d)", err->message,
       g_quark_to_string (err->domain), err->code);
 
-  api_bus_post_message (self, GST_PLAY_MESSAGE_WARNING,
-      GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, play_err,
-      GST_PLAY_MESSAGE_DATA_WARNING_DETAILS, GST_TYPE_STRUCTURE, details, NULL);
+  if (details != NULL) {
+    api_bus_post_message (self, GST_PLAY_MESSAGE_WARNING,
+        GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, play_err,
+        GST_PLAY_MESSAGE_DATA_WARNING_DETAILS, GST_TYPE_STRUCTURE, details,
+        NULL);
+  } else {
+    api_bus_post_message (self, GST_PLAY_MESSAGE_WARNING,
+        GST_PLAY_MESSAGE_DATA_WARNING, G_TYPE_ERROR, play_err, NULL);
+  }
 
   g_clear_error (&play_err);
   g_clear_error (&err);
