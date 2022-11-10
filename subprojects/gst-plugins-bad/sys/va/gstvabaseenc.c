@@ -330,6 +330,53 @@ error:
   return NULL;
 }
 
+/* Return 0 means error and -1 means not enough data. */
+gint
+gst_va_base_enc_copy_output_data (GstVaBaseEnc * base,
+    GstVaEncodePicture * picture, guint8 * data, gint size)
+{
+  guint coded_size;
+  VASurfaceID surface;
+  VACodedBufferSegment *seg, *seg_list;
+  gint ret_sz = 0;
+
+  /* Wait for encoding to finish */
+  surface = gst_va_encode_picture_get_raw_surface (picture);
+  if (!va_sync_surface (base->display, surface))
+    goto out;
+
+  seg_list = NULL;
+  if (!va_map_buffer (base->display, GST_MAP_READ, picture->coded_buffer,
+          (gpointer *) & seg_list))
+    goto out;
+
+  if (!seg_list) {
+    va_unmap_buffer (base->display, picture->coded_buffer);
+    GST_WARNING_OBJECT (base, "coded buffer has no segment list");
+    goto out;
+  }
+
+  coded_size = 0;
+  for (seg = seg_list; seg; seg = seg->next)
+    coded_size += seg->size;
+
+  if (coded_size > size) {
+    GST_DEBUG_OBJECT (base, "Not enough space for coded data");
+    ret_sz = -1;
+    goto out;
+  }
+
+  for (seg = seg_list; seg; seg = seg->next) {
+    memcpy (data + ret_sz, seg->buf, seg->size);
+    ret_sz += seg->size;
+  }
+
+  va_unmap_buffer (base->display, picture->coded_buffer);
+
+out:
+  return ret_sz;
+}
+
 static GstAllocator *
 _allocator_from_caps (GstVaBaseEnc * base, GstCaps * caps)
 {
