@@ -629,8 +629,14 @@ on_gst_sctp_association_stream_reset (GstSctpAssociation * gst_sctp_association,
   srcpad = gst_element_get_static_pad (GST_ELEMENT (self), pad_name);
   g_free (pad_name);
   if (!srcpad) {
-    GST_WARNING_OBJECT (self, "Reset called on stream without a srcpad");
-    return;
+    /* This can happen if a stream is created but the peer never sends any data.
+     * We still need to signal the reset by removing the relevant pad.  To do
+     * that, we need to add the relevant pad first. */
+    srcpad = get_pad_for_stream_id (self, stream_id);
+    if (!srcpad) {
+      GST_WARNING_OBJECT (self, "Reset called on stream without a srcpad");
+      return;
+    }
   }
   remove_pad (self, srcpad);
   gst_object_unref (srcpad);
