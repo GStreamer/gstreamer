@@ -73,6 +73,7 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
 
 GstOnnxClient::~GstOnnxClient ()
 {
+    outputNames.clear();
     delete session;
     delete[]dest;
 }
@@ -115,6 +116,10 @@ std::string GstOnnxClient::getOutputNodeName (GstMlOutputNodeFunction nodeType)
       case GST_ML_OUTPUT_NODE_FUNCTION_CLASS:
         return "label";
         break;
+      case GST_ML_OUTPUT_NODE_NUMBER_OF:
+        g_assert_not_reached();
+        GST_WARNING("Invalid parameter");
+        break;
     };
 
     return "";
@@ -130,9 +135,16 @@ GstMlModelInputImageFormat GstOnnxClient::getInputImageFormat (void)
     return inputImageFormat;
 }
 
-std::vector < const char *>GstOnnxClient::getOutputNodeNames (void)
+std::vector< const char *> GstOnnxClient::getOutputNodeNames (void)
 {
-    return outputNames;
+    if (!outputNames.empty() && outputNamesRaw.size() != outputNames.size()) {
+        outputNamesRaw.resize(outputNames.size());
+        for (size_t i = 0; i < outputNamesRaw.size(); i++) {
+          outputNamesRaw[i] = outputNames[i].get();
+        }
+    }
+
+    return outputNamesRaw;
 }
 
 void GstOnnxClient::setOutputNodeIndex (GstMlOutputNodeFunction node,
@@ -227,11 +239,13 @@ bool GstOnnxClient::createSession (std::string modelFile,
     GST_DEBUG ("Number of Output Nodes: %d", (gint) session->GetOutputCount ());
 
     Ort::AllocatorWithDefaultOptions allocator;
-    GST_DEBUG ("Input name: %s", session->GetInputName (0, allocator));
+    auto input_name = session->GetInputNameAllocated (0, allocator);
+    GST_DEBUG ("Input name: %s", input_name.get());
 
     for (size_t i = 0; i < session->GetOutputCount (); ++i) {
-      auto output_name = session->GetOutputName (i, allocator);
-      outputNames.push_back (output_name);
+      auto output_name = session->GetOutputNameAllocated (i, allocator);
+      GST_DEBUG("Output name %lu:%s", i, output_name.get());
+      outputNames.push_back (std::move(output_name));
       auto type_info = session->GetOutputTypeInfo (i);
       auto tensor_info = type_info.GetTensorTypeAndShapeInfo ();
 
@@ -278,7 +292,7 @@ template < typename T > std::vector < GstMlBoundingBox >
     parseDimensions (vmeta);
 
     Ort::AllocatorWithDefaultOptions allocator;
-    auto inputName = session->GetInputName (0, allocator);
+    auto inputName = session->GetInputNameAllocated (0, allocator);
     auto inputTypeInfo = session->GetInputTypeInfo (0);
     std::vector < int64_t > inputDims =
         inputTypeInfo.GetTensorTypeAndShapeInfo ().GetShape ();
@@ -366,11 +380,11 @@ template < typename T > std::vector < GstMlBoundingBox >
     std::vector < Ort::Value > inputTensors;
     inputTensors.push_back (Ort::Value::CreateTensor < uint8_t > (memoryInfo,
             dest, inputTensorSize, inputDims.data (), inputDims.size ()));
-    std::vector < const char *>inputNames { inputName };
+    std::vector < const char *>inputNames { inputName.get () };
 
     std::vector < Ort::Value > modelOutput = session->Run (Ort::RunOptions { nullptr},
         inputNames.data (),
-        inputTensors.data (), 1, outputNames.data (), outputNames.size ());
+        inputTensors.data (), 1, outputNamesRaw.data (), outputNamesRaw.size ());
 
     auto numDetections =
         modelOutput[getOutputNodeIndex

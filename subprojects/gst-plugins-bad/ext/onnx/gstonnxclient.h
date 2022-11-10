@@ -108,7 +108,8 @@ namespace GstOnnxNamespace {
     GstMlOutputNodeInfo outputNodeInfo[GST_ML_OUTPUT_NODE_NUMBER_OF];
     // !! indexed by array index
 	size_t outputNodeIndexToFunction[GST_ML_OUTPUT_NODE_NUMBER_OF];
-    std::vector < const char *>outputNames;
+    std::vector < const char *> outputNamesRaw;
+    std::vector < Ort::AllocatedStringPtr > outputNames;
     GstMlModelInputImageFormat inputImageFormat;
     bool fixedInputImageSize;
   };

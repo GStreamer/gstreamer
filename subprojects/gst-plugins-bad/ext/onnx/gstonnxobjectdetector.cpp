@@ -55,16 +55,24 @@
  *
  * ## Example launch command:
  *
- * (note: an object detection model has 3 or 4 output nodes, but there is no naming convention
- * to indicate which node outputs the bounding box, which node outputs the label, etc.
- * So, the `onnxobjectdetector` element has properties to map each node's functionality to its
- * respective node index in the specified model )
+ * (note: an object detection model has 3 or 4 output nodes, but there is no
+ * naming convention to indicate which node outputs the bounding box, which
+ * node outputs the label, etc. So, the `onnxobjectdetector` element has
+ * properties to map each node's functionality to its respective node index in
+ * the specified model. Image resolution also need to be adapted to the model.
+ * The videoscale in the pipeline below will scale the image, using padding if
+ * required, to 640x383 resolution required by the model.)
+ *
+ * model.onnx can be found here:
+ * https://github.com/zoq/onnx-runtime-examples/raw/main/data/models/model.onnx
  *
  * ```
  * GST_DEBUG=objectdetector:5 gst-launch-1.0 multifilesrc \
  * location=000000088462.jpg caps=image/jpeg,framerate=\(fraction\)30/1 ! jpegdec ! \
  * videoconvert ! \
- * onnxobjectdetector \
+ * videoscale ! \
+ * 'video/x-raw,width=640,height=383' ! \
+ * onnxobjectdetector ! \
  * box-node-index=0 \
  * class-node-index=1 \
  * score-node-index=2 \
