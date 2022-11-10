@@ -1756,7 +1756,7 @@ gst_play_subtitle_info_update (GstPlay * self, GstPlayStreamInfo * stream_info)
 
       g_object_get (G_OBJECT (self->playbin), "current-suburi", &suburi, NULL);
       if (suburi) {
-        if (self->use_playbin3) {
+        if (self->use_playbin3 && self->subtitle_sid) {
           if (g_str_equal (self->subtitle_sid, stream_info->stream_id))
             info->language = g_path_get_basename (suburi);
         } else {
