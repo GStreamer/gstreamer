@@ -554,6 +554,7 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
   self = g_object_new (GST_TYPE_CUDA_CONTEXT, "cuda-device-id", device, NULL);
   self->priv->context = handler;
   self->priv->device = device;
+  self->priv->tex_align = tex_align;
   gst_object_ref_sink (self);
 
 #ifdef GST_CUDA_HAS_D3D
