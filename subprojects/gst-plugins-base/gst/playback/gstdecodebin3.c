@@ -481,6 +481,7 @@ gst_decodebin3_select_stream (GstDecodebin3 * dbin,
 
 static GstPad *gst_decodebin3_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * name, const GstCaps * caps);
+static void gst_decodebin3_release_pad (GstElement * element, GstPad * pad);
 static void handle_stream_collection (GstDecodebin3 * dbin,
     GstStreamCollection * collection, DecodebinInput * input);
 static void gst_decodebin3_handle_message (GstBin * bin, GstMessage * message);
@@ -496,7 +497,6 @@ static gboolean have_factory (GstDecodebin3 * dbin, GstCaps * caps,
 #endif
 
 static void free_input (GstDecodebin3 * dbin, DecodebinInput * input);
-static void free_input_async (GstDecodebin3 * dbin, DecodebinInput * input);
 static DecodebinInput *create_new_input (GstDecodebin3 * dbin, gboolean main);
 static gboolean set_input_group_id (DecodebinInput * input, guint32 * group_id);
 
@@ -594,6 +594,7 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
       GST_DEBUG_FUNCPTR (gst_decodebin3_request_new_pad);
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_decodebin3_change_state);
   element_class->send_event = GST_DEBUG_FUNCPTR (gst_decodebin3_send_event);
+  element_class->release_pad = GST_DEBUG_FUNCPTR (gst_decodebin3_release_pad);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -772,9 +773,11 @@ set_input_group_id (DecodebinInput * input, guint32 * group_id)
   }
 
   if (*group_id != dbin->current_group_id) {
+    /* The input is being re-used with a different incoming stream, we do want
+     * to change/unify to this new group-id */
     if (dbin->current_group_id == GST_GROUP_ID_INVALID) {
-      GST_DEBUG_OBJECT (dbin, "Setting current group id to %" G_GUINT32_FORMAT,
-          *group_id);
+      GST_DEBUG_OBJECT (dbin,
+          "Setting current group id to %" G_GUINT32_FORMAT, *group_id);
       dbin->current_group_id = *group_id;
     }
     *group_id = dbin->current_group_id;
@@ -889,8 +892,15 @@ gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
    * processing) to figure out if one is really needed or whether an identity
    * element will be enough */
   INPUT_LOCK (dbin);
-  if (pull_mode && !ensure_input_parsebin (dbin, input))
-    res = GST_PAD_LINK_REFUSED;
+  if (pull_mode) {
+    if (!ensure_input_parsebin (dbin, input))
+      res = GST_PAD_LINK_REFUSED;
+    else if (input->identity) {
+      GST_ERROR_OBJECT (dbin,
+          "Can't reconfigure input from push-based to pull-based");
+      res = GST_PAD_LINK_REFUSED;
+    }
+  }
   INPUT_UNLOCK (dbin);
 
   return res;
@@ -915,18 +925,86 @@ query_duration_drop_probe (GstPad * pad, GstPadProbeInfo * info,
 }
 
 static void
-gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
+recalculate_group_id (GstDecodebin3 * dbin)
 {
-  GstDecodebin3 *dbin = (GstDecodebin3 *) parent;
+  guint32 common_group_id;
+  GList *iter;
+
+  common_group_id = dbin->main_input->group_id;
+
+  for (iter = dbin->other_inputs; iter; iter = iter->next) {
+    DecodebinInput *input = iter->data;
+
+    if (input->group_id != common_group_id)
+      return;
+  }
+
+  GST_DEBUG_OBJECT (dbin, "Updating global group_id to %" G_GUINT32_FORMAT,
+      common_group_id);
+  dbin->current_group_id = common_group_id;
+}
+
+/* CALL with INPUT LOCK */
+static void
+reset_input_parsebin (GstDecodebin3 * dbin, DecodebinInput * input)
+{
+  GList *iter;
+
+  if (input->parsebin == NULL)
+    return;
+
+  GST_DEBUG_OBJECT (dbin, "Resetting %" GST_PTR_FORMAT, input->parsebin);
+
+  GST_STATE_LOCK (dbin);
+  gst_element_set_state (input->parsebin, GST_STATE_NULL);
+  input->drained = FALSE;
+  input->group_id = GST_GROUP_ID_INVALID;
+  recalculate_group_id (dbin);
+  for (iter = dbin->input_streams; iter; iter = iter->next) {
+    DecodebinInputStream *istream = iter->data;
+    if (istream->input == input)
+      istream->saw_eos = TRUE;
+  }
+  gst_element_sync_state_with_parent (input->parsebin);
+  GST_STATE_UNLOCK (dbin);
+}
+
+
+static void
+gst_decodebin3_input_pad_unlink (GstPad * pad, GstPad * peer,
+    DecodebinInput * input)
+{
+  GstDecodebin3 *dbin = input->dbin;
+
+  g_return_if_fail (input);
+
+  GST_LOG_OBJECT (dbin, "Got unlink on input pad %" GST_PTR_FORMAT, pad);
+
+  INPUT_LOCK (dbin);
+  if (input->parsebin == NULL) {
+    INPUT_UNLOCK (dbin);
+    return;
+  }
+
+  if (GST_PAD_MODE (pad) == GST_PAD_MODE_PULL) {
+    GST_DEBUG_OBJECT (dbin, "Resetting parsebin since it's pull-based");
+    reset_input_parsebin (dbin, input);
+  }
+
+  INPUT_UNLOCK (dbin);
+}
+
+static void
+gst_decodebin3_release_pad (GstElement * element, GstPad * pad)
+{
+  GstDecodebin3 *dbin = (GstDecodebin3 *) element;
   DecodebinInput *input = g_object_get_data (G_OBJECT (pad), "decodebin.input");
   GstStreamCollection *collection = NULL;
   gulong probe_id = 0;
   GstMessage *msg;
 
   g_return_if_fail (input);
-
-  GST_LOG_OBJECT (parent, "Got unlink on input pad %" GST_PTR_FORMAT
-      ". Removing parsebin.", pad);
+  GST_LOG_OBJECT (dbin, "Releasing pad %" GST_PTR_FORMAT, pad);
 
   INPUT_LOCK (dbin);
 
@@ -996,7 +1074,7 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstObject * parent)
 
   if (!input->is_main) {
     dbin->other_inputs = g_list_remove (dbin->other_inputs, input);
-    free_input_async (dbin, input);
+    free_input (dbin, input);
   }
 
 beach:
@@ -1004,11 +1082,12 @@ beach:
   return;
 }
 
+/* Call with INPUT LOCK */
 static void
 free_input (GstDecodebin3 * dbin, DecodebinInput * input)
 {
   GST_DEBUG ("Freeing input %p", input);
-  INPUT_LOCK (dbin);
+
   gst_ghost_pad_set_target (GST_GHOST_PAD (input->ghost_sink), NULL);
   gst_element_remove_pad (GST_ELEMENT (dbin), input->ghost_sink);
   if (input->parsebin) {
@@ -1030,15 +1109,6 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
   if (input->collection)
     gst_object_unref (input->collection);
   g_free (input);
-  INPUT_UNLOCK (dbin);
-}
-
-static void
-free_input_async (GstDecodebin3 * dbin, DecodebinInput * input)
-{
-  GST_LOG_OBJECT (dbin, "pushing input %p on thread pool to free", input);
-  gst_element_call_async (GST_ELEMENT_CAST (dbin),
-      (GstElementCallAsyncFunc) free_input, input, NULL);
 }
 
 static gboolean
@@ -1165,6 +1235,10 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
          inputs is. This means things might break if there's a mix */
       if (input->upstream_selected)
         dbin->upstream_selected = TRUE;
+
+      /* Make sure group ids will be recalculated */
+      input->group_id = GST_GROUP_ID_INVALID;
+      recalculate_group_id (dbin);
       break;
     }
     case GST_EVENT_STREAM_COLLECTION:
@@ -1235,11 +1309,10 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       if (!gst_pad_query_accept_caps (input->parsebin_sink, newcaps)) {
         GST_DEBUG_OBJECT (sinkpad,
             "Parsebin doesn't accept the new caps %" GST_PTR_FORMAT, newcaps);
-        GST_STATE_LOCK (dbin);
         /* Reset parsebin so that it reconfigures itself for the new stream format */
-        gst_element_set_state (input->parsebin, GST_STATE_NULL);
-        gst_element_sync_state_with_parent (input->parsebin);
-        GST_STATE_UNLOCK (dbin);
+        INPUT_LOCK (dbin);
+        reset_input_parsebin (dbin, input);
+        INPUT_UNLOCK (dbin);
       } else {
         GST_DEBUG_OBJECT (sinkpad, "Parsebin accepts new caps");
       }
@@ -1277,8 +1350,8 @@ create_new_input (GstDecodebin3 * dbin, gboolean main)
   gst_pad_set_query_function (input->ghost_sink,
       (GstPadQueryFunction) sink_query_function);
   gst_pad_set_link_function (input->ghost_sink, gst_decodebin3_input_pad_link);
-  gst_pad_set_unlink_function (input->ghost_sink,
-      gst_decodebin3_input_pad_unlink);
+  g_signal_connect (input->ghost_sink, "unlinked",
+      (GCallback) gst_decodebin3_input_pad_unlink, input);
 
   gst_pad_set_active (input->ghost_sink, TRUE);
   gst_element_add_pad ((GstElement *) dbin, input->ghost_sink);
