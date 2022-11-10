@@ -831,7 +831,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
         remove_buffering_msgs (urisrc, GST_OBJECT_CAST (slot->queue));
 
       if (all_streams_eos) {
-        GST_DEBUG_OBJECT (urisrc, "POSTING ABOUT TO FINISH");
+        GST_DEBUG_OBJECT (urisrc, "Posting about-to-finish");
         g_signal_emit (urisrc,
             gst_uri_source_bin_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
       }
