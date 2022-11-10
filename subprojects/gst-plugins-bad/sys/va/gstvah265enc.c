@@ -4611,11 +4611,13 @@ gst_va_h265_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   return TRUE;
 }
 
-static void
-gst_va_h265_enc_prepare_output (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
+static gboolean
+gst_va_h265_enc_prepare_output (GstVaBaseEnc * base,
+    GstVideoCodecFrame * frame, gboolean * complete)
 {
   GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstVaH265EncFrame *frame_enc;
+  GstBuffer *buf;
 
   frame_enc = _enc_frame (frame);
 
@@ -4627,6 +4629,18 @@ gst_va_h265_enc_prepare_output (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
       (gint64) self->gop.num_reorder_frames);
   base->output_frame_count++;
   frame->duration = base->frame_duration;
+
+  buf = gst_va_base_enc_create_output_buffer (base, frame_enc->picture);
+  if (!buf) {
+    GST_ERROR_OBJECT (base, "Failed to create output buffer");
+    return FALSE;
+  }
+
+  gst_buffer_replace (&frame->output_buffer, buf);
+  gst_clear_buffer (&buf);
+
+  *complete = TRUE;
+  return TRUE;
 }
 
 /* *INDENT-OFF* */

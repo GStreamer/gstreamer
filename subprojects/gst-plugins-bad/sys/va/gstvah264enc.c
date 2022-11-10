@@ -3038,11 +3038,13 @@ gst_va_h264_enc_flush (GstVideoEncoder * venc)
   return GST_VIDEO_ENCODER_CLASS (parent_class)->flush (venc);
 }
 
-static void
-gst_va_h264_enc_prepare_output (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
+static gboolean
+gst_va_h264_enc_prepare_output (GstVaBaseEnc * base,
+    GstVideoCodecFrame * frame, gboolean * complete)
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (base);
   GstVaH264EncFrame *frame_enc;
+  GstBuffer *buf;
 
   frame_enc = _enc_frame (frame);
 
@@ -3054,6 +3056,18 @@ gst_va_h264_enc_prepare_output (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
       (gint64) self->gop.num_reorder_frames);
   base->output_frame_count++;
   frame->duration = base->frame_duration;
+
+  buf = gst_va_base_enc_create_output_buffer (base, frame_enc->picture);
+  if (!buf) {
+    GST_ERROR_OBJECT (base, "Failed to create output buffer");
+    return FALSE;
+  }
+
+  gst_buffer_replace (&frame->output_buffer, buf);
+  gst_clear_buffer (&buf);
+
+  *complete = TRUE;
+  return TRUE;
 }
 
 static gint

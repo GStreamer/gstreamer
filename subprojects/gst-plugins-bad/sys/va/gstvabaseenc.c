@@ -269,7 +269,7 @@ gst_va_base_enc_import_input_buffer (GstVaBaseEnc * base,
   return gst_va_buffer_importer_import (&importer, inbuf, buf);
 }
 
-static GstBuffer *
+GstBuffer *
 gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
     GstVaEncodePicture * picture)
 {
@@ -404,37 +404,38 @@ config_failed:
 static GstFlowReturn
 _push_buffer_to_downstream (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
 {
-  GstVaEncodePicture *enc_picture;
   GstVaBaseEncClass *base_class = GST_VA_BASE_ENC_GET_CLASS (base);
-  GstBuffer *buf;
+  GstFlowReturn ret;
+  gboolean complete = TRUE;
 
-  if (base_class->prepare_output)
-    base_class->prepare_output (base, frame);
-
-  enc_picture =
-      *((GstVaEncodePicture **) gst_video_codec_frame_get_user_data (frame));
-
-  buf = gst_va_base_enc_create_output_buffer (base, enc_picture);
-  if (!buf) {
-    GST_ERROR_OBJECT (base, "Failed to create output buffer");
+  if (!base_class->prepare_output (base, frame, &complete)) {
+    GST_ERROR_OBJECT (base, "Failed to prepare output");
     goto error;
   }
 
-  gst_buffer_replace (&frame->output_buffer, buf);
-  gst_clear_buffer (&buf);
+  if (frame->output_buffer)
+    GST_LOG_OBJECT (base, "Push to downstream: frame system_frame_number: %d,"
+        " pts: %" GST_TIME_FORMAT ", dts: %" GST_TIME_FORMAT
+        " duration: %" GST_TIME_FORMAT ", buffer size: %" G_GSIZE_FORMAT,
+        frame->system_frame_number, GST_TIME_ARGS (frame->pts),
+        GST_TIME_ARGS (frame->dts), GST_TIME_ARGS (frame->duration),
+        gst_buffer_get_size (frame->output_buffer));
 
-  GST_LOG_OBJECT (base, "Push to downstream: frame system_frame_number: %d,"
-      " pts: %" GST_TIME_FORMAT ", dts: %" GST_TIME_FORMAT
-      " duration: %" GST_TIME_FORMAT ", buffer size: %" G_GSIZE_FORMAT,
-      frame->system_frame_number, GST_TIME_ARGS (frame->pts),
-      GST_TIME_ARGS (frame->dts), GST_TIME_ARGS (frame->duration),
-      gst_buffer_get_size (frame->output_buffer));
+  if (complete) {
+    ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (base), frame);
+  } else {
+    if (frame->output_buffer) {
+      ret = gst_video_encoder_finish_subframe (GST_VIDEO_ENCODER (base), frame);
+    } else {
+      /* Allow to output later and no data here. */
+      ret = GST_FLOW_OK;
+    }
+  }
 
-  return gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (base), frame);
+  return ret;
 
 error:
   gst_clear_buffer (&frame->output_buffer);
-  gst_clear_buffer (&buf);
   gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (base), frame);
 
   return GST_FLOW_ERROR;
