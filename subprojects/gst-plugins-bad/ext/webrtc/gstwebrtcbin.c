@@ -2407,11 +2407,11 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
     g_signal_emit (webrtc, gst_webrtc_bin_signals[PREPARE_DATA_CHANNEL_SIGNAL],
         0, channel, FALSE);
 
-    gst_bin_add (GST_BIN (webrtc), channel->appsrc);
-    gst_bin_add (GST_BIN (webrtc), channel->appsink);
+    gst_bin_add (GST_BIN (webrtc), channel->src_bin);
+    gst_bin_add (GST_BIN (webrtc), channel->sink_bin);
 
-    gst_element_sync_state_with_parent (channel->appsrc);
-    gst_element_sync_state_with_parent (channel->appsink);
+    gst_element_sync_state_with_parent (channel->src_bin);
+    gst_element_sync_state_with_parent (channel->sink_bin);
 
     webrtc_data_channel_link_to_sctp (channel, webrtc->priv->sctp_transport);
 
@@ -2422,7 +2422,7 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
   g_signal_connect (channel, "notify::ready-state",
       G_CALLBACK (_on_data_channel_ready_state), webrtc);
 
-  sink_pad = gst_element_get_static_pad (channel->appsink, "sink");
+  sink_pad = gst_element_get_static_pad (channel->sink_bin, "sink");
   if (gst_pad_link (pad, sink_pad) != GST_PAD_LINK_OK)
     GST_WARNING_OBJECT (channel, "Failed to link sctp pad %s with channel %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), channel);
@@ -6968,11 +6968,11 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
   g_signal_emit (webrtc, gst_webrtc_bin_signals[PREPARE_DATA_CHANNEL_SIGNAL], 0,
       ret, TRUE);
 
-  gst_bin_add (GST_BIN (webrtc), ret->appsrc);
-  gst_bin_add (GST_BIN (webrtc), ret->appsink);
+  gst_bin_add (GST_BIN (webrtc), ret->src_bin);
+  gst_bin_add (GST_BIN (webrtc), ret->sink_bin);
 
-  gst_element_sync_state_with_parent (ret->appsrc);
-  gst_element_sync_state_with_parent (ret->appsink);
+  gst_element_sync_state_with_parent (ret->src_bin);
+  gst_element_sync_state_with_parent (ret->sink_bin);
 
   ret = gst_object_ref (ret);
   ret->webrtcbin = webrtc;
