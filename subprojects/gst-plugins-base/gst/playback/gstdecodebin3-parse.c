@@ -119,7 +119,7 @@ check_all_streams_for_eos (GstDecodebin3 * dbin, GstEvent * event)
   }
 
   SELECTION_UNLOCK (dbin);
-  /*  */
+
   for (tmp = outputpads; tmp; tmp = tmp->next) {
     GstPad *peer = (GstPad *) tmp->data;
 

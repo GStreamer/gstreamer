@@ -161,7 +161,7 @@
  * MAIN CONCEPTS
  *  1) Activating a stream (i.e. linking a slot to an output) is only done within
  *    the streaming thread in the multiqueue_src_probe() and only if the
-      stream is in the REQUESTED selection.
+ *    stream is in the REQUESTED selection.
  *  2) Deactivating a stream (i.e. unlinking a slot from an output) is also done
  *    within the stream thread, but only in a purposefully called IDLE probe
  *    that calls reassign_slot().
@@ -220,7 +220,6 @@ struct _GstDecodebin3
   /* counter for input */
   guint32 input_counter;
   /* Current stream group_id (default : GST_GROUP_ID_INVALID) */
-  /* FIXME : Needs to be reset appropriately (when upstream changes ?) */
   guint32 current_group_id;
   /* End of variables protected by input_lock */
 
@@ -301,9 +300,7 @@ struct _DecodebinInput
   gulong pad_removed_sigid;
   gulong drained_sigid;
 
-  /* TRUE if the input got drained
-   * FIXME : When do we reset it if re-used ?
-   */
+  /* TRUE if the input got drained */
   gboolean drained;
 };
 
@@ -329,6 +326,7 @@ typedef struct _MultiQueueSlot
   /* id of the MQ src_pad event probe */
   gulong probe_id;
 
+  /* TRUE if EOS was pushed out by multiqueue */
   gboolean is_drained;
 
   DecodebinOutputStream *output;
@@ -546,13 +544,11 @@ gst_decodebin3_class_init (GstDecodebin3Class * klass)
   gobject_klass->set_property = gst_decodebin3_set_property;
   gobject_klass->get_property = gst_decodebin3_get_property;
 
-  /* FIXME : ADD PROPERTIES ! */
   g_object_class_install_property (gobject_klass, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps",
           "The caps on which to stop decoding. (NULL = default)",
           GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  /* FIXME : ADD SIGNALS ! */
   /**
    * GstDecodebin3::select-stream
    * @decodebin: a #GstDecodebin3
@@ -705,7 +701,6 @@ gst_decodebin3_set_property (GObject * object, guint prop_id,
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) object;
 
-  /* FIXME : IMPLEMENT */
   switch (prop_id) {
     case PROP_CAPS:
       GST_OBJECT_LOCK (dbin);
@@ -726,7 +721,6 @@ gst_decodebin3_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) object;
 
-  /* FIXME : IMPLEMENT */
   switch (prop_id) {
     case PROP_CAPS:
       GST_OBJECT_LOCK (dbin);
@@ -2560,8 +2554,8 @@ keyframe_waiter_probe (GstPad * pad, GstPadProbeInfo * info,
     DecodebinOutputStream * output)
 {
   GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
+
   /* If we have a keyframe, remove the probe and let all data through */
-  /* FIXME : HANDLE HEADER BUFFER ?? */
   if (!GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT) ||
       GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER)) {
     GST_DEBUG_OBJECT (pad,
@@ -3261,7 +3255,6 @@ gst_decodebin3_send_event (GstElement * element, GstEvent * event)
     dbin->pending_select_streams = g_list_copy (streams);
     SELECTION_UNLOCK (dbin);
 
-    /* FIXME : We don't have an upstream ?? */
 #if 0
     /* Send event upstream */
     if ((peer = gst_pad_get_peer (pad))) {
