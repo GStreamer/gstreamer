@@ -168,12 +168,25 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
+    case GST_VIDEO_FORMAT_GBR:
       alloc_info->stride[0] = pitch;
       alloc_info->stride[1] = pitch;
       alloc_info->stride[2] = pitch;
       alloc_info->offset[0] = 0;
       alloc_info->offset[1] = alloc_info->stride[0] * height;
       alloc_info->offset[2] = alloc_info->offset[1] * 2;
+      break;
+    case GST_VIDEO_FORMAT_GBRA:
+      alloc_info->stride[0] = pitch;
+      alloc_info->stride[1] = pitch;
+      alloc_info->stride[2] = pitch;
+      alloc_info->stride[3] = pitch;
+      alloc_info->offset[0] = 0;
+      alloc_info->offset[1] = alloc_info->stride[0] * height;
+      alloc_info->offset[2] = alloc_info->offset[1] * 2;
+      alloc_info->offset[3] = alloc_info->offset[1] * 3;
       break;
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_RGBA:
@@ -516,7 +529,13 @@ gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
     case GST_VIDEO_FORMAT_I422_12LE:
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
+    case GST_VIDEO_FORMAT_GBR:
       alloc_height *= 3;
+      break;
+    case GST_VIDEO_FORMAT_GBRA:
+      alloc_height *= 4;
       break;
     default:
       break;
