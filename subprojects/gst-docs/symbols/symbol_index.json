@@ -8276,7 +8276,6 @@
   "GstCudaAllocator",
   "GstCudaAllocator.parent",
   "GstCudaAllocatorClass.parent_class",
-  "GstCudaBaseFilter",
   "GstCudaBaseTransform",
   "GstCudaBaseTransform:cuda-device-id",
   "GstCudaBufferCopyType",
