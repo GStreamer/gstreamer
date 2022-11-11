@@ -24,7 +24,7 @@
 
 #include <gst/cuda/gstcudautils.h>
 #include "gstcudaconvertscale.h"
-#include "cuda-converter.h"
+#include "gstcudaconverter.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_base_convert_debug);
 #define GST_CAT_DEFAULT gst_cuda_base_convert_debug
@@ -133,10 +133,7 @@ gst_cuda_base_convert_dispose (GObject * object)
 {
   GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (object);
 
-  if (self->converter) {
-    gst_cuda_converter_free (self->converter);
-    self->converter = NULL;
-  }
+  gst_clear_object (&self->converter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1229,7 +1226,7 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
   GstVideoInfo tmp_info;
 
-  g_clear_pointer (&self->converter, gst_cuda_converter_free);
+  gst_clear_object (&self->converter);
 
   if (!gst_util_fraction_multiply (in_info->width,
           in_info->height, in_info->par_n, in_info->par_d, &from_dar_n,
@@ -1288,7 +1285,7 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), FALSE);
 
     self->converter = gst_cuda_converter_new (in_info,
-        out_info, btrans->context);
+        out_info, btrans->context, NULL);
     if (!self->converter) {
       GST_ERROR_OBJECT (self, "Couldn't create converter");
       return FALSE;

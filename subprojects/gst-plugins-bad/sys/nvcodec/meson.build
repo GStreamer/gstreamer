@@ -1,6 +1,6 @@
 nvcodec_sources = [
-  'cuda-converter.c',
   'gstcudabasetransform.c',
+  'gstcudaconverter.c',
   'gstcudaconvertscale.c',
   'gstcudafilter.c',
   'gstcudamemorycopy.c',
