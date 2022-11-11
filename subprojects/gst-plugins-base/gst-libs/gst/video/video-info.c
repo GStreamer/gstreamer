@@ -1096,6 +1096,7 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
       break;
     case GST_VIDEO_FORMAT_NV12_4L4:
     case GST_VIDEO_FORMAT_NV12_32L32:
+    case GST_VIDEO_FORMAT_NV12_10LE40_4L4:
     {
       const gsize tile_size = GST_VIDEO_FORMAT_INFO_TILE_SIZE (info->finfo, 0);
       gint tile_width = GST_VIDEO_FORMAT_INFO_TILE_WIDTH (info->finfo, 0);
