@@ -1423,3 +1423,188 @@ static void
 gst_cuda_convert_scale_init (GstCudaConvertScale * self)
 {
 }
+
+/**
+ * SECTION:element-cudaconvert
+ * @title: cudaconvert
+ *
+ * Convert video frames between supported video formats.
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! cudaupload ! cudaconvert ! cudadownload ! autovideosink
+ * ```
+ *
+ * Since: 1.20
+ */
+
+struct _GstCudaConvert
+{
+  GstCudaBaseConvert parent;
+};
+
+static GstCaps *gst_cuda_convert_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *gst_cuda_convert_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+
+G_DEFINE_TYPE (GstCudaConvert, gst_cuda_convert, GST_TYPE_CUDA_BASE_CONVERT);
+
+static void
+gst_cuda_convert_class_init (GstCudaConvertClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class,
+      "CUDA colorspace converter",
+      "Filter/Converter/Video/Hardware",
+      "Converts video from one colorspace to another using CUDA",
+      "Seungha Yang <seungha.yang@navercorp.com>");
+
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_cuda_convert_transform_caps);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_cuda_convert_fixate_caps);
+}
+
+static void
+gst_cuda_convert_init (GstCudaConvert * self)
+{
+}
+
+static GstCaps *
+gst_cuda_convert_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *tmp, *tmp2;
+  GstCaps *result;
+
+  /* Get all possible caps that we can transform to */
+  tmp = gst_cuda_base_convert_caps_remove_format_info (caps);
+
+  if (filter) {
+    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = tmp2;
+  }
+
+  result = tmp;
+
+  GST_DEBUG_OBJECT (trans, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, result);
+
+  return result;
+}
+
+static GstCaps *
+gst_cuda_convert_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GstCaps *format = NULL;
+
+  GST_DEBUG_OBJECT (base,
+      "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
+      GST_PTR_FORMAT, othercaps, caps);
+
+  format = gst_cuda_base_convert_get_fixed_format (base, direction, caps,
+      othercaps);
+  gst_caps_unref (othercaps);
+
+  if (gst_caps_is_empty (format)) {
+    GST_ERROR_OBJECT (base, "Could not convert formats");
+  } else {
+    GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, format);
+  }
+
+  return format;
+}
+
+/**
+ * SECTION:element-cudascale
+ * @title: cudascale
+ *
+ * A CUDA based video resizing element
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc ! video/x-raw,width=640,height=480 ! cudaupload ! cudascale ! cudadownload ! video/x-raw,width=1280,height=720 ! fakesink
+ * ```
+ *  This will upload a 640x480 resolution test video to CUDA
+ * memory space and resize it to 1280x720 resolution. Then a resized CUDA
+ * frame will be downloaded to system memory space.
+ *
+ * Since: 1.20
+ */
+
+struct _GstCudaScale
+{
+  GstCudaBaseConvert parent;
+};
+
+static GstCaps *gst_cuda_scale_transform_caps (GstBaseTransform *
+    trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
+static GstCaps *gst_cuda_scale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
+
+G_DEFINE_TYPE (GstCudaScale, gst_cuda_scale, GST_TYPE_CUDA_BASE_CONVERT);
+
+static void
+gst_cuda_scale_class_init (GstCudaScaleClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  gst_element_class_set_static_metadata (element_class,
+      "CUDA video scaler",
+      "Filter/Converter/Video/Scaler/Hardware",
+      "Resize video using CUDA", "Seungha Yang <seungha.yang@navercorp.com>");
+
+  trans_class->transform_caps =
+      GST_DEBUG_FUNCPTR (gst_cuda_scale_transform_caps);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_cuda_scale_fixate_caps);
+}
+
+static void
+gst_cuda_scale_init (GstCudaScale * self)
+{
+}
+
+static GstCaps *
+gst_cuda_scale_transform_caps (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
+{
+  GstCaps *tmp, *tmp2;
+  GstCaps *result;
+
+  /* Get all possible caps that we can transform to */
+  tmp = gst_cuda_base_convert_caps_rangify_size_info (caps);
+
+  if (filter) {
+    tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+    tmp = tmp2;
+  }
+
+  result = tmp;
+
+  GST_DEBUG_OBJECT (trans, "transformed %" GST_PTR_FORMAT " into %"
+      GST_PTR_FORMAT, caps, result);
+
+  return result;
+}
+
+static GstCaps *
+gst_cuda_scale_fixate_caps (GstBaseTransform * base,
+    GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
+{
+  GST_DEBUG_OBJECT (base,
+      "trying to fixate othercaps %" GST_PTR_FORMAT " based on caps %"
+      GST_PTR_FORMAT, othercaps, caps);
+
+  othercaps =
+      gst_cuda_base_convert_fixate_size (base, direction, caps, othercaps);
+
+  GST_DEBUG_OBJECT (base, "fixated othercaps to %" GST_PTR_FORMAT, othercaps);
+
+  return othercaps;
+}

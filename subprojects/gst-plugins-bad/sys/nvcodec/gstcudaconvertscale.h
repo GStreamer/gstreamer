@@ -46,5 +46,13 @@ G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstCudaBaseConvert, gst_object_unref)
 G_DECLARE_FINAL_TYPE (GstCudaConvertScale, gst_cuda_convert_scale,
     GST, CUDA_CONVERT_SCALE, GstCudaBaseConvert)
 
+#define GST_TYPE_CUDA_CONVERT (gst_cuda_convert_get_type())
+G_DECLARE_FINAL_TYPE (GstCudaConvert, gst_cuda_convert,
+    GST, CUDA_CONVERT, GstCudaBaseConvert)
+
+#define GST_TYPE_CUDA_SCALE (gst_cuda_scale_get_type())
+G_DECLARE_FINAL_TYPE (GstCudaScale, gst_cuda_scale,
+    GST, CUDA_SCALE, GstCudaBaseConvert)
+
 G_END_DECLS
 

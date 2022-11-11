@@ -25,8 +25,6 @@
 #include <gst/cuda/gstcudanvrtc.h>
 
 #include "gstcudafilter.h"
-#include "gstcudaconvert.h"
-#include "gstcudascale.h"
 #include "gstcudaconvertscale.h"
 
 /* *INDENT-OFF* */
