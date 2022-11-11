@@ -32,7 +32,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_cuda_base_convert_debug);
 #define GST_CUDA_CONVET_FORMATS \
     "{ I420, YV12, NV12, NV21, P010_10LE, P016_LE, I420_10LE, Y444, Y444_16LE, " \
     "BGRA, RGBA, RGBx, BGRx, ARGB, ABGR, RGB, BGR, BGR10A2_LE, RGB10A2_LE, " \
-    "Y42B, I422_10LE, I422_12LE }"
+    "Y42B, I422_10LE, I422_12LE, RGBP, BGRP, GBR, GBRA }"
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -47,6 +47,8 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, GST_CUDA_CONVET_FORMATS))
     );
+
+#define DEFAULT_ADD_BORDERS TRUE
 
 struct _GstCudaBaseConvert
 {
@@ -126,6 +128,7 @@ gst_cuda_base_convert_class_init (GstCudaBaseConvertClass * klass)
 static void
 gst_cuda_base_convert_init (GstCudaBaseConvert * self)
 {
+  self->add_borders = DEFAULT_ADD_BORDERS;
 }
 
 static void
@@ -1282,10 +1285,21 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
           out_info->finfo->bits)) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), TRUE);
   } else {
+    GstStructure *config;
+
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), FALSE);
 
+    config = gst_structure_new_empty ("GstCudaConverter");
+    gst_structure_set (config,
+        GST_CUDA_CONVERTER_OPT_DEST_X, G_TYPE_INT, self->borders_w / 2,
+        GST_CUDA_CONVERTER_OPT_DEST_Y, G_TYPE_INT, self->borders_h / 2,
+        GST_CUDA_CONVERTER_OPT_DEST_WIDTH,
+        G_TYPE_INT, out_info->width - self->borders_w,
+        GST_CUDA_CONVERTER_OPT_DEST_HEIGHT,
+        G_TYPE_INT, out_info->height - self->borders_h, NULL);
+
     self->converter = gst_cuda_converter_new (in_info,
-        out_info, btrans->context, NULL);
+        out_info, btrans->context, config);
     if (!self->converter) {
       GST_ERROR_OBJECT (self, "Couldn't create converter");
       return FALSE;
@@ -1377,6 +1391,17 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
   return ret;
 }
 
+static void
+gst_cuda_base_convert_set_add_border (GstCudaBaseConvert * self,
+    gboolean add_border)
+{
+  gboolean prev = self->add_borders;
+
+  self->add_borders = add_border;
+  if (prev != self->add_borders)
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+}
+
 /**
  * SECTION:element-cudaconvertscale
  * @title: cudaconvertscale
@@ -1396,10 +1421,21 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
  * Since: 1.22
  */
 
+enum
+{
+  PROP_CONVERT_SCALE_0,
+  PROP_CONVERT_SCALE_ADD_BORDERS,
+};
+
 struct _GstCudaConvertScale
 {
   GstCudaBaseConvert parent;
 };
+
+static void gst_cuda_convert_scale_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_cuda_convert_scale_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 G_DEFINE_TYPE (GstCudaConvertScale, gst_cuda_convert_scale,
     GST_TYPE_CUDA_BASE_CONVERT);
@@ -1407,7 +1443,18 @@ G_DEFINE_TYPE (GstCudaConvertScale, gst_cuda_convert_scale,
 static void
 gst_cuda_convert_scale_class_init (GstCudaConvertScaleClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  gobject_class->set_property = gst_cuda_convert_scale_set_property;
+  gobject_class->get_property = gst_cuda_convert_scale_get_property;
+
+  g_object_class_install_property (gobject_class,
+      PROP_CONVERT_SCALE_ADD_BORDERS,
+      g_param_spec_boolean ("add-borders", "Add Borders",
+          "Add borders if necessary to keep the display aspect ratio",
+          DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "CUDA colorspace converter and scaler",
@@ -1419,6 +1466,39 @@ gst_cuda_convert_scale_class_init (GstCudaConvertScaleClass * klass)
 static void
 gst_cuda_convert_scale_init (GstCudaConvertScale * self)
 {
+}
+
+static void
+gst_cuda_convert_scale_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCudaBaseConvert *base = GST_CUDA_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_CONVERT_SCALE_ADD_BORDERS:
+      gst_cuda_base_convert_set_add_border (base, g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_cuda_convert_scale_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCudaBaseConvert *base = GST_CUDA_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_CONVERT_SCALE_ADD_BORDERS:
+      g_value_set_boolean (value, base->add_borders);
+      break;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 /**
@@ -1533,11 +1613,21 @@ gst_cuda_convert_fixate_caps (GstBaseTransform * base,
  * Since: 1.20
  */
 
+enum
+{
+  PROP_SCALE_0,
+  PROP_SCALE_ADD_BORDERS,
+};
+
 struct _GstCudaScale
 {
   GstCudaBaseConvert parent;
 };
 
+static void gst_cuda_scale_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_cuda_scale_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static GstCaps *gst_cuda_scale_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_cuda_scale_fixate_caps (GstBaseTransform * base,
@@ -1548,8 +1638,25 @@ G_DEFINE_TYPE (GstCudaScale, gst_cuda_scale, GST_TYPE_CUDA_BASE_CONVERT);
 static void
 gst_cuda_scale_class_init (GstCudaScaleClass * klass)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  gobject_class->set_property = gst_cuda_scale_set_property;
+  gobject_class->get_property = gst_cuda_scale_get_property;
+
+  /**
+   * GstCudaScale:add-borders:
+   *
+   * Add borders if necessary to keep the display aspect ratio
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_SCALE_ADD_BORDERS,
+      g_param_spec_boolean ("add-borders", "Add Borders",
+          "Add borders if necessary to keep the display aspect ratio",
+          DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
       "CUDA video scaler",
@@ -1564,6 +1671,39 @@ gst_cuda_scale_class_init (GstCudaScaleClass * klass)
 static void
 gst_cuda_scale_init (GstCudaScale * self)
 {
+}
+
+static void
+gst_cuda_scale_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstCudaBaseConvert *base = GST_CUDA_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_SCALE_ADD_BORDERS:
+      gst_cuda_base_convert_set_add_border (base, g_value_get_boolean (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_cuda_scale_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstCudaBaseConvert *base = GST_CUDA_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_SCALE_ADD_BORDERS:
+      g_value_set_boolean (value, base->add_borders);
+      break;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstCaps *
