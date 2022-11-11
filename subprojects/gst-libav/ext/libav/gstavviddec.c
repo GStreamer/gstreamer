@@ -666,16 +666,20 @@ update_state:
     gst_video_codec_state_unref (ffmpegdec->input_state);
   ffmpegdec->input_state = gst_video_codec_state_ref (state);
 
-  if (ffmpegdec->input_state->info.fps_n) {
-    GstVideoInfo *info = &ffmpegdec->input_state->info;
+  /* Use the framerate values stored in the decoder for calculating latency. The
+   * upstream framerate might not be set but we still want to report a latency
+   * if needed. */
+  if (ffmpegdec->context->time_base.den && ffmpegdec->context->ticks_per_frame) {
+    gint fps_n =
+        ffmpegdec->context->time_base.den / ffmpegdec->context->ticks_per_frame;
+    gint fps_d = ffmpegdec->context->time_base.num;
     latency = gst_util_uint64_scale_ceil (
-        (ffmpegdec->context->has_b_frames) * GST_SECOND, info->fps_d,
-        info->fps_n);
+        (ffmpegdec->context->has_b_frames) * GST_SECOND, fps_d, fps_n);
 
     if (ffmpegdec->context->thread_type & FF_THREAD_FRAME) {
       latency +=
           gst_util_uint64_scale_ceil (ffmpegdec->context->thread_count *
-          GST_SECOND, info->fps_d, info->fps_n);
+          GST_SECOND, fps_d, fps_n);
     }
   }
 
@@ -1453,8 +1457,7 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   }
 
   /* try to find a good framerate */
-  if ((in_info->fps_d && in_info->fps_n) ||
-      GST_VIDEO_INFO_FLAG_IS_SET (in_info, GST_VIDEO_FLAG_VARIABLE_FPS)) {
+  if ((in_info->fps_d && in_info->fps_n)) {
     /* take framerate from input when it was specified (#313970) */
     fps_n = in_info->fps_n;
     fps_d = in_info->fps_d;
@@ -1475,9 +1478,16 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     }
   }
 
-  GST_LOG_OBJECT (ffmpegdec, "setting framerate: %d/%d", fps_n, fps_d);
-  out_info->fps_n = fps_n;
-  out_info->fps_d = fps_d;
+  if (GST_VIDEO_INFO_FLAG_IS_SET (in_info, GST_VIDEO_FLAG_VARIABLE_FPS)) {
+    GST_LOG_OBJECT (ffmpegdec, "setting framerate: %d/%d", in_info->fps_n,
+        in_info->fps_d);
+    out_info->fps_n = in_info->fps_n;
+    out_info->fps_d = in_info->fps_d;
+  } else {
+    GST_LOG_OBJECT (ffmpegdec, "setting framerate: %d/%d", fps_n, fps_d);
+    out_info->fps_n = fps_n;
+    out_info->fps_d = fps_d;
+  }
 
   /* calculate and update par now */
   gst_ffmpegviddec_update_par (ffmpegdec, in_info, out_info);
