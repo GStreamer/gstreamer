@@ -765,6 +765,7 @@ mpegts_base_update_program (MpegTSBase * base, MpegTSBaseProgram * program,
     MpegTSBaseStream *stream = (MpegTSBaseStream *) tmp->data;
     mpegts_base_program_remove_stream (base, program, stream->pid);
   }
+  g_list_free (toremove);
   return TRUE;
 }
 
