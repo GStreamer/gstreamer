@@ -19,6 +19,18 @@
 
 #include <gst/check/gstcheck.h>
 
+static const gchar *run_visual_test = NULL;
+
+static const gchar *YUV_FORMATS[] = {
+  "I420", "YV12", "NV12", "NV21", "P010_10LE", "P016_LE", "I420_10LE", "Y444",
+  "Y444_16LE", "Y42B", "I422_10LE", "I422_12LE",
+};
+
+static const gchar *RGB_FORMATS[] = {
+  "BGRA", "RGBA", "RGBx", "BGRx", "ARGB", "ABGR", "RGB", "BGR", "BGR10A2_LE",
+  "RGB10A2_LE", "RGBP", "BGRP", "GBR", "GBRA",
+};
+
 static gboolean
 bus_cb (GstBus * bus, GstMessage * message, gpointer data)
 {
@@ -54,9 +66,12 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
   gchar *pipeline_str =
       g_strdup_printf ("videotestsrc num-buffers=1 is-live=true ! "
-      "video/x-raw,format=%s,framerate=3/1 ! cudaupload ! "
-      "cudaconvert ! cudadownload ! video/x-raw,format=%s ! "
-      "videoconvert ! autovideosink", in_format, out_format);
+      "video/x-raw,format=%s,width=128,height=64,framerate=3/1,"
+      "pixel-aspect-ratio=1/1 ! cudaupload ! "
+      "cudaconvertscale ! cudadownload ! "
+      "video/x-raw,format=%s,width=320,height=240,pixel-aspect-ratio=1/1 ! "
+      "videoconvert ! %s", in_format, out_format,
+      run_visual_test ? "autovideosink" : "fakesink");
   GstElement *pipeline;
 
   pipeline = gst_parse_launch (pipeline_str, NULL);
@@ -78,20 +93,12 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
 
 GST_START_TEST (test_convert_yuv_yuv)
 {
-  const gchar *format_list[] = {
-    "I420", "YV12", "NV12", "NV21", "P010_10LE", "I420_10LE",
-    "Y444", "Y444_16LE",
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (format_list); j++) {
-      if (i == j)
-        continue;
-
-      GST_DEBUG ("run conversion %s to %s", format_list[i], format_list[j]);
-      run_convert_pipelne (format_list[i], format_list[j]);
+  for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (YUV_FORMATS); j++) {
+      gst_println ("run conversion %s to %s", YUV_FORMATS[i], YUV_FORMATS[j]);
+      run_convert_pipelne (YUV_FORMATS[i], YUV_FORMATS[j]);
     }
   }
 }
@@ -100,22 +107,12 @@ GST_END_TEST;
 
 GST_START_TEST (test_convert_yuv_rgb)
 {
-  const gchar *in_format_list[] = {
-    "I420", "YV12", "NV12", "NV21", "P010_10LE", "I420_10LE",
-    "Y444", "Y444_16LE",
-  };
-  const gchar *out_format_list[] = {
-    "BGRA", "RGBA", "RGBx", "BGRx", "ARGB", "ABGR", "RGB", "BGR", "BGR10A2_LE",
-    "RGB10A2_LE",
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
-      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
-          out_format_list[j]);
-      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+  for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
+      gst_println ("run conversion %s to %s", YUV_FORMATS[i], RGB_FORMATS[j]);
+      run_convert_pipelne (YUV_FORMATS[i], RGB_FORMATS[j]);
     }
   }
 }
@@ -124,22 +121,12 @@ GST_END_TEST;
 
 GST_START_TEST (test_convert_rgb_yuv)
 {
-  const gchar *in_format_list[] = {
-    "BGRA", "RGBA", "RGBx", "BGRx", "ARGB", "ABGR", "RGB", "BGR", "BGR10A2_LE",
-    "RGB10A2_LE",
-  };
-  const gchar *out_format_list[] = {
-    "I420", "YV12", "NV12", "NV21", "P010_10LE", "I420_10LE",
-    "Y444", "Y444_16LE",
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (in_format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (out_format_list); j++) {
-      GST_DEBUG ("run conversion %s to %s", in_format_list[i],
-          out_format_list[j]);
-      run_convert_pipelne (in_format_list[i], out_format_list[j]);
+  for (i = 0; i < G_N_ELEMENTS (RGB_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (YUV_FORMATS); j++) {
+      gst_println ("run conversion %s to %s", RGB_FORMATS[i], YUV_FORMATS[j]);
+      run_convert_pipelne (RGB_FORMATS[i], YUV_FORMATS[j]);
     }
   }
 }
@@ -148,20 +135,12 @@ GST_END_TEST;
 
 GST_START_TEST (test_convert_rgb_rgb)
 {
-  const gchar *format_list[] = {
-    "BGRA", "RGBA", "RGBx", "BGRx", "ARGB", "ABGR", "RGB", "BGR", "BGR10A2_LE",
-    "RGB10A2_LE",
-  };
-
   gint i, j;
 
-  for (i = 0; i < G_N_ELEMENTS (format_list); i++) {
-    for (j = 0; j < G_N_ELEMENTS (format_list); j++) {
-      if (i == j)
-        continue;
-
-      GST_DEBUG ("run conversion %s to %s", format_list[i], format_list[j]);
-      run_convert_pipelne (format_list[i], format_list[j]);
+  for (i = 0; i < G_N_ELEMENTS (RGB_FORMATS); i++) {
+    for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
+      gst_println ("run conversion %s to %s", RGB_FORMATS[i], RGB_FORMATS[j]);
+      run_convert_pipelne (RGB_FORMATS[i], RGB_FORMATS[j]);
     }
   }
 }
@@ -174,9 +153,9 @@ check_cuda_convert_available (void)
   gboolean ret = TRUE;
   GstElement *upload;
 
-  upload = gst_element_factory_make ("cudaconvert", NULL);
+  upload = gst_element_factory_make ("cudaconvertscale", NULL);
   if (!upload) {
-    GST_WARNING ("cudaconvert is not available, possibly driver load failure");
+    GST_WARNING ("cudaconvertscale is not available");
     return FALSE;
   }
 
@@ -186,7 +165,7 @@ check_cuda_convert_available (void)
 }
 
 static Suite *
-cudaconvert_suite (void)
+cudaconvertscale_suite (void)
 {
   Suite *s;
   TCase *tc_chain;
@@ -194,23 +173,28 @@ cudaconvert_suite (void)
   /* HACK: cuda device init/deinit with fork seems to problematic */
   g_setenv ("CK_FORK", "no", TRUE);
 
-  s = suite_create ("cudaconvert");
+  run_visual_test = g_getenv ("ENABLE_CUDA_VISUAL_TEST");
+
+  s = suite_create ("cudaconvertscale");
   tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
 
   if (!check_cuda_convert_available ()) {
-    GST_DEBUG ("Skip cudaconvert test since cannot open device");
+    gst_println ("Skip convertscale test since cannot open device");
     goto end;
   }
 
-  tcase_add_test (tc_chain, test_convert_yuv_yuv);
-  tcase_add_test (tc_chain, test_convert_yuv_rgb);
-  tcase_add_test (tc_chain, test_convert_rgb_yuv);
-  tcase_add_test (tc_chain, test_convert_rgb_rgb);
+  /* Only run test if explicitly enabled */
+  if (g_getenv ("ENABLE_CUDA_CONVERSION_TEST")) {
+    tcase_add_test (tc_chain, test_convert_yuv_yuv);
+    tcase_add_test (tc_chain, test_convert_yuv_rgb);
+    tcase_add_test (tc_chain, test_convert_rgb_yuv);
+    tcase_add_test (tc_chain, test_convert_rgb_rgb);
+  }
 
 end:
   return s;
 }
 
-GST_CHECK_MAIN (cudaconvert);
+GST_CHECK_MAIN (cudaconvertscale);
