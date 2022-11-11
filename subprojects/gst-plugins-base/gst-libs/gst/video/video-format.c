@@ -6931,6 +6931,303 @@ pack_NV12_10LE40_TILED (const GstVideoFormatInfo * info,
       stride, chroma_site, y, width);
 }
 
+#define PACK_MT2110T_TILED  GST_VIDEO_FORMAT_AYUV64, unpack_MT2110T, 1, pack_MT2110T
+
+static void
+unpack_MT2110T (const GstVideoFormatInfo * info,
+    GstVideoPackFlags flags, gpointer dest,
+    const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const gsize TILE_SIZE = 640;
+  guint16 *restrict d = dest;
+
+  /* TODO not supported yet */
+  g_assert (x == 0);
+
+  /* Position in the partition grid */
+  guint ty = y / 32;
+  guint tx;
+
+  /* Vertical position within the tile */
+  gint tile_y = y % 32;
+
+  /* Tiles are split into partitions of 16 bytes of lower 2bit and 64 bytes
+   * of higher 8 bits. It contains 64 pixels, so 4 lines per parititons. The
+   * chroma tiles have half the number of parititons. */
+  gint partition_luma = tile_y / 4;
+  gint partition_chroma = partition_luma / 2;
+  gint partition_line_luma = tile_y % 4;
+  gint partition_line_chroma = (tile_y / 2) % 4;
+  gint partition_skip_luma = partition_luma * 80;
+  gint partition_skip_chroma = partition_chroma * 80;
+
+  for (tx = 0; tx < (width / 16); tx++) {
+    const guint8 *y_tile = data[0];
+    const guint8 *uv_tile = data[1];
+    gsize offset;
+    gint tile_x;
+    gint num_pixels = MIN (16, width - (tx * 16));
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[0]),
+        GST_VIDEO_TILE_Y_TILES (stride[0])) * TILE_SIZE;
+    y_tile = y_tile + offset + partition_skip_luma;
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[1]),
+        GST_VIDEO_TILE_Y_TILES (stride[1])) * (TILE_SIZE / 2);
+    uv_tile = uv_tile + offset + partition_skip_chroma;
+
+    for (tile_x = 0; tile_x < num_pixels; tile_x++) {
+      guint high_i = partition_line_luma * 16 + tile_x;
+      guint low_i = tile_x;
+      guint low_shift = partition_line_luma * 2;
+      guint low_mask = 0x03 << low_shift;
+      guint low_y = (y_tile[low_i] & low_mask) >> low_shift;
+      guint16 Y = (y_tile[16 + high_i] << 2) | low_y;
+
+      high_i = partition_line_chroma * 16 + GST_ROUND_DOWN_2 (tile_x);
+      low_i = GST_ROUND_DOWN_2 (tile_x);
+      low_shift = partition_line_chroma * 2;
+      low_mask = 0x03 << low_shift;
+      guint low_u = (uv_tile[low_i] & low_mask) >> low_shift;
+      guint low_v = (uv_tile[low_i + 1] & low_mask) >> low_shift;
+      guint16 U = (uv_tile[16 + high_i] << 2) | low_u;
+      guint16 V = (uv_tile[16 + high_i + 1] << 2) | low_v;
+
+      d[0] = 0xffff;
+      d[1] = Y << 6;
+      d[2] = U << 6;
+      d[3] = V << 6;
+      d += 4;
+    }
+  }
+}
+
+static void
+pack_MT2110T (const GstVideoFormatInfo * info,
+    GstVideoPackFlags flags, const gpointer src, gint sstride,
+    gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  const gsize TILE_SIZE = 640;
+  const guint16 *restrict s = src;
+
+  /* Position in the partition grid */
+  guint ty = y / 32;
+  guint tx;
+
+  /* Vertical position within the tile */
+  gint tile_y = y % 32;
+
+  /* Tiles are split into paritions of 16 bytes of lower 2bit and 64 bytes
+   * of higher 8 bits. It contains 64 pixels, so 4 lines per parititons. The
+   * chroma tiles have half the number of parititons. */
+  gint partition_luma = tile_y / 4;
+  gint partition_chroma = partition_luma / 2;
+  gint partition_line_luma = tile_y % 4;
+  gint partition_line_chroma = (tile_y / 2) % 4;
+  gint partition_skip_luma = partition_luma * 80;
+  gint partition_skip_chroma = partition_chroma * 80;
+
+  for (tx = 0; tx < (width / 16); tx++) {
+    guint8 *y_tile = data[0];
+    guint8 *uv_tile = data[1];
+    gsize offset;
+    gint tile_x;
+    gint num_pixels = MIN (16, width - (tx * 16));
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[0]),
+        GST_VIDEO_TILE_Y_TILES (stride[0])) * TILE_SIZE;
+    y_tile = y_tile + offset + partition_skip_luma;
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[1]),
+        GST_VIDEO_TILE_Y_TILES (stride[1])) * (TILE_SIZE / 2);
+    uv_tile = uv_tile + offset + partition_skip_chroma;
+
+    for (tile_x = 0; tile_x < num_pixels; tile_x++) {
+      const guint16 Y = s[1] >> 6;
+      const guint16 U = s[2] >> 6;
+      const guint16 V = s[3] >> 6;
+
+      guint high_i = partition_line_luma * 16 + tile_x;
+      guint low_i = tile_x;
+      guint low_shift = partition_line_luma * 2;
+      guint low_mask = 0x03 << low_shift;
+
+      y_tile[low_i] = (y_tile[low_i] & ~low_mask) | ((Y & 0x03) << low_shift);
+      y_tile[16 + high_i] = Y >> 2;
+
+      if (IS_CHROMA_LINE_420 (y, flags) && (tile_x & 1) == 0) {
+        high_i = partition_line_chroma * 16 + GST_ROUND_DOWN_2 (tile_x);
+        low_i = GST_ROUND_DOWN_2 (tile_x);
+        low_shift = partition_line_chroma * 2;
+        low_mask = 0x03 << low_shift;
+
+        uv_tile[low_i] =
+            (uv_tile[low_i] & ~low_mask) | ((U & 0x03) << low_shift);
+        uv_tile[low_i + 1] =
+            (uv_tile[low_i + 1] & ~low_mask) | ((V & 0x03) << low_shift);
+        uv_tile[16 + high_i] = U >> 2;
+        uv_tile[16 + high_i + 1] = V >> 2;
+      }
+
+      s += 4;
+    }
+  }
+}
+
+#define PACK_MT2110R_TILED  GST_VIDEO_FORMAT_AYUV64, unpack_MT2110R, 1, pack_MT2110R
+
+static void
+unpack_MT2110R (const GstVideoFormatInfo * info,
+    GstVideoPackFlags flags, gpointer dest,
+    const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const gsize TILE_SIZE = 640;
+  guint16 *restrict d = dest;
+
+  /* TODO not supported yet */
+  g_assert (x == 0);
+
+  /* Position in the partition grid */
+  guint ty = y / 32;
+  guint tx;
+
+  /* Vertical position within the tile */
+  gint tile_y = y % 32;
+
+  /* Tiles are split into partitions of 16 bytes of lower 2bit and 64 bytes
+   * of higher 8 bits. It contains 64 pixels, so 4 lines per parititons. The
+   * chroma tiles have half the number of parititons. */
+  gint partition_luma = tile_y / 4;
+  gint partition_chroma = partition_luma / 2;
+  gint partition_line_luma = tile_y % 4;
+  gint partition_line_chroma = (tile_y / 2) % 4;
+  gint partition_skip_luma = partition_luma * 80;
+  gint partition_skip_chroma = partition_chroma * 80;
+
+  for (tx = 0; tx < (width / 16); tx++) {
+    const guint8 *y_tile = data[0];
+    const guint8 *uv_tile = data[1];
+    gsize offset;
+    gint tile_x;
+    gint num_pixels = MIN (16, width - (tx * 16));
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[0]),
+        GST_VIDEO_TILE_Y_TILES (stride[0])) * TILE_SIZE;
+    y_tile = y_tile + offset + partition_skip_luma;
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[1]),
+        GST_VIDEO_TILE_Y_TILES (stride[1])) * (TILE_SIZE / 2);
+    uv_tile = uv_tile + offset + partition_skip_chroma;
+
+    for (tile_x = 0; tile_x < num_pixels; tile_x++) {
+      guint high_i = partition_line_luma * 16 + tile_x;
+      guint low_i = partition_line_luma * 4 + tile_x / 4;
+      guint low_shift = tile_x % 4 * 2;
+      guint low_mask = 0x03 << low_shift;
+      guint low_y = (y_tile[low_i] & low_mask) >> low_shift;
+      guint16 Y = (y_tile[16 + high_i] << 2) | low_y;
+
+      high_i = partition_line_chroma * 16 + GST_ROUND_DOWN_2 (tile_x);
+      low_i = partition_line_chroma * 4 + tile_x / 4;
+      low_shift = GST_ROUND_DOWN_2 (tile_x % 4) * 2;
+      low_mask = 0x03 << low_shift;
+      guint low_u = (uv_tile[low_i] & low_mask) >> low_shift;
+      guint low_v = (uv_tile[low_i] & (low_mask << 2)) >> (low_shift + 2);
+      guint16 U = (uv_tile[16 + high_i] << 2) | low_u;
+      guint16 V = (uv_tile[16 + high_i + 1] << 2) | low_v;
+
+      d[0] = 0xffff;
+      d[1] = Y << 6;
+      d[2] = U << 6;
+      d[3] = V << 6;
+      d += 4;
+    }
+  }
+}
+
+static void
+pack_MT2110R (const GstVideoFormatInfo * info,
+    GstVideoPackFlags flags, const gpointer src, gint sstride,
+    gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  const gsize TILE_SIZE = 640;
+  const guint16 *restrict s = src;
+
+  /* Position in the partition grid */
+  guint ty = y / 32;
+  guint tx;
+
+  /* Vertical position within the tile */
+  gint tile_y = y % 32;
+
+  /* Tiles are split into paritions of 16 bytes of lower 2bit and 64 bytes
+   * of higher 8 bits. It contains 64 pixels, so 4 lines per parititons. The
+   * chroma tiles have half the number of parititons. */
+  gint partition_luma = tile_y / 4;
+  gint partition_chroma = partition_luma / 2;
+  gint partition_line_luma = tile_y % 4;
+  gint partition_line_chroma = (tile_y / 2) % 4;
+  gint partition_skip_luma = partition_luma * 80;
+  gint partition_skip_chroma = partition_chroma * 80;
+
+  for (tx = 0; tx < (width / 16); tx++) {
+    guint8 *y_tile = data[0];
+    guint8 *uv_tile = data[1];
+    gsize offset;
+    gint tile_x;
+    gint num_pixels = MIN (16, width - (tx * 16));
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[0]),
+        GST_VIDEO_TILE_Y_TILES (stride[0])) * TILE_SIZE;
+    y_tile = y_tile + offset + partition_skip_luma;
+
+    offset = gst_video_tile_get_index (info->tile_mode, tx, ty,
+        GST_VIDEO_TILE_X_TILES (stride[1]),
+        GST_VIDEO_TILE_Y_TILES (stride[1])) * (TILE_SIZE / 2);
+    uv_tile = uv_tile + offset + partition_skip_chroma;
+
+    for (tile_x = 0; tile_x < num_pixels; tile_x++) {
+      const guint16 Y = s[1] >> 6;
+      const guint16 U = s[2] >> 6;
+      const guint16 V = s[3] >> 6;
+
+      guint high_i = partition_line_luma * 16 + tile_x;
+      guint low_i = partition_line_luma * 4 + tile_x / 4;
+      guint low_shift = tile_x % 4 * 2;
+      guint low_mask = 0x03 << low_shift;
+
+      y_tile[low_i] = (y_tile[low_i] & ~low_mask) | ((Y & 0x03) << low_shift);
+      y_tile[16 + high_i] = Y >> 2;
+
+      if (IS_CHROMA_LINE_420 (y, flags) && (tile_x & 1) == 0) {
+        high_i = partition_line_chroma * 16 + GST_ROUND_DOWN_2 (tile_x);
+        low_i = partition_line_chroma * 4 + tile_x / 4;
+        low_shift = GST_ROUND_DOWN_2 (tile_x % 4) * 2;
+        low_mask = 0x0f << low_shift;
+
+        uv_tile[low_i] = (uv_tile[low_i] & ~(low_mask)) |
+            ((U & 0x03) << low_shift) | ((V & 0x03) << (low_shift + 2));
+        uv_tile[16 + high_i] = U >> 2;
+        uv_tile[16 + high_i + 1] = V >> 2;
+      }
+
+      s += 4;
+    }
+  }
+}
 
 typedef struct
 {
@@ -7031,6 +7328,7 @@ typedef struct
 #define TILE_32x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 5, 5, { {32, 32, 32, 1024}, {16, 32, 32, 1024}, }
 #define TILE_64x32(mode) GST_VIDEO_TILE_MODE_ ##mode, 6, 5, { {64, 32, 64, 2048}, {32, 32, 64, 2048}, }
 #define TILE_8x128(mode) GST_VIDEO_TILE_MODE_ ##mode, 3, 7, { {8, 128, 8, 1024}, {4, 128, 8, 1024}, }
+#define TILE_10bit_16x32s(mode) GST_VIDEO_TILE_MODE_ ##mode, 4, 5, { {16, 32, 20, 640}, {8, 16, 20, 320}, }
 #define TILE_10bit_8x128(mode) GST_VIDEO_TILE_MODE_ ##mode, 3, 7, { {0, 128, 8, 1024}, {0, 128, 8, 1024}, }
 #define TILE_10bit_4x4(mode) GST_VIDEO_TILE_MODE_ ##mode, 2, 2, { {4, 4, 5, 20}, {2, 4, 5, 20}, }
 
@@ -7345,6 +7643,12 @@ static const VideoFormat formats[] = {
       OFFS001, SUB420, PACK_NV12_10LE40_TILED, TILE_10bit_4x4 (LINEAR)),
   {0x00000000, {GST_VIDEO_FORMAT_DMA_DRM, "DMA_DRM", "DMA DRM video",
           GST_VIDEO_FORMAT_FLAG_COMPLEX, DPTH0, PSTR0, PLANE_NA, OFFS0}},
+  MAKE_YUV_ST_FORMAT (MT2110T, "raw video",
+      GST_MAKE_FOURCC ('M', 'T', '2', 'T'), DPTH10_10_10, PSTR0, PLANE011,
+      OFFS001, SUB420, PACK_MT2110T_TILED, TILE_10bit_16x32s (LINEAR)),
+  MAKE_YUV_ST_FORMAT (MT2110R, "raw video",
+      GST_MAKE_FOURCC ('M', 'T', '2', 'R'), DPTH10_10_10, PSTR0, PLANE011,
+      OFFS001, SUB420, PACK_MT2110R_TILED, TILE_10bit_16x32s (LINEAR)),
 };
 
 G_GNUC_END_IGNORE_DEPRECATIONS;

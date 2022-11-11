@@ -3233,7 +3233,8 @@ GST_START_TEST (test_video_formats_pstrides)
         || fmt == GST_VIDEO_FORMAT_NV12_8L128
         || fmt == GST_VIDEO_FORMAT_NV12_10BE_8L128
         || fmt == GST_VIDEO_FORMAT_NV12_10LE40_4L4
-        || fmt == GST_VIDEO_FORMAT_DMA_DRM) {
+        || fmt == GST_VIDEO_FORMAT_DMA_DRM
+        || fmt == GST_VIDEO_FORMAT_MT2110T || fmt == GST_VIDEO_FORMAT_MT2110R) {
       fmt++;
       continue;
     }

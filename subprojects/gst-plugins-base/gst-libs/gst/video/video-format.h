@@ -150,6 +150,8 @@ G_BEGIN_DECLS
  *                            memory:DMABuf #GstCapsFeatures, where an extra
  *                            parameter (drm-format) is required to define the
  *                            image format and its memory layout.
+ * @GST_VIDEO_FORMAT_MT2110T : Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, tiled 2 bits (Since: 1.24)
+ * @GST_VIDEO_FORMAT_MT2110R : Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, raster 2 bits (Since: 1.24)
  *
  * Enum value describing the most common video formats.
  *
@@ -415,6 +417,7 @@ typedef enum {
    * Since: 1.24
    */
   GST_VIDEO_FORMAT_NV12_10LE40_4L4,
+
   /**
    * GST_VIDEO_FORMAT_DMA_DRM:
    *
@@ -426,6 +429,26 @@ typedef enum {
    * Since: 1.24
    */
   GST_VIDEO_FORMAT_DMA_DRM,
+
+  /**
+   * GST_VIDEO_FORMAT_MT2110T:
+   *
+   * Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, tile 2
+   * bits.
+   *
+   * Since: 1.24
+   */
+  GST_VIDEO_FORMAT_MT2110T,
+
+  /**
+   * GST_VIDEO_FORMAT_MT2110R:
+   *
+   * Mediatek 10bit NV12 little endian with 16x32 tiles in linear order, raster
+   * 2 bits.
+   *
+   * Since: 1.24
+   */
+  GST_VIDEO_FORMAT_MT2110R,
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
@@ -902,7 +925,8 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "GBR_12BE, Y444_12LE, GBR_12LE, I422_12BE, I422_12LE, Y212_BE, Y212_LE, I420_12BE, " \
     "I420_12LE, P012_BE, P012_LE, Y444_10BE, GBR_10BE, Y444_10LE, GBR_10LE, r210, " \
     "I422_10BE, I422_10LE, NV16_10LE32, Y210, v210, UYVP, I420_10BE, I420_10LE, " \
-    "P010_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, RGBP, GBR, BGRP, NV24, xBGR, BGRx, " \
+    "P010_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, NV12_10BE_8L128, NV12_10LE40_4L4, " \
+    "MT2110T, MT2110R, Y444, RGBP, GBR, BGRP, NV24, xBGR, BGRx, " \
     "xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, " \
     "YV12, NV21, NV12, NV12_8L128, NV12_64Z32, NV12_4L4, NV12_32L32, NV12_16L32S, Y41B, IYU1, YVU9, YUV9, RGB16, " \
     "BGR16, RGB15, BGR15, RGB8P, GRAY16_BE, GRAY16_LE, GRAY10_LE32, GRAY8"
@@ -915,7 +939,8 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
     "GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, " \
     "I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, " \
     "I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, " \
-    "P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, NV12_10LE40_4L4, NV12_10BE_8L128, Y444, RGBP, GBR, BGRP, NV24, xBGR, BGRx, " \
+    "P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, NV12_10LE40_4L4, NV12_10BE_8L128, " \
+    "MT2110T, MT2110R, Y444, RGBP, GBR, BGRP, NV24, xBGR, BGRx, " \
     "xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, " \
     "YV12, NV21, NV12, NV12_8L128, NV12_64Z32, NV12_4L4, NV12_32L32, NV12_16L32S, Y41B, IYU1, YVU9, YUV9, RGB16, " \
     "BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8"
