@@ -177,11 +177,12 @@ out:
   }
   if (runner)
     gst_object_unref (runner);
-  gst_validate_deinit ();
-  gst_deinit ();
 
   gst_validate_printf (NULL, "\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
+
+  gst_validate_deinit ();
+  gst_deinit ();
 
   return ret;
 }
