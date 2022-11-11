@@ -419,13 +419,14 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
                 "Stream %d belongs to running stream %d, no waiting",
                 stream->stream_number, ostream->stream_number);
             stream->wait = FALSE;
-
+            gst_syncstream_unref (stream);
             GST_STREAM_SYNCHRONIZER_UNLOCK (self);
             break;
           }
         } else if (group_id == self->group_id) {
           GST_DEBUG_OBJECT (pad, "Stream %d belongs to running group %d, "
               "no waiting", stream->stream_number, group_id);
+          gst_syncstream_unref (stream);
           GST_STREAM_SYNCHRONIZER_UNLOCK (self);
           break;
         }
