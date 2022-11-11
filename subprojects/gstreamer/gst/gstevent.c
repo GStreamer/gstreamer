@@ -213,6 +213,33 @@ gst_event_type_get_flags (GstEventType type)
   return ret;
 }
 
+/**
+ * gst_event_type_to_sticky_ordering
+ * @type: a #GstEventType
+ *
+ * Converts the #GstEventType to an unsigned integer that
+ * represents the ordering of sticky events when re-sending them.
+ * A lower value represents a higher-priority event.
+ *
+ * Returns: an unsigned integer
+ * Since: 1.22
+ */
+/* FIXME 2.0: Remove the sticky event order overrides once
+ * the event type numbers are fixed */
+guint
+gst_event_type_to_sticky_ordering (GstEventType type)
+{
+  guint sticky_order = type;
+
+  /* Fix up the sticky event ordering for events where the
+   * type was chosen poorly */
+  if (type == GST_EVENT_INSTANT_RATE_CHANGE) {
+    sticky_order = GST_EVENT_SEGMENT + 1;
+  }
+
+  return sticky_order;
+}
+
 static void
 _gst_event_free (GstEvent * event)
 {

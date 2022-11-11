@@ -2591,6 +2591,12 @@ test_sticky_events_handler (GstPad * pad, GstObject * parent, GstEvent * event)
     case 2:
       fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT);
       break;
+    case 3:
+      fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_INSTANT_RATE_CHANGE);
+      break;
+    case 4:
+      fail_unless (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_COLLECTION);
+      break;
     default:
       fail_unless (FALSE);
       break;
@@ -2642,6 +2648,15 @@ GST_START_TEST (test_sticky_events)
   gst_segment_init (&seg, GST_FORMAT_TIME);
   gst_pad_push_event (srcpad, gst_event_new_segment (&seg));
 
+  /* Push a stream collection */
+  GstStreamCollection *collection = gst_stream_collection_new (0);
+  gst_pad_push_event (srcpad, gst_event_new_stream_collection (collection));
+  gst_object_unref (collection);
+
+  /* Push an instant rate change, which should be sent earlier than the preceding stream collection */
+  gst_pad_push_event (srcpad, gst_event_new_instant_rate_change (1.0,
+          GST_SEGMENT_FLAG_NONE));
+
   /* now make a sinkpad */
   sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   fail_unless (sinkpad != NULL);
@@ -2662,13 +2677,13 @@ GST_START_TEST (test_sticky_events)
   gst_pad_push_event (srcpad, gst_event_new_caps (caps));
   gst_caps_unref (caps);
 
-  /* should have triggered 2 events, the segment event is still pending */
+  /* should have triggered 2 events, the segment, stream collection and instant-rate events are still pending */
   fail_unless_equals_int (sticky_count, 2);
 
   fail_unless (gst_pad_push (srcpad, gst_buffer_new ()) == GST_FLOW_OK);
 
-  /* should have triggered 3 events */
-  fail_unless_equals_int (sticky_count, 3);
+  /* should have triggered 5 events */
+  fail_unless_equals_int (sticky_count, 5);
 
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);

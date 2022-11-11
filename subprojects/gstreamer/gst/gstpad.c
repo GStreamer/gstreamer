@@ -128,6 +128,7 @@ enum
 typedef struct
 {
   gboolean received;
+  guint sticky_order;
   GstEvent *event;
 } PadEvent;
 
@@ -459,6 +460,8 @@ remove_events (GstPad * pad)
   }
 }
 
+#define _to_sticky_order(t) gst_event_type_to_sticky_ordering(t)
+
 /* should be called with object lock */
 static PadEvent *
 find_event_by_type (GstPad * pad, GstEventType type, guint idx)
@@ -466,6 +469,7 @@ find_event_by_type (GstPad * pad, GstEventType type, guint idx)
   guint i, len;
   GArray *events;
   PadEvent *ev;
+  guint last_sticky_order = _to_sticky_order (type);
 
   events = pad->priv->events;
   len = events->len;
@@ -479,7 +483,7 @@ find_event_by_type (GstPad * pad, GstEventType type, guint idx)
       if (idx == 0)
         goto found;
       idx--;
-    } else if (GST_EVENT_TYPE (ev->event) > type) {
+    } else if (ev->sticky_order > last_sticky_order) {
       break;
     }
   }
@@ -499,11 +503,12 @@ find_event (GstPad * pad, GstEvent * event)
   events = pad->priv->events;
   len = events->len;
 
+  guint sticky_order = _to_sticky_order (GST_EVENT_TYPE (event));
   for (i = 0; i < len; i++) {
     ev = &g_array_index (events, PadEvent, i);
     if (event == ev->event)
       goto found;
-    else if (GST_EVENT_TYPE (ev->event) > GST_EVENT_TYPE (event))
+    else if (ev->sticky_order > sticky_order)
       break;
   }
   ev = NULL;
@@ -522,13 +527,15 @@ remove_event_by_type (GstPad * pad, GstEventType type)
   events = pad->priv->events;
   len = events->len;
 
+  guint last_sticky_order = _to_sticky_order (type);
+
   i = 0;
   while (i < len) {
     ev = &g_array_index (events, PadEvent, i);
     if (ev->event == NULL)
       goto next;
 
-    if (GST_EVENT_TYPE (ev->event) > type)
+    if (ev->sticky_order > last_sticky_order)
       break;
     else if (GST_EVENT_TYPE (ev->event) != type)
       goto next;
@@ -599,6 +606,7 @@ restart:
       goto next;
 
     /* take additional ref, func might release the lock */
+    ev_ret.sticky_order = ev->sticky_order;
     ev_ret.event = gst_event_ref (ev->event);
     ev_ret.received = ev->received;
 
@@ -4033,12 +4041,17 @@ push_sticky (GstPad * pad, PadEvent * ev, gpointer user_data)
     return TRUE;
   }
 
+  guint data_sticky_order = 0;
+  if (data->event) {
+    data_sticky_order = _to_sticky_order (GST_EVENT_TYPE (data->event));
+  }
+
   /* If we're called because of an sticky event, only forward
    * events that would come before this new event and the
    * event itself */
   if (data->event && GST_EVENT_IS_STICKY (data->event) &&
-      GST_EVENT_TYPE (data->event) <= GST_EVENT_SEGMENT &&
-      GST_EVENT_TYPE (data->event) < GST_EVENT_TYPE (event)) {
+      data_sticky_order <= _to_sticky_order (GST_EVENT_SEGMENT) &&
+      data_sticky_order < ev->sticky_order) {
     data->ret = GST_FLOW_CUSTOM_SUCCESS_1;
   } else {
     data->ret = gst_pad_push_event_unchecked (pad, gst_event_ref (event),
@@ -5295,6 +5308,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   gboolean insert = TRUE;
 
   type = GST_EVENT_TYPE (event);
+  guint sticky_order = _to_sticky_order (type);
 
   /* Store all sticky events except SEGMENT/EOS when we're flushing,
    * otherwise they can be dropped and nothing would ever resend them.
@@ -5343,11 +5357,11 @@ store_sticky_event (GstPad * pad, GstEvent * event)
       break;
     }
 
-    if (type < GST_EVENT_TYPE (ev->event) || (type != GST_EVENT_TYPE (ev->event)
+    if (sticky_order < ev->sticky_order || (type != GST_EVENT_TYPE (ev->event)
             && GST_EVENT_TYPE (ev->event) == GST_EVENT_EOS)) {
       /* STREAM_START, CAPS and SEGMENT must be delivered in this order. By
        * storing the sticky ordered we can check that this is respected. */
-      if (G_UNLIKELY (GST_EVENT_TYPE (ev->event) <= GST_EVENT_SEGMENT
+      if (G_UNLIKELY (ev->sticky_order <= _to_sticky_order (GST_EVENT_SEGMENT)
               || GST_EVENT_TYPE (ev->event) == GST_EVENT_EOS))
         g_warning (G_STRLOC
             ":%s:<%s:%s> Sticky event misordering, got '%s' before '%s'",
@@ -5359,6 +5373,7 @@ store_sticky_event (GstPad * pad, GstEvent * event)
   }
   if (insert) {
     PadEvent ev;
+    ev.sticky_order = sticky_order;
     ev.event = gst_event_ref (event);
     ev.received = FALSE;
     g_array_insert_val (events, i, ev);
@@ -5438,7 +5453,7 @@ sticky_changed (GstPad * pad, PadEvent * ev, gpointer user_data)
 
   /* Forward all sticky events before our current one that are pending */
   if (ev->event != data->event
-      && GST_EVENT_TYPE (ev->event) < GST_EVENT_TYPE (data->event))
+      && ev->sticky_order < _to_sticky_order (GST_EVENT_TYPE (data->event)))
     return push_sticky (pad, ev, data);
 
   return TRUE;
