@@ -344,7 +344,7 @@ static void
 gst_transcode_bin_link_encodebin_pad (GstTranscodeBin * self, GstPad * pad,
     GstEvent * sstart)
 {
-  GstCaps *caps;
+  GstCaps *caps, *filtercaps;
   GstPadLinkReturn lret;
   const gchar *stream_id;
   TranscodingStream *stream;
@@ -368,8 +368,9 @@ gst_transcode_bin_link_encodebin_pad (GstTranscodeBin * self, GstPad * pad,
     }
   }
 
-  caps = gst_pad_query_caps (pad, NULL);
-  pad = _insert_filter (self, stream->encodebin_pad, pad, caps);
+  filtercaps = gst_pad_query_caps (pad, NULL);
+  pad = _insert_filter (self, stream->encodebin_pad, pad, filtercaps);
+  gst_caps_unref (filtercaps);
   lret = gst_pad_link (pad, stream->encodebin_pad);
   switch (lret) {
     case GST_PAD_LINK_OK:
@@ -608,6 +609,7 @@ get_encodebin_pad_from_stream (GstTranscodeBin * self, GstStream * stream)
     sinkpad = get_encodebin_pad_for_caps (self, caps);
   }
 
+  gst_caps_unref (caps);
   return sinkpad;
 }
 
@@ -679,9 +681,11 @@ _setup_avoid_reencoding (GstTranscodeBin * self)
 
     restrictions = gst_encoding_profile_get_restriction (profile);
 
-    if (restrictions && gst_caps_is_any (restrictions)) {
+    if (restrictions) {
+      gboolean is_any = gst_caps_is_any (restrictions);
       gst_caps_unref (restrictions);
-      continue;
+      if (is_any)
+        continue;
     }
 
     encodecaps = gst_encoding_profile_get_format (profile);
