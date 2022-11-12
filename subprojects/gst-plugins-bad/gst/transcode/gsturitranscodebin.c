@@ -225,6 +225,7 @@ transcodebin_pad_added_cb (GstElement * transcodebin, GstPad * pad,
         sinkpad);
     /* Let `pad unlinked` error pop up later */
   }
+  gst_object_unref (sinkpad);
 }
 
 static gboolean
@@ -506,6 +507,9 @@ gst_uri_transcode_bin_dispose (GObject * object)
   g_clear_object (&self->video_filter);
   g_clear_object (&self->audio_filter);
   g_clear_object (&self->cpu_clock);
+  g_free (self->source_uri);
+  g_free (self->dest_uri);
+  gst_clear_object (&self->profile);
 
   G_OBJECT_CLASS (gst_uri_transcode_bin_parent_class)->dispose (object);
 }
@@ -599,11 +603,13 @@ gst_uri_transcode_bin_set_property (GObject * object,
       break;
     case PROP_AUDIO_FILTER:
       GST_OBJECT_LOCK (self);
+      gst_object_unref (self->audio_filter);
       self->audio_filter = g_value_dup_object (value);
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_VIDEO_FILTER:
       GST_OBJECT_LOCK (self);
+      gst_object_unref (self->video_filter);
       self->video_filter = g_value_dup_object (value);
       GST_OBJECT_UNLOCK (self);
       break;
