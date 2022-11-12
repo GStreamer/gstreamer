@@ -191,6 +191,7 @@ gst_stream_finalize (GObject * object)
       (GstMiniObject *) NULL);
   gst_caps_replace (&stream->priv->caps, NULL);
   g_free ((gchar *) stream->stream_id);
+  stream->stream_id = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
