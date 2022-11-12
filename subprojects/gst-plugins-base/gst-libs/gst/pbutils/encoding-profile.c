@@ -1885,7 +1885,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
       if (propv[1] && propv[2]) {
         g_warning ("Wrong format for property: %s, only 1 `=` is expected",
             prop);
-
+        g_strfreev (propv);
         return NULL;
       }
 
@@ -1902,7 +1902,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
         if (!gst_value_deserialize (&v, propv[1])) {
           g_warning ("Invalid value for property 'single-segment': %s",
               propv[1]);
-
+          g_strfreev (propv);
           return NULL;
         }
 
@@ -1910,6 +1910,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
         g_value_reset (&v);
       } else {
         g_warning ("Unsupported property: %s", propv[0]);
+        g_strfreev (propv);
         return NULL;
       }
 
@@ -1918,9 +1919,11 @@ create_encoding_stream_profile (gchar * serialized_profile,
 
         if (endptr == strprops_v[1]) {
           g_warning ("Wrong presence %s", presence_str);
+          g_strfreev (propv);
           return NULL;
         }
       }
+      g_strfreev (propv);
     }
   } else {                      /* We have no presence */
     if (preset_v[1]) {          /* Not presence but preset */
