@@ -2220,6 +2220,7 @@ create_elements_and_pads (GstEncodeBaseBin * ebin)
       if (!pad)
         goto no_muxer_ghost_pad;
 
+      gst_object_unref (muxerpad);
       gst_element_add_pad (GST_ELEMENT (ebin), pad);
     }
 
