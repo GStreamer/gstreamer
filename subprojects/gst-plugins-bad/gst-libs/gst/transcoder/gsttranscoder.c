@@ -262,6 +262,7 @@ gst_transcoder_finalize (GObject * object)
   g_free (self->source_uri);
   g_free (self->dest_uri);
   g_cond_clear (&self->cond);
+  gst_object_unref (self->api_bus);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -942,6 +943,7 @@ _error_cb (RunSyncData * data, GError * error, GstStructure * details)
 
   if (data->loop) {
     g_main_loop_quit (data->loop);
+    g_main_loop_unref (data->loop);
     data->loop = NULL;
   }
 }
@@ -951,6 +953,7 @@ _done_cb (RunSyncData * data)
 {
   if (data->loop) {
     g_main_loop_quit (data->loop);
+    g_main_loop_unref (data->loop);
     data->loop = NULL;
   }
 }
