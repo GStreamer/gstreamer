@@ -5534,9 +5534,9 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
       if (!_parse_scenario (file, kf)) {
         GST_ERROR ("Could not parse scenario: %s", scenarios[i]);
 
-        gst_object_unref (file);
         res = 1;
       }
+      g_clear_object (&file);
     }
 
     goto done;
@@ -5547,29 +5547,30 @@ gst_validate_list_scenarios (gchar ** scenarios, gint num_scenarios,
     env_scenariodir = g_strsplit (envvar, ":", 0);
 
   _list_scenarios_in_dir (dir, kf);
-  g_object_unref (dir);
+  g_clear_object (&dir);
 
   tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
       "validate", GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
   dir = g_file_new_for_path (tldir);
   _list_scenarios_in_dir (dir, kf);
-  g_object_unref (dir);
+  g_clear_object (&dir);
   g_free (tldir);
 
   if (env_scenariodir) {
     guint i;
+    GFile *subfile;
 
     for (i = 0; env_scenariodir[i]; i++) {
-      dir = g_file_new_for_path (env_scenariodir[i]);
-      _list_scenarios_in_dir (dir, kf);
-      g_object_unref (dir);
+      subfile = g_file_new_for_path (env_scenariodir[i]);
+      _list_scenarios_in_dir (subfile, kf);
+      g_clear_object (&subfile);
     }
   }
 
   /* Hack to make it work within the development environment */
   dir = g_file_new_for_path ("data/scenarios");
   _list_scenarios_in_dir (dir, kf);
-  g_object_unref (dir);
+  g_clear_object (&dir);
 
 done:
   result = g_key_file_to_data (kf, &datalength, &err);
@@ -5592,6 +5593,7 @@ done:
 
     res = FALSE;
   }
+  g_clear_object (&dir);
 
   g_key_file_free (kf);
 
