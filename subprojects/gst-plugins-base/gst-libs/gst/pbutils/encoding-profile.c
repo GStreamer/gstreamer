@@ -1826,9 +1826,9 @@ create_encoding_stream_profile (gchar * serialized_profile,
   GstCaps *caps;
   guint presence = 0;
   gboolean single_segment = FALSE;
-  gchar *strcaps, *strpresence, **strprops_v, **restriction_format,
-      **preset_v, *preset_name = NULL, *factory_name = NULL,
-      *variable_framerate = NULL;
+  gchar *strcaps = NULL, *strpresence, **strprops_v =
+      NULL, **restriction_format, **preset_v = NULL, *preset_name =
+      NULL, *factory_name = NULL, *variable_framerate = NULL;
   GstStructure *element_properties = NULL;
   GstCaps *restrictioncaps = NULL;
   GstEncodingProfile *profile = NULL;
@@ -1886,7 +1886,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
         g_warning ("Wrong format for property: %s, only 1 `=` is expected",
             prop);
         g_strfreev (propv);
-        return NULL;
+        goto cleanup;
       }
 
       if (!propv[1]) {
@@ -1903,7 +1903,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
           g_warning ("Invalid value for property 'single-segment': %s",
               propv[1]);
           g_strfreev (propv);
-          return NULL;
+          goto cleanup;
         }
 
         single_segment = g_value_get_boolean (&v);
@@ -1911,7 +1911,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
       } else {
         g_warning ("Unsupported property: %s", propv[0]);
         g_strfreev (propv);
-        return NULL;
+        goto cleanup;
       }
 
       if (presence_str) {
@@ -1920,7 +1920,7 @@ create_encoding_stream_profile (gchar * serialized_profile,
         if (endptr == strprops_v[1]) {
           g_warning ("Wrong presence %s", presence_str);
           g_strfreev (propv);
-          return NULL;
+          goto cleanup;
         }
       }
       g_strfreev (propv);
@@ -1932,8 +1932,6 @@ create_encoding_stream_profile (gchar * serialized_profile,
       strcaps = g_strdup (preset_v[0]);
     }                           /* Else we have no presence nor preset */
   }
-  g_strfreev (strprops_v);
-  g_strfreev (preset_v);
 
   GST_DEBUG ("Creating preset with restrictions: %" GST_PTR_FORMAT
       ", caps: %s, preset %s, presence %d", restrictioncaps, strcaps,
@@ -1961,11 +1959,6 @@ create_encoding_stream_profile (gchar * serialized_profile,
       gst_caps_unref (caps);
     }
   }
-  g_free (preset_name);
-  g_free (strcaps);
-
-  if (restrictioncaps)
-    gst_caps_unref (restrictioncaps);
 
   if (variable_framerate) {
     if (GST_IS_ENCODING_VIDEO_PROFILE (profile)) {
@@ -1986,19 +1979,26 @@ create_encoding_stream_profile (gchar * serialized_profile,
       GST_WARNING
           ("Variable framerate specified on a non video encoding profile");
     }
-
-    g_free (variable_framerate);
   }
 
   if (profile == NULL) {
     GST_ERROR ("No way to create a profile for description: %s",
         serialized_profile);
-
-    return NULL;
+  } else if (element_properties) {
+    gst_encoding_profile_set_element_properties (profile,
+        g_steal_pointer (&element_properties));
   }
 
+cleanup:
+  g_free (strcaps);
+  g_free (variable_framerate);
+  g_strfreev (strprops_v);
+  g_strfreev (preset_v);
+  g_free (preset_name);
   if (element_properties)
-    gst_encoding_profile_set_element_properties (profile, element_properties);
+    gst_structure_free (element_properties);
+  if (restrictioncaps)
+    gst_caps_unref (restrictioncaps);
 
   return profile;
 }
