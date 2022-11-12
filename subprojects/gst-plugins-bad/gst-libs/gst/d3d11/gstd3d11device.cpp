@@ -543,7 +543,7 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
         }
         break;
       }
-        /* YUV non-DXGI native formats */
+        /* non-DXGI native formats */
       case GST_VIDEO_FORMAT_NV21:
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
@@ -557,7 +557,17 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_Y444_12LE:
       case GST_VIDEO_FORMAT_Y444_16LE:
       case GST_VIDEO_FORMAT_AYUV:
-      case GST_VIDEO_FORMAT_AYUV64:{
+      case GST_VIDEO_FORMAT_AYUV64:
+        /* RGB planar formats */
+      case GST_VIDEO_FORMAT_RGBP:
+      case GST_VIDEO_FORMAT_BGRP:
+      case GST_VIDEO_FORMAT_GBR:
+      case GST_VIDEO_FORMAT_GBR_10LE:
+      case GST_VIDEO_FORMAT_GBR_12LE:
+      case GST_VIDEO_FORMAT_GBRA:
+      case GST_VIDEO_FORMAT_GBRA_10LE:
+      case GST_VIDEO_FORMAT_GBRA_12LE:
+      {
         gboolean supported = TRUE;
 
         native = FALSE;

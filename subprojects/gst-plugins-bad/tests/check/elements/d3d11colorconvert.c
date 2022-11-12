@@ -1,6 +1,6 @@
 /* GStreamer
  *
- * unit test for d3d11colorconvert element
+ * unit test for d3d11convert element
  * Copyright (C) 2019 Matthew Waters <matthew@centricular.com>
  * Copyright (C) 2019 Seungha Yang <seungha.yang@navercorp.com>
  *
@@ -54,11 +54,12 @@ static const gchar *YUV_FORMATS[] = {
 };
 
 static const gchar *RGB_FORMATS[] = {
-  "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx", "RGBA64_LE"
+  "BGRA", "RGBA", "RGB10A2_LE", "BGRx", "RGBx", "RGBA64_LE", "RGBP", "BGRP",
+  "GBR", "GBR_10LE", "GBR_12LE", "GBRA", "GBRA_10LE", "GBRA_12LE"
 };
 
 static const gchar *PACKED_YUV_FORMATS[] = {
-  "Y410",
+  "Y410", "YUY2",
 };
 
 static const gchar *GRAY_FORMATS[] = {
@@ -70,7 +71,7 @@ static TestFrame test_rgba_reorder[] = {
   {1, 1, GST_VIDEO_FORMAT_BGRA, {(guint8 *) & bgra_reorder_data}},
 };
 
-GST_START_TEST (test_d3d11_color_convert_rgba_reorder)
+GST_START_TEST (test_d3d11_convert_rgba_reorder)
 {
   GstHarness *h =
       gst_harness_new_parse ("d3d11upload ! d3d11convert ! d3d11download");
@@ -157,8 +158,10 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
   GMainLoop *loop = g_main_loop_new (NULL, FALSE);
   gchar *pipeline_str =
       g_strdup_printf ("videotestsrc num-buffers=1 is-live=true ! "
-      "video/x-raw,format=%s,framerate=3/1 ! d3d11upload ! "
-      "d3d11convert ! d3d11download ! video/x-raw,format=%s ! "
+      "video/x-raw,format=%s,framerate=3/1,width=128,height=64,"
+      "pixel-aspect-ratio=1/1 ! d3d11upload ! "
+      "d3d11convert border-color=0xffffaaaaaaaaaaaa ! d3d11download ! "
+      "video/x-raw,format=%s,width=320,height=240,pixel-aspect-ratio=1/1 ! "
       "videoconvert ! %s", in_format, out_format,
       run_visual_test ? "d3d11videosink" : "fakesink");
   GstElement *pipeline;
@@ -180,15 +183,12 @@ run_convert_pipelne (const gchar * in_format, const gchar * out_format)
   g_main_loop_unref (loop);
 }
 
-GST_START_TEST (test_d3d11_color_convert_yuv_yuv)
+GST_START_TEST (test_d3d11_convert_yuv_yuv)
 {
   gint i, j;
 
   for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
     for (j = 0; j < G_N_ELEMENTS (YUV_FORMATS); j++) {
-      if (i == j)
-        continue;
-
       GST_DEBUG ("run conversion %s to %s", YUV_FORMATS[i], YUV_FORMATS[j]);
       run_convert_pipelne (YUV_FORMATS[i], YUV_FORMATS[j]);
     }
@@ -197,15 +197,12 @@ GST_START_TEST (test_d3d11_color_convert_yuv_yuv)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_yuv_rgb)
+GST_START_TEST (test_d3d11_convert_yuv_rgb)
 {
   gint i, j;
 
   for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
     for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
-      if (i == j)
-        continue;
-
       GST_DEBUG ("run conversion %s to %s", YUV_FORMATS[i], RGB_FORMATS[j]);
       run_convert_pipelne (YUV_FORMATS[i], RGB_FORMATS[j]);
     }
@@ -214,15 +211,12 @@ GST_START_TEST (test_d3d11_color_convert_yuv_rgb)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_yuv_gray)
+GST_START_TEST (test_d3d11_convert_yuv_gray)
 {
   gint i, j;
 
   for (i = 0; i < G_N_ELEMENTS (YUV_FORMATS); i++) {
     for (j = 0; j < G_N_ELEMENTS (GRAY_FORMATS); j++) {
-      if (i == j)
-        continue;
-
       GST_DEBUG ("run conversion %s to %s", YUV_FORMATS[i], GRAY_FORMATS[j]);
       run_convert_pipelne (YUV_FORMATS[i], GRAY_FORMATS[j]);
     }
@@ -231,7 +225,7 @@ GST_START_TEST (test_d3d11_color_convert_yuv_gray)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_rgb_yuv)
+GST_START_TEST (test_d3d11_convert_rgb_yuv)
 {
   gint i, j;
 
@@ -245,15 +239,12 @@ GST_START_TEST (test_d3d11_color_convert_rgb_yuv)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_rgb_rgb)
+GST_START_TEST (test_d3d11_convert_rgb_rgb)
 {
   gint i, j;
 
   for (i = 0; i < G_N_ELEMENTS (RGB_FORMATS); i++) {
     for (j = 0; j < G_N_ELEMENTS (RGB_FORMATS); j++) {
-      if (i == j)
-        continue;
-
       GST_DEBUG ("run conversion %s to %s", RGB_FORMATS[i], RGB_FORMATS[j]);
       run_convert_pipelne (RGB_FORMATS[i], RGB_FORMATS[j]);
     }
@@ -262,7 +253,7 @@ GST_START_TEST (test_d3d11_color_convert_rgb_rgb)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_rgb_gray)
+GST_START_TEST (test_d3d11_convert_rgb_gray)
 {
   gint i, j;
 
@@ -276,7 +267,7 @@ GST_START_TEST (test_d3d11_color_convert_rgb_gray)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_packed_yuv_yuv)
+GST_START_TEST (test_d3d11_convert_packed_yuv_yuv)
 {
   gint i, j;
 
@@ -291,7 +282,7 @@ GST_START_TEST (test_d3d11_color_convert_packed_yuv_yuv)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_packed_yuv_rgb)
+GST_START_TEST (test_d3d11_convert_packed_yuv_rgb)
 {
   gint i, j;
 
@@ -306,7 +297,7 @@ GST_START_TEST (test_d3d11_color_convert_packed_yuv_rgb)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_packed_yuv_gray)
+GST_START_TEST (test_d3d11_convert_packed_yuv_gray)
 {
   gint i, j;
 
@@ -321,7 +312,7 @@ GST_START_TEST (test_d3d11_color_convert_packed_yuv_gray)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_gray_yuv)
+GST_START_TEST (test_d3d11_convert_gray_yuv)
 {
   gint i, j;
 
@@ -335,7 +326,7 @@ GST_START_TEST (test_d3d11_color_convert_gray_yuv)
 
 GST_END_TEST;
 
-GST_START_TEST (test_d3d11_color_convert_gray_rgb)
+GST_START_TEST (test_d3d11_convert_gray_rgb)
 {
   gint i, j;
 
@@ -350,33 +341,33 @@ GST_START_TEST (test_d3d11_color_convert_gray_rgb)
 GST_END_TEST;
 
 static Suite *
-d3d11colorconvert_suite (void)
+d3d11convert_suite (void)
 {
-  Suite *s = suite_create ("d3d11colorconvert");
+  Suite *s = suite_create ("d3d11convert");
   TCase *tc_basic = tcase_create ("general");
 
   run_visual_test = g_getenv ("ENABLE_D3D11_VISUAL_TEST");
 
   suite_add_tcase (s, tc_basic);
-  tcase_add_test (tc_basic, test_d3d11_color_convert_rgba_reorder);
+  tcase_add_test (tc_basic, test_d3d11_convert_rgba_reorder);
 
   /* XXX: Some methods for device's capability checking and initialization
    * are plugin internal. Enable conversion tests only when it's enabled */
   if (g_getenv ("ENABLE_D3D11_CONVERSION_TEST")) {
-    tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_yuv);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_rgb);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_yuv_gray);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_yuv);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_rgb);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_rgb_gray);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_yuv);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_rgb);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_packed_yuv_gray);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_gray_yuv);
-    tcase_add_test (tc_basic, test_d3d11_color_convert_gray_rgb);
+    tcase_add_test (tc_basic, test_d3d11_convert_yuv_yuv);
+    tcase_add_test (tc_basic, test_d3d11_convert_yuv_rgb);
+    tcase_add_test (tc_basic, test_d3d11_convert_yuv_gray);
+    tcase_add_test (tc_basic, test_d3d11_convert_rgb_yuv);
+    tcase_add_test (tc_basic, test_d3d11_convert_rgb_rgb);
+    tcase_add_test (tc_basic, test_d3d11_convert_rgb_gray);
+    tcase_add_test (tc_basic, test_d3d11_convert_packed_yuv_yuv);
+    tcase_add_test (tc_basic, test_d3d11_convert_packed_yuv_rgb);
+    tcase_add_test (tc_basic, test_d3d11_convert_packed_yuv_gray);
+    tcase_add_test (tc_basic, test_d3d11_convert_gray_yuv);
+    tcase_add_test (tc_basic, test_d3d11_convert_gray_rgb);
   }
 
   return s;
 }
 
-GST_CHECK_MAIN (d3d11colorconvert);
+GST_CHECK_MAIN (d3d11convert);

@@ -140,6 +140,15 @@ static const gchar templ_OUTPUT_THREE_PLANES[] =
     "  float4 Plane_2: SV_TARGET2;\n"
     "};";
 
+static const gchar templ_OUTPUT_FOUR_PLANES[] =
+    "struct PS_OUTPUT\n"
+    "{\n"
+    "  float4 Plane_0: SV_TARGET0;\n"
+    "  float4 Plane_1: SV_TARGET1;\n"
+    "  float4 Plane_2: SV_TARGET2;\n"
+    "  float4 Plane_3: SV_TARGET3;\n"
+    "};";
+
 typedef struct
 {
   const gchar *output_template;
@@ -151,12 +160,14 @@ enum
   OUTPUT_SINGLE_PLANE = 0,
   OUTPUT_TWO_PLANES,
   OUTPUT_THREE_PLANES,
+  OUTPUT_FOUR_PLANES,
 };
 
 static const PSOutputType output_types[] = {
   {templ_OUTPUT_SINGLE_PLANE, 1},
   {templ_OUTPUT_TWO_PLANES, 2},
   {templ_OUTPUT_THREE_PLANES, 3},
+  {templ_OUTPUT_FOUR_PLANES, 4},
 };
 
 /* colorspace conversion */
@@ -266,10 +277,21 @@ static const gchar templ_SAMPLE_PLANAR[] =
     "float4 sample_texture (float2 uv)\n"
     "{\n"
     "  float3 sample;\n"
-    "  sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
+    "  sample.%c = shaderTexture[0].Sample(samplerState, uv).x;\n"
     "  sample.%c = shaderTexture[1].Sample(samplerState, uv).x;\n"
     "  sample.%c = shaderTexture[2].Sample(samplerState, uv).x;\n"
     "  return float4 (saturate(sample * %d), 1.0);\n"
+    "}";
+
+static const gchar templ_SAMPLE_PLANAR_4[] =
+    "float4 sample_texture (float2 uv)\n"
+    "{\n"
+    "  float4 sample;\n"
+    "  sample.%c = shaderTexture[0].Sample(samplerState, uv).x;\n"
+    "  sample.%c = shaderTexture[1].Sample(samplerState, uv).x;\n"
+    "  sample.%c = shaderTexture[2].Sample(samplerState, uv).x;\n"
+    "  sample.%c = shaderTexture[3].Sample(samplerState, uv).x;\n"
+    "  return saturate(sample * %d);\n"
     "}";
 
 static const gchar templ_SAMPLE_PLANAR_CHROMA[] =
@@ -370,24 +392,47 @@ static const gchar templ_OUTPUT_CHROMA_PLANAR_SCALED[] =
     "  return output;\n"
     "}";
 
-static const gchar templ_OUTPUT_Y444[] =
+static const gchar templ_OUTPUT_PLANAR[] =
     "PS_OUTPUT build_output (float4 sample)\n"
     "{\n"
     "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.x, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (sample.y, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_2 = float4 (sample.z, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_0 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_2 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
     "  return output;\n"
     "}";
 
-static const gchar templ_OUTPUT_Y444_SCALED[] =
+static const gchar templ_OUTPUT_PLANAR_SCALED[] =
     "PS_OUTPUT build_output (float4 sample)\n"
     "{\n"
     "  PS_OUTPUT output;\n"
     "  float3 scaled = sample.xyz / %d;\n"
-    "  output.Plane_0 = float4 (scaled.x, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (scaled.y, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_2 = float4 (scaled.z, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  return output;\n"
+    "}";
+
+static const gchar templ_OUTPUT_PLANAR_4[] =
+    "PS_OUTPUT build_output (float4 sample)\n"
+    "{\n"
+    "  PS_OUTPUT output;\n"
+    "  output.Plane_0 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_2 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_3 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
+    "  return output;\n"
+    "}";
+
+static const gchar templ_OUTPUT_PLANAR_4_SCALED[] =
+    "PS_OUTPUT build_output (float4 sample)\n"
+    "{\n"
+    "  PS_OUTPUT output;\n"
+    "  float4 scaled = sample / %d;\n"
+    "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_3 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
     "  return output;\n"
     "}";
 
@@ -1089,18 +1134,22 @@ get_packed_yuv_components (GstVideoFormat format, gchar * y, gchar * u,
 }
 
 static void
-get_planar_component (GstVideoFormat format, gchar * u, gchar * v,
-    guint * scale)
+get_planar_component (GstVideoFormat format, gchar * x, gchar * y, gchar * z,
+    gchar * w, guint * scale)
 {
   switch (format) {
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBRA_10LE:
       *scale = (1 << 6);
       break;
     case GST_VIDEO_FORMAT_I420_12LE:
     case GST_VIDEO_FORMAT_I422_12LE:
     case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
       *scale = (1 << 4);
       break;
     default:
@@ -1108,12 +1157,42 @@ get_planar_component (GstVideoFormat format, gchar * u, gchar * v,
       break;
   }
 
-  if (format == GST_VIDEO_FORMAT_YV12) {
-    *u = 'z';
-    *v = 'y';
-  } else {
-    *u = 'y';
-    *v = 'z';
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGBP:
+      *x = 'x';
+      *y = 'y';
+      *z = 'z';
+      break;
+    case GST_VIDEO_FORMAT_BGRP:
+      *x = 'z';
+      *y = 'y';
+      *z = 'x';
+      break;
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+      *x = 'y';
+      *y = 'z';
+      *z = 'x';
+      break;
+    case GST_VIDEO_FORMAT_GBRA:
+    case GST_VIDEO_FORMAT_GBRA_10LE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
+      *x = 'y';
+      *y = 'z';
+      *z = 'x';
+      *w = 'w';
+      break;
+    case GST_VIDEO_FORMAT_YV12:
+      *x = 'x';
+      *y = 'z';
+      *z = 'y';
+      break;
+    default:
+      *x = 'x';
+      *y = 'y';
+      *z = 'z';
+      break;
   }
 }
 
@@ -1768,6 +1847,14 @@ gst_d3d11_converter_update_dest_rect (GstD3D11Converter * self)
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_12LE:
     case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBRA:
+    case GST_VIDEO_FORMAT_GBRA_10LE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
       for (guint i = 1; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++)
         priv->viewport[i] = priv->viewport[0];
       break;
@@ -1840,10 +1927,10 @@ gst_d3d11_converter_prepare_output (GstD3D11Converter * self,
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_I422_12LE:{
-      gchar u, v;
+      gchar y, u, v, w;
       guint scale;
 
-      get_planar_component (format, &u, &v, &scale);
+      get_planar_component (format, &y, &u, &v, &w, &scale);
 
       cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
       cinfo->ps_output[1] = &output_types[OUTPUT_TWO_PLANES];
@@ -1864,18 +1951,44 @@ gst_d3d11_converter_prepare_output (GstD3D11Converter * self,
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_Y444_16LE:{
-      gchar u, v;
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    {
+      gchar x, y, z, w;
       guint scale;
 
-      get_planar_component (format, &u, &v, &scale);
+      get_planar_component (format, &x, &y, &z, &w, &scale);
 
       cinfo->ps_output[0] = &output_types[OUTPUT_THREE_PLANES];
       if (info->finfo->depth[0] == 8) {
-        cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_Y444);
+        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR,
+            x, y, z);
       } else {
-        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_Y444_SCALED,
-            scale);
+        cinfo->build_output_func[0] =
+            g_strdup_printf (templ_OUTPUT_PLANAR_SCALED, scale, x, y, z);
+      }
+      break;
+    }
+    case GST_VIDEO_FORMAT_GBRA:
+    case GST_VIDEO_FORMAT_GBRA_10LE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
+    {
+      gchar x, y, z, w;
+      guint scale;
+
+      get_planar_component (format, &x, &y, &z, &w, &scale);
+
+      cinfo->ps_output[0] = &output_types[OUTPUT_FOUR_PLANES];
+      if (info->finfo->depth[0] == 8) {
+        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR_4,
+            x, y, z, w);
+      } else {
+        cinfo->build_output_func[0] =
+            g_strdup_printf (templ_OUTPUT_PLANAR_4_SCALED, scale, x, y, z, w);
       }
       break;
     }
@@ -1980,14 +2093,15 @@ gst_d3d11_converter_prepare_sample_texture (GstD3D11Converter * self,
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_Y444_16LE:{
-      gchar u, v;
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    {
+      gchar x, y, z, w;
       guint scale;
 
-      get_planar_component (format, &u, &v, &scale);
+      get_planar_component (format, &x, &y, &z, &w, &scale);
       if (out_rgb) {
         cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR,
-            u, v, scale);
+            x, y, z, scale);
       } else if (out_gray) {
         cinfo->sample_texture_func[0] =
             g_strdup_printf (templ_SAMPLE_YUV_LUMA_SCALED, scale);
@@ -1996,16 +2110,16 @@ gst_d3d11_converter_prepare_sample_texture (GstD3D11Converter * self,
             cinfo->ps_output[0] == &output_types[OUTPUT_THREE_PLANES]) {
           /* YUV packed or Y444 */
           cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR,
-              u, v, scale);
+              x, y, z, scale);
         } else {
           if (priv->fast_path) {
             cinfo->sample_texture_func[0] =
                 g_strdup_printf (templ_SAMPLE_YUV_LUMA_SCALED, scale);
             cinfo->sample_texture_func[1] =
-                g_strdup_printf (templ_SAMPLE_PLANAR_CHROMA, u, v, scale);
+                g_strdup_printf (templ_SAMPLE_PLANAR_CHROMA, y, z, scale);
           } else {
             cinfo->sample_texture_func[0] =
-                g_strdup_printf (templ_SAMPLE_PLANAR, u, v, scale);
+                g_strdup_printf (templ_SAMPLE_PLANAR, x, y, z, scale);
             cinfo->sample_texture_func[1] =
                 g_strdup (cinfo->sample_texture_func[0]);
           }
@@ -2013,6 +2127,35 @@ gst_d3d11_converter_prepare_sample_texture (GstD3D11Converter * self,
       } else {
         g_assert_not_reached ();
         return FALSE;
+      }
+      break;
+    }
+      /* RGB planar */
+    case GST_VIDEO_FORMAT_RGBP:
+    case GST_VIDEO_FORMAT_BGRP:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBRA:
+    case GST_VIDEO_FORMAT_GBRA_10LE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
+    {
+      gchar x, y, z, w;
+      guint scale;
+
+      get_planar_component (format, &x, &y, &z, &w, &scale);
+
+      if (GST_VIDEO_INFO_N_PLANES (in_info) == 4) {
+        cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR_4,
+            x, y, z, w, scale);
+      } else {
+        cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR,
+            x, y, z, scale);
+      }
+
+      if (cinfo->ps_output[1]) {
+        cinfo->sample_texture_func[1] =
+            g_strdup (cinfo->sample_texture_func[0]);
       }
       break;
     }
@@ -2634,23 +2777,45 @@ gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self)
   GST_DEBUG_OBJECT (self, "Calculated background color ARGB: %f, %f, %f, %f",
       a, converted[0], converted[1], converted[2]);
 
-  if (GST_VIDEO_INFO_IS_RGB (out_info) || GST_VIDEO_INFO_IS_GRAY (out_info)) {
-    /* background color for video processor */
-    priv->background_color.RGBA.R = converted[0];
-    priv->background_color.RGBA.G = converted[1];
-    priv->background_color.RGBA.B = converted[2];
-    priv->background_color.RGBA.A = a;
+  /* background color for video processor */
+  priv->background_color.RGBA.R = converted[0];
+  priv->background_color.RGBA.G = converted[1];
+  priv->background_color.RGBA.B = converted[2];
+  priv->background_color.RGBA.A = a;
 
+  /* scale down if output is planar high bitdepth format */
+  switch (format) {
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    case GST_VIDEO_FORMAT_Y444_10LE:
+    case GST_VIDEO_FORMAT_GBR_10LE:
+    case GST_VIDEO_FORMAT_GBRA_10LE:
+      for (guint i = 0; i < 3; i++) {
+        converted[i] /= 64.0;
+      }
+      a /= 64.0;
+      break;
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_Y444_12LE:
+    case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBRA_12LE:
+      for (guint i = 0; i < 3; i++) {
+        converted[i] /= 16.0;
+      }
+      a /= 16.0;
+      break;
+    default:
+      break;
+  }
+
+  if ((GST_VIDEO_INFO_IS_RGB (out_info) &&
+          GST_VIDEO_INFO_N_PLANES (out_info) == 1) ||
+      GST_VIDEO_INFO_IS_GRAY (out_info)) {
     for (guint i = 0; i < 3; i++)
       priv->clear_color[0][i] = converted[i];
     priv->clear_color[0][3] = a;
   } else {
-    /* background color for video processor */
-    priv->background_color.YCbCr.Y = converted[0];
-    priv->background_color.YCbCr.Cb = converted[1];
-    priv->background_color.YCbCr.Cr = converted[2];
-    priv->background_color.YCbCr.A = a;
-
     switch (format) {
       case GST_VIDEO_FORMAT_VUYA:
         priv->clear_color[0][0] = converted[2];
@@ -2712,6 +2877,31 @@ gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self)
         priv->clear_color[2][1] = 0;
         priv->clear_color[2][2] = 0;
         priv->clear_color[2][3] = 1.0;
+        break;
+      case GST_VIDEO_FORMAT_RGBP:
+        priv->clear_color[0][0] = converted[0];
+        priv->clear_color[1][0] = converted[1];
+        priv->clear_color[2][0] = converted[2];
+        break;
+      case GST_VIDEO_FORMAT_BGRP:
+        priv->clear_color[0][0] = converted[2];
+        priv->clear_color[1][0] = converted[1];
+        priv->clear_color[2][0] = converted[0];
+        break;
+      case GST_VIDEO_FORMAT_GBR:
+      case GST_VIDEO_FORMAT_GBR_10LE:
+      case GST_VIDEO_FORMAT_GBR_12LE:
+        priv->clear_color[0][0] = converted[1];
+        priv->clear_color[1][0] = converted[2];
+        priv->clear_color[2][0] = converted[0];
+        break;
+      case GST_VIDEO_FORMAT_GBRA:
+      case GST_VIDEO_FORMAT_GBRA_10LE:
+      case GST_VIDEO_FORMAT_GBRA_12LE:
+        priv->clear_color[0][0] = converted[1];
+        priv->clear_color[1][0] = converted[2];
+        priv->clear_color[2][0] = converted[0];
+        priv->clear_color[3][0] = a;
         break;
       default:
         g_assert_not_reached ();
