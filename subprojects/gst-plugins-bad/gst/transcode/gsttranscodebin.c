@@ -177,15 +177,16 @@ filter_handles_any (GstElement * filter)
 
 static GstPad *
 _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
-    GstCaps * caps)
+    const GstCaps * filtercaps)
 {
   GstPad *filter_src = NULL, *filter_sink = NULL, *convert_sink, *convert_src;
   GstElement *filter = NULL, *convert;
   GstObject *filter_parent;
   const gchar *media_type;
   gboolean audio = TRUE;
+  GstCaps *caps;
 
-  media_type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  media_type = gst_structure_get_name (gst_caps_get_structure (filtercaps, 0));
 
   if (self->video_filter && g_str_has_prefix (media_type, "video")) {
     audio = FALSE;
@@ -195,7 +196,7 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
       filter = self->video_filter;
     else
       GST_ERROR_OBJECT (pad, "decodebin pad does not produce raw data (%"
-          GST_PTR_FORMAT "), cannot add video filter '%s'", caps,
+          GST_PTR_FORMAT "), cannot add video filter '%s'", filtercaps,
           GST_ELEMENT_NAME (self->video_filter));
   } else if (self->audio_filter && g_str_has_prefix (media_type, "audio")) {
     if (!g_strcmp0 (media_type, "audio/x-raw")
@@ -203,7 +204,7 @@ _insert_filter (GstTranscodeBin * self, GstPad * sinkpad, GstPad * pad,
       filter = self->audio_filter;
     else
       GST_ERROR_OBJECT (pad, "decodebin pad does not produce raw data (%"
-          GST_PTR_FORMAT "), cannot add audio filter '%s'", caps,
+          GST_PTR_FORMAT "), cannot add audio filter '%s'", filtercaps,
           GST_ELEMENT_NAME (self->audio_filter));
   }
 
@@ -512,7 +513,7 @@ no_profile:
 }
 
 static GstPad *
-get_encodebin_pad_for_caps (GstTranscodeBin * self, GstCaps * srccaps)
+get_encodebin_pad_for_caps (GstTranscodeBin * self, const GstCaps * srccaps)
 {
   GstPad *res = NULL;
   GstIterator *pads;
