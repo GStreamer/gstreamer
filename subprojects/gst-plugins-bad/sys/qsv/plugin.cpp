@@ -209,12 +209,15 @@ plugin_init (GstPlugin * plugin)
   mfxLoader loader;
   guint i = 0;
   GList *platform_devices = nullptr;
+  GstRank enc_rank = GST_RANK_NONE;
 
 #ifdef G_OS_WIN32
   /* D3D11 Video API is supported since Windows 8.
    * Do we want to support old OS (Windows 7 for example) with D3D9 ?? */
   if (!IsWindows8OrGreater ())
     return TRUE;
+
+  enc_rank = GST_RANK_PRIMARY;
 #endif
 
   GST_DEBUG_CATEGORY_INIT (gst_qsv_debug, "qsv", 0, "Intel Quick Sync Video");
@@ -261,11 +264,11 @@ plugin_init (GstPlugin * plugin)
     gst_qsv_jpeg_dec_register (plugin, GST_RANK_SECONDARY, i, device, session);
     gst_qsv_vp9_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
 
-    gst_qsv_h264_enc_register (plugin, GST_RANK_NONE, i, device, session);
-    gst_qsv_h265_enc_register (plugin, GST_RANK_NONE, i, device, session);
-    gst_qsv_jpeg_enc_register (plugin, GST_RANK_NONE, i, device, session);
-    gst_qsv_vp9_enc_register (plugin, GST_RANK_NONE, i, device, session);
-    gst_qsv_av1_enc_register (plugin, GST_RANK_NONE, i, device, session);
+    gst_qsv_h264_enc_register (plugin, enc_rank, i, device, session);
+    gst_qsv_h265_enc_register (plugin, enc_rank, i, device, session);
+    gst_qsv_jpeg_enc_register (plugin, enc_rank, i, device, session);
+    gst_qsv_vp9_enc_register (plugin, enc_rank, i, device, session);
+    gst_qsv_av1_enc_register (plugin, enc_rank, i, device, session);
 
   next:
     MFXDispReleaseImplDescription (loader, desc);
