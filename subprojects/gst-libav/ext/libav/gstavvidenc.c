@@ -673,6 +673,7 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
     g_slice_free (AVPacket, pkt);
     goto done;
   } else if (res == AVERROR_EOF) {
+    g_slice_free (AVPacket, pkt);
     ret = GST_FLOW_EOS;
     goto done;
   } else if (res < 0) {
