@@ -165,6 +165,10 @@ gst_cpu_throttling_clock_dispose (GObject * object)
     gst_clock_id_unref (self->priv->evaluate_wait_time);
     self->priv->evaluate_wait_time = 0;
   }
+  if (self->priv->timer) {
+    gst_poll_free (self->priv->timer);
+    self->priv->timer = NULL;
+  }
 }
 
 static void
