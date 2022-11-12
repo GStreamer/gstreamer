@@ -854,6 +854,7 @@ gst_transcode_bin_dispose (GObject * object)
   g_clear_object (&self->video_filter);
   g_clear_object (&self->audio_filter);
   g_clear_pointer (&self->transcoding_streams, g_ptr_array_unref);
+  gst_clear_object (&self->profile);
 
   G_OBJECT_CLASS (gst_transcode_bin_parent_class)->dispose (object);
 }
