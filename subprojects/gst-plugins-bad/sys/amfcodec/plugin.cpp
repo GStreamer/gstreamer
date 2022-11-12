@@ -105,9 +105,9 @@ plugin_init (GstPlugin * plugin)
 
     if (result == AMF_OK) {
       gst_amf_h264_enc_register_d3d11 (plugin, device,
-          (gpointer) context.GetPtr (), GST_RANK_NONE);
+          (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
       gst_amf_h265_enc_register_d3d11 (plugin, device,
-          (gpointer) context.GetPtr (), GST_RANK_NONE);
+          (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
     }
 
     gst_clear_object (&device);
