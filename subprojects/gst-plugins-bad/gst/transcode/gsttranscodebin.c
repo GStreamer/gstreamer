@@ -90,6 +90,8 @@ transcoding_stream_free (TranscodingStream * tstream)
 {
   gst_object_unref (tstream->stream);
   gst_object_unref (tstream->encodebin_pad);
+
+  g_free (tstream);
 }
 
 typedef struct
