@@ -89,7 +89,7 @@ register_enum (const AVClass ** obj, const AVOption * top_opt)
 {
   const AVOption *opt = NULL;
   GType res = 0;
-  GArray *values = g_array_new (TRUE, TRUE, sizeof (GEnumValue));
+  GArray *values;
   gchar *lower_obj_name = g_ascii_strdown ((*obj)->class_name, -1);
   gchar *enum_name = g_strdup_printf ("%s-%s", lower_obj_name, top_opt->unit);
   gboolean none_default = TRUE;
@@ -107,6 +107,8 @@ register_enum (const AVClass ** obj, const AVOption * top_opt)
 
   if ((res = g_type_from_name (enum_name_strip)))
     goto done;
+
+  values = g_array_new (TRUE, TRUE, sizeof (GEnumValue));
 
   while ((opt = av_opt_next (obj, opt))) {
     if (opt->type == AV_OPT_TYPE_CONST && !g_strcmp0 (top_opt->unit, opt->unit)) {
@@ -169,6 +171,10 @@ register_enum (const AVClass ** obj, const AVOption * top_opt)
         &g_array_index (values, GEnumValue, 0));
 
     gst_type_mark_as_plugin_api (res, 0);
+
+    g_array_free (values, FALSE);
+  } else {
+    g_array_free (values, TRUE);
   }
 
 done:
@@ -190,7 +196,7 @@ register_flags (const AVClass ** obj, const AVOption * top_opt)
 {
   const AVOption *opt = NULL;
   GType res = 0;
-  GArray *values = g_array_new (TRUE, TRUE, sizeof (GEnumValue));
+  GArray *values;
   gchar *lower_obj_name = g_ascii_strdown ((*obj)->class_name, -1);
   gchar *flags_name = g_strdup_printf ("%s-%s", lower_obj_name, top_opt->unit);
   const gchar *flags_name_strip;
@@ -207,6 +213,8 @@ register_flags (const AVClass ** obj, const AVOption * top_opt)
 
   if ((res = g_type_from_name (flags_name_strip)))
     goto done;
+
+  values = g_array_new (TRUE, TRUE, sizeof (GFlagsValue));
 
   while ((opt = av_opt_next (obj, opt))) {
     if (opt->type == AV_OPT_TYPE_CONST && !g_strcmp0 (top_opt->unit, opt->unit)) {
@@ -240,7 +248,9 @@ register_flags (const AVClass ** obj, const AVOption * top_opt)
             GFlagsValue, 0));
 
     gst_type_mark_as_plugin_api (res, 0);
-  }
+    g_array_free (values, FALSE);
+  } else
+    g_array_free (values, TRUE);
 
 done:
   g_free (lower_obj_name);
