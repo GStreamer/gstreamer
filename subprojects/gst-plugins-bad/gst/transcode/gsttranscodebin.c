@@ -359,6 +359,8 @@ gst_transcode_bin_link_encodebin_pad (GstTranscodeBin * self, GstPad * pad,
       gst_event_parse_stream (sstart, &tmpstream);
 
       stream = setup_stream (self, tmpstream);
+
+      gst_object_unref (tmpstream);
     }
 
     if (!stream) {
