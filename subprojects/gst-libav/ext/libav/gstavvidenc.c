@@ -226,6 +226,7 @@ gst_ffmpegvidenc_finalize (GObject * object)
   gst_ffmpeg_avcodec_close (ffmpegenc->refcontext);
   av_freep (&ffmpegenc->context);
   av_freep (&ffmpegenc->refcontext);
+  g_free (ffmpegenc->filename);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
