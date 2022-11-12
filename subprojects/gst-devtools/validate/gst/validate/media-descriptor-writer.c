@@ -735,17 +735,25 @@ gst_validate_media_descriptor_writer_new_discover (GstValidateRunner * runner,
         gst_validate_media_descriptor_writer_add_stream (writer, streaminfo);
       }
     } else {
+      GstDiscovererStreamInfo *nextinfo;
       if (!GST_IS_DISCOVERER_AUDIO_INFO (info)
-          && !GST_IS_DISCOVERER_AUDIO_INFO (info)
-          && gst_discoverer_stream_info_get_next (streaminfo)) {
-        gst_validate_media_descriptor_get_file_node ((GstValidateMediaDescriptor
-                *) writer)->caps =
-            gst_discoverer_stream_info_get_caps (streaminfo);
-        streaminfo = gst_discoverer_stream_info_get_next (streaminfo);
+          && !GST_IS_DISCOVERER_VIDEO_INFO (info)) {
+        nextinfo = gst_discoverer_stream_info_get_next (streaminfo);
+        if (nextinfo) {
+          GstValidateMediaFileNode *fn =
+              gst_validate_media_descriptor_get_file_node (
+              (GstValidateMediaDescriptor *) writer);
+          fn->caps = gst_discoverer_stream_info_get_caps (streaminfo);
+          gst_discoverer_stream_info_unref (streaminfo);
+          streaminfo = nextinfo;
+        }
       }
       do {
         gst_validate_media_descriptor_writer_add_stream (writer, streaminfo);
-      } while ((streaminfo = gst_discoverer_stream_info_get_next (streaminfo)));
+        nextinfo = gst_discoverer_stream_info_get_next (streaminfo);
+        gst_discoverer_stream_info_unref (streaminfo);
+        streaminfo = nextinfo;
+      } while (streaminfo);
     }
   } else {
     GST_VALIDATE_REPORT (writer, FILE_NO_STREAM_INFO,
