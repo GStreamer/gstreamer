@@ -738,13 +738,19 @@ gst_dash_demux_setup_mpdparser_streams (GstDashDemux2 * demux,
 {
   gboolean has_streams = FALSE;
   GList *adapt_sets, *iter;
+  guint connection_bitrate;
+
+  /* Using g_object_get so it goes through mutex locking in adaptivedemux2 */
+  g_object_get (demux, "connection-bitrate", &connection_bitrate, NULL);
 
   adapt_sets = gst_mpd_client2_get_adaptation_sets (client);
   for (iter = adapt_sets; iter; iter = g_list_next (iter)) {
     GstMPDAdaptationSetNode *adapt_set_node = iter->data;
 
-    if (gst_mpd_client2_setup_streaming (client, adapt_set_node))
-      has_streams = TRUE;
+    has_streams |= gst_mpd_client2_setup_streaming (client, adapt_set_node,
+        connection_bitrate, demux->max_video_width,
+        demux->max_video_height, demux->max_video_framerate_n,
+        demux->max_video_framerate_d);
   }
 
   if (!has_streams) {

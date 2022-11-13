@@ -70,7 +70,7 @@ void gst_mpd_client2_fetch_on_load_external_resources (GstMPDClient2 * client);
 
 /* Streaming management */
 gboolean gst_mpd_client2_setup_media_presentation (GstMPDClient2 *client, GstClockTime time, gint period_index, const gchar *period_id);
-gboolean gst_mpd_client2_setup_streaming (GstMPDClient2 * client, GstMPDAdaptationSetNode * adapt_set);
+gboolean gst_mpd_client2_setup_streaming (GstMPDClient2 * client, GstMPDAdaptationSetNode * adapt_set, gint64 max_bandwidth, gint max_video_width, gint max_video_height, gint max_video_framerate_n, gint max_video_framerate_d);
 gboolean gst_mpd_client2_setup_representation (GstMPDClient2 *client, GstActiveStream *stream, GstMPDRepresentationNode *representation);
 
 GstClockTime gst_mpd_client2_get_next_fragment_duration (GstMPDClient2 * client, GstActiveStream * stream);
