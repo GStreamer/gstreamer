@@ -652,7 +652,10 @@ gst_adaptive_demux_check_streams_aware (GstAdaptiveDemux * demux)
   gboolean ret = FALSE;
   GstObject *parent = gst_object_get_parent (GST_OBJECT (demux));
 
-  ret = (parent && GST_OBJECT_FLAG_IS_SET (parent, GST_BIN_FLAG_STREAMS_AWARE));
+  if (parent) {
+    ret = GST_OBJECT_FLAG_IS_SET (parent, GST_BIN_FLAG_STREAMS_AWARE);
+    gst_object_unref (parent);
+  }
 
   return ret;
 }
