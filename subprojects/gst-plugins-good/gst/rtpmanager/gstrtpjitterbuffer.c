@@ -232,6 +232,13 @@ enum
   (priv)->waiting_timer--;                                \
   GST_DEBUG ("waiting timer done");                       \
 } G_STMT_END
+#define JBUF_WAIT_TIMER_CHECK(priv, label) G_STMT_START { \
+    if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))	  \
+      goto label;					  \
+    JBUF_WAIT_TIMER (priv);				  \
+    if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))	  \
+      goto label;					  \
+  } G_STMT_END
 #define JBUF_SIGNAL_TIMER(priv) G_STMT_START {            \
   if (G_UNLIKELY ((priv)->waiting_timer)) {               \
     GST_DEBUG ("signal timer, %d waiters", (priv)->waiting_timer); \
@@ -1704,6 +1711,7 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
   JBUF_SIGNAL_EVENT (priv);
   JBUF_SIGNAL_QUERY (priv, FALSE);
   JBUF_SIGNAL_QUEUE (priv);
+  JBUF_SIGNAL_TIMER (priv);
   JBUF_UNLOCK (priv);
 }
 
@@ -3851,7 +3859,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
     while (rtp_timer_queue_length (priv->timers) > 0) {
       /* Stopping timers */
       unschedule_current_timer (jitterbuffer);
-      JBUF_WAIT_TIMER (priv);
+      JBUF_WAIT_TIMER_CHECK (priv, out_flushing_wait);
     }
   }
 
@@ -3916,6 +3924,12 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
   /* ERRORS */
 out_flushing:
   {
+    return priv->srcresult;
+  }
+
+out_flushing_wait:
+  {
+    rtp_jitter_buffer_free_item (item);
     return priv->srcresult;
   }
 }
