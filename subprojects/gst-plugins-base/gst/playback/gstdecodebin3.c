@@ -891,6 +891,17 @@ gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
       res = GST_PAD_LINK_REFUSED;
     }
   }
+
+  /* Clear stream-collection corresponding to current INPUT.  We do not
+   * recalculate the global one yet, it will be done when at least one
+   * collection is received/computed for this input.
+   */
+  if (input->collection) {
+    GST_DEBUG_OBJECT (pad, "Clearing input collection");
+    gst_object_unref (input->collection);
+    input->collection = NULL;
+  }
+
   INPUT_UNLOCK (dbin);
 
   return res;
