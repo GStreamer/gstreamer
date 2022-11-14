@@ -2779,8 +2779,7 @@ gst_rtspsrc_set_state (GstRTSPSrc * src, GstState state)
 }
 
 static void
-gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing,
-    guint32 seqnum)
+gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
 {
   GstEvent *event;
   gint cmd;
@@ -2788,13 +2787,11 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing,
 
   if (flush) {
     event = gst_event_new_flush_start ();
-    gst_event_set_seqnum (event, seqnum);
     GST_DEBUG_OBJECT (src, "start flush");
     cmd = CMD_WAIT;
     state = GST_STATE_PAUSED;
   } else {
     event = gst_event_new_flush_stop (TRUE);
-    gst_event_set_seqnum (event, seqnum);
     GST_DEBUG_OBJECT (src, "stop flush; playing %d", playing);
     cmd = CMD_LOOP;
     if (playing)
@@ -2927,7 +2924,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
    * blocking in preroll). */
   if (flush) {
     GST_DEBUG_OBJECT (src, "starting flush");
-    gst_rtspsrc_flush (src, TRUE, FALSE, gst_event_get_seqnum (event));
+    gst_rtspsrc_flush (src, TRUE, FALSE);
   } else {
     if (src->task) {
       gst_task_pause (src->task);
@@ -2977,7 +2974,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   if (flush) {
     /* if we started flush, we stop now */
     GST_DEBUG_OBJECT (src, "stopping flush");
-    gst_rtspsrc_flush (src, FALSE, playing, gst_event_get_seqnum (event));
+    gst_rtspsrc_flush (src, FALSE, playing);
   }
 
   /* now we did the seek and can activate the new segment values */
@@ -3131,15 +3128,13 @@ gst_rtspsrc_update_src_event (GstRTSPSrc * self, GstRTSPStream * stream,
       event = gst_event_new_stream_start (stream_id);
       gst_rtspsrc_stream_start_event_add_group_id (self, event);
       g_free (stream_id);
+
+      gst_event_set_seqnum (event, self->seek_seqnum);
       break;
     }
-    case GST_EVENT_SEGMENT:
-      if (self->seek_seqnum != GST_SEQNUM_INVALID) {
-        event = gst_event_make_writable (event);
-        gst_event_set_seqnum (event, self->seek_seqnum);
-      }
-      break;
     default:
+      event = gst_event_make_writable (event);
+      gst_event_set_seqnum (event, self->seek_seqnum);
       break;
   }
 
@@ -5196,8 +5191,8 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
   if (stream->udpsrc[0]) {
     GstEvent *sent_event;
 
-    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-      sent_event = gst_event_new_eos ();
+    if (stream->segment_seqnum[0] != GST_SEQNUM_INVALID) {
+      sent_event = gst_event_copy (event);
       gst_event_set_seqnum (sent_event, stream->segment_seqnum[0]);
     } else {
       sent_event = gst_event_ref (event);
@@ -5205,32 +5200,38 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
 
     res = gst_element_send_event (stream->udpsrc[0], sent_event);
   } else if (stream->channelpad[0]) {
-    gst_event_ref (event);
+    GstEvent *sent_event;
+
+    sent_event = gst_event_copy (event);
+    gst_event_set_seqnum (sent_event, src->seek_seqnum);
+
     if (GST_PAD_IS_SRC (stream->channelpad[0]))
-      res = gst_pad_push_event (stream->channelpad[0], event);
+      res = gst_pad_push_event (stream->channelpad[0], sent_event);
     else
-      res = gst_pad_send_event (stream->channelpad[0], event);
+      res = gst_pad_send_event (stream->channelpad[0], sent_event);
   }
 
   if (stream->udpsrc[1]) {
     GstEvent *sent_event;
 
-    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
-      sent_event = gst_event_new_eos ();
-      if (stream->segment_seqnum[1] != GST_SEQNUM_INVALID) {
-        gst_event_set_seqnum (sent_event, stream->segment_seqnum[1]);
-      }
+    if (stream->segment_seqnum[1] != GST_SEQNUM_INVALID) {
+      sent_event = gst_event_copy (event);
+      gst_event_set_seqnum (sent_event, stream->segment_seqnum[1]);
     } else {
       sent_event = gst_event_ref (event);
     }
 
     res &= gst_element_send_event (stream->udpsrc[1], sent_event);
   } else if (stream->channelpad[1]) {
-    gst_event_ref (event);
+    GstEvent *sent_event;
+
+    sent_event = gst_event_copy (event);
+    gst_event_set_seqnum (sent_event, src->seek_seqnum);
+
     if (GST_PAD_IS_SRC (stream->channelpad[1]))
-      res &= gst_pad_push_event (stream->channelpad[1], event);
+      res &= gst_pad_push_event (stream->channelpad[1], sent_event);
     else
-      res &= gst_pad_send_event (stream->channelpad[1], event);
+      res &= gst_pad_send_event (stream->channelpad[1], sent_event);
   }
 
 done:
@@ -9460,6 +9461,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
         goto start_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      rtspsrc->seek_seqnum = gst_util_seqnum_next ();
       /* init some state */
       rtspsrc->cur_protocols = rtspsrc->protocols;
       /* first attempt, don't ignore timeouts */
