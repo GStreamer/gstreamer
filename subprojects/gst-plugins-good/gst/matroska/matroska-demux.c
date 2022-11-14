@@ -1839,9 +1839,10 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
 
       gst_query_parse_duration (query, &format, NULL);
 
-      res = TRUE;
       if (format == GST_FORMAT_TIME) {
-        res = gst_pad_query_default (pad, GST_OBJECT_CAST (demux), query);
+        res = FALSE;
+        if (pad)
+          res = gst_pad_query_default (pad, GST_OBJECT_CAST (demux), query);
         if (!res) {
           GST_OBJECT_LOCK (demux);
           gst_query_set_duration (query, GST_FORMAT_TIME,
@@ -1852,6 +1853,8 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
         }
       } else if (format == GST_FORMAT_DEFAULT && context
           && context->default_duration) {
+        res = TRUE;
+
         GST_OBJECT_LOCK (demux);
         gst_query_set_duration (query, GST_FORMAT_DEFAULT,
             demux->common.segment.duration / context->default_duration);
