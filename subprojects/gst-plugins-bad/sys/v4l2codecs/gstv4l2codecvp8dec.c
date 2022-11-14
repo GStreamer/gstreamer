@@ -73,7 +73,7 @@ struct _GstV4l2CodecVp8Dec
   GstV4l2CodecPool *src_pool;
   gint min_pool_size;
   gboolean has_videometa;
-  gboolean need_negotiation;
+  gboolean streaming;
   gboolean copy_frames;
 
   struct v4l2_ctrl_vp8_frame frame_header;
@@ -137,6 +137,16 @@ gst_v4l2_codec_vp8_dec_close (GstVideoDecoder * decoder)
 }
 
 static void
+gst_v4l2_codec_vp8_dec_streamoff (GstV4l2CodecVp8Dec * self)
+{
+  if (self->streaming) {
+    gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
+    gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
+    self->streaming = FALSE;
+  }
+}
+
+static void
 gst_v4l2_codec_vp8_dec_reset_allocation (GstV4l2CodecVp8Dec * self)
 {
   if (self->sink_allocator) {
@@ -156,9 +166,7 @@ gst_v4l2_codec_vp8_dec_stop (GstVideoDecoder * decoder)
 {
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
 
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
-
+  gst_v4l2_codec_vp8_dec_streamoff (self);
   gst_v4l2_codec_vp8_dec_reset_allocation (self);
 
   if (self->output_state)
@@ -185,14 +193,10 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   GstCaps *filter, *caps;
 
   /* Ignore downstream renegotiation request. */
-  if (!self->need_negotiation)
-    return TRUE;
-  self->need_negotiation = FALSE;
+  if (self->streaming)
+    goto done;
 
   GST_DEBUG_OBJECT (self, "Negotiate");
-
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SINK);
-  gst_v4l2_decoder_streamoff (self->decoder, GST_PAD_SRC);
 
   gst_v4l2_codec_vp8_dec_reset_allocation (self);
 
@@ -234,6 +238,7 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   }
   gst_caps_unref (caps);
 
+done:
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
 
@@ -245,6 +250,9 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
 
   if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
+    if (self->streaming)
+      return TRUE;
+
     if (!gst_v4l2_decoder_streamon (self->decoder, GST_PAD_SINK)) {
       GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
           ("Could not enable the decoder driver."),
@@ -259,6 +267,8 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
       return FALSE;
     }
 
+    self->streaming = TRUE;
+
     return TRUE;
   }
 
@@ -272,6 +282,9 @@ gst_v4l2_codec_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
   guint min = 0;
   guint num_bitstream;
+
+  if (self->streaming)
+    return TRUE;
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
@@ -470,7 +483,7 @@ gst_v4l2_codec_vp8_dec_new_sequence (GstVp8Decoder * decoder,
   gst_v4l2_codec_vp8_dec_fill_frame_header (self, frame_hdr);
 
   if (negotiation_needed) {
-    self->need_negotiation = TRUE;
+    gst_v4l2_codec_vp8_dec_streamoff (self);
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
       GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
       return GST_FLOW_NOT_NEGOTIATED;
@@ -709,6 +722,13 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_vp8_picture_get_user_data (picture);
   gint ret;
+
+  if (picture->discont_state) {
+    if (!gst_video_decoder_negotiate (vdec)) {
+      GST_ERROR_OBJECT (vdec, "Could not re-negotiate with updated state");
+      return FALSE;
+    }
+  }
 
   GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
 
