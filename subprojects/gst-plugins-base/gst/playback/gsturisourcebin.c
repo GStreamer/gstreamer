@@ -1048,7 +1048,7 @@ static void
 setup_multiqueue (GstURISourceBin * urisrc, ChildSrcPadInfo * info,
     GstElement * multiqueue)
 {
-  if (info->use_downloadbuffer) {
+  if (info->use_downloadbuffer || !urisrc->is_stream) {
     /* If we have a downloadbuffer we will let that one deal with buffering,
        and we only use multiqueue for dealing with interleave */
     g_object_set (info->multiqueue, "use-buffering", FALSE, NULL);
@@ -1092,12 +1092,13 @@ new_output_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
   /* If a demuxer/parsebin is present, then the downloadbuffer will have been handled before that */
   use_downloadbuffer = info->use_downloadbuffer && !info->demuxer;
 
-  /* If parsebin is used and buffering is required, we go through a multiqueue */
-  if (urisrc->parse_streams && (info->use_queue2 || info->use_downloadbuffer)) {
+  /* If parsebin is used, we might have to go through a multiqueue */
+  if (urisrc->parse_streams && (info->use_queue2 || info->use_downloadbuffer
+          || !urisrc->is_stream)) {
     GST_DEBUG_OBJECT (urisrc, "Using multiqueue");
     if (!info->multiqueue) {
       GST_DEBUG_OBJECT (urisrc,
-          "Creating multiqueue for buffering elementary streams");
+          "Creating multiqueue for handling elementary streams");
       elem_name = "multiqueue";
       info->multiqueue = gst_element_factory_make (elem_name, NULL);
       if (!info->multiqueue)
