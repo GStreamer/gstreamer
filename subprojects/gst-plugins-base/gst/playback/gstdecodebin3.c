@@ -1624,7 +1624,9 @@ get_merged_collection (GstDecodebin3 * dbin)
 
   for (tmp = dbin->other_inputs; tmp; tmp = tmp->next) {
     DecodebinInput *input = (DecodebinInput *) tmp->data;
-    if (input->collection) {
+    GST_LOG_OBJECT (dbin, "Comparing res %p input->collection %p", res,
+        input->collection);
+    if (input->collection && input->collection != res) {
       if (res) {
         needs_merge = TRUE;
         break;
