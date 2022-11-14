@@ -3640,19 +3640,7 @@ gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, GstRTSPStream * stream)
 {
   GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", stream->id);
 
-  if (stream->eos)
-    goto was_eos;
-
-  stream->eos = TRUE;
   gst_rtspsrc_stream_push_event (src, stream, gst_event_new_eos ());
-  return;
-
-  /* ERRORS */
-was_eos:
-  {
-    GST_DEBUG_OBJECT (src, "stream for session %u was already EOS", stream->id);
-    return;
-  }
 }
 
 static void
@@ -5154,6 +5142,17 @@ gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
   /* only streams that have a connection to the outside world */
   if (!stream->setup)
     goto done;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+      stream->eos = TRUE;
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      stream->eos = FALSE;
+      break;
+    default:
+      break;
+  }
 
   if (stream->udpsrc[0]) {
     GstEvent *sent_event;
