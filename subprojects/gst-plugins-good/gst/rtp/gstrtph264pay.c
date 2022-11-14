@@ -924,6 +924,7 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 {
   GstRtpH264Pay *rtph264pay;
   guint8 nal_header, nal_type;
+  gboolean first_slice = FALSE;
   gboolean send_spspps;
   guint size;
 
@@ -960,8 +961,17 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 
   send_spspps = FALSE;
 
+  if (nal_type == IDR_TYPE_ID) {
+    guint8 first_mb_in_slice;
+    gst_buffer_extract (paybuf, 1, &first_mb_in_slice, 1);
+    /* 'first_mb_in_slice' specifies the address of the first macroblock
+     * in the slice. if 'first_mb_in_slice' is 0 (note that it's exp golomb
+     * code), the current slice is the first slice of the frame */
+    first_slice = ((first_mb_in_slice >> 7) & 0x01) == 1;
+  }
+
   /* check if we need to emit an SPS/PPS now */
-  if (nal_type == IDR_TYPE_ID && rtph264pay->spspps_interval > 0) {
+  if (first_slice && nal_type == IDR_TYPE_ID && rtph264pay->spspps_interval > 0) {
     if (rtph264pay->last_spspps != -1) {
       guint64 diff;
       GstClockTime running_time =
@@ -993,7 +1003,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
       GST_DEBUG_OBJECT (rtph264pay, "no previous SPS/PPS time, send now");
       send_spspps = TRUE;
     }
-  } else if (nal_type == IDR_TYPE_ID && rtph264pay->spspps_interval == -1) {
+  } else if (first_slice && nal_type == IDR_TYPE_ID
+      && rtph264pay->spspps_interval == -1) {
     GST_DEBUG_OBJECT (rtph264pay, "sending SPS/PPS before current IDR frame");
     /* send SPS/PPS before every IDR frame */
     send_spspps = TRUE;

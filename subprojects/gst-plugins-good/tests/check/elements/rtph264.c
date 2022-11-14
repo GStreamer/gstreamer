@@ -1455,6 +1455,77 @@ GST_START_TEST (test_rtph264pay_avc_incomplete_nal)
 
 GST_END_TEST;
 
+/* A buffer consists of two memory chunks: a primary slice with
+ * fist_mb_in_slice set to 0 and a secondary one. Only the first slice
+ * should trigger generation of SPS and PPS buffers */
+GST_START_TEST (test_rtph264pay_avc_two_slices_per_buffer_config_interval)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph264pay timestamp-offset=123"
+      " name=p config-interval=-1");
+  GstFlowReturn ret;
+  GstBuffer *slice1;
+  GstBuffer *slice2;
+  GstBuffer *buffer;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  guint8 *rest_of_image;
+  gsize rest_of_slice_1_size;
+  gsize rest_of_image_size;
+  guint num_buffers;
+  guint8 *payload = NULL;
+  guint8 nal_type;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h264,alignment=au,stream-format=avc,"
+      "codec_data=(buffer)01f4000dffe1001c67f4000d919b2884d80b50606064000003"
+      "000400000300f23c50a65801000668ebec448440");
+
+  /* first slice */
+  slice1 = wrap_static_buffer (h264_idr_slice_1_avc, 1);
+  rest_of_slice_1_size = sizeof (h264_idr_slice_1_avc) - 1;
+
+  rest_of_image_size = rest_of_slice_1_size + sizeof (h264_idr_slice_2_avc);
+  rest_of_image = g_malloc (rest_of_image_size);
+
+  memcpy (rest_of_image, h264_idr_slice_1_avc + 1, rest_of_slice_1_size);
+  memcpy (rest_of_image + rest_of_slice_1_size, h264_idr_slice_2_avc,
+      sizeof (h264_idr_slice_2_avc));
+
+  /* second slice */
+  slice2 =
+      wrap_static_buffer_full (rest_of_image, rest_of_image_size,
+      rest_of_image, g_free);
+  buffer = gst_buffer_append (slice1, slice2);
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+  /* SPS PPS IDR (Slice1) IDR (Slice2) */
+  num_buffers = gst_harness_buffers_in_queue (h);
+  fail_unless_equals_int (num_buffers, 4);
+
+  for (guint i = 0; i < num_buffers; i++) {
+    buffer = gst_harness_pull (h);
+    fail_unless (gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp));
+    payload = gst_rtp_buffer_get_payload (&rtp);
+    gst_rtp_buffer_unmap (&rtp);
+    nal_type = (GST_READ_UINT8 (payload)) & 0x1f;
+    GST_INFO ("nal_type=%d", nal_type);
+    if (i == 0) {
+      fail_unless_equals_int (nal_type, 7);
+    } else if (i == 1) {
+      fail_unless_equals_int (nal_type, 8);
+    } else if (i == 2) {
+      fail_unless_equals_int (nal_type, 5);
+    } else if (i == 3) {
+      fail_unless_equals_int (nal_type, 5);
+    }
+
+    gst_buffer_unref (buffer);
+  }
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtph264_suite (void)
 {
@@ -1486,6 +1557,8 @@ rtph264_suite (void)
   tcase_add_test (tc_chain, test_rtph264pay_avc);
   tcase_add_test (tc_chain, test_rtph264pay_avc_two_slices_per_buffer);
   tcase_add_test (tc_chain, test_rtph264pay_avc_incomplete_nal);
+  tcase_add_test (tc_chain,
+      test_rtph264pay_avc_two_slices_per_buffer_config_interval);
 
   return s;
 }
