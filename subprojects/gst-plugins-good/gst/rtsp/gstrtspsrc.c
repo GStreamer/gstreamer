@@ -3134,8 +3134,10 @@ gst_rtspsrc_update_src_event (GstRTSPSrc * self, GstRTSPStream * stream,
       break;
     }
     case GST_EVENT_SEGMENT:
-      if (self->seek_seqnum != GST_SEQNUM_INVALID)
-        GST_EVENT_SEQNUM (event) = self->seek_seqnum;
+      if (self->seek_seqnum != GST_SEQNUM_INVALID) {
+        event = gst_event_make_writable (event);
+        gst_event_set_seqnum (event, self->seek_seqnum);
+      }
       break;
     default:
       break;
