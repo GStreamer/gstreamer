@@ -4931,6 +4931,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     add_backchannel_fakesink (src, stream, outpad);
     gst_object_unref (outpad);
   } else if (outpad) {
+    GstPad *internal_src;
+
     GST_DEBUG_OBJECT (src, "creating ghostpad for stream %p", stream);
 
     gst_pad_use_fixed_caps (outpad);
@@ -4944,6 +4946,17 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
     gst_object_unref (template);
     g_free (name);
+
+    /* We intercept and modify the stream start event */
+    internal_src =
+        GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (stream->srcpad)));
+    gst_pad_set_element_private (internal_src, stream);
+    gst_pad_set_event_function (internal_src,
+        gst_rtspsrc_handle_src_sink_event);
+    gst_object_unref (internal_src);
+
+    gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
+    gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
 
     gst_object_unref (outpad);
   }
