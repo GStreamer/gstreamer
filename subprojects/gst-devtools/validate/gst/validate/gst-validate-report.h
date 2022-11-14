@@ -138,6 +138,12 @@ typedef enum {
 #define SCENARIO_ACTION_CHECK_ERROR              _QUARK("scenario::check-error")
 #define SCENARIO_ACTION_TIMEOUT                  _QUARK("scenario::action-timeout")
 #define SCENARIO_ACTION_EXECUTION_ISSUE          _QUARK("scenario::execution-issue")
+/**
+ * SCENARIO_ACTION_ENDED_EARLY:
+ *
+ * Since: 1.22
+ */
+#define SCENARIO_ACTION_ENDED_EARLY              _QUARK("scenario::action-ended-early")
 
 #define CONFIG_LATENCY_TOO_HIGH                  _QUARK("config::latency-too-high")
 #define CONFIG_TOO_MANY_BUFFERS_DROPPED          _QUARK("config::too-many-buffers-dropped")

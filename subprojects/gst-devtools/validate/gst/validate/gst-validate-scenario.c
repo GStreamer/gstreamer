@@ -2688,6 +2688,15 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
     return G_SOURCE_CONTINUE;
   }
 
+  if (message && GST_MESSAGE_TYPE (message) == GST_MESSAGE_EOS
+      && act->playback_time != GST_CLOCK_TIME_NONE) {
+    GST_VALIDATE_REPORT_ACTION (scenario, act,
+        SCENARIO_ACTION_ENDED_EARLY,
+        "Got EOS before action playback time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (act->playback_time));
+    goto execute_action;
+  }
+
   switch (act->priv->state) {
     case GST_VALIDATE_EXECUTE_ACTION_NONE:
     case GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
@@ -2734,6 +2743,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
     return G_SOURCE_CONTINUE;
   }
 
+execute_action:
   type = _find_action_type (act->type);
 
   GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT

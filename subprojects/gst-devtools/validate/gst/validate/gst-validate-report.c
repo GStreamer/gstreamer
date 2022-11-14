@@ -534,6 +534,8 @@ gst_validate_report_load_issues (void)
       GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS);
   REGISTER_VALIDATE_ISSUE (ISSUE, SCENARIO_ACTION_EXECUTION_ISSUE,
       "An issue happened during the execution of a scenario", NULL);
+  REGISTER_VALIDATE_ISSUE (WARNING, SCENARIO_ACTION_ENDED_EARLY,
+      "Got EOS before an action playback time", NULL);
   REGISTER_VALIDATE_ISSUE (CRITICAL, CONFIG_LATENCY_TOO_HIGH,
       "The pipeline latency is higher than the maximum allowed by the scenario",
       NULL);
