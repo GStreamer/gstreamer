@@ -583,11 +583,10 @@ gst_aes_dec_init_cipher (GstAesDec * filter)
     GST_ERROR_OBJECT (filter, "Could not initialize openssl cipher");
     return FALSE;
   }
-  if (filter->per_buffer_padding) {
-    if (!EVP_CIPHER_CTX_set_padding (filter->evp_ctx, 0)) {
-      GST_ERROR_OBJECT (filter, "Could not set padding");
-      return FALSE;
-    }
+  if (!EVP_CIPHER_CTX_set_padding (filter->evp_ctx,
+          filter->per_buffer_padding ? 0 : 1)) {
+    GST_ERROR_OBJECT (filter, "Could not set padding");
+    return FALSE;
   }
 
   return TRUE;
