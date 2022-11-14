@@ -1302,6 +1302,7 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
   gint min_width, min_height, max_width, max_height;
   GArray *mem_formats = NULL;
   gboolean ret = TRUE;
+  guint i, num_structure;
 
   if (postproc->allowed_sinkpad_caps) {
     ret = TRUE;
@@ -1324,6 +1325,30 @@ ensure_allowed_sinkpad_caps (GstVaapiPostproc * postproc)
     GST_WARNING_OBJECT (postproc, "failed to create VA sink caps");
     ret = FALSE;
     goto out;
+  }
+
+  /* For raw yuv caps, we need to replace va attrib formats with all image formats */
+  num_structure = gst_caps_get_size (out_caps);
+  for (i = 0; i < num_structure; i++) {
+    GstStructure *structure;
+    GstCapsFeatures *features = gst_caps_get_features (out_caps, i);
+    GValue v_formats = G_VALUE_INIT;
+
+    structure = gst_caps_get_structure (out_caps, i);
+    if (!structure)
+      continue;
+
+    if (gst_caps_features_contains (features,
+            GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
+      mem_formats = gst_vaapi_display_get_image_formats
+          (GST_VAAPI_PLUGIN_BASE_DISPLAY (postproc));
+      if (!gst_vaapi_value_set_format_list (&v_formats, mem_formats)) {
+        ret = FALSE;
+        goto out;
+      }
+      gst_structure_set_value (structure, "format", &v_formats);
+      g_value_unset (&v_formats);
+    }
   }
 
   postproc->allowed_sinkpad_caps = out_caps;
