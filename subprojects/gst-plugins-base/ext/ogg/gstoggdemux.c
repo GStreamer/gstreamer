@@ -2524,6 +2524,7 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_DEBUG_OBJECT (ogg, "Error seeking back after duration check: %d",
               res);
         }
+        gst_event_unref (event);
         res = TRUE;
         break;
       } else {
@@ -2538,6 +2539,8 @@ gst_ogg_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       if (!drop)
         res = gst_ogg_demux_send_event (ogg, event);
+      else
+        gst_event_unref (event);
       if (ogg->current_chain == NULL) {
         GST_WARNING_OBJECT (ogg,
             "EOS while trying to retrieve chain, seeking disabled");
