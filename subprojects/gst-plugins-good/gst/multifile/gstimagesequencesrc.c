@@ -529,6 +529,8 @@ gst_image_sequence_src_set_caps (GstImageSequenceSrc * self, GstCaps * caps)
   gst_pad_set_caps (GST_BASE_SRC_PAD (self), new_caps);
 
   GST_DEBUG_OBJECT (self, "Setting new caps: %" GST_PTR_FORMAT, new_caps);
+
+  gst_caps_unref (new_caps);
 }
 
 /* Call with LOCK */
