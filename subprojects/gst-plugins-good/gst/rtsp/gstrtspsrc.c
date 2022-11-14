@@ -3450,10 +3450,8 @@ udpsrc_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
   switch (GST_EVENT_TYPE (info->data)) {
     case GST_EVENT_SEGMENT:
-      if (!gst_event_is_writable (info->data))
-        info->data = gst_event_make_writable (info->data);
-
       *segment_seqnum = gst_event_get_seqnum (info->data);
+      break;
     default:
       break;
   }
