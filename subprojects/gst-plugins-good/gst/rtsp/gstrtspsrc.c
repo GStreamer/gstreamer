@@ -3108,15 +3108,10 @@ gst_rtspsrc_stream_start_event_add_group_id (GstRTSPSrc * src, GstEvent * event)
   gst_event_set_group_id (event, src->group_id);
 }
 
-static gboolean
-gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
+static GstEvent *
+gst_rtspsrc_update_src_event (GstRTSPSrc * self, GstRTSPStream * stream,
     GstEvent * event)
 {
-  GstRTSPStream *stream;
-  GstRTSPSrc *self = GST_RTSPSRC (GST_OBJECT_PARENT (parent));
-
-  stream = gst_pad_get_element_private (pad);
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:{
       GChecksum *cs;
@@ -3145,6 +3140,20 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
     default:
       break;
   }
+
+  return event;
+}
+
+static gboolean
+gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstRTSPStream *stream;
+  GstRTSPSrc *self = GST_RTSPSRC (GST_OBJECT_PARENT (parent));
+
+  stream = gst_pad_get_element_private (pad);
+
+  event = gst_rtspsrc_update_src_event (self, stream, event);
 
   return gst_pad_push_event (stream->srcpad, event);
 }
@@ -3459,13 +3468,24 @@ udpsrc_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   return GST_PAD_PROBE_OK;
 }
 
+typedef struct
+{
+  GstRTSPSrc *src;
+  GstRTSPStream *stream;
+} CopyStickyEventsData;
+
 static gboolean
 copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
 {
-  GstPad *gpad = GST_PAD_CAST (user_data);
+  CopyStickyEventsData *data = user_data;
+  GstEvent *new_event;
 
-  GST_DEBUG_OBJECT (gpad, "store sticky event %" GST_PTR_FORMAT, *event);
-  gst_pad_store_sticky_event (gpad, *event);
+  GST_DEBUG_OBJECT (data->stream->srcpad, "send sticky event %" GST_PTR_FORMAT,
+      *event);
+  new_event =
+      gst_rtspsrc_update_src_event (data->src, data->stream,
+      gst_event_ref (*event));
+  gst_pad_store_sticky_event (data->stream->srcpad, new_event);
 
   return TRUE;
 }
@@ -3511,6 +3531,7 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
   GstRTSPStream *stream;
   gboolean all_added;
   GstPad *internal_src;
+  CopyStickyEventsData copy_sticky_events_data;
 
   GST_DEBUG_OBJECT (src, "got new manager pad %" GST_PTR_FORMAT, pad);
 
@@ -3560,12 +3581,17 @@ new_manager_pad (GstElement * manager, GstPad * pad, GstRTSPSrc * src)
       GST_PAD (gst_proxy_pad_get_internal (GST_PROXY_PAD (stream->srcpad)));
   gst_pad_set_element_private (internal_src, stream);
   gst_pad_set_event_function (internal_src, gst_rtspsrc_handle_src_sink_event);
-  gst_object_unref (internal_src);
 
   gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
   gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
   gst_pad_set_active (stream->srcpad, TRUE);
-  gst_pad_sticky_events_foreach (pad, copy_sticky_events, stream->srcpad);
+
+  copy_sticky_events_data.src = src;
+  copy_sticky_events_data.stream = stream;
+  gst_pad_sticky_events_foreach (pad, copy_sticky_events,
+      &copy_sticky_events_data);
+
+  gst_object_unref (internal_src);
 
   /* don't add the srcpad if this is a sendonly stream */
   if (stream->is_backchannel)
