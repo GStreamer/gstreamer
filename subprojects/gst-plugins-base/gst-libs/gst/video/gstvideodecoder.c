@@ -3270,6 +3270,9 @@ gst_video_decoder_drop_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
   /* now free the frame */
   gst_video_decoder_release_frame (dec, frame);
 
+  /* store that we have valid decoded data */
+  dec->priv->had_output_data = TRUE;
+
   GST_VIDEO_DECODER_STREAM_UNLOCK (dec);
 
   return GST_FLOW_OK;
