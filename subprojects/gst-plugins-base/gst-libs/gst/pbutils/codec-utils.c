@@ -2520,7 +2520,10 @@ vp9_caps_get_mime_codec (GstCaps * caps)
     GstVideoChromaSite chroma_site;
 
     chroma_site_str = gst_structure_get_string (caps_st, "chroma-site");
-    chroma_site = gst_video_chroma_site_from_string (chroma_site_str);
+    if (chroma_site_str)
+      chroma_site = gst_video_chroma_site_from_string (chroma_site_str);
+    else
+      chroma_site = GST_VIDEO_CHROMA_SITE_UNKNOWN;
     if (chroma_site == GST_VIDEO_CHROMA_SITE_V_COSITED) {
       chroma_format = 0;
     } else if (chroma_site == GST_VIDEO_CHROMA_SITE_COSITED) {
