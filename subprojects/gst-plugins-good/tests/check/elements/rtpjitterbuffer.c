@@ -2697,6 +2697,48 @@ GST_START_TEST (test_deadline_ts_offset)
 
 GST_END_TEST;
 
+GST_START_TEST (test_deadline_ts_offset_overflow)
+{
+  GstHarness *h = gst_harness_new ("rtpjitterbuffer");
+  GstTestClock *testclock;
+  GstClockID id;
+  const gint jb_latency_ms = 10;
+
+  gst_harness_set_src_caps (h, generate_caps ());
+  testclock = gst_harness_get_testclock (h);
+
+  g_object_set (h->element, "latency", jb_latency_ms, NULL);
+
+  /* push the first buffer in */
+  fail_unless_equals_int (GST_FLOW_OK,
+      gst_harness_push (h, generate_test_buffer (0)));
+
+  /* wait_next_timeout() syncs on the deadline timer */
+  gst_test_clock_wait_for_next_pending_id (testclock, &id);
+  fail_unless_equals_uint64 (jb_latency_ms * GST_MSECOND,
+      gst_clock_id_get_time (id));
+  gst_clock_id_unref (id);
+
+  /* add ts-offset while waiting, this reschedules the deadline to a negative time */
+  g_object_set (h->element, "ts-offset", -20 * GST_MSECOND, NULL);
+
+  /* wait_next_timeout() syncs on the new deadline timer, which is scheduled
+   * to the jitterbuffer latency due to being in the past */
+  gst_test_clock_wait_for_next_pending_id (testclock, &id);
+  fail_unless_equals_uint64 (jb_latency_ms * GST_MSECOND,
+      gst_clock_id_get_time (id));
+  gst_clock_id_unref (id);
+
+  gst_test_clock_set_time_and_process (testclock, jb_latency_ms * GST_MSECOND);
+
+  gst_buffer_unref (gst_harness_pull (h));
+
+  gst_object_unref (testclock);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_big_gap_seqnum)
 {
   GstHarness *h = gst_harness_new ("rtpjitterbuffer");
@@ -3515,6 +3557,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_dont_drop_packet_based_on_skew);
 
   tcase_add_test (tc_chain, test_deadline_ts_offset);
+  tcase_add_test (tc_chain, test_deadline_ts_offset_overflow);
   tcase_add_test (tc_chain, test_big_gap_seqnum);
   tcase_add_test (tc_chain, test_big_gap_arrival_time);
   tcase_add_test (tc_chain, test_fill_queue);
