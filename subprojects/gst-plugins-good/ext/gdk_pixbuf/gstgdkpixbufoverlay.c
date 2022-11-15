@@ -21,17 +21,15 @@
  * SECTION:element-gdkpixbufoverlay
  * @title: gdkpixbufoverlay
  *
- * The gdkpixbufoverlay element overlays an image loaded from file onto
- * a video stream.
+ * The gdkpixbufoverlay element overlays a provided GdkPixbuf or an image
+ * loaded from file onto a video stream.
  *
  * Changing the positioning or overlay width and height properties at runtime
  * is supported, but it might be prudent to to protect the property setting
  * code with GST_BASE_TRANSFORM_LOCK and GST_BASE_TRANSFORM_UNLOCK, as
  * g_object_set() is not atomic for multiple properties passed in one go.
  *
- * Changing the image at runtime is currently not supported.
- *
- * Negative offsets are also not yet supported.
+ * Changing the image at runtime is supported.
  *
  * ## Example launch line
  * |[
