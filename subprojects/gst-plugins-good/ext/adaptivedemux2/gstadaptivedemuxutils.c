@@ -500,6 +500,7 @@ typedef struct
 {
   gboolean delivered;
   GstEvent *event;
+  guint sticky_order;
 } PadEvent;
 
 void
@@ -541,12 +542,12 @@ gst_event_store_insert_event (GstEventStore * store, GstEvent * event,
     gboolean delivered)
 {
   guint i, len;
-  GstEventType type;
   GArray *events;
   GQuark name_id = 0;
   gboolean insert = TRUE;
 
-  type = GST_EVENT_TYPE (event);
+  GstEventType type = GST_EVENT_TYPE (event);
+  guint event_sticky_order = gst_event_type_to_sticky_ordering (type);
 
   if (type & GST_EVENT_TYPE_STICKY_MULTI)
     name_id = gst_structure_get_name_id (gst_event_get_structure (event));
@@ -578,23 +579,27 @@ gst_event_store_insert_event (GstEventStore * store, GstEvent * event,
       break;
     }
 
-    if (type < GST_EVENT_TYPE (ev->event) || (type != GST_EVENT_TYPE (ev->event)
+    if (event_sticky_order < ev->sticky_order
+        || (type != GST_EVENT_TYPE (ev->event)
             && GST_EVENT_TYPE (ev->event) == GST_EVENT_EOS)) {
       /* STREAM_START, CAPS and SEGMENT must be delivered in this order. By
        * storing the sticky ordered we can check that this is respected. */
-      if (G_UNLIKELY (GST_EVENT_TYPE (ev->event) <= GST_EVENT_SEGMENT
-              || GST_EVENT_TYPE (ev->event) == GST_EVENT_EOS))
+      if (G_UNLIKELY (ev->sticky_order <=
+              gst_event_type_to_sticky_ordering (GST_EVENT_SEGMENT)
+              || GST_EVENT_TYPE (ev->event) == GST_EVENT_EOS)) {
         g_warning (G_STRLOC
             ":%s:<store %p> Sticky event misordering, got '%s' before '%s'",
             G_STRFUNC, store,
             gst_event_type_get_name (GST_EVENT_TYPE (ev->event)),
             gst_event_type_get_name (type));
+      }
       break;
     }
   }
   if (insert) {
     PadEvent ev;
     ev.event = gst_event_ref (event);
+    ev.sticky_order = event_sticky_order;
     ev.delivered = delivered;
     g_array_insert_val (events, i, ev);
 
