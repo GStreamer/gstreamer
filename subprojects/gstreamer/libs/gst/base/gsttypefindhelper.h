@@ -46,6 +46,13 @@ GstCaps * gst_type_find_helper_for_data_with_extension (GstObject              *
                                                         GstTypeFindProbability *prob);
 
 GST_BASE_API
+GstCaps * gst_type_find_helper_for_data_with_caps (GstObject              *obj,
+                                                   const guint8           *data,
+                                                   gsize                   size,
+                                                   GstCaps                *caps,
+                                                   GstTypeFindProbability *prob);
+
+GST_BASE_API
 GstCaps * gst_type_find_helper_for_buffer (GstObject              *obj,
                                            GstBuffer              *buf,
                                            GstTypeFindProbability *prob);
@@ -57,8 +64,18 @@ GstCaps * gst_type_find_helper_for_buffer_with_extension (GstObject             
                                                           GstTypeFindProbability *prob);
 
 GST_BASE_API
+GstCaps * gst_type_find_helper_for_buffer_with_caps (GstObject              *obj,
+                                                     GstBuffer              *buf,
+                                                     GstCaps                *caps,
+                                                     GstTypeFindProbability *prob);
+
+GST_BASE_API
 GstCaps * gst_type_find_helper_for_extension (GstObject * obj,
                                               const gchar * extension);
+
+GST_BASE_API
+GList * gst_type_find_list_factories_for_caps (GstObject * obj,
+                                               GstCaps * caps);
 
 /**
  * GstTypeFindHelperGetRangeFunction:
