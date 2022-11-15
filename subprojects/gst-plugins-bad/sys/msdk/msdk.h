@@ -137,6 +137,9 @@ GstVideoFormat
 gst_msdk_get_video_format_from_mfx_fourcc (mfxU32 fourcc);
 
 void
+gst_msdk_get_video_format_list (GValue * formats);
+
+void
 gst_msdk_update_mfx_frame_info_from_mfx_video_param (mfxFrameInfo * mfx_info,
     mfxVideoParam * param);
 
