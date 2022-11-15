@@ -46,30 +46,6 @@ typedef struct
 } TestCallbackData;
 
 static gboolean
-check_encoder_available (const gchar * encoder_name)
-{
-  gboolean ret = TRUE;
-  GstElement *elem;
-
-  elem = gst_element_factory_make (encoder_name, NULL);
-  if (!elem) {
-    gst_printerrln ("%s is not available", encoder_name);
-    return FALSE;
-  }
-
-  if (gst_element_set_state (elem,
-          GST_STATE_PAUSED) != GST_STATE_CHANGE_SUCCESS) {
-    gst_printerrln ("cannot open device");
-    ret = FALSE;
-  }
-
-  gst_element_set_state (elem, GST_STATE_NULL);
-  gst_object_unref (elem);
-
-  return ret;
-}
-
-static gboolean
 bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
 {
   switch (GST_MESSAGE_TYPE (msg)) {
@@ -450,21 +426,32 @@ gint
 main (gint argc, gchar ** argv)
 {
   GstElement *pipeline;
-  GstElement *src, *capsfilter, *enc, *dec, *parser, *sink;
+  GstElement *src, *capsfilter, *convert, *enc, *dec, *parser, *vpp, *sink;
+  GstElement *queue0, *queue1;
   GstStateChangeReturn sret;
   GError *error = NULL;
   GOptionContext *option_ctx;
   GstCaps *caps;
   GstPad *pad;
   TestCallbackData data = { 0, };
-  gchar *encoder_name = NULL;
+  gchar *codec = NULL;
   gulong deep_notify_id = 0;
+  guint idx;
 
   /* *INDENT-OFF* */
-  GOptionEntry options[] = {
-    {"encoder", 0, 0, G_OPTION_ARG_STRING, &encoder_name,
-        "VA video encoder element to test, default: vah264enc"},
+  const GOptionEntry options[] = {
+    {"codec", 'c', 0, G_OPTION_ARG_STRING, &codec,
+        "Codec to test: [ *h264, h265 ]"},
     {NULL}
+  };
+  const struct {
+    const char *codec;
+    const char *encoder;
+    const char *parser;
+    const char *decoder;
+  } elements_map[] = {
+    { "h264", "vah264enc", "h264parse", "vah264dec" },
+    { "h265", "vah265enc", "h265parse", "vah265dec" },
   };
   /* *INDENT-ON* */
 
@@ -493,16 +480,19 @@ main (gint argc, gchar ** argv)
   g_option_context_free (option_ctx);
   gst_init (NULL, NULL);
 
-  if (!encoder_name)
-    encoder_name = g_strdup ("vah264enc");
+  if (!codec)
+    codec = g_strdup ("h264");
 
-  if (!check_encoder_available (encoder_name)) {
-    gst_printerrln ("Cannot load %s plugin", encoder_name);
-    exit (1);
+  for (idx = 0; idx < G_N_ELEMENTS (elements_map); idx++) {
+    if (g_strcmp0 (elements_map[idx].codec, codec) == 0)
+      break;
   }
 
-  /* prepare the pipeline */
-  loop = g_main_loop_new (NULL, FALSE);
+  if (idx == G_N_ELEMENTS (elements_map)) {
+    gst_printerrln ("Unsupported codec: %s", codec);
+    exit (1);
+  }
+  g_free (codec);
 
   pipeline = gst_pipeline_new (NULL);
 
@@ -510,28 +500,29 @@ main (gint argc, gchar ** argv)
   g_object_set (src, "pattern", 1, NULL);
 
   MAKE_ELEMENT_AND_ADD (capsfilter, "capsfilter");
-  MAKE_ELEMENT_AND_ADD (enc, encoder_name);
-
-  /* gst_util_set_object_arg (G_OBJECT (enc), "rate-control", rate_control); */
-
-  if (g_strcmp0 (encoder_name, "vah264enc") == 0) {
-    MAKE_ELEMENT_AND_ADD (parser, "h264parse");
-    MAKE_ELEMENT_AND_ADD (dec, "vah264dec");
-  } else {
-    g_assert_not_reached ();
-  }
-
+  MAKE_ELEMENT_AND_ADD (convert, "videoconvert");
+  MAKE_ELEMENT_AND_ADD (enc, elements_map[idx].encoder);
+  MAKE_ELEMENT_AND_ADD (queue0, "queue");
+  MAKE_ELEMENT_AND_ADD (parser, elements_map[idx].parser);
+  MAKE_ELEMENT_AND_ADD (dec, elements_map[idx].decoder);
+  MAKE_ELEMENT_AND_ADD (vpp, "vapostproc");
+  MAKE_ELEMENT_AND_ADD (queue1, "queue");
   MAKE_ELEMENT_AND_ADD (sink, "autovideosink");
 
-  if (!gst_element_link_many (src, capsfilter, enc, parser, dec, sink, NULL)) {
+  if (!gst_element_link_many (src, capsfilter, convert, enc, queue0,
+          parser, dec, vpp, queue1, sink, NULL)) {
     gst_printerrln ("Failed to link element");
     exit (1);
   }
 
   caps = gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
-      width, "height", G_TYPE_INT, height, NULL);
+      width, "height", G_TYPE_INT, height,
+      "format", G_TYPE_STRING, "I420", NULL);
   g_object_set (capsfilter, "caps", caps, NULL);
   gst_caps_unref (caps);
+
+  g_object_set (convert, "chroma-mode", 3, NULL);
+  g_object_set (convert, "dither", 0, NULL);
 
   data.pipeline = pipeline;
   data.capsfilter = capsfilter;
@@ -544,6 +535,8 @@ main (gint argc, gchar ** argv)
   data.prev_width = width;
   data.prev_height = height;
 
+  loop = g_main_loop_new (NULL, FALSE);
+
   deep_notify_id =
       gst_element_add_property_deep_notify_watch (pipeline, NULL, TRUE);
 
@@ -552,7 +545,7 @@ main (gint argc, gchar ** argv)
   /* run the pipeline */
   sret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (sret == GST_STATE_CHANGE_FAILURE) {
-    gst_printerrln ("Pipeline doesn't want to playing\n");
+    gst_printerrln ("Pipeline doesn't want to playing");
   } else {
     set_key_handler ((KeyInputCallback) keyboard_cb, &data);
     g_main_loop_run (loop);
@@ -567,7 +560,6 @@ main (gint argc, gchar ** argv)
 
   gst_object_unref (pipeline);
   g_main_loop_unref (loop);
-  g_free (encoder_name);
 
   return 0;
 }
