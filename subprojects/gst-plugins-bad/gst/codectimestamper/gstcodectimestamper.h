@@ -40,8 +40,6 @@ struct _GstCodecTimestamper
   GstPad *sinkpad;
   GstPad *srcpad;
 
-  GstSegment in_segment;
-
   GstCodecTimestamperPrivate *priv;
 };
 

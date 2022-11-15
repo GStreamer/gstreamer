@@ -189,6 +189,7 @@ gst_codec_timestamper_init (GstCodecTimestamper * self,
       g_array_sized_new (FALSE, FALSE, sizeof (GstClockTime), 16);
 
   g_rec_mutex_init (&priv->lock);
+  gst_segment_init (&priv->in_segment, GST_FORMAT_TIME);
 }
 
 static void
@@ -338,10 +339,10 @@ gst_codec_timestamper_sink_event (GstPad * pad, GstObject * parent,
       }
 
       /* Drain on segment update */
-      if (memcmp (&self->in_segment, &segment, sizeof (GstSegment)))
+      if (!gst_segment_is_equal (&priv->in_segment, &segment))
         gst_codec_timestamper_drain (self);
 
-      self->in_segment = segment;
+      priv->in_segment = segment;
       break;
     }
     case GST_EVENT_EOS:
@@ -517,9 +518,9 @@ gst_codec_timestamper_chain (GstPad * pad, GstObject * parent,
     GstClockTime start_time = GST_CLOCK_TIME_NONE;
 
     if (GST_CLOCK_TIME_IS_VALID (pts))
-      start_time = MAX (pts, self->in_segment.start);
+      start_time = MAX (pts, priv->in_segment.start);
     else if (GST_CLOCK_TIME_IS_VALID (dts))
-      start_time = MAX (dts, self->in_segment.start);
+      start_time = MAX (dts, priv->in_segment.start);
     else
       start_time = priv->in_segment.start;
 
