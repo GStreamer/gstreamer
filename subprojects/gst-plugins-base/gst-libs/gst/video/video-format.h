@@ -596,8 +596,11 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  * @pack_lines: the amount of lines that will be packed
  * @pack_func: an pack function for this format
  * @tile_mode: The tiling mode
- * @tile_ws: The width of a tile, in bytes, represented as a shift
- * @tile_hs: The height of a tile, in bytes, represented as a shift
+ * @tile_ws: The width of a tile, in bytes, represented as a shift. DEPRECATED,
+ * use tile_info[] array instead.
+ * @tile_hs: The height of a tile, in bytes, represented as a shift. DEPREACTED,
+ * use tile_info[] array instead.
+ * @tile_info: Per-plane tile information
  *
  * Information for a video format.
  */
@@ -623,11 +626,17 @@ struct _GstVideoFormatInfo {
   GstVideoFormatPack pack_func;
 
   GstVideoTileMode tile_mode;
-  guint tile_ws;
-  guint tile_hs;
+  G_DEPRECATED_FOR(tile_info) guint tile_ws;
+  G_DEPRECATED_FOR(tile_info) guint tile_hs;
 
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  /**
+   * GstVideoFormatInfo.tile_info:
+   *
+   * Information about the tiles for each of the planes.
+   *
+   * Since: 1.22
+   */
+  GstVideoTileInfo tile_info[GST_VIDEO_MAX_PLANES];
 };
 
 #define GST_VIDEO_FORMAT_INFO_FORMAT(info)       ((info)->format)
@@ -727,6 +736,60 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_TILE_MODE(info) ((info)->tile_mode)
 #define GST_VIDEO_FORMAT_INFO_TILE_WS(info) ((info)->tile_ws)
 #define GST_VIDEO_FORMAT_INFO_TILE_HS(info) ((info)->tile_hs)
+
+/**
+ * GST_VIDEO_FORMAT_INFO_TILE_SIZE:
+ * @info: a #GstVideoFormatInfo
+ * @plane: the plane index
+ *
+ * Provides the size in bytes of a tile in the specified @plane. This replaces
+ * the width and height shift, which was limited to power of two dimensions.
+ *
+ * Since: 1.22
+ */
+#define GST_VIDEO_FORMAT_INFO_TILE_SIZE(info,plane) ((info)->tile_info[plane].size)
+
+/**
+ * GST_VIDEO_FORMAT_INFO_TILE_WIDTH:
+ * @info: a #GstVideoFormatInfo
+ * @plane: the plane index
+ *
+ * See #GstVideoTileInfo.width.
+ *
+ * Return the width of one tile in pixels, zero if its not an integer.
+ *
+ * Since: 1.22
+ */
+#define GST_VIDEO_FORMAT_INFO_TILE_WIDTH(info,plane) ((info)->tile_info[plane].width)
+
+/**
+ * GST_VIDEO_FORMAT_INFO_TILE_HEIGHT:
+ * @info: a #GstVideoFormatInfo
+ * @plane: the plane index
+ *
+ * See #GstVideoTileInfo.height.
+ *
+ * Returns the tile height.
+ *
+ * Since: 1.22
+ */
+#define GST_VIDEO_FORMAT_INFO_TILE_HEIGHT(info,plane) ((info)->tile_info[plane].height)
+
+/**
+ * GST_VIDEO_FORMAT_INFO_TILE_STRIDE:
+ * @info: a #GstVideoFormatInfo
+ * @plane: the plane index
+ *
+ * See #GstVideoTileInfo.stride.
+ *
+ * Returns the stride of one tile, regardless of the internal details of the
+ * tile (could be a complex system with subtile) the tiles size should alway
+ * match the tile width multiplied by the tile stride.
+ *
+ * Since: 1.22
+ */
+#define GST_VIDEO_FORMAT_INFO_TILE_STRIDE(info,plane) ((info)->tile_info[plane].stride)
+
 
 GST_VIDEO_API
 void gst_video_format_info_component                  (const GstVideoFormatInfo *info, guint plane, gint components[GST_VIDEO_MAX_COMPONENTS]);
@@ -860,12 +923,6 @@ GstCaps * gst_video_make_raw_caps (const GstVideoFormat formats[], guint len);
 GST_VIDEO_API
 GstCaps * gst_video_make_raw_caps_with_features (const GstVideoFormat formats[], guint len,
                                                  GstCapsFeatures * features);
-
-GST_VIDEO_API
-guint     gst_video_format_info_get_tile_sizes  (const GstVideoFormatInfo * finfo,
-                                                 guint plane,
-                                                 guint * out_ws, guint * out_hs);
-
 
 
 G_END_DECLS

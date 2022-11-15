@@ -80,16 +80,16 @@ set_stride (GstVideoInfo * info, gint plane, gint stride)
   const GstVideoFormatInfo *finfo = info->finfo;
 
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
-    guint x_tiles, y_tiles, ws, hs, padded_height;
+    guint x_tiles, y_tiles, tile_height, padded_height;
 
-    gst_video_format_info_get_tile_sizes (finfo, plane, &ws, &hs);
+    tile_height = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (finfo, plane);
 
     padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
         info->height);
-    padded_height = GST_ROUND_UP_N (padded_height, 1 << hs);
+    padded_height = (padded_height + tile_height - 1) / tile_height;
 
-    x_tiles = stride >> ws;
-    y_tiles = padded_height >> hs;
+    x_tiles = stride / GST_VIDEO_FORMAT_INFO_TILE_STRIDE (finfo, plane);
+    y_tiles = padded_height / tile_height;
     info->stride[plane] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
   } else {
     info->stride[plane] = stride;

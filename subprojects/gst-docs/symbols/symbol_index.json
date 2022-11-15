@@ -42525,7 +42525,6 @@
   "gst_video_format_get_palette",
   "gst_video_format_info_component",
   "gst_video_format_info_extrapolate_stride",
-  "gst_video_format_info_get_tile_sizes",
   "gst_video_format_to_fourcc",
   "gst_video_format_to_string",
   "gst_video_formats_raw",

@@ -2691,15 +2691,16 @@ _init_convert (GstGLColorConvert * convert)
   }
 
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (convert->in_info.finfo)) {
-    guint ws, hs;
+    guint tile_width, tile_height;
     gsize stride;
     gfloat width, height;
 
     stride = GST_VIDEO_INFO_PLANE_STRIDE (&convert->in_info, 0);
-    gst_video_format_info_get_tile_sizes (convert->in_info.finfo, 0, &ws, &hs);
+    tile_width = GST_VIDEO_FORMAT_INFO_TILE_WIDTH (convert->in_info.finfo, 0);
+    tile_height = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (convert->in_info.finfo, 0);
 
-    width = GST_VIDEO_TILE_X_TILES (stride) << ws;
-    height = GST_VIDEO_TILE_Y_TILES (stride) << hs;
+    width = GST_VIDEO_TILE_X_TILES (stride) * tile_width;
+    height = GST_VIDEO_TILE_Y_TILES (stride) * tile_height;
 
     gst_gl_shader_set_uniform_1f (convert->shader, "width", width);
     gst_gl_shader_set_uniform_1f (convert->shader, "height", height);

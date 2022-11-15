@@ -633,11 +633,10 @@ gst_gl_get_plane_data_size (const GstVideoInfo * info,
     gint x_tiles, y_tiles;
     gint tile_size;
 
-    tile_size = gst_video_format_info_get_tile_sizes (finfo, plane, NULL, NULL);
-
     stride = GST_VIDEO_INFO_PLANE_STRIDE (info, plane);
     x_tiles = GST_VIDEO_TILE_X_TILES (stride);
     y_tiles = GST_VIDEO_TILE_Y_TILES (stride);
+    tile_size = GST_VIDEO_FORMAT_INFO_TILE_SIZE (info->finfo, plane);
 
     plane_size = x_tiles * y_tiles * tile_size;
   } else {

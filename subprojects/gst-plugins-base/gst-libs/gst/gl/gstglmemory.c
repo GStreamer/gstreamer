@@ -123,13 +123,13 @@ static inline guint
 _get_plane_height (const GstVideoInfo * info, guint plane)
 {
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (info->finfo)) {
-    guint hs;
+    guint tile_height;
     gsize stride;
 
-    gst_video_format_info_get_tile_sizes (info->finfo, plane, NULL, &hs);
+    tile_height = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (info->finfo, plane);
     stride = GST_VIDEO_INFO_PLANE_STRIDE (info, plane);
 
-    return GST_VIDEO_TILE_Y_TILES (stride) << hs;
+    return GST_VIDEO_TILE_Y_TILES (stride) * tile_height;
   }
 
   if (GST_VIDEO_INFO_IS_YUV (info)) {
@@ -151,8 +151,8 @@ _get_mem_stride (GstGLMemory * gl_mem)
   if (!GST_VIDEO_FORMAT_INFO_IS_TILED (finfo))
     return stride;
 
-  return
-      GST_VIDEO_TILE_X_TILES (stride) << GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
+  return GST_VIDEO_TILE_X_TILES (stride) *
+      GST_VIDEO_FORMAT_INFO_TILE_STRIDE (finfo, gl_mem->plane);
 }
 
 static inline void

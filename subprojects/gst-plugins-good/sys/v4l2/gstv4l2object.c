@@ -3245,23 +3245,16 @@ gst_v4l2_object_set_stride (GstVideoInfo * info, GstVideoAlignment * align,
   const GstVideoFormatInfo *finfo = info->finfo;
 
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
-    gint x_tiles, y_tiles, ws, hs, tile_height, padded_height;
+    gint x_tiles, y_tiles, tile_height, padded_height;
 
-    ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
-    hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
-
-    /* this only works for what we support, NV12 subsampled tiles */
-    if (GST_VIDEO_FORMAT_INFO_HAS_SUBTILES (finfo) && plane == 1)
-      hs -= 1;
-
-    tile_height = 1 << hs;
+    tile_height = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (finfo, plane);
 
     padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
         info->height + align->padding_top + align->padding_bottom);
-    padded_height = GST_ROUND_UP_N (padded_height, tile_height);
+    padded_height = (padded_height + tile_height - 1) / tile_height;
 
-    x_tiles = stride >> ws;
-    y_tiles = padded_height >> hs;
+    x_tiles = stride / GST_VIDEO_FORMAT_INFO_TILE_STRIDE (finfo, plane);
+    y_tiles = padded_height / tile_height;
     info->stride[plane] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
   } else {
     info->stride[plane] = stride;
@@ -3348,12 +3341,9 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
   padded_height = format->fmt.pix.height;
 
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
-    guint hs, tile_height;
-
-    hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
-    tile_height = 1 << hs;
-
-    padded_height = GST_ROUND_UP_N (padded_height, tile_height);
+    guint tile_height;
+    tile_height = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (finfo, 0);
+    padded_height = (padded_height + tile_height - 1) / tile_height;
   }
 
   align->padding_bottom =
@@ -3764,8 +3754,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, i);
 
       if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.finfo))
-        stride = GST_VIDEO_TILE_X_TILES (stride) <<
-            GST_VIDEO_FORMAT_INFO_TILE_WS (info.finfo);
+        stride = GST_VIDEO_TILE_X_TILES (stride) *
+            GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info.finfo, i);
 
       format.fmt.pix_mp.plane_fmt[i].bytesperline = stride;
     }
@@ -3783,8 +3773,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     format.fmt.pix.field = field;
 
     if (GST_VIDEO_FORMAT_INFO_IS_TILED (info.finfo))
-      stride = GST_VIDEO_TILE_X_TILES (stride) <<
-          GST_VIDEO_FORMAT_INFO_TILE_WS (info.finfo);
+      stride = GST_VIDEO_TILE_X_TILES (stride) *
+          GST_VIDEO_FORMAT_INFO_TILE_STRIDE (info.finfo, i);
 
     /* try to ask our preferred stride */
     format.fmt.pix.bytesperline = stride;
@@ -4804,8 +4794,8 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
         gint plane_stride = stride[i];
 
         if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
-          plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) <<
-              GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
+          plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) *
+              GST_VIDEO_FORMAT_INFO_TILE_STRIDE (obj->info.finfo, i);
 
         format.fmt.pix_mp.plane_fmt[i].bytesperline = plane_stride;
         format.fmt.pix_mp.height = padded_height;
@@ -4818,8 +4808,8 @@ gst_v4l2_object_match_buffer_layout (GstV4l2Object * obj, guint n_planes,
       GST_DEBUG_OBJECT (obj->dbg_obj, "Wanted stride: %i", plane_stride);
 
       if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo))
-        plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) <<
-            GST_VIDEO_FORMAT_INFO_TILE_WS (obj->info.finfo);
+        plane_stride = GST_VIDEO_TILE_X_TILES (plane_stride) *
+            GST_VIDEO_FORMAT_INFO_TILE_STRIDE (obj->info.finfo, 0);
 
       format.fmt.pix.bytesperline = plane_stride;
       format.fmt.pix.height = padded_height;

@@ -1161,13 +1161,9 @@ gst_raw_video_parse_update_info (GstRawVideoParseConfig * config)
     gint stride = GST_VIDEO_INFO_PLANE_STRIDE (info, last_plane);
     gint x_tiles = GST_VIDEO_TILE_X_TILES (stride);
     gint y_tiles = GST_VIDEO_TILE_Y_TILES (stride);
-    gint tile_width = 1 << GST_VIDEO_FORMAT_INFO_TILE_WS (info->finfo);
-    gint tile_height = 1 << GST_VIDEO_FORMAT_INFO_TILE_HS (info->finfo);
+    guint tile_size = GST_VIDEO_FORMAT_INFO_TILE_SIZE (info->finfo, last_plane);
 
-    if (GST_VIDEO_FORMAT_INFO_HAS_SUBTILES (info->finfo))
-      tile_height /= 2;
-
-    last_plane_size = x_tiles * y_tiles * tile_width * tile_height;
+    last_plane_size = x_tiles * y_tiles * tile_size;
   } else {
     gint comp[GST_VIDEO_MAX_COMPONENTS];
     gst_video_format_info_component (info->finfo, last_plane, comp);

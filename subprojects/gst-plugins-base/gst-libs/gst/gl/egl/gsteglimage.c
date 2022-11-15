@@ -615,14 +615,12 @@ get_egl_stride (const GstVideoInfo * info, gint plane)
 {
   const GstVideoFormatInfo *finfo = info->finfo;
   gint stride = info->stride[plane];
-  guint ws;
 
   if (!GST_VIDEO_FORMAT_INFO_IS_TILED (finfo))
     return stride;
 
-  gst_video_format_info_get_tile_sizes (finfo, plane, &ws, NULL);
-
-  return GST_VIDEO_TILE_X_TILES (stride) << ws;
+  return GST_VIDEO_TILE_X_TILES (stride) *
+      GST_VIDEO_FORMAT_INFO_TILE_STRIDE (finfo, plane);
 }
 
 /**
