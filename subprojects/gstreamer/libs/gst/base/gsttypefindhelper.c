@@ -997,7 +997,7 @@ done:
  *
  * Free-function: g_list_free
  *
- * Returns: (transfer full) (nullable): the list of #GstTypeFindFactory
+ * Returns: (transfer full) (nullable) (element-type Gst.TypeFindFactory): the list of #GstTypeFindFactory
  *          corresponding to @caps, or %NULL if no typefinder could be
  *          found. Caller should free the returned list with g_list_free()
  *          and list elements with gst_object_unref().
@@ -1081,7 +1081,7 @@ gst_type_find_data_new (GstObject * obj, const guint8 * data, gsize size)
 }
 
 /**
- * gst_type_find_data_get_probability: (skip)
+ * gst_type_find_data_get_caps: (skip)
  * @data: GstTypeFindData *
  *
  * Returns #GstCaps associated with #GstTypeFindData
@@ -1105,7 +1105,7 @@ gst_type_find_data_get_caps (GstTypeFindData * data)
  *
  * Returns #GstTypeFindProbability associated with #GstTypeFindData
  *
- * Returns: (transfer full): #GstTypeFindProbability.
+ * Returns: #GstTypeFindProbability.
  *
  * Since: 1.22
  *
@@ -1124,7 +1124,7 @@ gst_type_find_data_get_probability (GstTypeFindData * data)
  *
  * Returns #GstTypeFind associated with #GstTypeFindData
  *
- * Returns: (transfer full) (nullable): #GstTypeFind.
+ * Returns: #GstTypeFind.
  *
  * Since: 1.22
  *
@@ -1138,7 +1138,7 @@ gst_type_find_data_get_typefind (GstTypeFindData * data)
 }
 
 /**
- * gst_type_find_data_get_probability: (skip)
+ * gst_type_find_data_free: (skip)
  * @data: GstTypeFindData * to free
  *
  * Since: 1.22
