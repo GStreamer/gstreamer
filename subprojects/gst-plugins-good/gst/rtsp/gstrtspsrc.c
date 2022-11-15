@@ -6436,21 +6436,21 @@ gst_rtsp_auth_method_to_string (GstRTSPAuthMethod method)
  *
  * At the moment, for Basic auth, we just do a minimal check and don't
  * even parse out the realm */
-static void
+static gboolean
 gst_rtspsrc_parse_auth_hdr (GstRTSPMessage * response,
     GstRTSPAuthMethod * methods, GstRTSPConnection * conn, gboolean * stale)
 {
   GstRTSPAuthCredential **credentials, **credential;
 
-  g_return_if_fail (response != NULL);
-  g_return_if_fail (methods != NULL);
-  g_return_if_fail (stale != NULL);
+  g_return_val_if_fail (response != NULL, FALSE);
+  g_return_val_if_fail (methods != NULL, FALSE);
+  g_return_val_if_fail (stale != NULL, FALSE);
 
   credentials =
       gst_rtsp_message_parse_auth_credentials (response,
       GST_RTSP_HDR_WWW_AUTHENTICATE);
   if (!credentials)
-    return;
+    return FALSE;
 
   credential = credentials;
   while (*credential) {
@@ -6478,6 +6478,8 @@ gst_rtspsrc_parse_auth_hdr (GstRTSPMessage * response,
   }
 
   gst_rtsp_auth_credentials_free (credentials);
+
+  return TRUE;
 }
 
 /**
@@ -6506,10 +6508,14 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
   GstRTSPConnection *conn;
   gboolean stale = FALSE;
 
+  g_return_val_if_fail (response != NULL, FALSE);
+
   conn = src->conninfo.connection;
 
-  /* Identify the available auth methods and see if any are supported */
-  gst_rtspsrc_parse_auth_hdr (response, &avail_methods, conn, &stale);
+  /* Identify the available auth methods and see if any are supported. If no
+   * headers were found, propagate the HTTP error. */
+  if (!gst_rtspsrc_parse_auth_hdr (response, &avail_methods, conn, &stale))
+    goto propagate_error;
 
   if (avail_methods == GST_RTSP_AUTH_NONE)
     goto no_auth_available;
@@ -6541,9 +6547,10 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
    * already, request a username and passwd from the application via some kind
    * of credentials request message */
 
-  /* If we don't have a username and passwd at this point, bail out. */
+  /* If we don't have a username and passwd at this point, bail out and
+   * propagate the normal NOT_AUTHORIZED error. */
   if (user == NULL || pass == NULL)
-    goto no_user_pass;
+    goto propagate_error;
 
   /* Try to configure for each available authentication method, strongest to
    * weakest */
@@ -6576,10 +6583,11 @@ no_auth_available:
         ("No supported authentication protocol was found"));
     return FALSE;
   }
-no_user_pass:
+
+propagate_error:
   {
     /* We don't fire an error message, we just return FALSE and let the
-     * normal NOT_AUTHORIZED error be propagated */
+     * normal error be propagated */
     return FALSE;
   }
 }
