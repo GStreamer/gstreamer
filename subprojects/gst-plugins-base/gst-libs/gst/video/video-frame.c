@@ -349,12 +349,10 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
     gint tile_size;
     gint sx_tiles, sy_tiles, dx_tiles, dy_tiles;
-    guint i, j, tw, th;
+    guint i, j;
     GstVideoTileMode mode;
 
     tile_size = GST_VIDEO_FORMAT_INFO_TILE_SIZE (finfo, plane);
-    tw = GST_VIDEO_FORMAT_INFO_TILE_WIDTH (finfo, plane);
-    th = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (finfo, plane);
 
     mode = GST_VIDEO_FORMAT_INFO_TILE_MODE (finfo);
 
@@ -365,8 +363,8 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
     dy_tiles = GST_VIDEO_TILE_Y_TILES (ds);
 
     /* this is the amount of tiles to copy */
-    w = ((w - 1) / tw) + 1;
-    h = ((h - 1) / th) + 1;
+    w = MIN (sx_tiles, dx_tiles);
+    h = MIN (sy_tiles, dy_tiles);
 
     /* FIXME can possibly do better when no retiling is needed, it depends on
      * the stride and the tile_size */
