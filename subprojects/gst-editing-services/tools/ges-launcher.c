@@ -1087,6 +1087,7 @@ _run_pipeline (GESLauncher * self)
       if (!ges_project_load (project, self->priv->timeline, NULL)) {
         ges_printerr ("Could not load timeline: %s\n",
             opts->sanitized_timeline);
+        g_clear_pointer (&opts->sanitized_timeline, &g_free);
         return FALSE;
       }
     }
