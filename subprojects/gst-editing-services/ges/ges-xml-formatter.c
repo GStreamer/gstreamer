@@ -1228,6 +1228,7 @@ _save_subproject (GESXmlFormatter * self, GString * str, GESProject * project,
   g_signal_handlers_disconnect_by_func (subproject, project_loaded_cb, &data);
   g_signal_handlers_disconnect_by_func (subproject, error_loading_asset_cb,
       &data);
+  g_main_loop_unref (data.ml);
   if (data.error) {
     g_propagate_error (error, data.error);
     return FALSE;
@@ -1244,6 +1245,8 @@ _save_subproject (GESXmlFormatter * self, GString * str, GESProject * project,
           g_type_name (ges_asset_get_extractable_type (subproject)), properties,
           metas), depth);
   self->priv->min_version = MAX (self->priv->min_version, 6);
+  g_free (properties);
+  g_free (metas);
 
   depth += 4;
   GST_DEBUG_OBJECT (self, "Saving subproject %s (depth: %d)",
@@ -1711,10 +1714,13 @@ _save_layers (GESXmlFormatter * self, GString * str, GESTimeline * timeline,
       extractable_id = ges_extractable_get_id (GES_EXTRACTABLE (clip));
       if (GES_IS_URI_CLIP (clip)) {
         G_LOCK (uri_subprojects_map_lock);
-        if (g_hash_table_contains (priv->subprojects_map, extractable_id))
-          extractable_id =
+        if (g_hash_table_contains (priv->subprojects_map, extractable_id)) {
+          gchar *new_extractable_id =
               g_strdup (g_hash_table_lookup (priv->subprojects_map,
                   extractable_id));
+          g_free (extractable_id);
+          extractable_id = new_extractable_id;
+        }
         G_UNLOCK (uri_subprojects_map_lock);
       }
       metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (clip));
