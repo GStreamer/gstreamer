@@ -451,7 +451,6 @@ _push_buffer_to_downstream (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
 {
   GstVaEncodePicture *enc_picture;
   GstVaBaseEncClass *base_class = GST_VA_BASE_ENC_GET_CLASS (base);
-  GstFlowReturn ret;
   GstBuffer *buf;
 
   if (base_class->prepare_output)
@@ -476,8 +475,7 @@ _push_buffer_to_downstream (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
       GST_TIME_ARGS (frame->dts), GST_TIME_ARGS (frame->duration),
       gst_buffer_get_size (frame->output_buffer));
 
-  ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (base), frame);
-  return ret;
+  return gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (base), frame);
 
 error:
   gst_clear_buffer (&frame->output_buffer);
@@ -502,7 +500,7 @@ _push_out_one_buffer (GstVaBaseEnc * base)
   ret = _push_buffer_to_downstream (base, frame_out);
 
   if (ret != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (base, "fails to push one buffer, system_frame_number "
+    GST_DEBUG_OBJECT (base, "fails to push one buffer, system_frame_number "
         "%d: %s", system_frame_number, gst_flow_get_name (ret));
   }
 
@@ -658,11 +656,8 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
     if (ret != GST_FLOW_OK)
       goto error_encode;
 
-    while (g_queue_get_length (&base->output_list) > 0) {
+    while (g_queue_get_length (&base->output_list) > 0)
       ret = _push_out_one_buffer (base);
-      if (ret != GST_FLOW_OK)
-        goto error_push_buffer;
-    }
 
     frame_encode = NULL;
     if (!base_class->reorder_frame (base, NULL, FALSE, &frame_encode))
@@ -703,12 +698,6 @@ error_encode:
         ("Failed to encode the frame %s.", gst_flow_get_name (ret)), (NULL));
     gst_clear_buffer (&frame_encode->output_buffer);
     gst_video_encoder_finish_frame (venc, frame_encode);
-    return ret;
-  }
-error_push_buffer:
-  {
-    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
-        ("Failed to push the buffer: %s.", gst_flow_get_name (ret)), (NULL));
     return ret;
   }
 }
