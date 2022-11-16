@@ -1209,6 +1209,10 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
   if (G_UNLIKELY (old_program == NULL))
     goto no_program;
 
+  if (G_UNLIKELY (mpegts_base_is_same_program (base, old_program, section->pid,
+              pmt)))
+    goto same_program;
+
   if (base->streams_aware
       && mpegts_base_is_program_update (base, old_program, section->pid, pmt)) {
     GST_FIXME ("We are streams_aware and new program is an update");
@@ -1216,10 +1220,6 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     mpegts_base_update_program (base, old_program, section, pmt);
     goto beach;
   }
-
-  if (G_UNLIKELY (mpegts_base_is_same_program (base, old_program, section->pid,
-              pmt)))
-    goto same_program;
 
   /* If the current program is active, this means we have a new program */
   if (old_program->active) {
