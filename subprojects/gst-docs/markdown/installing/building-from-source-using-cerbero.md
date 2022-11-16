@@ -167,42 +167,42 @@ Here's a list of config files for each target machine:
 
 #### Linux Targets
 
-Target            | Config file
-:-----------------|:-----------
-MinGW 32-bit      | `cross-win32.cbc`
-MinGW 64-bit      | `cross-win64.cbc`
-Android Universal | `cross-android-universal.cbc`
-Android ARM64     | `cross-android-arm64.cbc`
-Android ARMv7     | `cross-android-armv7.cbc`
-Android x86       | `cross-android-x86.cbc`
-Android x86_64    | `cross-android-x86-64.cbc`
+| Target            | Config file |
+|-------------------|-------------|
+| MinGW 32-bit      | `cross-win32.cbc` |
+| MinGW 64-bit      | `cross-win64.cbc` |
+| Android Universal | `cross-android-universal.cbc` |
+| Android ARM64     | `cross-android-arm64.cbc` |
+| Android ARMv7     | `cross-android-armv7.cbc` |
+| Android x86       | `cross-android-x86.cbc` |
+| Android x86_64    | `cross-android-x86-64.cbc` |
 
 #### macOS Targets
 
-Target                 | Config file
-:----------------------|:-----------
-macOS System Framework | `osx-x86-64.cbc`
-iOS Universal          | `cross-ios-universal.cbc`
-iOS ARM64              | `cross-ios-arm64.cbc`
-iOS ARMv7              | `cross-ios-armv7.cbc`
-iOS x86                | `cross-ios-x86.cbc`
-iOS x86_64             | `cross-ios-x86-64.cbc`
+| Target                 | Config file |
+|------------------------|-------------|
+| macOS System Framework | `osx-x86-64.cbc` |
+| iOS Universal          | `cross-ios-universal.cbc` |
+| iOS ARM64              | `cross-ios-arm64.cbc` |
+| iOS ARMv7              | `cross-ios-armv7.cbc` |
+| iOS x86                | `cross-ios-x86.cbc` |
+| iOS x86_64             | `cross-ios-x86-64.cbc` |
 
 #### Windows Targets
 
 On Windows, config files are used to select the architecture and variants are
 used to select the toolchain (MinGW, MSVC, UWP):
 
-Target          | Config file               | Variant
-:---------------|:--------------------------|:-------
-MinGW x86       | `win32.cbc`               |
-MinGW x86_64    | `win64.cbc`               |
-MSVC x86        | `win32.cbc`               | visualstudio
-MSVC x86_64     | `win64.cbc`               | visualstudio
-UWP x86         | `win32.cbc`               | uwp
-UWP x86_64      | `win64.cbc`               | uwp
-UWP ARM64       | `cross-win-arm64.cbc`     | uwp
-UWP Universal   | `cross-uwp-universal.cbc  | (implicitly uwp)
+| Target          | Config file               | Variant |
+|-----------------|---------------------------|---------|
+| MinGW x86       | `win32.cbc`               | |
+| MinGW x86_64    | `win64.cbc`               | |
+| MSVC x86        | `win32.cbc`               | visualstudio |
+| MSVC x86_64     | `win64.cbc`               | visualstudio |
+| UWP x86         | `win32.cbc`               | uwp |
+| UWP x86_64      | `win64.cbc`               | uwp |
+| UWP ARM64       | `cross-win-arm64.cbc`     | uwp |
+| UWP Universal   | `cross-uwp-universal.cbc` | (implicitly uwp) |
 
 Example usage:
 
