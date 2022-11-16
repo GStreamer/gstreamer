@@ -687,7 +687,7 @@ ges_project_try_updating_id (GESProject * project, GESAsset * asset,
         "and error: %s", g_type_name (G_OBJECT_TYPE (asset)), id,
         error->message);
     _send_error_loading_asset (project, asset, error);
-
+    g_free (new_id);
     return NULL;
   }
 
