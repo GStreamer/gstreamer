@@ -4469,25 +4469,29 @@ element_make_from_addr (const GstURIType type, const char *addr_s,
   char *uri = NULL;
 
   addr = g_inet_address_new_from_string (addr_s);
-
-  switch (g_inet_address_get_family (addr)) {
-    case G_SOCKET_FAMILY_IPV6:
-      uri = g_strdup_printf ("udp://[%s]:%i", addr_s, port);
-      break;
-    case G_SOCKET_FAMILY_INVALID:
-      GST_ERROR ("Unknown family type for %s", addr_s);
-      goto out;
-    case G_SOCKET_FAMILY_UNIX:
-      GST_ERROR ("Unexpected family type UNIX for %s", addr_s);
-      goto out;
-    case G_SOCKET_FAMILY_IPV4:
-      uri = g_strdup_printf ("udp://%s:%i", addr_s, port);
-      break;
+  if (addr == NULL) {
+    /* Address is a hostname, not an IP address */
+    uri = g_strdup_printf ("udp://%s:%i", addr_s, port);
+  } else {
+    switch (g_inet_address_get_family (addr)) {
+      case G_SOCKET_FAMILY_IPV6:
+        uri = g_strdup_printf ("udp://[%s]:%i", addr_s, port);
+        break;
+      case G_SOCKET_FAMILY_INVALID:
+        GST_ERROR ("Unknown family type for %s", addr_s);
+        goto out;
+      case G_SOCKET_FAMILY_UNIX:
+        GST_ERROR ("Unexpected family type UNIX for %s", addr_s);
+        goto out;
+      case G_SOCKET_FAMILY_IPV4:
+        uri = g_strdup_printf ("udp://%s:%i", addr_s, port);
+        break;
+    }
   }
 
   element = gst_element_make_from_uri (type, uri, name, error);
 out:
-  g_object_unref (addr);
+  g_clear_object (&addr);
   g_free (uri);
   return element;
 }
