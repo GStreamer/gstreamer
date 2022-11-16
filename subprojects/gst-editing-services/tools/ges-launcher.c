@@ -1494,7 +1494,9 @@ _local_command_line (GApplication * application, gchar ** arguments[],
 
   if (!opts->load_path && !opts->scenario && !opts->testfile
       && !opts->list_transitions && (argc <= 1)) {
-    gst_print ("%s", g_option_context_get_help (ctx, TRUE, NULL));
+    gchar *help_str = g_option_context_get_help (ctx, TRUE, NULL);
+    gst_print ("%s", help_str);
+    g_free (help_str);
     g_option_context_free (ctx);
     *exit_status = 1;
     goto done;
