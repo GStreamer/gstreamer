@@ -265,7 +265,7 @@ load_m3u8 (const gchar * data)
   GstHLSMediaPlaylist *playlist;
 
   playlist = gst_hls_media_playlist_parse (g_strdup (data),
-      "http://localhost/test.m3u8", NULL);
+      GST_CLOCK_TIME_NONE, "http://localhost/test.m3u8", NULL);
   fail_unless (playlist != NULL);
 
   return playlist;
@@ -556,7 +556,7 @@ GST_START_TEST (test_parse_invalid_playlist)
   GstHLSMediaPlaylist *pl;
 
   pl = gst_hls_media_playlist_parse (g_strdup ("#INVALID"),
-      "http://localhost/test.m3u8", NULL);
+      GST_CLOCK_TIME_NONE, "http://localhost/test.m3u8", NULL);
   fail_if (pl != NULL);
 }
 

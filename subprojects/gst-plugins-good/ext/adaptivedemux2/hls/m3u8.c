@@ -404,6 +404,7 @@ gst_hls_media_playlist_new (const gchar * uri, const gchar * base_uri)
 
   m3u8 = g_new0 (GstHLSMediaPlaylist, 1);
 
+  m3u8->playlist_ts = GST_CLOCK_TIME_NONE;
   m3u8->uri = g_strdup (uri);
   m3u8->base_uri = g_strdup (base_uri);
 
@@ -763,8 +764,8 @@ malformed_line:
 
 /* Parse and create a new GstHLSMediaPlaylist */
 GstHLSMediaPlaylist *
-gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
-    const gchar * base_uri)
+gst_hls_media_playlist_parse (gchar * data,
+    GstClockTime playlist_ts, const gchar * uri, const gchar * base_uri)
 {
   gchar *input_data = data;
   GstHLSMediaPlaylist *self;
@@ -784,6 +785,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
   GPtrArray *partial_segments = NULL;
   gboolean is_gap = FALSE;
 
+  GST_LOG ("playlist ts: %" GST_TIMEP_FORMAT, &playlist_ts);
   GST_LOG ("uri: %s", uri);
   GST_LOG ("base_uri: %s", base_uri);
   GST_TRACE ("data:\n%s", data);
@@ -801,6 +803,7 @@ gst_hls_media_playlist_parse (gchar * data, const gchar * uri,
   }
 
   self = gst_hls_media_playlist_new (uri, base_uri);
+  self->playlist_ts = playlist_ts;
 
   /* Store a copy of the data */
   self->last_data = g_strdup (data);

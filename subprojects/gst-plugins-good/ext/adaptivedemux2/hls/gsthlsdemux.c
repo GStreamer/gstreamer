@@ -941,7 +941,7 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
 
   if (hlsdemux->master->is_simple) {
     simple_media_playlist =
-        gst_hls_media_playlist_parse (playlist,
+        gst_hls_media_playlist_parse (playlist, GST_CLOCK_TIME_NONE,
         gst_adaptive_demux_get_manifest_ref_uri (demux), NULL);
   }
 
@@ -2066,6 +2066,12 @@ download_media_playlist (GstHLSDemux * demux, gchar * uri, GError ** err,
           "Couldn't download the playlist");
     goto out;
   }
+
+  /* Calculate the newest time we know this playlist was valid to store on the HLS Media Playlist */
+  GstClockTime playlist_ts =
+      MAX (0, GST_CLOCK_DIFF (download_request_get_age (download),
+          download->download_start_time));
+
   buf = download_request_take_buffer (download);
   download_request_unref (download);
 
@@ -2090,7 +2096,9 @@ download_media_playlist (GstHLSDemux * demux, gchar * uri, GError ** err,
     playlist->reloaded = TRUE;
     g_free (playlist_data);
   } else {
-    playlist = gst_hls_media_playlist_parse (playlist_data, uri, base_uri);
+    playlist =
+        gst_hls_media_playlist_parse (playlist_data, playlist_ts, uri,
+        base_uri);
     if (!playlist) {
       GST_WARNING_OBJECT (demux, "Couldn't parse playlist");
       if (err)
@@ -2424,8 +2432,6 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemux * demux,
     GST_WARNING_OBJECT (stream, "Could not get playlist '%s'", *uri);
     return GST_FLOW_ERROR;
   }
-  stream->playlist_last_update_time =
-      gst_adaptive_demux2_get_monotonic_time (GST_ADAPTIVE_DEMUX (demux));
 
   /* Check if a redirect happened */
   if (g_strcmp0 (*uri, new_playlist->uri)) {
@@ -2660,7 +2666,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       stream->current_position : GST_CLOCK_TIME_NONE;
   GstClockTime playlist_age =
       gst_adaptive_demux2_get_monotonic_time (GST_ADAPTIVE_DEMUX (demux)) -
-      hlsdemux_stream->playlist_last_update_time;
+      hlsdemux_stream->playlist->playlist_ts;
   GST_DEBUG_OBJECT (stream,
       "Updating fragment information, current_position:%" GST_TIME_FORMAT
       " which is %" GST_STIME_FORMAT " from live edge. Playlist age %"

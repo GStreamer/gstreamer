@@ -97,6 +97,8 @@ struct _GstHLSMediaPlaylist
   gchar *uri;                   /* actually downloaded URI */
   gchar *base_uri;              /* URI to use as base for resolving relative URIs.
                                  * This will be different to uri in case of redirects */
+  GstClockTime playlist_ts;     /* Monotonic clock time estimate for this playlist's validity from download time and cached Age */
+
   /* Base Tag */
   gint version;                 /* EXT-X-VERSION (default 1) */
 
@@ -272,6 +274,7 @@ gst_hls_media_playlist_has_same_data (GstHLSMediaPlaylist * m3u8,
 
 GstHLSMediaPlaylist *
 gst_hls_media_playlist_parse (gchar        * data,
+			      GstClockTime playlist_ts,
 			      const gchar  * uri,
 			      const gchar  * base_uri);
 
