@@ -476,6 +476,54 @@ download_request_get_caps (DownloadRequest * request)
   return caps;
 }
 
+static GstClockTime
+_get_age_header (GstStructure * headers)
+{
+  const GstStructure *response_headers;
+  const gchar *http_age;
+  const GValue *val;
+
+  val = gst_structure_get_value (headers, "response-headers");
+  if (!val) {
+    return 0;
+  }
+
+  response_headers = gst_value_get_structure (val);
+  http_age = gst_structure_get_string (response_headers, "Date");
+  if (!http_age) {
+    return 0;
+  }
+
+  return atoi (http_age) * GST_SECOND;
+}
+
+/* Return the age of the download from the Age header,
+ * or 0 if there was none */
+GstClockTime
+download_request_get_age (DownloadRequest * request)
+{
+  DownloadRequestPrivate *priv = DOWNLOAD_REQUEST_PRIVATE (request);
+  GstClockTime age = 0;
+
+  g_return_val_if_fail (request != NULL, age);
+
+  if (request->state != DOWNLOAD_REQUEST_STATE_LOADING
+      && request->state != DOWNLOAD_REQUEST_STATE_COMPLETE)
+    return age;
+
+  g_rec_mutex_lock (&priv->lock);
+
+  if (request->headers != NULL) {
+    /* We have headers for the download, see if there was an Age
+     * header in the response */
+    GstClockTime age = _get_age_header (request->headers);
+    GST_LOG ("Got cached data with age %" GST_TIMEP_FORMAT, &age);
+  }
+  g_rec_mutex_unlock (&priv->lock);
+
+  return age;
+}
+
 void
 download_request_add_buffer (DownloadRequest * request, GstBuffer * buffer)
 {

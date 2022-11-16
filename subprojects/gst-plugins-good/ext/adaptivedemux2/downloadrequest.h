@@ -84,6 +84,8 @@ void download_request_set_caps (DownloadRequest * request, GstCaps * caps);
 
 GstCaps * download_request_get_caps (DownloadRequest * request);
 
+GstClockTime download_request_get_age (DownloadRequest *request);
+
 void download_request_add_buffer (DownloadRequest *request, GstBuffer *buffer);
 GstBuffer * download_request_take_buffer (DownloadRequest *request);
 GstBuffer * download_request_take_buffer_range (DownloadRequest *request, gint64 range_start, gint64 range_end);
