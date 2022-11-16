@@ -110,8 +110,8 @@ _finish_structure (GESStructureParser * self)
     GST_ERROR ("Could not parse %s", self->current_string);
 
     self->wrong_strings = g_list_append (self->wrong_strings,
-        g_strdup (self->current_string));
-
+        self->current_string);
+    self->current_string = NULL;
     return;
   }
 
