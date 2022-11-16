@@ -36,6 +36,9 @@
 GST_DEBUG_CATEGORY_STATIC (rtpbasedepayload_debug);
 #define GST_CAT_DEFAULT (rtpbasedepayload_debug)
 
+static GstStaticCaps ntp_reference_timestamp_caps =
+GST_STATIC_CAPS ("timestamp/x-ntp");
+
 struct _GstRTPBaseDepayloadPrivate
 {
   GstClockTime npt_start;
@@ -49,6 +52,8 @@ struct _GstRTPBaseDepayloadPrivate
   GstClockTime pts;
   GstClockTime dts;
   GstClockTime duration;
+
+  GstClockTime ref_ts;
 
   guint32 last_ssrc;
   guint32 last_seqnum;
@@ -395,6 +400,7 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->dts = -1;
   priv->pts = -1;
   priv->duration = -1;
+  priv->ref_ts = -1;
   priv->source_info = DEFAULT_SOURCE_INFO;
   priv->max_reorder = DEFAULT_MAX_REORDER;
   priv->auto_hdr_ext = DEFAULT_AUTO_HEADER_EXTENSION;
@@ -679,6 +685,8 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   gboolean discont, buf_discont;
   gint gap;
   GstRTPBuffer rtp = { NULL };
+  GstReferenceTimestampMeta *meta;
+  GstCaps *ref_caps;
 
   priv = filter->priv;
   priv->process_flow_ret = GST_FLOW_OK;
@@ -689,6 +697,21 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
   /* we must have a setcaps first */
   if (G_UNLIKELY (!priv->negotiated))
     goto not_negotiated;
+
+  /* Check for duplicate reference timestamp metadata */
+  ref_caps = gst_static_caps_get (&ntp_reference_timestamp_caps);
+  meta = gst_buffer_get_reference_timestamp_meta (in, ref_caps);
+  gst_caps_unref (ref_caps);
+  if (meta) {
+    guint64 ref_ts = meta->timestamp;
+    if (ref_ts == priv->ref_ts) {
+      /* Drop the redundant/duplicate reference timstamp metadata */
+      in = gst_buffer_make_writable (in);
+      gst_buffer_remove_meta (in, GST_META_CAST (meta));
+    } else {
+      priv->ref_ts = ref_ts;
+    }
+  }
 
   if (G_UNLIKELY (!gst_rtp_buffer_map (in, GST_MAP_READ, &rtp)))
     goto invalid_buffer;
@@ -923,6 +946,7 @@ gst_rtp_base_depayload_handle_event (GstRTPBaseDepayload * filter,
 
       filter->need_newsegment = !filter->priv->onvif_mode;
       filter->priv->next_seqnum = -1;
+      filter->priv->ref_ts = -1;
       gst_event_replace (&filter->priv->segment_event, NULL);
       break;
     case GST_EVENT_CAPS:
@@ -1542,6 +1566,7 @@ gst_rtp_base_depayload_change_state (GstElement * element,
       priv->play_speed = 1.0;
       priv->play_scale = 1.0;
       priv->clock_base = -1;
+      priv->ref_ts = -1;
       priv->onvif_mode = FALSE;
       priv->next_seqnum = -1;
       priv->negotiated = FALSE;
