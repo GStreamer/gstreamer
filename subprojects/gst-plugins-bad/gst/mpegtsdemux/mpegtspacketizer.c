@@ -157,7 +157,7 @@ find_subtable (GSList * subtables, guint8 table_id, guint16 subtable_extension)
 static gboolean
 seen_section_before (MpegTSPacketizerStream * stream, guint8 table_id,
     guint16 subtable_extension, guint8 version_number, guint8 section_number,
-    guint8 last_section_number, guint8 * data_start, gsize to_read)
+    guint8 last_section_number)
 {
   MpegTSPacketizerStreamSubtable *subtable;
 
@@ -178,17 +178,7 @@ seen_section_before (MpegTSPacketizerStream * stream, guint8 table_id,
     return FALSE;
   }
   /* Finally return whether we saw that section or not */
-  if (!MPEGTS_BIT_IS_SET (subtable->seen_section, section_number)) {
-    GST_DEBUG ("Different section_number");
-    return FALSE;
-  }
-
-  if (stream->section_data) {
-    /* Everything else is the same, fall back to memcmp */
-    return (memcmp (stream->section_data, data_start, to_read) != 0);
-  }
-
-  return FALSE;
+  return MPEGTS_BIT_IS_SET (subtable->seen_section, section_number);
 }
 
 static MpegTSPacketizerStreamSubtable *
@@ -1203,8 +1193,7 @@ section_start:
    * * same section_number was seen
    */
   if (seen_section_before (stream, table_id, subtable_extension,
-          version_number, section_number, last_section_number, data_start,
-          to_read)) {
+          version_number, section_number, last_section_number)) {
     GST_DEBUG
         ("PID 0x%04x Already processed table_id:0x%02x subtable_extension:0x%04x, version_number:%d, section_number:%d",
         packet->pid, table_id, subtable_extension, version_number,
