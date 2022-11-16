@@ -193,6 +193,14 @@ ges_demux_set_property (GObject * object, guint property_id,
 }
 
 static void
+ges_demux_finalize (GObject * object)
+{
+  GESDemux *demux = (GESDemux *) object;
+  g_free (demux->upstream_uri);
+  G_OBJECT_CLASS (ges_demux_parent_class)->finalize (object);
+}
+
+static void
 ges_demux_class_init (GESDemuxClass * self_class)
 {
   GstPadTemplate *pad_template;
@@ -204,6 +212,7 @@ ges_demux_class_init (GESDemuxClass * self_class)
 
   sinkpad_caps = ges_demux_get_sinkpad_caps ();
 
+  gclass->finalize = ges_demux_finalize;
   gclass->get_property = ges_demux_get_property;
   gclass->set_property = ges_demux_set_property;
 
