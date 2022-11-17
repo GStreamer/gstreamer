@@ -693,6 +693,11 @@ gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
   while (total_consumed < map.size) {
     res = gst_av1_parser_identify_one_obu (priv->parser,
         map.data + total_consumed, map.size, &obu, &consumed);
+    if (res == GST_AV1_PARSER_DROP) {
+      total_consumed += consumed;
+      continue;
+    }
+
     if (res != GST_AV1_PARSER_OK) {
       ret = GST_FLOW_ERROR;
       goto out;
