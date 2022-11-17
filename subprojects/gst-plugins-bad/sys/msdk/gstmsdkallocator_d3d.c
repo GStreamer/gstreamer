@@ -191,6 +191,22 @@ error_alloc:
 mfxStatus
 gst_msdk_frame_free (mfxHDL pthis, mfxFrameAllocResponse * resp)
 {
+  GstMsdkContext *context = (GstMsdkContext *) pthis;
+  GstMsdkAllocResponse *cached = NULL;
+
+  cached = gst_msdk_context_get_cached_alloc_responses (context, resp);
+
+  if (cached) {
+    if (!g_atomic_int_dec_and_test (&cached->refcount))
+      return MFX_ERR_NONE;
+  } else
+    return MFX_ERR_NONE;
+
+  if (!gst_msdk_context_remove_alloc_response (context, resp))
+    return MFX_ERR_NONE;
+
+  g_slice_free1 (resp->NumFrameActual * sizeof (mfxMemId), resp->mids);
+
   return MFX_ERR_NONE;
 }
 
