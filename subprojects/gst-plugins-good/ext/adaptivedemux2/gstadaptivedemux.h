@@ -457,6 +457,7 @@ GstAdaptiveDemuxTrack *gst_adaptive_demux_track_new (GstAdaptiveDemux *demux,
 GstAdaptiveDemuxTrack *gst_adaptive_demux_track_ref (GstAdaptiveDemuxTrack *track);
 void                   gst_adaptive_demux_track_unref (GstAdaptiveDemuxTrack *track);
 
+const gchar *gst_adaptive_demux_get_manifest_ref_uri (GstAdaptiveDemux * demux);
 
 gboolean gst_adaptive_demux_start_new_period (GstAdaptiveDemux * demux);
 

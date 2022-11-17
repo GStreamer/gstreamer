@@ -3584,6 +3584,12 @@ gst_adaptive_demux_is_live (GstAdaptiveDemux * demux)
   return FALSE;
 }
 
+const gchar *
+gst_adaptive_demux_get_manifest_ref_uri (GstAdaptiveDemux * d)
+{
+  return d->manifest_base_uri ? d->manifest_base_uri : d->manifest_uri;
+}
+
 static void
 handle_manifest_download_complete (DownloadRequest * request,
     DownloadRequestState state, GstAdaptiveDemux * demux)

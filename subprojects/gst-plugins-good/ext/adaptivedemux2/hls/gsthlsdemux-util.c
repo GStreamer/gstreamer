@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include "gsthlsdemux.h"
+#include "gsthlsdemux-stream.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_hls_demux2_debug);
 #define GST_CAT_DEFAULT gst_hls_demux2_debug
@@ -389,7 +390,7 @@ gst_hlsdemux_handle_content_mpegts (GstHLSDemux * demux,
     return GST_HLS_PARSER_RESULT_NEED_MORE_DATA;
 
   /* We have the first internal time, figure out if we are in sync or not */
-  return gst_hlsdemux_handle_internal_time (demux, hls_stream, internal_time);
+  return gst_hlsdemux_stream_handle_internal_time (hls_stream, internal_time);
 }
 
 GstHLSParserResult
@@ -496,12 +497,11 @@ out:
   gst_buffer_unmap (*buffer, &info);
 
   if (smallest_ts != GST_CLOCK_TIME_NONE) {
-    ret = gst_hlsdemux_handle_internal_time (demux, hls_stream, smallest_ts);
+    ret = gst_hlsdemux_stream_handle_internal_time (hls_stream, smallest_ts);
   }
 
   return ret;
 }
-
 
 GstHLSParserResult
 gst_hlsdemux_handle_content_id3 (GstHLSDemux * demux,
@@ -561,7 +561,7 @@ gst_hlsdemux_handle_content_id3 (GstHLSDemux * demux,
 
   gst_buffer_unmap (tag_buf, &info);
 
-  ret = gst_hlsdemux_handle_internal_time (demux, hls_stream, internal);
+  ret = gst_hlsdemux_stream_handle_internal_time (hls_stream, internal);
 
 out:
   if (priv_data)
@@ -855,7 +855,7 @@ gst_hlsdemux_handle_content_webvtt (GstHLSDemux * demux,
   segment_end = segment_start + current_segment->duration;
   tolerance = MAX (current_segment->duration / 2, 500 * GST_MSECOND);
 
-  map = gst_hls_find_time_map (demux, current_segment->discont_sequence);
+  map = gst_hls_demux_find_time_map (demux, current_segment->discont_sequence);
 
   builder = g_ptr_array_new_with_free_func (g_free);
 
