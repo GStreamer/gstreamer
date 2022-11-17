@@ -194,14 +194,15 @@ allocate_output_surface (GstMsdkDec * thiz)
 {
   GstMsdkSurface *msdk_surface = NULL;
   GstBuffer *out_buffer = NULL;
-#ifndef _WIN32
   GstMemory *mem = NULL;
   mfxFrameSurface1 *mfx_surface = NULL;
-#endif
   gint n = 0;
   guint retry_times = gst_util_uint64_scale_ceil (GST_USECOND,
       thiz->param.mfx.FrameInfo.FrameRateExtD,
       thiz->param.mfx.FrameInfo.FrameRateExtN);
+#ifdef _WIN32
+  GstMapInfo map_info;
+#endif
 
   /* Free un-unsed msdk surfaces firstly, hence the associated mfx
    * surfaces will be moved from used list to available list */
@@ -220,13 +221,21 @@ allocate_output_surface (GstMsdkDec * thiz)
         break;
     }
   }
-#ifndef _WIN32
+
   if ((gst_buffer_pool_acquire_buffer (thiz->alloc_pool, &out_buffer, NULL))
       != GST_FLOW_OK) {
     GST_ERROR_OBJECT (thiz, "Failed to allocate output buffer");
     return NULL;
   }
-
+#ifdef _WIN32
+  /* For d3d11 we should call gst_buffer_map with GST_MAP_WRITE |
+   * GST_MAP_D3D11 flags to make sure the staging texture has been uploaded
+   */
+  if (!gst_buffer_map (out_buffer, &map_info, GST_MAP_WRITE | GST_MAP_D3D11)) {
+    GST_ERROR ("Failed to map buffer");
+    return NULL;
+  }
+#endif
   mem = gst_buffer_peek_memory (out_buffer, 0);
   msdk_surface = g_slice_new0 (GstMsdkSurface);
 
@@ -234,36 +243,14 @@ allocate_output_surface (GstMsdkDec * thiz)
               GST_MSDK_FRAME_SURFACE))) {
     msdk_surface->surface = mfx_surface;
     msdk_surface->from_qdata = TRUE;
+#ifdef _WIN32
+    gst_buffer_unmap (out_buffer, &map_info);
+#endif
   } else {
     GST_ERROR ("No available surfaces");
     g_slice_free (GstMsdkSurface, msdk_surface);
     return NULL;
   }
-#else
-  if (!gst_buffer_pool_is_active (thiz->pool) &&
-      !gst_buffer_pool_set_active (thiz->pool, TRUE)) {
-    GST_ERROR_OBJECT (thiz, "Failed to activate buffer pool");
-    return NULL;
-  }
-
-  if ((gst_buffer_pool_acquire_buffer (thiz->pool, &out_buffer, NULL))
-      != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (thiz, "Failed to allocate output buffer");
-    gst_buffer_pool_set_active (thiz->pool, FALSE);
-    return NULL;
-  }
-
-  GstVideoCodecState *output_state =
-      gst_video_decoder_get_output_state (GST_VIDEO_DECODER (thiz));
-
-  msdk_surface =
-      gst_msdk_import_sys_mem_to_msdk_surface (out_buffer, &output_state->info);
-
-  gst_video_codec_state_unref (output_state);
-
-  if (!msdk_surface)
-    return NULL;
-#endif
 
   msdk_surface->buf = out_buffer;
 
