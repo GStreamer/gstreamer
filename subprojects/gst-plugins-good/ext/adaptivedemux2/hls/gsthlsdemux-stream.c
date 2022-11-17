@@ -1309,11 +1309,7 @@ static void
 gst_hls_demux_stream_update_preloads (GstHLSDemuxStream * hlsdemux_stream)
 {
   GstHLSMediaPlaylist *playlist = hlsdemux_stream->playlist;
-  GstAdaptiveDemux *demux =
-      GST_ADAPTIVE_DEMUX2_STREAM_CAST (hlsdemux_stream)->demux;
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
-
-  gboolean preloads_allowed = hlsdemux->llhls_enabled
+  gboolean preloads_allowed = hlsdemux_stream->llhls_enabled
       && GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist);
 
   if (playlist->preload_hints == NULL || !preloads_allowed) {
