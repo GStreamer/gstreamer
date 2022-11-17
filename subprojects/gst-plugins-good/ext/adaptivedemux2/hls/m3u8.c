@@ -1906,6 +1906,59 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
   return NULL;
 }
 
+/* Match up the first segment in a delta playlist against the reference and transfer
+ * over preceding segments if we can */
+void
+gst_hls_media_playlist_sync_skipped_segments (GstHLSMediaPlaylist * m3u8,
+    GstHLSMediaPlaylist * reference)
+{
+  if (m3u8->skipped_segments < 1 || m3u8->segments->len < 1)
+    return;
+
+  /* find the first non-skipped segment from this playlist
+   * in the reference playlist, then transfer over as many
+   * skipped segments as we can */
+  GstM3U8MediaSegment *first = g_ptr_array_index (m3u8->segments, 0);
+
+  guint ref_idx;
+  gboolean found_ref_seg = FALSE;
+  for (ref_idx = 0; ref_idx < reference->segments->len; ref_idx++) {
+    GstM3U8MediaSegment *cand =
+        g_ptr_array_index (reference->segments, ref_idx);
+
+    if (cand->sequence == first->sequence &&
+        cand->discont_sequence == first->discont_sequence &&
+        cand->offset == first->offset && cand->size == first->size &&
+        !g_strcmp0 (cand->uri, first->uri)) {
+      found_ref_seg = TRUE;
+      break;
+    }
+  }
+
+  if (!found_ref_seg)
+    return;                     /* Couldn't match the segment */
+
+  /* Found the first segment of this playlist in the reference. Transfer over
+   * as many skipped segments as we can */
+  guint segs_avail = MIN (ref_idx, m3u8->skipped_segments);
+
+  GST_DEBUG
+      ("Transferring %u skipped segments from reference playlist starting at index %u",
+      segs_avail, ref_idx - segs_avail);
+
+  /* Reduce the skipped_segments count by the number we will transfer */
+  m3u8->skipped_segments -= segs_avail;
+
+  /* And copy over the segments */
+  guint cur_idx;
+  for (cur_idx = ref_idx - 1; segs_avail > 0; segs_avail--, cur_idx--) {
+    GstM3U8MediaSegment *segment =
+        g_ptr_array_index (reference->segments, cur_idx);
+    g_ptr_array_insert (m3u8->segments, 0,
+        gst_m3u8_media_segment_ref (segment));
+  }
+}
+
 /* Given a media segment (potentially from another media playlist), find the
  * equivalent media segment in this playlist.
  *

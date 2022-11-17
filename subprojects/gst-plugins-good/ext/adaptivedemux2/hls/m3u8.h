@@ -284,6 +284,10 @@ gst_hls_media_playlist_parse (gchar        * data,
 			      const gchar  * base_uri);
 
 void
+gst_hls_media_playlist_sync_skipped_segments (GstHLSMediaPlaylist * m3u8,
+					   GstHLSMediaPlaylist * reference);
+
+void
 gst_hls_media_playlist_recalculate_stream_time (GstHLSMediaPlaylist *playlist,
 						GstM3U8MediaSegment *anchor);
 
