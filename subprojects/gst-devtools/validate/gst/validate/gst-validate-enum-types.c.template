@@ -1,4 +1,9 @@
 /*** BEGIN file-header ***/
+
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gst-validate-enum-types.h"
 #include <gst/validate/validate.h>
 #define C_ENUM(v) ((gint) v)

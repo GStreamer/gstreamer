@@ -1,11 +1,13 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include "validate.h"
 #include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+
 
 #define EXTRA_CHECKS_WRONG_NUMBER_OF_INSTANCES g_quark_from_static_string ("extrachecks::wrong-number-of-instances")
 

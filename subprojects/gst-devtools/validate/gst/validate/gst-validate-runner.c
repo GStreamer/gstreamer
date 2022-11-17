@@ -22,12 +22,13 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <string.h>
-#include <stdlib.h>
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
+
+#include <string.h>
+#include <stdlib.h>
 
 #include "validate.h"
 #include "gst-validate-internal.h"

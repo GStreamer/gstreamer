@@ -58,14 +58,14 @@ gst_validate_enums = gnome.mkenums('gstvalidateenumtypes',
 
 validate_deps = [gst_check_dep, gst_dep, gst_controller_dep, gstbase_dep,
                  gio_dep, gmodule_dep, gst_pbutils_dep, mathlib, json_dep]
-gstvalidate = library('gstvalidate-1.0',
+gstvalidate = library('gstvalidate-@0@'.format(apiversion),
     sources: gstvalidate_sources + gst_validate_enums + runner_file,
     version : libversion,
     soversion : soversion,
     darwin_versions : osxversion,
     include_directories : [inc_dirs],
     install: true,
-    c_args : [gst_c_args] + ['-D_GNU_SOURCE'],
+    c_args : [gst_c_args] + ['-D_GNU_SOURCE', '-DBUILDING_GST_VALIDATE'],
     dependencies : validate_deps)
 
 if not static_build
@@ -73,7 +73,7 @@ if not static_build
       sources: gst_validate_enums + runner_file,
       include_directories : [inc_dirs],
       install: true,
-      c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE'],
+      c_args : [gst_c_args] + ['-D__GST_VALIDATE_PLUGIN', '-D_GNU_SOURCE', '-DBUILDING_GST_VALIDATE'],
       install_dir : plugins_install_dir,
       objects: gstvalidate.extract_objects(gstvalidate_sources),
       dependencies : validate_deps)

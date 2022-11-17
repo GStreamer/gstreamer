@@ -16,6 +16,19 @@ if cc.has_header('unistd.h')
   cdata.set('HAVE_UNISTD_H', 1)
 endif
 
+# Symbol visibility
+if cc.get_id() == 'msvc'
+  export_define = '__declspec(dllexport) extern'
+elif cc.has_argument('-fvisibility=hidden')
+  add_project_arguments('-fvisibility=hidden', language: 'c')
+  export_define = 'extern __attribute__ ((visibility ("default")))'
+else
+  export_define = 'extern'
+endif
+
+# Passing this through the command line would be too messy
+cdata.set('GST_API_EXPORT', export_define)
+
 configure_file(output : 'config.h', configuration : cdata)
 
 validate_plugins_install_dir = '@0@/gstreamer-1.0/validate'.format(get_option('libdir'))
