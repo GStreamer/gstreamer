@@ -403,6 +403,8 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
         _floor_log2 (priv->parser->state.operating_point_idc >> 8);
     GST_INFO_OBJECT (self, "set highest spatial layer to %d",
         self->highest_spatial_layer);
+  } else {
+    self->highest_spatial_layer = 0;
   }
 
   ret = klass->new_sequence (self, &seq_header,
