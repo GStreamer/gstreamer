@@ -1874,6 +1874,10 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             GST_IS_VA_DMABUF_ALLOCATOR (allocator)))
       thiz->ds_has_known_allocator = FALSE;
   }
+#else
+  if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+    thiz->ds_has_known_allocator = FALSE;
+  }
 #endif
 
   /* If downstream supports video meta and video alignment, or downstream
