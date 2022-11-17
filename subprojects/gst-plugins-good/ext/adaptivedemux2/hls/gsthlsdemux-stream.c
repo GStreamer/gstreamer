@@ -1392,6 +1392,13 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
     }
   }
 
+  /* Transfer over any skipped segments from the current playlist if
+   * we did a delta playlist update */
+  if (!playlist_uri_change && current && playlist
+      && playlist->skipped_segments > 0) {
+    gst_hls_media_playlist_sync_skipped_segments (playlist, current);
+  }
+
 out:
   g_free (uri);
   g_free (base_uri);
