@@ -1449,9 +1449,7 @@ gst_av1_parser_parse_sequence_header_obu (GstAV1Parser * parser,
   gst_av1_parse_reset_state (parser, FALSE);
 
   /* choose_operating_point() set the operating_point */
-  if (parser->state.operating_point < 0 ||
-      parser->state.operating_point >
-      seq_header->operating_points_cnt_minus_1) {
+  if (parser->state.operating_point > seq_header->operating_points_cnt_minus_1) {
     GST_WARNING ("Invalid operating_point %d set by user, just use 0",
         parser->state.operating_point);
     parser->state.operating_point_idc = seq_header->operating_points[0].idc;
