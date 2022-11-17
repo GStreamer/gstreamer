@@ -1204,6 +1204,66 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
   return GST_FLOW_EOS;
 }
 
+enum PlaylistDownloadParamFlags
+{
+  PLAYLIST_DOWNLOAD_FLAG_SKIP_V1 = (1 << 0),
+  PLAYLIST_DOWNLOAD_FLAG_SKIP_V2 = (1 << 1),    /* V2 also skips date-ranges */
+  PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST = (1 << 2),
+};
+
+struct PlaylistDownloadParams
+{
+  enum PlaylistDownloadParamFlags flags;
+  gint64 next_msn, next_part;
+};
+
+#define HLS_SKIP_QUERY_KEY "_HLS_skip"
+#define HLS_MSN_QUERY_KEY "_HLS_msn"
+#define HLS_PART_QUERY_KEY "_HLS_part"
+
+gchar *
+apply_directives_to_uri (GstHLSDemuxStream * stream,
+    const gchar * playlist_uri, struct PlaylistDownloadParams *dl_params)
+{
+  GstUri *uri = gst_uri_from_string (playlist_uri);
+
+  if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_SKIP_V1) {
+    GST_LOG_OBJECT (stream, "Doing HLS skip (v1) request");
+    gst_uri_set_query_value (uri, HLS_SKIP_QUERY_KEY, "YES");
+  } else if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_SKIP_V2) {
+    GST_LOG_OBJECT (stream, "Doing HLS skip (v2) request");
+    gst_uri_set_query_value (uri, HLS_SKIP_QUERY_KEY, "v2");
+  } else {
+    gst_uri_remove_query_key (uri, HLS_SKIP_QUERY_KEY);
+  }
+
+  if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST
+      && dl_params->next_msn != -1) {
+    GST_LOG_OBJECT (stream,
+        "Doing HLS blocking request with MSN %" G_GINT64_FORMAT " part %"
+        G_GINT64_FORMAT, dl_params->next_msn, dl_params->next_part);
+
+    gchar *next_msn_str =
+        g_strdup_printf ("%" G_GINT64_FORMAT, dl_params->next_msn);
+    gst_uri_set_query_value (uri, HLS_MSN_QUERY_KEY, next_msn_str);
+    g_free (next_msn_str);
+
+    if (dl_params->next_part != -1) {
+      gchar *next_part_str =
+          g_strdup_printf ("%" G_GINT64_FORMAT, dl_params->next_part);
+      gst_uri_set_query_value (uri, HLS_PART_QUERY_KEY, next_part_str);
+      g_free (next_part_str);
+    } else {
+      gst_uri_remove_query_key (uri, HLS_PART_QUERY_KEY);
+    }
+  }
+
+  gchar *out_uri = gst_uri_to_string (uri);
+  gst_uri_unref (uri);
+
+  return out_uri;
+}
+
 static GstHLSMediaPlaylist *
 download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
     GError ** err, GstHLSMediaPlaylist * current)
@@ -1215,6 +1275,7 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
   GstHLSMediaPlaylist *playlist = NULL;
   gchar *base_uri;
   gboolean playlist_uri_change = FALSE;
+  struct PlaylistDownloadParams dl_params = { 0, };
 
   GstAdaptiveDemux2Stream *base_stream = GST_ADAPTIVE_DEMUX2_STREAM (stream);
   GstAdaptiveDemux *demux = base_stream->demux;
@@ -1226,12 +1287,45 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
   playlist_uri_change = (current == NULL || g_strcmp0 (uri, current->uri) != 0);
 
   if (!playlist_uri_change) {
-    GST_LOG_OBJECT (demux, "Updating the playlist");
+    GST_LOG_OBJECT (stream, "Updating the playlist");
+
+    /* See if we can do a delta playlist update (if the playlist age is less than
+     * one half of the Skip Boundary */
+    GstClockTime now = gst_adaptive_demux2_get_monotonic_time (demux);
+    GstClockTimeDiff playlist_age = GST_CLOCK_DIFF (current->playlist_ts, now);
+
+    if (GST_CLOCK_TIME_IS_VALID (current->playlist_ts) &&
+        GST_CLOCK_TIME_IS_VALID (current->skip_boundary) &&
+        playlist_age <= current->skip_boundary / 2) {
+      if (current->can_skip_dateranges) {
+        dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V2;
+      } else {
+        dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V1;
+      }
+    }
   }
+
+  /* Blocking playlist reload check */
+  if (current != NULL && current->can_block_reload) {
+    if (playlist_uri_change) {
+      /* FIXME: We're changing playlist, but if there's a EXT-X-RENDITION-REPORT
+       * for the new playlist we might be able to use it to do a blocking request */
+    } else {
+      /* Get the next MSN (and/or possibly part number) for the request params */
+      gst_hls_media_playlist_get_next_msn_and_part (current,
+          stream->llhls_enabled, &dl_params.next_msn, &dl_params.next_part);
+      dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST;
+    }
+  }
+
+  gchar *target_uri = apply_directives_to_uri (stream, uri, &dl_params);
 
   download =
       downloadhelper_fetch_uri (demux->download_helper,
-      uri, main_uri, DOWNLOAD_FLAG_COMPRESS | DOWNLOAD_FLAG_FORCE_REFRESH, err);
+      target_uri, main_uri,
+      DOWNLOAD_FLAG_COMPRESS | DOWNLOAD_FLAG_FORCE_REFRESH, err);
+
+  g_free (target_uri);
 
   if (download == NULL)
     return NULL;
