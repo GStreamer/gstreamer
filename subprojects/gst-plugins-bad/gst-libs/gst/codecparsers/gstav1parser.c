@@ -799,8 +799,7 @@ gst_av1_parser_identify_one_obu (GstAV1Parser * parser, const guint8 * data,
 
     if (obu_length == 0) {
       /* An empty obu? let continue to the next */
-      ret = GST_AV1_PARSER_DROP;
-      goto error;
+      return GST_AV1_PARSER_DROP;
     }
   }
 
@@ -881,8 +880,7 @@ gst_av1_parser_identify_one_obu (GstAV1Parser * parser, const guint8 * data,
         (parser->state.operating_point_idc >> (obu->header.obu_spatial_id +
             8)) & 1;
     if (!inTemporalLayer || !inSpatialLayer) {
-      ret = GST_AV1_PARSER_DROP;
-      goto error;
+      return GST_AV1_PARSER_DROP;
     }
   }
 
