@@ -315,6 +315,10 @@ gst_hls_media_playlist_get_end_stream_time  (GstHLSMediaPlaylist * m3u8);
 GstClockTime
 gst_hls_media_playlist_get_duration         (GstHLSMediaPlaylist * m3u8);
 
+void
+gst_hls_media_playlist_get_next_msn_and_part (GstHLSMediaPlaylist * m3u8, gboolean low_latency,
+		gint64 *next_msn, gint64 *next_part);
+
 gchar *
 gst_hls_media_playlist_get_uri              (GstHLSMediaPlaylist * m3u8);
 

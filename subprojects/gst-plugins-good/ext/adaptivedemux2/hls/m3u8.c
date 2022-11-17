@@ -2245,6 +2245,32 @@ gst_hls_media_playlist_get_duration (GstHLSMediaPlaylist * m3u8)
   return duration;
 }
 
+void
+gst_hls_media_playlist_get_next_msn_and_part (GstHLSMediaPlaylist * m3u8,
+    gboolean low_latency, gint64 * next_msn, gint64 * next_part)
+{
+  /* Return the MSN and part number that are 1 past the end of the current playlist */
+  if (m3u8->segments->len == 0) {
+    *next_msn = -1;
+    *next_part = -1;
+    return;
+  }
+
+  GstM3U8MediaSegment *last =
+      g_ptr_array_index (m3u8->segments, m3u8->segments->len - 1);
+
+  /* If low_latency mode and the last segment contains partial segments, the next playlist update is
+   * when one extra partial segment gets added */
+  if (low_latency && last->partial_segments != NULL) {
+    *next_msn = last->sequence;
+    *next_part = last->partial_segments->len;
+    return;
+  }
+
+  *next_msn = last->sequence + 1;
+  *next_part = -1;
+}
+
 gchar *
 gst_hls_media_playlist_get_uri (GstHLSMediaPlaylist * m3u8)
 {
