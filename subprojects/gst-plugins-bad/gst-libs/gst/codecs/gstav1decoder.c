@@ -712,11 +712,11 @@ gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
     goto out;
   }
 
-  if (priv->current_picture->temporal_id > self->highest_spatial_layer) {
+  if (priv->current_picture->spatial_id > self->highest_spatial_layer) {
     ret = GST_FLOW_ERROR;
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
-        ("current picture temporal_id %d should not be higher than "
-            "highest spatial layer %d", priv->current_picture->temporal_id,
+        ("current picture spatial_id %d should not be higher than "
+            "highest spatial layer %d", priv->current_picture->spatial_id,
             self->highest_spatial_layer), (NULL), ret);
     goto out;
   }
