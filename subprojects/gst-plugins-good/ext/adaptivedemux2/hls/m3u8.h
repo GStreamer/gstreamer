@@ -142,6 +142,11 @@ struct _GstHLSMediaPlaylist
   GstClockTime part_hold_back;  /* Part-Hold-Back value, if provided (or CLOCK_TIME_NONE */
   gboolean can_block_reload;    /* TRUE if CAN-BLOCK-RELOAD was YES */
 
+  /* Delta playlist info from EXT-X-SKIP tag */
+  gint skipped_segments;
+  gint num_removed_date_ranges;
+  gchar **removed_date_ranges;
+
   /*< private > */
   GMutex lock;
 

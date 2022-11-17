@@ -259,6 +259,30 @@ midRoll273.mp4\n\
 #EXT-X-PRELOAD-HINT:TYPE=PART,URI=\"midRoll274.1.mp4\"\n\
 #EXT-X-RENDITION-REPORT:URI=\"/1M/LL-HLS.m3u8\",LAST-MSN=274,LAST-PART=1";
 
+static const gchar *SKIP_PLAYLIST = "#EXTM3U\n\
+#EXT-X-VERSION:7\n\
+#EXT-X-TARGETDURATION:4\n\
+#EXT-X-PART-INF:PART-TARGET=2\n\
+#EXT-X-SKIP:SKIPPED-SEGMENTS=2,RECENTLY-REMOVED-DATERANGES=\"splice-6FFFFFF0\tsplice-6FFFFFF1\"\n\
+#EXTINF:4.00008,\n\
+fileSequence270.mp4\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"filePart271.0.mp4\"\n\
+#EXT-X-PART:DURATION=2.00004,URI=\"filePart271.1.mp4\"\n\
+#EXTINF:4.00008,\n\
+fileSequence271.mp4\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"filePart272.0.mp4\"\n\
+#EXT-X-PART:DURATION=0.50001,URI=\"filePart272.1.mp4\"\n\
+#EXTINF:2.50005,\n\
+fileSequence272.mp4\n\
+#EXT-X-DISCONTINUITY\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"midRoll273.0.mp4\"\n\
+#EXT-X-PART:DURATION=2.00004,URI=\"midRoll273.1.mp4\"\n\
+#EXTINF:4.00008,\n\
+midRoll273.mp4\n\
+#EXT-X-PART:DURATION=2.00004,INDEPENDENT=YES,URI=\"midRoll274.0.mp4\"\n\
+#EXT-X-PRELOAD-HINT:TYPE=PART,URI=\"midRoll274.1.mp4\"\n\
+#EXT-X-RENDITION-REPORT:URI=\"/1M/LL-HLS.m3u8\",LAST-MSN=274,LAST-PART=1";
+
 static GstHLSMediaPlaylist *
 load_m3u8 (const gchar * data)
 {
@@ -920,6 +944,24 @@ GST_START_TEST (test_low_latency_playlist)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_playlist_skip)
+{
+  GstHLSMediaPlaylist *pl;
+
+  pl = load_m3u8 (SKIP_PLAYLIST);
+  fail_unless (pl != NULL);
+
+  assert_equals_int (pl->skipped_segments, 2);
+  assert_equals_int (pl->num_removed_date_ranges, 2);
+  fail_unless (g_strcmp0 (pl->removed_date_ranges[0], "splice-6FFFFFF0") == 0);
+  fail_unless (g_strcmp0 (pl->removed_date_ranges[1], "splice-6FFFFFF1") == 0);
+
+  gst_hls_media_playlist_unref (pl);
+}
+
+GST_END_TEST;
+
 static Suite *
 hlsdemux_suite (void)
 {
@@ -955,6 +997,7 @@ hlsdemux_suite (void)
   tcase_add_test (tc_m3u8, test_stream_inf_tag);
   tcase_add_test (tc_m3u8, test_map_tag);
   tcase_add_test (tc_m3u8, test_low_latency_playlist);
+  tcase_add_test (tc_m3u8, test_playlist_skip);
   return s;
 }
 

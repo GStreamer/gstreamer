@@ -66,6 +66,9 @@ gst_hls_media_playlist_unref (GstHLSMediaPlaylist * self)
     if (self->preload_hints != NULL)
       g_ptr_array_free (self->preload_hints, TRUE);
 
+    if (self->removed_date_ranges != NULL)
+      g_strfreev (self->removed_date_ranges);
+
     g_free (self->last_data);
     g_mutex_clear (&self->lock);
     g_free (self);
@@ -479,6 +482,17 @@ gst_hls_media_playlist_dump (GstHLSMediaPlaylist * self)
 
   GST_DEBUG ("can block reloads: %s", self->can_block_reload ? "YES" : "NO");
 
+  GST_DEBUG ("skipped segments: %d", self->skipped_segments);
+
+  if (self->num_removed_date_ranges && self->removed_date_ranges) {
+    GST_DEBUG ("Removed date ranges: %u", self->num_removed_date_ranges);
+    gchar **cur = self->removed_date_ranges;
+    while (*cur != NULL) {
+      GST_DEBUG ("  ID: %s", *cur);
+      cur++;
+    }
+  }
+
   GST_DEBUG ("Segments : %d", self->segments->len);
   for (idx = 0; idx < self->segments->len; idx++) {
     GstM3U8MediaSegment *segment = g_ptr_array_index (self->segments, idx);
@@ -758,6 +772,37 @@ parse_server_control (GstHLSMediaPlaylist * self, gchar * data)
 malformed_line:
   {
     GST_WARNING ("Invalid EXT-X-SERVER-CONTROL entry in playlist");
+    return;
+  }
+}
+
+/* Parse EXT-X-SKIP */
+static void
+parse_skip_tag (GstHLSMediaPlaylist * self, gchar * data)
+{
+  gchar *v, *a;
+
+  while (data != NULL && parse_attributes (&data, &a, &v)) {
+    if (strcmp (a, "SKIPPED-SEGMENTS") == 0) {
+      if (!int_from_string (v, NULL, &self->skipped_segments)
+          || self->skipped_segments < 0) {
+        GST_WARNING ("Can't read skipped segments from EXT-X-SKIP value");
+        self->skipped_segments = 0;
+        goto malformed_line;
+      }
+    } else if (strcmp (a, "RECENTLY-REMOVED-DATERANGES") == 0) {
+      gchar **removed_date_ranges = g_strsplit (v, "\t", -1);
+
+      g_strfreev (self->removed_date_ranges);
+      self->removed_date_ranges = removed_date_ranges;
+      self->num_removed_date_ranges = g_strv_length (removed_date_ranges);
+    }
+  }
+
+  return;
+malformed_line:
+  {
+    GST_WARNING ("Invalid EXT-X-SKIP entry in playlist");
     return;
   }
 }
@@ -1106,6 +1151,9 @@ gst_hls_media_playlist_parse (gchar * data,
               (GDestroyNotify) gst_m3u8_preload_hint_unref);
         }
         g_ptr_array_add (self->preload_hints, hint);
+      } else if (g_str_has_prefix (data_ext_x, "SKIP:")) {
+        data += strlen ("#EXT-X-SKIP:");
+        parse_skip_tag (self, data);
       } else {
         GST_LOG ("Ignored line: %s", data);
       }
