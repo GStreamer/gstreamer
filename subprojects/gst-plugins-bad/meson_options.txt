@@ -174,6 +174,7 @@ option('webrtc', type : 'feature', value : 'auto', description : 'WebRTC audio/v
 option('webrtcdsp', type : 'feature', value : 'auto', description : 'Plugin with various audio filters provided by the WebRTC audio processing library')
 option('wildmidi', type : 'feature', value : 'auto', description : 'WildMidi midi soft synth plugin')
 option('wic', type : 'feature', value : 'auto', description : 'Windows Imaging Component plugin')
+option('win32ipc', type : 'feature', value : 'auto', description : 'Windows IPC plugin')
 option('winks', type : 'feature', value : 'auto', description : 'Windows Kernel Streaming video source plugin')
 option('winscreencap', type : 'feature', value : 'auto', description : 'Windows Screen Capture video source plugin')
 option('x265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video encoder plugin (GPL - only built if gpl option is also enabled!)')
