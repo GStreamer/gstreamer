@@ -308,7 +308,7 @@ typedef enum /*< underscore_name=gst_webrtc_dtls_setup >*/
  * @GST_WEBRTC_STATS_REMOTE_INBOUND_RTP: remote-inbound-rtp
  * @GST_WEBRTC_STATS_REMOTE_OUTBOUND_RTP: remote-outbound-rtp
  * @GST_WEBRTC_STATS_CSRC: csrc
- * @GST_WEBRTC_STATS_PEER_CONNECTION: peer-connectiion
+ * @GST_WEBRTC_STATS_PEER_CONNECTION: peer-connection
  * @GST_WEBRTC_STATS_DATA_CHANNEL: data-channel
  * @GST_WEBRTC_STATS_STREAM: stream
  * @GST_WEBRTC_STATS_TRANSPORT: transport
@@ -316,6 +316,8 @@ typedef enum /*< underscore_name=gst_webrtc_dtls_setup >*/
  * @GST_WEBRTC_STATS_LOCAL_CANDIDATE: local-candidate
  * @GST_WEBRTC_STATS_REMOTE_CANDIDATE: remote-candidate
  * @GST_WEBRTC_STATS_CERTIFICATE: certificate
+ *
+ * See <https://w3c.github.io/webrtc-stats/#dom-rtcstatstype>
  */
 typedef enum /*< underscore_name=gst_webrtc_stats_type >*/
 {
