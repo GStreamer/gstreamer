@@ -49,6 +49,7 @@
 
 #include <gst/video/video.h>
 #include <gst/video/videooverlay.h>
+#include <gst/video/video-color.h>
 #include <gst/allocators/gstdmabuf.h>
 
 #include <drm.h>
@@ -61,6 +62,11 @@
 #include "gstkmsutils.h"
 #include "gstkmsbufferpool.h"
 #include "gstkmsallocator.h"
+
+#ifdef HAVE_DRM_HDR
+#include <math.h>
+#include "gstkmsedid.h"
+#endif
 
 #define GST_PLUGIN_NAME "kmssink"
 #define GST_PLUGIN_DESC "Video sink using the Linux kernel mode setting API"
@@ -103,6 +109,303 @@ enum
 };
 
 static GParamSpec *g_properties[PROP_N] = { NULL, };
+
+#ifdef HAVE_DRM_HDR
+enum hdmi_metadata_type
+{
+  HDMI_STATIC_METADATA_TYPE1 = 0,
+};
+enum hdmi_eotf
+{
+  HDMI_EOTF_TRADITIONAL_GAMMA_SDR = 0,
+  HDMI_EOTF_TRADITIONAL_GAMMA_HDR,
+  HDMI_EOTF_SMPTE_ST2084,
+  HDMI_EOTF_BT_2100_HLG,
+};
+
+static void
+gst_kms_populate_infoframe (struct hdr_output_metadata *pinfo_frame,
+    GstVideoMasteringDisplayInfo * p_hdr_minfo,
+    GstVideoContentLightLevel * p_hdr_cll,
+    gchar colorimetry, gboolean clear_it_out)
+{
+  /* From CTA-861.3:
+   * When a source is transmitting the Dynamic Range and Mastering InfoFrame,
+   * it shall signal the end of Dynamic Range... by sending a ... InfoFrame with
+   * the EOTF field to '0', the Static_Metadata_Descriptor_ID field set to '0',
+   * and the fields of the Static_Metadata_Descriptor set to unknown (0)...
+   *
+   * See also https://dri.freedesktop.org/docs/drm/gpu/drm-uapi.html
+   */
+  if (clear_it_out) {
+    /* Static_Metadata_Descriptor_ID */
+    pinfo_frame->metadata_type = 0;
+    (void) memset ((void *) &pinfo_frame->hdmi_metadata_type1, 0,
+        sizeof (pinfo_frame->hdmi_metadata_type1));
+    return;
+  } else {
+    pinfo_frame->metadata_type = HDMI_STATIC_METADATA_TYPE1;
+    pinfo_frame->hdmi_metadata_type1.eotf = colorimetry;
+    pinfo_frame->hdmi_metadata_type1.metadata_type = HDMI_STATIC_METADATA_TYPE1;
+  }
+
+  /* For HDR Infoframe see CTA-861-G, Section 6.9.1
+   * SEI message is in units of 0.0001 cd/m2, HDMI is units of 1 cd/m2 - see
+   * x265 specs */
+  pinfo_frame->hdmi_metadata_type1.max_display_mastering_luminance =
+      round (p_hdr_minfo->max_display_mastering_luminance / 10000.0);
+  pinfo_frame->hdmi_metadata_type1.min_display_mastering_luminance =
+      p_hdr_minfo->min_display_mastering_luminance;
+
+  pinfo_frame->hdmi_metadata_type1.max_cll = p_hdr_cll->max_content_light_level;
+  pinfo_frame->hdmi_metadata_type1.max_fall =
+      p_hdr_cll->max_frame_average_light_level;
+
+  for (int i = 0; i < 3; i++) {
+    pinfo_frame->hdmi_metadata_type1.display_primaries[i].x =
+        p_hdr_minfo->display_primaries[i].x;
+    pinfo_frame->hdmi_metadata_type1.display_primaries[i].y =
+        p_hdr_minfo->display_primaries[i].y;
+  }
+
+  pinfo_frame->hdmi_metadata_type1.white_point.x = p_hdr_minfo->white_point.x;
+  pinfo_frame->hdmi_metadata_type1.white_point.y = p_hdr_minfo->white_point.y;
+}
+
+static void
+gst_kms_push_hdr_infoframe (GstKMSSink * self, gboolean clear_it_out)
+{
+  struct hdr_output_metadata info_frame;
+  drmModeObjectPropertiesPtr props;
+  uint32_t hdrBlobID;
+  int drm_fd = self->fd;
+  uint32_t conn_id = self->conn_id;
+  int ret = 0;
+
+  if (self->no_infoframe || !self->has_hdr_info || (!clear_it_out
+          && self->has_sent_hdrif)) {
+    return;
+  }
+
+  /* Check to see if the connection has the HDR_OUTPUT_METADATA property if
+   * we haven't already found it */
+  if (self->hdrPropID == 0 || self->edidPropID == 0) {
+    props =
+        drmModeObjectGetProperties (drm_fd, conn_id, DRM_MODE_OBJECT_CONNECTOR);
+
+    if (!props) {
+      GST_ERROR_OBJECT (self, "Error on drmModeObjectGetProperties %d %s",
+          errno, g_strerror (errno));
+      return;
+    }
+
+    struct gst_kms_hdr_static_metadata hdr_edid_info = { 0, 0, 0, 0, 0 };
+    for (uint32_t i = 0;
+        i < props->count_props && (self->hdrPropID == 0
+            || self->edidPropID == 0); i++) {
+      drmModePropertyPtr pprop = drmModeGetProperty (drm_fd, props->props[i]);
+
+      if (pprop) {
+        /* 7 16 DRM_MODE_PROP_BLOB HDR_OUTPUT_METADATA */
+        if (!strncmp ("HDR_OUTPUT_METADATA", pprop->name,
+                strlen ("HDR_OUTPUT_METADATA"))) {
+          self->hdrPropID = pprop->prop_id;
+          GST_DEBUG_OBJECT (self, "HDR prop ID = %d", self->hdrPropID);
+        }
+
+        if (!strncmp ("EDID", pprop->name, strlen ("EDID"))) {
+          self->edidPropID = pprop->prop_id;
+
+          /* Check if EDID indicates device supports HDR */
+          drmModePropertyBlobPtr blob;
+          blob = drmModeGetPropertyBlob (drm_fd, props->prop_values[i]);
+          if (blob) {
+            int res =
+                gst_kms_edid_parse (&hdr_edid_info, blob->data, blob->length);
+            if (res != 0) {
+              hdr_edid_info.eotf = 0;
+              hdr_edid_info.metadata_type = 0;
+            }
+          }
+
+          drmModeFreePropertyBlob (blob);
+
+          GST_DEBUG_OBJECT (self, "EDID prop ID = %d", self->edidPropID);
+          /* only these two values are guaranteed to be populated for HDR */
+          GST_DEBUG_OBJECT (self, "EDID EOTF = %u, metadata type = %u",
+              hdr_edid_info.eotf, hdr_edid_info.metadata_type);
+        }
+
+        drmModeFreeProperty (pprop);
+      } else {
+        GST_ERROR_OBJECT (self, "Error on drmModeGetProperty(%d)", i);
+      }
+    }
+
+    drmModeFreeObjectProperties (props);
+
+    if (self->hdrPropID == 0 || self->edidPropID == 0
+        || hdr_edid_info.eotf == 0) {
+      GST_DEBUG_OBJECT (self, "No HDR support on target display");
+      self->no_infoframe = TRUE;
+      /* FIXME: maybe not the right flag here... */
+      self->has_sent_hdrif = TRUE;
+      return;
+    }
+  }
+
+  if (clear_it_out)
+    GST_INFO ("Clearing HDR Infoframe on connector %d", self->conn_id);
+  else
+    GST_INFO ("Setting HDR Infoframe, if available on connector %d",
+        self->conn_id);
+
+  gst_kms_populate_infoframe (&info_frame, &self->hdr_minfo, &self->hdr_cll,
+      self->colorimetry, clear_it_out);
+
+  /* Use non-atomic property setting */
+  ret = drmModeCreatePropertyBlob (drm_fd, &info_frame,
+      sizeof (struct hdr_output_metadata), &hdrBlobID);
+  if (!ret) {
+    ret =
+        drmModeObjectSetProperty (drm_fd, conn_id, DRM_MODE_OBJECT_CONNECTOR,
+        self->hdrPropID, hdrBlobID);
+    if (ret) {
+      GST_ERROR_OBJECT (self, "drmModeObjectSetProperty result %d %d %s", ret,
+          errno, g_strerror (errno));
+    }
+    drmModeDestroyPropertyBlob (drm_fd, hdrBlobID);
+  } else {
+    GST_ERROR_OBJECT (self, "Failed to drmModeCreatePropertyBlob %d %s", errno,
+        g_strerror (errno));
+  }
+
+  if (!ret) {
+    GST_INFO ("Set HDR Infoframe on connector %d", conn_id);
+    self->has_sent_hdrif = TRUE;        // Hooray!
+  }
+}
+
+
+/* From an HDR10 stream caps:
+ *
+ * colorimetry=(string)bt2100-pq
+ * content-light-level=(string)10000:166
+ * mastering-display-info=(string)35400:14600:8500:39850:6550:2300:15635:16450:10000000:1
+ */
+static void
+gst_kms_sink_set_hdr10_caps (GstKMSSink * self, GstCaps * caps)
+{
+  GstVideoMasteringDisplayInfo hdr_minfo;
+  GstVideoContentLightLevel hdr_cll;
+  GstStructure *structure;
+  const gchar *colorimetry_s;
+  GstVideoColorimetry colorimetry;
+  gboolean has_hdr_eotf = FALSE;
+  gboolean has_cll = FALSE;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if ((colorimetry_s = gst_structure_get_string (structure,
+              "colorimetry")) != NULL &&
+      gst_video_colorimetry_from_string (&colorimetry, colorimetry_s)) {
+    switch (colorimetry.transfer) {
+      case GST_VIDEO_TRANSFER_SMPTE2084:
+        self->colorimetry = HDMI_EOTF_SMPTE_ST2084;
+        has_hdr_eotf = TRUE;
+        GST_DEBUG ("Got HDR transfer value GST_VIDEO_TRANSFER_SMPTE2084: %u",
+            self->colorimetry);
+        break;
+      case GST_VIDEO_TRANSFER_BT2020_10:
+      case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+        self->colorimetry = HDMI_EOTF_BT_2100_HLG;
+        has_hdr_eotf = TRUE;
+        GST_DEBUG ("Got HDR transfer value HDMI_EOTF_BT_2100_HLG: %u",
+            self->colorimetry);
+        break;
+      case GST_VIDEO_TRANSFER_BT709:
+        self->colorimetry = HDMI_EOTF_TRADITIONAL_GAMMA_SDR;
+        GST_DEBUG ("Got HDR transfer value GST_VIDEO_TRANSFER_BT709, "
+            "not HDR: %u", self->colorimetry);
+        break;
+      default:
+        /* not an HDMI and/or HDR colorimetry, we will ignore */
+        GST_DEBUG ("Unsupported transfer function, no HDR: %u",
+            colorimetry.transfer);
+        self->no_infoframe = TRUE;
+        self->has_hdr_info = FALSE;
+        break;
+    }
+  }
+
+  if (gst_video_mastering_display_info_from_caps (&hdr_minfo, caps)) {
+    if (!gst_video_mastering_display_info_is_equal (&hdr_minfo,
+            &self->hdr_minfo)) {
+      self->hdr_minfo = hdr_minfo;
+      self->no_infoframe = FALSE;
+      self->has_hdr_info = TRUE;
+      /* to send again */
+      self->has_sent_hdrif = FALSE;
+    }
+
+    GST_DEBUG ("Got mastering info: "
+        "min %u max %u wp %u %u dp[0] %u %u dp[1] %u %u dp[2] %u %u",
+        self->hdr_minfo.min_display_mastering_luminance,
+        self->hdr_minfo.max_display_mastering_luminance,
+        self->hdr_minfo.white_point.x, self->hdr_minfo.white_point.y,
+        self->hdr_minfo.display_primaries[0].x,
+        self->hdr_minfo.display_primaries[0].y,
+        self->hdr_minfo.display_primaries[1].x,
+        self->hdr_minfo.display_primaries[1].y,
+        self->hdr_minfo.display_primaries[2].x,
+        self->hdr_minfo.display_primaries[2].y);
+
+  } else {
+    if (self->has_hdr_info == TRUE) {
+      GST_WARNING ("Missing mastering display info");
+    } else {
+      self->no_infoframe = TRUE;
+      self->has_hdr_info = FALSE;
+    }
+
+    gst_video_mastering_display_info_init (&self->hdr_minfo);
+  }
+
+  if (gst_video_content_light_level_from_caps (&hdr_cll, caps)) {
+    GST_DEBUG ("Got content light level information: Max CLL: %u Max FALL: %u",
+        hdr_cll.max_content_light_level, hdr_cll.max_frame_average_light_level);
+
+    if (!gst_video_content_light_level_is_equal (&hdr_cll, &self->hdr_cll)) {
+      self->hdr_cll = hdr_cll;
+      self->no_infoframe = FALSE;
+      self->has_hdr_info = TRUE;
+      /* to send again */
+      self->has_sent_hdrif = FALSE;
+    }
+
+    has_cll = TRUE;
+  } else {
+    gst_video_content_light_level_init (&self->hdr_cll);
+
+    if (self->has_hdr_info == TRUE) {
+      GST_WARNING ("Missing content light level info");
+    }
+
+    self->no_infoframe = TRUE;
+    self->has_hdr_info = FALSE;
+  }
+
+  /* need all caps set */
+  if ((has_hdr_eotf || has_cll) && !(has_hdr_eotf && has_cll)) {
+    GST_ELEMENT_WARNING (self, STREAM, FORMAT,
+        ("Stream doesn't have all HDR components needed"),
+        ("Check stream caps"));
+
+    self->no_infoframe = TRUE;
+    self->has_hdr_info = FALSE;
+  }
+}
+
+#endif /* HAVE_DRM_HDR */
 
 static void
 gst_kms_sink_set_render_rectangle (GstVideoOverlay * overlay,
@@ -1148,6 +1451,10 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0)
     goto invalid_size;
 
+#ifdef HAVE_DRM_HDR
+  gst_kms_sink_set_hdr10_caps (self, caps);
+#endif
+
   /* discard dumb buffer pool */
   if (self->pool) {
     gst_buffer_pool_set_active (self->pool, FALSE);
@@ -1665,6 +1972,10 @@ retry_set_plane:
     src.w = result.w;
     src.h = result.h;
   }
+#ifdef HAVE_DRM_HDR
+  /* Send the HDR infoframes if appropriate */
+  gst_kms_push_hdr_infoframe (self, FALSE);
+#endif
 
   GST_TRACE_OBJECT (self,
       "drmModeSetPlane at (%i,%i) %ix%i sourcing at (%i,%i) %ix%i",
@@ -1981,6 +2292,17 @@ gst_kms_sink_init (GstKMSSink * sink)
   sink->poll = gst_poll_new (TRUE);
   gst_video_info_init (&sink->vinfo);
   sink->skip_vsync = FALSE;
+
+#ifdef HAVE_DRM_HDR
+  sink->no_infoframe = FALSE;
+  sink->has_hdr_info = FALSE;
+  sink->has_sent_hdrif = FALSE;
+  sink->edidPropID = 0;
+  sink->hdrPropID = 0;
+  sink->colorimetry = HDMI_EOTF_TRADITIONAL_GAMMA_SDR;
+  gst_video_mastering_display_info_init (&sink->hdr_minfo);
+  gst_video_content_light_level_init (&sink->hdr_cll);
+#endif
 }
 
 static void
