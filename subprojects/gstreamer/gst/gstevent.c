@@ -1947,7 +1947,7 @@ gst_event_parse_group_id (GstEvent * event, guint * group_id)
 
 /**
  * gst_event_new_stream_collection:
- * @collection: Active collection for this data flow
+ * @collection: (transfer none): Active collection for this data flow
  *
  * Create a new STREAM_COLLECTION event. The stream collection event can only
  * travel downstream synchronized with the buffer flow.
