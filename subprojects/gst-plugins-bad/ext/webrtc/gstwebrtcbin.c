@@ -4924,7 +4924,7 @@ _set_internal_rtpbin_element_props_from_stream (GstWebRTCBin * webrtc,
         g_value_unset (&ptval);
       }
 
-      GST_DEBUG_OBJECT (webrtc, "stream %" GST_PTR_FORMAT " transceiever %"
+      GST_DEBUG_OBJECT (webrtc, "stream %" GST_PTR_FORMAT " transceiver %"
           GST_PTR_FORMAT " has FEC payload %d and RED payload %d", stream,
           trans, ulpfec_pt, red_pt);
 
