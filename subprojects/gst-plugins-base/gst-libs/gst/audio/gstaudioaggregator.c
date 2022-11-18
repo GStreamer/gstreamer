@@ -537,6 +537,7 @@ static GstSample *gst_audio_aggregator_peek_next_sample (GstAggregator * agg,
 #define DEFAULT_DISCONT_WAIT (1 * GST_SECOND)
 #define DEFAULT_OUTPUT_BUFFER_DURATION_N (1)
 #define DEFAULT_OUTPUT_BUFFER_DURATION_D (100)
+#define DEFAULT_FORCE_LIVE FALSE
 
 enum
 {
@@ -546,6 +547,7 @@ enum
   PROP_DISCONT_WAIT,
   PROP_OUTPUT_BUFFER_DURATION_FRACTION,
   PROP_IGNORE_INACTIVE_PADS,
+  PROP_FORCE_LIVE,
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstAudioAggregator, gst_audio_aggregator,
@@ -728,6 +730,23 @@ gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
           "Ignore inactive pads",
           "Avoid timing out waiting for inactive pads", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstAudioAggregator:force-live:
+   *
+   * Causes the element to aggregate on a timeout even when no live source is
+   * connected to its sinks. See #GstAggregator:min-upstream-latency for a
+   * companion property: in the vast majority of cases where you plan to plug in
+   * live sources with a non-zero latency, you should set it to a non-zero value.
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_FORCE_LIVE,
+      g_param_spec_boolean ("force-live", "Force live",
+          "Always operate in live mode and aggregate on timeout regardless of "
+          "whether any live sources are linked upstream",
+          DEFAULT_FORCE_LIVE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -797,6 +816,10 @@ gst_audio_aggregator_set_property (GObject * object, guint prop_id,
       gst_aggregator_set_ignore_inactive_pads (GST_AGGREGATOR (object),
           g_value_get_boolean (value));
       break;
+    case PROP_FORCE_LIVE:
+      gst_aggregator_set_force_live (GST_AGGREGATOR (object),
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -828,6 +851,10 @@ gst_audio_aggregator_get_property (GObject * object, guint prop_id,
     case PROP_IGNORE_INACTIVE_PADS:
       g_value_set_boolean (value,
           gst_aggregator_get_ignore_inactive_pads (GST_AGGREGATOR (object)));
+      break;
+    case PROP_FORCE_LIVE:
+      g_value_set_boolean (value,
+          gst_aggregator_get_force_live (GST_AGGREGATOR (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2195,7 +2222,7 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   gint64 next_timestamp;
   gint rate, bpf;
   gboolean dropped = FALSE;
-  gboolean is_eos = TRUE;
+  gboolean is_eos = !gst_aggregator_get_force_live (agg);
   gboolean is_done = TRUE;
   guint blocksize;
   GstAudioAggregatorPad *srcpad = GST_AUDIO_AGGREGATOR_PAD (agg->srcpad);

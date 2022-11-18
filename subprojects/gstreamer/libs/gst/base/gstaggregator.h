@@ -434,6 +434,13 @@ void            gst_aggregator_set_ignore_inactive_pads (GstAggregator * self,
 GST_BASE_API
 gboolean        gst_aggregator_get_ignore_inactive_pads (GstAggregator * self);
 
+GST_BASE_API
+gboolean        gst_aggregator_get_force_live       (GstAggregator *self);
+
+GST_BASE_API
+void            gst_aggregator_set_force_live       (GstAggregator *self,
+                                                     gboolean force_live);
+
 /**
  * GstAggregatorStartTimeSelection:
  * @GST_AGGREGATOR_START_TIME_SELECTION_ZERO: Start at running time 0.

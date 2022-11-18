@@ -26,6 +26,7 @@
 
 #include <stdlib.h>
 #include <gst/check/gstcheck.h>
+#include <gst/check/gstharness.h>
 #include <gst/base/gstaggregator.h>
 
 /* dummy aggregator based element */
@@ -143,10 +144,12 @@ gst_test_aggregator_aggregate (GstAggregator * aggregator, gboolean timeout)
   }
   gst_iterator_free (iter);
 
-  if (all_eos == TRUE) {
-    GST_INFO_OBJECT (testagg, "no data available, must be EOS");
-    gst_pad_push_event (aggregator->srcpad, gst_event_new_eos ());
-    return GST_FLOW_EOS;
+  if (!gst_aggregator_get_force_live (aggregator)) {
+    if (all_eos == TRUE) {
+      GST_INFO_OBJECT (testagg, "no data available, must be EOS");
+      gst_pad_push_event (aggregator->srcpad, gst_event_new_eos ());
+      return GST_FLOW_EOS;
+    }
   }
 
   buf = gst_buffer_new ();
@@ -188,6 +191,8 @@ gst_test_aggregator_class_init (GstTestAggregatorClass * klass)
 
   base_aggregator_class->aggregate =
       GST_DEBUG_FUNCPTR (gst_test_aggregator_aggregate);
+
+  base_aggregator_class->get_next_time = gst_aggregator_simple_get_next_time;
 }
 
 static void
@@ -846,8 +851,8 @@ GST_START_TEST (test_flushing_seek)
   GST_BUFFER_TIMESTAMP (buf) = 0;
   _chain_data_init (&data2, test.aggregator, buf, NULL);
 
-  gst_segment_init (&GST_AGGREGATOR_PAD (GST_AGGREGATOR (test.
-              aggregator)->srcpad)->segment, GST_FORMAT_TIME);
+  gst_segment_init (&GST_AGGREGATOR_PAD (GST_AGGREGATOR (test.aggregator)->
+          srcpad)->segment, GST_FORMAT_TIME);
 
   /* now do a successful flushing seek */
   event = gst_event_new_seek (1, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
@@ -1353,6 +1358,29 @@ GST_START_TEST (test_remove_pad_on_aggregate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_force_live)
+{
+  GstElement *agg;
+  GstHarness *h;
+  GstBuffer *buf;
+
+  agg = gst_check_setup_element ("testaggregator");
+  g_object_set (agg, "latency", GST_USECOND, NULL);
+  gst_aggregator_set_force_live (GST_AGGREGATOR (agg), TRUE);
+  h = gst_harness_new_with_element (agg, NULL, "src");
+
+  gst_harness_play (h);
+
+  gst_harness_crank_single_clock_wait (h);
+  buf = gst_harness_pull (h);
+
+  gst_buffer_unref (buf);
+  gst_harness_teardown (h);
+  gst_object_unref (agg);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_aggregator_suite (void)
 {
@@ -1382,6 +1410,7 @@ gst_aggregator_suite (void)
   tcase_add_test (general, test_change_state_intensive);
   tcase_add_test (general, test_flush_on_aggregate);
   tcase_add_test (general, test_remove_pad_on_aggregate);
+  tcase_add_test (general, test_force_live);
 
   return suite;
 }
