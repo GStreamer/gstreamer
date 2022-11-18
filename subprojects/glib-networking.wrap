@@ -1,5 +1,6 @@
-[wrap-git]
-directory=glib-networking
-url=https://gitlab.gnome.org/GNOME/glib-networking.git
-push-url=git@gitlab.gnome.org:GNOME/glib-networking.git
-revision=glib-2-72
+[wrap-file]
+directory = glib-networking-2.74.0
+source_url = https://download.gnome.org/sources/glib-networking/2.74/glib-networking-2.74.0.tar.xz
+source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/glib-networking/2.74/glib-networking-2.74.0.tar.xz
+source_filename = glib-networking-2.74.0.tar.xz
+source_hash = 1f185aaef094123f8e25d8fa55661b3fd71020163a0174adb35a37685cda613b
