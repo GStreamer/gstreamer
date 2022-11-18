@@ -805,9 +805,11 @@ gst_fake_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
   GST_BUFFER_OFFSET (buf) = offset;
 
   if (src->datarate > 0) {
-    time = (src->bytes_sent * GST_SECOND) / src->datarate;
+    time =
+        gst_util_uint64_scale_int (src->bytes_sent, GST_SECOND, src->datarate);
 
-    GST_BUFFER_DURATION (buf) = size * GST_SECOND / src->datarate;
+    GST_BUFFER_DURATION (buf) =
+        gst_util_uint64_scale_int (size, GST_SECOND, src->datarate);
   } else if (gst_base_src_is_live (basesrc)) {
     GstClock *clock;
 
