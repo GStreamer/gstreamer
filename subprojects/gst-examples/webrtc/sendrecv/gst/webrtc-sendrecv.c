@@ -442,7 +442,7 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
   audio_desc =
       g_strdup_printf
       ("audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample"
-      "! queue ! opusenc ! rtpopuspay name=audiopay ! queue");
+      "! queue ! opusenc ! rtpopuspay name=audiopay pt=%u ! queue", opus_pt);
   audio_bin = gst_parse_bin_from_description (audio_desc, TRUE, &audio_error);
   g_free (audio_desc);
   if (audio_error) {
@@ -461,7 +461,7 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
       "vp8enc deadline=1 keyframe-max-dist=2000 ! "
       /* picture-id-mode=15-bit seems to make TWCC stats behave better, and
        * fixes stuttery video playback in Chrome */
-      "rtpvp8pay name=videopay picture-id-mode=15-bit ! queue");
+      "rtpvp8pay name=videopay picture-id-mode=15-bit pt=%u ! queue", vp8_pt);
   video_bin = gst_parse_bin_from_description (video_desc, TRUE, &video_error);
   g_free (video_desc);
   if (video_error) {
