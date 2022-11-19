@@ -5782,10 +5782,9 @@ static void
 _connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id)
 {
   gchar *pad_name;
-  GstPad *queue_srcpad;
+  GstPad *srcpad;
   GstPad *rtp_sink;
   TransportStream *stream = _find_transport_for_session (webrtc, session_id);
-  GstElement *queue;
 
   g_assert (stream);
 
@@ -5796,19 +5795,14 @@ _connect_rtpfunnel (GstWebRTCBin * webrtc, guint session_id)
   gst_bin_add (GST_BIN (webrtc), webrtc->rtpfunnel);
   gst_element_sync_state_with_parent (webrtc->rtpfunnel);
 
-  queue = gst_element_factory_make ("queue", NULL);
-  gst_bin_add (GST_BIN (webrtc), queue);
-  gst_element_sync_state_with_parent (queue);
-
-  gst_element_link (webrtc->rtpfunnel, queue);
-
-  queue_srcpad = gst_element_get_static_pad (queue, "src");
+  srcpad = gst_element_get_static_pad (webrtc->rtpfunnel, "src");
 
   pad_name = g_strdup_printf ("send_rtp_sink_%d", session_id);
   rtp_sink = gst_element_request_pad_simple (webrtc->rtpbin, pad_name);
   g_free (pad_name);
-  gst_pad_link (queue_srcpad, rtp_sink);
-  gst_object_unref (queue_srcpad);
+
+  gst_pad_link (srcpad, rtp_sink);
+  gst_object_unref (srcpad);
   gst_object_unref (rtp_sink);
 
   pad_name = g_strdup_printf ("send_rtp_src_%d", session_id);
