@@ -481,6 +481,7 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
   g_assert_nonnull (webrtc1);
   gst_util_set_object_arg (G_OBJECT (webrtc1), "bundle-policy", "max-bundle");
 
+  /* Takes ownership of each: */
   gst_bin_add_many (GST_BIN (pipe1), audio_bin, video_bin, webrtc1, NULL);
 
   if (!gst_element_link (audio_bin, webrtc1)) {
@@ -547,8 +548,6 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
   /* Incoming streams will be exposed via this signal */
   g_signal_connect (webrtc1, "pad-added", G_CALLBACK (on_incoming_stream),
       pipe1);
-  /* Lifetime is the same as the pipeline itself */
-  gst_object_unref (webrtc1);
 
   g_timeout_add (100, (GSourceFunc) webrtcbin_get_stats, webrtc1);
 
