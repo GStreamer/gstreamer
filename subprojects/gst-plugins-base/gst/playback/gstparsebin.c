@@ -3573,6 +3573,7 @@ retry:
   /* Don't expose if we're currently shutting down */
   DYN_LOCK (parsebin);
   if (G_UNLIKELY (parsebin->shutdown)) {
+    g_list_free_full (endpads, (GDestroyNotify) gst_object_unref);
     GST_WARNING_OBJECT (parsebin,
         "Currently, shutting down, aborting exposing");
     DYN_UNLOCK (parsebin);
