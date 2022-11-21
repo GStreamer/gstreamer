@@ -3494,6 +3494,18 @@ gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
       && gst_video_colorimetry_is_equal (cinfo, &ci_jpeg))
     return TRUE;
 
+  /* bypass check the below transfer types, because those types are cast to
+   * V4L2_XFER_FUNC_NONE type when try format or set format and V4L2_XFER_FUNC_NONE
+   * type is cast to GST_VIDEO_TRANSFER_GAMMA10 type in gst_v4l2_object_get_colorspace */
+  if ((info.colorimetry.transfer == GST_VIDEO_TRANSFER_GAMMA18) ||
+      (info.colorimetry.transfer == GST_VIDEO_TRANSFER_GAMMA20) ||
+      (info.colorimetry.transfer == GST_VIDEO_TRANSFER_GAMMA22) ||
+      (info.colorimetry.transfer == GST_VIDEO_TRANSFER_GAMMA28)) {
+    info.colorimetry.transfer = GST_VIDEO_TRANSFER_GAMMA10;
+    if (gst_video_colorimetry_is_equal (&info.colorimetry, cinfo))
+      return TRUE;
+  }
+
   return FALSE;
 }
 
