@@ -24,7 +24,10 @@
 #include <gst/video/video.h>
 #include "linux/videodev2.h"
 
-#define GST_V4L2_DEFAULT_VIDEO_FORMATS "{ NV12, YUY2, NV12_4L4, NV12_32L32, NV12_16L32S, I420, P010_10LE}"
+#define GST_V4L2_DEFAULT_VIDEO_FORMATS "{ " \
+  "P010_10LE, NV12_10LE40_4L4, " \
+  "NV12, YUY2, NV12_4L4, NV12_32L32, NV12_16L32S, I420" \
+  "}"
 
 gboolean   gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
                                           GstVideoInfo * out_info);
