@@ -95,6 +95,7 @@ struct _GstKMSSink {
   gboolean reconfigure;
 
   gboolean is_internal_fd;
+  gboolean skip_vsync;
 };
 
 struct _GstKMSSinkClass {

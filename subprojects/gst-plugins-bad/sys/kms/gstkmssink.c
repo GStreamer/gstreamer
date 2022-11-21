@@ -98,6 +98,7 @@ enum
   PROP_CONNECTOR_PROPS,
   PROP_PLANE_PROPS,
   PROP_FD,
+  PROP_SKIP_VSYNC,
   PROP_N,
 };
 
@@ -1683,7 +1684,7 @@ retry_set_plane:
 
 sync_frame:
   /* Wait for the previous frame to complete redraw */
-  if (!gst_kms_sink_sync (self)) {
+  if (!self->skip_vsync && !gst_kms_sink_sync (self)) {
     GST_OBJECT_UNLOCK (self);
     goto bail;
   }
@@ -1884,6 +1885,9 @@ gst_kms_sink_set_property (GObject * object, guint prop_id,
     case PROP_FD:
       _validate_and_set_external_fd (sink, g_value_get_int (value));
       break;
+    case PROP_SKIP_VSYNC:
+      sink->skip_vsync = g_value_get_boolean (value);
+      break;
     default:
       if (!gst_video_overlay_set_property (object, PROP_N, prop_id, value))
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1940,6 +1944,9 @@ gst_kms_sink_get_property (GObject * object, guint prop_id,
     case PROP_FD:
       g_value_set_int (value, sink->fd);
       break;
+    case PROP_SKIP_VSYNC:
+      g_value_set_boolean (value, sink->skip_vsync);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1973,6 +1980,7 @@ gst_kms_sink_init (GstKMSSink * sink)
   gst_poll_fd_init (&sink->pollfd);
   sink->poll = gst_poll_new (TRUE);
   gst_video_info_init (&sink->vinfo);
+  sink->skip_vsync = FALSE;
 }
 
 static void
@@ -2150,6 +2158,20 @@ gst_kms_sink_class_init (GstKMSSinkClass * klass)
   g_properties[PROP_FD] =
       g_param_spec_int ("fd", "File Descriptor",
       "DRM file descriptor", -1, G_MAXINT, -1,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+
+  /**
+   * kmssink:skip-vsync:
+   *
+   *  For some cases, to suppress internal vsync, which can drop framerate
+   *  in half, set this to 1.
+   *
+   *  Since: 1.22
+   */
+  g_properties[PROP_SKIP_VSYNC] =
+      g_param_spec_boolean ("skip-vsync", "Skip Internal VSync",
+      "When enabled will not wait internally for vsync. "
+      "Should be used for atomic drivers to avoid double vsync.", FALSE,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_properties);
