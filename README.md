@@ -222,6 +222,22 @@ This will cause the features/plugins that are not registered to not be included 
 This is an experimental feature, backward incompatible changes could still be
 made in the future.
 
+### Building documentation
+
+Documentation is not built by default because it is slow to generate. To build
+the documentation, first ensure that `hotdoc` is installed and `doc` option is
+enabled. For API documentation, gobject introspection must also be enabled.
+The special target `gst-doc` can then be used to (re)generate the documentation.
+
+```
+pip install hotdoc
+meson setup -Ddoc=enabled -Dintrospection=enabled builddir
+ninja -C builddir gst-doc
+```
+
+NOTE: To visualize the documentation, `devhelp` can be run inside the development
+environment (see below).
+
 # Development environment
 
 ## Development environment target
