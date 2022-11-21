@@ -3483,6 +3483,7 @@ copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
       gst_rtspsrc_update_src_event (data->src, data->stream,
       gst_event_ref (*event));
   gst_pad_store_sticky_event (data->stream->srcpad, new_event);
+  gst_event_unref (new_event);
 
   return TRUE;
 }
