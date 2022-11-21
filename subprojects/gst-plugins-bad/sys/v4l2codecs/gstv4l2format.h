@@ -25,7 +25,7 @@
 #include "linux/videodev2.h"
 
 #define GST_V4L2_DEFAULT_VIDEO_FORMATS "{ " \
-  "P010_10LE, NV12_10LE40_4L4, " \
+  "P010_10LE, NV12_10LE40_4L4, MT2110T, MT2110R," \
   "NV12, YUY2, NV12_4L4, NV12_32L32, NV12_16L32S, I420" \
   "}"
 
