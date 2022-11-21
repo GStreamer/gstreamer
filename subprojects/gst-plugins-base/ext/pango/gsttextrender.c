@@ -631,7 +631,7 @@ gst_text_render_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_push_event (render->srcpad, event);
+      ret = gst_pad_event_default (pad, parent, event);
       break;
   }
 
