@@ -999,9 +999,8 @@ match_parsebin_to_track (GstAdaptiveDemux2Stream * stream, GstPad * pad)
   stream_type = gst_stream_get_stream_type (gst_stream);
 
   GST_DEBUG_OBJECT (pad,
-      "Trying to match pad from parsebin with internal streamid %s and caps %"
-      GST_PTR_FORMAT, GST_STR_NULL (internal_stream_id),
-      gst_stream_get_caps (gst_stream));
+      "Trying to match pad from parsebin with internal streamid %s and stream %"
+      GST_PTR_FORMAT, GST_STR_NULL (internal_stream_id), gst_stream);
 
   /* Try to match directly by the track's pending upstream_stream_id */
   for (tmp = stream->tracks; tmp; tmp = tmp->next) {
