@@ -47,6 +47,7 @@ struct _GstDvbSubEnc
   GstElement element;
 
   GstVideoInfo in_info;
+  int display_version;
   GstPad *sinkpad;
   GstPad *srcpad;
 
@@ -68,4 +69,4 @@ GST_ELEMENT_REGISTER_DECLARE (dvbsubenc);
 
 gboolean gst_dvbsubenc_ayuv_to_ayuv8p (GstVideoFrame * src, GstVideoFrame * dest, int max_colours, guint32 *out_num_colours);
 
-GstBuffer *gst_dvbenc_encode (int object_version, int page_id, SubpictureRect *s, guint num_subpictures);
+GstBuffer *gst_dvbenc_encode (int object_version, int page_id, int display_version, guint16 width, guint16 height, SubpictureRect *s, guint num_subpictures);
