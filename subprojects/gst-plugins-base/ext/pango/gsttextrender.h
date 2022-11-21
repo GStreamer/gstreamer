@@ -93,6 +93,7 @@ struct _GstTextRender {
     gint ypad;
 
     GstEvent             *segment_event;
+    gboolean              have_pango_markup;
 };
 
 struct _GstTextRenderClass {
