@@ -127,6 +127,10 @@ gstreamer_doc = hotdoc.generate_doc('GStreamer',
     fatal_warnings: get_option('fatal_warnings')
 )
 
+# For devhelp
+meson.add_devenv({'XDG_DATA_DIRS': meson.current_build_dir() / 'GStreamer-doc'},
+  method: 'prepend')
+
 cdata = configuration_data()
 cdata.set('GST_API_VERSION', apiversion)
 readme = configure_file(input: 'scripts/RELEASE_README.md',
