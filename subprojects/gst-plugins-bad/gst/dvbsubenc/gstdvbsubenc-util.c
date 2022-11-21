@@ -721,9 +721,35 @@ dvbenc_write_region_segment (GstByteWriter * b, int object_version, int page_id,
   gst_byte_writer_set_pos (b, pos);
 }
 
+static void
+dvbenc_write_display_definition_segment (GstByteWriter * b, int object_version,
+    int page_id, guint16 width, guint16 height)
+{
+  guint seg_size_pos, pos;
+
+  gst_byte_writer_put_uint8 (b, DVB_SEGMENT_SYNC_BYTE);
+  gst_byte_writer_put_uint8 (b, DVB_SEGMENT_TYPE_DISPLAY_DEFINITION);
+  gst_byte_writer_put_uint16_be (b, page_id);
+
+  /* Size placeholder */
+  seg_size_pos = gst_byte_writer_get_pos (b);
+  gst_byte_writer_put_uint16_be (b, 0);
+
+  /* version number, display window flag, reserved bits */
+  gst_byte_writer_put_uint8 (b, (object_version << 4) | (0 << 3) | 0x07);
+  gst_byte_writer_put_uint16_be (b, width);
+  gst_byte_writer_put_uint16_be (b, height);
+
+  /* Re-write the size field */
+  pos = gst_byte_writer_get_pos (b);
+  gst_byte_writer_set_pos (b, seg_size_pos);
+  gst_byte_writer_put_uint16_be (b, pos - (seg_size_pos + 2));
+  gst_byte_writer_set_pos (b, pos);
+}
+
 GstBuffer *
-gst_dvbenc_encode (int object_version, int page_id, SubpictureRect * s,
-    guint num_subpictures)
+gst_dvbenc_encode (int object_version, int page_id, int display_version,
+    guint16 width, guint16 height, SubpictureRect * s, guint num_subpictures)
 {
   GstByteWriter b;
   guint seg_size_pos, pos;
@@ -743,6 +769,11 @@ gst_dvbenc_encode (int object_version, int page_id, SubpictureRect * s,
   /* GStreamer passes DVB subpictures as private PES packets with
    * 0x20 0x00 prefixed */
   gst_byte_writer_put_uint16_be (&b, 0x2000);
+
+  /* If non-default width/height are used, write a display definiton segment */
+  if (width != 720 || height != 576)
+    dvbenc_write_display_definition_segment (&b, display_version, page_id,
+        width, height);
 
   /* Page Composition Segment */
   gst_byte_writer_put_uint8 (&b, DVB_SEGMENT_SYNC_BYTE);
