@@ -531,7 +531,10 @@ gst_text_render_chain (GstPad * pad, GstObject * parent, GstBuffer * inbuf)
 
   /* render text */
   GST_DEBUG ("rendering '%*s'", (gint) size, data);
-  pango_layout_set_markup (render->layout, (gchar *) data, size);
+  if (render->have_pango_markup)
+    pango_layout_set_markup (render->layout, (gchar *) data, size);
+  else
+    pango_layout_set_text (render->layout, (gchar *) data, size);
   gst_text_render_render_pangocairo (render);
   gst_buffer_unmap (inbuf, &map);
 
@@ -628,6 +631,23 @@ gst_text_render_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_replace (&render->segment_event, event);
         gst_event_unref (event);
       }
+      break;
+    }
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstStructure *structure;
+      const gchar *format;
+
+      gst_event_parse_caps (event, &caps);
+
+      structure = gst_caps_get_structure (caps, 0);
+      format = gst_structure_get_string (structure, "format");
+      render->have_pango_markup = (strcmp (format, "pango-markup") == 0);
+
+      gst_event_unref (event);
+      ret = TRUE;
+
       break;
     }
     default:
