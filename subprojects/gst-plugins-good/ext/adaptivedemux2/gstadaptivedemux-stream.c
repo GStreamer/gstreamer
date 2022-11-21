@@ -2427,6 +2427,8 @@ can_handle_collection (GstAdaptiveDemux2Stream * stream,
       default:
         break;
     }
+    if (tags)
+      gst_tag_list_unref (tags);
   }
 
   /* Check that we either have at most 1 of each track type, or that
