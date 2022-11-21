@@ -2833,9 +2833,7 @@ gst_adaptive_demux2_stream_set_tags (GstAdaptiveDemux2Stream * stream,
 {
   GST_DEBUG_OBJECT (stream,
       "setting new tags for stream %" GST_PTR_FORMAT, tags);
-  if (stream->pending_tags) {
-    gst_tag_list_unref (stream->pending_tags);
-  }
+  gst_clear_tag_list (&stream->pending_tags);
   stream->pending_tags = tags;
 }
 

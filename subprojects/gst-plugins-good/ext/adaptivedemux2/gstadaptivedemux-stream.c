@@ -135,7 +135,7 @@ gst_adaptive_demux2_stream_finalize (GObject * object)
   if (stream->pending_caps)
     gst_caps_unref (stream->pending_caps);
 
-  g_clear_pointer (&stream->pending_tags, gst_tag_list_unref);
+  gst_clear_tag_list (&stream->pending_tags);
   g_clear_pointer (&stream->stream_collection, gst_object_unref);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
