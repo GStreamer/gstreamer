@@ -256,7 +256,11 @@ configure_file(
 )
 
 if documented_projects != ''
-  subproject('gst-docs', required: get_option('doc').enabled())
+  gst_doc = subproject('gst-docs', required: get_option('doc').enabled())
+  if gst_doc.found()
+    gst_doc_target = gst_doc.get_variable('gstreamer_doc')
+    alias_target('gst-doc', gst_doc_target)
+  endif
   message('Gst docs subprojects: ' + documented_projects)
 endif
 
