@@ -57,6 +57,17 @@ static const gchar *h264_sdp = "v=0\r\n"
     "a=rtpmap:96 H264/90000\r\n"
     "a=fmtp:96 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\n";
 
+static const gchar *h264_sdp_with_source_filter = "v=0\r\n"
+    "o=- 992782775729845470 2 IN IP4 127.0.0.1\r\n"
+    "s=TestH264\r\n"
+    "t=0 0\r\n"
+    "m=video 9 UDP/TLS/RTP/SAVPF 96\r\n"
+    "c=IN IP4 0.0.0.0\r\n"
+    "a=recvonly\r\n"
+    "a=rtpmap:96 H264/90000\r\n"
+    "a=fmtp:96 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f\r\n"
+    "a=source-filter: incl IN IP4 127.0.0.2 127.0.0.1\r\n";
+
 static const gchar caps_video_string1[] =
     "application/x-unknown, media=(string)video, payload=(int)96, "
     "clock-rate=(int)90000, encoding-name=(string)MP4V-ES";
@@ -898,6 +909,31 @@ GST_START_TEST (caps_multiple_rid_parse_with_params)
 }
 
 GST_END_TEST
+GST_START_TEST (media_from_caps_with_source_filters)
+{
+  GstSDPMessage *message;
+  glong length = -1;
+  const GstSDPMedia *result_video;
+  GstStructure *s_video;
+  GstCaps *caps_video;
+
+  gst_sdp_message_new (&message);
+  gst_sdp_message_parse_buffer ((guint8 *) h264_sdp_with_source_filter,
+      length, message);
+
+  result_video = gst_sdp_message_get_media (message, 0);
+  fail_unless (result_video != NULL);
+  caps_video = gst_sdp_media_get_caps_from_media (result_video, 96);
+  gst_sdp_media_attributes_to_caps (result_video, caps_video);
+
+  s_video = gst_caps_get_structure (caps_video, 0);
+  fail_if (gst_structure_has_field (s_video, "a-source-filter"));
+
+  gst_caps_unref (caps_video);
+  gst_sdp_message_free (message);
+}
+
+GST_END_TEST
 /*
  * End of test cases
  */
@@ -926,6 +962,7 @@ sdp_suite (void)
       media_from_caps_h264_with_profile_asymmetry_allowed);
   tcase_add_test (tc_chain, caps_multiple_rid_parse);
   tcase_add_test (tc_chain, caps_multiple_rid_parse_with_params);
+  tcase_add_test (tc_chain, media_from_caps_with_source_filters);
 
   return s;
 }

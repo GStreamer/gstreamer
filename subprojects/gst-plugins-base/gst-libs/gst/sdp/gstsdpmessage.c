@@ -4224,6 +4224,8 @@ sdp_add_attributes_to_caps (GArray * attributes, GstCaps * caps)
         continue;
       if (!strcmp (key, "rid"))
         continue;
+      if (!strcmp (key, "source-filter"))
+        continue;
 
       /* string must be valid UTF8 */
       if (!g_utf8_validate (attr->value, -1, NULL))
