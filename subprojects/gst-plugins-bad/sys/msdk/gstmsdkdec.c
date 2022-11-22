@@ -58,6 +58,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define GST_TO_MFX_TIME(time) ((time) == GST_CLOCK_TIME_NONE ? \
     MFX_TIMESTAMP_UNKNOWN : gst_util_uint64_scale_round ((time), 9, 100000))
 
+#define MFX_TO_GST_TIME(time) ((time) == MFX_TIMESTAMP_UNKNOWN ? \
+    GST_CLOCK_TIME_NONE : gst_util_uint64_scale_round ((time), 100000, 9))
+
 #define MFX_TIME_IS_VALID(time) ((time) != MFX_TIMESTAMP_UNKNOWN)
 
 #define gst_msdkdec_parent_class parent_class
@@ -944,6 +947,8 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
 
     if (decode_only)
       GST_VIDEO_CODEC_FRAME_SET_DECODE_ONLY (frame);
+
+    frame->pts = MFX_TO_GST_TIME (pts);
     flow = gst_video_decoder_finish_frame (decoder, frame);
     if (flow == GST_FLOW_ERROR)
       GST_ERROR_OBJECT (thiz, "Failed to finish frame");
