@@ -357,6 +357,7 @@ enum
 #define DEFAULT_MAX_TS_OFFSET        G_GINT64_CONSTANT(3000000000)
 #define DEFAULT_MIN_TS_OFFSET        MIN_TS_OFFSET_ROUND_OFF_COMP
 #define DEFAULT_TS_OFFSET_SMOOTHING_FACTOR  0
+#define DEFAULT_UPDATE_NTP64_HEADER_EXT TRUE
 
 enum
 {
@@ -389,6 +390,7 @@ enum
   PROP_TS_OFFSET_SMOOTHING_FACTOR,
   PROP_FEC_DECODERS,
   PROP_FEC_ENCODERS,
+  PROP_UPDATE_NTP64_HEADER_EXT,
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -777,6 +779,10 @@ create_session (GstRtpBin * rtpbin, gint id)
 
   g_object_set (session, "max-dropout-time", rtpbin->max_dropout_time,
       "max-misorder-time", rtpbin->max_misorder_time, NULL);
+
+  g_object_set (session, "update-ntp64-header-ext",
+      rtpbin->update_ntp64_header_ext, NULL);
+
   GST_OBJECT_UNLOCK (rtpbin);
 
   /* provide clock_rate to the session manager when needed */
@@ -2980,6 +2986,22 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "fec-encoders='fec,0=\"rtpst2022-1-fecenc\\ rows\\=5\\ columns\\=5\";'",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:update-ntp64-header-ext:
+   *
+   * Whether RTP NTP header extension should be updated with actual
+   * NTP time. If not, use the NTP time from buffer timestamp metadata
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_UPDATE_NTP64_HEADER_EXT,
+      g_param_spec_boolean ("update-ntp64-header-ext",
+          "Update NTP-64 RTP Header Extension",
+          "Whether RTP NTP header extension should be updated with actual NTP time",
+          DEFAULT_UPDATE_NTP64_HEADER_EXT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -3070,6 +3092,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->min_ts_offset = DEFAULT_MIN_TS_OFFSET;
   rtpbin->min_ts_offset_is_set = FALSE;
   rtpbin->ts_offset_smoothing_factor = DEFAULT_TS_OFFSET_SMOOTHING_FACTOR;
+  rtpbin->update_ntp64_header_ext = DEFAULT_UPDATE_NTP64_HEADER_EXT;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -3409,6 +3432,13 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
     case PROP_FEC_ENCODERS:
       gst_rtp_bin_set_fec_encoders_struct (rtpbin, g_value_get_boxed (value));
       break;
+    case PROP_UPDATE_NTP64_HEADER_EXT:
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->update_ntp64_header_ext = g_value_get_boolean (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      gst_rtp_bin_propagate_property_to_session (rtpbin,
+          "update-ntp64-header-ext", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3517,6 +3547,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FEC_ENCODERS:
       g_value_take_boxed (value, gst_rtp_bin_get_fec_encoders_struct (rtpbin));
+      break;
+    case PROP_UPDATE_NTP64_HEADER_EXT:
+      g_value_set_boolean (value, rtpbin->update_ntp64_header_ext);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -223,6 +223,7 @@ enum
 #define DEFAULT_RTP_PROFILE          GST_RTP_PROFILE_AVP
 #define DEFAULT_NTP_TIME_SOURCE      GST_RTP_NTP_TIME_SOURCE_NTP
 #define DEFAULT_RTCP_SYNC_SEND_TIME  TRUE
+#define DEFAULT_UPDATE_NTP64_HEADER_EXT  TRUE
 
 enum
 {
@@ -244,7 +245,8 @@ enum
   PROP_TWCC_STATS,
   PROP_RTP_PROFILE,
   PROP_NTP_TIME_SOURCE,
-  PROP_RTCP_SYNC_SEND_TIME
+  PROP_RTCP_SYNC_SEND_TIME,
+  PROP_UPDATE_NTP64_HEADER_EXT
 };
 
 #define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->priv->lock)
@@ -810,6 +812,22 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           DEFAULT_RTCP_SYNC_SEND_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpSession:update-ntp64-header-ext:
+   *
+   * Whether RTP NTP header extension should be updated with actual
+   * NTP time. If not, use the NTP time from buffer timestamp metadata
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_UPDATE_NTP64_HEADER_EXT,
+      g_param_spec_boolean ("update-ntp64-header-ext",
+          "Update NTP-64 RTP Header Extension",
+          "Whether RTP NTP header extension should be updated with actual NTP time",
+          DEFAULT_UPDATE_NTP64_HEADER_EXT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -982,6 +1000,10 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_RTCP_SYNC_SEND_TIME:
       priv->rtcp_sync_send_time = g_value_get_boolean (value);
       break;
+    case PROP_UPDATE_NTP64_HEADER_EXT:
+      g_object_set_property (G_OBJECT (priv->session),
+          "update-ntp64-header-ext", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1060,6 +1082,10 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RTCP_SYNC_SEND_TIME:
       g_value_set_boolean (value, priv->rtcp_sync_send_time);
+      break;
+    case PROP_UPDATE_NTP64_HEADER_EXT:
+      g_object_get_property (G_OBJECT (priv->session),
+          "update-ntp64-header-ext", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -98,6 +98,8 @@ struct _GstRtpBin {
   /* the default FEC encoder factories for sessions */
   GstStructure   *fec_encoders;
 
+  gboolean       update_ntp64_header_ext;
+
   /*< private >*/
   GstRtpBinPrivate *priv;
 };

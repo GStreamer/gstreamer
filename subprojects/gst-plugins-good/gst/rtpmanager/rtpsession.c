@@ -81,6 +81,7 @@ enum
 #define DEFAULT_RTCP_DISABLE_SR_TIMESTAMP FALSE
 #define DEFAULT_FAVOR_NEW            FALSE
 #define DEFAULT_TWCC_FEEDBACK_INTERVAL GST_CLOCK_TIME_NONE
+#define DEFAULT_UPDATE_NTP64_HEADER_EXT TRUE
 
 enum
 {
@@ -108,6 +109,7 @@ enum
   PROP_RTCP_REDUCED_SIZE,
   PROP_RTCP_DISABLE_SR_TIMESTAMP,
   PROP_TWCC_FEEDBACK_INTERVAL,
+  PROP_UPDATE_NTP64_HEADER_EXT,
   PROP_LAST,
 };
 
@@ -643,6 +645,21 @@ rtp_session_class_init (RTPSessionClass * klass)
       0, G_MAXUINT64, DEFAULT_TWCC_FEEDBACK_INTERVAL,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * RTPSession:update-ntp64-header-ext:
+   *
+   * Whether RTP NTP header extension should be updated with actual
+   * NTP time. If not, use the NTP time from buffer timestamp metadata
+   *
+   * Since: 1.22
+   */
+  properties[PROP_UPDATE_NTP64_HEADER_EXT] =
+      g_param_spec_boolean ("update-ntp64-header-ext",
+      "Update NTP-64 RTP Header Extension",
+      "Whether RTP NTP header extension should be updated with actual NTP time",
+      DEFAULT_UPDATE_NTP64_HEADER_EXT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   klass->get_source_by_ssrc =
@@ -687,6 +704,8 @@ rtp_session_init (RTPSession * sess)
   /* default UDP header length */
   sess->header_len = UDP_IP_HEADER_OVERHEAD;
   sess->mtu = DEFAULT_RTCP_MTU;
+
+  sess->update_ntp64_header_ext = DEFAULT_UPDATE_NTP64_HEADER_EXT;
 
   sess->probation = DEFAULT_PROBATION;
   sess->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
@@ -928,6 +947,9 @@ rtp_session_set_property (GObject * object, guint prop_id,
       rtp_twcc_manager_set_feedback_interval (sess->twcc,
           g_value_get_uint64 (value));
       break;
+    case PROP_UPDATE_NTP64_HEADER_EXT:
+      sess->update_ntp64_header_ext = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1013,6 +1035,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_TWCC_FEEDBACK_INTERVAL:
       g_value_set_uint64 (value,
           rtp_twcc_manager_get_feedback_interval (sess->twcc));
+      break;
+    case PROP_UPDATE_NTP64_HEADER_EXT:
+      g_value_set_boolean (value, sess->update_ntp64_header_ext);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3422,7 +3447,9 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
     goto invalid_packet;
 
   /* Update any 64-bit NTP header extensions with the actual NTP time here */
-  update_ntp64_header_ext (&pinfo);
+  if (sess->update_ntp64_header_ext)
+    update_ntp64_header_ext (&pinfo);
+
   rtp_twcc_manager_send_packet (sess->twcc, &pinfo);
 
   source = obtain_internal_source (sess, pinfo.ssrc, &created, current_time);

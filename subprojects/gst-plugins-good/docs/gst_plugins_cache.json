@@ -17401,6 +17401,18 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "update-ntp64-header-ext": {
+                        "blurb": "Whether RTP NTP header extension should be updated with actual NTP time",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "use-pipeline-clock": {
                         "blurb": "Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-time-source property)",
                         "conditionally-available": false,
@@ -19318,6 +19330,18 @@
                         "type": "GstStructure",
                         "writable": false
                     },
+                    "update-ntp64-header-ext": {
+                        "blurb": "Whether RTP NTP header extension should be updated with actual NTP time",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "use-pipeline-clock": {
                         "blurb": "Use the pipeline running-time to set the NTP time in the RTCP SR messages (DEPRECATED: Use ntp-time-source property)",
                         "conditionally-available": false,
@@ -20082,6 +20106,18 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "guint64",
+                        "writable": true
+                    },
+                    "update-ntp64-header-ext": {
+                        "blurb": "Whether RTP NTP header extension should be updated with actual NTP time",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
                         "writable": true
                     }
                 },

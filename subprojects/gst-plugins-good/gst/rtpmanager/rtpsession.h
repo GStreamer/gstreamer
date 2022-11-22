@@ -313,6 +313,8 @@ struct _RTPSession {
   /* RFC6051 64-bit NTP header extension */
   guint8 send_ntp64_ext_id;
 
+  gboolean update_ntp64_header_ext;
+
   /* Transport-wide cc-extension */
   RTPTWCCManager *twcc;
   RTPTWCCStats *twcc_stats;
