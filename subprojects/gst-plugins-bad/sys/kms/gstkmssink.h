@@ -27,7 +27,6 @@
 #define __GST_KMS_SINK_H__
 
 #include <gst/video/gstvideosink.h>
-#include <drm/drm_mode.h>
 #include <gst/video/video-hdr.h>
 
 G_BEGIN_DECLS
