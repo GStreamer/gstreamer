@@ -377,6 +377,75 @@ GST_START_TEST (test_tsdemux_simple)
 
 GST_END_TEST;
 
+GST_START_TEST (test_tsdemux_stats)
+{
+  GstHarness *h = gst_harness_new_with_padnames ("tsdemux", "sink", NULL);
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GstStructure *stats, *counts;
+  guint64 count;
+
+  gst_harness_set (h, "tsdemux", "enable-stats", TRUE, NULL);
+
+  gst_harness_get (h, "tsdemux", "stats", &stats, NULL);
+  fail_unless_equals_string (gst_structure_get_name (stats),
+      "application/x-gst-mpegts-stats");
+  fail_unless (gst_structure_get (stats, "packet-counts", GST_TYPE_STRUCTURE,
+          &counts, NULL));
+  fail_unless_equals_string (gst_structure_get_name (counts),
+      "application/x-gst-mpegts-packet-counts");
+  fail_unless_equals_int (gst_structure_n_fields (counts), 0);
+  gst_structure_free (counts);
+  gst_structure_free (stats);
+
+  caps = gst_caps_from_string ("video/mpegts,systemstream=true");
+  gst_harness_push_event (h, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_harness_push_event (h, gst_event_new_segment (&segment));
+
+  gst_harness_set_sink_caps_str (h,
+      "audio/mpeg,mpegversion=4,stream-format=adts");
+
+  g_signal_connect (h->element, "pad-added",
+      G_CALLBACK (tsdemux_simple_pad_added), h);
+
+  buf =
+      gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, (guint8 *) aac_ts,
+      sizeof aac_ts, 0, sizeof aac_ts, NULL, NULL);
+  fail_unless (gst_harness_push (h, gst_buffer_ref (buf)) == GST_FLOW_OK);
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  gst_harness_get (h, "tsdemux", "stats", &stats, NULL);
+  fail_unless (gst_structure_get (stats, "packet-counts", GST_TYPE_STRUCTURE,
+          &counts, NULL));
+  fail_unless_equals_int (gst_structure_n_fields (counts), 3);
+  fail_unless (gst_structure_get_uint64 (counts, "0x0000", &count));
+  fail_unless_equals_uint64 (count, 1);
+  fail_unless (gst_structure_get_uint64 (counts, "0x0020", &count));
+  fail_unless_equals_uint64 (count, 1);
+  fail_unless (gst_structure_get_uint64 (counts, "0x0041", &count));
+  fail_unless_equals_uint64 (count, 3);
+  gst_structure_free (counts);
+  gst_structure_free (stats);
+
+  gst_element_set_state (h->element, GST_STATE_READY);
+
+  gst_harness_get (h, "tsdemux", "stats", &stats, NULL);
+  fail_unless (gst_structure_get (stats, "packet-counts", GST_TYPE_STRUCTURE,
+          &counts, NULL));
+  fail_unless_equals_int (gst_structure_n_fields (counts), 0);
+  gst_structure_free (counts);
+  gst_structure_free (stats);
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 mpegtsdemux_suite (void)
 {
@@ -394,6 +463,7 @@ mpegtsdemux_suite (void)
   tc = tcase_create ("tsdemux");
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_tsdemux_simple);
+  tcase_add_test (tc, test_tsdemux_stats);
 
   return s;
 }

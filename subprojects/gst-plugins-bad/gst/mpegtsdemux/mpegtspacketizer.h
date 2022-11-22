@@ -241,6 +241,13 @@ typedef struct _MpegTSPCR
   PCROffsetCurrent *current;
 } MpegTSPCR;
 
+typedef struct _MpegTSPIDStats {
+  guint16 pid;
+
+  /* Number of packets seen */
+  guint64 packets;
+} MpegTSPIDStats;
+
 struct _MpegTSPacketizer2 {
   GObject     parent;
 
@@ -293,6 +300,10 @@ struct _MpegTSPacketizer2 {
   /* Extra time offset to handle values before initial PCR.
    * This will be added to all converted timestamps */
   GstClockTime extra_shift;
+
+  /* Tracks stats for each PID */
+  GMutex stats_lock;
+  GArray *pid_stats;
 };
 
 struct _MpegTSPacketizer2Class {
@@ -390,6 +401,12 @@ mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
 G_GNUC_INTERNAL void
 mpegts_packetizer_set_pcr_discont_threshold (MpegTSPacketizer2 * packetizer,
 					GstClockTime threshold);
+
+G_GNUC_INTERNAL void
+mpegts_packetizer_set_packet_counts_enabled (MpegTSPacketizer2 * packetizer,
+					     gboolean enabled);
+G_GNUC_INTERNAL GstStructure *
+mpegts_packetizer_get_packet_counts (MpegTSPacketizer2 * packetizer);
 G_END_DECLS
 
 #endif /* GST_MPEGTS_PACKETIZER_H */

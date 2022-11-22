@@ -176,6 +176,9 @@ struct _MpegTSBase {
 
   /* Used for delayed seek events */
   GstEvent *seek_event;
+
+  /* Collect statistics */
+  gboolean enable_stats;
 };
 
 struct _MpegTSBaseClass {

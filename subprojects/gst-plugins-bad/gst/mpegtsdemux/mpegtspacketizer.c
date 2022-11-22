@@ -53,6 +53,9 @@ G_DEFINE_TYPE_EXTENDED (MpegTSPacketizer2, mpegts_packetizer, G_TYPE_OBJECT, 0,
 #define PACKETIZER_GROUP_LOCK(p) g_mutex_lock(&((p)->group_lock))
 #define PACKETIZER_GROUP_UNLOCK(p) g_mutex_unlock(&((p)->group_lock))
 
+#define PACKETIZER_STATS_LOCK(p) g_mutex_lock(&((p)->stats_lock))
+#define PACKETIZER_STATS_UNLOCK(p) g_mutex_unlock(&((p)->stats_lock))
+
 static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
 static GstClockTime calculate_skew (MpegTSPacketizer2 * packetizer,
@@ -60,6 +63,8 @@ static GstClockTime calculate_skew (MpegTSPacketizer2 * packetizer,
 static void _close_current_group (MpegTSPCR * pcrtable);
 static void record_pcr (MpegTSPacketizer2 * packetizer, MpegTSPCR * pcrtable,
     guint64 pcr, guint64 offset);
+static void mpegts_packetizer_count_packet (MpegTSPacketizer2 * packetizer,
+    MpegTSPacketizerPacket * packet);
 
 #define CONTINUITY_UNSET 255
 #define VERSION_NUMBER_UNSET 255
@@ -277,6 +282,9 @@ mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
   packetizer->last_pts = GST_CLOCK_TIME_NONE;
   packetizer->last_dts = GST_CLOCK_TIME_NONE;
   packetizer->extra_shift = 0;
+
+  g_mutex_init (&packetizer->stats_lock);
+  packetizer->pid_stats = NULL;
 }
 
 static void
@@ -304,6 +312,9 @@ mpegts_packetizer_dispose (GObject * object)
     packetizer->empty = TRUE;
 
     flush_observations (packetizer);
+
+    mpegts_packetizer_set_packet_counts_enabled (packetizer, FALSE);
+    g_mutex_clear (&packetizer->stats_lock);
   }
 
   if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose)
@@ -517,6 +528,7 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
   else
     packet->payload = NULL;
 
+  mpegts_packetizer_count_packet (packetizer, packet);
   return PACKET_OK;
 }
 
@@ -626,6 +638,12 @@ mpegts_packetizer_clear (MpegTSPacketizer2 * packetizer)
       break;
   }
   PACKETIZER_GROUP_UNLOCK (packetizer);
+
+  PACKETIZER_STATS_LOCK (packetizer);
+  if (packetizer->pid_stats) {
+    g_array_set_size (packetizer->pid_stats, 0);
+  }
+  PACKETIZER_STATS_UNLOCK (packetizer);
 }
 
 void
@@ -2648,4 +2666,85 @@ mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
           GST_TIME_ARGS (PCRTIME_TO_GSTTIME (tgroup->pcr_offset)));
   }
   PACKETIZER_GROUP_UNLOCK (packetizer);
+}
+
+void
+mpegts_packetizer_set_packet_counts_enabled (MpegTSPacketizer2 * packetizer,
+    gboolean enabled)
+{
+  PACKETIZER_STATS_LOCK (packetizer);
+
+  if (enabled && !packetizer->pid_stats)
+    packetizer->pid_stats = g_array_new (FALSE, FALSE, sizeof (MpegTSPIDStats));
+  else if (!enabled && packetizer->pid_stats)
+    g_clear_pointer (&packetizer->pid_stats, g_array_unref);
+
+  PACKETIZER_STATS_UNLOCK (packetizer);
+}
+
+static void
+mpegts_packetizer_count_packet (MpegTSPacketizer2 * packetizer,
+    MpegTSPacketizerPacket * packet)
+{
+  GArray *array;
+  gint16 pid;
+  MpegTSPIDStats *stats = NULL;
+  gint i;
+
+  if (!packetizer->pid_stats)
+    return;
+
+  PACKETIZER_STATS_LOCK (packetizer);
+
+  array = packetizer->pid_stats;
+  if (!array)
+    goto out;
+
+  pid = packet->pid;
+
+  for (i = 0; i < array->len; i++) {
+    stats = &g_array_index (array, MpegTSPIDStats, i);
+
+    if (stats->pid == pid)
+      break;
+  }
+
+  if (i == array->len) {
+    MpegTSPIDStats new_stats = {.pid = pid };
+    g_array_append_val (array, new_stats);
+    stats = &g_array_index (array, MpegTSPIDStats, i);
+  }
+
+  stats->packets += 1;
+
+out:
+  PACKETIZER_STATS_UNLOCK (packetizer);
+}
+
+GstStructure *
+mpegts_packetizer_get_packet_counts (MpegTSPacketizer2 * packetizer)
+{
+  GArray *array;
+  GstStructure *s;
+  gint i;
+
+  s = gst_structure_new_empty ("application/x-gst-mpegts-packet-counts");
+
+  PACKETIZER_STATS_LOCK (packetizer);
+
+  array = packetizer->pid_stats;
+  if (!array)
+    goto out;
+
+  for (i = 0; i < array->len; i++) {
+    MpegTSPIDStats *stats = &g_array_index (array, MpegTSPIDStats, i);
+    gchar field_name[7];
+
+    g_snprintf (field_name, sizeof field_name, "0x%04x", stats->pid);
+    gst_structure_set (s, field_name, G_TYPE_UINT64, stats->packets, NULL);
+  }
+
+out:
+  PACKETIZER_STATS_UNLOCK (packetizer);
+  return s;
 }
