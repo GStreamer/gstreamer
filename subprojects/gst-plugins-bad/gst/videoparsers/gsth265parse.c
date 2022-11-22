@@ -1061,6 +1061,10 @@ gst_h265_parse_handle_frame_packetized (GstBaseParse * parse,
       tmp_frame.overhead = frame->overhead;
       tmp_frame.buffer = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL,
           nalu.offset, nalu.size);
+      /* Don't lose timestamp when offset is not 0. */
+      GST_BUFFER_PTS (tmp_frame.buffer) = GST_BUFFER_PTS (buffer);
+      GST_BUFFER_DTS (tmp_frame.buffer) = GST_BUFFER_DTS (buffer);
+      GST_BUFFER_DURATION (tmp_frame.buffer) = GST_BUFFER_DURATION (buffer);
 
       /* Set marker on last packet */
       if (nl + nalu.size == left) {
