@@ -105,7 +105,7 @@ if default_library in ['static', 'both']
     include_directories: [configinc, libsinc],
     c_args: [gst_plugins_good_args, soup_loader_args, soup_loader_args, hls_cargs,
              '-DGST_ISOFF_API=G_GNUC_INTERNAL'],
-    dependencies: [gsttag_dep, gstnet_dep, gstbase_dep,
+    dependencies: [gst_dep, gsttag_dep, gstnet_dep, gstbase_dep,
                    gstpbutils_dep, gstapp_dep, soup_dep,
                    gio_dep, adaptive_xml2_dep,
                    hls_crypto_dep, libm],
