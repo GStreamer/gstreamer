@@ -23,7 +23,13 @@
 #ifndef __GST_UDP_NET_UTILS_H__
 #define __GST_UDP_NET_UTILS_H__
 
-gboolean     gst_udp_parse_uri            (const gchar *uristr, gchar **host, guint16 *port);
+gboolean     gst_udp_parse_uri            (const gchar *uristr,
+                                           gchar **host,
+                                           guint16 *port,
+                                           GPtrArray * source_list);
+
+gboolean     gst_udp_parse_multicast_source (const gchar * multicast_source,
+                                             GPtrArray * source_list);
 
 #endif /* __GST_UDP_NET_UTILS_H__*/
 

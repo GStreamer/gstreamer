@@ -65,6 +65,7 @@ struct _GstUDPSrc {
   /* our sockets */
   GSocket   *used_socket;	/* hot */
   GInetSocketAddress *addr;	/* hot */
+  GList     *source_addrs;
 
   GCancellable *cancellable;	/* hot */
 
@@ -83,6 +84,7 @@ struct _GstUDPSrc {
   gboolean   reuse;
   gboolean   loop;
   GstSocketTimestampMode socket_timestamp_mode;
+  gchar     *multicast_source;
 
   /* stats */
   guint      max_size;
@@ -97,6 +99,7 @@ struct _GstUDPSrc {
   GstMemory *extra_mem;
 
   gchar     *uri;
+  GPtrArray *source_list;
 };
 
 struct _GstUDPSrcClass {

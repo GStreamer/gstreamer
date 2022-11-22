@@ -247,6 +247,55 @@ send_failure:
 
 GST_END_TEST;
 
+static void
+on_multicast_source_updated (GObject * src, GParamSpec * pspec, guint * count)
+{
+  *count += 1;
+}
+
+GST_START_TEST (test_udpsrc_multicast_source)
+{
+  GstElement *src;
+  guint count = 0;
+  gchar *multicast_source = NULL;
+
+  src = gst_check_setup_element ("udpsrc");
+
+  g_signal_connect (G_OBJECT (src), "notify::multicast-source",
+      (GCallback) on_multicast_source_updated, &count);
+
+  /* Set uri without multicast-source */
+  g_object_set (src, "uri", "udp://127.0.0.1:5004", NULL);
+  fail_unless_equals_int (count, 0);
+  g_object_get (src, "multicast-source", &multicast_source, NULL);
+  fail_unless (multicast_source == NULL);
+
+  /* Sets source filter explicitly */
+  g_object_set (src, "multicast-source", "+127.0.0.2+127.0.0.3", NULL);
+  fail_unless_equals_int (count, 1);
+  g_object_get (src, "multicast-source", &multicast_source, NULL);
+  fail_unless_equals_string (multicast_source, "+127.0.0.2+127.0.0.3");
+  g_clear_pointer (&multicast_source, g_free);
+
+  /* Uri with source filters */
+  g_object_set (src, "uri", "udp://127.0.0.1:5004?multicast-source=+127.0.0.2",
+      NULL);
+  fail_unless_equals_int (count, 2);
+  g_object_get (src, "multicast-source", &multicast_source, NULL);
+  fail_unless_equals_string (multicast_source, "+127.0.0.2");
+  g_clear_pointer (&multicast_source, g_free);
+
+  /* New uri will reset source filters */
+  g_object_set (src, "uri", "udp://127.0.0.1:5004", NULL);
+  fail_unless_equals_int (count, 3);
+  g_object_get (src, "multicast-source", &multicast_source, NULL);
+  fail_unless (multicast_source == NULL);
+
+  gst_object_unref (src);
+}
+
+GST_END_TEST;
+
 static Suite *
 udpsrc_suite (void)
 {
@@ -256,6 +305,8 @@ udpsrc_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_udpsrc_empty_packet);
   tcase_add_test (tc_chain, test_udpsrc);
+  tcase_add_test (tc_chain, test_udpsrc_multicast_source);
+
   return s;
 }
 

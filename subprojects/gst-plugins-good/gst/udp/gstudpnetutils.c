@@ -28,81 +28,109 @@
 
 #include "gstudpnetutils.h"
 
+GST_DEBUG_CATEGORY_EXTERN (gst_udp_debug);
+#define GST_CAT_DEFAULT gst_udp_debug
+
 gboolean
-gst_udp_parse_uri (const gchar * uristr, gchar ** host, guint16 * port)
+gst_udp_parse_uri (const gchar * uristr, gchar ** host, guint16 * port,
+    GPtrArray * source_list)
 {
-  gchar *protocol, *location_start;
-  gchar *location, *location_end;
-  gchar *colptr;
+  GstUri *uri;
+  const gchar *protocol;
+
+  uri = gst_uri_from_string (uristr);
+  if (!uri) {
+    GST_ERROR ("Invalid URI string %s", uristr);
+    return FALSE;
+  }
 
   /* consider no protocol to be udp:// */
-  protocol = gst_uri_get_protocol (uristr);
-  if (!protocol)
-    goto no_protocol;
-  if (strcmp (protocol, "udp") != 0)
-    goto wrong_protocol;
-  g_free (protocol);
-
-  location_start = gst_uri_get_location (uristr);
-  if (!location_start)
-    return FALSE;
-
-  GST_DEBUG ("got location '%s'", location_start);
-
-  /* VLC compatibility, strip everything before the @ sign. VLC uses that as the
-   * remote address. */
-  location = g_strstr_len (location_start, -1, "@");
-  if (location == NULL)
-    location = location_start;
-  else
-    location += 1;
-
-  if (location[0] == '[') {
-    GST_DEBUG ("parse IPV6 address '%s'", location);
-    location_end = strchr (location, ']');
-    if (location_end == NULL)
-      goto wrong_address;
-
-    *host = g_strndup (location + 1, location_end - location - 1);
-    colptr = strrchr (location_end, ':');
-  } else {
-    GST_DEBUG ("parse IPV4 address '%s'", location);
-    colptr = strrchr (location, ':');
-
-    if (colptr != NULL) {
-      *host = g_strndup (location, colptr - location);
-    } else {
-      *host = g_strdup (location);
-    }
-  }
-  GST_DEBUG ("host set to '%s'", *host);
-
-  if (colptr != NULL) {
-    *port = g_ascii_strtoll (colptr + 1, NULL, 10);
-  } else {
-    *port = 0;
-  }
-  g_free (location_start);
-
-  return TRUE;
-
-  /* ERRORS */
-no_protocol:
-  {
+  protocol = gst_uri_get_scheme (uri);
+  if (!protocol) {
     GST_ERROR ("error parsing uri %s: no protocol", uristr);
-    return FALSE;
-  }
-wrong_protocol:
-  {
+    goto error;
+  } else if (g_strcmp0 (protocol, "udp")) {
     GST_ERROR ("error parsing uri %s: wrong protocol (%s != udp)", uristr,
         protocol);
-    g_free (protocol);
-    return FALSE;
+    goto error;
   }
-wrong_address:
-  {
-    GST_ERROR ("error parsing uri %s", uristr);
-    g_free (location);
-    return FALSE;
+
+  *host = g_strdup (gst_uri_get_host (uri));
+  if (*host == NULL) {
+    GST_ERROR ("Unknown host");
+    goto error;
   }
+
+  GST_DEBUG ("host set to '%s'", *host);
+
+  *port = gst_uri_get_port (uri);
+
+  if (source_list) {
+    const gchar *source = gst_uri_get_query_value (uri, "multicast-source");
+    if (source)
+      gst_udp_parse_multicast_source (source, source_list);
+  }
+
+  gst_uri_unref (uri);
+  return TRUE;
+
+error:
+  gst_uri_unref (uri);
+  return FALSE;
+}
+
+static gboolean
+gst_udp_source_filter_equal_func (gconstpointer a, gconstpointer b)
+{
+  return g_strcmp0 ((const gchar *) a, (const gchar *) b) == 0;
+}
+
+gboolean
+gst_udp_parse_multicast_source (const gchar * multicast_source,
+    GPtrArray * source_list)
+{
+  gchar **list;
+  guint i;
+  gboolean found = FALSE;
+
+  if (!multicast_source || !source_list)
+    return FALSE;
+
+  GST_DEBUG ("Parsing multicast source \"%s\"", multicast_source);
+
+  list = g_strsplit_set (multicast_source, "+-", 0);
+
+  for (i = 0; list[i] != NULL; i++) {
+    gchar *prefix;
+    gboolean is_positive = FALSE;
+
+    if (*list[i] == '\0')
+      continue;
+
+    prefix = g_strrstr (multicast_source, list[i]);
+    g_assert (prefix);
+
+    /* Begin without '+' or '-' prefix, assume it's positive filter */
+    if (prefix == multicast_source) {
+      GST_WARNING ("%s without prefix, assuming that it's positive filter",
+          list[i]);
+      is_positive = TRUE;
+    } else if (*(prefix - 1) == '+') {
+      is_positive = TRUE;
+    }
+
+    if (is_positive &&
+        !g_ptr_array_find_with_equal_func (source_list, list[i],
+            gst_udp_source_filter_equal_func, NULL)) {
+
+      GST_DEBUG ("Add multicast-source %s", list[i]);
+      /* Moves ownership to array */
+      g_ptr_array_add (source_list, g_strdup (list[i]));
+      found = TRUE;
+    }
+  }
+
+  g_strfreev (list);
+
+  return found;
 }

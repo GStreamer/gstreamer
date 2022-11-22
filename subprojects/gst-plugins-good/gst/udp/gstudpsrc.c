@@ -571,6 +571,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 #define UDP_DEFAULT_LOOP               TRUE
 #define UDP_DEFAULT_RETRIEVE_SENDER_ADDRESS TRUE
 #define UDP_DEFAULT_MTU                (1492)
+#define UDP_DEFAULT_MULTICAST_SOURCE   NULL
 
 enum
 {
@@ -594,6 +595,7 @@ enum
   PROP_RETRIEVE_SENDER_ADDRESS,
   PROP_MTU,
   PROP_SOCKET_TIMESTAMP,
+  PROP_MULTICAST_SOURCE,
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -780,6 +782,22 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
           GST_SOCKET_TIMESTAMP_MODE, GST_SOCKET_TIMESTAMP_MODE_REALTIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstUDPSrc:multicast-source:
+   *
+   * List of source to receive the stream from. (IGMPv3 SSM RFC 4604)
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_MULTICAST_SOURCE,
+      g_param_spec_string ("multicast-source", "Multicast source",
+          "List of source to receive the stream with \'+\' (positive filter) or"
+          " \'-\' (negative filter, ignored for now) prefix "
+          "(e.g., \"+SOURCE0+SOURCE1+SOURCE2\"). Alternatively, user can use "
+          "URI query with the key value \"multicast-source\"",
+          UDP_DEFAULT_MULTICAST_SOURCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -822,6 +840,8 @@ gst_udpsrc_init (GstUDPSrc * udpsrc)
   udpsrc->loop = UDP_DEFAULT_LOOP;
   udpsrc->retrieve_sender_address = UDP_DEFAULT_RETRIEVE_SENDER_ADDRESS;
   udpsrc->mtu = UDP_DEFAULT_MTU;
+  udpsrc->source_list =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) g_free);
 
   /* configure basesrc to be a live source */
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
@@ -863,6 +883,9 @@ gst_udpsrc_finalize (GObject * object)
   if (udpsrc->extra_mem)
     gst_memory_unref (udpsrc->extra_mem);
   udpsrc->extra_mem = NULL;
+
+  g_ptr_array_unref (udpsrc->source_list);
+  g_free (udpsrc->multicast_source);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1240,9 +1263,16 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri, GError ** error)
 {
   gchar *address;
   guint16 port;
+  gboolean source_updated = FALSE;
+  gchar *new_source = NULL;
 
-  if (!gst_udp_parse_uri (uri, &address, &port))
+  GST_OBJECT_LOCK (src);
+  g_ptr_array_set_size (src->source_list, 0);
+
+  if (!gst_udp_parse_uri (uri, &address, &port, src->source_list)) {
+    GST_OBJECT_UNLOCK (src);
     goto wrong_uri;
+  }
 
   if (port == (guint16) - 1)
     port = UDP_DEFAULT_PORT;
@@ -1251,8 +1281,33 @@ gst_udpsrc_set_uri (GstUDPSrc * src, const gchar * uri, GError ** error)
   src->address = address;
   src->port = port;
 
+  if (src->source_list->len > 0) {
+    GString *str = g_string_new (NULL);
+    guint i;
+
+    /* FIXME: gst_udp_parse_uri() will handle only positive filters for now */
+    for (i = 0; i < src->source_list->len; i++) {
+      gchar *s = g_ptr_array_index (src->source_list, i);
+
+      g_string_append_c (str, '+');
+      g_string_append (str, s);
+    }
+
+    new_source = g_string_free (str, FALSE);
+  }
+
+  if (g_strcmp0 (src->multicast_source, new_source) != 0)
+    source_updated = TRUE;
+
+  g_free (src->multicast_source);
+  src->multicast_source = new_source;
+
   g_free (src->uri);
   src->uri = g_strdup (uri);
+  GST_OBJECT_UNLOCK (src);
+
+  if (source_updated)
+    g_object_notify (G_OBJECT (src), "multicast-source");
 
   return TRUE;
 
@@ -1375,6 +1430,17 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_SOCKET_TIMESTAMP:
       udpsrc->socket_timestamp_mode = g_value_get_enum (value);
       break;
+    case PROP_MULTICAST_SOURCE:
+      GST_OBJECT_LOCK (udpsrc);
+      g_free (udpsrc->multicast_source);
+      udpsrc->multicast_source = g_value_dup_string (value);
+      g_ptr_array_set_size (udpsrc->source_list, 0);
+      if (udpsrc->multicast_source) {
+        gst_udp_parse_multicast_source (udpsrc->multicast_source,
+            udpsrc->source_list);
+      }
+      GST_OBJECT_UNLOCK (udpsrc);
+      break;
     default:
       break;
   }
@@ -1440,6 +1506,11 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SOCKET_TIMESTAMP:
       g_value_set_enum (value, udpsrc->socket_timestamp_mode);
+      break;
+    case PROP_MULTICAST_SOURCE:
+      GST_OBJECT_LOCK (udpsrc);
+      g_value_set_string (value, udpsrc->multicast_source);
+      GST_OBJECT_UNLOCK (udpsrc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1518,6 +1589,11 @@ gst_udpsrc_open (GstUDPSrc * src)
   GInetAddress *addr, *bind_addr;
   GSocketAddress *bind_saddr;
   GError *err = NULL;
+
+  if (src->source_addrs) {
+    g_list_free_full (src->source_addrs, (GDestroyNotify) g_object_unref);
+    src->source_addrs = NULL;
+  }
 
   gst_udpsrc_create_cancellable (src);
 
@@ -1658,19 +1734,48 @@ gst_udpsrc_open (GstUDPSrc * src)
       &&
       g_inet_address_get_is_multicast (g_inet_socket_address_get_address
           (src->addr))) {
+    guint i;
+    GList *iter;
+
+    for (i = 0; i < src->source_list->len; i++) {
+      gchar *source_addr_str = g_ptr_array_index (src->source_list, i);
+      GInetAddress *source_addr = gst_udpsrc_resolve (src, source_addr_str);
+      if (!source_addr) {
+        GST_WARNING_OBJECT (src, "Couldn't resolve address %s",
+            source_addr_str);
+      } else {
+        GST_DEBUG_OBJECT (src, "Adding multicast-source %s", source_addr_str);
+        src->source_addrs = g_list_append (src->source_addrs, source_addr);
+      }
+    }
 
     if (src->multi_iface) {
       GStrv multi_ifaces = g_strsplit (src->multi_iface, ",", -1);
       gchar **ifaces = multi_ifaces;
+
       while (*ifaces) {
         g_strstrip (*ifaces);
         GST_DEBUG_OBJECT (src, "joining multicast group %s interface %s",
             src->address, *ifaces);
-        if (!g_socket_join_multicast_group (src->used_socket,
-                g_inet_socket_address_get_address (src->addr),
-                FALSE, *ifaces, &err)) {
-          g_strfreev (multi_ifaces);
-          goto membership;
+
+        if (!src->source_addrs) {
+          if (!g_socket_join_multicast_group (src->used_socket,
+                  g_inet_socket_address_get_address (src->addr),
+                  FALSE, *ifaces, &err)) {
+            g_strfreev (multi_ifaces);
+            goto membership;
+          }
+        } else {
+          for (iter = src->source_addrs; iter; iter = g_list_next (iter)) {
+            GInetAddress *source_addr = (GInetAddress *) iter->data;
+
+            if (!g_socket_join_multicast_group_ssm (src->used_socket,
+                    g_inet_socket_address_get_address (src->addr),
+                    source_addr, *ifaces, &err)) {
+              g_strfreev (multi_ifaces);
+              goto membership;
+            }
+          }
         }
 
         ifaces++;
@@ -1678,9 +1783,23 @@ gst_udpsrc_open (GstUDPSrc * src)
       g_strfreev (multi_ifaces);
     } else {
       GST_DEBUG_OBJECT (src, "joining multicast group %s", src->address);
-      if (!g_socket_join_multicast_group (src->used_socket,
-              g_inet_socket_address_get_address (src->addr), FALSE, NULL, &err))
-        goto membership;
+
+      if (!src->source_addrs) {
+        if (!g_socket_join_multicast_group (src->used_socket,
+                g_inet_socket_address_get_address (src->addr), FALSE, NULL,
+                &err)) {
+          goto membership;
+        }
+      } else {
+        for (iter = src->source_addrs; iter; iter = g_list_next (iter)) {
+          GInetAddress *source_addr = (GInetAddress *) iter->data;
+          if (!g_socket_join_multicast_group_ssm (src->used_socket,
+                  g_inet_socket_address_get_address (src->addr),
+                  source_addr, NULL, &err)) {
+            goto membership;
+          }
+        }
+      }
     }
 
     if (g_inet_address_get_family (g_inet_socket_address_get_address
@@ -1857,6 +1976,7 @@ gst_udpsrc_close (GstUDPSrc * src)
         g_inet_address_get_is_multicast (g_inet_socket_address_get_address
             (src->addr))) {
       GError *err = NULL;
+      GList *iter;
 
       if (src->multi_iface) {
         GStrv multi_ifaces = g_strsplit (src->multi_iface, ",", -1);
@@ -1865,25 +1985,55 @@ gst_udpsrc_close (GstUDPSrc * src)
           g_strstrip (*ifaces);
           GST_DEBUG_OBJECT (src, "leaving multicast group %s interface %s",
               src->address, *ifaces);
-          if (!g_socket_leave_multicast_group (src->used_socket,
-                  g_inet_socket_address_get_address (src->addr),
-                  FALSE, *ifaces, &err)) {
-            GST_ERROR_OBJECT (src, "Failed to leave multicast group: %s",
-                err->message);
-            g_clear_error (&err);
+
+          if (!src->source_addrs) {
+            if (!g_socket_leave_multicast_group (src->used_socket,
+                    g_inet_socket_address_get_address (src->addr),
+                    FALSE, *ifaces, &err)) {
+              GST_ERROR_OBJECT (src, "Failed to leave multicast group: %s",
+                  err->message);
+              g_clear_error (&err);
+            }
+          } else {
+            for (iter = src->source_addrs; iter; iter = g_list_next (iter)) {
+              GInetAddress *source_addr = (GInetAddress *) iter->data;
+
+              if (!g_socket_leave_multicast_group_ssm (src->used_socket,
+                      g_inet_socket_address_get_address (src->addr),
+                      source_addr, *ifaces, &err)) {
+                GST_ERROR_OBJECT (src, "Failed to leave multicast group: %s",
+                    err->message);
+                g_clear_error (&err);
+              }
+            }
           }
+
           ifaces++;
         }
         g_strfreev (multi_ifaces);
 
       } else {
         GST_DEBUG_OBJECT (src, "leaving multicast group %s", src->address);
-        if (!g_socket_leave_multicast_group (src->used_socket,
-                g_inet_socket_address_get_address (src->addr), FALSE,
-                NULL, &err)) {
-          GST_ERROR_OBJECT (src, "Failed to leave multicast group: %s",
-              err->message);
-          g_clear_error (&err);
+        if (!src->source_addrs) {
+          if (!g_socket_leave_multicast_group (src->used_socket,
+                  g_inet_socket_address_get_address (src->addr), FALSE,
+                  NULL, &err)) {
+            GST_ERROR_OBJECT (src, "Failed to leave multicast group: %s",
+                err->message);
+            g_clear_error (&err);
+          }
+        } else {
+          for (iter = src->source_addrs; iter; iter = g_list_next (iter)) {
+            GInetAddress *source_addr = (GInetAddress *) iter->data;
+
+            if (!g_socket_leave_multicast_group_ssm (src->used_socket,
+                    g_inet_socket_address_get_address (src->addr),
+                    source_addr, NULL, &err)) {
+              GST_ERROR_OBJECT (src, "Failed to leave multicast group: %s",
+                  err->message);
+              g_clear_error (&err);
+            }
+          }
         }
       }
     }
@@ -1894,6 +2044,11 @@ gst_udpsrc_close (GstUDPSrc * src)
         GST_ERROR_OBJECT (src, "Failed to close socket: %s", err->message);
         g_clear_error (&err);
       }
+    }
+
+    if (src->source_addrs) {
+      g_list_free_full (src->source_addrs, (GDestroyNotify) g_object_unref);
+      src->source_addrs = NULL;
     }
 
     g_object_unref (src->used_socket);

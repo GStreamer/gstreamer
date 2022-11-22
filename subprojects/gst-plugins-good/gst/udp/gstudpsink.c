@@ -133,7 +133,7 @@ gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri, GError ** error)
 
   gst_multiudpsink_remove (GST_MULTIUDPSINK (sink), sink->host, sink->port);
 
-  if (!gst_udp_parse_uri (uri, &host, &port))
+  if (!gst_udp_parse_uri (uri, &host, &port, NULL))
     goto wrong_uri;
 
   g_free (sink->host);

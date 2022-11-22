@@ -24707,6 +24707,18 @@
                         "type": "gchararray",
                         "writable": true
                     },
+                    "multicast-source": {
+                        "blurb": "List of source to receive the stream with '+' (positive filter) or '-' (negative filter, ignored for now) prefix (e.g., \"+SOURCE0+SOURCE1+SOURCE2\"). Alternatively, user can use URI query with the key value \"multicast-source\"",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "port": {
                         "blurb": "The port to receive the packets from, 0=allocate",
                         "conditionally-available": false,
