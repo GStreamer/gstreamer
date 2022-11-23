@@ -1251,6 +1251,28 @@ update_receiver_stats (RTPSource * src, RTPPacketInfo * pinfo,
       GST_INFO ("duplicate or reordered packet (seqnr %u, expected %u)",
           seqnr, expected);
     }
+  } else {
+    /* Sender stats - update the outbound sequence number */
+    expected = src->stats.max_seq + 1;
+    delta = gst_rtp_buffer_compare_seqnum (expected, seqnr);
+    /* No probation for local senders, just check for lost / dropouts */
+    if (delta >= 0 && delta < max_dropout) {
+      stats->bad_seq = RTP_SEQ_MOD + 1; /* so seq == bad_seq is false */
+      /* in order, with permissible gap */
+      if (seqnr < stats->max_seq) {
+        /* sequence number wrapped - count another 64K cycle. */
+        stats->cycles += RTP_SEQ_MOD;
+      }
+      stats->max_seq = seqnr;
+    } else if (delta < -max_misorder || delta >= max_dropout) {
+      /* the sequence number made a very large jump */
+      if (seqnr != stats->bad_seq) {
+        /* unacceptable jump */
+        stats->bad_seq = (seqnr + 1) & (RTP_SEQ_MOD - 1);
+      }
+    } else {                    /* delta < 0 && delta >= -max_misorder */
+      stats->bad_seq = RTP_SEQ_MOD + 1; /* so seq == bad_seq is false */
+    }
   }
 
   src->stats.octets_received += pinfo->payload_len;
