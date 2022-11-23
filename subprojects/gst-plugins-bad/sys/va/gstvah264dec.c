@@ -121,33 +121,24 @@ gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaH264Dec *self = GST_VA_H264_DEC (decoder);
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  gboolean ret;
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
 
   if (self->last_ret != GST_FLOW_OK) {
     gst_h264_picture_unref (picture);
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+    gst_video_decoder_drop_frame (vdec, frame);
     return self->last_ret;
   }
 
-  if (base->copy_frames)
-    gst_va_base_dec_copy_output_buffer (base, frame);
-
-  if (picture->buffer_flags != 0) {
-    gboolean interlaced =
-        (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_INTERLACED) != 0;
-    gboolean tff = (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_TFF) != 0;
-
-    GST_TRACE_OBJECT (self,
-        "apply buffer flags 0x%x (interlaced %d, top-field-first %d)",
-        picture->buffer_flags, interlaced, tff);
-    GST_BUFFER_FLAG_SET (frame->output_buffer, picture->buffer_flags);
-  }
-
+  ret = gst_va_base_dec_process_output (base, frame, picture->buffer_flags);
   gst_h264_picture_unref (picture);
 
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  if (ret)
+    return gst_video_decoder_finish_frame (vdec, frame);
+  return GST_FLOW_ERROR;
 }
 
 static void

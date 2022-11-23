@@ -946,6 +946,8 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  gboolean ret;
 
   g_assert (picture->frame_hdr.show_frame ||
       picture->frame_hdr.show_existing_frame);
@@ -956,7 +958,7 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
 
   if (self->last_ret != GST_FLOW_OK) {
     gst_av1_picture_unref (picture);
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+    gst_video_decoder_drop_frame (vdec, frame);
     return self->last_ret;
   }
 
@@ -968,12 +970,12 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
     frame->output_buffer = gst_buffer_ref (pic->gstbuffer);
   }
 
-  if (base->copy_frames)
-    gst_va_base_dec_copy_output_buffer (base, frame);
-
+  ret = gst_va_base_dec_process_output (base, frame, 0);
   gst_av1_picture_unref (picture);
 
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  if (ret)
+    return gst_video_decoder_finish_frame (vdec, frame);
+  return GST_FLOW_ERROR;
 }
 
 static gboolean

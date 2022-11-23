@@ -445,6 +445,8 @@ gst_va_vp8_dec_output_picture (GstVp8Decoder * decoder,
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp8Dec *self = GST_VA_VP8_DEC (decoder);
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  gboolean ret;
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (system_frame_number %d)",
@@ -452,16 +454,16 @@ gst_va_vp8_dec_output_picture (GstVp8Decoder * decoder,
 
   if (self->last_ret != GST_FLOW_OK) {
     gst_vp8_picture_unref (picture);
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+    gst_video_decoder_drop_frame (vdec, frame);
     return self->last_ret;
   }
 
-  if (base->copy_frames)
-    gst_va_base_dec_copy_output_buffer (base, frame);
-
+  ret = gst_va_base_dec_process_output (base, frame, 0);
   gst_vp8_picture_unref (picture);
 
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  if (ret)
+    return gst_video_decoder_finish_frame (vdec, frame);
+  return GST_FLOW_ERROR;
 }
 
 static void

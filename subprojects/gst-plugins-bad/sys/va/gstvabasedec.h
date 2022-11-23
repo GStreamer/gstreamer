@@ -132,5 +132,7 @@ void                  gst_va_base_dec_get_preferred_format_and_caps_features (Gs
                                                            GstCapsFeatures ** capsfeatures);
 gboolean              gst_va_base_dec_copy_output_buffer  (GstVaBaseDec * base,
                                                            GstVideoCodecFrame * codec_frame);
-
+gboolean              gst_va_base_dec_process_output      (GstVaBaseDec * base,
+                                                           GstVideoCodecFrame * frame,
+                                                           GstVideoBufferFlags buffer_flags);
 G_END_DECLS

@@ -1027,3 +1027,28 @@ fail:
   GST_ERROR_OBJECT (base, "Failed copy output buffer.");
   return FALSE;
 }
+
+gboolean
+gst_va_base_dec_process_output (GstVaBaseDec * base, GstVideoCodecFrame * frame,
+    GstVideoBufferFlags buffer_flags)
+{
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (base);
+
+  if (base->copy_frames)
+    gst_va_base_dec_copy_output_buffer (base, frame);
+
+  if (buffer_flags != 0) {
+#ifndef GST_DISABLE_GST_DEBUG
+    gboolean interlaced =
+        (buffer_flags & GST_VIDEO_BUFFER_FLAG_INTERLACED) != 0;
+    gboolean tff = (buffer_flags & GST_VIDEO_BUFFER_FLAG_TFF) != 0;
+
+    GST_TRACE_OBJECT (base,
+        "apply buffer flags 0x%x (interlaced %d, top-field-first %d)",
+        buffer_flags, interlaced, tff);
+#endif
+    GST_BUFFER_FLAG_SET (frame->output_buffer, buffer_flags);
+  }
+
+  return TRUE;
+}

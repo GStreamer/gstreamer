@@ -232,7 +232,9 @@ gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaH265Dec *self = GST_VA_H265_DEC (decoder);
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstVaDecodePicture *va_pic;
+  gboolean ret;
 
   va_pic = gst_h265_picture_get_user_data (picture);
   g_assert (va_pic->gstbuffer);
@@ -243,18 +245,18 @@ gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
   if (self->last_ret != GST_FLOW_OK) {
     gst_h265_picture_unref (picture);
     _replace_previous_slice (self, NULL, 0);
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), frame);
+    gst_video_decoder_drop_frame (vdec, frame);
     return self->last_ret;
   }
 
   gst_buffer_replace (&frame->output_buffer, va_pic->gstbuffer);
 
-  if (base->copy_frames)
-    gst_va_base_dec_copy_output_buffer (base, frame);
-
+  ret = gst_va_base_dec_process_output (base, frame, picture->buffer_flags);
   gst_h265_picture_unref (picture);
 
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
+  if (ret)
+    return gst_video_decoder_finish_frame (vdec, frame);
+  return GST_FLOW_ERROR;
 }
 
 static void
