@@ -69,8 +69,6 @@ struct _GstVaVp8DecClass
 struct _GstVaVp8Dec
 {
   GstVaBaseDec parent;
-
-  GstFlowReturn last_ret;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -192,6 +190,7 @@ gst_va_vp8_dec_new_picture (GstVp8Decoder * decoder,
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstFlowReturn ret;
 
   if (base->need_negotiation) {
     if (!gst_video_decoder_negotiate (vdec)) {
@@ -200,8 +199,8 @@ gst_va_vp8_dec_new_picture (GstVp8Decoder * decoder,
     }
   }
 
-  self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
-  if (self->last_ret != GST_FLOW_OK)
+  ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+  if (ret != GST_FLOW_OK)
     goto error;
 
   pic = gst_va_decode_picture_new (base->decoder, frame->output_buffer);
@@ -218,8 +217,8 @@ error:
   {
     GST_WARNING_OBJECT (self,
         "Failed to allocated output buffer, return %s",
-        gst_flow_get_name (self->last_ret));
-    return self->last_ret;
+        gst_flow_get_name (ret));
+    return ret;
   }
 }
 
@@ -451,12 +450,6 @@ gst_va_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GST_LOG_OBJECT (self,
       "Outputting picture %p (system_frame_number %d)",
       picture, picture->system_frame_number);
-
-  if (self->last_ret != GST_FLOW_OK) {
-    gst_vp8_picture_unref (picture);
-    gst_video_decoder_drop_frame (vdec, frame);
-    return self->last_ret;
-  }
 
   ret = gst_va_base_dec_process_output (base, frame, 0);
   gst_vp8_picture_unref (picture);

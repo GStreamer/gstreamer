@@ -75,8 +75,6 @@ struct _GstVaH264Dec
 {
   GstVaBaseDec parent;
 
-  GstFlowReturn last_ret;
-
   gint coded_width;
   gint coded_height;
   gint dpb_size;
@@ -126,12 +124,6 @@ gst_va_h264_dec_output_picture (GstH264Decoder * decoder,
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
-
-  if (self->last_ret != GST_FLOW_OK) {
-    gst_h264_picture_unref (picture);
-    gst_video_decoder_drop_frame (vdec, frame);
-    return self->last_ret;
-  }
 
   ret = gst_va_base_dec_process_output (base, frame, picture->buffer_flags);
   gst_h264_picture_unref (picture);
@@ -485,6 +477,7 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstFlowReturn ret;
 
   if (base->need_negotiation) {
     if (!gst_video_decoder_negotiate (vdec)) {
@@ -493,8 +486,8 @@ gst_va_h264_dec_new_picture (GstH264Decoder * decoder,
     }
   }
 
-  self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
-  if (self->last_ret != GST_FLOW_OK)
+  ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+  if (ret != GST_FLOW_OK)
     goto error;
 
   pic = gst_va_decode_picture_new (base->decoder, frame->output_buffer);
@@ -511,8 +504,8 @@ error:
   {
     GST_WARNING_OBJECT (self,
         "Failed to allocated output buffer, return %s",
-        gst_flow_get_name (self->last_ret));
-    return self->last_ret;
+        gst_flow_get_name (ret));
+    return ret;
   }
 }
 

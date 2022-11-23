@@ -71,8 +71,6 @@ struct _GstVaAV1Dec
 {
   GstVaBaseDec parent;
 
-  GstFlowReturn last_ret;
-
   GstAV1SequenceHeaderOBU seq;
   gint max_width;
   gint max_height;
@@ -380,6 +378,7 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
   GstVaDecodePicture *pic;
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
+  GstFlowReturn ret;
 
   /* Only output the highest spatial layer. For non output pictures,
      we just use internal pool, then no negotiation needed. */
@@ -418,21 +417,20 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
   }
 
   if (picture->spatial_id < decoder->highest_spatial_layer) {
-    self->last_ret = gst_buffer_pool_acquire_buffer (self->internal_pool,
+    ret = gst_buffer_pool_acquire_buffer (self->internal_pool,
         &frame->output_buffer, NULL);
-    if (self->last_ret != GST_FLOW_OK) {
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self,
           "Failed to allocated output buffer from internal pool, return %s",
-          gst_flow_get_name (self->last_ret));
-      return self->last_ret;
+          gst_flow_get_name (ret));
+      return ret;
     }
   } else {
-    self->last_ret = gst_video_decoder_allocate_output_frame (vdec, frame);
-    if (self->last_ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (self,
-          "Failed to allocated output buffer, return %s",
-          gst_flow_get_name (self->last_ret));
-      return self->last_ret;
+    ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+    if (ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (self, "Failed to allocated output buffer, return %s",
+          gst_flow_get_name (ret));
+      return ret;
     }
   }
 
@@ -955,12 +953,6 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
   GST_LOG_OBJECT (self,
       "Outputting picture %p (system_frame_number %d)",
       picture, picture->system_frame_number);
-
-  if (self->last_ret != GST_FLOW_OK) {
-    gst_av1_picture_unref (picture);
-    gst_video_decoder_drop_frame (vdec, frame);
-    return self->last_ret;
-  }
 
   if (picture->frame_hdr.show_existing_frame) {
     GstVaDecodePicture *pic;
