@@ -1023,7 +1023,8 @@ gst_mf_dshow_enum_device (GstMFCaptureDShow * self,
       return FALSE;
   }
 
-  if (!gst_mf_result (hr))
+  // Documentation states that the result of CreateClassEnumerator must be checked against S_OK
+  if (hr != S_OK)
     return FALSE;
 
   for (guint i = 0;; i++) {
