@@ -283,7 +283,7 @@ gst_hls_media_playlist_parse (gchar        * data,
 			      const gchar  * uri,
 			      const gchar  * base_uri);
 
-void
+gboolean
 gst_hls_media_playlist_sync_skipped_segments (GstHLSMediaPlaylist * m3u8,
 					   GstHLSMediaPlaylist * reference);
 

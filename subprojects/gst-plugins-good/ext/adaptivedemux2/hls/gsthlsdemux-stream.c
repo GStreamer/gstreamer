@@ -1240,8 +1240,9 @@ apply_directives_to_uri (GstHLSDemuxStream * stream,
   if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST
       && dl_params->next_msn != -1) {
     GST_LOG_OBJECT (stream,
-        "Doing HLS blocking request with MSN %" G_GINT64_FORMAT " part %"
-        G_GINT64_FORMAT, dl_params->next_msn, dl_params->next_part);
+        "Doing HLS blocking request for URI %s with MSN %" G_GINT64_FORMAT
+        " part %" G_GINT64_FORMAT, playlist_uri, dl_params->next_msn,
+        dl_params->next_part);
 
     gchar *next_msn_str =
         g_strdup_printf ("%" G_GINT64_FORMAT, dl_params->next_msn);
@@ -1265,43 +1266,45 @@ apply_directives_to_uri (GstHLSDemuxStream * stream,
 }
 
 static GstHLSMediaPlaylist *
-download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
+download_media_playlist (GstHLSDemuxStream * stream, gchar * orig_uri,
     GError ** err, GstHLSMediaPlaylist * current)
 {
-  const gchar *main_uri;
-  DownloadRequest *download;
-  GstBuffer *buf;
-  gchar *playlist_data;
-  GstHLSMediaPlaylist *playlist = NULL;
-  gchar *base_uri;
-  gboolean playlist_uri_change = FALSE;
-  struct PlaylistDownloadParams dl_params = { 0, };
+  gboolean allow_skip = TRUE;
 
   GstAdaptiveDemux2Stream *base_stream = GST_ADAPTIVE_DEMUX2_STREAM (stream);
   GstAdaptiveDemux *demux = base_stream->demux;
+  const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
 
-  main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
+retry:
+
+  struct PlaylistDownloadParams dl_params = { 0, };
 
   /* If there's no previous playlist, or the URI changed this
    * is not a refresh/update but a switch to a new playlist */
-  playlist_uri_change = (current == NULL || g_strcmp0 (uri, current->uri) != 0);
+  gboolean playlist_uri_change = (current == NULL
+      || g_strcmp0 (orig_uri, current->uri) != 0);
 
   if (!playlist_uri_change) {
     GST_LOG_OBJECT (stream, "Updating the playlist");
 
     /* See if we can do a delta playlist update (if the playlist age is less than
      * one half of the Skip Boundary */
-    GstClockTime now = gst_adaptive_demux2_get_monotonic_time (demux);
-    GstClockTimeDiff playlist_age = GST_CLOCK_DIFF (current->playlist_ts, now);
+    if (GST_CLOCK_TIME_IS_VALID (current->skip_boundary) && allow_skip) {
+      GstClockTime now = gst_adaptive_demux2_get_monotonic_time (demux);
+      GstClockTimeDiff playlist_age =
+          GST_CLOCK_DIFF (current->playlist_ts, now);
 
-    if (GST_CLOCK_TIME_IS_VALID (current->playlist_ts) &&
-        GST_CLOCK_TIME_IS_VALID (current->skip_boundary) &&
-        playlist_age <= current->skip_boundary / 2) {
-      if (current->can_skip_dateranges) {
-        dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V2;
-      } else {
-        dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V1;
+      if (GST_CLOCK_TIME_IS_VALID (current->playlist_ts) &&
+          playlist_age <= current->skip_boundary / 2) {
+        if (current->can_skip_dateranges) {
+          dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V2;
+        } else {
+          dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V1;
+        }
       }
+    } else if (GST_CLOCK_TIME_IS_VALID (current->skip_boundary)) {
+      GST_DEBUG_OBJECT (stream,
+          "Doing full playlist update after failed delta request");
     }
   }
 
@@ -1318,10 +1321,9 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
     }
   }
 
-  gchar *target_uri = apply_directives_to_uri (stream, uri, &dl_params);
+  gchar *target_uri = apply_directives_to_uri (stream, orig_uri, &dl_params);
 
-  download =
-      downloadhelper_fetch_uri (demux->download_helper,
+  DownloadRequest *download = downloadhelper_fetch_uri (demux->download_helper,
       target_uri, main_uri,
       DOWNLOAD_FLAG_COMPRESS | DOWNLOAD_FLAG_FORCE_REFRESH, err);
 
@@ -1333,6 +1335,9 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
   /* If we got a permanent redirect, use that as the new
    * playlist URI, otherwise set the base URI of the playlist
    * to the redirect target if any (NULL if there was no redirect) */
+  GstHLSMediaPlaylist *playlist = NULL;
+  gchar *base_uri, *uri;
+
   if (download->redirect_permanent && download->redirect_uri) {
     uri = g_strdup (download->redirect_uri);
     base_uri = NULL;
@@ -1357,13 +1362,13 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
       MAX (0, GST_CLOCK_DIFF (download_request_get_age (download),
           download->download_start_time));
 
-  buf = download_request_take_buffer (download);
+  GstBuffer *buf = download_request_take_buffer (download);
   download_request_unref (download);
 
   /* there should be a buf if there wasn't an error (handled above) */
   g_assert (buf);
 
-  playlist_data = gst_hls_buf_to_utf8_text (buf);
+  gchar *playlist_data = gst_hls_buf_to_utf8_text (buf);
   gst_buffer_unref (buf);
 
   if (playlist_data == NULL) {
@@ -1396,7 +1401,18 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * uri,
    * we did a delta playlist update */
   if (!playlist_uri_change && current && playlist
       && playlist->skipped_segments > 0) {
-    gst_hls_media_playlist_sync_skipped_segments (playlist, current);
+    if (!gst_hls_media_playlist_sync_skipped_segments (playlist, current)) {
+      GST_DEBUG_OBJECT (stream,
+          "Could not merge delta update to playlist. Retrying with full request");
+
+      /* Delta playlist update failed. Load a full playlist */
+      allow_skip = FALSE;
+
+      gst_hls_media_playlist_unref (playlist);
+      g_free (uri);
+      g_free (base_uri);
+      goto retry;
+    }
   }
 
 out:

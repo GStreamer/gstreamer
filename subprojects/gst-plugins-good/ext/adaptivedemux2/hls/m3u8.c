@@ -1908,12 +1908,13 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
 
 /* Match up the first segment in a delta playlist against the reference and transfer
  * over preceding segments if we can */
-void
+gboolean
 gst_hls_media_playlist_sync_skipped_segments (GstHLSMediaPlaylist * m3u8,
     GstHLSMediaPlaylist * reference)
 {
+  /* Trivially there might be nothing to do (not a delta playlist) */
   if (m3u8->skipped_segments < 1 || m3u8->segments->len < 1)
-    return;
+    return TRUE;
 
   /* find the first non-skipped segment from this playlist
    * in the reference playlist, then transfer over as many
@@ -1936,11 +1937,13 @@ gst_hls_media_playlist_sync_skipped_segments (GstHLSMediaPlaylist * m3u8,
   }
 
   if (!found_ref_seg)
-    return;                     /* Couldn't match the segment */
+    return FALSE;               /* Couldn't match the segment */
 
   /* Found the first segment of this playlist in the reference. Transfer over
    * as many skipped segments as we can */
   guint segs_avail = MIN (ref_idx, m3u8->skipped_segments);
+  if (segs_avail < 1)
+    return FALSE;
 
   GST_DEBUG
       ("Transferring %u skipped segments from reference playlist starting at index %u",
@@ -1957,6 +1960,8 @@ gst_hls_media_playlist_sync_skipped_segments (GstHLSMediaPlaylist * m3u8,
     g_ptr_array_insert (m3u8->segments, 0,
         gst_m3u8_media_segment_ref (segment));
   }
+
+  return TRUE;
 }
 
 /* Given a media segment (potentially from another media playlist), find the
