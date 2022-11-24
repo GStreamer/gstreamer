@@ -1052,3 +1052,21 @@ gst_va_base_dec_process_output (GstVaBaseDec * base, GstVideoCodecFrame * frame,
 
   return TRUE;
 }
+
+GstFlowReturn
+gst_va_base_dec_prepare_output_frame (GstVaBaseDec * base,
+    GstVideoCodecFrame * frame)
+{
+  GstVideoDecoder *vdec = GST_VIDEO_DECODER (base);
+
+  if (base->need_negotiation) {
+    if (!gst_video_decoder_negotiate (vdec)) {
+      GST_ERROR_OBJECT (base, "Failed to negotiate with downstream");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+  }
+
+  if (frame)
+    return gst_video_decoder_allocate_output_frame (vdec, frame);
+  return GST_FLOW_OK;
+}

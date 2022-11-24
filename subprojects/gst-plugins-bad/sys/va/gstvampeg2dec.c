@@ -289,20 +289,12 @@ static GstFlowReturn
 gst_va_mpeg2_dec_new_picture (GstMpeg2Decoder * decoder,
     GstVideoCodecFrame * frame, GstMpeg2Picture * picture)
 {
-  GstFlowReturn ret;
   GstVaMpeg2Dec *self = GST_VA_MPEG2_DEC (decoder);
-  GstVaDecodePicture *pic;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  GstVaDecodePicture *pic;
+  GstFlowReturn ret;
 
-  if (base->need_negotiation) {
-    if (!gst_video_decoder_negotiate (vdec)) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
-
-  ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+  ret = gst_va_base_dec_prepare_output_frame (base, frame);
   if (ret != GST_FLOW_OK)
     goto error;
 

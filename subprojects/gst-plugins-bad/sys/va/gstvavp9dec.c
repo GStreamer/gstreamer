@@ -216,21 +216,13 @@ gst_va_vp9_dec_new_picture (GstVp9Decoder * decoder,
   GstFlowReturn ret;
   GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);
   GstVaDecodePicture *pic;
-  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
 
   ret = _check_resolution_change (self, picture);
   if (ret != GST_FLOW_OK)
     return ret;
 
-  if (base->need_negotiation) {
-    if (!gst_video_decoder_negotiate (vdec)) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
-
-  ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+  ret = gst_va_base_dec_prepare_output_frame (base, frame);
   if (ret != GST_FLOW_OK)
     goto error;
 
