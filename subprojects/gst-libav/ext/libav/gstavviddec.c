@@ -2164,7 +2164,8 @@ done:
 
 send_packet_failed:
   {
-    GST_WARNING_OBJECT (ffmpegdec, "Failed to send data for decoding");
+    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
+        ("Failed to send data for decoding"), ("Invalid input packet"), ret);
     goto done;
   }
 }
