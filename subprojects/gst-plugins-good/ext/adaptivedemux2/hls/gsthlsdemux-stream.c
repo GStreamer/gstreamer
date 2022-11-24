@@ -1675,6 +1675,58 @@ lost_sync:
   }
 }
 
+GstClockTime
+gst_hls_demux_stream_get_playlist_reload_interval (GstHLSDemuxStream * stream)
+{
+  GstHLSMediaPlaylist *playlist = stream->playlist;
+
+  if (playlist == NULL)
+    return GST_CLOCK_TIME_NONE; /* No playlist yet */
+
+  if (!gst_hls_media_playlist_is_live (playlist))
+    return GST_CLOCK_TIME_NONE; /* Not live playback */
+
+  /* Use the most recent segment (or part segment) duration, as per
+   * https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis-11#section-6.3.4
+   */
+  GstClockTime target_duration = GST_CLOCK_TIME_NONE;
+  GstClockTime min_reload_interval = playlist->targetduration / 2;
+
+  if (playlist->segments->len) {
+    GstM3U8MediaSegment *last_seg =
+        g_ptr_array_index (playlist->segments, playlist->segments->len - 1);
+
+    target_duration = last_seg->duration;
+
+    if (stream->llhls_enabled && last_seg->partial_segments) {
+      GstM3U8PartialSegment *last_part =
+          g_ptr_array_index (last_seg->partial_segments,
+          last_seg->partial_segments->len - 1);
+
+      target_duration = last_part->duration;
+      if (GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)) {
+        min_reload_interval = playlist->partial_targetduration / 2;
+      } else {
+        min_reload_interval = target_duration / 2;
+      }
+    }
+  } else if (stream->llhls_enabled
+      && GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)) {
+    target_duration = playlist->partial_targetduration;
+    min_reload_interval = target_duration / 2;
+  } else if (playlist->version > 5) {
+    target_duration = playlist->targetduration;
+  }
+
+  if (playlist->reloaded && target_duration > min_reload_interval) {
+    GST_DEBUG_OBJECT (stream,
+        "Playlist didn't change previously, returning lower update interval");
+    target_duration = min_reload_interval;
+  }
+
+  return target_duration;
+}
+
 static GstFlowReturn
 gst_hls_demux_stream_update_rendition_playlist (GstHLSDemux * demux,
     GstHLSDemuxStream * stream)

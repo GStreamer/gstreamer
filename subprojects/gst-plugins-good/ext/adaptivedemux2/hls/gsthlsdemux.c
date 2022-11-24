@@ -745,7 +745,7 @@ gst_hls_demux_is_live (GstAdaptiveDemux * demux)
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gboolean is_live = FALSE;
 
-  if (hlsdemux->main_stream)
+  if (hlsdemux->main_stream && hlsdemux->main_stream->playlist)
     is_live = gst_hls_media_playlist_is_live (hlsdemux->main_stream->playlist);
 
   return is_live;
@@ -1258,22 +1258,11 @@ gst_hls_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstClockTime target_duration = 5 * GST_SECOND;
+  GstHLSDemuxStream *main_stream = hlsdemux->main_stream;
 
-  if (hlsdemux->main_stream && hlsdemux->main_stream->playlist) {
-    GstHLSMediaPlaylist *playlist = hlsdemux->main_stream->playlist;
-
-    if (playlist->version > 5) {
-      target_duration = hlsdemux->main_stream->playlist->targetduration;
-    } else if (playlist->segments->len) {
-      GstM3U8MediaSegment *last_seg =
-          g_ptr_array_index (playlist->segments, playlist->segments->len - 1);
-      target_duration = last_seg->duration;
-    }
-    if (playlist->reloaded && target_duration > (playlist->targetduration / 2)) {
-      GST_DEBUG_OBJECT (demux,
-          "Playlist didn't change previously, returning lower update interval");
-      target_duration /= 2;
-    }
+  if (main_stream) {
+    target_duration =
+        gst_hls_demux_stream_get_playlist_reload_interval (main_stream);
   }
 
   GST_DEBUG_OBJECT (demux, "Returning update interval of %" GST_TIME_FORMAT,

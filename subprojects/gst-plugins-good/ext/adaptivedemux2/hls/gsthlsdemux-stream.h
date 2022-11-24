@@ -165,6 +165,9 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
 GstFlowReturn
 gst_hls_demux_stream_update_media_playlist (GstHLSDemuxStream * stream, gchar ** uri, GError ** err);
 
+GstClockTime
+gst_hls_demux_stream_get_playlist_reload_interval (GstHLSDemuxStream * stream);
+
 void
 gst_hls_demux_stream_clear_pending_data (GstHLSDemuxStream * hls_stream,
     gboolean force);
