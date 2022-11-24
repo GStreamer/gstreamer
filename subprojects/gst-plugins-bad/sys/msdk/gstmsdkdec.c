@@ -197,9 +197,7 @@ allocate_output_surface (GstMsdkDec * thiz)
   GstMemory *mem = NULL;
   mfxFrameSurface1 *mfx_surface = NULL;
   gint n = 0;
-  guint retry_times = gst_util_uint64_scale_ceil (GST_USECOND,
-      thiz->param.mfx.FrameInfo.FrameRateExtD,
-      thiz->param.mfx.FrameInfo.FrameRateExtN);
+  guint retry_times = 1000;
 #ifdef _WIN32
   GstMapInfo map_info;
 #endif
@@ -207,7 +205,7 @@ allocate_output_surface (GstMsdkDec * thiz)
   /* Free un-unsed msdk surfaces firstly, hence the associated mfx
    * surfaces will be moved from used list to available list */
   if (!gst_msdkdec_free_unlocked_msdk_surfaces (thiz, FALSE)) {
-    while (n < retry_times) {
+    for (n = 0; n < retry_times; n++) {
       /* It is MediaSDK/oneVPL's requirement that only the pre-allocated
        * surfaces can be used during the whole decoding process.
        * In the case of decoder plus multi-encoders, it is possible
@@ -215,10 +213,13 @@ allocate_output_surface (GstMsdkDec * thiz)
        * available for decoder. So here we need to wait until there is at
        * least one surface is free for decoder.
        */
-      n++;
       g_usleep (1000);
       if (gst_msdkdec_free_unlocked_msdk_surfaces (thiz, TRUE))
         break;
+    }
+    if (n == retry_times) {
+      GST_WARNING ("No available unlocked msdk surfaces");
+      return NULL;
     }
   }
 
