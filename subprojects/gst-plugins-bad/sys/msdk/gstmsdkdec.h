@@ -74,7 +74,6 @@ struct _GstMsdkDec
   /* downstream pool info based on allocation query */
   GstVideoInfo non_msdk_pool_info;
   mfxFrameAllocResponse alloc_resp;
-  gboolean use_video_memory;
   gboolean use_dmabuf;
   gboolean do_copy;
   gboolean initialized;

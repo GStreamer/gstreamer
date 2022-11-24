@@ -276,8 +276,7 @@ gst_msdkdec_close_decoder (GstMsdkDec * thiz, gboolean reset_param)
   GST_DEBUG_OBJECT (thiz, "Closing decoder with context %" GST_PTR_FORMAT,
       thiz->context);
 
-  if (thiz->use_video_memory)
-    gst_msdk_frame_free (thiz->context, &thiz->alloc_resp);
+  gst_msdk_frame_free (thiz->context, &thiz->alloc_resp);
 
   status = MFXVideoDECODE_Close (gst_msdk_context_get_session (thiz->context));
   if (status != MFX_ERR_NONE && status != MFX_ERR_NOT_INITIALIZED) {
@@ -336,6 +335,7 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   mfxSession session;
   mfxStatus status;
   mfxFrameAllocRequest request;
+  gint shared_async_depth;
 #if (MFX_VERSION >= 1022)
   mfxExtDecVideoProcessing ext_dec_video_proc;
 #endif
@@ -360,15 +360,8 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
 
   GST_OBJECT_LOCK (thiz);
 
-  if (thiz->use_video_memory) {
-    gst_msdk_set_frame_allocator (thiz->context);
-    thiz->param.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
-  } else {
-    thiz->param.IOPattern = MFX_IOPATTERN_OUT_SYSTEM_MEMORY;
-  }
-
-  GST_INFO_OBJECT (thiz, "This MSDK decoder uses %s memory",
-      thiz->use_video_memory ? "video" : "system");
+  gst_msdk_set_frame_allocator (thiz->context);
+  thiz->param.IOPattern = MFX_IOPATTERN_OUT_VIDEO_MEMORY;
 
   thiz->param.AsyncDepth = thiz->async_depth;
 
@@ -468,26 +461,21 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
         "Allocating resources without considering the downstream requirement"
         "or extra scratch surface count");
 
-  if (thiz->use_video_memory) {
-    gint shared_async_depth;
+  shared_async_depth = gst_msdk_context_get_shared_async_depth (thiz->context);
+  request.NumFrameSuggested += shared_async_depth;
 
-    shared_async_depth =
-        gst_msdk_context_get_shared_async_depth (thiz->context);
-    request.NumFrameSuggested += shared_async_depth;
-
-    request.Type |= MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
-    if (thiz->use_dmabuf)
-      request.Type |= MFX_MEMTYPE_EXPORT_FRAME;
+  request.Type |= MFX_MEMTYPE_VIDEO_MEMORY_DECODER_TARGET;
+  if (thiz->use_dmabuf)
+    request.Type |= MFX_MEMTYPE_EXPORT_FRAME;
 #if (MFX_VERSION >= 1022)
-    if (thiz->sfc) {
-      request.Info.Width = ext_dec_video_proc.Out.Width;
-      request.Info.Height = ext_dec_video_proc.Out.Height;
-    }
+  if (thiz->sfc) {
+    request.Info.Width = ext_dec_video_proc.Out.Width;
+    request.Info.Height = ext_dec_video_proc.Out.Height;
+  }
 #endif
 
-    gst_msdk_frame_alloc (thiz->context, &request, &thiz->alloc_resp);
-    thiz->alloc_pool = gst_msdk_context_get_alloc_pool (thiz->context);
-  }
+  gst_msdk_frame_alloc (thiz->context, &request, &thiz->alloc_resp);
+  thiz->alloc_pool = gst_msdk_context_get_alloc_pool (thiz->context);
 
   /* update the prealloc_buffer count, which will be used later
    * as GstBufferPool min_buffers */
@@ -1023,8 +1011,6 @@ gst_msdkdec_context_prepare (GstMsdkDec * thiz)
         ", reusing as-is", thiz->context);
     return TRUE;
   }
-
-  thiz->use_video_memory = TRUE;
 
   GST_INFO_OBJECT (thiz, "Found context %" GST_PTR_FORMAT " from neighbour",
       thiz->context);
@@ -1754,7 +1740,7 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   gst_msdk_set_video_alignment (&vinfo, 0, 0, &align);
   gst_video_info_align (&vinfo, &align);
 
-  if (thiz->do_copy || !thiz->use_video_memory)
+  if (thiz->do_copy)
     pool = gst_video_buffer_pool_new ();
   else {
 #ifndef _WIN32
@@ -2301,5 +2287,4 @@ gst_msdkdec_init (GstMsdkDec * thiz)
   thiz->input_state = NULL;
   thiz->pool = NULL;
   thiz->context = NULL;
-  thiz->use_video_memory = TRUE;
 }
