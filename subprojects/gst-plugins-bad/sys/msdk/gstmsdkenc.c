@@ -101,15 +101,15 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         4
 #define PROP_TARGET_USAGE_DEFAULT        (MFX_TARGETUSAGE_BALANCED)
-#define PROP_RATE_CONTROL_DEFAULT        (MFX_RATECONTROL_CBR)
+#define PROP_RATE_CONTROL_DEFAULT        (MFX_RATECONTROL_VBR)
 #define PROP_BITRATE_DEFAULT             (2 * 1024)
 #define PROP_QPI_DEFAULT                 0
 #define PROP_QPP_DEFAULT                 0
 #define PROP_QPB_DEFAULT                 0
-#define PROP_GOP_SIZE_DEFAULT            256
+#define PROP_GOP_SIZE_DEFAULT            0
 #define PROP_REF_FRAMES_DEFAULT          0
 #define PROP_I_FRAMES_DEFAULT            0
-#define PROP_B_FRAMES_DEFAULT            0
+#define PROP_B_FRAMES_DEFAULT            -1
 #define PROP_NUM_SLICES_DEFAULT          0
 #define PROP_AVBR_ACCURACY_DEFAULT       0
 #define PROP_AVBR_CONVERGENCE_DEFAULT    0
@@ -120,8 +120,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 #define PROP_MAX_FRAME_SIZE_P_DEFAULT    0
 #define PROP_MBBRC_DEFAULT               MFX_CODINGOPTION_OFF
 #define PROP_LOWDELAY_BRC_DEFAULT        MFX_CODINGOPTION_OFF
-#define PROP_ADAPTIVE_I_DEFAULT          MFX_CODINGOPTION_OFF
-#define PROP_ADAPTIVE_B_DEFAULT          MFX_CODINGOPTION_OFF
+#define PROP_ADAPTIVE_I_DEFAULT          MFX_CODINGOPTION_UNKNOWN
+#define PROP_ADAPTIVE_B_DEFAULT          MFX_CODINGOPTION_UNKNOWN
 
 /* External coding properties */
 #define EC_PROPS_STRUCT_NAME             "props"
@@ -2412,7 +2412,7 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
       thiz->i_frames = g_value_get_uint (value);
       break;
     case GST_MSDKENC_PROP_B_FRAMES:
-      thiz->b_frames = g_value_get_uint (value);
+      thiz->b_frames = g_value_get_int (value);
       break;
     case GST_MSDKENC_PROP_NUM_SLICES:
       thiz->num_slices = g_value_get_uint (value);
@@ -2524,7 +2524,7 @@ gst_msdkenc_get_common_property (GObject * object, guint prop_id,
       g_value_set_uint (value, thiz->i_frames);
       break;
     case GST_MSDKENC_PROP_B_FRAMES:
-      g_value_set_uint (value, thiz->b_frames);
+      g_value_set_int (value, thiz->b_frames);
       break;
     case GST_MSDKENC_PROP_NUM_SLICES:
       g_value_set_uint (value, thiz->num_slices);
@@ -2673,9 +2673,9 @@ gst_msdkenc_install_common_properties (GstMsdkEncClass * klass)
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_B_FRAMES] =
-      g_param_spec_uint ("b-frames", "B Frames",
+      g_param_spec_int ("b-frames", "B Frames",
       "Number of B frames between I and P frames",
-      0, G_MAXINT, PROP_B_FRAMES_DEFAULT,
+      -1, G_MAXINT, PROP_B_FRAMES_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   obj_properties[GST_MSDKENC_PROP_NUM_SLICES] =
