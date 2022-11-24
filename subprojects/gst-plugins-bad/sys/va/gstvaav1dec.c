@@ -369,6 +369,35 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
   return GST_FLOW_OK;
 }
 
+static inline GstFlowReturn
+_acquire_internal_buffer (GstVaAV1Dec * self, GstVideoCodecFrame * frame)
+{
+  GstVaBaseDec *base = GST_VA_BASE_DEC (self);
+  GstFlowReturn ret;
+
+  if (!self->internal_pool) {
+    self->internal_pool =
+        _create_internal_pool (self, self->max_width, self->max_height);
+    if (!self->internal_pool)
+      return GST_FLOW_ERROR;
+  }
+
+  if (base->need_negotiation) {
+    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self)))
+      return GST_FLOW_NOT_NEGOTIATED;
+  }
+
+  ret = gst_buffer_pool_acquire_buffer (self->internal_pool,
+      &frame->output_buffer, NULL);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self,
+        "Failed to allocated output buffer from internal pool, return %s",
+        gst_flow_get_name (ret));
+  }
+
+  return ret;
+}
+
 static GstFlowReturn
 gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture)
@@ -376,19 +405,15 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaDecodePicture *pic;
-  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
   GstFlowReturn ret;
 
   /* Only output the highest spatial layer. For non output pictures,
      we just use internal pool, then no negotiation needed. */
   if (picture->spatial_id < decoder->highest_spatial_layer) {
-    if (!self->internal_pool) {
-      self->internal_pool =
-          _create_internal_pool (self, self->max_width, self->max_height);
-      if (!self->internal_pool)
-        return GST_FLOW_ERROR;
-    }
+    ret = _acquire_internal_buffer (self, frame);
+    if (ret != GST_FLOW_OK)
+      return ret;
   } else {
     if (frame_hdr->upscaled_width != base->width
         || frame_hdr->frame_height != base->height) {
@@ -407,26 +432,8 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
 
       base->need_negotiation = TRUE;
     }
-  }
 
-  if (base->need_negotiation) {
-    if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
-      GST_ERROR_OBJECT (self, "Failed to negotiate with downstream");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
-  }
-
-  if (picture->spatial_id < decoder->highest_spatial_layer) {
-    ret = gst_buffer_pool_acquire_buffer (self->internal_pool,
-        &frame->output_buffer, NULL);
-    if (ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (self,
-          "Failed to allocated output buffer from internal pool, return %s",
-          gst_flow_get_name (ret));
-      return ret;
-    }
-  } else {
-    ret = gst_video_decoder_allocate_output_frame (vdec, frame);
+    ret = gst_va_base_dec_prepare_output_frame (base, frame);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "Failed to allocated output buffer, return %s",
           gst_flow_get_name (ret));
