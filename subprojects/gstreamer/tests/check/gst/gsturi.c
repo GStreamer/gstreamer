@@ -1043,6 +1043,55 @@ GST_START_TEST (test_url_get_set)
       "//example.com/path/to/file/there/segment?key=value&query#fragment");
   g_free (tmp_str);
 
+  /* query string (full) */
+  tmp_str = gst_uri_get_query_string (url);
+  fail_unless_equals_string (tmp_str, "key=value&query");
+  g_free (tmp_str);
+
+  /* query string (single key, no value) */
+  tmp_list = g_list_append (NULL, g_strdup ("query"));
+  tmp_str = gst_uri_get_query_string_ordered (url, tmp_list);
+  fail_unless_equals_string (tmp_str, "query");
+  g_free (tmp_str);
+  tmp_str = gst_uri_to_string_with_keys (url, tmp_list);
+  fail_unless_equals_string (tmp_str,
+      "//example.com/path/to/file/there/segment?query#fragment");
+  g_free (tmp_str);
+  g_list_free_full (tmp_list, g_free);
+
+  /* query string (single key, with value) */
+  tmp_list = g_list_append (NULL, g_strdup ("key"));
+  tmp_str = gst_uri_get_query_string_ordered (url, tmp_list);
+  fail_unless_equals_string (tmp_str, "key=value");
+  g_free (tmp_str);
+  tmp_str = gst_uri_to_string_with_keys (url, tmp_list);
+  fail_unless_equals_string (tmp_str,
+      "//example.com/path/to/file/there/segment?key=value#fragment");
+  g_free (tmp_str);
+  g_list_free_full (tmp_list, g_free);
+
+  /* query string (key not present) */
+  tmp_list = g_list_append (NULL, g_strdup ("absent"));
+  tmp_str = gst_uri_get_query_string_ordered (url, tmp_list);
+  fail_if (tmp_str != NULL);
+  tmp_str = gst_uri_to_string_with_keys (url, tmp_list);
+  fail_unless_equals_string (tmp_str,
+      "//example.com/path/to/file/there/segment#fragment");
+  g_free (tmp_str);
+  g_list_free_full (tmp_list, g_free);
+
+  /* query string (both keys, inverse order) */
+  tmp_list = g_list_append (NULL, g_strdup ("query"));
+  tmp_list = g_list_append (tmp_list, g_strdup ("key"));
+  tmp_str = gst_uri_get_query_string_ordered (url, tmp_list);
+  fail_unless_equals_string (tmp_str, "query&key=value");
+  g_free (tmp_str);
+  tmp_str = gst_uri_to_string_with_keys (url, tmp_list);
+  fail_unless_equals_string (tmp_str,
+      "//example.com/path/to/file/there/segment?query&key=value#fragment");
+  g_free (tmp_str);
+  g_list_free_full (tmp_list, g_free);
+
   fail_unless (gst_uri_set_query_value (url, "key", NULL));
   tmp_str = gst_uri_to_string (url);
   fail_unless_equals_string (tmp_str,
