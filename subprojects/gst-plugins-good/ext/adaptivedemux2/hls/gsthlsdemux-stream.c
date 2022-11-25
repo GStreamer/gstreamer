@@ -1262,7 +1262,15 @@ apply_directives_to_uri (GstHLSDemuxStream * stream,
     }
   }
 
-  gchar *out_uri = gst_uri_to_string (uri);
+  /* Produce the resulting URI with query arguments in UTF-8 order
+   * as required by the HLS spec:
+   * `Clients using Delivery Directives (Section 6.2.5) MUST ensure that
+   * all query parameters appear in UTF-8 order within the URI.`
+   */
+  GList *keys = gst_uri_get_query_keys (uri);
+  if (keys)
+    keys = g_list_sort (keys, (GCompareFunc) g_strcmp0);
+  gchar *out_uri = gst_uri_to_string_with_keys (uri, keys);
   gst_uri_unref (uri);
 
   return out_uri;
