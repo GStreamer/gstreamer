@@ -1096,6 +1096,9 @@ gst_hls_demux_stream_has_next_fragment (GstAdaptiveDemux2Stream * stream)
 
   GST_DEBUG_OBJECT (stream, "has next ?");
 
+  if (hls_stream->current_segment == NULL)
+    return FALSE;
+
   return gst_hls_media_playlist_has_next_fragment (hls_stream->playlist,
       hls_stream->current_segment, stream->demux->segment.rate > 0);
 }
