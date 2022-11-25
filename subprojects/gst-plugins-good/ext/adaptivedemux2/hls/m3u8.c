@@ -1154,6 +1154,9 @@ gst_hls_media_playlist_parse (gchar * data,
       } else if (g_str_has_prefix (data_ext_x, "SKIP:")) {
         data += strlen ("#EXT-X-SKIP:");
         parse_skip_tag (self, data);
+        /* Increment the current MSN by the number
+         * of segments that were removed */
+        mediasequence += self->skipped_segments;
       } else {
         GST_LOG ("Ignored line: %s", data);
       }
