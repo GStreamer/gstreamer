@@ -2298,6 +2298,10 @@ gst_glimage_sink_on_resize (GstGLImageSink * gl_sink, gint width, gint height)
         src.h = GST_VIDEO_SINK_HEIGHT (gl_sink);
       }
 
+      /* The stream may not be negotiated yet */
+      src.w = MAX (1, src.w);
+      src.h = MAX (1, src.h);
+
       dst.x = 0;
       dst.y = 0;
       dst.w = width;
