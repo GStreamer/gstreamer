@@ -288,7 +288,7 @@ gst_win32_ipc_video_src_unlock_stop (GstBaseSrc * src)
 {
   GstWin32IpcVideoSrc *self = GST_WIN32_IPC_VIDEO_SRC (src);
 
-  GST_DEBUG_OBJECT (self, "Unlock");
+  GST_DEBUG_OBJECT (self, "Unlock stop");
 
   AcquireSRWLockExclusive (&self->lock);
   g_clear_pointer (&self->pipe, win32_ipc_pipe_client_unref);
@@ -412,13 +412,21 @@ gst_win32_ipc_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   gboolean is_qpc = TRUE;
   gboolean need_video_meta = FALSE;
 
+  AcquireSRWLockExclusive (&self->lock);
+  if (self->flushing) {
+    ReleaseSRWLockExclusive (&self->lock);
+    return GST_FLOW_FLUSHING;
+  }
+
   if (!self->pipe) {
     self->pipe = win32_ipc_pipe_client_new (self->pipe_name);
     if (!self->pipe) {
+      ReleaseSRWLockExclusive (&self->lock);
       GST_ERROR_OBJECT (self, "Couldn't create pipe");
       return GST_FLOW_ERROR;
     }
   }
+  ReleaseSRWLockExclusive (&self->lock);
 
   if (!win32_ipc_pipe_client_get_mmf (self->pipe, &mmf, &info)) {
     AcquireSRWLockExclusive (&self->lock);
