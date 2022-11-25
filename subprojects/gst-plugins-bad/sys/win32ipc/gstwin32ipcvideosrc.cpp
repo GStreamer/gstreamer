@@ -54,7 +54,7 @@ enum
 {
   PROP_0,
   PROP_PIPE_NAME,
-  PROP_PROCESSING_DELAY,
+  PROP_PROCESSING_DEADLINE,
 };
 
 #define DEFAULT_PIPE_NAME "\\\\.\\pipe\\gst.win32.ipc.video"
@@ -120,7 +120,7 @@ gst_win32_ipc_video_src_class_init (GstWin32IpcVideoSrcClass * klass)
           "Validation of the pipe name is caller's responsibility",
           DEFAULT_PIPE_NAME, (GParamFlags) (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY)));
-  g_object_class_install_property (object_class, PROP_PROCESSING_DELAY,
+  g_object_class_install_property (object_class, PROP_PROCESSING_DEADLINE,
       g_param_spec_uint64 ("processing-deadline", "Processing deadline",
           "Maximum processing time for a buffer in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PROCESSING_DEADLINE, (GParamFlags) (G_PARAM_READWRITE |
@@ -187,7 +187,7 @@ gst_win32_ipc_video_src_set_property (GObject * object, guint prop_id,
         self->pipe_name = g_strdup (DEFAULT_PIPE_NAME);
       GST_OBJECT_UNLOCK (self);
       break;
-    case PROP_PROCESSING_DELAY:
+    case PROP_PROCESSING_DEADLINE:
     {
       GstClockTime prev_val, new_val;
       GST_OBJECT_LOCK (self);
@@ -221,7 +221,7 @@ gst_win32_video_src_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, self->pipe_name);
       GST_OBJECT_UNLOCK (self);
       break;
-    case PROP_PROCESSING_DELAY:
+    case PROP_PROCESSING_DEADLINE:
       GST_OBJECT_LOCK (self);
       g_value_set_uint64 (value, self->processing_deadline);
       GST_OBJECT_UNLOCK (self);
