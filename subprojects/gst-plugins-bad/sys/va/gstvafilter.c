@@ -444,7 +444,7 @@ static const struct VaFilterCapMap {
   F(HVSNoiseReduction, 0),
   F(HighDynamicRangeToneMapping, 1),
 #if VA_CHECK_VERSION (1, 12, 0)
-  F(3DLUT, 1),
+  F(3DLUT, 16),
 #endif
 #undef F
 };
@@ -481,6 +481,9 @@ struct VaFilter
     VAProcFilterCapColorBalance cb[VAProcColorBalanceCount];
     VAProcFilterCapTotalColorCorrection cc[VAProcTotalColorCorrectionCount];
     VAProcFilterCapHighDynamicRange hdr;
+#if VA_CHECK_VERSION (1, 12, 0)
+    VAProcFilterCap3DLUT lut[16];
+#endif
   } caps;
 };
 
