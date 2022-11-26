@@ -268,7 +268,7 @@ gst_proxy_sink_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     if (sticky)
       gst_proxy_sink_send_sticky_events (self, pad, srcpad);
 
-    ret = gst_pad_push_event (srcpad, event);
+    ret = gst_pad_push_event (srcpad, gst_event_ref (event));
     gst_object_unref (srcpad);
     gst_object_unref (src);
 
@@ -288,9 +288,24 @@ gst_proxy_sink_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = TRUE;
     }
   } else {
-    gst_event_unref (event);
     ret = TRUE;
   }
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_EOS:
+    {
+      GstMessage *msg = gst_message_new_eos (GST_OBJECT_CAST (self));
+      guint32 seq_num = gst_event_get_seqnum (event);
+
+      gst_message_set_seqnum (msg, seq_num);
+      gst_element_post_message (GST_ELEMENT_CAST (self), msg);
+      break;
+    }
+    default:
+      break;
+  }
+
+  gst_event_unref (event);
 
   return ret;
 }
