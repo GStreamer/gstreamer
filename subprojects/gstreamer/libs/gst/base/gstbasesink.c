@@ -5141,8 +5141,17 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
 
   GST_OBJECT_LOCK (basesink);
   /* we can only get the segment when we are not NULL or READY */
-  if (!basesink->have_newsegment)
+  if (GST_STATE (basesink) <= GST_STATE_READY &&
+      GST_STATE_PENDING (basesink) <= GST_STATE_READY) {
     goto wrong_state;
+  }
+
+  segment = &basesink->segment;
+  /* get the format in the segment */
+  oformat = segment->format;
+
+  if (oformat == GST_FORMAT_UNDEFINED)
+    goto no_segment;
 
   in_paused = FALSE;
   /* when not in PLAYING or when we're busy with a state change, we
@@ -5152,11 +5161,6 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       GST_STATE_PENDING (basesink) != GST_STATE_VOID_PENDING) {
     in_paused = TRUE;
   }
-
-  segment = &basesink->segment;
-
-  /* get the format in the segment */
-  oformat = segment->format;
 
   /* report with last seen position when EOS */
   last_seen = basesink->eos;
@@ -5351,6 +5355,15 @@ wrong_state:
   {
     /* in NULL or READY we always return FALSE and -1 */
     GST_DEBUG_OBJECT (basesink, "position in wrong state, return -1");
+    res = FALSE;
+    *cur = -1;
+    GST_OBJECT_UNLOCK (basesink);
+    goto done;
+  }
+no_segment:
+  {
+    GST_DEBUG_OBJECT (basesink,
+        "haven't received a segment yet, can't anwser position, return -1");
     res = FALSE;
     *cur = -1;
     GST_OBJECT_UNLOCK (basesink);
