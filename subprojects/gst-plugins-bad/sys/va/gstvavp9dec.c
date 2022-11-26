@@ -149,6 +149,7 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);
+  GstVideoInfo *info = &base->output_info;
   VAProfile profile;
   gboolean negotiation_needed = FALSE;
   guint rt_format;
@@ -171,15 +172,16 @@ gst_va_vp9_new_sequence (GstVp9Decoder * decoder,
   if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, frame_hdr->width, frame_hdr->height)) {
     base->profile = profile;
-    base->width = frame_hdr->width;
-    base->height = frame_hdr->height;
+    GST_VIDEO_INFO_WIDTH (info) = base->width = frame_hdr->width;
+    GST_VIDEO_INFO_HEIGHT (info) = base->height = frame_hdr->height;
     base->rt_format = rt_format;
     negotiation_needed = TRUE;
   }
 
   base->min_buffers = GST_VP9_REF_FRAMES;
-
   base->need_negotiation = negotiation_needed;
+  g_clear_pointer (&base->input_state, gst_video_codec_state_unref);
+  base->input_state = gst_video_codec_state_ref (decoder->input_state);
 
   return GST_FLOW_OK;
 }
@@ -188,11 +190,12 @@ static GstFlowReturn
 _check_resolution_change (GstVaVp9Dec * self, GstVp9Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (self);
+  GstVideoInfo *info = &base->output_info;
   const GstVp9FrameHeader *frame_hdr = &picture->frame_hdr;
 
   if ((base->width != frame_hdr->width) || base->height != frame_hdr->height) {
-    base->width = frame_hdr->width;
-    base->height = frame_hdr->height;
+    GST_VIDEO_INFO_WIDTH (info) = base->width = frame_hdr->width;
+    GST_VIDEO_INFO_HEIGHT (info) = base->height = frame_hdr->height;
 
     base->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self))) {
@@ -540,11 +543,8 @@ gst_va_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
 static gboolean
 gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
 {
-  GstCapsFeatures *capsfeatures = NULL;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp9Dec *self = GST_VA_VP9_DEC (decoder);
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
   gboolean need_open;
 
   /* Ignore downstream renegotiation request. */
@@ -590,24 +590,8 @@ gst_va_vp9_dec_negotiate (GstVideoDecoder * decoder)
       return FALSE;
   }
 
-  if (base->output_state)
-    gst_video_codec_state_unref (base->output_state);
-
-  gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
-      &capsfeatures);
-  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+  if (!gst_va_base_dec_set_output_state (base))
     return FALSE;
-
-  base->output_state =
-      gst_video_decoder_set_output_state (decoder, format,
-      base->width, base->height, vp9dec->input_state);
-
-  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
-  if (capsfeatures)
-    gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
-
-  GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
-      base->output_state->caps);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
