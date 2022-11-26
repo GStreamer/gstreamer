@@ -85,56 +85,6 @@ static const gchar *src_caps_str =
 
 static const gchar *sink_caps_str = "video/x-mpeg2";
 
-static gboolean
-gst_va_mpeg2_dec_negotiate (GstVideoDecoder * decoder)
-{
-  GstCapsFeatures *capsfeatures = NULL;
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  GstVaMpeg2Dec *self = GST_VA_MPEG2_DEC (decoder);
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  GstMpeg2Decoder *mpeg2dec = GST_MPEG2_DECODER (decoder);
-
-  /* Ignore downstream renegotiation request. */
-  if (!base->need_negotiation)
-    return TRUE;
-
-  base->need_negotiation = FALSE;
-
-  if (gst_va_decoder_is_open (base->decoder)
-      && !gst_va_decoder_close (base->decoder))
-    return FALSE;
-
-  if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
-    return FALSE;
-
-  if (!gst_va_decoder_set_frame_size (base->decoder, base->width, base->height))
-    return FALSE;
-
-  if (base->output_state)
-    gst_video_codec_state_unref (base->output_state);
-
-  gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
-      &capsfeatures);
-  if (format == GST_VIDEO_FORMAT_UNKNOWN)
-    return FALSE;
-
-  base->output_state =
-      gst_video_decoder_set_output_state (decoder, format,
-      base->width, base->height, mpeg2dec->input_state);
-
-  if (!self->progressive)
-    base->output_state->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_MIXED;
-
-  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
-  if (capsfeatures)
-    gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
-
-  GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
-      base->output_state->caps);
-
-  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
-}
-
 static VAProfile
 _map_profile (GstMpegVideoProfile profile)
 {
@@ -226,6 +176,7 @@ gst_va_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaMpeg2Dec *self = GST_VA_MPEG2_DEC (decoder);
+  GstVideoInfo *info = &base->output_info;
   VAProfile profile;
   GstMpegVideoProfile mpeg_profile;
   gboolean negotiation_needed = FALSE;
@@ -259,8 +210,8 @@ gst_va_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
           rt_format, width, height)) {
     base->profile = profile;
     base->rt_format = rt_format;
-    base->width = width;
-    base->height = height;
+    GST_VIDEO_INFO_WIDTH (info) = base->width = width;
+    GST_VIDEO_INFO_HEIGHT (info) = base->height = height;
 
     negotiation_needed = TRUE;
 
@@ -271,16 +222,17 @@ gst_va_mpeg2_dec_new_sequence (GstMpeg2Decoder * decoder,
   progressive = seq_ext ? seq_ext->progressive : 1;
   if (self->progressive != progressive) {
     self->progressive = progressive;
-
+    GST_VIDEO_INFO_INTERLACE_MODE (info) = progressive ?
+        GST_VIDEO_INTERLACE_MODE_PROGRESSIVE : GST_VIDEO_INTERLACE_MODE_MIXED;
     negotiation_needed = TRUE;
     GST_INFO_OBJECT (self, "Interlaced mode changed to %d", !progressive);
   }
 
   base->need_valign = FALSE;
-
   base->min_buffers = 2 + 4;    /* max num pic references + scratch surfaces */
-
   base->need_negotiation = negotiation_needed;
+  g_clear_pointer (&base->input_state, gst_video_codec_state_unref);
+  base->input_state = gst_video_codec_state_ref (decoder->input_state);
 
   return GST_FLOW_OK;
 }
@@ -594,7 +546,6 @@ gst_va_mpeg2_dec_class_init (gpointer g_class, gpointer class_data)
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstMpeg2DecoderClass *mpeg2decoder_class = GST_MPEG2_DECODER_CLASS (g_class);
-  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (g_class);
   struct CData *cdata = class_data;
   gchar *long_name;
 
@@ -626,8 +577,6 @@ gst_va_mpeg2_dec_class_init (gpointer g_class, gpointer class_data)
       src_doc_caps, sink_doc_caps);
 
   gobject_class->dispose = gst_va_mpeg2_dec_dispose;
-
-  decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_va_mpeg2_dec_negotiate);
 
   mpeg2decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_va_mpeg2_dec_new_sequence);

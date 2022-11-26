@@ -82,53 +82,6 @@ static const gchar *src_caps_str =
 
 static const gchar *sink_caps_str = "video/x-vp8";
 
-static gboolean
-gst_va_vp8_dec_negotiate (GstVideoDecoder * decoder)
-{
-  GstCapsFeatures *capsfeatures = NULL;
-  GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  GstVaVp8Dec *self = GST_VA_VP8_DEC (decoder);
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  GstVp8Decoder *vp8dec = GST_VP8_DECODER (decoder);
-
-  /* Ignore downstream renegotiation request. */
-  if (!base->need_negotiation)
-    return TRUE;
-
-  base->need_negotiation = FALSE;
-
-  if (gst_va_decoder_is_open (base->decoder)
-      && !gst_va_decoder_close (base->decoder))
-    return FALSE;
-
-  if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
-    return FALSE;
-
-  if (!gst_va_decoder_set_frame_size (base->decoder, base->width, base->height))
-    return FALSE;
-
-  if (base->output_state)
-    gst_video_codec_state_unref (base->output_state);
-
-  gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
-      &capsfeatures);
-  if (format == GST_VIDEO_FORMAT_UNKNOWN)
-    return FALSE;
-
-  base->output_state =
-      gst_video_decoder_set_output_state (decoder, format,
-      base->width, base->height, vp8dec->input_state);
-
-  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
-  if (capsfeatures)
-    gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
-
-  GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
-      base->output_state->caps);
-
-  return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
-}
-
 static VAProfile
 _get_profile (GstVaVp8Dec * self, const GstVp8FrameHdr * frame_hdr)
 {
@@ -147,6 +100,7 @@ gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp8Dec *self = GST_VA_VP8_DEC (decoder);
+  GstVideoInfo *info = &base->output_info;
   VAProfile profile;
   guint rt_format;
   gboolean negotiation_needed = FALSE;
@@ -169,15 +123,16 @@ gst_va_vp8_dec_new_sequence (GstVp8Decoder * decoder,
   if (!gst_va_decoder_config_is_equal (base->decoder, profile,
           rt_format, frame_hdr->width, frame_hdr->height)) {
     base->profile = profile;
-    base->width = frame_hdr->width;
-    base->height = frame_hdr->height;
+    GST_VIDEO_INFO_WIDTH (info) = base->width = frame_hdr->width;
+    GST_VIDEO_INFO_HEIGHT (info) = base->height = frame_hdr->height;
     base->rt_format = rt_format;
     negotiation_needed = TRUE;
   }
 
   base->min_buffers = 3 + 4;    /* max num pic references + scratch surfaces */
-
   base->need_negotiation = negotiation_needed;
+  g_clear_pointer (&base->input_state, gst_video_codec_state_unref);
+  base->input_state = gst_video_codec_state_ref (decoder->input_state);
 
   return GST_FLOW_OK;
 }
@@ -471,7 +426,6 @@ gst_va_vp8_dec_class_init (gpointer g_class, gpointer class_data)
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstVp8DecoderClass *vp8decoder_class = GST_VP8_DECODER_CLASS (g_class);
-  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (g_class);
   struct CData *cdata = class_data;
   gchar *long_name;
 
@@ -503,8 +457,6 @@ gst_va_vp8_dec_class_init (gpointer g_class, gpointer class_data)
       src_doc_caps, sink_doc_caps);
 
   gobject_class->dispose = gst_va_vp8_dec_dispose;
-
-  decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_va_vp8_dec_negotiate);
 
   vp8decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_va_vp8_dec_new_sequence);
