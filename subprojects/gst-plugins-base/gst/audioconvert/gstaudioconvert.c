@@ -934,6 +934,11 @@ gst_audio_convert_submit_input_buffer (GstBaseTransform * base,
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
 
   if (base->segment.format == GST_FORMAT_TIME) {
+    if (!GST_AUDIO_INFO_IS_VALID (&this->in_info)) {
+      GST_WARNING_OBJECT (this, "Got buffer, but not negotiated yet!");
+      return GST_FLOW_NOT_NEGOTIATED;
+    }
+
     input =
         gst_audio_buffer_clip (input, &base->segment, this->in_info.rate,
         this->in_info.bpf);
