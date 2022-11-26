@@ -514,6 +514,21 @@ integration testsuites fedora:
   extends: '.test fedora x86_64'
   parallel: 8
   variables:
+    MESON_BUILDTYPE_ARGS: >
+      -Domx=disabled
+      -Dsharp=disabled
+      -Dvaapi=disabled
+      -Dexamples=disabled
+      -Dgst-examples=disabled
+      -Dtests=disabled
+      -Dnls=disabled
+      -Dqt5=disabled
+      -Dgstreamer:benchmarks=disabled
+      -Dgst-plugins-good:gtk3=disabled
+      -Dgst-plugins-bad:microdns=disabled
+      -Dgst-plugins-bad:avtp=disabled
+      -Dgst-plugins-bad:opencv=disabled
+      -Dgst-plugins-bad:webrtc=disabled
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
     TEST_SUITE: "validate ges"
 
