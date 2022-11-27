@@ -72,8 +72,6 @@ struct _GstVaAV1Dec
   GstVaBaseDec parent;
 
   GstAV1SequenceHeaderOBU seq;
-  gint max_width;
-  gint max_height;
   GstVideoFormat preferred_format;
   /* Used for layers not output. */
   GstBufferPool *internal_pool;
@@ -95,9 +93,6 @@ gst_va_av1_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  GstAV1Decoder *av1dec = GST_AV1_DECODER (decoder);
-  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
-  GstCapsFeatures *capsfeatures = NULL;
 
   /* Ignore downstream renegotiation request. */
   if (!base->need_negotiation)
@@ -107,7 +102,7 @@ gst_va_av1_dec_negotiate (GstVideoDecoder * decoder)
 
   /* Do not re-create the context if only the frame size changes */
   if (!gst_va_decoder_config_is_equal (base->decoder, base->profile,
-          base->rt_format, self->max_width, self->max_height)) {
+          base->rt_format, base->width, base->height)) {
     if (gst_va_decoder_is_open (base->decoder)
         && !gst_va_decoder_close (base->decoder))
       return FALSE;
@@ -115,36 +110,22 @@ gst_va_av1_dec_negotiate (GstVideoDecoder * decoder)
     if (!gst_va_decoder_open (base->decoder, base->profile, base->rt_format))
       return FALSE;
 
-    if (!gst_va_decoder_set_frame_size (base->decoder, self->max_width,
-            self->max_height))
+    if (!gst_va_decoder_set_frame_size (base->decoder, base->width,
+            base->height))
       return FALSE;
   }
 
-  if (base->output_state)
-    gst_video_codec_state_unref (base->output_state);
-
-  gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
-      &capsfeatures);
-  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+  if (!gst_va_base_dec_set_output_state (base))
     return FALSE;
 
   if (self->preferred_format != GST_VIDEO_FORMAT_UNKNOWN &&
-      self->preferred_format != format) {
+      self->preferred_format !=
+      GST_VIDEO_INFO_FORMAT (&base->output_state->info)) {
     GST_WARNING_OBJECT (self, "The preferred_format is different from"
         " the last result");
     return FALSE;
   }
-  self->preferred_format = format;
-
-  base->output_state = gst_video_decoder_set_output_state (decoder, format,
-      base->width, base->height, av1dec->input_state);
-
-  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
-  if (capsfeatures)
-    gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
-
-  GST_INFO_OBJECT (self, "Negotiated caps %" GST_PTR_FORMAT,
-      base->output_state->caps);
+  self->preferred_format = GST_VIDEO_INFO_FORMAT (&base->output_state->info);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -319,6 +300,7 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
   }
 
   gst_object_unref (allocator);
+  gst_caps_unref (caps);
 
   gst_buffer_pool_set_active (pool, TRUE);
 
@@ -331,8 +313,10 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVideoInfo *info = &base->output_info;
   VAProfile profile;
   guint rt_format;
+  gint width, height;
 
   GST_LOG_OBJECT (self, "new sequence");
 
@@ -346,25 +330,25 @@ gst_va_av1_dec_new_sequence (GstAV1Decoder * decoder,
 
   self->seq = *seq_hdr;
 
+  width = seq_hdr->max_frame_width_minus_1 + 1;
+  height = seq_hdr->max_frame_height_minus_1 + 1;
+
   if (!gst_va_decoder_config_is_equal (base->decoder, profile,
-          rt_format, seq_hdr->max_frame_width_minus_1 + 1,
-          seq_hdr->max_frame_height_minus_1 + 1)) {
+          rt_format, width, height)) {
     _clear_internal_pool (self);
     self->preferred_format = GST_VIDEO_FORMAT_UNKNOWN;
 
     base->profile = profile;
     base->rt_format = rt_format;
-    self->max_width = seq_hdr->max_frame_width_minus_1 + 1;
-    self->max_height = seq_hdr->max_frame_height_minus_1 + 1;
+    GST_VIDEO_INFO_WIDTH (info) = base->width = width;
+    GST_VIDEO_INFO_HEIGHT (info) = base->height = height;
     base->need_negotiation = TRUE;
-
     base->min_buffers = 7 + 4;  /* dpb size + scratch surfaces */
-
-    /* May be changed by frame header */
-    base->width = self->max_width;
-    base->height = self->max_height;
     base->need_valign = FALSE;
   }
+
+  g_clear_pointer (&base->input_state, gst_video_codec_state_unref);
+  base->input_state = gst_video_codec_state_ref (decoder->input_state);
 
   return GST_FLOW_OK;
 }
@@ -377,7 +361,7 @@ _acquire_internal_buffer (GstVaAV1Dec * self, GstVideoCodecFrame * frame)
 
   if (!self->internal_pool) {
     self->internal_pool =
-        _create_internal_pool (self, self->max_width, self->max_height);
+        _create_internal_pool (self, base->width, base->height);
     if (!self->internal_pool)
       return GST_FLOW_ERROR;
   }
@@ -404,8 +388,9 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
 {
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  GstVaDecodePicture *pic;
   GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
+  GstVaDecodePicture *pic;
+  GstVideoInfo *info = &base->output_info;
   GstFlowReturn ret;
 
   /* Only output the highest spatial layer. For non output pictures,
@@ -415,17 +400,18 @@ gst_va_av1_dec_new_picture (GstAV1Decoder * decoder,
     if (ret != GST_FLOW_OK)
       return ret;
   } else {
-    if (frame_hdr->upscaled_width != base->width
-        || frame_hdr->frame_height != base->height) {
-      base->width = frame_hdr->upscaled_width;
-      base->height = frame_hdr->frame_height;
+    if (frame_hdr->upscaled_width != GST_VIDEO_INFO_WIDTH (info)
+        || frame_hdr->frame_height != GST_VIDEO_INFO_HEIGHT (info)) {
+      GST_VIDEO_INFO_WIDTH (info) = frame_hdr->upscaled_width;
+      GST_VIDEO_INFO_HEIGHT (info) = frame_hdr->frame_height;
 
-      if (base->width < self->max_width || base->height < self->max_height) {
+      if (GST_VIDEO_INFO_WIDTH (info) < base->width
+          || GST_VIDEO_INFO_HEIGHT (info) < base->height) {
         base->need_valign = TRUE;
         /* *INDENT-OFF* */
-        base->valign = (GstVideoAlignment){
-          .padding_bottom = self->max_height - base->height,
-          .padding_right = self->max_width - base->width,
+        base->valign = (GstVideoAlignment) {
+          .padding_bottom = base->height - GST_VIDEO_INFO_HEIGHT (info),
+          .padding_right = base->width - GST_VIDEO_INFO_WIDTH (info),
         };
         /* *INDENT-ON* */
       }
