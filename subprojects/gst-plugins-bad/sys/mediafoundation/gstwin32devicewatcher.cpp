@@ -94,6 +94,8 @@ gst_win32_device_watcher_constructed (GObject * object)
   while (!g_main_loop_is_running (self->loop))
     g_cond_wait (&self->cond, &self->lock);
   g_mutex_unlock (&self->lock);
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
 }
 
 static void
