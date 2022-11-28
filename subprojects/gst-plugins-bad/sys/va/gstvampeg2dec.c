@@ -530,6 +530,7 @@ static void
 gst_va_mpeg2_dec_init (GTypeInstance * instance, gpointer g_class)
 {
   gst_va_base_dec_init (GST_VA_BASE_DEC (instance), GST_CAT_DEFAULT);
+  GST_VA_MPEG2_DEC (instance)->progressive = 1;
 }
 
 static void
