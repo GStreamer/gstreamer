@@ -717,6 +717,9 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     if (!gst_wl_display_check_format_for_dmabuf (self->display, format))
       goto unsupported_format;
   } else if (!gst_wl_display_check_format_for_shm (self->display, format)) {
+    /* Note: we still support dmabuf in this case, but formats must also be
+     * supported on SHM interface to ensure a fallback is possible as we are
+     * not guarantied we'll get dmabuf in the buffers. */
     goto unsupported_format;
   }
 
