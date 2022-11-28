@@ -652,10 +652,14 @@ gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
   /* FIXME Check if buffer isn't the last one here */
 
   GST_LOG_OBJECT (encoder, "Process output buffer");
-  ret =
-      gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL
-      (self->v4l2capture->pool), &buffer, NULL);
-
+  {
+    GstV4l2BufferPool *cpool =
+        GST_V4L2_BUFFER_POOL (gst_v4l2_object_get_buffer_pool
+        (self->v4l2capture));
+    ret = gst_v4l2_buffer_pool_process (cpool, &buffer, NULL);
+    if (cpool)
+      gst_object_unref (cpool);
+  }
   if (ret != GST_FLOW_OK)
     goto beach;
 
@@ -741,6 +745,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstFlowReturn ret = GST_FLOW_OK;
   GstTaskState task_state;
+  gboolean active;
 
   GST_DEBUG_OBJECT (self, "Handling frame %d", frame->system_frame_number);
 
@@ -749,7 +754,7 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
 
   task_state = gst_pad_get_task_state (GST_VIDEO_ENCODER_SRC_PAD (self));
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
-    GstBufferPool *pool = GST_BUFFER_POOL (self->v4l2output->pool);
+    GstBufferPool *pool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
 
     /* It is possible that the processing thread stopped due to an error or
      * when the last buffer has been met during the draining process. */
@@ -759,6 +764,8 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
       GST_DEBUG_OBJECT (self, "Processing loop stopped with error: %s, leaving",
           gst_flow_get_name (self->output_flow));
       ret = self->output_flow;
+      if (pool)
+        gst_object_unref (pool);
       goto drop;
     }
 
@@ -772,15 +779,29 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
           self->v4l2output->info.size, min, min);
 
       /* There is no reason to refuse this config */
-      if (!gst_buffer_pool_set_config (pool, config))
+      if (!gst_buffer_pool_set_config (pool, config)) {
+        if (pool)
+          gst_object_unref (pool);
         goto activate_failed;
+      }
 
-      if (!gst_buffer_pool_set_active (pool, TRUE))
+      if (!gst_buffer_pool_set_active (pool, TRUE)) {
+        if (pool)
+          gst_object_unref (pool);
         goto activate_failed;
+      }
+      if (pool)
+        gst_object_unref (pool);
     }
 
-    if (!gst_buffer_pool_set_active
-        (GST_BUFFER_POOL (self->v4l2capture->pool), TRUE)) {
+    {
+      GstBufferPool *cpool =
+          gst_v4l2_object_get_buffer_pool (self->v4l2capture);
+      active = gst_buffer_pool_set_active (cpool, TRUE);
+      if (cpool)
+        gst_object_unref (cpool);
+    }
+    if (!active) {
       GST_WARNING_OBJECT (self, "Could not activate capture buffer pool.");
       goto activate_failed;
     }
@@ -799,10 +820,15 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
     GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
     GST_LOG_OBJECT (encoder, "Passing buffer with frame number %u",
         frame->system_frame_number);
-    ret =
-        gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (self->
-            v4l2output->pool), &frame->input_buffer,
-        &frame->system_frame_number);
+
+    {
+      GstBufferPool *opool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
+      ret = gst_v4l2_buffer_pool_process (GST_V4L2_BUFFER_POOL (opool),
+          &frame->input_buffer, &frame->system_frame_number);
+      if (opool)
+        gst_object_unref (opool);
+    }
+
     GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
     if (ret == GST_FLOW_FLUSHING) {
