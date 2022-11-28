@@ -137,6 +137,7 @@ gboolean              gst_va_base_dec_copy_output_buffer  (GstVaBaseDec * base,
                                                            GstVideoCodecFrame * codec_frame);
 gboolean              gst_va_base_dec_process_output      (GstVaBaseDec * base,
                                                            GstVideoCodecFrame * frame,
+                                                           GstVideoCodecState * input_state,
                                                            GstVideoBufferFlags buffer_flags);
 GstFlowReturn         gst_va_base_dec_prepare_output_frame (GstVaBaseDec * base,
                                                             GstVideoCodecFrame * frame);

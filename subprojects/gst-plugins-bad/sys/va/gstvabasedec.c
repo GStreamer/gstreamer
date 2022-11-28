@@ -1061,9 +1061,26 @@ fail:
 
 gboolean
 gst_va_base_dec_process_output (GstVaBaseDec * base, GstVideoCodecFrame * frame,
-    GstVideoBufferFlags buffer_flags)
+    GstVideoCodecState * input_state, GstVideoBufferFlags buffer_flags)
 {
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (base);
+
+  if (input_state) {
+
+    g_assert (GST_VIDEO_INFO_WIDTH (&input_state->info) ==
+        GST_VIDEO_INFO_WIDTH (&base->input_state->info)
+        && GST_VIDEO_INFO_HEIGHT (&input_state->info) ==
+        GST_VIDEO_INFO_HEIGHT (&input_state->info));
+
+    g_clear_pointer (&base->input_state, gst_video_codec_state_unref);
+    base->input_state = gst_video_codec_state_ref (input_state);
+
+    base->need_negotiation = TRUE;
+    if (!gst_video_decoder_negotiate (vdec)) {
+      GST_ERROR_OBJECT (base, "Could not re-negotiate with updated state");
+      return GST_FLOW_ERROR;
+    }
+  }
 
   if (base->copy_frames)
     gst_va_base_dec_copy_output_buffer (base, frame);

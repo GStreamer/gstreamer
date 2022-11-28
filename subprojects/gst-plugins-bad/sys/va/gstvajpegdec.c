@@ -322,7 +322,7 @@ gst_va_jpeg_dec_output_picture (GstJpegDecoder * decoder,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
 
-  if (gst_va_base_dec_process_output (base, frame, 0))
+  if (gst_va_base_dec_process_output (base, frame, NULL, 0))
     return gst_video_decoder_finish_frame (vdec, frame);
   return GST_FLOW_ERROR;
 }

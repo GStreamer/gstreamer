@@ -955,7 +955,7 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
     frame->output_buffer = gst_buffer_ref (pic->gstbuffer);
   }
 
-  ret = gst_va_base_dec_process_output (base, frame, 0);
+  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state, 0);
   gst_av1_picture_unref (picture);
 
   if (ret)

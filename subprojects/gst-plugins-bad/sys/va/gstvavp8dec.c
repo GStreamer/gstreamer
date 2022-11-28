@@ -398,7 +398,7 @@ gst_va_vp8_dec_output_picture (GstVp8Decoder * decoder,
       "Outputting picture %p (system_frame_number %d)",
       picture, picture->system_frame_number);
 
-  ret = gst_va_base_dec_process_output (base, frame, 0);
+  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state, 0);
   gst_vp8_picture_unref (picture);
 
   if (ret)
