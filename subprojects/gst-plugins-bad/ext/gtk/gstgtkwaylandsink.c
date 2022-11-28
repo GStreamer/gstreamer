@@ -106,7 +106,6 @@ typedef struct _GstGtkWaylandSinkPrivate
 
   GstBufferPool *pool;
   GstBuffer *last_buffer;
-  gboolean use_dmabuf;
 
   gboolean video_info_changed;
   GstVideoInfo video_info;
@@ -984,7 +983,6 @@ gst_gtk_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   GST_OBJECT_UNLOCK (self);
 
-  priv->use_dmabuf = use_dmabuf;
   /* Will be used to create buffer pools */
   gst_caps_replace (&priv->caps, caps);
 

@@ -720,8 +720,6 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     goto unsupported_format;
   }
 
-  self->use_dmabuf = use_dmabuf;
-
   /* Will be used to create buffer pools */
   gst_caps_replace (&self->caps, caps);
 
