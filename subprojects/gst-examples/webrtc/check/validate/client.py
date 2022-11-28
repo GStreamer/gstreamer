@@ -88,10 +88,7 @@ class WebRTCBinObserver(WebRTCObserver):
         return new_state
 
     def _deepcopy_session_description(self, desc):
-        # XXX: passing 'offer' to both a promise and an action signal without
-        # a deepcopy will segfault...
-        new_sdp = GstSdp.SDPMessage.new()[1]
-        GstSdp.sdp_message_parse_buffer(bytes(desc.sdp.as_text().encode()), new_sdp)
+        _, new_sdp = GstSdp.SDPMessage.new_from_text(desc.sdp.as_text())
         return GstWebRTC.WebRTCSessionDescription.new(desc.type, new_sdp)
 
     def _on_offer_created(self, promise, element):

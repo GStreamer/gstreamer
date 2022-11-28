@@ -170,8 +170,7 @@ class WebRTCApplication(object):
         def have_json(msg):
             if 'sdp' in msg:
                 sdp = msg['sdp']
-                res, sdpmsg = GstSdp.SDPMessage.new()
-                GstSdp.sdp_message_parse_buffer(bytes(sdp['sdp'].encode()), sdpmsg)
+                res, sdpmsg = GstSdp.SDPMessage.new_from_text(sdp['sdp'])
                 sdptype = GstWebRTC.WebRTCSDPType.ANSWER if sdp['type'] == 'answer' else GstWebRTC.WebRTCSDPType.OFFER
                 desc = GstWebRTC.WebRTCSessionDescription.new(sdptype, sdpmsg)
                 self.client.set_remote_description(desc)

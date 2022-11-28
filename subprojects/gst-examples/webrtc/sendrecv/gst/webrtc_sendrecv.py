@@ -224,16 +224,14 @@ class WebRTCClient:
             sdp = msg['sdp']['sdp']
             if msg['sdp']['type'] == 'answer':
                 print_status('Received answer:\n%s' % sdp)
-                res, sdpmsg = GstSdp.SDPMessage.new()
-                GstSdp.sdp_message_parse_buffer(bytes(sdp.encode()), sdpmsg)
+                res, sdpmsg = GstSdp.SDPMessage.new_from_text(sdp)
                 answer = GstWebRTC.WebRTCSessionDescription.new(GstWebRTC.WebRTCSDPType.ANSWER, sdpmsg)
                 promise = Gst.Promise.new()
                 self.webrtc.emit('set-remote-description', answer, promise)
                 promise.interrupt()  # we don't care about the result, discard it
             else:
                 print_status('Received offer:\n%s' % sdp)
-                res, sdpmsg = GstSdp.SDPMessage.new()
-                GstSdp.sdp_message_parse_buffer(bytes(sdp.encode()), sdpmsg)
+                res, sdpmsg = GstSdp.SDPMessage.new_from_text(sdp)
 
                 if not self.webrtc:
                     print_status('Incoming call: received an offer, creating pipeline')
