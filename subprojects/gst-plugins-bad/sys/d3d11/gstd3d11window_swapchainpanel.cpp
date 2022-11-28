@@ -540,7 +540,7 @@ gst_d3d11_window_swap_chain_panel_new (GstD3D11Device * device, guintptr handle)
     return NULL;
   }
 
-  g_object_ref_sink (window);
+  gst_object_ref_sink (window);
 
   return window;
 }

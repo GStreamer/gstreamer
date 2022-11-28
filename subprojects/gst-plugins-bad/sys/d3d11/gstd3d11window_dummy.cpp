@@ -330,7 +330,7 @@ gst_d3d11_window_dummy_new (GstD3D11Device * device)
       g_object_new (GST_TYPE_D3D11_WINDOW_DUMMY, "d3d11device", device, NULL);
 
   window->initialized = TRUE;
-  g_object_ref_sink (window);
+  gst_object_ref_sink (window);
 
   return window;
 }
