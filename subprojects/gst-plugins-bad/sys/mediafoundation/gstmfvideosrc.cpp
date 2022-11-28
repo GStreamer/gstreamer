@@ -451,16 +451,20 @@ gst_mf_video_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (self), 0,
         GST_VIDEO_INFO_SIZE (&self->info), &buf);
 
-    if (ret != GST_FLOW_OK)
+    if (ret != GST_FLOW_OK) {
+      gst_clear_buffer (&buf);
       return ret;
+    }
 
     ret = gst_mf_source_object_fill (self->source, buf);
   } else {
     ret = gst_mf_source_object_create (self->source, &buf);
   }
 
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    gst_clear_buffer (&buf);
     return ret;
+  }
 
   /* DirectShow capture object will set caps if it's got updated */
   if (sample) {
