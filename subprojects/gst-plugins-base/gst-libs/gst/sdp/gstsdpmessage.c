@@ -3439,7 +3439,7 @@ gst_sdp_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
     *params = NULL;
     goto out;
   } else {
-    *name = strdup (*name);
+    *name = g_strdup (*name);
   }
 
   t = p;
