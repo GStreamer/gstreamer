@@ -497,6 +497,7 @@ gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src,
   GstV4l2Object *obj = v4l2src->v4l2object;
   struct v4l2_dv_timings dv_timings = { 0, };
   const struct v4l2_bt_timings *bt = &dv_timings.bt;
+  gboolean not_streaming;
   gint tot_width, tot_height;
   gint gcd;
 
@@ -523,7 +524,14 @@ gst_v4l2src_query_preferred_dv_timings (GstV4l2Src * v4l2src,
 
   /* If are are not streaming (e.g. we received source-change event), lock the
    * new timing immediatly so that TRY_FMT can properly work */
-  if (!obj->pool || !GST_V4L2_BUFFER_POOL_IS_STREAMING (obj->pool)) {
+  {
+    GstBufferPool *obj_pool = gst_v4l2_object_get_buffer_pool (obj);
+    not_streaming = !obj_pool || !GST_V4L2_BUFFER_POOL_IS_STREAMING (obj_pool);
+    if (obj_pool)
+      gst_object_unref (obj_pool);
+  }
+
+  if (not_streaming) {
     gst_v4l2_set_dv_timings (obj, &dv_timings);
     /* Setting a new DV timings invalidates the probed caps. */
     gst_caps_replace (&obj->probed_caps, NULL);
@@ -693,6 +701,7 @@ static gboolean
 gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
   GstV4l2Src *src = GST_V4L2SRC (bsrc);
+  GstBufferPool *bpool = gst_v4l2_object_get_buffer_pool (src->v4l2object);
   gboolean ret = TRUE;
 
   if (src->pending_set_fmt) {
@@ -703,7 +712,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
     ret = gst_v4l2src_set_format (src, caps, &error);
     if (ret) {
-      GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (src->v4l2object->pool);
+      GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
       gst_v4l2_buffer_pool_enable_resolution_change (pool);
     } else {
       gst_v4l2_error (src, &error);
@@ -711,7 +720,7 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
     gst_caps_unref (caps);
     src->pending_set_fmt = FALSE;
-  } else if (gst_buffer_pool_is_active (src->v4l2object->pool)) {
+  } else if (gst_buffer_pool_is_active (bpool)) {
     /* Trick basesrc into not deactivating the active pool. Renegotiating here
      * would otherwise turn off and on the camera. */
     GstAllocator *allocator;
@@ -737,6 +746,8 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
       gst_object_unref (pool);
     if (allocator)
       gst_object_unref (allocator);
+    if (bpool)
+      gst_object_unref (bpool);
 
     return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
   }
@@ -748,10 +759,12 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   }
 
   if (ret) {
-    if (!gst_buffer_pool_set_active (src->v4l2object->pool, TRUE))
+    if (!gst_buffer_pool_set_active (bpool, TRUE))
       goto activate_failed;
   }
 
+  if (bpool)
+    gst_object_unref (bpool);
   return ret;
 
 activate_failed:
@@ -759,6 +772,8 @@ activate_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS,
         (_("Failed to allocate required memory.")),
         ("Buffer pool activation failed"));
+    if (bpool)
+      gst_object_unref (bpool);
     return FALSE;
   }
 }
@@ -803,8 +818,13 @@ gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
         min_latency /= 2;
 
       /* max latency is total duration of the frame buffer */
-      if (obj->pool != NULL)
-        num_buffers = GST_V4L2_BUFFER_POOL_CAST (obj->pool)->max_latency;
+      {
+        GstBufferPool *obj_pool = gst_v4l2_object_get_buffer_pool (obj);
+        if (obj_pool != NULL) {
+          num_buffers = GST_V4L2_BUFFER_POOL_CAST (obj_pool)->max_latency;
+          gst_object_unref (obj_pool);
+        }
+      }
 
       if (num_buffers == 0)
         max_latency = -1;
@@ -937,8 +957,6 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
   gboolean half_frame;
 
   do {
-    GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL_CAST (obj->pool);
-
     ret = GST_BASE_SRC_CLASS (parent_class)->alloc (GST_BASE_SRC (src), 0,
         obj->info.size, buf);
 
@@ -965,7 +983,13 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
       goto alloc_failed;
     }
 
-    ret = gst_v4l2_buffer_pool_process (pool, buf, NULL);
+    {
+      GstV4l2BufferPool *obj_pool =
+          GST_V4L2_BUFFER_POOL_CAST (gst_v4l2_object_get_buffer_pool (obj));
+      ret = gst_v4l2_buffer_pool_process (obj_pool, buf, NULL);
+      if (obj_pool)
+        gst_object_unref (obj_pool);
+    }
 
   } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER ||
       ret == GST_V4L2_FLOW_RESOLUTION_CHANGE);

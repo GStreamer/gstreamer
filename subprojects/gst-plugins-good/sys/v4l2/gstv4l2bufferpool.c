@@ -1031,21 +1031,25 @@ gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 }
 
 gboolean
-gst_v4l2_buffer_pool_orphan (GstBufferPool ** bpool)
+gst_v4l2_buffer_pool_orphan (GstV4l2Object * v4l2object)
 {
-  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (*bpool);
+  GstBufferPool *bpool = gst_v4l2_object_get_buffer_pool (v4l2object);
+  GstV4l2BufferPool *pool;
   gboolean ret;
 
-  g_return_val_if_fail (pool->orphaned == FALSE, FALSE);
+  g_return_val_if_fail (bpool, FALSE);
 
-  if (!GST_V4L2_ALLOCATOR_CAN_ORPHAN_BUFS (pool->vallocator))
-    return FALSE;
+  pool = GST_V4L2_BUFFER_POOL (bpool);
 
-  if (g_getenv ("GST_V4L2_FORCE_DRAIN"))
+  if (pool->orphaned != FALSE
+      || !GST_V4L2_ALLOCATOR_CAN_ORPHAN_BUFS (pool->vallocator)
+      || g_getenv ("GST_V4L2_FORCE_DRAIN")) {
+    gst_object_unref (bpool);
     return FALSE;
+  }
 
   GST_DEBUG_OBJECT (pool, "orphaning pool");
-  gst_buffer_pool_set_active (*bpool, FALSE);
+  gst_buffer_pool_set_active (bpool, FALSE);
 
   /* We lock to prevent racing with a return buffer in QBuf, and has a
    * workaround of not being able to use the pool hidden activation lock. */
@@ -1059,9 +1063,16 @@ gst_v4l2_buffer_pool_orphan (GstBufferPool ** bpool)
   GST_OBJECT_UNLOCK (pool);
 
   if (ret) {
-    gst_object_unref (*bpool);
-    *bpool = NULL;
+    GstBufferPool *old_pool;
+    GST_OBJECT_LOCK (v4l2object->element);
+    old_pool = v4l2object->pool;
+    v4l2object->pool = NULL;
+    GST_OBJECT_UNLOCK (v4l2object->element);
+    if (old_pool)
+      gst_object_unref (old_pool);
   }
+
+  gst_object_unref (bpool);
 
   return ret;
 }
@@ -2295,16 +2306,23 @@ gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * pool, gboolean copy)
 }
 
 gboolean
-gst_v4l2_buffer_pool_flush (GstBufferPool * bpool)
+gst_v4l2_buffer_pool_flush (GstV4l2Object * v4l2object)
 {
-  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
+  GstBufferPool *bpool = gst_v4l2_object_get_buffer_pool (v4l2object);
+  GstV4l2BufferPool *pool;
   gboolean ret = TRUE;
+
+  if (!bpool)
+    return FALSE;
+
+  pool = GST_V4L2_BUFFER_POOL (bpool);
 
   gst_v4l2_buffer_pool_streamoff (pool);
 
   if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type))
     ret = gst_v4l2_buffer_pool_streamon (pool);
 
+  gst_object_unref (bpool);
   return ret;
 }
 
