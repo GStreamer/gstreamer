@@ -304,6 +304,19 @@ struct _GstDebugMessage
   gchar *message;
   const gchar *format;
   va_list arguments;
+
+  /* The emitter of the message (can be NULL) */
+  GObject *object;
+
+  /* Provider of the message. Can be user-provided, or generated dynamically
+   * from object */
+  gchar *object_id;
+
+  /* Whether object_id was dynamically allocated and should be freed */
+  gboolean free_object_id;
+
+  /* heap-allocated write area for short names */
+  gchar tmp_id[32];
 };
 
 /* list of all name/level pairs from --gst-debug and GST_DEBUG */
@@ -522,6 +535,35 @@ gst_debug_log (GstDebugCategory * category, GstDebugLevel level,
   va_end (var_args);
 }
 
+/**
+ * gst_debug_log_id:
+ * @category: category to log
+ * @level: level of the message is in
+ * @file: the file that emitted the message, usually the __FILE__ identifier
+ * @function: the function that emitted the message
+ * @line: the line from that the message was emitted, usually __LINE__
+ * @id: (transfer none) (allow-none): the identifier of the object this message
+ *    relates to, or %NULL if none.
+ * @format: a printf style format string
+ * @...: optional arguments for the format
+ *
+ * Logs the given message using the currently registered debugging handlers.
+ *
+ * Since: 1.22
+ */
+void
+gst_debug_log_id (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    const gchar * id, const gchar * format, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, format);
+  gst_debug_log_id_valist (category, level, file, function, line, id, format,
+      var_args);
+  va_end (var_args);
+}
+
 /* based on g_basename(), which we can't use because it was deprecated */
 static inline const gchar *
 gst_path_basename (const gchar * file_name)
@@ -545,6 +587,49 @@ gst_path_basename (const gchar * file_name)
   return file_name;
 }
 
+static void
+gst_debug_log_full_valist (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, const gchar * id, const gchar * format, va_list args)
+{
+  GstDebugMessage message;
+  LogFuncEntry *entry;
+  GSList *handler;
+
+  g_return_if_fail (category != NULL);
+
+  if (level > gst_debug_category_get_threshold (category))
+    return;
+
+  g_return_if_fail (file != NULL);
+  g_return_if_fail (function != NULL);
+  g_return_if_fail (format != NULL);
+
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  g_return_if_fail (id != NULL || object == NULL || G_IS_OBJECT (object));
+#endif
+
+  message.message = NULL;
+  message.format = format;
+  message.object = object;
+  message.object_id = (gchar *) id;
+  message.free_object_id = FALSE;
+
+  G_VA_COPY (message.arguments, args);
+
+  handler = __log_functions;
+  while (handler) {
+    entry = handler->data;
+    handler = g_slist_next (handler);
+    entry->func (category, level, file, function, line, object, &message,
+        entry->user_data);
+  }
+  g_free (message.message);
+  if (message.free_object_id)
+    g_free (message.object_id);
+  va_end (message.arguments);
+}
+
 /**
  * gst_debug_log_valist:
  * @category: category to log
@@ -564,26 +649,65 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, const gchar * format, va_list args)
 {
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
+#endif
+
+  gst_debug_log_full_valist (category, level, file, function, line, object,
+      NULL, format, args);
+}
+
+/**
+ * gst_debug_log_id_valist:
+ * @category: category to log
+ * @level: level of the message is in
+ * @file: the file that emitted the message, usually the __FILE__ identifier
+ * @function: the function that emitted the message
+ * @line: the line from that the message was emitted, usually __LINE__
+ * @id: (transfer none) (allow-none): the identifier of the object this message
+ *    relates to or %NULL if none.
+ * @format: a printf style format string
+ * @args: optional arguments for the format
+ *
+ * Logs the given message using the currently registered debugging handlers.
+ *
+ * Since: 1.22
+ */
+void
+gst_debug_log_id_valist (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    const gchar * id, const gchar * format, va_list args)
+{
+  gst_debug_log_full_valist (category, level, file, function, line, NULL, id,
+      format, args);
+}
+
+static void
+gst_debug_log_literal_full (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    GObject * object, const gchar * id, const gchar * message_string)
+{
   GstDebugMessage message;
   LogFuncEntry *entry;
   GSList *handler;
 
   g_return_if_fail (category != NULL);
 
-#ifdef GST_ENABLE_EXTRA_CHECKS
-  g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
-#endif
-
   if (level > gst_debug_category_get_threshold (category))
     return;
 
+#ifdef GST_ENABLE_EXTRA_CHECKS
+  g_return_if_fail (id != NULL || object == NULL || G_IS_OBJECT (object));
+#endif
+
   g_return_if_fail (file != NULL);
   g_return_if_fail (function != NULL);
-  g_return_if_fail (format != NULL);
+  g_return_if_fail (message_string != NULL);
 
-  message.message = NULL;
-  message.format = format;
-  G_VA_COPY (message.arguments, args);
+  message.message = (gchar *) message_string;
+  message.object = object;
+  message.object_id = (gchar *) id;
+  message.free_object_id = FALSE;
 
   handler = __log_functions;
   while (handler) {
@@ -592,8 +716,9 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
     entry->func (category, level, file, function, line, object, &message,
         entry->user_data);
   }
-  g_free (message.message);
-  va_end (message.arguments);
+
+  if (message.free_object_id)
+    g_free (message.object_id);
 }
 
 /**
@@ -616,32 +741,36 @@ gst_debug_log_literal (GstDebugCategory * category, GstDebugLevel level,
     const gchar * file, const gchar * function, gint line,
     GObject * object, const gchar * message_string)
 {
-  GstDebugMessage message;
-  LogFuncEntry *entry;
-  GSList *handler;
-
-  g_return_if_fail (category != NULL);
-
 #ifdef GST_ENABLE_EXTRA_CHECKS
   g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
 #endif
 
-  if (level > gst_debug_category_get_threshold (category))
-    return;
+  gst_debug_log_literal_full (category, level, file, function, line, object,
+      NULL, message_string);
+}
 
-  g_return_if_fail (file != NULL);
-  g_return_if_fail (function != NULL);
-  g_return_if_fail (message_string != NULL);
-
-  message.message = (gchar *) message_string;
-
-  handler = __log_functions;
-  while (handler) {
-    entry = handler->data;
-    handler = g_slist_next (handler);
-    entry->func (category, level, file, function, line, object, &message,
-        entry->user_data);
-  }
+/**
+ * gst_debug_log_id_literal:
+ * @category: category to log
+ * @level: level of the message is in
+ * @file: the file that emitted the message, usually the __FILE__ identifier
+ * @function: the function that emitted the message
+ * @line: the line from that the message was emitted, usually __LINE__
+ * @id: (transfer none) (allow-none): the identifier of the object this message relates to
+ *    or %NULL if none
+ * @message_string: a message string
+ *
+ * Logs the given message using the currently registered debugging handlers.
+ *
+ * Since: 1.22
+ */
+void
+gst_debug_log_id_literal (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    const gchar * id, const gchar * message_string)
+{
+  gst_debug_log_literal_full (category, level, file, function, line, NULL, id,
+      message_string);
 }
 
 /**
@@ -666,6 +795,75 @@ gst_debug_message_get (GstDebugMessage * message)
       message->message = NULL;
   }
   return message->message;
+}
+
+/* Return the pad name. Will use the provided 32 byte write_area if it fits
+ * within */
+static inline gchar *
+_heap_pad_name (GstPad * pad, gchar * write_area, gboolean * allocated)
+{
+  GstObject *parent = GST_OBJECT_PARENT (pad);
+  const gchar *parentname =
+      parent ? GST_STR_NULL (GST_OBJECT_NAME (parent)) : "''";
+  const gchar *padname = GST_STR_NULL (GST_OBJECT_NAME (pad));
+
+  /* 1 byte for ':' and 1 for terminating '\0' */
+  if (strlen (parentname) + strlen (padname) + 2 <= 32) {
+    g_sprintf (write_area, "%s:%s", parentname, padname);
+    *allocated = FALSE;
+    return write_area;
+  }
+  *allocated = TRUE;
+  return g_strdup_printf ("%s:%s", parentname, padname);
+}
+
+/* Returns the object id. Allocated is set to TRUE if a memory allocation
+ * happened and the returned value should be freed */
+static gchar *
+_get_object_id (GObject * object, gboolean * allocated, gchar * write_area)
+{
+  gchar *object_id;
+
+  if (GST_IS_PAD (object) && GST_OBJECT_NAME (object)) {
+    object_id = _heap_pad_name (GST_PAD_CAST (object), write_area, allocated);
+  } else if (GST_IS_OBJECT (object)
+      && GST_OBJECT_NAME (object)) {
+    object_id = GST_OBJECT_NAME (object);
+    *allocated = FALSE;
+  } else if (G_IS_OBJECT (object)) {
+    object_id = g_strdup_printf ("%s@%p", G_OBJECT_TYPE_NAME (object), object);
+    *allocated = TRUE;
+  } else {
+    object_id = g_strdup_printf ("%p", object);
+    *allocated = TRUE;
+  }
+
+  return object_id;
+}
+
+/**
+ * gst_debug_message_get_id:
+ * @message: a debug message
+ *
+ * Get the id of the object that emitted this message. This function is used in
+ * debug handlers. Can be empty.
+ *
+ * Since: 1.22
+ *
+ * Returns: (nullable): The emitter of a #GstDebugMessage.
+ */
+const gchar *
+gst_debug_message_get_id (GstDebugMessage * message)
+{
+  if (!message->object_id && message->object) {
+    /* Dynamically generate the object id */
+    /* Note : we don't use gst_debug_print_object since we only accept a subset
+     * and can avoid duplicating if needed */
+    message->object_id =
+        _get_object_id (message->object, &message->free_object_id,
+        (gchar *) & message->tmp_id);
+  }
+  return message->object_id;
 }
 
 #define MAX_BUFFER_DUMP_STRING_LEN  100
@@ -1170,6 +1368,8 @@ gst_debug_construct_win_color (guint colorinfo)
 #endif
 #define CAT_FMT "%20s %s:%d:%s:%s"
 #define NOCOLOR_PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
+#define CAT_FMT_ID "%20s %s:%d:%s:<%s>"
+#define NOCOLOR_PRINT_FMT_ID " "PID_FMT" "PTR_FMT" %s "CAT_FMT_ID" %s\n"
 
 #ifdef G_OS_WIN32
 static const guchar levelcolormap_w32[GST_LEVEL_COUNT] = {
@@ -1215,8 +1415,8 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
 };
 
 static void
-_gst_debug_log_preamble (GstDebugMessage * message, GObject * object,
-    const gchar ** file, const gchar ** message_str, gchar ** obj_str,
+_gst_debug_log_preamble (GstDebugMessage * message, const gchar ** file,
+    const gchar ** message_str, const gchar ** object_id,
     GstClockTime * elapsed)
 {
   gchar c;
@@ -1239,12 +1439,7 @@ _gst_debug_log_preamble (GstDebugMessage * message, GObject * object,
     *file = gst_path_basename (*file);
   }
 
-  if (object) {
-    *obj_str = gst_debug_print_object (object);
-  } else {
-    *obj_str = (gchar *) "";
-  }
-
+  *object_id = gst_debug_message_get_id (message);
   *elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
 }
 
@@ -1273,23 +1468,22 @@ gst_debug_log_get_line (GstDebugCategory * category, GstDebugLevel level,
     GObject * object, GstDebugMessage * message)
 {
   GstClockTime elapsed;
-  gchar *ret, *obj_str = NULL;
-  const gchar *message_str;
+  gchar *ret;
+  const gchar *message_str, *object_id;
 
-#ifdef GST_ENABLE_EXTRA_CHECKS
-  g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
-#endif
+  _gst_debug_log_preamble (message, &file, &message_str, &object_id, &elapsed);
 
-  _gst_debug_log_preamble (message, object, &file, &message_str, &obj_str,
-      &elapsed);
+  if (object_id)
+    ret = g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT_ID,
+        GST_TIME_ARGS (elapsed), _gst_getpid (), g_thread_self (),
+        gst_debug_level_get_name (level), gst_debug_category_get_name
+        (category), file, line, function, object_id, message_str);
+  else
+    ret = g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
+        GST_TIME_ARGS (elapsed), _gst_getpid (), g_thread_self (),
+        gst_debug_level_get_name (level), gst_debug_category_get_name
+        (category), file, line, function, "", message_str);
 
-  ret = g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
-      GST_TIME_ARGS (elapsed), _gst_getpid (), g_thread_self (),
-      gst_debug_level_get_name (level), gst_debug_category_get_name
-      (category), file, line, function, obj_str, message_str);
-
-  if (object != NULL)
-    g_free (obj_str);
   return ret;
 }
 
@@ -1359,7 +1553,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 {
   gint pid;
   GstClockTime elapsed;
-  gchar *obj = NULL;
+  const gchar *object_id;
   GstDebugColorMode color_mode;
   const gchar *message_str;
   FILE *log_file = user_data ? user_data : stderr;
@@ -1378,8 +1572,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   g_warn_if_fail (object == NULL || G_IS_OBJECT (object));
 #endif
 
-  _gst_debug_log_preamble (message, object, &file, &message_str, &obj,
-      &elapsed);
+  _gst_debug_log_preamble (message, &file, &message_str, &object_id, &elapsed);
 
   pid = _gst_getpid ();
   color_mode = gst_debug_get_color_mode ();
@@ -1400,14 +1593,24 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       g_sprintf (pidcolor, "\033[%02dm", pid % 6 + 31);
       levelcolor = levelcolormap[level];
 
+      if (object_id) {
+#define PRINT_FMT_ID " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT_ID"%s %s\n"
+        FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT_ID,
+            GST_TIME_ARGS (elapsed), pidcolor, pid, clear, g_thread_self (),
+            levelcolor, gst_debug_level_get_name (level), clear, color,
+            gst_debug_category_get_name (category), file, line, function,
+            object_id, clear, message_str);
+      } else {
 #define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
-      FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT,
-          GST_TIME_ARGS (elapsed), pidcolor, pid, clear, g_thread_self (),
-          levelcolor, gst_debug_level_get_name (level), clear, color,
-          gst_debug_category_get_name (category), file, line, function, obj,
-          clear, message_str);
+        FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT PRINT_FMT,
+            GST_TIME_ARGS (elapsed), pidcolor, pid, clear, g_thread_self (),
+            levelcolor, gst_debug_level_get_name (level), clear, color,
+            gst_debug_category_get_name (category), file, line, function, "",
+            clear, message_str);
+      }
       FFLUSH_DEBUG (log_file);
 #undef PRINT_FMT
+#undef PRINT_FMT_ID
 #ifdef G_OS_WIN32
     } else {
       /* colors, windows. */
@@ -1431,8 +1634,14 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
       /* category */
       SET_COLOR (gst_debug_construct_win_color (gst_debug_category_get_color
               (category)));
-      FPRINTF_DEBUG (log_file, CAT_FMT, gst_debug_category_get_name (category),
-          file, line, function, obj);
+      if (object_id) {
+        FPRINTF_DEBUG (log_file, CAT_FMT_ID,
+            gst_debug_category_get_name (category), file, line, function,
+            object_id);
+      } else {
+        FPRINTF_DEBUG (log_file, CAT_FMT,
+            gst_debug_category_get_name (category), file, line, function, "");
+      }
       /* message */
       SET_COLOR (clear);
       FPRINTF_DEBUG (log_file, " %s\n", message_str);
@@ -1441,16 +1650,21 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
 #endif
   } else {
     /* no color, all platforms */
-    FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
-        GST_TIME_ARGS (elapsed), pid, g_thread_self (),
-        gst_debug_level_get_name (level),
-        gst_debug_category_get_name (category), file, line, function, obj,
-        message_str);
+    if (object_id) {
+      FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT_ID,
+          GST_TIME_ARGS (elapsed), pid, g_thread_self (),
+          gst_debug_level_get_name (level),
+          gst_debug_category_get_name (category), file, line, function,
+          object_id, message_str);
+    } else {
+      FPRINTF_DEBUG (log_file, "%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
+          GST_TIME_ARGS (elapsed), pid, g_thread_self (),
+          gst_debug_level_get_name (level),
+          gst_debug_category_get_name (category), file, line, function, "",
+          message_str);
+    }
     FFLUSH_DEBUG (log_file);
   }
-
-  if (object != NULL)
-    g_free (obj);
 }
 
 /**
@@ -2367,18 +2581,25 @@ gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
       (guint) mem_offset, hexstr, ascstr);
 }
 
-void
-_gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
-    const gchar * func, gint line, GObject * obj, const gchar * msg,
-    const guint8 * data, guint length)
+static void
+_gst_debug_dump_mem_full (GstDebugCategory * cat, const gchar * file,
+    const gchar * func, gint line, GObject * obj, const gchar * object_id,
+    const gchar * msg, const guint8 * data, guint length)
 {
   guint off = 0;
+  gboolean free_object_id = FALSE;
+  gchar tmp_id[32];
 
-  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "--------"
+  if (object_id == NULL && obj)
+    object_id = _get_object_id (obj, &free_object_id, (gchar *) & tmp_id);
+
+  gst_debug_log_id ((cat), GST_LEVEL_MEMDUMP, file, func, line, object_id,
+      "--------"
       "-------------------------------------------------------------------");
 
   if (msg != NULL && *msg != '\0') {
-    gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "%s", msg);
+    gst_debug_log_id ((cat), GST_LEVEL_MEMDUMP, file, func, line, object_id,
+        "%s", msg);
   }
 
   while (off < length) {
@@ -2386,13 +2607,37 @@ _gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
 
     /* gst_info_dump_mem_line will process 16 bytes at most */
     gst_info_dump_mem_line (buf, sizeof (buf), data, off, length - off);
-    gst_debug_log (cat, GST_LEVEL_MEMDUMP, file, func, line, obj, "%s", buf);
+    gst_debug_log_id (cat, GST_LEVEL_MEMDUMP, file, func, line, object_id, "%s",
+        buf);
     off += 16;
   }
 
-  gst_debug_log ((cat), GST_LEVEL_MEMDUMP, file, func, line, obj, "--------"
+  gst_debug_log_id ((cat), GST_LEVEL_MEMDUMP, file, func, line, object_id,
+      "--------"
       "-------------------------------------------------------------------");
+
+  if (free_object_id)
+    g_free ((gchar *) object_id);
 }
+
+void
+_gst_debug_dump_mem (GstDebugCategory * cat, const gchar * file,
+    const gchar * func, gint line, GObject * obj, const gchar * msg,
+    const guint8 * data, guint length)
+{
+  _gst_debug_dump_mem_full (cat, file, func, line, obj, NULL, msg, data,
+      length);
+}
+
+void
+_gst_debug_dump_mem_id (GstDebugCategory * cat, const gchar * file,
+    const gchar * func, gint line, const gchar * object_id, const gchar * msg,
+    const guint8 * data, guint length)
+{
+  _gst_debug_dump_mem_full (cat, file, func, line, NULL, object_id, msg, data,
+      length);
+}
+
 
 #else /* !GST_DISABLE_GST_DEBUG */
 #ifndef GST_REMOVE_DISABLED
@@ -2446,6 +2691,12 @@ const gchar *
 gst_debug_message_get (GstDebugMessage * message)
 {
   return "";
+}
+
+const gchar *
+gst_debug_message_get_id (GstDebugMessage * message)
+{
+  return NULL;
 }
 
 void
@@ -3275,21 +3526,19 @@ static GstRingBufferLogger *ring_buffer_logger = NULL;
 
 static void
 gst_ring_buffer_logger_log (GstDebugCategory * category,
-    GstDebugLevel level,
-    const gchar * file,
-    const gchar * function,
+    GstDebugLevel level, const gchar * file, const gchar * function,
     gint line, GObject * object, GstDebugMessage * message, gpointer user_data)
 {
   GstRingBufferLogger *logger = user_data;
   GThread *thread;
   GstClockTime elapsed;
-  gchar *obj = NULL;
   gchar c;
   gchar *output;
   gsize output_len;
   GstRingBufferLog *log;
   gint64 now = g_get_monotonic_time ();
   const gchar *message_str = gst_debug_message_get (message);
+  const gchar *object_id = gst_debug_message_get_id (message);
 
   /* __FILE__ might be a file name or an absolute path or a
    * relative path, irrespective of the exact compiler used,
@@ -3300,28 +3549,29 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     file = gst_path_basename (file);
   }
 
-  if (object) {
-    obj = gst_debug_print_object (object);
-  } else {
-    obj = (gchar *) "";
-  }
-
   elapsed = GST_CLOCK_DIFF (_priv_gst_start_time, gst_util_get_timestamp ());
   thread = g_thread_self ();
 
-  /* no color, all platforms */
-#define PRINT_FMT " "PID_FMT" "PTR_FMT" %s "CAT_FMT" %s\n"
-  output =
-      g_strdup_printf ("%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
-      _gst_getpid (), thread, gst_debug_level_get_name (level),
-      gst_debug_category_get_name (category), file, line, function, obj,
-      message_str);
-#undef PRINT_FMT
+  if (object_id) {
+    /* no color, all platforms */
+    output =
+        g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT_ID,
+        GST_TIME_ARGS (elapsed), _gst_getpid (), thread,
+        gst_debug_level_get_name (level),
+        gst_debug_category_get_name (category), file, line, function,
+        object_id, message_str);
+  } else {
+    /* no color, all platforms */
+    output =
+        g_strdup_printf ("%" GST_TIME_FORMAT NOCOLOR_PRINT_FMT,
+        GST_TIME_ARGS (elapsed), _gst_getpid (), thread,
+        gst_debug_level_get_name (level),
+        gst_debug_category_get_name (category), file, line, function, "",
+        message_str);
+  }
 
   output_len = strlen (output);
 
-  if (object != NULL)
-    g_free (obj);
 
   G_LOCK (ring_buffer_logger);
 
