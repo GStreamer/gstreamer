@@ -3318,7 +3318,7 @@ dbghelp_load_symbol (const gchar * symbol_name, gpointer * symbol)
     dbg_help_module = NULL;
   }
 
-  return ! !dbg_help_module;
+  return dbg_help_module != NULL;
 }
 
 static gboolean
@@ -3356,7 +3356,7 @@ dbghelp_initialize_symbols (HANDLE process)
     g_once_init_leave (&initialization_value, 1);
   }
 
-  return ! !dbg_help_module;
+  return dbg_help_module != NULL;
 }
 
 static gchar *
