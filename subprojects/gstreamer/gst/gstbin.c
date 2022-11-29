@@ -3496,6 +3496,13 @@ was_busy:
 nothing_pending:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "nothing pending");
+
+    amessage = gst_message_new_async_done (GST_OBJECT_CAST (bin), running_time);
+
+    GST_OBJECT_UNLOCK (bin);
+    gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
+    GST_OBJECT_LOCK (bin);
+
     return;
   }
 }
