@@ -36,6 +36,7 @@ typedef struct
 
   GstVaDisplay *display;
   gchar *render_device_path;
+  gint index;
 } GstVaDevice;
 
 GType                 gst_va_device_get_type              (void);

@@ -42,7 +42,8 @@ gst_va_device_free (GstVaDevice * device)
 }
 
 static GstVaDevice *
-gst_va_device_new (GstVaDisplay * display, const gchar * render_device_path)
+gst_va_device_new (GstVaDisplay * display, const gchar * render_device_path,
+    gint index)
 {
   GstVaDevice *device = g_new0 (GstVaDevice, 1);
 
@@ -52,6 +53,7 @@ gst_va_device_new (GstVaDisplay * display, const gchar * render_device_path)
   /* take ownership */
   device->display = display;
   device->render_device_path = g_strdup (render_device_path);
+  device->index = index;
 
   return device;
 }
@@ -61,7 +63,7 @@ compare_device_path (gconstpointer a, gconstpointer b, gpointer user_data)
 {
   const GstVaDevice *pa = a, *pb = b;
 
-  return strcmp (pa->render_device_path, pb->render_device_path);
+  return g_strcmp0 (pa->render_device_path, pb->render_device_path);
 }
 
 #if HAVE_GUDEV
@@ -71,6 +73,7 @@ gst_va_device_find_devices (void)
   GUdevClient *client;
   GList *udev_devices, *dev;
   GQueue devices = G_QUEUE_INIT;
+  gint i = 0;
 
   client = g_udev_client_new (NULL);
   udev_devices = g_udev_client_query_by_subsystem (client, "drm");
@@ -90,7 +93,7 @@ gst_va_device_find_devices (void)
       continue;
 
     GST_INFO ("Found VA-API device: %s", path);
-    g_queue_push_head (&devices, gst_va_device_new (dpy, path));
+    g_queue_push_head (&devices, gst_va_device_new (dpy, path, i++));
   }
 
   g_queue_sort (&devices, compare_device_path, NULL);
@@ -106,7 +109,7 @@ gst_va_device_find_devices (void)
   GstVaDisplay *dpy;
   GQueue devices = G_QUEUE_INIT;
   gchar path[64];
-  guint i;
+  guint i, j = 0;
 
   for (i = 0; i < 8; i++) {
     g_snprintf (path, sizeof (path), "/dev/dri/renderD%d", 128 + i);
@@ -117,7 +120,7 @@ gst_va_device_find_devices (void)
       continue;
 
     GST_INFO ("Found VA-API device: %s", path);
-    g_queue_push_head (&devices, gst_va_device_new (dpy, path));
+    g_queue_push_head (&devices, gst_va_device_new (dpy, path, j++));
   }
 
   g_queue_sort (&devices, compare_device_path, NULL);

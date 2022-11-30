@@ -581,16 +581,14 @@ gst_va_vp8_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  type_name = g_strdup ("GstVaVp8Dec");
-  feature_name = g_strdup ("vavp8dec");
-
   /* The first decoder to be registered should use a constant name,
    * like vavp8dec, for any additional decoders, we create unique
    * names, using inserting the render device name. */
-  if (g_type_from_name (type_name)) {
+  if (device->index == 0) {
+    type_name = g_strdup ("GstVaVp8Dec");
+    feature_name = g_strdup ("vavp8dec");
+  } else {
     gchar *basename = g_path_get_basename (device->render_device_path);
-    g_free (type_name);
-    g_free (feature_name);
     type_name = g_strdup_printf ("GstVa%sVp8Dec", basename);
     feature_name = g_strdup_printf ("va%svp8dec", basename);
     cdata->description = basename;

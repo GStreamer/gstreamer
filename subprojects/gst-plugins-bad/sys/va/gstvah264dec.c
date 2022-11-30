@@ -1034,16 +1034,14 @@ gst_va_h264_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  type_name = g_strdup ("GstVaH264Dec");
-  feature_name = g_strdup ("vah264dec");
-
   /* The first decoder to be registered should use a constant name,
    * like vah264dec, for any additional decoders, we create unique
    * names, using inserting the render device name. */
-  if (g_type_from_name (type_name)) {
+  if (device->index == 0) {
+    type_name = g_strdup ("GstVaH264Dec");
+    feature_name = g_strdup ("vah264dec");
+  } else {
     gchar *basename = g_path_get_basename (device->render_device_path);
-    g_free (type_name);
-    g_free (feature_name);
     type_name = g_strdup_printf ("GstVa%sH264Dec", basename);
     feature_name = g_strdup_printf ("va%sh264dec", basename);
     cdata->description = basename;
