@@ -1998,10 +1998,14 @@ gst_uri_decode_bin3_handle_message (GstBin * bin, GstMessage * msg)
       PLAY_ITEMS_LOCK (uridecodebin);
       /* Find the matching handler (if any) */
       handler = find_source_handler_for_element (uridecodebin, msg->src);
-      if (!handler || !uridecodebin->input_item->main_item) {
+      if (!handler) {
+        GST_LOG_OBJECT (uridecodebin, "No handler for message, dropping it");
         gst_message_unref (msg);
         msg = NULL;
-      } else if (handler != uridecodebin->input_item->main_item->handler) {
+      } else if (!uridecodebin->input_item->main_item
+          || handler != uridecodebin->input_item->main_item->handler) {
+        GST_LOG_OBJECT (uridecodebin,
+            "Handler isn't active input item, storing message");
         /* Store the message for a later time */
         if (handler->pending_buffering_msg)
           gst_message_unref (handler->pending_buffering_msg);
