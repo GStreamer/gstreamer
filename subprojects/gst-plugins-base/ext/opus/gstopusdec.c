@@ -310,7 +310,7 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     gst_structure_fixate_field_nearest_int (s, "rate", dec->sample_rate);
     gst_structure_get_int (s, "rate", &rate);
     channels = dec->n_channels > 0 ? dec->n_channels : 2;
-    gst_structure_fixate_field_nearest_int (s, "channels", dec->n_channels);
+    gst_structure_fixate_field_nearest_int (s, "channels", channels);
     gst_structure_get_int (s, "channels", &channels);
 
     gst_caps_unref (inter);
