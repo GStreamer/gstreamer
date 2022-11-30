@@ -808,7 +808,7 @@ gst_static_pad_compare_func (gconstpointer p1, gconstpointer p2)
 static void
 print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 {
-  GList *pads;
+  GList *pads, *tmp;
   GstStaticPadTemplate *padtemplate;
   GstPadTemplate *tmpl;
 
@@ -824,9 +824,9 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
   pads = g_list_copy ((GList *)
       gst_element_factory_get_static_pad_templates (factory));
   pads = g_list_sort (pads, gst_static_pad_compare_func);
-  while (pads) {
-    padtemplate = (GstStaticPadTemplate *) (pads->data);
-    pads = g_list_next (pads);
+
+  for (tmp = pads; tmp; tmp = tmp->next) {
+    padtemplate = (GstStaticPadTemplate *) (tmp->data);
 
     if (padtemplate->direction == GST_PAD_SRC)
       n_print ("%sSRC template%s: %s'%s'%s\n", PROP_NAME_COLOR, RESET_COLOR,
@@ -883,7 +883,7 @@ print_pad_templates_info (GstElement * element, GstElementFactory * factory)
 
     pop_indent ();
 
-    if (pads != NULL)
+    if (tmp->next)
       n_print ("\n");
   }
   g_list_free (pads);
