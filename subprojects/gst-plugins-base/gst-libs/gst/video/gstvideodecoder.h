@@ -161,7 +161,7 @@ G_STMT_START {                                                              \
  *
  * Default maximum number of errors tolerated before signaling error.
  */
-#define GST_VIDEO_DECODER_MAX_ERRORS     10
+#define GST_VIDEO_DECODER_MAX_ERRORS     -1
 
 
 /**
