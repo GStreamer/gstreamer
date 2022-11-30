@@ -1285,10 +1285,11 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * orig_uri,
   GstAdaptiveDemux2Stream *base_stream = GST_ADAPTIVE_DEMUX2_STREAM (stream);
   GstAdaptiveDemux *demux = base_stream->demux;
   const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
+  struct PlaylistDownloadParams dl_params;
 
 retry:
 
-  struct PlaylistDownloadParams dl_params = { 0, };
+  memset (&dl_params, 0, sizeof (struct PlaylistDownloadParams));
 
   /* If there's no previous playlist, or the URI changed this
    * is not a refresh/update but a switch to a new playlist */
