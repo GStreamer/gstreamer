@@ -1292,6 +1292,7 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
       for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
         sq = (GstSingleQueue *) tmp->data;
         sq->flushing = FALSE;
+        sq->sink_stream_gid = sq->src_stream_gid = GST_GROUP_ID_INVALID;
       }
 
       /* the visible limit might not have been set on single queues that have grown because of other queueus were empty */
@@ -1363,9 +1364,7 @@ gst_single_queue_pause (GstMultiQueue * mq, GstSingleQueue * sq)
   }
 
   sq->sink_tainted = sq->src_tainted = TRUE;
-  sq->sink_stream_gid = sq->src_stream_gid = GST_GROUP_ID_INVALID;
-  sq->sink_stream_gid_changed = FALSE;
-  sq->src_stream_gid_changed = FALSE;
+
   return result;
 }
 
@@ -1381,9 +1380,7 @@ gst_single_queue_stop (GstMultiQueue * mq, GstSingleQueue * sq)
     gst_object_unref (srcpad);
   }
   sq->sink_tainted = sq->src_tainted = TRUE;
-  sq->sink_stream_gid = sq->src_stream_gid = GST_GROUP_ID_INVALID;
-  sq->sink_stream_gid_changed = FALSE;
-  sq->src_stream_gid_changed = FALSE;
+
   return result;
 }
 
