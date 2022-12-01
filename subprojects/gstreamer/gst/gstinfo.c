@@ -1044,6 +1044,37 @@ gst_info_printf_pointer_extension_func (const char *format, void *ptr)
   return s;
 }
 
+/* Allocation-less generator of color escape code. Provide a 20 byte write
+ * area */
+static void
+_construct_term_color (guint colorinfo, gchar write_area[20])
+{
+  guint offset;
+
+  memcpy (write_area, "\033[00", 4);
+  offset = 4;
+
+  if (colorinfo & GST_DEBUG_BOLD) {
+    memcpy (write_area + offset, ";01", 3);
+    offset += 3;
+  }
+  if (colorinfo & GST_DEBUG_UNDERLINE) {
+    memcpy (write_area + offset, ";04", 3);
+    offset += 3;
+  }
+  if (colorinfo & GST_DEBUG_FG_MASK) {
+    memcpy (write_area + offset, ";3", 2);
+    write_area[offset + 2] = '0' + (colorinfo & GST_DEBUG_FG_MASK);
+    offset += 3;
+  }
+  if (colorinfo & GST_DEBUG_BG_MASK) {
+    memcpy (write_area + offset, ";4", 2);
+    write_area[offset + 2] = '0' + ((colorinfo & GST_DEBUG_BG_MASK) >> 4);
+    offset += 3;
+  }
+  strncpy (write_area + offset, "m", 2);
+}
+
 /**
  * gst_debug_construct_term_color:
  * @colorinfo: the color info
@@ -1058,26 +1089,11 @@ gst_info_printf_pointer_extension_func (const char *format, void *ptr)
 gchar *
 gst_debug_construct_term_color (guint colorinfo)
 {
-  GString *color;
+  gchar tmp_color[20];
 
-  color = g_string_new ("\033[00");
+  _construct_term_color (colorinfo, tmp_color);
 
-  if (colorinfo & GST_DEBUG_BOLD) {
-    g_string_append_len (color, ";01", 3);
-  }
-  if (colorinfo & GST_DEBUG_UNDERLINE) {
-    g_string_append_len (color, ";04", 3);
-  }
-  if (colorinfo & GST_DEBUG_FG_MASK) {
-    g_string_append_printf (color, ";3%1d", colorinfo & GST_DEBUG_FG_MASK);
-  }
-  if (colorinfo & GST_DEBUG_BG_MASK) {
-    g_string_append_printf (color, ";4%1d",
-        (colorinfo & GST_DEBUG_BG_MASK) >> 4);
-  }
-  g_string_append_c (color, 'm');
-
-  return g_string_free (color, FALSE);
+  return g_strdup (tmp_color);
 }
 
 /**
@@ -1374,13 +1390,12 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     if (color_mode == GST_DEBUG_COLOR_MODE_UNIX) {
 #endif
       /* colors, non-windows */
-      gchar *color = NULL;
+      gchar color[20];
       const gchar *clear;
       gchar pidcolor[10];
       const gchar *levelcolor;
 
-      color = gst_debug_construct_term_color (gst_debug_category_get_color
-          (category));
+      _construct_term_color (gst_debug_category_get_color (category), color);
       clear = "\033[00m";
       g_sprintf (pidcolor, "\033[%02dm", pid % 6 + 31);
       levelcolor = levelcolormap[level];
@@ -1393,7 +1408,6 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
           clear, message_str);
       FFLUSH_DEBUG (log_file);
 #undef PRINT_FMT
-      g_free (color);
 #ifdef G_OS_WIN32
     } else {
       /* colors, windows. */
