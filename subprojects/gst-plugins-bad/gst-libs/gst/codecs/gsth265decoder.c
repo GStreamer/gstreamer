@@ -1382,7 +1382,9 @@ gst_h265_decoder_prepare_rps (GstH265Decoder * self, const GstH265Slice * slice,
       stRefPic =
           &sps->short_term_ref_pic_set[slice_hdr->short_term_ref_pic_set_idx];
 
-    g_assert (stRefPic != NULL);
+    if (stRefPic == NULL) {
+      return FALSE;
+    }
 
     GST_LOG_OBJECT (self,
         "NumDeltaPocs: %d, NumNegativePics: %d, NumPositivePics %d",
@@ -1634,8 +1636,11 @@ gst_h265_decoder_start_current_picture (GstH265Decoder * self)
     return GST_FLOW_OK;
   }
 
-  gst_h265_decoder_prepare_rps (self, &priv->current_slice,
-      priv->current_picture);
+  if (!gst_h265_decoder_prepare_rps (self, &priv->current_slice,
+          priv->current_picture)) {
+    GST_WARNING_OBJECT (self, "Failed to prepare ref pic set");
+    return GST_FLOW_ERROR;
+  }
 
   ret = gst_h265_decoder_dpb_init (self,
       &priv->current_slice, priv->current_picture);
