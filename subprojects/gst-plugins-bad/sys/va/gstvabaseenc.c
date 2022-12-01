@@ -197,7 +197,7 @@ _get_sinkpad_pool (GstVaBaseEnc * base)
   GstAllocationParams params = { 0, };
   guint size, usage_hint = 0;
   GArray *surface_formats = NULL;
-  GstCaps *caps;
+  GstCaps *caps = NULL;
 
   if (base->priv->raw_pool)
     return base->priv->raw_pool;
@@ -217,6 +217,8 @@ _get_sinkpad_pool (GstVaBaseEnc * base)
 
   base->priv->raw_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
       usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
+  gst_clear_caps (&caps);
+
   if (!base->priv->raw_pool) {
     gst_object_unref (allocator);
     return NULL;
