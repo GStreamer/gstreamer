@@ -80,6 +80,21 @@ gst_webrtc_nice_stream_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GWeakRef *
+weak_new (gpointer object)
+{
+  GWeakRef *weak = g_new0 (GWeakRef, 1);
+  g_weak_ref_init (weak, object);
+  return weak;
+}
+
+static void
+weak_free (GWeakRef * weak)
+{
+  g_weak_ref_clear (weak);
+  g_free (weak);
+}
+
 static void
 gst_webrtc_nice_stream_finalize (GObject * object)
 {
@@ -99,12 +114,22 @@ gst_webrtc_nice_stream_finalize (GObject * object)
     gst_object_unref (ice);
   }
 
+  g_list_foreach (stream->priv->transports, (GFunc) weak_free, NULL);
   g_list_free (stream->priv->transports);
   stream->priv->transports = NULL;
 
   g_weak_ref_clear (&stream->priv->ice_weak);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static GList *
+_delete_transport (GList ** transports, GList * link)
+{
+  GList *next = link->next;
+  weak_free (link->data);
+  *transports = g_list_delete_link (*transports, link);
+  return next;
 }
 
 static void
@@ -125,10 +150,15 @@ _on_candidate_gathering_done (NiceAgent * agent, guint stream_id,
   ice->priv->gathered = TRUE;
 
   for (l = ice->priv->transports; l; l = l->next) {
-    GstWebRTCICETransport *ice = l->data;
+    GstWebRTCICETransport *trans = g_weak_ref_get (l->data);
 
-    gst_webrtc_ice_transport_gathering_state_change (ice,
-        GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE);
+    if (trans) {
+      gst_webrtc_ice_transport_gathering_state_change (trans,
+          GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE);
+      g_object_unref (trans);
+    } else {
+      l = _delete_transport (&ice->priv->transports, l);
+    }
   }
 
 cleanup:
@@ -145,35 +175,26 @@ gst_webrtc_nice_stream_find_transport (GstWebRTCICEStream * stream,
   GstWebRTCNiceStream *nice_stream = GST_WEBRTC_NICE_STREAM (stream);
 
   for (l = nice_stream->priv->transports; l; l = l->next) {
-    GstWebRTCICETransport *trans = l->data;
-    g_object_get (trans, "component", &trans_comp, NULL);
+    GstWebRTCICETransport *trans = g_weak_ref_get (l->data);
+    if (trans) {
+      g_object_get (trans, "component", &trans_comp, NULL);
 
-    if (component == trans_comp)
-      return gst_object_ref (trans);
+      if (component == trans_comp)
+        return trans;
+      else
+        gst_object_unref (trans);
+    } else {
+      l = _delete_transport (&nice_stream->priv->transports, l);
+    }
   }
 
   ret =
       GST_WEBRTC_ICE_TRANSPORT (gst_webrtc_nice_transport_new (nice_stream,
           component));
   nice_stream->priv->transports =
-      g_list_prepend (nice_stream->priv->transports, ret);
+      g_list_prepend (nice_stream->priv->transports, weak_new (ret));
 
   return ret;
-}
-
-static GWeakRef *
-weak_new (GstWebRTCNiceStream * stream)
-{
-  GWeakRef *weak = g_new0 (GWeakRef, 1);
-  g_weak_ref_init (weak, stream);
-  return weak;
-}
-
-static void
-weak_free (GWeakRef * weak)
-{
-  g_weak_ref_clear (weak);
-  g_free (weak);
 }
 
 static void
@@ -214,10 +235,15 @@ gst_webrtc_nice_stream_gather_candidates (GstWebRTCICEStream * stream)
     return TRUE;
 
   for (l = nice_stream->priv->transports; l; l = l->next) {
-    GstWebRTCICETransport *trans = l->data;
+    GstWebRTCICETransport *trans = g_weak_ref_get (l->data);
 
-    gst_webrtc_ice_transport_gathering_state_change (trans,
-        GST_WEBRTC_ICE_GATHERING_STATE_GATHERING);
+    if (trans) {
+      gst_webrtc_ice_transport_gathering_state_change (trans,
+          GST_WEBRTC_ICE_GATHERING_STATE_GATHERING);
+      g_object_unref (trans);
+    } else {
+      l = _delete_transport (&nice_stream->priv->transports, l);
+    }
   }
 
   ice = GST_WEBRTC_ICE (g_weak_ref_get (&nice_stream->priv->ice_weak));
@@ -248,9 +274,14 @@ gst_webrtc_nice_stream_gather_candidates (GstWebRTCICEStream * stream)
   }
 
   for (l = nice_stream->priv->transports; l; l = l->next) {
-    GstWebRTCNiceTransport *trans = l->data;
+    GstWebRTCNiceTransport *trans = g_weak_ref_get (l->data);
 
-    gst_webrtc_nice_transport_update_buffer_size (trans);
+    if (trans) {
+      gst_webrtc_nice_transport_update_buffer_size (trans);
+      g_object_unref (trans);
+    } else {
+      l = _delete_transport (&nice_stream->priv->transports, l);
+    }
   }
 
 cleanup:
