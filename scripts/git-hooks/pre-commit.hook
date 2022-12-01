@@ -68,18 +68,28 @@ for file in `git diff-index --cached --name-only HEAD --diff-filter=ACMR| grep "
     rm "${newfile}"
     rm "${nf}"
     if [ $r != 0 ] ; then
+        ERROR_FILES="$ERROR_FILES $file"
 echo "================================================================================================="
 echo " Code style error in: $file                                                                      "
+echo "================================================================================================="
+echo ""
+    fi
+done
+
+if [ -n "$ERROR_FILES" ];then
+echo "================================================================================================="
+echo " Code style error in:                                                                            "
+for file in $ERROR_FILES ; do
+echo "   $file"
+done
 echo "                                                                                                 "
 echo " Please fix before committing. Don't forget to run git add before trying to commit again.        "
 echo " If the whole file is to be committed, this should work (run from the top-level directory):      "
-echo "                                                                                                 "
-echo "   gst-indent $file; git add $file; git commit"
+echo "   scripts/gst-indent$ERROR_FILES ; git add$ERROR_FILES ; git commit"
 echo "                                                                                                 "
 echo "================================================================================================="
-        exit 1
-    fi
-done
+  exit 1
+fi
 
 csharp_files=` git diff-index --cached --name-only HEAD --diff-filter=ACMR| grep "^subprojects/gstreamer-sharp/.*cs$" `
 if test "x$csharp_files" != "x"; then
