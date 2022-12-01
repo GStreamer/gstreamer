@@ -736,20 +736,6 @@ gst_msdk_context_get_cached_alloc_responses_by_request (GstMsdkContext *
     return NULL;
 }
 
-static void
-free_surface (gpointer surface)
-{
-  g_slice_free1 (sizeof (mfxFrameSurface1), surface);
-}
-
-static void
-remove_surfaces (GstMsdkContext * context, GstMsdkAllocResponse * resp)
-{
-  g_list_free_full (resp->surfaces_used, free_surface);
-  g_list_free_full (resp->surfaces_avail, free_surface);
-  g_list_free_full (resp->surfaces_locked, free_surface);
-}
-
 void
 gst_msdk_context_add_alloc_response (GstMsdkContext * context,
     GstMsdkAllocResponse * resp)
@@ -772,129 +758,11 @@ gst_msdk_context_remove_alloc_response (GstMsdkContext * context,
 
   msdk_resp = l->data;
 
-  remove_surfaces (context, msdk_resp);
-
   g_slice_free1 (sizeof (GstMsdkAllocResponse), msdk_resp);
   priv->cached_alloc_responses =
       g_list_delete_link (priv->cached_alloc_responses, l);
 
   return TRUE;
-}
-
-static gboolean
-check_surfaces_available (GstMsdkContext * context, GstMsdkAllocResponse * resp)
-{
-  GList *l;
-  mfxFrameSurface1 *surface = NULL;
-  GstMsdkContextPrivate *priv = context->priv;
-  gboolean ret = FALSE;
-
-  g_mutex_lock (&priv->mutex);
-  for (l = resp->surfaces_locked; l;) {
-    surface = l->data;
-    l = l->next;
-    if (!surface->Data.Locked) {
-      resp->surfaces_locked = g_list_remove (resp->surfaces_locked, surface);
-      resp->surfaces_avail = g_list_prepend (resp->surfaces_avail, surface);
-      ret = TRUE;
-    }
-  }
-  g_mutex_unlock (&priv->mutex);
-
-  return ret;
-}
-
-/*
- * There are 3 lists here in GstMsdkContext as the following:
- * 1. surfaces_avail : surfaces which are free and unused anywhere
- * 2. surfaces_used : surfaces coupled with a gst buffer and being used now.
- * 3. surfaces_locked : surfaces still locked even after the gst buffer is released.
- *
- * Note that they need to be protected by mutex to be thread-safe.
- */
-
-mfxFrameSurface1 *
-gst_msdk_context_get_surface_available (GstMsdkContext * context,
-    mfxFrameAllocResponse * resp)
-{
-  GList *l;
-  mfxFrameSurface1 *surface = NULL;
-  GstMsdkAllocResponse *msdk_resp =
-      gst_msdk_context_get_cached_alloc_responses (context, resp);
-  gint retry = 0;
-  GstMsdkContextPrivate *priv = context->priv;
-
-retry:
-  g_mutex_lock (&priv->mutex);
-  for (l = msdk_resp->surfaces_avail; l;) {
-    surface = l->data;
-    l = l->next;
-    if (!surface->Data.Locked) {
-      msdk_resp->surfaces_avail =
-          g_list_remove (msdk_resp->surfaces_avail, surface);
-      msdk_resp->surfaces_used =
-          g_list_prepend (msdk_resp->surfaces_used, surface);
-      break;
-    }
-  }
-  g_mutex_unlock (&priv->mutex);
-
-  /*
-   * If a msdk context is shared by multiple msdk elements,
-   * upstream msdk element sometimes needs to wait for a gst buffer
-   * to be released in downstream.
-   *
-   * Poll the pool for a maximum of 20 millisecond.
-   *
-   * FIXME: Is there any better way to handle this case?
-   */
-  if (!surface && retry < 20) {
-    /* If there's no surface available, find unlocked surfaces in the locked list,
-     * take it back to the available list and then search again.
-     */
-    check_surfaces_available (context, msdk_resp);
-    retry++;
-    g_usleep (1000);
-    goto retry;
-  }
-
-  return surface;
-}
-
-void
-gst_msdk_context_put_surface_locked (GstMsdkContext * context,
-    mfxFrameAllocResponse * resp, mfxFrameSurface1 * surface)
-{
-  GstMsdkContextPrivate *priv = context->priv;
-  GstMsdkAllocResponse *msdk_resp =
-      gst_msdk_context_get_cached_alloc_responses (context, resp);
-
-  g_mutex_lock (&priv->mutex);
-  if (!g_list_find (msdk_resp->surfaces_locked, surface)) {
-    msdk_resp->surfaces_used =
-        g_list_remove (msdk_resp->surfaces_used, surface);
-    msdk_resp->surfaces_locked =
-        g_list_prepend (msdk_resp->surfaces_locked, surface);
-  }
-  g_mutex_unlock (&priv->mutex);
-}
-
-void
-gst_msdk_context_put_surface_available (GstMsdkContext * context,
-    mfxFrameAllocResponse * resp, mfxFrameSurface1 * surface)
-{
-  GstMsdkContextPrivate *priv = context->priv;
-  GstMsdkAllocResponse *msdk_resp =
-      gst_msdk_context_get_cached_alloc_responses (context, resp);
-
-  g_mutex_lock (&priv->mutex);
-  if (!g_list_find (msdk_resp->surfaces_avail, surface)) {
-    msdk_resp->surfaces_used =
-        g_list_remove (msdk_resp->surfaces_used, surface);
-    msdk_resp->surfaces_avail =
-        g_list_prepend (msdk_resp->surfaces_avail, surface);
-  }
-  g_mutex_unlock (&priv->mutex);
 }
 
 void

@@ -114,9 +114,6 @@ struct _GstMsdkAllocResponse {
   gint refcount;
   mfxFrameAllocResponse response;
   mfxFrameAllocRequest request;
-  GList *surfaces_avail;
-  GList *surfaces_used;
-  GList *surfaces_locked;
 };
 
 GstMsdkAllocResponse *
@@ -134,15 +131,6 @@ gst_msdk_context_add_alloc_response (GstMsdkContext * context,
 gboolean
 gst_msdk_context_remove_alloc_response (GstMsdkContext * context,
     mfxFrameAllocResponse * resp);
-
-mfxFrameSurface1 *
-gst_msdk_context_get_surface_available (GstMsdkContext * context, mfxFrameAllocResponse * resp);
-
-void
-gst_msdk_context_put_surface_locked (GstMsdkContext * context, mfxFrameAllocResponse * resp, mfxFrameSurface1 * surface);
-
-void
-gst_msdk_context_put_surface_available (GstMsdkContext * context, mfxFrameAllocResponse * resp, mfxFrameSurface1 * surface);
 
 void
 gst_msdk_context_set_alloc_pool (GstMsdkContext * context, GstBufferPool * pool);
