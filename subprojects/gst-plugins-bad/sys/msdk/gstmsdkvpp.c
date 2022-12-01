@@ -875,13 +875,6 @@ get_msdk_surface_from_input_buffer (GstMsdkVPP * thiz, GstBuffer * inbuf)
 {
   GstMsdkSurface *msdk_surface = NULL;
 
-  if (gst_msdk_is_msdk_buffer (inbuf)) {
-    msdk_surface = g_slice_new0 (GstMsdkSurface);
-    msdk_surface->surface = gst_msdk_get_surface_from_buffer (inbuf);
-    msdk_surface->buf = gst_buffer_ref (inbuf);
-    return msdk_surface;
-  }
-
   msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
       &thiz->sinkpad_info, GST_MAP_READ);
   if (msdk_surface) {
@@ -934,23 +927,19 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     in_surface->surface->Data.TimeStamp =
         gst_util_uint64_scale_round (inbuf->pts, 90000, GST_SECOND);
 
-  if (gst_msdk_is_msdk_buffer (outbuf)) {
-    out_surface = g_slice_new0 (GstMsdkSurface);
-    out_surface->surface = gst_msdk_get_surface_from_buffer (outbuf);
+  out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
+      &thiz->srcpad_info, GST_MAP_WRITE);
+
+  if (!thiz->use_video_memory)
+    out_surface =
+        gst_msdk_import_sys_mem_to_msdk_surface (outbuf, &thiz->srcpad_info);
+
+  if (out_surface) {
+    out_surface->buf = gst_buffer_ref (outbuf);
   } else {
-    out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
-        &thiz->srcpad_info, GST_MAP_WRITE);
-    if (!thiz->use_video_memory) {
-      out_surface =
-          gst_msdk_import_sys_mem_to_msdk_surface (outbuf, &thiz->srcpad_info);
-    }
-    if (out_surface)
-      out_surface->buf = gst_buffer_ref (outbuf);
-    else {
-      GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
-      free_msdk_surface (in_surface);
-      return GST_FLOW_ERROR;
-    }
+    GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
+    free_msdk_surface (in_surface);
+    return GST_FLOW_ERROR;
   }
 
   /* update surface crop info (NOTE: msdk min frame size is 2x2) */
@@ -1023,29 +1012,23 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       GST_BUFFER_TIMESTAMP (outbuf_new) = timestamp;
       GST_BUFFER_DURATION (outbuf_new) = thiz->buffer_duration;
 
-      if (gst_msdk_is_msdk_buffer (outbuf_new)) {
-        release_out_surface (thiz, out_surface);
-        out_surface = g_slice_new0 (GstMsdkSurface);
-        out_surface->surface = gst_msdk_get_surface_from_buffer (outbuf_new);
+      release_out_surface (thiz, out_surface);
+      out_surface =
+          gst_msdk_import_to_msdk_surface (outbuf_new, thiz->context,
+          &thiz->srcpad_buffer_pool_info, GST_MAP_WRITE);
+
+      if (!thiz->use_video_memory)
+        out_surface =
+            gst_msdk_import_sys_mem_to_msdk_surface (outbuf_new,
+            &thiz->srcpad_buffer_pool_info);
+
+      if (out_surface) {
+        out_surface->buf = gst_buffer_ref (outbuf_new);
         create_new_surface = TRUE;
       } else {
-        release_out_surface (thiz, out_surface);
-        out_surface =
-            gst_msdk_import_to_msdk_surface (outbuf_new, thiz->context,
-            &thiz->srcpad_buffer_pool_info, GST_MAP_WRITE);
-        if (!thiz->use_video_memory) {
-          out_surface =
-              gst_msdk_import_sys_mem_to_msdk_surface (outbuf_new,
-              &thiz->srcpad_buffer_pool_info);
-        }
-        if (out_surface) {
-          out_surface->buf = gst_buffer_ref (outbuf_new);
-          create_new_surface = TRUE;
-        } else {
-          GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
-          release_in_surface (thiz, in_surface, locked_by_others);
-          return GST_FLOW_ERROR;
-        }
+        GST_ERROR_OBJECT (thiz, "Failed to get msdk outsurface!");
+        release_in_surface (thiz, in_surface, locked_by_others);
+        return GST_FLOW_ERROR;
       }
     } else {
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;

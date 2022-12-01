@@ -538,22 +538,6 @@ gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
 }
 
 gboolean
-gst_msdk_is_msdk_buffer (GstBuffer * buf)
-{
-  GstAllocator *allocator;
-  GstMemory *mem = gst_buffer_peek_memory (buf, 0);
-
-  allocator = GST_MEMORY_CAST (mem)->allocator;
-
-  if (allocator && (GST_IS_MSDK_VIDEO_ALLOCATOR (allocator) ||
-          GST_IS_MSDK_SYSTEM_ALLOCATOR (allocator) ||
-          GST_IS_MSDK_DMABUF_ALLOCATOR (allocator)))
-    return TRUE;
-  else
-    return FALSE;
-}
-
-gboolean
 gst_msdk_is_va_mem (GstMemory * mem)
 {
   GstAllocator *allocator;

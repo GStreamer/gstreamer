@@ -1771,11 +1771,6 @@ gst_msdkenc_get_surface_from_frame (GstMsdkEnc * thiz,
   GstBuffer *inbuf;
 
   inbuf = frame->input_buffer;
-  if (gst_msdk_is_msdk_buffer (inbuf)) {
-    msdk_surface = g_slice_new0 (GstMsdkSurface);
-    msdk_surface->surface = gst_msdk_get_surface_from_buffer (inbuf);
-    return msdk_surface;
-  }
 
   msdk_surface = gst_msdk_import_to_msdk_surface (inbuf, thiz->context,
       &thiz->input_state->info, GST_MAP_READ);
