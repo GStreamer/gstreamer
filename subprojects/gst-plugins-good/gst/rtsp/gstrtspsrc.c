@@ -1550,6 +1550,9 @@ gst_rtspsrc_finalize (GObject * object)
   if (rtspsrc->tls_interaction)
     g_object_unref (rtspsrc->tls_interaction);
 
+  if (rtspsrc->initial_seek)
+    gst_event_unref (rtspsrc->initial_seek);
+
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
   g_rec_mutex_clear (&rtspsrc->state_rec_lock);
@@ -9445,12 +9448,12 @@ gst_rtspsrc_send_event (GstElement * element, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEEK) {
     if (rtspsrc->state >= GST_RTSP_STATE_READY) {
       res = gst_rtspsrc_perform_seek (rtspsrc, event);
-      gst_event_unref (event);
     } else {
       /* Store for later use */
       res = TRUE;
-      rtspsrc->initial_seek = event;
+      gst_event_replace (&rtspsrc->initial_seek, event);
     }
+    gst_event_unref(event);
   } else if (GST_EVENT_IS_DOWNSTREAM (event)) {
     res = gst_rtspsrc_push_event (rtspsrc, event);
   } else {
