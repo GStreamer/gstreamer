@@ -53,7 +53,6 @@
 #include <mfxjpeg.h>
 
 #include "gstmsdkmjpegdec.h"
-#include "gstmsdkvideomemory.h"
 
 #include <gst/pbutils/pbutils.h>
 

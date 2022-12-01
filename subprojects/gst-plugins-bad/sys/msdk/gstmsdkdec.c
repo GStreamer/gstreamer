@@ -36,9 +36,6 @@
 #include <stdlib.h>
 
 #include "gstmsdkdec.h"
-#include "gstmsdkbufferpool.h"
-#include "gstmsdkvideomemory.h"
-#include "gstmsdksystemmemory.h"
 #include "gstmsdkcontextutil.h"
 #include "gstmsdkallocator.h"
 

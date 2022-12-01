@@ -103,7 +103,6 @@ void GstMFXUnload (mfxLoader loader);
 #endif
 
 typedef struct _MsdkSession MsdkSession;
-typedef struct _GstMsdkSurface GstMsdkSurface;
 
 struct _MsdkSession
 {
@@ -134,9 +133,6 @@ void gst_msdk_set_mfx_frame_info_from_video_info (mfxFrameInfo * mfx_info,
 
 gboolean
 gst_msdk_is_va_mem (GstMemory * mem);
-
-mfxFrameSurface1 *
-gst_msdk_get_surface_from_buffer (GstBuffer * buf);
 
 GstVideoFormat
 gst_msdk_get_video_format_from_mfx_fourcc (mfxU32 fourcc);

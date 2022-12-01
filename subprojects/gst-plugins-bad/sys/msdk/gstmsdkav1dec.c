@@ -50,7 +50,6 @@
 #endif
 
 #include "gstmsdkav1dec.h"
-#include "gstmsdkvideomemory.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkav1dec_debug);
 #define GST_CAT_DEFAULT gst_msdkav1dec_debug

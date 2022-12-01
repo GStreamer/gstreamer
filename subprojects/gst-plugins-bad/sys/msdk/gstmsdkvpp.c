@@ -54,11 +54,9 @@
 #include <stdlib.h>
 
 #include "gstmsdkvpp.h"
-#include "gstmsdkbufferpool.h"
-#include "gstmsdkvideomemory.h"
-#include "gstmsdksystemmemory.h"
 #include "gstmsdkcontextutil.h"
 #include "gstmsdkvpputil.h"
+#include "gstmsdkallocator.h"
 
 #define EXT_FORMATS     ""
 
@@ -565,13 +563,6 @@ gst_msdkvpp_create_buffer_pool (GstMsdkVPP * thiz, GstPadDirection direction,
     goto error_no_pool;
 
   config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-  if (thiz->use_video_memory) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY);
-    if (use_dmabuf)
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF);
-  }
 
   gst_buffer_pool_config_set_params (config, caps,
       GST_VIDEO_INFO_SIZE (&info), min_num_buffers, 0);

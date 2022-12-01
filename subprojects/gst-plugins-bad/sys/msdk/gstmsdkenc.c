@@ -45,10 +45,8 @@
 #include <stdlib.h>
 
 #include "gstmsdkenc.h"
-#include "gstmsdkbufferpool.h"
-#include "gstmsdkvideomemory.h"
-#include "gstmsdksystemmemory.h"
 #include "gstmsdkcontextutil.h"
+#include "gstmsdkallocator.h"
 #include "mfxjpeg.h"
 
 #ifndef _WIN32
@@ -1437,13 +1435,6 @@ gst_msdkenc_create_buffer_pool (GstMsdkEnc * thiz, GstCaps * caps,
       GST_VIDEO_INFO_SIZE (&info), num_buffers, 0);
   gst_buffer_pool_config_set_video_alignment (config, &align);
 
-  if (thiz->use_video_memory) {
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_MSDK_USE_VIDEO_MEMORY);
-    if (thiz->use_dmabuf)
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_MSDK_USE_DMABUF);
-  }
   if (!gst_buffer_pool_set_config (pool, config))
     goto error_pool_config;
 

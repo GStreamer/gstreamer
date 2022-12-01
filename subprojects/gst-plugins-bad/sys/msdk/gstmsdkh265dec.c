@@ -50,7 +50,6 @@
 #endif
 
 #include "gstmsdkh265dec.h"
-#include "gstmsdkvideomemory.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh265dec_debug);
 #define GST_CAT_DEFAULT gst_msdkh265dec_debug
