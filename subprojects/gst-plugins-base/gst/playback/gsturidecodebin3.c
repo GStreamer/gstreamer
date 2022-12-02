@@ -1672,6 +1672,9 @@ free_play_item (GstURIDecodeBin3 * dec, GstPlayItem * item)
 static void
 play_item_set_uri (GstPlayItem * item, const gchar * uri)
 {
+  if (!uri)
+    return;
+
   if (!item->main_item) {
     item->main_item =
         new_source_item (item->uridecodebin, item, g_strdup (uri));
@@ -1683,6 +1686,9 @@ play_item_set_uri (GstPlayItem * item, const gchar * uri)
 static void
 play_item_set_suburi (GstPlayItem * item, const gchar * uri)
 {
+  if (!uri)
+    return;
+
   if (!item->sub_item) {
     item->sub_item = new_source_item (item->uridecodebin, item, g_strdup (uri));
   } else {
