@@ -140,6 +140,7 @@ gst_va_jpeg_dec_new_picture (GstJpegDecoder * decoder,
 {
   GstVaJpegDec *self = GST_VA_JPEG_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
+  GstVideoInfo *info = &base->output_info;
   GstFlowReturn ret;
   VAProfile profile;
   VAPictureParameterBufferJPEGBaseline pic_param;
@@ -162,13 +163,16 @@ gst_va_jpeg_dec_new_picture (GstJpegDecoder * decoder,
           frame_hdr->width, frame_hdr->height)) {
     base->profile = profile;
     base->rt_format = rt_format;
-    base->width = frame_hdr->width;
-    base->height = frame_hdr->height;
+    GST_VIDEO_INFO_WIDTH (info) = base->width = frame_hdr->width;
+    GST_VIDEO_INFO_HEIGHT (info) = base->height = frame_hdr->height;
 
     base->need_negotiation = TRUE;
     GST_INFO_OBJECT (self, "Format changed to %s [%x] (%dx%d)",
         gst_va_profile_name (profile), rt_format, base->width, base->height);
   }
+
+  g_clear_pointer (&base->input_state, gst_video_codec_state_unref);
+  base->input_state = gst_video_codec_state_ref (decoder->input_state);
 
   ret = gst_va_base_dec_prepare_output_frame (base, frame);
   if (ret != GST_FLOW_OK) {
@@ -351,7 +355,6 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaJpegDec *self = GST_VA_JPEG_DEC (decoder);
-  GstJpegDecoder *jpegdec = GST_JPEG_DECODER (decoder);
   GstVideoFormat format;
   GstCapsFeatures *capsfeatures = NULL;
 
@@ -397,7 +400,7 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
 
   base->output_state =
       gst_video_decoder_set_output_state (decoder, format,
-      base->width, base->height, jpegdec->input_state);
+      base->width, base->height, base->input_state);
 
   base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
   if (capsfeatures)
@@ -448,6 +451,15 @@ gst_va_jpeg_dec_class_init (gpointer g_class, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (g_class);
 
+  /**
+   * GstVaJpegDec:device-path:
+   *
+   * It shows the DRM device path used for the VA operation, if any.
+   */
+  gst_va_base_dec_class_init (GST_VA_BASE_DEC_CLASS (g_class), JPEG,
+      cdata->render_device_path, cdata->sink_caps, cdata->src_caps,
+      src_doc_caps, sink_doc_caps);
+
   gobject_class->dispose = gst_va_jpeg_dec_dispose;
 
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_va_jpeg_dec_negotiate);
@@ -460,15 +472,6 @@ gst_va_jpeg_dec_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_jpeg_dec_end_picture);
   jpegdecoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_va_jpeg_dec_output_picture);
-
-  /**
-   * GstVaJpegDec:device-path:
-   *
-   * It shows the DRM device path used for the VA operation, if any.
-   */
-  gst_va_base_dec_class_init (GST_VA_BASE_DEC_CLASS (g_class), JPEG,
-      cdata->render_device_path, cdata->sink_caps, cdata->src_caps,
-      src_doc_caps, sink_doc_caps);
 
   g_free (long_name);
   g_free (cdata->description);
