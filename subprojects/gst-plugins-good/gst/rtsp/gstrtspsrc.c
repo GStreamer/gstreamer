@@ -2480,6 +2480,7 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "cleanup");
 
+  GST_RTSP_STATE_LOCK (src);
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
 
@@ -2531,6 +2532,7 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     free_param_data (req);
   }
   GST_OBJECT_UNLOCK (src);
+  GST_RTSP_STATE_UNLOCK (src);
 
 }
 
