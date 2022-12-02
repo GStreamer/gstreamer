@@ -43,7 +43,7 @@ example.
 
 Running `gst-inspect-1.0 oggdemux` will show that the element has only one
 pad: a sink pad called 'sink'. The other pads are “dormant”. You can see
-this in the pad template because there is an “Exists: Sometimes”
+this in the pad template because there is an “Availability: Sometimes”
 property. Depending on the type of Ogg file you play, the pads will be
 created. We will see that this is very important when you are going to
 create dynamic pipelines. You can attach a signal handler to an element
