@@ -37,10 +37,27 @@ main (int argc, char *argv[])
   gboolean res;
   char **my_argv;
   int my_argc;
+  char *pipe_name = NULL;
 
+#ifdef G_OS_WIN32
+  /* On Windows, we need pipe name
+   * arg0: exe path
+   * arg1: -l
+   * arg2: parent process exe path
+   * arg3: pipe name */
+  if (argc != 4)
+    return 1;
+
+  _gst_executable_path = g_strdup (argv[2]);
+  pipe_name = argv[3];
+#else
   /* We may or may not have an executable path */
   if (argc != 2 && argc != 3)
     return 1;
+
+  if (argc == 3)
+    _gst_executable_path = g_strdup (argv[2]);
+#endif
 
   if (strcmp (argv[1], "-l"))
     return 1;
@@ -54,9 +71,6 @@ main (int argc, char *argv[])
   _gst_disable_registry_cache = TRUE;
 #endif
 
-  if (argc == 3)
-    _gst_executable_path = g_strdup (argv[2]);
-
   res = gst_init_check (&my_argc, &my_argv, NULL);
 
   g_free (my_argv);
@@ -64,7 +78,7 @@ main (int argc, char *argv[])
     return 1;
 
   /* Create registry scanner listener and run */
-  if (!_gst_plugin_loader_client_run ())
+  if (!_gst_plugin_loader_client_run (pipe_name))
     return 1;
 
   return 0;

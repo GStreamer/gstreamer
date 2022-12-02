@@ -40,7 +40,6 @@ gst_sources = files(
   'gstpipeline.c',
   'gstplugin.c',
   'gstpluginfeature.c',
-  'gstpluginloader.c',
   'gstpoll.c',
   'gstpreset.c',
   'gstprotection.c',
@@ -154,6 +153,13 @@ if host_system == 'darwin'
 endif
 
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
+
+# Some Win32 APIs are not allowed for UWP
+if host_system == 'windows' and not building_for_uwp
+  gst_sources += files('gstpluginloader-win32.c')
+else
+  gst_sources += files('gstpluginloader.c')
+endif
 
 extra_deps = []
 if host_system == 'android'

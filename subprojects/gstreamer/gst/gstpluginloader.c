@@ -644,7 +644,7 @@ plugin_loader_cleanup_child (GstPluginLoader * l)
 }
 
 gboolean
-_gst_plugin_loader_client_run (void)
+_gst_plugin_loader_client_run (const gchar * pipe_name)
 {
   gboolean res = TRUE;
   GstPluginLoader *l;

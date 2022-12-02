@@ -1154,12 +1154,6 @@ gst_registry_scan_plugin_file (GstRegistryScanContext * context,
   gboolean changed = FALSE;
   GstPlugin *newplugin = NULL;
 
-#ifdef G_OS_WIN32
-  /* Disable external plugin loader on Windows until it is ported properly. */
-  context->helper_state = REGISTRY_SCAN_HELPER_DISABLED;
-#endif
-
-
   /* Have a plugin to load - see if the scan-helper needs starting */
   if (context->helper_state == REGISTRY_SCAN_HELPER_NOT_STARTED) {
     GST_DEBUG ("Starting plugin scanner for file %s", filename);
