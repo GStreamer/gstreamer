@@ -907,11 +907,16 @@ gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     GstCaps *caps = gst_pad_get_current_caps (GST_BASE_SRC_PAD (bsrc));
     GstV4l2Error error = GST_V4L2_ERROR_INIT;
 
+    /* Setting the format replaces the current pool */
+    gst_clear_object (&bpool);
+
     caps = gst_caps_make_writable (caps);
 
     ret = gst_v4l2src_set_format (src, caps, &error);
     if (ret) {
-      GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
+      GstV4l2BufferPool *pool;
+      bpool = gst_v4l2_object_get_buffer_pool (src->v4l2object);
+      pool = GST_V4L2_BUFFER_POOL (bpool);
       gst_v4l2_buffer_pool_enable_resolution_change (pool);
     } else {
       gst_v4l2_error (src, &error);
