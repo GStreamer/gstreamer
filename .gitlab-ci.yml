@@ -639,7 +639,7 @@ valgrind ges:
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
   # FIXME: should rebuild the image with newer versions!
-  - pip3 install --upgrade hotdoc
+  - pip3 install --upgrade hotdoc==0.13.7
   - pip3 install --upgrade meson==0.60.*
   - *build
   - ./gst-env.py ninja -C build/ plugins_doc_caches
