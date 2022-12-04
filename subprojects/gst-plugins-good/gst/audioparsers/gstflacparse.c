@@ -377,7 +377,7 @@ gst_flac_parse_stop (GstBaseParse * parse)
   return TRUE;
 }
 
-static const guint8 sample_size_table[] = { 0, 8, 12, 0, 16, 20, 24, 0 };
+static const guint8 sample_size_table[] = { 0, 8, 12, 0, 16, 20, 24, 32 };
 
 static const guint16 blocksize_table[16] = {
   0, 192, 576 << 0, 576 << 1, 576 << 2, 576 << 3, 0, 0,
@@ -449,7 +449,7 @@ gst_flac_parse_frame_header_is_valid (GstFlacParse * flacparse,
 
   /* bits per sample */
   bps = gst_bit_reader_get_bits_uint8_unchecked (&reader, 3);
-  if (bps == 0x03 || bps == 0x07) {
+  if (bps == 0x03) {
     goto error;
   } else if (bps == 0 && flacparse->bps == 0) {
     goto need_streaminfo;
