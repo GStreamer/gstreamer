@@ -591,7 +591,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
     let needed = [
         "videotestsrc",
         "audiotestsrc",
-        "videoconvert",
+        "videoconvertscale",
         "audioconvert",
         "autodetect",
         "opus",
@@ -603,7 +603,6 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         "rtpmanager",
         "rtp",
         "playback",
-        "videoscale",
         "audioresample",
     ];
 

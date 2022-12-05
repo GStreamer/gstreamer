@@ -139,7 +139,7 @@ impl Drop for AppInner {
 fn check_plugins() -> Result<(), anyhow::Error> {
     let needed = [
         "videotestsrc",
-        "videoconvert",
+        "videoconvertscale",
         "autodetect",
         "vpx",
         "webrtc",
