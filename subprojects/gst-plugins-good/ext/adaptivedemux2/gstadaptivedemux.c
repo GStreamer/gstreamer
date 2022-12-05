@@ -2355,6 +2355,13 @@ handle_stream_selection (GstAdaptiveDemux * demux, GList * streams,
     return FALSE;
 
   TRACKS_LOCK (demux);
+  /* We can't do stream selection if we are migrating between periods */
+  if (demux->input_period && demux->output_period != demux->input_period) {
+    GST_WARNING_OBJECT (demux,
+        "Stream selection while migrating between periods is not possible");
+    TRACKS_UNLOCK (demux);
+    return FALSE;
+  }
   /* Validate the streams and fill:
    * tracks : list of tracks corresponding to requested streams
    */
