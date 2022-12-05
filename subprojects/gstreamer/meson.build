@@ -1,5 +1,5 @@
 project('gstreamer', 'c',
-  version : '1.21.3',
+  version : '1.21.3.1',
   meson_version : '>= 0.62',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
