@@ -1,6 +1,5 @@
-[wrap-git]
-directory=pixman
-url=https://gitlab.freedesktop.org/pixman/pixman
-push-url=git@gitlab.freedesktop.org:pixman/pixman.git
-depth=1
-revision=adc07d46188920806e32366917d00599fb183a5a
+[wrap-file]
+directory = pixman-0.42.2
+source_url = https://www.cairographics.org/releases/pixman-0.42.2.tar.gz
+source_filename = pixman-0.42.2.tar.gz
+source_hash = ea1480efada2fd948bc75366f7c349e1c96d3297d09a3fe62626e38e234a625e
