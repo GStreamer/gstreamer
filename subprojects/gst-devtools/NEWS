@@ -1,15 +1,20 @@
 GStreamer 1.22 Release Notes
 
 GStreamer 1.22 has not been released yet. It is scheduled for release
-around the end of December 2022.
+around the end of December 2022 / beginning of January 2023.
 
 1.21.x is the unstable development version that is being developed in
 the git master branch and which will eventually result in 1.22, and
-1.21.2 is the current development release in that series
+1.21.3 is the current development release in that series
 
-It is expected that feature freeze will be around 18 November 2022,
-followed by several 1.21 pre-releases and the new 1.22 stable release
-around the end of December 2022.
+A feature freeze is now into effect for the 1.21 branch, but newly-added
+API might still change until the final 1.22.0 stable release, and minor
+features may also still be added until then.
+
+A first 1.22 release candidate (1.21.90) is expected towards
+mid-December, followed by more release candiates until the new 1.22
+stable release around the end of December 2022 / beginning of January
+2023.
 
 1.22 will be backwards-compatible to the stable 1.20, 1.18, 1.16, 1.14,
 1.12, 1.10, 1.8, 1.6,, 1.4, 1.2 and 1.0 release series.
@@ -17,7 +22,7 @@ around the end of December 2022.
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Monday 7 November 2022, 17:00 UTC (log)
+Last updated: Monday 5 December 2022, 01:00 UTC (log)
 
 Introduction
 
