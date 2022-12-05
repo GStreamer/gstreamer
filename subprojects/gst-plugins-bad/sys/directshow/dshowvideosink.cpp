@@ -120,7 +120,7 @@ gst_dshowvideosink_set_window_handle (GstVideoOverlay * overlay, guintptr window
 
     if (sink->is_new_window) {
       /* If we created a new window */
-      SendMessage (previous_window, WM_CLOSE, NULL, NULL);
+      SendMessage (previous_window, WM_CLOSE, 0, 0);
       sink->is_new_window = FALSE;
       sink->window_closed = FALSE;
     } else {
@@ -632,7 +632,7 @@ gst_dshowvideosink_window_thread (GstDshowVideoSink * sink)
     height = vi->rcTarget.bottom + GetSystemMetrics (SM_CYCAPTION) +
         (GetSystemMetrics (SM_CYSIZEFRAME) * 2);
 
-    SystemParametersInfo (SPI_GETWORKAREA, NULL, &rect, 0);
+    SystemParametersInfo (SPI_GETWORKAREA, 0, &rect, 0);
     int screenwidth = rect.right - rect.left;
     int screenheight = rect.bottom - rect.top;
     offx = rect.left;
@@ -1590,7 +1590,7 @@ gst_dshowvideosink_stop (GstBaseSink * bsink)
   /* If we created a new window, send the close message and wait until
    * it's closed in the window thread */
   if (sink->is_new_window) {
-    SendMessage (sink->window_id, WM_CLOSE, NULL, NULL);
+    SendMessage (sink->window_id, WM_CLOSE, 0, 0);
     while (!sink->window_closed);
     sink->is_new_window = FALSE;
   }
