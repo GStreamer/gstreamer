@@ -76,6 +76,7 @@ struct _GstAjaSink {
   GstAjaOutputDestination output_destination;
   GstAjaSdiMode sdi_mode;
   GstAjaTimecodeIndex timecode_index;
+  gboolean rp188;
   GstAjaReferenceSource reference_source;
 
   gint cea608_line_number;

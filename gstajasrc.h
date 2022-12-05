@@ -69,6 +69,7 @@ struct _GstAjaSrc {
   GstAjaAudioSource audio_source;
   GstAjaEmbeddedAudioInput embedded_audio_input;
   GstAjaTimecodeIndex timecode_index;
+  gboolean rp188;
   GstAjaReferenceSource reference_source;
   GstAjaClosedCaptionCaptureMode closed_caption_capture_mode;
   guint queue_size;

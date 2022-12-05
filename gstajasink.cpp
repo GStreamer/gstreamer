@@ -38,6 +38,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_sink_debug);
 #define DEFAULT_OUTPUT_DESTINATION (GST_AJA_OUTPUT_DESTINATION_AUTO)
 #define DEFAULT_SDI_MODE (GST_AJA_SDI_MODE_SINGLE_LINK)
 #define DEFAULT_TIMECODE_INDEX (GST_AJA_TIMECODE_INDEX_VITC)
+#define DEFAULT_RP188 (TRUE)
 #define DEFAULT_REFERENCE_SOURCE (GST_AJA_REFERENCE_SOURCE_AUTO)
 #define DEFAULT_CEA608_LINE_NUMBER (12)
 #define DEFAULT_CEA708_LINE_NUMBER (12)
@@ -54,6 +55,7 @@ enum {
   PROP_OUTPUT_DESTINATION,
   PROP_SDI_MODE,
   PROP_TIMECODE_INDEX,
+  PROP_RP188,
   PROP_REFERENCE_SOURCE,
   PROP_CEA608_LINE_NUMBER,
   PROP_CEA708_LINE_NUMBER,
@@ -196,6 +198,13 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
                         G_PARAM_CONSTRUCT)));
 
   g_object_class_install_property(
+      gobject_class, PROP_RP188,
+      g_param_spec_boolean(
+          "rp188", "RP188", "Enable RP188 timecode transmission", DEFAULT_RP188,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
+  g_object_class_install_property(
       gobject_class, PROP_REFERENCE_SOURCE,
       g_param_spec_enum(
           "reference-source", "Reference Source", "Reference source to use",
@@ -311,6 +320,9 @@ void gst_aja_sink_set_property(GObject *object, guint property_id,
     case PROP_TIMECODE_INDEX:
       self->timecode_index = (GstAjaTimecodeIndex)g_value_get_enum(value);
       break;
+    case PROP_RP188:
+      self->rp188 = g_value_get_boolean(value);
+      break;
     case PROP_REFERENCE_SOURCE:
       self->reference_source = (GstAjaReferenceSource)g_value_get_enum(value);
       break;
@@ -360,6 +372,9 @@ void gst_aja_sink_get_property(GObject *object, guint property_id,
       break;
     case PROP_TIMECODE_INDEX:
       g_value_set_enum(value, self->timecode_index);
+      break;
+    case PROP_RP188:
+      g_value_set_boolean(value, self->rp188);
       break;
     case PROP_REFERENCE_SOURCE:
       g_value_set_enum(value, self->reference_source);
@@ -1917,7 +1932,7 @@ restart:
 
     if (!self->device->device->AutoCirculateInitForOutput(
             self->channel, 0, self->audio_system,
-            AUTOCIRCULATE_WITH_RP188 |
+            (self->rp188 ? AUTOCIRCULATE_WITH_RP188 : 0) |
                 (self->vanc_mode == ::NTV2_VANCMODE_OFF ? AUTOCIRCULATE_WITH_ANC
                                                         : 0),
             1, start_frame, end_frame)) {
