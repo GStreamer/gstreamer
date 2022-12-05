@@ -271,7 +271,7 @@ foreach plugin: all_plugins
   plugin_path = plugin.get_variable('full_path')
   all_plugins_paths += plugin_path
   all_plugins_dirs += fs.parent(plugin_path)
-  plugins_names += plugin_path
+  plugins_names += fs.name(plugin_path)
 endforeach
 
 # Work around meson bug: https://github.com/mesonbuild/meson/pull/6770
