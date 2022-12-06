@@ -190,6 +190,18 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
           DEFAULT_RTCP_MODE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstSDPDemux:media:
+   *
+   * Media to use, e.g. audio or video (NULL=allow all).
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_MEDIA,
+      g_param_spec_string ("media", "Media",
+          "Media to use, e.g. audio or video (NULL = all)", DEFAULT_MEDIA,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &rtptemplate);
 
@@ -266,6 +278,12 @@ gst_sdp_demux_set_property (GObject * object, guint prop_id,
     case PROP_RTCP_MODE:
       demux->rtcp_mode = g_value_get_enum (value);
       break;
+    case PROP_MEDIA:
+      GST_OBJECT_LOCK (demux);
+      /* g_intern_string() is NULL-safe */
+      demux->media = g_intern_string (g_value_get_string (value));
+      GST_OBJECT_UNLOCK (demux);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -295,6 +313,11 @@ gst_sdp_demux_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_RTCP_MODE:
       g_value_set_enum (value, demux->rtcp_mode);
+      break;
+    case PROP_MEDIA:
+      GST_OBJECT_LOCK (demux);
+      g_value_set_string (value, demux->media);
+      GST_OBJECT_UNLOCK (demux);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -436,6 +459,7 @@ static GstSDPStream *
 gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
 {
   GstSDPStream *stream;
+  const gchar *media_filter;
   const gchar *payload;
   const GstSDPMedia *media;
   const GstSDPConnection *conn;
@@ -444,6 +468,16 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
   media = gst_sdp_message_get_media (sdp, idx);
   if (media == NULL)
     return NULL;
+
+  GST_OBJECT_LOCK (demux);
+  media_filter = demux->media;
+  GST_OBJECT_UNLOCK (demux);
+
+  if (media_filter != NULL && !g_str_equal (media_filter, media->media)) {
+    GST_INFO_OBJECT (demux, "Skipping media %s (filter: %s)", media->media,
+        media_filter);
+    return NULL;
+  }
 
   stream = g_new0 (GstSDPStream, 1);
   stream->parent = demux;

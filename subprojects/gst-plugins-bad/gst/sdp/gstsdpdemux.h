@@ -118,6 +118,7 @@ struct _GstSDPDemux {
   guint64           udp_timeout;
   guint             latency;
   gboolean          redirect;
+  const gchar      *media; /* if non-NULL only hook up these kinds of media (video/audio) */ /* interned string */
   GstSDPDemuxRTCPMode rtcp_mode;
 
   /* session management */
