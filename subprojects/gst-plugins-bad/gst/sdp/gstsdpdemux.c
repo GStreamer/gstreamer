@@ -77,6 +77,8 @@ enum
 #define DEFAULT_TIMEOUT          10000000
 #define DEFAULT_LATENCY_MS       200
 #define DEFAULT_REDIRECT         TRUE
+#define DEFAULT_RTCP_MODE        GST_SDP_DEMUX_RTCP_MODE_SENDRECV
+#define DEFAULT_MEDIA            NULL
 
 enum
 {
@@ -84,7 +86,9 @@ enum
   PROP_DEBUG,
   PROP_TIMEOUT,
   PROP_LATENCY,
-  PROP_REDIRECT
+  PROP_REDIRECT,
+  PROP_RTCP_MODE,
+  PROP_MEDIA,
 };
 
 static void gst_sdp_demux_finalize (GObject * object);
@@ -106,7 +110,26 @@ static gboolean gst_sdp_demux_sink_event (GstPad * pad, GstObject * parent,
 static GstFlowReturn gst_sdp_demux_sink_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 
-/*static guint gst_sdp_demux_signals[LAST_SIGNAL] = { 0 }; */
+#define GST_TYPE_SDP_DEMUX_RTCP_MODE gst_sdp_demux_rtcp_mode_get_type()
+static GType
+gst_sdp_demux_rtcp_mode_get_type (void)
+{
+  static GType rtcp_mode_type = 0;
+  static const GEnumValue enums[] = {
+    {GST_SDP_DEMUX_RTCP_MODE_SENDRECV, "sendrecv", "Send + Receive RTCP"},
+    {GST_SDP_DEMUX_RTCP_MODE_RECVONLY, "recvonly",
+        "Receive RTCP sender reports"},
+    {GST_SDP_DEMUX_RTCP_MODE_SENDONLY, "sendonly",
+        "Send RTCP receiver reports"},
+    {GST_SDP_DEMUX_RTCP_MODE_INACTIVE, "inactivate", "Disable RTCP"},
+    {0, NULL, NULL},
+  };
+
+  if (!rtcp_mode_type) {
+    rtcp_mode_type = g_enum_register_static ("GstSDPDemuxRTCPMode", enums);
+  }
+  return rtcp_mode_type;
+}
 
 #define gst_sdp_demux_parent_class parent_class
 G_DEFINE_TYPE (GstSDPDemux, gst_sdp_demux, GST_TYPE_BIN);
@@ -152,6 +175,21 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
           DEFAULT_REDIRECT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstSDPDemux:rtcp-mode:
+   *
+   * RTCP mode: enable or disable receiving of Sender Reports and
+   * sending of Receiver Reports.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_RTCP_MODE,
+      g_param_spec_enum ("rtcp-mode", "RTCP Mode",
+          "Enable or disable receiving of RTCP sender reports and sending of "
+          "RTCP receiver reports", GST_TYPE_SDP_DEMUX_RTCP_MODE,
+          DEFAULT_RTCP_MODE,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &rtptemplate);
 
@@ -165,6 +203,8 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
   gstbin_class->handle_message = gst_sdp_demux_handle_message;
 
   GST_DEBUG_CATEGORY_INIT (sdpdemux_debug, "sdpdemux", 0, "SDP demux");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_SDP_DEMUX_RTCP_MODE, 0);
 }
 
 static void
@@ -182,6 +222,9 @@ gst_sdp_demux_init (GstSDPDemux * demux)
   g_rec_mutex_init (&demux->stream_rec_lock);
 
   demux->adapter = gst_adapter_new ();
+
+  demux->rtcp_mode = DEFAULT_RTCP_MODE;
+  demux->media = DEFAULT_MEDIA;
 }
 
 static void
@@ -220,6 +263,9 @@ gst_sdp_demux_set_property (GObject * object, guint prop_id,
     case PROP_REDIRECT:
       demux->redirect = g_value_get_boolean (value);
       break;
+    case PROP_RTCP_MODE:
+      demux->rtcp_mode = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -246,6 +292,9 @@ gst_sdp_demux_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_REDIRECT:
       g_value_set_boolean (value, demux->redirect);
+      break;
+    case PROP_RTCP_MODE:
+      g_value_set_enum (value, demux->rtcp_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -450,7 +499,11 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
   stream->multicast = is_multicast_address (stream->destination);
 
   stream->rtp_port = gst_sdp_media_get_port (media);
-  if (gst_sdp_media_get_attribute_val (media, "rtcp")) {
+
+  if (demux->rtcp_mode == GST_SDP_DEMUX_RTCP_MODE_INACTIVE) {
+    GST_INFO_OBJECT (demux, "RTCP disabled");
+    stream->rtcp_port = -1;
+  } else if (gst_sdp_media_get_attribute_val (media, "rtcp")) {
     /* FIXME, RFC 3605 */
     stream->rtcp_port = stream->rtp_port + 1;
   } else {
@@ -817,7 +870,9 @@ gst_sdp_demux_stream_configure_udp (GstSDPDemux * demux, GstSDPStream * stream)
   }
 
   /* creating another UDP source */
-  if (stream->rtcp_port != -1) {
+  if (stream->rtcp_port != -1
+      && (demux->rtcp_mode == GST_SDP_DEMUX_RTCP_MODE_SENDRECV
+          || demux->rtcp_mode == GST_SDP_DEMUX_RTCP_MODE_RECVONLY)) {
     GST_DEBUG_OBJECT (demux, "receiving RTCP from %s:%d", destination,
         stream->rtcp_port);
     uri = g_strdup_printf ("udp://%s:%d", destination, stream->rtcp_port);
@@ -862,6 +917,12 @@ gst_sdp_demux_stream_configure_udp_sink (GstSDPDemux * demux,
   gint port;
   GSocket *socket;
   gchar *destination, *uri, *name;
+
+  if (demux->rtcp_mode == GST_SDP_DEMUX_RTCP_MODE_INACTIVE
+      || demux->rtcp_mode == GST_SDP_DEMUX_RTCP_MODE_RECVONLY) {
+    GST_INFO_OBJECT (demux, "RTCP feedback disabled, not sending RRs");
+    return TRUE;
+  }
 
   /* get destination and port */
   port = stream->rtcp_port;
@@ -1204,7 +1265,8 @@ gst_sdp_demux_start (GstSDPDemux * demux)
 
       /* configure target state on udp sources */
       gst_element_set_state (stream->udpsrc[0], demux->target);
-      gst_element_set_state (stream->udpsrc[1], demux->target);
+      if (stream->udpsrc[1] != NULL)
+        gst_element_set_state (stream->udpsrc[1], demux->target);
     }
   }
   GST_SDP_STREAM_UNLOCK (demux);
