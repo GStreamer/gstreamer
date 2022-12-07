@@ -258,7 +258,8 @@ if cc.has_function('localtime_r', prefix : '#include<time.h>')
   cdata.set('HAVE_DECL_LOCALTIME_R', 1)
 endif
 
-if cc.links('''#include <pthread.h>
+if cc.links('''#define _GNU_SOURCE
+               #include <pthread.h>
                int main() {
                  pthread_setname_np("example"); return 0;
                }''', name : 'pthread_setname_np(const char*)')
