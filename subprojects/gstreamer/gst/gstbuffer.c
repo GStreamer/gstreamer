@@ -746,7 +746,7 @@ _gst_buffer_copy (const GstBuffer * buffer)
  * Creates a copy of the given buffer. This will make a newly allocated
  * copy of the data the source buffer contains.
  *
- * Returns: (transfer full): a new copy of @buf.
+ * Returns: (transfer full) (nullable): a new copy of @buf if the copy succeeded, %NULL otherwise.
  *
  * Since: 1.6
  */
@@ -3009,7 +3009,7 @@ gst_clear_buffer (GstBuffer ** buf_ptr)
  * Check gst_buffer_copy_deep() if you want to force the data
  * to be copied to newly allocated memory.
  *
- * Returns: (transfer full): a new copy of @buf.
+ * Returns: (transfer full) (nullable): a new copy of @buf if the copy succeeded, %NULL otherwise.
  */
 GstBuffer *
 gst_buffer_copy (const GstBuffer * buf)

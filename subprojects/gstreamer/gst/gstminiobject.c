@@ -423,8 +423,8 @@ gst_mini_object_is_writable (const GstMiniObject * mini_object)
  *
  * MT safe
  *
- * Returns: (transfer full): a mini-object (possibly the same pointer) that
- *     is writable.
+ * Returns: (transfer full) (nullable): a writable mini-object (which may or may not be
+ *     the same as @mini_object) or %NULL if copying is required but not possible.
  */
 GstMiniObject *
 gst_mini_object_make_writable (GstMiniObject * mini_object)
