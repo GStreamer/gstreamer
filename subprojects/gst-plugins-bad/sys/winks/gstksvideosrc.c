@@ -47,6 +47,8 @@
 #include "ksvideohelpers.h"
 #include "ksdeviceprovider.h"
 
+#include <versionhelpers.h>
+
 #define DEFAULT_DEVICE_PATH     NULL
 #define DEFAULT_DEVICE_NAME     NULL
 #define DEFAULT_DEVICE_INDEX    -1
@@ -240,6 +242,21 @@ gst_ks_video_src_init (GstKsVideoSrc * self)
   priv->device_index = DEFAULT_DEVICE_INDEX;
   priv->do_stats = DEFAULT_DO_STATS;
   priv->enable_quirks = DEFAULT_ENABLE_QUIRKS;
+
+  /* MediaFoundation does not support MinGW build */
+#ifdef _MSC_VER
+  {
+    static gsize deprecated_warn = 0;
+
+    if (g_once_init_enter (&deprecated_warn)) {
+      if (IsWindows8OrGreater ()) {
+        g_warning ("\"ksvideosrc\" is deprecated and will be removed"
+            "in the future. Use \"mfvideosrc\" element instead");
+      }
+      g_once_init_leave (&deprecated_warn, 1);
+    }
+  }
+#endif
 }
 
 static void
