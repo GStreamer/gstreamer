@@ -1,10 +1,11 @@
-project(
-  'gstreamer-full',
-  'c',
-version : '1.20.4.2',
-meson_version : '>= 0.59',
-default_options : ['buildtype=debugoptimized', 'cpp_std=c++14']
-)
+project('gstreamer-full', 'c',
+  version : '1.20.4.1',
+  meson_version : '>= 0.59',
+  default_options : ['buildtype=debugoptimized',
+                     # Needed due to https://github.com/mesonbuild/meson/issues/1889,
+                     # but this can cause problems in the future. Remove it
+                     # when it's no longer necessary.
+                     'cpp_std=c++14'])
 
 gst_version = '>= @0@'.format(meson.project_version())
 
