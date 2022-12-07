@@ -2790,8 +2790,13 @@ qtdemux_parse_piff (GstQTDemux * qtdemux, const guint8 * buffer, gint length,
     return;
   }
 
-  gst_structure_get (structure, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD,
-      G_TYPE_STRING, &system_id, NULL);
+  if (!gst_structure_get (structure, GST_PROTECTION_SYSTEM_ID_CAPS_FIELD,
+          G_TYPE_STRING, &system_id, NULL)) {
+    GST_WARNING_OBJECT (qtdemux, "%s field not present in caps",
+        GST_PROTECTION_SYSTEM_ID_CAPS_FIELD);
+    return;
+  }
+
   gst_qtdemux_append_protection_system_id (qtdemux, system_id);
 
   stream->protected = TRUE;
