@@ -560,24 +560,29 @@ gst_dvb_sub_enc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     }
     case GST_EVENT_GAP:
     {
-      GstClockTime start, duration;
-
-      gst_event_parse_gap (event, &start, &duration);
-      if (GST_CLOCK_TIME_IS_VALID (start)) {
-        if (GST_CLOCK_TIME_IS_VALID (duration))
-          start += duration;
-        /* we do not expect another buffer until after gap,
-         * so that is our position now */
-        GST_DEBUG_OBJECT (enc,
-            "Got GAP event, advancing time to %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (start));
-        gst_dvb_sub_enc_generate_end_packet (enc, start);
+      if (!GST_CLOCK_TIME_IS_VALID (enc->current_end_time)) {
+        ret = gst_pad_event_default (pad, parent, event);
       } else {
-        GST_WARNING_OBJECT (enc, "Got GAP event with invalid position");
-      }
+        GstClockTime start, duration;
 
-      gst_event_unref (event);
-      ret = TRUE;
+        gst_event_parse_gap (event, &start, &duration);
+
+        if (GST_CLOCK_TIME_IS_VALID (start)) {
+          if (GST_CLOCK_TIME_IS_VALID (duration))
+            start += duration;
+          /* we do not expect another buffer until after gap,
+           * so that is our position now */
+          GST_DEBUG_OBJECT (enc,
+              "Got GAP event, advancing time to %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (start));
+          gst_dvb_sub_enc_generate_end_packet (enc, start);
+        } else {
+          GST_WARNING_OBJECT (enc, "Got GAP event with invalid position");
+        }
+
+        gst_event_unref (event);
+        ret = TRUE;
+      }
       break;
     }
     case GST_EVENT_SEGMENT:
