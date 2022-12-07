@@ -650,6 +650,25 @@ gst_text_render_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       break;
     }
+    case GST_EVENT_GAP:
+      /* Negotiate caps first if we negotiated none so far as otherwise
+       * downstream wouldn't have received a segment event either and
+       * wouldn't know what to do with the gap event */
+      if (!gst_pad_has_current_caps (render->srcpad)) {
+        if (gst_text_render_renegotiate (render) != GST_FLOW_OK) {
+          gst_event_unref (event);
+          ret = FALSE;
+          break;
+        }
+      }
+
+      if (render->segment_event) {
+        gst_pad_push_event (render->srcpad, render->segment_event);
+        render->segment_event = NULL;
+      }
+
+      ret = gst_pad_event_default (pad, parent, event);
+      break;
     default:
       ret = gst_pad_event_default (pad, parent, event);
       break;
