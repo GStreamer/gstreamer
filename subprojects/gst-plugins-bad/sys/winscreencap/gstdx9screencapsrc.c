@@ -45,6 +45,7 @@
 
 #include "gstdx9screencapsrc.h"
 #include <gst/video/video.h>
+#include <versionhelpers.h>
 
 GST_DEBUG_CATEGORY_STATIC (dx9screencapsrc_debug);
 
@@ -158,6 +159,8 @@ gst_dx9screencapsrc_class_init (GstDX9ScreenCapSrcClass * klass)
 static void
 gst_dx9screencapsrc_init (GstDX9ScreenCapSrc * src)
 {
+  static gsize deprecated_warn = 0;
+
   /* Set src element initial values... */
   src->surface = NULL;
   src->d3d9_device = NULL;
@@ -177,6 +180,14 @@ gst_dx9screencapsrc_init (GstDX9ScreenCapSrc * src)
     g_d3d9 = Direct3DCreate9 (D3D_SDK_VERSION);
   else
     IDirect3D9_AddRef (g_d3d9);
+
+  if (g_once_init_enter (&deprecated_warn)) {
+    if (IsWindows8OrGreater ()) {
+      g_warning ("\"dx9screencapsrc\" is deprecated and will be removed"
+          "in the future. Use \"d3d11screencapturesrc\" element instead");
+    }
+    g_once_init_leave (&deprecated_warn, 1);
+  }
 }
 
 static void
