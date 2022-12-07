@@ -23,6 +23,7 @@
 
 #include "gstcudautils.h"
 #include "gstcudacontext.h"
+#include "gstcuda-private.h"
 
 #ifdef HAVE_NVCODEC_GST_GL
 #include <gst/gl/gl.h>

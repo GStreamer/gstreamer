@@ -184,63 +184,6 @@ void            gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * reso
 GST_CUDA_API
 void            gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource);
 
-/**
- * GstCudaBufferCopyType:
- * @GST_CUDA_BUFFER_COPY_SYSTEM: Copy from/to system memory
- * @GST_CUDA_BUFFER_COPY_CUDA: Copy from/to cuda memory
- * @GST_CUDA_BUFFER_COPY_GL: Copy from/to GL memory
- * @GST_CUDA_BUFFER_COPY_D3D11: Copy from/to D3D11 memory
- * @GST_CUDA_BUFFER_COPY_NVMM: Copy from/to NVMM memory
- *
- * Since: 1.22
- */
-typedef enum
-{
-  GST_CUDA_BUFFER_COPY_SYSTEM,
-  GST_CUDA_BUFFER_COPY_CUDA,
-  GST_CUDA_BUFFER_COPY_GL,
-  GST_CUDA_BUFFER_COPY_D3D11,
-  GST_CUDA_BUFFER_COPY_NVMM,
-} GstCudaBufferCopyType;
-
-/**
- * gst_cuda_buffer_copy_type_to_string:
- * @type: The #GstCudaBufferCopyType to get name from
- *
- * Returns: The human readable name of @type
- *
- * Since: 1.22
- */
-GST_CUDA_API
-const gchar * gst_cuda_buffer_copy_type_to_string (GstCudaBufferCopyType type);
-
-/**
- * gst_cuda_buffer_copy:
- * @dst: The buffer into which to copy @src content
- * @dst_type: The #GstCudaBufferCopyType to copy @src into
- * @dst_info: #GstVideoInfo defining @dst
- * @src: The source buffer to copy
- * @src_type: The #GstCudaBufferCopyType @src is in
- * @src_info: $GstVideoInfo defining @src
- * @context: The #GstCudaContext to use to copy @src into @dst
- * @stream: The @CUStream to use to copy @src into @dst
- *
- * Copies @src into @dst with the specified arguments.
- *
- * Returns: %TRUE if the buffer could be copied %FALSE otherwise
- *
- * Since: 1.22
- */
-GST_CUDA_API
-gboolean      gst_cuda_buffer_copy (GstBuffer * dst,
-                                    GstCudaBufferCopyType dst_type,
-                                    const GstVideoInfo * dst_info,
-                                    GstBuffer * src,
-                                    GstCudaBufferCopyType src_type,
-                                    const GstVideoInfo * src_info,
-                                    GstCudaContext * context,
-                                    CUstream stream);
-
 G_END_DECLS
 
 #endif /* __GST_CUDA_UTILS_H__ */
