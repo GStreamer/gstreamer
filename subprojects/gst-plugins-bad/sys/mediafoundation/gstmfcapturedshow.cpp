@@ -41,7 +41,7 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY_EXTERN (gst_mf_source_object_debug);
 #define GST_CAT_DEFAULT gst_mf_source_object_debug
 
-DEFINE_GUID (MEDIASUBTYPE_I420, 0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00,
+DEFINE_GUID (MF_MEDIASUBTYPE_I420, 0x30323449, 0x0000, 0x0010, 0x80, 0x00, 0x00,
     0xAA, 0x00, 0x38, 0x9B, 0x71);
 
 /* From qedit.h */
@@ -756,7 +756,7 @@ subtype_to_format (REFGUID subtype)
     return GST_VIDEO_FORMAT_YV12;
   else if (subtype == MEDIASUBTYPE_NV12)
     return GST_VIDEO_FORMAT_NV12;
-  else if (subtype == MEDIASUBTYPE_I420)
+  else if (subtype == MF_MEDIASUBTYPE_I420)
     return GST_VIDEO_FORMAT_I420;
   else if (subtype == MEDIASUBTYPE_IYUV)
     return GST_VIDEO_FORMAT_I420;

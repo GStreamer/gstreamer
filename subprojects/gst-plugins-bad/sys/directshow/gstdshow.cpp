@@ -34,7 +34,7 @@ wchar_to_gchar (WCHAR * w)
   return g_utf16_to_utf8 ((const gunichar2 *) w, wcslen (w), NULL, NULL, NULL);
 }
 
-const GUID MEDIASUBTYPE_I420
+const GUID DSHOW_MEDIASUBTYPE_I420
     = { 0x30323449, 0x0000, 0x0010, {0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B,
     0x71}
 };
@@ -613,7 +613,7 @@ gst_dshow_show_propertypage (IBaseFilter * base_filter)
 GstVideoFormat
 gst_dshow_guid_to_gst_video_format (AM_MEDIA_TYPE *mediatype)
 {
-  if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_I420, FORMAT_VideoInfo))
+  if (gst_dshow_check_mediatype (mediatype, DSHOW_MEDIASUBTYPE_I420, FORMAT_VideoInfo))
     return GST_VIDEO_FORMAT_I420;
 
   if (gst_dshow_check_mediatype (mediatype, MEDIASUBTYPE_RGB24, FORMAT_VideoInfo))
