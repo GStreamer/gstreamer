@@ -25,9 +25,9 @@
 
 #include "gstglwindow_win32.h"
 
-LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
+static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
-LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
+static LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 
 enum
@@ -534,7 +534,7 @@ gst_gl_window_win32_handle_mouse_event (GstGLWindow * window, UINT uMsg,
 
 /* PRIVATE */
 
-LRESULT CALLBACK
+static LRESULT CALLBACK
 window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   GstGLWindowWin32 *window_win32;
@@ -644,7 +644,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   return ret;
 }
 
-LRESULT FAR PASCAL
+static LRESULT FAR PASCAL
 sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   WNDPROC window_parent_proc = GetProp (hWnd, "gl_window_parent_proc");

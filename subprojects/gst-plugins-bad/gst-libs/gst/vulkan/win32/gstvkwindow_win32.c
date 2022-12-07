@@ -26,9 +26,9 @@
 
 #include "gstvkwindow_win32.h"
 
-LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
+static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
-LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
+static LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 
 enum
@@ -488,7 +488,7 @@ gst_vulkan_window_win32_show (GstVulkanWindowWin32 * window)
 
 /* PRIVATE */
 
-LRESULT CALLBACK
+static LRESULT CALLBACK
 window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   GstVulkanWindowWin32 *window_win32;
@@ -553,7 +553,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   return ret;
 }
 
-LRESULT FAR PASCAL
+static LRESULT FAR PASCAL
 sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   WNDPROC window_parent_proc = GetProp (hWnd, "vulkan_window_parent_proc");
