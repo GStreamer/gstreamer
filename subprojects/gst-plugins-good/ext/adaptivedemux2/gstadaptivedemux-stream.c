@@ -1759,6 +1759,46 @@ gst_adaptive_demux2_stream_on_manifest_update (GstAdaptiveDemux2Stream * stream)
       gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
 }
 
+void
+gst_adaptive_demux2_stream_on_can_download_fragments (GstAdaptiveDemux2Stream *
+    stream)
+{
+  GstAdaptiveDemux *demux = stream->demux;
+
+  if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_BEFORE_DOWNLOAD)
+    return;
+
+  g_assert (stream->pending_cb_id == 0);
+
+  GST_LOG_OBJECT (stream, "Scheduling load_a_fragment() call");
+  stream->pending_cb_id =
+      gst_adaptive_demux_loop_call (demux->priv->scheduler_task,
+      (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
+      gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
+}
+
+/*
+ * Called by a subclass that has returned GST_ADAPTIVE_DEMUX_FLOW_BUSY
+ * from update_fragment_info() to indicate that it is ready to continue
+ * downloading now.
+ */
+void
+gst_adaptive_demux2_stream_mark_prepared (GstAdaptiveDemux2Stream * stream)
+{
+  GstAdaptiveDemux *demux = stream->demux;
+
+  if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE)
+    return;
+
+  g_assert (stream->pending_cb_id == 0);
+
+  GST_LOG_OBJECT (stream, "Scheduling load_a_fragment() call");
+  stream->pending_cb_id =
+      gst_adaptive_demux_loop_call (demux->priv->scheduler_task,
+      (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
+      gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
+}
+
 static void
 gst_adaptive_demux2_stream_handle_playlist_eos (GstAdaptiveDemux2Stream *
     stream)
@@ -1800,9 +1840,11 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
   switch (stream->state) {
     case GST_ADAPTIVE_DEMUX2_STREAM_STATE_RESTART:
     case GST_ADAPTIVE_DEMUX2_STREAM_STATE_START_FRAGMENT:
+    case GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE:
     case GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_LIVE:
     case GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_OUTPUT_SPACE:
     case GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_MANIFEST_UPDATE:
+    case GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_BEFORE_DOWNLOAD:
       /* Get information about the fragment to download */
       GST_DEBUG_OBJECT (demux, "Calling update_fragment_info");
       ret = gst_adaptive_demux2_stream_update_fragment_info (stream);
@@ -1825,6 +1867,13 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
       GST_ERROR_OBJECT (stream, "Unexpected stream state %d", stream->state);
       g_assert_not_reached ();
       break;
+  }
+
+  if (ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY) {
+    GST_LOG_OBJECT (stream,
+        "Sub-class returned BUSY flow return. Waiting in PREPARE state");
+    stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE;
+    return FALSE;
   }
 
   if (ret == GST_FLOW_OK) {
@@ -1857,10 +1906,12 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
         return FALSE;
       }
     }
+  }
 
-    if (gst_adaptive_demux2_stream_download_fragment (stream) != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (demux,
-          "Failed to begin fragment download for stream %p", stream);
+  if (ret == GST_FLOW_OK) {
+    if (!demux->priv->streams_can_download_fragments) {
+      GST_LOG_OBJECT (stream, "Waiting for fragment downloads to be unblocked");
+      stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_BEFORE_DOWNLOAD;
       return FALSE;
     }
   }
@@ -1869,7 +1920,13 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
    * GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC is not in the GstFlowReturn enum */
   switch ((int) ret) {
     case GST_FLOW_OK:
-      break;                    /* all is good, let's go */
+      /* all is good, let's go */
+      if (gst_adaptive_demux2_stream_download_fragment (stream) != GST_FLOW_OK) {
+        GST_ERROR_OBJECT (demux,
+            "Failed to begin fragment download for stream %p", stream);
+        return FALSE;
+      }
+      break;
     case GST_FLOW_EOS:
       GST_DEBUG_OBJECT (stream, "EOS, checking to stop download loop");
       stream->last_ret = ret;

@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 
 /* Internal, so not using GST_FLOW_CUSTOM_SUCCESS_N */
 #define GST_ADAPTIVE_DEMUX_FLOW_SWITCH (GST_FLOW_CUSTOM_SUCCESS_2 + 2)
+#define GST_ADAPTIVE_DEMUX_FLOW_BUSY (GST_FLOW_CUSTOM_SUCCESS_2 + 3)
 
 #define TRACKS_GET_LOCK(d) (&GST_ADAPTIVE_DEMUX_CAST(d)->priv->tracks_lock)
 #define TRACKS_LOCK(d) g_mutex_lock (TRACKS_GET_LOCK (d))
@@ -99,6 +100,11 @@ struct _GstAdaptiveDemuxPrivate
 
   /* Set to TRUE if any stream is waiting on the manifest update */
   gboolean stream_waiting_for_manifest;
+
+  /* Set to TRUE if streams can download fragment data. If FALSE,
+   * they can load playlists / prepare for updata_fragment_info()
+   */
+  gboolean streams_can_download_fragments;
 
   GMutex api_lock;
 
@@ -181,6 +187,7 @@ gboolean gst_adaptive_demux_is_live (GstAdaptiveDemux * demux);
 
 void gst_adaptive_demux2_stream_on_manifest_update (GstAdaptiveDemux2Stream * stream);
 void gst_adaptive_demux2_stream_on_output_space_available (GstAdaptiveDemux2Stream *stream);
+void gst_adaptive_demux2_stream_on_can_download_fragments(GstAdaptiveDemux2Stream *stream);
 
 gboolean gst_adaptive_demux2_stream_has_next_fragment (GstAdaptiveDemux2Stream * stream);
 GstFlowReturn gst_adaptive_demux2_stream_seek (GstAdaptiveDemux2Stream * stream,

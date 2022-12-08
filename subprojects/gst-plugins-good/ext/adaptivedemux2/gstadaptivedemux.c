@@ -804,6 +804,41 @@ gst_adaptive_demux_output_slot_new (GstAdaptiveDemux * demux,
   return slot;
 }
 
+static gboolean
+gst_adaptive_demux_scheduler_unblock_fragment_downloads_cb (GstAdaptiveDemux *
+    demux)
+{
+  GList *iter;
+
+  GST_INFO_OBJECT (demux, "Unblocking streams' fragment downloads");
+  demux->priv->streams_can_download_fragments = TRUE;
+
+  iter = demux->input_period->streams;
+
+  for (; iter; iter = g_list_next (iter)) {
+    GstAdaptiveDemux2Stream *stream = iter->data;
+    gst_adaptive_demux2_stream_on_can_download_fragments (stream);
+  }
+
+  return FALSE;
+}
+
+/* must be called with the scheduler lock */
+static void
+gst_adaptive_demux_set_streams_can_download_fragments (GstAdaptiveDemux * demux,
+    gboolean streams_can_download_fragments)
+{
+  if (streams_can_download_fragments) {
+    gst_adaptive_demux_loop_call (demux->priv->scheduler_task, (GSourceFunc)
+        gst_adaptive_demux_scheduler_unblock_fragment_downloads_cb, demux,
+        NULL);
+  } else {
+    demux->priv->streams_can_download_fragments =
+        streams_can_download_fragments;
+  }
+
+}
+
 /* Called:
  * * After `process_manifest` or when a period starts
  * * Or when all tracks have been created
@@ -1020,6 +1055,8 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
 
   gst_adaptive_demux_prepare_streams (demux,
       gst_adaptive_demux_is_live (demux));
+
+  gst_adaptive_demux_set_streams_can_download_fragments (demux, TRUE);
   gst_adaptive_demux_start_tasks (demux);
   gst_adaptive_demux_start_manifest_update_task (demux);
 
@@ -3711,7 +3748,7 @@ gst_adaptive_demux_has_next_period (GstAdaptiveDemux * demux)
   return ret;
 }
 
-/* must be called with manifest_lock taken */
+/* must be called from the scheduler task */
 void
 gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux)
 {
