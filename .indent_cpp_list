@@ -1,3 +1,4 @@
+subprojects/gst-plugins-bad/ext/qt6d3d11
 subprojects/gst-plugins-bad/gst-libs/gst/cuda
 subprojects/gst-plugins-bad/gst-libs/gst/d3d11
 subprojects/gst-plugins-bad/gst-libs/gst/va
