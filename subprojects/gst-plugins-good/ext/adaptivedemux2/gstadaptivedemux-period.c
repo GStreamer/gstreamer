@@ -212,6 +212,33 @@ gst_adaptive_demux_period_transfer_selection (GstAdaptiveDemux * demux,
   }
 }
 
+/* called with TRACKS_LOCK taken. Takes ownership of the stream */
+gboolean
+gst_adaptive_demux_period_add_stream (GstAdaptiveDemuxPeriod * period,
+    GstAdaptiveDemux2Stream * stream)
+{
+  GST_LOG ("period %d stream: %" GST_PTR_FORMAT, period->period_num, stream);
+
+  /* Set the stream's period */
+  stream->period = period;
+  period->streams = g_list_append (period->streams, stream);
+
+  /* Add any pre-existing stream tracks to our set */
+  if (stream->tracks) {
+    GList *iter;
+    for (iter = stream->tracks; iter; iter = iter->next) {
+      GstAdaptiveDemuxTrack *track = (GstAdaptiveDemuxTrack *) iter->data;
+      if (!gst_adaptive_demux_period_add_track (period, track)) {
+        GST_ERROR_OBJECT (period->demux, "period %d failed to add track %p",
+            period->period_num, track);
+        return FALSE;
+      }
+    }
+  }
+
+  return TRUE;
+}
+
 /* called with TRACKS_LOCK taken */
 gboolean
 gst_adaptive_demux_period_add_track (GstAdaptiveDemuxPeriod * period,

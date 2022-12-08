@@ -3854,20 +3854,14 @@ gst_adaptive_demux2_add_stream (GstAdaptiveDemux * demux,
     return FALSE;
   }
   stream->demux = demux;
-  stream->period = demux->input_period;
-  demux->input_period->streams =
-      g_list_append (demux->input_period->streams, stream);
 
-  if (stream->tracks) {
-    GList *iter;
-    for (iter = stream->tracks; iter; iter = iter->next)
-      if (!gst_adaptive_demux_period_add_track (demux->input_period,
-              (GstAdaptiveDemuxTrack *) iter->data)) {
-        GST_ERROR_OBJECT (demux, "Failed to add track elements");
-        TRACKS_UNLOCK (demux);
-        return FALSE;
-      }
+  /* Takes ownership of the stream and adds the tracks */
+  if (!gst_adaptive_demux_period_add_stream (demux->input_period, stream)) {
+    GST_ERROR_OBJECT (demux, "Failed to add stream to period");
+    TRACKS_UNLOCK (demux);
+    return FALSE;
   }
+
   TRACKS_UNLOCK (demux);
   return TRUE;
 }

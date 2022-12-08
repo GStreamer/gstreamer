@@ -234,6 +234,8 @@ GstAdaptiveDemuxPeriod * gst_adaptive_demux_period_new (GstAdaptiveDemux * demux
 GstAdaptiveDemuxPeriod * gst_adaptive_demux_period_ref (GstAdaptiveDemuxPeriod * period);
 void                     gst_adaptive_demux_period_unref (GstAdaptiveDemuxPeriod * period);
 
+gboolean                 gst_adaptive_demux_period_add_stream (GstAdaptiveDemuxPeriod * period,
+							      GstAdaptiveDemux2Stream * stream);
 gboolean                 gst_adaptive_demux_period_add_track (GstAdaptiveDemuxPeriod * period,
 							      GstAdaptiveDemuxTrack * track);
 gboolean                 gst_adaptive_demux_track_add_elements (GstAdaptiveDemuxTrack * track,
