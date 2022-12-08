@@ -140,7 +140,7 @@ struct _GstAdaptiveDemuxPrivate
   /* Current output selection seqnum */
   guint32 current_selection_seqnum;
   /* Current output position (in running time) */
-  GstClockTimeDiff global_output_position;
+  GstClockTime global_output_position;
   /* End of fields protected by output_lock */
 
   gint n_audio_streams, n_video_streams, n_subtitle_streams;
