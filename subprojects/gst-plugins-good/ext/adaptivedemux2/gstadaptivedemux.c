@@ -3876,3 +3876,9 @@ gst_adaptive_demux_play_rate (GstAdaptiveDemux * demux)
   GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
   return rate;
 }
+
+GstAdaptiveDemuxLoop *
+gst_adaptive_demux_get_loop (GstAdaptiveDemux * demux)
+{
+  return gst_adaptive_demux_loop_ref (demux->priv->scheduler_task);
+}
