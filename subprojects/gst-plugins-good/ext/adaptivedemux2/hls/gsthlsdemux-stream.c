@@ -53,8 +53,8 @@ gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
     const guint8 * key_data, const guint8 * iv_data);
 static void gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream);
 
-static GstFlowReturn gst_hls_demux_stream_update_rendition_playlist (GstHLSDemux
-    * demux, GstHLSDemuxStream * stream);
+static GstFlowReturn
+gst_hls_demux_stream_update_rendition_playlist (GstHLSDemuxStream * stream);
 
 static gboolean
 gst_hls_demux_stream_start_fragment (GstAdaptiveDemux2Stream * stream);
@@ -164,7 +164,7 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
 
   /* If the rendition playlist needs to be updated, do it now */
   if (!hls_stream->is_variant && !hls_stream->playlist_fetched) {
-    ret = gst_hls_demux_stream_update_rendition_playlist (hlsdemux, hls_stream);
+    ret = gst_hls_demux_stream_update_rendition_playlist (hls_stream);
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (stream,
           "Failed to update the rendition playlist before seeking");
@@ -1740,8 +1740,7 @@ gst_hls_demux_stream_get_playlist_reload_interval (GstHLSDemuxStream * stream)
 }
 
 static GstFlowReturn
-gst_hls_demux_stream_update_rendition_playlist (GstHLSDemux * demux,
-    GstHLSDemuxStream * stream)
+gst_hls_demux_stream_update_rendition_playlist (GstHLSDemuxStream * stream)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstHLSRenditionStream *target_rendition =
@@ -1778,8 +1777,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 
   /* If the rendition playlist needs to be updated, do it now */
   if (!hlsdemux_stream->is_variant && !hlsdemux_stream->playlist_fetched) {
-    ret = gst_hls_demux_stream_update_rendition_playlist (hlsdemux,
-        hlsdemux_stream);
+    ret = gst_hls_demux_stream_update_rendition_playlist (hlsdemux_stream);
     if (ret != GST_FLOW_OK)
       return ret;
   }
