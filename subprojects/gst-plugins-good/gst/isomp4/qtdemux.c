@@ -392,6 +392,8 @@ static void gst_qtdemux_append_protection_system_id (GstQTDemux * qtdemux,
     const gchar * id);
 static void qtdemux_gst_structure_free (GstStructure * gststructure);
 static void gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard);
+static void qtdemux_clear_protection_events_on_all_streams (GstQTDemux *
+    qtdemux);
 
 static void
 gst_qtdemux_class_init (GstQTDemuxClass * klass)
@@ -482,9 +484,8 @@ gst_qtdemux_dispose (GObject * object)
   }
   gst_tag_list_unref (qtdemux->tag_list);
   gst_flow_combiner_free (qtdemux->flowcombiner);
-  g_queue_foreach (&qtdemux->protection_event_queue, (GFunc) gst_event_unref,
-      NULL);
-  g_queue_clear (&qtdemux->protection_event_queue);
+  g_queue_clear_full (&qtdemux->protection_event_queue,
+      (GDestroyNotify) gst_event_unref);
 
   g_free (qtdemux->cenc_aux_info_sizes);
   qtdemux->cenc_aux_info_sizes = NULL;
@@ -2039,9 +2040,8 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->have_group_id = FALSE;
     qtdemux->group_id = G_MAXUINT;
 
-    g_queue_foreach (&qtdemux->protection_event_queue, (GFunc) gst_event_unref,
-        NULL);
-    g_queue_clear (&qtdemux->protection_event_queue);
+    g_queue_clear_full (&qtdemux->protection_event_queue,
+        (GDestroyNotify) gst_event_unref);
 
     qtdemux->received_seek = FALSE;
     qtdemux->first_moof_already_parsed = FALSE;
@@ -2099,6 +2099,15 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   }
 }
 
+static void
+qtdemux_clear_protection_events_on_all_streams (GstQTDemux * qtdemux)
+{
+  for (unsigned i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
+    QtDemuxStream *stream = QTDEMUX_NTH_STREAM (qtdemux, i);
+    g_queue_clear_full (&stream->protection_scheme_event_queue,
+        (GDestroyNotify) gst_event_unref);
+  }
+}
 
 /* Maps the @segment to the qt edts internal segments and pushes
  * the corresponding segment event.
@@ -2574,9 +2583,8 @@ gst_qtdemux_stream_clear (QtDemuxStream * stream)
   }
   stream->protection_scheme_type = 0;
   stream->protection_scheme_version = 0;
-  g_queue_foreach (&stream->protection_scheme_event_queue,
-      (GFunc) gst_event_unref, NULL);
-  g_queue_clear (&stream->protection_scheme_event_queue);
+  g_queue_clear_full (&stream->protection_scheme_event_queue,
+      (GDestroyNotify) gst_event_unref);
   gst_qtdemux_stream_flush_segments_data (stream);
   gst_qtdemux_stream_flush_samples_data (stream);
 }
@@ -4292,6 +4300,10 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
 
   /* parse any protection system info */
   pssh_node = qtdemux_tree_get_child_by_type (moof_node, FOURCC_pssh);
+  if (pssh_node) {
+    /* Unref old protection events if we are going to receive new ones. */
+    qtdemux_clear_protection_events_on_all_streams (qtdemux);
+  }
   while (pssh_node) {
     GST_LOG_OBJECT (qtdemux, "Parsing pssh box.");
     qtdemux_parse_pssh (qtdemux, pssh_node);
@@ -14113,6 +14125,10 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
   /* parse any protection system info */
   pssh = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_pssh);
+  if (pssh) {
+    /* Unref old protection events if we are going to receive new ones. */
+    qtdemux_clear_protection_events_on_all_streams (qtdemux);
+  }
   while (pssh) {
     GST_LOG_OBJECT (qtdemux, "Parsing pssh box.");
     qtdemux_parse_pssh (qtdemux, pssh);
