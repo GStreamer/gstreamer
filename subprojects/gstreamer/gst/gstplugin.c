@@ -1183,8 +1183,16 @@ gboolean
 gst_plugin_is_loaded (GstPlugin * plugin)
 {
   g_return_val_if_fail (plugin != NULL, FALSE);
+  gboolean ret;
 
-  return (plugin->module != NULL || plugin->filename == NULL);
+  if (plugin->filename == NULL)
+    return TRUE;                /* Static plugin */
+
+  g_mutex_lock (&gst_plugin_loading_mutex);
+  ret = (plugin->module != NULL);
+  g_mutex_unlock (&gst_plugin_loading_mutex);
+
+  return ret;
 }
 
 /**
@@ -1406,22 +1414,27 @@ gst_plugin_load_by_name (const gchar * name)
 
   GST_DEBUG ("looking up plugin %s in default registry", name);
   plugin = gst_registry_find_plugin (gst_registry_get (), name);
-  if (plugin) {
-    GST_DEBUG ("loading plugin %s from file %s", name, plugin->filename);
-    newplugin = gst_plugin_load_file (plugin->filename, &error);
-    gst_object_unref (plugin);
-
-    if (!newplugin) {
-      GST_WARNING ("load_plugin error: %s", error->message);
-      g_error_free (error);
-      return NULL;
-    }
-    /* newplugin was reffed by load_file */
-    return newplugin;
+  if (plugin == NULL) {
+    GST_DEBUG ("Could not find plugin %s in registry", name);
+    return NULL;
   }
 
-  GST_DEBUG ("Could not find plugin %s in registry", name);
-  return NULL;
+  if (gst_plugin_is_loaded (plugin)) {
+    GST_DEBUG ("plugin %s already loaded", name);
+    return plugin;
+  }
+
+  GST_DEBUG ("loading plugin %s from file %s", name, plugin->filename);
+  newplugin = gst_plugin_load_file (plugin->filename, &error);
+  gst_object_unref (plugin);
+
+  if (!newplugin) {
+    GST_WARNING ("load_plugin error: %s", error->message);
+    g_error_free (error);
+    return NULL;
+  }
+  /* newplugin was reffed by load_file */
+  return newplugin;
 }
 
 /**
