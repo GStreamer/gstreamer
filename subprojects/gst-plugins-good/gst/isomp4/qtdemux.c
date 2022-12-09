@@ -233,6 +233,11 @@ struct _QtDemuxCencSampleSetInfo
 {
   GstStructure *default_properties;
 
+  /* sample groups */
+  GPtrArray *track_group_properties;
+  GPtrArray *fragment_group_properties;
+  GPtrArray *sample_to_group_map;
+
   /* @crypto_info holds one GstStructure per sample */
   GPtrArray *crypto_info;
 };
@@ -2576,6 +2581,12 @@ gst_qtdemux_stream_clear (QtDemuxStream * stream)
         gst_structure_free (info->default_properties);
       if (info->crypto_info)
         g_ptr_array_free (info->crypto_info, TRUE);
+      if (info->fragment_group_properties)
+        g_ptr_array_free (info->fragment_group_properties, TRUE);
+      if (info->track_group_properties)
+        g_ptr_array_free (info->track_group_properties, TRUE);
+      if (info->sample_to_group_map)
+        g_ptr_array_free (info->sample_to_group_map, FALSE);
     }
     if (stream->protection_scheme_type == FOURCC_aavd) {
       QtDemuxAavdEncryptionInfo *info =
@@ -3783,6 +3794,7 @@ qtdemux_get_cenc_sample_properties (GstQTDemux * qtdemux,
     QtDemuxStream * stream, guint sample_index)
 {
   QtDemuxCencSampleSetInfo *info = NULL;
+  GstStructure *properties = NULL;
 
   g_return_val_if_fail (stream != NULL, NULL);
   g_return_val_if_fail (stream->protected, NULL);
@@ -3790,9 +3802,264 @@ qtdemux_get_cenc_sample_properties (GstQTDemux * qtdemux,
 
   info = (QtDemuxCencSampleSetInfo *) stream->protection_scheme_info;
 
-  /* Currently, cenc properties for groups of samples are not supported, so
-   * simply return a copy of the default sample properties */
-  return gst_structure_copy (info->default_properties);
+  /* First check if the sample is associated with the 'seig' sample group. */
+  if (info->sample_to_group_map
+      && sample_index < info->sample_to_group_map->len)
+    properties = g_ptr_array_index (info->sample_to_group_map, sample_index);
+
+  /* If not, use the default properties for this sample. */
+  if (!properties)
+    properties = info->default_properties;
+
+  return gst_structure_copy (properties);
+}
+
+static gboolean
+qtdemux_parse_sbgp (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstByteReader * br, guint32 group, GPtrArray ** sample_to_group_array,
+    GstStructure * default_properties, GPtrArray * tack_properties_array,
+    GPtrArray * group_properties_array)
+{
+  guint32 flags = 0;
+  guint8 version = 0;
+  guint32 count = 0;
+  const guint8 *grouping_type_data = NULL;
+  guint32 grouping_type = 0;
+
+  g_return_val_if_fail (qtdemux != NULL, FALSE);
+  g_return_val_if_fail (stream != NULL, FALSE);
+  g_return_val_if_fail (br != NULL, FALSE);
+  g_return_val_if_fail (*sample_to_group_array == NULL, FALSE);
+  g_return_val_if_fail (group_properties_array != NULL, FALSE);
+
+  if (!gst_byte_reader_get_uint32_be (br, &flags))
+    return FALSE;
+
+  if (!gst_byte_reader_get_data (br, 4, &grouping_type_data))
+    return FALSE;
+
+  grouping_type = QT_FOURCC (grouping_type_data);
+  if (grouping_type != group) {
+    /* There may be other groups, so just log this... */
+    GST_DEBUG_OBJECT (qtdemux, "Unsupported grouping type: '%"
+        GST_FOURCC_FORMAT "'", GST_FOURCC_ARGS (grouping_type));
+    return FALSE;
+  }
+
+  version = (flags >> 24);
+  if (version > 0) {
+    GST_WARNING_OBJECT (qtdemux, "Unsupported 'sbgp' box version: %hhu",
+        version);
+    return FALSE;
+  }
+
+  if (!gst_byte_reader_get_uint32_be (br, &count))
+    return FALSE;
+
+  GST_LOG_OBJECT (qtdemux, "flags: %08x, type: '%" GST_FOURCC_FORMAT
+      "', count: %u", flags, GST_FOURCC_ARGS (grouping_type), count);
+
+  if (count > 0)
+    *sample_to_group_array = g_ptr_array_sized_new (count);
+
+  while (count--) {
+    guint32 samples;
+    guint32 index;
+    GstStructure *properties = NULL;
+
+    if (!gst_byte_reader_get_uint32_be (br, &samples))
+      goto error;
+
+    if (!gst_byte_reader_get_uint32_be (br, &index))
+      goto error;
+
+    if (index > 0x10000) {
+      /* Index is referring the current fragment. */
+      index -= 0x10001;
+      if (index < group_properties_array->len)
+        properties = g_ptr_array_index (group_properties_array, index);
+      else
+        GST_ERROR_OBJECT (qtdemux, "invalid group index %u", index);
+    } else if (index > 0) {
+      /* Index is referring to the whole track. */
+      index--;
+      if (index < tack_properties_array->len)
+        properties = g_ptr_array_index (tack_properties_array, index);
+      else
+        GST_ERROR_OBJECT (qtdemux, "invalid group index %u", index);
+    } else {
+      /* If zero, then this range of samples does not belong to this group,
+         perhaps to another one or to none at all. */
+    }
+
+    GST_DEBUG_OBJECT (qtdemux, "assigning group '%" GST_FOURCC_FORMAT
+        "' index %i for the next %i samples: %" GST_PTR_FORMAT,
+        GST_FOURCC_ARGS (grouping_type), index, samples, properties);
+
+    while (samples--)
+      g_ptr_array_add (*sample_to_group_array, properties);
+  }
+
+  return TRUE;
+
+error:
+  g_ptr_array_free (*sample_to_group_array, TRUE);
+  *sample_to_group_array = NULL;
+  return FALSE;
+}
+
+static gboolean
+qtdemux_parse_sgpd (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GstByteReader * br, guint32 group, GPtrArray ** properties)
+{
+  guint32 flags = 0;
+  guint8 version = 0;
+  guint32 default_length = 0;
+  guint32 count = 0;
+  const guint8 *grouping_type_data = NULL;
+  guint32 grouping_type = 0;
+  const guint32 min_entry_size = 20;
+
+  g_return_val_if_fail (qtdemux != NULL, FALSE);
+  g_return_val_if_fail (stream != NULL, FALSE);
+  g_return_val_if_fail (br != NULL, FALSE);
+  g_return_val_if_fail (*properties == NULL, FALSE);
+
+  if (!gst_byte_reader_get_uint32_be (br, &flags))
+    return FALSE;
+
+  if (!gst_byte_reader_get_data (br, 4, &grouping_type_data))
+    return FALSE;
+
+  grouping_type = QT_FOURCC (grouping_type_data);
+  if (grouping_type != group) {
+    GST_WARNING_OBJECT (qtdemux, "Unhandled grouping type: '%"
+        GST_FOURCC_FORMAT "'", GST_FOURCC_ARGS (grouping_type));
+    return FALSE;
+  }
+
+  version = (flags >> 24);
+  if (version == 1) {
+    if (!gst_byte_reader_get_uint32_be (br, &default_length))
+      return FALSE;
+  } else if (version > 1) {
+    GST_WARNING_OBJECT (qtdemux, "Unsupported 'sgpd' box version: %hhu",
+        version);
+    return FALSE;
+  }
+
+  if (!gst_byte_reader_get_uint32_be (br, &count))
+    return FALSE;
+
+  GST_LOG_OBJECT (qtdemux, "flags: %08x, type: '%" GST_FOURCC_FORMAT
+      "', count: %u", flags, GST_FOURCC_ARGS (grouping_type), count);
+
+  if (count)
+    *properties = g_ptr_array_sized_new (count);
+
+  for (guint32 index = 0; index < count; index++) {
+    GstStructure *props = NULL;
+    guint32 length = default_length;
+    const guint8 *entry_data = NULL;
+    guint8 is_encrypted = 0;
+    guint8 iv_size = 0;
+    guint8 constant_iv_size = 0;
+    const guint8 *kid = NULL;
+    guint8 crypt_byte_block = 0;
+    guint8 skip_byte_block = 0;
+    const guint8 *constant_iv = NULL;
+    GstBuffer *kid_buf;
+
+    if (version == 1 && length == 0) {
+      if (!gst_byte_reader_get_uint32_be (br, &length))
+        goto error;
+    }
+
+    if (G_UNLIKELY (length < min_entry_size)) {
+      GST_ERROR_OBJECT (qtdemux, "Invalid entry size: %u", length);
+      goto error;
+    }
+
+    if (!gst_byte_reader_get_data (br, length, &entry_data))
+      goto error;
+
+    /* Follows tenc format... */
+    is_encrypted = QT_UINT8 (entry_data + 2);
+    iv_size = QT_UINT8 (entry_data + 3);
+    kid = (entry_data + 4);
+
+    if (stream->protection_scheme_type == FOURCC_cbcs) {
+      guint8 possible_pattern_info;
+
+      if (iv_size == 0) {
+        if (G_UNLIKELY (length < min_entry_size + 1)) {
+          GST_ERROR_OBJECT (qtdemux, "Invalid entry size: %u", length);
+          goto error;
+        }
+
+        constant_iv_size = QT_UINT8 (entry_data + 20);
+        if (G_UNLIKELY (constant_iv_size != 8 && constant_iv_size != 16)) {
+          GST_ERROR_OBJECT (qtdemux,
+              "constant IV size should be 8 or 16, not %hhu", constant_iv_size);
+          goto error;
+        }
+
+        if (G_UNLIKELY (length < min_entry_size + 1 + constant_iv_size)) {
+          GST_ERROR_OBJECT (qtdemux, "Invalid entry size: %u", length);
+          goto error;
+        }
+
+        constant_iv = (entry_data + 21);
+      }
+
+      possible_pattern_info = QT_UINT8 (entry_data + 1);
+      crypt_byte_block = (possible_pattern_info >> 4) & 0x0f;
+      skip_byte_block = possible_pattern_info & 0x0f;
+    }
+
+    kid_buf = _gst_buffer_new_wrapped ((guint8 *) kid, 16, NULL);
+
+    props = gst_structure_new ("application/x-cenc",
+        "iv_size", G_TYPE_UINT, iv_size,
+        "encrypted", G_TYPE_BOOLEAN, is_encrypted == 1,
+        "kid", GST_TYPE_BUFFER, kid_buf, NULL);
+
+    gst_buffer_unref (kid_buf);
+
+    if (stream->protection_scheme_type == FOURCC_cbcs) {
+      if (crypt_byte_block != 0 || skip_byte_block != 0) {
+        gst_structure_set (props,
+            "crypt_byte_block", G_TYPE_UINT, crypt_byte_block,
+            "skip_byte_block", G_TYPE_UINT, skip_byte_block, NULL);
+      }
+
+      if (constant_iv != NULL) {
+        GstBuffer *constant_iv_buf = _gst_buffer_new_wrapped (
+            (guint8 *) constant_iv, constant_iv_size, NULL);
+        gst_structure_set (props,
+            "constant_iv_size", G_TYPE_UINT, constant_iv_size,
+            "iv", GST_TYPE_BUFFER, constant_iv_buf, NULL);
+        gst_buffer_unref (constant_iv_buf);
+      }
+
+      gst_structure_set (props, "cipher-mode", G_TYPE_STRING, "cbcs", NULL);
+    } else {
+      gst_structure_set (props, "cipher-mode", G_TYPE_STRING, "cenc", NULL);
+    }
+
+    GST_INFO_OBJECT (qtdemux, "properties for group '%"
+        GST_FOURCC_FORMAT "' at index %u: %" GST_PTR_FORMAT,
+        GST_FOURCC_ARGS (grouping_type), index, props);
+
+    g_ptr_array_add (*properties, props);
+  }
+
+  return TRUE;
+
+error:
+  g_ptr_array_free (*properties, TRUE);
+  *properties = NULL;
+  return FALSE;
 }
 
 /* Parses the sizes of sample auxiliary information contained within a stream,
@@ -4159,6 +4426,51 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     if (!qtdemux_parse_tfhd (qtdemux, &tfhd_data, &stream, &ds_duration,
             &ds_size, &ds_flags, &base_offset))
       goto missing_tfhd;
+
+    /* Sample grouping support */
+    if (stream->protected && (stream->protection_scheme_type == FOURCC_cenc
+            || stream->protection_scheme_type == FOURCC_cbcs)) {
+      QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
+      GNode *sbgp_node, *sgpd_node;
+      GstByteReader sgpd_data, sbgp_data;
+
+      if (info->fragment_group_properties) {
+        g_ptr_array_free (info->fragment_group_properties, TRUE);
+        info->fragment_group_properties = NULL;
+      }
+
+      if (info->sample_to_group_map) {
+        g_ptr_array_free (info->sample_to_group_map, FALSE);
+        info->sample_to_group_map = NULL;
+      }
+
+      /* Check if sample grouping information is present for this segment. */
+      /* However look only for 'seig' (CENC encryption) grouping type... */
+      sgpd_node = qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_sgpd,
+          &sgpd_data);
+      while (sgpd_node) {
+        if (qtdemux_parse_sgpd (qtdemux, stream, &sgpd_data, FOURCC_seig,
+                &info->fragment_group_properties)) {
+          /* CENC encryption grouping found, don't look further. */
+          break;
+        }
+        sgpd_node = qtdemux_tree_get_sibling_by_type_full (sgpd_node,
+            FOURCC_sgpd, &sgpd_data);
+      }
+
+      sbgp_node = qtdemux_tree_get_child_by_type_full (traf_node, FOURCC_sbgp,
+          &sbgp_data);
+      while (sbgp_node) {
+        if (qtdemux_parse_sbgp (qtdemux, stream, &sbgp_data, FOURCC_seig,
+                &info->sample_to_group_map, info->default_properties,
+                info->track_group_properties,
+                info->fragment_group_properties)) {
+          break;
+        }
+        sbgp_node = qtdemux_tree_get_sibling_by_type_full (sbgp_node,
+            FOURCC_sgpd, &sbgp_data);
+      }
+    }
 
     /* The following code assumes at most a single set of sample auxiliary
      * data in the fragment (consisting of a saiz box and a corresponding saio
@@ -13416,7 +13728,30 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
     stsd_entry_data += len;
     remaining_stsd_len -= len;
+  }
 
+  /* Sample grouping support */
+  if (stream->protected && (stream->protection_scheme_type == FOURCC_cenc
+          || stream->protection_scheme_type == FOURCC_cbcs)) {
+    QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
+    GNode *sgpd_node;
+    GstByteReader sgpd_data;
+
+    if (info->track_group_properties) {
+      g_ptr_array_free (info->fragment_group_properties, TRUE);
+      info->fragment_group_properties = NULL;
+    }
+
+    sgpd_node = qtdemux_tree_get_child_by_type_full (stbl, FOURCC_sgpd,
+        &sgpd_data);
+    while (sgpd_node) {
+      if (qtdemux_parse_sgpd (qtdemux, stream, &sgpd_data, FOURCC_seig,
+              &info->track_group_properties)) {
+        break;
+      }
+      sgpd_node = qtdemux_tree_get_sibling_by_type_full (sgpd_node,
+          FOURCC_sgpd, &sgpd_data);
+    }
   }
 
   /* collect sample information */
