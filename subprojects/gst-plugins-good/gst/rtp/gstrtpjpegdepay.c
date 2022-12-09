@@ -368,11 +368,11 @@ MakeHeaders (guint8 * p, int type, int width, int height, guint8 * qt,
   size = ((precision & 1) ? 128 : 64);
   p = MakeQuantHeader (p, qt, size, 0);
   qt += size;
-
+#if 0
   size = ((precision & 2) ? 128 : 64);
   p = MakeQuantHeader (p, qt, size, 1);
   qt += size;
-
+#endif
   if (dri != 0)
     p = MakeDRIHeader (p, dri);
 
@@ -394,10 +394,10 @@ MakeHeaders (guint8 * p, int type, int width, int height, guint8 * qt,
   *p++ = 0;                     /* quant table 0 */
   *p++ = 1;                     /* comp 1 */
   *p++ = 0x11;                  /* hsamp = 1, vsamp = 1 */
-  *p++ = 1;                     /* quant table 1 */
+  *p++ = ((precision & 1) ? 1 : 0); ;                     /* quant table 1 */
   *p++ = 2;                     /* comp 2 */
   *p++ = 0x11;                  /* hsamp = 1, vsamp = 1 */
-  *p++ = 1;                     /* quant table 1 */
+  *p++ = ((precision & 1) ? 1 : 0); ;                     /* quant table 1 */
 
   p = MakeHuffmanHeader (p, lum_dc_codelens,
       sizeof (lum_dc_codelens), lum_dc_symbols, sizeof (lum_dc_symbols), 0, 0);
