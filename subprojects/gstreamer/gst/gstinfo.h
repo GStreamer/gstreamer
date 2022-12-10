@@ -1139,7 +1139,7 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  */
 
 /**
- * GST_ERROR_OBJECT_ID:
+ * GST_ERROR_ID:
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
@@ -1151,7 +1151,7 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * Since: 1.22
  */
 /**
- * GST_WARNING_OBJECT_ID:
+ * GST_WARNING_ID:
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
@@ -1163,7 +1163,7 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * Since: 1.22
  */
 /**
- * GST_INFO_OBJECT_ID:
+ * GST_INFO_ID:
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
@@ -1176,7 +1176,7 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * Since: 1.22
  */
 /**
- * GST_DEBUG_OBJECT_ID:
+ * GST_DEBUG_ID:
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
@@ -1188,7 +1188,7 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * Since: 1.22
  */
 /**
- * GST_LOG_OBJECT_ID:
+ * GST_LOG_ID:
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
@@ -1200,7 +1200,7 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * Since: 1.22
  */
 /**
- * GST_FIXME_OBJECT_ID:
+ * GST_FIXME_ID:
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
@@ -1212,7 +1212,7 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
  * Since: 1.22
  */
 /**
- * GST_TRACE_OBJECT_ID:
+ * GST_TRACE_ID:
  * @id: An identifier of the message provider
  * @...: printf-style message to output
  *
@@ -1341,13 +1341,13 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
 #define GST_FIXME_OBJECT(obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   obj,  __VA_ARGS__)
 #define GST_TRACE_OBJECT(obj,...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_TRACE,   obj,  __VA_ARGS__)
 
-#define GST_ERROR_OBJECT_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   id,  __VA_ARGS__)
-#define GST_WARNING_OBJECT_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_WARNING, id,  __VA_ARGS__)
-#define GST_INFO_OBJECT_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_INFO,    id,  __VA_ARGS__)
-#define GST_DEBUG_OBJECT_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   id,  __VA_ARGS__)
-#define GST_LOG_OBJECT_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_LOG,     id,  __VA_ARGS__)
-#define GST_FIXME_OBJECT_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   id,  __VA_ARGS__)
-#define GST_TRACE_OBJECT_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_TRACE,   id,  __VA_ARGS__)
+#define GST_ERROR_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   id,  __VA_ARGS__)
+#define GST_WARNING_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_WARNING, id,  __VA_ARGS__)
+#define GST_INFO_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_INFO,    id,  __VA_ARGS__)
+#define GST_DEBUG_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   id,  __VA_ARGS__)
+#define GST_LOG_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_LOG,     id,  __VA_ARGS__)
+#define GST_FIXME_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   id,  __VA_ARGS__)
+#define GST_TRACE_ID(id,...)	GST_CAT_LEVEL_LOG_ID (GST_CAT_DEFAULT, GST_LEVEL_TRACE,   id,  __VA_ARGS__)
 
 #define GST_ERROR(...)			GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   NULL, __VA_ARGS__)
 #define GST_WARNING(...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, NULL, __VA_ARGS__)
@@ -1384,13 +1384,13 @@ GST_CAT_LEVEL_LOG_ID (GstDebugCategory * cat, GstDebugLevel level,
 #define GST_FIXME_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   obj,  ##args )
 #define GST_TRACE_OBJECT(obj,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_TRACE,   obj,  ##args )
 
-#define GST_ERROR_OBJECT_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   id,  ##args )
-#define GST_WARNING_OBJECT_ID(id,args...) GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, id,  ##args )
-#define GST_INFO_OBJECT_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    id,  ##args )
-#define GST_DEBUG_OBJECT_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   id,  ##args )
-#define GST_LOG_OBJECT_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     id,  ##args )
-#define GST_FIXME_OBJECT_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   id,  ##args )
-#define GST_TRACE_OBJECT_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_TRACE,   id,  ##args )
+#define GST_ERROR_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   id,  ##args )
+#define GST_WARNING_ID(id,args...) GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, id,  ##args )
+#define GST_INFO_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_INFO,    id,  ##args )
+#define GST_DEBUG_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_DEBUG,   id,  ##args )
+#define GST_LOG_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_LOG,     id,  ##args )
+#define GST_FIXME_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_FIXME,   id,  ##args )
+#define GST_TRACE_ID(id,args...)	GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_TRACE,   id,  ##args )
 
 #define GST_ERROR(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_ERROR,   NULL, ##args )
 #define GST_WARNING(args...)		GST_CAT_LEVEL_LOG (GST_CAT_DEFAULT, GST_LEVEL_WARNING, NULL, ##args )
@@ -1627,7 +1627,7 @@ GST_TRACE_OBJECT (gpointer obj, const char *format, ...)
 }
 
 static inline void
-GST_ERROR_OBJECT_ID (const gchar *id, const char *format, ...)
+GST_ERROR_ID (const gchar *id, const char *format, ...)
 {
   va_list varargs;
 
@@ -1638,7 +1638,7 @@ GST_ERROR_OBJECT_ID (const gchar *id, const char *format, ...)
 }
 
 static inline void
-GST_WARNING_OBJECT_ID (const gchar *id, const char *format, ...)
+GST_WARNING_ID (const gchar *id, const char *format, ...)
 {
   va_list varargs;
 
@@ -1649,7 +1649,7 @@ GST_WARNING_OBJECT_ID (const gchar *id, const char *format, ...)
 }
 
 static inline void
-GST_INFO_OBJECT_ID (const gchar *id, const char *format, ...)
+GST_INFO_ID (const gchar *id, const char *format, ...)
 {
   va_list varargs;
 
@@ -1660,7 +1660,7 @@ GST_INFO_OBJECT_ID (const gchar *id, const char *format, ...)
 }
 
 static inline void
-GST_DEBUG_OBJECT_ID (const gchar *id, const char *format, ...)
+GST_DEBUG_ID (const gchar *id, const char *format, ...)
 {
   va_list varargs;
 
@@ -1671,7 +1671,7 @@ GST_DEBUG_OBJECT_ID (const gchar *id, const char *format, ...)
 }
 
 static inline void
-GST_LOG_OBJECT_ID (const gchar *id, const char *format, ...)
+GST_LOG_ID (const gchar *id, const char *format, ...)
 {
   va_list varargs;
 
@@ -1682,7 +1682,7 @@ GST_LOG_OBJECT_ID (const gchar *id, const char *format, ...)
 }
 
 static inline void
-GST_FIXME_OBJECT_ID (const gchar *id, const char *format, ...)
+GST_FIXME_ID (const gchar *id, const char *format, ...)
 {
   va_list varargs;
 
@@ -1693,7 +1693,7 @@ GST_FIXME_OBJECT_ID (const gchar *id, const char *format, ...)
 }
 
 static inline void
-GST_TRACE_OBJECT_ID (const gchar *id, const char *format, ...)
+GST_TRACE_ID (const gchar *id, const char *format, ...)
 {
   va_list varargs;
 
@@ -1909,13 +1909,13 @@ GST_TRACE (const char *format, ...)
 #define GST_FIXME_OBJECT(...)				G_STMT_START{ }G_STMT_END
 #define GST_TRACE_OBJECT(...)				G_STMT_START{ }G_STMT_END
 
-#define GST_ERROR_OBJECT_ID(...)			G_STMT_START{ }G_STMT_END
-#define GST_WARNING_OBJECT_ID(...)			G_STMT_START{ }G_STMT_END
-#define GST_INFO_OBJECT_ID(...)				G_STMT_START{ }G_STMT_END
-#define GST_DEBUG_OBJECT_ID(...)			G_STMT_START{ }G_STMT_END
-#define GST_LOG_OBJECT_ID(...)				G_STMT_START{ }G_STMT_END
-#define GST_FIXME_OBJECT_ID(...)			G_STMT_START{ }G_STMT_END
-#define GST_TRACE_OBJECT_ID(...)			G_STMT_START{ }G_STMT_END
+#define GST_ERROR_ID(...)			G_STMT_START{ }G_STMT_END
+#define GST_WARNING_ID(...)			G_STMT_START{ }G_STMT_END
+#define GST_INFO_ID(...)				G_STMT_START{ }G_STMT_END
+#define GST_DEBUG_ID(...)			G_STMT_START{ }G_STMT_END
+#define GST_LOG_ID(...)				G_STMT_START{ }G_STMT_END
+#define GST_FIXME_ID(...)			G_STMT_START{ }G_STMT_END
+#define GST_TRACE_ID(...)			G_STMT_START{ }G_STMT_END
 
 #define GST_ERROR(...)					G_STMT_START{ }G_STMT_END
 #define GST_WARNING(...)				G_STMT_START{ }G_STMT_END
@@ -1954,13 +1954,13 @@ GST_TRACE (const char *format, ...)
 #define GST_FIXME_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 #define GST_TRACE_OBJECT(args...)			G_STMT_START{ }G_STMT_END
 
-#define GST_ERROR_OBJECT_ID(args...)			G_STMT_START{ }G_STMT_END
-#define GST_WARNING_OBJECT_ID(args...)			G_STMT_START{ }G_STMT_END
-#define GST_INFO_OBJECT_ID(args...)			G_STMT_START{ }G_STMT_END
-#define GST_DEBUG_OBJECT_ID(args...)			G_STMT_START{ }G_STMT_END
-#define GST_LOG_OBJECT_ID(args...)			G_STMT_START{ }G_STMT_END
-#define GST_FIXME_OBJECT_ID(args...)			G_STMT_START{ }G_STMT_END
-#define GST_TRACE_OBJECT_ID(args...)			G_STMT_START{ }G_STMT_END
+#define GST_ERROR_ID(args...)			G_STMT_START{ }G_STMT_END
+#define GST_WARNING_ID(args...)			G_STMT_START{ }G_STMT_END
+#define GST_INFO_ID(args...)			G_STMT_START{ }G_STMT_END
+#define GST_DEBUG_ID(args...)			G_STMT_START{ }G_STMT_END
+#define GST_LOG_ID(args...)			G_STMT_START{ }G_STMT_END
+#define GST_FIXME_ID(args...)			G_STMT_START{ }G_STMT_END
+#define GST_TRACE_ID(args...)			G_STMT_START{ }G_STMT_END
 
 #define GST_ERROR(args...)				G_STMT_START{ }G_STMT_END
 #define GST_WARNING(args...)				G_STMT_START{ }G_STMT_END
