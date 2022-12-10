@@ -177,7 +177,7 @@ gst_vaapisink_render_surface (GstVaapiSink * sink, GstVaapiSurface * surface,
 /* --- DRM Backend                                                      --- */
 /* ------------------------------------------------------------------------ */
 
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 #include <gst/vaapi/gstvaapidisplay_drm.h>
 
 static gboolean
@@ -212,7 +212,7 @@ gst_vaapisink_backend_drm (void)
 /* --- X11 Backend                                                      --- */
 /* ------------------------------------------------------------------------ */
 
-#if USE_X11
+#if GST_VAAPI_USE_X11
 #include <gst/vaapi/gstvaapidisplay_x11.h>
 #include <gst/vaapi/gstvaapiwindow_x11.h>
 
@@ -528,7 +528,7 @@ gst_vaapisink_backend_x11 (void)
 /* --- Wayland Backend                                                  --- */
 /* ------------------------------------------------------------------------ */
 
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
 #include <gst/vaapi/gstvaapidisplay_wayland.h>
 #include <gst/vaapi/gstvaapiwindow_wayland.h>
 
@@ -1021,22 +1021,22 @@ static void
 gst_vaapisink_ensure_backend (GstVaapiSink * sink)
 {
   switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE (sink)) {
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
     case GST_VAAPI_DISPLAY_TYPE_DRM:
       sink->backend = gst_vaapisink_backend_drm ();
       break;
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
     case GST_VAAPI_DISPLAY_TYPE_X11:
       sink->backend = gst_vaapisink_backend_x11 ();
       break;
 #endif
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
     case GST_VAAPI_DISPLAY_TYPE_GLX:
       sink->backend = gst_vaapisink_backend_x11 ();
       break;
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
     case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
       sink->backend = gst_vaapisink_backend_wayland ();
       break;

@@ -338,7 +338,7 @@ config_create (GstVaapiContext * context)
   g_assert (attrib_index < G_N_ELEMENTS (attribs));
 
   switch (cip->usage) {
-#if USE_ENCODERS
+#if GST_VAAPI_USE_ENCODERS
     case GST_VAAPI_CONTEXT_USAGE_ENCODE:
     {
       const GstVaapiConfigInfoEncoder *const config = &cip->config.encoder;

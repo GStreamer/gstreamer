@@ -115,23 +115,23 @@ gst_vaapi_display_type_get_type (void)
   static const GEnumValue display_types[] = {
     {GST_VAAPI_DISPLAY_TYPE_ANY,
         "Auto detection", "any"},
-#if USE_X11
+#if GST_VAAPI_USE_X11
     {GST_VAAPI_DISPLAY_TYPE_X11,
         "VA/X11 display", "x11"},
 #endif
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
     {GST_VAAPI_DISPLAY_TYPE_GLX,
         "VA/GLX display", "glx"},
 #endif
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
     {GST_VAAPI_DISPLAY_TYPE_EGL,
         "VA/EGL display", "egl"},
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
     {GST_VAAPI_DISPLAY_TYPE_WAYLAND,
         "VA/Wayland display", "wayland"},
 #endif
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
     {GST_VAAPI_DISPLAY_TYPE_DRM,
         "VA/DRM display", "drm"},
 #endif
@@ -1896,13 +1896,13 @@ static gboolean
 get_render_mode_default (GstVaapiDisplay * display, GstVaapiRenderMode * pmode)
 {
   switch (GST_VAAPI_DISPLAY_VADISPLAY_TYPE (display)) {
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
     case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
       /* wl_buffer mapped from VA surface through vaGetSurfaceBufferWl() */
       *pmode = GST_VAAPI_RENDER_MODE_OVERLAY;
       break;
 #endif
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
     case GST_VAAPI_DISPLAY_TYPE_DRM:
       /* vaGetSurfaceBufferDRM() returns the underlying DRM buffer handle */
       *pmode = GST_VAAPI_RENDER_MODE_OVERLAY;

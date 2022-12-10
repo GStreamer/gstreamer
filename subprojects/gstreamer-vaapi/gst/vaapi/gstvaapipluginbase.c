@@ -698,7 +698,7 @@ gst_vaapi_plugin_base_create_pool (GstVaapiPluginBase * plugin, GstCaps * caps,
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   }
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   if (options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD) {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
@@ -987,7 +987,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   guint i, size, min, max, pool_options, num_allocators;
   gint index_allocator;
   gboolean update_pool = FALSE;
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   guint idx;
 #endif
 
@@ -999,7 +999,7 @@ gst_vaapi_plugin_base_decide_allocation (GstVaapiPluginBase * plugin,
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL))
     pool_options |= GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_VIDEO_META;
 
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   if (gst_query_find_allocation_meta (query,
           GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx) &&
       gst_vaapi_caps_feature_contains (caps,
@@ -1328,13 +1328,13 @@ gst_vaapi_plugin_base_set_gl_context (GstVaapiPluginBase * plugin,
   gst_object_replace (&plugin->gl_context, object);
 
   switch (gst_gl_context_get_gl_platform (gl_context)) {
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
     case GST_GL_PLATFORM_GLX:
       display_type = GST_VAAPI_DISPLAY_TYPE_GLX;
       break;
 #endif
     case GST_GL_PLATFORM_EGL:
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
       display_type = GST_VAAPI_DISPLAY_TYPE_EGL;
       break;
 #endif
@@ -1531,7 +1531,7 @@ void
 gst_vaapi_plugin_base_set_srcpad_can_dmabuf (GstVaapiPluginBase * plugin,
     GstObject * object)
 {
-#if USE_EGL && USE_GST_GL_HELPERS
+#if GST_VAAPI_USE_EGL && USE_GST_GL_HELPERS
   GstVaapiPadPrivate *srcpriv = GST_VAAPI_PAD_PRIVATE (plugin->srcpad);
   GstGLContext *const gl_context = GST_GL_CONTEXT (object);
 

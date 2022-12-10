@@ -22,23 +22,23 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 # include <gst/vaapi/gstvaapiwindow_drm.h>
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 # include <gst/vaapi/gstvaapiwindow_x11.h>
 #endif
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 # include <gst/vaapi/gstvaapiwindow_glx.h>
 #endif
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
 # include <gst/vaapi/gstvaapidisplay_egl.h>
 # include <gst/vaapi/gstvaapiwindow_egl.h>
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 # include <gst/vaapi/gstvaapiwindow_wayland.h>
 #endif
@@ -47,22 +47,22 @@
 static const VideoOutputInfo *g_video_output;
 static const VideoOutputInfo g_video_outputs[] = {
   /* Video outputs are sorted in test order for automatic characterisation */
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
   {"wayland",
         gst_vaapi_display_wayland_new,
       gst_vaapi_window_wayland_new},
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
   {"x11",
         gst_vaapi_display_x11_new,
       gst_vaapi_window_x11_new},
 #endif
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
   {"glx",
         gst_vaapi_display_glx_new,
       gst_vaapi_window_glx_new},
 #endif
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
   {"drm",
         gst_vaapi_display_drm_new,
       gst_vaapi_window_drm_new},
@@ -188,7 +188,7 @@ video_output_create_display (const gchar * display_name)
     display = o->create_display (display_name);
 
   if (g_egl_mode) {
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
     egl_display = gst_vaapi_display_egl_new (display, g_gles_version);
 #else
     egl_display = NULL;
@@ -211,7 +211,7 @@ video_output_create_window (GstVaapiDisplay * display, guint width,
   if (!g_video_output)
     return NULL;
 
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
   if (g_egl_mode)
     window = gst_vaapi_window_egl_new (display, width, height);
   else
