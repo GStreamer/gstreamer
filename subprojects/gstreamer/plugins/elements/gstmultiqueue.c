@@ -951,7 +951,7 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
         GstSingleQueue *q = (GstSingleQueue *) tmp->data;
         gst_data_queue_get_level (q->queue, &size);
 
-        GST_DEBUG_OBJECT_ID (q->debug_id, "Requested buffers size: %d,"
+        GST_DEBUG_ID (q->debug_id, "Requested buffers size: %d,"
             " current: %d, current max %d", new_size, size.visible,
             q->max_size.visible);
 
@@ -1345,7 +1345,7 @@ gst_single_queue_start (GstMultiQueue * mq, GstSingleQueue * sq)
   gboolean res = FALSE;
   GstPad *srcpad = g_weak_ref_get (&sq->srcpad);
 
-  GST_LOG_OBJECT_ID (sq->debug_id, "starting task");
+  GST_LOG_ID (sq->debug_id, "starting task");
 
   if (srcpad) {
     res = gst_pad_start_task (srcpad,
@@ -1362,7 +1362,7 @@ gst_single_queue_pause (GstMultiQueue * mq, GstSingleQueue * sq)
   gboolean result = FALSE;
   GstPad *srcpad = g_weak_ref_get (&sq->srcpad);
 
-  GST_LOG_OBJECT_ID (sq->debug_id, "pausing task");
+  GST_LOG_ID (sq->debug_id, "pausing task");
   if (srcpad) {
     result = gst_pad_pause_task (srcpad);
     gst_object_unref (srcpad);
@@ -1379,7 +1379,7 @@ gst_single_queue_stop (GstMultiQueue * mq, GstSingleQueue * sq)
   gboolean result = FALSE;
   GstPad *srcpad = g_weak_ref_get (&sq->srcpad);
 
-  GST_LOG_OBJECT_ID (sq->debug_id, "stopping task");
+  GST_LOG_ID (sq->debug_id, "stopping task");
   if (srcpad) {
     result = gst_pad_stop_task (srcpad);
     gst_object_unref (srcpad);
@@ -1393,7 +1393,7 @@ static void
 gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
     gboolean full)
 {
-  GST_DEBUG_OBJECT_ID (sq->debug_id, "flush %s", (flush ? "start" : "stop"));
+  GST_DEBUG_ID (sq->debug_id, "flush %s", (flush ? "start" : "stop"));
 
   if (flush) {
     GST_MULTI_QUEUE_MUTEX_LOCK (mq);
@@ -1403,7 +1403,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush,
     sq->flushing = TRUE;
 
     /* wake up non-linked task */
-    GST_LOG_OBJECT_ID (sq->debug_id, "Waking up eventually waiting task");
+    GST_LOG_ID (sq->debug_id, "Waking up eventually waiting task");
     g_cond_signal (&sq->turn);
     sq->last_query = FALSE;
     g_cond_signal (&sq->query_handled);
@@ -1451,7 +1451,7 @@ get_buffering_level (GstMultiQueue * mq, GstSingleQueue * sq)
 
   gst_data_queue_get_level (sq->queue, &size);
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id,
+  GST_DEBUG_ID (sq->debug_id,
       "visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
       G_GUINT64_FORMAT, size.visible, sq->max_size.visible,
       size.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
@@ -1640,7 +1640,7 @@ calculate_interleave (GstMultiQueue * mq, GstSingleQueue * sq)
       if (oq->cached_sinktime < 0)
         some_inactive = TRUE;
     }
-    GST_LOG_OBJECT_ID (oq->debug_id,
+    GST_LOG_ID (oq->debug_id,
         "sinktime:%" GST_STIME_FORMAT " low:%" GST_STIME_FORMAT
         " high:%" GST_STIME_FORMAT,
         GST_STIME_ARGS (oq->cached_sinktime), GST_STIME_ARGS (low),
@@ -1713,7 +1713,7 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
     sink_time = sq->sinktime = my_segment_to_running_time (&sq->sink_segment,
         sq->sink_segment.position);
 
-    GST_DEBUG_OBJECT_ID (sq->debug_id,
+    GST_DEBUG_ID (sq->debug_id,
         "sink_segment.position:%" GST_TIME_FORMAT ", sink_time:%"
         GST_STIME_FORMAT, GST_TIME_ARGS (sq->sink_segment.position),
         GST_STIME_ARGS (sink_time));
@@ -1764,7 +1764,7 @@ update_time_level (GstMultiQueue * mq, GstSingleQueue * sq)
   } else
     src_time = sq->srctime;
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id,
+  GST_DEBUG_ID (sq->debug_id,
       "sink %" GST_STIME_FORMAT ", src %" GST_STIME_FORMAT,
       GST_STIME_ARGS (sink_time), GST_STIME_ARGS (src_time));
 
@@ -1820,7 +1820,7 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
   if (ppos) {
-    GST_DEBUG_OBJECT_ID (sq->debug_id, "Applying base of %" GST_TIME_FORMAT,
+    GST_DEBUG_ID (sq->debug_id, "Applying base of %" GST_TIME_FORMAT,
         GST_TIME_ARGS (ppos));
     segment->base = ppos;
   }
@@ -1839,7 +1839,7 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
     sq->src_tainted = TRUE;
   }
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id,
+  GST_DEBUG_ID (sq->debug_id,
       "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
 
   /* segment can update the time level of the queue */
@@ -1865,7 +1865,7 @@ apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstClockTime timestamp,
   if (duration != GST_CLOCK_TIME_NONE)
     timestamp += duration;
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id, "%s position updated to %" GST_TIME_FORMAT,
+  GST_DEBUG_ID (sq->debug_id, "%s position updated to %" GST_TIME_FORMAT,
       segment == &sq->sink_segment ? "sink" : "src", GST_TIME_ARGS (timestamp));
 
   segment->position = timestamp;
@@ -1898,7 +1898,7 @@ apply_gap (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
       timestamp += duration;
     }
 
-    GST_DEBUG_OBJECT_ID (sq->debug_id,
+    GST_DEBUG_ID (sq->debug_id,
         "%s position updated to %" GST_TIME_FORMAT,
         segment == &sq->sink_segment ? "sink" : "src",
         GST_TIME_ARGS (timestamp));
@@ -2007,12 +2007,12 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     gst_data_queue_limits_changed (sq->queue);
 
     if (G_UNLIKELY (*allow_drop)) {
-      GST_DEBUG_OBJECT_ID (sq->debug_id,
+      GST_DEBUG_ID (sq->debug_id,
           "Dropping EOS buffer %p with ts %" GST_TIME_FORMAT,
           buffer, GST_TIME_ARGS (timestamp));
       gst_buffer_unref (buffer);
     } else {
-      GST_DEBUG_OBJECT_ID (sq->debug_id,
+      GST_DEBUG_ID (sq->debug_id,
           "Pushing buffer %p with ts %" GST_TIME_FORMAT,
           buffer, GST_TIME_ARGS (timestamp));
       result = gst_pad_push (srcpad, buffer);
@@ -2066,12 +2066,12 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     }
 
     if (G_UNLIKELY (*allow_drop)) {
-      GST_DEBUG_OBJECT_ID (sq->debug_id,
+      GST_DEBUG_ID (sq->debug_id,
           "Dropping EOS event %p of type %s",
           event, GST_EVENT_TYPE_NAME (event));
       gst_event_unref (event);
     } else {
-      GST_DEBUG_OBJECT_ID (sq->debug_id,
+      GST_DEBUG_ID (sq->debug_id,
           "Pushing event %p of type %s", event, GST_EVENT_TYPE_NAME (event));
 
       gst_pad_push_event (srcpad, event);
@@ -2083,7 +2083,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     query = GST_QUERY_CAST (object);
 
     if (G_UNLIKELY (*allow_drop)) {
-      GST_DEBUG_OBJECT_ID (sq->debug_id, "Dropping EOS query %p", query);
+      GST_DEBUG_ID (sq->debug_id, "Dropping EOS query %p", query);
       gst_query_unref (query);
       res = FALSE;
     } else {
@@ -2191,7 +2191,7 @@ gst_multi_queue_loop (GstPad * pad)
     goto done;
 
 next:
-  GST_DEBUG_OBJECT_ID (sq->debug_id, "trying to pop an object");
+  GST_DEBUG_ID (sq->debug_id, "trying to pop an object");
 
   if (sq->flushing)
     goto out_flushing;
@@ -2215,8 +2215,7 @@ next:
   /* Get running time of the item. Events will have GST_CLOCK_STIME_NONE */
   next_time = get_running_time (&sq->src_segment, object, FALSE);
 
-  GST_LOG_OBJECT_ID (sq->debug_id, "newid:%d , oldid:%d",
-      newid, sq->last_oldid);
+  GST_LOG_ID (sq->debug_id, "newid:%d , oldid:%d", newid, sq->last_oldid);
 
   /* If we're not-linked, we do some extra work because we might need to
    * wait before pushing. If we're linked but there's a gap in the IDs,
@@ -2227,7 +2226,7 @@ next:
   if (sq->srcresult == GST_FLOW_NOT_LINKED
       || (sq->last_oldid == G_MAXUINT32) || (newid != (sq->last_oldid + 1))
       || sq->last_oldid > mq->highid) {
-    GST_LOG_OBJECT_ID (sq->debug_id, "CHECKING srcresult: %s",
+    GST_LOG_ID (sq->debug_id, "CHECKING srcresult: %s",
         gst_flow_get_name (sq->srcresult));
 
     /* Check again if we're flushing after the lock is taken,
@@ -2257,7 +2256,7 @@ next:
       /* Recompute the high time */
       compute_high_time (mq, sq->groupid);
 
-      GST_DEBUG_OBJECT_ID (sq->debug_id,
+      GST_DEBUG_ID (sq->debug_id,
           "groupid %d high_time %" GST_STIME_FORMAT " next_time %"
           GST_STIME_FORMAT, sq->groupid, GST_STIME_ARGS (sq->group_high_time),
           GST_STIME_ARGS (next_time));
@@ -2276,7 +2275,7 @@ next:
 
       while (should_wait && sq->srcresult == GST_FLOW_NOT_LINKED) {
 
-        GST_DEBUG_OBJECT_ID (sq->debug_id,
+        GST_DEBUG_ID (sq->debug_id,
             "Sleeping for not-linked wakeup with "
             "newid %u, highid %u, next_time %" GST_STIME_FORMAT
             ", high_time %" GST_STIME_FORMAT, newid, mq->highid,
@@ -2298,7 +2297,7 @@ next:
         compute_high_time (mq, sq->groupid);
         compute_high_id (mq);
 
-        GST_DEBUG_OBJECT_ID (sq->debug_id, "Woken from sleeping for not-linked "
+        GST_DEBUG_ID (sq->debug_id, "Woken from sleeping for not-linked "
             "wakeup with newid %u, highid %u, next_time %" GST_STIME_FORMAT
             ", high_time %" GST_STIME_FORMAT " mq high_time %" GST_STIME_FORMAT,
             newid, mq->highid,
@@ -2336,7 +2335,7 @@ next:
   if (sq->flushing)
     goto out_flushing;
 
-  GST_LOG_OBJECT_ID (sq->debug_id, "BEFORE PUSHING sq->srcresult: %s",
+  GST_LOG_ID (sq->debug_id, "BEFORE PUSHING sq->srcresult: %s",
       gst_flow_get_name (sq->srcresult));
 
   /* Update time stats */
@@ -2370,7 +2369,7 @@ next:
       && result == GST_FLOW_NOT_LINKED) {
     GList *tmp;
 
-    GST_LOG_OBJECT_ID (sq->debug_id, "Changed from active to non-active");
+    GST_LOG_ID (sq->debug_id, "Changed from active to non-active");
 
     compute_high_id (mq);
     compute_high_time (mq, sq->groupid);
@@ -2383,7 +2382,7 @@ next:
         GstSingleQueue *sq2 = (GstSingleQueue *) tmp->data;
 
         if (sq2->srcresult == GST_FLOW_NOT_LINKED) {
-          GST_LOG_OBJECT_ID (sq2->debug_id, "Waking up singlequeue");
+          GST_LOG_ID (sq2->debug_id, "Waking up singlequeue");
           sq2->pushed = FALSE;
           sq2->srcresult = GST_FLOW_OK;
           g_cond_signal (&sq2->turn);
@@ -2401,7 +2400,7 @@ next:
    * sure we are relaying the correct info wrt proper segment */
   if (result == GST_FLOW_EOS && !dropping &&
       sq->srcresult != GST_FLOW_NOT_LINKED) {
-    GST_DEBUG_OBJECT_ID (sq->debug_id, "starting EOS drop");
+    GST_DEBUG_ID (sq->debug_id, "starting EOS drop");
     dropping = TRUE;
     /* pretend we have not seen EOS yet for upstream's sake */
     result = sq->srcresult;
@@ -2409,7 +2408,7 @@ next:
     /* queue empty, so stop dropping
      * we can commit the result we have now,
      * which is either OK after a segment, or EOS */
-    GST_DEBUG_OBJECT_ID (sq->debug_id, "committed EOS drop");
+    GST_DEBUG_ID (sq->debug_id, "committed EOS drop");
     dropping = FALSE;
     result = GST_FLOW_EOS;
   }
@@ -2422,7 +2421,7 @@ next:
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
   gst_multi_queue_post_buffering (mq);
 
-  GST_LOG_OBJECT_ID (sq->debug_id,
+  GST_LOG_ID (sq->debug_id,
       "AFTER PUSHING sq->srcresult: %s (is_eos:%d)",
       gst_flow_get_name (sq->srcresult), GST_PAD_IS_EOS (srcpad));
 
@@ -2478,7 +2477,7 @@ out_flushing:
     single_queue_underrun_cb (sq->queue, sq);
     gst_data_queue_set_flushing (sq->queue, TRUE);
     gst_pad_pause_task (srcpad);
-    GST_LOG_OBJECT_ID (sq->debug_id,
+    GST_LOG_ID (sq->debug_id,
         "task paused, reason:%s", gst_flow_get_name (sq->srcresult));
     goto done;
   }
@@ -2518,7 +2517,7 @@ gst_multi_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   timestamp = GST_BUFFER_DTS_OR_PTS (buffer);
   duration = GST_BUFFER_DURATION (buffer);
 
-  GST_LOG_OBJECT_ID (sq->debug_id,
+  GST_LOG_ID (sq->debug_id,
       "About to enqueue buffer %p with id %d (pts:%"
       GST_TIME_FORMAT " dts:%" GST_TIME_FORMAT " dur:%" GST_TIME_FORMAT ")",
       buffer, curid, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)),
@@ -2540,7 +2539,7 @@ gst_multi_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     dval = my_segment_to_running_time (&sq->sink_segment, val);
     if (GST_CLOCK_STIME_IS_VALID (dval)) {
       sq->cached_sinktime = dval;
-      GST_DEBUG_OBJECT_ID (sq->debug_id,
+      GST_DEBUG_ID (sq->debug_id,
           "Cached sink time now %" G_GINT64_FORMAT " %"
           GST_STIME_FORMAT, sq->cached_sinktime,
           GST_STIME_ARGS (sq->cached_sinktime));
@@ -2563,7 +2562,7 @@ done:
   /* ERRORS */
 flushing:
   {
-    GST_LOG_OBJECT_ID (sq->debug_id, "exit because task paused, reason: %s",
+    GST_LOG_ID (sq->debug_id, "exit because task paused, reason: %s",
         gst_flow_get_name (sq->srcresult));
     if (item)
       gst_multi_queue_item_destroy (item);
@@ -2678,7 +2677,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GstStreamFlags stream_flags;
         gst_event_parse_stream_flags (event, &stream_flags);
         if ((stream_flags & GST_STREAM_FLAG_SPARSE)) {
-          GST_INFO_OBJECT_ID (sq->debug_id, "Stream is sparse");
+          GST_INFO_ID (sq->debug_id, "Stream is sparse");
           sq->is_sparse = TRUE;
         }
       }
@@ -2690,7 +2689,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
     }
     case GST_EVENT_FLUSH_START:
-      GST_DEBUG_OBJECT_ID (sq->debug_id, "Received flush start event");
+      GST_DEBUG_ID (sq->debug_id, "Received flush start event");
 
       res = gst_pad_push_event (srcpad, event);
 
@@ -2699,7 +2698,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       goto done;
 
     case GST_EVENT_FLUSH_STOP:
-      GST_DEBUG_OBJECT_ID (sq->debug_id, "Received flush stop event");
+      GST_DEBUG_ID (sq->debug_id, "Received flush stop event");
 
       res = gst_pad_push_event (srcpad, event);
 
@@ -2750,7 +2749,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   item = gst_multi_queue_mo_item_new ((GstMiniObject *) event, curid);
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id,
+  GST_DEBUG_ID (sq->debug_id,
       "Enqueuing event %p of type %s with id %d",
       event, GST_EVENT_TYPE_NAME (event), curid);
 
@@ -2813,14 +2812,13 @@ done:
   gst_object_unref (srcpad);
   if (res == FALSE)
     flowret = GST_FLOW_ERROR;
-  GST_DEBUG_OBJECT_ID (sq->debug_id, "Returning %s",
-      gst_flow_get_name (flowret));
+  GST_DEBUG_ID (sq->debug_id, "Returning %s", gst_flow_get_name (flowret));
   return flowret;
 
 flushing:
   {
     gst_object_unref (srcpad);
-    GST_LOG_OBJECT_ID (sq->debug_id, "Exit because task paused, reason: %s",
+    GST_LOG_ID (sq->debug_id, "Exit because task paused, reason: %s",
         gst_flow_get_name (sq->srcresult));
     if (sref)
       gst_event_unref (sref);
@@ -2869,7 +2867,7 @@ gst_multi_queue_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
           item = gst_multi_queue_mo_item_new ((GstMiniObject *) query, curid);
 
-          GST_DEBUG_OBJECT_ID (sq->debug_id,
+          GST_DEBUG_ID (sq->debug_id,
               "Enqueuing query %p of type %s with id %d",
               query, GST_QUERY_TYPE_NAME (query), curid);
           GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
@@ -2927,7 +2925,7 @@ gst_multi_queue_src_activate_mode (GstPad * pad, GstObject * parent,
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id, "active: %d", active);
+  GST_DEBUG_ID (sq->debug_id, "active: %d", active);
 
   switch (mode) {
     case GST_PAD_MODE_PUSH:
@@ -3029,7 +3027,7 @@ wake_up_next_non_linked (GstMultiQueue * mq)
         if (GST_CLOCK_STIME_IS_VALID (sq->next_time) &&
             GST_CLOCK_STIME_IS_VALID (high_time)
             && sq->next_time <= high_time) {
-          GST_LOG_OBJECT_ID (sq->debug_id, "Waking up singlequeue");
+          GST_LOG_ID (sq->debug_id, "Waking up singlequeue");
           g_cond_signal (&sq->turn);
         }
       }
@@ -3040,7 +3038,7 @@ wake_up_next_non_linked (GstMultiQueue * mq)
       GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
       if (sq->srcresult == GST_FLOW_NOT_LINKED &&
           sq->nextid != 0 && sq->nextid <= mq->highid) {
-        GST_LOG_OBJECT_ID (sq->debug_id, "Waking up singlequeue");
+        GST_LOG_ID (sq->debug_id, "Waking up singlequeue");
         g_cond_signal (&sq->turn);
       }
     }
@@ -3068,12 +3066,12 @@ compute_high_id (GstMultiQueue * mq)
       continue;
     }
 
-    GST_LOG_OBJECT_ID (sq->debug_id, "nextid:%d, oldid:%d, srcresult:%s",
+    GST_LOG_ID (sq->debug_id, "nextid:%d, oldid:%d, srcresult:%s",
         sq->nextid, sq->oldid, gst_flow_get_name (sq->srcresult));
 
     /* No need to consider queues which are not waiting */
     if (sq->nextid == 0) {
-      GST_LOG_OBJECT_ID (sq->debug_id, "not waiting - ignoring");
+      GST_LOG_ID (sq->debug_id, "not waiting - ignoring");
       gst_object_unref (srcpad);
       continue;
     }
@@ -3131,7 +3129,7 @@ compute_high_time (GstMultiQueue * mq, guint groupid)
       continue;
     }
 
-    GST_LOG_OBJECT_ID (sq->debug_id,
+    GST_LOG_ID (sq->debug_id,
         "inspecting (group:%d) , next_time:%" GST_STIME_FORMAT
         ", last_time:%" GST_STIME_FORMAT ", srcresult:%s", sq->groupid,
         GST_STIME_ARGS (sq->next_time), GST_STIME_ARGS (sq->last_time),
@@ -3143,7 +3141,7 @@ compute_high_time (GstMultiQueue * mq, guint groupid)
     if (sq->srcresult == GST_FLOW_NOT_LINKED) {
       /* No need to consider queues which are not waiting */
       if (!GST_CLOCK_STIME_IS_VALID (sq->next_time)) {
-        GST_LOG_OBJECT_ID (sq->debug_id, "Not waiting - ignoring");
+        GST_LOG_ID (sq->debug_id, "Not waiting - ignoring");
         gst_object_unref (srcpad);
         continue;
       }
@@ -3226,7 +3224,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
   gst_data_queue_get_level (sq->queue, &size);
 
-  GST_LOG_OBJECT_ID (sq->debug_id,
+  GST_LOG_ID (sq->debug_id,
       "EOS %d, visible %u/%u, bytes %u/%u, time %"
       G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT, sq->is_eos, size.visible,
       sq->max_size.visible, size.bytes, sq->max_size.bytes, sq->cur_time,
@@ -3249,13 +3247,13 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       continue;
 
     if (oq->srcresult == GST_FLOW_NOT_LINKED) {
-      GST_LOG_OBJECT_ID (sq->debug_id, "Queue is not-linked");
+      GST_LOG_ID (sq->debug_id, "Queue is not-linked");
       continue;
     }
 
-    GST_LOG_OBJECT_ID (oq->debug_id, "Checking queue");
+    GST_LOG_ID (oq->debug_id, "Checking queue");
     if (gst_data_queue_is_empty (oq->queue) && !oq->is_sparse) {
-      GST_LOG_OBJECT_ID (oq->debug_id, "Queue is empty");
+      GST_LOG_ID (oq->debug_id, "Queue is empty");
       empty_found = TRUE;
       break;
     }
@@ -3266,7 +3264,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   if (empty_found) {
     if (IS_FILLED (sq, visible, size.visible)) {
       sq->max_size.visible = size.visible + 1;
-      GST_DEBUG_OBJECT_ID (sq->debug_id,
+      GST_DEBUG_ID (sq->debug_id,
           "Bumping max visible to %d", sq->max_size.visible);
       filled = FALSE;
     }
@@ -3278,7 +3276,7 @@ done:
 
   /* Overrun is always forwarded, since this is blocking the upstream element */
   if (filled) {
-    GST_DEBUG_OBJECT_ID (sq->debug_id, "Queue is filled, signalling overrun");
+    GST_DEBUG_ID (sq->debug_id, "Queue is filled, signalling overrun");
     g_signal_emit (mq, gst_multi_queue_signals[SIGNAL_OVERRUN], 0);
   }
 }
@@ -3297,11 +3295,11 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   }
 
   if (sq->srcresult == GST_FLOW_NOT_LINKED) {
-    GST_LOG_OBJECT_ID (sq->debug_id, "Single Queue is empty but not-linked");
+    GST_LOG_ID (sq->debug_id, "Single Queue is empty but not-linked");
     gst_object_unref (mq);
     return;
   } else {
-    GST_LOG_OBJECT_ID (sq->debug_id,
+    GST_LOG_ID (sq->debug_id,
         "Single Queue is empty, Checking other single queues");
   }
 
@@ -3315,7 +3313,7 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
       gst_data_queue_get_level (oq->queue, &size);
       if (IS_FILLED (oq, visible, size.visible)) {
         oq->max_size.visible = size.visible + 1;
-        GST_DEBUG_OBJECT_ID (oq->debug_id,
+        GST_DEBUG_ID (oq->debug_id,
             "queue is filled, bumping its max visible to %d",
             oq->max_size.visible);
         gst_data_queue_limits_changed (oq->queue);
@@ -3346,7 +3344,7 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
     return TRUE;
   }
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id,
+  GST_DEBUG_ID (sq->debug_id,
       "visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
       G_GUINT64_FORMAT, visible, sq->max_size.visible, bytes,
       sq->max_size.bytes, sq->cur_time, sq->max_size.time);
@@ -3607,7 +3605,7 @@ gst_single_queue_new (GstMultiQueue * mqueue, guint id)
   }
   g_rec_mutex_unlock (GST_STATE_GET_LOCK (mqueue));
 
-  GST_DEBUG_OBJECT_ID (sq->debug_id, "GstSingleQueue created and pads added");
+  GST_DEBUG_ID (sq->debug_id, "GstSingleQueue created and pads added");
 
   return sq;
 }
