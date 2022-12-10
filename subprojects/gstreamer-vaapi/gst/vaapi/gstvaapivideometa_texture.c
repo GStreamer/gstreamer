@@ -30,13 +30,13 @@
 #include "gstvaapivideometa_texture.h"
 #include "gstvaapipluginutil.h"
 
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
 #include <gst/vaapi/gstvaapitexture_glx.h>
 #endif
 
 #define DEFAULT_FORMAT GST_VIDEO_FORMAT_RGBA
 
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
 struct _GstVaapiVideoMetaTexture
 {
   GstVaapiTexture *texture;

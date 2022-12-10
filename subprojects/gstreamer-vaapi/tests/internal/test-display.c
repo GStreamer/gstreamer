@@ -25,7 +25,7 @@
 #define _GNU_SOURCE
 #include "gst/vaapi/sysdeps.h"
 #include <gst/video/video.h>
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 # include <va/va_drm.h>
 # include <fcntl.h>
@@ -34,16 +34,16 @@
 # define DRM_DEVICE_PATH "/dev/dri/card0"
 # endif
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 #endif
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
 # include <gst/vaapi/gstvaapidisplay_egl.h>
 #endif
 
@@ -205,14 +205,14 @@ int
 main (int argc, char *argv[])
 {
   GstVaapiDisplay *display;
-#if USE_GLX || USE_WAYLAND
+#if GST_VAAPI_USE_GLX || GST_VAAPI_USE_WAYLAND
   guint width, height;
   guint par_n, par_d;
 #endif
 
   gst_init (&argc, &argv);
 
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
   g_print ("#\n");
   g_print ("# Create display with gst_vaapi_display_drm_new()\n");
   g_print ("#\n");
@@ -273,7 +273,7 @@ main (int argc, char *argv[])
   g_print ("\n");
 #endif
 
-#if USE_X11
+#if GST_VAAPI_USE_X11
   g_print ("#\n");
   g_print ("# Create display with gst_vaapi_display_x11_new()\n");
   g_print ("#\n");
@@ -331,7 +331,7 @@ main (int argc, char *argv[])
   g_print ("\n");
 #endif
 
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
   g_print ("#\n");
   g_print ("# Create display with gst_vaapi_display_glx_new()\n");
   g_print ("#\n");
@@ -400,7 +400,7 @@ main (int argc, char *argv[])
 #endif
 #endif
 
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
   g_print ("#\n");
   g_print ("# Create display with gst_vaapi_display_wayland_new()\n");
   g_print ("#\n");

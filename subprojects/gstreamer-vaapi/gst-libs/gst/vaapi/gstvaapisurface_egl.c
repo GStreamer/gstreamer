@@ -32,7 +32,7 @@
 #include "gstvaapisurface_drm.h"
 #include "gstvaapisurface_priv.h"
 
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 #include <drm_fourcc.h>
 #else
 #define DRM_FORMAT_MOD_LINEAR 0ULL

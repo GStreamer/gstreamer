@@ -35,7 +35,7 @@
 #define DEBUG 1
 #include "gst/vaapi/gstvaapidebug.h"
 
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 #include <drm_fourcc.h>
 #endif
 
@@ -49,7 +49,7 @@ typedef struct _GstVideoFormatMapMap
 
 #define VA_BYTE_ORDER_NOT_CARE 0
 
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 #define MAKE_DRM_FORMAT(DRM_FORMAT) G_PASTE(DRM_FORMAT_,DRM_FORMAT)
 #else
 #define MAKE_DRM_FORMAT(DRM_FORMAT) 0
@@ -643,7 +643,7 @@ gst_vaapi_video_format_create_map (VAImageFormat * formats, guint n)
 guint
 gst_vaapi_drm_format_from_va_fourcc (guint32 fourcc)
 {
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
   const GArray *map = gst_vaapi_video_formats_map;
   const GstVideoFormatMap *m;
   guint i;
@@ -679,7 +679,7 @@ gst_vaapi_drm_format_from_va_fourcc (guint32 fourcc)
 GstVideoFormat
 gst_vaapi_video_format_from_drm_format (guint drm_format)
 {
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
   const GArray *map = gst_vaapi_video_formats_map;
   const GstVideoFormatMap *m;
   guint i;

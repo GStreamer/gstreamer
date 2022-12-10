@@ -25,19 +25,19 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimage.h>
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 # include <gst/vaapi/gstvaapiwindow_drm.h>
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 # include <gst/vaapi/gstvaapiwindow_x11.h>
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 # include <gst/vaapi/gstvaapiwindow_wayland.h>
 #endif
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
 # include <gst/vaapi/gstvaapidisplay_egl.h>
 # include <gst/vaapi/gstvaapiwindow_egl.h>
 #endif
@@ -108,7 +108,7 @@ main (int argc, char *argv[])
 
   gst_init (&argc, &argv);
 
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
   display = gst_vaapi_display_drm_new (NULL);
   if (!display)
     g_error ("could not create Gst/VA (DRM) display");
@@ -138,7 +138,7 @@ main (int argc, char *argv[])
   gst_object_unref (display);
 #endif
 
-#if USE_X11
+#if GST_VAAPI_USE_X11
   display = gst_vaapi_display_x11_new (NULL);
   if (!display)
     g_error ("could not create Gst/VA display");
@@ -203,7 +203,7 @@ main (int argc, char *argv[])
   gst_object_unref (display);
 #endif
 
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
   display = gst_vaapi_display_wayland_new (NULL);
   if (!display)
     g_error ("could not create Gst/VA (Wayland) display");

@@ -25,7 +25,7 @@
 #include "gstvaapivideobuffer.h"
 #include "gstvaapivideomemory.h"
 #include "gstvaapipluginutil.h"
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
 #include "gstvaapivideometa_texture.h"
 #endif
 
@@ -431,7 +431,7 @@ gst_vaapi_video_buffer_pool_alloc_buffer (GstBufferPool * pool,
 
     GST_META_FLAG_SET (vmeta, GST_META_FLAG_POOLED);
   }
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   if (priv->options & GST_VAAPI_VIDEO_BUFFER_POOL_OPTION_GL_TEXTURE_UPLOAD) {
     GstMeta *tex_meta = gst_buffer_add_texture_upload_meta (buffer);
     if (tex_meta)

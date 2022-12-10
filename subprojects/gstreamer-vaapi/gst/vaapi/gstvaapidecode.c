@@ -30,7 +30,7 @@
 #include "gstvaapidecode_props.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
 #include "gstvaapivideometa_texture.h"
 #endif
 #include "gstvaapivideobufferpool.h"
@@ -44,7 +44,7 @@
 #include <gst/vaapi/gstvaapidecoder_vp8.h>
 #include <gst/vaapi/gstvaapidecoder_h265.h>
 #include <gst/vaapi/gstvaapidecoder_vp9.h>
-#if USE_AV1_DECODER
+#if GST_VAAPI_USE_AV1_DECODER
 #include <gst/vaapi/gstvaapidecoder_av1.h>
 #endif
 
@@ -71,7 +71,7 @@ char *gst_vaapidecode_sink_caps_str = NULL;
 
 static const char gst_vaapidecode_src_caps_str[] =
     GST_VAAPI_MAKE_SURFACE_CAPS "; "
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
     GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS "; "
 #endif
     GST_VIDEO_CAPS_MAKE(GST_VAAPI_FORMATS_ALL);
@@ -260,7 +260,7 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   gst_caps_set_features_simple (va_caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE));
 
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   if (!GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAN_DMABUF (decode)
       && gst_vaapi_display_has_opengl (GST_VAAPI_PLUGIN_BASE_DISPLAY (decode))) {
     gltexup_caps = gst_caps_from_string (GST_VAAPI_MAKE_GLTEXUPLOAD_CAPS);
@@ -332,7 +332,7 @@ gst_vaapidecode_update_src_caps (GstVaapiDecode * decode)
   if (feature == GST_VAAPI_CAPS_FEATURE_NOT_NEGOTIATED)
     return FALSE;
 
-#if (!USE_GLX && !USE_EGL)
+#if (!GST_VAAPI_USE_GLX && !GST_VAAPI_USE_EGL)
   /* This is a very pathological situation. Should not happen. */
   if (feature == GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META)
     return FALSE;
@@ -623,7 +623,7 @@ gst_vaapidecode_push_decoded_frame (GstVideoDecoder * vdec,
       GST_BUFFER_FLAG_SET (out_frame->output_buffer,
           GST_VIDEO_BUFFER_FLAG_FIRST_IN_BUNDLE);
     }
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
     if (decode->has_texture_upload_meta)
       gst_buffer_ensure_texture_upload_meta (out_frame->output_buffer);
 #endif
@@ -851,7 +851,7 @@ gst_vaapidecode_decide_allocation (GstVideoDecoder * vdec, GstQuery * query)
 
   decode->has_texture_upload_meta = FALSE;
 
-#if (USE_GLX || USE_EGL)
+#if (GST_VAAPI_USE_GLX || GST_VAAPI_USE_EGL)
   decode->has_texture_upload_meta =
       gst_query_find_allocation_meta (query,
       GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL) &&
@@ -963,7 +963,7 @@ gst_vaapidecode_create (GstVaapiDecode * decode, GstCaps * caps)
     case GST_VAAPI_CODEC_VP9:
       decode->decoder = gst_vaapi_decoder_vp9_new (dpy, caps);
       break;
-#if USE_AV1_DECODER
+#if GST_VAAPI_USE_AV1_DECODER
     case GST_VAAPI_CODEC_AV1:
       decode->decoder = gst_vaapi_decoder_av1_new (dpy, caps);
       break;

@@ -26,24 +26,24 @@
 #include "gstvaapivideocontext.h"
 #include <gst/vaapi/gstvaapiprofilecaps.h>
 #include <gst/vaapi/gstvaapiutils.h>
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
 # include <gst/vaapi/gstvaapidisplay_drm.h>
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
 # include <gst/vaapi/gstvaapidisplay_x11.h>
 #endif
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
 # include <gst/vaapi/gstvaapidisplay_glx.h>
 #endif
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
 # include <gst/vaapi/gstvaapidisplay_egl.h>
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
 #if USE_GST_GL_HELPERS
 # include <gst/gl/gl.h>
-#if USE_EGL && GST_GL_HAVE_PLATFORM_EGL
+#if GST_VAAPI_USE_EGL && GST_GL_HAVE_PLATFORM_EGL
 # include <gst/gl/egl/gstgldisplay_egl.h>
 #endif
 #endif
@@ -66,28 +66,28 @@ typedef struct
 
 /* *INDENT-OFF* */
 static const DisplayMap g_display_map[] = {
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
   {"wayland",
    GST_VAAPI_DISPLAY_TYPE_WAYLAND,
    gst_vaapi_display_wayland_new,
    (GstVaapiDisplayCreateFromHandleFunc)
    gst_vaapi_display_wayland_new_with_display},
 #endif
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
   {"glx",
    GST_VAAPI_DISPLAY_TYPE_GLX,
    gst_vaapi_display_glx_new,
    (GstVaapiDisplayCreateFromHandleFunc)
    gst_vaapi_display_glx_new_with_display},
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
   {"x11",
    GST_VAAPI_DISPLAY_TYPE_X11,
    gst_vaapi_display_x11_new,
    (GstVaapiDisplayCreateFromHandleFunc)
    gst_vaapi_display_x11_new_with_display},
 #endif
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
   {"drm",
    GST_VAAPI_DISPLAY_TYPE_DRM,
    gst_vaapi_display_drm_new},
@@ -140,26 +140,26 @@ gst_vaapi_get_display_type_from_gl (GstGLDisplayType gl_display_type,
     GstGLPlatform gl_platform)
 {
   switch (gl_display_type) {
-#if USE_X11
+#if GST_VAAPI_USE_X11
     case GST_GL_DISPLAY_TYPE_X11:{
-#if USE_GLX
+#if GST_VAAPI_USE_GLX
       if (gl_platform == GST_GL_PLATFORM_GLX)
         return GST_VAAPI_DISPLAY_TYPE_GLX;
 #endif
       return GST_VAAPI_DISPLAY_TYPE_X11;
     }
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
     case GST_GL_DISPLAY_TYPE_WAYLAND:{
       return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
     }
 #endif
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
     case GST_GL_DISPLAY_TYPE_EGL:{
       return GST_VAAPI_DISPLAY_TYPE_EGL;
     }
 #endif
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
     case GST_GL_DISPLAY_TYPE_GBM:{
       return GST_VAAPI_DISPLAY_TYPE_DRM;
     }
@@ -178,23 +178,23 @@ gst_vaapi_get_display_type_from_gl_env (void)
   const gchar *const gl_window_type = g_getenv ("GST_GL_WINDOW");
 
   if (!gl_window_type) {
-#if USE_X11 && GST_GL_HAVE_WINDOW_X11
+#if GST_VAAPI_USE_X11 && GST_GL_HAVE_WINDOW_X11
     return GST_VAAPI_DISPLAY_TYPE_X11;
-#elif USE_WAYLAND && GST_GL_HAVE_WINDOW_WAYLAND
+#elif GST_VAAPI_USE_WAYLAND && GST_GL_HAVE_WINDOW_WAYLAND
     return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
-#elif USE_EGL && GST_GL_HAVE_PLATFORM_EGL
+#elif GST_VAAPI_USE_EGL && GST_GL_HAVE_PLATFORM_EGL
     return GST_VAAPI_DISPLAY_TYPE_EGL;
 #endif
   }
-#if USE_X11
+#if GST_VAAPI_USE_X11
   if (g_strcmp0 (gl_window_type, "x11") == 0)
     return GST_VAAPI_DISPLAY_TYPE_X11;
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
   if (g_strcmp0 (gl_window_type, "wayland") == 0)
     return GST_VAAPI_DISPLAY_TYPE_WAYLAND;
 #endif
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
   {
     const gchar *const gl_platform_type = g_getenv ("GST_GL_PLATFORM");
     if (g_strcmp0 (gl_platform_type, "egl") == 0)
@@ -205,7 +205,7 @@ gst_vaapi_get_display_type_from_gl_env (void)
   return GST_VAAPI_DISPLAY_TYPE_ANY;
 }
 
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
 static gint
 gst_vaapi_get_gles_version_from_gl_api (GstGLAPI gl_api)
 {
@@ -236,7 +236,7 @@ gst_vaapi_get_egl_handle_from_gl_display (GstGLDisplay * gl_display)
   }
   return egl_handle;
 }
-#endif /* USE_EGL */
+#endif /* GST_VAAPI_USE_EGL */
 
 static GstVaapiDisplay *
 gst_vaapi_create_display_from_egl (GstGLDisplay * gl_display,
@@ -244,7 +244,7 @@ gst_vaapi_create_display_from_egl (GstGLDisplay * gl_display,
     gpointer native_display)
 {
   GstVaapiDisplay *display = NULL;
-#if USE_EGL
+#if GST_VAAPI_USE_EGL
   GstGLAPI gl_api;
   gint gles_version;
   guintptr egl_handler;
@@ -917,10 +917,10 @@ gst_vaapi_create_test_display (void)
   guint i;
   GstVaapiDisplay *display = NULL;
   const GstVaapiDisplayType test_display_map[] = {
-#if USE_DRM
+#if GST_VAAPI_USE_DRM
     GST_VAAPI_DISPLAY_TYPE_DRM,
 #endif
-#if USE_X11
+#if GST_VAAPI_USE_X11
     GST_VAAPI_DISPLAY_TYPE_X11,
 #endif
   };

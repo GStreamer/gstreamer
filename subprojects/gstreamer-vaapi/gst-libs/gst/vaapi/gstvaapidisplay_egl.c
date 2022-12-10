@@ -28,10 +28,10 @@
 #include "gstvaapiwindow_priv.h"
 #include "gstvaapitexture_egl.h"
 
-#if USE_X11
+#if GST_VAAPI_USE_X11
 #include "gstvaapidisplay_x11.h"
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
 #include "gstvaapidisplay_wayland.h"
 #endif
 
@@ -110,13 +110,13 @@ gst_vaapi_display_egl_bind_display (GstVaapiDisplay * base_display,
   native_egl_display = params->gl_display;
 
   if (!native_vaapi_display) {
-#if USE_X11
+#if GST_VAAPI_USE_X11
     if (params->display_type == GST_VAAPI_DISPLAY_TYPE_ANY
         || params->display_type == GST_VAAPI_DISPLAY_TYPE_X11
         || params->display_type == GST_VAAPI_DISPLAY_TYPE_EGL)
       native_vaapi_display = gst_vaapi_display_x11_new (NULL);
 #endif
-#if USE_WAYLAND
+#if GST_VAAPI_USE_WAYLAND
     if (!native_vaapi_display)
       native_vaapi_display = gst_vaapi_display_wayland_new (NULL);
 #endif
