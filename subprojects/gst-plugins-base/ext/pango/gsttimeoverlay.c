@@ -331,6 +331,7 @@ gst_time_overlay_init (GstTimeOverlay * overlay)
   video_sink = gst_element_get_static_pad (GST_ELEMENT (overlay), "video_sink");
   overlay->orig_video_event = GST_PAD_EVENTFUNC (video_sink);
   gst_pad_set_event_function (video_sink, gst_time_overlay_video_event);
+  gst_object_unref (video_sink);
 }
 
 static void
