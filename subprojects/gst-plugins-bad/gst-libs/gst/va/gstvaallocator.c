@@ -1906,7 +1906,7 @@ gst_va_allocator_set_hacks (GstAllocator * allocator, guint32 hacks)
  * gst_va_allocator_peek_display:
  * @allocator: a #GstAllocator
  *
- * Returns: (type #GstVaDisplay) (transfer none): the display which this
+ * Returns: (transfer none): the display which this
  *     @allocator belongs to. The reference of the display is unchanged.
  *
  * Since: 1.22
@@ -1929,10 +1929,10 @@ gst_va_allocator_peek_display (GstAllocator * allocator)
 /*============ Utilities =====================================================*/
 
 /**
- * gst_va_memory_get_surface:
+ * gst_va_memory_get_surface: (skip)
  * @mem: a #GstMemory
  *
- * Returns: (type guint) (transfer none): the VASurfaceID in @mem.
+ * Returns: (type guint): the VASurfaceID in @mem.
  *
  * Since: 1.22
  */
@@ -1963,7 +1963,7 @@ gst_va_memory_get_surface (GstMemory * mem)
  * gst_va_memory_peek_display:
  * @mem: a #GstMemory
  *
- * Returns: (type #GstVaDisplay) (transfer none): the display which
+ * Returns: (transfer none): the display which
  *     this @mem belongs to. The reference of the display is unchanged.
  *
  * Since: 1.22
@@ -1985,10 +1985,10 @@ gst_va_memory_peek_display (GstMemory * mem)
 }
 
 /**
- * gst_va_buffer_get_surface:
+ * gst_va_buffer_get_surface: (skip)
  * @buffer: a #GstBuffer
  *
- * Returns: (type guint) (transfer none): the VASurfaceID in @buffer.
+ * Returns: (type guint): the VASurfaceID in @buffer.
  *
  * Since: 1.22
  */
@@ -2098,10 +2098,10 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
 }
 
 /**
- * gst_va_buffer_get_aux_surface:
+ * gst_va_buffer_get_aux_surface: (skip)
  * @buffer: a #GstBuffer
  *
- * Returns: (type guint) (transfer none): the VASurfaceID attached to
+ * Returns: (type guint): the VASurfaceID attached to
  *     @buffer.
  *
  * Since: 1.22
@@ -2132,7 +2132,7 @@ gst_va_buffer_get_aux_surface (GstBuffer * buffer)
  * gst_va_buffer_peek_display:
  * @buffer: a #GstBuffer
  *
- * Returns: (type #GstVaDisplay) (transfer none): the display which this
+ * Returns: (transfer none): the display which this
  *     @buffer belongs to. The reference of the display is unchanged.
  *
  * Since: 1.22
