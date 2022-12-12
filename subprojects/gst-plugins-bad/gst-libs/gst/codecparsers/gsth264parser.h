@@ -234,6 +234,14 @@ typedef enum
   GST_H264_FRAME_PACKING_ROW_INTERLEAVING               = 2,
   GST_H264_FRAME_PACKING_SIDE_BY_SIDE                   = 3,
   GST_H264_FRMAE_PACKING_TOP_BOTTOM                     = 4,
+
+  /**
+   * GST_H264_FRAME_PACKING_TOP_BOTTOM:
+   *
+   * Top-Bottom packing
+   *
+   * Since: 1.22
+   */
   GST_H264_FRAME_PACKING_TOP_BOTTOM                     = 4,
   GST_H264_FRAME_PACKING_TEMPORAL_INTERLEAVING          = 5
 } GstH264FramePackingType;
