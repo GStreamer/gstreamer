@@ -639,6 +639,17 @@ struct _GstVideoFormatInfo {
   GstVideoTileInfo tile_info[GST_VIDEO_MAX_PLANES];
 };
 
+/**
+ * GST_VIDEO_FORMAT_INFO_IS_VALID_RAW:
+ *
+ * Tests that the given #GstVideoFormatInfo represents a valid un-encoded
+ * format.
+ *
+ * Since: 1.22
+ */
+#define GST_VIDEO_FORMAT_INFO_IS_VALID_RAW(info)              \
+  (info != NULL && (info)->format > GST_VIDEO_FORMAT_ENCODED)
+
 #define GST_VIDEO_FORMAT_INFO_FORMAT(info)       ((info)->format)
 #define GST_VIDEO_FORMAT_INFO_NAME(info)         ((info)->name)
 #define GST_VIDEO_FORMAT_INFO_FLAGS(info)        ((info)->flags)
