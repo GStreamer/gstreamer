@@ -436,7 +436,7 @@ translateModifiers(Qt::KeyboardModifiers modifiers)
   return (GstNavigationModifierType)(
     ((modifiers & Qt::KeyboardModifier::ShiftModifier) ? GST_NAVIGATION_MODIFIER_SHIFT_MASK : 0) |
     ((modifiers & Qt::KeyboardModifier::ControlModifier) ? GST_NAVIGATION_MODIFIER_CONTROL_MASK : 0) |
-    ((modifiers & Qt::KeyboardModifier::AltModifier) ? GST_NAVIGATION_MODIFIER_ALT_MASK : 0) |
+    ((modifiers & Qt::KeyboardModifier::AltModifier) ? GST_NAVIGATION_MODIFIER_MOD1_MASK : 0) |
     ((modifiers & Qt::KeyboardModifier::MetaModifier) ? GST_NAVIGATION_MODIFIER_META_MASK : 0));
 }
 

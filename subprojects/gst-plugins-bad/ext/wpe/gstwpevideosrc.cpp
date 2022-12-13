@@ -578,7 +578,7 @@ _gst_modifiers_to_wpe (GstEvent * ev)
       modifiers |= wpe_input_keyboard_modifier_control;
     if (modifier_state & GST_NAVIGATION_MODIFIER_SHIFT_MASK)
       modifiers |= wpe_input_keyboard_modifier_shift;
-    if (modifier_state & GST_NAVIGATION_MODIFIER_ALT_MASK)
+    if (modifier_state & GST_NAVIGATION_MODIFIER_MOD1_MASK)
       modifiers |= wpe_input_keyboard_modifier_alt;
     if (modifier_state & GST_NAVIGATION_MODIFIER_META_MASK)
       modifiers |= wpe_input_keyboard_modifier_meta;
