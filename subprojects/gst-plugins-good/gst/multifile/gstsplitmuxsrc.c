@@ -1480,7 +1480,8 @@ splitmux_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       " on %" GST_PTR_FORMAT, query, pad);
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
-    case GST_QUERY_POSITION:{
+    case GST_QUERY_POSITION:
+    case GST_QUERY_LATENCY:{
       GstSplitMuxPartReader *part;
       SplitMuxSrcPad *anypad;
 
