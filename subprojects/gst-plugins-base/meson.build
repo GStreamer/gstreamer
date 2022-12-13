@@ -105,20 +105,12 @@ core_conf = configuration_data()
 core_conf.set('ENABLE_NLS', 1)
 
 # Symbol visibility
-if cc.get_id() == 'msvc'
-  export_define = '__declspec(dllexport) extern'
-elif cc.has_argument('-fvisibility=hidden')
+if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
   if have_objc
     add_project_arguments('-fvisibility=hidden', language: 'objc')
   endif
-  export_define = 'extern __attribute__ ((visibility ("default")))'
-else
-  export_define = 'extern'
 endif
-
-# Passing this through the command line would be too messy
-core_conf.set('GST_API_EXPORT', export_define)
 
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')

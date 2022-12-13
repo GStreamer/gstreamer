@@ -55,14 +55,12 @@ configure_file(input : 'check.h.in',
 internal_check_h_inc = include_directories('..')
 
 # Must explicitly make symbols public if default visibility is hidden
-if have_visibility_hidden
+if host_system in ['windows', 'cygwin'] and not static_build
+  libcheck_visibility_args = ['-DCK_DLL_EXP=extern __declspec(dllexport)']
+elif have_visibility_hidden
   libcheck_visibility_args = ['-DCK_DLL_EXP=extern __attribute__ ((visibility ("default")))']
 else
-  if host_system == 'windows'
-    libcheck_visibility_args = ['-DCK_DLL_EXP=__declspec(dllexport)']
-  else
-    libcheck_visibility_args = ['-DCK_DLL_EXP=extern']
-  endif
+  libcheck_visibility_args = ['-DCK_DLL_EXP=extern']
 endif
 
 no_warn_args = []

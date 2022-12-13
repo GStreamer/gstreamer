@@ -132,14 +132,26 @@
 #  error "Could not detect architecture; don't know whether it supports unaligned access! Please file a bug."
 #endif
 
-/**
- * GST_EXPORT:
- *
- * Export the given variable from the built shared object.
- *
- * On Windows, this exports the variable from the DLL.
- * On other platforms, this gets defined to "extern".
- */
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(GST_STATIC_COMPILATION)
+#  define _GST_EXPORT __declspec(dllexport)
+#  define _GST_IMPORT __declspec(dllimport)
+#elif __GNUC__ >= 4
+#  define _GST_EXPORT __attribute__((visibility("default")))
+#  define _GST_IMPORT
+#else
+#  define _GST_EXPORT
+#  define _GST_IMPORT
+#endif
+
+#define GST_API_EXPORT _GST_EXPORT extern
+#define GST_API_IMPORT _GST_IMPORT extern
+
+#ifdef BUILDING_GST
+#  define GST_API GST_API_EXPORT
+#else
+#  define GST_API GST_API_IMPORT
+#endif
+
 /**
  * GST_PLUGIN_EXPORT:
  *
@@ -148,45 +160,21 @@
  * On Windows, this exports the plugin definition from the DLL.
  * On other platforms, this gets defined as a no-op.
  */
-/* Only use __declspec(dllexport/import) when we have been built with MSVC or
- * the user is linking to us with MSVC. The only remaining case is when we were
- * built with MinGW and are linking with MinGW in which case we rely on the
- * linker to auto-export/import symbols. Of course all this is only used when
- * not linking statically.
+#define GST_PLUGIN_EXPORT _GST_EXPORT
+
+/**
+ * GST_EXPORT:
  *
- * NOTE: To link to GStreamer statically on Windows, you must define
- * GST_STATIC_COMPILATION or the prototypes will cause the compiler to search
- * for the symbol inside a DLL.
+ * Export the given variable from the built shared object.
+ *
+ * On Windows, this exports the variable from the DLL.
+ * On other platforms, this gets defined to "extern".
+ * Deprecated: 1.22: Applications should define their own export macros.
  */
-#if (@GSTCONFIG_BUILT_WITH_MSVC@ || defined(_MSC_VER)) && !defined(GST_STATIC_COMPILATION)
-# define GST_PLUGIN_EXPORT __declspec(dllexport)
-# ifdef GST_EXPORTS
-#  define GST_EXPORT __declspec(dllexport)
-# else
-#  define GST_EXPORT __declspec(dllimport) extern
-# endif
+#ifdef GST_EXPORTS
+#  define GST_EXPORT GST_API_EXPORT
 #else
-# if defined(__GNUC__) || (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
-#  define GST_PLUGIN_EXPORT __attribute__ ((visibility ("default")))
-#  define GST_EXPORT extern __attribute__ ((visibility ("default")))
-# else
-#  define GST_PLUGIN_EXPORT
-#  define GST_EXPORT extern
-# endif
-#endif
-
-#if defined(_MSC_VER) && !defined(GST_STATIC_COMPILATION)
-# define GST_API_IMPORT __declspec(dllimport) extern
-#else
-# define GST_API_IMPORT extern
-#endif
-
-#ifndef GST_API
-# ifdef BUILDING_GST
-#  define GST_API GST_API_EXPORT        /* from config.h */
-# else
-#  define GST_API GST_API_IMPORT
-# endif
+#  define GST_EXPORT GST_API_IMPORT
 #endif
 
 /* These macros are used to mark deprecated functions in GStreamer headers,

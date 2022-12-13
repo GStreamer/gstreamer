@@ -93,18 +93,10 @@ endif
 
 # Symbol visibility
 have_visibility_hidden = false
-if cc.get_id() == 'msvc'
-  export_define = '__declspec(dllexport) extern'
-elif cc.has_argument('-fvisibility=hidden')
+if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
-  export_define = 'extern __attribute__ ((visibility ("default")))'
   have_visibility_hidden = true
-else
-  export_define = 'extern'
 endif
-
-# Passing this through the command line would be too messy
-cdata.set('GST_API_EXPORT', export_define)
 
 # Disable strict aliasing
 if cc.has_argument('-fno-strict-aliasing')
@@ -361,14 +353,6 @@ endif
 
 # All supported platforms have long long now
 cdata.set('HAVE_LONG_LONG', 1)
-
-# We only want to use the __declspec(dllexport/import) dance in GST_EXPORT when
-# building with MSVC
-if cc.get_id() == 'msvc'
-  cdata.set('GSTCONFIG_BUILT_WITH_MSVC', 1)
-else
-  cdata.set('GSTCONFIG_BUILT_WITH_MSVC', 0)
-endif
 
 # -------------------------------------------------------------------------------------
 # config.h things needed by libcheck

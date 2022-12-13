@@ -17,17 +17,9 @@ if cc.has_header('unistd.h')
 endif
 
 # Symbol visibility
-if cc.get_id() == 'msvc'
-  export_define = '__declspec(dllexport) extern'
-elif cc.has_argument('-fvisibility=hidden')
+if cc.has_argument('-fvisibility=hidden')
   add_project_arguments('-fvisibility=hidden', language: 'c')
-  export_define = 'extern __attribute__ ((visibility ("default")))'
-else
-  export_define = 'extern'
 endif
-
-# Passing this through the command line would be too messy
-cdata.set('GST_API_EXPORT', export_define)
 
 configure_file(output : 'config.h', configuration : cdata)
 
