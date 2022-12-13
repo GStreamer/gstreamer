@@ -1,5 +1,9 @@
 #include <clutter-gst/clutter-gst.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 /* Setup the video texture once its size is known */
 void
 size_change (ClutterActor * texture, gint width, gint height,
@@ -42,7 +46,7 @@ size_change (ClutterActor * texture, gint width, gint height,
 }
 
 int
-main (int argc, char *argv[])
+tutorial_main (int argc, char *argv[])
 {
   GstElement *pipeline, *sink;
   ClutterTimeline *timeline;
@@ -105,4 +109,14 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main (tutorial_main, argc, argv, NULL);
+#else
+  return tutorial_main (argc, argv);
+#endif
 }

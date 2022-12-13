@@ -1,5 +1,9 @@
 #include <gst/gst.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 /* Functions below print the Capabilities in a human-friendly format */
 static gboolean
 print_field (GQuark field, const GValue * value, gpointer pfx)
@@ -110,7 +114,7 @@ print_pad_capabilities (GstElement * element, gchar * pad_name)
 }
 
 int
-main (int argc, char *argv[])
+tutorial_main (int argc, char *argv[])
 {
   GstElement *pipeline, *source, *sink;
   GstElementFactory *source_factory, *sink_factory;
@@ -221,4 +225,14 @@ main (int argc, char *argv[])
   gst_object_unref (source_factory);
   gst_object_unref (sink_factory);
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main (tutorial_main, argc, argv, NULL);
+#else
+  return tutorial_main (argc, argv);
+#endif
 }

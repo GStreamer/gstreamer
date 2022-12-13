@@ -1,6 +1,10 @@
 #include <gst/gst.h>
 #include <string.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 typedef struct _CustomData
 {
   gboolean is_live;
@@ -59,7 +63,7 @@ cb_message (GstBus * bus, GstMessage * msg, CustomData * data)
 }
 
 int
-main (int argc, char *argv[])
+tutorial_main (int argc, char *argv[])
 {
   GstElement *pipeline;
   GstBus *bus;
@@ -105,4 +109,14 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main (tutorial_main, argc, argv, NULL);
+#else
+  return tutorial_main (argc, argv);
+#endif
 }

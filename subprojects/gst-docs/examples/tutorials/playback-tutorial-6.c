@@ -1,5 +1,9 @@
 #include <gst/gst.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 /* playbin2 flags */
 typedef enum
 {
@@ -22,7 +26,7 @@ filter_vis_features (GstPluginFeature * feature, gpointer data)
 }
 
 int
-main (int argc, char *argv[])
+tutorial_main (int argc, char *argv[])
 {
   GstElement *pipeline, *vis_plugin;
   GstBus *bus;
@@ -98,4 +102,14 @@ main (int argc, char *argv[])
   gst_element_set_state (pipeline, GST_STATE_NULL);
   gst_object_unref (pipeline);
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main (tutorial_main, argc, argv, NULL);
+#else
+  return tutorial_main (argc, argv);
+#endif
 }

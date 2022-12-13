@@ -95,6 +95,13 @@
 /* API compatibility stuff */
 #include <gst/gstcompat.h>
 
+#ifdef __APPLE__
+#	include <TargetConditionals.h>
+#	if TARGET_OS_MAC && !TARGET_OS_IPHONE
+#	 include <gst/gstmacos.h>
+#	endif
+#endif
+
 G_BEGIN_DECLS
 
 GST_API

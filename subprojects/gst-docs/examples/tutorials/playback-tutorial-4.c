@@ -1,6 +1,10 @@
 #include <gst/gst.h>
 #include <string.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #define GRAPH_LENGTH 78
 
 /* playbin flags */
@@ -122,7 +126,7 @@ refresh_ui (CustomData * data)
 }
 
 int
-main (int argc, char *argv[])
+tutorial_main (int argc, char *argv[])
 {
   GstElement *pipeline;
   GstBus *bus;
@@ -185,4 +189,14 @@ main (int argc, char *argv[])
 
   g_print ("\n");
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main (tutorial_main, argc, argv, NULL);
+#else
+  return tutorial_main (argc, argv);
+#endif
 }

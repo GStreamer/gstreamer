@@ -148,12 +148,21 @@ gst_headers = files(
   'gstparse.h',
   'math-compat.h',
 )
+if host_system == 'darwin'
+  gst_headers += 'gstmacos.h'
+  gst_sources += 'gstmacos.m'
+endif
+
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
 
 extra_deps = []
 if host_system == 'android'
   gst_sources += 'gstandroid.c'
   extra_deps += cc.find_library('log')
+endif
+
+if host_system == 'darwin'
+  extra_deps += dependency('appleframeworks', modules : ['Cocoa'])
 endif
 
 gst_registry = get_option('registry')

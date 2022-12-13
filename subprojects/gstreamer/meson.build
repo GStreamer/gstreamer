@@ -16,8 +16,6 @@ else
 endif
 gst_version_is_dev = gst_version_minor % 2 == 1 and gst_version_micro < 90
 
-host_system = host_machine.system()
-
 apiversion = '1.0'
 soversion = 0
 # maintaining compatibility with the previous libtool versioning
@@ -33,6 +31,19 @@ libexecdir = get_option('libexecdir')
 helpers_install_dir = join_paths(libexecdir, 'gstreamer-1.0')
 
 cc = meson.get_compiler('c')
+host_system = host_machine.system()
+
+if host_system == 'darwin'
+  ios_test_code = '''#include <TargetConditionals.h>
+  #if ! TARGET_OS_IPHONE
+  #error "Not iOS/tvOS/watchOS/iPhoneSimulator"
+  #endif'''
+  if cc.compiles(ios_test_code, name : 'building for iOS')
+    host_system = 'ios'
+  endif
+
+  add_languages('objc', native: false, required: true)
+endif
 
 cdata = configuration_data()
 

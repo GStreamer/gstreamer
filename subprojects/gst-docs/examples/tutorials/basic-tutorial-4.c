@@ -1,5 +1,9 @@
 #include <gst/gst.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData
 {
@@ -15,7 +19,7 @@ typedef struct _CustomData
 static void handle_message (CustomData * data, GstMessage * msg);
 
 int
-main (int argc, char *argv[])
+tutorial_main (int argc, char *argv[])
 {
   CustomData data;
   GstBus *bus;
@@ -169,4 +173,14 @@ handle_message (CustomData * data, GstMessage * msg)
       break;
   }
   gst_message_unref (msg);
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main (tutorial_main, argc, argv, NULL);
+#else
+  return tutorial_main (argc, argv);
+#endif
 }
