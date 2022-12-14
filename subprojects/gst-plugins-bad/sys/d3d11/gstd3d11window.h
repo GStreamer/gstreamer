@@ -145,7 +145,7 @@ struct _GstD3D11WindowClass
                                            guint width,
                                            guint height);
 
-  gboolean      (*prepare)                (GstD3D11Window * window,
+  GstFlowReturn (*prepare)                (GstD3D11Window * window,
                                            guint display_width,
                                            guint display_height,
                                            GstCaps * caps,
@@ -181,7 +181,7 @@ void          gst_d3d11_window_set_title            (GstD3D11Window * window,
 void          gst_d3d11_window_set_orientation      (GstD3D11Window * window,
                                                      GstVideoOrientationMethod method);
 
-gboolean      gst_d3d11_window_prepare              (GstD3D11Window * window,
+GstFlowReturn gst_d3d11_window_prepare              (GstD3D11Window * window,
                                                      guint display_width,
                                                      guint display_height,
                                                      GstCaps * caps,

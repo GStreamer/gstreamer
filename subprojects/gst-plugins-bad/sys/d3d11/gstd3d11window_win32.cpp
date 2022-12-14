@@ -92,6 +92,9 @@ struct _GstD3D11WindowWin32
 
   /* Handle set_render_rectangle */
   GstVideoRectangle render_rect;
+
+  gboolean flushing;
+  gboolean setup_external_hwnd;
 };
 
 #define gst_d3d11_window_win32_parent_class parent_class
@@ -118,17 +121,21 @@ gst_d3d11_window_win32_create_internal_window (GstD3D11WindowWin32 * self);
 static void gst_d3d11_window_win32_destroy_internal_window (HWND hwnd);
 static void gst_d3d11_window_win32_release_external_handle (HWND hwnd);
 static void
-gst_d3d11_window_win32_set_window_handle (GstD3D11WindowWin32 * self,
-    guintptr handle);
-static void
 gst_d3d11_window_win32_on_resize (GstD3D11Window * window,
     guint width, guint height);
+static GstFlowReturn gst_d3d11_window_win32_prepare (GstD3D11Window * window,
+    guint display_width, guint display_height, GstCaps * caps,
+    GstStructure * config, DXGI_FORMAT display_format, GError ** error);
 static void gst_d3d11_window_win32_unprepare (GstD3D11Window * window);
 static void
 gst_d3d11_window_win32_set_render_rectangle (GstD3D11Window * window,
     const GstVideoRectangle * rect);
 static void gst_d3d11_window_win32_set_title (GstD3D11Window * window,
     const gchar * title);
+static gboolean gst_d3d11_window_win32_unlock (GstD3D11Window * window);
+static gboolean gst_d3d11_window_win32_unlock_stop (GstD3D11Window * window);
+static GstFlowReturn
+gst_d3d11_window_win32_set_external_handle (GstD3D11WindowWin32 * self);
 
 static void
 gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
@@ -149,12 +156,16 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
   window_class->present = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_present);
   window_class->on_resize =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_on_resize);
+  window_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_prepare);
   window_class->unprepare =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_unprepare);
   window_class->set_render_rectangle =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_set_render_rectangle);
   window_class->set_title =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_set_title);
+  window_class->unlock = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_unlock);
+  window_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_unlock_stop);
 }
 
 static void
@@ -170,7 +181,9 @@ gst_d3d11_window_win32_constructed (GObject * object)
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (object);
 
   if (window->external_handle) {
-    gst_d3d11_window_win32_set_window_handle (self, window->external_handle);
+    /* Will setup internal child window on ::prepare() */
+    self->setup_external_hwnd = TRUE;
+    window->initialized = TRUE;
     goto done;
   }
 
@@ -192,6 +205,51 @@ gst_d3d11_window_win32_dispose (GObject * object)
   gst_d3d11_window_win32_unprepare (GST_D3D11_WINDOW (object));
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static GstFlowReturn
+gst_d3d11_window_win32_prepare (GstD3D11Window * window, guint display_width,
+    guint display_height, GstCaps * caps, GstStructure * config,
+    DXGI_FORMAT display_format, GError ** error)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+  HWND hwnd;
+  GstFlowReturn ret;
+
+  if (!self->setup_external_hwnd)
+    goto done;
+
+  hwnd = (HWND) window->external_handle;
+  if (!IsWindow (hwnd)) {
+    GST_ERROR_OBJECT (self, "Invalid window handle");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Invalid window handle");
+    return GST_FLOW_ERROR;
+  }
+
+  self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_NONE;
+  self->external_hwnd = hwnd;
+
+  GST_DEBUG_OBJECT (self, "Preparing external handle");
+  ret = gst_d3d11_window_win32_set_external_handle (self);
+  if (ret != GST_FLOW_OK) {
+    if (ret == GST_FLOW_FLUSHING) {
+      GST_WARNING_OBJECT (self, "Flushing");
+      return GST_FLOW_FLUSHING;
+    }
+
+    GST_ERROR_OBJECT (self, "Couldn't configure internal window");
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
+        "Window handle configuration failed");
+    return GST_FLOW_ERROR;
+  }
+
+  GST_DEBUG_OBJECT (self, "External handle got prepared");
+  self->setup_external_hwnd = FALSE;
+
+done:
+  return GST_D3D11_WINDOW_CLASS (parent_class)->prepare (window, display_width,
+      display_height, caps, config, display_format, error);
 }
 
 static void
@@ -294,6 +352,34 @@ gst_d3d11_window_win32_set_title (GstD3D11Window * window, const gchar * title)
 }
 
 static gboolean
+gst_d3d11_window_win32_unlock (GstD3D11Window * window)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  GST_DEBUG_OBJECT (self, "Unlock");
+
+  self->flushing = TRUE;
+  WakeAllConditionVariable (&self->cond);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d11_window_win32_unlock_stop (GstD3D11Window * window)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  GST_DEBUG_OBJECT (self, "Unlock stop");
+
+  self->flushing = FALSE;
+  WakeAllConditionVariable (&self->cond);
+
+  return TRUE;
+}
+
+static gboolean
 running_cb (gpointer user_data)
 {
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (user_data);
@@ -384,10 +470,11 @@ gst_d3d11_window_win32_destroy_internal_window (HWND hwnd)
         ", 0x%x", (guintptr) hwnd, (guint) GetLastError ());
 }
 
-static void
+static GstFlowReturn
 gst_d3d11_window_win32_set_external_handle (GstD3D11WindowWin32 * self)
 {
   WNDPROC external_window_proc;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   external_window_proc =
       (WNDPROC) GetWindowLongPtrA (self->external_hwnd, GWLP_WNDPROC);
@@ -402,9 +489,27 @@ gst_d3d11_window_win32_set_external_handle (GstD3D11WindowWin32 * self)
   SetWindowLongPtrA (self->external_hwnd, GWLP_WNDPROC,
       (LONG_PTR) sub_class_proc);
 
-  /* Will create our internal window on parent window's thread */
-  SendMessageA (self->external_hwnd, WM_GST_D3D11_CONSTRUCT_INTERNAL_WINDOW,
+  /* SendMessage() may cause deadlock if parent window thread is busy
+   * for changing pipeline's state. Post our message instead, and wait for
+   * the parent window's thread or flushing */
+  PostMessageA (self->external_hwnd, WM_GST_D3D11_CONSTRUCT_INTERNAL_WINDOW,
       0, 0);
+
+  GstD3D11SRWLockGuard lk (&self->lock);
+  while (self->external_hwnd &&
+      self->overlay_state == GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_NONE &&
+      !self->flushing) {
+    SleepConditionVariableSRW (&self->cond, &self->lock, INFINITE, 0);
+  }
+
+  if (self->overlay_state != GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_OPENED) {
+    if (self->flushing)
+      ret = GST_FLOW_FLUSHING;
+    else
+      ret = GST_FLOW_ERROR;
+  }
+
+  return ret;
 }
 
 static void
@@ -809,6 +914,10 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     MoveWindow (self->internal_hwnd, rect.left, rect.top, rect.right,
         rect.bottom, FALSE);
 
+    GstD3D11SRWLockGuard lk (&self->lock);
+    self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_OPENED;
+    WakeAllConditionVariable (&self->cond);
+
     /* don't need to be chained up to parent window procedure,
      * as this is our custom message */
     return 0;
@@ -822,13 +931,16 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       gst_d3d11_window_win32_release_external_handle (self->external_hwnd);
       self->external_hwnd = NULL;
 
-      RemovePropA (self->internal_hwnd, D3D11_WINDOW_PROP_NAME);
-      ShowWindow (self->internal_hwnd, SW_HIDE);
-      gst_d3d11_window_win32_destroy_internal_window (self->internal_hwnd);
+      if (self->internal_hwnd) {
+        RemovePropA (self->internal_hwnd, D3D11_WINDOW_PROP_NAME);
+        ShowWindow (self->internal_hwnd, SW_HIDE);
+        gst_d3d11_window_win32_destroy_internal_window (self->internal_hwnd);
+      }
       self->internal_hwnd = NULL;
       self->internal_hwnd_thread = NULL;
 
       self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_CLOSED;
+      WakeAllConditionVariable (&self->cond);
     } else {
       gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
           lParam);
@@ -994,18 +1106,6 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
   *swap_chain = new_swapchain;
 
   return TRUE;
-}
-
-static void
-gst_d3d11_window_win32_set_window_handle (GstD3D11WindowWin32 * self,
-    guintptr handle)
-{
-  self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_NONE;
-
-  self->external_hwnd = (HWND) handle;
-  gst_d3d11_window_win32_set_external_handle (self);
-
-  self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_OPENED;
 }
 
 static void

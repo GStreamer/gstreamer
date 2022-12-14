@@ -50,7 +50,7 @@ G_DEFINE_TYPE (GstD3D11WindowDummy, gst_d3d11_window_dummy,
 
 static void gst_d3d11_window_dummy_on_resize (GstD3D11Window * window,
     guint width, guint height);
-static gboolean gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
+static GstFlowReturn gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps,
     GstStructure * config, DXGI_FORMAT display_format, GError ** error);
 static void gst_d3d11_window_dummy_unprepare (GstD3D11Window * window);
@@ -82,7 +82,7 @@ gst_d3d11_window_dummy_init (GstD3D11WindowDummy * self)
 {
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps,
     GstStructure * config, DXGI_FORMAT display_format, GError ** error)
@@ -131,7 +131,7 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     GST_ERROR_OBJECT (window, "Cannot create converter");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create converter");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   window->compositor =
@@ -140,10 +140,10 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     GST_ERROR_OBJECT (window, "Cannot create overlay compositor");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create overlay compositor");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static void

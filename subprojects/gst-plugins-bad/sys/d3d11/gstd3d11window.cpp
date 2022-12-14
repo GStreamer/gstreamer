@@ -108,7 +108,7 @@ static GstFlowReturn gst_d3d111_window_present (GstD3D11Window * self,
     GstBuffer * buffer, GstBuffer * render_target);
 static void gst_d3d11_window_on_resize_default (GstD3D11Window * window,
     guint width, guint height);
-static gboolean gst_d3d11_window_prepare_default (GstD3D11Window * window,
+static GstFlowReturn gst_d3d11_window_prepare_default (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps,
     GstStructure * config, DXGI_FORMAT display_format, GError ** error);
 
@@ -517,14 +517,14 @@ typedef struct
   gboolean supported;
 } GstD3D11WindowDisplayFormat;
 
-gboolean
+GstFlowReturn
 gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
     guint display_height, GstCaps * caps, GstStructure * config,
     DXGI_FORMAT display_format, GError ** error)
 {
   GstD3D11WindowClass *klass;
 
-  g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), FALSE);
+  g_return_val_if_fail (GST_IS_D3D11_WINDOW (window), GST_FLOW_ERROR);
 
   klass = GST_D3D11_WINDOW_GET_CLASS (window);
   g_assert (klass->prepare != NULL);
@@ -536,7 +536,7 @@ gst_d3d11_window_prepare (GstD3D11Window * window, guint display_width,
       display_format, error);
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     guint display_height, GstCaps * caps, GstStructure * config,
     DXGI_FORMAT display_format, GError ** error)
@@ -600,7 +600,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     if (config)
       gst_structure_free (config);
 
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (display_format != DXGI_FORMAT_UNKNOWN) {
@@ -621,7 +621,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
       if (config)
         gst_structure_free (config);
 
-      return FALSE;
+      return GST_FLOW_ERROR;
     }
   } else {
     for (guint i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (&window->info); i++) {
@@ -694,7 +694,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     if (config)
       gst_structure_free (config);
 
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   /* this rect struct will be used to calculate render area */
@@ -782,7 +782,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create converter");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create converter");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (have_hdr10_meta) {
@@ -800,7 +800,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     GST_ERROR_OBJECT (window, "Cannot create overlay compositor");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create overlay compositor");
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   /* call resize to allocated resources */
@@ -811,7 +811,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 
   GST_DEBUG_OBJECT (window, "New swap chain 0x%p created", window->swap_chain);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 void
