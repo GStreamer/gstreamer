@@ -1231,6 +1231,12 @@ gst_multi_queue_release_pad (GstElement * element, GstPad * pad)
 
   GST_LOG_OBJECT (element, "pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
+  /* Take the reconfiguration lock before the qlock to avoid deadlocks
+   * from two release_pad running in parallel on different mqueue slots.
+   * We need reconf_lock for removing the singlequeue from the list, to
+   * prevent overlapping release/request from causing problems */
+  g_mutex_lock (&mqueue->reconf_lock);
+
   GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
   /* Find which single queue it belongs to, knowing that it should be a sinkpad */
   for (tmp = mqueue->queues; tmp; tmp = g_list_next (tmp)) {
@@ -1250,16 +1256,12 @@ gst_multi_queue_release_pad (GstElement * element, GstPad * pad)
     gst_clear_object (&srcpad);
     GST_WARNING_OBJECT (mqueue, "That pad doesn't belong to this element ???");
     GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
+    g_mutex_unlock (&mqueue->reconf_lock);
     return;
   }
 
   /* FIXME: The removal of the singlequeue should probably not happen until it
    * finishes draining */
-
-  /* Take the reconfiguration lock before removing the singlequeue from
-   * the list, to prevent overlapping release/request from causing
-   * problems */
-  g_mutex_lock (&mqueue->reconf_lock);
 
   /* remove it from the list */
   mqueue->queues = g_list_delete_link (mqueue->queues, tmp);
