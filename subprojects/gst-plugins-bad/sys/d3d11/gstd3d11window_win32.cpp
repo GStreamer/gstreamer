@@ -745,7 +745,9 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
 static LRESULT CALLBACK
 window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  GstD3D11WindowWin32 *self;
+  GstD3D11WindowWin32 *self = NULL;
+
+  GST_LOG ("Internal window event: hWnd = %u, uMsg = %u, wParam = %d, lParam = %d", hWnd, uMsg, wParam, lParam);
 
   if (uMsg == WM_CREATE) {
     self = GST_D3D11_WINDOW_WIN32 (((LPCREATESTRUCT) lParam)->lpCreateParams);
@@ -771,8 +773,10 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     g_assert (self->internal_hwnd == hWnd);
 
+    gst_d3d11_device_lock (self->parent.device);
     gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
         lParam);
+    gst_d3d11_device_unlock (self->parent.device);
 
     switch (uMsg) {
       case WM_SIZE:
@@ -796,12 +800,22 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
   }
 
-  return DefWindowProcA (hWnd, uMsg, wParam, lParam);
+  if (self != NULL) {
+    LRESULT ret;
+
+    gst_d3d11_device_lock(self->parent.device);
+    ret = DefWindowProcA (hWnd, uMsg, wParam, lParam);
+    gst_d3d11_device_unlock(self->parent.device);
+    return ret;
+  } else
+    return DefWindowProcA (hWnd, uMsg, wParam, lParam);
 }
 
 static LRESULT FAR PASCAL
 sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+  GST_LOG ("External window event: hWnd = %u, uMsg = %u, wParam = %d, lParam = %d", hWnd, uMsg, wParam, lParam);
+
   WNDPROC external_window_proc =
       (WNDPROC) GetPropA (hWnd, EXTERNAL_PROC_PROP_NAME);
   GstD3D11WindowWin32 *self =
@@ -832,8 +846,11 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return 0;
   } else if (self) {
     if (uMsg == WM_SIZE) {
+      GST_LOG_OBJECT (self, "WM_SIZE");
+      gst_d3d11_device_lock (self->parent.device);
       MoveWindow (self->internal_hwnd, 0, 0, LOWORD (lParam), HIWORD (lParam),
           FALSE);
+      gst_d3d11_device_unlock (self->parent.device);
     } else if (uMsg == WM_CLOSE || uMsg == WM_DESTROY) {
       g_mutex_lock (&self->lock);
       GST_WARNING_OBJECT (self, "external window is closing");
@@ -849,12 +866,21 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_CLOSED;
       g_mutex_unlock (&self->lock);
     } else {
+      gst_d3d11_device_lock (self->parent.device);
       gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
           lParam);
+      gst_d3d11_device_unlock (self->parent.device);
     }
   }
 
-  return CallWindowProcA (external_window_proc, hWnd, uMsg, wParam, lParam);
+  {
+      LRESULT ret;
+
+      gst_d3d11_device_lock(self->parent.device);
+      ret = CallWindowProcA(external_window_proc, hWnd, uMsg, wParam, lParam);
+      gst_d3d11_device_unlock(self->parent.device);
+      return ret;
+  }
 }
 
 static void
