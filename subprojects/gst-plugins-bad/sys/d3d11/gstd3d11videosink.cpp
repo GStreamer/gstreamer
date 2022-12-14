@@ -526,7 +526,7 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   return TRUE;
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
 {
   gint video_width, video_height;
@@ -534,6 +534,8 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
   gint display_par_n = 1, display_par_d = 1;    /* display's PAR */
   guint num, den;
   GError *error = NULL;
+  GstD3D11Window *window;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_DEBUG_OBJECT (self, "Updating window with caps %" GST_PTR_FORMAT, caps);
 
@@ -546,14 +548,14 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND, (nullptr),
         ("Failed to open window."));
 
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (!gst_video_info_from_caps (&self->info, caps)) {
     GST_DEBUG_OBJECT (self,
         "Could not locate image format from caps %" GST_PTR_FORMAT, caps);
     GST_D3D11_VIDEO_SINK_UNLOCK (self);
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   video_width = GST_VIDEO_INFO_WIDTH (&self->info);
@@ -572,7 +574,7 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
 
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (nullptr),
         ("Error calculating the output display ratio of the video."));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   GST_DEBUG_OBJECT (self,
@@ -615,7 +617,7 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
 
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (nullptr),
         ("Error calculating the output display ratio of the video."));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (self->pending_render_rect) {
@@ -626,20 +628,32 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
   }
 
   self->have_video_processor = FALSE;
-  if (!gst_d3d11_window_prepare (self->window, GST_VIDEO_SINK_WIDTH (self),
-          GST_VIDEO_SINK_HEIGHT (self), caps, &self->have_video_processor,
-          &error)) {
+  window = (GstD3D11Window *) gst_object_ref (self->window);
+  GST_D3D11_VIDEO_SINK_UNLOCK (self);
+
+  ret = gst_d3d11_window_prepare (window, GST_VIDEO_SINK_WIDTH (self),
+      GST_VIDEO_SINK_HEIGHT (self), caps, &self->have_video_processor, &error);
+  if (ret != GST_FLOW_OK) {
     GstMessage *error_msg;
 
-    GST_D3D11_VIDEO_SINK_UNLOCK (self);
+    if (ret == GST_FLOW_FLUSHING) {
+      GST_D3D11_VIDEO_SINK_LOCK (self);
+      GST_WARNING_OBJECT (self, "Couldn't prepare window but we are flushing");
+      gst_clear_object (&self->window);
+      gst_object_unref (window);
+      GST_D3D11_VIDEO_SINK_UNLOCK (self);
+
+      return GST_FLOW_FLUSHING;
+    }
 
     GST_ERROR_OBJECT (self, "cannot create swapchain");
     error_msg = gst_message_new_error (GST_OBJECT_CAST (self),
         error, "Failed to prepare d3d11window");
     g_clear_error (&error);
     gst_element_post_message (GST_ELEMENT (self), error_msg);
+    gst_object_unref (window);
 
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   if (self->fallback_pool) {
@@ -675,19 +689,20 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
 
   if (!self->fallback_pool) {
     GST_ERROR_OBJECT (self, "Failed to configure fallback pool");
-    return FALSE;
+    gst_object_unref (window);
+    return GST_FLOW_ERROR;
   }
 
   self->processor_in_use = FALSE;
 
   if (self->title) {
-    gst_d3d11_window_set_title (self->window, self->title);
+    gst_d3d11_window_set_title (window, self->title);
     g_clear_pointer (&self->title, g_free);
   }
 
-  GST_D3D11_VIDEO_SINK_UNLOCK (self);
+  gst_object_unref (window);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static void
@@ -806,6 +821,9 @@ done:
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
   g_signal_connect (self->window, "mouse-event",
       G_CALLBACK (gst_d3d11_video_mouse_key_event), self);
+
+  GST_DEBUG_OBJECT (self,
+      "Have prepared window %" GST_PTR_FORMAT, self->window);
 
   return TRUE;
 }
@@ -1197,17 +1215,16 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
   if (self->caps_updated || !self->window) {
     GstCaps *caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (sink));
-    gboolean update_ret;
 
     /* shouldn't happen */
     if (!caps)
       return GST_FLOW_NOT_NEGOTIATED;
 
-    update_ret = gst_d3d11_video_sink_update_window (self, caps);
+    ret = gst_d3d11_video_sink_update_window (self, caps);
     gst_caps_unref (caps);
 
-    if (!update_ret)
-      return GST_FLOW_NOT_NEGOTIATED;
+    if (ret != GST_FLOW_OK)
+      return ret;
   }
 
   if (!gst_d3d11_buffer_can_access_device (buf, device_handle)) {

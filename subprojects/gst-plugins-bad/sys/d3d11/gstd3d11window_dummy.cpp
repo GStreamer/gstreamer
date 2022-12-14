@@ -48,7 +48,7 @@ G_DEFINE_TYPE (GstD3D11WindowDummy, gst_d3d11_window_dummy,
 
 static void gst_d3d11_window_dummy_on_resize (GstD3D11Window * window,
     guint width, guint height);
-static gboolean gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
+static GstFlowReturn gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps,
     gboolean * video_processor_available, GError ** error);
 static void gst_d3d11_window_dummy_unprepare (GstD3D11Window * window);
@@ -80,7 +80,7 @@ gst_d3d11_window_dummy_init (GstD3D11WindowDummy * self)
 {
 }
 
-static gboolean
+static GstFlowReturn
 gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
     guint display_width, guint display_height, GstCaps * caps,
     gboolean * video_processor_available, GError ** error)
@@ -192,12 +192,12 @@ gst_d3d11_window_dummy_prepare (GstD3D11Window * window,
 
   gst_d3d11_device_unlock (window->device);
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 error:
   gst_d3d11_device_unlock (window->device);
 
-  return FALSE;
+  return GST_FLOW_ERROR;
 }
 
 static void
