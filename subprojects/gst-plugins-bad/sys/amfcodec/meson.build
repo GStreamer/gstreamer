@@ -2,6 +2,7 @@ amf_sources = [
   'gstamfencoder.cpp',
   'gstamfh264enc.cpp',
   'gstamfh265enc.cpp',
+  'gstamfav1enc.cpp',
   'gstamfutils.cpp',
   'plugin.cpp',
 ]

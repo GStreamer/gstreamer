@@ -35,6 +35,7 @@
 #include "gstamfutils.h"
 #include "gstamfh264enc.h"
 #include "gstamfh265enc.h"
+#include "gstamfav1enc.h"
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -108,6 +109,8 @@ plugin_init (GstPlugin * plugin)
           (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
       gst_amf_h265_enc_register_d3d11 (plugin, device,
           (gpointer) context.GetPtr (), GST_RANK_PRIMARY);
+      gst_amf_av1_enc_register_d3d11 (plugin, device,
+          (gpointer) context.GetPtr (), GST_RANK_NONE);
     }
 
     gst_clear_object (&device);
