@@ -2489,7 +2489,7 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
     GstMIKEYPayloadKEMAC *p = (GstMIKEYPayloadKEMAC *) payload;
     const GstMIKEYPayload *sub;
     GstMIKEYPayloadKeyData *pkd;
-    GstBuffer *buf;
+    GstBuffer *buf, *saltbuf;
 
     if (p->enc_alg != GST_MIKEY_ENC_NULL || p->mac_alg != GST_MIKEY_MAC_NULL)
       goto done;
@@ -2502,6 +2502,11 @@ gst_mikey_message_to_caps (const GstMIKEYMessage * msg, GstCaps * caps)
 
     pkd = (GstMIKEYPayloadKeyData *) sub;
     buf = gst_buffer_new_memdup (pkd->key_data, pkd->key_len);
+    if (pkd->salt_len) {
+      saltbuf = gst_buffer_new_memdup (pkd->salt_data, pkd->salt_len);
+      gst_buffer_append (buf, saltbuf);
+      gst_buffer_unref (saltbuf);
+    }
     gst_caps_set_simple (caps, "srtp-key", GST_TYPE_BUFFER, buf, NULL);
     gst_buffer_unref (buf);
 
