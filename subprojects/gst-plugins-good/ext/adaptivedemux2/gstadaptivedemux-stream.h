@@ -154,14 +154,26 @@ struct _GstAdaptiveDemux2StreamClass
 				    GstClockTimeDiff       * final_ts);
 
   /**
-   * can_start:
+   * start:
    * @stream: a #GstAdaptiveDemux2Stream
    *
-   * Called before starting a @stream. sub-classes can return %FALSE if more
-   * information is required before it can be started. Sub-classes will have to
-   * call gst_adaptive_demux2_stream_start() when the stream should be started.
+   * Called to start downloading a @stream, sub-classes should chain up to the default
+   * implementation. Sub-classes can return %FALSE if more
+   * information is required before the stream can be started. In that case, sub-classes
+   * will have to call gst_adaptive_demux2_stream_start() again when the stream should
+   * be started.
    */
-  gboolean      (*can_start) (GstAdaptiveDemux2Stream *stream);
+  void       (*start) (GstAdaptiveDemux2Stream *stream);
+
+  /**
+   * stop:
+   * @stream: a #GstAdaptiveDemux2Stream
+   *
+   * Called to stop downloading a @stream, sub-classes should chain up to the default
+   * implementation.
+   */
+  void       (*stop) (GstAdaptiveDemux2Stream *stream);
+
 
   /**
    * create_tracks:

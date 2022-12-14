@@ -53,6 +53,10 @@ static void gst_adaptive_demux2_stream_update_track_ids (GstAdaptiveDemux2Stream
 static GstFlowReturn
 gst_adaptive_demux2_stream_submit_request_default (GstAdaptiveDemux2Stream *
     stream, DownloadRequest * download_req);
+static void
+gst_adaptive_demux2_stream_start_default (GstAdaptiveDemux2Stream * stream);
+static void
+gst_adaptive_demux2_stream_stop_default (GstAdaptiveDemux2Stream * stream);
 
 #define gst_adaptive_demux2_stream_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE (GstAdaptiveDemux2Stream, gst_adaptive_demux2_stream,
@@ -65,6 +69,8 @@ gst_adaptive_demux2_stream_class_init (GstAdaptiveDemux2StreamClass * klass)
 
   gobject_class->finalize = gst_adaptive_demux2_stream_finalize;
 
+  klass->start = gst_adaptive_demux2_stream_start_default;
+  klass->stop = gst_adaptive_demux2_stream_stop_default;
   klass->data_received = gst_adaptive_demux2_stream_data_received_default;
   klass->finish_fragment = gst_adaptive_demux2_stream_finish_fragment_default;
   klass->submit_request = gst_adaptive_demux2_stream_submit_request_default;
@@ -2066,32 +2072,18 @@ gst_adaptive_demux2_stream_next_download (GstAdaptiveDemux2Stream * stream)
   return gst_adaptive_demux2_stream_load_a_fragment (stream);
 }
 
-static gboolean
-gst_adaptive_demux2_stream_can_start (GstAdaptiveDemux2Stream * stream)
-{
-  GstAdaptiveDemux2StreamClass *klass =
-      GST_ADAPTIVE_DEMUX2_STREAM_GET_CLASS (stream);
-
-  if (!klass->can_start)
-    return TRUE;
-  return klass->can_start (stream);
-}
-
 /**
  * gst_adaptive_demux2_stream_start:
  * @stream: a #GstAdaptiveDemux2Stream
  *
- * Start the given @stream. Should be called by subclasses that previously
- * returned %FALSE in `GstAdaptiveDemux::stream_can_start()`
+ * Start the given @stream. Can be called by subclasses that previously
+ * returned %FALSE in `GstAdaptiveDemux2Stream::start()`, or from
+ * the demuxer when a stream should start downloading.
  */
 void
 gst_adaptive_demux2_stream_start (GstAdaptiveDemux2Stream * stream)
 {
-  GstAdaptiveDemux *demux;
-
   g_return_if_fail (stream && stream->demux);
-
-  demux = stream->demux;
 
   if (stream->pending_cb_id != 0 || stream->download_active) {
     /* There is already something active / pending on this stream */
@@ -2099,12 +2091,16 @@ gst_adaptive_demux2_stream_start (GstAdaptiveDemux2Stream * stream)
     return;
   }
 
-  /* Some streams require a delayed start, i.e. they need more information
-   * before they can actually be started */
-  if (!gst_adaptive_demux2_stream_can_start (stream)) {
-    GST_LOG_OBJECT (stream, "Stream will be started asynchronously");
-    return;
-  }
+  GstAdaptiveDemux2StreamClass *klass =
+      GST_ADAPTIVE_DEMUX2_STREAM_GET_CLASS (stream);
+
+  klass->start (stream);
+}
+
+static void
+gst_adaptive_demux2_stream_start_default (GstAdaptiveDemux2Stream * stream)
+{
+  GstAdaptiveDemux *demux = stream->demux;
 
   if (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_EOS) {
     GST_LOG_OBJECT (stream, "Stream is EOS already");
@@ -2130,6 +2126,15 @@ gst_adaptive_demux2_stream_start (GstAdaptiveDemux2Stream * stream)
 
 void
 gst_adaptive_demux2_stream_stop (GstAdaptiveDemux2Stream * stream)
+{
+  GstAdaptiveDemux2StreamClass *klass =
+      GST_ADAPTIVE_DEMUX2_STREAM_GET_CLASS (stream);
+
+  klass->stop (stream);
+}
+
+static void
+gst_adaptive_demux2_stream_stop_default (GstAdaptiveDemux2Stream * stream)
 {
   GstAdaptiveDemux *demux = stream->demux;
 

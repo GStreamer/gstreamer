@@ -72,8 +72,8 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream);
 static GstFlowReturn
 gst_hls_demux_stream_submit_request (GstAdaptiveDemux2Stream * stream,
     DownloadRequest * download_req);
-static gboolean gst_hls_demux_stream_can_start (GstAdaptiveDemux2Stream *
-    stream);
+static void gst_hls_demux_stream_start (GstAdaptiveDemux2Stream * stream);
+static void gst_hls_demux_stream_stop (GstAdaptiveDemux2Stream * stream);
 static void gst_hls_demux_stream_create_tracks (GstAdaptiveDemux2Stream *
     stream);
 static gboolean gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream *
@@ -107,7 +107,8 @@ gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
       gst_hls_demux_stream_advance_fragment;
   adaptivedemux2stream_class->select_bitrate =
       gst_hls_demux_stream_select_bitrate;
-  adaptivedemux2stream_class->can_start = gst_hls_demux_stream_can_start;
+  adaptivedemux2stream_class->start = gst_hls_demux_stream_start;
+  adaptivedemux2stream_class->stop = gst_hls_demux_stream_stop;
   adaptivedemux2stream_class->create_tracks =
       gst_hls_demux_stream_create_tracks;
 
@@ -2005,6 +2006,23 @@ gst_hls_demux_stream_can_start (GstAdaptiveDemux2Stream * stream)
 
   /* Otherwise we have to wait */
   return FALSE;
+}
+
+static void
+gst_hls_demux_stream_start (GstAdaptiveDemux2Stream * stream)
+{
+  if (!gst_hls_demux_stream_can_start (stream))
+    return;
+
+  /* Chain up, to start the downloading */
+  GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->start (stream);
+}
+
+static void
+gst_hls_demux_stream_stop (GstAdaptiveDemux2Stream * stream)
+{
+  /* Chain up, to stop the downloading */
+  GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->stop (stream);
 }
 
 /* Returns TRUE if the rendition stream switched group-id */
