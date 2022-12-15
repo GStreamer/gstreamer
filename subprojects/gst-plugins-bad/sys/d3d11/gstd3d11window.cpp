@@ -889,6 +889,11 @@ gst_d3d111_window_present (GstD3D11Window * self, GstBuffer * buffer,
   if (!buffer)
     return GST_FLOW_OK;
 
+  if (!rtv) {
+    GST_ERROR_OBJECT (self, "RTV is unavailable");
+    return GST_FLOW_ERROR;
+  }
+
   {
     GstMapInfo infos[GST_VIDEO_MAX_PLANES];
     ID3D11ShaderResourceView *srv[GST_VIDEO_MAX_PLANES];
