@@ -158,7 +158,6 @@ struct _GstAV1Enc
   GstVideoEncoder base_video_encoder;
 
   /* properties */
-  guint keyframe_dist;
   gint cpu_used;
   gint threads;
   gboolean row_mt;

@@ -208,6 +208,7 @@ enum
   PROP_ENC_PASS,
   PROP_USAGE_PROFILE,
   PROP_LAG_IN_FRAMES,
+  PROP_KEYFRAME_MAX_DIST
 };
 
 /* From av1/av1_cx_iface.c */
@@ -242,6 +243,7 @@ enum
 #define DEFAULT_ENC_PASS                     GST_AV1_ENC_ONE_PASS
 #define DEFAULT_USAGE_PROFILE      GST_AV1_ENC_USAGE_GOOD_QUALITY
 #define DEFAULT_LAG_IN_FRAMES                                   0
+#define DEFAULT_KEYFRAME_MAX_DIST                              30
 
 static void gst_av1_enc_finalize (GObject * object);
 static void gst_av1_enc_set_property (GObject * object, guint prop_id,
@@ -511,6 +513,18 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
           0, G_MAXUINT, DEFAULT_LAG_IN_FRAMES,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * av1enc:keyframe-max-dist:
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_KEYFRAME_MAX_DIST,
+      g_param_spec_int ("keyframe-max-dist", "Keyframe max distance",
+          "Maximum distance between keyframes (number of frames)",
+          0, G_MAXINT, DEFAULT_KEYFRAME_MAX_DIST,
+          (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT)));
+
   gst_type_mark_as_plugin_api (GST_TYPE_END_USAGE_MODE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_RESIZE_MODE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_SUPERRES_MODE, 0);
@@ -534,7 +548,6 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
 
   av1enc->encoder_inited = FALSE;
 
-  av1enc->keyframe_dist = 30;
   av1enc->cpu_used = DEFAULT_CPU_USED;
   av1enc->format = AOM_IMG_FMT_I420;
   av1enc->threads = DEFAULT_THREADS;
@@ -549,6 +562,7 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->aom_cfg.fixed_qp_offsets[3] = -1;
   av1enc->aom_cfg.fixed_qp_offsets[4] = -1;
 #endif
+  av1enc->aom_cfg.kf_max_dist = DEFAULT_KEYFRAME_MAX_DIST;
   av1enc->aom_cfg.rc_dropframe_thresh = DEFAULT_DROP_FRAME;
   av1enc->aom_cfg.rc_resize_mode = DEFAULT_RESIZE_MODE;
   av1enc->aom_cfg.rc_resize_denominator = DEFAULT_RESIZE_DENOMINATOR;
@@ -948,12 +962,6 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   gst_av1_enc_fill_image (av1enc, &vframe, &raw);
   gst_video_frame_unmap (&vframe);
 
-  if (av1enc->keyframe_dist >= 30) {
-    av1enc->keyframe_dist = 0;
-    flags |= AOM_EFLAG_FORCE_KF;
-  }
-  av1enc->keyframe_dist++;
-
   // aom_codec_encode requires pts to be strictly increasing
   pts_rt =
       gst_segment_to_running_time (&encoder->input_segment,
@@ -1203,6 +1211,10 @@ gst_av1_enc_set_property (GObject * object, guint prop_id,
       av1enc->aom_cfg.g_lag_in_frames = g_value_get_uint (value);
       global = TRUE;
       break;
+    case PROP_KEYFRAME_MAX_DIST:
+      av1enc->aom_cfg.kf_max_dist = g_value_get_int (value);
+      global = TRUE;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1309,6 +1321,9 @@ gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_LAG_IN_FRAMES:
       g_value_set_uint (value, av1enc->aom_cfg.g_lag_in_frames);
+      break;
+    case PROP_KEYFRAME_MAX_DIST:
+      g_value_set_int (value, av1enc->aom_cfg.kf_max_dist);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
