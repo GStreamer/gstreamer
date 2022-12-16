@@ -277,7 +277,7 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
   gst_video_info_set_format (&info, self->preferred_format, width, height);
 
   caps = gst_video_info_to_caps (&info);
-  if (caps == NULL) {
+  if (!caps) {
     GST_WARNING_OBJECT (self, "Failed to create caps for internal pool");
     return NULL;
   }
@@ -291,16 +291,14 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
   pool = gst_va_pool_new_with_config (caps, GST_VIDEO_INFO_SIZE (&info),
       1, 0, VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO,
       allocator, &params);
+
   gst_clear_caps (&caps);
+  gst_object_unref (allocator);
 
   if (!pool) {
     GST_WARNING_OBJECT (self, "Failed to create internal pool");
-    gst_object_unref (allocator);
     return NULL;
   }
-
-  gst_object_unref (allocator);
-  gst_caps_unref (caps);
 
   gst_buffer_pool_set_active (pool, TRUE);
 
