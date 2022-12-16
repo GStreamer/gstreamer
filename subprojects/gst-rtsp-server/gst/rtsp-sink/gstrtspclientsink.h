@@ -186,6 +186,7 @@ struct _GstRTSPClientSink {
   GTlsInteraction  *tls_interaction;
   gint              ntp_time_source;
   gchar            *user_agent;
+  GstRTSPPublishClockMode publish_clock_mode;
 
   /* state */
   GstRTSPState       state;
