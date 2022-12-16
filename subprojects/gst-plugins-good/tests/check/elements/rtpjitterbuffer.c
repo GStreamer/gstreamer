@@ -3207,7 +3207,7 @@ GST_START_TEST (test_drop_messages_interval)
   guint num_sent_msg = 0;
 
   g_object_set (h->element, "post-drop-messages", TRUE, NULL);
-  g_object_set (h->element, "drop-messages-interval", interval, NULL);
+  g_object_set (h->element, "drop-messages-interval", (guint) interval, NULL);
   next_seqnum = construct_deterministic_initial_state (h, latency_ms);
 
   /* Create a bus to get the drop message on */
