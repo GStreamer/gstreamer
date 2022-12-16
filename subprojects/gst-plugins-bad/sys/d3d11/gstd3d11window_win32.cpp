@@ -43,6 +43,7 @@ G_LOCK_DEFINE_STATIC (create_lock);
 #define WM_GST_D3D11_CONSTRUCT_INTERNAL_WINDOW (WM_USER + 2)
 #define WM_GST_D3D11_DESTROY_INTERNAL_WINDOW (WM_USER + 3)
 #define WM_GST_D3D11_MOVE_WINDOW (WM_USER + 4)
+#define WM_GST_D3D11_SHOW_WINDOW (WM_USER + 5)
 
 static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
@@ -822,6 +823,9 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
         }
       }
       break;
+    case WM_GST_D3D11_SHOW_WINDOW:
+      ShowWindow (self->internal_hwnd, SW_SHOW);
+      break;
     default:
       break;
   }
@@ -1140,9 +1144,15 @@ gst_d3d11_window_win32_show (GstD3D11Window * window)
           GetSystemMetrics (SM_CYCAPTION);
       MoveWindow (self->internal_hwnd, rect.left, rect.top, width,
           height, FALSE);
+      ShowWindow (self->internal_hwnd, SW_SHOW);
+    } else if (self->internal_hwnd) {
+      /* ShowWindow will throw message to message pumping thread (app thread)
+       * synchroniously, which can be blocked at the moment.
+       * Post message to internal hwnd and do that from message pumping thread
+       */
+      PostMessageA (self->internal_hwnd, WM_GST_D3D11_SHOW_WINDOW, 0, 0);
     }
 
-    ShowWindow (self->internal_hwnd, SW_SHOW);
     self->visible = TRUE;
   }
 }
