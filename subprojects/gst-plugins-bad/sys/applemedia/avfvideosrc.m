@@ -966,7 +966,7 @@ checked:
   BOOL result = NO;
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_LATENCY) {
-    if (device != nil && caps != NULL) {
+    if (input != nil && caps != NULL) {
       GstClockTime min_latency, max_latency;
 
       min_latency = max_latency = latency;
