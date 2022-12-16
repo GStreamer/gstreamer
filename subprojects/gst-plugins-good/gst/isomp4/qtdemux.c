@@ -3477,33 +3477,22 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
       GST_INFO_OBJECT (stream->pad, "first sample ts %" GST_TIME_FORMAT,
           GST_TIME_ARGS (gst_ts));
     } else {
-      /* subsequent fragments extend stream */
-      timestamp =
-          stream->samples[stream->n_samples - 1].timestamp +
-          stream->samples[stream->n_samples - 1].duration;
-
-      /* If this is a GST_FORMAT_BYTES stream and there's a significant
-       * difference (1 sec.) between decode_ts and timestamp, prefer the
-       * former */
-      if (has_tfdt && !qtdemux->upstream_format_is_time
-          && ABSDIFF (decode_ts, timestamp) >
-          MAX (stream->duration_last_moof / 2,
-              GSTTIME_TO_QTSTREAMTIME (stream, GST_SECOND))) {
-        GST_INFO_OBJECT (qtdemux,
-            "decode_ts (%" GST_TIME_FORMAT ") and timestamp (%" GST_TIME_FORMAT
-            ") are significantly different (more than %" GST_TIME_FORMAT
-            "), using decode_ts",
-            GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, decode_ts)),
-            GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream, timestamp)),
-            GST_TIME_ARGS (QTSTREAMTIME_TO_GSTTIME (stream,
-                    MAX (stream->duration_last_moof / 2,
-                        GSTTIME_TO_QTSTREAMTIME (stream, GST_SECOND)))));
+      /* If this is a GST_FORMAT_BYTES stream and we have a tfdt then use it
+       * instead of the sum of sample durations */
+      if (has_tfdt && !qtdemux->upstream_format_is_time) {
         timestamp = decode_ts;
+        gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
+        GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
+            " (using tfdt)", GST_TIME_ARGS (gst_ts));
+      } else {
+        /* subsequent fragments extend stream */
+        timestamp =
+            stream->samples[stream->n_samples - 1].timestamp +
+            stream->samples[stream->n_samples - 1].duration;
+        gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
+        GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
+            " (extends previous samples)", GST_TIME_ARGS (gst_ts));
       }
-
-      gst_ts = QTSTREAMTIME_TO_GSTTIME (stream, timestamp);
-      GST_INFO_OBJECT (qtdemux, "first sample ts %" GST_TIME_FORMAT
-          " (extends previous samples)", GST_TIME_ARGS (gst_ts));
     }
   }
 
