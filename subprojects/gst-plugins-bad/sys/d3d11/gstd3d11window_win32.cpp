@@ -438,8 +438,8 @@ gst_d3d11_window_win32_thread_func (gpointer data)
 
   window->initialized = gst_d3d11_window_win32_create_internal_window (self);
 
-  self->msg_io_channel =
-      g_io_channel_win32_new_messages ((guintptr) self->internal_hwnd);
+  /* Watching and dispatching all messages on this thread */
+  self->msg_io_channel = g_io_channel_win32_new_messages (0);
   self->msg_source = g_io_create_watch (self->msg_io_channel, G_IO_IN);
   g_source_set_callback (self->msg_source, (GSourceFunc) msg_cb, self, NULL);
   g_source_attach (self->msg_source, self->main_context);
