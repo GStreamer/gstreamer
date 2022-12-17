@@ -49,3 +49,4 @@ subprojects/*/
 !subprojects/macos-bison-binary
 !subprojects/win-flex-bison-binaries
 !subprojects/win-nasm
+!subprojects/packagefiles
