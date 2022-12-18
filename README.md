@@ -29,16 +29,17 @@ community which can be found in the `subprojects/` directory.
 
 ## Getting started
 
-### Install git and python 3.5+
+### Install git and python 3.8+
 
-If you're on Linux, you probably already have these. On macOS, you can use the
+If you're on Linux, you probably already have these. On macOS, new versions of
+Xcode ship Python 3 already. If you're on an older Xcode, you can use the
 [official Python installer](https://www.python.org/downloads/mac-osx/).
 
 You can find [instructions for Windows below](#windows-prerequisites-setup).
 
 ### Install meson and ninja
 
-Meson 0.59 or newer is required.
+Meson 0.62 or newer is required.
 
 On Linux and macOS you can get meson through your package manager or using:
 
@@ -54,8 +55,9 @@ binary in your PATH.
 You can find [instructions for Windows below](#windows-prerequisites-setup).
 
 
-On macOS, you might need to execute "Install Certificates.command" from the
-Python folder in the user Applications folder:
+If you used the official Python installer on macOS instead of the Python
+3 shipped with Xcode, you might need to execute "Install Certificates.command"
+from the Python folder in the user Applications folder:
 
 ```
 $ /Applications/Python\ 3.*/Install\ Certificates.command
@@ -72,15 +74,16 @@ urllib.error.URLError: urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificat
 You can get all GStreamer built running:
 
 ```
-meson builddir
-ninja -C builddir
+meson setup builddir
+meson compile -C builddir
 ```
 
-This will automatically create the `build` directory and build everything
+This will automatically create the `builddir` directory and build everything
 inside it.
 
-NOTE: On Windows, you *must* run this from [inside the Visual Studio command
-prompt](#running-meson-on-windows) of the appropriate architecture and version.
+NOTE: On Windows, meson will automatically detect and use the latest Visual
+Studio if GCC, clang, etc are not available in `PATH`. Use the `--vsenv`
+argument to force the use of Visual Studio.
 
 ### External dependencies
 
@@ -229,10 +232,10 @@ the documentation, first ensure that `hotdoc` is installed and `doc` option is
 enabled. For API documentation, gobject introspection must also be enabled.
 The special target `gst-doc` can then be used to (re)generate the documentation.
 
-```
-pip install hotdoc
-meson setup -Ddoc=enabled -Dintrospection=enabled builddir
-ninja -C builddir gst-doc
+```sh
+$ pip install hotdoc
+$ meson setup -Ddoc=enabled -Dintrospection=enabled builddir
+$ meson compile -C builddir gst-doc
 ```
 
 NOTE: To visualize the documentation, `devhelp` can be run inside the development
@@ -242,21 +245,32 @@ environment (see below).
 
 ## Development environment target
 
-GStreamer also contains a special `devenv` target that lets you enter an
-development environment where you will be able to work on GStreamer
-easily. You can get into that environment running:
+GStreamer ships a script that drops you into a development environment where
+all the plugins, libraries, and tools you just built are available:
 
 ```
-ninja -C builddir devenv
+./gst-env.py
 ```
 
-If your operating system handles symlinks, built modules source code will be
-available at the root for example GStreamer core will be in
-`gstreamer/`. Otherwise they will be present in `subprojects/`. You can simply
-hack in there and to rebuild you just need to rerun `ninja -C builddir`.
+Or with a custom builddir (i.e., not `build`, `_build` or `builddir`):
 
-NOTE: In the development environment, a fully usable prefix is also configured
-in `gstreamer/prefix` where you can install any extra dependency/project.
+```
+./gst-env.py --builddir <BUILDDIR>
+```
+
+You can also use `ninja devenv` inside your build directory to achieve the same
+effect. However, this may not work on Windows if meson has auto-detected the
+visual studio environment.
+
+Alternatively, if you'd rather not start a shell in your workflow, you
+can mutate the current environment into a suitable state like so:
+
+```
+./gst-env.py --only-environment
+```
+
+This will print output suitable for an sh-compatible `eval` function,
+just like `ssh-agent -s`.
 
 An external script can be run in development environment with:
 
@@ -264,23 +278,26 @@ An external script can be run in development environment with:
 ./gst-env.py external_script.sh
 ```
 
+NOTE: In the development environment, a fully usable prefix is also configured
+in `gstreamer/prefix` where you can install any extra dependency/project.
+
 For more extensive documentation about the development environment go to [the
 documentation](https://gstreamer.freedesktop.org/documentation/installing/building-from-source-using-meson.html).
 
 ## Custom subprojects
 
 We also added a meson option, `custom_subprojects`, that allows the user
-to provide a comma-separated list of subprojects that should be built
+to provide a comma-separated list of meson subprojects that should be built
 alongside the default ones.
 
 To use it:
 
-```
-cd subprojects
-git clone my_subproject
-cd ../build
-rm -rf * && meson .. -Dcustom_subprojects=my_subproject
-ninja
+```sh
+# Clone into the subprojects directory
+$ git -C subprojects clone my_subproject
+# Wipe dependency detection state, in case you have an existing build dir
+$ meson setup --wipe builddir -Dcustom_subprojects=my_subproject
+$ meson compile -C builddir
 ```
 
 ## Run tests
@@ -321,8 +338,8 @@ You can also install everything that is built into a predetermined prefix like
 so:
 
 ```
-meson --prefix=/path/to/install/prefix builddir
-ninja -C builddir
+meson setup --prefix=/path/to/install/prefix builddir
+meson compile -C builddir
 meson install -C builddir
 ```
 
@@ -379,7 +396,7 @@ following option:
 
 ![Select "Git from the command line and also from 3rd-party software"](/data/images/git-installer-PATH.png)
 
-### Python 3.5+ on Windows
+### Python 3.8+ on Windows
 
 Use the [official Python installer](https://www.python.org/downloads/windows/).
 You must ensure that Python is installed into `PATH`:
@@ -391,16 +408,18 @@ a system-wide location such as `C:\PythonXY`, but this is not required.
 
 ### Ninja on Windows
 
-The easiest way to install Ninja on Windows is with `pip3`, which will download
-the compiled binary and place it into the `Scripts` directory inside your
-Python installation:
+If you are using Visual Studio 2019 or newer, Ninja is already provided.
+
+In other cases, the easiest way to install Ninja on Windows is with `pip3`,
+which will download the compiled binary and place it into the `Scripts`
+directory inside your Python installation:
 
 ```
 pip3 install ninja
 ```
 
 You can also download the [official release](https://github.com/ninja-build/ninja/releases)
-and place it into `PATH`.
+and place it into `PATH`, or use MSYS2.
 
 ### Meson on Windows
 
@@ -419,16 +438,13 @@ use the latest master branch for some reason.
 
 ### Running Meson on Windows
 
-At present, to build with Visual Studio, you need to run Meson from inside the
-VS 2019 command prompt. Press `Start`, and search for `VS 2019`, and click on
-`x64 Native Tools Command Prompt for VS 2019`, or a prompt named similar to
-that:
+Since version 0.59.0, Meson automatically activates the Visual Studio
+environment on Windows if no other compilers (gcc, clang, etc) are found. To
+force the use of Visual Studio in such cases, you can use:
 
-![x64 Native Tools Command Prompt for VS 2019](/data/images/vs-2019-dev-prompt.png)
-
-**ARM64 native only**: Since Visual Studio might not install dedicated command
-prompt for native ARM64 build, you might need to run `vcvarsx86_arm64.bat` on CMD.
-Please refer to [this document](https://docs.microsoft.com/en-us/cpp/build/building-on-the-command-line?view=vs-2019#developer_command_file_locations)
+```
+meson setup --vsenv builddir
+```
 
 ### Setup a mingw/wine based development environment on linux
 
@@ -462,25 +478,23 @@ meson/meson.py install -C $BUILDDIR/
 ```
 
 > __NOTE__: You should use `meson install -C $BUILDDIR`  each time you make a change
-> instead of the usual `ninja -C build` as this is not in the development environment.
+> instead of the usual `meson compile -C $BUILDDIR` as this is not in the
+> development environment.
 
-#### The development environment
+Alternatively, you can also use `mingw64-meson` on Fedora, which is a wrapper
+script that sets things up to use Fedora's cross files and settings. However,
+the wrapper script can be buggy in some cases.
 
-You can get into the development environment the usual way:
+#### cross-mingw development environment
+
+You can get into the development environment as usual with the gst-env.py
+script:
 
 ```
-ninja -C $BUILDDIR/ devenv
+./gst-env.py
 ```
 
-Alternatively, if you'd rather not start a shell in your workflow, you
-can mutate the current environment into a suitable state like so:
-
-```
-gst-env.py --only-environment
-```
-
-This will print output suitable for an sh-compatible `eval` function,
-just like `ssh-agent -s`.
+See [above](#development-environment) for more details.
 
 After setting up [binfmt] to use wine for windows binaries,
 you can run GStreamer tools under wine by running:
