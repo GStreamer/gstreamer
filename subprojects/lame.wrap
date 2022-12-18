@@ -3,10 +3,10 @@ directory = lame-3.100
 source_url = http://downloads.sourceforge.net/project/lame/lame/3.100/lame-3.100.tar.gz
 source_filename = lame-3.100.tar.gz
 source_hash = ddfe36cab873794038ae2c1210557ad34857a4b6bdc515785d1da9e175b1da1e
-patch_filename = lame_3.100-5_patch.zip
-patch_url = https://wrapdb.mesonbuild.com/v2/lame_3.100-5/get_patch
-patch_hash = ed9d897e8ce69e521551812b232de0a651da710d6b0f91606cad4e3afdfd137f
-wrapdb_version = 3.100-5
+patch_filename = lame_3.100-7_patch.zip
+patch_url = https://wrapdb.mesonbuild.com/v2/lame_3.100-7/get_patch
+patch_hash = b9b32a8f172f768ba68917ccd6747bccf4de9706e4be2a8e18e6c55ed551b510
+wrapdb_version = 3.100-7
 
 [provide]
 mp3lame = lame_dep
