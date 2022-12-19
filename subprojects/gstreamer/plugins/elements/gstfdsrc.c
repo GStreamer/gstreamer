@@ -450,10 +450,16 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (!gst_buffer_map (buf, &info, GST_MAP_WRITE))
     goto buffer_read_error;
 
+#ifdef G_OS_WIN32
+  int cur_mode = _setmode (src->fd, O_BINARY);
+#endif
   do {
     readbytes = read (src->fd, info.data, blocksize);
     GST_LOG_OBJECT (src, "read %" G_GSSIZE_FORMAT, readbytes);
   } while (readbytes == -1 && errno == EINTR);  /* retry if interrupted */
+#ifdef G_OS_WIN32
+  _setmode (src->fd, cur_mode);
+#endif
 
   if (readbytes < 0)
     goto read_error;

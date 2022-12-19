@@ -262,8 +262,14 @@ gst_fd_sink_render_list (GstBaseSink * bsink, GstBufferList * buffer_list)
   for (;;) {
     guint64 bytes_written = 0;
 
+#ifdef G_OS_WIN32
+    int cur_mode = _setmode (sink->fd, O_BINARY);
+#endif
     ret = gst_writev_buffer_list (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
         buffer_list, &bytes_written, skip, 0, -1, NULL);
+#ifdef G_OS_WIN32
+    _setmode (sink->fd, cur_mode);
+#endif
 
     sink->current_pos += bytes_written;
     skip += bytes_written;
@@ -297,8 +303,14 @@ gst_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   for (;;) {
     guint64 bytes_written = 0;
 
+#ifdef G_OS_WIN32
+    int cur_mode = _setmode (sink->fd, O_BINARY);
+#endif
     ret = gst_writev_buffer (GST_OBJECT_CAST (sink), sink->fd, sink->fdset,
         buffer, &bytes_written, skip, 0, -1, NULL);
+#ifdef G_OS_WIN32
+    _setmode (sink->fd, cur_mode);
+#endif
 
     sink->current_pos += bytes_written;
     skip += bytes_written;
