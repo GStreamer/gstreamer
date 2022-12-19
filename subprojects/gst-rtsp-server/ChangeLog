@@ -1,7 +1,20 @@
+2022-08-19 16:16:26 +0200  Linus Svensson <linussn@axis.com>
+
+	* gst/rtsp-server/rtsp-server.c:
+	  rtsp-server: Free client if no connection could be created
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3171>
+
+2022-10-12 18:40:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.20.4 ===
 
 2022-10-12 16:39:47 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

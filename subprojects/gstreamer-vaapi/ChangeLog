@@ -1,7 +1,59 @@
+2022-12-10 13:11:08 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay.c:
+	* gst-libs/gst/vaapi/gstvaapidisplay_egl.c:
+	* gst-libs/gst/vaapi/gstvaapisurface_egl.c:
+	* gst-libs/gst/vaapi/video-format.c:
+	* gst/vaapi/gstvaapi.c:
+	* gst/vaapi/gstvaapidecode.c:
+	* gst/vaapi/gstvaapidecodebin.c:
+	* gst/vaapi/gstvaapipluginbase.c:
+	* gst/vaapi/gstvaapipluginutil.c:
+	* gst/vaapi/gstvaapipostproc.c:
+	* gst/vaapi/gstvaapisink.c:
+	* gst/vaapi/gstvaapivideobufferpool.c:
+	* gst/vaapi/gstvaapivideocontext.c:
+	* gst/vaapi/gstvaapivideometa_texture.c:
+	* meson.build:
+	* tests/internal/output.c:
+	* tests/internal/test-display.c:
+	* tests/internal/test-windows.c:
+	  vaapi: prefix USE_FOO defines to fix build with mesa 22.3.0
+	  Apparently mesa 22.3.0 has updated the egl headers, and eglplatform.h now
+	  contains commit
+	  https://github.com/KhronosGroup/EGL-Registry/pull/130/commits/3670d645f4a26a0a9e87e7f3a8608e7cc1d53b5b
+	  after which xlib headers don't get included by default anymore but are
+	  dependent upon whether USE_X11 was defined.
+	  This breaks headless builds of gstreamer-vaapi because we always define
+	  an internal define USE_X11 as either 1 or 0.
+	  Change these defines to GST_VAAPI_USE_XYZ instead to avoid this.
+	  Fixes #1634
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3558>
+
+2022-11-02 17:23:04 -0400  Boyuan Zhang <boyuan.zhang@amd.com>
+
+	* gst-libs/gst/vaapi/gstvaapicontext.c:
+	  libs: context: use queried value for attrib
+	  Attribute's value should use returned value from get_attribute for
+	  VAConfigAttribRTFormat, since VAProfileHEVCMain10, in AMD Mesa Gallium,
+	  can process either VA_RT_FORMAT_420 and VA_RT_FORMAT_420_10, which isn't
+	  considered in gstreamer-vaapi design, where encoder's src pads will
+	  expose only 4:2:0 color formats but no 4:2:0 10bit. So, this is a workaround
+	  for this issue while new vah265enc is released.
+	  Signed-off-by: Boyuan Zhang <boyuan.zhang@amd.com>
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3435>
+
+2022-10-12 18:40:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.4 ===
 
 2022-10-12 16:39:47 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gstreamer-vaapi.doap:

@@ -1,7 +1,35 @@
+2022-10-26 16:30:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avdec_h265: Fix endless renegoation with alternate interlacing
+	  The picture parameter picture->top_field_first is reused in this mode
+	  to signal the TOP fields. As a side effect, it will change every frame
+	  and current code assumed that if this changes then a renegotiation is
+	  needed. Fixed this by ignoring that change whenever we are decoding one field
+	  only.
+	  Fixes #1523
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3289>
+
+2022-10-26 10:44:01 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Avoid flushing on framerate changes
+	  A framerate change does not require flushing the decoder and causes
+	  issues with some specific fragmented files if the two fragments have
+	  different framerate.
+	  Fixes #1522
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3280>
+
+2022-10-12 18:40:25 +0100  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.4 ===
 
 2022-10-12 16:39:47 +0100  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:
