@@ -32,5 +32,6 @@
 #include <gst/cuda/gstcudaloader.h>
 #include <gst/cuda/gstcudamemory.h>
 #include <gst/cuda/gstcudanvrtc.h>
+#include <gst/cuda/gstcudastream.h>
 #include <gst/cuda/gstcudautils.h>
 

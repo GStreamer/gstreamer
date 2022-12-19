@@ -4,6 +4,7 @@ cuda_sources = files([
   'gstcudaloader.c',
   'gstcudamemory.c',
   'gstcudanvrtc.c',
+  'gstcudastream.c',
   'gstcudautils.c',
 ])
 
@@ -15,6 +16,7 @@ cuda_headers = files([
   'gstcudaloader.h',
   'gstcudamemory.h',
   'gstcudanvrtc.h',
+  'gstcudastream.h',
   'gstcudautils.h',
 ])
 
