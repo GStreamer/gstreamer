@@ -1,3 +1,18 @@
+=== release 1.20.5 ===
+
+2022-12-19 23:34:42 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* NEWS:
+	* RELEASE:
+	* gst-libav.doap:
+	* meson.build:
+	  Release 1.20.5
+
+2022-12-19 23:34:34 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ChangeLog:
+	  Update ChangeLogs for 1.20.5
+
 2022-10-26 16:30:31 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
 
 	* ext/libav/gstavviddec.c:
