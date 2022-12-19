@@ -24,6 +24,7 @@
 #include <gst/video/video.h>
 #include <gst/cuda/cuda-prelude.h>
 #include <gst/cuda/gstcudacontext.h>
+#include <gst/cuda/gstcudastream.h>
 
 G_BEGIN_DECLS
 
@@ -33,6 +34,7 @@ G_BEGIN_DECLS
 #define GST_CUDA_ALLOCATOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_CUDA_ALLOCATOR,GstCudaAllocatorClass))
 #define GST_IS_CUDA_ALLOCATOR(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CUDA_ALLOCATOR))
 #define GST_IS_CUDA_ALLOCATOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_CUDA_ALLOCATOR))
+
 /**
  * GST_CUDA_ALLOCATOR_CAST:
  *
@@ -46,18 +48,23 @@ G_BEGIN_DECLS
  */
 #define GST_CUDA_MEMORY_CAST(mem)           ((GstCudaMemory *) (mem))
 
-/**
- * GstCudaAllocator:
- *
- * A #GstAllocator subclass for cuda memory
- *
- * Since: 1.22
- */
-typedef struct _GstCudaAllocator GstCudaAllocator;
-typedef struct _GstCudaAllocatorClass GstCudaAllocatorClass;
+#define GST_TYPE_CUDA_POOL_ALLOCATOR             (gst_cuda_pool_allocator_get_type())
+#define GST_CUDA_POOL_ALLOCATOR(obj)             (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CUDA_POOL_ALLOCATOR,GstCudaPoolAllocator))
+#define GST_CUDA_POOL_ALLOCATOR_CLASS(klass)     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CUDA_POOL_ALLOCATOR,GstCudaPoolAllocatorClass))
+#define GST_CUDA_POOL_ALLOCATOR_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_CUDA_POOL_ALLOCATOR,GstCudaPoolAllocatorClass))
+#define GST_IS_CUDA_POOL_ALLOCATOR(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CUDA_POOL_ALLOCATOR))
+#define GST_IS_CUDA_POOL_ALLOCATOR_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_CUDA_POOL_ALLOCATOR))
 
 typedef struct _GstCudaMemory GstCudaMemory;
 typedef struct _GstCudaMemoryPrivate GstCudaMemoryPrivate;
+
+typedef struct _GstCudaAllocator GstCudaAllocator;
+typedef struct _GstCudaAllocatorClass GstCudaAllocatorClass;
+typedef struct _GstCudaAllocatorPrivate GstCudaAllocatorPrivate;
+
+typedef struct _GstCudaPoolAllocator GstCudaPoolAllocator;
+typedef struct _GstCudaPoolAllocatorClass GstCudaPoolAllocatorClass;
+typedef struct _GstCudaPoolAllocatorPrivate GstCudaPoolAllocatorPrivate;
 
 /**
  * GST_MAP_CUDA:
@@ -95,17 +102,37 @@ typedef struct _GstCudaMemoryPrivate GstCudaMemoryPrivate;
 
 /**
  * GstCudaMemoryTransfer:
- * @GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD: the device memory needs downloading
- *                                          to the staging memory
- * @GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD:   the staging memory needs uploading
- *                                          to the device memory
  *
- * Since: 1.22
+ * CUDA memory transfer flags
  */
 typedef enum
 {
-  GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD   = (GST_MEMORY_FLAG_LAST << 0),
-  GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
+  /**
+   * GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD:
+   *
+   * the device memory needs downloading to the staging memory
+   *
+   * Since: 1.22
+   */
+  GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD = (GST_MEMORY_FLAG_LAST << 0),
+
+  /**
+   * GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD:
+   *
+   * the staging memory needs uploading to the device memory
+   *
+   * Since: 1.22
+   */
+  GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD = (GST_MEMORY_FLAG_LAST << 1),
+
+  /**
+   * GST_CUDA_MEMORY_TRANSFER_NEED_SYNC:
+   *
+   * the device memory needs synchronization
+   *
+   * Since: 1.24
+   */
+  GST_CUDA_MEMORY_TRANSFER_NEED_SYNC = (GST_MEMORY_FLAG_LAST << 2),
 } GstCudaMemoryTransfer;
 
 /**
@@ -126,29 +153,105 @@ struct _GstCudaMemory
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_CUDA_API
+void            gst_cuda_memory_init_once   (void);
+
+GST_CUDA_API
+gboolean        gst_is_cuda_memory          (GstMemory * mem);
+
+GST_CUDA_API
+GstCudaStream * gst_cuda_memory_get_stream  (GstCudaMemory * mem);
+
+GST_CUDA_API
+void            gst_cuda_memory_sync        (GstCudaMemory * mem);
+
+/**
+ * GstCudaAllocator:
+ *
+ * A #GstAllocator subclass for cuda memory
+ *
+ * Since: 1.22
+ */
 struct _GstCudaAllocator
 {
   GstAllocator parent;
+
+  /*< private >*/
+  GstCudaAllocatorPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstCudaAllocatorClass
 {
   GstAllocatorClass parent_class;
+
+  /**
+   * GstCudaAllocatorClass::set_active:
+   * @allocator: a #GstCudaAllocator
+   * @active: the new active state
+   *
+   * Since: 1.24
+   */
+  gboolean (*set_active) (GstCudaAllocator * allocator,
+                          gboolean active);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 GST_CUDA_API
-void           gst_cuda_memory_init_once   (void);
+GType           gst_cuda_allocator_get_type (void);
 
 GST_CUDA_API
-gboolean       gst_is_cuda_memory          (GstMemory * mem);
+GstMemory *     gst_cuda_allocator_alloc    (GstCudaAllocator * allocator,
+                                             GstCudaContext * context,
+                                             GstCudaStream * stream,
+                                             const GstVideoInfo * info);
 
 GST_CUDA_API
-GType          gst_cuda_allocator_get_type (void);
+gboolean        gst_cuda_allocator_set_active (GstCudaAllocator * allocator,
+                                               gboolean active);
+
+/**
+ * GstCudaPoolAllocator:
+ *
+ * A #GstCudaAllocator subclass for cuda memory pool
+ *
+ * Since: 1.24
+ */
+struct _GstCudaPoolAllocator
+{
+  GstCudaAllocator parent;
+
+  GstCudaContext *context;
+  GstCudaStream *stream;
+
+  GstVideoInfo info;
+
+  /*< private >*/
+  GstCudaPoolAllocatorPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstCudaPoolAllocatorClass
+{
+  GstCudaAllocatorClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
 
 GST_CUDA_API
-GstMemory    * gst_cuda_allocator_alloc    (GstCudaAllocator * allocator,
-                                            GstCudaContext * context,
-                                            const GstVideoInfo * info);
+GType                  gst_cuda_pool_allocator_get_type (void);
+
+GST_CUDA_API
+GstCudaPoolAllocator * gst_cuda_pool_allocator_new (GstCudaContext * context,
+                                                    GstCudaStream * stream,
+                                                    const GstVideoInfo * info);
+
+GST_CUDA_API
+GstFlowReturn          gst_cuda_pool_allocator_acquire_memory (GstCudaPoolAllocator * allocator,
+                                                               GstMemory ** memory);
 
 G_END_DECLS
 

@@ -73,7 +73,7 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     return FALSE;
   }
 
-  mem = gst_cuda_allocator_alloc (NULL, self->context, &info);
+  mem = gst_cuda_allocator_alloc (NULL, self->context, NULL, &info);
   if (!mem) {
     GST_WARNING_OBJECT (self, "Failed to allocate memory");
     return FALSE;
@@ -102,7 +102,7 @@ gst_cuda_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstMemory *mem;
   GstCudaMemory *cmem;
 
-  mem = gst_cuda_allocator_alloc (NULL, self->context, &priv->info);
+  mem = gst_cuda_allocator_alloc (NULL, self->context, NULL, &priv->info);
   if (!mem) {
     GST_WARNING_OBJECT (pool, "Cannot create CUDA memory");
     return GST_FLOW_ERROR;
