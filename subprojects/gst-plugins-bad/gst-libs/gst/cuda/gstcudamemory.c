@@ -462,6 +462,7 @@ gst_cuda_memory_init_once (void)
     _gst_cuda_allocator =
         (GstAllocator *) g_object_new (GST_TYPE_CUDA_ALLOCATOR, NULL);
     gst_object_ref_sink (_gst_cuda_allocator);
+    gst_object_ref (_gst_cuda_allocator);
 
     gst_allocator_register (GST_CUDA_MEMORY_TYPE_NAME, _gst_cuda_allocator);
     g_once_init_leave (&_init, 1);
@@ -485,6 +486,11 @@ gst_is_cuda_memory (GstMemory * mem)
 
 /**
  * gst_cuda_allocator_alloc:
+ * @allocator: (transfer none) (allow-none): a #GstCudaAllocator
+ * @context: (transfer none): a #GstCudaContext
+ * @info: a #GstVideoInfo
+ *
+ * Returns: (transfer full) (nullable): a newly allocated #GstCudaMemory
  *
  * Since: 1.22
  */
@@ -494,9 +500,11 @@ gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
 {
   guint alloc_height;
 
-  g_return_val_if_fail (GST_IS_CUDA_ALLOCATOR (allocator), NULL);
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
   g_return_val_if_fail (info != NULL, NULL);
+
+  if (!allocator)
+    allocator = (GstCudaAllocator *) _gst_cuda_allocator;
 
   alloc_height = GST_VIDEO_INFO_HEIGHT (info);
 

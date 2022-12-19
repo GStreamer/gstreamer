@@ -30,7 +30,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_cuda_buffer_pool_debug);
 
 struct _GstCudaBufferPoolPrivate
 {
-  GstCudaAllocator *allocator;
   GstVideoInfo info;
 };
 
@@ -74,15 +73,7 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     return FALSE;
   }
 
-  gst_clear_object (&priv->allocator);
-  priv->allocator = (GstCudaAllocator *)
-      gst_allocator_find (GST_CUDA_MEMORY_TYPE_NAME);
-  if (!priv->allocator) {
-    GST_WARNING_OBJECT (self, "CudaAllocator is unavailable");
-    return FALSE;
-  }
-
-  mem = gst_cuda_allocator_alloc (priv->allocator, self->context, &info);
+  mem = gst_cuda_allocator_alloc (NULL, self->context, &info);
   if (!mem) {
     GST_WARNING_OBJECT (self, "Failed to allocate memory");
     return FALSE;
@@ -111,7 +102,7 @@ gst_cuda_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstMemory *mem;
   GstCudaMemory *cmem;
 
-  mem = gst_cuda_allocator_alloc (priv->allocator, self->context, &priv->info);
+  mem = gst_cuda_allocator_alloc (NULL, self->context, &priv->info);
   if (!mem) {
     GST_WARNING_OBJECT (pool, "Cannot create CUDA memory");
     return GST_FLOW_ERROR;
@@ -161,9 +152,7 @@ static void
 gst_cuda_buffer_pool_dispose (GObject * object)
 {
   GstCudaBufferPool *self = GST_CUDA_BUFFER_POOL_CAST (object);
-  GstCudaBufferPoolPrivate *priv = self->priv;
 
-  gst_clear_object (&priv->allocator);
   gst_clear_object (&self->context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);

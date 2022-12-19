@@ -24,6 +24,7 @@
 #include "gstcudaloader.h"
 #include "gstcudacontext.h"
 #include "gstcudautils.h"
+#include "gstcudamemory.h"
 
 #ifdef GST_CUDA_HAS_D3D
 #include <gst/d3d11/gstd3d11.h>
@@ -99,6 +100,8 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
           GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
           G_PARAM_STATIC_STRINGS));
 #endif
+
+  gst_cuda_memory_init_once ();
 }
 
 static void
