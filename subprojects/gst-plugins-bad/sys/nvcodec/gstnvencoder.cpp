@@ -246,7 +246,6 @@ gst_nv_encoder_reset (GstNvEncoder * self)
     priv->session = NULL;
   }
 
-  gst_clear_cuda_stream (&priv->stream);
   g_queue_clear (&priv->free_tasks);
   g_queue_clear (&priv->output_tasks);
 
@@ -438,6 +437,8 @@ gst_nv_encoder_open (GstVideoEncoder * encoder)
         GST_ERROR_OBJECT (self, "failed to create CUDA context");
         return FALSE;
       }
+      if (!priv->stream && gst_nvenc_have_set_io_cuda_streams ())
+        priv->stream = gst_cuda_stream_new (priv->context);
       break;
     default:
       g_assert_not_reached ();
@@ -453,6 +454,7 @@ gst_nv_encoder_close (GstVideoEncoder * encoder)
   GstNvEncoder *self = GST_NV_ENCODER (encoder);
   GstNvEncoderPrivate *priv = self->priv;
 
+  gst_clear_cuda_stream (&priv->stream);
   gst_clear_object (&priv->context);
 #ifdef GST_CUDA_HAS_D3D
   gst_clear_d3d11_fence (&priv->fence);
@@ -473,6 +475,7 @@ gst_nv_encoder_stop (GstVideoEncoder * encoder)
   gst_nv_encoder_drain (self, FALSE);
 
   if (priv->subclass_device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT) {
+    gst_clear_cuda_stream (&priv->stream);
     gst_clear_object (&priv->context);
 #ifdef GST_CUDA_HAS_D3D
     gst_clear_object (&priv->device);
@@ -559,6 +562,7 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   GstStructure *config;
   GstCapsFeatures *features;
   guint min_buffers;
+  gboolean use_cuda_pool = FALSE;
 
   gst_query_parse_allocation (query, &caps, NULL);
   if (!caps) {
@@ -600,6 +604,7 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
               GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
         GST_DEBUG_OBJECT (self, "upstream support CUDA memory");
         pool = gst_cuda_buffer_pool_new (priv->context);
+        use_cuda_pool = TRUE;
       }
       break;
     default:
@@ -616,6 +621,10 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 
   size = GST_VIDEO_INFO_SIZE (&info);
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers, 0);
+  if (use_cuda_pool && priv->stream) {
+    /* Set our stream on buffer pool config so that CUstream can be shared */
+    gst_buffer_pool_config_set_cuda_stream (config, priv->stream);
+  }
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_WARNING_OBJECT (self, "Failed to set pool config");
@@ -1004,6 +1013,15 @@ gst_nv_encoder_thread_func (GstNvEncoder * self)
     }
 
     GST_NV_ENCODER_LOCK (self);
+    /* Any pending GPU command associated with this memory must be finished
+     * at this point */
+    if (task->buffer && priv->stream) {
+      GstMemory *mem;
+
+      mem = gst_buffer_peek_memory (task->buffer, 0);
+      if (gst_is_cuda_memory (mem))
+        GST_MEMORY_FLAG_UNSET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+    }
     gst_nv_encoder_task_reset (self, task);
     priv->last_flow = ret;
     g_cond_broadcast (&priv->cond);
@@ -1154,6 +1172,9 @@ gst_nv_encoder_create_pool (GstNvEncoder * self, GstVideoCodecState * state)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, state->caps,
       GST_VIDEO_INFO_SIZE (&state->info), 0, 0);
+  if (priv->selected_device_mode == GST_NV_ENCODER_DEVICE_CUDA && priv->stream)
+    gst_buffer_pool_config_set_cuda_stream (config, priv->stream);
+
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (self, "Failed to set pool config");
     gst_object_unref (pool);
@@ -1216,8 +1237,25 @@ gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
     priv->cuda_device_id = data.cuda_device_id;
     priv->dxgi_adapter_luid = data.adapter_luid;
     gst_clear_object (&priv->context);
-    if (data.device_mode == GST_NV_ENCODER_DEVICE_CUDA)
+    if (data.device_mode == GST_NV_ENCODER_DEVICE_CUDA) {
+      GstMemory *mem = gst_buffer_peek_memory (in_buf, 0);
+
       priv->context = (GstCudaContext *) data.device;
+      gst_clear_cuda_stream (&priv->stream);
+
+      if (gst_nvenc_have_set_io_cuda_streams ()) {
+        if (gst_is_cuda_memory (mem)) {
+          /* Use upstream CUDA stream */
+          priv->stream =
+              gst_cuda_memory_get_stream (GST_CUDA_MEMORY_CAST (mem));
+          if (priv->stream)
+            gst_cuda_stream_ref (priv->stream);
+        }
+
+        if (!priv->stream)
+          priv->stream = gst_cuda_stream_new (priv->context);
+      }
+    }
 #ifdef GST_CUDA_HAS_D3D
     gst_clear_object (&priv->device);
     if (data.device_mode == GST_NV_ENCODER_DEVICE_D3D11)
@@ -1269,17 +1307,13 @@ gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
   }
 
   if (priv->selected_device_mode == GST_NV_ENCODER_DEVICE_CUDA &&
-      gst_nvenc_have_set_io_cuda_streams ()) {
-    priv->stream = gst_cuda_stream_new (priv->context);
-
-    if (priv->stream) {
-      CUstream stream = gst_cuda_stream_get_handle (priv->stream);
-      status = NvEncSetIOCudaStreams (priv->session,
-          (NV_ENC_CUSTREAM_PTR) & stream, (NV_ENC_CUSTREAM_PTR) & stream);
-      if (status != NV_ENC_SUCCESS) {
-        GST_WARNING_OBJECT (self, "NvEncSetIOCudaStreams failed, status: %"
-            GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
-      }
+      gst_nvenc_have_set_io_cuda_streams () && priv->stream) {
+    CUstream stream = gst_cuda_stream_get_handle (priv->stream);
+    status = NvEncSetIOCudaStreams (priv->session,
+        (NV_ENC_CUSTREAM_PTR) & stream, (NV_ENC_CUSTREAM_PTR) & stream);
+    if (status != NV_ENC_SUCCESS) {
+      GST_WARNING_OBJECT (self, "NvEncSetIOCudaStreams failed, status: %"
+          GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
     }
   }
 
@@ -1511,6 +1545,7 @@ gst_nv_encoder_prepare_task_input_cuda (GstNvEncoder * self,
   GstMemory *mem;
   GstCudaMemory *cmem;
   NVENCSTATUS status;
+  GstCudaStream *stream;
 
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_cuda_memory (mem)) {
@@ -1534,6 +1569,11 @@ gst_nv_encoder_prepare_task_input_cuda (GstNvEncoder * self,
   }
 
   cmem = (GstCudaMemory *) gst_buffer_peek_memory (task->buffer, 0);
+  stream = gst_cuda_memory_get_stream (cmem);
+  if (stream != priv->stream) {
+    /* different stream, needs sync */
+    gst_cuda_memory_sync (cmem);
+  }
 
   task->register_resource.version = gst_nvenc_get_register_resource_version ();
   task->register_resource.resourceType =
