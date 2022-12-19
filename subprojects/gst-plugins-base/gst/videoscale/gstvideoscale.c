@@ -519,7 +519,8 @@ gst_video_scale_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
   const gchar *const valid_tags[] = { GST_META_TAG_VIDEO_STR,
     GST_META_TAG_VIDEO_COLORSPACE_STR,
     GST_META_TAG_VIDEO_ORIENTATION_STR,
-    GST_META_TAG_VIDEO_SIZE_STR
+    GST_META_TAG_VIDEO_SIZE_STR,
+    NULL
   };
 
   tags = gst_meta_api_type_get_tags (info->api);
