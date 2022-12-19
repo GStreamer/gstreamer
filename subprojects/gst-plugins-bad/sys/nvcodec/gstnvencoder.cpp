@@ -58,6 +58,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_encoder_debug);
 struct _GstNvEncoderPrivate
 {
   GstCudaContext *context;
+  CUstream cuda_stream;
+
 #ifdef GST_CUDA_HAS_D3D
   GstD3D11Device *device;
   GstD3D11Fence *fence;
@@ -241,6 +243,13 @@ gst_nv_encoder_reset (GstNvEncoder * self)
   if (priv->session) {
     NvEncDestroyEncoder (priv->session);
     priv->session = NULL;
+  }
+
+  if (priv->context && priv->cuda_stream) {
+    gst_cuda_context_push (priv->context);
+    CuStreamDestroy (priv->cuda_stream);
+    gst_cuda_context_pop (nullptr);
+    priv->cuda_stream = nullptr;
   }
 
   g_queue_clear (&priv->free_tasks);
@@ -1257,6 +1266,21 @@ gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
         ("Failed to init encoder, status: %"
             GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status)));
     goto error;
+  }
+
+  if (priv->selected_device_mode == GST_NV_ENCODER_DEVICE_CUDA &&
+      gst_nvenc_have_set_io_cuda_streams ()) {
+    CUresult cuda_ret = CuStreamCreate (&priv->cuda_stream, CU_STREAM_DEFAULT);
+
+    if (gst_cuda_result (cuda_ret)) {
+      status = NvEncSetIOCudaStreams (priv->session,
+          (NV_ENC_CUSTREAM_PTR) & priv->cuda_stream,
+          (NV_ENC_CUSTREAM_PTR) & priv->cuda_stream);
+      if (status != NV_ENC_SUCCESS) {
+        GST_WARNING_OBJECT (self, "NvEncSetIOCudaStreams failed, status: %"
+            GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
+      }
+    }
   }
 
   task_pool_size = gst_nv_encoder_calculate_task_pool_size (self,
