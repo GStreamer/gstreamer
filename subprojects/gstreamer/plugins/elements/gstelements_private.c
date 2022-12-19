@@ -234,7 +234,7 @@ gst_writev_iovecs (GstObject * sink, gint fd, GstPoll * fdset,
         flow_ret = GST_FLOW_FLUSHING;
         goto out;
       }
-#ifndef HAVE_WIN32
+#ifndef G_OS_WIN32
       if (fdset != NULL) {
         do {
           GST_DEBUG_OBJECT (sink, "going into select, have %" G_GSSIZE_FORMAT
@@ -298,7 +298,7 @@ gst_writev_iovecs (GstObject * sink, gint fd, GstPoll * fdset,
       } else {
         goto write_error;
       }
-#ifdef HAVE_WIN32
+#ifdef G_OS_WIN32
       /* do short sleep on windows where we don't use gst_poll(),
        * to avoid excessive busy looping */
       if (fdset != NULL)
@@ -315,7 +315,7 @@ out:
   return flow_ret;
 
 /* ERRORS */
-#ifndef HAVE_WIN32
+#ifndef G_OS_WIN32
 select_error:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),

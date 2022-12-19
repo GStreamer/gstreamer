@@ -120,7 +120,7 @@ static void gst_fd_src_uri_handler_init (gpointer g_iface, gpointer iface_data);
   GST_DEBUG_CATEGORY_INIT (gst_fd_src_debug, "fdsrc", 0, "fdsrc element");
 #define gst_fd_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFdSrc, gst_fd_src, GST_TYPE_PUSH_SRC, _do_init);
-#if defined(HAVE_SYS_SOCKET_H) || defined(_MSC_VER)
+#if defined(HAVE_SYS_SOCKET_H) || defined(G_OS_WIN32)
 GST_ELEMENT_REGISTER_DEFINE (fdsrc, "fdsrc", GST_RANK_NONE, GST_TYPE_FD_SRC);
 #endif
 
@@ -396,7 +396,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   guint blocksize;
   GstMapInfo info;
 
-#ifndef HAVE_WIN32
+#ifndef G_OS_WIN32
   GstClockTime timeout;
   gboolean try_again;
   gint retval;
@@ -404,7 +404,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   src = GST_FD_SRC (psrc);
 
-#ifndef HAVE_WIN32
+#ifndef G_OS_WIN32
   if (src->timeout > 0) {
     timeout = src->timeout * GST_USECOND;
   } else {
@@ -476,7 +476,7 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   return GST_FLOW_OK;
 
   /* ERRORS */
-#ifndef HAVE_WIN32
+#ifndef G_OS_WIN32
 poll_error:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),

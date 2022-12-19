@@ -111,7 +111,7 @@ static void gst_fd_sink_uri_handler_init (gpointer g_iface,
   GST_DEBUG_CATEGORY_INIT (gst_fd_sink__debug, "fdsink", 0, "fdsink element");
 #define gst_fd_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstFdSink, gst_fd_sink, GST_TYPE_BASE_SINK, _do_init);
-#if defined(HAVE_SYS_SOCKET_H) || defined(_MSC_VER)
+#if defined(HAVE_SYS_SOCKET_H) || defined(G_OS_WIN32)
 GST_ELEMENT_REGISTER_DEFINE (fdsink, "fdsink", GST_RANK_NONE, GST_TYPE_FD_SINK);
 #endif
 
