@@ -397,6 +397,7 @@ gst_nv_decoder_frame_map (GstNvDecoderFrame * frame)
 
   /* TODO: check interlaced */
   params.progressive_frame = 1;
+  params.output_stream = self->cuda_stream;
 
   if (frame->mapped) {
     GST_WARNING_OBJECT (self, "Frame %p is mapped already", frame);

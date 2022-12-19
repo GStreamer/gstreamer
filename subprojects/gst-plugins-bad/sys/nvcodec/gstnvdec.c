@@ -1167,6 +1167,7 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
   proc_params.progressive_frame = dispinfo->progressive_frame;
   proc_params.top_field_first = dispinfo->top_field_first;
   proc_params.unpaired_field = dispinfo->repeat_first_field == -1;
+  proc_params.output_stream = nvdec->cuda_stream;
 
   data->ret = TRUE;
 
@@ -1309,6 +1310,7 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
   params.second_field = dispinfo->repeat_first_field + 1;
   params.top_field_first = dispinfo->top_field_first;
   params.unpaired_field = dispinfo->repeat_first_field < 0;
+  params.output_stream = nvdec->cuda_stream;
 
   if (!gst_cuda_result (CuvidMapVideoFrame (nvdec->decoder,
               dispinfo->picture_index, &dptr, &pitch, &params))) {
