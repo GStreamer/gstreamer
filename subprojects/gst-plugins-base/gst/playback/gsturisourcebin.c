@@ -109,6 +109,7 @@ struct _ChildSrcPadInfo
   /* An optional demuxer or parsebin */
   GstElement *demuxer;
   gboolean demuxer_handles_buffering;
+  gboolean demuxer_streams_aware;
 
   /* list of output slots */
   GList *outputs;
@@ -752,6 +753,13 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
   GST_DEBUG_OBJECT (element, "New pad %" GST_PTR_FORMAT, pad);
 
   GST_URI_SOURCE_BIN_LOCK (urisrc);
+  /* Double-check that the demuxer is streams-aware by checking if it posted a
+   * collection */
+  if (info->demuxer && !info->demuxer_streams_aware) {
+    GST_ELEMENT_ERROR (urisrc, CORE, MISSING_PLUGIN, (NULL),
+        ("Adaptive demuxer is not streams-aware, check your installation"));
+
+  }
   /* If the demuxer handles buffering and is streams-aware, we can expose it
      as-is directly. We still add an event probe to deal with EOS */
   slot = new_output_slot (info, pad);
@@ -1801,11 +1809,6 @@ make_demuxer (GstURISourceBin * urisrc, ChildSrcPadInfo * info, GstCaps * caps)
       continue;
 
     demuxer = gst_element_factory_create (factory, NULL);
-    if (!GST_OBJECT_FLAG_IS_SET (demuxer, GST_BIN_FLAG_STREAMS_AWARE)) {
-      GST_DEBUG_OBJECT (urisrc, "Ignoring non-streams-aware adaptive demuxer");
-      gst_object_unref (demuxer);
-      continue;
-    }
     break;
   }
   gst_plugin_feature_list_free (eligible);
@@ -2579,6 +2582,35 @@ remove_buffering_msgs (GstURISourceBin * urisrc, GstObject * src)
   g_mutex_unlock (&urisrc->buffering_post_lock);
 }
 
+static ChildSrcPadInfo *
+find_adaptive_demuxer_cspi_for_msg (GstURISourceBin * urisrc,
+    GstElement * child)
+{
+  ChildSrcPadInfo *res = NULL;
+  GList *tmp;
+  GstElement *parent = gst_object_ref (child);
+
+  do {
+    GstElement *next_parent;
+
+    for (tmp = urisrc->src_infos; tmp; tmp = tmp->next) {
+      ChildSrcPadInfo *info = tmp->data;
+      if (parent == info->demuxer) {
+        res = info;
+        break;
+      }
+    }
+    next_parent = (GstElement *) gst_element_get_parent (parent);
+    gst_object_unref (parent);
+    parent = next_parent;
+  } while (parent && parent != (GstElement *) urisrc);
+
+  if (parent)
+    gst_object_unref (parent);
+
+  return res;
+}
+
 static void
 handle_message (GstBin * bin, GstMessage * msg)
 {
@@ -2596,18 +2628,33 @@ handle_message (GstBin * bin, GstMessage * msg)
       break;
     }
     case GST_MESSAGE_STREAM_COLLECTION:
+    {
+      ChildSrcPadInfo *info;
       /* We only want to forward stream collection from the source element *OR*
        * from adaptive demuxers. We do not want to forward them from the
        * potential parsebins since there might be many and require aggregation
        * to be useful/coherent. */
-      if (GST_MESSAGE_SRC (msg) != (GstObject *) urisrc->source
+      GST_URI_SOURCE_BIN_LOCK (urisrc);
+      info =
+          find_adaptive_demuxer_cspi_for_msg (urisrc,
+          (GstElement *) GST_MESSAGE_SRC (msg));
+      if (info) {
+        GST_DEBUG_OBJECT (bin,
+            "Dropping stream-collection for adaptive demuxer");
+        info->demuxer_streams_aware = TRUE;
+        gst_message_unref (msg);
+        msg = NULL;
+      } else if (GST_MESSAGE_SRC (msg) != (GstObject *) urisrc->source
           && !urisrc->is_adaptive) {
+        GST_LOG_OBJECT (bin, "Collection %" GST_PTR_FORMAT, msg);
         GST_DEBUG_OBJECT (bin,
             "Dropping stream-collection from non-adaptive-demuxer %"
             GST_PTR_FORMAT, GST_MESSAGE_SRC (msg));
         gst_message_unref (msg);
         msg = NULL;
       }
+      GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+    }
       break;
     case GST_MESSAGE_BUFFERING:
       handle_buffering_message (urisrc, msg);
