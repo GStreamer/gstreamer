@@ -2069,11 +2069,14 @@ ensure_fallback_buffer (GstCudaConverter * self, gint width_in_bytes,
 static CUtexObject
 gst_cuda_converter_create_texture (GstCudaConverter * self,
     CUdeviceptr src, gint width, gint height, gint stride, CUfilter_mode mode,
-    CUarray_format format, guint channles, gint plane, CUstream stream)
+    CUarray_format format, guint channles, gint plane, CUstream stream,
+    gboolean * need_sync)
 {
   GstCudaConverterPrivate *priv = self->priv;
   CUresult ret;
   CUdeviceptr src_ptr;
+
+  *need_sync = FALSE;
 
   src_ptr = src;
 
@@ -2096,11 +2099,13 @@ gst_cuda_converter_create_texture (GstCudaConverter * self,
         * GST_VIDEO_INFO_COMP_PSTRIDE (&priv->in_info, plane),
         params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->in_info, plane);
 
-    ret = CuMemcpy2D (&params);
+    ret = CuMemcpy2DAsync (&params, stream);
     if (!gst_cuda_result (ret)) {
       GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
       return 0;
     }
+
+    *need_sync = TRUE;
 
     src_ptr = priv->fallback_buffer[plane].ptr;
     stride = priv->fallback_buffer[plane].stride;
@@ -2145,7 +2150,8 @@ gst_cuda_converter_unpack_rgb (GstCudaConverter * self,
 
 gboolean
 gst_cuda_converter_convert_frame (GstCudaConverter * converter,
-    GstVideoFrame * src_frame, GstVideoFrame * dst_frame, CUstream stream)
+    GstVideoFrame * src_frame, GstVideoFrame * dst_frame, CUstream stream,
+    gboolean * synchronized)
 {
   GstCudaConverterPrivate *priv;
   const TextureFormat *format;
@@ -2159,6 +2165,7 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   gpointer args[] = { &texture[0], &texture[1], &texture[2], &texture[3],
     &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1]
   };
+  gboolean need_sync = FALSE;
 
   g_return_val_if_fail (GST_IS_CUDA_CONVERTER (converter), FALSE);
   g_return_val_if_fail (src_frame != NULL, FALSE);
@@ -2196,7 +2203,7 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
           GST_VIDEO_FRAME_COMP_HEIGHT (src_frame, i),
           GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, i),
           priv->filter_mode[i], format->array_format[i], format->channels[i], i,
-          stream);
+          stream, &need_sync);
       if (!texture[i]) {
         GST_ERROR_OBJECT (converter, "Couldn't create texture %d", i);
         goto out;
@@ -2223,7 +2230,11 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
     goto out;
   }
 
-  CuStreamSynchronize (stream);
+  if (need_sync)
+    CuStreamSynchronize (stream);
+
+  if (synchronized)
+    *synchronized = need_sync;
 
   ret = TRUE;
 

@@ -1380,7 +1380,7 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
   }
 
   if (!gst_cuda_converter_convert_frame (self->converter, &in_frame, &out_frame,
-          gst_cuda_stream_get_handle (btrans->stream))) {
+          gst_cuda_stream_get_handle (btrans->stream), NULL)) {
     GST_ERROR_OBJECT (self, "Failed to convert frame");
     ret = GST_FLOW_ERROR;
   }

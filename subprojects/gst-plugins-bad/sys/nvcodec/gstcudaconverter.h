@@ -93,7 +93,8 @@ GstCudaConverter *  gst_cuda_converter_new (const GstVideoInfo * in_info,
 gboolean            gst_cuda_converter_convert_frame (GstCudaConverter * converter,
                                                       GstVideoFrame * src_frame,
                                                       GstVideoFrame * dst_frame,
-                                                      CUstream cuda_stream);
+                                                      CUstream cuda_stream,
+                                                      gboolean * synchronized);
 
 G_END_DECLS
 
