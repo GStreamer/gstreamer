@@ -501,7 +501,7 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
    * GstURIDecodeBin3:instant-uri:
    *
    * Changes to uri are applied immediately (instead of on EOS or when the
-   * element is set back to PLAYING.
+   * element is set back to PLAYING).
    *
    * Since: 1.22
    */
