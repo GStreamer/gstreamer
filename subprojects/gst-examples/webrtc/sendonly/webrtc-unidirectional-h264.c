@@ -324,8 +324,14 @@ destroy_receiver_entry (gpointer receiver_entry_ptr)
   g_assert (receiver_entry != NULL);
 
   if (receiver_entry->pipeline != NULL) {
+    GstBus *bus;
+
     gst_element_set_state (GST_ELEMENT (receiver_entry->pipeline),
         GST_STATE_NULL);
+
+    bus = gst_pipeline_get_bus (GST_PIPELINE (receiver_entry->pipeline));
+    gst_bus_remove_watch (bus);
+    gst_object_unref (bus);
 
     gst_object_unref (GST_OBJECT (receiver_entry->webrtcbin));
     gst_object_unref (GST_OBJECT (receiver_entry->pipeline));

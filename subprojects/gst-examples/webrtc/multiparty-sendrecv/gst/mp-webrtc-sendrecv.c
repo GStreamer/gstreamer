@@ -973,6 +973,7 @@ int
 main (int argc, char *argv[])
 {
   GOptionContext *context;
+  GstBus *bus;
   GError *error = NULL;
 
   context = g_option_context_new ("- gstreamer webrtc sendrecv demo");
@@ -1020,6 +1021,10 @@ main (int argc, char *argv[])
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   gst_print ("Pipeline stopped\n");
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_remove_watch (bus);
+  gst_object_unref (bus);
 
   gst_object_unref (pipeline);
   g_free (server_url);
