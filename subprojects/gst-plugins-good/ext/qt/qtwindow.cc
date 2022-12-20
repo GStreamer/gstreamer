@@ -330,8 +330,12 @@ QtGLWindow::getGeometry(int * width, int * height)
   if (width == NULL || height == NULL)
     return FALSE;
 
-  *width = this->source->width();
-  *height = this->source->height();
+  double scale = this->source->effectiveDevicePixelRatio();
+  *width = this->source->width() * scale;
+  *height = this->source->height() * scale;
+
+  GST_LOG("Window width %d height %d scale %f", *width, *height,
+      scale);
 
   return TRUE;
 }
