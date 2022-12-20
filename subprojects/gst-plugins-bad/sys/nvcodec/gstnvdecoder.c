@@ -667,13 +667,13 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
     copy_params.dstDevice = dst_ptr;
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, NULL))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, self->cuda_stream))) {
       GST_WARNING_OBJECT (self, "memcpy to mapped array failed");
       data->ret = FALSE;
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (NULL));
+  gst_cuda_result (CuStreamSynchronize (self->cuda_stream));
 
 unmap_video_frame:
   for (i = 0; i < num_resources; i++) {
