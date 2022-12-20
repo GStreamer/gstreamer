@@ -2625,6 +2625,9 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
     /* MP2 : Use MP3 for decoding */
     /* Theora: Use libtheora based theoradec */
     /* CDG: use cdgdec */
+    /* AV1: Use av1dec, dav1ddec or any of the hardware decoders.
+     *      Also ffmpeg's decoder only works with hardware support!
+     */
     if (!strcmp (in_plugin->name, "theora") ||
         !strcmp (in_plugin->name, "mpeg1video") ||
         strstr (in_plugin->name, "crystalhd") != NULL ||
@@ -2633,7 +2636,8 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "pgssub") ||
         !strcmp (in_plugin->name, "dvdsub") ||
         !strcmp (in_plugin->name, "dvbsub") ||
-        !strcmp (in_plugin->name, "cdgraphics")) {
+        !strcmp (in_plugin->name, "cdgraphics") ||
+        !strcmp (in_plugin->name, "av1")) {
       GST_LOG ("Ignoring decoder %s", in_plugin->name);
       continue;
     }
