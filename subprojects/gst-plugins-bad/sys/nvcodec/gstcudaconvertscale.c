@@ -55,6 +55,7 @@ struct _GstCudaBaseConvert
   GstCudaBaseTransform parent;
 
   GstCudaConverter *converter;
+  GstCudaStream *other_stream;
 
   gint borders_h;
   gint borders_w;
@@ -136,6 +137,7 @@ gst_cuda_base_convert_dispose (GObject * object)
 {
   GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (object);
 
+  gst_clear_cuda_stream (&self->other_stream);
   gst_clear_object (&self->converter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -1099,6 +1101,7 @@ static gboolean
 gst_cuda_base_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
+  GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (trans);
   GstCudaBaseTransform *ctrans = GST_CUDA_BASE_TRANSFORM (trans);
   GstVideoInfo info;
   GstBufferPool *pool;
@@ -1127,6 +1130,14 @@ gst_cuda_base_convert_propose_allocation (GstBaseTransform * trans,
     pool = gst_cuda_buffer_pool_new (ctrans->context);
 
     config = gst_buffer_pool_get_config (pool);
+    /* Forward downstream CUDA stream to upstream */
+    if (self->other_stream) {
+      GST_DEBUG_OBJECT (self, "Have downstream CUDA stream, forwarding");
+      gst_buffer_pool_config_set_cuda_stream (config, self->other_stream);
+    } else if (ctrans->stream) {
+      GST_DEBUG_OBJECT (self, "Set our stream to proposing buffer pool");
+      gst_buffer_pool_config_set_cuda_stream (config, ctrans->stream);
+    }
 
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -1159,6 +1170,7 @@ static gboolean
 gst_cuda_base_convert_decide_allocation (GstBaseTransform * trans,
     GstQuery * query)
 {
+  GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (trans);
   GstCudaBaseTransform *ctrans = GST_CUDA_BASE_TRANSFORM (trans);
   GstCaps *outcaps = NULL;
   GstBufferPool *pool = NULL;
@@ -1202,6 +1214,15 @@ gst_cuda_base_convert_decide_allocation (GstBaseTransform * trans,
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
+  gst_clear_cuda_stream (&self->other_stream);
+  self->other_stream = gst_buffer_pool_config_get_cuda_stream (config);
+  if (self->other_stream) {
+    GST_DEBUG_OBJECT (self, "Downstream provided CUDA stream");
+  } else if (ctrans->stream) {
+    GST_DEBUG_OBJECT (self, "Set our stream to decided buffer pool");
+    gst_buffer_pool_config_set_cuda_stream (config, ctrans->stream);
+  }
+
   gst_buffer_pool_set_config (pool, config);
 
   /* Get updated size by cuda buffer pool */
@@ -1343,6 +1364,10 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
   GstVideoFrame in_frame, out_frame;
   GstFlowReturn ret = GST_FLOW_OK;
   GstMemory *mem;
+  GstCudaMemory *in_cmem, *out_cmem;
+  GstCudaStream *in_stream, *out_stream;
+  GstCudaStream *selected_stream = NULL;
+  gboolean sync_done = FALSE;
 
   if (gst_buffer_n_memory (inbuf) != 1) {
     GST_ERROR_OBJECT (self, "Invalid input buffer");
@@ -1354,6 +1379,8 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
     GST_ERROR_OBJECT (self, "Input buffer is not CUDA");
     return GST_FLOW_ERROR;
   }
+  in_cmem = GST_CUDA_MEMORY_CAST (mem);
+  in_stream = gst_cuda_memory_get_stream (in_cmem);
 
   if (gst_buffer_n_memory (outbuf) != 1) {
     GST_ERROR_OBJECT (self, "Invalid output buffer");
@@ -1365,6 +1392,8 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
     GST_ERROR_OBJECT (self, "Input buffer is not CUDA");
     return GST_FLOW_ERROR;
   }
+  out_cmem = GST_CUDA_MEMORY_CAST (mem);
+  out_stream = gst_cuda_memory_get_stream (out_cmem);
 
   if (!gst_video_frame_map (&in_frame, &btrans->in_info, inbuf,
           GST_MAP_READ | GST_MAP_CUDA)) {
@@ -1379,10 +1408,42 @@ gst_cuda_base_convert_transform (GstBaseTransform * trans,
     return GST_FLOW_ERROR;
   }
 
+  /* If downstream does not aware of CUDA stream (i.e., using default stream) */
+  if (!out_stream) {
+    if (in_stream) {
+      GST_TRACE_OBJECT (self, "Use upstram CUDA stream");
+      selected_stream = in_stream;
+    } else if (btrans->stream) {
+      GST_TRACE_OBJECT (self, "Use our CUDA stream");
+      selected_stream = btrans->stream;
+    }
+  } else {
+    selected_stream = out_stream;
+    if (in_stream) {
+      if (in_stream == out_stream) {
+        GST_TRACE_OBJECT (self, "Same stream");
+      } else {
+        GST_TRACE_OBJECT (self, "Different CUDA stream");
+        gst_cuda_memory_sync (in_cmem);
+      }
+    }
+  }
+
   if (!gst_cuda_converter_convert_frame (self->converter, &in_frame, &out_frame,
-          gst_cuda_stream_get_handle (btrans->stream), NULL)) {
+          gst_cuda_stream_get_handle (selected_stream), &sync_done)) {
     GST_ERROR_OBJECT (self, "Failed to convert frame");
     ret = GST_FLOW_ERROR;
+  }
+
+  if (sync_done) {
+    GST_TRACE_OBJECT (self, "Sync done by converter");
+    GST_MEMORY_FLAG_UNSET (out_cmem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+  } else if (selected_stream != out_stream) {
+    GST_MEMORY_FLAG_UNSET (out_cmem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+    GST_TRACE_OBJECT (self, "Waiting for convert sync");
+    gst_cuda_context_push (btrans->context);
+    CuStreamSynchronize (gst_cuda_stream_get_handle (selected_stream));
+    gst_cuda_context_pop (NULL);
   }
 
   gst_video_frame_unmap (&out_frame);
