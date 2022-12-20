@@ -236,6 +236,9 @@ QtGLWindow::afterRendering()
     gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
   }
 
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+  gst_video_frame_unmap (&gl_frame);
+
   if (this->priv->context) {
     sync_meta = gst_buffer_get_gl_sync_meta (this->priv->buffer);
     if (!sync_meta) {
@@ -246,16 +249,19 @@ QtGLWindow::afterRendering()
 
   GST_DEBUG ("rendering finished");
 
-errors:
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
-  gst_video_frame_unmap (&gl_frame);
-
+done:
   gst_gl_context_activate (context, FALSE);
 
   this->priv->result = ret;
   this->priv->updated = TRUE;
   g_cond_signal (&this->priv->update_cond);
   g_mutex_unlock (&this->priv->lock);
+  return;
+
+errors:
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+  gst_video_frame_unmap (&gl_frame);
+  goto done;
 }
 
 void
