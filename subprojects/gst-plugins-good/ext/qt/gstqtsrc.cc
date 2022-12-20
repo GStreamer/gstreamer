@@ -54,6 +54,7 @@ static GstStateChangeReturn gst_qt_src_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean gst_qt_src_start (GstBaseSrc * basesrc);
 static gboolean gst_qt_src_stop (GstBaseSrc * basesrc);
+static gboolean gst_qt_src_unlock(GstBaseSrc *basesrc);
 
 static GstStaticPadTemplate gst_qt_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -123,6 +124,7 @@ gst_qt_src_class_init (GstQtSrcClass * klass)
   gstbasesrc_class->query = gst_qt_src_query;
   gstbasesrc_class->start = gst_qt_src_start;
   gstbasesrc_class->stop = gst_qt_src_stop;
+  gstbasesrc_class->unlock = gst_qt_src_unlock;
   gstbasesrc_class->decide_allocation = gst_qt_src_decide_allocation;
 
   gstpushsrc_class->fill = gst_qt_src_fill;
@@ -513,8 +515,6 @@ gst_qt_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      if (qt_src->window)
-        qt_window_stop (qt_src->window);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
@@ -551,6 +551,15 @@ gst_qt_src_start (GstBaseSrc * basesrc)
 
   GST_DEBUG_OBJECT (qt_src, "Got qt display %p and qt gl context %p",
       qt_src->display, qt_src->qt_context);
+  return TRUE;
+}
+
+static gboolean
+gst_qt_src_unlock(GstBaseSrc *basesrc)
+{
+  GstQtSrc *qt_src = GST_QT_SRC (basesrc);
+  if (qt_src->window)
+    qt_window_stop (qt_src->window);
   return TRUE;
 }
 
