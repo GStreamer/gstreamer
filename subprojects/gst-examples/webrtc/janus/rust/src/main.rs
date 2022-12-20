@@ -101,6 +101,9 @@ impl App {
             MessageView::Warning(warning) => {
                 println!("Warning: \"{}\"", warning.debug().unwrap());
             }
+            MessageView::Latency(_) => {
+                let _ = self.pipeline.recalculate_latency();
+            }
             _ => (),
         }
         Ok(())
