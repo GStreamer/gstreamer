@@ -273,6 +273,8 @@ on_incoming_stream (GstElement * webrtc, GstPad * pad,
 static gboolean
 bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
 {
+  GstPipeline *pipeline = user_data;
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
     {
@@ -296,6 +298,9 @@ bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
       g_free (debug);
       break;
     }
+    case GST_MESSAGE_LATENCY:
+      gst_bin_recalculate_latency (GST_BIN (pipeline));
+      break;
     default:
       break;
   }
@@ -365,7 +370,7 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       G_CALLBACK (on_ice_candidate_cb), (gpointer) receiver_entry);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (receiver_entry->pipeline));
-  gst_bus_add_watch (bus, bus_watch_cb, NULL);
+  gst_bus_add_watch (bus, bus_watch_cb, receiver_entry->pipeline);
   gst_object_unref (bus);
 
   if (gst_element_set_state (receiver_entry->pipeline, GST_STATE_PLAYING) ==
