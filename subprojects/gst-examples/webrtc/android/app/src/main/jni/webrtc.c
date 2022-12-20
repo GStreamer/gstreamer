@@ -107,7 +107,14 @@ cleanup_and_quit_loop (WebRTC * webrtc, const gchar * msg, enum AppState state)
   }
 
   if (webrtc->pipe) {
+    GstBus *bus;
+
     gst_element_set_state (webrtc->pipe, GST_STATE_NULL);
+
+    bus = gst_pipeline_get_bus (GST_PIPELINE (webrtc->pipe));
+    gst_bus_remove_watch (bus);
+    gst_object_unref (bus);
+
     gst_object_unref (webrtc->pipe);
     webrtc->pipe = NULL;
   }
@@ -328,6 +335,45 @@ add_fec_to_offer (GstElement * webrtc)
       "fec-percentage", 25, "do-nack", FALSE, NULL);
 }
 
+static gboolean
+bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+  WebRTC *webrtc = user_data;
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:
+    {
+      GError *error = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (message, &error, &debug);
+      cleanup_and_quit_loop (webrtc, "ERROR: error on bus", APP_STATE_ERROR);
+      g_warning ("Error on bus: %s (debug: %s)", error->message, debug);
+      g_error_free (error);
+      g_free (debug);
+      break;
+    }
+    case GST_MESSAGE_WARNING:
+    {
+      GError *error = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_warning (message, &error, &debug);
+      g_warning ("Warning on bus: %s (debug: %s)", error->message, debug);
+      g_error_free (error);
+      g_free (debug);
+      break;
+    }
+    case GST_MESSAGE_LATENCY:
+      gst_bin_recalculate_latency (GST_BIN (webrtc->pipe));
+      break;
+    default:
+      break;
+  }
+
+  return G_SOURCE_CONTINUE;
+}
+
 #define RTP_CAPS_OPUS "application/x-rtp,media=audio,encoding-name=OPUS,payload=100"
 #define RTP_CAPS_VP8 "application/x-rtp,media=video,encoding-name=VP8,payload=101"
 
@@ -351,6 +397,10 @@ start_pipeline (WebRTC * webrtc)
     g_error_free (error);
     goto err;
   }
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (webrtc->pipe));
+  gst_bus_add_watch (bus, bus_watch_cb, webrtc);
+  gst_object_unref (bus);
 
   webrtc->webrtcbin = gst_bin_get_by_name (GST_BIN (webrtc->pipe), "sendrecv");
   g_assert (webrtc->webrtcbin != NULL);
