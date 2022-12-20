@@ -1272,14 +1272,23 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
   gint i;
   GstMemory *mem;
   gboolean use_device_copy = FALSE;
+  gboolean need_sync = TRUE;
   GstMapFlags map_flags = GST_MAP_WRITE;
   CUstream stream = gst_cuda_stream_get_handle (nvdec->stream);
 
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_CUDA &&
       (mem = gst_buffer_peek_memory (output_buffer, 0)) &&
       gst_is_cuda_memory (mem)) {
+    GstCudaStream *mem_stream;
+
     map_flags |= GST_MAP_CUDA;
     use_device_copy = TRUE;
+
+    mem_stream = gst_cuda_memory_get_stream (GST_CUDA_MEMORY_CAST (mem));
+    if (mem_stream) {
+      stream = gst_cuda_stream_get_handle (mem_stream);
+      need_sync = FALSE;
+    }
   }
 
   if (!gst_video_frame_map (&video_frame, info, output_buffer, map_flags)) {
@@ -1333,7 +1342,8 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (stream));
+  if (need_sync)
+    gst_cuda_result (CuStreamSynchronize (stream));
 
   gst_video_frame_unmap (&video_frame);
 

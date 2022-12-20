@@ -372,7 +372,7 @@ gst_nv_decoder_new_frame (GstNvDecoder * decoder)
 
 /* must be called with gst_cuda_context_push */
 static gboolean
-gst_nv_decoder_frame_map (GstNvDecoderFrame * frame)
+gst_nv_decoder_frame_map (GstNvDecoderFrame * frame, GstCudaStream * stream)
 {
   GstNvDecoder *self;
   CUVIDPROCPARAMS params = { 0 };
@@ -385,7 +385,7 @@ gst_nv_decoder_frame_map (GstNvDecoderFrame * frame)
 
   /* TODO: check interlaced */
   params.progressive_frame = 1;
-  params.output_stream = gst_cuda_stream_get_handle (self->stream);
+  params.output_stream = gst_cuda_stream_get_handle (stream);
 
   if (frame->mapped) {
     GST_WARNING_OBJECT (self, "Frame %p is mapped already", frame);
@@ -749,14 +749,15 @@ done:
 
 static gboolean
 gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
-    GstNvDecoderFrame * frame, GstBuffer * buffer)
+    GstNvDecoderFrame * frame, GstBuffer * buffer, GstCudaStream * stream,
+    gboolean need_sync)
 {
   CUDA_MEMCPY2D copy_params = { 0, };
   GstMemory *mem;
   gint i;
   gboolean ret = FALSE;
   GstVideoFrame video_frame;
-  CUstream stream = gst_cuda_stream_get_handle (decoder->stream);
+  CUstream stream_handle = gst_cuda_stream_get_handle (stream);
 
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_cuda_memory (mem)) {
@@ -790,13 +791,15 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
         * GST_VIDEO_INFO_COMP_PSTRIDE (&decoder->info, 0);
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&decoder->info, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, stream))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, stream_handle))) {
       GST_ERROR_OBJECT (decoder, "failed to copy %dth plane", i);
       goto done;
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (stream));
+  /* Don't sync if we are using downstream memory's stream */
+  if (need_sync)
+    gst_cuda_result (CuStreamSynchronize (stream_handle));
 
   ret = TRUE;
 
@@ -816,6 +819,9 @@ gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
 {
   GstBuffer *outbuf = NULL;
   gboolean ret = FALSE;
+  GstCudaStream *stream;
+  GstCudaStream *mem_stream = NULL;
+  gboolean need_sync = TRUE;
 
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), GST_FLOW_ERROR);
@@ -835,12 +841,24 @@ gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
     return FALSE;
   }
 
+  stream = decoder->stream;
+  if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA) {
+    GstCudaMemory *cmem = (GstCudaMemory *) gst_buffer_peek_memory (outbuf, 0);
+
+    /* Use downstream CUDA stream if available */
+    mem_stream = gst_cuda_memory_get_stream (cmem);
+    if (mem_stream) {
+      need_sync = FALSE;
+      stream = mem_stream;
+    }
+  }
+
   if (!gst_cuda_context_push (decoder->context)) {
     GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
     goto error;
   }
 
-  if (!gst_nv_decoder_frame_map (frame)) {
+  if (!gst_nv_decoder_frame_map (frame, stream)) {
     GST_ERROR_OBJECT (decoder, "Couldn't map frame");
     gst_cuda_context_pop (NULL);
     goto error;
@@ -861,7 +879,8 @@ gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
       break;
 #endif
     case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
-      ret = gst_nv_decoder_copy_frame_to_cuda (decoder, frame, outbuf);
+      ret = gst_nv_decoder_copy_frame_to_cuda (decoder,
+          frame, outbuf, stream, need_sync);
       break;
     default:
       g_assert_not_reached ();
