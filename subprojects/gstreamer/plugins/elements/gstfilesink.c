@@ -81,6 +81,29 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+#define GST_TYPE_FILE_SINK_FILE_MODE (gst_file_sink_file_mode_get_type())
+static GType
+gst_file_sink_file_mode_get_type (void)
+{
+  static GType file_mode_type = 0;
+
+  if (g_once_init_enter (&file_mode_type)) {
+    static const GEnumValue file_mode[] = {
+      {GST_FILE_SINK_FILE_MODE_TRUNC, "Truncate file (mode wb)", "truncate"},
+      {GST_FILE_SINK_FILE_MODE_APPEND, "Append file (mode ab)", "output"},
+      {GST_FILE_SINK_FILE_MODE_OVERWRITE,
+          "Overwrite file without truncating (mode rb+)", "overwrite"},
+      {0, NULL, NULL}
+    };
+
+    GType new_file_mode_type =
+        g_enum_register_static ("GstFileSinkFileMode", file_mode);
+
+    g_once_init_leave (&file_mode_type, new_file_mode_type);
+  }
+  return file_mode_type;
+}
+
 #define GST_TYPE_FILE_SINK_BUFFER_MODE (gst_file_sink_buffer_mode_get_type ())
 static GType
 gst_file_sink_buffer_mode_get_type (void)
@@ -111,6 +134,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_file_sink_debug);
 #define DEFAULT_APPEND		FALSE
 #define DEFAULT_O_SYNC		FALSE
 #define DEFAULT_MAX_TRANSIENT_ERROR_TIMEOUT	0
+#define DEFAULT_FILE_MODE      GST_FILE_SINK_FILE_MODE_TRUNC
 
 enum
 {
@@ -121,6 +145,7 @@ enum
   PROP_APPEND,
   PROP_O_SYNC,
   PROP_MAX_TRANSIENT_ERROR_TIMEOUT,
+  PROP_FILE_MODE,
   PROP_LAST
 };
 
@@ -145,6 +170,8 @@ gst_fopen (const gchar * filename, const gchar * mode, gboolean o_sync)
     flags |= O_TRUNC;
   else if (strcmp (mode, "ab") == 0)
     flags |= O_APPEND;
+  else if (strcmp (mode, "rb+") == 0)
+    flags |= O_RDWR;
   else
     g_assert_not_reached ();
 
@@ -231,6 +258,18 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstFileSink:file-mode
+   *
+   * Ability to specify file mode.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_FILE_MODE,
+      g_param_spec_enum ("file-mode", "File Mode",
+          "Specify file mode used to open file", GST_TYPE_FILE_SINK_FILE_MODE,
+          DEFAULT_FILE_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstFileSink:append
    *
    * Append to an already existing file.
@@ -238,7 +277,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_APPEND,
       g_param_spec_boolean ("append", "Append",
           "Append to an already existing file", DEFAULT_APPEND,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_DEPRECATED));
 
   g_object_class_install_property (gobject_class, PROP_O_SYNC,
       g_param_spec_boolean ("o-sync", "Synchronous IO",
@@ -276,6 +315,7 @@ gst_file_sink_class_init (GstFileSinkClass * klass)
   }
 
   gst_type_mark_as_plugin_api (GST_TYPE_FILE_SINK_BUFFER_MODE, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_FILE_SINK_FILE_MODE, 0);
 }
 
 static void
@@ -287,6 +327,7 @@ gst_file_sink_init (GstFileSink * filesink)
   filesink->buffer_mode = DEFAULT_BUFFER_MODE;
   filesink->buffer_size = DEFAULT_BUFFER_SIZE;
   filesink->append = FALSE;
+  filesink->file_mode = DEFAULT_FILE_MODE;
 
   gst_base_sink_set_sync (GST_BASE_SINK (filesink), FALSE);
 }
@@ -358,6 +399,9 @@ gst_file_sink_set_property (GObject * object, guint prop_id,
     case PROP_APPEND:
       sink->append = g_value_get_boolean (value);
       break;
+    case PROP_FILE_MODE:
+      sink->file_mode = g_value_get_enum (value);
+      break;
     case PROP_O_SYNC:
       sink->o_sync = g_value_get_boolean (value);
       break;
@@ -389,6 +433,9 @@ gst_file_sink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_APPEND:
       g_value_set_boolean (value, sink->append);
       break;
+    case PROP_FILE_MODE:
+      g_value_set_enum (value, sink->file_mode);
+      break;
     case PROP_O_SYNC:
       g_value_set_boolean (value, sink->o_sync);
       break;
@@ -408,8 +455,10 @@ gst_file_sink_open_file (GstFileSink * sink)
   if (sink->filename == NULL || sink->filename[0] == '\0')
     goto no_filename;
 
-  if (sink->append)
+  if (sink->append || sink->file_mode == GST_FILE_SINK_FILE_MODE_APPEND)
     sink->file = gst_fopen (sink->filename, "ab", sink->o_sync);
+  else if (sink->file_mode == GST_FILE_SINK_FILE_MODE_OVERWRITE)
+    sink->file = gst_fopen (sink->filename, "rb+", sink->o_sync);
   else
     sink->file = gst_fopen (sink->filename, "wb", sink->o_sync);
   if (sink->file == NULL)

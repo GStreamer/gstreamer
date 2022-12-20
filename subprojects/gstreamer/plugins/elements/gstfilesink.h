@@ -30,7 +30,6 @@
 #include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_FILE_SINK \
   (gst_file_sink_get_type())
 #define GST_FILE_SINK(obj) \
@@ -63,6 +62,22 @@ typedef enum {
 } GstFileSinkBufferMode;
 
 /**
+ * GstFileSinkFileMode:
+ * @FILESINK_FILE_MODE_TRUNC: Default file mode (wb)
+ * @FILESINK_FILE_MODE_APPEND: Append file mode (ab)
+ * @FILESINK_FILE_MODE_OVERWRITE: Overwrite file mode (rb+)
+ *
+ * File write mode.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+  GST_FILE_SINK_FILE_MODE_TRUNC     = 1,
+  GST_FILE_SINK_FILE_MODE_APPEND    = 2,
+  GST_FILE_SINK_FILE_MODE_OVERWRITE = 3,
+} GstFileSinkFileMode;
+
+/**
  * GstFileSink:
  *
  * Opaque #GstFileSink structure.
@@ -83,6 +98,8 @@ struct _GstFileSink {
 
   /* For default buffer mode */
   GstBufferList *buffer_list;
+
+  gint  file_mode;
 
   /* For full buffer mode */
   guint8 *buffer;
