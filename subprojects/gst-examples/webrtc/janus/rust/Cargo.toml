@@ -11,7 +11,7 @@ clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 url = "2"
 rand = "0.8"
-async-tungstenite = { version = "0.18", features = ["gio-runtime"] }
+async-tungstenite = { version = "0.19", features = ["gio-runtime"] }
 gst = { package = "gstreamer", version = "0.19" }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.19" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.19" }
@@ -22,4 +22,4 @@ http = "0.2"
 glib = "0.16"
 gio = "0.16"
 log = "0.4.8"
-env_logger = "0.9"
+env_logger = "0.10"
