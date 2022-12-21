@@ -1391,6 +1391,9 @@ src_pad_removed_cb (GstElement * element, GstPad * pad,
     gst_element_release_request_pad (uridecodebin->decodebin,
         spad->db3_sink_pad);
 
+  if (spad->stream)
+    gst_object_unref (spad->stream);
+
   handler->sourcepads = g_list_remove (handler->sourcepads, spad);
   g_slice_free (GstSourcePad, spad);
 }
