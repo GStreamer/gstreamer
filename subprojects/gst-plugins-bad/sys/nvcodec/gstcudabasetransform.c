@@ -340,8 +340,19 @@ gst_cuda_base_transform_before_transform (GstBaseTransform * trans,
   GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"
       GST_PTR_FORMAT, self->context, cmem->context);
 
+  if (self->cuda_stream) {
+    gst_cuda_context_push (self->context);
+    CuStreamDestroy (self->cuda_stream);
+    gst_cuda_context_pop (NULL);
+    self->cuda_stream = NULL;
+  }
+
   gst_object_unref (self->context);
   self->context = gst_object_ref (cmem->context);
+
+  gst_cuda_context_push (self->context);
+  CuStreamCreate (&self->cuda_stream, CU_STREAM_DEFAULT);
+  gst_cuda_context_pop (NULL);
 
   /* subclass will update internal object.
    * Note that gst_base_transform_reconfigure() might not trigger this
