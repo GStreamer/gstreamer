@@ -22,6 +22,7 @@
 #include <gst/cuda/cuda-prelude.h>
 #include <gst/cuda/cuda-gst.h>
 #include <gst/cuda/gstcudacontext.h>
+#include <gst/cuda/gstcudastream.h>
 
 #include <gst/video/video.h>
 
@@ -47,7 +48,7 @@ gboolean      gst_cuda_buffer_copy (GstBuffer * dst,
                                     GstCudaBufferCopyType src_type,
                                     const GstVideoInfo * src_info,
                                     GstCudaContext * context,
-                                    CUstream stream);
+                                    GstCudaStream * stream);
 
 G_END_DECLS
 

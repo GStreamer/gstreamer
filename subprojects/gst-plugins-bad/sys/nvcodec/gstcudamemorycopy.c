@@ -485,6 +485,7 @@ gst_cuda_memory_copy_propose_allocation (GstBaseTransform * trans,
   GstBufferPool *pool = NULL;
   GstCaps *caps;
   guint size;
+  gboolean is_cuda = FALSE;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
           decide_query, query))
@@ -574,6 +575,8 @@ gst_cuda_memory_copy_propose_allocation (GstBaseTransform * trans,
 
     size = GST_VIDEO_INFO_SIZE (&info);
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    if (is_cuda && ctrans->stream)
+      gst_buffer_pool_config_set_cuda_stream (config, ctrans->stream);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       GST_ERROR_OBJECT (ctrans, "failed to set config");
@@ -951,7 +954,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_TRACE_OBJECT (self, "Both in/out buffers are not CUDA");
     if (!gst_cuda_buffer_copy (outbuf, GST_CUDA_BUFFER_COPY_SYSTEM, out_info,
             inbuf, GST_CUDA_BUFFER_COPY_SYSTEM, in_info, ctrans->context,
-            gst_cuda_stream_get_handle (ctrans->stream))) {
+            ctrans->stream)) {
       return GST_FLOW_ERROR;
     }
 
@@ -959,7 +962,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 
   ret = gst_cuda_buffer_copy (outbuf, out_type, out_info, inbuf, in_type,
-      in_info, ctrans->context, gst_cuda_stream_get_handle (ctrans->stream));
+      in_info, ctrans->context, ctrans->stream);
 
   /* system memory <-> CUDA copy fallback if possible */
   if (!ret) {
@@ -1002,8 +1005,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         gst_cuda_buffer_copy_type_to_string (fallback_out_type));
 
     ret = gst_cuda_buffer_copy (outbuf, fallback_out_type, out_info, inbuf,
-        fallback_in_type, in_info, ctrans->context,
-        gst_cuda_stream_get_handle (ctrans->stream));
+        fallback_in_type, in_info, ctrans->context, ctrans->stream);
   }
 
   if (ret)
@@ -1018,7 +1020,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   /* final fallback using system memory */
   ret = gst_cuda_buffer_copy (outbuf, GST_CUDA_BUFFER_COPY_SYSTEM, out_info,
       inbuf, GST_CUDA_BUFFER_COPY_SYSTEM, in_info, ctrans->context,
-      gst_cuda_stream_get_handle (ctrans->stream));
+      ctrans->stream);
 
   if (ret)
     return GST_FLOW_OK;

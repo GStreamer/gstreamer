@@ -1490,14 +1490,17 @@ gboolean
 gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
     const GstVideoInfo * dst_info, GstBuffer * src,
     GstCudaBufferCopyType src_type, const GstVideoInfo * src_info,
-    GstCudaContext * context, CUstream stream)
+    GstCudaContext * context, GstCudaStream * stream)
 {
   gboolean use_copy_2d = FALSE;
   GstMemory *dst_mem, *src_mem;
 #ifdef GST_CUDA_HAS_D3D
   D3D11_TEXTURE2D_DESC desc;
 #endif
-  GstCudaContext *cuda_context;
+  GstCudaContext *cuda_context = context;
+  GstCudaMemory *cmem = NULL;
+  GstCudaStream *mem_stream = NULL;
+  gboolean ret;
 
   g_return_val_if_fail (GST_IS_BUFFER (dst), FALSE);
   g_return_val_if_fail (dst_info != NULL, FALSE);
@@ -1538,31 +1541,46 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   if (src_type == GST_CUDA_BUFFER_COPY_GL && gst_is_gl_memory_pbo (src_mem)) {
     GstGLMemory *gl_mem = (GstGLMemory *) src_mem;
     GstGLContext *gl_context = gl_mem->mem.context;
-    GstCudaContext *cuda_context = context;
 
-    if (dst_type == GST_CUDA_BUFFER_COPY_CUDA && gst_is_cuda_memory (dst_mem))
-      cuda_context = GST_CUDA_MEMORY_CAST (dst_mem)->context;
+    if (dst_type == GST_CUDA_BUFFER_COPY_CUDA && gst_is_cuda_memory (dst_mem)) {
+      cmem = GST_CUDA_MEMORY_CAST (dst_mem);
+      cuda_context = cmem->context;
+      mem_stream = gst_cuda_memory_get_stream (cmem);
+      if (mem_stream)
+        stream = mem_stream;
+    }
 
     GST_TRACE_OBJECT (context, "GL -> %s",
         gst_cuda_buffer_copy_type_to_string (dst_type));
 
-    return cuda_copy_gl_interop (dst, dst_info, src, src_info, gl_context,
-        cuda_context, stream, TRUE, dst_type);
+    ret = cuda_copy_gl_interop (dst, dst_info, src, src_info, gl_context,
+        cuda_context, gst_cuda_stream_get_handle (stream), TRUE, dst_type);
+
+    if (cmem)
+      GST_MEMORY_FLAG_UNSET (cmem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+
+    return ret;
   }
 
   if (dst_type == GST_CUDA_BUFFER_COPY_GL && gst_is_gl_memory_pbo (dst_mem)) {
     GstGLMemory *gl_mem = (GstGLMemory *) dst_mem;
     GstGLContext *gl_context = gl_mem->mem.context;
-    GstCudaContext *cuda_context = context;
 
-    if (src_type == GST_CUDA_BUFFER_COPY_CUDA && gst_is_cuda_memory (src_mem))
-      cuda_context = GST_CUDA_MEMORY_CAST (src_mem)->context;
+    if (src_type == GST_CUDA_BUFFER_COPY_CUDA && gst_is_cuda_memory (src_mem)) {
+      cmem = GST_CUDA_MEMORY_CAST (src_mem);
+      cuda_context = cmem->context;
+
+      /* Use memory's stream object if available */
+      mem_stream = gst_cuda_memory_get_stream (cmem);
+      if (mem_stream)
+        stream = mem_stream;
+    }
 
     GST_TRACE_OBJECT (context, "%s -> GL",
         gst_cuda_buffer_copy_type_to_string (src_type));
 
     return cuda_copy_gl_interop (dst, dst_info, src, src_info, gl_context,
-        cuda_context, stream, FALSE, src_type);
+        cuda_context, gst_cuda_stream_get_handle (stream), FALSE, src_type);
   }
 #endif
 
@@ -1572,15 +1590,23 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
       && desc.Usage == D3D11_USAGE_DEFAULT && gst_is_cuda_memory (dst_mem)) {
     GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (src_mem);
     GstD3D11Device *device = dmem->device;
-    GstCudaContext *cuda_context = GST_CUDA_MEMORY_CAST (dst_mem)->context;
-    gboolean ret;
+
+    cmem = GST_CUDA_MEMORY_CAST (dst_mem);
+    cuda_context = cmem->context;
+
+    /* Use memory's stream object if available */
+    mem_stream = gst_cuda_memory_get_stream (cmem);
+    if (mem_stream)
+      stream = mem_stream;
 
     GST_TRACE_OBJECT (context, "D3D11 -> CUDA");
 
     gst_d3d11_device_lock (device);
     ret = cuda_copy_d3d11_interop (dst, dst_info, src, src_info, device,
-        cuda_context, stream, TRUE);
+        cuda_context, gst_cuda_stream_get_handle (stream), TRUE);
     gst_d3d11_device_unlock (device);
+
+    GST_MEMORY_FLAG_UNSET (cmem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
 
     return ret;
   }
@@ -1590,14 +1616,20 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
       && desc.Usage == D3D11_USAGE_DEFAULT && gst_is_cuda_memory (src_mem)) {
     GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (dst_mem);
     GstD3D11Device *device = dmem->device;
-    GstCudaContext *cuda_context = GST_CUDA_MEMORY_CAST (src_mem)->context;
-    gboolean ret;
+
+    cmem = GST_CUDA_MEMORY_CAST (src_mem);
+    cuda_context = cmem->context;
+
+    /* Use memory's stream object if available */
+    mem_stream = gst_cuda_memory_get_stream (cmem);
+    if (mem_stream)
+      stream = mem_stream;
 
     GST_TRACE_OBJECT (context, "CUDA -> D3D11");
 
     gst_d3d11_device_lock (device);
     ret = cuda_copy_d3d11_interop (dst, dst_info, src, src_info, device,
-        cuda_context, stream, FALSE);
+        cuda_context, gst_cuda_stream_get_handle (stream), FALSE);
     gst_d3d11_device_unlock (device);
 
     return ret;
@@ -1605,17 +1637,31 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
 #endif
 
   if (gst_is_cuda_memory (dst_mem)) {
-    cuda_context = GST_CUDA_MEMORY_CAST (dst_mem)->context;
+    cmem = GST_CUDA_MEMORY_CAST (dst_mem);
   } else if (gst_is_cuda_memory (src_mem)) {
-    cuda_context = GST_CUDA_MEMORY_CAST (src_mem)->context;
+    cmem = GST_CUDA_MEMORY_CAST (src_mem);
   } else {
-    cuda_context = context;
+    cmem = NULL;
+  }
+
+  if (cmem) {
+    context = cmem->context;
+    mem_stream = gst_cuda_memory_get_stream (cmem);
+    if (mem_stream)
+      stream = mem_stream;
   }
 
   GST_TRACE_OBJECT (context, "%s -> %s",
       gst_cuda_buffer_copy_type_to_string (src_type),
       gst_cuda_buffer_copy_type_to_string (dst_type));
 
-  return gst_cuda_buffer_copy_internal (dst, dst_type, dst_info,
-      src, src_type, src_info, cuda_context, stream);
+  ret = gst_cuda_buffer_copy_internal (dst, dst_type, dst_info,
+      src, src_type, src_info, cuda_context,
+      gst_cuda_stream_get_handle (stream));
+
+  /* Already synchronized */
+  if (gst_is_cuda_memory (src_mem))
+    GST_MEMORY_FLAG_UNSET (src_mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+
+  return ret;
 }
