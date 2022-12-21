@@ -711,6 +711,7 @@ gst_decodebin3_dispose (GObject * object)
 
   gst_clear_object (&dbin->collection);
 
+  INPUT_LOCK (dbin);
   if (dbin->main_input) {
     free_input (dbin, dbin->main_input);
     dbin->main_input = NULL;
@@ -724,6 +725,7 @@ gst_decodebin3_dispose (GObject * object)
     free_input (dbin, input);
     dbin->other_inputs = g_list_delete_link (dbin->other_inputs, walk);
   }
+  INPUT_UNLOCK (dbin);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1170,7 +1172,10 @@ free_input (GstDecodebin3 * dbin, DecodebinInput * input)
 
   GST_LOG_OBJECT (dbin, "Freeing input %p", input);
 
+  INPUT_UNLOCK (dbin);
   gst_element_remove_pad (GST_ELEMENT (dbin), input->ghost_sink);
+  INPUT_LOCK (dbin);
+
   g_free (input);
 }
 
