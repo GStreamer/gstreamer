@@ -32,17 +32,18 @@
 #include "gstmsdkallocator.h"
 
 static gboolean
-map_data (GstBuffer * buffer, mfxFrameSurface1 * mfx_surface, GstVideoInfo info)
+map_data (GstBuffer * buffer, mfxFrameSurface1 * mfx_surface,
+    const GstVideoInfo * info)
 {
   guint stride;
   GstVideoFrame frame;
 
-  if (!gst_video_frame_map (&frame, &info, buffer, GST_MAP_READWRITE))
+  if (!gst_video_frame_map (&frame, info, buffer, GST_MAP_READWRITE))
     return FALSE;
 
   stride = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
 
-  switch (GST_VIDEO_INFO_FORMAT (&info)) {
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P012_LE:
@@ -119,7 +120,8 @@ map_data (GstBuffer * buffer, mfxFrameSurface1 * mfx_surface, GstVideoInfo info)
 }
 
 GstMsdkSurface *
-gst_msdk_import_sys_mem_to_msdk_surface (GstBuffer * buf, GstVideoInfo info)
+gst_msdk_import_sys_mem_to_msdk_surface (GstBuffer * buf,
+    const GstVideoInfo * info)
 {
   GstMsdkSurface *msdk_surface = NULL;
   GstMapInfo map_info;
@@ -141,7 +143,7 @@ gst_msdk_import_sys_mem_to_msdk_surface (GstBuffer * buf, GstVideoInfo info)
 
   gst_buffer_unmap (buf, &map_info);
 
-  gst_msdk_set_mfx_frame_info_from_video_info (&frame_info, &info);
+  gst_msdk_set_mfx_frame_info_from_video_info (&frame_info, info);
   mfx_surface->Info = frame_info;
 
   msdk_surface = g_slice_new0 (GstMsdkSurface);

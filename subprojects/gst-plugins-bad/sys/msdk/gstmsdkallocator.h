@@ -64,7 +64,7 @@ struct _GstMsdkSurface
 };
 
 GstMsdkSurface *
-gst_msdk_import_sys_mem_to_msdk_surface (GstBuffer * buf, GstVideoInfo info);
+gst_msdk_import_sys_mem_to_msdk_surface (GstBuffer * buf, const GstVideoInfo * info);
 
 mfxStatus gst_msdk_frame_alloc(mfxHDL pthis, mfxFrameAllocRequest *req, mfxFrameAllocResponse *resp);
 mfxStatus gst_msdk_frame_free(mfxHDL pthis, mfxFrameAllocResponse *resp);

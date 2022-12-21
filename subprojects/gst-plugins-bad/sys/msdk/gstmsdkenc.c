@@ -1662,7 +1662,7 @@ gst_msdkenc_get_surface_from_pool_old (GstMsdkEnc * thiz, GstBufferPool * pool,
       &thiz->aligned_info, 0);
 #else
   msdk_surface =
-      gst_msdk_import_sys_mem_to_msdk_surface (new_buffer, thiz->aligned_info);
+      gst_msdk_import_sys_mem_to_msdk_surface (new_buffer, &thiz->aligned_info);
 #endif
 
   if (msdk_surface)
@@ -1745,7 +1745,7 @@ gst_msdkenc_get_surface_from_pool (GstMsdkEnc * thiz,
   } else {
     msdk_surface =
         gst_msdk_import_sys_mem_to_msdk_surface (upload_buf,
-        thiz->aligned_info);
+        &thiz->aligned_info);
   }
 
   gst_buffer_replace (&frame->input_buffer, upload_buf);
