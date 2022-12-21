@@ -358,9 +358,6 @@ gst_va_filter_open (GstVaFilter * self)
   if (!gst_va_filter_ensure_config_attributes (self, &attrib.value))
     return FALSE;
 
-  if (!gst_va_filter_ensure_pipeline_caps (self))
-    return FALSE;
-
   self->image_formats = gst_va_display_get_image_formats (self->display);
   if (!self->image_formats)
     return FALSE;
@@ -381,6 +378,11 @@ gst_va_filter_open (GstVaFilter * self)
       &self->context);
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR_OBJECT (self, "vaCreateContext: %s", vaErrorStr (status));
+    goto bail;
+  }
+
+  if (!gst_va_filter_ensure_pipeline_caps (self)) {
+    vaDestroyContext (dpy, self->context);
     goto bail;
   }
 
