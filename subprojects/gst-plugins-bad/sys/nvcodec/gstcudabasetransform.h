@@ -42,7 +42,7 @@ struct _GstCudaBaseTransform
   GstBaseTransform parent;
 
   GstCudaContext *context;
-  CUstream cuda_stream;
+  GstCudaStream *stream;
 
   GstVideoInfo in_info;
   GstVideoInfo out_info;

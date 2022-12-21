@@ -469,7 +469,6 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
   GstNvBaseEnc *nvenc = GST_NV_BASE_ENC (enc);
   GstNvBaseEncClass *klass = GST_NV_BASE_ENC_GET_CLASS (enc);
   GValue *formats = NULL;
-  CUresult cuda_ret;
 
   if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (enc),
           klass->cuda_device_id, &nvenc->cuda_ctx)) {
@@ -477,14 +476,10 @@ gst_nv_base_enc_open (GstVideoEncoder * enc)
     return FALSE;
   }
 
-  if (gst_cuda_context_push (nvenc->cuda_ctx)) {
-    cuda_ret = CuStreamCreate (&nvenc->cuda_stream, CU_STREAM_DEFAULT);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_WARNING_OBJECT (nvenc,
-          "Could not create cuda stream, will use default stream");
-      nvenc->cuda_stream = NULL;
-    }
-    gst_cuda_context_pop (NULL);
+  nvenc->stream = gst_cuda_stream_new (nvenc->cuda_ctx);
+  if (!nvenc->stream) {
+    GST_WARNING_OBJECT (nvenc,
+        "Could not create cuda stream, will use default stream");
   }
 
   if (!gst_nv_base_enc_open_encode_session (nvenc)) {
@@ -998,15 +993,8 @@ gst_nv_base_enc_close (GstVideoEncoder * enc)
     nvenc->encoder = NULL;
   }
 
-  if (nvenc->cuda_ctx && nvenc->cuda_stream) {
-    if (gst_cuda_context_push (nvenc->cuda_ctx)) {
-      gst_cuda_result (CuStreamDestroy (nvenc->cuda_stream));
-      gst_cuda_context_pop (NULL);
-    }
-  }
-
+  gst_clear_cuda_stream (&nvenc->stream);
   gst_clear_object (&nvenc->cuda_ctx);
-  nvenc->cuda_stream = NULL;
 
   GST_OBJECT_LOCK (nvenc);
   if (nvenc->input_formats)
@@ -2131,6 +2119,7 @@ _map_gl_input_buffer (GstGLContext * context, GstNvEncGLMapData * data)
   CUDA_MEMCPY2D param;
   GstCudaGraphicsResource **resources;
   guint num_resources;
+  CUstream stream = gst_cuda_stream_get_handle (nvenc->stream);
 
   data->ret = FALSE;
 
@@ -2172,7 +2161,7 @@ _map_gl_input_buffer (GstGLContext * context, GstNvEncGLMapData * data)
         gl_mem->mem.tex_id);
 
     cuda_resource =
-        gst_cuda_graphics_resource_map (resources[i], nvenc->cuda_stream,
+        gst_cuda_graphics_resource_map (resources[i], stream,
         CU_GRAPHICS_MAP_RESOURCE_FLAGS_READ_ONLY);
 
     if (!cuda_resource) {
@@ -2210,18 +2199,18 @@ _map_gl_input_buffer (GstGLContext * context, GstNvEncGLMapData * data)
     param.WidthInBytes = _get_plane_width (data->info, i);
     param.Height = _get_plane_height (data->info, i);
 
-    cuda_ret = CuMemcpy2DAsync (&param, nvenc->cuda_stream);
+    cuda_ret = CuMemcpy2DAsync (&param, stream);
     if (!gst_cuda_result (cuda_ret)) {
       GST_ERROR_OBJECT (data->nvenc, "failed to copy GL texture %u into cuda "
           "ret :%d", gl_mem->mem.tex_id, cuda_ret);
       g_assert_not_reached ();
     }
 
-    gst_cuda_graphics_resource_unmap (resources[i], nvenc->cuda_stream);
+    gst_cuda_graphics_resource_unmap (resources[i], stream);
 
     data_pointer += dest_stride * _get_plane_height (&nvenc->input_info, i);
   }
-  gst_cuda_result (CuStreamSynchronize (nvenc->cuda_stream));
+  gst_cuda_result (CuStreamSynchronize (stream));
   gst_cuda_context_pop (NULL);
 
   data->ret = TRUE;
@@ -2236,6 +2225,7 @@ gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
   CUdeviceptr dst = resource->cuda_pointer;
   GstVideoInfo *info = &frame->info;
   CUresult cuda_ret;
+  CUstream stream = gst_cuda_stream_get_handle (nvenc->stream);
 
   if (!gst_cuda_context_push (nvenc->cuda_ctx)) {
     GST_ERROR_OBJECT (nvenc, "cannot push context");
@@ -2262,7 +2252,7 @@ gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
     param.WidthInBytes = _get_plane_width (info, i);
     param.Height = _get_plane_height (info, i);
 
-    cuda_ret = CuMemcpy2DAsync (&param, nvenc->cuda_stream);
+    cuda_ret = CuMemcpy2DAsync (&param, stream);
     if (!gst_cuda_result (cuda_ret)) {
       GST_ERROR_OBJECT (nvenc, "cannot copy %dth plane, ret %d", i, cuda_ret);
       gst_cuda_context_pop (NULL);
@@ -2273,7 +2263,7 @@ gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
     dst += dest_stride * _get_plane_height (&nvenc->input_info, i);
   }
 
-  gst_cuda_result (CuStreamSynchronize (nvenc->cuda_stream));
+  gst_cuda_result (CuStreamSynchronize (stream));
   gst_cuda_context_pop (NULL);
 
   return TRUE;

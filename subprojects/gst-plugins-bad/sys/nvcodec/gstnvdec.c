@@ -896,7 +896,6 @@ gst_nvdec_open (GstVideoDecoder * decoder)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
   GstNvDecClass *klass = GST_NVDEC_GET_CLASS (nvdec);
-  CUresult cuda_ret;
 
   GST_DEBUG_OBJECT (nvdec, "creating CUDA context");
 
@@ -906,14 +905,10 @@ gst_nvdec_open (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  if (gst_cuda_context_push (nvdec->cuda_ctx)) {
-    cuda_ret = CuStreamCreate (&nvdec->cuda_stream, CU_STREAM_DEFAULT);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_WARNING_OBJECT (nvdec,
-          "Could not create CUDA stream, will use default stream");
-      nvdec->cuda_stream = NULL;
-    }
-    gst_cuda_context_pop (NULL);
+  nvdec->stream = gst_cuda_stream_new (nvdec->cuda_ctx);
+  if (!nvdec->stream) {
+    GST_WARNING_OBJECT (nvdec,
+        "Could not create CUDA stream, will use default stream");
   }
 #if HAVE_NVCODEC_GST_GL
   gst_gl_ensure_element_data (GST_ELEMENT (nvdec),
@@ -1039,15 +1034,8 @@ gst_nvdec_close (GstVideoDecoder * decoder)
 {
   GstNvDec *nvdec = GST_NVDEC (decoder);
 
-  if (nvdec->cuda_ctx && nvdec->cuda_stream) {
-    if (gst_cuda_context_push (nvdec->cuda_ctx)) {
-      gst_cuda_result (CuStreamDestroy (nvdec->cuda_stream));
-      gst_cuda_context_pop (NULL);
-    }
-  }
-
+  gst_clear_cuda_stream (&nvdec->stream);
   gst_clear_object (&nvdec->cuda_ctx);
-  nvdec->cuda_stream = NULL;
 
   return TRUE;
 }
@@ -1158,13 +1146,14 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
   guint pitch, i;
   CUDA_MEMCPY2D mcpy2d = { 0, };
   GstVideoInfo *info = &nvdec->output_state->info;
+  CUstream stream = gst_cuda_stream_get_handle (nvdec->stream);
 
   GST_LOG_OBJECT (nvdec, "picture index: %u", dispinfo->picture_index);
 
   proc_params.progressive_frame = dispinfo->progressive_frame;
   proc_params.top_field_first = dispinfo->top_field_first;
   proc_params.unpaired_field = dispinfo->repeat_first_field == -1;
-  proc_params.output_stream = nvdec->cuda_stream;
+  proc_params.output_stream = stream;
 
   data->ret = TRUE;
 
@@ -1208,7 +1197,7 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
     CUdeviceptr cuda_ptr;
     gsize size;
     CUgraphicsResource cuda_resource =
-        gst_cuda_graphics_resource_map (resources[i], nvdec->cuda_stream,
+        gst_cuda_graphics_resource_map (resources[i], stream,
         CU_GRAPHICS_MAP_RESOURCE_FLAGS_WRITE_DISCARD);
 
     if (!cuda_resource) {
@@ -1232,17 +1221,17 @@ copy_video_frame_to_gl_textures (GstGLContext * context,
     mcpy2d.dstDevice = cuda_ptr;
     mcpy2d.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&mcpy2d, nvdec->cuda_stream))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&mcpy2d, stream))) {
       GST_WARNING_OBJECT (nvdec, "memcpy to mapped array failed");
       data->ret = FALSE;
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (nvdec->cuda_stream));
+  gst_cuda_result (CuStreamSynchronize (stream));
 
 unmap_video_frame:
   for (i = 0; i < num_resources; i++) {
-    gst_cuda_graphics_resource_unmap (resources[i], nvdec->cuda_stream);
+    gst_cuda_graphics_resource_unmap (resources[i], stream);
   }
 
   if (!gst_cuda_result (CuvidUnmapVideoFrame (nvdec->decoder, dptr)))
@@ -1284,6 +1273,7 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
   GstMemory *mem;
   gboolean use_device_copy = FALSE;
   GstMapFlags map_flags = GST_MAP_WRITE;
+  CUstream stream = gst_cuda_stream_get_handle (nvdec->stream);
 
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_CUDA &&
       (mem = gst_buffer_peek_memory (output_buffer, 0)) &&
@@ -1307,7 +1297,7 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
   params.second_field = dispinfo->repeat_first_field + 1;
   params.top_field_first = dispinfo->top_field_first;
   params.unpaired_field = dispinfo->repeat_first_field < 0;
-  params.output_stream = nvdec->cuda_stream;
+  params.output_stream = stream;
 
   if (!gst_cuda_result (CuvidMapVideoFrame (nvdec->decoder,
               dispinfo->picture_index, &dptr, &pitch, &params))) {
@@ -1334,7 +1324,7 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
         * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
-    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, nvdec->cuda_stream))) {
+    if (!gst_cuda_result (CuMemcpy2DAsync (&copy_params, stream))) {
       GST_ERROR_OBJECT (nvdec, "failed to copy %dth plane", i);
       CuvidUnmapVideoFrame (nvdec->decoder, dptr);
       gst_video_frame_unmap (&video_frame);
@@ -1343,7 +1333,7 @@ gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
     }
   }
 
-  gst_cuda_result (CuStreamSynchronize (nvdec->cuda_stream));
+  gst_cuda_result (CuStreamSynchronize (stream));
 
   gst_video_frame_unmap (&video_frame);
 

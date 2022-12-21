@@ -110,7 +110,7 @@ typedef struct {
   gboolean        i_adapt;
 
   GstCudaContext * cuda_ctx;
-  CUstream         cuda_stream;
+  GstCudaStream * stream;
   void          * encoder;
   NV_ENC_INITIALIZE_PARAMS init_params;
   NV_ENC_CONFIG            config;

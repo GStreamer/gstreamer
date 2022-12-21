@@ -26,6 +26,7 @@
 #include <gst/cuda/gstcudautils.h>
 #include <gst/cuda/gstcudamemory.h>
 #include <gst/cuda/gstcudabufferpool.h>
+#include <gst/cuda/gstcudastream.h>
 #include <string.h>
 
 #ifdef GST_CUDA_HAS_D3D
@@ -58,7 +59,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_nv_encoder_debug);
 struct _GstNvEncoderPrivate
 {
   GstCudaContext *context;
-  CUstream cuda_stream;
+  GstCudaStream *stream;
 
 #ifdef GST_CUDA_HAS_D3D
   GstD3D11Device *device;
@@ -245,13 +246,7 @@ gst_nv_encoder_reset (GstNvEncoder * self)
     priv->session = NULL;
   }
 
-  if (priv->context && priv->cuda_stream) {
-    gst_cuda_context_push (priv->context);
-    CuStreamDestroy (priv->cuda_stream);
-    gst_cuda_context_pop (nullptr);
-    priv->cuda_stream = nullptr;
-  }
-
+  gst_clear_cuda_stream (&priv->stream);
   g_queue_clear (&priv->free_tasks);
   g_queue_clear (&priv->output_tasks);
 
@@ -1275,12 +1270,12 @@ gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
 
   if (priv->selected_device_mode == GST_NV_ENCODER_DEVICE_CUDA &&
       gst_nvenc_have_set_io_cuda_streams ()) {
-    CUresult cuda_ret = CuStreamCreate (&priv->cuda_stream, CU_STREAM_DEFAULT);
+    priv->stream = gst_cuda_stream_new (priv->context);
 
-    if (gst_cuda_result (cuda_ret)) {
+    if (priv->stream) {
+      CUstream stream = gst_cuda_stream_get_handle (priv->stream);
       status = NvEncSetIOCudaStreams (priv->session,
-          (NV_ENC_CUSTREAM_PTR) & priv->cuda_stream,
-          (NV_ENC_CUSTREAM_PTR) & priv->cuda_stream);
+          (NV_ENC_CUSTREAM_PTR) & stream, (NV_ENC_CUSTREAM_PTR) & stream);
       if (status != NV_ENC_SUCCESS) {
         GST_WARNING_OBJECT (self, "NvEncSetIOCudaStreams failed, status: %"
             GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));

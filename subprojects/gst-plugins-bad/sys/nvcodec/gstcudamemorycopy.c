@@ -951,7 +951,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GST_TRACE_OBJECT (self, "Both in/out buffers are not CUDA");
     if (!gst_cuda_buffer_copy (outbuf, GST_CUDA_BUFFER_COPY_SYSTEM, out_info,
             inbuf, GST_CUDA_BUFFER_COPY_SYSTEM, in_info, ctrans->context,
-            ctrans->cuda_stream)) {
+            gst_cuda_stream_get_handle (ctrans->stream))) {
       return GST_FLOW_ERROR;
     }
 
@@ -959,7 +959,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   }
 
   ret = gst_cuda_buffer_copy (outbuf, out_type, out_info, inbuf, in_type,
-      in_info, ctrans->context, ctrans->cuda_stream);
+      in_info, ctrans->context, gst_cuda_stream_get_handle (ctrans->stream));
 
   /* system memory <-> CUDA copy fallback if possible */
   if (!ret) {
@@ -1002,7 +1002,8 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
         gst_cuda_buffer_copy_type_to_string (fallback_out_type));
 
     ret = gst_cuda_buffer_copy (outbuf, fallback_out_type, out_info, inbuf,
-        fallback_in_type, in_info, ctrans->context, ctrans->cuda_stream);
+        fallback_in_type, in_info, ctrans->context,
+        gst_cuda_stream_get_handle (ctrans->stream));
   }
 
   if (ret)
@@ -1017,7 +1018,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   /* final fallback using system memory */
   ret = gst_cuda_buffer_copy (outbuf, GST_CUDA_BUFFER_COPY_SYSTEM, out_info,
       inbuf, GST_CUDA_BUFFER_COPY_SYSTEM, in_info, ctrans->context,
-      ctrans->cuda_stream);
+      gst_cuda_stream_get_handle (ctrans->stream));
 
   if (ret)
     return GST_FLOW_OK;

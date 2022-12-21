@@ -170,7 +170,6 @@ static gboolean
 gst_cuda_base_transform_start (GstBaseTransform * trans)
 {
   GstCudaBaseTransform *filter = GST_CUDA_BASE_TRANSFORM (trans);
-  CUresult cuda_ret;
 
   if (!gst_cuda_ensure_element_context (GST_ELEMENT_CAST (filter),
           filter->device_id, &filter->context)) {
@@ -178,14 +177,10 @@ gst_cuda_base_transform_start (GstBaseTransform * trans)
     return FALSE;
   }
 
-  if (gst_cuda_context_push (filter->context)) {
-    cuda_ret = CuStreamCreate (&filter->cuda_stream, CU_STREAM_DEFAULT);
-    if (!gst_cuda_result (cuda_ret)) {
-      GST_WARNING_OBJECT (filter,
-          "Could not create cuda stream, will use default stream");
-      filter->cuda_stream = NULL;
-    }
-    gst_cuda_context_pop (NULL);
+  filter->stream = gst_cuda_stream_new (filter->context);
+  if (!filter->stream) {
+    GST_WARNING_OBJECT (filter,
+        "Could not create cuda stream, will use default stream");
   }
 
   return TRUE;
@@ -196,15 +191,8 @@ gst_cuda_base_transform_stop (GstBaseTransform * trans)
 {
   GstCudaBaseTransform *filter = GST_CUDA_BASE_TRANSFORM (trans);
 
-  if (filter->context && filter->cuda_stream) {
-    if (gst_cuda_context_push (filter->context)) {
-      gst_cuda_result (CuStreamDestroy (filter->cuda_stream));
-      gst_cuda_context_pop (NULL);
-    }
-  }
-
+  gst_clear_cuda_stream (&filter->stream);
   gst_clear_object (&filter->context);
-  filter->cuda_stream = NULL;
 
   return TRUE;
 }
@@ -338,19 +326,11 @@ gst_cuda_base_transform_before_transform (GstBaseTransform * trans,
   GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"
       GST_PTR_FORMAT, self->context, cmem->context);
 
-  if (self->cuda_stream) {
-    gst_cuda_context_push (self->context);
-    CuStreamDestroy (self->cuda_stream);
-    gst_cuda_context_pop (NULL);
-    self->cuda_stream = NULL;
-  }
-
+  gst_clear_cuda_stream (&self->stream);
   gst_object_unref (self->context);
   self->context = gst_object_ref (cmem->context);
 
-  gst_cuda_context_push (self->context);
-  CuStreamCreate (&self->cuda_stream, CU_STREAM_DEFAULT);
-  gst_cuda_context_pop (NULL);
+  self->stream = gst_cuda_stream_new (self->context);
 
   /* subclass will update internal object.
    * Note that gst_base_transform_reconfigure() might not trigger this
