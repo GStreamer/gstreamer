@@ -29,9 +29,6 @@
 #include "config.h"
 #endif
 
-#include <gst/cuda/gstcudautils.h>
-#include <gst/cuda/gstcudabufferpool.h>
-
 #include "gstcuvidloader.h"
 #include "gstnvdec.h"
 

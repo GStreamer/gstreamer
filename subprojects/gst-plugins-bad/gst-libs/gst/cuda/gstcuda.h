@@ -19,35 +19,18 @@
 
 #pragma once
 
+#ifndef GST_USE_UNSTABLE_API
+#pragma message ("The Cuda library from gst-plugins-bad is unstable API and may change in future.")
+#pragma message ("You can define GST_USE_UNSTABLE_API to avoid this warning.")
+#endif
+
+#include <gst/gst.h>
 #include <gst/cuda/cuda-prelude.h>
 #include <gst/cuda/cuda-gst.h>
+#include <gst/cuda/gstcudabufferpool.h>
 #include <gst/cuda/gstcudacontext.h>
-
-#include <gst/video/video.h>
-
-G_BEGIN_DECLS
-
-typedef enum
-{
-  GST_CUDA_BUFFER_COPY_SYSTEM,
-  GST_CUDA_BUFFER_COPY_CUDA,
-  GST_CUDA_BUFFER_COPY_GL,
-  GST_CUDA_BUFFER_COPY_D3D11,
-  GST_CUDA_BUFFER_COPY_NVMM,
-} GstCudaBufferCopyType;
-
-GST_CUDA_API
-const gchar * gst_cuda_buffer_copy_type_to_string (GstCudaBufferCopyType type);
-
-GST_CUDA_API
-gboolean      gst_cuda_buffer_copy (GstBuffer * dst,
-                                    GstCudaBufferCopyType dst_type,
-                                    const GstVideoInfo * dst_info,
-                                    GstBuffer * src,
-                                    GstCudaBufferCopyType src_type,
-                                    const GstVideoInfo * src_info,
-                                    GstCudaContext * context,
-                                    CUstream stream);
-
-G_END_DECLS
+#include <gst/cuda/gstcudaloader.h>
+#include <gst/cuda/gstcudamemory.h>
+#include <gst/cuda/gstcudanvrtc.h>
+#include <gst/cuda/gstcudautils.h>
 

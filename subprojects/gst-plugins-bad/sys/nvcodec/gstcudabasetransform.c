@@ -29,8 +29,6 @@
 #  include <config.h>
 #endif
 
-#include <gst/cuda/gstcudautils.h>
-
 #include "gstcudabasetransform.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_base_transform_debug);

@@ -17,20 +17,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_CUDA_MEMORY_H__
-#define __GST_CUDA_MEMORY_H__
+#pragma once
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The Cuda library from gst-plugins-bad is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
-#include "cuda-prelude.h"
 #include <gst/gst.h>
 #include <gst/gstallocator.h>
 #include <gst/video/video.h>
-#include "gstcudaloader.h"
-#include "gstcudacontext.h"
+#include <gst/cuda/cuda-prelude.h>
+#include <gst/cuda/gstcudacontext.h>
 
 G_BEGIN_DECLS
 
@@ -159,4 +152,3 @@ GstMemory    * gst_cuda_allocator_alloc    (GstCudaAllocator * allocator,
 
 G_END_DECLS
 
-#endif /* __GST_CUDA_MEMORY_H__ */

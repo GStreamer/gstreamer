@@ -41,7 +41,6 @@
 #include "gstcudabasetransform.h"
 #include "gstcudamemorycopy.h"
 #include "gstcudaformat.h"
-#include <gst/cuda/gstcudautils.h>
 #include <gst/cuda/gstcuda-private.h>
 #ifdef HAVE_NVCODEC_NVMM
 #include "gstcudanvmm.h"

@@ -20,7 +20,7 @@
 #pragma once
 
 #include <gst/video/video.h>
-#include <gst/cuda/gstcudacontext.h>
+#include <gst/cuda/gstcuda.h>
 
 G_BEGIN_DECLS
 

@@ -28,9 +28,9 @@
 
 #include <string.h>
 
+#include <gst/cuda/gstcuda.h>
 #include "nvEncodeAPI.h"
 #include "gstnvenc.h"
-#include <gst/cuda/gstcudamemory.h>
 
 G_BEGIN_DECLS
 

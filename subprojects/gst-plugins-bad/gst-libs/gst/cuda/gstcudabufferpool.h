@@ -17,19 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_CUDA_BUFFER_POOL_H__
-#define __GST_CUDA_BUFFER_POOL_H__
+#pragma once
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The Cuda library from gst-plugins-bad is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
+#include <gst/video/video.h>
 
-#include "cuda-prelude.h"
-#include <gst/video/gstvideometa.h>
-#include <gst/video/gstvideopool.h>
-
-#include "gstcudamemory.h"
+#include <gst/cuda/cuda-prelude.h>
+#include <gst/cuda/gstcudamemory.h>
 
 G_BEGIN_DECLS
 
@@ -80,4 +73,3 @@ GstBufferPool * gst_cuda_buffer_pool_new (GstCudaContext * context);
 
 G_END_DECLS
 
-#endif /* __GST_CUDA_BUFFER_POOL_H__ */

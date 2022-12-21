@@ -22,7 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/cuda/gstcudaloader.h>
+#include <gst/cuda/gstcuda.h>
 
 #include "nvEncodeAPI.h"
 

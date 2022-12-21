@@ -21,7 +21,7 @@
 #define __GST_CUVID_LOADER_H__
 
 #include <gst/gst.h>
-#include "cuda.h"
+#include <gst/cuda/gstcuda.h>
 #include "nvcuvid.h"
 
 G_BEGIN_DECLS

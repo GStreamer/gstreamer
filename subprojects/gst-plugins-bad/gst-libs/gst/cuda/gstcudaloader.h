@@ -17,19 +17,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_CUDA_LOADER_H__
-#define __GST_CUDA_LOADER_H__
+#pragma once
 
-#ifndef GST_USE_UNSTABLE_API
-#warning "The Cuda library from gst-plugins-bad is unstable API and may change in future."
-#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
-#endif
-
-#include "cuda.h"
-#include "cudaGL.h"
-
-#include "cuda-prelude.h"
 #include <gst/gst.h>
+#include <gst/cuda/cuda-prelude.h>
 
 G_BEGIN_DECLS
 
@@ -37,4 +28,3 @@ GST_CUDA_API
 gboolean gst_cuda_load_library (void);
 
 G_END_DECLS
-#endif /* __GST_CUDA_LOADER_H__ */

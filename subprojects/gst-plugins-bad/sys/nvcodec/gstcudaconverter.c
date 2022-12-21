@@ -22,9 +22,6 @@
 #endif
 
 #include "gstcudaconverter.h"
-#include <gst/cuda/gstcudautils.h>
-#include <gst/cuda/gstcudaloader.h>
-#include <gst/cuda/gstcudanvrtc.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_converter_debug);

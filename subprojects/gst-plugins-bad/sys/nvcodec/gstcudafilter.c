@@ -21,8 +21,7 @@
 #include "config.h"
 #endif
 
-#include <gst/cuda/gstcudaloader.h>
-#include <gst/cuda/gstcudanvrtc.h>
+#include <gst/cuda/gstcuda.h>
 
 #include "gstcudafilter.h"
 #include "gstcudaconvertscale.h"

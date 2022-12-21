@@ -23,7 +23,7 @@
 #include "gstnvenc.h"
 
 #include <gst/video/gstvideoencoder.h>
-#include <gst/cuda/gstcudacontext.h>
+#include <gst/cuda/gstcuda.h>
 
 #define GST_TYPE_NV_BASE_ENC \
   (gst_nv_base_enc_get_type())

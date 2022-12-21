@@ -89,8 +89,6 @@
 #include "config.h"
 #endif
 
-#include <gst/cuda/gstcudautils.h>
-
 #include "gstnvh264dec.h"
 #include "gstnvdecoder.h"
 

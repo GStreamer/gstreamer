@@ -37,8 +37,7 @@
 #include <gst/video/video.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/codecparsers/gsth265parser.h>
-#include <gst/cuda/gstcudaloader.h>
-#include <gst/cuda/gstcudacontext.h>
+#include <gst/cuda/gstcuda.h>
 
 G_BEGIN_DECLS
 

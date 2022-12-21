@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cuda-prelude.h"
+#include <gst/cuda/cuda-prelude.h>
 #include <cuda.h>
 #include <cudaGL.h>
 

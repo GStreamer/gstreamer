@@ -36,8 +36,6 @@
 #include "config.h"
 #endif
 
-#include <gst/cuda/gstcudautils.h>
-
 #include "gstnvav1dec.h"
 #include "gstnvdecoder.h"
 
