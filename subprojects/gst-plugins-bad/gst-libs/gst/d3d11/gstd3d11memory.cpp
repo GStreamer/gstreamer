@@ -1716,8 +1716,8 @@ gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator, gboolean active)
   g_return_val_if_fail (GST_IS_D3D11_ALLOCATOR (allocator), FALSE);
 
   klass = GST_D3D11_ALLOCATOR_GET_CLASS (allocator);
-  if (klass->set_actvie)
-    return klass->set_actvie (allocator, active);
+  if (klass->set_active)
+    return klass->set_active (allocator, active);
 
   return TRUE;
 }
@@ -1779,7 +1779,7 @@ gst_d3d11_pool_allocator_class_init (GstD3D11PoolAllocatorClass * klass)
   gobject_class->dispose = gst_d3d11_pool_allocator_dispose;
   gobject_class->finalize = gst_d3d11_pool_allocator_finalize;
 
-  d3d11alloc_class->set_actvie = gst_d3d11_pool_allocator_set_active;
+  d3d11alloc_class->set_active = gst_d3d11_pool_allocator_set_active;
 }
 
 static void

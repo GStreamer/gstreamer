@@ -274,7 +274,7 @@ struct _GstD3D11AllocatorClass
 {
   GstAllocatorClass parent_class;
 
-  gboolean (*set_actvie)   (GstD3D11Allocator * allocator,
+  gboolean (*set_active)   (GstD3D11Allocator * allocator,
                             gboolean active);
 
   /*< private >*/
