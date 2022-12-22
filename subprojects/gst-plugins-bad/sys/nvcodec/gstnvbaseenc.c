@@ -2219,13 +2219,14 @@ _map_gl_input_buffer (GstGLContext * context, GstNvEncGLMapData * data)
 
 static gboolean
 gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
-    GstNvEncInputResource * resource, gboolean use_device_memory)
+    GstNvEncInputResource * resource, gboolean use_device_memory,
+    GstCudaStream * stream)
 {
   gint i;
   CUdeviceptr dst = resource->cuda_pointer;
   GstVideoInfo *info = &frame->info;
   CUresult cuda_ret;
-  CUstream stream = gst_cuda_stream_get_handle (nvenc->stream);
+  CUstream stream_handle = gst_cuda_stream_get_handle (stream);
 
   if (!gst_cuda_context_push (nvenc->cuda_ctx)) {
     GST_ERROR_OBJECT (nvenc, "cannot push context");
@@ -2252,7 +2253,7 @@ gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
     param.WidthInBytes = _get_plane_width (info, i);
     param.Height = _get_plane_height (info, i);
 
-    cuda_ret = CuMemcpy2DAsync (&param, stream);
+    cuda_ret = CuMemcpy2DAsync (&param, stream_handle);
     if (!gst_cuda_result (cuda_ret)) {
       GST_ERROR_OBJECT (nvenc, "cannot copy %dth plane, ret %d", i, cuda_ret);
       gst_cuda_context_pop (NULL);
@@ -2263,7 +2264,7 @@ gst_nv_base_enc_upload_frame (GstNvBaseEnc * nvenc, GstVideoFrame * frame,
     dst += dest_stride * _get_plane_height (&nvenc->input_info, i);
   }
 
-  gst_cuda_result (CuStreamSynchronize (stream));
+  gst_cuda_result (CuStreamSynchronize (stream_handle));
   gst_cuda_context_pop (NULL);
 
   return TRUE;
@@ -2404,6 +2405,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   GstNvEncFrameState *state = NULL;
   GstNvEncInputResource *resource = NULL;
   gboolean use_device_memory = FALSE;
+  GstCudaStream *stream = nvenc->stream;
 
   g_assert (nvenc->encoder != NULL);
 
@@ -2445,8 +2447,14 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
           (gst_cuda_context_can_access_peer (cmem->context, nvenc->cuda_ctx) &&
               gst_cuda_context_can_access_peer (nvenc->cuda_ctx,
                   cmem->context))) {
+        GstCudaStream *mem_stream;
+
         use_device_memory = TRUE;
         in_map_flags |= GST_MAP_CUDA;
+
+        mem_stream = gst_cuda_memory_get_stream (cmem);
+        if (mem_stream)
+          stream = mem_stream;
       }
     }
   }
@@ -2491,7 +2499,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
   } else
 #endif
   if (!gst_nv_base_enc_upload_frame (nvenc,
-          &vframe, resource, use_device_memory)) {
+          &vframe, resource, use_device_memory, stream)) {
     flow = GST_FLOW_ERROR;
     goto unmap_and_drop;
   }
