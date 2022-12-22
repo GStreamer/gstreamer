@@ -4,12 +4,15 @@ sources = [
   'gstqsg6glnode.cc',
   'gstqt6glutility.cc',
   'gstqml6glsink.cc',
+  'gstqml6glsrc.cc',
   'qt6glitem.cc',
+  'qt6glwindow.cc',
 ]
 
 moc_headers = [
   'qt6glitem.h',
   'gstqsg6glnode.h',
+  'qt6glwindow.h',
 ]
 
 qt6qml_dep = dependency('', required: false)

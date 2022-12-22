@@ -15,3 +15,4 @@ if not qt6qml_example_deps.found()
 endif
 
 subdir('qmlsink')
+subdir('qmlsrc')
