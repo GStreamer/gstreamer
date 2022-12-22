@@ -105,7 +105,7 @@ _gst_structure_take_structure (GstStructure * s, const char *fieldname,
 static gboolean
 _get_stats_from_remote_rtp_source_stats (GstWebRTCBin * webrtc,
     TransportStream * stream, const GstStructure * source_stats,
-    guint ssrc, guint clock_rate, const gchar * codec_id,
+    guint ssrc, guint clock_rate, const gchar * codec_id, const gchar * kind,
     const gchar * transport_id, GstStructure * s)
 {
   gboolean have_rb = FALSE, internal = FALSE;
@@ -135,7 +135,8 @@ _get_stats_from_remote_rtp_source_stats (GstWebRTCBin * webrtc,
   gst_structure_set (r_in, "ssrc", G_TYPE_UINT, ssrc, NULL);
   gst_structure_set (r_in, "codec-id", G_TYPE_STRING, codec_id, NULL);
   gst_structure_set (r_in, "transport-id", G_TYPE_STRING, transport_id, NULL);
-  /* To be added: kind */
+  if (kind)
+    gst_structure_set (r_in, "kind", G_TYPE_STRING, kind, NULL);
 
   /* RTCReceivedRtpStreamStats */
 
@@ -205,7 +206,8 @@ _get_stats_from_remote_rtp_source_stats (GstWebRTCBin * webrtc,
 static void
 _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     TransportStream * stream, const GstStructure * source_stats,
-    const gchar * codec_id, const gchar * transport_id, GstStructure * s)
+    const gchar * codec_id, const gchar * kind, const gchar * transport_id,
+    GstStructure * s)
 {
   guint ssrc, fir, pli, nack, jitter;
   int clock_rate;
@@ -230,8 +232,8 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_set (out, "ssrc", G_TYPE_UINT, ssrc, NULL);
     gst_structure_set (out, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (out, "transport-id", G_TYPE_STRING, transport_id, NULL);
-    /* To be added: kind */
-
+    if (kind)
+      gst_structure_set (out, "kind", G_TYPE_STRING, kind, NULL);
 
     /* RTCSentRtpStreamStats  */
     if (gst_structure_get_uint64 (source_stats, "octets-sent", &bytes))
@@ -350,8 +352,8 @@ _get_stats_from_rtp_source_stats (GstWebRTCBin * webrtc,
     gst_structure_set (in, "ssrc", G_TYPE_UINT, ssrc, NULL);
     gst_structure_set (in, "codec-id", G_TYPE_STRING, codec_id, NULL);
     gst_structure_set (in, "transport-id", G_TYPE_STRING, transport_id, NULL);
-    /* To be added: kind */
-
+    if (kind)
+      gst_structure_set (in, "kind", G_TYPE_STRING, kind, NULL);
 
     /* RTCReceivedRtpStreamStats */
 
@@ -871,6 +873,7 @@ struct transport_stream_stats
   TransportStream *stream;
   char *transport_id;
   char *codec_id;
+  const char *kind;
   guint clock_rate;
   GValueArray *source_stats;
   GstStructure *s;
@@ -897,12 +900,14 @@ webrtc_stats_get_from_transport (SsrcMapItem * entry,
     if (gst_structure_get_uint (stats, "ssrc", &stats_ssrc) &&
         entry->ssrc == stats_ssrc)
       _get_stats_from_rtp_source_stats (ts_stats->webrtc, ts_stats->stream,
-          stats, ts_stats->codec_id, ts_stats->transport_id, ts_stats->s);
-    else if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc) &&
-        entry->ssrc == stats_ssrc)
+          stats, ts_stats->codec_id, ts_stats->kind, ts_stats->transport_id,
+          ts_stats->s);
+    else if (gst_structure_get_uint (stats, "rb-ssrc", &stats_ssrc)
+        && entry->ssrc == stats_ssrc)
       _get_stats_from_remote_rtp_source_stats (ts_stats->webrtc,
           ts_stats->stream, stats, entry->ssrc, ts_stats->clock_rate,
-          ts_stats->codec_id, ts_stats->transport_id, ts_stats->s);
+          ts_stats->codec_id, ts_stats->kind, ts_stats->transport_id,
+          ts_stats->s);
   }
 
   /* we want to look at all the entries */
@@ -918,12 +923,26 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
   GObject *rtp_session;
   GObject *gst_rtp_session;
   GstStructure *rtp_stats, *twcc_stats;
+  GstWebRTCKind kind;
 
   _get_codec_stats_from_pad (webrtc, pad, s, &ts_stats.codec_id, &ssrc,
       &clock_rate);
 
   if (!wpad->trans)
     goto out;
+
+  g_object_get (wpad->trans, "kind", &kind, NULL);
+  switch (kind) {
+    case GST_WEBRTC_KIND_AUDIO:
+      ts_stats.kind = "audio";
+      break;
+    case GST_WEBRTC_KIND_VIDEO:
+      ts_stats.kind = "video";
+      break;
+    case GST_WEBRTC_KIND_UNKNOWN:
+      ts_stats.kind = NULL;
+      break;
+  };
 
   ts_stats.stream = WEBRTC_TRANSCEIVER (wpad->trans)->stream;
   if (!ts_stats.stream)

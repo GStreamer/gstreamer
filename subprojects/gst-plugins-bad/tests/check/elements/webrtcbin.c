@@ -1517,7 +1517,7 @@ validate_codec_stats (const GstStructure * s)
 static void
 validate_rtc_stream_stats (const GstStructure * s, const GstStructure * stats)
 {
-  gchar *codec_id, *transport_id;
+  gchar *codec_id, *transport_id, *kind;
   GstStructure *codec, *transport;
 
   fail_unless (gst_structure_get (s, "codec-id", G_TYPE_STRING, &codec_id,
@@ -1536,8 +1536,12 @@ validate_rtc_stream_stats (const GstStructure * s, const GstStructure * stats)
   gst_structure_free (transport);
   gst_structure_free (codec);
 
+  fail_unless (gst_structure_get (s, "kind", G_TYPE_STRING, &kind, NULL));
+  fail_unless (g_str_equal (kind, "audio") || g_str_equal (kind, "video"));
+
   g_free (codec_id);
   g_free (transport_id);
+  g_free (kind);
 }
 
 static void
