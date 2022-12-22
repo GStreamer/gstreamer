@@ -641,6 +641,8 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
 static void
 gst_qt_mux_pad_reset (GstQTMuxPad * qtpad)
 {
+  guint i;
+
   qtpad->fourcc = 0;
   qtpad->is_out_of_order = FALSE;
   qtpad->sample_size = 0;
@@ -678,7 +680,13 @@ gst_qt_mux_pad_reset (GstQTMuxPad * qtpad)
     atom_traf_free (qtpad->traf);
     qtpad->traf = NULL;
   }
+  for (i = 0; i < atom_array_get_len (&qtpad->fragment_buffers); i++) {
+    GstBuffer *buf = atom_array_index (&qtpad->fragment_buffers, i);
+    if (buf != NULL)
+      gst_buffer_unref (atom_array_index (&qtpad->fragment_buffers, i));
+  }
   atom_array_clear (&qtpad->fragment_buffers);
+
   if (qtpad->samples)
     g_array_unref (qtpad->samples);
   qtpad->samples = NULL;
