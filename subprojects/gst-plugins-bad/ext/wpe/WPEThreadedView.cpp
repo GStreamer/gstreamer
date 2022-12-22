@@ -296,6 +296,7 @@ webkit_extension_msg_received (WebKitWebContext  *context,
     GVariant *params = webkit_user_message_get_parameters (message);
     gboolean res = TRUE;
 
+    GST_TRACE_OBJECT(src, "Handling message %s", name);
     if (!g_strcmp0(name, "gstwpe.new_stream")) {
         guint32 id = g_variant_get_uint32 (g_variant_get_child_value (params, 0));
         const gchar *capsstr = g_variant_get_string (g_variant_get_child_value (params, 1), NULL);
