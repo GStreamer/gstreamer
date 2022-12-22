@@ -677,6 +677,10 @@ valgrind ges:
       - subprojects/gst-plugins-bad/**/*
       - subprojects/gst-editing-services/**/*
       - subprojects/gst-python/**/*
+  # valgrind ges jobs are racy across the board and simply fail too often.
+  # Someone needs to go through job logs and figure out which jobs to mark
+  # as flaky. Until then, just ignore failures.
+  allow_failure: true
 
 # ---- Integration ----- #
 
