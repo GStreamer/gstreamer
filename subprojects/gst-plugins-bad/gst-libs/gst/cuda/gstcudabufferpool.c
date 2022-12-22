@@ -31,6 +31,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_cuda_buffer_pool_debug);
 struct _GstCudaBufferPoolPrivate
 {
   GstVideoInfo info;
+  GstCudaStream *stream;
+  GstCudaPoolAllocator *alloc;
 };
 
 #define gst_cuda_buffer_pool_parent_class parent_class
@@ -73,6 +75,20 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     return FALSE;
   }
 
+  if (priv->alloc) {
+    gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), FALSE);
+    gst_object_unref (priv->alloc);
+  }
+
+  gst_clear_cuda_stream (&priv->stream);
+  priv->stream = gst_buffer_pool_config_get_cuda_stream (config);
+  priv->alloc = gst_cuda_pool_allocator_new (self->context, priv->stream,
+      &info);
+  if (!priv->alloc) {
+    GST_ERROR_OBJECT (self, "Couldn't create allocator");
+    return FALSE;
+  }
+
   mem = gst_cuda_allocator_alloc (NULL, self->context, NULL, &info);
   if (!mem) {
     GST_WARNING_OBJECT (self, "Failed to allocate memory");
@@ -101,18 +117,18 @@ gst_cuda_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstBuffer *buf;
   GstMemory *mem;
   GstCudaMemory *cmem;
+  GstFlowReturn ret;
 
-  mem = gst_cuda_allocator_alloc (NULL, self->context, NULL, &priv->info);
-  if (!mem) {
-    GST_WARNING_OBJECT (pool, "Cannot create CUDA memory");
-    return GST_FLOW_ERROR;
+  ret = gst_cuda_pool_allocator_acquire_memory (priv->alloc, &mem);
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "Couldn't acquire memory");
+    return ret;
   }
 
-  cmem = GST_CUDA_MEMORY_CAST (mem);
-
   buf = gst_buffer_new ();
-
   gst_buffer_append_memory (buf, mem);
+
+  cmem = GST_CUDA_MEMORY_CAST (mem);
 
   GST_DEBUG_OBJECT (pool, "adding GstVideoMeta");
   gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
@@ -123,6 +139,32 @@ gst_cuda_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   *buffer = buf;
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+gst_cuda_buffer_pool_start (GstBufferPool * pool)
+{
+  GstCudaBufferPool *self = GST_CUDA_BUFFER_POOL_CAST (pool);
+  GstCudaBufferPoolPrivate *priv = self->priv;
+
+  if (!gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), TRUE)) {
+    GST_ERROR_OBJECT (self, "Couldn't activate allocator");
+    return FALSE;
+  }
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
+}
+
+static gboolean
+gst_cuda_buffer_pool_stop (GstBufferPool * pool)
+{
+  GstCudaBufferPool *self = GST_CUDA_BUFFER_POOL_CAST (pool);
+  GstCudaBufferPoolPrivate *priv = self->priv;
+
+  if (priv->alloc)
+    gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), FALSE);
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
 /**
@@ -148,11 +190,59 @@ gst_cuda_buffer_pool_new (GstCudaContext * context)
   return GST_BUFFER_POOL_CAST (self);
 }
 
+/**
+ * gst_buffer_pool_config_get_cuda_stream:
+ * @config: a buffer pool config
+ *
+ * Returns: (transfer full) (nullable): the currently configured #GstCudaStream
+ * on @config or %NULL if @config doesn't hold #GstCudaStream
+ *
+ * Since: 1.24
+ */
+GstCudaStream *
+gst_buffer_pool_config_get_cuda_stream (GstStructure * config)
+{
+  GstCudaStream *stream = NULL;
+
+  g_return_val_if_fail (config, NULL);
+
+  gst_structure_get (config, "cuda-stream", GST_TYPE_CUDA_STREAM, &stream,
+      NULL);
+
+  return stream;
+}
+
+/**
+ * gst_buffer_pool_config_set_cuda_stream:
+ * @config: a buffer pool config
+ * @stream: a #GstCudaStream
+ *
+ * Sets @stream on @config
+ *
+ * Since: 1.24
+ */
+void
+gst_buffer_pool_config_set_cuda_stream (GstStructure * config,
+    GstCudaStream * stream)
+{
+  g_return_if_fail (config);
+  g_return_if_fail (GST_IS_CUDA_STREAM (stream));
+
+  gst_structure_set (config, "cuda-stream", GST_TYPE_CUDA_STREAM, stream, NULL);
+}
+
 static void
 gst_cuda_buffer_pool_dispose (GObject * object)
 {
   GstCudaBufferPool *self = GST_CUDA_BUFFER_POOL_CAST (object);
+  GstCudaBufferPoolPrivate *priv = self->priv;
 
+  if (priv->alloc) {
+    gst_cuda_allocator_set_active (GST_CUDA_ALLOCATOR (priv->alloc), FALSE);
+    gst_clear_object (&priv->alloc);
+  }
+
+  gst_clear_cuda_stream (&priv->stream);
   gst_clear_object (&self->context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -168,6 +258,8 @@ gst_cuda_buffer_pool_class_init (GstCudaBufferPoolClass * klass)
 
   bufferpool_class->get_options = gst_cuda_buffer_pool_get_options;
   bufferpool_class->set_config = gst_cuda_buffer_pool_set_config;
+  bufferpool_class->start = gst_cuda_buffer_pool_start;
+  bufferpool_class->stop = gst_cuda_buffer_pool_stop;
   bufferpool_class->alloc_buffer = gst_cuda_buffer_pool_alloc;
 
   GST_DEBUG_CATEGORY_INIT (gst_cuda_buffer_pool_debug, "cudabufferpool", 0,
