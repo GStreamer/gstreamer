@@ -22,6 +22,7 @@ moc_headers = [
 # deciding whether to build the qt5 examples
 qt5qml_dep = dependency('', required: false)
 qt5_option = get_option('qt5')
+qt5_method = get_option('qt-method')
 
 if qt5_option.disabled()
   subdir_done()
@@ -40,7 +41,7 @@ endif
 
 qt5_mod = import('qt5')
 qt5qml_dep = dependency('qt5', modules : ['Core', 'Gui', 'Qml', 'Quick'],
-                        required: qt5_option, static: host_machine.system() == 'ios')
+                        method: qt5_method, required: qt5_option, static: host_system == 'ios')
 
 # On Linux, distros often have the Qt5 pkg-config files and moc in separate
 # packages, so the user may not have both installed. Check for moc and ensure
@@ -78,7 +79,7 @@ endif
 
 if gst_gl_have_window_x11 and gst_gl_have_platform_glx
   # FIXME: automagic
-  qt5x11extras = dependency('qt5', modules : ['X11Extras'], required : false)
+  qt5x11extras = dependency('qt5', modules : ['X11Extras'], method: qt5_method, required : false)
   if qt5x11extras.found()
     optional_deps += [qt5x11extras, gstglx11_dep]
     qt_defines += ['-DHAVE_QT_X11']
@@ -95,7 +96,7 @@ if gst_gl_have_platform_egl
     # Wayland windowing
     if gst_gl_have_window_wayland
       # FIXME: automagic
-      qt5waylandextras = dependency('qt5', modules : ['WaylandClient'], required : false)
+      qt5waylandextras = dependency('qt5', modules : ['WaylandClient'], method: qt5_method, required : false)
       if qt5waylandextras.found()
         optional_deps += [qt5waylandextras, gstglwayland_dep]
         qt_defines += ['-DHAVE_QT_WAYLAND']
@@ -105,7 +106,7 @@ if gst_gl_have_platform_egl
     # Android windowing
     if gst_gl_have_window_android
       # FIXME: automagic
-      qt5androidextras = dependency('qt5', modules : ['AndroidExtras'], required : false)
+      qt5androidextras = dependency('qt5', modules : ['AndroidExtras'], method: qt5_method, required : false)
       # for gl functions in QtGui/qopenglfunctions.h
       # FIXME: automagic
       glesv2_dep = cc.find_library('GLESv2', required : false)
@@ -134,7 +135,7 @@ endif
 
 if gst_gl_have_window_cocoa and gst_gl_have_platform_cgl
   # FIXME: automagic
-  qt5macextras = dependency('qt5', modules : ['MacExtras'], required : false)
+  qt5macextras = dependency('qt5', modules : ['MacExtras'], method: qt5_method, required : false)
   if qt5macextras.found()
     qt_defines += ['-DHAVE_QT_MAC']
     optional_deps += qt5macextras

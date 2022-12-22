@@ -14,6 +14,7 @@ moc_headers = [
 
 qt6qml_dep = dependency('', required: false)
 qt6_option = get_option('qt6')
+qt6_method = get_option('qt-method')
 
 if qt6_option.disabled()
   subdir_done()
@@ -39,7 +40,7 @@ if not qt6_mod.has_tools()
 endif
 
 qt6qml_dep = dependency('qt6', modules : ['Core', 'Gui', 'Qml', 'Quick'],
-                        required: qt6_option, static: host_machine.system() == 'ios')
+                        method: qt6_method, required: qt6_option, static: host_system == 'ios')
 if not qt6qml_dep.found()
   subdir_done()
 endif
@@ -76,7 +77,7 @@ if gst_gl_have_platform_egl
     # Wayland windowing
     if gst_gl_have_window_wayland
       # FIXME: automagic
-      qt6waylandextras = dependency('qt6', modules : ['WaylandClient'], required : false)
+      qt6waylandextras = dependency('qt6', modules : ['WaylandClient'], method: qt6_method, required : false)
       if qt6waylandextras.found()
         optional_deps += [qt6waylandextras, gstglwayland_dep]
         qt_defines += ['-DHAVE_QT_WAYLAND']
@@ -86,7 +87,7 @@ if gst_gl_have_platform_egl
     # Android windowing
 #    if gst_gl_have_window_android
       # FIXME: automagic
-#      qt5androidextras = dependency('qt5', modules : ['AndroidExtras'], required : false)
+#      qt5androidextras = dependency('qt5', modules : ['AndroidExtras'], method: qt6_method, required : false)
       # for gl functions in QtGui/qopenglfunctions.h
       # FIXME: automagic
 #      glesv2_dep = cc.find_library('GLESv2', required : false)
