@@ -1294,11 +1294,6 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * orig_uri,
   const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
   struct PlaylistDownloadParams dl_params;
 
-  /* FIXME: Set this URI when the variant is changed */
-  if (stream->playlistloader)
-    gst_hls_demux_playlist_loader_set_playlist_uri (stream->playlistloader,
-        main_uri, orig_uri);
-
 retry:
 
   memset (&dl_params, 0, sizeof (struct PlaylistDownloadParams));
@@ -1525,6 +1520,23 @@ gst_hls_demux_stream_submit_request (GstAdaptiveDemux2Stream * stream,
   return
       GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->submit_request
       (stream, download_req);
+}
+
+void
+gst_hls_demux_stream_set_playlist_uri (GstHLSDemuxStream * hls_stream,
+    gchar * uri)
+{
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX2_STREAM_CAST (hls_stream)->demux;
+
+  if (hls_stream->playlistloader == NULL) {
+    hls_stream->playlistloader =
+        gst_hls_demux_playlist_loader_new (demux, demux->download_helper,
+        hls_stream->llhls_enabled);
+  }
+
+  const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
+  gst_hls_demux_playlist_loader_set_playlist_uri (hls_stream->playlistloader,
+      main_uri, uri);
 }
 
 GstFlowReturn
@@ -2114,6 +2126,9 @@ gst_hls_demux_update_rendition_stream (GstHLSDemux * hlsdemux,
   }
   hls_stream->pending_rendition =
       gst_hls_rendition_stream_ref (replacement_media);
+
+  gst_hls_demux_stream_set_playlist_uri (hls_stream, replacement_media->uri);
+
   return TRUE;
 }
 

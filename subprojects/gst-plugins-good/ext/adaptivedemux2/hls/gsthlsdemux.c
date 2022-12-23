@@ -426,6 +426,10 @@ create_main_variant_stream (GstHLSDemux * demux)
 
   stream = create_common_hls_stream (demux, "hlsstream-variant");
   demux->main_stream = hlsdemux_stream = (GstHLSDemuxStream *) stream;
+
+  gst_hls_demux_stream_set_playlist_uri (hlsdemux_stream,
+      demux->current_variant->uri);
+
   hlsdemux_stream->is_variant = TRUE;
   hlsdemux_stream->playlist_fetched = TRUE;
   /* Due to HLS manifest information being so unreliable/inconsistent, we will
@@ -626,6 +630,10 @@ gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
     GST_DEBUG_OBJECT (hlsdemux, "Setting variant '%s'", variant->name);
     hlsdemux->current_variant = gst_hls_variant_stream_ref (variant);
   }
+
+  if (hlsdemux->main_stream) {
+    gst_hls_demux_stream_set_playlist_uri (hlsdemux->main_stream, variant->uri);
+  }
 }
 
 static gboolean
@@ -684,7 +692,7 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   if (variant) {
     GST_INFO_OBJECT (hlsdemux,
         "Manifest processed, initial variant selected : `%s`", variant->name);
-    gst_hls_demux_set_current_variant (hlsdemux, variant);      // FIXME: inline?
+    gst_hls_demux_set_current_variant (hlsdemux, variant);
   }
 
   GST_DEBUG_OBJECT (hlsdemux, "Manifest handled, now setting up streams");

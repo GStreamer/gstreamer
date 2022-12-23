@@ -166,6 +166,9 @@ GstFlowReturn
 gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
     GstSeekFlags flags, GstClockTimeDiff ts, GstClockTimeDiff * final_ts);
 
+void
+gst_hls_demux_stream_set_playlist_uri (GstHLSDemuxStream * stream, gchar * uri);
+
 GstFlowReturn
 gst_hls_demux_stream_update_media_playlist (GstHLSDemuxStream * stream, gchar ** uri, GError ** err);
 
