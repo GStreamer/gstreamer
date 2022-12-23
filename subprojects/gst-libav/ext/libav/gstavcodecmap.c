@@ -2956,14 +2956,13 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
     bpp += GST_VIDEO_INFO_COMP_DEPTH (info, i);
   context->bits_per_coded_sample = bpp;
 
+  context->time_base.den = 1000000000;
+  context->time_base.num = 1;
   context->ticks_per_frame = 1;
-  if (GST_VIDEO_INFO_FPS_N (info) == 0) {
-    GST_DEBUG ("Using 25/1 framerate");
-    context->time_base.den = 25;
-    context->time_base.num = 1;
-  } else {
-    context->time_base.den = GST_VIDEO_INFO_FPS_N (info);
-    context->time_base.num = GST_VIDEO_INFO_FPS_D (info);
+
+  if (GST_VIDEO_INFO_FPS_N (info) != 0) {
+    context->framerate.num = GST_VIDEO_INFO_FPS_N (info);
+    context->framerate.den = GST_VIDEO_INFO_FPS_D (info);
   }
 
   context->sample_aspect_ratio.num = GST_VIDEO_INFO_PAR_N (info);
