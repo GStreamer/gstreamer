@@ -2162,21 +2162,29 @@ svg_type_find (GstTypeFind * tf, gpointer unused)
 {
   static const gchar svg_doctype[] = "!DOCTYPE svg";
   static const gchar svg_tag[] = "<svg";
+  static const gchar svg_namespace[] = "http://www.w3.org/2000/svg";
   DataScanCtx c = { 0, NULL, 0 };
+  guint probability = GST_TYPE_FIND_NONE;
 
   while (c.offset <= 1024) {
-    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 12)))
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c,
+                strlen (svg_namespace))))
       break;
 
-    if (memcmp (svg_doctype, c.data, 12) == 0) {
+    if (memcmp (svg_doctype, c.data, 12) == 0
+        || memcmp (svg_namespace, c.data, strlen (svg_namespace)) == 0) {
       gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SVG_CAPS);
       return;
     } else if (memcmp (svg_tag, c.data, 4) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, SVG_CAPS);
-      return;
+      // Check if we also find the SVG namespace later as that would be a
+      // clearer indication
+      probability = GST_TYPE_FIND_LIKELY;
     }
     data_scan_ctx_advance (tf, &c, 1);
   }
+
+  if (probability > GST_TYPE_FIND_NONE)
+    gst_type_find_suggest (tf, probability, SVG_CAPS);
 }
 
 /*** multipart/x-mixed-replace mimestream ***/
