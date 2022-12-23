@@ -42,6 +42,7 @@
 #include <components/Component.h>
 #include <components/VideoEncoderHEVC.h>
 #include <core/Factory.h>
+#include <set>
 #include <string>
 #include <vector>
 #include <string.h>
@@ -283,7 +284,7 @@ enum
 #define DEFAULT_AUD TRUE
 
 #define DOC_SINK_CAPS_COMM \
-    "format = (string) NV12, " \
+    "format = (string) {NV12, P010_10LE}, " \
     "width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ]"
 
 #define DOC_SINK_CAPS \
@@ -292,7 +293,7 @@ enum
 
 #define DOC_SRC_CAPS \
     "video/x-h265, width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ], " \
-    "profile = (string) main, stream-format = (string) byte-stream, " \
+    "profile = (string) {main, main-10}, stream-format = (string) byte-stream, " \
     "alignment = (string) au"
 
 typedef struct _GstAmfH265Enc
@@ -336,6 +337,8 @@ static void gst_amf_h265_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_amf_h265_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static GstCaps *gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder,
+    GstCaps * filter);
 static gboolean gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component);
 static gboolean gst_amf_h265_enc_set_output_state (GstAmfEncoder * encoder,
@@ -351,6 +354,7 @@ gst_amf_h265_enc_class_init (GstAmfH265EncClass * klass, gpointer data)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstVideoEncoderClass *videoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
   GstAmfEncoderClass *amf_class = GST_AMF_ENCODER_CLASS (klass);
   GstAmfH265EncClassData *cdata = (GstAmfH265EncClassData *) data;
   GstAmfH265EncDeviceCaps *dev_caps = &cdata->dev_caps;
@@ -446,6 +450,8 @@ gst_amf_h265_enc_class_init (GstAmfH265EncClass * klass, gpointer data)
   gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
   gst_caps_unref (doc_caps);
   gst_element_class_add_pad_template (element_class, pad_templ);
+
+  videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_amf_h265_enc_getcaps);
 
   amf_class->set_format = GST_DEBUG_FUNCPTR (gst_amf_h265_enc_set_format);
   amf_class->set_output_state =
@@ -662,6 +668,106 @@ gst_amf_h265_enc_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+gst_amf_h265_enc_get_downstream_profiles (GstAmfH265Enc * self,
+    std::set < std::string > &downstream_profiles)
+{
+  GstCaps *allowed_caps;
+  GstStructure *s;
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (self));
+
+  if (!allowed_caps || gst_caps_is_empty (allowed_caps) ||
+      gst_caps_is_any (allowed_caps)) {
+    gst_clear_caps (&allowed_caps);
+
+    return;
+  }
+
+  for (guint i = 0; i < gst_caps_get_size (allowed_caps); i++) {
+    const GValue *profile_value;
+    const gchar *profile;
+
+    s = gst_caps_get_structure (allowed_caps, i);
+    profile_value = gst_structure_get_value (s, "profile");
+    if (!profile_value)
+      continue;
+
+    if (GST_VALUE_HOLDS_LIST (profile_value)) {
+      for (guint j = 0; j < gst_value_list_get_size (profile_value); j++) {
+        const GValue *p = gst_value_list_get_value (profile_value, j);
+
+        if (!G_VALUE_HOLDS_STRING (p))
+          continue;
+
+        profile = g_value_get_string (p);
+        if (profile)
+          downstream_profiles.insert (profile);
+      }
+    } else if (G_VALUE_HOLDS_STRING (profile_value)) {
+      profile = g_value_get_string (profile_value);
+      if (profile)
+        downstream_profiles.insert (profile);
+    }
+  }
+
+  gst_clear_caps (&allowed_caps);
+}
+
+static GstCaps *
+gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
+{
+  GstAmfH265Enc *self = GST_AMF_H265_ENC (encoder);
+  GstCaps *template_caps;
+  GstCaps *supported_caps;
+  std::set < std::string > downstream_profiles;
+  std::set < std::string > allowed_formats;
+
+  gst_amf_h265_enc_get_downstream_profiles (self, downstream_profiles);
+
+  GST_DEBUG_OBJECT (self, "Downstream specified %" G_GSIZE_FORMAT " profiles",
+      downstream_profiles.size ());
+
+  if (downstream_profiles.size () == 0)
+    return gst_video_encoder_proxy_getcaps (encoder, NULL, filter);
+
+  /* *INDENT-OFF* */
+  for (const auto &iter : downstream_profiles) {
+    if (iter == "main") {
+      allowed_formats.insert("NV12");
+    } else if (iter == "main-10") {
+      allowed_formats.insert("P010_10LE");
+    }
+  }
+  /* *INDENT-ON* */
+  template_caps = gst_pad_get_pad_template_caps (encoder->sinkpad);
+  template_caps = gst_caps_make_writable (template_caps);
+
+  GValue formats = G_VALUE_INIT;
+
+  g_value_init (&formats, GST_TYPE_LIST);
+
+  /* *INDENT-OFF* */
+  for (const auto &iter: allowed_formats) {
+    GValue val = G_VALUE_INIT;
+    g_value_init (&val, G_TYPE_STRING);
+
+    g_value_set_string (&val, iter.c_str());
+    gst_value_list_append_and_take_value (&formats, &val);
+  }
+  /* *INDENT-ON* */
+
+  gst_caps_set_value (template_caps, "format", &formats);
+  g_value_unset (&formats);
+  supported_caps = gst_video_encoder_proxy_getcaps (encoder,
+      template_caps, filter);
+  gst_caps_unref (template_caps);
+
+  GST_DEBUG_OBJECT (self, "Returning %" GST_PTR_FORMAT, supported_caps);
+
+  return supported_caps;
+}
+
 static gboolean
 gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component)
@@ -669,10 +775,17 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
   GstAmfH265Enc *self = GST_AMF_H265_ENC (encoder);
   AMFComponent *comp = (AMFComponent *) component;
   GstVideoInfo *info = &state->info;
+  const GstVideoColorimetry *cinfo = &info->colorimetry;
+  amf_int64 color_profile;
   AMF_RESULT result;
   AMFRate framerate;
   AMFRatio aspect_ratio;
   amf_int64 int64_val;
+  amf_int64 profile = AMF_VIDEO_ENCODER_HEVC_PROFILE_MAIN;
+  amf_int64 color_depth;
+  AMF_SURFACE_FORMAT surface_format;
+  std::set < std::string > downstream_profiles;
+
   AMF_VIDEO_ENCODER_HEVC_RATE_CONTROL_METHOD_ENUM rc_mode;
 
   g_mutex_lock (&self->prop_lock);
@@ -702,10 +815,50 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     }
   }
 
+  gst_amf_h265_enc_get_downstream_profiles (self, downstream_profiles);
+
+  if (downstream_profiles.empty ()) {
+    GST_ERROR_OBJECT (self, "Unable to get downstream profile");
+    goto error;
+  }
+
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_P010_10LE) {
+    if (downstream_profiles.find ("main-10") == downstream_profiles.end ()) {
+      GST_ERROR_OBJECT (self, "Downstream does not support main-10 profile");
+      goto error;
+    } else {
+      color_depth = AMF_COLOR_BIT_DEPTH_10;
+      surface_format = AMF_SURFACE_P010;
+      profile = AMF_VIDEO_ENCODER_HEVC_PROFILE_MAIN_10;
+    }
+  } else if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_NV12) {
+    if (downstream_profiles.find ("main") == downstream_profiles.end ()) {
+      GST_ERROR_OBJECT (self, "Downstream does not support main profile");
+      goto error;
+    } else {
+      color_depth = AMF_COLOR_BIT_DEPTH_8;
+      surface_format = AMF_SURFACE_NV12;
+      profile = AMF_VIDEO_ENCODER_HEVC_PROFILE_MAIN;
+    }
+  } else {
+    GST_ERROR_OBJECT (self, "Unexpected format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+    g_assert_not_reached ();
+    goto error;
+  }
+
   result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_PROFILE,
-      (amf_int64) AMF_VIDEO_ENCODER_HEVC_PROFILE_MAIN);
+      (amf_int64) profile);
   if (result != AMF_OK) {
     GST_ERROR_OBJECT (self, "Failed to set profile, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  result =
+      comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_COLOR_BIT_DEPTH, color_depth);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set bit depth, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
   }
@@ -728,7 +881,7 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
-  if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255)
+  if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255)
     int64_val = AMF_VIDEO_ENCODER_HEVC_NOMINAL_RANGE_FULL;
   else
     int64_val = AMF_VIDEO_ENCODER_HEVC_NOMINAL_RANGE_STUDIO;
@@ -740,7 +893,108 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
-  result = comp->Init (AMF_SURFACE_NV12, info->width, info->height);
+  color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN;
+  switch (cinfo->matrix) {
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_601;
+      } else {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_601;
+      }
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_709;
+      } else {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_709;
+      }
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_2020;
+      } else {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_2020;
+      }
+      break;
+    default:
+      break;
+  }
+
+  result =
+      comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_OUTPUT_COLOR_PROFILE,
+      color_profile);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set output color profile, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  result =
+      comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_OUTPUT_TRANSFER_CHARACTERISTIC,
+      gst_video_transfer_function_to_iso (cinfo->transfer));
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self,
+        "Failed to set output transfer characteristic, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  result = comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_OUTPUT_COLOR_PRIMARIES,
+      gst_video_color_primaries_to_iso (cinfo->primaries));
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set output color primaries, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  if (cinfo->transfer == GST_VIDEO_TRANSFER_SMPTE2084 &&
+      state->mastering_display_info && state->content_light_level) {
+    AMFBuffer *hdrmeta_buffer = NULL;
+    result =
+        comp->GetContext ()->AllocBuffer (AMF_MEMORY_HOST,
+        sizeof (AMFHDRMetadata), &hdrmeta_buffer);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to allocate HDR metadata buffer, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+    AMFHDRMetadata *hdrmeta = (AMFHDRMetadata *) hdrmeta_buffer->GetNative ();
+    GstVideoMasteringDisplayInfo *minfo = state->mastering_display_info;
+    GstVideoContentLightLevel *cllinfo = state->content_light_level;
+    hdrmeta->maxMasteringLuminance =
+        (amf_uint32) minfo->max_display_mastering_luminance;
+    hdrmeta->minMasteringLuminance =
+        (amf_uint32) minfo->min_display_mastering_luminance;
+
+    hdrmeta->redPrimary[0] = minfo->display_primaries[0].x;
+    hdrmeta->redPrimary[1] = minfo->display_primaries[0].y;
+
+    hdrmeta->greenPrimary[0] = minfo->display_primaries[1].x;
+    hdrmeta->greenPrimary[1] = minfo->display_primaries[1].y;
+
+    hdrmeta->bluePrimary[0] = minfo->display_primaries[2].x;
+    hdrmeta->bluePrimary[1] = minfo->display_primaries[2].y;
+
+    hdrmeta->whitePoint[0] = minfo->white_point.x;
+    hdrmeta->whitePoint[1] = minfo->white_point.y;
+    hdrmeta->maxContentLightLevel =
+        (amf_uint16) cllinfo->max_content_light_level;
+    hdrmeta->maxFrameAverageLightLevel =
+        (amf_uint16) cllinfo->max_frame_average_light_level;
+
+    result =
+        comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_INPUT_HDR_METADATA,
+        hdrmeta_buffer);
+
+    hdrmeta_buffer->Release ();
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set HDR metadata, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+  }
+
+  result = comp->Init (surface_format, info->width, info->height);
   if (result != AMF_OK) {
     GST_ERROR_OBJECT (self, "Failed to init component, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
@@ -857,12 +1111,19 @@ gst_amf_h265_enc_set_output_state (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component)
 {
   GstAmfH265Enc *self = GST_AMF_H265_ENC (encoder);
+  GstVideoInfo *info = &state->info;
   GstVideoCodecState *output_state;
   GstCaps *caps;
   GstTagList *tags;
+  std::string caps_str = "video/x-h265, alignment = (string) au"
+      ", stream-format = (string) byte-stream, profile = (string) ";
 
-  caps = gst_caps_from_string ("video/x-h265, alignment = (string) au"
-      ", stream-format = (string) byte-stream, profile = (string) main");
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_P010_10LE) {
+    caps_str += "main-10";
+  } else {
+    caps_str += "main";
+  }
+  caps = gst_caps_from_string (caps_str.c_str ());
   output_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       caps, state);
 
@@ -961,7 +1222,8 @@ gst_amf_h265_enc_create_class_data (GstD3D11Device * device,
   GstAmfH265EncDeviceCaps dev_caps = { 0, };
   std::string sink_caps_str;
   std::string src_caps_str;
-  std::vector < std::string > profiles;
+  std::set < std::string > profiles;
+  std::string profile_str;
   std::string resolution_str;
   GstAmfH265EncClassData *cdata;
   AMFCapsPtr amf_caps;
@@ -972,7 +1234,10 @@ gst_amf_h265_enc_create_class_data (GstD3D11Device * device,
   amf_int32 out_min_width = 0, out_max_width = 0;
   amf_int32 out_min_height = 0, out_max_height = 0;
   amf_int32 num_val;
+  std::set < std::string > formats;
+  std::string format_str;
   gboolean have_nv12 = FALSE;
+  gboolean have_p010 = FALSE;
   gboolean d3d11_supported = FALSE;
   gint min_width, max_width, min_height, max_height;
   GstCaps *sink_caps;
@@ -1002,15 +1267,24 @@ gst_amf_h265_enc_create_class_data (GstD3D11Device * device,
   GST_LOG_OBJECT (device, "Input format count: %d", num_val);
   for (amf_int32 i = 0; i < num_val; i++) {
     AMF_SURFACE_FORMAT format;
-    amf_bool native;
+    amf_bool native = false;
 
     result = in_iocaps->GetFormatAt (i, &format, &native);
     if (result != AMF_OK)
       continue;
 
     GST_INFO_OBJECT (device, "Format %d supported, native %d", format, native);
-    if (format == AMF_SURFACE_NV12)
+    if (format == AMF_SURFACE_NV12) {
       have_nv12 = TRUE;
+      formats.insert ("NV12");
+    }
+    if (format == AMF_SURFACE_P010 && native) {
+      have_p010 = TRUE;
+    }
+  }
+  if (formats.empty ()) {
+    GST_WARNING_OBJECT (device, "Empty supported input formats");
+    return nullptr;
   }
 
   if (!have_nv12) {
@@ -1113,6 +1387,50 @@ gst_amf_h265_enc_create_class_data (GstD3D11Device * device,
     }
   }
 
+  if (formats.find ("NV12") != formats.end ())
+    profiles.insert ("main");
+
+  if (dev_caps.max_profile >= (amf_int64) AMF_VIDEO_ENCODER_HEVC_PROFILE_MAIN_10
+      && have_p010) {
+    formats.insert ("P010_10LE");
+    profiles.insert ("main-10");
+  }
+
+  if (profiles.empty ()) {
+    GST_WARNING_OBJECT (device, "Failed to determine profile support");
+    return nullptr;
+  }
+#define APPEND_STRING(dst,set,str) G_STMT_START { \
+  if (set.find(str) != set.end()) { \
+    if (!first) \
+      dst += ", "; \
+    dst += str; \
+    first = FALSE; \
+  } \
+} G_STMT_END
+
+  if (formats.size () == 1) {
+    format_str = "format = (string) " + *(formats.begin ());
+  } else {
+    gboolean first = TRUE;
+    format_str = "format = (string) { ";
+    APPEND_STRING (format_str, formats, "NV12");
+    APPEND_STRING (format_str, formats, "P010_10LE");
+    format_str += " } ";
+  }
+  if (profiles.size () == 1) {
+    profile_str = "profile = (string) " + *(profiles.begin ());
+  } else {
+    gboolean first = TRUE;
+
+    profile_str = "profile = (string) { ";
+    APPEND_STRING (profile_str, profiles, "main");
+    APPEND_STRING (profile_str, profiles, "main-10");
+    profile_str += " } ";
+  }
+
+#undef APPEND_STRING
+
   min_width = MAX (in_min_width, 1);
   max_width = in_max_width;
   if (max_width == 0) {
@@ -1132,9 +1450,12 @@ gst_amf_h265_enc_create_class_data (GstD3D11Device * device,
   resolution_str += ", height = (int) [ " + std::to_string (min_height)
       + ", " + std::to_string (max_height) + " ]";
 
-  sink_caps_str = "video/x-raw, format = (string) NV12, " + resolution_str +
+  sink_caps_str =
+      "video/x-raw, " + format_str + ", " + resolution_str +
       ", interlace-mode = (string) progressive";
-  src_caps_str = "video/x-h265, " + resolution_str + ", profile = (string) main"
+  src_caps_str =
+      "video/x-h265, " + resolution_str +
+      ", " + profile_str +
       ", stream-format = (string) byte-stream, alignment = (string) au";
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
