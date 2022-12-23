@@ -74,9 +74,6 @@ enum
 #define DEFAULT_START_BITRATE 0
 #define DEFAULT_LLHLS_ENABLED TRUE
 
-/* Maximum values for mpeg-ts DTS values */
-#define MPEG_TS_MAX_PTS (((((guint64)1) << 33) * (guint64)100000) / 9)
-
 /* GObject */
 static void gst_hls_demux_finalize (GObject * obj);
 
@@ -170,7 +167,6 @@ gst_hls_demux_get_property (GObject * object, guint prop_id,
       break;
   }
 }
-
 
 static void
 gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
@@ -408,8 +404,8 @@ create_common_hls_stream (GstHLSDemux * demux, const gchar * name)
 {
   GstAdaptiveDemux2Stream *stream;
 
-  stream = g_object_new (GST_TYPE_HLS_DEMUX_STREAM, "name", name, NULL);
-  GST_HLS_DEMUX_STREAM (stream)->llhls_enabled = demux->llhls_enabled;
+  stream = g_object_new (GST_TYPE_HLS_DEMUX_STREAM, "name", name,
+      "llhls-enabled", demux->llhls_enabled, NULL);
 
   gst_adaptive_demux2_add_stream ((GstAdaptiveDemux *) demux, stream);
 

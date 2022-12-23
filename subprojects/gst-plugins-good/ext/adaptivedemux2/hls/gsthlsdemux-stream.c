@@ -43,6 +43,15 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_hls_demux2_debug);
 #define GST_CAT_DEFAULT gst_hls_demux2_debug
 
+enum
+{
+  PROP_0,
+
+  PROP_LLHLS_ENABLED,
+};
+
+#define DEFAULT_LLHLS_ENABLED TRUE
+
 /* Maximum values for mpeg-ts DTS values */
 #define MPEG_TS_MAX_PTS (((((guint64)1) << 33) * (guint64)100000) / 9)
 
@@ -88,12 +97,46 @@ G_DEFINE_TYPE (GstHLSDemuxStream, gst_hls_demux_stream,
     GST_TYPE_ADAPTIVE_DEMUX2_STREAM);
 
 static void
+gst_hls_demux_stream_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstHLSDemuxStream *stream = GST_HLS_DEMUX_STREAM (object);
+
+  switch (prop_id) {
+    case PROP_LLHLS_ENABLED:
+      stream->llhls_enabled = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_hls_demux_stream_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstHLSDemuxStream *stream = GST_HLS_DEMUX_STREAM (object);
+
+  switch (prop_id) {
+    case PROP_LLHLS_ENABLED:
+      g_value_set_boolean (value, stream->llhls_enabled);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAdaptiveDemux2StreamClass *adaptivedemux2stream_class =
       GST_ADAPTIVE_DEMUX2_STREAM_CLASS (klass);
 
+  gobject_class->set_property = gst_hls_demux_stream_set_property;
+  gobject_class->get_property = gst_hls_demux_stream_get_property;
   gobject_class->finalize = gst_hls_demux_stream_finalize;
 
   adaptivedemux2stream_class->update_fragment_info =
@@ -120,6 +163,11 @@ gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
       gst_hls_demux_stream_data_received;
   adaptivedemux2stream_class->get_presentation_offset =
       gst_hls_demux_stream_get_presentation_offset;
+
+  g_object_class_install_property (gobject_class, PROP_LLHLS_ENABLED,
+      g_param_spec_boolean ("llhls-enabled", "Enable LL-HLS support",
+          "Enable support for LL-HLS (Low Latency HLS) downloads",
+          DEFAULT_LLHLS_ENABLED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -130,6 +178,7 @@ gst_hls_demux_stream_init (GstHLSDemuxStream * stream)
   stream->reset_pts = TRUE;
   stream->presentation_offset = 60 * GST_SECOND;
   stream->pdt_tag_sent = FALSE;
+  stream->llhls_enabled = DEFAULT_LLHLS_ENABLED;
 }
 
 void
