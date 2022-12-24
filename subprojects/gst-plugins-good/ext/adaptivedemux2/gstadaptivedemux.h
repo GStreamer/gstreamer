@@ -85,6 +85,10 @@ G_BEGIN_DECLS
 /* The live stream has lost synchronization and the demuxer needs to be resetted */
 #define GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC GST_FLOW_CUSTOM_SUCCESS_2 + 1
 
+/* The stream sub-class is busy and can't supply information for
+ * ::update_fragment_info() right now */
+#define GST_ADAPTIVE_DEMUX_FLOW_BUSY (GST_FLOW_CUSTOM_SUCCESS_2 + 3)
+
 typedef struct _GstAdaptiveDemuxPrivate GstAdaptiveDemuxPrivate;
 
 struct _GstAdaptiveDemuxTrack
