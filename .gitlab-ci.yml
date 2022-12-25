@@ -28,6 +28,10 @@ variables:
 
   FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
 
+  MESON_COMMIT:
+    description: "Overwrite the meson version installed on the CI images with the specified meson commit"
+    value: ""
+
   FEDORA_AMD64_SUFFIX: 'amd64/fedora'
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
   WINDOWS_AMD64_SUFFIX: 'amd64/windows'
