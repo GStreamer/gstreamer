@@ -2,8 +2,6 @@
  * Copyright (C) 2022, Fluendo S.A.
  * support@fluendo.com
  */
-#include "pch.h"
-
 #include "config.h"
 #include <iostream>
 #include <gst/gst.h>
