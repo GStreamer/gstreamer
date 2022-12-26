@@ -1333,8 +1333,8 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
              "matroskademux.gst_matroska_demux_handle_seek_push: Seek end-time not supported in streaming mode"),
 
             # MPEG TS known issues:
-            ('(?i)*playback.reverse_playback.*(?:_|.)(?:|m)ts$',
-             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/97"),
+            ('*.playback.reverse_playback.*(?:_|.)(?:|m)ts$',
+             "https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/97", '(?i)'),
 
             # Fragmented MP4 disabled tests:
             ('*.playback..*seek.*.fragmented_nonseekable_sink_mp4',

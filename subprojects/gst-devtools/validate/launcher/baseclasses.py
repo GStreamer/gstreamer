@@ -1565,9 +1565,13 @@ class TestsManager(Loggable):
                 self.blacklisted_tests_patterns.append(re.compile(pattern))
 
     def set_default_blacklist(self, default_blacklist):
-        for test_regex, reason in default_blacklist:
+        for test_regex, reason, *re_flags in default_blacklist:
+            re_flags = re_flags[0] if re_flags else None
+
             if not test_regex.startswith(self.loading_testsuite + '.'):
                 test_regex = self.loading_testsuite + '.' + test_regex
+            if re_flags is not None:
+                test_regex = re_flags + test_regex
             self.blacklisted_tests.append((test_regex, reason))
             self._add_blacklist(test_regex)
 
