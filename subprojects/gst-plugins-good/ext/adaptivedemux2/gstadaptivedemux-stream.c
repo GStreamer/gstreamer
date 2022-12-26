@@ -2170,6 +2170,8 @@ gst_adaptive_demux2_stream_is_running (GstAdaptiveDemux2Stream * stream)
   return TRUE;
 }
 
+/* Returns TRUE if the stream has at least one selected track.
+ * Must be called with the TRACKS_LOCK held */
 gboolean
 gst_adaptive_demux2_stream_is_selected_locked (GstAdaptiveDemux2Stream * stream)
 {

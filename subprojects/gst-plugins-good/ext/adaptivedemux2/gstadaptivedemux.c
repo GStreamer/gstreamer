@@ -2363,23 +2363,6 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   return ret;
 }
 
-/* Returns TRUE if the stream has at least one selected track */
-static gboolean
-gst_adaptive_demux2_stream_has_selected_tracks (GstAdaptiveDemux2Stream *
-    stream)
-{
-  GList *tmp;
-
-  for (tmp = stream->tracks; tmp; tmp = tmp->next) {
-    GstAdaptiveDemuxTrack *track = tmp->data;
-
-    if (track->selected)
-      return TRUE;
-  }
-
-  return FALSE;
-}
-
 static gboolean
 handle_stream_selection (GstAdaptiveDemux * demux, GList * streams,
     guint32 seqnum)
@@ -2448,7 +2431,7 @@ handle_stream_selection (GstAdaptiveDemux * demux, GList * streams,
 
     gboolean is_running = gst_adaptive_demux2_stream_is_running (stream);
     gboolean should_be_running =
-        gst_adaptive_demux2_stream_has_selected_tracks (stream);
+        gst_adaptive_demux2_stream_is_selected_locked (stream);
 
     if (!is_running && should_be_running) {
       GstClockTime output_running_ts = demux->priv->global_output_position;
