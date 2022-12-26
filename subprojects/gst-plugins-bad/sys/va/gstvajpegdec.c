@@ -614,7 +614,8 @@ gst_va_jpeg_dec_register (GstPlugin * plugin, GstVaDevice * device,
   /* class data will be leaked if the element never gets instantiated */
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
-  GST_MINI_OBJECT_FLAG_SET (src_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
 
   type_info.class_data = cdata;
 
