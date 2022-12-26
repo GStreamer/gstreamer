@@ -62,9 +62,6 @@ gst_hls_demux_stream_decrypt_start (GstHLSDemuxStream * stream,
     const guint8 * key_data, const guint8 * iv_data);
 static void gst_hls_demux_stream_decrypt_end (GstHLSDemuxStream * stream);
 
-static GstFlowReturn
-gst_hls_demux_stream_update_rendition_playlist (GstHLSDemuxStream * stream);
-
 static gboolean
 gst_hls_demux_stream_start_fragment (GstAdaptiveDemux2Stream * stream);
 static GstFlowReturn
@@ -212,14 +209,9 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
       GST_TIME_FORMAT, hls_stream->is_variant, hls_stream->current_rendition,
       hlsdemux->current_variant, forward, GST_TIME_ARGS (ts));
 
-  /* If the rendition playlist needs to be updated, do it now */
-  if (!hls_stream->is_variant && !hls_stream->playlist_fetched) {
-    ret = gst_hls_demux_stream_update_rendition_playlist (hls_stream);
-    if (ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (stream,
-          "Failed to update the rendition playlist before seeking");
-      return ret;
-    }
+  /* If this stream doesn't have a playlist yet, we can't seek on it */
+  if (!hls_stream->playlist_fetched) {
+    return GST_ADAPTIVE_DEMUX_FLOW_BUSY;
   }
 
   /* Allow jumping to partial segments in the last 2 segments in LL-HLS */
@@ -1263,233 +1255,6 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
   return GST_FLOW_EOS;
 }
 
-enum PlaylistDownloadParamFlags
-{
-  PLAYLIST_DOWNLOAD_FLAG_SKIP_V1 = (1 << 0),
-  PLAYLIST_DOWNLOAD_FLAG_SKIP_V2 = (1 << 1),    /* V2 also skips date-ranges */
-  PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST = (1 << 2),
-};
-
-struct PlaylistDownloadParams
-{
-  enum PlaylistDownloadParamFlags flags;
-  gint64 next_msn, next_part;
-};
-
-#define HLS_SKIP_QUERY_KEY "_HLS_skip"
-#define HLS_MSN_QUERY_KEY "_HLS_msn"
-#define HLS_PART_QUERY_KEY "_HLS_part"
-
-static gchar *
-apply_directives_to_uri (GstHLSDemuxStream * stream,
-    const gchar * playlist_uri, struct PlaylistDownloadParams *dl_params)
-{
-  GstUri *uri = gst_uri_from_string (playlist_uri);
-
-  if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_SKIP_V1) {
-    GST_LOG_OBJECT (stream, "Doing HLS skip (v1) request");
-    gst_uri_set_query_value (uri, HLS_SKIP_QUERY_KEY, "YES");
-  } else if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_SKIP_V2) {
-    GST_LOG_OBJECT (stream, "Doing HLS skip (v2) request");
-    gst_uri_set_query_value (uri, HLS_SKIP_QUERY_KEY, "v2");
-  } else {
-    gst_uri_remove_query_key (uri, HLS_SKIP_QUERY_KEY);
-  }
-
-  if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST
-      && dl_params->next_msn != -1) {
-    GST_LOG_OBJECT (stream,
-        "Doing HLS blocking request for URI %s with MSN %" G_GINT64_FORMAT
-        " part %" G_GINT64_FORMAT, playlist_uri, dl_params->next_msn,
-        dl_params->next_part);
-
-    gchar *next_msn_str =
-        g_strdup_printf ("%" G_GINT64_FORMAT, dl_params->next_msn);
-    gst_uri_set_query_value (uri, HLS_MSN_QUERY_KEY, next_msn_str);
-    g_free (next_msn_str);
-
-    if (dl_params->next_part != -1) {
-      gchar *next_part_str =
-          g_strdup_printf ("%" G_GINT64_FORMAT, dl_params->next_part);
-      gst_uri_set_query_value (uri, HLS_PART_QUERY_KEY, next_part_str);
-      g_free (next_part_str);
-    } else {
-      gst_uri_remove_query_key (uri, HLS_PART_QUERY_KEY);
-    }
-  }
-
-  /* Produce the resulting URI with query arguments in UTF-8 order
-   * as required by the HLS spec:
-   * `Clients using Delivery Directives (Section 6.2.5) MUST ensure that
-   * all query parameters appear in UTF-8 order within the URI.`
-   */
-  GList *keys = gst_uri_get_query_keys (uri);
-  if (keys)
-    keys = g_list_sort (keys, (GCompareFunc) g_strcmp0);
-  gchar *out_uri = gst_uri_to_string_with_keys (uri, keys);
-  gst_uri_unref (uri);
-
-  return out_uri;
-}
-
-static GstHLSMediaPlaylist *
-download_media_playlist (GstHLSDemuxStream * stream, gchar * orig_uri,
-    GError ** err, GstHLSMediaPlaylist * current)
-{
-  gboolean allow_skip = TRUE;
-
-  GstAdaptiveDemux2Stream *base_stream = GST_ADAPTIVE_DEMUX2_STREAM (stream);
-  GstAdaptiveDemux *demux = base_stream->demux;
-  const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
-  struct PlaylistDownloadParams dl_params;
-
-retry:
-
-  memset (&dl_params, 0, sizeof (struct PlaylistDownloadParams));
-
-  /* If there's no previous playlist, or the URI changed this
-   * is not a refresh/update but a switch to a new playlist */
-  gboolean playlist_uri_change = (current == NULL
-      || g_strcmp0 (orig_uri, current->uri) != 0);
-
-  if (!playlist_uri_change) {
-    GST_LOG_OBJECT (stream, "Updating the playlist");
-
-    /* See if we can do a delta playlist update (if the playlist age is less than
-     * one half of the Skip Boundary */
-    if (GST_CLOCK_TIME_IS_VALID (current->skip_boundary) && allow_skip) {
-      GstClockTime now = gst_adaptive_demux2_get_monotonic_time (demux);
-      GstClockTimeDiff playlist_age =
-          GST_CLOCK_DIFF (current->playlist_ts, now);
-
-      if (GST_CLOCK_TIME_IS_VALID (current->playlist_ts) &&
-          playlist_age <= current->skip_boundary / 2) {
-        if (current->can_skip_dateranges) {
-          dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V2;
-        } else {
-          dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_SKIP_V1;
-        }
-      }
-    } else if (GST_CLOCK_TIME_IS_VALID (current->skip_boundary)) {
-      GST_DEBUG_OBJECT (stream,
-          "Doing full playlist update after failed delta request");
-    }
-  }
-
-  /* Blocking playlist reload check */
-  if (current != NULL && current->can_block_reload) {
-    if (playlist_uri_change) {
-      /* FIXME: We're changing playlist, but if there's a EXT-X-RENDITION-REPORT
-       * for the new playlist we might be able to use it to do a blocking request */
-    } else {
-      /* Get the next MSN (and/or possibly part number) for the request params */
-      gst_hls_media_playlist_get_next_msn_and_part (current,
-          stream->llhls_enabled, &dl_params.next_msn, &dl_params.next_part);
-      dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST;
-    }
-  }
-
-  gchar *target_uri = apply_directives_to_uri (stream, orig_uri, &dl_params);
-
-  DownloadRequest *download = downloadhelper_fetch_uri (demux->download_helper,
-      target_uri, main_uri,
-      DOWNLOAD_FLAG_COMPRESS | DOWNLOAD_FLAG_FORCE_REFRESH, err);
-
-  g_free (target_uri);
-
-  if (download == NULL)
-    return NULL;
-
-  /* If we got a permanent redirect, use that as the new
-   * playlist URI, otherwise set the base URI of the playlist
-   * to the redirect target if any (NULL if there was no redirect) */
-  GstHLSMediaPlaylist *playlist = NULL;
-  gchar *base_uri, *uri;
-
-  if (download->redirect_permanent && download->redirect_uri) {
-    uri = g_strdup (download->redirect_uri);
-    base_uri = NULL;
-  } else {
-    uri = g_strdup (download->uri);
-    base_uri = g_strdup (download->redirect_uri);
-  }
-
-  if (download->state == DOWNLOAD_REQUEST_STATE_ERROR) {
-    GST_WARNING_OBJECT (demux,
-        "Couldn't get the playlist, got HTTP status code %d",
-        download->status_code);
-    download_request_unref (download);
-    if (err)
-      g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_WRONG_TYPE,
-          "Couldn't download the playlist");
-    goto out;
-  }
-
-  /* Calculate the newest time we know this playlist was valid to store on the HLS Media Playlist */
-  GstClockTime playlist_ts =
-      MAX (0, GST_CLOCK_DIFF (download_request_get_age (download),
-          download->download_start_time));
-
-  GstBuffer *buf = download_request_take_buffer (download);
-  download_request_unref (download);
-
-  /* there should be a buf if there wasn't an error (handled above) */
-  g_assert (buf);
-
-  gchar *playlist_data = gst_hls_buf_to_utf8_text (buf);
-  gst_buffer_unref (buf);
-
-  if (playlist_data == NULL) {
-    GST_WARNING_OBJECT (demux, "Couldn't validate playlist encoding");
-    if (err)
-      g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_WRONG_TYPE,
-          "Couldn't validate playlist encoding");
-    goto out;
-  }
-
-  if (!playlist_uri_change && current
-      && gst_hls_media_playlist_has_same_data (current, playlist_data)) {
-    GST_DEBUG_OBJECT (demux, "Same playlist data");
-    playlist = gst_hls_media_playlist_ref (current);
-    playlist->reloaded = TRUE;
-    g_free (playlist_data);
-  } else {
-    playlist =
-        gst_hls_media_playlist_parse (playlist_data, playlist_ts, uri,
-        base_uri);
-    if (!playlist) {
-      GST_WARNING_OBJECT (demux, "Couldn't parse playlist");
-      if (err)
-        g_set_error (err, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
-            "Couldn't parse playlist");
-    }
-  }
-
-  /* Transfer over any skipped segments from the current playlist if
-   * we did a delta playlist update */
-  if (!playlist_uri_change && current && playlist
-      && playlist->skipped_segments > 0) {
-    if (!gst_hls_media_playlist_sync_skipped_segments (playlist, current)) {
-      GST_DEBUG_OBJECT (stream,
-          "Could not merge delta update to playlist. Retrying with full request");
-
-      /* Delta playlist update failed. Load a full playlist */
-      allow_skip = FALSE;
-
-      gst_hls_media_playlist_unref (playlist);
-      g_free (uri);
-      g_free (base_uri);
-      goto retry;
-    }
-  }
-
-out:
-  g_free (uri);
-  g_free (base_uri);
-
-  return playlist;
-}
-
 static void
 gst_hls_demux_stream_update_preloads (GstHLSDemuxStream * hlsdemux_stream)
 {
@@ -1571,45 +1336,11 @@ gst_hls_demux_stream_submit_request (GstAdaptiveDemux2Stream * stream,
       (stream, download_req);
 }
 
-void
-gst_hls_demux_stream_set_playlist_uri (GstHLSDemuxStream * hls_stream,
-    gchar * uri)
+static void
+gst_hls_demux_stream_handle_playlist_update (GstHLSDemuxStream * stream,
+    const gchar * new_playlist_uri, GstHLSMediaPlaylist * new_playlist)
 {
-  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX2_STREAM_CAST (hls_stream)->demux;
-
-  if (hls_stream->playlistloader == NULL) {
-    hls_stream->playlistloader =
-        gst_hls_demux_playlist_loader_new (demux, demux->download_helper,
-        hls_stream->llhls_enabled);
-  }
-
-  const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
-  gst_hls_demux_playlist_loader_set_playlist_uri (hls_stream->playlistloader,
-      main_uri, uri);
-}
-
-GstFlowReturn
-gst_hls_demux_stream_update_media_playlist (GstHLSDemuxStream * stream,
-    gchar ** uri, GError ** err)
-{
-  GstHLSMediaPlaylist *new_playlist;
   GstHLSDemux *demux = GST_HLS_DEMUX_STREAM_GET_DEMUX (stream);
-
-  GST_DEBUG_OBJECT (stream, "Updating %s", *uri);
-
-  new_playlist = download_media_playlist (stream, *uri, err, stream->playlist);
-  if (new_playlist == NULL) {
-    GST_WARNING_OBJECT (stream, "Could not get playlist '%s'", *uri);
-    return GST_FLOW_ERROR;
-  }
-
-  /* Check if a redirect happened */
-  if (g_strcmp0 (*uri, new_playlist->uri)) {
-    GST_DEBUG_OBJECT (stream, "Playlist URI update : '%s'  =>  '%s'", *uri,
-        new_playlist->uri);
-    g_free (*uri);
-    *uri = g_strdup (new_playlist->uri);
-  }
 
   /* Synchronize playlist with previous one. If we can't update the playlist
    * timing and inform the base class that we lost sync */
@@ -1707,29 +1438,31 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemuxStream * stream,
     GST_DEBUG_OBJECT (stream, "No current segment");
   }
 
-  if (stream->playlist) {
-    gst_hls_media_playlist_unref (stream->playlist);
-    stream->playlist = new_playlist;
-  } else {
-    if (stream->is_variant) {
-      GST_DEBUG_OBJECT (stream, "Setting up initial playlist");
-      gst_hls_demux_setup_initial_playlist (demux, new_playlist);
-    }
-    stream->playlist = new_playlist;
+  if (stream->is_variant) {
+    /* Updates on the variant playlist have some special requirements to
+     * set up the time mapping and initial stream config */
+    gst_hls_demux_handle_variant_playlist_update (demux, new_playlist_uri,
+        new_playlist);
+  } else if (stream->pending_rendition) {
+    /* Switching rendition configures a new playlist on the loader,
+     * and we should never get a callback for a stale download URI */
+    g_assert (g_str_equal (stream->pending_rendition->uri, new_playlist_uri));
+
+    gst_hls_rendition_stream_unref (stream->current_rendition);
+    /* Stealing ref */
+    stream->current_rendition = stream->pending_rendition;
+    stream->pending_rendition = NULL;
   }
+
+  if (stream->playlist)
+    gst_hls_media_playlist_unref (stream->playlist);
+  stream->playlist = gst_hls_media_playlist_ref (new_playlist);
+  stream->playlist_fetched = TRUE;
 
   if (!GST_HLS_MEDIA_PLAYLIST_IS_LIVE (stream->playlist)) {
     /* Make sure to cancel any preloads if a playlist isn't live after reload */
     gst_hls_demux_stream_update_preloads (stream);
   }
-
-  if (stream->is_variant) {
-    /* Update time mappings. We only use the variant stream for collecting
-     * mappings since it is the reference on which rendition stream timing will
-     * be based. */
-    gst_hls_update_time_mappings (demux, stream->playlist);
-  }
-  gst_hls_media_playlist_dump (stream->playlist);
 
   if (stream->current_segment) {
     GST_DEBUG_OBJECT (stream,
@@ -1743,8 +1476,7 @@ gst_hls_demux_stream_update_media_playlist (GstHLSDemuxStream * stream,
   }
 
   GST_DEBUG_OBJECT (stream, "done");
-
-  return GST_FLOW_OK;
+  return;
 
   /* ERRORS */
 lost_sync:
@@ -1753,88 +1485,97 @@ lost_sync:
     if (stream->playlist)
       gst_hls_media_playlist_unref (stream->playlist);
     stream->playlist = new_playlist;
+    stream->playlist = gst_hls_media_playlist_ref (new_playlist);
+    stream->playlist_fetched = TRUE;
 
     gst_hls_demux_reset_for_lost_sync (demux);
-
-    return GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC;
   }
 }
 
-GstClockTime
-gst_hls_demux_stream_get_playlist_reload_interval (GstHLSDemuxStream * stream)
+static void
+on_playlist_update_success (GstHLSDemuxPlaylistLoader * pl,
+    const gchar * new_playlist_uri, GstHLSMediaPlaylist * new_playlist,
+    gpointer userdata)
 {
-  GstHLSMediaPlaylist *playlist = stream->playlist;
+  GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (userdata);
 
-  if (playlist == NULL)
-    return GST_CLOCK_TIME_NONE; /* No playlist yet */
-
-  if (!gst_hls_media_playlist_is_live (playlist))
-    return GST_CLOCK_TIME_NONE; /* Not live playback */
-
-  /* Use the most recent segment (or part segment) duration, as per
-   * https://datatracker.ietf.org/doc/html/draft-pantos-hls-rfc8216bis-11#section-6.3.4
-   */
-  GstClockTime target_duration = GST_CLOCK_TIME_NONE;
-  GstClockTime min_reload_interval = playlist->targetduration / 2;
-
-  if (playlist->segments->len) {
-    GstM3U8MediaSegment *last_seg =
-        g_ptr_array_index (playlist->segments, playlist->segments->len - 1);
-
-    target_duration = last_seg->duration;
-
-    if (stream->llhls_enabled && last_seg->partial_segments) {
-      GstM3U8PartialSegment *last_part =
-          g_ptr_array_index (last_seg->partial_segments,
-          last_seg->partial_segments->len - 1);
-
-      target_duration = last_part->duration;
-      if (GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)) {
-        min_reload_interval = playlist->partial_targetduration / 2;
-      } else {
-        min_reload_interval = target_duration / 2;
-      }
-    }
-  } else if (stream->llhls_enabled
-      && GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)) {
-    target_duration = playlist->partial_targetduration;
-    min_reload_interval = target_duration / 2;
-  } else if (playlist->version > 5) {
-    target_duration = playlist->targetduration;
-  }
-
-  if (playlist->reloaded && target_duration > min_reload_interval) {
-    GST_DEBUG_OBJECT (stream,
-        "Playlist didn't change previously, returning lower update interval");
-    target_duration = min_reload_interval;
-  }
-
-  return target_duration;
+  gst_hls_demux_stream_handle_playlist_update (hls_stream,
+      new_playlist_uri, new_playlist);
+  gst_adaptive_demux2_stream_mark_prepared (GST_ADAPTIVE_DEMUX2_STREAM_CAST
+      (hls_stream));
 }
 
-static GstFlowReturn
-gst_hls_demux_stream_update_rendition_playlist (GstHLSDemuxStream * stream)
+static void
+on_playlist_update_error (GstHLSDemuxPlaylistLoader * pl,
+    const gchar * playlist_uri, gpointer userdata)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstHLSRenditionStream *target_rendition =
-      stream->pending_rendition ? stream->
-      pending_rendition : stream->current_rendition;
+  GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (userdata);
 
-  ret = gst_hls_demux_stream_update_media_playlist (stream,
-      &target_rendition->uri, NULL);
-  if (ret != GST_FLOW_OK)
-    return ret;
+  /* FIXME: How to handle rendition playlist update errors */
+  if (hls_stream->is_variant) {
+    GstHLSDemux *demux = GST_HLS_DEMUX_STREAM_GET_DEMUX (hls_stream);
+    gst_hls_demux_handle_variant_playlist_update_error (demux, playlist_uri);
+  }
+}
 
-  if (stream->pending_rendition) {
-    gst_hls_rendition_stream_unref (stream->current_rendition);
-    /* Stealing ref */
-    stream->current_rendition = stream->pending_rendition;
-    stream->pending_rendition = NULL;
+static GstHLSDemuxPlaylistLoader *
+gst_hls_demux_stream_get_playlist_loader (GstHLSDemuxStream * hls_stream)
+{
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX2_STREAM_CAST (hls_stream)->demux;
+  if (hls_stream->playlistloader == NULL) {
+    hls_stream->playlistloader =
+        gst_hls_demux_playlist_loader_new (demux, demux->download_helper,
+        hls_stream->llhls_enabled);
+    gst_hls_demux_playlist_loader_set_callbacks (hls_stream->playlistloader,
+        on_playlist_update_success, on_playlist_update_error, hls_stream);
   }
 
-  stream->playlist_fetched = TRUE;
+  return hls_stream->playlistloader;
+}
 
-  return ret;
+void
+gst_hls_demux_stream_set_playlist_uri (GstHLSDemuxStream * hls_stream,
+    gchar * uri)
+{
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX2_STREAM_CAST (hls_stream)->demux;
+  GstHLSDemuxPlaylistLoader *pl =
+      gst_hls_demux_stream_get_playlist_loader (hls_stream);
+
+  const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
+  gst_hls_demux_playlist_loader_set_playlist_uri (pl, main_uri, uri);
+}
+
+void
+gst_hls_demux_stream_start_playlist_loading (GstHLSDemuxStream * hls_stream)
+{
+  GstHLSDemuxPlaylistLoader *pl =
+      gst_hls_demux_stream_get_playlist_loader (hls_stream);
+  gst_hls_demux_playlist_loader_start (pl);
+}
+
+GstFlowReturn
+gst_hls_demux_stream_check_current_playlist_uri (GstHLSDemuxStream * stream,
+    gchar * uri)
+{
+  GstHLSDemuxPlaylistLoader *pl =
+      gst_hls_demux_stream_get_playlist_loader (stream);
+
+  if (!gst_hls_demux_playlist_loader_has_current_uri (pl, uri)) {
+    GST_LOG_OBJECT (stream, "Playlist '%s' not available yet", uri);
+    return GST_ADAPTIVE_DEMUX_FLOW_BUSY;
+  }
+
+  return GST_FLOW_OK;
+
+#if 0
+  /* Check if a redirect happened */
+  if (g_strcmp0 (*uri, new_playlist->uri)) {
+    GST_DEBUG_OBJECT (stream, "Playlist URI update : '%s'  =>  '%s'", *uri,
+        new_playlist->uri);
+    g_free (*uri);
+    *uri = g_strdup (new_playlist->uri);
+  }
+#endif
 }
 
 static GstFlowReturn
@@ -1848,11 +1589,10 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
   GstM3U8PartialSegment *part = NULL;
   gboolean discont;
 
-  /* If the rendition playlist needs to be updated, do it now */
-  if (!hlsdemux_stream->is_variant && !hlsdemux_stream->playlist_fetched) {
-    ret = gst_hls_demux_stream_update_rendition_playlist (hlsdemux_stream);
-    if (ret != GST_FLOW_OK)
-      return ret;
+  /* Return BUSY if the playlist isn't loaded yet */
+  if (!hlsdemux_stream->playlist_fetched) {
+    gst_hls_demux_stream_start_playlist_loading (hlsdemux_stream);
+    return GST_ADAPTIVE_DEMUX_FLOW_BUSY;
   }
 #ifndef GST_DISABLE_GST_DEBUG
   GstClockTimeDiff live_edge_dist =
@@ -2089,14 +1829,7 @@ gst_hls_demux_stream_start (GstAdaptiveDemux2Stream * stream)
   /* Start the playlist loader */
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
 
-  if (hls_stream->playlistloader == NULL) {
-    GstAdaptiveDemux *demux = stream->demux;
-
-    hls_stream->playlistloader =
-        gst_hls_demux_playlist_loader_new (demux, demux->download_helper,
-        hls_stream->llhls_enabled);
-  }
-  gst_hls_demux_playlist_loader_start (hls_stream->playlistloader);
+  gst_hls_demux_stream_start_playlist_loading (hls_stream);
 
   /* Chain up, to start the downloading */
   GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->start (stream);
@@ -2107,14 +1840,20 @@ gst_hls_demux_stream_stop (GstAdaptiveDemux2Stream * stream)
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
 
-  if (hls_stream->playlistloader)
+  if (hls_stream->playlistloader && !hls_stream->is_variant) {
+    /* Don't stop the loader for the variant stream, keep it running
+     * until the scheduler itself is stopped so we keep updating
+     * the live playlist timeline */
     gst_hls_demux_playlist_loader_stop (hls_stream->playlistloader);
+  }
 
   /* Chain up, to stop the downloading */
   GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->stop (stream);
 }
 
-/* Returns TRUE if the rendition stream switched group-id */
+/* Called when the variant is changed, to set a new rendition
+ * for this stream to download. Returns TRUE if the rendition
+ * stream switched group-id */
 static gboolean
 gst_hls_demux_update_rendition_stream (GstHLSDemux * hlsdemux,
     GstHLSDemuxStream * hls_stream, GError ** err)
@@ -2166,7 +1905,6 @@ gst_hls_demux_update_rendition_stream (GstHLSDemux * hlsdemux,
 
   GST_DEBUG_OBJECT (hlsdemux, "Use replacement playlist %s",
       replacement_media->name);
-  hls_stream->playlist_fetched = FALSE;
   if (hls_stream->pending_rendition) {
     GST_ERROR_OBJECT (hlsdemux,
         "Already had a pending rendition switch to '%s'",

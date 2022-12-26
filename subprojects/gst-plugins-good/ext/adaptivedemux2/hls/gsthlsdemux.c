@@ -50,6 +50,9 @@
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/tag/tag.h>
 
+/* FIXME: Only needed for scheduler-unlock/lock hack */
+#include <gstadaptivedemux-private.h>
+
 #include "gsthlselements.h"
 #include "gstadaptivedemuxelements.h"
 #include "gsthlsdemux.h"
@@ -82,17 +85,13 @@ static GstStateChangeReturn
 gst_hls_demux_change_state (GstElement * element, GstStateChange transition);
 
 /* GstHLSDemux */
-static GstFlowReturn gst_hls_demux_update_playlist (GstHLSDemux * demux,
-    gboolean update, GError ** err);
+static GstFlowReturn
+gst_hls_demux_check_variant_playlist_loaded (GstHLSDemux * demux);
 
 static gboolean gst_hls_demux_is_live (GstAdaptiveDemux * demux);
 static GstClockTime gst_hls_demux_get_duration (GstAdaptiveDemux * demux);
-static gint64 gst_hls_demux_get_manifest_update_interval (GstAdaptiveDemux *
-    demux);
-static gboolean gst_hls_demux_process_manifest (GstAdaptiveDemux * demux,
-    GstBuffer * buf);
-
-static GstFlowReturn gst_hls_demux_update_manifest (GstAdaptiveDemux * demux);
+static gboolean gst_hls_demux_process_initial_manifest (GstAdaptiveDemux *
+    demux, GstBuffer * buf);
 
 static void gst_hls_prune_time_mappings (GstHLSDemux * demux);
 
@@ -168,6 +167,16 @@ gst_hls_demux_get_property (GObject * object, guint prop_id,
   }
 }
 
+static gboolean
+hlsdemux_requires_periodical_playlist_update_default (GstAdaptiveDemux *
+    demux G_GNUC_UNUSED)
+{
+  /* We don't need the base class to update our manifest periodically, the
+   * playlist loader for the main stream will do that */
+  return FALSE;
+}
+
+
 static void
 gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
 {
@@ -208,10 +217,10 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
   adaptivedemux_class->is_live = gst_hls_demux_is_live;
   adaptivedemux_class->get_live_seek_range = gst_hls_demux_get_live_seek_range;
   adaptivedemux_class->get_duration = gst_hls_demux_get_duration;
-  adaptivedemux_class->get_manifest_update_interval =
-      gst_hls_demux_get_manifest_update_interval;
-  adaptivedemux_class->process_manifest = gst_hls_demux_process_manifest;
-  adaptivedemux_class->update_manifest = gst_hls_demux_update_manifest;
+  adaptivedemux_class->requires_periodical_playlist_update =
+      hlsdemux_requires_periodical_playlist_update_default;
+  adaptivedemux_class->process_manifest =
+      gst_hls_demux_process_initial_manifest;
   adaptivedemux_class->reset = gst_hls_demux_reset;
   adaptivedemux_class->seek = gst_hls_demux_seek;
 }
@@ -258,7 +267,10 @@ gst_hls_demux_get_bitrate (GstHLSDemux * hlsdemux)
 
   /* FIXME !!!
    *
-   * No, there isn't a single output :D */
+   * No, there isn't a single output :D.
+   * Until the download helper can do estimates,
+   * use the main variant, or a video stream if the
+   * main variant stream is not loading */
 
   /* Valid because hlsdemux only has a single output */
   if (demux->input_period->streams) {
@@ -328,7 +340,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     gst_hls_demux_set_current_variant (hlsdemux,
         hlsdemux->master->iframe_variants->data);
 
-    if (gst_hls_demux_update_playlist (hlsdemux, FALSE, &err) != GST_FLOW_OK) {
+    if (gst_hls_demux_check_variant_playlist_loaded (hlsdemux) != GST_FLOW_OK) {
       GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
       return FALSE;
     }
@@ -342,7 +354,7 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     gst_hls_demux_set_current_variant (hlsdemux,
         hlsdemux->master->variants->data);
 
-    if (gst_hls_demux_update_playlist (hlsdemux, FALSE, &err) != GST_FLOW_OK) {
+    if (gst_hls_demux_check_variant_playlist_loaded (hlsdemux) != GST_FLOW_OK) {
       GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
       return FALSE;
     }
@@ -391,14 +403,6 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   return TRUE;
 }
 
-static GstFlowReturn
-gst_hls_demux_update_manifest (GstAdaptiveDemux * demux)
-{
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
-
-  return gst_hls_demux_update_playlist (hlsdemux, TRUE, NULL);
-}
-
 static GstAdaptiveDemux2Stream *
 create_common_hls_stream (GstHLSDemux * demux, const gchar * name)
 {
@@ -423,15 +427,16 @@ create_main_variant_stream (GstHLSDemux * demux)
   stream = create_common_hls_stream (demux, "hlsstream-variant");
   demux->main_stream = hlsdemux_stream = (GstHLSDemuxStream *) stream;
 
-  gst_hls_demux_stream_set_playlist_uri (hlsdemux_stream,
-      demux->current_variant->uri);
-
   hlsdemux_stream->is_variant = TRUE;
-  hlsdemux_stream->playlist_fetched = TRUE;
+
   /* Due to HLS manifest information being so unreliable/inconsistent, we will
    * create the actual tracks once we have information about the streams present
    * in the variant data stream */
   stream->pending_tracks = TRUE;
+
+  gst_hls_demux_stream_set_playlist_uri (hlsdemux_stream,
+      demux->current_variant->uri);
+  gst_hls_demux_stream_start_playlist_loading (hlsdemux_stream);
 }
 
 GstAdaptiveDemuxTrack *
@@ -590,6 +595,7 @@ gst_hls_demux_setup_streams (GstAdaptiveDemux * demux)
       if (media_stream->current_rendition)
         gst_hls_rendition_stream_unref (media_stream->current_rendition);
       media_stream->current_rendition = gst_hls_rendition_stream_ref (media);
+      gst_hls_demux_stream_set_playlist_uri (media_stream, media->uri);
     }
 
     if (!previous_media_stream)
@@ -628,12 +634,16 @@ gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
   }
 
   if (hlsdemux->main_stream) {
+    /* The variant stream exists, update the playlist we're loading */
     gst_hls_demux_stream_set_playlist_uri (hlsdemux->main_stream, variant->uri);
   }
 }
 
+/* Called to process the initial multi-variant (or simple playlist)
+ * received on the element's sinkpad */
 static gboolean
-gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
+gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
+    GstBuffer * buf)
 {
   GstHLSVariantStream *variant;
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
@@ -694,6 +704,8 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
   GST_DEBUG_OBJECT (hlsdemux, "Manifest handled, now setting up streams");
 
   ret = gst_hls_demux_setup_streams (demux);
+  if (!ret)
+    return FALSE;
 
   if (simple_media_playlist) {
     GstM3U8SeekResult seek_result;
@@ -711,23 +723,33 @@ gst_hls_demux_process_manifest (GstAdaptiveDemux * demux, GstBuffer * buf)
         seek_result.found_partial_segment;
     hlsdemux->main_stream->part_idx = seek_result.part_idx;
 
-    gst_hls_demux_setup_initial_playlist (hlsdemux, simple_media_playlist);
-    gst_hls_update_time_mappings (hlsdemux, simple_media_playlist);
-    gst_hls_media_playlist_dump (simple_media_playlist);
+    gst_hls_demux_handle_variant_playlist_update (hlsdemux,
+        simple_media_playlist->uri, simple_media_playlist);
   }
 
-  /* get the selected media playlist (unless the initial list was one already) */
+  /* If this is a multi-variant playlist, wait for the initial variant playlist to load */
   if (!hlsdemux->master->is_simple) {
     GError *err = NULL;
+    GstFlowReturn flow_ret;
 
-    if (gst_hls_demux_update_playlist (hlsdemux, FALSE, &err) != GST_FLOW_OK) {
+    while ((flow_ret = gst_hls_demux_check_variant_playlist_loaded (hlsdemux)
+            == GST_ADAPTIVE_DEMUX_FLOW_BUSY)) {
+      if (!gst_adaptive_demux2_stream_wait_prepared (GST_ADAPTIVE_DEMUX2_STREAM
+              (hlsdemux->main_stream))) {
+        GST_DEBUG_OBJECT (demux,
+            "Interrupted waiting for stream to be prepared");
+        return FALSE;
+      }
+    }
+
+    if (flow_ret != GST_FLOW_OK) {
       GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not fetch media playlist",
           err);
       return FALSE;
     }
   }
 
-  return ret;
+  return TRUE;
 }
 
 static GstClockTime
@@ -997,21 +1019,45 @@ gst_hls_update_time_mappings (GstHLSDemux * demux,
 }
 
 void
-gst_hls_demux_setup_initial_playlist (GstHLSDemux * demux,
-    GstHLSMediaPlaylist * playlist)
+gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
+    const gchar * playlist_uri, GstHLSMediaPlaylist * playlist)
 {
-  GstM3U8MediaSegment *segment;
+  if (demux->main_stream == NULL || !demux->main_stream->playlist_fetched) {
+    GstM3U8MediaSegment *segment;
 
-  GST_DEBUG_OBJECT (demux,
-      "Setting up initial variant segment and time mapping");
+    GST_DEBUG_OBJECT (demux,
+        "Setting up initial variant segment and time mapping");
 
-  /* This is the initial variant playlist. We will use it to base all our timing
-   * from. */
-  segment = g_ptr_array_index (playlist->segments, 0);
-  if (segment) {
-    segment->stream_time = 0;
-    gst_hls_media_playlist_recalculate_stream_time (playlist, segment);
+    /* This is the initial variant playlist. We will use it to base all our timing
+     * from. */
+    segment = g_ptr_array_index (playlist->segments, 0);
+    if (segment) {
+      segment->stream_time = 0;
+      gst_hls_media_playlist_recalculate_stream_time (playlist, segment);
+    }
   }
+
+  if (demux->pending_variant) {
+    g_assert (g_str_equal (demux->pending_variant->uri, playlist_uri));
+
+    gst_hls_variant_stream_unref (demux->current_variant);
+    /* Stealing ref */
+    demux->current_variant = demux->pending_variant;
+    demux->pending_variant = NULL;
+  }
+
+  /* Update time mappings. We only use the variant stream for collecting
+   * mappings since it is the reference on which rendition stream timing will
+   * be based. */
+  gst_hls_update_time_mappings (demux, playlist);
+  gst_hls_media_playlist_dump (playlist);
+}
+
+void
+gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
+    const gchar * playlist_uri)
+{
+  GST_FIXME ("Variant playlist update failed. Switch over to another variant");
 }
 
 /* Reset hlsdemux in case of live synchronization loss (i.e. when a media
@@ -1106,63 +1152,14 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
 }
 
 static GstFlowReturn
-gst_hls_demux_update_variant_playlist (GstHLSDemux * demux, GError ** err)
+gst_hls_demux_check_variant_playlist_loaded (GstHLSDemux * demux)
 {
-  GstFlowReturn ret = GST_FLOW_OK;
   GstHLSVariantStream *target_variant =
       demux->pending_variant ? demux->pending_variant : demux->current_variant;
   GstHLSDemuxStream *stream = demux->main_stream;
 
-  ret = gst_hls_demux_stream_update_media_playlist (stream,
-      &target_variant->uri, err);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  if (demux->pending_variant) {
-    gst_hls_variant_stream_unref (demux->current_variant);
-    /* Stealing ref */
-    demux->current_variant = demux->pending_variant;
-    demux->pending_variant = NULL;
-  }
-
-  stream->playlist_fetched = TRUE;
-
-  return ret;
-}
-
-
-/*
- * update: TRUE only when requested from parent class (via
- * ::demux_update_manifest() or ::change_variant_playlist() ).
- */
-static GstFlowReturn
-gst_hls_demux_update_playlist (GstHLSDemux * demux, gboolean update,
-    GError ** err)
-{
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstAdaptiveDemux *adaptive_demux = GST_ADAPTIVE_DEMUX (demux);
-
-  GST_DEBUG_OBJECT (demux, "update:%d", update);
-
-  /* Download and update the appropriate variant playlist (pending if any, else
-   * current) */
-  ret = gst_hls_demux_update_variant_playlist (demux, err);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  if (update && gst_hls_demux_is_live (adaptive_demux)) {
-    GList *tmp;
-    GST_DEBUG_OBJECT (demux,
-        "LIVE, Marking rendition streams to be updated next");
-    /* We're live, instruct all rendition medias to be updated next */
-    for (tmp = adaptive_demux->input_period->streams; tmp; tmp = tmp->next) {
-      GstHLSDemuxStream *hls_stream = tmp->data;
-      if (!hls_stream->is_variant)
-        hls_stream->playlist_fetched = FALSE;
-    }
-  }
-
-  return GST_FLOW_OK;
+  return gst_hls_demux_stream_check_current_playlist_uri (stream,
+      target_variant->uri);
 }
 
 gboolean
@@ -1199,7 +1196,14 @@ retry_failover_protection:
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
       " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
 
-  if (gst_hls_demux_update_playlist (demux, TRUE, NULL) == GST_FLOW_OK) {
+  GstFlowReturn flow_ret = gst_hls_demux_check_variant_playlist_loaded (demux);
+
+  /* If the stream is still fetching the playlist, stop */
+  if (flow_ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY)
+    return TRUE;
+
+  /* FIXME: Dead code. We need a different fail and retry mechanism */
+  if (flow_ret == GST_FLOW_OK) {
     const gchar *main_uri;
     gchar *uri = new_variant->uri;
 
@@ -1255,24 +1259,6 @@ retry_failover_protection:
 
   gst_hls_variant_stream_unref (previous_variant);
   return TRUE;
-}
-
-static gint64
-gst_hls_demux_get_manifest_update_interval (GstAdaptiveDemux * demux)
-{
-  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
-  GstClockTime target_duration = 5 * GST_SECOND;
-  GstHLSDemuxStream *main_stream = hlsdemux->main_stream;
-
-  if (main_stream) {
-    target_duration =
-        gst_hls_demux_stream_get_playlist_reload_interval (main_stream);
-  }
-
-  GST_DEBUG_OBJECT (demux, "Returning update interval of %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (target_duration));
-
-  return gst_util_uint64_scale (target_duration, G_USEC_PER_SEC, GST_SECOND);
 }
 
 static gboolean

@@ -258,18 +258,21 @@ gst_hls_demux_playlist_loader_set_playlist_uri (GstHLSDemuxPlaylistLoader * pl,
 }
 
 /* Check that the current playlist matches the target URI, and return
- * a ref to it if so */
-GstHLSMediaPlaylist *
-gst_hls_demux_stream_get_playlist_for_uri (GstHLSDemuxPlaylistLoader * pl,
+ * TRUE if so */
+gboolean
+gst_hls_demux_playlist_loader_has_current_uri (GstHLSDemuxPlaylistLoader * pl,
     const gchar * target_playlist_uri)
 {
   GstHLSDemuxPlaylistLoaderPrivate *priv = pl->priv;
 
+  if (target_playlist_uri == NULL)
+    target_playlist_uri = priv->target_playlist_uri;
+
   if (priv->current_playlist == NULL
       || !g_str_equal (target_playlist_uri, priv->current_playlist_uri))
-    return NULL;
+    return FALSE;
 
-  return gst_hls_media_playlist_ref (priv->current_playlist);
+  return TRUE;
 }
 
 enum PlaylistDownloadParamFlags
@@ -490,7 +493,6 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
   if (priv->current_playlist)
     gst_hls_media_playlist_unref (priv->current_playlist);
 
-  /* FIXME: If there was a redirect, use that for the next update */
   priv->current_playlist_uri = g_strdup (priv->loading_playlist_uri);
   priv->current_playlist = playlist;
 
@@ -510,6 +512,10 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
       GstClockTime delay = get_playlist_reload_interval (pl, priv, playlist);
       schedule_next_playlist_load (pl, priv, delay);
     }
+  } else {
+    GST_LOG_OBJECT (pl, "Playlist is not live. Not scheduling a reload");
+    /* Go back to the starting state until/if the playlist uri is updated */
+    priv->state = PLAYLIST_LOADER_STATE_STARTING;
   }
 
 out:
@@ -557,7 +563,8 @@ start_playlist_download (GstHLSDemuxPlaylistLoader * pl,
   if (orig_uri == NULL)
     return;
 
-  struct PlaylistDownloadParams dl_params = { 0, };
+  struct PlaylistDownloadParams dl_params;
+  memset (&dl_params, 0, sizeof (struct PlaylistDownloadParams));
 
   GstHLSMediaPlaylist *current_playlist = priv->current_playlist;
 

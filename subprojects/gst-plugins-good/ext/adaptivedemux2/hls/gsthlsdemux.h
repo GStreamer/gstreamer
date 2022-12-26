@@ -117,11 +117,14 @@ void gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux);
 const GstHLSKey *gst_hls_demux_get_key (GstHLSDemux * demux,
     const gchar * key_url, const gchar * referer, gboolean allow_cache);
 
-void
-gst_hls_demux_setup_initial_playlist (GstHLSDemux * demux,
-    GstHLSMediaPlaylist * playlist);
+void gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
+    const gchar *playlist_uri, GstHLSMediaPlaylist * playlist);
+void gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
+    const gchar *playlist_uri);
 gboolean gst_hls_demux_change_variant_playlist (GstHLSDemux * demux,
     guint max_bitrate, gboolean * changed);
+GstFlowReturn gst_hls_demux_update_variant_playlist (GstHLSDemux * demux,
+    GError ** err);
 
 void gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
     GstClockTimeDiff stream_time, GDateTime * pdt);

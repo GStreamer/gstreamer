@@ -49,7 +49,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_HLS_DEMUX_STREAM,GstHLSDemuxStream))
 #define GST_HLS_DEMUX_STREAM_CAST(obj) ((GstHLSDemuxStream *)obj)
 
-#define GST_HLS_DEMUX_STREAM_GET_DEMUX(obj) (GST_HLS_DEMUX_CAST(GST_ADAPTIVE_DEMUX2_STREAM(stream)->demux))
+#define GST_HLS_DEMUX_STREAM_GET_DEMUX(obj) (GST_HLS_DEMUX_CAST(GST_ADAPTIVE_DEMUX2_STREAM((obj))->demux))
 
 typedef struct _GstHLSDemuxStream GstHLSDemuxStream;
 typedef GstAdaptiveDemux2StreamClass GstHLSDemuxStreamClass;
@@ -169,11 +169,10 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
 void
 gst_hls_demux_stream_set_playlist_uri (GstHLSDemuxStream * stream, gchar * uri);
 
-GstFlowReturn
-gst_hls_demux_stream_update_media_playlist (GstHLSDemuxStream * stream, gchar ** uri, GError ** err);
+void
+gst_hls_demux_stream_start_playlist_loading (GstHLSDemuxStream * stream);
 
-GstClockTime
-gst_hls_demux_stream_get_playlist_reload_interval (GstHLSDemuxStream * stream);
+GstFlowReturn gst_hls_demux_stream_check_current_playlist_uri (GstHLSDemuxStream * stream, gchar *uri);
 
 void
 gst_hls_demux_stream_clear_pending_data (GstHLSDemuxStream * hls_stream,

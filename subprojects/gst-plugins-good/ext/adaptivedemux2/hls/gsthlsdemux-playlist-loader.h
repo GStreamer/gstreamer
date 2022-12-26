@@ -73,7 +73,7 @@ void gst_hls_demux_playlist_loader_stop (GstHLSDemuxPlaylistLoader *pl);
 
 void gst_hls_demux_playlist_loader_set_playlist_uri (GstHLSDemuxPlaylistLoader *pl,
   const gchar *base_uri, const gchar *current_playlist_uri);
-GstHLSMediaPlaylist *gst_hls_demux_stream_get_playlist_for_uri (GstHLSDemuxPlaylistLoader *pl,
+gboolean gst_hls_demux_playlist_loader_has_current_uri (GstHLSDemuxPlaylistLoader *pl,
   const gchar *target_playlist_uri);
 
 G_END_DECLS
