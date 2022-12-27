@@ -49,6 +49,7 @@
 #include <string.h>
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/tag/tag.h>
+#include <glib/gi18n-lib.h>
 
 /* FIXME: Only needed for scheduler-unlock/lock hack */
 #include <gstadaptivedemux-private.h>
@@ -296,6 +297,27 @@ gst_hls_demux_clear_all_pending_data (GstHLSDemux * hlsdemux)
   }
 }
 
+/* Wait until the current variant playlist finishes loading, only
+ * for use when called from an external thread - seeking or initial
+ * manifest. From the scheduler task it will just hang */
+static GstFlowReturn
+gst_hls_demux_wait_for_variant_playlist (GstHLSDemux * hlsdemux)
+{
+  GstFlowReturn flow_ret;
+
+  while ((flow_ret = gst_hls_demux_check_variant_playlist_loaded (hlsdemux)
+          == GST_ADAPTIVE_DEMUX_FLOW_BUSY)) {
+    if (!gst_adaptive_demux2_stream_wait_prepared (GST_ADAPTIVE_DEMUX2_STREAM
+            (hlsdemux->main_stream))) {
+      GST_DEBUG_OBJECT (hlsdemux,
+          "Interrupted waiting for stream to be prepared");
+      return GST_FLOW_FLUSHING;
+    }
+  }
+
+  return flow_ret;
+}
+
 #define SEEK_UPDATES_PLAY_POSITION(r, start_type, stop_type) \
   ((r >= 0 && start_type != GST_SEEK_TYPE_NONE) || \
    (r < 0 && stop_type != GST_SEEK_TYPE_NONE))
@@ -334,33 +356,27 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
   /* Use I-frame variants for trick modes */
   if (hlsdemux->master->iframe_variants != NULL
       && rate < -1.0 && old_rate >= -1.0 && old_rate <= 1.0) {
-    GError *err = NULL;
 
     /* Switch to I-frame variant */
     gst_hls_demux_set_current_variant (hlsdemux,
         hlsdemux->master->iframe_variants->data);
 
-    if (gst_hls_demux_check_variant_playlist_loaded (hlsdemux) != GST_FLOW_OK) {
-      GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
-      return FALSE;
-    }
-    //hlsdemux->discont = TRUE;
-
-    gst_hls_demux_change_variant_playlist (hlsdemux, bitrate / ABS (rate),
-        NULL);
   } else if (rate > -1.0 && rate <= 1.0 && (old_rate < -1.0 || old_rate > 1.0)) {
-    GError *err = NULL;
     /* Switch to normal variant */
     gst_hls_demux_set_current_variant (hlsdemux,
         hlsdemux->master->variants->data);
+  }
 
-    if (gst_hls_demux_check_variant_playlist_loaded (hlsdemux) != GST_FLOW_OK) {
-      GST_ELEMENT_ERROR_FROM_ERROR (hlsdemux, "Could not switch playlist", err);
-      return FALSE;
-    }
-    //hlsdemux->discont = TRUE;
-    /* TODO why not continue using the same? that was being used up to now? */
-    gst_hls_demux_change_variant_playlist (hlsdemux, bitrate, NULL);
+  gst_hls_demux_change_variant_playlist (hlsdemux, bitrate / ABS (rate), NULL);
+
+  /* Of course the playlist isn't loaded as soon as we ask - we need to wait */
+  GstFlowReturn flow_ret = gst_hls_demux_wait_for_variant_playlist (hlsdemux);
+  if (flow_ret == GST_FLOW_FLUSHING)
+    return FALSE;
+  if (flow_ret != GST_FLOW_OK) {
+    GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+        (_("Internal data stream error.")), ("Could not switch playlist"));
+    return FALSE;
   }
 
   target_pos = rate < 0 ? stop : start;
@@ -380,8 +396,20 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     if (!gst_adaptive_demux2_stream_is_selected (stream))
       continue;
 
-    if (gst_hls_demux_stream_seek (stream, rate >= 0, flags, target_pos,
-            &current_pos) != GST_FLOW_OK) {
+    GstFlowReturn flow_ret;
+
+    while ((flow_ret =
+            gst_hls_demux_stream_seek (stream, rate >= 0, flags, target_pos,
+                &current_pos) == GST_ADAPTIVE_DEMUX_FLOW_BUSY)) {
+      if (!gst_adaptive_demux2_stream_wait_prepared (GST_ADAPTIVE_DEMUX2_STREAM
+              (stream))) {
+        GST_DEBUG_OBJECT (hlsdemux,
+            "Interrupted waiting for stream to be prepared for seek");
+        return FALSE;
+      }
+    }
+
+    if (flow_ret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (stream, "Failed to seek on stream");
       return FALSE;
     }
@@ -729,22 +757,13 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
 
   /* If this is a multi-variant playlist, wait for the initial variant playlist to load */
   if (!hlsdemux->master->is_simple) {
-    GError *err = NULL;
-    GstFlowReturn flow_ret;
-
-    while ((flow_ret = gst_hls_demux_check_variant_playlist_loaded (hlsdemux)
-            == GST_ADAPTIVE_DEMUX_FLOW_BUSY)) {
-      if (!gst_adaptive_demux2_stream_wait_prepared (GST_ADAPTIVE_DEMUX2_STREAM
-              (hlsdemux->main_stream))) {
-        GST_DEBUG_OBJECT (demux,
-            "Interrupted waiting for stream to be prepared");
-        return FALSE;
-      }
-    }
-
+    GstFlowReturn flow_ret = gst_hls_demux_wait_for_variant_playlist (hlsdemux);
+    if (flow_ret == GST_FLOW_FLUSHING)
+      return FALSE;
     if (flow_ret != GST_FLOW_OK) {
-      GST_ELEMENT_ERROR_FROM_ERROR (demux, "Could not fetch media playlist",
-          err);
+      GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+          (_("Internal data stream error.")),
+          ("Could not fetch media playlist"));
       return FALSE;
     }
   }

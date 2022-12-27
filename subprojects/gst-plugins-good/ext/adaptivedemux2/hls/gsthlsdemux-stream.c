@@ -36,6 +36,7 @@
 #include <string.h>
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/tag/tag.h>
+#include <glib/gi18n-lib.h>
 
 #include "gsthlsdemux.h"
 #include "gsthlsdemux-stream.h"
@@ -1511,10 +1512,16 @@ on_playlist_update_error (GstHLSDemuxPlaylistLoader * pl,
 {
   GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (userdata);
 
-  /* FIXME: How to handle rendition playlist update errors */
+  /* FIXME: How to handle rendition playlist update errors? There's
+   * not much we can do about it except throw an error */
   if (hls_stream->is_variant) {
     GstHLSDemux *demux = GST_HLS_DEMUX_STREAM_GET_DEMUX (hls_stream);
     gst_hls_demux_handle_variant_playlist_update_error (demux, playlist_uri);
+  } else {
+    GstHLSDemux *demux = GST_HLS_DEMUX_STREAM_GET_DEMUX (hls_stream);
+    GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+        (_("Internal data stream error.")),
+        ("Could not update rendition playlist"));
   }
 }
 
@@ -1855,7 +1862,7 @@ gst_hls_demux_stream_stop (GstAdaptiveDemux2Stream * stream)
  * for this stream to download. Returns TRUE if the rendition
  * stream switched group-id */
 static gboolean
-gst_hls_demux_update_rendition_stream (GstHLSDemux * hlsdemux,
+gst_hls_demux_update_rendition_stream_uri (GstHLSDemux * hlsdemux,
     GstHLSDemuxStream * hls_stream, GError ** err)
 {
   gchar *current_group_id, *requested_group_id;
@@ -1932,9 +1939,9 @@ gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream * stream,
     return FALSE;
 
   /* Currently playing partial segments, disallow bitrate
-   * switches - unless exactly at the first partial
-   * segment in a full segment (implying we are about to play
-   * a partial segment but didn't yet */
+   * switches and rendition playlist changes - except exactly
+   * at the first partial segment in a full segment (implying
+   * we are about to play a partial segment but didn't yet) */
   if (hls_stream->in_partial_segments && hls_stream->part_idx > 0)
     return FALSE;
 
@@ -1953,7 +1960,7 @@ gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream * stream,
   }
 
   /* Handle rendition streams */
-  return gst_hls_demux_update_rendition_stream (hlsdemux, hls_stream, NULL);
+  return gst_hls_demux_update_rendition_stream_uri (hlsdemux, hls_stream, NULL);
 }
 
 #if defined(HAVE_OPENSSL)
