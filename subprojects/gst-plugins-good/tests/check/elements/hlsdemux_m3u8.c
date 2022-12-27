@@ -524,7 +524,8 @@ GST_START_TEST (test_playlist_with_doubles_duration)
   assert_equals_float (file->duration / (double) GST_SECOND, 10.2344);
   file = GST_M3U8_MEDIA_SEGMENT (g_ptr_array_index (pl->segments, 3));
   assert_equals_float (file->duration / (double) GST_SECOND, 9.92);
-  fail_unless (gst_hls_media_playlist_get_seek_range (pl, &start, &stop));
+  fail_unless (gst_hls_media_playlist_get_seek_range (pl, FALSE, &start,
+          &stop));
   assert_equals_int64 (start, 0);
   assert_equals_float (stop / (double) GST_SECOND,
       10.321 + 9.6789 + 10.2344 + 9.92);

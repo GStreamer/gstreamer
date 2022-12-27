@@ -1268,10 +1268,11 @@ gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gboolean ret = FALSE;
 
-  if (hlsdemux->main_stream && hlsdemux->main_stream->playlist)
+  if (hlsdemux->main_stream && hlsdemux->main_stream->playlist) {
     ret =
         gst_hls_media_playlist_get_seek_range (hlsdemux->main_stream->playlist,
-        start, stop);
+        hlsdemux->main_stream->llhls_enabled, start, stop);
+  }
 
   return ret;
 }

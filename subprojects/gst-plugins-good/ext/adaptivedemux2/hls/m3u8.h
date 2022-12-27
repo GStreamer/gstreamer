@@ -335,7 +335,7 @@ gboolean
 gst_hls_media_playlist_is_live              (GstHLSMediaPlaylist * m3u8);
 
 gboolean
-gst_hls_media_playlist_get_seek_range       (GstHLSMediaPlaylist * m3u8,
+gst_hls_media_playlist_get_seek_range       (GstHLSMediaPlaylist * m3u8, gboolean low_latency,
 					     gint64  * start,
 					     gint64  * stop);
 

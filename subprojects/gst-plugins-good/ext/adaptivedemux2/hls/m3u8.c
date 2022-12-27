@@ -2487,10 +2487,9 @@ gst_hls_media_playlist_has_lost_sync (GstHLSMediaPlaylist * m3u8,
 
 gboolean
 gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
-    gint64 * start, gint64 * stop)
+    gboolean low_latency, gint64 * start, gint64 * stop)
 {
   GstM3U8MediaSegment *first, *last;
-  guint min_distance = 1;
 
   g_return_val_if_fail (m3u8 != NULL, FALSE);
 
@@ -2500,16 +2499,30 @@ gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
   first = g_ptr_array_index (m3u8->segments, 0);
   *start = first->stream_time;
 
-  if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (m3u8) && m3u8->segments->len > 1) {
-    /* min_distance is used to make sure the seek range is never closer than
-       GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE fragments from the end of a live
-       playlist - see 6.3.3. "Playing the Playlist file" of the HLS draft */
-    min_distance =
-        MIN (GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE, m3u8->segments->len - 1);
-  }
-
-  last = g_ptr_array_index (m3u8->segments, m3u8->segments->len - min_distance);
+  /* Default is the end of the playlist */
+  last = g_ptr_array_index (m3u8->segments, m3u8->segments->len - 1);
   *stop = last->stream_time + last->duration;
+
+  /* For live playlists, take the minimum hold back into account
+   * for the end of the seek range */
+  if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (m3u8)) {
+    GstM3U8SeekResult seek_result;
+
+    if (gst_hls_media_playlist_get_starting_segment (m3u8, low_latency,
+            &seek_result)) {
+      if (seek_result.found_partial_segment) {
+        GstM3U8PartialSegment *part =
+            g_ptr_array_index (seek_result.segment->partial_segments,
+            seek_result.part_idx);
+        *stop = part->stream_time + part->duration;
+      } else {
+        *stop =
+            seek_result.segment->stream_time + seek_result.segment->duration;
+      }
+
+      gst_m3u8_media_segment_unref (seek_result.segment);
+    }
+  }
 
   return TRUE;
 }
