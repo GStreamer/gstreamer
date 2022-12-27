@@ -6030,11 +6030,11 @@ interrupt:
   }
 connect_error:
   {
-    gchar *str = gst_rtsp_strresult (res);
     GstFlowReturn ret;
 
     src->conninfo.connected = FALSE;
     if (res != GST_RTSP_EINTR) {
+      gchar *str = gst_rtsp_strresult (res);
       GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
           ("Could not connect to server. (%s)", str));
       g_free (str);
@@ -6055,11 +6055,11 @@ receive_error:
   }
 handle_request_failed:
   {
-    gchar *str = gst_rtsp_strresult (res);
     GstFlowReturn ret;
 
     gst_rtsp_message_unset (&message);
     if (res != GST_RTSP_EINTR) {
+      gchar *str = gst_rtsp_strresult (res);
       GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
           ("Could not handle server message. (%s)", str));
       g_free (str);
