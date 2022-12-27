@@ -182,12 +182,6 @@ KNOWN_ISSUES = {
         ],
         "max_retries": 1,
     },
-    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/778": {
-        "tests": [
-            r"check.gstreamer.gst_gstbin.test_watch_for_state_change",
-        ],
-        "max_retries": 1,
-    },
     "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/803": {
         "tests": [
             "check.gst-editing-services.edit_while_seeked_with_stop"
