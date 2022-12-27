@@ -34,6 +34,8 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_hls_demux2_debug);
 #define GST_CAT_DEFAULT gst_hls_demux2_debug
 
+#define MAX_DOWNLOAD_ERROR_COUNT 3
+
 typedef enum _PlaylistLoaderState PlaylistLoaderState;
 
 enum _PlaylistLoaderState
@@ -68,6 +70,10 @@ struct _GstHLSDemuxPlaylistLoaderPrivate
   gboolean delta_merge_failed;
   gchar *current_playlist_uri;
   GstHLSMediaPlaylist *current_playlist;
+
+  gchar *current_playlist_redirect_uri;
+
+  guint download_error_count;
 };
 
 #define gst_hls_demux_playlist_loader_parent_class parent_class
@@ -153,6 +159,7 @@ gst_hls_demux_playlist_loader_finalize (GObject * object)
   if (priv->current_playlist)
     gst_hls_media_playlist_unref (priv->current_playlist);
   g_free (priv->current_playlist_uri);
+  g_free (priv->current_playlist_redirect_uri);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -187,8 +194,10 @@ gst_hls_demux_playlist_loader_start (GstHLSDemuxPlaylistLoader * pl)
 {
   GstHLSDemuxPlaylistLoaderPrivate *priv = pl->priv;
 
-  if (priv->state != PLAYLIST_LOADER_STATE_STOPPED)
+  if (priv->state != PLAYLIST_LOADER_STATE_STOPPED) {
+    GST_LOG_OBJECT (pl, "Already started - state %d", priv->state);
     return;                     /* Already active */
+  }
 
   GST_DEBUG_OBJECT (pl, "Starting playlist loading");
   priv->state = PLAYLIST_LOADER_STATE_STARTING;
@@ -217,6 +226,8 @@ gst_hls_demux_playlist_loader_stop (GstHLSDemuxPlaylistLoader * pl)
     download_request_unref (priv->download_request);
     priv->download_request = NULL;
   }
+
+  priv->state = PLAYLIST_LOADER_STATE_STOPPED;
 }
 
 void
@@ -293,6 +304,28 @@ struct PlaylistDownloadParams
 #define HLS_PART_QUERY_KEY "_HLS_part"
 
 static gchar *
+remove_HLS_directives_from_uri (const gchar * playlist_uri)
+{
+
+  /* Catch the simple case and keep NULL as NULL */
+  if (playlist_uri == NULL)
+    return NULL;
+
+  GstUri *uri = gst_uri_from_string (playlist_uri);
+  gst_uri_remove_query_key (uri, HLS_SKIP_QUERY_KEY);
+  gst_uri_remove_query_key (uri, HLS_MSN_QUERY_KEY);
+  gst_uri_remove_query_key (uri, HLS_PART_QUERY_KEY);
+
+  GList *keys = gst_uri_get_query_keys (uri);
+  if (keys)
+    keys = g_list_sort (keys, (GCompareFunc) g_strcmp0);
+  gchar *out_uri = gst_uri_to_string_with_keys (uri, keys);
+  gst_uri_unref (uri);
+
+  return out_uri;
+}
+
+static gchar *
 apply_directives_to_uri (GstHLSDemuxPlaylistLoader * pl,
     const gchar * playlist_uri, struct PlaylistDownloadParams *dl_params)
 {
@@ -328,6 +361,9 @@ apply_directives_to_uri (GstHLSDemuxPlaylistLoader * pl,
     } else {
       gst_uri_remove_query_key (uri, HLS_PART_QUERY_KEY);
     }
+  } else {
+    gst_uri_remove_query_key (uri, HLS_MSN_QUERY_KEY);
+    gst_uri_remove_query_key (uri, HLS_PART_QUERY_KEY);
   }
 
   /* Produce the resulting URI with query arguments in UTF-8 order
@@ -393,6 +429,25 @@ get_playlist_reload_interval (GstHLSDemuxPlaylistLoader * pl,
 }
 
 static void
+handle_download_error (GstHLSDemuxPlaylistLoader * pl,
+    GstHLSDemuxPlaylistLoaderPrivate * priv)
+{
+  if (++priv->download_error_count > MAX_DOWNLOAD_ERROR_COUNT) {
+    GST_DEBUG_OBJECT (pl,
+        "Reached %d download failures on URI %s. Reporting the failure",
+        priv->download_error_count, priv->loading_playlist_uri);
+    if (priv->error_cb)
+      priv->error_cb (pl, priv->loading_playlist_uri, priv->userdata);
+  }
+
+  /* The error callback may have provided a new playlist to load, which
+   * will have scheduled a state update immediately. In that case,
+   * don't trigger our own delayed retry */
+  if (priv->pending_cb_id == 0)
+    schedule_next_playlist_load (pl, priv, 100 * GST_MSECOND);
+}
+
+static void
 on_download_complete (DownloadRequest * download, DownloadRequestState state,
     GstHLSDemuxPlaylistLoader * pl)
 {
@@ -423,14 +478,21 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
   GstHLSMediaPlaylist *playlist = NULL;
   gchar *base_uri, *uri;
 
-  if (download->redirect_permanent && download->redirect_uri) {
-    uri = g_strdup (download->redirect_uri);
+  if (download->redirect_uri) {
+    /* Strip HLS request params from the playlist and redirect URI */
+    uri = remove_HLS_directives_from_uri (download->redirect_uri);
     base_uri = NULL;
+
+    if (download->redirect_permanent) {
+      /* Store this redirect as the future request URI for this playlist */
+      g_free (priv->current_playlist_redirect_uri);
+      priv->current_playlist_redirect_uri = g_strdup (uri);
+    }
   } else {
-    uri = g_strdup (download->uri);
-    base_uri = g_strdup (download->redirect_uri);
+    /* Strip HLS request params from the playlist and redirect URI */
+    uri = remove_HLS_directives_from_uri (download->uri);
+    base_uri = remove_HLS_directives_from_uri (download->redirect_uri);
   }
-  /* FIXME: Strip HLS request params from the playlist and redirect URI */
 
   /* Calculate the newest time we know this playlist was valid to store on the HLS Media Playlist */
   GstClockTime playlist_ts =
@@ -447,13 +509,34 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
 
   if (playlist_data == NULL) {
     GST_WARNING_OBJECT (pl, "Couldn't validate playlist encoding");
-    goto delay_retry_out;
+    goto error_retry_out;
   }
 
   GstHLSMediaPlaylist *current_playlist = priv->current_playlist;
   gboolean playlist_uri_change = (current_playlist == NULL
       || g_strcmp0 (priv->loading_playlist_uri,
           priv->current_playlist_uri) != 0);
+
+  gboolean always_reload = FALSE;
+#if 0
+  /* Test code the reports a playlist load error if we load
+     the same playlist 2 times in a row and the URI contains "video.m3u8"
+     https://playertest.longtailvideo.com/adaptive/elephants_dream_v4/redundant.m3u8
+     works as a test URL
+   */
+  static gint playlist_load_counter = 0;
+  if (playlist_uri_change)
+    playlist_load_counter = 0;
+  else if (strstr (priv->loading_playlist_uri, "video.m3u8") != NULL) {
+    playlist_load_counter++;
+    if (playlist_load_counter > 1) {
+      g_print ("Triggering playlist failure for %s\n",
+          priv->loading_playlist_uri);
+      goto error_retry_out;
+    }
+  }
+  always_reload = TRUE;
+#endif
 
   if (!playlist_uri_change && current_playlist
       && gst_hls_media_playlist_has_same_data (current_playlist,
@@ -468,6 +551,7 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
         base_uri);
     if (!playlist) {
       GST_WARNING_OBJECT (pl, "Couldn't parse playlist");
+      goto error_retry_out;
     }
   }
 
@@ -496,6 +580,9 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
   priv->current_playlist_uri = g_strdup (priv->loading_playlist_uri);
   priv->current_playlist = playlist;
 
+  /* Successfully loaded the playlist. Forget any prior failures */
+  priv->download_error_count = 0;
+
   if (priv->success_cb)
     priv->success_cb (pl, priv->current_playlist_uri, priv->current_playlist,
         priv->userdata);
@@ -503,7 +590,7 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
   g_free (priv->loading_playlist_uri);
   priv->loading_playlist_uri = NULL;
 
-  if (gst_hls_media_playlist_is_live (playlist)) {
+  if (gst_hls_media_playlist_is_live (playlist) || always_reload) {
     /* Schedule the next playlist load. If we can do a blocking load,
      * do it immediately, otherwise delayed */
     if (playlist->can_block_reload) {
@@ -523,9 +610,9 @@ out:
   g_free (base_uri);
   return;
 
-delay_retry_out:
-  /* Got invalid playlist data, retry soon */
-  schedule_next_playlist_load (pl, priv, 100 * GST_MSECOND);
+error_retry_out:
+  /* Got invalid playlist data, retry soon or error out */
+  handle_download_error (pl, priv);
   goto out;
 }
 
@@ -544,10 +631,7 @@ on_download_error (DownloadRequest * download, DownloadRequestState state,
       "Couldn't retrieve playlist, got HTTP status code %d",
       download->status_code);
 
-  if (priv->error_cb)
-    priv->error_cb (pl, priv->loading_playlist_uri, priv->userdata);
-
-  start_playlist_download (pl, priv);
+  handle_download_error (pl, priv);
 }
 
 static void
@@ -576,6 +660,12 @@ start_playlist_download (GstHLSDemuxPlaylistLoader * pl,
   if (!playlist_uri_change) {
     GST_LOG_OBJECT (pl, "Updating the playlist");
 
+    /* If we have a redirect stored for this playlist URI, use that instead */
+    if (priv->current_playlist_redirect_uri) {
+      orig_uri = priv->current_playlist_redirect_uri;
+      GST_LOG_OBJECT (pl, "Using redirected playlist URI %s", orig_uri);
+    }
+
     /* See if we can do a delta playlist update (if the playlist age is less than
      * one half of the Skip Boundary */
     if (GST_CLOCK_TIME_IS_VALID (current_playlist->skip_boundary) && allow_skip) {
@@ -595,6 +685,12 @@ start_playlist_download (GstHLSDemuxPlaylistLoader * pl,
       GST_DEBUG_OBJECT (pl,
           "Doing full playlist update after failed delta request");
     }
+  } else {
+    /* This is the first time loading this playlist URI, clear the error counter
+     * and redirect URI */
+    priv->download_error_count = 0;
+    g_free (priv->current_playlist_redirect_uri);
+    priv->current_playlist_redirect_uri = NULL;
   }
 
   /* Blocking playlist reload check */
