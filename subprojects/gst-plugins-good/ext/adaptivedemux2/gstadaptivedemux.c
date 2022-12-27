@@ -2316,6 +2316,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
           stream, gst_flow_get_name (flow_ret));
 
       GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
+      GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
 
       GST_API_UNLOCK (demux);
       gst_event_unref (event);
