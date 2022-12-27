@@ -304,6 +304,8 @@ rtp_timer_queue_finalize (GObject * object)
     rtp_timer_free (timer);
   g_hash_table_unref (queue->hashtable);
   g_assert (queue->timers.length == 0);
+
+  G_OBJECT_CLASS (rtp_timer_queue_parent_class)->finalize (object);
 }
 
 static void
