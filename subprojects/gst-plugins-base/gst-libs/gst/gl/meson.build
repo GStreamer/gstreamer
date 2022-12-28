@@ -1118,7 +1118,8 @@ if build_gstgl
   gstgl_dep = declare_dependency(link_with : gstgl,
     include_directories : [libsinc, compat_includes],
     sources: gen_sources,
-    dependencies : [video_dep, gst_base_dep])
+    dependencies : [video_dep, gst_base_dep],
+    variables: pkgconfig_gl_variables)
   gstglproto_dep = declare_dependency(
     dependencies : [gstgl_dep] + gl_lib_deps,
     sources: gen_sources
