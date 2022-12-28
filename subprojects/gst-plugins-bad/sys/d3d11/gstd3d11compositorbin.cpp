@@ -231,6 +231,8 @@ enum
   PROP_INPUT_BLEND_FACTOR_BLUE,
   PROP_INPUT_BLEND_FACTOR_ALPHA,
   PROP_INPUT_SIZING_POLICY,
+  PROP_PAD_CROP,
+
 };
 
 /* GstVideoAggregatorPad */
@@ -431,6 +433,13 @@ gst_d3d11_compositor_bin_input_class_init (GstD3D11CompositorBinInputClass *
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE |
               G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property(gobject_class,
+      PROP_PAD_CROP,
+      g_param_spec_boxed("crop", "crop properties",
+          "provide left,right,top,bottom coordinates",
+          GST_TYPE_STRUCTURE,
+          (GParamFlags)(G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS)));
+
   pad_class->set_target =
       GST_DEBUG_FUNCPTR (gst_d3d11_compositor_bin_input_set_target);
 }
@@ -477,6 +486,7 @@ gst_d3d11_compositor_bin_input_set_target (GstD3D11CompositorBinPad * pad,
   /* GstD3D11CompositorPad */
   ADD_BINDING (target, pad, "xpos");
   ADD_BINDING (target, pad, "ypos");
+  ADD_BINDING(target, pad, "crop");
   ADD_BINDING (target, pad, "width");
   ADD_BINDING (target, pad, "height");
   ADD_BINDING (target, pad, "alpha");
