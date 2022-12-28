@@ -175,6 +175,9 @@ get_monitor_name (const MONITORINFOEXW * info,
   UINT32 num_path = 0;
   UINT32 num_mode = 0;
   LONG query_ret;
+  DISPLAYCONFIG_PATH_INFO *path_infos = nullptr;
+  DISPLAYCONFIG_MODE_INFO *mode_infos = nullptr;
+  gboolean ret = FALSE;
 
   memset (target, 0, sizeof (DISPLAYCONFIG_TARGET_DEVICE_NAME));
 
@@ -183,15 +186,13 @@ get_monitor_name (const MONITORINFOEXW * info,
   if (query_ret != ERROR_SUCCESS || num_path == 0 || num_mode == 0)
     return FALSE;
 
-  DISPLAYCONFIG_PATH_INFO *path_infos = (DISPLAYCONFIG_PATH_INFO *)
-      g_alloca (num_path * sizeof (DISPLAYCONFIG_PATH_INFO));
-  DISPLAYCONFIG_MODE_INFO *mode_infos = (DISPLAYCONFIG_MODE_INFO *)
-      g_alloca (num_mode * sizeof (DISPLAYCONFIG_MODE_INFO));
+  path_infos = g_new0 (DISPLAYCONFIG_PATH_INFO, num_path);
+  mode_infos = g_new0 (DISPLAYCONFIG_MODE_INFO, num_mode);
 
   query_ret = QueryDisplayConfig (QDC_ONLY_ACTIVE_PATHS, &num_path,
       path_infos, &num_mode, mode_infos, nullptr);
   if (query_ret != ERROR_SUCCESS)
-    return FALSE;
+    goto out;
 
   for (UINT32 i = 0; i < num_path; i++) {
     DISPLAYCONFIG_PATH_INFO *p = &path_infos[i];
@@ -226,10 +227,15 @@ get_monitor_name (const MONITORINFOEXW * info,
 
     memcpy (target, &tmp, sizeof (DISPLAYCONFIG_TARGET_DEVICE_NAME));
 
-    return TRUE;
+    ret = TRUE;
+    break;
   }
 
-  return FALSE;
+out:
+  g_free (path_infos);
+  g_free (mode_infos);
+
+  return ret;
 }
 
 /* XXX: please bump MinGW toolchain version,

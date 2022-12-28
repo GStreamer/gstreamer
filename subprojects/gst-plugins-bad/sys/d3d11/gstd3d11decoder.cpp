@@ -644,6 +644,7 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Device * device,
   ID3D11VideoDevice *video_device;
   const GUID **profile_list = nullptr;
   guint profile_size = 0;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), FALSE);
   g_return_val_if_fail (selected_profile != nullptr, FALSE);
@@ -713,13 +714,13 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Device * device,
 
   GST_DEBUG_OBJECT (device,
       "Have %u available decoder profiles", available_profile_count);
-  guid_list = (GUID *) g_alloca (sizeof (GUID) * available_profile_count);
+  guid_list = g_new0 (GUID, available_profile_count);
 
   for (i = 0; i < available_profile_count; i++) {
     hr = video_device->GetVideoDecoderProfile (i, &guid_list[i]);
     if (!gst_d3d11_result (hr, device)) {
       GST_WARNING_OBJECT (device, "Failed to get %d th decoder profile", i);
-      return FALSE;
+      goto out;
     }
   }
 
@@ -759,7 +760,7 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Device * device,
   if (!profile) {
     GST_INFO_OBJECT (device, "No supported decoder profile for %s codec",
         gst_dxva_codec_to_string (codec));
-    return FALSE;
+    goto out;
   }
 
   *selected_profile = profile;
@@ -772,7 +773,11 @@ gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Device * device,
       profile->Data4[3], profile->Data4[4], profile->Data4[5],
       profile->Data4[6], profile->Data4[7]);
 
-  return TRUE;
+  ret = TRUE;
+
+out:
+  g_free (guid_list);
+  return ret;
 }
 
 gboolean
@@ -894,7 +899,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   HRESULT hr;
   BOOL can_support = FALSE;
   guint config_count;
-  D3D11_VIDEO_DECODER_CONFIG *config_list;
+  D3D11_VIDEO_DECODER_CONFIG *config_list = NULL;
   D3D11_VIDEO_DECODER_CONFIG *best_config = NULL;
   D3D11_VIDEO_DECODER_DESC decoder_desc = { 0, };
   const GUID *selected_profile = NULL;
@@ -995,9 +1000,7 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
 
   GST_DEBUG_OBJECT (self, "Total %d config available", config_count);
 
-  config_list = (D3D11_VIDEO_DECODER_CONFIG *)
-      g_alloca (sizeof (D3D11_VIDEO_DECODER_CONFIG) * config_count);
-
+  config_list = g_new0 (D3D11_VIDEO_DECODER_CONFIG, config_count);
   for (i = 0; i < config_count; i++) {
     hr = video_device->GetVideoDecoderConfig (&decoder_desc, i,
         &config_list[i]);
@@ -1074,10 +1077,12 @@ gst_d3d11_decoder_open (GstD3D11Decoder * self)
   self->opened = TRUE;
 
   gst_d3d11_decoder_enable_high_precision_timer (self);
+  g_free (config_list);
 
   return TRUE;
 
 error:
+  g_free (config_list);
   gst_d3d11_decoder_reset (self);
 
   return FALSE;

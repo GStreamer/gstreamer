@@ -225,7 +225,7 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
       return;
     }
 
-    msg = (D3D11_MESSAGE *) g_alloca (msg_len);
+    msg = (D3D11_MESSAGE *) g_malloc0 (msg_len);
     hr = info_queue->GetMessage (i, msg, &msg_len);
 
     level = d3d11_message_severity_to_gst (msg->Severity);
@@ -238,6 +238,7 @@ gst_d3d11_device_d3d11_debug (GstD3D11Device * device,
 
     gst_debug_log (gst_d3d11_debug_layer_debug, level, file, function, line,
         G_OBJECT (device), "D3D11InfoQueue: %s", msg->pDescription);
+    g_free (msg);
   }
 
   info_queue->ClearStoredMessages ();
@@ -336,12 +337,13 @@ gst_d3d11_device_dxgi_debug (GstD3D11Device * device,
       return;
     }
 
-    msg = (DXGI_INFO_QUEUE_MESSAGE *) g_alloca (msg_len);
+    msg = (DXGI_INFO_QUEUE_MESSAGE *) g_malloc0 (msg_len);
     hr = info_queue->GetMessage (DXGI_DEBUG_ALL, i, msg, &msg_len);
 
     level = dxgi_info_queue_message_severity_to_gst (msg->Severity);
     gst_debug_log (gst_d3d11_debug_layer_debug, level, file, function, line,
         G_OBJECT (device), "DXGIInfoQueue: %s", msg->pDescription);
+    g_free (msg);
   }
 
   info_queue->ClearStoredMessages (DXGI_DEBUG_ALL);
