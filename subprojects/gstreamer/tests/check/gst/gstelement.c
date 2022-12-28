@@ -113,6 +113,7 @@ GST_START_TEST (test_add_pad_while_paused)
   gst_element_set_state (e, GST_STATE_PAUSED);
   {
     GstPad *old_pad = gst_element_get_static_pad (e, "src");
+    gst_pad_set_active (old_pad, FALSE);
     gst_element_remove_pad (e, old_pad);
     gst_object_unref (old_pad);
   }
