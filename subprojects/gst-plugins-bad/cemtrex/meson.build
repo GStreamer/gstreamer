@@ -1,4 +1,4 @@
-if not get_option('vicondewarp').disabled()
+if get_option('vicondewarp').disabled()
   subdir_done()
 endif
 
