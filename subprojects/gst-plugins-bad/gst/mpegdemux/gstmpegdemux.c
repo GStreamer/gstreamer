@@ -712,6 +712,16 @@ gst_ps_demux_send_data (GstPsDemux * demux, GstPsStream * stream,
 
   gst_ps_demux_send_segment (demux, stream, pts);
 
+  /* Ignores DTS if PTS < DTS. Maybe additional sanity checking is possible
+   * by comparing 33bits timestap rollover case, but PTS < DTS is already
+   * invalid case */
+  if (GST_CLOCK_TIME_IS_VALID (pts) && GST_CLOCK_TIME_IS_VALID (dts) &&
+      dts > pts) {
+    GST_WARNING_OBJECT (demux, "PTS (%" GST_TIME_FORMAT ") < DTS (%"
+        GST_TIME_FORMAT ")", GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
+    dts = GST_CLOCK_TIME_NONE;
+  }
+
   /* OK, sent new segment now prepare the buffer for sending */
   GST_BUFFER_PTS (buf) = pts;
   GST_BUFFER_DTS (buf) = dts;
