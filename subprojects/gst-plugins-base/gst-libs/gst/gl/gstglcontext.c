@@ -402,7 +402,7 @@ gst_gl_context_new (GstGLDisplay * display)
  *
  * @available_apis must not be %GST_GL_API_NONE or %GST_GL_API_ANY
  *
- * Returns: (transfer full): a #GstGLContext wrapping @handle
+ * Returns: (transfer full) (nullable): a #GstGLContext wrapping @handle
  *
  * Since: 1.4
  */
@@ -430,13 +430,6 @@ gst_gl_context_new_wrapped (GstGLDisplay * display, guintptr handle,
 
   context_wrap = g_object_new (GST_TYPE_GL_WRAPPED_CONTEXT, NULL);
   gst_object_ref_sink (context_wrap);
-
-  if (!context_wrap) {
-    /* subclass returned a NULL context */
-    GST_ERROR ("Could not wrap existing context");
-
-    return NULL;
-  }
 
   context = (GstGLContext *) context_wrap;
 
