@@ -1232,7 +1232,10 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
       }
     }
     GST_LOG_OBJECT (pad, "Skiping %" GST_PTR_FORMAT, event);
-    return GST_PAD_PROBE_DROP;
+    /* We don't want to be repeatedly called for the same event when unlinked,
+     * so we mark the event as handled */
+    gst_mini_object_unref (GST_PAD_PROBE_INFO_DATA (info));
+    return GST_PAD_PROBE_HANDLED;
   }
 
   PLAY_ITEMS_LOCK (handler->uridecodebin);
