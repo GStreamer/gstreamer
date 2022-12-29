@@ -140,6 +140,9 @@ struct _GstSourceHandler
   /* buffering message stored for after switching */
   GstMessage *pending_buffering_msg;
 
+  /* TRUE if urisourcebin handles stream-selection */
+  gboolean upstream_selected;
+
   /* Number of expected sourcepads. Default 1, else it's the number of streams
    * specified by GST_MESSAGE_SELECTED_STREAMS from the source */
   guint expected_pads;
@@ -1222,6 +1225,7 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
     GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
     if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
       GstStream *stream = NULL;
+      GstQuery *q = gst_query_new_selectable ();
       gst_event_parse_stream (event, &stream);
       if (stream) {
         GST_DEBUG_OBJECT (srcpad->src_pad, "Got GstStream %" GST_PTR_FORMAT,
@@ -1230,7 +1234,32 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
           gst_object_unref (srcpad->stream);
         srcpad->stream = stream;
       }
+      if (gst_pad_query (pad, q)) {
+        PLAY_ITEMS_LOCK (handler->uridecodebin);
+        gst_query_parse_selectable (q, &handler->upstream_selected);
+        GST_DEBUG_OBJECT (srcpad->src_pad, "Upstream is selectable : %d",
+            handler->upstream_selected);
+        PLAY_ITEMS_UNLOCK (handler->uridecodebin);
+      }
+      gst_query_unref (q);
+    } else if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_COLLECTION) {
+      GstStreamCollection *collection = NULL;
+      PLAY_ITEMS_LOCK (handler->uridecodebin);
+      if (!handler->upstream_selected) {
+        gst_event_parse_stream_collection (event, &collection);
+        if (collection) {
+          GST_DEBUG_OBJECT (srcpad->src_pad, "Seen collection with %d streams",
+              gst_stream_collection_get_size (collection));
+          if (handler->expected_pads == 1) {
+            handler->expected_pads =
+                gst_stream_collection_get_size (collection);
+          }
+          gst_object_unref (collection);
+        }
+      }
+      PLAY_ITEMS_UNLOCK (handler->uridecodebin);
     }
+
     GST_LOG_OBJECT (pad, "Skiping %" GST_PTR_FORMAT, event);
     /* We don't want to be repeatedly called for the same event when unlinked,
      * so we mark the event as handled */
