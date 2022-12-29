@@ -1979,7 +1979,7 @@ gst_event_new_stream_collection (GstStreamCollection * collection)
 /**
  * gst_event_parse_stream_collection:
  * @event: a stream-collection event
- * @collection: (out) (optional): pointer to store the collection
+ * @collection: (out) (optional) (transfer full): pointer to store the collection.
  *
  * Retrieve new #GstStreamCollection from STREAM_COLLECTION event @event.
  *
