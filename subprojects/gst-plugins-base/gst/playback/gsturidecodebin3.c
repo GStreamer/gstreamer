@@ -1160,7 +1160,7 @@ uri_src_probe (GstPad * pad, GstPadProbeInfo * info, GstSourcePad * srcpad)
        * pending play item, switch to it */
       if (handler->play_item == handler->uridecodebin->input_item &&
           play_item_is_eos (handler->play_item)) {
-        g_cond_signal (&handler->uridecodebin->input_source_drained);
+        g_cond_broadcast (&handler->uridecodebin->input_source_drained);
       }
       PLAY_ITEMS_UNLOCK (handler->uridecodebin);
       ret = GST_PAD_PROBE_HANDLED;
@@ -1245,6 +1245,7 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
   } else if (play_item_has_all_pads (handler->play_item)) {
     /* We have all expected pads for this play item but the current input
      * play item isn't done yet, wait for it */
+    GST_DEBUG_OBJECT (pad, "Waiting for input source to be drained");
     g_cond_wait (&handler->uridecodebin->input_source_drained,
         &handler->uridecodebin->play_items_lock);
     if (g_atomic_int_get (&handler->uridecodebin->shutdown))
@@ -1254,8 +1255,8 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
           "We can switch over to the next input item");
       switch_and_activate_input_locked (handler->uridecodebin,
           handler->play_item);
-      ret = GST_PAD_PROBE_REMOVE;
     }
+    ret = GST_PAD_PROBE_REMOVE;
   }
 
   PLAY_ITEMS_UNLOCK (handler->uridecodebin);
@@ -1884,7 +1885,7 @@ purge_play_items (GstURIDecodeBin3 * dec)
   GST_DEBUG_OBJECT (dec, "Purging play items");
 
   PLAY_ITEMS_LOCK (dec);
-  g_cond_signal (&dec->input_source_drained);
+  g_cond_broadcast (&dec->input_source_drained);
   while (dec->play_items && dec->play_items->next) {
     GstPlayItem *item = dec->play_items->data;
     dec->play_items = g_list_remove (dec->play_items, item);
@@ -1916,7 +1917,7 @@ gst_uri_decode_bin3_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       PLAY_ITEMS_LOCK (uridecodebin);
       g_atomic_int_set (&uridecodebin->shutdown, 1);
-      g_cond_signal (&uridecodebin->input_source_drained);
+      g_cond_broadcast (&uridecodebin->input_source_drained);
       PLAY_ITEMS_UNLOCK (uridecodebin);
       break;
     default:
