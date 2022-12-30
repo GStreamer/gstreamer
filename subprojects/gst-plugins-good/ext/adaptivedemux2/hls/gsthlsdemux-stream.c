@@ -1568,7 +1568,7 @@ gst_hls_demux_stream_check_current_playlist_uri (GstHLSDemuxStream * stream,
       gst_hls_demux_stream_get_playlist_loader (stream);
 
   if (!gst_hls_demux_playlist_loader_has_current_uri (pl, uri)) {
-    GST_LOG_OBJECT (stream, "Playlist '%s' not available yet", uri);
+    GST_LOG_OBJECT (stream, "Target playlist not available yet");
     return GST_ADAPTIVE_DEMUX_FLOW_BUSY;
   }
 
@@ -1596,10 +1596,22 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
   GstM3U8PartialSegment *part = NULL;
   gboolean discont;
 
-  /* Return BUSY if the playlist isn't loaded yet */
+  /* Return BUSY if no playlist is loaded yet. Even if
+   * we switched an another playlist is loading, we'll keep*/
   if (!hlsdemux_stream->playlist_fetched) {
     gst_hls_demux_stream_start_playlist_loading (hlsdemux_stream);
     return GST_ADAPTIVE_DEMUX_FLOW_BUSY;
+  }
+  g_assert (hlsdemux_stream->playlist != NULL);
+  if ((ret =
+          gst_hls_demux_stream_check_current_playlist_uri (hlsdemux_stream,
+              NULL)) != GST_FLOW_OK) {
+    /* The URI of the playlist we have is not the target URI due
+     * to a bitrate switch - wait for it to load */
+    GST_DEBUG_OBJECT (hlsdemux_stream,
+        "Playlist is stale. Waiting for new playlist");
+    gst_hls_demux_stream_start_playlist_loading (hlsdemux_stream);
+    return ret;
   }
 #ifndef GST_DISABLE_GST_DEBUG
   GstClockTimeDiff live_edge_dist =
