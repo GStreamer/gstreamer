@@ -1209,9 +1209,6 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
           || last_status_code / 100 == 5)) {
     /* 4xx/5xx */
     /* if current position is before available start, switch to next */
-    if (!gst_adaptive_demux2_stream_has_next_fragment (stream))
-      goto flushing;
-
     if (live) {
       gint64 range_start, range_stop;
 
