@@ -845,12 +845,14 @@ gst_d3d11_compositor_pad_set_property (GObject * object, guint prop_id,
         }            
         pad->crop_properties =
             gst_structure_copy(gst_value_get_structure(value));
-
         gst_structure_get_int(pad->crop_properties, "left", &left);
         gst_structure_get_int(pad->crop_properties, "right", &right);
         gst_structure_get_int(pad->crop_properties, "top", &top);
         gst_structure_get_int(pad->crop_properties, "bottom", &bottom);
-        GST_OBJECT_LOCK(pad->convert);
+        pad->crop_left = left;
+        pad->crop_top = top;
+        pad->crop_right = right;
+        pad->crop_bottom = bottom;
         if (pad->convert != NULL)
         {
             RECT rect;
@@ -858,15 +860,12 @@ gst_d3d11_compositor_pad_set_property (GObject * object, guint prop_id,
             rect.top = top;
             rect.right = right;
             rect.bottom = bottom;
-            pad->crop_left = left;
-            pad->crop_top = top;
-            pad->crop_right = right;
-            pad->crop_bottom = bottom;
+            GST_OBJECT_LOCK(pad->convert);
             gst_d3d11_converter_update_src_rect(pad->convert, &rect);
+            GST_OBJECT_UNLOCK(pad->convert);
             gst_structure_free(pad->crop_properties);
             pad->crop_properties = NULL;
         }
-        GST_OBJECT_UNLOCK(pad->convert);
         pad->apply_crop = TRUE;
         break;
     }
