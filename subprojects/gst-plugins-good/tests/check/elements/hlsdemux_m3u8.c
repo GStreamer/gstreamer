@@ -781,22 +781,27 @@ GST_START_TEST (test_get_stream_for_bitrate)
   GstHLSVariantStream *stream;
 
   master = load_master_playlist (VARIANT_PLAYLIST);
-  stream = gst_hls_master_playlist_get_variant_for_bitrate (master, NULL, 0, 0);
+  stream =
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 0, 0,
+      NULL);
 
   assert_equals_int (stream->bandwidth, 65000);
 
   stream =
-      gst_hls_master_playlist_get_variant_for_bitrate (master, NULL,
-      G_MAXINT32, 0);
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE,
+      G_MAXINT32, 0, NULL);
   assert_equals_int (stream->bandwidth, 768000);
   stream =
-      gst_hls_master_playlist_get_variant_for_bitrate (master, NULL, 300000, 0);
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 300000, 0,
+      NULL);
   assert_equals_int (stream->bandwidth, 256000);
   stream =
-      gst_hls_master_playlist_get_variant_for_bitrate (master, NULL, 500000, 0);
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 500000, 0,
+      NULL);
   assert_equals_int (stream->bandwidth, 256000);
   stream =
-      gst_hls_master_playlist_get_variant_for_bitrate (master, NULL, 255000, 0);
+      gst_hls_master_playlist_get_variant_for_bitrate (master, FALSE, 255000, 0,
+      NULL);
   assert_equals_int (stream->bandwidth, 128000);
 
   gst_hls_master_playlist_unref (master);

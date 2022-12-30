@@ -495,9 +495,10 @@ GstHLSMasterPlaylist * hls_master_playlist_new_from_data (gchar       * data,
 
 #define gst_hls_master_playlist_get_variant_for_bitrate hls_master_playlist_get_variant_for_bitrate
 GstHLSVariantStream *  hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist * playlist,
-								    GstHLSVariantStream  * current_variant,
-								    guint                  bitrate,
-								    guint                  min_bitrate);
+								    gboolean  iframe_variant,
+								    guint     bitrate,
+								    guint     min_bitrate,
+                    GList   * failed_variants);
 
 #define gst_hls_master_playlist_get_common_caps hls_master_playlist_get_common_caps
 GstCaps *              hls_master_playlist_get_common_caps (GstHLSMasterPlaylist *playlist);

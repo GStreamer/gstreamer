@@ -358,16 +358,15 @@ gst_hls_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
       && rate < -1.0 && old_rate >= -1.0 && old_rate <= 1.0) {
 
     /* Switch to I-frame variant */
-    gst_hls_demux_set_current_variant (hlsdemux,
-        hlsdemux->master->iframe_variants->data);
+    if (!gst_hls_demux_change_variant_playlist (hlsdemux, TRUE,
+            bitrate / ABS (rate), NULL))
+      return FALSE;
 
   } else if (rate > -1.0 && rate <= 1.0 && (old_rate < -1.0 || old_rate > 1.0)) {
     /* Switch to normal variant */
-    gst_hls_demux_set_current_variant (hlsdemux,
-        hlsdemux->master->variants->data);
+    if (!gst_hls_demux_change_variant_playlist (hlsdemux, FALSE, bitrate, NULL))
+      return FALSE;
   }
-
-  gst_hls_demux_change_variant_playlist (hlsdemux, bitrate / ABS (rate), NULL);
 
   /* Of course the playlist isn't loaded as soon as we ask - we need to wait */
   GstFlowReturn flow_ret = gst_hls_demux_wait_for_variant_playlist (hlsdemux);
@@ -716,18 +715,24 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
   } else if (hlsdemux->start_bitrate > 0) {
     variant =
         gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
-        NULL, hlsdemux->start_bitrate, demux->min_bitrate);
+        FALSE, hlsdemux->start_bitrate, demux->min_bitrate,
+        hlsdemux->failed_variants);
   } else {
     variant =
         gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
-        NULL, demux->connection_speed, demux->min_bitrate);
+        FALSE, demux->connection_speed, demux->min_bitrate,
+        hlsdemux->failed_variants);
   }
 
-  if (variant) {
-    GST_INFO_OBJECT (hlsdemux,
-        "Manifest processed, initial variant selected : `%s`", variant->name);
-    gst_hls_demux_set_current_variant (hlsdemux, variant);
+  if (variant == NULL) {
+    GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+        (_("Internal data stream error.")),
+        ("Could not find an initial variant to play"));
   }
+
+  GST_INFO_OBJECT (hlsdemux,
+      "Manifest processed, initial variant selected : `%s`", variant->name);
+  gst_hls_demux_set_current_variant (hlsdemux, variant);
 
   GST_DEBUG_OBJECT (hlsdemux, "Manifest handled, now setting up streams");
 
@@ -1057,12 +1062,34 @@ gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
   }
 
   if (demux->pending_variant) {
+    /* The pending variant must always match the one that just got updated:
+     * The loader should only do a callback for the most recently set URI */
     g_assert (g_str_equal (demux->pending_variant->uri, playlist_uri));
+
+    gboolean changed = (demux->pending_variant != demux->current_variant);
 
     gst_hls_variant_stream_unref (demux->current_variant);
     /* Stealing ref */
     demux->current_variant = demux->pending_variant;
     demux->pending_variant = NULL;
+
+    if (changed) {
+      GstAdaptiveDemux *basedemux = GST_ADAPTIVE_DEMUX (demux);
+      const gchar *main_uri =
+          gst_adaptive_demux_get_manifest_ref_uri (basedemux);
+      gchar *uri = demux->current_variant->uri;
+      gint new_bandwidth = demux->current_variant->bandwidth;
+
+      gst_element_post_message (GST_ELEMENT_CAST (demux),
+          gst_message_new_element (GST_OBJECT_CAST (demux),
+              gst_structure_new (GST_ADAPTIVE_DEMUX_STATISTICS_MESSAGE_NAME,
+                  "manifest-uri", G_TYPE_STRING,
+                  main_uri, "uri", G_TYPE_STRING,
+                  uri, "bitrate", G_TYPE_INT, new_bandwidth, NULL)));
+
+      /* Mark discont on the next packet after switching variant */
+      GST_ADAPTIVE_DEMUX2_STREAM (demux->main_stream)->discont = TRUE;
+    }
   }
 
   /* Update time mappings. We only use the variant stream for collecting
@@ -1076,7 +1103,22 @@ void
 gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
     const gchar * playlist_uri)
 {
-  GST_FIXME ("Variant playlist update failed. Switch over to another variant");
+  if (demux->pending_variant) {
+    GST_DEBUG_OBJECT (demux, "Variant playlist update failed. "
+        "Marking variant URL %s as failed and switching over to another variant",
+        playlist_uri);
+
+    /* The pending variant must always match the one that just got updated:
+     * The loader should only do a callback for the most recently set URI */
+    g_assert (g_str_equal (demux->pending_variant->uri, playlist_uri));
+    g_assert (g_list_find (demux->failed_variants,
+            demux->pending_variant) == NULL);
+
+    /* Steal pending_variant ref into the failed variants */
+    demux->failed_variants =
+        g_list_prepend (demux->failed_variants, demux->pending_variant);
+    demux->pending_variant = NULL;
+  }
 }
 
 /* Reset hlsdemux in case of live synchronization loss (i.e. when a media
@@ -1163,6 +1205,11 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
     gst_hls_variant_stream_unref (demux->pending_variant);
     demux->pending_variant = NULL;
   }
+  if (demux->failed_variants != NULL) {
+    g_list_free_full (demux->failed_variants,
+        (GDestroyNotify) gst_hls_variant_stream_unref);
+    demux->failed_variants = NULL;
+  }
 
   g_list_free_full (demux->mappings, (GDestroyNotify) gst_hls_time_map_free);
   demux->mappings = NULL;
@@ -1182,101 +1229,47 @@ gst_hls_demux_check_variant_playlist_loaded (GstHLSDemux * demux)
 }
 
 gboolean
-gst_hls_demux_change_variant_playlist (GstHLSDemux * demux, guint max_bitrate,
-    gboolean * changed)
+gst_hls_demux_change_variant_playlist (GstHLSDemux * demux,
+    gboolean iframe_variant, guint max_bitrate, gboolean * changed)
 {
-  GstHLSVariantStream *lowest_variant, *lowest_ivariant;
-  GstHLSVariantStream *previous_variant, *new_variant;
-  gint old_bandwidth, new_bandwidth;
   GstAdaptiveDemux *adaptive_demux = GST_ADAPTIVE_DEMUX_CAST (demux);
-  GstAdaptiveDemux2Stream *stream;
 
   g_return_val_if_fail (demux->main_stream != NULL, FALSE);
-  stream = (GstAdaptiveDemux2Stream *) demux->main_stream;
 
-  /* Make sure we keep a reference in case we need to switch back */
-  previous_variant = gst_hls_variant_stream_ref (demux->current_variant);
-  new_variant =
+  if (changed)
+    *changed = FALSE;
+
+  /* Make sure we keep a reference for the debug output below */
+  GstHLSVariantStream *new_variant =
       gst_hls_master_playlist_get_variant_for_bitrate (demux->master,
-      demux->current_variant, max_bitrate, adaptive_demux->min_bitrate);
+      iframe_variant, max_bitrate, adaptive_demux->min_bitrate,
+      demux->failed_variants);
 
-retry_failover_protection:
-  old_bandwidth = previous_variant->bandwidth;
-  new_bandwidth = new_variant->bandwidth;
+  /* We're out of available variants to use */
+  if (new_variant == NULL) {
+    return FALSE;
+  }
+
+  GstHLSVariantStream *previous_variant =
+      gst_hls_variant_stream_ref (demux->current_variant);
 
   /* Don't do anything else if the playlist is the same */
-  if (new_bandwidth == old_bandwidth) {
+  if (new_variant == previous_variant) {
     gst_hls_variant_stream_unref (previous_variant);
     return TRUE;
   }
 
   gst_hls_demux_set_current_variant (demux, new_variant);
 
+  gint new_bandwidth = new_variant->bandwidth;
+
   GST_INFO_OBJECT (demux, "Client was on %dbps, max allowed is %dbps, switching"
-      " to bitrate %dbps", old_bandwidth, max_bitrate, new_bandwidth);
-
-  GstFlowReturn flow_ret = gst_hls_demux_check_variant_playlist_loaded (demux);
-
-  /* If the stream is still fetching the playlist, stop */
-  if (flow_ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY)
-    return TRUE;
-
-  /* FIXME: Dead code. We need a different fail and retry mechanism */
-  if (flow_ret == GST_FLOW_OK) {
-    const gchar *main_uri;
-    gchar *uri = new_variant->uri;
-
-    main_uri = gst_adaptive_demux_get_manifest_ref_uri (adaptive_demux);
-    gst_element_post_message (GST_ELEMENT_CAST (demux),
-        gst_message_new_element (GST_OBJECT_CAST (demux),
-            gst_structure_new (GST_ADAPTIVE_DEMUX_STATISTICS_MESSAGE_NAME,
-                "manifest-uri", G_TYPE_STRING,
-                main_uri, "uri", G_TYPE_STRING,
-                uri, "bitrate", G_TYPE_INT, new_bandwidth, NULL)));
-    if (changed)
-      *changed = TRUE;
-    stream->discont = TRUE;
-  } else if (gst_adaptive_demux2_is_running (GST_ADAPTIVE_DEMUX_CAST (demux))) {
-    GstHLSVariantStream *failover_variant = NULL;
-    GList *failover;
-
-    GST_INFO_OBJECT (demux, "Unable to update playlist. Switching back");
-
-    /* we find variants by bitrate by going from highest to lowest, so it's
-     * possible that there's another variant with the same bitrate before the
-     * one selected which we can use as failover */
-    failover = g_list_find (demux->master->variants, new_variant);
-    if (failover != NULL)
-      failover = failover->prev;
-    if (failover != NULL)
-      failover_variant = failover->data;
-    if (failover_variant && new_bandwidth == failover_variant->bandwidth) {
-      new_variant = failover_variant;
-      goto retry_failover_protection;
-    }
-
-    gst_hls_demux_set_current_variant (demux, previous_variant);
-
-    /*  Try a lower bitrate (or stop if we just tried the lowest) */
-    if (previous_variant->iframe) {
-      lowest_ivariant = demux->master->iframe_variants->data;
-      if (new_bandwidth == lowest_ivariant->bandwidth) {
-        gst_hls_variant_stream_unref (previous_variant);
-        return FALSE;
-      }
-    } else {
-      lowest_variant = demux->master->variants->data;
-      if (new_bandwidth == lowest_variant->bandwidth) {
-        gst_hls_variant_stream_unref (previous_variant);
-        return FALSE;
-      }
-    }
-    gst_hls_variant_stream_unref (previous_variant);
-    return gst_hls_demux_change_variant_playlist (demux, new_bandwidth - 1,
-        changed);
-  }
+      " to bitrate %dbps", previous_variant->bandwidth, max_bitrate,
+      new_bandwidth);
 
   gst_hls_variant_stream_unref (previous_variant);
+  if (changed)
+    *changed = TRUE;
   return TRUE;
 }
 

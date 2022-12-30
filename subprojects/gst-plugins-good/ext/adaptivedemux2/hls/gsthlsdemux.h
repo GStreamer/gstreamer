@@ -88,13 +88,16 @@ struct _GstHLSDemux2
   GHashTable *keys;
   GMutex      keys_lock;
 
-  /* FIXME: check locking, protected automatically by manifest_lock already? */
-  /* The master playlist with the available variant streams */
+  /* The master playlist with the available variant streams,
+   * created at demuxer start based on the input multivariant playlist */
   GstHLSMasterPlaylist *master;
 
   GstHLSVariantStream  *current_variant;
-  /* The variant to switch to */
+  /* The variant we're switching to (currently being loaded by the playlist loader) */
   GstHLSVariantStream  *pending_variant;
+
+  /* List of failed variants that should be ignored */
+  GList *failed_variants;
 
   GstHLSDemuxStream *main_stream;
 
@@ -122,7 +125,7 @@ void gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
 void gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
     const gchar *playlist_uri);
 gboolean gst_hls_demux_change_variant_playlist (GstHLSDemux * demux,
-    guint max_bitrate, gboolean * changed);
+    gboolean iframe_variant, guint max_bitrate, gboolean * changed);
 GstFlowReturn gst_hls_demux_update_variant_playlist (GstHLSDemux * demux,
     GError ** err);
 

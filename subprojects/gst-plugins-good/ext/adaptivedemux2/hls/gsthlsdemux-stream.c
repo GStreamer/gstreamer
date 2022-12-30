@@ -1952,8 +1952,11 @@ gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream * stream,
     /* Handle variant streams */
     GST_DEBUG_OBJECT (hlsdemux,
         "Checking playlist change for main variant stream");
-    gst_hls_demux_change_variant_playlist (hlsdemux, bitrate / MAX (1.0,
-            ABS (play_rate)), &changed);
+    if (!gst_hls_demux_change_variant_playlist (hlsdemux,
+            hlsdemux->current_variant->iframe,
+            bitrate / MAX (1.0, ABS (play_rate)), &changed)) {
+      GST_ERROR_OBJECT (hlsdemux, "Failed to choose a new variant to play");
+    }
 
     GST_DEBUG_OBJECT (hlsdemux, "Returning changed: %d", changed);
     return changed;

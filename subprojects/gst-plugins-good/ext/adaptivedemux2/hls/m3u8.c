@@ -3276,20 +3276,26 @@ hls_master_playlist_new_from_data (gchar * data, const gchar * base_uri)
 
 GstHLSVariantStream *
 hls_master_playlist_get_variant_for_bitrate (GstHLSMasterPlaylist *
-    playlist, GstHLSVariantStream * current_variant, guint bitrate,
-    guint min_bitrate)
+    playlist, gboolean iframe_variant, guint bitrate,
+    guint min_bitrate, GList * failed_variants)
 {
-  GstHLSVariantStream *variant = current_variant;
-  GstHLSVariantStream *variant_by_min = current_variant;
+  GstHLSVariantStream *variant = NULL;
+  GstHLSVariantStream *variant_by_min = NULL;
   GList *l;
 
   /* variant lists are sorted low to high, so iterate from highest to lowest */
-  if (current_variant == NULL || !current_variant->iframe)
-    l = g_list_last (playlist->variants);
-  else
+  if (iframe_variant && playlist->iframe_variants != NULL)
     l = g_list_last (playlist->iframe_variants);
+  else
+    l = g_list_last (playlist->variants);
 
   while (l != NULL) {
+    if (g_list_find (failed_variants, l->data) != NULL) {
+      /* Ignore all variants from the failed list */
+      l = l->prev;
+      continue;
+    }
+
     variant = l->data;
     if (variant->bandwidth >= min_bitrate)
       variant_by_min = variant;
