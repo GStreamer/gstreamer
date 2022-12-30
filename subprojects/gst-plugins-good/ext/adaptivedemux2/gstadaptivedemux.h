@@ -476,6 +476,7 @@ GstCaps * gst_codec_utils_caps_from_iso_rfc6831 (gchar * codec);
 
 gdouble gst_adaptive_demux_play_rate (GstAdaptiveDemux *demux);
 
+void gst_adaptive_demux2_manual_manifest_update (GstAdaptiveDemux * demux);
 GstAdaptiveDemuxLoop *gst_adaptive_demux_get_loop (GstAdaptiveDemux *demux);
 
 G_END_DECLS

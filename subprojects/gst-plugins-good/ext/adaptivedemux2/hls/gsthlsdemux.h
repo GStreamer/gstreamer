@@ -92,6 +92,9 @@ struct _GstHLSDemux2
    * created at demuxer start based on the input multivariant playlist */
   GstHLSMasterPlaylist *master;
 
+  /* A ref to the main playlist, for access from external threads */
+  GstHLSMediaPlaylist *main_playlist;
+
   GstHLSVariantStream  *current_variant;
   /* The variant we're switching to (currently being loaded by the playlist loader) */
   GstHLSVariantStream  *pending_variant;

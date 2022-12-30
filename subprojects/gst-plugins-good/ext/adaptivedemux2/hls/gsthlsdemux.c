@@ -93,6 +93,7 @@ static gboolean gst_hls_demux_is_live (GstAdaptiveDemux * demux);
 static GstClockTime gst_hls_demux_get_duration (GstAdaptiveDemux * demux);
 static gboolean gst_hls_demux_process_initial_manifest (GstAdaptiveDemux *
     demux, GstBuffer * buf);
+static GstFlowReturn gst_hls_demux_update_manifest (GstAdaptiveDemux * demux);
 
 static void gst_hls_prune_time_mappings (GstHLSDemux * demux);
 
@@ -173,7 +174,8 @@ hlsdemux_requires_periodical_playlist_update_default (GstAdaptiveDemux *
     demux G_GNUC_UNUSED)
 {
   /* We don't need the base class to update our manifest periodically, the
-   * playlist loader for the main stream will do that */
+   * playlist loader for the main stream will do that and trigger
+   * an update manual */
   return FALSE;
 }
 
@@ -223,6 +225,7 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
   adaptivedemux_class->process_manifest =
       gst_hls_demux_process_initial_manifest;
   adaptivedemux_class->reset = gst_hls_demux_reset;
+  adaptivedemux_class->update_manifest = gst_hls_demux_update_manifest;
   adaptivedemux_class->seek = gst_hls_demux_seek;
 }
 
@@ -775,6 +778,10 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
     }
   }
 
+  /* Make sure the external manifest copy of the main playlist
+   * is available to the baseclass at the start */
+  gst_hls_demux_update_manifest (demux);
+
   return TRUE;
 }
 
@@ -784,21 +791,21 @@ gst_hls_demux_get_duration (GstAdaptiveDemux * demux)
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   GstClockTime duration = GST_CLOCK_TIME_NONE;
 
-  if (hlsdemux->main_stream)
-    duration =
-        gst_hls_media_playlist_get_duration (hlsdemux->main_stream->playlist);
+  if (hlsdemux->main_playlist)
+    duration = gst_hls_media_playlist_get_duration (hlsdemux->main_playlist);
 
   return duration;
 }
 
+/* Called from base class with the MANIFEST_LOCK held */
 static gboolean
 gst_hls_demux_is_live (GstAdaptiveDemux * demux)
 {
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gboolean is_live = FALSE;
 
-  if (hlsdemux->main_stream && hlsdemux->main_stream->playlist)
-    is_live = gst_hls_media_playlist_is_live (hlsdemux->main_stream->playlist);
+  if (hlsdemux->main_playlist)
+    is_live = gst_hls_media_playlist_is_live (hlsdemux->main_playlist);
 
   return is_live;
 }
@@ -1044,6 +1051,26 @@ gst_hls_update_time_mappings (GstHLSDemux * demux,
   }
 }
 
+/* Called by the base class with the manifest lock held */
+static GstFlowReturn
+gst_hls_demux_update_manifest (GstAdaptiveDemux * demux)
+{
+  GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
+
+  /* Take a copy of the main variant playlist for base class
+   * calls that need access from outside the scheduler task,
+   * holding the MANIFEST_LOCK */
+  if (hlsdemux->main_stream && hlsdemux->main_stream->playlist) {
+    if (hlsdemux->main_playlist)
+      gst_hls_media_playlist_unref (hlsdemux->main_playlist);
+    hlsdemux->main_playlist =
+        gst_hls_media_playlist_ref (hlsdemux->main_stream->playlist);
+    return GST_FLOW_OK;
+  }
+
+  return GST_ADAPTIVE_DEMUX_FLOW_BUSY;
+}
+
 void
 gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
     const gchar * playlist_uri, GstHLSMediaPlaylist * playlist)
@@ -1099,6 +1126,10 @@ gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
    * be based. */
   gst_hls_update_time_mappings (demux, playlist);
   gst_hls_media_playlist_dump (playlist);
+
+  /* Get the base class to call the update_manifest() vfunc with the MANIFEST_LOCK()
+   * held */
+  gst_adaptive_demux2_manual_manifest_update (GST_ADAPTIVE_DEMUX (demux));
 }
 
 void
@@ -1242,6 +1273,10 @@ gst_hls_demux_reset (GstAdaptiveDemux * ademux)
     gst_hls_master_playlist_unref (demux->master);
     demux->master = NULL;
   }
+  if (demux->main_playlist) {
+    gst_hls_media_playlist_unref (demux->main_playlist);
+    demux->main_playlist = NULL;
+  }
   if (demux->current_variant != NULL) {
     gst_hls_variant_stream_unref (demux->current_variant);
     demux->current_variant = NULL;
@@ -1325,10 +1360,10 @@ gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gboolean ret = FALSE;
 
-  if (hlsdemux->main_stream && hlsdemux->main_stream->playlist) {
+  if (hlsdemux->main_playlist) {
     ret =
-        gst_hls_media_playlist_get_seek_range (hlsdemux->main_stream->playlist,
-        hlsdemux->main_stream->llhls_enabled, start, stop);
+        gst_hls_media_playlist_get_seek_range (hlsdemux->main_playlist,
+        hlsdemux->llhls_enabled, start, stop);
   }
 
   return ret;

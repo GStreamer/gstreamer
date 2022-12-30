@@ -1964,7 +1964,7 @@ gst_adaptive_demux_seek_to_input_period (GstAdaptiveDemux * demux)
   }
 }
 
-/* must be called with manifest_lock taken */
+/* must be called with scheduler lock taken */
 gboolean
 gst_adaptive_demux_get_live_seek_range (GstAdaptiveDemux * demux,
     gint64 * range_start, gint64 * range_stop)
@@ -1978,7 +1978,7 @@ gst_adaptive_demux_get_live_seek_range (GstAdaptiveDemux * demux,
   return klass->get_live_seek_range (demux, range_start, range_stop);
 }
 
-/* must be called with manifest_lock taken */
+/* must be called from scheduler task */
 gboolean
 gst_adaptive_demux2_stream_in_live_seek_range (GstAdaptiveDemux * demux,
     GstAdaptiveDemux2Stream * stream)
@@ -2684,6 +2684,7 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
         if (can_seek) {
           if (gst_adaptive_demux_is_live (demux)) {
             ret = gst_adaptive_demux_get_live_seek_range (demux, &start, &stop);
+
             if (!ret) {
               GST_MANIFEST_UNLOCK (demux);
               GST_INFO_OBJECT (demux, "can't answer seeking query");
@@ -2797,6 +2798,7 @@ static void
 gst_adaptive_demux_stop_manifest_update_task (GstAdaptiveDemux * demux)
 {
   GST_DEBUG_OBJECT (demux, "requesting stop of the manifest update task");
+  demux->priv->manifest_updates_enabled = FALSE;
   if (demux->priv->manifest_updates_cb != 0) {
     gst_adaptive_demux_loop_cancel_call (demux->priv->scheduler_task,
         demux->priv->manifest_updates_cb);
@@ -2811,6 +2813,12 @@ static void
 gst_adaptive_demux_start_manifest_update_task (GstAdaptiveDemux * demux)
 {
   GstAdaptiveDemuxClass *demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
+  demux->priv->manifest_updates_enabled = TRUE;
+
+  if (demux->priv->need_manual_manifest_update) {
+    gst_adaptive_demux2_manual_manifest_update (demux);
+    demux->priv->need_manual_manifest_update = FALSE;
+  }
 
   if (gst_adaptive_demux_is_live (demux)) {
     /* Task to periodically update the manifest */
@@ -3754,6 +3762,35 @@ gst_adaptive_demux_update_manifest (GstAdaptiveDemux * demux)
   ret = klass->update_manifest (demux);
 
   return ret;
+}
+
+static gboolean
+gst_adaptive_demux2_manual_manifest_update_cb (GstAdaptiveDemux * demux)
+{
+  GST_MANIFEST_LOCK (demux);
+  gst_adaptive_demux_update_manifest (demux);
+  GST_MANIFEST_UNLOCK (demux);
+
+  return G_SOURCE_REMOVE;
+}
+
+/* called by a subclass that needs a callback to 'update_manifest'
+ * done with with MANIFEST_LOCK held */
+void
+gst_adaptive_demux2_manual_manifest_update (GstAdaptiveDemux * demux)
+{
+  if (demux->priv->manifest_updates_cb != 0)
+    return;                     /* Callback already pending */
+
+  if (!demux->priv->manifest_updates_enabled) {
+    GST_LOG_OBJECT (demux, "Marking manual manifest update pending");
+    demux->priv->need_manual_manifest_update = TRUE;
+    return;
+  }
+
+  demux->priv->manifest_updates_cb =
+      gst_adaptive_demux_loop_call (demux->priv->scheduler_task,
+      (GSourceFunc) gst_adaptive_demux2_manual_manifest_update_cb, demux, NULL);
 }
 
 /* must be called with manifest_lock taken */

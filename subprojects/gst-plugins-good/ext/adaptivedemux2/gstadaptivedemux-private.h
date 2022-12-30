@@ -83,6 +83,8 @@ struct _GstAdaptiveDemuxPrivate
 
   /* Callback / timer id for the next manifest update */
   guint manifest_updates_cb;
+  gboolean manifest_updates_enabled;
+  gboolean need_manual_manifest_update;
 
   /* Count of failed manifest updates */
   gint update_failed_count;
