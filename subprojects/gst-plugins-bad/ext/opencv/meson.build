@@ -71,7 +71,7 @@ if opencv_found
 endif
 
 if not opencv_found
-  opencv_dep = dependency('opencv4', version : ['>= 4.0.0', '< 4.7.0'], required : false)
+  opencv_dep = dependency('opencv4', version : '>= 4.0.0', required : false)
   opencv_found = opencv_dep.found()
   if opencv_found
     foreach h : libopencv4_headers
