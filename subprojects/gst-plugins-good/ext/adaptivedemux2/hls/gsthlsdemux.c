@@ -650,8 +650,10 @@ gst_hls_demux_set_current_variant (GstHLSDemux * hlsdemux,
     GST_DEBUG_OBJECT (hlsdemux, "Will switch from variant '%s' to '%s'",
         hlsdemux->current_variant->name, variant->name);
     if (hlsdemux->pending_variant) {
-      GST_ERROR_OBJECT (hlsdemux, "Already waiting for pending variant '%s'",
-          hlsdemux->pending_variant->name);
+      if (hlsdemux->pending_variant != variant) {
+        GST_DEBUG_OBJECT (hlsdemux, "Already waiting for pending variant '%s'",
+            hlsdemux->pending_variant->name);
+      }
       gst_hls_variant_stream_unref (hlsdemux->pending_variant);
     }
     hlsdemux->pending_variant = gst_hls_variant_stream_ref (variant);
