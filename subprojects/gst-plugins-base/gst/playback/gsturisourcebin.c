@@ -110,6 +110,7 @@ struct _ChildSrcPadInfo
   GstElement *demuxer;
   gboolean demuxer_handles_buffering;
   gboolean demuxer_streams_aware;
+  gboolean demuxer_is_parsebin;
 
   /* list of output slots */
   GList *outputs;
@@ -755,7 +756,8 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
   GST_URI_SOURCE_BIN_LOCK (urisrc);
   /* Double-check that the demuxer is streams-aware by checking if it posted a
    * collection */
-  if (info->demuxer && !info->demuxer_streams_aware) {
+  if (info->demuxer && !info->demuxer_is_parsebin
+      && !info->demuxer_streams_aware) {
     GST_ELEMENT_ERROR (urisrc, CORE, MISSING_PLUGIN, (NULL),
         ("Adaptive demuxer is not streams-aware, check your installation"));
 
@@ -1898,6 +1900,8 @@ setup_parsebin_for_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
   gst_element_set_locked_state (info->demuxer, TRUE);
   gst_bin_add (GST_BIN_CAST (urisrc), info->demuxer);
 
+  info->demuxer_is_parsebin = TRUE;
+
   if (info->pre_parse_queue) {
     if (!gst_element_link_pads (info->pre_parse_queue, "src", info->demuxer,
             "sink"))
@@ -2639,16 +2643,16 @@ handle_message (GstBin * bin, GstMessage * msg)
           find_adaptive_demuxer_cspi_for_msg (urisrc,
           (GstElement *) GST_MESSAGE_SRC (msg));
       if (info) {
-        GST_DEBUG_OBJECT (bin,
-            "Dropping stream-collection for adaptive demuxer");
         info->demuxer_streams_aware = TRUE;
-        gst_message_unref (msg);
-        msg = NULL;
-      } else if (GST_MESSAGE_SRC (msg) != (GstObject *) urisrc->source
-          && !urisrc->is_adaptive) {
+        if (info->demuxer_is_parsebin) {
+          GST_DEBUG_OBJECT (bin, "Dropping stream-collection from parsebin");
+          gst_message_unref (msg);
+          msg = NULL;
+        }
+      } else if (GST_MESSAGE_SRC (msg) != (GstObject *) urisrc->source) {
         GST_LOG_OBJECT (bin, "Collection %" GST_PTR_FORMAT, msg);
         GST_DEBUG_OBJECT (bin,
-            "Dropping stream-collection from non-adaptive-demuxer %"
+            "Dropping stream-collection from %"
             GST_PTR_FORMAT, GST_MESSAGE_SRC (msg));
         gst_message_unref (msg);
         msg = NULL;
