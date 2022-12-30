@@ -51,6 +51,7 @@ enum
   PROP_Y_AXIS,
   PROP_PIXEL_SIZE,
   PROP_QRCODE_ERROR_CORRECTION,
+  PROP_CASE_SENSITIVE,
 };
 
 typedef struct _GstBaseQROverlayPrivate GstBaseQROverlayPrivate;
@@ -65,6 +66,7 @@ struct _GstBaseQROverlayPrivate
   GstElement *overlaycomposition;
   GstVideoInfo info;
   gboolean valid;
+  gboolean case_sensitive;
 
   GstPad *sinkpad, *srcpad;
   GstVideoOverlayComposition *prev_overlay;
@@ -91,6 +93,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
 
 #define DEFAULT_PROP_QUALITY    1
 #define DEFAULT_PROP_PIXEL_SIZE    3
+#define DEFAULT_PROP_CASE_SENSITIVE FALSE
 
 #define GST_TYPE_QRCODE_QUALITY (gst_qrcode_quality_get_type())
 static GType
@@ -234,7 +237,8 @@ gst_base_qr_overlay_draw_cb (GstBaseQROverlay * self, GstSample * sample,
   } else if (content) {
     GST_INFO_OBJECT (self, "String will be encoded : %s", content);
     qrcode =
-        QRcode_encodeString (content, 0, priv->qrcode_quality, QR_MODE_8, 0);
+        QRcode_encodeString (content, 0, priv->qrcode_quality, QR_MODE_8,
+        priv->case_sensitive);
 
     if (qrcode) {
       GST_DEBUG_OBJECT (self, "String encoded");
@@ -299,6 +303,19 @@ gst_base_qr_overlay_class_init (GstBaseQROverlayClass * klass)
           "qrcode-error-correction", GST_TYPE_QRCODE_QUALITY,
           DEFAULT_PROP_QUALITY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstBaseQROverlay::case-sensitive:
+   *
+   * Strings to encode are case sensitive (e.g. passwords or SSIDs).
+   *
+   * Since: 1.22
+   */
+  g_object_class_install_property (gobject_class, PROP_CASE_SENSITIVE,
+      g_param_spec_boolean ("case-sensitive", "Case Sensitive",
+          "Strings to encode are case sensitive (e.g. passwords or SSIDs)",
+          DEFAULT_PROP_CASE_SENSITIVE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (gstelement_class,
@@ -319,6 +336,7 @@ gst_base_qr_overlay_init (GstBaseQROverlay * self)
   priv->x_percent = 50.0;
   priv->y_percent = 50.0;
   priv->qrcode_quality = DEFAULT_PROP_QUALITY;
+  priv->case_sensitive = DEFAULT_PROP_CASE_SENSITIVE;
   priv->span_frame = 0;
   priv->qrcode_size = DEFAULT_PROP_PIXEL_SIZE;
   priv->overlaycomposition =
@@ -366,6 +384,9 @@ gst_base_qr_overlay_set_property (GObject * object, guint prop_id,
     case PROP_QRCODE_ERROR_CORRECTION:
       priv->qrcode_quality = g_value_get_enum (value);
       break;
+    case PROP_CASE_SENSITIVE:
+      priv->case_sensitive = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -390,6 +411,9 @@ gst_base_qr_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_QRCODE_ERROR_CORRECTION:
       g_value_set_enum (value, priv->qrcode_quality);
+      break;
+    case PROP_CASE_SENSITIVE:
+      g_value_set_boolean (value, priv->case_sensitive);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
