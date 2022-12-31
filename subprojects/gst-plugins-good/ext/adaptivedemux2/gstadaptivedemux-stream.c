@@ -91,6 +91,9 @@ gst_adaptive_demux2_stream_init (GstAdaptiveDemux2Stream * stream)
 
   stream->start_position = stream->current_position = GST_CLOCK_TIME_NONE;
 
+  g_mutex_init (&stream->prepare_lock);
+  g_cond_init (&stream->prepare_cond);
+
   gst_segment_init (&stream->parse_segment, GST_FORMAT_TIME);
 }
 
@@ -147,6 +150,9 @@ gst_adaptive_demux2_stream_finalize (GObject * object)
 
   gst_clear_tag_list (&stream->pending_tags);
   g_clear_pointer (&stream->stream_collection, gst_object_unref);
+
+  g_mutex_clear (&stream->prepare_lock);
+  g_cond_clear (&stream->prepare_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1787,12 +1793,21 @@ gst_adaptive_demux2_stream_on_can_download_fragments (GstAdaptiveDemux2Stream *
  * Called by a subclass that has returned GST_ADAPTIVE_DEMUX_FLOW_BUSY
  * from update_fragment_info() to indicate that it is ready to continue
  * downloading now.
+ *
+ * Called from the scheduler task
  */
 void
 gst_adaptive_demux2_stream_mark_prepared (GstAdaptiveDemux2Stream * stream)
 {
   GstAdaptiveDemux *demux = stream->demux;
 
+  /* hlsdemux calls this method whenever a playlist is updated, so also
+   * use it to wake up a stream that's waiting at the live edge */
+  if (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_MANIFEST_UPDATE) {
+    gst_adaptive_demux2_stream_on_manifest_update (stream);
+  }
+
+  g_cond_broadcast (&stream->prepare_cond);
   if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE)
     return;
 
@@ -1803,6 +1818,22 @@ gst_adaptive_demux2_stream_mark_prepared (GstAdaptiveDemux2Stream * stream)
       gst_adaptive_demux_loop_call (demux->priv->scheduler_task,
       (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
       gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
+}
+
+/* Called by external threads (manifest input on sinkpad, and seek handling)
+ * when it requires the stream to be prepared before they can continue
+ * Must be held with the SCHEDULER lock held */
+gboolean
+gst_adaptive_demux2_stream_wait_prepared (GstAdaptiveDemux2Stream * stream)
+{
+  GstAdaptiveDemux *demux = stream->demux;
+
+  g_mutex_lock (&stream->prepare_lock);
+  GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
+  g_cond_wait (&stream->prepare_cond, &stream->prepare_lock);
+  g_mutex_unlock (&stream->prepare_lock);
+
+  return GST_ADAPTIVE_SCHEDULER_LOCK (demux);
 }
 
 static void
@@ -1857,8 +1888,12 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
       GST_DEBUG_OBJECT (stream,
           "Fragment info update result: %d %s", ret, gst_flow_get_name (ret));
 
-      if (ret == GST_FLOW_OK)
+      if (ret == GST_FLOW_OK) {
+        /* Wake anyone that's waiting for this stream to get prepared */
+        if (stream->state == GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE)
+          g_cond_broadcast (&stream->prepare_cond);
         stream->starting_fragment = TRUE;
+      }
       break;
     case GST_ADAPTIVE_DEMUX2_STREAM_STATE_DOWNLOADING:
       break;
@@ -1878,7 +1913,12 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
   if (ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY) {
     GST_LOG_OBJECT (stream,
         "Sub-class returned BUSY flow return. Waiting in PREPARE state");
+    /* Need to take the prepare lock specifically when switching
+     * to WAITING_PREPARE state, to avoid a race in _wait_prepared();
+     */
+    g_mutex_lock (&stream->prepare_lock);
     stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_WAITING_PREPARE;
+    g_mutex_unlock (&stream->prepare_lock);
     return FALSE;
   }
 
@@ -1941,6 +1981,7 @@ gst_adaptive_demux2_stream_load_a_fragment (GstAdaptiveDemux2Stream * stream)
     case GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC:
       GST_DEBUG_OBJECT (stream, "Lost sync, asking reset to current position");
       stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED;
+      g_cond_broadcast (&stream->prepare_cond);
       gst_adaptive_demux_handle_lost_sync (demux);
       return FALSE;
     case GST_FLOW_NOT_LINKED:
@@ -2140,6 +2181,7 @@ gst_adaptive_demux2_stream_stop_default (GstAdaptiveDemux2Stream * stream)
 
   GST_DEBUG_OBJECT (stream, "Stopping stream (from state %d)", stream->state);
   stream->state = GST_ADAPTIVE_DEMUX2_STREAM_STATE_STOPPED;
+  g_cond_broadcast (&stream->prepare_cond);
 
   if (stream->pending_cb_id != 0) {
     gst_adaptive_demux_loop_cancel_call (demux->priv->scheduler_task,

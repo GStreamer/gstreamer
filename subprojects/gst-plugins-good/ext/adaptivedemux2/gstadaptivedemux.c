@@ -1683,7 +1683,21 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
       /* TODO we only need the first timestamp, maybe create a simple function to
        * get the current PTS of a fragment ? */
       GST_DEBUG_OBJECT (stream, "Calling update_fragment_info");
-      gst_adaptive_demux2_stream_update_fragment_info (stream);
+      GstFlowReturn flow_ret =
+          gst_adaptive_demux2_stream_update_fragment_info (stream);
+
+      /* Handle fragment info waiting on BUSY */
+      while (flow_ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY) {
+        if (!gst_adaptive_demux2_stream_wait_prepared (stream))
+          break;
+        flow_ret = gst_adaptive_demux2_stream_update_fragment_info (stream);
+      }
+
+      if (flow_ret != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (stream, "Could not update fragment info. flow: %s",
+            gst_flow_get_name (flow_ret));
+        continue;
+      }
 
       GST_DEBUG_OBJECT (stream,
           "Got stream time %" GST_STIME_FORMAT,
@@ -2285,8 +2299,22 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
       }
     }
 
-    if (gst_adaptive_demux2_stream_seek (stream, rate >= 0, stream_seek_flags,
-            ts, &ts) != GST_FLOW_OK) {
+    GstFlowReturn flow_ret =
+        gst_adaptive_demux2_stream_seek (stream, rate >= 0, stream_seek_flags,
+        ts, &ts);
+
+    /* Handle fragment info waiting on BUSY */
+    while (flow_ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY) {
+      if (!gst_adaptive_demux2_stream_wait_prepared (stream))
+        break;
+      flow_ret = gst_adaptive_demux2_stream_update_fragment_info (stream);
+    }
+
+    if (flow_ret != GST_FLOW_OK) {
+      GST_DEBUG_OBJECT (demux,
+          "Seek on stream %" GST_PTR_FORMAT " failed with flow return %s",
+          stream, gst_flow_get_name (flow_ret));
+
       GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
 
       GST_API_UNLOCK (demux);

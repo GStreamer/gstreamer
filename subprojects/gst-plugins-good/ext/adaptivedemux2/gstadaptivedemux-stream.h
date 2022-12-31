@@ -309,6 +309,10 @@ struct _GstAdaptiveDemux2Stream
   GstAdaptiveDemux2StreamState state;
   guint pending_cb_id;
   gboolean download_active;
+
+  GMutex prepare_lock;
+  GCond prepare_cond;
+
   /* The (global output) time at which this stream should be woken
    * to download more input */
   GstClockTimeDiff next_input_wakeup_time;
@@ -376,6 +380,7 @@ gboolean gst_adaptive_demux2_stream_handle_collection (GstAdaptiveDemux2Stream *
     GstStreamCollection *collection, gboolean *had_pending_tracks);
 
 void gst_adaptive_demux2_stream_mark_prepared(GstAdaptiveDemux2Stream *stream);
+gboolean gst_adaptive_demux2_stream_wait_prepared(GstAdaptiveDemux2Stream *stream);
 
 void gst_adaptive_demux2_stream_fragment_clear (GstAdaptiveDemux2StreamFragment * f);
 
