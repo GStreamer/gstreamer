@@ -1105,21 +1105,64 @@ void
 gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
     const gchar * playlist_uri)
 {
-  if (demux->pending_variant) {
-    GST_DEBUG_OBJECT (demux, "Variant playlist update failed. "
-        "Marking variant URL %s as failed and switching over to another variant",
-        playlist_uri);
+  GST_DEBUG_OBJECT (demux, "Playlist update failure for variant URI %s",
+      playlist_uri);
 
-    /* The pending variant must always match the one that just got updated:
-     * The loader should only do a callback for the most recently set URI */
-    g_assert (g_str_equal (demux->pending_variant->uri, playlist_uri));
-    g_assert (g_list_find (demux->failed_variants,
-            demux->pending_variant) == NULL);
+  /* Check if this is a new load of the pending variant, or a reload
+   * of the current variant */
+  GstHLSVariantStream *variant = demux->pending_variant;
+  if (variant == NULL)
+    variant = demux->current_variant;
 
-    /* Steal pending_variant ref into the failed variants */
+  /* If the variant has an fallback URIs available, we can try one of those */
+  if (variant->fallback != NULL) {
+    gchar *fallback_uri = (gchar *) (variant->fallback->data);
+
+    GST_DEBUG_OBJECT (demux,
+        "Variant playlist update failed. Switching to fallback URI %s",
+        fallback_uri);
+
+    variant->fallback = g_list_remove (variant->fallback, fallback_uri);
+    g_free (variant->uri);
+    variant->uri = fallback_uri;
+
+    if (demux->main_stream) {
+      /* The variant stream exists, update the playlist we're loading */
+      gst_hls_demux_stream_set_playlist_uri (demux->main_stream, variant->uri);
+    }
+    return;
+  }
+
+  GST_DEBUG_OBJECT (demux, "Variant playlist update failed. "
+      "Marking variant URL %s as failed and switching over to another variant",
+      playlist_uri);
+
+  /* The variant must always match the one that just got updated:
+   * The loader should only do a callback for the most recently set URI */
+  g_assert (g_str_equal (variant->uri, playlist_uri));
+
+  /* If we didn't already add this playlist to the failed variants list
+   * do so now. It's possible we get an update error again if we failed
+   * to choose a new variant and posted error but didn't get shut down
+   * yet */
+  if (g_list_find (demux->failed_variants, variant) == NULL) {
     demux->failed_variants =
-        g_list_prepend (demux->failed_variants, demux->pending_variant);
-    demux->pending_variant = NULL;
+        g_list_prepend (demux->failed_variants,
+        gst_hls_variant_stream_ref (variant));
+  }
+
+  /* Now try to find another variant to play */
+  gdouble play_rate = gst_adaptive_demux_play_rate (GST_ADAPTIVE_DEMUX (demux));
+  guint64 bitrate = gst_hls_demux_get_bitrate (demux);
+
+  GST_DEBUG_OBJECT (demux, "Trying to find failover variant playlist");
+
+  if (!gst_hls_demux_change_variant_playlist (demux,
+          variant->iframe, bitrate / MAX (1.0, ABS (play_rate)), NULL)) {
+    GST_ERROR_OBJECT (demux, "Failed to choose a new variant to play");
+    GST_ELEMENT_ERROR (demux, STREAM, FAILED,
+        (_("Internal data stream error.")),
+        ("Could not update any variant playlist"));
   }
 }
 
@@ -1236,8 +1279,6 @@ gst_hls_demux_change_variant_playlist (GstHLSDemux * demux,
 {
   GstAdaptiveDemux *adaptive_demux = GST_ADAPTIVE_DEMUX_CAST (demux);
 
-  g_return_val_if_fail (demux->main_stream != NULL, FALSE);
-
   if (changed)
     *changed = FALSE;
 
@@ -1257,6 +1298,8 @@ gst_hls_demux_change_variant_playlist (GstHLSDemux * demux,
 
   /* Don't do anything else if the playlist is the same */
   if (new_variant == previous_variant) {
+    GST_TRACE_OBJECT (demux, "Variant didn't change from bandwidth %dbps",
+        new_variant->bandwidth);
     gst_hls_variant_stream_unref (previous_variant);
     return TRUE;
   }
