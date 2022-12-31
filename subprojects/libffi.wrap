@@ -2,4 +2,4 @@
 directory=libffi
 url=https://gitlab.freedesktop.org/gstreamer/meson-ports/libffi.git
 push-url=git@gitlab.freedesktop.org:gstreamer/meson-ports/libffi.git
-revision=meson
+revision=meson-3.2.9999.4
