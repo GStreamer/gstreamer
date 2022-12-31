@@ -943,6 +943,8 @@ gst_adaptive_demux_post_collection (GstAdaptiveDemux * demux)
   return TRUE;
 }
 
+/* Called from the sinkpad's input thread with
+ * the SCHEDULER lock held */
 static gboolean
 handle_incoming_manifest (GstAdaptiveDemux * demux)
 {
@@ -1053,9 +1055,9 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
       gst_adaptive_demux_post_collection (demux);
   TRACKS_UNLOCK (demux);
 
+  gst_adaptive_demux_set_streams_can_download_fragments (demux, FALSE);
   gst_adaptive_demux_prepare_streams (demux,
       gst_adaptive_demux_is_live (demux));
-
   gst_adaptive_demux_set_streams_can_download_fragments (demux, TRUE);
   gst_adaptive_demux_start_tasks (demux);
   gst_adaptive_demux_start_manifest_update_task (demux);
@@ -1667,8 +1669,12 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
 
   for (iter = new_streams; iter; iter = g_list_next (iter)) {
     GstAdaptiveDemux2Stream *stream = iter->data;
+    gboolean is_selected =
+        gst_adaptive_demux2_stream_is_selected_locked (stream);
 
-    GST_DEBUG_OBJECT (stream, "Preparing stream");
+    GST_DEBUG_OBJECT (stream,
+        "Preparing stream. Is selected: %d pending_tracks: %d", is_selected,
+        stream->pending_tracks);
 
     stream->need_header = TRUE;
     stream->discont = TRUE;
@@ -1677,9 +1683,7 @@ gst_adaptive_demux_prepare_streams (GstAdaptiveDemux * demux,
      * * If the stream is selected
      * * Or it provides dynamic tracks (in which case we need to force an update)
      */
-    if (first_and_live
-        && (gst_adaptive_demux2_stream_is_selected_locked (stream)
-            || stream->pending_tracks)) {
+    if (first_and_live && (is_selected || stream->pending_tracks)) {
       /* TODO we only need the first timestamp, maybe create a simple function to
        * get the current PTS of a fragment ? */
       GST_DEBUG_OBJECT (stream, "Calling update_fragment_info");
@@ -2383,6 +2387,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
 
   /* Restart the demux */
+  gst_adaptive_demux_set_streams_can_download_fragments (demux, TRUE);
   gst_adaptive_demux_start_tasks (demux);
 
   GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
@@ -2767,7 +2772,7 @@ gst_adaptive_demux_scheduler_start_cb (GstAdaptiveDemux * demux)
   return FALSE;
 }
 
-/* must be called with manifest_lock taken */
+/* must be called with the scheduler lock */
 static void
 gst_adaptive_demux_start_tasks (GstAdaptiveDemux * demux)
 {
@@ -2952,6 +2957,12 @@ gst_adaptive_demux_manifest_update_cb (GstAdaptiveDemux * demux)
       }
       demux->priv->stream_waiting_for_manifest = FALSE;
     }
+  } else if (ret == GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC) {
+    schedule_again = FALSE;
+    gst_adaptive_demux_handle_lost_sync (demux);
+  } else if (ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY) {
+    /* This is not an error, we'll just try again later */
+    GST_LOG_OBJECT (demux, "Manifest update returned BUSY / ongoing");
   } else {
     demux->priv->update_failed_count++;
 
@@ -2965,9 +2976,6 @@ gst_adaptive_demux_manifest_update_cb (GstAdaptiveDemux * demux)
       schedule_again = FALSE;
     }
   }
-
-  if (ret == GST_ADAPTIVE_DEMUX_FLOW_LOST_SYNC)
-    gst_adaptive_demux_handle_lost_sync (demux);
 
   if (schedule_again) {
     GstAdaptiveDemuxClass *klass = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
