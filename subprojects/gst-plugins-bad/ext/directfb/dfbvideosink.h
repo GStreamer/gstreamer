@@ -156,6 +156,10 @@ struct _GstDfbVideoSinkClass {
 GType gst_dfbvideosink_get_type (void);
 GType gst_dfb_buffer_pool_get_type (void);
 
+static void
+gst_dfbvideosink_navigation_send_event (GstNavigation * navigation,
+    GstEvent * event);
+
 GST_ELEMENT_REGISTER_DECLARE (dfbvideosink);
 
 G_END_DECLS
