@@ -264,7 +264,14 @@ gst_hls_demux_playlist_loader_set_playlist_uri (GstHLSDemuxPlaylistLoader * pl,
       }
       break;
     case PLAYLIST_LOADER_STATE_WAITING:
-      return;                   /* Already waiting for the next time to load a live playlist */
+      /* Waiting for the next time to load a live playlist, but the playlist has changed so
+       * cancel that and trigger a new one */
+      g_assert (priv->pending_cb_id != 0);
+      gst_adaptive_demux_loop_cancel_call (priv->scheduler_task,
+          priv->pending_cb_id);
+      priv->pending_cb_id = 0;
+      schedule_state_update (pl, priv);
+      break;
   }
 }
 
