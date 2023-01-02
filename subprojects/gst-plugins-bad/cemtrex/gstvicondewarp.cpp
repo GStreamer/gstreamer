@@ -133,9 +133,7 @@ void DewarpPlugin::setProperties(const GstStructure* properties)
 		m_data[i].m_roll = g_value_get_float(gst_structure_get_value(properties, rollKey));
 	}
 
-	if (m_isCameraSetup) {
-		m_isCameraSetup = false;
-	}
+	setPosition();
 }
 
 void DewarpPlugin::setOnOff(bool onOff)
