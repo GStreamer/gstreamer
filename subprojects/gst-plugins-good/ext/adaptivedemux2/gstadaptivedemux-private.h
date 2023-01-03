@@ -218,10 +218,7 @@ typedef struct
   GstClockTimeDiff runningtime_buffering;
 } TrackQueueItem;
 
-GstAdaptiveDemux2Stream *find_stream_for_track_locked (GstAdaptiveDemux *
-    demux, GstAdaptiveDemuxTrack * track);
-
-GstMiniObject * track_dequeue_data_locked (GstAdaptiveDemux * demux, GstAdaptiveDemuxTrack * track, gboolean check_sticky_events);
+GstMiniObject * gst_adaptive_demux_track_dequeue_data_locked (GstAdaptiveDemux * demux, GstAdaptiveDemuxTrack * track, gboolean check_sticky_events);
 void gst_adaptive_demux_track_flush (GstAdaptiveDemuxTrack * track);
 void gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track, GstClockTime drain_running_time);
 void gst_adaptive_demux_track_update_next_position (GstAdaptiveDemuxTrack * track);

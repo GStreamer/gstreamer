@@ -118,7 +118,7 @@ static inline GstClockTimeDiff my_segment_to_running_time (GstSegment * segment,
 /* Dequeue or generate a buffer/event from the track queue and update the buffering levels
  * TRACKS_LOCK hold */
 GstMiniObject *
-track_dequeue_data_locked (GstAdaptiveDemux * demux,
+gst_adaptive_demux_track_dequeue_data_locked (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxTrack * track, gboolean check_sticky_events)
 {
   GstMiniObject *res = NULL;
@@ -371,7 +371,8 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
      * will be collected by the dequeue function, gaps will be started.
      * If it's a buffer, mark the track as discont to get the flag set
      * on the next output buffer */
-    next_mo = track_dequeue_data_locked (demux, track, FALSE);
+    next_mo =
+        gst_adaptive_demux_track_dequeue_data_locked (demux, track, FALSE);
     if (GST_IS_BUFFER (next_mo)) {
       track->output_discont = TRUE;
     }

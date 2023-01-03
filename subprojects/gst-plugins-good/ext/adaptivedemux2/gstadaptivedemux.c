@@ -1890,7 +1890,7 @@ demux_post_buffering_locked (GstAdaptiveDemux * demux)
 }
 
 /* MANIFEST_LOCK and TRACKS_LOCK hold */
-GstAdaptiveDemux2Stream *
+static GstAdaptiveDemux2Stream *
 find_stream_for_track_locked (GstAdaptiveDemux * demux,
     GstAdaptiveDemuxTrack * track)
 {
@@ -3484,7 +3484,8 @@ restart:
         || ((track->next_position != GST_CLOCK_STIME_NONE)
             && track->next_position <= global_output_position)
         || ((track->next_position == GST_CLOCK_STIME_NONE) && track->eos)) {
-      GstMiniObject *mo = track_dequeue_data_locked (demux, track, TRUE);
+      GstMiniObject *mo =
+          gst_adaptive_demux_track_dequeue_data_locked (demux, track, TRUE);
 
       if (!mo) {
         GST_DEBUG_OBJECT (demux,
