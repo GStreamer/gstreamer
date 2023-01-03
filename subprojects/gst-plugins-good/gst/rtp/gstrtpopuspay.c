@@ -28,7 +28,7 @@
  *
  * In addition to the RFC, which assumes only mono and stereo payload,
  * the element supports multichannel Opus audio streams using a non-standardized
- * SDP config and "multiopus" codec developed by Google for libwebrtc. When the
+ * SDP config and "MULTIOPUS" codec developed by Google for libwebrtc. When the
  * input data have more than 2 channels, rtpopuspay will add extra fields to
  * output caps that can be used to generate SDP in the syntax understood by
  * libwebrtc. For example in the case of 5.1 audio:
@@ -83,7 +83,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 48000, "
-        "encoding-name = (string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\", \"multiopus\" }")
+        "encoding-name = (string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\", \"MULTIOPUS\" }")
     );
 
 static gboolean gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload,
@@ -255,7 +255,7 @@ gst_rtp_opus_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 
       /* libwebrtc only supports "multiopus" when channels > 2. Mono and stereo
        * sound must always be payloaded according to RFC 7587. */
-      encoding_name = "multiopus";
+      encoding_name = "MULTIOPUS";
 
       if (gst_structure_get_int (s, "stream-count", &stream_count)) {
         char *num_streams = g_strdup_printf ("%d", stream_count);

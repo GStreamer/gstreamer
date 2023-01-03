@@ -15572,7 +15572,7 @@
                 "long-name": "RTP Opus packet depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)multiopus }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)MULTIOPUS }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
@@ -15605,7 +15605,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)multiopus }\n",
+                        "caps": "application/x-rtp:\n          media: audio\n        payload: [ 96, 127 ]\n     clock-rate: 48000\n  encoding-name: { (string)OPUS, (string)X-GST-OPUS-DRAFT-SPITTKA-00, (string)MULTIOPUS }\n",
                         "direction": "src",
                         "presence": "always"
                     }

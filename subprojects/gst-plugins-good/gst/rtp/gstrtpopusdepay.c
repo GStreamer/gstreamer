@@ -42,7 +42,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ","
         "clock-rate = (int) 48000, "
-        "encoding-name = (string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\", \"multiopus\" }")
+        "encoding-name = (string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\", \"MULTIOPUS\" }")
     );
 
 static GstStaticPadTemplate gst_rtp_opus_depay_src_template =
@@ -105,7 +105,7 @@ gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   s = gst_caps_get_structure (caps, 0);
 
-  if (g_str_equal (gst_structure_get_string (s, "encoding-name"), "multiopus")) {
+  if (g_str_equal (gst_structure_get_string (s, "encoding-name"), "MULTIOPUS")) {
     gint channels;
     gint stream_count;
     gint coupled_count;
@@ -119,7 +119,7 @@ gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
         !gst_structure_has_field_typed (s, "num_streams", G_TYPE_STRING) ||
         !gst_structure_has_field_typed (s, "coupled_streams", G_TYPE_STRING) ||
         !gst_structure_has_field_typed (s, "channel_mapping", G_TYPE_STRING)) {
-      GST_WARNING_OBJECT (depayload, "Encoding name 'multiopus' requires "
+      GST_WARNING_OBJECT (depayload, "Encoding name 'MULTIOPUS' requires "
           "encoding-params, num_streams, coupled_streams and channel_mapping "
           "as string fields in caps.");
       goto reject_caps;
