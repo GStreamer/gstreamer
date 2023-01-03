@@ -437,13 +437,11 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
       GstCaps *caps2 = gst_caps_copy (caps);
 
       gst_caps_set_simple (caps, "channels", G_TYPE_INT, 2, NULL);
-      gst_caps_set_simple (caps2, "channels", G_TYPE_INT, 1, NULL);
       caps = gst_caps_merge (caps, caps2);
     } else if (!strcmp (stereo, "0")) {
       GstCaps *caps2 = gst_caps_copy (caps);
 
       gst_caps_set_simple (caps, "channels", G_TYPE_INT, 1, NULL);
-      gst_caps_set_simple (caps2, "channels", G_TYPE_INT, 2, NULL);
       caps = gst_caps_merge (caps, caps2);
     }
   }
