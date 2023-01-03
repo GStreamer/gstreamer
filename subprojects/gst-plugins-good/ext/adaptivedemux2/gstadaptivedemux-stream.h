@@ -342,6 +342,7 @@ struct _GstAdaptiveDemux2Stream
 
   GstAdaptiveDemux2StreamFragment fragment;
 
+  gboolean download_error_retry;
   guint download_error_count;
 
   /* Last collection provided by parsebin */

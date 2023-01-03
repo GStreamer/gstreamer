@@ -1200,57 +1200,57 @@ on_download_error (DownloadRequest * request, DownloadRequestState state,
   stream->download_active = FALSE;
   stream->last_status_code = last_status_code;
 
-  GST_DEBUG_OBJECT (stream,
-      "Download finished with error, request state %d http status %u, dc %d",
-      request->state, last_status_code, stream->download_error_count);
-
   live = gst_adaptive_demux_is_live (demux);
-  if (((last_status_code / 100 == 4 && live)
+
+  GST_DEBUG_OBJECT (stream,
+      "Download finished with error, request state %d http status %u, dc %d "
+      "live %d retried %d",
+      request->state, last_status_code,
+      stream->download_error_count, live, stream->download_error_retry);
+
+  if (!stream->download_error_retry && ((last_status_code / 100 == 4 && live)
           || last_status_code / 100 == 5)) {
     /* 4xx/5xx */
     /* if current position is before available start, switch to next */
     if (live) {
       gint64 range_start, range_stop;
 
-      if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
-              &range_stop))
-        goto flushing;
-
-      if (demux->segment.position < range_start) {
-        GstFlowReturn ret;
-
-        GST_DEBUG_OBJECT (stream, "Retrying once with next segment");
-        gst_adaptive_demux2_stream_finish_download (stream, GST_FLOW_EOS, NULL);
-
-        GST_DEBUG_OBJECT (demux, "Calling update_fragment_info");
-
-        ret = gst_adaptive_demux2_stream_update_fragment_info (stream);
-        GST_DEBUG_OBJECT (stream, "update_fragment_info ret: %s",
-            gst_flow_get_name (ret));
-
-        if (ret == GST_FLOW_OK)
-          goto again;
-
-      } else if (demux->segment.position > range_stop) {
-        /* wait a bit to be in range, we don't have any locks at that point */
-        GstClockTime wait_time =
-            gst_adaptive_demux2_stream_get_fragment_waiting_time (stream);
-        if (wait_time > 0) {
-          GST_DEBUG_OBJECT (stream,
-              "Download waiting for %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (wait_time));
-          g_assert (stream->pending_cb_id == 0);
-          GST_LOG_OBJECT (stream, "Scheduling delayed load_a_fragment() call");
-          stream->pending_cb_id =
-              gst_adaptive_demux_loop_call_delayed (demux->priv->scheduler_task,
-              wait_time,
-              (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
-              gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
+      if (gst_adaptive_demux_get_live_seek_range (demux, &range_start,
+              &range_stop)) {
+        if (demux->segment.position < range_start) {
+          /* This should advance into the valid playlist range */
+          GST_DEBUG_OBJECT (stream, "Retrying once with next segment");
+          stream->download_error_retry = TRUE;
+          gst_adaptive_demux2_stream_finish_download (stream, GST_FLOW_OK,
+              NULL);
+          return;
+        } else if (demux->segment.position > range_stop) {
+          /* wait a bit to be in range */
+          GstClockTime wait_time =
+              gst_adaptive_demux2_stream_get_fragment_waiting_time (stream);
+          if (wait_time > 0) {
+            GST_DEBUG_OBJECT (stream,
+                "Download waiting for %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (wait_time));
+            g_assert (stream->pending_cb_id == 0);
+            GST_LOG_OBJECT (stream,
+                "Scheduling delayed load_a_fragment() call");
+            stream->pending_cb_id =
+                gst_adaptive_demux_loop_call_delayed (demux->
+                priv->scheduler_task, wait_time,
+                (GSourceFunc) gst_adaptive_demux2_stream_load_a_fragment,
+                gst_object_ref (stream), (GDestroyNotify) gst_object_unref);
+            return;
+          }
+        } else {
+          GST_LOG_OBJECT (stream,
+              "Failed segment is inside the live range, retrying");
         }
+      } else {
+        GST_LOG_OBJECT (stream, "Could not get live seek range after error");
       }
     }
 
-  flushing:
     if (stream->download_error_count >= MAX_DOWNLOAD_ERROR_COUNT) {
       /* looks like there is no way of knowing when a live stream has ended
        * Have to assume we are falling behind and cause a manifest reload */
@@ -1371,6 +1371,7 @@ on_download_complete (DownloadRequest * request, DownloadRequestState state,
   GstBuffer *buffer;
 
   stream->download_active = FALSE;
+  stream->download_error_retry = FALSE;
 
   if (stream->state != GST_ADAPTIVE_DEMUX2_STREAM_STATE_DOWNLOADING) {
     GST_DEBUG_OBJECT (stream, "Stream state changed to %d. Aborting",
@@ -2193,6 +2194,8 @@ gst_adaptive_demux2_stream_stop_default (GstAdaptiveDemux2Stream * stream)
   stream->downloading_header = stream->downloading_index = FALSE;
   stream->download_request = download_request_new ();
   stream->download_active = FALSE;
+  stream->download_error_retry = FALSE;
+  stream->download_error_count = 0;
 
   stream->next_input_wakeup_time = GST_CLOCK_STIME_NONE;
 }
