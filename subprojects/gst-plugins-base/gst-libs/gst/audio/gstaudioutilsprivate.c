@@ -51,7 +51,6 @@ __gst_audio_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
       const GstStructure *caps_s = gst_caps_get_structure (caps, j);
       const GValue *val;
       GstStructure *s;
-      GstCaps *tmp = gst_caps_new_empty ();
 
       s = gst_structure_new_id_empty (q_name);
       if ((val = gst_structure_get_value (caps_s, "rate")))
@@ -61,9 +60,8 @@ __gst_audio_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
       if ((val = gst_structure_get_value (caps_s, "channels-mask")))
         gst_structure_set_value (s, "channels-mask", val);
 
-      gst_caps_append_structure_full (tmp, s,
+      result = gst_caps_merge_structure_full (result, s,
           gst_caps_features_copy (features));
-      result = gst_caps_merge (result, tmp);
     }
   }
 
