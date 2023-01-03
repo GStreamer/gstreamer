@@ -445,9 +445,9 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
        * fixes stuttery video playback in Chrome */
       "rtpvp8pay name=videopay picture-id-mode=15-bit ! "
       "queue ! %s,payload=%u ! sendrecv. "
-      "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay name=audiopay ! "
-      "queue ! %s,payload=%u ! sendrecv. ", RTP_CAPS_VP8, vp8_pt,
-      RTP_CAPS_OPUS, opus_pt);
+      "audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay name=audiopay "
+      " ! application/x-rtp, encoding-name=OPUS ! queue ! %s,payload=%u ! sendrecv. ",
+      RTP_CAPS_VP8, vp8_pt, RTP_CAPS_OPUS, opus_pt);
 
   pipe1 = gst_parse_launch (pipeline, &error);
   g_free (pipeline);

@@ -244,7 +244,8 @@ create_receiver_entry (SoupWebsocketConnection * connection)
       "application/x-rtp,media=video,encoding-name=H264,payload="
       RTP_PAYLOAD_TYPE " ! webrtcbin. "
       "autoaudiosrc is-live=1 ! queue max-size-buffers=1 leaky=downstream ! audioconvert ! audioresample ! opusenc ! rtpopuspay pt="
-      RTP_AUDIO_PAYLOAD_TYPE " ! webrtcbin. ", &error);
+      RTP_AUDIO_PAYLOAD_TYPE
+      " ! application/x-rtp,encoding-name=OPUS ! webrtcbin. ", &error);
   if (error != NULL) {
     g_error ("Could not create WebRTC pipeline: %s\n", error->message);
     g_error_free (error);
