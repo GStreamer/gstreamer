@@ -795,7 +795,7 @@ gst_srt_object_set_socket_option (GstStructure * s, const gchar * key,
 {
   SrtOption *option = srt_options;
 
-  for (; option; ++option) {
+  for (; option->name; ++option) {
     if (g_str_equal (key, option->name)) {
       switch (option->gtype) {
         case G_TYPE_INT:
