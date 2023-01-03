@@ -128,13 +128,15 @@ __gst_audio_element_proxy_getcaps (GstElement * element, GstPad * sinkpad,
 
   filter_caps = __gst_audio_element_proxy_caps (element, templ_caps, allowed);
 
-  fcaps = gst_caps_intersect (filter_caps, templ_caps);
+  fcaps = gst_caps_intersect_full (filter_caps, templ_caps,
+      GST_CAPS_INTERSECT_FIRST);
   gst_caps_unref (filter_caps);
   gst_caps_unref (templ_caps);
 
   if (filter) {
     GST_LOG_OBJECT (element, "intersecting with %" GST_PTR_FORMAT, filter);
-    filter_caps = gst_caps_intersect (fcaps, filter);
+    filter_caps = gst_caps_intersect_full (fcaps, filter,
+        GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (fcaps);
     fcaps = filter_caps;
   }
