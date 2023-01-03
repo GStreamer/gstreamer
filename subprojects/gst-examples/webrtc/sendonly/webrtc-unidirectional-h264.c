@@ -433,7 +433,7 @@ soup_websocket_message_cb (G_GNUC_UNUSED SoupWebsocketConnection * connection,
     SoupWebsocketDataType data_type, GBytes * message, gpointer user_data)
 {
   gsize size;
-  gchar *data;
+  const gchar *data;
   gchar *data_string;
   const gchar *type_string;
   JsonNode *root_json;
@@ -445,14 +445,12 @@ soup_websocket_message_cb (G_GNUC_UNUSED SoupWebsocketConnection * connection,
   switch (data_type) {
     case SOUP_WEBSOCKET_DATA_BINARY:
       g_error ("Received unknown binary message, ignoring\n");
-      g_bytes_unref (message);
       return;
 
     case SOUP_WEBSOCKET_DATA_TEXT:
-      data = g_bytes_unref_to_data (message, &size);
+      data = g_bytes_get_data (message, &size);
       /* Convert to NULL-terminated string */
       data_string = g_strndup (data, size);
-      g_free (data);
       break;
 
     default:
