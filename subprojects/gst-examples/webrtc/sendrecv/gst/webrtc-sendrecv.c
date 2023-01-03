@@ -481,7 +481,8 @@ start_pipeline (gboolean create_offer, guint opus_pt, guint vp8_pt)
   audio_desc =
       g_strdup_printf
       ("audiotestsrc is-live=true wave=red-noise ! audioconvert ! audioresample"
-      "! queue ! opusenc ! rtpopuspay name=audiopay pt=%u ! queue", opus_pt);
+      "! queue ! opusenc ! rtpopuspay name=audiopay pt=%u "
+      "! application/x-rtp, encoding-name=OPUS ! queue", opus_pt);
   audio_bin = gst_parse_bin_from_description (audio_desc, TRUE, &audio_error);
   g_free (audio_desc);
   if (audio_error) {

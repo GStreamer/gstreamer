@@ -159,7 +159,7 @@ impl App {
             &format!(
                 "videotestsrc is-live=true ! vp8enc deadline=1 ! rtpvp8pay pt=96 ! tee name=video-tee ! \
                  queue ! fakesink sync=true \
-                 audiotestsrc wave=ticks is-live=true ! opusenc ! rtpopuspay pt=97 ! tee name=audio-tee ! \
+                 audiotestsrc wave=ticks is-live=true ! opusenc ! rtpopuspay pt=97 ! application/x-rtp,encoding-name=OPUS ! tee name=audio-tee ! \
                  queue ! fakesink sync=true \
                  audiotestsrc wave=silence is-live=true ! audio-mixer. \
                  audiomixer name=audio-mixer sink_0::mute=true ! audioconvert ! audioresample ! autoaudiosink \
