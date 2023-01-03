@@ -830,7 +830,7 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu)
    * GstH265SliceHdr::entry_point_offset_minus1 but we don't use it
    * in this h265decoder baseclass at the moment
    */
-  gst_h265_slice_hdr_free (&priv->current_slice.header);
+  gst_h265_slice_hdr_free (&slice.header);
   slice.nalu = *nalu;
 
   if (nalu->type >= GST_H265_NAL_SLICE_BLA_W_LP &&
