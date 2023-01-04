@@ -142,6 +142,27 @@ _vk_mem_map_full (GstVulkanMemory * mem, GstMapInfo * info, gsize size)
 static void
 _vk_mem_unmap_full (GstVulkanMemory * mem, GstMapInfo * info)
 {
+  if ((info->flags & GST_MAP_WRITE)
+      && !(mem->properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+    GError *error = NULL;
+    VkResult err;
+    VkMappedMemoryRange range = {
+      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+      /* .pNext = */
+      .memory = mem->mem_ptr,
+      .offset = mem->vk_offset,
+      .size = mem->mem.size,
+    };
+
+    err = vkFlushMappedMemoryRanges (mem->device->device, 1u, &range);
+    if (gst_vulkan_error_to_g_error (err, &error,
+            "vkFlushMappedMemoryRanges") < 0) {
+      GST_CAT_WARNING (GST_CAT_VULKAN_MEMORY, "Failed to flush memory: %s",
+          error->message);
+      g_clear_error (&error);
+    }
+  }
+
   vkUnmapMemory (mem->device->device, mem->mem_ptr);
 }
 
