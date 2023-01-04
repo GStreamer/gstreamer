@@ -1490,16 +1490,17 @@ gst_hls_media_playlist_find_partial_position (GstHLSMediaPlaylist * playlist,
   return FALSE;
 }
 
-/* gst_hls_media_playlist_find_position() is used
- * when finding the segment or partial segment that corresponds
- * to our current playback position.
+/* gst_hls_media_playlist_find_position() is used when finding the segment or
+ * partial segment that corresponds to our current playback position.
+ *
  * If we're "playing partial segments", we want to find the partial segment
-   whose stream_time matches the target position most closely (or fail
-   if there's no partial segment, since the target partial segment was
-   removed from the playlist and we lost sync.
- * If not currently playing partial segment, find the segment with a
- * stream_time that matches, or the partial segment exactly at the start
- * of the 'partial_only' segment.
+ * whose stream_time matches the target position most closely (or fail if
+ * there's no partial segment, since the target partial segment was removed from
+ * the playlist and we lost sync.
+ *
+ * If not currently playing partial segment, find the segment with a stream_time
+ * that matches, or the partial segment exactly at the start of the
+ * 'partial_only' segment.
  */
 gboolean
 gst_hls_media_playlist_find_position (GstHLSMediaPlaylist * playlist,
@@ -1507,7 +1508,7 @@ gst_hls_media_playlist_find_position (GstHLSMediaPlaylist * playlist,
     GstM3U8SeekResult * seek_result)
 {
   guint i;
-  GstM3U8MediaSegment *seg = NULL;
+  GstM3U8MediaSegment *seg = NULL, *following = NULL;
 
   GST_DEBUG ("ts:%" GST_STIME_FORMAT
       " in_partial_segments %d (live %d) playlist uri: %s", GST_STIME_ARGS (ts),
@@ -1579,19 +1580,44 @@ gst_hls_media_playlist_find_position (GstHLSMediaPlaylist * playlist,
       }
     }
 
-    /* Otherwise, we're doing a full segment match so check that the timestamp is
-     * within half a segment duration of this segment stream_time. The maximum
-     * of the current segment or target duration is used, because the partial-only
-     * last segment might be quite small (as it's still being created), which
-     * can cause a missed match otherwise */
+    /* Otherwise, we're doing a full segment match so check that the timestamp
+     * is within half a segment duration of this segment stream_time.
+     *
+     * If the final segment has partial fragments, the target duration is used
+     * instead, because the partial-only last segment might be quite small (as
+     * it's still being created), which can cause a missed match otherwise */
     GstClockTimeDiff match_threshold =
-        MAX (cand->duration, playlist->targetduration) / 2;
-    if (cand->stream_time + match_threshold >= ts
-        && cand->stream_time <= ts + match_threshold) {
+        (cand->partial_only ? playlist->targetduration : cand->duration) / 2;
+
+    /* If the requesting position is beyond the halfway point of this segment,
+     * we should return the following segment, which is closer to the requested
+     * position. Note that it can be NULL */
+    if (ts > cand->stream_time + match_threshold) {
+      if (following)
+        GST_DEBUG ("choosing following segment %d", seg_idx + 1);
+      else
+        GST_DEBUG ("After last segment");
+      seg = following;
+      break;
+    }
+
+    /* Else if the requested position is within the first half we are sure it's
+     * this segment */
+    if (ts >= cand->stream_time) {
       GST_DEBUG ("choosing segment %d", seg_idx);
       seg = cand;
       break;
     }
+
+    /* Last check for the very first segment in the playlist */
+    if (i == 1 && cand->stream_time <= ts + match_threshold) {
+      GST_DEBUG ("choosing first segment");
+      seg = cand;
+      break;
+    }
+
+    /* We are scanning backwards, remember this as the following segment */
+    following = cand;
   }
 
   if (seg == NULL) {
