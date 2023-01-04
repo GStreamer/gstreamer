@@ -108,6 +108,12 @@ static const struct
 #if VK_HEADER_VERSION >= 70
   {VK_QUEUE_PROTECTED_BIT, "protected"},
 #endif
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  {VK_QUEUE_VIDEO_DECODE_BIT_KHR, "decode"},
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+  {VK_QUEUE_VIDEO_ENCODE_BIT_KHR, "encode"}
+#endif
+#endif
 };
 /**
  * gst_vulkan_queue_flags_to_string:
