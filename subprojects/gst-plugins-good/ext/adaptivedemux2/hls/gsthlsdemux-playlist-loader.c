@@ -179,7 +179,31 @@ static void
 schedule_next_playlist_load (GstHLSDemuxPlaylistLoader * pl,
     GstHLSDemuxPlaylistLoaderPrivate * priv, GstClockTime next_load_interval)
 {
-  GST_LOG_OBJECT (pl, "Scheduling next playlist reload");
+  /* If we have a valid request time, compute a more accurate download time for
+   * the playlist.
+   *
+   * This better takes into account the time it took to actually get and process
+   * the current playlist.
+   */
+  if (priv->current_playlist
+      && GST_CLOCK_TIME_IS_VALID (priv->current_playlist->request_time)) {
+    GstClockTime now = gst_adaptive_demux2_get_monotonic_time (priv->demux);
+    GstClockTimeDiff load_diff = GST_CLOCK_DIFF (now,
+        priv->current_playlist->request_time + next_load_interval);
+    GST_LOG_OBJECT (pl,
+        "now %" GST_TIME_FORMAT " request_time %" GST_TIME_FORMAT
+        " next_load_interval %" GST_TIME_FORMAT, GST_TIME_ARGS (now),
+        GST_TIME_ARGS (priv->current_playlist->request_time),
+        GST_TIME_ARGS (next_load_interval));
+    if (load_diff < 0) {
+      GST_LOG_OBJECT (pl, "Playlist update already late by %" GST_STIME_FORMAT,
+          GST_STIME_ARGS (load_diff));
+    };
+    next_load_interval = MAX (0, load_diff);
+  }
+
+  GST_LOG_OBJECT (pl, "Scheduling next playlist reload in %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (next_load_interval));
   g_assert (priv->pending_cb_id == 0);
   priv->state = PLAYLIST_LOADER_STATE_WAITING;
   priv->pending_cb_id =
@@ -557,6 +581,7 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
     GST_DEBUG_OBJECT (pl, "playlist data was unchanged");
     playlist = gst_hls_media_playlist_ref (current_playlist);
     playlist->reloaded = TRUE;
+    playlist->request_time = GST_CLOCK_TIME_NONE;
     g_free (playlist_data);
   } else {
     playlist =
@@ -566,6 +591,7 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
       GST_WARNING_OBJECT (pl, "Couldn't parse playlist");
       goto error_retry_out;
     }
+    playlist->request_time = download->download_request_time;
   }
 
   /* Transfer over any skipped segments from the current playlist if

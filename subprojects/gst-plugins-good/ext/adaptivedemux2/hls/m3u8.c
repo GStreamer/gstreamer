@@ -410,6 +410,7 @@ gst_hls_media_playlist_new (const gchar * uri, const gchar * base_uri)
   m3u8->playlist_ts = GST_CLOCK_TIME_NONE;
   m3u8->uri = g_strdup (uri);
   m3u8->base_uri = g_strdup (base_uri);
+  m3u8->request_time = GST_CLOCK_TIME_NONE;
 
   m3u8->version = 1;
   m3u8->type = GST_HLS_PLAYLIST_TYPE_UNDEFINED;
