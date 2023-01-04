@@ -214,6 +214,10 @@ option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 
 option('mfx-modules-dir', type: 'string', value : '',
        description : 'libmfx runtime module dir, linux only')
 
+# Vulkan plugin options
+option('vulkan-video', type: 'feature', value: 'auto',
+       description: 'Whether to use Vulkan Video Extensions')
+
 # License-related feature options
 option('gpl', type: 'feature', value: 'disabled', yield: true,
   description: 'Allow build plugins that have (A)GPL-licensed dependencies')
