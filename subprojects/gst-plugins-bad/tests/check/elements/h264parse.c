@@ -1106,6 +1106,58 @@ GST_START_TEST (test_parse_sliced_nal_au)
 }
 
 GST_END_TEST;
+/* These were generated using this pipeline, on a zynqultrascaleplus:
+ *
+ * gst-launch-1.0 videotestsrc num-buffers=1 pattern=green \
+ *     ! video/x-raw,width=128,height=128 \
+ *     ! omxh264enc num-slices=2 gop-mode=pyramidal gop-length=60 b-frames=3 \
+ *     ! video/x-h264, profile=high-4:2:2 \
+ *     ! fakesink dump=1
+ *
+ * This uses a special feature of the encoder ("temporal encoding")
+ * that causes it to output PREFIX NALs before each slice.
+ */
+
+/* SPS */
+static guint8 h264_prefixed_sps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x27, 0x7a, 0x00, 0x0b,
+  0xad, 0x00, 0xce, 0x50, 0x81, 0x1a, 0x6a, 0x0c,
+  0x04, 0x05, 0xe0, 0x00, 0x00, 0x03, 0x00, 0x20,
+  0x00, 0x00, 0x07, 0x96, 0x6a, 0x07, 0xd0, 0x0b,
+  0xbf, 0xff, 0xf8, 0x14
+};
+
+/* PPS */
+static guint8 h264_prefixed_pps[] = {
+  0x00, 0x00, 0x00, 0x01, 0x28, 0xe9, 0x08, 0x3c,
+  0xb0
+};
+
+static guint8 h264_prefixed_idr_slice_1[] = {
+  /* prefix */
+  0x00, 0x00, 0x00, 0x01, 0x0e, 0xc0, 0x80, 0x07,
+  /* IDR Slice 1 */
+  0x00, 0x00, 0x00, 0x01, 0x25, 0xb8, 0x40, 0x00,
+  0x45, 0xbf, 0x53, 0x39, 0xfb, 0xf7, 0xff, 0x07,
+  0x23, 0x20, 0x25, 0xb3, 0xf6, 0x38, 0x79, 0x10,
+  0xed, 0x91, 0x7b, 0xbc, 0x60, 0x7c, 0x36, 0x2f,
+  0x8d, 0x9d, 0x5e, 0xcb, 0xed, 0x70, 0x6d, 0xba,
+  0x50, 0x9e, 0x5c, 0x76, 0x6a, 0xa6, 0xc9, 0xf8,
+  0x0f
+};
+
+static guint8 h264_prefixed_idr_slice_2[] = {
+  /* prefix */
+  0x00, 0x00, 0x00, 0x01, 0x0e, 0xc0, 0x80, 0x07,
+  /* IDR Slice 2 */
+  0x00, 0x00, 0x00, 0x01, 0x25, 0x04, 0x2e, 0x10,
+  0x00, 0x11, 0x6f, 0x53, 0x39, 0xfb, 0xf7, 0xff,
+  0x07, 0x23, 0x20, 0x25, 0xb3, 0xf6, 0x38, 0x79,
+  0x10, 0xed, 0x91, 0x7b, 0xbc, 0x60, 0x7c, 0x36,
+  0x2f, 0x8d, 0x9d, 0x5e, 0xcb, 0xed, 0x70, 0x6d,
+  0xba, 0x50, 0x9e, 0x5c, 0x76, 0x6a, 0xa6, 0xc9,
+  0xf8, 0x0f
+};
 
 GST_START_TEST (test_parse_sliced_sps_pps_sps)
 {
@@ -1176,6 +1228,68 @@ GST_START_TEST (test_parse_sliced_sps_pps_sps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_sliced_with_prefix_and_sei_nal_au)
+{
+  /* Insert an SEI between slices of first frame, checks that AUD gets
+   * inserted after SLICE2 and not before the SEI.
+   * <AUD> | SPS | PPS | PREFIX_UNIT | SLICE1 mb=0 | SEI | PREFIX_UNIT | SLICE2
+   * <AUD> | PREFIX_UNIT | SLICE1
+   */
+  GstHarness *h = gst_harness_new ("h264parse");
+  GstBuffer *buf;
+  GstMapInfo info;
+
+  gst_harness_set_caps_str (h,
+      "video/x-h264,stream-format=byte-stream,alignment=nal,parsed=false,framerate=30/1",
+      "video/x-h264,stream-format=byte-stream,alignment=au,parsed=true");
+
+  /* Frame 1 */
+  buf = wrap_buffer (h264_prefixed_sps, sizeof (h264_prefixed_sps), 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  buf = wrap_buffer (h264_prefixed_pps, sizeof (h264_prefixed_pps), 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* 1st slice of first frame */
+  buf =
+      wrap_buffer (h264_prefixed_idr_slice_1,
+      sizeof (h264_prefixed_idr_slice_1), 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* SEI */
+  buf =
+      wrap_buffer (h264_sei_buffering_period,
+      sizeof (h264_sei_buffering_period), 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* 2nd slice of first frame */
+  buf =
+      wrap_buffer (h264_prefixed_idr_slice_2,
+      sizeof (h264_prefixed_idr_slice_2), 10, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Push first slice of 2nd frame, that should produce the 1st frame */
+  buf =
+      wrap_buffer (h264_prefixed_idr_slice_1,
+      sizeof (h264_prefixed_idr_slice_1), 100, 0);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  /* Parser produces frame 1 */
+  buf = composite_buffer (10, 0, 6,
+      h264_aud, sizeof (h264_aud),
+      h264_prefixed_sps, sizeof (h264_prefixed_sps),
+      h264_prefixed_pps, sizeof (h264_prefixed_pps),
+      h264_prefixed_idr_slice_1, sizeof (h264_prefixed_idr_slice_1),
+      h264_sei_buffering_period, sizeof (h264_sei_buffering_period),
+      h264_prefixed_idr_slice_2, sizeof (h264_prefixed_idr_slice_2));
+  gst_buffer_map (buf, &info, GST_MAP_READ);
+  pull_and_check_full (h, info.data, info.size, 10, 0);
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_unref (buf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 h264parse_sliced_suite (void)
@@ -1188,6 +1302,7 @@ h264parse_sliced_suite (void)
   tcase_add_test (tc_chain, test_parse_sliced_au_nal);
   tcase_add_test (tc_chain, test_parse_sliced_nal_au);
   tcase_add_test (tc_chain, test_parse_sliced_sps_pps_sps);
+  tcase_add_test (tc_chain, test_parse_sliced_with_prefix_and_sei_nal_au);
 
   return s;
 }
