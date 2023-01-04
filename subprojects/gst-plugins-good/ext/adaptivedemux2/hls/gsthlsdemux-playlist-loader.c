@@ -404,8 +404,6 @@ get_playlist_reload_interval (GstHLSDemuxPlaylistLoader * pl,
     GstM3U8MediaSegment *last_seg =
         g_ptr_array_index (playlist->segments, playlist->segments->len - 1);
 
-    target_duration = last_seg->duration;
-
     if (priv->llhls_enabled && last_seg->partial_segments) {
       GstM3U8PartialSegment *last_part =
           g_ptr_array_index (last_seg->partial_segments,
@@ -417,6 +415,9 @@ get_playlist_reload_interval (GstHLSDemuxPlaylistLoader * pl,
       } else {
         min_reload_interval = target_duration / 2;
       }
+    } else {
+      target_duration = last_seg->duration;
+      min_reload_interval = target_duration / 2;
     }
   } else if (priv->llhls_enabled
       && GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)) {
@@ -428,9 +429,14 @@ get_playlist_reload_interval (GstHLSDemuxPlaylistLoader * pl,
 
   if (playlist->reloaded && target_duration > min_reload_interval) {
     GST_DEBUG_OBJECT (pl,
-        "Playlist didn't change previously, returning lower update interval");
+        "Playlist didn't change previously, returning lower update interval (%"
+        GST_TIME_FORMAT " -> %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (target_duration), GST_TIME_ARGS (min_reload_interval));
     target_duration = min_reload_interval;
   }
+
+  GST_DEBUG_OBJECT (pl, "Returning target duration %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (target_duration));
 
   return target_duration;
 }
