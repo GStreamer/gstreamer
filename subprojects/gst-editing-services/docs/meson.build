@@ -108,6 +108,7 @@ libs_doc = [hotdoc.generate_doc('gst-editing-services',
     gi_order_generated_subpages: true,
     dependencies: [ges_dep],
     disable_incremental_build: true,
+    depends: ges_gir[0],
 )]
 
 plugins_doc = []

@@ -198,6 +198,7 @@ foreach lib_def: libs
                 dependencies: [lib, gir],
                 c_flags: '-DGST_USE_UNSTABLE_API',
                 install: false,
+                depends: gir[0],
             )]
         endif
     else

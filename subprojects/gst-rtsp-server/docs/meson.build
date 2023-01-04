@@ -91,6 +91,7 @@ libs_doc = [hotdoc.generate_doc('gst-rtsp-server',
     gi_index: 'index.md',
     gi_smart_index: true,
     gi_order_generated_subpages: true,
+    depends: rtsp_server_gir[0],
 )]
 
 plugins_doc = [hotdoc.generate_doc('rtspclientsink',

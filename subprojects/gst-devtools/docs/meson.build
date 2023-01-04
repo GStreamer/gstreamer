@@ -72,4 +72,5 @@ libs_doc = [hotdoc.generate_doc('gst-devtools',
     gi_sources: [validate_gir[0].full_path()],
     disable_incremental_build: true,
     dependencies : [validate_dep],
+    depends: validate_gir[0],
 )]

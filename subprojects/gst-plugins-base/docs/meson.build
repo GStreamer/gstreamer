@@ -168,6 +168,7 @@ foreach lib: libs
       gi_order_generated_subpages: true,
       dependencies: deps,
       install: false,
+      depends: gir[0],
   )]
 endforeach
 
