@@ -987,7 +987,7 @@ _unlink_track (GESPipeline * self, GESTrack * track)
 /**
  * ges_pipeline_set_timeline:
  * @pipeline: A #GESPipeline
- * @timeline: (transfer full): The timeline to set for @pipeline
+ * @timeline: (transfer floating): The timeline to set for @pipeline
  *
  * Takes the given timeline and sets it as the #GESPipeline:timeline for
  * the pipeline.
