@@ -2060,11 +2060,11 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
 
 gboolean
 gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
-    gboolean low_latency, GstM3U8SeekResult * seek_result)
+    gboolean allow_low_latency, GstM3U8SeekResult * seek_result)
 {
   GstM3U8MediaSegment *res = NULL;
 
-  GST_DEBUG ("playlist %s", self->uri);
+  GST_DEBUG ("allow_low_latency:%d playlist %s", allow_low_latency, self->uri);
 
   if (!GST_HLS_MEDIA_PLAYLIST_IS_LIVE (self)) {
     /* For non-live, we just grab the first one */
@@ -2072,18 +2072,29 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
   } else {
     GstClockTime hold_back = GST_CLOCK_TIME_NONE;
     /* Live playlist. If low-latency, use the PART-HOLD-BACK specified distance
-     * from the end, otherwise HOLD-BACK distance or if that's not provided,
-     * then 3 target durations */
-    if (low_latency) {
+     * from the end, otherwise HOLD-BACK distance */
+    if (allow_low_latency) {
       if (GST_CLOCK_TIME_IS_VALID (self->part_hold_back))
         hold_back = self->part_hold_back;
       else if (GST_CLOCK_TIME_IS_VALID (self->partial_targetduration))
         hold_back = 3 * self->partial_targetduration;
-    } else {
-      if (GST_CLOCK_TIME_IS_VALID (self->hold_back))
+      else if (GST_CLOCK_TIME_IS_VALID (self->hold_back))
         hold_back = self->hold_back;
-      else if (GST_CLOCK_TIME_IS_VALID (self->targetduration))
-        hold_back = 3 * self->targetduration;
+    }
+    if (hold_back == GST_CLOCK_TIME_NONE) {
+      /* If low-latency is not enabled, or none of the above were present,
+       * fallback to the standard behaviour:
+       *
+       * RFC 8216 6.3.3. Playing the Media Playlist File:
+       *
+       *   The client SHALL choose which Media Segment to play first from the
+       *   Media Playlist when playback starts.  If the EXT-X-ENDLIST tag is not
+       *   present and the client intends to play the media normally, the client
+       *   SHOULD NOT choose a segment that starts less than three target
+       *   durations from the end of the Playlist file.  Doing so can trigger
+       *   playback stalls.
+       */
+      hold_back = GST_M3U8_LIVE_MIN_FRAGMENT_DISTANCE * self->targetduration;
     }
 
     if (GST_CLOCK_TIME_IS_VALID (hold_back)) {
@@ -2104,7 +2115,7 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
           " Looking for a segment before %" GST_TIME_FORMAT,
           GST_TIME_ARGS (hold_back), GST_TIME_ARGS (target_ts));
 
-      if (low_latency)
+      if (allow_low_latency)
         flags |= GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
 
       if (gst_hls_media_playlist_seek (self, TRUE, flags, target_ts,
