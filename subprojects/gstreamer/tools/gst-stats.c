@@ -191,7 +191,7 @@ free_reported_latency (gpointer data)
 static void
 free_element_stats (gpointer data)
 {
-  g_slice_free (GstElementStats, data);
+  g_free (data);
 }
 
 static inline GstElementStats *
@@ -211,7 +211,7 @@ get_pad_stats (guint ix)
 static void
 free_pad_stats (gpointer data)
 {
-  g_slice_free (GstPadStats, data);
+  g_free (data);
 }
 
 static inline GstThreadStats *
@@ -220,7 +220,7 @@ get_thread_stats (gpointer id)
   GstThreadStats *stats = g_hash_table_lookup (threads, id);
 
   if (G_UNLIKELY (!stats)) {
-    stats = g_slice_new0 (GstThreadStats);
+    stats = g_new0 (GstThreadStats, 1);
     stats->tthread = GST_CLOCK_TIME_NONE;
     g_hash_table_insert (threads, id, stats);
   }
@@ -246,7 +246,7 @@ new_pad_stats (GstStructure * s)
       "pad-direction", GST_TYPE_PAD_DIRECTION, &dir,
       "thread-id", G_TYPE_UINT64, &thread_id, NULL);
 
-  stats = g_slice_new0 (GstPadStats);
+  stats = g_new0 (GstPadStats, 1);
   if (is_ghost_pad)
     num_ghostpads++;
   num_pads++;
@@ -279,7 +279,7 @@ new_element_stats (GstStructure * s)
       "name", G_TYPE_STRING, &name,
       "type", G_TYPE_STRING, &type, "is-bin", G_TYPE_BOOLEAN, &is_bin, NULL);
 
-  stats = g_slice_new0 (GstElementStats);
+  stats = g_new0 (GstElementStats, 1);
   if (is_bin)
     num_bins++;
   num_elements++;
@@ -298,7 +298,7 @@ new_element_stats (GstStructure * s)
 static void
 free_thread_stats (gpointer data)
 {
-  g_slice_free (GstThreadStats, data);
+  g_free (data);
 }
 
 static GstPluginStats *
