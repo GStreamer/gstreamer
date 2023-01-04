@@ -747,8 +747,17 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
 
   if (simple_media_playlist) {
     GstM3U8SeekResult seek_result;
+    GstM3U8MediaSegment *segment;
 
     hlsdemux->main_stream->playlist = simple_media_playlist;
+    /* This is the initial variant playlist. We will use it to base all our timing
+     * from. */
+    segment = g_ptr_array_index (simple_media_playlist->segments, 0);
+    if (segment) {
+      segment->stream_time = 0;
+      gst_hls_media_playlist_recalculate_stream_time (simple_media_playlist,
+          segment);
+    }
 
     if (!gst_hls_media_playlist_get_starting_segment (simple_media_playlist,
             hlsdemux->main_stream->llhls_enabled, &seek_result)) {
