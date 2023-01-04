@@ -212,11 +212,14 @@ gst_dvb_base_bin_conf_set_uint (GstElement * dvbbasebin, const gchar * property,
     GKeyFile * kf, const gchar * channel_name, const gchar * key)
 {
   guint64 v;
+  GError *err = NULL;
 
-  v = g_key_file_get_uint64 (kf, channel_name, key, NULL);
-  if (!v) {
+  v = g_key_file_get_uint64 (kf, channel_name, key, &err);
+  if (err != NULL) {
     GST_WARNING_OBJECT (dvbbasebin,
-        "Could not get value for '%s' on channel '%s'", key, channel_name);
+        "Could not get value for '%s' on channel '%s' error: '%s'", key,
+        channel_name, err->message);
+    g_error_free (err);
     return FALSE;
   }
 
@@ -229,11 +232,14 @@ gst_dvb_base_bin_conf_set_int (GstElement * dvbbasebin, const gchar * property,
     GKeyFile * kf, const gchar * channel_name, const gchar * key)
 {
   gint v;
+  GError *err = NULL;
 
-  v = g_key_file_get_integer (kf, channel_name, key, NULL);
-  if (!v) {
+  v = g_key_file_get_integer (kf, channel_name, key, &err);
+  if (err != NULL) {
     GST_WARNING_OBJECT (dvbbasebin,
-        "Could not get value for '%s' on channel '%s'", key, channel_name);
+        "Could not get value for '%s' on channel '%s' error: '%s'", key,
+        channel_name, err->message);
+    g_error_free (err);
     return FALSE;
   }
 
