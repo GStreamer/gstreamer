@@ -588,7 +588,7 @@ static GstMemory *
 _my_opaque_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
-  MyOpaqueMemory *mem = g_slice_new (MyOpaqueMemory);
+  MyOpaqueMemory *mem = g_new (MyOpaqueMemory, 1);
   gsize maxsize = size + params->prefix + params->padding;
 
   gst_memory_init (GST_MEMORY_CAST (mem), params->flags, allocator, NULL,
@@ -605,7 +605,7 @@ _my_opaque_free (GstAllocator * allocator, GstMemory * mem)
   MyOpaqueMemory *mmem = (MyOpaqueMemory *) mem;
 
   g_free (mmem->data);
-  g_slice_free (MyOpaqueMemory, mmem);
+  g_free (mmem);
 }
 
 static gpointer

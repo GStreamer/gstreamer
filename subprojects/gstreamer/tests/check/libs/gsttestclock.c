@@ -116,7 +116,7 @@ gst_test_util_wait_for_clock_id_begin (GstTestClock * test_clock, GstClockID id,
 {
   GtuClockWaitContext *wait_ctx;
 
-  wait_ctx = g_slice_new (GtuClockWaitContext);
+  wait_ctx = g_new (GtuClockWaitContext, 1);
   wait_ctx->test_clock = gst_object_ref (test_clock);
   wait_ctx->reference = gst_clock_get_time (GST_CLOCK (wait_ctx->test_clock));
   wait_ctx->id = gst_clock_id_ref (id);
@@ -179,7 +179,7 @@ gst_test_util_wait_for_clock_id_end (GtuClockWaitContext * wait_ctx)
 
   gst_clock_id_unref (wait_ctx->id);
   gst_object_unref (wait_ctx->test_clock);
-  g_slice_free (GtuClockWaitContext, wait_ctx);
+  g_free (wait_ctx);
 
   return status;
 }
