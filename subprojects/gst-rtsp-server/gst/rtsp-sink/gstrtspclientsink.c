@@ -661,7 +661,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPClientSink::tls-validation-flags:
+   * GstRTSPClientSink:tls-validation-flags:
    *
    * TLS certificate validation flags used to validate server
    * certificate.
@@ -684,7 +684,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPClientSink::tls-database:
+   * GstRTSPClientSink:tls-database:
    *
    * TLS database with anchor certificate authorities used to validate
    * the server certificate.
@@ -696,7 +696,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
           G_TYPE_TLS_DATABASE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPClientSink::tls-interaction:
+   * GstRTSPClientSink:tls-interaction:
    *
    * A #GTlsInteraction object to be used when the connection or certificate
    * database need to interact with the user. This will be used to prompt the
@@ -709,7 +709,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
           G_TYPE_TLS_INTERACTION, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPClientSink::ntp-time-source:
+   * GstRTSPClientSink:ntp-time-source:
    *
    * allows to select the time source that should be used
    * for the NTP time in outgoing packets
@@ -722,7 +722,7 @@ gst_rtsp_client_sink_class_init (GstRTSPClientSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPClientSink::user-agent:
+   * GstRTSPClientSink:user-agent:
    *
    * The string to set in the User-Agent header.
    *
