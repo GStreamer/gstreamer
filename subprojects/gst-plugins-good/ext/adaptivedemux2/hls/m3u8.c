@@ -2547,7 +2547,7 @@ gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
         && threshold > playlist->hold_back)
       threshold = playlist->hold_back;
     else if (GST_CLOCK_TIME_IS_VALID (playlist->targetduration)
-        && threshold > playlist->targetduration)
+        && threshold > 3 * playlist->targetduration)
       threshold = 3 * playlist->targetduration;
 
     if (low_latency) {
@@ -2555,7 +2555,7 @@ gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
           && threshold > playlist->part_hold_back)
         threshold = playlist->part_hold_back;
       else if (GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)
-          && threshold > playlist->partial_targetduration)
+          && threshold > 3 * playlist->partial_targetduration)
         threshold = 3 * playlist->partial_targetduration;
     }
   }
