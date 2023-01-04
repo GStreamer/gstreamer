@@ -175,6 +175,13 @@ gboolean        gst_vulkan_image_memory_init            (GstVulkanImageMemory * 
                                                          gsize size,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
+
+GST_VULKAN_API
+GstMemory *     gst_vulkan_image_memory_alloc_with_image_info
+                                                       (GstVulkanDevice * device,
+                                                        VkImageCreateInfo * image_info,
+                                                        VkMemoryPropertyFlags mem_prop_flags);
+
 GST_VULKAN_API
 GstMemory *     gst_vulkan_image_memory_alloc           (GstVulkanDevice * device,
                                                          VkFormat format,

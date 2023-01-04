@@ -188,29 +188,36 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
 }
 
 static GstVulkanImageMemory *
-_vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
-    GstVulkanDevice * device, VkFormat format, gsize width, gsize height,
-    VkImageTiling tiling, VkImageUsageFlags usage,
-    VkMemoryPropertyFlags mem_prop_flags, gpointer user_data,
-    GDestroyNotify notify)
+_vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
+    GstMemory * parent, GstVulkanDevice * device,
+    VkImageCreateInfo * image_info, VkMemoryPropertyFlags mem_prop_flags,
+    gpointer user_data, GDestroyNotify notify)
 {
   GstVulkanImageMemory *mem = NULL;
   GstAllocationParams params = { 0, };
-  VkImageCreateInfo image_info;
   VkPhysicalDevice gpu;
   GError *error = NULL;
+  GArray *qfi = NULL;
   guint32 type_idx;
   VkImage image;
   VkResult err;
 
   gpu = gst_vulkan_device_get_physical_device (device);
-  if (!_create_info_from_args (&image_info, format, width, height, tiling,
-          usage)) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_IMAGE_MEMORY, "Incorrect image parameters");
-    goto error;
+
+  if (!image_info->pQueueFamilyIndices) {
+    /* XXX: overwrite the queue indices part of the structure */
+    qfi = gst_vulkan_device_queue_family_indices (device);
+    image_info->pQueueFamilyIndices = (uint32_t *) qfi->data;
+    image_info->queueFamilyIndexCount = qfi->len;
+    image_info->sharingMode = qfi->len > 1 ? VK_SHARING_MODE_CONCURRENT :
+        VK_SHARING_MODE_EXCLUSIVE;
   }
 
-  err = vkCreateImage (device->device, &image_info, NULL, &image);
+  err = vkCreateImage (device->device, image_info, NULL, &image);
+
+  if (qfi)
+    g_array_unref (qfi);
+
   if (gst_vulkan_error_to_g_error (err, &error, "vkCreateImage") < 0)
     goto vk_error;
 
@@ -218,13 +225,16 @@ _vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
 
   vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
-  gst_vulkan_image_memory_init (mem, allocator, parent, device, usage, &params,
-      mem->requirements.size, user_data, notify);
-  mem->create_info = image_info;
+  gst_vulkan_image_memory_init (mem, allocator, parent, device,
+      image_info->usage, &params, mem->requirements.size, user_data, notify);
+  mem->create_info = *image_info;
+  /* XXX: to avoid handling pNext lifetime  */
+  mem->create_info.pNext = NULL;
   mem->image = image;
 
-  err = vkGetPhysicalDeviceImageFormatProperties (gpu, format, VK_IMAGE_TYPE_2D,
-      tiling, usage, 0, &mem->format_properties);
+  err = vkGetPhysicalDeviceImageFormatProperties (gpu, image_info->format,
+      VK_IMAGE_TYPE_2D, image_info->tiling, image_info->usage, 0,
+      &mem->format_properties);
   if (gst_vulkan_error_to_g_error (err, &error,
           "vkGetPhysicalDeviceImageFormatProperties") < 0)
     goto vk_error;
@@ -264,6 +274,25 @@ error:
       gst_memory_unref ((GstMemory *) mem);
     return NULL;
   }
+}
+
+static GstVulkanImageMemory *
+_vk_image_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
+    GstVulkanDevice * device, VkFormat format, gsize width, gsize height,
+    VkImageTiling tiling, VkImageUsageFlags usage,
+    VkMemoryPropertyFlags mem_prop_flags, gpointer user_data,
+    GDestroyNotify notify)
+{
+  VkImageCreateInfo image_info;
+
+  if (!_create_info_from_args (&image_info, format, width, height, tiling,
+          usage)) {
+    GST_CAT_ERROR (GST_CAT_VULKAN_IMAGE_MEMORY, "Incorrect image parameters");
+    return NULL;
+  }
+
+  return _vk_image_mem_new_alloc_with_image_info (allocator, parent, device,
+      &image_info, mem_prop_flags, user_data, notify);
 }
 
 static GstVulkanImageMemory *
@@ -415,6 +444,31 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   gst_object_unref (mem->device);
 
   g_free (mem);
+}
+
+/**
+ * gst_vulkan_image_memory_alloc_with_image_info:
+ * @device: a #GstVulkanDevice
+ * @image_info: VkImageCreateInfo structure
+ * @mem_prop_flags: VkMemoryPropertyFlags flags
+ *
+ * Returns: a #GstMemory object backed by a vulkan device memory
+ *
+ * Since: 1.24
+ */
+GstMemory *
+gst_vulkan_image_memory_alloc_with_image_info (GstVulkanDevice * device,
+    VkImageCreateInfo * image_info, VkMemoryPropertyFlags mem_prop_flags)
+{
+  GstVulkanImageMemory *mem;
+
+  g_return_val_if_fail (image_info
+      && image_info->sType == VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO, NULL);
+
+  mem = _vk_image_mem_new_alloc_with_image_info (_vulkan_image_memory_allocator,
+      NULL, device, image_info, mem_prop_flags, NULL, NULL);
+
+  return (GstMemory *) mem;
 }
 
 /**
