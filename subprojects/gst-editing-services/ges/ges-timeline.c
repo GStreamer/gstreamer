@@ -2473,7 +2473,7 @@ ges_timeline_remove_layer (GESTimeline * timeline, GESLayer * layer)
 /**
  * ges_timeline_add_track:
  * @timeline: The #GESTimeline
- * @track: (transfer full): The track to add
+ * @track: (transfer floating): The track to add
  *
  * Add a track to the timeline.
  *
@@ -2510,6 +2510,8 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   if (G_UNLIKELY (g_list_find (timeline->tracks, (gconstpointer) track))) {
     UNLOCK_DYN (timeline);
     GST_WARNING ("Track is already controlled by this timeline");
+    gst_object_ref_sink (track);
+    gst_object_unref (track);
     return FALSE;
   }
 
