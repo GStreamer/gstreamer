@@ -857,8 +857,17 @@ gst_opus_enc_get_sink_template_caps (void)
     g_value_unset (&rate_array);
     g_value_unset (&v);
 
+    /* Mono */
+    s = gst_structure_copy (s1);
+    gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
+    gst_caps_append_structure (caps, s);
+
+    s = gst_structure_copy (s2);
+    gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
+    gst_caps_append_structure (caps, s);
+
     /* Stereo and further */
-    for (i = 8; i >= 2; i--) {
+    for (i = 2; i <= 8; i++) {
       guint64 channel_mask = 0;
       const GstAudioChannelPosition *pos = gst_opus_channel_positions[i - 1];
 
@@ -889,14 +898,6 @@ gst_opus_enc_get_sink_template_caps (void)
       gst_caps_append_structure (caps, s);
     }
 
-    /* Mono */
-    s = gst_structure_copy (s1);
-    gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
-    gst_caps_append_structure (caps, s);
-
-    s = gst_structure_copy (s2);
-    gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
-    gst_caps_append_structure (caps, s);
     gst_structure_free (s1);
     gst_structure_free (s2);
 
