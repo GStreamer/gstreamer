@@ -285,7 +285,7 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
     gint rate = dec->sample_rate, channels = dec->n_channels;
     GstCaps *constraint, *inter;
 
-    constraint = gst_caps_from_string ("audio/x-raw");
+    constraint = gst_caps_new_empty_simple ("audio/x-raw");
     if (dec->n_channels <= 2) { /* including 0 */
       gst_caps_set_simple (constraint, "channels", GST_TYPE_INT_RANGE, 1, 2,
           NULL);
@@ -302,6 +302,41 @@ gst_opus_dec_negotiate (GstOpusDec * dec, const GstAudioChannelPosition * pos)
       gst_caps_unref (inter);
       gst_caps_unref (caps);
       return FALSE;
+    }
+
+    /* If we have a channels preference (0 means we prefer 2), then check if
+     * we can passthrough that. The preferred channel count might not be in
+     * the first structure! */
+    if (dec->n_channels <= 2) {
+      GstCaps *preferred =
+          gst_caps_new_simple ("audio/x-raw", "channels", G_TYPE_INT,
+          dec->n_channels > 0 ? dec->n_channels : 2, NULL);
+      GstCaps *tmp;
+
+      tmp = gst_caps_intersect (inter, preferred);
+      if (!gst_caps_is_empty (tmp)) {
+        gst_caps_unref (inter);
+        inter = tmp;
+      }
+
+      gst_caps_unref (preferred);
+    }
+
+    /* If we have a rate preference, then check if we can passthrough that.
+     * The preferred rate might not be in the first structure! */
+    {
+      GstCaps *preferred =
+          gst_caps_new_simple ("audio/x-raw", "rate", G_TYPE_INT,
+          dec->sample_rate > 0 ? dec->sample_rate : 48000, NULL);
+      GstCaps *tmp;
+
+      tmp = gst_caps_intersect (inter, preferred);
+      if (!gst_caps_is_empty (tmp)) {
+        gst_caps_unref (inter);
+        inter = tmp;
+      }
+
+      gst_caps_unref (preferred);
     }
 
     inter = gst_caps_truncate (inter);
