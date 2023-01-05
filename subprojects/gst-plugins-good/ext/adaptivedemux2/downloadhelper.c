@@ -349,10 +349,12 @@ on_read_ready (GObject * source, GAsyncResult * result, gpointer user_data)
 finish_transfer:
   if (request->in_use && !g_cancellable_is_cancelled (transfer->cancellable)) {
     SoupStatus status_code = _soup_message_get_status (transfer->msg);
-
-    GST_LOG ("request complete. Code %d URI %s range %" G_GINT64_FORMAT " %"
-        G_GINT64_FORMAT, status_code, request->uri,
-        request->range_start, request->range_end);
+#ifndef GST_DISABLE_GST_DEBUG
+    guint download_ms = (now - request->download_request_time) / GST_MSECOND;
+    GST_LOG ("request complete in %u ms. Code %d URI %s range %" G_GINT64_FORMAT
+        " %" G_GINT64_FORMAT, download_ms, status_code,
+        request->uri, request->range_start, request->range_end);
+#endif
 
     if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT) {
       if (SOUP_STATUS_IS_SUCCESSFUL (status_code)
