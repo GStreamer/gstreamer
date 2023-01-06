@@ -36,7 +36,7 @@ _my_alloc (GstAllocator * allocator, gsize size, GstAllocationParams * params)
 
   GST_DEBUG ("alloc from allocator %p", allocator);
 
-  mem = g_slice_new (MyMemory);
+  mem = g_new (MyMemory, 1);
 
   gst_memory_init (GST_MEMORY_CAST (mem), params->flags, allocator, NULL,
       maxsize, params->align, params->prefix, size);
@@ -52,7 +52,7 @@ _my_free (GstAllocator * allocator, GstMemory * mem)
   MyMemory *mmem = (MyMemory *) mem;
 
   g_free (mmem->data);
-  g_slice_free (MyMemory, mmem);
+  g_free (mmem);
   GST_DEBUG ("%p: freed", mmem);
 }
 
@@ -101,7 +101,7 @@ _my_mem_share (MyMemory * mem, gssize offset, gsize size)
   if (size == -1)
     size = mem->mem.size - offset;
 
-  sub = g_slice_new (MyMemory);
+  sub = g_new (MyMemory, 1);
   /* the shared memory is always readonly */
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,

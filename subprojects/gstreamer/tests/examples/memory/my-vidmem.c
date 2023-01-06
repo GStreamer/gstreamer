@@ -47,7 +47,7 @@ _my_free (GstAllocator * allocator, GstMemory * mem)
   MyVidmem *vmem = (MyVidmem *) mem;
 
   g_free (vmem->data);
-  g_slice_free (MyVidmem, vmem);
+  g_free (vmem);
   GST_DEBUG ("%p: freed", vmem);
 }
 
@@ -96,7 +96,7 @@ _my_vidmem_share (MyVidmem * mem, gssize offset, gsize size)
   if (size == -1)
     size = mem->mem.size - offset;
 
-  sub = g_slice_new (MyVidmem);
+  sub = g_new (MyVidmem, 1);
   /* the shared memory is always readonly */
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,
@@ -161,7 +161,7 @@ my_vidmem_alloc (guint format, guint width, guint height)
 
   maxsize = (GST_ROUND_UP_4 (width) * height);
 
-  mem = g_slice_new (MyVidmem);
+  mem = g_new (MyVidmem, 1);
 
   gst_memory_init (GST_MEMORY_CAST (mem), 0, _my_allocator, NULL,
       maxsize, 31, 0, maxsize);

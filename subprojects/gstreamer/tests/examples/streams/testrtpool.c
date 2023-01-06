@@ -55,7 +55,7 @@ default_push (GstTaskPool * pool, GstTaskPoolFunction func, gpointer data,
 
   g_message ("pushing Realtime pool %p, %p", pool, func);
 
-  tid = g_slice_new0 (TestRTId);
+  tid = g_new0 (TestRTId, 1);
 
   g_message ("set policy");
   pthread_attr_init (&attr);
@@ -77,7 +77,7 @@ default_push (GstTaskPool * pool, GstTaskPoolFunction func, gpointer data,
   if (res != 0) {
     g_set_error (error, G_THREAD_ERROR, G_THREAD_ERROR_AGAIN,
         "Error creating thread: %s", g_strerror (res));
-    g_slice_free (TestRTId, tid);
+    g_free (tid);
     tid = NULL;
   }
 
@@ -93,7 +93,7 @@ default_join (GstTaskPool * pool, gpointer id)
 
   pthread_join (tid->thread, NULL);
 
-  g_slice_free (TestRTId, tid);
+  g_free (tid);
 }
 
 static void
