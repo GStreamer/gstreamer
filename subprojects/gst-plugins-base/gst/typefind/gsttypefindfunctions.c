@@ -660,7 +660,7 @@ xml_check_first_element (GstTypeFind * tf, const gchar * element, guint elen,
   /* try a default that should be enough */
   if (length == 0)
     length = 512;
-  else if (length < 64)
+  else if (length < 32)
     return FALSE;
   else                          /* the first few bytes should be enough */
     length = MIN (4096, length);
