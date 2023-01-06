@@ -65,7 +65,7 @@ link_t *__gst_parse_link_new (void)
 {
   link_t *ret;
   __links++;
-  ret = g_slice_new0 (link_t);
+  ret = g_new0 (link_t, 1);
   /* g_print ("ALLOCATED LINK  (%3u): %p\n", __links, ret); */
   return ret;
 }
@@ -74,7 +74,7 @@ __gst_parse_link_free (link_t *data)
 {
   if (data) {
     /* g_print ("FREEING LINK    (%3u): %p\n", __links - 1, data); */
-    g_slice_free (link_t, data);
+    g_free (data);
     g_return_if_fail (__links > 0);
     __links--;
   }
@@ -84,7 +84,7 @@ __gst_parse_chain_new (void)
 {
   chain_t *ret;
   __chains++;
-  ret = g_slice_new0 (chain_t);
+  ret = g_new0 (chain_t, 1);
   /* g_print ("@%p: ALLOCATED CHAIN (%3u):\n", ret, __chains); */
   return ret;
 }
@@ -92,7 +92,7 @@ void
 __gst_parse_chain_free (chain_t *data)
 {
   /* g_print ("@%p: FREEING CHAIN   (%3u):\n", data, __chains - 1); */
-  g_slice_free (chain_t, data);
+  g_free (data);
   g_return_if_fail (__chains > 0);
   __chains--;
 }
@@ -282,7 +282,7 @@ static void gst_parse_free_delayed_set (DelayedSet *set)
 {
   g_free(set->name);
   g_free(set->value_str);
-  g_slice_free(DelayedSet, set);
+  g_free(set);
 }
 
 static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
@@ -290,7 +290,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
 
 static void gst_parse_add_delayed_set (GstElement *element, gchar *name, gchar *value_str)
 {
-  DelayedSet *data = g_slice_new0 (DelayedSet);
+  DelayedSet *data = g_new0 (DelayedSet, 1);
 
   GST_CAT_LOG_OBJECT (GST_CAT_PIPELINE, element, "delaying property set %s to %s",
     name, value_str);
@@ -835,7 +835,7 @@ static void gst_parse_free_delayed_link (DelayedLink *link)
   g_free (link->src_pad);
   g_free (link->sink_pad);
   if (link->caps) gst_caps_unref (link->caps);
-  g_slice_free (DelayedLink, link);
+  g_free (link);
 }
 
 #define PRETTY_PAD_NAME_FMT "%s %s of %s named %s"
@@ -901,7 +901,7 @@ gst_parse_perform_delayed_link (GstElement *src, const gchar *src_pad,
     if ((GST_PAD_TEMPLATE_DIRECTION (templ) == GST_PAD_SRC) &&
         (GST_PAD_TEMPLATE_PRESENCE(templ) == GST_PAD_SOMETIMES))
     {
-      DelayedLink *data = g_slice_new (DelayedLink);
+      DelayedLink *data = g_new (DelayedLink, 1);
 
       data->all_pads = all_pads;
 
