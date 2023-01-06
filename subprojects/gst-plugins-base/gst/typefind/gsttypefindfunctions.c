@@ -570,6 +570,9 @@ xml_check_first_element_from_data (const guint8 * data, guint length,
     length -= (ptr - data);
     data = ptr;
 
+    if (length < 2)
+      return FALSE;
+
     got_xmldec = (memcmp (data, "?>", 2) == 0);
     if (!got_xmldec)
       return FALSE;
