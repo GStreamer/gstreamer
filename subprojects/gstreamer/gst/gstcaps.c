@@ -222,7 +222,7 @@ _gst_caps_free (GstCaps * caps)
   memset (caps, 0xff, sizeof (GstCapsImpl));
 #endif
 
-  g_slice_free1 (sizeof (GstCapsImpl), caps);
+  g_free (caps);
 }
 
 static void
@@ -255,7 +255,7 @@ gst_caps_new_empty (void)
 {
   GstCaps *caps;
 
-  caps = (GstCaps *) g_slice_new (GstCapsImpl);
+  caps = (GstCaps *) g_new (GstCapsImpl, 1);
 
   gst_caps_init (caps);
 
