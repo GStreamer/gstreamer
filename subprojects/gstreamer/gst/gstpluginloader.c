@@ -147,7 +147,7 @@ static gboolean plugin_loader_sync_with_child (GstPluginLoader * l);
 static GstPluginLoader *
 plugin_loader_new (GstRegistry * registry)
 {
-  GstPluginLoader *l = g_slice_new0 (GstPluginLoader);
+  GstPluginLoader *l = g_new0 (GstPluginLoader, 1);
 
   if (registry)
     l->registry = gst_object_ref (registry);
@@ -211,12 +211,12 @@ plugin_loader_free (GstPluginLoader * loader)
   while (cur) {
     PendingPluginEntry *entry = (PendingPluginEntry *) (cur->data);
     g_free (entry->filename);
-    g_slice_free (PendingPluginEntry, entry);
+    g_free (entry);
 
     cur = g_list_delete_link (cur, cur);
   }
 
-  g_slice_free (GstPluginLoader, loader);
+  g_free (loader);
 
   return got_plugin_details;
 }
@@ -235,7 +235,7 @@ plugin_loader_load (GstPluginLoader * loader, const gchar * filename,
   GST_LOG_OBJECT (loader->registry,
       "Sending file %s to child. tag %u", filename, loader->next_tag);
 
-  entry = g_slice_new (PendingPluginEntry);
+  entry = g_new (PendingPluginEntry, 1);
   entry->tag = loader->next_tag++;
   entry->filename = g_strdup (filename);
   entry->file_size = file_size;
@@ -283,7 +283,7 @@ restart:
       /* Now remove this crashy plugin from the head of the list */
       l->pending_plugins = g_list_delete_link (cur, cur);
       g_free (entry->filename);
-      g_slice_free (PendingPluginEntry, entry);
+      g_free (entry);
       if (l->pending_plugins == NULL)
         l->pending_plugins_tail = NULL;
       if (!gst_plugin_loader_spawn (l))
@@ -982,7 +982,7 @@ handle_rx_packet (GstPluginLoader * l,
         } else {
           cur = g_list_delete_link (cur, cur);
           g_free (e->filename);
-          g_slice_free (PendingPluginEntry, e);
+          g_free (e);
         }
       }
 
@@ -1016,7 +1016,7 @@ handle_rx_packet (GstPluginLoader * l,
 
       if (entry != NULL) {
         g_free (entry->filename);
-        g_slice_free (PendingPluginEntry, entry);
+        g_free (entry);
       }
 
       /* Remove the plugin entry we just loaded */

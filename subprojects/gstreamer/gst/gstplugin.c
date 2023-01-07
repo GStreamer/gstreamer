@@ -1881,7 +1881,7 @@ gst_plugin_ext_dep_free (GstPluginDep * dep)
   g_strfreev (dep->env_vars);
   g_strfreev (dep->paths);
   g_strfreev (dep->names);
-  g_slice_free (GstPluginDep, dep);
+  g_free (dep);
 }
 
 static gboolean
@@ -1960,7 +1960,7 @@ gst_plugin_add_dependency (GstPlugin * plugin, const gchar ** env_vars,
     }
   }
 
-  dep = g_slice_new (GstPluginDep);
+  dep = g_new (GstPluginDep, 1);
 
   dep->env_vars = g_strdupv ((gchar **) env_vars);
   dep->paths = g_strdupv ((gchar **) paths);
