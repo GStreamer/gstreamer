@@ -1149,7 +1149,7 @@ poll_destroy (GstBusPollData * poll_data, gpointer unused)
   poll_data->source_running = FALSE;
   if (!poll_data->timeout_id) {
     g_main_loop_unref (poll_data->loop);
-    g_slice_free (GstBusPollData, poll_data);
+    g_free (poll_data);
   }
 }
 
@@ -1159,7 +1159,7 @@ poll_destroy_timeout (GstBusPollData * poll_data)
   poll_data->timeout_id = 0;
   if (!poll_data->source_running) {
     g_main_loop_unref (poll_data->loop);
-    g_slice_free (GstBusPollData, poll_data);
+    g_free (poll_data);
   }
 }
 
@@ -1217,7 +1217,7 @@ gst_bus_poll (GstBus * bus, GstMessageType events, GstClockTime timeout)
 
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  poll_data = g_slice_new (GstBusPollData);
+  poll_data = g_new (GstBusPollData, 1);
   poll_data->source_running = TRUE;
   poll_data->loop = g_main_loop_new (NULL, FALSE);
   poll_data->events = events;
