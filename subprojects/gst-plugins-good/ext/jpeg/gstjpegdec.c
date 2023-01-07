@@ -47,6 +47,9 @@
 #include <glib/gi18n-lib.h>
 #include <jerror.h>
 
+/* Disable libjpeg-turbo support for now, due to unresolved cornercases */
+#undef JCS_EXTENSIONS
+
 #define MIN_WIDTH  1
 #define MAX_WIDTH  65535
 #define MIN_HEIGHT 1
