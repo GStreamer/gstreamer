@@ -3266,7 +3266,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 static void
 free_bin_continue_data (BinContinueData * data)
 {
-  g_slice_free (BinContinueData, data);
+  g_free (data);
 }
 
 static void
@@ -3436,7 +3436,7 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret,
         "continue state change, pending %s",
         gst_element_state_get_name (pending));
 
-    cont = g_slice_new (BinContinueData);
+    cont = g_new (BinContinueData, 1);
 
     /* cookie to detect concurrent state change */
     cont->cookie = GST_ELEMENT_CAST (bin)->state_cookie;
