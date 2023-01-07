@@ -116,10 +116,7 @@ void
 _priv_gst_registry_chunk_free (GstRegistryChunk * chunk)
 {
   if (!(chunk->flags & GST_REGISTRY_CHUNK_FLAG_CONST)) {
-    if ((chunk->flags & GST_REGISTRY_CHUNK_FLAG_MALLOC))
-      g_free (chunk->data);
-    else
-      g_free (chunk->data);
+    g_free (chunk->data);
   }
   g_free (chunk);
 }
@@ -165,7 +162,7 @@ gst_registry_chunks_save_string (GList ** list, gchar * str)
   chunk = g_new (GstRegistryChunk, 1);
   chunk->data = str;
   chunk->size = strlen ((gchar *) chunk->data) + 1;
-  chunk->flags = GST_REGISTRY_CHUNK_FLAG_MALLOC;
+  chunk->flags = GST_REGISTRY_CHUNK_FLAG_NONE;
   chunk->align = FALSE;
   *list = g_list_prepend (*list, chunk);
   return TRUE;
