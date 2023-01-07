@@ -46,6 +46,7 @@
 #endif
 
 #include "gst_private.h"
+#include "glib-compat-private.h"
 #include "gstmemory.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_allocator_debug);
@@ -162,7 +163,7 @@ gst_allocation_params_new (void)
 {
   /* Call new() and then init(), rather than calling new0(), in case
    * init() ever changes to something other than a memset(). */
-  GstAllocationParams *result = g_slice_new (GstAllocationParams);
+  GstAllocationParams *result = g_new (GstAllocationParams, 1);
   gst_allocation_params_init (result);
   return result;
 }
@@ -196,8 +197,8 @@ gst_allocation_params_copy (const GstAllocationParams * params)
 
   if (params) {
     result =
-        (GstAllocationParams *) g_slice_copy (sizeof (GstAllocationParams),
-        params);
+        (GstAllocationParams *) g_memdup2 (params,
+        sizeof (GstAllocationParams));
   }
   return result;
 }
@@ -211,7 +212,7 @@ gst_allocation_params_copy (const GstAllocationParams * params)
 void
 gst_allocation_params_free (GstAllocationParams * params)
 {
-  g_slice_free (GstAllocationParams, params);
+  g_free (params);
 }
 
 /**
@@ -364,7 +365,6 @@ typedef struct
 {
   GstMemory mem;
 
-  gsize slice_size;
   guint8 *data;
 
   gpointer user_data;
@@ -387,14 +387,13 @@ G_DEFINE_TYPE (GstAllocatorSysmem, gst_allocator_sysmem, GST_TYPE_ALLOCATOR);
 /* initialize the fields */
 static inline void
 _sysmem_init (GstMemorySystem * mem, GstMemoryFlags flags,
-    GstMemory * parent, gsize slice_size,
+    GstMemory * parent,
     gpointer data, gsize maxsize, gsize align, gsize offset, gsize size,
     gpointer user_data, GDestroyNotify notify)
 {
   gst_memory_init (GST_MEMORY_CAST (mem),
       flags, _sysmem_allocator, parent, maxsize, align, offset, size);
 
-  mem->slice_size = slice_size;
   mem->data = data;
   mem->user_data = user_data;
   mem->notify = notify;
@@ -407,12 +406,9 @@ _sysmem_new (GstMemoryFlags flags,
     gsize size, gpointer user_data, GDestroyNotify notify)
 {
   GstMemorySystem *mem;
-  gsize slice_size;
 
-  slice_size = sizeof (GstMemorySystem);
-
-  mem = g_slice_alloc (slice_size);
-  _sysmem_init (mem, flags, parent, slice_size,
+  mem = g_new (GstMemorySystem, 1);
+  _sysmem_init (mem, flags, parent,
       data, maxsize, align, offset, size, user_data, notify);
 
   return mem;
@@ -434,7 +430,7 @@ _sysmem_new_block (GstMemoryFlags flags,
   /* alloc header and data in one block */
   slice_size = sizeof (GstMemorySystem) + maxsize;
 
-  mem = g_slice_alloc (slice_size);
+  mem = g_malloc (slice_size);
   if (mem == NULL)
     return NULL;
 
@@ -454,7 +450,7 @@ _sysmem_new_block (GstMemoryFlags flags,
   if (padding && (flags & GST_MEMORY_FLAG_ZERO_PADDED))
     memset (data + offset + size, 0, padding);
 
-  _sysmem_init (mem, flags, NULL, slice_size, data, maxsize,
+  _sysmem_init (mem, flags, NULL, data, maxsize,
       align, offset, size, NULL, NULL);
 
   return mem;
@@ -541,19 +537,16 @@ static void
 default_free (GstAllocator * allocator, GstMemory * mem)
 {
   GstMemorySystem *dmem = (GstMemorySystem *) mem;
-  gsize slice_size;
 
   if (dmem->notify)
     dmem->notify (dmem->user_data);
-
-  slice_size = dmem->slice_size;
 
 #ifdef USE_POISONING
   /* just poison the structs, not all the data */
   memset (mem, 0xff, sizeof (GstMemorySystem));
 #endif
 
-  g_slice_free1 (slice_size, mem);
+  g_free (mem);
 }
 
 static void

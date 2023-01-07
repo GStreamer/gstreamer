@@ -145,7 +145,6 @@ GType _gst_buffer_type = 0;
 
 #define GST_BUFFER_MEM_MAX         16
 
-#define GST_BUFFER_SLICE_SIZE(b)   (((GstBufferImpl *)(b))->slice_size)
 #define GST_BUFFER_MEM_LEN(b)      (((GstBufferImpl *)(b))->len)
 #define GST_BUFFER_MEM_ARRAY(b)    (((GstBufferImpl *)(b))->mem)
 #define GST_BUFFER_MEM_PTR(b,i)    (((GstBufferImpl *)(b))->mem[i])
@@ -156,8 +155,6 @@ GType _gst_buffer_type = 0;
 typedef struct
 {
   GstBuffer buffer;
-
-  gsize slice_size;
 
   /* the memory blocks */
   guint len;
@@ -782,7 +779,6 @@ _gst_buffer_free (GstBuffer * buffer)
 {
   GstMetaItem *walk, *next;
   guint i, len;
-  gsize msize;
 
   g_return_if_fail (buffer != NULL);
 
@@ -799,12 +795,8 @@ _gst_buffer_free (GstBuffer * buffer)
 
     next = walk->next;
     /* and free the slice */
-    g_slice_free1 (ITEM_SIZE (info), walk);
+    g_free (walk);
   }
-
-  /* get the size, when unreffing the memory, we could also unref the buffer
-   * itself */
-  msize = GST_BUFFER_SLICE_SIZE (buffer);
 
   /* free our memory */
   len = GST_BUFFER_MEM_LEN (buffer);
@@ -815,26 +807,19 @@ _gst_buffer_free (GstBuffer * buffer)
     gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
   }
 
-  /* we set msize to 0 when the buffer is part of the memory block */
-  if (msize) {
 #ifdef USE_POISONING
-    memset (buffer, 0xff, msize);
+  memset (buffer, 0xff, sizeof (GstBufferImpl));
 #endif
-    g_slice_free1 (msize, buffer);
-  } else {
-    gst_memory_unref (GST_BUFFER_BUFMEM (buffer));
-  }
+  g_free (buffer);
 }
 
 static void
-gst_buffer_init (GstBufferImpl * buffer, gsize size)
+gst_buffer_init (GstBufferImpl * buffer)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (buffer), 0, _gst_buffer_type,
       (GstMiniObjectCopyFunction) _gst_buffer_copy,
       (GstMiniObjectDisposeFunction) _gst_buffer_dispose,
       (GstMiniObjectFreeFunction) _gst_buffer_free);
-
-  GST_BUFFER_SLICE_SIZE (buffer) = size;
 
   GST_BUFFER (buffer)->pool = NULL;
   GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
@@ -859,10 +844,10 @@ gst_buffer_new (void)
 {
   GstBufferImpl *newbuf;
 
-  newbuf = g_slice_new (GstBufferImpl);
+  newbuf = g_new (GstBufferImpl, 1);
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p", newbuf);
 
-  gst_buffer_init (newbuf, sizeof (GstBufferImpl));
+  gst_buffer_init (newbuf);
 
   return GST_BUFFER_CAST (newbuf);
 }
@@ -918,7 +903,7 @@ gst_buffer_new_allocate (GstAllocator * allocator, gsize size,
 
 #if 0
   asize = sizeof (GstBufferImpl) + size;
-  data = g_slice_alloc (asize);
+  data = g_malloc (asize);
   if (G_UNLIKELY (data == NULL))
     goto no_memory;
 
@@ -2311,9 +2296,9 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
    * uninitialized memory
    */
   if (!info->init_func)
-    item = g_slice_alloc0 (size);
+    item = g_malloc0 (size);
   else
-    item = g_slice_alloc (size);
+    item = g_malloc (size);
   result = &item->meta;
   result->info = info;
   result->flags = GST_META_FLAG_NONE;
@@ -2341,7 +2326,7 @@ gst_buffer_add_meta (GstBuffer * buffer, const GstMetaInfo * info,
 
 init_failed:
   {
-    g_slice_free1 (size, item);
+    g_free (item);
     return NULL;
   }
 }
@@ -2392,7 +2377,7 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
         info->free_func (m, buffer);
 
       /* and free the slice */
-      g_slice_free1 (ITEM_SIZE (info), walk);
+      g_free (walk);
       break;
     }
     prev = walk;
@@ -2540,7 +2525,7 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
         info->free_func (m, buffer);
 
       /* and free the slice */
-      g_slice_free1 (ITEM_SIZE (info), walk);
+      g_free (walk);
     } else {
       prev = walk;
     }
