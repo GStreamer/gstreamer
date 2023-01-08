@@ -363,7 +363,7 @@ gst_gl_gbm_drm_fb_destroy_callback (struct gbm_bo *bo, void *data)
   if (fb->fb_id)
     drmModeRmFB (drm_fd, fb->fb_id);
 
-  g_slice_free1 (sizeof (GstGLDRMFramebuffer), fb);
+  g_free (fb);
 }
 
 
@@ -400,7 +400,7 @@ gst_gl_gbm_drm_fb_get_from_bo (struct gbm_bo *bo)
 
   drm_fd = gbm_device_get_fd (gbm_bo_get_device (bo));
 
-  fb = g_slice_alloc0 (sizeof (GstGLDRMFramebuffer));
+  fb = g_new0 (GstGLDRMFramebuffer, 1);
   fb->bo = bo;
 
   width = gbm_bo_get_width (bo);
@@ -423,7 +423,7 @@ gst_gl_gbm_drm_fb_get_from_bo (struct gbm_bo *bo)
   if (ret != 0) {
     GST_ERROR ("Failed to add GBM BO as scanout framebuffer: %s (%d)",
         g_strerror (errno), errno);
-    g_slice_free1 (sizeof (GstGLDRMFramebuffer), fb);
+    g_free (fb);
     return NULL;
   }
 

@@ -333,7 +333,7 @@ _video_frame_unmap_and_free (gpointer user_data)
   GstVideoFrame *frame = user_data;
 
   gst_video_frame_unmap (frame);
-  g_slice_free (GstVideoFrame, frame);
+  g_free (frame);
 }
 
 static void
@@ -367,7 +367,7 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
       gst_video_overlay_rectangle_get_pixels_unscaled_argb (overlay->rectangle,
       alpha_flags);
 
-  comp_frame = g_slice_new (GstVideoFrame);
+  comp_frame = g_new (GstVideoFrame, 1);
 
   vmeta = gst_buffer_get_video_meta (comp_buffer);
   gst_video_info_set_format (&vinfo, vmeta->format, vmeta->width,
@@ -417,7 +417,7 @@ gst_gl_composition_overlay_upload (GstGLCompositionOverlay * overlay,
 
     GST_DEBUG ("uploaded overlay texture %d", overlay->texture_id);
   } else {
-    g_slice_free (GstVideoFrame, comp_frame);
+    g_free (comp_frame);
   }
 }
 

@@ -418,7 +418,7 @@ static void
 _free_swh_cb (GstSetWindowHandleCb * data)
 {
   gst_object_unref (data->window);
-  g_slice_free (GstSetWindowHandleCb, data);
+  g_free (data);
 }
 
 /**
@@ -442,7 +442,7 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->set_window_handle != NULL);
 
-  data = g_slice_new (GstSetWindowHandleCb);
+  data = g_new (GstSetWindowHandleCb, 1);
   data->window = gst_object_ref (window);
   data->handle = handle;
 
@@ -704,7 +704,7 @@ _run_message_async (GstGLAsyncMessage * message)
   if (message->destroy)
     message->destroy (message->data);
 
-  g_slice_free (GstGLAsyncMessage, message);
+  g_free (message);
 
   return FALSE;
 }
@@ -713,7 +713,7 @@ static void
 gst_gl_window_default_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
 {
-  GstGLAsyncMessage *message = g_slice_new (GstGLAsyncMessage);
+  GstGLAsyncMessage *message = g_new (GstGLAsyncMessage, 1);
 
   message->callback = callback;
   message->data = data;

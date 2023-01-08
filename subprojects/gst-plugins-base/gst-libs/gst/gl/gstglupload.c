@@ -1252,12 +1252,12 @@ _raw_upload_frame_new (struct RawUpload *raw, GstBuffer * buffer)
   if (!buffer)
     return NULL;
 
-  frame = g_slice_new (struct RawUploadFrame);
+  frame = g_new (struct RawUploadFrame, 1);
   frame->ref_count = 1;
 
   if (!gst_video_frame_map (&frame->frame, &raw->upload->priv->in_info,
           buffer, GST_MAP_READ)) {
-    g_slice_free (struct RawUploadFrame, frame);
+    g_free (frame);
     return NULL;
   }
 
@@ -1285,7 +1285,7 @@ _raw_upload_frame_unref (struct RawUploadFrame *frame)
 {
   if (g_atomic_int_dec_and_test (&frame->ref_count)) {
     gst_video_frame_unmap (&frame->frame);
-    g_slice_free (struct RawUploadFrame, frame);
+    g_free (frame);
   }
 }
 

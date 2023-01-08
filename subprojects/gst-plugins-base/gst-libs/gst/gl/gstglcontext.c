@@ -289,7 +289,7 @@ gst_gl_context_init (GstGLContext * context)
   context->priv = gst_gl_context_get_instance_private (context);
 
   context->window = NULL;
-  context->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
+  context->gl_vtable = g_new0 (GstGLFuncs, 1);
 
   g_mutex_init (&context->priv->render_lock);
 
@@ -727,7 +727,7 @@ gst_gl_context_finalize (GObject * object)
   }
 
   if (context->gl_vtable) {
-    g_slice_free (GstGLFuncs, context->gl_vtable);
+    g_free (context->gl_vtable);
     context->gl_vtable = NULL;
   }
 
