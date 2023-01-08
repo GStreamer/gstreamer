@@ -52,7 +52,7 @@ G_BEGIN_DECLS \
 static gboolean \
 G_PASTE(_private_type_find_riff_, typefind_name) (GstPlugin * plugin) \
 { \
-  GstTypeFindData *sw_data = g_slice_new (GstTypeFindData);             \
+  GstTypeFindData *sw_data = g_new (GstTypeFindData, 1);             \
   sw_data->data = (gpointer)_data;                                      \
   sw_data->size = 4;                                                    \
   sw_data->probability = GST_TYPE_FIND_MAXIMUM;                         \
