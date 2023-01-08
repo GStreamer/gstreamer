@@ -2234,11 +2234,11 @@ GST_START_TEST (test_rtcp_compound_padding)
   rtcp_buffer = gst_rtcp_buffer_new (1400);
 
   fail_unless (gst_rtcp_buffer_map (rtcp_buffer, GST_MAP_READWRITE, &rtcp));
-  rtcp_packet = g_slice_new0 (GstRTCPPacket);
+  rtcp_packet = g_new0 (GstRTCPPacket, 1);
   fail_unless (gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_RR,
           rtcp_packet));
   gst_rtcp_packet_rr_set_ssrc (rtcp_packet, 1);
-  g_slice_free (GstRTCPPacket, rtcp_packet);
+  g_free (rtcp_packet);
   gst_rtcp_buffer_unmap (&rtcp);
 
   fail_unless (gst_rtcp_buffer_validate (rtcp_buffer));
