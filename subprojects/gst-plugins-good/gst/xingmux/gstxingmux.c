@@ -70,13 +70,13 @@ typedef struct _GstXingSeekEntry
 static inline GstXingSeekEntry *
 gst_xing_seek_entry_new (void)
 {
-  return g_slice_new (GstXingSeekEntry);
+  return g_new (GstXingSeekEntry, 1);
 }
 
 static inline void
 gst_xing_seek_entry_free (GstXingSeekEntry * entry)
 {
-  g_slice_free (GstXingSeekEntry, entry);
+  g_free (entry);
 }
 
 static void gst_xing_mux_finalize (GObject * obj);
