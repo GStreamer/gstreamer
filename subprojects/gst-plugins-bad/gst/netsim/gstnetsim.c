@@ -216,7 +216,7 @@ typedef struct
 static inline PushBufferCtx *
 push_buffer_ctx_new (GstPad * pad, GstBuffer * buf)
 {
-  PushBufferCtx *ctx = g_slice_new (PushBufferCtx);
+  PushBufferCtx *ctx = g_new (PushBufferCtx, 1);
   ctx->pad = gst_object_ref (pad);
   ctx->buf = gst_buffer_ref (buf);
   return ctx;
@@ -228,7 +228,7 @@ push_buffer_ctx_free (PushBufferCtx * ctx)
   if (G_LIKELY (ctx != NULL)) {
     gst_buffer_unref (ctx->buf);
     gst_object_unref (ctx->pad);
-    g_slice_free (PushBufferCtx, ctx);
+    g_free (ctx);
   }
 }
 
