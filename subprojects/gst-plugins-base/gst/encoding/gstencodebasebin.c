@@ -1469,7 +1469,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
       GST_PTR_FORMAT, format, sinkcaps);
   GST_DEBUG ("avoid_reencoding:%d", ebin->avoid_reencoding);
 
-  sgroup = g_slice_new0 (StreamGroup);
+  sgroup = g_new0 (StreamGroup, 1);
   sgroup->ebin = ebin;
   sgroup->profile = sprof;
 
@@ -2464,7 +2464,7 @@ stream_group_free (GstEncodeBaseBin * ebin, StreamGroup * sgroup)
   if (sgroup->outfilter)
     gst_bin_remove ((GstBin *) ebin, sgroup->outfilter);
 
-  g_slice_free (StreamGroup, sgroup);
+  g_free (sgroup);
 }
 
 static void
