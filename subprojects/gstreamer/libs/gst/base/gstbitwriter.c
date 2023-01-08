@@ -51,7 +51,7 @@
 GstBitWriter *
 gst_bit_writer_new (void)
 {
-  GstBitWriter *ret = g_slice_new0 (GstBitWriter);
+  GstBitWriter *ret = g_new0 (GstBitWriter, 1);
 
   ret->owned = TRUE;
   ret->auto_grow = TRUE;
@@ -72,7 +72,7 @@ gst_bit_writer_new (void)
 GstBitWriter *
 gst_bit_writer_new_with_size (guint size, gboolean fixed)
 {
-  GstBitWriter *ret = g_slice_new0 (GstBitWriter);
+  GstBitWriter *ret = g_new0 (GstBitWriter, 1);
 
   gst_bit_writer_init_with_size (ret, size, fixed);
   return ret;
@@ -95,7 +95,7 @@ gst_bit_writer_new_with_size (guint size, gboolean fixed)
 GstBitWriter *
 gst_bit_writer_new_with_data (guint8 * data, guint size, gboolean initialized)
 {
-  GstBitWriter *ret = g_slice_new0 (GstBitWriter);
+  GstBitWriter *ret = g_new0 (GstBitWriter, 1);
 
   gst_bit_writer_init_with_data (ret, data, size, initialized);
 
@@ -260,7 +260,7 @@ gst_bit_writer_free (GstBitWriter * bitwriter)
   g_return_if_fail (bitwriter != NULL);
 
   gst_bit_writer_reset (bitwriter);
-  g_slice_free (GstBitWriter, bitwriter);
+  g_free (bitwriter);
 }
 
 /**
@@ -283,7 +283,7 @@ gst_bit_writer_free_and_get_data (GstBitWriter * bitwriter)
   g_return_val_if_fail (bitwriter != NULL, NULL);
 
   data = gst_bit_writer_reset_and_get_data (bitwriter);
-  g_slice_free (GstBitWriter, bitwriter);
+  g_free (bitwriter);
 
   return data;
 }
@@ -308,7 +308,7 @@ gst_bit_writer_free_and_get_buffer (GstBitWriter * bitwriter)
   g_return_val_if_fail (bitwriter != NULL, NULL);
 
   buffer = gst_bit_writer_reset_and_get_buffer (bitwriter);
-  g_slice_free (GstBitWriter, bitwriter);
+  g_free (bitwriter);
 
   return buffer;
 }
