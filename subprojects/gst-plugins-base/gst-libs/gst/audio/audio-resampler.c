@@ -1366,7 +1366,7 @@ gst_audio_resampler_new (GstAudioResamplerMethod method,
 
   audio_resampler_init ();
 
-  resampler = g_slice_new0 (GstAudioResampler);
+  resampler = g_new0 (GstAudioResampler, 1);
   resampler->method = method;
   resampler->flags = flags;
   resampler->format = format;
@@ -1634,7 +1634,7 @@ gst_audio_resampler_free (GstAudioResampler * resampler)
   g_free (resampler->sbuf);
   if (resampler->options)
     gst_structure_free (resampler->options);
-  g_slice_free (GstAudioResampler, resampler);
+  g_free (resampler);
 }
 
 /**

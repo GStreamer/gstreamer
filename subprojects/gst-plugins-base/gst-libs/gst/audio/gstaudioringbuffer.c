@@ -633,7 +633,7 @@ gst_audio_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   GST_INFO_OBJECT (buf, "Allocating an array for %d timestamps",
       spec->segtotal);
-  buf->timestamps = g_slice_alloc0 (sizeof (GstClockTime) * spec->segtotal);
+  buf->timestamps = g_new0 (GstClockTime, spec->segtotal);
   /* initialize array with invalid timestamps */
   for (i = 0; i < spec->segtotal; i++) {
     buf->timestamps[i] = GST_CLOCK_TIME_NONE;
@@ -727,7 +727,7 @@ gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
   if (G_LIKELY (buf->timestamps)) {
     GST_INFO_OBJECT (buf, "Freeing timestamp buffer, %d entries",
         buf->spec.segtotal);
-    g_slice_free1 (sizeof (GstClockTime) * buf->spec.segtotal, buf->timestamps);
+    g_free (buf->timestamps);
     buf->timestamps = NULL;
   }
 

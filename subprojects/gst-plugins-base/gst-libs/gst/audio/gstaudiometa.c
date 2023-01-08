@@ -327,7 +327,7 @@ gst_audio_meta_free (GstMeta * meta, GstBuffer * buffer)
   GstAudioMeta *ameta = (GstAudioMeta *) meta;
 
   if (ameta->offsets && ameta->offsets != ameta->priv_offsets_arr)
-    g_slice_free1 (ameta->info.channels * sizeof (gsize), ameta->offsets);
+    g_free (ameta->offsets);
 }
 
 static gboolean
@@ -413,7 +413,7 @@ gst_buffer_add_audio_meta (GstBuffer * buffer, const GstAudioInfo * info,
 #endif
 
     if (G_UNLIKELY (info->channels > 8))
-      meta->offsets = g_slice_alloc (info->channels * sizeof (gsize));
+      meta->offsets = g_new (gsize, info->channels);
     else
       meta->offsets = meta->priv_offsets_arr;
 

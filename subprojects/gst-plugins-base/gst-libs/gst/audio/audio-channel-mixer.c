@@ -95,7 +95,7 @@ gst_audio_channel_mixer_free (GstAudioChannelMixer * mix)
   g_free (mix->matrix_int);
   mix->matrix_int = NULL;
 
-  g_slice_free (GstAudioChannelMixer, mix);
+  g_free (mix);
 }
 
 /*
@@ -836,7 +836,7 @@ gst_audio_channel_mixer_new_with_matrix (GstAudioChannelMixerFlags flags,
   g_return_val_if_fail (in_channels > 0 && in_channels < 64, NULL);
   g_return_val_if_fail (out_channels > 0 && out_channels < 64, NULL);
 
-  mix = g_slice_new0 (GstAudioChannelMixer);
+  mix = g_new0 (GstAudioChannelMixer, 1);
   mix->in_channels = in_channels;
   mix->out_channels = out_channels;
 
