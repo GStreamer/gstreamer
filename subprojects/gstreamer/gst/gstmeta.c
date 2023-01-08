@@ -78,7 +78,7 @@ typedef struct
 static void
 free_info (gpointer data)
 {
-  g_slice_free (GstMetaInfoImpl, data);
+  g_free (data);
 }
 
 void
@@ -394,7 +394,7 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
   if (type == G_TYPE_INVALID)
     return NULL;
 
-  info = (GstMetaInfo *) g_slice_new (GstMetaInfoImpl);
+  info = (GstMetaInfo *) g_new (GstMetaInfoImpl, 1);
   info->api = api;
   info->type = type;
   info->size = size;
