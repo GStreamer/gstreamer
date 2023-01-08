@@ -175,7 +175,7 @@ create_receiver_entry (SoupWebsocketConnection * connection)
   GError *error;
   ReceiverEntry *receiver_entry;
 
-  receiver_entry = g_slice_alloc0 (sizeof (ReceiverEntry));
+  receiver_entry = g_new0 (ReceiverEntry, 1);
   receiver_entry->connection = connection;
 
   g_object_ref (G_OBJECT (connection));
@@ -234,7 +234,7 @@ destroy_receiver_entry (gpointer receiver_entry_ptr)
   if (receiver_entry->connection != NULL)
     g_object_unref (G_OBJECT (receiver_entry->connection));
 
-  g_slice_free1 (sizeof (ReceiverEntry), receiver_entry);
+  g_free (receiver_entry);
 }
 
 

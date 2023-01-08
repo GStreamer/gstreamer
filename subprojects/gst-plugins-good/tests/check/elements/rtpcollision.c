@@ -95,15 +95,15 @@ create_rtcp_app (guint32 ssrc, guint count)
 
   /* need to begin with rr */
   gst_rtcp_buffer_map (rtcp_buffer, GST_MAP_READWRITE, &rtcp);
-  rtcp_packet = g_slice_new0 (GstRTCPPacket);
+  rtcp_packet = g_new0 (GstRTCPPacket, 1);
   gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_RR, rtcp_packet);
   gst_rtcp_packet_rr_set_ssrc (rtcp_packet, ssrc);
-  g_slice_free (GstRTCPPacket, rtcp_packet);
+  g_free (rtcp_packet);
 
   /* useful to make the rtcp buffer valid */
-  rtcp_packet = g_slice_new0 (GstRTCPPacket);
+  rtcp_packet = g_new0 (GstRTCPPacket, 1);
   gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_APP, rtcp_packet);
-  g_slice_free (GstRTCPPacket, rtcp_packet);
+  g_free (rtcp_packet);
   gst_rtcp_buffer_unmap (&rtcp);
 
   return rtcp_buffer;
