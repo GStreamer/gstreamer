@@ -73,7 +73,7 @@ struct GstSrtpEventReporterData
 static void
 free_reporter_data (gpointer data)
 {
-  g_slice_free (struct GstSrtpEventReporterData, data);
+  g_free (data);
 }
 
 
@@ -101,7 +101,7 @@ gst_srtp_init_event_reporter (void)
   struct GstSrtpEventReporterData *dat = g_private_get (&current_callback);
 
   if (!dat) {
-    dat = g_slice_new (struct GstSrtpEventReporterData);
+    dat = g_new (struct GstSrtpEventReporterData, 1);
     g_private_set (&current_callback, dat);
   }
 

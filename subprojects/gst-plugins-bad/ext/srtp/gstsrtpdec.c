@@ -561,7 +561,7 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
   const gchar *rtp_cipher, *rtp_auth, *rtcp_cipher, *rtcp_auth;
 
   /* Create new stream structure and set default values */
-  stream = g_slice_new0 (GstSrtpDecSsrcStream);
+  stream = g_new0 (GstSrtpDecSsrcStream, 1);
   stream->ssrc = ssrc;
   stream->key = NULL;
 
@@ -671,7 +671,7 @@ get_stream_from_caps (GstSrtpDec * filter, GstCaps * caps, guint32 ssrc)
   return stream;
 
 error:
-  g_slice_free (GstSrtpDecSsrcStream, stream);
+  g_free (stream);
   return NULL;
 }
 
@@ -848,7 +848,7 @@ free_stream (GstSrtpDecSsrcStream * stream)
     gst_buffer_unref (stream->key);
   if (stream->keys)
     g_array_free (stream->keys, TRUE);
-  g_slice_free (GstSrtpDecSsrcStream, stream);
+  g_free (stream);
 }
 
 static gboolean
@@ -949,7 +949,7 @@ update_session_stream_from_caps (GstSrtpDec * filter, guint32 ssrc,
       GST_WARNING_OBJECT (filter, "Failed to create the stream (err: %d)", err);
       if (stream->key)
         gst_buffer_unref (stream->key);
-      g_slice_free (GstSrtpDecSsrcStream, stream);
+      g_free (stream);
       stream = NULL;
     }
   }
