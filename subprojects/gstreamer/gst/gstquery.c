@@ -200,7 +200,7 @@ _gst_query_free (GstQuery * query)
   memset (query, 0xff, sizeof (GstQueryImpl));
 #endif
 
-  g_slice_free1 (sizeof (GstQueryImpl), query);
+  g_free (query);
 }
 
 static GstQuery *
@@ -674,7 +674,7 @@ gst_query_new_custom (GstQueryType type, GstStructure * structure)
 {
   GstQueryImpl *query;
 
-  query = g_slice_new0 (GstQueryImpl);
+  query = g_new0 (GstQueryImpl, 1);
 
   GST_DEBUG ("creating new query %p %s", query, gst_query_type_get_name (type));
 
@@ -697,7 +697,7 @@ gst_query_new_custom (GstQueryType type, GstStructure * structure)
   /* ERRORS */
 had_parent:
   {
-    g_slice_free1 (sizeof (GstQueryImpl), query);
+    g_free (query);
     g_warning ("structure is already owned by another object");
     return NULL;
   }
