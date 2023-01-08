@@ -203,7 +203,7 @@ static void
 splitmux_part_free_queue_item (GstDataQueueItem * item)
 {
   gst_mini_object_unref (item->object);
-  g_slice_free (GstDataQueueItem, item);
+  g_free (item);
 }
 
 static GstFlowReturn
@@ -251,7 +251,7 @@ splitmux_part_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   /* We are active, and one queue is empty, place this buffer in
    * the dataqueue */
   GST_LOG_OBJECT (reader, "Enqueueing buffer %" GST_PTR_FORMAT, buf);
-  item = g_slice_new (GstDataQueueItem);
+  item = g_new (GstDataQueueItem, 1);
   item->destroy = (GDestroyNotify) splitmux_part_free_queue_item;
   item->object = GST_MINI_OBJECT (buf);
   item->size = gst_buffer_get_size (buf);
@@ -341,7 +341,7 @@ enqueue_event (GstSplitMuxPartReader * reader, GstSplitMuxPartPad * part_pad,
   GstDataQueueItem *item;
 
   GST_LOG_OBJECT (reader, "Enqueueing event %" GST_PTR_FORMAT, event);
-  item = g_slice_new (GstDataQueueItem);
+  item = g_new (GstDataQueueItem, 1);
   item->destroy = (GDestroyNotify) splitmux_part_free_queue_item;
   item->object = GST_MINI_OBJECT (event);
   item->size = 0;

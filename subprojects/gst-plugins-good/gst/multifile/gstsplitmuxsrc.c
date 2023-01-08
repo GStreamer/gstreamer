@@ -810,7 +810,7 @@ gst_splitmux_pad_loop (GstPad * pad)
       }
     }
   }
-  g_slice_free (GstDataQueueItem, item);
+  g_free (item);
 
   gst_object_unref (reader);
   gst_object_unref (part_pad);

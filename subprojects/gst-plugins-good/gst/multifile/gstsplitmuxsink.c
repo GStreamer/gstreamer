@@ -252,32 +252,32 @@ static GstClockTime calculate_next_max_timecode (GstSplitMuxSink * splitmux,
 static MqStreamBuf *
 mq_stream_buf_new (void)
 {
-  return g_slice_new0 (MqStreamBuf);
+  return g_new0 (MqStreamBuf, 1);
 }
 
 static void
 mq_stream_buf_free (MqStreamBuf * data)
 {
-  g_slice_free (MqStreamBuf, data);
+  g_free (data);
 }
 
 static SplitMuxOutputCommand *
 out_cmd_buf_new (void)
 {
-  return g_slice_new0 (SplitMuxOutputCommand);
+  return g_new0 (SplitMuxOutputCommand, 1);
 }
 
 static void
 out_cmd_buf_free (SplitMuxOutputCommand * data)
 {
-  g_slice_free (SplitMuxOutputCommand, data);
+  g_free (data);
 }
 
 static void
 input_gop_free (InputGop * gop)
 {
   g_clear_pointer (&gop->start_tc, gst_video_time_code_free);
-  g_slice_free (InputGop, gop);
+  g_free (gop);
 }
 
 static void
@@ -2878,7 +2878,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
             splitmux->fragment_start_time_pts = rtime;
 
           if (g_queue_is_empty (&splitmux->pending_input_gops)) {
-            InputGop *gop = g_slice_new0 (InputGop);
+            InputGop *gop = g_new0 (InputGop, 1);
 
             gop->from_gap = TRUE;
             gop->start_time = rtime;
@@ -3026,7 +3026,7 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
     if (!gop || (!gop->from_gap
             && !GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))) {
-      gop = g_slice_new0 (InputGop);
+      gop = g_new0 (InputGop, 1);
 
       gop->start_time = running_time;
       gop->start_time_pts = running_time_pts;
