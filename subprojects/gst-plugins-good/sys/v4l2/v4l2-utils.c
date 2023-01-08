@@ -46,7 +46,7 @@ gst_v4l2_iterator_new (void)
   static const gchar *subsystems[] = { "video4linux", NULL };
   struct _GstV4l2GUdevIterator *it;
 
-  it = g_slice_new0 (struct _GstV4l2GUdevIterator);
+  it = g_new0 (struct _GstV4l2GUdevIterator, 1);
 
   it->client = g_udev_client_new (subsystems);
   it->devices = g_udev_client_query_by_subsystem (it->client, "video4linux");
@@ -92,7 +92,7 @@ gst_v4l2_iterator_free (GstV4l2Iterator * _it)
   struct _GstV4l2GUdevIterator *it = (struct _GstV4l2GUdevIterator *) _it;
   g_list_free_full (it->devices, g_object_unref);
   gst_object_unref (it->client);
-  g_slice_free (struct _GstV4l2GUdevIterator, it);
+  g_free (it);
 }
 
 #else /* No GUDEV */
@@ -110,7 +110,7 @@ gst_v4l2_iterator_new (void)
 {
   struct _GstV4l2FsIterator *it;
 
-  it = g_slice_new0 (struct _GstV4l2FsIterator);
+  it = g_new0 (struct _GstV4l2FsIterator, 1);
   it->base_idx = 0;
   it->video_idx = -1;
   it->device = NULL;
@@ -160,7 +160,7 @@ gst_v4l2_iterator_free (GstV4l2Iterator * _it)
 {
   struct _GstV4l2FsIterator *it = (struct _GstV4l2FsIterator *) _it;
   g_free ((gchar *) it->parent.device_path);
-  g_slice_free (struct _GstV4l2FsIterator, it);
+  g_free (it);
 }
 
 #endif

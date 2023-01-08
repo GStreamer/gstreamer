@@ -154,7 +154,7 @@ _v4l2mem_new (GstMemoryFlags flags, GstAllocator * allocator,
 {
   GstV4l2Memory *mem;
 
-  mem = g_slice_new0 (GstV4l2Memory);
+  mem = g_new0 (GstV4l2Memory, 1);
   gst_memory_init (GST_MEMORY_CAST (mem),
       flags, allocator, parent, maxsize, align, offset, size);
 
@@ -236,7 +236,7 @@ gst_v4l2_memory_group_free (GstV4l2MemoryGroup * group)
       gst_memory_unref (mem);
   }
 
-  g_slice_free (GstV4l2MemoryGroup, group);
+  g_free (group);
 }
 
 static GstV4l2MemoryGroup *
@@ -248,7 +248,7 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
   GstV4l2MemoryGroup *group;
   gsize img_size, buf_size;
 
-  group = g_slice_new0 (GstV4l2MemoryGroup);
+  group = g_new0 (GstV4l2MemoryGroup, 1);
 
   group->buffer.type = format->type;
   group->buffer.index = index;
@@ -268,7 +268,7 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
     GST_ERROR_OBJECT (allocator, "Buffer index returned by VIDIOC_QUERYBUF "
         "didn't match, this indicate the presence of a bug in your driver or "
         "libv4l2");
-    g_slice_free (GstV4l2MemoryGroup, group);
+    g_free (group);
     return NULL;
   }
 
@@ -401,7 +401,7 @@ gst_v4l2_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
       close (mem->dmafd);
   }
 
-  g_slice_free (GstV4l2Memory, mem);
+  g_free (mem);
 }
 
 static void

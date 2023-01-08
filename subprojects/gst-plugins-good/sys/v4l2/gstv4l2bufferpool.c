@@ -220,7 +220,7 @@ _unmap_userptr_frame (struct UserPtrData *data)
   if (data->buffer)
     gst_buffer_unref (data->buffer);
 
-  g_slice_free (struct UserPtrData, data);
+  g_free (data);
 }
 
 static GstFlowReturn
@@ -244,7 +244,7 @@ gst_v4l2_buffer_pool_import_userptr (GstV4l2BufferPool * pool,
   else
     flags = GST_MAP_WRITE;
 
-  data = g_slice_new0 (struct UserPtrData);
+  data = g_new0 (struct UserPtrData, 1);
 
   if (finfo && (finfo->format != GST_VIDEO_FORMAT_UNKNOWN &&
           finfo->format != GST_VIDEO_FORMAT_ENCODED)) {
@@ -325,7 +325,7 @@ not_our_buffer:
 invalid_buffer:
   {
     GST_ERROR_OBJECT (pool, "could not map buffer");
-    g_slice_free (struct UserPtrData, data);
+    g_free (data);
     return GST_FLOW_ERROR;
   }
 non_contiguous_mem:
