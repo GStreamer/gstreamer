@@ -628,8 +628,8 @@ gst_svthevc_enc_init (GstSvtHevcEnc * encoder)
 {
   EB_H265_ENC_INPUT *in_data;
 
-  encoder->in_buf = g_slice_new0 (EB_BUFFERHEADERTYPE);
-  in_data = g_slice_new0 (EB_H265_ENC_INPUT);
+  encoder->in_buf = g_new0 (EB_BUFFERHEADERTYPE, 1);
+  in_data = g_new0 (EB_H265_ENC_INPUT, 1);
   encoder->in_buf->pBuffer = (unsigned char *) in_data;
   encoder->in_buf->nSize = sizeof (*encoder->in_buf);
   encoder->in_buf->pAppPrivate = NULL;
@@ -747,8 +747,8 @@ gst_svthevc_enc_finalize (GObject * object)
   if (encoder->in_buf) {
     EB_H265_ENC_INPUT *in_data = (EB_H265_ENC_INPUT *) encoder->in_buf->pBuffer;
     if (in_data)
-      g_slice_free (EB_H265_ENC_INPUT, in_data);
-    g_slice_free (EB_BUFFERHEADERTYPE, encoder->in_buf);
+      g_free (in_data);
+    g_free (encoder->in_buf);
   }
 
   g_free ((gpointer) encoder->svthevc_version);
