@@ -46,7 +46,7 @@ static GstMpegtsSCTESpliceEvent *
 _gst_mpegts_scte_splice_event_copy (GstMpegtsSCTESpliceEvent * event)
 {
   GstMpegtsSCTESpliceEvent *copy =
-      g_slice_dup (GstMpegtsSCTESpliceEvent, event);
+      g_memdup2 (event, sizeof (GstMpegtsSCTESpliceEvent));
 
   copy->components = g_ptr_array_ref (event->components);
 
@@ -57,7 +57,7 @@ static void
 _gst_mpegts_scte_splice_event_free (GstMpegtsSCTESpliceEvent * event)
 {
   g_ptr_array_unref (event->components);
-  g_slice_free (GstMpegtsSCTESpliceEvent, event);
+  g_free (event);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsSCTESpliceEvent, gst_mpegts_scte_splice_event,
@@ -68,14 +68,14 @@ static GstMpegtsSCTESpliceComponent *
 _gst_mpegts_scte_splice_component_copy (GstMpegtsSCTESpliceComponent *
     component)
 {
-  return g_slice_dup (GstMpegtsSCTESpliceComponent, component);
+  return g_memdup2 (component, sizeof (GstMpegtsSCTESpliceComponent));
 }
 
 static void
 _gst_mpegts_scte_splice_component_free (GstMpegtsSCTESpliceComponent *
     component)
 {
-  g_slice_free (GstMpegtsSCTESpliceComponent, component);
+  g_free (component);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsSCTESpliceComponent,
@@ -88,7 +88,7 @@ _parse_splice_component (GstMpegtsSCTESpliceEvent * event, guint8 ** orig_data,
     guint8 * end)
 {
   GstMpegtsSCTESpliceComponent *component =
-      g_slice_new0 (GstMpegtsSCTESpliceComponent);
+      g_new0 (GstMpegtsSCTESpliceComponent, 1);
   guint8 *data = *orig_data;
 
   if (data + 1 + 6 > end)
@@ -132,7 +132,7 @@ error:
 static GstMpegtsSCTESpliceEvent *
 _parse_splice_event (guint8 ** orig_data, guint8 * end, gboolean insert_event)
 {
-  GstMpegtsSCTESpliceEvent *event = g_slice_new0 (GstMpegtsSCTESpliceEvent);
+  GstMpegtsSCTESpliceEvent *event = g_new0 (GstMpegtsSCTESpliceEvent, 1);
   guint8 *data = *orig_data;
 
   /* Note : +6 is because of the final descriptor_loop_length and CRC */
@@ -241,7 +241,7 @@ error:
 static GstMpegtsSCTESIT *
 _gst_mpegts_scte_sit_copy (GstMpegtsSCTESIT * sit)
 {
-  GstMpegtsSCTESIT *copy = g_slice_dup (GstMpegtsSCTESIT, sit);
+  GstMpegtsSCTESIT *copy = g_memdup2 (sit, sizeof (GstMpegtsSCTESIT));
 
   copy->splices = g_ptr_array_ref (sit->splices);
   copy->descriptors = g_ptr_array_ref (sit->descriptors);
@@ -254,7 +254,7 @@ _gst_mpegts_scte_sit_free (GstMpegtsSCTESIT * sit)
 {
   g_ptr_array_unref (sit->splices);
   g_ptr_array_unref (sit->descriptors);
-  g_slice_free (GstMpegtsSCTESIT, sit);
+  g_free (sit);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsSCTESIT, gst_mpegts_scte_sit,
@@ -278,7 +278,7 @@ _parse_sit (GstMpegtsSection * section)
     return NULL;
   }
 
-  sit = g_slice_new0 (GstMpegtsSCTESIT);
+  sit = g_new0 (GstMpegtsSCTESIT, 1);
 
   sit->fully_parsed = FALSE;
 
@@ -456,7 +456,7 @@ gst_mpegts_scte_sit_new (void)
 {
   GstMpegtsSCTESIT *sit;
 
-  sit = g_slice_new0 (GstMpegtsSCTESIT);
+  sit = g_new0 (GstMpegtsSCTESIT, 1);
 
   /* Set all default values (which aren't already 0/NULL) */
   sit->tier = 0xfff;
@@ -606,7 +606,7 @@ gst_mpegts_scte_splice_out_new (guint32 event_id, GstClockTime splice_time,
 GstMpegtsSCTESpliceEvent *
 gst_mpegts_scte_splice_event_new (void)
 {
-  GstMpegtsSCTESpliceEvent *event = g_slice_new0 (GstMpegtsSCTESpliceEvent);
+  GstMpegtsSCTESpliceEvent *event = g_new0 (GstMpegtsSCTESpliceEvent, 1);
 
   /* Non-0 Default values */
   event->program_splice_flag = TRUE;
@@ -630,7 +630,7 @@ GstMpegtsSCTESpliceComponent *
 gst_mpegts_scte_splice_component_new (guint8 tag)
 {
   GstMpegtsSCTESpliceComponent *component =
-      g_slice_new0 (GstMpegtsSCTESpliceComponent);
+      g_new0 (GstMpegtsSCTESpliceComponent, 1);
 
   component->tag = tag;
 

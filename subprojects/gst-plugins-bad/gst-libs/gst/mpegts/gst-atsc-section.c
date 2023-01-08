@@ -87,7 +87,7 @@ _gst_mpegts_atsc_vct_source_copy (GstMpegtsAtscVCTSource * source)
 {
   GstMpegtsAtscVCTSource *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscVCTSource, source);
+  copy = g_memdup2 (source, sizeof (GstMpegtsAtscVCTSource));
   copy->descriptors = g_ptr_array_ref (source->descriptors);
 
   return copy;
@@ -99,7 +99,7 @@ _gst_mpegts_atsc_vct_source_free (GstMpegtsAtscVCTSource * source)
   g_free (source->short_name);
   if (source->descriptors)
     g_ptr_array_unref (source->descriptors);
-  g_slice_free (GstMpegtsAtscVCTSource, source);
+  g_free (source);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscVCTSource, gst_mpegts_atsc_vct_source,
@@ -111,7 +111,7 @@ _gst_mpegts_atsc_vct_copy (GstMpegtsAtscVCT * vct)
 {
   GstMpegtsAtscVCT *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscVCT, vct);
+  copy = g_memdup2 (vct, sizeof (GstMpegtsAtscVCT));
   copy->sources = g_ptr_array_ref (vct->sources);
   copy->descriptors = g_ptr_array_ref (vct->descriptors);
 
@@ -125,7 +125,7 @@ _gst_mpegts_atsc_vct_free (GstMpegtsAtscVCT * vct)
     g_ptr_array_unref (vct->sources);
   if (vct->descriptors)
     g_ptr_array_unref (vct->descriptors);
-  g_slice_free (GstMpegtsAtscVCT, vct);
+  g_free (vct);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscVCT, gst_mpegts_atsc_vct,
@@ -142,7 +142,7 @@ _parse_atsc_vct (GstMpegtsSection * section)
   guint i;
   GError *err = NULL;
 
-  vct = g_slice_new0 (GstMpegtsAtscVCT);
+  vct = g_new0 (GstMpegtsAtscVCT, 1);
 
   data = section->data;
   end = data + section->section_length;
@@ -173,7 +173,7 @@ _parse_atsc_vct (GstMpegtsSection * section)
     if (end - data < 32 + 2 + 4)
       goto error;
 
-    source = g_slice_new0 (GstMpegtsAtscVCTSource);
+    source = g_new0 (GstMpegtsAtscVCTSource, 1);
     g_ptr_array_add (vct->sources, source);
 
     source->short_name =
@@ -304,7 +304,7 @@ _gst_mpegts_atsc_mgt_table_copy (GstMpegtsAtscMGTTable * mgt_table)
 {
   GstMpegtsAtscMGTTable *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscMGTTable, mgt_table);
+  copy = g_memdup2 (mgt_table, sizeof (GstMpegtsAtscMGTTable));
   copy->descriptors = g_ptr_array_ref (mgt_table->descriptors);
 
   return copy;
@@ -314,7 +314,7 @@ static void
 _gst_mpegts_atsc_mgt_table_free (GstMpegtsAtscMGTTable * mgt_table)
 {
   g_ptr_array_unref (mgt_table->descriptors);
-  g_slice_free (GstMpegtsAtscMGTTable, mgt_table);
+  g_free (mgt_table);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscMGTTable, gst_mpegts_atsc_mgt_table,
@@ -326,7 +326,7 @@ _gst_mpegts_atsc_mgt_copy (GstMpegtsAtscMGT * mgt)
 {
   GstMpegtsAtscMGT *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscMGT, mgt);
+  copy = g_memdup2 (mgt, sizeof (GstMpegtsAtscMGT));
   copy->tables = g_ptr_array_ref (mgt->tables);
   copy->descriptors = g_ptr_array_ref (mgt->descriptors);
 
@@ -338,7 +338,7 @@ _gst_mpegts_atsc_mgt_free (GstMpegtsAtscMGT * mgt)
 {
   g_ptr_array_unref (mgt->tables);
   g_ptr_array_unref (mgt->descriptors);
-  g_slice_free (GstMpegtsAtscMGT, mgt);
+  g_free (mgt);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscMGT, gst_mpegts_atsc_mgt,
@@ -353,7 +353,7 @@ _parse_atsc_mgt (GstMpegtsSection * section)
   guint8 *data, *end;
   guint16 descriptors_loop_length;
 
-  mgt = g_slice_new0 (GstMpegtsAtscMGT);
+  mgt = g_new0 (GstMpegtsAtscMGT, 1);
 
   data = section->data;
   end = data + section->section_length;
@@ -375,7 +375,7 @@ _parse_atsc_mgt (GstMpegtsSection * section)
       goto error;
     }
 
-    mgt_table = g_slice_new0 (GstMpegtsAtscMGTTable);
+    mgt_table = g_new0 (GstMpegtsAtscMGTTable, 1);
     g_ptr_array_add (mgt->tables, mgt_table);
 
     mgt_table->table_type = GST_READ_UINT16_BE (data);
@@ -577,7 +577,7 @@ gst_mpegts_atsc_mgt_new (void)
 {
   GstMpegtsAtscMGT *mgt;
 
-  mgt = g_slice_new0 (GstMpegtsAtscMGT);
+  mgt = g_new0 (GstMpegtsAtscMGT, 1);
 
   mgt->tables = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_atsc_mgt_table_free);
@@ -595,7 +595,7 @@ _gst_mpegts_atsc_string_segment_copy (GstMpegtsAtscStringSegment * seg)
 {
   GstMpegtsAtscStringSegment *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscStringSegment, seg);
+  copy = g_memdup2 (seg, sizeof (GstMpegtsAtscStringSegment));
 
   return copy;
 }
@@ -604,7 +604,7 @@ static void
 _gst_mpegts_atsc_string_segment_free (GstMpegtsAtscStringSegment * seg)
 {
   g_free (seg->cached_string);
-  g_slice_free (GstMpegtsAtscStringSegment, seg);
+  g_free (seg);
 }
 
 static void
@@ -726,7 +726,7 @@ _gst_mpegts_atsc_mult_string_copy (GstMpegtsAtscMultString * mstring)
 {
   GstMpegtsAtscMultString *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscMultString, mstring);
+  copy = g_memdup2 (mstring, sizeof (GstMpegtsAtscMultString));
   copy->segments = g_ptr_array_ref (mstring->segments);
 
   return copy;
@@ -736,7 +736,7 @@ static void
 _gst_mpegts_atsc_mult_string_free (GstMpegtsAtscMultString * mstring)
 {
   g_ptr_array_unref (mstring->segments);
-  g_slice_free (GstMpegtsAtscMultString, mstring);
+  g_free (mstring);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscMultString, gst_mpegts_atsc_mult_string,
@@ -765,7 +765,7 @@ _parse_atsc_mult_string (guint8 * data, guint datasize)
       guint8 num_segments;
       gint j;
 
-      mstring = g_slice_new0 (GstMpegtsAtscMultString);
+      mstring = g_new0 (GstMpegtsAtscMultString, 1);
       g_ptr_array_add (res, mstring);
       mstring->segments =
           g_ptr_array_new_full (num_strings,
@@ -790,7 +790,7 @@ _parse_atsc_mult_string (guint8 * data, guint datasize)
       for (j = 0; j < num_segments; j++) {
         GstMpegtsAtscStringSegment *seg;
 
-        seg = g_slice_new0 (GstMpegtsAtscStringSegment);
+        seg = g_new0 (GstMpegtsAtscStringSegment, 1);
         g_ptr_array_add (mstring->segments, seg);
 
         /* each entry needs at least 3 bytes */
@@ -909,7 +909,7 @@ _gst_mpegts_atsc_eit_event_copy (GstMpegtsAtscEITEvent * event)
 {
   GstMpegtsAtscEITEvent *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscEITEvent, event);
+  copy = g_memdup2 (event, sizeof (GstMpegtsAtscEITEvent));
   copy->titles = g_ptr_array_ref (event->titles);
   copy->descriptors = g_ptr_array_ref (event->descriptors);
 
@@ -923,7 +923,7 @@ _gst_mpegts_atsc_eit_event_free (GstMpegtsAtscEITEvent * event)
     g_ptr_array_unref (event->titles);
   if (event->descriptors)
     g_ptr_array_unref (event->descriptors);
-  g_slice_free (GstMpegtsAtscEITEvent, event);
+  g_free (event);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscEITEvent, gst_mpegts_atsc_eit_event,
@@ -935,7 +935,7 @@ _gst_mpegts_atsc_eit_copy (GstMpegtsAtscEIT * eit)
 {
   GstMpegtsAtscEIT *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscEIT, eit);
+  copy = g_memdup2 (eit, sizeof (GstMpegtsAtscEIT));
   copy->events = g_ptr_array_ref (eit->events);
 
   return copy;
@@ -946,7 +946,7 @@ _gst_mpegts_atsc_eit_free (GstMpegtsAtscEIT * eit)
 {
   if (eit->events)
     g_ptr_array_unref (eit->events);
-  g_slice_free (GstMpegtsAtscEIT, eit);
+  g_free (eit);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscEIT, gst_mpegts_atsc_eit,
@@ -961,7 +961,7 @@ _parse_atsc_eit (GstMpegtsSection * section)
   guint8 *data, *end;
   guint8 num_events;
 
-  eit = g_slice_new0 (GstMpegtsAtscEIT);
+  eit = g_new0 (GstMpegtsAtscEIT, 1);
 
   data = section->data;
   end = data + section->section_length;
@@ -991,7 +991,7 @@ _parse_atsc_eit (GstMpegtsSection * section)
       goto error;
     }
 
-    event = g_slice_new0 (GstMpegtsAtscEITEvent);
+    event = g_new0 (GstMpegtsAtscEITEvent, 1);
     g_ptr_array_add (eit->events, event);
 
     event->event_id = GST_READ_UINT16_BE (data) & 0x3FFF;
@@ -1072,7 +1072,7 @@ _gst_mpegts_atsc_ett_copy (GstMpegtsAtscETT * ett)
 {
   GstMpegtsAtscETT *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscETT, ett);
+  copy = g_memdup2 (ett, sizeof (GstMpegtsAtscETT));
   copy->messages = g_ptr_array_ref (ett->messages);
 
   return copy;
@@ -1083,7 +1083,7 @@ _gst_mpegts_atsc_ett_free (GstMpegtsAtscETT * ett)
 {
   if (ett->messages)
     g_ptr_array_unref (ett->messages);
-  g_slice_free (GstMpegtsAtscETT, ett);
+  g_free (ett);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscETT, gst_mpegts_atsc_ett,
@@ -1096,7 +1096,7 @@ _parse_ett (GstMpegtsSection * section)
   GstMpegtsAtscETT *ett = NULL;
   guint8 *data, *end;
 
-  ett = g_slice_new0 (GstMpegtsAtscETT);
+  ett = g_new0 (GstMpegtsAtscETT, 1);
 
   data = section->data;
   end = data + section->section_length;
@@ -1159,7 +1159,7 @@ _gst_mpegts_atsc_stt_copy (GstMpegtsAtscSTT * stt)
 {
   GstMpegtsAtscSTT *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscSTT, stt);
+  copy = g_memdup2 (stt, sizeof (GstMpegtsAtscSTT));
   copy->descriptors = g_ptr_array_ref (stt->descriptors);
 
   return copy;
@@ -1173,7 +1173,7 @@ _gst_mpegts_atsc_stt_free (GstMpegtsAtscSTT * stt)
   if (stt->utc_datetime)
     gst_date_time_unref (stt->utc_datetime);
 
-  g_slice_free (GstMpegtsAtscSTT, stt);
+  g_free (stt);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscSTT, gst_mpegts_atsc_stt,
@@ -1187,7 +1187,7 @@ _parse_atsc_stt (GstMpegtsSection * section)
   guint8 *data, *end;
   guint16 daylight_saving;
 
-  stt = g_slice_new0 (GstMpegtsAtscSTT);
+  stt = g_new0 (GstMpegtsAtscSTT, 1);
 
   data = section->data;
   end = data + section->section_length;
@@ -1334,7 +1334,7 @@ gst_mpegts_atsc_stt_new (void)
 {
   GstMpegtsAtscSTT *stt;
 
-  stt = g_slice_new0 (GstMpegtsAtscSTT);
+  stt = g_new0 (GstMpegtsAtscSTT, 1);
   stt->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_mpegts_descriptor_free);
 
@@ -1369,7 +1369,7 @@ _gst_mpegts_atsc_rrt_dimension_value_copy (GstMpegtsAtscRRTDimensionValue *
 {
   GstMpegtsAtscRRTDimensionValue *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscRRTDimensionValue, value);
+  copy = g_memdup2 (value, sizeof (GstMpegtsAtscRRTDimensionValue));
   copy->abbrev_ratings = g_ptr_array_ref (value->abbrev_ratings);
   copy->ratings = g_ptr_array_ref (value->ratings);
 
@@ -1385,7 +1385,7 @@ _gst_mpegts_atsc_rrt_dimension_value_free (GstMpegtsAtscRRTDimensionValue *
   if (value->ratings)
     g_ptr_array_unref (value->ratings);
 
-  g_slice_free (GstMpegtsAtscRRTDimensionValue, value);
+  g_free (value);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscRRTDimensionValue,
@@ -1398,7 +1398,7 @@ _gst_mpegts_atsc_rrt_dimension_copy (GstMpegtsAtscRRTDimension * dim)
 {
   GstMpegtsAtscRRTDimension *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscRRTDimension, dim);
+  copy = g_memdup2 (dim, sizeof (GstMpegtsAtscRRTDimension));
   copy->names = g_ptr_array_ref (dim->names);
   copy->values = g_ptr_array_ref (dim->values);
 
@@ -1413,7 +1413,7 @@ _gst_mpegts_atsc_rrt_dimension_free (GstMpegtsAtscRRTDimension * dim)
   if (dim->values)
     g_ptr_array_unref (dim->values);
 
-  g_slice_free (GstMpegtsAtscRRTDimension, dim);
+  g_free (dim);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscRRTDimension, gst_mpegts_atsc_rrt_dimension,
@@ -1425,7 +1425,7 @@ _gst_mpegts_atsc_rrt_copy (GstMpegtsAtscRRT * rrt)
 {
   GstMpegtsAtscRRT *copy;
 
-  copy = g_slice_dup (GstMpegtsAtscRRT, rrt);
+  copy = g_memdup2 (rrt, sizeof (GstMpegtsAtscRRT));
   copy->names = g_ptr_array_ref (rrt->names);
   copy->dimensions = g_ptr_array_ref (rrt->dimensions);
   copy->descriptors = g_ptr_array_ref (rrt->descriptors);
@@ -1443,7 +1443,7 @@ _gst_mpegts_atsc_rrt_free (GstMpegtsAtscRRT * rrt)
   if (rrt->descriptors)
     g_ptr_array_unref (rrt->descriptors);
 
-  g_slice_free (GstMpegtsAtscRRT, rrt);
+  g_free (rrt);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsAtscRRT, gst_mpegts_atsc_rrt,
@@ -1459,7 +1459,7 @@ _parse_rrt (GstMpegtsSection * section)
   guint16 descriptors_loop_length;
   guint8 text_length;
 
-  rrt = g_slice_new0 (GstMpegtsAtscRRT);
+  rrt = g_new0 (GstMpegtsAtscRRT, 1);
 
   data = section->data;
 
@@ -1485,7 +1485,7 @@ _parse_rrt (GstMpegtsSection * section)
     guint8 tmp;
     guint j = 0;
 
-    dim = g_slice_new0 (GstMpegtsAtscRRTDimension);
+    dim = g_new0 (GstMpegtsAtscRRTDimension, 1);
     g_ptr_array_add (rrt->dimensions, dim);
 
     text_length = GST_READ_UINT8 (data);
@@ -1505,7 +1505,7 @@ _parse_rrt (GstMpegtsSection * section)
     for (j = 0; j < dim->values_defined; j++) {
       GstMpegtsAtscRRTDimensionValue *val;
 
-      val = g_slice_new0 (GstMpegtsAtscRRTDimensionValue);
+      val = g_new0 (GstMpegtsAtscRRTDimensionValue, 1);
       g_ptr_array_add (dim->values, val);
 
       text_length = GST_READ_UINT8 (data);
@@ -1710,7 +1710,7 @@ gst_mpegts_atsc_rrt_dimension_value_new (void)
 {
   GstMpegtsAtscRRTDimensionValue *val;
 
-  val = g_slice_new0 (GstMpegtsAtscRRTDimensionValue);
+  val = g_new0 (GstMpegtsAtscRRTDimensionValue, 1);
   val->abbrev_ratings = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_atsc_mult_string_free);
   val->ratings = g_ptr_array_new_with_free_func ((GDestroyNotify)
@@ -1730,7 +1730,7 @@ gst_mpegts_atsc_rrt_dimension_new (void)
 {
   GstMpegtsAtscRRTDimension *dim;
 
-  dim = g_slice_new0 (GstMpegtsAtscRRTDimension);
+  dim = g_new0 (GstMpegtsAtscRRTDimension, 1);
   dim->names = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_atsc_mult_string_free);
   dim->values = g_ptr_array_new_with_free_func ((GDestroyNotify)
@@ -1750,7 +1750,7 @@ gst_mpegts_atsc_rrt_new (void)
 {
   GstMpegtsAtscRRT *rrt;
 
-  rrt = g_slice_new0 (GstMpegtsAtscRRT);
+  rrt = g_new0 (GstMpegtsAtscRRT, 1);
   rrt->names = g_ptr_array_new_with_free_func ((GDestroyNotify)
       _gst_mpegts_atsc_mult_string_free);
   rrt->dimensions = g_ptr_array_new_with_free_func ((GDestroyNotify)

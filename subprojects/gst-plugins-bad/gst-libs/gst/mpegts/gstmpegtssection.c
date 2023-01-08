@@ -211,7 +211,7 @@ _gst_mpegts_section_free (GstMpegtsSection * section)
 
   g_free (section->data);
 
-  g_slice_free (GstMpegtsSection, section);
+  g_free (section);
 }
 
 static GstMpegtsSection *
@@ -219,7 +219,7 @@ _gst_mpegts_section_copy (GstMpegtsSection * section)
 {
   GstMpegtsSection *copy;
 
-  copy = g_slice_new0 (GstMpegtsSection);
+  copy = g_new0 (GstMpegtsSection, 1);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (copy), 0, MPEG_TYPE_TS_SECTION,
       (GstMiniObjectCopyFunction) _gst_mpegts_section_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_mpegts_section_free);
@@ -437,13 +437,13 @@ gst_mpegts_section_send_event (GstMpegtsSection * section, GstElement * element)
 static GstMpegtsPatProgram *
 _mpegts_pat_program_copy (GstMpegtsPatProgram * orig)
 {
-  return g_slice_dup (GstMpegtsPatProgram, orig);
+  return g_memdup2 (orig, sizeof (GstMpegtsPatProgram));
 }
 
 static void
 _mpegts_pat_program_free (GstMpegtsPatProgram * orig)
 {
-  g_slice_free (GstMpegtsPatProgram, orig);
+  g_free (orig);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsPatProgram, gst_mpegts_pat_program,
@@ -474,7 +474,7 @@ _parse_pat (GstMpegtsSection * section)
   GST_LOG ("nb_programs %u", nb_programs);
 
   for (i = 0; i < nb_programs; i++) {
-    program = g_slice_new0 (GstMpegtsPatProgram);
+    program = g_new0 (GstMpegtsPatProgram, 1);
     program->program_number = GST_READ_UINT16_BE (data);
     data += 2;
 
@@ -558,7 +558,7 @@ gst_mpegts_pat_program_new (void)
 {
   GstMpegtsPatProgram *program;
 
-  program = g_slice_new0 (GstMpegtsPatProgram);
+  program = g_new0 (GstMpegtsPatProgram, 1);
 
   return program;
 }
@@ -639,7 +639,7 @@ _gst_mpegts_pmt_stream_copy (GstMpegtsPMTStream * pmt)
 {
   GstMpegtsPMTStream *copy;
 
-  copy = g_slice_dup (GstMpegtsPMTStream, pmt);
+  copy = g_memdup2 (pmt, sizeof (GstMpegtsPMTStream));
   copy->descriptors = g_ptr_array_ref (pmt->descriptors);
 
   return copy;
@@ -650,7 +650,7 @@ _gst_mpegts_pmt_stream_free (GstMpegtsPMTStream * pmt)
 {
   if (pmt->descriptors)
     g_ptr_array_unref (pmt->descriptors);
-  g_slice_free (GstMpegtsPMTStream, pmt);
+  g_free (pmt);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsPMTStream, gst_mpegts_pmt_stream,
@@ -662,7 +662,7 @@ _gst_mpegts_pmt_copy (GstMpegtsPMT * pmt)
 {
   GstMpegtsPMT *copy;
 
-  copy = g_slice_dup (GstMpegtsPMT, pmt);
+  copy = g_memdup2 (pmt, sizeof (GstMpegtsPMT));
   if (pmt->descriptors)
     copy->descriptors = g_ptr_array_ref (pmt->descriptors);
   copy->streams = g_ptr_array_ref (pmt->streams);
@@ -677,7 +677,7 @@ _gst_mpegts_pmt_free (GstMpegtsPMT * pmt)
     g_ptr_array_unref (pmt->descriptors);
   if (pmt->streams)
     g_ptr_array_unref (pmt->streams);
-  g_slice_free (GstMpegtsPMT, pmt);
+  g_free (pmt);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsPMT, gst_mpegts_pmt,
@@ -693,7 +693,7 @@ _parse_pmt (GstMpegtsSection * section)
   guint program_info_length;
   guint stream_info_length;
 
-  pmt = g_slice_new0 (GstMpegtsPMT);
+  pmt = g_new0 (GstMpegtsPMT, 1);
 
   data = section->data;
   end = data + section->section_length;
@@ -730,7 +730,7 @@ _parse_pmt (GstMpegtsSection * section)
   /* parse entries, cycle until there's space for another entry (at least 5
    * bytes) plus the CRC */
   while (data <= end - 4 - 5) {
-    GstMpegtsPMTStream *stream = g_slice_new0 (GstMpegtsPMTStream);
+    GstMpegtsPMTStream *stream = g_new0 (GstMpegtsPMTStream, 1);
 
     g_ptr_array_add (pmt->streams, stream);
 
@@ -811,7 +811,7 @@ gst_mpegts_pmt_new (void)
 {
   GstMpegtsPMT *pmt;
 
-  pmt = g_slice_new0 (GstMpegtsPMT);
+  pmt = g_new0 (GstMpegtsPMT, 1);
 
   pmt->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_mpegts_descriptor_free);
@@ -833,7 +833,7 @@ gst_mpegts_pmt_stream_new (void)
 {
   GstMpegtsPMTStream *stream;
 
-  stream = g_slice_new0 (GstMpegtsPMTStream);
+  stream = g_new0 (GstMpegtsPMTStream, 1);
 
   stream->descriptors = g_ptr_array_new_with_free_func ((GDestroyNotify)
       gst_mpegts_descriptor_free);
@@ -1120,7 +1120,7 @@ _gst_mpegts_section_init (guint16 pid, guint8 table_id)
 {
   GstMpegtsSection *section;
 
-  section = g_slice_new0 (GstMpegtsSection);
+  section = g_new0 (GstMpegtsSection, 1);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (section), 0, MPEG_TYPE_TS_SECTION,
       (GstMiniObjectCopyFunction) _gst_mpegts_section_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_mpegts_section_free);

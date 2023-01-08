@@ -33,13 +33,13 @@
 #define DEFINE_STATIC_COPY_FUNCTION(type, name) \
 static type * _##name##_copy (type * source) \
 { \
-  return g_slice_dup (type, source); \
+  return g_memdup2 (source, sizeof (type)); \
 }
 
 #define DEFINE_STATIC_FREE_FUNCTION(type, name) \
 static void _##name##_free (type * source) \
 { \
-  g_slice_free (type, source); \
+  g_free (source); \
 }
 
 /**
@@ -656,7 +656,7 @@ _new_descriptor (guint8 tag, guint8 length)
   GstMpegtsDescriptor *descriptor;
   guint8 *data;
 
-  descriptor = g_slice_new (GstMpegtsDescriptor);
+  descriptor = g_new (GstMpegtsDescriptor, 1);
 
   descriptor->tag = tag;
   descriptor->tag_extension = 0;
@@ -678,7 +678,7 @@ _new_descriptor_with_extension (guint8 tag, guint8 tag_extension, guint8 length)
   GstMpegtsDescriptor *descriptor;
   guint8 *data;
 
-  descriptor = g_slice_new (GstMpegtsDescriptor);
+  descriptor = g_new (GstMpegtsDescriptor, 1);
 
   descriptor->tag = tag;
   descriptor->tag_extension = tag_extension;
@@ -700,7 +700,7 @@ _copy_descriptor (GstMpegtsDescriptor * desc)
 {
   GstMpegtsDescriptor *copy;
 
-  copy = g_slice_dup (GstMpegtsDescriptor, desc);
+  copy = g_memdup2 (desc, sizeof (GstMpegtsDescriptor));
   copy->data = g_memdup2 (desc->data, desc->length + 2);
 
   return copy;
@@ -716,7 +716,7 @@ void
 gst_mpegts_descriptor_free (GstMpegtsDescriptor * desc)
 {
   g_free ((gpointer) desc->data);
-  g_slice_free (GstMpegtsDescriptor, desc);
+  g_free (desc);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsDescriptor, gst_mpegts_descriptor,
@@ -783,7 +783,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
   data = buffer;
 
   for (i = 0; i < nb_desc; i++) {
-    GstMpegtsDescriptor *desc = g_slice_new0 (GstMpegtsDescriptor);
+    GstMpegtsDescriptor *desc = g_new0 (GstMpegtsDescriptor, 1);
 
     desc->data = data;
     desc->tag = *data++;
@@ -988,7 +988,7 @@ _gst_mpegts_iso_639_language_descriptor_copy (GstMpegtsISO639LanguageDescriptor
   GstMpegtsISO639LanguageDescriptor *copy;
   guint i;
 
-  copy = g_slice_dup (GstMpegtsISO639LanguageDescriptor, source);
+  copy = g_memdup2 (source, sizeof (GstMpegtsISO639LanguageDescriptor));
 
   for (i = 0; i < source->nb_language; i++) {
     copy->language[i] = g_strdup (source->language[i]);
@@ -1006,7 +1006,7 @@ gst_mpegts_iso_639_language_descriptor_free (GstMpegtsISO639LanguageDescriptor
   for (i = 0; i < desc->nb_language; i++) {
     g_free (desc->language[i]);
   }
-  g_slice_free (GstMpegtsISO639LanguageDescriptor, desc);
+  g_free (desc);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegtsISO639LanguageDescriptor,
@@ -1040,7 +1040,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegtsDescriptor *
 
   data = (guint8 *) descriptor->data + 2;
 
-  res = g_slice_new0 (GstMpegtsISO639LanguageDescriptor);
+  res = g_new0 (GstMpegtsISO639LanguageDescriptor, 1);
 
   /* Each language is 3 + 1 bytes */
   res->nb_language = descriptor->length / 4;
