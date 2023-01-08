@@ -2225,7 +2225,7 @@ gst_vpx_enc_finish (GstVideoEncoder * video_encoder)
 static vpx_image_t *
 gst_vpx_enc_buffer_to_image (GstVPXEnc * enc, GstVideoFrame * frame)
 {
-  vpx_image_t *image = g_slice_new (vpx_image_t);
+  vpx_image_t *image = g_new (vpx_image_t, 1);
 
   memcpy (image, &enc->image, sizeof (*image));
 

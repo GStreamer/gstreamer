@@ -643,7 +643,7 @@ gst_vp9_enc_handle_invisible_frame_buffer (GstVPXEnc * enc, void *user_data,
 static void
 gst_vp9_enc_user_data_free (vpx_image_t * image)
 {
-  g_slice_free (vpx_image_t, image);
+  g_free (image);
 }
 
 static void
