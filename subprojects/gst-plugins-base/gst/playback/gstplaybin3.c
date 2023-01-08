@@ -2237,7 +2237,7 @@ static void
 control_source_pad (GstPlayBin3 * playbin, GstPad * pad,
     GstPad * combine_pad, GstStreamType stream_type)
 {
-  SourcePad *sourcepad = g_slice_new0 (SourcePad);
+  SourcePad *sourcepad = g_new0 (SourcePad, 1);
 
   sourcepad->pad = pad;
   sourcepad->event_probe_id =
@@ -2415,7 +2415,7 @@ release_source_pad (GstPlayBin3 * playbin,
 
   /* Remove from list of controlled pads and check again for EOS status */
   playbin->source_pads = g_list_remove (playbin->source_pads, sourcepad);
-  g_slice_free (SourcePad, sourcepad);
+  g_free (sourcepad);
 }
 
 /* this function is called when a new pad is added to decodebin. We check the

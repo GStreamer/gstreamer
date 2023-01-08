@@ -1215,7 +1215,7 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
   g_object_set_data (G_OBJECT (pad), "uridecodebin.ghostpad", newpad);
 
   /* add event probe to monitor tags */
-  stream = g_slice_alloc0 (sizeof (GstURIDecodeBinStream));
+  stream = g_new0 (GstURIDecodeBinStream, 1);
   stream->probe_id =
       gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
       decoded_pad_event_probe, decoder, NULL);
@@ -2140,7 +2140,7 @@ could_not_link:
 static void
 free_stream (gpointer value)
 {
-  g_slice_free (GstURIDecodeBinStream, value);
+  g_free (value);
 }
 
 /* remove source and all related elements */

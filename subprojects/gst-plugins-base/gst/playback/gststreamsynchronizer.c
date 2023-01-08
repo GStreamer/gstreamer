@@ -105,7 +105,7 @@ gst_syncstream_unref (GstSyncStream * stream)
   g_return_if_fail (stream->refcount > 0);
 
   if (g_atomic_int_dec_and_test (&stream->refcount))
-    g_slice_free (GstSyncStream, stream);
+    g_free (stream);
 }
 
 G_BEGIN_DECLS
@@ -879,7 +879,7 @@ gst_stream_synchronizer_new_pad (GstStreamSynchronizer * sync)
   GstStreamSyncPad *sinkpad, *srcpad;
   gchar *tmp;
 
-  stream = g_slice_new0 (GstSyncStream);
+  stream = g_new0 (GstSyncStream, 1);
   stream->transform = sync;
   stream->stream_number = sync->current_stream_number;
   g_cond_init (&stream->stream_finish_cond);

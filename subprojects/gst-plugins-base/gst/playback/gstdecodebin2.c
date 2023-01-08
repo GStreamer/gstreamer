@@ -1803,7 +1803,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       capsfilter = delem->capsfilter =
           gst_element_factory_make ("capsfilter", NULL);
     } else {
-      delem = g_slice_new0 (GstDecodeElement);
+      delem = g_new0 (GstDecodeElement, 1);
       capsfilter = delem->element =
           gst_element_factory_make ("capsfilter", NULL);
       delem->capsfilter = NULL;
@@ -1936,7 +1936,7 @@ setup_caps_delay:
     CHAIN_MUTEX_LOCK (chain);
     GST_LOG_OBJECT (dbin, "Chain %p has now %d dynamic pads", chain,
         g_list_length (chain->pending_pads));
-    ppad = g_slice_new0 (GstPendingPad);
+    ppad = g_new0 (GstPendingPad, 1);
     ppad->pad = gst_object_ref (pad);
     ppad->chain = chain;
     ppad->event_probe_id =
@@ -2403,7 +2403,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     GST_LOG_OBJECT (dbin, "linked on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
     CHAIN_MUTEX_LOCK (chain);
-    delem = g_slice_new0 (GstDecodeElement);
+    delem = g_new0 (GstDecodeElement, 1);
     delem->element = gst_object_ref (element);
     delem->capsfilter = NULL;
     chain->elements = g_list_prepend (chain->elements, delem);
@@ -2620,7 +2620,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         gst_element_set_state (tmp, GST_STATE_NULL);
 
         gst_object_unref (tmp);
-        g_slice_free (GstDecodeElement, dtmp);
+        g_free (dtmp);
 
         chain->elements = g_list_delete_link (chain->elements, chain->elements);
       } while (tmp != element);
@@ -3364,7 +3364,7 @@ gst_decode_chain_unref (GstDecodeChain * chain)
 {
   if (g_atomic_int_dec_and_test (&chain->refs)) {
     g_mutex_clear (&chain->lock);
-    g_slice_free (GstDecodeChain, chain);
+    g_free (chain);
   }
 }
 
@@ -3463,7 +3463,7 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
       gst_object_unref (element);
       l->data = NULL;
 
-      g_slice_free (GstDecodeElement, delem);
+      g_free (delem);
     }
   }
   if (!hide) {
@@ -3542,7 +3542,7 @@ static GstDecodeChain *
 gst_decode_chain_new (GstDecodeBin * dbin, GstDecodeGroup * parent,
     GstPad * pad)
 {
-  GstDecodeChain *chain = g_slice_new0 (GstDecodeChain);
+  GstDecodeChain *chain = g_new0 (GstDecodeChain, 1);
 
   GST_DEBUG_OBJECT (dbin, "Creating new chain %p with parent group %p", chain,
       parent);
@@ -3666,7 +3666,7 @@ gst_decode_group_free_internal (GstDecodeGroup * group, gboolean hide)
   GST_DEBUG_OBJECT (group->dbin, "%s group %p", (hide ? "Hid" : "Freed"),
       group);
   if (!hide)
-    g_slice_free (GstDecodeGroup, group);
+    g_free (group);
 }
 
 /* gst_decode_group_free:
@@ -3846,7 +3846,7 @@ decodebin_set_queue_size_full (GstDecodeBin * dbin, GstElement * multiqueue,
 static GstDecodeGroup *
 gst_decode_group_new (GstDecodeBin * dbin, GstDecodeChain * parent)
 {
-  GstDecodeGroup *group = g_slice_new0 (GstDecodeGroup);
+  GstDecodeGroup *group = g_new0 (GstDecodeGroup, 1);
   GstElement *mq;
   gboolean seekable;
 
@@ -3889,7 +3889,7 @@ missing_multiqueue:
         gst_missing_element_message_new (GST_ELEMENT_CAST (dbin),
             "multiqueue"));
     GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL), ("no multiqueue!"));
-    g_slice_free (GstDecodeGroup, group);
+    g_free (group);
     return NULL;
   }
 }
@@ -5231,7 +5231,7 @@ gst_pending_pad_free (GstPendingPad * ppad)
   if (ppad->notify_caps_id)
     g_signal_handler_disconnect (ppad->pad, ppad->notify_caps_id);
   gst_object_unref (ppad->pad);
-  g_slice_free (GstPendingPad, ppad);
+  g_free (ppad);
 }
 
 /*****

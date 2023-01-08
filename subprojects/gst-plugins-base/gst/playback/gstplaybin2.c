@@ -3959,7 +3959,7 @@ avelements_free (gpointer avelement)
     gst_object_unref (elm->dec);
   if (elm->sink)
     gst_object_unref (elm->sink);
-  g_slice_free (GstAVElement, elm);
+  g_free (elm);
 }
 
 static gint
@@ -4085,7 +4085,7 @@ avelements_create (GstPlayBin * playbin, gboolean isaudioelement)
       if (n_common_cf < 1)
         continue;
 
-      ave = g_slice_new (GstAVElement);
+      ave = g_new (GstAVElement, 1);
       ave->dec = gst_object_ref (d_factory);
       ave->sink = gst_object_ref (s_factory);
       ave->n_comm_cf = n_common_cf;
@@ -4146,7 +4146,7 @@ create_decoders_list (GList * factory_list, GSequence * avelements,
           g_sequence_lookup (avelements, factory,
           (GCompareDataFunc) avelement_lookup_decoder, NULL);
       if (!seq_iter) {
-        GstAVElement *ave = g_slice_new0 (GstAVElement);
+        GstAVElement *ave = g_new0 (GstAVElement, 1);
 
         ave->dec = factory;
         ave->sink = NULL;
@@ -4196,7 +4196,7 @@ create_decoders_list (GList * factory_list, GSequence * avelements,
   gst_plugin_feature_list_free (factory_list);
 
   for (tmp = ave_free_list; tmp; tmp = tmp->next)
-    g_slice_free (GstAVElement, tmp->data);
+    g_free (tmp->data);
   g_list_free (ave_free_list);
 
   dec_list = g_list_reverse (dec_list);

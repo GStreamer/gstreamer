@@ -675,7 +675,7 @@ add_output_pad (GstURIDecodeBin3 * dec, GstPad * target_pad)
   gchar *pad_name;
   GstEvent *stream_start;
 
-  output = g_slice_new0 (OutputPad);
+  output = g_new0 (OutputPad, 1);
 
   GST_LOG_OBJECT (dec, "Created output %p", output);
 
@@ -751,7 +751,7 @@ db_pad_removed_cb (GstElement * element, GstPad * pad, GstURIDecodeBin3 * dec)
     /* Remove event probe */
     gst_pad_remove_probe (output->target_pad, output->probe_id);
 
-    g_slice_free (OutputPad, output);
+    g_free (output);
 
     check_output_group_id (dec);
   }
@@ -1321,7 +1321,7 @@ static void
 src_pad_added_cb (GstElement * element, GstPad * pad,
     GstSourceHandler * handler)
 {
-  GstSourcePad *spad = g_slice_new0 (GstSourcePad);
+  GstSourcePad *spad = g_new0 (GstSourcePad, 1);
   GstURIDecodeBin3 *uridecodebin;
 
   uridecodebin = handler->uridecodebin;
@@ -1401,7 +1401,7 @@ src_pad_removed_cb (GstElement * element, GstPad * pad,
     gst_object_unref (spad->stream);
 
   handler->sourcepads = g_list_remove (handler->sourcepads, spad);
-  g_slice_free (GstSourcePad, spad);
+  g_free (spad);
 }
 
 static void
@@ -1427,7 +1427,7 @@ new_source_handler (GstURIDecodeBin3 * uridecodebin, GstPlayItem * item,
 {
   GstSourceHandler *handler;
 
-  handler = g_slice_new0 (GstSourceHandler);
+  handler = g_new0 (GstSourceHandler, 1);
 
   handler->uridecodebin = uridecodebin;
   handler->play_item = item;
@@ -1653,13 +1653,13 @@ free_source_handler (GstURIDecodeBin3 * uridecodebin,
   }
   if (handler->pending_buffering_msg)
     gst_message_unref (handler->pending_buffering_msg);
-  g_slice_free (GstSourceHandler, handler);
+  g_free (handler);
 }
 
 static GstSourceItem *
 new_source_item (GstURIDecodeBin3 * dec, GstPlayItem * item, gchar * uri)
 {
-  GstSourceItem *sourceitem = g_slice_new0 (GstSourceItem);
+  GstSourceItem *sourceitem = g_new0 (GstSourceItem, 1);
 
   sourceitem->play_item = item;
   sourceitem->uri = uri;
@@ -1674,7 +1674,7 @@ free_source_item (GstURIDecodeBin3 * uridecodebin, GstSourceItem * item)
   if (item->handler)
     free_source_handler (uridecodebin, item->handler);
   g_free (item->uri);
-  g_slice_free (GstSourceItem, item);
+  g_free (item);
 }
 
 static void
@@ -1691,7 +1691,7 @@ source_item_set_uri (GstSourceItem * item, const gchar * uri)
 static GstPlayItem *
 new_play_item (GstURIDecodeBin3 * dec)
 {
-  GstPlayItem *item = g_slice_new0 (GstPlayItem);
+  GstPlayItem *item = g_new0 (GstPlayItem, 1);
 
   item->uridecodebin = dec;
   item->group_id = GST_GROUP_ID_INVALID;
@@ -1708,7 +1708,7 @@ free_play_item (GstURIDecodeBin3 * dec, GstPlayItem * item)
   if (item->sub_item)
     free_source_item (dec, item->sub_item);
 
-  g_slice_free (GstPlayItem, item);
+  g_free (item);
 }
 
 static void
