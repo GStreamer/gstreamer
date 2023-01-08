@@ -556,7 +556,7 @@ gst_test_clock_add_entry (GstTestClock * test_clock,
   if (jitter != NULL)
     *jitter = GST_CLOCK_DIFF (GST_CLOCK_ENTRY_TIME (entry), now);
 
-  ctx = g_slice_new (GstClockEntryContext);
+  ctx = g_new (GstClockEntryContext, 1);
   ctx->clock_entry = GST_CLOCK_ENTRY (gst_clock_id_ref (entry));
   ctx->time_diff = GST_CLOCK_DIFF (now, GST_CLOCK_ENTRY_TIME (entry));
 
@@ -576,7 +576,7 @@ gst_test_clock_remove_entry (GstTestClock * test_clock, GstClockEntry * entry)
   if (ctx != NULL) {
     gst_clock_id_unref (ctx->clock_entry);
     priv->entry_contexts = g_list_remove (priv->entry_contexts, ctx);
-    g_slice_free (GstClockEntryContext, ctx);
+    g_free (ctx);
 
     g_cond_broadcast (&priv->entry_processed_cond);
   }

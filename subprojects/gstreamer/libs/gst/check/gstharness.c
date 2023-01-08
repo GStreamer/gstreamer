@@ -2898,13 +2898,13 @@ gst_harness_thread_init (GstHarnessThread * t, GDestroyNotify freefunc,
 static void
 gst_harness_thread_free (GstHarnessThread * t)
 {
-  g_slice_free (GstHarnessThread, t);
+  g_free (t);
 }
 
 static void
 gst_harness_custom_thread_free (GstHarnessCustomThread * t)
 {
-  g_slice_free (GstHarnessCustomThread, t);
+  g_free (t);
 }
 
 static void
@@ -2914,7 +2914,7 @@ gst_harness_push_buffer_thread_free (GstHarnessPushBufferThread * t)
     gst_caps_replace (&t->caps, NULL);
     if (t->notify != NULL)
       t->notify (t->data);
-    g_slice_free (GstHarnessPushBufferThread, t);
+    g_free (t);
   }
 }
 
@@ -2924,7 +2924,7 @@ gst_harness_push_event_thread_free (GstHarnessPushEventThread * t)
   if (t != NULL) {
     if (t->notify != NULL)
       t->notify (t->data);
-    g_slice_free (GstHarnessPushEventThread, t);
+    g_free (t);
   }
 }
 
@@ -2934,7 +2934,7 @@ gst_harness_property_thread_free (GstHarnessPropThread * t)
   if (t != NULL) {
     g_free (t->name);
     g_value_unset (&t->value);
-    g_slice_free (GstHarnessPropThread, t);
+    g_free (t);
   }
 }
 
@@ -2963,7 +2963,7 @@ gst_harness_requestpad_thread_free (GstHarnessReqPadThread * t)
     gst_caps_replace (&t->caps, NULL);
 
     gst_harness_requestpad_release_pads (t);
-    g_slice_free (GstHarnessReqPadThread, t);
+    g_free (t);
   }
 }
 
@@ -3209,7 +3209,7 @@ GstHarnessThread *
 gst_harness_stress_custom_start (GstHarness * h,
     GFunc init, GFunc callback, gpointer data, gulong sleep)
 {
-  GstHarnessCustomThread *t = g_slice_new0 (GstHarnessCustomThread);
+  GstHarnessCustomThread *t = g_new0 (GstHarnessCustomThread, 1);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_custom_thread_free, h, sleep);
 
@@ -3239,7 +3239,7 @@ gst_harness_stress_custom_start (GstHarness * h,
 GstHarnessThread *
 gst_harness_stress_statechange_start_full (GstHarness * h, gulong sleep)
 {
-  GstHarnessThread *t = g_slice_new0 (GstHarnessThread);
+  GstHarnessThread *t = g_new0 (GstHarnessThread, 1);
   gst_harness_thread_init (t,
       (GDestroyNotify) gst_harness_thread_free, h, sleep);
   GST_HARNESS_THREAD_START (statechange, t);
@@ -3312,7 +3312,7 @@ gst_harness_stress_push_buffer_with_cb_start_full (GstHarness * h,
     GstHarnessPrepareBufferFunc func, gpointer data, GDestroyNotify notify,
     gulong sleep)
 {
-  GstHarnessPushBufferThread *t = g_slice_new0 (GstHarnessPushBufferThread);
+  GstHarnessPushBufferThread *t = g_new0 (GstHarnessPushBufferThread, 1);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_push_buffer_thread_free, h, sleep);
 
@@ -3375,7 +3375,7 @@ gst_harness_stress_push_event_with_cb_start_full (GstHarness * h,
     GstHarnessPrepareEventFunc func, gpointer data, GDestroyNotify notify,
     gulong sleep)
 {
-  GstHarnessPushEventThread *t = g_slice_new0 (GstHarnessPushEventThread);
+  GstHarnessPushEventThread *t = g_new0 (GstHarnessPushEventThread, 1);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_push_event_thread_free, h, sleep);
 
@@ -3436,7 +3436,7 @@ gst_harness_stress_push_upstream_event_with_cb_start_full (GstHarness * h,
     GstHarnessPrepareEventFunc func, gpointer data, GDestroyNotify notify,
     gulong sleep)
 {
-  GstHarnessPushEventThread *t = g_slice_new0 (GstHarnessPushEventThread);
+  GstHarnessPushEventThread *t = g_new0 (GstHarnessPushEventThread, 1);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_push_event_thread_free, h, sleep);
 
@@ -3468,7 +3468,7 @@ GstHarnessThread *
 gst_harness_stress_property_start_full (GstHarness * h,
     const gchar * name, const GValue * value, gulong sleep)
 {
-  GstHarnessPropThread *t = g_slice_new0 (GstHarnessPropThread);
+  GstHarnessPropThread *t = g_new0 (GstHarnessPropThread, 1);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_property_thread_free, h, sleep);
 
@@ -3503,7 +3503,7 @@ gst_harness_stress_requestpad_start_full (GstHarness * h,
     GstPadTemplate * templ, const gchar * name, GstCaps * caps,
     gboolean release, gulong sleep)
 {
-  GstHarnessReqPadThread *t = g_slice_new0 (GstHarnessReqPadThread);
+  GstHarnessReqPadThread *t = g_new0 (GstHarnessReqPadThread, 1);
   gst_harness_thread_init (&t->t,
       (GDestroyNotify) gst_harness_requestpad_thread_free, h, sleep);
 

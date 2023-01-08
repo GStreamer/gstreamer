@@ -99,7 +99,7 @@ gst_check_alloc_log_filter (const gchar * log_domain, GLogLevelFlags log_level,
 {
   GstCheckLogFilter *filter;
 
-  filter = g_slice_new (GstCheckLogFilter);
+  filter = g_new (GstCheckLogFilter, 1);
   filter->log_domain = g_strdup (log_domain);
   filter->log_level = log_level;
   filter->regex = regex;
@@ -120,7 +120,7 @@ gst_check_free_log_filter (GstCheckLogFilter * filter)
   g_regex_unref (filter->regex);
   if (filter->destroy)
     filter->destroy (filter->user_data);
-  g_slice_free (GstCheckLogFilter, filter);
+  g_free (filter);
 }
 
 
@@ -1271,7 +1271,7 @@ gst_check_objects_destroyed_on_unref (gpointer object_to_unref,
 {
   GObject *object;
   GList *objs = NULL, *tmp;
-  DestroyedObjectStruct *destroyed = g_slice_new0 (DestroyedObjectStruct);
+  DestroyedObjectStruct *destroyed = g_new0 (DestroyedObjectStruct, 1);
 
   destroyed->object = object_to_unref;
   g_object_weak_ref (object_to_unref, (GWeakNotify) weak_notify, destroyed);
@@ -1284,7 +1284,7 @@ gst_check_objects_destroyed_on_unref (gpointer object_to_unref,
 
     va_start (varargs, first_object);
     while (object) {
-      destroyed = g_slice_new0 (DestroyedObjectStruct);
+      destroyed = g_new0 (DestroyedObjectStruct, 1);
       destroyed->object = object;
       g_object_weak_ref (object, (GWeakNotify) weak_notify, destroyed);
       objs = g_list_prepend (objs, destroyed);
@@ -1305,7 +1305,7 @@ gst_check_objects_destroyed_on_unref (gpointer object_to_unref,
           G_OBJECT_TYPE_NAME (destroyed), destroyed->object,
           destroyed->object->ref_count);
     }
-    g_slice_free (DestroyedObjectStruct, tmp->data);
+    g_free (tmp->data);
   }
   g_list_free (objs);
 }
