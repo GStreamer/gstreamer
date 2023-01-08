@@ -225,7 +225,7 @@ gst_jif_mux_marker_free (GstJifMuxMarker * m)
   if (m->owned)
     g_free ((gpointer) m->data);
 
-  g_slice_free (GstJifMuxMarker, m);
+  g_free (m);
 }
 
 static void
@@ -246,7 +246,7 @@ static GstJifMuxMarker *
 gst_jif_mux_new_marker (guint8 marker, guint16 size, const guint8 * data,
     gboolean owned)
 {
-  GstJifMuxMarker *m = g_slice_new (GstJifMuxMarker);
+  GstJifMuxMarker *m = g_new (GstJifMuxMarker, 1);
 
   m->marker = marker;
   m->size = size;
