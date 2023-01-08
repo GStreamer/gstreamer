@@ -118,7 +118,7 @@ gst_tag_xmp_writer_data_free (gpointer p)
   }
   g_mutex_clear (&data->lock);
 
-  g_slice_free (GstTagXmpWriterData, data);
+  g_free (data);
 }
 
 static GstTagXmpWriterData *
@@ -135,7 +135,7 @@ gst_tag_xmp_writer_get_data (GstTagXmpWriter * xmpconfig)
 
     data = g_object_get_qdata (G_OBJECT (xmpconfig), tag_xmp_writer_key);
     if (!data) {
-      data = g_slice_new (GstTagXmpWriterData);
+      data = g_new (GstTagXmpWriterData, 1);
 
       g_mutex_init (&data->lock);
       data->schemas = NULL;

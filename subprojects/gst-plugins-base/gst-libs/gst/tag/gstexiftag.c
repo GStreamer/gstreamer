@@ -480,7 +480,7 @@ gst_exif_reader_add_pending_tag (GstExifReader * reader, GstExifTagData * data)
 {
   GstExifTagData *copy;
 
-  copy = g_slice_new (GstExifTagData);
+  copy = g_new (GstExifTagData, 1);
   memcpy (copy, data, sizeof (GstExifTagData));
 
   reader->pending_tags = g_slist_prepend (reader->pending_tags, copy);
@@ -509,7 +509,7 @@ gst_exif_reader_reset (GstExifReader * reader, gboolean return_taglist)
   for (walker = reader->pending_tags; walker; walker = g_slist_next (walker)) {
     GstExifTagData *data = (GstExifTagData *) walker->data;
 
-    g_slice_free (GstExifTagData, data);
+    g_free (data);
   }
   g_slist_free (reader->pending_tags);
 
