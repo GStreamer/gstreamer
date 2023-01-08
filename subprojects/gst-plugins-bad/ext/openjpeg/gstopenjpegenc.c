@@ -1101,7 +1101,7 @@ static GstOpenJPEGCodecMessage *
 gst_openjpeg_encode_message_new (GstOpenJPEGEnc * self,
     GstVideoCodecFrame * frame, int num_stripe)
 {
-  GstOpenJPEGCodecMessage *message = g_slice_new0 (GstOpenJPEGCodecMessage);
+  GstOpenJPEGCodecMessage *message = g_new0 (GstOpenJPEGCodecMessage, 1);
 
   message->frame = gst_video_codec_frame_ref (frame);
   message->stripe = num_stripe;
@@ -1117,7 +1117,7 @@ gst_openjpeg_encode_message_free (GstOpenJPEGCodecMessage * message)
     gst_video_codec_frame_unref (message->frame);
     if (message->output_buffer)
       gst_buffer_unref (message->output_buffer);
-    g_slice_free (GstOpenJPEGCodecMessage, message);
+    g_free (message);
   }
   return NULL;
 }
