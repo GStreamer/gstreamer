@@ -170,7 +170,7 @@ GST_ELEMENT_REGISTER_DEFINE (ristsrc, "ristsrc", GST_RANK_PRIMARY,
 static RistReceiverBond *
 gst_rist_src_add_bond (GstRistSrc * src)
 {
-  RistReceiverBond *bond = g_slice_new0 (RistReceiverBond);
+  RistReceiverBond *bond = g_new0 (RistReceiverBond, 1);
   GstPad *pad, *gpad;
   gchar name[32];
 
@@ -200,7 +200,7 @@ gst_rist_src_add_bond (GstRistSrc * src)
     g_clear_object (&bond->rtp_src);
     g_clear_object (&bond->rtcp_src);
     g_clear_object (&bond->rtcp_sink);
-    g_slice_free (RistReceiverBond, bond);
+    g_free (bond);
     src->missing_plugin = "udp";
     return NULL;
   }
@@ -1239,7 +1239,7 @@ gst_rist_src_finalize (GObject * object)
     g_free (bond->address);
     g_free (bond->multicast_iface);
     g_clear_object (&bond->rtcp_send_addr);
-    g_slice_free (RistReceiverBond, bond);
+    g_free (bond);
   }
   g_ptr_array_free (src->bonds, TRUE);
 

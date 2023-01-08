@@ -196,7 +196,7 @@ GQuark session_id_quark = 0;
 static RistSenderBond *
 gst_rist_sink_add_bond (GstRistSink * sink)
 {
-  RistSenderBond *bond = g_slice_new0 (RistSenderBond);
+  RistSenderBond *bond = g_new0 (RistSenderBond, 1);
   GstPad *pad, *gpad;
   gchar name[32];
 
@@ -206,7 +206,7 @@ gst_rist_sink_add_bond (GstRistSink * sink)
   g_snprintf (name, 32, "rist_rtp_udpsink%u", bond->session);
   bond->rtp_sink = gst_element_factory_make ("udpsink", name);
   if (!bond->rtp_sink) {
-    g_slice_free (RistSenderBond, bond);
+    g_free (bond);
     sink->missing_plugin = "udp";
     return NULL;
   }
@@ -231,7 +231,7 @@ gst_rist_sink_add_bond (GstRistSink * sink)
   bond->rtx_send = gst_element_factory_make ("ristrtxsend", name);
   if (!bond->rtx_send) {
     sink->missing_plugin = "rtpmanager";
-    g_slice_free (RistSenderBond, bond);
+    g_free (bond);
     return NULL;
   }
   gst_bin_add (GST_BIN (sink->rtxbin), bond->rtx_send);
@@ -1314,7 +1314,7 @@ gst_rist_sink_finalize (GObject * object)
     RistSenderBond *bond = g_ptr_array_index (sink->bonds, i);
     g_free (bond->address);
     g_free (bond->multicast_iface);
-    g_slice_free (RistSenderBond, bond);
+    g_free (bond);
   }
   g_ptr_array_free (sink->bonds, TRUE);
 
