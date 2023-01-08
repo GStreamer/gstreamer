@@ -267,7 +267,7 @@ gst_gdk_pixbuf_sink_pixbuf_destroy_notify (guchar * pixels,
 {
   gst_video_frame_unmap (frame);
   gst_buffer_unref (frame->buffer);
-  g_slice_free (GstVideoFrame, frame);
+  g_free (frame);
 }
 
 static GdkPixbuf *
@@ -281,7 +281,7 @@ gst_gdk_pixbuf_sink_get_pixbuf_from_buffer (GstGdkPixbufSink * sink,
   g_return_val_if_fail (GST_VIDEO_SINK_WIDTH (sink) > 0, NULL);
   g_return_val_if_fail (GST_VIDEO_SINK_HEIGHT (sink) > 0, NULL);
 
-  frame = g_slice_new0 (GstVideoFrame);
+  frame = g_new0 (GstVideoFrame, 1);
   gst_video_frame_map (frame, &sink->info, buf, GST_MAP_READ);
 
   bytes_per_pixel = (sink->has_alpha) ? 4 : 3;
