@@ -125,7 +125,7 @@ gst_va_buffer_surface_unref (gpointer data)
     GST_LOG_OBJECT (buf->display, "Destroying surface %#x", buf->surface);
     va_destroy_surfaces (buf->display, &buf->surface, 1);
     gst_clear_object (&buf->display);
-    g_slice_free (GstVaBufferSurface, buf);
+    g_free (buf);
   }
 }
 
@@ -133,7 +133,7 @@ static GstVaBufferSurface *
 gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
     gint width, gint height)
 {
-  GstVaBufferSurface *buf = g_slice_new (GstVaBufferSurface);
+  GstVaBufferSurface *buf = g_new (GstVaBufferSurface, 1);
 
   g_atomic_int_set (&buf->ref_count, 0);
   g_atomic_int_set (&buf->ref_mems_count, 0);
@@ -194,7 +194,7 @@ gst_va_memory_pool_flush_unlocked (GstVaMemoryPool * self,
         GST_LOG ("Destroying surface %#x", buf->surface);
         va_destroy_surfaces (display, &buf->surface, 1);
         self->surface_count -= 1;       /* GstVaDmabufAllocator */
-        g_slice_free (GstVaBufferSurface, buf);
+        g_free (buf);
       }
     } else {
       self->surface_count -= 1; /* GstVaAllocator */
@@ -1170,7 +1170,7 @@ _va_free (GstAllocator * allocator, GstMemory * mem)
 
   g_mutex_clear (&va_mem->lock);
 
-  g_slice_free (GstVaMemory, va_mem);
+  g_free (va_mem);
 }
 
 static void
@@ -1444,7 +1444,7 @@ _va_share (GstMemory * mem, gssize offset, gssize size)
   if (size == -1)
     size = mem->maxsize - offset;
 
-  sub = g_slice_new (GstVaMemory);
+  sub = g_new (GstVaMemory, 1);
 
   /* the shared memory is alwyas readonly */
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
@@ -1593,7 +1593,7 @@ gst_va_allocator_alloc (GstAllocator * allocator)
           &surface, 1))
     return NULL;
 
-  mem = g_slice_new (GstVaMemory);
+  mem = g_new (GstVaMemory, 1);
 
   mem->surface = surface;
   mem->surface_format = self->surface_format;

@@ -71,7 +71,7 @@ gst_va_surface_copy_new (GstVaDisplay * display, GstVideoInfo * vinfo)
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), NULL);
   g_return_val_if_fail (vinfo != NULL, NULL);
 
-  self = g_slice_new (GstVaSurfaceCopy);
+  self = g_new (GstVaSurfaceCopy, 1);
   self->display = gst_object_ref (display);
   self->has_copy = _has_copy (display);
   self->info = *vinfo;
@@ -89,7 +89,7 @@ gst_va_surface_copy_free (GstVaSurfaceCopy * self)
 
   g_rec_mutex_clear (&self->lock);
 
-  g_slice_free (GstVaSurfaceCopy, self);
+  g_free (self);
 }
 
 gboolean
