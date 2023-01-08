@@ -174,7 +174,7 @@ free_latency_stats (gpointer data)
   GstLatencyStats *ls = data;
 
   g_free (ls->name);
-  g_slice_free (GstLatencyStats, data);
+  g_free (data);
 }
 
 static void
@@ -304,7 +304,7 @@ free_thread_stats (gpointer data)
 static GstPluginStats *
 new_plugin_stats (const gchar * plugin_name)
 {
-  GstPluginStats *plugin = g_slice_new (GstPluginStats);
+  GstPluginStats *plugin = g_new0 (GstPluginStats, 1);
   guint i;
 
   plugin->name = g_strdup (plugin_name);
@@ -328,7 +328,7 @@ free_plugin_stats (gpointer data)
   for (i = 0; i < N_FACTORY_TYPES; i++)
     g_ptr_array_unref (plugin->factories[i]);
 
-  g_slice_free (GstPluginStats, data);
+  g_free (data);
 }
 
 static void

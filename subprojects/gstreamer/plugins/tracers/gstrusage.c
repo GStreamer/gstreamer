@@ -74,13 +74,13 @@ static GPrivate thread_stats_key = G_PRIVATE_INIT (free_thread_stats);
 static void
 free_trace_value (gpointer data)
 {
-  g_slice_free (GstTraceValue, data);
+  g_free (data);
 }
 
 static GstTraceValues *
 make_trace_values (GstClockTime window)
 {
-  GstTraceValues *self = g_slice_new0 (GstTraceValues);
+  GstTraceValues *self = g_new0 (GstTraceValues, 1);
   self->window = window;
   g_queue_init (&self->values);
   return self;
@@ -91,7 +91,7 @@ free_trace_values (GstTraceValues * self)
 {
   g_queue_foreach (&self->values, (GFunc) free_trace_value, NULL);
   g_queue_clear (&self->values);
-  g_slice_free (GstTraceValues, self);
+  g_free (self);
 }
 
 static gboolean
@@ -136,7 +136,7 @@ update_trace_value (GstTraceValues * self, GstClockTime nts,
   lv = q->head ? q->head->data : NULL;
   if (!lv || (GST_CLOCK_DIFF (lv->ts, nts) > (window / WINDOW_SUBDIV))) {
     /* push the new measurement */
-    lv = g_slice_new0 (GstTraceValue);
+    lv = g_new0 (GstTraceValue, 1);
     lv->ts = nts;
     lv->val = nval;
     g_queue_push_head (q, lv);
