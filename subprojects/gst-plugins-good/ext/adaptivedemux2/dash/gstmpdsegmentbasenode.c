@@ -32,7 +32,7 @@ gst_mpd_segment_base_node_finalize (GObject * object)
   GstMPDSegmentBaseNode *self = GST_MPD_SEGMENT_BASE_NODE (object);
 
   if (self->indexRange)
-    g_slice_free (GstXMLRange, self->indexRange);
+    g_free (self->indexRange);
   gst_mpd_url_type_node_free (self->Initialization);
   gst_mpd_url_type_node_free (self->RepresentationIndex);
 

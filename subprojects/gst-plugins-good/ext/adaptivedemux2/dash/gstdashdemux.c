@@ -3661,7 +3661,7 @@ gst_dash_demux_clock_drift_new (GstDashDemux2 * demux)
 {
   GstDashDemux2ClockDrift *clock_drift;
 
-  clock_drift = g_slice_new0 (GstDashDemux2ClockDrift);
+  clock_drift = g_new0 (GstDashDemux2ClockDrift, 1);
   g_mutex_init (&clock_drift->clock_lock);
   clock_drift->next_update =
       GST_TIME_AS_USECONDS (gst_adaptive_demux2_get_monotonic_time
@@ -3678,7 +3678,7 @@ gst_dash_demux_clock_drift_free (GstDashDemux2ClockDrift * clock_drift)
       g_object_unref (clock_drift->ntp_clock);
     g_mutex_unlock (&clock_drift->clock_lock);
     g_mutex_clear (&clock_drift->clock_lock);
-    g_slice_free (GstDashDemux2ClockDrift, clock_drift);
+    g_free (clock_drift);
   }
 }
 

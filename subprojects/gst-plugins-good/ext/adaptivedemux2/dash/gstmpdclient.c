@@ -795,7 +795,7 @@ gst_mpd_client2_add_media_segment (GstActiveStream * stream,
 
   g_return_val_if_fail (stream->segments != NULL, FALSE);
 
-  media_segment = g_slice_new0 (GstMediaSegment);
+  media_segment = g_new0 (GstMediaSegment, 1);
 
   media_segment->SegmentURL = url_node;
   media_segment->number = number;
@@ -1420,7 +1420,7 @@ gst_mpd_client2_setup_media_presentation (GstMPDClient2 * client,
       goto syntax_error;
     }
 
-    stream_period = g_slice_new0 (GstStreamPeriod);
+    stream_period = g_new0 (GstStreamPeriod, 1);
     client->periods = g_list_append (client->periods, stream_period);
     stream_period->period = period_node;
     stream_period->number = idx++;
@@ -1624,7 +1624,7 @@ gst_mpd_client2_setup_streaming (GstMPDClient2 * client,
     return FALSE;
   }
 
-  stream = g_slice_new0 (GstActiveStream);
+  stream = g_new0 (GstActiveStream, 1);
   gst_mpdparser_init_active_stream_segments (stream);
 
   stream->baseURL_idx = 0;

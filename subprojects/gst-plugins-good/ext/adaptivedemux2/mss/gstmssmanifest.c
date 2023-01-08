@@ -211,7 +211,7 @@ node_has_type (xmlNodePtr node, const gchar * name)
 static GstMssStreamQuality *
 gst_mss_stream_quality_new (xmlNodePtr node)
 {
-  GstMssStreamQuality *q = g_slice_new (GstMssStreamQuality);
+  GstMssStreamQuality *q = g_new (GstMssStreamQuality, 1);
 
   q->xmlnode = node;
   q->bitrate_str = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_BITRATE);
@@ -230,7 +230,7 @@ gst_mss_stream_quality_free (GstMssStreamQuality * quality)
   g_return_if_fail (quality != NULL);
 
   xmlFree (quality->bitrate_str);
-  g_slice_free (GstMssStreamQuality, quality);
+  g_free (quality);
 }
 
 static gint

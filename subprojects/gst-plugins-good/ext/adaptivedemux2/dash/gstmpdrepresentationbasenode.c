@@ -65,21 +65,21 @@ gst_mpd_representation_base_node_set_property (GObject * object, guint prop_id,
       self->height = g_value_get_uint (value);
       break;
     case PROP_MPD_REPRESENTATION_BASE_SAR:
-      g_slice_free (GstXMLRatio, self->sar);
+      g_free (self->sar);
       self->sar = gst_xml_helper_clone_ratio (g_value_get_pointer (value));
       break;
     case PROP_MPD_REPRESENTATION_BASE_MIN_FRAME_RATE:
-      g_slice_free (GstXMLFrameRate, self->minFrameRate);
+      g_free (self->minFrameRate);
       self->minFrameRate =
           gst_xml_helper_clone_frame_rate (g_value_get_pointer (value));
       break;
     case PROP_MPD_REPRESENTATION_BASE_MAX_FRAME_RATE:
-      g_slice_free (GstXMLFrameRate, self->maxFrameRate);
+      g_free (self->maxFrameRate);
       self->maxFrameRate =
           gst_xml_helper_clone_frame_rate (g_value_get_pointer (value));
       break;
     case PROP_MPD_REPRESENTATION_BASE_FRAME_RATE:
-      g_slice_free (GstXMLFrameRate, self->frameRate);
+      g_free (self->frameRate);
       self->frameRate =
           gst_xml_helper_clone_frame_rate (g_value_get_pointer (value));
       break;
@@ -192,10 +192,10 @@ gst_mpd_representation_base_node_finalize (GObject * object)
 
   if (self->profiles)
     xmlFree (self->profiles);
-  g_slice_free (GstXMLRatio, self->sar);
-  g_slice_free (GstXMLFrameRate, self->frameRate);
-  g_slice_free (GstXMLFrameRate, self->minFrameRate);
-  g_slice_free (GstXMLFrameRate, self->maxFrameRate);
+  g_free (self->sar);
+  g_free (self->frameRate);
+  g_free (self->minFrameRate);
+  g_free (self->maxFrameRate);
   if (self->audioSamplingRate)
     xmlFree (self->audioSamplingRate);
   if (self->mimeType)

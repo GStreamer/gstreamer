@@ -79,9 +79,9 @@ gst_mpd_adaptation_set_node_finalize (GObject * object)
     xmlFree (self->lang);
   if (self->contentType)
     xmlFree (self->contentType);
-  g_slice_free (GstXMLRatio, self->par);
-  g_slice_free (GstXMLConditionalUintType, self->segmentAlignment);
-  g_slice_free (GstXMLConditionalUintType, self->subsegmentAlignment);
+  g_free (self->par);
+  g_free (self->segmentAlignment);
+  g_free (self->subsegmentAlignment);
   g_list_free_full (self->Accessibility,
       (GDestroyNotify) gst_mpd_descriptor_type_node_free);
   g_list_free_full (self->Role,

@@ -71,10 +71,10 @@ gst_mpd_segment_url_node_finalize (GObject * object)
 
   if (self->media)
     xmlFree (self->media);
-  g_slice_free (GstXMLRange, self->mediaRange);
+  g_free (self->mediaRange);
   if (self->index)
     xmlFree (self->index);
-  g_slice_free (GstXMLRange, self->indexRange);
+  g_free (self->indexRange);
 
   G_OBJECT_CLASS (gst_mpd_segment_url_node_parent_class)->finalize (object);
 }

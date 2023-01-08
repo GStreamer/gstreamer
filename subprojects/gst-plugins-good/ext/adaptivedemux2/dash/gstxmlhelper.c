@@ -287,7 +287,7 @@ gst_xml_helper_clone_range (GstXMLRange * range)
   GstXMLRange *clone = NULL;
 
   if (range) {
-    clone = g_slice_new0 (GstXMLRange);
+    clone = g_new0 (GstXMLRange, 1);
     clone->first_byte_pos = range->first_byte_pos;
     clone->last_byte_pos = range->last_byte_pos;
   }
@@ -301,7 +301,7 @@ gst_xml_helper_clone_ratio (GstXMLRatio * ratio)
   GstXMLRatio *clone = NULL;
 
   if (ratio) {
-    clone = g_slice_new0 (GstXMLRatio);
+    clone = g_new0 (GstXMLRatio, 1);
     clone->num = ratio->num;
     clone->den = ratio->den;
   }
@@ -315,7 +315,7 @@ gst_xml_helper_clone_frame_rate (GstXMLFrameRate * frameRate)
   GstXMLFrameRate *clone = NULL;
 
   if (frameRate) {
-    clone = g_slice_new0 (GstXMLFrameRate);
+    clone = g_new0 (GstXMLFrameRate, 1);
     clone->num = frameRate->num;
     clone->den = frameRate->den;
   }
@@ -628,7 +628,7 @@ gst_xml_helper_get_prop_range (xmlNode * a_node,
       goto error;
     }
     /* malloc return data structure */
-    *property_value = g_slice_new0 (GstXMLRange);
+    *property_value = g_new0 (GstXMLRange, 1);
     exists = TRUE;
     (*property_value)->first_byte_pos = first_byte_pos;
     (*property_value)->last_byte_pos = last_byte_pos;
@@ -685,7 +685,7 @@ gst_xml_helper_get_prop_ratio (xmlNode * a_node,
       }
     }
     /* malloc return data structure */
-    *property_value = g_slice_new0 (GstXMLRatio);
+    *property_value = g_new0 (GstXMLRatio, 1);
     exists = TRUE;
     (*property_value)->num = num;
     (*property_value)->den = den;
@@ -738,7 +738,7 @@ gst_xml_helper_get_prop_framerate (xmlNode * a_node,
       }
     }
     /* alloc return data structure */
-    *property_value = g_slice_new0 (GstXMLFrameRate);
+    *property_value = g_new0 (GstXMLFrameRate, 1);
     exists = TRUE;
     (*property_value)->num = num;
     (*property_value)->den = den;
@@ -786,7 +786,7 @@ gst_xml_helper_get_prop_cond_uint (xmlNode * a_node,
     }
 
     /* alloc return data structure */
-    *property_value = g_slice_new0 (GstXMLConditionalUintType);
+    *property_value = g_new0 (GstXMLConditionalUintType, 1);
     exists = TRUE;
     (*property_value)->flag = flag;
     (*property_value)->value = val;

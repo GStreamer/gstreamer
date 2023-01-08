@@ -32,7 +32,7 @@ gst_mpd_url_type_node_finalize (GObject * object)
 
   if (self->sourceURL)
     xmlFree (self->sourceURL);
-  g_slice_free (GstXMLRange, self->range);
+  g_free (self->range);
   g_free (self->node_name);
 
   G_OBJECT_CLASS (gst_mpd_url_type_node_parent_class)->finalize (object);

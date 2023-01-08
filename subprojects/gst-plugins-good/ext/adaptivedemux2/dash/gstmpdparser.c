@@ -289,7 +289,7 @@ gst_mpdparser_parse_seg_base_type_ext (GstMPDSegmentBaseNode ** pointer,
   }
   if (gst_xml_helper_get_prop_range (a_node, "indexRange", &rangeval)) {
     if (seg_base_type->indexRange) {
-      g_slice_free (GstXMLRange, seg_base_type->indexRange);
+      g_free (seg_base_type->indexRange);
     }
     seg_base_type->indexRange = rangeval;
   }
@@ -1362,7 +1362,7 @@ void
 gst_mpdparser_free_stream_period (GstStreamPeriod * stream_period)
 {
   if (stream_period) {
-    g_slice_free (GstStreamPeriod, stream_period);
+    g_free (stream_period);
   }
 }
 
@@ -1370,7 +1370,7 @@ void
 gst_mpdparser_free_media_segment (GstMediaSegment * media_segment)
 {
   if (media_segment) {
-    g_slice_free (GstMediaSegment, media_segment);
+    g_free (media_segment);
   }
 }
 
@@ -1393,7 +1393,7 @@ gst_mpdparser_free_active_stream (GstActiveStream * active_stream)
     active_stream->queryURL = NULL;
     if (active_stream->segments)
       g_ptr_array_unref (active_stream->segments);
-    g_slice_free (GstActiveStream, active_stream);
+    g_free (active_stream);
   }
 }
 

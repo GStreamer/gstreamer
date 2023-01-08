@@ -53,7 +53,7 @@ DownloadRequest *
 download_request_new (void)
 {
   DownloadRequest *request =
-      (DownloadRequest *) g_slice_new0 (DownloadRequestPrivate);
+      (DownloadRequest *) g_new0 (DownloadRequestPrivate, 1);
   DownloadRequestPrivate *priv = DOWNLOAD_REQUEST_PRIVATE (request);
 
   g_atomic_int_set (&request->ref_count, 1);
@@ -122,7 +122,7 @@ download_request_free (DownloadRequest * request)
 
   g_rec_mutex_clear (&priv->lock);
 
-  g_slice_free1 (sizeof (DownloadRequestPrivate), priv);
+  g_free (priv);
 }
 
 void

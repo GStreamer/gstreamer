@@ -745,7 +745,7 @@ gst_adaptive_demux_output_slot_free (GstAdaptiveDemux * demux,
   if (slot->pending_track)
     gst_adaptive_demux_track_unref (slot->pending_track);
 
-  g_slice_free (OutputSlot, slot);
+  g_free (slot);
 }
 
 static OutputSlot *
@@ -779,7 +779,7 @@ gst_adaptive_demux_output_slot_new (GstAdaptiveDemux * demux,
       return NULL;
   }
 
-  slot = g_slice_new0 (OutputSlot);
+  slot = g_new0 (OutputSlot, 1);
   slot->type = streamtype;
   slot->pushed_timed_data = FALSE;
 

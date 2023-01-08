@@ -35,7 +35,7 @@ gst_mpd_content_component_node_finalize (GObject * object)
     xmlFree (self->lang);
   if (self->contentType)
     xmlFree (self->contentType);
-  g_slice_free (GstXMLRatio, self->par);
+  g_free (self->par);
   g_list_free_full (self->Accessibility,
       (GDestroyNotify) gst_mpd_descriptor_type_node_free);
   g_list_free_full (self->Role,
