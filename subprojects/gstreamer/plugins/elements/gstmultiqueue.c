@@ -2124,7 +2124,7 @@ gst_multi_queue_item_destroy (GstMultiQueueItem * item)
 {
   if (!item->is_query && item->object)
     gst_mini_object_unref (item->object);
-  g_slice_free (GstMultiQueueItem, item);
+  g_free (item);
 }
 
 /* takes ownership of passed mini object! */
@@ -2133,7 +2133,7 @@ gst_multi_queue_buffer_item_new (GstMiniObject * object, guint32 curid)
 {
   GstMultiQueueItem *item;
 
-  item = g_slice_new (GstMultiQueueItem);
+  item = g_new (GstMultiQueueItem, 1);
   item->object = object;
   item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
   item->posid = curid;
@@ -2152,7 +2152,7 @@ gst_multi_queue_mo_item_new (GstMiniObject * object, guint32 curid)
 {
   GstMultiQueueItem *item;
 
-  item = g_slice_new (GstMultiQueueItem);
+  item = g_new (GstMultiQueueItem, 1);
   item->object = object;
   item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
   item->posid = curid;
