@@ -644,7 +644,7 @@ uridecodebin_pad_added_cb (GstElement * uridecodebin, GstPad * pad,
     DISCO_UNLOCK (dc);
     return;
   }
-  ps = g_slice_new0 (PrivateStream);
+  ps = g_new0 (PrivateStream, 1);
 
   ps->dc = dc;
   ps->pad = pad;
@@ -722,7 +722,7 @@ error:
     gst_object_unref (ps->queue);
   if (ps->sink)
     gst_object_unref (ps->sink);
-  g_slice_free (PrivateStream, ps);
+  g_free (ps);
   DISCO_UNLOCK (dc);
   return;
 }
@@ -788,7 +788,7 @@ uridecodebin_pad_removed_cb (GstElement * uridecodebin, GstPad * pad,
   }
   g_free (ps->stream_id);
 
-  g_slice_free (PrivateStream, ps);
+  g_free (ps);
 
   GST_DEBUG ("Done handling pad");
 }
