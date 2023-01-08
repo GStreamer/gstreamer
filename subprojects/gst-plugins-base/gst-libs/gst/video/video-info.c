@@ -70,7 +70,7 @@ ensure_debug_category (void)
 GstVideoInfo *
 gst_video_info_copy (const GstVideoInfo * info)
 {
-  return g_slice_dup (GstVideoInfo, info);
+  return g_memdup2 (info, sizeof (GstVideoInfo));
 }
 
 /**
@@ -85,7 +85,7 @@ gst_video_info_copy (const GstVideoInfo * info)
 void
 gst_video_info_free (GstVideoInfo * info)
 {
-  g_slice_free (GstVideoInfo, info);
+  g_free (info);
 }
 
 G_DEFINE_BOXED_TYPE (GstVideoInfo, gst_video_info,
@@ -106,7 +106,7 @@ gst_video_info_new (void)
 {
   GstVideoInfo *info;
 
-  info = g_slice_new (GstVideoInfo);
+  info = g_new (GstVideoInfo, 1);
   gst_video_info_init (info);
 
   return info;

@@ -792,7 +792,7 @@ _new_input_state (GstCaps * caps)
   GstStructure *structure;
   const GValue *codec_data;
 
-  state = g_slice_new0 (GstVideoCodecState);
+  state = g_new0 (GstVideoCodecState, 1);
   state->ref_count = 1;
   gst_video_info_init (&state->info);
   if (G_UNLIKELY (!gst_video_info_from_caps (&state->info, caps)))
@@ -809,7 +809,7 @@ _new_input_state (GstCaps * caps)
 
 parse_fail:
   {
-    g_slice_free (GstVideoCodecState, state);
+    g_free (state);
     return NULL;
   }
 }
@@ -821,12 +821,12 @@ _new_output_state (GstVideoFormat fmt, GstVideoInterlaceMode interlace_mode,
 {
   GstVideoCodecState *state;
 
-  state = g_slice_new0 (GstVideoCodecState);
+  state = g_new0 (GstVideoCodecState, 1);
   state->ref_count = 1;
   gst_video_info_init (&state->info);
   if (!gst_video_info_set_interlaced_format (&state->info, fmt, interlace_mode,
           width, height)) {
-    g_slice_free (GstVideoCodecState, state);
+    g_free (state);
     return NULL;
   }
 
@@ -2200,7 +2200,7 @@ struct _Timestamp
 static void
 timestamp_free (Timestamp * ts)
 {
-  g_slice_free (Timestamp, ts);
+  g_free (ts);
 }
 
 static void
@@ -2219,7 +2219,7 @@ gst_video_decoder_add_buffer_info (GstVideoDecoder * decoder,
     return;
   }
 
-  ts = g_slice_new (Timestamp);
+  ts = g_new (Timestamp, 1);
 
   GST_LOG_OBJECT (decoder,
       "adding PTS %" GST_TIME_FORMAT " DTS %" GST_TIME_FORMAT
@@ -2933,7 +2933,7 @@ gst_video_decoder_new_frame (GstVideoDecoder * decoder)
   GstVideoDecoderPrivate *priv = decoder->priv;
   GstVideoCodecFrame *frame;
 
-  frame = g_slice_new0 (GstVideoCodecFrame);
+  frame = g_new0 (GstVideoCodecFrame, 1);
 
   frame->ref_count = 1;
 

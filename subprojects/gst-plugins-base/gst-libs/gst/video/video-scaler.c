@@ -219,7 +219,7 @@ gst_video_scaler_new (GstVideoResamplerMethod method, GstVideoScalerFlags flags,
   g_return_val_if_fail (in_size != 0, NULL);
   g_return_val_if_fail (out_size != 0, NULL);
 
-  scale = g_slice_new0 (GstVideoScaler);
+  scale = g_new0 (GstVideoScaler, 1);
 
   GST_DEBUG ("%d %u  %u->%u", method, n_taps, in_size, out_size);
 
@@ -279,7 +279,7 @@ gst_video_scaler_free (GstVideoScaler * scale)
   g_free (scale->offset_n);
   g_free (scale->tmpline1);
   g_free (scale->tmpline2);
-  g_slice_free (GstVideoScaler, scale);
+  g_free (scale);
 }
 
 /**
@@ -1147,7 +1147,7 @@ gst_video_scaler_combine_packed_YUV (GstVideoScaler * y_scale,
   g_return_val_if_fail (uv_scale->resampler.max_taps ==
       y_scale->resampler.max_taps, NULL);
 
-  scale = g_slice_new0 (GstVideoScaler);
+  scale = g_new0 (GstVideoScaler, 1);
 
   scale->method = y_scale->method;
   scale->flags = y_scale->flags;

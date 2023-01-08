@@ -498,7 +498,7 @@ gst_video_convert_frame_context_unref (GstVideoConvertSampleContext * ctx)
    * must not end up here without finish() being called */
   g_warn_if_fail (ctx->pipeline == NULL);
 
-  g_slice_free (GstVideoConvertSampleContext, ctx);
+  g_free (ctx);
 }
 
 static gboolean
@@ -757,7 +757,7 @@ gst_video_convert_sample_async (GstSample * sample,
   /* There's a reference cycle between the context and the pipeline, which is
    * broken up once the finish() is called on the context. At latest when the
    * timeout triggers the context will be freed */
-  ctx = g_slice_new0 (GstVideoConvertSampleContext);
+  ctx = g_new0 (GstVideoConvertSampleContext, 1);
   ctx->ref_count = 1;
   g_mutex_init (&ctx->mutex);
   ctx->sample = gst_sample_ref (sample);

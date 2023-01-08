@@ -514,7 +514,7 @@ gst_line_cache_new (GstLineCache * prev)
 {
   GstLineCache *result;
 
-  result = g_slice_new0 (GstLineCache);
+  result = g_new0 (GstLineCache, 1);
   result->lines = g_ptr_array_new ();
   result->prev = prev;
 
@@ -539,7 +539,7 @@ gst_line_cache_free (GstLineCache * cache)
     cache->alloc_line_notify (cache->alloc_line_data);
   gst_line_cache_clear (cache);
   g_ptr_array_unref (cache->lines);
-  g_slice_free (GstLineCache, cache);
+  g_free (cache);
 }
 
 static void
@@ -668,7 +668,7 @@ converter_alloc_new (guint stride, guint n_lines, gpointer user_data,
   ConverterAlloc *alloc;
 
   GST_DEBUG ("stride %d, n_lines %d", stride, n_lines);
-  alloc = g_slice_new0 (ConverterAlloc);
+  alloc = g_new0 (ConverterAlloc, 1);
   alloc->data = g_malloc (stride * n_lines);
   alloc->stride = stride;
   alloc->n_lines = n_lines;
@@ -685,7 +685,7 @@ converter_alloc_free (ConverterAlloc * alloc)
   if (alloc->notify)
     alloc->notify (alloc->user_data);
   g_free (alloc->data);
-  g_slice_free (ConverterAlloc, alloc);
+  g_free (alloc);
 }
 
 static void
@@ -2333,7 +2333,7 @@ gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
   g_return_val_if_fail (in_info->interlace_mode == out_info->interlace_mode,
       NULL);
 
-  convert = g_slice_new0 (GstVideoConverter);
+  convert = g_new0 (GstVideoConverter, 1);
 
   fin = in_info->finfo;
   fout = out_info->finfo;
@@ -2681,7 +2681,7 @@ gst_video_converter_free (GstVideoConverter * convert)
     g_free (convert->tasks_p[i]);
   }
 
-  g_slice_free (GstVideoConverter, convert);
+  g_free (convert);
 }
 
 static gboolean

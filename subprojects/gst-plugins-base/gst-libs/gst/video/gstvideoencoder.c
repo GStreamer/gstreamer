@@ -198,14 +198,14 @@ struct _ForcedKeyUnitEvent
 static void
 forced_key_unit_event_free (ForcedKeyUnitEvent * evt)
 {
-  g_slice_free (ForcedKeyUnitEvent, evt);
+  g_free (evt);
 }
 
 static ForcedKeyUnitEvent *
 forced_key_unit_event_new (GstClockTime running_time, gboolean all_headers,
     guint count)
 {
-  ForcedKeyUnitEvent *evt = g_slice_new0 (ForcedKeyUnitEvent);
+  ForcedKeyUnitEvent *evt = g_new0 (ForcedKeyUnitEvent, 1);
 
   evt->running_time = running_time;
   evt->all_headers = all_headers;
@@ -634,12 +634,12 @@ _new_output_state (GstCaps * caps, GstVideoCodecState * reference)
 {
   GstVideoCodecState *state;
 
-  state = g_slice_new0 (GstVideoCodecState);
+  state = g_new0 (GstVideoCodecState, 1);
   state->ref_count = 1;
   gst_video_info_init (&state->info);
 
   if (!gst_video_info_set_format (&state->info, GST_VIDEO_FORMAT_ENCODED, 0, 0)) {
-    g_slice_free (GstVideoCodecState, state);
+    g_free (state);
     return NULL;
   }
 
@@ -669,12 +669,14 @@ _new_output_state (GstCaps * caps, GstVideoCodecState * reference)
     GST_VIDEO_INFO_MULTIVIEW_FLAGS (tgt) = GST_VIDEO_INFO_MULTIVIEW_FLAGS (ref);
 
     if (reference->mastering_display_info) {
-      state->mastering_display_info = g_slice_dup (GstVideoMasteringDisplayInfo,
-          reference->mastering_display_info);
+      state->mastering_display_info =
+          g_memdup2 (reference->mastering_display_info,
+          sizeof (GstVideoMasteringDisplayInfo));
     }
     if (reference->content_light_level) {
-      state->content_light_level = g_slice_dup (GstVideoContentLightLevel,
-          reference->content_light_level);
+      state->content_light_level =
+          g_memdup2 (reference->content_light_level,
+          sizeof (GstVideoContentLightLevel));
     }
   }
 
@@ -688,7 +690,7 @@ _new_input_state (GstCaps * caps)
   GstStructure *c_struct;
   const gchar *s;
 
-  state = g_slice_new0 (GstVideoCodecState);
+  state = g_new0 (GstVideoCodecState, 1);
   state->ref_count = 1;
   gst_video_info_init (&state->info);
   if (G_UNLIKELY (!gst_video_info_from_caps (&state->info, caps)))
@@ -698,12 +700,12 @@ _new_input_state (GstCaps * caps)
   c_struct = gst_caps_get_structure (caps, 0);
 
   if ((s = gst_structure_get_string (c_struct, "mastering-display-info"))) {
-    state->mastering_display_info = g_slice_new (GstVideoMasteringDisplayInfo);
+    state->mastering_display_info = g_new (GstVideoMasteringDisplayInfo, 1);
     gst_video_mastering_display_info_from_string (state->mastering_display_info,
         s);
   }
   if ((s = gst_structure_get_string (c_struct, "content-light-level"))) {
-    state->content_light_level = g_slice_new (GstVideoContentLightLevel);
+    state->content_light_level = g_new (GstVideoContentLightLevel, 1);
     gst_video_content_light_level_from_string (state->content_light_level, s);
   }
 
@@ -711,7 +713,7 @@ _new_input_state (GstCaps * caps)
 
 parse_fail:
   {
-    g_slice_free (GstVideoCodecState, state);
+    g_free (state);
     return NULL;
   }
 }
@@ -1495,7 +1497,7 @@ gst_video_encoder_new_frame (GstVideoEncoder * encoder, GstBuffer * buf,
   GstVideoEncoderPrivate *priv = encoder->priv;
   GstVideoCodecFrame *frame;
 
-  frame = g_slice_new0 (GstVideoCodecFrame);
+  frame = g_new0 (GstVideoCodecFrame, 1);
 
   frame->ref_count = 1;
 
