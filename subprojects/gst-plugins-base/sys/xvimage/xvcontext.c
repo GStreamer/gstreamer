@@ -630,7 +630,7 @@ gst_xvcontext_free (GstXvContext * context)
 
   g_mutex_clear (&context->lock);
 
-  g_slice_free1 (sizeof (GstXvContext), context);
+  g_free (context);
 }
 
 
@@ -659,7 +659,7 @@ gst_xvcontext_new (GstXvContextConfig * config, GError ** error)
 
   g_return_val_if_fail (config != NULL, NULL);
 
-  context = g_slice_new0 (GstXvContext);
+  context = g_new0 (GstXvContext, 1);
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (context), 0,
       gst_xvcontext_get_type (),
@@ -989,7 +989,7 @@ gst_xvcontext_create_xwindow (GstXvContext * context, gint width, gint height)
 
   g_return_val_if_fail (GST_IS_XVCONTEXT (context), NULL);
 
-  window = g_slice_new0 (GstXWindow);
+  window = g_new0 (GstXWindow, 1);
 
   window->context = gst_xvcontext_ref (context);
   window->render_rect.x = window->render_rect.y = 0;
@@ -1064,7 +1064,7 @@ gst_xvcontext_create_xwindow_from_xid (GstXvContext * context, XID xid)
   GstXWindow *window;
   XWindowAttributes attr;
 
-  window = g_slice_new0 (GstXWindow);
+  window = g_new0 (GstXWindow, 1);
   window->win = xid;
   window->context = gst_xvcontext_ref (context);
 
@@ -1124,7 +1124,7 @@ gst_xwindow_destroy (GstXWindow * window)
 
   gst_xvcontext_unref (context);
 
-  g_slice_free1 (sizeof (GstXWindow), window);
+  g_free (window);
 }
 
 #ifdef HAVE_XI2

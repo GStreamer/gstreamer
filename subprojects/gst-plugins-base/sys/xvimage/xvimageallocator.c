@@ -185,7 +185,7 @@ gst_xvimage_allocator_free (GstAllocator * allocator, GstMemory * gmem)
   g_mutex_unlock (&context->lock);
 
 sub_mem:
-  g_slice_free (GstXvImageMemory, mem);
+  g_free (mem);
 }
 
 static gpointer
@@ -223,7 +223,7 @@ gst_xvimage_memory_share (GstXvImageMemory * mem, gssize offset, gsize size)
     size = mem->parent.size - offset;
 
   /* the shared memory is always readonly */
-  sub = g_slice_new (GstXvImageMemory);
+  sub = g_new (GstXvImageMemory, 1);
 
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->parent.allocator,
@@ -357,7 +357,7 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
 
   context = allocator->context;
 
-  mem = g_slice_new (GstXvImageMemory);
+  mem = g_new (GstXvImageMemory, 1);
 
   mem->im_format = im_format;
   mem->info = *info;
@@ -531,7 +531,7 @@ gst_xvimage_allocator_alloc (GstXvImageAllocator * allocator, gint im_format,
 
 beach:
   if (!success) {
-    g_slice_free (GstXvImageMemory, mem);
+    g_free (mem);
     mem = NULL;
   }
 

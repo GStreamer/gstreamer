@@ -116,7 +116,7 @@ beach:
   gst_object_unref (mem->sink);
 
 sub_mem:
-  g_slice_free (GstXImageMemory, mem);
+  g_free (mem);
 }
 
 static gpointer
@@ -151,7 +151,7 @@ ximage_memory_share (GstXImageMemory * mem, gssize offset, gsize size)
     size = mem->parent.size - offset;
 
   /* the shared memory is always readonly */
-  sub = g_slice_new (GstXImageMemory);
+  sub = g_new (GstXImageMemory, 1);
 
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->parent.allocator,
@@ -222,7 +222,7 @@ ximage_memory_alloc (GstXImageBufferPool * xpool)
   width = xpool->padded_width;
   height = xpool->padded_height;
 
-  mem = g_slice_new (GstXImageMemory);
+  mem = g_new (GstXImageMemory, 1);
 
 #ifdef HAVE_XSHM
   mem->SHMInfo.shmaddr = ((void *) -1);
@@ -360,7 +360,7 @@ ximage_memory_alloc (GstXImageBufferPool * xpool)
 
 beach:
   if (!success) {
-    g_slice_free (GstXImageMemory, mem);
+    g_free (mem);
     mem = NULL;
   }
 
