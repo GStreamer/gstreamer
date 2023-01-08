@@ -1004,7 +1004,7 @@ _gst_uri_new (void)
 
   g_return_val_if_fail (gst_is_initialized (), NULL);
 
-  uri = GST_URI_CAST (g_slice_new0 (GstUri));
+  uri = g_new0 (GstUri, 1);
 
   if (uri)
     gst_mini_object_init (GST_MINI_OBJECT_CAST (uri), 0, gst_uri_get_type (),
@@ -1031,7 +1031,7 @@ _gst_uri_free (GstUri * uri)
   memset (uri, 0xff, sizeof (*uri));
 #endif
 
-  g_slice_free1 (sizeof (*uri), uri);
+  g_free (uri);
 }
 
 static GHashTable *
