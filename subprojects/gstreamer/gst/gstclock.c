@@ -247,7 +247,7 @@ gst_clock_entry_new (GstClock * clock, GstClockTime time,
 {
   GstClockEntry *entry;
 
-  entry = (GstClockEntry *) g_slice_new0 (GstClockEntryImpl);
+  entry = (GstClockEntry *) g_new0 (GstClockEntryImpl, 1);
 
   /* FIXME: add tracer hook for struct allocations such as clock entries */
 
@@ -382,7 +382,7 @@ _gst_clock_id_free (GstClockID id)
 
   /* FIXME: add tracer hook for struct allocations such as clock entries */
 
-  g_slice_free (GstClockEntryImpl, (GstClockEntryImpl *) id);
+  g_free (id);
 }
 
 /**
