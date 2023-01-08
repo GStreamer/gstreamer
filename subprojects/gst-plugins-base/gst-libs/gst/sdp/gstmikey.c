@@ -136,7 +136,8 @@ static GstMIKEYPayloadKEMAC *
 gst_mikey_payload_kemac_copy (const GstMIKEYPayloadKEMAC * payload)
 {
   guint i, len;
-  GstMIKEYPayloadKEMAC *copy = g_slice_dup (GstMIKEYPayloadKEMAC, payload);
+  GstMIKEYPayloadKEMAC *copy =
+      g_memdup2 (payload, sizeof (GstMIKEYPayloadKEMAC));
   gst_mikey_payload_kemac_set (&copy->pt, payload->enc_alg, payload->mac_alg);
   len = payload->subpayloads->len;
   for (i = 0; i < len; i++) {
@@ -287,7 +288,7 @@ gst_mikey_payload_pke_dispose (GstMIKEYPayloadPKE * payload)
 static GstMIKEYPayloadPKE *
 gst_mikey_payload_pke_copy (const GstMIKEYPayloadPKE * payload)
 {
-  GstMIKEYPayloadPKE *copy = g_slice_dup (GstMIKEYPayloadPKE, payload);
+  GstMIKEYPayloadPKE *copy = g_memdup2 (payload, sizeof (GstMIKEYPayloadPKE));
   gst_mikey_payload_pke_set (&copy->pt, payload->C, payload->data_len,
       payload->data);
   return copy;
@@ -359,7 +360,7 @@ gst_mikey_payload_t_dispose (GstMIKEYPayloadT * payload)
 static GstMIKEYPayloadT *
 gst_mikey_payload_t_copy (const GstMIKEYPayloadT * payload)
 {
-  GstMIKEYPayloadT *copy = g_slice_dup (GstMIKEYPayloadT, payload);
+  GstMIKEYPayloadT *copy = g_memdup2 (payload, sizeof (GstMIKEYPayloadT));
   gst_mikey_payload_t_set (&copy->pt, payload->type, payload->ts_value);
   return copy;
 }
@@ -415,7 +416,7 @@ static GstMIKEYPayloadSP *
 gst_mikey_payload_sp_copy (const GstMIKEYPayloadSP * payload)
 {
   guint i, len;
-  GstMIKEYPayloadSP *copy = g_slice_dup (GstMIKEYPayloadSP, payload);
+  GstMIKEYPayloadSP *copy = g_memdup2 (payload, sizeof (GstMIKEYPayloadSP));
   gst_mikey_payload_sp_set (&copy->pt, payload->policy, payload->proto);
   len = payload->params->len;
   for (i = 0; i < len; i++) {
@@ -574,7 +575,7 @@ gst_mikey_payload_rand_dispose (GstMIKEYPayloadRAND * payload)
 static GstMIKEYPayloadRAND *
 gst_mikey_payload_rand_copy (const GstMIKEYPayloadRAND * payload)
 {
-  GstMIKEYPayloadRAND *copy = g_slice_dup (GstMIKEYPayloadRAND, payload);
+  GstMIKEYPayloadRAND *copy = g_memdup2 (payload, sizeof (GstMIKEYPayloadRAND));
   gst_mikey_payload_rand_set (&copy->pt, payload->len, payload->rand);
   return copy;
 }
@@ -730,7 +731,8 @@ gst_mikey_payload_key_data_dispose (GstMIKEYPayloadKeyData * payload)
 static GstMIKEYPayloadKeyData *
 gst_mikey_payload_key_data_copy (const GstMIKEYPayloadKeyData * payload)
 {
-  GstMIKEYPayloadKeyData *copy = g_slice_dup (GstMIKEYPayloadKeyData, payload);
+  GstMIKEYPayloadKeyData *copy =
+      g_memdup2 (payload, sizeof (GstMIKEYPayloadKeyData));
   gst_mikey_payload_key_data_set_key (&copy->pt, payload->key_type,
       payload->key_len, payload->key_data);
   gst_mikey_payload_key_data_set_salt (&copy->pt, payload->salt_len,
@@ -753,7 +755,7 @@ gst_mikey_payload_key_data_copy (const GstMIKEYPayloadKeyData * payload)
 static void
 mikey_payload_free (GstMIKEYPayload * payload)
 {
-  g_slice_free1 (payload->len, payload);
+  g_free (payload);
 }
 
 
@@ -821,7 +823,7 @@ gst_mikey_payload_new (GstMIKEYPayloadType type)
   if (len == 0)
     return NULL;
 
-  result = g_slice_alloc0 (len);
+  result = g_malloc0 (len);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (result),
       0, GST_TYPE_MIKEY_PAYLOAD, copy, clear,
       (GstMiniObjectFreeFunction) mikey_payload_free);
@@ -862,7 +864,7 @@ mikey_message_free (GstMIKEYMessage * msg)
   FREE_ARRAY (msg->map_info);
   FREE_ARRAY (msg->payloads);
 
-  g_slice_free (GstMIKEYMessage, msg);
+  g_free (msg);
 }
 
 /**
@@ -879,7 +881,7 @@ gst_mikey_message_new (void)
 {
   GstMIKEYMessage *result;
 
-  result = g_slice_new0 (GstMIKEYMessage);
+  result = g_new0 (GstMIKEYMessage, 1);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (result),
       0, GST_TYPE_MIKEY_MESSAGE,
       (GstMiniObjectCopyFunction) mikey_message_copy, NULL,
