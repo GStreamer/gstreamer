@@ -504,7 +504,7 @@ parse_siz (GstJP2kDecimator * self, GstByteReader * reader,
     return GST_FLOW_ERROR;
   }
 
-  siz->components = g_slice_alloc (sizeof (ComponentSize) * siz->n_components);
+  siz->components = g_new (ComponentSize, siz->n_components);
   for (i = 0; i < siz->n_components; i++) {
     siz->components[i].s = gst_byte_reader_get_uint8_unchecked (reader);
     siz->components[i].xr = gst_byte_reader_get_uint8_unchecked (reader);
@@ -524,7 +524,7 @@ static void
 reset_siz (GstJP2kDecimator * self, ImageSize * siz)
 {
   if (siz->components)
-    g_slice_free1 (sizeof (ComponentSize) * siz->n_components, siz->components);
+    g_free (siz->components);
   memset (siz, 0, sizeof (ImageSize));
 }
 
@@ -598,7 +598,7 @@ parse_cod (GstJP2kDecimator * self, GstByteReader * reader,
       return GST_FLOW_ERROR;
     }
 
-    cod->PPx = g_slice_alloc (sizeof (guint8) * (cod->n_decompositions + 1));
+    cod->PPx = g_new (guint8, (cod->n_decompositions + 1));
     for (i = 0; i < cod->n_decompositions + 1; i++) {
       guint8 v = gst_byte_reader_get_uint8_unchecked (reader);
       cod->PPx[i] = (v & 0x0f);
@@ -618,10 +618,8 @@ sizeof_cod (GstJP2kDecimator * self, const CodingStyleDefault * cod)
 static void
 reset_cod (GstJP2kDecimator * self, CodingStyleDefault * cod)
 {
-  if (cod->PPx)
-    g_slice_free1 (sizeof (guint8) * (cod->n_decompositions + 1), cod->PPx);
-  if (cod->PPy)
-    g_slice_free1 (sizeof (guint8) * (cod->n_decompositions + 1), cod->PPy);
+  g_free (cod->PPx);
+  g_free (cod->PPy);
   memset (cod, 0, sizeof (CodingStyleDefault));
 }
 
@@ -880,14 +878,14 @@ parse_packet (GstJP2kDecimator * self, GstByteReader * reader,
       goto done;
     }
 
-    p = g_slice_new0 (Packet);
+    p = g_new0 (Packet, 1);
 
     /* If there is a SOP keep the seqno */
     if (sop && length > 6) {
       if (!gst_byte_reader_peek_uint16_be (reader, &marker)) {
         GST_ERROR_OBJECT (self, "Truncated file");
         ret = GST_FLOW_ERROR;
-        g_slice_free (Packet, p);
+        g_free (p);
         goto done;
       }
 
@@ -899,14 +897,14 @@ parse_packet (GstJP2kDecimator * self, GstByteReader * reader,
         if (!gst_byte_reader_get_uint16_be (reader, &dummy)) {
           GST_ERROR_OBJECT (self, "Truncated file");
           ret = GST_FLOW_ERROR;
-          g_slice_free (Packet, p);
+          g_free (p);
           goto done;
         }
 
         if (!gst_byte_reader_get_uint16_be (reader, &seqno)) {
           GST_ERROR_OBJECT (self, "Truncated file");
           ret = GST_FLOW_ERROR;
-          g_slice_free (Packet, p);
+          g_free (p);
           goto done;
         }
         p->data = gst_byte_reader_peek_data_unchecked (reader);
@@ -966,7 +964,7 @@ parse_packet (GstJP2kDecimator * self, GstByteReader * reader,
       }
 
       if (marker == MARKER_SOP || marker == MARKER_EOC || marker == MARKER_SOT) {
-        Packet *p = g_slice_new (Packet);
+        Packet *p = g_new (Packet, 1);
 
         p->sop = TRUE;
         p->eph = eph;
@@ -1143,7 +1141,7 @@ parse_tile (GstJP2kDecimator * self, GstByteReader * reader,
           goto done;
         }
 
-        tile->cod = g_slice_new0 (CodingStyleDefault);
+        tile->cod = g_new0 (CodingStyleDefault, 1);
         ret = parse_cod (self, reader, tile->cod, length);
         if (ret != GST_FLOW_OK)
           goto done;
@@ -1165,11 +1163,11 @@ parse_tile (GstJP2kDecimator * self, GstByteReader * reader,
         ret = GST_FLOW_ERROR;
         goto done;
       case MARKER_PLT:{
-        PacketLengthTilePart *plt = g_slice_new (PacketLengthTilePart);
+        PacketLengthTilePart *plt = g_new (PacketLengthTilePart, 1);
 
         ret = parse_plt (self, reader, plt, length);
         if (ret != GST_FLOW_OK) {
-          g_slice_free (PacketLengthTilePart, plt);
+          g_free (plt);
           goto done;
         }
 
@@ -1182,13 +1180,13 @@ parse_tile (GstJP2kDecimator * self, GstByteReader * reader,
           ret = GST_FLOW_ERROR;
           goto done;
         }
-        tile->qcd = g_slice_new (Buffer);
+        tile->qcd = g_new (Buffer, 1);
         tile->qcd->data = gst_byte_reader_peek_data_unchecked (reader);
         tile->qcd->length = length - 2;
         gst_byte_reader_skip_unchecked (reader, length - 2);
         break;
       case MARKER_QCC:{
-        Buffer *p = g_slice_new (Buffer);
+        Buffer *p = g_new (Buffer, 1);
         p->data = gst_byte_reader_peek_data_unchecked (reader);
         p->length = length - 2;
         tile->qcc = g_list_append (tile->qcc, p);
@@ -1196,7 +1194,7 @@ parse_tile (GstJP2kDecimator * self, GstByteReader * reader,
         break;
       }
       case MARKER_COM:{
-        Buffer *p = g_slice_new (Buffer);
+        Buffer *p = g_new (Buffer, 1);
         p->data = gst_byte_reader_peek_data_unchecked (reader);
         p->length = length - 2;
         tile->com = g_list_append (tile->com, p);
@@ -1265,7 +1263,7 @@ reset_tile (GstJP2kDecimator * self, const MainHeader * header, Tile * tile)
 
   if (tile->cod) {
     reset_cod (self, tile->cod);
-    g_slice_free (CodingStyleDefault, tile->cod);
+    g_free (tile->cod);
   }
 
   for (l = tile->plt; l; l = l->next) {
@@ -1273,27 +1271,27 @@ reset_tile (GstJP2kDecimator * self, const MainHeader * header, Tile * tile)
 
     reset_plt (self, plt);
 
-    g_slice_free (PacketLengthTilePart, plt);
+    g_free (plt);
   }
   g_list_free (tile->plt);
 
   if (tile->qcd)
-    g_slice_free (Buffer, tile->qcd);
+    g_free (tile->qcd);
 
   for (l = tile->qcc; l; l = l->next) {
-    g_slice_free (Buffer, l->data);
+    g_free (l->data);
   }
   g_list_free (tile->qcc);
 
   for (l = tile->com; l; l = l->next) {
-    g_slice_free (Buffer, l->data);
+    g_free (l->data);
   }
   g_list_free (tile->com);
 
   for (l = tile->packets; l; l = l->next) {
     Packet *p = l->data;
 
-    g_slice_free (Packet, p);
+    g_free (p);
   }
   g_list_free (tile->packets);
 
@@ -1548,7 +1546,7 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
         gst_byte_reader_skip_unchecked (reader, length - 2);
         break;
       case MARKER_QCC:{
-        Buffer *p = g_slice_new (Buffer);
+        Buffer *p = g_new (Buffer, 1);
         p->data = gst_byte_reader_peek_data_unchecked (reader);
         p->length = length - 2;
         header->qcc = g_list_append (header->qcc, p);
@@ -1556,7 +1554,7 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
         break;
       }
       case MARKER_COM:{
-        Buffer *p = g_slice_new (Buffer);
+        Buffer *p = g_new (Buffer, 1);
         p->data = gst_byte_reader_peek_data_unchecked (reader);
         p->length = length - 2;
         header->com = g_list_append (header->com, p);
@@ -1564,7 +1562,7 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
         break;
       }
       case MARKER_CRG:{
-        Buffer *p = g_slice_new (Buffer);
+        Buffer *p = g_new (Buffer, 1);
         p->data = gst_byte_reader_peek_data_unchecked (reader);
         p->length = length - 2;
         header->crg = g_list_append (header->crg, p);
@@ -1589,7 +1587,7 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
       (header->siz.y - header->siz.yto + header->siz.yt - 1) / header->siz.yt;
   header->n_tiles = header->n_tiles_x * header->n_tiles_y;
 
-  header->tiles = g_slice_alloc0 (sizeof (Tile) * header->n_tiles);
+  header->tiles = g_malloc0 (sizeof (Tile) * header->n_tiles);
 
   /* now at SOT marker, read the tiles */
   {
@@ -1661,19 +1659,19 @@ reset_main_header (GstJP2kDecimator * self, MainHeader * header)
     for (i = 0; i < header->n_tiles; i++) {
       reset_tile (self, header, &header->tiles[i]);
     }
-    g_slice_free1 (sizeof (Tile) * header->n_tiles, header->tiles);
+    g_free (header->tiles);
   }
 
   for (l = header->qcc; l; l = l->next)
-    g_slice_free (Buffer, l->data);
+    g_free (l->data);
   g_list_free (header->qcc);
 
   for (l = header->com; l; l = l->next)
-    g_slice_free (Buffer, l->data);
+    g_free (l->data);
   g_list_free (header->com);
 
   for (l = header->crg; l; l = l->next)
-    g_slice_free (Buffer, l->data);
+    g_free (l->data);
   g_list_free (header->crg);
 
   reset_cod (self, &header->cod);
@@ -1768,7 +1766,7 @@ decimate_main_header (GstJP2kDecimator * self, MainHeader * header)
         ret = GST_FLOW_ERROR;
         goto done;
       }
-      plt = g_slice_new (PacketLengthTilePart);
+      plt = g_new (PacketLengthTilePart, 1);
       plt->index = 0;
       plt->packet_lengths = g_array_new (FALSE, FALSE, sizeof (guint32));
     }
@@ -1783,7 +1781,7 @@ decimate_main_header (GstJP2kDecimator * self, MainHeader * header)
         GST_ERROR_OBJECT (self, "Not enough packets");
         ret = GST_FLOW_ERROR;
         g_array_free (plt->packet_lengths, TRUE);
-        g_slice_free (PacketLengthTilePart, plt);
+        g_free (plt);
         goto done;
       }
 
@@ -1806,7 +1804,7 @@ decimate_main_header (GstJP2kDecimator * self, MainHeader * header)
 
     if (plt) {
       reset_plt (self, tile->plt->data);
-      g_slice_free (PacketLengthTilePart, tile->plt->data);
+      g_free (tile->plt->data);
       tile->plt->data = plt;
     }
 
