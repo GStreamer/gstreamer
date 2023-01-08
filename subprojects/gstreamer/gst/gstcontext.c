@@ -114,7 +114,7 @@ _gst_context_free (GstContext * context)
   memset (context, 0xff, sizeof (GstContext));
 #endif
 
-  g_slice_free1 (sizeof (GstContext), context);
+  g_free (context);
 }
 
 static void gst_context_init (GstContext * context);
@@ -128,7 +128,7 @@ _gst_context_copy (GstContext * context)
   GST_CAT_LOG (GST_CAT_CONTEXT, "copy context %p: %" GST_PTR_FORMAT, context,
       GST_CONTEXT_STRUCTURE (context));
 
-  copy = g_slice_new0 (GstContext);
+  copy = g_new0 (GstContext, 1);
 
   gst_context_init (copy);
 
@@ -171,7 +171,7 @@ gst_context_new (const gchar * context_type, gboolean persistent)
 
   g_return_val_if_fail (context_type != NULL, NULL);
 
-  context = g_slice_new0 (GstContext);
+  context = g_new0 (GstContext, 1);
 
   GST_CAT_LOG (GST_CAT_CONTEXT, "creating new context %p", context);
 
