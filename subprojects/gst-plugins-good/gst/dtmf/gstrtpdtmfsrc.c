@@ -245,8 +245,8 @@ gst_rtp_dtmf_src_event_free (GstRTPDTMFSrcEvent * event)
 {
   if (event) {
     if (event->payload)
-      g_slice_free (GstRTPDTMFPayload, event->payload);
-    g_slice_free (GstRTPDTMFSrcEvent, event);
+      g_free (event->payload);
+    g_free (event);
   }
 }
 
@@ -508,10 +508,10 @@ gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc * dtmfsrc, gint event_number,
     gint event_volume)
 {
 
-  GstRTPDTMFSrcEvent *event = g_slice_new0 (GstRTPDTMFSrcEvent);
+  GstRTPDTMFSrcEvent *event = g_new0 (GstRTPDTMFSrcEvent, 1);
   event->event_type = RTP_DTMF_EVENT_TYPE_START;
 
-  event->payload = g_slice_new0 (GstRTPDTMFPayload);
+  event->payload = g_new0 (GstRTPDTMFPayload, 1);
   event->payload->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
   event->payload->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
 
@@ -522,7 +522,7 @@ static void
 gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc * dtmfsrc)
 {
 
-  GstRTPDTMFSrcEvent *event = g_slice_new0 (GstRTPDTMFSrcEvent);
+  GstRTPDTMFSrcEvent *event = g_new0 (GstRTPDTMFSrcEvent, 1);
   event->event_type = RTP_DTMF_EVENT_TYPE_STOP;
 
   g_async_queue_push (dtmfsrc->event_queue, event);
@@ -808,7 +808,7 @@ send_last:
   /* This is the end of the event */
   if (dtmfsrc->last_packet == TRUE && dtmfsrc->redundancy_count == 0) {
 
-    g_slice_free (GstRTPDTMFPayload, dtmfsrc->payload);
+    g_free (dtmfsrc->payload);
     dtmfsrc->payload = NULL;
 
     dtmfsrc->last_packet = FALSE;
@@ -1121,7 +1121,7 @@ gst_rtp_dtmf_src_unlock (GstBaseSrc * src)
   GST_OBJECT_UNLOCK (dtmfsrc);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Pushing the PAUSE_TASK event on unlock request");
-  event = g_slice_new0 (GstRTPDTMFSrcEvent);
+  event = g_new0 (GstRTPDTMFSrcEvent, 1);
   event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
   g_async_queue_push (dtmfsrc->event_queue, event);
 
