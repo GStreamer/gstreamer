@@ -2756,7 +2756,7 @@ gst_matroska_read_common_parse_metadata (GstMatroskaReadCommon * common,
   }
 
   common->tags_parsed =
-      g_list_prepend (common->tags_parsed, g_slice_new (guint64));
+      g_list_prepend (common->tags_parsed, g_new (guint64, 1));
   *((guint64 *) common->tags_parsed->data) = curpos;
   /* fall-through */
 
@@ -3278,7 +3278,7 @@ gst_matroska_read_common_read_track_encodings (GstMatroskaReadCommon * common,
 void
 gst_matroska_read_common_free_parsed_el (gpointer mem, gpointer user_data)
 {
-  g_slice_free (guint64, mem);
+  g_free (mem);
 }
 
 void
