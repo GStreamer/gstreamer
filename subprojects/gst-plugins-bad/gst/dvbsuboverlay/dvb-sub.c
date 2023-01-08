@@ -256,14 +256,26 @@ delete_region_display_list (DvbSub * dvb_sub, DVBSubRegion * region)
 
           *obj2_ptr = obj2->next;
 
-          g_slice_free (DVBSubObject, obj2);
+          g_free (obj2);
         }
       }
     }
 
     region->display_list = display->region_list_next;
 
-    g_slice_free (DVBSubObjectDisplay, display);
+    g_free (display);
+  }
+}
+
+static void
+dvb_sub_free_clut_list (DVBSubCLUT * list)
+{
+  DVBSubCLUT *next;
+
+  while (list != NULL) {
+    next = list->next;
+    g_free (list);
+    list = next;
   }
 }
 
@@ -280,10 +292,10 @@ delete_state (DvbSub * dvb_sub)
     delete_region_display_list (dvb_sub, region);
     g_free (region->pbuf);
 
-    g_slice_free (DVBSubRegion, region);
+    g_free (region);
   }
 
-  g_slice_free_chain (DVBSubCLUT, dvb_sub->clut_list, next);
+  dvb_sub_free_clut_list (dvb_sub->clut_list);
   dvb_sub->clut_list = NULL;
 
   /* Should already be NULL */
@@ -410,7 +422,7 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     }
 
     if (!display)
-      display = g_slice_new0 (DVBSubRegionDisplay);
+      display = g_new0 (DVBSubRegionDisplay, 1);
 
     display->region_id = region_id;
 
@@ -434,7 +446,7 @@ _dvb_sub_parse_page_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
     tmp_display_list = display->next;
 
-    g_slice_free (DVBSubRegionDisplay, display);
+    g_free (display);
   }
 }
 
@@ -458,7 +470,7 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   region = get_region (dvb_sub, region_id);
 
   if (!region) {                /* Create a new region */
-    region = g_slice_new0 (DVBSubRegion);
+    region = g_new0 (DVBSubRegion, 1);
     region->id = region_id;
     region->next = dvb_sub->region_list;
     dvb_sub->region_list = region;
@@ -476,7 +488,7 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
     region->buf_size = region->width * region->height;
 
-    region->pbuf = g_malloc (region->buf_size); /* TODO: We can probably use GSlice here if careful about freeing while buf_size still records the correct size */
+    region->pbuf = g_malloc (region->buf_size);
 
     fill = 1;                   /* FIXME: Validate from spec that fill is forced on (in the following codes context) when dimensions change */
   }
@@ -519,7 +531,7 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
     object = get_object (dvb_sub, object_id);
 
     if (!object) {
-      object = g_slice_new0 (DVBSubObject);
+      object = g_new0 (DVBSubObject, 1);
 
       object->id = object_id;
 
@@ -529,7 +541,7 @@ _dvb_sub_parse_region_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
 
     object->type = (*buf) >> 6;
 
-    object_display = g_slice_new0 (DVBSubObjectDisplay);
+    object_display = g_new0 (DVBSubObjectDisplay, 1);
 
     object_display->object_id = object_id;
     object_display->region_id = region_id;
@@ -579,7 +591,7 @@ _dvb_sub_parse_clut_segment (DvbSub * dvb_sub, guint16 page_id, guint8 * buf,
   clut = get_clut (dvb_sub, clut_id);
 
   if (!clut) {
-    clut = g_slice_new (DVBSubCLUT);
+    clut = g_new (DVBSubCLUT, 1);
 
     memcpy (clut, &default_clut, sizeof (DVBSubCLUT));
 
@@ -1194,7 +1206,7 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
 
   GST_DEBUG ("DISPLAY SET END: page_id = %u", page_id);
 
-  sub = g_slice_new0 (DVBSubtitles);
+  sub = g_new0 (DVBSubtitles, 1);
 
 #if 0                           /* FIXME: PTS stuff not figured out yet */
   sub->start_display_time = 0;
@@ -1254,14 +1266,14 @@ _dvb_sub_parse_end_of_display_set (DvbSub * dvb_sub, guint16 page_id,
 
     /* FIXME: Tweak this to be saved in a format most suitable for Qt and GStreamer instead.
      * Currently kept in AVPicture for quick save_display_set testing */
-    rect->pict.palette = g_malloc ((1 << region->depth) * sizeof (guint32));    /* FIXME: Can we use GSlice here? */
+    rect->pict.palette = g_new (guint32, (1 << region->depth));
     memcpy (rect->pict.palette, clut_table,
         (1 << region->depth) * sizeof (guint32));
 
     GST_MEMDUMP ("rect->pict.data.palette content",
         (guint8 *) rect->pict.palette, (1 << region->depth) * sizeof (guint32));
 
-    rect->pict.data = g_malloc (region->buf_size);      /* FIXME: Can we use GSlice here? */
+    rect->pict.data = g_malloc (region->buf_size);
     memcpy (rect->pict.data, region->pbuf, region->buf_size);
 
     GST_DEBUG ("DISPLAY: an object rect created: iteration %u, "
@@ -1301,7 +1313,7 @@ dvb_subtitles_free (DVBSubtitles * sub)
     g_free (sub->rects[i].pict.data);
   }
   g_free (sub->rects);
-  g_slice_free (DVBSubtitles, sub);
+  g_free (sub);
 }
 
 DvbSub *
@@ -1315,7 +1327,7 @@ dvb_sub_new (void)
     g_once_init_leave (&inited, TRUE);
   }
 
-  sub = g_slice_new0 (DvbSub);
+  sub = g_new0 (DvbSub, 1);
 
   /* TODO: Add initialization code here */
   /* FIXME: Do we have a reason to initiate the members to zero, or are we guaranteed that anyway? */
@@ -1341,11 +1353,11 @@ dvb_sub_free (DvbSub * sub)
   delete_state (sub);
   while (sub->display_list) {
     DVBSubRegionDisplay *tmp = sub->display_list->next;
-    g_slice_free (DVBSubRegionDisplay, sub->display_list);
+    g_free (sub->display_list);
     sub->display_list = tmp;
   }
   g_string_free (sub->pes_buffer, TRUE);
-  g_slice_free (DvbSub, sub);
+  g_free (sub);
 }
 
 #define DVB_SUB_SEGMENT_PAGE_COMPOSITION 0x10
