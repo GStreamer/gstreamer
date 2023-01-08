@@ -102,7 +102,7 @@ __gst_parse_element_new (void)
 {
   element_t *ret;
   __elements++;
-  ret = g_slice_new0 (element_t);
+  ret = g_new0 (element_t, 1);
   /* g_print ("@%p: ALLOCATED ELEMENT (%3u):\n", ret, __elements); */
   return ret;
 }
@@ -110,7 +110,7 @@ void
 __gst_parse_element_free (element_t *data)
 {
   /* g_print ("@%p: FREEING ELEMENT   (%3u):\n", data, __elements - 1); */
-  g_slice_free (element_t, data);
+  g_free (data);
   g_return_if_fail (__elements > 0);
   __elements--;
 }
@@ -549,7 +549,7 @@ typedef struct
 
 static void
 proxied_property_free (proxied_property_t *pp) {
-  g_slice_free (proxied_property_t, pp);
+  g_free (pp);
 }
 
 static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
@@ -589,7 +589,7 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
     gchar *value = gst_parse_split_assignment (tmp->data);
 
     if (is_proxy && strstr (name, "::") != NULL) {
-      proxied_property_t *pp = g_slice_new (proxied_property_t);
+      proxied_property_t *pp = g_new (proxied_property_t, 1);
       pp->name = name;
       pp->value = value;
       proxied = g_slist_prepend (proxied, pp);

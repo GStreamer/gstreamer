@@ -694,7 +694,7 @@ gst_base_parse_frame_copy (GstBaseParseFrame * frame)
 {
   GstBaseParseFrame *copy;
 
-  copy = g_slice_dup (GstBaseParseFrame, frame);
+  copy = g_memdup2 (frame, sizeof (GstBaseParseFrame));
   copy->buffer = gst_buffer_ref (frame->buffer);
   copy->_private_flags &= ~GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC;
 
@@ -720,7 +720,7 @@ gst_base_parse_frame_free (GstBaseParseFrame * frame)
   }
 
   if (!(frame->_private_flags & GST_BASE_PARSE_FRAME_PRIVATE_FLAG_NOALLOC)) {
-    g_slice_free (GstBaseParseFrame, frame);
+    g_free (frame);
   } else {
     memset (frame, 0, sizeof (*frame));
   }
@@ -769,7 +769,7 @@ gst_base_parse_frame_new (GstBuffer * buffer, GstBaseParseFrameFlags flags,
 {
   GstBaseParseFrame *frame;
 
-  frame = g_slice_new0 (GstBaseParseFrame);
+  frame = g_new0 (GstBaseParseFrame, 1);
   frame->buffer = gst_buffer_ref (buffer);
 
   GST_TRACE ("created frame %p", frame);
