@@ -95,7 +95,7 @@ free_stream (GstOggStream * stream)
   g_list_foreach (stream->unknown_pages, (GFunc) gst_mini_object_unref, NULL);
   g_list_foreach (stream->stored_buffers, (GFunc) gst_mini_object_unref, NULL);
 
-  g_slice_free (GstOggStream, stream);
+  g_free (stream);
 }
 
 static void
@@ -118,7 +118,7 @@ gst_ogg_parse_new_stream (GstOggParse * parser, ogg_page * page)
 
   GST_DEBUG_OBJECT (parser, "creating new stream %08x", serialno);
 
-  stream = g_slice_new0 (GstOggStream);
+  stream = g_new0 (GstOggStream, 1);
 
   stream->serialno = serialno;
   stream->in_headers = 1;

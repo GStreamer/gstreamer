@@ -84,7 +84,7 @@ GST_DEBUG_CATEGORY (gst_ogg_demux_setup_debug);
 static ogg_packet *
 _ogg_packet_copy (const ogg_packet * packet)
 {
-  ogg_packet *ret = g_slice_new (ogg_packet);
+  ogg_packet *ret = g_new (ogg_packet, 1);
 
   *ret = *packet;
   ret->packet = g_memdup2 (packet->packet, packet->bytes);
@@ -96,13 +96,13 @@ static void
 _ogg_packet_free (ogg_packet * packet)
 {
   g_free (packet->packet);
-  g_slice_free (ogg_packet, packet);
+  g_free (packet);
 }
 
 static ogg_page *
 gst_ogg_page_copy (ogg_page * page)
 {
-  ogg_page *p = g_slice_new (ogg_page);
+  ogg_page *p = g_new (ogg_page, 1);
 
   /* make a copy of the page */
   p->header = g_memdup2 (page->header, page->header_len);
@@ -118,7 +118,7 @@ gst_ogg_page_free (ogg_page * page)
 {
   g_free (page->header);
   g_free (page->body);
-  g_slice_free (ogg_page, page);
+  g_free (page);
 }
 
 static gboolean gst_ogg_demux_collect_chain_info (GstOggDemux * ogg,
@@ -2125,7 +2125,7 @@ choked:
 static GstOggChain *
 gst_ogg_chain_new (GstOggDemux * ogg)
 {
-  GstOggChain *chain = g_slice_new0 (GstOggChain);
+  GstOggChain *chain = g_new0 (GstOggChain, 1);
 
   GST_DEBUG_OBJECT (ogg, "creating new chain %p", chain);
   chain->ogg = ogg;
@@ -2152,7 +2152,7 @@ gst_ogg_chain_free (GstOggChain * chain)
     gst_object_unref (pad);
   }
   g_array_free (chain->streams, TRUE);
-  g_slice_free (GstOggChain, chain);
+  g_free (chain);
 }
 
 static void
