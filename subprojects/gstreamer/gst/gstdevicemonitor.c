@@ -151,7 +151,7 @@ struct DeviceFilter
 static struct DeviceFilter *
 device_filter_copy (struct DeviceFilter *filter)
 {
-  struct DeviceFilter *copy = g_slice_new0 (struct DeviceFilter);
+  struct DeviceFilter *copy = g_new0 (struct DeviceFilter, 1);
 
   copy->classesv = g_strdupv (filter->classesv);
   copy->caps = filter->caps ? gst_caps_ref (filter->caps) : NULL;
@@ -167,7 +167,7 @@ device_filter_free (struct DeviceFilter *filter)
   if (filter->caps)
     gst_caps_unref (filter->caps);
 
-  g_slice_free (struct DeviceFilter, filter);
+  g_free (filter);
 }
 
 static void
@@ -665,7 +665,7 @@ gst_device_monitor_add_filter_unlocked (GstDeviceMonitor * monitor,
   guint id = 0;
   gboolean matched = FALSE;
 
-  filter = g_slice_new0 (struct DeviceFilter);
+  filter = g_new0 (struct DeviceFilter, 1);
   filter->id = monitor->priv->last_id++;
   if (caps)
     filter->caps = gst_caps_ref (caps);
