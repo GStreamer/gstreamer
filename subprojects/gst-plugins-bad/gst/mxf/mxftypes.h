@@ -66,8 +66,6 @@ typedef struct {
   MXFUL ul;
   guint16 size;
   guint8 *data;
-  
-  gboolean g_slice; /* TRUE if data was allocated by GSlice */
 } MXFLocalTag;
 
 /* SMPTE 377M 11.1 */

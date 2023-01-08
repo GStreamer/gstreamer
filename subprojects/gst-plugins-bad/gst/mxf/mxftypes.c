@@ -1452,7 +1452,7 @@ mxf_index_table_segment_to_buffer (const MXFIndexTableSegment * segment)
 static void
 _mxf_mapping_ul_free (MXFUL * ul)
 {
-  g_slice_free (MXFUL, ul);
+  g_free (ul);
 }
 
 gboolean
@@ -1502,7 +1502,7 @@ mxf_primer_pack_parse (const MXFUL * ul, MXFPrimerPack * pack,
     if (g_hash_table_lookup (pack->mappings, GUINT_TO_POINTER (local_tag)))
       continue;
 
-    uid = g_slice_new (MXFUL);
+    uid = g_new (MXFUL, 1);
     memcpy (uid, data, 16);
     data += 16;
 
@@ -1575,13 +1575,13 @@ mxf_primer_pack_add_mapping (MXFPrimerPack * primer, guint16 local_tag,
 
   g_assert (ltag_tmp != 0);
 
-  uid = g_slice_new (MXFUL);
+  uid = g_new (MXFUL, 1);
   memcpy (uid, ul, 16);
 
   GST_DEBUG ("Adding mapping = 0x%04x -> %s", ltag_tmp,
       mxf_ul_to_string (uid, str));
   g_hash_table_insert (primer->mappings, GUINT_TO_POINTER (ltag_tmp), uid);
-  uid = g_slice_dup (MXFUL, uid);
+  uid = g_memdup2 (uid, sizeof (MXFUL));
   g_hash_table_insert (primer->reverse_mappings, uid,
       GUINT_TO_POINTER (ltag_tmp));
 
@@ -1664,11 +1664,8 @@ mxf_local_tag_parse (const guint8 * data, guint size, guint16 * tag,
 void
 mxf_local_tag_free (MXFLocalTag * tag)
 {
-  if (tag->g_slice)
-    g_slice_free1 (tag->size, tag->data);
-  else
-    g_free (tag->data);
-  g_slice_free (MXFLocalTag, tag);
+  g_free (tag->data);
+  g_free (tag);
 }
 
 gboolean
@@ -1703,11 +1700,10 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
     GST_DEBUG ("Adding local tag 0x%04x with UL %s and size %u", tag,
         mxf_ul_to_string (ul, str), tag_size);
 
-    local_tag = g_slice_new0 (MXFLocalTag);
+    local_tag = g_new0 (MXFLocalTag, 1);
     memcpy (&local_tag->ul, ul, sizeof (MXFUL));
     local_tag->size = tag_size;
     local_tag->data = tag_size == 0 ? NULL : g_memdup2 (tag_data, tag_size);
-    local_tag->g_slice = FALSE;
 
     g_hash_table_insert (*hash_table, &local_tag->ul, local_tag);
   } else {
