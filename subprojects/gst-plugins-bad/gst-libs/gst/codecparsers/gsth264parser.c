@@ -1432,7 +1432,7 @@ gst_h264_nal_parser_new (void)
 {
   GstH264NalParser *nalparser;
 
-  nalparser = g_slice_new0 (GstH264NalParser);
+  nalparser = g_new0 (GstH264NalParser, 1);
 
   return nalparser;
 }
@@ -1452,7 +1452,7 @@ gst_h264_nal_parser_free (GstH264NalParser * nalparser)
     gst_h264_sps_clear (&nalparser->sps[i]);
   for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++)
     gst_h264_pps_clear (&nalparser->pps[i]);
-  g_slice_free (GstH264NalParser, nalparser);
+  g_free (nalparser);
 
   nalparser = NULL;
 }

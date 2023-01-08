@@ -637,11 +637,11 @@ gst_vp9_parser_new (void)
   INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("Create VP9 Parser");
 
-  parser = g_slice_new0 (GstVp9Parser);
+  parser = g_new0 (GstVp9Parser, 1);
   if (!parser)
     return NULL;
 
-  priv = g_slice_new0 (GstVp9ParserPrivate);
+  priv = g_new0 (GstVp9ParserPrivate, 1);
   if (!priv)
     return NULL;
 
@@ -664,10 +664,10 @@ gst_vp9_parser_free (GstVp9Parser * parser)
 {
   if (parser) {
     if (parser->priv) {
-      g_slice_free (GstVp9ParserPrivate, parser->priv);
+      g_free (parser->priv);
       parser->priv = NULL;
     }
-    g_slice_free (GstVp9Parser, parser);
+    g_free (parser);
   }
 }
 

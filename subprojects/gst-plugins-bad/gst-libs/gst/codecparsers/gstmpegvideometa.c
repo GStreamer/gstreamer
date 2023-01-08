@@ -47,18 +47,17 @@ gst_mpeg_video_meta_free (GstMpegVideoMeta * mpeg_video_meta,
     GstBuffer * buffer)
 {
   if (mpeg_video_meta->sequencehdr)
-    g_slice_free (GstMpegVideoSequenceHdr, mpeg_video_meta->sequencehdr);
+    g_free (mpeg_video_meta->sequencehdr);
   if (mpeg_video_meta->sequenceext)
-    g_slice_free (GstMpegVideoSequenceExt, mpeg_video_meta->sequenceext);
+    g_free (mpeg_video_meta->sequenceext);
   if (mpeg_video_meta->sequencedispext)
-    g_slice_free (GstMpegVideoSequenceDisplayExt,
-        mpeg_video_meta->sequencedispext);
+    g_free (mpeg_video_meta->sequencedispext);
   if (mpeg_video_meta->pichdr)
-    g_slice_free (GstMpegVideoPictureHdr, mpeg_video_meta->pichdr);
+    g_free (mpeg_video_meta->pichdr);
   if (mpeg_video_meta->picext)
-    g_slice_free (GstMpegVideoPictureExt, mpeg_video_meta->picext);
+    g_free (mpeg_video_meta->picext);
   if (mpeg_video_meta->quantext)
-    g_slice_free (GstMpegVideoQuantMatrixExt, mpeg_video_meta->quantext);
+    g_free (mpeg_video_meta->quantext);
 }
 
 static gboolean
@@ -160,19 +159,21 @@ gst_buffer_add_mpeg_video_meta (GstBuffer * buffer,
 
   if (seq_hdr)
     mpeg_video_meta->sequencehdr =
-        g_slice_dup (GstMpegVideoSequenceHdr, seq_hdr);
+        g_memdup2 (seq_hdr, sizeof (GstMpegVideoSequenceHdr));
   if (seq_ext)
     mpeg_video_meta->sequenceext =
-        g_slice_dup (GstMpegVideoSequenceExt, seq_ext);
+        g_memdup2 (seq_ext, sizeof (GstMpegVideoSequenceExt));
   if (disp_ext)
     mpeg_video_meta->sequencedispext =
-        g_slice_dup (GstMpegVideoSequenceDisplayExt, disp_ext);
-  mpeg_video_meta->pichdr = g_slice_dup (GstMpegVideoPictureHdr, pic_hdr);
+        g_memdup2 (disp_ext, sizeof (GstMpegVideoSequenceDisplayExt));
+  mpeg_video_meta->pichdr =
+      g_memdup2 (pic_hdr, sizeof (GstMpegVideoPictureHdr));
   if (pic_ext)
-    mpeg_video_meta->picext = g_slice_dup (GstMpegVideoPictureExt, pic_ext);
+    mpeg_video_meta->picext =
+        g_memdup2 (pic_ext, sizeof (GstMpegVideoPictureExt));
   if (quant_ext)
     mpeg_video_meta->quantext =
-        g_slice_dup (GstMpegVideoQuantMatrixExt, quant_ext);
+        g_memdup2 (quant_ext, sizeof (GstMpegVideoQuantMatrixExt));
 
   return mpeg_video_meta;
 }

@@ -1357,7 +1357,7 @@ gst_h265_parser_new (void)
 {
   GstH265Parser *parser;
 
-  parser = g_slice_new0 (GstH265Parser);
+  parser = g_new0 (GstH265Parser, 1);
 
   return parser;
 }
@@ -1371,7 +1371,7 @@ gst_h265_parser_new (void)
 void
 gst_h265_parser_free (GstH265Parser * parser)
 {
-  g_slice_free (GstH265Parser, parser);
+  g_free (parser);
   parser = NULL;
 }
 

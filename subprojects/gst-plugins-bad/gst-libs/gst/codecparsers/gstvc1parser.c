@@ -2154,7 +2154,7 @@ failed:
 GstVC1BitPlanes *
 gst_vc1_bitplanes_new (void)
 {
-  return g_slice_new0 (GstVC1BitPlanes);
+  return g_new0 (GstVC1BitPlanes, 1);
 }
 
 /**
@@ -2167,7 +2167,7 @@ void
 gst_vc1_bitplanes_free (GstVC1BitPlanes * bitplanes)
 {
   gst_vc1_bitplanes_free_1 (bitplanes);
-  g_slice_free (GstVC1BitPlanes, bitplanes);
+  g_free (bitplanes);
 }
 
 /**
