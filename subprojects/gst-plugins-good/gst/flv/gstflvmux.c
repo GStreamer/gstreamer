@@ -219,7 +219,7 @@ typedef struct
 static void
 gst_flv_mux_index_entry_free (GstFlvMuxIndexEntry * entry)
 {
-  g_slice_free (GstFlvMuxIndexEntry, entry);
+  g_free (entry);
 }
 
 static GstBuffer *
@@ -1644,7 +1644,7 @@ gst_flv_mux_update_index (GstFlvMux * mux, GstBuffer * buffer,
     return;
 
   if (GST_BUFFER_PTS_IS_VALID (buffer)) {
-    GstFlvMuxIndexEntry *entry = g_slice_new (GstFlvMuxIndexEntry);
+    GstFlvMuxIndexEntry *entry = g_new (GstFlvMuxIndexEntry, 1);
     GstClockTime pts =
         gst_flv_mux_segment_to_running_time (&GST_AGGREGATOR_PAD
         (pad)->segment, GST_BUFFER_PTS (buffer));
