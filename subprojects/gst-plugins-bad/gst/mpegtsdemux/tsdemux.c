@@ -2165,7 +2165,7 @@ gst_ts_demux_stream_flush (TSDemuxStream * stream, GstTSDemux * tsdemux,
     for (tmp = stream->pending; tmp; tmp = tmp->next) {
       PendingBuffer *pend = (PendingBuffer *) tmp->data;
       gst_buffer_unref (pend->buffer);
-      g_slice_free (PendingBuffer, pend);
+      g_free (pend);
     }
     g_list_free (stream->pending);
     stream->pending = NULL;
@@ -3448,7 +3448,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     if (G_UNLIKELY (stream->pending_ts && !check_pending_buffers (demux))) {
       if (buffer) {
         PendingBuffer *pend;
-        pend = g_slice_new0 (PendingBuffer);
+        pend = g_new0 (PendingBuffer, 1);
         pend->buffer = buffer;
         pend->pts = stream->raw_pts;
         pend->dts = stream->raw_dts;
@@ -3459,7 +3459,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
         n = gst_buffer_list_length (buffer_list);
         for (i = 0; i < n; i++) {
           PendingBuffer *pend;
-          pend = g_slice_new0 (PendingBuffer);
+          pend = g_new0 (PendingBuffer, 1);
           pend->buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, i));
           pend->pts = i == 0 ? stream->raw_pts : -1;
           pend->dts = i == 0 ? stream->raw_dts : -1;
@@ -3493,7 +3493,7 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
 
       res = gst_pad_push (stream->pad, pend->buffer);
       stream->nb_out_buffers += 1;
-      g_slice_free (PendingBuffer, pend);
+      g_free (pend);
     }
     g_list_free (stream->pending);
     stream->pending = NULL;

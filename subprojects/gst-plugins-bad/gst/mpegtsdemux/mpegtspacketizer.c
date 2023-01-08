@@ -94,7 +94,7 @@ get_pcr_table (MpegTSPacketizer2 * packetizer, guint16 pid)
     res->prev_out_time = GST_CLOCK_TIME_NONE;
     res->pcroffset = 0;
 
-    res->current = g_slice_new0 (PCROffsetCurrent);
+    res->current = g_new0 (PCROffsetCurrent, 1);
   }
 
   return res;
@@ -104,7 +104,7 @@ static void
 pcr_offset_group_free (PCROffsetGroup * group)
 {
   g_free (group->values);
-  g_slice_free (PCROffsetGroup, group);
+  g_free (group);
 }
 
 static void
@@ -115,8 +115,7 @@ flush_observations (MpegTSPacketizer2 * packetizer)
   for (i = 0; i < packetizer->lastobsid; i++) {
     g_list_free_full (packetizer->observations[i]->groups,
         (GDestroyNotify) pcr_offset_group_free);
-    if (packetizer->observations[i]->current)
-      g_slice_free (PCROffsetCurrent, packetizer->observations[i]->current);
+    g_free (packetizer->observations[i]->current);
     g_free (packetizer->observations[i]);
     packetizer->observations[i] = NULL;
   }
@@ -1788,7 +1787,7 @@ _reevaluate_group_pcr_offset (MpegTSPCR * pcrtable, PCROffsetGroup * group)
 static PCROffsetGroup *
 _new_group (guint64 pcr, guint64 offset, guint64 pcr_offset, guint flags)
 {
-  PCROffsetGroup *group = g_slice_new0 (PCROffsetGroup);
+  PCROffsetGroup *group = g_new0 (PCROffsetGroup, 1);
 
   GST_DEBUG ("Input PCR %" GST_TIME_FORMAT " offset:%" G_GUINT64_FORMAT
       " pcr_offset:%" G_GUINT64_FORMAT " flags:%d",
