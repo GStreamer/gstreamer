@@ -625,9 +625,16 @@ debug_ranges (GstQueue2 * queue)
 static void
 clean_ranges (GstQueue2 * queue)
 {
+  GstQueue2Range *r, *next;
+
   GST_DEBUG_OBJECT (queue, "clean queue ranges");
 
-  g_slice_free_chain (GstQueue2Range, queue->ranges, next);
+  r = queue->ranges;
+  while (r != NULL) {
+    next = r->next;
+    g_free (r);
+    r = next;
+  }
   queue->ranges = NULL;
   queue->current = NULL;
 }
@@ -692,7 +699,7 @@ add_range (GstQueue2 * queue, guint64 offset, gboolean update_existing)
     GST_DEBUG_OBJECT (queue,
         "new range %" G_GUINT64_FORMAT "-%" G_GUINT64_FORMAT, offset, offset);
 
-    range = g_slice_new0 (GstQueue2Range);
+    range = g_new0 (GstQueue2Range, 1);
     range->offset = offset;
     /* we want to write to the next location in the ring buffer */
     range->rb_offset = queue->current ? queue->current->rb_writing_pos : 0;
@@ -2096,7 +2103,7 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
         if (range_to_destroy) {
           if (range_to_destroy == queue->ranges)
             queue->ranges = range;
-          g_slice_free (GstQueue2Range, range_to_destroy);
+          g_free (range_to_destroy);
           range_to_destroy = NULL;
         }
       }
@@ -2146,7 +2153,7 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
             new_writing_pos = next->writing_pos;
             do_seek = TRUE;
           }
-          g_slice_free (GstQueue2Range, next);
+          g_free (next);
         }
         goto update_and_signal;
       }

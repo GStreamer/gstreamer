@@ -98,7 +98,7 @@ get_write_range (GstSparseFile * file, gsize offset)
     next = next->next;
   }
   if (result == NULL) {
-    result = g_slice_new0 (GstSparseRange);
+    result = g_new0 (GstSparseRange, 1);
     result->start = offset;
     result->stop = offset;
 
@@ -150,7 +150,7 @@ gst_sparse_file_new (void)
 {
   GstSparseFile *result;
 
-  result = g_slice_new0 (GstSparseFile);
+  result = g_new0 (GstSparseFile, 1);
   result->current_pos = 0;
   result->ranges = NULL;
   result->n_ranges = 0;
@@ -181,6 +181,17 @@ gst_sparse_file_set_fd (GstSparseFile * file, gint fd)
   return file->file != NULL;
 }
 
+static void
+gst_sparse_range_free_chain (GstSparseRange * r)
+{
+  while (r != NULL) {
+    GstSparseRange *next = r->next;
+
+    g_free (r);
+    r = next;
+  }
+}
+
 /**
  * gst_sparse_file_clear:
  * @file: a #GstSparseFile
@@ -192,7 +203,7 @@ gst_sparse_file_clear (GstSparseFile * file)
 {
   g_return_if_fail (file != NULL);
 
-  g_slice_free_chain (GstSparseRange, file->ranges, next);
+  gst_sparse_range_free_chain (file->ranges);
   file->current_pos = 0;
   file->ranges = NULL;
   file->n_ranges = 0;
@@ -216,8 +227,8 @@ gst_sparse_file_free (GstSparseFile * file)
     fflush (file->file);
     fclose (file->file);
   }
-  g_slice_free_chain (GstSparseRange, file->ranges, next);
-  g_slice_free (GstSparseFile, file);
+  gst_sparse_range_free_chain (file->ranges);
+  g_free (file);
 }
 
 /**
@@ -284,7 +295,7 @@ gst_sparse_file_write (GstSparseFile * file, gsize offset, gconstpointer data,
       file->write_range = NULL;
     if (file->read_range == next)
       file->read_range = NULL;
-    g_slice_free (GstSparseRange, next);
+    g_free (next);
     file->n_ranges--;
   }
   if (available)
