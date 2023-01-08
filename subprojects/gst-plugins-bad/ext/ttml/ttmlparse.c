@@ -111,7 +111,7 @@ struct _TtmlStyleSet
 static TtmlStyleSet *
 ttml_style_set_new (void)
 {
-  TtmlStyleSet *ret = g_slice_new0 (TtmlStyleSet);
+  TtmlStyleSet *ret = g_new0 (TtmlStyleSet, 1);
   ret->table = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
   return ret;
 }
@@ -122,7 +122,7 @@ ttml_style_set_delete (TtmlStyleSet * style_set)
 {
   if (style_set) {
     g_hash_table_unref (style_set->table);
-    g_slice_free (TtmlStyleSet, style_set);
+    g_free (style_set);
   }
 }
 
@@ -254,7 +254,7 @@ ttml_delete_element (TtmlElement * element)
   g_free ((gpointer) element->region);
   ttml_style_set_delete (element->style_set);
   g_free ((gpointer) element->text);
-  g_slice_free (TtmlElement, element);
+  g_free (element);
 }
 
 
@@ -355,7 +355,7 @@ ttml_parse_element (const xmlNode * node)
     return NULL;
   }
 
-  element = g_slice_new0 (TtmlElement);
+  element = g_new0 (TtmlElement, 1);
   element->type = type;
 
   if ((value = ttml_get_xml_property (node, "id"))) {
@@ -1257,7 +1257,7 @@ ttml_create_scenes (GList * region_trees)
         "transition", g_list_length (active_trees));
 
     if (active_trees) {
-      cur_scene = g_slice_new0 (TtmlScene);
+      cur_scene = g_new0 (TtmlScene, 1);
       cur_scene->begin = timestamp;
       cur_scene->trees = active_trees;
     } else {
@@ -1439,7 +1439,7 @@ ttml_remove_nodes_by_region (GNode * node, const gchar * region)
 static TtmlElement *
 ttml_copy_element (const TtmlElement * element)
 {
-  TtmlElement *ret = g_slice_new0 (TtmlElement);
+  TtmlElement *ret = g_new0 (TtmlElement, 1);
 
   ret->type = element->type;
   if (element->id)
@@ -1765,7 +1765,7 @@ ttml_delete_scene (TtmlScene * scene)
     g_list_free_full (scene->trees, (GDestroyNotify) ttml_delete_tree);
   if (scene->buf)
     gst_buffer_unref (scene->buf);
-  g_slice_free (TtmlScene, scene);
+  g_free (scene);
 }
 
 

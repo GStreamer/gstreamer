@@ -44,7 +44,7 @@ _gst_subtitle_style_set_free (GstSubtitleStyleSet * style_set)
 {
   g_return_if_fail (style_set != NULL);
   g_free (style_set->font_family);
-  g_slice_free (GstSubtitleStyleSet, style_set);
+  g_free (style_set);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstSubtitleStyleSet, gst_subtitle_style_set);
@@ -59,7 +59,7 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstSubtitleStyleSet, gst_subtitle_style_set);
 GstSubtitleStyleSet *
 gst_subtitle_style_set_new (void)
 {
-  GstSubtitleStyleSet *ret = g_slice_new0 (GstSubtitleStyleSet);
+  GstSubtitleStyleSet *ret = g_new0 (GstSubtitleStyleSet, 1);
   GstSubtitleColor white = { 255, 255, 255, 255 };
   GstSubtitleColor transparent = { 0, 0, 0, 0 };
 
@@ -88,7 +88,7 @@ _gst_subtitle_element_free (GstSubtitleElement * element)
 {
   g_return_if_fail (element != NULL);
   gst_subtitle_style_set_unref (element->style_set);
-  g_slice_free (GstSubtitleElement, element);
+  g_free (element);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstSubtitleElement, gst_subtitle_element);
@@ -113,7 +113,7 @@ gst_subtitle_element_new (GstSubtitleStyleSet * style_set,
 
   g_return_val_if_fail (style_set != NULL, NULL);
 
-  element = g_slice_new0 (GstSubtitleElement);
+  element = g_new0 (GstSubtitleElement, 1);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (element), 0,
       gst_subtitle_element_get_type (), NULL, NULL,
       (GstMiniObjectFreeFunction) _gst_subtitle_element_free);
@@ -131,7 +131,7 @@ _gst_subtitle_block_free (GstSubtitleBlock * block)
   g_return_if_fail (block != NULL);
   gst_subtitle_style_set_unref (block->style_set);
   g_ptr_array_unref (block->elements);
-  g_slice_free (GstSubtitleBlock, block);
+  g_free (block);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstSubtitleBlock, gst_subtitle_block);
@@ -154,7 +154,7 @@ gst_subtitle_block_new (GstSubtitleStyleSet * style_set)
 
   g_return_val_if_fail (style_set != NULL, NULL);
 
-  block = g_slice_new0 (GstSubtitleBlock);
+  block = g_new0 (GstSubtitleBlock, 1);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (block), 0,
       gst_subtitle_block_get_type (), NULL, NULL,
       (GstMiniObjectFreeFunction) _gst_subtitle_block_free);
@@ -227,7 +227,7 @@ _gst_subtitle_region_free (GstSubtitleRegion * region)
   g_return_if_fail (region != NULL);
   gst_subtitle_style_set_unref (region->style_set);
   g_ptr_array_unref (region->blocks);
-  g_slice_free (GstSubtitleRegion, region);
+  g_free (region);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstSubtitleRegion, gst_subtitle_region);
@@ -250,7 +250,7 @@ gst_subtitle_region_new (GstSubtitleStyleSet * style_set)
 
   g_return_val_if_fail (style_set != NULL, NULL);
 
-  region = g_slice_new0 (GstSubtitleRegion);
+  region = g_new0 (GstSubtitleRegion, 1);
   gst_mini_object_init (GST_MINI_OBJECT_CAST (region), 0,
       gst_subtitle_region_get_type (), NULL, NULL,
       (GstMiniObjectFreeFunction) _gst_subtitle_region_free);

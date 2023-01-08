@@ -273,7 +273,7 @@ gst_ttml_render_class_init (GstTtmlRenderClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_ttml_render_change_state);
 
-  klass->pango_lock = g_slice_new (GMutex);
+  klass->pango_lock = g_new (GMutex, 1);
   g_mutex_init (klass->pango_lock);
 }
 
@@ -1228,7 +1228,7 @@ gst_ttml_render_draw_rectangle (guint width, guint height,
 static void
 gst_ttml_render_char_range_free (CharRange * range)
 {
-  g_slice_free (CharRange, range);
+  g_free (range);
 }
 
 
@@ -1301,7 +1301,7 @@ gst_ttml_render_unified_element_free (UnifiedElement * unified_element)
 
   gst_subtitle_element_unref (unified_element->element);
   g_free (unified_element->text);
-  g_slice_free (UnifiedElement, unified_element);
+  g_free (unified_element);
 }
 
 
@@ -1313,7 +1313,7 @@ gst_ttml_render_unified_element_copy (const UnifiedElement * unified_element)
   if (!unified_element)
     return NULL;
 
-  ret = g_slice_new0 (UnifiedElement);
+  ret = g_new0 (UnifiedElement, 1);
   ret->element = gst_subtitle_element_ref (unified_element->element);
   ret->pango_font_size = unified_element->pango_font_size;
   ret->pango_font_metrics.height = unified_element->pango_font_metrics.height;
@@ -1334,7 +1334,7 @@ gst_ttml_render_unified_block_free (UnifiedBlock * unified_block)
   gst_subtitle_style_set_unref (unified_block->style_set);
   g_ptr_array_unref (unified_block->unified_elements);
   g_free (unified_block->joined_text);
-  g_slice_free (UnifiedBlock, unified_block);
+  g_free (unified_block);
 }
 
 
@@ -1358,7 +1358,7 @@ gst_ttml_render_unified_block_copy (const UnifiedBlock * block)
   if (!block)
     return NULL;
 
-  ret = g_slice_new0 (UnifiedBlock);
+  ret = g_new0 (UnifiedBlock, 1);
   ret->joined_text = g_strdup (block->joined_text);
   ret->style_set = gst_subtitle_style_set_ref (block->style_set);
   ret->unified_elements = g_ptr_array_new_with_free_func ((GDestroyNotify)
@@ -1485,7 +1485,7 @@ static UnifiedBlock *
 gst_ttml_render_unify_block (GstTtmlRender * render,
     const GstSubtitleBlock * block, GstBuffer * buf)
 {
-  UnifiedBlock *ret = g_slice_new0 (UnifiedBlock);
+  UnifiedBlock *ret = g_new0 (UnifiedBlock, 1);
   guint i;
 
   ret->unified_elements = g_ptr_array_new_with_free_func ((GDestroyNotify)
@@ -1495,7 +1495,7 @@ gst_ttml_render_unify_block (GstTtmlRender * render,
 
   for (i = 0; i < gst_subtitle_block_get_element_count (block); ++i) {
     gchar *text;
-    UnifiedElement *ue = g_slice_new0 (UnifiedElement);
+    UnifiedElement *ue = g_new0 (UnifiedElement, 1);
     ue->element =
         gst_subtitle_element_ref (gst_subtitle_block_get_element (block, i));
     ue->pango_font_size =
@@ -1584,7 +1584,7 @@ gst_ttml_render_get_line_char_ranges (GstTtmlRender * render,
 
   /* Handle hard breaks in block text. */
   while (start_index < strlen (block->joined_text)) {
-    CharRange *range = g_slice_new0 (CharRange);
+    CharRange *range = g_new0 (CharRange, 1);
     gchar *c = block->joined_text + start_index;
     while (*c != '\0' && *c != '\n')
       ++c;
@@ -1647,7 +1647,7 @@ gst_ttml_render_get_line_char_ranges (GstTtmlRender * render,
         end_index = gst_ttml_render_get_nearest_breakpoint (block, end_index);
 
         if (end_index > range->first_index) {
-          new_range = g_slice_new0 (CharRange);
+          new_range = g_new0 (CharRange, 1);
           new_range->first_index = end_index + 1;
           new_range->last_index = range->last_index;
           GST_CAT_LOG (ttmlrender_debug,
@@ -2279,7 +2279,7 @@ gst_ttml_render_rendered_image_new (GstBuffer * image, gint x, gint y,
 {
   GstTtmlRenderRenderedImage *ret;
 
-  ret = g_slice_new0 (GstTtmlRenderRenderedImage);
+  ret = g_new0 (GstTtmlRenderRenderedImage, 1);
 
   ret->image = image;
   ret->x = x;
@@ -2301,7 +2301,7 @@ gst_ttml_render_rendered_image_new_empty (void)
 static inline GstTtmlRenderRenderedImage *
 gst_ttml_render_rendered_image_copy (GstTtmlRenderRenderedImage * image)
 {
-  GstTtmlRenderRenderedImage *ret = g_slice_new0 (GstTtmlRenderRenderedImage);
+  GstTtmlRenderRenderedImage *ret = g_new0 (GstTtmlRenderRenderedImage, 1);
 
   ret->image = gst_buffer_ref (image->image);
   ret->x = image->x;
@@ -2319,7 +2319,7 @@ gst_ttml_render_rendered_image_free (GstTtmlRenderRenderedImage * image)
   if (!image)
     return;
   gst_buffer_unref (image->image);
-  g_slice_free (GstTtmlRenderRenderedImage, image);
+  g_free (image);
 }
 
 
@@ -2343,7 +2343,7 @@ gst_ttml_render_rendered_image_combine (GstTtmlRenderRenderedImage * image1,
   if (image2 && !image1)
     return gst_ttml_render_rendered_image_copy (image2);
 
-  ret = g_slice_new0 (GstTtmlRenderRenderedImage);
+  ret = g_new0 (GstTtmlRenderRenderedImage, 1);
 
   /* Work out dimensions of combined image. */
   ret->x = MIN (image1->x, image2->x);
@@ -2429,7 +2429,7 @@ gst_ttml_render_rendered_image_crop (GstTtmlRenderRenderedImage * image,
     return NULL;
   }
 
-  ret = g_slice_new0 (GstTtmlRenderRenderedImage);
+  ret = g_new0 (GstTtmlRenderRenderedImage, 1);
 
   ret->x = MAX (image->x, x);
   ret->y = MAX (image->y, y);
