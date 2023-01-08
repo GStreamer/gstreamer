@@ -167,7 +167,7 @@ gst_kate_util_decoder_base_queue_event (GstKateDecoderBase * decoder,
   if (decoder->delay_events && can_be_queued) {
     GstKateDecoderBaseQueuedEvent *item;
     GST_DEBUG_OBJECT (decoder, "We have to delay the event");
-    item = g_slice_new (GstKateDecoderBaseQueuedEvent);
+    item = g_new (GstKateDecoderBaseQueuedEvent, 1);
     if (item) {
       item->event = event;
       item->parent = parent;
@@ -190,7 +190,7 @@ gst_kate_util_decoder_base_free_event_queue (GstKateDecoderBase * decoder)
     GstKateDecoderBaseQueuedEvent *item = (GstKateDecoderBaseQueuedEvent *)
         g_queue_pop_head (decoder->event_queue);
     gst_event_unref (item->event);
-    g_slice_free (GstKateDecoderBaseQueuedEvent, item);
+    g_free (item);
   }
   g_queue_free (decoder->event_queue);
   decoder->event_queue = NULL;
@@ -209,7 +209,7 @@ gst_kate_util_decoder_base_drain_event_queue (GstKateDecoderBase * decoder)
     GstKateDecoderBaseQueuedEvent *item = (GstKateDecoderBaseQueuedEvent *)
         g_queue_pop_head (decoder->event_queue);
     (*item->handler) (item->pad, item->parent, item->event);
-    g_slice_free (GstKateDecoderBaseQueuedEvent, item);
+    g_free (item);
   }
 }
 
