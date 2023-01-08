@@ -1527,7 +1527,7 @@ gst_value_deserialize_int_range (GValue * dest, const gchar * s)
 static void
 gst_value_init_int64_range (GValue * value)
 {
-  gint64 *vals = g_slice_alloc0 (3 * sizeof (gint64));
+  gint64 *vals = g_malloc0 (3 * sizeof (gint64));
   value->data[0].v_pointer = vals;
   INT64_RANGE_MIN (value) = 0;
   INT64_RANGE_MAX (value) = 0;
@@ -1538,7 +1538,7 @@ static void
 gst_value_free_int64_range (GValue * value)
 {
   g_return_if_fail (GST_VALUE_HOLDS_INT64_RANGE (value));
-  g_slice_free1 (3 * sizeof (gint64), value->data[0].v_pointer);
+  g_free (value->data[0].v_pointer);
   value->data[0].v_pointer = NULL;
 }
 
@@ -1913,7 +1913,7 @@ gst_value_init_fraction_range (GValue * value)
 
   ftype = GST_TYPE_FRACTION;
 
-  value->data[0].v_pointer = vals = g_slice_alloc0 (2 * sizeof (GValue));
+  value->data[0].v_pointer = vals = g_malloc0 (2 * sizeof (GValue));
   g_value_init (&vals[0], ftype);
   g_value_init (&vals[1], ftype);
 }
@@ -1927,7 +1927,7 @@ gst_value_free_fraction_range (GValue * value)
     /* we know the two values contain fractions without internal allocs */
     /* g_value_unset (&vals[0]); */
     /* g_value_unset (&vals[1]); */
-    g_slice_free1 (2 * sizeof (GValue), vals);
+    g_free (vals);
     value->data[0].v_pointer = NULL;
   }
 }
