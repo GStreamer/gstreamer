@@ -548,7 +548,7 @@ gst_mpeg2dec_clear_buffers (GstMpeg2dec * mpeg2dec)
   while ((l = g_list_first (mpeg2dec->buffers))) {
     GstMpeg2DecBuffer *mbuf = l->data;
     gst_video_frame_unmap (&mbuf->frame);
-    g_slice_free (GstMpeg2DecBuffer, mbuf);
+    g_free (mbuf);
     mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
   }
 }
@@ -561,7 +561,7 @@ gst_mpeg2dec_save_buffer (GstMpeg2dec * mpeg2dec, gint id,
 
   GST_LOG_OBJECT (mpeg2dec, "Saving local info for frame %d", id);
 
-  mbuf = g_slice_new0 (GstMpeg2DecBuffer);
+  mbuf = g_new0 (GstMpeg2DecBuffer, 1);
   mbuf->id = id;
   mbuf->frame = *frame;
 
@@ -585,7 +585,7 @@ gst_mpeg2dec_discard_buffer (GstMpeg2dec * mpeg2dec, gint id)
   if (l) {
     GstMpeg2DecBuffer *mbuf = l->data;
     gst_video_frame_unmap (&mbuf->frame);
-    g_slice_free (GstMpeg2DecBuffer, mbuf);
+    g_free (mbuf);
     mpeg2dec->buffers = g_list_delete_link (mpeg2dec->buffers, l);
     GST_LOG_OBJECT (mpeg2dec, "Discarded local info for frame %d", id);
   } else {
