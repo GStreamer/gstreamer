@@ -112,9 +112,6 @@ rtp_jitter_buffer_finalize (GObject * object)
   if (jbuf->pipeline_clock)
     gst_object_unref (jbuf->pipeline_clock);
 
-  /* We cannot use g_queue_clear() as it would pass the wrong size to
-   * g_slice_free() which may lead to data corruption in the slice allocator.
-   */
   rtp_jitter_buffer_flush (jbuf, NULL, NULL);
 
   g_mutex_clear (&jbuf->clock_lock);
@@ -1177,7 +1174,7 @@ rtp_jitter_buffer_alloc_item (gpointer data, guint type, GstClockTime dts,
 {
   RTPJitterBufferItem *item;
 
-  item = g_slice_new (RTPJitterBufferItem);
+  item = g_new (RTPJitterBufferItem, 1);
   item->data = data;
   item->next = NULL;
   item->prev = NULL;
@@ -1629,5 +1626,5 @@ rtp_jitter_buffer_free_item (RTPJitterBufferItem * item)
 
   if (item->data && item->free_data)
     item->free_data (item->data);
-  g_slice_free (RTPJitterBufferItem, item);
+  g_free (item);
 }

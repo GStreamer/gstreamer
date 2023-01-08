@@ -493,7 +493,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     gst_pad_set_event_function (srcpad, gst_rtp_pt_demux_src_event);
 
     GST_DEBUG_OBJECT (rtpdemux, "Adding pt=%d to the list.", pt);
-    rtpdemuxpad = g_slice_new0 (GstRtpPtDemuxPad);
+    rtpdemuxpad = g_new0 (GstRtpPtDemuxPad, 1);
     rtpdemuxpad->pt = pt;
     rtpdemuxpad->newcaps = FALSE;
     rtpdemuxpad->pad = srcpad;
@@ -720,7 +720,7 @@ gst_rtp_pt_demux_release (GstRtpPtDemux * ptdemux)
 
     gst_pad_set_active (pad->pad, FALSE);
     gst_element_remove_pad (GST_ELEMENT_CAST (ptdemux), pad->pad);
-    g_slice_free (GstRtpPtDemuxPad, pad);
+    g_free (pad);
   }
   g_slist_free (tmppads);
 }

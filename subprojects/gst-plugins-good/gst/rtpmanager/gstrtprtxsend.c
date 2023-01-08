@@ -169,7 +169,7 @@ static void
 buffer_queue_item_free (BufferQueueItem * item)
 {
   gst_buffer_unref (item->buffer);
-  g_slice_free (BufferQueueItem, item);
+  g_free (item);
 }
 
 typedef struct
@@ -185,7 +185,7 @@ typedef struct
 static SSRCRtxData *
 ssrc_rtx_data_new (guint32 rtx_ssrc)
 {
-  SSRCRtxData *data = g_slice_new0 (SSRCRtxData);
+  SSRCRtxData *data = g_new0 (SSRCRtxData, 1);
 
   data->rtx_ssrc = rtx_ssrc;
   data->next_seqnum = data->seqnum_base = g_random_int_range (0, G_MAXUINT16);
@@ -198,7 +198,7 @@ static void
 ssrc_rtx_data_free (SSRCRtxData * data)
 {
   g_sequence_free (data->queue);
-  g_slice_free (SSRCRtxData, data);
+  g_free (data);
 }
 
 typedef enum
@@ -442,7 +442,7 @@ gst_rtp_rtx_data_queue_item_free (gpointer item)
   GstDataQueueItem *data = item;
   if (data->object)
     gst_mini_object_unref (data->object);
-  g_slice_free (GstDataQueueItem, data);
+  g_free (data);
 }
 
 static gboolean
@@ -451,7 +451,7 @@ gst_rtp_rtx_send_push_out (GstRtpRtxSend * rtx, gpointer object)
   GstDataQueueItem *data;
   gboolean success;
 
-  data = g_slice_new0 (GstDataQueueItem);
+  data = g_new0 (GstDataQueueItem, 1);
   data->object = GST_MINI_OBJECT (object);
   data->size = 1;
   data->duration = 1;
@@ -1042,7 +1042,7 @@ process_buffer (GstRtpRtxSend * rtx, GstBuffer * buffer)
     }
 
     /* add current rtp buffer to queue history */
-    item = g_slice_new0 (BufferQueueItem);
+    item = g_new0 (BufferQueueItem, 1);
     item->seqnum = seqnum;
     item->timestamp = rtptime;
     item->buffer = gst_buffer_ref (buffer);

@@ -4482,7 +4482,7 @@ generate_twcc (const gchar * key, RTPSource * source, ReportData * data)
   GST_DEBUG ("generating TWCC feedback for source %08x", source->ssrc);
 
   while ((buf = rtp_twcc_manager_get_feedback (sess->twcc, source->ssrc))) {
-    ReportOutput *output = g_slice_new (ReportOutput);
+    ReportOutput *output = g_new (ReportOutput, 1);
     output->source = g_object_ref (source);
     output->is_bye = FALSE;
     output->buffer = buf;
@@ -4546,7 +4546,7 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
 
   gst_rtcp_buffer_unmap (&data->rtcpbuf);
 
-  output = g_slice_new (ReportOutput);
+  output = g_new (ReportOutput, 1);
   output->source = g_object_ref (source);
   output->is_bye = is_bye;
   output->buffer = data->rtcp;
@@ -4796,7 +4796,7 @@ done:
       gst_buffer_unref (buffer);
     }
     g_object_unref (source);
-    g_slice_free (ReportOutput, output);
+    g_free (output);
   }
 
   if (all_empty)

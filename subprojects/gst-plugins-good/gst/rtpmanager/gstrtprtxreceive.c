@@ -381,7 +381,7 @@ typedef struct
 static SsrcAssoc *
 ssrc_assoc_new (guint32 ssrc, GstClockTime time)
 {
-  SsrcAssoc *assoc = g_slice_new (SsrcAssoc);
+  SsrcAssoc *assoc = g_new (SsrcAssoc, 1);
 
   assoc->ssrc = ssrc;
   assoc->time = time;
@@ -392,7 +392,7 @@ ssrc_assoc_new (guint32 ssrc, GstClockTime time)
 static void
 ssrc_assoc_free (SsrcAssoc * assoc)
 {
-  g_slice_free (SsrcAssoc, assoc);
+  g_free (assoc);
 }
 
 static void

@@ -39,7 +39,7 @@ G_DEFINE_TYPE (RtpTimerQueue, rtp_timer_queue, G_TYPE_OBJECT);
 static RtpTimer *
 rtp_timer_new (void)
 {
-  return g_slice_new0 (RtpTimer);
+  return g_new0 (RtpTimer, 1);
 }
 
 static inline void
@@ -329,7 +329,7 @@ rtp_timer_free (RtpTimer * timer)
   g_return_if_fail (timer->list.next == NULL);
   g_return_if_fail (timer->list.prev == NULL);
 
-  g_slice_free (RtpTimer, timer);
+  g_free (timer);
 }
 
 /**
@@ -343,7 +343,7 @@ rtp_timer_free (RtpTimer * timer)
 RtpTimer *
 rtp_timer_dup (const RtpTimer * timer)
 {
-  RtpTimer *copy = g_slice_new (RtpTimer);
+  RtpTimer *copy = g_new (RtpTimer, 1);
   memcpy (copy, timer, sizeof (RtpTimer));
   memset (&copy->list, 0, sizeof (GList));
   copy->queued = FALSE;

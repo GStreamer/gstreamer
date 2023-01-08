@@ -328,7 +328,7 @@ void
 rtp_conflicting_address_free (RTPConflictingAddress * addr)
 {
   g_object_unref (addr->address);
-  g_slice_free (RTPConflictingAddress, addr);
+  g_free (addr);
 }
 
 static void
@@ -1872,7 +1872,7 @@ add_conflicting_address (GList * conflicting_addresses,
 {
   RTPConflictingAddress *new_conflict;
 
-  new_conflict = g_slice_new (RTPConflictingAddress);
+  new_conflict = g_new (RTPConflictingAddress, 1);
 
   new_conflict->address = G_SOCKET_ADDRESS (g_object_ref (address));
   new_conflict->time = time;
