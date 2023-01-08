@@ -156,7 +156,7 @@ static Transaction *
 transaction_new (gdouble transaction_id, GstRtmpCommandCallback func,
     gpointer user_data)
 {
-  Transaction *data = g_slice_new (Transaction);
+  Transaction *data = g_new (Transaction, 1);
   data->transaction_id = transaction_id;
   data->func = func;
   data->user_data = user_data;
@@ -167,7 +167,7 @@ static void
 transaction_free (gpointer ptr)
 {
   Transaction *data = ptr;
-  g_slice_free (Transaction, data);
+  g_free (data);
 }
 
 typedef struct
@@ -182,7 +182,7 @@ static ExpectedCommand *
 expected_command_new (guint32 stream_id, const gchar * command_name,
     GstRtmpCommandCallback func, gpointer user_data)
 {
-  ExpectedCommand *data = g_slice_new (ExpectedCommand);
+  ExpectedCommand *data = g_new (ExpectedCommand, 1);
   data->stream_id = stream_id;
   data->command_name = g_strdup (command_name);
   data->func = func;
@@ -195,7 +195,7 @@ expected_command_free (gpointer ptr)
 {
   ExpectedCommand *data = ptr;
   g_free (data->command_name);
-  g_slice_free (ExpectedCommand, data);
+  g_free (data);
 }
 
 enum

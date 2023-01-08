@@ -690,7 +690,7 @@ gst_rtmp_chunk_streams_new (void)
 
   init_debug ();
 
-  cstreams = g_slice_new (GstRtmpChunkStreams);
+  cstreams = g_new (GstRtmpChunkStreams, 1);
   cstreams->array = g_array_new (FALSE, TRUE, sizeof (GstRtmpChunkStream));
   g_array_set_clear_func (cstreams->array,
       (GDestroyNotify) gst_rtmp_chunk_stream_clear);
@@ -702,7 +702,7 @@ gst_rtmp_chunk_streams_free (gpointer ptr)
 {
   GstRtmpChunkStreams *cstreams = ptr;
   g_clear_pointer (&cstreams->array, g_array_unref);
-  g_slice_free (GstRtmpChunkStreams, cstreams);
+  g_free (cstreams);
 }
 
 GstRtmpChunkStream *

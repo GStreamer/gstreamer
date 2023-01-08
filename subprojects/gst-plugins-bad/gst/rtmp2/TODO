@@ -2,7 +2,7 @@
   deleting and recreating stream, which drops clients.
 
 - Move AMF parser/serializer to GstRtmpMeta?
-- Move AMF nodes from g_slice to GstMiniObject?
+- Move AMF nodes to GstMiniObject?
 
 - First video frame that comes from Wowza seems to be out-of-order; librtmp
   does not have this problem

@@ -167,7 +167,7 @@ typedef struct
 static WriteAllBufferData *
 write_all_buffer_data_new (GstBuffer * buffer)
 {
-  WriteAllBufferData *data = g_slice_new0 (WriteAllBufferData);
+  WriteAllBufferData *data = g_new0 (WriteAllBufferData, 1);
   data->buffer = gst_buffer_ref (buffer);
   return data;
 }
@@ -180,7 +180,7 @@ write_all_buffer_data_free (gpointer ptr)
     gst_buffer_unmap (data->buffer, &data->map);
   }
   g_clear_pointer (&data->buffer, gst_buffer_unref);
-  g_slice_free (WriteAllBufferData, data);
+  g_free (data);
 }
 
 void

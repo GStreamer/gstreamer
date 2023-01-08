@@ -93,7 +93,7 @@ handshake_random_data (void)
 static HandshakeData *
 handshake_data_new (gboolean strict)
 {
-  HandshakeData *data = g_slice_new0 (HandshakeData);
+  HandshakeData *data = g_new0 (HandshakeData, 1);
   data->random_bytes = handshake_random_data ();
   data->strict = strict;
   return data;
@@ -104,7 +104,7 @@ handshake_data_free (gpointer ptr)
 {
   HandshakeData *data = ptr;
   g_clear_pointer (&data->random_bytes, g_bytes_unref);
-  g_slice_free (HandshakeData, data);
+  g_free (data);
 }
 
 static gboolean

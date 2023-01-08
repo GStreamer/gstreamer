@@ -156,7 +156,7 @@ node_new (GstAmfType type)
 
   init_static ();
 
-  node = g_slice_alloc0 (sizeof *node);
+  node = g_malloc0 (sizeof *node);
   node->type = type;
 
   switch (type) {
@@ -295,7 +295,7 @@ gst_amf_node_free (gpointer ptr)
       break;
   }
 
-  g_slice_free (GstAmfNode, node);
+  g_free (node);
 }
 
 GstAmfType

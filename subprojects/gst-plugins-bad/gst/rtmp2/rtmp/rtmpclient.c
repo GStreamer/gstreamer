@@ -336,7 +336,7 @@ typedef struct
 static ConnectTaskData *
 connect_task_data_new (const GstRtmpLocation * location)
 {
-  ConnectTaskData *data = g_slice_new0 (ConnectTaskData);
+  ConnectTaskData *data = g_new0 (ConnectTaskData, 1);
   gst_rtmp_location_copy (&data->location, location);
   return data;
 }
@@ -351,7 +351,7 @@ connect_task_data_free (gpointer ptr)
     g_signal_handler_disconnect (data->connection, data->error_handler_id);
   }
   g_clear_object (&data->connection);
-  g_slice_free (ConnectTaskData, data);
+  g_free (data);
 }
 
 static GRegex *auth_regex = NULL;
@@ -1074,7 +1074,7 @@ static StreamTaskData *
 stream_task_data_new (GstRtmpConnection * connection, const gchar * stream,
     gboolean publish)
 {
-  StreamTaskData *data = g_slice_new0 (StreamTaskData);
+  StreamTaskData *data = g_new0 (StreamTaskData, 1);
   data->connection = g_object_ref (connection);
   data->stream = g_strdup (stream);
   data->publish = publish;
@@ -1090,7 +1090,7 @@ stream_task_data_free (gpointer ptr)
     g_signal_handler_disconnect (data->connection, data->error_handler_id);
   }
   g_clear_object (&data->connection);
-  g_slice_free (StreamTaskData, data);
+  g_free (data);
 }
 
 static void
