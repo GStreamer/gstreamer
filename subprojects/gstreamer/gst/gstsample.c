@@ -106,7 +106,7 @@ _gst_sample_free (GstSample * sample)
   memset (sample, 0xff, sizeof (GstSample));
 #endif
 
-  g_slice_free1 (sizeof (GstSample), sample);
+  g_free (sample);
 }
 
 /**
@@ -129,7 +129,7 @@ gst_sample_new (GstBuffer * buffer, GstCaps * caps, const GstSegment * segment,
 {
   GstSample *sample;
 
-  sample = g_slice_new0 (GstSample);
+  sample = g_new0 (GstSample, 1);
 
   GST_LOG ("new %p", sample);
 
