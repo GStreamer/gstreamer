@@ -104,7 +104,7 @@ rtp_hist_item_init (RTPHistItem * item, GstRTPBuffer * rtp,
 static RTPHistItem *
 rtp_hist_item_new (GstRTPBuffer * rtp, GstBuffer * rtp_payload)
 {
-  RTPHistItem *item = g_slice_new0 (RTPHistItem);
+  RTPHistItem *item = g_new0 (RTPHistItem, 1);
   rtp_hist_item_init (item, rtp, rtp_payload);
   return item;
 }
@@ -122,7 +122,7 @@ rtp_hist_item_free (gpointer _item)
 {
   RTPHistItem *item = _item;
   gst_buffer_unref (item->payload);
-  g_slice_free (RTPHistItem, item);
+  g_free (item);
 }
 
 static GstEvent *

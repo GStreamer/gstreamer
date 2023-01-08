@@ -25,7 +25,7 @@
 static RtpStorageItem *
 rtp_storage_item_new (GstBuffer * buffer, guint8 pt, guint16 seq)
 {
-  RtpStorageItem *ret = g_slice_new0 (RtpStorageItem);
+  RtpStorageItem *ret = g_new0 (RtpStorageItem, 1);
   ret->buffer = buffer;
   ret->pt = pt;
   ret->seq = seq;
@@ -37,7 +37,7 @@ rtp_storage_item_free (RtpStorageItem * item)
 {
   g_assert (item->buffer != NULL);
   gst_buffer_unref (item->buffer);
-  g_slice_free (RtpStorageItem, item);
+  g_free (item);
 }
 
 static gint
@@ -150,7 +150,7 @@ rtp_storage_stream_resize_and_add_item (RtpStorageStream * stream,
 RtpStorageStream *
 rtp_storage_stream_new (guint32 ssrc)
 {
-  RtpStorageStream *ret = g_slice_new0 (RtpStorageStream);
+  RtpStorageStream *ret = g_new0 (RtpStorageStream, 1);
   ret->max_arrival_time = GST_CLOCK_TIME_NONE;
   ret->ssrc = ssrc;
   g_mutex_init (&ret->stream_lock);
@@ -165,7 +165,7 @@ rtp_storage_stream_free (RtpStorageStream * stream)
     rtp_storage_item_free (g_queue_pop_tail (&stream->queue));
   STREAM_UNLOCK (stream);
   g_mutex_clear (&stream->stream_lock);
-  g_slice_free (RtpStorageStream, stream);
+  g_free (stream);
 }
 
 void

@@ -97,13 +97,13 @@ enum
 static RTPHistItem *
 rtp_hist_item_alloc (void)
 {
-  return g_slice_new (RTPHistItem);
+  return g_new (RTPHistItem, 1);
 }
 
 static void
 rtp_hist_item_free (gpointer item)
 {
-  g_slice_free (RTPHistItem, item);
+  g_free (item);
 }
 
 static gint

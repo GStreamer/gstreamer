@@ -278,7 +278,7 @@ gst_rtp_mpa_robust_depay_generate_dummy_frame (GstRtpMPARobustDepay *
   GstADUFrame *dummy;
   GstMapInfo map;
 
-  dummy = g_slice_dup (GstADUFrame, frame);
+  dummy = g_memdup2 (frame, sizeof (GstADUFrame));
 
   /* go for maximum bitrate */
   dummy->header = (frame->header & ~(0xf << 12)) | (0xe << 12);
@@ -319,7 +319,7 @@ gst_rtp_mpa_robust_depay_queue_frame (GstRtpMPARobustDepay * rtpmpadepay,
   if (map.size < 6)
     goto corrupt_frame;
 
-  frame = g_slice_new0 (GstADUFrame);
+  frame = g_new0 (GstADUFrame, 1);
   frame->header = GST_READ_UINT32_BE (map.data);
 
   size = mp3_type_frame_length_from_header (GST_ELEMENT_CAST (rtpmpadepay),
@@ -377,7 +377,7 @@ corrupt_frame:
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     if (frame)
-      g_slice_free (GstADUFrame, frame);
+      g_free (frame);
     return FALSE;
   }
 }
@@ -387,7 +387,7 @@ gst_rtp_mpa_robust_depay_free_frame (GstADUFrame * frame)
 {
   if (frame->buffer)
     gst_buffer_unref (frame->buffer);
-  g_slice_free (GstADUFrame, frame);
+  g_free (frame);
 }
 
 static inline void
@@ -500,7 +500,7 @@ gst_rtp_mpa_robust_depay_push_mp3_frames (GstRtpMPARobustDepay * rtpmpadepay)
           frame->buffer);
       frame->buffer = NULL;
       /* and remove it from any further consideration */
-      g_slice_free (GstADUFrame, frame);
+      g_free (frame);
       g_queue_delete_link (rtpmpadepay->adu_frames, rtpmpadepay->cur_adu_frame);
       rtpmpadepay->cur_adu_frame = NULL;
       continue;
