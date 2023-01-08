@@ -113,7 +113,7 @@ static void
 tsmux_section_free (TsMuxSection * section)
 {
   gst_mpegts_section_unref (section->section);
-  g_slice_free (TsMuxSection, section);
+  g_free (section);
 }
 
 /**
@@ -128,7 +128,7 @@ tsmux_new (void)
 {
   TsMux *mux;
 
-  mux = g_slice_new0 (TsMux);
+  mux = g_new0 (TsMux, 1);
 
   mux->transport_id = TSMUX_DEFAULT_TS_ID;
 
@@ -344,7 +344,7 @@ tsmux_add_mpegts_si_section (TsMux * mux, GstMpegtsSection * section)
   g_return_val_if_fail (section != NULL, FALSE);
   g_return_val_if_fail (mux->si_sections != NULL, FALSE);
 
-  tsmux_section = g_slice_new0 (TsMuxSection);
+  tsmux_section = g_new0 (TsMuxSection, 1);
 
   GST_DEBUG ("Adding mpegts section with type %d to mux",
       section->section_type);
@@ -398,7 +398,7 @@ tsmux_free (TsMux * mux)
   /* Free SI table sections */
   g_hash_table_unref (mux->si_sections);
 
-  g_slice_free (TsMux, mux);
+  g_free (mux);
 }
 
 static gint
@@ -427,7 +427,7 @@ tsmux_program_new (TsMux * mux, gint prog_id)
   if (mux->nb_programs == TSMUX_MAX_PROGRAMS)
     return NULL;
 
-  program = g_slice_new0 (TsMuxProgram);
+  program = g_new0 (TsMuxProgram, 1);
 
   program->pmt_changed = TRUE;
   program->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
@@ -576,7 +576,7 @@ tsmux_program_set_scte35_pid (TsMuxProgram * program, guint16 pid)
     program->scte35_null_section = NULL;
   }
   if (pid != 0) {
-    program->scte35_null_section = section = g_slice_new0 (TsMuxSection);
+    program->scte35_null_section = section = g_new0 (TsMuxSection, 1);
     section->pi.pid = pid;
     sit = gst_mpegts_scte_null_new ();
     section->section = gst_mpegts_section_from_scte_sit (sit, pid);
@@ -1677,7 +1677,7 @@ tsmux_program_free (TsMuxProgram * program)
     tsmux_section_free (program->scte35_null_section);
 
   g_ptr_array_free (program->streams, TRUE);
-  g_slice_free (TsMuxProgram, program);
+  g_free (program);
 }
 
 /**

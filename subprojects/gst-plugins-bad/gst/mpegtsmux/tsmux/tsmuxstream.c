@@ -108,7 +108,7 @@ struct TsMuxStreamBuffer
 TsMuxStream *
 tsmux_stream_new (guint16 pid, guint stream_type)
 {
-  TsMuxStream *stream = g_slice_new0 (TsMuxStream);
+  TsMuxStream *stream = g_new0 (TsMuxStream, 1);
 
   stream->state = TSMUX_STREAM_STATE_HEADER;
   stream->pi.pid = pid;
@@ -259,11 +259,11 @@ tsmux_stream_free (TsMuxStream * stream)
 
     if (stream->buffer_release)
       stream->buffer_release (tmbuf->data, tmbuf->user_data);
-    g_slice_free (TsMuxStreamBuffer, tmbuf);
+    g_free (tmbuf);
   }
   g_list_free (stream->buffers);
 
-  g_slice_free (TsMuxStream, stream);
+  g_free (stream);
 }
 
 /**
@@ -331,7 +331,7 @@ tsmux_stream_consume (TsMuxStream * stream, guint len)
           stream->cur_buffer->user_data);
     }
 
-    g_slice_free (TsMuxStreamBuffer, stream->cur_buffer);
+    g_free (stream->cur_buffer);
     stream->cur_buffer = NULL;
     /* FIXME: As a hack, for unbounded streams, start a new PES packet for each
      * incoming packet we receive. This assumes that incoming data is
@@ -716,7 +716,7 @@ tsmux_stream_add_data (TsMuxStream * stream, guint8 * data, guint len,
 
   g_return_if_fail (stream != NULL);
 
-  packet = g_slice_new (TsMuxStreamBuffer);
+  packet = g_new (TsMuxStreamBuffer, 1);
   packet->data = data;
   packet->size = len;
   packet->user_data = user_data;
