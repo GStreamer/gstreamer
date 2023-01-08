@@ -474,7 +474,7 @@ gst_udp_client_new (GstMultiUDPSink * sink, const gchar * host, gint port)
   }
 #endif
 
-  client = g_slice_new0 (GstUDPClient);
+  client = g_new0 (GstUDPClient, 1);
   client->ref_count = 1;
   client->add_count = 0;
   client->host = g_strdup (host);
@@ -499,7 +499,7 @@ gst_udp_client_unref (GstUDPClient * client)
   if (--client->ref_count == 0) {
     g_object_unref (client->addr);
     g_free (client->host);
-    g_slice_free (GstUDPClient, client);
+    g_free (client);
   }
 }
 
