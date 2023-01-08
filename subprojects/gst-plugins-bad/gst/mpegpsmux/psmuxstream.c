@@ -67,7 +67,7 @@ static void psmux_stream_find_pts_dts_within (PsMuxStream * stream, guint bound,
 PsMuxStream *
 psmux_stream_new (PsMux * mux, PsMuxStreamType stream_type)
 {
-  PsMuxStream *stream = g_slice_new0 (PsMuxStream);
+  PsMuxStream *stream = g_new0 (PsMuxStream, 1);
   PsMuxStreamIdInfo *info = &(mux->id_info);
 
   stream->stream_type = stream_type;
@@ -147,7 +147,7 @@ psmux_stream_new (PsMux * mux, PsMuxStreamType stream_type)
   if (stream->stream_id == 0) {
     g_critical ("Number of elementary streams of type %04x exceeds maximum",
         stream->stream_type);
-    g_slice_free (PsMuxStream, stream);
+    g_free (stream);
     return NULL;
   }
 
@@ -211,7 +211,7 @@ psmux_stream_free (PsMuxStream * stream)
   if (psmux_stream_bytes_in_buffer (stream)) {
     g_warning ("Freeing stream with data not yet processed");
   }
-  g_slice_free (PsMuxStream, stream);
+  g_free (stream);
 }
 
 /* Advance the current packet stream position by len bytes.
@@ -237,7 +237,7 @@ psmux_stream_consume (PsMuxStream * stream, guint len)
 
     gst_buffer_unmap (stream->cur_buffer->buf, &stream->cur_buffer->map);
     gst_buffer_unref (stream->cur_buffer->buf);
-    g_slice_free (PsMuxStreamBuffer, stream->cur_buffer);
+    g_free (stream->cur_buffer);
     stream->cur_buffer = NULL;
   }
 }
@@ -494,13 +494,13 @@ psmux_stream_add_data (PsMuxStream * stream, GstBuffer * buffer,
 
   g_return_if_fail (stream != NULL);
 
-  packet = g_slice_new (PsMuxStreamBuffer);
+  packet = g_new (PsMuxStreamBuffer, 1);
   packet->buf = buffer;
 
   if (!gst_buffer_map (packet->buf, &packet->map, GST_MAP_READ)) {
     GST_ERROR ("Failed to map buffer for reading");
     gst_buffer_unref (packet->buf);
-    g_slice_free (PsMuxStreamBuffer, packet);
+    g_free (packet);
     return;
   }
 

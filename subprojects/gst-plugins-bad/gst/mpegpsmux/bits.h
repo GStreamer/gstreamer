@@ -49,7 +49,7 @@ static inline gint bits_initwrite( bits_buffer_t *p_buffer,
     p_buffer->p_data = p_data;
     if( !p_buffer->p_data )
     {
-        if( !( p_buffer->p_data = g_slice_alloc0( i_size ) ) )
+        if( !( p_buffer->p_data = g_malloc0( i_size ) ) )
             return -1;
     }
     p_buffer->p_data[0] = 0;

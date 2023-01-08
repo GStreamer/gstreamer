@@ -71,7 +71,7 @@ psmux_new (void)
 {
   PsMux *mux;
 
-  mux = g_slice_new0 (PsMux);
+  mux = g_new0 (PsMux, 1);
 
   mux->pts = -1;                /* uninitialized values */
   mux->pack_hdr_pts = -1;
@@ -147,7 +147,7 @@ psmux_free (PsMux * mux)
   if (mux->psm != NULL)
     gst_buffer_unref (mux->psm);
 
-  g_slice_free (PsMux, mux);
+  g_free (mux);
 }
 
 /**
