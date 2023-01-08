@@ -252,7 +252,7 @@ change_data_free (struct ChangeData *data)
   gst_object_unref (data->element);
   if (data->sibling)
     gst_object_unref (data->sibling);
-  g_slice_free (struct ChangeData, data);
+  g_free (data);
 }
 
 
@@ -794,7 +794,7 @@ gst_insert_bin_add_operation (GstInsertBin * self,
     GstInsertBinDirection direction, GstInsertBinCallback callback,
     gpointer user_data)
 {
-  struct ChangeData *data = g_slice_new (struct ChangeData);
+  struct ChangeData *data = g_new (struct ChangeData, 1);
   gboolean block_pad;
 
   data->element = element;
