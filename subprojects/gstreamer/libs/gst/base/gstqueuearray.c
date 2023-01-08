@@ -69,7 +69,7 @@ gst_queue_array_new_for_struct (gsize struct_size, guint initial_size)
 
   g_return_val_if_fail (struct_size > 0, NULL);
 
-  array = g_slice_new (GstQueueArray);
+  array = g_new (GstQueueArray, 1);
   array->elt_size = struct_size;
   array->size = initial_size;
   array->array = g_malloc0 (struct_size * initial_size);
@@ -116,7 +116,7 @@ gst_queue_array_free (GstQueueArray * array)
   g_return_if_fail (array != NULL);
   gst_queue_array_clear (array);
   g_free (array->array);
-  g_slice_free (GstQueueArray, array);
+  g_free (array);
 }
 
 /**
