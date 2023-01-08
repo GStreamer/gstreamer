@@ -1722,7 +1722,7 @@ gst_debug_add_log_function (GstLogFunction func, gpointer user_data,
   if (func == NULL)
     func = gst_debug_log_default;
 
-  entry = g_slice_new (LogFuncEntry);
+  entry = g_new (LogFuncEntry, 1);
   entry->func = func;
   entry->user_data = user_data;
   entry->notify = notify;
@@ -1789,7 +1789,7 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
     if (entry->notify)
       entry->notify (entry->user_data);
 
-    g_slice_free (LogFuncEntry, entry);
+    g_free (entry);
     cleanup = g_slist_delete_link (cleanup, cleanup);
   }
   return removals;
@@ -2074,7 +2074,7 @@ gst_debug_set_threshold_for_name (const gchar * name, GstDebugLevel level)
   g_return_if_fail (name != NULL);
 
   pat = g_pattern_spec_new (name);
-  entry = g_slice_new (LevelNameEntry);
+  entry = g_new (LevelNameEntry, 1);
   entry->pat = pat;
   entry->level = level;
   g_mutex_lock (&__level_name_mutex);
@@ -2109,7 +2109,7 @@ gst_debug_unset_threshold_for_name (const gchar * name)
     if (g_pattern_spec_equal (entry->pat, pat)) {
       __level_name = g_slist_remove_link (__level_name, walk);
       g_pattern_spec_free (entry->pat);
-      g_slice_free (LevelNameEntry, entry);
+      g_free (entry);
       g_slist_free_1 (walk);
       walk = __level_name;
     } else {
@@ -2129,7 +2129,7 @@ _gst_debug_category_new (const gchar * name, guint color,
 
   g_return_val_if_fail (name != NULL, NULL);
 
-  cat = g_slice_new (GstDebugCategory);
+  cat = g_new (GstDebugCategory, 1);
   cat->name = g_strdup (name);
   cat->color = color;
   if (description != NULL) {
@@ -2146,7 +2146,7 @@ _gst_debug_category_new (const gchar * name, guint color,
   if (catfound) {
     g_free ((gpointer) cat->name);
     g_free ((gpointer) cat->description);
-    g_slice_free (GstDebugCategory, cat);
+    g_free (cat);
     cat = catfound;
   } else {
     __categories = g_slist_prepend (__categories, cat);
@@ -2511,7 +2511,7 @@ clear_level_names (void)
   while (__level_name) {
     LevelNameEntry *level_name_entry = __level_name->data;
     g_pattern_spec_free (level_name_entry->pat);
-    g_slice_free (LevelNameEntry, level_name_entry);
+    g_free (level_name_entry);
     __level_name = g_slist_delete_link (__level_name, __level_name);
   }
   g_mutex_unlock (&__level_name_mutex);
@@ -2534,7 +2534,7 @@ _priv_gst_debug_cleanup (void)
     GstDebugCategory *cat = __categories->data;
     g_free ((gpointer) cat->name);
     g_free ((gpointer) cat->description);
-    g_slice_free (GstDebugCategory, cat);
+    g_free (cat);
     __categories = g_slist_delete_link (__categories, __categories);
   }
   g_mutex_unlock (&__cat_mutex);
@@ -2546,7 +2546,7 @@ _priv_gst_debug_cleanup (void)
     LogFuncEntry *log_func_entry = __log_functions->data;
     if (log_func_entry->notify)
       log_func_entry->notify (log_func_entry->user_data);
-    g_slice_free (LogFuncEntry, log_func_entry);
+    g_free (log_func_entry);
     __log_functions = g_slist_delete_link (__log_functions, __log_functions);
   }
   g_mutex_unlock (&__log_func_mutex);
