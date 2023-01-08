@@ -361,7 +361,7 @@ static RsnSelectorPadCachedBuffer *
 gst_selector_pad_new_cached_buffer (RsnSelectorPad * selpad, GstBuffer * buffer)
 {
   RsnSelectorPadCachedBuffer *cached_buffer =
-      g_slice_new (RsnSelectorPadCachedBuffer);
+      g_new (RsnSelectorPadCachedBuffer, 1);
   cached_buffer->buffer = buffer;
   cached_buffer->segment = selpad->segment;
   return cached_buffer;
@@ -371,7 +371,7 @@ static void
 gst_selector_pad_free_cached_buffer (RsnSelectorPadCachedBuffer * cached_buffer)
 {
   gst_buffer_unref (cached_buffer->buffer);
-  g_slice_free (RsnSelectorPadCachedBuffer, cached_buffer);
+  g_free (cached_buffer);
 }
 
 /* must be called with the SELECTOR_LOCK */
