@@ -70,7 +70,7 @@ gst_fd_mem_free (GstAllocator * allocator, GstMemory * gmem)
       && !(mem->flags & GST_FD_MEMORY_FLAG_DONT_CLOSE))
     close (mem->fd);
   g_mutex_clear (&mem->lock);
-  g_slice_free (GstFdMemory, mem);
+  g_free (mem);
   GST_DEBUG ("%p: freed", mem);
 #endif
 }
@@ -196,7 +196,7 @@ gst_fd_mem_share (GstMemory * gmem, gssize offset, gssize size)
   if (size == -1)
     size = gmem->maxsize - offset;
 
-  sub = g_slice_new0 (GstFdMemory);
+  sub = g_new0 (GstFdMemory, 1);
   /* the shared memory is always readonly */
   gst_memory_init (GST_MEMORY_CAST (sub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, mem->mem.allocator, parent,
@@ -287,7 +287,7 @@ gst_fd_allocator_alloc (GstAllocator * allocator, gint fd, gsize size,
 
   g_return_val_if_fail (GST_IS_FD_ALLOCATOR (allocator), NULL);
 
-  mem = g_slice_new0 (GstFdMemory);
+  mem = g_new0 (GstFdMemory, 1);
   gst_memory_init (GST_MEMORY_CAST (mem), 0, GST_ALLOCATOR_CAST (allocator),
       NULL, size, 0, 0, size);
 
