@@ -53,6 +53,7 @@ struct _GstTagInject
   /*< private > */
   GstTagList *tags;
   gboolean tags_sent;
+  GstTagScope tags_scope;
 };
 
 struct _GstTagInjectClass

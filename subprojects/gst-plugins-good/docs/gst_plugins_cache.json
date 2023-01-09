@@ -4693,6 +4693,18 @@
                     }
                 },
                 "properties": {
+                    "scope": {
+                        "blurb": "Scope of tags to inject (stream | global)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "stream (0)",
+                        "mutable": "null",
+                        "readable": false,
+                        "type": "GstTagScope",
+                        "writable": true
+                    },
                     "tags": {
                         "blurb": "List of tags to inject into the target file",
                         "conditionally-available": false,

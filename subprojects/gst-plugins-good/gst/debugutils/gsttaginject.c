@@ -32,6 +32,9 @@
  * |[
  * gst-launch-1.0 audiotestsrc num-buffers=100 ! taginject tags="keywords=\{\"testone\",\"audio\"\},title=\"audio\ testtone\"" ! vorbisenc ! oggmux ! filesink location=test.ogg
  * ]| set keywords and title demonstrating quoting of special chars and handling lists
+ * |[
+ * gst-launch-1.0.exe audiotestsrc num-buffers=500 ! taginject tags="title=MyTitle,artist=MyArtist,album=MyAlbum,genre=MyGenre" scope=global ! qtmux ! filesink location=test.m4a
+ * ]| set title, artist, album and genre. set scope as global
  *
  */
 
@@ -59,7 +62,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_tag_inject_debug);
 
 enum
 {
-  PROP_TAGS = 1
+  PROP_TAGS = 1,
+  PROP_SCOPE
 };
 
 
@@ -114,6 +118,19 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
           "List of tags to inject into the target file",
           NULL, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * taginject:scope:
+   *
+   * Scope of tags to inject (stream | global).
+   *
+   * Since: 1.24
+   **/
+  g_object_class_install_property (gobject_class, PROP_SCOPE,
+      g_param_spec_enum ("scope", "Scope",
+          "Scope of tags to inject (stream | global)",
+          g_type_from_name ("GstTagScope"), GST_TAG_SCOPE_STREAM,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+
   gobject_class->finalize = gst_tag_inject_finalize;
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -136,6 +153,7 @@ gst_tag_inject_init (GstTagInject * self)
   gst_base_transform_set_gap_aware (trans, TRUE);
 
   self->tags = NULL;
+  self->tags_scope = GST_TAG_SCOPE_STREAM;
 }
 
 static GstFlowReturn
@@ -168,6 +186,8 @@ gst_tag_inject_set_property (GObject * object, guint prop_id,
           g_strdup_printf ("taglist,%s", g_value_get_string (value));
       if (!(self->tags = gst_tag_list_new_from_string (structure))) {
         GST_WARNING ("unparsable taglist = '%s'", structure);
+      } else {
+        gst_tag_list_set_scope (self->tags, self->tags_scope);
       }
 
       /* make sure that tags will be send */
@@ -175,6 +195,11 @@ gst_tag_inject_set_property (GObject * object, guint prop_id,
       g_free (structure);
       break;
     }
+    case PROP_SCOPE:
+      self->tags_scope = g_value_get_enum (value);
+      if (self->tags)
+        gst_tag_list_set_scope (self->tags, self->tags_scope);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
