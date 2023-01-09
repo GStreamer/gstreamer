@@ -246,10 +246,10 @@ mxf_metadata_base_to_buffer (MXFMetadataBase * self, MXFPrimerPack * primer)
     g_hash_table_iter_init (&iter, self->other_tags);
 
     while (g_hash_table_iter_next (&iter, NULL, (gpointer) & t)) {
+      mxf_primer_pack_add_mapping (primer, 0x0000, &t->ul);
       tmp = g_slice_dup (MXFLocalTag, t);
       if (t->g_slice) {
         tmp->data = g_slice_alloc (t->size);
-        mxf_primer_pack_add_mapping (primer, 0x0000, &t->ul);
         memcpy (tmp->data, t->data, t->size);
       } else {
         tmp->data = g_memdup2 (t->data, t->size);
