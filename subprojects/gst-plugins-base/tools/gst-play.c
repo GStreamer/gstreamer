@@ -174,7 +174,7 @@ static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
     gboolean gapless, gboolean instant_uri, gdouble initial_volume,
     gboolean verbose, const gchar * flags_string, gboolean use_playbin3,
-    gdouble start_position)
+    gdouble start_position, gboolean no_position)
 {
   GstElement *sink, *playbin;
   GstPlay *play;
@@ -254,8 +254,9 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
   play->bus_watch = gst_bus_add_watch (GST_ELEMENT_BUS (play->playbin),
       play_bus_msg, play);
 
-  /* FIXME: make configurable incl. 0 for disable */
-  play->timeout = g_timeout_add (100, play_timeout, play);
+  if (!no_position) {
+    play->timeout = g_timeout_add (100, play_timeout, play);
+  }
 
   play->missing = NULL;
   play->buffering = FALSE;
@@ -296,7 +297,8 @@ play_free (GstPlay * play)
   gst_object_unref (play->playbin);
 
   g_source_remove (play->bus_watch);
-  g_source_remove (play->timeout);
+  if (play->timeout != 0)
+    g_source_remove (play->timeout);
   g_main_loop_unref (play->loop);
 
   g_strfreev (play->uris);
@@ -1619,6 +1621,7 @@ real_main (int argc, char **argv)
   GOptionContext *ctx;
   gchar *playlist_file = NULL;
   gboolean use_playbin3 = FALSE;
+  gboolean no_position = FALSE;
 #ifdef HAVE_WINMM
   guint winmm_timer_resolution = 0;
 #endif
@@ -1663,6 +1666,9 @@ real_main (int argc, char **argv)
           N_
           ("Keep showing the last frame on EOS until quit or playlist change command "
               "(gapless is ignored)"),
+        NULL},
+    {"no-position", 0, 0, G_OPTION_ARG_NONE, &no_position,
+          N_("Do not print current position of pipeline"),
         NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
@@ -1775,7 +1781,7 @@ real_main (int argc, char **argv)
   /* prepare */
   play =
       play_new (uris, audio_sink, video_sink, gapless, instant_uri, volume,
-      verbose, flags, use_playbin3, start_position);
+      verbose, flags, use_playbin3, start_position, no_position);
 
   if (play == NULL) {
     gst_printerr
