@@ -64,6 +64,7 @@ if cc.get_id() == 'msvc'
       '/wd4146', # unary minus on unsigned (beware INT_MIN)
       '/wd4244', # lossy type conversion (e.g. double -> int)
       '/wd4305', # truncating type conversion (e.g. double -> float)
+      '/wd5051', # attribute 'attribute-name' requires at least 'standard-level'; ignored
       cc.get_supported_arguments(['/utf-8']), # set the input encoding to utf-8
   ]
 
