@@ -151,6 +151,15 @@ if gst_gl_have_window_eagl and gst_gl_have_platform_eagl
 endif
 
 if have_qt_windowing
+  # rpath is needed to be able to load the plugin on macOS inside the devenv
+  qmlgl_kwargs = {}
+  if host_system == 'darwin'
+    fs = import('fs')
+    qt_bindir = fs.parent(find_program('qmake').full_path())
+    qt_libdir = fs.parent(qt_bindir) / 'lib'
+    qmlgl_kwargs += {'build_rpath': qt_libdir}
+  endif
+
   # Build it!
   moc_files = qt5_mod.preprocess(moc_headers : moc_headers)
   gstqmlgl = library('gstqmlgl', sources, moc_files,
@@ -159,6 +168,7 @@ if have_qt_windowing
     include_directories: [configinc, libsinc],
     dependencies : [gst_dep, gstvideo_dep, gstgl_dep, gstglproto_dep, qt5qml_dep, optional_deps],
     override_options : ['cpp_std=c++11'],
+    kwargs: qmlgl_kwargs,
     install: true,
     install_dir : plugins_install_dir)
   plugins += [gstqmlgl]
