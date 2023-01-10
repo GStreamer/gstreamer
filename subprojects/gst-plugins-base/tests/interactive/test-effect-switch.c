@@ -203,7 +203,7 @@ main (int argc, char **argv)
 
   q2 = gst_element_factory_make ("queue", NULL);
 
-  sink = gst_element_factory_make ("ximagesink", NULL);
+  sink = gst_element_factory_make ("autovideosink", NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), src, filter, q1, conv_before, effect,
       conv_after, q2, sink, NULL);
