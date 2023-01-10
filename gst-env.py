@@ -294,8 +294,12 @@ def get_subprocess_env(options, gst_version):
     if os.name == 'nt':
         lib_path_envvar = 'PATH'
     elif platform.system() == 'Darwin':
-        # RPATH is sufficient on macOS, and DYLD_LIBRARY_PATH can cause issues with dynamic linker path priority
+        # DYLD_LIBRARY_PATH is stripped when new shells are spawned and can
+        # cause issues with runtime linker resolution, so only set it when
+        # using --only-environment
         lib_path_envvar = None
+        if options.only_environment:
+            lib_path_envvar = 'DYLD_LIBRARY_PATH'
     else:
         lib_path_envvar = 'LD_LIBRARY_PATH'
 
