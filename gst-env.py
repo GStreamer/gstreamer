@@ -572,6 +572,7 @@ if __name__ == "__main__":
     if not args:
         if os.name != 'nt':
             args = [os.environ.get("SHELL", os.path.realpath("/bin/sh"))]
+        prompt_export = f'export PS1="[{gst_version}] $PS1"'
         if args[0].endswith('bash') and not str_to_bool(os.environ.get("GST_BUILD_DISABLE_PS1_OVERRIDE", r"FALSE")):
             # Let the GC remove the tmp file
             tmprc = tempfile.NamedTemporaryFile(mode='w')
@@ -579,7 +580,7 @@ if __name__ == "__main__":
             if os.path.exists(bashrc):
                 with open(bashrc, 'r') as src:
                     shutil.copyfileobj(src, tmprc)
-            tmprc.write('\nexport PS1="[%s] $PS1"' % gst_version)
+            tmprc.write('\n' + prompt_export)
             tmprc.flush()
             if is_bash_completion_available(options):
                 bash_completions_files = []
@@ -592,6 +593,7 @@ if __name__ == "__main__":
             args.append("--rcfile")
             args.append(tmprc.name)
         elif args[0].endswith('fish'):
+            prompt_export = None  # FIXME
             # Ignore SIGINT while using fish as the shell to make it behave
             # like other shells such as bash and zsh.
             # See: https://gitlab.freedesktop.org/gstreamer/gst-build/issues/18
@@ -604,6 +606,7 @@ if __name__ == "__main__":
             end'''.format(gst_version)
             args.append(prompt_cmd)
         elif args[0].endswith('zsh'):
+            prompt_export = f'export PROMPT="[{gst_version}] $PROMPT"'
             tmpdir = tempfile.TemporaryDirectory()
             # Let the GC remove the tmp file
             tmprc = open(os.path.join(tmpdir.name, '.zshrc'), 'w')
@@ -611,7 +614,7 @@ if __name__ == "__main__":
             if os.path.exists(zshrc):
                 with open(zshrc, 'r') as src:
                     shutil.copyfileobj(src, tmprc)
-            tmprc.write('\nexport PROMPT="[{}] $PROMPT"'.format(gst_version))
+            tmprc.write('\n' + prompt_export)
             tmprc.flush()
             env['ZDOTDIR'] = tmpdir.name
     try:
@@ -619,6 +622,8 @@ if __name__ == "__main__":
             for name, value in env.items():
                 print('{}={}'.format(name, shlex.quote(value)))
                 print('export {}'.format(name))
+            if prompt_export:
+                print(prompt_export)
         else:
             if os.environ.get("CI_PROJECT_NAME"):
                 print("Ignoring SIGINT when running on the CI,"
