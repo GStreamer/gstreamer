@@ -972,6 +972,7 @@ query_duration_drop_probe (GstPad * pad, GstPadProbeInfo * info,
   return ret;
 }
 
+/* CALL with INPUT LOCK */
 static void
 recalculate_group_id (GstDecodebin3 * dbin)
 {
@@ -1003,6 +1004,7 @@ reset_input_parsebin (GstDecodebin3 * dbin, DecodebinInput * input)
 
   GST_DEBUG_OBJECT (dbin, "Resetting %" GST_PTR_FORMAT, input->parsebin);
 
+  INPUT_LOCK (dbin);
   GST_STATE_LOCK (dbin);
   gst_element_set_state (input->parsebin, GST_STATE_NULL);
   input->drained = FALSE;
@@ -1015,6 +1017,7 @@ reset_input_parsebin (GstDecodebin3 * dbin, DecodebinInput * input)
   }
   gst_element_sync_state_with_parent (input->parsebin);
   GST_STATE_UNLOCK (dbin);
+  INPUT_UNLOCK (dbin);
 }
 
 
@@ -1306,7 +1309,9 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
 
       /* Make sure group ids will be recalculated */
       input->group_id = GST_GROUP_ID_INVALID;
+      INPUT_LOCK (dbin);
       recalculate_group_id (dbin);
+      INPUT_UNLOCK (dbin);
       break;
     }
     case GST_EVENT_STREAM_COLLECTION:
