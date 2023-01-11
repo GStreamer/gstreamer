@@ -683,7 +683,7 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
       svtav1enc->frame_count++;
     }
 
-  } while (res == EB_ErrorNone && !encode_at_eos);
+  } while (res == EB_ErrorNone && !encode_at_eos && ret == GST_FLOW_OK);
 
   return ret;
 }
