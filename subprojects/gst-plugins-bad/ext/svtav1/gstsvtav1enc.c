@@ -736,12 +736,11 @@ gst_svtav1enc_set_format (GstVideoEncoder * encoder,
 
   min_latency_frames = ((fps * 5) >> 2);
 
-  /* TODO: find a better value for max_latency */
   gst_video_encoder_set_latency(encoder,
                                 min_latency_frames * GST_SECOND /
                                     (svtav1enc->svt_config->frame_rate_numerator /
                                      svtav1enc->svt_config->frame_rate_denominator),
-                                3 * GST_SECOND);
+                                -1);
 
   src_caps =
       gst_static_pad_template_get_caps (&gst_svtav1enc_src_pad_template);
