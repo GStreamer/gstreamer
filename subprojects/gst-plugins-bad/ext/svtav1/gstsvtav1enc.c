@@ -759,7 +759,7 @@ gst_svtav1enc_set_format (GstVideoEncoder * encoder,
   GST_DEBUG_OBJECT (svtav1enc, "output caps: %" GST_PTR_FORMAT,
       svtav1enc->state->caps);
 
-  return TRUE;
+  return gst_video_encoder_negotiate (encoder);
 }
 
 static GstFlowReturn
