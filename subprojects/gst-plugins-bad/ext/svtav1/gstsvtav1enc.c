@@ -758,6 +758,7 @@ gst_svtav1enc_handle_frame (GstVideoEncoder * encoder,
   GST_DEBUG_OBJECT (svtav1enc, "handle_frame");
 
   ret = gst_svtav1enc_encode (svtav1enc, frame);
+  gst_video_codec_frame_unref (frame);
   if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (svtav1enc, "gst_svtav1enc_encode returned %d", ret);
     return ret;
