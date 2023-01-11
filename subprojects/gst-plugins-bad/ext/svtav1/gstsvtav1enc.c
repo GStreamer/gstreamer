@@ -689,16 +689,6 @@ gst_svtav1enc_stop (GstVideoEncoder * encoder)
 
   GST_DEBUG_OBJECT (svtav1enc, "stop");
 
-  GstVideoCodecFrame *remaining_frame = NULL;
-  while ((remaining_frame =
-          gst_video_encoder_get_oldest_frame (encoder)) != NULL) {
-    GST_WARNING_OBJECT (svtav1enc,
-        "encoder is being stopped, dropping frame %d",
-        remaining_frame->system_frame_number);
-    remaining_frame->output_buffer = NULL;
-    gst_video_encoder_finish_frame (encoder, remaining_frame);
-  }
-
   GST_OBJECT_LOCK (svtav1enc);
   if (svtav1enc->state)
     gst_video_codec_state_unref (svtav1enc->state);
