@@ -633,7 +633,6 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
   gboolean encode_at_eos = FALSE;
 
   do {
-    GList *pending_frames = NULL;
     GstVideoCodecFrame *frame = NULL;
     EbBufferHeaderType *output_buf = NULL;
 
@@ -674,11 +673,6 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
       output_buf = NULL;
 
       ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (svtav1enc), frame);
-
-      if (pending_frames != NULL) {
-        g_list_free_full (pending_frames,
-            (GDestroyNotify) gst_video_codec_frame_unref);
-      }
 
       svtav1enc->frame_count++;
     }
