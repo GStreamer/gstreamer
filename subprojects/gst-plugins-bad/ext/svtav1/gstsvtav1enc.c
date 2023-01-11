@@ -347,6 +347,9 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
     case PROP_SOCKET:
       svtav1enc->svt_config->target_socket = g_value_get_int (value);
       break;
+    case PROP_LOOKAHEAD:
+      svtav1enc->svt_config->look_ahead_distance = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -408,6 +411,9 @@ gst_svtav1enc_get_property (GObject * object, guint property_id,
       break;
     case PROP_SOCKET:
       g_value_set_int (value, svtav1enc->svt_config->target_socket);
+      break;
+    case PROP_LOOKAHEAD:
+      g_value_set_int (value, svtav1enc->svt_config->look_ahead_distance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
