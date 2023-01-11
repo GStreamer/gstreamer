@@ -1,16 +1,17 @@
-# translation of gst-plugins-bad-0.10.21.2.po to Español
+# translation of gst-plugins-bad-1.19.2.po to Español
 # spanish translation for gst-plugins-bad
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2007, 2008, 2009, 2011.
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2011-10-02 15:47+0200\n"
-"Last-Translator: Jorge González González <aloriel@gmail.com>\n"
-"Language-Team: Spanish <es@li.org>\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-03-07 13:53-0600\n"
+"Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
+"Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -19,10 +20,10 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "No se definió un URL."
 
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "Falló OpenCV al cargar la imagen de plantilla"
 
 msgid "Could not read title information for DVD."
 msgstr "No se pudo leer la información del título para el DVD."
@@ -45,34 +46,37 @@ msgid "Could not read DVD."
 msgstr "No se pudo leer el DVD."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Este archivo no continen flujos reproducibles."
 
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "No se pudo abrir el archivo «%s» para leer."
+msgstr "No se pudo abrir el flujo sndfile para leer."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"El archivo generado tiene un tiempo de preenrollado más grande que la "
+"duración de sus flujos"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Falta el elemento '%s' - verifique su instalación de GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"La ubicación del archivo se configuró a NULL, por favor cámbiela por un "
+"nombre de archivo válido"
 
 msgid "Digitalzoom element couldn't be created"
-msgstr ""
+msgstr "No se pudo crear el elemento Digitalzoom"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "El formato de subimagen no se configuró antes del flujo de datos"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "No se pudo obtener el URL del fragmento."
 
 #, c-format
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "No se pudo descargar los fragmentos"
 
 msgid "Internal data stream error."
 msgstr "Error en el flujo de datos interno."
@@ -89,55 +93,200 @@ msgstr "No se pudo abrir el dispositivo frontend «%s»."
 msgid "Could not get settings from frontend device \"%s\"."
 msgstr "No se pudieron obtener los ajustes del dispositivo frontend «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "No se pudieron obtener los ajustes del dispositivo frontend «%s»."
+msgstr ""
+"No se pudieron enumerar los sistemas de entrega del dispositivo frontend "
+"«%s»."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "No se pudo abrir el archivo «%s» para leer."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find channel configuration file"
-msgstr "Configuración del canal del mezclador virtual"
+msgstr "No se encontró el archivo de configuración del canal"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Configuración del canal del mezclador virtual"
+msgstr "No se pudo cargar el archivo de configuración del canal: '%s'"
 
 #, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr ""
+msgstr "No se pudo encontrar detalles para el canal '%s'"
 
 #, c-format
 msgid "No properties for channel '%s'"
-msgstr ""
+msgstr "No hay propiedades para el canal '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Falló abrir el dispositivo DVD «%s»."
+msgstr "Falló al establecer propiedades para el canal «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Configuración del canal del mezclador virtual"
+msgstr "No se encontró el archivo de configuración del canal: '%s'"
 
 #, c-format
 msgid "Channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "El archivo de configuración del canal no contiene ningún canal"
+
+#~ msgid "failed to draw pattern"
+#~ msgstr "falló al dibujar el patrón"
+
+#~ msgid "A GL error occured"
+#~ msgstr "Ocurrió un error de GL"
+
+#~ msgid "format wasn't negotiated before get function"
+#~ msgstr "No se negoció el formato antes de la función de obtener"
+
+#~ msgid "Could not establish connection to sndio"
+#~ msgstr "No se pudo establecer la conexión a sndio"
+
+#~ msgid "Failed to query sndio capabilities"
+#~ msgstr "Falló al consultar las capacidades de sndio"
+
+#~ msgid "Could not configure sndio"
+#~ msgstr "No se pudo configurar sndio"
+
+#~ msgid "Could not start sndio"
+#~ msgstr "No se pudo iniciar sndio"
 
 #~ msgid "No file name specified for writing."
 #~ msgstr "No se especificó un nombre de archivo para su escritura."
 
-#, c-format
+#~ msgid ""
+#~ "Given file name \"%s\" can't be converted to local file name encoding."
+#~ msgstr ""
+#~ "El nombre de archivo dado \"%s\" no se puede cambiar a la codificación "
+#~ "local de nombre de archivo."
+
 #~ msgid "Could not open file \"%s\" for writing."
 #~ msgstr "No se pudo abrir el archivo «%s» para escribir."
 
-#, c-format
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "No se pudo escribir en el archivo «%s»."
-
 #~ msgid "Internal data flow error."
 #~ msgstr "Error en el flujo de datos interno."
+
+#~ msgid "default GStreamer sound events audiosink"
+#~ msgstr "sumidero de eventos de sonido GStreamer por defecto"
+
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, pulsesink and alsasink. The audiosink can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Gstreamer puede reproducir audio usando cualquier número de elementos de "
+#~ "salida. Algunas opciones posibles son osssink, pulsesink y alsasink. El "
+#~ "sumidero de audio puede ser un conducto parcial en lugar de un solo "
+#~ "elemento."
+
+#~ msgid "description for default GStreamer sound events audiosink"
+#~ msgstr ""
+#~ "descripción para el sumidero de audio de eventos de sonido GStreamer por "
+#~ "defecto"
+
+#~ msgid "Describes the selected audiosink element."
+#~ msgstr "Describe el elemento de sumidero de audio seleccionado."
+
+#~ msgid "default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr ""
+#~ "sumidero de audio GStreamer por defecto para Conferencia Audio/Video"
+
+#~ msgid ""
+#~ "description for default GStreamer audiosink for Audio/Video Conferencing"
+#~ msgstr ""
+#~ "descripción para el sumidero de audio GStreamer por defecto para "
+#~ "Conferencia de Audio/Video"
+
+#~ msgid "default GStreamer audiosink for Music and Movies"
+#~ msgstr "sumidero de audio GStreamer por defecto para Música y Películas"
+
+#~ msgid "description for default GStreamer audiosink for Music and Movies"
+#~ msgstr ""
+#~ "descripción para el sumidero de audio GStreamer por defecto para Música y "
+#~ "Películas"
+
+#~ msgid "default GStreamer videosink"
+#~ msgstr "sumidero de video GStreamer por defecto"
+
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer puede reproducir video usando cualquier número de elementos de "
+#~ "salida. Algunas opciones posibles son xvimagesink, ximagesink, "
+#~ "sdlvideosink y aasink. El sumidero de video puede ser un conducto parcial "
+#~ "en lugar de un solo elemento."
+
+#~ msgid "description for default GStreamer videosink"
+#~ msgstr "descripción para el sumidero de video GStreamer por defecto"
+
+#~ msgid "Describes the selected videosink element."
+#~ msgstr "Describe el elemento de sumidero de video seleccionado."
+
+#~ msgid "default GStreamer audiosrc"
+#~ msgstr "fuente de audio GStreamer por defecto"
+
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, pulsesrc and alsasrc. The audio source can "
+#~ "be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "Gstreamer puede grabar audio usando cualquier número de elementos de "
+#~ "entrada. Algunas opciones posibles son osssrc, pulsesrc y alsasrc. La "
+#~ "fuente de audio puede ser un conducto parcial en lugar de un solo "
+#~ "elemento."
+
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "descripción para la fuente de audio GStreamer por defecto"
+
+#~ msgid "Describes the selected audiosrc element."
+#~ msgstr "Describe el elemento de audio de entrada seleccionado."
+
+#~ msgid "default GStreamer videosrc"
+#~ msgstr "fuente de video GStreamer por defecto"
+
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc, v4l2src and videotestsrc. The video source "
+#~ "can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "GStreamer puede grabar video de cualquier número de elementos de entrada. "
+#~ "Algunas opciones posible son v4lsrc, v4l2src y videotestsrc. La fuente de "
+#~ "video puede ser un conducto parcial en lugar de un solo elemento."
+
+#~ msgid "description for default GStreamer videosrc"
+#~ msgstr "descripción para la fuente de video GStreamer por defecto"
+
+#~ msgid "Describes the selected videosrc element."
+#~ msgstr "Describe el elemento de fuente de video seleccionado."
+
+#~ msgid "default GStreamer visualization"
+#~ msgstr "visualización GStreamer por defecto"
+
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "streams in video frames. Some possible choices are goom, goom2k1 and "
+#~ "synaesthesia. The visualization plugin can be a partial pipeline instead "
+#~ "of just one element."
+#~ msgstr ""
+#~ "GStreamer puede poner plugins de visualización en un conducto para "
+#~ "transformar los flujos de audio en fotogramas de video. Algunas opciones "
+#~ "posibles son goom, goom2k1 y synaesthesia. El plugin de visualización "
+#~ "puede ser un conducto parcial en lugar de un solo elemento."
+
+#~ msgid "description for default GStreamer visualization"
+#~ msgstr "descripción para la visualización GStreamer por defecto"
+
+#~ msgid "Describes the selected visualization element."
+#~ msgstr "Describe el elemento de visualización seleccionado."
+
+#~ msgid "Couldn't get the Manifest's URI"
+#~ msgstr "No se pudo obtener el URI del manifesto"
+
+#~ msgid "Could not write to file \"%s\"."
+#~ msgstr "No se pudo escribir en el archivo «%s»."
 
 #~ msgid "Internal clock error."
 #~ msgstr "Error en el reloj interno."
