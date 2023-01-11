@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2014-04-20 16:38+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -429,9 +429,6 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Neizdevās iestatīt izvadi %d uz ierīces %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Izšķirtspējas mainīšana izpildlaikā pašlaik netiek atbalstīta."
-
 msgid "Cannot operate without a clock"
 msgstr "Nevar veikt darbības bez pulksteņa"
 
@@ -498,6 +495,9 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 
 #~ msgid "AUX 2 Out"
 #~ msgstr "AUX 2 izeja"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Izšķirtspējas mainīšana izpildlaikā pašlaik netiek atbalstīta."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Nevar izveidot savienojumu ar skaņas serveri"

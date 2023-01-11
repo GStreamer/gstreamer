@@ -4,13 +4,13 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2021-09-24 15:33+0200\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-11-06 16:22-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -18,8 +18,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Poedit 3.0\n"
 
 msgid "Jack server not found"
@@ -84,7 +84,7 @@ msgstr ""
 "Nije uspjelo konfigurirati koder TwoLAME. Provjerite parametre kodiranja."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Nema audio ulaza ili nije valjan -- AVI protok bit će oštećen."
+msgstr "Nema audio ulaza ili nije valjan -- AVI tok bit će oštećen."
 
 msgid "This file contains no playable streams."
 msgstr "Ova datoteka ne sadrži upotrebljive protoke."
@@ -93,7 +93,7 @@ msgid "This file is invalid and cannot be played."
 msgstr "Datoteka nije valjana i ne može se reproducirati."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr "Ovaj protok nije moguće reproducirati jer je šifriran s PlayReady DRM."
+msgstr "Ovaj tok nije moguće reproducirati jer je šifriran s PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Datoteka je oštećena i ne može se reproducirati."
@@ -112,7 +112,7 @@ msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
-"Nije nađen nijedan podržani protok. Vjerojatno trebate instalirati plugin "
+"Nije nađen nijedan podržani tok. Vjerojatno trebate instalirati plugin "
 "GStreamera za proširenje RTSP na Real multimedijske protoke."
 
 msgid ""
@@ -120,9 +120,9 @@ msgid ""
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Nije nađen nijedan podržani protok. Vjerojatno trebate omogućiti još neke "
-"prijenosne protokole ili vam možda nedostaje odgovarajući plugin GStreamera "
-"za proširenje RTSP-a."
+"Nije nađen nijedan podržani tok. Vjerojatno trebate omogućiti još neke "
+"prijenosne protokole ili možda nema odgovarajućeg plugina GStreamera za "
+"proširenje RTSP-a."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -186,7 +186,7 @@ msgstr "greška pri čitanju %d bajtova iz uređaja „%s“."
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
-"Nije uspjelo prikazati sve video formate s kojima može raditi uređaj „%s“"
+"Nije uspjelo pokazati sve video formate s kojima može raditi uređaj „%s“"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
@@ -429,11 +429,11 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Nije uspjelo postaviti izlaz %u na uređaju %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Promjena rezolucije u tijeku rada (runtime) još nije podržana."
-
 msgid "Cannot operate without a clock"
 msgstr "Nije moguće raditi bez sata (clock)"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Promjena rezolucije u tijeku rada (runtime) još nije podržana."
 
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr ""

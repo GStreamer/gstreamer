@@ -4,14 +4,14 @@
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
 # Claude Paroz <claude@2xlibre.net>, 2008-2011.
-# Stéphane Aulery <lkppo@free.fr>, 2015-2017, 2019, 2021.
+# Stéphane Aulery <lkppo@free.fr>, 2015-2022.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-23 01:33+0100\n"
-"PO-Revision-Date: 2021-11-21 00:53+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-07-05 00:15+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -176,7 +176,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "Le périphèrique CoreAudio n’a pas pu être ouvert"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Module d'appareil photo Raspberry Pi"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -456,13 +456,13 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Impossible de définir la sortie %u du périphérique %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr ""
-"La modification de la résolution au cours de l’exécution n’est pas encore "
-"prise en charge."
-
 msgid "Cannot operate without a clock"
 msgstr "Impossible de fonctionner sans horloge"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr ""
+#~ "La modification de la résolution au cours de l’exécution n’est pas encore "
+#~ "prise en charge."
 
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Ce fichier contient trop de flux. Seuls les %d premiers seront lus"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2021-10-04 14:15+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
@@ -419,11 +419,11 @@ msgstr "'%s' cihazında mevcut çıktı alınamadı. Bir radyo cihazı olabilir"
 msgid "Failed to set output %u on device %s."
 msgstr "Failed to set output %u on device %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
-
 msgid "Cannot operate without a clock"
 msgstr "Saat olmadan çalışamaz"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Bu dosya çok fazla akış içeriyor. Sadece ilki oynatılıyor %d"

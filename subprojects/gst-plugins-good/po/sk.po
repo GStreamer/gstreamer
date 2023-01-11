@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2020-06-11 10:01+0200\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -430,11 +430,11 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Nepodarilo sa nastaviť výstup %d na zariadení %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
-
 msgid "Cannot operate without a clock"
 msgstr "Nemôžem fungovať bez hodín"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Zmena rozlíšenia za chodu nie je zatiaľ podporovaná."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Vnútorná chyba prúdu údajov."

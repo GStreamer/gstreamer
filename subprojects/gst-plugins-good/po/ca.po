@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2012-01-01 14:19+0100\n"
 "Last-Translator: Gil Forcada <gforcada@gnome.org>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -460,9 +460,6 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "No s'ha pogut establir la sortida %d en el dispositiu %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Encara no es permet el canvi de la resolució en temps d'execució."
-
 msgid "Cannot operate without a clock"
 msgstr "No es pot operar sense un rellotge"
 
@@ -888,6 +885,9 @@ msgstr "No es pot operar sense un rellotge"
 #~ msgid "Failed after %d tries. device %s. system error: %s"
 #~ msgstr ""
 #~ "Ha fallat després de %d intents. Dispositiu %s. Error de sistema: %s"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Encara no es permet el canvi de la resolució en temps d'execució."
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Descriu l'element d'entrada seleccionat."

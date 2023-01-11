@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2019-02-17 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -429,11 +429,11 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Kunne ikke sætte uddata %d for enhed %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
-
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 
 # hvad er %d i dette program? Umiddelbart ville jeg tro det skulle
 # hedde, "Afpiller kun første %d" men det kommer selvfølgelig an på 

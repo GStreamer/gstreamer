@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -429,9 +429,6 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Sisääntuloa %d ei voitu asettaa laitteelle %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
-
 msgid "Cannot operate without a clock"
 msgstr "Ei voitu toimia ilman kelloa"
 
@@ -848,6 +845,9 @@ msgstr "Ei voitu toimia ilman kelloa"
 #, c-format
 #~ msgid "Failed after %d tries. device %s. system error: %s"
 #~ msgstr "Epäonnistui %d yrityksen jälkeen: laite %s, järjestelmävirhe: %s"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Resoluution vaihto käytön aikana ei ole vielä mahdollista."
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "

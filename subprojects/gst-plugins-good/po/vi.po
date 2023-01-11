@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2017-05-05 06:52+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -434,9 +434,6 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Gặp lỗi khi đặt dữ liệu nhập %d trên thiết bị %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi chạy."
-
 msgid "Cannot operate without a clock"
 msgstr "Không thể thao tác khi không có đồng hồ"
 
@@ -497,6 +494,9 @@ msgstr "Không thể thao tác khi không có đồng hồ"
 
 #~ msgid "AUX 2 Out"
 #~ msgstr "AUX 2 Ra"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi chạy."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Lỗi luồng dữ liệu nội bộ."
