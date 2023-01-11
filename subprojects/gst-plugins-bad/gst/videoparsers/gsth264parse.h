@@ -48,6 +48,40 @@ typedef struct _H264Params H264Params;
 
 GType gst_h264_parse_get_type (void);
 
+typedef struct
+{
+  gboolean valid;
+  guint16 frame_num;
+  guint8 field_pic_flag;
+  guint8 bottom_field_flag;
+  guint16 idr_pic_id;
+  gint32 delta_pic_order_cnt[2];
+  guint16 pic_order_cnt_lsb;
+  guint32 delta_pic_order_cnt_bottom;
+  guint32 first_mb_in_slice;
+} GstH264ParseHistorySlice;
+
+typedef struct
+{
+  guint16 ref_idc;
+  guint8 idr_pic_flag;
+
+  /* For MVC Extension */
+  guint16 view_id;
+} GstH264ParseHistoryNalUnit;
+
+typedef struct
+{
+  guint8 pic_order_cnt_type;
+  guint8 profile_idc;
+} GstH264ParseHistorySPS;
+
+typedef struct
+{
+  gint id;
+} GstH264ParseHistoryPPS;
+
+
 typedef struct _GstH264Parse GstH264Parse;
 typedef struct _GstH264ParseClass GstH264ParseClass;
 
@@ -157,6 +191,21 @@ struct _GstH264Parse
   GstVideoMultiviewFlags multiview_flags;
   gboolean first_in_bundle;
 
+  /* For insertion of AU Delimiter */
+  GArray *nal_backlog;
+
+  /* Index of last vcl nal of current AU in backlog */
+  gint bl_curr_au_last_vcl;
+
+  /* Index of first vcl nal of next AU in backlog */
+  gint bl_next_au_first_vcl;
+
+  /* Index of first nal of next AU in backlog */
+  gint bl_next_au_first_nal;
+
+  /* Index of next nal to be processed in backlog */
+  gint bl_next_nal;
+
   GstVideoParseUserData user_data;
   GstVideoParseUserDataUnregistered user_data_unregistered;
 
@@ -168,6 +217,12 @@ struct _GstH264Parse
 
   /* For forward predicted trickmode */
   gboolean discard_bidirectional;
+
+  /* First VCL NAL unit of primary code picuture detection context */
+  GstH264ParseHistorySlice history_slice[2];
+  GstH264ParseHistoryNalUnit history_nalu[2];
+  GstH264ParseHistorySPS history_sps[2];
+  GstH264ParseHistoryPPS history_pps[2];
 };
 
 struct _GstH264ParseClass

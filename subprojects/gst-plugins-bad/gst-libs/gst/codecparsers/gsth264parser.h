@@ -133,6 +133,8 @@ typedef enum {
  * @GST_H264_NAL_PREFIX_UNIT: Prefix NAL unit
  * @GST_H264_NAL_SUBSET_SPS: Subset sequence parameter set (SSPS) NAL unit
  * @GST_H264_NAL_DEPTH_SPS: Depth parameter set (DPS) NAL unit
+ * @GST_H264_NAL_RSV_1: First reserved parameter
+ * @GST_H264_NAL_RSV_2: Second reserved parameter
  * @GST_H264_NAL_SLICE_AUX: Auxiliary coded picture without partitioning NAL unit
  * @GST_H264_NAL_SLICE_EXT: Coded slice extension NAL unit
  * @GST_H264_NAL_SLICE_DEPTH: Coded slice extension for depth or 3D-AVC texture view
@@ -158,6 +160,24 @@ typedef enum
   GST_H264_NAL_PREFIX_UNIT  = 14,
   GST_H264_NAL_SUBSET_SPS   = 15,
   GST_H264_NAL_DEPTH_SPS    = 16,
+
+  /**
+   * GST_H264_NAL_RSV_1:
+   *
+   * First reserved parameter
+   *
+   * Since: 1.24
+   */
+  GST_H264_NAL_RSV_1        = 17,
+
+  /**
+   * GST_H264_NAL_RSV_2:
+   *
+   * Second reserved parameter
+   *
+   * Since: 1.24
+   */
+  GST_H264_NAL_RSV_2        = 18,
   GST_H264_NAL_SLICE_AUX    = 19,
   GST_H264_NAL_SLICE_EXT    = 20,
   GST_H264_NAL_SLICE_DEPTH  = 21
