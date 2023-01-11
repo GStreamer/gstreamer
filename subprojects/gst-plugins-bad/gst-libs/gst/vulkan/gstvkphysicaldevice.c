@@ -66,6 +66,10 @@ struct _GstVulkanPhysicalDevicePrivate
   VkPhysicalDeviceVulkan12Features features12;
   VkPhysicalDeviceVulkan12Properties properties12;
 #endif
+#if defined (VK_API_VERSION_1_3)
+  VkPhysicalDeviceVulkan13Features features13;
+  VkPhysicalDeviceVulkan13Properties properties13;
+#endif
 };
 
 static void
@@ -186,6 +190,15 @@ gst_vulkan_physical_device_init (GstVulkanPhysicalDevice * device)
       VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
   priv->features10.pNext = &priv->features11;
   priv->features11.pNext = &priv->features12;
+#endif
+#if defined (VK_API_VERSION_1_3)
+  priv->properties13.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES;
+  priv->properties12.pNext = &priv->properties13;
+
+  priv->features13.sType =
+      VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+  priv->features12.pNext = &priv->features13;
 #endif
 }
 
@@ -437,6 +450,32 @@ dump_features12 (GstVulkanPhysicalDevice * device,
   /* *INDENT-ON* */
 }
 #endif
+
+#if defined (VK_API_VERSION_1_3)
+static void
+dump_features13 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan13Features * features)
+{
+  /* *INDENT-OFF* */
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, robustImageAccess);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, inlineUniformBlock);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, descriptorBindingInlineUniformBlockUpdateAfterBind);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, pipelineCreationCacheControl);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, privateData);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, shaderDemoteToHelperInvocation);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, shaderTerminateInvocation);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, subgroupSizeControl);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, computeFullSubgroups);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, synchronization2);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, textureCompressionASTC_HDR);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, shaderZeroInitializeWorkgroupMemory);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, dynamicRendering);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, shaderIntegerDotProduct);
+  DEBUG_BOOL_STRUCT ("support for (1.3)", features, maintenance4);
+  /* *INDENT-ON* */
+}
+#endif
+
 static gboolean
 dump_features (GstVulkanPhysicalDevice * device, GError ** error)
 {
@@ -456,6 +495,12 @@ dump_features (GstVulkanPhysicalDevice * device, GError ** error)
       else if (iter->sType ==
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES)
         dump_features12 (device, (VkPhysicalDeviceVulkan12Features *) iter);
+#if defined (VK_API_VERSION_1_3)
+      else if (gst_vulkan_instance_check_version (device->instance, 1, 3, 0)
+          && iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES)
+        dump_features13 (device, (VkPhysicalDeviceVulkan13Features *) iter);
+#endif
     }
   } else
 #endif
@@ -748,6 +793,61 @@ dump_properties12 (GstVulkanPhysicalDevice * device,
 }
 #endif
 
+#if defined(VK_API_VERSION_1_3)
+static void
+dump_properties13 (GstVulkanPhysicalDevice * device,
+    VkPhysicalDeviceVulkan13Properties * properties)
+{
+  /* *INDENT-OFF* */
+  DEBUG_UINT32 ("properties (1.3)", properties, minSubgroupSize);
+  DEBUG_UINT32 ("properties (1.3)", properties, maxSubgroupSize);
+  DEBUG_UINT32 ("properties (1.3)", properties, maxComputeWorkgroupSubgroups);
+  /* VkShaderStageFlags    requiredSubgroupSizeStages; */
+  DEBUG_UINT32 ("properties (1.3)", properties, maxInlineUniformBlockSize);
+  DEBUG_UINT32 ("properties (1.3)", properties, maxPerStageDescriptorInlineUniformBlocks);
+  DEBUG_UINT32 ("properties (1.3)", properties, maxPerStageDescriptorUpdateAfterBindInlineUniformBlocks);
+  DEBUG_UINT32 ("properties (1.3)", properties, maxDescriptorSetInlineUniformBlocks);
+  DEBUG_UINT32 ("properties (1.3)", properties, maxDescriptorSetUpdateAfterBindInlineUniformBlocks);
+  DEBUG_UINT32 ("properties (1.3)", properties, maxInlineUniformTotalSize);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct8BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct8BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct8BitMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct4x8BitPackedUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct4x8BitPackedSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct4x8BitPackedMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct16BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct16BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct16BitMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct32BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct32BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct32BitMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct64BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct64BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProduct64BitMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating8BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating8BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating8BitMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating4x8BitPackedUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating4x8BitPackedSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating4x8BitPackedMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating16BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating16BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating16BitMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating32BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating32BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating32BitMixedSignednessAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating64BitUnsignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating64BitSignedAccelerated);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, integerDotProductAccumulatingSaturating64BitMixedSignednessAccelerated);
+  DEBUG_SIZE ("properties (1.3)", properties, storageTexelBufferOffsetAlignmentBytes);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, storageTexelBufferOffsetSingleTexelAlignment);
+  DEBUG_SIZE ("properties (1.3)", properties, uniformTexelBufferOffsetAlignmentBytes);
+  DEBUG_BOOL_STRUCT ("properties (1.3)", properties, uniformTexelBufferOffsetSingleTexelAlignment);
+  DEBUG_SIZE ("properties (1.3)", properties, maxBufferSize);
+  /* *INDENT-ON* */
+}
+#endif
+
 static gboolean
 physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
 {
@@ -789,6 +889,12 @@ physical_device_info (GstVulkanPhysicalDevice * device, GError ** error)
       else if (iter->sType ==
           VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_PROPERTIES)
         dump_properties12 (device, (VkPhysicalDeviceVulkan12Properties *) iter);
+#if defined (VK_API_VERSION_1_3)
+      else if (gst_vulkan_instance_check_version (device->instance, 1, 3, 0)
+          && iter->sType ==
+          VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_PROPERTIES)
+        dump_properties13 (device, (VkPhysicalDeviceVulkan13Properties *) iter);
+#endif
     }
   }
 #endif
