@@ -3,12 +3,13 @@
 # Funda Wang <fundawang@linux.net.cn>, 2005.
 # Ji ZhengYu <zhengyuji@gmail.com>, 2008.
 # Tianze Wang <zwpwjwtz@126.com>, 2015.
+# Boyuan Yang <073plan@gmail.com>, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2019-09-22 08:34+0200\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-02-08 21:08-0500\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -16,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.0.7\n"
+"X-Generator: Poedit 2.4.3\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "无法在单声道模式打开设备播放。"
@@ -47,7 +48,7 @@ msgstr "无法在立体声模式打开设备录音。"
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "无法在 %d 声道模式打开设备录音。"
+msgstr "无法在 %d 声道模式打开设备录音"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -81,9 +82,6 @@ msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
 
 msgid "Could not create \"uridecodebin\" element."
 msgstr "无法创建“uridecodebin”组件。"
-
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "无法创建“uridecodebin3”组件。"
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -149,6 +147,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "“%s”未实现 URI 处理器。"
 
 msgid "Source element is invalid."
+msgstr "无效的源组件。"
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "无效的源组件。"
 
 #, c-format
@@ -386,19 +388,16 @@ msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz 专辑艺人 ID"
 
 msgid "release group ID"
-msgstr ""
+msgstr "发行组 ID"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "MusicBrainz 音轨 ID"
+msgstr "MusicBrainz 发行组 ID"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "音轨 ID"
+msgstr "发行版音轨 ID"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "MusicBrainz 音轨 ID"
+msgstr "MusicBrainz 发行版音轨 ID"
 
 msgid "track TRM ID"
 msgstr "音轨 TRM ID"
@@ -407,10 +406,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "AcoustID ID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "AcoustID 指纹 (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "捕捉快门速度"
@@ -553,7 +552,7 @@ msgid "Initial key in which the sound starts"
 msgstr "音乐开始时的音调"
 
 msgid "Print version information and exit"
-msgstr "显示版本信息，然后退出。"
+msgstr "显示版本信息，然后退出"
 
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
@@ -561,17 +560,17 @@ msgid ""
 msgstr "显示初始设备列表后不退出，而是等待设备被添加或移除。"
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "包含来自隐藏设备提供方的设备。"
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "音量：%.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "静音：开启"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "静音：关闭"
 
 msgid "Buffering..."
 msgstr "缓冲中..."
@@ -638,13 +637,13 @@ msgid "volume down"
 msgstr "减小音量"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "切换音频静音开启/关闭"
 
 msgid "increase playback rate"
 msgstr "增大回放速率"
 
 msgid "decrease playback rate"
-msgstr "减小回访率"
+msgstr "减小回放速率"
 
 msgid "change playback direction"
 msgstr "改变回放方向"
@@ -652,13 +651,16 @@ msgstr "改变回放方向"
 msgid "enable/disable trick modes"
 msgstr "启用/禁用特效模式"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "改变音频轨"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "改变视频轨"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "改变字幕轨"
 
 msgid "seek to beginning"
@@ -669,6 +671,10 @@ msgstr "显示键盘快捷键"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "交互模式 - 键盘控制："
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "使用 Windows 高分辨率时钟，精确度：%u 毫秒\n"
 
 msgid "Output status information and property notifications"
 msgstr "输出状态信息和属性通知"
@@ -685,6 +691,9 @@ msgstr "要使用的音频接收组件（默认为autoaudiosink）"
 msgid "Enable gapless playback"
 msgstr "启用无缝回放"
 
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
+
 msgid "Shuffle playlist"
 msgstr "随机播放列表"
 
@@ -695,21 +704,21 @@ msgid "Volume"
 msgstr "音量"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "以秒计算的起始位置。"
 
 msgid "Playlist file containing input media files"
 msgstr "播放列表文件含有媒体文件"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
-msgstr ""
+msgstr "改变速率时使用实验性的 instant-rate-change 旗标"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "不显示任何输出（除了错误信息）"
 
-msgid "Use playbin3 pipeline"
-msgstr "使用 playbin3 管道"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "（默认配置取决于“USE_PLAYBIN”环境变量）"
 
 msgid ""
@@ -728,6 +737,12 @@ msgstr "你必须提供至少一个文件名或URI来播放。"
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "按“k”键来显示键盘快捷键列表。\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "无法创建“uridecodebin3”组件。"
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "使用 playbin3 管道"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "无法创建“decodebin3”组件。"

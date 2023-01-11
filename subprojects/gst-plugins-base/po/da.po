@@ -34,7 +34,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2020-03-08 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -111,9 +111,6 @@ msgstr "Elementet »%s« mangler - kontroller din GStreamer-installation."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Kunne ikke oprette elementet »uridecodebin«."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Kunne ikke oprette elementet »uridecodebin3«."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Både autovideosink og %s elementer mangler."
@@ -179,6 +176,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-håndtering er implementeret for »%s«."
 
 msgid "Source element is invalid."
+msgstr "Kildeelement er ugyldigt."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Kildeelement er ugyldigt."
 
 #, c-format
@@ -703,13 +704,16 @@ msgstr "ændr afspilningsretning"
 msgid "enable/disable trick modes"
 msgstr "aktiver/deaktiver trick-tilstande"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "ændr lydspor"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "ændr videospor"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "ændr undertekstspor"
 
 msgid "seek to beginning"
@@ -720,6 +724,10 @@ msgstr "vis genvejstaster"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktiv tilstand - kontrol via tastatur:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Vis statusinformation og egenskabspåmindelser"
@@ -736,6 +744,9 @@ msgstr "Brud denne lydkanal (standard er autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Aktiver afspilning uden huller"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Bland afspilningsliste"
@@ -758,10 +769,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Udskriv ikke noget (undtagen fejl)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Brug playbin3-datakanal"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(standard varierer afhængig af miljøvariablen »USE_PLAYBIN«"
 
 msgid ""
@@ -780,6 +791,12 @@ msgstr "Du skal angive mindst et filnavn eller en adresse for at afspille."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tryk »k« for at se en liste over genvejstaster.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Kunne ikke oprette elementet »uridecodebin3«."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Brug playbin3-datakanal"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Kunne ikke oprette elementet »decodebin3«."

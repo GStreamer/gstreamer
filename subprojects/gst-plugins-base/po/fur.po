@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.10.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2017-02-20 15:34+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -89,10 +89,6 @@ msgstr "Al mancje l'element '%s' - controlâ la instalazion di GStreamer."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Impussibil creâ l'element \"uridecodebin\"."
 
-#, fuzzy
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Impussibil creâ l'element \"uridecodebin\"."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Ducj i dôi i elements autovideosink e %s a mancjin."
@@ -157,6 +153,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Nissun gjestôr di URI implementât par \"%s\"."
 
 msgid "Source element is invalid."
+msgstr "L'element sorzint nol è valit."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "L'element sorzint nol è valit."
 
 #, c-format
@@ -660,13 +660,16 @@ msgstr "cambie direzion di riproduzion"
 msgid "enable/disable trick modes"
 msgstr "abilite/disabilite modalitâts truc"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "cambie toc audio"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "cambie toc video"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "cambie toc sottitul"
 
 #, fuzzy
@@ -678,6 +681,10 @@ msgstr "mostre scurtis tastiere"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "modalitât interative - controi tastiere:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr ""
@@ -693,6 +700,9 @@ msgstr "\"Sink\" audio di doprâ (il predefinît al è autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Abilite riproduzion cence pausis"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Liste di riproduzion messedade"
@@ -715,10 +725,9 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "No sta a stampâ nissun output (infûr dai erôrs)"
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
 
 msgid ""

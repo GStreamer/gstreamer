@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2021-09-25 22:29-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
@@ -96,9 +96,6 @@ msgstr ""
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Não foi possível criar o elemento \"uridecodebin\"."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Não foi possível criar o elemento \"uridecodebin3\"."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Os elementos autovideosink e %s estão faltando."
@@ -164,6 +161,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Nenhum controlador para o URI \"%s\" foi implementado."
 
 msgid "Source element is invalid."
+msgstr "O elemento de origem é inválido."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "O elemento de origem é inválido."
 
 #, c-format
@@ -675,13 +676,16 @@ msgstr "alterar a direção de reprodução"
 msgid "enable/disable trick modes"
 msgstr "ativar/desativar modos avançados"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "alterar a trilha de áudio"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "alterar a trilha de vídeo"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "alterar a trilha de legenda"
 
 msgid "seek to beginning"
@@ -692,6 +696,10 @@ msgstr "exibir atalhos de teclado"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Modo interativo - teclas de comando:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 #  Flag: verbose
 msgid "Output status information and property notifications"
@@ -714,6 +722,9 @@ msgstr "Define o elemento consumidor de áudio (predefinido para autoaudiosink)"
 #  Flag: gapless
 msgid "Enable gapless playback"
 msgstr "Ativar reprodução sem intervalos"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 #  Flag: shuffle
 msgid "Shuffle playlist"
@@ -743,13 +754,13 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Não exibir nenhuma saída (além dos erros)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Utiliza a fila de processamento playbin3"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
-"(valor predefinido varia de acordo com a variável de ambiente \"USE_PLAYBIN"
-"\")"
+"(valor predefinido varia de acordo com a variável de ambiente "
+"\"USE_PLAYBIN\")"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -767,6 +778,12 @@ msgstr "Você deve fornecer ao menos um nome de arquivo ou URI para reproduzir."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pressione \"k\" para ver a lista de atalhos do teclado.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Não foi possível criar o elemento \"uridecodebin3\"."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Utiliza a fila de processamento playbin3"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Não foi possível criar o elemento \"decodebin3\"."

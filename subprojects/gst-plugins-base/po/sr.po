@@ -2,21 +2,21 @@
 # Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Danilo Segan <dsegan@gmx.net>, 2004.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2021.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.19.2\n"
+"Project-Id-Version: gst-plugins-base-1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2021-10-01 21:56+0200\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-02-15 20:19+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
 
@@ -88,9 +88,6 @@ msgstr "Недостаје елемент „%s“ — проверите ваш
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не могу да направим „uridecodebin“ елемент."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Не могу да направим „uridecodebin3“ елемент."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Недостају и самоусклађивање снимка и „%s“."
@@ -155,6 +152,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Руковалац адресе није примењен за „%s“."
 
 msgid "Source element is invalid."
+msgstr "Изворни елемент је неисправан."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Изворни елемент је неисправан."
 
 #, c-format
@@ -659,13 +660,16 @@ msgstr "мења смер пуштања"
 msgid "enable/disable trick modes"
 msgstr "укључује/искључује трик режиме"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "мења звучну нумеру"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "мења видео нумеру"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "мења запис превода"
 
 msgid "seek to beginning"
@@ -676,6 +680,10 @@ msgstr "приказује пречице тастатуре"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Међудејствени режим — управљање тастатуром:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Користи сат високе резолуције Виндоуза, тачности: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Исписује податке о стању и обавештења о власништву"
@@ -691,6 +699,9 @@ msgstr "Усаглашавање звука за коришћење (основ�
 
 msgid "Enable gapless playback"
 msgstr "Укључује пуштање без застоја"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Меша списак нумера"
@@ -714,10 +725,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Не исписује никакав излаз (осим грешака)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Користи спојку „playbin3“"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(основне променљиве зависе од „USE_PLAYBIN“ променљиве окружења)"
 
 msgid ""
@@ -738,6 +749,12 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Притисните „k“ да видите списак пречица тастатуре.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Не могу да направим „uridecodebin3“ елемент."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Користи спојку „playbin3“"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Не могу да направим „decodebin3“ елемент."

@@ -1,16 +1,16 @@
 # Hungarian translation for gst-plugins-base.
-# Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
+# Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017, 2019, 2022 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2012, 2016.
-# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019.
+# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2019-11-23 21:59+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-10-19 00:10+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Rosetta-Export-Date: 2007-03-10 00:18+0000\n"
-"X-Generator: Lokalize 19.04.3\n"
+"X-Generator: Lokalize 19.12.3\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -90,9 +90,6 @@ msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nem sikerült létrehozni „uridecodebin” elemet."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Nem sikerült létrehozni „uridecodebin3” elemet."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Az autovideosink és a(z) %s elem is hiányzik."
@@ -157,6 +154,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Nincs URI kezelő megvalósítva a következőhöz: „%s”."
 
 msgid "Source element is invalid."
+msgstr "A forráselem érvénytelen."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "A forráselem érvénytelen."
 
 #, c-format
@@ -394,19 +395,16 @@ msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albumelőadó azonosítója"
 
 msgid "release group ID"
-msgstr ""
+msgstr "kiadás csoportazonosítója"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "MusicBrainz számazonosító"
+msgstr "MusicBrainz kiadás csoportazonosítója"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "számazonosító"
+msgstr "kiadás számazonosítója"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "MusicBrainz számazonosító"
+msgstr "MusicBrainz kiadás számazonosítója"
 
 msgid "track TRM ID"
 msgstr "szám TRM azonosítója"
@@ -415,10 +413,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz szám TRM azonosítója"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "AcoustID-azonosító"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "AcoustID-ujjlenyomat (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "felvétel zársebessége"
@@ -572,17 +570,17 @@ msgstr ""
 "hozzáadására/eltávolítására."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Eszközök felvétele a rejtett eszközszolgáltatóktól."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Hangerő: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Némítás: be"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Némítás: ki"
 
 msgid "Buffering..."
 msgstr "Pufferelés…"
@@ -643,13 +641,13 @@ msgid "seek backward"
 msgstr "tekerés hátra"
 
 msgid "volume up"
-msgstr "hangerő fel"
+msgstr "hangosítás"
 
 msgid "volume down"
-msgstr "hangerő le"
+msgstr "halkítás"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "hangnémítás be- és kikapcsolása"
 
 msgid "increase playback rate"
 msgstr "lejátszási sebesség növelése"
@@ -663,13 +661,16 @@ msgstr "lejátszási irány megváltoztatása"
 msgid "enable/disable trick modes"
 msgstr "trükk módok engedélyezése/letiltása"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "hangsáv megváltoztatása"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "videosáv megváltoztatása"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "feliratsáv megváltoztatása"
 
 msgid "seek to beginning"
@@ -680,6 +681,10 @@ msgstr "gyorsbillentyűk megjelenítése"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktív mód - billentyűzetvezérlők:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "A Windows nagy felbontású órájának használata, pontosság: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Állapotinformációk és tulajdonságértesítések kiírása"
@@ -698,6 +703,9 @@ msgstr "Használandó hangsüllyesztés (az alapértelmezett az autoaudiosink)"
 msgid "Enable gapless playback"
 msgstr "Szünetmentes lejátszás bekapcsolása"
 
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
+
 msgid "Shuffle playlist"
 msgstr "Lejátszólista keverése"
 
@@ -708,21 +716,23 @@ msgid "Volume"
 msgstr "Hangerő"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Kezdési pozíció másodpercben."
 
 msgid "Playlist file containing input media files"
 msgstr "Bemeneti médiafájlokat tartalmazó lejátszólista fájl"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"A kísérleti instant-rate-change jelző használata a sebesség "
+"megváltoztatásakor"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne írjon ki semmilyen kimenetet (a hibákon kívül)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Playbin3 csővezeték használata"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
 "(az alapértelmezett a „USE_PLAYBIN” környezeti változótól függően változik)"
 
@@ -743,3 +753,9 @@ msgstr "Meg kell adnia legalább egy fájlnevet vagy URI-t a lejátszáshoz."
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr ""
 "Nyomja meg a „k” billentyűt a gyorsbillentyűk listájának megtekintéséhez.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Nem sikerült létrehozni „uridecodebin3” elemet."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Playbin3 csővezeték használata"

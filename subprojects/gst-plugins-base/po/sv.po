@@ -1,16 +1,16 @@
 # Swedish messages for gst-plugins-base.
-# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019, 2022 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2019-09-03 18:26+0200\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-10-24 18:28+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.2.3\n"
+"X-Generator: Poedit 3.1.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna enheten för uppspelning i monoläge."
@@ -88,9 +88,6 @@ msgstr "Saknar elementet ”%s” - kontrollera din GStreamer-installation."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Kunde inte skapa ”uridecodebin”-element."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Kunde inte skapa ”uridecodebin3”-element."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Både autovideosink- och %s-elementet saknas."
@@ -155,6 +152,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-hanterare implementerad för ”%s”."
 
 msgid "Source element is invalid."
+msgstr "Källelementet är ogiltigt."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Källelementet är ogiltigt."
 
 #, c-format
@@ -392,19 +393,16 @@ msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albumartist-ID"
 
 msgid "release group ID"
-msgstr ""
+msgstr "släpp grupp-ID"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "MusicBrainz spår-ID"
+msgstr "MusicBrainz släpp grupp-ID"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "spår-ID"
+msgstr "släpp spår-ID"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "MusicBrainz spår-ID"
+msgstr "MusicBrainz släpp spår-ID"
 
 msgid "track TRM ID"
 msgstr "spår TRM-ID"
@@ -413,10 +411,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-ID"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "AcoustID ID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "AcoustID fingeravtryck (chromaavtryck)"
 
 msgid "capturing shutter speed"
 msgstr "slutarhastighet"
@@ -451,7 +449,7 @@ msgid "Digital zoom ratio used when capturing an image"
 msgstr "Digitalt zoom-förhållande som används när bild infångas"
 
 msgid "capturing iso speed"
-msgstr "ISO-tal"
+msgstr "ISO-tal för tagning"
 
 msgid "The ISO speed used when capturing an image"
 msgstr "ISO-tal som används när bild infångas"
@@ -570,17 +568,17 @@ msgstr ""
 "enheter läggs till/tas bort."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Inkludera enheter från gömda enhetsleverantörer."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volym: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Tyst: på"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Tyst: av"
 
 msgid "Buffering..."
 msgstr "Buffrar..."
@@ -647,7 +645,7 @@ msgid "volume down"
 msgstr "sänk volym"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "växla tystnadsläge på/av"
 
 msgid "increase playback rate"
 msgstr "öka uppspelningshastighet"
@@ -661,13 +659,16 @@ msgstr "ändra uppspelningsriktning"
 msgid "enable/disable trick modes"
 msgstr "aktivera/inaktivera tricklägen"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "byt ljudspår"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "byt videospår"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "byt undertextspår"
 
 msgid "seek to beginning"
@@ -678,6 +679,10 @@ msgstr "visa tangentbordsgenvägar"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktivt läge: tangentbordsstyrning:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Använd Windows högupplösta klocka, precision: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Mata ut statusinformation och egenskapsaviseringar"
@@ -695,6 +700,9 @@ msgstr "Ljudutgång som ska användas (standard är autoaudiosink)"
 msgid "Enable gapless playback"
 msgstr "Aktivera mellanrumslös uppspelning"
 
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
+
 msgid "Shuffle playlist"
 msgstr "Blanda spellista"
 
@@ -705,21 +713,23 @@ msgid "Volume"
 msgstr "Volym"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Startposition i sekunder."
 
 msgid "Playlist file containing input media files"
 msgstr "Fil med spellista innehållandes inkommande mediafiler"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"Använd den experimentella flaggan för omedelbar hastighetsändring vid "
+"ändring av hastighet"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Mata inte ut någonting (bortsett från fel)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Använd playbin3-rörledning"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(standardvärdet beror på miljövariabeln ”USE_PLAYBIN”)"
 
 msgid ""
@@ -738,6 +748,12 @@ msgstr "Du måste ange åtminstone ett filnamn eller en URI att spela."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tryck på 'k' för att se en lista över tangentbordsgenvägar.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Kunde inte skapa ”uridecodebin3”-element."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Använd playbin3-rörledning"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Kunde inte skapa \"decodebin3\"-element."

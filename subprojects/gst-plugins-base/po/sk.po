@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.7.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2016-05-20 12:24+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -87,10 +87,6 @@ msgstr "Chýa prvok '%s' - skontrolujte svoju inštaláciu GStreamer."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nepodarilo sa vytvoriť prvok \"uridecodebin\"."
 
-#, fuzzy
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Nepodarilo sa vytvoriť prvok \"uridecodebin\"."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Chýbajú prvky autovideosink aj %s."
@@ -155,6 +151,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Pre \"%s\" nie je implementovaná obsluha."
 
 msgid "Source element is invalid."
+msgstr "Zdrojový prvok je chybný."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Zdrojový prvok je chybný."
 
 #, c-format
@@ -663,13 +663,16 @@ msgstr "zmeniť smer prehrávania"
 msgid "enable/disable trick modes"
 msgstr "zapnúť/vypnúť trikové režimy"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "zmeniť zvukovú stopu"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "zmeniť video stopu"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "zmeniť stopu s titulkami"
 
 msgid "seek to beginning"
@@ -680,6 +683,10 @@ msgstr "zobraziť klávesové skratky"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktívny režim - klávesové ovládanie:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Zobraziť na výstupe informácie o stave a upozornenia o vlastníctve"
@@ -695,6 +702,9 @@ msgstr "Ktorý audiosink použiť (predvolený je autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Povoliť plynulé prehrávanie"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Premiešať prehrávací zoznam"
@@ -717,10 +727,9 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Nevypisovať žiadny výstup (okrem chýb)"
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
 
 msgid ""

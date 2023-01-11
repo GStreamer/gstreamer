@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2021.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2021-09-25 08:48+0200\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-02-08 17:23+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -95,9 +95,6 @@ msgstr "Brak elementu '%s' - proszę sprawdzić instalację GStreamera."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Nie udało się utworzyć elementu \"uridecodebin3\"."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Nie ma żadnego z elementów autovideosink i %s."
@@ -162,6 +159,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Nie ma zaimplementowanej obsługi URI dla \"%s\"."
 
 msgid "Source element is invalid."
+msgstr "Element źródłowy jest niepoprawny."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Element źródłowy jest niepoprawny."
 
 #, c-format
@@ -666,13 +667,16 @@ msgstr "zmiana kierunku odtwarzania"
 msgid "enable/disable trick modes"
 msgstr "włączenie/wyłączenie trybów trików"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "zmiana ścieżki dźwiękowej"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "zmiana ścieżki filmowej"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "zmiana ścieżki podpisów"
 
 msgid "seek to beginning"
@@ -683,6 +687,10 @@ msgstr "wyświetlenie skrótów klawiatury"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Tryb interaktywny - sterowanie z klawiatury:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Użycie zegara Windows dużej rozdzielczości, precyzja: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Informacje o stanie wyjścia i powiadomienia o własnościach"
@@ -700,6 +708,9 @@ msgstr "Element pochłaniający dźwięk (domyślny to autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Włączenie odtwarzania bez przerw"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Przetasowanie listy odtwarzania"
@@ -722,10 +733,10 @@ msgstr "Użycie eksperymentalnej flagi instant-rate-change przy zmianie tempa"
 msgid "Do not print any output (apart from errors)"
 msgstr "Bez wypisywania żadnego wyjścia (poza błędami)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Użycie potoku playbin3"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(wartość domyślna zależy od zmiennej środowiskowej 'USE_PLAYBIN')"
 
 msgid ""
@@ -744,3 +755,9 @@ msgstr "Trzeba podać przynajmniej jedną nazwę pliku lub URI do odtworzenia."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Klawisz 'k' wyświetla listę skrótów klawiatury.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Nie udało się utworzyć elementu \"uridecodebin3\"."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Użycie potoku playbin3"

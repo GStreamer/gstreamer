@@ -1,16 +1,17 @@
-# translation of gst-plugins-base-0.10.32.2.po to Español
+# translation of gst-plugins-base-1.20.0.po to Español
 # spanish translation for gst-plugins-base
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2007, 2008, 2009, 2010, 2011.
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2011-10-02 15:46+0200\n"
-"Last-Translator: Jorge González González <aloriel@gmail.com>\n"
-"Language-Team: Spanish <es@li.org>\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-03-04 17:01-0600\n"
+"Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
+"Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -40,6 +41,7 @@ msgstr "No se pudo abrir el dispositivo para la reproducir."
 
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr ""
+"Error en la salida del dispositivo de audio. El dispositivo se desconectó."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "No se pudo abrir el dispositivo para grabar en modo mono."
@@ -63,6 +65,7 @@ msgstr "No se pudo abrir el dispositivo de sonido para grabar."
 
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr ""
+"Error al grabar del dispositivo de audio. El dispositivo se desconectó."
 
 msgid "Could not open CD device for reading."
 msgstr "No se pudo abrir el dispositivo de CD para leer."
@@ -71,7 +74,7 @@ msgid "Could not seek CD."
 msgstr "No se pudo buscar en el CD."
 
 msgid "Could not read CD."
-msgstr "No se pudo leer del D."
+msgstr "No se pudo leer del CD."
 
 msgid "Could not determine type of stream"
 msgstr "No se pudo determinar el tipo de flujo"
@@ -83,13 +86,8 @@ msgstr "Esto parece ser un archivo de texto"
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Falta el elemento «%s»; compruebe su instalación de GStreamer."
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "No se pudo crear el elemento «decodebin»."
-
-#, fuzzy
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "No se pudo crear el elemento «decodebin»."
+msgstr "No se pudo crear el elemento «uridecodebin»."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -158,6 +156,10 @@ msgstr "No existe un manejador URI implementado para «%s»."
 msgid "Source element is invalid."
 msgstr "El elemento fuente no es válido."
 
+#, fuzzy
+msgid "Source element has no pads."
+msgstr "El elemento fuente no es válido."
+
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Error al enviar los datos a «%s:%d»."
@@ -169,13 +171,13 @@ msgid "This CD has no audio tracks"
 msgstr "Este CD no tiene pistas de sonido"
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "falló al dibujar el patrón"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Ocurrió un error de GL"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "el formato no se negoció antes de obtener la función"
 
 msgid "ID3 tag"
 msgstr "Etiqueta ID3"
@@ -212,23 +214,20 @@ msgstr "Codificación del tamaño durante la ejecución"
 
 #. subtitle formats with static descriptions
 msgid "Timed Text"
-msgstr ""
+msgstr "Texto temporizado"
 
 #. FIXME: add variant field to typefinder?
 msgid "Subtitle"
-msgstr ""
+msgstr "Subtítulo"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Formato de subtítulos TMPlayer"
+msgstr "Formato de subtítulo MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Formato de subtítulos Sami"
+msgstr "Formato de subtítulos DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Formato de subtítulos kate"
+msgstr "Formato de subtítulos QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Formato de subtítulos Sami"
@@ -237,57 +236,53 @@ msgid "TMPlayer subtitle format"
 msgstr "Formato de subtítulos TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Subtítulos CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Subtítulos CEA 708"
 
 msgid "Kate subtitle format"
-msgstr "Formato de subtítulos kate"
+msgstr "Formato de subtítulos Kate"
 
-#, fuzzy
 msgid "WebVTT subtitle format"
-msgstr "Formato de subtítulos kate"
+msgstr "Formato de subtítulos WebVTT"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "YUV sin comprimir"
+msgstr "Video sin comprimir"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Imagen en escala de grises sin comprimir"
+msgstr "Gris sin comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "YUV 4:2:2 empaquetado sin comprimir"
+msgstr "YUV %s empaquetado sin comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "YUV 4:2:0 plano sin comprimir"
+msgstr "YUV %s semiplano sin comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "YUV 4:2:0 plano sin comprimir"
+msgstr "YUV %s plano sin comprimir"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Paletizado sin comprimir de %d-bit %s"
+msgstr "%2$s paletizada de %1$d-bit sin comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Paletizado sin comprimir de %d-bit %s"
+msgstr "%2$s sin comprimir de %1$d-bit"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 versión %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "YUV sin comprimir"
+msgstr "Audio sin comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Audio PCM sin comprimir de %d-bits"
+msgstr "Audio %2$s sin comprimir de %1$d-bits"
 
 msgid "Audio CD source"
 msgstr "Fuente: CD de audio"
@@ -400,19 +395,16 @@ msgid "MusicBrainz album artist ID"
 msgstr "ID del álbum del artista en MusicBrainz"
 
 msgid "release group ID"
-msgstr ""
+msgstr "ID de lanzamiento del grupo"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "ID de la pista en MusicBrainz"
+msgstr "ID de lanzamiento del grupo en MusicBrainz"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "ID de la pista"
+msgstr "ID de lanzamiento de la pista"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "ID de la pista en MusicBrainz"
+msgstr "ID de lanzamiento de la pista en MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "ID TRM de la pista"
@@ -421,10 +413,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "ID TRM en MusicBrainz"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "ID de AcoustID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "Huella digital de AcoustID (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "velocidad del obturador de la toma"
@@ -444,14 +436,14 @@ msgstr "longitud focal de la toma"
 msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Longitud focal de la lente usada al tomar la imagen, en mm"
 
-#, fuzzy
 msgid "capturing 35 mm equivalent focal length"
-msgstr "longitud focal de la toma"
+msgstr "la longitud focal de la toma equivalente a 35 mm"
 
-#, fuzzy
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Longitud focal de la lente usada al tomar la imagen, en mm"
+msgstr ""
+"Longitud focal equivalente a 35 mm de la lente usada al tomar la imagen, en "
+"mm"
 
 msgid "capturing digital zoom ratio"
 msgstr "tasa de ampliación digital de la toma"
@@ -558,193 +550,231 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Densidad vertical de píxeles, en ppi, del medio (imagen o vídeo)"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "Marco ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "marco de etiqueta id3v2 sin analizar"
 
 msgid "musical-key"
-msgstr ""
+msgstr "llave-musical"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Llave inicial en la cual inicia el sonido"
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Muestra la información de versión y termina"
 
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"No salir después de mostrar la lista inicial de dispositivos, pero espera "
+"que se agreguen/eliminen dispositivos."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Incluir dispositivos de proveedores de dispositivos ocultos."
 
 #, c-format
 msgid "Volume: %.0f%%"
-msgstr ""
+msgstr "Volumen: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Silenciar: encendido"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Silenciar: apagado"
 
 msgid "Buffering..."
-msgstr ""
+msgstr "Llenando el búfer..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Se perdió el reloj, se escoje uno nuevo\n"
 
 msgid "Reached end of play list."
-msgstr ""
+msgstr "Se alcanzó el final de la lista de reproducción."
 
 msgid "Paused"
-msgstr ""
+msgstr "Pausado"
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Ahora reproduciendo %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "A punto de terminar, preparando el siguiente título: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Tasa de reproducción: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "No se pudo abrir el dispositivo para la reproducir en modo estéreo."
+msgstr "No se pudo cambiar la tasa de reproducción a %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "espacio"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "pausa/quitar pausa"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q o ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "salir"
 
 msgid "> or n"
-msgstr ""
+msgstr "> o n"
 
 msgid "play next"
-msgstr ""
+msgstr "reproducir siguiente"
 
 msgid "< or b"
-msgstr ""
+msgstr "< o b"
 
 msgid "play previous"
-msgstr ""
+msgstr "reproducir anterior"
 
 msgid "seek forward"
-msgstr ""
+msgstr "adelantar"
 
 msgid "seek backward"
-msgstr ""
+msgstr "retrasar"
 
 msgid "volume up"
-msgstr ""
+msgstr "subir volumen"
 
 msgid "volume down"
-msgstr ""
+msgstr "bajar volumen"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "encender/apagar el silencio del audio"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "incrementar la tasa de reproducción"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "decrementar la tasa de reproducción"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "cambiar la dirección de reproducción"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "activar/desactivar los modos de truco"
 
 #, fuzzy
-msgid "change audio track"
-msgstr "Este CD no tiene pistas de sonido"
-
-msgid "change video track"
-msgstr ""
+msgid "change to previous/next audio track"
+msgstr "cambiar pista de sonido"
 
 #, fuzzy
-msgid "change subtitle track"
-msgstr "Formato de subtítulos kate"
+msgid "change to previous/next video track"
+msgstr "cambiar pista de video"
+
+#, fuzzy
+msgid "change to previous/next subtitle track"
+msgstr "cambiar pista de subtítulos"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "regresar al inicio"
 
 msgid "show keyboard shortcuts"
-msgstr ""
+msgstr "mostrar los atajos del teclado"
 
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "Modo interactivo - controles del teclado:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Usar el reloj de alta resolución de Windows: precisión: %u ms\n"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Mostrar información de estado y notificaciones de propiedades"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Controlar el modo de reproducción modificando la propiedad 'flags' de playbin"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Usar este sumidero de video (por defecto es autovideosink)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Usar este sumidero de audio (por defecto es autoaudiosink)"
 
 msgid "Enable gapless playback"
+msgstr "Permitir la reproducción sin espacios en blanco"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
 msgstr ""
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Lista de reproducción aleatoria"
 
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "Desactivar el control interactivo con el teclado"
 
 msgid "Volume"
-msgstr ""
+msgstr "Volumen"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Posición de inicio en segundos."
 
 msgid "Playlist file containing input media files"
 msgstr ""
+"Fichero de lista de reproducción que cotiene ficheros de medios de entrada"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
-msgstr ""
+msgstr "Usar la opción instant-rate-change experimental al cambiar la tasa"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "No mostrar ninguna salida (además de los errores)"
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
+msgstr "(por defecto varía de acuerdo a la variable de ambiente 'USE_PLAYBIN')"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
 "(gapless is ignored)"
 msgstr ""
+"Seguir mostrando el último cuadro en EOS hasta salir o recibir una orden "
+"para cambiar la lista de reproducción (se ignora la reproducción sin "
+"espacios)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Uso: %s FICH1|URI1 [FICH2|URI2] [FICH3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr ""
+msgstr "Debe proveer por lo menos un nombre de fichero o URI para reproducir."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
+msgstr "Pulse 'k' para ver una lista de atajos de teclado.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "No se pudo crear el elemento «uridecodebin3»."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Usar el conducto playbin3"
+
+#~ msgid "Could not create \"decodebin3\" element."
+#~ msgstr "No se pudo crear el elemento «decodebin3»."
+
+#~ msgid "Could not create \"urisourcebin\" element."
+#~ msgstr "No se pudo crear el elemento «urisourcebin»."
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Error interno de flujo de datos."
+
+#~ msgid "A %s plugin is required to play this stream, but not installed."
+#~ msgstr ""
+#~ "Se requiere un complemento de %s para reproducir este medio, pero no está "
+#~ "instalado."
+
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "YUV %s %s sin comprimir"
 
 #~ msgid "Master"
 #~ msgstr "Maestro"
@@ -779,31 +809,18 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "Capturar"
 
-#, c-format
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "No se pudo abrir el archivo VFS «%s» para escribir: %s."
 
 #~ msgid "No filename given"
 #~ msgstr "No se dio un nombre de archivo"
 
-#, c-format
 #~ msgid "Could not close vfs file \"%s\"."
 #~ msgstr "No se pudo cerrar el archivo VFS «%s»."
 
-#, c-format
 #~ msgid "Error while writing to file \"%s\"."
 #~ msgstr "Error al escribir al archivo «%s»."
 
-#~ msgid "Internal data stream error."
-#~ msgstr "Error interno de flujo de datos."
-
-#, c-format
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Se requiere un complemento de %s para reproducir este medio, pero no está "
-#~ "instalado."
-
-#, c-format
 #~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 #~ msgstr "URI de subtítulos «%s» no válida, se desactivaron los subtítulos."
 
@@ -838,15 +855,12 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Tanto el elemento autoaudiosink como alsasink faltan."
 
-#, c-format
 #~ msgid "Error while sending gdp header data to \"%s:%d\"."
 #~ msgstr "Error al enviar los datos de la cabecera gdp a «%s:%d»."
 
-#, c-format
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "Error al enviar la carga de datos de gdp a «%s:%d»."
 
-#, c-format
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Se rechazó la conexión con %s:%d."
 
@@ -877,7 +891,6 @@ msgstr ""
 #~ msgid "Raw PCM audio"
 #~ msgstr "Audio PCM sin comprimir"
 
-#, c-format
 #~ msgid "Raw %d-bit floating-point audio"
 #~ msgstr "Audio sin comprimir de %d-bits en coma flotante"
 
@@ -887,15 +900,12 @@ msgstr ""
 #~ msgid "No device specified."
 #~ msgstr "No se especificó un dispositivo."
 
-#, c-format
 #~ msgid "Device \"%s\" does not exist."
 #~ msgstr "El dispositivo «%s» no existe."
 
-#, c-format
 #~ msgid "Device \"%s\" is already being used."
 #~ msgstr "El dispositivo «%s» ya se está usando."
 
-#, c-format
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "No se pudo abrir el dispositivo «%s» para su lectura y escritura."
 
@@ -913,9 +923,6 @@ msgstr ""
 
 #~ msgid "Internal data flow error."
 #~ msgstr "Error en el flujo de datos interno."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "No se pudo crear el elemento «decodebin2»."
 
 #~ msgid "Could not create \"queue2\" element."
 #~ msgstr "No se pudo crear el elemento «queue2»."
