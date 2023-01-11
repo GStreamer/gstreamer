@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -427,9 +427,6 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Problema biex nissettja input %d fuq apparat %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Ma tistax tibdel ir-resolution waqt runtime."
-
 msgid "Cannot operate without a clock"
 msgstr "Ma nistax nħaddem mingħajr arloġġ"
 
@@ -585,3 +582,6 @@ msgstr "Ma nistax nħaddem mingħajr arloġġ"
 #, c-format
 #~ msgid "Error stopping streaming capture from device '%s'."
 #~ msgstr "Problem biex inwaqqaf streaming capture mill-apparat '%s'."
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Ma tistax tibdel ir-resolution waqt runtime."

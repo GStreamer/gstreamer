@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2019-03-05 16:27+0100\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -405,11 +405,11 @@ msgstr "获取设备“%s”上的当前输入出错。它可能是一个广播�
 msgid "Failed to set output %u on device %s."
 msgstr "将输出 %d 设置到设备 %s 上失败。"
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "尚不支持在运行时更改分辨率。"
-
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "尚不支持在运行时更改分辨率。"
 
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "此文件包含了太多的流。只播放前面 %d 个"

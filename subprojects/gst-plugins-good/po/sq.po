@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -400,9 +400,6 @@ msgstr ""
 #, fuzzy, c-format
 msgid "Failed to set output %u on device %s."
 msgstr "E pamundur mbyllja e dispozitivit të kontrollit \"%s\"."
-
-msgid "Changing resolution at runtime is not yet supported."
-msgstr ""
 
 msgid "Cannot operate without a clock"
 msgstr ""

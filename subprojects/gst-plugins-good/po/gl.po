@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2012-12-15 03:46+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -450,9 +450,6 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "Produciuse un fallo ao estabelecer a saída %d no dispositivo %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Aínda non se admite o cambio de resolución durante a reprodución."
-
 msgid "Cannot operate without a clock"
 msgstr "Non é posíbel operar sen reloxo"
 
@@ -493,6 +490,9 @@ msgstr "Non é posíbel operar sen reloxo"
 
 #~ msgid "AUX 2 Out"
 #~ msgstr "Saída AUX 2"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Aínda non se admite o cambio de resolución durante a reprodución."
 
 #~ msgid "Could not establish connection to sound server"
 #~ msgstr "Non foi posíbel estabelecer a conexión co servidor de son"

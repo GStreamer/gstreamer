@@ -1,15 +1,15 @@
 # Esperanto translation for gst-plugins-good.
-# Copyright (C) 2011 Free Software Foundation, Inc.
+# Copyright (C) 2011, 2023 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
-# Felipe CASTRO <fefcas@gmail.com>, 2021.
+# Felipe CASTRO <fefcas@gmail.com>, 2021, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2021-03-13 11:13-0300\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2023-01-08 12:06-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
 "Language: eo\n"
@@ -24,17 +24,15 @@ msgid "Jack server not found"
 msgstr "Servilo Jack ne estas trovita"
 
 msgid "Failed to decode JPEG image"
-msgstr "Ni malsukcesis malkodi bildon JPEG"
+msgstr "Malsukcesis malkodi bildon JPEG"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "Ni malsukcesis asigni bezonatan memoron."
+msgstr "Malsukcesis legi memoron"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Ni malsukcesis agordi sonkodilon LAME mp3. Kontrolu viajn enkodajn "
-"parametrojn."
+"Malsukcesis agordi sonkodilon LAME mp3. Kontrolu viajn enkodajn parametrojn."
 
 #. <php-emulation-mode>three underscores for ___rate is really really really
 #. * private as opposed to one underscore<php-emulation-mode>
@@ -80,8 +78,7 @@ msgstr "La servilo ne subtenas serĉadon."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"Ni malsukcesis agordi la enkodilon TwoLAME. Kontrolu viajn enkodajn "
-"parametrojn."
+"Malsukcesis agordi la enkodilon TwoLAME. Kontrolu viajn enkodajn parametrojn."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Neniu aŭ malvalida eniga sono, la fluo AVI estos difektita."
@@ -174,7 +171,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "Ne eblis malfermi aparaton CoreAudio"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Kamerao-modulo de Raspberry Pi"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -183,7 +180,7 @@ msgstr "Eraro dum lego de %d bajtoj el aparato '%s'."
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
-"Ni malsukcesis nombrigi eblajn video-formojn kun kiuj la aparato '%s' povas "
+"Malsukcesis nombrigi eblajn video-formojn kun kiuj la aparato '%s' povas "
 "funkcii"
 
 #, c-format
@@ -198,9 +195,8 @@ msgstr "La pelilo de la aparato '%s' ne subtenas la en/eligan metodon %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "La pelilo de la aparato '%s' ne subtenas iun ajn en/eligan metodon."
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "Malvalida grando de ATOM-fluo."
+msgstr "Malvalida caps"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -254,7 +250,7 @@ msgid "Video device uses an unsupported pixel format."
 msgstr "La video-aparato uzas nesubtenatan bilderan formon."
 
 msgid "Failed to configure internal buffer pool."
-msgstr "Ni malsukcesis agordin internan bufraron."
+msgstr "Malsukcesis agordin internan bufraron."
 
 msgid "Video device did not suggest any buffer size."
 msgstr "La video-aparato ne sugestis iun ajn bufran grandon."
@@ -265,7 +261,7 @@ msgstr "Neniu alŝut-grupo el kio ni povus importi."
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr ""
-"Ni malsukcesis havigi parametrojn el la radi-agordilo %d en la aparato '%s'."
+"Malsukcesis havigi parametrojn el la radi-agordilo %d en la aparato '%s'."
 
 #, c-format
 msgid "Error getting capabilities for device '%s'."
@@ -277,21 +273,21 @@ msgstr "Aparato '%s' ne estas radi-agordilo."
 
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Ni malsukcesis havigi radian enigon en la aparato '%s'. "
+msgstr "Malsukcesis havigi radian enigon en la aparato '%s'. "
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Ni malsukcesis difini enigon %d en la aparato %s."
+msgstr "Malsukcesis difini enigon %d en la aparato %s."
 
 #, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Ni malsukcesis ŝanĝi silentan staton por la aparato '%s'."
+msgstr "Malsukcesis ŝanĝi silentan staton por la aparato '%s'."
 
 msgid "Failed to allocated required memory."
-msgstr "Ni malsukcesis asigni bezonatan memoron."
+msgstr "Malsukcesis asigni bezonatan memoron."
 
 msgid "Failed to allocate required memory."
-msgstr "Ni malsukcesis asigni bezonatan memoron."
+msgstr "Malsukcesis asigni bezonatan memoron."
 
 #, c-format
 msgid "Converter on device %s has no supported input format"
@@ -310,10 +306,10 @@ msgid "Decoder on device %s has no supported output format"
 msgstr "Malkodilo en la aparato %s havas neniun subtenatan eligan formon"
 
 msgid "Failed to start decoding thread."
-msgstr "Ni malsukcesis lanĉi malkodilan fadenon."
+msgstr "Malsukcesis lanĉi malkodilan fadenon."
 
 msgid "Failed to process frame."
-msgstr "Ni malsukcesis procezi kadron."
+msgstr "Malsukcesis procezi kadron."
 
 #, c-format
 msgid "Encoder on device %s has no supported output format"
@@ -324,7 +320,7 @@ msgid "Encoder on device %s has no supported input format"
 msgstr "Enkodilo en la aparato %s havas neniun subtenatan enigan formon"
 
 msgid "Failed to start encoding thread."
-msgstr "Ni malsukcesis lanĉi enkodigan fadenon."
+msgstr "Malsukcesis lanĉi enkodigan fadenon."
 
 #, c-format
 msgid ""
@@ -336,19 +332,19 @@ msgstr ""
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr "Ni malsukcesis envicige peti atributojn de enigo %d en aparato %s"
+msgstr "Malsukcesis envicige peti atributojn de enigo %d en aparato %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Ni malsukcesis havigi difinon de radi-agordilo %d en aparato '%s'."
+msgstr "Malsukcesis havigi difinon de radi-agordilo %d en aparato '%s'."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Ni malsukcesis envicige peti normon en aparato '%s'."
+msgstr "Malsukcesis envicige peti normon en aparato '%s'."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Ni malsukcesis havigi regajn atributojn en aparato '%s'."
+msgstr "Malsukcesis havigi regajn atributojn en aparato '%s'."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -380,60 +376,58 @@ msgstr "Ne eblis 'dup' la aparaton '%s' por legi/skribi."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Ni malsukcesis difini normon por la aparato '%s'."
+msgstr "Malsukcesis difini normon por la aparato '%s'."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Ni malsukcesis havigi nunan radi-agordan frekvencon por aparato '%s'."
+msgstr "Malsukcesis havigi nunan radi-agordan frekvencon por aparato '%s'."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Ni malsukcesis difini nunan radi-agordan frekvencon por aparato '%s': kiel "
-"%lu Hz."
+"Malsukcesis difini nunan radi-agordan frekvencon por aparato '%s': kiel %lu "
+"Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Ni malsukcesis havigin signalan forton por aparato '%s'."
+msgstr "Malsukcesis havigin signalan forton por aparato '%s'."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Ni malsukcesis havigi valoron por regilo %d en aparato '%s'."
+msgstr "Malsukcesis havigi valoron por regilo %d en aparato '%s'."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Ni malsukcesis difini valoron %d por regilo %d en aparato '%s'."
+msgstr "Malsukcesis difini valoron %d por regilo %d en aparato '%s'."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
-msgstr "Ni malsukcesis difini valoron %d por regilo %d en aparato '%s'."
+msgstr "Malsukcesis difini valoron %s por regilo %d en aparato '%s'."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Ni malsukcesis havigi nunan enigon en aparato '%s'. Eble ĝi estas radi-"
-"aparato"
+"Malsukcesis havigi nunan enigon en aparato '%s'. Eble ĝi estas radi-aparato"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "Ni malsukcesis difini enigon %d en la aparato %s."
+msgstr "Malsukcesis difini enigon %u en la aparato %s."
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Ni malsukcesis havigi nunan eligon en aparato '%s'. Eble ĝi estas radi-"
-"aparato"
+"Malsukcesis havigi nunan eligon en aparato '%s'. Eble ĝi estas radi-aparato"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "Ni malsukcesis difini eligon %d en aparato %s."
-
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Ŝanĝo de distingpovon dum plenumado ankoraŭ ne estas subtenata."
+msgstr "Malsukcesis difini eligon %u en aparato %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Ne eblas funkcii sen horloĝo"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Ŝanĝo de distingpovon dum plenumado ankoraŭ ne estas subtenata."
 
 #~ msgid "Internal data stream error."
 #~ msgstr "Interna datumflu-eraro."

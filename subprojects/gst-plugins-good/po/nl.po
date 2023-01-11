@@ -1,13 +1,13 @@
 # translation of gst-plugins-good.nl.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.12.0\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2017-10-23 23:59+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-02-08 14:13+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 2.0\n"
+"X-Generator: Lokalize 21.12.2\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Jack server not found"
@@ -24,13 +24,14 @@ msgstr "Jack-server niet gevonden"
 msgid "Failed to decode JPEG image"
 msgstr "Kan de JPEG-afbeelding niet decoderen"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "Vereist geheugen toekennen is mislukt."
+msgstr "Geheugen lezen is mislukt"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Audio-codeerder LAME mp3 configureren is mislukt. Controleer uw "
+"coderingsparameters."
 
 #. <php-emulation-mode>three underscores for ___rate is really really really
 #. * private as opposed to one underscore<php-emulation-mode>
@@ -41,6 +42,8 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"De gewenste bitsnelheid %d kbit/s voor eigenschap '%s' is niet toegestaan. "
+"De bitsnelheid is gewijzigd naar %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -76,6 +79,8 @@ msgstr "Zoeken wordt door de server niet ondersteund."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Audio-codeerder TwoLAME configureren is mislukt. Controleer uw "
+"coderingsparameters."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Geen of ongeldig invoergeluid, AVI-stroom zal slecht zijn."
@@ -170,7 +175,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio apparaat kon niet geopend worden"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Raspberry Pi cameramodule"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -193,17 +198,16 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "Het stuurprogramma van apparaat '%s' ondersteunt geen bekende IO-methode."
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "Ongeldige \"atom\"-grootte."
+msgstr "Ongeldige hoofdletters"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Codeerder op apparaat %s heeft geen ondersteund invoerformaat"
+msgstr "Apparaat '%s' heeft geen ondersteund formaat"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Apparaat '%s' mislukte tijdens initialisatie"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -221,13 +225,13 @@ msgstr "Apparaat '%s' kan geen opname maken in het gespecificeerde formaat"
 msgid "Device '%s' does support non-contiguous planes"
 msgstr "Apparaat '%s' ondersteunt niet-continue vlakken"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Apparaat '%s' ondersteunt het opnemen van video niet"
+msgstr "Apparaat '%s' ondersteunt geen %s interlacing"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Apparaat '%s' ondersteunt het opnemen van video niet"
+msgstr "Apparaat '%s' ondersteunt geen %s colorimetrie"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -296,13 +300,13 @@ msgstr "Converter op apparaat %s heeft geen ondersteund invoerformaat"
 msgid "Converter on device %s has no supported output format"
 msgstr "Converter op apparaat %s heeft geen ondersteund uitvoerformaat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Codeerder op apparaat %s heeft geen ondersteund invoerformaat"
+msgstr "Decodeerder op apparaat %s heeft geen ondersteund invoerformaat"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Codeerder op apparaat %s heeft geen ondersteund uitvoerformaat"
+msgstr "Decodeerder op apparaat %s heeft geen ondersteund uitvoerformaat"
 
 msgid "Failed to start decoding thread."
 msgstr "Beginnen met decoderen van thread is mislukt."
@@ -318,9 +322,8 @@ msgstr "Codeerder op apparaat %s heeft geen ondersteund uitvoerformaat"
 msgid "Encoder on device %s has no supported input format"
 msgstr "Codeerder op apparaat %s heeft geen ondersteund invoerformaat"
 
-#, fuzzy
 msgid "Failed to start encoding thread."
-msgstr "Beginnen met decoderen van thread is mislukt."
+msgstr "Beginnen met coderen van thread is mislukt."
 
 #, c-format
 msgid ""
@@ -399,9 +402,9 @@ msgstr "Kan de waarde voor knop %d op apparaat '%s' niet verkrijgen."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kan de waarde %d voor knop %d op apparaat '%s' niet instellen."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
-msgstr "Kan de waarde %d voor knop %d op apparaat '%s' niet instellen."
+msgstr "Kan de waarde %s voor besturing %d op apparaat '%s' niet zetten."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
@@ -409,9 +412,9 @@ msgstr ""
 "Kan de huidige instellingen van apparaat '%s' niet verkrijgen. Het is "
 "mogelijk een radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "Kan invoer %d op apparaat '%s' niet instellen."
+msgstr "Kan invoer %u op apparaat '%s' niet zetten."
 
 #, c-format
 msgid ""
@@ -420,17 +423,16 @@ msgstr ""
 "Kan de huidige uitvoer niet op apparaat '%s' krijgen. Het is mogelijk een "
 "radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "Kan uitvoer %d op apparaat %s niet instellen."
-
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
+msgstr "Kan uitvoer %u op apparaat %s niet zetten."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan niet werken zonder een klok."
 
-#, c-format
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Tijdens het draaien kan de resolutie nog niet gewijzigd worden."
+
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr ""
 #~ "Dit bestand bevat te veel stromen. Alleen de eerste %d worden afgespeeld."

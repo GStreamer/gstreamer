@@ -1,16 +1,16 @@
 # Swedish messages for gst-plugins-good.
-# Copyright © 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019, 2022 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2019-02-05 18:23+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-10-26 21:21+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Generator: Poedit 3.1.1\n"
 
 msgid "Jack server not found"
 msgstr "Jack-server hittades ej"
@@ -26,9 +26,8 @@ msgstr "Jack-server hittades ej"
 msgid "Failed to decode JPEG image"
 msgstr "Misslyckades med att avkoda JPEG-bild"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "Misslyckades med att allokera begärt minne."
+msgstr "Misslyckades med att läsa minne"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
@@ -80,7 +79,7 @@ msgstr "Servern stöder inte sökning/spolning."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
-"Misslyckades med att konfigurerar TwoLAME-kodare. Kontrollera dina "
+"Misslyckades med att konfigurera TwoLAME-kodare. Kontrollera dina "
 "kodningsparametrar."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
@@ -176,7 +175,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "CoreAudio-enhet kunde inte öppnas"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Raspberry Pi-kameramodul"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -200,9 +199,8 @@ msgstr "Drivrutinen för enheten ”%s” stöder inte IO-metod %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Drivrutinen för enheten ”%s” stöder inte någon känd IO-metod."
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "Ogiltig atomstorlek."
+msgstr "Ogiltig förmåga"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -210,7 +208,7 @@ msgstr "Enheten ”%s” har inget format som stöds"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr "Enheten ”%s” misslyckades under initialisering"
+msgstr "Enheten ”%s” misslyckades under initiering"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -230,7 +228,7 @@ msgstr "Enheten ”%s” stöder inte icke-kontinuerliga plan"
 
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Enheten ”%s” stöder inte %s-avflätning."
+msgstr "Enhet ”%s” stöder inte %s-sammanflätning"
 
 #, c-format
 msgid "Device '%s' does not support %s colorimetry"
@@ -280,7 +278,7 @@ msgstr "Enheten ”%s” är ingen mottagare."
 
 #, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Kunde inte ställa in radioingång på enheten ”%s”."
+msgstr "Kunde inte ställa in radioingång på enheten ”%s”. "
 
 #, c-format
 msgid "Failed to set input %d on device %s."
@@ -410,9 +408,9 @@ msgstr ""
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "Kunde inte ställa in värdet %d för kontrollen %d på enheten ”%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
-msgstr "Kunde inte ställa in värdet %d för kontrollen %d på enheten ”%s”."
+msgstr "Kunde inte ställa in värdet %s för kontroll %d på enheten ”%s”."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
@@ -420,9 +418,9 @@ msgstr ""
 "Misslyckades med att få tag på aktuell ingång på enheten ”%s”. Kan vara en "
 "radioenhet"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "Kunde inte ställa in ingång %d på enheten %s."
+msgstr "Kunde inte ställa in ingång %u på enhet %s."
 
 #, c-format
 msgid ""
@@ -431,15 +429,15 @@ msgstr ""
 "Misslyckades med att få tag på aktuell utgång på enheten ”%s”. Kan vara en "
 "radioenhet"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "Misslyckades med att ställa in utgång %d på enheten %s."
-
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Ändring av upplösning vid körtid stöds inte än."
+msgstr "Misslyckades med att ställa in utgång %u på enhet %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan inte fungera utan en klocka"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Ändring av upplösning vid körtid stöds inte än."
 
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr ""

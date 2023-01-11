@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.10.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2017-02-17 10:54+0100\n"
 "Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
@@ -434,9 +434,6 @@ msgstr ""
 msgid "Failed to set output %u on device %s."
 msgstr "No si è rivâts a stabilî la jessude %d sul dispositîf %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Il cambiâ la risoluzion dilunc la vore nol è ancjemò supuartât."
-
 msgid "Cannot operate without a clock"
 msgstr "Impussibil operâ cence un orloi"
 
@@ -497,3 +494,6 @@ msgstr "Impussibil operâ cence un orloi"
 
 #~ msgid "AUX 2 Out"
 #~ msgstr "AUX 2 jessude"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Il cambiâ la risoluzion dilunc la vore nol è ancjemò supuartât."

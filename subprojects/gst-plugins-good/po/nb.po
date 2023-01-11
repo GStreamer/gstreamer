@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2021-09-24 18:03+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
@@ -420,11 +420,11 @@ msgstr "Kunne ikke hente utdata fra enheten «%s». Kanskje det er en radioenhet
 msgid "Failed to set output %u on device %s."
 msgstr "Klarte ikke å sette utgang %u på enhet %s."
 
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "Endring av oppløsning under kjøring støttes ikke enda."
-
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
+
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "Endring av oppløsning under kjøring støttes ikke enda."
 
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Filen inneholder for mange strømmer. Spiller bare første %d"

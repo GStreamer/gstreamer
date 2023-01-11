@@ -1,16 +1,16 @@
 # Hungarian translation for gst-plugins-good.
-# Copyright (C) 2004, 2007, 2008, 2009, 2010, 2012, 2014, 2016, 2017, 2019 Free Software Foundation, Inc.
+# Copyright (C) 2004, 2007, 2008, 2009, 2010, 2012, 2014, 2016, 2017, 2019, 2022 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2010, 2012, 2014, 2016.
-# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019.
+# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2019-11-23 22:07+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-10-18 21:22+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
-"X-Generator: Lokalize 19.04.3\n"
+"X-Generator: Lokalize 19.12.3\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
@@ -29,9 +29,8 @@ msgstr "Jack kiszolgáló nem található"
 msgid "Failed to decode JPEG image"
 msgstr "A JPEG kép visszafejtése meghiúsult"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "Nem sikerült lefoglalni a szükséges memóriát."
+msgstr "Nem sikerült olvasni a memóriát"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
@@ -180,7 +179,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "A CoreAudio eszköz nem nyitható meg"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Raspberry Pi kameramodul"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -205,9 +204,8 @@ msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
 "A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert IO módot sem."
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "Érvénytelen atom méret."
+msgstr "Érvénytelen képességek"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -410,12 +408,14 @@ msgstr "A(z) %d. vezérlőelem értékének lekérése meghiúsult a(z) „%s”
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr ""
-"A(z) $%2d érték beállítása $%1d vezérlőelemhez meghiúsult a(z) „%s” eszközön."
+"A(z) %2$d. vezérlőelem %1$d. értékének beállítása meghiúsult a(z) „%3$s” "
+"eszközön."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
 msgstr ""
-"A(z) $%2d érték beállítása $%1d vezérlőelemhez meghiúsult a(z) „%s” eszközön."
+"A(z) %2$d. vezérlőelem %1$s értékének beállítása meghiúsult a(z) „%3$s” "
+"eszközön."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
@@ -423,9 +423,9 @@ msgstr ""
 "Az aktuális bemenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
 "egy rádióeszköz."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
+msgstr "A(z) %u. bemenet beállítása meghiúsult a(z) „%s” eszközön."
 
 #, c-format
 msgid ""
@@ -434,70 +434,12 @@ msgstr ""
 "Az aktuális kimenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
 "egy rádióeszköz."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "A(z) %d. kimenet beállítása meghiúsult a(z) „%s” eszközön."
-
-msgid "Changing resolution at runtime is not yet supported."
-msgstr "A felbontás módosítása futás közben még nem támogatott."
+msgstr "A(z) %u. kimenet beállítása meghiúsult a(z) „%s” eszközön."
 
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
 
-#~ msgid "This file contains too many streams. Only playing first %d"
-#~ msgstr ""
-#~ "A fájl túl sok adatfolyamot tartalmaz. Csak az első %d kerül lejátszásra."
-
-#~ msgid "Record Source"
-#~ msgstr "Felvétel forrása"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
-#~ msgid "Line In"
-#~ msgstr "Vonalbemenet"
-
-#~ msgid "Internal CD"
-#~ msgstr "Belső CD"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF be"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "1. AUX be"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "2. AUX be"
-
-#~ msgid "Codec Loopback"
-#~ msgstr "Kodek visszacsatolás"
-
-#~ msgid "SunVTS Loopback"
-#~ msgstr "SunVTS visszacsatolás"
-
-#~ msgid "Volume"
-#~ msgstr "Hangerő"
-
-#~ msgid "Gain"
-#~ msgstr "Erősítés"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Beépített hangszóró"
-
-#~ msgid "Headphone"
-#~ msgstr "Fejhallgató"
-
-#~ msgid "Line Out"
-#~ msgstr "Vonalkimenet"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "SPDIF ki"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "1. AUX ki"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "2. AUX ki"
+#~ msgid "Changing resolution at runtime is not yet supported."
+#~ msgstr "A felbontás módosítása futás közben még nem támogatott."
