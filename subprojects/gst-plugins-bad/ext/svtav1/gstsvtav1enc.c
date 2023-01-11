@@ -656,8 +656,11 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
         GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
       }
 
-      frame->output_buffer =
-          gst_buffer_new_allocate (NULL, output_buf->n_filled_len, NULL);
+      if ((ret = gst_video_encoder_allocate_output_frame(GST_VIDEO_ENCODER (svtav1enc), frame, output_buf->n_filled_len)) != GST_FLOW_OK) {
+        svt_av1_enc_release_out_buffer(&output_buf);
+        gst_video_codec_frame_unref (frame);
+        return ret;
+      }
       GST_BUFFER_FLAG_SET(frame->output_buffer, GST_BUFFER_FLAG_LIVE);
       gst_buffer_fill (frame->output_buffer, 0,
           output_buf->p_buffer, output_buf->n_filled_len);
