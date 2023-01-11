@@ -30,6 +30,7 @@
 #include "config.h"
 #endif
 
+#include "gstav12json.h"
 #include "gstvp82json.h"
 
 static gboolean
@@ -37,6 +38,10 @@ plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "vp82json", GST_RANK_NONE,
           GST_TYPE_VP8_2_JSON))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "av12json", GST_RANK_NONE,
+          GST_TYPE_AV1_2_JSON))
     return FALSE;
 
   return TRUE;
