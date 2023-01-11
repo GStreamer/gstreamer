@@ -721,8 +721,8 @@ gst_svtav1enc_set_format (GstVideoEncoder * encoder,
   GstCaps *src_caps = NULL;
   GST_DEBUG_OBJECT (svtav1enc, "set_format");
 
-  /* TODO: handle configuration changes while encoder is running
-   * and if there was already a state. */
+  if (svtav1enc->state)
+    gst_video_codec_state_unref (svtav1enc->state);
   svtav1enc->state = gst_video_codec_state_ref (state);
 
   gst_svtav1enc_configure_svt (svtav1enc);
