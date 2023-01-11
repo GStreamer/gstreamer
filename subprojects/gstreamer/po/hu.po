@@ -1,15 +1,15 @@
 # Hungarian translation for gstreamer.
-# Copyright (c) 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017, 2019 Canonical Ltd, and Rosetta Contributors
+# Copyright (c) 2006, 2007, 2008, 2009, 2010, 2012, 2014, 2015, 2016, 2017, 2019, 2022 Canonical Ltd, and Rosetta Contributors
 # This file is distributed under the same license as the gstreamer package.
 #
 # Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2010, 2012, 2016.
-# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019.
+# Balázs Úr <ur.balazs@fsf.hu>, 2014, 2015, 2017, 2019, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.16.0\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2019-11-23 22:13+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"PO-Revision-Date: 2022-10-18 21:55+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 19.04.3\n"
+"X-Generator: Lokalize 19.12.3\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Print the GStreamer version"
@@ -153,13 +153,13 @@ msgid "GStreamer encountered a general supporting library error."
 msgstr "A GStreamer általános támogató programkönyvtárhibát észlelt."
 
 msgid "Could not initialize supporting library."
-msgstr "Nem sikerült inicializálni a támogató programkönyvtárat."
+msgstr "Nem sikerült előkészíteni a támogató programkönyvtárat."
 
 msgid "Could not close supporting library."
-msgstr "Nem zárható be a támogató programkönyvtár."
+msgstr "Nem sikerült bezárni a támogató programkönyvtárat."
 
 msgid "Could not configure supporting library."
-msgstr "Nem állítható be a támogató programkönyvtár."
+msgstr "Nem sikerült beállítani a támogató programkönyvtárat."
 
 msgid "Encoding error."
 msgstr "Kódolási hiba."
@@ -174,31 +174,31 @@ msgid "Resource busy or not available."
 msgstr "Az erőforrás foglalt vagy nem érhető el."
 
 msgid "Could not open resource for reading."
-msgstr "Az erőforrás nem nyitható meg olvasásra."
+msgstr "Nem sikerült megnyitni az erőforrást olvasásra."
 
 msgid "Could not open resource for writing."
-msgstr "Az erőforrás nem nyitható meg írásra."
+msgstr "Nem sikerült megnyitni az erőforrást írásra."
 
 msgid "Could not open resource for reading and writing."
-msgstr "Az erőforrás nem nyitható meg olvasásra és írásra."
+msgstr "Nem sikerült megnyitni az erőforrást olvasásra és írásra."
 
 msgid "Could not close resource."
-msgstr "Az erőforrás nem zárható le."
+msgstr "Nem sikerült bezárni az erőforrást."
 
 msgid "Could not read from resource."
-msgstr "Nem lehet olvasni az erőforrásból."
+msgstr "Nem sikerült olvasni az erőforrásból."
 
 msgid "Could not write to resource."
-msgstr "Nem lehet írni az erőforrásba."
+msgstr "Nem sikerült írni az erőforrásba."
 
 msgid "Could not perform seek on resource."
-msgstr "Nem végezhető pozicionálás az erőforráson."
+msgstr "Nem sikerült pozicionálás végezni az erőforráson."
 
 msgid "Could not synchronize on resource."
-msgstr "Nem lehet szinkronizálni az erőforráson."
+msgstr "Nem sikerült szinkronizálni az erőforráson."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "Nem lehet lekérni/beállítani az erőforrás beállításait."
+msgstr "Nem sikerült lekérni/beállítani az erőforrás beállításait."
 
 msgid "No space left on the resource."
 msgstr "Nincs több hely az erőforráson."
@@ -215,7 +215,7 @@ msgstr ""
 "hibajelentést."
 
 msgid "Could not determine type of stream."
-msgstr "Nem állapítható meg az adatfolyam típusa."
+msgstr "Nem sikerült megállapítani az adatfolyam típusát."
 
 msgid "The stream is of a different type than handled by this element."
 msgstr "Az adatfolyam típusa eltér az elem által kezelttől."
@@ -224,16 +224,16 @@ msgid "There is no codec present that can handle the stream's type."
 msgstr "Nincs jelen az adatfolyam típusát kezelni képes kodek."
 
 msgid "Could not decode stream."
-msgstr "Nem fejthető vissza az adatfolyam."
+msgstr "Nem sikerült visszafejteni az adatfolyamot."
 
 msgid "Could not encode stream."
-msgstr "Az adatfolyam nem kódolható."
+msgstr "Nem sikerült kódolni az adatfolyamot."
 
 msgid "Could not demultiplex stream."
-msgstr "Nem választható szét az adatfolyam."
+msgstr "Nem sikerült szétválasztani az adatfolyamot."
 
 msgid "Could not multiplex stream."
-msgstr "Nem egyesíthető az adatfolyam."
+msgstr "Nem sikerült egyesíteni az adatfolyamot."
 
 msgid "The stream is in the wrong format."
 msgstr "Az adatfolyam formátuma rossz."
@@ -835,7 +835,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "Érvénytelen URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -868,21 +868,34 @@ msgstr "a hivatkozásnak nincs forrása [nyelő=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "a hivatkozásnak nincs nyelője [forrás=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "nincs „%s” tulajdonság a(z) „%s” elemben"
 
 #, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$s” értékre"
-
-#, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "A(z) „%s” fájl egy foglalat."
+msgstr "A(z) „%s” elem nem GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "nem sikerült beállítani a(z) „%s” előbeállítást a(z) „%s” elemben"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "nincs „%s” elem"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"nem sikerült beállítani a(z) „%2$s” elem „%1$s” tulajdonságát „%3$s” értékre"
 
 #, fuzzy, c-format
-msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "nem állítható be a(z) „%2$s” elem „%1$s” tulajdonsága „%3$s” értékre"
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr ""
+"nem sikerült beállítani a(z) „%2$s” elem „%1$s” tulajdonságát „%3$s” értékre"
 
 msgid "Delayed linking failed."
 msgstr "A késleltetett linkelés meghiúsult."
@@ -908,10 +921,6 @@ msgid "could not link %s to %s"
 msgstr "%s nem linkelhető a következőre: %s"
 
 #, c-format
-msgid "no element \"%s\""
-msgstr "nincs „%s” elem"
-
-#, c-format
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "nem várt „%s” hivatkozás - mellőzés"
 
@@ -921,7 +930,7 @@ msgstr "nem várt „%s” kitöltési hivatkozás - mellőzés"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "a(z) „%s” képesség nem elemezhető"
+msgstr "nem sikerült feldolgozni a(z) „%s” képességeket"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
@@ -984,11 +993,11 @@ msgstr "Nincs megadva ideiglenes könyvtár."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Nem hozható létre a következő ideiglenes fájl: „%s”."
+msgstr "Nem sikerült létrehozni a következő ideiglenes fájlt: „%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Nem nyitható meg a(z) „%s” fájl olvasásra."
+msgstr "Nem sikerült megnyitni a(z) „%s” fájlt olvasásra."
 
 msgid "Error while writing to download file."
 msgstr "Hiba a letöltési fájl írása közben."
@@ -998,7 +1007,7 @@ msgstr "Nincs fájlnév megadva az íráshoz."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Nem lehet írásra megnyitni a(z) „%s” fájlt."
+msgstr "Nem sikerült megnyitni a(z) „%s” fájlt írásra."
 
 #, c-format
 msgid "Error closing file \"%s\"."
@@ -1017,7 +1026,7 @@ msgstr "Nincs megadva fájlnév az olvasáshoz."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Nem kérhetők le információk a következőkről: „%s”."
+msgstr "Nem sikerült lekérni az információkat a következőkről: „%s”."
 
 #, c-format
 msgid "\"%s\" is a directory."
@@ -1070,9 +1079,8 @@ msgstr "elavult"
 msgid "controllable"
 msgstr "vezérelhető"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "vezérelhető"
+msgstr "feltételesen elérhető"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "módosítható a NULL, KÉSZ, SZÜNETEL vagy LEJÁTSZÁS állapotban"
@@ -1153,7 +1161,6 @@ msgstr ""
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Támogatott URI sémák kiírása, az azokat megvalósító elemmel"
 
-#, fuzzy
 msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
@@ -1162,11 +1169,11 @@ msgstr ""
 "környezeti változó bármilyen értékre történő beállításával."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Kimenet színezése, akkor is ha nem a tty-ra kerül küldésre."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Nem tölthető be a bővítményfájl: %s\n"
+msgstr "Nem sikerült betölteni a bővítményfájlt: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
@@ -1302,7 +1309,7 @@ msgstr "Hiba történt az EOS-ra várakozáskor\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "A Windows nagy felbontású órájának használata, pontosság: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Kimeneti címkék (metaadatok)"
@@ -1343,18 +1350,25 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"Ne írja ki az adatcsatorna jelenlegi pozícióját. Ha ez a kapcsoló nincs "
+"megadva, akkor a pozíció kiírásra kerül, ha a szabványos kimenet egy TTY. Ha "
+"a szabványos kimenet nem TTY, a pozíció kiírásának engedélyezéséhez "
+"használja a „force-position” kapcsolót."
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Az adatcsatorna jelenlegi pozíciója kiírásának engedélyezése akkor is, ha a "
+"szabványos kimenet nem TTY. Ennek a kapcsolónak nincs hatása, ha a „no-"
+"position” kapcsoló van megadva."
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr "HIBA: az adatcsatorna nem építhető fel: %s.\n"
+msgstr "HIBA: az adatcsatornát nem sikerült felépíteni: %s.\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr "HIBA: az adatcsatorna nem építhető fel.\n"
+msgstr "HIBA: az adatcsatornát nem sikerült felépíteni.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
@@ -1366,9 +1380,8 @@ msgstr "HIBA: az „adatcsatorna” elem nem található.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Adatcsatorna beállítása SZÜNETELTETETT állapotúra…\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Adatcsatorna beállítása SZÜNETELTETETT állapotúra…\n"
+msgstr "Nem sikerült beállítani az adatcsatornát SZÜNETELTETETT állapotúra.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Az adatcsatorna él és nem szükséges ELINDÍTANI…\n"
@@ -1384,12 +1397,3 @@ msgstr "Az adatcsatorna beállítása NULL értékre…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Adatcsatorna felszabadítása…\n"
-
-#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
-#~ msgstr "HIBA: az adatcsatorna nem akar megállni.\n"
-
-#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-#~ msgstr "Leállításkor EOS engedélyezve – várakozás EOS-ra hiba után\n"
-
-#~ msgid "Setting pipeline to READY ...\n"
-#~ msgstr "Az adatcsatorna beállítása KÉSZ állapotra…\n"

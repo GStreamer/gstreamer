@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -881,14 +881,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ez dago \"%s\" propietaterik \"%s\" elementuan"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
-"ezin izan da ezarri \"%2$s\" elementuko \"%1$s\" propietatea honela: \"%3$s\""
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -896,6 +894,20 @@ msgstr "\"%s\" fitxategia socket-a da."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr ""
+"ezin izan da ezarri \"%2$s\" elementuko \"%1$s\" propietatea honela: \"%3$s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "ez dago \"%s\" elementua"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"ezin izan da ezarri \"%2$s\" elementuko \"%1$s\" propietatea honela: \"%3$s\""
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr ""
 "ezin izan da ezarri \"%2$s\" elementuko \"%1$s\" propietatea honela: \"%3$s\""
 
@@ -917,10 +929,6 @@ msgstr "ezin izan da %s estekatu hona: %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "ezin izan da %s estekatu hona: %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "ez dago \"%s\" elementua"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

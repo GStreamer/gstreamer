@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2021-10-01 19:22+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -870,13 +870,12 @@ msgstr "връзка без източник [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "връзка без приемник [source=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "елементът „2$%s“ няма свойството „1$%s“"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "свойството „%s“ на елемента „%s“ не може да се зададе да е „%s“"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -885,6 +884,18 @@ msgstr "Файлът „%s“ е във формат GstPreset."
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "настройките „%s“ не може да се зададат в елемента „%s“"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "елементът „%s“ липсва"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "свойството „%s“ на елемента „%s“ не може да се зададе да е „%s“"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "свойството „%s“ на елемента „%s“ не може да се зададе да е „%s“"
 
 msgid "Delayed linking failed."
 msgstr "Неуспешно отложено свързване."
@@ -904,10 +915,6 @@ msgstr "„%s“ не може да се свърже към „%s“ с въз�
 #, c-format
 msgid "could not link %s to %s"
 msgstr "„%s“ не може да се свърже към „%s“"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "елементът „%s“ липсва"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

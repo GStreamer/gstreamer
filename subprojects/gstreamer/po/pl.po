@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2021-09-25 08:30+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -873,13 +873,12 @@ msgstr "dowiązanie nie ma źródła [cel=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "dowiązanie nie ma celu [źródło=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "brak właściwości \"%s\" w elemencie \"%s\""
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nie udało się ustawić właściwości \"%s\" w elemencie \"%s\" na \"%s\""
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -888,6 +887,18 @@ msgstr "Element \"%s\" to nie GstPreset"
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "nie udało się ustawić predefiniowanego \"%s\" w elemencie \"%s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "brak elementu \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nie udało się ustawić właściwości \"%s\" w elemencie \"%s\" na \"%s\""
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "nie udało się ustawić właściwości \"%s\" w elemencie \"%s\" na \"%s\""
 
 msgid "Delayed linking failed."
 msgstr "Opóźnione dowiązanie nie powiodło się."
@@ -908,10 +919,6 @@ msgstr "nie udało się dowiązać %s do %s z możliwościami %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nie udało się dowiązać %s do %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "brak elementu \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

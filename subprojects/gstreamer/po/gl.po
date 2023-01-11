@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2012-12-15 03:29+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -872,13 +872,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "non hai unha propiedade «%s» no elemento «%s»"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "non foi posíbel estabelecer a propiedade «%s» no elemento «%s» a «%s»"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -886,6 +885,18 @@ msgstr "O ficheiro «%s» é un socket."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "non foi posíbel estabelecer a propiedade «%s» no elemento «%s» a «%s»"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "non hai un elemento «%s»"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "non foi posíbel estabelecer a propiedade «%s» no elemento «%s» a «%s»"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "non foi posíbel estabelecer a propiedade «%s» no elemento «%s» a «%s»"
 
 msgid "Delayed linking failed."
@@ -906,10 +917,6 @@ msgstr "non foi posíbel ligar %s a %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "non foi posíbel ligar %s a %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "non hai un elemento «%s»"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

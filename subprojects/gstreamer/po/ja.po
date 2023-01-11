@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -837,13 +837,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "プロパティ \"%s\" がエレメント \"%s\" にありません"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -851,6 +850,18 @@ msgstr "ファイル \"%s\" はソケットです"
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "プロパティ \"%s\" がエレメント \"%s\" にありません"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "エレメント \"%s\" がありません"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "プロパティ \"%s\" がエレメント \"%s\" にありません"
 
 msgid "Delayed linking failed."
@@ -871,10 +882,6 @@ msgstr "%s を %s へリンクできません"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s を %s へリンクできません"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "エレメント \"%s\" がありません"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

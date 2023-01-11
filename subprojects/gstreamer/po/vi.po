@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2017-05-05 06:45+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -873,13 +873,12 @@ msgstr "liên kết không có nguồn [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "liên kết không có sink [nguồn=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "không có thuộc tính “%s” trong phần tử “%s”"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -887,6 +886,18 @@ msgstr "Tập tin “%s” là ổ cắm mạng."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "không có phần tử “%s”"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "không thể đặt thuộc tính “%s” trong phần tử “%s” thành “%s”"
 
 msgid "Delayed linking failed."
@@ -909,10 +920,6 @@ msgstr "không thể liên kết %s đến %s với caps %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "không thể liên kết %s đến %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "không có phần tử “%s”"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

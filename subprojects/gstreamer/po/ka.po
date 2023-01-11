@@ -1,28 +1,29 @@
-# Friulian translation for gstreamer package of GStreamer project.
-# This file is put in the public domain.
-# Fabio Tomat <f.t.public@gmail.com>, 2017.
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2022 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the gstreamer package.
+# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2022
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.10.0\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2017-03-19 15:41+0100\n"
-"Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
-"Language-Team: Friulian <f.t.public@gmail.com>\n"
-"Language: fur\n"
+"PO-Revision-Date: 2022-04-17 15:35+0200\n"
+"Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
+"Language-Team: Georgian <(nothing)>\n"
+"Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.12\n"
+"X-Generator: Poedit 3.0.1\n"
 
 msgid "Print the GStreamer version"
-msgstr "Stampe la version di GStreamer"
+msgstr "GStreamer-ის ვერსიის გამოტანა"
 
 msgid "Make all warnings fatal"
-msgstr "Fâs deventâ ducj i avertiments fatâi"
+msgstr "ყველა გაფრთხილების ფატალურად გამოცხადება"
 
 msgid "Print available debug categories and exit"
 msgstr ""
@@ -32,7 +33,7 @@ msgid ""
 msgstr ""
 
 msgid "LEVEL"
-msgstr "NIVEL"
+msgstr "დონე"
 
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
@@ -40,7 +41,7 @@ msgid ""
 msgstr ""
 
 msgid "LIST"
-msgstr "LISTE"
+msgstr "სია"
 
 msgid "Disable colored debugging output"
 msgstr ""
@@ -51,16 +52,16 @@ msgid ""
 msgstr ""
 
 msgid "Disable debugging"
-msgstr ""
+msgstr "გამართვის გამორთვა"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr ""
+msgstr "დამატებების დიაგნოსტიკური შეტყობინებების გამორთვა"
 
 msgid "Colon-separated paths containing plugins"
 msgstr ""
 
 msgid "PATHS"
-msgstr "PERCORS"
+msgstr "ბილიკები"
 
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
@@ -68,26 +69,26 @@ msgid ""
 msgstr ""
 
 msgid "PLUGINS"
-msgstr "PLUGIN"
+msgstr "PLUGINS"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "რეესტრის განახლების გამორთვა"
 
 msgid "Disable spawning a helper process while scanning the registry"
-msgstr ""
+msgstr "რეესტრის სკანირებისას ახალი პროცესის გაშვების გამორთვა"
 
 msgid "GStreamer Options"
-msgstr "Opzions GStreamer"
+msgstr "GStreamer-ის მორგება"
 
 msgid "Show GStreamer Options"
-msgstr "Mostre lis opzions di GSstreamer"
+msgstr "GStreamer-ის პარამეტრების ჩვენება"
 
 #, c-format
 msgid "Unknown option"
-msgstr "Opzion no cognossude"
+msgstr "უცნობი პარამეტრი"
 
 msgid "GStreamer encountered a general core library error."
 msgstr ""
@@ -97,7 +98,7 @@ msgid ""
 msgstr ""
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: კოდი განხორციელებულ არაა."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
@@ -105,31 +106,31 @@ msgid ""
 msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: პადის პრობლემა."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: ნაკადის პრობლემა."
 
 msgid "GStreamer error: negotiation problem."
-msgstr ""
+msgstr "GStreamer-ის შეცდომა: დალაპარაკების პრობლემა."
 
 msgid "Internal GStreamer error: event problem."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: მოვლენის პრობლემა."
 
 msgid "Internal GStreamer error: seek problem."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: გადახვევის პრობლემა."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: caps-ის პრობლემა."
 
 msgid "Internal GStreamer error: tag problem."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: ჭდის პრობლემა."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "GStreamer-ის თქვენს ვარიანს დამატება აკლია."
 
 msgid "GStreamer error: clock problem."
-msgstr ""
+msgstr "GStreamer-ის შიდა შეცდომა: საათის პრობლემა."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -137,70 +138,70 @@ msgid ""
 msgstr ""
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr ""
+msgstr "GStreamer-ის მთავარი მხარდამჭერი ბიბლიოთეკის შეცდომა."
 
 msgid "Could not initialize supporting library."
-msgstr ""
+msgstr "მხარდაჭერის ბიბლიოთეკის ინიციალიზაციის შეცდომა."
 
 msgid "Could not close supporting library."
-msgstr ""
+msgstr "მხარდაჭერის ბიბლიოთეკის დახურვის შეცდომა."
 
 msgid "Could not configure supporting library."
-msgstr ""
+msgstr "მხარდაჭერის ბიბლიოთეკის მორგების შეცდომა."
 
 msgid "Encoding error."
-msgstr "Erôr di codifiche."
+msgstr "კოდირების შეცდომა."
 
 msgid "GStreamer encountered a general resource error."
-msgstr ""
+msgstr "GStreamer-ის ზოგადი რესურსის შეცდომა."
 
 msgid "Resource not found."
-msgstr "Risorse no cjatade."
+msgstr "რესურსი ნაპოვნი არაა."
 
 msgid "Resource busy or not available."
-msgstr "Risorse ocupade o no disponibile."
+msgstr "რესურსი დაკავებული ან მიუწვდომელია."
 
 msgid "Could not open resource for reading."
-msgstr "Impussibil vierzi la risorse pe leture."
+msgstr "რესურსის წასაკითხად გახსნა შეუძლებელია."
 
 msgid "Could not open resource for writing."
-msgstr "Impussibil vierzi la risorse pe scriture."
+msgstr "რესურსის ჩასაწერად გახსნა შეუძლებელია."
 
 msgid "Could not open resource for reading and writing."
-msgstr "Impussibil vierzi la risorse pe leture e scriture."
+msgstr "რესურსის წასაკითხად და ჩასაწერად გახსნა შეუძლებელია."
 
 msgid "Could not close resource."
-msgstr "Impussibil sierâ la risorse."
+msgstr "რესურსის დახურვის შეცდომა."
 
 msgid "Could not read from resource."
-msgstr "Impussibil lei de risorse."
+msgstr "რესურსიდან წაკითხვის შეცდომა."
 
 msgid "Could not write to resource."
-msgstr "Impussibil scrivi te risorse."
+msgstr "რესურსში ჩაწერის შეცდომა."
 
 msgid "Could not perform seek on resource."
-msgstr "Impussibil fâ une ricercje su pe risorse."
+msgstr "რესურსის გადახვევის შეცდომა."
 
 msgid "Could not synchronize on resource."
-msgstr "Impussibil sincronizâ su pe risorse."
+msgstr "რესურსის სინქრონიზაციის შეცდომა."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "Impussibil vê/stabilî impostazions de/su pe risorse."
+msgstr "პარამეტრების რესურს(იდან/ზე) მიღება/დაყენების შეცდომა."
 
 msgid "No space left on the resource."
-msgstr "No spazi disponibil su pe risorse."
+msgstr "რესურსზე ადგილი აღარ დარჩა."
 
 msgid "Not authorized to access resource."
-msgstr "No autorizât a acedi ae risorse."
+msgstr "შეამოწმეთ რესურსზე წვდომის უფლებები."
 
 msgid "GStreamer encountered a general stream error."
-msgstr ""
+msgstr "GStreamer-ის ზოგადი ნაკადის შეცდომა."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
 
 msgid "Could not determine type of stream."
-msgstr "Impussibil determinâ il gjenar di flus."
+msgstr "ნაკადის ტიპის დადგენა შეუძლებელია."
 
 msgid "The stream is of a different type than handled by this element."
 msgstr ""
@@ -209,344 +210,337 @@ msgid "There is no codec present that can handle the stream's type."
 msgstr ""
 
 msgid "Could not decode stream."
-msgstr "Impussibil decodificâ il flus."
+msgstr "ნაკადის დეკოდირების შეცდომა."
 
 msgid "Could not encode stream."
-msgstr "Impussibil codificâ il flus."
+msgstr "ნაკადის კოდირების შეცდომა."
 
 msgid "Could not demultiplex stream."
-msgstr ""
+msgstr "ნაკადის დემულტიპლექსირების შეცდომა."
 
 msgid "Could not multiplex stream."
-msgstr ""
+msgstr "ნაკადის მულტიპლექსირების შეცდომა."
 
 msgid "The stream is in the wrong format."
-msgstr "Il flus al è tal formât sbaliât."
+msgstr "ნაკადის არასწორი ფორმატი."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr "Il flus al è cifrât e il decifrâ nol è supuartât."
+msgstr "ნაკადი დაშიფრულია. გაშიფვრა მხარდაუჭერელია."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
-"Il flus al è cifrât e nol pues jessi decifrât parcè che no je stade furnide "
-"nissune clâf adate."
 
 #, c-format
 msgid "No error message for domain %s."
-msgstr "Nissun messaç di erôr pal domini %s."
+msgstr "დომენს %s შეცდომები არ გააჩნია."
 
 #, c-format
 msgid "No standard error message for domain %s and code %d."
-msgstr "Nissun messaç di erôr standard pal domini %s e codiç %d."
+msgstr ""
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr "Erôr tal scrivi la cache di regjistri su %s: %s"
+msgstr "რეესტრის კეშის %s-ში ჩაწერის შეცდომა: %s"
 
 msgid "title"
-msgstr "titul"
+msgstr "სათაური"
 
 msgid "commonly used title"
-msgstr "titul doprât di solit"
+msgstr "ზოგადად გამოყენებული სათაური"
 
 msgid "title sortname"
-msgstr "non ordenament titul"
+msgstr "სათაურის დალაგების სახელი"
 
 msgid "commonly used title for sorting purposes"
-msgstr "il titul doprât di solit par motîfs di ordenament"
+msgstr "დალაგებისთვის გამოყენებული სახელი"
 
 msgid "artist"
-msgstr "artist"
+msgstr "შემსრულებელი"
 
 msgid "person(s) responsible for the recording"
-msgstr "persone(-is) responsabile pe regjistrazion"
+msgstr "ჩაწერაზე პასუხისმგებელი პერსონალი"
 
 msgid "artist sortname"
-msgstr "non ordenament artist"
+msgstr "შემსრულებლის დალაგების სახელი"
 
 msgid "person(s) responsible for the recording for sorting purposes"
-msgstr "persone(-is) responsabile pe regjistrazion par motîfs di ordenament"
+msgstr "დალაგებისთვის გამოყენებული ჩაწერაზე მომუშავე პერსონალი"
 
 msgid "album"
-msgstr "album"
+msgstr "ალბომი"
 
 msgid "album containing this data"
-msgstr "album che al conten chescj dâts"
+msgstr "ამ მონაცემების შემცველი ალბომი"
 
 msgid "album sortname"
-msgstr "non ordenament album"
+msgstr "დალაგებისთვის გამოყენებული ალბომის სახელი"
 
 msgid "album containing this data for sorting purposes"
-msgstr "album che al conten chescj dâts par motîfs di ordenament"
+msgstr "დალაგებისთვის გამოყენებული ალბომის სახელი"
 
 msgid "album artist"
-msgstr "artist album"
+msgstr "ალბომის შემსრულებელი"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr "L'artist dal album intîr, come che al à di jessi mostrât"
+msgstr "ალბომის შემსრულებელი, როგორც უნდა გამოჩნდეს"
 
 msgid "album artist sortname"
-msgstr "non ordenament artist album"
+msgstr "დალაგებისთვის გამოყენებული ალბომის შემსრულებლის სახელი"
 
 msgid "The artist of the entire album, as it should be sorted"
-msgstr "L'artist dal album intîr, come che al à di jessi ordenât"
+msgstr "დალაგებისთვის გამოყენებული ალბომის შემსრულებლის სახელი"
 
 msgid "date"
-msgstr "date"
+msgstr "თარიღი"
 
 msgid "date the data was created (as a GDate structure)"
-msgstr "date di cuant che i dâts a son stâts creâts (come struture GDate)"
+msgstr "მონაცემების შექმნის თარიღი (როგორც GDate-ის სტრუქტურა)"
 
 msgid "datetime"
-msgstr "date/ore"
+msgstr "თარიღი და დრო"
 
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr ""
-"date e ore di cuant che i dâts a son stâts creâts (come struture GsDateTime)"
+msgstr "მონაცემების შექმნის თარიღი და დრო (როგორც GstDateTime-ის სტრუქტურა)"
 
 msgid "genre"
-msgstr "gjenar"
+msgstr "ჟანრი"
 
 msgid "genre this data belongs to"
-msgstr "il gjenar di apartignince di chescj dâts"
+msgstr "ჟანრი, რომელსაც ეს მონაცემები ეკუთვნის"
 
 msgid "comment"
-msgstr "coment"
+msgstr "კომენტარები"
 
 msgid "free text commenting the data"
-msgstr ""
+msgstr "კომენტარის ტექსტი"
 
 msgid "extended comment"
-msgstr ""
+msgstr "გაფართოებული კომენტარი"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
 
 msgid "track number"
-msgstr "numar dal toc"
+msgstr "ტრეკის ნომერი"
 
 msgid "track number inside a collection"
-msgstr "numar dal toc dentri une colezion"
+msgstr "ტრეკის ნომერი კოლექციაში"
 
 msgid "track count"
-msgstr "totâl tocs"
+msgstr "ტრეკების რაოდენობა"
 
 msgid "count of tracks inside collection this track belongs to"
-msgstr "il totâl dai tocs dentri de colezion dulà che chest toc al aparten"
+msgstr "ტრეკების რაოდენობა კოლექციაში, რომელსაც ის ეკუთვნის"
 
 msgid "disc number"
-msgstr "numar disc"
+msgstr "დისკის ნომერი"
 
 msgid "disc number inside a collection"
-msgstr "numar disc dentri une colezion"
+msgstr "დისკის ნომერი კოლექციაში"
 
 msgid "disc count"
-msgstr "totâl discs"
+msgstr "დისკების რაოდენობა"
 
 msgid "count of discs inside collection this disc belongs to"
-msgstr "il totâl dai discs dentri de colezion dulà che chest disc al aparten"
+msgstr "დისკების რაოდენობა კოლექციაში, რომელსაც ის ეკუთვნის"
 
 msgid "location"
-msgstr "posizion"
+msgstr "მდებარეობა"
 
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
-"Origjin dal contignût multimediâl come URI (posizion dulà che il file "
-"origjinâl o il flus a son ospitâts)"
+"წყაროს მდებარეობის URI(მდებარეობა, სადაც ორიგინალი ნაკადი ან ფაილი ინახება)"
 
 msgid "homepage"
-msgstr "sît web"
+msgstr "საწყისი გვერდი"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
-msgstr ""
-"sît web par chest contignût multimediâl (p.e. il sît web dal artist o dal "
-"film)"
+msgstr "მედიის საწყისი გვერდი (შემსრულებლის ან ფილმის ვებგვერდი)"
 
 msgid "description"
-msgstr "descrizion"
+msgstr "აღწერა"
 
 msgid "short text describing the content of the data"
-msgstr "un curt test che al descrîf il contignût dai dâts"
+msgstr "მონაცემების შემცველობის აღმწერი მოკლე ტექსტი"
 
 msgid "version"
-msgstr "version"
+msgstr "ვერსია"
 
 msgid "version of this data"
-msgstr "version di chescj dâts"
+msgstr "მონაცემების ვერსია"
 
 msgid "ISRC"
 msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
-"Codiç di Regjistrazion Standard Internazionâl - viôt http://www.ifpi.org/"
-"isrc/"
+"ჩაწერის საერთაშორისო სტანდარტული კოდი - იხილეთ http://www.ifpi.org/isrc/"
 
 msgid "organization"
-msgstr "organizazion"
+msgstr "ორგანიზაცია"
 
 msgid "copyright"
-msgstr "copyright"
+msgstr "უფლებები"
 
 msgid "copyright notice of the data"
-msgstr "l'avîs sul copyright dai dâts"
+msgstr "მონაცემების საავტორო უფლებები"
 
 msgid "copyright uri"
-msgstr "uri copyright"
+msgstr "საავტორო უფლებების URI"
 
 msgid "URI to the copyright notice of the data"
-msgstr "il URI dal avîs sul copyright dai dâts"
+msgstr "საავტორო უფლებების შემცველი ტექსტის URI-ი"
 
 msgid "encoded by"
-msgstr "codificât di"
+msgstr "კოდირების ავტორი"
 
 msgid "name of the encoding person or organization"
-msgstr "non de persone o organizazion che a codifiche"
+msgstr "კოდირების ავტორი პერსონის ან ორგანიზაციის სახელი"
 
 msgid "contact"
-msgstr "contat"
+msgstr "კონტაქტი"
 
 msgid "contact information"
-msgstr "informazion contat"
+msgstr "საკონტაქტო ინფორმაცია"
 
 msgid "license"
-msgstr "licence"
+msgstr "ლიცენზია"
 
 msgid "license of data"
-msgstr "licence dai dâts"
+msgstr "მონაცემების ლიცენზია"
 
 msgid "license uri"
-msgstr "uri licence"
+msgstr "ლიცენზიის URI"
 
 msgid "URI to the license of the data"
-msgstr "URI de licence dai dâts"
+msgstr "მონაცემების ლიცენზიის URI"
 
 msgid "performer"
-msgstr "esecutôr"
+msgstr "შემსრულებელი"
 
 msgid "person(s) performing"
-msgstr "persone(-is) che a àn interpretât"
+msgstr "შემსრულებლები"
 
 msgid "composer"
-msgstr "compositôr"
+msgstr "კომპოზიტორი"
 
 msgid "person(s) who composed the recording"
-msgstr "persone(-is) che e à componût la regjistrazion"
+msgstr "ჩანაწერის კომპოზიტორი"
 
 msgid "conductor"
-msgstr ""
+msgstr "დირიჟორი"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "დირიჟორი"
 
 msgid "duration"
-msgstr "durade"
+msgstr "ხანგრძლივობა"
 
 msgid "length in GStreamer time units (nanoseconds)"
-msgstr "lungjece in unitâts di timp di GStreamer (nanoseconts)"
+msgstr "ხანგრძლივობა GStreamer-ის დროის ერთეულებში (ნანოწამებში)"
 
 msgid "codec"
-msgstr "codec"
+msgstr "კოდეკი"
 
 msgid "codec the data is stored in"
-msgstr "codec doprât par memorizâ i dâts"
+msgstr "მონაცემების კოდეკი"
 
 msgid "video codec"
-msgstr "codec video"
+msgstr "ვიდეო კოდეკი"
 
 msgid "codec the video data is stored in"
-msgstr "codec doprât par memorizâ i dâts video"
+msgstr "მონაცემების ვიდეო კოდეკი"
 
 msgid "audio codec"
-msgstr "codec audio"
+msgstr "აუდიო კოდეკი"
 
 msgid "codec the audio data is stored in"
-msgstr "codec doprât par memorizâ i dâts audio"
+msgstr "მონაცემების აუდიო კოდეკი"
 
 msgid "subtitle codec"
-msgstr "codec sottitui"
+msgstr "სუბტიტრების კოდეკი"
 
 msgid "codec the subtitle data is stored in"
-msgstr "codec doprât par memorizâ i sottitui"
+msgstr "მონაცემების სუბტიტრების კოდეკი"
 
 msgid "container format"
-msgstr "formât contignidôr"
+msgstr "კონტეინერის ფორმატი"
 
 msgid "container format the data is stored in"
-msgstr "formât dal contignidôr doprât par memorizâ i dâts"
+msgstr "მონაცემების კონტეინერის ფორმატი"
 
 msgid "bitrate"
-msgstr "bitrate"
+msgstr "სიჩქარე"
 
 msgid "exact or average bitrate in bits/s"
-msgstr "il bitrate esat o medi in bit/s"
+msgstr "ზუსტი ან საშუალო სიჩქარე (ბიტი/წმ)"
 
 msgid "nominal bitrate"
-msgstr "bitrate nominâl"
+msgstr "ნომინალური სიჩქარე"
 
 msgid "nominal bitrate in bits/s"
-msgstr "bitrate nominâl in bit/s"
+msgstr "ნომინალური სიჩქარე (ბიტი/წმ)"
 
 msgid "minimum bitrate"
-msgstr "bitrate minim"
+msgstr "მინიმალური სიჩქარე"
 
 msgid "minimum bitrate in bits/s"
-msgstr "bitrate minim in bit/s"
+msgstr "მინიმალური სიჩქარე (ბიტი/წმ)"
 
 msgid "maximum bitrate"
-msgstr "bitrate massim"
+msgstr "მაქსიმალური სიჩქარე"
 
 msgid "maximum bitrate in bits/s"
-msgstr "bitrate massim in bit/s"
+msgstr "მაქსიმალური სიჩქარე (ბიტი/წმ)"
 
 msgid "encoder"
-msgstr ""
+msgstr "ენკოდერი"
 
 msgid "encoder used to encode this stream"
-msgstr ""
+msgstr "ამ ნაკადის გადაყვანად გამოყენებული ენკოდერი"
 
 msgid "encoder version"
-msgstr ""
+msgstr "ენკოდერის ვერსია"
 
 msgid "version of the encoder used to encode this stream"
-msgstr ""
+msgstr "ამ ნაკადის გადასაყვანად გამოყენებული ენკოდერი"
 
 msgid "serial"
-msgstr "seriâl"
+msgstr "სერიული ნომერი"
 
 msgid "serial number of track"
-msgstr "numar seriâl dal toc"
+msgstr "ტრეკის სერიული ნომერი"
 
 msgid "replaygain track gain"
 msgstr ""
 
 msgid "track gain in db"
-msgstr "vuadagn toc in db"
+msgstr ""
 
 msgid "replaygain track peak"
 msgstr ""
 
 msgid "peak of the track"
-msgstr "pic dal toc"
+msgstr ""
 
 msgid "replaygain album gain"
 msgstr ""
 
 msgid "album gain in db"
-msgstr "vuadagn album in db"
+msgstr ""
 
 msgid "replaygain album peak"
 msgstr ""
 
 msgid "peak of the album"
-msgstr "pic dal album"
+msgstr ""
 
 msgid "replaygain reference level"
 msgstr ""
@@ -555,129 +549,125 @@ msgid "reference level of track and album gain values"
 msgstr ""
 
 msgid "language code"
-msgstr "codiç lenghe"
+msgstr "ენის კოდი"
 
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "il codiç di lenghe par chest flus, conformi ae ISO-639-1 o ISO-639-2"
+msgstr ""
 
 msgid "language name"
-msgstr "non lenghe"
+msgstr "ენის სახელი"
 
 msgid "freeform name of the language this stream is in"
-msgstr "non in forme libare di cheste lenghe che chest flus e sta doprant"
+msgstr ""
 
 msgid "image"
-msgstr "imagjin"
+msgstr "გამოსახულება"
 
 msgid "image related to this stream"
-msgstr "imagjin relative a chest flus"
+msgstr ""
 
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
 msgid "preview image"
-msgstr "imagjin anteprime"
+msgstr "გამოსახულების გადახედვა"
 
 msgid "preview image related to this stream"
-msgstr "imagjin di anteprime relative a chest flus"
+msgstr ""
 
 msgid "attachment"
-msgstr "zonte"
+msgstr "მიმაგრება"
 
 msgid "file attached to this stream"
-msgstr "file alegât a chest flus"
+msgstr ""
 
 msgid "beats per minute"
-msgstr "batudis al minût"
+msgstr "ტაქტი წუთში"
 
 msgid "number of beats per minute in audio"
-msgstr "numar di batudis par minût tal audio"
+msgstr ""
 
 msgid "keywords"
-msgstr "peraulis clâf"
+msgstr "საკვანძო სიტყვები"
 
 msgid "comma separated keywords describing the content"
-msgstr "peraulis clâf separadis di virgule che a descrivin il contest"
+msgstr ""
 
 msgid "geo location name"
-msgstr "non posizion gjeog."
+msgstr "გელოკაციის სახელი"
 
 msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
+"ადამიანისთვის გასაგები სახელი ადგილისა, სადაც ეს მედია ჩაიწერა ან გამოიცა"
 
 msgid "geo location latitude"
-msgstr "latitudin posizion gjeog."
+msgstr "გეოლოკაციის განედი"
 
 msgid ""
 "geo latitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the equator, negative values for "
 "southern latitudes)"
 msgstr ""
-"la posizion de latitudin gjeog. di dulà che il contignût multimediâl al è "
-"stât regjistrât o prodot in grâts in acuardi cul WGS84 (zero al ecuatôr, "
-"valôrs negatîfs pes latitudins meridionâls)"
+"გეოლოკაციის განედი, სადაც ეს მედია ჩაიწერა ან გამოიცა (WGS84 (0 ეკვატორთან, "
+"უარყოფითი სამხრეთ ნახევარსფეროში))"
 
 msgid "geo location longitude"
-msgstr "longjitudin posizion gjeog."
+msgstr "გეოლოკაციის გრძედი"
 
 msgid ""
 "geo longitude location of where the media has been recorded or produced in "
 "degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
 "negative values for western longitudes)"
 msgstr ""
-"posizion de longjitudin gjeog. di dulà che il contignût multimediâl al è "
-"stât regjistrât o prodot, in grât in acuardi cul WGS84 (zero al prin "
-"meridian a Greenwich/UK, valôrs negatîfs pes longjitudins ocidentâls)"
+"გეოლოკაციის გრძედი, სადაც ეს მედია ჩაიწერა ან გამოიცა (WGS84 (0 ნულოვან "
+"სარტყელთან, უარყოფითი მნიშვნელობა დასავლეთ გრძედებში))"
 
 msgid "geo location elevation"
-msgstr "altece posizion gjeog."
+msgstr "გეოლოკაციის სიმაღლე"
 
 msgid ""
 "geo elevation of where the media has been recorded or produced in meters "
 "according to WGS84 (zero is average sea level)"
 msgstr ""
-"la altece gjeog. di dulà che il contignût multimediâl al è stât regjistrât o "
-"prodot in metris, in acuardi cun WGS84 (zero al è il nivel medi dal mâr)"
+"გეოლოკაციის სიმაღლე, სადაც ეს მედია ჩაიწერა ან გამოიცა (WGS84 (0 ზღვის დონეა)"
 
 msgid "geo location country"
-msgstr "paîs posizion gjeog."
+msgstr "ქვეყნის გეოლოკაცია"
 
 msgid "country (english name) where the media has been recorded or produced"
-msgstr ""
-"paîs (non inglês) di dulà che il contignût multimediâl al è stât regjistrât "
-"o prodot"
+msgstr "ქვეყანა, სადაც ეს მედია ჩაიწერა ან გამოიცა"
 
 msgid "geo location city"
-msgstr "citât posizion gjeog."
+msgstr "ქალაქის გეოლოკაცია"
 
 msgid "city (english name) where the media has been recorded or produced"
-msgstr ""
-"citât (non inglês) di dulà che il contignût multimediâl al è stât regjistrât "
-"o prodot"
+msgstr "ქალაქის სახელი(ინგლისურად), სადაც ეს მედია ჩაიწერა ან გამოიცა"
 
 msgid "geo location sublocation"
-msgstr ""
+msgstr "გეოლოკაციის ქველოკაცია"
 
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"მდებარეობა ქალაქის შიგნით, სადაც ეს მედია ჩაიწერა ან გამოიცა (მაგ: უბნის "
+"სახელი)"
 
 msgid "geo location horizontal error"
-msgstr ""
+msgstr "გეოლოკაციის ჰორიზონტალური შეცდომა"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
 msgid "geo location movement speed"
-msgstr ""
+msgstr "გეოლოკაციის გადაადგილების სიჩქარე"
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
 
 msgid "geo location movement direction"
-msgstr ""
+msgstr "გეოლოკაციის მოძრაობის მიმართულება"
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
@@ -686,7 +676,7 @@ msgid ""
 msgstr ""
 
 msgid "geo location capture direction"
-msgstr ""
+msgstr "გეოლოკაციის ჩაწერის მიმართულება"
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
@@ -696,50 +686,45 @@ msgstr ""
 
 #. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
 msgid "show name"
-msgstr "mostre non"
+msgstr "სახელის ჩვენება"
 
 msgid "Name of the tv/podcast/series show the media is from"
 msgstr ""
 
 #. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
 msgid "show sortname"
-msgstr "mostre non ordenament"
+msgstr "დასალაგებელი სახელის ჩვენება"
 
 msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
 
 msgid "episode number"
-msgstr "numar episodi"
+msgstr "ეპიზოდის ნომერი"
 
 msgid "The episode number in the season the media is part of"
 msgstr ""
-"Il numar di episodi inte stagjon dulà che al fâs part il contignût "
-"multimediâl"
 
 msgid "season number"
-msgstr "numar stagjon"
+msgstr "სეზონის ნომერი"
 
 msgid "The season number of the show the media is part of"
 msgstr ""
-"Il numar di stagjon dal spetacul dulà che al fâs part il contignût "
-"multimediâl"
 
 msgid "lyrics"
-msgstr ""
+msgstr "ლირიკა"
 
 msgid "The lyrics of the media, commonly used for songs"
 msgstr ""
 
 msgid "composer sortname"
-msgstr "non ordenament compositôr"
+msgstr ""
 
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr ""
-"persone(-is) che e à componût la regjistrazion, par motîfs di ordenament"
 
 msgid "grouping"
-msgstr ""
+msgstr "დაჯგუფება"
 
 msgid ""
 "Groups related media that spans multiple tracks, like the different pieces "
@@ -747,69 +732,66 @@ msgid ""
 msgstr ""
 
 msgid "user rating"
-msgstr "valutazion utent"
+msgstr "მომხმარებლის შეფასება"
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
 "this media"
 msgstr ""
-"Valutazion dade di un utent. Plui alt al è il nivel, plui al utent i plâs "
-"chest contignût multimediâl"
 
 msgid "device manufacturer"
-msgstr "produtôr dispositîf"
+msgstr "მოწყობილობის მწარმოებელი"
 
 msgid "Manufacturer of the device used to create this media"
-msgstr "Fabricant dal dispositîf doprât par creâ chest contignût multimediâl"
+msgstr ""
 
 msgid "device model"
-msgstr "model dispositîf"
+msgstr "მოწყობილობის მოდელი"
 
 msgid "Model of the device used to create this media"
-msgstr "Model dal dispositîf doprât par creâ chest contignût multimediâl"
+msgstr ""
 
 msgid "application name"
-msgstr "non aplicazion"
+msgstr "აპლიკაციის სახელი"
 
 msgid "Application used to create the media"
-msgstr "Aplicazion doprade par creâ chest contignût multimediâl"
+msgstr "ამ მედიის შესაქმნელად გამოყენებული აპლიკაცია"
 
 msgid "application data"
-msgstr "dâts aplicazion"
+msgstr "აპლიკაციის მონაცემები"
 
 msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
 
 msgid "image orientation"
-msgstr "orientament imagjin"
+msgstr "გამოსახულების ორიენტაცია"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr ""
-"Ce mût che la imagjin e varès di jessi voltade o ribaltade prime di mostrâle"
 
 msgid "publisher"
-msgstr ""
+msgstr "გამომცემელი"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "გამომცემლის ან ლეიბლის სახელი"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "ინტერპრეტატორი"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "midi-base-note"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "აუდიო ბილიკის MIDI ნომერი."
 
 msgid "private-data"
-msgstr ""
+msgstr "private-data"
 
 msgid "Private data"
-msgstr ""
+msgstr "პირადი მონაცემები"
 
 #. separator between two strings
 msgid ", "
@@ -817,7 +799,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "არასწორი URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -825,17 +807,19 @@ msgstr ""
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "URI-ს სქემა %s მხარდაუჭერელია"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr ""
+msgstr "შეცდომა: ელემენტიდან %s: %s\n"
 
 #, c-format
 msgid ""
 "Additional debug info:\n"
 "%s\n"
 msgstr ""
+"გამართვის დამატებითი ინფორმაცია:\n"
+"%s\n"
 
 #. ******************************************************************************************
 #. *** helpers for pipeline-setup
@@ -855,17 +839,17 @@ msgstr ""
 msgid "no property \"%s\" in element \"%s\""
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Il file \"%s\" al è un socket."
+msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "Impussibil creâ il file temporani \"%s\"."
+msgstr ""
 
 #, c-format
 msgid "no element \"%s\""
-msgstr ""
+msgstr "ელემენტი \"%s\" არ არსებობს"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
@@ -915,7 +899,7 @@ msgid "no source element for URI \"%s\""
 msgstr ""
 
 msgid "syntax error"
-msgstr "erôr di sintassi"
+msgstr "სინტაქსური შეცდომა"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
@@ -935,16 +919,16 @@ msgid "A lot of buffers are being dropped."
 msgstr ""
 
 msgid "Internal data flow problem."
-msgstr ""
+msgstr "მონაცემების შიდა დინების პრობლემა."
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "მონაცემების შიდა დინების შეცდომა."
 
 msgid "Internal clock error."
-msgstr ""
+msgstr "შიდა საათის შეცდომა."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "ბაფერის დადების შეცდომა."
 
 msgid "Filter caps"
 msgstr ""
@@ -961,40 +945,40 @@ msgid "Filter caps change behaviour"
 msgstr ""
 
 msgid "No Temp directory specified."
-msgstr "Nissune cartele temporanie specificade."
+msgstr ""
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Impussibil creâ il file temporani \"%s\"."
+msgstr ""
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Impussibil vierzi il file \"%s\" pe leture."
+msgstr ""
 
 msgid "Error while writing to download file."
 msgstr ""
 
 msgid "No file name specified for writing."
-msgstr "Nissun non di file specificât pe scriture."
+msgstr ""
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Impussibil vierzi il file \"%s\" pe scriture."
+msgstr ""
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Erôr tal sierâ il file \"%s\"."
+msgstr "ფაილის (%s) დახურვის შეცდომა."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Erôr tal cirî tal file \"%s\"."
+msgstr ""
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Erôr tal scrivi sul file \"%s\"."
+msgstr ""
 
 msgid "No file name specified for reading."
-msgstr "Nissun non di file specificât pe leture."
+msgstr ""
 
 #, c-format
 msgid "Could not get info on \"%s\"."
@@ -1002,11 +986,11 @@ msgstr ""
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "\"%s\" e je une cartele."
+msgstr "\"%s\" საქაღალდეა."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Il file \"%s\" al è un socket."
+msgstr "ფაილი \"%s\" სოკეტია."
 
 msgid "Failed after iterations as requested."
 msgstr ""
@@ -1021,7 +1005,7 @@ msgid "detected capabilities in stream"
 msgstr ""
 
 msgid "minimum"
-msgstr ""
+msgstr "მინიმუმი"
 
 msgid "force caps"
 msgstr ""
@@ -1030,75 +1014,75 @@ msgid "force caps without doing a typefind"
 msgstr ""
 
 msgid "Stream doesn't contain enough data."
-msgstr "Il flus nol conten vonde dâts."
+msgstr ""
 
 msgid "Stream contains no data."
-msgstr "Il flus nol conten dâts."
+msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Interfacis implementadis:\n"
+msgstr ""
 
 msgid "readable"
-msgstr ""
+msgstr "კითხვადი"
 
 msgid "writable"
-msgstr ""
+msgstr "ჩაწერადი"
 
 msgid "deprecated"
-msgstr ""
+msgstr "მოძველებული"
 
 msgid "controllable"
-msgstr ""
+msgstr "კონტროლირებადი"
 
 msgid "conditionally available"
-msgstr ""
+msgstr "პირობითად ხელმისაწვდომი"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "შეცვლადია NULL, READY, PAUSED და PLAYING მდგომარეობაში"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "შეცვლადია მხოლოდ NULL, READY ან PAUSED მდგომარეობაში"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "შეცვლადია მხოლოდ NULL ან READY მდგომარეობაში"
 
 msgid "Blacklisted files:"
-msgstr "File te liste nere:"
+msgstr "შავ სიაში ჩასმული ფაილები:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Conte totâl: "
+msgstr "%sსრული რაოდენობა%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
 msgid_plural "%d blacklisted files"
-msgstr[0] "%d file in liste nere"
-msgstr[1] "%d file in liste nere"
+msgstr[0] "%d შავ სიაში ჩასმული ფაილიკი"
+msgstr[1] "%d შავ სიაში ჩასმული ფაილიკი"
 
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
-msgstr[0] "%d plugin"
-msgstr[1] "%d plugin"
+msgstr[0] "%d დამატება"
+msgstr[1] "%d დამატება"
 
 #, c-format
 msgid "%d blacklist entry"
 msgid_plural "%d blacklist entries"
-msgstr[0] "%d vôs te liste nere"
-msgstr[1] "%d vôs te liste nere"
+msgstr[0] "%d შავი სიის ჩანაწერი"
+msgstr[1] "%d შავი სიის ჩანაწერი"
 
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
-msgstr[0] "%d funzionalitât"
-msgstr[1] "%d funzionalitâts"
+msgstr[0] "%d თვისება"
+msgstr[1] "%d თვისება"
 
 msgid "Print all elements"
-msgstr "Stampe ducj i elements"
+msgstr "ყველა ელემენტის გამოტანა"
 
 msgid "Print list of blacklisted files"
-msgstr "Stampe la liste dai file metûts in liste nere"
+msgstr "ყველა გაშავებული ფაილის სიის ჩვენება"
 
 msgid ""
 "Print a machine-parsable list of features the specified plugin or all "
@@ -1108,7 +1092,7 @@ msgid ""
 msgstr ""
 
 msgid "List the plugin contents"
-msgstr ""
+msgstr "დამატების შემცველობის ჩვენება"
 
 msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
@@ -1136,14 +1120,14 @@ msgstr ""
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Impussibil cjariâ file di plugin: %s\n"
+msgstr "დამატების ფაილის ჩატვირთვა შეუძლებელია: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr ""
 
 msgid "Index statistics"
-msgstr ""
+msgstr "ინდექსის სტატისტიკა"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr ""
@@ -1176,35 +1160,37 @@ msgstr ""
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr ""
+msgstr "ნაპოვნია ჭდე      : იპოვნა ელემენტმა \"%s\".\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr ""
+msgstr "ნაპოვნია ჭდე      : იპოვნა PAD-მა \"%s:%s\".\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr ""
+msgstr "ნაპოვნია ჭდე      : იპოვნა ობიექტმა \"%s\".\n"
 
 msgid "FOUND TAG\n"
-msgstr ""
+msgstr "ნაპოვნია ჭდე\n"
 
 #, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr ""
+msgstr "ნაპოვნია სარჩევი      : იპოვნა ელემენტმა \"%s\".\n"
 
 #, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr ""
+msgstr "ნაპოვნია სარჩევი      : იპოვნა ობიექტმა \"%s\".\n"
 
 msgid "FOUND TOC\n"
-msgstr ""
+msgstr "ნაპოვნია სარჩევი\n"
 
 #, c-format
 msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"ინფორმაცია:\n"
+"%s\n"
 
 #, c-format
 msgid "WARNING: from element %s: %s\n"
@@ -1220,7 +1206,7 @@ msgid "Prerolled, waiting for progress to finish...\n"
 msgstr ""
 
 msgid "buffering..."
-msgstr ""
+msgstr "ბუფერის შევსება..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
@@ -1252,11 +1238,11 @@ msgstr ""
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr "Progrès: (%s) %s\n"
+msgstr "მიმდინარეობა (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
-msgstr "Element mancjant: %s\n"
+msgstr "ნაკლული ელემენტი: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"
@@ -1282,10 +1268,10 @@ msgid "Output status information and property notifications"
 msgstr ""
 
 msgid "Do not print any progress information"
-msgstr "No stâ stampâ nissune informazion di progrès"
+msgstr ""
 
 msgid "Output messages"
-msgstr ""
+msgstr "გამოტანილი შეტყობინებები"
 
 msgid ""
 "Do not output status information for the specified property if verbose "

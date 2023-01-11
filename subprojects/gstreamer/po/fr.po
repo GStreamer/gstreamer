@@ -4,14 +4,14 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Claude Paroz <claude@2xlibre.net>, 2008-2012.
-# Stéphane Aulery <lkppo@free.fr>, 2015-2017, 2019, 2021.
+# Stéphane Aulery <lkppo@free.fr>, 2015-2022.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-23 01:32+0100\n"
-"PO-Revision-Date: 2021-11-21 00:53+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"PO-Revision-Date: 2022-07-05 00:47+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -845,7 +845,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "URI incorrecte : %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -878,13 +878,12 @@ msgstr "lien sans source [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "lien sans sink [source=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "pas de propriété « %s » dans l’élément « %s »"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -893,6 +892,18 @@ msgstr "L'élément « %s » n'est pas de type GstPreset"
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "impossible de définir le réglage « %s » de l’élément « %s »"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "pas d’élément « %s »"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "impossible de définir la propriété « %s » de l’élément « %s » à « %s »"
 
 msgid "Delayed linking failed."
 msgstr "Échec du chargement dynamique différé."
@@ -913,10 +924,6 @@ msgstr "impossible de connecter %s à %s avec les capacités %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "impossible de connecter %s à %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "pas d’élément « %s »"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
@@ -1172,7 +1179,7 @@ msgstr ""
 "GST_INSPECT_NO_COLORS."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Couleur de la sortie, même quand vers un autre périphérique qu'un tty"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1312,7 +1319,7 @@ msgstr "Une erreur s’est produite lors de l’attente de l’EOS\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Utiliser l'horloge haute résolution de Windows, précision à %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Affiche les balises (aussi connues sous le nom de métadonnées)"
@@ -1353,11 +1360,18 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"Ne pas imprimer la position actuelle du pipeline. Si cette option n'est pas "
+"spécifiée, la position sera imprimée lorsque stdout est un TTY. Pour activer "
+"la position d'impression lorsque stdout n'est pas un TTY, utilisez l'option "
+"\"force-position\""
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Autoriser l'impression de la position actuelle du pipeline même si stdout "
+"n'est pas un TTY. Cette option n'a aucun effet si l'option \"no-position\" "
+"est spécifiée"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

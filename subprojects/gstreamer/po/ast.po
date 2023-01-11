@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.28.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2010-06-07 22:01+0100\n"
 "Last-Translator: astur <maacub@gmail.com>\n"
 "Language-Team: Asturian <ubuntu-l10n-ast@lists.ubuntu.com>\n"
@@ -876,13 +876,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "nun esiste la propiedá «%s» nel elementu «%s»"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nun pudo afitase la propiedá \"%s\" nel elementu \"%s\" a \"%s\""
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -890,6 +889,18 @@ msgstr "El ficheru \"%s\" ye un socket."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "nun pudo afitase la propiedá \"%s\" nel elementu \"%s\" a \"%s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "nun esiste l'elementu «%s»"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nun pudo afitase la propiedá \"%s\" nel elementu \"%s\" a \"%s\""
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "nun pudo afitase la propiedá \"%s\" nel elementu \"%s\" a \"%s\""
 
 msgid "Delayed linking failed."
@@ -910,10 +921,6 @@ msgstr "nun pudo enllazase %s a %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nun pudo enllazase %s a %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "nun esiste l'elementu «%s»"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

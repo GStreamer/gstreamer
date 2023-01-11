@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -16,8 +16,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
-"%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"(n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Virtaal 0.6.1\n"
 
 msgid "Print the GStreamer version"
@@ -877,13 +877,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "nenurodyta savybė „%s“ elemente „%s“"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nepavyko nustatyti savybės „%s“ elemente „%s“ į „%s“"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -891,6 +890,18 @@ msgstr "Failas „%s“ yra lizdas."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "nepavyko nustatyti savybės „%s“ elemente „%s“ į „%s“"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "nėra elemento „%s“"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nepavyko nustatyti savybės „%s“ elemente „%s“ į „%s“"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "nepavyko nustatyti savybės „%s“ elemente „%s“ į „%s“"
 
 msgid "Delayed linking failed."
@@ -911,10 +922,6 @@ msgstr "nepavyko susieti %s su %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nepavyko susieti %s su %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "nėra elemento „%s“"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

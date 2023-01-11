@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2021-09-24 18:37+0200\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
@@ -867,13 +867,12 @@ msgstr "link har ingen slik kilde [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "link har ingen slik sink [source=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ingen egenskap «%s» i element «%s»"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "kunne ikke sette egenskapen «%s» i elementet «%s» til «%s»"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -882,6 +881,18 @@ msgstr "Elementet «%s» er ikke en GstPreset."
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "kunne ikke sette forhåndsinstilling «%s» i elementet «%s»"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "ingen element «%s»"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "kunne ikke sette egenskapen «%s» i elementet «%s» til «%s»"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "kunne ikke sette egenskapen «%s» i elementet «%s» til «%s»"
 
 msgid "Delayed linking failed."
 msgstr "Forsinket linking feilet."
@@ -903,10 +914,6 @@ msgstr "kunne ikke lenke %s til %s med store bokstaver %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kunne ikke lenke %s til %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "ingen element «%s»"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

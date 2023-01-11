@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2021-10-04 13:42+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
@@ -860,13 +860,12 @@ msgstr "bağlantı kaynağı yok [alıcı=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "bağlantı alış noktası yok [kaynak=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "\"%s\" öğesinde \"%s\" özelliği yok"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "\"%s\" öğesindeki \"%s\" özelliğine \"%s\" değeri atanamadı"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -875,6 +874,18 @@ msgstr "\"%s\" öğesi bir GstPreset değildir"
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "\"%s\" öğesinde kurulu ayar \"%s\" ayarlanamadı"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "\"%s\" öğesi yok"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "\"%s\" öğesindeki \"%s\" özelliğine \"%s\" değeri atanamadı"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "\"%s\" öğesindeki \"%s\" özelliğine \"%s\" değeri atanamadı"
 
 msgid "Delayed linking failed."
 msgstr "Gecikmeli bağlama başarısız oldu."
@@ -894,10 +905,6 @@ msgstr "%s, %s e %s başlıklar ile bağlanamadı"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s, %s'a bağlanamadı"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "\"%s\" öğesi yok"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

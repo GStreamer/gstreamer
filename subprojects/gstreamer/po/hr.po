@@ -7,13 +7,13 @@
 # https://gstreamer.freedesktop.org/data/doc/gstreamer/head/manual/html/index.html
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2021-09-24 15:06+0200\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"PO-Revision-Date: 2022-11-06 16:24-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr_HR\n"
@@ -21,8 +21,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
 "X-Generator: Poedit 3.0\n"
 
 msgid "Print the GStreamer version"
@@ -146,7 +146,7 @@ msgid "Internal GStreamer error: tag problem."
 msgstr "Interna greška GStreamera: problem s tagom."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr "Vašoj instalaciji GStreamera nedostaje plugin."
+msgstr "Vašoj instalaciji GStreamera manjka plugin."
 
 msgid "GStreamer error: clock problem."
 msgstr "Greška GStreamera: problem sa sinkronizacijom (clock)."
@@ -226,37 +226,37 @@ msgstr ""
 "ovaj bug."
 
 msgid "Could not determine type of stream."
-msgstr "Nije moguće odrediti vrstu ovog protoka."
+msgstr "Nije moguće odrediti tip toka (strream)."
 
 msgid "The stream is of a different type than handled by this element."
-msgstr "Protok je vrste kojom ovaj element ne može manipulirati."
+msgstr "Ovaj element ne može manipulirati tok (stream) ovog tipa."
 
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Nema kodeka koji može manipulirati s ovom vrstom protoka."
+msgstr "Nema kodeka koji može manipulirati s ovim tipom toka (stream)."
 
 msgid "Could not decode stream."
-msgstr "Nije moguće dekodirati protok."
+msgstr "Nije moguće dekodirati tok."
 
 msgid "Could not encode stream."
-msgstr "Nije moguće kodirati protok."
+msgstr "Nije moguće kodirati tok."
 
 msgid "Could not demultiplex stream."
-msgstr "Nije moguće demultipleksirati protok."
+msgstr "Nije moguće demultipleksirati tok."
 
 msgid "Could not multiplex stream."
-msgstr "Nije moguće multipleksirati protok."
+msgstr "Nije moguće multipleksirati tok."
 
 msgid "The stream is in the wrong format."
-msgstr "Protok je u krivom formatu."
+msgstr "Tok je u krivom formatu."
 
 msgid "The stream is encrypted and decryption is not supported."
-msgstr "Protok je šifriran a dešifriranje nije podržano."
+msgstr "Tok je šifriran a dešifriranje nije podržano."
 
 msgid ""
 "The stream is encrypted and can't be decrypted because no suitable key has "
 "been supplied."
 msgstr ""
-"Protok je šifriran i ne može se dešifrirati jer nije dobiven prikladni ključ."
+"Tok je šifriran i ne može se dešifrirati jer nije dobiven prikladni ključ."
 
 #, c-format
 msgid "No error message for domain %s."
@@ -286,7 +286,7 @@ msgid "commonly used title for sorting purposes"
 msgstr "uobičajeni naslov (za sortiranje)"
 
 msgid "artist"
-msgstr "izvođač"
+msgstr "artist"
 
 msgid "person(s) responsible for the recording"
 msgstr "osobe odgovorne za snimanje"
@@ -313,7 +313,7 @@ msgid "album artist"
 msgstr "izvođač albuma"
 
 msgid "The artist of the entire album, as it should be displayed"
-msgstr "Izvođač cijelog albuma (prikazan onako kako  treba)"
+msgstr "Izvođač cijelog albuma (pokazan onako kako  treba)"
 
 msgid "album artist sortname"
 msgstr "izvođač albuma (za sortiranje)"
@@ -343,7 +343,7 @@ msgid "comment"
 msgstr "komentar"
 
 msgid "free text commenting the data"
-msgstr "tekstualno komentiranje podataka"
+msgstr "tekstno komentiranje podataka"
 
 msgid "extended comment"
 msgstr "prošireni komentar"
@@ -535,13 +535,13 @@ msgid "encoder"
 msgstr "koder"
 
 msgid "encoder used to encode this stream"
-msgstr "koder s kojim je kodiran ovaj protok"
+msgstr "koder s kojim je kodiran ovaj tok"
 
 msgid "encoder version"
 msgstr "inačica kodera"
 
 msgid "version of the encoder used to encode this stream"
-msgstr "inačica kodera s kojim je kodiran ovaj protok"
+msgstr "inačica kodera s kojim je kodiran ovaj tok"
 
 msgid "serial"
 msgstr "serijski broj"
@@ -585,7 +585,7 @@ msgid "language code"
 msgstr "jezični kȏd"
 
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "jezični kȏd za ovaj protok, u skladu s ISO-639-1 ili ISO-639-2"
+msgstr "jezični kȏd za ovaj tok, u skladu s ISO-639-1 ili ISO-639-2"
 
 msgid "language name"
 msgstr "ime jezika"
@@ -597,7 +597,7 @@ msgid "image"
 msgstr "slika"
 
 msgid "image related to this stream"
-msgstr "slika za ovaj protok"
+msgstr "slika za ovaj tok"
 
 # thumbnail
 #. TRANSLATORS: 'preview image' = image that shows a preview of the full image
@@ -605,7 +605,7 @@ msgid "preview image"
 msgstr "pregledna slika"
 
 msgid "preview image related to this stream"
-msgstr "pregledna slika za ovaj protok"
+msgstr "pregledna slika za ovaj tok"
 
 msgid "attachment"
 msgstr "privitak"
@@ -878,13 +878,12 @@ msgstr "poveznica nema izvor [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "poveznica nema ponor [source=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "nema svojstva „%s“ u elementu „%s“"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "nije moguće postaviti svojstvo „%s“ u elementu „%s“ na „%s“"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -893,6 +892,18 @@ msgstr "Element „%s“ nije GstPreset."
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "nije moguće postaviti preset „%s“ u elementu „%s“"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "nema elementa „%s“"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nije moguće postaviti svojstvo „%s“ u elementu „%s“ na „%s“"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "nije moguće postaviti svojstvo „%s“ u elementu „%s“ na „%s“"
 
 msgid "Delayed linking failed."
 msgstr "Odgođeno povezivanje nije uspjelo."
@@ -915,17 +926,13 @@ msgid "could not link %s to %s"
 msgstr "nije moguće povezati %s sa %s"
 
 #, c-format
-msgid "no element \"%s\""
-msgstr "nema elementa „%s“"
-
-#, c-format
 msgid "unexpected reference \"%s\" - ignoring"
-msgstr "neočekivana referencija „%s“ - ignorira se"
+msgstr "neočekivana referencija „%s“ - zanemareno"
 
 # pad (u elektronskoj glazbi) > A category of synthsizer patches which produce a soft, pleasing sound.
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr "neočekivana poveznica (pad-reference) „%s“ - ignorira se"
+msgstr "neočekivana poveznica (pad-reference) „%s“ - zanemareno"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -940,7 +947,7 @@ msgid "no source element for URI \"%s\""
 msgstr "nema elementa-izvor za URI „%s“"
 
 msgid "syntax error"
-msgstr "greška u sintaksi"
+msgstr "sintaktična greška"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
@@ -992,7 +999,7 @@ msgstr "Nijedan privremeni direktorij nije specificiran."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Nije moguće kreirati privremenu datoteku „%s“."
+msgstr "Nije moguće stvoriti privremenu datoteku „%s“."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
@@ -1057,10 +1064,10 @@ msgid "force caps without doing a typefind"
 msgstr "nametne sposobnosti bez upotrebe „typefind“"
 
 msgid "Stream doesn't contain enough data."
-msgstr "Protok ne sadrži dovoljno podataka."
+msgstr "Tok ne sadrži dovoljno podataka."
 
 msgid "Stream contains no data."
-msgstr "Protok ne sadrži podatke."
+msgstr "Tok ne sadrži podatke."
 
 #, c-format
 msgid "%sImplemented Interfaces%s:\n"
@@ -1306,7 +1313,7 @@ msgstr "Progres: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
-msgstr "Nedostaje element %s\n"
+msgstr "Nema elementa %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s=%s\n"

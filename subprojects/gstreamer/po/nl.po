@@ -5,13 +5,13 @@
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.12.0\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2017-10-24 22:53+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"PO-Revision-Date: 2022-02-08 13:38+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Lokalize 2.0\n"
+"X-Generator: Lokalize 21.12.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Toon de GStreamer versie"
@@ -351,7 +351,7 @@ msgstr "uitgebreid commentaar"
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
 "vrij te kiezen commentaartekst bij gegevens in de vorm key=waarde of "
-"key[en]=commentaar "
+"key[en]=commentaar"
 
 msgid "track number"
 msgstr "nummer"
@@ -384,7 +384,7 @@ msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
 "is hosted)"
 msgstr ""
-"oorsprong van het medium als een URI (locatie, waar de oorsprong van het "
+"Oorsprong van het medium als een URI (locatie, waar de oorsprong van het "
 "bestand of stroom wordt gehost)"
 
 msgid "homepage"
@@ -847,7 +847,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "Ongeldige URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -880,20 +880,31 @@ msgstr "link heeft geen bron [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "link heeft geen sink [bron=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "geen eigenschap \"%s\" in element \"%s\""
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Element \"%s\" is geen GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "kon voorinstelling \"%s\" in element \"%s\" niet instellen"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "geen element \"%s\""
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 
 #, fuzzy, c-format
-msgid "Element \"%s\" is not a GstPreset"
-msgstr "Bestand \"%s\" is een socket."
-
-#, fuzzy, c-format
-msgid "could not set preset \"%s\" in element \"%s\""
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "kon eigenschap \"%s\" in element \"%s\" niet op \"%s\" instellen"
 
 msgid "Delayed linking failed."
@@ -915,10 +926,6 @@ msgstr "kon %s niet koppelen naar %s met hoofdletters %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kon %s niet verbinden met %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "geen element \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
@@ -955,7 +962,7 @@ msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "Pijplijn-constructie is ongeldig, voeg wachtrijen toe."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Er worden veel buffers gedropt."
@@ -1041,7 +1048,7 @@ msgid "Failed after iterations as requested."
 msgstr "Mislukt na iteraties zoals gevraagd."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "eos-after en error-after kunnen niet beiden gedefinieerd worden."
 
 msgid "caps"
 msgstr "mogelijkheden"
@@ -1064,9 +1071,9 @@ msgstr "Stream bevat niet genoeg gegevens."
 msgid "Stream contains no data."
 msgstr "Stroom zonder gegevens."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Geïmplementeerde interfaces:\n"
+msgstr "%sGeïmplementeerde interfaces%s:\n"
 
 msgid "readable"
 msgstr "leesbaar"
@@ -1080,9 +1087,8 @@ msgstr "verouderd"
 msgid "controllable"
 msgstr "controleerbaar"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "controleerbaar"
+msgstr "voorwaardelijk beschikbaar"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "te veranderen in NUL, GEREED-, GEPAUZEERD- of SPEEL-status"
@@ -1096,9 +1102,9 @@ msgstr "alleen te veranderen in NUL of GEREED-status"
 msgid "Blacklisted files:"
 msgstr "Bestanden op de zwarte lijst:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Totaal aantal: "
+msgstr "%sTotaal aantal%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1169,9 +1175,11 @@ msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Uitvoer in kleur uitschakelen. U kunt hetzelfde ook bereiken door de "
+"omgevingsvariabele 'GST_INSPECT_NO_COLORS' een waarde te geven."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Kleuruitvoer, zelfs wanneer niet verzenden naar een tty."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1311,7 +1319,7 @@ msgstr "Er trad een fout op bij het wachten op EOS\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Hoge resolutie klok van Windows gebruiken, precisie: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tags (ook bekend als metadata) weergeven"
@@ -1352,11 +1360,18 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"Niet de huidige positie van pijplijn afdrukken. Als deze optie niet is "
+"gespecificeerd zal de positie afgedrukt worden wanneer stdout een TTY is. Om "
+"afdrukken van positie in te schakelen wanneer stdout geen TTY is, gebruik "
+"optie \"force-position\""
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Afdrukken van huidige positie van pijplijn toestaan ook als stdout geen TTY "
+"is. Deze optie heeft geen effect als de optie \"no-position\" is "
+"gespecificeerd"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1375,9 +1390,8 @@ msgstr "FOUT: het 'pijplijn' element werd niet gevonden.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Pijplijn gezet op gepauzeerd ...\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Pijplijn gezet op gepauzeerd ...\n"
+msgstr "Pijplijn zetten op GEPAUZEERD is mislukt.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Pijplijn klaar en heeft PREROLL niet nodig...\n"
