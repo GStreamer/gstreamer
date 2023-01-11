@@ -62,8 +62,6 @@ static gboolean gst_svtav1enc_sink_event (GstVideoEncoder * encoder,
 static gboolean gst_svtav1enc_src_event (GstVideoEncoder * encoder,
     GstEvent * event);
 static gboolean gst_svtav1enc_negotiate (GstVideoEncoder * encoder);
-static gboolean gst_svtav1enc_decide_allocation (GstVideoEncoder * encoder,
-    GstQuery * query);
 static gboolean gst_svtav1enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
 static gboolean gst_svtav1enc_flush (GstVideoEncoder * encoder);
@@ -180,8 +178,6 @@ gst_svtav1enc_class_init (GstSvtAv1EncClass * klass)
       GST_DEBUG_FUNCPTR (gst_svtav1enc_sink_event);
   video_encoder_class->src_event = GST_DEBUG_FUNCPTR (gst_svtav1enc_src_event);
   video_encoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_svtav1enc_negotiate);
-  video_encoder_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_svtav1enc_decide_allocation);
   video_encoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_svtav1enc_propose_allocation);
   video_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_svtav1enc_flush);
@@ -902,16 +898,6 @@ gst_svtav1enc_negotiate (GstVideoEncoder * encoder)
 
   return
       GST_VIDEO_ENCODER_CLASS (gst_svtav1enc_parent_class)->negotiate(encoder);
-}
-
-static gboolean
-gst_svtav1enc_decide_allocation (GstVideoEncoder * encoder, GstQuery * query)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "decide_allocation");
-
-  return TRUE;
 }
 
 static gboolean
