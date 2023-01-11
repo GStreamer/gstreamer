@@ -298,7 +298,6 @@ gst_svtav1enc_init (GstSvtAv1Enc * svtav1enc)
   }
   memset (&svtav1enc->svt_encoder, 0, sizeof (svtav1enc->svt_encoder));
   svtav1enc->frame_count = 0;
-  svtav1enc->dts_offset = 0;
 
   EbErrorType res =
       svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
@@ -682,29 +681,11 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
       gst_buffer_fill (frame->output_buffer, 0,
           output_buf->p_buffer, output_buf->n_filled_len);
 
-
-      /* SVT-AV1 may return first frames with a negative DTS,
-       * offsetting it to start at 0 since GStreamer 1.x doesn't support it */
-      if (output_buf->dts + svtav1enc->dts_offset < 0) {
-        svtav1enc->dts_offset = -output_buf->dts;
-      }
-      /* Gstreamer doesn't support negative DTS so we return
-       * very small increasing ones for the first frames. */
-      if (output_buf->dts < 1) {
-        frame->dts = frame->output_buffer->dts =
-            output_buf->dts + svtav1enc->dts_offset;
-      } else {
-        frame->dts = frame->output_buffer->dts =
-            (output_buf->dts *
-            svtav1enc->svt_config->frame_rate_denominator * GST_SECOND) /
-            svtav1enc->svt_config->frame_rate_numerator;
-      }
-
       frame->pts = frame->output_buffer->pts = output_buf->pts;
 
-      GST_LOG_OBJECT (svtav1enc, "#frame:%lld dts:%" G_GINT64_FORMAT " pts:%"
+      GST_LOG_OBJECT (svtav1enc, "#frame:%lld pts:%"
           G_GINT64_FORMAT " SliceType:%d\n", svtav1enc->frame_count,
-           (frame->dts), (frame->pts), output_buf->pic_type);
+           (frame->pts), output_buf->pic_type);
 
       svt_av1_enc_release_out_buffer(&output_buf);
       output_buf = NULL;
