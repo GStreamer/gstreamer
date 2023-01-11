@@ -5,8 +5,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-1.15.1\n"
-"Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2019-01-17 02:16+0000\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2021-05-09 21:17+0800\n"
 "Last-Translator: Yi-Jyun Pan <pan93412@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
@@ -67,6 +67,7 @@ msgstr "未在資料串流前設定子影像 (Subpicture) 格式"
 msgid "Failed to get fragment URL."
 msgstr "無法取得片段 URL。"
 
+#, c-format
 msgid "Couldn't download fragments"
 msgstr "無法下載片段"
 
@@ -93,6 +94,7 @@ msgstr "無法在前端裝置「%s」枚舉遞送系統。"
 msgid "Could not open file \"%s\" for reading."
 msgstr "無法開啟 \"%s\" 檔案以讀取。"
 
+#, c-format
 msgid "Couldn't find channel configuration file"
 msgstr "找不到頻道設定檔"
 
@@ -116,5 +118,6 @@ msgstr "無法設定 '%s' 頻道的屬性"
 msgid "Couldn't find channel configuration file: '%s'"
 msgstr "找不到頻道設定檔：'%s'"
 
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
 msgstr "頻道設定檔內完全沒有頻道"

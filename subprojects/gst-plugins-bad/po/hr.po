@@ -4,13 +4,13 @@
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019, 2021, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.15.1\n"
+"Project-Id-Version: gst-plugins-bad-1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2019-02-03 13:38-0800\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-11-06 16:21-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -18,9 +18,9 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Poedit 2.2.1\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 3.0\n"
 
 msgid "No URL set."
 msgstr "Nema URL-adrese (nije postavljena)."
@@ -53,7 +53,7 @@ msgid "This file contains no playable streams."
 msgstr "Ova datoteka ne sadrži upotrebljive protoke."
 
 msgid "Could not open sndfile stream for reading."
-msgstr "Nije moguće otvoriti protok sndfile za čitanje."
+msgstr "Nije moguće otvoriti tok sndfile za čitanje."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
