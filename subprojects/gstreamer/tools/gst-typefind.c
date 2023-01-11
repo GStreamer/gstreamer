@@ -29,6 +29,10 @@
 #include <string.h>
 #include <locale.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #include "tools.h"
 
 static void
@@ -134,8 +138,8 @@ typefind_file (const gchar * filename)
   gst_object_unref (pipeline);
 }
 
-int
-main (int argc, char *argv[])
+static int
+real_main (int argc, char *argv[])
 {
   gchar **filenames = NULL;
   guint num, i;
@@ -184,4 +188,14 @@ main (int argc, char *argv[])
   g_strfreev (filenames);
 
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  return real_main (argc, argv);
+#endif
 }

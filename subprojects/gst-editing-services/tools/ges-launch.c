@@ -21,9 +21,12 @@
 #include <locale.h>             /* for LC_ALL */
 #include "ges-launcher.h"
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
 
-int
-main (int argc, gchar ** argv)
+static int
+real_main (int argc, gchar ** argv)
 {
   GESLauncher *launcher;
   gint ret;
@@ -42,4 +45,14 @@ main (int argc, gchar ** argv)
   gst_deinit ();
 
   return ret;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  return real_main (argc, argv);
+#endif
 }

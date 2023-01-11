@@ -46,6 +46,10 @@
 #include <io.h>
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 /* "R" : support color
  * "X" : do not clear the screen when leaving the pager
  * "F" : skip the pager if content fit into the screen
@@ -2087,8 +2091,8 @@ _parse_sort_type (const gchar * option_name, const gchar * optarg,
   return FALSE;
 }
 
-int
-main (int argc, char *argv[])
+static int
+real_main (int argc, char *argv[])
 {
   gboolean print_all = FALSE;
   gboolean do_print_blacklist = FALSE;
@@ -2329,4 +2333,14 @@ done:
 #endif
 
   return exit_code;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  return real_main (argc, argv);
+#endif
 }

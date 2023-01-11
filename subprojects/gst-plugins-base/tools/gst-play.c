@@ -45,6 +45,10 @@
 #include <mmsystem.h>
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 #include "gst-play-kb.h"
 
 #define VOLUME_STEPS 20
@@ -1592,8 +1596,8 @@ clear_winmm_timer_resolution (guint resolution)
 }
 #endif
 
-int
-main (int argc, char **argv)
+static int
+real_main (int argc, char **argv)
 {
   GstPlay *play;
   GPtrArray *playlist;
@@ -1821,4 +1825,14 @@ main (int argc, char **argv)
   gst_print ("\n");
   gst_deinit ();
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  return real_main (argc, argv);
+#endif
 }

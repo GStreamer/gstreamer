@@ -26,6 +26,10 @@
 #include <glib-unix.h>
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 static const gchar *HELP_SUMMARY =
     "gst-transcoder-1.0 transcodes a stream defined by its first <input-uri>\n"
     "argument to the place defined by its second <output-uri> argument\n"
@@ -317,8 +321,8 @@ _warning_cb (GstTranscoder * transcoder, GError * error, GstStructure * details)
   warn ("Got warning: %s", error->message);
 }
 
-int
-main (int argc, char *argv[])
+static int
+real_main (int argc, char *argv[])
 {
   gint res = 0;
   GError *err = NULL;
@@ -459,4 +463,14 @@ no_extension:
   res = 1;
 
   goto done;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  return real_main (argc, argv);
+#endif
 }

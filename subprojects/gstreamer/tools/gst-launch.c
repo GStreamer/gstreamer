@@ -50,6 +50,10 @@
 #include <mmsystem.h>
 #endif
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 extern volatile gboolean glib_on_error_halt;
 
 #ifdef G_OS_UNIX
@@ -1070,8 +1074,8 @@ clear_winmm_timer_resolution (guint resolution)
 }
 #endif
 
-int
-main (int argc, char *argv[])
+static int
+real_main (int argc, char *argv[])
 {
   /* options */
   gboolean verbose = FALSE;
@@ -1359,4 +1363,14 @@ main (int argc, char *argv[])
   gst_deinit ();
 
   return last_launch_code;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  return real_main (argc, argv);
+#endif
 }

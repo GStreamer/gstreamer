@@ -30,6 +30,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#endif
+
 GST_DEBUG_CATEGORY (devmon_debug);
 #define GST_CAT_DEFAULT devmon_debug
 
@@ -282,8 +286,8 @@ quit_loop (GMainLoop * loop)
   return G_SOURCE_REMOVE;
 }
 
-int
-main (int argc, char **argv)
+static int
+real_main (int argc, char **argv)
 {
   gboolean print_version = FALSE;
   GError *err = NULL;
@@ -400,4 +404,14 @@ main (int argc, char **argv)
   g_timer_destroy (timer);
 
   return 0;
+}
+
+int
+main (int argc, char *argv[])
+{
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  return real_main (argc, argv);
+#endif
 }
