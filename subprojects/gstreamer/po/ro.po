@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-23 01:32+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2022-01-21 14:07+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -962,14 +962,12 @@ msgstr "legătura nu are nicio sursă [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "legătura nu are niciun destinatar [sursă=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "nicio proprietate „%s” în elementul „%s”"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
-"nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -978,6 +976,20 @@ msgstr "Elementul „% s” nu este o preconfigurare Gstreamer"
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "nu se poate stabili preconfigurarea „%s” în elementul „%s”"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "niciun element „%s”"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr ""
+"nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
 
 msgid "Delayed linking failed."
 msgstr "Legătura întârziată a eșuat."
@@ -1002,10 +1014,6 @@ msgstr "nu s-a putut lega %s la %s cu majusculele %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "nu se poate lega %s la %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "niciun element „%s”"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

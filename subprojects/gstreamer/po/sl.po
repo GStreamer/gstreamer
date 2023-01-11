@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2014-04-09 22:38+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -19,8 +19,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
-"%100==4 ? 3 : 0);\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || "
+"n%100==4 ? 3 : 0);\n"
 "X-Generator: Poedit 1.6.4\n"
 
 msgid "Print the GStreamer version"
@@ -869,14 +869,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "lastnost \"%s\" v predmetu \"%s\" ne obstaja"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
-"lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -884,6 +882,20 @@ msgstr "Datoteka \"%s\" je vtič."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr ""
+"lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "predmet \"%s\" ne obstaja"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr ""
 "lastnosti \"%s\" v predmetu \"%s\" ni mogoče nastaviti na vrednost \"%s\""
 
@@ -905,10 +917,6 @@ msgstr "%s in %s ni mogoče povezati"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s in %s ni mogoče povezati"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "predmet \"%s\" ne obstaja"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

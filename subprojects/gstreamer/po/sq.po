@@ -1,21 +1,24 @@
 # Përkthimi i mesazheve të gstreamer në shqip.
 # Copyright (C) 2004 Free Software Foundation, Inc.
-# Laurent Dhima <laurenti@alblinux.net>, 2004.
 #
+# This file is distributed under the same license as the gstreamer package.
+# Laurent Dhima <laurenti@alblinux.net>, 2004.
+# Agron Selimaj <as9902613@gmail.com>, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.8.4\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2004-08-07 23:46+0200\n"
-"Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
-"Language-Team: Albanian <begraj@hotmail.com>\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"PO-Revision-Date: 2022-03-22 10:52-0400\n"
+"Last-Translator: Agron Selimaj <as9902613@gmail.com>\n"
+"Language-Team: Albanian <translation-team-sq@lists.sourceforge.net>\n"
 "Language: sq\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Lokalize 21.12.3\n"
 
 msgid "Print the GStreamer version"
 msgstr "Printo versionin e GStreamer"
@@ -26,12 +29,11 @@ msgstr "Bëj që të gjithë paralajmërimet të jenë fatale"
 msgid "Print available debug categories and exit"
 msgstr "Printo kategoritë e debug në dispozicion dhe dil"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Niveli i prezgjedhur i debug nga 1 (vetëm gabimi) në 5 (gjithçka) ose 0 për "
-"jo output"
+"Niveli i prezgjedhur i debug nga 1 (vetëm gabimi) deri në 9 (gjithçka) ose 0 "
+"për të mos shtypur asgjë"
 
 msgid "LEVEL"
 msgstr "NIVELI"
@@ -54,6 +56,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Ndryshon regjimin e ngjyrave të raportit të debugut. Regjimet e mundshme "
+"janë: fikur, kyqur, e pamundësuar, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Ç'aktivo debug"
@@ -62,10 +66,10 @@ msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivo kërkesën e plugin të ngarkimit të diagnostikimeve"
 
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "Shtigjet e ndara me pikpresje qe permbajne plugins"
 
 msgid "PATHS"
-msgstr "POZICIONET"
+msgstr "SHTIGJET"
 
 #, fuzzy
 msgid ""
@@ -83,13 +87,13 @@ msgstr ""
 "Ç'aktivo regjistrimin e dështimeve të segmentuara gjatë ngarkimit të plugin"
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "Pamundesoje azhurimin e regjistrit"
 
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr ""
 
 msgid "GStreamer Options"
-msgstr ""
+msgstr "Opsionet e GStreamer"
 
 #, fuzzy
 msgid "Show GStreamer Options"
@@ -97,7 +101,7 @@ msgstr "Printo versionin e GStreamer"
 
 #, c-format
 msgid "Unknown option"
-msgstr ""
+msgstr "Opsion i panjohur"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
@@ -172,7 +176,7 @@ msgid "Could not configure supporting library."
 msgstr "E pamundur mbyllja e librarisë mbështetëse."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Gabim enkodimi."
 
 #, fuzzy
 msgid "GStreamer encountered a general resource error."
@@ -880,13 +884,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "asnjë pronësi \"%s\" tek elementi \"%s\""
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -894,6 +897,18 @@ msgstr "File \"%s\" është një socket."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "asnjë element \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
 
 msgid "Delayed linking failed."
@@ -914,10 +929,6 @@ msgstr "e pamundur lidhja e %s me %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "e pamundur lidhja e %s me %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "asnjë element \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
@@ -1392,11 +1403,9 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgid "REGISTRY"
 #~ msgstr "REGJISTRI"
 
-#, c-format
 #~ msgid "path list for loading plugins (separated by '%s')"
 #~ msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
 
-#, c-format
 #~ msgid "Scheduler to use (default is '%s')"
 #~ msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
 
@@ -1410,7 +1419,6 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgid "original location of file as a URI"
 #~ msgstr "vendodhja orgjinale e file si një URI"
 
-#, c-format
 #~ msgid "There is no element present to handle the stream's mime type %s."
 #~ msgstr ""
 #~ "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
@@ -1424,7 +1432,6 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgid "link without sink element"
 #~ msgstr "lidhje pa elementin sink"
 
-#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "asnjë element për të lidhur URI \"%s\" me"
 
@@ -1447,24 +1454,19 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgstr ""
 #~ "Përdorimi: gst-xmllaunch <file.xml> [ element.property=vlera ... ]\n"
 
-#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
 
-#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
 
-#, c-format
 #~ msgid "WARNING: only one toplevel element is supported at this time."
 #~ msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
 
-#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr ""
 #~ "GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
 
-#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
 
@@ -1483,30 +1485,23 @@ msgstr "DUKE ZBATUAR pipeline ...\n"
 #~ msgid "Number of times to iterate pipeline"
 #~ msgstr "Numri i herëve të përsëritjes së kanalit"
 
-#, c-format
 #~ msgid "         Trying to run anyway.\n"
 #~ msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
 
-#, c-format
 #~ msgid "Added plugin %s with %d %s.\n"
 #~ msgstr "U shtua plugin %s me %d %s.\n"
 
-#, c-format
 #~ msgid "Added path   %s to %s \n"
 #~ msgstr "U shtua pozicioni   %s tek %s \n"
 
-#, c-format
 #~ msgid "Rebuilding %s (%s) ...\n"
 #~ msgstr "Duke rindërtuar %s (%s) ...\n"
 
-#, c-format
 #~ msgid "Trying to load %s ...\n"
 #~ msgstr "Duke u përpjekur të ngarkoj %s ...\n"
 
-#, c-format
 #~ msgid "Error loading %s\n"
 #~ msgstr "Gabim gjatë ngarkimit të %s\n"
 
-#, c-format
 #~ msgid "Loaded %d plugins with %d %s.\n"
 #~ msgstr "U ngarkuan %d plugins me %d %s.\n"

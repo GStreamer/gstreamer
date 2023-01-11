@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -870,13 +870,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "Geen eienskap \"%s\" in element \"%s\""
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -884,6 +883,18 @@ msgstr "Lêer \"%s\" is 'n sok."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "geen element \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "kon nie eienskap \"%s\" in element \"%s\" stel na \"%s\" nie"
 
 msgid "Delayed linking failed."
@@ -904,10 +915,6 @@ msgstr "Kon nie %s aan %s verbind nie"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "Kon nie %s aan %s verbind nie"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "geen element \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

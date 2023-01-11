@@ -108,7 +108,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2019-01-29 09:16+0100\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -1026,13 +1026,12 @@ msgstr "il collegamento non ha alcuna sorgente [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "il collegamento non ha alcun sink [source=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "nessuna proprietà «%s» nell'elemento «%s»"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -1040,6 +1039,18 @@ msgstr "Il file «%s» è un socket."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "nessun elemento «%s»"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "impossibile impostare la proprietà «%s» nell'elemento «%s» a «%s»"
 
 msgid "Delayed linking failed."
@@ -1062,10 +1073,6 @@ msgstr "impossibile collegare %s a %s con caps %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "impossibile collegare %s a %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "nessun elemento «%s»"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

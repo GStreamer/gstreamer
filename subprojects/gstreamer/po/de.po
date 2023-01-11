@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-23 01:32+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2021-11-06 22:51+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -897,14 +897,12 @@ msgstr "Verknüpfung hat keine Quelle [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "Verknüpfung hat kein Ziel [sink=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "Keine Eigenschaft »%s« im Element »%s«"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr ""
-"Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -913,6 +911,20 @@ msgstr "Element »%s« ist kein GstPreset"
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "Die Voreinstellung »%s« konnte nicht im Element »%s« gesetzt werden"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "Kein Element »%s«"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr ""
+"Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr ""
+"Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
 
 msgid "Delayed linking failed."
 msgstr "Verzögertes Verknüpfen ist fehlgeschlagen."
@@ -936,10 +948,6 @@ msgstr "%s konnte nicht mit %s mittels Fähigkeit %s verknüpft werden."
 #, c-format
 msgid "could not link %s to %s"
 msgstr "%s konnte nicht mit %s verknüpft werden"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "Kein Element »%s«"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

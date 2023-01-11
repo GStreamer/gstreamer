@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -874,13 +874,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "no property \"%s\" in element \"%s\""
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -888,6 +887,18 @@ msgstr ""
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "no element \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "could not set property \"%s\" in element \"%s\" to \"%s\""
 
 msgid "Delayed linking failed."
@@ -908,10 +919,6 @@ msgstr "could not link %s to %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "could not link %s to %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "no element \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

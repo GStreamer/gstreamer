@@ -27,7 +27,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2021-09-26 21:45+0800\n"
 "Last-Translator: Wen Liao <wen.cf83@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
@@ -865,13 +865,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "“%2$s” 元件沒有 “%1$s” 屬性"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "無法將 “%2$s” element的 “%1$s” 屬性設定為 “%3$s”"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -879,6 +878,18 @@ msgstr "“%s” 是一個 socket。"
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "無法將 “%2$s” element的 “%1$s” 屬性設定為 “%3$s”"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "“%s” element不存在"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "無法將 “%2$s” element的 “%1$s” 屬性設定為 “%3$s”"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "無法將 “%2$s” element的 “%1$s” 屬性設定為 “%3$s”"
 
 msgid "Delayed linking failed."
@@ -899,10 +910,6 @@ msgstr "無法連接 %s 和 %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "無法連接 %s 和 %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "“%s” element不存在"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

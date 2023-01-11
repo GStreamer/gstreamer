@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -893,13 +893,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "δεν υπάρχει ιδιότητα «%s» στο στοιχείο «%s»"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -907,6 +906,18 @@ msgstr "Το αρχείο «%s» είναι μια υποδοχή."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "δεν υπάρχει στοιχείο «%s»"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "αδυναμία ορισμού ιδιότητας «%s» στο στοιχείο «%s» σε «%s»"
 
 msgid "Delayed linking failed."
@@ -927,10 +938,6 @@ msgstr "αδυναμία σύνδεσης %s σε %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "αδυναμία σύνδεσης %s σε %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "δεν υπάρχει στοιχείο «%s»"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

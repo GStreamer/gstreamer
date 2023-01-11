@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -881,13 +881,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "no hi ha cap propietat «%s» en l'element «%s»"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "no s'ha pogut establir la propietat «%s» en l'element «%s» a «%s»"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -895,6 +894,18 @@ msgstr "El fitxer «%s» és un sòcol."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "no s'ha pogut establir la propietat «%s» en l'element «%s» a «%s»"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "no hi ha cap element «%s»"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "no s'ha pogut establir la propietat «%s» en l'element «%s» a «%s»"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "no s'ha pogut establir la propietat «%s» en l'element «%s» a «%s»"
 
 msgid "Delayed linking failed."
@@ -915,10 +926,6 @@ msgstr "no s'ha pogut enllaçar %s a %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "no s'ha pogut enllaçar %s a %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "no hi ha cap element «%s»"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

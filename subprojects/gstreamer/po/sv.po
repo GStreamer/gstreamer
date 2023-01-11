@@ -1,25 +1,25 @@
 # Swedish messages for gstreamer.
-# Copyright © 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2014, 2015, 2016, 2017, 2019, 2022 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009, 2010, 2011.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.15.1\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2019-02-05 18:22+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"PO-Revision-Date: 2022-10-27 01:35+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.1\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.1.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "Skriv ut GStreamer-versionen"
@@ -56,7 +56,7 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
-"Ändrar färgläggning av felsökningsutskrifter. Möjliga alternativ: off, on, "
+"Ändrar färgläggning av felsökningsutskrifter. Möjliga lägen: off, on, "
 "disable, auto, unix"
 
 msgid "Disable debugging"
@@ -92,14 +92,14 @@ msgid "Disable spawning a helper process while scanning the registry"
 msgstr "Inaktivera start av en hjälpprocess vid avsökning av registret"
 
 msgid "GStreamer Options"
-msgstr "GStreamer-alternativ"
+msgstr "GStreamer-flaggor"
 
 msgid "Show GStreamer Options"
-msgstr "Visa GStreamer-alternativ"
+msgstr "Visa GStreamer-flaggor"
 
 #, c-format
 msgid "Unknown option"
-msgstr "Okänt alternativ"
+msgstr "Okänt flagga"
 
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
@@ -416,7 +416,7 @@ msgid "copyright notice of the data"
 msgstr "copyrightnotis för dessa data"
 
 msgid "copyright uri"
-msgstr "Uri till copyrightnotis"
+msgstr "copyright-uri"
 
 msgid "URI to the copyright notice of the data"
 msgstr "Uri till copyrightnotis för datat"
@@ -440,7 +440,7 @@ msgid "license of data"
 msgstr "licens för data"
 
 msgid "license uri"
-msgstr "Uri för licensinformation"
+msgstr "licens-uri"
 
 msgid "URI to the license of the data"
 msgstr "Uri till licens för datat"
@@ -838,7 +838,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "Ogiltig URI: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -871,20 +871,31 @@ msgstr "länk har ingen källa [utgång=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "länk har ingen utgång [källa=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ingen ”%s”-egenskap i elementet ”%s”"
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Elementet ”%s” är inte en GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "kunde inte ställa in förinställningen ”%s” i elementet ”%s”"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "inget ”%s”-element"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunde inte ställa in egenskapen ”%s” i elementet ”%s” till ”%s”"
 
 #, fuzzy, c-format
-msgid "Element \"%s\" is not a GstPreset"
-msgstr "Filen ”%s” är ett uttag."
-
-#, fuzzy, c-format
-msgid "could not set preset \"%s\" in element \"%s\""
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "kunde inte ställa in egenskapen ”%s” i elementet ”%s” till ”%s”"
 
 msgid "Delayed linking failed."
@@ -906,10 +917,6 @@ msgstr "kunde inte länka %s med %s med förmågor %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "kunde inte länka %s med %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "inget ”%s”-element"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
@@ -1070,9 +1077,8 @@ msgstr "föråldrad"
 msgid "controllable"
 msgstr "kontrollerbar"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "kontrollerbar"
+msgstr "villkorligt tillgänglig"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "ändringsbart i tillstånden NULL, READY, PAUSED eller PLAYING"
@@ -1158,7 +1164,6 @@ msgstr ""
 "Skriv ut uri-scheman som stöds, tillsammans med elementen som implementerar "
 "dem"
 
-#, fuzzy
 msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
@@ -1167,7 +1172,7 @@ msgstr ""
 "miljövariabeln ”GST_INSPECT_NO_COLORS” till vilket värde som helst."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Färgutmatning, även då utmatning inte skickas till en tty."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1307,7 +1312,7 @@ msgstr "Ett fel inträffade vid väntan på EOS\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Använd Windows högupplösta klocka, precision: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Mata ut taggar (även känt som metadata)"
@@ -1348,11 +1353,17 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"Skriv inte ut aktuell position för rörledningen. Om denna flagga inte är "
+"angivet, kommer positionen att skrivas ut då standard ut är en TTY. För att "
+"aktivera utskrift av position när standard ut inte är en TTY använd ”force-"
+"position”-flaggan."
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Tillåt utskrift av aktuell position av rörledningen även om standard ut inte "
+"är en TTY. Denna flagga har ingen effekt om flaggan ”no-position” är angiven."
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1371,9 +1382,10 @@ msgstr "FEL: ”pipeline”-elementet hittades inte.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ställer in rörledningen till PAUSED...\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Ställer in rörledningen till PAUSED...\n"
+msgstr ""
+"Misslyckades med att sätta rörledningen till PAUSED.\n"
+"\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Rörledningen lever och behöver inte PREROLL ...\n"
@@ -1390,19 +1402,15 @@ msgstr "Ställer in rörledningen till NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Frigör rörledning ...\n"
 
-#, c-format
 #~ msgid "Error creating pipe: %s\n"
 #~ msgstr "Fel vid stängning av rörledning: %s\n"
 
-#, c-format
 #~ msgid "Error forking: %s\n"
 #~ msgstr "Fel vid processgrening: %s\n"
 
-#, c-format
 #~ msgid "Error reading from console: %s\n"
 #~ msgstr "Fel vid läsning från konsol: %s\n"
 
-#, c-format
 #~ msgid "Error writing to console: %s\n"
 #~ msgstr "Fel vid skrivning till konsol: %s\n"
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2021-09-25 16:56+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -873,13 +873,12 @@ msgstr "tautan tidak mempunyai sumber [sink=%s@%p]"
 msgid "link has no sink [source=%s@%p]"
 msgstr "tautan mempunyai buangan [source=%s@%p]"
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "tak ada properti \"%s\" di elemen \"%s\""
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -888,6 +887,18 @@ msgstr "Elemen \"%s\" bukat suatu GstPreset"
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
 msgstr "tak dapat mengatur pratata \"%s\" di elemen \"%s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "tak ada elemen \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
 
 msgid "Delayed linking failed."
 msgstr "Jeda penautan gagal."
@@ -911,10 +922,6 @@ msgstr "tidak dapat menautkan %s ke %s dengan caps %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "tidak dapat menautkan %s ke %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "tak ada elemen \"%s\""
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"

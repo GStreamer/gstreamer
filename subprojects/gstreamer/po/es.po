@@ -1,16 +1,17 @@
-# translation of gstreamer-0.10.32.2.po to Español
+# translation of gstreamer-1.19.2 to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2009, 2010, 2011.
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2011-10-02 15:45+0200\n"
-"Last-Translator: Jorge González González <aloriel@gmail.com>\n"
-"Language-Team: Spanish <es@li.org>\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
+"PO-Revision-Date: 2022-03-04 14:12-0600\n"
+"Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
+"Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -27,11 +28,10 @@ msgstr "Hacer todas las advertencias fatales"
 msgid "Print available debug categories and exit"
 msgstr "Imprimir categorías de depuración disponibles y salir"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Nivel de depuración predeterminado desde 1 (sólo error) hasta 5 (todo) o 0 "
+"Nivel de depuración predeterminado desde 1 (sólo error) hasta 9 (todo) o 0 "
 "sin salida"
 
 msgid "LEVEL"
@@ -55,6 +55,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Cambia el modo de color para la salida depurada. Modos posibles: off, on, "
+"disable, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Desactivar depuración"
@@ -110,7 +112,7 @@ msgstr ""
 "código de error a este error."
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr "Error interno de GStreamer: código no implementado"
+msgstr "Error interno de GStreamer: código no implementado."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
@@ -120,14 +122,13 @@ msgstr ""
 "publicar el error de mensaje correspondiente con el motivo del fallo."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr " "
+msgstr "Error interno de GStreamer: problema de relleno."
 
 msgid "Internal GStreamer error: thread problem."
 msgstr "Error interno de GStreamer: problema con las hebras."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Error interno de GStreamer: problema con la negociación."
+msgstr "Error de GStreamer: problema con la negociación."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Error interno de GStreamer: problema con los eventos."
@@ -144,9 +145,8 @@ msgstr "Error interno de GStreamer: problema con las etiquetas."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "A la instalación de GStreamer le falta un complemento."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Error interno de GStreamer: problema con el reloj."
+msgstr "Error de GStreamer: problema con el reloj."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -209,9 +209,8 @@ msgstr "No se pudieron obtener/establecer los ajustes de/en el recurso."
 msgid "No space left on the resource."
 msgstr "No queda espacio disponible en el recurso."
 
-#, fuzzy
 msgid "Not authorized to access resource."
-msgstr "No queda espacio disponible en el recurso."
+msgstr "No se autorizó el acceso al recurso."
 
 msgid "GStreamer encountered a general stream error."
 msgstr "GStreamer encontró un error general de flujo."
@@ -465,13 +464,13 @@ msgid "person(s) who composed the recording"
 msgstr "persona(s) que compusieron la grabación"
 
 msgid "conductor"
-msgstr ""
+msgstr "conductor"
 
 msgid "conductor/performer refinement"
-msgstr ""
+msgstr "refinamiento de conductor/intérprete"
 
 msgid "duration"
-msgstr "duracio"
+msgstr "duración"
 
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "duración en unidades de tiempo GStreamer (nanosegundos)"
@@ -581,16 +580,14 @@ msgstr "valor del nivel de referencia de ganancia de la pista y del álbum"
 msgid "language code"
 msgstr "código de idioma"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "código de idioma para este flujo, ajustándose a ISO-639-1"
+msgstr "código de idioma para este flujo, ajustándose a ISO-639-1 o ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "código de idioma"
+msgstr "nombre de idioma"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "nombre en forma libre del idioma en que está este flujo"
 
 msgid "image"
 msgstr "imagen"
@@ -682,7 +679,6 @@ msgstr "ciudad (nombre en inglés) donde se ha grabado o producido el medio"
 msgid "geo location sublocation"
 msgstr "sububicación de la geolocalización"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -822,28 +818,30 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Cómo se debería rotar o voltear la imagen antes de mostrarla"
 
 msgid "publisher"
-msgstr ""
+msgstr "editor"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Nombre de la etiqueta o editor"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "interpretado-por"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
+"Información acerca de la gente detrás de una remezcla e interpretaciones "
+"similares"
 
 msgid "midi-base-note"
-msgstr ""
+msgstr "nota-base-midi"
 
 msgid "Midi note number of the audio track."
-msgstr ""
+msgstr "Número de nota midi de la pista de audio."
 
 msgid "private-data"
-msgstr ""
+msgstr "datos-privados"
 
 msgid "Private data"
-msgstr ""
+msgstr "Datos privados"
 
 #. separator between two strings
 msgid ", "
@@ -851,15 +849,15 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "URI inválido: %s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "No se encontró un manejador de URI para el protocolo %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "No se admite el esquema de URI '%s'"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -878,10 +876,13 @@ msgstr ""
 #. ******************************************************************************************
 #, c-format
 msgid "link has no source [sink=%s@%p]"
-msgstr ""
+msgstr "el enlace no tiene fuente [sink=%s@%p]"
 
 #, c-format
 msgid "link has no sink [source=%s@%p]"
+msgstr "el enlace no tiene sumidero [fuente=%s@%p]"
+
+msgid "No such property."
 msgstr ""
 
 #, c-format
@@ -889,47 +890,53 @@ msgid "no property \"%s\" in element \"%s\""
 msgstr "no hay una propiedad «%s» en el elemento «%s»"
 
 #, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "no se pudo establecer la propiedad «%s» en el elemento «%s» a «%s»"
-
-#, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "El archivo «%s» es un socket."
-
-#, fuzzy, c-format
-msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "no se pudo establecer la propiedad «%s» en el elemento «%s» a «%s»"
-
-msgid "Delayed linking failed."
-msgstr ""
-
-#, fuzzy, c-format
-msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "no se pudo enlazar %s a %s"
-
-#, fuzzy, c-format
-msgid "could not link %s to %s, neither element can handle caps %s"
-msgstr "no se pudo enlazar el elemento sumidero para el URI «%s»"
-
-#, fuzzy, c-format
-msgid "could not link %s to %s with caps %s"
-msgstr "no se pudo enlazar %s a %s"
+msgstr "El elemento «%s» no es un GstPreset"
 
 #, c-format
-msgid "could not link %s to %s"
-msgstr "no se pudo enlazar %s a %s"
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "no se pudo establecer la propiedad «%s» en el elemento «%s»"
 
 #, c-format
 msgid "no element \"%s\""
 msgstr "no hay un elemento «%s»"
 
 #, c-format
-msgid "unexpected reference \"%s\" - ignoring"
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "no se pudo establecer la propiedad «%s» en el elemento «%s» a «%s»"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "no se pudo establecer la propiedad «%s» en el elemento «%s» a «%s»"
+
+msgid "Delayed linking failed."
+msgstr "Falló el enlazado retrasado."
+
+#, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "no se pudo enlazar %s a %s, %s no puede manejar la capacidad %s"
+
+#, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
 msgstr ""
+"no se pudo enlazar %s a %s, ninguno de los elementos puede manejar la "
+"capacidad %s"
+
+#, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "no se pudo enlazar %s a %s con la capacidad %s"
+
+#, c-format
+msgid "could not link %s to %s"
+msgstr "no se pudo enlazar %s a %s"
+
+#, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr "referencia \"%s\" inesperada - se descarta"
 
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr ""
+msgstr "referencia de relleno \"%s\" inesperada - se descarta"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -944,21 +951,21 @@ msgid "no source element for URI \"%s\""
 msgstr "no existe un elemento origen para el URI «%s»"
 
 msgid "syntax error"
-msgstr ""
+msgstr "error de sintaxis"
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "el binario especificado «%s» está vacío, no está permitido"
 
-#, fuzzy, c-format
+#, c-format
 msgid "no bin \"%s\", unpacking elements"
-msgstr "no existe el binario «%s», omitiendo"
+msgstr "no existe el binario «%s», desempacando elementos"
 
 msgid "empty pipeline not allowed"
 msgstr "no se permite un conducto vacío"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "La construcción del conducto es inválida, por favor agregue colas."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Se están desechando muchos búferes."
@@ -973,7 +980,7 @@ msgid "Internal clock error."
 msgstr "Error en el reloj interno."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Fallo al asociar el almacenamiento."
 
 msgid "Filter caps"
 msgstr "Filtro de capacidades"
@@ -987,10 +994,10 @@ msgstr ""
 "proporcionado."
 
 msgid "Caps Change Mode"
-msgstr ""
+msgstr "Modo de cambio de capacidades"
 
 msgid "Filter caps change behaviour"
-msgstr ""
+msgstr "Filtrar la conducta de cambio de capacidades"
 
 msgid "No Temp directory specified."
 msgstr "No se especificó un directorio temporal."
@@ -1044,7 +1051,7 @@ msgid "Failed after iterations as requested."
 msgstr "Falló después de las iteraciones, como se pidió."
 
 msgid "eos-after and error-after can't both be defined."
-msgstr ""
+msgstr "no se puede definir al mismo tiempo eos-after y error-after."
 
 msgid "caps"
 msgstr "capacidades"
@@ -1061,16 +1068,15 @@ msgstr "forzar las capacidades"
 msgid "force caps without doing a typefind"
 msgstr "forzar las capacidades sin hacer un «typefind»"
 
-#, fuzzy
 msgid "Stream doesn't contain enough data."
-msgstr "El flujo no contiene datos."
+msgstr "El flujo no contiene suficientes datos."
 
 msgid "Stream contains no data."
 msgstr "El flujo no contiene datos."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Interfaces implementados:\n"
+msgstr "%sInterfaces implementados%s:\n"
 
 msgid "readable"
 msgstr "legible"
@@ -1079,14 +1085,13 @@ msgid "writable"
 msgstr "escribible"
 
 msgid "deprecated"
-msgstr ""
+msgstr "obsoleto"
 
 msgid "controllable"
 msgstr "controlable"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "controlable"
+msgstr "condicionalmente disponible"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "intercambiable entre los estados NULL, READY, PAUSED o PLAYING"
@@ -1100,9 +1105,9 @@ msgstr "intercambiable sólo entre los estados NULL o READY"
 msgid "Blacklisted files:"
 msgstr "Archivos en la lista negra:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Conteo total:"
+msgstr "%sConteo total%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1152,14 +1157,18 @@ msgid ""
 "A slashes ('/') separated list of types of elements (also known as klass) to "
 "list. (unordered)"
 msgstr ""
+"Una lista separada por barras ('/') de tipos de elementos (también conocidos "
+"como klass) a la lista. (sin orden)"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Verificar si existe el elemento o plugin especificado"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Al verificar si existe un elemento o plugin, también verifica que su versión "
+"sea al menos la versión especificada"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
@@ -1169,9 +1178,11 @@ msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
 msgstr ""
+"Desactiva los colores en la salida. También puede lograr lo mismo definiendo "
+"la variable de ambiente 'GST_INSPECT_NO_COLORS' con cualquier valor."
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "Color en la salida, aún cuando no se envíe a una terminal."
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1228,17 +1239,16 @@ msgstr "ETIQUETA ENCONTRADA      : encontrada por el objeto «%s».\n"
 msgid "FOUND TAG\n"
 msgstr "ETIQUETA ENCONTRADA\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "ETIQUETA ENCONTRADA      : encontrada por el elemento «%s».\n"
+msgstr "TABLA DE CONTENIDOS ENCONTRADA : encontrada por el elemento «%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "ETIQUETA ENCONTRADA      : encontrada por el objeto «%s».\n"
+msgstr "TABLA DE CONTENIDOS ENCONTRADA : encontrada por el objeto «%s».\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "ETIQUETA ENCONTRADA\n"
+msgstr "TABLA DE CONTENIDOS ENCONTRADA\n"
 
 #, c-format
 msgid ""
@@ -1258,9 +1268,8 @@ msgstr "El conducto está PREPARADO …\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Preparado, esperando a llenar el búfer para terminar…\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Preparado, esperando a llenar el búfer para terminar…\n"
+msgstr "Preparado, esperando por avance para terminar…\n"
 
 msgid "buffering..."
 msgstr "almacenando en el búfer…"
@@ -1286,27 +1295,26 @@ msgstr "Estableciendo el estado a %s según lo solicitó %s…\n"
 msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Interrumpir: parando el conducto …\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interrumpir: parando el conducto …\n"
+msgstr "Interrupción al esperar EOS - parando el conducto ...\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr "EOS al apagar activado; Forzando EOS en la tubería\n"
+msgstr "EOS al apagar activado; Forzando EOS en el conducto\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Esperando a EOS…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Progreso: (%s) %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "no hay un elemento «%s»"
+msgstr "Falta un elemento: «%s»\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "ADVERTENCIA: del elemento %s: %s\n"
+msgstr "Se obtiene contexto del elemento '%s': %s=%s\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ERROR: el conducto no quiere prepararse.\n"
@@ -1316,13 +1324,13 @@ msgstr "Ocurrió un error al esperar a EOS\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Usar el reloj de alta resolución de Windows, precisión: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr "Etiquetas de salida (también conocidos como metadatos)"
+msgstr "Etiquetas (también conocidos como metadatos)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Tabla de contenido (capítulos y ediciones)"
 
 msgid "Output status information and property notifications"
 msgstr "Información de estado de la salida y notificaciones de las propiedades"
@@ -1337,15 +1345,17 @@ msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"No mostrar la información de estado para la propiedad especificada si se "
+"activa la salida detallada (se puede usar varias veces)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NOMBRE-PROPIEDAD"
 
 msgid "Do not install a fault handler"
 msgstr "No instalar un manejador predeterminado"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr "Forzar EOS en las fuentes antes de cerrar la tubería"
+msgstr "Forzar EOS en las fuentes antes de cerrar el conducto"
 
 msgid "Gather and print index statistics"
 msgstr "Obtener y mostrar el índice de las estadísticas"
@@ -1355,11 +1365,18 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"No muestra la posición actual del conducto. Si no se especifica esta opción, "
+"se mostrará la posición cuando la salida estándard sea una terminal. Para "
+"mostrar la posición cuando la salida estándard no sea una terminal, use la "
+"opción \"force-position\""
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Permite mostrar la posición actual del conducto aún si la salida estándard "
+"no es una terminal. Esta opción no tiene efecto si se especificó la opción "
+"\" no-position\""
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1378,9 +1395,8 @@ msgstr "ERROR: el elemento «conducto» no se encontró.\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Estableciendo el conducto a PAUSA …\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Estableciendo el conducto a PAUSA …\n"
+msgstr "Falló al establecer el conducto a PAUSA …\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "El conducto está vivo y no necesita PREPARARSE …\n"
@@ -1395,7 +1411,40 @@ msgid "Setting pipeline to NULL ...\n"
 msgstr "Estableciendo el conducto a NULL …\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr "Liberando la tubería…\n"
+msgstr "Liberando el conducto…\n"
+
+#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
+#~ msgstr "ERROR: El conducto no quiere pausarse.\n"
+
+#~ msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
+#~ msgstr "EOS al apagar activado -- esperando EOS después del Error\n"
+
+#~ msgid "Setting pipeline to READY ...\n"
+#~ msgstr "Estableciando el conducto a PREPARADO …\n"
+
+#~ msgid "Error creating pipe: %s\n"
+#~ msgstr "Error al crear la tubería: %s\n"
+
+#~ msgid "Error forking: %s\n"
+#~ msgstr "Error al crear proceso: %s\n"
+
+#~ msgid "Error reading from console: %s\n"
+#~ msgstr "Error al leer de la consola: %s\n"
+
+#~ msgid "Error writing to console: %s\n"
+#~ msgstr "Error al escribir a la consola: %s\n"
+
+#~ msgid "bin"
+#~ msgstr "binario"
+
+#~ msgid "Internal data stream error."
+#~ msgstr "Error interno de flujo de datos."
+
+#~ msgid "Do not output status information of TYPE"
+#~ msgstr "No sacar la salida de la información de estado del TIPO"
+
+#~ msgid "TYPE1,TYPE2,..."
+#~ msgstr "TIPO1,TIPO2,…"
 
 #~ msgid "link without source element"
 #~ msgstr "enlace sin elemento origen"
@@ -1403,12 +1452,8 @@ msgstr "Liberando la tubería…\n"
 #~ msgid "link without sink element"
 #~ msgstr "enlace sin elemento sumidero"
 
-#, c-format
 #~ msgid "no element to link URI \"%s\" to"
 #~ msgstr "no existe un elemento con el que enlazar el URI «%s»"
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Error interno de flujo de datos."
 
 #~ msgid "maximum"
 #~ msgstr "máximo"
@@ -1417,11 +1462,9 @@ msgstr "Liberando la tubería…\n"
 #~ msgstr ""
 #~ "Uso: gst-xmllaunch <archivo.xml> [ propiedad.del.elemento=valor … ]\n"
 
-#, c-format
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "ERROR: falló el análisis del archivo xml «%s».\n"
 
-#, c-format
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 #~ msgstr ""
 #~ "ERROR: no existe el elemento de nivel superior de la segmentación en el "
@@ -1432,20 +1475,12 @@ msgstr "Liberando la tubería…\n"
 #~ "ADVERTENCIA: en este momento sólo se soporta un elemento de nivel "
 #~ "superior.\n"
 
-#, c-format
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr ""
 #~ "ERROR: no se pudo analizar el argumento %d de la línea de comandos: %s.\n"
 
-#, c-format
 #~ msgid "WARNING: element named '%s' not found.\n"
 #~ msgstr "ADVERTENCIA: no se encontró el elemento llamado «%s».\n"
-
-#~ msgid "Do not output status information of TYPE"
-#~ msgstr "No sacar la salida de la información de estado del TIPO"
-
-#~ msgid "TYPE1,TYPE2,..."
-#~ msgstr "TIPO1,TIPO2,…"
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Guardar la representación xml del conducto a un ARCHIVO y salir"
@@ -1458,15 +1493,6 @@ msgstr "Liberando la tubería…\n"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Imprimir la traza de asignaciones (si se activó al compilar)"
-
-#~ msgid "ERROR: Pipeline doesn't want to pause.\n"
-#~ msgstr "ERROR: El conducto no quiere pausarse.\n"
-
-#~ msgid "Setting pipeline to READY ...\n"
-#~ msgstr "Estableciando el conducto a PREPARADO …\n"
-
-#~ msgid "Error re-scanning registry %s: %s"
-#~ msgstr "Error al volver a escanear el registro %s: %s"
 
 #~ msgid "Error re-scanning registry %s"
 #~ msgstr "Error al volver a escanear el registro %s"

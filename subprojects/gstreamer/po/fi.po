@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:40+0000\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -879,13 +879,12 @@ msgstr ""
 msgid "link has no sink [source=%s@%p]"
 msgstr ""
 
+msgid "No such property."
+msgstr ""
+
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "ominaisuutta ”%s” ei ole elementissä ”%s”"
-
-#, c-format
-msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”%3$s”"
 
 #, fuzzy, c-format
 msgid "Element \"%s\" is not a GstPreset"
@@ -893,6 +892,18 @@ msgstr "Tiedosto ”%s” on pistoke."
 
 #, fuzzy, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”%3$s”"
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "ei elementtiä ”%s”"
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”%3$s”"
+
+#, fuzzy, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr "elementin ”%2$s” ominaisuutta ”%1$s” ei voitu asettaa arvoon ”%3$s”"
 
 msgid "Delayed linking failed."
@@ -913,10 +924,6 @@ msgstr "elementtiä %s ei voitu linkittää elementtiin %s"
 #, c-format
 msgid "could not link %s to %s"
 msgstr "elementtiä %s ei voitu linkittää elementtiin %s"
-
-#, c-format
-msgid "no element \"%s\""
-msgstr "ei elementtiä ”%s”"
 
 #, c-format
 msgid "unexpected reference \"%s\" - ignoring"
