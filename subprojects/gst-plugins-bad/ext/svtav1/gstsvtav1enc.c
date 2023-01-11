@@ -44,24 +44,12 @@ static gboolean gst_svtav1enc_send_eos (GstSvtAv1Enc * svtav1enc);
 static GstFlowReturn gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc *
     svtav1enc, gboolean closing_encoder, gboolean output_frames);
 
-static gboolean gst_svtav1enc_open (GstVideoEncoder * encoder);
-static gboolean gst_svtav1enc_close (GstVideoEncoder * encoder);
-static gboolean gst_svtav1enc_start (GstVideoEncoder * encoder);
 static gboolean gst_svtav1enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_svtav1enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
 static GstFlowReturn gst_svtav1enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static GstFlowReturn gst_svtav1enc_finish (GstVideoEncoder * encoder);
-static GstFlowReturn gst_svtav1enc_pre_push (GstVideoEncoder * encoder,
-    GstVideoCodecFrame * frame);
-static GstCaps *gst_svtav1enc_getcaps (GstVideoEncoder * encoder,
-    GstCaps * filter);
-static gboolean gst_svtav1enc_sink_event (GstVideoEncoder * encoder,
-    GstEvent * event);
-static gboolean gst_svtav1enc_src_event (GstVideoEncoder * encoder,
-    GstEvent * event);
-static gboolean gst_svtav1enc_negotiate (GstVideoEncoder * encoder);
 static gboolean gst_svtav1enc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
 static gboolean gst_svtav1enc_flush (GstVideoEncoder * encoder);
@@ -163,21 +151,12 @@ gst_svtav1enc_class_init (GstSvtAv1EncClass * klass)
   gobject_class->get_property = gst_svtav1enc_get_property;
   gobject_class->dispose = gst_svtav1enc_dispose;
   gobject_class->finalize = gst_svtav1enc_finalize;
-  video_encoder_class->open = GST_DEBUG_FUNCPTR (gst_svtav1enc_open);
-  video_encoder_class->close = GST_DEBUG_FUNCPTR (gst_svtav1enc_close);
-  video_encoder_class->start = GST_DEBUG_FUNCPTR (gst_svtav1enc_start);
   video_encoder_class->stop = GST_DEBUG_FUNCPTR (gst_svtav1enc_stop);
   video_encoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_svtav1enc_set_format);
   video_encoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_svtav1enc_handle_frame);
   video_encoder_class->finish = GST_DEBUG_FUNCPTR (gst_svtav1enc_finish);
-  video_encoder_class->pre_push = GST_DEBUG_FUNCPTR (gst_svtav1enc_pre_push);
-  video_encoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_svtav1enc_getcaps);
-  video_encoder_class->sink_event =
-      GST_DEBUG_FUNCPTR (gst_svtav1enc_sink_event);
-  video_encoder_class->src_event = GST_DEBUG_FUNCPTR (gst_svtav1enc_src_event);
-  video_encoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_svtav1enc_negotiate);
   video_encoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_svtav1enc_propose_allocation);
   video_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_svtav1enc_flush);
@@ -702,38 +681,6 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
 }
 
 static gboolean
-gst_svtav1enc_open (GstVideoEncoder * encoder)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "open");
-
-  return TRUE;
-}
-
-static gboolean
-gst_svtav1enc_close (GstVideoEncoder * encoder)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "close");
-
-  return TRUE;
-}
-
-static gboolean
-gst_svtav1enc_start (GstVideoEncoder * encoder)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "start");
-  /* starting the encoder is done in set_format,
-   * once caps are fully negotiated */
-
-  return TRUE;
-}
-
-static gboolean
 gst_svtav1enc_stop (GstVideoEncoder * encoder)
 {
   GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
@@ -836,68 +783,6 @@ gst_svtav1enc_finish (GstVideoEncoder * encoder)
   gst_svtav1enc_send_eos (svtav1enc);
 
   return gst_svtav1enc_dequeue_encoded_frames (svtav1enc, TRUE, TRUE);
-}
-
-static GstFlowReturn
-gst_svtav1enc_pre_push (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "pre_push");
-
-  return GST_FLOW_OK;
-}
-
-static GstCaps *
-gst_svtav1enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "getcaps");
-
-  GstCaps *sink_caps =
-      gst_static_pad_template_get_caps (&gst_svtav1enc_sink_pad_template);
-  GstCaps *ret =
-      gst_video_encoder_proxy_getcaps (GST_VIDEO_ENCODER (svtav1enc),
-      sink_caps, filter);
-  gst_caps_unref (sink_caps);
-
-  return ret;
-}
-
-static gboolean
-gst_svtav1enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "sink_event");
-
-  return
-      GST_VIDEO_ENCODER_CLASS (gst_svtav1enc_parent_class)->sink_event
-      (encoder, event);
-}
-
-static gboolean
-gst_svtav1enc_src_event (GstVideoEncoder * encoder, GstEvent * event)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "src_event");
-
-  return
-      GST_VIDEO_ENCODER_CLASS (gst_svtav1enc_parent_class)->src_event (encoder,
-      event);
-}
-
-static gboolean
-gst_svtav1enc_negotiate (GstVideoEncoder * encoder)
-{
-  GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
-
-  GST_DEBUG_OBJECT (svtav1enc, "negotiate");
-
-  return
-      GST_VIDEO_ENCODER_CLASS (gst_svtav1enc_parent_class)->negotiate(encoder);
 }
 
 static gboolean
