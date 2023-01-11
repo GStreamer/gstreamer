@@ -792,7 +792,9 @@ gst_svtav1enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 
   GST_DEBUG_OBJECT (svtav1enc, "propose_allocation");
 
-  return TRUE;
+  gst_query_add_allocation_meta(query, GST_VIDEO_META_API_TYPE, NULL);
+
+  return GST_VIDEO_ENCODER_CLASS (gst_svtav1enc_parent_class)->propose_allocation (encoder, query);
 }
 
 static gboolean
