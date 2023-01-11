@@ -565,7 +565,6 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
   EbSvtIOFormat *input_picture_buffer =
       (EbSvtIOFormat *) svtav1enc->input_buf->p_buffer;
   GstVideoFrame video_frame;
-  EbPrivDataNode private_data;
 
   if (!gst_video_frame_map (&video_frame, &svtav1enc->state->info,
           frame->input_buffer, GST_MAP_READ)) {
@@ -591,12 +590,7 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
 
   /* Fill in Buffers Header control data */
   input_buffer->flags = 0;
-  // private data is copied in svt_av1_enc_send_picture
-  private_data.node_type = PRIVATE_DATA;
-  private_data.size = sizeof (GstVideoCodecFrame);
-  private_data.data = (void *) frame;
-  private_data.next = NULL;
-  input_buffer->p_app_private = (void *) &private_data;
+  input_buffer->p_app_private = NULL;
   input_buffer->pts = frame->pts;
   input_buffer->pic_type = EB_AV1_INVALID_PICTURE;
 
@@ -650,14 +644,6 @@ gst_svtav1enc_flush (GstVideoEncoder * encoder)
   return (ret != GST_FLOW_ERROR);
 }
 
-gint
-compare_video_code_frame_and_pts (const void *video_codec_frame_ptr,
-    const void *pts_ptr)
-{
-  return ((GstVideoCodecFrame *) video_codec_frame_ptr)->pts -
-      *((GstClockTime *) pts_ptr);
-}
-
 GstFlowReturn
 gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
     gboolean done_sending_pics, gboolean output_frames)
@@ -668,7 +654,6 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
 
   do {
     GList *pending_frames = NULL;
-    GList *frame_list_element = NULL;
     GstVideoCodecFrame *frame = NULL;
     EbBufferHeaderType *output_buf = NULL;
 
@@ -684,26 +669,8 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
       GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("encode failed"));
       return GST_FLOW_ERROR;
     } else if (res != EB_NoErrorEmptyQueue && output_frames && output_buf) {
-      /* if p_app_private is indeed propagated, get the frame through it
-       * it's not currently the case with SVT-AV1
-       * so we fallback on using its PTS to find it back */
-      if (output_buf->p_app_private) {
-        EbPrivDataNode *private_data = (EbPrivDataNode *) output_buf->p_app_private;
-        frame = (GstVideoCodecFrame *) private_data->data;
-      } else {
-        pending_frames = gst_video_encoder_get_frames (GST_VIDEO_ENCODER
-            (svtav1enc));
-        frame_list_element = g_list_find_custom (pending_frames,
-            &output_buf->pts, compare_video_code_frame_and_pts);
-
-        if (frame_list_element == NULL) {
-          GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("failed to get unfinished frame"));
-          return GST_FLOW_ERROR;
-        }
-
-        frame = (GstVideoCodecFrame *) frame_list_element->data;
-      }
-
+      // AV1 has no frame re-ordering so always get the oldest frame
+      frame = gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (svtav1enc));
       if (output_buf->pic_type == EB_AV1_KEY_PICTURE
           || output_buf->pic_type == EB_AV1_INTRA_ONLY_PICTURE) {
         GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
