@@ -661,7 +661,6 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
         gst_video_codec_frame_unref (frame);
         return ret;
       }
-      GST_BUFFER_FLAG_SET(frame->output_buffer, GST_BUFFER_FLAG_LIVE);
       gst_buffer_fill (frame->output_buffer, 0,
           output_buf->p_buffer, output_buf->n_filled_len);
 
