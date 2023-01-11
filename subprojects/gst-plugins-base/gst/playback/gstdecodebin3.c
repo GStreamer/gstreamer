@@ -816,6 +816,9 @@ set_input_group_id (DecodebinInput * input, guint32 * group_id)
       GST_DEBUG_OBJECT (dbin,
           "Setting current group id to %" G_GUINT32_FORMAT, *group_id);
       dbin->current_group_id = *group_id;
+    } else {
+      GST_DEBUG_OBJECT (dbin, "Returning global group id %" G_GUINT32_FORMAT,
+          dbin->current_group_id);
     }
     *group_id = dbin->current_group_id;
     return TRUE;
@@ -979,18 +982,30 @@ recalculate_group_id (GstDecodebin3 * dbin)
   guint32 common_group_id;
   GList *iter;
 
+  GST_DEBUG_OBJECT (dbin,
+      "recalculating, current global group_id: %" G_GUINT32_FORMAT,
+      dbin->current_group_id);
+
   common_group_id = dbin->main_input->group_id;
 
   for (iter = dbin->other_inputs; iter; iter = iter->next) {
     DecodebinInput *input = iter->data;
 
-    if (input->group_id != common_group_id)
-      return;
+    if (input->group_id != common_group_id) {
+      if (common_group_id != GST_GROUP_ID_INVALID)
+        return;
+
+      common_group_id = input->group_id;
+    }
   }
 
-  GST_DEBUG_OBJECT (dbin, "Updating global group_id to %" G_GUINT32_FORMAT,
-      common_group_id);
-  dbin->current_group_id = common_group_id;
+  if (common_group_id == dbin->current_group_id) {
+    GST_DEBUG_OBJECT (dbin, "Global group_id hasn't changed");
+  } else {
+    GST_DEBUG_OBJECT (dbin, "Updating global group_id to %" G_GUINT32_FORMAT,
+        common_group_id);
+    dbin->current_group_id = common_group_id;
+  }
 }
 
 /* CALL with INPUT LOCK */
@@ -1032,12 +1047,8 @@ gst_decodebin3_input_pad_unlink (GstPad * pad, GstPad * peer,
   GST_LOG_OBJECT (dbin, "Got unlink on input pad %" GST_PTR_FORMAT, pad);
 
   INPUT_LOCK (dbin);
-  if (input->parsebin == NULL) {
-    INPUT_UNLOCK (dbin);
-    return;
-  }
 
-  if (GST_PAD_MODE (pad) == GST_PAD_MODE_PULL) {
+  if (input->parsebin && GST_PAD_MODE (pad) == GST_PAD_MODE_PULL) {
     GST_DEBUG_OBJECT (dbin, "Resetting parsebin since it's pull-based");
     reset_input_parsebin (dbin, input);
   }
