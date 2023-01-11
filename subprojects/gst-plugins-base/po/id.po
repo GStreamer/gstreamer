@@ -5,19 +5,19 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2021-09-25 16:59+0700\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-03-21 21:06+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.4.2\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.0.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Tak dapat membuka divais untuk putar kembali dalam mode mono."
@@ -87,9 +87,6 @@ msgstr "Elemen '%s' hilang - cek instalasi GStreamer anda."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Tak dapat membuat elemen \"uridecodebin\"."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Tak dapat membuat elemen \"uridecodebin3\"."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Baik elemen autovideosink maupun %s hilang."
@@ -154,6 +151,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Tak ada penanganan URI yang diimplementasikan untuk \"%s\"."
 
 msgid "Source element is invalid."
+msgstr "Elemen sumber tidak sah."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Elemen sumber tidak sah."
 
 #, c-format
@@ -660,13 +661,16 @@ msgstr "ubah arah putar"
 msgid "enable/disable trick modes"
 msgstr "aktifkan/nonaktifkan mode trik"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "ubah urutan audio"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "ubah urutan video"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "ubah urutan subjudul"
 
 msgid "seek to beginning"
@@ -677,6 +681,10 @@ msgstr "tampilkan jalan pintas papan ketik"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Mode interaktif - kontrol papan ketik:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Memakai jam resolusi tinggi Windows, presisi: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Informasi status keluaran dan notifikasi properti"
@@ -692,6 +700,9 @@ msgstr "Sink audio yang digunakan (standar adalah autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Aktifkan putar balik tanpa jeda"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Acak senarai putar"
@@ -714,10 +725,10 @@ msgstr "Gunakan flag instant-rate-change eksperimental ketika mengubah laju"
 msgid "Do not print any output (apart from errors)"
 msgstr "Jangan cetak keluaran apapun (selain galat)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Gunakan pipeline playbin3"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(baku bervariasi tergantung pada variabel lingkungan 'USE_PLAYBIN')"
 
 msgid ""
@@ -737,3 +748,9 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Tekan ‘k’ untuk melihat daftar jalan pintas papan ketik.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Tak dapat membuat elemen \"uridecodebin3\"."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Gunakan pipeline playbin3"

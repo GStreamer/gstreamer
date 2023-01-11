@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.0.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2013-01-05 10:10+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -19,8 +19,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
-"%100==4 ? 3 : 0);\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || "
+"n%100==4 ? 3 : 0);\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Naprave ni mogoče odpreti za predvajanje v mono načinu."
@@ -89,9 +89,6 @@ msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
 msgid "Could not create \"uridecodebin\" element."
 msgstr ""
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr ""
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Predmeta autovideosink in %s manjkata."
@@ -156,6 +153,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Ni ročnika naslovov URI za \"%s\"."
 
 msgid "Source element is invalid."
+msgstr "Izvorni predmet je neveljaven."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Izvorni predmet je neveljaven."
 
 #, c-format
@@ -663,16 +664,14 @@ msgstr ""
 msgid "enable/disable trick modes"
 msgstr ""
 
-#, fuzzy
-msgid "change audio track"
-msgstr "Ta CD nima zvočnih sledi"
-
-msgid "change video track"
+msgid "change to previous/next audio track"
 msgstr ""
 
-#, fuzzy
-msgid "change subtitle track"
-msgstr "Oblika podnapisov Kate"
+msgid "change to previous/next video track"
+msgstr ""
+
+msgid "change to previous/next subtitle track"
+msgstr ""
 
 msgid "seek to beginning"
 msgstr ""
@@ -681,6 +680,10 @@ msgid "show keyboard shortcuts"
 msgstr ""
 
 msgid "Interactive mode - keyboard controls:"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
 
 msgid "Output status information and property notifications"
@@ -696,6 +699,9 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
 
 msgid "Enable gapless playback"
+msgstr ""
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
 msgstr ""
 
 msgid "Shuffle playlist"
@@ -719,10 +725,9 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
 
 msgid ""

@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012-2021
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2022
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2021-09-24 17:35+0200\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-02-08 16:20+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
 "Language: nb_NO\n"
@@ -47,11 +47,11 @@ msgid "Could not open device for recording in mono mode."
 msgstr "Kunne ikke åpne enhet for opptak i monomodus."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "Kunne ikke åpne enhet for opptak i stereomodus"
+msgstr "Kunne ikke åpne enhet for opptak i stereomodus."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Kunne ikke åpne enhet for opptak i %d-kanalmodus."
+msgstr "Kunne ikke åpne enhet for opptak i %d-kanalmodus"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -75,7 +75,7 @@ msgid "Could not read CD."
 msgstr "Kunne ikke lese CD."
 
 msgid "Could not determine type of stream"
-msgstr "Kunne ikke bestemme type strøm."
+msgstr "Kunne ikke bestemme type strøm"
 
 msgid "This appears to be a text file"
 msgstr "Dette ser ut som en tekstfil"
@@ -85,10 +85,7 @@ msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Mangler elementet «%s» - kontroller GStreamer-installasjonen."
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Kunne ikke opprette elementet «uridecodebin»"
-
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Kunne ikke opprette elementet «uridecodebin3»"
+msgstr "Kunne ikke opprette elementet «uridecodebin»."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -106,7 +103,7 @@ msgid "Both autovideosink and %s elements are not working."
 msgstr "Både autobildesluk- og %s-elementer virker ikke."
 
 msgid "The autovideosink element is not working."
-msgstr "autobildeslukelementet fungerer ikke."
+msgstr "Autobildeslukelementet fungerer ikke."
 
 msgid "Custom text sink element is not usable."
 msgstr "Tilpasset tekstslukelement er ikke brukbart."
@@ -119,7 +116,7 @@ msgid "Both autoaudiosink and %s elements are missing."
 msgstr "Både autolydsluk- og %s-elementer mangler."
 
 msgid "The autoaudiosink element is missing."
-msgstr "Autolydslukelementet mangler"
+msgstr "Autolydslukelementet mangler."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
@@ -133,7 +130,7 @@ msgid "The autoaudiosink element is not working."
 msgstr "Autolydslukelementet fungerer ikke."
 
 msgid "Can't play a text file without video or visualizations."
-msgstr "Kan ikke spille av en tekstfil uten film eller visualiseringer"
+msgstr "Kan ikke spille av en tekstfil uten film eller visualiseringer."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -156,6 +153,10 @@ msgstr "Ingen URI-håndterer er implementert for «%s»."
 msgid "Source element is invalid."
 msgstr "Kildeelement er ugyldig."
 
+#, fuzzy
+msgid "Source element has no pads."
+msgstr "Kildeelement er ugyldig."
+
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Feil ved sending av data til «%s:%d»."
@@ -167,7 +168,7 @@ msgid "This CD has no audio tracks"
 msgstr "Denne CDen har ingen lydspor"
 
 msgid "failed to draw pattern"
-msgstr "Kunne ikke tegne mønster"
+msgstr "kunne ikke tegne mønster"
 
 msgid "A GL error occurred"
 msgstr "En GL-feil oppsto"
@@ -391,7 +392,7 @@ msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albumartist-id"
 
 msgid "release group ID"
-msgstr "Utgivelsesgruppe-id"
+msgstr "utgivelsesgruppe-id"
 
 msgid "MusicBrainz release group ID"
 msgstr "MusicBrainz utgivelsesgruppe-id"
@@ -533,13 +534,13 @@ msgid "The source or type of device used for the capture"
 msgstr "Kilden eller type enhet som brukes for opptak"
 
 msgid "image horizontal ppi"
-msgstr "Bilde horisontalt (ppi)"
+msgstr "bilde horisontalt (ppi)"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr "Media (bilde/video) beregnet horisontal pikseltetthet i ppi"
 
 msgid "image vertical ppi"
-msgstr "Bilde vertikalt (ppi)"
+msgstr "bilde vertikalt (ppi)"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Media (bilde/video) beregnet vertikal piksel tetthet i ppi"
@@ -548,7 +549,7 @@ msgid "ID3v2 frame"
 msgstr "ID3v2-ramme"
 
 msgid "unparsed id3v2 tag frame"
-msgstr "Utolket id3v2 merkeramme"
+msgstr "utolket id3v2 merkeramme"
 
 msgid "musical-key"
 msgstr "musikal-tast"
@@ -617,7 +618,7 @@ msgid "q or ESC"
 msgstr "q eller ESC"
 
 msgid "quit"
-msgstr "Avslutt"
+msgstr "avslutt"
 
 msgid "> or n"
 msgstr "> eller n"
@@ -638,13 +639,13 @@ msgid "seek backward"
 msgstr "søk bakover"
 
 msgid "volume up"
-msgstr "Volum opp"
+msgstr "volum opp"
 
 msgid "volume down"
 msgstr "volum opp"
 
 msgid "toggle audio mute on/off"
-msgstr "Bytt lyd-demping av/på"
+msgstr "bytt lyd-demping av/på"
 
 msgid "increase playback rate"
 msgstr "øk avspillingshastigheten"
@@ -656,25 +657,32 @@ msgid "change playback direction"
 msgstr "endre avspillingsretningen"
 
 msgid "enable/disable trick modes"
-msgstr "aktivere/deaktivere trikse-moduser\t"
+msgstr "aktivere/deaktivere trikse-moduser"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "endre lydspor"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "endre videospor"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "endre undertekstspor"
 
 msgid "seek to beginning"
-msgstr "Søk til begynnelsen"
+msgstr "søk til begynnelsen"
 
 msgid "show keyboard shortcuts"
 msgstr "vis hurtigtaster"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktiv modus - tastaturkontroller:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Bruk Windows høyoppløselig klokke, presisjon: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Utdata-statusinformasjon og egenskapsvarslinger"
@@ -690,6 +698,9 @@ msgstr "Lyd-sink som skal brukes (standard er autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Aktiver sømløs avspilling"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Stokke spilleliste"
@@ -713,11 +724,11 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Ikke skriv noe utdata (bortsett fra feil)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Bruk playbin3-datakanal"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr "(standard varierer avhengig av miljøvariabelen «USE_PLAYBIN»"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
+msgstr "(standard varierer avhengig av miljøvariabelen «USE_PLAYBIN»)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -735,6 +746,12 @@ msgstr "Du må ha med minst ett filnavn eller nettadresse å spille."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Trykk «k» for å se en liste over hurtigtaster.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Kunne ikke opprette elementet «uridecodebin3»."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Bruk playbin3-datakanal"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Kunne ikke opprette elementet «decodebin3»"

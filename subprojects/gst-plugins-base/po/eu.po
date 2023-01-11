@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -89,10 +89,6 @@ msgstr "'%s' elementua falta da. Begiratu GStreamer ondo instalatua dagoen."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Ezin izan da sortu \"decodebin\" elementua."
 
-#, fuzzy
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Ezin izan da sortu \"decodebin\" elementua."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Autovideosink eta %s elementuak, biak, falta dira."
@@ -159,6 +155,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Ez da URI maneiatzailerik ezarri \"%s\"(r)entzat."
 
 msgid "Source element is invalid."
+msgstr "Iturburuko elementua baliogabea da."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Iturburuko elementua baliogabea da."
 
 #, c-format
@@ -669,16 +669,14 @@ msgstr ""
 msgid "enable/disable trick modes"
 msgstr ""
 
-#, fuzzy
-msgid "change audio track"
-msgstr "CD honek ez du audio-pistarik"
-
-msgid "change video track"
+msgid "change to previous/next audio track"
 msgstr ""
 
-#, fuzzy
-msgid "change subtitle track"
-msgstr "'Kate' azpititulu-formatua"
+msgid "change to previous/next video track"
+msgstr ""
+
+msgid "change to previous/next subtitle track"
+msgstr ""
 
 msgid "seek to beginning"
 msgstr ""
@@ -687,6 +685,10 @@ msgid "show keyboard shortcuts"
 msgstr ""
 
 msgid "Interactive mode - keyboard controls:"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
 
 msgid "Output status information and property notifications"
@@ -702,6 +704,9 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
 
 msgid "Enable gapless playback"
+msgstr ""
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
 msgstr ""
 
 msgid "Shuffle playlist"
@@ -725,10 +730,9 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
 
 msgid ""

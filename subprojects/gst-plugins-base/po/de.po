@@ -7,19 +7,19 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-23 01:33+0100\n"
-"PO-Revision-Date: 2021-11-06 23:14+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-04-27 23:22+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.0\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.0.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -90,9 +90,6 @@ msgstr ""
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Das Element »uridecodebin« konnte nicht erstellt werden."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Das Element »uridecodebin3« konnte nicht erstellt werden."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Beide Elemente »autovideosink« und »%s« fehlen."
@@ -158,6 +155,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Es ist kein URI-Handler für »%s« implementiert."
 
 msgid "Source element is invalid."
+msgstr "Das Quellelement ist ungültig."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Das Quellelement ist ungültig."
 
 #, c-format
@@ -667,13 +668,16 @@ msgstr "Wiedergaberichtung ändern"
 msgid "enable/disable trick modes"
 msgstr "Trickmodi einschalten/ausschalten"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "Audio-Titel wechseln"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "Videl-Titel wechseln"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "Untertitel wechseln"
 
 msgid "seek to beginning"
@@ -684,6 +688,10 @@ msgstr "Tastenkombinationen anzeigen"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interaktiver Modus - Tastatursteuerung:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Hochgenaue Windows-Uhr verwenden. Präzision: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Zustandsinformation und Eigenschaftsmitteilungen ausgeben"
@@ -699,6 +707,9 @@ msgstr "Zu verwendende Audio-Ziel (Voreinstellung ist »autoaudiosink«)"
 
 msgid "Enable gapless playback"
 msgstr "Lückenlose Wiedergabe einschalten"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Wiedergabeliste mischen"
@@ -723,10 +734,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Nichts ausgeben (außer Fehlermeldungen)"
 
-msgid "Use playbin3 pipeline"
-msgstr "playbin3-Weiterleitung verwenden"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(die Vorgabe hängt von der Umgebungsvariablen »USE_PLABIN« ab)"
 
 msgid ""
@@ -747,6 +758,12 @@ msgstr ""
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Geben Sie »k« ein, um die Liste der Tastenkombinationen zu sehen.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Das Element »uridecodebin3« konnte nicht erstellt werden."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "playbin3-Weiterleitung verwenden"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Das Element »decodebin3« konnte nicht erstellt werden."

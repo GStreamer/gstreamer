@@ -4,14 +4,14 @@
 #
 # Nicolas Velin <nicolas@velin.fr>, 2008.
 # Claude Paroz <claude@2xlibre.net>, 2008-2011.
-# Stéphane Aulery <lkppo@free.fr>, 2015-2016, 2019, 2021.
+# Stéphane Aulery <lkppo@free.fr>, 2015-2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-23 01:33+0100\n"
-"PO-Revision-Date: 2021-11-21 00:53+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-07-05 00:21+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -98,9 +98,6 @@ msgstr "Élément « %s » manquant — Vérifiez votre installation de GStrea
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Impossible de créer un élément « uridecodebin »."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Impossible de créer un élément « uridecodebin3 »."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Les éléments autovideosink et %s sont tous deux manquants."
@@ -165,6 +162,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Aucun gestionnaire d’URI implémenté pour « %s »."
 
 msgid "Source element is invalid."
+msgstr "Élément source non valide."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Élément source non valide."
 
 #, c-format
@@ -403,7 +404,7 @@ msgid "MusicBrainz album artist ID"
 msgstr "identifiant d’artiste de l’album MusicBrainz"
 
 msgid "release group ID"
-msgstr ""
+msgstr "relâcher l'identifiant de groupe"
 
 msgid "MusicBrainz release group ID"
 msgstr "identifiant de groupe de publication MusicBrainz"
@@ -421,10 +422,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "identifiant TRM MusicBrainz"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "identifiant AcoustID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "empreinte AcoustID (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "vitesse d’obturation de la capture"
@@ -592,17 +593,17 @@ msgstr ""
 "mais attendre l’ajout ou la suppression de périphèriques."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Inclure les périphériques des fournisseurs cachés."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volume : %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Sourdine : on"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Sourdine : off"
 
 msgid "Buffering..."
 msgstr "Mise en cache…"
@@ -669,7 +670,7 @@ msgid "volume down"
 msgstr "baisser le volume"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "basculer la sourdine on/off"
 
 msgid "increase playback rate"
 msgstr "augmenter la vitesse de lecture"
@@ -683,13 +684,16 @@ msgstr "modifier le sens de lecture"
 msgid "enable/disable trick modes"
 msgstr "activer / désactiver les astuces"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "modifier la piste audio"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "modifier la piste vidéo"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "modifier la piste de sous-titre"
 
 msgid "seek to beginning"
@@ -700,6 +704,10 @@ msgstr "afficher les raccourcis clavier"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Mode interactif — commandes clavier :"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Utiliser l'horloge haute précision de Windows : précision à %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Afficher des informations sur l’état et les notifications de propriété"
@@ -718,6 +726,9 @@ msgstr "Récepteur audio à utiliser (autoaudiosink par défaut)"
 msgid "Enable gapless playback"
 msgstr "Activer la lecture sans blanc"
 
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
+
 msgid "Shuffle playlist"
 msgstr "Mélanger les morceaux"
 
@@ -728,21 +739,23 @@ msgid "Volume"
 msgstr "Volume"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Position de départ en secondes."
 
 msgid "Playlist file containing input media files"
 msgstr "Fichier de lecture contenant des fichiers de media d’entrée"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"Utiliser l'indicateur de changement de débit instantané expérimental lors du "
+"changement de débit"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne pas afficher de message en sortie (sauf les erreurs)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Utiliser un pipeline playbin3"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
 "(la valeur par défaut dépend de la variable d'environnement USE_PLAYBIN)"
 
@@ -763,3 +776,9 @@ msgstr "Vous devez fournir au moins un nom de fichier ou une URI à lire."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Pressez k pour voir la liste des raccourcis clavier.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Impossible de créer un élément « uridecodebin3 »."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Utiliser un pipeline playbin3"

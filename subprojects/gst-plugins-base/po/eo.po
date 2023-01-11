@@ -1,15 +1,15 @@
 # Esperanto translation for gst-plugins-base.
-# Copyright (C) 2011, 2021 Free Software Foundation, Inc.
+# Copyright (C) 2011, 2021, 2023 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Kristjan SCHMIDT <kristjan.schmidt@googlemail.com>, 2011.
-# Felipe CASTRO <fefcas@gmail.com>, 2021.
+# Felipe Castro <fefcas@gmail.com>, 2021, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.16.0\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2021-03-17 12:05-0300\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2023-01-08 15:54-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
 "Language: eo\n"
@@ -87,9 +87,6 @@ msgstr "Mankas elemento '%s' - kontrolu vian instalon de GStreamer."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Ne eblis krei elementon \"uridecodebin\"."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Ne eblis krei elementon \"uridecodebin3\"."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Mankas elementoj: kaj autovideosink kaj %s."
@@ -154,6 +151,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Neniu URI-traktilo estas realigita por \"%s\"."
 
 msgid "Source element is invalid."
+msgstr "Font-elemento estas nevalida."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Font-elemento estas nevalida."
 
 #, c-format
@@ -373,37 +374,34 @@ msgid "MusicBrainz track ID"
 msgstr "Trak-ID ĉe MusicBrainz"
 
 msgid "artist ID"
-msgstr "artist-ID"
+msgstr "artista ID"
 
 msgid "MusicBrainz artist ID"
-msgstr "artist-ID ĉe MusicBrainz"
+msgstr "Artista ID ĉe MusicBrainz"
 
 msgid "album ID"
-msgstr "album-ID"
+msgstr "albuma ID"
 
 msgid "MusicBrainz album ID"
-msgstr "album-ID ĉe MusicBrainz"
+msgstr "Albuma ID ĉe MusicBrainz"
 
 msgid "album artist ID"
-msgstr "artist-ID de albumo"
+msgstr "artista ID de albumo"
 
 msgid "MusicBrainz album artist ID"
-msgstr "artist-ID de albumo ĉe MusicBrainz"
+msgstr "Album-artista ID ĉe MusicBrainz"
 
 msgid "release group ID"
-msgstr ""
+msgstr "eldongrupa ID"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "Trak-ID ĉe MusicBrainz"
+msgstr "Eldongrupa ID ĉe MusicBrainz"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "trak-ID"
+msgstr "eldontraka ID"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "Trak-ID ĉe MusicBrainz"
+msgstr "Eldontraka ID ĉe MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "trak-TRM ID"
@@ -412,10 +410,10 @@ msgid "MusicBrainz TRM ID"
 msgstr "TRM ID ĉe MusicBrainz"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "AcoustID ID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "AcoustID fingropremaĵo (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "kaptado de obturila rapido"
@@ -548,7 +546,7 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Aŭdvidaĵa intenca vertikala denso de bilderoj laŭ ppi"
 
 msgid "ID3v2 frame"
-msgstr "kadro ID3v2"
+msgstr "Kadro ID3v2"
 
 msgid "unparsed id3v2 tag frame"
 msgstr "kadro kun neanalizita etikedo id3v2"
@@ -570,17 +568,17 @@ msgstr ""
 "estu aldonataj/forigataj."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Inkluzivi aparatojn el kaŝitaj aparat-provizantoj."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Laŭteco: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Silento: aktiva"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Silento: malaktiva"
 
 msgid "Buffering..."
 msgstr "Bufrado..."
@@ -647,7 +645,7 @@ msgid "volume down"
 msgstr "malpliigi laŭtecon"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "ŝanĝi sona silento aktiva/malaktiva"
 
 msgid "increase playback rate"
 msgstr "pliigi lud-rapidon"
@@ -661,13 +659,16 @@ msgstr "ŝanĝi direkton de ludado"
 msgid "enable/disable trick modes"
 msgstr "aktivigi/malaktivigi artifikajn reĝimojn"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "ŝanĝi trakon de sono"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "ŝanĝi trakon de video"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "ŝanĝi trakon de subteksto"
 
 msgid "seek to beginning"
@@ -678,6 +679,10 @@ msgstr "montri fulmoklavojn"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Interega reĝimo - klavaraj regiloj:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Uzu Vindozan alt-distingivan horloĝon, distingivo: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Eligi informon pri stato kaj sciigojn pri atributoj"
@@ -694,6 +699,9 @@ msgstr "Sona konsumanto uzota (apriore estas autoaudiosink)"
 msgid "Enable gapless playback"
 msgstr "Aktivigas ludadon sen interrompoj"
 
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
+
 msgid "Shuffle playlist"
 msgstr "Hazarda ludlisto"
 
@@ -704,21 +712,21 @@ msgid "Volume"
 msgstr "Laŭteco"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Komenci pozicio laŭ sekundoj."
 
 msgid "Playlist file containing input media files"
 msgstr "Ludlista dosiero enhavanta enigajn aŭdvidaĵajn dosierojn"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
-msgstr ""
+msgstr "Uzi eksperimentan flagon instant-rate-change dum ŝanĝo de rapido"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne montru iun ajn eligon (krom eraroj)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Uzi ĉenstablon playbin3"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(aprioro varias depende de la medivariablo 'USE_PLAYBIN')"
 
 msgid ""
@@ -737,6 +745,12 @@ msgstr "Vi devas indiki minimume unu dosiernomon aŭ URI por ludi."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Premu 'k' por vidi liston de fulmoklavoj.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Ne eblis krei elementon \"uridecodebin3\"."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Uzi ĉenstablon playbin3"
 
 #~ msgid "Master"
 #~ msgstr "Ĉefa regilo"

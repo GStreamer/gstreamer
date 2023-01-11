@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -17,8 +17,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: KBabel 1.11.4\n"
-"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && (n"
-"%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"(n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Nepavyko atverti įrenginio monofoniniam grojimui."
@@ -89,10 +89,6 @@ msgstr "Trūksta elemento „%s“ - patikrinkite GStreamer įdiegimą."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Nepavyko sukurti „decodebin“ elemento."
 
-#, fuzzy
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Nepavyko sukurti „decodebin“ elemento."
-
 #, fuzzy, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Trūksta ir autovideosink, ir xvimagesink elementų."
@@ -161,6 +157,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Nėra URI valdyklės „%s“."
 
 msgid "Source element is invalid."
+msgstr "Šaltinio elementas nekorektiškas."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Šaltinio elementas nekorektiškas."
 
 #, c-format
@@ -672,16 +672,14 @@ msgstr ""
 msgid "enable/disable trick modes"
 msgstr ""
 
-#, fuzzy
-msgid "change audio track"
-msgstr "Šiame CD nėra audio takelių"
-
-msgid "change video track"
+msgid "change to previous/next audio track"
 msgstr ""
 
-#, fuzzy
-msgid "change subtitle track"
-msgstr "Sami titrų formatas"
+msgid "change to previous/next video track"
+msgstr ""
+
+msgid "change to previous/next subtitle track"
+msgstr ""
 
 msgid "seek to beginning"
 msgstr ""
@@ -690,6 +688,10 @@ msgid "show keyboard shortcuts"
 msgstr ""
 
 msgid "Interactive mode - keyboard controls:"
+msgstr ""
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
 
 msgid "Output status information and property notifications"
@@ -705,6 +707,9 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr ""
 
 msgid "Enable gapless playback"
+msgstr ""
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
 msgstr ""
 
 msgid "Shuffle playlist"
@@ -728,10 +733,9 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr ""
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr ""
 
 msgid ""

@@ -3,24 +3,23 @@
 # Copyright © 2016 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2014, 2015, 2016.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2016, 2022.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2016-11-02 13:29+0700\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-02-14 09:24+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Language-Team-Website: <http://translationproject.org/team/vi.html>\n"
-"X-Generator: Gtranslator 2.91.7\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Không thể mở thiết bị để phát lại trong chế độ đơn kênh."
@@ -53,7 +52,7 @@ msgstr "Không thể mở thiết bị để thu trong chế độ âm lập th�
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Không thể mở thiết bị để thu trong chế độ %d kênh."
+msgstr "Không thể mở thiết bị để thu trong chế độ %d-kênh"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -89,13 +88,9 @@ msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại phần cài đặ
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Không thể tạo phần tử “uridecodebin”."
 
-#, fuzzy
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Không thể tạo phần tử “uridecodebin”."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
-msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử %s."
+msgstr "Thiếu cả hai phần tử autovideosink và %s."
 
 msgid "The autovideosink element is missing."
 msgstr "Thiếu phần tử autovideosink."
@@ -160,6 +155,10 @@ msgstr "Không có bộ quản lý địa chỉ URI được thực hiện cho �
 msgid "Source element is invalid."
 msgstr "Phần tử nguồn không phải hợp lệ."
 
+#, fuzzy
+msgid "Source element has no pads."
+msgstr "Phần tử nguồn không phải hợp lệ."
+
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Gặp lỗi khi gửi dữ liệu cho “%s:%d”."
@@ -171,13 +170,13 @@ msgid "This CD has no audio tracks"
 msgstr "Đĩa CD này không có rãnh âm thanh nào"
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "gặp lỗi khi vẽ mẫu"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Đã nảy sinh một lỗi GL"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "định dạng không được dàn xếp trước hàm"
 
 msgid "ID3 tag"
 msgstr "Thẻ ID3"
@@ -236,10 +235,10 @@ msgid "TMPlayer subtitle format"
 msgstr "Định dạng phụ đề TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Nhãn đóng CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Nhãn đóng CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Định dạng phụ đề Kate"
@@ -377,52 +376,49 @@ msgid "track ID"
 msgstr "mã rãnh"
 
 msgid "MusicBrainz track ID"
-msgstr "mã rãnh MusicBrainz"
+msgstr "Mã rãnh MusicBrainz"
 
 msgid "artist ID"
 msgstr "mã nghệ sĩ"
 
 msgid "MusicBrainz artist ID"
-msgstr "mã nghệ sĩ MusicBrainz"
+msgstr "Mã nghệ sĩ MusicBrainz"
 
 msgid "album ID"
 msgstr "mã tập nhạc"
 
 msgid "MusicBrainz album ID"
-msgstr "mã tập nhạc MusicBrainz"
+msgstr "Mã tập nhạc MusicBrainz"
 
 msgid "album artist ID"
 msgstr "mã nghệ sĩ tập nhạc"
 
 msgid "MusicBrainz album artist ID"
-msgstr "mã nghệ sĩ tập nhạc MusicBrainz"
+msgstr "Mã nghệ sĩ tập nhạc MusicBrainz"
 
 msgid "release group ID"
-msgstr ""
+msgstr "mã nhóm phát hành"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "mã rãnh MusicBrainz"
+msgstr "Mã nhóm phát hành MusicBrainz"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "mã rãnh"
+msgstr "mã rãnh phát hành"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "mã rãnh MusicBrainz"
+msgstr "Mã rãnh phát hành MusicBrainz"
 
 msgid "track TRM ID"
 msgstr "mã TRM rãnh"
 
 msgid "MusicBrainz TRM ID"
-msgstr "mã TRM rãnh MusicBrainz"
+msgstr "Mã TRM rãnh MusicBrainz"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "Mã AcoustID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "Dấu vân tay AcoustID (chromaprint)"
 
 msgid "capturing shutter speed"
 msgstr "tốc độ màn chập khi chụp"
@@ -443,7 +439,7 @@ msgid "Focal length of the lens used capturing the image, in mm"
 msgstr "Chiều dài tiêu cự ống kính được sử dụng khi chụp một ảnh, tính bằng mm"
 
 msgid "capturing 35 mm equivalent focal length"
-msgstr "độ dài tiêu cự tương đương 25mm khi chụp"
+msgstr "độ dài tiêu cự tương đương phim 35mm khi chụp"
 
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
@@ -579,17 +575,17 @@ msgstr ""
 "cho thiết bị thêm/xóa."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Bao gồm các thiết bị từ nhà cung cấp thiết bị ẩn."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Âm lượng: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Câm: bật"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Câm: tắt"
 
 msgid "Buffering..."
 msgstr "Đang đệm…"
@@ -656,7 +652,7 @@ msgid "volume down"
 msgstr "giảm âm lượng"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "bật/tắt câm tiến mở/tắt"
 
 msgid "increase playback rate"
 msgstr "tăng tốc độ phát lại"
@@ -670,13 +666,16 @@ msgstr "thay đổi hướng phát lại"
 msgid "enable/disable trick modes"
 msgstr "bật/tắt chế độ thủ thuật"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "đổi rãnh âm thanh"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "đổi rãnh phim"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "đổi phụ đề rãnh"
 
 msgid "seek to beginning"
@@ -687,6 +686,10 @@ msgstr "hiện phím tắt"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Chế độ tương tác - điều khiển thông qua bàn phím:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Dùng đồng hồ độ phân giải cao Windows, chính xác: %u ms\n"
 
 msgid "Output status information and property notifications"
 msgstr "Thông tin trạng thái xuất và các thông báo thuộc tính"
@@ -701,7 +704,10 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr "Bộ chứa âm thanh được dùng (mặc định là autoaudiosink)"
 
 msgid "Enable gapless playback"
-msgstr "Bật phát lại không khe"
+msgstr "Bật phát lại không khe trống"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Xáo trộn danh sách phát"
@@ -713,27 +719,29 @@ msgid "Volume"
 msgstr "Âm lượng"
 
 msgid "Start position in seconds."
-msgstr ""
+msgstr "Vị trí bắt đầu tính bằng giây."
 
 msgid "Playlist file containing input media files"
 msgstr "Tập tin danh sách phát có chứa các tập tin đa phương tiện đầu vào"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
-msgstr ""
+msgstr "Sử dụng cờ instant-rate-change thử nghiệm khi thay đổi tốc độ"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "Đừng in bất kỳ cái gì ra (ngoại trừ lỗi)"
 
-msgid "Use playbin3 pipeline"
-msgstr ""
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
-msgstr ""
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
+msgstr "(biến mặc định tùy thuộc vào biến môi trường 'USE_PLAYBIN')"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
 "(gapless is ignored)"
 msgstr ""
+"Giữ hiển thị khung hình cuối trên EOS cho đến khi thoát hoặc lệnh thay đổi "
+"danh sách phát (khe trống bị bỏ qua)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -744,6 +752,12 @@ msgstr "Bạn phải cung cấp ít nhất là một tên tập tin hay URI đ�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Nhấn phím “k” để xem toàn bộ phím tắt.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Không thể tạo phần tử “uridecodebin3”."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Dùng đường ống playbin3"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Không thể tạo phần tử “uridecodebin3”."

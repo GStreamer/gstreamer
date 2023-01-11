@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2019-09-03 10:01+0200\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -96,9 +96,6 @@ msgstr ""
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Impossibile creare l'elemento «uridecodebin»."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Impossibile creare l'elemento «uridecodebin3»."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Risultano mancanti entrambi gli elementi «autovideosink» e «%s»."
@@ -163,6 +160,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Nessun gestore di URI implementato per «%s»."
 
 msgid "Source element is invalid."
+msgstr "L'elemento sorgente non è valido."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "L'elemento sorgente non è valido."
 
 #, c-format
@@ -697,13 +698,16 @@ msgstr "cambia direzione di riproduzione"
 msgid "enable/disable trick modes"
 msgstr "abilita/disabilita le modalità trick"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "cambia traccia audio"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "cambia traccia video"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "cambia traccia sottotitoli"
 
 msgid "seek to beginning"
@@ -714,6 +718,10 @@ msgstr "mostra scorciatoie da tastiera"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Modalità interattiva - controlli da tastiera:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Stampa informazioni di stato e notifiche delle proprietà"
@@ -731,6 +739,9 @@ msgstr "Sink audio da usare (predefinito autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Abilita riproduzione senza interruzioni"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Mischia playlist"
@@ -753,10 +764,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Non stampare nulla (a parte gli errori)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Usa pipeline playbin3"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(il predefinito varia in base alla variabile USE_PLAYBIN)"
 
 msgid ""
@@ -775,3 +786,9 @@ msgstr "È necessario fornire almeno un nome file o un URI da riprodurre."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Premere «k» per consultare le scorciatoie da tastiera.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Impossibile creare l'elemento «uridecodebin3»."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Usa pipeline playbin3"

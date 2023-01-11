@@ -3,13 +3,13 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.19.2\n"
+"Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
-"PO-Revision-Date: 2021-09-28 07:15+0300\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"PO-Revision-Date: 2022-02-19 10:45+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -18,8 +18,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Generator: Lokalize 20.12.0\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
-"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Не удалось открыть устройство для воспроизведения в режиме моно."
@@ -90,9 +90,6 @@ msgstr "Отсутствует элемент «%s» — проверьте пр
 msgid "Could not create \"uridecodebin\" element."
 msgstr "Не удалось создать элемент «uridecodebin»."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "Не удалось создать элемент «uridecodebin3»."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Отсутствуют элементы autovideosink и %s."
@@ -158,6 +155,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "Для «%s» не реализован обработчик URI."
 
 msgid "Source element is invalid."
+msgstr "Неверный элемент источника."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Неверный элемент источника."
 
 #, c-format
@@ -663,13 +664,16 @@ msgstr "изменить направление воспроизведения"
 msgid "enable/disable trick modes"
 msgstr "включить/выключить режим рекомендаций"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "изменить звуковую дорожку"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "изменить видео дорожку"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "изменить дорожку субтитров"
 
 msgid "seek to beginning"
@@ -680,6 +684,10 @@ msgstr "показать клавиатурные сокращения"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Интерактивный режим — управление с клавиатуры:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr "Использовать таймер высокой точности Windows, точность: %u мс\n"
 
 msgid "Output status information and property notifications"
 msgstr "Выводить информацию о состоянии и уведомления о свойствах"
@@ -696,6 +704,9 @@ msgstr "Используемый приёмник аудио (по умолча�
 
 msgid "Enable gapless playback"
 msgstr "Включить непрерывное воспроизведение"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Перемешать список воспроизведения"
@@ -720,10 +731,10 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Не выводить ничего в поток стандартного вывода (кроме ошибок)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Использовать конвейер playbin3"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(значение по умолчанию зависит от переменной окружения «USE_PLAYBIN»)"
 
 msgid ""
@@ -742,6 +753,12 @@ msgstr "Вы должны указать не менее одного имени
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Нажмите «k» для показа списка клавиатурных комбинаций.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "Не удалось создать элемент «uridecodebin3»."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Использовать конвейер playbin3"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "Не удалось создать элемент «decodebin3»."

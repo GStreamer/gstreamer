@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:01+0100\n"
+"POT-Creation-Date: 2023-01-11 15:41+0000\n"
 "PO-Revision-Date: 2021-10-04 13:55+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
@@ -90,9 +90,6 @@ msgstr "Kayıp öge '%s' - GStreamer kurulumunu denetleyin."
 msgid "Could not create \"uridecodebin\" element."
 msgstr "\"uridecodebin\" ögesi oluşturulamıyor."
 
-msgid "Could not create \"uridecodebin3\" element."
-msgstr "\"uridecodebin3\" ögesi oluşturulamıyor."
-
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Hem autovideosink hem de % s öğeleri eksik."
@@ -157,6 +154,10 @@ msgid "No URI handler implemented for \"%s\"."
 msgstr "\"%s\" için hiçbir URI işleyicisi geliştirilmemiş."
 
 msgid "Source element is invalid."
+msgstr "Kaynak ögesi geçersiz."
+
+#, fuzzy
+msgid "Source element has no pads."
 msgstr "Kaynak ögesi geçersiz."
 
 #, c-format
@@ -660,13 +661,16 @@ msgstr "oynatma yönünü değiştir"
 msgid "enable/disable trick modes"
 msgstr "hile modularını etkinleştir/devre dışı bırak"
 
-msgid "change audio track"
+#, fuzzy
+msgid "change to previous/next audio track"
 msgstr "ses izini değiştir"
 
-msgid "change video track"
+#, fuzzy
+msgid "change to previous/next video track"
 msgstr "video izini değiştir"
 
-msgid "change subtitle track"
+#, fuzzy
+msgid "change to previous/next subtitle track"
 msgstr "alt yazı izini değiştir"
 
 msgid "seek to beginning"
@@ -677,6 +681,10 @@ msgstr "klavye kısayollarını göster"
 
 msgid "Interactive mode - keyboard controls:"
 msgstr "Etkileşimli kip - klavye denetimleri:"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
 
 msgid "Output status information and property notifications"
 msgstr "Çıktı durum bilgisi ve özellik bildirimleri"
@@ -692,6 +700,9 @@ msgstr "Kullanılacak ses alıcı (varsayılan autoaudiosink)"
 
 msgid "Enable gapless playback"
 msgstr "Aralıksız çalmayı etkinleştir"
+
+msgid "Enable instantaneous uri changes (only with playbin3)"
+msgstr ""
 
 msgid "Shuffle playlist"
 msgstr "Çalma listesini karıştır"
@@ -714,10 +725,10 @@ msgstr "Hızı değiştirirken deneysel anlık-hız-değiştirme bayrağını ku
 msgid "Do not print any output (apart from errors)"
 msgstr "Herhangi bir çıktı yazdırma (hatalar dışında)"
 
-msgid "Use playbin3 pipeline"
-msgstr "Playbin3 ardaşık düzenini kullan"
-
-msgid "(default varies depending on 'USE_PLAYBIN' env variable)"
+#, fuzzy
+msgid ""
+"Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
+"variable)"
 msgstr "(varsayılan 'USE_PLAYBIN' env değişkenine bağlı olarak değişir)"
 
 msgid ""
@@ -736,6 +747,12 @@ msgstr "Çalmak için en azından bir dosya adı veya URI sağlamalısınız."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Klavye kısayollarının bir listesini görmek için 'k'ye basın.\n"
+
+#~ msgid "Could not create \"uridecodebin3\" element."
+#~ msgstr "\"uridecodebin3\" ögesi oluşturulamıyor."
+
+#~ msgid "Use playbin3 pipeline"
+#~ msgstr "Playbin3 ardaşık düzenini kullan"
 
 #~ msgid "Could not create \"decodebin3\" element."
 #~ msgstr "\"decodebin3\" ögesi oluşturamıyor."
