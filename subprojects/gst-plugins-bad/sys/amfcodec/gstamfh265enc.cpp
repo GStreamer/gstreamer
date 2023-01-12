@@ -75,6 +75,7 @@ typedef struct
   amf_int64 max_gop_size;
   amf_int64 default_gop_size;
   guint valign;
+  gboolean smart_access_supported;
 } GstAmfH265EncDeviceCaps;
 
 /**
@@ -273,6 +274,7 @@ enum
   PROP_QP_P,
   PROP_REF_FRAMES,
   PROP_AUD,
+  PROP_SMART_ACCESS
 };
 
 #define DEFAULT_USAGE AMF_VIDEO_ENCODER_HEVC_USAGE_TRANSCODING
@@ -282,6 +284,7 @@ enum
 #define DEFAULT_MAX_BITRATE 0
 #define DEFAULT_MIN_MAX_QP -1
 #define DEFAULT_AUD TRUE
+#define DEFAULT_SMART_ACCESS FALSE
 
 #define DOC_SINK_CAPS_COMM \
     "format = (string) {NV12, P010_10LE}, " \
@@ -318,6 +321,7 @@ typedef struct _GstAmfH265Enc
   guint ref_frames;
 
   gboolean aud;
+  gboolean smart_access;
 } GstAmfH265Enc;
 
 typedef struct _GstAmfH265EncClass
@@ -431,6 +435,16 @@ gst_amf_h265_enc_class_init (GstAmfH265EncClass * klass, gpointer data)
       g_param_spec_boolean ("aud", "AUD",
           "Use AU (Access Unit) delimiter", DEFAULT_AUD, param_flags));
 
+  if (cdata->dev_caps.smart_access_supported) {
+    g_object_class_install_property (object_class, PROP_SMART_ACCESS,
+        g_param_spec_boolean ("smart-access-video", "Smart Access Video",
+            "Enable AMF SmartAccess Video feature for optimal distribution"
+            " between multiple AMD hardware instances", DEFAULT_SMART_ACCESS,
+            (GParamFlags) (G_PARAM_READWRITE |
+                GST_PARAM_CONDITIONALLY_AVAILABLE |
+                GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS)));
+  }
+
   gst_element_class_set_metadata (element_class,
       "AMD AMF H.265 Video Encoder",
       "Codec/Encoder/Video/Hardware",
@@ -503,6 +517,7 @@ gst_amf_h265_enc_init (GstAmfH265Enc * self)
   self->qp_p = (guint) dev_caps->default_qp_p;
   self->ref_frames = (guint) dev_caps->min_ref_frames;
   self->aud = DEFAULT_AUD;
+  self->smart_access = DEFAULT_SMART_ACCESS;
 }
 
 static void
@@ -543,6 +558,18 @@ static void
 update_enum (GstAmfH265Enc * self, gint * old_val, const GValue * new_val)
 {
   gint val = g_value_get_enum (new_val);
+
+  if (*old_val == val)
+    return;
+
+  *old_val = val;
+  self->property_updated = TRUE;
+}
+
+static void
+update_bool (GstAmfH265Enc * self, gboolean * old_val, const GValue * new_val)
+{
+  gboolean val = g_value_get_boolean (new_val);
 
   if (*old_val == val)
     return;
@@ -601,6 +628,9 @@ gst_amf_h265_enc_set_property (GObject * object, guint prop_id,
     case PROP_AUD:
       /* This is per frame property, don't need to reset encoder */
       self->aud = g_value_get_boolean (value);
+      break;
+    case PROP_SMART_ACCESS:
+      update_bool (self, &self->smart_access, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -661,6 +691,9 @@ gst_amf_h265_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUD:
       g_value_set_boolean (value, self->aud);
+      break;
+    case PROP_SMART_ACCESS:
+      g_value_set_boolean (value, self->smart_access);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -773,6 +806,8 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component)
 {
   GstAmfH265Enc *self = GST_AMF_H265_ENC (encoder);
+  GstAmfH265EncClass *klass = GST_AMF_H265_ENC_GET_CLASS (self);
+  GstAmfH265EncDeviceCaps *dev_caps = &klass->dev_caps;
   AMFComponent *comp = (AMFComponent *) component;
   GstVideoInfo *info = &state->info;
   const GstVideoColorimetry *cinfo = &info->colorimetry;
@@ -893,6 +928,15 @@ gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
+  if (dev_caps->smart_access_supported) {
+    result =
+        comp->SetProperty (AMF_VIDEO_ENCODER_HEVC_ENABLE_SMART_ACCESS_VIDEO,
+        (amf_bool) self->smart_access);
+    if (result != AMF_OK) {
+      GST_WARNING_OBJECT (self, "Failed to set smart access video, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    }
+  }
   color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN;
   switch (cinfo->matrix) {
     case GST_VIDEO_COLOR_MATRIX_BT601:
@@ -1233,6 +1277,7 @@ gst_amf_h265_enc_create_class_data (GstD3D11Device * device,
   amf_int32 in_min_height = 0, in_max_height = 0;
   amf_int32 out_min_width = 0, out_max_width = 0;
   amf_int32 out_min_height = 0, out_max_height = 0;
+  amf_bool smart_access_supported;
   amf_int32 num_val;
   std::set < std::string > formats;
   std::string format_str;
@@ -1369,6 +1414,11 @@ gst_amf_h265_enc_create_class_data (GstD3D11Device * device,
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_HEVC_QP_I, default_qp_i, 26);
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_HEVC_QP_P, default_qp_p, 26);
 #undef QUERY_DEFAULT_PROP
+
+  result = comp->GetProperty (AMF_VIDEO_ENCODER_HEVC_ENABLE_SMART_ACCESS_VIDEO,
+      &smart_access_supported);
+  if (result == AMF_OK)
+    dev_caps.smart_access_supported = TRUE;
 
   {
     const AMFPropertyInfo *pinfo = nullptr;

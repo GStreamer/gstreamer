@@ -77,6 +77,7 @@ typedef struct
   amf_int64 default_qp_b;
   gboolean interlace_supported;
   guint valign;
+  gboolean smart_access_supported;
 } GstAmfH264EncDeviceCaps;
 
 /**
@@ -273,6 +274,7 @@ enum
   PROP_REF_FRAMES,
   PROP_AUD,
   PROP_CABAC,
+  PROP_SMART_ACCESS
 };
 
 #define DEFAULT_USAGE AMF_VIDEO_ENCODER_USAGE_TRANSCODING
@@ -284,6 +286,7 @@ enum
 #define DEFAULT_MIN_MAX_QP -1
 #define DEFAULT_AUD TRUE
 #define DEFAULT_CABAC TRUE
+#define DEFAULT_SMART_ACCESS FALSE
 
 #define DOC_SINK_CAPS_COMM \
     "format = (string) NV12, " \
@@ -322,6 +325,7 @@ typedef struct _GstAmfH264Enc
 
   gboolean aud;
   gboolean cabac;
+  gboolean smart_access;
 } GstAmfH264Enc;
 
 typedef struct _GstAmfH264EncClass
@@ -429,6 +433,16 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
       g_param_spec_boolean ("cabac", "CABAC",
           "Enable CABAC entropy coding", TRUE, param_flags));
 
+  if (cdata->dev_caps.smart_access_supported) {
+    g_object_class_install_property (object_class, PROP_SMART_ACCESS,
+        g_param_spec_boolean ("smart-access-video", "Smart Access Video",
+            "Enable AMF SmartAccess Video feature for optimal distribution"
+            " between multiple AMD hardware instances", DEFAULT_SMART_ACCESS,
+            (GParamFlags) (G_PARAM_READWRITE |
+                GST_PARAM_CONDITIONALLY_AVAILABLE |
+                GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS)));
+  }
+
   gst_element_class_set_metadata (element_class,
       "AMD AMF H.264 Video Encoder",
       "Codec/Encoder/Video/Hardware",
@@ -502,6 +516,7 @@ gst_amf_h264_enc_init (GstAmfH264Enc * self)
   self->ref_frames = (guint) dev_caps->min_ref_frames;
   self->aud = DEFAULT_AUD;
   self->cabac = DEFAULT_CABAC;
+  self->smart_access = DEFAULT_SMART_ACCESS;
 }
 
 static void
@@ -611,6 +626,9 @@ gst_amf_h264_enc_set_property (GObject * object, guint prop_id,
     case PROP_CABAC:
       update_bool (self, &self->cabac, value);
       break;
+    case PROP_SMART_ACCESS:
+      update_bool (self, &self->smart_access, value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -667,6 +685,9 @@ gst_amf_h264_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CABAC:
       g_value_set_boolean (value, self->cabac);
+      break;
+    case PROP_SMART_ACCESS:
+      g_value_set_boolean (value, self->smart_access);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -924,6 +945,15 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
       GST_ERROR_OBJECT (self, "Failed to set rate-control, result %"
           GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
       goto error;
+    }
+  }
+
+  if (dev_caps->smart_access_supported) {
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_ENABLE_SMART_ACCESS_VIDEO,
+        (amf_bool) self->smart_access);
+    if (result != AMF_OK) {
+      GST_WARNING_OBJECT (self, "Failed to set smart access video, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     }
   }
 
@@ -1330,6 +1360,7 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
   amf_int32 out_min_width = 0, out_max_width = 0;
   amf_int32 out_min_height = 0, out_max_height = 0;
   amf_bool interlace_supported;
+  amf_bool smart_access_supported;
   amf_int32 num_val;
   gboolean have_nv12 = FALSE;
   gboolean d3d11_supported = FALSE;
@@ -1460,6 +1491,11 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_p, 22);
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_QP_I, default_qp_b, 22);
 #undef QUERY_DEFAULT_PROP
+
+  result = comp->GetProperty (AMF_VIDEO_ENCODER_ENABLE_SMART_ACCESS_VIDEO,
+      &smart_access_supported);
+  if (result == AMF_OK)
+    dev_caps.smart_access_supported = TRUE;
 
   min_width = MAX (in_min_width, 1);
   max_width = in_max_width;

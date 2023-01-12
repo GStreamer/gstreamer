@@ -73,6 +73,7 @@ typedef struct
   amf_int64 max_gop_size;
   amf_int64 default_gop_size;
   guint valign;
+  gboolean smart_access_supported;
 } GstAmfAv1EncDeviceCaps;
 
 /**
@@ -264,6 +265,7 @@ enum
   PROP_QP_I,
   PROP_QP_P,
   PROP_REF_FRAMES,
+  PROP_SMART_ACCESS
 };
 
 #define DEFAULT_USAGE AMF_VIDEO_ENCODER_AV1_USAGE_TRANSCODING
@@ -273,6 +275,7 @@ enum
 #define DEFAULT_MAX_BITRATE 0
 #define DEFAULT_MIN_MAX_QP -1
 #define DEFAULT_REF_FRAMES 1
+#define DEFAULT_SMART_ACCESS FALSE
 
 #define DOC_SINK_CAPS_COMM \
     "format = (string) {NV12, P010_10LE}, " \
@@ -305,6 +308,7 @@ typedef struct _GstAmfAv1Enc
   guint qp_i;
   guint qp_p;
   guint ref_frames;
+  gboolean smart_access;
 } GstAmfAv1Enc;
 
 typedef struct _GstAmfAv1EncClass
@@ -410,6 +414,16 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
       g_param_spec_uint ("ref-frames", "Reference Frames",
           "Number of reference frames", 0, 8, DEFAULT_REF_FRAMES, param_flags));
 
+  if (cdata->dev_caps.smart_access_supported) {
+    g_object_class_install_property (object_class, PROP_SMART_ACCESS,
+        g_param_spec_boolean ("smart-access-video", "Smart Access Video",
+            "Enable AMF SmartAccess Video feature for optimal distribution"
+            " between multiple AMD hardware instances", DEFAULT_SMART_ACCESS,
+            (GParamFlags) (G_PARAM_READWRITE |
+                GST_PARAM_CONDITIONALLY_AVAILABLE |
+                GST_PARAM_MUTABLE_PLAYING | G_PARAM_STATIC_STRINGS)));
+  }
+
   gst_element_class_set_metadata (element_class,
       "AMD AMF AV1 Video Encoder",
       "Codec/Encoder/Video/Hardware",
@@ -480,6 +494,7 @@ gst_amf_av1_enc_init (GstAmfAv1Enc * self)
   self->qp_i = (guint) dev_caps->default_qp_i;
   self->qp_p = (guint) dev_caps->default_qp_p;
   self->ref_frames = DEFAULT_REF_FRAMES;
+  self->smart_access = DEFAULT_SMART_ACCESS;
 }
 
 static void
@@ -520,6 +535,18 @@ static void
 update_enum (GstAmfAv1Enc * self, gint * old_val, const GValue * new_val)
 {
   gint val = g_value_get_enum (new_val);
+
+  if (*old_val == val)
+    return;
+
+  *old_val = val;
+  self->property_updated = TRUE;
+}
+
+static void
+update_bool (GstAmfAv1Enc * self, gboolean * old_val, const GValue * new_val)
+{
+  gboolean val = g_value_get_boolean (new_val);
 
   if (*old_val == val)
     return;
@@ -574,6 +601,9 @@ gst_amf_av1_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_REF_FRAMES:
       update_uint (self, &self->ref_frames, value);
+      break;
+    case PROP_SMART_ACCESS:
+      update_bool (self, &self->smart_access, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -632,6 +662,9 @@ gst_amf_av1_enc_get_property (GObject * object, guint prop_id,
     case PROP_REF_FRAMES:
       g_value_set_uint (value, self->ref_frames);
       break;
+    case PROP_SMART_ACCESS:
+      g_value_set_boolean (value, self->smart_access);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -643,6 +676,8 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component)
 {
   GstAmfAv1Enc *self = GST_AMF_AV1_ENC (encoder);
+  GstAmfAv1EncClass *klass = GST_AMF_AV1_ENC_GET_CLASS (self);
+  GstAmfAv1EncDeviceCaps *dev_caps = &klass->dev_caps;
   AMFComponent *comp = (AMFComponent *) component;
   GstVideoInfo *info = &state->info;
   AMF_RESULT result;
@@ -726,6 +761,14 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
+  if (dev_caps->smart_access_supported) {
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_ENABLE_SMART_ACCESS_VIDEO,
+        (amf_bool) self->smart_access);
+    if (result != AMF_OK) {
+      GST_WARNING_OBJECT (self, "Failed to set smart access video, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    }
+  }
   color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN;
   switch (cinfo->matrix) {
     case GST_VIDEO_COLOR_MATRIX_BT601:
@@ -1050,6 +1093,7 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
   amf_int32 in_min_height = 0, in_max_height = 0;
   amf_int32 out_min_width = 0, out_max_width = 0;
   amf_int32 out_min_height = 0, out_max_height = 0;
+  amf_bool smart_access_supported;
   amf_int32 num_val;
   std::set < std::string > formats;
   std::string format_str;
@@ -1202,6 +1246,11 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_AV1_Q_INDEX_INTRA, default_qp_i, 26);
   QUERY_DEFAULT_PROP (AMF_VIDEO_ENCODER_AV1_Q_INDEX_INTER, default_qp_p, 26);
 #undef QUERY_DEFAULT_PROP
+
+  result = comp->GetProperty (AMF_VIDEO_ENCODER_AV1_ENABLE_SMART_ACCESS_VIDEO,
+      &smart_access_supported);
+  if (result == AMF_OK)
+    dev_caps.smart_access_supported = TRUE;
 
   {
     const AMFPropertyInfo *pinfo = nullptr;
