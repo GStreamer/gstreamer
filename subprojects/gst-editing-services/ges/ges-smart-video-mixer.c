@@ -240,8 +240,10 @@ set_pad_properties_from_positioner_meta (GstPad * mixer_pad, GstSample * sample,
   }
 
   g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
-      meta->posy, "width", meta->width, "height", meta->height,
-      "operator", meta->operator, NULL);
+      meta->posy, "width", meta->width, "height", meta->height, NULL);
+
+  if (self->ABI.abi.has_operator)
+    g_object_set (mixer_pad, "operator", meta->operator, NULL);
 }
 
 /****************************************************
@@ -426,6 +428,8 @@ ges_smart_mixer_constructed (GObject * obj)
 
   self->mixer =
       gst_element_factory_create (ges_get_compositor_factory (), cname);
+  self->ABI.abi.has_operator =
+      gst_compositor_operator_get_type_and_default_value (NULL) != G_TYPE_NONE;
   g_free (cname);
 
   if (GST_IS_BIN (self->mixer)) {

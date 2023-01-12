@@ -85,6 +85,7 @@ struct _GstFramePositionerMeta {
   gint operator;
 };
 
+G_GNUC_INTERNAL GType gst_compositor_operator_get_type_and_default_value (int *default_operator_value);
 G_GNUC_INTERNAL void ges_frame_positioner_set_source_and_filter (GstFramePositioner *pos,
 						  GESTrackElement *trksrc,
 						  GstElement *capsfilter);

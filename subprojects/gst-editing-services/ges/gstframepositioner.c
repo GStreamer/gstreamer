@@ -81,7 +81,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 G_DEFINE_TYPE (GstFramePositioner, gst_frame_positioner,
     GST_TYPE_BASE_TRANSFORM);
 
-static GType
+GType
 gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
 {
   static gsize _init = 0;
@@ -112,7 +112,8 @@ gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
     g_once_init_leave (&_init, 1);
   }
 
-  *default_operator_value = operator_value;
+  if (default_operator_value)
+    *default_operator_value = operator_value;
 
   return operator_gtype;
 }
@@ -549,7 +550,7 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
    *
    * The blending operator for the source.
    */
-  if (operator_gtype) {
+  if (operator_gtype != G_TYPE_NONE) {
     properties[PROP_OPERATOR] =
         g_param_spec_enum ("operator", "Operator",
         "Blending operator to use for blending this pad over the previous ones",

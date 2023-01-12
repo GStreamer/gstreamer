@@ -56,7 +56,14 @@ struct _GESSmartMixer
   GstCaps *caps;
   gboolean is_transition;
 
-  gpointer _ges_reserved[GES_PADDING];
+  union {
+    gpointer _ges_reserved[GES_PADDING];
+
+    struct {
+      gboolean has_operator;
+    } abi;
+
+  } ABI;
 };
 
 G_GNUC_INTERNAL

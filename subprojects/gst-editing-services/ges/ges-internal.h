@@ -500,7 +500,7 @@ G_GNUC_INTERNAL GstElement * ges_track_get_composition (GESTrack *track);
 
 
 /*********************************************
- *  GESTrackElement subclasses contructores  *
+ *  GESTrackElement subclasses constructors  *
  ********************************************/
 G_GNUC_INTERNAL GESAudioTestSource * ges_audio_test_source_new (void);
 G_GNUC_INTERNAL GESAudioUriSource  * ges_audio_uri_source_new  (gchar *uri);
