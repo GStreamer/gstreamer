@@ -1826,12 +1826,13 @@ gst_d3d11_pool_allocator_release_memory (GstD3D11PoolAllocator * self,
 
   GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
   mem->allocator = (GstAllocator *) gst_object_ref (_d3d11_memory_allocator);
-  gst_object_unref (self);
 
   /* keep it around in our queue */
   gst_atomic_queue_push (self->priv->queue, mem);
   gst_poll_write_control (self->priv->poll);
   dec_outstanding (self);
+
+  gst_object_unref (self);
 }
 
 static gboolean
