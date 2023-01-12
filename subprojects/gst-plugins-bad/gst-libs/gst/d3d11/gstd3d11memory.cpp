@@ -1755,7 +1755,6 @@ struct _GstD3D11PoolAllocatorPrivate
   gsize mem_size;
 };
 
-static void gst_d3d11_pool_allocator_dispose (GObject * object);
 static void gst_d3d11_pool_allocator_finalize (GObject * object);
 
 static gboolean
@@ -1776,7 +1775,6 @@ gst_d3d11_pool_allocator_class_init (GstD3D11PoolAllocatorClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstD3D11AllocatorClass *d3d11alloc_class = GST_D3D11_ALLOCATOR_CLASS (klass);
 
-  gobject_class->dispose = gst_d3d11_pool_allocator_dispose;
   gobject_class->finalize = gst_d3d11_pool_allocator_finalize;
 
   d3d11alloc_class->set_active = gst_d3d11_pool_allocator_set_active;
@@ -1805,16 +1803,6 @@ gst_d3d11_pool_allocator_init (GstD3D11PoolAllocator * allocator)
 }
 
 static void
-gst_d3d11_pool_allocator_dispose (GObject * object)
-{
-  GstD3D11PoolAllocator *self = GST_D3D11_POOL_ALLOCATOR (object);
-
-  gst_clear_object (&self->device);
-
-  G_OBJECT_CLASS (pool_alloc_parent_class)->dispose (object);
-}
-
-static void
 gst_d3d11_pool_allocator_finalize (GObject * object)
 {
   GstD3D11PoolAllocator *self = GST_D3D11_POOL_ALLOCATOR (object);
@@ -1828,6 +1816,8 @@ gst_d3d11_pool_allocator_finalize (GObject * object)
   DeleteCriticalSection (&priv->lock);
 
   GST_D3D11_CLEAR_COM (priv->texture);
+
+  gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (pool_alloc_parent_class)->finalize (object);
 }
