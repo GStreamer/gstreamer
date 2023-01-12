@@ -21,6 +21,10 @@ cuda_headers = files([
 ])
 
 gstcuda_dep = dependency('', required : false)
+cuda_stubinc = include_directories('./stub')
+gstcuda_stub_dep = declare_dependency(
+  include_directories: cuda_stubinc
+)
 
 if host_system not in ['windows', 'linux']
   subdir_done()
@@ -40,7 +44,6 @@ if host_system == 'windows'
   endforeach
 endif
 
-cuda_stubinc = include_directories('./stub')
 extra_c_args = ['-DGST_USE_UNSTABLE_API']
 
 if gstgl_dep.found()
