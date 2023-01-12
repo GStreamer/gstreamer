@@ -33,9 +33,6 @@
  * a #GstVulkanImageBufferPool is an object that allocates buffers with #GstVulkanImageMemory
  *
  * A #GstVulkanImageBufferPool is created with gst_vulkan_image_buffer_pool_new()
- *
- * #GstVulkanImageBufferPool implements the VideoMeta buffer pool option
- * #GST_BUFFER_POOL_OPTION_VIDEO_META
  */
 
 /* bufferpool */
@@ -44,7 +41,6 @@ struct _GstVulkanImageBufferPoolPrivate
   GstCaps *caps;
   gboolean raw_caps;
   GstVideoInfo v_info;
-  gboolean add_videometa;
 };
 
 static void gst_vulkan_image_buffer_pool_finalize (GObject * object);
@@ -59,16 +55,6 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanImageBufferPool, gst_vulkan_image_buffer_pool,
     GST_TYPE_BUFFER_POOL, G_ADD_PRIVATE (GstVulkanImageBufferPool)
     GST_DEBUG_CATEGORY_INIT (GST_CAT_VULKAN_IMAGE_BUFFER_POOL,
         "vulkanimagebufferpool", 0, "Vulkan Image Buffer Pool"));
-
-static const gchar **
-gst_vulkan_image_buffer_pool_get_options (GstBufferPool * pool)
-{
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META,
-    NULL
-  };
-
-  return options;
-}
 
 static gboolean
 gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
@@ -129,9 +115,6 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
     gst_memory_unref (GST_MEMORY_CAST (img_mem));
   }
-
-  priv->add_videometa = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   gst_buffer_pool_config_set_params (config, caps,
       priv->v_info.size, min_buffers, max_buffers);
@@ -245,7 +228,6 @@ gst_vulkan_image_buffer_pool_class_init (GstVulkanImageBufferPoolClass * klass)
 
   gobject_class->finalize = gst_vulkan_image_buffer_pool_finalize;
 
-  gstbufferpool_class->get_options = gst_vulkan_image_buffer_pool_get_options;
   gstbufferpool_class->set_config = gst_vulkan_image_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_vulkan_image_buffer_pool_alloc;
 }

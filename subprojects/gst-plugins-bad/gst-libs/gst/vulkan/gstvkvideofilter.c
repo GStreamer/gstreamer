@@ -278,7 +278,6 @@ gst_vulkan_video_filter_decide_allocation (GstBaseTransform * bt,
   config = gst_buffer_pool_get_config (pool);
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
 
   gst_buffer_pool_set_config (pool, config);
 
