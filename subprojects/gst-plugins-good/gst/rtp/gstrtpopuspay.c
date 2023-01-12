@@ -374,6 +374,10 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
   GstStructure *s;
   int channel_mapping_family = 0;
   GstCaps *caps, *peercaps, *tcaps, *tempcaps;
+  static GstStaticCaps opus_static_caps = GST_STATIC_CAPS ("application/x-rtp, "
+      "encoding-name=(string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\"}");
+  static GstStaticCaps multiopus_static_caps =
+      GST_STATIC_CAPS ("application/x-rtp, encoding-name=(string)MULTIOPUS");
 
   if (pad == GST_RTP_BASE_PAYLOAD_SRCPAD (payload))
     return
@@ -394,8 +398,7 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
 
   caps = gst_pad_get_pad_template_caps (GST_RTP_BASE_PAYLOAD_SINKPAD (payload));
 
-  tempcaps = gst_caps_from_string ("application/x-rtp, "
-      "encoding-name=(string) { \"OPUS\", \"X-GST-OPUS-DRAFT-SPITTKA-00\"}");
+  tempcaps = gst_static_caps_get (&opus_static_caps);
   if (!gst_caps_can_intersect (peercaps, tempcaps)) {
     GstCaps *multiopuscaps = gst_caps_new_simple ("audio/x-opus",
         "channel-mapping-family", G_TYPE_INT, 1,
@@ -411,8 +414,7 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
   }
   gst_caps_unref (tempcaps);
 
-  tempcaps = gst_caps_new_simple ("application/x-rtp",
-      "encoding-name", G_TYPE_STRING, "MULTIOPUS", NULL);
+  tempcaps = gst_static_caps_get (&multiopus_static_caps);
   if (!gst_caps_can_intersect (peercaps, tempcaps)) {
     GstCaps *opuscaps = gst_caps_new_simple ("audio/x-opus",
         "channel-mapping-family", G_TYPE_INT, 0,
