@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId "org.freedesktop.gstreamer.play"
-        minSdkVersion 15
+        minSdkVersion 21
         targetSdkVersion 32
         versionCode 1
         versionName "1.0"
