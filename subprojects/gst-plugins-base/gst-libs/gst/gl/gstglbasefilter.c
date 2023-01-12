@@ -42,6 +42,10 @@
 #define GST_CAT_DEFAULT gst_gl_base_filter_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+/* cached quark to avoid contention on the global quark table lock */
+#define META_TAG_VIDEO meta_tag_video_quark
+static GQuark meta_tag_video_quark;
+
 struct _GstGLBaseFilterPrivate
 {
   GstGLContext *other_context;
@@ -96,6 +100,8 @@ static void gst_gl_base_filter_default_gl_stop (GstGLBaseFilter * filter);
 
 static gboolean gst_gl_base_filter_find_gl_context_unlocked (GstGLBaseFilter *
     filter);
+static gboolean gst_gl_base_filter_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 static void
 gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
 {
@@ -115,6 +121,8 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->stop = gst_gl_base_filter_stop;
   GST_BASE_TRANSFORM_CLASS (klass)->decide_allocation =
       gst_gl_base_filter_decide_allocation;
+  GST_BASE_TRANSFORM_CLASS (klass)->transform_meta =
+      gst_gl_base_filter_transform_meta;
 
   element_class->set_context = gst_gl_base_filter_set_context;
   element_class->change_state = gst_gl_base_filter_change_state;
@@ -128,6 +136,8 @@ gst_gl_base_filter_class_init (GstGLBaseFilterClass * klass)
   klass->supported_gl_api = GST_GL_API_ANY;
   klass->gl_start = gst_gl_base_filter_default_gl_start;
   klass->gl_stop = gst_gl_base_filter_default_gl_stop;
+
+  meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 }
 
 static void
@@ -615,6 +625,24 @@ error:
         ("Subclass failed to initialize."), (NULL));
     return FALSE;
   }
+}
+
+static gboolean
+gst_gl_base_filter_transform_meta (GstBaseTransform * trans, GstBuffer * outbuf,
+    GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (!tags || (g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO))) {
+    return TRUE;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
+      meta, inbuf);
 }
 
 /**
