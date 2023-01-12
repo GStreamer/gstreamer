@@ -126,6 +126,7 @@ GST_START_TEST (test_pay_to_depay_multichannel)
 }
 
 GST_END_TEST;
+
 GST_START_TEST (test_depay_to_pay_multichannel)
 {
   GstHarness *h = gst_harness_new_parse ("rtpopusdepay ! rtpopuspay");
@@ -165,6 +166,95 @@ GST_START_TEST (test_depay_to_pay_multichannel)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pay_getcaps)
+{
+  GstHarness *h = gst_harness_new ("rtpopuspay");
+  GstCaps *ref, *qcaps;
+
+  gst_harness_set_sink_caps_str (h, "application/x-rtp, "
+      "encoding-name=(string)OPUS, stereo=(string)0");
+  qcaps = gst_pad_peer_query_caps (h->srcpad, NULL);
+  /* Check that is also contains stereo */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)2, "
+      "channel-mapping-family=(int)0");
+  fail_unless (gst_caps_can_intersect (ref, qcaps));
+  gst_caps_unref (ref);
+  fail_unless_equals_int (gst_caps_get_size (qcaps), 2);
+  qcaps = gst_caps_truncate (qcaps);
+  /* Check that the first structure is mono */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)1, "
+      "channel-mapping-family=(int)0");
+  fail_unless (gst_caps_is_equal (ref, qcaps));
+  gst_caps_unref (ref);
+  gst_caps_unref (qcaps);
+
+  gst_harness_set_sink_caps_str (h, "application/x-rtp, "
+      "encoding-name=(string)OPUS, stereo=(string)1");
+  qcaps = gst_pad_peer_query_caps (h->srcpad, NULL);
+  /* Check that is also contains stereo */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)2, "
+      "channel-mapping-family=(int)0");
+  fail_unless (gst_caps_can_intersect (ref, qcaps));
+  gst_caps_unref (ref);
+  fail_unless_equals_int (gst_caps_get_size (qcaps), 2);
+  qcaps = gst_caps_truncate (qcaps);
+  /* Check that the first structure is mono */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)2, "
+      "channel-mapping-family=(int)0");
+  fail_unless (gst_caps_is_equal (ref, qcaps));
+  gst_caps_unref (ref);
+  gst_caps_unref (qcaps);
+
+  gst_harness_set_sink_caps_str (h, "application/x-rtp, "
+      "encoding-name=(string)MULTIOPUS");
+  qcaps = gst_pad_peer_query_caps (h->srcpad, NULL);
+  /* Check that is also contains stereo */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)[3, 255], "
+      "channel-mapping-family=(int)1");
+  fail_unless (gst_caps_is_equal (ref, qcaps));
+  gst_caps_unref (ref);
+  fail_unless_equals_int (gst_caps_get_size (qcaps), 1);
+  gst_caps_unref (qcaps);
+
+  gst_harness_set_sink_caps_str (h, "application/x-rtp, "
+      "encoding-name=(string)MULTIOPUS, stereo=(string)1");
+  qcaps = gst_pad_peer_query_caps (h->srcpad, NULL);
+  /* Check that is also contains stereo */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)[3, 255], "
+      "channel-mapping-family=(int)1");
+  fail_unless (gst_caps_is_equal (ref, qcaps));
+  gst_caps_unref (ref);
+  fail_unless_equals_int (gst_caps_get_size (qcaps), 1);
+  gst_caps_unref (qcaps);
+
+  gst_harness_set_sink_caps_str (h, "application/x-rtp, "
+      "encoding-name=(string)OPUS, stereo=(string)0;"
+      "application/x-rtp, encoding-name=(string)MULTIOPUS");
+  qcaps = gst_pad_peer_query_caps (h->srcpad, NULL);
+  /* Check that is also contains stereo */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)2, "
+      "channel-mapping-family=(int)0");
+  fail_unless (gst_caps_can_intersect (ref, qcaps));
+  gst_caps_unref (ref);
+  /* Check that is also contains 3 channels */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)3, "
+      "channel-mapping-family=(int)1");
+  fail_unless (gst_caps_can_intersect (ref, qcaps));
+  gst_caps_unref (ref);
+  fail_unless_equals_int (gst_caps_get_size (qcaps), 3);
+  qcaps = gst_caps_truncate (qcaps);
+  /* Check that the first structure is mono */
+  ref = gst_caps_from_string ("audio/x-opus, channels=(int)1, "
+      "channel-mapping-family=(int)0");
+  fail_unless (gst_caps_can_intersect (ref, qcaps));
+  gst_caps_unref (ref);
+  gst_caps_unref (qcaps);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpopus_suite (void)
 {
@@ -176,6 +266,7 @@ rtpopus_suite (void)
   tcase_add_test (tc_chain, test_depay_to_pay);
   tcase_add_test (tc_chain, test_pay_to_depay_multichannel);
   tcase_add_test (tc_chain, test_depay_to_pay_multichannel);
+  tcase_add_test (tc_chain, test_pay_getcaps);
 
   return s;
 }

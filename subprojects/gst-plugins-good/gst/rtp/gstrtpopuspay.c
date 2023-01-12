@@ -372,7 +372,7 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
     GstPad * pad, GstCaps * filter)
 {
   GstStructure *s;
-  const gchar *stereo;
+  int channel_mapping_family = 0;
   GstCaps *caps, *peercaps, *tcaps, *tempcaps;
 
   if (pad == GST_RTP_BASE_PAYLOAD_SRCPAD (payload))
@@ -428,21 +428,27 @@ gst_rtp_opus_pay_getcaps (GstRTPBasePayload * payload,
   }
   gst_caps_unref (tempcaps);
 
-  s = gst_caps_get_structure (peercaps, 0);
-  stereo = gst_structure_get_string (s, "stereo");
-  if (stereo != NULL) {
-    caps = gst_caps_make_writable (caps);
+  s = gst_caps_get_structure (caps, 0);
+  gst_structure_get_int (s, "channel-mapping-family", &channel_mapping_family);
+  if (channel_mapping_family == 0) {
+    GstStructure *sp = gst_caps_get_structure (peercaps, 0);
+    const gchar *stereo = gst_structure_get_string (sp, "stereo");
 
-    if (!strcmp (stereo, "1")) {
-      GstCaps *caps2 = gst_caps_copy (caps);
+    if (stereo != NULL) {
+      guint channels = 0;
 
-      gst_caps_set_simple (caps, "channels", G_TYPE_INT, 2, NULL);
-      caps = gst_caps_merge (caps, caps2);
-    } else if (!strcmp (stereo, "0")) {
-      GstCaps *caps2 = gst_caps_copy (caps);
+      if (!strcmp (stereo, "1"))
+        channels = 2;
+      else if (!strcmp (stereo, "0"))
+        channels = 1;
 
-      gst_caps_set_simple (caps, "channels", G_TYPE_INT, 1, NULL);
-      caps = gst_caps_merge (caps, caps2);
+      if (channels) {
+        GstCaps *caps2 = gst_caps_copy_nth (caps, 0);
+
+        gst_caps_set_simple (caps2, "channels", G_TYPE_INT, channels, NULL);
+        caps = gst_caps_make_writable (caps);
+        caps = gst_caps_merge (caps2, caps);
+      }
     }
   }
   gst_caps_unref (peercaps);
