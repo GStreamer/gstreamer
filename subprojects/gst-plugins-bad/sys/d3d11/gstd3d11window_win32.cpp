@@ -784,10 +784,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
 
     self = GST_D3D11_WINDOW_WIN32 (handle);
-    if (self->parent.device == nullptr)
-    {
-      return 0;
-    }
 
     g_assert (self->internal_hwnd == hWnd);
 
