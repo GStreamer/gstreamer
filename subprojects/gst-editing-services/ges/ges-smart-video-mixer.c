@@ -341,6 +341,8 @@ _release_pad (GstElement * element, GstPad * pad)
   LOCK (element);
   g_hash_table_remove (GES_SMART_MIXER (element)->pads_infos, pad);
   g_hash_table_remove (GES_SMART_MIXER (element)->pads_infos, info->mixer_pad);
+  g_hash_table_remove (GES_SMART_MIXER (element)->pads_infos,
+      info->real_mixer_pad);
   peer = gst_pad_get_peer (pad);
   if (peer) {
     gst_pad_unlink (peer, pad);
