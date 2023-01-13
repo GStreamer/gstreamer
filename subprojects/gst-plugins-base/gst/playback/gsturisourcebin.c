@@ -1934,6 +1934,10 @@ setup_parsebin_for_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
 
 could_not_link:
   {
+    if (info->pre_parse_queue)
+      gst_element_set_locked_state (info->pre_parse_queue, FALSE);
+    if (info->demuxer)
+      gst_element_set_locked_state (info->demuxer, FALSE);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     GST_STATE_UNLOCK (urisrc);
     GST_ELEMENT_ERROR (urisrc, CORE, NEGOTIATION,
@@ -2143,6 +2147,7 @@ no_typefind:
 could_not_link:
   {
     gst_object_unref (sinkpad);
+    gst_element_set_locked_state (info->typefind, FALSE);
     GST_ELEMENT_ERROR (urisrc, CORE, NEGOTIATION,
         (NULL), ("Can't link source to typefind element"));
     return FALSE;
