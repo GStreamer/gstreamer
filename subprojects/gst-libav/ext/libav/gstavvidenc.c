@@ -398,6 +398,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   }
 
   /* success! */
+  ffmpegenc->pts_offset = GST_CLOCK_TIME_NONE;
   ffmpegenc->opened = TRUE;
 
   return TRUE;
@@ -617,9 +618,20 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   picture->width = GST_VIDEO_FRAME_WIDTH (&buffer_info->vframe);
   picture->height = GST_VIDEO_FRAME_HEIGHT (&buffer_info->vframe);
 
-  picture->pts =
-      gst_ffmpeg_time_gst_to_ff (frame->pts /
-      ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
+  if (ffmpegenc->pts_offset == GST_CLOCK_TIME_NONE) {
+    ffmpegenc->pts_offset = frame->pts;
+  }
+
+  if (frame->pts == GST_CLOCK_TIME_NONE) {
+    picture->pts = AV_NOPTS_VALUE;
+  } else if (frame->pts < ffmpegenc->pts_offset) {
+    GST_ERROR_OBJECT (ffmpegenc, "PTS is going backwards");
+    picture->pts = AV_NOPTS_VALUE;
+  } else {
+    picture->pts =
+        gst_ffmpeg_time_gst_to_ff ((frame->pts - ffmpegenc->pts_offset) /
+        ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
+  }
 
 send_frame:
   if (!picture) {
@@ -701,14 +713,20 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
       GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
   }
 
-  frame->dts =
-      gst_ffmpeg_time_ff_to_gst (pkt->dts, ffmpegenc->context->time_base);
+  if (pkt->dts != AV_NOPTS_VALUE) {
+    frame->dts =
+        gst_ffmpeg_time_ff_to_gst (pkt->dts + ffmpegenc->pts_offset,
+        ffmpegenc->context->time_base);
+  }
   /* This will lose some precision compared to setting the PTS from the input
    * buffer directly, but that way we're sure PTS and DTS are consistent, in
    * particular DTS should always be <= PTS
    */
-  frame->pts =
-      gst_ffmpeg_time_ff_to_gst (pkt->pts, ffmpegenc->context->time_base);
+  if (pkt->pts != AV_NOPTS_VALUE) {
+    frame->pts =
+        gst_ffmpeg_time_ff_to_gst (pkt->pts + ffmpegenc->pts_offset,
+        ffmpegenc->context->time_base);
+  }
 
   ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
 
@@ -802,6 +820,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
       break;
   } while (got_packet);
   avcodec_flush_buffers (ffmpegenc->context);
+  ffmpegenc->pts_offset = GST_CLOCK_TIME_NONE;
 
 done:
   /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
@@ -877,8 +896,10 @@ gst_ffmpegvidenc_flush (GstVideoEncoder * encoder)
 {
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
 
-  if (ffmpegenc->opened)
+  if (ffmpegenc->opened) {
     avcodec_flush_buffers (ffmpegenc->context);
+    ffmpegenc->pts_offset = GST_CLOCK_TIME_NONE;
+  }
 
   return TRUE;
 }
