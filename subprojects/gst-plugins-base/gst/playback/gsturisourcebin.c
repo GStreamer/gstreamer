@@ -3014,11 +3014,13 @@ gst_uri_source_bin_change_state (GstElement * element,
   /* ERRORS */
 source_failed:
   {
+    remove_source (urisrc);
     return GST_STATE_CHANGE_FAILURE;
   }
 setup_failed:
   {
-    /* clean up leftover groups */
+    if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
+      remove_source (urisrc);
     return GST_STATE_CHANGE_FAILURE;
   }
 }
