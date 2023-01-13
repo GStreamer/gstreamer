@@ -56,6 +56,11 @@ GST_VULKAN_API
 GstVulkanImageView *    gst_vulkan_get_or_create_image_view     (GstVulkanImageMemory * image);
 
 GST_VULKAN_API
+GstVulkanImageView *    gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
+                                                                       VkImageViewCreateInfo * create_info);
+
+
+GST_VULKAN_API
 GstVulkanHandle *       gst_vulkan_create_shader                (GstVulkanDevice * device,
                                                                  const gchar * code,
                                                                  gsize size,

@@ -465,16 +465,41 @@ find_compatible_view (GstVulkanImageView * view, VkImageViewCreateInfo * info)
 GstVulkanImageView *
 gst_vulkan_get_or_create_image_view (GstVulkanImageMemory * image)
 {
-  VkImageViewCreateInfo create_info;
-  GstVulkanImageView *ret = NULL;
+  return gst_vulkan_get_or_create_image_view_with_info (image, NULL);
+}
 
-  fill_vulkan_image_view_info (image->image, image->create_info.format,
-      &create_info);
+/**
+ * gst_vulkan_get_or_create_image_view_with_info
+ * @image: a #GstVulkanImageMemory
+ * @create_info: (nullable): a VkImageViewCreateInfo
+ *
+ * Create a new #GstVulkanImageView with a specific @create_info.
+ *
+ * Returns: (transfer full): a #GstVulkanImageView for @image matching the
+ *                           original layout and format of @image
+ *
+ * Since: 1.24
+ */
+GstVulkanImageView *
+gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
+    VkImageViewCreateInfo * create_info)
+{
+  VkImageViewCreateInfo _create_info;
+  GstVulkanImageView *ret;
+
+  if (!create_info) {
+    fill_vulkan_image_view_info (image->image, image->create_info.format,
+        &_create_info);
+    create_info = &_create_info;
+  } else if (!(create_info->format == image->create_info.format
+          && create_info->image == image->image)) {
+    return NULL;
+  }
 
   ret = gst_vulkan_image_memory_find_view (image,
-      (GstVulkanImageMemoryFindViewFunc) find_compatible_view, &create_info);
+      (GstVulkanImageMemoryFindViewFunc) find_compatible_view, create_info);
   if (!ret) {
-    ret = gst_vulkan_image_view_new (image, &create_info);
+    ret = gst_vulkan_image_view_new (image, create_info);
     gst_vulkan_image_memory_add_view (image, ret);
   }
 
