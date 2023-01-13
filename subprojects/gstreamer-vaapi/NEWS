@@ -1,20 +1,15 @@
 GStreamer 1.22 Release Notes
 
 GStreamer 1.22 has not been released yet. It is scheduled for release
-around the end of December 2022 / beginning of January 2023.
+around in January 2023.
 
 1.21.x is the unstable development version that is being developed in
 the git master branch and which will eventually result in 1.22, and
-1.21.3 is the current development release in that series
+1.21.90 is the first release candidate for 1.22 (rc1) in that series
 
 A feature freeze is now into effect for the 1.21 branch, but newly-added
 API might still change until the final 1.22.0 stable release, and minor
 features may also still be added until then.
-
-A first 1.22 release candidate (1.21.90) is expected towards
-mid-December, followed by more release candiates until the new 1.22
-stable release around the end of December 2022 / beginning of January
-2023.
 
 1.22 will be backwards-compatible to the stable 1.20, 1.18, 1.16, 1.14,
 1.12, 1.10, 1.8, 1.6,, 1.4, 1.2 and 1.0 release series.
@@ -22,7 +17,7 @@ stable release around the end of December 2022 / beginning of January
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Monday 5 December 2022, 01:00 UTC (log)
+Last updated: Thursday 12 January 2023, 15:00 UTC (log)
 
 Introduction
 
@@ -193,6 +188,13 @@ Build and Dependencies
 
 -   this section will be filled in in due course
 
+-   GLib >= 2.64 is now required (technically it still says >= 2.62 but
+    the plan is to bump that to 2.64 soon once some CI issues are sorted
+    out)
+
+-   libnice >= 0.1.21 is now required and contains important fixes for
+    GStreamer’s WebRTC stack.
+
 gst-build
 
 -   this section will be filled in in due course
@@ -241,6 +243,10 @@ Windows
 
 -   this section will be filled in in due course
 
+-   The Windows universal UWP build is currently non-functional and will
+    need updating after the recent GLib upgrade. It is unclear if anyone
+    is using these binaries, so if you are please make yourself known.
+
 Linux
 
 -   this section will be filled in in due course
@@ -252,6 +258,14 @@ Documentation improvements
 Possibly Breaking Changes
 
 -   this section will be filled in in due course
+
+-   the Opus audio payloader and depayloader no longer accept the lower
+    case encoding-format=multiopus but instead produce and accept only
+    the upper case variant encoding-format=MULTIOPUS, since those should
+    always be upper case in GStreamer (caps fields are always case
+    sensitive). This should hopefully only affect applications where RTP
+    caps are set manually and multi-channel audio (>= 3 channels) is
+    used.
 
 Known Issues
 
@@ -323,7 +337,7 @@ the git 1.22 branch, which will be a stable branch.
 
 1.22.0
 
-1.22.0 is scheduled to be released around December 2022.
+1.22.0 is scheduled to be released in January 2023.
 
 Schedule for 1.24
 

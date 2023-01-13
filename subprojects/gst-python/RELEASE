@@ -1,13 +1,15 @@
-This is GStreamer gst-python 1.21.3.
+This is GStreamer gst-python 1.21.90.
 
-GStreamer 1.21 is the unstable development branch leading up to the next major
-stable version which will be 1.22.
+The GStreamer team is thrilled to announce a first release candidate of a new
+major feature release of your favourite cross-platform multimedia framework!
 
-The 1.21 development series adds new features on top of the 1.20 series and is
-part of the API and ABI-stable 1.x release series of the GStreamer multimedia
-framework.
+As always, this release is again packed with new features, bug fixes and
+other improvements.
 
-Full release notes will one day be found at:
+The 1.22 release series adds new features on top of the 1.20 series and is
+part of the API and ABI-stable 1.x release series.
+
+Full release notes will soon be available at:
 
   https://gstreamer.freedesktop.org/releases/1.22/
 
@@ -50,6 +52,9 @@ with other GStreamer modules for a complete multimedia experience.
  - gst-rtsp-server: library to serve files or streaming pipelines via RTSP
 
  - gst-editing-services: library an plugins for non-linear editing
+
+ - gst-plugins-rs: an exciting collection of well-maintained plugins written
+                   in the Rust programming language (usable from any language)
 
 ==== Download ====
 
