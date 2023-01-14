@@ -29,7 +29,8 @@ G_BEGIN_DECLS
 
 @interface GstGLCAOpenGLLayer : CAOpenGLLayer {
 @public
-  GstGLContext *gst_gl_context;
+  GWeakRef gst_gl_window_ref;
+  GstGLContext *gst_gl_context_ref;
   CGLContextObj gl_context;
 
 @private
@@ -51,6 +52,8 @@ G_BEGIN_DECLS
 - (void) setDrawCallback:(GstGLWindowCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (void) setResizeCallback:(GstGLWindowResizeCB)cb data:(gpointer)a notify:(GDestroyNotify)notify;
 - (void) queueResize;
+- (GstGLContext *) getGLContext;
+- (id) initWithGstGLWindow:(GstGLWindow *)window;
 - (id) initWithGstGLContext: (GstGLContext *)context;
 @end
 

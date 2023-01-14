@@ -55,7 +55,23 @@ _init_debug (void)
   if (self->draw_context)
     gst_object_unref (self->draw_context);
 
-  GST_TRACE ("dealloc GstGLCAOpenGLLayer %p context %p", self, self->gst_gl_context);
+  g_weak_ref_clear (&self->gst_gl_window_ref);
+  self->gst_gl_context_ref = NULL;
+
+  GST_TRACE ("dealloc GstGLCAOpenGLLayer %p", self);
+}
+
+- (GstGLContext *)getGLContext {
+  GstGLWindow *gst_gl_window;
+  GstGLContext *gst_gl_context = NULL;
+  if (gst_gl_context_ref)
+    return gst_gl_context_ref;
+  gst_gl_window = g_weak_ref_get (&self->gst_gl_window_ref);
+  if (gst_gl_window) {
+    gst_gl_context = gst_gl_window_get_context (gst_gl_window);
+    gst_object_unref (gst_gl_window);
+  }
+  return gst_gl_context;
 }
 
 static void
@@ -73,9 +89,9 @@ _context_ready (gpointer data)
 
   _init_debug();
 
-  GST_LOG ("init CAOpenGLLayer");
+  GST_LOG ("init CAOpenGLLayer with context");
 
-  self->gst_gl_context = parent_gl_context;
+  self->gst_gl_context_ref = parent_gl_context;
   self.needsDisplayOnBoundsChange = YES;
 
   gst_gl_window_send_message_async (parent_gl_context->window,
@@ -84,11 +100,33 @@ _context_ready (gpointer data)
   return self;
 }
 
+- (id)initWithGstGLWindow:(GstGLWindow *)parent_gl_window {
+  g_return_val_if_fail (GST_IS_GL_WINDOW_COCOA (parent_gl_window), nil);
+
+  self = [super init];
+
+  _init_debug();
+
+  GST_LOG ("init CAOpenGLLayer with window");
+
+  g_weak_ref_init (&self->gst_gl_window_ref, parent_gl_window);
+  self->gst_gl_context_ref = NULL;
+  self.needsDisplayOnBoundsChange = YES;
+
+  gst_gl_window_send_message_async (parent_gl_window,
+      (GstGLWindowCB) _context_ready, (__bridge_retained gpointer)self, (GDestroyNotify)CFRelease);
+
+  return self;
+}
+
 - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask {
   CGLPixelFormatObj fmt = NULL;
+  GstGLContext *gst_gl_context = [self getGLContext];
 
-  if (self->gst_gl_context)
-    fmt = gst_gl_context_cocoa_get_pixel_format (GST_GL_CONTEXT_COCOA (self->gst_gl_context));
+  if (gst_gl_context) {
+    fmt = gst_gl_context_cocoa_get_pixel_format (GST_GL_CONTEXT_COCOA (gst_gl_context));
+    gst_object_unref (gst_gl_context);
+  }
 
   if (!fmt) {
     CGLPixelFormatAttribute attribs[] = {
@@ -115,9 +153,16 @@ _context_ready (gpointer data)
   CGLContextObj external_context = NULL;
   CGLError ret;
   GError *error = NULL;
+  GstGLContext *gst_gl_context = NULL;
 
-  if (self->gst_gl_context)
-    external_context = (CGLContextObj) gst_gl_context_get_gl_context (self->gst_gl_context);
+  gst_gl_context = [self getGLContext];
+
+  if (!gst_gl_context) {
+    GST_ERROR ("failed to retrieve GStreamer GL context in CAOpenGLLayer");
+    gst_clear_object (&gst_gl_context);
+    return NULL;
+  }
+  external_context = (CGLContextObj) gst_gl_context_get_gl_context (gst_gl_context);
 
   GST_INFO ("attempting to create CGLContext for CAOpenGLLayer with "
       "share context %p", external_context);
@@ -125,6 +170,7 @@ _context_ready (gpointer data)
   ret = CGLCreateContext (pixelFormat, external_context, &self->gl_context);
   if (ret != kCGLNoError) {
     GST_ERROR ("failed to create CGL context in CAOpenGLLayer with share context %p: %s", external_context, CGLErrorString(ret));
+    gst_clear_object (&gst_gl_context);
     return NULL;
   }
 
@@ -133,10 +179,11 @@ _context_ready (gpointer data)
 
   if (kCGLNoError != CGLSetCurrentContext (self->gl_context)) {
     GST_ERROR ("failed set cgl context %p current", self->gl_context);
+    gst_clear_object (&gst_gl_context);
     return NULL;
   }
 
-  display = gst_gl_context_get_display (self->gst_gl_context);
+  display = gst_gl_context_get_display (gst_gl_context);
   self->draw_context = gst_gl_context_new_wrapped (display,
       (guintptr) self->gl_context, GST_GL_PLATFORM_CGL,
       gst_gl_context_get_current_gl_api (GST_GL_PLATFORM_CGL, NULL, NULL));
@@ -144,16 +191,20 @@ _context_ready (gpointer data)
 
   if (!self->draw_context) {
     GST_ERROR ("failed to create wrapped context");
+    gst_clear_object (&gst_gl_context);
     return NULL;
   }
 
   gst_gl_context_activate (self->draw_context, TRUE);
-  gst_gl_context_set_shared_with (self->draw_context, self->gst_gl_context);
+  gst_gl_context_set_shared_with (self->draw_context, gst_gl_context);
   if (!gst_gl_context_fill_info (self->draw_context, &error)) {
     GST_ERROR ("failed to fill wrapped context information: %s", error->message);
+    gst_clear_object (&gst_gl_context);
     return NULL;
   }
   gst_gl_context_activate (self->draw_context, FALSE);
+
+  gst_clear_object (&gst_gl_context);
 
   return self->gl_context;
 }
@@ -199,7 +250,12 @@ _context_ready (gpointer data)
                pixelFormat:(CGLPixelFormatObj)pixelFormat
             forLayerTime:(CFTimeInterval)interval
              displayTime:(const CVTimeStamp *)timeStamp {
-  const GstGLFuncs *gl = ((GstGLContext *)self->gst_gl_context)->gl_vtable;
+
+  GstGLContext *gst_gl_context = [self getGLContext];
+  if (!gst_gl_context)
+    return;
+
+  const GstGLFuncs *gl = gst_gl_context->gl_vtable;
   GstVideoRectangle src, dst, result;
   gint ca_viewport[4];
 
@@ -259,6 +315,8 @@ _context_ready (gpointer data)
 
   /* flushes the buffer */
   [super drawInCGLContext:glContext pixelFormat:pixelFormat forLayerTime:interval displayTime:timeStamp];
+
+  gst_clear_object (&gst_gl_context);
 }
 
 @end

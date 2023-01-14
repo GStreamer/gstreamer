@@ -210,7 +210,7 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
   if (!context)
     return FALSE;
 
-  layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLContext:context];
+  layer = [[GstGLCAOpenGLLayer alloc] initWithGstGLWindow:window];
   layer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
   layer.needsDisplayOnBoundsChange = YES;
   glView = [[GstGLNSView alloc] initWithFrameLayer:window_cocoa rect:windowRect layer:layer];
