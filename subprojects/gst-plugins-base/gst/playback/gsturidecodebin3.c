@@ -1728,8 +1728,13 @@ play_item_set_uri (GstPlayItem * item, const gchar * uri)
 static void
 play_item_set_suburi (GstPlayItem * item, const gchar * uri)
 {
-  if (!uri)
+  if (!uri) {
+    if (item->sub_item) {
+      free_source_item (item->uridecodebin, item->sub_item);
+      item->sub_item = NULL;
+    }
     return;
+  }
 
   if (!item->sub_item) {
     item->sub_item = new_source_item (item->uridecodebin, item, g_strdup (uri));
