@@ -25,9 +25,15 @@ prefix/
 /gst-examples
 /gst-plugins-rs
 
-# Because of unwanted diff caused by redirect wrap files 
-# https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/1140
-subprojects/*.wrap
+# Automatic meson redirect wrap files
+subprojects/gdk-pixbuf.wrap
+subprojects/gobject-introspection.wrap
+subprojects/gvdb.wrap
+subprojects/libepoxy.wrap
+subprojects/libsass.wrap
+subprojects/libtiff.wrap
+subprojects/pcre2.wrap
+subprojects/sassc.wrap
 
 subprojects/*/
 !subprojects/gst-devtools
