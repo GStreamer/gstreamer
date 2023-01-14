@@ -1,22 +1,22 @@
-# Subproject options
-option('python', type : 'feature', value : 'auto')
-option('libav', type : 'feature', value : 'auto')
-option('libnice', type : 'feature', value : 'auto')
+# GStreamer subprojects
 option('base', type : 'feature', value : 'enabled')
 option('good', type : 'feature', value : 'enabled')
-option('ugly', type : 'feature', value : 'auto')
-option('bad', type : 'feature', value : 'auto')
-option('devtools', type : 'feature', value : 'auto')
-option('ges', type : 'feature', value : 'auto')
-option('rtsp_server', type : 'feature', value : 'auto')
+option('ugly', type : 'feature', value : 'enabled')
+option('bad', type : 'feature', value : 'enabled')
+option('libav', type : 'feature', value : 'enabled')
+option('devtools', type : 'feature', value : 'enabled')
+option('ges', type : 'feature', value : 'enabled')
+option('rtsp_server', type : 'feature', value : 'enabled')
+option('rs', type : 'feature', value : 'disabled')
 option('omx', type : 'feature', value : 'disabled')
 option('vaapi', type : 'feature', value : 'disabled')
+option('gst-examples', type : 'feature', value : 'auto', description : 'Build gst-examples subproject')
+# Bindings
+option('python', type : 'feature', value : 'auto')
 option('sharp', type : 'feature', value : 'disabled')
-option('rs', type : 'feature', value : 'disabled')
-option('gst-examples', type : 'feature', value : 'auto', description : 'Build gst-examples')
-option('tls', type : 'feature', value : 'auto', description : 'TLS support using glib-networking')
-option('qt5', type : 'feature', value : 'auto', description : 'Qt5 Support')
-option('tools', type : 'feature', value : 'auto', yield : true, description : 'Build command line tools')
+# External subprojects
+option('tls', type : 'feature', value : 'auto', description : 'TLS support using glib-networking as a subproject')
+option('libnice', type : 'feature', value : 'auto', description: 'ICE support using libnice as a subproject')
 
 # Build for fuzzing
 option('oss_fuzz', type : 'feature', value : 'disabled',
@@ -46,12 +46,15 @@ option('gpl', type: 'feature', value: 'disabled',
 
 # Common options, automatically inherited by subprojects
 option('tests', type : 'feature', value : 'auto', description : 'Build tests')
+option('tools', type : 'feature', value : 'auto', yield : true, description : 'Build command line tools')
 option('examples', type : 'feature', value : 'auto', description : 'Build examples')
 option('introspection', type : 'feature', value : 'auto', description : 'Generate introspection data')
-option('nls', type : 'feature', value : 'auto', description : 'Enable native language support (translations)')
-option('orc', type : 'feature', value : 'auto', description : 'Enable Optimized Inner Loop Runtime Compiler')
+option('nls', type : 'feature', value : 'auto', description : 'Native language support (translations)')
+option('orc', type : 'feature', value : 'auto', description : 'Optimized Inner Loop Runtime Compiler (SIMD)')
 option('doc', type : 'feature', value : 'auto', description : 'Generate API documentation with hotdoc')
 option('gtk_doc', type : 'feature', value : 'disabled', description : 'Generate API documentation with gtk-doc')
+option('qt5', type : 'feature', value : 'auto', description : 'Qt5 toolkit support')
+option('qt6', type : 'feature', value : 'auto', description : 'Qt6 toolkit support')
 
 option('package-origin', type : 'string', value : 'Unknown package origin', yield : true,
        description : 'package origin URL to use in plugins')
