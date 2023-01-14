@@ -1,0 +1,10 @@
+[wrap-git]
+directory = gtk
+url = https://gitlab.gnome.org/GNOME/gtk.git
+push-url = ssh://git@ssh.gitlab.gnome.org:GNOME/gtk.git
+revision = 4.9.2
+depth = 1
+
+[provide]
+dependency_names = gtk4, gtk4-broadway, gtk4-macos, gtk4-wayland, gtk4-win32, gtk4-x11, gtk4-unix-print
+program_names = gtk4-query-settings, gtk4-builder-tool, gtk4-update-icon-cache, gtk4-encode-symbolic-svg, gtk4-launch
