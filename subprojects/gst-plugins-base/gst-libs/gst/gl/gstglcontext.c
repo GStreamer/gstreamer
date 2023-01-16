@@ -1194,8 +1194,19 @@ _build_extension_string (GstGLContext * context)
   return ext_g_str;
 }
 
-//gboolean
-//gst_gl_context_create (GstGLContext * context, GstGLContext * other_context, GError ** error)
+typedef struct
+{
+  GError **error;
+  gboolean ret;
+} FillInfoCtx;
+
+static void
+fill_info (GstGLContext * context, gpointer data)
+{
+  FillInfoCtx *ctx = data;
+  ctx->ret = gst_gl_context_fill_info (context, ctx->error);
+}
+
 static gpointer
 gst_gl_context_create_thread (GstGLContext * context)
 {
@@ -1360,9 +1371,14 @@ gst_gl_context_create_thread (GstGLContext * context)
   g_free (display_api_s);
 
   GST_DEBUG_OBJECT (context, "Filling info");
-  if (!gst_gl_context_fill_info (context, error)) {
-    g_assert (error == NULL || *error != NULL);
-    goto failure;
+  {
+    FillInfoCtx ctx = { 0 };
+    ctx.error = error;
+    gst_gl_context_thread_add (context, fill_info, &ctx);
+    if (!ctx.ret) {
+      g_assert (error == NULL || *error != NULL);
+      goto failure;
+    }
   }
 
   context->priv->alive = TRUE;
