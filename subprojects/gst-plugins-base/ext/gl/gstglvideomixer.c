@@ -919,25 +919,25 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PAD_XPOS:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->xpos;
+      pad->geometry_change |= val != pad->xpos;
       pad->xpos = val;
       break;
     }
     case PROP_PAD_YPOS:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->ypos;
+      pad->geometry_change |= val != pad->ypos;
       pad->ypos = val;
       break;
     }
     case PROP_PAD_WIDTH:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->width;
+      pad->geometry_change |= val != pad->width;
       pad->width = val;
       break;
     }
     case PROP_PAD_HEIGHT:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->height;
+      pad->geometry_change |= val != pad->height;
       pad->height = val;
     }
       break;
@@ -976,25 +976,25 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_CROP_LEFT:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->crop_left;
+      pad->geometry_change |= val != pad->crop_left;
       pad->crop_left = val;
       break;
     }
     case PROP_PAD_CROP_RIGHT:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->crop_right;
+      pad->geometry_change |= val != pad->crop_right;
       pad->crop_right = val;
       break;
     }
     case PROP_PAD_CROP_TOP:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->crop_top;
+      pad->geometry_change |= val != pad->crop_top;
       pad->crop_top = val;
       break;
     }
     case PROP_PAD_CROP_BOTTOM:{
       gint val = g_value_get_int (value);
-      pad->geometry_change = val != pad->crop_bottom;
+      pad->geometry_change |= val != pad->crop_bottom;
       pad->crop_bottom = val;
       break;
     }
