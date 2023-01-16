@@ -67,7 +67,7 @@ auto string2ColorFormat(const std::string& format)
 }
 
 InputOutputBuffers::InputOutputBuffers() :
-	m_in{ new IMV_Buffer() }, m_out{ new IMV_Buffer() }, m_outputBuffer{ nullptr }
+	m_in{ new IMV_Buffer() }, m_out{ new IMV_Buffer() }, m_outputBuffer{ nullptr }, m_inputBuffer{ nullptr }
 {
 }
 
@@ -83,6 +83,7 @@ void InputOutputBuffers::reset()
 		return;
 	}
 	gst_buffer_unmap(m_outputBuffer, &m_outputMap);
+	gst_buffer_unmap(m_inputBuffer, &m_inputMap);
 	gst_buffer_unref(m_outputBuffer);
 	m_outputBuffer = nullptr;
 }
@@ -91,6 +92,7 @@ bool InputOutputBuffers::setInputBuffer(GstBuffer* inputBuffer, int width, int h
 {
 	m_width = width;
 	m_height = height;
+	m_inputBuffer = inputBuffer;
 
 	if (gst_buffer_map(inputBuffer, &m_inputMap, (GstMapFlags)(GST_MAP_READ)) == FALSE)
 	{
@@ -155,7 +157,10 @@ GstBuffer* InputOutputBuffers::outputTransferFull()
 {
 	auto* outputBuffer = m_outputBuffer;
 	gst_buffer_unmap(m_outputBuffer, &m_outputMap);
+	gst_buffer_unmap(m_inputBuffer, &m_inputMap);
+	gst_buffer_unref(m_inputBuffer);
 	m_outputBuffer = nullptr;
+	m_inputBuffer = nullptr;
 	return outputBuffer;
 }
 
@@ -251,8 +256,6 @@ std::string DewarpPlugin::getLensName()
 
 bool DewarpPlugin::setUpCamera(std::string format, int width, int height, GstBuffer* originalInputBuffer)
 {
-
-
 	auto result = m_camera->SetVideoParams(m_buffers.in(), m_buffers.out(), string2ColorFormat(format), m_viewType, m_mountPos);
 
 	if (result != IMV_Defs::E_ERR_OK)
@@ -360,7 +363,7 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 			return false;
 		}
 		m_isCameraSetup = true;
-		}
+	}
 
 	auto ret = m_camera->Update();
 
@@ -374,11 +377,11 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 #ifdef VICON_DEBUG_LIBRARY
 	saveToPNG("output_frame.png", inputCaps, outputBuffer);
 #endif
-
-	gst_pad_push(pad, m_buffers.outputTransferFull());
+	auto* outputBuffer = m_buffers.outputTransferFull();
+	gst_pad_push(pad, outputBuffer);
 
 	return true;
-	}
+}
 
 /* thiz signals and args */
 enum
