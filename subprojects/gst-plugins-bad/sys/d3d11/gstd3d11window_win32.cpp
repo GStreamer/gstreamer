@@ -93,6 +93,11 @@ struct _GstD3D11WindowWin32
 
   /* Handle set_render_rectangle */
   GstVideoRectangle render_rect;
+
+  /* Used to cancel proccessing the window events if going to be destroyed */
+  gboolean stopping;
+  /* Storage for the reference on 'self' obtained by the internal window */
+  gpointer window_ref;
 };
 
 #define gst_d3d11_window_win32_parent_class parent_class
@@ -205,16 +210,23 @@ gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
 {
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
 
+  self->stopping = TRUE;
   if (self->external_hwnd) {
-    gst_d3d11_window_win32_release_external_handle (self->external_hwnd);
-    RemovePropA (self->internal_hwnd, D3D11_WINDOW_PROP_NAME);
-
     if (self->internal_hwnd_thread == g_thread_self ()) {
       /* State changing thread is identical to internal window thread.
        * window can be closed here */
-
+      gst_d3d11_window_win32_release_external_handle(self->external_hwnd);
       GST_INFO_OBJECT (self, "Closing internal window immediately");
       gst_d3d11_window_win32_destroy_internal_window (self->internal_hwnd);
+      RemovePropA(self->internal_hwnd, D3D11_WINDOW_PROP_NAME);
+      // Internal window is released, so we release the reference that belongs to it.
+      if (self->window_ref) {
+          self->window_ref = NULL;
+          g_assert(G_OBJECT(self)->ref_count > 1);
+          gst_object_unref(self);
+      }
+      self->internal_hwnd = NULL;
+      self->external_hwnd = NULL;
     } else {
       /* We cannot destroy internal window from non-window thread.
        * and we cannot use synchronously SendMessage() method at this point
@@ -227,8 +239,6 @@ gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
           0, 0);
     }
 
-    self->external_hwnd = NULL;
-    self->internal_hwnd = NULL;
     self->internal_hwnd_thread = NULL;
   }
 
@@ -367,6 +377,11 @@ gst_d3d11_window_win32_thread_func (gpointer data)
   gst_d3d11_window_win32_destroy_internal_window (self->internal_hwnd);
   self->internal_hwnd = NULL;
   self->internal_hwnd_thread = NULL;
+  if (self->window_ref != NULL) {
+    g_assert (G_OBJECT (self)->ref_count > 1);
+    g_object_unref (self);
+    self->window_ref = NULL;
+  }
 
   if (self->msg_source) {
     g_source_destroy (self->msg_source);
@@ -677,6 +692,11 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
         gst_d3d11_window_win32_destroy_internal_window (self->internal_hwnd);
         self->internal_hwnd = NULL;
         self->internal_hwnd_thread = NULL;
+        if (self->window_ref != NULL) {
+          self->window_ref = NULL;
+          g_object_unref (self);
+          self = NULL;
+        }
       }
       break;
     case WM_KEYDOWN:
@@ -761,54 +781,51 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     ReleaseDC (hWnd, self->device_handle);
 
     SetPropA (hWnd, D3D11_WINDOW_PROP_NAME, self);
-  } else if (GetPropA (hWnd, D3D11_WINDOW_PROP_NAME)) {
-    HANDLE handle = GetPropA (hWnd, D3D11_WINDOW_PROP_NAME);
+  } else {
+      self = (GstD3D11WindowWin32 *)GetPropA (hWnd, D3D11_WINDOW_PROP_NAME);
 
-    if (!GST_IS_D3D11_WINDOW_WIN32 (handle)) {
-      GST_WARNING ("%p is not d3d11window object", handle);
-      return DefWindowProcA (hWnd, uMsg, wParam, lParam);
-    }
+      if (uMsg == WM_GST_D3D11_DESTROY_INTERNAL_WINDOW) {
+          GST_INFO("Handle destroy window message");
+          gst_d3d11_window_win32_release_external_handle(self->external_hwnd);
+          gst_d3d11_window_win32_destroy_internal_window(hWnd);
+          g_assert(GST_IS_D3D11_WINDOW_WIN32(self));
+          g_assert(self->internal_hwnd == hWnd);
+          if (self->window_ref) {
+            self->window_ref = NULL;
+            gst_object_unref(self);
+            self = NULL;
+          }
+          return 0;
+      }
 
-    self = GST_D3D11_WINDOW_WIN32 (handle);
+      if (self != NULL && !self->stopping) {
+          g_assert(GST_IS_D3D11_WINDOW_WIN32(self));
+          g_assert(self->internal_hwnd == hWnd);
 
-    g_assert (self->internal_hwnd == hWnd);
+          gst_d3d11_device_lock(self->parent.device);
+          gst_d3d11_window_win32_handle_window_proc(self, hWnd, uMsg, wParam,
+              lParam);
+          gst_d3d11_device_unlock(self->parent.device);
 
-    gst_d3d11_device_lock (self->parent.device);
-    gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
-        lParam);
-    gst_d3d11_device_unlock (self->parent.device);
-
-    switch (uMsg) {
-      case WM_SIZE:
-        /* We handled this event already */
-        return 0;
-      case WM_NCHITTEST:
-        /* To passthrough mouse event if external window is used.
-         * Only hit-test succeeded window can receive/handle some mouse events
-         * and we want such events to be handled by parent (application) window
-         */
-        if (self->external_hwnd)
-          return (LRESULT) HTTRANSPARENT;
-        break;
-      default:
-        break;
-    }
-  } else if (uMsg == WM_GST_D3D11_DESTROY_INTERNAL_WINDOW) {
-    GST_INFO ("Handle destroy window message");
-    gst_d3d11_window_win32_destroy_internal_window (hWnd);
-
-    return 0;
+          switch (uMsg) {
+          case WM_SIZE:
+              /* We handled this event already */
+              return 0;
+          case WM_NCHITTEST:
+              /* To passthrough mouse event if external window is used.
+               * Only hit-test succeeded window can receive/handle some mouse events
+               * and we want such events to be handled by parent (application) window
+               */
+              if (self->external_hwnd)
+                  return (LRESULT)HTTRANSPARENT;
+              break;
+          default:
+              break;
+          }
+      }
   }
 
-  if (self != NULL) {
-    LRESULT ret;
-
-    gst_d3d11_device_lock(self->parent.device);
-    ret = DefWindowProcA (hWnd, uMsg, wParam, lParam);
-    gst_d3d11_device_unlock(self->parent.device);
-    return ret;
-  } else
-    return DefWindowProcA (hWnd, uMsg, wParam, lParam);
+  return DefWindowProcA (hWnd, uMsg, wParam, lParam);
 }
 
 static LRESULT FAR PASCAL
@@ -824,6 +841,9 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   if (uMsg == WM_GST_D3D11_CONSTRUCT_INTERNAL_WINDOW) {
     GstD3D11Window *window = GST_D3D11_WINDOW (self);
     RECT rect;
+
+    g_assert (self->window_ref == NULL);
+    self->window_ref = gst_object_ref (self);
 
     GST_DEBUG_OBJECT (self, "Create internal window");
 
@@ -865,6 +885,11 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_CLOSED;
       g_mutex_unlock (&self->lock);
+      if (self->window_ref != NULL) {
+          self->window_ref = NULL;
+          g_object_unref (self);
+          self = NULL;
+      }
     } else {
       gst_d3d11_device_lock (self->parent.device);
       gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
@@ -873,14 +898,7 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
   }
 
-  {
-      LRESULT ret;
-
-      gst_d3d11_device_lock(self->parent.device);
-      ret = CallWindowProcA(external_window_proc, hWnd, uMsg, wParam, lParam);
-      gst_d3d11_device_unlock(self->parent.device);
-      return ret;
-  }
+  return CallWindowProcA(external_window_proc, hWnd, uMsg, wParam, lParam);
 }
 
 static void
