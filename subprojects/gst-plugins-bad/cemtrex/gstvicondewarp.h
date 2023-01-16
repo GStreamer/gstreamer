@@ -6,19 +6,47 @@
 
 #include <gst/gst.h>
 #include <memory>
+#include <mutex>
 #include "IMV1.h"
+
+
+class InputOutputBuffers
+{
+public:
+	explicit InputOutputBuffers();
+	~InputOutputBuffers();
+
+	void reset();
+
+	bool setInputBuffer(GstBuffer* inputBuffer, int width, int height);
+
+	IMV_Buffer* in();
+	IMV_Buffer* out();
+
+	int width();
+	int height();
+
+	GstBuffer* outputTransferFull();
+
+private:
+	std::unique_ptr<IMV_Buffer> m_in;
+	std::unique_ptr<IMV_Buffer> m_out;
+	GstMapInfo m_inputMap;
+	GstMapInfo m_outputMap;
+	GstBuffer* m_outputBuffer;
+	int m_width;
+	int m_height;
+};
 
 class DewarpPlugin
 {
 public:
 	explicit DewarpPlugin();
 	~DewarpPlugin();
-	bool setUpCamera(std::string format, int width, int height, unsigned char* bufferIn, unsigned char* bufferOut);
 	bool chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* buffer);
 	void setPosition();
 
 	void setProperties(const GstStructure* properties);
-	void setOnOff(bool status);
 	void setMountPos(int mountPos);
 	void setViewType(int viewType);
 	void setLensName(const char* lensName);
@@ -30,6 +58,9 @@ public:
 
 
 private:
+	bool setUpCamera(std::string format, int width, int height, GstBuffer* originalInputBuffer);
+	bool calibrateLens(std::string format, int width, int height, GstCaps* caps, GstBuffer* originalInputBuffer);
+
 	std::string m_lensName;
 	int m_mountPos;
 	int m_viewType;
@@ -41,13 +72,13 @@ private:
 		float m_zoom;
 	} m_data[4];
 
-	bool m_onOff;
-
 	std::unique_ptr<IMV_CameraInterface> m_camera;
-	std::unique_ptr<IMV_Buffer> m_in;
-	std::unique_ptr<IMV_Buffer> m_out;
-
+	InputOutputBuffers m_buffers;
+	std::string m_acsInfo;
 	bool m_isCameraSetup;
+	bool m_isLensCalibrated;
+
+	std::mutex m_render;
 
 };
 
