@@ -148,16 +148,22 @@ gboolean        gst_is_vulkan_buffer_memory              (GstMemory * mem);
 
 GST_VULKAN_API
 GstMemory *     gst_vulkan_buffer_memory_alloc           (GstVulkanDevice * device,
-                                                         gsize size,
-                                                         VkBufferUsageFlags usage,
-                                                         VkMemoryPropertyFlags mem_prop_flags);
+                                                          gsize size,
+                                                          VkBufferUsageFlags usage,
+                                                          VkMemoryPropertyFlags mem_prop_flags);
+
+GST_VULKAN_API
+GstMemory *    gst_vulkan_buffer_memory_alloc_with_buffer_info
+                                                         (GstVulkanDevice * device,
+                                                          VkBufferCreateInfo * buffer_info,
+                                                          VkMemoryPropertyFlags mem_prop_flags);
 
 GST_VULKAN_API
 GstMemory *     gst_vulkan_buffer_memory_wrapped         (GstVulkanDevice * device,
-                                                         VkBuffer buffer,
-                                                         VkBufferUsageFlags usage,
-                                                         gpointer user_data,
-                                                         GDestroyNotify notify);
+                                                          VkBuffer buffer,
+                                                          VkBufferUsageFlags usage,
+                                                          gpointer user_data,
+                                                          GDestroyNotify notify);
 
 G_END_DECLS
 

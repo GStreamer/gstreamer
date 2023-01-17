@@ -96,25 +96,19 @@ _vk_buffer_mem_init (GstVulkanBufferMemory * mem, GstAllocator * allocator,
 }
 
 static GstVulkanBufferMemory *
-_vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
-    GstVulkanDevice * device, gsize size, VkBufferUsageFlags usage,
-    VkMemoryPropertyFlags mem_prop_flags, gpointer user_data,
-    GDestroyNotify notify)
+_vk_buffer_mem_new_alloc_with_buffer_info (GstAllocator * allocator,
+    GstMemory * parent, GstVulkanDevice * device,
+    VkBufferCreateInfo * buffer_info, VkMemoryPropertyFlags mem_prop_flags,
+    gpointer user_data, GDestroyNotify notify)
 {
   GstVulkanBufferMemory *mem = NULL;
   GstAllocationParams params = { 0, };
-  VkBufferCreateInfo buffer_info;
   GError *error = NULL;
   guint32 type_idx;
   VkBuffer buffer;
   VkResult err;
 
-  if (!_create_info_from_args (&buffer_info, size, usage)) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_BUFFER_MEMORY, "Incorrect buffer parameters");
-    goto error;
-  }
-
-  err = vkCreateBuffer (device->device, &buffer_info, NULL, &buffer);
+  err = vkCreateBuffer (device->device, buffer_info, NULL, &buffer);
   if (gst_vulkan_error_to_g_error (err, &error, "vkCreateBuffer") < 0)
     goto vk_error;
 
@@ -128,8 +122,8 @@ _vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
   }
 
   params.align = mem->requirements.alignment - 1;
-  _vk_buffer_mem_init (mem, allocator, parent, device, usage, &params, size,
-      user_data, notify);
+  _vk_buffer_mem_init (mem, allocator, parent, device, buffer_info->usage,
+      &params, buffer_info->size, user_data, notify);
   mem->buffer = buffer;
 
   if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
@@ -161,6 +155,23 @@ error:
       gst_memory_unref ((GstMemory *) mem);
     return NULL;
   }
+}
+
+static GstVulkanBufferMemory *
+_vk_buffer_mem_new_alloc (GstAllocator * allocator, GstMemory * parent,
+    GstVulkanDevice * device, gsize size, VkBufferUsageFlags usage,
+    VkMemoryPropertyFlags mem_prop_flags, gpointer user_data,
+    GDestroyNotify notify)
+{
+  VkBufferCreateInfo buffer_info;
+
+  if (!_create_info_from_args (&buffer_info, size, usage)) {
+    GST_CAT_ERROR (GST_CAT_VULKAN_BUFFER_MEMORY, "Incorrect buffer parameters");
+    return NULL;
+  }
+
+  return _vk_buffer_mem_new_alloc_with_buffer_info (allocator, parent, device,
+      &buffer_info, mem_prop_flags, user_data, notify);
 }
 
 static GstVulkanBufferMemory *
@@ -269,6 +280,35 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
   gst_object_unref (mem->device);
 
   g_free (mem);
+}
+
+/**
+ * gst_vulkan_buffer_memory_alloc_with_buffer_info:
+ * @device: a #GstVulkanDevice
+ * @buffer_info: the VkBufferCreateInfo structure
+ * @mem_prop_flags: memory properties flags for the backing memory
+ *
+ * Allocate a new #GstVulkanBufferMemory.
+ *
+ * Returns: (transfer full): a #GstMemory object backed by a vulkan buffer
+ *          backed by vulkan device memory
+ *
+ * Since: 1.24
+ */
+GstMemory *
+gst_vulkan_buffer_memory_alloc_with_buffer_info (GstVulkanDevice * device,
+    VkBufferCreateInfo * buffer_info, VkMemoryPropertyFlags mem_prop_flags)
+{
+  GstVulkanBufferMemory *mem;
+
+  g_return_val_if_fail (buffer_info
+      && buffer_info->sType == VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO, NULL);
+
+  mem = _vk_buffer_mem_new_alloc_with_buffer_info
+      (_vulkan_buffer_memory_allocator, NULL, device, buffer_info,
+      mem_prop_flags, NULL, NULL);
+
+  return (GstMemory *) mem;
 }
 
 /**
