@@ -146,7 +146,8 @@ static GstStaticPadTemplate videosink_templ =
         "video/x-prores, "
         COMMON_VIDEO_CAPS "; "
         "video/x-wmv, " "wmvversion = (int) [ 1, 3 ], " COMMON_VIDEO_CAPS "; "
-        "video/x-av1, " "alignment = (string) \"tu\", " COMMON_VIDEO_CAPS ";"
+        "video/x-av1, " "stream-format = (string) \"obu-stream\", "
+        "alignment = (string) \"tu\", " COMMON_VIDEO_CAPS ";"
         "video/x-ffv, ffversion = (int) 1, " COMMON_VIDEO_CAPS)
     );
 
