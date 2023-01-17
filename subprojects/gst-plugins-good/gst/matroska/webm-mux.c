@@ -69,7 +69,9 @@ static GstStaticPadTemplate webm_videosink_templ =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-vp8, " COMMON_VIDEO_CAPS ";"
-        "video/x-vp9, " COMMON_VIDEO_CAPS ";" "video/x-av1, " COMMON_VIDEO_CAPS)
+        "video/x-vp9, " COMMON_VIDEO_CAPS ";" "video/x-av1, "
+        "stream-format = (string) \"obu-stream\", "
+        "alignment = (string) \"tu\", " COMMON_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate webm_audiosink_templ =
