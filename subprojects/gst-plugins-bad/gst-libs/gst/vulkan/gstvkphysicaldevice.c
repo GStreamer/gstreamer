@@ -24,6 +24,7 @@
 
 #include "gstvkphysicaldevice.h"
 
+#include "gstvkphysicaldevice-private.h"
 #include "gstvkdebug.h"
 
 #include <string.h>
@@ -1212,4 +1213,19 @@ gst_vulkan_physical_device_get_extension_info (GstVulkanPhysicalDevice * device,
   GST_OBJECT_UNLOCK (device);
 
   return ret;
+}
+
+const VkPhysicalDeviceFeatures2 *
+gst_vulkan_physical_device_get_features (GstVulkanPhysicalDevice * device)
+{
+#if defined (VK_API_VERSION_1_2)
+  GstVulkanPhysicalDevicePrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VULKAN_PHYSICAL_DEVICE (device), FALSE);
+
+  priv = GET_PRIV (device);
+  if (gst_vulkan_instance_check_version (device->instance, 1, 2, 0))
+    return &priv->features10;
+#endif
+  return NULL;
 }
