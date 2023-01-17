@@ -14835,6 +14835,23 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "stream-format", G_TYPE_STRING, "avc3",
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
+    case FOURCC_ai12:
+    case FOURCC_ai13:
+    case FOURCC_ai15:
+    case FOURCC_ai16:
+    case FOURCC_ai1p:
+    case FOURCC_ai1q:
+    case FOURCC_ai52:
+    case FOURCC_ai53:
+    case FOURCC_ai55:
+    case FOURCC_ai56:
+    case FOURCC_ai5p:
+    case FOURCC_ai5q:
+      _codec ("H.264 / AVC");
+      caps = gst_caps_new_simple ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "byte-stream",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
     case FOURCC_H265:
     case FOURCC_hvc1:
     case FOURCC_dvh1:
