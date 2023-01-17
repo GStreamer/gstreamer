@@ -15018,6 +15018,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case FOURCC_av01:
       _codec ("AV1");
       caps = gst_caps_new_simple ("video/x-av1",
+          "stream-format", G_TYPE_STRING, "obu-stream",
           "alignment", G_TYPE_STRING, "tu", NULL);
       break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
