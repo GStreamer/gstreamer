@@ -143,6 +143,8 @@ class WebRTCClient:
             elif msg.type == Gst.MessageType.EOS:
                 remove_bus_poll()
                 break
+            elif msg.type == Gst.MessageType.LATENCY:
+                self.pipe.recalculate_latency()
 
     def send_sdp(self, offer):
         text = offer.sdp.as_text()
