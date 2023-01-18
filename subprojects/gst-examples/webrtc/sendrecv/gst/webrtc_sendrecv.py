@@ -129,6 +129,21 @@ class WebRTCClient:
     def send_soon(self, msg):
         asyncio.run_coroutine_threadsafe(self.send(msg), self.event_loop)
 
+    def on_bus_poll_cb(self, bus):
+        def remove_bus_poll():
+            self.event_loop.remove_reader(bus.get_pollfd().fd)
+            self.event_loop.stop()
+        while bus.peek():
+            msg = bus.pop()
+            if msg.type == Gst.MessageType.ERROR:
+                err = msg.parse_error()
+                print("ERROR:", err.gerror, err.debug)
+                remove_bus_poll()
+                break
+            elif msg.type == Gst.MessageType.EOS:
+                remove_bus_poll()
+                break
+
     def send_sdp(self, offer):
         text = offer.sdp.as_text()
         if offer.type == GstWebRTC.WebRTCSDPType.OFFER:
@@ -208,6 +223,8 @@ class WebRTCClient:
     def start_pipeline(self, create_offer=True, audio_pt=96, video_pt=97):
         print_status(f'Creating pipeline, create_offer: {create_offer}')
         self.pipe = Gst.parse_launch(PIPELINE_DESC[self.video_encoding].format(video_pt=video_pt, audio_pt=audio_pt))
+        bus = self.pipe.get_bus()
+        self.event_loop.add_reader(bus.get_pollfd().fd, self.on_bus_poll_cb, bus)
         self.webrtc = self.pipe.get_by_name('sendrecv')
         self.webrtc.connect('on-negotiation-needed', self.on_negotiation_needed, create_offer)
         self.webrtc.connect('on-ice-candidate', self.send_ice_candidate_message)
