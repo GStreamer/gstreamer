@@ -643,8 +643,7 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   if (dmabuf->target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES &&
       !gst_gl_context_check_feature (dmabuf->upload->context,
           "GL_OES_EGL_image_external")) {
-    GST_DEBUG_OBJECT (dmabuf->upload,
-        "no EGL_KHR_image_base_external extension");
+    GST_DEBUG_OBJECT (dmabuf->upload, "no GL_OES_EGL_image_external extension");
     return FALSE;
   }
 
