@@ -25,6 +25,7 @@
 #include <windows.h>
 #include <initguid.h>
 #include <audioclient.h>
+#include <endpointvolume.h>
 
 G_BEGIN_DECLS
 

@@ -51,6 +51,9 @@ HRESULT                gst_wasapi2_ring_buffer_set_volume (GstWasapi2RingBuffer 
 HRESULT                gst_wasapi2_ring_buffer_get_volume (GstWasapi2RingBuffer * buf,
                                                            gfloat * volume);
 
+void                   gst_wasapi2_ring_buffer_set_device_mute_monitoring (GstWasapi2RingBuffer * buf,
+                                                                           gboolean value);
+
 G_END_DECLS
 
 #endif /* __GST_WASAPI2_RING_BUFFER_H__ */

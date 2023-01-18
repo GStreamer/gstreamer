@@ -176,6 +176,8 @@ struct _GstWasapi2RingBuffer
   gboolean mute_changed;
   gboolean volume_changed;
 
+  gboolean monitor_device_mute;
+
   GstCaps *supported_caps;
 };
 
@@ -462,6 +464,7 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
   gint segment;
   guint8 *readptr;
   gint len;
+  gboolean is_device_muted;
 
   if (!capture_client) {
     GST_ERROR_OBJECT (self, "IAudioCaptureClient is not available");
@@ -474,6 +477,9 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
     to_read = 0;
     goto out;
   }
+
+  is_device_muted = g_atomic_int_get (&self->monitor_device_mute) &&
+      gst_wasapi2_client_is_endpoint_muted (self->client);
 
   to_read_bytes = to_read * GST_AUDIO_INFO_BPF (info);
 
@@ -539,7 +545,8 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
     if (len > to_read_bytes)
       len = to_read_bytes;
 
-    if ((flags & AUDCLNT_BUFFERFLAGS_SILENT) == AUDCLNT_BUFFERFLAGS_SILENT) {
+    if (((flags & AUDCLNT_BUFFERFLAGS_SILENT) == AUDCLNT_BUFFERFLAGS_SILENT) ||
+        is_device_muted) {
       gst_audio_format_info_fill_silence (ringbuffer->spec.info.finfo,
           readptr + self->segoffset, len);
     } else {
@@ -1482,4 +1489,13 @@ gst_wasapi2_ring_buffer_get_volume (GstWasapi2RingBuffer * buf, gfloat * volume)
   *volume = volume_val;
 
   return hr;
+}
+
+void
+gst_wasapi2_ring_buffer_set_device_mute_monitoring (GstWasapi2RingBuffer * buf,
+    gboolean value)
+{
+  g_return_if_fail (GST_IS_WASAPI2_RING_BUFFER (buf));
+
+  g_atomic_int_set (&buf->monitor_device_mute, value);
 }

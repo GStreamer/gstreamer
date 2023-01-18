@@ -119,6 +119,7 @@ gst_wasapi2_src_loopback_mode_get_type (void)
 #define DEFAULT_VOLUME        1.0
 #define DEFAULT_LOOPBACK      FALSE
 #define DEFAULT_LOOPBACK_MODE GST_WASAPI2_SRC_LOOPBACK_DEFAULT
+#define DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE FALSE
 
 enum
 {
@@ -131,6 +132,7 @@ enum
   PROP_LOOPBACK,
   PROP_LOOPBACK_MODE,
   PROP_LOOPBACK_TARGET_PID,
+  PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE,
 };
 
 struct _GstWasapi2Src
@@ -146,6 +148,7 @@ struct _GstWasapi2Src
   gboolean loopback;
   GstWasapi2SrcLoopbackMode loopback_mode;
   guint loopback_pid;
+  gboolean loopback_silence_on_device_mute;
 
   gboolean mute_changed;
   gboolean volume_changed;
@@ -168,6 +171,8 @@ static void gst_wasapi2_src_set_mute (GstWasapi2Src * self, gboolean mute);
 static gboolean gst_wasapi2_src_get_mute (GstWasapi2Src * self);
 static void gst_wasapi2_src_set_volume (GstWasapi2Src * self, gdouble volume);
 static gdouble gst_wasapi2_src_get_volume (GstWasapi2Src * self);
+static void gst_wasapi2_src_set_silence_on_mute (GstWasapi2Src * self,
+    gboolean value);
 
 #define gst_wasapi2_src_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstWasapi2Src, gst_wasapi2_src,
@@ -274,6 +279,22 @@ gst_wasapi2_src_class_init (GstWasapi2SrcClass * klass)
             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   }
 
+  /**
+   * GstWasapi2Src:loopback-silence-on-device-mute:
+   *
+   * When loopback recording, if the device is muted, inject silence in the pipeline
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE,
+      g_param_spec_boolean ("loopback-silence-on-device-mute",
+          "Loopback Silence On Device Mute",
+          "When loopback recording, if the device is muted, inject silence in the pipeline",
+          DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE,
+          GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
+          G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (element_class, &src_template);
   gst_element_class_set_static_metadata (element_class, "Wasapi2Src",
       "Source/Audio/Hardware",
@@ -304,6 +325,8 @@ gst_wasapi2_src_init (GstWasapi2Src * self)
   self->volume = DEFAULT_VOLUME;
   self->low_latency = DEFAULT_LOW_LATENCY;
   self->loopback = DEFAULT_LOOPBACK;
+  self->loopback_silence_on_device_mute =
+      DEFAULT_LOOPBACK_SILENCE_ON_DEVICE_MUTE;
 }
 
 static void
@@ -348,6 +371,9 @@ gst_wasapi2_src_set_property (GObject * object, guint prop_id,
     case PROP_LOOPBACK_TARGET_PID:
       self->loopback_pid = g_value_get_uint (value);
       break;
+    case PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE:
+      gst_wasapi2_src_set_silence_on_mute (self, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -381,6 +407,9 @@ gst_wasapi2_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_LOOPBACK_TARGET_PID:
       g_value_set_uint (value, self->loopback_pid);
+      break;
+    case PROP_LOOPBACK_SILENCE_ON_DEVICE_MUTE:
+      g_value_set_boolean (value, self->loopback_silence_on_device_mute);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -488,6 +517,11 @@ gst_wasapi2_src_create_ringbuffer (GstAudioBaseSrc * src)
       self->low_latency, self->device_id, self->dispatcher, name,
       self->loopback_pid);
   g_free (name);
+
+  if (self->loopback) {
+    gst_wasapi2_ring_buffer_set_device_mute_monitoring (GST_WASAPI2_RING_BUFFER
+        (ringbuffer), self->loopback_silence_on_device_mute);
+  }
 
   return ringbuffer;
 }
@@ -607,4 +641,23 @@ gst_wasapi2_src_get_volume (GstWasapi2Src * self)
   volume = MIN (1.0, volume);
 
   return volume;
+}
+
+static void
+gst_wasapi2_src_set_silence_on_mute (GstWasapi2Src * self, gboolean value)
+{
+  GstAudioBaseSrc *bsrc = GST_AUDIO_BASE_SRC_CAST (self);
+
+  GST_OBJECT_LOCK (self);
+
+  self->loopback_silence_on_device_mute = value;
+
+  if (self->loopback && bsrc->ringbuffer) {
+    GstWasapi2RingBuffer *ringbuffer =
+        GST_WASAPI2_RING_BUFFER (bsrc->ringbuffer);
+
+    gst_wasapi2_ring_buffer_set_device_mute_monitoring (ringbuffer, value);
+  }
+
+  GST_OBJECT_UNLOCK (self);
 }

@@ -95,15 +95,29 @@ static void
 gst_wasapi2_client_on_device_activated (GstWasapi2Client * client,
     IAudioClient * audio_client);
 
+static void
+gst_wasapi2_client_on_endpoint_volume_activated (GstWasapi2Client * client,
+    IAudioEndpointVolume * audio_endpoint_volume);
+
+static void
+gst_wasapi2_client_set_endpoint_muted (GstWasapi2Client * client,
+    gboolean muted);
+
 /* *INDENT-OFF* */
 class GstWasapiDeviceActivator
     : public RuntimeClass<RuntimeClassFlags<ClassicCom>, FtmBase,
         IActivateAudioInterfaceCompletionHandler>
 {
 public:
+  typedef enum {
+    WASAPI_IFACE_AUDIO_CLIENT,
+    WASAPI_IFACE_AUDIO_ENDPOINT_VOLUME,
+  } WasapiInterface;
+
   GstWasapiDeviceActivator ()
   {
     g_weak_ref_init (&listener_, nullptr);
+    interface_to_activate_ = WASAPI_IFACE_AUDIO_CLIENT;
   }
 
   ~GstWasapiDeviceActivator ()
@@ -112,7 +126,9 @@ public:
   }
 
   HRESULT
-  RuntimeClassInitialize (GstWasapi2Client * listener, gpointer dispatcher)
+  RuntimeClassInitialize (GstWasapi2Client * listener,
+      gpointer dispatcher,
+      WasapiInterface interface_to_activate)
   {
     if (!listener)
       return E_INVALIDARG;
@@ -129,6 +145,8 @@ public:
         GST_INFO("Main UI dispatcher is available");
     }
 
+    interface_to_activate_ = interface_to_activate;
+
     return S_OK;
   }
 
@@ -136,6 +154,7 @@ public:
   (IActivateAudioInterfaceAsyncOperation *async_op)
   {
     ComPtr<IAudioClient> audio_client;
+    ComPtr<IAudioEndpointVolume> audio_endpoint_volume;
     HRESULT hr = S_OK;
     HRESULT hr_async_op = S_OK;
     ComPtr<IUnknown> audio_interface;
@@ -162,15 +181,34 @@ public:
       goto done;
     }
 
-    hr = audio_interface.As (&audio_client);
-    if (!gst_wasapi2_result (hr)) {
-      GST_ERROR_OBJECT (client, "Failed to get IAudioClient3 interface");
-      goto done;
+    switch (interface_to_activate_) {
+      case WASAPI_IFACE_AUDIO_CLIENT:
+        hr = audio_interface.As (&audio_client);
+        if (!gst_wasapi2_result (hr)) {
+          GST_ERROR_OBJECT (client, "Failed to get IAudioClient3 interface");
+          goto done;
+        }
+        break;
+      case WASAPI_IFACE_AUDIO_ENDPOINT_VOLUME:
+        hr = audio_interface.As (&audio_endpoint_volume);
+        if (!gst_wasapi2_result (hr)) {
+          GST_ERROR_OBJECT (client, "Failed to get IAudioEndpointVolume interface");
+          goto done;
+        }
+        break;
     }
 
   done:
     /* Should call this method anyway, listener will wait this event */
-    gst_wasapi2_client_on_device_activated (client, audio_client.Get());
+    switch (interface_to_activate_) {
+      case WASAPI_IFACE_AUDIO_CLIENT:
+        gst_wasapi2_client_on_device_activated (client, audio_client.Get());
+        break;
+      case WASAPI_IFACE_AUDIO_ENDPOINT_VOLUME:
+        gst_wasapi2_client_on_endpoint_volume_activated (client, audio_endpoint_volume.Get());
+        break;
+    }
+
     gst_object_unref (client);
     /* return S_OK anyway, but listener can know it's succeeded or not
      * by passed IAudioClient handle via gst_wasapi2_client_on_device_activated
@@ -192,16 +230,27 @@ public:
       ComPtr<IActivateAudioInterfaceAsyncOperation> async_op;
       HRESULT async_hr = S_OK;
       PROPVARIANT activate_params = {};
+      IID iid = {};
+
+      switch (interface_to_activate_) {
+        case WASAPI_IFACE_AUDIO_CLIENT:
+          iid = __uuidof (IAudioClient);
+          break;
+        case WASAPI_IFACE_AUDIO_ENDPOINT_VOLUME:
+          iid = __uuidof (IAudioEndpointVolume);
+          break;
+      }
+
       if (params) {
         activate_params.vt = VT_BLOB;
         activate_params.blob.cbSize = sizeof(GST_AUDIOCLIENT_ACTIVATION_PARAMS);
         activate_params.blob.pBlobData = (BYTE *) params;
 
         async_hr = ActivateAudioInterfaceAsync (device_id.c_str (),
-              __uuidof(IAudioClient), &activate_params, this, &async_op);
+              iid, &activate_params, this, &async_op);
       } else {
         async_hr = ActivateAudioInterfaceAsync (device_id.c_str (),
-              __uuidof(IAudioClient), nullptr, this, &async_op);
+              iid, nullptr, this, &async_op);
       }
 
       /* for debugging */
@@ -234,6 +283,46 @@ public:
 private:
   GWeakRef listener_;
   ComPtr<ICoreDispatcher> dispatcher_;
+  WasapiInterface interface_to_activate_;
+};
+
+class GstWasapiEndpointVolumeCallback
+    : public RuntimeClass<RuntimeClassFlags<ClassicCom>, FtmBase,
+        IAudioEndpointVolumeCallback>
+{
+public:
+  GstWasapiEndpointVolumeCallback ()
+  {
+    g_weak_ref_init (&client_, nullptr);
+  }
+
+  ~GstWasapiEndpointVolumeCallback ()
+  {
+    g_weak_ref_set (&client_, nullptr);
+  }
+
+  HRESULT
+  RuntimeClassInitialize (GstWasapi2Client * client)
+  {
+    if (!client)
+      return E_INVALIDARG;
+    g_weak_ref_set (&client_, client);
+    return S_OK;
+  }
+
+  STDMETHOD(OnNotify)
+  (AUDIO_VOLUME_NOTIFICATION_DATA * notify)
+  {
+    GstWasapi2Client *client = (GstWasapi2Client *) g_weak_ref_get (&client_);
+    if (client) {
+      gst_wasapi2_client_set_endpoint_muted (client, !!notify->bMuted);
+      gst_object_unref (client);
+    }
+    return S_OK;
+  }
+
+private:
+  GWeakRef client_;
 };
 /* *INDENT-ON* */
 
@@ -273,7 +362,11 @@ struct _GstWasapi2Client
   guint target_pid;
 
   IAudioClient *audio_client;
-  GstWasapiDeviceActivator *activator;
+
+  GMutex endpoint_volume_lock;
+  IAudioEndpointVolume *audio_endpoint_volume;
+  GstWasapiEndpointVolumeCallback *endpoint_volume_callback;
+  gint is_endpoint_muted;
 
   GstCaps *supported_caps;
 
@@ -382,6 +475,8 @@ gst_wasapi2_client_init (GstWasapi2Client * self)
   g_cond_init (&self->init_cond);
   self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_INIT;
 
+  g_mutex_init (&self->endpoint_volume_lock);
+
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
 }
@@ -431,6 +526,8 @@ gst_wasapi2_client_finalize (GObject * object)
 
   g_mutex_clear (&self->init_lock);
   g_cond_clear (&self->init_cond);
+
+  g_mutex_clear (&self->endpoint_volume_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -534,6 +631,55 @@ gst_wasapi2_client_on_device_activated (GstWasapi2Client * self,
   g_mutex_unlock (&self->init_lock);
 }
 
+static void
+gst_wasapi2_client_on_endpoint_volume_activated (GstWasapi2Client * self,
+    IAudioEndpointVolume * audio_endpoint_volume)
+{
+  GST_INFO_OBJECT (self, "Audio Endpoint Volume activated");
+
+  if (audio_endpoint_volume) {
+    HRESULT hr;
+    ComPtr < GstWasapiEndpointVolumeCallback > callback;
+
+    g_mutex_lock (&self->endpoint_volume_lock);
+    audio_endpoint_volume->AddRef ();
+    self->audio_endpoint_volume = audio_endpoint_volume;
+
+    hr = MakeAndInitialize < GstWasapiEndpointVolumeCallback > (&callback,
+        self);
+    if (!gst_wasapi2_result (hr)) {
+      GST_WARNING_OBJECT (self,
+          "Could not create endpoint volume callback object");
+    } else {
+      hr = audio_endpoint_volume->RegisterControlChangeNotify (callback.Get ());
+      if (!gst_wasapi2_result (hr)) {
+        GST_WARNING_OBJECT (self,
+            "Failed to register endpoint volume callback");
+      } else {
+        BOOL initially_muted = FALSE;
+
+        self->endpoint_volume_callback = callback.Detach ();
+
+        hr = audio_endpoint_volume->GetMute (&initially_muted);
+        if (gst_wasapi2_result (hr)) {
+          gst_wasapi2_client_set_endpoint_muted (self, !!initially_muted);
+        }
+      }
+    }
+    g_mutex_unlock (&self->endpoint_volume_lock);
+  } else {
+    GST_WARNING_OBJECT (self, "IAudioEndpointVolume is unavailable");
+  }
+}
+
+static void
+gst_wasapi2_client_set_endpoint_muted (GstWasapi2Client * self, gboolean muted)
+{
+  GST_DEBUG_OBJECT (self, "Audio Endpoint Volume: muted=%d", muted);
+
+  g_atomic_int_set (&self->is_endpoint_muted, muted);
+}
+
 /* *INDENT-OFF* */
 static std::string
 convert_wstring_to_string (const std::wstring &wstr)
@@ -581,7 +727,8 @@ gst_wasapi2_client_get_default_device_id (GstWasapi2Client * self)
 
 static gboolean
 gst_wasapi2_client_activate_async (GstWasapi2Client * self,
-    GstWasapiDeviceActivator * activator)
+    GstWasapiDeviceActivator * activator,
+    GstWasapiDeviceActivator * endpoint_volume_activator)
 {
   /* *INDENT-OFF* */
   ComPtr<IDeviceInformationStatics> device_info_static;
@@ -866,6 +1013,20 @@ activate:
     goto failed;
   }
 
+  /* activate the endpoint volume interface */
+  if (endpoint_volume_activator) {
+    if (use_default_device) {
+      GST_INFO_OBJECT (self,
+          "Endpoint volume monitoring for the default device is not implemented.");
+    } else {
+      hr = endpoint_volume_activator->ActivateDeviceAsync
+          (target_device_id_wstring, nullptr);
+      if (!gst_wasapi2_result (hr)) {
+        GST_WARNING_OBJECT (self, "Failed to activate device");
+      }
+    }
+  }
+
   g_mutex_lock (&self->lock);
   if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_INIT)
     self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_WAIT;
@@ -905,10 +1066,11 @@ gst_wasapi2_client_thread_func (GstWasapi2Client * self)
   GSource *source;
   HRESULT hr;
   /* *INDENT-OFF* */
-  ComPtr<GstWasapiDeviceActivator> activator;
+  ComPtr<GstWasapiDeviceActivator> client_activator;
+  ComPtr<GstWasapiDeviceActivator> endpoint_volume_activator;
 
-  hr = MakeAndInitialize<GstWasapiDeviceActivator> (&activator,
-      self, self->dispatcher);
+  hr = MakeAndInitialize<GstWasapiDeviceActivator> (&client_activator,
+      self, self->dispatcher, GstWasapiDeviceActivator::WASAPI_IFACE_AUDIO_CLIENT);
   /* *INDENT-ON* */
 
   if (!gst_wasapi2_result (hr)) {
@@ -917,7 +1079,17 @@ gst_wasapi2_client_thread_func (GstWasapi2Client * self)
     goto run_loop;
   }
 
-  gst_wasapi2_client_activate_async (self, activator.Get ());
+  /* Initialize audio endpoint volume activator */
+  hr = MakeAndInitialize < GstWasapiDeviceActivator >
+      (&endpoint_volume_activator, self, self->dispatcher,
+      GstWasapiDeviceActivator::WASAPI_IFACE_AUDIO_ENDPOINT_VOLUME);
+  if (!gst_wasapi2_result (hr)) {
+    GST_WARNING_OBJECT (self,
+        "Could not create endpoint volume activator object");
+  }
+
+  gst_wasapi2_client_activate_async (self, client_activator.Get (),
+      endpoint_volume_activator.Get ());
 
   if (!self->dispatcher) {
     /* In case that dispatcher is unavailable, wait activation synchroniously */
@@ -948,9 +1120,19 @@ run_loop:
 
   GST_WASAPI2_CLEAR_COM (self->audio_client);
 
+  g_mutex_lock (&self->endpoint_volume_lock);
+  if (self->audio_endpoint_volume && self->endpoint_volume_callback) {
+    self->audio_endpoint_volume->
+        UnregisterControlChangeNotify (self->endpoint_volume_callback);
+  }
+  GST_WASAPI2_CLEAR_COM (self->endpoint_volume_callback);
+  GST_WASAPI2_CLEAR_COM (self->audio_endpoint_volume);
+  g_mutex_unlock (&self->endpoint_volume_lock);
+
   /* Reset explicitly to ensure that it happens before
    * RoInitializeWrapper dtor is called */
-  activator.Reset ();
+  client_activator.Reset ();
+  endpoint_volume_activator.Reset ();
 
   GST_DEBUG_OBJECT (self, "Exit thread function");
 
@@ -1096,4 +1278,12 @@ gst_wasapi2_client_get_handle (GstWasapi2Client * client)
   g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), nullptr);
 
   return client->audio_client;
+}
+
+gboolean
+gst_wasapi2_client_is_endpoint_muted (GstWasapi2Client * client)
+{
+  g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), FALSE);
+
+  return g_atomic_int_get (&client->is_endpoint_muted);
 }
