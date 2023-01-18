@@ -6,6 +6,10 @@
 # Demo gstreamer app for negotiating and streaming a sendrecv webrtc stream
 # with a browser JS app, implemented in Python.
 
+from websockets.version import version as wsv
+from gi.repository import GstSdp
+from gi.repository import GstWebRTC
+from gi.repository import Gst
 import random
 import ssl
 import websockets
@@ -17,11 +21,8 @@ import argparse
 
 import gi
 gi.require_version('Gst', '1.0')
-from gi.repository import Gst
 gi.require_version('GstWebRTC', '1.0')
-from gi.repository import GstWebRTC
 gi.require_version('GstSdp', '1.0')
-from gi.repository import GstSdp
 
 # Ensure that gst-python is installed
 try:
@@ -52,8 +53,6 @@ PIPELINE_DESC = {
     'H264': PIPELINE_DESC_H264,
     'VP8': PIPELINE_DESC_VP8,
 }
-
-from websockets.version import version as wsv
 
 
 def print_status(msg):
@@ -159,7 +158,7 @@ class WebRTCClient:
         self.send_soon(msg)
 
     def on_offer_created(self, promise, _, __):
-        assert(promise.wait() == Gst.PromiseResult.REPLIED)
+        assert promise.wait() == Gst.PromiseResult.REPLIED
         reply = promise.get_reply()
         offer = reply['offer']
         promise = Gst.Promise.new()
@@ -235,7 +234,7 @@ class WebRTCClient:
         self.pipe.set_state(Gst.State.PLAYING)
 
     def on_answer_created(self, promise, _, __):
-        assert(promise.wait() == Gst.PromiseResult.REPLIED)
+        assert promise.wait() == Gst.PromiseResult.REPLIED
         reply = promise.get_reply()
         answer = reply['answer']
         promise = Gst.Promise.new()
@@ -244,7 +243,7 @@ class WebRTCClient:
         self.send_sdp(answer)
 
     def on_offer_set(self, promise, _, __):
-        assert(promise.wait() == Gst.PromiseResult.REPLIED)
+        assert promise.wait() == Gst.PromiseResult.REPLIED
         promise = Gst.Promise.new_with_change_func(self.on_answer_created, None, None)
         self.webrtc.emit('create-answer', None, promise)
 
@@ -270,17 +269,17 @@ class WebRTCClient:
                 if not self.webrtc:
                     print_status('Incoming call: received an offer, creating pipeline')
                     pts = get_payload_types(sdpmsg, video_encoding=self.video_encoding, audio_encoding='OPUS')
-                    assert(self.video_encoding in pts)
-                    assert('OPUS' in pts)
+                    assert self.video_encoding in pts
+                    assert 'OPUS' in pts
                     self.start_pipeline(create_offer=False, video_pt=pts[self.video_encoding], audio_pt=pts['OPUS'])
 
-                assert(self.webrtc)
+                assert self.webrtc
 
                 offer = GstWebRTC.WebRTCSessionDescription.new(GstWebRTC.WebRTCSDPType.OFFER, sdpmsg)
                 promise = Gst.Promise.new_with_change_func(self.on_offer_set, None, None)
                 self.webrtc.emit('set-remote-description', offer, promise)
         elif 'ice' in msg:
-            assert(self.webrtc)
+            assert self.webrtc
             ice = msg['ice']
             candidate = ice['candidate']
             sdpmlineindex = ice['sdpMLineIndex']
