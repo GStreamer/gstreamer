@@ -147,6 +147,7 @@
 			additional/design/controller.md
 			additional/design/conventions.md
 			additional/design/decodebin.md
+			additional/design/dmabuf.md
 			additional/design/dynamic.md
 			additional/design/element-sink.md
 			additional/design/element-source.md
@@ -179,6 +180,7 @@
 			additional/design/orc-integration.md
 			additional/design/overview.md
 			additional/design/playbin.md
+			additional/design/playback-gapless.md
 			additional/design/preroll.md
 			additional/design/probes.md
 			additional/design/progress.md
