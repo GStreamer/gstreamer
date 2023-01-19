@@ -504,6 +504,7 @@ gst_win32_ipc_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
     gst_video_frame_copy (&frame, &mmf_frame);
     gst_video_frame_unmap (&frame);
+    win32_ipc_mmf_unref (mmf);
   }
 
   QueryPerformanceCounter (&cur_time);
