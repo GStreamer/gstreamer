@@ -695,6 +695,27 @@ void WPEView::loadUri(const gchar* uri)
     });
 }
 
+static void s_runJavascriptFinished(GObject* object, GAsyncResult* result, gpointer user_data)
+{
+    WebKitJavascriptResult* js_result;
+    GError* error = NULL;
+
+    js_result = webkit_web_view_run_javascript_finish(WEBKIT_WEB_VIEW(object), result, &error);
+    if (!js_result) {
+        GST_WARNING("Error running javascript: %s", error->message);
+        g_error_free(error);
+        return;
+    }
+    webkit_javascript_result_unref(js_result);
+}
+
+void WPEView::runJavascript(const char* script)
+{
+    s_view->dispatch([&]() {
+        webkit_web_view_run_javascript(webkit.view, script, nullptr, s_runJavascriptFinished, nullptr);
+    });
+}
+
 void WPEView::loadData(GBytes* bytes)
 {
     s_view->dispatch([this, bytes = g_bytes_ref(bytes)]() {

@@ -111,6 +111,7 @@ enum
 {
   SIGNAL_CONFIGURE_WEB_VIEW,
   SIGNAL_LOAD_BYTES,
+  SIGNAL_RUN_JAVASCRIPT,
   LAST_SIGNAL
 };
 static guint gst_wpe_video_src_signals[LAST_SIGNAL] = { 0 };
@@ -457,6 +458,15 @@ gst_wpe_video_src_configure_web_view (GstWpeVideoSrc * src,
 
   g_value_unset (&args[0]);
   g_value_unset (&args[1]);
+}
+
+static void
+gst_wpe_video_src_run_javascript (GstWpeVideoSrc * src, const gchar * script)
+{
+  if (src->view && GST_STATE (GST_ELEMENT_CAST (src)) > GST_STATE_NULL) {
+    GST_INFO_OBJECT (src, "running javascript");
+    src->view->runJavascript (script);
+  }
 }
 
 static void
@@ -879,4 +889,20 @@ gst_wpe_video_src_class_init (GstWpeVideoSrcClass * klass)
       static_cast < GSignalFlags > (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
       G_CALLBACK (gst_wpe_video_src_load_bytes), NULL, NULL, NULL,
       G_TYPE_NONE, 1, G_TYPE_BYTES);
+
+  /**
+   * GstWpeSrc::run-javascript:
+   * @src: the object which received the signal
+   * @script: the script to run
+   *
+   * Asynchronously run script in the context of the current page on the
+   * internal webView.
+   *
+   * Since: 1.22
+   */
+    gst_wpe_video_src_signals[SIGNAL_RUN_JAVASCRIPT] =
+      g_signal_new_class_handler ("run-javascript", G_TYPE_FROM_CLASS (klass),
+      static_cast < GSignalFlags > (G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
+      G_CALLBACK (gst_wpe_video_src_run_javascript), NULL, NULL, NULL,
+      G_TYPE_NONE, 1, G_TYPE_STRING);
 }
