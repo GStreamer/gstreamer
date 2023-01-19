@@ -499,7 +499,7 @@ static void free_input (GstDecodebin3 * dbin, DecodebinInput * input);
 static DecodebinInput *create_new_input (GstDecodebin3 * dbin, gboolean main);
 static gboolean set_input_group_id (DecodebinInput * input, guint32 * group_id);
 
-static void reconfigure_output_stream (DecodebinOutputStream * output,
+static gboolean reconfigure_output_stream (DecodebinOutputStream * output,
     MultiQueueSlot * slot);
 static void free_output_stream (GstDecodebin3 * dbin,
     DecodebinOutputStream * output);
@@ -1535,6 +1535,21 @@ stream_in_list (GList * list, const gchar * sid)
   return NULL;
 }
 
+static GList *
+remove_from_list (GList * list, const gchar * sid)
+{
+  GList *tmp;
+
+  for (tmp = list; tmp; tmp = tmp->next) {
+    gchar *osid = tmp->data;
+    if (!g_strcmp0 (sid, osid)) {
+      g_free (osid);
+      return g_list_delete_link (list, tmp);
+    }
+  }
+  return list;
+}
+
 static gboolean
 stream_list_equal (GList * lista, GList * listb)
 {
@@ -2282,6 +2297,34 @@ check_all_slot_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
   }
 }
 
+static void
+check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
+{
+  DecodebinOutputStream *output;
+
+  SELECTION_LOCK (dbin);
+  output = get_output_for_slot (slot);
+  if (!output) {
+    SELECTION_UNLOCK (dbin);
+    return;
+  }
+
+  if (!reconfigure_output_stream (output, slot)) {
+    GST_DEBUG_OBJECT (dbin, "Removing failing stream from selection: %s ",
+        gst_stream_get_stream_id (slot->active_stream));
+    slot->dbin->requested_selection =
+        remove_from_list (slot->dbin->requested_selection,
+        gst_stream_get_stream_id (slot->active_stream));
+    SELECTION_UNLOCK (dbin);
+    reassign_slot (dbin, slot);
+  } else {
+    GstMessage *msg = is_selection_done (dbin);
+    SELECTION_UNLOCK (dbin);
+    if (msg)
+      gst_element_post_message ((GstElement *) slot->dbin, msg);
+  }
+}
+
 static GstPadProbeReturn
 multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
     MultiQueueSlot * slot)
@@ -2357,17 +2400,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
       case GST_EVENT_CAPS:
       {
         /* Configure the output slot if needed */
-        DecodebinOutputStream *output;
-        GstMessage *msg = NULL;
-        SELECTION_LOCK (dbin);
-        output = get_output_for_slot (slot);
-        if (output) {
-          reconfigure_output_stream (output, slot);
-          msg = is_selection_done (dbin);
-        }
-        SELECTION_UNLOCK (dbin);
-        if (msg)
-          gst_element_post_message ((GstElement *) slot->dbin, msg);
+        check_slot_reconfiguration (dbin, slot);
       }
         break;
       case GST_EVENT_EOS:
@@ -2678,13 +2711,16 @@ keyframe_waiter_probe (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_DROP;
 }
 
-static void
+/* Returns FALSE if the output couldn't be properly configured and the
+ * associated GstStreams should be disabled */
+static gboolean
 reconfigure_output_stream (DecodebinOutputStream * output,
     MultiQueueSlot * slot)
 {
   GstDecodebin3 *dbin = output->dbin;
   GstCaps *new_caps = (GstCaps *) gst_stream_get_caps (slot->active_stream);
   gboolean needs_decoder;
+  gboolean ret = TRUE;
 
   needs_decoder = gst_caps_can_intersect (new_caps, dbin->caps) != TRUE;
 
@@ -2697,7 +2733,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     GST_WARNING_OBJECT (dbin,
         "Output still linked to another slot (%p)", output->slot);
     gst_caps_unref (new_caps);
-    return;
+    return ret;
   }
 
   /* Check if existing config is reusable as-is by checking if
@@ -2726,7 +2762,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
         output->linked = TRUE;
       }
       gst_caps_unref (new_caps);
-      return;
+      return ret;
     }
 
     GST_DEBUG_OBJECT (dbin, "Removing old decoder for slot %p", slot);
@@ -2778,9 +2814,11 @@ reconfigure_output_stream (DecodebinOutputStream * output,
         output->decoder = gst_element_factory_create ((GstElementFactory *)
             next_factory->data, NULL);
         GST_DEBUG ("Created decoder '%s'", GST_ELEMENT_NAME (output->decoder));
-      } else
+      } else {
         GST_DEBUG ("Could not find an element for caps %" GST_PTR_FORMAT,
             new_caps);
+        g_assert (output->decoder == NULL);
+      }
 
       if (output->decoder == NULL) {
         GstCaps *caps;
@@ -2793,10 +2831,12 @@ reconfigure_output_stream (DecodebinOutputStream * output,
             gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
         gst_caps_unref (caps);
         SELECTION_LOCK (dbin);
+        ret = FALSE;
         goto cleanup;
       }
       if (!gst_bin_add ((GstBin *) dbin, output->decoder)) {
         GST_ERROR_OBJECT (dbin, "could not add decoder to pipeline");
+        ret = FALSE;
         goto cleanup;
       }
       output->decoder_sink =
@@ -2812,6 +2852,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
               GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK) {
         GST_ERROR_OBJECT (dbin, "could not link to %s:%s",
             GST_DEBUG_PAD_NAME (output->decoder_sink));
+        ret = FALSE;
         goto cleanup;
       }
       if (gst_element_set_state (output->decoder,
@@ -2853,6 +2894,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
   if (!gst_ghost_pad_set_target ((GstGhostPad *) output->src_pad,
           output->decoder_src)) {
     GST_ERROR_OBJECT (dbin, "Could not expose decoder pad");
+    ret = FALSE;
     goto cleanup;
   }
   if (output->src_exposed == FALSE) {
@@ -2878,7 +2920,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     gst_element_sync_state_with_parent (output->decoder);
 
   output->slot = slot;
-  return;
+  return ret;
 
 cleanup:
   {
@@ -2896,27 +2938,16 @@ cleanup:
       gst_bin_remove ((GstBin *) dbin, output->decoder);
       output->decoder = NULL;
     }
+    return ret;
   }
 }
 
 static GstPadProbeReturn
 idle_reconfigure (GstPad * pad, GstPadProbeInfo * info, MultiQueueSlot * slot)
 {
-  GstMessage *msg = NULL;
-  DecodebinOutputStream *output;
+  GstDecodebin3 *dbin = slot->dbin;
 
-  SELECTION_LOCK (slot->dbin);
-  output = get_output_for_slot (slot);
-
-  GST_DEBUG_OBJECT (pad, "output : %p", output);
-
-  if (output) {
-    reconfigure_output_stream (output, slot);
-    msg = is_selection_done (slot->dbin);
-  }
-  SELECTION_UNLOCK (slot->dbin);
-  if (msg)
-    gst_element_post_message ((GstElement *) slot->dbin, msg);
+  check_slot_reconfiguration (dbin, slot);
 
   return GST_PAD_PROBE_REMOVE;
 }
