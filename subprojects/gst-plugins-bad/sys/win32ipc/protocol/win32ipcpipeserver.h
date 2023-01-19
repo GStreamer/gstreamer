@@ -34,6 +34,8 @@ G_BEGIN_DECLS
 
 struct Win32IpcPipeServer;
 
+typedef void (*Win32IpcMmfDestroy) (void * user_data);
+
 Win32IpcPipeServer * win32_ipc_pipe_server_new (const char * pipe_name);
 
 Win32IpcPipeServer * win32_ipc_pipe_server_ref (Win32IpcPipeServer * server);
@@ -44,7 +46,9 @@ void                 win32_ipc_pipe_server_shutdown (Win32IpcPipeServer * server
 
 BOOL                 win32_ipc_pipe_server_send_mmf (Win32IpcPipeServer * server,
                                                      Win32IpcMmf * mmf,
-                                                     const Win32IpcVideoInfo * info);
+                                                     const Win32IpcVideoInfo * info,
+                                                     void * user_data,
+                                                     Win32IpcMmfDestroy notify);
 
 G_END_DECLS
 

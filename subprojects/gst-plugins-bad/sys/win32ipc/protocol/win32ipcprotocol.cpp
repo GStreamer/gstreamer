@@ -35,6 +35,8 @@ win32_ipc_pkt_type_to_string (Win32IpcPktType type)
       return "HAVE-DATA";
     case WIN32_IPC_PKT_READ_DONE:
       return "READ-DONE";
+    case WIN32_IPC_PKT_RELEASE_DATA:
+      return "RELEASE-DATA";
     default:
       break;
   }
@@ -232,6 +234,59 @@ win32_ipc_pkt_parse_read_done (UINT8 * pkt, UINT32 pkt_len, UINT64 * seq_num)
   data++;
 
   READ_UINT64 (data, seq_num);
+
+  return TRUE;
+}
+
+UINT32
+win32_ipc_pkt_build_release_data (UINT8 * pkt, UINT32 pkt_size, UINT64 seq_num,
+    const char * mmf_name)
+{
+  UINT8 *data = pkt;
+  size_t len;
+
+  if (!pkt || !mmf_name)
+    return 0;
+
+  len = strlen (mmf_name);
+  if (len == 0)
+    return 0;
+
+  len++;
+
+  data[0] = win32_ipc_pkt_type_to_raw (WIN32_IPC_PKT_RELEASE_DATA);
+  data++;
+
+  WRITE_UINT64 (data, seq_num);
+
+  strcpy ((char *) data, mmf_name);
+  data += len;
+
+  return data - pkt;
+}
+
+BOOL
+win32_ipc_pkt_parse_release_data (UINT8 * pkt, UINT32 pkt_size,
+    UINT64 * seq_num, char * mmf_name)
+{
+  UINT8 *data = pkt;
+  size_t len;
+
+  if (win32_ipc_pkt_type_from_raw (pkt[0]) != WIN32_IPC_PKT_RELEASE_DATA)
+    return FALSE;
+
+  data++;
+
+  READ_UINT64 (data, seq_num);
+
+  len = strnlen ((const char *) data, pkt_size - (data - pkt));
+  if (len == 0)
+    return FALSE;
+
+  len++;
+
+  strcpy (mmf_name, (const char *) data);
+  data += len;
 
   return TRUE;
 }

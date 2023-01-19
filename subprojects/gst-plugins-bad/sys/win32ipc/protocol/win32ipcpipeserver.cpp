@@ -41,22 +41,30 @@ GST_DEBUG_CATEGORY_EXTERN (gst_win32_ipc_debug);
 
 struct MmfInfo
 {
-  explicit MmfInfo (Win32IpcMmf * m, const Win32IpcVideoInfo * i, UINT64 s)
+  explicit MmfInfo (Win32IpcMmf * m, const Win32IpcVideoInfo * i, UINT64 s,
+      void * u, Win32IpcMmfDestroy n)
   {
     mmf = m;
     info = *i;
     seq_num = s;
+    user_data = u;
+    notify = n;
   }
 
   ~MmfInfo()
   {
     if (mmf)
       win32_ipc_mmf_unref (mmf);
+
+    if (notify)
+      notify (user_data);
   }
 
   Win32IpcMmf *mmf = nullptr;
   Win32IpcVideoInfo info;
   UINT64 seq_num;
+  void *user_data;
+  Win32IpcMmfDestroy notify;
 };
 
 struct ServerConnection : public OVERLAPPED
@@ -73,6 +81,7 @@ struct ServerConnection : public OVERLAPPED
 
   Win32IpcPipeServer *self;
   std::shared_ptr<MmfInfo> minfo;
+  std::vector<std::shared_ptr<MmfInfo>> used_minfo;
   HANDLE pipe = INVALID_HANDLE_VALUE;
   UINT8 client_msg[CONN_BUFFER_SIZE];
   UINT32 to_read = 0;
@@ -113,7 +122,7 @@ struct Win32IpcPipeServer
 };
 
 static void
-win32_ipc_pipe_server_receive_need_data_async (ServerConnection * conn);
+win32_ipc_pipe_server_wait_client_msg_async (ServerConnection * conn);
 
 static void
 win32_ipc_pipe_server_close_connection (ServerConnection * conn,
@@ -140,44 +149,6 @@ win32_ipc_pipe_server_close_connection (ServerConnection * conn,
 }
 
 static void WINAPI
-win32_ipc_pipe_server_receive_read_done_finish (DWORD error_code, DWORD n_bytes,
-    LPOVERLAPPED overlapped)
-{
-  ServerConnection *conn = (ServerConnection *) overlapped;
-
-  if (error_code != ERROR_SUCCESS) {
-    std::string msg = win32_ipc_error_message (error_code);
-
-    GST_WARNING ("READ-DONE failed with 0x%x (%s)",
-        (UINT) error_code, msg.c_str ());
-    win32_ipc_pipe_server_close_connection (conn, TRUE);
-    return;
-  }
-
-  GST_TRACE ("Got READ-DONE %p", conn);
-
-  conn->minfo = nullptr;
-
-  /* All done, wait for need-data again */
-  win32_ipc_pipe_server_receive_need_data_async (conn);
-}
-
-static void
-win32_ipc_pipe_server_receive_read_done_async (ServerConnection * conn)
-{
-  GST_TRACE ("Waiting READ-DONE %p", conn);
-
-  if (!ReadFileEx (conn->pipe, conn->client_msg, CONN_BUFFER_SIZE,
-      (OVERLAPPED *) conn, win32_ipc_pipe_server_receive_read_done_finish)) {
-    UINT last_err = GetLastError ();
-    std::string msg = win32_ipc_error_message (last_err);
-    GST_WARNING ("ReadFileEx failed with 0x%x (%s)", last_err, msg.c_str ());
-
-    win32_ipc_pipe_server_close_connection (conn, TRUE);
-  }
-}
-
-static void WINAPI
 win32_ipc_pipe_server_send_have_data_finish (DWORD error_code, DWORD n_bytes,
     LPOVERLAPPED overlapped)
 {
@@ -194,7 +165,7 @@ win32_ipc_pipe_server_send_have_data_finish (DWORD error_code, DWORD n_bytes,
   GST_TRACE ("HAVE-DATA done with %s",
       win32_ipc_mmf_get_name (conn->minfo->mmf));
 
-  win32_ipc_pipe_server_receive_read_done_async (conn);
+  win32_ipc_pipe_server_wait_client_msg_async (conn);
 }
 
 static void
@@ -228,11 +199,13 @@ win32_ipc_pipe_server_send_have_data_async (ServerConnection * conn)
 }
 
 static void WINAPI
-win32_ipc_pipe_server_receive_need_data_finish (DWORD error_code, DWORD n_bytes,
+win32_ipc_pipe_server_wait_client_msg_finish (DWORD error_code, DWORD n_bytes,
     LPOVERLAPPED overlapped)
 {
   ServerConnection *conn = (ServerConnection *) overlapped;
   UINT64 seq_num;
+  Win32IpcPktType type;
+  char mmf_name[1024];
 
   if (error_code != ERROR_SUCCESS) {
     std::string msg = win32_ipc_error_message (error_code);
@@ -242,32 +215,74 @@ win32_ipc_pipe_server_receive_need_data_finish (DWORD error_code, DWORD n_bytes,
     return;
   }
 
-  if (!win32_ipc_pkt_parse_need_data (conn->client_msg, CONN_BUFFER_SIZE,
-      &seq_num)) {
-    GST_ERROR ("Couldn't parse NEED-DATA message");
-    win32_ipc_pipe_server_close_connection (conn, TRUE);
-    return;
+  type = win32_ipc_pkt_type_from_raw (conn->client_msg[0]);
+  switch (type) {
+    case WIN32_IPC_PKT_NEED_DATA:
+      GST_TRACE ("Got NEED-DATA %p", conn);
+
+      if (!win32_ipc_pkt_parse_need_data (conn->client_msg, CONN_BUFFER_SIZE,
+          &seq_num)) {
+        GST_ERROR ("Couldn't parse NEED-DATA message");
+        win32_ipc_pipe_server_close_connection (conn, TRUE);
+        return;
+      }
+
+      /* Will response later once data is available */
+      if (!conn->minfo) {
+        GST_LOG ("No data available, waiting");
+        conn->pending_have_data = TRUE;
+        return;
+      }
+
+      win32_ipc_pipe_server_send_have_data_async (conn);
+      break;
+    case WIN32_IPC_PKT_READ_DONE:
+      GST_TRACE ("Got READ-DONE %p", conn);
+
+      conn->used_minfo.push_back (conn->minfo);
+      conn->minfo = nullptr;
+
+      /* All done, wait for need-data again */
+      win32_ipc_pipe_server_wait_client_msg_async (conn);
+      break;
+    case WIN32_IPC_PKT_RELEASE_DATA:
+    {
+      GST_TRACE ("Got RELEASE-DATA %p", conn);
+
+      if (!win32_ipc_pkt_parse_release_data (conn->client_msg, CONN_BUFFER_SIZE,
+          &seq_num, mmf_name)) {
+        GST_WARNING ("Couldn't parse RELEASE-DATA mssage");
+        return;
+      }
+
+      auto it = std::find_if (conn->used_minfo.begin (),
+          conn->used_minfo.end (), [&](const std::shared_ptr<MmfInfo> info) -> bool {
+            return strcmp (mmf_name, win32_ipc_mmf_get_name (info->mmf)) == 0;
+          });
+
+      if (it != conn->used_minfo.end ()) {
+        conn->used_minfo.erase (it);
+      } else {
+        GST_WARNING ("Unknown memory name %s", mmf_name);
+      }
+
+      win32_ipc_pipe_server_wait_client_msg_async (conn);
+      break;
+    }
+    default:
+      GST_WARNING ("Unexpected packet type");
+      win32_ipc_pipe_server_close_connection (conn, TRUE);
+      break;
   }
-
-  GST_TRACE ("Got NEED-DATA");
-
-  /* Will response later once data is available */
-  if (!conn->minfo) {
-    GST_LOG ("No data available, waiting");
-    conn->pending_have_data = TRUE;
-    return;
-  }
-
-  win32_ipc_pipe_server_send_have_data_async (conn);
 }
 
 static void
-win32_ipc_pipe_server_receive_need_data_async (ServerConnection * conn)
+win32_ipc_pipe_server_wait_client_msg_async (ServerConnection * conn)
 {
-  GST_TRACE ("Waiting NEED-DATA");
+  GST_TRACE ("Waiting client message");
 
   if (!ReadFileEx (conn->pipe, conn->client_msg, CONN_BUFFER_SIZE,
-      (OVERLAPPED *) conn, win32_ipc_pipe_server_receive_need_data_finish)) {
+      (OVERLAPPED *) conn, win32_ipc_pipe_server_wait_client_msg_finish)) {
     UINT last_err = GetLastError ();
     std::string msg = win32_ipc_error_message (last_err);
 
@@ -350,12 +365,12 @@ win32_ipc_pipe_server_loop (Win32IpcPipeServer * self)
   self->cond.notify_all ();
   lk.unlock ();
 
+  waitables[0] = overlap.hEvent;
+  waitables[1] = self->enqueue_event;
+  waitables[2] = self->cancellable;
+
   do {
     ServerConnection *conn;
-
-    waitables[0] = overlap.hEvent;
-    waitables[1] = self->enqueue_event;
-    waitables[2] = self->cancellable;
 
     /* Enters alertable state and wait for
      * 1) Client's connection request
@@ -393,7 +408,7 @@ win32_ipc_pipe_server_loop (Win32IpcPipeServer * self)
 
         pipe = INVALID_HANDLE_VALUE;
         self->conn.push_back (conn);
-        win32_ipc_pipe_server_receive_need_data_async (conn);
+        win32_ipc_pipe_server_wait_client_msg_async (conn);
         pipe = win32_ipc_pipe_server_create_pipe (self, &overlap, &io_pending);
         if (pipe == INVALID_HANDLE_VALUE)
           goto out;
@@ -534,10 +549,11 @@ win32_ipc_pipe_server_shutdown (Win32IpcPipeServer * server)
 
 BOOL
 win32_ipc_pipe_server_send_mmf (Win32IpcPipeServer * server, Win32IpcMmf * mmf,
-    const Win32IpcVideoInfo * info)
+    const Win32IpcVideoInfo * info, void * user_data, Win32IpcMmfDestroy notify)
 {
   std::lock_guard<std::mutex> lk (server->lock);
-  server->minfo = std::make_shared<MmfInfo> (mmf, info, server->seq_num);
+  server->minfo = std::make_shared<MmfInfo> (mmf, info, server->seq_num,
+      user_data, notify);
 
   GST_LOG ("Enqueue mmf %s", win32_ipc_mmf_get_name (mmf));
 

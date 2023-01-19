@@ -4,6 +4,8 @@ win32ipc_sources = [
   'protocol/win32ipcpipeserver.cpp',
   'protocol/win32ipcprotocol.cpp',
   'protocol/win32ipcutils.cpp',
+  'gstwin32ipcbufferpool.cpp',
+  'gstwin32ipcmemory.cpp',
   'gstwin32ipcutils.cpp',
   'gstwin32ipcvideosink.cpp',
   'gstwin32ipcvideosrc.cpp',

@@ -66,8 +66,10 @@ struct ClientConnection : public OVERLAPPED
 struct Win32IpcPipeClient
 {
   explicit Win32IpcPipeClient (const std::string & n)
-    : name (n), ref_count(1), last_err (ERROR_SUCCESS)
+    : name (n), ref_count(1), last_err (ERROR_SUCCESS), flushing (FALSE)
+    , stopped (FALSE), io_pending (FALSE)
   {
+    release_event = CreateEventA (nullptr, FALSE, FALSE, nullptr);
     cancellable = CreateEventA (nullptr, TRUE, FALSE, nullptr);
     conn.pipe = INVALID_HANDLE_VALUE;
     conn.self = this;
@@ -76,7 +78,21 @@ struct Win32IpcPipeClient
   ~Win32IpcPipeClient ()
   {
     GST_DEBUG ("Free client %p", this);
-    win32_ipc_pipe_client_shutdown (this);
+    SetEvent (cancellable);
+    if (thread) {
+      thread->join ();
+      thread = nullptr;
+    }
+
+    last_err = ERROR_OPERATION_ABORTED;
+    while (!queue.empty ()) {
+      MmfInfo info = queue.front ();
+
+      queue.pop ();
+      win32_ipc_mmf_unref (info.mmf);
+    }
+
+    CloseHandle (release_event);
     CloseHandle (cancellable);
   }
 
@@ -84,33 +100,63 @@ struct Win32IpcPipeClient
   std::condition_variable cond;
   std::unique_ptr<std::thread> thread;
   std::queue<MmfInfo> queue;
+  std::queue<std::string> unused_mmf;
   std::string name;
 
   ULONG ref_count;
+  HANDLE release_event;
   HANDLE cancellable;
   UINT last_err;
+  BOOL flushing;
+  BOOL stopped;
+  BOOL io_pending;
   ClientConnection conn;
 };
 
 static DWORD
 win32_ipc_pipe_client_send_need_data_async (Win32IpcPipeClient * self);
+static DWORD
+win32_ipc_pipe_client_send_release_data_async (Win32IpcPipeClient * self,
+    const char * mmf_name);
 
 static VOID WINAPI
-win32_ipc_pipe_client_send_read_done_finish (DWORD error_code, DWORD n_bytes,
+win32_ipc_pipe_client_send_finish (DWORD error_code, DWORD n_bytes,
     LPOVERLAPPED overlapped)
 {
   ClientConnection *conn = (ClientConnection *) overlapped;
   Win32IpcPipeClient *self = conn->self;
+  std::string unused_mmf;
 
   if (error_code != ERROR_SUCCESS) {
     std::string msg = win32_ipc_error_message (error_code);
     self->last_err = error_code;
-    GST_WARNING ("READ-DONE failed with 0x%x (%s)",
-        self->last_err, msg.c_str ());
+    GST_WARNING ("Failed with 0x%x (%s)", self->last_err, msg.c_str ());
     goto error;
   }
 
-  GST_TRACE ("READ-DONE sent");
+  self->lock.lock ();
+  if (!self->unused_mmf.empty ()) {
+    unused_mmf = self->unused_mmf.front ();
+    self->unused_mmf.pop ();
+  }
+  self->lock.unlock ();
+
+  if (unused_mmf.size () > 0) {
+    self->last_err = win32_ipc_pipe_client_send_release_data_async (self,
+        unused_mmf.c_str ());
+    if (self->last_err != ERROR_SUCCESS)
+      goto error;
+
+    return;
+  }
+
+  /* Don't request data anymore if we are stopped, but keep connection
+   * to send release data message later */
+  if (self->stopped) {
+    GST_DEBUG ("We are stopped");
+    self->io_pending = FALSE;
+    return;
+  }
 
   self->last_err = win32_ipc_pipe_client_send_need_data_async (self);
   if (self->last_err != ERROR_SUCCESS)
@@ -121,6 +167,32 @@ win32_ipc_pipe_client_send_read_done_finish (DWORD error_code, DWORD n_bytes,
 
 error:
   SetEvent (self->cancellable);
+}
+
+static DWORD
+win32_ipc_pipe_client_send_release_data_async (Win32IpcPipeClient * self,
+    const char * mmf_name)
+{
+  ClientConnection *conn = &self->conn;
+
+  conn->to_write = win32_ipc_pkt_build_release_data (conn->client_msg,
+      CONN_BUFFER_SIZE, conn->seq_num, mmf_name);
+  if (conn->to_write == 0) {
+    GST_ERROR ("Couldn't build RELEASE-DATA pkt");
+    return ERROR_BAD_FORMAT;
+  }
+
+  GST_TRACE ("Sending RELEASE-DATA");
+
+  if (!WriteFileEx (conn->pipe, conn->client_msg, conn->to_write,
+      (OVERLAPPED *) conn, win32_ipc_pipe_client_send_finish)) {
+    UINT last_err = GetLastError ();
+    std::string msg = win32_ipc_error_message (last_err);
+    GST_WARNING ("WriteFileEx failed with 0x%x (%s)", last_err, msg.c_str ());
+    return last_err;
+  }
+
+  return ERROR_SUCCESS;
 }
 
 static DWORD
@@ -138,7 +210,7 @@ win32_ipc_pipe_client_send_read_done_async (Win32IpcPipeClient * self)
   GST_TRACE ("Sending READ-DONE");
 
   if (!WriteFileEx (conn->pipe, conn->client_msg, conn->to_write,
-      (OVERLAPPED *) conn, win32_ipc_pipe_client_send_read_done_finish)) {
+      (OVERLAPPED *) conn, win32_ipc_pipe_client_send_finish)) {
     UINT last_err = GetLastError ();
     std::string msg = win32_ipc_error_message (last_err);
 
@@ -171,7 +243,7 @@ win32_ipc_pipe_client_receive_have_data_finish (DWORD error_code, DWORD n_bytes,
   if (!win32_ipc_pkt_parse_have_data (conn->server_msg, n_bytes,
       &conn->seq_num, mmf_name, &info)) {
     self->last_err = ERROR_BAD_FORMAT;
-    GST_WARNING ("Couldn't parse HAVE-DATA pkg");
+    GST_WARNING ("Couldn't parse HAVE-DATA pkt");
     goto error;
   }
 
@@ -285,6 +357,8 @@ win32_ipc_pipe_client_loop (Win32IpcPipeClient * self)
   DWORD mode = PIPE_READMODE_MESSAGE;
   std::unique_lock<std::mutex> lk (self->lock);
   ClientConnection *conn = &self->conn;
+  HANDLE waitables[2];
+  DWORD wait_ret;
 
   conn->pipe = CreateFileA (self->name.c_str (),
         GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING,
@@ -319,28 +393,60 @@ win32_ipc_pipe_client_loop (Win32IpcPipeClient * self)
   if (self->last_err != ERROR_SUCCESS)
     goto out;
 
+  self->io_pending = TRUE;
+  waitables[0] = self->cancellable;
+  waitables[1] = self->release_event;
+
   do {
     /* Enters alertable thread state and wait for I/O completion event
      * or cancellable event */
-    DWORD ret = WaitForSingleObjectEx (self->cancellable, INFINITE, TRUE);
-    if (ret == WAIT_OBJECT_0) {
+    wait_ret = WaitForMultipleObjectsEx (2, waitables, FALSE, INFINITE, TRUE);
+    if (wait_ret == WAIT_OBJECT_0) {
       GST_DEBUG ("Operation cancelled");
-      CancelIoEx (conn->pipe, (OVERLAPPED *) &conn);
-      break;
-    } else if (ret != WAIT_IO_COMPLETION) {
-      GST_WARNING ("Unexpected wait return 0x%x", (UINT) ret);
-      CancelIoEx (conn->pipe, (OVERLAPPED *) &conn);
-      break;
+      goto out;
+    }
+
+    switch (wait_ret) {
+      case WAIT_OBJECT_0 + 1:
+      case WAIT_IO_COMPLETION:
+      {
+        std::string unused_mmf;
+        /* If I/O chain is stopped, send release data message here */
+        if (!self->io_pending) {
+          lk.lock ();
+          if (!self->unused_mmf.empty ()) {
+            unused_mmf = self->unused_mmf.front ();
+            self->unused_mmf.pop ();
+          }
+          lk.unlock ();
+        }
+
+        if (unused_mmf.size () > 0) {
+          GST_DEBUG ("Sending release data for %s", unused_mmf.c_str ());
+          self->io_pending = TRUE;
+          self->last_err = win32_ipc_pipe_client_send_release_data_async (self,
+              unused_mmf.c_str ());
+          if (self->last_err != ERROR_SUCCESS)
+            goto out;
+        }
+        break;
+      }
+      default:
+        GST_WARNING ("Unexpected wait return 0x%x", (UINT) wait_ret);
+        goto out;
     }
   } while (true);
 
 out:
-  if (conn->pipe != INVALID_HANDLE_VALUE)
+  if (conn->pipe != INVALID_HANDLE_VALUE) {
+    CancelIoEx (conn->pipe, (OVERLAPPED *) &conn);
     CloseHandle (conn->pipe);
+  }
 
   lk.lock ();
   self->last_err = ERROR_OPERATION_ABORTED;
   conn->pipe = INVALID_HANDLE_VALUE;
+  self->io_pending = FALSE;
   self->cond.notify_all ();
 }
 
@@ -401,24 +507,10 @@ win32_ipc_pipe_client_unref (Win32IpcPipeClient * client)
 }
 
 void
-win32_ipc_pipe_client_shutdown (Win32IpcPipeClient * client)
+win32_ipc_pipe_client_set_flushing (Win32IpcPipeClient * client, BOOL flushing)
 {
-  GST_DEBUG ("Shutting down %p", client);
-
-  SetEvent (client->cancellable);
-  if (client->thread) {
-    client->thread->join ();
-    client->thread = nullptr;
-  }
-
   std::lock_guard<std::mutex> lk (client->lock);
-  client->last_err = ERROR_OPERATION_ABORTED;
-  while (!client->queue.empty ()) {
-    MmfInfo info = client->queue.front ();
-
-    client->queue.pop ();
-    win32_ipc_mmf_unref (info.mmf);
-  }
+  client->flushing = flushing;
   client->cond.notify_all ();
 }
 
@@ -432,10 +524,12 @@ win32_ipc_pipe_client_get_mmf (Win32IpcPipeClient * client, Win32IpcMmf ** mmf,
     return FALSE;
   }
 
-  while (client->queue.empty () && client->last_err == ERROR_SUCCESS)
+  while (client->queue.empty () && client->last_err == ERROR_SUCCESS &&
+      !client->flushing && !client->stopped) {
     client->cond.wait (lk);
+  }
 
-  if (client->last_err != ERROR_SUCCESS || client->queue.empty ())
+  if (client->queue.empty ())
     return FALSE;
 
   MmfInfo mmf_info = client->queue.front ();
@@ -445,4 +539,31 @@ win32_ipc_pipe_client_get_mmf (Win32IpcPipeClient * client, Win32IpcMmf ** mmf,
   *info = mmf_info.info;
 
   return TRUE;
+}
+
+void
+win32_ipc_pipe_client_release_mmf (Win32IpcPipeClient * client,
+    Win32IpcMmf * mmf)
+{
+  std::string name = win32_ipc_mmf_get_name (mmf);
+
+  win32_ipc_mmf_unref (mmf);
+
+  std::lock_guard<std::mutex> lk (client->lock);
+  if (client->last_err != ERROR_SUCCESS)
+    return;
+
+  GST_LOG ("Enqueue release data %s", name.c_str ());
+  client->unused_mmf.push (name);
+  SetEvent (client->release_event);
+}
+
+void
+win32_ipc_pipe_client_stop (Win32IpcPipeClient * client)
+{
+  GST_DEBUG ("Stopping %p", client);
+
+  std::lock_guard<std::mutex> lk (client->lock);
+  client->stopped = TRUE;
+  client->cond.notify_all ();
 }

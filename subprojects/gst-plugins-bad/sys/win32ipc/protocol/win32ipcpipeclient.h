@@ -40,10 +40,16 @@ Win32IpcPipeClient * win32_ipc_pipe_client_ref (Win32IpcPipeClient * client);
 
 void                 win32_ipc_pipe_client_unref (Win32IpcPipeClient * client);
 
-void                 win32_ipc_pipe_client_shutdown (Win32IpcPipeClient * client);
+void                 win32_ipc_pipe_client_set_flushing (Win32IpcPipeClient * client,
+                                                         BOOL flushing);
 
 BOOL                 win32_ipc_pipe_client_get_mmf (Win32IpcPipeClient * client,
                                                     Win32IpcMmf ** mmf,
                                                     Win32IpcVideoInfo * info);
+
+void                 win32_ipc_pipe_client_release_mmf (Win32IpcPipeClient * client,
+                                                        Win32IpcMmf * mmf);
+
+void                 win32_ipc_pipe_client_stop (Win32IpcPipeClient * client);
 
 G_END_DECLS

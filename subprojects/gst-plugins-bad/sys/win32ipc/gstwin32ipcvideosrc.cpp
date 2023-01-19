@@ -257,7 +257,11 @@ gst_win32_ipc_video_src_stop (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (self, "Stop");
 
-  g_clear_pointer (&self->pipe, win32_ipc_pipe_client_unref);
+  if (self->pipe) {
+    win32_ipc_pipe_client_stop (self->pipe);
+    g_clear_pointer (&self->pipe, win32_ipc_pipe_client_unref);
+  }
+
   gst_clear_caps (&self->caps);
   if (self->pool) {
     gst_buffer_pool_set_active (self->pool, FALSE);
@@ -277,7 +281,7 @@ gst_win32_ipc_video_src_unlock (GstBaseSrc * src)
   AcquireSRWLockExclusive (&self->lock);
   self->flushing = TRUE;
   if (self->pipe)
-    win32_ipc_pipe_client_shutdown (self->pipe);
+    win32_ipc_pipe_client_set_flushing (self->pipe, TRUE);
   ReleaseSRWLockExclusive (&self->lock);
 
   return TRUE;
@@ -291,9 +295,9 @@ gst_win32_ipc_video_src_unlock_stop (GstBaseSrc * src)
   GST_DEBUG_OBJECT (self, "Unlock stop");
 
   AcquireSRWLockExclusive (&self->lock);
-  g_clear_pointer (&self->pipe, win32_ipc_pipe_client_unref);
-  gst_clear_caps (&self->caps);
   self->flushing = FALSE;
+  if (self->pipe)
+    win32_ipc_pipe_client_set_flushing (self->pipe, FALSE);
   ReleaseSRWLockExclusive (&self->lock);
 
   return TRUE;
@@ -393,6 +397,20 @@ error:
   return FALSE;
 }
 
+struct MmfReleaseData
+{
+  Win32IpcPipeClient *pipe;
+  Win32IpcMmf *mmf;
+};
+
+static void
+gst_win32_ipc_video_src_release_mmf (MmfReleaseData * data)
+{
+  win32_ipc_pipe_client_release_mmf (data->pipe, data->mmf);
+  win32_ipc_pipe_client_unref (data->pipe);
+  delete data;
+}
+
 static GstFlowReturn
 gst_win32_ipc_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstBuffer ** buf)
@@ -465,10 +483,14 @@ gst_win32_ipc_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   }
 
   if (self->have_video_meta || !need_video_meta) {
+    MmfReleaseData *data = new MmfReleaseData ();
+    data->pipe = win32_ipc_pipe_client_ref (self->pipe);
+    data->mmf = mmf;
+
     buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
         win32_ipc_mmf_get_raw (mmf), win32_ipc_mmf_get_size (mmf),
-        0, win32_ipc_mmf_get_size (mmf), mmf,
-        (GDestroyNotify) win32_ipc_mmf_unref);
+        0, win32_ipc_mmf_get_size (mmf), data,
+        (GDestroyNotify) gst_win32_ipc_video_src_release_mmf);
 
     if (self->have_video_meta) {
       gst_buffer_add_video_meta_full (buffer,

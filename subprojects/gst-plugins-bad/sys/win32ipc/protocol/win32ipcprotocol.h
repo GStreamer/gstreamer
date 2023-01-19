@@ -47,6 +47,12 @@ G_BEGIN_DECLS
  *  shared-memory |                               |
  *       +------->+                               |
  *                |--------- READ-DONE ---------->|
+ *                |                               |
+ *       +--------+                               |
+ *    release     |                               |
+ *  shared-memory |                               |
+ *       +--------|                               |
+ *                |------- RELEASE-Data---------->|
  */
 
 typedef enum
@@ -55,6 +61,7 @@ typedef enum
   WIN32_IPC_PKT_NEED_DATA,
   WIN32_IPC_PKT_HAVE_DATA,
   WIN32_IPC_PKT_READ_DONE,
+  WIN32_IPC_PKT_RELEASE_DATA,
 } Win32IpcPktType;
 
 /* Same as GstVideoFormat */
@@ -238,6 +245,16 @@ UINT32           win32_ipc_pkt_build_read_done (UINT8 * pkt,
 BOOL             win32_ipc_pkt_parse_read_done (UINT8 * pkt,
                                                 UINT32 pkt_size,
                                                 UINT64 * seq_num);
+
+UINT32           win32_ipc_pkt_build_release_data (UINT8 * pkt,
+                                                   UINT32 pkt_size,
+                                                   UINT64 seq_num,
+                                                   const char * mmf_name);
+
+BOOL             win32_ipc_pkt_parse_release_data (UINT8 * pkt,
+                                                   UINT32 pkt_size,
+                                                   UINT64 * seq_num,
+                                                   char * mmf_name);
 
 G_END_DECLS
 

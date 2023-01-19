@@ -39,6 +39,8 @@
 
 #include "gstwin32ipcvideosink.h"
 #include "gstwin32ipcutils.h"
+#include "gstwin32ipcbufferpool.h"
+#include "gstwin32ipcmemory.h"
 #include "protocol/win32ipcpipeserver.h"
 #include <string>
 #include <string.h>
@@ -65,12 +67,12 @@ struct _GstWin32IpcVideoSink
 
   GstVideoInfo info;
   Win32IpcPipeServer *pipe;
-  gchar *mmf_prefix;
-  guint64 seq_num;
   LARGE_INTEGER frequency;
 
-  Win32IpcMmf *mmf;
   Win32IpcVideoInfo minfo;
+
+  GstBufferPool *fallback_pool;
+  GstBuffer *prepared_buffer;
 
   /* properties */
   gchar *pipe_name;
@@ -222,9 +224,6 @@ gst_win32_ipc_video_sink_start (GstBaseSink * sink)
     return FALSE;
   }
 
-  self->mmf_prefix = gst_win32_ipc_get_mmf_prefix ();
-  self->seq_num = 0;
-
   return TRUE;
 }
 
@@ -236,8 +235,12 @@ gst_win32_ipc_video_sink_stop (GstBaseSink * sink)
   GST_DEBUG_OBJECT (self, "Stop");
 
   g_clear_pointer (&self->pipe, win32_ipc_pipe_server_unref);
-  g_clear_pointer (&self->mmf_prefix, g_free);
-  g_clear_pointer (&self->mmf, win32_ipc_mmf_unref);
+  gst_clear_buffer (&self->prepared_buffer);
+
+  if (self->fallback_pool) {
+    gst_buffer_pool_set_active (self->fallback_pool, FALSE);
+    gst_clear_object (&self->fallback_pool);
+  }
 
   return TRUE;
 }
@@ -247,7 +250,7 @@ gst_win32_ipc_video_sink_unlock_stop (GstBaseSink * sink)
 {
   GstWin32IpcVideoSink *self = GST_WIN32_IPC_VIDEO_SINK (sink);
 
-  g_clear_pointer (&self->mmf, win32_ipc_mmf_unref);
+  gst_clear_buffer (&self->prepared_buffer);
 
   return TRUE;
 }
@@ -281,6 +284,7 @@ static gboolean
 gst_win32_ipc_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
 {
   GstWin32IpcVideoSink *self = GST_WIN32_IPC_VIDEO_SINK (sink);
+  GstStructure *config;
 
   if (!gst_video_info_from_caps (&self->info, caps)) {
     GST_WARNING_OBJECT (self, "Invalid caps");
@@ -296,6 +300,19 @@ gst_win32_ipc_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   self->minfo.fps_d = self->info.fps_d;
   self->minfo.par_n = self->info.par_n;
   self->minfo.par_d = self->info.par_d;
+
+  if (self->fallback_pool) {
+    gst_buffer_pool_set_active (self->fallback_pool, FALSE);
+    gst_object_unref (self->fallback_pool);
+  }
+
+  self->fallback_pool = gst_win32_ipc_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (self->fallback_pool);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_config_set_params (config, caps, (guint) self->info.size,
+      0, 0);
+  gst_buffer_pool_set_config (self->fallback_pool, config);
+  gst_buffer_pool_set_active (self->fallback_pool, TRUE);
 
   return TRUE;
 }
@@ -326,7 +343,7 @@ gst_win32_ipc_video_sink_propose_allocation (GstBaseSink * sink,
   if (need_pool) {
     GstStructure *config;
 
-    pool = gst_video_buffer_pool_new ();
+    pool = gst_win32_ipc_buffer_pool_new ();
     config = gst_buffer_pool_get_config (pool);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -355,41 +372,81 @@ static GstFlowReturn
 gst_win32_ipc_video_sink_prepare (GstBaseSink * sink, GstBuffer * buf)
 {
   GstWin32IpcVideoSink *self = GST_WIN32_IPC_VIDEO_SINK (sink);
-  std::string mmf_name;
-  GstVideoFrame frame;
-  GstMapInfo info;
+  GstVideoFrame frame, mmf_frame;
+  GstMemory *mem;
+  GstFlowReturn ret;
 
-  g_clear_pointer (&self->mmf, win32_ipc_mmf_unref);
+  gst_clear_buffer (&self->prepared_buffer);
 
   if (!gst_video_frame_map (&frame, &self->info, buf, GST_MAP_READ)) {
     GST_ERROR_OBJECT (self, "Couldn't map frame");
     return GST_FLOW_ERROR;
   }
 
-  mmf_name = std::string (self->mmf_prefix) + std::to_string (self->seq_num);
-  self->seq_num++;
+  mem = gst_buffer_peek_memory (buf, 0);
+  if (gst_is_win32_ipc_memory (mem) && gst_buffer_n_memory (buf) == 1) {
+    GST_LOG_OBJECT (self, "Upstream memory is mmf");
 
-  self->mmf = win32_ipc_mmf_alloc (GST_VIDEO_FRAME_SIZE (&frame),
-      mmf_name.c_str ());
-  if (!self->mmf) {
-    GST_ERROR_OBJECT (self, "Couldn't create memory with name %s",
-        mmf_name.c_str ());
+    self->prepared_buffer = gst_buffer_ref (buf);
+
+    self->minfo.size = GST_VIDEO_FRAME_SIZE (&frame);
+    for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&frame); i++) {
+      self->minfo.offset[i] = GST_VIDEO_FRAME_PLANE_OFFSET (&frame, i);
+      self->minfo.stride[i] = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, i);
+    }
+
+    gst_video_frame_unmap (&frame);
+
+    return GST_FLOW_OK;
+  }
+
+  GST_LOG_OBJECT (self, "Copying into mmf buffer");
+
+  ret = gst_buffer_pool_acquire_buffer (self->fallback_pool,
+      &self->prepared_buffer, nullptr);
+  if (ret != GST_FLOW_OK) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire buffer");
     gst_video_frame_unmap (&frame);
     return GST_FLOW_ERROR;
   }
 
-  self->minfo.size = GST_VIDEO_FRAME_SIZE (&frame);
-  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&frame); i++) {
-    self->minfo.offset[i] = GST_VIDEO_FRAME_PLANE_OFFSET (&frame, i);
-    self->minfo.stride[i] = GST_VIDEO_FRAME_PLANE_STRIDE (&frame, i);
+  if (!gst_video_frame_map (&mmf_frame, &self->info, self->prepared_buffer,
+          GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (self, "Couldn't map mmf frame");
+    gst_video_frame_unmap (&frame);
+    gst_clear_buffer (&self->prepared_buffer);
+    return GST_FLOW_ERROR;
   }
+
+  if (!gst_video_frame_copy (&mmf_frame, &frame)) {
+    GST_ERROR_OBJECT (self, "Couldn't copy buffer");
+    gst_video_frame_unmap (&frame);
+    gst_video_frame_unmap (&mmf_frame);
+    gst_clear_buffer (&self->prepared_buffer);
+    return GST_FLOW_ERROR;
+  }
+
   gst_video_frame_unmap (&frame);
 
-  gst_buffer_map (buf, &info, GST_MAP_READ);
-  memcpy (win32_ipc_mmf_get_raw (self->mmf), info.data, self->minfo.size);
-  gst_buffer_unmap (buf, &info);
+  self->minfo.size = GST_VIDEO_FRAME_SIZE (&mmf_frame);
+  for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&mmf_frame); i++) {
+    self->minfo.offset[i] = GST_VIDEO_FRAME_PLANE_OFFSET (&mmf_frame, i);
+    self->minfo.stride[i] = GST_VIDEO_FRAME_PLANE_STRIDE (&mmf_frame, i);
+  }
+
+  gst_video_frame_unmap (&mmf_frame);
 
   return GST_FLOW_OK;
+}
+
+static void
+gst_win32_ipc_video_sink_mmf_free (void *user_data)
+{
+  GstBuffer *buffer = GST_BUFFER_CAST (user_data);
+
+  GST_LOG ("Relese %" GST_PTR_FORMAT, buffer);
+
+  gst_buffer_unref (buffer);
 }
 
 static GstFlowReturn
@@ -401,6 +458,20 @@ gst_win32_ipc_video_sink_render (GstBaseSink * sink, GstBuffer * buf)
   GstClockTime now_qpc;
   GstClockTime buf_pts;
   GstClockTime buffer_clock = GST_CLOCK_TIME_NONE;
+  Win32IpcMmf *mmf;
+  GstWin32IpcMemory *mem;
+
+  if (!self->prepared_buffer) {
+    GST_ERROR_OBJECT (self, "No prepared buffer");
+    return GST_FLOW_ERROR;
+  }
+
+  mem = (GstWin32IpcMemory *) gst_buffer_peek_memory (self->prepared_buffer, 0);
+
+  g_assert (mem != nullptr);
+  g_assert (gst_is_win32_ipc_memory (GST_MEMORY_CAST (mem)));
+
+  mmf = mem->mmf;
 
   QueryPerformanceCounter (&cur_time);
   pts = now_qpc = gst_util_uint64_scale (cur_time.QuadPart, GST_SECOND,
@@ -454,7 +525,9 @@ gst_win32_ipc_video_sink_render (GstBaseSink * sink, GstBuffer * buf)
 
   /* win32_ipc_pipe_server_send_mmf() takes ownership of mmf */
   if (!win32_ipc_pipe_server_send_mmf (self->pipe,
-          (Win32IpcMmf *) g_steal_pointer (&self->mmf), &self->minfo)) {
+          win32_ipc_mmf_ref (mmf), &self->minfo,
+          g_steal_pointer (&self->prepared_buffer),
+          gst_win32_ipc_video_sink_mmf_free)) {
     GST_ERROR_OBJECT (self, "Couldn't send buffer");
     return GST_FLOW_ERROR;
   }
