@@ -844,6 +844,18 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
     }
       break;
     case GST_EVENT_STREAM_START:
+    {
+      /* This is a temporary hack to notify downstream decodebin3 to *not*
+       * plug in an extra parsebin */
+      if (slot->linked_info && slot->linked_info->demuxer_is_parsebin) {
+        GstStructure *s;
+        GST_PAD_PROBE_INFO_DATA (info) = ev = gst_event_make_writable (ev);
+        s = (GstStructure *) gst_event_get_structure (ev);
+        gst_structure_set (s, "urisourcebin-parsed-data", G_TYPE_BOOLEAN, TRUE,
+            NULL);
+      }
+    }
+      /* PASSTHROUGH */
     case GST_EVENT_FLUSH_STOP:
       BUFFERING_LOCK (urisrc);
       slot->is_eos = FALSE;

@@ -302,6 +302,10 @@ struct _DecodebinInput
 
   /* TRUE if the input got drained */
   gboolean drained;
+
+  /* TEMPORARY HACK for knowing if upstream is already parsed and identity can
+   * be avoided */
+  gboolean input_is_parsed;
 };
 
 /* Multiqueue Slots */
@@ -1231,6 +1235,9 @@ is_parsebin_required_for_input (GstDecodebin3 * dbin, DecodebinInput * input,
     /* If the incoming caps match decodebin3 output, no processing is needed */
     GST_FIXME_OBJECT (sinkpad, "parsebin not needed (matches output caps) !");
     parsebin_needed = FALSE;
+  } else if (input->input_is_parsed) {
+    GST_DEBUG_OBJECT (sinkpad, "input is parsed, no parsebin needed");
+    parsebin_needed = FALSE;
   } else {
     GList *decoder_list;
     /* If the incoming caps are compatible with a decoder, we don't need to
@@ -1301,6 +1308,7 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
     case GST_EVENT_STREAM_START:
     {
       GstQuery *q = gst_query_new_selectable ();
+      const GstStructure *s = gst_event_get_structure (event);
 
       /* Query whether upstream can handle stream selection or not */
       if (gst_pad_peer_query (sinkpad, q)) {
@@ -1317,6 +1325,9 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
          inputs is. This means things might break if there's a mix */
       if (input->upstream_selected)
         dbin->upstream_selected = TRUE;
+
+      input->input_is_parsed = s
+          && gst_structure_has_field (s, "urisourcebin-parsed-data");
 
       /* Make sure group ids will be recalculated */
       input->group_id = GST_GROUP_ID_INVALID;
