@@ -694,6 +694,46 @@ dependencies = [
 ]
 
 [[package]]
+name = "gstreamer-base-sys"
+version = "0.19.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbc3c4476e1503ae245c89fbe20060c30ec6ade5f44620bcc402cbc70a3911a1"
+dependencies = [
+ "glib-sys",
+ "gobject-sys",
+ "gstreamer-sys",
+ "libc",
+ "system-deps",
+]
+
+[[package]]
+name = "gstreamer-rtp"
+version = "0.19.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2e464957d09a9abb8c3cbf818635f38113b327d9ba23b89ef11b10afb25cdfe"
+dependencies = [
+ "bitflags",
+ "glib",
+ "gstreamer",
+ "gstreamer-rtp-sys",
+ "libc",
+ "once_cell",
+]
+
+[[package]]
+name = "gstreamer-rtp-sys"
+version = "0.19.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e65dbc4429a8cb494907c654caa74c1630111116f9ac2d1d9bf585c144e4821d"
+dependencies = [
+ "glib-sys",
+ "gstreamer-base-sys",
+ "gstreamer-sys",
+ "libc",
+ "system-deps",
+]
+
+[[package]]
 name = "gstreamer-sdp"
 version = "0.19.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1590,6 +1630,7 @@ dependencies = [
  "cocoa",
  "futures",
  "gstreamer",
+ "gstreamer-rtp",
  "gstreamer-sdp",
  "gstreamer-webrtc",
  "rand",

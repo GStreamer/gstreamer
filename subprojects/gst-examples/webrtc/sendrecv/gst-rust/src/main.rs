@@ -18,6 +18,7 @@ use tungstenite::Message as WsMessage;
 
 use gst::glib;
 use gst::prelude::*;
+use gst_rtp::prelude::*;
 
 use serde_derive::{Deserialize, Serialize};
 
@@ -25,6 +26,8 @@ use anyhow::{anyhow, bail, Context};
 
 const STUN_SERVER: &str = "stun://stun.l.google.com:19302";
 const TURN_SERVER: &str = "turn://foo:bar@webrtc.nirbheek.in:3478";
+
+const TWCC_URI: &str = "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
 
 // upgrade weak reference or return
 #[macro_export]
@@ -149,6 +152,15 @@ impl App {
 
         // Connect to on-negotiation-needed to handle sending an Offer
         if app.args.peer_id.is_some() {
+            let vpay = app.pipeline.by_name("vpay").unwrap();
+            let apay = app.pipeline.by_name("apay").unwrap();
+
+            for pay in [vpay, apay] {
+                let twcc = gst_rtp::RTPHeaderExtension::create_from_uri(TWCC_URI).unwrap();
+                twcc.set_id(1);
+                pay.emit_by_name::<()>("add-extension", &[&twcc]);
+            }
+
             let app_clone = app.downgrade();
             app.webrtcbin.connect_closure(
                 "on-negotiation-needed",
@@ -403,10 +415,25 @@ impl App {
                     Err(_) => continue,
                 };
 
+                let twcc_id = media.attributes().find_map(|attr| {
+                    let key = attr.key();
+                    let value = attr.value();
+                    if key != "extmap" || !value.map_or(false, |value| value.ends_with(TWCC_URI)) {
+                        return None;
+                    }
+                    let value = value.unwrap();
+
+                    let id = value
+                        .strip_suffix(TWCC_URI)
+                        .and_then(|id| id.trim().parse::<u8>().ok());
+
+                    id
+                });
+
                 if encoding_name == "VP8" && vp8_id.is_none() {
-                    vp8_id = Some(pt);
+                    vp8_id = Some((pt, twcc_id));
                 } else if encoding_name == "OPUS" && opus_id.is_none() {
-                    opus_id = Some(pt);
+                    opus_id = Some((pt, twcc_id));
                 }
             }
         }
@@ -415,8 +442,14 @@ impl App {
             let apay = self.pipeline.by_name("apay").unwrap();
             let vpay = self.pipeline.by_name("vpay").unwrap();
 
-            for (pay, pt) in [(apay, opus_id), (vpay, vp8_id)] {
+            for (pay, (pt, twcc_id)) in [(apay, opus_id), (vpay, vp8_id)] {
                 pay.set_property("pt", pt as u32);
+
+                if let Some(twcc_id) = twcc_id {
+                    let twcc = gst_rtp::RTPHeaderExtension::create_from_uri(TWCC_URI).unwrap();
+                    twcc.set_id(twcc_id as u32);
+                    pay.emit_by_name::<()>("add-extension", &[&twcc]);
+                }
             }
         } else {
             gst::element_error!(

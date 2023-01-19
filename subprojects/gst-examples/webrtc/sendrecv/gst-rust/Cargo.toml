@@ -12,6 +12,7 @@ anyhow = "1"
 rand = "0.8"
 async-tungstenite = { version = "0.19", features = ["async-std-runtime", "async-native-tls"] }
 gst = { package = "gstreamer", version = "0.19" }
+gst-rtp = { package = "gstreamer-rtp", version = "0.19", features = ["v1_20"] }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.19" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.19" }
 serde = "1"
