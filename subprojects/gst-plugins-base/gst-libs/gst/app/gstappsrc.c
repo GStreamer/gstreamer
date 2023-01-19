@@ -1329,7 +1329,7 @@ gst_app_src_do_negotiate (GstBaseSrc * basesrc)
 {
   GstAppSrc *appsrc = GST_APP_SRC_CAST (basesrc);
   GstAppSrcPrivate *priv = appsrc->priv;
-  gboolean result;
+  gboolean result = TRUE;
   GstCaps *caps;
 
   GST_OBJECT_LOCK (basesrc);
@@ -1342,8 +1342,6 @@ gst_app_src_do_negotiate (GstBaseSrc * basesrc)
   if (caps) {
     result = gst_base_src_set_caps (basesrc, caps);
     gst_caps_unref (caps);
-  } else {
-    result = GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
   }
   g_mutex_lock (&priv->mutex);
 
