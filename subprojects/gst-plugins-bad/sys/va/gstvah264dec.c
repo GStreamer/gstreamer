@@ -381,7 +381,7 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
   GstVaDecodePicture *va_pic;
   VAIQMatrixBufferH264 iq_matrix = { 0, };
   VAPictureParameterBufferH264 pic_param;
-  guint i, n;
+  guint i;
   GArray *ref_list = self->ref_list;
 
   va_pic = gst_h264_picture_get_user_data (picture);
@@ -472,9 +472,15 @@ gst_va_h264_dec_start_picture (GstH264Decoder * decoder,
 
   /* We need the first 2 entries (Y intra and Y inter for YCbCr 4:2:2 and
    * less, and the full 6 entries for 4:4:4, see Table 7-2 of the spec for
-   * more details */
-  n = (pps->sequence->chroma_format_idc == 3) ? 6 : 2;
-  for (i = 0; i < n; i++) {
+   * more details.
+   * But VA API only define the first 2 entries, so we may lose scaling
+   * list info for 4:4:4 stream. */
+  if (pps->sequence->chroma_format_idc == 3)
+    GST_WARNING_OBJECT (self, "We do not have scaling list entries "
+        "for U/V planes in 4:4:4 stream. It may have artifact if "
+        "those scaling lists are not default value.");
+
+  for (i = 0; i < 2; i++) {
     gst_h264_quant_matrix_8x8_get_raster_from_zigzag (iq_matrix.ScalingList8x8
         [i], pps->scaling_lists_8x8[i]);
   }
