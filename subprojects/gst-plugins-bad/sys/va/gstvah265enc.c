@@ -4987,16 +4987,18 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
         va_enc_class->entrypoint);
     if (gst_va_encoder_get_rate_control_enum (encoder,
             vah265enc_class->rate_control)) {
+      gchar *basename = g_path_get_basename (va_enc_class->render_device_path);
       g_snprintf (vah265enc_class->rate_control_type_name,
           G_N_ELEMENTS (vah265enc_class->rate_control_type_name) - 1,
           "GstVaEncoderRateControl_%" GST_FOURCC_FORMAT "%s_%s",
           GST_FOURCC_ARGS (va_enc_class->codec),
           (va_enc_class->entrypoint == VAEntrypointEncSliceLP) ? "_LP" : "",
-          g_path_get_basename (va_enc_class->render_device_path));
+          basename);
       vah265enc_class->rate_control_type =
           g_enum_register_static (vah265enc_class->rate_control_type_name,
           vah265enc_class->rate_control);
       gst_type_mark_as_plugin_api (vah265enc_class->rate_control_type, 0);
+      g_free (basename);
     }
     gst_object_unref (encoder);
     gst_object_unref (display);
