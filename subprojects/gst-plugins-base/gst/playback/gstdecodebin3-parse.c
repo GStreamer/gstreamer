@@ -320,35 +320,39 @@ parse_chain_output_probe (GstPad * pad, GstPadProbeInfo * info,
         break;
     }
   } else if (GST_IS_QUERY (GST_PAD_PROBE_INFO_DATA (info))) {
-    GstQuery *q = GST_PAD_PROBE_INFO_QUERY (info);
-    GST_DEBUG_OBJECT (pad, "Seeing query %s", GST_QUERY_TYPE_NAME (q));
-    /* If we have a parser, we want to reply to the caps query */
-    /* FIXME: Set a flag when the input stream is created for
-     * streams where we shouldn't reply to these queries */
-    if (GST_QUERY_TYPE (q) == GST_QUERY_CAPS
-        && (info->type & GST_PAD_PROBE_TYPE_PULL)) {
-      GstCaps *filter = NULL;
-      GstCaps *allowed;
-      gst_query_parse_caps (q, &filter);
-      allowed = get_parser_caps_filter (input->dbin, filter);
-      GST_DEBUG_OBJECT (pad,
-          "Intercepting caps query, setting %" GST_PTR_FORMAT, allowed);
-      gst_query_set_caps_result (q, allowed);
-      gst_caps_unref (allowed);
-      ret = GST_PAD_PROBE_HANDLED;
-    } else if (GST_QUERY_TYPE (q) == GST_QUERY_ACCEPT_CAPS) {
-      GstCaps *prop = NULL;
-      gst_query_parse_accept_caps (q, &prop);
-      /* Fast check against target caps */
-      if (gst_caps_can_intersect (prop, input->dbin->caps)) {
-        gst_query_set_accept_caps_result (q, TRUE);
-      } else {
-        gboolean accepted = check_parser_caps_filter (input->dbin, prop);
-        /* check against caps filter */
-        gst_query_set_accept_caps_result (q, accepted);
-        GST_DEBUG_OBJECT (pad, "ACCEPT_CAPS query, returning %d", accepted);
+    if (input->input && input->input->identity) {
+      GST_DEBUG_OBJECT (pad, "Letting query through");
+    } else {
+      GstQuery *q = GST_PAD_PROBE_INFO_QUERY (info);
+      GST_DEBUG_OBJECT (pad, "Seeing query %" GST_PTR_FORMAT, q);
+      /* If we have a parser, we want to reply to the caps query */
+      /* FIXME: Set a flag when the input stream is created for
+       * streams where we shouldn't reply to these queries */
+      if (GST_QUERY_TYPE (q) == GST_QUERY_CAPS
+          && (info->type & GST_PAD_PROBE_TYPE_PULL)) {
+        GstCaps *filter = NULL;
+        GstCaps *allowed;
+        gst_query_parse_caps (q, &filter);
+        allowed = get_parser_caps_filter (input->dbin, filter);
+        GST_DEBUG_OBJECT (pad,
+            "Intercepting caps query, setting %" GST_PTR_FORMAT, allowed);
+        gst_query_set_caps_result (q, allowed);
+        gst_caps_unref (allowed);
+        ret = GST_PAD_PROBE_HANDLED;
+      } else if (GST_QUERY_TYPE (q) == GST_QUERY_ACCEPT_CAPS) {
+        GstCaps *prop = NULL;
+        gst_query_parse_accept_caps (q, &prop);
+        /* Fast check against target caps */
+        if (gst_caps_can_intersect (prop, input->dbin->caps)) {
+          gst_query_set_accept_caps_result (q, TRUE);
+        } else {
+          gboolean accepted = check_parser_caps_filter (input->dbin, prop);
+          /* check against caps filter */
+          gst_query_set_accept_caps_result (q, accepted);
+          GST_DEBUG_OBJECT (pad, "ACCEPT_CAPS query, returning %d", accepted);
+        }
+        ret = GST_PAD_PROBE_HANDLED;
       }
-      ret = GST_PAD_PROBE_HANDLED;
     }
   }
 
