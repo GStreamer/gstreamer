@@ -7631,6 +7631,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "sizing-policy": {
+                        "blurb": "Sizing policy to use for image scaling",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstGLVideoMixerSizingPolicy",
+                        "writable": true
+                    },
                     "width": {
                         "blurb": "Width of the picture",
                         "conditionally-available": false,
@@ -7915,6 +7927,18 @@
                         "type": "gint",
                         "writable": true
                     },
+                    "sizing-policy": {
+                        "blurb": "Sizing policy to use for image scaling",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstGLVideoMixerSizingPolicy",
+                        "writable": true
+                    },
                     "width": {
                         "blurb": "Width of the picture",
                         "conditionally-available": false,
@@ -7959,6 +7983,21 @@
                     }
                 },
                 "signals": {}
+            },
+            "GstGLVideoMixerSizingPolicy": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "None: Image is scaled to fill configured destination rectangle without padding or keeping the aspect ratio",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Keep Aspect Ratio: Image is scaled to fit destination rectangle specified by GstGLVideoMixerPad:{xpos, ypos, width, height} with preserved aspect ratio. Resulting image will be centered in the destination rectangle with padding if necessary",
+                        "name": "keep-aspect-ratio",
+                        "value": "1"
+                    }
+                ]
             }
         },
         "package": "GStreamer Base Plug-ins",

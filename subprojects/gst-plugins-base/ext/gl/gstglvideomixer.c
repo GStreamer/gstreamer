@@ -153,6 +153,33 @@ gst_gl_video_mixer_blend_function_get_type (void)
   return mixer_blend_function_type;
 }
 
+#define GST_TYPE_GL_VIDEO_MIXER_SIZING_POLICY (gst_gl_video_mixer_sizing_policy_get_type())
+static GType
+gst_gl_video_mixer_sizing_policy_get_type (void)
+{
+
+  static GType sizing_policy_type = 0;
+
+  static const GEnumValue sizing_polices[] = {
+    {GST_GL_VIDEO_MIXER_SIZING_POLICY_NONE,
+        "None: Image is scaled to fill configured destination rectangle without "
+          "padding or keeping the aspect ratio", "none"},
+    {GST_GL_VIDEO_MIXER_SIZING_POLICY_KEEP_ASPECT_RATIO,
+          "Keep Aspect Ratio: Image is scaled to fit destination rectangle "
+          "specified by GstGLVideoMixerPad:{xpos, ypos, width, height} "
+          "with preserved aspect ratio. Resulting image will be centered in "
+          "the destination rectangle with padding if necessary",
+        "keep-aspect-ratio"},
+    {0, NULL, NULL},
+  };
+
+  if (!sizing_policy_type) {
+    sizing_policy_type =
+        g_enum_register_static ("GstGLVideoMixerSizingPolicy", sizing_polices);
+  }
+  return sizing_policy_type;
+}
+
 #define DEFAULT_PAD_XPOS   0
 #define DEFAULT_PAD_YPOS   0
 #define DEFAULT_PAD_WIDTH  0
@@ -167,6 +194,7 @@ gst_gl_video_mixer_blend_function_get_type (void)
 #define DEFAULT_PAD_BLEND_FUNCTION_DST_RGB GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
 #define DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
 #define DEFAULT_PAD_CROP 0
+#define DEFAULT_PAD_SIZING_POLICY GST_GL_VIDEO_MIXER_SIZING_POLICY_NONE
 
 enum
 {
@@ -192,6 +220,7 @@ enum
   PROP_INPUT_CROP_RIGHT,
   PROP_INPUT_CROP_TOP,
   PROP_INPUT_CROP_BOTTOM,
+  PROP_INPUT_SIZING_POLICY,
 };
 
 static void gst_gl_video_mixer_input_get_property (GObject * object,
@@ -372,6 +401,22 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
       g_param_spec_int ("crop-bottom", "Crop Bottom",
           "Crop bottom of the picture", 0, G_MAXINT, DEFAULT_PAD_CROP,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstGLVideoMixerInput:sizing-policy:
+   *
+   * Specifies sizing policy to use. Depending on selected sizing policy,
+   * scaled image might not fully cover the configured target rectangle area
+   * (e.g., "keep-aspect-ratio"). In that case, any uncovered area will be
+   * filled with background unless the uncovered area is drawn by other image.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_INPUT_SIZING_POLICY,
+      g_param_spec_enum ("sizing-policy", "Sizing policy",
+          "Sizing policy to use for image scaling",
+          GST_TYPE_GL_VIDEO_MIXER_SIZING_POLICY, DEFAULT_PAD_SIZING_POLICY,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -422,6 +467,7 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
   ADD_BINDING (mixer_pad, input, "blend-constant-color-green");
   ADD_BINDING (mixer_pad, input, "blend-constant-color-blue");
   ADD_BINDING (mixer_pad, input, "blend-constant-color-alpha");
+  ADD_BINDING (mixer_pad, input, "sizing-policy");
 #undef ADD_BINDING
 
   input->mixer_pad = mixer_pad;
@@ -620,6 +666,7 @@ struct _GstGLVideoMixerPad
   gint xpos, ypos;
   gint width, height;
   gdouble alpha;
+  GstGLVideoMixerSizingPolicy sizing_policy;
 
   GstGLVideoMixerBlendEquation blend_equation_rgb;
   GstGLVideoMixerBlendEquation blend_equation_alpha;
@@ -676,6 +723,7 @@ enum
   PROP_PAD_CROP_RIGHT,
   PROP_PAD_CROP_TOP,
   PROP_PAD_CROP_BOTTOM,
+  PROP_PAD_SIZING_POLICY,
 };
 
 static void
@@ -688,6 +736,7 @@ gst_gl_video_mixer_pad_init (GstGLVideoMixerPad * pad)
   pad->blend_function_src_alpha = DEFAULT_PAD_BLEND_FUNCTION_SRC_ALPHA;
   pad->blend_function_dst_rgb = DEFAULT_PAD_BLEND_FUNCTION_DST_RGB;
   pad->blend_function_dst_alpha = DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA;
+  pad->sizing_policy = DEFAULT_PAD_SIZING_POLICY;
   memset (pad->m_matrix, 0, sizeof (gfloat) * 4 * 4);
   pad->m_matrix[0] = 1.0;
   pad->m_matrix[5] = 1.0;
@@ -836,6 +885,22 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
       g_param_spec_int ("crop-bottom", "Crop Bottom",
           "Crop bottom of the picture", 0, G_MAXINT, DEFAULT_PAD_CROP,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstGLVideoMixerPad:sizing-policy:
+   *
+   * Specifies sizing policy to use. Depending on selected sizing policy,
+   * scaled image might not fully cover the configured target rectangle area
+   * (e.g., "keep-aspect-ratio"). In that case, any uncovered area will be
+   * filled with background unless the uncovered area is drawn by other image.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_SIZING_POLICY,
+      g_param_spec_enum ("sizing-policy", "Sizing policy",
+          "Sizing policy to use for image scaling",
+          GST_TYPE_GL_VIDEO_MIXER_SIZING_POLICY, DEFAULT_PAD_SIZING_POLICY,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -901,6 +966,9 @@ gst_gl_video_mixer_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_CROP_BOTTOM:
       g_value_set_int (value, pad->crop_bottom);
+      break;
+    case PROP_PAD_SIZING_POLICY:
+      g_value_set_enum (value, pad->sizing_policy);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -996,6 +1064,12 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
       gint val = g_value_get_int (value);
       pad->geometry_change |= val != pad->crop_bottom;
       pad->crop_bottom = val;
+      break;
+    }
+    case PROP_PAD_SIZING_POLICY:{
+      GstGLVideoMixerSizingPolicy val = g_value_get_enum (value);
+      pad->geometry_change |= val != pad->sizing_policy;
+      pad->sizing_policy = val;
       break;
     }
     default:
@@ -1112,6 +1186,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_PAD, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BLEND_EQUATION, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_BLEND_FUNCTION, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_VIDEO_MIXER_SIZING_POLICY, 0);
 }
 
 static void
@@ -1170,18 +1245,21 @@ gst_gl_video_mixer_propose_allocation (GstAggregator * agg,
 static void
 _mixer_pad_get_output_size (GstGLVideoMixer * mix,
     GstGLVideoMixerPad * mix_pad, gint out_par_n, gint out_par_d, gint * width,
-    gint * height)
+    gint * height, gint * x_offset, gint * y_offset)
 {
   GstVideoAggregatorPad *vagg_pad = GST_VIDEO_AGGREGATOR_PAD (mix_pad);
   gint pad_width, pad_height;
   guint dar_n, dar_d;
 
+  *x_offset = 0;
+  *y_offset = 0;
+  *width = 0;
+  *height = 0;
+
   /* FIXME: Anything better we can do here? */
   if (!vagg_pad->info.finfo
       || vagg_pad->info.finfo->format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_DEBUG_OBJECT (mix_pad, "Have no caps yet");
-    *width = 0;
-    *height = 0;
     return;
   }
 
@@ -1218,12 +1296,81 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
       pad_height, dar_n, dar_d, GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
       GST_VIDEO_INFO_PAR_D (&vagg_pad->info), out_par_n, out_par_d);
 
-  if (pad_height % dar_n == 0) {
-    pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
-  } else if (pad_width % dar_d == 0) {
-    pad_height = gst_util_uint64_scale_int (pad_width, dar_d, dar_n);
-  } else {
-    pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
+  switch (mix_pad->sizing_policy) {
+    case GST_GL_VIDEO_MIXER_SIZING_POLICY_NONE:
+      /* Pick either height or width, whichever is an integer multiple of the
+       * display aspect ratio. However, prefer preserving the height to account
+       * for interlaced video. */
+      if (pad_height % dar_n == 0) {
+        pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
+      } else if (pad_width % dar_d == 0) {
+        pad_height = gst_util_uint64_scale_int (pad_width, dar_d, dar_n);
+      } else {
+        pad_width = gst_util_uint64_scale_int (pad_height, dar_n, dar_d);
+      }
+      break;
+    case GST_GL_VIDEO_MIXER_SIZING_POLICY_KEEP_ASPECT_RATIO:
+    {
+      gint from_dar_n, from_dar_d, to_dar_n, to_dar_d, num, den;
+
+      /* Calculate DAR again with actual video size */
+      if (!gst_util_fraction_multiply (GST_VIDEO_INFO_WIDTH (&vagg_pad->info),
+              GST_VIDEO_INFO_HEIGHT (&vagg_pad->info),
+              GST_VIDEO_INFO_PAR_N (&vagg_pad->info),
+              GST_VIDEO_INFO_PAR_D (&vagg_pad->info), &from_dar_n,
+              &from_dar_d)) {
+        from_dar_n = from_dar_d = -1;
+      }
+
+      if (!gst_util_fraction_multiply (pad_width, pad_height,
+              out_par_n, out_par_d, &to_dar_n, &to_dar_d)) {
+        to_dar_n = to_dar_d = -1;
+      }
+
+      if (from_dar_n != to_dar_n || from_dar_d != to_dar_d) {
+        /* Calculate new output resolution */
+        if (from_dar_n != -1 && from_dar_d != -1
+            && gst_util_fraction_multiply (from_dar_n, from_dar_d,
+                out_par_d, out_par_n, &num, &den)) {
+          GstVideoRectangle src_rect, dst_rect, rst_rect;
+
+          src_rect.h = gst_util_uint64_scale_int (pad_width, den, num);
+          if (src_rect.h == 0) {
+            pad_width = 0;
+            pad_height = 0;
+            break;
+          }
+
+          src_rect.x = src_rect.y = 0;
+          src_rect.w = pad_width;
+
+          dst_rect.x = dst_rect.y = 0;
+          dst_rect.w = pad_width;
+          dst_rect.h = pad_height;
+
+          /* Scale rect to be centered in destination rect */
+          gst_video_center_rect (&src_rect, &dst_rect, &rst_rect, TRUE);
+
+          GST_LOG_OBJECT (mix_pad,
+              "Re-calculated size %dx%d -> %dx%d (x-offset %d, y-offset %d)",
+              pad_width, pad_height, rst_rect.w, rst_rect.h, rst_rect.x,
+              rst_rect.h);
+
+          *x_offset = rst_rect.x;
+          *y_offset = rst_rect.y;
+          pad_width = rst_rect.w;
+          pad_height = rst_rect.h;
+        } else {
+          GST_WARNING_OBJECT (mix_pad, "Failed to calculate output size");
+
+          *x_offset = 0;
+          *y_offset = 0;
+          pad_width = 0;
+          pad_height = 0;
+        }
+      }
+      break;
+    }
   }
 
   *width = pad_width;
@@ -1293,18 +1440,20 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
     GstGLVideoMixerPad *mixer_pad = GST_GL_VIDEO_MIXER_PAD (vaggpad);
     gint this_width, this_height;
     gint width, height;
+    gint offset_x, offset_y;
     gint fps_n, fps_d;
     gdouble cur_fps;
 
     fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
-    _mixer_pad_get_output_size (mix, mixer_pad, par_n, par_d, &width, &height);
+    _mixer_pad_get_output_size (mix, mixer_pad, par_n, par_d, &width, &height,
+        &offset_x, &offset_y);
 
     if (width == 0 || height == 0)
       continue;
 
-    this_width = width + MAX (mixer_pad->xpos, 0);
-    this_height = height + MAX (mixer_pad->ypos, 0);
+    this_width = width + MAX (mixer_pad->xpos + offset_x, 0);
+    this_height = height + MAX (mixer_pad->ypos + offset_y, 0);
 
     if (best_width < this_width)
       best_width = this_width;
@@ -1406,9 +1555,10 @@ src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
 
   /* Find output rectangle of this pad */
   gst_structure_get_fraction (caps_st, "pixel-aspect-ratio", &par_n, &par_d);
-  _mixer_pad_get_output_size (mix, mix_pad, par_n, par_d, &(rect.w), &(rect.h));
-  rect.x = mix_pad->xpos;
-  rect.y = mix_pad->ypos;
+  _mixer_pad_get_output_size (mix, mix_pad, par_n, par_d, &(rect.w), &(rect.h),
+      &(rect.x), &(rect.y));
+  rect.x += mix_pad->xpos;
+  rect.y += mix_pad->ypos;
 
   /* Translate coordinates and send event if it lies in this rectangle */
   if (is_point_contained (rect, event_x, event_y)) {
@@ -1830,6 +1980,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
     if (video_mixer->output_geo_change
         || pad->geometry_change || !pad->vertex_buffer) {
       gint pad_width, pad_height;
+      gint pad_offset_x, pad_offset_y;
       gfloat w, h;
       /* *INDENT-OFF* */
       gfloat v_vertices[] = {
@@ -1842,7 +1993,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
       _mixer_pad_get_output_size (video_mixer, pad,
           GST_VIDEO_INFO_PAR_N (&vagg->info),
-          GST_VIDEO_INFO_PAR_D (&vagg->info), &pad_width, &pad_height);
+          GST_VIDEO_INFO_PAR_D (&vagg->info),
+          &pad_width, &pad_height, &pad_offset_x, &pad_offset_y);
 
       w = ((gfloat) pad_width / (gfloat) out_width);
       h = ((gfloat) pad_height / (gfloat) out_height);
@@ -1850,9 +2002,11 @@ gst_gl_video_mixer_callback (gpointer stuff)
       pad->m_matrix[0] = w;
       pad->m_matrix[5] = h;
       pad->m_matrix[12] =
-          2. * (gfloat) pad->xpos / (gfloat) out_width - (1. - w);
+          2. * (gfloat) (pad->xpos + pad_offset_x) / (gfloat) out_width - (1. -
+          w);
       pad->m_matrix[13] =
-          2. * (gfloat) pad->ypos / (gfloat) out_height - (1. - h);
+          2. * (gfloat) (pad->ypos + pad_offset_y) / (gfloat) out_height - (1. -
+          h);
 
       v_vertices[0 * 5 + 3] = v_vertices[3 * 5 + 3] =
           pad->crop_left ? ((gfloat) pad->crop_left) /

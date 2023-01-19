@@ -113,6 +113,24 @@ typedef enum
 }
 GstGLVideoMixerBlendFunction;
 
+/**
+ * GstGLVideoMixerSizingPolicy:
+ * @GST_GL_VIDEO_MIXER_SIZING_POLICY_NONE: Scaling image without padding
+ * @GST_GL_VIDEO_MIXER_SIZING_POLICY_KEEP_ASPECT_RATIO: Scaling image to fit destination
+ *    resolution with preserving aspect ratio. Resulting image will be centered
+ *    in the configured destination rectangle and it might have padding area
+ *    if aspect ratio of destination rectangle is different from that of
+ *    input image.
+ *
+ * Since: 1.24
+ */
+typedef enum
+{
+  GST_GL_VIDEO_MIXER_SIZING_POLICY_NONE,
+  GST_GL_VIDEO_MIXER_SIZING_POLICY_KEEP_ASPECT_RATIO,
+}
+GstGLVideoMixerSizingPolicy;
+
 struct _GstGLVideoMixer
 {
     GstGLMixer mixer;
