@@ -7657,6 +7657,20 @@
                         "type": "gint",
                         "writable": true
                     },
+                    "xalign": {
+                        "blurb": "X alignment of the picture",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
                     "xpos": {
                         "blurb": "X Position of the picture",
                         "conditionally-available": false,
@@ -7669,6 +7683,20 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
+                        "writable": true
+                    },
+                    "yalign": {
+                        "blurb": "Y alignment of the picture",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "ypos": {
@@ -7953,6 +7981,20 @@
                         "type": "gint",
                         "writable": true
                     },
+                    "xalign": {
+                        "blurb": "X alignment of the picture",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0.5",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
                     "xpos": {
                         "blurb": "X Position of the picture",
                         "conditionally-available": false,
@@ -7965,6 +8007,20 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gint",
+                        "writable": true
+                    },
+                    "yalign": {
+                        "blurb": "Y alignment of the picture",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0.5",
+                        "max": "1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
                         "writable": true
                     },
                     "ypos": {
@@ -7993,7 +8049,7 @@
                         "value": "0"
                     },
                     {
-                        "desc": "Keep Aspect Ratio: Image is scaled to fit destination rectangle specified by GstGLVideoMixerPad:{xpos, ypos, width, height} with preserved aspect ratio. Resulting image will be centered in the destination rectangle with padding if necessary",
+                        "desc": "Keep Aspect Ratio: Image is scaled to fit destination rectangle specified by GstGLVideoMixerPad:{xpos, ypos, width, height} with preserved aspect ratio. The empty space of the resulting image will be distributed in the destination rectangle according to the GstGLVideoMixerPad:{xalign, yalign} values",
                         "name": "keep-aspect-ratio",
                         "value": "1"
                     }

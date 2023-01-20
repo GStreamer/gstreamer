@@ -167,8 +167,9 @@ gst_gl_video_mixer_sizing_policy_get_type (void)
     {GST_GL_VIDEO_MIXER_SIZING_POLICY_KEEP_ASPECT_RATIO,
           "Keep Aspect Ratio: Image is scaled to fit destination rectangle "
           "specified by GstGLVideoMixerPad:{xpos, ypos, width, height} "
-          "with preserved aspect ratio. Resulting image will be centered in "
-          "the destination rectangle with padding if necessary",
+          "with preserved aspect ratio. The empty space of the resulting image "
+          "will be distributed in the destination rectangle according to the "
+          "GstGLVideoMixerPad:{xalign, yalign} values",
         "keep-aspect-ratio"},
     {0, NULL, NULL},
   };
@@ -195,6 +196,8 @@ gst_gl_video_mixer_sizing_policy_get_type (void)
 #define DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA GST_GL_VIDEO_MIXER_BLEND_FUNCTION_ONE_MINUS_SRC_ALPHA
 #define DEFAULT_PAD_CROP 0
 #define DEFAULT_PAD_SIZING_POLICY GST_GL_VIDEO_MIXER_SIZING_POLICY_NONE
+#define DEFAULT_PAD_XALIGN 0.5
+#define DEFAULT_PAD_YALIGN 0.5
 
 enum
 {
@@ -221,6 +224,8 @@ enum
   PROP_INPUT_CROP_TOP,
   PROP_INPUT_CROP_BOTTOM,
   PROP_INPUT_SIZING_POLICY,
+  PROP_INPUT_XALIGN,
+  PROP_INPUT_YALIGN,
 };
 
 static void gst_gl_video_mixer_input_get_property (GObject * object,
@@ -417,6 +422,54 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
           "Sizing policy to use for image scaling",
           GST_TYPE_GL_VIDEO_MIXER_SIZING_POLICY, DEFAULT_PAD_SIZING_POLICY,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstGLVideoMixerInput:xalign:
+   *
+   * Defines the alignment of the input within the available horizontal space,
+   * relative to #GstGLVideoMixerPad:width and #GstGLVideoMixerPad:height.
+   * Values range from 0.0 (left) to 1.0 (right).
+   *
+   * The image is aligned in the available space as if the pivot point is
+   * matching the alignment. For example, setting the `xalign` property to 0.0
+   * will align the left edge of the image with the left edge of the bounding
+   * box; 0.5 aligns the horizontal center of the image with the horizontal
+   * center of the bounding box; 1.0 aligns the right edge of the image with the
+   * right edge of the bounding box; and so it goes.
+   *
+   * This property is only effective when #GstGLVideoMixerInput:sizing-policy
+   * is set to 'keep-aspect-ratio'.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_INPUT_XALIGN,
+      g_param_spec_double ("xalign", "X alignment",
+          "X alignment of the picture", 0.0, 1.0, DEFAULT_PAD_XALIGN,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstGLVideoMixerInput:yalign:
+   *
+   * Defines the alignment of the input within the available vertical space,
+   * relative to #GstGLVideoMixerPad:width and #GstGLVideoMixerPad:height.
+   * Values range from 0.0 (top) to 1.0 (bottom).
+   *
+   * The image is aligned in the available space as if the pivot point is
+   * matching the alignment. For example, setting the `xalign` property to 0.0
+   * will align the left edge of the image with the left edge of the bounding
+   * box; 0.5 aligns the horizontal center of the image with the horizontal
+   * center of the bounding box; 1.0 aligns the right edge of the image with the
+   * right edge of the bounding box; and so it goes.
+   *
+   * This property is only effective when #GstGLVideoMixerInput:sizing-policy
+   * is set to 'keep-aspect-ratio'.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_INPUT_YALIGN,
+      g_param_spec_double ("yalign", "Y alignment",
+          "Y alignment of the picture", 0.0, 1.0, DEFAULT_PAD_YALIGN,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -468,6 +521,8 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
   ADD_BINDING (mixer_pad, input, "blend-constant-color-blue");
   ADD_BINDING (mixer_pad, input, "blend-constant-color-alpha");
   ADD_BINDING (mixer_pad, input, "sizing-policy");
+  ADD_BINDING (mixer_pad, input, "xalign");
+  ADD_BINDING (mixer_pad, input, "yalign");
 #undef ADD_BINDING
 
   input->mixer_pad = mixer_pad;
@@ -665,6 +720,7 @@ struct _GstGLVideoMixerPad
   /* properties */
   gint xpos, ypos;
   gint width, height;
+  gdouble xalign, yalign;
   gdouble alpha;
   GstGLVideoMixerSizingPolicy sizing_policy;
 
@@ -724,6 +780,8 @@ enum
   PROP_PAD_CROP_TOP,
   PROP_PAD_CROP_BOTTOM,
   PROP_PAD_SIZING_POLICY,
+  PROP_PAD_XALIGN,
+  PROP_PAD_YALIGN,
 };
 
 static void
@@ -737,6 +795,8 @@ gst_gl_video_mixer_pad_init (GstGLVideoMixerPad * pad)
   pad->blend_function_dst_rgb = DEFAULT_PAD_BLEND_FUNCTION_DST_RGB;
   pad->blend_function_dst_alpha = DEFAULT_PAD_BLEND_FUNCTION_DST_ALPHA;
   pad->sizing_policy = DEFAULT_PAD_SIZING_POLICY;
+  pad->xalign = DEFAULT_PAD_XALIGN;
+  pad->yalign = DEFAULT_PAD_YALIGN;
   memset (pad->m_matrix, 0, sizeof (gfloat) * 4 * 4);
   pad->m_matrix[0] = 1.0;
   pad->m_matrix[5] = 1.0;
@@ -901,6 +961,54 @@ gst_gl_video_mixer_pad_class_init (GstGLVideoMixerPadClass * klass)
           "Sizing policy to use for image scaling",
           GST_TYPE_GL_VIDEO_MIXER_SIZING_POLICY, DEFAULT_PAD_SIZING_POLICY,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstGLVideoMixerPad:xalign:
+   *
+   * Defines the alignment of the input within the available horizontal space,
+   * relative to #GstGLVideoMixerPad:width and #GstGLVideoMixerPad:height.
+   * Values range from 0.0 (left) to 1.0 (right).
+   *
+   * The image is aligned in the available space as if the pivot point is
+   * matching the alignment. For example, setting the `xalign` property to 0.0
+   * will align the left edge of the image with the left edge of the bounding
+   * box; 0.5 aligns the horizontal center of the image with the horizontal
+   * center of the bounding box; 1.0 aligns the right edge of the image with the
+   * right edge of the bounding box; and so it goes.
+   *
+   * This property is only effective when #GstGLVideoMixerInput:sizing-policy
+   * is set to 'keep-aspect-ratio'.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_XALIGN,
+      g_param_spec_double ("xalign", "X alignment",
+          "X alignment of the picture", 0.0, 1.0, DEFAULT_PAD_XALIGN,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstGLVideoMixerPad:yalign:
+   *
+   * Defines the alignment of the input within the available vertical space,
+   * relative to #GstGLVideoMixerPad:width and #GstGLVideoMixerPad:height.
+   * Values range from 0.0 (top) to 1.0 (bottom).
+   *
+   * The image is aligned in the available space as if the pivot point is
+   * matching the alignment. For example, setting the `yalign` property to 0.0
+   * will align the top edge of the image with the top edge of the bounding box;
+   * 0.5 aligns the vertical center of the image with the vertical center of the
+   * bounding box; 1.0 aligns the bottom edge of the image with the bottom edge
+   * of the bounding box; and so it goes.
+   *
+   * This property is only effective when #GstGLVideoMixerInput:sizing-policy
+   * is set to 'keep-aspect-ratio'.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_PAD_YALIGN,
+      g_param_spec_double ("yalign", "Y alignment",
+          "Y alignment of the picture", 0.0, 1.0, DEFAULT_PAD_YALIGN,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -969,6 +1077,12 @@ gst_gl_video_mixer_pad_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PAD_SIZING_POLICY:
       g_value_set_enum (value, pad->sizing_policy);
+      break;
+    case PROP_PAD_XALIGN:
+      g_value_set_double (value, pad->xalign);
+      break;
+    case PROP_PAD_YALIGN:
+      g_value_set_double (value, pad->yalign);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1070,6 +1184,18 @@ gst_gl_video_mixer_pad_set_property (GObject * object, guint prop_id,
       GstGLVideoMixerSizingPolicy val = g_value_get_enum (value);
       pad->geometry_change |= val != pad->sizing_policy;
       pad->sizing_policy = val;
+      break;
+    }
+    case PROP_PAD_XALIGN:{
+      gdouble val = g_value_get_double (value);
+      pad->geometry_change |= !G_APPROX_VALUE (val, pad->xalign, DBL_EPSILON);
+      pad->xalign = val;
+      break;
+    }
+    case PROP_PAD_YALIGN:{
+      gdouble val = g_value_get_double (value);
+      pad->geometry_change |= !G_APPROX_VALUE (val, pad->yalign, DBL_EPSILON);
+      pad->yalign = val;
       break;
     }
     default:
@@ -1243,6 +1369,41 @@ gst_gl_video_mixer_propose_allocation (GstAggregator * agg,
 }
 
 static void
+align_rect (const GstVideoRectangle * src,
+    const GstVideoRectangle * dst, GstVideoRectangle * result, gdouble xalign,
+    gdouble yalign)
+{
+  gdouble src_ratio, dst_ratio;
+
+  g_return_if_fail (src->h != 0);
+  g_return_if_fail (dst->h != 0);
+
+  src_ratio = (gdouble) src->w / src->h;
+  dst_ratio = (gdouble) dst->w / dst->h;
+
+  if (src_ratio > dst_ratio) {
+    result->w = dst->w;
+    result->h = dst->w / src_ratio;
+    result->x = dst->x;
+    result->y = dst->y + (dst->h - result->h) * yalign;
+  } else if (src_ratio < dst_ratio) {
+    result->w = dst->h * src_ratio;
+    result->h = dst->h;
+    result->x = dst->x + (dst->w - result->w) * xalign;
+    result->y = dst->y;
+  } else {
+    result->x = dst->x;
+    result->y = dst->y;
+    result->w = dst->w;
+    result->h = dst->h;
+  }
+
+  GST_DEBUG ("source is %dx%d dest is %dx%d, result is %dx%d with x,y %dx%d",
+      src->w, src->h, dst->w, dst->h,
+      result->w, result->h, result->x, result->y);
+}
+
+static void
 _mixer_pad_get_output_size (GstGLVideoMixer * mix,
     GstGLVideoMixerPad * mix_pad, gint out_par_n, gint out_par_d, gint * width,
     gint * height, gint * x_offset, gint * y_offset)
@@ -1332,7 +1493,8 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
         if (from_dar_n != -1 && from_dar_d != -1
             && gst_util_fraction_multiply (from_dar_n, from_dar_d,
                 out_par_d, out_par_n, &num, &den)) {
-          GstVideoRectangle src_rect, dst_rect, rst_rect;
+          GstVideoRectangle src_rect, dst_rect;
+          GstVideoRectangle rst_rect = { 0, 0, 0, 0 };
 
           src_rect.h = gst_util_uint64_scale_int (pad_width, den, num);
           if (src_rect.h == 0) {
@@ -1349,7 +1511,8 @@ _mixer_pad_get_output_size (GstGLVideoMixer * mix,
           dst_rect.h = pad_height;
 
           /* Scale rect to be centered in destination rect */
-          gst_video_center_rect (&src_rect, &dst_rect, &rst_rect, TRUE);
+          align_rect (&src_rect, &dst_rect, &rst_rect, mix_pad->xalign,
+              mix_pad->yalign);
 
           GST_LOG_OBJECT (mix_pad,
               "Re-calculated size %dx%d -> %dx%d (x-offset %d, y-offset %d)",
