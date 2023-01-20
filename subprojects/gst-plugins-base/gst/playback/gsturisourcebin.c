@@ -30,8 +30,6 @@
  *
  * The main configuration is via the #GstURISourceBin:uri property.
  *
- * > urisourcebin is still experimental API and a technology preview.
- * > Its behaviour and exposed API is subject to change.
  */
 
 #ifdef HAVE_CONFIG_H

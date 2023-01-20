@@ -22,7 +22,7 @@
  * @title: uridecodebin3
  *
  * Decodes data from a URI into raw media. It selects a source element that can
- * handle the given #GstURIDecodeBin3:uri scheme and connects it to a decodebin.
+ * handle the given #GstURIDecodeBin3:uri scheme and connects it to a decodebin3.
  */
 
 #ifdef HAVE_CONFIG_H
