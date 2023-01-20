@@ -47,8 +47,12 @@ macro_rules! upgrade_weak {
 struct Args {
     #[clap(short, long, default_value = "wss://webrtc.nirbheek.in:8443")]
     server: String,
+    /// Peer ID that should be called. If not given then an incoming call is expected.
     #[clap(short, long)]
     peer_id: Option<u32>,
+    /// Our ID. If not given then a random ID is created.
+    #[clap(short, long)]
+    our_id: Option<u32>,
 }
 
 // JSON messages we communicate with
@@ -737,7 +741,9 @@ async fn async_main() -> Result<(), anyhow::Error> {
     println!("connected");
 
     // Say HELLO to the server and see if it replies with HELLO
-    let our_id = rand::thread_rng().gen_range(10..10_000);
+    let our_id = args
+        .our_id
+        .unwrap_or_else(|| rand::thread_rng().gen_range(10..10_000));
     println!("Registering id {} with server", our_id);
     ws.send(WsMessage::Text(format!("HELLO {}", our_id)))
         .await?;
