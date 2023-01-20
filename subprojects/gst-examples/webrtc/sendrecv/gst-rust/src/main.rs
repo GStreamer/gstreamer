@@ -53,6 +53,9 @@ struct Args {
     /// Our ID. If not given then a random ID is created.
     #[clap(short, long)]
     our_id: Option<u32>,
+    /// Request that the peer creates an offer.
+    #[clap(short, long, default_value = "false")]
+    remote_offerer: bool,
 }
 
 // JSON messages we communicate with
@@ -155,7 +158,9 @@ impl App {
         }));
 
         // Connect to on-negotiation-needed to handle sending an Offer
-        if app.args.peer_id.is_some() {
+        if app.args.peer_id.is_some() && !app.args.remote_offerer
+            || app.args.peer_id.is_none() && app.args.remote_offerer
+        {
             let vpay = app.pipeline.by_name("vpay").unwrap();
             let apay = app.pipeline.by_name("apay").unwrap();
 
@@ -218,7 +223,7 @@ impl App {
 
         // Asynchronously set the pipeline to Playing if we're creating the offer,
         // otherwise do that after the offer was received.
-        if app.args.peer_id.is_some() {
+        if app.args.peer_id.is_some() && !app.args.remote_offerer {
             app.pipeline.call_async(|pipeline| {
                 // If this fails, post an error on the bus so we exit
                 if pipeline.set_state(gst::State::Playing).is_err() {
@@ -238,6 +243,21 @@ impl App {
     fn handle_websocket_message(&self, msg: &str) -> Result<(), anyhow::Error> {
         if msg.starts_with("ERROR") {
             bail!("Got error message: {}", msg);
+        }
+
+        if msg == "OFFER_REQUEST" {
+            self.pipeline.call_async(|pipeline| {
+                // If this fails, post an error on the bus so we exit
+                if pipeline.set_state(gst::State::Playing).is_err() {
+                    gst::element_error!(
+                        pipeline,
+                        gst::LibraryError::Failed,
+                        ("Failed to set pipeline to Playing")
+                    );
+                }
+            });
+
+            return Ok(());
         }
 
         let json_msg: JsonMsg = serde_json::from_str(msg)?;
@@ -758,6 +778,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
     }
 
     if let Some(peer_id) = args.peer_id {
+        println!("Setting up call with peer id {}", peer_id);
+
         // Join the given session
         ws.send(WsMessage::Text(format!("SESSION {}", peer_id)))
             .await?;
@@ -770,6 +792,14 @@ async fn async_main() -> Result<(), anyhow::Error> {
         if msg != WsMessage::Text("SESSION_OK".into()) {
             bail!("server error: {:?}", msg);
         }
+
+        // If we expect the peer to create the offer request it now
+        if args.remote_offerer {
+            println!("Requesting offer from peer");
+            ws.send(WsMessage::Text("OFFER_REQUEST".into())).await?;
+        }
+    } else {
+        println!("Waiting for incoming call");
     }
 
     // All good, let's run our message loop
