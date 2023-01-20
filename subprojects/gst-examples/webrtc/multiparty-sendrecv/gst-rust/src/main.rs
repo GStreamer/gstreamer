@@ -1,5 +1,3 @@
-#![recursion_limit = "256"]
-
 mod macos_workaround;
 
 use std::collections::BTreeMap;
