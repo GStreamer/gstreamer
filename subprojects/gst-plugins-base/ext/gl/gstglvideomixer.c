@@ -1393,7 +1393,7 @@ src_pad_mouse_event (GstElement * element, GstPad * pad, gpointer user_data)
   GstGLVideoMixerPad *mix_pad = GST_GL_VIDEO_MIXER_PAD (pad);
   GstCaps *caps = gst_pad_get_current_caps (pad);
   GstStructure *event_st, *caps_st;
-  gint par_n, par_d;
+  gint par_n = 1, par_d = 1;
   gdouble event_x, event_y;
   GstVideoRectangle rect;
 
