@@ -326,6 +326,14 @@ webkit_extension_msg_received (WebKitWebContext  *context,
         webkit_extension_gerror_msg_received (src, params);
     } else if (!g_strcmp0(name, "gstwpe.bus_message")) {
         webkit_extension_bus_message_received (src, params);
+    } else if (!g_strcmp0(name, "gstwpe.console_message")) {
+        const gchar *message = g_variant_get_string (g_variant_get_child_value (params, 0), NULL);
+        GstStructure *structure = gst_structure_new ("wpe-console-message",
+            "message", G_TYPE_STRING, message,
+            NULL);
+
+        gst_element_post_message(GST_ELEMENT(src), gst_message_new_custom(GST_MESSAGE_ELEMENT,
+            GST_OBJECT(src), structure));
     } else {
         res = FALSE;
         g_error("Unknown event: %s", name);
@@ -348,7 +356,7 @@ WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* cont
     WPEView* view = nullptr;
     dispatch([&]() mutable {
         if (!glib.web_context) {
-            auto *manager = webkit_website_data_manager_new_ephemeral();
+            auto *manager = webkit_website_data_manager_new(NULL);
             glib.web_context =
                 webkit_web_context_new_with_website_data_manager(manager);
             g_object_unref(manager);

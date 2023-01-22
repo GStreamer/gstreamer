@@ -38,6 +38,26 @@ G_MODULE_EXPORT void webkit_web_extension_initialize (WebKitWebExtension *
 
 static WebKitWebExtension *global_extension = NULL;
 
+
+static void
+console_message_cb (WebKitWebPage * page,
+    WebKitConsoleMessage * console_message, gpointer data)
+{
+  char *message = g_strdup (webkit_console_message_get_text (console_message));
+  gst_wpe_extension_send_message (webkit_user_message_new
+      ("gstwpe.console_message", g_variant_new ("(s)", message)), NULL, NULL,
+      NULL);
+  g_free (message);
+}
+
+static void
+web_page_created_callback (WebKitWebExtension * extension,
+    WebKitWebPage * web_page, gpointer data)
+{
+  g_signal_connect (web_page, "console-message-sent",
+      G_CALLBACK (console_message_cb), NULL);
+}
+
 void
 webkit_web_extension_initialize (WebKitWebExtension * extension)
 {
@@ -55,6 +75,9 @@ webkit_web_extension_initialize (WebKitWebExtension * extension)
 
   global_extension = extension;
   GST_INFO ("Setting as global extension.");
+
+  g_signal_connect (global_extension, "page-created",
+      G_CALLBACK (web_page_created_callback), NULL);
 }
 
 void
