@@ -825,6 +825,10 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 
   if (!cpad->convert) {
     GstStructure *config = gst_structure_new ("converter-config",
+        /* XXX: Always use shader, to workaround buggy blending behavior of
+         * vendor implemented converter. Need investigation */
+        GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
+        GST_D3D11_CONVERTER_BACKEND_SHADER,
         GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
         GST_TYPE_VIDEO_GAMMA_MODE, cpad->gamma_mode,
         GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
