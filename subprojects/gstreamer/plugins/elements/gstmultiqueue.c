@@ -2872,6 +2872,34 @@ gst_multi_queue_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_LATENCY:
+    {
+      GstClockTime latency = GST_CLOCK_TIME_NONE;
+      gst_event_parse_latency (event, &latency);
+      if (GST_CLOCK_TIME_IS_VALID (latency)) {
+        GST_MULTI_QUEUE_MUTEX_LOCK (mq);
+        if (latency > mq->min_interleave_time) {
+          /* Due to the dynamic nature of multiqueue, whe `use-interleave` is
+           * used we can't report a maximum tolerated latency (when queried)
+           * since it is calculated dynamically.
+           *
+           * When in such live pipelines, we need to make sure multiqueue can
+           * handle the lowest global latency (provided by this event). Failure
+           * to do that would result in not providing enough buffering for a
+           * realtime pipeline.
+           */
+          GST_DEBUG_OBJECT (mq,
+              "Raising minimum interleave time to %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (latency));
+          mq->min_interleave_time = latency;
+          if (mq->use_interleave)
+            calculate_interleave (mq, NULL);
+        }
+        GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+      }
+      ret = gst_pad_push_event (sinkpad, event);
+    }
+      break;
     case GST_EVENT_RECONFIGURE:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       if (sq->srcresult == GST_FLOW_NOT_LINKED) {
