@@ -3,34 +3,40 @@
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2023.
+#
+# Cronologia traducerii fișierului „gst-plugins-good”:
+# Traducerea inițială, făcută de LAG, pentru versiunea gst-plugins-good 0.10.23.2
+# Actualizare a traducerii pentru versiunea 1.15.1, făcută de FM, iun-2020.
 # Actualizare a mesajelor, de la fișierul „gst-plugins-good-1.19.2.pot”.
 # Eliminare a mesajelor ce-au dispărut în ultima versiune.
-# Actualizări realizate de Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 15.01.2022.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022.
+# Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
+# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023
+# Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.19.2\n"
+"Project-Id-Version: gst-plugins-good 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-01-21 01:52+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 20:09+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
-"X-Generator: Poedit 2.3.1\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.2.2\n"
 "X-Launchpad-Export-Date: 2010-08-16 00:08+0000\n"
 
 msgid "Jack server not found"
 msgstr "Nu s-a găsit serverul jack"
 
 msgid "Failed to decode JPEG image"
-msgstr "Nu s-a putut decoda imaginea JPEG"
+msgstr "Nu s-a putut decodifica imaginea JPEG"
 
 msgid "Failed to read memory"
 msgstr "Nu s-a putut citi memoria"
@@ -39,7 +45,7 @@ msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
 "Nu s-a putut configura codificatorul audio mp3 LAME. Verificați parametrii "
-"de codare."
+"de codificare."
 
 #. <php-emulation-mode>three underscores for ___rate is really really really
 #. * private as opposed to one underscore<php-emulation-mode>
@@ -62,7 +68,7 @@ msgid "Could not connect to server"
 msgstr "Nu se poate stabili o conexiune la server"
 
 msgid "No URL set."
-msgstr "Nu este stabilit niciun URL."
+msgstr "Nu este stabilită nicio adresă URL."
 
 msgid "Could not resolve server name."
 msgstr "Nu s-a putut rezolva numele serverului."
@@ -79,7 +85,7 @@ msgstr ""
 "A apărut o eroare de rețea, sau serverul a închis conexiunea neașteptat."
 
 msgid "Server sent bad data."
-msgstr "Serverul a trimis date greșite."
+msgstr "Serverul a trimis date incorecte."
 
 msgid "Server does not support seeking."
 msgstr "Serverul nu suportă căutarea."
@@ -87,11 +93,11 @@ msgstr "Serverul nu suportă căutarea."
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
 "Nu s-a putut configura codificatorul TwoLAME. Verificați parametrii de "
-"codare."
+"codificare."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
-"Intrarea audio nu există sau este nevalidă, fluxul de date AVI va fi corupt."
+"Intrarea audio nu există sau nu este validă, fluxul de date AVI va fi corupt."
 
 msgid "This file contains no playable streams."
 msgstr "Acest fișier nu conține fluxuri ce pot fi redate."
@@ -273,15 +279,15 @@ msgstr "Dispozitivul „%s” nu poate captura în formatul specificat"
 
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr "Dispozitivul „%s” nu suportă planele non-contigue"
+msgstr "Dispozitivul „%s” acceptă planuri necontigue"
 
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Dispozitivul „%s” nu suportă întrețeserea %s"
+msgstr "Dispozitivul „%s” nu acceptă întrețeserea %s"
 
 #, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Dispozitivul „%s” nu suportă colorimetria %s"
+msgstr "Dispozitivul „%s” nu acceptă colorimetria %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -297,10 +303,10 @@ msgid "Video device returned invalid dimensions."
 msgstr "Dispozitivul video a returnat dimensiuni nevalide."
 
 msgid "Video device uses an unsupported interlacing method."
-msgstr "Dispozitivul video utilizează o metodă de întrețesere nesuportată."
+msgstr "Dispozitivul video utilizează o metodă de întrețesere neacceptată."
 
 msgid "Video device uses an unsupported pixel format."
-msgstr "Dispozitivul video utilizează un format de pixel nesuportat."
+msgstr "Dispozitivul video utilizează un format de pixel neacceptat."
 
 msgid "Failed to configure internal buffer pool."
 msgstr "Nu s-a putut configura rezerva internă de preîncărcare."
@@ -342,10 +348,10 @@ msgstr "Definirea valorii %d pentru dispozitivul „%s” a eșuat."
 
 #, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Nu s-a putut modifica starea ,fără sunet” pe dispozitivul „%s”."
+msgstr "Nu s-a putut modifica starea „fără sunet” pe dispozitivul „%s”."
 
 msgid "Failed to allocated required memory."
-msgstr "Nu s-a alocat memoria necesară."
+msgstr "Nu s-a putut aloca memoria necesară."
 
 msgid "Failed to allocate required memory."
 msgstr "Nu s-a putut aloca memoria necesară."
@@ -353,25 +359,25 @@ msgstr "Nu s-a putut aloca memoria necesară."
 #, c-format
 msgid "Converter on device %s has no supported input format"
 msgstr ""
-"Convertizorul pe dispozitivul %s nu are niciun format de intrare suportat"
+"Convertizorul pe dispozitivul %s nu are niciun format de intrare acceptat"
 
 #, c-format
 msgid "Converter on device %s has no supported output format"
 msgstr ""
-"Convertizorul pe dispozitivul %s nu are niciun format de ieșire suportat"
+"Convertizorul pe dispozitivul %s nu are niciun format de ieșire acceptat"
 
 #, c-format
 msgid "Decoder on device %s has no supported input format"
 msgstr ""
-"Decodificatorul pe dispozitivul %s nu are niciun format de intrare suportat"
+"Decodificatorul pe dispozitivul %s nu are niciun format de intrare acceptat"
 
 #, c-format
 msgid "Decoder on device %s has no supported output format"
 msgstr ""
-"Decodificatorul pe dispozitivul %s nu are niciun format de ieșire suportat"
+"Decodificatorul pe dispozitivul %s nu are niciun format de ieșire acceptat"
 
 msgid "Failed to start decoding thread."
-msgstr "Nu s-a putut începe firul de decodare."
+msgstr "Nu s-a putut începe firul de decodificare."
 
 msgid "Failed to process frame."
 msgstr "Nu s-a putut procesa cadrul."
@@ -379,12 +385,12 @@ msgstr "Nu s-a putut procesa cadrul."
 #, c-format
 msgid "Encoder on device %s has no supported output format"
 msgstr ""
-"Codificatorul pe dispozitivul %s nu are niciun format de ieșire suportat"
+"Codificatorul pe dispozitivul %s nu are niciun format de ieșire acceptat"
 
 #, c-format
 msgid "Encoder on device %s has no supported input format"
 msgstr ""
-"Codificatorul pe dispozitivul %s nu are niciun format de intrare suportat"
+"Codificatorul pe dispozitivul %s nu are niciun format de intrare acceptat"
 
 msgid "Failed to start encoding thread."
 msgstr "Nu s-a putut începe firul de codare."

@@ -5,10 +5,10 @@
 # zwpwjwtz <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.15.1\n"
+"Project-Id-Version: gst-plugins-good 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2019-03-05 16:27+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-21 13:45+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.0.7\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Jack server not found"
 msgstr "未找到插口设备"
@@ -24,9 +24,8 @@ msgstr "未找到插口设备"
 msgid "Failed to decode JPEG image"
 msgstr "解码 JPEG 图像出错"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "分配请求的内存失败。"
+msgstr "读取内存失败"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
@@ -161,7 +160,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "无法打开 CoreAudio 设备"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "树莓派相机模块"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -183,9 +182,8 @@ msgstr "设备“%s”的驱动不支持I/O方式 %d。"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "设备“%s”的驱动不支持任何已知的I/O方式。"
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "无效的原子尺寸。"
+msgstr "caps无效"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -384,26 +382,26 @@ msgstr "获取设备“%2$s”的控制器 %1$d 的值出错。"
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "设置设备“%3$s”的控制器 %2$d 的值为 %1$d 时出错。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
-msgstr "设置设备“%3$s”的控制器 %2$d 的值为 %1$d 时出错。"
+msgstr "设置设备“%3$s”的控制器 %2$d 的值为 %1$s 时出错。"
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr "获取设备“%s”上的当前输入出错。也许它是一个广播设备"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "设置设备 %2$s 上的输入 %1$d 时出错。"
+msgstr "设置设备 %2$s 上的输入 %1$u 时出错。"
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr "获取设备“%s”上的当前输入出错。它可能是一个广播设备"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "将输出 %d 设置到设备 %s 上失败。"
+msgstr "将输出 %u 设置到设备 %s 上失败。"
 
 msgid "Cannot operate without a clock"
 msgstr "没有时钟的话无法操作"
