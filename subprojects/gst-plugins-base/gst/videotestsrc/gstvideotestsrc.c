@@ -291,8 +291,7 @@ gst_video_test_src_class_init (GstVideoTestSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_TIMESTAMP_OFFSET,
       g_param_spec_int64 ("timestamp-offset", "Timestamp offset",
           "An offset added to timestamps set on buffers (in ns)", 0,
-          (G_MAXLONG == G_MAXINT64) ? G_MAXINT64 : (G_MAXLONG * GST_SECOND - 1),
-          0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_IS_LIVE,
       g_param_spec_boolean ("is-live", "Is Live",
           "Whether to act as a live source", DEFAULT_IS_LIVE,
