@@ -7,19 +7,19 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-11-06 22:51+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-16 22:34+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.0\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.1.1\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Print the GStreamer version"
@@ -898,7 +898,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "Verknüpfung hat kein Ziel [sink=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Keine derartige Eigenschaft."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -921,10 +921,11 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr ""
-"Die Eigenschaft »%s« im Element »%s« konnte nicht auf »%s« gesetzt werden"
+"Die Eigenschaft »%s« im Unterknoten von Element »%s« konnte nicht auf »%s« "
+"gesetzt werden"
 
 msgid "Delayed linking failed."
 msgstr "Verzögertes Verknüpfen ist fehlgeschlagen."

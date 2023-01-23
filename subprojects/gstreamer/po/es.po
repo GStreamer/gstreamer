@@ -1,15 +1,15 @@
-# translation of gstreamer-1.19.2 to Español
+# translation of gstreamer-1.21.90 to Español
 # spanish translation for gstreamer
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2009, 2010, 2011.
-# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022.
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2022-03-04 14:12-0600\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-16 11:12-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
@@ -883,7 +883,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "el enlace no tiene sumidero [fuente=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "No hay tal propiedad."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -905,9 +905,10 @@ msgstr "no hay un elemento «%s»"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "no se pudo establecer la propiedad «%s» en el elemento «%s» a «%s»"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "no se pudo establecer la propiedad «%s» en el elemento «%s» a «%s»"
+msgstr ""
+"no se pudo establecer la propiedad «%s» en el hijo del elemento «%s» a «%s»"
 
 msgid "Delayed linking failed."
 msgstr "Falló el enlazado retrasado."

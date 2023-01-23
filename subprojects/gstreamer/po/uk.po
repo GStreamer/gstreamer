@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-09-24 15:08+0300\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 17:39+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
@@ -870,7 +870,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "у посилання немає приймача [джерело=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Такої властивості немає."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -892,9 +892,11 @@ msgstr "немає елемента «%s»"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не вдалося встановити властивість «%s» у елементі «%s» у значення «%s»"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "не вдалося встановити властивість «%s» у елементі «%s» у значення «%s»"
+msgstr ""
+"не вдалося встановити властивість «%s» у дочірньому записі елемента «%s» у "
+"значення «%s»"
 
 msgid "Delayed linking failed."
 msgstr "Спроба відкладеного компонування зазнала невдачі."

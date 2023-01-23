@@ -4,13 +4,13 @@
 # Peter Astakhov <astakhovp@mail.ru>, 2005.
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2019, 2021, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-09-28 07:22+0300\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 12:54+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
 "Language: ru\n"
@@ -873,7 +873,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "соединение без приёмника [источник=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Такого свойства нет."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -895,9 +895,11 @@ msgstr "элемент «%s» не найден"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не удалось установить свойство «%s» элемента «%s» в значение «%s»"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "не удалось установить свойство «%s» элемента «%s» в значение «%s»"
+msgstr ""
+"невозможно установить свойство «%s» в потомке элемента «%s» равным значению "
+"«%s»"
 
 msgid "Delayed linking failed."
 msgstr "Ошибка при отложенной компоновке."
@@ -1381,9 +1383,8 @@ msgstr "ОШИБКА: не найден элемент «pipeline».\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Установка конвейера в состояние PAUSED…\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "Установка конвейера в состояние PAUSED…\n"
+msgstr "Не удалось поставить конвейер в состояние PAUSED.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвейер работает и не требует состояния PREROLL…\n"

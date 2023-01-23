@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2015-2021
+# Johnny A. Solbu <johnny@solbu.net>, 2015-2023
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-09-24 18:37+0200\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 14:22+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
 "Language: nb_NO\n"
@@ -868,7 +868,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "link har ingen slik sink [source=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Egenskapen finnes ikke."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -890,9 +890,9 @@ msgstr "ingen element «%s»"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "kunne ikke sette egenskapen «%s» i elementet «%s» til «%s»"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "kunne ikke sette egenskapen «%s» i elementet «%s» til «%s»"
+msgstr "kunne ikke sette egenskapen «%s» i underordnet elementet «%s» til «%s»"
 
 msgid "Delayed linking failed."
 msgstr "Forsinket linking feilet."

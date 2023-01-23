@@ -3,27 +3,33 @@
 #
 # Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2023.
+#
+# Cronologia traducerii fișierului „gstreamer”:
+# Traducerea inițială, făcută de LAG, pentru versiunea gstreamer 0.10.29.2
+# Actualizare a traducerii pentru versiunea 1.16.0, făcută de FM, iun-2020.
 # Actualizare a mesajelor, de la fișierul „gstreamer-1.19.2.pot”.
 # Eliminare a mesajelor ce-au dispărut în ultima versiune.
-# Actualizări realizate de Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 15.01.2022.
-# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022.
+# Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
+# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023.
+# Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2022-01-21 14:07+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 19:23+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);\n"
-"X-Generator: Poedit 2.3.1\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.2.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Afișează versiunea GStreamer"
@@ -193,7 +199,7 @@ msgid "Could not configure supporting library."
 msgstr "Nu se poate configura biblioteca suport."
 
 msgid "Encoding error."
-msgstr "Eroare de codare."
+msgstr "Eroare de codificare."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer a întâlnit o eroare generală de resurse."
@@ -318,7 +324,7 @@ msgstr "titlu folosit în mod obișnuit"
 # a definii această acțiune
 # =====================================
 # oricum, această versiune, «19.2» este o
-# versiune aflată „în curs de dezvoltare”, la 
+# versiune aflată „în curs de dezvoltare”, la
 # momentul scrieriii acestui comentariu; așa că
 # sugestia făcută, rămîne în „vizor”
 msgid "title sortname"
@@ -370,7 +376,7 @@ msgid "date the data was created (as a GDate structure)"
 msgstr "data la care au fost create aceste date (ca structură GDate)"
 
 msgid "datetime"
-msgstr "datăoră"
+msgstr "dată_oră"
 
 msgid "date and time the data was created (as a GstDateTime structure)"
 msgstr "data și ora la care datele au fost create (ca o structură GstDateTime)"
@@ -963,7 +969,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "legătura nu are niciun destinatar [sursă=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Nici o astfel de proprietate."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -971,7 +977,7 @@ msgstr "nicio proprietate „%s” în elementul „%s”"
 
 #, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Elementul „% s” nu este o preconfigurare Gstreamer"
+msgstr "Elementul „%s” nu este o preconfigurare Gstreamer"
 
 #, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
@@ -986,10 +992,11 @@ msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr ""
 "nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
 msgstr ""
-"nu se poate stabili proprietatea „%s” în elementul „%s” la valoarea „%s”"
+"nu se poate stabili proprietatea „%s” din fiul-elementului „%s” la valoarea "
+"„%s”"
 
 msgid "Delayed linking failed."
 msgstr "Legătura întârziată a eșuat."
@@ -997,9 +1004,14 @@ msgstr "Legătura întârziată a eșuat."
 # R-GC, scrie:
 # cred că traducerea corectă, ar fi:
 # „nu s-a putut asocia %s cu %s, %s nu poate manipula majusculele %s”
+# ***
+# La actualizarea fișierului la versiunea 1.21.90,
+# am schimbat „lega”, cu „vincula”; ce mi se pare
+# un termen mai apropiat pentru traducerea
+# acestui mesaj
 #, c-format
 msgid "could not link %s to %s, %s can't handle caps %s"
-msgstr "nu s-a putut lega %s la %s, %s nu poate manipula majusculele %s"
+msgstr "nu s-a putut vincula %s la %s, %s nu poate manipula majusculele %s"
 
 #, c-format
 msgid "could not link %s to %s, neither element can handle caps %s"
@@ -1050,7 +1062,7 @@ msgid "empty pipeline not allowed"
 msgstr "linia de asamblare vidă nu este permisă"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr "Construirea liniei de conexiune nu este validă, adăugați cozi."
+msgstr "Construcția liniei de asamblare nu este validă, adăugați cozi."
 
 msgid "A lot of buffers are being dropped."
 msgstr "Multe zone de memorie tampon sunt abandonate."
@@ -1388,7 +1400,7 @@ msgstr "Întrerupere: Se oprește linia de asamblare ...\n"
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
 msgstr ""
 "Întrerupere în timpul așteptării pentru EOS - se oprește linia de "
-"conexiune...\n"
+"asamblare...\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS la închidere activat -- Se forțează EOS pe linia de asamblare\n"
@@ -1458,17 +1470,17 @@ msgid ""
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
 "Nu se imprimă poziția curentă a liniei de asamblare. Dacă această opțiune nu "
-"este specificată, poziția va fi imprimată atunci când stdout este un TTY. "
-"Pentru a activa poziția de imprimare atunci când stdout nu este un TTY, "
-"utilizați opțiunea „force-position”."
+"este specificată, poziția va fi imprimată atunci când ieșirea standard este "
+"un TTY. Pentru a activa imprimarea poziției atunci când ieșirea standard nu "
+"este un TTY, utilizați opțiunea „force-position”."
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
-"Permite imprimarea poziției curente a liniei de asamblare chiar dacă stdout "
-"nu este un TTY. Această opțiune nu are efect dacă este specificată opțiunea "
-"„fără poziție(no-position)”."
+"Permite imprimarea poziției curente a liniei de asamblare chiar dacă ieșire "
+"standard nu este un TTY. Această opțiune nu are efect dacă este specificată "
+"opțiunea „fără poziție(no-position)”."
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"

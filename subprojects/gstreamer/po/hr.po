@@ -10,20 +10,20 @@
 # Božidar Putanec <bozidarp@yahoo.com>, 2016, 2017, 2018, 2019, 2021, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.19.2\n"
+"Project-Id-Version: gstreamer-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2022-11-06 16:24-0800\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-16 11:03-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr_HR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
-"X-Generator: Poedit 3.0\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.2.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "ispiše inačicu GStreamera"
@@ -123,7 +123,7 @@ msgstr ""
 "ispravnu poruku o grešci s razlogom za neuspjeh."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr "Interna greška GStreamera: problem s konekcijom."
+msgstr "Interna greška GStreamera: problem sa sučeljem."
 
 # Rač.: nezavisni skup naredbi koji se samostalno izvršavaju u programu
 msgid "Internal GStreamer error: thread problem."
@@ -879,7 +879,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "poveznica nema ponor [source=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Nema takvog svojstva."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -901,9 +901,9 @@ msgstr "nema elementa „%s“"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "nije moguće postaviti svojstvo „%s“ u elementu „%s“ na „%s“"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "nije moguće postaviti svojstvo „%s“ u elementu „%s“ na „%s“"
+msgstr "nije moguće postaviti svojstvo „%s“ u potomku od elementa „%s“ na „%s“"
 
 msgid "Delayed linking failed."
 msgstr "Odgođeno povezivanje nije uspjelo."
@@ -929,10 +929,10 @@ msgstr "nije moguće povezati %s sa %s"
 msgid "unexpected reference \"%s\" - ignoring"
 msgstr "neočekivana referencija „%s“ - zanemareno"
 
-# pad (u elektronskoj glazbi) > A category of synthsizer patches which produce a soft, pleasing sound.
+# pad pads are the element's interface to the outside world -> sučelje
 #, c-format
 msgid "unexpected pad-reference \"%s\" - ignoring"
-msgstr "neočekivana poveznica (pad-reference) „%s“ - zanemareno"
+msgstr "neočekivana referencija sučelja (pad-reference) „%s“ - zanemareno"
 
 #, c-format
 msgid "could not parse caps \"%s\""
@@ -1201,7 +1201,7 @@ msgid "Index statistics"
 msgstr "Indeksna statistika"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Cjevovod je stavlja u stanje PLAYING ...\n"
+msgstr "Postavljamo cjevovod na PLAYING ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GREŠKA: cjevovod ne želi reproducirati (play).\n"
@@ -1212,7 +1212,7 @@ msgstr "Primljena je poruka #%u od elementa „%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Primljena je poruka #%u od konekcije „%s:%s“ (%s): "
+msgstr "Primljena je poruka #%u od sučelja „%s:%s“ (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
@@ -1231,15 +1231,15 @@ msgstr "Primljen je EOS - cjevovod se zaustavlja...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "PRONAĐEN TAG   : pronađen elementom „%s“.\n"
+msgstr "PRONAĐEN TAG   : pronađen po elementu „%s“.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "PRONAĐEN TAG   : pronađen s konekcijom „%s:%s“.\n"
+msgstr "PRONAĐEN TAG   : pronađen po sučelju „%s:%s“.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "PRONAĐEN TAG   : pronađen objektom „%s“.\n"
+msgstr "PRONAĐEN TAG   : pronađen po objektu „%s“.\n"
 
 msgid "FOUND TAG\n"
 msgstr "PRONAĐEN TAG\n"
@@ -1271,27 +1271,27 @@ msgid "Pipeline is PREROLLED ...\n"
 msgstr "Cjevovod je pripremljen (PREROLLED) ...\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Pripremljeno, čeka se završetak punjenja međuspremnika...\n"
+msgstr "Pripremljeno, čekamo da završi punjenje međuspremnika...\n"
 
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Pripremljeno, čeka se završetak procesa...\n"
+msgstr "Pripremljeno, čekamo na kraj procesa...\n"
 
 msgid "buffering..."
-msgstr "punjenje međuspremnika..."
+msgstr "punimo međuspremnik..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Gotovo je s punjenjem, cjevovod se stavlja u stanje PLAYING ...\n"
+msgstr "Punjenje je gotovo, postavljamo cjevovod na PLAYING ...\n"
 
 #. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "Punjenje međuspremnika, cjevovod se stavlja u stanje PAUSED ...\n"
+msgstr "Punimo međuspremnik, postavljamo cjevovod na PAUSED ...\n"
 
 msgid "Redistribute latency...\n"
 msgstr "Preraspodjela latencije...\n"
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr "Uspostavlja se stanje %s prema zahtjevu od %s...\n"
+msgstr "Postavljamo stanje na %s prema zahtjevu od %s...\n"
 
 #. this application message is posted when we caught an interrupt and
 #. * we need to stop the pipeline.
@@ -1299,13 +1299,13 @@ msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Prekid: Zaustavlja se cjevovod ...\n"
 
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Prekid dok se čeka na EOS - cjevovod se zaustavlja...\n"
+msgstr "Prekid dok čekamo na EOS - cjevovod se zaustavlja...\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "Omogućen je EOS pri zatvaranju -- nameće se EOS na cjevovod\n"
 
 msgid "Waiting for EOS...\n"
-msgstr "Čeka se EOS...\n"
+msgstr "Čekamo na EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1396,7 +1396,7 @@ msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GREŠKA: nije pronađen element „pipeline“.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "Cjevovod se stavlja u stanje PAUSED ...\n"
+msgstr "Postavljamo cjevovod na PAUSED ...\n"
 
 msgid "Failed to set pipeline to PAUSED.\n"
 msgstr "Nije uspjelo postaviti cjevovod u stanje PAUSED.\n"
@@ -1411,7 +1411,7 @@ msgid "Execution ended after %"
 msgstr "Izvršavanje je završilo nakon %"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Cjevovod se stavlja u stanje NULL ...\n"
+msgstr "Postavljamo cjevovod na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Cjevovod se prazni...\n"

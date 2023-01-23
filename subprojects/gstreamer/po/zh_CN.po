@@ -5,10 +5,10 @@
 # Tianze Wang <zwpwjwtz@126.com>, 2015.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.15.1\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2019-02-28 16:15+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-21 13:39+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.0.7\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Print the GStreamer version"
 msgstr "打印 GStreamer 版本"
@@ -805,7 +805,7 @@ msgstr ", "
 
 #, c-format
 msgid "Invalid URI: %s"
-msgstr ""
+msgstr "无效的 URI：%s"
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
@@ -839,19 +839,19 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "链接没有汇 [源为 %s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "找不到该属性。"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "组件“%2$s”中找不到属性“%1$s”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "文件“%s”是套接字。"
+msgstr "元素“%s”不是GstPreset"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
+msgstr "无法设置元素“%2$s”中的预设属性“%1$s”"
 
 #, c-format
 msgid "no element \"%s\""
@@ -861,9 +861,9 @@ msgstr "无组件“%s”"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "无法设置组件“%2$s”中的属性“%1$s”为“%3$s”"
+msgstr "无法设置元素“%2$s”中子元素的属性“%1$s”为“%3$s”"
 
 msgid "Delayed linking failed."
 msgstr "延迟链接失败。"
@@ -1043,9 +1043,8 @@ msgstr "已废弃"
 msgid "controllable"
 msgstr "可控制"
 
-#, fuzzy
 msgid "conditionally available"
-msgstr "可控制"
+msgstr "部分情况下可用"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
 msgstr "可以在NULL、READY、PAUSED或PLAYING状态下改变"
@@ -1118,7 +1117,6 @@ msgstr "当检查组件或插件是否存在时，也检测它们的版本是否
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "打印所支持的 URI 样式及它们的关联组件"
 
-#, fuzzy
 msgid ""
 "Disable colors in output. You can also achieve the same by setting "
 "'GST_INSPECT_NO_COLORS' environment variable to any value."
@@ -1127,7 +1125,7 @@ msgstr ""
 "（可以为任意值）来实现同样的效果。"
 
 msgid "Color output, even when not sending to a tty."
-msgstr ""
+msgstr "在输出中使用文字着色功能，即便输出目标不是终端（TTY）。"
 
 #, c-format
 msgid "Could not load plugin file: %s\n"
@@ -1267,7 +1265,7 @@ msgstr "等待 EOS 信号时出现一个错误\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "使用Windows高精度时钟，精度为%u毫秒\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "输出标识(也可认为是元数据)"
@@ -1306,11 +1304,16 @@ msgid ""
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"不显示管道的当前位置。如果未指定此选项且输出目标为标准输出（stdout），将会显"
+"示当前位置。若要在stdout不为终端（TTY）时仍然输出当前位置，请使用“force-"
+"position”选项"
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"允许在输出目标非TTY时显示管道的当前位置。如果同时指定了“no-position”选项，此"
+"选项将不起作用。"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1329,9 +1332,8 @@ msgstr "错误: 未找到‘管道’组件。\n"
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "设置暂停管道 ...\n"
 
-#, fuzzy
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr "设置暂停管道 ...\n"
+msgstr "将管道设为暂停状态失败。\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "管道正在使用且不需要 PREROLL ...\n"
@@ -1348,19 +1350,15 @@ msgstr "设置 NULL 管道 ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "释放管道资源 ...\n"
 
-#, c-format
 #~ msgid "Error creating pipe: %s\n"
 #~ msgstr "创建管道时出错：“%s\n"
 
-#, c-format
 #~ msgid "Error forking: %s\n"
 #~ msgstr "创建子进程时出错：%s\n"
 
-#, c-format
 #~ msgid "Error reading from console: %s\n"
 #~ msgstr "从终端中读取内容时出错：%s\n"
 
-#, c-format
 #~ msgid "Error writing to console: %s\n"
 #~ msgstr "写入到终端时出错：%s\n"
 

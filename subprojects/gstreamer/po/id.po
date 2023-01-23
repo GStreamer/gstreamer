@@ -1,23 +1,23 @@
 # Indonesian translations for gstreamer package.
 # This file is put in the public domain.
-# Andika Triwidada <andika@gmail.com>, 2013, 2021.
+# Andika Triwidada <andika@gmail.com>, 2013, 2021, 2023.
 # Andhika Padmawan <andhika.padmawan@gmail.com>, 2010-2016.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.19.2\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-09-25 16:56+0700\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-16 09:15+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.4.2\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.2.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Cetak versi GStreamer"
@@ -874,7 +874,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "tautan mempunyai buangan [source=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Tidak ada properti seperti itu."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -896,9 +896,9 @@ msgstr "tak ada elemen \"%s\""
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "tak dapat mengatur properti \"%s\" di elemen \"%s\" ke \"%s\""
+msgstr "tak bisa mengatur properti \"%s\" di anak elemen \"%s\" ke \"%s\""
 
 msgid "Delayed linking failed."
 msgstr "Jeda penautan gagal."
@@ -1361,7 +1361,7 @@ msgstr ""
 "Jangan cetak posisi saat ini dari pipeline. Bila opsi ini tidak dinyatakan, "
 "posisi akan dicetak ketika stdout adalah sebuah TTY. Untuk memfungsikan "
 "pencetakan posisi ketika stdout bukan suatu TTY, gunakan opsi \"force-"
-"position\"."
+"position\""
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
