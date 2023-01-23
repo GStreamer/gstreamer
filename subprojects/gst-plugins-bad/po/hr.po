@@ -7,10 +7,10 @@
 # Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019, 2021, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad-1.19.2\n"
+"Project-Id-Version: gst-plugins-bad-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-11-06 16:21-0800\n"
+"POT-Creation-Date: 2023-01-23 16:28+0000\n"
+"PO-Revision-Date: 2023-01-15 19:31-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"

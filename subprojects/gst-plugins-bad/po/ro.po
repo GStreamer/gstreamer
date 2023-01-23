@@ -1,19 +1,25 @@
 # Romanian translation for gst-plugins-bad
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
-# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010.
+# Lucian Adrian Grijincu <lucian.grijincu@gmail.com>, 2010..
 # Florentina Mușat <florentina.musat.28@gmail.com>, 2020.
+# Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>. 2022 - 2023.
+#
+# Cronologia traducerii fișierului „gstreamer”:
+# Traducerea inițială, făcută de LAG, pentru versiunea gstreamer
+# Actualizare a traducerii pentru versiunea 1.16.0, făcută de FM, iun-2020.
 # Actualizare a mesajelor, de la fișierul „gst-plugins-bad-1.19.2.pot”.
 # Eliminare a mesajelor ce-au dispărut în ultima versiune.
-# S-au efectuat mici corecții
-# Actualizări realizate de Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>, 2022.
+# Actualizare a traducerii pentru versiunea 1.19.2, făcută de R-GC, ian-2022.
+# Actualizare a traducerii pentru versiunea 1.21.90, făcută de R-GC, ian-2023
+# Actualizare a traducerii pentru versiunea Y, făcută de X, Z(anul).
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.19.2\n"
+"Project-Id-Version: gst-plugins-bad 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-09-23 01:34+0100\n"
-"PO-Revision-Date: 2022-01-17 11:49+0100\n"
+"POT-Creation-Date: 2023-01-23 16:28+0000\n"
+"PO-Revision-Date: 2023-01-15 22:09+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
 "Language: ro\n"
@@ -26,7 +32,7 @@ msgstr ""
 "X-Generator: Poedit 2.3.1\n"
 
 msgid "No URL set."
-msgstr "Niciun URL stabilit."
+msgstr "Nicio adresă URL definită."
 
 msgid "OpenCV failed to load template image"
 msgstr "OpenCV a eșuat să încarce imaginea șablon"
