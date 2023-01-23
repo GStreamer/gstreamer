@@ -1,7 +1,7 @@
-This is GStreamer gstreamer-vaapi 1.21.90.
+This is GStreamer gstreamer-vaapi 1.22.0.
 
-The GStreamer team is thrilled to announce a first release candidate of a new
-major feature release of your favourite cross-platform multimedia framework!
+The GStreamer team is thrilled to announce a new major feature release
+of your favourite cross-platform multimedia framework!
 
 As always, this release is again packed with new features, bug fixes and
 other improvements.
@@ -9,7 +9,7 @@ other improvements.
 The 1.22 release series adds new features on top of the 1.20 series and is
 part of the API and ABI-stable 1.x release series.
 
-Full release notes will soon be available at:
+Full release notes can be found at:
 
   https://gstreamer.freedesktop.org/releases/1.22/
 

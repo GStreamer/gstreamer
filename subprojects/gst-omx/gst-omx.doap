@@ -33,6 +33,16 @@ a basic collection of elements
 
  <release>
   <Version>
+   <revision>1.22.0</revision>
+   <branch>main</branch>
+   <name></name>
+   <created>2023-01-23</created>
+   <file-release rdf:resource="https://gstreamer.freedesktop.org/src/gst-omx/gst-omx-1.22.0.tar.xz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>1.21.90</revision>
    <branch>main</branch>
    <name></name>
