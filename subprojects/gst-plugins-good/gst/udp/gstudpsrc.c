@@ -476,7 +476,8 @@ gst_socket_timestamp_message_deserialize (gint level,
 {
   GstSocketTimestampMessage *message;
 
-  if (level != SOL_SOCKET)
+  if (level != SOL_SOCKET
+      || type != gst_socket_timestamp_message_get_msg_type (NULL))
     return NULL;
 
   if (size < sizeof (struct timespec))
