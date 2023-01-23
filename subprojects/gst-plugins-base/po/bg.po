@@ -1,17 +1,17 @@
 # Bulgarian translation of gst-plugins-base.
 # Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # Copyright (C) 2011, 2016, 2019 Free Software Foundation, Inc.
-# Copyright (C) 2021. 2022 Alexander Shopov.
+# Copyright (C) 2021. 2022, 2023 Alexander Shopov.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Alexander Shopov <ash@kambanaria.org>, 2005, 2006, 2007, 2008, 2009, 2010.
-# Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2019, 2021, 2022.
+# Alexander Shopov <ash@kambanaria.org>, 2011, 2016, 2019, 2021, 2022, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-02-08 11:07+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 20:28+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
 "Language: bg\n"
@@ -155,9 +155,8 @@ msgstr "Обработката на адреси „%s“ не е реализи
 msgid "Source element is invalid."
 msgstr "Елементът-източник е грешен."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Елементът-източник е грешен."
+msgstr "Елементът-източник няма запълване."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -660,17 +659,14 @@ msgstr "смяна на посоката на изпълнение"
 msgid "enable/disable trick modes"
 msgstr "включване/изключване на ефекти"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "смяна на песента"
+msgstr "смяна към предишния/следващия аудио клип"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "смяна на видеото"
+msgstr "смяна към предишния/следващия видео клип"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "смяна на субтитрите"
+msgstr "смяна към предишните/следващите субтитрти"
 
 msgid "seek to beginning"
 msgstr "търсене към началото"
@@ -704,6 +700,7 @@ msgstr "Изпълнение без прекъсвания"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
 msgstr ""
+"Включване на мигновени промени на адреса (възможно е само с „playbin3“)"
 
 msgid "Shuffle playlist"
 msgstr "Разбъркано изпълнение"
@@ -728,11 +725,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Без извеждане на информация (освен грешките)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(стандартният вариант зависи от променливата на средата „USE_PLAYBIN“)"
+msgstr ""
+"Ползване на конвейер „playbin3“ (стандартният вариант зависи от променливата "
+"на средата „USE_PLAYBIN“)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -741,6 +739,9 @@ msgstr ""
 "Последният кадър в края на поток да се показва до получаването на команда за "
 "спиране или смяна на списъка за изпълнение (в този случай настройката за "
 "изпълнение без прекъсвания се пренебрегва)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -751,9 +752,3 @@ msgstr "Трябва да укажете поне един файл или ад�
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Натиснете „k“, за да видите списъка с клавишни комбинации.\n"
-
-#~ msgid "Could not create \"uridecodebin3\" element."
-#~ msgstr "Не може да се създаде елемент „uridecodebin3“."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Конвейер с „playbin3“"

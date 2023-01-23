@@ -6,10 +6,10 @@
 # Boyuan Yang <073plan@gmail.com>, 2022.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-02-08 21:08-0500\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-21 13:42+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
 "Language: zh_CN\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.4.3\n"
+"X-Generator: Poedit 2.2.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "无法在单声道模式打开设备播放。"
@@ -149,9 +149,8 @@ msgstr "“%s”未实现 URI 处理器。"
 msgid "Source element is invalid."
 msgstr "无效的源组件。"
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "无效的源组件。"
+msgstr "源组件缺少pad。"
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -651,17 +650,14 @@ msgstr "改变回放方向"
 msgid "enable/disable trick modes"
 msgstr "启用/禁用特效模式"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "改变音频轨"
+msgstr "切换至上一个/下一个音轨"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "改变视频轨"
+msgstr "切换至上一个/下一个视频轨"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "改变字幕轨"
+msgstr "切换至上一个/下一个字幕轨"
 
 msgid "seek to beginning"
 msgstr "定位至开始处"
@@ -692,7 +688,7 @@ msgid "Enable gapless playback"
 msgstr "启用无缝回放"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "启用即时URI变更（仅用于playbin3）"
 
 msgid "Shuffle playlist"
 msgstr "随机播放列表"
@@ -715,11 +711,10 @@ msgstr "改变速率时使用实验性的 instant-rate-change 旗标"
 msgid "Do not print any output (apart from errors)"
 msgstr "不显示任何输出（除了错误信息）"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "（默认配置取决于“USE_PLAYBIN”环境变量）"
+msgstr "使用playbin3管道（默认配置取决于“USE_PLAYBIN”环境变量）"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -727,6 +722,9 @@ msgid ""
 msgstr ""
 "播放结束后，在 EOS 上维持最后一帧，直到用户手动退出或者切换播放列表（忽略“无"
 "缝切换”选项）"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

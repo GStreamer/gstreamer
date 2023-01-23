@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2022.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-02-08 17:23+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 20:54+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -161,9 +161,8 @@ msgstr "Nie ma zaimplementowanej obsługi URI dla \"%s\"."
 msgid "Source element is invalid."
 msgstr "Element źródłowy jest niepoprawny."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Element źródłowy jest niepoprawny."
+msgstr "Element źródłowy nie ma podkładki."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -667,17 +666,14 @@ msgstr "zmiana kierunku odtwarzania"
 msgid "enable/disable trick modes"
 msgstr "włączenie/wyłączenie trybów trików"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "zmiana ścieżki dźwiękowej"
+msgstr "zmiana na poprzednią/następną ścieżkę dźwiękową"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "zmiana ścieżki filmowej"
+msgstr "zmiana na poprzednią/następną ścieżkę filmową"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "zmiana ścieżki podpisów"
+msgstr "zmiana na poprzednią/następną ścieżkę podpisów"
 
 msgid "seek to beginning"
 msgstr "przewinięcie na początek"
@@ -710,7 +706,7 @@ msgid "Enable gapless playback"
 msgstr "Włączenie odtwarzania bez przerw"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Włączenie natychmiastowych zmian URI (tylko z playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Przetasowanie listy odtwarzania"
@@ -733,11 +729,12 @@ msgstr "Użycie eksperymentalnej flagi instant-rate-change przy zmianie tempa"
 msgid "Do not print any output (apart from errors)"
 msgstr "Bez wypisywania żadnego wyjścia (poza błędami)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(wartość domyślna zależy od zmiennej środowiskowej 'USE_PLAYBIN')"
+msgstr ""
+"Użycie potoku playbin3 (wartość domyślna zależy od zmiennej środowiskowej "
+"'USE_PLAYBIN')"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -745,6 +742,9 @@ msgid ""
 msgstr ""
 "Pokazywanie ostatniej klatki po EOS aż do polecenia zakończenia lub zmiany "
 "listy odtwarzania (brak przerw jest ignorowany)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
@@ -755,9 +755,3 @@ msgstr "Trzeba podać przynajmniej jedną nazwę pliku lub URI do odtworzenia."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
 msgstr "Klawisz 'k' wyświetla listę skrótów klawiatury.\n"
-
-#~ msgid "Could not create \"uridecodebin3\" element."
-#~ msgstr "Nie udało się utworzyć elementu \"uridecodebin3\"."
-
-#~ msgid "Use playbin3 pipeline"
-#~ msgstr "Użycie potoku playbin3"

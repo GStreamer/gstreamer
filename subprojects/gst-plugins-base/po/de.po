@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-04-27 23:22+0200\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-16 22:40+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 3.1.1\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Gerät konnte nicht zur Wiedergabe in Mono geöffnet werden."
@@ -157,9 +157,8 @@ msgstr "Es ist kein URI-Handler für »%s« implementiert."
 msgid "Source element is invalid."
 msgstr "Das Quellelement ist ungültig."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Das Quellelement ist ungültig."
+msgstr "Das Quellelement hat keine Auffüllung."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -668,17 +667,14 @@ msgstr "Wiedergaberichtung ändern"
 msgid "enable/disable trick modes"
 msgstr "Trickmodi einschalten/ausschalten"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "Audio-Titel wechseln"
+msgstr "Zum vorherigen/folgenden Audio-Titel wechseln"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "Videl-Titel wechseln"
+msgstr "Zum vorherigen/folgenden Video-Titel wechseln"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "Untertitel wechseln"
+msgstr "Zum vorherigen/folgenden Untertitel wechseln"
 
 msgid "seek to beginning"
 msgstr "An den Anfang springen"
@@ -709,7 +705,7 @@ msgid "Enable gapless playback"
 msgstr "Lückenlose Wiedergabe einschalten"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Unverzügliche Adressen-Wechsel einschalten (nur mit playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Wiedergabeliste mischen"
@@ -734,11 +730,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Nichts ausgeben (außer Fehlermeldungen)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(die Vorgabe hängt von der Umgebungsvariablen »USE_PLABIN« ab)"
+msgstr ""
+"Die playbin3-Weiterleitung verwenden (die Voreinstellung hängt von der "
+"Umgebungsvariablen »USE_PLABIN« ab)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -746,6 +743,9 @@ msgid ""
 msgstr ""
 "Bei Stromende das letzte Einzelbild dargestellt lassen bis zum Beenden oder "
 "Wechseln der Wiedergabeliste (lückenlose Wiedergabe wird ignoriert)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

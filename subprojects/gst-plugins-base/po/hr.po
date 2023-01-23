@@ -4,13 +4,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Tomislav Krznar <tomislav.krznar@gmail.com>, 2012.
-# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019, 2021, 2022.
+# Božidar Putanec <bozidarp@yahoo.com>, 2016, 2018, 2019, 2021, 2022, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.20.0\n"
+"Project-Id-Version: gst-plugins-base-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-11-06 16:22-0800\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 19:31-0800\n"
 "Last-Translator: Božidar Putanec <bozidarp@yahoo.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
 "Language: hr\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Lokalize 23.03.70\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Uređaj za reprodukciju nije moguće otvoriti u mono načinu."
@@ -157,9 +157,8 @@ msgstr "Nijedan URI rukovatelj nije realiziran za „%s“."
 msgid "Source element is invalid."
 msgstr "Element izvor nije valjan."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Element izvor nije valjan."
+msgstr "Element izvor nema sučelje."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -669,17 +668,14 @@ msgid "enable/disable trick modes"
 msgstr ""
 "omogući/onemogući „trick modes“ (simulira brzo premotavanje analognih VCR)"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "promijeni audio zapis"
+msgstr "promijeni na prethodni/slijedeći audio zapis"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "promijeni video zapis"
+msgstr "promijeni na  prethodni/slijedeći video zapis"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "promijeni (zapis) podnaslov"
+msgstr "promijeni na prethodni/slijedeći titl-zapis"
 
 msgid "seek to beginning"
 msgstr "skoči (premota) na početak"
@@ -711,7 +707,7 @@ msgid "Enable gapless playback"
 msgstr "Omogući reprodukciju bez pauza (između zapisa)"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Omogući trenutne promjene URI-ja (samo s playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Izmiješati popis za reprodukciju"
@@ -735,11 +731,12 @@ msgstr "Koristi pokusni „instant-rate-change flag“ pri promjeni brzine"
 msgid "Do not print any output (apart from errors)"
 msgstr "Ne ispisuje nikakve izlazne informacije (osim greški)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(zadano: varira, ovisno o varijabli okružja „USE_PLAYBIN“)"
+msgstr ""
+"Koristi playbin3 cjevovod (zadano varira ovisno o 'USE_PLAYBIN' varijabli "
+"okoline)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -747,6 +744,9 @@ msgid ""
 msgstr ""
 "Nastavi pokazivati posljednji okvir na EOS-u dok ne napustite ili "
 "promijenite naredbu za promjenu popisa za reprodukciju (zanemaruje „gapless“)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

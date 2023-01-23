@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021, 2022.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2019, 2021, 2022, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-02-08 12:22+0200\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 17:42+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
 "Language: uk\n"
@@ -160,9 +160,8 @@ msgstr "Не реалізовано обробник URI для «%s»."
 msgid "Source element is invalid."
 msgstr "Неправильний вхідний елемент."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Неправильний вхідний елемент."
+msgstr "У таких елементів немає прокладок."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -677,17 +676,14 @@ msgstr "змінити напрям відтворення"
 msgid "enable/disable trick modes"
 msgstr "увімкнути або вимкнути особливі режими"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "змінити звукову доріжку"
+msgstr "перейти до попередньої/наступної звукової доріжки"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "змінити відеодоріжку"
+msgstr "перейти до попередньої/наступної відеодоріжки"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "змінити доріжку субтитрів"
+msgstr "перейти до попередньої/наступної доріжки субтитрів"
 
 msgid "seek to beginning"
 msgstr "позиціювати на початок"
@@ -719,7 +715,7 @@ msgid "Enable gapless playback"
 msgstr "Увімкнути неперервне відтворення"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Уможливити миттєві зміни адреси (лише з playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Перемішати список відтворення"
@@ -744,11 +740,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Не виводити повідомлень (окрім повідомлень щодо помилок)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(типове значення залежить від змінної середовища USE_PLAYBIN)"
+msgstr ""
+"Використовувати конвеєр playbin3 (типове значення залежить від змінної "
+"середовища USE_PLAYBIN)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -756,6 +753,9 @@ msgid ""
 msgstr ""
 "Показувати останній кадр на EOS до команди виходу або зміни списку "
 "відтворення (gapless буде проігноровано)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

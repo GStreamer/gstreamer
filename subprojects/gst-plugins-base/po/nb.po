@@ -2,14 +2,14 @@
 # This file is put in the public domain.
 #
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
-# Johnny A. Solbu <johnny@solbu.net>, 2012-2022
+# Johnny A. Solbu <johnny@solbu.net>, 2012-2023
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-02-08 16:20+0100\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-15 14:19+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
 "Language: nb_NO\n"
@@ -153,9 +153,8 @@ msgstr "Ingen URI-håndterer er implementert for «%s»."
 msgid "Source element is invalid."
 msgstr "Kildeelement er ugyldig."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Kildeelement er ugyldig."
+msgstr "Kildeelementet har ingen utfylling."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -659,17 +658,14 @@ msgstr "endre avspillingsretningen"
 msgid "enable/disable trick modes"
 msgstr "aktivere/deaktivere trikse-moduser"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "endre lydspor"
+msgstr "bytt til forrige/neste lydspor"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "endre videospor"
+msgstr "bytt til forrige/neste videospor"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "endre undertekstspor"
+msgstr "bytt til forrige/neste undertekstspor"
 
 msgid "seek to beginning"
 msgstr "søk til begynnelsen"
@@ -700,7 +696,7 @@ msgid "Enable gapless playback"
 msgstr "Aktiver sømløs avspilling"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Aktiver umiddelbare uri-endringer (bare med playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Stokke spilleliste"
@@ -724,11 +720,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Ikke skriv noe utdata (bortsett fra feil)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(standard varierer avhengig av miljøvariabelen «USE_PLAYBIN»)"
+msgstr ""
+"Bruk playbin3-kanal (standard varierer avhengig av miljøvariabelen "
+"«USE_PLAYBIN»)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -736,6 +733,9 @@ msgid ""
 msgstr ""
 "Fortsett å vise den siste rammen på EOS til du avslutter eller endrer "
 "kommandoen for spillelisten (gapless ignoreres)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

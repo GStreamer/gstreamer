@@ -1,15 +1,15 @@
-# translation of gst-plugins-base-1.20.0.po to Español
+# translation of gst-plugins-base-1.21.90.po to Español
 # spanish translation for gst-plugins-base
 # This file is put in the public domain.
 # Jorge González <jorgegonz@svn.gnome.org>, 2007, 2008, 2009, 2010, 2011.
-# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022
+# Cristian Othón Martínez Vera <cfuga@cfuga.mx>, 2022, 2023
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-03-04 17:01-0600\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-16 11:17-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
 "Language: es\n"
@@ -156,9 +156,8 @@ msgstr "No existe un manejador URI implementado para «%s»."
 msgid "Source element is invalid."
 msgstr "El elemento fuente no es válido."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "El elemento fuente no es válido."
+msgstr "El elemento fuente no tiene rellenos."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -663,17 +662,14 @@ msgstr "cambiar la dirección de reproducción"
 msgid "enable/disable trick modes"
 msgstr "activar/desactivar los modos de truco"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "cambiar pista de sonido"
+msgstr "cambiar a la pista de sonido previa/siguiente"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "cambiar pista de video"
+msgstr "cambiar a la pista de video previa/siguiente"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "cambiar pista de subtítulos"
+msgstr "cambiar a la pista de subtítulos previa/siguiente"
 
 msgid "seek to beginning"
 msgstr "regresar al inicio"
@@ -705,7 +701,7 @@ msgid "Enable gapless playback"
 msgstr "Permitir la reproducción sin espacios en blanco"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Permitir cambios instantáneos de uri (solamente con playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Lista de reproducción aleatoria"
@@ -729,11 +725,12 @@ msgstr "Usar la opción instant-rate-change experimental al cambiar la tasa"
 msgid "Do not print any output (apart from errors)"
 msgstr "No mostrar ninguna salida (además de los errores)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(por defecto varía de acuerdo a la variable de ambiente 'USE_PLAYBIN')"
+msgstr ""
+"Usar el conducto playbin3 (por defecto varía de acuerdo a la variable de "
+"ambiente 'USE_PLAYBIN')"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -742,6 +739,9 @@ msgstr ""
 "Seguir mostrando el último cuadro en EOS hasta salir o recibir una orden "
 "para cambiar la lista de reproducción (se ignora la reproducción sin "
 "espacios)"
+
+msgid "Do not print current position of pipeline"
+msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

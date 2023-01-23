@@ -1,23 +1,23 @@
 # Georgian translation for gst-plugins-base.
-# Copyright (C) 2022 THE PACKAGE'S COPYRIGHT HOLDER
+# Copyright (C) 2023 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the gst-plugins-base package.
-# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2022.
+# Temuri Doghonadze <temuri.doghonadze@gmail.com>, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.20.0\n"
+"Project-Id-Version: gst-plugins-base-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2022-10-15 15:38+0200\n"
+"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"PO-Revision-Date: 2023-01-16 22:28+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
 "Language: ka\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.2.2\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "მოწყობილობის მონო რეჟიმში დასაკრავად გახსნის შეცდომა."
@@ -153,9 +153,8 @@ msgstr "URI-ის (\"%s\") დამმუშავებელი ჯერჯ
 msgid "Source element is invalid."
 msgstr "საწყისი ელემენტი არასწორია."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "საწყისი ელემენტი არასწორია."
+msgstr ""
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -416,7 +415,7 @@ msgid "AcoustID fingerprint (chromaprint)"
 msgstr "AcoustID -ის ანაბეჭდი (chromaprint)"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "გადაღების შატერის სიჩქარე"
 
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr ""
@@ -465,7 +464,7 @@ msgid "The exposure mode used when capturing an image"
 msgstr ""
 
 msgid "capturing exposure compensation"
-msgstr ""
+msgstr "გადაღების ექსპოზიციის კომპენსაცია"
 
 msgid "The exposure compensation used when capturing an image"
 msgstr ""
@@ -477,7 +476,7 @@ msgid "The scene capture mode used when capturing an image"
 msgstr ""
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "გადაღების გაძლიერების მორგება"
 
 msgid "The overall gain adjustment applied on an image"
 msgstr ""
@@ -510,7 +509,7 @@ msgid "capturing flash fired"
 msgstr "ჩაწერის განათების ჩართვა"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "ჩართულია თუ არა განათება სურათის გადაღებისას"
 
 msgid "capturing flash mode"
 msgstr "ჩაწერის განათების რეჟიმი"
@@ -529,7 +528,7 @@ msgid "capturing source"
 msgstr "ჩაწერის წყარო"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "გადასაღებად გამოყენებული მოწყობილობის წყარო ან ტიპი"
 
 msgid "image horizontal ppi"
 msgstr "გამოსახულების ჰორიზონტალური ppi"
@@ -655,17 +654,14 @@ msgstr "დაკვრის მიმართულების შეცვ�
 msgid "enable/disable trick modes"
 msgstr ""
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "აუდიო ტრეკის შეცვლა"
+msgstr "აუდიო ტრეკის წინაზე/შემდეგზე გადართვა"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "ვიდეო ტრეკის შეცვლა"
+msgstr "წინა/შემდეგ ვიდეო ტრეკზე გადართვა"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "სუბტიტრების ტრეკის შეცვლა"
+msgstr "სუბტიტრების წინა/შემდეგ ტრეკზე გადართვა"
 
 msgid "seek to beginning"
 msgstr "თავში გადახვევა"
@@ -674,7 +670,7 @@ msgid "show keyboard shortcuts"
 msgstr "კლავიატურის მალსახმობების ჩვენება"
 
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "ინტერაქტიული რეჟიმი - კლავიატურით კონტროლი:"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
@@ -727,6 +723,9 @@ msgstr ""
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
 "(gapless is ignored)"
+msgstr ""
+
+msgid "Do not print current position of pipeline"
 msgstr ""
 
 #, c-format
