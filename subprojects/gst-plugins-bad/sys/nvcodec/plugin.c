@@ -115,7 +115,8 @@ plugin_init (GstPlugin * plugin)
     return TRUE;
   }
 
-  if (CuDeviceGetCount (&dev_count) != CUDA_SUCCESS || !dev_count) {
+  cuda_ret = CuDeviceGetCount (&dev_count);
+  if (cuda_ret != CUDA_SUCCESS || !dev_count) {
     GST_WARNING ("No available device, ret: 0x%x", (gint) cuda_ret);
     return TRUE;
   }
