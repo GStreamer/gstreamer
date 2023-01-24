@@ -73,7 +73,7 @@ _gst_rtsp_permissions_free (GstRTSPPermissions * permissions)
 
   g_ptr_array_free (impl->roles, TRUE);
 
-  g_slice_free1 (sizeof (GstRTSPPermissionsImpl), permissions);
+  g_free (permissions);
 }
 
 static GstRTSPPermissions *
@@ -142,7 +142,7 @@ gst_rtsp_permissions_new (void)
 {
   GstRTSPPermissionsImpl *permissions;
 
-  permissions = g_slice_new0 (GstRTSPPermissionsImpl);
+  permissions = g_new0 (GstRTSPPermissionsImpl, 1);
   gst_rtsp_permissions_init (permissions);
 
   return GST_RTSP_PERMISSIONS (permissions);

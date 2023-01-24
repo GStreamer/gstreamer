@@ -54,7 +54,7 @@ data_item_new (gchar * path, gint len, GstRTSPMediaFactory * factory)
 {
   DataItem *item;
 
-  item = g_slice_alloc (sizeof (DataItem));
+  item = g_new (DataItem, 1);
   item->path = path;
   item->len = len;
   item->factory = factory;
@@ -69,7 +69,7 @@ data_item_free (gpointer data)
 
   g_free (item->path);
   g_object_unref (item->factory);
-  g_slice_free1 (sizeof (DataItem), item);
+  g_free (item);
 }
 
 static void

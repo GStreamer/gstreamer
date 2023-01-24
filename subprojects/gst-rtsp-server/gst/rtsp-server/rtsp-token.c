@@ -68,7 +68,7 @@ _gst_rtsp_token_free (GstRTSPToken * token)
   gst_structure_set_parent_refcount (impl->structure, NULL);
   gst_structure_free (impl->structure);
 
-  g_slice_free1 (sizeof (GstRTSPTokenImpl), token);
+  g_free (token);
 }
 
 static GstRTSPToken *
@@ -79,7 +79,7 @@ _gst_rtsp_token_copy (GstRTSPTokenImpl * token)
 
   structure = gst_structure_copy (token->structure);
 
-  copy = g_slice_new0 (GstRTSPTokenImpl);
+  copy = g_new0 (GstRTSPTokenImpl, 1);
   gst_rtsp_token_init (copy, structure);
 
   return (GstRTSPToken *) copy;
@@ -114,7 +114,7 @@ gst_rtsp_token_new_empty (void)
   s = gst_structure_new_empty ("GstRTSPToken");
   g_return_val_if_fail (s != NULL, NULL);
 
-  token = g_slice_new0 (GstRTSPTokenImpl);
+  token = g_new0 (GstRTSPTokenImpl, 1);
   gst_rtsp_token_init (token, s);
 
   return (GstRTSPToken *) token;

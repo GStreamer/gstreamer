@@ -76,7 +76,7 @@ _gst_rtsp_thread_free (GstRTSPThreadImpl * impl)
   g_source_unref (impl->source);
   g_main_loop_unref (impl->thread.loop);
   g_main_context_unref (impl->thread.context);
-  g_slice_free1 (sizeof (GstRTSPThreadImpl), impl);
+  g_free (impl);
 }
 
 static GstRTSPThread *
@@ -86,7 +86,7 @@ _gst_rtsp_thread_copy (GstRTSPThreadImpl * impl)
 
   GST_DEBUG ("copy thread %p", impl);
 
-  copy = g_slice_new0 (GstRTSPThreadImpl);
+  copy = g_new0 (GstRTSPThreadImpl, 1);
   gst_rtsp_thread_init (copy);
   copy->thread.context = g_main_context_ref (impl->thread.context);
   copy->thread.loop = g_main_loop_ref (impl->thread.loop);
@@ -118,7 +118,7 @@ gst_rtsp_thread_new (GstRTSPThreadType type)
 {
   GstRTSPThreadImpl *impl;
 
-  impl = g_slice_new0 (GstRTSPThreadImpl);
+  impl = g_new0 (GstRTSPThreadImpl, 1);
 
   gst_rtsp_thread_init (impl);
   impl->thread.type = type;

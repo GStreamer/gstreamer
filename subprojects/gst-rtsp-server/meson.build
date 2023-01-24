@@ -209,6 +209,11 @@ if gst_version_nano == 0
   message('Package release date: ' + release_date)
 endif
 
+glib_gio_dep = dependency('gio-2.0', version: glib_req)
+if glib_gio_dep.version().version_compare('< 2.67.4')
+  cdata.set('g_memdup2(ptr,sz)', '(G_LIKELY(((guint64)(sz)) < G_MAXUINT)) ? g_memdup(ptr,sz) : (g_abort(),NULL)')
+endif
+
 configure_file(output: 'config.h', configuration: cdata)
 
 meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())

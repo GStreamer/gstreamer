@@ -1612,7 +1612,7 @@ again:
   }
 
   if (!addr) {
-    addr = g_slice_new0 (GstRTSPAddress);
+    addr = g_new0 (GstRTSPAddress, 1);
     addr->port = tmp_rtp;
     addr->n_ports = 2;
     if (transport_settings_defined)

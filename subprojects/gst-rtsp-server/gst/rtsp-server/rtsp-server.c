@@ -1061,7 +1061,7 @@ free_client_context (ClientContext * ctx)
 
   g_object_unref (ctx->client);
   g_object_unref (ctx->server);
-  g_slice_free (ClientContext, ctx);
+  g_free (ctx);
 
   return G_SOURCE_REMOVE;
 }
@@ -1106,7 +1106,7 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
   g_signal_emit (server, gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED], 0,
       client);
 
-  cctx = g_slice_new0 (ClientContext);
+  cctx = g_new0 (ClientContext, 1);
   cctx->server = g_object_ref (server);
   cctx->client = client;
 

@@ -60,7 +60,7 @@ gst_rtsp_address_copy (GstRTSPAddress * addr)
 
   g_return_val_if_fail (addr != NULL, NULL);
 
-  copy = g_slice_dup (GstRTSPAddress, addr);
+  copy = g_memdup2 (addr, sizeof (GstRTSPAddress));
   /* only release to the pool when the original is freed. It's a bit
    * weird but this will do for now as it avoid us to use refcounting. */
   copy->pool = NULL;
@@ -89,7 +89,7 @@ gst_rtsp_address_free (GstRTSPAddress * addr)
     gst_rtsp_address_pool_release_address (addr->pool, addr);
   }
   g_free (addr->address);
-  g_slice_free (GstRTSPAddress, addr);
+  g_free (addr);
 }
 
 G_DEFINE_BOXED_TYPE (GstRTSPAddress, gst_rtsp_address,
@@ -161,7 +161,7 @@ gst_rtsp_address_pool_init (GstRTSPAddressPool * pool)
 static void
 free_range (AddrRange * range)
 {
-  g_slice_free (AddrRange, range);
+  g_free (range);
 }
 
 static void
@@ -293,7 +293,7 @@ gst_rtsp_address_pool_add_range (GstRTSPAddressPool * pool,
 
   is_multicast = ttl != 0;
 
-  range = g_slice_new0 (AddrRange);
+  range = g_new0 (AddrRange, 1);
 
   if (!fill_address (min_address, min_port, &range->min, is_multicast))
     goto invalid;
@@ -324,7 +324,7 @@ invalid:
   {
     GST_ERROR_OBJECT (pool, "invalid address range %s-%s", min_address,
         max_address);
-    g_slice_free (AddrRange, range);
+    g_free (range);
     return FALSE;
   }
 }
@@ -370,7 +370,7 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
   AddrRange *temp;
 
   if (skip_addr) {
-    temp = g_slice_dup (AddrRange, range);
+    temp = g_memdup2 (range, sizeof (AddrRange));
     memcpy (temp->max.bytes, temp->min.bytes, temp->min.size);
     inc_address (&temp->max, skip_addr - 1);
     priv->addresses = g_list_prepend (priv->addresses, temp);
@@ -380,7 +380,7 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
 
   if (!RANGE_IS_SINGLE (range)) {
     /* min and max are not the same, we have more than one address. */
-    temp = g_slice_dup (AddrRange, range);
+    temp = g_memdup2 (range, sizeof (AddrRange));
     /* increment the range min address */
     inc_address (&temp->min, 1);
     /* and store back in pool */
@@ -393,7 +393,7 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
   /* range now contains only one single address */
   if (skip_port > 0) {
     /* make a range with the skipped ports */
-    temp = g_slice_dup (AddrRange, range);
+    temp = g_memdup2 (range, sizeof (AddrRange));
     temp->max.port = temp->min.port + skip_port - 1;
     /* and store back in pool */
     priv->addresses = g_list_prepend (priv->addresses, temp);
@@ -404,7 +404,7 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
   /* range now contains single address with desired port number */
   if (range->max.port - range->min.port + 1 > n_ports) {
     /* make a range with the remaining ports */
-    temp = g_slice_dup (AddrRange, range);
+    temp = g_memdup2 (range, sizeof (AddrRange));
     temp->min.port += n_ports;
     /* and store back in pool */
     priv->addresses = g_list_prepend (priv->addresses, temp);
@@ -484,7 +484,7 @@ gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
   g_mutex_unlock (&priv->lock);
 
   if (result) {
-    addr = g_slice_new0 (GstRTSPAddress);
+    addr = g_new0 (GstRTSPAddress, 1);
     addr->pool = g_object_ref (pool);
     addr->address = get_address_string (&result->min);
     addr->n_ports = n_ports;
@@ -689,7 +689,7 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
   }
 
   if (addr_range) {
-    addr = g_slice_new0 (GstRTSPAddress);
+    addr = g_new0 (GstRTSPAddress, 1);
     addr->pool = g_object_ref (pool);
     addr->address = get_address_string (&addr_range->min);
     addr->n_ports = n_ports;

@@ -1347,7 +1347,7 @@ media_unprepared (GstRTSPMedia * media, GWeakRef * ref)
 static GWeakRef *
 weak_ref_new (gpointer obj)
 {
-  GWeakRef *ref = g_slice_new (GWeakRef);
+  GWeakRef *ref = g_new (GWeakRef, 1);
 
   g_weak_ref_init (ref, obj);
   return ref;
@@ -1357,7 +1357,7 @@ static void
 weak_ref_free (GWeakRef * ref)
 {
   g_weak_ref_clear (ref);
-  g_slice_free (GWeakRef, ref);
+  g_free (ref);
 }
 
 /**

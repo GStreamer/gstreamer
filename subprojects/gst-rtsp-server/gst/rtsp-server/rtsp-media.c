@@ -3756,7 +3756,7 @@ start_prepare (GstRTSPMedia * media)
 
   for (walk = priv->dynamic; walk; walk = g_list_next (walk)) {
     GstElement *elem = walk->data;
-    DynPaySignalHandlers *handlers = g_slice_new (DynPaySignalHandlers);
+    DynPaySignalHandlers *handlers = g_new (DynPaySignalHandlers, 1);
 
     GST_INFO ("adding callbacks for dynamic element %p", elem);
 
@@ -4054,7 +4054,7 @@ finish_unprepare (GstRTSPMedia * media)
     g_signal_handler_disconnect (G_OBJECT (elem),
         handlers->no_more_pads_handler);
 
-    g_slice_free (DynPaySignalHandlers, handlers);
+    g_free (handlers);
   }
 
   gst_bin_remove (GST_BIN (priv->pipeline), priv->rtpbin);
