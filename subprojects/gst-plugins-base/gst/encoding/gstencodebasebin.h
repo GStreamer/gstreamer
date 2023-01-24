@@ -62,6 +62,7 @@ struct _GstEncodeBaseBin
   GList *formatters;
   GList *encoders;
   GList *parsers;
+  GList *timestampers;
 
   /* Increasing counter for unique pad name */
   guint last_pad_id;
