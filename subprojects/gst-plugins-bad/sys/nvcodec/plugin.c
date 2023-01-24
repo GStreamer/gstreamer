@@ -65,6 +65,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   CUresult cuda_ret;
+  const char *err_name = NULL, *err_desc = NULL;
   gint dev_count = 0;
   guint i;
   gboolean nvdec_available = TRUE;
@@ -102,7 +103,8 @@ plugin_init (GstPlugin * plugin)
   }
 
   if (!gst_cuvid_load_library (api_major_ver, api_minor_ver)) {
-    GST_WARNING ("Failed to load nvdec library");
+    GST_WARNING ("Failed to load nvdec library version %u.%u", api_major_ver,
+        api_minor_ver);
     nvdec_available = FALSE;
   }
 
@@ -111,13 +113,19 @@ plugin_init (GstPlugin * plugin)
 
   cuda_ret = CuInit (0);
   if (cuda_ret != CUDA_SUCCESS) {
-    GST_WARNING ("Failed to init cuda, ret: 0x%x", (gint) cuda_ret);
+    CuGetErrorName (cuda_ret, &err_name);
+    CuGetErrorString (cuda_ret, &err_desc);
+    GST_ERROR ("Failed to init cuda, cuInit ret: 0x%x: %s: %s",
+        (int) cuda_ret, err_name, err_desc);
     return TRUE;
   }
 
   cuda_ret = CuDeviceGetCount (&dev_count);
   if (cuda_ret != CUDA_SUCCESS || !dev_count) {
-    GST_WARNING ("No available device, ret: 0x%x", (gint) cuda_ret);
+    CuGetErrorName (cuda_ret, &err_name);
+    CuGetErrorString (cuda_ret, &err_desc);
+    GST_ERROR ("No available device, cuDeviceGetCount ret: 0x%x: %s %s",
+        (int) cuda_ret, err_name, err_desc);
     return TRUE;
   }
 
@@ -153,7 +161,7 @@ plugin_init (GstPlugin * plugin)
     CUcontext cuda_ctx;
 
     if (!context) {
-      GST_WARNING ("Failed to create context for deevice %d", i);
+      GST_WARNING ("Failed to create context for device %d", i);
       continue;
     }
 
