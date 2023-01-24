@@ -76,7 +76,7 @@ remove_client (Client * client)
   g_object_unref (client->connection);
   g_byte_array_unref (client->current_message);
 
-  g_slice_free (Client, client);
+  g_free (client);
 }
 
 static void
@@ -270,7 +270,7 @@ static gboolean
 on_new_connection (GSocketService * service, GSocketConnection * connection,
     GObject * source_object, gpointer user_data)
 {
-  Client *client = g_slice_new0 (Client);
+  Client *client = g_new0 (Client, 1);
   GSocketAddress *addr;
   GInetAddress *iaddr;
   gchar *ip;
