@@ -145,7 +145,7 @@ copy_video_codec_state (const GstVideoCodecState * in_state)
 
   g_return_val_if_fail (in_state != NULL, NULL);
 
-  state = g_slice_new0 (GstVideoCodecState);
+  state = g_new0 (GstVideoCodecState, 1);
   state->ref_count = 1;
   state->info = in_state->info;
   state->caps = gst_caps_copy (in_state->caps);

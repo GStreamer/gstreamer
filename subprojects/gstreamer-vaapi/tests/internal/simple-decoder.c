@@ -110,7 +110,7 @@ typedef struct
 static inline RenderFrame *
 render_frame_new (void)
 {
-  return g_slice_new (RenderFrame);
+  return g_new (RenderFrame, 1);
 }
 
 static void
@@ -119,7 +119,7 @@ render_frame_free (RenderFrame * rfp)
   if (G_UNLIKELY (!rfp))
     return;
   gst_vaapi_surface_proxy_replace (&rfp->proxy, NULL);
-  g_slice_free (RenderFrame, rfp);
+  g_free (rfp);
 }
 
 static inline void
@@ -536,7 +536,7 @@ app_free (App * app)
   g_cond_clear (&app->render_ready);
   g_cond_clear (&app->event_cond);
   g_mutex_clear (&app->mutex);
-  g_slice_free (App, app);
+  g_free (app);
 }
 
 static App *
@@ -544,7 +544,7 @@ app_new (void)
 {
   App *app;
 
-  app = g_slice_new0 (App);
+  app = g_new0 (App, 1);
   if (!app)
     return NULL;
 

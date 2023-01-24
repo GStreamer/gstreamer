@@ -297,8 +297,9 @@ av1_decode_seqeunce (GstVaapiDecoderAV1 * decoder, GstVaapiDecoderUnit * unit)
 
   /* update the sequence */
   if (priv->seq_header)
-    g_slice_free (GstAV1SequenceHeaderOBU, priv->seq_header);
-  priv->seq_header = g_slice_dup (GstAV1SequenceHeaderOBU, &pi->seq_header);
+    g_free (priv->seq_header);
+  priv->seq_header =
+      g_memdup2 (&pi->seq_header, sizeof (GstAV1SequenceHeaderOBU));
 
   return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -988,7 +989,7 @@ av1_decoder_reset (GstVaapiDecoderAV1 * decoder)
     gst_vaapi_picture_replace (&priv->current_picture, NULL);
 
   if (priv->seq_header) {
-    g_slice_free (GstAV1SequenceHeaderOBU, priv->seq_header);
+    g_free (priv->seq_header);
     priv->seq_header = NULL;
   }
 

@@ -34,7 +34,7 @@ gst_vaapi_mini_object_free (GstVaapiMiniObject * object)
     klass->finalize (object);
 
   if (G_LIKELY (g_atomic_int_dec_and_test (&object->ref_count)))
-    g_slice_free1 (klass->size, object);
+    g_free (object);
 }
 
 /**
@@ -65,7 +65,7 @@ gst_vaapi_mini_object_new (const GstVaapiMiniObjectClass * object_class)
 
   g_return_val_if_fail (object_class->size >= sizeof (*object), NULL);
 
-  object = g_slice_alloc (object_class->size);
+  object = g_malloc (object_class->size);
   if (!object)
     return NULL;
 

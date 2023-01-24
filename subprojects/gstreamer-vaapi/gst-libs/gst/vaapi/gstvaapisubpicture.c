@@ -84,7 +84,7 @@ gst_vaapi_subpicture_free (GstVaapiSubpicture * subpicture)
 {
   gst_vaapi_subpicture_free_image (subpicture);
   gst_vaapi_display_replace (&subpicture->display, NULL);
-  g_slice_free1 (sizeof (GstVaapiSubpicture), subpicture);
+  g_free (subpicture);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstVaapiSubpicture, gst_vaapi_subpicture);
@@ -142,7 +142,7 @@ gst_vaapi_subpicture_new (GstVaapiImage * image, guint flags)
   if (flags & ~va_flags)
     return NULL;
 
-  subpicture = g_slice_new (GstVaapiSubpicture);
+  subpicture = g_new (GstVaapiSubpicture, 1);
   if (!subpicture)
     return NULL;
 

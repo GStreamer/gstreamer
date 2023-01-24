@@ -71,7 +71,7 @@ frame_state_new (GstVaapiWindow * window)
 {
   FrameState *frame;
 
-  frame = g_slice_new (FrameState);
+  frame = g_new (FrameState, 1);
   if (!frame)
     return NULL;
 
@@ -160,7 +160,7 @@ frame_state_free (FrameState * frame)
 
   g_clear_pointer (&frame->callback, wl_callback_destroy);
   wl_buffer_destroy (frame->buffer);
-  g_slice_free (FrameState, frame);
+  g_free (frame);
 }
 
 static void

@@ -83,7 +83,7 @@ static void
 gst_vaapi_texture_free (GstVaapiTexture * texture)
 {
   gst_vaapi_display_replace (&GST_VAAPI_TEXTURE_DISPLAY (texture), NULL);
-  g_slice_free1 (sizeof (GstVaapiTexture), texture);
+  g_free (texture);
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstVaapiTexture, gst_vaapi_texture);
@@ -100,7 +100,7 @@ gst_vaapi_texture_new_internal (GstVaapiDisplay * display, GstVaapiID id,
   g_return_val_if_fail (width > 0, NULL);
   g_return_val_if_fail (height > 0, NULL);
 
-  texture = g_slice_alloc (sizeof (GstVaapiTexture));
+  texture = g_new (GstVaapiTexture, 1);
   if (!texture)
     return NULL;
 

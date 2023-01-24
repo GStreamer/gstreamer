@@ -141,7 +141,7 @@ gst_vaapi_image_free (GstVaapiImage * image)
 
   gst_vaapi_display_replace (&GST_VAAPI_IMAGE_DISPLAY (image), NULL);
 
-  g_slice_free1 (sizeof (GstVaapiImage), image);
+  g_free (image);
 }
 
 static gboolean
@@ -284,7 +284,7 @@ gst_vaapi_image_new (GstVaapiDisplay * display,
   GST_DEBUG ("format %s, size %ux%u", gst_vaapi_video_format_to_string (format),
       width, height);
 
-  image = g_slice_new (GstVaapiImage);
+  image = g_new (GstVaapiImage, 1);
   if (!image)
     return NULL;
 
@@ -328,7 +328,7 @@ gst_vaapi_image_new_with_image (GstVaapiDisplay * display, VAImage * va_image)
       GST_FOURCC_ARGS (va_image->format.fourcc),
       va_image->width, va_image->height);
 
-  image = g_slice_new (GstVaapiImage);
+  image = g_new (GstVaapiImage, 1);
   if (!image)
     return NULL;
 

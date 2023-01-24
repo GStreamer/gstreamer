@@ -538,7 +538,7 @@ static void
 op_data_free (GstVaapiFilterOpData * op_data)
 {
   g_free (op_data->va_caps);
-  g_slice_free (GstVaapiFilterOpData, op_data);
+  g_free (op_data);
 }
 
 static inline gpointer
@@ -546,7 +546,7 @@ op_data_new (GstVaapiFilterOp op, GParamSpec * pspec)
 {
   GstVaapiFilterOpData *op_data;
 
-  op_data = g_slice_new0 (GstVaapiFilterOpData);
+  op_data = g_new0 (GstVaapiFilterOpData, 1);
   if (!op_data)
     return NULL;
 

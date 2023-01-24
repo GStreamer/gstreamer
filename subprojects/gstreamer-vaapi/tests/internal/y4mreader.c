@@ -144,7 +144,7 @@ y4m_reader_open (const gchar * filename)
 {
   Y4MReader *imagefile;
 
-  imagefile = g_slice_new0 (Y4MReader);
+  imagefile = g_new0 (Y4MReader, 1);
 
   if (filename) {
     imagefile->fp = fopen (filename, "r");
@@ -165,7 +165,7 @@ bail:
   if (imagefile->fp && imagefile->fp != stdin)
     fclose (imagefile->fp);
 
-  g_slice_free (Y4MReader, imagefile);
+  g_free (imagefile);
   return NULL;
 }
 
@@ -177,7 +177,7 @@ y4m_reader_close (Y4MReader * file)
   if (file->fp && file->fp != stdin)
     fclose (file->fp);
 
-  g_slice_free (Y4MReader, file);
+  g_free (file);
 }
 
 static gboolean

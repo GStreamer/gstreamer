@@ -326,7 +326,7 @@ decode_step (GstVaapiDecoder * decoder)
 
   do {
     if (!ps->current_frame) {
-      ps->current_frame = g_slice_new0 (GstVideoCodecFrame);
+      ps->current_frame = g_new0 (GstVideoCodecFrame, 1);
       if (!ps->current_frame)
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
       ps->current_frame->ref_count = 1;
@@ -569,7 +569,7 @@ gst_vaapi_decoder_init (GstVaapiDecoder * decoder)
 
   parser_state_init (&decoder->parser_state);
 
-  codec_state = g_slice_new0 (GstVideoCodecState);
+  codec_state = g_new0 (GstVideoCodecState, 1);
   codec_state->ref_count = 1;
   gst_video_info_init (&codec_state->info);
 

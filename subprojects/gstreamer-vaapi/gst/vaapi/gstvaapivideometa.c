@@ -169,13 +169,13 @@ gst_vaapi_video_meta_init (GstVaapiVideoMeta * meta)
 static inline GstVaapiVideoMeta *
 _gst_vaapi_video_meta_create (void)
 {
-  return g_slice_new (GstVaapiVideoMeta);
+  return g_new (GstVaapiVideoMeta, 1);
 }
 
 static inline void
 _gst_vaapi_video_meta_destroy (GstVaapiVideoMeta * meta)
 {
-  g_slice_free1 (sizeof (*meta), meta);
+  g_free (meta);
 }
 
 static inline GstVaapiVideoMeta *

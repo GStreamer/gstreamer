@@ -135,7 +135,7 @@ codec_identifier_free (CodecIdentifier * cip)
     cip->file = NULL;
   }
   gst_caps_replace (&cip->caps, NULL);
-  g_slice_free (CodecIdentifier, cip);
+  g_free (cip);
 }
 
 static CodecIdentifier *
@@ -144,7 +144,7 @@ codec_identifier_new (const gchar * filename)
   CodecIdentifier *cip;
   GstTypeFind *tfp;
 
-  cip = g_slice_new0 (CodecIdentifier);
+  cip = g_new0 (CodecIdentifier, 1);
   if (!cip)
     return NULL;
 

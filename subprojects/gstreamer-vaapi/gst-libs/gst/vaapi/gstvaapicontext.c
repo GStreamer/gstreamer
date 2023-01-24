@@ -500,7 +500,7 @@ gst_vaapi_context_new (GstVaapiDisplay * display,
       || cip->entrypoint == GST_VAAPI_ENTRYPOINT_INVALID)
     return NULL;
 
-  context = g_slice_new (GstVaapiContext);
+  context = g_new (GstVaapiContext, 1);
   if (!context)
     return NULL;
 
@@ -783,6 +783,6 @@ gst_vaapi_context_unref (GstVaapiContext * context)
     context_destroy (context);
     context_destroy_surfaces (context);
     gst_vaapi_display_replace (&context->display, NULL);
-    g_slice_free (GstVaapiContext, context);
+    g_free (context);
   }
 }

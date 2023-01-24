@@ -69,7 +69,7 @@ coded_buffer_free (GstVaapiCodedBuffer * buf)
 
   gst_vaapi_display_replace (&GST_VAAPI_CODED_BUFFER_DISPLAY (buf), NULL);
 
-  g_slice_free1 (sizeof (GstVaapiCodedBuffer), buf);
+  g_free (buf);
 }
 
 static gboolean
@@ -126,7 +126,7 @@ gst_vaapi_coded_buffer_new (GstVaapiContext * context, guint buf_size)
   display = GST_VAAPI_CONTEXT_DISPLAY (context);
   g_return_val_if_fail (display != NULL, NULL);
 
-  buf = g_slice_new (GstVaapiCodedBuffer);
+  buf = g_new (GstVaapiCodedBuffer, 1);
   if (!buf)
     return NULL;
 

@@ -155,7 +155,7 @@ new_codec_state (gint width, gint height, gint fps_n, gint fps_d)
 {
   GstVideoCodecState *state;
 
-  state = g_slice_new0 (GstVideoCodecState);
+  state = g_new0 (GstVideoCodecState, 1);
   state->ref_count = 1;
   gst_video_info_set_format (&state->info, GST_VIDEO_FORMAT_ENCODED, width,
       height);
@@ -175,7 +175,7 @@ set_format (GstVaapiEncoder * encoder, gint width, gint height, gint fps_n,
 
   in_state = new_codec_state (width, height, fps_n, fps_d);
   status = gst_vaapi_encoder_set_codec_state (encoder, in_state);
-  g_slice_free (GstVideoCodecState, in_state);
+  g_free (in_state);
 
   return (status == GST_VAAPI_ENCODER_STATUS_SUCCESS);
 }
@@ -308,13 +308,13 @@ app_free (App * app)
   if (app->output_file)
     fclose (app->output_file);
 
-  g_slice_free (App, app);
+  g_free (app);
 }
 
 static App *
 app_new (const gchar * input_fn, const gchar * output_fn)
 {
-  App *app = g_slice_new0 (App);
+  App *app = g_new0 (App, 1);
   if (!app)
     return NULL;
 
@@ -362,7 +362,7 @@ upload_frame (GstVaapiEncoder * encoder, GstVaapiSurfaceProxy * proxy)
   GstVideoCodecFrame *frame;
   GstVaapiEncoderStatus ret;
 
-  frame = g_slice_new0 (GstVideoCodecFrame);
+  frame = g_new0 (GstVideoCodecFrame, 1);
   gst_video_codec_frame_set_user_data (frame,
       gst_vaapi_surface_proxy_ref (proxy),
       (GDestroyNotify) gst_vaapi_surface_proxy_unref);

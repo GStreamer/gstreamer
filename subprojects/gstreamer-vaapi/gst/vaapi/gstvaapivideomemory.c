@@ -361,7 +361,7 @@ gst_vaapi_video_memory_new (GstAllocator * base_allocator,
 
   g_return_val_if_fail (GST_VAAPI_IS_VIDEO_ALLOCATOR (allocator), NULL);
 
-  mem = g_slice_new (GstVaapiVideoMemory);
+  mem = g_new (GstVaapiVideoMemory, 1);
   if (!mem)
     return NULL;
 
@@ -620,7 +620,7 @@ gst_vaapi_video_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
   gst_vaapi_surface_proxy_replace (&mem->proxy, NULL);
   gst_vaapi_video_meta_replace (&mem->meta, NULL);
   g_mutex_clear (&mem->lock);
-  g_slice_free (GstVaapiVideoMemory, mem);
+  g_free (mem);
 }
 
 static void

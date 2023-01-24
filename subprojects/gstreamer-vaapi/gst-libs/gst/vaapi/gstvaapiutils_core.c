@@ -143,7 +143,7 @@ gst_vaapi_config_surface_attributes_get (GstVaapiDisplay * display,
   if (!surface_attribs)
     return NULL;
 
-  attribs = g_slice_new0 (GstVaapiConfigSurfaceAttributes);
+  attribs = g_new0 (GstVaapiConfigSurfaceAttributes, 1);
   if (!attribs)
     goto error;
 
@@ -223,5 +223,5 @@ gst_vaapi_config_surface_attributes_free (GstVaapiConfigSurfaceAttributes *
 
   if (attribs->formats)
     g_array_unref (attribs->formats);
-  g_slice_free (GstVaapiConfigSurfaceAttributes, attribs);
+  g_free (attribs);
 }

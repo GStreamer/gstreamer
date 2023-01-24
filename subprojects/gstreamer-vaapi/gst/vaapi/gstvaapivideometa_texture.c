@@ -126,7 +126,7 @@ meta_texture_free (GstVaapiVideoMetaTexture * meta)
     return;
 
   gst_mini_object_replace ((GstMiniObject **) & meta->texture, NULL);
-  g_slice_free (GstVaapiVideoMetaTexture, meta);
+  g_free (meta);
 }
 
 static GstVaapiVideoMetaTexture *
@@ -134,7 +134,7 @@ meta_texture_new (void)
 {
   GstVaapiVideoMetaTexture *meta;
 
-  meta = g_slice_new (GstVaapiVideoMetaTexture);
+  meta = g_new (GstVaapiVideoMetaTexture, 1);
   if (!meta)
     return NULL;
 

@@ -90,7 +90,7 @@ gst_vaapi_surface_free (GstVaapiSurface * surface)
   gst_vaapi_buffer_proxy_replace (&surface->extbuf_proxy, NULL);
   gst_vaapi_display_replace (&GST_VAAPI_SURFACE_DISPLAY (surface), NULL);
 
-  g_slice_free1 (sizeof (GstVaapiSurface), surface);
+  g_free (surface);
 }
 
 static gboolean
@@ -330,7 +330,7 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstVaapiSurface, gst_vaapi_surface);
 static GstVaapiSurface *
 gst_vaapi_surface_create (GstVaapiDisplay * display)
 {
-  GstVaapiSurface *surface = g_slice_new (GstVaapiSurface);
+  GstVaapiSurface *surface = g_new (GstVaapiSurface, 1);
   if (!surface)
     return NULL;
 

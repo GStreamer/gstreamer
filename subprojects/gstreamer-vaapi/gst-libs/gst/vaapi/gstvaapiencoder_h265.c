@@ -1767,14 +1767,14 @@ reference_pic_free (GstVaapiEncoderH265 * encoder, GstVaapiEncoderH265Ref * ref)
     return;
   if (ref->pic)
     gst_vaapi_encoder_release_surface (GST_VAAPI_ENCODER (encoder), ref->pic);
-  g_slice_free (GstVaapiEncoderH265Ref, ref);
+  g_free (ref);
 }
 
 static inline GstVaapiEncoderH265Ref *
 reference_pic_create (GstVaapiEncoderH265 * encoder,
     GstVaapiEncPicture * picture, GstVaapiSurfaceProxy * surface)
 {
-  GstVaapiEncoderH265Ref *const ref = g_slice_new0 (GstVaapiEncoderH265Ref);
+  GstVaapiEncoderH265Ref *const ref = g_new0 (GstVaapiEncoderH265Ref, 1);
 
   ref->pic = surface;
   ref->poc = picture->poc;

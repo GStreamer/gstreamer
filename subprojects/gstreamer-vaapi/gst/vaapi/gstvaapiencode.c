@@ -122,7 +122,7 @@ prop_value_free (PropValue * prop_value)
     g_param_spec_unref (prop_value->pspec);
     prop_value->pspec = NULL;
   }
-  g_slice_free (PropValue, prop_value);
+  g_free (prop_value);
 }
 
 static PropValue *
@@ -133,7 +133,7 @@ prop_value_new_entry (guint id, GParamSpec * pspec, const GValue * value)
   if (!pspec)
     return NULL;
 
-  prop_value = g_slice_new0 (PropValue);
+  prop_value = g_new0 (PropValue, 1);
   if (!prop_value)
     return NULL;
 
