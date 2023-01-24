@@ -1084,6 +1084,10 @@ gst_element_factory_list_is_type (GstElementFactory * factory,
     res = ((strstr (klass, "Parser") != NULL)
         && (strstr (klass, "Codec") != NULL));
 
+  if (!res && (type & GST_ELEMENT_FACTORY_TYPE_TIMESTAMPER))
+    res = ((strstr (klass, "Timestamper") != NULL)
+        && (strstr (klass, "Codec") != NULL));
+
   if (!res && (type & GST_ELEMENT_FACTORY_TYPE_DEPAYLOADER))
     res = (strstr (klass, "Depayloader") != NULL);
 
