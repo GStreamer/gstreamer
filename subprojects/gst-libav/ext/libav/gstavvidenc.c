@@ -307,7 +307,9 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
      * (1<<16) - 1 . We therefore scale them down.
      * Agreed, it will not be the exact framerate... but the difference
      * shouldn't be that noticeable */
-    ffmpegenc->context->time_base.num = 1;
+    ffmpegenc->context->time_base.num =
+        (gint) gst_util_uint64_scale_int (ffmpegenc->context->time_base.num,
+        65535, ffmpegenc->context->time_base.den);
     ffmpegenc->context->time_base.den = 65535;
     GST_LOG_OBJECT (ffmpegenc, "MPEG4 : scaled down framerate to %d / %d",
         ffmpegenc->context->time_base.den, ffmpegenc->context->time_base.num);
