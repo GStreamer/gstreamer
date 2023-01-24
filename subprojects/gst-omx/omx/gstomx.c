@@ -82,7 +82,7 @@ gst_omx_core_acquire (const gchar * filename)
 
   core = g_hash_table_lookup (core_handles, filename);
   if (!core) {
-    core = g_slice_new0 (GstOMXCore);
+    core = g_new0 (GstOMXCore, 1);
     g_mutex_init (&core->lock);
     core->user_count = 0;
     g_hash_table_insert (core_handles, g_strdup (filename), core);
@@ -189,7 +189,7 @@ error:
   {
     g_hash_table_remove (core_handles, filename);
     g_mutex_clear (&core->lock);
-    g_slice_free (GstOMXCore, core);
+    g_free (core);
 
     G_UNLOCK (core_handles);
 
@@ -231,7 +231,7 @@ gst_omx_component_flush_messages (GstOMXComponent * comp)
 
   g_mutex_lock (&comp->messages_lock);
   while ((msg = g_queue_pop_head (&comp->messages))) {
-    g_slice_free (GstOMXMessage, msg);
+    g_free (msg);
   }
   g_mutex_unlock (&comp->messages_lock);
 }
@@ -436,7 +436,7 @@ gst_omx_component_handle_messages (GstOMXComponent * comp)
       }
     }
 
-    g_slice_free (GstOMXMessage, msg);
+    g_free (msg);
 
     g_mutex_lock (&comp->messages_lock);
   }
@@ -655,7 +655,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
 
       switch (cmd) {
         case OMX_CommandStateSet:{
-          GstOMXMessage *msg = g_slice_new (GstOMXMessage);
+          GstOMXMessage *msg = g_new (GstOMXMessage, 1);
 
           msg->type = GST_OMX_MESSAGE_STATE_SET;
           msg->content.state_set.state = nData2;
@@ -668,7 +668,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
           break;
         }
         case OMX_CommandFlush:{
-          GstOMXMessage *msg = g_slice_new (GstOMXMessage);
+          GstOMXMessage *msg = g_new (GstOMXMessage, 1);
 
           msg->type = GST_OMX_MESSAGE_FLUSH;
           msg->content.flush.port = nData2;
@@ -680,7 +680,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
         }
         case OMX_CommandPortEnable:
         case OMX_CommandPortDisable:{
-          GstOMXMessage *msg = g_slice_new (GstOMXMessage);
+          GstOMXMessage *msg = g_new (GstOMXMessage, 1);
 
           msg->type = GST_OMX_MESSAGE_PORT_ENABLE;
           msg->content.port_enable.port = nData2;
@@ -715,7 +715,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
         break;
       }
 
-      msg = g_slice_new (GstOMXMessage);
+      msg = g_new (GstOMXMessage, 1);
 
       msg->type = GST_OMX_MESSAGE_ERROR;
       msg->content.error.error = error_type;
@@ -728,7 +728,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     }
     case OMX_EventPortSettingsChanged:
     {
-      GstOMXMessage *msg = g_slice_new (GstOMXMessage);
+      GstOMXMessage *msg = g_new (GstOMXMessage, 1);
       OMX_U32 index;
 
       if (!(comp->hacks &
@@ -756,7 +756,7 @@ EventHandler (OMX_HANDLETYPE hComponent, OMX_PTR pAppData, OMX_EVENTTYPE eEvent,
     case OMX_EventBufferFlag:{
       GstOMXMessage *msg;
 
-      msg = g_slice_new (GstOMXMessage);
+      msg = g_new (GstOMXMessage, 1);
 
       msg->type = GST_OMX_MESSAGE_BUFFER_FLAG;
       msg->content.buffer_flag.port = nData1;
@@ -871,7 +871,7 @@ EmptyBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
 
   comp = buf->port->comp;
 
-  msg = g_slice_new (GstOMXMessage);
+  msg = g_new (GstOMXMessage, 1);
   msg->type = GST_OMX_MESSAGE_BUFFER_DONE;
   msg->content.buffer_done.component = hComponent;
   msg->content.buffer_done.app_data = pAppData;
@@ -910,7 +910,7 @@ FillBufferDone (OMX_HANDLETYPE hComponent, OMX_PTR pAppData,
 
   comp = buf->port->comp;
 
-  msg = g_slice_new (GstOMXMessage);
+  msg = g_new (GstOMXMessage, 1);
   msg->type = GST_OMX_MESSAGE_BUFFER_DONE;
   msg->content.buffer_done.component = hComponent;
   msg->content.buffer_done.app_data = pAppData;
@@ -947,7 +947,7 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
   if (!core)
     return NULL;
 
-  comp = g_slice_new0 (GstOMXComponent);
+  comp = g_new0 (GstOMXComponent, 1);
   comp->core = core;
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (comp), 0,
@@ -968,7 +968,7 @@ gst_omx_component_new (GstObject * parent, const gchar * core_name,
         component_name, core_name, err);
     gst_omx_core_release (core);
     g_free (comp->name);
-    g_slice_free (GstOMXComponent, comp);
+    g_free (comp);
     return NULL;
   }
   GST_DEBUG_OBJECT (parent,
@@ -1039,7 +1039,7 @@ gst_omx_component_free (GstOMXComponent * comp)
       g_assert (port->buffers == NULL);
       g_assert (g_queue_get_length (&port->pending_buffers) == 0);
 
-      g_slice_free (GstOMXPort, port);
+      g_free (port);
     }
     g_ptr_array_unref (comp->ports);
     comp->ports = NULL;
@@ -1059,7 +1059,7 @@ gst_omx_component_free (GstOMXComponent * comp)
   g_free (comp->name);
   comp->name = NULL;
 
-  g_slice_free (GstOMXComponent, comp);
+  g_free (comp);
 }
 
 GstOMXComponent *
@@ -1305,7 +1305,7 @@ gst_omx_component_add_port (GstOMXComponent * comp, guint32 index)
     return NULL;
   }
 
-  port = g_slice_new0 (GstOMXPort);
+  port = g_new0 (GstOMXPort, 1);
   port->comp = comp;
   port->index = index;
 
@@ -2579,7 +2579,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
   for (i = 0; i < n; i++) {
     GstOMXBuffer *buf;
 
-    buf = g_slice_new0 (GstOMXBuffer);
+    buf = g_new0 (GstOMXBuffer, 1);
     buf->port = port;
     buf->used = FALSE;
     buf->settings_cookie = port->settings_cookie;
@@ -2903,7 +2903,7 @@ gst_omx_port_deallocate_buffers_unlocked (GstOMXPort * port)
           err = tmp;
       }
     }
-    g_slice_free (GstOMXBuffer, buf);
+    g_free (buf);
   }
   g_queue_clear (&port->pending_buffers);
   g_ptr_array_unref (port->buffers);

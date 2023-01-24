@@ -718,7 +718,7 @@ gst_omx_try_importing_buffer (GstOMXVideoDec * self, GstBufferPool * pool,
     goto out;
   }
 
-  *frame = g_slice_new0 (GstVideoFrame);
+  *frame = g_new0 (GstVideoFrame, 1);
 
   is_mapped = gst_video_frame_map (*frame, v_info, buffer, flags);
   if (!is_mapped) {
@@ -740,7 +740,7 @@ out:
   if (*frame) {
     if (is_mapped)
       gst_video_frame_unmap (*frame);
-    g_slice_free (GstVideoFrame, *frame);
+    g_free (*frame);
     *frame = NULL;
   }
   gst_buffer_unref (buffer);

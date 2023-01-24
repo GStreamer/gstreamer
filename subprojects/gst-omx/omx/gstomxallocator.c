@@ -126,7 +126,7 @@ gst_omx_memory_new (GstOMXAllocator * allocator, GstOMXBuffer * omx_buf,
     size = maxsize - offset;
   }
 
-  mem = g_slice_new0 (GstOMXMemory);
+  mem = g_new0 (GstOMXMemory, 1);
   gst_memory_init (GST_MEMORY_CAST (mem), flags, (GstAllocator *) allocator,
       parent, maxsize, align, offset, size);
 
@@ -528,7 +528,7 @@ gst_omx_allocator_free (GstAllocator * allocator, GstMemory * mem)
   if (omem->foreign_mem)
     gst_memory_unref (omem->foreign_mem);
 
-  g_slice_free (GstOMXMemory, omem);
+  g_free (omem);
 }
 
 static void

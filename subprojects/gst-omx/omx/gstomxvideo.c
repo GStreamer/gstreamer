@@ -137,7 +137,7 @@ gst_omx_video_get_supported_colorformats (GstOMXPort * port,
       f = gst_omx_video_get_format_from_omx (param.eColorFormat);
 
       if (f != GST_VIDEO_FORMAT_UNKNOWN) {
-        m = g_slice_new (GstOMXVideoNegotiationMap);
+        m = g_new (GstOMXVideoNegotiationMap, 1);
         m->format = f;
         m->type = param.eColorFormat;
         negotiation_map = g_list_append (negotiation_map, m);
@@ -177,7 +177,7 @@ gst_omx_video_get_caps_for_map (GList * map)
 void
 gst_omx_video_negotiation_map_free (GstOMXVideoNegotiationMap * m)
 {
-  g_slice_free (GstOMXVideoNegotiationMap, m);
+  g_free (m);
 }
 
 GstVideoCodecFrame *
