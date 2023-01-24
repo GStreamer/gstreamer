@@ -484,7 +484,7 @@ static void
 gst_ffmpegvidenc_free_avpacket (gpointer pkt)
 {
   av_packet_unref ((AVPacket *) pkt);
-  g_slice_free (AVPacket, pkt);
+  g_free (pkt);
 }
 
 typedef struct
@@ -500,7 +500,7 @@ buffer_info_free (void *opaque, guint8 * data)
 
   gst_video_frame_unmap (&info->vframe);
   gst_buffer_unref (info->buffer);
-  g_slice_free (BufferInfo, info);
+  g_free (info);
 }
 
 static enum AVStereo3DType
@@ -591,14 +591,14 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
     picture->pict_type = AV_PICTURE_TYPE_I;
 
-  buffer_info = g_slice_new0 (BufferInfo);
+  buffer_info = g_new0 (BufferInfo, 1);
   buffer_info->buffer = gst_buffer_ref (frame->input_buffer);
 
   if (!gst_video_frame_map (&buffer_info->vframe, info, frame->input_buffer,
           GST_MAP_READ)) {
     GST_ERROR_OBJECT (ffmpegenc, "Failed to map input buffer");
     gst_buffer_unref (buffer_info->buffer);
-    g_slice_free (BufferInfo, buffer_info);
+    g_free (buffer_info);
     gst_video_codec_frame_unref (frame);
     goto done;
   }
@@ -677,15 +677,15 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
 
   *got_packet = FALSE;
 
-  pkt = g_slice_new0 (AVPacket);
+  pkt = g_new0 (AVPacket, 1);
 
   res = avcodec_receive_packet (ffmpegenc->context, pkt);
 
   if (res == AVERROR (EAGAIN)) {
-    g_slice_free (AVPacket, pkt);
+    g_free (pkt);
     goto done;
   } else if (res == AVERROR_EOF) {
-    g_slice_free (AVPacket, pkt);
+    g_free (pkt);
     ret = GST_FLOW_EOS;
     goto done;
   } else if (res < 0) {

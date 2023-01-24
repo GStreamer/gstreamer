@@ -382,7 +382,7 @@ static void
 gst_ffmpegaudenc_free_avpacket (gpointer pkt)
 {
   av_packet_unref ((AVPacket *) pkt);
-  g_slice_free (AVPacket, pkt);
+  g_free (pkt);
 }
 
 typedef struct
@@ -405,7 +405,7 @@ buffer_info_free (void *opaque, guint8 * data)
     av_freep (&info->ext_data);
     av_freep (&info->ext_data_array);
   }
-  g_slice_free (BufferInfo, info);
+  g_free (info);
 }
 
 static GstFlowReturn
@@ -425,7 +425,7 @@ gst_ffmpegaudenc_send_frame (GstFFMpegAudEnc * ffmpegaudenc, GstBuffer * buffer)
   ctx = ffmpegaudenc->context;
 
   if (buffer != NULL) {
-    BufferInfo *buffer_info = g_slice_new0 (BufferInfo);
+    BufferInfo *buffer_info = g_new0 (BufferInfo, 1);
     guint8 *audio_in;
     guint in_size;
 
@@ -579,7 +579,7 @@ gst_ffmpegaudenc_receive_packet (GstFFMpegAudEnc * ffmpegaudenc,
 
   ctx = ffmpegaudenc->context;
 
-  pkt = g_slice_new0 (AVPacket);
+  pkt = g_new0 (AVPacket, 1);
 
   res = avcodec_receive_packet (ctx, pkt);
 
@@ -619,7 +619,7 @@ gst_ffmpegaudenc_receive_packet (GstFFMpegAudEnc * ffmpegaudenc,
     *got_packet = TRUE;
   } else {
     GST_LOG_OBJECT (ffmpegaudenc, "no output produced");
-    g_slice_free (AVPacket, pkt);
+    g_free (pkt);
     ret = GST_FLOW_OK;
     *got_packet = FALSE;
   }

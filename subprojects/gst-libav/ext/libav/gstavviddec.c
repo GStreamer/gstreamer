@@ -723,7 +723,7 @@ gst_ffmpegviddec_video_frame_new (GstFFMpegVidDec * ffmpegdec,
 {
   GstFFMpegVidDecVideoFrame *dframe;
 
-  dframe = g_slice_new0 (GstFFMpegVidDecVideoFrame);
+  dframe = g_new0 (GstFFMpegVidDecVideoFrame, 1);
   dframe->ffmpegdec = ffmpegdec;
   dframe->frame = frame;
 
@@ -747,7 +747,7 @@ gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
   if (frame->avbuffer) {
     av_buffer_unref (&frame->avbuffer);
   }
-  g_slice_free (GstFFMpegVidDecVideoFrame, frame);
+  g_free (frame);
 }
 
 static void
