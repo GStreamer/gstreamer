@@ -36,7 +36,7 @@ provided to the `gst_mini_object_init()` function.
 MyObject *
 my_object_new()
 {
-  MyObject *res = g_slice_new (MyObject);
+  MyObject *res = g_new (MyObject, 1);
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (res), 0,
         MY_TYPE_OBJECT,
@@ -61,7 +61,7 @@ _my_object_free (MyObject *obj)
   /* other cleanup */
   ...
 
-  g_slice_free (MyObject, obj);
+  g_free (obj);
 }
 ```
 
