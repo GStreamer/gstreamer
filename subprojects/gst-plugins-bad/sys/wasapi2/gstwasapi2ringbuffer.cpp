@@ -703,7 +703,10 @@ gst_wasapi2_ring_buffer_io_callback (GstWasapi2RingBuffer * self)
   }
 
   if (self->running) {
-    if (gst_wasapi2_result (hr)) {
+    if (gst_wasapi2_result (hr) &&
+        /* In case of normal loopback capture, this method is called from
+         * silence feeding thread. Don't schedule again in that case */
+        self->device_class != GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE) {
       hr = MFPutWaitingWorkItem (self->event_handle, 0, self->callback_result,
           &self->callback_key);
 
@@ -751,17 +754,16 @@ gst_wasapi2_ring_buffer_fill_loopback_silence (GstWasapi2RingBuffer * self)
   if (!gst_wasapi2_result (hr))
     return hr;
 
-  if (padding_frames >= self->buffer_size) {
+  if (padding_frames >= self->loopback_buffer_size) {
     GST_INFO_OBJECT (self,
         "Padding size %d is larger than or equal to buffer size %d",
-        padding_frames, self->buffer_size);
+        padding_frames, self->loopback_buffer_size);
     return S_OK;
   }
 
-  can_write = self->buffer_size - padding_frames;
+  can_write = self->loopback_buffer_size - padding_frames;
 
-  GST_TRACE_OBJECT (self,
-      "Writing %d silent frames offset at %" G_GUINT64_FORMAT, can_write);
+  GST_TRACE_OBJECT (self, "Writing %d silent frames", can_write);
 
   hr = render_client->GetBuffer (can_write, &data);
   if (!gst_wasapi2_result (hr))
@@ -786,6 +788,12 @@ gst_wasapi2_ring_buffer_loopback_callback (GstWasapi2RingBuffer * self)
   }
 
   hr = gst_wasapi2_ring_buffer_fill_loopback_silence (self);
+
+  /* On Windows versions prior to Windows 10, a pull-mode capture client will
+   * not receive any events when a stream is initialized with event-driven
+   * buffering */
+  if (gst_wasapi2_result (hr))
+    hr = gst_wasapi2_ring_buffer_io_callback (self);
 
   if (self->running) {
     if (gst_wasapi2_result (hr)) {
@@ -1203,13 +1211,15 @@ gst_wasapi2_ring_buffer_start_internal (GstWasapi2RingBuffer * self)
     goto error;
   }
 
-  hr = MFPutWaitingWorkItem (self->event_handle, 0, self->callback_result,
-      &self->callback_key);
-  if (!gst_wasapi2_result (hr)) {
-    GST_ERROR_OBJECT (self, "Failed to put waiting item");
-    client_handle->Stop ();
-    self->running = FALSE;
-    goto error;
+  if (self->device_class != GST_WASAPI2_CLIENT_DEVICE_CLASS_LOOPBACK_CAPTURE) {
+    hr = MFPutWaitingWorkItem (self->event_handle, 0, self->callback_result,
+        &self->callback_key);
+    if (!gst_wasapi2_result (hr)) {
+      GST_ERROR_OBJECT (self, "Failed to put waiting item");
+      client_handle->Stop ();
+      self->running = FALSE;
+      goto error;
+    }
   }
 
   return TRUE;
