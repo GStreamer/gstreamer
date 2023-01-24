@@ -108,8 +108,8 @@ static GstStaticPadTemplate gst_svtav1enc_sink_pad_template = GST_STATIC_PAD_TEM
 static GstStaticPadTemplate gst_svtav1enc_src_pad_template = GST_STATIC_PAD_TEMPLATE(
     "src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS("video/x-av1, "
-                    "stream-format = (string) byte-stream, "
-                    "alignment = (string) au, "
+                    "stream-format = (string) obu-stream, "
+                    "alignment = (string) tu, "
                     "width = (int) [64, 3840], "
                     "height = (int) [64, 2160], "
                     "framerate = (fraction) [0, MAX]"));
