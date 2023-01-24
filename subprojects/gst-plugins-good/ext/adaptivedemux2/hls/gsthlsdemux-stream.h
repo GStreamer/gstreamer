@@ -30,6 +30,7 @@
 #include <gstadaptivedemux.h>
 #include "gsthlsdemux.h"
 #include "gsthlsdemux-preloader.h"
+#include "gsthlsdemux-playlist-loader.h"
 
 #if defined(HAVE_OPENSSL)
 #include <openssl/evp.h>
@@ -85,6 +86,9 @@ struct _GstHLSDemuxStream
   /* Whether the underlying playlist was fetched on creation */
   gboolean playlist_fetched;
   GstClockTime playlist_last_update_time;
+
+  /* Playlist loading helper */
+  GstHLSDemuxPlaylistLoader *playlistloader;
 
   /* The media playlist currently used */
   GstHLSMediaPlaylist *playlist;

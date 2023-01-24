@@ -1056,6 +1056,12 @@ gst_hls_demux_stream_finalize (GObject * object)
   gst_buffer_replace (&hls_stream->pending_typefind_buffer, NULL);
   gst_buffer_replace (&hls_stream->pending_segment_data, NULL);
 
+  if (hls_stream->playlistloader) {
+    gst_hls_demux_playlist_loader_stop (hls_stream->playlistloader);
+    gst_object_unparent (GST_OBJECT (hls_stream->playlistloader));
+    gst_object_unref (hls_stream->playlistloader);
+  }
+
   if (hls_stream->preloader) {
     gst_hls_demux_preloader_free (hls_stream->preloader);
     hls_stream->preloader = NULL;
@@ -1225,7 +1231,7 @@ struct PlaylistDownloadParams
 #define HLS_MSN_QUERY_KEY "_HLS_msn"
 #define HLS_PART_QUERY_KEY "_HLS_part"
 
-gchar *
+static gchar *
 apply_directives_to_uri (GstHLSDemuxStream * stream,
     const gchar * playlist_uri, struct PlaylistDownloadParams *dl_params)
 {
@@ -1287,6 +1293,11 @@ download_media_playlist (GstHLSDemuxStream * stream, gchar * orig_uri,
   GstAdaptiveDemux *demux = base_stream->demux;
   const gchar *main_uri = gst_adaptive_demux_get_manifest_ref_uri (demux);
   struct PlaylistDownloadParams dl_params;
+
+  /* FIXME: Set this URI when the variant is changed */
+  if (stream->playlistloader)
+    gst_hls_demux_playlist_loader_set_playlist_uri (stream->playlistloader,
+        main_uri, orig_uri);
 
 retry:
 
@@ -2014,6 +2025,18 @@ gst_hls_demux_stream_start (GstAdaptiveDemux2Stream * stream)
   if (!gst_hls_demux_stream_can_start (stream))
     return;
 
+  /* Start the playlist loader */
+  GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
+
+  if (hls_stream->playlistloader == NULL) {
+    GstAdaptiveDemux *demux = stream->demux;
+
+    hls_stream->playlistloader =
+        gst_hls_demux_playlist_loader_new (demux, demux->download_helper,
+        hls_stream->llhls_enabled);
+  }
+  gst_hls_demux_playlist_loader_start (hls_stream->playlistloader);
+
   /* Chain up, to start the downloading */
   GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->start (stream);
 }
@@ -2021,6 +2044,11 @@ gst_hls_demux_stream_start (GstAdaptiveDemux2Stream * stream)
 static void
 gst_hls_demux_stream_stop (GstAdaptiveDemux2Stream * stream)
 {
+  GstHLSDemuxStream *hls_stream = GST_HLS_DEMUX_STREAM_CAST (stream);
+
+  if (hls_stream->playlistloader)
+    gst_hls_demux_playlist_loader_stop (hls_stream->playlistloader);
+
   /* Chain up, to stop the downloading */
   GST_ADAPTIVE_DEMUX2_STREAM_CLASS (stream_parent_class)->stop (stream);
 }

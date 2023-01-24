@@ -1,6 +1,7 @@
 hls_sources = [
   'hls/gsthlsdemux.c',
   'hls/gsthlsdemux-stream.c',
+  'hls/gsthlsdemux-playlist-loader.c',
   'hls/gsthlsdemux-preloader.c',
   'hls/gsthlsdemux-util.c',
   'hls/gsthlselement.c',
