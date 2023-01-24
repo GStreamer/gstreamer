@@ -200,8 +200,8 @@ _alloc_red_packet_and_fill_headers (GstRtpRedEnc * self,
      * for our wrapper */
     if (gst_rtp_buffer_get_extension_onebyte_header (inp_rtp, self->twcc_ext_id,
             0, &inp_data, &inp_size)) {
-      gst_rtp_buffer_add_extension_onebyte_header (&red_rtp, 1, &data,
-          sizeof (guint16));
+      gst_rtp_buffer_add_extension_onebyte_header (&red_rtp, self->twcc_ext_id,
+          &data, sizeof (guint16));
     } else if (gst_rtp_buffer_get_extension_twobytes_header (inp_rtp, &appbits,
             self->twcc_ext_id, 0, &inp_data, &inp_size)) {
       gst_rtp_buffer_add_extension_twobytes_header (&red_rtp, appbits,
