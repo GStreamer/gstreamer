@@ -717,19 +717,25 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
       GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
   }
 
-  if (pkt->dts != AV_NOPTS_VALUE) {
-    frame->dts =
-        gst_ffmpeg_time_ff_to_gst (pkt->dts + ffmpegenc->pts_offset,
-        ffmpegenc->context->time_base);
-  }
-  /* This will lose some precision compared to setting the PTS from the input
-   * buffer directly, but that way we're sure PTS and DTS are consistent, in
-   * particular DTS should always be <= PTS
+  /* calculate the DTS by taking the PTS/DTS difference from the ffmpeg side
+   * and applying it to our PTS. We don't use the ffmpeg timestamps verbatim
+   * because they're too inaccurate and in the framerate time_base
    */
-  if (pkt->pts != AV_NOPTS_VALUE) {
-    frame->pts =
-        gst_ffmpeg_time_ff_to_gst (pkt->pts + ffmpegenc->pts_offset,
-        ffmpegenc->context->time_base);
+  if (pkt->dts != AV_NOPTS_VALUE) {
+    gint64 pts_dts_diff = pkt->dts - pkt->pts;
+    if (pts_dts_diff < 0) {
+      GstClockTime gst_pts_dts_diff = gst_ffmpeg_time_ff_to_gst (-pts_dts_diff,
+          ffmpegenc->context->time_base);
+
+      if (gst_pts_dts_diff > frame->pts)
+        frame->pts = 0;
+      else
+        frame->dts = frame->pts - gst_pts_dts_diff;
+    } else {
+      frame->dts = frame->pts +
+          gst_ffmpeg_time_ff_to_gst (pts_dts_diff,
+          ffmpegenc->context->time_base);
+    }
   }
 
   ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
