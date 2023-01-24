@@ -241,6 +241,10 @@ meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0'
 
 pkgconfig = import('pkgconfig')
 plugins_pkgconfig_install_dir = join_paths(plugins_install_dir, 'pkgconfig')
+if get_option('default_library') == 'shared'
+  # If we don't build static plugins there is no need to generate pc files
+  plugins_pkgconfig_install_dir = disabler()
+endif
 
 plugin_names = []
 gst_plugins = []
