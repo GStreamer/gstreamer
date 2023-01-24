@@ -785,7 +785,7 @@ _remove_object_func (NleComposition * comp, ChildIOData * childio)
 static void
 _add_remove_object_action (NleComposition * comp, NleObject * object)
 {
-  ChildIOData *childio = g_slice_new0 (ChildIOData);
+  ChildIOData *childio = g_new0 (ChildIOData, 1);
 
   GST_DEBUG_OBJECT (comp, "Adding Action");
 
@@ -835,7 +835,7 @@ _add_object_func (NleComposition * comp, ChildIOData * childio)
 static void
 _add_add_object_action (NleComposition * comp, NleObject * object)
 {
-  ChildIOData *childio = g_slice_new0 (ChildIOData);
+  ChildIOData *childio = g_new0 (ChildIOData, 1);
 
   GST_DEBUG_OBJECT (comp, "Adding Action");
 
@@ -855,18 +855,18 @@ _free_action (gpointer udata, Action * action)
     SeekData *seekd = (SeekData *) udata;
 
     gst_event_unref (seekd->event);
-    g_slice_free (SeekData, seekd);
+    g_free (seekd);
   } else if (ACTION_CALLBACK (action) == _add_object_func) {
     ChildIOData *iodata = (ChildIOData *) udata;
 
     gst_object_unref (iodata->object);
-    g_slice_free (ChildIOData, iodata);
+    g_free (iodata);
   } else if (ACTION_CALLBACK (action) == _remove_object_func) {
-    g_slice_free (ChildIOData, udata);
+    g_free (udata);
   } else if (ACTION_CALLBACK (action) == _update_pipeline_func ||
       ACTION_CALLBACK (action) == _commit_func ||
       ACTION_CALLBACK (action) == _initialize_stack_func) {
-    g_slice_free (UpdateCompositionData, udata);
+    g_free (udata);
   }
 }
 
@@ -911,7 +911,7 @@ _add_action (NleComposition * comp, GCallback func,
 static SeekData *
 create_seek_data (NleComposition * comp, GstEvent * event)
 {
-  SeekData *seekd = g_slice_new0 (SeekData);
+  SeekData *seekd = g_new0 (SeekData, 1);
 
   seekd->comp = comp;
   seekd->event = event;
@@ -993,7 +993,7 @@ static void
 _add_update_compo_action (NleComposition * comp,
     GCallback callback, NleUpdateStackReason reason)
 {
-  UpdateCompositionData *ucompo = g_slice_new0 (UpdateCompositionData);
+  UpdateCompositionData *ucompo = g_new0 (UpdateCompositionData, 1);
 
   ucompo->comp = comp;
   ucompo->reason = reason;
