@@ -43,6 +43,13 @@ if not gstd3d11_dep.found()
   subdir_done()
 endif
 
+d2d1_lib = cc.find_library('d2d1', required: false)
+if cc.has_header('d2d1.h') and d2d1_lib.found()
+  extra_dep += [d2d1_lib]
+  d3d11_sources += ['gstd3d11d2d1.cpp']
+  extra_args += ['-DHAVE_D2D1']
+endif
+
 d3dcompiler_lib = cc.find_library('d3dcompiler', required: d3d11_option)
 runtimeobject_lib = cc.find_library('runtimeobject', required : false)
 winmm_lib = cc.find_library('winmm', required: false)
