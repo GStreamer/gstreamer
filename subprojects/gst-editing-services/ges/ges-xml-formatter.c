@@ -339,7 +339,7 @@ _parse_asset (GMarkupParseContext * context, const gchar * element_name,
 
   extractable_type = g_type_from_name (extractable_type_name);
   if (extractable_type == GES_TYPE_TIMELINE) {
-    SubprojectData *subproj_data = g_malloc0 (sizeof (SubprojectData));
+    SubprojectData *subproj_data = g_new0 (SubprojectData, 1);
     const gchar *nid;
 
     priv->subproject = subproj_data;

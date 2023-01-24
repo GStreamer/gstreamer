@@ -124,7 +124,7 @@ static void
 _free_layer_entry (LayerEntry * entry)
 {
   gst_object_unref (entry->layer);
-  g_slice_free (LayerEntry, entry);
+  g_free (entry);
 }
 
 static void
@@ -133,7 +133,7 @@ _free_pending_group (PendingGroup * pgroup)
   if (pgroup->group)
     g_object_unref (pgroup->group);
   g_list_free_full (pgroup->pending_children, g_free);
-  g_slice_free (PendingGroup, pgroup);
+  g_free (pgroup);
 }
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GESBaseXmlFormatter,
@@ -663,7 +663,7 @@ _free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
     gst_structure_free (passet->properties);
 
   priv->pending_assets = g_list_remove (priv->pending_assets, passet);
-  g_slice_free (PendingAsset, passet);
+  g_free (passet);
 }
 
 static void
@@ -842,7 +842,7 @@ ges_base_xml_formatter_add_asset (GESBaseXmlFormatter * self,
     return;
   }
 
-  passet = g_slice_new0 (PendingAsset);
+  passet = g_new0 (PendingAsset, 1);
   passet->metadatas = g_strdup (metadatas);
   passet->id = g_strdup (id);
   passet->extractable_type = extractable_type;
@@ -1005,7 +1005,7 @@ ges_base_xml_formatter_add_layer (GESBaseXmlFormatter * self,
     g_list_free (tracks);
   }
 
-  entry = g_slice_new0 (LayerEntry);
+  entry = g_new0 (LayerEntry, 1);
   entry->layer = gst_object_ref (layer);
   entry->auto_trans = auto_transition;
 
@@ -1292,7 +1292,7 @@ ges_base_xml_formatter_add_group (GESBaseXmlFormatter * self,
     return;
   }
 
-  pgroup = g_slice_new0 (PendingGroup);
+  pgroup = g_new0 (PendingGroup, 1);
   pgroup->group = ges_group_new ();
 
   if (metadatas)

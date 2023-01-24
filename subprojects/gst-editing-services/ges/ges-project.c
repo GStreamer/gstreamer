@@ -140,7 +140,7 @@ _emit_loaded_in_idle (EmitLoadedInIdle * data)
 
   gst_object_unref (data->project);
   gst_object_unref (data->timeline);
-  g_slice_free (EmitLoadedInIdle, data);
+  g_free (data);
 
   return FALSE;
 }
@@ -226,7 +226,7 @@ _load_project (GESProject * project, GESTimeline * timeline, GError ** error)
       ges_project_set_uri (project, ges_asset_get_id (GES_ASSET (project)));
       GST_INFO_OBJECT (project, "Using asset ID %s as URI.", priv->uri);
     } else {
-      EmitLoadedInIdle *data = g_slice_new (EmitLoadedInIdle);
+      EmitLoadedInIdle *data = g_new (EmitLoadedInIdle, 1);
 
       GST_INFO_OBJECT (project, "%s, Loading an empty timeline %s"
           " as no URI set yet", GST_OBJECT_NAME (timeline),

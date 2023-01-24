@@ -127,7 +127,7 @@ _free_mapping (ChildMapping * mapping)
     gst_object_unref (child);
   }
 
-  g_slice_free (ChildMapping, mapping);
+  g_free (mapping);
 }
 
 static gint
@@ -347,7 +347,7 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * copy)
   for (tmp = GES_CONTAINER_CHILDREN (element); tmp; tmp = tmp->next) {
     ChildMapping *map, *orig_map;
     orig_map = g_hash_table_lookup (self->priv->mappings, tmp->data);
-    map = g_slice_new0 (ChildMapping);
+    map = g_new0 (ChildMapping, 1);
     map->child = ges_timeline_element_copy (tmp->data, TRUE);
     map->start_offset = orig_map->start_offset;
 
@@ -758,7 +758,7 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
     }
   }
 
-  mapping = g_slice_new0 (ChildMapping);
+  mapping = g_new0 (ChildMapping, 1);
   mapping->child = gst_object_ref (child);
   g_hash_table_insert (priv->mappings, child, mapping);
   container->children = g_list_append (container->children, child);

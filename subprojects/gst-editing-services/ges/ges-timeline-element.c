@@ -401,7 +401,7 @@ _child_prop_handler_free (ChildPropHandler * handler)
   if (handler->child != (GObject *) handler->self &&
       handler->child != (GObject *) handler->owner)
     gst_object_unref (handler->child);
-  g_slice_free (ChildPropHandler, handler);
+  g_free (handler);
 }
 
 static gboolean
@@ -763,7 +763,7 @@ emit_deep_notify_in_idle (EmitDeepNotifyInIdleData * data)
   gst_object_unref (data->child);
   g_param_spec_unref (data->arg);
   gst_object_unref (data->self);
-  g_slice_free (EmitDeepNotifyInIdleData, data);
+  g_free (data);
 
   return FALSE;
 }
@@ -782,7 +782,7 @@ child_prop_changed_cb (GObject * child, GParamSpec * arg,
     return;
   }
 
-  data = g_slice_new (EmitDeepNotifyInIdleData);
+  data = g_new (EmitDeepNotifyInIdleData, 1);
 
   data->child = gst_object_ref (child);
   data->arg = g_param_spec_ref (arg);
@@ -845,7 +845,7 @@ ges_timeline_element_add_child_property_full (GESTimelineElement * self,
       child, pspec->name);
 
   signame = g_strconcat ("notify::", pspec->name, NULL);
-  handler = (ChildPropHandler *) g_slice_new0 (ChildPropHandler);
+  handler = (ChildPropHandler *) g_new0 (ChildPropHandler, 1);
   handler->self = self;
   if (child == G_OBJECT (self) || child == G_OBJECT (owner))
     handler->child = child;

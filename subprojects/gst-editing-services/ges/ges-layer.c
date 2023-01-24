@@ -434,7 +434,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
 
   gst_object_unref (asset);
   gst_object_unref (udata->clip);
-  g_slice_free (NewAssetUData, udata);
+  g_free (udata);
 }
 
 /**
@@ -714,7 +714,7 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
   asset = ges_extractable_get_asset (GES_EXTRACTABLE (clip));
   if (asset == NULL) {
     gchar *id;
-    NewAssetUData *mudata = g_slice_new (NewAssetUData);
+    NewAssetUData *mudata = g_new (NewAssetUData, 1);
 
     mudata->clip = clip;
     mudata->layer = layer;
@@ -743,7 +743,7 @@ ges_layer_add_clip_full (GESLayer * layer, GESClip * clip, GError ** error)
 
     ges_extractable_set_asset (GES_EXTRACTABLE (clip), asset);
 
-    g_slice_free (NewAssetUData, mudata);
+    g_free (mudata);
     gst_clear_object (&asset);
   }
 

@@ -610,7 +610,7 @@ _free_entries (gpointer entry)
   GESAssetCacheEntry *data = (GESAssetCacheEntry *) entry;
   if (data->asset)
     gst_object_unref (data->asset);
-  g_slice_free (GESAssetCacheEntry, entry);
+  g_free (entry);
 }
 
 static void
@@ -740,7 +740,7 @@ ges_asset_cache_put (GESAsset * asset, GTask * task)
           g_strdup (_extractable_type_name (extractable_type)), entries_table);
     }
 
-    entry = g_slice_new0 (GESAssetCacheEntry);
+    entry = g_new0 (GESAssetCacheEntry, 1);
 
     /* transfer asset to entry */
     entry->asset = asset;

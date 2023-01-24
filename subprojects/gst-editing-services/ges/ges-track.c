@@ -173,7 +173,7 @@ gap_new (GESTrack * track, GstClockTime start, GstClockTime duration)
     return NULL;
   }
 
-  new_gap = g_slice_new (Gap);
+  new_gap = g_new (Gap, 1);
   new_gap->start = start;
   new_gap->duration = duration;
   new_gap->track = track;
@@ -201,7 +201,7 @@ free_gap (Gap * gap)
       GST_TIME_ARGS (gap->duration));
   ges_nle_composition_remove_object (track->priv->composition, gap->nleobj);
 
-  g_slice_free (Gap, gap);
+  g_free (gap);
 }
 
 static inline void

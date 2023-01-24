@@ -71,7 +71,7 @@ destroy_pad (PadInfos * infos)
     gst_element_release_request_pad (infos->self->adder, infos->adder_pad);
     gst_object_unref (infos->adder_pad);
   }
-  g_slice_free (PadInfos, infos);
+  g_free (infos);
 }
 
 /****************************************************
@@ -84,7 +84,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
   GstPad *audioresample_srcpad, *audioconvert_sinkpad, *tmpghost;
   GstPad *ghost;
   GstElement *audioconvert, *audioresample;
-  PadInfos *infos = g_slice_new0 (PadInfos);
+  PadInfos *infos = g_new0 (PadInfos, 1);
   GESSmartAdder *self = GES_SMART_ADDER (element);
 
   infos->adder_pad = gst_element_request_pad (self->adder,
@@ -93,7 +93,7 @@ _request_new_pad (GstElement * element, GstPadTemplate * templ,
 
   if (infos->adder_pad == NULL) {
     GST_WARNING_OBJECT (element, "Could not get any pad from GstAdder");
-    g_slice_free (PadInfos, infos);
+    g_free (infos);
 
     return NULL;
   }

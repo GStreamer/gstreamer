@@ -110,19 +110,19 @@ _free_meta_container_data (ContainerData * data)
   gst_structure_free (data->structure);
   g_hash_table_unref (data->static_items);
 
-  g_slice_free (ContainerData, data);
+  g_free (data);
 }
 
 static void
 _free_static_item (RegisteredMeta * item)
 {
-  g_slice_free (RegisteredMeta, item);
+  g_free (item);
 }
 
 static ContainerData *
 _create_container_data (GESMetaContainer * container)
 {
-  ContainerData *data = g_slice_new (ContainerData);
+  ContainerData *data = g_new (ContainerData, 1);
   data->structure = gst_structure_new_empty ("metadatas");
   data->static_items = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, (GDestroyNotify) (GDestroyNotify) _free_static_item);
@@ -216,7 +216,7 @@ _register_meta (GESMetaContainer * container, GESMetaFlag flags,
     return FALSE;
   }
 
-  static_item = g_slice_new0 (RegisteredMeta);
+  static_item = g_new0 (RegisteredMeta, 1);
   static_item->item_type = type;
   static_item->flags = flags;
   g_hash_table_insert (data->static_items, g_strdup (meta_item), static_item);
