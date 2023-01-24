@@ -84,7 +84,7 @@ ssim_convert_info_free (SSimConverterInfo * info)
   if (info->converter)
     gst_video_converter_free (info->converter);
 
-  g_slice_free (SSimConverterInfo, info);
+  g_free (info);
 }
 
 static gboolean
@@ -256,7 +256,7 @@ gst_validate_ssim_configure_converter (GstValidateSsim * self, gint index,
   SSimConverterInfo *info = g_list_nth_data (self->priv->converters, index);
 
   if (!info) {
-    info = g_slice_new0 (SSimConverterInfo);
+    info = g_new0 (SSimConverterInfo, 1);
 
     self->priv->converters =
         g_list_insert (self->priv->converters, info, index);

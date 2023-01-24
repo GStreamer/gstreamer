@@ -499,8 +499,8 @@ _action_free (GstValidateAction * action)
   g_free (GST_VALIDATE_ACTION_FILENAME (action));
   g_free (GST_VALIDATE_ACTION_DEBUG (action));
 
-  g_slice_free (GstValidateActionPrivate, action->priv);
-  g_slice_free (GstValidateAction, action);
+  g_free (action->priv);
+  g_free (action);
 }
 
 static void
@@ -510,7 +510,7 @@ gst_validate_action_init (GstValidateAction * action)
       _gst_validate_action_type, (GstMiniObjectCopyFunction) _action_copy, NULL,
       (GstMiniObjectFreeFunction) _action_free);
 
-  action->priv = g_slice_new0 (GstValidateActionPrivate);
+  action->priv = g_new0 (GstValidateActionPrivate, 1);
 
   g_weak_ref_init (&action->priv->scenario, NULL);
 }
@@ -541,7 +541,7 @@ gst_validate_action_new (GstValidateScenario * scenario,
     GstValidateActionType * action_type, GstStructure * structure,
     gboolean add_to_lists)
 {
-  GstValidateAction *action = g_slice_new0 (GstValidateAction);
+  GstValidateAction *action = g_new0 (GstValidateAction, 1);
 
   g_assert (action_type);
 
@@ -616,7 +616,7 @@ _action_type_free (GstValidateActionType * type)
   if (type->overriden_type)
     gst_mini_object_unref (GST_MINI_OBJECT (type->overriden_type));
 
-  g_slice_free (GstValidateActionType, type);
+  g_free (type);
 }
 
 static void
@@ -632,7 +632,7 @@ gst_validate_action_type_init (GstValidateActionType * type)
 GstValidateActionType *
 gst_validate_action_type_new (void)
 {
-  GstValidateActionType *type = g_slice_new0 (GstValidateActionType);
+  GstValidateActionType *type = g_new0 (GstValidateActionType, 1);
 
   gst_validate_action_type_init (type);
 

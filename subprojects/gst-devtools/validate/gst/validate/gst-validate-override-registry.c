@@ -65,7 +65,7 @@ static void
   g_free (entry->name);
   g_object_unref (entry->override);
 
-  g_slice_free (GstValidateOverrideRegistryNameEntry, entry);
+  g_free (entry);
 }
 
 static void
@@ -74,13 +74,13 @@ static void
 {
   g_object_unref (entry->override);
 
-  g_slice_free (GstValidateOverrideRegistryGTypeEntry, entry);
+  g_free (entry);
 }
 
 static GstValidateOverrideRegistry *
 gst_validate_override_registry_new (void)
 {
-  GstValidateOverrideRegistry *reg = g_slice_new0 (GstValidateOverrideRegistry);
+  GstValidateOverrideRegistry *reg = g_new0 (GstValidateOverrideRegistry, 1);
 
   g_mutex_init (&reg->mutex);
   g_queue_init (&reg->name_overrides);
@@ -107,7 +107,7 @@ gst_validate_overide_registery_free (GstValidateOverrideRegistry * reg)
   g_queue_clear (&reg->klass_overrides);
   g_mutex_clear (&reg->mutex);
 
-  g_slice_free (GstValidateOverrideRegistry, reg);
+  g_free (reg);
 }
 
 /**
@@ -131,7 +131,7 @@ gst_validate_override_register_by_name (const gchar * name,
 {
   GstValidateOverrideRegistry *registry = gst_validate_override_registry_get ();
   GstValidateOverrideRegistryNameEntry *entry =
-      g_slice_new (GstValidateOverrideRegistryNameEntry);
+      g_new (GstValidateOverrideRegistryNameEntry, 1);
 
   GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (registry);
   entry->name = g_strdup (name);
@@ -146,7 +146,7 @@ gst_validate_override_register_by_type (GType gtype,
 {
   GstValidateOverrideRegistry *registry = gst_validate_override_registry_get ();
   GstValidateOverrideRegistryGTypeEntry *entry =
-      g_slice_new (GstValidateOverrideRegistryGTypeEntry);
+      g_new (GstValidateOverrideRegistryGTypeEntry, 1);
 
   GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (registry);
   entry->gtype = gtype;
@@ -161,7 +161,7 @@ gst_validate_override_register_by_klass (const gchar * klass,
 {
   GstValidateOverrideRegistry *registry = gst_validate_override_registry_get ();
   GstValidateOverrideRegistryNameEntry *entry =
-      g_slice_new (GstValidateOverrideRegistryNameEntry);
+      g_new (GstValidateOverrideRegistryNameEntry, 1);
 
   GST_VALIDATE_OVERRIDE_REGISTRY_LOCK (registry);
   entry->name = g_strdup (klass);

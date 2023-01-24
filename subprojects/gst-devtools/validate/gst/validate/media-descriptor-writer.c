@@ -282,7 +282,7 @@ static gboolean
   g_return_val_if_fail (gst_validate_media_descriptor_get_file_node (
           (GstValidateMediaDescriptor *) writer), FALSE);
 
-  snode = g_slice_new0 (GstValidateMediaStreamNode);
+  snode = g_new0 (GstValidateMediaStreamNode, 1);
   snode->frames = NULL;
   snode->cframe = NULL;
 
@@ -291,7 +291,7 @@ static gboolean
     caps = gst_discoverer_stream_info_get_caps (info);
     capsstr = gst_caps_to_string (caps);
 
-    g_slice_free (GstValidateMediaStreamNode, snode);
+    g_free (snode);
     GST_VALIDATE_REPORT (writer, FILE_NO_STREAM_ID,
         "Stream with caps: %s has no stream ID", capsstr);
     gst_caps_unref (caps);
@@ -363,7 +363,7 @@ _uridecodebin_probe (GstPad * pad, GstPadProbeInfo * info,
             writer, pad);
         if (streamnode) {
           GstValidateSegmentNode *segment_node =
-              g_slice_new0 (GstValidateSegmentNode);
+              g_new0 (GstValidateSegmentNode, 1);
 
           gst_event_parse_segment (event, &segment);
           gst_segment_copy_into (segment, &segment_node->segment);
@@ -821,7 +821,7 @@ gst_validate_media_descriptor_writer_add_tags (GstValidateMediaDescriptorWriter
   }
 
   if (snode->tags == NULL) {
-    tagsnode = g_slice_new0 (GstValidateMediaTagsNode);
+    tagsnode = g_new0 (GstValidateMediaTagsNode, 1);
     tagsnode->str_open = g_markup_printf_escaped ("<tags>");
     tagsnode->str_close = g_markup_printf_escaped ("</tags>");
     snode->tags = tagsnode;
@@ -838,7 +838,7 @@ gst_validate_media_descriptor_writer_add_tags (GstValidateMediaDescriptorWriter
     }
   }
 
-  tagnode = g_slice_new0 (GstValidateMediaTagNode);
+  tagnode = g_new0 (GstValidateMediaTagNode, 1);
   tagnode->taglist = gst_tag_list_copy (taglist);
   str_str = gst_tag_list_to_string (tagnode->taglist);
   tagnode->str_open =
@@ -877,7 +877,7 @@ gst_validate_media_descriptor_writer_add_pad (GstValidateMediaDescriptorWriter *
     }
   }
 
-  snode = g_slice_new0 (GstValidateMediaStreamNode);
+  snode = g_new0 (GstValidateMediaStreamNode, 1);
   snode->frames = NULL;
   snode->cframe = NULL;
 
@@ -921,7 +921,7 @@ gboolean
 
   if (gst_validate_media_descriptor_get_file_node ((GstValidateMediaDescriptor
               *) writer)->tags == NULL) {
-    tagsnode = g_slice_new0 (GstValidateMediaTagsNode);
+    tagsnode = g_new0 (GstValidateMediaTagsNode, 1);
     tagsnode->str_open = g_markup_printf_escaped ("<tags>");
     tagsnode->str_close = g_markup_printf_escaped ("</tags>");
     gst_validate_media_descriptor_get_file_node ((GstValidateMediaDescriptor *)
@@ -940,7 +940,7 @@ gboolean
     }
   }
 
-  tagnode = g_slice_new0 (GstValidateMediaTagNode);
+  tagnode = g_new0 (GstValidateMediaTagNode, 1);
   tagnode->taglist = gst_tag_list_copy (taglist);
   str_str = gst_tag_list_to_string (tagnode->taglist);
   tagnode->str_open =
@@ -987,7 +987,7 @@ gst_validate_media_descriptor_writer_add_frame (GstValidateMediaDescriptorWriter
   }
 
   id = g_list_length (streamnode->frames);
-  fnode = g_slice_new0 (GstValidateMediaFrameNode);
+  fnode = g_new0 (GstValidateMediaFrameNode, 1);
 
   g_assert (gst_buffer_map (buf, &map, GST_MAP_READ));
   checksum = g_compute_checksum_for_data (G_CHECKSUM_MD5,

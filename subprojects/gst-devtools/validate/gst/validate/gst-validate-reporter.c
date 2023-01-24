@@ -73,7 +73,7 @@ _free_priv (GstValidateReporterPrivate * priv)
   g_free (priv->name);
   g_mutex_clear (&priv->reports_lock);
   g_weak_ref_clear (&priv->runner);
-  g_slice_free (GstValidateReporterPrivate, priv);
+  g_free (priv);
 }
 
 static GstValidateReporterPrivate *
@@ -84,7 +84,7 @@ gst_validate_reporter_get_priv (GstValidateReporter * reporter)
   priv = g_object_get_data (G_OBJECT (reporter), REPORTER_PRIVATE);
 
   if (priv == NULL) {
-    priv = g_slice_new0 (GstValidateReporterPrivate);
+    priv = g_new0 (GstValidateReporterPrivate, 1);
     priv->reports = g_hash_table_new_full (g_direct_hash,
         g_direct_equal, NULL, (GDestroyNotify) gst_validate_report_unref);
 

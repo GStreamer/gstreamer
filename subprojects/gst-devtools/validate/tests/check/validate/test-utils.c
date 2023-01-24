@@ -37,7 +37,7 @@ check_destroyed (gpointer object_to_unref, gpointer first_object, ...)
   gint i = 0;
   GObject *object;
   GList *objs = NULL, *tmp;
-  DestroyedObjectStruct *destroyed = g_slice_new0 (DestroyedObjectStruct);
+  DestroyedObjectStruct *destroyed = g_new0 (DestroyedObjectStruct, 1);
 
   destroyed->object = G_OBJECT (object_to_unref);
   g_object_weak_ref (G_OBJECT (object_to_unref), (GWeakNotify) weak_notify,
@@ -51,7 +51,7 @@ check_destroyed (gpointer object_to_unref, gpointer first_object, ...)
 
     va_start (varargs, first_object);
     while (object) {
-      destroyed = g_slice_new0 (DestroyedObjectStruct);
+      destroyed = g_new0 (DestroyedObjectStruct, 1);
       destroyed->object = object;
       g_object_weak_ref (object, (GWeakNotify) weak_notify, destroyed);
       objs = g_list_append (objs, destroyed);
@@ -65,7 +65,7 @@ check_destroyed (gpointer object_to_unref, gpointer first_object, ...)
     fail_unless (((DestroyedObjectStruct *) tmp->data)->destroyed == TRUE,
         "%p is not destroyed (object nb %i)",
         ((DestroyedObjectStruct *) tmp->data)->object, i);
-    g_slice_free (DestroyedObjectStruct, tmp->data);
+    g_free (tmp->data);
     i++;
   }
   g_list_free (objs);

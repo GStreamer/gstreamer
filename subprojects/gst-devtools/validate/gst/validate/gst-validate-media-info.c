@@ -682,7 +682,7 @@ setup_input_selector_counters (GstElement * element)
     switch (gst_iterator_next (iterator, &value)) {
       case GST_ITERATOR_OK:
         pad = g_value_dup_object (&value);
-        bcd = g_slice_new0 (BufferCountData);
+        bcd = g_new0 (BufferCountData, 1);
         g_object_set_data (G_OBJECT (pad), "buffer-count-data", bcd);
         bcd->probe_id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
             (GstPadProbeCallback) input_selector_pad_probe, NULL, NULL);
@@ -791,7 +791,7 @@ check_and_remove_input_selector_counters (GstElement * element,
 
   for (id = 0; id < element->numpads; ++id) {
     gst_object_unref (bcds[id]->pad);
-    g_slice_free (BufferCountData, bcds[id]);
+    g_free (bcds[id]);
   }
   g_free (bcds);
   return ret;

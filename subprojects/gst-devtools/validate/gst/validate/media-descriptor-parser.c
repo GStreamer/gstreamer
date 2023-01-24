@@ -85,7 +85,7 @@ deserialize_streamnode (const gchar ** names, const gchar ** values)
 {
   gint i;
   GstValidateMediaStreamNode
-      * streamnode = g_slice_new0 (GstValidateMediaStreamNode);
+      * streamnode = g_new0 (GstValidateMediaStreamNode, 1);
 
   for (i = 0; names[i] != NULL; i++) {
     if (g_strcmp0 (names[i], "id") == 0)
@@ -104,7 +104,7 @@ static GstValidateSegmentNode *
 deserialize_segmentnode (const gchar ** names, const gchar ** values)
 {
   gint i;
-  GstValidateSegmentNode *node = g_slice_new0 (GstValidateSegmentNode);
+  GstValidateSegmentNode *node = g_new0 (GstValidateSegmentNode, 1);
 
   for (i = 0; names[i] != NULL; i++) {
     if (!g_strcmp0 (names[i], "next-frame-id"))
@@ -139,7 +139,7 @@ deserialize_segmentnode (const gchar ** names, const gchar ** values)
 static GstValidateMediaTagsNode *
 deserialize_tagsnode (const gchar ** names, const gchar ** values)
 {
-  GstValidateMediaTagsNode *tagsnode = g_slice_new0 (GstValidateMediaTagsNode);
+  GstValidateMediaTagsNode *tagsnode = g_new0 (GstValidateMediaTagsNode, 1);
 
   return tagsnode;
 }
@@ -148,7 +148,7 @@ static GstValidateMediaTagNode *
 deserialize_tagnode (const gchar ** names, const gchar ** values)
 {
   gint i;
-  GstValidateMediaTagNode *tagnode = g_slice_new0 (GstValidateMediaTagNode);
+  GstValidateMediaTagNode *tagnode = g_new0 (GstValidateMediaTagNode, 1);
 
   for (i = 0; names[i] != NULL; i++) {
     if (g_strcmp0 (names[i], "content") == 0)
@@ -163,8 +163,7 @@ deserialize_framenode (const gchar ** names, const gchar ** values)
 {
   gint i;
 
-  GstValidateMediaFrameNode *framenode =
-      g_slice_new0 (GstValidateMediaFrameNode);
+  GstValidateMediaFrameNode *framenode = g_new0 (GstValidateMediaFrameNode, 1);
 
 /* *INDENT-OFF* */
 #define IF_SET_UINT64_FIELD(name,fieldname) \

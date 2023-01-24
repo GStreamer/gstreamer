@@ -353,7 +353,7 @@ static void
 _serialized_event_data_free (SerializedEventData * serialized_event)
 {
   gst_event_unref (serialized_event->event);
-  g_slice_free (SerializedEventData, serialized_event);
+  g_free (serialized_event);
 }
 
 static gboolean gst_validate_pad_monitor_do_setup (GstValidateMonitor *
@@ -894,7 +894,7 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
 static void
 seek_data_free (GstValidatePadSeekData * data)
 {
-  g_slice_free (GstValidatePadSeekData, data);
+  g_free (data);
 }
 
 static GstValidatePadSeekData *
@@ -1505,7 +1505,7 @@ static void
         otherpad = g_value_get_object (&value);
         othermonitor = _GET_PAD_MONITOR (otherpad);
         if (othermonitor) {
-          SerializedEventData *data = g_slice_new0 (SerializedEventData);
+          SerializedEventData *data = g_new0 (SerializedEventData, 1);
           data->timestamp = last_ts;
           data->event = gst_event_ref (event);
           GST_VALIDATE_MONITOR_LOCK (othermonitor);
@@ -2151,7 +2151,7 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
 static GstValidatePadSeekData *
 _store_seek_event_data (GstValidatePadMonitor * pad_monitor, GstEvent * event)
 {
-  GstValidatePadSeekData *data = g_slice_new0 (GstValidatePadSeekData);
+  GstValidatePadSeekData *data = g_new0 (GstValidatePadSeekData, 1);
 
   data->seqnum = gst_event_get_seqnum (event);
   gst_event_parse_seek (event, &data->rate, &data->format, &data->flags,
@@ -2190,7 +2190,7 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
       /* Remove failed seek from list */
       GST_LOG_OBJECT (pad, "Failed seek, removing stored seek data");
       pad_monitor->seeks = g_list_remove (pad_monitor->seeks, seekdata);
-      g_slice_free (GstValidatePadSeekData, seekdata);
+      g_free (seekdata);
     }
   }
 

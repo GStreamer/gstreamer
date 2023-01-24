@@ -136,7 +136,7 @@ gst_validate_issue_unref (GstValidateIssue * issue)
     /* We are using an string array for area and name */
     g_strfreev (&issue->area);
 
-    g_slice_free (GstValidateIssue, issue);
+    g_free (issue);
   }
 }
 
@@ -250,7 +250,7 @@ gst_validate_issue_new_full (GstValidateIssueId issue_id, const gchar * summary,
     return NULL;
   }
 
-  issue = g_slice_new (GstValidateIssue);
+  issue = g_new (GstValidateIssue, 1);
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
@@ -287,7 +287,7 @@ gst_validate_issue_new (GstValidateIssueId issue_id, const gchar * summary,
     return NULL;
   }
 
-  issue = g_slice_new (GstValidateIssue);
+  issue = g_new (GstValidateIssue, 1);
   issue->issue_id = issue_id;
   issue->summary = g_strdup (summary);
   issue->description = g_strdup (description);
@@ -854,7 +854,7 @@ _report_free (GstValidateReport * report)
   g_list_free_full (report->repeated_reports,
       (GDestroyNotify) gst_validate_report_unref);
   g_mutex_clear (&report->shadow_reports_lock);
-  g_slice_free (GstValidateReport, report);
+  g_free (report);
 }
 
 static gboolean
@@ -889,7 +889,7 @@ GstValidateReport *
 gst_validate_report_new (GstValidateIssue * issue,
     GstValidateReporter * reporter, const gchar * message)
 {
-  GstValidateReport *report = g_slice_new0 (GstValidateReport);
+  GstValidateReport *report = g_new0 (GstValidateReport, 1);
   GstValidateReportingDetails reporter_details, default_details,
       issue_type_details;
   GstValidateRunner *runner = gst_validate_reporter_get_runner (reporter);
