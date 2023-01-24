@@ -98,7 +98,7 @@ G_DEFINE_TYPE (GstH264Timestamper,
     gst_h264_timestamper, GST_TYPE_CODEC_TIMESTAMPER);
 
 GST_ELEMENT_REGISTER_DEFINE (h264timestamper, "h264timestamper",
-    GST_RANK_NONE, GST_TYPE_H264_TIMESTAMPER);
+    GST_RANK_MARGINAL, GST_TYPE_H264_TIMESTAMPER);
 
 static void
 gst_h264_timestamper_class_init (GstH264TimestamperClass * klass)
@@ -111,7 +111,7 @@ gst_h264_timestamper_class_init (GstH264TimestamperClass * klass)
   gst_element_class_add_static_pad_template (element_class, &srctemplate);
 
   gst_element_class_set_static_metadata (element_class, "H.264 timestamper",
-      "Codec/Video", "Timestamp H.264 streams",
+      "Codec/Video/Timestamper", "Timestamp H.264 streams",
       "Seungha Yang <seungha@centricular.com>");
 
   timestamper_class->start = GST_DEBUG_FUNCPTR (gst_h264_timestamper_start);
