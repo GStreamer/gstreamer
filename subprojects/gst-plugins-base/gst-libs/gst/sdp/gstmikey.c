@@ -684,7 +684,7 @@ gst_mikey_payload_key_data_set_spi (GstMIKEYPayload * payload,
  * gst_mikey_payload_key_data_set_interval:
  * @payload: a #GstMIKEYPayload
  * @vf_len: the length of @vf_data
- * @vf_data: (array length=vf_data): the Valid From data
+ * @vf_data: (array length=vf_len): the Valid From data
  * @vt_len: the length of @vt_data
  * @vt_data: (array length=vt_len): the Valid To data
  *
