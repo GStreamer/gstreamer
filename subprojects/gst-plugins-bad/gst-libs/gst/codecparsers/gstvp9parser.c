@@ -59,7 +59,7 @@ static gboolean initialized = FALSE;
 #define gst_vp9_read_bit(br) gst_bit_reader_get_bits_uint8_unchecked(br, 1)
 #define gst_vp9_read_bits(br, bits) gst_bit_reader_get_bits_uint32_unchecked(br, bits)
 
-#define GST_VP9_PARSER_GET_PRIVATE(parser)  ((GstVp9ParserPrivate *)(parser->priv))
+#define GST_VP9_PARSER_GET_PRIVATE(parser)  ((GstVp9ParserPrivate *)(parser))
 
 typedef struct _ReferenceSize
 {
@@ -69,6 +69,11 @@ typedef struct _ReferenceSize
 
 typedef struct
 {
+  /* Public part of the struct */
+  GstVp9Parser parser;
+
+  /* Private part of the struct for tracking state variables across frames */
+
   /* for loop filters */
   gint8 ref_deltas[GST_VP9_MAX_REF_LF_DELTAS];
   gint8 mode_deltas[GST_VP9_MAX_MODE_LF_DELTAS];
@@ -587,16 +592,18 @@ setup_past_independence (GstVp9Parser * parser,
 static void
 gst_vp9_parser_reset (GstVp9Parser * parser)
 {
-  GstVp9ParserPrivate *priv = parser->priv;
+  GstVp9ParserPrivate *priv = GST_VP9_PARSER_GET_PRIVATE (parser);
+  GstVp9Parser saved_vals = *parser;
 
-  parser->priv = NULL;
-  memset (parser->mb_segment_tree_probs, 0,
-      sizeof (parser->mb_segment_tree_probs));
-  memset (parser->segment_pred_probs, 0, sizeof (parser->segment_pred_probs));
-  memset (parser->segmentation, 0, sizeof (parser->segmentation));
-
+  /* Reset almost everything in private struct and public struct */
   memset (priv, 0, sizeof (GstVp9ParserPrivate));
-  parser->priv = priv;
+
+  /* Restore the fields we want to keep as-is */
+  parser->subsampling_x = saved_vals.subsampling_x;
+  parser->subsampling_y = saved_vals.subsampling_y;
+  parser->bit_depth = saved_vals.bit_depth;
+  parser->color_space = saved_vals.color_space;
+  parser->color_range = saved_vals.color_range;
 }
 
 static GstVp9ParserResult
@@ -631,13 +638,14 @@ gst_vp9_parser_update (GstVp9Parser * parser, GstVp9FrameHdr * const frame_hdr)
 GstVp9Parser *
 gst_vp9_parser_new (void)
 {
+  GstVp9ParserPrivate *priv;
   GstVp9Parser *parser;
 
   INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("Create VP9 Parser");
 
-  parser = g_new0 (GstVp9Parser, 1);
-  parser->priv = g_new0 (GstVp9ParserPrivate, 1);
+  priv = g_new0 (GstVp9ParserPrivate, 1);
+  parser = &priv->parser;
   parser->subsampling_x = parser->subsampling_y = -1;
 
   return parser;
@@ -655,11 +663,8 @@ void
 gst_vp9_parser_free (GstVp9Parser * parser)
 {
   if (parser) {
-    if (parser->priv) {
-      g_free (parser->priv);
-      parser->priv = NULL;
-    }
-    g_free (parser);
+    GstVp9ParserPrivate *priv = GST_VP9_PARSER_GET_PRIVATE (parser);
+    g_free (priv);
   }
 }
 

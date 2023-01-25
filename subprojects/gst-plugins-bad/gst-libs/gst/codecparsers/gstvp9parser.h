@@ -490,8 +490,9 @@ struct _GstVp9Segmentation
  */
 struct _GstVp9Parser
 {
-  /* private struct for tracking state variables across frames */
-  void *priv;
+#ifndef GST_REMOVE_DEPRECATED
+  void *priv;          /* unused, kept around for ABI compatibility */
+#endif
 
   gint subsampling_x;
   gint subsampling_y;
