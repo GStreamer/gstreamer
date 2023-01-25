@@ -30,11 +30,11 @@
 #ifdef SHM_PIPE_USE_GLIB
 #include <glib.h>
 
-#define spalloc_new(type) g_slice_new (type)
-#define spalloc_alloc(size) g_slice_alloc (size)
+#define spalloc_new(type) g_new (type,1)
+#define spalloc_alloc(size) g_malloc (size)
 
-#define spalloc_free(type, buf) g_slice_free (type, buf)
-#define spalloc_free1(size, buf) g_slice_free1 (size, buf)
+#define spalloc_free(type, buf) g_free (buf)
+#define spalloc_free1(size, buf) g_free (buf)
 
 #else
 

@@ -175,7 +175,7 @@ gst_shm_sink_allocator_free (GstAllocator * allocator, GstMemory * mem)
   }
   gst_object_unref (mem->allocator);
 
-  g_slice_free (GstShmSinkMemory, mymem);
+  g_free (mymem);
 }
 
 static gpointer
@@ -206,7 +206,7 @@ gst_shm_sink_allocator_mem_share (GstMemory * mem, gssize offset, gssize size)
   if (size == -1)
     size = mem->size - offset;
 
-  mysub = g_slice_new0 (GstShmSinkMemory);
+  mysub = g_new0 (GstShmSinkMemory, 1);
   /* the shared memory is always readonly */
   gst_memory_init (GST_MEMORY_CAST (mysub), GST_MINI_OBJECT_FLAGS (parent) |
       GST_MINI_OBJECT_FLAG_LOCK_READONLY, gst_object_ref (mem->allocator),
@@ -271,7 +271,7 @@ gst_shm_sink_allocator_alloc_locked (GstShmSinkAllocator * self, gsize size,
         "Allocated block %p with %" G_GSIZE_FORMAT " bytes at %p", block, size,
         sp_writer_block_get_buf (block));
 
-    mymem = g_slice_new0 (GstShmSinkMemory);
+    mymem = g_new0 (GstShmSinkMemory, 1);
     memory = GST_MEMORY_CAST (mymem);
     mymem->data = sp_writer_block_get_buf (block);
     mymem->sink = gst_object_ref (self->sink);
@@ -630,7 +630,7 @@ gst_shm_sink_stop (GstBaseSink * bsink)
         (sp_buffer_free_callback) gst_buffer_unref, NULL);
     g_signal_emit (self, signals[SIGNAL_CLIENT_DISCONNECTED], 0,
         client->pollfd.fd);
-    g_slice_free (struct GstShmClient, client);
+    g_free (client);
   }
 
   gst_poll_free (self->poll);
@@ -877,7 +877,7 @@ pollthread_func (gpointer data)
         return NULL;
       }
 
-      gclient = g_slice_new (struct GstShmClient);
+      gclient = g_new (struct GstShmClient, 1);
       gclient->client = client;
       gst_poll_fd_init (&gclient->pollfd);
       gclient->pollfd.fd = sp_writer_get_client_fd (client);
@@ -943,7 +943,7 @@ pollthread_func (gpointer data)
 
       g_signal_emit (self, signals[SIGNAL_CLIENT_DISCONNECTED], 0,
           gclient->pollfd.fd);
-      g_slice_free (struct GstShmClient, gclient);
+      g_free (gclient);
 
       goto again;
     }

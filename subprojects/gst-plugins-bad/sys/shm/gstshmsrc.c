@@ -233,7 +233,7 @@ gst_shm_src_start_reading (GstShmSrc * self)
     return FALSE;
   }
 
-  gstpipe = g_slice_new0 (GstShmPipe);
+  gstpipe = g_new0 (GstShmPipe, 1);
   gstpipe->use_count = 1;
   gstpipe->src = gst_object_ref (self);
 
@@ -316,7 +316,7 @@ free_buffer (gpointer data)
 
   gst_shm_pipe_dec (gsb->pipe);
 
-  g_slice_free (struct GstShmBuffer, gsb);
+  g_free (gsb);
 }
 
 static GstFlowReturn
@@ -380,7 +380,7 @@ gst_shm_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   GST_LOG_OBJECT (self, "Got buffer %p of size %d", buf, rv);
 
-  gsb = g_slice_new0 (struct GstShmBuffer);
+  gsb = g_new0 (struct GstShmBuffer, 1);
   gsb->buf = buf;
   gsb->pipe = pipe;
 
@@ -476,5 +476,5 @@ gst_shm_pipe_dec (GstShmPipe * pipe)
   GST_OBJECT_UNLOCK (pipe->src);
 
   gst_object_unref (pipe->src);
-  g_slice_free (GstShmPipe, pipe);
+  g_free (pipe);
 }
