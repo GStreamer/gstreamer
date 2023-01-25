@@ -431,6 +431,9 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
     if (lang != NULL)
       tags = gst_tag_list_new (GST_TAG_LANGUAGE_CODE, lang, NULL);
 
+    if (tags)
+      gst_adaptive_demux2_stream_set_tags (stream, gst_tag_list_ref (tags));
+
     track = gst_adaptive_demux_track_new (demux, stream_type,
         GST_STREAM_FLAG_NONE, (gchar *) stream_id, create_mss_caps (mss_stream,
             caps), tags);
@@ -442,9 +445,6 @@ gst_mss_demux_setup_streams (GstAdaptiveDemux * demux)
 
     GST_DEBUG_OBJECT (stream, "Current quality bitrate %" G_GUINT64_FORMAT,
         gst_mss_stream_get_current_bitrate (manifeststream));
-
-    if (tags)
-      gst_adaptive_demux2_stream_set_tags (stream, tags);
 
     active_streams = g_slist_prepend (active_streams, mss_stream);
   }

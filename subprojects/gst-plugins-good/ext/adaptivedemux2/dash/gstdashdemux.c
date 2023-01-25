@@ -879,6 +879,9 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
     GST_ADAPTIVE_DEMUX2_STREAM_CAST (stream)->stream_type = streamtype;
 
     g_free (stream_id);
+    if (tags)
+      gst_adaptive_demux2_stream_set_tags (GST_ADAPTIVE_DEMUX2_STREAM_CAST
+          (stream), gst_tag_list_ref (tags));
 
     gst_adaptive_demux2_add_stream (GST_ADAPTIVE_DEMUX_CAST (demux),
         GST_ADAPTIVE_DEMUX2_STREAM_CAST (stream));
@@ -901,9 +904,6 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
         || gst_structure_has_name (s, "audio/x-m4a");
     gst_adaptive_demux2_stream_set_caps (GST_ADAPTIVE_DEMUX2_STREAM_CAST
         (stream), caps);
-    if (tags)
-      gst_adaptive_demux2_stream_set_tags (GST_ADAPTIVE_DEMUX2_STREAM_CAST
-          (stream), tags);
     stream->index = i;
 
     if (active_stream->cur_adapt_set &&

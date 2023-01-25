@@ -2896,6 +2896,7 @@ gst_adaptive_demux2_stream_set_caps (GstAdaptiveDemux2Stream * stream,
 }
 
 /* must be called with manifest_lock taken */
+/* @tags: transfer full */
 void
 gst_adaptive_demux2_stream_set_tags (GstAdaptiveDemux2Stream * stream,
     GstTagList * tags)
