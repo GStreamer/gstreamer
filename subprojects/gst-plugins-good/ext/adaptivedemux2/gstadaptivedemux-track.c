@@ -927,8 +927,8 @@ gst_adaptive_demux_track_new (GstAdaptiveDemux * demux,
   track->generic_caps = caps;
   track->stream_object = gst_stream_new (track->stream_id, caps, type, flags);
   if (tags) {
-    track->tags = gst_tag_list_ref (tags);
     gst_stream_set_tags (track->stream_object, tags);
+    track->tags = tags;
   }
 
   track->selected = FALSE;
