@@ -632,20 +632,12 @@ GstVp9Parser *
 gst_vp9_parser_new (void)
 {
   GstVp9Parser *parser;
-  GstVp9ParserPrivate *priv;
 
   INITIALIZE_DEBUG_CATEGORY;
   GST_DEBUG ("Create VP9 Parser");
 
   parser = g_new0 (GstVp9Parser, 1);
-  if (!parser)
-    return NULL;
-
-  priv = g_new0 (GstVp9ParserPrivate, 1);
-  if (!priv)
-    return NULL;
-
-  parser->priv = priv;
+  parser->priv = g_new0 (GstVp9ParserPrivate, 1);
   parser->subsampling_x = parser->subsampling_y = -1;
 
   return parser;
