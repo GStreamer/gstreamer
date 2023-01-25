@@ -24,7 +24,7 @@ variables:
   GIT_DEPTH: 1
 
   # Branch to track for modules that have no ref specified in the manifest
-  GST_UPSTREAM_BRANCH: 'main'
+  GST_UPSTREAM_BRANCH: '1.22'
 
   FDO_UPSTREAM_REPO: 'gstreamer/gstreamer'
 
@@ -472,7 +472,6 @@ build msys2 :
     - >
       ./gst-env.py
       gst-validate-launcher ${TEST_SUITE}
-      --check-bugs
       --dump-on-failure
       --mute
       --shuffle
