@@ -4643,8 +4643,8 @@ gst_v4l2_object_stop (GstV4l2Object * v4l2object)
         if (old_pool)
           gst_object_unref (old_pool);
       }
-      gst_object_unref (pool);
     }
+    gst_object_unref (pool);
   }
 
   GST_V4L2_SET_INACTIVE (v4l2object);
