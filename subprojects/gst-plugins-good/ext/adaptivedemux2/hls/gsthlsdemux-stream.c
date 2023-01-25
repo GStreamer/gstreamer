@@ -1057,10 +1057,11 @@ gst_hls_demux_stream_data_received (GstAdaptiveDemux2Stream * stream,
   }
 
   if (!hls_stream->pdt_tag_sent && file != NULL && file->datetime != NULL) {
+    GstDateTime *pdt_time = gst_date_time_new_from_g_date_time (g_date_time_ref
+        (file->datetime));
     gst_adaptive_demux2_stream_set_tags (stream,
-        gst_tag_list_new (GST_TAG_DATE_TIME,
-            gst_date_time_new_from_g_date_time (g_date_time_ref
-                (file->datetime)), NULL));
+        gst_tag_list_new (GST_TAG_DATE_TIME, pdt_time, NULL));
+    gst_date_time_unref (pdt_time);
     hls_stream->pdt_tag_sent = TRUE;
   }
 
