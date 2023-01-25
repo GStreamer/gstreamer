@@ -234,7 +234,7 @@ gst_kms_allocator_free (GstAllocator * allocator, GstMemory * mem)
   kmsmem = (GstKMSMemory *) mem;
 
   gst_kms_allocator_memory_reset (alloc, kmsmem);
-  g_slice_free (GstKMSMemory, kmsmem);
+  g_free (kmsmem);
 }
 
 static void
@@ -460,16 +460,14 @@ gst_kms_allocator_bo_alloc (GstAllocator * allocator, GstVideoInfo * vinfo)
   GstKMSMemory *kmsmem;
   GstMemory *mem;
 
-  kmsmem = g_slice_new0 (GstKMSMemory);
-  if (!kmsmem)
-    return NULL;
+  kmsmem = g_new0 (GstKMSMemory, 1);
 
   alloc = GST_KMS_ALLOCATOR (allocator);
 
   mem = GST_MEMORY_CAST (kmsmem);
 
   if (!gst_kms_allocator_memory_create (alloc, kmsmem, vinfo)) {
-    g_slice_free (GstKMSMemory, kmsmem);
+    g_free (kmsmem);
     return NULL;
   }
 
@@ -498,9 +496,7 @@ gst_kms_allocator_dmabuf_import (GstAllocator * allocator, gint * prime_fds,
 
   g_return_val_if_fail (n_planes <= GST_VIDEO_MAX_PLANES, FALSE);
 
-  kmsmem = g_slice_new0 (GstKMSMemory);
-  if (!kmsmem)
-    return FALSE;
+  kmsmem = g_new0 (GstKMSMemory, 1);
 
   mem = GST_MEMORY_CAST (kmsmem);
   gst_memory_init (mem, GST_MEMORY_FLAG_NO_SHARE, allocator, NULL,
