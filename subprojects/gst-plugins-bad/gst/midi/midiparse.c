@@ -829,7 +829,7 @@ parse_MTrk (GstMidiParse * midiparse, guint8 * data, guint size)
   if (midiparse->track_count >= midiparse->ntracks)
     return TRUE;
 
-  track = g_slice_new (GstMidiTrack);
+  track = g_new (GstMidiTrack, 1);
   track->data = data;
   track->size = size;
   reset_track (track, midiparse);
@@ -1293,7 +1293,7 @@ pause:
 static void
 free_track (GstMidiTrack * track, GstMidiParse * midiparse)
 {
-  g_slice_free (GstMidiTrack, track);
+  g_free (track);
 }
 
 static void
