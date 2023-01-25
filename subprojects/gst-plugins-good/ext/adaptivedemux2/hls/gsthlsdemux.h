@@ -81,9 +81,6 @@ struct _GstHLSDemux2
   /* Initial bitrate to use before any bandwidth measurement */
   guint start_bitrate;
 
-  /* Whether LL-HLS (Low Latency HLS) features are enabled */
-  gboolean llhls_enabled;
-
   /* Decryption key cache: url => GstHLSKey */
   GHashTable *keys;
   GMutex      keys_lock;

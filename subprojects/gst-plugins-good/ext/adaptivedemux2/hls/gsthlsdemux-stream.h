@@ -69,11 +69,6 @@ struct _GstHLSDemuxStream
   /* A stream either variants or renditions */
   gboolean is_variant;
 
-  /* A copy of the demuxer flag, stored when the
-   * stream is created, so it can't change after
-   * the stream starts downloading things */
-  gboolean llhls_enabled;
-
   /* Rendition-specific fields */
   GstStreamType rendition_type;	/* FIXME: Also used by variant streams */
   gchar *lang;

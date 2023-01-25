@@ -61,7 +61,7 @@ struct _GstHLSDemuxPlaylistLoader
 GType gst_hls_demux_playlist_loader_get_type(void);
 
 GstHLSDemuxPlaylistLoader *gst_hls_demux_playlist_loader_new(GstAdaptiveDemux *demux,
-    DownloadHelper *download_helper, gboolean llhls_enabled);
+    DownloadHelper *download_helper);
 
 void gst_hls_demux_playlist_loader_set_callbacks (GstHLSDemuxPlaylistLoader *pl,
       GstHLSDemuxPlaylistLoaderSuccessCallback success_cb,

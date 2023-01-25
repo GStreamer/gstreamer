@@ -72,11 +72,9 @@ enum
   PROP_0,
 
   PROP_START_BITRATE,
-  PROP_LLHLS_ENABLED,
 };
 
 #define DEFAULT_START_BITRATE 0
-#define DEFAULT_LLHLS_ENABLED TRUE
 
 /* GObject */
 static void gst_hls_demux_finalize (GObject * obj);
@@ -141,9 +139,6 @@ gst_hls_demux_set_property (GObject * object, guint prop_id,
     case PROP_START_BITRATE:
       demux->start_bitrate = g_value_get_uint (value);
       break;
-    case PROP_LLHLS_ENABLED:
-      demux->llhls_enabled = g_value_get_boolean (value);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -159,9 +154,6 @@ gst_hls_demux_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_START_BITRATE:
       g_value_set_uint (value, demux->start_bitrate);
-      break;
-    case PROP_LLHLS_ENABLED:
-      g_value_set_boolean (value, demux->llhls_enabled);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -201,11 +193,6 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
           0, G_MAXUINT, DEFAULT_START_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_LLHLS_ENABLED,
-      g_param_spec_boolean ("llhls-enabled", "Enable LL-HLS support",
-          "Enable support for LL-HLS (Low Latency HLS) downloads",
-          DEFAULT_LLHLS_ENABLED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_hls_demux_change_state);
 
   gst_element_class_add_static_pad_template (element_class, &sinktemplate);
@@ -232,7 +219,6 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
 static void
 gst_hls_demux2_init (GstHLSDemux * demux)
 {
-  demux->llhls_enabled = DEFAULT_LLHLS_ENABLED;
   demux->keys = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
   g_mutex_init (&demux->keys_lock);
 }
@@ -438,8 +424,7 @@ create_common_hls_stream (GstHLSDemux * demux, const gchar * name)
 {
   GstAdaptiveDemux2Stream *stream;
 
-  stream = g_object_new (GST_TYPE_HLS_DEMUX_STREAM, "name", name,
-      "llhls-enabled", demux->llhls_enabled, NULL);
+  stream = g_object_new (GST_TYPE_HLS_DEMUX_STREAM, "name", name, NULL);
 
   gst_adaptive_demux2_add_stream ((GstAdaptiveDemux *) demux, stream);
 
@@ -760,7 +745,7 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
     }
 
     if (!gst_hls_media_playlist_get_starting_segment (simple_media_playlist,
-            hlsdemux->main_stream->llhls_enabled, &seek_result)) {
+            &seek_result)) {
       GST_DEBUG_OBJECT (hlsdemux->main_stream,
           "Failed to find a segment to start at");
       return FALSE;
@@ -1231,7 +1216,7 @@ gst_hls_demux_reset_for_lost_sync (GstHLSDemux * hlsdemux)
       /* Resynchronize the variant stream */
       g_assert (stream->current_position != GST_CLOCK_STIME_NONE);
       if (gst_hls_media_playlist_get_starting_segment (hls_stream->playlist,
-              hls_stream->llhls_enabled, &seek_result)) {
+              &seek_result)) {
         hls_stream->current_segment = seek_result.segment;
         hls_stream->in_partial_segments = seek_result.found_partial_segment;
         hls_stream->part_idx = seek_result.part_idx;
@@ -1371,8 +1356,8 @@ gst_hls_demux_get_live_seek_range (GstAdaptiveDemux * demux, gint64 * start,
 
   if (hlsdemux->main_playlist) {
     ret =
-        gst_hls_media_playlist_get_seek_range (hlsdemux->main_playlist,
-        hlsdemux->llhls_enabled, start, stop);
+        gst_hls_media_playlist_get_seek_range (hlsdemux->main_playlist, start,
+        stop);
   }
 
   return ret;

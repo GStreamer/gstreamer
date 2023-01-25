@@ -524,8 +524,7 @@ GST_START_TEST (test_playlist_with_doubles_duration)
   assert_equals_float (file->duration / (double) GST_SECOND, 10.2344);
   file = GST_M3U8_MEDIA_SEGMENT (g_ptr_array_index (pl->segments, 3));
   assert_equals_float (file->duration / (double) GST_SECOND, 9.92);
-  fail_unless (gst_hls_media_playlist_get_seek_range (pl, FALSE, &start,
-          &stop));
+  fail_unless (gst_hls_media_playlist_get_seek_range (pl, &start, &stop));
   assert_equals_int64 (start, 0);
   assert_equals_float (stop / (double) GST_SECOND,
       10.321 + 9.6789 + 10.2344 + 9.92);
@@ -705,7 +704,7 @@ GST_START_TEST (test_advance_fragment)
   pl = load_m3u8 (BYTE_RANGES_PLAYLIST);
 
   /* Check the next fragment */
-  fail_unless (gst_hls_media_playlist_get_starting_segment (pl, FALSE,
+  fail_unless (gst_hls_media_playlist_get_starting_segment (pl,
           &seek_result) == TRUE);
 
   mf = seek_result.segment;
@@ -719,7 +718,7 @@ GST_START_TEST (test_advance_fragment)
   gst_m3u8_media_segment_unref (mf);
 
   /* Check next media segments */
-  mf = gst_hls_media_playlist_advance_fragment (pl, mf, TRUE, FALSE);
+  mf = gst_hls_media_playlist_advance_fragment (pl, mf, TRUE);
   fail_unless (mf != NULL);
   assert_equals_int (mf->discont, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
@@ -730,7 +729,7 @@ GST_START_TEST (test_advance_fragment)
   gst_m3u8_media_segment_unref (mf);
 
   /* Check next media segments */
-  mf = gst_hls_media_playlist_advance_fragment (pl, mf, TRUE, FALSE);
+  mf = gst_hls_media_playlist_advance_fragment (pl, mf, TRUE);
   assert_equals_int (mf->discont, FALSE);
   assert_equals_string (mf->uri, "http://media.example.com/all.ts");
   assert_equals_uint64 (mf->stream_time, 20 * GST_SECOND);

@@ -44,15 +44,6 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_hls_demux2_debug);
 #define GST_CAT_DEFAULT gst_hls_demux2_debug
 
-enum
-{
-  PROP_0,
-
-  PROP_LLHLS_ENABLED,
-};
-
-#define DEFAULT_LLHLS_ENABLED TRUE
-
 /* Maximum values for mpeg-ts DTS values */
 #define MPEG_TS_MAX_PTS (((((guint64)1) << 33) * (guint64)100000) / 9)
 
@@ -95,46 +86,12 @@ G_DEFINE_TYPE (GstHLSDemuxStream, gst_hls_demux_stream,
     GST_TYPE_ADAPTIVE_DEMUX2_STREAM);
 
 static void
-gst_hls_demux_stream_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstHLSDemuxStream *stream = GST_HLS_DEMUX_STREAM (object);
-
-  switch (prop_id) {
-    case PROP_LLHLS_ENABLED:
-      stream->llhls_enabled = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_hls_demux_stream_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstHLSDemuxStream *stream = GST_HLS_DEMUX_STREAM (object);
-
-  switch (prop_id) {
-    case PROP_LLHLS_ENABLED:
-      g_value_set_boolean (value, stream->llhls_enabled);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
 gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAdaptiveDemux2StreamClass *adaptivedemux2stream_class =
       GST_ADAPTIVE_DEMUX2_STREAM_CLASS (klass);
 
-  gobject_class->set_property = gst_hls_demux_stream_set_property;
-  gobject_class->get_property = gst_hls_demux_stream_get_property;
   gobject_class->finalize = gst_hls_demux_stream_finalize;
 
   adaptivedemux2stream_class->update_fragment_info =
@@ -162,10 +119,6 @@ gst_hls_demux_stream_class_init (GstHLSDemuxStreamClass * klass)
   adaptivedemux2stream_class->get_presentation_offset =
       gst_hls_demux_stream_get_presentation_offset;
 
-  g_object_class_install_property (gobject_class, PROP_LLHLS_ENABLED,
-      g_param_spec_boolean ("llhls-enabled", "Enable LL-HLS support",
-          "Enable support for LL-HLS (Low Latency HLS) downloads",
-          DEFAULT_LLHLS_ENABLED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -176,7 +129,6 @@ gst_hls_demux_stream_init (GstHLSDemuxStream * stream)
   stream->reset_pts = TRUE;
   stream->presentation_offset = 60 * GST_SECOND;
   stream->pdt_tag_sent = FALSE;
-  stream->llhls_enabled = DEFAULT_LLHLS_ENABLED;
 }
 
 void
@@ -216,8 +168,7 @@ gst_hls_demux_stream_seek (GstAdaptiveDemux2Stream * stream, gboolean forward,
   }
 
   /* Allow jumping to partial segments in the last 2 segments in LL-HLS */
-  if (hls_stream->llhls_enabled
-      && GST_HLS_MEDIA_PLAYLIST_IS_LIVE (hls_stream->playlist))
+  if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (hls_stream->playlist))
     flags |= GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
 
   GstM3U8SeekResult seek_result;
@@ -1207,8 +1158,7 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
 
   new_segment =
       gst_hls_media_playlist_advance_fragment (hlsdemux_stream->playlist,
-      hlsdemux_stream->current_segment, stream->demux->segment.rate > 0,
-      hlsdemux_stream->llhls_enabled);
+      hlsdemux_stream->current_segment, stream->demux->segment.rate > 0);
 
   if (new_segment) {
     hlsdemux_stream->reset_pts = FALSE;
@@ -1220,8 +1170,7 @@ gst_hls_demux_stream_advance_fragment (GstAdaptiveDemux2Stream * stream)
     hlsdemux_stream->current_segment = new_segment;
 
     /* In LL-HLS, handle advancing into the partial-only segment */
-    if (hlsdemux_stream->llhls_enabled
-        && GST_HLS_MEDIA_PLAYLIST_IS_LIVE (hlsdemux_stream->playlist)
+    if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (hlsdemux_stream->playlist)
         && new_segment->partial_only) {
       hlsdemux_stream->in_partial_segments = TRUE;
       hlsdemux_stream->part_idx = 0;
@@ -1261,8 +1210,7 @@ static void
 gst_hls_demux_stream_update_preloads (GstHLSDemuxStream * hlsdemux_stream)
 {
   GstHLSMediaPlaylist *playlist = hlsdemux_stream->playlist;
-  gboolean preloads_allowed = hlsdemux_stream->llhls_enabled
-      && GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist);
+  gboolean preloads_allowed = GST_HLS_MEDIA_PLAYLIST_IS_LIVE (playlist);
 
   if (playlist->preload_hints == NULL || !preloads_allowed) {
     if (hlsdemux_stream->preloader != NULL) {
@@ -1532,8 +1480,7 @@ gst_hls_demux_stream_get_playlist_loader (GstHLSDemuxStream * hls_stream)
   GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX2_STREAM_CAST (hls_stream)->demux;
   if (hls_stream->playlistloader == NULL) {
     hls_stream->playlistloader =
-        gst_hls_demux_playlist_loader_new (demux, demux->download_helper,
-        hls_stream->llhls_enabled);
+        gst_hls_demux_playlist_loader_new (demux, demux->download_helper);
     gst_hls_demux_playlist_loader_set_callbacks (hls_stream->playlistloader,
         on_playlist_update_success, on_playlist_update_error, hls_stream);
   }
@@ -1638,8 +1585,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
       GST_DEBUG_OBJECT (stream, "Setting up initial segment");
 
       if (gst_hls_media_playlist_get_starting_segment
-          (hlsdemux_stream->playlist, hlsdemux_stream->llhls_enabled,
-              &seek_result)) {
+          (hlsdemux_stream->playlist, &seek_result)) {
         hlsdemux_stream->current_segment = seek_result.segment;
         hlsdemux_stream->in_partial_segments =
             seek_result.found_partial_segment;
@@ -1797,7 +1743,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 
   stream->recommended_buffering_threshold =
       gst_hls_media_playlist_recommended_buffering_threshold
-      (hlsdemux_stream->playlist, hlsdemux_stream->llhls_enabled);
+      (hlsdemux_stream->playlist);
 
   if (discont)
     stream->discont = TRUE;

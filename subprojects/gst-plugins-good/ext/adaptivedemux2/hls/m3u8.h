@@ -312,12 +312,11 @@ gst_hls_media_playlist_has_next_fragment    (GstHLSMediaPlaylist * m3u8,
 GstM3U8MediaSegment *
 gst_hls_media_playlist_advance_fragment     (GstHLSMediaPlaylist * m3u8,
 					     GstM3U8MediaSegment * current,
-					     gboolean  forward,
-					     gboolean allow_partial_only_segment);
+					     gboolean  forward);
 
 gboolean
-gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist *self, gboolean low_latency,
-    GstM3U8SeekResult *seek_result);
+gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist *self, 
+					     GstM3U8SeekResult *seek_result);
 
 GstClockTime
 gst_hls_media_playlist_get_end_stream_time  (GstHLSMediaPlaylist * m3u8);
@@ -326,8 +325,9 @@ GstClockTime
 gst_hls_media_playlist_get_duration         (GstHLSMediaPlaylist * m3u8);
 
 void
-gst_hls_media_playlist_get_next_msn_and_part (GstHLSMediaPlaylist * m3u8, gboolean low_latency,
-		gint64 *next_msn, gint64 *next_part);
+gst_hls_media_playlist_get_next_msn_and_part (GstHLSMediaPlaylist * m3u8,
+					      gint64 *next_msn,
+					      gint64 *next_part);
 
 gchar *
 gst_hls_media_playlist_get_uri              (GstHLSMediaPlaylist * m3u8);
@@ -336,7 +336,7 @@ gboolean
 gst_hls_media_playlist_is_live              (GstHLSMediaPlaylist * m3u8);
 
 gboolean
-gst_hls_media_playlist_get_seek_range       (GstHLSMediaPlaylist * m3u8, gboolean low_latency,
+gst_hls_media_playlist_get_seek_range       (GstHLSMediaPlaylist * m3u8,
 					     gint64  * start,
 					     gint64  * stop);
 
@@ -360,8 +360,7 @@ void
 gst_hls_media_playlist_dump                 (GstHLSMediaPlaylist* self);
 
 GstClockTime
-gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
-    playlist, gboolean low_latency);
+gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist * playlist);
 
 typedef enum
 {

@@ -2087,11 +2087,11 @@ gst_hls_media_playlist_sync_to_segment (GstHLSMediaPlaylist * playlist,
 
 gboolean
 gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
-    gboolean allow_low_latency, GstM3U8SeekResult * seek_result)
+    GstM3U8SeekResult * seek_result)
 {
   GstM3U8MediaSegment *res = NULL;
 
-  GST_DEBUG ("allow_low_latency:%d playlist %s", allow_low_latency, self->uri);
+  GST_DEBUG ("playlist %s", self->uri);
 
   if (!GST_HLS_MEDIA_PLAYLIST_IS_LIVE (self)) {
     /* For non-live, we just grab the first one */
@@ -2100,14 +2100,13 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
     GstClockTime hold_back = GST_CLOCK_TIME_NONE;
     /* Live playlist. If low-latency, use the PART-HOLD-BACK specified distance
      * from the end, otherwise HOLD-BACK distance */
-    if (allow_low_latency) {
-      if (GST_CLOCK_TIME_IS_VALID (self->part_hold_back))
-        hold_back = self->part_hold_back;
-      else if (GST_CLOCK_TIME_IS_VALID (self->partial_targetduration))
-        hold_back = 3 * self->partial_targetduration;
-      else if (GST_CLOCK_TIME_IS_VALID (self->hold_back))
-        hold_back = self->hold_back;
-    }
+    if (GST_CLOCK_TIME_IS_VALID (self->part_hold_back))
+      hold_back = self->part_hold_back;
+    else if (GST_CLOCK_TIME_IS_VALID (self->partial_targetduration))
+      hold_back = 3 * self->partial_targetduration;
+    else if (GST_CLOCK_TIME_IS_VALID (self->hold_back))
+      hold_back = self->hold_back;
+
     if (hold_back == GST_CLOCK_TIME_NONE) {
       /* If low-latency is not enabled, or none of the above were present,
        * fallback to the standard behaviour:
@@ -2125,7 +2124,9 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
     }
 
     if (GST_CLOCK_TIME_IS_VALID (hold_back)) {
-      GstSeekFlags flags = GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_KEY_UNIT;
+      GstSeekFlags flags =
+          GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_KEY_UNIT |
+          GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
       GstM3U8MediaSegment *last_seg =
           g_ptr_array_index (self->segments, self->segments->len - 1);
       GstClockTime playlist_duration =
@@ -2141,9 +2142,6 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
       GST_DEBUG ("Hold back is %" GST_TIME_FORMAT
           " Looking for a segment before %" GST_TIME_FORMAT,
           GST_TIME_ARGS (hold_back), GST_TIME_ARGS (target_ts));
-
-      if (allow_low_latency)
-        flags |= GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
 
       if (gst_hls_media_playlist_seek (self, TRUE, flags, target_ts,
               seek_result)) {
@@ -2297,8 +2295,7 @@ gst_hls_media_playlist_has_next_fragment (GstHLSMediaPlaylist * m3u8,
 
 GstM3U8MediaSegment *
 gst_hls_media_playlist_advance_fragment (GstHLSMediaPlaylist * m3u8,
-    GstM3U8MediaSegment * current, gboolean forward,
-    gboolean allow_partial_only_segment)
+    GstM3U8MediaSegment * current, gboolean forward)
 {
   GstM3U8MediaSegment *file = NULL;
   guint idx;
@@ -2328,13 +2325,6 @@ gst_hls_media_playlist_advance_fragment (GstHLSMediaPlaylist * m3u8,
     file =
         gst_m3u8_media_segment_ref (g_ptr_array_index (m3u8->segments,
             idx - 1));
-  }
-
-  if (file && file->partial_only && !allow_partial_only_segment) {
-    GST_LOG
-        ("Ignoring segment with only partials as full segment was requested");
-    gst_m3u8_media_segment_unref (file);
-    file = NULL;
   }
 
   if (file)
@@ -2394,7 +2384,7 @@ gst_hls_media_playlist_get_duration (GstHLSMediaPlaylist * m3u8)
 
 void
 gst_hls_media_playlist_get_next_msn_and_part (GstHLSMediaPlaylist * m3u8,
-    gboolean low_latency, gint64 * next_msn, gint64 * next_part)
+    gint64 * next_msn, gint64 * next_part)
 {
   /* Return the MSN and part number that are 1 past the end of the current playlist */
   if (m3u8->segments->len == 0) {
@@ -2408,7 +2398,7 @@ gst_hls_media_playlist_get_next_msn_and_part (GstHLSMediaPlaylist * m3u8,
 
   /* If low_latency mode and the last segment contains partial segments, the next playlist update is
    * when one extra partial segment gets added */
-  if (low_latency && last->partial_segments != NULL) {
+  if (last->partial_segments != NULL) {
     *next_msn = last->sequence;
     *next_part = last->partial_segments->len;
     return;
@@ -2525,7 +2515,7 @@ gst_hls_media_playlist_has_lost_sync (GstHLSMediaPlaylist * m3u8,
 
 gboolean
 gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
-    gboolean low_latency, gint64 * start, gint64 * stop)
+    gint64 * start, gint64 * stop)
 {
   GstM3U8MediaSegment *first, *last;
 
@@ -2546,8 +2536,7 @@ gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
   if (GST_HLS_MEDIA_PLAYLIST_IS_LIVE (m3u8)) {
     GstM3U8SeekResult seek_result;
 
-    if (gst_hls_media_playlist_get_starting_segment (m3u8, low_latency,
-            &seek_result)) {
+    if (gst_hls_media_playlist_get_starting_segment (m3u8, &seek_result)) {
       if (seek_result.found_partial_segment) {
         GstM3U8PartialSegment *part =
             g_ptr_array_index (seek_result.segment->partial_segments,
@@ -2567,7 +2556,7 @@ gst_hls_media_playlist_get_seek_range (GstHLSMediaPlaylist * m3u8,
 
 GstClockTime
 gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
-    playlist, gboolean low_latency)
+    playlist)
 {
   if (!playlist->duration || !GST_CLOCK_TIME_IS_VALID (playlist->duration)
       || playlist->segments->len == 0)
@@ -2588,14 +2577,12 @@ gst_hls_media_playlist_recommended_buffering_threshold (GstHLSMediaPlaylist *
         && threshold > 3 * playlist->targetduration)
       threshold = 3 * playlist->targetduration;
 
-    if (low_latency) {
-      if (GST_CLOCK_TIME_IS_VALID (playlist->part_hold_back)
-          && threshold > playlist->part_hold_back)
-        threshold = playlist->part_hold_back;
-      else if (GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)
-          && threshold > 3 * playlist->partial_targetduration)
-        threshold = 3 * playlist->partial_targetduration;
-    }
+    if (GST_CLOCK_TIME_IS_VALID (playlist->part_hold_back)
+        && threshold > playlist->part_hold_back)
+      threshold = playlist->part_hold_back;
+    else if (GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)
+        && threshold > 3 * playlist->partial_targetduration)
+      threshold = 3 * playlist->partial_targetduration;
   }
 
   return threshold;

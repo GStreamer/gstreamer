@@ -49,7 +49,6 @@ enum _PlaylistLoaderState
 struct _GstHLSDemuxPlaylistLoaderPrivate
 {
   GstAdaptiveDemux *demux;
-  gboolean llhls_enabled;
 
   GstHLSDemuxPlaylistLoaderSuccessCallback success_cb;
   GstHLSDemuxPlaylistLoaderErrorCallback error_cb;
@@ -89,14 +88,13 @@ static void start_playlist_download (GstHLSDemuxPlaylistLoader * pl,
 /* Takes ownership of the loop ref */
 GstHLSDemuxPlaylistLoader *
 gst_hls_demux_playlist_loader_new (GstAdaptiveDemux * demux,
-    DownloadHelper * download_helper, gboolean llhls_enabled)
+    DownloadHelper * download_helper)
 {
   GstHLSDemuxPlaylistLoader *pl =
       g_object_new (GST_TYPE_HLS_DEMUX_PLAYLIST_LOADER, NULL);
   GstHLSDemuxPlaylistLoaderPrivate *priv = pl->priv;
 
   priv->demux = demux;
-  priv->llhls_enabled = llhls_enabled;
   priv->scheduler_task = gst_adaptive_demux_get_loop (demux);
   priv->download_helper = download_helper;
 
@@ -428,7 +426,7 @@ get_playlist_reload_interval (GstHLSDemuxPlaylistLoader * pl,
     GstM3U8MediaSegment *last_seg =
         g_ptr_array_index (playlist->segments, playlist->segments->len - 1);
 
-    if (priv->llhls_enabled && last_seg->partial_segments) {
+    if (last_seg->partial_segments) {
       GstM3U8PartialSegment *last_part =
           g_ptr_array_index (last_seg->partial_segments,
           last_seg->partial_segments->len - 1);
@@ -443,8 +441,7 @@ get_playlist_reload_interval (GstHLSDemuxPlaylistLoader * pl,
       target_duration = last_seg->duration;
       min_reload_interval = target_duration / 2;
     }
-  } else if (priv->llhls_enabled
-      && GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)) {
+  } else if (GST_CLOCK_TIME_IS_VALID (playlist->partial_targetduration)) {
     target_duration = playlist->partial_targetduration;
     min_reload_interval = target_duration / 2;
   } else if (playlist->version > 5) {
@@ -740,7 +737,7 @@ start_playlist_download (GstHLSDemuxPlaylistLoader * pl,
     } else {
       /* Get the next MSN (and/or possibly part number) for the request params */
       gst_hls_media_playlist_get_next_msn_and_part (current_playlist,
-          priv->llhls_enabled, &dl_params.next_msn, &dl_params.next_part);
+          &dl_params.next_msn, &dl_params.next_part);
       dl_params.flags |= PLAYLIST_DOWNLOAD_FLAG_BLOCKING_REQUEST;
     }
   }
