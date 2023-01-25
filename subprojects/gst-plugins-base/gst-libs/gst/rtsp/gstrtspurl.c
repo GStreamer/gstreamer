@@ -59,9 +59,11 @@
 G_DEFINE_BOXED_TYPE (GstRTSPUrl, gst_rtsp_url,
     (GBoxedCopyFunc) gst_rtsp_url_copy, (GBoxedFreeFunc) gst_rtsp_url_free);
 
+#define SCHEME_SIZE 7
+
 static const struct
 {
-  const char scheme[6];
+  const char scheme[SCHEME_SIZE];
   GstRTSPLowerTrans transports;
 } rtsp_schemes_map[] = {
   {
@@ -326,6 +328,8 @@ gst_rtsp_url_get_request_uri (const GstRTSPUrl * url)
   const gchar *post_host;
   const gchar *pre_query;
   const gchar *query;
+  gchar scheme[SCHEME_SIZE] = "rtsp";
+  guint i;
 
   g_return_val_if_fail (url != NULL, NULL);
 
@@ -333,12 +337,18 @@ gst_rtsp_url_get_request_uri (const GstRTSPUrl * url)
   post_host = url->family == GST_RTSP_FAM_INET6 ? "]" : "";
   pre_query = url->query ? "?" : "";
   query = url->query ? url->query : "";
+  for (i = 0; i < G_N_ELEMENTS (rtsp_schemes_map); i++) {
+    if (url->transports == rtsp_schemes_map[i].transports) {
+      strcpy (scheme, rtsp_schemes_map[i].scheme);
+      break;
+    }
+  }
 
   if (url->port != 0) {
-    uri = g_strdup_printf ("rtsp://%s%s%s:%u%s%s%s", pre_host, url->host,
+    uri = g_strdup_printf ("%s://%s%s%s:%u%s%s%s", scheme, pre_host, url->host,
         post_host, url->port, url->abspath, pre_query, query);
   } else {
-    uri = g_strdup_printf ("rtsp://%s%s%s%s%s%s", pre_host, url->host,
+    uri = g_strdup_printf ("%s://%s%s%s%s%s%s", scheme, pre_host, url->host,
         post_host, url->abspath, pre_query, query);
   }
   return uri;
