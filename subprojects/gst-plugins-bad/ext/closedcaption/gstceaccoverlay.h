@@ -127,7 +127,6 @@ struct _GstCeaCcOverlayClass
   GstElementClass parent_class;
 
   PangoContext *pango_context;
-  GMutex *pango_lock;
 };
 
 GType gst_cea_cc_overlay_get_type (void);

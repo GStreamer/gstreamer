@@ -1,4 +1,4 @@
-closedcaption_dep = dependency('pangocairo', version : '>= 1.22.0',
+closedcaption_dep = dependency('pangocairo', version : '>= 1.32.6',
                             required : get_option('closedcaption'))
 
 zvbi_sources = [
