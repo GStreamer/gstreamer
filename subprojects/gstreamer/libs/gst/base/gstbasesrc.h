@@ -241,7 +241,7 @@ struct _GstBaseSrcClass {
 
   /**
    * GstBaseSrcClass::create:
-   * @buf: (inout):
+   * @buf: (inout) (nullable):
    *
    * Ask the subclass to create a buffer with @offset and @size, the default
    * implementation will call alloc if no allocated @buf is provided and then call fill.
@@ -250,7 +250,7 @@ struct _GstBaseSrcClass {
                                  GstBuffer **buf);
   /**
    * GstBaseSrcClass::alloc:
-   * @buf: (out):
+   * @buf: (out) (nullable):
    *
    * Ask the subclass to allocate an output buffer with @offset and @size, the default
    * implementation will use the negotiated allocator.
