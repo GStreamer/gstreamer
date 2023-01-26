@@ -154,10 +154,7 @@ foreach sp : subprojects
   if match_gst_version
     subproj = subproject(project_name, version: gst_version, required: is_required, default_options: default_options)
   elif sysdep != ''
-      sysdep_dep = dependency(sysdep, version: sysdep_version, required: false, default_options: default_options)
-      if not sysdep_dep.found()
-        subproj = subproject(project_name, required: is_required, default_options: default_options)
-      endif
+    sysdep_dep = dependency(sysdep, version: sysdep_version, required: is_required, default_options: default_options)
   else
     subproj = subproject(project_name, required: is_required, default_options: default_options)
   endif
