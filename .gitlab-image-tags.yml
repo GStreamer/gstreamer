@@ -7,4 +7,4 @@ variables:
   ###
   FEDORA_TAG:  '2022-12-10.0'
   INDENT_TAG: '2022-03-07.1'
-  WINDOWS_TAG: '2022-12-10.0'
+  WINDOWS_TAG: '2023-01-26.0'
