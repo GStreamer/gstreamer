@@ -52,7 +52,7 @@ RUN Get-ChildItem C:\BuildTools
 RUN Get-ChildItem C:\BuildTools\VC\Tools\MSVC
 RUN Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\lib'
 
-RUN pip3 install meson==0.62.2
+RUN pip3 install meson==1.1.1
 
 RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git config --global user.name "GStreamer CI system"'
 
