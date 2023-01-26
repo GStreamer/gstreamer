@@ -61,7 +61,7 @@ Build outputs will be placed in the directory `_builddir`.
 
 ### sendrecv: Send and receive audio and video
 
-* Serve the `js/` directory on the root of your website, or open https://webrtc.nirbheek.in
+* Serve the `js/` directory on the root of your website, or open https://webrtc.gstreamer.net
   - The JS code assumes the signalling server is on port 8443 of the same server serving the HTML
 
 * Open the website in a browser and ensure that the status is "Registered with server, waiting for call", and note the `id` too.
@@ -93,7 +93,7 @@ You can pass a --server argument to all versions, for example `--server=wss://12
 `./gradlew build`\
 `java -jar build/libs/gst-java.jar --peer-id=ID` with the `id` from the browser.
 
-You can optionally specify the server URL too (it defaults to wss://webrtc.nirbheek.in:8443):
+You can optionally specify the server URL too (it defaults to wss://webrtc.gstreamer.net:8443):
 
 `java -jar build/libs/gst-java.jar --peer-id=1 --server=ws://localhost:8443`
 

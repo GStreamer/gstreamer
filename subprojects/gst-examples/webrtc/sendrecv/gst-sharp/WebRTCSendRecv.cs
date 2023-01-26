@@ -284,7 +284,7 @@ namespace GstWebRTCDemo
 
     static class WebRtcSendRcv
     {
-        const string SERVER = "wss://webrtc.nirbheek.in:8443";
+        const string SERVER = "wss://webrtc.gstreamer.net:8443";
         static Random random = new Random();
 
         public static void Main(string[] args)

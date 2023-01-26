@@ -25,7 +25,7 @@ use serde_derive::{Deserialize, Serialize};
 use anyhow::{anyhow, bail, Context};
 
 const STUN_SERVER: &str = "stun://stun.l.google.com:19302";
-const TURN_SERVER: &str = "turn://foo:bar@webrtc.nirbheek.in:3478";
+const TURN_SERVER: &str = "turn://foo:bar@webrtc.gstreamer.net:3478";
 
 const TWCC_URI: &str = "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01";
 
@@ -45,7 +45,7 @@ macro_rules! upgrade_weak {
 
 #[derive(Debug, clap::Parser)]
 struct Args {
-    #[clap(short, long, default_value = "wss://webrtc.nirbheek.in:8443")]
+    #[clap(short, long, default_value = "wss://webrtc.gstreamer.net:8443")]
     server: String,
     /// Peer ID that should be called. If not given then an incoming call is expected.
     #[clap(short, long)]

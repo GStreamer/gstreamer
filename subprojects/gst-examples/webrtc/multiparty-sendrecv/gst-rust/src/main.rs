@@ -25,7 +25,7 @@ use serde_derive::{Deserialize, Serialize};
 use anyhow::{anyhow, bail, Context};
 
 const STUN_SERVER: &str = "stun://stun.l.google.com:19302";
-const TURN_SERVER: &str = "turn://foo:bar@webrtc.nirbheek.in:3478";
+const TURN_SERVER: &str = "turn://foo:bar@webrtc.gstreamer.net:3478";
 const VIDEO_WIDTH: u32 = 1024;
 const VIDEO_HEIGHT: u32 = 768;
 
@@ -45,7 +45,7 @@ macro_rules! upgrade_weak {
 
 #[derive(Debug, clap::Parser)]
 struct Args {
-    #[clap(short, long, default_value = "wss://webrtc.nirbheek.in:8443")]
+    #[clap(short, long, default_value = "wss://webrtc.gstreamer.net:8443")]
     server: String,
     #[clap(short, long)]
     room_id: u32,
