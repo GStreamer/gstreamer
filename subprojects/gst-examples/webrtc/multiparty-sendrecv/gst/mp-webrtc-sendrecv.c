@@ -46,7 +46,7 @@ static GList *peers;
 
 static SoupWebsocketConnection *ws_conn = NULL;
 static enum AppState app_state = 0;
-static const gchar *default_server_url = "wss://webrtc.nirbheek.in:8443";
+static const gchar *default_server_url = "wss://webrtc.gstreamer.net:8443";
 static gchar *server_url = NULL;
 static gchar *local_id = NULL;
 static gchar *room_id = NULL;

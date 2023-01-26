@@ -23,7 +23,7 @@ use serde_derive::{Deserialize, Serialize};
 use anyhow::{anyhow, bail, Context};
 
 const STUN_SERVER: &str = "stun://stun.l.google.com:19302";
-const TURN_SERVER: &str = "turn://foo:bar@webrtc.nirbheek.in:3478";
+const TURN_SERVER: &str = "turn://foo:bar@webrtc.gstreamer.net:3478";
 
 // upgrade weak reference or return
 #[macro_export]
@@ -41,7 +41,7 @@ macro_rules! upgrade_weak {
 
 #[derive(Debug, StructOpt)]
 struct Args {
-    #[structopt(short, long, default_value = "wss://webrtc.nirbheek.in:8443")]
+    #[structopt(short, long, default_value = "wss://webrtc.gstreamer.net:8443")]
     server: String,
     #[structopt(short, long)]
     peer_id: Option<u32>,

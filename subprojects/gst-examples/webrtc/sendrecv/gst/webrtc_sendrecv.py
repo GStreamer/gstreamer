@@ -320,7 +320,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--peer-id', help='String ID of the peer to connect to')
     parser.add_argument('--our-id', help='String ID that the peer can use to connect to us')
-    parser.add_argument('--server', default='wss://webrtc.nirbheek.in:8443',
+    parser.add_argument('--server', default='wss://webrtc.gstreamer.net:8443',
                         help='Signalling server to connect to, eg "wss://127.0.0.1:8443"')
     parser.add_argument('--remote-offerer', default=False, action='store_true',
                         dest='remote_is_offerer',

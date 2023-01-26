@@ -38,7 +38,7 @@
 GST_DEBUG_CATEGORY_STATIC (debug_category);
 #define GST_CAT_DEFAULT debug_category
 
-#define DEFAULT_SIGNALLING_SERVER "wss://webrtc.nirbheek.in:8443"
+#define DEFAULT_SIGNALLING_SERVER "wss://webrtc.gstreamer.net:8443"
 
 #define GET_CUSTOM_DATA(env, thiz, fieldID) (WebRTC *)(gintptr)(*env)->GetLongField (env, thiz, fieldID)
 #define SET_CUSTOM_DATA(env, thiz, fieldID, data) (*env)->SetLongField (env, thiz, fieldID, (jlong)(gintptr)data)
