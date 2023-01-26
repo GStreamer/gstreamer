@@ -3196,7 +3196,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
           GST_WARNING_OBJECT (aggpad,
               "Ignoring request of selecting the first start time "
               "as the segment is a %s segment instead of a time segment",
-              gst_format_get_name (aggpad->segment.format));
+              gst_format_get_name (aggpad->priv->head_segment.format));
         }
         GST_OBJECT_UNLOCK (aggpad);
         break;
