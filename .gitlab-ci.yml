@@ -359,6 +359,9 @@ build clang fedora x86_64:
         *modules_changes
     - changes:
         - subprojects/win-*/*
+  before_script:
+    # Install more recent version. We need at least 0.63 for diff_files support in wraps
+    - pip3 install -U meson==1.1.1
   script:
     # Make sure powershell exits on errors
     # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
