@@ -38,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:inputType="textUri"
-                android:text="wss://webrtc.nirbheek.in:8443" />
+                android:text="wss://webrtc.gstreamer.net:8443" />
         </TableRow>
 
         <TableRow

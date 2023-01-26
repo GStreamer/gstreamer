@@ -28,7 +28,7 @@ import java.io.IOException;
 public class WebrtcSendRecv {
 
     private static final Logger logger = LoggerFactory.getLogger(WebrtcSendRecv.class);
-    private static final String REMOTE_SERVER_URL = "wss://webrtc.nirbheek.in:8443";
+    private static final String REMOTE_SERVER_URL = "wss://webrtc.gstreamer.net:8443";
     private static final String VIDEO_BIN_DESCRIPTION = "videotestsrc ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay ! queue ! capsfilter caps=application/x-rtp,media=video,encoding-name=VP8,payload=97";
     private static final String AUDIO_BIN_DESCRIPTION = "audiotestsrc ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! queue ! capsfilter caps=application/x-rtp,media=audio,encoding-name=OPUS,payload=96";
 
@@ -41,7 +41,7 @@ public class WebrtcSendRecv {
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
-            logger.error("Please pass at least the peer-id from the signalling server e.g java -jar build/libs/gst-java.jar --peer-id=1234 --server=wss://webrtc.nirbheek.in:8443");
+            logger.error("Please pass at least the peer-id from the signalling server e.g java -jar build/libs/gst-java.jar --peer-id=1234 --server=wss://webrtc.gstreamer.net:8443");
             return;
         }
         String serverUrl = REMOTE_SERVER_URL;
