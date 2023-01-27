@@ -30,6 +30,8 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_WL_SHM_ALLOCATOR (gst_wl_shm_allocator_get_type ())
+
+GST_WL_API
 G_DECLARE_FINAL_TYPE (GstWlShmAllocator, gst_wl_shm_allocator, GST, WL_SHM_ALLOCATOR, GstFdAllocator);
 
 #define GST_ALLOCATOR_WL_SHM "wl_shm"

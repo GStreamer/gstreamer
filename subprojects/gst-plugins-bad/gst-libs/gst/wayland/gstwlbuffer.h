@@ -25,6 +25,8 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_WL_BUFFER gst_wl_buffer_get_type ()
+
+GST_WL_API
 G_DECLARE_FINAL_TYPE (GstWlBuffer, gst_wl_buffer, GST, WL_BUFFER, GObject);
 
 struct _GstWlBuffer

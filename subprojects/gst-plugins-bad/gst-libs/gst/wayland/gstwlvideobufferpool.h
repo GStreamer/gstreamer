@@ -33,6 +33,8 @@ G_BEGIN_DECLS
  * hopefully there will be a better Wayland interface in the future. */
 
 #define GST_TYPE_WL_VIDEO_BUFFER_POOL (gst_wl_video_buffer_pool_get_type ())
+
+GST_WL_API
 G_DECLARE_FINAL_TYPE (GstWlVideoBufferPool, gst_wl_video_buffer_pool, GST, WL_VIDEO_BUFFER_POOL, GstVideoBufferPool);
 
 struct _GstWlVideoBufferPool
