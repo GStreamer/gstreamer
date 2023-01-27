@@ -434,8 +434,13 @@ def get_subprocess_env(options, gst_version):
             # /usr/lib/site-packages/foo/bar.py , we will not add anything
             # to PYTHONPATH, but the current approach works with pygobject
             # and gst-python at least.
+            py_package = None
             if 'site-packages' in installpath_parts:
-                install_subpath = os.path.join(*installpath_parts[installpath_parts.index('site-packages') + 1:])
+                py_package = 'site-packages'
+            elif 'dist-packages' in installpath_parts:
+                py_package = 'dist-packages'
+            if  py_package:
+                install_subpath = os.path.join(*installpath_parts[installpath_parts.index(py_package) + 1:])
                 if path.endswith(install_subpath):
                     if os.path.commonprefix(["gi/overrides", install_subpath]):
                         overrides_dirs.add(os.path.dirname(path))
