@@ -2479,6 +2479,13 @@ _foreach_find_iterator (GQuark field_id, GValue * value,
 }
 
 
+/**
+ * gst_validate_execute_action:
+ * @action_type: The #GstValidateActionType to execute
+ * @action: (transfer full) The #GstValidateAction to execute
+ *
+ * Executes @action
+ */
 GstValidateExecuteActionReturn
 gst_validate_execute_action (GstValidateActionType * action_type,
     GstValidateAction * action)
