@@ -19,10 +19,94 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-#include "qtdemux.h"
+#include <glib/gstdio.h>
 #include <glib/gprintf.h>
-#include <gst/check/gstharness.h>
+
+#include <gst/check/check.h>
+
+#define TEST_FILE_PREFIX GST_TEST_FILES_PATH G_DIR_SEPARATOR_S
+
+/* Fragments taken from http://dash.akamaized.net/dash264/TestCases/5c/nomor/4_1a.mpd
+ *
+ * Audio stream (aac)
+ * Header + first Fragments
+ */
+/* http://dash.akamaized.net/dash264/TestCases/5c/nomor/BBB_32k_init.mp4 */
+#define BBB_FILE_I TEST_FILE_PREFIX "qtdemux-test-BBB_32k_init.mp4"
+static guint8 *BBB_32k_init_mp4;
+static const guint BBB_32k_init_mp4_len = 776;
+
+/* http://dash.akamaized.net/dash264/TestCases/5c/nomor/BBB_32k_1.mp4 */
+#define BBB_FILE_1 TEST_FILE_PREFIX "qtdemux-test-BBB_32k_1.mp4"
+static guint8 *BBB_32k_1_mp4;
+static const guint BBB_32k_1_mp4_len = 8423;
+
+/* Fragments taken from http://www.bok.net/dash/tears_of_steel/cleartext/stream.mpd
+ *
+ * Audio stream (aac)
+ * Header + first fragment
+ */
+/* http://www.bok.net/dash/tears_of_steel/cleartext/audio/en/init.mp4 */
+#define INIT_FILE TEST_FILE_PREFIX "qtdemux-test-audio-init.mp4"
+static guint8 *init_mp4;
+const guint init_mp4_len = 624;
+
+/* http://www.bok.net/dash/tears_of_steel/cleartext/audio/en/seg-1.m4f */
+#define SEG1_FILE TEST_FILE_PREFIX "qtdemux-test-audio-seg1.m4f"
+static guint8 *seg_1_m4f;
+const guint seg_1_m4f_len = 49554;
+const guint seg_1_moof_size = 1120;
+const guint seg_1_sample_0_offset = 1128;
+
+static const guint seg_1_sample_sizes[] = {
+  371, 372, 477, 530, 489, 462, 441, 421, 420, 410, 402, 398, 381, 381, 386,
+  386, 369, 370, 362, 346, 357, 355, 376, 336, 341, 358, 350, 362, 333, 415,
+  386, 364, 344, 386, 358, 365, 404, 342, 361, 366, 361, 350, 390, 348, 366,
+  359, 357, 360, 349, 356, 365, 393, 353, 385, 381, 348, 345, 414, 372, 369,
+  401, 391, 333, 339, 423, 343, 445, 425, 422, 415, 406, 389, 395, 375, 356,
+  442, 432, 391, 385, 339, 277, 293, 316, 327, 309, 389, 359, 427, 326, 420,
+  407, 316, 362, 419, 349, 387, 326, 328, 367, 344, 425, 329, 379, 403, 314,
+  397, 368, 389, 380, 373, 342, 343, 368, 436, 359, 352, 361, 366, 350, 419,
+  331, 426, 401, 382, 326, 411, 364, 338, 345
+};
+
+/* in timescale */
+static const GstClockTime seg_1_sample_duration = 1024;
+static const guint32 seg_1_timescale = 44100;
+
+static gboolean
+load_file (const gchar * fn, guint8 ** p_data, guint expected_len)
+{
+  gsize read_len = 0;
+
+  if (!g_file_get_contents (fn, (gchar **) p_data, &read_len, NULL))
+    return FALSE;
+
+  g_assert_cmpuint (read_len, ==, expected_len);
+  return TRUE;
+}
+
+static void
+load_files (void)
+{
+  g_assert (load_file (INIT_FILE, &init_mp4, init_mp4_len));
+  g_assert (load_file (SEG1_FILE, &seg_1_m4f, seg_1_m4f_len));
+  g_assert (load_file (BBB_FILE_I, &BBB_32k_init_mp4, BBB_32k_init_mp4_len));
+  g_assert (load_file (BBB_FILE_1, &BBB_32k_1_mp4, BBB_32k_1_mp4_len));
+}
+
+static void
+unload_files (void)
+{
+  g_clear_pointer (&init_mp4, (GDestroyNotify) g_free);
+  g_clear_pointer (&seg_1_m4f, (GDestroyNotify) g_free);
+  g_clear_pointer (&BBB_32k_init_mp4, (GDestroyNotify) g_free);
+  g_clear_pointer (&BBB_32k_1_mp4, (GDestroyNotify) g_free);
+}
 
 typedef struct
 {
@@ -198,6 +282,8 @@ GST_START_TEST (test_qtdemux_input_gap)
    *     of 0.
    */
 
+  load_files ();
+
   qtdemux = gst_element_factory_make ("qtdemux", NULL);
   gst_element_set_state (qtdemux, GST_STATE_PLAYING);
   sinkpad = gst_element_get_static_pad (qtdemux, "sink");
@@ -260,6 +346,8 @@ GST_START_TEST (test_qtdemux_input_gap)
   gst_object_unref (sinkpad);
   gst_element_set_state (qtdemux, GST_STATE_NULL);
   gst_object_unref (qtdemux);
+
+  unload_files ();
 }
 
 GST_END_TEST;
@@ -393,6 +481,8 @@ GST_START_TEST (test_qtdemux_duplicated_moov)
   data.expected_num_srcpad = 1;
   data.total_step = G_N_ELEMENTS (expected);
 
+  load_files ();
+
   /* The goal of this test is to check that qtdemux can properly handle
    * duplicated moov without redundant events and pad exposing
    *
@@ -468,6 +558,8 @@ GST_START_TEST (test_qtdemux_duplicated_moov)
   gst_object_unref (data.sinkpad);
   gst_element_set_state (qtdemux, GST_STATE_NULL);
   gst_object_unref (qtdemux);
+
+  unload_files ();
 }
 
 GST_END_TEST;
@@ -518,6 +610,8 @@ GST_START_TEST (test_qtdemux_stream_change)
   data.expected_events = expected;
   data.expected_num_srcpad = 4;
   data.total_step = G_N_ELEMENTS (expected);
+
+  load_files ();
 
   /* The goal of this test is to check that qtdemux can properly handle
    * stream change regardless of track-id change.
@@ -736,6 +830,8 @@ GST_START_TEST (test_qtdemux_stream_change)
   gst_object_unref (data.sinkpad);
   gst_element_set_state (qtdemux, GST_STATE_NULL);
   gst_object_unref (qtdemux);
+
+  unload_files ();
 }
 
 GST_END_TEST;
@@ -763,6 +859,8 @@ GST_START_TEST (test_qtdemux_pad_names)
   GstEvent *event;
   GstCaps *caps;
   GstCaps *mediacaps;
+
+  load_files ();
 
   /* The goal of this test is to check that qtdemux can create proper
    * pad names with encrypted stream caps in mss mode.
@@ -884,6 +982,8 @@ GST_START_TEST (test_qtdemux_pad_names)
   gst_element_set_state (qtdemux_a, GST_STATE_NULL);
   gst_object_unref (qtdemux_a);
   g_free (expected_audio_pad_name);
+
+  unload_files ();
 }
 
 GST_END_TEST;
