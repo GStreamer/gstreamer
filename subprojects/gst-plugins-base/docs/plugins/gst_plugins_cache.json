@@ -9392,6 +9392,16 @@
                         "desc": "reference-timestamp",
                         "name": "reference-timestamp",
                         "value": "5"
+                    },
+                    {
+                        "desc": "buffer-count",
+                        "name": "buffer-count",
+                        "value": "6"
+                    },
+                    {
+                        "desc": "buffer-offset",
+                        "name": "buffer-offset",
+                        "value": "7"
                     }
                 ]
             }

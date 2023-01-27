@@ -48,6 +48,8 @@ typedef enum {
   GST_TIME_OVERLAY_TIME_LINE_TIME_CODE,
   GST_TIME_OVERLAY_TIME_LINE_ELAPSED_RUNNING_TIME,
   GST_TIME_OVERLAY_TIME_LINE_REFERENCE_TIMESTAMP,
+  GST_TIME_OVERLAY_TIME_LINE_BUFFER_COUNT,
+  GST_TIME_OVERLAY_TIME_LINE_BUFFER_OFFSET,
 } GstTimeOverlayTimeLine;
 
 /**
@@ -63,6 +65,8 @@ struct _GstTimeOverlay {
 
   /* For datetime mode */
   gboolean show_times_as_dates;
+  guint    buffer_count;
+  gboolean show_buffer_count;
   gchar *datetime_format;
   GDateTime *datetime_epoch;
 

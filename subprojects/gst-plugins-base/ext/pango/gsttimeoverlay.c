@@ -96,6 +96,21 @@ static void gst_time_overlay_get_property (GObject * object, guint prop_id,
  * Since: 1.22
  */
 
+/**
+ * GstTimeOverlayTimeLine::buffer-count:
+ *
+ * Overlay buffer count.
+ *
+ * Since: 1.24
+ */
+/**
+ * GstTimeOverlayTimeLine::buffer-offset:
+ *
+ * Overlay buffer offset count according to ts and framerate.
+ *
+ * Since: 1.24
+ */
+
 #define GST_TYPE_TIME_OVERLAY_TIME_LINE (gst_time_overlay_time_line_type())
 static GType
 gst_time_overlay_time_line_type (void)
@@ -110,6 +125,10 @@ gst_time_overlay_time_line_type (void)
         "elapsed-running-time", "elapsed-running-time"},
     {GST_TIME_OVERLAY_TIME_LINE_REFERENCE_TIMESTAMP,
         "reference-timestamp", "reference-timestamp"},
+    {GST_TIME_OVERLAY_TIME_LINE_BUFFER_COUNT,
+        "buffer-count", "buffer-count"},
+    {GST_TIME_OVERLAY_TIME_LINE_BUFFER_OFFSET,
+        "buffer-offset", "buffer-offset"},
     {0, NULL, NULL},
   };
 
@@ -145,6 +164,7 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
   gchar *time_str, *txt, *ret;
 
   overlay->need_render = TRUE;
+  self->show_buffer_count = FALSE;
 
   time_line = g_atomic_int_get (&GST_TIME_OVERLAY_CAST (overlay)->time_line);
   if (time_line == GST_TIME_OVERLAY_TIME_LINE_TIME_CODE) {
@@ -160,7 +180,7 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
     GstClockTime ts, ts_buffer;
     GstSegment *segment = &overlay->segment;
 
-    ts_buffer = GST_BUFFER_TIMESTAMP (video_frame);
+    ts = ts_buffer = GST_BUFFER_TIMESTAMP (video_frame);
 
     if (!GST_CLOCK_TIME_IS_VALID (ts_buffer)) {
       GST_DEBUG ("buffer without valid timestamp");
@@ -203,13 +223,25 @@ gst_time_overlay_get_text (GstBaseTextOverlay * overlay,
 
         break;
       }
+      case GST_TIME_OVERLAY_TIME_LINE_BUFFER_COUNT:
+        self->show_buffer_count = TRUE;
+        self->buffer_count += 1;
+        break;
+      case GST_TIME_OVERLAY_TIME_LINE_BUFFER_OFFSET:
+        self->show_buffer_count = TRUE;
+        ts = gst_segment_to_running_time (segment, GST_FORMAT_TIME, ts_buffer);
+        self->buffer_count =
+            gst_util_uint64_scale (ts, overlay->info.fps_n,
+            overlay->info.fps_d * GST_SECOND);
+        break;
       case GST_TIME_OVERLAY_TIME_LINE_BUFFER_TIME:
       default:
         ts = ts_buffer;
         break;
     }
-
-    if (self->show_times_as_dates) {
+    if (self->show_buffer_count) {
+      time_str = g_strdup_printf ("%u", self->buffer_count);
+    } else if (self->show_times_as_dates) {
       GDateTime *datetime;
 
       datetime =
@@ -247,6 +279,7 @@ gst_time_overlay_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->first_running_time = GST_CLOCK_TIME_NONE;
+      self->buffer_count = 0;
       break;
     default:
       break;
