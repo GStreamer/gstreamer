@@ -620,7 +620,7 @@ gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
 /**
  * gst_gl_display_create_context:
  * @display: a #GstGLDisplay
- * @other_context: (transfer none): other #GstGLContext to share resources with.
+ * @other_context: (transfer none) (nullable): other #GstGLContext to share resources with.
  * @p_context: (transfer full) (out): resulting #GstGLContext
  * @error: resulting #GError
  *
