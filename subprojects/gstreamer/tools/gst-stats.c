@@ -1283,10 +1283,19 @@ main (gint argc, gchar * argv[])
 
   g_set_prgname ("gst-stats-" GST_API_VERSION);
 
+#ifdef G_OS_WIN32
+  argv = g_win32_get_command_line ();
+#endif
+
   ctx = g_option_context_new ("FILE");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
-  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+#ifdef G_OS_WIN32
+  if (!g_option_context_parse_strv (ctx, &argv, &err))
+#else
+  if (!g_option_context_parse (ctx, &argc, &argv, &err))
+#endif
+  {
     g_print ("Error initializing: %s\n", GST_STR_NULL (err->message));
     exit (1);
   }
@@ -1312,5 +1321,10 @@ main (gint argc, gchar * argv[])
   done ();
 
   g_strfreev (filenames);
+
+#ifdef G_OS_WIN23
+  g_strfreev (argv);
+#endif
+
   return 0;
 }

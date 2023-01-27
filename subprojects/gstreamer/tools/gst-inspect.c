@@ -2171,7 +2171,12 @@ real_main (int argc, char *argv[])
   ctx = g_option_context_new ("[ELEMENT-NAME | PLUGIN-NAME]");
   g_option_context_add_main_entries (ctx, options, GETTEXT_PACKAGE);
   g_option_context_add_group (ctx, gst_init_get_option_group ());
-  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+#if defined(G_OS_WIN32) && !defined(GST_CHECK_MAIN)
+  if (!g_option_context_parse_strv (ctx, &argv, &err))
+#else
+  if (!g_option_context_parse (ctx, &argc, &argv, &err))
+#endif
+  {
     g_printerr ("Error initializing: %s\n", err->message);
     g_clear_error (&err);
     g_option_context_free (ctx);
@@ -2338,9 +2343,22 @@ done:
 int
 main (int argc, char *argv[])
 {
-#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
-  return gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
-#else
-  return real_main (argc, argv);
+  int ret;
+
+  /* gstinspect.c calls this function */
+#if defined(G_OS_WIN32) && !defined(GST_CHECK_MAIN)
+  argv = g_win32_get_command_line ();
 #endif
+
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  ret = gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  ret = real_main (argc, argv);
+#endif
+
+#if defined(G_OS_WIN32) && !defined(GST_CHECK_MAIN)
+  g_strfreev (argv);
+#endif
+
+  return ret;
 }
