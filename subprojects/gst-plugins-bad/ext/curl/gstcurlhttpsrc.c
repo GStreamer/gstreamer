@@ -1116,6 +1116,7 @@ gst_curl_http_src_create_easy_handle (GstCurlHttpSrc * s)
   gst_curl_setopt_str (s, handle, CURLOPT_NOPROXY, s->no_proxy_list);
   gst_curl_setopt_str (s, handle, CURLOPT_PROXYUSERNAME, s->proxy_user);
   gst_curl_setopt_str (s, handle, CURLOPT_PROXYPASSWORD, s->proxy_pass);
+  gst_curl_setopt_generic (s, handle, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 
   for (i = 0; i < s->number_cookies; i++) {
     gst_curl_setopt_str (s, handle, CURLOPT_COOKIELIST, s->cookies[i]);
