@@ -1019,8 +1019,8 @@ gst_gl_context_can_share (GstGLContext * context, GstGLContext * other_context)
 /**
  * gst_gl_context_create:
  * @context: a #GstGLContext:
- * @other_context: (allow-none): a #GstGLContext to share OpenGL objects with
- * @error: (allow-none): a #GError
+ * @other_context: (nullable): a #GstGLContext to share OpenGL objects with
+ * @error: a #GError
  *
  * Creates an OpenGL context with the specified @other_context as a context
  * to share shareable OpenGL objects with.  See the OpenGL specification for
