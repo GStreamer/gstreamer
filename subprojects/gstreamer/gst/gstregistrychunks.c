@@ -478,6 +478,14 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
     gst_registry_chunks_save_const_string (list, "");
   }
 
+  /* pack status info */
+  if (plugin->priv->status_info) {
+    gchar *status_str = gst_structure_to_string (plugin->priv->status_info);
+    gst_registry_chunks_save_string (list, status_str);
+  } else {
+    gst_registry_chunks_save_const_string (list, "");
+  }
+
   /* pack plugin element strings */
   gst_registry_chunks_save_const_string (list,
       (plugin->desc.release_datetime) ? plugin->desc.release_datetime : "");
@@ -826,6 +834,7 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
   gchar *start = *in;
 #endif
   GstRegistryChunkPluginElement *pe;
+  const gchar *status_str = NULL;
   const gchar *cache_str = NULL;
   GstPlugin *plugin = NULL;
   guint i, n;
@@ -865,6 +874,11 @@ _priv_gst_registry_chunks_load_plugin (GstRegistry * registry, gchar ** in,
 
   if (plugin->desc.release_datetime[0] == '\0')
     plugin->desc.release_datetime = NULL;
+
+  /* unpack status info */
+  unpack_string_nocopy (*in, status_str, end, fail);
+  if (status_str != NULL && *status_str != '\0')
+    plugin->priv->status_info = gst_structure_from_string (status_str, NULL);
 
   /* unpack cache data */
   unpack_string_nocopy (*in, cache_str, end, fail);

@@ -33428,6 +33428,54 @@ arguments separated by predefined delimiters (see above).</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="add_status_error" c:identifier="gst_plugin_add_status_error" version="1.24">
+        <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">a #GstPlugin</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
+          <parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">the status error message</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_status_info" c:identifier="gst_plugin_add_status_info" version="1.24">
+        <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">a #GstPlugin</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
+          <parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">the status info message</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_status_warning" c:identifier="gst_plugin_add_status_warning" version="1.24">
+        <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">a #GstPlugin</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
+          <parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">the status warning message</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_cache_data" c:identifier="gst_plugin_get_cache_data">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">Gets the plugin specific data cache. If it is %NULL there is no cached data
 stored. This is the case when the registry is getting rebuilt.</doc>
@@ -33560,6 +33608,51 @@ available.</doc>
         <parameters>
           <instance-parameter name="plugin" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">plugin to get the source of</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_status_errors" c:identifier="gst_plugin_get_status_errors" version="1.24">
+        <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">an array of plugin status error messages, or NULL</doc>
+          <array c:type="gchar**">
+            <type name="utf8"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">a #GstPlugin</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_status_infos" c:identifier="gst_plugin_get_status_infos" version="1.24">
+        <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">an array of plugin status info messages, or NULL</doc>
+          <array c:type="gchar**">
+            <type name="utf8"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">a #GstPlugin</doc>
+            <type name="Plugin" c:type="GstPlugin*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_status_warnings" c:identifier="gst_plugin_get_status_warnings" version="1.24">
+        <source-position filename="../subprojects/gstreamer/gst/gstplugin.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">an array of plugin status warning messages, or NULL</doc>
+          <array c:type="gchar**">
+            <type name="utf8"/>
+          </array>
+        </return-value>
+        <parameters>
+          <instance-parameter name="plugin" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstplugin.c">a #GstPlugin</doc>
             <type name="Plugin" c:type="GstPlugin*"/>
           </instance-parameter>
         </parameters>

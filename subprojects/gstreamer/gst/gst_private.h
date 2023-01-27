@@ -84,7 +84,8 @@ typedef struct {
 } GstPluginDep;
 
 struct _GstPluginPrivate {
-  GList *deps;    /* list of GstPluginDep structures */
+  GList *deps;                 /* list of GstPluginDep structures */
+  GstStructure *status_info;
   GstStructure *cache_data;
 };
 
