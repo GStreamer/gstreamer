@@ -445,7 +445,8 @@ build fedora clang:
 
     # Set the code page to UTF-8
     - chcp 65001
-
+    # Renormalize line endings
+    - git add --renormalize .
     - ci/scripts/handle-subprojects-cache.py subprojects/
     # For some reason, options are separated by newline instead of space, so we
     # have to replace them first.
