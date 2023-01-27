@@ -603,13 +603,13 @@ gst_uri_transcode_bin_set_property (GObject * object,
       break;
     case PROP_AUDIO_FILTER:
       GST_OBJECT_LOCK (self);
-      gst_object_unref (self->audio_filter);
+      gst_clear_object (&self->audio_filter);
       self->audio_filter = g_value_dup_object (value);
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_VIDEO_FILTER:
       GST_OBJECT_LOCK (self);
-      gst_object_unref (self->video_filter);
+      gst_clear_object (&self->video_filter);
       self->video_filter = g_value_dup_object (value);
       GST_OBJECT_UNLOCK (self);
       break;
