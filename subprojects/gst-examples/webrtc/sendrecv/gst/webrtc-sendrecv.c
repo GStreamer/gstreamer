@@ -428,10 +428,19 @@ bus_watch_cb (GstBus * bus, GstMessage * message, gpointer user_data)
   GstPipeline *pipeline = user_data;
 
   switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ASYNC_DONE:
+    {
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipe1),
+          GST_DEBUG_GRAPH_SHOW_ALL, "webrtc-sendrecv.async-done");
+      break;
+    }
     case GST_MESSAGE_ERROR:
     {
       GError *error = NULL;
       gchar *debug = NULL;
+
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipe1),
+          GST_DEBUG_GRAPH_SHOW_ALL, "webrtc-sendrecv.error");
 
       gst_message_parse_error (message, &error, &debug);
       cleanup_and_quit_loop ("ERROR: Error on bus", APP_STATE_ERROR);
