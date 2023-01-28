@@ -61,6 +61,8 @@
 #include <gst/va/gstva.h>
 #endif
 
+#include <glib/gi18n-lib.h>
+
 GST_DEBUG_CATEGORY (gst_qsv_debug);
 GST_DEBUG_CATEGORY (gst_qsv_allocator_debug);
 
@@ -214,8 +216,11 @@ plugin_init (GstPlugin * plugin)
 #ifdef G_OS_WIN32
   /* D3D11 Video API is supported since Windows 8.
    * Do we want to support old OS (Windows 7 for example) with D3D9 ?? */
-  if (!IsWindows8OrGreater ())
+  if (!IsWindows8OrGreater ()) {
+    gst_plugin_add_status_warning (plugin,
+        N_("This plugin requires at least Windows 8 or newer."));
     return TRUE;
+  }
 
   enc_rank = GST_RANK_PRIMARY;
 #endif
@@ -225,11 +230,15 @@ plugin_init (GstPlugin * plugin)
       "qsvallocator", 0, "qsvallocator");
 
   loader = gst_qsv_get_loader ();
-  if (!loader)
+  if (!loader) {
+    // FIXME: any status/error/warning message we should show here?
     return TRUE;
+  }
 
   platform_devices = gst_qsv_get_platform_devices ();
   if (!platform_devices) {
+    gst_plugin_add_status_warning (plugin,
+        N_("No Intel graphics cards detected!"));
     gst_qsv_deinit ();
     return TRUE;
   }
