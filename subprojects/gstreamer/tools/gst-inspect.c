@@ -78,6 +78,7 @@ GMainLoop *loop = NULL;
 /* Console colors */
 
 /* Escape values for colors */
+#define RED       "\033[31m"
 #define BLUE      "\033[34m"
 #define BRBLUE    "\033[94m"
 #define BRCYAN    "\033[96m"
@@ -1677,6 +1678,50 @@ print_plugin_features (GstPlugin * plugin)
   n_print ("\n");
 }
 
+static void
+print_plugin_status_message (const gchar * label, const gchar * msg,
+    const gchar * color)
+{
+  if (msg != NULL) {
+    /* TODO: do something fancy with multi-line strings to preserve indentation */
+    n_print ("%s%s:%s %s\n\n", color, label, RESET_COLOR, msg);
+  }
+}
+
+static void
+print_plugin_status (GstPlugin * plugin)
+{
+  gchar **msgs, **s;
+
+  push_indent ();
+
+  msgs = gst_plugin_get_status_infos (plugin);
+  for (s = msgs; s != NULL && *s != NULL; ++s) {
+    const gchar *info_msg = *s;
+
+    print_plugin_status_message ("Info", info_msg, GREEN);
+  }
+  g_strfreev (msgs);
+
+  msgs = gst_plugin_get_status_warnings (plugin);
+  for (s = msgs; s != NULL && *s != NULL; ++s) {
+    const gchar *warning_msg = *s;
+
+    print_plugin_status_message ("Warning", warning_msg, YELLOW);
+  }
+  g_strfreev (msgs);
+
+  msgs = gst_plugin_get_status_errors (plugin);
+  for (s = msgs; s != NULL && *s != NULL; ++s) {
+    const gchar *err_msg = *s;
+
+    print_plugin_status_message ("Error", err_msg, RED);
+  }
+  g_strfreev (msgs);
+
+  pop_indent ();
+}
+
 static int
 print_feature_info (const gchar * feature_name, gboolean print_all)
 {
@@ -2322,6 +2367,7 @@ real_main (int argc, char *argv[])
           print_plugin_automatic_install_info (plugin);
         } else {
           print_plugin_info (plugin);
+          print_plugin_status (plugin);
           print_plugin_features (plugin);
         }
       } else {
@@ -2335,6 +2381,7 @@ real_main (int argc, char *argv[])
               print_plugin_automatic_install_info (plugin);
             } else {
               print_plugin_info (plugin);
+              print_plugin_status (plugin);
               print_plugin_features (plugin);
             }
           } else {
