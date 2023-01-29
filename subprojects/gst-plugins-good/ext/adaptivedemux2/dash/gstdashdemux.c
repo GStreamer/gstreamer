@@ -310,6 +310,7 @@ enum
   PROP_MAX_VIDEO_HEIGHT,
   PROP_MAX_VIDEO_FRAMERATE,
   PROP_PRESENTATION_DELAY,
+  PROP_START_BITRATE,
   PROP_LAST
 };
 
@@ -319,6 +320,7 @@ enum
 #define DEFAULT_MAX_VIDEO_FRAMERATE_N     0
 #define DEFAULT_MAX_VIDEO_FRAMERATE_D     1
 #define DEFAULT_PRESENTATION_DELAY     "10s"    /* 10s */
+#define DEFAULT_START_BITRATE             0
 
 /* Clock drift compensation for live streams */
 #define SLOW_CLOCK_UPDATE_INTERVAL  (1000000 * 30 * 60) /* 30 minutes */
@@ -633,6 +635,17 @@ gst_dash_demux2_class_init (GstDashDemux2Class * klass)
           DEFAULT_PRESENTATION_DELAY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * dashdemux2:start-bitrate:
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_START_BITRATE,
+      g_param_spec_uint ("start-bitrate", "Starting Bitrate",
+          "Initial bitrate to use to choose first alternate (0 = automatic) (bits/s)",
+          0, G_MAXUINT, DEFAULT_START_BITRATE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
 
   gst_element_class_set_static_metadata (gstelement_class,
@@ -697,6 +710,9 @@ gst_dash_demux_set_property (GObject * object, guint prop_id,
       g_free (demux->default_presentation_delay);
       demux->default_presentation_delay = g_value_dup_string (value);
       break;
+    case PROP_START_BITRATE:
+      demux->start_bitrate = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -726,6 +742,9 @@ gst_dash_demux_get_property (GObject * object, guint prop_id, GValue * value,
       else
         g_value_set_string (value, demux->default_presentation_delay);
       break;
+    case PROP_START_BITRATE:
+      g_value_set_uint (value, demux->start_bitrate);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -738,19 +757,20 @@ gst_dash_demux_setup_mpdparser_streams (GstDashDemux2 * demux,
 {
   gboolean has_streams = FALSE;
   GList *adapt_sets, *iter;
-  guint connection_bitrate;
+  guint start_bitrate = demux->start_bitrate;
 
-  /* Using g_object_get so it goes through mutex locking in adaptivedemux2 */
-  g_object_get (demux, "connection-bitrate", &connection_bitrate, NULL);
+  if (start_bitrate == 0) {
+    /* Using g_object_get so it goes through mutex locking in adaptivedemux2 */
+    g_object_get (demux, "connection-bitrate", &start_bitrate, NULL);
+  }
 
   adapt_sets = gst_mpd_client2_get_adaptation_sets (client);
   for (iter = adapt_sets; iter; iter = g_list_next (iter)) {
     GstMPDAdaptationSetNode *adapt_set_node = iter->data;
 
     has_streams |= gst_mpd_client2_setup_streaming (client, adapt_set_node,
-        connection_bitrate, demux->max_video_width,
-        demux->max_video_height, demux->max_video_framerate_n,
-        demux->max_video_framerate_d);
+        start_bitrate, demux->max_video_width, demux->max_video_height,
+        demux->max_video_framerate_n, demux->max_video_framerate_d);
   }
 
   if (!has_streams) {
@@ -2288,6 +2308,10 @@ gst_dash_demux_stream_select_bitrate (GstAdaptiveDemux2Stream * stream,
   if (!rep_list) {
     goto end;
   }
+
+  /* If not calculated yet, continue using start bitrate */
+  if (bitrate == 0)
+    bitrate = demux->start_bitrate;
 
   GST_DEBUG_OBJECT (stream,
       "Trying to change to bitrate: %" G_GUINT64_FORMAT, bitrate);

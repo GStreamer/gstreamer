@@ -155,6 +155,7 @@ struct _GstDashDemux2
   gint max_video_width, max_video_height;
   gint max_video_framerate_n, max_video_framerate_d;
   gchar* default_presentation_delay; /* presentation time delay if MPD@suggestedPresentationDelay is not present */
+  guint start_bitrate; /* Initial bitrate to use before any bandwidth measurement */
 
   gboolean allow_trickmode_key_units;
 };

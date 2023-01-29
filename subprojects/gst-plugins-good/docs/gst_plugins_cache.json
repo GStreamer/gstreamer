@@ -1102,6 +1102,20 @@
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
+                    },
+                    "start-bitrate": {
+                        "blurb": "Initial bitrate to use to choose first alternate (0 = automatic) (bits/s)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
                     }
                 },
                 "rank": "primary + 1"
