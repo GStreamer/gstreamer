@@ -253,11 +253,20 @@ typedef enum
  *
  * The type of SEI message.
  */
+/**
+ * GST_H264_SEI_USER_DATA_UNREGISTERED:
+ *
+ * User Data Unregistered (D.2.6)
+ *
+ * Since: 1.22
+ */
+
 typedef enum
 {
   GST_H264_SEI_BUF_PERIOD = 0,
   GST_H264_SEI_PIC_TIMING = 1,
   GST_H264_SEI_REGISTERED_USER_DATA = 4,
+  GST_H264_SEI_USER_DATA_UNREGISTERED = 5,
   GST_H264_SEI_RECOVERY_POINT = 6,
   GST_H264_SEI_STEREO_VIDEO_INFO = 21,
   GST_H264_SEI_FRAME_PACKING = 45,
@@ -357,6 +366,7 @@ typedef struct _GstH264SliceHdr               GstH264SliceHdr;
 typedef struct _GstH264ClockTimestamp         GstH264ClockTimestamp;
 typedef struct _GstH264PicTiming              GstH264PicTiming;
 typedef struct _GstH264RegisteredUserData     GstH264RegisteredUserData;
+typedef struct _GstH264UserDataUnregistered   GstH264UserDataUnregistered;
 typedef struct _GstH264BufferingPeriod        GstH264BufferingPeriod;
 typedef struct _GstH264RecoveryPoint          GstH264RecoveryPoint;
 typedef struct _GstH264StereoVideoInfo        GstH264StereoVideoInfo;
@@ -1111,6 +1121,23 @@ struct _GstH264RegisteredUserData
   guint size;
 };
 
+/**
+ * GstH264UserDataUnregistered:
+ * @uuid: an uuid_iso_iec_11578.
+ * @data: the data of user_data_payload_byte
+ * @size: the size of @data in bytes
+ *
+ * The User data unregistered SEI message syntax.
+ *
+ * Since: 1.22
+ */
+struct _GstH264UserDataUnregistered
+{
+  guint8 uuid[16];
+  const guint8 *data;
+  guint size;
+};
+
 struct _GstH264BufferingPeriod
 {
   GstH264SPS *sps;
@@ -1185,6 +1212,13 @@ struct _GstH264SEIUnhandledPayload
   guint size;
 };
 
+/**
+ * _GstH264SEIMessage.payload.user_data_unregistered:
+ *
+ * User Data Unregistered
+ *
+ * Since: 1.22
+ */
 struct _GstH264SEIMessage
 {
   GstH264SEIPayloadType payloadType;
@@ -1199,6 +1233,7 @@ struct _GstH264SEIMessage
     GstH264MasteringDisplayColourVolume mastering_display_colour_volume;
     GstH264ContentLightLevel content_light_level;
     GstH264SEIUnhandledPayload unhandled_payload;
+    GstH264UserDataUnregistered user_data_unregistered;
     /* ... could implement more */
   } payload;
 };

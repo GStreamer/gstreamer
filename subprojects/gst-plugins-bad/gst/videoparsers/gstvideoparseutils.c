@@ -26,6 +26,7 @@
 #include <gst/base/base.h>
 #include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
+#include <gst/video/video-sei.h>
 #include <gst/base/gstbitreader.h>
 #include <gstvideoparseutils.h>
 
@@ -435,4 +436,59 @@ gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFD * afd,
   afd->spec = spec;
   afd->afd = (GstVideoAFDValue) afd_data;
   return TRUE;
+}
+
+/*
+ * gst_video_parse_user_data_unregistered:
+ * @elt: #GstElement that is parsing user data
+ * @user_data: #GstVideoParseUserDataUnregistered struct to hold parsed data
+ * @br: #GstByteReader attached to buffer of user data
+ * @uuid: User Data Unregistered UUID
+ *
+ * Parse user data and store in @user_data
+ */
+void
+gst_video_parse_user_data_unregistered (GstElement * elt,
+    GstVideoParseUserDataUnregistered * user_data,
+    GstByteReader * br, guint8 uuid[16])
+{
+  gst_video_user_data_unregistered_clear (user_data);
+
+  memcpy (&user_data->uuid, uuid, 16);
+  user_data->size = gst_byte_reader_get_size (br);
+  gst_byte_reader_dup_data (br, user_data->size, &user_data->data);
+}
+
+/*
+ * gst_video_user_data_unregistered_clear:
+ * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
+ *
+ * Clears the user data unregistered
+ */
+void
+gst_video_user_data_unregistered_clear (GstVideoParseUserDataUnregistered *
+    user_data)
+{
+  g_free (user_data->data);
+  user_data->data = NULL;
+  user_data->size = 0;
+}
+
+/*
+ * gst_video_push_user_data_unregistered:
+ * @elt: #GstElement that is pushing user data
+ * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
+ * @buf: #GstBuffer that receives the parsed data
+ *
+ * After user data has been parsed, add the data to @buf
+ */
+void
+gst_video_push_user_data_unregistered (GstElement * elt,
+    GstVideoParseUserDataUnregistered * user_data, GstBuffer * buf)
+{
+  if (user_data->data != NULL) {
+    gst_buffer_add_video_sei_user_data_unregistered_meta (buf, user_data->uuid,
+        user_data->data, user_data->size);
+    gst_video_user_data_unregistered_clear (user_data);
+  }
 }

@@ -1089,6 +1089,46 @@ error:
 }
 
 static GstH264ParserResult
+gst_h264_parser_parse_user_data_unregistered (GstH264NalParser * nalparser,
+    GstH264UserDataUnregistered * urud, NalReader * nr, guint payload_size)
+{
+  guint8 *data = NULL;
+  gint i;
+
+  if (payload_size < 16) {
+    GST_WARNING ("Too small payload size %d", payload_size);
+    return GST_H264_PARSER_BROKEN_DATA;
+  }
+
+  for (int i = 0; i < 16; i++) {
+    READ_UINT8 (nr, urud->uuid[i], 8);
+    --payload_size;
+  }
+
+  urud->size = payload_size;
+
+  data = g_malloc0 (payload_size);
+  for (i = 0; i < payload_size; ++i) {
+    READ_UINT8 (nr, data[i], 8);
+  }
+
+  if (payload_size < 1) {
+    GST_WARNING ("No more remaining payload data to store");
+    return GST_H264_PARSER_BROKEN_DATA;
+  }
+
+  urud->data = data;
+  GST_MEMDUMP ("SEI user data unregistered", data, payload_size);
+  return GST_H264_PARSER_OK;
+
+error:
+  {
+    GST_WARNING ("error parsing \"User Data Unregistered\"");
+    return GST_H264_PARSER_ERROR;
+  }
+}
+
+static GstH264ParserResult
 gst_h264_parser_parse_recovery_point (GstH264NalParser * nalparser,
     GstH264RecoveryPoint * rp, NalReader * nr)
 {
@@ -1309,6 +1349,10 @@ gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
     case GST_H264_SEI_REGISTERED_USER_DATA:
       res = gst_h264_parser_parse_registered_user_data (nalparser,
           &sei->payload.registered_user_data, nr, payload_size >> 3);
+      break;
+    case GST_H264_SEI_USER_DATA_UNREGISTERED:
+      res = gst_h264_parser_parse_user_data_unregistered (nalparser,
+          &sei->payload.user_data_unregistered, nr, payload_size >> 3);
       break;
     case GST_H264_SEI_RECOVERY_POINT:
       res = gst_h264_parser_parse_recovery_point (nalparser,
@@ -2467,6 +2511,13 @@ gst_h264_sei_clear (GstH264SEIMessage * sei)
 
       g_free ((guint8 *) rud->data);
       rud->data = NULL;
+      break;
+    }
+    case GST_H264_SEI_USER_DATA_UNREGISTERED:{
+      GstH264UserDataUnregistered *udu = &sei->payload.user_data_unregistered;
+
+      g_free ((guint8 *) udu->data);
+      udu->data = NULL;
       break;
     }
     case GST_H264_SEI_UNHANDLED_PAYLOAD:{
