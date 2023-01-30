@@ -145,10 +145,12 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
 {
   struct ImageToRawDownload *raw = impl;
   GstVulkanCommandBuffer *cmd_buf;
+  VkImageMemoryBarrier image_memory_barrier[GST_VIDEO_MAX_PLANES];
+  VkBufferMemoryBarrier buffer_memory_barrier[GST_VIDEO_MAX_PLANES];
   GError *error = NULL;
   GstFlowReturn ret;
   VkResult err;
-  int i, n_mems;
+  int i, n_mems, n_planes, n_barriers = 0;
 
   if (!raw->cmd_pool) {
     if (!(raw->cmd_pool =
@@ -198,14 +200,12 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       goto unlock_error;
   }
 
-  n_mems = gst_buffer_n_memory (*outbuf);
+  n_mems = gst_buffer_n_memory (inbuf);
+  g_assert (n_mems < GST_VIDEO_MAX_PLANES);
+
   for (i = 0; i < n_mems; i++) {
-    VkBufferImageCopy region;
-    GstMemory *in_mem, *out_mem;
-    GstVulkanBufferMemory *buf_mem;
+    GstMemory *in_mem;
     GstVulkanImageMemory *img_mem;
-    VkImageMemoryBarrier image_memory_barrier;
-    VkBufferMemoryBarrier buffer_memory_barrier;
 
     in_mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_image_memory (in_mem)) {
@@ -214,34 +214,8 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     }
     img_mem = (GstVulkanImageMemory *) in_mem;
 
-    out_mem = gst_buffer_peek_memory (*outbuf, i);
-    if (!gst_is_vulkan_buffer_memory (out_mem)) {
-      GST_WARNING_OBJECT (raw->download,
-          "Output is not a GstVulkanBufferMemory");
-      goto unlock_error;
-    }
-    buf_mem = (GstVulkanBufferMemory *) out_mem;
-
     /* *INDENT-OFF* */
-    region = (VkBufferImageCopy) {
-        .bufferOffset = 0,
-        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
-        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
-        .imageSubresource = {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .mipLevel = 0,
-            .baseArrayLayer = 0,
-            .layerCount = 1,
-        },
-        .imageOffset = { .x = 0, .y = 0, .z = 0, },
-        .imageExtent = {
-            .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
-            .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
-            .depth = 1,
-        }
-    };
-
-    image_memory_barrier = (VkImageMemoryBarrier) {
+    image_memory_barrier[n_barriers] = (VkImageMemoryBarrier) {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
         .pNext = NULL,
         .srcAccessMask = img_mem->barrier.parent.access_flags,
@@ -254,8 +228,74 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         .image = img_mem->image,
         .subresourceRange = img_mem->barrier.subresource_range
     };
+    /* *INDENT-ON* */
 
-    buffer_memory_barrier = (VkBufferMemoryBarrier) {
+    img_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    img_mem->barrier.parent.access_flags =
+        image_memory_barrier[n_barriers].dstAccessMask;
+    img_mem->barrier.image_layout = image_memory_barrier[n_barriers].newLayout;
+
+    n_barriers++;
+  }
+
+  if (n_barriers) {
+    vkCmdPipelineBarrier (cmd_buf->cmd,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, n_barriers,
+        image_memory_barrier);
+  }
+
+  n_planes = GST_VIDEO_INFO_N_PLANES (&raw->out_info);
+  n_barriers = 0;
+
+  for (i = 0; i < n_planes; i++) {
+    VkBufferImageCopy region;
+    GstMemory *out_mem;
+    GstVulkanBufferMemory *buf_mem;
+    GstVulkanImageMemory *img_mem;
+    gint idx;
+    const VkImageAspectFlags aspects[] = { VK_IMAGE_ASPECT_PLANE_0_BIT,
+      VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
+    };
+    VkImageAspectFlags plane_aspect;
+
+    idx = MIN (i, n_mems - 1);
+    img_mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (inbuf, idx);
+
+    out_mem = gst_buffer_peek_memory (*outbuf, i);
+    if (!gst_is_vulkan_buffer_memory (out_mem)) {
+      GST_WARNING_OBJECT (raw->download,
+          "Output is not a GstVulkanBufferMemory");
+      goto unlock_error;
+    }
+    buf_mem = (GstVulkanBufferMemory *) out_mem;
+
+    if (n_planes == n_mems)
+      plane_aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+    else
+      plane_aspect = aspects[i];
+
+    /* *INDENT-OFF* */
+    region = (VkBufferImageCopy) {
+        .bufferOffset = 0,
+        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&raw->in_info, i),
+        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&raw->in_info, i),
+        .imageSubresource = {
+             /* XXX: each plane is a buffer */
+          .aspectMask = plane_aspect,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .imageOffset = { .x = 0, .y = 0, .z = 0, },
+        .imageExtent = {
+            .width = GST_VIDEO_INFO_COMP_WIDTH (&raw->out_info, i),
+            .height = GST_VIDEO_INFO_COMP_HEIGHT (&raw->out_info, i),
+            .depth = 1,
+        }
+    };
+
+    buffer_memory_barrier[n_barriers] = (VkBufferMemoryBarrier) {
         .sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
         .pNext = NULL,
         .srcAccessMask = buf_mem->barrier.parent.access_flags,
@@ -269,20 +309,20 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     };
     /* *INDENT-ON* */
 
-    vkCmdPipelineBarrier (cmd_buf->cmd,
-        buf_mem->barrier.parent.pipeline_stages | img_mem->barrier.
-        parent.pipeline_stages, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 1,
-        &buffer_memory_barrier, 1, &image_memory_barrier);
-
     buf_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    buf_mem->barrier.parent.access_flags = buffer_memory_barrier.dstAccessMask;
-
-    img_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    img_mem->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
-    img_mem->barrier.image_layout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+    buf_mem->barrier.parent.access_flags =
+        buffer_memory_barrier[n_barriers].dstAccessMask;
 
     vkCmdCopyImageToBuffer (cmd_buf->cmd, img_mem->image,
         img_mem->barrier.image_layout, buf_mem->buffer, 1, &region);
+
+    n_barriers++;
+  }
+
+  if (n_barriers) {
+    vkCmdPipelineBarrier (cmd_buf->cmd, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, n_barriers,
+        buffer_memory_barrier, 0, NULL);
   }
 
   err = vkEndCommandBuffer (cmd_buf->cmd);
