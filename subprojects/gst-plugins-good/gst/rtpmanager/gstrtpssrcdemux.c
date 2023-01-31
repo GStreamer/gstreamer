@@ -226,6 +226,30 @@ add_ssrc_and_ref (GstEvent * event, guint32 ssrc)
       gst_caps_unref (newcaps);
       break;
     }
+    case GST_EVENT_STREAM_START:
+    {
+      const gchar *stream_id;
+      gchar *new_stream_id;
+      guint group_id;
+      GstStreamFlags flags;
+      GstEvent *new_event;
+
+      gst_event_parse_stream_start (event, &stream_id);
+
+      new_stream_id =
+          g_strdup_printf ("%s/%u", stream_id ? stream_id : "", ssrc);
+      new_event = gst_event_new_stream_start (new_stream_id);
+      g_free (new_stream_id);
+
+      if (gst_event_parse_group_id (event, &group_id))
+        gst_event_set_group_id (new_event, group_id);
+      gst_event_parse_stream_flags (event, &flags);
+      gst_event_set_stream_flags (new_event, flags);
+
+      event = new_event;
+
+      break;
+    }
     default:
       gst_event_ref (event);
       break;
