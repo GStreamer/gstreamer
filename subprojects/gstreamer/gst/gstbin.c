@@ -2876,10 +2876,13 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       GST_DEBUG_OBJECT (element, "clearing all cached messages");
       bin_remove_messages (bin, NULL, GST_MESSAGE_ANY);
       GST_OBJECT_UNLOCK (bin);
-      /* We might not have reached PAUSED yet due to async errors,
-       * make sure to always deactivate the pads nonetheless */
-      if (!(gst_bin_src_pads_activate (bin, FALSE)))
-        goto activate_failure;
+      /* Pads can be activated in PULL mode before in NULL state */
+      if (current != GST_STATE_NULL) {
+        /* We might not have reached PAUSED yet due to async errors,
+         * make sure to always deactivate the pads nonetheless */
+        if (!gst_bin_src_pads_activate (bin, FALSE))
+          goto activate_failure;
+      }
       break;
     case GST_STATE_NULL:
       /* Clear message list on next NULL */
