@@ -61,6 +61,9 @@ static GType gst_svtav1enc_rate_control_mode_get_type(void) {
     return rate_control_mode_type;
 }
 
+/* default configuration */
+static EbSvtAv1EncConfiguration default_configuration;
+
 /* prototypes */
 static void gst_svtav1enc_set_property(GObject *object, guint property_id, const GValue *value,
                                        GParamSpec *pspec);
@@ -321,6 +324,7 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
 
 static void gst_svtav1enc_init(GstSvtAv1Enc *svtav1enc) {
     svtav1enc->svt_config = g_new0(EbSvtAv1EncConfiguration, 1);
+    memcpy(svtav1enc->svt_config, &default_configuration, sizeof(default_configuration));
 }
 
 static void gst_svtav1enc_set_property(GObject *object, guint property_id, const GValue *value,
@@ -633,10 +637,12 @@ static GstFlowReturn gst_svtav1enc_dequeue_encoded_frames(GstSvtAv1Enc *svtav1en
 
 static gboolean gst_svtav1enc_open(GstVideoEncoder *encoder) {
     GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(encoder);
+    /* don't overwrite the application's configuration */
+    EbSvtAv1EncConfiguration svt_config;
 
     GST_DEBUG_OBJECT(svtav1enc, "open");
 
-    EbErrorType res = svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
+    EbErrorType res = svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, &svt_config);
     if (res != EB_ErrorNone) {
         GST_ELEMENT_ERROR(svtav1enc,
                           LIBRARY,
@@ -762,6 +768,16 @@ static gboolean gst_svtav1enc_propose_allocation(GstVideoEncoder *encoder, GstQu
 }
 
 static gboolean plugin_init(GstPlugin *plugin) {
+    EbComponentType *handle = NULL;
+    EbErrorType      res;
+
+    res = svt_av1_enc_init_handle(&handle, NULL, &default_configuration);
+    if (res != EB_ErrorNone) {
+        GST_ERROR("Failed to initialize SVT AV1 handle");
+        return FALSE;
+    }
+    svt_av1_enc_deinit(handle);
+
     return gst_element_register(plugin, "svtav1enc", GST_RANK_SECONDARY, GST_TYPE_SVTAV1ENC);
 }
 
