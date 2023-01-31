@@ -117,7 +117,7 @@ static GstStaticPadTemplate gst_svtav1enc_src_pad_template = GST_STATIC_PAD_TEMP
 /* class initialization */
 G_DEFINE_TYPE_WITH_CODE(GstSvtAv1Enc, gst_svtav1enc, GST_TYPE_VIDEO_ENCODER,
                         GST_DEBUG_CATEGORY_INIT(gst_svtav1enc_debug_category, "svtav1enc", 0,
-                                                "debug category for SVT-AV1 encoder element"));
+                                                "SVT-AV1 encoder element"));
 
 /* this mutex is required to avoid race conditions in SVT-AV1 memory allocations, which aren't thread-safe */
 G_LOCK_DEFINE_STATIC(init_mutex);
