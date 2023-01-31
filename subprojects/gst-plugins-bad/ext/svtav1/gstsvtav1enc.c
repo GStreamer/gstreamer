@@ -72,7 +72,7 @@ static void gst_svtav1enc_get_property(GObject *object, guint property_id, GValu
 static void gst_svtav1enc_finalize(GObject *object);
 
 static void          gst_svtav1enc_allocate_svt_buffers(GstSvtAv1Enc *svtav1enc);
-static void          gst_svthevenc_deallocate_svt_buffers(GstSvtAv1Enc *svtav1enc);
+static void          gst_svtav1enc_deallocate_svt_buffers(GstSvtAv1Enc *svtav1enc);
 static gboolean      gst_svtav1enc_configure_svt(GstSvtAv1Enc *svtav1enc);
 static GstFlowReturn gst_svtav1enc_encode(GstSvtAv1Enc *svtav1enc, GstVideoCodecFrame *frame);
 static gboolean      gst_svtav1enc_send_eos(GstSvtAv1Enc *svtav1enc);
@@ -437,7 +437,7 @@ static void gst_svtav1enc_allocate_svt_buffers(GstSvtAv1Enc *svtav1enc) {
     svtav1enc->input_buf->metadata      = NULL;
 }
 
-static void gst_svthevenc_deallocate_svt_buffers(GstSvtAv1Enc *svtav1enc) {
+static void gst_svtav1enc_deallocate_svt_buffers(GstSvtAv1Enc *svtav1enc) {
     if (svtav1enc->input_buf) {
         g_free(svtav1enc->input_buf->p_buffer);
         svtav1enc->input_buf->p_buffer = NULL;
@@ -683,7 +683,7 @@ static gboolean gst_svtav1enc_stop(GstVideoEncoder *encoder) {
     svtav1enc->state = NULL;
 
     svt_av1_enc_deinit(svtav1enc->svt_encoder);
-    gst_svthevenc_deallocate_svt_buffers(svtav1enc);
+    gst_svtav1enc_deallocate_svt_buffers(svtav1enc);
 
     return TRUE;
 }
