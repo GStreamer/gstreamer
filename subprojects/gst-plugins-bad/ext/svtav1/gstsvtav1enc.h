@@ -35,9 +35,6 @@ typedef struct _GstSvtAv1Enc {
     EbSvtAv1EncConfiguration *svt_config;
 
     EbBufferHeaderType *input_buf;
-
-    long long int frame_count;
-    int           dts_offset;
 } GstSvtAv1Enc;
 
 typedef struct _GstSvtAv1EncClass {

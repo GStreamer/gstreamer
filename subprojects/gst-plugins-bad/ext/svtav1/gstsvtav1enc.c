@@ -322,7 +322,6 @@ static void gst_svtav1enc_init(GstSvtAv1Enc *svtav1enc) {
         return;
     }
     memset(&svtav1enc->svt_encoder, 0, sizeof(svtav1enc->svt_encoder));
-    svtav1enc->frame_count = 0;
 
     EbErrorType res = svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
     if (res != EB_ErrorNone) {
@@ -652,8 +651,8 @@ GstFlowReturn gst_svtav1enc_dequeue_encoded_frames(GstSvtAv1Enc *svtav1enc,
             frame->pts = frame->output_buffer->pts = output_buf->pts;
 
             GST_LOG_OBJECT(svtav1enc,
-                           "#frame:%lld pts:%" G_GINT64_FORMAT " SliceType:%d\n",
-                           svtav1enc->frame_count,
+                           "#frame:%u pts:%" G_GINT64_FORMAT " SliceType:%d\n",
+                           frame->system_frame_number,
                            (frame->pts),
                            output_buf->pic_type);
 
@@ -661,8 +660,6 @@ GstFlowReturn gst_svtav1enc_dequeue_encoded_frames(GstSvtAv1Enc *svtav1enc,
             output_buf = NULL;
 
             ret = gst_video_encoder_finish_frame(GST_VIDEO_ENCODER(svtav1enc), frame);
-
-            svtav1enc->frame_count++;
         }
 
     } while (res == EB_ErrorNone && !encode_at_eos && ret == GST_FLOW_OK);
