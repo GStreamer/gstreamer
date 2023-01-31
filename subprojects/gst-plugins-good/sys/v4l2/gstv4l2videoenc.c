@@ -635,31 +635,27 @@ static void
 gst_v4l2_video_enc_loop (GstVideoEncoder * encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
+  GstBufferPool *pool = gst_v4l2_object_get_buffer_pool (self->v4l2capture);
+  GstV4l2BufferPool *cpool = GST_V4L2_BUFFER_POOL (pool);
   GstVideoCodecFrame *frame;
   GstBuffer *buffer = NULL;
   GstFlowReturn ret;
 
   GST_LOG_OBJECT (encoder, "Allocate output buffer");
 
-  buffer = gst_video_encoder_allocate_output_buffer (encoder,
-      self->v4l2capture->info.size);
-
-  if (NULL == buffer) {
-    ret = GST_FLOW_FLUSHING;
+  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
+  if (ret != GST_FLOW_OK) {
+    if (cpool)
+      gst_object_unref (cpool);
     goto beach;
   }
 
   /* FIXME Check if buffer isn't the last one here */
 
   GST_LOG_OBJECT (encoder, "Process output buffer");
-  {
-    GstV4l2BufferPool *cpool =
-        GST_V4L2_BUFFER_POOL (gst_v4l2_object_get_buffer_pool
-        (self->v4l2capture));
-    ret = gst_v4l2_buffer_pool_process (cpool, &buffer, NULL);
-    if (cpool)
-      gst_object_unref (cpool);
-  }
+  ret = gst_v4l2_buffer_pool_process (cpool, &buffer, NULL);
+  if (cpool)
+    gst_object_unref (cpool);
   if (ret != GST_FLOW_OK)
     goto beach;
 
