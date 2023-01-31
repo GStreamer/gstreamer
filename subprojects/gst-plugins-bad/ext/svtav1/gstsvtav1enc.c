@@ -32,11 +32,10 @@ static void gst_svtav1enc_set_property(GObject *object, guint property_id, const
                                        GParamSpec *pspec);
 static void gst_svtav1enc_get_property(GObject *object, guint property_id, GValue *value,
                                        GParamSpec *pspec);
-static void gst_svtav1enc_dispose(GObject *object);
 static void gst_svtav1enc_finalize(GObject *object);
 
-gboolean             gst_svtav1enc_allocate_svt_buffers(GstSvtAv1Enc *svtav1enc);
-void                 gst_svthevenc_deallocate_svt_buffers(GstSvtAv1Enc *svtav1enc);
+static void          gst_svtav1enc_allocate_svt_buffers(GstSvtAv1Enc *svtav1enc);
+static void          gst_svthevenc_deallocate_svt_buffers(GstSvtAv1Enc *svtav1enc);
 static gboolean      gst_svtav1enc_configure_svt(GstSvtAv1Enc *svtav1enc);
 static GstFlowReturn gst_svtav1enc_encode(GstSvtAv1Enc *svtav1enc, GstVideoCodecFrame *frame);
 static gboolean      gst_svtav1enc_send_eos(GstSvtAv1Enc *svtav1enc);
@@ -44,6 +43,9 @@ static GstFlowReturn gst_svtav1enc_dequeue_encoded_frames(GstSvtAv1Enc *svtav1en
                                                           gboolean      closing_encoder,
                                                           gboolean      output_frames);
 
+static gboolean      gst_svtav1enc_open(GstVideoEncoder *encoder);
+static gboolean      gst_svtav1enc_close(GstVideoEncoder *encoder);
+static gboolean      gst_svtav1enc_start(GstVideoEncoder *encoder);
 static gboolean      gst_svtav1enc_stop(GstVideoEncoder *encoder);
 static gboolean      gst_svtav1enc_set_format(GstVideoEncoder *encoder, GstVideoCodecState *state);
 static GstFlowReturn gst_svtav1enc_handle_frame(GstVideoEncoder    *encoder,
@@ -141,8 +143,10 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
 
     gobject_class->set_property             = gst_svtav1enc_set_property;
     gobject_class->get_property             = gst_svtav1enc_get_property;
-    gobject_class->dispose                  = gst_svtav1enc_dispose;
     gobject_class->finalize                 = gst_svtav1enc_finalize;
+    video_encoder_class->open               = GST_DEBUG_FUNCPTR(gst_svtav1enc_open);
+    video_encoder_class->close              = GST_DEBUG_FUNCPTR(gst_svtav1enc_close);
+    video_encoder_class->start              = GST_DEBUG_FUNCPTR(gst_svtav1enc_start);
     video_encoder_class->stop               = GST_DEBUG_FUNCPTR(gst_svtav1enc_stop);
     video_encoder_class->set_format         = GST_DEBUG_FUNCPTR(gst_svtav1enc_set_format);
     video_encoder_class->handle_frame       = GST_DEBUG_FUNCPTR(gst_svtav1enc_handle_frame);
@@ -314,27 +318,7 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
 }
 
 static void gst_svtav1enc_init(GstSvtAv1Enc *svtav1enc) {
-    GST_OBJECT_LOCK(svtav1enc);
-    svtav1enc->svt_config = g_malloc(sizeof(EbSvtAv1EncConfiguration));
-    if (!svtav1enc->svt_config) {
-        GST_ERROR_OBJECT(svtav1enc, "insufficient resources");
-        GST_OBJECT_UNLOCK(svtav1enc);
-        return;
-    }
-    memset(&svtav1enc->svt_encoder, 0, sizeof(svtav1enc->svt_encoder));
-
-    EbErrorType res = svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
-    if (res != EB_ErrorNone) {
-        GST_ELEMENT_ERROR(svtav1enc,
-                          LIBRARY,
-                          INIT,
-                          (NULL),
-                          ("svt_av1_enc_init_handle failed with error %d", res));
-        GST_OBJECT_UNLOCK(svtav1enc);
-        return;
-    }
-    /* setting configuration here since svt_av1_enc_init_handle overrides it */
-    GST_OBJECT_UNLOCK(svtav1enc);
+    svtav1enc->svt_config = g_new0(EbSvtAv1EncConfiguration, 1);
 }
 
 void gst_svtav1enc_set_property(GObject *object, guint property_id, const GValue *value,
@@ -422,51 +406,23 @@ void gst_svtav1enc_get_property(GObject *object, guint property_id, GValue *valu
     }
 }
 
-void gst_svtav1enc_dispose(GObject *object) {
-    GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(object);
-
-    GST_DEBUG_OBJECT(svtav1enc, "dispose");
-
-    /* clean up as possible.  may be called multiple times */
-    if (svtav1enc->state)
-        gst_video_codec_state_unref(svtav1enc->state);
-    svtav1enc->state = NULL;
-
-    G_OBJECT_CLASS(gst_svtav1enc_parent_class)->dispose(object);
-}
-
 void gst_svtav1enc_finalize(GObject *object) {
     GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(object);
 
     GST_DEBUG_OBJECT(svtav1enc, "finalizing svtav1enc");
 
-    GST_OBJECT_LOCK(svtav1enc);
-    svt_av1_enc_deinit_handle(svtav1enc->svt_encoder);
-    svtav1enc->svt_encoder = NULL;
     g_free(svtav1enc->svt_config);
-    GST_OBJECT_UNLOCK(svtav1enc);
 
     G_OBJECT_CLASS(gst_svtav1enc_parent_class)->finalize(object);
 }
 
-gboolean gst_svtav1enc_allocate_svt_buffers(GstSvtAv1Enc *svtav1enc) {
-    svtav1enc->input_buf = g_malloc(sizeof(EbBufferHeaderType));
-    if (!svtav1enc->input_buf) {
-        GST_ERROR_OBJECT(svtav1enc, "insufficient resources");
-        return FALSE;
-    }
-    svtav1enc->input_buf->p_buffer = g_malloc(sizeof(EbSvtIOFormat));
-    if (!svtav1enc->input_buf->p_buffer) {
-        GST_ERROR_OBJECT(svtav1enc, "insufficient resources");
-        return FALSE;
-    }
-    memset(svtav1enc->input_buf->p_buffer, 0, sizeof(EbSvtIOFormat));
+void gst_svtav1enc_allocate_svt_buffers(GstSvtAv1Enc *svtav1enc) {
+    svtav1enc->input_buf                = g_new0(EbBufferHeaderType, 1);
+    svtav1enc->input_buf->p_buffer      = (uint8_t *)g_new0(EbSvtIOFormat, 1);
     svtav1enc->input_buf->size          = sizeof(EbBufferHeaderType);
     svtav1enc->input_buf->p_app_private = NULL;
     svtav1enc->input_buf->pic_type      = EB_AV1_INVALID_PICTURE;
     svtav1enc->input_buf->metadata      = NULL;
-
-    return TRUE;
 }
 
 void gst_svthevenc_deallocate_svt_buffers(GstSvtAv1Enc *svtav1enc) {
@@ -485,7 +441,7 @@ gboolean gst_svtav1enc_configure_svt(GstSvtAv1Enc *svtav1enc) {
     }
 
     /* set properties out of GstVideoInfo */
-    GstVideoInfo *info                            = &svtav1enc->state->info;
+    const GstVideoInfo *info                      = &svtav1enc->state->info;
     svtav1enc->svt_config->encoder_bit_depth      = GST_VIDEO_INFO_COMP_DEPTH(info, 0);
     svtav1enc->svt_config->source_width           = GST_VIDEO_INFO_WIDTH(info);
     svtav1enc->svt_config->source_height          = GST_VIDEO_INFO_HEIGHT(info);
@@ -667,22 +623,53 @@ GstFlowReturn gst_svtav1enc_dequeue_encoded_frames(GstSvtAv1Enc *svtav1enc,
     return ret;
 }
 
+static gboolean gst_svtav1enc_open(GstVideoEncoder *encoder) {
+    GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(encoder);
+
+    GST_DEBUG_OBJECT(svtav1enc, "open");
+
+    EbErrorType res = svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
+    if (res != EB_ErrorNone) {
+        GST_ELEMENT_ERROR(svtav1enc,
+                          LIBRARY,
+                          INIT,
+                          (NULL),
+                          ("svt_av1_enc_init_handle failed with error %d", res));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+static gboolean gst_svtav1enc_close(GstVideoEncoder *encoder) {
+    GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(encoder);
+
+    GST_DEBUG_OBJECT(svtav1enc, "close");
+
+    svt_av1_enc_deinit_handle(svtav1enc->svt_encoder);
+    svtav1enc->svt_encoder = NULL;
+    return TRUE;
+}
+
+static gboolean gst_svtav1enc_start(GstVideoEncoder *encoder) {
+    GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(encoder);
+
+    GST_DEBUG_OBJECT(svtav1enc, "start");
+
+    gst_svtav1enc_allocate_svt_buffers(svtav1enc);
+    return TRUE;
+}
+
 static gboolean gst_svtav1enc_stop(GstVideoEncoder *encoder) {
     GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(encoder);
 
     GST_DEBUG_OBJECT(svtav1enc, "stop");
 
-    GST_OBJECT_LOCK(svtav1enc);
     if (svtav1enc->state)
         gst_video_codec_state_unref(svtav1enc->state);
     svtav1enc->state = NULL;
-    GST_OBJECT_UNLOCK(svtav1enc);
 
-    GST_OBJECT_LOCK(svtav1enc);
     svt_av1_enc_deinit(svtav1enc->svt_encoder);
-    /* Destruct the buffer memory pool */
     gst_svthevenc_deallocate_svt_buffers(svtav1enc);
-    GST_OBJECT_UNLOCK(svtav1enc);
 
     return TRUE;
 }
@@ -694,13 +681,16 @@ static gboolean gst_svtav1enc_set_format(GstVideoEncoder *encoder, GstVideoCodec
     GstVideoCodecState *output_state;
     GST_DEBUG_OBJECT(svtav1enc, "set_format");
 
-    if (svtav1enc->state)
+    if (svtav1enc->state) {
         gst_video_codec_state_unref(svtav1enc->state);
+        svt_av1_enc_deinit(svtav1enc->svt_encoder);
+    }
     svtav1enc->state = gst_video_codec_state_ref(state);
 
-    gst_svtav1enc_configure_svt(svtav1enc);
-    gst_svtav1enc_allocate_svt_buffers(svtav1enc);
-    gst_svtav1enc_start_svt(svtav1enc);
+    if (!gst_svtav1enc_configure_svt(svtav1enc))
+        return FALSE;
+    if (!gst_svtav1enc_start_svt(svtav1enc))
+        return FALSE;
 
     uint32_t fps = svtav1enc->svt_config->frame_rate_numerator /
         svtav1enc->svt_config->frame_rate_denominator;
