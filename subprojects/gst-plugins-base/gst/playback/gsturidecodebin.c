@@ -2309,6 +2309,10 @@ setup_source (GstURIDecodeBin * decoder)
   /* stream admin setup */
   decoder->streams = g_hash_table_new_full (NULL, NULL, NULL, free_stream);
 
+  if (gst_element_set_state (source,
+          GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS)
+    goto state_fail;
+
   /* see if the source element emits raw audio/video all by itself,
    * if so, we can create streams for the pads and be done with it.
    * Also check that is has source pads, if not, we assume it will
@@ -2370,6 +2374,12 @@ setup_source (GstURIDecodeBin * decoder)
 no_source:
   {
     /* error message was already posted */
+    return FALSE;
+  }
+state_fail:
+  {
+    GST_ELEMENT_ERROR (decoder, CORE, FAILED,
+        (_("Source element can't be prepared")), (NULL));
     return FALSE;
   }
 invalid_source:
