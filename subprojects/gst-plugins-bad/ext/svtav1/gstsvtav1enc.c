@@ -27,6 +27,40 @@
 GST_DEBUG_CATEGORY_STATIC(gst_svtav1enc_debug_category);
 #define GST_CAT_DEFAULT gst_svtav1enc_debug_category
 
+#define GST_SVTAV1ENC_TYPE_INTRA_REFRESH_TYPE (gst_svtav1enc_intra_refresh_type_get_type())
+static GType gst_svtav1enc_intra_refresh_type_get_type(void) {
+    static GType            intra_refresh_type = 0;
+    static const GEnumValue intra_refresh[]    = {
+        {SVT_AV1_FWDKF_REFRESH, "Open GOP", "CRA"},
+        {SVT_AV1_KF_REFRESH, "Closed GOP", "IDR"},
+        {0, NULL, NULL},
+    };
+
+    if (!intra_refresh_type) {
+        intra_refresh_type = g_enum_register_static("GstSvtAv1EncIntraRefreshType", intra_refresh);
+    }
+    return intra_refresh_type;
+}
+
+#define GST_SVTAV1ENC_TYPE_RATE_CONTROL_MODE (gst_svtav1enc_rate_control_mode_get_type())
+static GType gst_svtav1enc_rate_control_mode_get_type(void) {
+    static GType            rate_control_mode_type = 0;
+    static const GEnumValue rate_control_mode[]    = {
+        {SVT_AV1_RC_MODE_CQP_OR_CRF,
+            "Constant quantization parameter/constant rate factor",
+            "cqp-or-crf"},
+        {SVT_AV1_RC_MODE_VBR, "Variable bitrate", "vbr"},
+        {SVT_AV1_RC_MODE_CBR, "Constant bitrate", "cbr"},
+        {0, NULL, NULL},
+    };
+
+    if (!rate_control_mode_type) {
+        rate_control_mode_type = g_enum_register_static("GstSvtAv1EncRateControlMode",
+                                                        rate_control_mode);
+    }
+    return rate_control_mode_type;
+}
+
 /* prototypes */
 static void gst_svtav1enc_set_property(GObject *object, guint property_id, const GValue *value,
                                        GParamSpec *pspec);
@@ -56,44 +90,34 @@ static gboolean      gst_svtav1enc_flush(GstVideoEncoder *encoder);
 
 enum {
     PROP_0,
-    PROP_ENCMODE,
-    PROP_B_PYRAMID,
-    PROP_P_FRAMES,
-    PROP_PRED_STRUCTURE,
-    PROP_GOP_SIZE,
-    PROP_INTRA_REFRESH,
+    PROP_PRESET,
+    PROP_RATE_CONTROL_MODE,
+    PROP_TARGET_BITRATE,
+    PROP_MAX_BITRATE,
+    PROP_MAX_QP_ALLOWED,
+    PROP_MIN_QP_ALLOWED,
     PROP_QP,
-    PROP_QP_MAX,
-    PROP_QP_MIN,
-    PROP_DEBLOCKING,
-    PROP_RC_MODE,
-    PROP_BITRATE,
-    PROP_LOOKAHEAD,
-    PROP_SCD,
-    PROP_CORES,
-    PROP_SOCKET
+    PROP_MAXIMUM_BUFFER_SIZE,
+    PROP_ADAPTIVE_QUANTIZATION,
+    PROP_INTRA_PERIOD_LENGTH,
+    PROP_INTRA_REFRESH_TYPE,
+    PROP_LOGICAL_PROCESSORS,
+    PROP_TARGET_SOCKET
 };
 
-#define PROP_RC_MODE_CQP 0
-#define PROP_RC_MODE_VBR 1
-
-#define PROP_ENCMODE_DEFAULT 8
-#define PROP_HIERARCHICAL_LEVEL_DEFAULT 4
-#define PROP_P_FRAMES_DEFAULT 0
-#define PROP_PRED_STRUCTURE_DEFAULT 2
-#define PROP_GOP_SIZE_DEFAULT -1
-#define PROP_INTRA_REFRESH_DEFAULT 1
+#define PROP_PRESET_DEFAULT 8
+#define PROP_RATE_CONTROL_MODE_DEFAULT SVT_AV1_RC_MODE_CQP_OR_CRF
+#define PROP_TARGET_BITRATE_DEFAULT 2000
+#define PROP_MAX_BITRATE_DEFAULT 0
+#define PROP_QP_MAX_QP_ALLOWED_DEFAULT 63
+#define PROP_QP_MIN_QP_ALLOWED_DEFAULT 0
 #define PROP_QP_DEFAULT 50
-#define PROP_DEBLOCKING_DEFAULT TRUE
-#define PROP_RC_MODE_DEFAULT PROP_RC_MODE_CQP
-#define PROP_BITRATE_DEFAULT 7000000
-#define PROP_QP_MAX_DEFAULT 63
-#define PROP_QP_MIN_DEFAULT 0
-#define PROP_LOOKAHEAD_DEFAULT (unsigned int)-1
-#define PROP_SCD_DEFAULT FALSE
-#define PROP_AUD_DEFAULT FALSE
-#define PROP_CORES_DEFAULT 0
-#define PROP_SOCKET_DEFAULT -1
+#define PROP_MAXIMUM_BUFFER_SIZE_DEFAULT 1000
+#define PROP_ADAPTIVE_QUANTIZATION_DEFAULT 2
+#define PROP_INTRA_PERIOD_LENGTH_DEFAULT -2
+#define PROP_INTRA_REFRESH_TYPE_DEFAULT 1
+#define PROP_LOGICAL_PROCESSORS_DEFAULT 0
+#define PROP_TARGET_SOCKET_DEFAULT -1
 
 /* pad templates */
 static GstStaticPadTemplate gst_svtav1enc_sink_pad_template = GST_STATIC_PAD_TEMPLATE(
@@ -153,61 +177,72 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
 
     g_object_class_install_property(
         gobject_class,
-        PROP_ENCMODE,
-        g_param_spec_uint("speed",
-                          "speed (Encoder Mode)",
+        PROP_PRESET,
+        g_param_spec_uint("preset",
+                          "Preset",
                           "Quality vs density tradeoff point"
                           " that the encoding is to be performed at"
-                          " (0 is the highest quality, 12 is the highest speed) ",
+                          " (0 is the highest quality, 13 is the highest speed) ",
                           0,
-                          12,
-                          PROP_ENCMODE_DEFAULT,
+                          13,
+                          PROP_PRESET_DEFAULT,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property(gobject_class,
-                                    PROP_B_PYRAMID,
-                                    g_param_spec_uint("hierarchical-level",
-                                                      "Hierarchical levels",
-                                                      "3 : 4 - Level Hierarchy,"
-                                                      "4 : 5 - Level Hierarchy",
-                                                      3,
-                                                      4,
-                                                      PROP_HIERARCHICAL_LEVEL_DEFAULT,
+                                    PROP_RATE_CONTROL_MODE,
+                                    g_param_spec_enum("rate-control-mode",
+                                                      "Rate-control mode",
+                                                      "Rate Control Mode",
+                                                      GST_SVTAV1ENC_TYPE_RATE_CONTROL_MODE,
+                                                      PROP_RATE_CONTROL_MODE_DEFAULT,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-    //g_object_class_install_property (gobject_class, PROP_P_FRAMES,
-    //    g_param_spec_boolean ("p-frames", "P Frames",
-    //        "Use P-frames in the base layer",
-    //        PROP_P_FRAMES_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-    //g_object_class_install_property (gobject_class, PROP_PRED_STRUCTURE,
-    //    g_param_spec_uint ("pred-struct", "Prediction Structure",
-    //        "0 : Low Delay P, 1 : Low Delay B"
-    //        ", 2 : Random Access",
-    //        0, 2, PROP_PRED_STRUCTURE_DEFAULT,
-    //        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property(
         gobject_class,
-        PROP_GOP_SIZE,
-        g_param_spec_int("gop-size",
-                         "GOP size",
-                         "Period of Intra Frames insertion (-1 is auto)",
-                         -1,
-                         251,
-                         PROP_GOP_SIZE_DEFAULT,
-                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+        PROP_TARGET_BITRATE,
+        g_param_spec_uint("target-bitrate",
+                          "Target bitrate",
+                          "Target bitrate in kbits/sec. Only used when in CBR and VBR mode",
+                          0,
+                          100000,
+                          PROP_TARGET_BITRATE_DEFAULT,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    g_object_class_install_property(gobject_class,
-                                    PROP_INTRA_REFRESH,
-                                    g_param_spec_int("intra-refresh",
-                                                     "Intra refresh type",
-                                                     "CRA (open GOP)"
-                                                     "or IDR frames (closed GOP)",
-                                                     1,
-                                                     2,
-                                                     PROP_INTRA_REFRESH_DEFAULT,
-                                                     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    g_object_class_install_property(
+        gobject_class,
+        PROP_MAX_BITRATE,
+        g_param_spec_uint("max-bitrate",
+                          "Maximum bitrate",
+                          "Maximum bitrate in kbits/sec. Only used when in CBQ mode",
+                          0,
+                          100000,
+                          PROP_MAX_BITRATE_DEFAULT,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_MAX_QP_ALLOWED,
+        g_param_spec_uint("max-qp-allowed",
+                          "Max Quantization parameter",
+                          "Maximum QP value allowed for rate control use"
+                          " Only used in VBR mode.",
+                          0,
+                          63,
+                          PROP_MAX_QP_ALLOWED,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_MIN_QP_ALLOWED,
+        g_param_spec_uint("min-qp-allowed",
+                          "Min Quantization parameter",
+                          "Minimum QP value allowed for rate control use"
+                          " Only used in VBR mode.",
+                          0,
+                          63,
+                          PROP_MIN_QP_ALLOWED,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
     g_object_class_install_property(gobject_class,
                                     PROP_QP,
                                     g_param_spec_uint("qp",
@@ -218,100 +253,70 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
                                                       PROP_QP_DEFAULT,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_DEBLOCKING,
-        g_param_spec_boolean("deblocking",
-                             "Deblock Filter",
-                             "Enable Deblocking Loop Filtering",
-                             PROP_DEBLOCKING_DEFAULT,
-                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
     g_object_class_install_property(gobject_class,
-                                    PROP_RC_MODE,
-                                    g_param_spec_uint("rc",
-                                                      "Rate-control mode",
-                                                      "0 : CQP, 1 : VBR",
-                                                      0,
-                                                      1,
-                                                      PROP_RC_MODE_DEFAULT,
+                                    PROP_MAXIMUM_BUFFER_SIZE,
+                                    g_param_spec_uint("maximum-buffer-size",
+                                                      "Maximum Buffer Size",
+                                                      "Maximum buffer size in milliseconds."
+                                                      " Only used in CBR mode.",
+                                                      20,
+                                                      10000,
+                                                      PROP_MAXIMUM_BUFFER_SIZE_DEFAULT,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    /* TODO: add GST_PARAM_MUTABLE_PLAYING property and handle it? */
     g_object_class_install_property(
         gobject_class,
-        PROP_BITRATE,
-        g_param_spec_uint("bitrate",
-                          "Target bitrate",
-                          "Target bitrate in bits/sec. Only used when in VBR mode",
-                          1,
-                          G_MAXUINT,
-                          PROP_BITRATE_DEFAULT,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-    g_object_class_install_property(
-        gobject_class,
-        PROP_QP_MAX,
-        g_param_spec_uint("max-qp",
-                          "Max Quantization parameter",
-                          "Maximum QP value allowed for rate control use"
-                          " Only used in VBR mode.",
+        PROP_ADAPTIVE_QUANTIZATION,
+        g_param_spec_uint("adaptive-quantization",
+                          "Adaptive Quantization",
+                          "Adaptive quantization within a frame using segmentation.",
                           0,
-                          63,
-                          PROP_QP_MAX_DEFAULT,
+                          2,
+                          PROP_ADAPTIVE_QUANTIZATION_DEFAULT,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property(
         gobject_class,
-        PROP_QP_MIN,
-        g_param_spec_uint("min-qp",
-                          "Min Quantization parameter",
-                          "Minimum QP value allowed for rate control use"
-                          " Only used in VBR mode.",
-                          0,
-                          63,
-                          PROP_QP_MIN_DEFAULT,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-    g_object_class_install_property(
-        gobject_class,
-        PROP_LOOKAHEAD,
-        g_param_spec_int("lookahead",
-                         "Look Ahead Distance",
-                         "Number of frames to look ahead. -1 lets the encoder pick a value",
-                         -1,
-                         250,
-                         PROP_LOOKAHEAD_DEFAULT,
+        PROP_INTRA_PERIOD_LENGTH,
+        g_param_spec_int("intra-period-length",
+                         "Intra Period Length",
+                         "Period of Intra Frames insertion (-2 is auto, -1 no updates)",
+                         -2,
+                         G_MAXINT,
+                         PROP_INTRA_PERIOD_LENGTH_DEFAULT,
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    g_object_class_install_property(
-        gobject_class,
-        PROP_SCD,
-        g_param_spec_boolean("scd",
-                             "Scene Change Detection",
-                             "Enable Scene Change Detection algorithm",
-                             PROP_SCD_DEFAULT,
-                             G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
     g_object_class_install_property(gobject_class,
-                                    PROP_CORES,
-                                    g_param_spec_uint("cores",
-                                                      "Number of logical cores",
-                                                      "Number of logical cores to be used. 0: auto",
-                                                      0,
-                                                      UINT_MAX,
-                                                      PROP_CORES_DEFAULT,
+                                    PROP_INTRA_REFRESH_TYPE,
+                                    g_param_spec_enum("intra-refresh-type",
+                                                      "Intra refresh type",
+                                                      "CRA (open GOP)"
+                                                      "or IDR frames (closed GOP)",
+                                                      GST_SVTAV1ENC_TYPE_INTRA_REFRESH_TYPE,
+                                                      PROP_INTRA_REFRESH_TYPE_DEFAULT,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    g_object_class_install_property(gobject_class,
-                                    PROP_SOCKET,
-                                    g_param_spec_int("socket",
-                                                     "Target socket",
-                                                     "Target socket to run on. -1: all available",
-                                                     -1,
-                                                     15,
-                                                     PROP_SOCKET_DEFAULT,
-                                                     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    g_object_class_install_property(
+        gobject_class,
+        PROP_LOGICAL_PROCESSORS,
+        g_param_spec_uint("logical-processors",
+                          "Logical Processors",
+                          "Number of logical CPU cores to be used. 0: auto",
+                          0,
+                          G_MAXUINT,
+                          PROP_LOGICAL_PROCESSORS_DEFAULT,
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_TARGET_SOCKET,
+        g_param_spec_int("target-socket",
+                         "Target socket",
+                         "Target CPU socket to run on. -1: all available",
+                         -1,
+                         15,
+                         PROP_TARGET_SOCKET_DEFAULT,
+                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void gst_svtav1enc_init(GstSvtAv1Enc *svtav1enc) {
@@ -332,36 +337,39 @@ static void gst_svtav1enc_set_property(GObject *object, guint property_id, const
     GST_LOG_OBJECT(svtav1enc, "setting property %u", property_id);
 
     switch (property_id) {
-    case PROP_ENCMODE: svtav1enc->svt_config->enc_mode = g_value_get_uint(value); break;
-    case PROP_GOP_SIZE:
-        svtav1enc->svt_config->intra_period_length = g_value_get_int(value) - 1;
+    case PROP_PRESET: svtav1enc->svt_config->enc_mode = g_value_get_uint(value); break;
+    case PROP_RATE_CONTROL_MODE:
+        svtav1enc->svt_config->rate_control_mode = g_value_get_enum(value);
         break;
-    case PROP_INTRA_REFRESH:
-        svtav1enc->svt_config->intra_refresh_type = g_value_get_int(value);
-        break;
-    case PROP_B_PYRAMID:
-        svtav1enc->svt_config->hierarchical_levels = g_value_get_uint(value);
-        break;
-    case PROP_PRED_STRUCTURE:
-        svtav1enc->svt_config->pred_structure = g_value_get_uint(value);
-        break;
-
-    case PROP_QP: svtav1enc->svt_config->qp = g_value_get_uint(value); break;
-    case PROP_DEBLOCKING:
-        svtav1enc->svt_config->enable_dlf_flag = g_value_get_boolean(value);
-        break;
-    case PROP_RC_MODE: svtav1enc->svt_config->rate_control_mode = g_value_get_uint(value); break;
-    case PROP_BITRATE:
+    case PROP_TARGET_BITRATE:
         svtav1enc->svt_config->target_bit_rate = g_value_get_uint(value) * 1000;
         break;
-    case PROP_QP_MAX: svtav1enc->svt_config->max_qp_allowed = g_value_get_uint(value); break;
-    case PROP_QP_MIN: svtav1enc->svt_config->min_qp_allowed = g_value_get_uint(value); break;
-    case PROP_SCD:
-        svtav1enc->svt_config->scene_change_detection = g_value_get_boolean(value);
+    case PROP_MAX_BITRATE:
+        svtav1enc->svt_config->max_bit_rate = g_value_get_uint(value) * 1000;
         break;
-    case PROP_CORES: svtav1enc->svt_config->logical_processors = g_value_get_uint(value); break;
-    case PROP_SOCKET: svtav1enc->svt_config->target_socket = g_value_get_int(value); break;
-    case PROP_LOOKAHEAD: svtav1enc->svt_config->look_ahead_distance = g_value_get_int(value); break;
+    case PROP_MAX_QP_ALLOWED:
+        svtav1enc->svt_config->max_qp_allowed = g_value_get_uint(value);
+        break;
+    case PROP_MIN_QP_ALLOWED:
+        svtav1enc->svt_config->min_qp_allowed = g_value_get_uint(value);
+        break;
+    case PROP_QP: svtav1enc->svt_config->qp = g_value_get_uint(value); break;
+    case PROP_MAXIMUM_BUFFER_SIZE:
+        svtav1enc->svt_config->maximum_buffer_size_ms = g_value_get_uint(value);
+        break;
+    case PROP_ADAPTIVE_QUANTIZATION:
+        svtav1enc->svt_config->enable_adaptive_quantization = g_value_get_uint(value);
+        break;
+    case PROP_INTRA_PERIOD_LENGTH:
+        svtav1enc->svt_config->intra_period_length = g_value_get_int(value) - 1;
+        break;
+    case PROP_INTRA_REFRESH_TYPE:
+        svtav1enc->svt_config->intra_refresh_type = g_value_get_enum(value);
+        break;
+    case PROP_LOGICAL_PROCESSORS:
+        svtav1enc->svt_config->logical_processors = g_value_get_uint(value);
+        break;
+    case PROP_TARGET_SOCKET: svtav1enc->svt_config->target_socket = g_value_get_int(value); break;
     default: G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec); break;
     }
 }
@@ -373,32 +381,35 @@ static void gst_svtav1enc_get_property(GObject *object, guint property_id, GValu
     GST_LOG_OBJECT(svtav1enc, "getting property %u", property_id);
 
     switch (property_id) {
-    case PROP_ENCMODE: g_value_set_uint(value, svtav1enc->svt_config->enc_mode); break;
-    case PROP_B_PYRAMID: g_value_set_uint(value, svtav1enc->svt_config->hierarchical_levels); break;
-
-    case PROP_PRED_STRUCTURE: g_value_set_uint(value, svtav1enc->svt_config->pred_structure); break;
-    case PROP_GOP_SIZE:
-        g_value_set_int(value, svtav1enc->svt_config->intra_period_length + 1);
+    case PROP_PRESET: g_value_set_uint(value, svtav1enc->svt_config->enc_mode); break;
+    case PROP_RATE_CONTROL_MODE:
+        g_value_set_enum(value, svtav1enc->svt_config->rate_control_mode);
         break;
-    case PROP_INTRA_REFRESH:
-        g_value_set_int(value, svtav1enc->svt_config->intra_refresh_type);
-        break;
-    case PROP_QP: g_value_set_uint(value, svtav1enc->svt_config->qp); break;
-    case PROP_DEBLOCKING:
-        g_value_set_boolean(value, svtav1enc->svt_config->enable_dlf_flag == 1);
-        break;
-    case PROP_RC_MODE: g_value_set_uint(value, svtav1enc->svt_config->rate_control_mode); break;
-    case PROP_BITRATE:
+    case PROP_TARGET_BITRATE:
         g_value_set_uint(value, svtav1enc->svt_config->target_bit_rate / 1000);
         break;
-    case PROP_QP_MAX: g_value_set_uint(value, svtav1enc->svt_config->max_qp_allowed); break;
-    case PROP_QP_MIN: g_value_set_uint(value, svtav1enc->svt_config->min_qp_allowed); break;
-    case PROP_SCD:
-        g_value_set_boolean(value, svtav1enc->svt_config->scene_change_detection == 1);
+    case PROP_MAX_BITRATE:
+        g_value_set_uint(value, svtav1enc->svt_config->max_bit_rate / 1000);
         break;
-    case PROP_CORES: g_value_set_uint(value, svtav1enc->svt_config->logical_processors); break;
-    case PROP_SOCKET: g_value_set_int(value, svtav1enc->svt_config->target_socket); break;
-    case PROP_LOOKAHEAD: g_value_set_int(value, svtav1enc->svt_config->look_ahead_distance); break;
+    case PROP_MAX_QP_ALLOWED: g_value_set_uint(value, svtav1enc->svt_config->max_qp_allowed); break;
+    case PROP_MIN_QP_ALLOWED: g_value_set_uint(value, svtav1enc->svt_config->min_qp_allowed); break;
+    case PROP_QP: g_value_set_uint(value, svtav1enc->svt_config->qp); break;
+    case PROP_MAXIMUM_BUFFER_SIZE:
+        g_value_set_uint(value, svtav1enc->svt_config->maximum_buffer_size_ms);
+        break;
+    case PROP_ADAPTIVE_QUANTIZATION:
+        g_value_set_uint(value, svtav1enc->svt_config->enable_adaptive_quantization);
+        break;
+    case PROP_INTRA_PERIOD_LENGTH:
+        g_value_set_int(value, svtav1enc->svt_config->intra_period_length + 1);
+        break;
+    case PROP_INTRA_REFRESH_TYPE:
+        g_value_set_enum(value, svtav1enc->svt_config->intra_refresh_type);
+        break;
+    case PROP_LOGICAL_PROCESSORS:
+        g_value_set_uint(value, svtav1enc->svt_config->logical_processors);
+        break;
+    case PROP_TARGET_SOCKET: g_value_set_int(value, svtav1enc->svt_config->target_socket); break;
     default: G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec); break;
     }
 }
