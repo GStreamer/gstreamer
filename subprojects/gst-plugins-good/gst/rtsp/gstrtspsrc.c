@@ -7581,6 +7581,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
           goto retry;
       case GST_RTSP_STS_BAD_REQUEST:
       case GST_RTSP_STS_NOT_FOUND:
+      case GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE:
         /* There are various non-compliant servers that don't require control
          * URLs that are not resolved correctly but instead are just appended.
          * See e.g.
