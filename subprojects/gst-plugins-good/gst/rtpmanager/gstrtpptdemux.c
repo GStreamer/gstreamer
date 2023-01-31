@@ -505,8 +505,31 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     gst_pad_set_active (srcpad, TRUE);
 
     /* First push the stream-start event, it must always come first */
-    gst_pad_push_event (srcpad,
-        gst_pad_get_sticky_event (rtpdemux->sink, GST_EVENT_STREAM_START, 0));
+    {
+      gchar *stream_id;
+      GstEvent *sink_event, *event;
+      guint group_id;
+      GstStreamFlags flags;
+
+      sink_event =
+          gst_pad_get_sticky_event (rtpdemux->sink, GST_EVENT_STREAM_START, 0);
+
+      stream_id =
+          gst_pad_create_stream_id_printf (srcpad, GST_ELEMENT_CAST (rtpdemux),
+          "%u", pt);
+
+      event = gst_event_new_stream_start (stream_id);
+      if (gst_event_parse_group_id (sink_event, &group_id)) {
+        gst_event_set_group_id (event, group_id);
+      }
+      gst_event_parse_stream_flags (sink_event, &flags);
+      gst_event_set_stream_flags (event, flags);
+
+      gst_pad_push_event (srcpad, event);
+
+      gst_event_unref (sink_event);
+      g_free (stream_id);
+    }
 
     /* Then caps event is sent */
     gst_pad_set_caps (srcpad, caps);
