@@ -1453,7 +1453,8 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
     case V4L2_PIX_FMT_PJPG:    /* Progressive-JPEG */
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
-      structure = gst_structure_new_empty ("image/jpeg");
+      structure = gst_structure_new ("image/jpeg",
+          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
     case V4L2_PIX_FMT_MPEG1:
       structure = gst_structure_new ("video/mpeg",
