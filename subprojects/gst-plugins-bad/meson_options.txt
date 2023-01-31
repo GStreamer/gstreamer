@@ -158,6 +158,7 @@ option('soundtouch', type : 'feature', value : 'auto', description : 'Audio pitc
 option('spandsp', type : 'feature', value : 'auto', description : 'Packet loss concealment audio plugin')
 option('srt', type : 'feature', value : 'auto', description : 'Secure, Reliable, Transport client/server network source/sink plugin')
 option('srtp', type : 'feature', value : 'auto', description : 'Secure RTP codec plugin')
+option('svtav1', type : 'feature', value : 'auto', description : 'Scalable Video Technology for AV1 plugin')
 option('svthevcenc', type : 'feature', value : 'auto', description : 'Scalable Video Technology for HEVC encoder plugin')
 option('teletext', type : 'feature', value : 'auto', description : 'Teletext plugin')
 option('tinyalsa', type : 'feature', value : 'auto', description : 'TinyALSA plugin')

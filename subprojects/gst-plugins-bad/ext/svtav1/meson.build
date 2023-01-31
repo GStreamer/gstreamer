@@ -1,54 +1,17 @@
-# standalone plugin meson configuration
-project('gst-svt-av1', 'c',
-  version : '0.1',
-  meson_version : '>= 0.29',
-  default_options : [ 'buildtype=debugoptimized' ])
-
-# GStreamer dependencies
-gst_req = '>= 1.16'
-gst_dep = dependency('gstreamer-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gst_dep'])
-gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gstbase_dep'])
-gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gstvideo_dep'])
-plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
-
-# common meson configuration
-svtav1enc_dep = dependency('SvtAv1Enc')
-
-cc = meson.get_compiler('c')
-cc_flags = [
-    '-O2',
-    '-D_FORTIFY_SOURCE=2',
-    '-Wformat',
-    '-Wformat-security',
-    '-fPIE',
-    '-fPIC',
-    '-fstack-protector-strong',
+svtav1_sources = [
+  'gstsvtav1enc.c',
 ]
-foreach flag: cc_flags
-    if cc.has_argument(flag)
-        add_global_arguments(flag, language: 'c')
-    endif
-endforeach
 
+svtav1_dep = dependency('SvtAv1Enc', version : '>= 1.1', required: get_option('svtav1'))
 
-ldflags = [
-   '-Wl,-z,now',
-   '-Wl,-z,relro',
-   '-Wl,-z,noexecstack',
-]
-foreach lflag : ldflags
-    add_global_link_arguments(lflag, language : 'c')
-endforeach
-
-
-if svtav1enc_dep.found()
-    gstsvtav1enc = library('gstsvtav1enc',
-        'gstsvtav1enc.c',
-        dependencies: [gstbase_dep, gstvideo_dep, svtav1enc_dep],
-        install: true,
-        install_dir: plugins_install_dir,
-    )
+if svtav1_dep.found()
+  gstsvtav1 = library('gstsvtav1',
+    svtav1_sources,
+    c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+    include_directories : [configinc],
+    dependencies : [gstbase_dep, gstvideo_dep, svtav1_dep],
+    install : true,
+    install_dir : plugins_install_dir,
+  )
+  plugins += [gstsvtav1]
 endif

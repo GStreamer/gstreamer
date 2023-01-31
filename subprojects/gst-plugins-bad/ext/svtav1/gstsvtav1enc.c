@@ -19,6 +19,8 @@
  * </refsect2>
  */
 
+#include "config.h"
+
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
@@ -963,19 +965,6 @@ static gboolean plugin_init(GstPlugin *plugin) {
     return gst_element_register(plugin, "svtav1enc", GST_RANK_SECONDARY, GST_TYPE_SVTAV1ENC);
 }
 
-#ifndef VERSION
-#define VERSION "1.0"
-#endif
-#ifndef PACKAGE
-#define PACKAGE "gstreamer-svt-av1"
-#endif
-#ifndef PACKAGE_NAME
-#define PACKAGE_NAME "SVT-AV1 Encoder plugin for GStreamer"
-#endif
-#ifndef GST_PACKAGE_ORIGIN
-#define GST_PACKAGE_ORIGIN "https://gitlab.com/AOMediaCodec"
-#endif
-
-GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR, svtav1enc,
-                  "Scalable Video Technology for AV1 Encoder (SVT-AV1 Encoder)", plugin_init,
+GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR, svtav1,
+                  "Scalable Video Technology for AV1 (SVT-AV1)", plugin_init,
                   VERSION, "LGPL", PACKAGE_NAME, GST_PACKAGE_ORIGIN)
