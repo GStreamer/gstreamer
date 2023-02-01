@@ -1893,12 +1893,16 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
   variant = gst_structure_get_string (structure, "variant");
 
+  if (variant && strcmp (variant, "mse-bytestream") == 0) {
+    demux->variant = VARIANT_MSE_BYTESTREAM;
+  }
+
   if (variant && strcmp (variant, "mss-fragmented") == 0) {
     QtDemuxStream *stream;
     const GValue *value;
 
     demux->fragmented = TRUE;
-    demux->mss_mode = TRUE;
+    demux->variant = VARIANT_MSS_FRAGMENTED;
 
     if (QTDEMUX_N_STREAMS (demux) > 1) {
       /* can't do this, we can only renegotiate for another mss format */
@@ -1969,8 +1973,6 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
       }
     }
     gst_caps_replace (&demux->media_caps, (GstCaps *) mediacaps);
-  } else {
-    demux->mss_mode = FALSE;
   }
 
   return TRUE;
@@ -2058,7 +2060,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->n_meta_streams = 0;
     qtdemux->exposed = FALSE;
     qtdemux->fragmented = FALSE;
-    qtdemux->mss_mode = FALSE;
+    qtdemux->variant = VARIANT_NONE;
     gst_caps_replace (&qtdemux->media_caps, NULL);
     qtdemux->timescale = 0;
     qtdemux->got_moov = FALSE;
@@ -2079,7 +2081,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       g_free (qtdemux->preferred_protection_system_id);
       qtdemux->preferred_protection_system_id = NULL;
     }
-  } else if (qtdemux->mss_mode) {
+  } else if (qtdemux->variant == VARIANT_MSS_FRAGMENTED) {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     g_ptr_array_foreach (qtdemux->active_streams,
         (GFunc) gst_qtdemux_stream_clear, NULL);
@@ -3625,7 +3627,7 @@ qtdemux_find_stream (GstQTDemux * qtdemux, guint32 id)
     if (stream->track_id == id)
       return stream;
   }
-  if (qtdemux->mss_mode) {
+  if (qtdemux->variant == VARIANT_MSS_FRAGMENTED) {
     /* mss should have only 1 stream anyway */
     return QTDEMUX_NTH_STREAM (qtdemux, 0);
   }
@@ -3692,7 +3694,7 @@ qtdemux_parse_tfhd (GstQTDemux * qtdemux, GstByteReader * tfhd,
     (*stream)->stsd_sample_description_id = sample_description_index - 1;
   }
 
-  if (qtdemux->mss_mode) {
+  if (qtdemux->variant == VARIANT_MSS_FRAGMENTED) {
     /* mss has no stsd entry */
     (*stream)->stsd_sample_description_id = 0;
   }
@@ -4295,7 +4297,9 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
     pssh_node = qtdemux_tree_get_sibling_by_type (pssh_node, FOURCC_pssh);
   }
 
-  if (!qtdemux->upstream_format_is_time && !qtdemux->first_moof_already_parsed
+  if (!qtdemux->upstream_format_is_time
+      && qtdemux->variant != VARIANT_MSE_BYTESTREAM
+      && !qtdemux->first_moof_already_parsed
       && !qtdemux->received_seek && GST_CLOCK_TIME_IS_VALID (min_dts)
       && min_dts != 0) {
     /* Unless the user has explicitly requested another seek, perform an
@@ -7549,7 +7553,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             }
 
             /* in MSS we need to expose the pads after the first moof as we won't get a moov */
-            if (demux->mss_mode && !demux->exposed) {
+            if (demux->variant == VARIANT_MSS_FRAGMENTED && !demux->exposed) {
               QTDEMUX_EXPOSE_LOCK (demux);
               qtdemux_expose_streams (demux);
               QTDEMUX_EXPOSE_UNLOCK (demux);

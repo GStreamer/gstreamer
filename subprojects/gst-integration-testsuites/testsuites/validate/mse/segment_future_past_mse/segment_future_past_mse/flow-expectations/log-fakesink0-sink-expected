@@ -1,0 +1,17 @@
+
+CHECKPOINT: Mse-bytestream variant
+
+
+CHECKPOINT: Init segment is now pushed
+
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+
+CHECKPOINT: Data from the future is now pushed
+
+
+CHECKPOINT: Init segment is now pushed
+
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+
+CHECKPOINT: Data from the past is now pushed
+

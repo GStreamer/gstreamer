@@ -1,0 +1,22 @@
+set-globals, media_dir="$(test_dir)/../../../../medias/fragments/"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "appsrc ! video/quicktime, variant=mse-bytestream ! qtdemux ! fakesink async=false",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=false, logged-event-types={segment}",
+    }
+
+# Scenario action types
+checkpoint, text="Mse-bytestream variant"
+checkpoint, text="Init segment is now pushed"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/car-20120827-86.mp4/init.mp4"
+checkpoint, text="Data from the future is now pushed"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/car-20120827-86.mp4/media2.mp4"
+checkpoint, text="Init segment is now pushed"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/car-20120827-86.mp4/init.mp4"
+checkpoint, text="Data from the past is now pushed"
+appsrc-push, target-element-name=appsrc0, file-name="$(media_dir)/car-20120827-86.mp4/media1.mp4"
+stop
