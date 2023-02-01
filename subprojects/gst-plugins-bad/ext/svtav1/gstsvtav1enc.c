@@ -91,6 +91,8 @@ static GstFlowReturn gst_svtav1enc_finish(GstVideoEncoder *encoder);
 static gboolean      gst_svtav1enc_propose_allocation(GstVideoEncoder *encoder, GstQuery *query);
 static gboolean      gst_svtav1enc_flush(GstVideoEncoder *encoder);
 
+static void gst_svtav1enc_parse_parameters_string(GstSvtAv1Enc *svtav1enc, const gchar *parameters);
+
 enum {
     PROP_0,
     PROP_PRESET,
@@ -105,7 +107,8 @@ enum {
     PROP_INTRA_PERIOD_LENGTH,
     PROP_INTRA_REFRESH_TYPE,
     PROP_LOGICAL_PROCESSORS,
-    PROP_TARGET_SOCKET
+    PROP_TARGET_SOCKET,
+    PROP_PARAMETERS_STRING,
 };
 
 #define PROP_PRESET_DEFAULT 8
@@ -121,6 +124,7 @@ enum {
 #define PROP_INTRA_REFRESH_TYPE_DEFAULT 1
 #define PROP_LOGICAL_PROCESSORS_DEFAULT 0
 #define PROP_TARGET_SOCKET_DEFAULT -1
+#define PROP_PARAMETERS_STRING_DEFAULT NULL
 
 /* pad templates */
 static GstStaticPadTemplate gst_svtav1enc_sink_pad_template = GST_STATIC_PAD_TEMPLATE(
@@ -320,6 +324,16 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
                          15,
                          PROP_TARGET_SOCKET_DEFAULT,
                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_PARAMETERS_STRING,
+        g_param_spec_string(
+            "parameters-string",
+            "Parameters String",
+            "Colon-delimited list of key=value pairs of additional parameters to set",
+            PROP_PARAMETERS_STRING_DEFAULT,
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void gst_svtav1enc_init(GstSvtAv1Enc *svtav1enc) {
@@ -374,6 +388,9 @@ static void gst_svtav1enc_set_property(GObject *object, guint property_id, const
         svtav1enc->svt_config->logical_processors = g_value_get_uint(value);
         break;
     case PROP_TARGET_SOCKET: svtav1enc->svt_config->target_socket = g_value_get_int(value); break;
+    case PROP_PARAMETERS_STRING:
+        gst_svtav1enc_parse_parameters_string(svtav1enc, g_value_get_string(value));
+        break;
     default: G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec); break;
     }
 }
@@ -414,6 +431,7 @@ static void gst_svtav1enc_get_property(GObject *object, guint property_id, GValu
         g_value_set_uint(value, svtav1enc->svt_config->logical_processors);
         break;
     case PROP_TARGET_SOCKET: g_value_set_int(value, svtav1enc->svt_config->target_socket); break;
+    case PROP_PARAMETERS_STRING: g_value_set_string(value, svtav1enc->parameters_string); break;
     default: G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec); break;
     }
 }
@@ -424,6 +442,7 @@ static void gst_svtav1enc_finalize(GObject *object) {
     GST_DEBUG_OBJECT(svtav1enc, "finalizing svtav1enc");
 
     g_free(svtav1enc->svt_config);
+    g_free(svtav1enc->parameters_string);
 
     G_OBJECT_CLASS(gst_svtav1enc_parent_class)->finalize(object);
 }
@@ -765,6 +784,43 @@ static gboolean gst_svtav1enc_propose_allocation(GstVideoEncoder *encoder, GstQu
     gst_query_add_allocation_meta(query, GST_VIDEO_META_API_TYPE, NULL);
 
     return GST_VIDEO_ENCODER_CLASS(gst_svtav1enc_parent_class)->propose_allocation(encoder, query);
+}
+
+static void gst_svtav1enc_parse_parameters_string(GstSvtAv1Enc *svtav1enc,
+                                                  const gchar  *parameters) {
+    gchar **key_values, **p;
+
+    g_free(svtav1enc->parameters_string);
+    svtav1enc->parameters_string = g_strdup(parameters);
+
+    if (!parameters)
+        return;
+
+    p = key_values = g_strsplit(parameters, ":", -1);
+    while (p && *p) {
+        gchar      *equals;
+        EbErrorType res;
+
+        equals = strchr(*p, '=');
+        if (!equals) {
+            p++;
+            continue;
+        }
+
+        *equals = '\0';
+        equals++;
+
+        GST_DEBUG_OBJECT(svtav1enc, "Setting parameter %s=%s", *p, equals);
+
+        res = svt_av1_enc_parse_parameter(svtav1enc->svt_config, *p, equals);
+        if (res != EB_ErrorNone) {
+            GST_WARNING_OBJECT(svtav1enc, "Failed to set parameter %s=%s: %d", *p, equals, res);
+        }
+
+        p++;
+    }
+
+    g_strfreev(key_values);
 }
 
 static gboolean plugin_init(GstPlugin *plugin) {

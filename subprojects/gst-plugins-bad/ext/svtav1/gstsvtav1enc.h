@@ -33,6 +33,7 @@ typedef struct _GstSvtAv1Enc {
 
     /* SVT-AV1 configuration */
     EbSvtAv1EncConfiguration *svt_config;
+    gchar                    *parameters_string;
 
     EbBufferHeaderType *input_buf;
 } GstSvtAv1Enc;
