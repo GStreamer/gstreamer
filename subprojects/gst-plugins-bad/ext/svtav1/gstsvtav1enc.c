@@ -358,6 +358,9 @@ static void gst_svtav1enc_set_property(GObject *object, guint property_id, const
     case PROP_PRESET: svtav1enc->svt_config->enc_mode = g_value_get_uint(value); break;
     case PROP_RATE_CONTROL_MODE:
         svtav1enc->svt_config->rate_control_mode = g_value_get_enum(value);
+        // Forcing keyframes is only support in CQP/CRF mode
+        svtav1enc->svt_config->force_key_frames = (svtav1enc->svt_config->rate_control_mode ==
+                                                   SVT_AV1_RC_MODE_CQP_OR_CRF);
         break;
     case PROP_TARGET_BITRATE:
         svtav1enc->svt_config->target_bit_rate = g_value_get_uint(value) * 1000;
