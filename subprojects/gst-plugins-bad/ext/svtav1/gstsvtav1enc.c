@@ -137,8 +137,8 @@ static GstStaticPadTemplate gst_svtav1enc_sink_pad_template = GST_STATIC_PAD_TEM
     "sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS("video/x-raw, "
                     "format = (string) {I420, " FORMAT_I420_10 "}, "
-                    "width = (int) [64, 3840], "
-                    "height = (int) [64, 2160], "
+                    "width = (int) [64, 16384], "
+                    "height = (int) [64, 8704], "
                     "framerate = (fraction) [0, MAX]"));
 
 static GstStaticPadTemplate gst_svtav1enc_src_pad_template = GST_STATIC_PAD_TEMPLATE(
@@ -146,8 +146,8 @@ static GstStaticPadTemplate gst_svtav1enc_src_pad_template = GST_STATIC_PAD_TEMP
     GST_STATIC_CAPS("video/x-av1, "
                     "stream-format = (string) obu-stream, "
                     "alignment = (string) tu, "
-                    "width = (int) [64, 3840], "
-                    "height = (int) [64, 2160], "
+                    "width = (int) [64, 16384], "
+                    "height = (int) [64, 8704], "
                     "framerate = (fraction) [0, MAX]"));
 
 /* class initialization */
