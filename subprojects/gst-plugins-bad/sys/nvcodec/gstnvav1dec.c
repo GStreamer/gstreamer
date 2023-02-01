@@ -886,8 +886,7 @@ gst_nv_av1_dec_get_preferred_output_delay (GstAV1Decoder * decoder,
   if (is_live)
     return 0;
 
-  /* NVCODEC SDK uses 4 frame delay for better throughput performance */
-  return 4;
+  return 2;
 }
 
 void

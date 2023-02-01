@@ -940,8 +940,7 @@ gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
   if (live)
     return 0;
 
-  /* NVCODEC SDK uses 4 frame delay for better throughput performance */
-  return 4;
+  return 2;
 }
 
 void

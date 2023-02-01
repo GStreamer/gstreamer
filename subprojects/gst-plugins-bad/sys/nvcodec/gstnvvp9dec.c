@@ -596,8 +596,7 @@ gst_nv_vp9_dec_get_preferred_output_delay (GstVp9Decoder * decoder,
   if (is_live)
     return 0;
 
-  /* NVCODEC SDK uses 4 frame delay for better throughput performance */
-  return 4;
+  return 2;
 }
 
 void
