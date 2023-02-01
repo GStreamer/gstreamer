@@ -281,6 +281,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   DWORD n_bytes;
   DWORD wait_ret;
   gchar *pipe_name = NULL;
+  HANDLE waitables[2];
 
   memset (&si, 0, sizeof (STARTUPINFOW));
   si.cb = sizeof (STARTUPINFOW);
@@ -347,7 +348,9 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   }
 
   /* Wait for client connection */
-  wait_ret = WaitForSingleObjectEx (loader->overlap.hEvent, 5000, TRUE);
+  waitables[0] = loader->overlap.hEvent;
+  waitables[1] = self->child_info.hProcess;
+  wait_ret = WaitForMultipleObjectsEx (2, waitables, FALSE, 5000, TRUE);
   if (wait_ret == WAIT_OBJECT_0) {
     ret = GetOverlappedResult (loader->pipe, &loader->overlap, &n_bytes, FALSE);
     if (!ret) {
