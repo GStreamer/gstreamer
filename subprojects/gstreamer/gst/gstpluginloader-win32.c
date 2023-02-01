@@ -308,6 +308,11 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
     goto error;
   }
 
+  loader->overlap.Internal = 0;
+  loader->overlap.InternalHigh = 0;
+  loader->overlap.Offset = 0;
+  loader->overlap.OffsetHigh = 0;
+
   /* Async pipe should return zero */
   if (ConnectNamedPipe (loader->pipe, &loader->overlap)) {
     last_err = GetLastError ();
