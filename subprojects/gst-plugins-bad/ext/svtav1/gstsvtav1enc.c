@@ -498,12 +498,160 @@ static gboolean gst_svtav1enc_configure_svt(GstSvtAv1Enc *svtav1enc) {
                    svtav1enc->svt_config->frame_rate_numerator /
                        svtav1enc->svt_config->frame_rate_denominator);
 
-    /* TODO: better handle HDR metadata when GStreamer will have such support
-   * https://gitlab.freedesktop.org/gstreamer/gst-plugins-base/issues/400 */
-    if (GST_VIDEO_INFO_COLORIMETRY(info).matrix == GST_VIDEO_COLOR_MATRIX_BT2020 &&
-        GST_VIDEO_INFO_COMP_DEPTH(info, 0) > 8) {
-        svtav1enc->svt_config->high_dynamic_range_input = TRUE;
+    switch (GST_VIDEO_INFO_COLORIMETRY(info).primaries) {
+    case GST_VIDEO_COLOR_PRIMARIES_BT709:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_BT_709;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT470M:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_BT_470_M;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT470BG:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_BT_470_B_G;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE170M:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_BT_601;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTE240M:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_SMPTE_240;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_FILM:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_GENERIC_FILM;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_BT2020:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_BT_2020;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTERP431:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_SMPTE_431;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_SMPTEEG432:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_SMPTE_432;
+        break;
+    case GST_VIDEO_COLOR_PRIMARIES_EBU3213:
+        svtav1enc->svt_config->color_primaries = EB_CICP_CP_EBU_3213;
+        break;
+    default: svtav1enc->svt_config->color_primaries = EB_CICP_CP_UNSPECIFIED; break;
     }
+
+    switch (GST_VIDEO_INFO_COLORIMETRY(info).transfer) {
+    case GST_VIDEO_TRANSFER_BT709:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_BT_709;
+        break;
+    case GST_VIDEO_TRANSFER_GAMMA28:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_BT_470_B_G;
+        break;
+#if GST_CHECK_VERSION(1, 18, 0)
+    case GST_VIDEO_TRANSFER_BT601:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_BT_601;
+        break;
+#endif
+    case GST_VIDEO_TRANSFER_SMPTE240M:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_SMPTE_240;
+        break;
+    case GST_VIDEO_TRANSFER_GAMMA10:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_LINEAR;
+        break;
+    case GST_VIDEO_TRANSFER_LOG100:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_LOG_100;
+        break;
+    case GST_VIDEO_TRANSFER_LOG316:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_LOG_100_SQRT10;
+        break;
+    case GST_VIDEO_TRANSFER_SRGB:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_SRGB;
+        break;
+#if GST_CHECK_VERSION(1, 18, 0)
+    case GST_VIDEO_TRANSFER_BT2020_10:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_BT_2020_10_BIT;
+        break;
+#endif
+    case GST_VIDEO_TRANSFER_BT2020_12:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_BT_2020_12_BIT;
+        break;
+#if GST_CHECK_VERSION(1, 18, 0)
+    case GST_VIDEO_TRANSFER_SMPTE2084:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_SMPTE_2084;
+        break;
+    case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+        svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_HLG;
+        break;
+#endif
+    default: svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_UNSPECIFIED; break;
+    }
+
+    switch (GST_VIDEO_INFO_COLORIMETRY(info).matrix) {
+    case GST_VIDEO_COLOR_MATRIX_RGB:
+        svtav1enc->svt_config->matrix_coefficients = EB_CICP_MC_IDENTITY;
+        break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+        svtav1enc->svt_config->matrix_coefficients = EB_CICP_MC_BT_709;
+        break;
+    case GST_VIDEO_COLOR_MATRIX_FCC:
+        svtav1enc->svt_config->matrix_coefficients = EB_CICP_MC_FCC;
+        break;
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+        svtav1enc->svt_config->matrix_coefficients = EB_CICP_MC_BT_601;
+        break;
+    case GST_VIDEO_COLOR_MATRIX_SMPTE240M:
+        svtav1enc->svt_config->matrix_coefficients = EB_CICP_MC_SMPTE_240;
+        break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+        svtav1enc->svt_config->matrix_coefficients = EB_CICP_MC_BT_2020_NCL;
+        break;
+
+    default: svtav1enc->svt_config->matrix_coefficients = EB_CICP_MC_UNSPECIFIED; break;
+    }
+
+    if (GST_VIDEO_INFO_COLORIMETRY(info).range == GST_VIDEO_COLOR_RANGE_0_255) {
+        svtav1enc->svt_config->color_range = EB_CR_FULL_RANGE;
+    } else {
+        svtav1enc->svt_config->color_range = EB_CR_STUDIO_RANGE;
+    }
+
+    switch (GST_VIDEO_INFO_CHROMA_SITE(info)) {
+    case GST_VIDEO_CHROMA_SITE_V_COSITED:
+        svtav1enc->svt_config->chroma_sample_position = EB_CSP_VERTICAL;
+        break;
+    case GST_VIDEO_CHROMA_SITE_COSITED:
+        svtav1enc->svt_config->chroma_sample_position = EB_CSP_COLOCATED;
+        break;
+    default: svtav1enc->svt_config->chroma_sample_position = EB_CSP_UNKNOWN;
+    }
+
+#if GST_CHECK_VERSION(1, 18, 0)
+    GstVideoMasteringDisplayInfo master_display_info;
+    if (gst_video_mastering_display_info_from_caps(&master_display_info, svtav1enc->state->caps)) {
+        svtav1enc->svt_config->mastering_display.r.x = master_display_info.display_primaries[0].x;
+        svtav1enc->svt_config->mastering_display.r.y = master_display_info.display_primaries[0].y;
+        svtav1enc->svt_config->mastering_display.g.x = master_display_info.display_primaries[1].x;
+        svtav1enc->svt_config->mastering_display.g.y = master_display_info.display_primaries[1].y;
+        svtav1enc->svt_config->mastering_display.b.x = master_display_info.display_primaries[2].x;
+        svtav1enc->svt_config->mastering_display.b.y = master_display_info.display_primaries[2].y;
+        svtav1enc->svt_config->mastering_display.white_point.x = master_display_info.white_point.x;
+        svtav1enc->svt_config->mastering_display.white_point.y = master_display_info.white_point.y;
+        svtav1enc->svt_config->mastering_display.max_luma =
+            master_display_info.max_display_mastering_luminance;
+        svtav1enc->svt_config->mastering_display.min_luma =
+            master_display_info.min_display_mastering_luminance;
+        svtav1enc->svt_config->high_dynamic_range_input = TRUE;
+    } else {
+        memset(&svtav1enc->svt_config->mastering_display,
+               0,
+               sizeof(svtav1enc->svt_config->mastering_display));
+        svtav1enc->svt_config->high_dynamic_range_input = FALSE;
+    }
+
+    GstVideoContentLightLevel content_light_level;
+    if (gst_video_content_light_level_from_caps(&content_light_level, svtav1enc->state->caps)) {
+        svtav1enc->svt_config->content_light_level.max_cll =
+            content_light_level.max_content_light_level;
+        svtav1enc->svt_config->content_light_level.max_fall =
+            content_light_level.max_frame_average_light_level;
+    } else {
+        memset(&svtav1enc->svt_config->content_light_level,
+               0,
+               sizeof(svtav1enc->svt_config->content_light_level));
+    }
+#endif
 
     EbErrorType res = svt_av1_enc_set_parameter(svtav1enc->svt_encoder, svtav1enc->svt_config);
     if (res != EB_ErrorNone) {
