@@ -44,7 +44,8 @@ static GstStaticPadTemplate gst_av1_dec_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-av1")
+    GST_STATIC_CAPS ("video/x-av1, "
+        "stream-format = (string) obu-stream, " "alignment = (string) tu")
     );
 
 static GstStaticPadTemplate gst_av1_dec_src_pad_template =
