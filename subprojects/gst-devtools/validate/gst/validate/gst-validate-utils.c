@@ -1104,6 +1104,7 @@ fault_restore (void)
   memset (&action, 0, sizeof (action));
   action.sa_handler = SIG_DFL;
 
+  sigaction (SIGINT, &action, NULL);
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
