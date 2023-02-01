@@ -1153,10 +1153,24 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
       FILE_FLAG_OVERLAPPED, NULL);
   loader.last_err = GetLastError ();
   if (loader.pipe == INVALID_HANDLE_VALUE) {
-    err = g_win32_error_message (loader.last_err);
-    GST_ERROR ("CreateFileA failed with 0x%x (%s)",
-        loader.last_err, GST_STR_NULL (err));
-    goto out;
+    /* Server should be pending (waiting for connection) state already,
+     * but do retry if it's not the case */
+    if (loader.last_err == ERROR_PIPE_BUSY) {
+      if (WaitNamedPipeA (pipe_name, 5000)) {
+        loader.pipe = CreateFileA (pipe_name,
+            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+            FILE_FLAG_OVERLAPPED, NULL);
+      }
+
+      loader.last_err = GetLastError ();
+    }
+
+    if (loader.pipe == INVALID_HANDLE_VALUE) {
+      err = g_win32_error_message (loader.last_err);
+      GST_ERROR ("CreateFileA failed with 0x%x (%s)",
+          loader.last_err, GST_STR_NULL (err));
+      goto out;
+    }
   }
 
   /* We use message mode */
