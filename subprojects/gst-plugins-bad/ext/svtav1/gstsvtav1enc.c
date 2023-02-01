@@ -898,7 +898,6 @@ static gboolean gst_svtav1enc_set_format(GstVideoEncoder *encoder, GstVideoCodec
     src_caps     = gst_static_pad_template_get_caps(&gst_svtav1enc_src_pad_template);
     output_state = gst_video_encoder_set_output_state(
         GST_VIDEO_ENCODER(encoder), src_caps, svtav1enc->state);
-    gst_caps_unref(src_caps);
     gst_video_codec_state_unref(output_state);
 
     GST_DEBUG_OBJECT(svtav1enc, "output caps: %" GST_PTR_FORMAT, svtav1enc->state->caps);
