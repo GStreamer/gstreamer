@@ -421,7 +421,7 @@ gst_nv_vp9_dec_decode_picture (GstVp9Decoder * decoder,
           dpb->pic_list[i]);
       if (!other_frame) {
         GST_ERROR_OBJECT (self, "Couldn't get decoder frame from picture");
-        return FALSE;
+        return GST_FLOW_ERROR;
       }
 
       ref_frame_map[i] = other_frame->index;
