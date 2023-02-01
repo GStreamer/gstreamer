@@ -126,11 +126,17 @@ enum {
 #define PROP_TARGET_SOCKET_DEFAULT -1
 #define PROP_PARAMETERS_STRING_DEFAULT NULL
 
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+#define FORMAT_I420_10 "I420_10LE"
+#else
+#define FORMAT_I420_10 "I420_10BE"
+#endif
+
 /* pad templates */
 static GstStaticPadTemplate gst_svtav1enc_sink_pad_template = GST_STATIC_PAD_TEMPLATE(
     "sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS("video/x-raw, "
-                    "format = (string) {I420, I420_10LE}, "
+                    "format = (string) {I420, " FORMAT_I420_10 "}, "
                     "width = (int) [64, 3840], "
                     "height = (int) [64, 2160], "
                     "framerate = (fraction) [0, MAX]"));
