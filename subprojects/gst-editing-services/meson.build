@@ -110,7 +110,7 @@ if host_machine.system() != 'windows'
 endif
 gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_controller_dep'])
-gstvalidate_dep = dependency('gst-validate-1.0', version : gst_req, required : get_option('validate'),
+gstvalidate_dep = dependency('gstreamer-validate-1.0', version : gst_req, required : get_option('validate'),
   fallback : ['gst-devtools', 'validate_dep'])
 
 gio_dep = dependency('gio-2.0', version: glib_req)
