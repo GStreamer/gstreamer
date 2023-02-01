@@ -351,13 +351,17 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   if (wait_ret == WAIT_OBJECT_0) {
     ret = GetOverlappedResult (loader->pipe, &loader->overlap, &n_bytes, FALSE);
     if (!ret) {
+      last_err = GetLastError ();
       err = g_win32_error_message (last_err);
       GST_ERROR ("GetOverlappedResult failed with 0x%x (%s)",
           last_err, GST_STR_NULL (err));
       goto kill_child;
     }
   } else {
-    GST_ERROR ("WaitForSingleObjectEx failed");
+    last_err = GetLastError ();
+    err = g_win32_error_message (last_err);
+    GST_ERROR ("Unexpected WaitForSingleObjectEx return 0x%x, with 0x%x (%s)",
+        (guint) wait_ret, last_err, GST_STR_NULL (err));
     goto kill_child;
   }
 
@@ -1150,7 +1154,7 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
   loader.last_err = GetLastError ();
   if (loader.pipe == INVALID_HANDLE_VALUE) {
     err = g_win32_error_message (loader.last_err);
-    GST_WARNING ("CreateFileA failed with 0x%x (%s)",
+    GST_ERROR ("CreateFileA failed with 0x%x (%s)",
         loader.last_err, GST_STR_NULL (err));
     goto out;
   }
@@ -1159,7 +1163,7 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
   if (!SetNamedPipeHandleState (loader.pipe, &pipe_mode, NULL, NULL)) {
     loader.last_err = GetLastError ();
     err = g_win32_error_message (loader.last_err);
-    GST_WARNING ("SetNamedPipeHandleState failed with 0x%x (%s)",
+    GST_ERROR ("SetNamedPipeHandleState failed with 0x%x (%s)",
         loader.last_err, err);
     goto out;
   }
