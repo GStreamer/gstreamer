@@ -32,6 +32,8 @@
 #include <string.h>
 #include <malloc.h>
 
+extern HMODULE _priv_gst_dll_handle;
+
 /* IMPORTANT: Bump the version number if the plugin loader packet protocol
  * changes. Changes in the binary registry format itself are handled by
  * bumping the GST_MAGIC_BINARY_VERSION_STR
@@ -162,6 +164,8 @@ struct _GstPluginLoader
 
   GstRegistry *registry;
   gchar *pipe_prefix;
+
+  wchar_t *env_string;
 
   PROCESS_INFORMATION child_info;
 
@@ -336,8 +340,9 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
 
   GST_LOG ("Trying to spawn gst-plugin-scanner helper at %s, command %s",
       location, cmd);
-  ret = CreateProcessW (NULL, (WCHAR *) wcmd, NULL, NULL, FALSE, 0,
-      NULL, NULL, &si, &self->child_info);
+  ret = CreateProcessW (NULL, (WCHAR *) wcmd, NULL, NULL, FALSE,
+      CREATE_UNICODE_ENVIRONMENT, (LPVOID) self->env_string, NULL, &si,
+      &self->child_info);
 
   if (!ret) {
     last_err = GetLastError ();
@@ -982,11 +987,35 @@ gst_plugin_loader_server_load (GstPluginLoader * self,
   return win32_plugin_loader_run (loader, 10000);
 }
 
+/* *INDENT-OFF* */
+static gboolean
+is_path_env_string (wchar_t *str)
+{
+  if (wcslen (str) <= wcslen (L"PATH="))
+    return FALSE;
+
+  /* Env variable is case-insensitive */
+  if ((str[0] == L'P' || str[0] == L'p') &&
+      (str[1] == L'A' || str[1] == L'a') &&
+      (str[2] == L'T' || str[2] == L't') &&
+      (str[3] == L'H' || str[3] == L'h') && str[4] == L'=') {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+/* *INDENT-ON* */
+
 static GstPluginLoader *
 gst_plugin_loader_new (GstRegistry * registry)
 {
   GstPluginLoader *self;
   Win32PluginLoader *loader;
+  wchar_t *env_str;
+  size_t origin_len;
+  guint i;
+  wchar_t lib_dir[MAX_PATH];
+  wchar_t *origin_path = NULL;
 
   if (!registry)
     return NULL;
@@ -1002,6 +1031,62 @@ gst_plugin_loader_new (GstRegistry * registry)
 
   g_queue_init (&self->pending_plugins);
   self->registry = gst_object_ref (registry);
+
+  env_str = GetEnvironmentStringsW ();
+  /* Count original env string length */
+  for (i = 0, origin_len = 0; env_str[origin_len]; i++) {
+    if (!origin_path) {
+      if (is_path_env_string (&env_str[origin_len]))
+        origin_path = _wcsdup (&env_str[origin_len]);
+    }
+
+    origin_len += wcslen (&env_str[origin_len]) + 1;
+  }
+
+  /* Environment string is terminated with additional L'\0' */
+  origin_len++;
+
+  if (GetModuleFileNameW (_priv_gst_dll_handle, lib_dir, MAX_PATH)) {
+    wchar_t *new_env_string, *pos;
+    size_t new_len;
+    size_t lib_dir_len;
+    wchar_t *sep = wcsrchr (lib_dir, L'\\');
+    if (sep)
+      *sep = L'\0';
+
+    lib_dir_len = wcslen (lib_dir);
+
+    /* +1 for L';' seperator */
+    new_len = origin_len + lib_dir_len + 1;
+
+    new_env_string = calloc (1, sizeof (wchar_t) * new_len);
+
+    pos = new_env_string;
+    /* Copy every env except for PATH */
+    for (i = 0, origin_len = 0; env_str[origin_len]; i++) {
+      size_t len = wcslen (&env_str[origin_len]);
+      if (!is_path_env_string (&env_str[origin_len])) {
+        wcscpy (pos, &env_str[origin_len]);
+        pos += len + 1;
+      }
+
+      origin_len += len + 1;
+    }
+
+    /* Then copy PATH env */
+    wcscpy (pos, L"PATH=");
+    pos += wcslen (L"PATH=");
+    wcscpy (pos, lib_dir);
+    pos += lib_dir_len;
+    *pos = L';';
+    if (origin_path)
+      wcscpy (pos + 1, origin_path + wcslen (L"PATH="));
+
+    self->env_string = new_env_string;
+  }
+
+  free (origin_path);
+  FreeEnvironmentStringsW (env_str);
 
   return self;
 }
@@ -1132,6 +1217,8 @@ gst_plugin_loader_free (GstPluginLoader * self)
   gst_clear_object (&self->registry);
   g_queue_clear_full (&self->pending_plugins,
       (GDestroyNotify) pending_plugin_entry_free);
+
+  free (self->env_string);
   g_free (self);
 
   return got_plugin_detail;
