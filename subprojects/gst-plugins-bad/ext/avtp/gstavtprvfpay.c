@@ -35,6 +35,7 @@
  * ]| This example pipeline will payload raw video. Refer to the avtprvfdepay
  * example to depayload and play the AVTP stream.
  * </refsect2>
+ * Since: 1.24
  */
 
 #include <avtp.h>

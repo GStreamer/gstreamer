@@ -36,6 +36,7 @@
  * and play them. Refer to the avtprvfpay example to payload raw video and send the
  * AVTP stream.
  * </refsect2>
+ * Since: 1.24
  */
 
 #include <avtp.h>
