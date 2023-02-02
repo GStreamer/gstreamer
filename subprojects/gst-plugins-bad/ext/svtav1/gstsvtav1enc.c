@@ -42,28 +42,6 @@ static GType gst_svtav1enc_intra_refresh_type_get_type(void) {
     return intra_refresh_type;
 }
 
-#define GST_SVTAV1ENC_TYPE_RATE_CONTROL_MODE (gst_svtav1enc_rate_control_mode_get_type())
-static GType gst_svtav1enc_rate_control_mode_get_type(void) {
-    static GType            rate_control_mode_type = 0;
-    static const GEnumValue rate_control_mode[]    = {
-        {SVT_AV1_RC_MODE_CQP_OR_CRF,
-            "Constant quantization parameter/constant rate factor",
-            "cqp-or-crf"},
-        {SVT_AV1_RC_MODE_VBR, "Variable bitrate", "vbr"},
-        {SVT_AV1_RC_MODE_CBR, "Constant bitrate", "cbr"},
-        {0, NULL, NULL},
-    };
-
-    if (!rate_control_mode_type) {
-        rate_control_mode_type = g_enum_register_static("GstSvtAv1EncRateControlMode",
-                                                        rate_control_mode);
-    }
-    return rate_control_mode_type;
-}
-
-/* default configuration */
-static EbSvtAv1EncConfiguration default_configuration;
-
 /* prototypes */
 static void gst_svtav1enc_set_property(GObject *object, guint property_id, const GValue *value,
                                        GParamSpec *pspec);
@@ -91,19 +69,18 @@ static GstFlowReturn gst_svtav1enc_finish(GstVideoEncoder *encoder);
 static gboolean      gst_svtav1enc_propose_allocation(GstVideoEncoder *encoder, GstQuery *query);
 static gboolean      gst_svtav1enc_flush(GstVideoEncoder *encoder);
 
-static void gst_svtav1enc_parse_parameters_string(GstSvtAv1Enc *svtav1enc, const gchar *parameters);
+static void gst_svtav1enc_parse_parameters_string(GstSvtAv1Enc *svtav1enc);
 
 enum {
     PROP_0,
     PROP_PRESET,
-    PROP_RATE_CONTROL_MODE,
     PROP_TARGET_BITRATE,
     PROP_MAX_BITRATE,
     PROP_MAX_QP_ALLOWED,
     PROP_MIN_QP_ALLOWED,
-    PROP_QP,
+    PROP_CQP,
+    PROP_CRF,
     PROP_MAXIMUM_BUFFER_SIZE,
-    PROP_ADAPTIVE_QUANTIZATION,
     PROP_INTRA_PERIOD_LENGTH,
     PROP_INTRA_REFRESH_TYPE,
     PROP_LOGICAL_PROCESSORS,
@@ -111,17 +88,16 @@ enum {
     PROP_PARAMETERS_STRING,
 };
 
-#define PROP_PRESET_DEFAULT 8
-#define PROP_RATE_CONTROL_MODE_DEFAULT SVT_AV1_RC_MODE_CQP_OR_CRF
-#define PROP_TARGET_BITRATE_DEFAULT 2000
+#define PROP_PRESET_DEFAULT 10
+#define PROP_TARGET_BITRATE_DEFAULT 0
 #define PROP_MAX_BITRATE_DEFAULT 0
 #define PROP_QP_MAX_QP_ALLOWED_DEFAULT 63
-#define PROP_QP_MIN_QP_ALLOWED_DEFAULT 0
-#define PROP_QP_DEFAULT 50
+#define PROP_QP_MIN_QP_ALLOWED_DEFAULT 1
+#define PROP_CQP_DEFAULT -1
+#define PROP_CRF_DEFAULT 35
 #define PROP_MAXIMUM_BUFFER_SIZE_DEFAULT 1000
-#define PROP_ADAPTIVE_QUANTIZATION_DEFAULT 2
 #define PROP_INTRA_PERIOD_LENGTH_DEFAULT -2
-#define PROP_INTRA_REFRESH_TYPE_DEFAULT 1
+#define PROP_INTRA_REFRESH_TYPE_DEFAULT SVT_AV1_KF_REFRESH
 #define PROP_LOGICAL_PROCESSORS_DEFAULT 0
 #define PROP_TARGET_SOCKET_DEFAULT -1
 #define PROP_PARAMETERS_STRING_DEFAULT NULL
@@ -201,21 +177,12 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
                           PROP_PRESET_DEFAULT,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    g_object_class_install_property(gobject_class,
-                                    PROP_RATE_CONTROL_MODE,
-                                    g_param_spec_enum("rate-control-mode",
-                                                      "Rate-control mode",
-                                                      "Rate Control Mode",
-                                                      GST_SVTAV1ENC_TYPE_RATE_CONTROL_MODE,
-                                                      PROP_RATE_CONTROL_MODE_DEFAULT,
-                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
     g_object_class_install_property(
         gobject_class,
         PROP_TARGET_BITRATE,
         g_param_spec_uint("target-bitrate",
                           "Target bitrate",
-                          "Target bitrate in kbits/sec. Only used when in CBR and VBR mode",
+                          "Target bitrate in kbits/sec. Enables CBR or VBR mode",
                           0,
                           100000,
                           PROP_TARGET_BITRATE_DEFAULT,
@@ -226,7 +193,8 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
         PROP_MAX_BITRATE,
         g_param_spec_uint("max-bitrate",
                           "Maximum bitrate",
-                          "Maximum bitrate in kbits/sec. Only used when in CBQ mode",
+                          "Maximum bitrate in kbits/sec. Enables VBR mode if a different "
+                          "target-bitrate is provided",
                           0,
                           100000,
                           PROP_MAX_BITRATE_DEFAULT,
@@ -238,7 +206,7 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
         g_param_spec_uint("max-qp-allowed",
                           "Max Quantization parameter",
                           "Maximum QP value allowed for rate control use"
-                          " Only used in VBR mode.",
+                          " Only used in CBR and VBR mode.",
                           0,
                           63,
                           PROP_MAX_QP_ALLOWED,
@@ -250,21 +218,33 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
         g_param_spec_uint("min-qp-allowed",
                           "Min Quantization parameter",
                           "Minimum QP value allowed for rate control use"
-                          " Only used in VBR mode.",
+                          " Only used in CBR and VBR mode.",
                           0,
                           63,
                           PROP_MIN_QP_ALLOWED,
                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-    g_object_class_install_property(gobject_class,
-                                    PROP_QP,
-                                    g_param_spec_uint("qp",
-                                                      "Quantization parameter",
-                                                      "Quantization parameter used in CQP mode",
-                                                      0,
-                                                      63,
-                                                      PROP_QP_DEFAULT,
-                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+    g_object_class_install_property(
+        gobject_class,
+        PROP_CQP,
+        g_param_spec_int("cqp",
+                         "Quantization parameter",
+                         "Quantization parameter used in CQP mode (-1 is disabled)",
+                         -1,
+                         63,
+                         PROP_CQP_DEFAULT,
+                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    g_object_class_install_property(
+        gobject_class,
+        PROP_CRF,
+        g_param_spec_int("crf",
+                         "Constant Rate Factor",
+                         "Quantization parameter used in CRF mode (-1 is disabled)",
+                         -1,
+                         63,
+                         PROP_CRF_DEFAULT,
+                         G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property(gobject_class,
                                     PROP_MAXIMUM_BUFFER_SIZE,
@@ -276,17 +256,6 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
                                                       10000,
                                                       PROP_MAXIMUM_BUFFER_SIZE_DEFAULT,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-    g_object_class_install_property(
-        gobject_class,
-        PROP_ADAPTIVE_QUANTIZATION,
-        g_param_spec_uint("adaptive-quantization",
-                          "Adaptive Quantization",
-                          "Adaptive quantization within a frame using segmentation.",
-                          0,
-                          2,
-                          PROP_ADAPTIVE_QUANTIZATION_DEFAULT,
-                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property(
         gobject_class,
@@ -343,8 +312,20 @@ static void gst_svtav1enc_class_init(GstSvtAv1EncClass *klass) {
 }
 
 static void gst_svtav1enc_init(GstSvtAv1Enc *svtav1enc) {
-    svtav1enc->svt_config = g_new0(EbSvtAv1EncConfiguration, 1);
-    memcpy(svtav1enc->svt_config, &default_configuration, sizeof(default_configuration));
+    svtav1enc->svt_config          = g_new0(EbSvtAv1EncConfiguration, 1);
+    svtav1enc->preset              = PROP_PRESET_DEFAULT;
+    svtav1enc->target_bitrate      = PROP_TARGET_BITRATE_DEFAULT;
+    svtav1enc->max_bitrate         = PROP_MAX_BITRATE_DEFAULT;
+    svtav1enc->max_qp_allowed      = PROP_QP_MAX_QP_ALLOWED_DEFAULT;
+    svtav1enc->min_qp_allowed      = PROP_QP_MIN_QP_ALLOWED_DEFAULT;
+    svtav1enc->cqp                 = PROP_CQP_DEFAULT;
+    svtav1enc->crf                 = PROP_CRF_DEFAULT;
+    svtav1enc->maximum_buffer_size = PROP_MAXIMUM_BUFFER_SIZE_DEFAULT;
+    svtav1enc->intra_period_length = PROP_INTRA_PERIOD_LENGTH_DEFAULT;
+    svtav1enc->intra_refresh_type  = PROP_INTRA_REFRESH_TYPE_DEFAULT;
+    svtav1enc->logical_processors  = PROP_LOGICAL_PROCESSORS_DEFAULT;
+    svtav1enc->target_socket       = PROP_TARGET_SOCKET_DEFAULT;
+    svtav1enc->parameters_string   = PROP_PARAMETERS_STRING_DEFAULT;
 }
 
 static void gst_svtav1enc_set_property(GObject *object, guint property_id, const GValue *value,
@@ -361,45 +342,23 @@ static void gst_svtav1enc_set_property(GObject *object, guint property_id, const
     GST_LOG_OBJECT(svtav1enc, "setting property %u", property_id);
 
     switch (property_id) {
-    case PROP_PRESET: svtav1enc->svt_config->enc_mode = g_value_get_uint(value); break;
-    case PROP_RATE_CONTROL_MODE:
-        svtav1enc->svt_config->rate_control_mode = g_value_get_enum(value);
-        // Forcing keyframes is only support in CQP/CRF mode
-        svtav1enc->svt_config->force_key_frames = (svtav1enc->svt_config->rate_control_mode ==
-                                                   SVT_AV1_RC_MODE_CQP_OR_CRF);
+    case PROP_PRESET: svtav1enc->preset = g_value_get_uint(value); break;
+    case PROP_TARGET_BITRATE: svtav1enc->target_bitrate = g_value_get_uint(value) * 1000; break;
+    case PROP_MAX_BITRATE: svtav1enc->max_bitrate = g_value_get_uint(value) * 1000; break;
+    case PROP_MAX_QP_ALLOWED: svtav1enc->max_qp_allowed = g_value_get_uint(value); break;
+    case PROP_MIN_QP_ALLOWED: svtav1enc->min_qp_allowed = g_value_get_uint(value); break;
+    case PROP_CQP: svtav1enc->cqp = g_value_get_int(value); break;
+    case PROP_CRF: svtav1enc->crf = g_value_get_int(value); break;
+    case PROP_MAXIMUM_BUFFER_SIZE: svtav1enc->maximum_buffer_size = g_value_get_uint(value); break;
+    case PROP_INTRA_PERIOD_LENGTH: svtav1enc->intra_period_length = g_value_get_int(value); break;
+    case PROP_INTRA_REFRESH_TYPE: svtav1enc->intra_refresh_type = g_value_get_enum(value); break;
+    case PROP_LOGICAL_PROCESSORS: svtav1enc->logical_processors = g_value_get_uint(value); break;
+    case PROP_TARGET_SOCKET: svtav1enc->target_socket = g_value_get_int(value); break;
+    case PROP_PARAMETERS_STRING: {
+        g_free(svtav1enc->parameters_string);
+        svtav1enc->parameters_string = g_value_dup_string(value);
         break;
-    case PROP_TARGET_BITRATE:
-        svtav1enc->svt_config->target_bit_rate = g_value_get_uint(value) * 1000;
-        break;
-    case PROP_MAX_BITRATE:
-        svtav1enc->svt_config->max_bit_rate = g_value_get_uint(value) * 1000;
-        break;
-    case PROP_MAX_QP_ALLOWED:
-        svtav1enc->svt_config->max_qp_allowed = g_value_get_uint(value);
-        break;
-    case PROP_MIN_QP_ALLOWED:
-        svtav1enc->svt_config->min_qp_allowed = g_value_get_uint(value);
-        break;
-    case PROP_QP: svtav1enc->svt_config->qp = g_value_get_uint(value); break;
-    case PROP_MAXIMUM_BUFFER_SIZE:
-        svtav1enc->svt_config->maximum_buffer_size_ms = g_value_get_uint(value);
-        break;
-    case PROP_ADAPTIVE_QUANTIZATION:
-        svtav1enc->svt_config->enable_adaptive_quantization = g_value_get_uint(value);
-        break;
-    case PROP_INTRA_PERIOD_LENGTH:
-        svtav1enc->svt_config->intra_period_length = g_value_get_int(value) - 1;
-        break;
-    case PROP_INTRA_REFRESH_TYPE:
-        svtav1enc->svt_config->intra_refresh_type = g_value_get_enum(value);
-        break;
-    case PROP_LOGICAL_PROCESSORS:
-        svtav1enc->svt_config->logical_processors = g_value_get_uint(value);
-        break;
-    case PROP_TARGET_SOCKET: svtav1enc->svt_config->target_socket = g_value_get_int(value); break;
-    case PROP_PARAMETERS_STRING:
-        gst_svtav1enc_parse_parameters_string(svtav1enc, g_value_get_string(value));
-        break;
+    }
     default: G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec); break;
     }
 }
@@ -411,35 +370,18 @@ static void gst_svtav1enc_get_property(GObject *object, guint property_id, GValu
     GST_LOG_OBJECT(svtav1enc, "getting property %u", property_id);
 
     switch (property_id) {
-    case PROP_PRESET: g_value_set_uint(value, svtav1enc->svt_config->enc_mode); break;
-    case PROP_RATE_CONTROL_MODE:
-        g_value_set_enum(value, svtav1enc->svt_config->rate_control_mode);
-        break;
-    case PROP_TARGET_BITRATE:
-        g_value_set_uint(value, svtav1enc->svt_config->target_bit_rate / 1000);
-        break;
-    case PROP_MAX_BITRATE:
-        g_value_set_uint(value, svtav1enc->svt_config->max_bit_rate / 1000);
-        break;
-    case PROP_MAX_QP_ALLOWED: g_value_set_uint(value, svtav1enc->svt_config->max_qp_allowed); break;
-    case PROP_MIN_QP_ALLOWED: g_value_set_uint(value, svtav1enc->svt_config->min_qp_allowed); break;
-    case PROP_QP: g_value_set_uint(value, svtav1enc->svt_config->qp); break;
-    case PROP_MAXIMUM_BUFFER_SIZE:
-        g_value_set_uint(value, svtav1enc->svt_config->maximum_buffer_size_ms);
-        break;
-    case PROP_ADAPTIVE_QUANTIZATION:
-        g_value_set_uint(value, svtav1enc->svt_config->enable_adaptive_quantization);
-        break;
-    case PROP_INTRA_PERIOD_LENGTH:
-        g_value_set_int(value, svtav1enc->svt_config->intra_period_length + 1);
-        break;
-    case PROP_INTRA_REFRESH_TYPE:
-        g_value_set_enum(value, svtav1enc->svt_config->intra_refresh_type);
-        break;
-    case PROP_LOGICAL_PROCESSORS:
-        g_value_set_uint(value, svtav1enc->svt_config->logical_processors);
-        break;
-    case PROP_TARGET_SOCKET: g_value_set_int(value, svtav1enc->svt_config->target_socket); break;
+    case PROP_PRESET: g_value_set_uint(value, svtav1enc->preset); break;
+    case PROP_TARGET_BITRATE: g_value_set_uint(value, svtav1enc->target_bitrate / 1000); break;
+    case PROP_MAX_BITRATE: g_value_set_uint(value, svtav1enc->max_bitrate / 1000); break;
+    case PROP_MAX_QP_ALLOWED: g_value_set_uint(value, svtav1enc->max_qp_allowed); break;
+    case PROP_MIN_QP_ALLOWED: g_value_set_uint(value, svtav1enc->min_qp_allowed); break;
+    case PROP_CQP: g_value_set_int(value, svtav1enc->cqp); break;
+    case PROP_CRF: g_value_set_int(value, svtav1enc->crf); break;
+    case PROP_MAXIMUM_BUFFER_SIZE: g_value_set_uint(value, svtav1enc->maximum_buffer_size); break;
+    case PROP_INTRA_PERIOD_LENGTH: g_value_set_int(value, svtav1enc->intra_period_length); break;
+    case PROP_INTRA_REFRESH_TYPE: g_value_set_enum(value, svtav1enc->intra_refresh_type); break;
+    case PROP_LOGICAL_PROCESSORS: g_value_set_uint(value, svtav1enc->logical_processors); break;
+    case PROP_TARGET_SOCKET: g_value_set_int(value, svtav1enc->target_socket); break;
     case PROP_PARAMETERS_STRING: g_value_set_string(value, svtav1enc->parameters_string); break;
     default: G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec); break;
     }
@@ -480,6 +422,50 @@ static gboolean gst_svtav1enc_configure_svt(GstSvtAv1Enc *svtav1enc) {
         return FALSE;
     }
 
+    /* set object properties */
+    svtav1enc->svt_config->enc_mode = svtav1enc->preset;
+    if (svtav1enc->target_bitrate != 0) {
+        svtav1enc->svt_config->target_bit_rate = svtav1enc->target_bitrate;
+        if (svtav1enc->target_bitrate != svtav1enc->max_bitrate) {
+            GST_DEBUG_OBJECT(svtav1enc,
+                             "Enabling VBR mode (br %u max-br %u max-qp %u min-qp %u)",
+                             svtav1enc->target_bitrate,
+                             svtav1enc->max_bitrate,
+                             svtav1enc->max_qp_allowed,
+                             svtav1enc->min_qp_allowed);
+            svtav1enc->svt_config->max_bit_rate      = svtav1enc->max_bitrate;
+            svtav1enc->svt_config->rate_control_mode = SVT_AV1_RC_MODE_VBR;
+        } else {
+            GST_DEBUG_OBJECT(svtav1enc,
+                             "Enabling CBR mode (br %u max-bs %u)",
+                             svtav1enc->target_bitrate,
+                             svtav1enc->maximum_buffer_size);
+            svtav1enc->svt_config->rate_control_mode      = SVT_AV1_RC_MODE_CBR;
+            svtav1enc->svt_config->maximum_buffer_size_ms = svtav1enc->maximum_buffer_size;
+        }
+        svtav1enc->svt_config->max_qp_allowed   = svtav1enc->max_qp_allowed;
+        svtav1enc->svt_config->min_qp_allowed   = svtav1enc->min_qp_allowed;
+        svtav1enc->svt_config->force_key_frames = FALSE;
+    } else if (svtav1enc->crf > 0) {
+        GST_DEBUG_OBJECT(svtav1enc, "Enabling CRF mode (qp %u)", svtav1enc->crf);
+        svtav1enc->svt_config->qp                = svtav1enc->crf;
+        svtav1enc->svt_config->rate_control_mode = SVT_AV1_RC_MODE_CQP_OR_CRF;
+        svtav1enc->svt_config->force_key_frames  = TRUE;
+    } else if (svtav1enc->cqp > 0) {
+        GST_DEBUG_OBJECT(svtav1enc, "Enabling CQP mode (qp %u)", svtav1enc->cqp);
+        svtav1enc->svt_config->qp                           = svtav1enc->cqp;
+        svtav1enc->svt_config->rate_control_mode            = SVT_AV1_RC_MODE_CQP_OR_CRF;
+        svtav1enc->svt_config->enable_adaptive_quantization = FALSE;
+        svtav1enc->svt_config->force_key_frames             = TRUE;
+    } else {
+        GST_DEBUG_OBJECT(svtav1enc, "Using default rate control settings");
+    }
+    svtav1enc->svt_config->intra_period_length = svtav1enc->intra_period_length;
+    svtav1enc->svt_config->intra_refresh_type  = svtav1enc->intra_refresh_type;
+    svtav1enc->svt_config->logical_processors  = svtav1enc->logical_processors;
+    svtav1enc->svt_config->target_socket       = svtav1enc->target_socket;
+    gst_svtav1enc_parse_parameters_string(svtav1enc);
+
     /* set properties out of GstVideoInfo */
     const GstVideoInfo *info                      = &svtav1enc->state->info;
     svtav1enc->svt_config->encoder_bit_depth      = GST_VIDEO_INFO_COMP_DEPTH(info, 0);
@@ -492,11 +478,11 @@ static gboolean gst_svtav1enc_configure_svt(GstSvtAv1Enc *svtav1enc) {
         ? GST_VIDEO_INFO_FPS_D(info)
         : 1;
     GST_LOG_OBJECT(svtav1enc,
-                   "width %d, height %d, framerate %d",
+                   "width %d, height %d, framerate %d/%d",
                    svtav1enc->svt_config->source_width,
                    svtav1enc->svt_config->source_height,
-                   svtav1enc->svt_config->frame_rate_numerator /
-                       svtav1enc->svt_config->frame_rate_denominator);
+                   svtav1enc->svt_config->frame_rate_numerator,
+                   svtav1enc->svt_config->frame_rate_denominator);
 
     switch (GST_VIDEO_INFO_COLORIMETRY(info).primaries) {
     case GST_VIDEO_COLOR_PRIMARIES_BT709:
@@ -813,12 +799,10 @@ static GstFlowReturn gst_svtav1enc_dequeue_encoded_frames(GstSvtAv1Enc *svtav1en
 
 static gboolean gst_svtav1enc_open(GstVideoEncoder *encoder) {
     GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC(encoder);
-    /* don't overwrite the application's configuration */
-    EbSvtAv1EncConfiguration svt_config;
 
     GST_DEBUG_OBJECT(svtav1enc, "open");
 
-    EbErrorType res = svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, &svt_config);
+    EbErrorType res = svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
     if (res != EB_ErrorNone) {
         GST_ELEMENT_ERROR(svtav1enc,
                           LIBRARY,
@@ -942,17 +926,13 @@ static gboolean gst_svtav1enc_propose_allocation(GstVideoEncoder *encoder, GstQu
     return GST_VIDEO_ENCODER_CLASS(gst_svtav1enc_parent_class)->propose_allocation(encoder, query);
 }
 
-static void gst_svtav1enc_parse_parameters_string(GstSvtAv1Enc *svtav1enc,
-                                                  const gchar  *parameters) {
+static void gst_svtav1enc_parse_parameters_string(GstSvtAv1Enc *svtav1enc) {
     gchar **key_values, **p;
 
-    g_free(svtav1enc->parameters_string);
-    svtav1enc->parameters_string = g_strdup(parameters);
-
-    if (!parameters)
+    if (!svtav1enc->parameters_string)
         return;
 
-    p = key_values = g_strsplit(parameters, ":", -1);
+    p = key_values = g_strsplit(svtav1enc->parameters_string, ":", -1);
     while (p && *p) {
         gchar      *equals;
         EbErrorType res;
@@ -980,16 +960,6 @@ static void gst_svtav1enc_parse_parameters_string(GstSvtAv1Enc *svtav1enc,
 }
 
 static gboolean plugin_init(GstPlugin *plugin) {
-    EbComponentType *handle = NULL;
-    EbErrorType      res;
-
-    res = svt_av1_enc_init_handle(&handle, NULL, &default_configuration);
-    if (res != EB_ErrorNone) {
-        GST_ERROR("Failed to initialize SVT AV1 handle");
-        return FALSE;
-    }
-    svt_av1_enc_deinit(handle);
-
     return gst_element_register(plugin, "svtav1enc", GST_RANK_SECONDARY, GST_TYPE_SVTAV1ENC);
 }
 

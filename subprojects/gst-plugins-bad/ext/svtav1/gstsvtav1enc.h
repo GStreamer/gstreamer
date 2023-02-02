@@ -33,7 +33,19 @@ typedef struct _GstSvtAv1Enc {
 
     /* SVT-AV1 configuration */
     EbSvtAv1EncConfiguration *svt_config;
-    gchar                    *parameters_string;
+    /* Property values */
+    guint  preset;
+    guint  target_bitrate;
+    guint  max_bitrate;
+    guint  max_qp_allowed;
+    guint  min_qp_allowed;
+    gint   cqp, crf;
+    guint  maximum_buffer_size;
+    gint   intra_period_length;
+    gint   intra_refresh_type;
+    gint   logical_processors;
+    gint   target_socket;
+    gchar *parameters_string;
 
     EbBufferHeaderType *input_buf;
 } GstSvtAv1Enc;
