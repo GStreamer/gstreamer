@@ -65,7 +65,7 @@ _init_debug (void)
   GstGLWindow *gst_gl_window;
   GstGLContext *gst_gl_context = NULL;
   if (gst_gl_context_ref)
-    return gst_gl_context_ref;
+    return gst_object_ref(gst_gl_context_ref);
   gst_gl_window = g_weak_ref_get (&self->gst_gl_window_ref);
   if (gst_gl_window) {
     gst_gl_context = gst_gl_window_get_context (gst_gl_window);
