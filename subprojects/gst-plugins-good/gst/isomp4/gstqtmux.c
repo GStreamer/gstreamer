@@ -6592,24 +6592,87 @@ gst_qt_mux_video_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
     entry.fourcc = FOURCC_cfhd;
     sync = FALSE;
   } else if (strcmp (mimetype, "video/x-av1") == 0) {
-    gint presentation_delay;
-    guint8 presentation_delay_byte = 0;
-    GstBuffer *av1_codec_data;
+    gint presentation_delay = -1;
+    GstBuffer *av1_codec_data = NULL;
 
-    if (gst_structure_get_int (structure, "presentation-delay",
-            &presentation_delay)) {
-      presentation_delay_byte = 1 << 5;
-      presentation_delay_byte |= MAX (0xF, presentation_delay & 0xF);
+    if (codec_data) {
+      av1_codec_data = gst_buffer_ref ((GstBuffer *) codec_data);
+    } else {
+      GstMapInfo map;
+      const gchar *tmp;
+      guint tmp2;
+
+      gst_structure_get_int (structure, "presentation-delay",
+          &presentation_delay);
+
+      av1_codec_data = gst_buffer_new_allocate (NULL, 4, NULL);
+      gst_buffer_map (av1_codec_data, &map, GST_MAP_WRITE);
+
+      /*
+       *  unsigned int (1) marker = 1;
+       *  unsigned int (7) version = 1;
+       *  unsigned int (3) seq_profile;
+       *  unsigned int (5) seq_level_idx_0;
+       *  unsigned int (1) seq_tier_0;
+       *  unsigned int (1) high_bitdepth;
+       *  unsigned int (1) twelve_bit;
+       *  unsigned int (1) monochrome;
+       *  unsigned int (1) chroma_subsampling_x;
+       *  unsigned int (1) chroma_subsampling_y;
+       *  unsigned int (2) chroma_sample_position;
+       *  unsigned int (3) reserved = 0;
+       *
+       *  unsigned int (1) initial_presentation_delay_present;
+       *  if (initial_presentation_delay_present) {
+       *    unsigned int (4) initial_presentation_delay_minus_one;
+       *  } else {
+       *    unsigned int (4) reserved = 0;
+       *  }
+       */
+
+      map.data[0] = 0x81;
+      map.data[1] = 0x00;
+      if ((tmp = gst_structure_get_string (structure, "profile"))) {
+        if (strcmp (tmp, "main") == 0)
+          map.data[1] |= (0 << 5);
+        if (strcmp (tmp, "high") == 0)
+          map.data[1] |= (1 << 5);
+        if (strcmp (tmp, "professional") == 0)
+          map.data[1] |= (2 << 5);
+      }
+      /* FIXME: level set to 1 */
+      map.data[1] |= 0x01;
+      /* FIXME: tier set to 0 */
+
+      if (gst_structure_get_uint (structure, "bit-depth-luma", &tmp2)) {
+        if (tmp2 == 10) {
+          map.data[2] |= 0x40;
+        } else if (tmp2 == 12) {
+          map.data[2] |= 0x60;
+        }
+      }
+
+      /* Assume 4:2:0 if nothing else is given */
+      map.data[2] |= 0x0C;
+      if ((tmp = gst_structure_get_string (structure, "chroma-format"))) {
+        if (strcmp (tmp, "4:0:0") == 0)
+          map.data[2] |= 0x1C;
+        if (strcmp (tmp, "4:2:0") == 0)
+          map.data[2] |= 0x0C;
+        if (strcmp (tmp, "4:2:2") == 0)
+          map.data[2] |= 0x08;
+        if (strcmp (tmp, "4:4:4") == 0)
+          map.data[2] |= 0x00;
+      }
+
+      /* FIXME: keep chroma-site unknown */
+
+      if (presentation_delay != -1) {
+        map.data[3] = 0x10 | (MAX (0xF, presentation_delay) & 0xF);
+      }
+
+      gst_buffer_unmap (av1_codec_data, &map);
     }
-
-
-    av1_codec_data = gst_buffer_new_allocate (NULL, 5, NULL);
-    /* Fill version and 3 bytes of flags to 0 */
-    gst_buffer_memset (av1_codec_data, 0, 0, 4);
-    gst_buffer_fill (av1_codec_data, 4, &presentation_delay_byte, 1);
-    if (codec_data)
-      av1_codec_data = gst_buffer_append (av1_codec_data,
-          gst_buffer_ref ((GstBuffer *) codec_data));
 
     entry.fourcc = FOURCC_av01;
 
