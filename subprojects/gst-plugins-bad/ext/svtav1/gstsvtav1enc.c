@@ -458,7 +458,7 @@ static void gst_svtav1enc_finalize(GObject *object) {
 
 static void gst_svtav1enc_allocate_svt_buffers(GstSvtAv1Enc *svtav1enc) {
     svtav1enc->input_buf                = g_new0(EbBufferHeaderType, 1);
-    svtav1enc->input_buf->p_buffer      = (uint8_t *)g_new0(EbSvtIOFormat, 1);
+    svtav1enc->input_buf->p_buffer      = (guint8 *)g_new0(EbSvtIOFormat, 1);
     svtav1enc->input_buf->size          = sizeof(EbBufferHeaderType);
     svtav1enc->input_buf->p_app_private = NULL;
     svtav1enc->input_buf->pic_type      = EB_AV1_INVALID_PICTURE;
@@ -882,7 +882,7 @@ static gboolean gst_svtav1enc_set_format(GstVideoEncoder *encoder, GstVideoCodec
     if (!gst_svtav1enc_start_svt(svtav1enc))
         return FALSE;
 
-    uint32_t fps = svtav1enc->svt_config->frame_rate_numerator /
+    guint32 fps = svtav1enc->svt_config->frame_rate_numerator /
         svtav1enc->svt_config->frame_rate_denominator;
     fps = fps > 120 ? 120 : fps;
     fps = fps < 24 ? 24 : fps;
