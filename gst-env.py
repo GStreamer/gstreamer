@@ -289,7 +289,7 @@ def get_subprocess_env(options, gst_version):
     env["GST_PLUGIN_SCANNER"] = os.path.normpath(
         "%s/subprojects/gstreamer/libs/gst/helpers/gst-plugin-scanner" % options.builddir)
     env["GST_PTP_HELPER"] = os.path.normpath(
-        "%s/subprojects/gstreamer/libs/gst/helpers/gst-ptp-helper" % options.builddir)
+        "%s/subprojects/gstreamer/libs/gst/helpers/ptp/gst-ptp-helper" % options.builddir)
 
     if os.name == 'nt':
         lib_path_envvar = 'PATH'

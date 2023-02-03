@@ -1,0 +1,2 @@
+pub const PTP_HELPER_SETUID_USER: Option<&str> = @PTP_HELPER_SETUID_USER@;
+pub const PTP_HELPER_SETUID_GROUP: Option<&str> = @PTP_HELPER_SETUID_GROUP@;
