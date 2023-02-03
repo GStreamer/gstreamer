@@ -173,10 +173,9 @@ gst_adaptive_demux2_stream_add_track (GstAdaptiveDemux2Stream * stream,
 {
   g_return_val_if_fail (track != NULL, FALSE);
 
-  GST_DEBUG_OBJECT (stream->demux, "stream:%p track:%s", stream,
-      track->stream_id);
+  GST_DEBUG_OBJECT (stream, "track:%s", track->stream_id);
   if (g_list_find (stream->tracks, track)) {
-    GST_DEBUG_OBJECT (stream->demux,
+    GST_DEBUG_OBJECT (stream,
         "track '%s' already handled by this stream", track->stream_id);
     return FALSE;
   }

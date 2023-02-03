@@ -1789,10 +1789,10 @@ demux_update_buffering_locked (GstAdaptiveDemux * demux)
   for (tmp = demux->output_period->tracks; tmp; tmp = tmp->next) {
     GstAdaptiveDemuxTrack *track = (GstAdaptiveDemuxTrack *) tmp->data;
 
-    GST_LOG_OBJECT (demux,
-        "Checking track '%s' (period %u) active:%d selected:%d eos:%d level:%"
+    GST_LOG_ID (track->id,
+        "Checking track active:%d selected:%d eos:%d level:%"
         GST_TIME_FORMAT " buffering_threshold:%" GST_TIME_FORMAT,
-        track->stream_id, track->period_num, track->active, track->selected,
+        track->active, track->selected,
         track->eos, GST_TIME_ARGS (track->level_time),
         GST_TIME_ARGS (track->buffering_threshold));
 
@@ -1957,7 +1957,7 @@ gst_adaptive_demux_seek_to_input_period (GstAdaptiveDemux * demux)
     if (slot->pending_track != NULL) {
       GST_DEBUG_OBJECT (demux,
           "Removing track '%s' as pending from output of current track '%s'",
-          slot->pending_track->stream_id, slot->track->stream_id);
+          slot->pending_track->id, slot->track->id);
       gst_adaptive_demux_track_unref (slot->pending_track);
       slot->pending_track = NULL;
     }
@@ -3147,7 +3147,7 @@ check_and_handle_selection_update_locked (GstAdaptiveDemux * demux)
     if (slot->pending_track != NULL && !slot->pending_track->selected) {
       GST_DEBUG_OBJECT (demux,
           "Removing deselected track '%s' as pending from output of current track '%s'",
-          slot->pending_track->stream_id, slot->track->stream_id);
+          slot->pending_track->id, slot->track->id);
       gst_adaptive_demux_track_unref (slot->pending_track);
       slot->pending_track = NULL;
     }
@@ -3163,7 +3163,7 @@ check_and_handle_selection_update_locked (GstAdaptiveDemux * demux)
       /* 0. Track is selected and has a slot. Nothing to do */
       if (slot) {
         GST_DEBUG_OBJECT (demux, "Track '%s' is already being outputted",
-            track->stream_id);
+            track->id);
         continue;
       }
 
@@ -3174,16 +3174,14 @@ check_and_handle_selection_update_locked (GstAdaptiveDemux * demux)
         g_assert (slot->pending_track == NULL || slot->pending_track == track);
         if (slot->pending_track == NULL) {
           slot->pending_track = gst_adaptive_demux_track_ref (track);
-          GST_DEBUG_OBJECT (demux,
-              "Track '%s' (period %u) will be used on output of track '%s' (period %u)",
-              track->stream_id, track->period_num,
-              slot->track->stream_id, slot->track->period_num);
+          GST_DEBUG_ID (track->id,
+              "Track will be used on output of track '%s' (period %u)",
+              slot->track->id, slot->track->period_num);
         }
       } else {
         /* 2. There is no compatible replacement slot, create a new one */
         slot = gst_adaptive_demux_output_slot_new (demux, track->type);
-        GST_DEBUG_OBJECT (demux, "Created slot for track '%s'",
-            track->stream_id);
+        GST_DEBUG_OBJECT (demux, "Created slot for track '%s'", track->id);
         demux->priv->outputs = g_list_append (demux->priv->outputs, slot);
 
         track->update_next_segment = TRUE;
@@ -3207,7 +3205,7 @@ check_and_handle_selection_update_locked (GstAdaptiveDemux * demux)
       GstAdaptiveDemux2Stream *stream;
 
       GST_DEBUG_OBJECT (demux, "Output for track '%s' is no longer used",
-          slot->track->stream_id);
+          slot->track->id);
       slot->track->active = FALSE;
 
       /* If the stream feeding this track is stopped, flush and clear
@@ -3303,7 +3301,7 @@ handle_slot_pending_track_switch_locked (GstAdaptiveDemux * demux,
   if (!pending_is_ready && gst_queue_array_get_length (track->queue) > 0) {
     GST_DEBUG_OBJECT (demux,
         "Replacement track '%s' doesn't have enough data for switching yet",
-        slot->pending_track->stream_id);
+        slot->pending_track->id);
     return;
   }
 
@@ -3416,9 +3414,8 @@ restart:
       gst_adaptive_demux_track_update_next_position (track);
     }
 
-    GST_TRACE_OBJECT (demux,
-        "Looking at track %s (period %u). next_position %" GST_STIME_FORMAT,
-        track->stream_id, track->period_num,
+    GST_TRACE_ID (track->id,
+        "Looking at track, next_position %" GST_STIME_FORMAT,
         GST_STIME_ARGS (track->next_position));
 
     if (track->next_position != GST_CLOCK_STIME_NONE) {
@@ -3430,14 +3427,11 @@ restart:
       track->waiting_add = FALSE;
       all_tracks_empty = FALSE;
     } else if (!track->eos) {
-      GST_DEBUG_OBJECT (demux, "Need timed data on track %s (period %u)",
-          track->stream_id, track->period_num);
+      GST_DEBUG_ID (track->id, "Need timed data");
       all_tracks_empty = FALSE;
       wait_for_data = track->waiting_add = TRUE;
     } else {
-      GST_DEBUG_OBJECT (demux,
-          "Track %s (period %u) is EOS, not waiting for timed data",
-          track->stream_id, track->period_num);
+      GST_DEBUG_ID (track->id, "Track is EOS, not waiting for timed data");
 
       if (gst_queue_array_get_length (track->queue) > 0) {
         all_tracks_empty = FALSE;
@@ -3497,10 +3491,9 @@ restart:
           gst_adaptive_demux_track_dequeue_data_locked (demux, track, TRUE);
 
       if (!mo) {
-        GST_DEBUG_OBJECT (demux,
-            "Track '%s' (period %u) doesn't have any pending data (eos:%d pushed_timed_data:%d)",
-            track->stream_id, track->period_num, track->eos,
-            slot->pushed_timed_data);
+        GST_DEBUG_ID (track->id,
+            "Track doesn't have any pending data (eos:%d pushed_timed_data:%d)",
+            track->eos, slot->pushed_timed_data);
         /* This should only happen if the track is EOS, or exactly in between
          * the parser outputting segment/caps before buffers. */
         g_assert (track->eos || !slot->pushed_timed_data);
@@ -3508,9 +3501,8 @@ restart:
         /* If we drained the track, but there's a pending track on the slot
          * loop again to activate it */
         if (slot->pending_track) {
-          GST_DEBUG_OBJECT (demux,
-              "Track '%s' (period %u) drained, but has a pending track to activate",
-              track->stream_id, track->period_num);
+          GST_DEBUG_ID (track->id,
+              "Track drained, but has a pending track to activate");
           goto restart;
         }
         break;
@@ -3520,9 +3512,7 @@ restart:
       demux_post_buffering_locked (demux);
       TRACKS_UNLOCK (demux);
 
-      GST_DEBUG_OBJECT (demux,
-          "Track '%s' (period %u) dequeued %" GST_PTR_FORMAT, track->stream_id,
-          track->period_num, mo);
+      GST_DEBUG_ID (track->id, "Track dequeued %" GST_PTR_FORMAT, mo);
 
       if (GST_IS_EVENT (mo)) {
         GstEvent *event = (GstEvent *) mo;
@@ -3531,9 +3521,7 @@ restart:
         } else if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
           /* If there is a pending next period, don't send the EOS */
           if (demux->output_period->has_next_period) {
-            GST_LOG_OBJECT (demux,
-                "Dropping EOS on track '%s' (period %u) before next period",
-                track->stream_id, track->period_num);
+            GST_LOG_OBJECT (track->id, "Dropping EOS before next period");
             gst_event_store_mark_delivered (&track->sticky_events, event);
             gst_event_unref (event);
             event = NULL;
@@ -3556,8 +3544,7 @@ restart:
           if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
             buffer = gst_buffer_make_writable (buffer);
             GST_DEBUG_OBJECT (slot->pad,
-                "track %s marking discont %" GST_PTR_FORMAT, track->stream_id,
-                buffer);
+                "track %s marking discont %" GST_PTR_FORMAT, track->id, buffer);
             GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
           }
           track->output_discont = FALSE;
@@ -3567,8 +3554,8 @@ restart:
             gst_flow_combiner_update_pad_flow (demux->priv->flowcombiner,
             slot->pad, slot->flow_ret);
         GST_DEBUG_OBJECT (slot->pad,
-            "track %s (period %u) push returned %s (combined %s)",
-            track->stream_id, track->period_num,
+            "track %s push returned %s (combined %s)",
+            track->id,
             gst_flow_get_name (slot->flow_ret), gst_flow_get_name (ret));
         slot->pushed_timed_data = TRUE;
       } else {

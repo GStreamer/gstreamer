@@ -38,8 +38,8 @@ GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 void
 gst_adaptive_demux_track_flush (GstAdaptiveDemuxTrack * track)
 {
-  GST_DEBUG_OBJECT (track->demux, "Flushing track '%s' with %u queued items",
-      track->stream_id, gst_queue_array_get_length (track->queue));
+  GST_DEBUG_ID (track->id, "Flushing track with %u queued items",
+      gst_queue_array_get_length (track->queue));
   gst_queue_array_clear (track->queue);
 
   gst_event_store_flush (&track->sticky_events);
@@ -69,15 +69,14 @@ static gboolean
 _track_sink_query_function (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstAdaptiveDemuxTrack *track = gst_pad_get_element_private (pad);
-  GstAdaptiveDemux *demux = track->demux;
   gboolean ret = FALSE;
 
-  GST_DEBUG_OBJECT (pad, "query %" GST_PTR_FORMAT, query);
+  GST_DEBUG_ID (track->id, "query %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ACCEPT_CAPS:
       /* Should we intersect by track caps as a safety check ? */
-      GST_DEBUG_OBJECT (demux, "We accept any caps on %s:%s",
+      GST_DEBUG_ID (track->id, "We accept any caps on %s:%s",
           GST_DEBUG_PAD_NAME (pad));
       gst_query_set_accept_caps_result (query, TRUE);
       ret = TRUE;
@@ -103,9 +102,9 @@ track_dequeue_item_locked (GstAdaptiveDemux * demux,
   *out_item = *item;
   gst_queue_array_pop_head (track->queue);
 
-  GST_LOG_OBJECT (demux,
-      "track %s (period %u) item running_time %" GST_STIME_FORMAT " end %"
-      GST_STIME_FORMAT, track->stream_id, track->period_num,
+  GST_LOG_ID (track->id,
+      "item running_time %" GST_STIME_FORMAT " end %"
+      GST_STIME_FORMAT,
       GST_STIME_ARGS (out_item->runningtime),
       GST_STIME_ARGS (out_item->runningtime_end));
 
@@ -136,9 +135,8 @@ gst_adaptive_demux_track_dequeue_data_locked (GstAdaptiveDemux * demux,
       res = (GstMiniObject *) event;
       running_time_buffering = running_time = running_time_end =
           GST_CLOCK_STIME_NONE;
-      GST_DEBUG_OBJECT (demux,
-          "track %s (period %u) dequeued pending sticky event %" GST_PTR_FORMAT,
-          track->stream_id, track->period_num, event);
+      GST_DEBUG_ID (track->id,
+          "dequeued pending sticky event %" GST_PTR_FORMAT, event);
       is_pending_sticky = TRUE;
       goto handle_event;
     }
@@ -213,10 +211,10 @@ gst_adaptive_demux_track_dequeue_data_locked (GstAdaptiveDemux * demux,
       pos = cstart;
       duration = cstop - cstart;
 
-      GST_DEBUG_OBJECT (demux,
-          "track %s (period %u) Starting gap for runningtime %" GST_STIME_FORMAT
+      GST_DEBUG_ID (track->id,
+          "Starting gap for runningtime %" GST_STIME_FORMAT
           " - clipped position %" GST_TIME_FORMAT " duration %" GST_TIME_FORMAT,
-          track->stream_id, track->period_num, GST_STIME_ARGS (running_time),
+          GST_STIME_ARGS (running_time),
           GST_TIME_ARGS (pos), GST_TIME_ARGS (duration));
 
       track->gap_position = pos;
@@ -252,8 +250,8 @@ handle_event:
           GstClockTimeDiff global_output_position =
               demux->priv->global_output_position;
 
-          GST_DEBUG ("track %s: Override segment for running time %"
-              GST_STIME_FORMAT " : %" GST_PTR_FORMAT, track->stream_id,
+          GST_DEBUG_ID (track->id, "Override segment for running time %"
+              GST_STIME_FORMAT " : %" GST_PTR_FORMAT,
               GST_STIME_ARGS (global_output_position), event);
           gst_event_unref (event);
           gst_segment_set_running_time (&track->output_segment, GST_FORMAT_TIME,
@@ -278,9 +276,7 @@ handle_event:
     /* Store any sticky event in the cache, unless this is already an event
      * from the pending sticky_events store */
     if (!is_pending_sticky && GST_EVENT_IS_STICKY (event)) {
-      GST_DEBUG_OBJECT (demux,
-          "track %s Storing sticky event %" GST_PTR_FORMAT,
-          track->stream_id, event);
+      GST_DEBUG_ID (track->id, "Storing sticky event %" GST_PTR_FORMAT, event);
       gst_event_store_insert_event (&track->sticky_events, event, FALSE);
     }
   }
@@ -289,14 +285,13 @@ handle_event:
   if (GST_CLOCK_STIME_IS_VALID (running_time_buffering)) {
     track->output_time = running_time_buffering;
 
-    GST_LOG_OBJECT (demux,
-        "track %s buffering time:%" GST_STIME_FORMAT,
-        track->stream_id, GST_STIME_ARGS (running_time_buffering));
+    GST_LOG_ID (track->id,
+        "buffering time:%" GST_STIME_FORMAT,
+        GST_STIME_ARGS (running_time_buffering));
 
     gst_adaptive_demux_track_update_level_locked (track);
   } else {
-    GST_LOG_OBJECT (demux, "track %s popping untimed item %" GST_PTR_FORMAT,
-        track->stream_id, res);
+    GST_LOG_ID (track->id, "popping untimed item %" GST_PTR_FORMAT, res);
   }
 
   track->level_bytes -= item_size;
@@ -310,9 +305,9 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
 {
   GstAdaptiveDemux *demux = track->demux;
 
-  GST_DEBUG_OBJECT (demux,
-      "Track '%s' draining to running time %" GST_STIME_FORMAT,
-      track->stream_id, GST_STIME_ARGS (drain_running_time));
+  GST_DEBUG_ID (track->id,
+      "draining to running time %" GST_STIME_FORMAT,
+      GST_STIME_ARGS (drain_running_time));
 
   while (track->next_position == GST_CLOCK_STIME_NONE ||
       track->next_position < drain_running_time) {
@@ -334,9 +329,9 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
           my_segment_to_running_time (&track->output_segment, gap_end);
 
       if (running_time_end >= drain_running_time) {
-        GST_DEBUG_OBJECT (demux,
-            "Track '%s' drained to GAP with running time %" GST_STIME_FORMAT,
-            track->stream_id, GST_STIME_ARGS (running_time_end));
+        GST_DEBUG_ID (track->id,
+            "drained to GAP with running time %" GST_STIME_FORMAT,
+            GST_STIME_ARGS (running_time_end));
         return;
       }
 
@@ -348,8 +343,7 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
     item = gst_queue_array_peek_head_struct (track->queue);
     /* track is empty, we're done */
     if (item == NULL) {
-      GST_DEBUG_OBJECT (demux, "Track '%s' completely drained",
-          track->stream_id);
+      GST_DEBUG_ID (track->id, "Track completely drained");
       return;
     }
 
@@ -357,15 +351,15 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
      * we're done. */
     if (item->runningtime != GST_CLOCK_STIME_NONE
         && item->runningtime >= drain_running_time) {
-      GST_DEBUG_OBJECT (demux, "Track '%s' drained to item %" GST_PTR_FORMAT
+      GST_DEBUG_ID (track->id, "Track drained to item %" GST_PTR_FORMAT
           " with running time %" GST_STIME_FORMAT,
-          track->stream_id, item->item, GST_STIME_ARGS (item->runningtime));
+          item->item, GST_STIME_ARGS (item->runningtime));
       return;
     }
 
-    GST_DEBUG_OBJECT (demux, "Track '%s' discarding %" GST_PTR_FORMAT
+    GST_DEBUG_ID (track->id, "discarding %" GST_PTR_FORMAT
         " with running time %" GST_STIME_FORMAT,
-        track->stream_id, item->item, GST_STIME_ARGS (item->runningtime));
+        item->item, GST_STIME_ARGS (item->runningtime));
 
     /* Dequeue the item and discard. Sticky events
      * will be collected by the dequeue function, gaps will be started.
@@ -380,8 +374,8 @@ gst_adaptive_demux_track_drain_to (GstAdaptiveDemuxTrack * track,
     gst_adaptive_demux_track_update_next_position (track);
   }
 
-  GST_DEBUG_OBJECT (demux,
-      "Track '%s' drained to running time %" GST_STIME_FORMAT, track->stream_id,
+  GST_DEBUG_ID (track->id,
+      "drained to running time %" GST_STIME_FORMAT,
       GST_STIME_ARGS (track->next_position));
 }
 
@@ -475,18 +469,17 @@ track_queue_data_locked (GstAdaptiveDemux * demux,
      * so buffering level is updated correctly */
     if (!GST_CLOCK_STIME_IS_VALID (track->output_time)) {
       track->output_time = track->lowest_input_time;
-      GST_LOG_OBJECT (track->sinkpad,
-          "track %s (period %u) set output_time = lowest input_time = %"
-          GST_STIME_FORMAT, track->stream_id, track->period_num,
-          GST_STIME_ARGS (track->output_time));
+      GST_LOG_ID (track->id,
+          "setting output_time = lowest input_time = %"
+          GST_STIME_FORMAT, GST_STIME_ARGS (track->output_time));
     }
 
     gst_adaptive_demux_track_update_level_locked (track);
   }
 
-  GST_LOG_OBJECT (track->sinkpad,
-      "track %s item running_time :%" GST_STIME_FORMAT " end :%"
-      GST_STIME_FORMAT, track->stream_id, GST_STIME_ARGS (item.runningtime),
+  GST_LOG_ID (track->id,
+      "item running_time :%" GST_STIME_FORMAT " end :%"
+      GST_STIME_FORMAT, GST_STIME_ARGS (item.runningtime),
       GST_STIME_ARGS (item.runningtime_end));
 
   track->level_bytes += size;
@@ -507,7 +500,7 @@ _track_sink_chain_function (GstPad * pad, GstObject * parent,
   GstAdaptiveDemux *demux = track->demux;
   GstClockTime ts;
 
-  GST_DEBUG_OBJECT (pad, "buffer %" GST_PTR_FORMAT, buffer);
+  GST_DEBUG_ID (track->id, "buffer %" GST_PTR_FORMAT, buffer);
 
   TRACKS_LOCK (demux);
 
@@ -531,12 +524,12 @@ _track_sink_chain_function (GstPad * pad, GstObject * parent,
    */
   if (!GST_CLOCK_TIME_IS_VALID (ts)) {
     if (GST_CLOCK_TIME_IS_VALID (track->input_segment.position)) {
-      GST_WARNING_OBJECT (pad,
+      GST_WARNING_ID (track->id,
           "buffer doesn't have any pts or dts, using segment position (%"
           GST_TIME_FORMAT ")", GST_TIME_ARGS (track->input_segment.position));
       ts = track->input_segment.position;
     } else {
-      GST_ERROR_OBJECT (pad, "initial buffer doesn't have any pts or dts !");
+      GST_ERROR_ID (track->id, "initial buffer doesn't have any pts or dts !");
       gst_buffer_unref (buffer);
       TRACKS_UNLOCK (demux);
       return GST_FLOW_ERROR;
@@ -550,7 +543,7 @@ _track_sink_chain_function (GstPad * pad, GstObject * parent,
     GstClockTime duration = ts - track->input_segment.position;
     GstEvent *gap = gst_event_new_gap (track->input_segment.position, duration);
     /* Insert gap event to ensure coherent interleave */
-    GST_DEBUG_OBJECT (pad,
+    GST_DEBUG_ID (track->id,
         "Inserting gap for %" GST_TIME_FORMAT " vs %" GST_TIME_FORMAT,
         GST_TIME_ARGS (ts), GST_TIME_ARGS (track->input_segment.position));
     track_queue_data_locked (demux, track, (GstMiniObject *) gap, 0,
@@ -580,7 +573,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
   gboolean drop = FALSE;
   gboolean is_discont = FALSE;
 
-  GST_DEBUG_OBJECT (pad, "event %" GST_PTR_FORMAT, event);
+  GST_DEBUG_ID (track->id, "event %" GST_PTR_FORMAT, event);
 
   TRACKS_LOCK (demux);
 
@@ -588,13 +581,13 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_STREAM_COLLECTION:
     {
       /* Replace upstream collection with demux collection */
-      GST_DEBUG_OBJECT (pad, "Dropping stream-collection, we send our own");
+      GST_DEBUG_ID (track->id, "Dropping stream-collection, we send our own");
       drop = TRUE;
       break;
     }
     case GST_EVENT_STREAM_START:
     {
-      GST_DEBUG_OBJECT (pad, "Dropping stream-start, we send our own");
+      GST_DEBUG_ID (track->id, "Dropping stream-start, we send our own");
       if (track->eos) {
         gint i, len;
         /* Find and drop latest EOS if present */
@@ -605,8 +598,8 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
           if (GST_IS_EVENT (item->item)
               && GST_EVENT_TYPE (item->item) == GST_EVENT_EOS) {
             TrackQueueItem sub;
-            GST_DEBUG_OBJECT (pad, "Removing previously received EOS (pos:%d)",
-                i);
+            GST_DEBUG_ID (track->id,
+                "Removing previously received EOS (pos:%d)", i);
             if (gst_queue_array_drop_struct (track->queue, i, &sub))
               gst_mini_object_unref (sub.item);
             break;
@@ -620,7 +613,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_EOS:
     {
       if (track->pending_srcpad != NULL) {
-        GST_DEBUG_OBJECT (pad,
+        GST_DEBUG_ID (track->id,
             "Dropping EOS because we have a pending pad switch");
         drop = TRUE;
       } else {
@@ -640,7 +633,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
   }
 
   if (drop || !GST_EVENT_IS_SERIALIZED (event)) {
-    GST_DEBUG_OBJECT (pad, "dropping event %s", GST_EVENT_TYPE_NAME (event));
+    GST_DEBUG_ID (track->id, "dropping event %s", GST_EVENT_TYPE_NAME (event));
     gst_event_unref (event);
     TRACKS_UNLOCK (demux);
     /* Silently "accept" them */
@@ -653,7 +646,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
       guint64 seg_seqnum = gst_event_get_seqnum (event);
 
       if (track->input_segment_seqnum == seg_seqnum) {
-        GST_DEBUG_OBJECT (pad, "Ignoring duplicate segment");
+        GST_DEBUG_ID (track->id, "Ignoring duplicate segment");
         gst_event_unref (event);
         TRACKS_UNLOCK (demux);
 
@@ -666,8 +659,8 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
         track->input_segment.position = track->input_segment.start;
       else
         track->input_segment.position = track->input_segment.stop;
-      GST_DEBUG_OBJECT (pad, "track %s stored segment %" GST_SEGMENT_FORMAT,
-          track->stream_id, &track->input_segment);
+      GST_DEBUG_ID (track->id, "stored segment %" GST_SEGMENT_FORMAT,
+          &track->input_segment);
       timestamp = track->input_segment.position;
       is_discont = TRUE;
 
@@ -678,7 +671,7 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_parse_gap (event, &timestamp, &duration);
 
       if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
-        GST_DEBUG_OBJECT (pad, "Dropping gap event with invalid timestamp");
+        GST_DEBUG_ID (track->id, "Dropping gap event with invalid timestamp");
         goto drop_ok;
       }
 
@@ -747,8 +740,8 @@ gst_adaptive_demux_track_update_next_position (GstAdaptiveDemuxTrack * track)
     TrackQueueItem *item = gst_queue_array_peek_nth_struct (track->queue, i);
 
     if (item->runningtime != GST_CLOCK_STIME_NONE) {
-      GST_DEBUG_OBJECT (track->demux,
-          "Track '%s' next position %" GST_STIME_FORMAT, track->stream_id,
+      GST_DEBUG_ID (track->id,
+          "next position %" GST_STIME_FORMAT,
           GST_STIME_ARGS (item->runningtime));
       track->next_position = item->runningtime;
       return;
@@ -756,8 +749,7 @@ gst_adaptive_demux_track_update_next_position (GstAdaptiveDemuxTrack * track)
   }
   track->next_position = GST_CLOCK_STIME_NONE;
 
-  GST_DEBUG_OBJECT (track->demux,
-      "Track '%s' doesn't have any pending timed data", track->stream_id);
+  GST_DEBUG_ID (track->id, "Track doesn't have any pending timed data");
 }
 
 /* TRACKS_LOCK held. Recomputes the level_time for the track */
@@ -777,10 +769,10 @@ gst_adaptive_demux_track_update_level_locked (GstAdaptiveDemuxTrack * track)
   else
     track->level_time = 0;
 
-  GST_LOG_OBJECT (track->sinkpad,
-      "track %s (period %u) input_time:%" GST_STIME_FORMAT " output_time:%"
+  GST_LOG_ID (track->id,
+      "input_time:%" GST_STIME_FORMAT " output_time:%"
       GST_STIME_FORMAT " level:%" GST_TIME_FORMAT,
-      track->stream_id, track->period_num, GST_STIME_ARGS (track->input_time),
+      GST_STIME_ARGS (track->input_time),
       GST_STIME_ARGS (track->output_time), GST_TIME_ARGS (track->level_time));
 }
 
@@ -817,7 +809,7 @@ GstAdaptiveDemuxTrack *
 gst_adaptive_demux_track_ref (GstAdaptiveDemuxTrack * track)
 {
   g_return_val_if_fail (track != NULL, NULL);
-  GST_TRACE ("%p %d -> %d", track, track->ref_count, track->ref_count + 1);
+  GST_TRACE_ID (track->id, "%d -> %d", track->ref_count, track->ref_count + 1);
   g_atomic_int_inc (&track->ref_count);
 
   return track;
@@ -828,7 +820,7 @@ gst_adaptive_demux_track_unref (GstAdaptiveDemuxTrack * track)
 {
   g_return_if_fail (track != NULL);
 
-  GST_TRACE ("%p %d -> %d", track, track->ref_count, track->ref_count - 1);
+  GST_TRACE_ID (track->id, "%d -> %d", track->ref_count, track->ref_count - 1);
   if (g_atomic_int_dec_and_test (&track->ref_count)) {
     _demux_track_free (track);
   }
