@@ -53,6 +53,36 @@ gst_svtav1enc_intra_refresh_type_get_type (void)
   return intra_refresh_type;
 }
 
+typedef struct _GstSvtAv1Enc
+{
+  GstVideoEncoder video_encoder;
+
+  /* SVT-AV1 Encoder Handle */
+  EbComponentType *svt_encoder;
+
+  /* GStreamer Codec state */
+  GstVideoCodecState *state;
+
+  /* SVT-AV1 configuration */
+  EbSvtAv1EncConfiguration *svt_config;
+  /* Property values */
+  guint preset;
+  guint target_bitrate;
+  guint max_bitrate;
+  guint max_qp_allowed;
+  guint min_qp_allowed;
+  gint cqp, crf;
+  guint maximum_buffer_size;
+  gint intra_period_length;
+  gint intra_refresh_type;
+  gint logical_processors;
+  gint target_socket;
+  gchar *parameters_string;
+
+  EbBufferHeaderType *input_buf;
+} GstSvtAv1Enc;
+
+
 /* prototypes */
 static void gst_svtav1enc_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec);
@@ -139,6 +169,9 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 G_DEFINE_TYPE_WITH_CODE (GstSvtAv1Enc, gst_svtav1enc, GST_TYPE_VIDEO_ENCODER,
     GST_DEBUG_CATEGORY_INIT (gst_svtav1enc_debug_category, "svtav1enc", 0,
         "SVT-AV1 encoder element"));
+
+GST_ELEMENT_REGISTER_DEFINE (svtav1enc, "svtav1enc", GST_RANK_SECONDARY,
+    gst_svtav1enc_get_type ());
 
 /* this mutex is required to avoid race conditions in SVT-AV1 memory allocations, which aren't thread-safe */
 G_LOCK_DEFINE_STATIC (init_mutex);
@@ -1074,8 +1107,7 @@ gst_svtav1enc_parse_parameters_string (GstSvtAv1Enc * svtav1enc)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  return gst_element_register (plugin, "svtav1enc", GST_RANK_SECONDARY,
-      GST_TYPE_SVTAV1ENC);
+  return GST_ELEMENT_REGISTER (svtav1enc, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR, GST_VERSION_MINOR, svtav1,

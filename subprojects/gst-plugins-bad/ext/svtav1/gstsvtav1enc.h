@@ -15,46 +15,12 @@
 #include <EbSvtAv1Enc.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_SVTAV1ENC (gst_svtav1enc_get_type())
-#define GST_SVTAV1ENC(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_SVTAV1ENC, GstSvtAv1Enc))
-#define GST_SVTAV1ENC_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_SVTAV1ENC, GstSvtHevcEncClass))
-#define GST_IS_SVTAV1ENC(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_SVTAV1ENC))
-#define GST_IS_SVTAV1ENC_CLASS(obj) (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SVTAV1ENC))
 
-typedef struct _GstSvtAv1Enc {
-    GstVideoEncoder video_encoder;
+G_DECLARE_FINAL_TYPE (GstSvtAv1Enc, gst_svtav1enc, GST, SVTAV1ENC, GstVideoEncoder);
 
-    /* SVT-AV1 Encoder Handle */
-    EbComponentType *svt_encoder;
-
-    /* GStreamer Codec state */
-    GstVideoCodecState *state;
-
-    /* SVT-AV1 configuration */
-    EbSvtAv1EncConfiguration *svt_config;
-    /* Property values */
-    guint  preset;
-    guint  target_bitrate;
-    guint  max_bitrate;
-    guint  max_qp_allowed;
-    guint  min_qp_allowed;
-    gint   cqp, crf;
-    guint  maximum_buffer_size;
-    gint   intra_period_length;
-    gint   intra_refresh_type;
-    gint   logical_processors;
-    gint   target_socket;
-    gchar *parameters_string;
-
-    EbBufferHeaderType *input_buf;
-} GstSvtAv1Enc;
-
-typedef struct _GstSvtAv1EncClass {
-    GstVideoEncoderClass video_encoder_class;
-} GstSvtAv1EncClass;
-
-GType gst_svtav1enc_get_type(void);
+GST_ELEMENT_REGISTER_DECLARE (svtav1enc);
 
 G_END_DECLS
 #endif
