@@ -578,6 +578,11 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 
   features = gst_caps_get_features (caps, 0);
   min_buffers = gst_nv_encoder_get_task_size (self);
+  if (min_buffers == 0) {
+    GstNvEncoderClass *klass = GST_NV_ENCODER_GET_CLASS (self);
+
+    min_buffers = klass->calculate_min_buffers (self);
+  }
 
   switch (priv->subclass_device_mode) {
     case GST_NV_ENCODER_DEVICE_AUTO_SELECT:

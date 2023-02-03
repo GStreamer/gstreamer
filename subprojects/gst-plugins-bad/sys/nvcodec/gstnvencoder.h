@@ -222,6 +222,8 @@ struct _GstNvEncoderClass
                                        const GstVideoInfo * info,
                                        GstBuffer * buffer,
                                        GstNvEncoderDeviceData * data);
+
+  guint       (*calculate_min_buffers) (GstNvEncoder * encoder);
 };
 
 GType gst_nv_encoder_get_type (void);
