@@ -104,6 +104,9 @@ struct _GstAdaptiveDemuxTrack
   /* Stream flags */
   GstStreamFlags flags;
 
+  /* Unique identifier (for naming and debugging) */
+  gchar *id;
+
   /* Unique identifier */
   gchar *stream_id;
 

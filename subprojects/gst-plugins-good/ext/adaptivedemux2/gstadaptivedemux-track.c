@@ -787,11 +787,11 @@ gst_adaptive_demux_track_update_level_locked (GstAdaptiveDemuxTrack * track)
 static void
 _demux_track_free (GstAdaptiveDemuxTrack * track)
 {
-  GST_DEBUG_OBJECT (track->demux, "freeing track %p '%s'", track,
-      track->stream_id);
+  GST_DEBUG_ID (track->id, "freeing track");
 
   g_free (track->stream_id);
   g_free (track->upstream_stream_id);
+  g_free (track->id);
 
   if (track->pending_srcpad)
     gst_object_unref (track->pending_srcpad);
@@ -849,31 +849,24 @@ gst_adaptive_demux_track_add_elements (GstAdaptiveDemuxTrack * track,
     guint period_num)
 {
   GstAdaptiveDemux *demux = track->demux;
-  gchar *internal_name;
+  gchar *tmpid;
   guint i, len;
 
   /* Store the period number for debugging output */
   track->period_num = period_num;
 
-  internal_name =
-      g_strdup_printf ("track-period%d-%s", period_num, track->stream_id);
-  len = strlen (internal_name);
+  tmpid = g_strdup_printf ("%s-period%d", track->id, period_num);
+  g_free (track->id);
+  track->id = tmpid;
+  len = strlen (track->id);
   for (i = 0; i < len; i++)
-    if (internal_name[i] == ' ')
-      internal_name[i] = '_';
-  track->element = gst_bin_new (internal_name);
-  g_free (internal_name);
+    if (track->id[i] == ' ')
+      track->id[i] = '_';
+  track->element = gst_bin_new (track->id);
 
-  internal_name =
-      g_strdup_printf ("track-period%d-sink-%s", period_num, track->stream_id);
-  len = strlen (internal_name);
-  for (i = 0; i < len; i++)
-    if (internal_name[i] == ' ')
-      internal_name[i] = '_';
-  track->sinkpad = gst_pad_new (internal_name, GST_PAD_SINK);
+  track->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
   g_signal_connect (track->sinkpad, "unlinked",
       (GCallback) track_sinkpad_unlinked_cb, track);
-  g_free (internal_name);
   gst_element_add_pad (GST_ELEMENT_CAST (track->element), track->sinkpad);
   gst_pad_set_element_private (track->sinkpad, track);
   gst_pad_set_chain_function (track->sinkpad, _track_sink_chain_function);
@@ -923,6 +916,7 @@ gst_adaptive_demux_track_new (GstAdaptiveDemux * demux,
   track->flags = flags;
   track->stream_id =
       gst_element_decorate_stream_id (GST_ELEMENT (demux), stream_id);
+  track->id = g_strdup_printf ("track-%s", stream_id);
   track->period_num = (guint) (-1);
   track->generic_caps = caps;
   track->stream_object = gst_stream_new (track->stream_id, caps, type, flags);
