@@ -227,6 +227,7 @@ gst_nv_h264_encoder_check_reconfigure (GstNvEncoder * encoder,
 static gboolean gst_nv_h264_encoder_select_device (GstNvEncoder * encoder,
     const GstVideoInfo * info, GstBuffer * buffer,
     GstNvEncoderDeviceData * data);
+static guint gst_nv_h264_encoder_calculate_min_buffers (GstNvEncoder * encoder);
 
 static void
 gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
@@ -467,6 +468,8 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_nv_h264_encoder_check_reconfigure);
   nvenc_class->select_device =
       GST_DEBUG_FUNCPTR (gst_nv_h264_encoder_select_device);
+  nvenc_class->calculate_min_buffers =
+      GST_DEBUG_FUNCPTR (gst_nv_h264_encoder_calculate_min_buffers);
 
   klass->device_caps = cdata->device_caps;
   klass->cuda_device_id = cdata->cuda_device_id;
@@ -1736,6 +1739,24 @@ gst_nv_h264_encoder_select_device (GstNvEncoder * encoder,
   self->selected_device_mode = data->device_mode;
 
   return TRUE;
+}
+
+static guint
+gst_nv_h264_encoder_calculate_min_buffers (GstNvEncoder * encoder)
+{
+  GstNvH264Encoder *self = GST_NV_H264_ENCODER (encoder);
+  guint num_buffers;
+
+  /* At least 4 surfaces are required as documented by Nvidia Encoder guide */
+  num_buffers = 4;
+
+  /* lookahead depth */
+  num_buffers += self->rc_lookahead;
+
+  /* B frames + 1 */
+  num_buffers += self->bframes + 1;
+
+  return num_buffers;
 }
 
 static GstNvEncoderClassData *
