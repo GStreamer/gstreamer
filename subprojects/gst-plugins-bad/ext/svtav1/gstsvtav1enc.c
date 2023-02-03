@@ -26,6 +26,12 @@
 #include <gst/video/gstvideoencoder.h>
 #include "gstsvtav1enc.h"
 
+#if !SVT_AV1_CHECK_VERSION(1,2,1)
+#define SVT_AV1_RC_MODE_CQP_OR_CRF 0
+#define SVT_AV1_RC_MODE_VBR 1
+#define SVT_AV1_RC_MODE_CBR 2
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_svtav1enc_debug_category);
 #define GST_CAT_DEFAULT gst_svtav1enc_debug_category
 
@@ -581,11 +587,9 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
     case GST_VIDEO_TRANSFER_GAMMA28:
       svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_BT_470_B_G;
       break;
-#if GST_CHECK_VERSION(1, 18, 0)
     case GST_VIDEO_TRANSFER_BT601:
       svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_BT_601;
       break;
-#endif
     case GST_VIDEO_TRANSFER_SMPTE240M:
       svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_SMPTE_240;
       break;
@@ -602,24 +606,20 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
     case GST_VIDEO_TRANSFER_SRGB:
       svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_SRGB;
       break;
-#if GST_CHECK_VERSION(1, 18, 0)
     case GST_VIDEO_TRANSFER_BT2020_10:
       svtav1enc->svt_config->transfer_characteristics =
           EB_CICP_TC_BT_2020_10_BIT;
       break;
-#endif
     case GST_VIDEO_TRANSFER_BT2020_12:
       svtav1enc->svt_config->transfer_characteristics =
           EB_CICP_TC_BT_2020_12_BIT;
       break;
-#if GST_CHECK_VERSION(1, 18, 0)
     case GST_VIDEO_TRANSFER_SMPTE2084:
       svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_SMPTE_2084;
       break;
     case GST_VIDEO_TRANSFER_ARIB_STD_B67:
       svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_HLG;
       break;
-#endif
     default:
       svtav1enc->svt_config->transfer_characteristics = EB_CICP_TC_UNSPECIFIED;
       break;
@@ -667,7 +667,6 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
       svtav1enc->svt_config->chroma_sample_position = EB_CSP_UNKNOWN;
   }
 
-#if GST_CHECK_VERSION(1, 18, 0)
   GstVideoMasteringDisplayInfo master_display_info;
   if (gst_video_mastering_display_info_from_caps (&master_display_info,
           svtav1enc->state->caps)) {
@@ -709,7 +708,6 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
     memset (&svtav1enc->svt_config->content_light_level,
         0, sizeof (svtav1enc->svt_config->content_light_level));
   }
-#endif
 
   EbErrorType res =
       svt_av1_enc_set_parameter (svtav1enc->svt_encoder, svtav1enc->svt_config);
