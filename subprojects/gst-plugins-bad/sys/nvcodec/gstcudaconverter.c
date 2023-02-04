@@ -1373,6 +1373,7 @@ typedef struct _TextureBuffer
 {
   CUdeviceptr ptr;
   gsize stride;
+  CUtexObject texture;
 } TextureBuffer;
 
 typedef struct
@@ -1447,12 +1448,22 @@ gst_cuda_converter_dispose (GObject * object)
 
     for (i = 0; i < G_N_ELEMENTS (priv->fallback_buffer); i++) {
       if (priv->fallback_buffer[i].ptr) {
+        if (priv->fallback_buffer[i].texture) {
+          CuTexObjectDestroy (priv->fallback_buffer[i].texture);
+          priv->fallback_buffer[i].texture = 0;
+        }
+
         CuMemFree (priv->fallback_buffer[i].ptr);
         priv->fallback_buffer[i].ptr = 0;
       }
     }
 
     if (priv->unpack_buffer.ptr) {
+      if (priv->unpack_buffer.texture) {
+        CuTexObjectDestroy (priv->unpack_buffer.texture);
+        priv->unpack_buffer.texture = 0;
+      }
+
       CuMemFree (priv->unpack_buffer.ptr);
       priv->unpack_buffer.ptr = 0;
     }
@@ -1867,6 +1878,18 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     return FALSE;
   }
 
+  if (priv->dest_rect.x != 0 || priv->dest_rect.y != 0 ||
+      priv->dest_rect.width != out_info->width ||
+      priv->dest_rect.height != out_info->height ||
+      in_info->width != out_info->width
+      || in_info->height != out_info->height) {
+    for (i = 0; i < G_N_ELEMENTS (priv->filter_mode); i++)
+      priv->filter_mode[i] = CU_TR_FILTER_MODE_LINEAR;
+  } else {
+    for (i = 0; i < G_N_ELEMENTS (priv->filter_mode); i++)
+      priv->filter_mode[i] = CU_TR_FILTER_MODE_POINT;
+  }
+
   if (!gst_cuda_context_push (self->context)) {
     GST_ERROR_OBJECT (self, "Couldn't push context");
     return FALSE;
@@ -1874,6 +1897,13 @@ gst_cuda_converter_setup (GstCudaConverter * self)
 
   /* Allocates intermediate memory for texture */
   if (unpack_function) {
+    CUDA_TEXTURE_DESC texture_desc;
+    CUDA_RESOURCE_DESC resource_desc;
+    CUtexObject texture = 0;
+
+    memset (&texture_desc, 0, sizeof (CUDA_TEXTURE_DESC));
+    memset (&resource_desc, 0, sizeof (CUDA_RESOURCE_DESC));
+
     ret = CuMemAllocPitch (&priv->unpack_buffer.ptr,
         &priv->unpack_buffer.stride,
         GST_VIDEO_INFO_COMP_WIDTH (texture_info, 0) *
@@ -1883,6 +1913,28 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       GST_ERROR_OBJECT (self, "Couldn't allocate unpack buffer");
       goto error;
     }
+
+    resource_desc.resType = CU_RESOURCE_TYPE_PITCH2D;
+    resource_desc.res.pitch2D.format = priv->texture_fmt->array_format[0];
+    resource_desc.res.pitch2D.numChannels = 4;
+    resource_desc.res.pitch2D.width = in_info->width;
+    resource_desc.res.pitch2D.height = in_info->height;
+    resource_desc.res.pitch2D.pitchInBytes = priv->unpack_buffer.stride;
+    resource_desc.res.pitch2D.devPtr = priv->unpack_buffer.ptr;
+
+    texture_desc.filterMode = priv->filter_mode[0];
+    texture_desc.flags = 0x2;
+    texture_desc.addressMode[0] = 1;
+    texture_desc.addressMode[1] = 1;
+    texture_desc.addressMode[2] = 1;
+
+    ret = CuTexObjectCreate (&texture, &resource_desc, &texture_desc, NULL);
+    if (!gst_cuda_result (ret)) {
+      GST_ERROR_OBJECT (self, "Couldn't create unpack texture");
+      goto error;
+    }
+
+    priv->unpack_buffer.texture = texture;
   }
 
   ret = CuModuleLoadData (&priv->module, ptx);
@@ -1910,18 +1962,6 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   }
 
   gst_cuda_context_pop (NULL);
-
-  if (priv->dest_rect.x != 0 || priv->dest_rect.y != 0 ||
-      priv->dest_rect.width != out_info->width ||
-      priv->dest_rect.height != out_info->height ||
-      in_info->width != out_info->width
-      || in_info->height != out_info->height) {
-    for (i = 0; i < G_N_ELEMENTS (priv->filter_mode); i++)
-      priv->filter_mode[i] = CU_TR_FILTER_MODE_LINEAR;
-  } else {
-    for (i = 0; i < G_N_ELEMENTS (priv->filter_mode); i++)
-      priv->filter_mode[i] = CU_TR_FILTER_MODE_POINT;
-  }
 
   return TRUE;
 
@@ -2069,50 +2109,43 @@ ensure_fallback_buffer (GstCudaConverter * self, gint width_in_bytes,
 static CUtexObject
 gst_cuda_converter_create_texture (GstCudaConverter * self,
     CUdeviceptr src, gint width, gint height, gint stride, CUfilter_mode mode,
-    CUarray_format format, guint channles, gint plane, CUstream stream,
-    gboolean * need_sync)
+    CUarray_format format, guint channles, gint plane, CUstream stream)
 {
   GstCudaConverterPrivate *priv = self->priv;
   CUresult ret;
   CUdeviceptr src_ptr;
+  CUDA_MEMCPY2D params = { 0, };
 
-  *need_sync = FALSE;
+  if (!ensure_fallback_buffer (self, stride, height, plane))
+    return 0;
 
-  src_ptr = src;
+  params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
+  params.srcPitch = stride;
+  params.srcDevice = (CUdeviceptr) src;
 
-  if (priv->texture_align > 0 && (src_ptr % priv->texture_align) != 0) {
-    CUDA_MEMCPY2D params = { 0, };
+  params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
+  params.dstPitch = priv->fallback_buffer[plane].stride;
+  params.dstDevice = priv->fallback_buffer[plane].ptr;
+  params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (&priv->in_info, plane)
+      * GST_VIDEO_INFO_COMP_PSTRIDE (&priv->in_info, plane),
+      params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->in_info, plane);
 
-    GST_DEBUG_OBJECT (self, "Plane %d is not aligned, copying", plane);
-
-    if (!ensure_fallback_buffer (self, stride, height, plane))
-      return 0;
-
-    params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-    params.srcPitch = stride;
-    params.srcDevice = (CUdeviceptr) src_ptr;
-
-    params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
-    params.dstPitch = priv->fallback_buffer[plane].stride;
-    params.dstDevice = priv->fallback_buffer[plane].ptr;
-    params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (&priv->in_info, plane)
-        * GST_VIDEO_INFO_COMP_PSTRIDE (&priv->in_info, plane),
-        params.Height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->in_info, plane);
-
-    ret = CuMemcpy2DAsync (&params, stream);
-    if (!gst_cuda_result (ret)) {
-      GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
-      return 0;
-    }
-
-    *need_sync = TRUE;
-
-    src_ptr = priv->fallback_buffer[plane].ptr;
-    stride = priv->fallback_buffer[plane].stride;
+  ret = CuMemcpy2DAsync (&params, stream);
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
+    return 0;
   }
 
-  return gst_cuda_converter_create_texture_unchecked (self,
-      src_ptr, width, height, format, channles, stride, plane, mode);
+  if (!priv->fallback_buffer[plane].texture) {
+    src_ptr = priv->fallback_buffer[plane].ptr;
+    stride = priv->fallback_buffer[plane].stride;
+
+    priv->fallback_buffer[plane].texture =
+        gst_cuda_converter_create_texture_unchecked (self, src_ptr, width,
+        height, format, channles, stride, plane, mode);
+  }
+
+  return priv->fallback_buffer[plane].texture;
 }
 
 static gboolean
@@ -2166,6 +2199,7 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
     &dst[0], &dst[1], &dst[2], &dst[3], &stride[0], &stride[1]
   };
   gboolean need_sync = FALSE;
+  GstCudaMemory *cmem;
 
   g_return_val_if_fail (GST_IS_CUDA_CONVERTER (converter), FALSE);
   g_return_val_if_fail (src_frame != NULL, FALSE);
@@ -2176,6 +2210,9 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
 
   g_assert (format);
 
+  cmem = (GstCudaMemory *) gst_buffer_peek_memory (src_frame->buffer, 0);
+  g_return_val_if_fail (gst_is_cuda_memory (GST_MEMORY_CAST (cmem)), FALSE);
+
   if (!gst_cuda_context_push (converter->context)) {
     GST_ERROR_OBJECT (converter, "Couldn't push context");
     return FALSE;
@@ -2185,25 +2222,26 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
     if (!gst_cuda_converter_unpack_rgb (converter, src_frame, stream))
       goto out;
 
-    texture[0] = gst_cuda_converter_create_texture_unchecked (converter,
-        priv->unpack_buffer.ptr, priv->in_info.width, priv->in_info.height,
-        format->array_format[0], 4, priv->unpack_buffer.stride, 0,
-        priv->filter_mode[0]);
+    texture[0] = priv->unpack_buffer.texture;
     if (!texture[0]) {
-      GST_ERROR_OBJECT (converter, "Couldn't create texture");
+      GST_ERROR_OBJECT (converter, "Unpack texture is unavailable");
       goto out;
     }
   } else {
     for (i = 0; i < GST_VIDEO_FRAME_N_PLANES (src_frame); i++) {
-      CUdeviceptr src;
+      if (!gst_cuda_memory_get_texture (cmem,
+              i, priv->filter_mode[i], &texture[i])) {
+        CUdeviceptr src;
+        src = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (src_frame, i);
+        texture[i] = gst_cuda_converter_create_texture (converter,
+            src, GST_VIDEO_FRAME_COMP_WIDTH (src_frame, i),
+            GST_VIDEO_FRAME_COMP_HEIGHT (src_frame, i),
+            GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, i),
+            priv->filter_mode[i], format->array_format[i], format->channels[i],
+            i, stream);
+        need_sync = TRUE;
+      }
 
-      src = (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (src_frame, i);
-      texture[i] = gst_cuda_converter_create_texture (converter,
-          src, GST_VIDEO_FRAME_COMP_WIDTH (src_frame, i),
-          GST_VIDEO_FRAME_COMP_HEIGHT (src_frame, i),
-          GST_VIDEO_FRAME_PLANE_STRIDE (src_frame, i),
-          priv->filter_mode[i], format->array_format[i], format->channels[i], i,
-          stream, &need_sync);
       if (!texture[i]) {
         GST_ERROR_OBJECT (converter, "Couldn't create texture %d", i);
         goto out;
@@ -2239,12 +2277,6 @@ gst_cuda_converter_convert_frame (GstCudaConverter * converter,
   ret = TRUE;
 
 out:
-  for (i = 0; i < G_N_ELEMENTS (texture); i++) {
-    if (texture[i])
-      CuTexObjectDestroy (texture[i]);
-    else
-      break;
-  }
 
   gst_cuda_context_pop (NULL);
   return ret;
