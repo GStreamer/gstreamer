@@ -52,6 +52,7 @@
 #include "gstalsasink.h"
 
 #include <gst/audio/gstaudioiec61937.h>
+#include <gst/audio/gstdsd.h>
 #include <glib/gi18n-lib.h>
 
 #ifndef ESTRPIPE
@@ -113,6 +114,11 @@ static GstStaticPadTemplate alsasink_sink_factory =
     GST_STATIC_CAPS ("audio/x-raw, "
         "format = (string) " GST_AUDIO_FORMATS_ALL ", "
         "layout = (string) interleaved, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
+        GST_DSD_MEDIA_TYPE ", "
+        "format = (string) " GST_DSD_FORMATS_ALL ", "
+        "layout = (string) interleaved, "
+        "reversed-bytes = (gboolean) false, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
         PASSTHROUGH_CAPS)
     );
@@ -825,6 +831,27 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstAudioRingBufferSpec * spec)
           goto error;
       }
       break;
+    case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DSD:
+      switch (GST_AUDIO_RING_BUFFER_SPEC_DSD_FORMAT (spec)) {
+        case GST_DSD_FORMAT_U8:
+          alsa->format = SND_PCM_FORMAT_DSD_U8;
+          break;
+        case GST_DSD_FORMAT_U16LE:
+          alsa->format = SND_PCM_FORMAT_DSD_U16_LE;
+          break;
+        case GST_DSD_FORMAT_U16BE:
+          alsa->format = SND_PCM_FORMAT_DSD_U16_BE;
+          break;
+        case GST_DSD_FORMAT_U32LE:
+          alsa->format = SND_PCM_FORMAT_DSD_U32_LE;
+          break;
+        case GST_DSD_FORMAT_U32BE:
+          alsa->format = SND_PCM_FORMAT_DSD_U32_BE;
+          break;
+        default:
+          goto error;
+      }
+      break;
     case GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW:
       alsa->format = SND_PCM_FORMAT_A_LAW;
       break;
@@ -848,7 +875,9 @@ alsasink_parse_spec (GstAlsaSink * alsa, GstAudioRingBufferSpec * spec)
   alsa->period_time = spec->latency_time;
   alsa->access = SND_PCM_ACCESS_RW_INTERLEAVED;
 
-  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW && alsa->channels < 9)
+  if ((spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW ||
+          spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DSD) &&
+      alsa->channels < 9)
     gst_audio_ring_buffer_set_channel_positions (GST_AUDIO_BASE_SINK
         (alsa)->ringbuffer, alsa_position[alsa->channels - 1]);
 
