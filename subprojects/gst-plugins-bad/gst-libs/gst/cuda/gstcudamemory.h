@@ -171,6 +171,9 @@ gboolean        gst_cuda_memory_get_texture (GstCudaMemory * mem,
                                              CUfilter_mode filter_mode,
                                              CUtexObject * texture);
 
+GST_CUDA_API
+gpointer        gst_cuda_memory_get_user_data (GstCudaMemory * mem);
+
 /**
  * GstCudaAllocator:
  *
@@ -217,6 +220,15 @@ GstMemory *     gst_cuda_allocator_alloc    (GstCudaAllocator * allocator,
 GST_CUDA_API
 gboolean        gst_cuda_allocator_set_active (GstCudaAllocator * allocator,
                                                gboolean active);
+
+GST_CUDA_API
+GstMemory *     gst_cuda_allocator_alloc_wrapped (GstCudaAllocator * allocator,
+                                                  GstCudaContext * context,
+                                                  GstCudaStream * stream,
+                                                  const GstVideoInfo * info,
+                                                  CUdeviceptr dev_ptr,
+                                                  gpointer user_data,
+                                                  GDestroyNotify notify);
 
 /**
  * GstCudaPoolAllocator:
