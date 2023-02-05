@@ -165,6 +165,12 @@ GstCudaStream * gst_cuda_memory_get_stream  (GstCudaMemory * mem);
 GST_CUDA_API
 void            gst_cuda_memory_sync        (GstCudaMemory * mem);
 
+GST_CUDA_API
+gboolean        gst_cuda_memory_get_texture (GstCudaMemory * mem,
+                                             guint plane,
+                                             CUfilter_mode filter_mode,
+                                             CUtexObject * texture);
+
 /**
  * GstCudaAllocator:
  *

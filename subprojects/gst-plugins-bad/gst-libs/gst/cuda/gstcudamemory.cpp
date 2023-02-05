@@ -35,6 +35,11 @@ static GstAllocator *_gst_cuda_allocator = nullptr;
 /* *INDENT-OFF* */
 struct _GstCudaMemoryPrivate
 {
+  _GstCudaMemoryPrivate ()
+  {
+    memset (&texture, 0, sizeof (texture));
+  }
+
   CUdeviceptr data = 0;
   void *staging = nullptr;
 
@@ -46,6 +51,11 @@ struct _GstCudaMemoryPrivate
   std::mutex lock;
 
   GstCudaStream *stream = nullptr;
+
+  gint texture_align = 0;
+
+  /* Per plane, and point/linear sampling textures respectively  */
+  CUtexObject texture[GST_VIDEO_MAX_PLANES][2];
 };
 /* *INDENT-ON* */
 
@@ -138,6 +148,7 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
   priv->pitch = pitch;
   priv->width_in_bytes = width_in_bytes;
   priv->height = alloc_height;
+  priv->texture_align = gst_cuda_context_get_texture_alignment (context);
   if (stream)
     priv->stream = gst_cuda_stream_ref (stream);
 
@@ -243,6 +254,14 @@ gst_cuda_allocator_free (GstAllocator * allocator, GstMemory * memory)
   if (priv->stream &&
       GST_MEMORY_FLAG_IS_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC)) {
     CuStreamSynchronize (gst_cuda_stream_get_handle (priv->stream));
+  }
+
+  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    for (guint j = 0; j < 2; j++) {
+      if (priv->texture[i][j]) {
+        CuTexObjectDestroy (priv->texture[i][j]);
+      }
+    }
   }
 
   if (priv->data)
@@ -580,6 +599,158 @@ gst_cuda_memory_sync (GstCudaMemory * mem)
       gst_cuda_context_pop (nullptr);
     }
   }
+}
+
+typedef struct _TextureFormat
+{
+  GstVideoFormat format;
+  CUarray_format array_format[GST_VIDEO_MAX_COMPONENTS];
+  guint channels[GST_VIDEO_MAX_COMPONENTS];
+} TextureFormat;
+
+#define CU_AD_FORMAT_NONE ((CUarray_format) 0)
+#define MAKE_FORMAT_YUV_PLANAR(f,cf) \
+  { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf, \
+      CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_NONE },  {1, 1, 1, 0} }
+#define MAKE_FORMAT_YUV_SEMI_PLANAR(f,cf) \
+  { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf, \
+      CU_AD_FORMAT_NONE, CU_AD_FORMAT_NONE }, {1, 2, 0, 0} }
+#define MAKE_FORMAT_RGB(f,cf) \
+  { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_NONE, \
+      CU_AD_FORMAT_NONE, CU_AD_FORMAT_NONE }, {4, 0, 0, 0} }
+#define MAKE_FORMAT_RGBP(f,cf) \
+  { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf, \
+      CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_NONE }, {1, 1, 1, 0} }
+#define MAKE_FORMAT_RGBAP(f,cf) \
+  { GST_VIDEO_FORMAT_ ##f,  { CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf, \
+      CU_AD_FORMAT_ ##cf, CU_AD_FORMAT_ ##cf }, {1, 1, 1, 1} }
+
+static const TextureFormat format_map[] = {
+  MAKE_FORMAT_YUV_PLANAR (I420, UNSIGNED_INT8),
+  MAKE_FORMAT_YUV_PLANAR (YV12, UNSIGNED_INT8),
+  MAKE_FORMAT_YUV_SEMI_PLANAR (NV12, UNSIGNED_INT8),
+  MAKE_FORMAT_YUV_SEMI_PLANAR (NV21, UNSIGNED_INT8),
+  MAKE_FORMAT_YUV_SEMI_PLANAR (P010_10LE, UNSIGNED_INT16),
+  MAKE_FORMAT_YUV_SEMI_PLANAR (P016_LE, UNSIGNED_INT16),
+  MAKE_FORMAT_YUV_PLANAR (I420_10LE, UNSIGNED_INT16),
+  MAKE_FORMAT_YUV_PLANAR (Y444, UNSIGNED_INT8),
+  MAKE_FORMAT_YUV_PLANAR (Y444_16LE, UNSIGNED_INT16),
+  MAKE_FORMAT_RGB (RGBA, UNSIGNED_INT8),
+  MAKE_FORMAT_RGB (BGRA, UNSIGNED_INT8),
+  MAKE_FORMAT_RGB (RGBx, UNSIGNED_INT8),
+  MAKE_FORMAT_RGB (BGRx, UNSIGNED_INT8),
+  MAKE_FORMAT_RGB (ARGB, UNSIGNED_INT8),
+  MAKE_FORMAT_RGB (ARGB64, UNSIGNED_INT16),
+  MAKE_FORMAT_RGB (ABGR, UNSIGNED_INT8),
+  MAKE_FORMAT_YUV_PLANAR (Y42B, UNSIGNED_INT8),
+  MAKE_FORMAT_YUV_PLANAR (I422_10LE, UNSIGNED_INT16),
+  MAKE_FORMAT_YUV_PLANAR (I422_12LE, UNSIGNED_INT16),
+  MAKE_FORMAT_RGBP (RGBP, UNSIGNED_INT8),
+  MAKE_FORMAT_RGBP (BGRP, UNSIGNED_INT8),
+  MAKE_FORMAT_RGBP (GBR, UNSIGNED_INT8),
+  MAKE_FORMAT_RGBAP (GBRA, UNSIGNED_INT8),
+};
+
+/**
+ * gst_cuda_memory_get_texture:
+ * @mem: A #GstCudaMemory
+ * @plane: the plane index
+ * @filter_mode: filter mode
+ * @texture: (out) (transfer none): a pointer to CUtexObject object
+ *
+ * Creates CUtexObject with given parameters
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_cuda_memory_get_texture (GstCudaMemory * mem, guint plane,
+    CUfilter_mode filter_mode, CUtexObject * texture)
+{
+  GstAllocator *alloc;
+  GstCudaMemoryPrivate *priv;
+  CUtexObject tex = 0;
+  CUdeviceptr src_ptr;
+  CUDA_RESOURCE_DESC resource_desc;
+  CUDA_TEXTURE_DESC texture_desc;
+  const TextureFormat *format = nullptr;
+  CUresult ret;
+
+  g_return_val_if_fail (gst_is_cuda_memory ((GstMemory *) mem), FALSE);
+  g_return_val_if_fail (plane < GST_VIDEO_INFO_N_PLANES (&mem->info), FALSE);
+  g_return_val_if_fail (filter_mode == CU_TR_FILTER_MODE_POINT ||
+      filter_mode == CU_TR_FILTER_MODE_LINEAR, FALSE);
+
+  alloc = mem->mem.allocator;
+  priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->texture[plane][filter_mode]) {
+    *texture = priv->texture[plane][filter_mode];
+    return TRUE;
+  }
+
+  src_ptr = (CUdeviceptr) (((guint8 *) priv->data) + mem->info.offset[plane]);
+  if (priv->texture_align > 0 && (src_ptr % priv->texture_align) != 0) {
+    GST_INFO_OBJECT (alloc, "Plane %d data is not aligned", plane);
+    return FALSE;
+  }
+
+  for (guint i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (format_map[i].format == GST_VIDEO_INFO_FORMAT (&mem->info)) {
+      format = &format_map[i];
+      break;
+    }
+  }
+
+  if (!format) {
+    GST_WARNING_OBJECT (alloc, "Not supported format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&mem->info)));
+    return FALSE;
+  }
+
+  memset (&resource_desc, 0, sizeof (CUDA_RESOURCE_DESC));
+  memset (&texture_desc, 0, sizeof (CUDA_TEXTURE_DESC));
+
+  resource_desc.resType = CU_RESOURCE_TYPE_PITCH2D;
+  resource_desc.res.pitch2D.format = format->array_format[plane];
+  resource_desc.res.pitch2D.numChannels = format->channels[plane];
+  resource_desc.res.pitch2D.width =
+      GST_VIDEO_INFO_COMP_WIDTH (&mem->info, plane);
+  resource_desc.res.pitch2D.height =
+      GST_VIDEO_INFO_COMP_HEIGHT (&mem->info, plane);
+  resource_desc.res.pitch2D.pitchInBytes =
+      GST_VIDEO_INFO_PLANE_STRIDE (&mem->info, plane);
+  resource_desc.res.pitch2D.devPtr = src_ptr;
+
+  texture_desc.filterMode = filter_mode;
+  /* Will read texture value as a normalized [0, 1] float value
+   * with [0, 1) coordinates */
+  /* CU_TRSF_NORMALIZED_COORDINATES */
+  texture_desc.flags = 0x2;
+  /* CU_TR_ADDRESS_MODE_CLAMP */
+  texture_desc.addressMode[0] = (CUaddress_mode) 1;
+  texture_desc.addressMode[1] = (CUaddress_mode) 1;
+  texture_desc.addressMode[2] = (CUaddress_mode) 1;
+
+  if (!gst_cuda_context_push (mem->context))
+    return FALSE;
+
+  ret = CuTexObjectCreate (&tex, &resource_desc, &texture_desc, nullptr);
+  gst_cuda_context_pop (nullptr);
+
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (alloc, "Could not create texture");
+    return FALSE;
+  }
+
+  /* Cache this texture to reuse later */
+  priv->texture[plane][filter_mode] = tex;
+
+  *texture = tex;
+
+  return TRUE;
 }
 
 /**
