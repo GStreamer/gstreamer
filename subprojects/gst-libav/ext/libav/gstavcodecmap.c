@@ -34,6 +34,7 @@
 
 #include <gst/video/video.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/gstdsd.h>
 #include <gst/pbutils/codec-utils.h>
 
 /* IMPORTANT: Keep this sorted by the ffmpeg channel masks */
@@ -636,6 +637,36 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
       {
         const static gint l_rates[] = { 16000 };
         maxchannels = 1;
+        n_rates = G_N_ELEMENTS (l_rates);
+        rates = l_rates;
+        break;
+      }
+      case AV_CODEC_ID_DSD_LSBF:
+      case AV_CODEC_ID_DSD_MSBF:
+      case AV_CODEC_ID_DSD_LSBF_PLANAR:
+      case AV_CODEC_ID_DSD_MSBF_PLANAR:
+      {
+        const static gint l_rates[] = {
+          GST_DSD_MAKE_DSD_RATE_44x (64),
+          GST_DSD_MAKE_DSD_RATE_48x (64),
+          GST_DSD_MAKE_DSD_RATE_44x (128),
+          GST_DSD_MAKE_DSD_RATE_48x (128),
+          GST_DSD_MAKE_DSD_RATE_44x (256),
+          GST_DSD_MAKE_DSD_RATE_48x (256),
+          GST_DSD_MAKE_DSD_RATE_44x (512),
+          GST_DSD_MAKE_DSD_RATE_48x (512),
+          GST_DSD_MAKE_DSD_RATE_44x (1024),
+          GST_DSD_MAKE_DSD_RATE_48x (1024),
+          GST_DSD_MAKE_DSD_RATE_44x (2048),
+          GST_DSD_MAKE_DSD_RATE_48x (2048),
+        };
+        /* There is no clearly defined maximum number of channels in DSD.
+         * The DSF spec mentions a maximum of 6 channels, while the DSDIFF
+         * spec mentions up to 65535 channels. DSDIFF stores DSD in an
+         * interleaved, DSF in a planar fashion. But there is no reason
+         * why some other format couldn't have more than 6 interleaved
+         * channels for example. */
+        maxchannels = 65535;
         n_rates = G_N_ELEMENTS (l_rates);
         rates = l_rates;
         break;
@@ -2318,33 +2349,45 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           NULL);
       break;
     case AV_CODEC_ID_DSD_LSBF:
-      caps =
-          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
-          NULL);
-      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
-          TRUE, "planar", G_TYPE_BOOLEAN, FALSE, NULL);
-      break;
     case AV_CODEC_ID_DSD_MSBF:
-      caps =
-          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
-          NULL);
-      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
-          FALSE, "planar", G_TYPE_BOOLEAN, FALSE, NULL);
-      break;
     case AV_CODEC_ID_DSD_LSBF_PLANAR:
-      caps =
-          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
-          NULL);
-      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
-          TRUE, "planar", G_TYPE_BOOLEAN, TRUE, NULL);
-      break;
     case AV_CODEC_ID_DSD_MSBF_PLANAR:
+    {
+      gboolean reversed_bytes;
+      gboolean interleaved;
+
+      switch (codec_id) {
+        case AV_CODEC_ID_DSD_LSBF:
+          reversed_bytes = TRUE;
+          interleaved = TRUE;
+          break;
+        case AV_CODEC_ID_DSD_MSBF:
+          reversed_bytes = FALSE;
+          interleaved = TRUE;
+          break;
+        case AV_CODEC_ID_DSD_LSBF_PLANAR:
+          reversed_bytes = TRUE;
+          interleaved = FALSE;
+          break;
+        case AV_CODEC_ID_DSD_MSBF_PLANAR:
+          reversed_bytes = FALSE;
+          interleaved = FALSE;
+          break;
+        default:
+          reversed_bytes = FALSE;
+          interleaved = FALSE;
+          break;
+      }
+
       caps =
           gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-dsd",
-          NULL);
-      gst_caps_set_simple (caps, "lsbf", G_TYPE_BOOLEAN,
-          FALSE, "planar", G_TYPE_BOOLEAN, TRUE, NULL);
+          "format", G_TYPE_STRING, "DSDU8",
+          "reversed-bytes", G_TYPE_BOOLEAN, reversed_bytes,
+          "layout", G_TYPE_STRING,
+          (interleaved) ? "interleaved" : "non-interleaved", NULL);
+
       break;
+    }
     case AV_CODEC_ID_APTX:
       caps =
           gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/aptx",
