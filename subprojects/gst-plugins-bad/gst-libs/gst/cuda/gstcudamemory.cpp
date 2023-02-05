@@ -23,28 +23,31 @@
 
 #include "gstcudamemory.h"
 #include "gstcudautils.h"
+#include "gstcuda-private.h"
 
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (cuda_allocator_debug);
 #define GST_CAT_DEFAULT cuda_allocator_debug
 
-static GstAllocator *_gst_cuda_allocator = NULL;
+static GstAllocator *_gst_cuda_allocator = nullptr;
 
+/* *INDENT-OFF* */
 struct _GstCudaMemoryPrivate
 {
-  CUdeviceptr data;
-  void *staging;
+  CUdeviceptr data = 0;
+  void *staging = nullptr;
 
   /* params used for cuMemAllocPitch */
-  gsize pitch;
-  guint width_in_bytes;
-  guint height;
+  gsize pitch = 0;
+  guint width_in_bytes = 0;
+  guint height = 0;
 
-  GMutex lock;
+  std::mutex lock;
 
-  GstCudaStream *stream;
+  GstCudaStream *stream = nullptr;
 };
+/* *INDENT-ON* */
 
 struct _GstCudaAllocatorPrivate
 {
@@ -67,7 +70,7 @@ static GstMemory *
 gst_cuda_allocator_dummy_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
-  g_return_val_if_reached (NULL);
+  g_return_val_if_reached (nullptr);
 }
 
 static void
@@ -88,7 +91,8 @@ gst_cuda_allocator_init (GstCudaAllocator * allocator)
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
   GstCudaAllocatorPrivate *priv;
 
-  priv = allocator->priv = gst_cuda_allocator_get_instance_private (allocator);
+  priv = allocator->priv = (GstCudaAllocatorPrivate *)
+      gst_cuda_allocator_get_instance_private (allocator);
 
   alloc->mem_type = GST_CUDA_MEMORY_TYPE_NAME;
 
@@ -116,35 +120,35 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
   GstVideoInfo *alloc_info;
 
   if (!gst_cuda_context_push (context))
-    return NULL;
+    return nullptr;
 
   ret = gst_cuda_result (CuMemAllocPitch (&data, &pitch, width_in_bytes,
           alloc_height, 16));
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
 
   if (!ret) {
     GST_ERROR_OBJECT (self, "Failed to allocate CUDA memory");
-    return NULL;
+    return nullptr;
   }
 
   mem = g_new0 (GstCudaMemory, 1);
-  mem->priv = priv = g_new0 (GstCudaMemoryPrivate, 1);
+  mem->priv = priv = new GstCudaMemoryPrivate ();
 
   priv->data = data;
   priv->pitch = pitch;
   priv->width_in_bytes = width_in_bytes;
   priv->height = alloc_height;
-  g_mutex_init (&priv->lock);
   if (stream)
     priv->stream = gst_cuda_stream_ref (stream);
 
-  mem->context = gst_object_ref (context);
+  mem->context = (GstCudaContext *) gst_object_ref (context);
   mem->info = *info;
   mem->info.size = pitch * alloc_height;
 
   alloc_info = &mem->info;
-  gst_memory_init (GST_MEMORY_CAST (mem), 0, GST_ALLOCATOR_CAST (self),
-      NULL, alloc_info->size, 0, 0, alloc_info->size);
+  gst_memory_init (GST_MEMORY_CAST (mem), (GstMemoryFlags) 0,
+      GST_ALLOCATOR_CAST (self), nullptr, alloc_info->size, 0, 0,
+      alloc_info->size);
 
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_I420:
@@ -222,7 +226,7 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
       g_assert_not_reached ();
       gst_memory_unref (GST_MEMORY_CAST (mem));
-      return NULL;
+      return nullptr;
   }
 
   return GST_MEMORY_CAST (mem);
@@ -246,13 +250,13 @@ gst_cuda_allocator_free (GstAllocator * allocator, GstMemory * memory)
 
   if (priv->staging)
     gst_cuda_result (CuMemFreeHost (priv->staging));
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
 
   gst_clear_cuda_stream (&priv->stream);
   gst_object_unref (mem->context);
 
-  g_mutex_clear (&priv->lock);
-  g_free (mem->priv);
+  delete mem->priv;
+
   g_free (mem);
 }
 
@@ -294,7 +298,7 @@ gst_cuda_memory_upload (GstCudaAllocator * self, GstCudaMemory * mem)
   } else {
     GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
   }
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
 
   if (!ret)
     GST_ERROR_OBJECT (self, "Failed to upload memory");
@@ -323,7 +327,7 @@ gst_cuda_memory_download (GstCudaAllocator * self, GstCudaMemory * mem)
             GST_MEMORY_CAST (mem)->size));
     if (!ret) {
       GST_ERROR_OBJECT (self, "Failed to allocate staging memory");
-      gst_cuda_context_pop (NULL);
+      gst_cuda_context_pop (nullptr);
       return FALSE;
     }
   }
@@ -341,7 +345,7 @@ gst_cuda_memory_download (GstCudaAllocator * self, GstCudaMemory * mem)
   ret = gst_cuda_result (CuMemcpy2DAsync (&param, stream));
   /* For CPU access, sync immediately */
   CuStreamSynchronize (stream);
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
   GST_MINI_OBJECT_FLAG_UNSET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
 
   if (!ret)
@@ -356,12 +360,13 @@ cuda_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
   GstCudaAllocator *self = GST_CUDA_ALLOCATOR (mem->allocator);
   GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
   GstCudaMemoryPrivate *priv = cmem->priv;
-  gpointer ret = NULL;
+  gpointer ret = nullptr;
 
-  g_mutex_lock (&priv->lock);
+  std::lock_guard < std::mutex > lk (priv->lock);
+
   if ((flags & GST_MAP_CUDA) == GST_MAP_CUDA) {
     if (!gst_cuda_memory_upload (self, cmem))
-      goto out;
+      return nullptr;
 
     GST_MEMORY_FLAG_UNSET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD);
 
@@ -372,8 +377,7 @@ cuda_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
         GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
     }
 
-    ret = (gpointer) priv->data;
-    goto out;
+    return (gpointer) priv->data;
   }
 
   /* First CPU access, must be downloaded */
@@ -381,7 +385,7 @@ cuda_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
   if (!gst_cuda_memory_download (self, cmem))
-    goto out;
+    return nullptr;
 
   ret = priv->staging;
 
@@ -389,9 +393,6 @@ cuda_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD);
 
   GST_MEMORY_FLAG_UNSET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD);
-
-out:
-  g_mutex_unlock (&priv->lock);
 
   return ret;
 }
@@ -402,19 +403,15 @@ cuda_mem_unmap_full (GstMemory * mem, GstMapInfo * info)
   GstCudaMemory *cmem = GST_CUDA_MEMORY_CAST (mem);
   GstCudaMemoryPrivate *priv = cmem->priv;
 
-  g_mutex_lock (&priv->lock);
+  std::lock_guard < std::mutex > lk (priv->lock);
   if ((info->flags & GST_MAP_CUDA) == GST_MAP_CUDA) {
     if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
       GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD);
-
-    goto out;
+    return;
   }
 
   if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_UPLOAD);
-
-out:
-  g_mutex_unlock (&priv->lock);
 
   return;
 }
@@ -427,7 +424,7 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
   GstCudaContext *context = src_mem->context;
   GstMapInfo src_info, dst_info;
   CUDA_MEMCPY2D param = { 0, };
-  GstMemory *copy = NULL;
+  GstMemory *copy = nullptr;
   gboolean ret;
   GstCudaStream *stream = src_mem->priv->stream;
   CUstream stream_handle = gst_cuda_stream_get_handle (stream);
@@ -450,20 +447,22 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
 
   if (!copy) {
     GST_ERROR_OBJECT (self, "Failed to allocate memory for copying");
-    return NULL;
+    return nullptr;
   }
 
-  if (!gst_memory_map (mem, &src_info, GST_MAP_READ | GST_MAP_CUDA)) {
+  if (!gst_memory_map (mem, &src_info,
+          (GstMapFlags) (GST_MAP_READ | GST_MAP_CUDA))) {
     GST_ERROR_OBJECT (self, "Failed to map src memory");
     gst_memory_unref (copy);
-    return NULL;
+    return nullptr;
   }
 
-  if (!gst_memory_map (copy, &dst_info, GST_MAP_WRITE | GST_MAP_CUDA)) {
+  if (!gst_memory_map (copy, &dst_info,
+          (GstMapFlags) (GST_MAP_WRITE | GST_MAP_CUDA))) {
     GST_ERROR_OBJECT (self, "Failed to map dst memory");
     gst_memory_unmap (mem, &src_info);
     gst_memory_unref (copy);
-    return NULL;
+    return nullptr;
   }
 
   if (!gst_cuda_context_push (context)) {
@@ -471,7 +470,7 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
     gst_memory_unmap (mem, &src_info);
     gst_memory_unmap (copy, &dst_info);
 
-    return NULL;
+    return nullptr;
   }
 
   param.srcMemoryType = CU_MEMORYTYPE_DEVICE;
@@ -486,7 +485,7 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
 
   ret = gst_cuda_result (CuMemcpy2DAsync (&param, stream_handle));
   CuStreamSynchronize (stream_handle);
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
 
   gst_memory_unmap (mem, &src_info);
   gst_memory_unmap (copy, &dst_info);
@@ -494,7 +493,7 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
   if (!ret) {
     GST_ERROR_OBJECT (self, "Failed to copy memory");
     gst_memory_unref (copy);
-    return NULL;
+    return nullptr;
   }
 
   return copy;
@@ -510,17 +509,14 @@ cuda_mem_copy (GstMemory * mem, gssize offset, gssize size)
 void
 gst_cuda_memory_init_once (void)
 {
-  static gsize _init = 0;
-
-  if (g_once_init_enter (&_init)) {
+  GST_CUDA_CALL_ONCE_BEGIN {
     _gst_cuda_allocator =
-        (GstAllocator *) g_object_new (GST_TYPE_CUDA_ALLOCATOR, NULL);
+        (GstAllocator *) g_object_new (GST_TYPE_CUDA_ALLOCATOR, nullptr);
     gst_object_ref_sink (_gst_cuda_allocator);
     gst_object_ref (_gst_cuda_allocator);
 
     gst_allocator_register (GST_CUDA_MEMORY_TYPE_NAME, _gst_cuda_allocator);
-    g_once_init_leave (&_init, 1);
-  }
+  } GST_CUDA_CALL_ONCE_END;
 }
 
 /**
@@ -534,7 +530,7 @@ gst_cuda_memory_init_once (void)
 gboolean
 gst_is_cuda_memory (GstMemory * mem)
 {
-  return mem != NULL && mem->allocator != NULL &&
+  return mem != nullptr && mem->allocator != nullptr &&
       GST_IS_CUDA_ALLOCATOR (mem->allocator);
 }
 
@@ -552,7 +548,7 @@ gst_is_cuda_memory (GstMemory * mem)
 GstCudaStream *
 gst_cuda_memory_get_stream (GstCudaMemory * mem)
 {
-  g_return_val_if_fail (gst_is_cuda_memory ((GstMemory *) mem), NULL);
+  g_return_val_if_fail (gst_is_cuda_memory ((GstMemory *) mem), nullptr);
 
   return mem->priv->stream;
 }
@@ -576,16 +572,14 @@ gst_cuda_memory_sync (GstCudaMemory * mem)
   if (!priv->stream)
     return;
 
-  g_mutex_lock (&priv->lock);
+  std::lock_guard < std::mutex > lk (priv->lock);
   if (GST_MEMORY_FLAG_IS_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC)) {
     GST_MEMORY_FLAG_UNSET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
     if (gst_cuda_context_push (mem->context)) {
       CuStreamSynchronize (gst_cuda_stream_get_handle (priv->stream));
-      gst_cuda_context_pop (NULL);
+      gst_cuda_context_pop (nullptr);
     }
   }
-
-  g_mutex_unlock (&priv->lock);
 }
 
 /**
@@ -605,14 +599,14 @@ gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
 {
   guint alloc_height;
 
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
-  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), NULL);
-  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
+  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), nullptr);
+  g_return_val_if_fail (info != nullptr, nullptr);
 
   if (stream && stream->context != context) {
     GST_ERROR_OBJECT (context,
         "stream object is holding different CUDA context");
-    return NULL;
+    return nullptr;
   }
 
   if (!allocator)
@@ -741,7 +735,7 @@ gst_cuda_pool_allocator_init (GstCudaPoolAllocator * allocator)
 {
   GstCudaPoolAllocatorPrivate *priv;
 
-  priv = allocator->priv =
+  priv = allocator->priv = (GstCudaPoolAllocatorPrivate *)
       gst_cuda_pool_allocator_get_instance_private (allocator);
 
   g_rec_mutex_init (&priv->lock);
@@ -878,7 +872,7 @@ gst_cuda_pool_allocator_free_memory (GstCudaPoolAllocator * self,
   g_atomic_int_add (&priv->cur_mems, -1);
   GST_LOG_OBJECT (self, "freeing memory %p (%u left)", mem, priv->cur_mems);
 
-  GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
+  GST_MINI_OBJECT_CAST (mem)->dispose = nullptr;
   gst_memory_unref (mem);
 }
 
@@ -894,7 +888,7 @@ gst_cuda_pool_allocator_clear_queue (GstCudaPoolAllocator * self)
     /* Wait for outstanding operations */
     gst_cuda_context_push (self->context);
     CuStreamSynchronize (gst_cuda_stream_get_handle (self->stream));
-    gst_cuda_context_pop (NULL);
+    gst_cuda_context_pop (nullptr);
   }
 
   while ((memory = (GstMemory *) gst_atomic_queue_pop (priv->queue))) {
@@ -961,8 +955,8 @@ gst_cuda_pool_allocator_release_memory (GstCudaPoolAllocator * self,
 {
   GST_LOG_OBJECT (self, "Released memory %p", mem);
 
-  GST_MINI_OBJECT_CAST (mem)->dispose = NULL;
-  mem->allocator = gst_object_ref (_gst_cuda_allocator);
+  GST_MINI_OBJECT_CAST (mem)->dispose = nullptr;
+  mem->allocator = (GstAllocator *) gst_object_ref (_gst_cuda_allocator);
 
   /* keep it around in our queue */
   gst_atomic_queue_push (self->priv->queue, mem);
@@ -1121,13 +1115,14 @@ gst_cuda_pool_allocator_new (GstCudaContext * context, GstCudaStream * stream,
 {
   GstCudaPoolAllocator *self;
 
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
-  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), NULL);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
+  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), nullptr);
 
-  self = g_object_new (GST_TYPE_CUDA_POOL_ALLOCATOR, NULL);
+  self = (GstCudaPoolAllocator *)
+      g_object_new (GST_TYPE_CUDA_POOL_ALLOCATOR, nullptr);
   gst_object_ref_sink (self);
 
-  self->context = gst_object_ref (context);
+  self->context = (GstCudaContext *) gst_object_ref (context);
   if (stream)
     self->stream = gst_cuda_stream_ref (stream);
   self->info = *info;
@@ -1167,7 +1162,7 @@ gst_cuda_pool_allocator_acquire_memory (GstCudaPoolAllocator * allocator,
     GstMemory *mem = *memory;
     /* Replace default allocator with ours */
     gst_object_unref (mem->allocator);
-    mem->allocator = gst_object_ref (allocator);
+    mem->allocator = (GstAllocator *) gst_object_ref (allocator);
     GST_MINI_OBJECT_CAST (mem)->dispose = gst_cuda_memory_release;
     allocator->priv->outstanding++;
   } else {

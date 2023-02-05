@@ -1,11 +1,11 @@
 cuda_sources = files([
-  'gstcudabufferpool.c',
-  'gstcudacontext.c',
-  'gstcudaloader.c',
-  'gstcudamemory.c',
-  'gstcudanvrtc.c',
-  'gstcudastream.c',
-  'gstcudautils.c',
+  'gstcudabufferpool.cpp',
+  'gstcudacontext.cpp',
+  'gstcudaloader.cpp',
+  'gstcudamemory.cpp',
+  'gstcudanvrtc.cpp',
+  'gstcudastream.cpp',
+  'gstcudautils.cpp',
 ])
 
 cuda_headers = files([
@@ -44,21 +44,23 @@ if host_system == 'windows'
   endforeach
 endif
 
-extra_c_args = ['-DGST_USE_UNSTABLE_API']
+extra_args = ['-DGST_USE_UNSTABLE_API',
+              '-DBUILDING_GST_CUDA',
+              '-DG_LOG_DOMAIN="GStreamer-Cuda"']
 
 if gstgl_dep.found()
-  extra_c_args += ['-DHAVE_NVCODEC_GST_GL=1']
+  extra_args += ['-DHAVE_NVCODEC_GST_GL=1']
 endif
 
 if gstd3d11_dep.found()
-  extra_c_args += ['-DGST_CUDA_HAS_D3D=1', '-DCOBJMACROS']
+  extra_args += ['-DGST_CUDA_HAS_D3D']
 endif
 
 pkg_name = 'gstreamer-cuda-' + api_version
 gstcuda= library('gstcuda-' + api_version,
   cuda_sources,
-  c_args : gst_plugins_bad_args + extra_c_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_CUDA', '-DG_LOG_DOMAIN="GStreamer-Cuda"'],
-  cpp_args : gst_plugins_bad_args,
+  c_args : gst_plugins_bad_args + extra_args,
+  cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : [configinc, libsinc, cuda_stubinc],
   version : libversion,
   soversion : soversion,

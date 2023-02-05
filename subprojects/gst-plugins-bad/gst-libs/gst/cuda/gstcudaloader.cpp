@@ -24,6 +24,7 @@
 #include "cuda-gst.h"
 #include "gstcudaloader.h"
 #include <gmodule.h>
+#include "gstcuda-private.h"
 
 GST_DEBUG_CATEGORY (gst_cudaloader_debug);
 #define GST_CAT_DEFAULT gst_cudaloader_debug
@@ -37,7 +38,8 @@ GST_DEBUG_CATEGORY (gst_cudaloader_debug);
 #define LOAD_SYMBOL(name,func) G_STMT_START { \
   if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &vtable->func)) { \
     GST_ERROR ("Failed to load '%s' from %s, %s", G_STRINGIFY (name), filename, g_module_error()); \
-    goto error; \
+    g_module_close (module); \
+    return; \
   } \
 } G_STMT_END;
 
@@ -137,37 +139,17 @@ typedef struct _GstNvCodecCudaVTable
 
 static GstNvCodecCudaVTable gst_cuda_vtable = { 0, };
 
-/**
- * gst_cuda_load_library:
- *
- * Loads the cuda library
- *
- * Returns: %TRUE if the libcuda could be loaded %FALSE otherwise
- *
- * Since: 1.22
- */
-gboolean
-gst_cuda_load_library (void)
+static void
+gst_cuda_load_library_once_func (void)
 {
   GModule *module;
   const gchar *filename = CUDA_LIBNAME;
   GstNvCodecCudaVTable *vtable;
-  static gsize debug_initialized = FALSE;
-
-  if (g_once_init_enter (&debug_initialized)) {
-    GST_DEBUG_CATEGORY_INIT (gst_cudaloader_debug, "cudaloader", 0,
-        "cudaloader");
-
-    g_once_init_leave (&debug_initialized, TRUE);
-  }
-
-  if (gst_cuda_vtable.loaded)
-    return TRUE;
 
   module = g_module_open (filename, G_MODULE_BIND_LAZY);
-  if (module == NULL) {
+  if (module == nullptr) {
     GST_WARNING ("Could not open library %s, %s", filename, g_module_error ());
-    return FALSE;
+    return;
   }
 
   vtable = &gst_cuda_vtable;
@@ -234,19 +216,31 @@ gst_cuda_load_library (void)
 #endif
 
   vtable->loaded = TRUE;
+}
 
-  return TRUE;
+/**
+ * gst_cuda_load_library:
+ *
+ * Loads the cuda library
+ *
+ * Returns: %TRUE if the libcuda could be loaded %FALSE otherwise
+ *
+ * Since: 1.22
+ */
+gboolean
+gst_cuda_load_library (void)
+{
+  GST_CUDA_CALL_ONCE_BEGIN {
+    gst_cuda_load_library_once_func ();
+  } GST_CUDA_CALL_ONCE_END;
 
-error:
-  g_module_close (module);
-
-  return FALSE;
+  return gst_cuda_vtable.loaded;
 }
 
 CUresult CUDAAPI
 CuInit (unsigned int Flags)
 {
-  g_assert (gst_cuda_vtable.CuInit != NULL);
+  g_assert (gst_cuda_vtable.CuInit != nullptr);
 
   return gst_cuda_vtable.CuInit (Flags);
 }
@@ -254,7 +248,7 @@ CuInit (unsigned int Flags)
 CUresult CUDAAPI
 CuGetErrorName (CUresult error, const char **pStr)
 {
-  g_assert (gst_cuda_vtable.CuGetErrorName != NULL);
+  g_assert (gst_cuda_vtable.CuGetErrorName != nullptr);
 
   return gst_cuda_vtable.CuGetErrorName (error, pStr);
 }
@@ -262,7 +256,7 @@ CuGetErrorName (CUresult error, const char **pStr)
 CUresult CUDAAPI
 CuGetErrorString (CUresult error, const char **pStr)
 {
-  g_assert (gst_cuda_vtable.CuGetErrorString != NULL);
+  g_assert (gst_cuda_vtable.CuGetErrorString != nullptr);
 
   return gst_cuda_vtable.CuGetErrorString (error, pStr);
 }
@@ -270,7 +264,7 @@ CuGetErrorString (CUresult error, const char **pStr)
 CUresult CUDAAPI
 CuCtxCreate (CUcontext * pctx, unsigned int flags, CUdevice dev)
 {
-  g_assert (gst_cuda_vtable.CuCtxCreate != NULL);
+  g_assert (gst_cuda_vtable.CuCtxCreate != nullptr);
 
   return gst_cuda_vtable.CuCtxCreate (pctx, flags, dev);
 }
@@ -278,7 +272,7 @@ CuCtxCreate (CUcontext * pctx, unsigned int flags, CUdevice dev)
 CUresult CUDAAPI
 CuCtxDestroy (CUcontext ctx)
 {
-  g_assert (gst_cuda_vtable.CuCtxDestroy != NULL);
+  g_assert (gst_cuda_vtable.CuCtxDestroy != nullptr);
 
   return gst_cuda_vtable.CuCtxDestroy (ctx);
 }
@@ -286,7 +280,7 @@ CuCtxDestroy (CUcontext ctx)
 CUresult CUDAAPI
 CuCtxPopCurrent (CUcontext * pctx)
 {
-  g_assert (gst_cuda_vtable.CuCtxPopCurrent != NULL);
+  g_assert (gst_cuda_vtable.CuCtxPopCurrent != nullptr);
 
   return gst_cuda_vtable.CuCtxPopCurrent (pctx);
 }
@@ -294,7 +288,7 @@ CuCtxPopCurrent (CUcontext * pctx)
 CUresult CUDAAPI
 CuCtxPushCurrent (CUcontext ctx)
 {
-  g_assert (gst_cuda_vtable.CuCtxPushCurrent != NULL);
+  g_assert (gst_cuda_vtable.CuCtxPushCurrent != nullptr);
 
   return gst_cuda_vtable.CuCtxPushCurrent (ctx);
 }
@@ -302,7 +296,7 @@ CuCtxPushCurrent (CUcontext ctx)
 CUresult CUDAAPI
 CuCtxEnablePeerAccess (CUcontext peerContext, unsigned int Flags)
 {
-  g_assert (gst_cuda_vtable.CuCtxEnablePeerAccess != NULL);
+  g_assert (gst_cuda_vtable.CuCtxEnablePeerAccess != nullptr);
 
   return gst_cuda_vtable.CuCtxEnablePeerAccess (peerContext, Flags);
 }
@@ -310,7 +304,7 @@ CuCtxEnablePeerAccess (CUcontext peerContext, unsigned int Flags)
 CUresult CUDAAPI
 CuCtxDisablePeerAccess (CUcontext peerContext)
 {
-  g_assert (gst_cuda_vtable.CuCtxDisablePeerAccess != NULL);
+  g_assert (gst_cuda_vtable.CuCtxDisablePeerAccess != nullptr);
 
   return gst_cuda_vtable.CuCtxDisablePeerAccess (peerContext);
 }
@@ -319,7 +313,7 @@ CUresult CUDAAPI
 CuGraphicsMapResources (unsigned int count, CUgraphicsResource * resources,
     CUstream hStream)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsMapResources != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsMapResources != nullptr);
 
   return gst_cuda_vtable.CuGraphicsMapResources (count, resources, hStream);
 }
@@ -328,7 +322,7 @@ CUresult CUDAAPI
 CuGraphicsUnmapResources (unsigned int count, CUgraphicsResource * resources,
     CUstream hStream)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsUnmapResources != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsUnmapResources != nullptr);
 
   return gst_cuda_vtable.CuGraphicsUnmapResources (count, resources, hStream);
 }
@@ -336,7 +330,7 @@ CuGraphicsUnmapResources (unsigned int count, CUgraphicsResource * resources,
 CUresult CUDAAPI
 CuGraphicsResourceSetMapFlags (CUgraphicsResource resource, unsigned int flags)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsResourceSetMapFlags != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsResourceSetMapFlags != nullptr);
 
   return gst_cuda_vtable.CuGraphicsResourceSetMapFlags (resource, flags);
 }
@@ -345,7 +339,7 @@ CUresult CUDAAPI
 CuGraphicsSubResourceGetMappedArray (CUarray * pArray,
     CUgraphicsResource resource, unsigned int arrayIndex, unsigned int mipLevel)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsSubResourceGetMappedArray != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsSubResourceGetMappedArray != nullptr);
 
   return gst_cuda_vtable.CuGraphicsSubResourceGetMappedArray (pArray, resource,
       arrayIndex, mipLevel);
@@ -356,7 +350,7 @@ CUresult CUDAAPI
 CuGraphicsResourceGetMappedPointer (CUdeviceptr * pDevPtr, size_t * pSize,
     CUgraphicsResource resource)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsResourceGetMappedPointer != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsResourceGetMappedPointer != nullptr);
 
   return gst_cuda_vtable.CuGraphicsResourceGetMappedPointer (pDevPtr, pSize,
       resource);
@@ -366,7 +360,7 @@ CuGraphicsResourceGetMappedPointer (CUdeviceptr * pDevPtr, size_t * pSize,
 CUresult CUDAAPI
 CuGraphicsUnregisterResource (CUgraphicsResource resource)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsUnregisterResource != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsUnregisterResource != nullptr);
 
   return gst_cuda_vtable.CuGraphicsUnregisterResource (resource);
 }
@@ -374,7 +368,7 @@ CuGraphicsUnregisterResource (CUgraphicsResource resource)
 CUresult CUDAAPI
 CuMemAlloc (CUdeviceptr * dptr, unsigned int bytesize)
 {
-  g_assert (gst_cuda_vtable.CuMemAlloc != NULL);
+  g_assert (gst_cuda_vtable.CuMemAlloc != nullptr);
 
   return gst_cuda_vtable.CuMemAlloc (dptr, bytesize);
 }
@@ -384,7 +378,7 @@ CUresult CUDAAPI
 CuMemAllocPitch (CUdeviceptr * dptr, size_t * pPitch, size_t WidthInBytes,
     size_t Height, unsigned int ElementSizeBytes)
 {
-  g_assert (gst_cuda_vtable.CuMemAllocPitch != NULL);
+  g_assert (gst_cuda_vtable.CuMemAllocPitch != nullptr);
 
   return gst_cuda_vtable.CuMemAllocPitch (dptr, pPitch, WidthInBytes, Height,
       ElementSizeBytes);
@@ -394,7 +388,7 @@ CuMemAllocPitch (CUdeviceptr * dptr, size_t * pPitch, size_t WidthInBytes,
 CUresult CUDAAPI
 CuMemAllocHost (void **pp, unsigned int bytesize)
 {
-  g_assert (gst_cuda_vtable.CuMemAllocHost != NULL);
+  g_assert (gst_cuda_vtable.CuMemAllocHost != nullptr);
 
   return gst_cuda_vtable.CuMemAllocHost (pp, bytesize);
 }
@@ -402,7 +396,7 @@ CuMemAllocHost (void **pp, unsigned int bytesize)
 CUresult CUDAAPI
 CuMemcpy2D (const CUDA_MEMCPY2D * pCopy)
 {
-  g_assert (gst_cuda_vtable.CuMemcpy2D != NULL);
+  g_assert (gst_cuda_vtable.CuMemcpy2D != nullptr);
 
   return gst_cuda_vtable.CuMemcpy2D (pCopy);
 }
@@ -410,7 +404,7 @@ CuMemcpy2D (const CUDA_MEMCPY2D * pCopy)
 CUresult CUDAAPI
 CuMemcpy2DAsync (const CUDA_MEMCPY2D * pCopy, CUstream hStream)
 {
-  g_assert (gst_cuda_vtable.CuMemcpy2DAsync != NULL);
+  g_assert (gst_cuda_vtable.CuMemcpy2DAsync != nullptr);
 
   return gst_cuda_vtable.CuMemcpy2DAsync (pCopy, hStream);
 }
@@ -418,7 +412,7 @@ CuMemcpy2DAsync (const CUDA_MEMCPY2D * pCopy, CUstream hStream)
 CUresult CUDAAPI
 CuMemFree (CUdeviceptr dptr)
 {
-  g_assert (gst_cuda_vtable.CuMemFree != NULL);
+  g_assert (gst_cuda_vtable.CuMemFree != nullptr);
 
   return gst_cuda_vtable.CuMemFree (dptr);
 }
@@ -426,7 +420,7 @@ CuMemFree (CUdeviceptr dptr)
 CUresult CUDAAPI
 CuMemFreeHost (void *p)
 {
-  g_assert (gst_cuda_vtable.CuMemFreeHost != NULL);
+  g_assert (gst_cuda_vtable.CuMemFreeHost != nullptr);
 
   return gst_cuda_vtable.CuMemFreeHost (p);
 }
@@ -434,7 +428,7 @@ CuMemFreeHost (void *p)
 CUresult CUDAAPI
 CuStreamCreate (CUstream * phStream, unsigned int Flags)
 {
-  g_assert (gst_cuda_vtable.CuStreamCreate != NULL);
+  g_assert (gst_cuda_vtable.CuStreamCreate != nullptr);
 
   return gst_cuda_vtable.CuStreamCreate (phStream, Flags);
 }
@@ -442,7 +436,7 @@ CuStreamCreate (CUstream * phStream, unsigned int Flags)
 CUresult CUDAAPI
 CuStreamDestroy (CUstream hStream)
 {
-  g_assert (gst_cuda_vtable.CuStreamDestroy != NULL);
+  g_assert (gst_cuda_vtable.CuStreamDestroy != nullptr);
 
   return gst_cuda_vtable.CuStreamDestroy (hStream);
 }
@@ -450,7 +444,7 @@ CuStreamDestroy (CUstream hStream)
 CUresult CUDAAPI
 CuStreamSynchronize (CUstream hStream)
 {
-  g_assert (gst_cuda_vtable.CuStreamSynchronize != NULL);
+  g_assert (gst_cuda_vtable.CuStreamSynchronize != nullptr);
 
   return gst_cuda_vtable.CuStreamSynchronize (hStream);
 }
@@ -458,7 +452,7 @@ CuStreamSynchronize (CUstream hStream)
 CUresult CUDAAPI
 CuDeviceGet (CUdevice * device, int ordinal)
 {
-  g_assert (gst_cuda_vtable.CuDeviceGet != NULL);
+  g_assert (gst_cuda_vtable.CuDeviceGet != nullptr);
 
   return gst_cuda_vtable.CuDeviceGet (device, ordinal);
 }
@@ -466,7 +460,7 @@ CuDeviceGet (CUdevice * device, int ordinal)
 CUresult CUDAAPI
 CuDeviceGetCount (int *count)
 {
-  g_assert (gst_cuda_vtable.CuDeviceGetCount != NULL);
+  g_assert (gst_cuda_vtable.CuDeviceGetCount != nullptr);
 
   return gst_cuda_vtable.CuDeviceGetCount (count);
 }
@@ -474,7 +468,7 @@ CuDeviceGetCount (int *count)
 CUresult CUDAAPI
 CuDeviceGetName (char *name, int len, CUdevice dev)
 {
-  g_assert (gst_cuda_vtable.CuDeviceGetName != NULL);
+  g_assert (gst_cuda_vtable.CuDeviceGetName != nullptr);
 
   return gst_cuda_vtable.CuDeviceGetName (name, len, dev);
 }
@@ -482,7 +476,7 @@ CuDeviceGetName (char *name, int len, CUdevice dev)
 CUresult CUDAAPI
 CuDeviceGetAttribute (int *pi, CUdevice_attribute attrib, CUdevice dev)
 {
-  g_assert (gst_cuda_vtable.CuDeviceGetAttribute != NULL);
+  g_assert (gst_cuda_vtable.CuDeviceGetAttribute != nullptr);
 
   return gst_cuda_vtable.CuDeviceGetAttribute (pi, attrib, dev);
 }
@@ -490,7 +484,7 @@ CuDeviceGetAttribute (int *pi, CUdevice_attribute attrib, CUdevice dev)
 CUresult CUDAAPI
 CuDeviceCanAccessPeer (int *canAccessPeer, CUdevice dev, CUdevice peerDev)
 {
-  g_assert (gst_cuda_vtable.CuDeviceCanAccessPeer != NULL);
+  g_assert (gst_cuda_vtable.CuDeviceCanAccessPeer != nullptr);
 
   return gst_cuda_vtable.CuDeviceCanAccessPeer (canAccessPeer, dev, peerDev);
 }
@@ -498,7 +492,7 @@ CuDeviceCanAccessPeer (int *canAccessPeer, CUdevice dev, CUdevice peerDev)
 CUresult CUDAAPI
 CuDriverGetVersion (int *driverVersion)
 {
-  g_assert (gst_cuda_vtable.CuDriverGetVersion != NULL);
+  g_assert (gst_cuda_vtable.CuDriverGetVersion != nullptr);
 
   return gst_cuda_vtable.CuDriverGetVersion (driverVersion);
 }
@@ -506,7 +500,7 @@ CuDriverGetVersion (int *driverVersion)
 CUresult CUDAAPI
 CuModuleLoadData (CUmodule * module, const void *image)
 {
-  g_assert (gst_cuda_vtable.CuModuleLoadData != NULL);
+  g_assert (gst_cuda_vtable.CuModuleLoadData != nullptr);
 
   return gst_cuda_vtable.CuModuleLoadData (module, image);
 }
@@ -514,7 +508,7 @@ CuModuleLoadData (CUmodule * module, const void *image)
 CUresult CUDAAPI
 CuModuleUnload (CUmodule module)
 {
-  g_assert (gst_cuda_vtable.CuModuleUnload != NULL);
+  g_assert (gst_cuda_vtable.CuModuleUnload != nullptr);
 
   return gst_cuda_vtable.CuModuleUnload (module);
 }
@@ -522,7 +516,7 @@ CuModuleUnload (CUmodule module)
 CUresult CUDAAPI
 CuModuleGetFunction (CUfunction * hfunc, CUmodule hmod, const char *name)
 {
-  g_assert (gst_cuda_vtable.CuModuleGetFunction != NULL);
+  g_assert (gst_cuda_vtable.CuModuleGetFunction != nullptr);
 
   return gst_cuda_vtable.CuModuleGetFunction (hfunc, hmod, name);
 }
@@ -532,7 +526,7 @@ CuTexObjectCreate (CUtexObject * pTexObject,
     const CUDA_RESOURCE_DESC * pResDesc, const CUDA_TEXTURE_DESC * pTexDesc,
     const CUDA_RESOURCE_VIEW_DESC * pResViewDesc)
 {
-  g_assert (gst_cuda_vtable.CuTexObjectCreate != NULL);
+  g_assert (gst_cuda_vtable.CuTexObjectCreate != nullptr);
 
   return gst_cuda_vtable.CuTexObjectCreate (pTexObject, pResDesc, pTexDesc,
       pResViewDesc);
@@ -541,7 +535,7 @@ CuTexObjectCreate (CUtexObject * pTexObject,
 CUresult CUDAAPI
 CuTexObjectDestroy (CUtexObject texObject)
 {
-  g_assert (gst_cuda_vtable.CuTexObjectDestroy != NULL);
+  g_assert (gst_cuda_vtable.CuTexObjectDestroy != nullptr);
 
   return gst_cuda_vtable.CuTexObjectDestroy (texObject);
 }
@@ -553,7 +547,7 @@ CuLaunchKernel (CUfunction f, unsigned int gridDimX,
     unsigned int sharedMemBytes, CUstream hStream, void **kernelParams,
     void **extra)
 {
-  g_assert (gst_cuda_vtable.CuLaunchKernel != NULL);
+  g_assert (gst_cuda_vtable.CuLaunchKernel != nullptr);
 
   return gst_cuda_vtable.CuLaunchKernel (f, gridDimX, gridDimY, gridDimZ,
       blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams,
@@ -565,7 +559,7 @@ CUresult CUDAAPI
 CuGraphicsGLRegisterImage (CUgraphicsResource * pCudaResource,
     unsigned int image, unsigned int target, unsigned int Flags)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsGLRegisterImage != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsGLRegisterImage != nullptr);
 
   return gst_cuda_vtable.CuGraphicsGLRegisterImage (pCudaResource, image,
       target, Flags);
@@ -575,7 +569,7 @@ CUresult CUDAAPI
 CuGraphicsGLRegisterBuffer (CUgraphicsResource * pCudaResource,
     unsigned int buffer, unsigned int Flags)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsGLRegisterBuffer != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsGLRegisterBuffer != nullptr);
 
   return gst_cuda_vtable.CuGraphicsGLRegisterBuffer (pCudaResource, buffer,
       Flags);
@@ -585,7 +579,7 @@ CUresult CUDAAPI
 CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
     unsigned int cudaDeviceCount, CUGLDeviceList deviceList)
 {
-  g_assert (gst_cuda_vtable.CuGLGetDevices != NULL);
+  g_assert (gst_cuda_vtable.CuGLGetDevices != nullptr);
 
   return gst_cuda_vtable.CuGLGetDevices (pCudaDeviceCount, pCudaDevices,
       cudaDeviceCount, deviceList);
@@ -597,7 +591,7 @@ CUresult CUDAAPI
 CuGraphicsD3D11RegisterResource (CUgraphicsResource * pCudaResource,
     ID3D11Resource * pD3DResource, unsigned int Flags)
 {
-  g_assert (gst_cuda_vtable.CuGraphicsD3D11RegisterResource != NULL);
+  g_assert (gst_cuda_vtable.CuGraphicsD3D11RegisterResource != nullptr);
 
   return gst_cuda_vtable.CuGraphicsD3D11RegisterResource (pCudaResource,
       pD3DResource, Flags);
@@ -606,7 +600,7 @@ CuGraphicsD3D11RegisterResource (CUgraphicsResource * pCudaResource,
 CUresult CUDAAPI
 CuD3D11GetDevice (CUdevice * device, IDXGIAdapter * pAdapter)
 {
-  g_assert (gst_cuda_vtable.CuD3D11GetDevice != NULL);
+  g_assert (gst_cuda_vtable.CuD3D11GetDevice != nullptr);
 
   return gst_cuda_vtable.CuD3D11GetDevice (device, pAdapter);
 }
@@ -616,7 +610,7 @@ CuD3D11GetDevices (unsigned int *pCudaDeviceCount,
     CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
     ID3D11Device * pD3D11Device, CUd3d11DeviceList deviceList)
 {
-  g_assert (gst_cuda_vtable.CuD3D11GetDevices != NULL);
+  g_assert (gst_cuda_vtable.CuD3D11GetDevices != nullptr);
 
   return gst_cuda_vtable.CuD3D11GetDevices (pCudaDeviceCount, pCudaDevices,
       cudaDeviceCount, pD3D11Device, deviceList);

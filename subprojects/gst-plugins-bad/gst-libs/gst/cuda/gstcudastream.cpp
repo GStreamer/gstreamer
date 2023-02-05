@@ -24,21 +24,20 @@
 #include "cuda-gst.h"
 #include "gstcudastream.h"
 #include "gstcudautils.h"
+#include "gstcuda-private.h"
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
 static GstDebugCategory *
 ensure_debug_category (void)
 {
-  static gsize cat_once = 0;
+  static GstDebugCategory *cat = nullptr;
 
-  if (g_once_init_enter (&cat_once)) {
-    gsize temp = (gsize) _gst_debug_category_new ("cudastream", 0,
-        "cudastream");
-    g_once_init_leave (&cat_once, temp);
-  }
+  GST_CUDA_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("cudastream", 0, "cudastream");
+  } GST_CUDA_CALL_ONCE_END;
 
-  return (GstDebugCategory *) cat_once;
+  return cat;
 }
 #else
 #define ensure_debug_category() /* NOOP */
@@ -58,7 +57,7 @@ gst_cuda_stream_init_once (GType type)
 {
   static GstValueTable table = {
     0, (GstValueCompareFunc) gst_cuda_stream_compare_func,
-    NULL, NULL
+    nullptr, nullptr
   };
 
   table.type = type;
@@ -84,7 +83,7 @@ _gst_cuda_stream_free (GstCudaStream * stream)
     if (priv->handle) {
       gst_cuda_context_push (stream->context);
       CuStreamDestroy (priv->handle);
-      gst_cuda_context_pop (NULL);
+      gst_cuda_context_pop (nullptr);
     }
 
     gst_object_unref (stream->context);
@@ -112,28 +111,28 @@ gst_cuda_stream_new (GstCudaContext * context)
   CUresult cuda_ret;
   CUstream stream;
 
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
 
   if (!gst_cuda_context_push (context)) {
     GST_ERROR_OBJECT (context, "Couldn't push context");
-    return NULL;
+    return nullptr;
   }
 
   cuda_ret = CuStreamCreate (&stream, CU_STREAM_DEFAULT);
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
 
   if (!gst_cuda_result (cuda_ret)) {
     GST_ERROR_OBJECT (context, "Couldn't create stream");
-    return NULL;
+    return nullptr;
   }
 
   self = g_new0 (GstCudaStream, 1);
-  self->context = gst_object_ref (context);
+  self->context = (GstCudaContext *) gst_object_ref (context);
   self->priv = g_new0 (GstCudaStreamPrivate, 1);
   self->priv->handle = stream;
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (self), 0,
-      GST_TYPE_CUDA_STREAM, NULL, NULL,
+      GST_TYPE_CUDA_STREAM, nullptr, nullptr,
       (GstMiniObjectFreeFunction) _gst_cuda_stream_free);
 
   return self;
@@ -152,10 +151,10 @@ gst_cuda_stream_new (GstCudaContext * context)
 CUstream
 gst_cuda_stream_get_handle (GstCudaStream * stream)
 {
-  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), NULL);
+  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), nullptr);
 
   if (!stream)
-    return NULL;
+    return nullptr;
 
   return stream->priv->handle;
 }
@@ -203,6 +202,6 @@ gst_clear_cuda_stream (GstCudaStream ** stream)
 {
   if (stream && *stream) {
     gst_cuda_stream_unref (*stream);
-    *stream = NULL;
+    *stream = nullptr;
   }
 }

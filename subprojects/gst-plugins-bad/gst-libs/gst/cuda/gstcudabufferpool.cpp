@@ -42,7 +42,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (GstCudaBufferPool, gst_cuda_buffer_pool,
 static const gchar **
 gst_cuda_buffer_pool_get_options (GstBufferPool * pool)
 {
-  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, nullptr
   };
 
   return options;
@@ -53,7 +53,7 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstCudaBufferPool *self = GST_CUDA_BUFFER_POOL (pool);
   GstCudaBufferPoolPrivate *priv = self->priv;
-  GstCaps *caps = NULL;
+  GstCaps *caps = nullptr;
   guint size, min_buffers, max_buffers;
   GstVideoInfo info;
   GstMemory *mem;
@@ -89,7 +89,7 @@ gst_cuda_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     return FALSE;
   }
 
-  mem = gst_cuda_allocator_alloc (NULL, self->context, NULL, &info);
+  mem = gst_cuda_allocator_alloc (nullptr, self->context, nullptr, &info);
   if (!mem) {
     GST_WARNING_OBJECT (self, "Failed to allocate memory");
     return FALSE;
@@ -180,12 +180,13 @@ gst_cuda_buffer_pool_new (GstCudaContext * context)
 {
   GstCudaBufferPool *self;
 
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
 
-  self = g_object_new (GST_TYPE_CUDA_BUFFER_POOL, NULL);
+  self = (GstCudaBufferPool *)
+      g_object_new (GST_TYPE_CUDA_BUFFER_POOL, nullptr);
   gst_object_ref_sink (self);
 
-  self->context = gst_object_ref (context);
+  self->context = (GstCudaContext *) gst_object_ref (context);
 
   return GST_BUFFER_POOL_CAST (self);
 }
@@ -202,12 +203,12 @@ gst_cuda_buffer_pool_new (GstCudaContext * context)
 GstCudaStream *
 gst_buffer_pool_config_get_cuda_stream (GstStructure * config)
 {
-  GstCudaStream *stream = NULL;
+  GstCudaStream *stream = nullptr;
 
-  g_return_val_if_fail (config, NULL);
+  g_return_val_if_fail (config, nullptr);
 
   gst_structure_get (config, "cuda-stream", GST_TYPE_CUDA_STREAM, &stream,
-      NULL);
+      nullptr);
 
   return stream;
 }
@@ -228,7 +229,8 @@ gst_buffer_pool_config_set_cuda_stream (GstStructure * config,
   g_return_if_fail (config);
   g_return_if_fail (GST_IS_CUDA_STREAM (stream));
 
-  gst_structure_set (config, "cuda-stream", GST_TYPE_CUDA_STREAM, stream, NULL);
+  gst_structure_set (config,
+      "cuda-stream", GST_TYPE_CUDA_STREAM, stream, nullptr);
 }
 
 static void
@@ -269,5 +271,6 @@ gst_cuda_buffer_pool_class_init (GstCudaBufferPoolClass * klass)
 static void
 gst_cuda_buffer_pool_init (GstCudaBufferPool * pool)
 {
-  pool->priv = gst_cuda_buffer_pool_get_instance_private (pool);
+  pool->priv = (GstCudaBufferPoolPrivate *)
+      gst_cuda_buffer_pool_get_instance_private (pool);
 }

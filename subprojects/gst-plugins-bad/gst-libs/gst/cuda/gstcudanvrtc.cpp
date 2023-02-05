@@ -26,6 +26,7 @@
 #include "gstcudaloader.h"
 #include <nvrtc.h>
 #include <gmodule.h>
+#include "gstcuda-private.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_nvrtc_debug);
 #define GST_CAT_DEFAULT gst_cuda_nvrtc_debug
@@ -68,8 +69,8 @@ static GstCudaNvrtcVTable gst_cuda_nvrtc_vtable = { 0, };
 static GModule *
 gst_cuda_nvrtc_load_library_once_win32 (void)
 {
-  gchar *dll_name = NULL;
-  GModule *module = NULL;
+  gchar *dll_name = nullptr;
+  GModule *module = nullptr;
   gint cuda_version;
   gint cuda_major_version;
   gint cuda_minor_version;
@@ -79,7 +80,7 @@ gst_cuda_nvrtc_load_library_once_win32 (void)
   rst = CuDriverGetVersion (&cuda_version);
   if (rst != CUDA_SUCCESS) {
     GST_WARNING ("Couldn't get driver version, 0x%x", (guint) rst);
-    return NULL;
+    return nullptr;
   }
 
   cuda_major_version = cuda_version / 1000;
@@ -121,14 +122,14 @@ gst_cuda_nvrtc_load_library_once_win32 (void)
 
   g_free (dll_name);
 
-  return NULL;
+  return nullptr;
 }
 #endif
 
 static gboolean
 gst_cuda_nvrtc_load_library_once (void)
 {
-  GModule *module = NULL;
+  GModule *module = nullptr;
   const gchar *filename_env;
   GstCudaNvrtcVTable *vtable;
 
@@ -144,7 +145,7 @@ gst_cuda_nvrtc_load_library_once (void)
 #endif
   }
 
-  if (module == NULL) {
+  if (module == nullptr) {
     GST_WARNING ("Could not open nvrtc library %s", g_module_error ());
     return FALSE;
   }
@@ -181,15 +182,13 @@ error:
 gboolean
 gst_cuda_nvrtc_load_library (void)
 {
-  static gsize init_once = 0;
-
-  if (g_once_init_enter (&init_once)) {
+  GST_CUDA_CALL_ONCE_BEGIN {
     GST_DEBUG_CATEGORY_INIT (gst_cuda_nvrtc_debug, "cudanvrtc", 0,
         "CUDA runtime compiler");
     if (gst_cuda_load_library ())
       gst_cuda_nvrtc_load_library_once ();
-    g_once_init_leave (&init_once, 1);
   }
+  GST_CUDA_CALL_ONCE_END;
 
   return gst_cuda_nvrtc_vtable.loaded;
 }
@@ -198,7 +197,7 @@ gst_cuda_nvrtc_load_library (void)
 static nvrtcResult
 NvrtcCompileProgram (nvrtcProgram prog, int numOptions, const char **options)
 {
-  g_assert (gst_cuda_nvrtc_vtable.NvrtcCompileProgram != NULL);
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcCompileProgram != nullptr);
 
   return gst_cuda_nvrtc_vtable.NvrtcCompileProgram (prog, numOptions, options);
 }
@@ -207,7 +206,7 @@ static nvrtcResult
 NvrtcCreateProgram (nvrtcProgram * prog, const char *src, const char *name,
     int numHeaders, const char **headers, const char **includeNames)
 {
-  g_assert (gst_cuda_nvrtc_vtable.NvrtcCreateProgram != NULL);
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcCreateProgram != nullptr);
 
   return gst_cuda_nvrtc_vtable.NvrtcCreateProgram (prog, src, name, numHeaders,
       headers, includeNames);
@@ -216,7 +215,7 @@ NvrtcCreateProgram (nvrtcProgram * prog, const char *src, const char *name,
 static nvrtcResult
 NvrtcDestroyProgram (nvrtcProgram * prog)
 {
-  g_assert (gst_cuda_nvrtc_vtable.NvrtcDestroyProgram != NULL);
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcDestroyProgram != nullptr);
 
   return gst_cuda_nvrtc_vtable.NvrtcDestroyProgram (prog);
 }
@@ -224,7 +223,7 @@ NvrtcDestroyProgram (nvrtcProgram * prog)
 static nvrtcResult
 NvrtcGetPTX (nvrtcProgram prog, char *ptx)
 {
-  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetPTX != NULL);
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetPTX != nullptr);
 
   return gst_cuda_nvrtc_vtable.NvrtcGetPTX (prog, ptx);
 }
@@ -232,7 +231,7 @@ NvrtcGetPTX (nvrtcProgram prog, char *ptx)
 static nvrtcResult
 NvrtcGetPTXSize (nvrtcProgram prog, size_t *ptxSizeRet)
 {
-  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetPTXSize != NULL);
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetPTXSize != nullptr);
 
   return gst_cuda_nvrtc_vtable.NvrtcGetPTXSize (prog, ptxSizeRet);
 }
@@ -240,7 +239,7 @@ NvrtcGetPTXSize (nvrtcProgram prog, size_t *ptxSizeRet)
 static nvrtcResult
 NvrtcGetProgramLog (nvrtcProgram prog, char *log)
 {
-  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetProgramLog != NULL);
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetProgramLog != nullptr);
 
   return gst_cuda_nvrtc_vtable.NvrtcGetProgramLog (prog, log);
 }
@@ -248,7 +247,7 @@ NvrtcGetProgramLog (nvrtcProgram prog, char *log)
 static nvrtcResult
 NvrtcGetProgramLogSize (nvrtcProgram prog, size_t *logSizeRet)
 {
-  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetProgramLogSize != NULL);
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetProgramLogSize != nullptr);
 
   return gst_cuda_nvrtc_vtable.NvrtcGetProgramLogSize (prog, logSizeRet);
 }
@@ -268,13 +267,13 @@ gst_cuda_nvrtc_compile (const gchar * source)
   CUresult curet;
   const gchar *opts[] = { "--gpu-architecture=compute_30" };
   gsize ptx_size;
-  gchar *ptx = NULL;
+  gchar *ptx = nullptr;
   int driverVersion;
 
-  g_return_val_if_fail (source != NULL, NULL);
+  g_return_val_if_fail (source != nullptr, nullptr);
 
   if (!gst_cuda_nvrtc_load_library ()) {
-    return NULL;
+    return nullptr;
   }
 
   GST_TRACE ("CUDA kernel source \n%s", source);
@@ -282,16 +281,16 @@ gst_cuda_nvrtc_compile (const gchar * source)
   curet = CuDriverGetVersion (&driverVersion);
   if (curet != CUDA_SUCCESS) {
     GST_ERROR ("Failed to query CUDA Driver version, ret %d", curet);
-    return NULL;
+    return nullptr;
   }
 
   GST_DEBUG ("CUDA Driver Version %d.%d", driverVersion / 1000,
       (driverVersion % 1000) / 10);
 
-  ret = NvrtcCreateProgram (&prog, source, NULL, 0, NULL, NULL);
+  ret = NvrtcCreateProgram (&prog, source, nullptr, 0, nullptr, nullptr);
   if (ret != NVRTC_SUCCESS) {
     GST_ERROR ("couldn't create nvrtc program, ret %d", ret);
-    return NULL;
+    return nullptr;
   }
 
   /* Starting from CUDA 11, the lowest supported architecture is 5.2 */
@@ -305,7 +304,7 @@ gst_cuda_nvrtc_compile (const gchar * source)
     GST_ERROR ("couldn't compile nvrtc program, ret %d", ret);
     if (NvrtcGetProgramLogSize (prog, &log_size) == NVRTC_SUCCESS &&
         log_size > 0) {
-      gchar *compile_log = g_alloca (log_size);
+      gchar *compile_log = (gchar *) g_alloca (log_size);
       if (NvrtcGetProgramLog (prog, compile_log) == NVRTC_SUCCESS) {
         GST_ERROR ("nvrtc compile log %s", compile_log);
       }
@@ -321,7 +320,7 @@ gst_cuda_nvrtc_compile (const gchar * source)
     goto error;
   }
 
-  ptx = g_malloc0 (ptx_size);
+  ptx = (gchar *) g_malloc0 (ptx_size);
   ret = NvrtcGetPTX (prog, ptx);
   if (ret != NVRTC_SUCCESS) {
     GST_ERROR ("couldn't get ptx, ret %d", ret);
@@ -339,5 +338,5 @@ gst_cuda_nvrtc_compile (const gchar * source)
 error:
   NvrtcDestroyProgram (&prog);
 
-  return NULL;
+  return nullptr;
 }

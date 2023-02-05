@@ -47,22 +47,18 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 static void
 _init_debug (void)
 {
-  static gsize once_init = 0;
-
-  if (g_once_init_enter (&once_init)) {
-
+  GST_CUDA_CALL_ONCE_BEGIN {
     GST_DEBUG_CATEGORY_INIT (gst_cuda_utils_debug, "cudautils", 0,
         "CUDA utils");
     GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
-    g_once_init_leave (&once_init, 1);
-  }
+  } GST_CUDA_CALL_ONCE_END;
 }
 
 static gboolean
 pad_query (const GValue * item, GValue * value, gpointer user_data)
 {
-  GstPad *pad = g_value_get_object (item);
-  GstQuery *query = user_data;
+  GstPad *pad = (GstPad *) g_value_get_object (item);
+  GstQuery *query = (GstQuery *) user_data;
   gboolean res;
 
   res = gst_pad_peer_query (pad, query);
@@ -122,7 +118,7 @@ find_cuda_context (GstElement * element, GstCudaContext ** cuda_ctx)
 
   /* although we found cuda context above, the element does not want
    * to use the context. Then try to find from the other direction */
-  if (*cuda_ctx == NULL && run_query (element, query, GST_PAD_SINK)) {
+  if (*cuda_ctx == nullptr && run_query (element, query, GST_PAD_SINK)) {
     gst_query_parse_context (query, &ctxt);
     if (ctxt) {
       GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
@@ -131,7 +127,7 @@ find_cuda_context (GstElement * element, GstCudaContext ** cuda_ctx)
     }
   }
 
-  if (*cuda_ctx == NULL) {
+  if (*cuda_ctx == nullptr) {
     /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
      *    the required context type and afterwards check if a
      *    usable context was set now. The message could
@@ -162,9 +158,9 @@ context_set_cuda_context (GstContext * context, GstCudaContext * cuda_ctx)
   GstStructure *s;
   guint device_id;
 
-  g_return_if_fail (context != NULL);
+  g_return_if_fail (context != nullptr);
 
-  g_object_get (G_OBJECT (cuda_ctx), "cuda-device-id", &device_id, NULL);
+  g_object_get (G_OBJECT (cuda_ctx), "cuda-device-id", &device_id, nullptr);
 
   GST_CAT_LOG (GST_CAT_CONTEXT,
       "setting GstCudaContext(%" GST_PTR_FORMAT
@@ -173,7 +169,7 @@ context_set_cuda_context (GstContext * context, GstCudaContext * cuda_ctx)
 
   s = gst_context_writable_structure (context);
   gst_structure_set (s, GST_CUDA_CONTEXT_TYPE, GST_TYPE_CUDA_CONTEXT,
-      cuda_ctx, "cuda-device-id", G_TYPE_UINT, device_id, NULL);
+      cuda_ctx, "cuda-device-id", G_TYPE_UINT, device_id, nullptr);
 }
 
 /**
@@ -199,26 +195,21 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
 {
   guint target_device_id = 0;
   gboolean ret = TRUE;
-  static GRecMutex lock;
-  static gsize init_lock_once = 0;
+  static std::recursive_mutex lock;
 
-  g_return_val_if_fail (element != NULL, FALSE);
-  g_return_val_if_fail (cuda_ctx != NULL, FALSE);
+  g_return_val_if_fail (element != nullptr, FALSE);
+  g_return_val_if_fail (cuda_ctx != nullptr, FALSE);
 
   _init_debug ();
-  if (g_once_init_enter (&init_lock_once)) {
-    g_rec_mutex_init (&lock);
-    g_once_init_leave (&init_lock_once, 1);
-  }
 
-  g_rec_mutex_lock (&lock);
+  std::lock_guard < std::recursive_mutex > lk (lock);
 
   if (*cuda_ctx)
-    goto out;
+    return TRUE;
 
   find_cuda_context (element, cuda_ctx);
   if (*cuda_ctx)
-    goto out;
+    return TRUE;
 
   if (device_id > 0)
     target_device_id = device_id;
@@ -226,7 +217,7 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
   /* No available CUDA context in pipeline, create new one here */
   *cuda_ctx = gst_cuda_context_new (target_device_id);
 
-  if (*cuda_ctx == NULL) {
+  if (*cuda_ctx == nullptr) {
     GST_CAT_ERROR_OBJECT (GST_CAT_CONTEXT, element,
         "Failed to create CUDA context with device-id %d", device_id);
     ret = FALSE;
@@ -247,9 +238,6 @@ gst_cuda_ensure_element_context (GstElement * element, gint device_id,
     msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
     gst_element_post_message (GST_ELEMENT_CAST (element), msg);
   }
-
-out:
-  g_rec_mutex_unlock (&lock);
 
   return ret;
 }
@@ -277,8 +265,8 @@ gst_cuda_handle_set_context (GstElement * element,
 {
   const gchar *context_type;
 
-  g_return_val_if_fail (element != NULL, FALSE);
-  g_return_val_if_fail (cuda_ctx != NULL, FALSE);
+  g_return_val_if_fail (element != nullptr, FALSE);
+  g_return_val_if_fail (cuda_ctx != nullptr, FALSE);
 
   _init_debug ();
 
@@ -288,7 +276,7 @@ gst_cuda_handle_set_context (GstElement * element,
   context_type = gst_context_get_context_type (context);
   if (g_strcmp0 (context_type, GST_CUDA_CONTEXT_TYPE) == 0) {
     const GstStructure *str;
-    GstCudaContext *other_ctx = NULL;
+    GstCudaContext *other_ctx = nullptr;
     guint other_device_id = 0;
 
     /* If we had context already, will not replace it */
@@ -297,10 +285,10 @@ gst_cuda_handle_set_context (GstElement * element,
 
     str = gst_context_get_structure (context);
     if (gst_structure_get (str, GST_CUDA_CONTEXT_TYPE, GST_TYPE_CUDA_CONTEXT,
-            &other_ctx, NULL)) {
-      g_object_get (other_ctx, "cuda-device-id", &other_device_id, NULL);
+            &other_ctx, nullptr)) {
+      g_object_get (other_ctx, "cuda-device-id", &other_device_id, nullptr);
 
-      if (device_id == -1 || other_device_id == device_id) {
+      if (device_id == -1 || other_device_id == (guint) device_id) {
         GST_CAT_DEBUG_OBJECT (GST_CAT_CONTEXT, element, "Found CUDA context");
         *cuda_ctx = other_ctx;
 
@@ -334,7 +322,7 @@ gst_cuda_handle_context_query (GstElement * element,
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
-  g_return_val_if_fail (cuda_ctx == NULL
+  g_return_val_if_fail (cuda_ctx == nullptr
       || GST_IS_CUDA_CONTEXT (cuda_ctx), FALSE);
 
   _init_debug ();
@@ -377,7 +365,7 @@ gst_context_new_cuda_context (GstCudaContext * cuda_ctx)
 {
   GstContext *context;
 
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (cuda_ctx), NULL);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (cuda_ctx), nullptr);
 
   _init_debug ();
 
@@ -395,17 +383,13 @@ static GQuark gst_cuda_quark_table[GST_CUDA_QUARK_MAX];
 static void
 init_cuda_quark_once (void)
 {
-  static gsize once_init = 0;
-
-  if (g_once_init_enter (&once_init)) {
-    gint i;
-
-    for (i = 0; i < GST_CUDA_QUARK_MAX; i++)
+  GST_CUDA_CALL_ONCE_BEGIN {
+    for (guint i = 0; i < GST_CUDA_QUARK_MAX; i++) {
       gst_cuda_quark_table[i] =
           g_quark_from_static_string (gst_cuda_quark_strings[i]);
-
-    g_once_init_leave (&once_init, 1);
+    }
   }
+  GST_CUDA_CALL_ONCE_END;
 }
 
 /**
@@ -446,14 +430,16 @@ gst_cuda_graphics_resource_new (GstCudaContext *
 {
   GstCudaGraphicsResource *resource;
 
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), NULL);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
 
   _init_debug ();
 
   resource = g_new0 (GstCudaGraphicsResource, 1);
-  resource->cuda_context = gst_object_ref (context);
-  if (graphics_context)
-    resource->graphics_context = gst_object_ref (graphics_context);
+  resource->cuda_context = (GstCudaContext *) gst_object_ref (context);
+  if (graphics_context) {
+    resource->graphics_context =
+        (GstObject *) gst_object_ref (graphics_context);
+  }
 
   return resource;
 }
@@ -478,7 +464,7 @@ gst_cuda_graphics_resource_register_gl_buffer (GstCudaGraphicsResource *
 {
   CUresult cuda_ret;
 
-  g_return_val_if_fail (resource != NULL, FALSE);
+  g_return_val_if_fail (resource != nullptr, FALSE);
   g_return_val_if_fail (resource->registered == FALSE, FALSE);
 
   _init_debug ();
@@ -516,7 +502,7 @@ gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource *
 {
   CUresult cuda_ret;
 
-  g_return_val_if_fail (resource != NULL, FALSE);
+  g_return_val_if_fail (resource != nullptr, FALSE);
   g_return_val_if_fail (resource->registered == FALSE, FALSE);
 
   _init_debug ();
@@ -549,7 +535,7 @@ gst_cuda_graphics_resource_register_d3d11_resource (GstCudaGraphicsResource *
 void
 gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource)
 {
-  g_return_if_fail (resource != NULL);
+  g_return_if_fail (resource != nullptr);
 
   _init_debug ();
 
@@ -557,7 +543,7 @@ gst_cuda_graphics_resource_unregister (GstCudaGraphicsResource * resource)
     return;
 
   gst_cuda_result (CuGraphicsUnregisterResource (resource->resource));
-  resource->resource = NULL;
+  resource->resource = nullptr;
   resource->registered = FALSE;
 
   return;
@@ -581,18 +567,18 @@ gst_cuda_graphics_resource_map (GstCudaGraphicsResource * resource,
 {
   CUresult cuda_ret;
 
-  g_return_val_if_fail (resource != NULL, NULL);
-  g_return_val_if_fail (resource->registered != FALSE, NULL);
+  g_return_val_if_fail (resource != nullptr, nullptr);
+  g_return_val_if_fail (resource->registered != FALSE, nullptr);
 
   _init_debug ();
 
   cuda_ret = CuGraphicsResourceSetMapFlags (resource->resource, flags);
   if (!gst_cuda_result (cuda_ret))
-    return NULL;
+    return nullptr;
 
   cuda_ret = CuGraphicsMapResources (1, &resource->resource, stream);
   if (!gst_cuda_result (cuda_ret))
-    return NULL;
+    return nullptr;
 
   resource->mapped = TRUE;
 
@@ -612,7 +598,7 @@ void
 gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * resource,
     CUstream stream)
 {
-  g_return_if_fail (resource != NULL);
+  g_return_if_fail (resource != nullptr);
   g_return_if_fail (resource->registered != FALSE);
 
   _init_debug ();
@@ -639,7 +625,7 @@ unregister_resource_from_gl_thread (GstGLContext * gl_context,
 
   gst_cuda_graphics_resource_unregister (resource);
 
-  if (!gst_cuda_context_pop (NULL)) {
+  if (!gst_cuda_context_pop (nullptr)) {
     GST_WARNING_OBJECT (cuda_context, "failed to pop CUDA context");
   }
 }
@@ -661,7 +647,7 @@ unregister_d3d11_resource (GstCudaGraphicsResource * resource)
   gst_cuda_graphics_resource_unregister (resource);
   gst_d3d11_device_unlock (device);
 
-  if (!gst_cuda_context_pop (NULL)) {
+  if (!gst_cuda_context_pop (nullptr)) {
     GST_WARNING_OBJECT (cuda_context, "failed to pop CUDA context");
   }
 }
@@ -678,7 +664,7 @@ unregister_d3d11_resource (GstCudaGraphicsResource * resource)
 void
 gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
 {
-  g_return_if_fail (resource != NULL);
+  g_return_if_fail (resource != nullptr);
 
   if (resource->registered) {
 #ifdef HAVE_NVCODEC_GST_GL
@@ -768,8 +754,8 @@ gst_cuda_buffer_fallback_copy (GstBuffer * dst, const GstVideoInfo * dst_info,
     dst_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&dst_frame, i);
     src_stride = GST_VIDEO_FRAME_PLANE_STRIDE (&src_frame, i);
 
-    dst_data = GST_VIDEO_FRAME_PLANE_DATA (&dst_frame, i);
-    src_data = GST_VIDEO_FRAME_PLANE_DATA (&src_frame, i);
+    dst_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&dst_frame, i);
+    src_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&src_frame, i);
 
     for (j = 0; j < height; j++) {
       memcpy (dst_data, src_data, width_in_bytes);
@@ -909,7 +895,7 @@ map_buffer_and_fill_copy2d (GstBuffer * buf, const GstVideoInfo * info,
       map_flags = GST_MAP_WRITE;
 
     if (copy_type == GST_CUDA_BUFFER_COPY_CUDA)
-      map_flags |= GST_MAP_CUDA;
+      map_flags = (GstMapFlags) (map_flags | GST_MAP_CUDA);
 
     if (!gst_video_frame_map (frame, info, buf, map_flags)) {
       GST_ERROR ("Failed to map buffer");
@@ -1023,7 +1009,7 @@ gst_cuda_buffer_copy_internal (GstBuffer * dst_buf,
   }
 
   gst_cuda_result (CuStreamSynchronize (stream));
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
 
 unmap_and_out:
   unmap_buffer_or_frame (dst_buf, &src_frame, &src_map);
@@ -1067,12 +1053,12 @@ static GstCudaGraphicsResource *
 ensure_cuda_gl_graphics_resource (GstCudaContext * context, GstMemory * mem)
 {
   GQuark quark;
-  GstCudaGraphicsResource *ret = NULL;
+  GstCudaGraphicsResource *ret = nullptr;
 
   if (!gst_is_gl_memory_pbo (mem)) {
     GST_WARNING_OBJECT (context, "memory is not GL PBO memory, %s",
         mem->allocator->mem_type);
-    return NULL;
+    return nullptr;
   }
 
   quark = gst_cuda_quark_from_id (GST_CUDA_QUARK_GRAPHICS_RESOURCE);
@@ -1091,7 +1077,7 @@ ensure_cuda_gl_graphics_resource (GstCudaContext * context, GstMemory * mem)
     if (!gst_memory_map (mem, &info, (GstMapFlags) (GST_MAP_READ | GST_MAP_GL))) {
       GST_ERROR_OBJECT (context, "Failed to map gl memory");
       gst_cuda_graphics_resource_free (ret);
-      return NULL;
+      return nullptr;
     }
 
     pbo = (GstGLMemoryPBO *) mem;
@@ -1103,7 +1089,7 @@ ensure_cuda_gl_graphics_resource (GstCudaContext * context, GstMemory * mem)
       gst_memory_unmap (mem, &info);
       gst_cuda_graphics_resource_free (ret);
 
-      return NULL;
+      return nullptr;
     }
 
     gst_memory_unmap (mem, &info);
@@ -1258,7 +1244,7 @@ gl_copy_thread_func (GstGLContext * gl_context, GLCopyData * data)
 
 out:
   gst_cuda_result (CuStreamSynchronize (stream));
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
   unmap_buffer_or_frame (cuda_buf, &cuda_frame, &cuda_map_info);
 }
 
@@ -1299,7 +1285,7 @@ ensure_d3d11_interop (GstCudaContext * context, GstD3D11Device * device)
   CUdevice device_list[1] = { 0, };
   CUresult cuda_ret;
 
-  g_object_get (context, "cuda-device-id", &cuda_device_id, NULL);
+  g_object_get (context, "cuda-device-id", &cuda_device_id, nullptr);
 
   cuda_ret = CuD3D11GetDevices (&device_count,
       device_list, 1, gst_d3d11_device_get_device_handle (device),
@@ -1318,12 +1304,12 @@ static GstCudaGraphicsResource *
 ensure_cuda_d3d11_graphics_resource (GstCudaContext * context, GstMemory * mem)
 {
   GQuark quark;
-  GstCudaGraphicsResource *ret = NULL;
+  GstCudaGraphicsResource *ret = nullptr;
 
   if (!gst_is_d3d11_memory (mem)) {
     GST_WARNING_OBJECT (context, "memory is not D3D11 memory, %s",
         mem->allocator->mem_type);
-    return NULL;
+    return nullptr;
   }
 
   quark = gst_cuda_quark_from_id (GST_CUDA_QUARK_GRAPHICS_RESOURCE);
@@ -1341,7 +1327,7 @@ ensure_cuda_d3d11_graphics_resource (GstCudaContext * context, GstMemory * mem)
       GST_ERROR_OBJECT (context, "failed to register d3d11 resource");
       gst_cuda_graphics_resource_free (ret);
 
-      return NULL;
+      return nullptr;
     }
 
     gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), quark, ret,
@@ -1378,7 +1364,7 @@ cuda_copy_d3d11_interop (GstBuffer * dst_buf, const GstVideoInfo * dst_info,
     d3d11_buf = src_buf;
     cuda_buf = dst_buf;
     if (!gst_video_frame_map (&d3d11_frame, src_info, d3d11_buf,
-            GST_MAP_READ | GST_MAP_D3D11)) {
+            (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
       GST_ERROR_OBJECT (context, "Failed to map input D3D11 buffer");
       return FALSE;
     }
@@ -1393,7 +1379,7 @@ cuda_copy_d3d11_interop (GstBuffer * dst_buf, const GstVideoInfo * dst_info,
     d3d11_buf = dst_buf;
     cuda_buf = src_buf;
     if (!gst_video_frame_map (&d3d11_frame, dst_info, d3d11_buf,
-            GST_MAP_WRITE | GST_MAP_D3D11)) {
+            (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
       GST_ERROR_OBJECT (context, "Failed to map output D3D11 buffer");
       return FALSE;
     }
@@ -1478,7 +1464,7 @@ cuda_copy_d3d11_interop (GstBuffer * dst_buf, const GstVideoInfo * dst_info,
 
 out:
   gst_cuda_result (CuStreamSynchronize (stream));
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
   gst_video_frame_unmap (&d3d11_frame);
   unmap_buffer_or_frame (cuda_buf, &cuda_frame, &cuda_map_info);
 
@@ -1498,14 +1484,14 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   D3D11_TEXTURE2D_DESC desc;
 #endif
   GstCudaContext *cuda_context = context;
-  GstCudaMemory *cmem = NULL;
-  GstCudaStream *mem_stream = NULL;
+  GstCudaMemory *cmem = nullptr;
+  GstCudaStream *mem_stream = nullptr;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_BUFFER (dst), FALSE);
-  g_return_val_if_fail (dst_info != NULL, FALSE);
+  g_return_val_if_fail (dst_info != nullptr, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
-  g_return_val_if_fail (src_info != NULL, FALSE);
+  g_return_val_if_fail (src_info != nullptr, FALSE);
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), FALSE);
 
   _init_debug ();
@@ -1641,7 +1627,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   } else if (gst_is_cuda_memory (src_mem)) {
     cmem = GST_CUDA_MEMORY_CAST (src_mem);
   } else {
-    cmem = NULL;
+    cmem = nullptr;
   }
 
   if (cmem) {

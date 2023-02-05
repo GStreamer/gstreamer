@@ -25,17 +25,26 @@
 #include "gstcudacontext.h"
 #include "gstcudautils.h"
 #include "gstcudamemory.h"
+#include "gstcuda-private.h"
 
 #ifdef GST_CUDA_HAS_D3D
 #include <gst/d3d11/gstd3d11.h>
+#include <wrl.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_context_debug);
 #define GST_CAT_DEFAULT gst_cuda_context_debug
 
 /* store all context object with weak ref */
-static GList *context_list = NULL;
-G_LOCK_DEFINE_STATIC (list_lock);
+static GList *context_list = nullptr;
+
+/* *INDENT-OFF* */
+static std::mutex list_lock;
+/* *INDENT-ON* */
 
 enum
 {
@@ -90,15 +99,16 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
       g_param_spec_uint ("cuda-device-id", "Cuda Device ID",
           "Set the GPU device to use for operations",
           0, G_MAXUINT, 0,
-          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 
 #ifdef GST_CUDA_HAS_D3D
   g_object_class_install_property (gobject_class, PROP_DXGI_ADAPTER_LUID,
       g_param_spec_int64 ("dxgi-adapter-luid", "DXGI Adapter LUID",
           "Associated DXGI Adapter LUID (Locally Unique Identifier) ",
           G_MININT64, G_MAXINT64, 0,
-          GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
-          G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READABLE |
+              G_PARAM_STATIC_STRINGS)));
 #endif
 
   gst_cuda_memory_init_once ();
@@ -107,7 +117,8 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
 static void
 gst_cuda_context_init (GstCudaContext * context)
 {
-  GstCudaContextPrivate *priv = gst_cuda_context_get_instance_private (context);
+  GstCudaContextPrivate *priv = (GstCudaContextPrivate *)
+      gst_cuda_context_get_instance_private (context);
 
   priv->accessible_peer = g_hash_table_new (g_direct_hash, g_direct_equal);
 
@@ -157,44 +168,36 @@ gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
 {
   gint64 ret = 0;
   HRESULT hr;
-  IDXGIFactory1 *factory = NULL;
+  ComPtr < IDXGIFactory1 > factory;
   guint i;
 
-  hr = CreateDXGIFactory1 (&IID_IDXGIFactory1, (void **) &factory);
+  hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
   if (FAILED (hr))
     return 0;
 
   for (i = 0;; i++) {
-    IDXGIAdapter1 *adapter;
+    ComPtr < IDXGIAdapter1 > adapter;
     DXGI_ADAPTER_DESC desc;
     CUdevice other_dev = 0;
     CUresult cuda_ret;
 
-    hr = IDXGIFactory1_EnumAdapters1 (factory, i, &adapter);
+    hr = factory->EnumAdapters1 (i, &adapter);
     if (FAILED (hr))
       break;
 
-    hr = IDXGIAdapter1_GetDesc (adapter, &desc);
-    if (FAILED (hr)) {
-      IDXGIAdapter1_Release (adapter);
+    hr = adapter->GetDesc (&desc);
+    if (FAILED (hr))
       continue;
-    }
 
-    if (desc.VendorId != 0x10de) {
-      IDXGIAdapter1_Release (adapter);
+    if (desc.VendorId != 0x10de)
       continue;
-    }
 
-    cuda_ret = CuD3D11GetDevice (&other_dev, (IDXGIAdapter *) adapter);
-    IDXGIAdapter1_Release (adapter);
-
+    cuda_ret = CuD3D11GetDevice (&other_dev, adapter.Get ());
     if (cuda_ret == CUDA_SUCCESS && other_dev == cuda_device) {
       ret = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
       break;
     }
   }
-
-  IDXGIFactory1_Release (factory);
 
   return ret;
 }
@@ -202,23 +205,22 @@ gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
 static gboolean
 init_cuda_ctx (void)
 {
-  gboolean ret = TRUE;
+  static gboolean ret = TRUE;
 
-  static gsize once = 0;
-
-  if (g_once_init_enter (&once)) {
+  GST_CUDA_CALL_ONCE_BEGIN {
     if (CuInit (0) != CUDA_SUCCESS) {
       GST_ERROR ("Failed to cuInit");
       ret = FALSE;
     }
     GST_DEBUG_CATEGORY_INIT (gst_cuda_context_debug,
         "cudacontext", 0, "CUDA Context");
-    g_once_init_leave (&once, ret);
   }
+  GST_CUDA_CALL_ONCE_END;
 
   return ret;
 }
 
+/* *INDENT-OFF* */
 static gboolean
 gst_create_cucontext (guint * device_id, CUcontext * context)
 {
@@ -228,7 +230,6 @@ gst_create_cucontext (guint * device_id, CUcontext * context)
   gchar name[256];
   gint min = 0, maj = 0;
   gint i;
-
 
   if (!init_cuda_ctx ())
     return FALSE;
@@ -247,7 +248,7 @@ gst_create_cucontext (guint * device_id, CUcontext * context)
                 CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, cdev))) {
       GST_INFO ("GPU #%d supports NVENC: %s (%s) (Compute SM %d.%d)", i,
           (((maj << 4) + min) >= 0x30) ? "yes" : "no", name, maj, min);
-      if (*device_id == -1 || *device_id == cdev) {
+      if (*device_id == (guint) -1 || *device_id == (guint) cdev) {
         *device_id = cuda_dev = cdev;
         break;
       }
@@ -275,6 +276,7 @@ gst_create_cucontext (guint * device_id, CUcontext * context)
 
   return TRUE;
 }
+/* *INDENT-ON* */
 
 /* must be called with list_lock taken */
 static void
@@ -302,7 +304,7 @@ gst_cuda_context_enable_peer_access (GstCudaContext * context,
     g_hash_table_add (priv->accessible_peer, peer);
   }
 
-  gst_cuda_context_pop (NULL);
+  gst_cuda_context_pop (nullptr);
 }
 
 static void
@@ -310,7 +312,7 @@ gst_cuda_context_weak_ref_notify (gpointer data, GstCudaContext * context)
 {
   GList *iter;
 
-  G_LOCK (list_lock);
+  std::lock_guard < std::mutex > lk (list_lock);
   context_list = g_list_remove (context_list, context);
 
   /* disable self -> peer access */
@@ -319,18 +321,18 @@ gst_cuda_context_weak_ref_notify (gpointer data, GstCudaContext * context)
     gpointer key;
     g_hash_table_iter_init (&iter, context->priv->accessible_peer);
     if (gst_cuda_context_push (context)) {
-      while (g_hash_table_iter_next (&iter, &key, NULL)) {
+      while (g_hash_table_iter_next (&iter, &key, nullptr)) {
         GstCudaContext *peer = GST_CUDA_CONTEXT (key);
         CUcontext peer_handle = gst_cuda_context_get_handle (peer);
         GST_DEBUG_OBJECT (context,
             "Disable peer access to %" GST_PTR_FORMAT, peer);
         gst_cuda_result (CuCtxDisablePeerAccess (peer_handle));
       }
-      gst_cuda_context_pop (NULL);
+      gst_cuda_context_pop (nullptr);
     }
 
     g_hash_table_destroy (context->priv->accessible_peer);
-    context->priv->accessible_peer = NULL;
+    context->priv->accessible_peer = nullptr;
   }
 
   /* disable peer -> self access */
@@ -348,13 +350,12 @@ gst_cuda_context_weak_ref_notify (gpointer data, GstCudaContext * context)
         GST_DEBUG_OBJECT (other,
             "Disable peer access to %" GST_PTR_FORMAT, context);
         gst_cuda_result (CuCtxDisablePeerAccess (self_handle));
-        gst_cuda_context_pop (NULL);
+        gst_cuda_context_pop (nullptr);
       }
 
       g_hash_table_remove (other_priv->accessible_peer, context);
     }
   }
-  G_UNLOCK (list_lock);
 }
 
 static void
@@ -390,13 +391,13 @@ gst_cuda_context_new (guint device_id)
   GstCudaContext *self;
 
   if (!gst_create_cucontext (&device_id, &ctx)) {
-    return NULL;
+    return nullptr;
   }
 
   self = gst_cuda_context_new_wrapped (ctx, device_id);
   if (!self) {
     CuCtxDestroy (ctx);
-    return NULL;
+    return nullptr;
   }
 
   self->priv->owns_context = TRUE;
@@ -405,7 +406,7 @@ gst_cuda_context_new (guint device_id)
     GST_ERROR ("Could not pop current context");
     g_object_unref (self);
 
-    return NULL;
+    return nullptr;
   }
 
   return self;
@@ -461,8 +462,8 @@ gst_cuda_context_pop (CUcontext * cuda_ctx)
 gpointer
 gst_cuda_context_get_handle (GstCudaContext * ctx)
 {
-  g_return_val_if_fail (ctx, NULL);
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (ctx), NULL);
+  g_return_val_if_fail (ctx, nullptr);
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (ctx), nullptr);
 
   return ctx->priv->context;
 }
@@ -505,12 +506,11 @@ gst_cuda_context_can_access_peer (GstCudaContext * ctx, GstCudaContext * peer)
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (ctx), FALSE);
   g_return_val_if_fail (GST_IS_CUDA_CONTEXT (peer), FALSE);
 
-  G_LOCK (list_lock);
+  std::lock_guard < std::mutex > lk (list_lock);
   if (ctx->priv->accessible_peer &&
       g_hash_table_lookup (ctx->priv->accessible_peer, peer)) {
     ret = TRUE;
   }
-  G_UNLOCK (list_lock);
 
   return ret;
 }
@@ -541,20 +541,21 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
 
   GstCudaContext *self;
 
-  g_return_val_if_fail (handler, NULL);
-  g_return_val_if_fail (device >= 0, NULL);
+  g_return_val_if_fail (handler, nullptr);
+  g_return_val_if_fail (device >= 0, nullptr);
 
   if (!init_cuda_ctx ())
-    return NULL;
+    return nullptr;
 
   if (!gst_cuda_result (CuDeviceGetAttribute (&tex_align,
               CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT, device))) {
     GST_ERROR ("Could not get texture alignment for %d", device);
 
-    return NULL;
+    return nullptr;
   }
 
-  self = g_object_new (GST_TYPE_CUDA_CONTEXT, "cuda-device-id", device, NULL);
+  self = (GstCudaContext *)
+      g_object_new (GST_TYPE_CUDA_CONTEXT, "cuda-device-id", device, nullptr);
   self->priv->context = handler;
   self->priv->device = device;
   self->priv->tex_align = tex_align;
@@ -566,9 +567,9 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
 #endif
 
 
-  G_LOCK (list_lock);
+  std::lock_guard < std::mutex > lk (list_lock);
   g_object_weak_ref (G_OBJECT (self),
-      (GWeakNotify) gst_cuda_context_weak_ref_notify, NULL);
+      (GWeakNotify) gst_cuda_context_weak_ref_notify, nullptr);
   for (iter = context_list; iter; iter = g_list_next (iter)) {
     GstCudaContext *peer = (GstCudaContext *) iter->data;
 
@@ -578,7 +579,6 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
   }
 
   context_list = g_list_append (context_list, self);
-  G_UNLOCK (list_lock);
 
   return self;
 }
