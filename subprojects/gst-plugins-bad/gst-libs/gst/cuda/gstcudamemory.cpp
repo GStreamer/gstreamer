@@ -56,6 +56,8 @@ struct _GstCudaMemoryPrivate
 
   /* Per plane, and point/linear sampling textures respectively  */
   CUtexObject texture[GST_VIDEO_MAX_PLANES][2];
+
+  gboolean saw_io = FALSE;
 };
 /* *INDENT-ON* */
 
@@ -251,7 +253,7 @@ gst_cuda_allocator_free (GstAllocator * allocator, GstMemory * memory)
 
   gst_cuda_context_push (mem->context);
   /* Finish any pending operations before freeing */
-  if (priv->stream &&
+  if (priv->stream && priv->saw_io &&
       GST_MEMORY_FLAG_IS_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC)) {
     CuStreamSynchronize (gst_cuda_stream_get_handle (priv->stream));
   }
@@ -382,6 +384,8 @@ cuda_mem_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
   gpointer ret = nullptr;
 
   std::lock_guard < std::mutex > lk (priv->lock);
+
+  priv->saw_io = TRUE;
 
   if ((flags & GST_MAP_CUDA) == GST_MAP_CUDA) {
     if (!gst_cuda_memory_upload (self, cmem))
