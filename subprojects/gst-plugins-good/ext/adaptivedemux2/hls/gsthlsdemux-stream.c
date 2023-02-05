@@ -1908,6 +1908,10 @@ gst_hls_demux_stream_select_bitrate (GstAdaptiveDemux2Stream * stream,
     gdouble play_rate = gst_adaptive_demux_play_rate (demux);
     gboolean changed = FALSE;
 
+    /* If not calculated yet, continue using start bitrate */
+    if (bitrate == 0)
+      bitrate = hlsdemux->start_bitrate;
+
     /* Handle variant streams */
     GST_DEBUG_OBJECT (hlsdemux,
         "Checking playlist change for main variant stream");

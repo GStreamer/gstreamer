@@ -665,6 +665,7 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
   GstHLSVariantStream *variant;
   GstHLSDemux *hlsdemux = GST_HLS_DEMUX_CAST (demux);
   gchar *playlist = NULL;
+  guint start_bitrate = hlsdemux->start_bitrate;
   gboolean ret;
   GstHLSMediaPlaylist *simple_media_playlist = NULL;
 
@@ -699,19 +700,16 @@ gst_hls_demux_process_initial_manifest (GstAdaptiveDemux * demux,
         gst_adaptive_demux_get_manifest_ref_uri (demux), NULL);
   }
 
+  if (start_bitrate == 0)
+    start_bitrate = demux->connection_speed;
+
   /* select the initial variant stream */
-  if (demux->connection_speed == 0) {
-    variant = hlsdemux->master->default_variant;
-  } else if (hlsdemux->start_bitrate > 0) {
+  if (start_bitrate > 0) {
     variant =
         gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
-        FALSE, hlsdemux->start_bitrate, demux->min_bitrate,
-        hlsdemux->failed_variants);
+        FALSE, start_bitrate, demux->min_bitrate, hlsdemux->failed_variants);
   } else {
-    variant =
-        gst_hls_master_playlist_get_variant_for_bitrate (hlsdemux->master,
-        FALSE, demux->connection_speed, demux->min_bitrate,
-        hlsdemux->failed_variants);
+    variant = hlsdemux->master->default_variant;
   }
 
   if (variant == NULL) {
