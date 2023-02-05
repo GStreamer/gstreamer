@@ -22,7 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #endif
 

@@ -27,7 +27,7 @@
 #include "gstcudamemory.h"
 #include "gstcuda-private.h"
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #include <wrl.h>
 
@@ -102,7 +102,7 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
           (GParamFlags) (G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   g_object_class_install_property (gobject_class, PROP_DXGI_ADAPTER_LUID,
       g_param_spec_int64 ("dxgi-adapter-luid", "DXGI Adapter LUID",
           "Associated DXGI Adapter LUID (Locally Unique Identifier) ",
@@ -162,7 +162,7 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
   }
 }
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static gint64
 gst_cuda_context_find_dxgi_adapter_luid (CUdevice cuda_device)
 {
@@ -561,7 +561,7 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
   self->priv->tex_align = tex_align;
   gst_object_ref_sink (self);
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   self->priv->dxgi_adapter_luid =
       gst_cuda_context_find_dxgi_adapter_luid (self->priv->device);
 #endif

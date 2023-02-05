@@ -1688,7 +1688,7 @@ gst_nv_h264_encoder_select_device (GstNvEncoder * encoder,
 
     return TRUE;
   }
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   if (klass->adapter_luid_size > 0 && gst_is_d3d11_memory (mem)) {
     GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
     GstD3D11Device *device = dmem->device;
@@ -1893,7 +1893,7 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_copy (system_caps);
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   if (device_mode == GST_NV_ENCODER_DEVICE_D3D11) {
     gst_caps_set_features (sink_caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
@@ -2014,7 +2014,7 @@ gst_nv_h264_encoder_register_cuda (GstPlugin * plugin, GstCudaContext * context,
   return cdata;
 }
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 GstNvEncoderClassData *
 gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin, GstD3D11Device * device,
     guint rank)
@@ -2217,7 +2217,7 @@ gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, nullptr));
     gst_caps_append (sink_caps, cuda_caps);
   }
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   if (adapter_luid_size > 0) {
     GstCaps *d3d11_caps = gst_caps_copy (system_caps);
     gst_caps_set_features (d3d11_caps, 0,

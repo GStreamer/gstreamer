@@ -27,7 +27,7 @@ GstNvEncoderClassData * gst_nv_h264_encoder_register_cuda (GstPlugin * plugin,
                                                            GstCudaContext * context,
                                                            guint rank);
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 GstNvEncoderClassData * gst_nv_h264_encoder_register_d3d11 (GstPlugin * plugin,
                                                             GstD3D11Device * device,
                                                             guint rank);

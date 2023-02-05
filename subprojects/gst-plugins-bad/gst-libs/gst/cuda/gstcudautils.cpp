@@ -30,7 +30,7 @@
 #include <gst/gl/gstglfuncs.h>
 #endif
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
@@ -631,7 +631,7 @@ unregister_resource_from_gl_thread (GstGLContext * gl_context,
 }
 #endif
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static void
 unregister_d3d11_resource (GstCudaGraphicsResource * resource)
 {
@@ -674,7 +674,7 @@ gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
           resource);
     } else
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     if (resource->type == GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE) {
       unregister_d3d11_resource (resource);
     } else
@@ -1276,7 +1276,7 @@ cuda_copy_gl_interop (GstBuffer * dst_buf, const GstVideoInfo * dst_info,
 }
 #endif
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static gboolean
 ensure_d3d11_interop (GstCudaContext * context, GstD3D11Device * device)
 {
@@ -1480,7 +1480,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
 {
   gboolean use_copy_2d = FALSE;
   GstMemory *dst_mem, *src_mem;
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   D3D11_TEXTURE2D_DESC desc;
 #endif
   GstCudaContext *cuda_context = context;
@@ -1570,7 +1570,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   }
 #endif
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   if (src_type == GST_CUDA_BUFFER_COPY_D3D11 && gst_is_d3d11_memory (src_mem) &&
       gst_d3d11_memory_get_texture_desc (GST_D3D11_MEMORY_CAST (src_mem), &desc)
       && desc.Usage == D3D11_USAGE_DEFAULT && gst_is_cuda_memory (dst_mem)) {

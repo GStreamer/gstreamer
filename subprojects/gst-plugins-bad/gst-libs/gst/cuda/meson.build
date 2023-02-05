@@ -36,14 +36,6 @@ cuda_win32_headers = [
   'dxgi.h',
 ]
 
-if host_system == 'windows'
-  foreach h : cuda_win32_headers
-    if not cc.has_header(h)
-      subdir_done()
-    endif
-  endforeach
-endif
-
 extra_args = ['-DGST_USE_UNSTABLE_API',
               '-DBUILDING_GST_CUDA',
               '-DG_LOG_DOMAIN="GStreamer-Cuda"']
@@ -52,8 +44,23 @@ if gstgl_dep.found()
   extra_args += ['-DHAVE_NVCODEC_GST_GL=1']
 endif
 
-if gstd3d11_dep.found()
-  extra_args += ['-DGST_CUDA_HAS_D3D']
+if host_system == 'windows'
+  foreach h : cuda_win32_headers
+    if not cc.has_header(h)
+      subdir_done()
+    endif
+  endforeach
+
+  if not gstd3d11_dep.found()
+    subdir_done()
+  endif
+
+  # MinGW 32bits build workaround
+  if cc.get_id() != 'msvc'
+    extra_args += cc.get_supported_arguments([
+      '-Wno-redundant-decls',
+    ])
+  endif
 endif
 
 pkg_name = 'gstreamer-cuda-' + api_version

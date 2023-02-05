@@ -49,7 +49,7 @@
 #ifdef HAVE_NVCODEC_GST_GL
 #include <gst/gl/gl.h>
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
@@ -77,7 +77,7 @@ struct _GstCudaMemoryCopy
   GstGLContext *gl_context;
   GstGLContext *other_gl_context;
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   GstD3D11Device *d3d11_device;
 #endif
 };
@@ -127,7 +127,7 @@ static gboolean gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
     GstVideoInfo * out_info);
 static GstFlowReturn gst_cuda_memory_copy_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static gboolean
 gst_cuda_memory_copy_ensure_d3d11_interop (GstCudaContext * context,
     GstD3D11Device * device);
@@ -168,7 +168,7 @@ static void
 gst_cuda_memory_copy_set_context (GstElement * element, GstContext * context)
 {
   /* CUDA context is handled by parent class, handle only non-CUDA context */
-#if defined (HAVE_NVCODEC_GST_GL) || defined (GST_CUDA_HAS_D3D)
+#if defined (HAVE_NVCODEC_GST_GL) || defined (G_OS_WIN32)
   GstCudaMemoryCopy *self = GST_CUDA_MEMORY_COPY (element);
 
 #ifdef HAVE_NVCODEC_GST_GL
@@ -176,7 +176,7 @@ gst_cuda_memory_copy_set_context (GstElement * element, GstContext * context)
       &self->other_gl_context);
 #endif /* HAVE_NVCODEC_GST_GL */
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   GstCudaBaseTransform *base = GST_CUDA_BASE_TRANSFORM (element);
   if (gst_d3d11_handle_set_context (element, context, -1, &self->d3d11_device)) {
     gboolean compatible = TRUE;
@@ -211,8 +211,8 @@ gst_cuda_memory_copy_set_context (GstElement * element, GstContext * context)
           self->d3d11_device);
     }
   }
-#endif /* GST_CUDA_HAS_D3D */
-#endif /* defined (HAVE_NVCODEC_GST_GL) || defined (GST_CUDA_HAS_D3D) */
+#endif /* G_OS_WIN32 */
+#endif /* defined (HAVE_NVCODEC_GST_GL) || defined (G_OS_WIN32) */
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -220,7 +220,7 @@ gst_cuda_memory_copy_set_context (GstElement * element, GstContext * context)
 static gboolean
 gst_cuda_memory_copy_transform_stop (GstBaseTransform * trans)
 {
-#if defined(HAVE_NVCODEC_GST_GL) || defined(GST_CUDA_HAS_D3D)
+#if defined(HAVE_NVCODEC_GST_GL) || defined(G_OS_WIN32)
   GstCudaMemoryCopy *self = GST_CUDA_MEMORY_COPY (trans);
 
 # ifdef HAVE_NVCODEC_GST_GL
@@ -228,7 +228,7 @@ gst_cuda_memory_copy_transform_stop (GstBaseTransform * trans)
   gst_clear_object (&self->gl_context);
   gst_clear_object (&self->other_gl_context);
 # endif
-# ifdef GST_CUDA_HAS_D3D
+# ifdef G_OS_WIN32
   gst_clear_object (&self->d3d11_device);
 # endif
 #endif
@@ -301,7 +301,7 @@ create_transform_caps (GstCaps * caps, gboolean to_cuda)
     new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_GL_MEMORY);
     ret = gst_caps_merge (ret, new_caps);
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     new_caps = _set_caps_features (caps, GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
     ret = gst_caps_merge (ret, new_caps);
 #endif
@@ -426,7 +426,7 @@ gst_cuda_memory_copy_ensure_gl_context (GstCudaMemoryCopy * self)
 }
 #endif
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static gboolean
 gst_cuda_memory_copy_ensure_d3d11_interop (GstCudaContext * context,
     GstD3D11Device * device)
@@ -521,7 +521,7 @@ gst_cuda_memory_copy_propose_allocation (GstBaseTransform * trans,
 
       pool = gst_gl_buffer_pool_new (self->gl_context);
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     } else if (features && gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY) &&
         gst_cuda_memory_copy_ensure_d3d11_context (self)) {
@@ -615,7 +615,7 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
 #ifdef HAVE_NVCODEC_GST_GL
   gboolean need_gl = FALSE;
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   gboolean need_d3d11 = FALSE;
 #endif
 #ifdef HAVE_NVCODEC_NVMM
@@ -645,7 +645,7 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
     need_gl = TRUE;
   }
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   else if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY) &&
       gst_cuda_memory_copy_ensure_d3d11_context (self)) {
@@ -699,7 +699,7 @@ gst_cuda_memory_copy_decide_allocation (GstBaseTransform * trans,
       pool = gst_gl_buffer_pool_new (self->gl_context);
     }
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     else if (need_d3d11) {
       GST_DEBUG_OBJECT (self, "creating d3d11 pool");
       pool = gst_d3d11_buffer_pool_new (self->d3d11_device);
@@ -778,7 +778,7 @@ static gboolean
 gst_cuda_memory_copy_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query)
 {
-#if defined(HAVE_NVCODEC_GST_GL) || defined(GST_CUDA_HAS_D3D)
+#if defined(HAVE_NVCODEC_GST_GL) || defined(G_OS_WIN32)
   GstCudaMemoryCopy *self = GST_CUDA_MEMORY_COPY (trans);
 
   switch (GST_QUERY_TYPE (query)) {
@@ -791,7 +791,7 @@ gst_cuda_memory_copy_query (GstBaseTransform * trans,
       if (ret)
         return TRUE;
 # endif
-# ifdef GST_CUDA_HAS_D3D
+# ifdef G_OS_WIN32
       ret = gst_d3d11_handle_context_query (GST_ELEMENT (self), query,
           self->d3d11_device);
       if (ret)
@@ -843,7 +843,7 @@ gst_cuda_memory_copy_set_info (GstCudaBaseTransform * btrans,
   }
 #endif
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   if (in_features && gst_caps_features_contains (in_features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     self->in_type = GST_CUDA_BUFFER_COPY_D3D11;
@@ -891,7 +891,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstCudaBufferCopyType in_type = GST_CUDA_BUFFER_COPY_SYSTEM;
   GstCudaBufferCopyType out_type = GST_CUDA_BUFFER_COPY_SYSTEM;
   gboolean use_device_copy = FALSE;
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   D3D11_TEXTURE2D_DESC desc;
 #endif
 
@@ -920,7 +920,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   } else if (self->gl_context && gst_is_gl_memory_pbo (in_mem)) {
     in_type = GST_CUDA_BUFFER_COPY_GL;
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   } else if (self->d3d11_device && gst_is_d3d11_memory (in_mem)
       && gst_d3d11_memory_get_texture_desc (GST_D3D11_MEMORY_CAST (in_mem),
           &desc) && desc.Usage == D3D11_USAGE_DEFAULT) {
@@ -940,7 +940,7 @@ gst_cuda_memory_copy_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   } else if (self->gl_context && gst_is_gl_memory_pbo (out_mem)) {
     out_type = GST_CUDA_BUFFER_COPY_GL;
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   } else if (self->d3d11_device && gst_is_d3d11_memory (out_mem)
       && gst_d3d11_memory_get_texture_desc (GST_D3D11_MEMORY_CAST (out_mem),
           &desc) && desc.Usage == D3D11_USAGE_DEFAULT) {
@@ -1161,7 +1161,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
 #ifdef HAVE_NVCODEC_GST_GL
   GstCaps *gl_caps;
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   GstCaps *d3d11_caps;
 #endif
   GstCaps *upload_sink_caps;
@@ -1190,7 +1190,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, GST_CUDA_GL_FORMATS));
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   d3d11_caps =
       gst_caps_from_string (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
       (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, GST_CUDA_D3D11_FORMATS));
@@ -1200,7 +1200,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
 #ifdef HAVE_NVCODEC_GST_GL
   upload_sink_caps = gst_caps_merge (upload_sink_caps, gst_caps_copy (gl_caps));
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   upload_sink_caps =
       gst_caps_merge (upload_sink_caps, gst_caps_copy (d3d11_caps));
 #endif
@@ -1236,7 +1236,7 @@ gst_cuda_memory_copy_register (GstPlugin * plugin, guint rank)
 #ifdef HAVE_NVCODEC_GST_GL
   download_src_caps = gst_caps_merge (download_src_caps, gl_caps);
 #endif
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   download_src_caps = gst_caps_merge (download_src_caps, d3d11_caps);
 #endif
 #ifdef HAVE_NVCODEC_NVMM

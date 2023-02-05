@@ -44,10 +44,6 @@ if gstgl_dep.found()
   extra_args += ['-DHAVE_NVCODEC_GST_GL=1']
 endif
 
-if gstd3d11_dep.found()
-  extra_args += ['-DGST_CUDA_HAS_D3D=1', '-DCOBJMACROS']
-endif
-
 if host_system == 'linux'
   have_nvmm = false
   if cc.has_header('nvbufsurface.h')

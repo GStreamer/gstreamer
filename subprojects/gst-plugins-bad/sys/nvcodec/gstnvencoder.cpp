@@ -29,7 +29,7 @@
 #include <gst/cuda/gstcudastream.h>
 #include <string.h>
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
@@ -61,7 +61,7 @@ struct _GstNvEncoderPrivate
   GstCudaContext *context;
   GstCudaStream *stream;
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   GstD3D11Device *device;
   GstD3D11Fence *fence;
 #endif
@@ -208,7 +208,7 @@ gst_nv_encoder_set_context (GstElement * element, GstContext * context)
   g_rec_mutex_lock (&priv->context_lock);
 
   switch (priv->selected_device_mode) {
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       gst_d3d11_handle_set_context_for_adapter_luid (element,
           context, priv->dxgi_adapter_luid, &priv->device);
@@ -261,7 +261,7 @@ gst_nv_encoder_device_lock (GstNvEncoder * self)
   gboolean ret = TRUE;
 
   switch (priv->selected_device_mode) {
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       gst_d3d11_device_lock (priv->device);
       break;
@@ -283,7 +283,7 @@ gst_nv_encoder_device_unlock (GstNvEncoder * self)
   gboolean ret = TRUE;
 
   switch (priv->selected_device_mode) {
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       gst_d3d11_device_unlock (priv->device);
       break;
@@ -387,7 +387,7 @@ gst_nv_encoder_drain (GstNvEncoder * self, gboolean locked)
   return TRUE;
 }
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static gboolean
 gst_nv_encoder_open_d3d11_device (GstNvEncoder * self)
 {
@@ -427,7 +427,7 @@ gst_nv_encoder_open (GstVideoEncoder * encoder)
     case GST_NV_ENCODER_DEVICE_AUTO_SELECT:
       /* Will open GPU later */
       return TRUE;
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       return gst_nv_encoder_open_d3d11_device (self);
 #endif
@@ -456,7 +456,7 @@ gst_nv_encoder_close (GstVideoEncoder * encoder)
 
   gst_clear_cuda_stream (&priv->stream);
   gst_clear_object (&priv->context);
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
   gst_clear_d3d11_fence (&priv->fence);
   gst_clear_object (&priv->device);
 #endif
@@ -477,7 +477,7 @@ gst_nv_encoder_stop (GstVideoEncoder * encoder)
   if (priv->subclass_device_mode == GST_NV_ENCODER_DEVICE_AUTO_SELECT) {
     gst_clear_cuda_stream (&priv->stream);
     gst_clear_object (&priv->context);
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     gst_clear_object (&priv->device);
 #endif
     priv->selected_device_mode = GST_NV_ENCODER_DEVICE_AUTO_SELECT;
@@ -497,7 +497,7 @@ gst_nv_encoder_handle_context_query (GstNvEncoder * self, GstQuery * query)
   g_rec_mutex_lock (&priv->context_lock);
 
   switch (priv->selected_device_mode) {
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       ret = gst_d3d11_handle_context_query (GST_ELEMENT (self),
           query, priv->device);
@@ -590,7 +590,7 @@ gst_nv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
       gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
       gst_query_add_allocation_pool (query, nullptr, info.size, min_buffers, 0);
       return TRUE;
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       if (features && gst_caps_features_contains (features,
               GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
@@ -1085,7 +1085,7 @@ gst_nv_encoder_open_encode_session (GstNvEncoder * self, gpointer * session)
   NVENCSTATUS status;
 
   switch (priv->selected_device_mode) {
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       session_params.deviceType = NV_ENC_DEVICE_TYPE_DIRECTX;
       session_params.device = gst_d3d11_device_get_device_handle (priv->device);
@@ -1110,7 +1110,7 @@ gst_nv_encoder_open_encode_session (GstNvEncoder * self, gpointer * session)
   return TRUE;
 }
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static GstBufferPool *
 gst_nv_encoder_create_d3d11_pool (GstNvEncoder * self,
     GstVideoCodecState * state)
@@ -1157,7 +1157,7 @@ gst_nv_encoder_create_pool (GstNvEncoder * self, GstVideoCodecState * state)
 
   /* At this moment device type must be selected already */
   switch (priv->selected_device_mode) {
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       return gst_nv_encoder_create_d3d11_pool (self, state);
 #endif
@@ -1256,7 +1256,7 @@ gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
           priv->stream = gst_cuda_stream_new (priv->context);
       }
     }
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     gst_clear_object (&priv->device);
     if (data.device_mode == GST_NV_ENCODER_DEVICE_D3D11)
       priv->device = (GstD3D11Device *) data.device;
@@ -1617,7 +1617,7 @@ gst_nv_encoder_prepare_task_input_cuda (GstNvEncoder * self,
   return GST_FLOW_OK;
 }
 
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
 static GstBuffer *
 gst_nv_encoder_copy_d3d11 (GstNvEncoder * self,
     GstBuffer * src_buffer, GstBufferPool * pool, gboolean shared)
@@ -1892,7 +1892,7 @@ gst_nv_encoder_prepare_task_input (GstNvEncoder * self,
   GstFlowReturn ret = GST_FLOW_ERROR;
 
   switch (priv->selected_device_mode) {
-#ifdef GST_CUDA_HAS_D3D
+#ifdef G_OS_WIN32
     case GST_NV_ENCODER_DEVICE_D3D11:
       ret = gst_nv_encoder_prepare_task_input_d3d11 (self, info, buffer,
           session, pool, task);
