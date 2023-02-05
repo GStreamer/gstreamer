@@ -164,27 +164,6 @@ typedef struct
 
 typedef struct
 {
-  /* without ref */
-  GstNvEncoder *encoder;
-
-  /* Holds ownership */
-  GstBuffer *buffer;
-  GstMapInfo map_info;
-
-  NV_ENC_REGISTER_RESOURCE register_resource;
-  NV_ENC_MAP_INPUT_RESOURCE mapped_resource;
-
-  /* Used when input resource cannot be registered */
-  NV_ENC_CREATE_INPUT_BUFFER input_buffer;
-  NV_ENC_LOCK_INPUT_BUFFER lk_input_buffer;
-
-  NV_ENC_OUTPUT_PTR output_ptr;
-  gpointer event_handle;
-  gboolean is_eos;
-} GstNvEncoderTask;
-
-typedef struct
-{
   GstNvEncoderDeviceMode device_mode;
   guint cuda_device_id;
   gint64 adapter_luid;
@@ -228,12 +207,6 @@ struct _GstNvEncoderClass
 
 GType gst_nv_encoder_get_type (void);
 
-guint gst_nv_encoder_get_task_size (GstNvEncoder * encoder);
-
-const gchar * gst_nv_encoder_status_to_string (NVENCSTATUS status);
-#define GST_NVENC_STATUS_FORMAT "s (%d)"
-#define GST_NVENC_STATUS_ARGS(s) gst_nv_encoder_status_to_string (s), s
-
 void gst_nv_encoder_preset_to_guid (GstNvEncoderPreset preset,
                                     GUID * guid);
 
@@ -258,6 +231,14 @@ void gst_nv_encoder_merge_device_caps (const GstNvEncoderDeviceCaps * a,
                                        const GstNvEncoderDeviceCaps * b,
                                        GstNvEncoderDeviceCaps * merged);
 
+gboolean _gst_nv_enc_result (NVENCSTATUS status,
+                             GObject * self,
+                             const gchar * file,
+                             const gchar * function,
+                             gint line);
+
+#define gst_nv_enc_result(status,self) \
+    _gst_nv_enc_result (status, (GObject *) self, __FILE__, GST_FUNCTION, __LINE__)
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstNvEncoder, gst_object_unref)
 

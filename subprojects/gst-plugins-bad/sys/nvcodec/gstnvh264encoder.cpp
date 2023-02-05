@@ -1201,9 +1201,8 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
 
   status = NvEncGetEncodePresetConfig (session, NV_ENC_CODEC_H264_GUID,
       init_params->presetGUID, &preset_config);
-  if (status != NV_ENC_SUCCESS) {
-    GST_ERROR_OBJECT (self, "Failed to get preset config %"
-        GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
+  if (!gst_nv_enc_result (status, self)) {
+    GST_ERROR_OBJECT (self, "Failed to get preset config");
     g_mutex_unlock (&self->prop_lock);
     return FALSE;
   }
@@ -1431,9 +1430,8 @@ gst_nv_h264_encoder_set_output_state (GstNvEncoder * encoder,
   seq_params.spsppsBuffer = &spspps;
   seq_params.outSPSPPSPayloadSize = &seq_size;
   status = NvEncGetSequenceParams (session, &seq_params);
-  if (status != NV_ENC_SUCCESS) {
-    GST_ERROR_OBJECT (self, "Failed to get sequence header, status %"
-        GST_NVENC_STATUS_FORMAT, GST_NVENC_STATUS_ARGS (status));
+  if (!gst_nv_enc_result (status, self)) {
+    GST_ERROR_OBJECT (self, "Failed to get sequence header");
     return FALSE;
   }
 
