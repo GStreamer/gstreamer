@@ -1668,6 +1668,13 @@ mxf_local_tag_free (MXFLocalTag * tag)
   g_free (tag);
 }
 
+MXFUL *
+mxf_primer_tag_to_ul (const MXFPrimerPack * primer, guint16 tag)
+{
+  return (MXFUL *) g_hash_table_lookup (primer->mappings,
+      GUINT_TO_POINTER (((guint) tag)));
+}
+
 gboolean
 mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
     guint16 tag, const guint8 * tag_data, guint16 tag_size,
@@ -1689,8 +1696,7 @@ mxf_local_tag_add_to_hash_table (const MXFPrimerPack * primer,
 
   g_return_val_if_fail (*hash_table != NULL, FALSE);
 
-  ul = (MXFUL *) g_hash_table_lookup (primer->mappings,
-      GUINT_TO_POINTER (((guint) tag)));
+  ul = mxf_primer_tag_to_ul (primer, tag);
 
   if (ul) {
 #ifndef GST_DISABLE_GST_DEBUG

@@ -265,6 +265,7 @@ void mxf_local_tag_free (MXFLocalTag *tag);
 gboolean mxf_local_tag_add_to_hash_table (const MXFPrimerPack *primer,
   guint16 tag, const guint8 *tag_data, guint16 tag_size,
   GHashTable **hash_table);
+MXFUL *mxf_primer_tag_to_ul (const MXFPrimerPack *primer, guint16 tag);
 gboolean mxf_local_tag_insert (MXFLocalTag *tag, GHashTable **hash_table);
 
 #endif /* __MXF_TYPES_H__ */

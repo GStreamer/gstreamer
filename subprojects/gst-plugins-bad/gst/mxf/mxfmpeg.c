@@ -141,9 +141,8 @@ mxf_metadata_mpeg_video_descriptor_handle_tag (MXFMetadataBase * metadata,
   gboolean ret = TRUE;
   MXFUL *tag_ul = NULL;
 
-  if (!(tag_ul =
-          (MXFUL *) g_hash_table_lookup (primer->mappings,
-              GUINT_TO_POINTER (((guint) tag)))))
+  tag_ul = mxf_primer_tag_to_ul (primer, tag);
+  if (!tag_ul)
     return FALSE;
 
   if (memcmp (tag_ul, &_single_sequence_ul, 16) == 0) {
