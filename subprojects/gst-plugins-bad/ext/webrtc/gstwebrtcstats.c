@@ -977,6 +977,7 @@ _get_stats_from_pad (GstWebRTCBin * webrtc, GstPad * pad, GstStructure * s)
       ts_stats.source_stats->n_values, ts_stats.stream->transport);
 
   ts_stats.s = s;
+  ts_stats.clock_rate = clock_rate;
 
   transport_stream_find_ssrc_map_item (ts_stats.stream, &ts_stats,
       (FindSsrcMapFunc) webrtc_stats_get_from_transport);
