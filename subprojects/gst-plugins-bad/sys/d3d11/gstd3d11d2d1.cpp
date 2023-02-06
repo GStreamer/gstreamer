@@ -176,9 +176,7 @@ gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
     D3D11_TEXTURE2D_DESC dst_desc;
     D3D11_TEXTURE2D_DESC src_desc;
     GstFlowReturn ret = GST_FLOW_ERROR;
-    ID2D1RenderTarget* pRenderTarget = NULL;
-    IDXGISurface* pDxgiSurface = NULL;
-    HRESULT hr = S_OK;
+    HRESULT hr;
 
     g_return_val_if_fail(gst_buffer_n_memory(inbuf) == 1, GST_FLOW_ERROR);
     g_return_val_if_fail(gst_buffer_n_memory(outbuf) == 1, GST_FLOW_ERROR);
@@ -222,23 +220,9 @@ gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
         context_handle->CopySubresourceRegion((ID3D11Resource*)out_map.data,
             subidx, 0, 0, 0, (ID3D11Resource*)in_map.data, src_subidx, &src_box);
 
-        hr = ((ID3D11Resource*)out_map.data)->QueryInterface(&pDxgiSurface);
-        if (!gst_d3d11_result(hr, device)) {
-            GST_ERROR("Could not query IDXGISurface, hr: 0x%x", (guint)hr);
-            goto cleanup;
-        }
-
-        D2D1_RENDER_TARGET_PROPERTIES props =
-            D2D1::RenderTargetProperties(
-                D2D1_RENDER_TARGET_TYPE_DEFAULT,
-                D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
-                96,
-                96);
-
         static ID2D1Factory* direct2DFactory;
         if (!direct2DFactory)
         {
-            // FIXME: cache in the d3d11context!!
             hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED,
                 &direct2DFactory);
 
@@ -248,27 +232,18 @@ gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
             }
         }
 
-        hr = direct2DFactory->CreateDxgiSurfaceRenderTarget(
-            pDxgiSurface,
-            &props,
-            &pRenderTarget);
-
-        if (!gst_d3d11_result(hr, device)) {
-            GST_ERROR("Could not create CreateDxgiSurfaceRenderTarget, hr: 0x%x", (guint)hr);
+        ID2D1RenderTarget* render_target = gst_d3d11_memory_get_d2d1_render_target(mem, direct2DFactory);
+        if (render_target == NULL) {
+            GST_ERROR("Could not get ID2D1RenderTarget from d3d11memory");
             goto cleanup;
         }
 
         GST_DEBUG_OBJECT(d2d1, "Emit signal to the user");
-        g_signal_emit(d2d1, gst_d3d11_d2d1_signals[SIGNAL_DRAW], 0, pRenderTarget, GST_BUFFER_PTS (inbuf));
+        g_signal_emit(d2d1, gst_d3d11_d2d1_signals[SIGNAL_DRAW], 0, render_target, GST_BUFFER_PTS (inbuf));
     }
 
     ret = GST_FLOW_OK;
 cleanup:
-    // FIXME: cache this in gstmemory
-    if (pRenderTarget)
-        pRenderTarget->Release();
-    if (pDxgiSurface)
-        pDxgiSurface->Release();
     gst_d3d11_buffer_unmap(inbuf, &in_map);
     gst_d3d11_buffer_unmap(outbuf, &out_map);
     gst_d3d11_device_unlock(device);
