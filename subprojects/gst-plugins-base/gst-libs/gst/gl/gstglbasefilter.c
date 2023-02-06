@@ -556,24 +556,11 @@ gst_gl_base_filter_find_gl_context_unlocked (GstGLBaseFilter * filter)
     return FALSE;
   }
 
-  if (!filter->context) {
-    GST_OBJECT_LOCK (filter->display);
-    do {
-      if (filter->context)
-        gst_object_unref (filter->context);
-      /* just get a GL context.  we don't care */
-      filter->context =
-          gst_gl_display_get_gl_context_for_thread (filter->display, NULL);
-      if (!filter->context) {
-        if (!gst_gl_display_create_context (filter->display,
-                filter->priv->other_context, &filter->context, &error)) {
-          GST_OBJECT_UNLOCK (filter->display);
-          goto context_error;
-        }
-      }
-    } while (!gst_gl_display_add_context (filter->display, filter->context));
-    GST_OBJECT_UNLOCK (filter->display);
+  if (!gst_gl_display_ensure_context (filter->display,
+          filter->priv->other_context, &filter->context, &error)) {
+    goto context_error;
   }
+
   GST_INFO_OBJECT (filter, "found OpenGL context %" GST_PTR_FORMAT,
       filter->context);
 
