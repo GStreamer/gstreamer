@@ -1781,7 +1781,8 @@ gst_av1_parser_parse_metadata_obu (GstAV1Parser * parser, GstAV1OBU * obu,
           &bit_reader, &(metadata->timecode));
       break;
     default:
-      return GST_AV1_PARSER_BITSTREAM_ERROR;
+      GST_WARNING ("Unknown metadata type %u", metadata->metadata_type);
+      return GST_AV1_PARSER_OK;
   }
 
   if (retval != GST_AV1_PARSER_OK)
