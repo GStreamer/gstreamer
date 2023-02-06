@@ -3912,6 +3912,11 @@ mxf_metadata_generic_descriptor_finalize (GObject * object)
   g_free (self->locators);
   self->locators = NULL;
 
+  g_free (self->sub_descriptors_uids);
+  self->sub_descriptors_uids = NULL;
+  g_free (self->sub_descriptors);
+  self->sub_descriptors = NULL;
+
   G_OBJECT_CLASS (mxf_metadata_generic_descriptor_parent_class)->finalize
       (object);
 }
@@ -3946,11 +3951,31 @@ mxf_metadata_generic_descriptor_handle_tag (MXFMetadataBase * metadata,
 #endif
       break;
     default:
-      ret =
-          MXF_METADATA_BASE_CLASS
-          (mxf_metadata_generic_descriptor_parent_class)->handle_tag (metadata,
-          primer, tag, tag_data, tag_size);
+    {
+      MXFUL *tag_ul = mxf_primer_tag_to_ul (primer, tag);
+      if (tag_ul && mxf_ul_is_equal (tag_ul, MXF_UL (SUB_DESCRIPTORS_ARRAY))) {
+        if (!mxf_uuid_array_parse (&self->sub_descriptors_uids,
+                &self->n_sub_descriptors, tag_data, tag_size))
+          goto error;
+
+        GST_DEBUG ("  number of sub_descriptors = %u", self->n_sub_descriptors);
+#ifndef GST_DISABLE_GST_DEBUG
+        {
+          guint i;
+          for (i = 0; i < self->n_sub_descriptors; i++) {
+            GST_DEBUG ("  sub descriptor %u = %s", i,
+                mxf_uuid_to_string (&self->sub_descriptors_uids[i], str));
+          }
+        }
+#endif
+      } else {
+        ret =
+            MXF_METADATA_BASE_CLASS
+            (mxf_metadata_generic_descriptor_parent_class)->handle_tag
+            (metadata, primer, tag, tag_data, tag_size);
+      }
       break;
+    }
   }
 
   return ret;
@@ -3998,6 +4023,29 @@ mxf_metadata_generic_descriptor_resolve (MXFMetadataBase * m,
   if (!have_locator && self->n_locators > 0) {
     GST_ERROR ("Couldn't resolve a locator");
     return FALSE;
+  }
+
+  /* this memory reuse is done in the same way as for locators, but the reason
+   * isn't 100% clear. This might not be needed anymore */
+  if (self->sub_descriptors)
+    memset (self->sub_descriptors, 0,
+        sizeof (gpointer) * self->n_sub_descriptors);
+  else
+    self->sub_descriptors =
+        g_new0 (MXFMetadataGenericDescriptor *, self->n_sub_descriptors);
+  for (i = 0; i < self->n_sub_descriptors; i++) {
+    current = g_hash_table_lookup (metadata, &self->sub_descriptors_uids[i]);
+    if (current && MXF_IS_METADATA_GENERIC_DESCRIPTOR (current)) {
+      if (mxf_metadata_base_resolve (current, metadata)) {
+        self->sub_descriptors[i] = MXF_METADATA_GENERIC_DESCRIPTOR (current);
+      } else {
+        GST_WARNING ("Couldn't resolve sub_descriptor %s",
+            mxf_uuid_to_string (&self->sub_descriptors_uids[i], str));
+      }
+    } else {
+      GST_WARNING ("Sub_Descriptor %s not found",
+          mxf_uuid_to_string (&self->sub_descriptors_uids[i], str));
+    }
   }
 
   return

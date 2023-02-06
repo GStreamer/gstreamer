@@ -625,6 +625,10 @@ struct _MXFMetadataGenericDescriptor {
   guint32 n_locators;
   MXFUUID *locators_uids;
   MXFMetadataLocator **locators;
+
+  MXFUUID *sub_descriptors_uids;
+  guint32 n_sub_descriptors;
+  MXFMetadataGenericDescriptor **sub_descriptors;
 };
 
 struct _MXFMetadataFileDescriptor {

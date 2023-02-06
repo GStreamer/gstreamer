@@ -1201,9 +1201,21 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
       }
       for (di = 0; di < track->n_descriptor; di++) {
         MXFMetadataFileDescriptor *desc = track->descriptor[di];
+        MXFMetadataGenericDescriptor *generic =
+            (MXFMetadataGenericDescriptor *) desc;
+        guint subdi;
+
         GST_DEBUG_OBJECT (demux, "      Descriptor %s %s",
             g_type_name (G_OBJECT_TYPE (desc)),
             mxf_ul_to_string (&desc->essence_container, str));
+        for (subdi = 0; subdi < generic->n_sub_descriptors; subdi++) {
+          MXFMetadataGenericDescriptor *subdesc =
+              generic->sub_descriptors[subdi];
+          if (subdesc) {
+            GST_DEBUG_OBJECT (demux, "        Sub-Descriptor %s",
+                g_type_name (G_OBJECT_TYPE (subdesc)));
+          }
+        }
       }
       GST_DEBUG_OBJECT (demux,
           "      Sequence duration:%" G_GINT64_FORMAT
