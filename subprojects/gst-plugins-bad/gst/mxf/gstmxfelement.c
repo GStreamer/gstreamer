@@ -32,6 +32,7 @@
 #include "mxfalaw.h"
 #include "mxfd10.h"
 #include "mxfdv-dif.h"
+#include "mxfffv1.h"
 #include "mxfjpeg2000.h"
 #include "mxfmpeg.h"
 #include "mxfup.h"
@@ -72,6 +73,7 @@ mxf_element_init (GstPlugin * plugin)
     mxf_alaw_init ();
     mxf_d10_init ();
     mxf_dv_dif_init ();
+    mxf_ffv1_init ();
     mxf_jpeg2000_init ();
     mxf_mpeg_init ();
     mxf_up_init ();

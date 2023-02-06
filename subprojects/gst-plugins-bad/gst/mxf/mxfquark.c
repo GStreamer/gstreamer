@@ -193,6 +193,7 @@ static const gchar *_quark_strings[] = {
   "bitrate",
   "profile-and-level",
   "filler",
+  "ffv1-picture-descriptor",
 };
 
 GQuark _mxf_quark_table[MXF_QUARK_MAX];
