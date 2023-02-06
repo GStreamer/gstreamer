@@ -186,26 +186,10 @@ _get_gl_context_unlocked (GstGLBaseMixer * mix)
 
   _find_local_gl_context_unlocked (mix);
 
-  GST_OBJECT_LOCK (mix->display);
-  if (!mix->context) {
-    do {
-      if (mix->context) {
-        gst_object_unref (mix->context);
-        mix->context = NULL;
-      }
-      /* just get a GL context.  we don't care */
-      mix->context =
-          gst_gl_display_get_gl_context_for_thread (mix->display, NULL);
-      if (!mix->context) {
-        if (!gst_gl_display_create_context (mix->display,
-                mix->priv->other_context, &mix->context, &error)) {
-          GST_OBJECT_UNLOCK (mix->display);
-          goto context_error;
-        }
-      }
-    } while (!gst_gl_display_add_context (mix->display, mix->context));
+  if (!gst_gl_display_ensure_context (mix->display, mix->priv->other_context,
+          &mix->context, &error)) {
+    goto context_error;
   }
-  GST_OBJECT_UNLOCK (mix->display);
 
   if (new_context || !mix->priv->gl_started) {
     if (mix->priv->gl_started)
