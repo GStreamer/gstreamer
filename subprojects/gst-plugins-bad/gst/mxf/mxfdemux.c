@@ -814,13 +814,8 @@ gst_mxf_demux_update_essence_tracks (GstMXFDemux * demux)
       gboolean new = FALSE;
 
       if (!package->parent.tracks[j]
-          || !MXF_IS_METADATA_TIMELINE_TRACK (package->parent.tracks[j])) {
-        GST_DEBUG_OBJECT (demux,
-            "Skipping non-timeline track (id:%d number:0x%08x)",
-            package->parent.tracks[j]->track_id,
-            package->parent.tracks[j]->track_number);
+          || !MXF_IS_METADATA_TIMELINE_TRACK (package->parent.tracks[j]))
         continue;
-      }
 
       track = MXF_METADATA_TIMELINE_TRACK (package->parent.tracks[j]);
       if ((track->parent.type & 0xf0) != 0x30) {
@@ -1174,16 +1169,21 @@ gst_mxf_demux_show_topology (GstMXFDemux * demux)
   for (tmp = file_packages; tmp; tmp = tmp->next) {
     MXFMetadataMaterialPackage *pack = (MXFMetadataMaterialPackage *) tmp->data;
     MXFMetadataSourcePackage *src = (MXFMetadataSourcePackage *) pack;
+#ifndef GST_DISABLE_GST_DEBUG
     MXFMetadataEssenceContainerData *econt =
         essence_container_for_source_package (storage, src);
     GST_DEBUG_OBJECT (demux,
         "  Package (body_sid:%d index_sid:%d top_level:%d) with %d tracks , UID:%s",
-        econt->body_sid, econt->index_sid, src->top_level, pack->n_tracks,
-        mxf_umid_to_string (&pack->package_uid, str));
+        econt ? econt->body_sid : 0, econt ? econt->index_sid : 0,
+        src->top_level, pack->n_tracks, mxf_umid_to_string (&pack->package_uid,
+            str));
+#endif
     GST_DEBUG_OBJECT (demux, "    Package descriptor : %s",
         g_type_name (G_OBJECT_TYPE (src->descriptor)));
     for (i = 0; i < pack->n_tracks; i++) {
       MXFMetadataTrack *track = pack->tracks[i];
+      if (!track)
+        continue;
       MXFMetadataSequence *sequence = track->sequence;
       guint di, si;
       if (MXF_IS_METADATA_TIMELINE_TRACK (track)) {
