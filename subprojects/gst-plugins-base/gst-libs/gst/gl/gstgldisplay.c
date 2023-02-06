@@ -1014,3 +1014,57 @@ gst_gl_display_remove_context (GstGLDisplay * display, GstGLContext * needle)
   GST_WARNING_OBJECT (display, "%" GST_PTR_FORMAT " was not found in this "
       "display", needle);
 }
+
+
+/**
+ * gst_gl_display_ensure_context:
+ * @display: a #GstGLDisplay
+ * @other_context: (transfer none)(nullable): other #GstGLContext to share resources with.
+ * @context: (inout)(transfer full)(nullable): the resulting #GstGLContext
+ * @error: (out)(transfer full)(nullable): possible error
+ *
+ * Ensures that the display has a valid GL context for the current thread. If
+ * @context already contains a valid context, this does nothing.
+ *
+ * Returns: wether @context contains a valid context.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_gl_display_ensure_context (GstGLDisplay * display,
+    GstGLContext * other_context, GstGLContext ** context, GError ** error)
+{
+  gboolean ret = FALSE;
+
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), FALSE);
+  g_return_val_if_fail (other_context == NULL
+      || GST_IS_GL_CONTEXT (other_context), FALSE);
+  g_return_val_if_fail (context != NULL, FALSE);
+  g_return_val_if_fail (*context == NULL
+      || GST_IS_GL_CONTEXT (*context), FALSE);
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  if (*context && (*context)->display == display) {
+    return TRUE;
+  }
+
+  GST_OBJECT_LOCK (display);
+  do {
+    if (*context) {
+      gst_object_unref (*context);
+      *context = NULL;
+    }
+    /* just get a GL context.  we don't care */
+    *context = gst_gl_display_get_gl_context_for_thread (display, NULL);
+    if (!*context) {
+      if (!gst_gl_display_create_context (display, other_context, &*context,
+              error)) {
+        goto out;
+      }
+    }
+  } while (!gst_gl_display_add_context (display, *context));
+  ret = TRUE;
+out:
+  GST_OBJECT_UNLOCK (display);
+  return ret;
+}

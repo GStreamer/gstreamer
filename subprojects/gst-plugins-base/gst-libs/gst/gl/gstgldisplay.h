@@ -175,7 +175,11 @@ gboolean        gst_gl_display_add_context      (GstGLDisplay * display,
 GST_GL_API
 void            gst_gl_display_remove_context   (GstGLDisplay * display,
                                                  GstGLContext * context);
-
+GST_GL_API
+gboolean        gst_gl_display_ensure_context   (GstGLDisplay * display,
+                                                 GstGLContext * other_context,
+                                                 GstGLContext ** context,
+                                                 GError ** error);
 GST_GL_API
 GstGLWindow *   gst_gl_display_create_window    (GstGLDisplay * display);
 GST_GL_API
