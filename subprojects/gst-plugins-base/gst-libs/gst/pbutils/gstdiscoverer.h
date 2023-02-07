@@ -383,11 +383,25 @@ struct _GstDiscovererClass {
   void        (*starting)        (GstDiscoverer *discoverer);
   void        (*discovered)      (GstDiscoverer *discoverer,
                                   GstDiscovererInfo *info,
-				  const GError *err);
+                                  const GError *err);
   void        (*source_setup)    (GstDiscoverer *discoverer,
                                   GstElement *source);
+  /**
+   * GstDiscovererClass::load_serialize_info:
+   * @dc: the #GstDiscoverer
+   * @uri: the uri to load the info from
+   *
+   * Loads the serialized info from the given uri.
+   *
+   * Returns: (transfer full): the #GstDiscovererInfo or %NULL if it could not be loaded
+   *
+   * Since: 1.24
+   */
+  GstDiscovererInfo *
+  (*load_serialize_info)          (GstDiscoverer *dc,
+                                   gchar *uri);
 
-  gpointer _reserved[GST_PADDING];
+  gpointer _reserved[GST_PADDING - 1];
 };
 
 GST_PBUTILS_API

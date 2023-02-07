@@ -172,6 +172,7 @@ enum
   SIGNAL_STARTING,
   SIGNAL_DISCOVERED,
   SIGNAL_SOURCE_SETUP,
+  SIGNAL_LOAD_SERIALIZED_INFO,
   LAST_SIGNAL
 };
 
@@ -215,6 +216,8 @@ static GVariant *gst_discoverer_info_to_variant_recurse (GstDiscovererStreamInfo
     * sinfo, GstDiscovererSerializeFlags flags);
 static GstDiscovererStreamInfo *_parse_discovery (GVariant * variant,
     GstDiscovererInfo * info);
+static GstDiscovererInfo *load_serialized_info (GstDiscoverer * dc,
+    gchar * uri);
 
 static void
 gst_discoverer_class_init (GstDiscovererClass * klass)
@@ -226,6 +229,8 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
 
   gobject_class->set_property = gst_discoverer_set_property;
   gobject_class->get_property = gst_discoverer_get_property;
+
+  klass->load_serialize_info = load_serialized_info;
 
 
   /* properties */
@@ -323,6 +328,26 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDiscovererClass, source_setup),
       NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
+
+  /**
+   * GstDiscoverer::load-serialized-info:
+   * @discoverer: the #GstDiscoverer
+   * @uri: THe URI to load the serialized info for
+   *
+   * Retrieves information about a URI from and external source of information,
+   * like a cache file. This is used by the discoverer to speed up the
+   * discovery.
+   *
+   * Returns: (nullable) (transfer full): The #GstDiscovererInfo representing
+   * @uri, or %NULL if no information
+   *
+   * Since: 1.24
+   */
+  gst_discoverer_signals[SIGNAL_LOAD_SERIALIZED_INFO] =
+      g_signal_new ("load-serialized-info", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDiscovererClass,
+          load_serialize_info), g_signal_accumulator_first_wins, NULL, NULL,
+      GST_TYPE_DISCOVERER_INFO, 1, G_TYPE_STRING);
 }
 
 static void
@@ -1836,40 +1861,53 @@ _get_info_from_cachefile (GstDiscoverer * dc, gchar * cachefile)
   return NULL;
 }
 
+static GstDiscovererInfo *
+load_serialized_info (GstDiscoverer * dc, gchar * uri)
+{
+  GstDiscovererInfo *res = NULL;
+
+  if (dc->priv->use_cache) {
+    gchar *cachefile = _serialized_info_get_path (dc, uri);
+
+    if (cachefile) {
+      res = _get_info_from_cachefile (dc, cachefile);
+      g_free (cachefile);
+    }
+  }
+
+  return res;
+}
+
 static gboolean
 _setup_locked (GstDiscoverer * dc)
 {
   GstStateChangeReturn ret;
   gchar *uri = (gchar *) dc->priv->pending_uris->data;
-  gchar *cachefile = NULL;
 
   dc->priv->pending_uris =
       g_list_delete_link (dc->priv->pending_uris, dc->priv->pending_uris);
 
-  if (dc->priv->use_cache) {
-    cachefile = _serialized_info_get_path (dc, uri);
-    if (cachefile)
-      dc->priv->current_info = _get_info_from_cachefile (dc, cachefile);
-
-    if (dc->priv->current_info) {
-      /* Make sure the URI is exactly what the user passed in */
-      g_free (dc->priv->current_info->uri);
-      dc->priv->current_info->uri = uri;
-
-      dc->priv->current_info->cachefile = cachefile;
-      dc->priv->processing = FALSE;
-      dc->priv->target_state = GST_STATE_NULL;
-
-      return TRUE;
-    }
-  }
 
   GST_DEBUG ("Setting up");
+
+  g_signal_emit (dc, gst_discoverer_signals[SIGNAL_LOAD_SERIALIZED_INFO], 0,
+      uri, &dc->priv->current_info);
+  if (dc->priv->current_info) {
+    /* Make sure the URI is exactly what the user passed in */
+    g_free (dc->priv->current_info->uri);
+    dc->priv->current_info->uri = uri;
+
+    dc->priv->processing = FALSE;
+    dc->priv->target_state = GST_STATE_NULL;
+
+    return TRUE;
+  }
 
   /* Pop URI off the pending URI list */
   dc->priv->current_info =
       (GstDiscovererInfo *) g_object_new (GST_TYPE_DISCOVERER_INFO, NULL);
-  dc->priv->current_info->cachefile = cachefile;
+  if (dc->priv->use_cache)
+    dc->priv->current_info->cachefile = _serialized_info_get_path (dc, uri);
   dc->priv->current_info->uri = uri;
 
   /* set uri on uridecodebin */
