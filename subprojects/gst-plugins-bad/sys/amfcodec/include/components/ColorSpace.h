@@ -1,4 +1,4 @@
-//
+// 
 // Notice Regarding Standards.  AMD does not provide a license or sublicense to
 // any Intellectual Property Rights relating to any standards, including but not
 // limited to any audio and/or video codec technologies such as MPEG-2, MPEG-4;
@@ -6,9 +6,9 @@
 // (collectively, the "Media Technologies"). For clarity, you will pay any
 // royalties due for such third party technologies, which may include the Media
 // Technologies that are owed as a result of AMD providing the Software to you.
-//
-// MIT license
-//
+// 
+// MIT license 
+// 
 // Copyright (c) 2018 Advanced Micro Devices, Inc. All rights reserved.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,9 +41,9 @@
 typedef enum AMF_VIDEO_CONVERTER_COLOR_PROFILE_ENUM
 {
     AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN   =-1,
-    AMF_VIDEO_CONVERTER_COLOR_PROFILE_601       = 0,    // studio range
-    AMF_VIDEO_CONVERTER_COLOR_PROFILE_709       = 1,    // studio range
-    AMF_VIDEO_CONVERTER_COLOR_PROFILE_2020      = 2,    // studio range
+    AMF_VIDEO_CONVERTER_COLOR_PROFILE_601       = 0,    // studio range 
+    AMF_VIDEO_CONVERTER_COLOR_PROFILE_709       = 1,    // studio range 
+    AMF_VIDEO_CONVERTER_COLOR_PROFILE_2020      = 2,    // studio range 
     AMF_VIDEO_CONVERTER_COLOR_PROFILE_JPEG      = 3,    // full range 601
 //    AMF_VIDEO_CONVERTER_COLOR_PROFILE_G22_BT709 = AMF_VIDEO_CONVERTER_COLOR_PROFILE_709,
 //    AMF_VIDEO_CONVERTER_COLOR_PROFILE_G10_SCRGB = 4,
@@ -113,8 +113,8 @@ typedef struct AMFHDRMetadata
     amf_uint16  whitePoint[2];              // normalized to 50000
     amf_uint32  maxMasteringLuminance;      // normalized to 10000
     amf_uint32  minMasteringLuminance;      // normalized to 10000
-    amf_uint16  maxContentLightLevel;       // nit value
-    amf_uint16  maxFrameAverageLightLevel;  // nit value
+    amf_uint16  maxContentLightLevel;       // nit value 
+    amf_uint16  maxFrameAverageLightLevel;  // nit value 
 } AMFHDRMetadata;
 
 
@@ -130,8 +130,8 @@ typedef enum AMF_COLOR_RANGE_ENUM
 // IDs are the same as in decoder properties
 // can be used to dynamically pass color data between components:
 // Decoder, Capture, Encoder. Presenter etc.
-#define AMF_VIDEO_COLOR_TRANSFER_CHARACTERISTIC         L"ColorTransferChar"    // amf_int64(AMF_COLOR_TRANSFER_CHARACTERISTIC_ENUM); default = AMF_COLOR_TRANSFER_CHARACTERISTIC_UNDEFINED, ISO/IEC 23001-8_2013 Section 7.2 See ColorSpace.h for enum
-#define AMF_VIDEO_COLOR_PRIMARIES                       L"ColorPrimaries"       // amf_int64(AMF_COLOR_PRIMARIES_ENUM); default = AMF_COLOR_PRIMARIES_UNDEFINED, ISO/IEC 23001-8_2013 Section 7.1 See ColorSpace.h for enum
+#define AMF_VIDEO_COLOR_TRANSFER_CHARACTERISTIC         L"ColorTransferChar"    // amf_int64(AMF_COLOR_TRANSFER_CHARACTERISTIC_ENUM); default = AMF_COLOR_TRANSFER_CHARACTERISTIC_UNDEFINED, ISO/IEC 23001-8_2013 Section 7.2 See ColorSpace.h for enum 
+#define AMF_VIDEO_COLOR_PRIMARIES                       L"ColorPrimaries"       // amf_int64(AMF_COLOR_PRIMARIES_ENUM); default = AMF_COLOR_PRIMARIES_UNDEFINED, ISO/IEC 23001-8_2013 Section 7.1 See ColorSpace.h for enum 
 #define AMF_VIDEO_COLOR_RANGE                           L"ColorRange"           // amf_int64(AMF_COLOR_RANGE_ENUM) default = AMF_COLOR_RANGE_UNDEFINED
 #define AMF_VIDEO_COLOR_HDR_METADATA                    L"HdrMetadata"          // AMFBuffer containing AMFHDRMetadata; default NULL
 

@@ -163,6 +163,11 @@ enum AMF_VIDEO_ENCODER_AV1_INTRA_REFRESH_MODE_ENUM
     AMF_VIDEO_ENCODER_AV1_INTRA_REFRESH_MODE__GOP_ALIGNED = 1,
     AMF_VIDEO_ENCODER_AV1_INTRA_REFRESH_MODE__CONTINUOUS = 2
 };
+enum AMF_VIDEO_ENCODER_AV1_LTR_MODE_ENUM
+{
+    AMF_VIDEO_ENCODER_AV1_LTR_MODE_RESET_UNUSED     = 0,
+    AMF_VIDEO_ENCODER_AV1_LTR_MODE_KEEP_UNUSED      = 1
+};
 
 
 // *** Static properties - can be set only before Init() *** 
@@ -207,6 +212,7 @@ enum AMF_VIDEO_ENCODER_AV1_INTRA_REFRESH_MODE_ENUM
 // Picture Management Configuration
 #define AMF_VIDEO_ENCODER_AV1_MAX_NUM_TEMPORAL_LAYERS               L"Av1MaxNumOfTemporalLayers"        // amf_int64; default = depends on USAGE; Max number of temporal layers might be enabled. The maximum value can be queried from AMF_VIDEO_ENCODER_AV1_CAP_MAX_NUM_TEMPORAL_LAYERS
 #define AMF_VIDEO_ENCODER_AV1_MAX_LTR_FRAMES                        L"Av1MaxNumLTRFrames"               // amf_int64; default = depends on USAGE; Max number of LTR frames. The maximum value can be queried from AMF_VIDEO_ENCODER_AV1_CAP_MAX_NUM_LTR_FRAMES
+#define AMF_VIDEO_ENCODER_AV1_LTR_MODE                              L"Av1LTRMode"                       // amf_int64(AMF_VIDEO_ENCODER_AV1_LTR_MODE_ENUM); default = AMF_VIDEO_ENCODER_AV1_LTR_MODE_RESET_UNUSED; remove/keep unused LTRs (not specified in property AMF_VIDEO_ENCODER_AV1_FORCE_LTR_REFERENCE_BITFIELD)
 #define AMF_VIDEO_ENCODER_AV1_MAX_NUM_REFRAMES                      L"Av1MaxNumRefFrames"               // amf_int64; default = 1; Maximum number of reference frames
 
 // color conversion
@@ -281,12 +287,14 @@ enum AMF_VIDEO_ENCODER_AV1_INTRA_REFRESH_MODE_ENUM
 #define AMF_VIDEO_ENCODER_AV1_CAP_NUM_OF_HW_INSTANCES               L"Av1CapNumOfHwInstances"           // amf_int64; default = N/A; number of HW encoder instances
 #define AMF_VIDEO_ENCODER_AV1_CAP_MAX_THROUGHPUT                    L"Av1CapMaxThroughput"              // amf_int64; default = N/A; MAX throughput for AV1 encoder in MB (16 x 16 pixel)
 #define AMF_VIDEO_ENCODER_AV1_CAP_REQUESTED_THROUGHPUT              L"Av1CapRequestedThroughput"        // amf_int64; default = N/A; Currently total requested throughput for AV1 encode in MB (16 x 16 pixel)
-#define AMF_VIDEO_ENCODER_AV1_CAP_COLOR_CONVERSION                  L"Av1CapColorConversion"            // amf_int64(AMF_ACCELERATION_TYPE); default = N/A; type of supported color conversion.
+#define AMF_VIDEO_ENCODER_AV1_CAP_COLOR_CONVERSION                  L"Av1CapColorConversion"            // amf_int64(AMF_ACCELERATION_TYPE); default = N/A; type of supported color conversion. default AMF_ACCEL_GPU
 #define AMF_VIDEO_ENCODER_AV1_CAP_PRE_ANALYSIS                      L"Av1PreAnalysis"                    // amf_bool - pre analysis module is available for AV1 UVE encoder, n/a for the other encoders
 #define AMF_VIDEO_ENCODER_AV1_CAP_MAX_BITRATE                       L"Av1MaxBitrate"                    // amf_int64; default = N/A; Maximum bit rate in bits
 #define AMF_VIDEO_ENCODER_AV1_CAP_MAX_PROFILE                       L"Av1MaxProfile"                    // amf_int64(AMF_VIDEO_ENCODER_AV1_PROFILE_ENUM); default = N/A; max value of code profile
 #define AMF_VIDEO_ENCODER_AV1_CAP_MAX_LEVEL                         L"Av1MaxLevel"                      // amf_int64(AMF_VIDEO_ENCODER_AV1_LEVEL_ENUM); default = N/A; max value of codec level
 #define AMF_VIDEO_ENCODER_AV1_CAP_MAX_NUM_TEMPORAL_LAYERS           L"Av1CapMaxNumTemporalLayers"       // amf_int64; default = N/A; The cap of maximum number of temporal layers
 #define AMF_VIDEO_ENCODER_AV1_CAP_MAX_NUM_LTR_FRAMES                L"Av1CapMaxNumLTRFrames"            // amf_int64; default = N/A; The cap of maximum number of LTR frames. This value is calculated based on current value of AMF_VIDEO_ENCODER_AV1_MAX_NUM_TEMPORAL_LAYERS.
+
+#define AMF_VIDEO_ENCODER_AV1_ENABLE_SMART_ACCESS_VIDEO             L"Av1EnableEncoderSmartAccessVideo" // amf_bool; default = false; true = enables smart access video feature
 
 #endif //#ifndef AMF_VideoEncoderAV1_h
