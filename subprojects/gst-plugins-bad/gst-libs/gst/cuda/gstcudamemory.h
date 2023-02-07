@@ -174,6 +174,16 @@ gboolean        gst_cuda_memory_get_texture (GstCudaMemory * mem,
 GST_CUDA_API
 gpointer        gst_cuda_memory_get_user_data (GstCudaMemory * mem);
 
+GST_CUDA_API
+void            gst_cuda_memory_set_token_data (GstCudaMemory * mem,
+                                                gint64 token,
+                                                gpointer data,
+                                                GDestroyNotify notify);
+
+GST_CUDA_API
+gpointer        gst_cuda_memory_get_token_data (GstCudaMemory * mem,
+                                                gint64 token);
+
 /**
  * GstCudaAllocator:
  *

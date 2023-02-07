@@ -24,6 +24,7 @@
 #include "gstcudautils.h"
 #include "gstcudacontext.h"
 #include "gstcuda-private.h"
+#include <atomic>
 
 #ifdef HAVE_NVCODEC_GST_GL
 #include <gst/gl/gl.h>
@@ -1650,4 +1651,23 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
     GST_MEMORY_FLAG_UNSET (src_mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
 
   return ret;
+}
+
+/**
+ * gst_cuda_create_user_token:
+ *
+ * Creates new user token value
+ *
+ * Returns: user token value
+ *
+ * Since: 1.24
+ */
+gint64
+gst_cuda_create_user_token (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > user_token { 0 };
+  /* *INDENT-ON* */
+
+  return user_token.fetch_add (1);
 }

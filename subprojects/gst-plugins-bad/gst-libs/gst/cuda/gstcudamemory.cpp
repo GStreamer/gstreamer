@@ -26,6 +26,8 @@
 #include "gstcuda-private.h"
 
 #include <string.h>
+#include <map>
+#include <memory>
 
 GST_DEBUG_CATEGORY_STATIC (cuda_allocator_debug);
 #define GST_CAT_DEFAULT cuda_allocator_debug
@@ -33,6 +35,23 @@ GST_DEBUG_CATEGORY_STATIC (cuda_allocator_debug);
 static GstAllocator *_gst_cuda_allocator = nullptr;
 
 /* *INDENT-OFF* */
+struct GstCudaMemoryTokenData
+{
+  GstCudaMemoryTokenData (gpointer data, GDestroyNotify notify_func)
+  :user_data (data), notify (notify_func)
+  {
+  }
+
+   ~GstCudaMemoryTokenData ()
+  {
+    if (notify)
+      notify (user_data);
+  }
+
+  gpointer user_data;
+  GDestroyNotify notify;
+};
+
 struct _GstCudaMemoryPrivate
 {
   _GstCudaMemoryPrivate ()
@@ -58,6 +77,8 @@ struct _GstCudaMemoryPrivate
   CUtexObject texture[GST_VIDEO_MAX_PLANES][2];
 
   gboolean saw_io = FALSE;
+
+  std::map < gint64, std::unique_ptr < GstCudaMemoryTokenData >> token_map;
 
   gpointer user_data = nullptr;
   GDestroyNotify notify = nullptr;
@@ -260,6 +281,8 @@ gst_cuda_allocator_free (GstAllocator * allocator, GstMemory * memory)
       GST_MEMORY_FLAG_IS_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC)) {
     CuStreamSynchronize (gst_cuda_stream_get_handle (priv->stream));
   }
+
+  priv->token_map.clear ();
 
   for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     for (guint j = 0; j < 2; j++) {
@@ -779,6 +802,67 @@ gst_cuda_memory_get_user_data (GstCudaMemory * mem)
   g_return_val_if_fail (gst_is_cuda_memory ((GstMemory *) mem), nullptr);
 
   return mem->priv->user_data;
+}
+
+/**
+ * gst_cuda_memory_set_token_data:
+ * @mem: a #GstCudaMemory
+ * @token: an user token
+ * @data: an user data
+ * @notify: function to invoke with @data as argument, when @data needs to be
+ *          freed
+ *
+ * Sets an opaque user data on a #GstCudaMemory
+ *
+ * Since: 1.24
+ */
+void
+gst_cuda_memory_set_token_data (GstCudaMemory * mem, gint64 token,
+    gpointer data, GDestroyNotify notify)
+{
+  GstCudaMemoryPrivate *priv;
+
+  g_return_if_fail (gst_is_cuda_memory (GST_MEMORY_CAST (mem)));
+
+  priv = mem->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+  auto old_token = priv->token_map.find (token);
+  if (old_token != priv->token_map.end ())
+    priv->token_map.erase (old_token);
+
+  if (data) {
+    priv->token_map[token] =
+        std::unique_ptr < GstCudaMemoryTokenData >
+        (new GstCudaMemoryTokenData (data, notify));
+  }
+}
+
+/**
+ * gst_cuda_memory_get_token_data:
+ * @mem: a #GstCudaMemory
+ * @token: an user token
+ *
+ * Gets back user data pointer stored via gst_cuda_memory_set_token_data()
+ *
+ * Returns: (transfer none) (nullable): user data pointer or %NULL
+ *
+ * Since: 1.24
+ */
+gpointer
+gst_cuda_memory_get_token_data (GstCudaMemory * mem, gint64 token)
+{
+  GstCudaMemoryPrivate *priv;
+  gpointer ret = nullptr;
+
+  g_return_val_if_fail (gst_is_cuda_memory (GST_MEMORY_CAST (mem)), nullptr);
+
+  priv = mem->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+  auto old_token = priv->token_map.find (token);
+  if (old_token != priv->token_map.end ())
+    ret = old_token->second->user_data;
+
+  return ret;
 }
 
 /**

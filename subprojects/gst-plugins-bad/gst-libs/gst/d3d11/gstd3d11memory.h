@@ -249,6 +249,17 @@ ID3D11VideoProcessorOutputView *  gst_d3d11_memory_get_processor_output_view (Gs
                                                                               ID3D11VideoDevice * video_device,
                                                                               ID3D11VideoProcessorEnumerator * enumerator);
 
+GST_D3D11_API
+void                              gst_d3d11_memory_set_token_data (GstD3D11Memory * mem,
+                                                                   gint64 token,
+                                                                   gpointer data,
+                                                                   GDestroyNotify notify);
+
+GST_D3D11_API
+gpointer                          gst_d3d11_memory_get_token_data (GstD3D11Memory * mem,
+                                                                   gint64 token);
+
+
 /**
  * GstD3D11Allocator:
  *

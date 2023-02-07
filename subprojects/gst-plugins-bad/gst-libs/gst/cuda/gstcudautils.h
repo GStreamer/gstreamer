@@ -176,5 +176,8 @@ void            gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * reso
 GST_CUDA_API
 void            gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource);
 
+GST_CUDA_API
+gint64          gst_cuda_create_user_token (void);
+
 G_END_DECLS
 

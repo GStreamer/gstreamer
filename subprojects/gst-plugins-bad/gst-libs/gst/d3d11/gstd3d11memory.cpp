@@ -27,6 +27,8 @@
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11-private.h"
+#include <map>
+#include <memory>
 
 /**
  * SECTION:gstd3d11memory
@@ -304,39 +306,67 @@ gst_d3d11_allocation_params_init (GType type)
 /* GstD3D11Memory */
 #define GST_D3D11_MEMORY_GET_LOCK(m) (&(GST_D3D11_MEMORY_CAST(m)->priv->lock))
 
+struct GstD3D11MemoryTokenData
+{
+  GstD3D11MemoryTokenData (gpointer data, GDestroyNotify notify_func)
+  :user_data (data), notify (notify_func)
+  {
+  }
+
+   ~GstD3D11MemoryTokenData ()
+  {
+    if (notify)
+      notify (user_data);
+  }
+
+  gpointer user_data;
+  GDestroyNotify notify;
+};
+
 struct _GstD3D11MemoryPrivate
 {
-  ID3D11Texture2D *texture;
-  ID3D11Buffer *buffer;
+  _GstD3D11MemoryPrivate ()
+  {
+    for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    {
+      shader_resource_view[i] = nullptr;
+      render_target_view[i] = nullptr;
+    }
+  }
 
-  GstD3D11MemoryNativeType native_type;
+  ID3D11Texture2D *texture = nullptr;
+  ID3D11Buffer *buffer = nullptr;
+
+  GstD3D11MemoryNativeType native_type = GST_D3D11_MEMORY_NATIVE_TYPE_INVALID;
 
   D3D11_TEXTURE2D_DESC desc;
   D3D11_BUFFER_DESC buffer_desc;
 
-  guint subresource_index;
+  guint subresource_index = 0;
 
   /* protected by device lock */
-  ID3D11Resource *staging;
+  ID3D11Resource *staging = nullptr;
   D3D11_MAPPED_SUBRESOURCE map;
-  gint cpu_map_count;
+  gint cpu_map_count = 0;
 
   /* protects resource objects */
-  SRWLOCK lock;
+  SRWLOCK lock = SRWLOCK_INIT;
   ID3D11ShaderResourceView *shader_resource_view[GST_VIDEO_MAX_PLANES];
-  guint num_shader_resource_views;
+  guint num_shader_resource_views = 0;
 
   ID3D11RenderTargetView *render_target_view[GST_VIDEO_MAX_PLANES];
-  guint num_render_target_views;
+  guint num_render_target_views = 0;
 
-  ID3D11VideoDecoderOutputView *decoder_output_view;
-  ID3D11VideoDecoder *decoder_handle;
+  ID3D11VideoDecoderOutputView *decoder_output_view = nullptr;
+  ID3D11VideoDecoder *decoder_handle = nullptr;
 
-  ID3D11VideoProcessorInputView *processor_input_view;
-  ID3D11VideoProcessorOutputView *processor_output_view;
+  ID3D11VideoProcessorInputView *processor_input_view = nullptr;
+  ID3D11VideoProcessorOutputView *processor_output_view = nullptr;
 
-  GDestroyNotify notify;
-  gpointer user_data;
+  std::map < gint64, std::unique_ptr < GstD3D11MemoryTokenData >> token_map;
+
+  GDestroyNotify notify = nullptr;
+  gpointer user_data = nullptr;
 };
 
 static inline D3D11_MAP
@@ -1266,6 +1296,67 @@ gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
   return mem->priv->processor_output_view;
 }
 
+/**
+ * gst_d3d11_memory_set_token_data:
+ * @mem: a #GstD3D11Memory
+ * @token: an user token
+ * @data: an user data
+ * @notify: function to invoke with @data as argument, when @data needs to be
+ *          freed
+ *
+ * Sets an opaque user data on a #GstD3D11Memory
+ *
+ * Since: 1.24
+ */
+void
+gst_d3d11_memory_set_token_data (GstD3D11Memory * mem, gint64 token,
+    gpointer data, GDestroyNotify notify)
+{
+  GstD3D11MemoryPrivate *priv;
+
+  g_return_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)));
+
+  priv = mem->priv;
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
+  auto old_token = priv->token_map.find (token);
+  if (old_token != priv->token_map.end ())
+    priv->token_map.erase (old_token);
+
+  if (data) {
+    priv->token_map[token] =
+        std::unique_ptr < GstD3D11MemoryTokenData >
+        (new GstD3D11MemoryTokenData (data, notify));
+  }
+}
+
+/**
+ * gst_d3d11_memory_get_token_data:
+ * @mem: a #GstD3D11Memory
+ * @token: an user token
+ *
+ * Gets back user data pointer stored via gst_d3d11_memory_set_token_data()
+ *
+ * Returns: (transfer none) (nullable): user data pointer or %NULL
+ *
+ * Since: 1.24
+ */
+gpointer
+gst_d3d11_memory_get_token_data (GstD3D11Memory * mem, gint64 token)
+{
+  GstD3D11MemoryPrivate *priv;
+  gpointer ret = nullptr;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), nullptr);
+
+  priv = mem->priv;
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
+  auto old_token = priv->token_map.find (token);
+  if (old_token != priv->token_map.end ())
+    ret = old_token->second->user_data;
+
+  return ret;
+}
+
 /* GstD3D11Allocator */
 struct _GstD3D11AllocatorPrivate
 {
@@ -1397,6 +1488,8 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
 
   GST_LOG_OBJECT (allocator, "Free memory %p", mem);
 
+  dmem_priv->token_map.clear ();
+
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     GST_D3D11_CLEAR_COM (dmem_priv->render_target_view[i]);
     GST_D3D11_CLEAR_COM (dmem_priv->shader_resource_view[i]);
@@ -1416,7 +1509,8 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   if (dmem_priv->notify)
     dmem_priv->notify (dmem_priv->user_data);
 
-  g_free (dmem->priv);
+  delete dmem->priv;
+
   g_free (dmem);
 }
 
@@ -1428,7 +1522,7 @@ gst_d3d11_allocator_alloc_wrapped_internal (GstD3D11Allocator * self,
   GstD3D11Memory *mem;
 
   mem = g_new0 (GstD3D11Memory, 1);
-  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
+  mem->priv = new GstD3D11MemoryPrivate ();
 
   gst_memory_init (GST_MEMORY_CAST (mem),
       (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (self), NULL, 0, 0, 0, 0);
@@ -1601,7 +1695,7 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
   }
 
   mem = g_new0 (GstD3D11Memory, 1);
-  mem->priv = g_new0 (GstD3D11MemoryPrivate, 1);
+  mem->priv = new GstD3D11MemoryPrivate ();
 
   gst_memory_init (GST_MEMORY_CAST (mem),
       (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (allocator), nullptr, 0, 0, 0, 0);

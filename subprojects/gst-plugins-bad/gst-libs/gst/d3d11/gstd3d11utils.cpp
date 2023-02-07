@@ -28,6 +28,7 @@
 #include <windows.h>
 #include <versionhelpers.h>
 #include <mutex>
+#include <atomic>
 
 /**
  * SECTION:gstd3d11utils
@@ -596,4 +597,23 @@ _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
 #else
   return SUCCEEDED (hr);
 #endif
+}
+
+/**
+ * gst_d3d11_create_user_token:
+ *
+ * Creates new user token value
+ *
+ * Returns: user token value
+ *
+ * Since: 1.24
+ */
+gint64
+gst_d3d11_create_user_token (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > user_token { 0 };
+  /* *INDENT-ON* */
+
+  return user_token.fetch_add (1);
 }
