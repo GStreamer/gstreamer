@@ -988,7 +988,6 @@ gst_cea_cc_overlay_cc_event (GstPad * pad, GstObject * parent, GstEvent * event)
             ("received non-TIME newsegment event on text input"));
       }
 
-      gst_event_unref (event);
       ret = TRUE;
 
       /* wake up the video chain, it might be waiting for a text buffer or
@@ -1015,7 +1014,6 @@ gst_cea_cc_overlay_cc_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_CEA_CC_OVERLAY_BROADCAST (overlay);
       GST_CEA_CC_OVERLAY_UNLOCK (overlay);
 
-      gst_event_unref (event);
       ret = TRUE;
       break;
     }
@@ -1027,7 +1025,6 @@ gst_cea_cc_overlay_cc_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_cea_cc_overlay_pop_text (overlay);
       gst_segment_init (&overlay->cc_segment, GST_FORMAT_TIME);
       GST_CEA_CC_OVERLAY_UNLOCK (overlay);
-      gst_event_unref (event);
       ret = TRUE;
       break;
     case GST_EVENT_FLUSH_START:
@@ -1036,7 +1033,6 @@ gst_cea_cc_overlay_cc_event (GstPad * pad, GstObject * parent, GstEvent * event)
       overlay->cc_flushing = TRUE;
       GST_CEA_CC_OVERLAY_BROADCAST (overlay);
       GST_CEA_CC_OVERLAY_UNLOCK (overlay);
-      gst_event_unref (event);
       ret = TRUE;
       break;
     case GST_EVENT_EOS:
@@ -1047,12 +1043,16 @@ gst_cea_cc_overlay_cc_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * a text segment update */
       GST_CEA_CC_OVERLAY_BROADCAST (overlay);
       GST_CEA_CC_OVERLAY_UNLOCK (overlay);
-      gst_event_unref (event);
       ret = TRUE;
       break;
     default:
-      ret = gst_pad_event_default (pad, parent, event);
       break;
+  }
+
+  if (ret) {
+    gst_event_unref (event);
+  } else {
+    ret = gst_pad_event_default (pad, parent, event);
   }
 
   return ret;
