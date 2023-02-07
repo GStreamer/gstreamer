@@ -169,7 +169,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
   {
     GstCaps *caps = gst_caps_from_string (VIDEO_SRC_CAPS);
     /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
-    if (GST_VTUTIL_HAVE_64ARGBALE)
+    if (GST_VTUTIL_HAVE_64RGBALE)
       caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
     gst_element_class_add_pad_template (element_class,
         gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
@@ -299,7 +299,7 @@ get_preferred_video_format (GstStructure * s, gboolean prores)
           return vfmt;
         break;
       case GST_VIDEO_FORMAT_RGBA64_LE:
-        if (GST_VTUTIL_HAVE_64ARGBALE) {
+        if (GST_VTUTIL_HAVE_64RGBALE) {
           if (prores)
             return vfmt;
         } else {
@@ -697,7 +697,7 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
       cv_format = kCVPixelFormatType_64ARGB;
       break;
     case GST_VIDEO_FORMAT_RGBA64_LE:
-      if (GST_VTUTIL_HAVE_64ARGBALE)
+      if (GST_VTUTIL_HAVE_64RGBALE)
         cv_format = kCVPixelFormatType_64RGBALE;
       else
         /* Codepath will never be hit on macOS older than Big Sur (11.3) */
