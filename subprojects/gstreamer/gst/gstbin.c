@@ -1567,8 +1567,10 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   GST_OBJECT_LOCK (element);
   elem_name = g_strdup (GST_ELEMENT_NAME (element));
 
-  if (GST_OBJECT_PARENT (element) != GST_OBJECT_CAST (bin))
+  if (GST_OBJECT_PARENT (element) != GST_OBJECT_CAST (bin)) {
+    GST_OBJECT_UNLOCK (element);
     goto not_in_bin;
+  }
 
   /* remove the parent ref */
   GST_OBJECT_PARENT (element) = NULL;
@@ -1819,7 +1821,6 @@ no_state_recalc:
   /* ERROR handling */
 not_in_bin:
   {
-    GST_OBJECT_UNLOCK (element);
     GST_OBJECT_UNLOCK (bin);
     GST_WARNING_OBJECT (bin, "Element '%s' is not in bin", elem_name);
     g_free (elem_name);
