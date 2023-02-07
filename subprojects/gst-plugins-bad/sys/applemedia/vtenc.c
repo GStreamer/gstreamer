@@ -70,6 +70,7 @@
 #include "corevideobuffer.h"
 #include "vtutil.h"
 #include <gst/pbutils/codec-utils.h>
+#include <sys/sysctl.h>
 
 #define VTENC_DEFAULT_BITRATE     0
 #define VTENC_DEFAULT_FRAME_REORDERING TRUE
@@ -201,8 +202,7 @@ static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
 #else
 static GstStaticCaps sink_caps =
-GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE
-    ("{ AYUV64, UYVY, NV12, I420, ARGB64_BE }"));
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV64, UYVY, NV12, I420 }"));
 #endif
 
 
@@ -231,9 +231,33 @@ gst_vtenc_base_init (GstVTEncClass * klass)
 
   {
     GstCaps *caps = gst_static_caps_get (&sink_caps);
-    /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
-    if (GST_VTUTIL_HAVE_64ARGBALE)
-      caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
+#ifndef HAVE_IOS
+    gboolean enable_argb = TRUE;
+    int retval;
+    char cpu_name[15];
+    size_t cpu_len = 15;
+
+    if (__builtin_available (macOS 13.0, *)) {
+      /* Can't negate a __builtin_available check */
+    } else {
+      /* Disable ARGB64/RGBA64 if we're on M1 Pro/Max and macOS < 13.0 
+       * due to a bug within VideoToolbox which causes encoding to fail. */
+      retval = sysctlbyname ("machdep.cpu.brand_string", &cpu_name, &cpu_len,
+          NULL, 0);
+
+      if (retval == 0 &&
+          (strstr (cpu_name, "M1 Pro") != NULL ||
+              strstr (cpu_name, "M1 Max") != NULL))
+        enable_argb = FALSE;
+    }
+
+    if (enable_argb) {
+      caps = gst_vtutil_caps_append_video_format (caps, "ARGB64_BE");
+      /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
+      if (GST_VTUTIL_HAVE_64ARGBALE)
+        caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
+    }
+#endif
     gst_element_class_add_pad_template (element_class,
         gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, caps));
   }
