@@ -233,6 +233,9 @@ typedef struct _GESEffectAsset GESEffectAsset;
 typedef struct _GESXmlFormatterClass GESXmlFormatterClass;
 typedef struct _GESXmlFormatter GESXmlFormatter;
 
+typedef struct _GESDiscovererManager GESDiscovererManager;
+typedef struct _GESDiscovererManagerClass GESDiscovererManagerClass;
+
 /**
  * GES_DECLARE_TYPE: (attributes doc.skip=true)
  */

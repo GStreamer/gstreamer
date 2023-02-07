@@ -28,6 +28,7 @@
  * let you get information about the medias. Also, the tags found in the media file are
  * set as Metadata of the Asset.
  */
+#include "ges-discoverer-manager.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -42,43 +43,8 @@
 
 static GHashTable *parent_newparent_table = NULL;
 
-G_LOCK_DEFINE_STATIC (discoverers_lock);
-static GstClockTime discovering_timeout = DEFAULT_DISCOVERY_TIMEOUT;
-static GHashTable *discoverers = NULL;  /* Thread ID -> GstDiscoverer */
 static void discoverer_discovered_cb (GstDiscoverer * discoverer,
     GstDiscovererInfo * info, GError * err, gpointer user_data);
-
-/* WITH discoverers_lock */
-static GstDiscoverer *
-create_discoverer (void)
-{
-  GstDiscoverer *disco = gst_discoverer_new (discovering_timeout, NULL);
-
-  g_signal_connect (disco, "discovered", G_CALLBACK (discoverer_discovered_cb),
-      NULL);
-  GST_INFO_OBJECT (disco, "Creating new discoverer");
-  g_hash_table_insert (discoverers, g_thread_self (), disco);
-  gst_discoverer_start (disco);
-
-  return disco;
-}
-
-static GstDiscoverer *
-get_discoverer (void)
-{
-  GstDiscoverer *disco;
-
-  G_LOCK (discoverers_lock);
-  g_assert (discoverers);
-  disco = g_hash_table_lookup (discoverers, g_thread_self ());
-  if (!disco) {
-    disco = create_discoverer ();
-  }
-  disco = gst_object_ref (disco);
-  G_UNLOCK (discoverers_lock);
-
-  return disco;
-}
 
 static void
 initable_iface_init (GInitableIface * initable_iface)
@@ -167,13 +133,13 @@ _start_loading (GESAsset * asset, GError ** error)
 {
   gboolean ret;
   const gchar *uri;
-  GstDiscoverer *discoverer = get_discoverer ();
+  GESDiscovererManager *manager = ges_discoverer_manager_get_default ();
 
   uri = ges_asset_get_id (asset);
-  GST_DEBUG_OBJECT (discoverer, "Started loading %s", uri);
+  GST_DEBUG_OBJECT (manager, "Started loading %s", uri);
 
-  ret = gst_discoverer_discover_uri_async (discoverer, uri);
-  gst_object_unref (discoverer);
+  ret = ges_discoverer_manager_start_discovery (manager, uri);
+  gst_object_unref (manager);
 
   if (ret)
     return GES_ASSET_LOADING_ASYNC;
@@ -313,7 +279,6 @@ ges_uri_clip_asset_class_init (GESUriClipAssetClass * klass)
   GES_CLIP_ASSET_CLASS (klass)->get_natural_framerate = _get_natural_framerate;
 
   klass->discovered = discoverer_discovered_cb;
-
 
   /**
    * GESUriClipAsset:duration:
@@ -491,7 +456,7 @@ _set_meta_foreach (const GstTagList * tags, const gchar * tag,
 }
 
 static void
-discoverer_discovered_cb (GstDiscoverer * discoverer,
+discoverer_discovered_cb (GstDiscoverer * _object,
     GstDiscovererInfo * info, GError * err, gpointer user_data)
 {
   GError *error = NULL;
@@ -697,7 +662,7 @@ ges_uri_clip_asset_finish (GAsyncResult * res, GError ** error)
  * You can also use multi file uris for #GESMultiFileSource.
  * @error: An error to be set in case something wrong happens or %NULL
  *
- * Creates a #GESUriClipAsset for @uri syncronously. You should avoid
+ * Creates a #GESUriClipAsset for @uri synchonously. You should avoid
  * to use it in application, and rather create #GESUriClipAsset asynchronously
  *
  * Returns: (transfer full): A reference to the requested asset or %NULL if
@@ -709,7 +674,6 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
   GError *lerror = NULL;
   GESUriClipAsset *asset;
   RequestSyncData data = { 0, };
-  GstDiscoverer *previous_discoverer;
 
   asset = GES_URI_CLIP_ASSET (ges_asset_request (GES_TYPE_URI_CLIP, uri,
           &lerror));
@@ -718,17 +682,11 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
     return asset;
 
   data.ml = g_main_loop_new (NULL, TRUE);
-  previous_discoverer = get_discoverer ();
-  create_discoverer ();
 
   ges_asset_request_async (GES_TYPE_URI_CLIP, uri, NULL,
       (GAsyncReadyCallback) asset_ready_cb, &data);
   g_main_loop_run (data.ml);
   g_main_loop_unref (data.ml);
-
-  G_LOCK (discoverers_lock);
-  g_hash_table_insert (discoverers, g_thread_self (), previous_discoverer);
-  G_UNLOCK (discoverers_lock);
 
   if (data.error) {
     GST_ERROR ("Got an error requesting asset: %s", data.error->message);
@@ -747,23 +705,17 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
  * @timeout: The timeout to set
  *
  * Sets the timeout of #GESUriClipAsset loading
+ *
+ * Deprecated: 1.24: ges_discoverer_manager_set_timeout() should be used instead
  */
 void
 ges_uri_clip_asset_class_set_timeout (GESUriClipAssetClass * klass,
     GstClockTime timeout)
 {
-  GHashTableIter iter;
-  gpointer value;
-
   g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (klass));
 
-  discovering_timeout = timeout;
-
-  G_LOCK (discoverers_lock);
-  g_hash_table_iter_init (&iter, discoverers);
-  while (g_hash_table_iter_next (&iter, NULL, &value))
-    g_object_set (value, "timeout", timeout, NULL);
-  G_UNLOCK (discoverers_lock);
+  ges_discoverer_manager_set_timeout (ges_discoverer_manager_get_default (),
+      timeout);
 }
 
 /**
@@ -931,14 +883,9 @@ _ges_uri_asset_cleanup (void)
     parent_newparent_table = NULL;
   }
 
-  G_LOCK (discoverers_lock);
-  if (discoverers) {
-    g_hash_table_destroy (discoverers);
-    discoverers = NULL;
-  }
   gst_clear_object (&GES_URI_CLIP_ASSET_CLASS (g_type_class_peek
           (GES_TYPE_URI_CLIP_ASSET))->discoverer);
-  G_UNLOCK (discoverers_lock);
+  ges_discoverer_manager_cleanup ();
 }
 
 gboolean
@@ -965,18 +912,23 @@ _ges_uri_asset_ensure_setup (gpointer uriasset_class)
   if (errno)
     timeout = DEFAULT_DISCOVERY_TIMEOUT;
 
+  /* The class structure keeps weak pointers on the discoverers so they
+   * can be properly cleaned up in _ges_uri_asset_cleanup(). */
   if (!klass->discoverer) {
+    GESDiscovererManager *manager = ges_discoverer_manager_get_default ();
+
+    ges_discoverer_manager_set_timeout (manager, timeout);
+    g_signal_connect (manager, "discovered",
+        G_CALLBACK (discoverer_discovered_cb), NULL);
+
     discoverer = gst_discoverer_new (timeout, &err);
     if (!discoverer) {
       GST_ERROR ("Could not create discoverer: %s", err->message);
       g_error_free (err);
       return FALSE;
     }
-  }
 
-  /* The class structure keeps weak pointers on the discoverers so they
-   * can be properly cleaned up in _ges_uri_asset_cleanup(). */
-  if (!klass->discoverer) {
+    /* Keep legacy handling of discoverer, even if not used */
     klass->discoverer = klass->sync_discoverer = discoverer;
     g_object_add_weak_pointer (G_OBJECT (discoverer),
         (gpointer *) & klass->discoverer);
@@ -987,13 +939,6 @@ _ges_uri_asset_ensure_setup (gpointer uriasset_class)
         G_CALLBACK (klass->discovered), NULL);
     gst_discoverer_start (klass->discoverer);
   }
-
-  G_LOCK (discoverers_lock);
-  if (discoverers == NULL) {
-    discoverers = g_hash_table_new_full (g_direct_hash,
-        (GEqualFunc) g_direct_equal, NULL, g_object_unref);
-  }
-  G_UNLOCK (discoverers_lock);
 
   /* We just start the discoverer and let it live */
   if (parent_newparent_table == NULL) {

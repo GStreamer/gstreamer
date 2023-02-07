@@ -445,7 +445,6 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->check_id = (GESExtractableCheckId) extractable_check_id;
   iface->get_parameters_from_id = extractable_get_parameters_from_id;
   iface->get_id = extractable_get_id;
-  iface->get_id = extractable_get_id;
   iface->can_update_asset = TRUE;
   iface->set_asset_full = extractable_set_asset;
 }

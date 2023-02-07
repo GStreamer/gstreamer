@@ -3126,6 +3126,124 @@ if no track elements are created or an error occurred.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <class name="DiscovererManager" c:symbol-prefix="discoverer_manager" c:type="GESDiscovererManager" version="1.24" parent="GObject.Object" glib:type-name="GESDiscovererManager" glib:get-type="ges_discoverer_manager_get_type" glib:type-struct="DiscovererManagerClass">
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+      <function name="get_default" c:identifier="ges_discoverer_manager_get_default" version="1.24">
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The default #GESDiscovererManager</doc>
+          <type name="DiscovererManager" c:type="GESDiscovererManager*"/>
+        </return-value>
+      </function>
+      <method name="get_timeout" c:identifier="ges_discoverer_manager_get_timeout" version="1.24">
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The timeout to use for the discoverer</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GESDiscovererManager</doc>
+            <type name="DiscovererManager" c:type="GESDiscovererManager*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_use_cache" c:identifier="ges_discoverer_manager_get_use_cache" version="1.24">
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Whether to use the cache or not</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GESDiscovererManager</doc>
+            <type name="DiscovererManager" c:type="GESDiscovererManager*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="set_timeout" c:identifier="ges_discoverer_manager_set_timeout" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Sets the timeout to use for the discoverer</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GESDiscovererManager</doc>
+            <type name="DiscovererManager" c:type="GESDiscovererManager*"/>
+          </instance-parameter>
+          <parameter name="timeout" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The timeout to set</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_use_cache" c:identifier="ges_discoverer_manager_set_use_cache" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Sets whether to use the cache or not</doc>
+        <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GESDiscovererManager</doc>
+            <type name="DiscovererManager" c:type="GESDiscovererManager*"/>
+          </instance-parameter>
+          <parameter name="use_cache" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Whether to use the cache</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <property name="timeout" version="1.24" writable="1" construct="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The timeout (in milliseconds) for the #GstDiscoverer operations</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="use-cache" writable="1" construct="1" transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <glib:signal name="discovered" when="last" action="1" version="1.24">
+        <attribute name="doc.skip" value="true"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GstDiscovererInfo representing the discovered URI</doc>
+            <type name="GstPbutils.DiscovererInfo"/>
+          </parameter>
+          <parameter name="error" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GError that occurred, or %NULL</doc>
+            <type name="GLib.Error"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+      <glib:signal name="load-serialized-info" when="last" action="1" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Retrieves information about a URI from and external source of information,
+like a cache file. This is used by the discoverer to speed up the
+discovery.</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GstDiscovererInfo representing
+@uri, or %NULL if no information</doc>
+          <type name="GstPbutils.DiscovererInfo"/>
+        </return-value>
+        <parameters>
+          <parameter name="uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The URI to load the serialized info for</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
+    </class>
+    <record name="DiscovererManagerClass" c:type="GESDiscovererManagerClass" glib:is-gtype-struct-for="DiscovererManager">
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+      <field name="parent_class">
+        <type name="GObject.ObjectClass" c:type="GObjectClass"/>
+      </field>
+    </record>
+    <record name="DiscovererManagerPrivate" c:type="GESDiscovererManagerPrivate" disguised="1">
+      <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
+    </record>
     <function-macro name="EXTRACTABLE_GET_INTERFACE" c:identifier="GES_EXTRACTABLE_GET_INTERFACE" introspectable="0">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-extractable.h"/>
       <parameters>
@@ -14965,7 +15083,7 @@ ges_uri_clip_asset_new (uri, (GAsyncReadyCallback) filesource_asset_loaded_cb, u
         </parameters>
       </function>
       <function name="request_sync" c:identifier="ges_uri_clip_asset_request_sync" throws="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-asset.c">Creates a #GESUriClipAsset for @uri syncronously. You should avoid
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-asset.c">Creates a #GESUriClipAsset for @uri synchonously. You should avoid
 to use it in application, and rather create #GESUriClipAsset asynchronously</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-uri-asset.h"/>
         <return-value transfer-ownership="full">
@@ -15115,8 +15233,9 @@ are different as those can be extended 'infinitely'.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
-      <method name="set_timeout" c:identifier="ges_uri_clip_asset_class_set_timeout">
+      <method name="set_timeout" c:identifier="ges_uri_clip_asset_class_set_timeout" deprecated="1" deprecated-version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-uri-asset.c">Sets the timeout of #GESUriClipAsset loading</doc>
+        <doc-deprecated xml:space="preserve">ges_discoverer_manager_set_timeout() should be used instead</doc-deprecated>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-uri-asset.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>

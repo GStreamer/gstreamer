@@ -369,6 +369,24 @@ free it when no longer needed using g_error_free().</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <virtual-method name="load_serialize_info" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Loads the serialized info from the given uri.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the #GstDiscovererInfo or %NULL if it could not be loaded</doc>
+          <type name="DiscovererInfo" c:type="GstDiscovererInfo*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="dc" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the #GstDiscoverer</doc>
+            <type name="Discoverer" c:type="GstDiscoverer*"/>
+          </instance-parameter>
+          <parameter name="uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the uri to load the info from</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
       <virtual-method name="source_setup">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
         <return-value transfer-ownership="none">
@@ -520,6 +538,22 @@ depending on the circumstances of the error.</doc>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
+      </glib:signal>
+      <glib:signal name="load-serialized-info" when="last" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.c">Retrieves information about a URI from and external source of information,
+like a cache file. This is used by the discoverer to speed up the
+discovery.</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.c">The #GstDiscovererInfo representing
+@uri, or %NULL if no information</doc>
+          <type name="DiscovererInfo"/>
+        </return-value>
+        <parameters>
+          <parameter name="uri" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.c">THe URI to load the serialized info for</doc>
+            <type name="utf8" c:type="gchar*"/>
+          </parameter>
+        </parameters>
       </glib:signal>
       <glib:signal name="source-setup" when="last">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.c">This signal is emitted after the source element has been created for, so
@@ -708,8 +742,27 @@ information.</doc>
           </parameters>
         </callback>
       </field>
+      <field name="load_serialize_info">
+        <callback name="load_serialize_info">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
+          <return-value transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the #GstDiscovererInfo or %NULL if it could not be loaded</doc>
+            <type name="DiscovererInfo" c:type="GstDiscovererInfo*"/>
+          </return-value>
+          <parameters>
+            <parameter name="dc" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the #GstDiscoverer</doc>
+              <type name="Discoverer" c:type="GstDiscoverer*"/>
+            </parameter>
+            <parameter name="uri" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the uri to load the info from</doc>
+              <type name="utf8" c:type="gchar*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
       <field name="_reserved">
-        <array zero-terminated="0" fixed-size="4">
+        <array zero-terminated="0" fixed-size="3">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>

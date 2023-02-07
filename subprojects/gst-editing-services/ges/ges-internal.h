@@ -594,6 +594,14 @@ G_GNUC_INTERNAL GESMarker * ges_marker_list_get_closest (GESMarkerList *list, Gs
 G_GNUC_INTERNAL gchar * ges_marker_list_serialize (const GValue * v);
 G_GNUC_INTERNAL gboolean ges_marker_list_deserialize (GValue *dest, const gchar *s);
 
+/*******************************
+ *       GESDiscovererManager   *
+ *******************************/
+G_GNUC_INTERNAL void ges_discoverer_manager_cleanup                  (void);
+G_GNUC_INTERNAL gboolean ges_discoverer_manager_start_discovery      (GESDiscovererManager *self,
+                                                                      const gchar *uri);
+G_GNUC_INTERNAL void ges_discoverer_manager_recreate_discoverer      (GESDiscovererManager *self);
+
 /********************
  *  Gnonlin helpers *
  ********************/
