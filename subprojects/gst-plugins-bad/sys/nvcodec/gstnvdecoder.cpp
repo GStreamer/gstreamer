@@ -67,11 +67,6 @@ extern "C"
 #define SUPPORTED_GL_APIS (GstGLAPI) (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)
 #endif
 
-typedef struct _GstNvDecoderFrameInfo
-{
-  gboolean available;
-} GstNvDecoderFrameInfo;
-
 typedef enum
 {
   GST_NV_DECODER_OUTPUT_TYPE_SYSTEM = 0,
@@ -83,18 +78,21 @@ typedef enum
 struct _GstNvDecoder
 {
   GstObject parent;
+
+  GstNvDecObject *object;
   GstCudaContext *context;
   GstCudaStream *stream;
-  CUvideodecoder decoder_handle;
-
-  GstNvDecoderFrameInfo *frame_pool;
-  guint pool_size;
-  gboolean alloc_aux_frame;
 
   GstVideoInfo info;
   GstVideoInfo coded_info;
+  CUVIDDECODECREATEINFO create_info;
 
+  gboolean alloc_aux_frame;
   gboolean configured;
+  guint downstream_min_buffers;
+  guint num_output_surfaces;
+
+  GMutex lock;
 
   /* For OpenGL interop. */
   GstObject *gl_display;
@@ -105,7 +103,8 @@ struct _GstNvDecoder
 };
 
 static void gst_nv_decoder_dispose (GObject * object);
-static void gst_nv_decoder_reset (GstNvDecoder * self);
+static void gst_nv_decoder_finalize (GObject * object);
+static void gst_nv_decoder_reset_unlocked (GstNvDecoder * self);
 
 #define parent_class gst_nv_decoder_parent_class
 G_DEFINE_TYPE (GstNvDecoder, gst_nv_decoder, GST_TYPE_OBJECT);
@@ -116,11 +115,13 @@ gst_nv_decoder_class_init (GstNvDecoderClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->dispose = gst_nv_decoder_dispose;
+  gobject_class->finalize = gst_nv_decoder_finalize;
 }
 
 static void
 gst_nv_decoder_init (GstNvDecoder * self)
 {
+  g_mutex_init (&self->lock);
 }
 
 static void
@@ -128,7 +129,7 @@ gst_nv_decoder_dispose (GObject * object)
 {
   GstNvDecoder *self = GST_NV_DECODER (object);
 
-  gst_nv_decoder_reset (self);
+  gst_nv_decoder_reset_unlocked (self);
 
   gst_clear_cuda_stream (&self->stream);
   gst_clear_object (&self->context);
@@ -137,6 +138,16 @@ gst_nv_decoder_dispose (GObject * object)
   gst_clear_object (&self->other_gl_context);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_nv_decoder_finalize (GObject * object)
+{
+  GstNvDecoder *self = GST_NV_DECODER (object);
+
+  g_mutex_clear (&self->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static cudaVideoChromaFormat
@@ -185,19 +196,6 @@ output_format_from_video_format (GstVideoFormat format)
   return cudaVideoSurfaceFormat_NV12;
 }
 
-static gboolean
-gst_nv_decoder_prepare_frame_pool (GstNvDecoder * self, guint pool_size)
-{
-  self->frame_pool = g_new (GstNvDecoderFrameInfo, pool_size);
-
-  for (guint i = 0; i < pool_size; i++)
-    self->frame_pool[i].available = TRUE;
-
-  self->pool_size = pool_size;
-
-  return TRUE;
-}
-
 GstNvDecoder *
 gst_nv_decoder_new (GstCudaContext * context)
 {
@@ -227,29 +225,27 @@ gst_nv_decoder_is_configured (GstNvDecoder * decoder)
 }
 
 static void
-gst_nv_decoder_reset (GstNvDecoder * self)
+gst_nv_decoder_reset_unlocked (GstNvDecoder * self)
 {
-  g_clear_pointer (&self->frame_pool, g_free);
+  if (self->object)
+    gst_nv_dec_object_set_flushing (self->object, TRUE);
 
-  if (self->decoder_handle) {
-    gst_cuda_context_push (self->context);
-    CuvidDestroyDecoder (self->decoder_handle);
-    gst_cuda_context_pop (nullptr);
-    self->decoder_handle = nullptr;
-  }
+  gst_clear_object (&self->object);
 
   self->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
   self->configured = FALSE;
+  self->downstream_min_buffers = 0;
+  self->num_output_surfaces = 0;
 }
 
 gboolean
 gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
     GstVideoInfo * info, gint coded_width, gint coded_height,
-    guint coded_bitdepth, guint pool_size, gboolean alloc_aux_frame)
+    guint coded_bitdepth, guint pool_size, gboolean alloc_aux_frame,
+    guint num_output_surfaces)
 {
   CUVIDDECODECREATEINFO create_info = { 0, };
   GstVideoFormat format;
-  gboolean ret;
   guint alloc_size;
 
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
@@ -260,7 +256,9 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   g_return_val_if_fail (coded_bitdepth >= 8, FALSE);
   g_return_val_if_fail (pool_size > 0, FALSE);
 
-  gst_nv_decoder_reset (decoder);
+  g_mutex_lock (&decoder->lock);
+  gst_nv_decoder_reset_unlocked (decoder);
+  g_mutex_unlock (&decoder->lock);
 
   decoder->info = *info;
   gst_video_info_set_format (&decoder->coded_info, GST_VIDEO_INFO_FORMAT (info),
@@ -273,15 +271,15 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
 
   /* Need pool size * 2 for decode-only (used for reference) frame
    * and output frame, AV1 film grain case for example */
+  decoder->alloc_aux_frame = alloc_aux_frame;
   if (alloc_aux_frame) {
     alloc_size = pool_size * 2;
   } else {
     alloc_size = pool_size;
   }
 
-  decoder->alloc_aux_frame = alloc_aux_frame;
+  decoder->num_output_surfaces = num_output_surfaces;
 
-  /* FIXME: check aligned resolution or actual coded resolution */
   create_info.ulWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
   create_info.ulHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
   create_info.ulNumDecodeSurfaces = alloc_size;
@@ -300,7 +298,7 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
 
   create_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (info);
   create_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (info);
-  /* we always copy decoded picture to output buffer */
+  /* Will be updated on negotiate() */
   create_info.ulNumOutputSurfaces = 1;
 
   create_info.target_rect.left = 0;
@@ -308,191 +306,56 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   create_info.target_rect.right = GST_VIDEO_INFO_WIDTH (info);
   create_info.target_rect.bottom = GST_VIDEO_INFO_HEIGHT (info);
 
-  if (!gst_cuda_context_push (decoder->context)) {
-    GST_ERROR_OBJECT (decoder, "Failed to lock CUDA context");
-    return FALSE;
-  }
-
-  ret = gst_cuda_result (CuvidCreateDecoder (&decoder->decoder_handle,
-          &create_info));
-  gst_cuda_context_pop (nullptr);
-
-  if (!ret) {
-    GST_ERROR_OBJECT (decoder, "Cannot create decoder instance");
-    return FALSE;
-  }
-
-  if (!gst_nv_decoder_prepare_frame_pool (decoder, pool_size)) {
-    GST_ERROR_OBJECT (decoder, "Cannot prepare internal surface buffer pool");
-    gst_nv_decoder_reset (decoder);
-    return FALSE;
-  }
-
+  decoder->create_info = create_info;
   decoder->configured = TRUE;
 
   return TRUE;
 }
 
-GstNvDecoderFrame *
-gst_nv_decoder_new_frame (GstNvDecoder * decoder)
+GstFlowReturn
+gst_nv_decoder_acquire_surface (GstNvDecoder * decoder,
+    GstNvDecSurface ** surface)
 {
-  GstNvDecoderFrame *frame;
-  gint index_to_use = -1;
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), GST_FLOW_ERROR);
 
-  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), nullptr);
-
-  for (guint i = 0; i < decoder->pool_size; i++) {
-    if (decoder->frame_pool[i].available) {
-      decoder->frame_pool[i].available = FALSE;
-      index_to_use = (gint) i;
-      break;
-    }
-  }
-
-  if (index_to_use < 0) {
-    GST_ERROR_OBJECT (decoder, "No available frame");
-    return nullptr;
-  }
-
-  frame = g_new0 (GstNvDecoderFrame, 1);
-  frame->index = index_to_use;
-  frame->decode_frame_index = index_to_use;
-  frame->decoder = (GstNvDecoder *) gst_object_ref (decoder);
-  frame->ref_count = 1;
-  if (decoder->alloc_aux_frame) {
-    /* [0, pool_size - 1]: output picture
-     * [pool_size, pool_size * 2 - 1]: decoder output without film-grain,
-     * used for reference picture */
-    frame->decode_frame_index = index_to_use + decoder->pool_size;
-  }
-
-  GST_LOG_OBJECT (decoder, "New frame %p (index %d)", frame, frame->index);
-
-  return frame;
-}
-
-/* must be called with gst_cuda_context_push */
-static gboolean
-gst_nv_decoder_frame_map (GstNvDecoderFrame * frame, GstCudaStream * stream)
-{
-  GstNvDecoder *self;
-  CUVIDPROCPARAMS params = { 0 };
-
-  g_return_val_if_fail (frame != nullptr, FALSE);
-  g_return_val_if_fail (frame->index >= 0, FALSE);
-  g_return_val_if_fail (GST_IS_NV_DECODER (frame->decoder), FALSE);
-
-  self = frame->decoder;
-
-  /* TODO: check interlaced */
-  params.progressive_frame = 1;
-  params.output_stream = gst_cuda_stream_get_handle (stream);
-
-  if (frame->mapped) {
-    GST_WARNING_OBJECT (self, "Frame %p is mapped already", frame);
-    return TRUE;
-  }
-
-  if (!gst_cuda_result (CuvidMapVideoFrame (self->decoder_handle,
-              frame->index, &frame->devptr, &frame->pitch, &params))) {
-    GST_ERROR_OBJECT (self, "Cannot map picture");
-    return FALSE;
-  }
-
-  frame->mapped = TRUE;
-
-  return TRUE;
-}
-
-/* must be called with gst_cuda_context_push */
-static void
-gst_nv_decoder_frame_unmap (GstNvDecoderFrame * frame)
-{
-  GstNvDecoder *self;
-
-  g_return_if_fail (frame != nullptr);
-  g_return_if_fail (frame->index >= 0);
-  g_return_if_fail (GST_IS_NV_DECODER (frame->decoder));
-
-  self = frame->decoder;
-
-  if (!frame->mapped) {
-    GST_WARNING_OBJECT (self, "Frame %p is not mapped", frame);
-    return;
-  }
-
-  if (!gst_cuda_result (CuvidUnmapVideoFrame (self->decoder_handle,
-              frame->devptr))) {
-    GST_ERROR_OBJECT (self, "Cannot unmap picture");
-  }
-
-  frame->mapped = FALSE;
-}
-
-GstNvDecoderFrame *
-gst_nv_decoder_frame_ref (GstNvDecoderFrame * frame)
-{
-  g_assert (frame != nullptr);
-
-  g_atomic_int_add (&frame->ref_count, 1);
-
-  return frame;
-}
-
-void
-gst_nv_decoder_frame_unref (GstNvDecoderFrame * frame)
-{
-  GstNvDecoder *self;
-
-  g_assert (frame != nullptr);
-
-  if (g_atomic_int_dec_and_test (&frame->ref_count)) {
-    GST_LOG ("Free frame %p (index %d)", frame, frame->index);
-
-    if (frame->decoder) {
-      self = frame->decoder;
-      if (frame->mapped && gst_cuda_context_push (self->context)) {
-        gst_nv_decoder_frame_unmap (frame);
-        gst_cuda_context_pop (nullptr);
-      }
-
-      if ((guint) frame->index < self->pool_size) {
-        self->frame_pool[frame->index].available = TRUE;
+  if (!decoder->object) {
+    if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA) {
+      if (decoder->num_output_surfaces == 0 ||
+          decoder->num_output_surfaces < decoder->downstream_min_buffers) {
+        /* Auto mode or user specified num-output-surfaces value is too small */
+        decoder->create_info.ulNumOutputSurfaces =
+            decoder->downstream_min_buffers + 2;
       } else {
-        GST_WARNING_OBJECT (self,
-            "Frame %p has invalid index %d", frame, frame->index);
+        /* Otherwise use user provided value */
+        decoder->create_info.ulNumOutputSurfaces = decoder->num_output_surfaces;
       }
 
-      gst_object_unref (self);
+      GST_INFO_OBJECT (decoder, "Updating ulNumOutputSurfaces to %u, "
+          "user requested %u, min-downstream %u",
+          (guint) decoder->create_info.ulNumOutputSurfaces,
+          decoder->num_output_surfaces, decoder->downstream_min_buffers);
     }
 
-    g_free (frame);
+    g_mutex_lock (&decoder->lock);
+    decoder->object = gst_nv_dec_object_new (decoder->context,
+        &decoder->create_info, &decoder->info, decoder->alloc_aux_frame);
+    g_mutex_unlock (&decoder->lock);
+    if (!decoder->object) {
+      GST_ERROR_OBJECT (decoder, "Couldn't create decoder object");
+      return GST_FLOW_ERROR;
+    }
   }
+
+  return gst_nv_dec_object_acquire_surface (decoder->object, surface);
 }
 
 gboolean
-gst_nv_decoder_decode_picture (GstNvDecoder * decoder, CUVIDPICPARAMS * params)
+gst_nv_decoder_decode (GstNvDecoder * decoder, CUVIDPICPARAMS * params)
 {
-  GstCudaContext *ctx = decoder->context;
-  gboolean ret = TRUE;
+  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
+  g_return_val_if_fail (decoder->object != nullptr, FALSE);
 
-  GST_LOG_OBJECT (decoder, "picture index: %u", params->CurrPicIdx);
-
-  if (!gst_cuda_context_push (ctx)) {
-    GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
-    return FALSE;
-  }
-
-  if (!gst_cuda_result (CuvidDecodePicture (decoder->decoder_handle, params))) {
-    GST_ERROR_OBJECT (decoder, "Failed to decode picture");
-    ret = FALSE;
-  }
-
-  if (!gst_cuda_context_pop (nullptr)) {
-    GST_WARNING_OBJECT (decoder, "Failed to pop CUDA context");
-  }
-
-  return ret;
+  return gst_nv_dec_object_decode (decoder->object, params);
 }
 
 #ifdef HAVE_NVCODEC_GST_GL
@@ -580,7 +443,7 @@ typedef struct
 {
   GstNvDecoder *self;
   gboolean ret;
-  GstNvDecoderFrame *frame;
+  GstNvDecSurface *surface;
   GstBuffer *output_buffer;
 } GstNvDecoderCopyToGLData;
 
@@ -589,7 +452,7 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
     GstNvDecoderCopyToGLData * data)
 {
   GstNvDecoder *self = data->self;
-  GstNvDecoderFrame *frame = data->frame;
+  GstNvDecSurface *surface = data->surface;
   GstCudaGraphicsResource **resources;
   guint num_resources;
   guint i;
@@ -601,6 +464,12 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
 
   num_resources = gst_buffer_n_memory (data->output_buffer);
   resources = g_newa (GstCudaGraphicsResource *, num_resources);
+
+  if (!gst_cuda_context_push (self->context)) {
+    GST_WARNING_OBJECT (self, "Failed to push CUDA context");
+    data->ret = FALSE;
+    return;
+  }
 
   for (i = 0; i < num_resources; i++) {
     GstMemory *mem;
@@ -618,14 +487,8 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
     GST_MINI_OBJECT_FLAG_SET (mem, GST_GL_BASE_MEMORY_TRANSFER_NEED_UPLOAD);
   }
 
-  if (!gst_cuda_context_push (self->context)) {
-    GST_WARNING_OBJECT (self, "Failed to push CUDA context");
-    data->ret = FALSE;
-    return;
-  }
-
   copy_params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-  copy_params.srcPitch = frame->pitch;
+  copy_params.srcPitch = surface->pitch;
   copy_params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
 
   for (i = 0; i < num_resources; i++) {
@@ -652,8 +515,8 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
     copy_params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (info, i)
         * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
 
-    copy_params.srcDevice = frame->devptr +
-        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&self->info));
+    copy_params.srcDevice = surface->devptr +
+        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&self->info));
     copy_params.dstDevice = dst_ptr;
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
@@ -676,12 +539,12 @@ unmap_video_frame:
 
 static gboolean
 gst_nv_decoder_copy_frame_to_gl (GstNvDecoder * decoder,
-    GstGLContext * context, GstNvDecoderFrame * frame, GstBuffer * buffer)
+    GstGLContext * context, GstNvDecSurface * surface, GstBuffer * buffer)
 {
   GstNvDecoderCopyToGLData data;
 
   data.self = decoder;
-  data.frame = frame;
+  data.surface = surface;
   data.output_buffer = buffer;
 
   gst_gl_context_thread_add (context,
@@ -695,7 +558,7 @@ gst_nv_decoder_copy_frame_to_gl (GstNvDecoder * decoder,
 
 static gboolean
 gst_nv_decoder_copy_frame_to_system (GstNvDecoder * decoder,
-    GstNvDecoderFrame * frame, GstBuffer * buffer)
+    GstNvDecSurface * surface, GstBuffer * buffer)
 {
   GstVideoFrame video_frame;
   CUDA_MEMCPY2D copy_params = { 0, };
@@ -708,21 +571,15 @@ gst_nv_decoder_copy_frame_to_system (GstNvDecoder * decoder,
     return FALSE;
   }
 
-  if (!gst_cuda_context_push (decoder->context)) {
-    GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
-    gst_video_frame_unmap (&video_frame);
-    return FALSE;
-  }
-
   copy_params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-  copy_params.srcPitch = frame->pitch;
+  copy_params.srcPitch = surface->pitch;
   copy_params.dstMemoryType = CU_MEMORYTYPE_HOST;
   copy_params.WidthInBytes = GST_VIDEO_INFO_COMP_WIDTH (&decoder->info, 0)
       * GST_VIDEO_INFO_COMP_PSTRIDE (&decoder->info, 0);
 
   for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&video_frame); i++) {
-    copy_params.srcDevice = frame->devptr +
-        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
+    copy_params.srcDevice = surface->devptr +
+        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
     copy_params.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&video_frame, i);
@@ -738,8 +595,6 @@ gst_nv_decoder_copy_frame_to_system (GstNvDecoder * decoder,
   ret = TRUE;
 
 done:
-  gst_cuda_context_pop (nullptr);
-
   gst_video_frame_unmap (&video_frame);
 
   GST_LOG_OBJECT (decoder, "Copy frame to system ret %d", ret);
@@ -749,8 +604,7 @@ done:
 
 static gboolean
 gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
-    GstNvDecoderFrame * frame, GstBuffer * buffer, GstCudaStream * stream,
-    gboolean need_sync)
+    GstNvDecSurface * surface, GstBuffer * buffer, GstCudaStream * stream)
 {
   CUDA_MEMCPY2D copy_params = { 0, };
   GstMemory *mem;
@@ -771,19 +625,13 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
     return FALSE;
   }
 
-  if (!gst_cuda_context_push (decoder->context)) {
-    gst_video_frame_unmap (&video_frame);
-    GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
-    return FALSE;
-  }
-
   copy_params.srcMemoryType = CU_MEMORYTYPE_DEVICE;
-  copy_params.srcPitch = frame->pitch;
+  copy_params.srcPitch = surface->pitch;
   copy_params.dstMemoryType = CU_MEMORYTYPE_DEVICE;
 
   for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&decoder->info); i++) {
-    copy_params.srcDevice = frame->devptr +
-        (i * frame->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
+    copy_params.srcDevice = surface->devptr +
+        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
     copy_params.dstDevice =
         (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
@@ -798,89 +646,115 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
   }
 
   /* Don't sync if we are using downstream memory's stream */
-  if (need_sync)
-    gst_cuda_result (CuStreamSynchronize (stream_handle));
+  if (!stream)
+    gst_cuda_result (CuStreamSynchronize (nullptr));
+  else
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
 
   ret = TRUE;
 
 done:
   gst_video_frame_unmap (&video_frame);
-  gst_cuda_context_pop (nullptr);
 
   GST_LOG_OBJECT (decoder, "Copy frame to CUDA ret %d", ret);
 
   return ret;
 }
 
-gboolean
-gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
-    GstVideoCodecState * input_state, GstNvDecoderFrame * frame,
-    GstBuffer ** buffer)
+GstFlowReturn
+gst_nv_decoder_finish_surface (GstNvDecoder * decoder,
+    GstVideoDecoder * videodec, GstVideoCodecState * input_state,
+    GstNvDecSurface * surface, GstBuffer ** buffer)
 {
   GstBuffer *outbuf = nullptr;
   gboolean ret = FALSE;
   GstCudaStream *stream;
-  GstCudaStream *mem_stream = nullptr;
-  gboolean need_sync = TRUE;
+  GstFlowReturn flow_ret;
 
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), GST_FLOW_ERROR);
-  g_return_val_if_fail (frame != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (decoder->object != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (surface != nullptr, GST_FLOW_ERROR);
   g_return_val_if_fail (buffer != nullptr, GST_FLOW_ERROR);
 
   if (input_state) {
     if (!gst_nv_decoder_negotiate (decoder, videodec, input_state)) {
       GST_ERROR_OBJECT (videodec, "Couldn't re-negotiate with updated state");
-      return FALSE;
+      return GST_FLOW_NOT_NEGOTIATED;
     }
+  }
+
+  if (!gst_cuda_context_push (decoder->context)) {
+    GST_ERROR_OBJECT (decoder, "Couldn't push context");
+    return GST_FLOW_ERROR;
+  }
+
+  stream = decoder->stream;
+  flow_ret = gst_nv_dec_object_map_surface (decoder->object, surface, stream);
+  if (flow_ret != GST_FLOW_OK) {
+    gst_cuda_context_pop (nullptr);
+    return flow_ret;
+  }
+
+  if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA &&
+      (guint) decoder->create_info.ulNumOutputSurfaces >=
+      decoder->downstream_min_buffers) {
+    GstMemory *mem;
+    GstCudaMemory *cmem;
+    GstBuffer *buf;
+    GstVideoInfo *info = &decoder->info;
+
+    flow_ret = gst_nv_dec_object_export_surface (decoder->object,
+        surface, stream, &mem);
+    if (flow_ret != GST_FLOW_OK) {
+      GST_WARNING_OBJECT (decoder, "Couldn't export surface");
+      gst_nv_dec_object_unmap_surface (decoder->object, surface);
+      gst_cuda_context_pop (nullptr);
+      return flow_ret;
+    }
+
+    gst_cuda_context_pop (nullptr);
+
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_DOWNLOAD);
+
+    if (stream)
+      GST_MINI_OBJECT_FLAG_SET (mem, GST_CUDA_MEMORY_TRANSFER_NEED_SYNC);
+
+    buf = gst_buffer_new ();
+    cmem = GST_CUDA_MEMORY_CAST (mem);
+    gst_buffer_append_memory (buf, mem);
+    gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+        GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
+        GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
+        cmem->info.offset, cmem->info.stride);
+
+    *buffer = buf;
+    return GST_FLOW_OK;
   }
 
   outbuf = gst_video_decoder_allocate_output_buffer (videodec);
   if (!outbuf) {
     GST_ERROR_OBJECT (videodec, "Couldn't allocate output buffer");
-    return FALSE;
-  }
-
-  stream = decoder->stream;
-  if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA) {
-    GstCudaMemory *cmem = (GstCudaMemory *) gst_buffer_peek_memory (outbuf, 0);
-
-    /* Use downstream CUDA stream if available */
-    mem_stream = gst_cuda_memory_get_stream (cmem);
-    if (mem_stream) {
-      need_sync = FALSE;
-      stream = mem_stream;
-    }
-  }
-
-  if (!gst_cuda_context_push (decoder->context)) {
-    GST_ERROR_OBJECT (decoder, "Failed to push CUDA context");
-    goto error;
-  }
-
-  if (!gst_nv_decoder_frame_map (frame, stream)) {
-    GST_ERROR_OBJECT (decoder, "Couldn't map frame");
+    gst_nv_dec_object_unmap_surface (decoder->object, surface);
     gst_cuda_context_pop (nullptr);
-    goto error;
+    return GST_FLOW_ERROR;
   }
-
-  gst_cuda_context_pop (nullptr);
 
   switch (decoder->output_type) {
     case GST_NV_DECODER_OUTPUT_TYPE_SYSTEM:
-      ret = gst_nv_decoder_copy_frame_to_system (decoder, frame, outbuf);
+      ret = gst_nv_decoder_copy_frame_to_system (decoder, surface, outbuf);
       break;
 #ifdef HAVE_NVCODEC_GST_GL
     case GST_NV_DECODER_OUTPUT_TYPE_GL:
       g_assert (decoder->gl_context != nullptr);
 
       ret = gst_nv_decoder_copy_frame_to_gl (decoder,
-          GST_GL_CONTEXT (decoder->gl_context), frame, outbuf);
+          GST_GL_CONTEXT (decoder->gl_context), surface, outbuf);
       break;
 #endif
     case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
       ret = gst_nv_decoder_copy_frame_to_cuda (decoder,
-          frame, outbuf, stream, need_sync);
+          surface, outbuf, stream);
       break;
     default:
       g_assert_not_reached ();
@@ -896,11 +770,10 @@ gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
         "Couldn't copy frame to GL memory, fallback to system memory");
     decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
 
-    ret = gst_nv_decoder_copy_frame_to_system (decoder, frame, outbuf);
+    ret = gst_nv_decoder_copy_frame_to_system (decoder, surface, outbuf);
   }
 
-  gst_cuda_context_push (decoder->context);
-  gst_nv_decoder_frame_unmap (frame);
+  gst_nv_dec_object_unmap_surface (decoder->object, surface);
   gst_cuda_context_pop (nullptr);
 
   if (!ret) {
@@ -910,11 +783,12 @@ gst_nv_decoder_finish_frame (GstNvDecoder * decoder, GstVideoDecoder * videodec,
 
   *buffer = outbuf;
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 error:
+  gst_nv_dec_object_unmap_surface (decoder->object, surface);
   gst_clear_buffer (&outbuf);
-  return FALSE;
+  return GST_FLOW_ERROR;
 }
 
 typedef enum
@@ -1577,9 +1451,10 @@ gst_nv_decoder_ensure_cuda_pool (GstNvDecoder * decoder, GstQuery * query)
 {
   GstCaps *outcaps;
   GstBufferPool *pool = nullptr;
-  guint n, size, min, max;
+  guint n, size, min = 0, max = 0;
   GstVideoInfo vinfo = { 0, };
   GstStructure *config;
+  GstCudaStream *stream;
 
   gst_query_parse_allocation (query, &outcaps, nullptr);
   n = gst_query_get_n_allocation_pools (query);
@@ -1598,10 +1473,26 @@ gst_nv_decoder_ensure_cuda_pool (GstNvDecoder * decoder, GstQuery * query)
     if (outcaps)
       gst_video_info_from_caps (&vinfo, outcaps);
     size = (guint) vinfo.size;
-    min = max = 0;
   }
 
   config = gst_buffer_pool_get_config (pool);
+  stream = gst_buffer_pool_config_get_cuda_stream (config);
+  if (stream) {
+    GST_DEBUG_OBJECT (decoder, "Downstream CUDA stream is available");
+    gst_clear_cuda_stream (&decoder->stream);
+    decoder->stream = stream;
+  } else if (decoder->stream) {
+    GST_DEBUG_OBJECT (decoder,
+        "Downstream CUDA stream is not available, use ours");
+    gst_buffer_pool_config_set_cuda_stream (config, decoder->stream);
+  }
+
+  decoder->downstream_min_buffers = min;
+  GST_DEBUG_OBJECT (decoder, "Downstream min buffers %d", min);
+
+  /* Since we don't use downstream buffer pool, pre-allocation is unnecessary */
+  min = 0;
+
   gst_buffer_pool_config_set_params (config, outcaps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_set_config (pool, config);
@@ -1700,4 +1591,21 @@ gst_nv_decoder_decide_allocation (GstNvDecoder * decoder,
   }
 
   return ret;
+}
+
+void
+gst_nv_decoder_set_flushing (GstNvDecoder * decoder, gboolean flushing)
+{
+  g_mutex_lock (&decoder->lock);
+  if (decoder->object)
+    gst_nv_dec_object_set_flushing (decoder->object, flushing);
+  g_mutex_unlock (&decoder->lock);
+}
+
+void
+gst_nv_decoder_reset (GstNvDecoder * decoder)
+{
+  g_mutex_lock (&decoder->lock);
+  gst_nv_decoder_reset_unlocked (decoder);
+  g_mutex_unlock (&decoder->lock);
 }

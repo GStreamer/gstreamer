@@ -8,6 +8,7 @@ nvcodec_sources = [
   'gstnvav1dec.cpp',
   'gstnvbaseenc.c',
   'gstnvdec.c',
+  'gstnvdecobject.cpp',
   'gstnvdecoder.cpp',
   'gstnvenc.c',
   'gstnvencoder.cpp',

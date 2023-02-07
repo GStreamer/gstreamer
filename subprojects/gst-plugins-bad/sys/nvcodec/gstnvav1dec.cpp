@@ -69,6 +69,8 @@ typedef struct _GstNvAV1Dec
   guint max_height;
   guint bitdepth;
   guint8 film_grain_params_present;
+
+  guint num_output_surfaces;
 } GstNvAV1Dec;
 
 typedef struct _GstNvAV1DecClass
@@ -81,7 +83,10 @@ enum
 {
   PROP_0,
   PROP_CUDA_DEVICE_ID,
+  PROP_NUM_OUTPUT_SURFACES,
 };
+
+#define DEFAULT_NUM_OUTPUT_SURFACES 0
 
 static GTypeClass *parent_class = nullptr;
 
@@ -89,6 +94,8 @@ static GTypeClass *parent_class = nullptr;
 #define GST_NV_AV1_DEC_GET_CLASS(object) \
     (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstNvAV1DecClass))
 
+static void gst_nv_av1_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static void gst_nv_av1_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
@@ -96,11 +103,14 @@ static void gst_nv_av1_dec_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_nv_av1_dec_open (GstVideoDecoder * decoder);
 static gboolean gst_nv_av1_dec_close (GstVideoDecoder * decoder);
+static gboolean gst_nv_av1_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_nv_av1_dec_negotiate (GstVideoDecoder * decoder);
 static gboolean gst_nv_av1_dec_decide_allocation (GstVideoDecoder *
     decoder, GstQuery * query);
 static gboolean gst_nv_av1_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
+static gboolean gst_nv_av1_dec_sink_event (GstVideoDecoder * decoder,
+    GstEvent * event);
 
 static GstFlowReturn gst_nv_av1_dec_new_sequence (GstAV1Decoder * decoder,
     const GstAV1SequenceHeaderOBU * seq_hdr, gint max_dpb_size);
@@ -128,12 +138,30 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstAV1DecoderClass *av1decoder_class = GST_AV1_DECODER_CLASS (klass);
 
+  object_class->set_property = gst_nv_av1_dec_set_property;
   object_class->get_property = gst_nv_av1_dec_get_property;
 
   g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id", "CUDA device id",
           "Assigned CUDA device id", 0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstNvAV1Dec:num-output-surfaces:
+   *
+   * The number of output surfaces (0 = auto). This property will be used to
+   * calculate the CUVIDDECODECREATEINFO.ulNumOutputSurfaces parameter
+   * in case of CUDA output mode
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_NUM_OUTPUT_SURFACES,
+      g_param_spec_uint ("num-output-surfaces", "Num Output Surfaces",
+          "Maximum number of output surfaces simultaneously mapped in CUDA "
+          "output mode (0 = auto)",
+          0, 64, DEFAULT_NUM_OUTPUT_SURFACES,
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_set_context);
 
@@ -151,10 +179,12 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_close);
+  decoder_class->stop = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_stop);
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_negotiate);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_nv_av1_dec_decide_allocation);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_src_query);
+  decoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_sink_event);
 
   av1decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_nv_av1_dec_new_sequence);
@@ -183,17 +213,38 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
 static void
 gst_nv_av1_dec_init (GstNvAV1Dec * self)
 {
+  self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
+}
+
+static void
+gst_nv_av1_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstNvAV1Dec *self = GST_NV_AV1_DEC (object);
+
+  switch (prop_id) {
+    case PROP_NUM_OUTPUT_SURFACES:
+      self->num_output_surfaces = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
 gst_nv_av1_dec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
+  GstNvAV1Dec *self = GST_NV_AV1_DEC (object);
   GstNvAV1DecClass *klass = GST_NV_AV1_DEC_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_CUDA_DEVICE_ID:
       g_value_set_uint (value, klass->cuda_device_id);
+      break;
+    case PROP_NUM_OUTPUT_SURFACES:
+      g_value_set_uint (value, self->num_output_surfaces);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -280,6 +331,20 @@ gst_nv_av1_dec_close (GstVideoDecoder * decoder)
 }
 
 static gboolean
+gst_nv_av1_dec_stop (GstVideoDecoder * decoder)
+{
+  GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
+  gboolean ret;
+
+  ret = GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
+
+  if (self->decoder)
+    gst_nv_decoder_reset (self->decoder);
+
+  return ret;
+}
+
+static gboolean
 gst_nv_av1_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
@@ -326,6 +391,29 @@ gst_nv_av1_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
+}
+
+static gboolean
+gst_nv_av1_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
+{
+  GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
+
+  if (!self->decoder)
+    goto done;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      gst_nv_decoder_set_flushing (self->decoder, TRUE);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_nv_decoder_set_flushing (self->decoder, FALSE);
+      break;
+    default:
+      break;
+  }
+
+done:
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }
 
 static GstFlowReturn
@@ -389,11 +477,13 @@ gst_nv_av1_dec_new_sequence (GstAV1Decoder * decoder,
     }
 
     gst_video_info_set_format (&info,
-        out_format, self->max_width, self->max_height);
+        out_format, GST_ROUND_UP_2 (self->max_width),
+        GST_ROUND_UP_2 (self->max_height));
 
     if (!gst_nv_decoder_configure (self->decoder, cudaVideoCodec_AV1,
             &info, self->max_width, self->max_height, self->bitdepth,
-            max_dpb_size, self->film_grain_params_present ? TRUE : FALSE)) {
+            max_dpb_size, self->film_grain_params_present ? TRUE : FALSE,
+            self->num_output_surfaces)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -412,35 +502,33 @@ gst_nv_av1_dec_new_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture)
 {
   GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
-  GstNvDecoderFrame *nv_frame;
+  GstNvDecSurface *surface;
+  GstFlowReturn ret;
 
-  nv_frame = gst_nv_decoder_new_frame (self->decoder);
-  if (!nv_frame) {
-    GST_ERROR_OBJECT (self, "No available decoder frame");
-    return GST_FLOW_ERROR;
-  }
+  ret = gst_nv_decoder_acquire_surface (self->decoder, &surface);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   GST_LOG_OBJECT (self,
-      "New decoder frame %p (index %d)", nv_frame, nv_frame->index);
+      "New decoder surface %p (index %d)", surface, surface->index);
 
   gst_av1_picture_set_user_data (picture,
-      nv_frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
+      surface, (GDestroyNotify) gst_nv_dec_surface_unref);
 
   return GST_FLOW_OK;
 }
 
-static GstNvDecoderFrame *
-gst_nv_av1_dec_get_decoder_frame_from_picture (GstNvAV1Dec * self,
+static GstNvDecSurface *
+gst_nv_av1_dec_get_decoder_surface_from_picture (GstNvAV1Dec * self,
     GstAV1Picture * picture)
 {
-  GstNvDecoderFrame *frame;
+  GstNvDecSurface *surface;
 
-  frame = (GstNvDecoderFrame *) gst_av1_picture_get_user_data (picture);
+  surface = (GstNvDecSurface *) gst_av1_picture_get_user_data (picture);
+  if (!surface)
+    GST_DEBUG_OBJECT (self, "current picture does not have decoder surface");
 
-  if (!frame)
-    GST_DEBUG_OBJECT (self, "current picture does not have decoder frame");
-
-  return frame;
+  return surface;
 }
 
 static GstAV1Picture *
@@ -448,13 +536,13 @@ gst_nv_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
     GstVideoCodecFrame * frame, GstAV1Picture * picture)
 {
   GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
-  GstNvDecoderFrame *nv_frame;
+  GstNvDecSurface *surface;
   GstAV1Picture *new_picture;
 
-  nv_frame = gst_nv_av1_dec_get_decoder_frame_from_picture (self, picture);
+  surface = gst_nv_av1_dec_get_decoder_surface_from_picture (self, picture);
 
-  if (!nv_frame) {
-    GST_ERROR_OBJECT (self, "Parent picture does not have decoder frame");
+  if (!surface) {
+    GST_ERROR_OBJECT (self, "Parent picture does not have decoder surface");
     return nullptr;
   }
 
@@ -462,8 +550,8 @@ gst_nv_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
   new_picture->frame_hdr = picture->frame_hdr;
 
   gst_av1_picture_set_user_data (new_picture,
-      gst_nv_decoder_frame_ref (nv_frame),
-      (GDestroyNotify) gst_nv_decoder_frame_unref);
+      gst_nv_dec_surface_ref (surface),
+      (GDestroyNotify) gst_nv_dec_surface_unref);
 
   return new_picture;
 }
@@ -504,13 +592,13 @@ gst_nv_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
   const GstAV1LoopFilterParams *lp = &frame_hdr->loop_filter_params;
   const GstAV1LoopRestorationParams *lrp = &frame_hdr->loop_restoration_params;
   const GstAV1FilmGrainParams *fgp = &frame_hdr->film_grain_params;
-  GstNvDecoderFrame *frame;
-  GstNvDecoderFrame *other_frame;
+  GstNvDecSurface *surface;
+  GstNvDecSurface *other_surface;
   GstAV1Picture *other_pic;
   guint i, j;
 
-  frame = gst_nv_av1_dec_get_decoder_frame_from_picture (self, picture);
-  if (!frame) {
+  surface = gst_nv_av1_dec_get_decoder_surface_from_picture (self, picture);
+  if (!surface) {
     GST_ERROR_OBJECT (self, "Decoder frame is unavailable");
     return GST_FLOW_ERROR;
   }
@@ -519,13 +607,13 @@ gst_nv_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
 
   params->PicWidthInMbs = GST_ROUND_UP_16 (frame_hdr->frame_width) >> 4;
   params->FrameHeightInMbs = GST_ROUND_UP_16 (frame_hdr->frame_height) >> 4;
-  params->CurrPicIdx = frame->index;
+  params->CurrPicIdx = surface->index;
   params->intra_pic_flag = frame_hdr->frame_is_intra;
 
   av1_params->width = frame_hdr->frame_width;
   av1_params->height = frame_hdr->frame_height;
   av1_params->frame_offset = frame_hdr->order_hint;
-  av1_params->decodePicIdx = frame->decode_frame_index;
+  av1_params->decodePicIdx = surface->decode_frame_index;
 
   /* sequence header */
   av1_params->profile = seq_hdr->seq_profile;
@@ -675,14 +763,14 @@ gst_nv_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
 
     other_pic = dpb->pic_list[i];
     if (other_pic) {
-      other_frame =
-          gst_nv_av1_dec_get_decoder_frame_from_picture (self, other_pic);
-      if (!other_frame) {
+      other_surface =
+          gst_nv_av1_dec_get_decoder_surface_from_picture (self, other_pic);
+      if (!other_surface) {
         GST_ERROR_OBJECT (self, "reference frame is unavailable");
         return GST_FLOW_ERROR;
       }
 
-      ref_idx = other_frame->decode_frame_index;
+      ref_idx = other_surface->decode_frame_index;
     }
 
     av1_params->ref_frame_map[i] = ref_idx;
@@ -711,10 +799,10 @@ gst_nv_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
       other_pic = dpb->pic_list[ref_idx];
 
     if (other_pic) {
-      other_frame =
-          gst_nv_av1_dec_get_decoder_frame_from_picture (self, other_pic);
+      other_surface =
+          gst_nv_av1_dec_get_decoder_surface_from_picture (self, other_pic);
 
-      av1_params->ref_frame[i].index = other_frame->decode_frame_index;
+      av1_params->ref_frame[i].index = other_surface->decode_frame_index;
       av1_params->ref_frame[i].width = other_pic->frame_hdr.frame_width;
       av1_params->ref_frame[i].height = other_pic->frame_hdr.frame_height;
     } else {
@@ -835,7 +923,7 @@ gst_nv_av1_dec_end_picture (GstAV1Decoder * decoder, GstAV1Picture * picture)
   params->nNumSlices = self->num_tiles;
   params->pSliceDataOffsets = self->tile_offsets;
 
-  ret = gst_nv_decoder_decode_picture (self->decoder, params);
+  ret = gst_nv_decoder_decode (self->decoder, params);
 
   if (!ret) {
     GST_ERROR_OBJECT (self, "Failed to decode picture");
@@ -851,21 +939,21 @@ gst_nv_av1_dec_output_picture (GstAV1Decoder * decoder,
 {
   GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstNvDecoderFrame *decoder_frame;
+  GstNvDecSurface *surface;
+  GstFlowReturn ret = GST_FLOW_ERROR;
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
-  decoder_frame = (GstNvDecoderFrame *) gst_av1_picture_get_user_data (picture);
-  if (!decoder_frame) {
+  surface = (GstNvDecSurface *) gst_av1_picture_get_user_data (picture);
+  if (!surface) {
     GST_ERROR_OBJECT (self, "No decoder frame in picture %p", picture);
     goto error;
   }
 
-  if (!gst_nv_decoder_finish_frame (self->decoder, vdec, picture->discont_state,
-          decoder_frame, &frame->output_buffer)) {
-    GST_ERROR_OBJECT (self, "Failed to handle output picture");
+  ret = gst_nv_decoder_finish_surface (self->decoder,
+      vdec, picture->discont_state, surface, &frame->output_buffer);
+  if (ret != GST_FLOW_OK)
     goto error;
-  }
 
   gst_av1_picture_unref (picture);
 
@@ -875,7 +963,7 @@ error:
   gst_video_decoder_drop_frame (vdec, frame);
   gst_av1_picture_unref (picture);
 
-  return GST_FLOW_ERROR;
+  return ret;
 }
 
 static guint

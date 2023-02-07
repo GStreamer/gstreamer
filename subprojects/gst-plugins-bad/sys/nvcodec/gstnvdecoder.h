@@ -24,30 +24,13 @@
 #include <gst/video/video.h>
 #include <gst/cuda/gstcuda.h>
 #include "gstcuvidloader.h"
+#include "gstnvdecobject.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_NV_DECODER (gst_nv_decoder_get_type())
 G_DECLARE_FINAL_TYPE (GstNvDecoder,
     gst_nv_decoder, GST, NV_DECODER, GstObject);
-
-typedef struct _GstNvDecoderFrame
-{
-  /* CUVIDPICPARAMS::CurrPicIdx */
-  gint index;
-  guintptr devptr;
-  guint pitch;
-
-  gboolean mapped;
-
-  /* Extra frame allocated for AV1 film grain */
-  gint decode_frame_index;
-
-  /*< private >*/
-  GstNvDecoder *decoder;
-
-  gint ref_count;
-} GstNvDecoderFrame;
 
 typedef struct _GstNvDecoderClassData
 {
@@ -67,22 +50,25 @@ gboolean       gst_nv_decoder_configure (GstNvDecoder * decoder,
                                          gint coded_height,
                                          guint coded_bitdepth,
                                          guint pool_size,
-                                         gboolean alloc_aux_frame);
+                                         gboolean alloc_aux_frame,
+                                         guint num_output_surfaces);
 
-GstNvDecoderFrame * gst_nv_decoder_new_frame (GstNvDecoder * decoder);
+GstFlowReturn  gst_nv_decoder_acquire_surface (GstNvDecoder * decoder,
+                                               GstNvDecSurface ** surface);
 
-GstNvDecoderFrame * gst_nv_decoder_frame_ref (GstNvDecoderFrame * frame);
+gboolean       gst_nv_decoder_decode         (GstNvDecoder * decoder,
+                                              CUVIDPICPARAMS * params);
 
-void gst_nv_decoder_frame_unref (GstNvDecoderFrame * frame);
+GstFlowReturn  gst_nv_decoder_finish_surface (GstNvDecoder * decoder,
+                                              GstVideoDecoder * videodec,
+                                              GstVideoCodecState * input_state,
+                                              GstNvDecSurface *surface,
+                                              GstBuffer ** buffer);
 
-gboolean gst_nv_decoder_decode_picture (GstNvDecoder * decoder,
-                                        CUVIDPICPARAMS * params);
+void           gst_nv_decoder_set_flushing   (GstNvDecoder * decoder,
+                                              gboolean flushing);
 
-gboolean gst_nv_decoder_finish_frame   (GstNvDecoder * decoder,
-                                        GstVideoDecoder * videodec,
-                                        GstVideoCodecState * input_state,
-                                        GstNvDecoderFrame *frame,
-                                        GstBuffer ** buffer);
+void           gst_nv_decoder_reset          (GstNvDecoder * decoder);
 
 /* utils for class registration */
 gboolean gst_nv_decoder_check_device_caps (CUcontext cuda_ctx,

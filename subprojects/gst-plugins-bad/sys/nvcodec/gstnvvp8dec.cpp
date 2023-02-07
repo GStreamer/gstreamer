@@ -53,6 +53,8 @@ typedef struct _GstNvVp8Dec
   CUVIDPICPARAMS params;
 
   guint width, height;
+
+  guint num_output_surfaces;
 } GstNvVp8Dec;
 
 typedef struct _GstNvVp8DecClass
@@ -65,7 +67,10 @@ enum
 {
   PROP_0,
   PROP_CUDA_DEVICE_ID,
+  PROP_NUM_OUTPUT_SURFACES,
 };
+
+#define DEFAULT_NUM_OUTPUT_SURFACES 0
 
 static GTypeClass *parent_class = nullptr;
 
@@ -73,6 +78,8 @@ static GTypeClass *parent_class = nullptr;
 #define GST_NV_VP8_DEC_GET_CLASS(object) \
     (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstNvVp8DecClass))
 
+static void gst_nv_vp8_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 static void gst_nv_vp8_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
@@ -80,11 +87,14 @@ static void gst_nv_vp8_dec_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_nv_vp8_dec_open (GstVideoDecoder * decoder);
 static gboolean gst_nv_vp8_dec_close (GstVideoDecoder * decoder);
+static gboolean gst_nv_vp8_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_nv_vp8_dec_negotiate (GstVideoDecoder * decoder);
 static gboolean gst_nv_vp8_dec_decide_allocation (GstVideoDecoder *
     decoder, GstQuery * query);
 static gboolean gst_nv_vp8_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
+static gboolean gst_nv_vp8_dec_sink_event (GstVideoDecoder * decoder,
+    GstEvent * event);
 
 /* GstVp8Decoder */
 static GstFlowReturn gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
@@ -107,6 +117,7 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass,
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstVp8DecoderClass *vp8decoder_class = GST_VP8_DECODER_CLASS (klass);
 
+  object_class->set_property = gst_nv_vp8_dec_set_property;
   object_class->get_property = gst_nv_vp8_dec_get_property;
 
   /**
@@ -120,6 +131,23 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass,
       g_param_spec_uint ("cuda-device-id", "CUDA device id",
           "Assigned CUDA device id", 0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstNvVp8SLDec:num-output-surfaces:
+   *
+   * The number of output surfaces (0 = auto). This property will be used to
+   * calculate the CUVIDDECODECREATEINFO.ulNumOutputSurfaces parameter
+   * in case of CUDA output mode
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_NUM_OUTPUT_SURFACES,
+      g_param_spec_uint ("num-output-surfaces", "Num Output Surfaces",
+          "Maximum number of output surfaces simultaneously mapped in CUDA "
+          "output mode (0 = auto)",
+          0, 64, DEFAULT_NUM_OUTPUT_SURFACES,
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_set_context);
 
@@ -138,10 +166,12 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass,
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_close);
+  decoder_class->stop = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_stop);
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_negotiate);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_decide_allocation);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_src_query);
+  decoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_sink_event);
 
   vp8decoder_class->new_sequence =
       GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_new_sequence);
@@ -164,17 +194,38 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass,
 static void
 gst_nv_vp8_dec_init (GstNvVp8Dec * self)
 {
+  self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
+}
+
+static void
+gst_nv_vp8_dec_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstNvVp8Dec *self = GST_NV_VP8_DEC (object);
+
+  switch (prop_id) {
+    case PROP_NUM_OUTPUT_SURFACES:
+      self->num_output_surfaces = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
 gst_nv_vp8_dec_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
+  GstNvVp8Dec *self = GST_NV_VP8_DEC (object);
   GstNvVp8DecClass *klass = GST_NV_VP8_DEC_GET_CLASS (object);
 
   switch (prop_id) {
     case PROP_CUDA_DEVICE_ID:
       g_value_set_uint (value, klass->cuda_device_id);
+      break;
+    case PROP_NUM_OUTPUT_SURFACES:
+      g_value_set_uint (value, self->num_output_surfaces);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -238,6 +289,20 @@ gst_nv_vp8_dec_close (GstVideoDecoder * decoder)
 }
 
 static gboolean
+gst_nv_vp8_dec_stop (GstVideoDecoder * decoder)
+{
+  GstNvVp8Dec *self = GST_NV_VP8_DEC (decoder);
+  gboolean ret;
+
+  ret = GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
+
+  if (self->decoder)
+    gst_nv_decoder_reset (self->decoder);
+
+  return ret;
+}
+
+static gboolean
 gst_nv_vp8_dec_negotiate (GstVideoDecoder * decoder)
 {
   GstNvVp8Dec *self = GST_NV_VP8_DEC (decoder);
@@ -288,6 +353,29 @@ gst_nv_vp8_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
 }
 
+static gboolean
+gst_nv_vp8_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
+{
+  GstNvVp8Dec *self = GST_NV_VP8_DEC (decoder);
+
+  if (!self->decoder)
+    goto done;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      gst_nv_decoder_set_flushing (self->decoder, TRUE);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_nv_decoder_set_flushing (self->decoder, FALSE);
+      break;
+    default:
+      break;
+  }
+
+done:
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
+}
+
 static GstFlowReturn
 gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     const GstVp8FrameHdr * frame_hdr, gint max_dpb_size)
@@ -313,11 +401,12 @@ gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     GstVideoInfo info;
 
     gst_video_info_set_format (&info,
-        GST_VIDEO_FORMAT_NV12, self->width, self->height);
+        GST_VIDEO_FORMAT_NV12, GST_ROUND_UP_2 (self->width),
+        GST_ROUND_UP_2 (self->height));
 
     if (!gst_nv_decoder_configure (self->decoder,
             cudaVideoCodec_VP8, &info, self->width, self->height, 8,
-            max_dpb_size, FALSE)) {
+            max_dpb_size, FALSE, self->num_output_surfaces)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -344,35 +433,33 @@ gst_nv_vp8_dec_new_picture (GstVp8Decoder * decoder,
     GstVideoCodecFrame * frame, GstVp8Picture * picture)
 {
   GstNvVp8Dec *self = GST_NV_VP8_DEC (decoder);
-  GstNvDecoderFrame *nv_frame;
+  GstNvDecSurface *surface;
+  GstFlowReturn ret;
 
-  nv_frame = gst_nv_decoder_new_frame (self->decoder);
-  if (!nv_frame) {
-    GST_ERROR_OBJECT (self, "No available decoder frame");
-    return GST_FLOW_ERROR;
-  }
+  ret = gst_nv_decoder_acquire_surface (self->decoder, &surface);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
   GST_LOG_OBJECT (self,
-      "New decoder frame %p (index %d)", nv_frame, nv_frame->index);
+      "New decoder frame %p (index %d)", surface, surface->index);
 
   gst_vp8_picture_set_user_data (picture,
-      nv_frame, (GDestroyNotify) gst_nv_decoder_frame_unref);
+      surface, (GDestroyNotify) gst_nv_dec_surface_unref);
 
   return GST_FLOW_OK;
 }
 
-static GstNvDecoderFrame *
+static GstNvDecSurface *
 gst_nv_vp8_dec_get_decoder_frame_from_picture (GstNvVp8Dec * self,
     GstVp8Picture * picture)
 {
-  GstNvDecoderFrame *frame;
+  GstNvDecSurface *surface;
 
-  frame = (GstNvDecoderFrame *) gst_vp8_picture_get_user_data (picture);
+  surface = (GstNvDecSurface *) gst_vp8_picture_get_user_data (picture);
+  if (!surface)
+    GST_DEBUG_OBJECT (self, "current picture does not have decoder surface");
 
-  if (!frame)
-    GST_DEBUG_OBJECT (self, "current picture does not have decoder frame");
-
-  return frame;
+  return surface;
 }
 
 static GstFlowReturn
@@ -381,14 +468,14 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
 {
   GstNvVp8Dec *self = GST_NV_VP8_DEC (decoder);
   GstVp8FrameHdr *frame_hdr = &picture->frame_hdr;
-  GstNvDecoderFrame *frame;
-  GstNvDecoderFrame *other_frame;
+  GstNvDecSurface *surface;
+  GstNvDecSurface *other_surface;
   guint offset = 0;
 
   GST_LOG_OBJECT (self, "Decode picture, size %" G_GSIZE_FORMAT, picture->size);
 
-  frame = gst_nv_vp8_dec_get_decoder_frame_from_picture (self, picture);
-  if (!frame) {
+  surface = gst_nv_vp8_dec_get_decoder_frame_from_picture (self, picture);
+  if (!surface) {
     GST_ERROR_OBJECT (self, "Decoder frame is unavailable");
     return GST_FLOW_ERROR;
   }
@@ -398,49 +485,49 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
   self->params.nNumSlices = 1;
   self->params.pSliceDataOffsets = &offset;
 
-  self->params.CurrPicIdx = frame->index;
+  self->params.CurrPicIdx = surface->index;
 
   self->params.CodecSpecific.vp8.first_partition_size =
       frame_hdr->first_part_size;
 
   if (decoder->alt_ref_picture) {
-    other_frame =
+    other_surface =
         gst_nv_vp8_dec_get_decoder_frame_from_picture (self,
         decoder->alt_ref_picture);
-    if (!other_frame) {
+    if (!other_surface) {
       GST_ERROR_OBJECT (self, "Couldn't get decoder frame for AltRef");
       return GST_FLOW_ERROR;
     }
 
-    self->params.CodecSpecific.vp8.AltRefIdx = other_frame->index;
+    self->params.CodecSpecific.vp8.AltRefIdx = other_surface->index;
   } else {
     self->params.CodecSpecific.vp8.AltRefIdx = 0xff;
   }
 
   if (decoder->golden_ref_picture) {
-    other_frame =
+    other_surface =
         gst_nv_vp8_dec_get_decoder_frame_from_picture (self,
         decoder->golden_ref_picture);
-    if (!other_frame) {
+    if (!other_surface) {
       GST_ERROR_OBJECT (self, "Couldn't get decoder frame for GoldenRef");
       return GST_FLOW_ERROR;
     }
 
-    self->params.CodecSpecific.vp8.GoldenRefIdx = other_frame->index;
+    self->params.CodecSpecific.vp8.GoldenRefIdx = other_surface->index;
   } else {
     self->params.CodecSpecific.vp8.GoldenRefIdx = 0xff;
   }
 
   if (decoder->last_picture) {
-    other_frame =
+    other_surface =
         gst_nv_vp8_dec_get_decoder_frame_from_picture (self,
         decoder->last_picture);
-    if (!other_frame) {
+    if (!other_surface) {
       GST_ERROR_OBJECT (self, "Couldn't get decoder frame for LastRef");
       return GST_FLOW_ERROR;
     }
 
-    self->params.CodecSpecific.vp8.LastRefIdx = other_frame->index;
+    self->params.CodecSpecific.vp8.LastRefIdx = other_surface->index;
   } else {
     self->params.CodecSpecific.vp8.LastRefIdx = 0xff;
   }
@@ -454,7 +541,7 @@ gst_nv_vp8_dec_decode_picture (GstVp8Decoder * decoder,
       parser->segmentation.segmentation_enabled ?
       parser->segmentation.update_segment_feature_data : 0;
 
-  if (!gst_nv_decoder_decode_picture (self->decoder, &self->params))
+  if (!gst_nv_decoder_decode (self->decoder, &self->params))
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
@@ -466,21 +553,21 @@ gst_nv_vp8_dec_output_picture (GstVp8Decoder * decoder,
 {
   GstNvVp8Dec *self = GST_NV_VP8_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstNvDecoderFrame *decoder_frame;
+  GstNvDecSurface *surface;
+  GstFlowReturn ret = GST_FLOW_ERROR;
 
   GST_LOG_OBJECT (self, "Outputting picture %p", picture);
 
-  decoder_frame = (GstNvDecoderFrame *) gst_vp8_picture_get_user_data (picture);
-  if (!decoder_frame) {
+  surface = (GstNvDecSurface *) gst_vp8_picture_get_user_data (picture);
+  if (!surface) {
     GST_ERROR_OBJECT (self, "No decoder frame in picture %p", picture);
     goto error;
   }
 
-  if (!gst_nv_decoder_finish_frame (self->decoder, vdec, picture->discont_state,
-          decoder_frame, &frame->output_buffer)) {
-    GST_ERROR_OBJECT (self, "Failed to handle output picture");
+  ret = gst_nv_decoder_finish_surface (self->decoder,
+      vdec, picture->discont_state, surface, &frame->output_buffer);
+  if (ret != GST_FLOW_OK)
     goto error;
-  }
 
   gst_vp8_picture_unref (picture);
 
@@ -490,7 +577,7 @@ error:
   gst_video_decoder_drop_frame (vdec, frame);
   gst_vp8_picture_unref (picture);
 
-  return GST_FLOW_ERROR;
+  return ret;
 }
 
 static guint
