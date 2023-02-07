@@ -35,7 +35,7 @@
 #if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 110300
 #define kCVPixelFormatType_64RGBALE 'l64r'
 #endif
-#define GST_VTUTIL_HAVE_64ARGBALE __builtin_available(macOS 11.3, *)
+#define GST_VTUTIL_HAVE_64RGBALE __builtin_available(macOS 11.3, *)
 
 G_BEGIN_DECLS
 

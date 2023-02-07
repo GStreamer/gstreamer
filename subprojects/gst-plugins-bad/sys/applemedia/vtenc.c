@@ -254,7 +254,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
     if (enable_argb) {
       caps = gst_vtutil_caps_append_video_format (caps, "ARGB64_BE");
       /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
-      if (GST_VTUTIL_HAVE_64ARGBALE)
+      if (GST_VTUTIL_HAVE_64RGBALE)
         caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
     }
 #endif
@@ -1741,7 +1741,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
           pixel_format_type = kCVPixelFormatType_4444AYpCbCr16;
           break;
         case GST_VIDEO_FORMAT_RGBA64_LE:
-          if (GST_VTUTIL_HAVE_64ARGBALE)
+          if (GST_VTUTIL_HAVE_64RGBALE)
             pixel_format_type = kCVPixelFormatType_64RGBALE;
           else
             /* Codepath will never be hit on macOS older than Big Sur (11.3) */
