@@ -67,7 +67,7 @@ enum
   PROP_CUDA_DEVICE_ID,
 };
 
-static GTypeClass *parent_class = NULL;
+static GTypeClass *parent_class = nullptr;
 
 #define GST_NV_VP8_DEC(object) ((GstNvVp8Dec *) (object))
 #define GST_NV_VP8_DEC_GET_CLASS(object) \
@@ -119,7 +119,7 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass,
   g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id", "CUDA device id",
           "Assigned CUDA device id", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_vp8_dec_set_context);
 
@@ -515,11 +515,11 @@ gst_nv_vp8_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   gint index = 0;
   GTypeInfo type_info = {
     sizeof (GstNvVp8DecClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_nv_vp8_dec_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstNvVp8Dec),
     0,
     (GInstanceInitFunc) gst_nv_vp8_dec_init,
@@ -555,7 +555,7 @@ gst_nv_vp8_dec_register (GstPlugin * plugin, guint device_id, guint rank,
 
   type_info.class_data = cdata;
   type = g_type_register_static (GST_TYPE_VP8_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index > 0)

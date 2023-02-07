@@ -135,7 +135,7 @@ enum
   PROP_CUDA_DEVICE_ID,
 };
 
-static GTypeClass *parent_class = NULL;
+static GTypeClass *parent_class = nullptr;
 
 #define GST_NV_H265_DEC(object) ((GstNvH265Dec *) (object))
 #define GST_NV_H265_DEC_GET_CLASS(object) \
@@ -193,7 +193,7 @@ gst_nv_h265_dec_class_init (GstNvH265DecClass * klass,
   g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id", "CUDA device id",
           "Assigned CUDA device id", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h265_dec_set_context);
 
@@ -377,7 +377,7 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
     gint max_dpb_size)
 {
   GstNvH265Dec *self = GST_NV_H265_DEC (decoder);
-  gint crop_width, crop_height;
+  guint crop_width, crop_height;
   gboolean modified = FALSE;
 
   GST_LOG_OBJECT (self, "new sequence");
@@ -391,7 +391,8 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   }
 
   if (self->width != crop_width || self->height != crop_height ||
-      self->coded_width != sps->width || self->coded_height != sps->height) {
+      self->coded_width != (guint) sps->width ||
+      self->coded_height != (guint) sps->height) {
     GST_INFO_OBJECT (self, "resolution changed %dx%d (%dx%d)",
         crop_width, crop_height, sps->width, sps->height);
     self->width = crop_width;
@@ -401,7 +402,7 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
     modified = TRUE;
   }
 
-  if (self->bitdepth != sps->bit_depth_luma_minus8 + 8) {
+  if (self->bitdepth != (guint) sps->bit_depth_luma_minus8 + 8) {
     GST_INFO_OBJECT (self, "bitdepth changed");
     self->bitdepth = sps->bit_depth_luma_minus8 + 8;
     modified = TRUE;
@@ -601,7 +602,7 @@ static gboolean
 gst_nv_h265_dec_picture_params_from_pps (GstNvH265Dec * self,
     const GstH265PPS * pps, CUVIDHEVCPICPARAMS * params)
 {
-  gint i;
+  guint i;
 
 #define COPY_FIELD(f) \
   (params)->f = (pps)->f
@@ -703,9 +704,9 @@ gst_nv_h265_dec_reset_bitstream_params (GstNvH265Dec * self)
   self->num_slices = 0;
 
   self->params.nBitstreamDataLen = 0;
-  self->params.pBitstreamData = NULL;
+  self->params.pBitstreamData = nullptr;
   self->params.nNumSlices = 0;
-  self->params.pSliceDataOffsets = NULL;
+  self->params.pSliceDataOffsets = nullptr;
 }
 
 static GstFlowReturn
@@ -720,9 +721,9 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   const GstH265PPS *pps;
   GstNvDecoderFrame *frame;
   GArray *dpb_array;
-  gint num_ref_pic;
-  gint i, j, k;
-  const GstH265ScalingList *scaling_list = NULL;
+  guint num_ref_pic;
+  guint i, j, k;
+  const GstH265ScalingList *scaling_list = nullptr;
 
   /* both NVDEC and h265parser are using the same order */
   G_STATIC_ASSERT (sizeof (scaling_list->scaling_lists_4x4) ==
@@ -734,8 +735,8 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   G_STATIC_ASSERT (sizeof (scaling_list->scaling_lists_32x32) ==
       sizeof (h265_params->ScalingList32x32));
 
-  g_return_val_if_fail (slice_header->pps != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (slice_header->pps->sps != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (slice_header->pps != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (slice_header->pps->sps != nullptr, GST_FLOW_ERROR);
 
   frame = gst_nv_h265_dec_get_decoder_frame_from_picture (self, picture);
 
@@ -827,7 +828,7 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   g_array_unref (dpb_array);
 
   for (i = 0, j = 0; i < num_ref_pic; i++) {
-    GstH265Picture *other = NULL;
+    GstH265Picture *other = nullptr;
 
     while (!other && j < decoder->NumPocStCurrBefore)
       other = decoder->RefPicSetStCurrBefore[j++];
@@ -843,7 +844,7 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   }
 
   for (i = 0, j = 0; i < num_ref_pic; i++) {
-    GstH265Picture *other = NULL;
+    GstH265Picture *other = nullptr;
 
     while (!other && j < decoder->NumPocStCurrAfter)
       other = decoder->RefPicSetStCurrAfter[j++];
@@ -859,7 +860,7 @@ gst_nv_h265_dec_start_picture (GstH265Decoder * decoder,
   }
 
   for (i = 0, j = 0; i < num_ref_pic; i++) {
-    GstH265Picture *other = NULL;
+    GstH265Picture *other = nullptr;
 
     while (!other && j < decoder->NumPocLtCurr)
       other = decoder->RefPicSetLtCurr[j++];
@@ -995,11 +996,11 @@ gst_nv_h265_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   GValue value = G_VALUE_INIT;
   GTypeInfo type_info = {
     sizeof (GstNvH265DecClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_nv_h265_dec_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstNvH265Dec),
     0,
     (GInstanceInitFunc) gst_nv_h265_dec_init,
@@ -1055,7 +1056,7 @@ gst_nv_h265_dec_register (GstPlugin * plugin, guint device_id, guint rank,
 
   type_info.class_data = cdata;
   type = g_type_register_static (GST_TYPE_H265_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index > 0)

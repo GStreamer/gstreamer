@@ -139,7 +139,7 @@ enum
   PROP_CUDA_DEVICE_ID,
 };
 
-static GTypeClass *parent_class = NULL;
+static GTypeClass *parent_class = nullptr;
 
 #define GST_NV_H264_DEC(object) ((GstNvH264Dec *) (object))
 #define GST_NV_H264_DEC_GET_CLASS(object) \
@@ -202,7 +202,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
   g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id", "CUDA device id",
           "Assigned CUDA device id", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_set_context);
 
@@ -418,7 +418,7 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     gint max_dpb_size)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
-  gint crop_width, crop_height;
+  guint crop_width, crop_height;
   gboolean modified = FALSE;
   gboolean interlaced;
 
@@ -433,7 +433,8 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
   }
 
   if (self->width != crop_width || self->height != crop_height ||
-      self->coded_width != sps->width || self->coded_height != sps->height) {
+      self->coded_width != (guint) sps->width ||
+      self->coded_height != (guint) sps->height) {
     GST_INFO_OBJECT (self, "resolution changed %dx%d (%dx%d)",
         crop_width, crop_height, sps->width, sps->height);
     self->width = crop_width;
@@ -443,7 +444,7 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     modified = TRUE;
   }
 
-  if (self->bitdepth != sps->bit_depth_luma_minus8 + 8) {
+  if (self->bitdepth != (guint) sps->bit_depth_luma_minus8 + 8) {
     GST_INFO_OBJECT (self, "bitdepth changed");
     self->bitdepth = sps->bit_depth_luma_minus8 + 8;
     modified = TRUE;
@@ -701,9 +702,9 @@ gst_nv_h264_dec_reset_bitstream_params (GstNvH264Dec * self)
   self->num_slices = 0;
 
   self->params.nBitstreamDataLen = 0;
-  self->params.pBitstreamData = NULL;
+  self->params.pBitstreamData = nullptr;
   self->params.nNumSlices = 0;
-  self->params.pSliceDataOffsets = NULL;
+  self->params.pSliceDataOffsets = nullptr;
 }
 
 static void
@@ -781,8 +782,8 @@ gst_nv_h264_dec_start_picture (GstH264Decoder * decoder,
   GArray *ref_list = self->ref_list;
   guint i, ref_frame_idx;
 
-  g_return_val_if_fail (slice_header->pps != NULL, FALSE);
-  g_return_val_if_fail (slice_header->pps->sequence != NULL, FALSE);
+  g_return_val_if_fail (slice_header->pps != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (slice_header->pps->sequence != nullptr, GST_FLOW_ERROR);
 
   frame = gst_nv_h264_dec_get_decoder_frame_from_picture (self, picture);
 
@@ -956,11 +957,11 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   GstStructure *s;
   GTypeInfo type_info = {
     sizeof (GstNvH264DecClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_nv_h264_dec_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstNvH264Dec),
     0,
     (GInstanceInitFunc) gst_nv_h264_dec_init,
@@ -1011,7 +1012,7 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   type_info.class_data = cdata;
 
   type = g_type_register_static (GST_TYPE_H264_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index > 0)

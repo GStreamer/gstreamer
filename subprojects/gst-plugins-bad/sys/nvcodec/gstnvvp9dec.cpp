@@ -68,7 +68,7 @@ enum
   PROP_CUDA_DEVICE_ID,
 };
 
-static GTypeClass *parent_class = NULL;
+static GTypeClass *parent_class = nullptr;
 
 #define GST_NV_VP9_DEC(object) ((GstNvVp9Dec *) (object))
 #define GST_NV_VP9_DEC_GET_CLASS(object) \
@@ -122,7 +122,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
   g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id", "CUDA device id",
           "Assigned CUDA device id", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_set_context);
 
@@ -310,7 +310,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
 
   self->width = frame_hdr->width;
   self->height = frame_hdr->height;
-  self->profile = frame_hdr->profile;
+  self->profile = (GstVP9Profile) frame_hdr->profile;
 
   if (self->profile == GST_VP9_PROFILE_0) {
     out_format = GST_VIDEO_FORMAT_NV12;
@@ -395,7 +395,7 @@ gst_nv_vp9_dec_duplicate_picture (GstVp9Decoder * decoder,
 
   if (!nv_frame) {
     GST_ERROR_OBJECT (self, "Parent picture does not have decoder frame");
-    return NULL;
+    return nullptr;
   }
 
   new_picture = gst_vp9_picture_new ();
@@ -610,11 +610,11 @@ gst_nv_vp9_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   gint index = 0;
   GTypeInfo type_info = {
     sizeof (GstNvVp9DecClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_nv_vp9_dec_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstNvVp9Dec),
     0,
     (GInstanceInitFunc) gst_nv_vp9_dec_init,
@@ -625,7 +625,7 @@ gst_nv_vp9_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata = g_new0 (GstNvDecoderClassData, 1);
   cdata->sink_caps = gst_caps_copy (sink_caps);
   gst_caps_set_simple (cdata->sink_caps,
-      "alignment", G_TYPE_STRING, "frame", NULL);
+      "alignment", G_TYPE_STRING, "frame", nullptr);
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   cdata->src_caps = gst_caps_ref (src_caps);
@@ -655,7 +655,7 @@ gst_nv_vp9_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   type_info.class_data = cdata;
 
   type = g_type_register_static (GST_TYPE_VP9_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index > 0)

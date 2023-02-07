@@ -83,7 +83,7 @@ enum
   PROP_CUDA_DEVICE_ID,
 };
 
-static GTypeClass *parent_class = NULL;
+static GTypeClass *parent_class = nullptr;
 
 #define GST_NV_AV1_DEC(object) ((GstNvAV1Dec *) (object))
 #define GST_NV_AV1_DEC_GET_CLASS(object) \
@@ -133,7 +133,7 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
   g_object_class_install_property (object_class, PROP_CUDA_DEVICE_ID,
       g_param_spec_uint ("cuda-device-id", "CUDA device id",
           "Assigned CUDA device id", 0, G_MAXINT, 0,
-          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_set_context);
 
@@ -252,9 +252,9 @@ gst_nv_av1_dec_reset_bitstream_params (GstNvAV1Dec * self)
   self->num_tiles = 0;
 
   self->params.nBitstreamDataLen = 0;
-  self->params.pBitstreamData = NULL;
+  self->params.pBitstreamData = nullptr;
   self->params.nNumSlices = 0;
-  self->params.pSliceDataOffsets = NULL;
+  self->params.pSliceDataOffsets = nullptr;
 }
 
 static gboolean
@@ -268,10 +268,10 @@ gst_nv_av1_dec_close (GstVideoDecoder * decoder)
   gst_nv_av1_dec_reset_bitstream_params (self);
 
   g_free (self->bitstream_buffer);
-  self->bitstream_buffer = NULL;
+  self->bitstream_buffer = nullptr;
 
   g_free (self->tile_offsets);
-  self->tile_offsets = NULL;
+  self->tile_offsets = nullptr;
 
   self->bitstream_buffer_alloc_size = 0;
   self->tile_offsets_alloc_len = 0;
@@ -455,7 +455,7 @@ gst_nv_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
 
   if (!nv_frame) {
     GST_ERROR_OBJECT (self, "Parent picture does not have decoder frame");
-    return NULL;
+    return nullptr;
   }
 
   new_picture = gst_av1_picture_new ();
@@ -705,7 +705,7 @@ gst_nv_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
   for (i = 0; i < GST_AV1_REFS_PER_FRAME; i++) {
     gint8 ref_idx = frame_hdr->ref_frame_idx[i];
 
-    other_pic = NULL;
+    other_pic = nullptr;
 
     if (ref_idx >= 0)
       other_pic = dpb->pic_list[ref_idx];
@@ -899,11 +899,11 @@ gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   guint index = 0;
   GTypeInfo type_info = {
     sizeof (GstNvAV1DecClass),
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     (GClassInitFunc) gst_nv_av1_dec_class_init,
-    NULL,
-    NULL,
+    nullptr,
+    nullptr,
     sizeof (GstNvAV1Dec),
     0,
     (GInstanceInitFunc) gst_nv_av1_dec_init,
@@ -931,7 +931,7 @@ gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   }
 
   type = g_type_register_static (GST_TYPE_AV1_DECODER,
-      type_name, &type_info, 0);
+      type_name, &type_info, (GTypeFlags) 0);
 
   /* make lower rank than default device */
   if (rank > 0 && index != 0)
