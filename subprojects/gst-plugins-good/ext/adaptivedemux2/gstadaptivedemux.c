@@ -2267,87 +2267,100 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
   GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
 
-  /*
-   * Handle snap seeks as follows:
-   * 1) do the snap seeking a (random) active stream
-   * 2) use the final position on this stream to seek
-   *    on the other streams to the same position
-   *
-   * We can't snap at all streams at the same time as they might end in
-   * different positions, so just pick one and align all others to that
-   * position.
-   */
+  if (IS_SNAP_SEEK (flags)) {
+    GstAdaptiveDemux2Stream *default_stream = NULL;
+    GstAdaptiveDemux2Stream *stream = NULL;
+    GList *iter;
+    /*
+     * Handle snap seeks as follows:
+     * 1) do the snap seeking a (random) active stream
+     * 1.1) If none are active yet (early-seek), pick a random default one
+     * 2) use the final position on this stream to seek
+     *    on the other streams to the same position
+     *
+     * We can't snap at all streams at the same time as they might end in
+     * different positions, so just pick one and align all others to that
+     * position.
+     */
 
-  GstAdaptiveDemux2Stream *stream = NULL;
-  GList *iter;
-  /* Pick a random active stream on which to do the stream seek */
-  for (iter = demux->output_period->streams; iter; iter = iter->next) {
-    GstAdaptiveDemux2Stream *cand = iter->data;
-    if (gst_adaptive_demux2_stream_is_selected_locked (cand)) {
-      stream = cand;
-      break;
-    }
-  }
-
-  if (stream && IS_SNAP_SEEK (flags)) {
-    GstClockTimeDiff ts;
-    GstSeekFlags stream_seek_flags = flags;
-
-    /* snap-seek on the chosen stream and then
-     * use the resulting position to seek on all streams */
-    if (rate >= 0) {
-      if (start_type != GST_SEEK_TYPE_NONE)
-        ts = start;
-      else {
-        ts = gst_segment_position_from_running_time (&demux->segment,
-            GST_FORMAT_TIME, demux->priv->global_output_position);
-        start_type = GST_SEEK_TYPE_SET;
-      }
-    } else {
-      if (stop_type != GST_SEEK_TYPE_NONE)
-        ts = stop;
-      else {
-        stop_type = GST_SEEK_TYPE_SET;
-        ts = gst_segment_position_from_running_time (&demux->segment,
-            GST_FORMAT_TIME, demux->priv->global_output_position);
-      }
-    }
-
-    GstFlowReturn flow_ret =
-        gst_adaptive_demux2_stream_seek (stream, rate >= 0, stream_seek_flags,
-        ts, &ts);
-
-    /* Handle fragment info waiting on BUSY */
-    while (flow_ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY) {
-      if (!gst_adaptive_demux2_stream_wait_prepared (stream))
+    /* Pick a random active stream on which to do the stream seek */
+    for (iter = demux->output_period->streams; iter; iter = iter->next) {
+      GstAdaptiveDemux2Stream *cand = iter->data;
+      if (gst_adaptive_demux2_stream_is_selected_locked (cand)) {
+        stream = cand;
         break;
-      flow_ret = gst_adaptive_demux2_stream_update_fragment_info (stream);
+      }
+      if (default_stream == NULL
+          && gst_adaptive_demux2_stream_is_default_locked (cand))
+        default_stream = cand;
     }
 
-    if (flow_ret != GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (demux,
-          "Seek on stream %" GST_PTR_FORMAT " failed with flow return %s",
-          stream, gst_flow_get_name (flow_ret));
+    if (stream == NULL)
+      stream = default_stream;
 
-      GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-      GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
+    if (stream) {
+      GstClockTimeDiff ts;
+      GstSeekFlags stream_seek_flags = flags;
 
-      GST_API_UNLOCK (demux);
+      /* snap-seek on the chosen stream and then
+       * use the resulting position to seek on all streams */
+      if (rate >= 0) {
+        if (start_type != GST_SEEK_TYPE_NONE)
+          ts = start;
+        else {
+          ts = gst_segment_position_from_running_time (&demux->segment,
+              GST_FORMAT_TIME, demux->priv->global_output_position);
+          start_type = GST_SEEK_TYPE_SET;
+        }
+      } else {
+        if (stop_type != GST_SEEK_TYPE_NONE)
+          ts = stop;
+        else {
+          stop_type = GST_SEEK_TYPE_SET;
+          ts = gst_segment_position_from_running_time (&demux->segment,
+              GST_FORMAT_TIME, demux->priv->global_output_position);
+        }
+      }
+
+      GstFlowReturn flow_ret =
+          gst_adaptive_demux2_stream_seek (stream, rate >= 0, stream_seek_flags,
+          ts, &ts);
+
+      /* Handle fragment info waiting on BUSY */
+      while (flow_ret == GST_ADAPTIVE_DEMUX_FLOW_BUSY) {
+        if (!gst_adaptive_demux2_stream_wait_prepared (stream))
+          break;
+        flow_ret = gst_adaptive_demux2_stream_update_fragment_info (stream);
+      }
+
+      if (flow_ret != GST_FLOW_OK) {
+        GST_DEBUG_OBJECT (demux,
+            "Seek on stream %" GST_PTR_FORMAT " failed with flow return %s",
+            stream, gst_flow_get_name (flow_ret));
+
+        GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
+        GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
+
+
+        GST_API_UNLOCK (demux);
+
+        gst_event_unref (event);
+
+        return FALSE;
+
+      }
+      /* replace event with a new one without snapping to seek on all streams */
       gst_event_unref (event);
-      return FALSE;
+      if (rate >= 0) {
+        start = ts;
+      } else {
+        stop = ts;
+      }
+      event =
+          gst_event_new_seek (rate, format, REMOVE_SNAP_FLAGS (flags),
+          start_type, start, stop_type, stop);
+      GST_DEBUG_OBJECT (demux, "Adapted snap seek to %" GST_PTR_FORMAT, event);
     }
-
-    /* replace event with a new one without snapping to seek on all streams */
-    gst_event_unref (event);
-    if (rate >= 0) {
-      start = ts;
-    } else {
-      stop = ts;
-    }
-    event =
-        gst_event_new_seek (rate, format, REMOVE_SNAP_FLAGS (flags),
-        start_type, start, stop_type, stop);
-    GST_DEBUG_OBJECT (demux, "Adapted snap seek to %" GST_PTR_FORMAT, event);
   }
 
   ret = gst_segment_do_seek (&demux->segment, rate, format, flags, start_type,

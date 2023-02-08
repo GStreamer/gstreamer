@@ -2229,6 +2229,20 @@ gst_adaptive_demux2_stream_is_selected_locked (GstAdaptiveDemux2Stream * stream)
   return FALSE;
 }
 
+gboolean
+gst_adaptive_demux2_stream_is_default_locked (GstAdaptiveDemux2Stream * stream)
+{
+  GList *tmp;
+
+  for (tmp = stream->tracks; tmp; tmp = tmp->next) {
+    GstAdaptiveDemuxTrack *track = tmp->data;
+    if (track->flags & GST_STREAM_FLAG_SELECT)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 /**
  * gst_adaptive_demux2_stream_is_selected:
  * @stream: A #GstAdaptiveDemux2Stream
