@@ -504,6 +504,18 @@ _track_sink_chain_function (GstPad * pad, GstObject * parent,
 
   TRACKS_LOCK (demux);
 
+  /* Discard buffers that are received outside of a valid segment. This can
+   * happen if a flushing seek (which resets the track segment seqnums) was
+   * received but the stream is still providing buffers before returning.
+   */
+  if (track->input_segment_seqnum == GST_SEQNUM_INVALID) {
+    GST_DEBUG_OBJECT (pad,
+        "Dropping buffer because we do not have a valid input segment");
+    gst_buffer_unref (buffer);
+    TRACKS_UNLOCK (demux);
+    return GST_FLOW_OK;
+  }
+
   ts = GST_BUFFER_DTS_OR_PTS (buffer);
 
   /* Buffers coming out of parsebin *should* always be timestamped (it's the
@@ -647,6 +659,14 @@ _track_sink_event_function (GstPad * pad, GstObject * parent, GstEvent * event)
 
       if (track->input_segment_seqnum == seg_seqnum) {
         GST_DEBUG_ID (track->id, "Ignoring duplicate segment");
+        gst_event_unref (event);
+        TRACKS_UNLOCK (demux);
+
+        return TRUE;
+      }
+
+      if (seg_seqnum != demux->priv->segment_seqnum) {
+        GST_DEBUG_OBJECT (pad, "Ignoring non-current segment");
         gst_event_unref (event);
         TRACKS_UNLOCK (demux);
 
