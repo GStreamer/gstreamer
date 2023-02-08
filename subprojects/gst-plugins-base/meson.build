@@ -305,6 +305,13 @@ if get_option('default_library') == 'static'
   gst_plugins_base_args += ['-DGST_STATIC_COMPILATION']
 endif
 
+libdrm_dep = dependency('libdrm', version : '>= 2.4.98',
+  required : get_option('drm'),
+  fallback: ['libdrm', 'ext_libdrm']
+)
+
+core_conf.set('HAVE_LIBDRM', libdrm_dep.found())
+
 # X11 checks are for sys/ and tests/
 x11_dep = dependency('x11', required : get_option('x11'))
 # GIO is used by the GIO plugin, and by the TCP, SDP, and RTSP plugins

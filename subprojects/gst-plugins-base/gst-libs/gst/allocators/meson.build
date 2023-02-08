@@ -4,10 +4,11 @@ gst_allocators_headers = files([
   'gstfdmemory.h',
   'gstphysmemory.h',
   'gstdmabuf.h',
+  'gstdrmdumb.h',
 ])
 install_headers(gst_allocators_headers, subdir : 'gstreamer-1.0/gst/allocators/')
 
-gst_allocators_sources = files([ 'gstdmabuf.c', 'gstfdmemory.c', 'gstphysmemory.c'])
+gst_allocators_sources = files([ 'gstdrmdumb.c', 'gstdmabuf.c', 'gstfdmemory.c', 'gstphysmemory.c'])
 gstallocators = library('gstallocators-@0@'.format(api_version),
   gst_allocators_sources,
   c_args : gst_plugins_base_args + ['-DBUILDING_GST_ALLOCATORS', '-DG_LOG_DOMAIN="GStreamer-Allocators"'],
@@ -16,12 +17,12 @@ gstallocators = library('gstallocators-@0@'.format(api_version),
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : [gst_dep],
+  dependencies : [libdrm_dep, gst_dep],
 )
 
 pkg_name = 'gstreamer-allocators-1.0'
 pkgconfig.generate(gstallocators,
-  libraries : [gst_dep],
+  libraries : [libdrm_dep, gst_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,
