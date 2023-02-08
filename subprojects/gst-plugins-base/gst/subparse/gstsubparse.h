@@ -75,6 +75,7 @@ struct _GstSubParse {
   guint64 offset;
   
   /* Segment */
+  guint32       segment_seqnum;
   GstSegment    segment;
   gboolean      need_segment;
   
