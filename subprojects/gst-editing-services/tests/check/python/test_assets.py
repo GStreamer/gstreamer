@@ -27,6 +27,7 @@ gi.require_version("Gst", "1.0")
 gi.require_version("GES", "1.0")
 
 from gi.repository import Gst  # noqa
+from gi.repository import GstPbutils  # noqa
 from gi.repository import GLib  # noqa
 from gi.repository import GES  # noqa
 import unittest  # noqa
@@ -74,6 +75,7 @@ class TestTimeline(GESSimpleTimelineTest):
 
                 with common.created_video_asset(uri, 6, framerate="2/1") as uri:
                     mainloop = common.create_main_loop()
+
                     def asset_loaded_cb(_, res, mainloop):
                         asset2 = GES.Asset.request_finish(res)
                         self.assertEqual(asset2.props.duration, 3 * Gst.SECOND)
@@ -85,30 +87,66 @@ class TestTimeline(GESSimpleTimelineTest):
                     mainloop.run()
 
     def test_asset_metadata_on_reload(self):
-            mainloop = GLib.MainLoop()
+        mainloop = GLib.MainLoop()
 
-            unused, xges_path = tempfile.mkstemp(suffix=".xges")
-            project_uri = Gst.filename_to_uri(os.path.abspath(xges_path))
+        unused, xges_path = tempfile.mkstemp(suffix=".xges")
+        project_uri = Gst.filename_to_uri(os.path.abspath(xges_path))
 
-            asset_uri = Gst.filename_to_uri(os.path.join(__file__, "../../assets/audio_video.ogg"))
-            xges = """<ges version='0.3'>
-                <project properties='properties;' metadatas='metadatas;'>
-                    <ressources>
-                        <asset id='%(uri)s' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)2003000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)und, application-name=(string)Lavc56.60.100, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)80000, bitrate=(uint)80000, video-codec=(string)&quot;On2\ VP8&quot;, file-size=(guint64)223340, foo=(string)bar;' >
-                        </asset>
-                    </ressources>
-                </project>
-                </ges>"""% {"uri": asset_uri}
-            with open(xges_path, "w") as xges_file:
-                xges_file.write(xges)
+        asset_uri = Gst.filename_to_uri(os.path.join(__file__, "../../assets/audio_video.ogg"))
+        xges = """<ges version='0.3'>
+            <project properties='properties;' metadatas='metadatas;'>
+                <ressources>
+                    <asset id='%(uri)s' extractable-type-name='GESUriClip' properties='properties, supported-formats=(int)6, duration=(guint64)2003000000;' metadatas='metadatas, container-format=(string)Matroska, language-code=(string)und, application-name=(string)Lavc56.60.100, encoder-version=(uint)0, audio-codec=(string)Vorbis, nominal-bitrate=(uint)80000, bitrate=(uint)80000, video-codec=(string)&quot;On2\ VP8&quot;, file-size=(guint64)223340, foo=(string)bar;' >
+                    </asset>
+                </ressources>
+            </project>
+            </ges>""" % {"uri": asset_uri}
+        with open(xges_path, "w") as xges_file:
+            xges_file.write(xges)
 
+        def loaded_cb(project, timeline):
+            asset = project.list_assets(GES.Extractable)[0]
+            self.assertEqual(asset.get_meta("foo"), "bar")
+            mainloop.quit()
 
-            def loaded_cb(project, timeline):
-                asset = project.list_assets(GES.Extractable)[0]
-                self.assertEqual(asset.get_meta("foo"), "bar")
-                mainloop.quit()
+        loaded_project = GES.Project(uri=project_uri, extractable_type=GES.Timeline)
+        loaded_project.connect("loaded", loaded_cb)
+        timeline = loaded_project.extract()
+        mainloop.run()
 
-            loaded_project = GES.Project(uri=project_uri, extractable_type=GES.Timeline)
-            loaded_project.connect("loaded", loaded_cb)
-            timeline = loaded_project.extract()
-            mainloop.run()
+    def test_asset_load_serialized_info(self):
+        mainloop = GLib.MainLoop()
+
+        serialized_infos = {}
+        n_calls = 0
+        n_cache_hits = 0
+
+        def load_serialized_info_cb(_manager, uri):
+            nonlocal n_calls, n_cache_hits, serialized_infos
+
+            n_calls += 1
+            res = serialized_infos.get(uri)
+            if res:
+                n_cache_hits += 1
+            return res
+
+        GES.DiscovererManager.get_default().connect("load-serialized-info",
+                                                    load_serialized_info_cb)
+
+        self.assertEqual(n_calls, 0)
+        asset = GES.UriClipAsset.request_sync(Gst.filename_to_uri(os.path.join(__file__, "../../assets/audio_video.ogg")))
+        self.assertEqual(n_calls, 1)
+        self.assertEqual(n_cache_hits, 0)
+
+        serialized_infos[asset.get_id()] = asset.get_info()
+
+        # Clear the GES internal asset cache
+        GES.deinit()
+        GES.init()
+
+        # Connect to the new manager, previous one was destroyed on deinit
+        GES.DiscovererManager.get_default().connect("load-serialized-info",
+                                                    load_serialized_info_cb)
+        asset = GES.UriClipAsset.request_sync(Gst.filename_to_uri(os.path.join(__file__, "../../assets/audio_video.ogg")))
+        self.assertEqual(n_calls, 2)
+        self.assertEqual(n_cache_hits, 1)
