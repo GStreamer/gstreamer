@@ -2065,7 +2065,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   gint64 start, stop;
   guint32 seqnum;
   gboolean update;
-  gboolean ret;
+  gboolean ret = FALSE;
   GstSegment oldsegment;
   GstEvent *flush_event;
 
@@ -2113,9 +2113,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
       GST_ERROR_OBJECT (demux,
           "Instant rate change seeks only supported in the "
           "same direction, without flushing and position change");
-      GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-      GST_API_UNLOCK (demux);
-      return FALSE;
+      goto unlock_return;
     }
 
     rate_multiplier = rate / demux->segment.rate;
@@ -2131,32 +2129,17 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
       demux->instant_rate_multiplier = rate_multiplier;
       GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
     }
-
-    GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-    GST_API_UNLOCK (demux);
-    gst_event_unref (event);
-
-    return ret;
+    goto unlock_return;
   }
 
-  if (!gst_adaptive_demux_can_seek (demux)) {
-    GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-
-    GST_API_UNLOCK (demux);
-    gst_event_unref (event);
-    return FALSE;
-  }
+  if (!gst_adaptive_demux_can_seek (demux))
+    goto unlock_return;
 
   /* We can only accept flushing seeks from this point onward */
   if (!(flags & GST_SEEK_FLAG_FLUSH)) {
     GST_ERROR_OBJECT (demux,
         "Non-flushing non-instant-rate seeks are not possible");
-
-    GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-
-    GST_API_UNLOCK (demux);
-    gst_event_unref (event);
-    return FALSE;
+    goto unlock_return;
   }
 
   if (gst_adaptive_demux_is_live (demux)) {
@@ -2166,11 +2149,8 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
     if (!gst_adaptive_demux_get_live_seek_range (demux, &range_start,
             &range_stop)) {
-      GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-      GST_API_UNLOCK (demux);
-      gst_event_unref (event);
       GST_WARNING_OBJECT (demux, "Failure getting the live seek ranges");
-      return FALSE;
+      goto unlock_return;
     }
 
     GST_DEBUG_OBJECT (demux,
@@ -2232,12 +2212,8 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
     }
 
     /* If the seek position is still outside of the seekable range, refuse the seek */
-    if (!start_valid || !stop_valid) {
-      GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-      GST_API_UNLOCK (demux);
-      gst_event_unref (event);
-      return FALSE;
-    }
+    if (!start_valid || !stop_valid)
+      goto unlock_return;
 
     /* Re-create seek event with changed/updated values */
     if (changed) {
@@ -2335,17 +2311,8 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
         GST_DEBUG_OBJECT (demux,
             "Seek on stream %" GST_PTR_FORMAT " failed with flow return %s",
             stream, gst_flow_get_name (flow_ret));
-
-        GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
         GST_ADAPTIVE_DEMUX_SEGMENT_UNLOCK (demux);
-
-
-        GST_API_UNLOCK (demux);
-
-        gst_event_unref (event);
-
-        return FALSE;
-
+        goto unlock_return;
       }
       /* replace event with a new one without snapping to seek on all streams */
       gst_event_unref (event);
@@ -2411,6 +2378,7 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   gst_adaptive_demux_set_streams_can_download_fragments (demux, TRUE);
   gst_adaptive_demux_start_tasks (demux);
 
+unlock_return:
   GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
   GST_API_UNLOCK (demux);
   gst_event_unref (event);
