@@ -397,7 +397,11 @@ gst_va_encoder_open (GstVaEncoder * self, VAProfile profile,
     GST_ERROR_OBJECT (self, "Failed to create reconstruct pool");
     goto error;
   }
-  gst_buffer_pool_set_active (recon_pool, TRUE);
+
+  if (!gst_buffer_pool_set_active (recon_pool, TRUE)) {
+    GST_ERROR_OBJECT (self, "Failed to activate reconstruct pool");
+    goto error;
+  }
 
   status = vaCreateContext (dpy, config, coded_width, coded_height,
       VA_PROGRESSIVE, NULL, 0, &context);

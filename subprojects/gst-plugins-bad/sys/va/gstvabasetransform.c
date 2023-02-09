@@ -768,7 +768,10 @@ _get_sinkpad_pool (GstVaBaseTransform * self)
 
   if (self->priv->sinkpad_caps) {
     caps = self->priv->sinkpad_caps;
-    gst_video_info_from_caps (&in_info, caps);
+    if (!gst_video_info_from_caps (&in_info, caps)) {
+      GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+      return NULL;
+    }
   } else {
     caps = self->in_caps;
     in_info = self->in_info;

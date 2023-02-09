@@ -300,7 +300,11 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
     return NULL;
   }
 
-  gst_buffer_pool_set_active (pool, TRUE);
+  if (!gst_buffer_pool_set_active (pool, TRUE)) {
+    GST_WARNING_OBJECT (self, "Failed to activate internal pool");
+    gst_object_unref (pool);
+    return NULL;
+  }
 
   return pool;
 }
