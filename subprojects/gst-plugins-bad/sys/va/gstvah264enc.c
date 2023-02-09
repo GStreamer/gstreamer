@@ -1200,11 +1200,13 @@ _calculate_coded_size (GstVaH264Enc * self)
         BitDepthC = 10;
         MbWidthC = 8;
         MbHeightC = 8;
+        break;
       case VA_RT_FORMAT_YUV422_10:
         BitDepthY = 10;
         BitDepthC = 10;
         MbWidthC = 8;
         MbHeightC = 16;
+        break;
       case VA_RT_FORMAT_YUV444_10:
         BitDepthY = 10;
         BitDepthC = 10;

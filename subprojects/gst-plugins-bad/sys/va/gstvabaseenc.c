@@ -229,7 +229,10 @@ _get_sinkpad_pool (GstVaBaseEnc * base)
 
   gst_object_unref (allocator);
 
-  gst_buffer_pool_set_active (base->priv->raw_pool, TRUE);
+  if (!gst_buffer_pool_set_active (base->priv->raw_pool, TRUE)) {
+    GST_WARNING_OBJECT (base, "Failed to activate sinkpad pool");
+    return NULL;
+  }
 
   return base->priv->raw_pool;
 }
@@ -690,8 +693,10 @@ error_reorder:
   {
     GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
         ("Failed to reorder the input frame."), (NULL));
-    gst_clear_buffer (&frame->output_buffer);
-    gst_video_encoder_finish_frame (venc, frame);
+    if (frame) {
+      gst_clear_buffer (&frame->output_buffer);
+      gst_video_encoder_finish_frame (venc, frame);
+    }
     return GST_FLOW_ERROR;
   }
 error_encode:
