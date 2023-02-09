@@ -2241,6 +2241,12 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
   GST_ADAPTIVE_DEMUX_SEGMENT_LOCK (demux);
 
+  if (!IS_SNAP_SEEK (flags) && !(flags & GST_SEEK_FLAG_ACCURATE)) {
+    /* If no accurate seeking was specified, we want to default to seeking to
+     * the previous segment for efficient/fast playback. */
+    flags |= GST_SEEK_FLAG_KEY_UNIT;
+  }
+
   if (IS_SNAP_SEEK (flags)) {
     GstAdaptiveDemux2Stream *default_stream = NULL;
     GstAdaptiveDemux2Stream *stream = NULL;
