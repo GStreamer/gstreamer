@@ -1020,7 +1020,7 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
     }
   }
 
-  if (drain)
+  if (drain || flush)
     VTDecompressionSessionWaitForAsynchronousFrames (vtdec->session);
 
   /* push a buffer if there are enough frames to guarantee that we push in PTS
