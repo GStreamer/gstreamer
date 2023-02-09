@@ -513,7 +513,7 @@ static inline GstAjaMemory *_aja_memory_new(GstAjaAllocator *alloc,
                                             gsize size) {
   GstAjaMemory *mem;
 
-  mem = (GstAjaMemory *)g_slice_alloc(sizeof(GstAjaMemory));
+  mem = (GstAjaMemory *)g_new0(GstAjaMemory, 1);
   _aja_memory_init(alloc, mem, flags, (GstMemory *)parent, data, maxsize,
                    offset, size);
 
@@ -526,7 +526,7 @@ static GstAjaMemory *_aja_memory_new_block(GstAjaAllocator *alloc,
   GstAjaMemory *mem;
   guint8 *data;
 
-  mem = (GstAjaMemory *)g_slice_alloc(sizeof(GstAjaMemory));
+  mem = (GstAjaMemory *)g_new0(GstAjaMemory, 1);
 
   data = (guint8 *)AJAMemory::AllocateAligned(maxsize, 4096);
   GST_TRACE_OBJECT(alloc, "Allocated %" G_GSIZE_FORMAT " at %p", maxsize, data);
@@ -604,7 +604,7 @@ static void gst_aja_allocator_free(GstAllocator *alloc, GstMemory *mem) {
     AJAMemory::FreeAligned(dmem->data);
   }
 
-  g_slice_free1(sizeof(GstAjaMemory), dmem);
+  g_free(dmem);
 }
 
 static void gst_aja_allocator_finalize(GObject *alloc) {
