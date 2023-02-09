@@ -91,6 +91,7 @@ struct _GstAjaAllocator {
   GstAllocator allocator;
 
   GstAjaNtv2Device *device;
+  GstQueueArray *freed_mems;
 };
 
 struct _GstAjaAllocatorClass {

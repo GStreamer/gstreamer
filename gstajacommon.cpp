@@ -494,6 +494,11 @@ typedef struct {
   guint8 *data;
 } GstAjaMemory;
 
+typedef struct {
+  guint8 *data;
+  gsize size;
+} FreedMemory;
+
 G_DEFINE_TYPE(GstAjaAllocator, gst_aja_allocator, GST_TYPE_ALLOCATOR);
 
 static inline void _aja_memory_init(GstAjaAllocator *alloc, GstAjaMemory *mem,
@@ -524,14 +529,35 @@ static GstAjaMemory *_aja_memory_new_block(GstAjaAllocator *alloc,
                                            GstMemoryFlags flags, gsize maxsize,
                                            gsize offset, gsize size) {
   GstAjaMemory *mem;
-  guint8 *data;
+  guint8 *data = NULL;
 
   mem = (GstAjaMemory *)g_new0(GstAjaMemory, 1);
 
-  data = (guint8 *)AJAMemory::AllocateAligned(maxsize, 4096);
-  GST_TRACE_OBJECT(alloc, "Allocated %" G_GSIZE_FORMAT " at %p", maxsize, data);
-  if (!alloc->device->device->DMABufferLock((ULWord *)data, maxsize, true)) {
-    GST_WARNING_OBJECT(alloc, "Failed to pre-lock memory");
+  GST_OBJECT_LOCK(alloc);
+  guint n = gst_queue_array_get_length(alloc->freed_mems);
+  for (guint i = 0; i < n; i++) {
+    FreedMemory *fmem =
+        (FreedMemory *)gst_queue_array_peek_nth_struct(alloc->freed_mems, i);
+
+    if (fmem->size == size) {
+      data = fmem->data;
+      GST_TRACE_OBJECT(
+          alloc, "Using cached freed memory of size %" G_GSIZE_FORMAT " at %p",
+          fmem->size, fmem->data);
+      gst_queue_array_drop_struct(alloc->freed_mems, i, NULL);
+      break;
+    }
+  }
+  GST_OBJECT_UNLOCK(alloc);
+
+  if (!data) {
+    data = (guint8 *)AJAMemory::AllocateAligned(maxsize, 4096);
+    GST_TRACE_OBJECT(alloc,
+                     "Allocated memory of size %" G_GSIZE_FORMAT " at %p",
+                     maxsize, data);
+    if (!alloc->device->device->DMABufferLock((ULWord *)data, maxsize, true)) {
+      GST_WARNING_OBJECT(alloc, "Failed to pre-lock memory");
+    }
   }
 
   _aja_memory_init(alloc, mem, flags, NULL, data, maxsize, offset, size);
@@ -598,10 +624,27 @@ static void gst_aja_allocator_free(GstAllocator *alloc, GstMemory *mem) {
   if (!mem->parent) {
     GstAjaAllocator *aja_alloc = GST_AJA_ALLOCATOR(alloc);
 
-    GST_TRACE_OBJECT(alloc, "Freeing memory at %p", dmem->data);
-    aja_alloc->device->device->DMABufferUnlock((ULWord *)dmem->data,
-                                               mem->maxsize);
-    AJAMemory::FreeAligned(dmem->data);
+    GST_OBJECT_LOCK(aja_alloc);
+    while (gst_queue_array_get_length(aja_alloc->freed_mems) > 8) {
+      FreedMemory *fmem =
+          (FreedMemory *)gst_queue_array_pop_head_struct(aja_alloc->freed_mems);
+
+      GST_TRACE_OBJECT(
+          alloc, "Freeing cached memory of size %" G_GSIZE_FORMAT " at %p",
+          fmem->size, fmem->data);
+      aja_alloc->device->device->DMABufferUnlock((ULWord *)fmem->data,
+                                                 fmem->size);
+      AJAMemory::FreeAligned(fmem->data);
+    }
+
+    FreedMemory fmem;
+    GST_TRACE_OBJECT(alloc,
+                     "Caching freed memory of size %" G_GSIZE_FORMAT " at %p",
+                     mem->maxsize, dmem->data);
+    fmem.data = dmem->data;
+    fmem.size = mem->size;
+    gst_queue_array_push_tail_struct(aja_alloc->freed_mems, &fmem);
+    GST_OBJECT_UNLOCK(aja_alloc);
   }
 
   g_free(dmem);
@@ -611,6 +654,14 @@ static void gst_aja_allocator_finalize(GObject *alloc) {
   GstAjaAllocator *aja_alloc = GST_AJA_ALLOCATOR(alloc);
 
   GST_DEBUG_OBJECT(alloc, "Freeing allocator");
+
+  FreedMemory *mem;
+  while ((mem = (FreedMemory *)gst_queue_array_pop_head_struct(
+              aja_alloc->freed_mems))) {
+    GST_TRACE_OBJECT(alloc, "Freeing cached memory at %p", mem->data);
+    aja_alloc->device->device->DMABufferUnlock((ULWord *)mem->data, mem->size);
+    AJAMemory::FreeAligned(mem->data);
+  }
 
   gst_aja_ntv2_device_unref(aja_alloc->device);
 
@@ -645,6 +696,7 @@ GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device) {
       (GstAjaAllocator *)g_object_new(GST_TYPE_AJA_ALLOCATOR, NULL);
 
   alloc->device = gst_aja_ntv2_device_ref(device);
+  alloc->freed_mems = gst_queue_array_new_for_struct(sizeof(FreedMemory), 16);
 
   GST_DEBUG_OBJECT(alloc, "Creating allocator for device %d",
                    device->device->GetIndexNumber());
