@@ -121,6 +121,7 @@ typedef struct
   GstPlayTrickMode trick_mode;
   gdouble rate;
   gdouble start_position;
+  gboolean accurate_seeks;
 
   /* keyboard state tracking */
   gboolean shift_pressed;
@@ -174,7 +175,7 @@ static GstPlay *
 play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
     gboolean gapless, gboolean instant_uri, gdouble initial_volume,
     gboolean verbose, const gchar * flags_string, gboolean use_playbin3,
-    gdouble start_position, gboolean no_position)
+    gdouble start_position, gboolean no_position, gboolean accurate_seeks)
 {
   GstElement *sink, *playbin;
   GstPlay *play;
@@ -281,6 +282,7 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
   play->rate = 1.0;
   play->trick_mode = GST_PLAY_TRICK_MODE_NONE;
   play->start_position = start_position;
+  play->accurate_seeks = accurate_seeks;
   return play;
 }
 
@@ -1065,14 +1067,17 @@ play_do_seek (GstPlay * play, gint64 pos, gdouble rate, GstPlayTrickMode mode)
 
   /* No instant rate change, need to do a flushing seek */
   seek_flags |= GST_SEEK_FLAG_FLUSH;
+
+  /* Seek to keyframe if not doing accurate seeks */
+  seek_flags |=
+      play->accurate_seeks ? GST_SEEK_FLAG_ACCURATE : GST_SEEK_FLAG_KEY_UNIT;
+
   if (rate >= 0)
-    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-        seek_flags | GST_SEEK_FLAG_ACCURATE,
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME, seek_flags,
         /* start */ GST_SEEK_TYPE_SET, pos,
         /* stop */ GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
   else
-    seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-        seek_flags | GST_SEEK_FLAG_ACCURATE,
+    seek = gst_event_new_seek (rate, GST_FORMAT_TIME, seek_flags,
         /* start */ GST_SEEK_TYPE_SET, 0,
         /* stop */ GST_SEEK_TYPE_SET, pos);
 
@@ -1611,6 +1616,7 @@ real_main (int argc, char **argv)
   gboolean shuffle = FALSE;
   gdouble volume = -1;
   gdouble start_position = 0;
+  gboolean accurate_seeks = FALSE;
   gchar **filenames = NULL;
   gchar *audio_sink = NULL;
   gchar *video_sink = NULL;
@@ -1650,6 +1656,8 @@ real_main (int argc, char **argv)
         N_("Volume"), NULL},
     {"start-position", 's', 0, G_OPTION_ARG_DOUBLE, &start_position,
         N_("Start position in seconds."), NULL},
+    {"accurate-seeks", 'a', 0, G_OPTION_ARG_NONE, &accurate_seeks,
+        N_("Accurate seeking"), NULL},
     {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
         N_("Playlist file containing input media files"), NULL},
     {"instant-rate-changes", 'i', 0, G_OPTION_ARG_NONE, &instant_rate_changes,
@@ -1781,7 +1789,8 @@ real_main (int argc, char **argv)
   /* prepare */
   play =
       play_new (uris, audio_sink, video_sink, gapless, instant_uri, volume,
-      verbose, flags, use_playbin3, start_position, no_position);
+      verbose, flags, use_playbin3, start_position, no_position,
+      accurate_seeks);
 
   if (play == NULL) {
     gst_printerr
