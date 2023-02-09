@@ -35,6 +35,300 @@ using namespace Microsoft::WRL;
 using namespace amf;
 /* *INDENT-ON* */
 
+/**
+ * GstAmfEncPAActivityType:
+ *
+ * Determines whether activity analysis is performed on the Luma component
+ * only (Y) or on both Luma and Chroma (YUV).
+ *
+ * Since: 1.24
+ */
+GType
+gst_amf_enc_pa_activity_get_type (void)
+{
+  static GType pa_activity_type = 0;
+  static const GEnumValue activity_types[] = {
+    /**
+     * GstAmfEncPAActivityType::y:
+     *
+     * Activity analysis is performed on the Luma component only (Y)
+     */
+    {AMF_PA_ACTIVITY_Y, "Luma (Y) component only",
+        "y"},
+
+    /**
+     * GstAmfEncPAActivityType::yuv:
+     *
+     * Activity analysis is performed on both Luma and Chroma components (YUV)
+     */
+    {AMF_PA_ACTIVITY_YUV, "Luma and Chroma components (YUV)", "yuv"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&pa_activity_type)) {
+    GType type =
+        g_enum_register_static ("GstAmfEncPAActivityType", activity_types);
+    g_once_init_leave (&pa_activity_type, type);
+  }
+
+  return pa_activity_type;
+}
+
+/**
+ * GstAmfEncPASceneChangeDetectionSensitivity:
+ *
+ * Sensitivity of scene change detection. The higher the sensitivity, the more
+ * restrictive it is to detect a scene change. This parameter takes effect
+ * only when AMF_PA_LOOKAHEAH_BUFFER_DEPTH is set to 0.
+ *
+ * Since: 1.24
+ */
+GType
+gst_amf_enc_pa_scene_change_detection_sensitivity_get_type (void)
+{
+  static GType pa_scene_change_detection_sensitivity = 0;
+  static const GEnumValue sensitivity_types[] = {
+    /**
+     * GstAmfEncPASceneChangeDetectionSensitivity::low:
+     *
+     * Low sensitivity
+     */
+    {AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY_LOW, "Low", "low"},
+
+    /**
+     * GstAmfEncPASceneChangeDetectionSensitivity::medium:
+     *
+     * Medium sensitivity
+     */
+    {AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY_MEDIUM, "Medium", "medium"},
+
+    /**
+     * GstAmfEncPASceneChangeDetectionSensitivity::high:
+     *
+     * High sensitivity
+     */
+    {AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY_HIGH, "High", "high"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&pa_scene_change_detection_sensitivity)) {
+    GType type =
+        g_enum_register_static
+        ("GstAmfEncPASceneChangeDetectionSensitivity", sensitivity_types);
+    g_once_init_leave (&pa_scene_change_detection_sensitivity, type);
+  }
+
+  return pa_scene_change_detection_sensitivity;
+}
+
+/**
+ * GstAmfEncPAStaticSceneDetectionSensitivity:
+ *
+ * Sensitivity of static scene detection. The higher the sensitivity, the more
+ * restrictive it is to detect a static scene.
+ *
+ * Since: 1.24
+ */
+GType
+gst_amf_enc_pa_static_scene_detection_sensitivity_get_type (void)
+{
+  static GType pa_static_scene_detection_sensitivity = 0;
+  static const GEnumValue sensitivity_types[] = {
+    /**
+     * GstAmfEncPAStaticSceneDetectionSensitivity::low:
+     *
+     * Low sensitivity
+     */
+    {AMF_PA_STATIC_SCENE_DETECTION_SENSITIVITY_LOW, "Low", "low"},
+
+    /**
+     * GstAmfEncPAStaticSceneDetectionSensitivity::medium:
+     *
+     * Medium sensitivity
+     */
+    {AMF_PA_STATIC_SCENE_DETECTION_SENSITIVITY_MEDIUM, "Medium", "medium"},
+
+    /**
+     * GstAmfEncPAStaticSceneDetectionSensitivity::high:
+     *
+     * High sensitivity
+     */
+    {AMF_PA_STATIC_SCENE_DETECTION_SENSITIVITY_HIGH, "High", "high"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&pa_static_scene_detection_sensitivity)) {
+    GType type =
+        g_enum_register_static
+        ("GstAmfEncPAStaticSceneDetectionSensitivity", sensitivity_types);
+    g_once_init_leave (&pa_static_scene_detection_sensitivity, type);
+  }
+
+  return pa_static_scene_detection_sensitivity;
+}
+
+/**
+ * GstAmfEncPACAQStrength:
+ *
+ * Content Adaptive Quantization strength. Stronger CAQ strength means larger
+ * variation in block level QP assignment.
+ *
+ * Since: 1.24
+ */
+GType
+gst_amf_enc_pa_caq_strength_get_type (void)
+{
+  static GType pa_caq_strength = 0;
+  static const GEnumValue strength_types[] = {
+    /**
+     * GstAmfEncPACAQStrength::low:
+     *
+     * Low strength
+     */
+    {AMF_PA_CAQ_STRENGTH_LOW, "Low", "low"},
+
+    /**
+     * GstAmfEncPACAQStrength::medium:
+     *
+     * Medium strength
+     */
+    {AMF_PA_CAQ_STRENGTH_MEDIUM, "Medium", "medium"},
+
+    /**
+     * GstAmfEncPACAQStrength::high:
+     *
+     * High strength
+     */
+    {AMF_PA_CAQ_STRENGTH_HIGH, "High", "high"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&pa_caq_strength)) {
+    GType type =
+        g_enum_register_static ("GstAmfEncPACAQStrength", strength_types);
+    g_once_init_leave (&pa_caq_strength, type);
+  }
+
+  return pa_caq_strength;
+}
+
+/**
+ * GstAmfEncPAPAQMode:
+ *
+ * Sets the perceptual adaptive quantization mode.
+ *
+ * Since: 1.24
+ */
+GType
+gst_amf_enc_pa_paq_mode_get_type (void)
+{
+  static GType pa_paq_mode = 0;
+  static const GEnumValue paq_modes[] = {
+    /**
+     * GstAmfEncPAPAQMode::none:
+     *
+     * No perceptual adaptive quantization
+     */
+    {AMF_PA_PAQ_MODE_NONE, "None", "none"},
+
+    /**
+     * GstAmfEncPAPAQMode::caq:
+     *
+     * Content Adaptive Quantization (CAQ) mode
+     */
+    {AMF_PA_PAQ_MODE_CAQ, "Content Adaptive Quantization (CAQ) mode", "caq"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&pa_paq_mode)) {
+    GType type = g_enum_register_static ("GstAmfEncPAPAQMode", paq_modes);
+    g_once_init_leave (&pa_paq_mode, type);
+  }
+
+  return pa_paq_mode;
+}
+
+/**
+ * GstAmfEncPATAQMode:
+ *
+ * Sets the temporal adaptive quantization mode. MODE_1 is suitable for non-gaming
+ * applications whereas MODE_2 is suitable for gaming applications.
+ *
+ * Since: 1.24
+ */
+GType
+gst_amf_enc_pa_taq_mode_get_type (void)
+{
+  static GType pa_taq_mode = 0;
+  static const GEnumValue taq_modes[] = {
+    /**
+     * GstAmfEncPATAQMode::none:
+     *
+     * No temporal adaptive quantization
+     */
+    {AMF_PA_TAQ_MODE_NONE, "None", "none"},
+
+    /**
+     * GstAmfEncPATAQMode::mode1:
+     *
+     * MODE_1 is suitable for non-gaming applications
+     */
+    {AMF_PA_TAQ_MODE_1, "Mode_1 is suitable for non-gaming applications",
+        "mode1"},
+
+    /**
+     * GstAmfEncPATAQMode::mode2:
+     *
+     * MODE_2 is suitable for for gaming applications
+     */
+    {AMF_PA_TAQ_MODE_2, "Mode_2 is suitable for gaming applications", "mode2"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&pa_taq_mode)) {
+    GType type = g_enum_register_static ("GstAmfEncPATAQMode", taq_modes);
+    g_once_init_leave (&pa_taq_mode, type);
+  }
+
+  return pa_taq_mode;
+}
+
+/**
+ * GstAmfEncPAHQMBMode:
+ *
+ * Sets the PA high motion quality boost (HQMB) mode to help the encoder in motion search.
+ *
+ * Since: 1.24
+ */
+GType
+gst_amf_enc_pa_hmbq_mode_get_type (void)
+{
+  static GType pa_hmbq_mode = 0;
+  static const GEnumValue hmbq_modes[] = {
+    /**
+     * GstAmfEncPAHQMBMode::none:
+     *
+     * No high motion quality boost
+     */
+    {AMF_PA_HIGH_MOTION_QUALITY_BOOST_MODE_NONE, "None", "none"},
+
+    /**
+     * GstAmfEncPAHQMBMode::auto:
+     *
+     * Automatic mode
+     */
+    {AMF_PA_HIGH_MOTION_QUALITY_BOOST_MODE_AUTO, "Auto", "auto"},
+    {0, nullptr, nullptr}
+  };
+
+  if (g_once_init_enter (&pa_hmbq_mode)) {
+    GType type = g_enum_register_static ("GstAmfEncPAHQMBMode", hmbq_modes);
+    g_once_init_leave (&pa_hmbq_mode, type);
+  }
+
+  return pa_hmbq_mode;
+}
+
 GST_DEBUG_CATEGORY_STATIC (gst_amf_encoder_debug);
 #define GST_CAT_DEFAULT gst_amf_encoder_debug
 
@@ -122,6 +416,22 @@ gst_amf_encoder_class_init (GstAmfEncoderClass * klass)
       "amfencoder", 0, "amfencoder");
 
   gst_type_mark_as_plugin_api (GST_TYPE_AMF_ENCODER, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_ENC_PA_ACTIVITY_TYPE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api
+      (GST_TYPE_AMF_ENC_PA_SCENE_CHANGE_DETECTION_SENSITIVITY,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api
+      (GST_TYPE_AMF_ENC_PA_STATIC_SCENE_DETECTION_SENSITIVITY,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_ENC_PA_CAQ_STRENGTH,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_ENC_PA_PAQ_MODE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_ENC_PA_TAQ_MODE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AMF_ENC_PA_HQMB_MODE,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -466,7 +776,7 @@ gst_amf_encoder_prepare_internal_pool (GstAmfEncoder * self)
       GST_VIDEO_INFO_SIZE (info), 0, 0);
 
   params = gst_d3d11_allocation_params_new (priv->device, info,
-      GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0);
   params->desc[0].MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
@@ -775,7 +1085,8 @@ gst_amf_encoder_upload_buffer (GstAmfEncoder * self, GstBuffer * buffer)
   }
 
   gst_d3d11_memory_get_texture_desc (dmem, &desc);
-  if (desc.Usage != D3D11_USAGE_DEFAULT) {
+  if (desc.Usage != D3D11_USAGE_DEFAULT
+      || (desc.BindFlags & D3D11_BIND_SHADER_RESOURCE) == 0) {
     GST_TRACE_OBJECT (self, "Not a default usage texture, d3d11 copy");
     gst_d3d11_device_lock (priv->device);
     ret = gst_amf_encoder_copy_d3d11 (self, buffer, FALSE);
@@ -1012,6 +1323,7 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   GstCapsFeatures *features;
   gboolean is_d3d11 = FALSE;
   guint min_buffers = 0;
+  GstD3D11AllocationParams *params;
 
   gst_query_parse_allocation (query, &caps, nullptr);
   if (!caps) {
@@ -1048,6 +1360,11 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   size = GST_VIDEO_INFO_SIZE (&info);
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers, 0);
 
+  params = gst_d3d11_allocation_params_new (device, &info,
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_SHADER_RESOURCE, 0);
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+  gst_d3d11_allocation_params_free (params);
+
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_WARNING_OBJECT (self, "Failed to set pool config");
     gst_object_unref (pool);
@@ -1082,3 +1399,181 @@ gst_amf_encoder_set_subclass_data (GstAmfEncoder * encoder, gint64 adapter_luid,
   priv->codec_id = codec_id;
 }
 /* *INDENT-ON* */
+
+AMF_RESULT
+gst_amf_encoder_set_pre_analysis_options (GstAmfEncoder * self,
+    AMFComponent * comp, const GstAmfEncoderPreAnalysis * pa,
+    GstAmfEncoderPASupportedOptions * pa_supported)
+{
+  AMF_RESULT result;
+  if (pa_supported->activity_type) {
+    result = comp->SetProperty (AMF_PA_ACTIVITY_TYPE,
+        (AMF_PA_ACTIVITY_TYPE_ENUM) pa->activity_type);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis activity type, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->scene_change_detection) {
+    result = comp->SetProperty (AMF_PA_SCENE_CHANGE_DETECTION_ENABLE,
+        (amf_bool) pa->scene_change_detection);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis scene change detection, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->scene_change_detection_sensitivity) {
+    result = comp->SetProperty (AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY,
+        (AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY_ENUM)
+        pa->scene_change_detection_sensitivity);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis scene change detection sensitivity, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->static_scene_detection) {
+    result = comp->SetProperty (AMF_PA_STATIC_SCENE_DETECTION_ENABLE,
+        (amf_bool) pa->static_scene_detection);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis static scene detection, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->static_scene_detection_sensitivity) {
+    result = comp->SetProperty (AMF_PA_STATIC_SCENE_DETECTION_SENSITIVITY,
+        (AMF_PA_STATIC_SCENE_DETECTION_SENSITIVITY_ENUM)
+        pa->static_scene_detection_sensitivity);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis static scene detection sensitivity, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->initial_qp) {
+    result = comp->SetProperty (AMF_PA_INITIAL_QP_AFTER_SCENE_CHANGE,
+        (amf_int64) pa->initial_qp);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set pre-analysis initial QP, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->max_qp) {
+    result = comp->SetProperty (AMF_PA_MAX_QP_BEFORE_FORCE_SKIP,
+        (amf_int64) pa->max_qp);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set pre-analysis max QP, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->caq_strength) {
+    result = comp->SetProperty (AMF_PA_CAQ_STRENGTH,
+        (amf_int64) pa->caq_strength);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis CAQ strength, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->frame_sad) {
+    result = comp->SetProperty (AMF_PA_FRAME_SAD_ENABLE,
+        (amf_bool) pa->frame_sad);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis frame SAD algorithm, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->ltr) {
+    result = comp->SetProperty (AMF_PA_LTR_ENABLE, (amf_bool) pa->ltr);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis automatic Long Term Reference frame management, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->lookahead_buffer_depth) {
+    result = comp->SetProperty (AMF_PA_LOOKAHEAD_BUFFER_DEPTH,
+        (amf_int64) pa->lookahead_buffer_depth);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis lookahead buffer depth, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->paq_mode) {
+    result = comp->SetProperty (AMF_PA_PAQ_MODE, (amf_int64) pa->paq_mode);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set pre-analysis PAQ mode, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->taq_mode) {
+    result = comp->SetProperty (AMF_PA_TAQ_MODE, (amf_int64) pa->taq_mode);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set pre-analysis TAQ mode, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  if (pa_supported->hmqb_mode) {
+    result = comp->SetProperty (AMF_PA_HIGH_MOTION_QUALITY_BOOST_MODE,
+        (amf_int64) pa->hmqb_mode);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set pre-analysis high motion quality boost mode, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      return result;
+    }
+  }
+  return AMF_OK;
+}
+
+void
+gst_amf_encoder_check_pa_supported_options (GstAmfEncoderPASupportedOptions *
+    pa_supported, AMFComponent * comp)
+{
+  if (comp->HasProperty (AMF_PA_ACTIVITY_TYPE))
+    pa_supported->activity_type = TRUE;
+  if (comp->HasProperty (AMF_PA_SCENE_CHANGE_DETECTION_ENABLE))
+    pa_supported->scene_change_detection = TRUE;
+  if (comp->HasProperty (AMF_PA_SCENE_CHANGE_DETECTION_SENSITIVITY))
+    pa_supported->scene_change_detection_sensitivity = TRUE;
+  if (comp->HasProperty (AMF_PA_STATIC_SCENE_DETECTION_ENABLE))
+    pa_supported->static_scene_detection = TRUE;
+  if (comp->HasProperty (AMF_PA_STATIC_SCENE_DETECTION_SENSITIVITY))
+    pa_supported->static_scene_detection_sensitivity = TRUE;
+  if (comp->HasProperty (AMF_PA_INITIAL_QP_AFTER_SCENE_CHANGE))
+    pa_supported->initial_qp = TRUE;
+  if (comp->HasProperty (AMF_PA_MAX_QP_BEFORE_FORCE_SKIP))
+    pa_supported->max_qp = TRUE;
+  if (comp->HasProperty (AMF_PA_CAQ_STRENGTH))
+    pa_supported->caq_strength = TRUE;
+  if (comp->HasProperty (AMF_PA_FRAME_SAD_ENABLE))
+    pa_supported->frame_sad = TRUE;
+  if (comp->HasProperty (AMF_PA_LTR_ENABLE))
+    pa_supported->ltr = TRUE;
+  if (comp->HasProperty (AMF_PA_LOOKAHEAD_BUFFER_DEPTH))
+    pa_supported->lookahead_buffer_depth = TRUE;
+  if (comp->HasProperty (AMF_PA_PAQ_MODE))
+    pa_supported->paq_mode = TRUE;
+  if (comp->HasProperty (AMF_PA_TAQ_MODE))
+    pa_supported->taq_mode = TRUE;
+  if (comp->HasProperty (AMF_PA_HIGH_MOTION_QUALITY_BOOST_MODE))
+    pa_supported->hmqb_mode = TRUE;
+}
