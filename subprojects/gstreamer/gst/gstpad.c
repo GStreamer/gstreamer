@@ -6324,6 +6324,7 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer user_data,
   task = GST_PAD_TASK (pad);
   if (task == NULL) {
     task = gst_task_new (func, user_data, notify);
+    notify = NULL;
     gst_task_set_lock (task, GST_PAD_GET_STREAM_LOCK (pad));
     gst_task_set_enter_callback (task, pad_enter_thread, pad, NULL);
     gst_task_set_leave_callback (task, pad_leave_thread, pad, NULL);
@@ -6344,6 +6345,10 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer user_data,
   }
   res = gst_task_set_state (task, GST_TASK_STARTED);
   GST_OBJECT_UNLOCK (pad);
+
+  /* free user_data if it wasn't used for gst_task_new */
+  if (notify)
+    notify (user_data);
 
   return res;
 
