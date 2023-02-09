@@ -259,12 +259,16 @@ ensure_context (GstVaapiDecoderVp9 * decoder)
 
   if (reset_context) {
     GstVaapiContextInfo info;
+    /* *INDENT-OFF* */
+    info = (GstVaapiContextInfo) {
+      .profile = priv->profile,
+      .entrypoint = entrypoint,
+      .width = priv->width,
+      .height = priv->height,
+      .ref_frames = 8,
+    };
+    /* *INDENT-ON* */
 
-    info.profile = priv->profile;
-    info.entrypoint = entrypoint;
-    info.width = priv->width;
-    info.height = priv->height;
-    info.ref_frames = 8;
     if (!get_chroma_type (frame_hdr, parser, &info))
       return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
 

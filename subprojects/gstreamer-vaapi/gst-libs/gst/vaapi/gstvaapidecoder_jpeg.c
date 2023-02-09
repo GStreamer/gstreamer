@@ -250,14 +250,19 @@ ensure_context (GstVaapiDecoderJpeg * decoder)
   if (reset_context) {
     GstVaapiContextInfo info;
 
-    info.profile = priv->profile;
-    info.entrypoint = entrypoint;
-    info.width = priv->width;
-    info.height = priv->height;
-    info.ref_frames = 2;
     if (!get_chroma_type (frame_hdr, &chroma_type))
       return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
-    info.chroma_type = chroma_type;
+
+  /* *INDENT-OFF* */
+    info = (GstVaapiContextInfo) {
+      .profile = priv->profile,
+      .entrypoint = entrypoint,
+      .chroma_type = chroma_type,
+      .width = priv->width,
+      .height = priv->height,
+      .ref_frames = 2,
+    };
+  /* *INDENT-ON* */
 
     reset_context =
         gst_vaapi_decoder_ensure_context (GST_VAAPI_DECODER (decoder), &info);

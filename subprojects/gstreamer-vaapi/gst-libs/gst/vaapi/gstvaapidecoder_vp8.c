@@ -180,13 +180,17 @@ ensure_context (GstVaapiDecoderVp8 * decoder)
 
   if (reset_context) {
     GstVaapiContextInfo info;
+    /* *INDENT-OFF* */
+    info = (GstVaapiContextInfo) {
+      .profile = priv->profile,
+      .entrypoint = entrypoint,
+      .chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420,
+      .width = priv->width,
+      .height = priv->height,
+      .ref_frames = 3,
+    };
+    /* *INDENT-ON* */
 
-    info.profile = priv->profile;
-    info.entrypoint = entrypoint;
-    info.chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-    info.width = priv->width;
-    info.height = priv->height;
-    info.ref_frames = 3;
     reset_context =
         gst_vaapi_decoder_ensure_context (GST_VAAPI_DECODER (decoder), &info);
 
