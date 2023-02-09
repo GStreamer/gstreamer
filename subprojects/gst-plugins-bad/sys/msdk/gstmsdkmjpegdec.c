@@ -106,6 +106,7 @@ static gboolean
 gst_msdkmjpegdec_post_configure (GstMsdkDec * decoder)
 {
   /* Set the output color format based on the input color format */
+  GST_OBJECT_LOCK (decoder);
   switch (decoder->param.mfx.JPEGChromaFormat) {
     case MFX_CHROMAFORMAT_YUV422:
       decoder->param.mfx.FrameInfo.FourCC = MFX_FOURCC_YUY2;
@@ -116,6 +117,7 @@ gst_msdkmjpegdec_post_configure (GstMsdkDec * decoder)
       break;
   }
 
+  GST_OBJECT_UNLOCK (decoder);
   return TRUE;
 }
 

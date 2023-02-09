@@ -393,8 +393,8 @@ gst_msdkdec_init_decoder (GstMsdkDec * thiz)
   thiz->param.AsyncDepth = thiz->async_depth;
 
   /* We expect msdk to fill the width and height values */
-  g_return_val_if_fail (thiz->param.mfx.FrameInfo.Width
-      && thiz->param.mfx.FrameInfo.Height, FALSE);
+  if (!(thiz->param.mfx.FrameInfo.Width && thiz->param.mfx.FrameInfo.Height))
+    goto failed;
 
   klass->preinit_decoder (thiz);
 
