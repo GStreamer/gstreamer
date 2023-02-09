@@ -2071,13 +2071,10 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
   GST_INFO_OBJECT (demux, "Received seek event");
 
-  GST_API_LOCK (demux);
-
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
 
   if (format != GST_FORMAT_TIME) {
-    GST_API_UNLOCK (demux);
     GST_WARNING_OBJECT (demux,
         "Adaptive demuxers only support TIME-based seeking");
     gst_event_unref (event);
@@ -2086,15 +2083,16 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
   if (flags & GST_SEEK_FLAG_SEGMENT) {
     GST_FIXME_OBJECT (demux, "Handle segment seeks");
-    GST_API_UNLOCK (demux);
     gst_event_unref (event);
     return FALSE;
   }
 
   seqnum = gst_event_get_seqnum (event);
 
+  GST_API_LOCK (demux);
   if (!GST_ADAPTIVE_SCHEDULER_LOCK (demux)) {
     GST_LOG_OBJECT (demux, "Failed to acquire scheduler context");
+    GST_API_UNLOCK (demux);
     return FALSE;
   }
 
