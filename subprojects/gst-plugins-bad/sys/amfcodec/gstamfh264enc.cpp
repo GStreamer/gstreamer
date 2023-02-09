@@ -79,6 +79,8 @@ typedef struct
   guint valign;
   gboolean pre_encode_supported;
   gboolean smart_access_supported;
+  gboolean mini_gop_supported;
+  gboolean b_frames_delta_qp_supported;
   GstAmfEncoderPASupportedOptions pa_supported;
 } GstAmfH264EncDeviceCaps;
 
@@ -276,6 +278,12 @@ enum
   PROP_REF_FRAMES,
   PROP_AUD,
   PROP_CABAC,
+  PROP_ADAPT_MINI_GOP,
+  PROP_MAX_B_FRAMES,
+  PROP_B_FRAMES,
+  PROP_B_REFERENCE,
+  PROP_B_FRAMES_DELTA_QP,
+  PROP_REF_B_FRAMES_DELTA_QP,
   PROP_SMART_ACCESS,
   PROP_PRE_ENCODE,
   PROP_PRE_ANALYSIS,
@@ -304,6 +312,15 @@ enum
 #define DEFAULT_MIN_MAX_QP -1
 #define DEFAULT_AUD TRUE
 #define DEFAULT_CABAC TRUE
+#define DEFAULT_ADAPT_MINI_GOP FALSE
+
+// B-frames settings
+#define DEFAULT_MAX_B_FRAMES 0
+#define DEFAULT_B_FRAMES 0
+#define DEFAULT_B_REFERENCE TRUE
+#define DEFAULT_B_FRAMES_DELTA_QP 4
+#define DEFAULT_REF_B_FRAMES_DELTA_QP 4
+
 #define DEFAULT_SMART_ACCESS FALSE
 #define DEFAULT_PRE_ENCODE FALSE
 
@@ -345,6 +362,14 @@ typedef struct _GstAmfH264Enc
 
   gboolean aud;
   gboolean cabac;
+  gboolean adaptive_mini_gop;
+
+  guint max_b_frames;
+  gint b_frames;
+  gboolean b_reference;
+  gint b_frames_delta_qp;
+  gint ref_b_frames_delta_qp;
+
   gboolean smart_access;
   gboolean pre_encode;
   GstAmfEncoderPreAnalysis pa;
@@ -463,6 +488,33 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
             "Enable pre-encode", DEFAULT_PRE_ENCODE,
             (GParamFlags) (param_flags | GST_PARAM_CONDITIONALLY_AVAILABLE)));
   }
+  if (dev_caps->bframes) {
+    g_object_class_install_property (object_class, PROP_MAX_B_FRAMES,
+        g_param_spec_uint ("max-b-frames", "Maximum number of B-frames",
+            "Maximum number of consecutive B Pictures. "
+            "Suggestion set to 3 if b-frames is not 0", 0, 3,
+            DEFAULT_MAX_B_FRAMES, param_flags));
+    g_object_class_install_property (object_class, PROP_B_FRAMES,
+        g_param_spec_int ("b-frames", "B-Frames",
+            "Number of consecutive B-frames in a GOP. "
+            "If b-frames > max-b-frames, then b-frames set to max-b-frames "
+            "(-1: USAGE default)", -1, 3, DEFAULT_B_FRAMES, param_flags));
+    g_object_class_install_property (object_class, PROP_B_REFERENCE,
+        g_param_spec_boolean ("b-reference", "B-Frames as reference",
+            "Enables or disables using B-pictures as references",
+            DEFAULT_B_REFERENCE, param_flags));
+    if (dev_caps->b_frames_delta_qp_supported) {
+      g_object_class_install_property (object_class, PROP_B_FRAMES_DELTA_QP,
+          g_param_spec_int ("b-frames-delta-qp", "B-Frames delta QP",
+              "Selects the delta QP of non-reference B pictures with respect to I pictures",
+              -10, 10, DEFAULT_B_FRAMES_DELTA_QP, param_flags));
+      g_object_class_install_property (object_class, PROP_REF_B_FRAMES_DELTA_QP,
+          g_param_spec_int ("ref-b-frames-delta-qp",
+              "Reference B-Frames delta QP",
+              "Selects delta QP of reference B pictures with respect to I pictures",
+              -10, 10, DEFAULT_REF_B_FRAMES_DELTA_QP, param_flags));
+    }
+  }
   if (cdata->dev_caps.smart_access_supported) {
     g_object_class_install_property (object_class, PROP_SMART_ACCESS,
         g_param_spec_boolean ("smart-access-video", "Smart Access Video",
@@ -477,6 +529,14 @@ gst_amf_h264_enc_class_init (GstAmfH264EncClass * klass, gpointer data)
     g_object_class_install_property (object_class, PROP_PRE_ANALYSIS,
         g_param_spec_boolean ("pre-analysis", "Pre Analysis",
             "Enable pre-analysis", DEFAULT_PRE_ANALYSIS, param_flags));
+    if (cdata->dev_caps.mini_gop_supported) {
+      g_object_class_install_property (object_class, PROP_ADAPT_MINI_GOP,
+          g_param_spec_boolean ("adaptive-mini-gop", "Adaptive MiniGOP",
+              "Enable Adaptive MiniGOP. Determines the number of B-frames to be "
+              "inserted between I and P frames, or between two consecutive P-frames",
+              DEFAULT_ADAPT_MINI_GOP,
+              (GParamFlags) (param_flags | GST_PARAM_CONDITIONALLY_AVAILABLE)));
+    }
     if (pa_supported->activity_type) {
       g_object_class_install_property (object_class, PROP_PA_ACTIVITY_TYPE,
           g_param_spec_enum ("pa-activity-type", "Pre-analysis activity type",
@@ -652,8 +712,15 @@ gst_amf_h264_enc_init (GstAmfH264Enc * self)
   self->ref_frames = (guint) dev_caps->min_ref_frames;
   self->aud = DEFAULT_AUD;
   self->cabac = DEFAULT_CABAC;
+  self->adaptive_mini_gop = DEFAULT_ADAPT_MINI_GOP;
   self->smart_access = DEFAULT_SMART_ACCESS;
   self->pre_encode = DEFAULT_PRE_ENCODE;
+  // b-frames settings
+  self->max_b_frames = DEFAULT_MAX_B_FRAMES;
+  self->b_frames = DEFAULT_B_FRAMES;
+  self->b_reference = DEFAULT_B_REFERENCE;
+  self->b_frames_delta_qp = DEFAULT_B_FRAMES_DELTA_QP;
+  self->ref_b_frames_delta_qp = DEFAULT_REF_B_FRAMES_DELTA_QP;
   // Init pre-analysis options
   self->pa.pre_analysis = DEFAULT_PRE_ANALYSIS;
   self->pa.activity_type = DEFAULT_PA_ACTIVITY_TYPE;
@@ -781,6 +848,24 @@ gst_amf_h264_enc_set_property (GObject * object, guint prop_id,
     case PROP_CABAC:
       update_bool (self, &self->cabac, value);
       break;
+    case PROP_ADAPT_MINI_GOP:
+      update_bool (self, &self->adaptive_mini_gop, value);
+      break;
+    case PROP_MAX_B_FRAMES:
+      update_uint (self, &self->max_b_frames, value);
+      break;
+    case PROP_B_FRAMES:
+      update_int (self, &self->b_frames, value);
+      break;
+    case PROP_B_REFERENCE:
+      update_bool (self, &self->b_reference, value);
+      break;
+    case PROP_B_FRAMES_DELTA_QP:
+      update_int (self, &self->b_frames_delta_qp, value);
+      break;
+    case PROP_REF_B_FRAMES_DELTA_QP:
+      update_int (self, &self->ref_b_frames_delta_qp, value);
+      break;
     case PROP_SMART_ACCESS:
       update_bool (self, &self->smart_access, value);
       break;
@@ -887,6 +972,24 @@ gst_amf_h264_enc_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CABAC:
       g_value_set_boolean (value, self->cabac);
+      break;
+    case PROP_ADAPT_MINI_GOP:
+      g_value_set_boolean (value, self->adaptive_mini_gop);
+      break;
+    case PROP_MAX_B_FRAMES:
+      g_value_set_uint (value, self->max_b_frames);
+      break;
+    case PROP_B_FRAMES:
+      g_value_set_int (value, self->b_frames);
+      break;
+    case PROP_B_REFERENCE:
+      g_value_set_boolean (value, self->b_reference);
+      break;
+    case PROP_B_FRAMES_DELTA_QP:
+      g_value_set_int (value, self->b_frames_delta_qp);
+      break;
+    case PROP_REF_B_FRAMES_DELTA_QP:
+      g_value_set_int (value, self->ref_b_frames_delta_qp);
       break;
     case PROP_SMART_ACCESS:
       g_value_set_boolean (value, self->smart_access);
@@ -1198,6 +1301,65 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
     }
   }
 
+  if (dev_caps->bframes && (profile == AMF_VIDEO_ENCODER_PROFILE_MAIN ||
+          profile == AMF_VIDEO_ENCODER_PROFILE_HIGH)) {
+    result = comp->SetProperty (AMF_VIDEO_ENCODER_MAX_CONSECUTIVE_BPICTURES,
+        (amf_int64) self->max_b_frames);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self,
+          "Failed to set maximum number of consecutive B Pictures, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+
+    if (self->max_b_frames > 0) {
+      gint b_frames = self->b_frames;
+      if (b_frames != -1 && (guint) b_frames > self->max_b_frames) {
+        GST_WARNING_OBJECT (self,
+            "Limited b-frames option to max-b-frames value");
+        b_frames = self->max_b_frames;
+      }
+
+      if (b_frames != -1) {
+        result = comp->SetProperty (AMF_VIDEO_ENCODER_B_PIC_PATTERN,
+            (amf_int64) b_frames);
+        if (result != AMF_OK) {
+          GST_ERROR_OBJECT (self, "Failed to set B-picture pattern, result %"
+              GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+          goto error;
+        }
+      }
+
+      result = comp->SetProperty (AMF_VIDEO_ENCODER_B_REFERENCE_ENABLE,
+          (amf_bool) self->b_reference);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self,
+            "Failed to set using B-frames as reference, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+
+      if (dev_caps->b_frames_delta_qp_supported) {
+        result = comp->SetProperty (AMF_VIDEO_ENCODER_B_PIC_DELTA_QP,
+            (amf_int64) self->b_frames_delta_qp);
+        if (result != AMF_OK) {
+          GST_ERROR_OBJECT (self, "Failed to set B-frames delta QP, result %"
+              GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+          goto error;
+        }
+
+        result = comp->SetProperty (AMF_VIDEO_ENCODER_REF_B_PIC_DELTA_QP,
+            (amf_int64) self->ref_b_frames_delta_qp);
+        if (result != AMF_OK) {
+          GST_ERROR_OBJECT (self,
+              "Failed to set reference B-frames delta QP, result %"
+              GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+          goto error;
+        }
+      }
+    }
+  }
+
   if (dev_caps->smart_access_supported) {
     result = comp->SetProperty (AMF_VIDEO_ENCODER_ENABLE_SMART_ACCESS_VIDEO,
         (amf_bool) self->smart_access);
@@ -1224,6 +1386,16 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
           GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
       goto error;
     }
+    if (dev_caps->mini_gop_supported) {
+      result = comp->SetProperty (AMF_VIDEO_ENCODER_ADAPTIVE_MINIGOP,
+          (amf_int64) self->adaptive_mini_gop);
+      if (result != AMF_OK) {
+        GST_ERROR_OBJECT (self, "Failed to set adaptive mini GOP, result %"
+            GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+        goto error;
+      }
+    }
+
     if (self->pa.pre_analysis) {
       result =
           gst_amf_encoder_set_pre_analysis_options (encoder, comp, &self->pa,
@@ -1637,6 +1809,8 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
   amf_bool interlace_supported;
   amf_bool pre_encode_supported;
   amf_bool smart_access_supported;
+  amf_bool mini_gop_supported;
+  amf_bool b_frames_delta_qp_supported;
   amf_int32 num_val;
   gboolean have_nv12 = FALSE;
   gboolean d3d11_supported = FALSE;
@@ -1778,8 +1952,20 @@ gst_amf_h264_enc_create_class_data (GstD3D11Device * device,
   if (result == AMF_OK)
     dev_caps.smart_access_supported = TRUE;
 
+  result = comp->GetProperty (AMF_VIDEO_ENCODER_B_PIC_DELTA_QP,
+      &b_frames_delta_qp_supported);
+  if (result == AMF_OK)
+    dev_caps.b_frames_delta_qp_supported = TRUE;
+
+
   if (dev_caps.pre_analysis) {
     amf_bool pre_analysis = FALSE;
+
+    result = comp->GetProperty (AMF_VIDEO_ENCODER_ADAPTIVE_MINIGOP,
+        &mini_gop_supported);
+    if (result == AMF_OK)
+      dev_caps.mini_gop_supported = TRUE;
+
     // Store initial pre-analysis value
     result =
         comp->GetProperty (AMF_VIDEO_ENCODER_PRE_ANALYSIS_ENABLE,
