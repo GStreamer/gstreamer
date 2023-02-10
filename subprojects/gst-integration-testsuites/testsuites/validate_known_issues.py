@@ -248,5 +248,16 @@ KNOWN_ISSUES = {
                 "issue-id": "transcoded-file-wrong-duration",
             },
         ]
+    },
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1777": {
+        "tests": [
+            "check.gst-plugins-bad.elements_srtp.test_play"
+        ],
+        "issues": [
+            {
+                'returncode': 1,
+                'sometimes': True,
+            },
+        ],
     }
 }
