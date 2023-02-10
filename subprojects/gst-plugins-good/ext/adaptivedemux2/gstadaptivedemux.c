@@ -1428,38 +1428,6 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
 }
 
 static gboolean
-gst_adaptive_demux_query (GstElement * element, GstQuery * query)
-{
-  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (element);
-
-  GST_LOG_OBJECT (demux, "%" GST_PTR_FORMAT, query);
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_BUFFERING:
-    {
-      GstFormat format;
-      gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
-
-      if (!demux->output_period) {
-        if (format != GST_FORMAT_TIME) {
-          GST_DEBUG_OBJECT (demux,
-              "No period setup yet, can't answer non-TIME buffering queries");
-          return FALSE;
-        }
-
-        GST_DEBUG_OBJECT (demux,
-            "No period setup yet, but still answering buffering query");
-        return TRUE;
-      }
-    }
-    default:
-      break;
-  }
-
-  return GST_ELEMENT_CLASS (parent_class)->query (element, query);
-}
-
-static gboolean
 gst_adaptive_demux_send_event (GstElement * element, GstEvent * event)
 {
   GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (element);
@@ -2610,6 +2578,54 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
+gst_adaptive_demux_handle_query_seeking (GstAdaptiveDemux * demux,
+    GstQuery * query)
+{
+  GstFormat fmt = GST_FORMAT_UNDEFINED;
+  gint64 stop = -1;
+  gint64 start = 0;
+  gboolean ret = FALSE;
+
+  if (!g_atomic_int_get (&demux->priv->have_manifest)) {
+    GST_INFO_OBJECT (demux,
+        "Don't have manifest yet, can't answer seeking query");
+    return FALSE;               /* can't answer without manifest */
+  }
+
+  GST_MANIFEST_LOCK (demux);
+
+  gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+  GST_INFO_OBJECT (demux, "Received GST_QUERY_SEEKING with format %d", fmt);
+  if (fmt == GST_FORMAT_TIME) {
+    GstClockTime duration;
+    gboolean can_seek = gst_adaptive_demux_can_seek (demux);
+
+    ret = TRUE;
+    if (can_seek) {
+      if (gst_adaptive_demux_is_live (demux)) {
+        ret = gst_adaptive_demux_get_live_seek_range (demux, &start, &stop);
+
+        if (!ret) {
+          GST_MANIFEST_UNLOCK (demux);
+          GST_INFO_OBJECT (demux, "can't answer seeking query");
+          return FALSE;
+        }
+      } else {
+        duration = demux->priv->duration;
+        if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
+          stop = duration;
+      }
+    }
+    gst_query_set_seeking (query, fmt, can_seek, start, stop);
+    GST_INFO_OBJECT (demux, "GST_QUERY_SEEKING returning with start : %"
+        GST_TIME_FORMAT ", stop : %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+  }
+  GST_MANIFEST_UNLOCK (demux);
+  return ret;
+}
+
+static gboolean
 gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
@@ -2618,7 +2634,6 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 
   if (query == NULL)
     return FALSE;
-
 
   switch (query->type) {
     case GST_QUERY_DURATION:{
@@ -2656,49 +2671,9 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
       ret = TRUE;
       break;
     }
-    case GST_QUERY_SEEKING:{
-      GstFormat fmt;
-      gint64 stop = -1;
-      gint64 start = 0;
-
-      if (!g_atomic_int_get (&demux->priv->have_manifest)) {
-        GST_INFO_OBJECT (demux,
-            "Don't have manifest yet, can't answer seeking query");
-        return FALSE;           /* can't answer without manifest */
-      }
-
-      GST_MANIFEST_LOCK (demux);
-
-      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
-      GST_INFO_OBJECT (demux, "Received GST_QUERY_SEEKING with format %d", fmt);
-      if (fmt == GST_FORMAT_TIME) {
-        GstClockTime duration;
-        gboolean can_seek = gst_adaptive_demux_can_seek (demux);
-
-        ret = TRUE;
-        if (can_seek) {
-          if (gst_adaptive_demux_is_live (demux)) {
-            ret = gst_adaptive_demux_get_live_seek_range (demux, &start, &stop);
-
-            if (!ret) {
-              GST_MANIFEST_UNLOCK (demux);
-              GST_INFO_OBJECT (demux, "can't answer seeking query");
-              return FALSE;
-            }
-          } else {
-            duration = demux->priv->duration;
-            if (GST_CLOCK_TIME_IS_VALID (duration) && duration > 0)
-              stop = duration;
-          }
-        }
-        gst_query_set_seeking (query, fmt, can_seek, start, stop);
-        GST_INFO_OBJECT (demux, "GST_QUERY_SEEKING returning with start : %"
-            GST_TIME_FORMAT ", stop : %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
-      }
-      GST_MANIFEST_UNLOCK (demux);
+    case GST_QUERY_SEEKING:
+      ret = gst_adaptive_demux_handle_query_seeking (demux, query);
       break;
-    }
     case GST_QUERY_URI:
 
       GST_MANIFEST_LOCK (demux);
@@ -2726,6 +2701,44 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
   }
 
   return ret;
+}
+
+static gboolean
+gst_adaptive_demux_query (GstElement * element, GstQuery * query)
+{
+  GstAdaptiveDemux *demux = GST_ADAPTIVE_DEMUX_CAST (element);
+
+  GST_LOG_OBJECT (demux, "%" GST_PTR_FORMAT, query);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_BUFFERING:
+    {
+      GstFormat format;
+      gst_query_parse_buffering_range (query, &format, NULL, NULL, NULL);
+
+      if (!demux->output_period) {
+        if (format != GST_FORMAT_TIME) {
+          GST_DEBUG_OBJECT (demux,
+              "No period setup yet, can't answer non-TIME buffering queries");
+          return FALSE;
+        }
+
+        GST_DEBUG_OBJECT (demux,
+            "No period setup yet, but still answering buffering query");
+        return TRUE;
+      }
+    }
+    case GST_QUERY_SEEKING:
+    {
+      /* Source pads might not be present early on which would cause the default
+       * element query handler to fail, yet we can answer this query */
+      return gst_adaptive_demux_handle_query_seeking (demux, query);
+    }
+    default:
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->query (element, query);
 }
 
 gboolean
