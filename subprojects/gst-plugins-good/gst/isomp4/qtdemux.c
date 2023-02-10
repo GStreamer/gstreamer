@@ -4642,6 +4642,36 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
         goto beach;
       }
 
+      if (length == G_MAXUINT64) {
+        /* Read until the end */
+        gint64 duration;
+        if (!gst_pad_peer_query_duration (qtdemux->sinkpad, GST_FORMAT_BYTES,
+                &duration)) {
+          GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
+              (_("Cannot query file size")),
+              ("Duration query on sink pad failed"));
+          ret = GST_FLOW_ERROR;
+          goto beach;
+        }
+        if (G_UNLIKELY (cur_offset > duration)) {
+          GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
+              (_("Cannot query file size")),
+              ("Duration %" G_GINT64_FORMAT " < current offset %"
+                  G_GUINT64_FORMAT, duration, cur_offset));
+          ret = GST_FLOW_ERROR;
+          goto beach;
+        }
+        length = duration - cur_offset;
+        if (length > QTDEMUX_MAX_ATOM_SIZE) {
+          GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
+              (_("Cannot demux file")),
+              ("Moov atom size %" G_GINT64_FORMAT " > maximum %d", length,
+                  QTDEMUX_MAX_ATOM_SIZE));
+          ret = GST_FLOW_ERROR;
+          goto beach;
+        }
+      }
+
       ret = gst_pad_pull_range (qtdemux->sinkpad, cur_offset, length, &moov);
       if (ret != GST_FLOW_OK)
         goto beach;
