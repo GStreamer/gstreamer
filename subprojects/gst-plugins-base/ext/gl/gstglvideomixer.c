@@ -200,6 +200,7 @@ static void gst_gl_video_mixer_input_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static gboolean gst_gl_video_mixer_src_event (GstAggregator * agg,
     GstEvent * event);
+static void gst_gl_video_mixer_input_dispose (GObject * object);
 
 typedef struct _GstGLVideoMixerInput GstGLVideoMixerInput;
 typedef GstGhostPadClass GstGLVideoMixerInputClass;
@@ -229,6 +230,7 @@ gst_gl_video_mixer_input_class_init (GstGLVideoMixerInputClass * klass)
 
   gobject_class->set_property = gst_gl_video_mixer_input_set_property;
   gobject_class->get_property = gst_gl_video_mixer_input_get_property;
+  gobject_class->dispose = gst_gl_video_mixer_input_dispose;
 
   g_object_class_install_property (gobject_class, PROP_INPUT_ZORDER,
       g_param_spec_uint ("zorder", "Z-Order", "Z Order of the picture",
@@ -394,6 +396,14 @@ gst_gl_video_mixer_input_set_property (GObject * object, guint prop_id,
     g_object_set_property (G_OBJECT (self->mixer_pad), pspec->name, value);
 }
 
+static void
+gst_gl_video_mixer_input_dispose (GObject * object)
+{
+  GstGLVideoMixerInput *self = (GstGLVideoMixerInput *) object;
+
+  gst_clear_object (&self->mixer_pad);
+}
+
 static GstGhostPad *
 _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
 {
@@ -424,7 +434,7 @@ _create_video_mixer_input (GstGLMixerBin * self, GstPad * mixer_pad)
   ADD_BINDING (mixer_pad, input, "blend-constant-color-alpha");
 #undef ADD_BINDING
 
-  input->mixer_pad = mixer_pad;
+  input->mixer_pad = gst_object_ref (mixer_pad);
 
   return GST_GHOST_PAD (input);
 }
