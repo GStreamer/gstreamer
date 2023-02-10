@@ -3119,7 +3119,7 @@ qtdemux_parse_cstb (GstQTDemux * qtdemux, GstByteReader * data)
 
 /* caller verifies at least 8 bytes in buf */
 static void
-extract_initial_length_and_fourcc (const guint8 * data, guint size,
+extract_initial_length_and_fourcc (const guint8 * data, gsize size,
     guint64 * plength, guint32 * pfourcc)
 {
   guint64 length;
@@ -4676,8 +4676,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
         GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
             (_("This file is incomplete and cannot be played.")),
             ("We got less than expected (received %" G_GSIZE_FORMAT
-                ", wanted %u, offset %" G_GUINT64_FORMAT ")", map.size,
-                (guint) length, cur_offset));
+                ", wanted %" G_GUINT64_FORMAT ", offset %" G_GUINT64_FORMAT ")",
+                map.size, length, cur_offset));
         gst_buffer_unmap (moov, &map);
         gst_buffer_unref (moov);
         ret = GST_FLOW_ERROR;
