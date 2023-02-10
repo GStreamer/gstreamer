@@ -38,6 +38,7 @@
 #include <drm.h>
 
 #include <gst/allocators/gstdmabuf.h>
+#include <gst/allocators/gstdrmdumb.h>
 
 #include "gstkmsallocator.h"
 #include "gstkmsutils.h"
@@ -51,20 +52,12 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 #define GST_KMS_MEMORY_TYPE "KMSMemory"
 
-struct kms_bo
-{
-  void *ptr;
-  size_t size;
-  unsigned handle;
-  unsigned int refs;
-};
-
 struct _GstKMSAllocatorPrivate
 {
   int fd;
   /* protected by GstKMSAllocator object lock */
   GList *mem_cache;
-  GstAllocator *dmabuf_alloc;
+  GstAllocator *dumb_alloc;
 };
 
 #define parent_class gst_kms_allocator_parent_class
@@ -101,92 +94,40 @@ check_fd (GstKMSAllocator * alloc)
   return alloc->priv->fd > -1;
 }
 
-static void
-gst_kms_allocator_memory_reset (GstKMSAllocator * allocator, GstKMSMemory * mem)
-{
-  int err;
-  struct drm_mode_destroy_dumb arg = { 0, };
-
-  if (!check_fd (allocator))
-    return;
-
-  if (mem->fb_id) {
-    GST_DEBUG_OBJECT (allocator, "removing fb id %d", mem->fb_id);
-    drmModeRmFB (allocator->priv->fd, mem->fb_id);
-    mem->fb_id = 0;
-  }
-
-  if (!mem->bo)
-    return;
-
-  if (mem->bo->ptr != NULL) {
-    GST_WARNING_OBJECT (allocator, "destroying mapped bo (refcount=%d)",
-        mem->bo->refs);
-    munmap (mem->bo->ptr, mem->bo->size);
-    mem->bo->ptr = NULL;
-  }
-
-  arg.handle = mem->bo->handle;
-
-  err = drmIoctl (allocator->priv->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &arg);
-  if (err)
-    GST_WARNING_OBJECT (allocator,
-        "Failed to destroy dumb buffer object: %s %d",
-        g_strerror (errno), errno);
-
-  g_free (mem->bo);
-  mem->bo = NULL;
-}
-
 static gboolean
 gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
     GstKMSMemory * kmsmem, GstVideoInfo * vinfo)
 {
-  gint i, ret, h;
-  struct drm_mode_create_dumb arg = { 0, };
-  guint32 fmt;
+  gint i, h;
   gint num_planes = GST_VIDEO_INFO_N_PLANES (vinfo);
   gsize offs = 0;
+  guint32 pitch;
 
   if (kmsmem->bo)
     return TRUE;
 
-  if (!check_fd (allocator))
-    return FALSE;
-
-  kmsmem->bo = g_malloc0 (sizeof (*kmsmem->bo));
+  kmsmem->bo = gst_drm_dumb_allocator_alloc (allocator->priv->dumb_alloc,
+      gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (vinfo)),
+      GST_VIDEO_INFO_WIDTH (vinfo), GST_VIDEO_INFO_HEIGHT (vinfo), &pitch);
   if (!kmsmem->bo)
-    return FALSE;
-
-  fmt = gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (vinfo));
-  arg.bpp = gst_drm_bpp_from_drm (fmt);
-  arg.width = GST_VIDEO_INFO_WIDTH (vinfo);
-  h = GST_VIDEO_INFO_HEIGHT (vinfo);
-  arg.height = gst_drm_height_from_drm (fmt, h);
-
-  ret = drmIoctl (allocator->priv->fd, DRM_IOCTL_MODE_CREATE_DUMB, &arg);
-  if (ret)
     goto create_failed;
 
-  if (!arg.pitch)
+  if (!pitch)
     goto done;
 
+  h = GST_VIDEO_INFO_HEIGHT (vinfo);
   for (i = 0; i < num_planes; i++) {
-    guint32 pitch;
-
-    if (!arg.pitch)
-      continue;
+    guint32 stride;
 
     /* Overwrite the video info's stride and offset using the pitch calculcated
      * by the kms driver. */
-    pitch = gst_video_format_info_extrapolate_stride (vinfo->finfo, i,
-        arg.pitch);
+    stride = gst_video_format_info_extrapolate_stride (vinfo->finfo, i, pitch);
     GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i) = pitch;
     GST_VIDEO_INFO_PLANE_OFFSET (vinfo, i) = offs;
 
     /* Note that we cannot negotiate special padding betweem each planes,
      * hence using the display height here. */
-    offs += pitch * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, h);
+    offs += stride * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo->finfo, i, h);
 
     GST_DEBUG_OBJECT (allocator, "Created BO plane %i with stride %i and "
         "offset %" G_GSIZE_FORMAT, i,
@@ -198,10 +139,6 @@ gst_kms_allocator_memory_create (GstKMSAllocator * allocator,
   GST_VIDEO_INFO_SIZE (vinfo) = offs;
 
 done:
-  kmsmem->bo->handle = arg.handle;
-  /* will be used a memory maxsize */
-  kmsmem->bo->size = arg.size;
-
   /* Validate the size to prevent overflow */
   if (kmsmem->bo->size < GST_VIDEO_INFO_SIZE (vinfo)) {
     GST_ERROR_OBJECT (allocator,
@@ -218,8 +155,6 @@ create_failed:
   {
     GST_ERROR_OBJECT (allocator, "Failed to create buffer object: %s (%d)",
         g_strerror (errno), errno);
-    g_free (kmsmem->bo);
-    kmsmem->bo = NULL;
     return FALSE;
   }
 }
@@ -233,7 +168,17 @@ gst_kms_allocator_free (GstAllocator * allocator, GstMemory * mem)
   alloc = GST_KMS_ALLOCATOR (allocator);
   kmsmem = (GstKMSMemory *) mem;
 
-  gst_kms_allocator_memory_reset (alloc, kmsmem);
+  if (check_fd (alloc) && kmsmem->fb_id) {
+    GST_DEBUG_OBJECT (allocator, "removing fb id %d", kmsmem->fb_id);
+    drmModeRmFB (alloc->priv->fd, kmsmem->fb_id);
+    kmsmem->fb_id = 0;
+  }
+
+  if (kmsmem->bo) {
+    gst_memory_unref (kmsmem->bo);
+    kmsmem->bo = NULL;
+  }
+
   g_free (kmsmem);
 }
 
@@ -277,6 +222,22 @@ gst_kms_allocator_get_property (GObject * object, guint prop_id,
 }
 
 static void
+gst_kms_allocator_constructed (GObject * obj)
+{
+  GstKMSAllocator *alloc;
+
+  alloc = GST_KMS_ALLOCATOR (obj);
+
+  /* Should be called after the properties are set */
+  g_assert (check_fd (alloc));
+  alloc->priv->dumb_alloc =
+      gst_drm_dumb_allocator_new_with_fd (alloc->priv->fd);
+
+  /* Its already opened and we already checked for dumb allocation support */
+  g_assert (alloc->priv->dumb_alloc);
+}
+
+static void
 gst_kms_allocator_finalize (GObject * obj)
 {
   GstKMSAllocator *alloc;
@@ -285,8 +246,8 @@ gst_kms_allocator_finalize (GObject * obj)
 
   gst_kms_allocator_clear_cache (GST_ALLOCATOR (alloc));
 
-  if (alloc->priv->dmabuf_alloc)
-    gst_object_unref (alloc->priv->dmabuf_alloc);
+  if (alloc->priv->dumb_alloc)
+    gst_object_unref (alloc->priv->dumb_alloc);
 
   if (check_fd (alloc))
     close (alloc->priv->fd);
@@ -307,11 +268,12 @@ gst_kms_allocator_class_init (GstKMSAllocatorClass * klass)
 
   gobject_class->set_property = gst_kms_allocator_set_property;
   gobject_class->get_property = gst_kms_allocator_get_property;
+  gobject_class->constructed = gst_kms_allocator_constructed;
   gobject_class->finalize = gst_kms_allocator_finalize;
 
   g_props[PROP_DRM_FD] = g_param_spec_int ("drm-fd", "DRM fd",
       "DRM file descriptor", -1, G_MAXINT, -1,
-      G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
 
   g_object_class_install_properties (gobject_class, PROP_N, g_props);
 }
@@ -320,46 +282,20 @@ static gpointer
 gst_kms_memory_map (GstMemory * mem, gsize maxsize, GstMapFlags flags)
 {
   GstKMSMemory *kmsmem;
-  GstKMSAllocator *alloc;
-  int err;
-  gpointer out;
-  struct drm_mode_map_dumb arg = { 0, };
-
-  alloc = (GstKMSAllocator *) mem->allocator;
-
-  if (!check_fd (alloc))
-    return NULL;
 
   kmsmem = (GstKMSMemory *) mem;
   if (!kmsmem->bo)
     return NULL;
 
-  /* Reuse existing buffer object mapping if possible */
-  if (kmsmem->bo->ptr != NULL) {
+  if (kmsmem->bo_map.data)
     goto out;
-  }
 
-  arg.handle = kmsmem->bo->handle;
-
-  err = drmIoctl (alloc->priv->fd, DRM_IOCTL_MODE_MAP_DUMB, &arg);
-  if (err) {
-    GST_ERROR_OBJECT (alloc, "Failed to get offset of buffer object: %s %d",
-        g_strerror (errno), errno);
+  if (!gst_memory_map (kmsmem->bo, &kmsmem->bo_map, flags))
     return NULL;
-  }
-
-  out = mmap (0, kmsmem->bo->size,
-      PROT_READ | PROT_WRITE, MAP_SHARED, alloc->priv->fd, arg.offset);
-  if (out == MAP_FAILED) {
-    GST_ERROR_OBJECT (alloc, "Failed to map dumb buffer object: %s %d",
-        g_strerror (errno), errno);
-    return NULL;
-  }
-  kmsmem->bo->ptr = out;
 
 out:
-  g_atomic_int_inc (&kmsmem->bo->refs);
-  return kmsmem->bo->ptr;
+  g_atomic_int_inc (&kmsmem->bo_map_refs);
+  return kmsmem->bo_map.data;
 }
 
 static void
@@ -367,16 +303,13 @@ gst_kms_memory_unmap (GstMemory * mem)
 {
   GstKMSMemory *kmsmem;
 
-  if (!check_fd ((GstKMSAllocator *) mem->allocator))
-    return;
-
   kmsmem = (GstKMSMemory *) mem;
   if (!kmsmem->bo)
     return;
 
-  if (g_atomic_int_dec_and_test (&kmsmem->bo->refs)) {
-    munmap (kmsmem->bo->ptr, kmsmem->bo->size);
-    kmsmem->bo->ptr = NULL;
+  if (g_atomic_int_dec_and_test (&kmsmem->bo_map_refs)) {
+    gst_memory_unmap (kmsmem->bo, &kmsmem->bo_map);
+    kmsmem->bo_map.data = NULL;
   }
 }
 
@@ -414,11 +347,12 @@ gst_kms_allocator_new (int fd)
  * which are relative to the GstBuffer start. */
 static gboolean
 gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
-    gsize in_offsets[GST_VIDEO_MAX_PLANES], GstVideoInfo * vinfo)
+    gsize in_offsets[GST_VIDEO_MAX_PLANES], GstVideoInfo * vinfo,
+    guint32 bo_handles[4])
 {
   gint i, ret;
   gint num_planes = GST_VIDEO_INFO_N_PLANES (vinfo);
-  guint32 w, h, fmt, bo_handles[4] = { 0, };
+  guint32 w, h, fmt;
   guint32 pitches[4] = { 0, };
   guint32 offsets[4] = { 0, };
 
@@ -430,11 +364,6 @@ gst_kms_allocator_add_fb (GstKMSAllocator * alloc, GstKMSMemory * kmsmem,
   fmt = gst_drm_format_from_video (GST_VIDEO_INFO_FORMAT (vinfo));
 
   for (i = 0; i < num_planes; i++) {
-    if (kmsmem->bo)
-      bo_handles[i] = kmsmem->bo->handle;
-    else
-      bo_handles[i] = kmsmem->gem_handle[i];
-
     pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (vinfo, i);
     offsets[i] = in_offsets[i];
   }
@@ -459,6 +388,8 @@ gst_kms_allocator_bo_alloc (GstAllocator * allocator, GstVideoInfo * vinfo)
   GstKMSAllocator *alloc;
   GstKMSMemory *kmsmem;
   GstMemory *mem;
+  guint32 bo_handle[4] = { 0, };
+  gint i;
 
   kmsmem = g_new0 (GstKMSMemory, 1);
 
@@ -472,9 +403,13 @@ gst_kms_allocator_bo_alloc (GstAllocator * allocator, GstVideoInfo * vinfo)
   }
 
   gst_memory_init (mem, GST_MEMORY_FLAG_NO_SHARE, allocator, NULL,
-      kmsmem->bo->size, 0, 0, GST_VIDEO_INFO_SIZE (vinfo));
+      kmsmem->bo->maxsize, 0, 0, GST_VIDEO_INFO_SIZE (vinfo));
 
-  if (!gst_kms_allocator_add_fb (alloc, kmsmem, vinfo->offset, vinfo))
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (vinfo); i++)
+    bo_handle[i] = gst_drm_dumb_memory_get_handle (kmsmem->bo);
+
+  if (!gst_kms_allocator_add_fb (alloc, kmsmem, vinfo->offset, vinfo,
+          bo_handle))
     goto fail;
 
   return mem;
@@ -493,6 +428,7 @@ gst_kms_allocator_dmabuf_import (GstAllocator * allocator, gint * prime_fds,
   GstKMSMemory *kmsmem;
   GstMemory *mem;
   gint i, ret;
+  guint32 gem_handle[4] = { 0, };
 
   g_return_val_if_fail (n_planes <= GST_VIDEO_MAX_PLANES, FALSE);
 
@@ -504,42 +440,41 @@ gst_kms_allocator_dmabuf_import (GstAllocator * allocator, gint * prime_fds,
 
   alloc = GST_KMS_ALLOCATOR (allocator);
   for (i = 0; i < n_planes; i++) {
-    ret = drmPrimeFDToHandle (alloc->priv->fd, prime_fds[i],
-        &kmsmem->gem_handle[i]);
+    ret = drmPrimeFDToHandle (alloc->priv->fd, prime_fds[i], &gem_handle[i]);
     if (ret)
       goto import_fd_failed;
   }
 
-  if (!gst_kms_allocator_add_fb (alloc, kmsmem, offsets, vinfo))
+  if (!gst_kms_allocator_add_fb (alloc, kmsmem, offsets, vinfo, gem_handle))
     goto failed;
 
+done:
   for (i = 0; i < n_planes; i++) {
-    struct drm_gem_close arg = { kmsmem->gem_handle[i], };
+    struct drm_gem_close arg = { gem_handle[i], };
     gint err;
+
+    if (!gem_handle[i])
+      continue;
 
     err = drmIoctl (alloc->priv->fd, DRM_IOCTL_GEM_CLOSE, &arg);
     if (err)
       GST_WARNING_OBJECT (allocator,
           "Failed to close GEM handle: %s %d", g_strerror (errno), errno);
-
-    kmsmem->gem_handle[i] = 0;
   }
 
   return kmsmem;
 
   /* ERRORS */
 import_fd_failed:
-  {
-    GST_ERROR_OBJECT (alloc, "Failed to import prime fd %d: %s (%d)",
-        prime_fds[i], g_strerror (errno), errno);
-    /* fallback */
-  }
+  GST_ERROR_OBJECT (alloc, "Failed to import prime fd %d: %s (%d)",
+      prime_fds[i], g_strerror (errno), errno);
+  /* fallthrough */
 
 failed:
-  {
-    gst_memory_unref (mem);
-    return NULL;
-  }
+  gst_memory_unref (mem);
+  mem = NULL;
+  kmsmem = NULL;
+  goto done;
 }
 
 GstMemory *
@@ -548,30 +483,21 @@ gst_kms_allocator_dmabuf_export (GstAllocator * allocator, GstMemory * _kmsmem)
   GstKMSMemory *kmsmem = (GstKMSMemory *) _kmsmem;
   GstKMSAllocator *alloc = GST_KMS_ALLOCATOR (allocator);
   GstMemory *mem;
-  gint ret;
-  gint prime_fd;
 
   /* We can only export DUMB buffers */
   g_return_val_if_fail (kmsmem->bo, NULL);
 
-
-  ret = drmPrimeHandleToFD (alloc->priv->fd, kmsmem->bo->handle,
-      DRM_CLOEXEC | DRM_RDWR, &prime_fd);
-  if (ret)
+  mem = gst_drm_dumb_memory_export_dmabuf (kmsmem->bo);
+  if (!mem)
     goto export_fd_failed;
-
-  if (G_UNLIKELY (alloc->priv->dmabuf_alloc == NULL))
-    alloc->priv->dmabuf_alloc = gst_dmabuf_allocator_new ();
-
-  mem = gst_dmabuf_allocator_alloc (alloc->priv->dmabuf_alloc, prime_fd,
-      gst_memory_get_sizes (_kmsmem, NULL, NULL));
 
   /* Populate the cache so KMSSink can find the kmsmem back when it receives
    * one of these DMABuf. This call takes ownership of the kmsmem. */
   gst_kms_allocator_cache (allocator, mem, _kmsmem);
 
-  GST_DEBUG_OBJECT (alloc, "Exported bo handle %d as %d", kmsmem->bo->handle,
-      prime_fd);
+  GST_DEBUG_OBJECT (alloc, "Exported bo handle %d as %d",
+      gst_drm_dumb_memory_get_handle (kmsmem->bo),
+      gst_dmabuf_memory_get_fd (mem));
 
   return mem;
 
@@ -579,7 +505,7 @@ gst_kms_allocator_dmabuf_export (GstAllocator * allocator, GstMemory * _kmsmem)
 export_fd_failed:
   {
     GST_ERROR_OBJECT (alloc, "Failed to export bo handle %d: %s (%d)",
-        kmsmem->bo->handle, g_strerror (errno), ret);
+        gst_drm_dumb_memory_get_handle (kmsmem->bo), g_strerror (errno), errno);
     return NULL;
   }
 }
