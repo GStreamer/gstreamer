@@ -96,7 +96,7 @@ impl App {
                     .map(|s| String::from(s.path_string()))
                     .unwrap_or_else(|| String::from("None")),
                 err.error(),
-                err.debug().unwrap_or_else(|| String::from("None")),
+                err.debug().unwrap_or_else(|| glib::GString::from("None")),
             ),
             MessageView::Warning(warning) => {
                 println!("Warning: \"{}\"", warning.debug().unwrap());
