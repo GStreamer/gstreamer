@@ -43,6 +43,7 @@
 #include <components/Component.h>
 #include <components/VideoEncoderAV1.h>
 #include <core/Factory.h>
+#include <set>
 #include <string>
 #include <vector>
 #include <string.h>
@@ -274,7 +275,7 @@ enum
 #define DEFAULT_REF_FRAMES 1
 
 #define DOC_SINK_CAPS_COMM \
-    "format = (string) NV12, " \
+    "format = (string) {NV12, P010_10LE}, " \
     "width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ]"
 
 #define DOC_SINK_CAPS \
@@ -648,6 +649,10 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
   AMFRate framerate;
   amf_int64 int64_val = 0;
   AMF_VIDEO_ENCODER_AV1_RATE_CONTROL_METHOD_ENUM rc_mode;
+  amf_int64 color_depth;
+  AMF_SURFACE_FORMAT surface_format;
+  const GstVideoColorimetry *cinfo = &info->colorimetry;
+  amf_int64 color_profile;
 
   g_mutex_lock (&self->prop_lock);
   result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_FRAMESIZE,
@@ -684,6 +689,27 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
+  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_NV12) {
+    color_depth = AMF_COLOR_BIT_DEPTH_8;
+    surface_format = AMF_SURFACE_NV12;
+  } else if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_P010_10LE) {
+    color_depth = AMF_COLOR_BIT_DEPTH_10;
+    surface_format = AMF_SURFACE_P010;
+  } else {
+    GST_ERROR_OBJECT (self, "Unexpected format %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+    g_assert_not_reached ();
+    goto error;
+  }
+
+  result =
+      comp->SetProperty (AMF_VIDEO_ENCODER_AV1_COLOR_BIT_DEPTH, color_depth);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set bit depth, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
   result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_ALIGNMENT_MODE,
       (amf_int64) AMF_VIDEO_ENCODER_AV1_ALIGNMENT_MODE_NO_RESTRICTIONS);
   if (result != AMF_OK) {
@@ -700,7 +726,109 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
     goto error;
   }
 
-  result = comp->Init (AMF_SURFACE_NV12, info->width, info->height);
+  color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN;
+  switch (cinfo->matrix) {
+    case GST_VIDEO_COLOR_MATRIX_BT601:
+      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_601;
+      } else {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_601;
+      }
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT709:
+      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_709;
+      } else {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_709;
+      }
+      break;
+    case GST_VIDEO_COLOR_MATRIX_BT2020:
+      if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_2020;
+      } else {
+        color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_2020;
+      }
+      break;
+    default:
+      break;
+  }
+
+  result =
+      comp->SetProperty (AMF_VIDEO_ENCODER_AV1_OUTPUT_COLOR_PROFILE,
+      color_profile);
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set output color profile, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  result =
+      comp->SetProperty (AMF_VIDEO_ENCODER_AV1_OUTPUT_TRANSFER_CHARACTERISTIC,
+      gst_video_transfer_function_to_iso (cinfo->transfer));
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self,
+        "Failed to set output transfer characteristic, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  result = comp->SetProperty (AMF_VIDEO_ENCODER_AV1_OUTPUT_COLOR_PRIMARIES,
+      gst_video_color_primaries_to_iso (cinfo->primaries));
+  if (result != AMF_OK) {
+    GST_ERROR_OBJECT (self, "Failed to set output color primaries, result %"
+        GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+    goto error;
+  }
+
+  if (cinfo->transfer == GST_VIDEO_TRANSFER_SMPTE2084 &&
+      state->mastering_display_info && state->content_light_level) {
+    AMFBuffer *hdrmeta_buffer = NULL;
+    result =
+        comp->GetContext ()->AllocBuffer (AMF_MEMORY_HOST,
+        sizeof (AMFHDRMetadata), &hdrmeta_buffer);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to allocate HDR metadata buffer, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+    AMFHDRMetadata *hdrmeta = (AMFHDRMetadata *) hdrmeta_buffer->GetNative ();
+    GstVideoMasteringDisplayInfo *minfo = state->mastering_display_info;
+    GstVideoContentLightLevel *cllinfo = state->content_light_level;
+    hdrmeta->maxMasteringLuminance =
+        (amf_uint32) minfo->max_display_mastering_luminance;
+    hdrmeta->minMasteringLuminance =
+        (amf_uint32) minfo->min_display_mastering_luminance;
+
+    hdrmeta->redPrimary[0] = minfo->display_primaries[0].x;
+    hdrmeta->redPrimary[1] = minfo->display_primaries[0].y;
+
+    hdrmeta->greenPrimary[0] = minfo->display_primaries[1].x;
+    hdrmeta->greenPrimary[1] = minfo->display_primaries[1].y;
+
+    hdrmeta->bluePrimary[0] = minfo->display_primaries[2].x;
+    hdrmeta->bluePrimary[1] = minfo->display_primaries[2].y;
+
+    hdrmeta->whitePoint[0] = minfo->white_point.x;
+    hdrmeta->whitePoint[1] = minfo->white_point.y;
+
+    hdrmeta->maxContentLightLevel =
+        (amf_uint16) cllinfo->max_content_light_level;
+    hdrmeta->maxFrameAverageLightLevel =
+        (amf_uint16) cllinfo->max_frame_average_light_level;
+
+    result =
+        comp->SetProperty (AMF_VIDEO_ENCODER_AV1_INPUT_HDR_METADATA,
+        hdrmeta_buffer);
+
+    hdrmeta_buffer->Release ();
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Failed to set HDR metadata, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+  }
+
+  result = comp->Init (surface_format, info->width, info->height);
   if (result != AMF_OK) {
     GST_ERROR_OBJECT (self, "Failed to init component, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
@@ -923,6 +1051,8 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
   amf_int32 out_min_width = 0, out_max_width = 0;
   amf_int32 out_min_height = 0, out_max_height = 0;
   amf_int32 num_val;
+  std::set < std::string > formats;
+  std::string format_str;
   gboolean have_nv12 = FALSE;
   gboolean d3d11_supported = FALSE;
   gint min_width, max_width, min_height, max_height;
@@ -953,27 +1083,56 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
   GST_LOG_OBJECT (device, "Input format count: %d", num_val);
   for (amf_int32 i = 0; i < num_val; i++) {
     AMF_SURFACE_FORMAT format;
-    amf_bool native;
+    amf_bool native = false;
 
     result = in_iocaps->GetFormatAt (i, &format, &native);
     if (result != AMF_OK)
       continue;
 
     GST_INFO_OBJECT (device, "Format %d supported, native %d", format, native);
-    if (format == AMF_SURFACE_NV12)
+    if (format == AMF_SURFACE_NV12) {
       have_nv12 = TRUE;
+      formats.insert ("NV12");
+    }
+    if (format == AMF_SURFACE_P010 && native) {
+      formats.insert ("P010_10LE");
+    }
+  }
+
+  if (formats.empty ()) {
+    GST_WARNING_OBJECT (device, "Empty supported input formats");
+    return nullptr;
   }
 
   if (!have_nv12) {
     GST_WARNING_OBJECT (device, "NV12 is not supported");
     return nullptr;
   }
+#define APPEND_STRING(dst,set,str) G_STMT_START { \
+  if (set.find(str) != set.end()) { \
+    if (!first) \
+      dst += ", "; \
+    dst += str; \
+    first = FALSE; \
+  } \
+} G_STMT_END
+
+  if (formats.size () == 1) {
+    format_str = "format = (string) " + *(formats.begin ());
+  } else {
+    gboolean first = TRUE;
+    format_str = "format = (string) { ";
+    APPEND_STRING (format_str, formats, "NV12");
+    APPEND_STRING (format_str, formats, "P010_10LE");
+    format_str += " } ";
+  }
+#undef APPEND_STRING
 
   num_val = in_iocaps->GetNumOfMemoryTypes ();
   GST_LOG_OBJECT (device, "Input memory type count: %d", num_val);
   for (amf_int32 i = 0; i < num_val; i++) {
     AMF_MEMORY_TYPE type;
-    amf_bool native;
+    amf_bool native = false;
 
     result = in_iocaps->GetMemoryTypeAt (i, &type, &native);
     if (result != AMF_OK)
@@ -1080,7 +1239,7 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
   resolution_str += ", height = (int) [ " + std::to_string (min_height)
       + ", " + std::to_string (max_height) + " ]";
 
-  sink_caps_str = "video/x-raw, format = (string) NV12, " + resolution_str;
+  sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str;
   src_caps_str = "video/x-av1, " + resolution_str + ", profile = (string) main"
       ", stream-format = (string) obu-stream, alignment = (string) tu";
 
