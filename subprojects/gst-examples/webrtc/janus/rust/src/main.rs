@@ -161,7 +161,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         .collect::<Vec<_>>();
 
     if !missing.is_empty() {
-        bail!("Missing plugins: {:?}", missing);
+        bail!("Missing plugins: {missing:?}");
     } else {
         Ok(())
     }

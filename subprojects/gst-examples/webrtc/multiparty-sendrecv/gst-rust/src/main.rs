@@ -162,9 +162,7 @@ impl App {
                  audiotestsrc wave=silence is-live=true ! audio-mixer. \
                  audiomixer name=audio-mixer sink_0::mute=true ! audioconvert ! audioresample ! autoaudiosink \
                  videotestsrc pattern=black ! capsfilter caps=video/x-raw,width=1,height=1 ! video-mixer. \
-                 compositor name=video-mixer background=black sink_0::alpha=0.0 ! capsfilter caps=video/x-raw,width={width},height={height} ! videoconvert ! autovideosink",
-                width=VIDEO_WIDTH,
-                height=VIDEO_HEIGHT,
+                 compositor name=video-mixer background=black sink_0::alpha=0.0 ! capsfilter caps=video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT} ! videoconvert ! autovideosink",
         ))?;
 
         // Downcast from gst::Element to gst::Pipeline
@@ -222,7 +220,7 @@ impl App {
     // Handle WebSocket messages, both our own as well as WebSocket protocol messages
     fn handle_websocket_message(&self, msg: &str) -> Result<(), anyhow::Error> {
         if msg.starts_with("ERROR") {
-            bail!("Got error message: {}", msg);
+            bail!("Got error message: {msg}");
         }
 
         if let Some(msg) = msg.strip_prefix("ROOM_PEER_MSG ") {
@@ -236,7 +234,7 @@ impl App {
             let peers = self.peers.lock().unwrap();
             let peer = peers
                 .get(&peer_id)
-                .ok_or_else(|| anyhow!("Can't find peer {}", peer_id))?
+                .ok_or_else(|| anyhow!("Can't find peer {peer_id}"))?
                 .clone();
             drop(peers);
 
@@ -297,11 +295,11 @@ impl App {
 
     // Add this new peer and if requested, send the offer to it
     fn add_peer(&self, peer: &str, offer: bool) -> Result<(), anyhow::Error> {
-        println!("Adding peer {}", peer);
+        println!("Adding peer {peer}");
         let peer_id = str::parse::<u32>(peer).context("Can't parse peer id")?;
         let mut peers = self.peers.lock().unwrap();
         if peers.contains_key(&peer_id) {
-            bail!("Peer {} already called", peer_id);
+            bail!("Peer {peer_id} already called");
         }
 
         let peer_bin = gst::parse_bin_from_description(
@@ -492,7 +490,7 @@ impl App {
 
     // Remove this peer
     fn remove_peer(&self, peer: &str) -> Result<(), anyhow::Error> {
-        println!("Removing peer {}", peer);
+        println!("Removing peer {peer}");
         let peer_id = str::parse::<u32>(peer).context("Can't parse peer id")?;
         let mut peers = self.peers.lock().unwrap();
         if let Some(peer) = peers.remove(&peer_id) {
@@ -559,8 +557,6 @@ impl App {
             (1, 1)
         } else if npads <= 4 {
             (2, 2)
-        } else if npads <= 16 {
-            (4, 4)
         } else {
             // FIXME: we don't support more than 16 streams for now
             (4, 4)
@@ -637,7 +633,7 @@ impl Peer {
                 bail!("Offer creation future got no reponse");
             }
             Err(err) => {
-                bail!("Offer creation future got error reponse: {:?}", err);
+                bail!("Offer creation future got error reponse: {err:?}");
             }
         };
 
@@ -684,7 +680,7 @@ impl Peer {
                 bail!("Answer creation future got no reponse");
             }
             Err(err) => {
-                bail!("Answer creation future got error reponse: {:?}", err);
+                bail!("Answer creation future got error reponse: {err:?}");
             }
         };
 
@@ -722,7 +718,7 @@ impl Peer {
     // Handle incoming SDP answers from the peer
     fn handle_sdp(&self, type_: &str, sdp: &str) -> Result<(), anyhow::Error> {
         if type_ == "answer" {
-            print!("Received answer:\n{}\n", sdp);
+            print!("Received answer:\n{sdp}\n");
 
             let ret = gst_sdp::SDPMessage::parse_buffer(sdp.as_bytes())
                 .map_err(|_| anyhow!("Failed to parse SDP answer"))?;
@@ -734,7 +730,7 @@ impl Peer {
 
             Ok(())
         } else if type_ == "offer" {
-            print!("Received offer:\n{}\n", sdp);
+            print!("Received offer:\n{sdp}\n");
 
             let ret = gst_sdp::SDPMessage::parse_buffer(sdp.as_bytes())
                 .map_err(|_| anyhow!("Failed to parse SDP offer"))?;
@@ -774,7 +770,7 @@ impl Peer {
 
             Ok(())
         } else {
-            bail!("Sdp type is not \"answer\" but \"{}\"", type_)
+            bail!("Sdp type is not \"answer\" but \"{type_}\"")
         }
     }
 
@@ -820,14 +816,12 @@ impl Peer {
         let media_type = s
             .get_optional::<&str>("media")
             .expect("Invalid type")
-            .ok_or_else(|| anyhow!("no media type in caps {:?}", caps))?;
+            .ok_or_else(|| anyhow!("no media type in caps {caps:?}"))?;
 
         let conv = if media_type == "video" {
             gst::parse_bin_from_description(
                 &format!(
-                    "decodebin name=dbin ! queue ! videoconvert ! videoscale ! capsfilter name=src caps=video/x-raw,width={width},height={height},pixel-aspect-ratio=1/1",
-                    width=VIDEO_WIDTH,
-                    height=VIDEO_HEIGHT
+                    "decodebin name=dbin ! queue ! videoconvert ! videoscale ! capsfilter name=src caps=video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT},pixel-aspect-ratio=1/1"
                 ),
                 false,
             )?
@@ -837,7 +831,7 @@ impl Peer {
                 false,
             )?
         } else {
-            println!("Unknown pad {:?}, ignoring", pad);
+            println!("Unknown pad {pad:?}, ignoring");
             return Ok(());
         };
 
@@ -855,10 +849,10 @@ impl Peer {
 
         self.bin.add(&conv).unwrap();
         conv.sync_state_with_parent()
-            .with_context(|| format!("can't start sink for stream {:?}", caps))?;
+            .with_context(|| format!("can't start sink for stream {caps:?}"))?;
 
         pad.link(&sinkpad)
-            .with_context(|| format!("can't link sink for stream {:?}", caps))?;
+            .with_context(|| format!("can't link sink for stream {caps:?}"))?;
 
         // And then add a new ghost pad to the peer bin that proxies the source pad we added above
         if media_type == "video" {
@@ -912,7 +906,7 @@ async fn run(
                     WsMessage::Binary(_) => None,
                     WsMessage::Text(text) => {
                         if let Err(err) = app.handle_websocket_message(&text) {
-                            println!("Failed to parse message: {}", err);
+                            println!("Failed to parse message: {err}");
                         }
                         None
                     },
@@ -970,7 +964,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         .collect::<Vec<_>>();
 
     if !missing.is_empty() {
-        bail!("Missing plugins: {:?}", missing);
+        bail!("Missing plugins: {missing:?}");
     } else {
         Ok(())
     }
@@ -991,9 +985,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
     // Say HELLO to the server and see if it replies with HELLO
     let our_id = rand::thread_rng().gen_range(10..10_000);
-    println!("Registering id {} with server", our_id);
-    ws.send(WsMessage::Text(format!("HELLO {}", our_id)))
-        .await?;
+    println!("Registering id {our_id} with server");
+    ws.send(WsMessage::Text(format!("HELLO {our_id}"))).await?;
 
     let msg = ws
         .next()
@@ -1015,14 +1008,14 @@ async fn async_main() -> Result<(), anyhow::Error> {
 
     let peers_str = if let WsMessage::Text(text) = &msg {
         if !text.starts_with("ROOM_OK") {
-            bail!("server error: {:?}", text);
+            bail!("server error: {text:?}");
         }
 
         println!("Joined room {}", args.room_id);
 
         &text["ROOM_OK ".len()..]
     } else {
-        bail!("server error: {:?}", msg);
+        bail!("server error: {msg:?}");
     };
 
     // Collect the ids of already existing peers

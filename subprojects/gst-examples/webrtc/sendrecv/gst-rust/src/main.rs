@@ -242,7 +242,7 @@ impl App {
     // Handle WebSocket messages, both our own as well as WebSocket protocol messages
     fn handle_websocket_message(&self, msg: &str) -> Result<(), anyhow::Error> {
         if msg.starts_with("ERROR") {
-            bail!("Got error message: {}", msg);
+            bail!("Got error message: {msg}");
         }
 
         if msg == "OFFER_REQUEST" {
@@ -333,7 +333,7 @@ impl App {
                 bail!("Offer creation future got no response");
             }
             Err(err) => {
-                bail!("Offer creation future got error response: {:?}", err);
+                bail!("Offer creation future got error response: {err:?}");
             }
         };
 
@@ -377,7 +377,7 @@ impl App {
                 bail!("Answer creation future got no response");
             }
             Err(err) => {
-                bail!("Answer creation future got error response: {:?}", err);
+                bail!("Answer creation future got error response: {err:?}", err);
             }
         };
 
@@ -490,7 +490,7 @@ impl App {
     // Handle incoming SDP answers from the peer
     fn handle_sdp(&self, type_: &str, sdp: &str) -> Result<(), anyhow::Error> {
         if type_ == "answer" {
-            print!("Received answer:\n{}\n", sdp);
+            print!("Received answer:\n{sdp}\n");
 
             let ret = gst_sdp::SDPMessage::parse_buffer(sdp.as_bytes())
                 .map_err(|_| anyhow!("Failed to parse SDP answer"))?;
@@ -502,7 +502,7 @@ impl App {
 
             Ok(())
         } else if type_ == "offer" {
-            print!("Received offer:\n{}\n", sdp);
+            print!("Received offer:\n{sdp}\n");
 
             let ret = gst_sdp::SDPMessage::parse_buffer(sdp.as_bytes())
                 .map_err(|_| anyhow!("Failed to parse SDP offer"))?;
@@ -556,7 +556,7 @@ impl App {
 
             Ok(())
         } else {
-            bail!("Sdp type is not \"answer\" but \"{}\"", type_)
+            bail!("Sdp type is not \"answer\" but \"{type_}\"")
         }
     }
 
@@ -633,17 +633,17 @@ impl App {
                 true,
             )?
         } else {
-            println!("Unknown pad {:?}, ignoring", pad);
+            println!("Unknown pad {pad:?}, ignoring");
             return Ok(());
         };
 
         self.pipeline.add(&sink).unwrap();
         sink.sync_state_with_parent()
-            .with_context(|| format!("can't start sink for stream {:?}", caps))?;
+            .with_context(|| format!("can't start sink for stream {caps:?}"))?;
 
         let sinkpad = sink.static_pad("sink").unwrap();
         pad.link(&sinkpad)
-            .with_context(|| format!("can't link sink for stream {:?}", caps))?;
+            .with_context(|| format!("can't link sink for stream {caps:?}"))?;
 
         Ok(())
     }
@@ -741,7 +741,7 @@ fn check_plugins() -> Result<(), anyhow::Error> {
         .collect::<Vec<_>>();
 
     if !missing.is_empty() {
-        bail!("Missing plugins: {:?}", missing);
+        bail!("Missing plugins: {missing:?}");
     } else {
         Ok(())
     }
@@ -764,9 +764,8 @@ async fn async_main() -> Result<(), anyhow::Error> {
     let our_id = args
         .our_id
         .unwrap_or_else(|| rand::thread_rng().gen_range(10..10_000));
-    println!("Registering id {} with server", our_id);
-    ws.send(WsMessage::Text(format!("HELLO {}", our_id)))
-        .await?;
+    println!("Registering id {our_id} with server");
+    ws.send(WsMessage::Text(format!("HELLO {our_id}"))).await?;
 
     let msg = ws
         .next()
@@ -778,10 +777,10 @@ async fn async_main() -> Result<(), anyhow::Error> {
     }
 
     if let Some(peer_id) = args.peer_id {
-        println!("Setting up call with peer id {}", peer_id);
+        println!("Setting up call with peer id {peer_id}");
 
         // Join the given session
-        ws.send(WsMessage::Text(format!("SESSION {}", peer_id)))
+        ws.send(WsMessage::Text(format!("SESSION {peer_id}")))
             .await?;
 
         let msg = ws
@@ -790,7 +789,7 @@ async fn async_main() -> Result<(), anyhow::Error> {
             .ok_or_else(|| anyhow!("didn't receive anything"))??;
 
         if msg != WsMessage::Text("SESSION_OK".into()) {
-            bail!("server error: {:?}", msg);
+            bail!("server error: {msg:?}");
         }
 
         // If we expect the peer to create the offer request it now
