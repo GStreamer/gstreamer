@@ -43,17 +43,28 @@ const MXFEssenceElementHandler *
 mxf_essence_element_handler_find (const MXFMetadataTimelineTrack * track)
 {
   GSList *l;
-  const MXFEssenceElementHandler *ret = NULL;
+  guint i;
+  MXFMetadataTrack *parent = (MXFMetadataTrack *) track;
 
-  for (l = _mxf_essence_element_handler_registry; l; l = l->next) {
-    MXFEssenceElementHandler *current = l->data;
+  g_return_val_if_fail (track != NULL, NULL);
 
-    if (current->handles_track (track)) {
-      ret = current;
+  if (parent->descriptor == NULL)
+    return NULL;
+
+  for (i = 0; i < parent->n_descriptor; i++) {
+    MXFMetadataFileDescriptor *d = parent->descriptor[i];
+
+    if (d) {
+      for (l = _mxf_essence_element_handler_registry; l; l = l->next) {
+        MXFEssenceElementHandler *current = l->data;
+
+        if (current->handles_descriptor (d))
+          return current;
+      }
     }
   }
 
-  return ret;
+  return NULL;
 }
 
 static GList *_essence_element_writer_registry = NULL;

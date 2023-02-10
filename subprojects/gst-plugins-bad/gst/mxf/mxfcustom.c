@@ -43,28 +43,9 @@ static const MXFUL mxf_canon_xf_hevc = { {0x06, 0x0E, 0x2B, 0x34,
 };
 
 static gboolean
-mxf_is_canon_xfhevc_essence_track (const MXFMetadataTimelineTrack * track)
+mxf_is_canon_xfhevc_essence_track (const MXFMetadataFileDescriptor * d)
 {
-  guint i;
-
-  g_return_val_if_fail (track != NULL, FALSE);
-
-  if (track->parent.descriptor == NULL)
-    return FALSE;
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
-    MXFUL *key;
-
-    if (!d)
-      continue;
-
-    key = &d->essence_container;
-    if (mxf_ul_is_equal (key, &mxf_canon_xf_hevc))
-      return TRUE;
-  }
-
-  return FALSE;
+  return mxf_ul_is_equal (&d->essence_container, &mxf_canon_xf_hevc);
 }
 
 static GstFlowReturn

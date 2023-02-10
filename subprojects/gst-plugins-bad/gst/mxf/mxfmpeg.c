@@ -392,34 +392,16 @@ typedef enum
 } MXFMPEGEssenceType;
 
 static gboolean
-mxf_is_mpeg_essence_track (const MXFMetadataTimelineTrack * track)
+mxf_is_mpeg_essence_track (const MXFMetadataFileDescriptor * d)
 {
-  guint i;
-
-  g_return_val_if_fail (track != NULL, FALSE);
-
-  if (track->parent.descriptor == NULL)
-    return FALSE;
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
-    MXFUL *key;
-
-    if (!d)
-      continue;
-
-    key = &d->essence_container;
-    /* SMPTE 381M 7 */
-    /* SMPTE RP2008 8.1 */
-    if (mxf_is_generic_container_essence_container_label (key) &&
-        key->u[12] == 0x02 &&
-        (key->u[13] == 0x04 ||
-            key->u[13] == 0x07 || key->u[13] == 0x08 || key->u[13] == 0x09 ||
-            key->u[13] == 0x0f || key->u[13] == 0x10))
-      return TRUE;
-  }
-
-  return FALSE;
+  const MXFUL *key = &d->essence_container;
+  /* SMPTE 381M 7 */
+  /* SMPTE RP2008 8.1 */
+  return (mxf_is_generic_container_essence_container_label (key) &&
+      key->u[12] == 0x02 &&
+      (key->u[13] == 0x04 ||
+          key->u[13] == 0x07 || key->u[13] == 0x08 || key->u[13] == 0x09 ||
+          key->u[13] == 0x0f || key->u[13] == 0x10));
 }
 
 /* See ISO/IEC 13818-2 for MPEG ES format */

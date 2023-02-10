@@ -34,30 +34,12 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
  * and Application of Apple ProRes"
  */
 static gboolean
-mxf_is_prores_essence_track (const MXFMetadataTimelineTrack * track)
+mxf_is_prores_essence_track (const MXFMetadataFileDescriptor * d)
 {
-  guint i;
+  const MXFUL *key = &d->essence_container;
 
-  g_return_val_if_fail (track != NULL, FALSE);
-
-  if (track->parent.descriptor == NULL)
-    return FALSE;
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
-    MXFUL *key;
-
-    if (!d)
-      continue;
-
-    key = &d->essence_container;
-    if (mxf_is_generic_container_essence_container_label (key) &&
-        key->u[12] == 0x02 && key->u[13] == 0x1C) {
-      return TRUE;
-    }
-  }
-
-  return FALSE;
+  return (mxf_is_generic_container_essence_container_label (key) &&
+      key->u[12] == 0x02 && key->u[13] == 0x1C);
 }
 
 static GstFlowReturn

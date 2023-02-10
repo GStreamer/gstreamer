@@ -41,31 +41,13 @@ GST_DEBUG_CATEGORY_EXTERN (mxf_debug);
 #define GST_CAT_DEFAULT mxf_debug
 
 static gboolean
-mxf_is_jpeg2000_essence_track (const MXFMetadataTimelineTrack * track)
+mxf_is_jpeg2000_essence_track (const MXFMetadataFileDescriptor * d)
 {
-  guint i;
-
-  g_return_val_if_fail (track != NULL, FALSE);
-
-  if (track->parent.descriptor == NULL)
-    return FALSE;
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
-    MXFUL *key;
-
-    if (!d)
-      continue;
-
-    key = &d->essence_container;
-    /* SMPTE 422M 5.4 */
-    if (mxf_is_generic_container_essence_container_label (key) &&
-        key->u[12] == 0x02 && key->u[13] == 0x0c &&
-        (key->u[14] == 0x01 || key->u[14] == 0x02))
-      return TRUE;
-  }
-
-  return FALSE;
+  const MXFUL *key = &d->essence_container;
+  /* SMPTE 422M 5.4 */
+  return (mxf_is_generic_container_essence_container_label (key) &&
+      key->u[12] == 0x02 && key->u[13] == 0x0c &&
+      (key->u[14] == 0x01 || key->u[14] == 0x02));
 }
 
 static GstFlowReturn

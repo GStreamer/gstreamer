@@ -48,38 +48,24 @@ static const MXFUL picture_essence_coding_dv = { {
 };
 
 static gboolean
-mxf_is_dv_dif_essence_track (const MXFMetadataTimelineTrack * track)
+mxf_is_dv_dif_essence_track (const MXFMetadataFileDescriptor * d)
 {
-  guint i;
+  const MXFUL *key = &d->essence_container;
+  /* SMPTE 383M 8 */
+  if (mxf_is_generic_container_essence_container_label (key) &&
+      key->u[12] == 0x02 && key->u[13] == 0x02) {
+    return TRUE;
+  }
+  if (mxf_is_avid_essence_container_label (key)) {
+    MXFMetadataGenericPictureEssenceDescriptor *p;
 
-  g_return_val_if_fail (track != NULL, FALSE);
+    if (!MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d))
+      return FALSE;
+    p = MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d);
 
-  if (track->parent.descriptor == NULL)
-    return FALSE;
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
-    MXFUL *key;
-
-    if (!d)
-      continue;
-
-    key = &d->essence_container;
-    /* SMPTE 383M 8 */
-    if (mxf_is_generic_container_essence_container_label (key) &&
-        key->u[12] == 0x02 && key->u[13] == 0x02) {
+    key = &p->picture_essence_coding;
+    if (mxf_ul_is_subclass (&picture_essence_coding_dv, key))
       return TRUE;
-    } else if (mxf_is_avid_essence_container_label (key)) {
-      MXFMetadataGenericPictureEssenceDescriptor *p;
-
-      if (!MXF_IS_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d))
-        return FALSE;
-      p = MXF_METADATA_GENERIC_PICTURE_ESSENCE_DESCRIPTOR (d);
-
-      key = &p->picture_essence_coding;
-      if (mxf_ul_is_subclass (&picture_essence_coding_dv, key))
-        return TRUE;
-    }
   }
 
   return FALSE;

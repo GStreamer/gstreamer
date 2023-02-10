@@ -1077,39 +1077,19 @@ static void
 }
 
 static gboolean
-mxf_is_aes_bwf_essence_track (const MXFMetadataTimelineTrack * track)
+mxf_is_aes_bwf_essence_track (const MXFMetadataFileDescriptor * d)
 {
-  guint i;
+  const MXFUL *key = &d->essence_container;
 
-  g_return_val_if_fail (track != NULL, FALSE);
-
-  if (track->parent.descriptor == NULL) {
-    GST_ERROR ("No descriptor for this track");
-    return FALSE;
-  }
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
-    MXFUL *key;
-
-    if (!d)
-      continue;
-
-    key = &d->essence_container;
-    /* SMPTE 382M 9 */
-    if (mxf_is_generic_container_essence_container_label (key) &&
-        key->u[12] == 0x02 &&
-        key->u[13] == 0x06 &&
-        (key->u[14] == 0x01 ||
-            key->u[14] == 0x02 ||
-            key->u[14] == 0x03 ||
-            key->u[14] == 0x04 || key->u[14] == 0x08 || key->u[14] == 0x09 ||
-            key->u[14] == 0x0a || key->u[14] == 0x0b))
-      return TRUE;
-  }
-
-
-  return FALSE;
+  /* SMPTE 382M 9 */
+  return (mxf_is_generic_container_essence_container_label (key) &&
+      key->u[12] == 0x02 &&
+      key->u[13] == 0x06 &&
+      (key->u[14] == 0x01 ||
+          key->u[14] == 0x02 ||
+          key->u[14] == 0x03 ||
+          key->u[14] == 0x04 || key->u[14] == 0x08 || key->u[14] == 0x09 ||
+          key->u[14] == 0x0a || key->u[14] == 0x0b));
 }
 
 static MXFEssenceWrapping

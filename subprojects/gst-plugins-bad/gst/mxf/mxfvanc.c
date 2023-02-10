@@ -71,31 +71,14 @@ static void
 }
 
 static gboolean
-mxf_is_vanc_essence_track (const MXFMetadataTimelineTrack * track)
+mxf_is_vanc_essence_track (const MXFMetadataFileDescriptor * d)
 {
-  guint i;
+  const MXFUL *key = &d->essence_container;
 
-  g_return_val_if_fail (track != NULL, FALSE);
-
-  if (track->parent.descriptor == NULL)
-    return FALSE;
-
-  for (i = 0; i < track->parent.n_descriptor; i++) {
-    MXFMetadataFileDescriptor *d = track->parent.descriptor[i];
-    MXFUL *key;
-
-    if (!d)
-      continue;
-
-    key = &d->essence_container;
-    /* SMPTE 436M 4.3 */
-    if (mxf_is_generic_container_essence_container_label (key) &&
-        key->u[12] == 0x02 && key->u[13] == 0x0e &&
-        key->u[14] == 0x00 && key->u[15] == 0x00)
-      return TRUE;
-  }
-
-  return FALSE;
+  /* SMPTE 436M 4.3 */
+  return (mxf_is_generic_container_essence_container_label (key) &&
+      key->u[12] == 0x02 && key->u[13] == 0x0e &&
+      key->u[14] == 0x00 && key->u[15] == 0x00);
 }
 
 static GstFlowReturn

@@ -36,7 +36,7 @@ typedef enum {
 typedef GstFlowReturn (*MXFEssenceElementHandleFunc) (const MXFUL *key, GstBuffer *buffer, GstCaps *caps, MXFMetadataTimelineTrack *track, gpointer mapping_data, GstBuffer **outbuf);
 
 typedef struct {
-  gboolean (*handles_track) (const MXFMetadataTimelineTrack *track);
+  gboolean (*handles_descriptor) (const MXFMetadataFileDescriptor *d);
   MXFEssenceWrapping (*get_track_wrapping) (const MXFMetadataTimelineTrack *track);
   GstCaps * (*create_caps) (MXFMetadataTimelineTrack *track, GstTagList **tags, gboolean * intra_only, MXFEssenceElementHandleFunc *handler, gpointer *mapping_data);
 } MXFEssenceElementHandler;
