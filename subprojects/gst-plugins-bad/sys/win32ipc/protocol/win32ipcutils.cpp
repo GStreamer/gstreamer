@@ -23,6 +23,7 @@
  */
 
 #include "win32ipcutils.h"
+#include <cctype>
 #include <string>
 #include <locale>
 #include <codecvt>
