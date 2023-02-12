@@ -283,7 +283,7 @@ enum
 
 #define DOC_SRC_CAPS \
     "video/x-av1, width = (int) [ 128, 4096 ], height = (int) [ 128, 4096 ], " \
-    "profile = (string) main, alignment= (string) tu"
+    "profile = (string) main, stream-format = (string) obu-stream, alignment= (string) tu"
 
 typedef struct _GstAmfAv1Enc
 {
@@ -824,7 +824,7 @@ gst_amf_av1_enc_set_output_state (GstAmfEncoder * encoder,
   GstTagList *tags;
 
   caps = gst_caps_from_string ("video/x-av1, profile = (string) main, "
-      "alignment = (string) tu");
+      "stream-format = (string) obu-stream, alignment = (string) tu");
   output_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       caps, state);
 
@@ -1081,8 +1081,8 @@ gst_amf_av1_enc_create_class_data (GstD3D11Device * device, AMFComponent * comp)
       + ", " + std::to_string (max_height) + " ]";
 
   sink_caps_str = "video/x-raw, format = (string) NV12, " + resolution_str;
-  src_caps_str = "video/x-av1, " + resolution_str + ", profile = (string) main, "
-      "alignment = (string) tu";
+  src_caps_str = "video/x-av1, " + resolution_str + ", profile = (string) main"
+      ", stream-format = (string) obu-stream, alignment = (string) tu";
 
   system_caps = gst_caps_from_string (sink_caps_str.c_str ());
   sink_caps = gst_caps_copy (system_caps);
