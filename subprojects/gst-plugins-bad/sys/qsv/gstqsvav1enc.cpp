@@ -122,7 +122,7 @@ enum
 
 #define DOC_SRC_CAPS \
     "video/x-av1, width = (int) [ 16, 8192 ], height = (int) [ 16, 8192 ], " \
-    "alignment = (string) tu"
+    "stream-format = (string) obu-stream, alignment = (string) tu"
 
 typedef struct _GstQsvAV1EncClassData
 {
@@ -561,7 +561,7 @@ gst_qsv_av1_enc_set_output_state (GstQsvEncoder * encoder,
   }
 
   caps = gst_caps_from_string ("video/x-av1, profile = (string) main, "
-      "alignment= (string) tu");
+      "stream-format = (string) obu-stream, alignment= (string) tu");
   out_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (encoder),
       caps, state);
   gst_video_codec_state_unref (out_state);
@@ -778,7 +778,7 @@ gst_qsv_av1_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 #endif
 
   std::string src_caps_str = "video/x-av1, profile = (string) main, "
-      "alignment = (string) tu";
+      "stream-format = (string) obu-stream, alignment = (string) tu";
   src_caps_str += ", width=(int) [ 16, " + std::to_string (resolution) + " ]";
   src_caps_str += ", height=(int) [ 16, " + std::to_string (resolution) + " ]";
 
