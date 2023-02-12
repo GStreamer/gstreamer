@@ -481,9 +481,10 @@ gst_jpeg_decoder_handle_frame (GstVideoDecoder * decoder,
         break;
 
       case GST_JPEG_MARKER_DRI:
-        if (!(valid_state (priv->state, GST_JPEG_DECODER_STATE_GOT_SOS)
-                && decode_restart_interval (self, &seg)))
+        if (!decode_restart_interval (self, &seg)) {
+          GST_WARNING_OBJECT (self, "Fail to decode restart interval");
           goto unmap_and_error;
+        }
         break;
       case GST_JPEG_MARKER_DNL:
         break;
