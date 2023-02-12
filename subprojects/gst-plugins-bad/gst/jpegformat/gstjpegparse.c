@@ -653,10 +653,14 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
 }
 
 static GstFlowReturn
-gst_jpeg_parse_push_frame (GstJpegParse * parse, GstBaseParseFrame * frame,
+gst_jpeg_parse_finish_frame (GstJpegParse * parse, GstBaseParseFrame * frame,
     gint size)
 {
   GstBaseParse *bparse = GST_BASE_PARSE (parse);
+  GstFlowReturn ret;
+
+  if (parse->tags)
+    gst_base_parse_merge_tags (bparse, parse->tags, GST_TAG_MERGE_REPLACE);
 
   if (!gst_jpeg_parse_set_new_caps (parse))
     return GST_FLOW_ERROR;
@@ -667,7 +671,11 @@ gst_jpeg_parse_push_frame (GstJpegParse * parse, GstBaseParseFrame * frame,
     GST_WARNING_OBJECT (parse, "Potentially invalid picture");
   }
 
-  return gst_base_parse_finish_frame (bparse, frame, size);
+  ret = gst_base_parse_finish_frame (bparse, frame, size);
+
+  gst_jpeg_parse_reset (parse);
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -722,32 +730,41 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
 
     switch (marker) {
       case GST_JPEG_MARKER_SOI:
-        parse->state |= GST_JPEG_PARSER_STATE_GOT_SOI;
-        /* unset tags */
-        gst_base_parse_merge_tags (bparse, NULL, GST_TAG_MERGE_UNDEFINED);
-        /* remove all previous bytes */
+        /* This means that new SOI comes without an previous EOI. */
         if (offset > 2) {
+          /* If already some data segment parsed, push it as a frame. */
+          if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOS)) {
+            gst_buffer_unmap (frame->buffer, &mapinfo);
+
+            frame->out_buffer = gst_buffer_copy_region (frame->buffer,
+                GST_BUFFER_COPY_ALL, 0, seg.offset - 2);
+            GST_MINI_OBJECT_FLAGS (frame->out_buffer) |=
+                GST_BUFFER_FLAG_CORRUPTED;
+
+            GST_DEBUG_OBJECT (parse, "Push a frame without EOI, size %d",
+                seg.offset - 2);
+            return gst_jpeg_parse_finish_frame (parse, frame, seg.offset - 2);
+          }
+
+          gst_jpeg_parse_reset (parse);
+          parse->state |= GST_JPEG_PARSER_STATE_GOT_SOI;
+          /* unset tags */
+          gst_base_parse_merge_tags (bparse, NULL, GST_TAG_MERGE_UNDEFINED);
+
           *skipsize = offset - 2;
           GST_DEBUG_OBJECT (parse, "skipping %d bytes before SOI", *skipsize);
           parse->last_offset = 2;
           goto beach;
         }
+
+        /* unset tags */
+        gst_base_parse_merge_tags (bparse, NULL, GST_TAG_MERGE_UNDEFINED);
+        parse->state |= GST_JPEG_PARSER_STATE_GOT_SOI;
         break;
-      case GST_JPEG_MARKER_EOI:{
-        GstFlowReturn ret;
-
+      case GST_JPEG_MARKER_EOI:
         gst_buffer_unmap (frame->buffer, &mapinfo);
-
-        if (parse->tags) {
-          gst_base_parse_merge_tags (bparse, parse->tags,
-              GST_TAG_MERGE_REPLACE);
-        }
-
-        ret = gst_jpeg_parse_push_frame (parse, frame, seg.offset);
-        gst_jpeg_parse_reset (parse);
-
-        return ret;
-      }
+        return gst_jpeg_parse_finish_frame (parse, frame, seg.offset);
+        break;
       case GST_JPEG_MARKER_SOS:
         if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOF))
           GST_WARNING_OBJECT (parse, "SOS marker without SOF one");
