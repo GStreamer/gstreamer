@@ -149,6 +149,7 @@ struct _GstV4l2Object {
   GstVideoAlignment align;
   GstVideoTransferFunction transfer;
   gsize plane_size[GST_VIDEO_MAX_PLANES];
+  GstVideoColorMatrix matrix;
 
   /* Features */
   gboolean need_video_meta;

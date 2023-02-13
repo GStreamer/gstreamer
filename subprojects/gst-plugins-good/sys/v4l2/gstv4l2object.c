@@ -1526,6 +1526,23 @@ gst_v4l2_object_v4l2fourcc_is_rgb (guint32 fourcc)
   return ret;
 }
 
+static gboolean
+gst_v4l2_object_v4l2fourcc_is_codec (guint32 fourcc)
+{
+  gint i;
+
+  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+    if (gst_v4l2_formats[i].format == fourcc) {
+      if (gst_v4l2_formats[i].flags & (GST_V4L2_CODEC | GST_V4L2_TRANSPORT))
+        return TRUE;
+      else
+        return FALSE;
+    }
+  }
+
+  return FALSE;
+}
+
 static GstStructure *
 gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
 {
@@ -2245,12 +2262,12 @@ static gboolean
 gst_v4l2_object_get_colorspace (GstV4l2Object * v4l2object,
     struct v4l2_format *fmt, GstVideoColorimetry * cinfo)
 {
-  gboolean is_rgb =
-      gst_v4l2_object_v4l2fourcc_is_rgb (fmt->fmt.pix.pixelformat);
+  gboolean is_rgb = FALSE;
   enum v4l2_colorspace colorspace;
   enum v4l2_quantization range;
   enum v4l2_ycbcr_encoding matrix;
   enum v4l2_xfer_func transfer;
+  guint32 pixelformat;
   gboolean ret = TRUE;
 
   if (V4L2_TYPE_IS_MULTIPLANAR (fmt->type)) {
@@ -2258,12 +2275,24 @@ gst_v4l2_object_get_colorspace (GstV4l2Object * v4l2object,
     range = fmt->fmt.pix_mp.quantization;
     matrix = fmt->fmt.pix_mp.ycbcr_enc;
     transfer = fmt->fmt.pix_mp.xfer_func;
+    pixelformat = fmt->fmt.pix_mp.pixelformat;
   } else {
     colorspace = fmt->fmt.pix.colorspace;
     range = fmt->fmt.pix.quantization;
     matrix = fmt->fmt.pix.ycbcr_enc;
     transfer = fmt->fmt.pix.xfer_func;
+    pixelformat = fmt->fmt.pix.pixelformat;
   }
+
+  /* Detect that we are dealing with RGB, this can be that the pixelformat is
+   * an RGB format, or we have an encoded format for which RGB color matrix
+   * was set in set_format. */
+  if (gst_v4l2_object_v4l2fourcc_is_rgb (pixelformat) ||
+      (v4l2object->matrix == GST_VIDEO_COLOR_MATRIX_RGB &&
+          gst_v4l2_object_v4l2fourcc_is_codec (pixelformat)))
+    is_rgb = TRUE;
+  else
+    is_rgb = FALSE;
 
   /* First step, set the defaults for each primaries */
   switch (colorspace) {
@@ -3796,6 +3825,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   gst_video_info_init (&info);
   gst_video_alignment_reset (&align);
   v4l2object->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+  v4l2object->matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
 
   if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
     goto invalid_caps;
@@ -3882,6 +3912,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   switch (info.colorimetry.matrix) {
     case GST_VIDEO_COLOR_MATRIX_RGB:
+      /* save the matrix so we can restore it on get() call from default */
+      v4l2object->matrix = GST_VIDEO_COLOR_MATRIX_RGB;
       /* Unspecified, leave to default */
       break;
       /* FCC is about the same as BT601 with less digit */
@@ -4571,6 +4603,7 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
   gst_video_info_init (info);
   gst_video_alignment_reset (&align);
   v4l2object->transfer = GST_VIDEO_TRANSFER_UNKNOWN;
+  v4l2object->matrix = GST_VIDEO_COLOR_MATRIX_UNKNOWN;
 
   memset (&fmt, 0x00, sizeof (struct v4l2_format));
   fmt.type = v4l2object->type;
