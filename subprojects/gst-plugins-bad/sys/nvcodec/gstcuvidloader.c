@@ -56,6 +56,8 @@ typedef struct _GstnvdecCuvidVTable
       unsigned int reserved_flags);
     CUresult (CUDAAPI * CuvidCreateDecoder) (CUvideodecoder * phDecoder,
       CUVIDDECODECREATEINFO * pdci);
+    CUresult (CUDAAPI * CuvidReconfigureDecoder) (CUvideodecoder phDecoder,
+      CUVIDRECONFIGUREDECODERINFO * pDecReconfigParams);
     CUresult (CUDAAPI * CuvidDestroyDecoder) (CUvideodecoder hDecoder);
     CUresult (CUDAAPI * CuvidDecodePicture) (CUvideodecoder hDecoder,
       CUVIDPICPARAMS * pPicParams);
@@ -97,6 +99,7 @@ gst_cuvid_load_library (guint api_major_ver, guint api_minor_ver)
   LOAD_SYMBOL (cuvidCtxLock, CuvidCtxLock, TRUE);
   LOAD_SYMBOL (cuvidCtxUnlock, CuvidCtxUnlock, TRUE);
   LOAD_SYMBOL (cuvidCreateDecoder, CuvidCreateDecoder, TRUE);
+  LOAD_SYMBOL (cuvidReconfigureDecoder, CuvidReconfigureDecoder, FALSE);
   LOAD_SYMBOL (cuvidDestroyDecoder, CuvidDestroyDecoder, TRUE);
   LOAD_SYMBOL (cuvidDecodePicture, CuvidDecodePicture, TRUE);
   LOAD_SYMBOL (cuvidCreateVideoParser, CuvidCreateVideoParser, TRUE);
@@ -142,6 +145,15 @@ gst_cuvid_can_get_decoder_caps (void)
   return FALSE;
 }
 
+gboolean
+gst_cuvid_can_reconfigure (void)
+{
+  if (gst_cuvid_vtable.CuvidReconfigureDecoder)
+    return TRUE;
+
+  return FALSE;
+}
+
 CUresult CUDAAPI
 CuvidCtxLockCreate (CUvideoctxlock * pLock, CUcontext ctx)
 {
@@ -180,6 +192,16 @@ CuvidCreateDecoder (CUvideodecoder * phDecoder, CUVIDDECODECREATEINFO * pdci)
   g_assert (gst_cuvid_vtable.CuvidCreateDecoder != NULL);
 
   return gst_cuvid_vtable.CuvidCreateDecoder (phDecoder, pdci);
+}
+
+CUresult CUDAAPI
+CuvidReconfigureDecoder (CUvideodecoder hDecoder,
+    CUVIDRECONFIGUREDECODERINFO * pDecReconfigParams)
+{
+  g_assert (gst_cuvid_vtable.CuvidReconfigureDecoder != NULL);
+
+  return gst_cuvid_vtable.CuvidReconfigureDecoder (hDecoder,
+      pDecReconfigParams);
 }
 
 CUresult CUDAAPI

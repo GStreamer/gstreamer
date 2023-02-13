@@ -44,12 +44,19 @@ struct _GstNvDecSurface
 
   CUdeviceptr devptr;
   guint pitch;
+
+  guint seq_num;
 };
 
 GstNvDecObject * gst_nv_dec_object_new (GstCudaContext * context,
                                         CUVIDDECODECREATEINFO * create_info,
                                         const GstVideoInfo * video_info,
                                         gboolean alloc_aux_frame);
+
+gboolean         gst_nv_dec_object_reconfigure (GstNvDecObject * object,
+                                                CUVIDRECONFIGUREDECODERINFO * reconfigure_info,
+                                                const GstVideoInfo * video_info,
+                                                gboolean alloc_aux_frame);
 
 void             gst_nv_dec_object_set_flushing (GstNvDecObject * object,
                                                  gboolean flushing);

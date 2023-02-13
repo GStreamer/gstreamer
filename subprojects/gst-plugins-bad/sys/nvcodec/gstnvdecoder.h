@@ -37,6 +37,8 @@ typedef struct _GstNvDecoderClassData
   GstCaps *sink_caps;
   GstCaps *src_caps;
   guint cuda_device_id;
+  guint max_width;
+  guint max_height;
 } GstNvDecoderClassData;
 
 GstNvDecoder * gst_nv_decoder_new (GstCudaContext * context);
@@ -51,7 +53,9 @@ gboolean       gst_nv_decoder_configure (GstNvDecoder * decoder,
                                          guint coded_bitdepth,
                                          guint pool_size,
                                          gboolean alloc_aux_frame,
-                                         guint num_output_surfaces);
+                                         guint num_output_surfaces,
+                                         guint init_max_width,
+                                         guint init_max_height);
 
 GstFlowReturn  gst_nv_decoder_acquire_surface (GstNvDecoder * decoder,
                                                GstNvDecSurface ** surface);
@@ -94,6 +98,10 @@ gboolean gst_nv_decoder_negotiate            (GstNvDecoder * decoder,
 gboolean gst_nv_decoder_decide_allocation    (GstNvDecoder * decoder,
                                               GstVideoDecoder * videodec,
                                               GstQuery * query);
+
+guint    gst_nv_decoder_get_max_output_size  (guint coded_size,
+                                              guint user_requested,
+                                              guint device_max);
 
 G_END_DECLS
 

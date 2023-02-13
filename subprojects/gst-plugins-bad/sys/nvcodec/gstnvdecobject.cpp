@@ -38,13 +38,14 @@ extern "C"
 #define GST_CAT_DEFAULT gst_nv_decoder_debug
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstNvDecSurface, gst_nv_dec_surface);
-static GstNvDecSurface *gst_nv_dec_surface_new (void);
+static GstNvDecSurface *gst_nv_dec_surface_new (guint seq_num);
 
 /* *INDENT-OFF* */
 struct GstNvDecOutput
 {
   GstNvDecObject *self = nullptr;
   CUdeviceptr devptr = 0;
+  guint seq_num = 0;
 };
 
 struct GstNvDecObjectPrivate
@@ -76,6 +77,8 @@ struct _GstNvDecObject
   guint pool_size;
   guint num_mapped;
   gboolean alloc_aux_frame;
+  guint plane_height;
+  guint seq_num;
 };
 
 static void gst_nv_dec_object_finalize (GObject * object);
@@ -160,9 +163,10 @@ gst_nv_dec_object_new (GstCudaContext * context,
   self->create_info = *create_info;
   self->video_info = *video_info;
   self->pool_size = pool_size;
+  self->plane_height = create_info->ulTargetHeight;
 
   for (guint i = 0; i < pool_size; i++) {
-    GstNvDecSurface *surf = gst_nv_dec_surface_new ();
+    GstNvDecSurface *surf = gst_nv_dec_surface_new (0);
 
     surf->index = i;
 
@@ -178,6 +182,73 @@ gst_nv_dec_object_new (GstCudaContext * context,
   }
 
   return self;
+}
+
+gboolean
+gst_nv_dec_object_reconfigure (GstNvDecObject * object,
+    CUVIDRECONFIGUREDECODERINFO * reconfigure_info,
+    const GstVideoInfo * video_info, gboolean alloc_aux_frame)
+{
+  GstNvDecObjectPrivate *priv = object->priv;
+  CUresult ret;
+  guint pool_size;
+
+  if (!gst_cuvid_can_reconfigure ())
+    return FALSE;
+
+  pool_size = reconfigure_info->ulNumDecodeSurfaces;
+  if (alloc_aux_frame)
+    pool_size /= 2;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!gst_cuda_context_push (object->context)) {
+    GST_ERROR_OBJECT (object, "Couldn't push context");
+    return FALSE;
+  }
+
+  ret = CuvidReconfigureDecoder (object->handle, reconfigure_info);
+  gst_cuda_context_pop (nullptr);
+
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (object, "Couldn't reconfigure decoder");
+    return FALSE;
+  }
+
+  if ((guint) priv->surface_queue.size () != object->pool_size) {
+    GST_WARNING_OBJECT (object, "Unused surfaces %u != pool size %u",
+        (guint) priv->surface_queue.size (), object->pool_size);
+  }
+
+  /* Release old surfaces and create new ones */
+  /* *INDENT-OFF* */
+  for (auto it : priv->surface_queue)
+    gst_nv_dec_surface_unref (it);
+  /* *INDENT-ON* */
+
+  priv->surface_queue.clear ();
+
+  object->pool_size = pool_size;
+  object->video_info = *video_info;
+  object->seq_num++;
+  object->plane_height = reconfigure_info->ulTargetHeight;
+
+  for (guint i = 0; i < pool_size; i++) {
+    GstNvDecSurface *surf = gst_nv_dec_surface_new (object->seq_num);
+
+    surf->index = i;
+
+    /* [0, pool_size - 1]: output picture
+     * [pool_size, pool_size * 2 - 1]: decoder output without film-grain,
+     * used for reference picture */
+    if (alloc_aux_frame)
+      surf->decode_frame_index = i + pool_size;
+    else
+      surf->decode_frame_index = i;
+
+    object->priv->surface_queue.push_back (surf);
+  }
+
+  return TRUE;
 }
 
 void
@@ -381,7 +452,7 @@ gst_nv_dec_object_export_surface (GstNvDecObject * object,
 
   GST_LOG_OBJECT (object, "Exporting surface %d", surface->index);
 
-  offset = surface->pitch * object->create_info.ulTargetHeight;
+  offset = surface->pitch * object->plane_height;
 
   info = object->video_info;
   switch (GST_VIDEO_INFO_FORMAT (&info)) {
@@ -431,11 +502,21 @@ gst_nv_dec_object_export_surface (GstNvDecObject * object,
       GST_LOG_OBJECT (object, "Waiting for output release");
       priv->cond.wait (lk);
     } while (true);
+
+    output = (GstNvDecOutput *)
+        gst_cuda_memory_get_user_data (GST_CUDA_MEMORY_CAST (mem));
+    if (output->seq_num != object->seq_num) {
+      GST_DEBUG_OBJECT (object,
+          "output belongs to previous sequence, need new memory");
+      gst_memory_unref (mem);
+      mem = nullptr;
+    }
   }
 
   if (!mem) {
     output = new GstNvDecOutput ();
     output->devptr = surface->devptr;
+    output->seq_num = object->seq_num;
 
     GST_LOG_OBJECT (object, "New output, allocating memory");
 
@@ -469,6 +550,7 @@ gst_nv_dec_surface_dispose (GstNvDecSurface * surf)
 {
   GstNvDecObject *object;
   GstNvDecObjectPrivate *priv;
+  gboolean ret = FALSE;
 
   if (!surf->object)
     return TRUE;
@@ -476,33 +558,43 @@ gst_nv_dec_surface_dispose (GstNvDecSurface * surf)
   object = (GstNvDecObject *) g_steal_pointer (&surf->object);
   priv = object->priv;
 
-  /* Back to surface queue */
-  gst_nv_dec_surface_ref (surf);
-
   /* *INDENT-OFF* */
   {
     std::lock_guard < std::mutex > lk (priv->lock);
-    /* Keep sorted order */
-    priv->surface_queue.insert (
-        std::upper_bound (priv->surface_queue.begin (),
-        priv->surface_queue.end(), surf,
-            [] (const GstNvDecSurface * a, const GstNvDecSurface * b)
-            {
-              return a->index < b->index;
-            }), surf);
-    priv->cond.notify_all ();
+
+    if (surf->seq_num == object->seq_num) {
+      /* Back to surface queue */
+      gst_nv_dec_surface_ref (surf);
+
+      /* Keep sorted order */
+      priv->surface_queue.insert (
+          std::upper_bound (priv->surface_queue.begin (),
+          priv->surface_queue.end(), surf,
+              [] (const GstNvDecSurface * a, const GstNvDecSurface * b)
+              {
+                return a->index < b->index;
+              }), surf);
+      priv->cond.notify_all ();
+    } else {
+      GST_WARNING_OBJECT (object, "Releasing surface %p of previous sequence",
+          surf);
+      /* Shouldn't happen (e.g., surfaces were not flushed before reconfigure) */
+      ret = TRUE;
+    }
   }
   /* *INDENT-ON* */
 
   gst_object_unref (object);
 
-  return FALSE;
+  return ret;
 }
 
 static GstNvDecSurface *
-gst_nv_dec_surface_new (void)
+gst_nv_dec_surface_new (guint seq_num)
 {
   GstNvDecSurface *surf = g_new0 (GstNvDecSurface, 1);
+
+  surf->seq_num = seq_num;
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (surf),
       0, GST_TYPE_NV_DEC_SURFACE, nullptr,

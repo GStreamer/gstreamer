@@ -242,10 +242,10 @@ gboolean
 gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
     GstVideoInfo * info, gint coded_width, gint coded_height,
     guint coded_bitdepth, guint pool_size, gboolean alloc_aux_frame,
-    guint num_output_surfaces)
+    guint num_output_surfaces, guint init_max_width, guint init_max_height)
 {
   CUVIDDECODECREATEINFO create_info = { 0, };
-  GstVideoFormat format;
+  GstVideoFormat format, prev_format = GST_VIDEO_FORMAT_UNKNOWN;
   guint alloc_size;
 
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
@@ -256,15 +256,9 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   g_return_val_if_fail (coded_bitdepth >= 8, FALSE);
   g_return_val_if_fail (pool_size > 0, FALSE);
 
-  g_mutex_lock (&decoder->lock);
-  gst_nv_decoder_reset_unlocked (decoder);
-  g_mutex_unlock (&decoder->lock);
-
-  decoder->info = *info;
-  gst_video_info_set_format (&decoder->coded_info, GST_VIDEO_INFO_FORMAT (info),
-      coded_width, coded_height);
-
   format = GST_VIDEO_INFO_FORMAT (info);
+  if (decoder->info.finfo)
+    prev_format = GST_VIDEO_INFO_FORMAT (&decoder->info);
 
   /* Additional 2 frame margin */
   pool_size += 2;
@@ -277,6 +271,56 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   } else {
     alloc_size = pool_size;
   }
+
+  decoder->info = *info;
+  gst_video_info_set_format (&decoder->coded_info, format,
+      coded_width, coded_height);
+
+  g_mutex_lock (&decoder->lock);
+  if (decoder->object) {
+    GST_DEBUG_OBJECT (decoder,
+        "Configured max resolution %ux%u %s (bit-depth %u), "
+        "new resolution %ux%u %s (bit-depth %u)",
+        (guint) decoder->create_info.ulMaxWidth,
+        (guint) decoder->create_info.ulMaxHeight,
+        gst_video_format_to_string (prev_format),
+        (guint) decoder->create_info.bitDepthMinus8 + 8,
+        (guint) coded_width, (guint) coded_height,
+        gst_video_format_to_string (format), coded_bitdepth);
+
+    if (format == prev_format &&
+        (guint) coded_width <= decoder->create_info.ulMaxWidth &&
+        (guint) coded_height <= decoder->create_info.ulMaxHeight &&
+        coded_bitdepth == (guint) decoder->create_info.bitDepthMinus8 + 8) {
+      CUVIDRECONFIGUREDECODERINFO reconfig_info = { 0, };
+
+      reconfig_info.ulWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
+      reconfig_info.ulHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
+      reconfig_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (info);
+      reconfig_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (info);
+      reconfig_info.ulNumDecodeSurfaces = alloc_size;
+      reconfig_info.display_area.right = GST_VIDEO_INFO_WIDTH (info);
+      reconfig_info.display_area.bottom = GST_VIDEO_INFO_HEIGHT (info);
+      reconfig_info.target_rect.right = GST_VIDEO_INFO_WIDTH (info);
+      reconfig_info.target_rect.bottom = GST_VIDEO_INFO_HEIGHT (info);
+
+      if (gst_nv_dec_object_reconfigure (decoder->object,
+              &reconfig_info, info, alloc_aux_frame)) {
+        GST_DEBUG_OBJECT (decoder, "Reconfigured");
+        decoder->configured = TRUE;
+        g_mutex_unlock (&decoder->lock);
+        return TRUE;
+      } else {
+        GST_WARNING_OBJECT (decoder,
+            "Couldn't reconfigure decoder, creating new decoder instance");
+      }
+    } else {
+      GST_DEBUG_OBJECT (decoder, "Need new decoder instance");
+    }
+  }
+
+  gst_nv_decoder_reset_unlocked (decoder);
+  g_mutex_unlock (&decoder->lock);
 
   decoder->num_output_surfaces = num_output_surfaces;
 
@@ -305,6 +349,9 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   create_info.target_rect.top = 0;
   create_info.target_rect.right = GST_VIDEO_INFO_WIDTH (info);
   create_info.target_rect.bottom = GST_VIDEO_INFO_HEIGHT (info);
+
+  create_info.ulMaxWidth = MAX (create_info.ulWidth, init_max_width);
+  create_info.ulMaxHeight = MAX (create_info.ulHeight, init_max_height);
 
   decoder->create_info = create_info;
   decoder->configured = TRUE;
@@ -1608,4 +1655,16 @@ gst_nv_decoder_reset (GstNvDecoder * decoder)
   g_mutex_lock (&decoder->lock);
   gst_nv_decoder_reset_unlocked (decoder);
   g_mutex_unlock (&decoder->lock);
+}
+
+guint
+gst_nv_decoder_get_max_output_size (guint coded_size, guint user_requested,
+    guint device_max)
+{
+  if (user_requested <= coded_size)
+    return coded_size;
+
+  user_requested = GST_ROUND_UP_16 (user_requested);
+
+  return MIN (user_requested, device_max);
 }

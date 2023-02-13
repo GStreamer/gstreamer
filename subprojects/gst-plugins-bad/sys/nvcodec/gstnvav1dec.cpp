@@ -71,12 +71,16 @@ typedef struct _GstNvAV1Dec
   guint8 film_grain_params_present;
 
   guint num_output_surfaces;
+  guint init_max_width;
+  guint init_max_height;
 } GstNvAV1Dec;
 
 typedef struct _GstNvAV1DecClass
 {
   GstAV1DecoderClass parent_class;
   guint cuda_device_id;
+  guint max_width;
+  guint max_height;
 } GstNvAV1DecClass;
 
 enum
@@ -84,6 +88,8 @@ enum
   PROP_0,
   PROP_CUDA_DEVICE_ID,
   PROP_NUM_OUTPUT_SURFACES,
+  PROP_INIT_MAX_WIDTH,
+  PROP_INIT_MAX_HEIGHT,
 };
 
 #define DEFAULT_NUM_OUTPUT_SURFACES 0
@@ -163,6 +169,38 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
           (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstNvAV1Dec:init-max-width:
+   *
+   * Initial CUVIDDECODECREATEINFO.ulMaxWidth value
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_INIT_MAX_WIDTH,
+      g_param_spec_uint ("init-max-width", "Initial Maximum Width",
+          "Expected maximum coded width of stream. This value is used to "
+          "pre-allocate higher dimension of output surfaces than "
+          "that of input stream, in order to help decoder reconfiguration",
+          0, cdata->max_width, 0,
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstNvAV1Dec:init-max-height:
+   *
+   * Initial CUVIDDECODECREATEINFO.ulMaxHeight value
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_INIT_MAX_HEIGHT,
+      g_param_spec_uint ("init-max-height", "Initial Maximum Height",
+          "Expected maximum coded height of stream. This value is used to "
+          "pre-allocate higher dimension of output surfaces than "
+          "that of input stream, in order to help decoder reconfiguration",
+          0, cdata->max_height, 0,
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_set_context);
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
@@ -204,6 +242,8 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_nv_av1_dec_get_preferred_output_delay);
 
   klass->cuda_device_id = cdata->cuda_device_id;
+  klass->max_width = cdata->max_width;
+  klass->max_height = cdata->max_height;
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
@@ -226,6 +266,12 @@ gst_nv_av1_dec_set_property (GObject * object, guint prop_id,
     case PROP_NUM_OUTPUT_SURFACES:
       self->num_output_surfaces = g_value_get_uint (value);
       break;
+    case PROP_INIT_MAX_WIDTH:
+      self->init_max_width = g_value_get_uint (value);
+      break;
+    case PROP_INIT_MAX_HEIGHT:
+      self->init_max_height = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -245,6 +291,12 @@ gst_nv_av1_dec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_NUM_OUTPUT_SURFACES:
       g_value_set_uint (value, self->num_output_surfaces);
+      break;
+    case PROP_INIT_MAX_WIDTH:
+      g_value_set_uint (value, self->init_max_width);
+      break;
+    case PROP_INIT_MAX_HEIGHT:
+      g_value_set_uint (value, self->init_max_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -421,6 +473,7 @@ gst_nv_av1_dec_new_sequence (GstAV1Decoder * decoder,
     const GstAV1SequenceHeaderOBU * seq_hdr, gint max_dpb_size)
 {
   GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
+  GstNvAV1DecClass *klass = GST_NV_AV1_DEC_GET_CLASS (self);
   gboolean modified = FALSE;
   guint max_width, max_height;
 
@@ -480,10 +533,15 @@ gst_nv_av1_dec_new_sequence (GstAV1Decoder * decoder,
         out_format, GST_ROUND_UP_2 (self->max_width),
         GST_ROUND_UP_2 (self->max_height));
 
+    max_width = gst_nv_decoder_get_max_output_size (self->max_width,
+        self->init_max_width, klass->max_width);
+    max_height = gst_nv_decoder_get_max_output_size (self->max_height,
+        self->init_max_height, klass->max_height);
+
     if (!gst_nv_decoder_configure (self->decoder, cudaVideoCodec_AV1,
             &info, self->max_width, self->max_height, self->bitdepth,
             max_dpb_size, self->film_grain_params_present ? TRUE : FALSE,
-            self->num_output_surfaces)) {
+            self->num_output_surfaces, max_width, max_height)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -985,6 +1043,8 @@ gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   gchar *type_name;
   gchar *feature_name;
   guint index = 0;
+  const GValue *value;
+  GstStructure *s;
   GTypeInfo type_info = {
     sizeof (GstNvAV1DecClass),
     nullptr,
@@ -1001,6 +1061,14 @@ gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   GST_DEBUG_CATEGORY_INIT (gst_nv_av1_dec_debug, "nvav1dec", 0, "nvav1dec");
 
   cdata = g_new0 (GstNvDecoderClassData, 1);
+
+  s = gst_caps_get_structure (sink_caps, 0);
+  value = gst_structure_get_value (s, "width");
+  cdata->max_width = (guint) gst_value_get_int_range_max (value);
+
+  value = gst_structure_get_value (s, "height");
+  cdata->max_height = (guint) gst_value_get_int_range_max (value);
+
   cdata->sink_caps = gst_caps_ref (sink_caps);
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;

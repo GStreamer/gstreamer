@@ -127,12 +127,16 @@ typedef struct _GstNvH264Dec
   GArray *ref_list;
 
   guint num_output_surfaces;
+  guint init_max_width;
+  guint init_max_height;
 } GstNvH264Dec;
 
 typedef struct _GstNvH264DecClass
 {
   GstH264DecoderClass parent_class;
   guint cuda_device_id;
+  guint max_width;
+  guint max_height;
 } GstNvH264DecClass;
 
 enum
@@ -140,6 +144,8 @@ enum
   PROP_0,
   PROP_CUDA_DEVICE_ID,
   PROP_NUM_OUTPUT_SURFACES,
+  PROP_INIT_MAX_WIDTH,
+  PROP_INIT_MAX_HEIGHT,
 };
 
 #define DEFAULT_NUM_OUTPUT_SURFACES 0
@@ -232,6 +238,38 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
           (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstNvH264SLDec:init-max-width:
+   *
+   * Initial CUVIDDECODECREATEINFO.ulMaxWidth value
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_INIT_MAX_WIDTH,
+      g_param_spec_uint ("init-max-width", "Initial Maximum Width",
+          "Expected maximum coded width of stream. This value is used to "
+          "pre-allocate higher dimension of output surfaces than "
+          "that of input stream, in order to help decoder reconfiguration",
+          0, cdata->max_width, 0,
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstNvH264SLDec:init-max-height:
+   *
+   * Initial CUVIDDECODECREATEINFO.ulMaxHeight value
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_INIT_MAX_HEIGHT,
+      g_param_spec_uint ("init-max-height", "Initial Maximum Height",
+          "Expected maximum coded height of stream. This value is used to "
+          "pre-allocate higher dimension of output surfaces than "
+          "that of input stream, in order to help decoder reconfiguration",
+          0, cdata->max_height, 0,
+          (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_h264_dec_set_context);
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
@@ -274,6 +312,8 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_nv_h264_dec_get_preferred_output_delay);
 
   klass->cuda_device_id = cdata->cuda_device_id;
+  klass->max_width = cdata->max_width;
+  klass->max_height = cdata->max_height;
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
@@ -311,6 +351,12 @@ gst_nv_h264_dec_set_property (GObject * object, guint prop_id,
     case PROP_NUM_OUTPUT_SURFACES:
       self->num_output_surfaces = g_value_get_uint (value);
       break;
+    case PROP_INIT_MAX_WIDTH:
+      self->init_max_width = g_value_get_uint (value);
+      break;
+    case PROP_INIT_MAX_HEIGHT:
+      self->init_max_height = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -330,6 +376,12 @@ gst_nv_h264_dec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_NUM_OUTPUT_SURFACES:
       g_value_set_uint (value, self->num_output_surfaces);
+      break;
+    case PROP_INIT_MAX_WIDTH:
+      g_value_set_uint (value, self->init_max_width);
+      break;
+    case PROP_INIT_MAX_HEIGHT:
+      g_value_set_uint (value, self->init_max_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -507,9 +559,11 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
     gint max_dpb_size)
 {
   GstNvH264Dec *self = GST_NV_H264_DEC (decoder);
+  GstNvH264DecClass *klass = GST_NV_H264_DEC_GET_CLASS (self);
   guint crop_width, crop_height;
   gboolean modified = FALSE;
   gboolean interlaced;
+  guint max_width, max_height;
 
   GST_LOG_OBJECT (self, "new sequence");
 
@@ -587,10 +641,16 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
       GST_VIDEO_INFO_INTERLACE_MODE (&info) = GST_VIDEO_INTERLACE_MODE_MIXED;
 
     self->max_dpb_size = max_dpb_size;
+    max_width = gst_nv_decoder_get_max_output_size (self->coded_width,
+        self->init_max_width, klass->max_width);
+    max_height = gst_nv_decoder_get_max_output_size (self->coded_height,
+        self->init_max_height, klass->max_height);
+
     /* FIXME: add support cudaVideoCodec_H264_SVC and cudaVideoCodec_H264_MVC */
     if (!gst_nv_decoder_configure (self->decoder,
             cudaVideoCodec_H264, &info, self->coded_width, self->coded_height,
-            self->bitdepth, max_dpb_size, FALSE, self->num_output_surfaces)) {
+            self->bitdepth, max_dpb_size, FALSE, self->num_output_surfaces,
+            max_width, max_height)) {
       GST_ERROR_OBJECT (self, "Failed to configure decoder");
       return GST_FLOW_NOT_NEGOTIATED;
     }
@@ -1064,9 +1124,11 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
 
   s = gst_caps_get_structure (sink_caps, 0);
   value = gst_structure_get_value (s, "width");
+  cdata->max_width = (guint) gst_value_get_int_range_max (value);
   gst_caps_set_value (cdata->sink_caps, "width", value);
 
   value = gst_structure_get_value (s, "height");
+  cdata->max_height = (guint) gst_value_get_int_range_max (value);
   gst_caps_set_value (cdata->sink_caps, "height", value);
 
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,

@@ -35,6 +35,8 @@ gboolean gst_cuvid_get_api_version  (guint * api_major_ver,
 
 gboolean gst_cuvid_can_get_decoder_caps (void);
 
+gboolean gst_cuvid_can_reconfigure (void);
+
 CUresult CUDAAPI CuvidCtxLockCreate         (CUvideoctxlock * pLock,
                                              CUcontext ctx);
 
@@ -48,6 +50,9 @@ CUresult CUDAAPI CuvidCtxUnlock             (CUvideoctxlock lck,
 
 CUresult CUDAAPI CuvidCreateDecoder         (CUvideodecoder * phDecoder,
                                              CUVIDDECODECREATEINFO * pdci);
+
+CUresult CUDAAPI CuvidReconfigureDecoder    (CUvideodecoder hDecoder,
+                                             CUVIDRECONFIGUREDECODERINFO * pDecReconfigParams);
 
 CUresult CUDAAPI CuvidDestroyDecoder        (CUvideodecoder hDecoder);
 
