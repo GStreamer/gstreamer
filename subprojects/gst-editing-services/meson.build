@@ -259,7 +259,6 @@ foreach extra_arg : warning_flags
   endif
 endforeach
 
-python3 = import('python').find_installation()
 pkgconfig = import('pkgconfig')
 pkgconfig_subdirs = ['gstreamer-1.0']
 
@@ -277,14 +276,16 @@ endif
 subdir('docs')
 
 pygi_override_dir = get_option('pygi-overrides-dir')
-if pygi_override_dir == ''
-  pygi_override_dir = python3.get_install_dir(
+if pygi_override_dir == '' and python.found()
+  pygi_override_dir = python.get_install_dir(
     subdir : join_paths('gi', 'overrides')
   )
 endif
 
-message('pygobject overrides directory = @0@'.format(pygi_override_dir))
-subdir('bindings/python')
+if python.found()
+  message('pygobject overrides directory = @0@'.format(pygi_override_dir))
+  subdir('bindings/python')
+endif
 
 # Set release date
 if gst_version_nano == 0

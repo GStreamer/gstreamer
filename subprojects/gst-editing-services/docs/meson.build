@@ -112,7 +112,7 @@ libs_doc = [hotdoc.generate_doc('gst-editing-services',
 )]
 
 plugins_doc = []
-list_plugin_res = run_command(python3, '-c',
+list_plugin_res = run_command(python, '-c',
 '''
 import sys
 import json
