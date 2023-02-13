@@ -217,10 +217,14 @@ gst_openjpeg_dec_start (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "Starting");
   self->available_threads = self->max_slice_threads;
-  if (self->available_threads)
-    self->decode_frame = gst_openjpeg_dec_decode_frame_multiple;
-  else
-    self->decode_frame = gst_openjpeg_dec_decode_frame_single;
+  self->decode_frame = gst_openjpeg_dec_decode_frame_single;
+  if (self->available_threads) {
+    if (gst_video_decoder_get_subframe_mode (decoder))
+      self->decode_frame = gst_openjpeg_dec_decode_frame_multiple;
+    else
+      GST_INFO_OBJECT (self,
+          "Multiple threads decoding only available in subframe mode.");
+  }
 
   return TRUE;
 }
