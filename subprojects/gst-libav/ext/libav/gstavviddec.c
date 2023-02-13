@@ -35,6 +35,10 @@
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_PERFORMANCE);
 
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(58,132,100)
+#define AV_CODEC_CAP_OTHER_THREADS AV_CODEC_CAP_AUTO_THREADS
+#endif
+
 #define GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED (1<<15)
 
 #define MAX_TS_MASK 0xff
@@ -615,7 +619,7 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   if (ffmpegdec->max_threads == 0) {
     /* When thread type is FF_THREAD_FRAME, extra latency is introduced equal
      * to one frame per thread. We thus need to calculate the thread count ourselves */
-    if ((!(oclass->in_plugin->capabilities & AV_CODEC_CAP_AUTO_THREADS)) ||
+    if ((!(oclass->in_plugin->capabilities & AV_CODEC_CAP_OTHER_THREADS)) ||
         (ffmpegdec->context->thread_type & FF_THREAD_FRAME))
       ffmpegdec->context->thread_count =
           MIN (gst_ffmpeg_auto_max_threads (), 16);
