@@ -76,6 +76,8 @@ typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
  * 'unsigned long' for the 2nd parameter */
 #ifdef __ANDROID__
 typedef unsigned ioctl_req_t;
+#elif defined(__linux__) && !defined(__GLIBC__) /* musl/linux */
+typedef int ioctl_req_t;
 #else
 typedef gulong ioctl_req_t;
 #endif
