@@ -988,9 +988,13 @@ gst_svtav1enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
   GstVideoCodecState *output_state;
   GST_DEBUG_OBJECT (svtav1enc, "set_format");
 
-  if (svtav1enc->state) {
-    gst_video_codec_state_unref (svtav1enc->state);
-    svt_av1_enc_deinit (svtav1enc->svt_encoder);
+  if (svtav1enc->state
+      && !gst_video_info_is_equal (&svtav1enc->state->info, &state->info)) {
+    gst_svtav1enc_finish (encoder);
+    gst_svtav1enc_stop (encoder);
+    gst_svtav1enc_close (encoder);
+    gst_svtav1enc_open (encoder);
+    gst_svtav1enc_start (encoder);
   }
   svtav1enc->state = gst_video_codec_state_ref (state);
 
