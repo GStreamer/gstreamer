@@ -499,8 +499,7 @@ nal_is_rasl (guint8 nal_type)
 static gboolean
 nal_is_slice (guint8 nal_type)
 {
-  if ((nal_type >= GST_H265_NAL_SLICE_TRAIL_N) &&
-      (nal_type <= GST_H265_NAL_SLICE_CRA_NUT))
+  if ((nal_type <= GST_H265_NAL_SLICE_CRA_NUT))
     return TRUE;
   return FALSE;
 }

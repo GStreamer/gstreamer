@@ -298,7 +298,11 @@ app_free (App * app)
     y4m_reader_close (app->parser);
 
   if (app->encoder) {
-    gst_vaapi_encoder_flush (app->encoder);
+    if ((gst_vaapi_encoder_flush (app->encoder)) !=
+        GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      GST_WARNING_OBJECT (app->encoder,
+          "Failed to flush pending encoded frames");
+
     gst_object_unref (app->encoder);
   }
 

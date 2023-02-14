@@ -152,11 +152,16 @@ GST_START_TEST (test_overlay_position)
   fail_unless (handoff_buffer != NULL);
   pad = gst_element_get_static_pad (sink, "sink");
   caps = gst_pad_get_current_caps (pad);
-  gst_video_info_from_caps (&vinfo, caps);
-  gst_caps_unref (caps);
-  gst_object_unref (pad);
+  if (!gst_video_info_from_caps (&vinfo, caps)) {
+    GST_ERROR ("Failed to parse the caps");
+    goto end;
+  }
 
-  gst_video_frame_map (&frame, &vinfo, handoff_buffer, GST_MAP_READ);
+  if (!gst_video_frame_map (&frame, &vinfo, handoff_buffer, GST_MAP_READ)) {
+    GST_ERROR ("Failed to map the frame");
+    goto end;
+  }
+
   {
     guint i, j, n_planes, plane;
     n_planes = GST_VIDEO_FRAME_N_PLANES (&frame);
@@ -193,7 +198,10 @@ GST_START_TEST (test_overlay_position)
   }
   gst_video_frame_unmap (&frame);
 
+end:
   /* cleanup */
+  gst_caps_unref (caps);
+  gst_object_unref (pad);
   gst_buffer_replace (&handoff_buffer, NULL);
   gst_element_set_state (bin, GST_STATE_NULL);
   g_main_loop_unref (main_loop);

@@ -3017,11 +3017,11 @@ gst_vaapi_encoder_h264_get_pending_reordered (GstVaapiEncoder * base_encoder,
     iter->pic_type = GST_VAAPI_PICTURE_TYPE_B;
   } else if (iter->pic_type == GST_VAAPI_PICTURE_TYPE_B) {
     pic = g_queue_pop_head (&reorder_pool->reorder_frame_list);
-    g_assert (pic);
   } else {
     GST_WARNING ("Unhandled pending picture type");
   }
 
+  g_assert (pic);
   set_frame_num (encoder, pic);
 
   if (GST_CLOCK_TIME_IS_VALID (pic->frame->pts))
