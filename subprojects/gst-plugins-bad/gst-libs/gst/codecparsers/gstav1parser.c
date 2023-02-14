@@ -697,7 +697,7 @@ gst_av1_parser_identify_one_obu (GstAV1Parser * parser, const guint8 * data,
   }
 
   if (!size) {
-    return ret = GST_AV1_PARSER_NO_MORE_DATA;
+    ret = GST_AV1_PARSER_NO_MORE_DATA;
     goto error;
   }
 

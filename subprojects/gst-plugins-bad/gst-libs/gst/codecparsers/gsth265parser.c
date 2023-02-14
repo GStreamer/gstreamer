@@ -1889,7 +1889,8 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
     for (j = 0; j <= vps->max_layer_id; j++) {
       /* layer_id_included_flag[i][j] */
       /* FIXME: need to parse this when we can support parsing multi-layer info. */
-      nal_reader_skip (&nr, 1);
+      if (!nal_reader_skip (&nr, 1))
+        goto error;
     }
   }
 
@@ -2762,8 +2763,10 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
   }
 
   if (!slice->dependent_slice_segment_flag) {
-    for (i = 0; i < pps->num_extra_slice_header_bits; i++)
-      nal_reader_skip (&nr, 1);
+    for (i = 0; i < pps->num_extra_slice_header_bits; i++) {
+      if (!nal_reader_skip (&nr, 1))
+        goto error;
+    }
     READ_UE_MAX (&nr, slice->type, 63);
 
     if (pps->output_flag_present_flag)
