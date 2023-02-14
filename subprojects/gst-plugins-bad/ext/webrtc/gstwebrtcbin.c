@@ -650,6 +650,7 @@ enum
   ON_DATA_CHANNEL_SIGNAL,
   PREPARE_DATA_CHANNEL_SIGNAL,
   REQUEST_AUX_SENDER,
+  ADD_ICE_CANDIDATE_FULL_SIGNAL,
   LAST_SIGNAL,
 };
 
@@ -6787,7 +6788,7 @@ _free_ice_candidate_item (IceCandidateItem * item)
 
 static void
 gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
-    const gchar * attr)
+    const gchar * attr, GstPromise * promise)
 {
   IceCandidateItem *item;
 
@@ -6799,9 +6800,19 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
     else if (!g_ascii_strncasecmp (attr, "candidate:", 10))
       item->candidate = g_strdup_printf ("a=%s", attr);
   }
-  gst_webrtc_bin_enqueue_task (webrtc,
-      (GstWebRTCBinFunc) _add_ice_candidate_task, item,
-      (GDestroyNotify) _free_ice_candidate_item, NULL);
+  if (!gst_webrtc_bin_enqueue_task (webrtc,
+          (GstWebRTCBinFunc) _add_ice_candidate_task, item,
+          (GDestroyNotify) _free_ice_candidate_item, promise)) {
+    GError *error =
+        g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
+        "Could not add ICE candidate. webrtcbin is closed");
+    GstStructure *s = gst_structure_new ("application/x-gst-promise", "error",
+        G_TYPE_ERROR, error, NULL);
+
+    gst_promise_reply (promise, s);
+
+    g_clear_error (&error);
+  }
 }
 
 static GstStructure *
@@ -8709,6 +8720,26 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_webrtc_bin_add_ice_candidate), NULL, NULL, NULL,
       G_TYPE_NONE, 2, G_TYPE_UINT, G_TYPE_STRING);
+
+  /**
+   * GstWebRTCBin::add-ice-candidate-full:
+   * @object: the #webrtcbin
+   * @mline_index: the index of the media description in the SDP
+   * @ice-candidate: an ice candidate or NULL/"" to mark that no more candidates
+   * will arrive
+   * @promise: (nullable): a #GstPromise to be notified when the task is
+   * complete
+   *
+   * Variant of the `add-ice-candidate` signal, allowing the call site to be
+   * notified using a #GstPromise when the task has completed.
+   *
+   * Since: 1.24
+   */
+  gst_webrtc_bin_signals[ADD_ICE_CANDIDATE_FULL_SIGNAL] =
+      g_signal_new_class_handler ("add-ice-candidate-full",
+      G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_webrtc_bin_add_ice_candidate), NULL, NULL, NULL,
+      G_TYPE_NONE, 3, G_TYPE_UINT, G_TYPE_STRING, GST_TYPE_PROMISE);
 
   /**
    * GstWebRTCBin::get-stats:
