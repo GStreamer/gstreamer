@@ -50,6 +50,7 @@
  *  + APP3 -- meta (same as exif)
  *  + APP12 -- Photoshop Save for Web: Ducky / Picture info
  *  + APP13 -- Adobe IRB
+ *  + check for interlaced mjpeg
  */
 
 #ifdef HAVE_CONFIG_H
@@ -432,6 +433,18 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   if (g_strcmp0 (id_str, "JFXX") == 0) {
     if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF))
       return FALSE;
+
+    return TRUE;
+  }
+
+  /* https://exiftool.org/TagNames/JPEG.html#AVI1 */
+  if (g_strcmp0 (id_str, "AVI1") == 0) {
+    /* polarity */
+    if (!gst_byte_reader_get_uint8 (&reader, &unit))
+      return FALSE;
+
+    /* TODO: update caps for interlaced MJPEG */
+    GST_DEBUG_OBJECT (parse, "MJPEG interleaved field: %d", unit);
 
     return TRUE;
   }
