@@ -1792,8 +1792,8 @@ gst_h265_bit_writer_slice_hdr (const GstH265SliceHdr * slice,
   g_return_val_if_fail (data != NULL, GST_H265_BIT_WRITER_ERROR);
   g_return_val_if_fail (size != NULL, GST_H265_BIT_WRITER_ERROR);
   g_return_val_if_fail (*size > 0, GST_H265_BIT_WRITER_ERROR);
-  g_return_val_if_fail (nal_type >= GST_H265_NAL_SLICE_TRAIL_N &&
-      nal_type <= GST_H265_NAL_SLICE_CRA_NUT, GST_H265_BIT_WRITER_ERROR);
+  g_return_val_if_fail (nal_type <= GST_H265_NAL_SLICE_CRA_NUT,
+      GST_H265_BIT_WRITER_ERROR);
 
   gst_bit_writer_init_with_data (&bw, data, *size, FALSE);
 

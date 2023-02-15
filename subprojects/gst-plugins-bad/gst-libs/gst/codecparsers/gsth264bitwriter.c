@@ -1492,8 +1492,7 @@ gst_h264_bit_writer_aud (guint8 primary_pic_type, gboolean start_code,
   gboolean have_space = TRUE;
   GstBitWriter bw;
 
-  g_return_val_if_fail (primary_pic_type >= 0
-      && primary_pic_type <= 7, GST_H264_BIT_WRITER_ERROR);
+  g_return_val_if_fail (primary_pic_type <= 7, GST_H264_BIT_WRITER_ERROR);
   g_return_val_if_fail (data != NULL, GST_H264_BIT_WRITER_ERROR);
   g_return_val_if_fail (size != NULL, GST_H264_BIT_WRITER_ERROR);
   g_return_val_if_fail (*size > 0, GST_H264_BIT_WRITER_ERROR);
