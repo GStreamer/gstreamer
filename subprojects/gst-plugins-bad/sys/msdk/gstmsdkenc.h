@@ -167,6 +167,9 @@ struct _GstMsdkEnc
   guint max_frame_size_p;
   gint16 lowdelay_brc;
 
+  GstClockTime start_pts;
+  GstClockTime frame_duration;
+
   GstStructure *ext_coding_props;
 
   gboolean reconfig;

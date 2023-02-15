@@ -690,6 +690,15 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
   thiz->param.mfx.FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
 
+  /* work-around to avoid zero fps in msdk structure */
+  if (0 == thiz->param.mfx.FrameInfo.FrameRateExtN)
+    thiz->param.mfx.FrameInfo.FrameRateExtN = 30;
+
+  thiz->frame_duration =
+      gst_util_uint64_scale (GST_SECOND,
+      thiz->param.mfx.FrameInfo.FrameRateExtN,
+      thiz->param.mfx.FrameInfo.FrameRateExtD);
+
   switch (encoder_input_fmt) {
     case GST_VIDEO_FORMAT_P010_10LE:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_P010;
@@ -1870,7 +1879,15 @@ gst_msdkenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 
     fdata->frame_surface = surface;
 
+    /* It is possible to have input frame without any framerate/pts info,
+     * we need to set the correct pts here. */
+    if (frame->presentation_frame_number == 0)
+      thiz->start_pts = frame->pts;
+
     if (frame->pts != GST_CLOCK_TIME_NONE) {
+      frame->pts = thiz->start_pts +
+          frame->presentation_frame_number * thiz->frame_duration;
+      frame->duration = thiz->frame_duration;
       surface->surface->Data.TimeStamp =
           gst_util_uint64_scale (frame->pts, 90000, GST_SECOND);
     } else {
