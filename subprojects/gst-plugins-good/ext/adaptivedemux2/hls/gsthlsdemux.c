@@ -1857,7 +1857,6 @@ download_media_playlist (GstHLSDemux * demux, gchar * uri, GError ** err,
     GstHLSMediaPlaylist * current)
 {
   GstAdaptiveDemux *adaptive_demux;
-  const gchar *main_uri;
   DownloadRequest *download;
   GstBuffer *buf;
   gchar *playlist_data;
@@ -1866,7 +1865,6 @@ download_media_playlist (GstHLSDemux * demux, gchar * uri, GError ** err,
   gboolean playlist_uri_change = FALSE;
 
   adaptive_demux = GST_ADAPTIVE_DEMUX (demux);
-  main_uri = gst_adaptive_demux_get_manifest_ref_uri (adaptive_demux);
 
   /* If there's no previous playlist, or the URI changed this
    * is not a refresh/update but a switch to a new playlist */
@@ -1878,7 +1876,7 @@ download_media_playlist (GstHLSDemux * demux, gchar * uri, GError ** err,
 
   download =
       downloadhelper_fetch_uri (adaptive_demux->download_helper,
-      uri, main_uri, DOWNLOAD_FLAG_COMPRESS | DOWNLOAD_FLAG_FORCE_REFRESH, err);
+      uri, NULL, DOWNLOAD_FLAG_COMPRESS | DOWNLOAD_FLAG_FORCE_REFRESH, err);
 
   if (download == NULL)
     return NULL;
