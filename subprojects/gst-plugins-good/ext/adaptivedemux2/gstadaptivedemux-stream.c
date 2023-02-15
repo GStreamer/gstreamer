@@ -1410,7 +1410,7 @@ gst_adaptive_demux2_stream_submit_request_default (GstAdaptiveDemux2Stream *
   GstAdaptiveDemux *demux = stream->demux;
 
   if (!downloadhelper_submit_request (demux->download_helper,
-          demux->manifest_uri, DOWNLOAD_FLAG_NONE, download_req, NULL))
+          NULL, DOWNLOAD_FLAG_NONE, download_req, NULL))
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
