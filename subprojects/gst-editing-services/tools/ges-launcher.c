@@ -637,6 +637,44 @@ _set_rendering_details (GESLauncher * self)
         return FALSE;
       }
 
+      if (opts->container_profile) {
+        GstEncodingProfile *new_prof;
+        GList *tmp;
+
+        if (!(new_prof = parse_encoding_profile (opts->container_profile))) {
+          gst_printerr ("Failed to parse container profile %s",
+              opts->container_profile);
+          gst_object_unref (prof);
+          return FALSE;
+        }
+
+        if (!GST_IS_ENCODING_CONTAINER_PROFILE (new_prof)) {
+          gst_printerr ("Top level profile should be container profile");
+          gst_object_unref (prof);
+          gst_object_unref (new_prof);
+          return FALSE;
+        }
+
+        if (gst_encoding_container_profile_get_profiles
+            (GST_ENCODING_CONTAINER_PROFILE (new_prof))) {
+          gst_printerr ("--container-profile cannot contain children profiles");
+          gst_object_unref (prof);
+          gst_object_unref (new_prof);
+          return FALSE;
+        }
+
+        for (tmp = (GList *)
+            gst_encoding_container_profile_get_profiles
+            (GST_ENCODING_CONTAINER_PROFILE (prof)); tmp; tmp = tmp->next) {
+          gst_encoding_container_profile_add_profile
+              (GST_ENCODING_CONTAINER_PROFILE (new_prof),
+              GST_ENCODING_PROFILE (gst_encoding_profile_ref (tmp->data)));
+        }
+
+        gst_encoding_profile_unref (prof);
+        prof = new_prof;
+      }
+
       gst_print ("\nEncoding details:\n");
       gst_print ("================\n");
 
@@ -1275,6 +1313,11 @@ ges_launcher_get_rendering_option_group (GESLauncherParsedOptions * opts)
           "of the rendered output. This will have no effect if no outputuri "
           "has been specified.",
         "<clip-name>"},
+    {"container-profile", 0, 0, G_OPTION_ARG_STRING, &opts->container_profile,
+          "Set a container profile for rendering. Applies after --format, "
+          "--encoding-profile and profile-from, potentially overriding the "
+          "existing top level container profile",
+        "<container-profile>"},
     {"forward-tags", 0, 0, G_OPTION_ARG_NONE, &opts->forward_tags,
           "Forward tags from input files to the output",
         NULL},
@@ -1327,6 +1370,7 @@ ges_launcher_parse_options (GESLauncher * self,
   gboolean owns_ctx = ctx == NULL;
   GESLauncherParsedOptions *opts = &self->priv->parsed_options;
   gchar *prev_videosink = opts->videosink, *prev_audiosink = opts->audiosink;
+
 /*  *INDENT-OFF* */
   GOptionEntry options[] = {
     {"disable-mixing", 0, 0, G_OPTION_ARG_NONE, &opts->disable_mixing,
@@ -1672,6 +1716,7 @@ _finalize (GObject * object)
   g_free (opts->format);
   g_free (opts->encoding_profile);
   g_free (opts->profile_from);
+  g_free (opts->container_profile);
   g_free (opts->videosink);
   g_free (opts->audiosink);
   g_free (opts->video_track_caps);

@@ -39,6 +39,7 @@ typedef struct
   gchar *outputuri;
   gchar *encoding_profile;
   gchar *profile_from;
+  gchar *container_profile;
   gchar *videosink;
   gchar *audiosink;
   gboolean list_transitions;
