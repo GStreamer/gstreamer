@@ -1001,6 +1001,7 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   if (!priv->wl_window) {
     GST_LOG_OBJECT (self,
         "buffer %" GST_PTR_FORMAT " dropped (waiting for window)", buffer);
+    ret = GST_BASE_SINK_FLOW_DROPPED;
     goto done;
   }
 
@@ -1008,6 +1009,7 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   if (priv->redraw_pending) {
     GST_LOG_OBJECT (self, "buffer %" GST_PTR_FORMAT " dropped (redraw pending)",
         buffer);
+    ret = GST_BASE_SINK_FLOW_DROPPED;
     goto done;
   }
 

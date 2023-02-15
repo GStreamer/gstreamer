@@ -773,6 +773,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   if (self->redraw_pending) {
     GST_LOG_OBJECT (self, "buffer %" GST_PTR_FORMAT " dropped (redraw pending)",
         buffer);
+    ret = GST_BASE_SINK_FLOW_DROPPED;
     goto done;
   }
 
