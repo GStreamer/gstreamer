@@ -840,7 +840,7 @@ struct _GstH264PPS
   guint8 scaling_lists_4x4[6][16];
   guint8 scaling_lists_8x8[6][64];
 
-  guint8 second_chroma_qp_index_offset;
+  gint8 second_chroma_qp_index_offset;
 
   gboolean valid;
 
