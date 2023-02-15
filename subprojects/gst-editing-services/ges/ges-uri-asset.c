@@ -501,7 +501,9 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 
   _set_meta_file_size (uri, mfs);
 
-  if (gst_discoverer_info_get_result (info) == GST_DISCOVERER_OK) {
+  if (gst_discoverer_info_get_result (info) == GST_DISCOVERER_OK
+      || gst_discoverer_info_get_result (info) ==
+      GST_DISCOVERER_MISSING_PLUGINS) {
     ges_uri_clip_asset_set_info (mfs, info);
   } else {
     if (err) {
