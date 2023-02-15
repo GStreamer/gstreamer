@@ -741,7 +741,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   GstWlBuffer *wlbuffer;
   GstVideoMeta *vmeta;
   GstVideoFormat format;
-  GstVideoInfo old_vinfo;
+  GstVideoInfo src_vinfo;
   GstMemory *mem;
   struct wl_buffer *wbuf = NULL;
 
@@ -794,16 +794,16 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   /* update video info from video meta */
   mem = gst_buffer_peek_memory (buffer, 0);
 
-  old_vinfo = self->video_info;
+  src_vinfo = self->video_info;
   vmeta = gst_buffer_get_video_meta (buffer);
   if (vmeta) {
     gint i;
 
     for (i = 0; i < vmeta->n_planes; i++) {
-      self->video_info.offset[i] = vmeta->offset[i];
-      self->video_info.stride[i] = vmeta->stride[i];
+      src_vinfo.offset[i] = vmeta->offset[i];
+      src_vinfo.stride[i] = vmeta->stride[i];
     }
-    self->video_info.size = gst_buffer_get_size (buffer);
+    src_vinfo.size = gst_buffer_get_size (buffer);
   }
 
   GST_LOG_OBJECT (self,
@@ -820,7 +820,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
     if (nb_dmabuf && (nb_dmabuf == gst_buffer_n_memory (buffer)))
       wbuf = gst_wl_linux_dmabuf_construct_wl_buffer (buffer, self->display,
-          &self->video_info);
+          &src_vinfo);
   }
 
   if (!wbuf && gst_wl_display_check_format_for_shm (self->display, format)) {
@@ -831,10 +831,6 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
     /* If nothing worked, copy into our internal pool */
     if (!wbuf) {
       GstVideoFrame src, dst;
-      GstVideoInfo src_info = self->video_info;
-
-      /* rollback video info changes */
-      self->video_info = old_vinfo;
 
       /* we don't know how to create a wl_buffer directly from the provided
        * memory, so we have to copy the data to shm memory that we know how
@@ -886,7 +882,7 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
               GST_MAP_WRITE))
         goto dst_map_failed;
 
-      if (!gst_video_frame_map (&src, &src_info, buffer, GST_MAP_READ)) {
+      if (!gst_video_frame_map (&src, &src_vinfo, buffer, GST_MAP_READ)) {
         gst_video_frame_unmap (&dst);
         goto src_map_failed;
       }
