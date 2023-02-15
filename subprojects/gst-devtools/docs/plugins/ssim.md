@@ -83,5 +83,5 @@ Save that content in a file called check_agingtv_ssim.config
 ## Launch the pipeline
 
 ``` shell
-   GST_VALIDATE_CONFIG=check_agingtv_ssim.config gst-validate-1.0-debug uridecodebin uri=file://a/file ! videoconvert ! agingtv name=my_agingtv ! videoconvert ! autovideosink
+   GST_VALIDATE_CONFIG=check_agingtv_ssim.config gst-validate-1.0 uridecodebin uri=file://a/file ! videoconvert ! agingtv name=my_agingtv ! videoconvert ! autovideosink
 ```
