@@ -445,7 +445,7 @@ gst_codec_timestamper_output_frame (GstCodecTimestamper * self,
   GST_BUFFER_PTS (frame->buffer) = frame->pts;
   GST_BUFFER_DTS (frame->buffer) = dts;
 
-  GST_TRACE_OBJECT (self, "Output %" GST_PTR_FORMAT, frame->buffer);
+  GST_LOG_OBJECT (self, "Output %" GST_PTR_FORMAT, frame->buffer);
 
   ret = gst_pad_push (self->srcpad, g_steal_pointer (&frame->buffer));
 
@@ -477,15 +477,15 @@ gst_codec_timestamper_drain (GstCodecTimestamper * self)
 {
   GstCodecTimestamperPrivate *priv = self->priv;
 
+  GST_DEBUG_OBJECT (self, "Draining");
+
   while (gst_queue_array_get_length (priv->queue) > 0) {
     GstCodecTimestamperFrame *frame = (GstCodecTimestamperFrame *)
         gst_queue_array_pop_head_struct (priv->queue);
     gst_codec_timestamper_output_frame (self, frame);
   }
 
-  priv->time_adjustment = GST_CLOCK_TIME_NONE;
-  priv->last_dts = GST_CLOCK_TIME_NONE;
-  priv->last_pts = GST_CLOCK_TIME_NONE;
+  GST_DEBUG_OBJECT (self, "Drained");
 }
 
 static gint
@@ -509,7 +509,7 @@ gst_codec_timestamper_chain (GstPad * pad, GstObject * parent,
 
   gst_codec_timestamper_frame_init (&frame);
 
-  GST_TRACE_OBJECT (self, "Handle %" GST_PTR_FORMAT, buffer);
+  GST_LOG_OBJECT (self, "Handle %" GST_PTR_FORMAT, buffer);
 
   pts = GST_BUFFER_PTS (buffer);
   dts = GST_BUFFER_DTS (buffer);
@@ -517,15 +517,24 @@ gst_codec_timestamper_chain (GstPad * pad, GstObject * parent,
   if (!GST_CLOCK_TIME_IS_VALID (priv->time_adjustment)) {
     GstClockTime start_time = GST_CLOCK_TIME_NONE;
 
-    if (GST_CLOCK_TIME_IS_VALID (pts))
+    if (GST_CLOCK_TIME_IS_VALID (pts)) {
+      GST_DEBUG_OBJECT (self, "Got valid PTS: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (pts));
       start_time = MAX (pts, priv->in_segment.start);
-    else if (GST_CLOCK_TIME_IS_VALID (dts))
+    } else if (GST_CLOCK_TIME_IS_VALID (dts)) {
+      GST_DEBUG_OBJECT (self, "Got valid DTS: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (dts));
       start_time = MAX (dts, priv->in_segment.start);
-    else
+    } else {
+      GST_WARNING_OBJECT (self, "Both PTS and DTS are invalid");
       start_time = priv->in_segment.start;
+    }
 
-    if (start_time < min_pts)
+    if (start_time < min_pts) {
       priv->time_adjustment = min_pts - start_time;
+      GST_DEBUG_OBJECT (self, "Updating time-adjustment %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (priv->time_adjustment));
+    }
   }
 
   if (GST_CLOCK_TIME_IS_VALID (priv->time_adjustment)) {
@@ -556,6 +565,10 @@ gst_codec_timestamper_chain (GstPad * pad, GstObject * parent,
   frame.buffer = buffer;
   frame.events = priv->current_frame_events;
   priv->current_frame_events = NULL;
+
+  GST_LOG_OBJECT (self, "Enqueue frame, buffer pts %" GST_TIME_FORMAT
+      ", adjusted pts %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_PTS (buffer)), GST_TIME_ARGS (pts));
 
   gst_queue_array_push_tail_struct (priv->queue, &frame);
   if (GST_CLOCK_TIME_IS_VALID (frame.pts)) {
