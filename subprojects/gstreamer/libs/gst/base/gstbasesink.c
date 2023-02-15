@@ -3950,6 +3950,11 @@ again:
 
     if (bclass->render)
       ret = bclass->render (basesink, GST_BUFFER_CAST (obj));
+
+    if (ret == GST_BASE_SINK_FLOW_DROPPED) {
+      ret = GST_FLOW_OK;
+      goto dropped;
+    }
   } else {
     GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (obj);
 
@@ -3959,6 +3964,9 @@ again:
     /* Set the first buffer and buffer list to be included in last sample */
     gst_base_sink_set_last_buffer (basesink, sync_buf);
     gst_base_sink_set_last_buffer_list (basesink, buffer_list);
+
+    /* Not currently supported */
+    g_assert (ret != GST_BASE_SINK_FLOW_DROPPED);
   }
 
   if (ret == GST_FLOW_STEP)
