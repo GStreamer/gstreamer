@@ -1427,7 +1427,7 @@ gst_adaptive_demux2_stream_begin_download_uri (GstAdaptiveDemux * demux,
   }
 
   if (!downloadhelper_submit_request (demux->download_helper,
-          demux->manifest_uri, DOWNLOAD_FLAG_NONE, request, NULL))
+          NULL, DOWNLOAD_FLAG_NONE, request, NULL))
     return GST_FLOW_ERROR;
 
   stream->download_active = TRUE;
