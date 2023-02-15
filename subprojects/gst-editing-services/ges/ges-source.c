@@ -131,8 +131,6 @@ _set_ghost_pad_target (GESSource * self, GstPad * srcpad, GstElement * element)
     if (!gst_ghost_pad_set_target (GST_GHOST_PAD (priv->ghostpad), srcpad))
       GST_ERROR_OBJECT (self, "Could not set ghost target");
   }
-
-  gst_element_no_more_pads (element);
 }
 
 /* @elements: (transfer-full) */
