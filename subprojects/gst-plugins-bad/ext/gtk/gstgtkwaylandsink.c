@@ -875,6 +875,12 @@ gst_gtk_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     GST_OBJECT_UNLOCK (self);
     return FALSE;
   }
+
+  /* Ensure queue_draw get executed and internal display size get initialized.
+   * This does not happen otherwise as we don't draw in the widget
+   */
+  gtk_gst_base_widget_queue_draw (GTK_GST_BASE_WIDGET (priv->gtk_widget));
+
   GST_OBJECT_UNLOCK (self);
 
   priv->use_dmabuf = use_dmabuf;
