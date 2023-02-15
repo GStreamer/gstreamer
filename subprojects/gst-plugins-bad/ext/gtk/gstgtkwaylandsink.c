@@ -25,12 +25,12 @@
 #endif
 
 #include "gstgtkwaylandsink.h"
-
-#include <gdk/gdk.h>
-#include <gst/wayland/wayland.h>
-
 #include "gstgtkutils.h"
 #include "gtkgstwaylandwidget.h"
+
+#include <gdk/gdk.h>
+#include <gst/allocators/allocators.h>
+#include <gst/wayland/wayland.h>
 
 #ifdef GDK_WINDOWING_WAYLAND
 #include <gdk/gdkwayland.h>
@@ -40,10 +40,6 @@
 
 #define GST_CAT_DEFAULT gst_debug_gtk_wayland_sink
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
-
-#ifndef GST_CAPS_FEATURE_MEMORY_DMABUF
-#define GST_CAPS_FEATURE_MEMORY_DMABUF "memory:DMABuf"
-#endif
 
 #define WL_VIDEO_FORMATS \
   "{ BGRx, BGRA, RGBx, xBGR, xRGB, RGBA, ABGR, ARGB, RGB, BGR, " \
