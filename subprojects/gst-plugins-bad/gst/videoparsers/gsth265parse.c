@@ -2170,10 +2170,16 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             && h265parse->parsed_framerate) {
           gint new_fps_num, new_fps_den;
 
-          gst_util_fraction_multiply (fps_num, fps_den, 1, 2, &new_fps_num,
-              &new_fps_den);
-          fps_num = new_fps_num;
-          fps_den = new_fps_den;
+          if (!gst_util_fraction_multiply (fps_num, fps_den, 1, 2, &new_fps_num,
+                  &new_fps_den)) {
+            GST_WARNING_OBJECT (h265parse, "Error calculating the new framerate"
+                " - integer overflow; setting it to 0/1");
+            fps_num = 0;
+            fps_den = 1;
+          } else {
+            fps_num = new_fps_num;
+            fps_den = new_fps_den;
+          }
           h265parse->parsed_framerate = FALSE;
         }
       }
