@@ -572,11 +572,13 @@ _set_rendering_details (GESLauncher * self)
   gboolean smart_profile = FALSE;
   GESPipelineFlags cmode = ges_pipeline_get_mode (self->priv->pipeline);
   GESProject *proj;
+  gboolean ret = FALSE;
 
   if (cmode & GES_PIPELINE_MODE_RENDER
       || cmode & GES_PIPELINE_MODE_SMART_RENDER) {
     GST_INFO_OBJECT (self, "Rendering settings already set");
-    return TRUE;
+    ret = TRUE;
+    goto done;
   }
 
   proj =
@@ -616,8 +618,10 @@ _set_rendering_details (GESLauncher * self)
         }
       } else {
         prof = parse_encoding_profile (opts->format);
-        if (!prof)
-          g_error ("Invalid format specified: %s", opts->format);
+        if (!prof) {
+          ges_printerr ("Invalid format specified: %s", opts->format);
+          goto done;
+        }
       }
 
       if (!prof) {
@@ -634,7 +638,7 @@ _set_rendering_details (GESLauncher * self)
       if (!prof) {
         ges_printerr ("Could not find any encoding format for %s\n",
             opts->format);
-        return FALSE;
+        goto done;
       }
 
       if (opts->container_profile) {
@@ -642,25 +646,25 @@ _set_rendering_details (GESLauncher * self)
         GList *tmp;
 
         if (!(new_prof = parse_encoding_profile (opts->container_profile))) {
-          gst_printerr ("Failed to parse container profile %s",
+          ges_printerr ("Failed to parse container profile %s",
               opts->container_profile);
           gst_object_unref (prof);
-          return FALSE;
+          goto done;
         }
 
         if (!GST_IS_ENCODING_CONTAINER_PROFILE (new_prof)) {
-          gst_printerr ("Top level profile should be container profile");
+          ges_printerr ("Top level profile should be container profile");
           gst_object_unref (prof);
           gst_object_unref (new_prof);
-          return FALSE;
+          goto done;
         }
 
         if (gst_encoding_container_profile_get_profiles
             (GST_ENCODING_CONTAINER_PROFILE (new_prof))) {
-          gst_printerr ("--container-profile cannot contain children profiles");
+          ges_printerr ("--container-profile cannot contain children profiles");
           gst_object_unref (prof);
           gst_object_unref (new_prof);
-          return FALSE;
+          goto done;
         }
 
         for (tmp = (GList *)
@@ -700,14 +704,18 @@ _set_rendering_details (GESLauncher * self)
         || !ges_pipeline_set_mode (self->priv->pipeline,
             opts->smartrender ? GES_PIPELINE_MODE_SMART_RENDER :
             GES_PIPELINE_MODE_RENDER)) {
-      return FALSE;
+      goto done;
     }
 
     gst_encoding_profile_unref (prof);
   } else {
     ges_pipeline_set_mode (self->priv->pipeline, GES_PIPELINE_MODE_PREVIEW);
   }
-  return TRUE;
+
+  ret = TRUE;
+
+done:
+  return ret;
 }
 
 static void
