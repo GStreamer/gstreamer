@@ -349,7 +349,7 @@ class Test(Loggable):
             info = ""
 
         info += "\n\n**You can mark the issues as 'known' by adding the " \
-            + " following lines to the list of known issues**\n" \
+            + f" following lines to the list of known issues of the testsuite called \"{self.classname.split('.')[0]}\"**\n" \
             + "\n\n``` python\n%s\n```" % (self.generate_expected_issues())
 
         if self.options.redirect_logs:
