@@ -389,6 +389,13 @@ class Test(Loggable):
         if result not in [Result.PASSED, Result.NOT_RUN, Result.SKIPPED]:
             self.add_known_issue_information()
 
+    def expected_return_codes(self):
+        res = []
+        for issue in self.expected_issues:
+            if 'returncode' in issue:
+                res.append(issue['returncode'])
+        return res
+
     def check_results(self):
         if self.result is Result.FAILED or self.result is Result.TIMEOUT:
             return
@@ -397,6 +404,10 @@ class Test(Loggable):
         if self.options.rr and self.process.returncode == -signal.SIGPIPE:
             self.set_result(Result.SKIPPED, "SIGPIPE received under `rr`, known issue.")
         elif self.process.returncode == 0:
+            for issue in self.expected_issues:
+                if issue['returncode'] != 0 and not issue.get("sometimes", False):
+                    self.set_result(Result.ERROR, "Expected return code %d" % issue['returncode'])
+                    return
             self.set_result(Result.PASSED)
         elif self.process.returncode in EXITING_SIGNALS:
             self.add_stack_trace_to_logfile()
@@ -405,6 +416,8 @@ class Test(Loggable):
                                 EXITING_SIGNALS[self.process.returncode]))
         elif self.process.returncode == VALGRIND_ERROR_CODE:
             self.set_result(Result.FAILED, "Valgrind reported errors")
+        elif self.process.returncode in self.expected_return_codes():
+            self.set_result(Result.KNOWN_ERROR)
         else:
             self.set_result(Result.FAILED,
                             "Application returned %d" % (self.process.returncode))
