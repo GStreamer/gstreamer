@@ -200,6 +200,10 @@ gst_gtk_wayland_sink_finalize (GObject * object)
   GstGtkWaylandSinkPrivate *priv =
       gst_gtk_wayland_sink_get_instance_private (self);
 
+  g_clear_object (&priv->display);
+  g_clear_object (&priv->wl_window);
+  g_clear_object (&priv->pool);
+
   g_clear_object (&priv->gtk_widget);
   gst_clear_caps (&priv->caps);
 
