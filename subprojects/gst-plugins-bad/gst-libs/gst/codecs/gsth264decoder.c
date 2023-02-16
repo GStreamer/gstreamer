@@ -926,6 +926,7 @@ _bump_dpb (GstH264Decoder * self, GstH264DpbBumpMode bump_level,
 
     if (!to_output) {
       GST_WARNING_OBJECT (self, "Bumping is needed but no picture to output");
+      gst_h264_decoder_clear_dpb (self, TRUE);
       break;
     }
 
