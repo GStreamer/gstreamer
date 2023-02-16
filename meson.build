@@ -33,6 +33,14 @@ endif
 # Install gst-indent pre-commit hook
 run_command(python3, '-c', 'import shutil; shutil.copy("scripts/git-hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")', check: false)
 
+
+gitlint = find_program('gitlint', required: false)
+if gitlint.found()
+  run_command(gitlint, 'install-hook', check: false)
+else
+  message('gitlint not found, please install it with your package manager or `python3 -m pip install gitlint` to enable the commit message hook')
+endif
+
 # On macOS, you have to run "Install Certificates.command" otherwise Python
 # doesn't have access to the latest SSL CA Certificates, and Meson will fail to
 # download wrap files from websites that use, for example, Let's Encrypt.

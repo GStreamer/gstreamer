@@ -1,0 +1,12 @@
+[title-max-length]
+line-length=100
+
+[general]
+ignore=body-is-missing
+
+[body-max-line-length]
+line-length=120
+
+# Ensure every title starts with a prefix
+[title-match-regex]
+regex=^\w+:.*
