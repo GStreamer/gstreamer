@@ -26,21 +26,17 @@
 
 G_BEGIN_DECLS
 
-/* A tiny GstVideoBufferPool subclass that modify the options to remove
+/* A GstVideoBufferPool subclass that modify the options to remove
  * VideoAlignment. To support VideoAlignment we would need to pass the padded
  * width/height + stride and use the viewporter interface to crop, a bit like
  * we use to do with XV. It would still be quite limited. It's a bit retro,
- * hopefully there will be a better Wayland interface in the future. */
+ * hopefully there will be a better Wayland interface in the future. This buffer
+ * pool also support GstDRMDumbAllocator. */
 
 #define GST_TYPE_WL_VIDEO_BUFFER_POOL (gst_wl_video_buffer_pool_get_type ())
 
 GST_WL_API
 G_DECLARE_FINAL_TYPE (GstWlVideoBufferPool, gst_wl_video_buffer_pool, GST, WL_VIDEO_BUFFER_POOL, GstVideoBufferPool);
-
-struct _GstWlVideoBufferPool
-{
-  GstVideoBufferPool parent;
-};
 
 GST_WL_API
 GstBufferPool * gst_wl_video_buffer_pool_new (void);
