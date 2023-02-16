@@ -2571,7 +2571,9 @@ gst_mpd_client2_get_rep_idx_with_max_bandwidth (GList * Representations,
   GstMPDRepresentationNode *representation;
   gint best_bandwidth = 0;
 
-  GST_DEBUG ("max_bandwidth = %" G_GINT64_FORMAT, max_bandwidth);
+  GST_DEBUG ("Selecting rep with restrictions: bandwidth=%" G_GINT64_FORMAT ", "
+      "width=%i, height=%i, framerate=%i/%i", max_bandwidth, max_video_width,
+      max_video_height, max_video_framerate_n, max_video_framerate_d);
 
   if (Representations == NULL)
     return -1;
