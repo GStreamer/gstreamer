@@ -817,8 +817,7 @@ static void
 gst_nv_h264_dec_picture_params_from_pps (GstNvH264Dec * self,
     const GstH264PPS * pps, CUVIDH264PICPARAMS * params)
 {
-  params->second_chroma_qp_index_offset =
-      (gint8) pps->second_chroma_qp_index_offset;
+  params->second_chroma_qp_index_offset = pps->second_chroma_qp_index_offset;
 
 #define COPY_FIELD(f) \
   (params)->f = (pps)->f
