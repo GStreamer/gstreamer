@@ -106,7 +106,7 @@ static gboolean gst_jpeg_parse_stop (GstBaseParse * parse);
 
 #define gst_jpeg_parse_parent_class parent_class
 G_DEFINE_TYPE (GstJpegParse, gst_jpeg_parse, GST_TYPE_BASE_PARSE);
-GST_ELEMENT_REGISTER_DEFINE (jpegparse, "jpegparse", GST_RANK_NONE,
+GST_ELEMENT_REGISTER_DEFINE (jpegparse, "jpegparse", GST_RANK_PRIMARY,
     GST_TYPE_JPEG_PARSE);
 
 enum GstJPEGColorspace
