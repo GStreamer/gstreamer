@@ -315,6 +315,8 @@ gst_wayland_sink_finalize (GObject * object)
   if (self->pool)
     gst_object_unref (self->pool);
 
+  gst_clear_caps (&self->caps);
+
   g_free (self->display_name);
 
   g_mutex_clear (&self->display_lock);
@@ -578,28 +580,53 @@ gst_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   return caps;
 }
 
-static GstBufferPool *
-gst_wayland_create_pool (GstWaylandSink * self, GstCaps * caps)
+static gboolean
+gst_wayland_update_pool (GstWaylandSink * self, GstAllocator * allocator)
 {
-  GstBufferPool *pool = NULL;
-  GstStructure *structure;
   gsize size = self->video_info.size;
-  GstAllocator *alloc;
+  GstStructure *config;
 
-  pool = gst_wl_video_buffer_pool_new ();
+  /* Pools with outstanding buffer cannot be reconfigured, so we must use
+   * a new pool. */
+  if (self->pool) {
+    gst_buffer_pool_set_active (self->pool, FALSE);
+    gst_object_unref (self->pool);
+  }
+  self->pool = gst_wl_video_buffer_pool_new ();
 
-  structure = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (structure, caps, size, 2, 0);
+  config = gst_buffer_pool_get_config (self->pool);
+  gst_buffer_pool_config_set_params (config, self->caps, size, 2, 0);
+  gst_buffer_pool_config_set_allocator (config, allocator, NULL);
+
+  if (!gst_buffer_pool_set_config (self->pool, config))
+    return FALSE;
+
+  return gst_buffer_pool_set_active (self->pool, TRUE);
+}
+
+static gboolean
+gst_wayland_activate_shm_pool (GstWaylandSink * self)
+{
+  GstAllocator *alloc = NULL;
+
+  if (self->pool && gst_buffer_pool_is_active (self->pool)) {
+    GstStructure *config = gst_buffer_pool_get_config (self->pool);
+    gboolean is_shm = FALSE;
+
+    if (gst_buffer_pool_config_get_allocator (config, &alloc, NULL) && alloc)
+      is_shm = GST_IS_WL_SHM_ALLOCATOR (alloc);
+
+    gst_structure_free (config);
+
+    if (is_shm)
+      return TRUE;
+  }
 
   alloc = gst_wl_shm_allocator_get ();
-  gst_buffer_pool_config_set_allocator (structure, alloc, NULL);
-  if (!gst_buffer_pool_set_config (pool, structure)) {
-    g_object_unref (pool);
-    pool = NULL;
-  }
-  g_object_unref (alloc);
+  gst_wayland_update_pool (self, alloc);
+  gst_object_unref (alloc);
 
-  return pool;
+  return TRUE;
 }
 
 static gboolean
@@ -618,10 +645,11 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   format = GST_VIDEO_INFO_FORMAT (&self->video_info);
   self->video_info_changed = TRUE;
 
-  /* create a new pool for the new caps */
-  if (self->pool)
-    gst_object_unref (self->pool);
-  self->pool = gst_wayland_create_pool (self, caps);
+  /* free pooled buffer used with previous caps */
+  if (self->pool) {
+    gst_buffer_pool_set_active (self->pool, FALSE);
+    gst_clear_object (&self->pool);
+  }
 
   use_dmabuf = gst_caps_features_contains (gst_caps_get_features (caps, 0),
       GST_CAPS_FEATURE_MEMORY_DMABUF);
@@ -635,6 +663,9 @@ gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   self->use_dmabuf = use_dmabuf;
+
+  /* Will be used to create buffer pools */
+  gst_caps_replace (&self->caps, caps);
 
   return TRUE;
 
@@ -663,8 +694,14 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
-  if (need_pool)
-    pool = gst_wayland_create_pool (self, caps);
+  if (need_pool) {
+    GstStructure *config;
+    pool = gst_wl_video_buffer_pool_new ();
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_allocator (config,
+        gst_wl_shm_allocator_get (), NULL);
+    gst_buffer_pool_set_config (pool, config);
+  }
 
   gst_query_add_allocation_pool (query, pool, self->video_info.size, 2, 0);
   if (pool)
@@ -841,25 +878,9 @@ gst_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
           "buffer %" GST_PTR_FORMAT " cannot have a wl_buffer, "
           "copying to wl_shm memory", buffer);
 
-      /* self->pool always exists (created in set_caps), but it may not
-       * be active if upstream is not using it */
-      if (!gst_buffer_pool_is_active (self->pool)) {
-        GstStructure *config;
-        GstCaps *caps;
-
-        config = gst_buffer_pool_get_config (self->pool);
-        gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
-
-        /* revert back to default strides and offsets */
-        gst_video_info_from_caps (&self->video_info, caps);
-        gst_buffer_pool_config_set_params (config, caps, self->video_info.size,
-            2, 0);
-
-        /* This is a video pool, it should not fail with basic settings */
-        if (!gst_buffer_pool_set_config (self->pool, config) ||
-            !gst_buffer_pool_set_active (self->pool, TRUE))
-          goto activate_failed;
-      }
+      /* ensure the internal pool is configured for SHM */
+      if (!gst_wayland_activate_shm_pool (self))
+        goto activate_failed;
 
       ret = gst_buffer_pool_acquire_buffer (self->pool, &to_render, NULL);
       if (ret != GST_FLOW_OK)
