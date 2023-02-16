@@ -414,7 +414,8 @@ gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
     return NULL;
   }
 
-  va_sync_surface (self->display, surface);
+  if (!va_sync_surface (self->display, surface))
+    return NULL;
 
   return self->parent_map (gmem, maxsize, flags);
 }
