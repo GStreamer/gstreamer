@@ -100,7 +100,21 @@ _priv_gst_tracing_init (void)
     while (t[i]) {
       // check t[i] for params
       if ((params = strchr (t[i], '('))) {
-        gchar *end = strchr (&params[1], ')');
+        // params can contain multiple '(' when using this kind of parameter: 'max-buffer-size=(uint)5'
+        guint n_par = 1, j;
+        gchar *end = NULL;
+
+        for (j = 1; params[j] != '\0'; j++) {
+          if (params[j] == '(')
+            n_par++;
+          else if (params[j] == ')') {
+            n_par--;
+            if (n_par == 0) {
+              end = &params[j];
+              break;
+            }
+          }
+        }
         *params = '\0';
         params++;
         if (end)
