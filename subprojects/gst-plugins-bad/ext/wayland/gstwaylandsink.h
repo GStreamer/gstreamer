@@ -69,6 +69,9 @@ struct _GstWaylandSink
   GstVideoOrientationMethod current_rotate_method;
 
   struct wl_callback *callback;
+
+  gchar *drm_device;
+  gboolean skip_dumb_buffer_copy;
 };
 
 struct _GstWaylandSinkClass
