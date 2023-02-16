@@ -365,15 +365,21 @@ _create_uri_source_asset (GESUriClipAsset * asset,
       g_strdup (gst_discoverer_stream_info_get_stream_id (sinfo));
 
   if (stream_id == NULL) {
-    GST_WARNING ("No stream ID, ignoring %p on %s", sinfo,
+    GST_WARNING_OBJECT (asset,
+        "No stream ID, ignoring stream info: %p off type: %s", sinfo,
         ges_track_type_name (type));
     return;
   }
 
-  if (type == GES_TRACK_TYPE_VIDEO)
+  if (type == GES_TRACK_TYPE_VIDEO) {
     src_asset = ges_asset_request (GES_TYPE_VIDEO_URI_SOURCE, stream_id, NULL);
-  else
+  } else if (type == GES_TRACK_TYPE_AUDIO) {
     src_asset = ges_asset_request (GES_TYPE_AUDIO_URI_SOURCE, stream_id, NULL);
+  } else {
+    GST_INFO_OBJECT (asset,
+        "Unknown track type %d, not creating any asset backing it", type);
+    return;
+  }
   g_free (stream_id);
 
   src_priv = GES_URI_SOURCE_ASSET (src_asset)->priv;
