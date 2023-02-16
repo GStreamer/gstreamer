@@ -15662,6 +15662,25 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "stream-format", G_TYPE_STRING, "obu-stream",
           "alignment", G_TYPE_STRING, "tu", NULL);
       break;
+    case FOURCC_SHQ0:
+    case FOURCC_SHQ1:
+    case FOURCC_SHQ2:
+    case FOURCC_SHQ3:
+    case FOURCC_SHQ4:
+    case FOURCC_SHQ5:
+    case FOURCC_SHQ6:
+    case FOURCC_SHQ7:
+    case FOURCC_SHQ8:
+    case FOURCC_SHQ9:{
+      gchar *format =
+          g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
+      _codec ("SpeedHQ");
+      caps =
+          gst_caps_new_simple ("video/x-speedhq", "variant", G_TYPE_STRING,
+          format, NULL);
+      g_free (format);
+      break;
+    }
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
