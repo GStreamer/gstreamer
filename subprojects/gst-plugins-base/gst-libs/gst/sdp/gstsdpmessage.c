@@ -3622,7 +3622,7 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
 
   /* check if we have a rate, if not, we need to look up the rate from the
    * default rates based on the payload types. */
-  if (rate == -1) {
+  if (rate == -1 || rate == 0) {
     const GstRTPPayloadInfo *info;
 
     if (GST_RTP_PAYLOAD_IS_DYNAMIC (pt)) {
@@ -3642,9 +3642,6 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
     /* we fail if we cannot find one */
     if (rate == -1)
       goto no_rate;
-
-    if (rate == 0 && name != NULL && (!g_strcmp0(name,"h264") || !g_strcmp0(name,"H264")))
-      rate = 90000;
   }
 
   tmp = g_ascii_strdown (media->media, -1);
