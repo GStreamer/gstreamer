@@ -36,7 +36,7 @@ GST_WL_API
 enum wl_shm_format gst_video_format_to_wl_shm_format (GstVideoFormat format);
 
 GST_WL_API
-gint gst_video_format_to_wl_dmabuf_format (GstVideoFormat format);
+guint32 gst_video_format_to_wl_dmabuf_format (GstVideoFormat format);
 
 GST_WL_API
 GstVideoFormat gst_wl_shm_format_to_video_format (enum wl_shm_format wl_format);

@@ -175,8 +175,8 @@ out:
     GST_ERROR_OBJECT (mem->allocator, "can't create linux-dmabuf buffer");
   } else {
     GST_DEBUG_OBJECT (mem->allocator, "created linux_dmabuf wl_buffer (%p):"
-        "%dx%d, fmt=%.4s, %d planes",
-        data.wbuf, width, height, (char *) &format, nplanes);
+        "%dx%d, fmt=%" GST_FOURCC_FORMAT ", %d planes",
+        data.wbuf, width, height, GST_FOURCC_ARGS (format), nplanes);
   }
 
   g_mutex_unlock (&data.lock);

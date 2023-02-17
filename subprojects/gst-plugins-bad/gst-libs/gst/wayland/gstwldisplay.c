@@ -226,7 +226,7 @@ gst_wl_display_check_format_for_dmabuf (GstWlDisplay * self,
     return FALSE;
 
   dmabuf_fmt = gst_video_format_to_wl_dmabuf_format (format);
-  if (dmabuf_fmt == (guint) - 1)
+  if (!dmabuf_fmt)
     return FALSE;
 
   formats = priv->dmabuf_formats;
