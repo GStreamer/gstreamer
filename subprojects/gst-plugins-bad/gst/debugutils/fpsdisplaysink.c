@@ -360,6 +360,13 @@ display_current_fps (gpointer data)
     return TRUE;
   }
 
+  if (frames_rendered < self->last_frames_rendered ||
+      frames_dropped < self->last_frames_dropped) {
+    /* avoid negative drop rates on reset */
+    GST_DEBUG_OBJECT (self, "Frame counters have been reset, skipping update");
+    goto update_last_values;
+  }
+
   time_diff = (gdouble) (current_ts - self->last_ts) / GST_SECOND;
   time_elapsed = (gdouble) (current_ts - self->start_ts) / GST_SECOND;
 
@@ -418,6 +425,7 @@ display_current_fps (gpointer data)
     g_object_notify_by_pspec ((GObject *) self, pspec_last_message);
   }
 
+update_last_values:
   self->last_frames_rendered = frames_rendered;
   self->last_frames_dropped = frames_dropped;
   self->last_ts = current_ts;
