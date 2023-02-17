@@ -88,6 +88,9 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   GstMemory *mem;
   int format;
   guint i, width, height;
+  const gsize *offsets = info->offset;
+  const gint *strides = info->stride;
+  GstVideoMeta *vmeta;
   guint nplanes, flags = 0;
   struct zwp_linux_buffer_params_v1 *params;
   gint64 timeout;
@@ -107,6 +110,12 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
   height = GST_VIDEO_INFO_HEIGHT (info);
   nplanes = GST_VIDEO_INFO_N_PLANES (info);
 
+  vmeta = gst_buffer_get_video_meta (buf);
+  if (vmeta) {
+    offsets = vmeta->offset;
+    strides = vmeta->stride;
+  }
+
   GST_DEBUG_OBJECT (display, "Creating wl_buffer from DMABuf of size %"
       G_GSSIZE_FORMAT " (%d x %d), format %s", info->size, width, height,
       gst_wl_dmabuf_format_to_string (format));
@@ -119,8 +128,8 @@ gst_wl_linux_dmabuf_construct_wl_buffer (GstBuffer * buf,
     guint offset, stride, mem_idx, length;
     gsize skip;
 
-    offset = GST_VIDEO_INFO_PLANE_OFFSET (info, i);
-    stride = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
+    offset = offsets[i];
+    stride = strides[i];
     if (gst_buffer_find_memory (buf, offset, 1, &mem_idx, &length, &skip)) {
       GstMemory *m = gst_buffer_peek_memory (buf, mem_idx);
       gint fd = gst_dmabuf_memory_get_fd (m);
