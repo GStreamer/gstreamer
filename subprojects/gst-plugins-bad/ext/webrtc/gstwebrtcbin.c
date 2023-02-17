@@ -5303,12 +5303,15 @@ typedef struct
 {
   guint mlineindex;
   gchar *candidate;
+  GstPromise *promise;
 } IceCandidateItem;
 
 static void
 _clear_ice_candidate_item (IceCandidateItem * item)
 {
   g_free (item->candidate);
+  if (item->promise)
+    gst_promise_unref (item->promise);
 }
 
 static void
@@ -5320,12 +5323,23 @@ _add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item,
   stream = _find_ice_stream_for_session (webrtc, item->mlineindex);
   if (stream == NULL) {
     if (drop_invalid) {
-      GST_WARNING_OBJECT (webrtc, "Unknown mline %u, dropping",
-          item->mlineindex);
+      if (item->promise) {
+        GError *error =
+            g_error_new (GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INTERNAL_FAILURE,
+            "Unknown mline %u, dropping", item->mlineindex);
+        GstStructure *s = gst_structure_new ("application/x-gst-promise",
+            "error", G_TYPE_ERROR, error, NULL);
+        gst_promise_reply (item->promise, s);
+        g_clear_error (&error);
+      } else {
+        GST_WARNING_OBJECT (webrtc, "Unknown mline %u, dropping",
+            item->mlineindex);
+      }
     } else {
       IceCandidateItem new;
       new.mlineindex = item->mlineindex;
       new.candidate = g_strdup (item->candidate);
+      new.promise = NULL;
       GST_INFO_OBJECT (webrtc, "Unknown mline %u, deferring", item->mlineindex);
 
       ICE_LOCK (webrtc);
@@ -5338,7 +5352,8 @@ _add_ice_candidate (GstWebRTCBin * webrtc, IceCandidateItem * item,
   GST_LOG_OBJECT (webrtc, "adding ICE candidate with mline:%u, %s",
       item->mlineindex, item->candidate);
 
-  gst_webrtc_ice_add_candidate (webrtc->priv->ice, stream, item->candidate);
+  gst_webrtc_ice_add_candidate (webrtc->priv->ice, stream, item->candidate,
+      item->promise);
 }
 
 static void
@@ -5364,7 +5379,7 @@ _add_ice_candidates_from_sdp (GstWebRTCBin * webrtc, gint mlineindex,
       candidate = g_strdup_printf ("a=candidate:%s", attr->value);
       GST_LOG_OBJECT (webrtc, "adding ICE candidate with mline:%u, %s",
           mlineindex, candidate);
-      gst_webrtc_ice_add_candidate (webrtc->priv->ice, stream, candidate);
+      gst_webrtc_ice_add_candidate (webrtc->priv->ice, stream, candidate, NULL);
       g_free (candidate);
     }
   }
@@ -6768,6 +6783,7 @@ _add_ice_candidate_task (GstWebRTCBin * webrtc, IceCandidateItem * item)
     IceCandidateItem new;
     new.mlineindex = item->mlineindex;
     new.candidate = g_steal_pointer (&item->candidate);
+    new.promise = NULL;
 
     ICE_LOCK (webrtc);
     g_array_append_val (webrtc->priv->pending_remote_ice_candidates, new);
@@ -6794,6 +6810,7 @@ gst_webrtc_bin_add_ice_candidate (GstWebRTCBin * webrtc, guint mline,
 
   item = g_new0 (IceCandidateItem, 1);
   item->mlineindex = mline;
+  item->promise = promise ? gst_promise_ref (promise) : NULL;
   if (attr && attr[0] != 0) {
     if (!g_ascii_strncasecmp (attr, "a=candidate:", 12))
       item->candidate = g_strdup (attr);
@@ -6885,6 +6902,7 @@ _on_local_ice_candidate_cb (GstWebRTCICE * ice, guint session_id,
 
   item.mlineindex = session_id;
   item.candidate = g_strdup (candidate);
+  item.promise = NULL;
 
   ICE_LOCK (webrtc);
   g_array_append_val (webrtc->priv->pending_local_ice_candidates, item);

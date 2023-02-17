@@ -101,17 +101,19 @@ gst_webrtc_ice_find_transport (GstWebRTCICE * ice,
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
  * @candidate: The ICE candidate
+ * @promise: (allow none): A #GstPromise for task notifications (Since: 1.24)
  *
  * Since: 1.22
  */
 void
 gst_webrtc_ice_add_candidate (GstWebRTCICE * ice,
-    GstWebRTCICEStream * stream, const gchar * candidate)
+    GstWebRTCICEStream * stream, const gchar * candidate, GstPromise * promise)
 {
   g_return_if_fail (GST_IS_WEBRTC_ICE (ice));
   g_assert (GST_WEBRTC_ICE_GET_CLASS (ice)->add_candidate);
 
-  GST_WEBRTC_ICE_GET_CLASS (ice)->add_candidate (ice, stream, candidate);
+  GST_WEBRTC_ICE_GET_CLASS (ice)->add_candidate (ice, stream, candidate,
+      promise);
 }
 
 /**

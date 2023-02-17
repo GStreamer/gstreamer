@@ -84,7 +84,8 @@ struct _GstWebRTCICEClass {
                                                         GstWebRTCICEStream * stream);
   void (*add_candidate)                                (GstWebRTCICE * ice,
                                                         GstWebRTCICEStream * stream,
-                                                        const gchar * candidate);
+                                                        const gchar * candidate,
+                                                        GstPromise * promise);
   gboolean (*set_local_credentials)                    (GstWebRTCICE * ice,
                                                         GstWebRTCICEStream * stream,
                                                         const gchar * ufrag,
@@ -169,7 +170,8 @@ gboolean                    gst_webrtc_ice_gather_candidates        (GstWebRTCIC
 GST_WEBRTC_API
 void                        gst_webrtc_ice_add_candidate            (GstWebRTCICE * ice,
                                                                      GstWebRTCICEStream * stream,
-                                                                     const gchar * candidate);
+                                                                     const gchar * candidate,
+                                                                     GstPromise * promise);
 
 GST_WEBRTC_API
 gboolean                    gst_webrtc_ice_set_local_credentials    (GstWebRTCICE * ice,
