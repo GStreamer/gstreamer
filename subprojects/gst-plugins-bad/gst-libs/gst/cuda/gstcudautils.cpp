@@ -26,7 +26,7 @@
 #include "gstcuda-private.h"
 #include <atomic>
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
 #endif
@@ -612,7 +612,7 @@ gst_cuda_graphics_resource_unmap (GstCudaGraphicsResource * resource,
   resource->mapped = FALSE;
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static void
 unregister_resource_from_gl_thread (GstGLContext * gl_context,
     GstCudaGraphicsResource * resource)
@@ -668,7 +668,7 @@ gst_cuda_graphics_resource_free (GstCudaGraphicsResource * resource)
   g_return_if_fail (resource != nullptr);
 
   if (resource->registered) {
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
     if (resource->type == GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER) {
       gst_gl_context_thread_add ((GstGLContext *) resource->graphics_context,
           (GstGLContextThreadFunc) unregister_resource_from_gl_thread,
@@ -1019,7 +1019,7 @@ unmap_and_out:
   return ret;
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static gboolean
 ensure_gl_interop (void)
 {
@@ -1524,7 +1524,7 @@ gst_cuda_buffer_copy (GstBuffer * dst, GstCudaBufferCopyType dst_type,
   dst_mem = gst_buffer_peek_memory (dst, 0);
   src_mem = gst_buffer_peek_memory (src, 0);
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (src_type == GST_CUDA_BUFFER_COPY_GL && gst_is_gl_memory_pbo (src_mem)) {
     GstGLMemory *gl_mem = (GstGLMemory *) src_mem;
     GstGLContext *gl_context = gl_mem->mem.context;

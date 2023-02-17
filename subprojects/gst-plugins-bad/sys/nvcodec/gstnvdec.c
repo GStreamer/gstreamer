@@ -46,7 +46,7 @@ enum
   PROP_CUDA_DEVICE_ID,
 };
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 #define SUPPORTED_GL_APIS (GST_GL_API_OPENGL | GST_GL_API_OPENGL3 | GST_GL_API_GLES2)
 
 static gboolean
@@ -58,7 +58,7 @@ static gboolean
 gst_nvdec_copy_device_to_memory (GstNvDec * nvdec,
     CUVIDPARSERDISPINFO * dispinfo, GstBuffer * output_buffer);
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 typedef struct _GstNvDecRegisterResourceData
 {
   GstMemory *mem;
@@ -148,7 +148,7 @@ ensure_cuda_graphics_resource (GstMemory * mem, GstNvDec * nvdec)
 
   return cgr_info;
 }
-#endif /* HAVE_NVCODEC_GST_GL */
+#endif /* HAVE_CUDA_GST_GL */
 
 static gboolean gst_nvdec_open (GstVideoDecoder * decoder);
 static gboolean gst_nvdec_start (GstVideoDecoder * decoder);
@@ -167,7 +167,7 @@ static gboolean gst_nvdec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_drain (GstVideoDecoder * decoder);
 static GstFlowReturn gst_nvdec_finish (GstVideoDecoder * decoder);
 static gboolean gst_nvdec_negotiate (GstVideoDecoder * decoder);
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static gboolean gst_nvdec_ensure_gl_context (GstNvDec * nvdec);
 #endif
 
@@ -638,7 +638,7 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
           have_cuda = TRUE;
           break;
         }
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
         if (nvdec->gl_display &&
             features && gst_caps_features_contains (features,
                 GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
@@ -656,7 +656,7 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
     gst_clear_caps (&caps);
   }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL &&
       !gst_nvdec_ensure_gl_context (nvdec)) {
     GST_WARNING_OBJECT (nvdec,
@@ -671,7 +671,7 @@ gst_nvdec_negotiate (GstVideoDecoder * decoder)
       gst_caps_set_features (state->caps, 0,
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, NULL));
       break;
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
     case GST_NVDEC_MEM_TYPE_GL:
       GST_DEBUG_OBJECT (nvdec, "use gl memory");
       gst_caps_set_features (state->caps, 0,
@@ -828,7 +828,7 @@ parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
     }
   }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL) {
     copy_ret = gst_nvdec_copy_device_to_gl (nvdec, dispinfo, output_buffer);
 
@@ -910,7 +910,7 @@ gst_nvdec_open (GstVideoDecoder * decoder)
     GST_WARNING_OBJECT (nvdec,
         "Could not create CUDA stream, will use default stream");
   }
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   gst_gl_ensure_element_data (GST_ELEMENT (nvdec),
       &nvdec->gl_display, &nvdec->other_gl_context);
   if (nvdec->gl_display)
@@ -1012,7 +1012,7 @@ gst_nvdec_stop (GstVideoDecoder * decoder)
   if (!maybe_destroy_decoder_and_parser (nvdec))
     return FALSE;
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   gst_clear_object (&nvdec->gl_context);
   gst_clear_object (&nvdec->other_gl_context);
   gst_clear_object (&nvdec->gl_display);
@@ -1124,7 +1124,7 @@ gst_nvdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   return ret;
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 typedef struct
 {
   GstNvDec *nvdec;
@@ -1760,7 +1760,7 @@ gst_nvdec_finish (GstVideoDecoder * decoder)
   return gst_nvdec_drain (decoder);
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static void
 gst_nvdec_check_cuda_device_from_context (GstGLContext * context,
     gboolean * ret)
@@ -1942,7 +1942,7 @@ gst_nvdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_SYSTEM)
     goto done;
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (nvdec->mem_type == GST_NVDEC_MEM_TYPE_GL) {
     if (!gst_nvdec_ensure_gl_pool (nvdec, query))
       return FALSE;
@@ -1968,7 +1968,7 @@ gst_nvdec_src_query (GstVideoDecoder * decoder, GstQuery * query)
               query, nvdec->cuda_ctx)) {
         return TRUE;
       }
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
       if (gst_gl_handle_context_query (GST_ELEMENT (decoder), query,
               nvdec->gl_display, nvdec->gl_context, nvdec->other_gl_context)) {
         if (nvdec->gl_display)
@@ -1999,7 +1999,7 @@ gst_nvdec_set_context (GstElement * element, GstContext * context)
           context, klass->cuda_device_id, &nvdec->cuda_ctx)) {
     goto done;
   }
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   gst_gl_handle_set_context (element, context, &nvdec->gl_display,
       &nvdec->other_gl_context);
 #endif

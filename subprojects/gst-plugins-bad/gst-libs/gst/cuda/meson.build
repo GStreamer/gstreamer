@@ -41,7 +41,7 @@ extra_args = ['-DGST_USE_UNSTABLE_API',
               '-DG_LOG_DOMAIN="GStreamer-Cuda"']
 
 if gstgl_dep.found()
-  extra_args += ['-DHAVE_NVCODEC_GST_GL=1']
+  extra_args += ['-DHAVE_CUDA_GST_GL']
 endif
 
 if host_system == 'windows'

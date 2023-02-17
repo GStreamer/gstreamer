@@ -30,7 +30,7 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_nvenc_debug);
 #define GST_CAT_DEFAULT gst_nvenc_debug
 
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
 #endif
 
@@ -513,7 +513,7 @@ gst_nv_base_enc_set_context (GstElement * element, GstContext * context)
           &nvenc->cuda_ctx)) {
     goto done;
   }
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   gst_gl_handle_set_context (element, context,
       (GstGLDisplay **) & nvenc->display,
       (GstGLContext **) & nvenc->other_context);
@@ -537,7 +537,7 @@ gst_nv_base_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
               query, nvenc->cuda_ctx))
         return TRUE;
 
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
       {
         gboolean ret;
 
@@ -562,7 +562,7 @@ gst_nv_base_enc_sink_query (GstVideoEncoder * enc, GstQuery * query)
   return GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (enc, query);
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static gboolean
 gst_nv_base_enc_ensure_gl_context (GstNvBaseEnc * nvenc)
 {
@@ -633,7 +633,7 @@ gst_nv_base_enc_propose_allocation (GstVideoEncoder * enc, GstQuery * query)
   }
 
   features = gst_caps_get_features (caps, 0);
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (features && gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
     GST_DEBUG_OBJECT (nvenc, "upsteram support GL memory");
@@ -725,7 +725,7 @@ gst_nv_base_enc_start (GstVideoEncoder * enc)
   memset (&nvenc->init_params, 0, sizeof (NV_ENC_INITIALIZE_PARAMS));
   memset (&nvenc->config, 0, sizeof (NV_ENC_CONFIG));
 
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   {
     gst_gl_ensure_element_data (GST_ELEMENT (nvenc),
         (GstGLDisplay **) & nvenc->display,
@@ -1873,7 +1873,7 @@ gst_nv_base_enc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
             GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY)) {
       nvenc->mem_type = GST_NVENC_MEM_TYPE_CUDA;
     }
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
     else if (gst_caps_features_contains (features,
             GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
       nvenc->mem_type = GST_NVENC_MEM_TYPE_GL;
@@ -2011,7 +2011,7 @@ _get_cuda_device_stride (GstVideoInfo * info, guint plane, gsize cuda_stride)
   }
 }
 
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 typedef struct _GstNvEncRegisterResourceData
 {
   GstMemory *mem;
@@ -2429,7 +2429,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
     /* reconfigured encode session should start from keyframe */
     GST_VIDEO_CODEC_FRAME_SET_FORCE_KEYFRAME (frame);
   }
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (nvenc->mem_type == GST_NVENC_MEM_TYPE_GL)
     in_map_flags |= GST_MAP_GL;
 #endif
@@ -2477,7 +2477,7 @@ gst_nv_base_enc_handle_frame (GstVideoEncoder * enc, GstVideoCodecFrame * frame)
 
   resource = state->in_buf;
 
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (nvenc->mem_type == GST_NVENC_MEM_TYPE_GL) {
     GstGLMemory *gl_mem;
     GstNvEncGLMapData data;

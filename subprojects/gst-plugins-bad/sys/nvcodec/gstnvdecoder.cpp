@@ -45,7 +45,7 @@
 #include "config.h"
 #endif
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
 #endif
@@ -63,7 +63,7 @@ extern "C"
 
 #define GST_CAT_DEFAULT gst_nv_decoder_debug
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 #define SUPPORTED_GL_APIS (GstGLAPI) (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)
 #endif
 
@@ -405,7 +405,7 @@ gst_nv_decoder_decode (GstNvDecoder * decoder, CUVIDPICPARAMS * params)
   return gst_nv_dec_object_decode (decoder->object, params);
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static gboolean
 gst_nv_decoder_register_cuda_resource (GstNvDecoder * self, GstMemory * mem,
     GstCudaGraphicsResource * resource)
@@ -791,7 +791,7 @@ gst_nv_decoder_finish_surface (GstNvDecoder * decoder,
     case GST_NV_DECODER_OUTPUT_TYPE_SYSTEM:
       ret = gst_nv_decoder_copy_frame_to_system (decoder, surface, outbuf);
       break;
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
     case GST_NV_DECODER_OUTPUT_TYPE_GL:
       g_assert (decoder->gl_context != nullptr);
 
@@ -1065,7 +1065,7 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
       gst_caps_set_features_simple (cuda_caps,
           gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
 
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
       {
         GstCaps *gl_caps = gst_caps_copy (src_templ);
         gst_caps_set_features_simple (gl_caps,
@@ -1204,7 +1204,7 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
 
     /* OpenGL specific */
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
     {
       GstCaps *gl_caps = gst_caps_copy (src_templ);
       gst_caps_set_features_simple (gl_caps,
@@ -1273,7 +1273,7 @@ gst_nv_decoder_handle_set_context (GstNvDecoder * decoder,
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (videodec), FALSE);
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (gst_gl_handle_set_context (videodec, context,
           (GstGLDisplay **) & decoder->gl_display,
           (GstGLContext **) & decoder->other_gl_context)) {
@@ -1291,7 +1291,7 @@ gst_nv_decoder_handle_context_query (GstNvDecoder * decoder,
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), FALSE);
   g_return_val_if_fail (GST_IS_ELEMENT (videodec), FALSE);
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (gst_gl_handle_context_query (GST_ELEMENT (videodec), query,
           (GstGLDisplay *) decoder->gl_display,
           (GstGLContext *) decoder->gl_context,
@@ -1306,7 +1306,7 @@ gst_nv_decoder_handle_context_query (GstNvDecoder * decoder,
   return FALSE;
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static void
 gst_nv_decoder_check_cuda_device_from_context (GstGLContext * context,
     gboolean * ret)
@@ -1444,7 +1444,7 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
           have_cuda = TRUE;
           break;
         }
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
         if (features && gst_caps_features_contains (features,
                 GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
           GST_DEBUG_OBJECT (videodec, "found GL memory feature");
@@ -1461,7 +1461,7 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
     gst_clear_caps (&caps);
   }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_GL &&
       !gst_nv_decoder_ensure_gl_context (decoder, GST_ELEMENT (videodec))) {
     GST_WARNING_OBJECT (videodec,
@@ -1476,7 +1476,7 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
       gst_caps_set_features (state->caps, 0,
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, nullptr));
       break;
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
     case GST_NV_DECODER_OUTPUT_TYPE_GL:
       GST_DEBUG_OBJECT (videodec, "using GL memory");
       gst_caps_set_features (state->caps, 0,
@@ -1558,7 +1558,7 @@ gst_nv_decoder_ensure_cuda_pool (GstNvDecoder * decoder, GstQuery * query)
   return TRUE;
 }
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 static gboolean
 gst_nv_decoder_ensure_gl_pool (GstNvDecoder * decoder, GstQuery * query)
 {
@@ -1624,7 +1624,7 @@ gst_nv_decoder_decide_allocation (GstNvDecoder * decoder,
     case GST_NV_DECODER_OUTPUT_TYPE_SYSTEM:
       /* GstVideoDecoder will take care this case */
       break;
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
     case GST_NV_DECODER_OUTPUT_TYPE_GL:
       ret = gst_nv_decoder_ensure_gl_pool (decoder, query);
       break;

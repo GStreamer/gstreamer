@@ -30,7 +30,7 @@
 
 #include <gmodule.h>
 
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
 #endif
 
@@ -827,7 +827,7 @@ gst_nv_enc_register (GstPlugin * plugin, GUID codec_id, const gchar * codec,
 
     {
       GstCaps *cuda_caps = gst_caps_copy (sink_templ);
-#if HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
       GstCaps *gl_caps = gst_caps_copy (sink_templ);
       gst_caps_set_features_simple (gl_caps,
           gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));

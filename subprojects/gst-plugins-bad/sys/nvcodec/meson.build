@@ -43,7 +43,7 @@ plugin_incdirs = [configinc, cuda_stubinc]
 extra_args = ['-DGST_USE_UNSTABLE_API']
 
 if gstgl_dep.found()
-  extra_args += ['-DHAVE_NVCODEC_GST_GL=1']
+  extra_args += ['-DHAVE_CUDA_GST_GL']
 endif
 
 if host_system == 'linux'

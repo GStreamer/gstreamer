@@ -28,7 +28,7 @@
 #ifndef __GST_NVDEC_H__
 #define __GST_NVDEC_H__
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
 #endif
@@ -70,7 +70,7 @@ struct _GstNvDec
 {
   GstVideoDecoder parent;
 
-#ifdef HAVE_NVCODEC_GST_GL
+#ifdef HAVE_CUDA_GST_GL
   GstGLDisplay *gl_display;
   GstGLContext *gl_context;
   GstGLContext *other_gl_context;
