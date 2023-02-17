@@ -141,7 +141,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp9dec_debug, "msdkvp9dec", 0, "msdkvp9dec");
   GST_DEBUG_CATEGORY_INIT (gst_msdkvp9enc_debug, "msdkvp9enc", 0, "msdkvp9enc");
   GST_DEBUG_CATEGORY_INIT (gst_msdkav1dec_debug, "msdkav1dec", 0, "msdkav1dec");
-  GST_DEBUG_CATEGORY_INIT (gst_msdkav1dec_debug, "msdkav1enc", 0, "msdkav1enc");
+  GST_DEBUG_CATEGORY_INIT (gst_msdkav1enc_debug, "msdkav1enc", 0, "msdkav1enc");
 
   plugin_add_dependencies (plugin);
 
