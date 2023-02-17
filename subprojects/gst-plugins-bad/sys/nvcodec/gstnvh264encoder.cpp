@@ -1901,6 +1901,12 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   if (device_mode == GST_NV_ENCODER_DEVICE_CUDA) {
     gst_caps_set_features (sink_caps, 0,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY, nullptr));
+#ifdef HAVE_CUDA_GST_GL
+    GstCaps *gl_caps = gst_caps_copy (system_caps);
+    gst_caps_set_features (gl_caps, 0,
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, nullptr));
+    gst_caps_append (sink_caps, gl_caps);
+#endif
   }
 
   gst_caps_append (sink_caps, system_caps);
@@ -2222,6 +2228,13 @@ gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
         gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, nullptr));
     gst_caps_append (sink_caps, d3d11_caps);
   }
+#endif
+
+#ifdef HAVE_CUDA_GST_GL
+  GstCaps *gl_caps = gst_caps_copy (system_caps);
+  gst_caps_set_features (gl_caps, 0,
+      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, nullptr));
+  gst_caps_append (sink_caps, gl_caps);
 #endif
 
   gst_caps_append (sink_caps, system_caps);

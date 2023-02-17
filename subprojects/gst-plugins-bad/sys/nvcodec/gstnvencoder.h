@@ -26,6 +26,10 @@
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
+#ifdef HAVE_CUDA_GST_GL
+#include <gst/gl/gl.h>
+#endif
+
 #include <string.h>
 
 #include <gst/cuda/gstcuda.h>
