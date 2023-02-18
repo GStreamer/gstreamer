@@ -51,6 +51,7 @@
 #include <string>
 #include <set>
 #include <string.h>
+#include <vector>
 
 GST_DEBUG_CATEGORY_STATIC (gst_nv_h265_encoder_debug);
 #define GST_CAT_DEFAULT gst_nv_h265_encoder_debug
@@ -1669,7 +1670,11 @@ gst_nv_h265_encoder_create_output_buffer (GstNvEncoder * encoder,
     buffer = gst_buffer_new_memdup (bitstream->bitstreamBufferPtr,
         bitstream->bitstreamSizeInBytes);
   } else {
-    buffer = gst_buffer_new ();
+    std::vector < GstH265NalUnit > nalu_list;
+    gsize total_size = 0;
+    GstMapInfo info;
+    guint8 *data;
+
     rst = gst_h265_parser_identify_nalu (self->parser,
         (guint8 *) bitstream->bitstreamBufferPtr, 0,
         bitstream->bitstreamSizeInBytes, &nalu);
@@ -1678,16 +1683,8 @@ gst_nv_h265_encoder_create_output_buffer (GstNvEncoder * encoder,
       rst = GST_H265_PARSER_OK;
 
     while (rst == GST_H265_PARSER_OK) {
-      GstMemory *mem;
-      guint8 *data;
-
-      data = (guint8 *) g_malloc0 (nalu.size + 4);
-      GST_WRITE_UINT32_BE (data, nalu.size);
-      memcpy (data + 4, nalu.data + nalu.offset, nalu.size);
-
-      mem = gst_memory_new_wrapped ((GstMemoryFlags) 0, data, nalu.size + 4,
-          0, nalu.size + 4, data, (GDestroyNotify) g_free);
-      gst_buffer_append_memory (buffer, mem);
+      nalu_list.push_back (nalu);
+      total_size += nalu.size + 4;
 
       rst = gst_h265_parser_identify_nalu (self->parser,
           (guint8 *) bitstream->bitstreamBufferPtr, nalu.offset + nalu.size,
@@ -1696,6 +1693,19 @@ gst_nv_h265_encoder_create_output_buffer (GstNvEncoder * encoder,
       if (rst == GST_H265_PARSER_NO_NAL_END)
         rst = GST_H265_PARSER_OK;
     }
+
+    buffer = gst_buffer_new_and_alloc (total_size);
+    gst_buffer_map (buffer, &info, GST_MAP_WRITE);
+    data = (guint8 *) info.data;
+    /* *INDENT-OFF* */
+    for (const auto & it : nalu_list) {
+      GST_WRITE_UINT32_BE (data, it.size);
+      data += 4;
+      memcpy (data, it.data + it.offset, it.size);
+      data += it.size;
+    }
+    /* *INDENT-ON* */
+    gst_buffer_unmap (buffer, &info);
   }
 
   if (bitstream->pictureType == NV_ENC_PIC_TYPE_IDR && self->sei) {
