@@ -147,6 +147,8 @@ typedef struct _GstNvH265Encoder
 
   GstNvH265EncoderStreamFormat stream_format;
   GstH265Parser *parser;
+  GstMemory *sei;
+  GArray *sei_array;
 
   GstNvEncoderDeviceMode selected_device_mode;
 
@@ -219,6 +221,7 @@ static void gst_nv_h265_encoder_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static GstCaps *gst_nv_h265_encoder_getcaps (GstVideoEncoder * encoder,
     GstCaps * filter);
+static gboolean gst_nv_h265_encoder_stop (GstVideoEncoder * encoder);
 static gboolean gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
     GstVideoCodecState * state, gpointer session,
     NV_ENC_INITIALIZE_PARAMS * init_params, NV_ENC_CONFIG * config);
@@ -459,6 +462,7 @@ gst_nv_h265_encoder_class_init (GstNvH265EncoderClass * klass, gpointer data)
           cdata->src_caps));
 
   videoenc_class->getcaps = GST_DEBUG_FUNCPTR (gst_nv_h265_encoder_getcaps);
+  videoenc_class->stop = GST_DEBUG_FUNCPTR (gst_nv_h265_encoder_stop);
 
   nvenc_class->set_format = GST_DEBUG_FUNCPTR (gst_nv_h265_encoder_set_format);
   nvenc_class->set_output_state =
@@ -527,6 +531,7 @@ gst_nv_h265_encoder_init (GstNvH265Encoder * self)
   self->repeat_sequence_header = DEFAULT_REPEAT_SEQUENCE_HEADER;
 
   self->parser = gst_h265_parser_new ();
+  self->sei_array = g_array_new (FALSE, FALSE, sizeof (GstH265SEIMessage));
 
   gst_nv_encoder_set_device_mode (GST_NV_ENCODER (self), klass->device_mode,
       klass->cuda_device_id, klass->adapter_luid);
@@ -539,6 +544,7 @@ gst_nv_h265_encoder_finalize (GObject * object)
 
   g_mutex_clear (&self->prop_lock);
   gst_h265_parser_free (self->parser);
+  g_array_unref (self->sei_array);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1019,6 +1025,21 @@ gst_nv_h265_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 }
 
 static gboolean
+gst_nv_h265_encoder_stop (GstVideoEncoder * encoder)
+{
+  GstNvH265Encoder *self = GST_NV_H265_ENCODER (encoder);
+
+  if (self->sei) {
+    gst_memory_unref (self->sei);
+    self->sei = nullptr;
+  }
+
+  g_array_set_size (self->sei_array, 0);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->stop (encoder);
+}
+
+static gboolean
 gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
     GstVideoCodecState * state, gpointer session,
     NV_ENC_INITIALIZE_PARAMS * init_params, NV_ENC_CONFIG * config)
@@ -1338,6 +1359,71 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
   if (temporal_aq_aborted)
     g_object_notify (G_OBJECT (self), "temporal-aq");
 
+  if (self->sei) {
+    gst_memory_unref (self->sei);
+    self->sei = nullptr;
+  }
+
+  g_array_set_size (self->sei_array, 0);
+
+  if (state->mastering_display_info) {
+    GstH265SEIMessage sei;
+    GstH265MasteringDisplayColourVolume *mdcv;
+
+    memset (&sei, 0, sizeof (GstH265SEIMessage));
+
+    sei.payloadType = GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME;
+    mdcv = &sei.payload.mastering_display_colour_volume;
+
+    /* HEVC uses GBR order */
+    mdcv->display_primaries_x[0] =
+        state->mastering_display_info->display_primaries[1].x;
+    mdcv->display_primaries_y[0] =
+        state->mastering_display_info->display_primaries[1].y;
+    mdcv->display_primaries_x[1] =
+        state->mastering_display_info->display_primaries[2].x;
+    mdcv->display_primaries_y[1] =
+        state->mastering_display_info->display_primaries[2].y;
+    mdcv->display_primaries_x[2] =
+        state->mastering_display_info->display_primaries[0].x;
+    mdcv->display_primaries_y[2] =
+        state->mastering_display_info->display_primaries[0].y;
+
+    mdcv->white_point_x = state->mastering_display_info->white_point.x;
+    mdcv->white_point_y = state->mastering_display_info->white_point.y;
+    mdcv->max_display_mastering_luminance =
+        state->mastering_display_info->max_display_mastering_luminance;
+    mdcv->min_display_mastering_luminance =
+        state->mastering_display_info->min_display_mastering_luminance;
+
+    g_array_append_val (self->sei_array, sei);
+  }
+
+  if (state->content_light_level) {
+    GstH265SEIMessage sei;
+    GstH265ContentLightLevel *cll;
+
+    memset (&sei, 0, sizeof (GstH265SEIMessage));
+
+    sei.payloadType = GST_H265_SEI_CONTENT_LIGHT_LEVEL;
+    cll = &sei.payload.content_light_level;
+
+    cll->max_content_light_level =
+        state->content_light_level->max_content_light_level;
+    cll->max_pic_average_light_level =
+        state->content_light_level->max_frame_average_light_level;
+
+    g_array_append_val (self->sei_array, sei);
+  }
+
+  if (self->sei_array->len > 0) {
+    if (self->stream_format == GST_NV_H265_ENCODER_BYTE_STREAM) {
+      self->sei = gst_h265_create_sei_memory (0, 1, 4, self->sei_array);
+    } else {
+      self->sei = gst_h265_create_sei_memory_hevc (0, 1, 4, self->sei_array);
+    }
+  }
+
   return TRUE;
 }
 
@@ -1571,45 +1657,63 @@ gst_nv_h265_encoder_set_output_state (GstNvEncoder * encoder,
 }
 
 static GstBuffer *
-gst_nv_h265_encoder_create_output_buffer (GstNvEncoder *
-    encoder, NV_ENC_LOCK_BITSTREAM * bitstream)
+gst_nv_h265_encoder_create_output_buffer (GstNvEncoder * encoder,
+    NV_ENC_LOCK_BITSTREAM * bitstream)
 {
   GstNvH265Encoder *self = GST_NV_H265_ENCODER (encoder);
-  GstBuffer *buffer;
+  GstBuffer *buffer = nullptr;
   GstH265ParserResult rst;
   GstH265NalUnit nalu;
 
   if (self->stream_format == GST_NV_H265_ENCODER_BYTE_STREAM) {
-    return gst_buffer_new_memdup (bitstream->bitstreamBufferPtr,
+    buffer = gst_buffer_new_memdup (bitstream->bitstreamBufferPtr,
         bitstream->bitstreamSizeInBytes);
-  }
-
-  buffer = gst_buffer_new ();
-  rst = gst_h265_parser_identify_nalu (self->parser,
-      (guint8 *) bitstream->bitstreamBufferPtr, 0,
-      bitstream->bitstreamSizeInBytes, &nalu);
-
-  if (rst == GST_H265_PARSER_NO_NAL_END)
-    rst = GST_H265_PARSER_OK;
-
-  while (rst == GST_H265_PARSER_OK) {
-    GstMemory *mem;
-    guint8 *data;
-
-    data = (guint8 *) g_malloc0 (nalu.size + 4);
-    GST_WRITE_UINT32_BE (data, nalu.size);
-    memcpy (data + 4, nalu.data + nalu.offset, nalu.size);
-
-    mem = gst_memory_new_wrapped ((GstMemoryFlags) 0, data, nalu.size + 4,
-        0, nalu.size + 4, data, (GDestroyNotify) g_free);
-    gst_buffer_append_memory (buffer, mem);
-
+  } else {
+    buffer = gst_buffer_new ();
     rst = gst_h265_parser_identify_nalu (self->parser,
-        (guint8 *) bitstream->bitstreamBufferPtr, nalu.offset + nalu.size,
+        (guint8 *) bitstream->bitstreamBufferPtr, 0,
         bitstream->bitstreamSizeInBytes, &nalu);
 
     if (rst == GST_H265_PARSER_NO_NAL_END)
       rst = GST_H265_PARSER_OK;
+
+    while (rst == GST_H265_PARSER_OK) {
+      GstMemory *mem;
+      guint8 *data;
+
+      data = (guint8 *) g_malloc0 (nalu.size + 4);
+      GST_WRITE_UINT32_BE (data, nalu.size);
+      memcpy (data + 4, nalu.data + nalu.offset, nalu.size);
+
+      mem = gst_memory_new_wrapped ((GstMemoryFlags) 0, data, nalu.size + 4,
+          0, nalu.size + 4, data, (GDestroyNotify) g_free);
+      gst_buffer_append_memory (buffer, mem);
+
+      rst = gst_h265_parser_identify_nalu (self->parser,
+          (guint8 *) bitstream->bitstreamBufferPtr, nalu.offset + nalu.size,
+          bitstream->bitstreamSizeInBytes, &nalu);
+
+      if (rst == GST_H265_PARSER_NO_NAL_END)
+        rst = GST_H265_PARSER_OK;
+    }
+  }
+
+  if (bitstream->pictureType == NV_ENC_PIC_TYPE_IDR && self->sei) {
+    GstBuffer *new_buf = nullptr;
+
+    if (self->stream_format == GST_NV_H265_ENCODER_BYTE_STREAM) {
+      new_buf = gst_h265_parser_insert_sei (self->parser, buffer, self->sei);
+    } else {
+      new_buf = gst_h265_parser_insert_sei_hevc (self->parser, 4, buffer,
+          self->sei);
+    }
+
+    if (new_buf) {
+      gst_buffer_unref (buffer);
+      buffer = new_buf;
+    } else {
+      GST_WARNING_OBJECT (self, "Couldn't insert SEI memory");
+    }
   }
 
   return buffer;
