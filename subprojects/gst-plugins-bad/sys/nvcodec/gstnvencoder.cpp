@@ -27,6 +27,8 @@
 #include <gst/cuda/gstcudamemory.h>
 #include <gst/cuda/gstcudabufferpool.h>
 #include <gst/cuda/gstcudastream.h>
+#include <gst/cuda/gstcuda-private.h>
+#include <gst/base/gstbytewriter.h>
 #include <string.h>
 #include <mutex>
 #include <condition_variable>
@@ -52,6 +54,14 @@ GST_DEBUG_CATEGORY (gst_nv_encoder_debug);
 
 #define GST_NVENC_STATUS_FORMAT "s (%d)"
 #define GST_NVENC_STATUS_ARGS(s) nvenc_status_to_string (s), s
+
+enum
+{
+  PROP_0,
+  PROP_CC_INSERT,
+};
+
+#define DEFAULT_CC_INSERT GST_NV_ENCODER_SEI_INSERT
 
 struct _GstNvEncoderPrivate
 {
@@ -101,6 +111,9 @@ struct _GstNvEncoderPrivate
   std::unique_ptr < std::thread > encoding_thread;
 
   std::atomic < GstFlowReturn > last_flow;
+
+  /* properties */
+  GstNvEncoderSeiInsertMode cc_insert = DEFAULT_CC_INSERT;
 };
 
 /**
@@ -112,6 +125,10 @@ struct _GstNvEncoderPrivate
 G_DEFINE_ABSTRACT_TYPE (GstNvEncoder, gst_nv_encoder, GST_TYPE_VIDEO_ENCODER);
 
 static void gst_nv_encoder_finalize (GObject * object);
+static void gst_nv_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_nv_encoder_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static void gst_nv_encoder_set_context (GstElement * element,
     GstContext * context);
 static gboolean gst_nv_encoder_open (GstVideoEncoder * encoder);
@@ -131,6 +148,8 @@ static GstFlowReturn gst_nv_encoder_handle_frame (GstVideoEncoder *
     encoder, GstVideoCodecFrame * frame);
 static GstFlowReturn gst_nv_encoder_finish (GstVideoEncoder * encoder);
 static gboolean gst_nv_encoder_flush (GstVideoEncoder * encoder);
+static gboolean gst_nv_encoder_transform_meta (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame, GstMeta * meta);
 
 static void
 gst_nv_encoder_class_init (GstNvEncoderClass * klass)
@@ -140,6 +159,21 @@ gst_nv_encoder_class_init (GstNvEncoderClass * klass)
   GstVideoEncoderClass *videoenc_class = GST_VIDEO_ENCODER_CLASS (klass);
 
   object_class->finalize = gst_nv_encoder_finalize;
+  object_class->set_property = gst_nv_encoder_set_property;
+  object_class->get_property = gst_nv_encoder_get_property;
+
+  /**
+   * GstNvEncoder:cc-insert:
+   *
+   * Closed Caption insert mode
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_CC_INSERT,
+      g_param_spec_enum ("cc-insert", "Closed Caption Insert",
+          "Closed Caption Insert mode",
+          GST_TYPE_NV_ENCODER_SEI_INSERT_MODE, DEFAULT_CC_INSERT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_encoder_set_context);
 
@@ -156,6 +190,8 @@ gst_nv_encoder_class_init (GstNvEncoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_nv_encoder_handle_frame);
   videoenc_class->finish = GST_DEBUG_FUNCPTR (gst_nv_encoder_finish);
   videoenc_class->flush = GST_DEBUG_FUNCPTR (gst_nv_encoder_flush);
+  videoenc_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_nv_encoder_transform_meta);
 
   GST_DEBUG_CATEGORY_INIT (gst_nv_encoder_debug, "nvencoder", 0, "nvencoder");
 
@@ -163,6 +199,8 @@ gst_nv_encoder_class_init (GstNvEncoderClass * klass)
   gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_PRESET,
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_RC_MODE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_SEI_INSERT_MODE,
       (GstPluginAPIFlags) 0);
 }
 
@@ -183,6 +221,40 @@ gst_nv_encoder_finalize (GObject * object)
   delete self->priv;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_nv_encoder_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstNvEncoder *self = GST_NV_ENCODER (object);
+  GstNvEncoderPrivate *priv = self->priv;
+
+  switch (prop_id) {
+    case PROP_CC_INSERT:
+      priv->cc_insert = (GstNvEncoderSeiInsertMode) g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_nv_encoder_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstNvEncoder *self = GST_NV_ENCODER (object);
+  GstNvEncoderPrivate *priv = self->priv;
+
+  switch (prop_id) {
+    case PROP_CC_INSERT:
+      g_value_set_enum (value, priv->cc_insert);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -1749,6 +1821,69 @@ gst_nv_encoder_prepare_task_input (GstNvEncoder * self,
   return ret;
 }
 
+static gboolean
+gst_nv_encoder_foreach_caption_meta (GstBuffer * buffer, GstMeta ** meta,
+    GArray * payload)
+{
+  GstVideoCaptionMeta *cc_meta;
+  GstByteWriter br;
+  guint payload_size;
+  NV_ENC_SEI_PAYLOAD sei_payload;
+
+  if ((*meta)->info->api != GST_VIDEO_CAPTION_META_API_TYPE)
+    return TRUE;
+
+  cc_meta = (GstVideoCaptionMeta *) (*meta);
+
+  if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
+    return TRUE;
+
+  /* 1 byte contry_code + 10 bytes CEA-708 specific data + caption data */
+  payload_size = 11 + cc_meta->size;
+
+  gst_byte_writer_init_with_size (&br, payload_size, FALSE);
+
+  /* 8-bits itu_t_t35_country_code */
+  gst_byte_writer_put_uint8 (&br, 181);
+
+  /* 16-bits itu_t_t35_provider_code */
+  gst_byte_writer_put_uint8 (&br, 0);
+  gst_byte_writer_put_uint8 (&br, 49);
+
+  /* 32-bits ATSC_user_identifier */
+  gst_byte_writer_put_uint8 (&br, 'G');
+  gst_byte_writer_put_uint8 (&br, 'A');
+  gst_byte_writer_put_uint8 (&br, '9');
+  gst_byte_writer_put_uint8 (&br, '4');
+
+  /* 8-bits ATSC1_data_user_data_type_code */
+  gst_byte_writer_put_uint8 (&br, 3);
+
+  /* 8-bits:
+   * 1 bit process_em_data_flag (0)
+   * 1 bit process_cc_data_flag (1)
+   * 1 bit additional_data_flag (0)
+   * 5-bits cc_count
+   */
+  gst_byte_writer_put_uint8 (&br, ((cc_meta->size / 3) & 0x1f) | 0x40);
+
+  /* 8 bits em_data, unused */
+  gst_byte_writer_put_uint8 (&br, 255);
+
+  gst_byte_writer_put_data (&br, cc_meta->data, cc_meta->size);
+
+  /* 8 marker bits */
+  gst_byte_writer_put_uint8 (&br, 255);
+
+  sei_payload.payloadSize = gst_byte_writer_get_pos (&br);
+  sei_payload.payloadType = 4;
+  sei_payload.payload = gst_byte_writer_reset_and_get_data (&br);
+
+  g_array_append_val (payload, sei_payload);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -1831,6 +1966,12 @@ gst_nv_encoder_handle_frame (GstVideoEncoder * encoder,
     return ret;
   }
 
+  if (priv->cc_insert != GST_NV_ENCODER_SEI_DISABLED) {
+    gst_buffer_foreach_meta (in_buf,
+        (GstBufferForeachMetaFunc) gst_nv_encoder_foreach_caption_meta,
+        gst_nv_enc_task_get_sei_payload (task));
+  }
+
   status = priv->object->Encode (frame,
       gst_nv_encoder_get_pic_struct (self, in_buf), task);
   if (status != NV_ENC_SUCCESS) {
@@ -1870,6 +2011,33 @@ gst_nv_encoder_flush (GstVideoEncoder * encoder)
   priv->last_flow = GST_FLOW_OK;
 
   return TRUE;
+}
+
+static gboolean
+gst_nv_encoder_transform_meta (GstVideoEncoder * encoder,
+    GstVideoCodecFrame * frame, GstMeta * meta)
+{
+  GstNvEncoder *self = GST_NV_ENCODER (encoder);
+  GstNvEncoderPrivate *priv = self->priv;
+  GstVideoCaptionMeta *cc_meta;
+
+  /* We need to handle only case CC meta should be dropped */
+  if (priv->cc_insert != GST_NV_ENCODER_SEI_INSERT_AND_DROP)
+    goto out;
+
+  if (meta->info->api != GST_VIDEO_CAPTION_META_API_TYPE)
+    goto out;
+
+  cc_meta = (GstVideoCaptionMeta *) meta;
+  if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
+    goto out;
+
+  /* Don't copy this meta into output buffer */
+  return FALSE;
+
+out:
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->transform_meta (encoder,
+      frame, meta);
 }
 
 void
@@ -2002,6 +2170,48 @@ gst_nv_encoder_rc_mode_to_native (GstNvEncoderRCMode rc_mode)
   }
 
   return NV_ENC_PARAMS_RC_VBR;
+}
+
+/**
+ * GstNvEncoderSeiInsertMode:
+ *
+ * Since: 1.24
+ */
+GType
+gst_nv_encoder_sei_insert_mode_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue insert_modes[] = {
+    /**
+     * GstNvEncoderSeiInsertMode::insert:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_SEI_INSERT, "Insert SEI", "insert"},
+
+    /**
+     * GstNvEncoderSeiInsertMode::insert-and-drop:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_SEI_INSERT_AND_DROP,
+          "Insert SEI and remove corresponding meta from output buffer",
+        "insert-and-drop"},
+
+    /**
+     * GstNvEncoderSeiInsertMode::disabled:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_SEI_DISABLED, "Disable SEI insertion", "disabled"},
+    {0, nullptr, nullptr}
+  };
+
+  GST_CUDA_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstNvEncoderSeiInsertMode", insert_modes);
+  } GST_CUDA_CALL_ONCE_END;
+
+  return type;
 }
 
 GstNvEncoderClassData *

@@ -110,6 +110,8 @@ gboolean    gst_nv_enc_task_set_resource (GstNvEncTask * task,
                                           GstBuffer * buffer,
                                           GstNvEncResource * resource);
 
+GArray *    gst_nv_enc_task_get_sei_payload (GstNvEncTask * task);
+
 NVENCSTATUS gst_nv_enc_task_lock_bitstream (GstNvEncTask * task,
                                             NV_ENC_LOCK_BITSTREAM * bitstream);
 
@@ -131,6 +133,12 @@ gst_nv_enc_task_unref (GstNvEncTask * task)
 const gchar * nvenc_status_to_string (NVENCSTATUS status);
 
 G_END_DECLS
+
+enum GstNvEncCodec
+{
+  GST_NV_ENC_CODEC_H264,
+  GST_NV_ENC_CODEC_H265,
+};
 
 class GstNvEncObject : public std::enable_shared_from_this <GstNvEncObject>
 {
@@ -240,6 +248,7 @@ private:
 
   NV_ENC_DEVICE_TYPE device_type_ = NV_ENC_DEVICE_TYPE_CUDA;
   NV_ENC_BUFFER_FORMAT buffer_format_ = NV_ENC_BUFFER_FORMAT_UNDEFINED;
+  GstNvEncCodec codec_;
 
   std::atomic<guint> buffer_seq_;
   std::atomic<guint> resource_seq_;
