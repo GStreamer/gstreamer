@@ -935,9 +935,6 @@ gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
           if (priv->stream)
             gst_cuda_stream_ref (priv->stream);
         }
-
-        if (!priv->stream)
-          priv->stream = gst_cuda_stream_new (priv->context);
       }
     }
 #ifdef G_OS_WIN32
