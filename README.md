@@ -85,6 +85,13 @@ NOTE: On Windows, meson will automatically detect and use the latest Visual
 Studio if GCC, clang, etc are not available in `PATH`. Use the `--vsenv`
 argument to force the use of Visual Studio.
 
+NOTE: Meson will not update subprojects automatically once a subproject has
+been fetched. Remember to update subprojects if wrap files are updated.
+
+```
+meson subprojects update
+```
+
 ### External dependencies
 
 All mandatory dependencies of GStreamer are included as [meson subprojects](https://mesonbuild.com/Subprojects.html):
