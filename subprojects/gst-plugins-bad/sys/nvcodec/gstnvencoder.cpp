@@ -73,6 +73,7 @@ struct _GstNvEncoderPrivate
   NV_ENC_INITIALIZE_PARAMS init_params;
   NV_ENC_CONFIG config;
   gpointer session;
+  guint lookahead;
 
   GstVideoCodecState *input_state;
 
@@ -84,6 +85,7 @@ struct _GstNvEncoderPrivate
   GArray *task_pool;
 
   GQueue free_tasks;
+  GQueue pending_tasks;
   GQueue output_tasks;
 
   GMutex lock;
@@ -171,6 +173,7 @@ gst_nv_encoder_init (GstNvEncoder * self)
       (GDestroyNotify) gst_nv_encoder_task_clear);
 
   g_queue_init (&priv->free_tasks);
+  g_queue_init (&priv->pending_tasks);
   g_queue_init (&priv->output_tasks);
 
   g_mutex_init (&priv->lock);
@@ -253,6 +256,7 @@ gst_nv_encoder_reset (GstNvEncoder * self)
   }
 
   g_queue_clear (&priv->free_tasks);
+  g_queue_clear (&priv->pending_tasks);
   g_queue_clear (&priv->output_tasks);
 
   priv->last_flow = GST_FLOW_OK;
@@ -349,6 +353,7 @@ gst_nv_encoder_drain (GstNvEncoder * self, gboolean locked)
   NV_ENC_PIC_PARAMS pic_params = { 0, };
   NVENCSTATUS status;
   GstNvEncoderTask *task;
+  GstNvEncoderTask *pending_task;
 
   if (!priv->session || !priv->encoding_thread)
     return TRUE;
@@ -380,6 +385,12 @@ gst_nv_encoder_drain (GstNvEncoder * self, gboolean locked)
   gst_nv_encoder_device_unlock (self);
 
   GST_NV_ENCODER_LOCK (self);
+  while ((pending_task =
+          (GstNvEncoderTask *) g_queue_pop_head (&priv->pending_tasks)) !=
+      nullptr) {
+    g_queue_push_tail (&priv->output_tasks, pending_task);
+  }
+
   g_queue_push_tail (&priv->output_tasks, task);
   g_cond_broadcast (&priv->cond);
   GST_NV_ENCODER_UNLOCK (self);
@@ -878,8 +889,38 @@ gst_nv_encoder_encode_frame (GstNvEncoder * self,
   }
 
   gst_video_codec_frame_set_user_data (frame, task, NULL);
-  g_queue_push_tail (&priv->output_tasks, task);
-  g_cond_broadcast (&priv->cond);
+
+  /* On Windows and if async encoding is enabled, output thread will wait
+   * for completion event. But on Linux, async encoding is not supported.
+   * So, we should wait for NV_ENC_SUCCESS in case of sync mode
+   * (it would introduce latency though).
+   * Otherwise nvEncLockBitstream() will return error */
+  if (task->event_handle) {
+    /* Windows only path */
+    g_queue_push_tail (&priv->output_tasks, task);
+    g_cond_broadcast (&priv->cond);
+  } else {
+    g_queue_push_tail (&priv->pending_tasks, task);
+    if (status == NV_ENC_SUCCESS) {
+      bool notify = false;
+
+      /* XXX: nvEncLockBitstream() will return NV_ENC_ERR_INVALID_PARAM
+       * if lookahead is enabled. See also
+       * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/merge_requests/494
+       */
+      while (g_queue_get_length (&priv->pending_tasks) > priv->lookahead) {
+        GstNvEncoderTask *pending_task =
+            (GstNvEncoderTask *) g_queue_pop_head (&priv->pending_tasks);
+
+        g_queue_push_tail (&priv->output_tasks, pending_task);
+        notify = true;
+      }
+
+      if (notify)
+        g_cond_broadcast (&priv->cond);
+    }
+  }
+
   GST_NV_ENCODER_UNLOCK (self);
 
   return GST_FLOW_OK;
@@ -1288,6 +1329,7 @@ gst_nv_encoder_init_session (GstNvEncoder * self, GstBuffer * in_buf)
     }
   }
 
+  priv->lookahead = priv->config.rcParams.lookaheadDepth;
   task_pool_size = gst_nv_encoder_calculate_task_pool_size (self,
       &priv->config);
   g_array_set_size (priv->task_pool, task_pool_size);
