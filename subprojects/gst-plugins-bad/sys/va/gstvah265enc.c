@@ -3382,8 +3382,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
 
     GST_INFO_OBJECT (self, "target bitrate computed to %u kbps", bitrate);
 
-    self->prop.bitrate = bitrate;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_BITRATE]);
+    update_property_uint (base, &self->prop.bitrate, bitrate, PROP_BITRATE);
   }
 
   /* Adjust the setting based on RC mode. */
@@ -4284,10 +4283,8 @@ print_options:
     self->features.use_trellis = FALSE;
   }
 
-  if (self->prop.use_trellis != self->features.use_trellis) {
-    self->prop.use_trellis = self->features.use_trellis;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_TRELLIS]);
-  }
+  update_property_bool (base, &self->prop.use_trellis,
+      self->features.use_trellis, PROP_TRELLIS);
 }
 
 /* We need to decide the profile and entrypoint before call this.
