@@ -74,11 +74,10 @@ gst_qsv_coding_option_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&coding_opt_type)) {
-    GType type = g_enum_register_static ("GstQsvCodingOption",
+  GST_QSV_CALL_ONCE_BEGIN {
+    coding_opt_type = g_enum_register_static ("GstQsvCodingOption",
         coding_opts);
-    g_once_init_leave (&coding_opt_type, type);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return coding_opt_type;
 }

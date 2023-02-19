@@ -83,11 +83,10 @@ gst_qsv_av1_enc_rate_control_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&rate_control_type)) {
-    GType type =
+  GST_QSV_CALL_ONCE_BEGIN {
+    rate_control_type =
         g_enum_register_static ("GstQsvAV1EncRateControl", rate_controls);
-    g_once_init_leave (&rate_control_type, type);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return rate_control_type;
 }

@@ -95,11 +95,10 @@ gst_qsv_h264_enc_sei_insert_mode_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&sei_insert_mode_type)) {
-    GType type =
+  GST_QSV_CALL_ONCE_BEGIN {
+    sei_insert_mode_type =
         g_enum_register_static ("GstQsvH264EncSeiInsertMode", insert_modes);
-    g_once_init_leave (&sei_insert_mode_type, type);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return sei_insert_mode_type;
 }
@@ -188,11 +187,10 @@ gst_qsv_h264_enc_rate_control_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&rate_control_type)) {
-    GType type =
+  GST_QSV_CALL_ONCE_BEGIN {
+    rate_control_type =
         g_enum_register_static ("GstQsvH264EncRateControl", rate_controls);
-    g_once_init_leave (&rate_control_type, type);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return rate_control_type;
 }
@@ -240,11 +238,10 @@ gst_qsv_h264_enc_rc_lookahead_ds_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&rc_lookahead_ds_type)) {
-    GType type =
+  GST_QSV_CALL_ONCE_BEGIN {
+    rc_lookahead_ds_type =
         g_enum_register_static ("GstQsvH264EncRCLookAheadDS", rc_lookahead_ds);
-    g_once_init_leave (&rc_lookahead_ds_type, type);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return rc_lookahead_ds_type;
 }

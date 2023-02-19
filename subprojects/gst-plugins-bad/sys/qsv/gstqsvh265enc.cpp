@@ -94,11 +94,10 @@ gst_qsv_h265_enc_sei_insert_mode_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&sei_insert_mode_type)) {
-    GType type =
+  GST_QSV_CALL_ONCE_BEGIN {
+    sei_insert_mode_type =
         g_enum_register_static ("GstQsvH265EncSeiInsertMode", insert_modes);
-    g_once_init_leave (&sei_insert_mode_type, type);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return sei_insert_mode_type;
 }
@@ -158,11 +157,10 @@ gst_qsv_h265_enc_rate_control_get_type (void)
     {0, nullptr, nullptr}
   };
 
-  if (g_once_init_enter (&rate_control_type)) {
-    GType type =
+  GST_QSV_CALL_ONCE_BEGIN {
+    rate_control_type =
         g_enum_register_static ("GstQsvH265EncRateControl", rate_controls);
-    g_once_init_leave (&rate_control_type, type);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return rate_control_type;
 }

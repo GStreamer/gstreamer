@@ -76,3 +76,14 @@ static const GstQsvResolution gst_qsv_resolutions[] = {
 };
 
 G_END_DECLS
+
+#ifdef __cplusplus
+#include <mutex>
+
+#define GST_QSV_CALL_ONCE_BEGIN \
+    static std::once_flag __once_flag; \
+    std::call_once (__once_flag, [&]()
+
+#define GST_QSV_CALL_ONCE_END )
+
+#endif /* __cplusplus */

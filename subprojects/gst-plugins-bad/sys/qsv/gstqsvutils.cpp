@@ -39,12 +39,9 @@ static mfxLoader _loader = nullptr;
 mfxLoader
 gst_qsv_get_loader (void)
 {
-  static gsize load_once = 0;
-
-  if (g_once_init_enter (&load_once)) {
+  GST_QSV_CALL_ONCE_BEGIN {
     _loader = MFXLoad ();
-    g_once_init_leave (&load_once, 1);
-  }
+  } GST_QSV_CALL_ONCE_END;
 
   return _loader;
 }
