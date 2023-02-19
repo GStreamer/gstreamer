@@ -367,6 +367,7 @@ GstNvEncObject::InitSession (NV_ENC_INITIALIZE_PARAMS * params,
   }
 
   task_size_ = task_size;
+  lookahead_ = params->encodeConfig->rcParams.lookaheadDepth;
   initialized_ = true;
 
 out:
@@ -490,8 +491,34 @@ GstNvEncObject::Encode (GstVideoCodecFrame * codec_frame,
       active_resource_queue_.insert (task->resource);
   }
 
-  task_queue_.push (task);
-  cond_.notify_all ();
+  /* On Windows and if async encoding is enabled, output thread will wait
+   * for completion event. But on Linux, async encoding is not supported.
+   * So, we should wait for NV_ENC_SUCCESS in case of sync mode
+   * (it would introduce latency though).
+   * Otherwise nvEncLockBitstream() will return error */
+  if (params.completionEvent) {
+    /* Windows only path */
+    task_queue_.push (task);
+    cond_.notify_all ();
+  } else {
+    pending_task_queue_.push (task);
+    if (status == NV_ENC_SUCCESS) {
+      bool notify = false;
+
+      /* XXX: nvEncLockBitstream() will return NV_ENC_ERR_INVALID_PARAM
+       * if lookahead is enabled. See also
+       * https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/-/merge_requests/494
+       */
+      while (pending_task_queue_.size() > lookahead_) {
+        notify = true;
+        task_queue_.push (pending_task_queue_.front ());
+        pending_task_queue_.pop ();
+      }
+
+      if (notify)
+        cond_.notify_all ();
+    }
+  }
 
   return NV_ENC_SUCCESS;
 }
@@ -530,6 +557,11 @@ GstNvEncObject::Drain (GstNvEncTask * task)
 
     break;
   } while (true);
+
+  while (!pending_task_queue_.empty ()) {
+    task_queue_.push (pending_task_queue_.front ());
+    pending_task_queue_.pop ();
+  }
 
   task_queue_.push (task);
   cond_.notify_all ();

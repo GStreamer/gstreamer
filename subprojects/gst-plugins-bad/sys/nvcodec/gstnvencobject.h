@@ -233,6 +233,7 @@ private:
   /* list of GstNvEncResource in task_queue */
   std::set <GstNvEncResource *> active_resource_queue_;
   std::queue <GstNvEncTask *> task_queue_;
+  std::queue <GstNvEncTask *> pending_task_queue_;
   std::queue <GstNvEncTask *> empty_task_queue_;
   gint64 user_token_;
   GstCudaContext *context_ = nullptr;
@@ -245,6 +246,7 @@ private:
   bool initialized_ = false;
   bool flushing_ = false;
   guint task_size_ = 0;
+  guint lookahead_ = 0;
 
   NV_ENC_DEVICE_TYPE device_type_ = NV_ENC_DEVICE_TYPE_CUDA;
   NV_ENC_BUFFER_FORMAT buffer_format_ = NV_ENC_BUFFER_FORMAT_UNDEFINED;
