@@ -26,8 +26,19 @@ gstcuda_stub_dep = declare_dependency(
   include_directories: cuda_stubinc
 )
 
+gstcuda_platform_dep = []
 if host_system not in ['windows', 'linux']
   subdir_done()
+endif
+
+# Linux ARM would need -latomic for std::atomic<int64_t>
+if host_system == 'linux' and host_machine.cpu_family() not in ['x86', 'x86_64']
+  libatomic_dep = cxx.find_library('atomic', required: false)
+  if not libatomic_dep.found()
+    subdir_done()
+  endif
+
+  gstcuda_platform_dep += [libatomic_dep]
 endif
 
 cuda_win32_headers = [
@@ -72,7 +83,7 @@ gstcuda= library('gstcuda-' + api_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstd3d11_dep]
+  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstd3d11_dep, gstcuda_platform_dep]
 )
 
 gen_sources = []
@@ -118,7 +129,7 @@ endif
 gst_libraries += [[pkg_name, library_def]]
 
 pkgconfig.generate(gstcuda,
-  libraries : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep],
+  libraries : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstcuda_platform_dep],
   variables : pkgconfig_variables,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,
@@ -128,7 +139,7 @@ pkgconfig.generate(gstcuda,
 install_headers(cuda_headers + ['cuda-gst.h', 'gstcuda.h'], subdir : 'gstreamer-1.0/gst/cuda')
 gstcuda_dep = declare_dependency(link_with : gstcuda,
   include_directories : [libsinc],
-  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep],
+  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstcuda_platform_dep],
   sources: gen_sources)
 
 meson.override_dependency(pkg_name, gstcuda_dep)
