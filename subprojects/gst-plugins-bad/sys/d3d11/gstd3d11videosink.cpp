@@ -1430,6 +1430,7 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     GST_LOG_OBJECT (self, "End drawing");
     self->drawing = FALSE;
   } else {
+    gst_d3d11_window_show (self->window);
     ret = gst_d3d11_window_render (self->window, self->prepared_buffer);
   }
 

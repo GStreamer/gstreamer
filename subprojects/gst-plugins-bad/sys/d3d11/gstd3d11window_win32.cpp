@@ -43,6 +43,7 @@ G_LOCK_DEFINE_STATIC (create_lock);
 #define WM_GST_D3D11_CONSTRUCT_INTERNAL_WINDOW (WM_USER + 2)
 #define WM_GST_D3D11_DESTROY_INTERNAL_WINDOW (WM_USER + 3)
 #define WM_GST_D3D11_MOVE_WINDOW (WM_USER + 4)
+#define WM_GST_D3D11_SHOW_WINDOW (WM_USER + 5)
 
 static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
@@ -65,6 +66,8 @@ struct _GstD3D11WindowWin32
 
   GMainContext *main_context;
   GMainLoop *loop;
+
+  gboolean visible;
 
   GSource *msg_source;
   GIOChannel *msg_io_channel;
@@ -102,6 +105,7 @@ G_DEFINE_TYPE (GstD3D11WindowWin32, gst_d3d11_window_win32,
 static void gst_d3d11_window_win32_constructed (GObject * object);
 static void gst_d3d11_window_win32_dispose (GObject * object);
 
+static void gst_d3d11_window_win32_show (GstD3D11Window * window);
 static void gst_d3d11_window_win32_update_swap_chain (GstD3D11Window * window);
 static void
 gst_d3d11_window_win32_change_fullscreen_mode (GstD3D11Window * window);
@@ -143,6 +147,7 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
   gobject_class->constructed = gst_d3d11_window_win32_constructed;
   gobject_class->dispose = gst_d3d11_window_win32_dispose;
 
+  window_class->show = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_show);
   window_class->update_swap_chain =
       GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_update_swap_chain);
   window_class->change_fullscreen_mode =
@@ -211,32 +216,9 @@ gst_d3d11_window_win32_prepare (GstD3D11Window * window, guint display_width,
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
   HWND hwnd;
   GstFlowReturn ret;
-  gint width, height;
 
-  switch (window->method) {
-    case GST_VIDEO_ORIENTATION_90R:
-    case GST_VIDEO_ORIENTATION_90L:
-    case GST_VIDEO_ORIENTATION_UL_LR:
-    case GST_VIDEO_ORIENTATION_UR_LL:
-      width = display_height;
-      height = display_width;
-      break;
-    default:
-      width = display_width;
-      height = display_height;
-      break;
-  }
-
-  if (!self->setup_external_hwnd) {
-    RECT rect;
-    GetClientRect (self->internal_hwnd, &rect);
-    width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
-    height +=
-        2 * GetSystemMetrics (SM_CYSIZEFRAME) + GetSystemMetrics (SM_CYCAPTION);
-    MoveWindow (self->internal_hwnd, rect.left, rect.top, width, height, FALSE);
-    ShowWindow (self->internal_hwnd, SW_SHOW);
+  if (!self->setup_external_hwnd)
     goto done;
-  }
 
   hwnd = (HWND) window->external_handle;
   if (!IsWindow (hwnd)) {
@@ -592,6 +574,9 @@ gst_d3d11_window_win32_create_internal_window (GstD3D11WindowWin32 * self)
   }
 
   self->device_handle = 0;
+  self->internal_hwnd = 0;
+  self->visible = FALSE;
+
   self->internal_hwnd = CreateWindowExA (0,
       "GSTD3D11",
       "Direct3D11 renderer",
@@ -838,6 +823,9 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
         }
       }
       break;
+    case WM_GST_D3D11_SHOW_WINDOW:
+      ShowWindow (self->internal_hwnd, SW_SHOW);
+      break;
     default:
       break;
   }
@@ -929,7 +917,6 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         SWP_FRAMECHANGED | SWP_NOACTIVATE);
     MoveWindow (self->internal_hwnd, rect.left, rect.top, rect.right,
         rect.bottom, FALSE);
-    ShowWindow (self->internal_hwnd, SW_SHOW);
 
     GstD3D11SRWLockGuard lk (&self->lock);
     self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_OPENED;
@@ -1123,6 +1110,51 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
   *swap_chain = new_swapchain;
 
   return TRUE;
+}
+
+static void
+gst_d3d11_window_win32_show (GstD3D11Window * window)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+  gint width, height;
+
+  switch (window->method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      width = GST_VIDEO_INFO_HEIGHT (&window->render_info);
+      height = GST_VIDEO_INFO_WIDTH (&window->render_info);
+      break;
+    default:
+      width = GST_VIDEO_INFO_WIDTH (&window->render_info);
+      height = GST_VIDEO_INFO_HEIGHT (&window->render_info);
+      break;
+  }
+
+  if (!self->visible) {
+    /* if no parent the real size has to be set now because this has not been done
+     * when at window creation */
+    if (!self->external_hwnd) {
+      RECT rect;
+      GetClientRect (self->internal_hwnd, &rect);
+      width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
+      height +=
+          2 * GetSystemMetrics (SM_CYSIZEFRAME) +
+          GetSystemMetrics (SM_CYCAPTION);
+      MoveWindow (self->internal_hwnd, rect.left, rect.top, width,
+          height, FALSE);
+      ShowWindow (self->internal_hwnd, SW_SHOW);
+    } else if (self->internal_hwnd) {
+      /* ShowWindow will throw message to message pumping thread (app thread)
+       * synchroniously, which can be blocked at the moment.
+       * Post message to internal hwnd and do that from message pumping thread
+       */
+      PostMessageA (self->internal_hwnd, WM_GST_D3D11_SHOW_WINDOW, 0, 0);
+    }
+
+    self->visible = TRUE;
+  }
 }
 
 static GstFlowReturn
