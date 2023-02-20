@@ -815,6 +815,19 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
 }
 
 void
+gst_d3d11_window_show (GstD3D11Window * window)
+{
+  GstD3D11WindowClass *klass;
+
+  g_return_if_fail (GST_IS_D3D11_WINDOW (window));
+
+  klass = GST_D3D11_WINDOW_GET_CLASS (window);
+
+  if (klass->show)
+    klass->show (window);
+}
+
+void
 gst_d3d11_window_set_render_rectangle (GstD3D11Window * window,
     const GstVideoRectangle * rect)
 {
