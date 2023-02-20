@@ -1453,7 +1453,7 @@ gst_msdkvpp_fixate_caps (GstBaseTransform * trans,
   gboolean *use_dmabuf;
 
   if (direction == GST_PAD_SRC) {
-    result = gst_caps_fixate (result);
+    result = gst_caps_fixate (othercaps);
     use_dmabuf = &thiz->use_sinkpad_dmabuf;
   } else {
     /*
