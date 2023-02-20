@@ -316,13 +316,11 @@ gst_qsv_av1_enc_check_update_uint (GstQsvAV1Enc * self, guint * old_val,
   if (*old_val == new_val)
     return;
 
-  g_mutex_lock (&self->prop_lock);
   *old_val = new_val;
   if (is_bitrate_param)
     self->bitrate_updated = TRUE;
   else
     self->property_updated = TRUE;
-  g_mutex_unlock (&self->prop_lock);
 }
 
 static void
@@ -332,10 +330,8 @@ gst_qsv_av1_enc_check_update_enum (GstQsvAV1Enc * self, mfxU16 * old_val,
   if (*old_val == (mfxU16) new_val)
     return;
 
-  g_mutex_lock (&self->prop_lock);
   *old_val = (mfxU16) new_val;
   self->property_updated = TRUE;
-  g_mutex_unlock (&self->prop_lock);
 }
 
 static void
@@ -344,6 +340,7 @@ gst_qsv_av1_enc_set_property (GObject * object, guint prop_id,
 {
   GstQsvAV1Enc *self = GST_QSV_AV1_ENC (object);
 
+  g_mutex_lock (&self->prop_lock);
   switch (prop_id) {
     case PROP_QP_I:
       gst_qsv_av1_enc_check_update_uint (self, &self->qp_i,
@@ -377,6 +374,7 @@ gst_qsv_av1_enc_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&self->prop_lock);
 }
 
 static void
@@ -385,6 +383,7 @@ gst_qsv_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstQsvAV1Enc *self = GST_QSV_AV1_ENC (object);
 
+  g_mutex_lock (&self->prop_lock);
   switch (prop_id) {
     case PROP_QP_I:
       g_value_set_uint (value, self->qp_i);
@@ -411,6 +410,7 @@ gst_qsv_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&self->prop_lock);
 }
 
 static void

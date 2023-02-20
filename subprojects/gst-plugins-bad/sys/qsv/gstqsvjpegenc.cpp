@@ -216,10 +216,8 @@ gst_qsv_jpeg_enc_check_update_uint (GstQsvJpegEnc * self, guint * old_val,
   if (*old_val == new_val)
     return;
 
-  g_mutex_lock (&self->prop_lock);
   *old_val = new_val;
   self->property_updated = TRUE;
-  g_mutex_unlock (&self->prop_lock);
 }
 
 static void
@@ -228,6 +226,7 @@ gst_qsv_jpeg_enc_set_property (GObject * object, guint prop_id,
 {
   GstQsvJpegEnc *self = GST_QSV_JPEG_ENC (object);
 
+  g_mutex_lock (&self->prop_lock);
   switch (prop_id) {
     case PROP_QUALITY:
       gst_qsv_jpeg_enc_check_update_uint (self, &self->quality,
@@ -237,6 +236,7 @@ gst_qsv_jpeg_enc_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&self->prop_lock);
 }
 
 static void
@@ -245,6 +245,7 @@ gst_qsv_jpeg_enc_get_property (GObject * object, guint prop_id, GValue * value,
 {
   GstQsvJpegEnc *self = GST_QSV_JPEG_ENC (object);
 
+  g_mutex_lock (&self->prop_lock);
   switch (prop_id) {
     case PROP_QUALITY:
       g_value_set_uint (value, self->quality);
@@ -253,6 +254,7 @@ gst_qsv_jpeg_enc_get_property (GObject * object, guint prop_id, GValue * value,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+  g_mutex_unlock (&self->prop_lock);
 }
 
 static gboolean
