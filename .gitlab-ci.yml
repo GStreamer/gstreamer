@@ -572,6 +572,13 @@ integration testsuites fedora:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
     TEST_SUITE: "validate ges"
 
+playbin3 integration:
+  extends: 'integration testsuites fedora'
+  variables:
+    USE_PLAYBIN3: 1
+  # Let's allow failures for now until we're 100% sure everything works
+  allow_failure: true
+    
 # gstreamer-full:
 gstreamer-full static build:
   extends: '.build fedora x86_64'
