@@ -318,7 +318,9 @@ create_device (const DXGI_ADAPTER_DESC * adapter_desc,
   GstCaps *caps;
   gint width, height, left, top, right, bottom;
   GstStructure *props;
-  std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t >converter;
+  /* *INDENT-OFF* */
+  std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t > converter;
+  /* *INDENT-ON* */
   std::string device_name;
   std::string display_name;
   std::string device_path;

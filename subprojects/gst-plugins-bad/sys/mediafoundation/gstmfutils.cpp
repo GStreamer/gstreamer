@@ -388,6 +388,7 @@ gst_mf_media_type_to_video_caps (IMFMediaType * media_type)
                                          SPEAKER_FRONT_LEFT_OF_CENTER | SPEAKER_FRONT_RIGHT_OF_CENTER)
 #endif
 
+/* *INDENT-OFF* */
 static struct
 {
   guint64 mf_pos;
@@ -416,7 +417,6 @@ static struct
   {SPEAKER_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}
 };
 
-/* *INDENT-OFF* */
 static DWORD default_ch_masks[] = {
   0,
   KSAUDIO_SPEAKER_MONO,

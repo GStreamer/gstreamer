@@ -21,12 +21,11 @@
 
 #include <wrl.h>
 
-/* *INDENT-OFF* */
-using namespace Microsoft::WRL;
-/* *INDENT-ON* */
-
 GST_DEBUG_CATEGORY_EXTERN (gst_wic_utils_debug);
 #define GST_CAT_DEFAULT gst_wic_utils_debug
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
 
 static struct
 {
@@ -46,6 +45,7 @@ static struct
   {GUID_WICPixelFormat32bppBGRA, GST_VIDEO_FORMAT_BGRA},
   {GUID_WICPixelFormat64bppRGBA, GST_VIDEO_FORMAT_RGBA64_LE},
 };
+/* *INDENT-ON* */
 
 gboolean
 gst_wic_pixel_format_to_gst (REFWICPixelFormatGUID guid,

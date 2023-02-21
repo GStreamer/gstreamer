@@ -1068,9 +1068,10 @@ gst_amf_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   return TRUE;
 }
 
+/* *INDENT-OFF* */
 void
 gst_amf_encoder_set_subclass_data (GstAmfEncoder * encoder, gint64 adapter_luid,
-    const wchar_t *codec_id)
+    const wchar_t * codec_id)
 {
   GstAmfEncoderPrivate *priv;
 
@@ -1080,3 +1081,4 @@ gst_amf_encoder_set_subclass_data (GstAmfEncoder * encoder, gint64 adapter_luid,
   priv->adapter_luid = adapter_luid;
   priv->codec_id = codec_id;
 }
+/* *INDENT-ON* */
