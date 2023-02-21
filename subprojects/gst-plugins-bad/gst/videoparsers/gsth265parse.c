@@ -2368,6 +2368,60 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
       GstH265Profile p;
 
       p = gst_h265_get_profile_from_sps (sps);
+      /* gst_h265_get_profile_from_sps() method will determine profile
+       * as defined in spec, with allowing slightly broken profile-tier-level
+       * bits, then it might not be able to cover all cases.
+       * If it's still unknown, do guess again */
+      if (p == GST_H265_PROFILE_INVALID) {
+        GST_WARNING_OBJECT (h265parse, "Unknown profile, guessing");
+        switch (sps->chroma_format_idc) {
+          case 0:
+            if (sps->bit_depth_luma_minus8 == 0) {
+              p = GST_H265_PROFILE_MONOCHROME;
+            } else if (sps->bit_depth_luma_minus8 <= 2) {
+              p = GST_H265_PROFILE_MONOCHROME_10;
+            } else if (sps->bit_depth_luma_minus8 <= 4) {
+              p = GST_H265_PROFILE_MONOCHROME_12;
+            } else {
+              p = GST_H265_PROFILE_MONOCHROME_16;
+            }
+            break;
+          case 1:
+            if (sps->bit_depth_luma_minus8 == 0) {
+              p = GST_H265_PROFILE_MAIN;
+            } else if (sps->bit_depth_luma_minus8 <= 2) {
+              p = GST_H265_PROFILE_MAIN_10;
+            } else if (sps->bit_depth_luma_minus8 <= 4) {
+              p = GST_H265_PROFILE_MAIN_12;
+            } else {
+              p = GST_H265_PROFILE_MAIN_444_16_INTRA;
+            }
+            break;
+          case 2:
+            if (sps->bit_depth_luma_minus8 <= 2) {
+              p = GST_H265_PROFILE_MAIN_422_10;
+            } else if (sps->bit_depth_luma_minus8 <= 4) {
+              p = GST_H265_PROFILE_MAIN_422_12;
+            } else {
+              p = GST_H265_PROFILE_MAIN_444_16_INTRA;
+            }
+            break;
+          case 3:
+            if (sps->bit_depth_luma_minus8 == 0) {
+              p = GST_H265_PROFILE_MAIN_444;
+            } else if (sps->bit_depth_luma_minus8 <= 2) {
+              p = GST_H265_PROFILE_MAIN_444_10;
+            } else if (sps->bit_depth_luma_minus8 <= 4) {
+              p = GST_H265_PROFILE_MAIN_444_12;
+            } else {
+              p = GST_H265_PROFILE_MAIN_444_16_INTRA;
+            }
+            break;
+          default:
+            break;
+        }
+      }
+
       profile = gst_h265_profile_to_string (p);
 
       if (s && gst_structure_has_field (s, "profile")) {
