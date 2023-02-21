@@ -1256,7 +1256,7 @@ GST_CUDA_KERNEL_UNPACK_FUNC
 "}\n"
 "}\n";
 
-#define GST_CUDA_KERNEL_MAIN_FUNC "KernelMain"
+#define GST_CUDA_KERNEL_MAIN_FUNC "gst_cuda_converter_main"
 
 static const gchar TEMPLETA_KERNEL[] =
 /* KERNEL_COMMON */
