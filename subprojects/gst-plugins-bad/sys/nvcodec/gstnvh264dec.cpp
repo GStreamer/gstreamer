@@ -274,7 +274,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
   gst_element_class_set_static_metadata (element_class,
-      "NVDEC H.264 Stateless Decoder",
+      "NVDEC H.264 Decoder",
       "Codec/Decoder/Video/Hardware",
       "NVIDIA H.264 video decoder", "Seungha Yang <seungha@centricular.com>");
 
@@ -1091,7 +1091,7 @@ gst_nv_h264_dec_get_preferred_output_delay (GstH264Decoder * decoder,
 
 void
 gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
-    GstCaps * sink_caps, GstCaps * src_caps, gboolean is_primary)
+    GstCaps * sink_caps, GstCaps * src_caps)
 {
   GType type;
   gchar *type_name;
@@ -1135,25 +1135,15 @@ gst_nv_h264_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
 
-  if (is_primary) {
-    type_name = g_strdup ("GstNvH264Dec");
-    feature_name = g_strdup ("nvh264dec");
-  } else {
-    type_name = g_strdup ("GstNvH264SLDec");
-    feature_name = g_strdup ("nvh264sldec");
-  }
+  type_name = g_strdup ("GstNvH264Dec");
+  feature_name = g_strdup ("nvh264dec");
 
   while (g_type_from_name (type_name)) {
     index++;
     g_free (type_name);
     g_free (feature_name);
-    if (is_primary) {
-      type_name = g_strdup_printf ("GstNvH264Device%dDec", index);
-      feature_name = g_strdup_printf ("nvh264device%ddec", index);
-    } else {
-      type_name = g_strdup_printf ("GstNvH264SLDevice%dDec", index);
-      feature_name = g_strdup_printf ("nvh264sldevice%ddec", index);
-    }
+    type_name = g_strdup_printf ("GstNvH264Device%dDec", index);
+    feature_name = g_strdup_printf ("nvh264device%ddec", index);
   }
 
   type_info.class_data = cdata;

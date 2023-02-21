@@ -191,7 +191,7 @@ gst_nv_vp8_dec_class_init (GstNvVp8DecClass * klass,
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
   gst_element_class_set_metadata (element_class,
-      "NVDEC VP8 Stateless Decoder",
+      "NVDEC VP8 Decoder",
       "Codec/Decoder/Video/Hardware",
       "NVIDIA VP8 video decoder", "Seungha Yang <seungha@centricular.com>");
 
@@ -653,7 +653,7 @@ gst_nv_vp8_dec_get_preferred_output_delay (GstVp8Decoder * decoder,
 
 void
 gst_nv_vp8_dec_register (GstPlugin * plugin, guint device_id, guint rank,
-    GstCaps * sink_caps, GstCaps * src_caps, gboolean is_primary)
+    GstCaps * sink_caps, GstCaps * src_caps)
 {
   GType type;
   gchar *type_name;
@@ -689,25 +689,15 @@ gst_nv_vp8_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
 
-  if (is_primary) {
-    type_name = g_strdup ("GstNvVp8Dec");
-    feature_name = g_strdup ("nvvp8dec");
-  } else {
-    type_name = g_strdup ("GstNvVp8SLDec");
-    feature_name = g_strdup ("nvvp8sldec");
-  }
+  type_name = g_strdup ("GstNvVp8Dec");
+  feature_name = g_strdup ("nvvp8dec");
 
   while (g_type_from_name (type_name)) {
     index++;
     g_free (type_name);
     g_free (feature_name);
-    if (is_primary) {
-      type_name = g_strdup_printf ("GstNvVp8Device%dDec", index);
-      feature_name = g_strdup_printf ("nvvp8device%ddec", index);
-    } else {
-      type_name = g_strdup_printf ("GstNvVp8SLDevice%dDec", index);
-      feature_name = g_strdup_printf ("nvvp8sldevice%ddec", index);
-    }
+    type_name = g_strdup_printf ("GstNvVp8Device%dDec", index);
+    feature_name = g_strdup_printf ("nvvp8device%ddec", index);
   }
 
   type_info.class_data = cdata;
