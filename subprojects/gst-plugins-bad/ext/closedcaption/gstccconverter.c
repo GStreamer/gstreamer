@@ -50,13 +50,14 @@ enum
 };
 
 #define DEFAULT_CDP_MODE (GST_CC_CONVERTER_CDP_MODE_TIME_CODE | GST_CC_CONVERTER_CDP_MODE_CC_DATA | GST_CC_CONVERTER_CDP_MODE_CC_SVC_INFO)
+#define DEFAULT_FIELD 0
 
 /* Ordered by the amount of information they can contain */
 #define CC_CAPS \
         "closedcaption/x-cea-708,format=(string) cdp; " \
         "closedcaption/x-cea-708,format=(string) cc_data; " \
         "closedcaption/x-cea-608,format=(string) s334-1a; " \
-        "closedcaption/x-cea-608,format=(string) raw"
+        "closedcaption/x-cea-608,format=(string) raw, field=(int) {0, 1}"
 
 #define VAL_OR_0(v) ((v) ? (*(v)) : 0)
 
@@ -126,12 +127,14 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
   static GstStaticCaps non_cdp_caps =
       GST_STATIC_CAPS ("closedcaption/x-cea-708, format=(string)cc_data; "
       "closedcaption/x-cea-608,format=(string) s334-1a; "
-      "closedcaption/x-cea-608,format=(string) raw");
+      "closedcaption/x-cea-608,format=(string) raw, field=(int) {0, 1}");
   static GstStaticCaps cdp_caps =
       GST_STATIC_CAPS ("closedcaption/x-cea-708, format=(string)cdp");
   static GstStaticCaps cdp_caps_framerate =
       GST_STATIC_CAPS ("closedcaption/x-cea-708, format=(string)cdp, "
       "framerate=(fraction){60/1, 60000/1001, 50/1, 30/1, 30000/1001, 25/1, 24/1, 24000/1001}");
+  static GstStaticCaps raw_608_caps =
+      GST_STATIC_CAPS ("closedcaption/x-cea-608,format=(string) raw");
 
   GstCCConverter *self = GST_CCCONVERTER (base);
   guint i, n;
@@ -149,8 +152,17 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
     const GValue *framerate = gst_structure_get_value (s, "framerate");
 
     if (gst_structure_has_name (s, "closedcaption/x-cea-608")) {
+      const GValue *field = gst_structure_get_value (s, "field");
 
       if (direction == GST_PAD_SRC) {
+        GstCaps *tmp;
+
+        tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+
+        if (!field) {
+          tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
+        }
+
         /* SRC direction: We produce upstream caps
          *
          * Downstream wanted CEA608 caps. If it had a framerate, we
@@ -162,14 +174,9 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
         res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
         if (framerate) {
           /* we can only keep the same framerate for non-cdp */
-          GstCaps *tmp;
-
-          tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
           gst_caps_set_value (tmp, "framerate", framerate);
-          res = gst_caps_merge (res, tmp);
-        } else {
-          res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
         }
+        res = gst_caps_merge (res, tmp);
       } else {
         /* SINK: We produce downstream caps
          *
@@ -205,10 +212,19 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           }
           /* And we can convert to everything else with the given framerate */
           tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+
+          if (!field) {
+            tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
+          }
+
           gst_caps_set_value (tmp, "framerate", framerate);
           res = gst_caps_merge (res, tmp);
         } else {
           res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+
+          if (!field) {
+            res = gst_caps_merge (res, gst_static_caps_get (&raw_608_caps));
+          }
         }
       }
     } else if (gst_structure_has_name (s, "closedcaption/x-cea-708")) {
@@ -247,6 +263,7 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
              * into CDP with exactly those framerates from anything else */
             cdp_framerate = gst_structure_get_value (t, "framerate");
             tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+            tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
             gst_caps_set_value (tmp, "framerate", cdp_framerate);
             res = gst_caps_merge (res, tmp);
           } else {
@@ -261,6 +278,7 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
                 "framerate");
 
             tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+            tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
             gst_caps_set_value (tmp, "framerate", cdp_framerate);
             gst_caps_unref (cdp_caps);
 
@@ -274,10 +292,12 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
             GstCaps *tmp;
 
             tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+            tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
             gst_caps_set_value (tmp, "framerate", framerate);
             res = gst_caps_merge (res, tmp);
           } else {
             res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+            res = gst_caps_merge (res, gst_static_caps_get (&raw_608_caps));
           }
         }
       } else {
@@ -330,10 +350,12 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           GstCaps *tmp;
 
           tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
+          tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
           gst_caps_set_value (tmp, "framerate", framerate);
           res = gst_caps_merge (res, tmp);
         } else {
           res = gst_caps_merge (res, gst_static_caps_get (&non_cdp_caps));
+          res = gst_caps_merge (res, gst_static_caps_get (&raw_608_caps));
         }
       }
     } else {
@@ -433,6 +455,8 @@ gst_cc_converter_set_caps (GstBaseTransform * base, GstCaps * incaps,
   GstCCConverter *self = GST_CCCONVERTER (base);
   const GstStructure *s;
   gboolean passthrough;
+  static GstStaticCaps raw_608_caps =
+      GST_STATIC_CAPS ("closedcaption/x-cea-608,format=(string) raw");
 
   self->input_caption_type = gst_video_caption_type_from_caps (incaps);
   self->output_caption_type = gst_video_caption_type_from_caps (outcaps);
@@ -446,16 +470,32 @@ gst_cc_converter_set_caps (GstBaseTransform * base, GstCaps * incaps,
           &self->in_fps_d))
     self->in_fps_n = self->in_fps_d = 0;
 
+  if (!gst_structure_get_int (s, "field", &self->in_field))
+    self->in_field = 0;
+
   s = gst_caps_get_structure (outcaps, 0);
   if (!gst_structure_get_fraction (s, "framerate", &self->out_fps_n,
           &self->out_fps_d))
     self->out_fps_n = self->out_fps_d = 0;
 
+  if (!gst_structure_get_int (s, "field", &self->out_field))
+    self->out_field = 0;
+
   gst_video_time_code_clear (&self->current_output_timecode);
 
-  /* Caps can be different but we can passthrough as long as they can
-   * intersect, i.e. have same caps name and format */
-  passthrough = gst_caps_can_intersect (incaps, outcaps);
+  /* For raw 608 caps in and out, we can ignore the field to determine
+   * passthrough. We can also ignore framerate at this point, as our transform_caps
+   * implementation guarantees that it is either absent or present on both sides.
+   */
+  if (gst_caps_is_subset (incaps, gst_static_caps_get (&raw_608_caps)) &&
+      gst_caps_is_subset (outcaps, gst_static_caps_get (&raw_608_caps))) {
+    passthrough = TRUE;
+  } else {
+    /* Caps can be different but we can passthrough as long as they can
+     * intersect, i.e. have same caps name and format */
+    passthrough = gst_caps_can_intersect (incaps, outcaps);
+  }
+
   gst_base_transform_set_passthrough (base, passthrough);
 
   GST_DEBUG_OBJECT (self,
@@ -677,10 +717,9 @@ convert_cea608_raw_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
 
-  /* We have to assume that each value is from the first field and
-   * don't know from which line offset it originally is */
+  /* We don't know from which line offset it originally is */
   for (i = 0; i < n; i++) {
-    out.data[i * 3] = 0x80;
+    out.data[i * 3] = self->in_field == 0 ? 0x80 : 0x00;
     out.data[i * 3 + 1] = in.data[i * 2];
     out.data[i * 3 + 2] = in.data[i * 2 + 1];
   }
@@ -718,10 +757,9 @@ convert_cea608_raw_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (inbuf, &in, GST_MAP_READ);
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
 
-  /* We have to assume that each value is from the first field and
-   * don't know from which line offset it originally is */
+  /* We don't know from which line offset it originally is */
   for (i = 0; i < n; i++) {
-    out.data[i * 3] = 0xfc;
+    out.data[i * 3] = self->in_field == 0 ? 0xfc : 0xfd;
     out.data[i * 3 + 1] = in.data[i * 2];
     out.data[i * 3 + 2] = in.data[i * 2 + 1];
   }
@@ -764,8 +802,13 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
     }
 
     gst_buffer_map (inbuf, &in, GST_MAP_READ);
-    cc_buffer_push_separated (self->cc_buffer, in.data, in.size, NULL, 0, NULL,
-        0);
+    if (self->in_field == 0) {
+      cc_buffer_push_separated (self->cc_buffer, in.data, in.size, NULL, 0,
+          NULL, 0);
+    } else {
+      cc_buffer_push_separated (self->cc_buffer, NULL, 0, in.data, in.size,
+          NULL, 0);
+    }
     gst_buffer_unmap (inbuf, &in);
     self->input_frames++;
   }
@@ -823,9 +866,10 @@ convert_cea608_s334_1a_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
 
   for (i = 0; i < n; i++) {
-    if (in.data[i * 3] & 0x80) {
-      out.data[i * 2] = in.data[i * 3 + 1];
-      out.data[i * 2 + 1] = in.data[i * 3 + 2];
+    if ((in.data[i * 3] & 0x80 && self->out_field == 0) ||
+        (!(in.data[i * 3] & 0x80) && self->out_field == 1)) {
+      out.data[cea608 * 2] = in.data[i * 3 + 1];
+      out.data[cea608 * 2 + 1] = in.data[i * 3 + 2];
       cea608++;
     }
   }
@@ -983,11 +1027,8 @@ convert_cea708_cc_data_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
 
   for (i = 0; i < n; i++) {
-    /* We can only really copy the first field here as there can't be any
-     * signalling in raw CEA608 and we must not mix the streams of different
-     * fields
-     */
-    if (in.data[i * 3] == 0xfc) {
+    if ((in.data[i * 3] == 0xfc && self->out_field == 0) ||
+        (in.data[i * 3] == 0xfd && self->out_field == 1)) {
       out.data[cea608 * 2] = in.data[i * 3 + 1];
       out.data[cea608 * 2 + 1] = in.data[i * 3 + 2];
       cea608++;
@@ -1107,7 +1148,7 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
 {
   GstMapInfo out;
   GstVideoTimeCode tc = GST_VIDEO_TIME_CODE_INIT;
-  guint cea608_1_len;
+  guint cea608_len;
   const struct cdp_fps_entry *in_fps_entry = NULL, *out_fps_entry;
 
   if (!push_cdp_buffer (self, inbuf, &tc, &in_fps_entry)) {
@@ -1124,9 +1165,14 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
     goto drop;
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
-  cea608_1_len = out.size;
-  cc_buffer_take_separated (self->cc_buffer, out_fps_entry, out.data,
-      &cea608_1_len, NULL, 0, NULL, 0);
+  cea608_len = out.size;
+  if (self->out_field == 0) {
+    cc_buffer_take_separated (self->cc_buffer, out_fps_entry, out.data,
+        &cea608_len, NULL, 0, NULL, 0);
+  } else {
+    cc_buffer_take_separated (self->cc_buffer, out_fps_entry, NULL, 0, out.data,
+        &cea608_len, NULL, 0);
+  }
   gst_buffer_unmap (outbuf, &out);
   self->output_frames++;
 
@@ -1137,11 +1183,11 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
   }
 
 out:
-  gst_buffer_set_size (outbuf, cea608_1_len);
+  gst_buffer_set_size (outbuf, cea608_len);
   return GST_FLOW_OK;
 
 drop:
-  cea608_1_len = 0;
+  cea608_len = 0;
   goto out;
 }
 
@@ -1744,5 +1790,7 @@ static void
 gst_cc_converter_init (GstCCConverter * self)
 {
   self->cdp_mode = DEFAULT_CDP_MODE;
+  self->in_field = 0;
+  self->out_field = 0;
   self->cc_buffer = cc_buffer_new ();
 }

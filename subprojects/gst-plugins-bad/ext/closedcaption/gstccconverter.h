@@ -53,6 +53,8 @@ struct _GstCCConverter
   GstBaseTransform parent;
 
   GstCCConverterCDPMode cdp_mode;
+  gint in_field;
+  gint out_field;
 
   GstVideoCaptionType input_caption_type;
   GstVideoCaptionType output_caption_type;

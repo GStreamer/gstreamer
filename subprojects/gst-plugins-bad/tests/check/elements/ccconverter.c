@@ -988,6 +988,85 @@ GST_START_TEST (convert_cea608_s334_1a_cea708_cdp_double_framerate)
 
 GST_END_TEST;
 
+GST_START_TEST (convert_cea608_raw_cea608_s334_1a_field_one)
+{
+  const guint8 in[] = { 0x80, 0x80 };
+  const guint8 out[] = { 0x00, 0x80, 0x80 };
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-608,format=(string)raw,field=(int)1",
+      "closedcaption/x-cea-608,format=(string)s334-1a");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (convert_cea608_raw_cea708_cc_data_field_one)
+{
+  const guint8 in[] = { 0x80, 0x80 };
+  const guint8 out[] = { 0xfd, 0x80, 0x80 };
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-608,format=(string)raw,field=(int)1",
+      "closedcaption/x-cea-708,format=(string)cc_data");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (convert_cea608_raw_cea708_cdp_field_one)
+{
+  const guint8 in[] = { 0x81, 0x82 };
+  const guint8 out[] =
+      { 0x96, 0x69, 0x49, 0x5f, 0x43, 0x00, 0x00, 0x72, 0xf4, 0xf8, 0x80, 0x80,
+    0xfd, 0x81, 0x82, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0x74, 0x00, 0x00,
+    0xb0
+  };
+
+  check_conversion (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-608,format=(string)raw,framerate=(fraction)30/1,field=(int)1",
+      "closedcaption/x-cea-708,format=(string)cdp,framerate=(fraction)30/1",
+      NULL, NULL);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (convert_cea608_s334_1a_cea608_raw_field_one)
+{
+  const guint8 in[] = { 0x80, 0x00, 0x00, 0x00, 0x80, 0x80 };
+  const guint8 out[] = { 0x80, 0x80 };
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-608,format=(string)s334-1a",
+      "closedcaption/x-cea-608,format=(string)raw,field=(int)1");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (convert_cea708_cc_data_cea608_raw_field_one)
+{
+  const guint8 in[] = { 0xfc, 0x00, 0x00, 0xfd, 0x80, 0x80 };
+  const guint8 out[] = { 0x80, 0x80 };
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-708,format=(string)cc_data",
+      "closedcaption/x-cea-608,format=(string)raw,field=(int)1");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (convert_cea708_cdp_cea608_raw_field_one)
+{
+  const guint8 in[] =
+      { 0x96, 0x69, 0x13, 0x5f, 0x43, 0x00, 0x00, 0x72, 0xe2, 0xfc, 0x00, 0x00,
+    0xfd, 0x80, 0x80, 0x74, 0x00, 0x00, 0x8a
+  };
+  const guint8 out[] = { 0x80, 0x80 };
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-708,format=(string)cdp,framerate=30/1",
+      "closedcaption/x-cea-608,format=(string)raw,framerate=30/1,field=(int)1");
+}
+
+GST_END_TEST;
+
 GST_START_TEST (convert_cea708_cdp_cea708_cc_data_double_input_data)
 {
   /* caps say 60fps, data has 30fps. Ensure data is taken alternatatively from
@@ -1204,6 +1283,13 @@ ccextractor_suite (void)
   tcase_add_test (tc, convert_cea708_cdp_cea708_cc_data_double_input_data);
   tcase_add_test (tc, convert_cea708_cc_data_cea708_cdp_double_input_data);
   tcase_add_test (tc, convert_cea708_cc_data_cea708_cdp_field1_overflow);
+
+  tcase_add_test (tc, convert_cea608_raw_cea608_s334_1a_field_one);
+  tcase_add_test (tc, convert_cea608_raw_cea708_cc_data_field_one);
+  tcase_add_test (tc, convert_cea608_raw_cea708_cdp_field_one);
+  tcase_add_test (tc, convert_cea608_s334_1a_cea608_raw_field_one);
+  tcase_add_test (tc, convert_cea708_cc_data_cea608_raw_field_one);
+  tcase_add_test (tc, convert_cea708_cdp_cea608_raw_field_one);
 
   return s;
 }
