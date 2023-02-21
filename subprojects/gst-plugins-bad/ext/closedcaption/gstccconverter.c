@@ -352,7 +352,6 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
 
     tmp = gst_caps_intersect_full (filter, res, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (res);
-    gst_caps_unref (filter);
     res = tmp;
   }
 
@@ -362,6 +361,8 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
       direction == GST_PAD_SRC ? "src" : "sink", caps);
   GST_DEBUG_OBJECT (self, "filter %" GST_PTR_FORMAT, filter);
   GST_DEBUG_OBJECT (self, "to %" GST_PTR_FORMAT, res);
+
+  gst_clear_caps (&filter);
 
   return res;
 }
