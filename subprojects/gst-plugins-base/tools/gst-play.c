@@ -1657,7 +1657,7 @@ real_main (int argc, char **argv)
     {"start-position", 's', 0, G_OPTION_ARG_DOUBLE, &start_position,
         N_("Start position in seconds."), NULL},
     {"accurate-seeks", 'a', 0, G_OPTION_ARG_NONE, &accurate_seeks,
-        N_("Accurate seeking"), NULL},
+        N_("Enable accurate seeking"), NULL},
     {"playlist", 0, 0, G_OPTION_ARG_FILENAME, &playlist_file,
         N_("Playlist file containing input media files"), NULL},
     {"instant-rate-changes", 'i', 0, G_OPTION_ARG_NONE, &instant_rate_changes,
