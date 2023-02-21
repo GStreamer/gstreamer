@@ -194,7 +194,8 @@ plugin_init (GstPlugin * plugin)
         gst_d3d11_vp8_dec_register (plugin, device, GST_RANK_PRIMARY);
         /* rust dav1ddec has "primary" rank */
         gst_d3d11_av1_dec_register (plugin, device, GST_RANK_PRIMARY + 1);
-        gst_d3d11_mpeg2_dec_register (plugin, device, GST_RANK_SECONDARY);
+        /* avdec_mpeg2video has primary rank */
+        gst_d3d11_mpeg2_dec_register (plugin, device, GST_RANK_PRIMARY + 1);
       }
 
       gst_d3d11_deinterlace_register (plugin, device, GST_RANK_MARGINAL);
