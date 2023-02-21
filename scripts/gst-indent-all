@@ -16,3 +16,16 @@ if test -f ".indentignore"; then
     fi
 fi
 git ls-files "*.c" | "${filter_cmd[@]}" | xargs -d '\n' $BASEDIR/gst-indent
+
+if test -f ".indent_cpp_list"; then
+    filter_args=()
+    while read -r line; do
+        if test -n "$line"; then
+            filter_args+=("-e" "$line")
+        fi
+    done < ".indent_cpp_list"
+    if [[ ${#filter_args[@]} -gt 0 ]]; then
+        filter_cmd=("grep" "-E" "${filter_args[@]}")
+        git ls-files "*.cpp" | "${filter_cmd[@]}" | xargs -d '\n' $BASEDIR/gst-indent
+    fi
+fi
