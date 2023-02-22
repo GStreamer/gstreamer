@@ -688,7 +688,8 @@ gst_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
       } else if (deep && gst_meta_api_type_has_tag (info->api,
               _gst_meta_tag_memory_reference)) {
         GST_CAT_DEBUG (GST_CAT_BUFFER,
-            "don't copy meta with memory references %" GST_PTR_FORMAT, meta);
+            "don't copy memory reference meta %p of API type %s", meta,
+            g_type_name (info->api));
       } else if (info->transform_func) {
         GstMetaTransformCopy copy_data;
 
