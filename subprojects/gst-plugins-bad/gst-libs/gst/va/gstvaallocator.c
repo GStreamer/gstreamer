@@ -40,6 +40,7 @@
 #ifndef G_OS_WIN32
 #include <sys/types.h>
 #include <unistd.h>
+#include <libdrm/drm_fourcc.h>
 #endif
 
 #include "gstvasurfacecopy.h"
@@ -541,6 +542,154 @@ gst_va_dmabuf_memory_release (GstMiniObject * mini_object)
   return FALSE;
 }
 
+static gboolean
+_modifier_found (guint64 modifier, guint64 * modifiers, guint num_modifiers)
+{
+  guint i;
+
+  /* user doesn't care the returned modifier */
+  if (num_modifiers == 0)
+    return TRUE;
+
+  for (i = 0; i < num_modifiers; i++)
+    if (modifier == modifiers[i])
+      return TRUE;
+  return FALSE;
+}
+
+static gboolean
+_va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
+    guint usage_hint, guint64 * modifiers, guint num_modifiers,
+    GstVideoInfo * info, VASurfaceID * ret_surface,
+    VADRMPRIMESurfaceDescriptor * ret_desc)
+{
+  VADRMPRIMESurfaceDescriptor desc = { 0, };
+  guint32 i, fourcc, rt_format, export_flags;
+  VASurfaceAttribExternalBuffers *extbuf = NULL, ext_buf;
+  GstVideoFormat format;
+  VASurfaceID surface;
+  guint64 prev_modifier;
+
+  _init_debug_category ();
+
+  format = GST_VIDEO_INFO_FORMAT (info);
+
+  fourcc = gst_va_fourcc_from_video_format (format);
+  rt_format = gst_va_chroma_from_video_format (format);
+  if (fourcc == 0 || rt_format == 0)
+    return FALSE;
+
+  /* HACK(victor): disable tiling for i965 driver for RGB formats */
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965)
+      && GST_VIDEO_INFO_IS_RGB (info)) {
+    /* *INDENT-OFF* */
+    ext_buf = (VASurfaceAttribExternalBuffers) {
+      .width = GST_VIDEO_INFO_WIDTH (info),
+      .height = GST_VIDEO_INFO_HEIGHT (info),
+      .num_planes = GST_VIDEO_INFO_N_PLANES (info),
+      .pixel_format = fourcc,
+    };
+    /* *INDENT-ON* */
+
+    extbuf = &ext_buf;
+  }
+
+  if (!va_create_surfaces (display, rt_format, fourcc,
+          GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
+          usage_hint, modifiers, num_modifiers, extbuf, &surface, 1))
+    return FALSE;
+
+  /* workaround for missing layered dmabuf formats in i965 */
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965)
+      && (fourcc == VA_FOURCC_YUY2 || fourcc == VA_FOURCC_UYVY)) {
+    /* These are not representable as separate planes */
+    export_flags = VA_EXPORT_SURFACE_COMPOSED_LAYERS;
+  } else {
+    /* Each layer will contain exactly one plane.  For example, an NV12
+     * surface will be exported as two layers */
+    export_flags = VA_EXPORT_SURFACE_SEPARATE_LAYERS;
+  }
+
+  export_flags |= VA_EXPORT_SURFACE_READ_WRITE;
+
+  if (!va_export_surface_to_dmabuf (display, surface, export_flags, &desc))
+    goto failed;
+
+  if (GST_VIDEO_INFO_N_PLANES (info) != desc.num_layers)
+    goto failed;
+
+  if (fourcc != desc.fourcc) {
+    GST_ERROR ("Unsupported fourcc: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (desc.fourcc));
+    goto failed;
+  }
+
+  if (desc.num_objects == 0) {
+    GST_ERROR ("Failed to export surface to dmabuf");
+    goto failed;
+  }
+
+  for (i = 0; i < desc.num_objects; i++) {
+    guint64 modifier = desc.objects[i].drm_format_modifier;
+
+    if (!_modifier_found (modifier, modifiers, num_modifiers)) {
+      GST_ERROR ("driver set a modifier different from allowed list: "
+          "0x%016" G_GINT64_MODIFIER "x", modifier);
+      goto failed;
+    }
+    if (i > 0 && modifier != prev_modifier) {
+      GST_ERROR ("Different objects have different modifier");
+      goto failed;
+    }
+
+    prev_modifier = modifier;
+  }
+
+  *ret_surface = surface;
+  if (ret_desc)
+    *ret_desc = desc;
+
+  return TRUE;
+
+failed:
+  {
+    va_destroy_surfaces (display, &surface, 1);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_va_dmabuf_get_modifier_for_format:
+ * @display: a #GstVaDisplay
+ * @format: a #GstVideoFormat
+ * @usage_hint: VA usage hint
+ *
+ * Get the underlying modifier for specified @format and @usage_hint.
+ *
+ * Returns: the underlying modifier.
+ *
+ * Since: 1.24
+ */
+guint64
+gst_va_dmabuf_get_modifier_for_format (GstVaDisplay * display,
+    GstVideoFormat format, guint usage_hint)
+{
+  VADRMPRIMESurfaceDescriptor desc = { 0, };
+  VASurfaceID surface;
+  GstVideoInfo info;
+
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, format, 64, 64);
+
+  if (!_va_create_surface_and_export_to_dmabuf (display, usage_hint,
+          NULL, 0, &info, &surface, &desc))
+    return DRM_FORMAT_MOD_INVALID;
+
+  va_destroy_surfaces (display, &surface, 1);
+
+  return desc.objects[0].drm_format_modifier;
+}
+
 /* Creates an exported VASurfaceID and adds it as @buffer's memories
  * qdata
  *
@@ -553,75 +702,17 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 {
   GstVaBufferSurface *buf;
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
-  GstVideoFormat format;
   VADRMPRIMESurfaceDescriptor desc = { 0, };
-  VASurfaceAttribExternalBuffers *extbuf = NULL, ext_buf;
   VASurfaceID surface;
-  guint32 i, fourcc, rt_format, export_flags;
+  guint32 i;
   GDestroyNotify buffer_destroy = NULL;
   gsize object_offset[4];
 
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
 
-  format = GST_VIDEO_INFO_FORMAT (&self->info);
-  fourcc = gst_va_fourcc_from_video_format (format);
-  rt_format = gst_va_chroma_from_video_format (format);
-  if (fourcc == 0 || rt_format == 0) {
-    GST_ERROR_OBJECT (allocator, "Unsupported format: %s",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&self->info)));
+  if (!_va_create_surface_and_export_to_dmabuf (self->display, self->usage_hint,
+          NULL, 0, &self->info, &surface, &desc))
     return FALSE;
-  }
-
-  /* HACK(victor): disable tiling for i965 driver for RGB formats */
-  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_I965)
-      && GST_VIDEO_INFO_IS_RGB (&self->info)) {
-    /* *INDENT-OFF* */
-    ext_buf = (VASurfaceAttribExternalBuffers) {
-      .width = GST_VIDEO_INFO_WIDTH (&self->info),
-      .height = GST_VIDEO_INFO_HEIGHT (&self->info),
-      .num_planes = GST_VIDEO_INFO_N_PLANES (&self->info),
-      .pixel_format = fourcc,
-    };
-    /* *INDENT-ON* */
-
-    extbuf = &ext_buf;
-  }
-
-  if (!va_create_surfaces (self->display, rt_format, fourcc,
-          GST_VIDEO_INFO_WIDTH (&self->info),
-          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL, 1,
-          extbuf, &surface, 1))
-    return FALSE;
-
-  /* workaround for missing layered dmabuf formats in i965 */
-  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (self->display, INTEL_I965)
-      && (fourcc == VA_FOURCC_YUY2 || fourcc == VA_FOURCC_UYVY)) {
-    /* These are not representable as separate planes */
-    export_flags = VA_EXPORT_SURFACE_COMPOSED_LAYERS;
-  } else {
-    /* Each layer will contain exactly one plane.  For example, an NV12
-     * surface will be exported as two layers */
-    export_flags = VA_EXPORT_SURFACE_SEPARATE_LAYERS;
-  }
-
-  export_flags |= VA_EXPORT_SURFACE_READ_WRITE;
-
-  if (!va_export_surface_to_dmabuf (self->display, surface, export_flags,
-          &desc))
-    goto failed;
-
-  g_assert (GST_VIDEO_INFO_N_PLANES (&self->info) == desc.num_layers);
-
-  if (fourcc != desc.fourcc) {
-    GST_ERROR ("Unsupported fourcc: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (desc.fourcc));
-    goto failed;
-  }
-
-  if (desc.num_objects == 0) {
-    GST_ERROR ("Failed to export surface to dmabuf");
-    goto failed;
-  }
 
   buf = gst_va_buffer_surface_new (surface);
   if (G_UNLIKELY (info)) {
@@ -692,12 +783,6 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   }
 
   return TRUE;
-
-failed:
-  {
-    va_destroy_surfaces (self->display, &surface, 1);
-    return FALSE;
-  }
 }
 
 /**
