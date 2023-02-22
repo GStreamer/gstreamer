@@ -33,6 +33,8 @@
 #define __GST_MSDKCAPS_H__
 
 #include "msdk.h"
+#include "gstmsdkcontext.h"
+
 #include <mfxjpeg.h>
 #include <mfxvp8.h>
 
@@ -40,6 +42,11 @@ G_BEGIN_DECLS
 
 gboolean
 gst_msdkcaps_has_feature (const GstCaps * caps, const gchar * feature);
+
+gboolean
+gst_msdkcaps_enc_create_caps (GstMsdkContext * context,
+    gpointer enc_description, guint codec_id,
+    GstCaps ** sink_caps, GstCaps ** src_caps);
 
 G_END_DECLS
 
