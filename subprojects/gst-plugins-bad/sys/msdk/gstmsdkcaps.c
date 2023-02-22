@@ -648,8 +648,14 @@ _enc_is_format_supported (mfxSession * session,
   if (!_fill_mfxframeinfo (format, &in->mfx.FrameInfo))
     return FALSE;
 
-  if (!_enc_is_param_supported (session, in, out))
-    return FALSE;
+  in->mfx.LowPower = MFX_CODINGOPTION_UNKNOWN;
+  if (!_enc_is_param_supported (session, in, out)) {
+    in->mfx.LowPower = (out->mfx.LowPower == MFX_CODINGOPTION_ON) ?
+        MFX_CODINGOPTION_OFF : MFX_CODINGOPTION_ON;
+
+    if (!_enc_is_param_supported (session, in, out))
+      return FALSE;
+  }
 
   return TRUE;
 }
