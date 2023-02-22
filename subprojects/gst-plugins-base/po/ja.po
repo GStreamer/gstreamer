@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2010-10-25 10:27+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -151,6 +151,10 @@ msgstr "このストリームタイプをまだ再生することはできませ
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "\"%s\" 用の URI ハンドラの実装はありません"
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "ソースエレメントが不正です。"
 
 msgid "Source element is invalid."
 msgstr "ソースエレメントが不正です。"
@@ -719,6 +723,9 @@ msgid "Volume"
 msgstr ""
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"

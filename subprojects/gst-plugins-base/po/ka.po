@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-16 22:28+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <(nothing)>\n"
@@ -149,6 +149,10 @@ msgstr "ნაკადის ტიპის დაკვრა ჯერჯე
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "URI-ის (\"%s\") დამმუშავებელი ჯერჯერობით მიუწვდომელია."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "საწყისი ელემენტი არასწორია."
 
 msgid "Source element is invalid."
 msgstr "საწყისი ელემენტი არასწორია."
@@ -705,6 +709,9 @@ msgstr "ხმის სიმაღლე"
 
 msgid "Start position in seconds."
 msgstr "დაწყების პოზიცია, წამებში."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "დასაკრავი სიის ფაილი, რომელიც შესაყვან მედია ფაილებს შეიცავს"

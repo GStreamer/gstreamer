@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-15 14:19+0100\n"
 "Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <l10n-no@lister.huftis.org>\n"
@@ -149,6 +149,10 @@ msgstr "Dennestrømtypen kan ikke spilles ennå."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-håndterer er implementert for «%s»."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Kildeelementet har ingen utfylling."
 
 msgid "Source element is invalid."
 msgstr "Kildeelement er ugyldig."
@@ -709,6 +713,9 @@ msgstr "Volum"
 
 msgid "Start position in seconds."
 msgstr "Startposisjon i sekunder."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Spillelistefil som inneholder inngangsmediefiler"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-08 15:54-0300\n"
 "Last-Translator: Felipe Castro <fefcas@gmail.com>\n"
 "Language-Team: Esperanto <translation-team-eo@lists.sourceforge.net>\n"
@@ -149,6 +149,10 @@ msgstr "Tiu ĉi tipo de fluo ankoraŭ ne povas esti ludata."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Neniu URI-traktilo estas realigita por \"%s\"."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Font-elemento estas nevalida."
 
 msgid "Source element is invalid."
 msgstr "Font-elemento estas nevalida."
@@ -713,6 +717,9 @@ msgstr "Laŭteco"
 
 msgid "Start position in seconds."
 msgstr "Komenci pozicio laŭ sekundoj."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Ludlista dosiero enhavanta enigajn aŭdvidaĵajn dosierojn"

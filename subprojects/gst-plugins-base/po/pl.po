@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-15 20:54+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -157,6 +157,10 @@ msgstr "Tego strumienia jeszcze nie można odtworzyć."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nie ma zaimplementowanej obsługi URI dla \"%s\"."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Element źródłowy nie ma podkładki."
 
 msgid "Source element is invalid."
 msgstr "Element źródłowy jest niepoprawny."
@@ -719,6 +723,9 @@ msgstr "Głośność"
 
 msgid "Start position in seconds."
 msgstr "Pozycja początkowa w sekundach."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Plik listy odtwarzania zawierający wejściowe pliki multimedialne"

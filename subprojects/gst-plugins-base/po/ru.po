@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-15 13:01+0300\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -153,6 +153,10 @@ msgstr "Воспроизведение этого потока в данный �
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Для «%s» не реализован обработчик URI."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Элемент источника не имеет контактных гнёзд."
 
 msgid "Source element is invalid."
 msgstr "Неверный элемент источника."
@@ -715,6 +719,9 @@ msgstr "Громкость"
 
 msgid "Start position in seconds."
 msgstr "Начальная позиция в секундах."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Файл списка воспроизведения с входными медиа-файлами"

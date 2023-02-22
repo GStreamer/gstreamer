@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2012-05-05 19:13+0100\n"
 "Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -153,6 +153,10 @@ msgstr "Αυτός ο τύπος ροής δεν μπορεί να αναπαρ�
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Δεν έχει υλοποιηθεί χειριστής URI για «%s»."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Το στοιχείο προέλευσης δεν είναι έγκυρο."
 
 msgid "Source element is invalid."
 msgstr "Το στοιχείο προέλευσης δεν είναι έγκυρο."
@@ -738,6 +742,9 @@ msgid "Volume"
 msgstr ""
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"

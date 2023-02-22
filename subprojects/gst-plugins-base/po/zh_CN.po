@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-21 13:42+0800\n"
 "Last-Translator: Tianze Wang <zwpwjwtz@126.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -145,6 +145,10 @@ msgstr "此类型的数据流尚不能播放。"
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "“%s”未实现 URI 处理器。"
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "源组件缺少pad。"
 
 msgid "Source element is invalid."
 msgstr "无效的源组件。"
@@ -701,6 +705,9 @@ msgstr "音量"
 
 msgid "Start position in seconds."
 msgstr "以秒计算的起始位置。"
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "播放列表文件含有媒体文件"

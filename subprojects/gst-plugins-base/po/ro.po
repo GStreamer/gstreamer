@@ -18,7 +18,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-15 20:42+0100\n"
 "Last-Translator: Remus-Gabriel Chelu <remusgabriel.chelu@disroot.org>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -172,6 +172,10 @@ msgstr "Acest tip de flux nu poate fi redat încă."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nu a fost implementată nicio rutină de tratare a URI-ului pentru „%s”."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Elementul sursă nu are pini (pads)."
 
 msgid "Source element is invalid."
 msgstr "Elementul sursă nu este valid."
@@ -784,6 +788,9 @@ msgstr "Volum"
 
 msgid "Start position in seconds."
 msgstr "Poziția de start în secunde."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Fișierul listei de redare care conține fișierele media de intrare"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2022-02-15 20:19+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
@@ -150,6 +150,10 @@ msgstr "Ова врста тока још увек не може бити пуш
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Руковалац адресе није примењен за „%s“."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Изворни елемент је неисправан."
 
 msgid "Source element is invalid."
 msgstr "Изворни елемент је неисправан."
@@ -714,6 +718,9 @@ msgstr "Јачина звука"
 
 msgid "Start position in seconds."
 msgstr "Положај почетка у секундама."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Датотека списка нумера садржи датотеке улазних медија"

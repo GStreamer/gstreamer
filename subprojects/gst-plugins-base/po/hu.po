@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2022-10-19 00:10+0200\n"
 "Last-Translator: Balázs Úr <ur.balazs@fsf.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -152,6 +152,10 @@ msgstr "Ez az adatfolyamtípus még nem játszható le."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nincs URI kezelő megvalósítva a következőhöz: „%s”."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "A forráselem érvénytelen."
 
 msgid "Source element is invalid."
 msgstr "A forráselem érvénytelen."
@@ -717,6 +721,9 @@ msgstr "Hangerő"
 
 msgid "Start position in seconds."
 msgstr "Kezdési pozíció másodpercben."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Bemeneti médiafájlokat tartalmazó lejátszólista fájl"

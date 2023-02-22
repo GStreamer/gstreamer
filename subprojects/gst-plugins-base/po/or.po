@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -153,6 +153,9 @@ msgstr ""
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+msgid "Source element can't be prepared"
 msgstr ""
 
 msgid "Source element is invalid."
@@ -710,6 +713,9 @@ msgid "Volume"
 msgstr "ପ୍ରବଳତା"
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"

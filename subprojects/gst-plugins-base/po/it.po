@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.16.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2019-09-03 10:01+0200\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -158,6 +158,10 @@ msgstr "Non è ancora possibile riprodurre questo tipo di stream."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nessun gestore di URI implementato per «%s»."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "L'elemento sorgente non è valido."
 
 msgid "Source element is invalid."
 msgstr "L'elemento sorgente non è valido."
@@ -753,6 +757,9 @@ msgid "Volume"
 msgstr "Volume"
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"
