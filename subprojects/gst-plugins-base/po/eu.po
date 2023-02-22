@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -153,6 +153,10 @@ msgstr "Oraindik ezin da erreproduzitu korronte mota hori."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ez da URI maneiatzailerik ezarri \"%s\"(r)entzat."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Iturburuko elementua baliogabea da."
 
 msgid "Source element is invalid."
 msgstr "Iturburuko elementua baliogabea da."
@@ -719,6 +723,9 @@ msgid "Volume"
 msgstr ""
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"

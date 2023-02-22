@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-16 22:40+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -153,6 +153,10 @@ msgstr "Dieser Datenstrom kann noch nicht abgespielt werden."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Es ist kein URI-Handler für »%s« implementiert."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Das Quellelement hat keine Auffüllung."
 
 msgid "Source element is invalid."
 msgstr "Das Quellelement ist ungültig."
@@ -718,6 +722,9 @@ msgstr "Lautstärke"
 
 msgid "Start position in seconds."
 msgstr "Startposition in Sekunden."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Datei mit Wiedergabeliste enthält Eingabe-Mediendateien"

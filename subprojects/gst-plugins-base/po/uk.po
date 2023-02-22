@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-15 17:42+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <trans-uk@lists.fedoraproject.org>\n"
@@ -156,6 +156,10 @@ msgstr "Цей потік поки-що не може бути відтворе�
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Не реалізовано обробник URI для «%s»."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "У таких елементів немає прокладок."
 
 msgid "Source element is invalid."
 msgstr "Неправильний вхідний елемент."
@@ -728,6 +732,9 @@ msgstr "Гучність"
 
 msgid "Start position in seconds."
 msgstr "Початкова позиція у секундах."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Файл списку відтворення, що містить мультимедійні файли вхідних даних"

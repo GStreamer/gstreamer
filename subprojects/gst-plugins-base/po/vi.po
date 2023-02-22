@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2022-02-14 09:24+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -151,6 +151,10 @@ msgstr "Chưa có khả năng phát kiểu luồng này."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Không có bộ quản lý địa chỉ URI được thực hiện cho “%s”."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Phần tử nguồn không phải hợp lệ."
 
 msgid "Source element is invalid."
 msgstr "Phần tử nguồn không phải hợp lệ."
@@ -720,6 +724,9 @@ msgstr "Âm lượng"
 
 msgid "Start position in seconds."
 msgstr "Vị trí bắt đầu tính bằng giây."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Tập tin danh sách phát có chứa các tập tin đa phương tiện đầu vào"

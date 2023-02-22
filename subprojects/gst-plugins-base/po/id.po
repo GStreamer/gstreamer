@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-16 09:20+0700\n"
 "Last-Translator: Andika Triwidada <andika@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -149,6 +149,10 @@ msgstr "Tipe arus ini belum dapat dimainkan."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Tak ada penanganan URI yang diimplementasikan untuk \"%s\"."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Elemen sumber tidak punya pad."
 
 msgid "Source element is invalid."
 msgstr "Elemen sumber tidak sah."
@@ -711,6 +715,9 @@ msgstr "Volume"
 
 msgid "Start position in seconds."
 msgstr "Posisi memulai dalam detik."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Berkas senarai putar berisi masukan berkas media"

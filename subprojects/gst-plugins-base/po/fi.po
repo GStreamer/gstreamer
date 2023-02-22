@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -153,6 +153,10 @@ msgstr "Tätä virtatyyppiä ei voi vielä soittaa."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Protokollalle \"%s\" ei ole määritelty URI-käsittelijää."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Lähde-elementti on virheellinen."
 
 msgid "Source element is invalid."
 msgstr "Lähde-elementti on virheellinen."
@@ -723,6 +727,9 @@ msgid "Volume"
 msgstr ""
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"

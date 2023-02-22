@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2022-07-05 00:21+0200\n"
 "Last-Translator: Stéphane Aulery <lkppo@free.fr>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -160,6 +160,10 @@ msgstr "Ce type de flux ne peut pas encore être lu."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Aucun gestionnaire d’URI implémenté pour « %s »."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Élément source non valide."
 
 msgid "Source element is invalid."
 msgstr "Élément source non valide."
@@ -740,6 +744,9 @@ msgstr "Volume"
 
 msgid "Start position in seconds."
 msgstr "Position de départ en secondes."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Fichier de lecture contenant des fichiers de media d’entrée"

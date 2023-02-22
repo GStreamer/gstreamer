@@ -1,22 +1,25 @@
-# SOME DESCRIPTIVE TITLE.
-# This file is put in the public domain.
-# Fabio Tomat <f.t.public@gmail.com>, 2017.
+# Translation of gst-plugins-base to Friulian
+# Copyright (C) 2003-2011 GStreamer core team
+# This file is distributed under the same license as the gst-plugins-base package.
+#
+# Fabio Tomat <f.t.public@gmail.com>, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.10.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
-"PO-Revision-Date: 2017-02-20 15:34+0100\n"
-"Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"PO-Revision-Date: 2023-01-25 22:24+0000\n"
+"Last-Translator: Fabio T. <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
 "Language: fur\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 1.8.11\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Editor: HaiPO 1.4 beta\n"
+"X-Generator: Poedit 1.8.11\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Impussibil vierzi il dispositîf pe riproduzion in modalitât mono."
@@ -152,12 +155,15 @@ msgstr "Chest gjenar di flus nol pues ancjemò jessi riprodot."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nissun gjestôr di URI implementât par \"%s\"."
 
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "L'element sorzint nol à sostance dentri."
+
 msgid "Source element is invalid."
 msgstr "L'element sorzint nol è valit."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "L'element sorzint nol è valit."
+msgstr "L'element sorzint nol à sostance dentri."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -167,16 +173,16 @@ msgid "Can't record audio fast enough"
 msgstr "Impussibil regjistrâ audio a velocitât adeguade"
 
 msgid "This CD has no audio tracks"
-msgstr "Chest CD nol à tocs audio"
+msgstr "Chest CD nol à liniis audio"
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "impussibil dissegnâ il motîf"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Al è capitât un erôr GL"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "il formât nol è stât negoziât prime di otignî la funzion"
 
 msgid "ID3 tag"
 msgstr "Etichete ID3"
@@ -235,10 +241,10 @@ msgid "TMPlayer subtitle format"
 msgstr "Formât sottitul TMPlayer"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "Sottitui CEA 608"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "Sottitui CEA 708"
 
 msgid "Kate subtitle format"
 msgstr "Formât sottitul Kate"
@@ -304,39 +310,39 @@ msgstr "Sorzint protocol %s"
 
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr ""
+msgstr "cjariadôr di elements video RTP %s"
 
 #, c-format
 msgid "%s audio RTP depayloader"
-msgstr ""
+msgstr "cjariadôr di elements audio RTP %s"
 
 #, c-format
 msgid "%s RTP depayloader"
-msgstr ""
+msgstr "cjariadôr di elements RTP %s"
 
 #, c-format
 msgid "%s demuxer"
-msgstr ""
+msgstr "demultiplexer di %s"
 
 #, c-format
 msgid "%s decoder"
-msgstr ""
+msgstr "decodificadôr %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr ""
+msgstr "caric util dal video RTP %s"
 
 #, c-format
 msgid "%s audio RTP payloader"
-msgstr ""
+msgstr "caric util dal audio RTP %s"
 
 #, c-format
 msgid "%s RTP payloader"
-msgstr ""
+msgstr "caric util dal RTP %s"
 
 #, c-format
 msgid "%s muxer"
-msgstr ""
+msgstr "multiplexer di %s"
 
 #, c-format
 msgid "%s encoder"
@@ -370,10 +376,10 @@ msgid "Failed to read tag: not enough data"
 msgstr "No si è rivâts a lei la etichete: no vonde dâts"
 
 msgid "track ID"
-msgstr "ID toc"
+msgstr "ID linie"
 
 msgid "MusicBrainz track ID"
-msgstr "ID MusicBrainz dal toc"
+msgstr "ID MusicBrainz de linie"
 
 msgid "artist ID"
 msgstr "ID artist"
@@ -394,192 +400,206 @@ msgid "MusicBrainz album artist ID"
 msgstr "ID MusicBrainz dal artist dal album"
 
 msgid "release group ID"
-msgstr ""
+msgstr "ID grup di publicazion"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "ID MusicBrainz dal toc"
+msgstr "ID MusicBrainz dal grup di publicazion"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "ID toc"
+msgstr "ID linie publicazion"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "ID MusicBrainz dal toc"
+msgstr "ID MusicBrainz de linie di publicazion"
 
 msgid "track TRM ID"
-msgstr "ID TRM dal toc"
+msgstr "ID TRM de linie"
 
 msgid "MusicBrainz TRM ID"
 msgstr "ID MusicBrainz dal TRM"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "ID AcoustID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "Impront AcoustID (chromaprint)"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "velocitât oturatôr di acuisizion"
 
 msgid "Shutter speed used when capturing an image, in seconds"
 msgstr ""
+"Velocitât dal oturatôr doprade cuant che si acuisìs une imagjin, in seconts"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "rapuart focâl di acuisizion"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Rapuart focâl (numar f) doprât te acuisizion de imagjin"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "lungjece focâl de acuisizion"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Lungjece focâl des lints doprade pe acuisizion de imagjin, in mm"
 
 msgid "capturing 35 mm equivalent focal length"
-msgstr ""
+msgstr "lungjece focâl ecuivalent a 35 mm pe acuisizion"
 
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
 msgstr ""
+"lungjece focâl des lints, ecuivalent a 35 mm, doprade pe acuisizion de "
+"imagjin, in mm "
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "rapuart di ingrandiment digjitâl pe acuisizion"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Rapuart di ingrandiment digjitâl doprât te acuisizion de imagjin"
 
 msgid "capturing iso speed"
 msgstr "velocitât iso di cature"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "La velocitât ISO doprade pe acuisizion de imagjin"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "program di esposizion pe acuisizion"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Il program di esposizion doprât te acuisizion de imagjin"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "modalitât di esposizion pe acuisizion"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "La modalitât di esposizion doprade te acuisizion de imagjin"
 
 msgid "capturing exposure compensation"
-msgstr ""
+msgstr "compensazion di esposizion pe acuisizion"
 
 msgid "The exposure compensation used when capturing an image"
-msgstr ""
+msgstr "La compensazion di esposizion doprade te acuisizion de imagjin"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "gjenar di acuisizion de sene pe acuisizion"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "La modalitât di acuisizion de sene cuant che si acuisìs une imagjin"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "corezion di vuadagn de acuisizion"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "La corezion di vuadagn complessive aplicade su une imagjin"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "belançament dal blanc de acuisizion"
 
 msgid "The white balance mode set when capturing an image"
 msgstr ""
+"La serie di modalitâts di belançament dal blanc te acuisizion de imagjin"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "contrast di acuisizion"
 
 msgid "The direction of contrast processing applied when capturing an image"
 msgstr ""
+"La direzion de elaborazion dal contrast aplicade te acuisizion de imagjin"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "saturazion de acuisizion"
 
 msgid "The direction of saturation processing applied when capturing an image"
 msgstr ""
+"La direzion de elaborazion de saturazion aplicade te acuisizion de imagjin"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "clarece de acuisizion"
 
 msgid "The direction of sharpness processing applied when capturing an image"
 msgstr ""
+"La direzion de elaborazion de clarece aplicade te acuisizion de imagjin"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "lamp lampât pe acuisizion"
 
 msgid "If the flash fired while capturing an image"
 msgstr ""
+"Se il lamp de machine fotografiche al à lampât dilunc la acuisizion de "
+"imagjin"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "modalitât dal lamp de acuisizion"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "La modalitât dal lamp selezionade dilunc la acuisizion de imagjin"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "modalitât di misurazion de acuisizion"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
+"La modalitât di misurazion doprade intant che si determine la esposizion pe "
+"acuisizion di une imagjin"
 
 msgid "capturing source"
-msgstr ""
+msgstr "sorzint di acuisizion"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "La sorzint o il gjenar di dispositîf doprât pe acuisizion"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "ppi orizontâl de imagjin"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
+"Il file multimediâl (imagjin/video) al intindeve la densitât dai pixels "
+"orizontâi in ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "ppi verticâi de imagjin"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
+"Il file ultimediâl (imagjin/video) al intindeve la densitât dai pixels "
+"verticâi in ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "struture ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "struture di etichete id3v2 no analizade"
 
 msgid "musical-key"
-msgstr ""
+msgstr "clâf-musicâl"
 
 msgid "Initial key in which the sound starts"
-msgstr ""
+msgstr "Clâf iniziâl dulà che il sun al scomence"
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Stampe lis informazions di version e jes"
 
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"No stâ jessî dopo vê mostrât la liste di dispositîfs iniziâl, ma spiete la "
+"zonte/rimozion di dispositîfs."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Inclût i dispositîf dai furnidôrs di dispositîfs platâts."
 
 #, c-format
 msgid "Volume: %.0f%%"
 msgstr "Volum: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Cidin: atîf"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Cidin: disativât"
 
 msgid "Buffering..."
 msgstr "Daûr a jemplâ il buffer..."
@@ -603,11 +623,11 @@ msgstr "Daûr a finî, si prepare il prossim titul: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Velocitât di riproduzion: %.2f"
 
 #, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr ""
+msgstr "Impussibil cambiâ la velocitât di riproduzion a %.2f"
 
 msgid "space"
 msgstr "spazi"
@@ -625,13 +645,13 @@ msgid "> or n"
 msgstr "> o n"
 
 msgid "play next"
-msgstr ""
+msgstr "riprodûs sucessîf"
 
 msgid "< or b"
 msgstr "< o b"
 
 msgid "play previous"
-msgstr ""
+msgstr "riprodûs precedent"
 
 msgid "seek forward"
 msgstr "cîr indenant"
@@ -646,13 +666,13 @@ msgid "volume down"
 msgstr "sbasse volum"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "comute audio cidinât atîf/disativât"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "incrès velocitât di riproduzion"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "decrès velocitât di riproduzion"
 
 msgid "change playback direction"
 msgstr "cambie direzion di riproduzion"
@@ -660,21 +680,17 @@ msgstr "cambie direzion di riproduzion"
 msgid "enable/disable trick modes"
 msgstr "abilite/disabilite modalitâts truc"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "cambie toc audio"
+msgstr "passe ae linie audio precedente/sucessive"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "cambie toc video"
+msgstr "passe ae linie video precedente/sucessive"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "cambie toc sottitul"
+msgstr "passe ae linie dal sottitul precedente/sucessive"
 
-#, fuzzy
 msgid "seek to beginning"
-msgstr "cîr dal inizi"
+msgstr "cîr fintal inizi"
 
 msgid "show keyboard shortcuts"
 msgstr "mostre scurtis tastiere"
@@ -684,13 +700,15 @@ msgstr "modalitât interative - controi tastiere:"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
-msgstr ""
+msgstr "Dopre l'orloi di sisteme a alte risoluzion, precision: %u ms\n"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Mande fûr lis informazions sul stât e lis notifichis des proprietâts"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
 msgstr ""
+"Controle il compuartament de riproduzion configurant la proprietât 'flags' "
+"di playbin"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "\"Sink\" video di doprâ (il predefinît al è autovideosink)"
@@ -702,7 +720,7 @@ msgid "Enable gapless playback"
 msgstr "Abilite riproduzion cence pausis"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Abilite lis modifichis istantaniis dal uri (dome cun playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Liste di riproduzion messedade"
@@ -714,6 +732,9 @@ msgid "Volume"
 msgstr "Volum"
 
 msgid "Start position in seconds."
+msgstr "Posizion di inizi in seconts."
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"
@@ -721,6 +742,8 @@ msgstr "Il file de liste di riproduzion al conten file multimediâi di jentrade"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"Dopre la opzion (flag) sperimentâl instant-rate-change (cambi di velocitât "
+"istantani) cuant che tu cambis velocitât di riproduzion"
 
 msgid "Do not print any output (apart from errors)"
 msgstr "No sta a stampâ nissun output (infûr dai erôrs)"
@@ -729,11 +752,16 @@ msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
 msgstr ""
+"Dopre pipeline playbin3 (il predefinît al varie in base ae variabile di "
+"ambient 'USE_PLAYBIN')"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
 "(gapless is ignored)"
 msgstr ""
+"Continue a mostrâ l'ultin fotogram su EOS fintremai che no si jes opûr al "
+"comant par cambiâ liste di riproduzion (gapless “ndt. cence-interval” al ven "
+"ignorât)"
 
 msgid "Do not print current position of pipeline"
 msgstr ""

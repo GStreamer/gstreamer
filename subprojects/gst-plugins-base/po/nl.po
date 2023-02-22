@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.20.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2022-02-08 14:01+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -150,6 +150,10 @@ msgstr "Deze stroom kan nog niet afgespeeld worden."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Geen URI-handler geïmplementeerd voor \"%s\"."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Bronelement is ongeldig."
 
 msgid "Source element is invalid."
 msgstr "Bronelement is ongeldig."
@@ -724,6 +728,9 @@ msgstr "Volume"
 
 msgid "Start position in seconds."
 msgstr "Startpositie in seconden."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Afspeellijstbestand met mediabestanden voor invoer"

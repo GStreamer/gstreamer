@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.10.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2017-09-13 15:20+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -152,6 +152,10 @@ msgstr "Tento typ proudu zatím nemůže být přehrán."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "U „%s“ není prováděna obsluha URI."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Zdrojový prvek je neplatný."
 
 msgid "Source element is invalid."
 msgstr "Zdrojový prvek je neplatný."
@@ -722,6 +726,9 @@ msgid "Volume"
 msgstr "Hlasitost"
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"

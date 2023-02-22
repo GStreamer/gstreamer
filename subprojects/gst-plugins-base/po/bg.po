@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-15 20:28+0200\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@ludost.net>\n"
@@ -151,6 +151,10 @@ msgstr "Потоци от този вид все още не могат да б�
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Обработката на адреси „%s“ не е реализирана."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Елементът-източник няма запълване."
 
 msgid "Source element is invalid."
 msgstr "Елементът-източник е грешен."
@@ -713,6 +717,9 @@ msgstr "Сила на звука"
 
 msgid "Start position in seconds."
 msgstr "Начално положение в секунди."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr "Файл със списък за изпълнение"

@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2014-04-20 16:15+0300\n"
 "Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -154,6 +154,10 @@ msgstr "Šo plūsmu pagaidām nevar atskaņot."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Nav izstrādāts neviens “%s” URI apstrādātājs."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "Avota elements ir nederīgs."
 
 msgid "Source element is invalid."
 msgstr "Avota elements ir nederīgs."
@@ -716,6 +720,9 @@ msgid "Volume"
 msgstr ""
 
 msgid "Start position in seconds."
+msgstr ""
+
+msgid "Enable accurate seeking"
 msgstr ""
 
 msgid "Playlist file containing input media files"

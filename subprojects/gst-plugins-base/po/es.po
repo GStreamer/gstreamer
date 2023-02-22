@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-23 16:27+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2023-01-16 11:17-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
@@ -152,6 +152,10 @@ msgstr "Este tipo de flujo no se puede reproducir aún."
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "No existe un manejador URI implementado para «%s»."
+
+#, fuzzy
+msgid "Source element can't be prepared"
+msgstr "El elemento fuente no tiene rellenos."
 
 msgid "Source element is invalid."
 msgstr "El elemento fuente no es válido."
@@ -714,6 +718,9 @@ msgstr "Volumen"
 
 msgid "Start position in seconds."
 msgstr "Posición de inicio en segundos."
+
+msgid "Enable accurate seeking"
+msgstr ""
 
 msgid "Playlist file containing input media files"
 msgstr ""
