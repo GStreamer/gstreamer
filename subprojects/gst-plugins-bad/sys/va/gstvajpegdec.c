@@ -46,6 +46,7 @@
 
 #include <gst/va/gstvavideoformat.h>
 
+#include "gstvacaps.h"
 #include "gstvabasedec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_jpegdec_debug);
@@ -356,6 +357,7 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaJpegDec *self = GST_VA_JPEG_DEC (decoder);
   GstVideoFormat format;
+  guint64 modifier;
   GstCapsFeatures *capsfeatures = NULL;
 
   /* Ignore downstream renegotiation request. */
@@ -386,7 +388,7 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
     base->rt_format = VA_RT_FORMAT_RGBP;
 
   gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
-      &capsfeatures);
+      &capsfeatures, &modifier);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
@@ -402,7 +404,16 @@ gst_va_jpeg_dec_negotiate (GstVideoDecoder * decoder)
       gst_video_decoder_set_output_state (decoder, format,
       base->width, base->height, base->input_state);
 
-  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
+  /* set caps feature */
+  if (capsfeatures && gst_caps_features_contains (capsfeatures,
+          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    base->output_state->caps =
+        gst_va_video_info_to_dma_caps (&base->output_state->info, modifier);
+  } else {
+    base->output_state->caps =
+        gst_video_info_to_caps (&base->output_state->info);
+  }
+
   if (capsfeatures)
     gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
 

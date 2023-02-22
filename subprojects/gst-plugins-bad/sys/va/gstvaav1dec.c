@@ -265,7 +265,7 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
     GstVideoFormat format;
 
     gst_va_base_dec_get_preferred_format_and_caps_features (base,
-        &format, NULL);
+        &format, NULL, NULL);
     if (format == GST_VIDEO_FORMAT_UNKNOWN) {
       GST_WARNING_OBJECT (self, "Failed to get format for internal pool");
       return NULL;

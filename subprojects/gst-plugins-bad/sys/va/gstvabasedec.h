@@ -133,7 +133,8 @@ void                  gst_va_base_dec_class_init          (GstVaBaseDecClass * k
 gboolean              gst_va_base_dec_close               (GstVideoDecoder * decoder);
 void                  gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
                                                            GstVideoFormat * format,
-                                                           GstCapsFeatures ** capsfeatures);
+                                                           GstCapsFeatures ** capsfeatures,
+                                                           guint64 * modifier);
 gboolean              gst_va_base_dec_copy_output_buffer  (GstVaBaseDec * base,
                                                            GstVideoCodecFrame * codec_frame);
 gboolean              gst_va_base_dec_process_output      (GstVaBaseDec * base,

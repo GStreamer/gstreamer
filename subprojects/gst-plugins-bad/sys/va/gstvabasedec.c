@@ -501,7 +501,10 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 
   gst_query_parse_allocation (query, &caps, NULL);
 
-  if (!(caps && gst_video_info_from_caps (&info, caps)))
+  if (!caps)
+    goto wrong_caps;
+
+  if (!gst_va_video_info_from_caps (&info, NULL, caps))
     goto wrong_caps;
 
   has_videometa = gst_query_find_allocation_meta (query,
@@ -515,9 +518,12 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
      2. Some codec such as H265, it does not clean the DPB when new SPS
      comes. The new SPS may set the crop window to top-left corner and
      so no video crop is needed here. But we may still have cached frames
-     in DPB which need a copy. */
-  if ((_need_video_crop (base) && !has_video_crop_meta) ||
-      base->apply_video_crop) {
+     in DPB which need a copy.
+     3. For DMA kind memory, because we may not be able to map this buffer,
+     just disable the copy for crop. This may cause some alignment garbage. */
+  if (!gst_video_is_dma_drm_caps (caps) &&
+      ((_need_video_crop (base) && !has_video_crop_meta) ||
+          base->apply_video_crop)) {
     return _decide_allocation_for_video_crop (decoder, query, caps, &info);
   }
 
@@ -758,16 +764,24 @@ gst_va_base_dec_class_init (GstVaBaseDecClass * klass, GstVaCodecs codec,
 /* XXX: if chroma has not an available format, the first format is
  * returned, relying on an hypothetical internal CSC */
 static GstVideoFormat
-_find_video_format_from_chroma (const GValue * formats, guint chroma_type)
+_find_video_format_from_chroma (const GValue * formats, guint chroma_type,
+    gboolean drm_format, guint64 * modifier)
 {
   GstVideoFormat fmt;
+  guint32 fourcc;
   guint i, num_values;
 
   if (!formats)
     return GST_VIDEO_FORMAT_UNKNOWN;
 
   if (G_VALUE_HOLDS_STRING (formats)) {
-    return gst_video_format_from_string (g_value_get_string (formats));
+    if (drm_format) {
+      fourcc = gst_video_dma_drm_fourcc_from_string
+          (g_value_get_string (formats), modifier);
+      return gst_va_video_format_from_drm_fourcc (fourcc);
+    } else {
+      return gst_video_format_from_string (g_value_get_string (formats));
+    }
   } else if (GST_VALUE_HOLDS_LIST (formats)) {
     GValue *val, *first_val = NULL;
 
@@ -778,13 +792,28 @@ _find_video_format_from_chroma (const GValue * formats, guint chroma_type)
         continue;
       if (!first_val)
         first_val = val;
-      fmt = gst_video_format_from_string (g_value_get_string (val));
+
+      if (drm_format) {
+        fourcc = gst_video_dma_drm_fourcc_from_string (g_value_get_string (val),
+            modifier);
+        fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+      } else {
+        fmt = gst_video_format_from_string (g_value_get_string (val));
+      }
+
       if (gst_va_chroma_from_video_format (fmt) == chroma_type)
         return fmt;
     }
 
-    if (first_val)
-      return gst_video_format_from_string (g_value_get_string (first_val));
+    if (first_val) {
+      if (drm_format) {
+        fourcc = gst_video_dma_drm_fourcc_from_string (g_value_get_string
+            (first_val), modifier);
+        return gst_va_video_format_from_drm_fourcc (fourcc);
+      } else {
+        return gst_video_format_from_string (g_value_get_string (first_val));
+      }
+    }
   }
 
   return GST_VIDEO_FORMAT_UNKNOWN;
@@ -792,13 +821,15 @@ _find_video_format_from_chroma (const GValue * formats, guint chroma_type)
 
 static GstVideoFormat
 _caps_video_format_from_chroma (GstCaps * caps, GstCapsFeatures * features,
-    guint chroma_type)
+    guint chroma_type, guint64 * ret_modifier)
 {
   guint i, num_structures;
+  gboolean drm_format;
   GstCapsFeatures *feats;
   GstStructure *structure;
   const GValue *format;
   GstVideoFormat fmt, ret_fmt = GST_VIDEO_FORMAT_UNKNOWN;
+  guint64 modifier;
 
   num_structures = gst_caps_get_size (caps);
   for (i = 0; i < num_structures; i++) {
@@ -806,19 +837,30 @@ _caps_video_format_from_chroma (GstCaps * caps, GstCapsFeatures * features,
     if (!gst_caps_features_is_equal (feats, features))
       continue;
     structure = gst_caps_get_structure (caps, i);
-    format = gst_structure_get_value (structure, "format");
 
-    fmt = _find_video_format_from_chroma (format, chroma_type);
+    if (gst_caps_features_contains (feats, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      format = gst_structure_get_value (structure, "drm-format");
+      drm_format = TRUE;
+    } else {
+      format = gst_structure_get_value (structure, "format");
+      drm_format = FALSE;
+    }
+
+    fmt = _find_video_format_from_chroma (format, chroma_type, drm_format,
+        &modifier);
     if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
       continue;
 
-    /* Record the first valid format as the fallback if we can
-       not find a better one. */
-    if (ret_fmt == GST_VIDEO_FORMAT_UNKNOWN)
+    if (ret_fmt == GST_VIDEO_FORMAT_UNKNOWN) {
       ret_fmt = fmt;
+      if (ret_modifier)
+        *ret_modifier = modifier;
+    }
 
     if (gst_va_chroma_from_video_format (fmt) == chroma_type) {
       ret_fmt = fmt;
+      if (ret_modifier)
+        *ret_modifier = modifier;
       break;
     }
   }
@@ -828,13 +870,28 @@ _caps_video_format_from_chroma (GstCaps * caps, GstCapsFeatures * features,
 
 static GstVideoFormat
 _default_video_format_from_chroma (GstVaBaseDec * base,
-    GstCapsFeatures * features, guint chroma_type)
+    GstCaps * preferred_caps, GstCapsFeatures * features, guint chroma_type,
+    guint64 * modifier)
 {
   GstCaps *tmpl_caps;
   GstVideoFormat ret = GST_VIDEO_FORMAT_UNKNOWN;
 
   tmpl_caps = gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (base));
-  ret = _caps_video_format_from_chroma (tmpl_caps, features, chroma_type);
+
+  /* Make the preferred caps in the order of our template */
+  if (preferred_caps) {
+    GstCaps *tmp;
+    g_assert (!gst_caps_is_empty (preferred_caps));
+
+    tmp = tmpl_caps;
+    tmpl_caps = gst_caps_intersect_full (tmp, preferred_caps,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  }
+
+  ret = _caps_video_format_from_chroma (tmpl_caps, features, chroma_type,
+      modifier);
+
   gst_caps_unref (tmpl_caps);
 
   return ret;
@@ -858,9 +915,10 @@ _downstream_has_video_meta (GstVaBaseDec * base, GstCaps * caps)
 
 void
 gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
-    GstVideoFormat * format, GstCapsFeatures ** capsfeatures)
+    GstVideoFormat * format, GstCapsFeatures ** capsfeatures,
+    guint64 * modifier)
 {
-  GstCaps *peer_caps, *preferred_caps = NULL;
+  GstCaps *peer_caps = NULL, *preferred_caps = NULL;
   GstCapsFeatures *features;
   GstStructure *structure;
   guint num_structures, i;
@@ -897,16 +955,14 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
   }
 
   if (!preferred_caps)
-    preferred_caps = peer_caps;
-  else
-    gst_clear_caps (&peer_caps);
+    preferred_caps = gst_caps_copy (peer_caps);
 
   if (gst_caps_is_empty (preferred_caps)) {
     if (capsfeatures)
       *capsfeatures = NULL;     /* system memory */
     if (format) {
-      *format = _default_video_format_from_chroma (base,
-          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY, base->rt_format);
+      *format = _default_video_format_from_chroma (base, NULL,
+          GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY, base->rt_format, NULL);
     }
     goto bail;
   }
@@ -922,7 +978,10 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
       && !_downstream_has_video_meta (base, preferred_caps)) {
     GST_INFO_OBJECT (base, "Downstream reports ANY caps but without"
         " VideoMeta support; fallback to system memory.");
+
     features = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
+    gst_clear_caps (&preferred_caps);
+    preferred_caps = gst_caps_copy (peer_caps);
   }
 
 
@@ -932,12 +991,13 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
   /* Use the format from chroma and available format for selected
    * capsfeature */
   if (format) {
-    *format = _default_video_format_from_chroma (base, features,
-        base->rt_format);
+    *format = _default_video_format_from_chroma (base, preferred_caps,
+        features, base->rt_format, modifier);
   }
 
 bail:
   gst_clear_caps (&preferred_caps);
+  gst_clear_caps (&peer_caps);
 }
 
 static gboolean
@@ -1143,6 +1203,7 @@ gst_va_base_dec_set_output_state (GstVaBaseDec * base)
 {
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (base);
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+  guint64 modifier;
   GstCapsFeatures *capsfeatures = NULL;
   GstVideoInfo *info = &base->output_info;
 
@@ -1150,7 +1211,7 @@ gst_va_base_dec_set_output_state (GstVaBaseDec * base)
     gst_video_codec_state_unref (base->output_state);
 
   gst_va_base_dec_get_preferred_format_and_caps_features (base, &format,
-      &capsfeatures);
+      &capsfeatures, &modifier);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
@@ -1160,7 +1221,15 @@ gst_va_base_dec_set_output_state (GstVaBaseDec * base)
       GST_VIDEO_INFO_HEIGHT (info), base->input_state);
 
   /* set caps feature */
-  base->output_state->caps = gst_video_info_to_caps (&base->output_state->info);
+  if (capsfeatures && gst_caps_features_contains (capsfeatures,
+          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    base->output_state->caps =
+        gst_va_video_info_to_dma_caps (&base->output_state->info, modifier);
+  } else {
+    base->output_state->caps =
+        gst_video_info_to_caps (&base->output_state->info);
+  }
+
   if (capsfeatures)
     gst_caps_set_features_simple (base->output_state->caps, capsfeatures);
 
