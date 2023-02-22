@@ -211,8 +211,8 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   subresource_data.SysMemPitch = stride;
   subresource_data.SysMemSlicePitch = 0;
 
-  texture_desc.Width = width;
-  texture_desc.Height = height;
+  texture_desc.Width = vmeta->width;
+  texture_desc.Height = vmeta->height;
   texture_desc.MipLevels = 1;
   texture_desc.ArraySize = 1;
   texture_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
