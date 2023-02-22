@@ -106,6 +106,7 @@ typedef struct _MsdkSession MsdkSession;
 
 struct _MsdkSession
 {
+  mfxU32 impl_idx;
   mfxSession session;
   mfxLoader loader;
 };
@@ -153,6 +154,11 @@ msdk_get_platform_codename (mfxSession session);
 mfxStatus
 msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
     MsdkSession * msdk_session);
+
+gpointer
+msdk_get_impl_description (const mfxLoader * loader, mfxU32 impl_idx);
+gboolean
+msdk_release_impl_description (const mfxLoader * loader, gpointer impl_desc);
 
 G_END_DECLS
 

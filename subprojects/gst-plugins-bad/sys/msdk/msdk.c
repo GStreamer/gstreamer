@@ -179,6 +179,40 @@ msdk_get_platform_codename (mfxSession session)
 
 #if (MFX_VERSION >= 2000)
 
+gpointer
+msdk_get_impl_description (const mfxLoader * loader, mfxU32 impl_idx)
+{
+  mfxImplDescription *desc = NULL;
+  mfxStatus status = MFX_ERR_NONE;
+
+  g_return_val_if_fail (loader != NULL, NULL);
+
+  status = MFXEnumImplementations (*loader, impl_idx,
+      MFX_IMPLCAPS_IMPLDESCSTRUCTURE, (mfxHDL *) & desc);
+  if (status != MFX_ERR_NONE) {
+    GST_ERROR ("Failed to get implementation description, %s",
+        msdk_status_to_string (status));
+    return NULL;
+  }
+
+  return desc;
+}
+
+gboolean
+msdk_release_impl_description (const mfxLoader * loader, gpointer impl_desc)
+{
+  mfxStatus status = MFX_ERR_NONE;
+  mfxImplDescription *desc = (mfxImplDescription *) impl_desc;
+
+  g_return_val_if_fail (loader != NULL, FALSE);
+
+  status = MFXDispReleaseImplDescription (*loader, desc);
+  if (status != MFX_ERR_NONE)
+    return FALSE;
+
+  return TRUE;
+}
+
 mfxStatus
 msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
     MsdkSession * msdk_session)
@@ -258,8 +292,10 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
     sts = MFXCreateSession (loader, impl_idx, &session);
     MFXDispReleaseImplDescription (loader, impl_desc);
 
-    if (sts == MFX_ERR_NONE)
+    if (sts == MFX_ERR_NONE) {
+      msdk_session->impl_idx = impl_idx;
       break;
+    }
 
     impl_idx++;
   }
@@ -281,6 +317,18 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
 }
 
 #else
+
+gpointer
+msdk_get_impl_description (const mfxLoader * loader, mfxU32 impl_idx)
+{
+  return NULL;
+}
+
+gboolean
+msdk_release_impl_description (const mfxLoader * loader, gpointer impl_desc)
+{
+  return TRUE;
+}
 
 mfxStatus
 msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
