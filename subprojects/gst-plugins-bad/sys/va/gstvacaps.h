@@ -43,7 +43,7 @@ GstCaps *             gst_va_create_coded_caps            (GstVaDisplay * displa
                                                            guint32 * rt_formats_ptr);
 
 gboolean              gst_caps_set_format_array           (GstCaps * caps,
-							   GArray * formats);
+                                                           GArray * formats);
 
 gboolean              gst_caps_is_dmabuf                  (GstCaps * caps);
 gboolean              gst_caps_is_vamemory                (GstCaps * caps);
