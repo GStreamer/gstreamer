@@ -25,6 +25,7 @@
 #include "gstvabasetransform.h"
 
 #include <gst/va/gstva.h>
+#include <gst/va/gstvavideoformat.h>
 
 #include "gstvacaps.h"
 #include "gstvapluginutils.h"
@@ -177,11 +178,11 @@ gst_va_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   gboolean res;
 
   /* input caps */
-  if (!gst_video_info_from_caps (&in_info, incaps))
+  if (!gst_va_video_info_from_caps (&in_info, NULL, incaps))
     goto invalid_caps;
 
   /* output caps */
-  if (!gst_video_info_from_caps (&out_info, outcaps))
+  if (!gst_va_video_info_from_caps (&out_info, NULL, outcaps))
     goto invalid_caps;
 
   fclass = GST_VA_BASE_TRANSFORM_GET_CLASS (self);
@@ -253,7 +254,7 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   gst_query_parse_allocation (query, &caps, NULL);
   if (!caps)
     return FALSE;
-  if (!gst_video_info_from_caps (&info, caps)) {
+  if (!gst_va_video_info_from_caps (&info, NULL, caps)) {
     GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
@@ -353,7 +354,7 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
   gst_allocation_params_init (&other_params);
   gst_allocation_params_init (&params);
 
-  if (!gst_video_info_from_caps (&vinfo, outcaps)) {
+  if (!gst_va_video_info_from_caps (&vinfo, NULL, outcaps)) {
     GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, outcaps);
     return FALSE;
   }
@@ -848,6 +849,35 @@ _get_sinkpad_pool (GstVaBaseTransform * self, GstBuffer * inbuf)
   else
     caps = gst_caps_copy (self->in_caps);
 
+  g_assert (gst_caps_is_fixed (caps));
+  /* For DMA buffer, we can only import linear buffers.
+     Replace the drm-format into format field. */
+  if (gst_video_is_dma_drm_caps (caps)) {
+    GstVideoInfoDmaDrm dma_info;
+    GstVideoInfo info;
+
+    if (!gst_video_info_dma_drm_from_caps (&dma_info, caps)) {
+      GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+      gst_caps_unref (caps);
+      return NULL;
+    }
+
+    if (dma_info.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
+      GST_ERROR_OBJECT (self, "Cannot import non-linear DMA buffer");
+      gst_caps_unref (caps);
+      return NULL;
+    }
+
+    if (!gst_va_dma_drm_info_to_video_info (&dma_info, &info)) {
+      GST_ERROR_OBJECT (self, "Cannot get va video info");
+      gst_caps_unref (caps);
+      return NULL;
+    }
+
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING,
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&info)), NULL);
+    gst_structure_remove_field (gst_caps_get_structure (caps, 0), "drm-format");
+  }
   gst_caps_set_features_simple (caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
 
