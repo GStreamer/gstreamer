@@ -1,22 +1,23 @@
 # Friulian translation for gstreamer package of GStreamer project.
 # This file is put in the public domain.
-# Fabio Tomat <f.t.public@gmail.com>, 2017.
+# Fabio Tomat <f.t.public@gmail.com>, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.10.0\n"
+"Project-Id-Version: gstreamer 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2017-03-19 15:41+0100\n"
-"Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
+"POT-Creation-Date: 2023-02-22 11:51+0000\n"
+"PO-Revision-Date: 2023-01-28 11:40+0100\n"
+"Last-Translator: Fabio T. <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
 "Language: fur\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.8.12\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Editor: HaiPO 1.4 beta\n"
+"X-Generator: Poedit 3.2.2\n"
 
 msgid "Print the GStreamer version"
 msgstr "Stampe la version di GStreamer"
@@ -25,11 +26,12 @@ msgid "Make all warnings fatal"
 msgstr "Fâs deventâ ducj i avertiments fatâi"
 
 msgid "Print available debug categories and exit"
-msgstr ""
+msgstr "Stampe lis categoriis di debug disponibilis e jes"
 
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
+"Nivel di debug predefinît di 1 (dome erôr) a 9 (dut) opûr 0 par no vê output"
 
 msgid "LEVEL"
 msgstr "NIVEL"
@@ -38,26 +40,30 @@ msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
+"Liste separade di virgulis di cubiis non_categorie:nivel par stabilî i nivei "
+"specifics pes categoriis individuâls. Esempli: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
 msgstr "LISTE"
 
 msgid "Disable colored debugging output"
-msgstr ""
+msgstr "Disabilite la jessude di debug colorade"
 
 msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Al cambie la modalitât di colorazion dal regjistri di debug. Lis modalitât "
+"pussibilis: off, on, disable, auto, unix"
 
 msgid "Disable debugging"
-msgstr ""
+msgstr "Disabilite il debug"
 
 msgid "Enable verbose plugin loading diagnostics"
-msgstr ""
+msgstr "Abilite lis diagnostichis prolissis pal cjariament dai plugins"
 
 msgid "Colon-separated paths containing plugins"
-msgstr ""
+msgstr "Percors separâts di “:” che a contegnin i plugins"
 
 msgid "PATHS"
 msgstr "PERCORS"
@@ -66,18 +72,24 @@ msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
 msgstr ""
+"Liste separade di “:” di plugins di pre-cjariâ in zonte ae liste archividade "
+"te variabile di ambient GST_PLUGIN_PATH"
 
 msgid "PLUGINS"
 msgstr "PLUGIN"
 
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
+"Disabilite la cature di vuascj di segmentazion dilunc il cjariament dai "
+"plugins"
 
 msgid "Disable updating the registry"
-msgstr ""
+msgstr "Disabilite l'inzornament dal regjistri"
 
 msgid "Disable spawning a helper process while scanning the registry"
 msgstr ""
+"Disabilite la creazion di un procès aiutant intant che si analize il "
+"regjistri"
 
 msgid "GStreamer Options"
 msgstr "Opzions GStreamer"
@@ -90,69 +102,75 @@ msgid "Unknown option"
 msgstr "Opzion no cognossude"
 
 msgid "GStreamer encountered a general core library error."
-msgstr ""
+msgstr "GStreamer al à riscontrât un erôr gjenerâl de librarie cûr."
 
 msgid ""
 "GStreamer developers were too lazy to assign an error code to this error."
 msgstr ""
+"I svilupadôrs di GStreamer a jerin masse pelandrons par assegnâ un codiç di "
+"erôr a chest erôr."
 
 msgid "Internal GStreamer error: code not implemented."
-msgstr ""
+msgstr "Erôr interni di GStreamer: codiç no implementât."
 
 msgid ""
 "GStreamer error: state change failed and some element failed to post a "
 "proper error message with the reason for the failure."
 msgstr ""
+"Erôr di GStreamer: il cambiament di stât al à falît e cualchi element nol è "
+"rivât a publicâ un messaç di erôr adat cul motîf relatîf al faliment."
 
 msgid "Internal GStreamer error: pad problem."
-msgstr ""
+msgstr "Erôr interni di GStreamer: probleme di imbotidure."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr ""
+msgstr "Erôr interni di GStreamer: probleme di thread."
 
 msgid "GStreamer error: negotiation problem."
-msgstr ""
+msgstr "Erôr di GStreamer: probleme di negoziazion."
 
 msgid "Internal GStreamer error: event problem."
-msgstr ""
+msgstr "Erôr interni di GStreamer: probleme di event."
 
 msgid "Internal GStreamer error: seek problem."
-msgstr ""
+msgstr "Erôr interni di GStreamer: probleme di ricercje."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr ""
+msgstr "Erôr interni di GStreamer: probleme di sottitui."
 
 msgid "Internal GStreamer error: tag problem."
-msgstr ""
+msgstr "Erôr interni di GStreamer: probleme di etichete."
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr ""
+msgstr "Ae tô instalazion di GStreamer e mancje un plug-in."
 
 msgid "GStreamer error: clock problem."
-msgstr ""
+msgstr "Erôr di GStreamer: probleme di orloi."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
 "disabled."
 msgstr ""
+"Cheste aplicazion e sta cirint di doprâ une funzion di GStreamer che e je "
+"stade disabilitade."
 
 msgid "GStreamer encountered a general supporting library error."
-msgstr ""
+msgstr "GStreamer al à riscontrât un erôr gjenerâl de librarie di supuart."
 
 msgid "Could not initialize supporting library."
-msgstr ""
+msgstr "Impussibil inizializâ la librarie di supuart."
 
 msgid "Could not close supporting library."
-msgstr ""
+msgstr "Impussibil sierâ la libarie di supuart."
 
 msgid "Could not configure supporting library."
-msgstr ""
+msgstr "Impussibil configurâ la librarie di supuart."
 
 msgid "Encoding error."
 msgstr "Erôr di codifiche."
 
 msgid "GStreamer encountered a general resource error."
-msgstr ""
+msgstr "GStreamer al à riscontrât un erôr gjenerâl des risorsis."
 
 msgid "Resource not found."
 msgstr "Risorse no cjatade."
@@ -194,19 +212,22 @@ msgid "Not authorized to access resource."
 msgstr "No autorizât a acedi ae risorse."
 
 msgid "GStreamer encountered a general stream error."
-msgstr ""
+msgstr "GStreamer al à riscontrât un erôr gjenerâl di flus."
 
 msgid "Element doesn't implement handling of this stream. Please file a bug."
 msgstr ""
+"L'element nol implemente la gjestion di chest flus. Par plasê, fâs une "
+"segnalazion di erôr."
 
 msgid "Could not determine type of stream."
 msgstr "Impussibil determinâ il gjenar di flus."
 
 msgid "The stream is of a different type than handled by this element."
-msgstr ""
+msgstr "Il flus al è di un gjenar diferent di chel gjestît di chest element."
 
 msgid "There is no codec present that can handle the stream's type."
 msgstr ""
+"Nol è presint nissun codificadôr che al pues gjestî chest gjenar di flus."
 
 msgid "Could not decode stream."
 msgstr "Impussibil decodificâ il flus."
@@ -215,10 +236,10 @@ msgid "Could not encode stream."
 msgstr "Impussibil codificâ il flus."
 
 msgid "Could not demultiplex stream."
-msgstr ""
+msgstr "Impussibil demultiplexâ il flus."
 
 msgid "Could not multiplex stream."
-msgstr ""
+msgstr "Impussibil multiplexâ il flus."
 
 msgid "The stream is in the wrong format."
 msgstr "Il flus al è tal formât sbaliât."
@@ -242,7 +263,7 @@ msgid "No standard error message for domain %s and code %d."
 msgstr "Nissun messaç di erôr standard pal domini %s e codiç %d."
 
 msgid "Selected clock cannot be used in pipeline."
-msgstr ""
+msgstr "Nol è pussibil doprâ te pipeline l'orloi selezionât."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
@@ -319,13 +340,14 @@ msgid "comment"
 msgstr "coment"
 
 msgid "free text commenting the data"
-msgstr ""
+msgstr "test libar che al comente i dâts"
 
 msgid "extended comment"
-msgstr ""
+msgstr "coment slargjât"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
+"test libar che al comente i dâts te forme clâf=valôr o clâf[ing]=coment"
 
 msgid "track number"
 msgstr "numar dal toc"
@@ -366,8 +388,8 @@ msgstr "sît web"
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr ""
-"sît web par chest contignût multimediâl (p.e. il sît web dal artist o dal "
-"film)"
+"Sît web par chest contignût multimediâl (vâl a dî la pagjine web dal artist "
+"o dal film)"
 
 msgid "description"
 msgstr "descrizion"
@@ -507,16 +529,16 @@ msgid "maximum bitrate in bits/s"
 msgstr "bitrate massim in bit/s"
 
 msgid "encoder"
-msgstr ""
+msgstr "codificadôr"
 
 msgid "encoder used to encode this stream"
-msgstr ""
+msgstr "codificadôr doprât par codificâ chest flus"
 
 msgid "encoder version"
-msgstr ""
+msgstr "version codificadôr"
 
 msgid "version of the encoder used to encode this stream"
-msgstr ""
+msgstr "version dal codfiicadôr doprât par codificâ chest flus"
 
 msgid "serial"
 msgstr "seriâl"
@@ -552,7 +574,7 @@ msgid "replaygain reference level"
 msgstr ""
 
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "nivel di riferiment dai valôrs di vuadagn de linie e dal album"
 
 msgid "language code"
 msgstr "codiç lenghe"
@@ -604,6 +626,8 @@ msgid ""
 "human readable descriptive location of where the media has been recorded or "
 "produced"
 msgstr ""
+"ubicazion descritive par umans di dulà che l'element multimediâl al è stât "
+"regjistrât o prodot"
 
 msgid "geo location latitude"
 msgstr "latitudin posizion gjeog."
@@ -662,6 +686,8 @@ msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
+"une posizion dentri di une citât dulà che l'element multimediâl al è stât "
+"prodot o creât (p.e. borc)"
 
 msgid "geo location horizontal error"
 msgstr ""
@@ -855,13 +881,13 @@ msgstr ""
 msgid "no property \"%s\" in element \"%s\""
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Element \"%s\" is not a GstPreset"
-msgstr "Il file \"%s\" al è un socket."
+msgstr "L'element \"%s\" nol è un GstPreset"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set preset \"%s\" in element \"%s\""
-msgstr "Impussibil creâ il file temporani \"%s\"."
+msgstr "impussibil stabilî la pre-configurazion \"%s\" tal element \"%s\""
 
 #, c-format
 msgid "no element \"%s\""
@@ -926,10 +952,10 @@ msgid "no bin \"%s\", unpacking elements"
 msgstr ""
 
 msgid "empty pipeline not allowed"
-msgstr ""
+msgstr "la pipeline vueide no je ametude"
 
 msgid "Pipeline construction is invalid, please add queues."
-msgstr ""
+msgstr "La costrusion de pipeline no je valide, zonte codis di riproduzion."
 
 msgid "A lot of buffers are being dropped."
 msgstr ""
@@ -1035,9 +1061,9 @@ msgstr "Il flus nol conten vonde dâts."
 msgid "Stream contains no data."
 msgstr "Il flus nol conten dâts."
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sImplemented Interfaces%s:\n"
-msgstr "Interfacis implementadis:\n"
+msgstr "%sInterfacis implementadis%s:\n"
 
 msgid "readable"
 msgstr ""
@@ -1066,9 +1092,9 @@ msgstr ""
 msgid "Blacklisted files:"
 msgstr "File te liste nere:"
 
-#, fuzzy, c-format
+#, c-format
 msgid "%sTotal count%s: %s"
-msgstr "Conte totâl: "
+msgstr "%sConte totâl%s: %s"
 
 #, c-format
 msgid "%d blacklisted file"
@@ -1146,10 +1172,10 @@ msgid "Index statistics"
 msgstr ""
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr ""
+msgstr "Daûr a meti la pipeline a RIPRODUZION ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
-msgstr ""
+msgstr "ERÔR: la pipeline no vûl riprodusi.\n"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1172,7 +1198,7 @@ msgid "Got EOS from element \"%s\".\n"
 msgstr ""
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr ""
+msgstr "Ricevût EOS - daûr a fermâ la pipeline...\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
@@ -1205,10 +1231,12 @@ msgid ""
 "INFO:\n"
 "%s\n"
 msgstr ""
+"INFORMAZION:\n"
+"%s\n"
 
 #, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr ""
+msgstr "ATENZION: dal element %s: %s\n"
 
 msgid "Pipeline is PREROLLED ...\n"
 msgstr ""
@@ -1220,35 +1248,38 @@ msgid "Prerolled, waiting for progress to finish...\n"
 msgstr ""
 
 msgid "buffering..."
-msgstr ""
+msgstr "daûr a jemplâ la memorie tampon..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
+"Terminât di jemplâ la memorie tampon, daûr a meti la pipeline a "
+"RIPRODUZION ...\n"
 
 #. we were not buffering but PLAYING, PAUSE  the pipeline.
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr ""
+"Daûr a jemplâ la memorie tampon, configurazion de pipeline a IN PAUSE ...\n"
 
 msgid "Redistribute latency...\n"
 msgstr ""
 
 #, c-format
 msgid "Setting state to %s as requested by %s...\n"
-msgstr ""
+msgstr "Daûr a meti il stât a %s come domandât di %s...\n"
 
 #. this application message is posted when we caught an interrupt and
 #. * we need to stop the pipeline.
 msgid "Interrupt: Stopping pipeline ...\n"
-msgstr ""
+msgstr "Interuzion: daûr a fermâ la pipeline ...\n"
 
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr ""
+msgstr "Interuzion dilunc la spiete pal EOS - daûr a fermâ la pipeline...\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
-msgstr ""
+msgstr "EOS al distudâ abilitât -- Daûr a sfuarçâ il EOS su la pipeline\n"
 
 msgid "Waiting for EOS...\n"
-msgstr ""
+msgstr "Daûr a spietâ il EOS...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
@@ -1266,74 +1297,84 @@ msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr ""
 
 msgid "An error happened while waiting for EOS\n"
-msgstr ""
+msgstr "Al è capitât un erôr intant che si spietave il EOS\n"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
+"Dopre l'orloi di sisteme di Windows a alte risoluzion, precision: %u ms\n"
 
 msgid "Output tags (also known as metadata)"
-msgstr ""
+msgstr "Etichetis di jessude (cognossudis ancje come metadâts)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "TOC di jessude (cjapitui e edizions)"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Informazions di stât di jessude e notifichis di proprietâts"
 
 msgid "Do not print any progress information"
 msgstr "No stâ stampâ nissune informazion di progrès"
 
 msgid "Output messages"
-msgstr ""
+msgstr "Messaçs di jessude"
 
 msgid ""
 "Do not output status information for the specified property if verbose "
 "output is enabled (can be used multiple times)"
 msgstr ""
+"No sta mandâ fûr lis informazions di stât pe proprietât indicade se la "
+"jessude prolisse e je abilitade (al è pussibil doprâle plui voltis)"
 
 msgid "PROPERTY-NAME"
-msgstr ""
+msgstr "NON-PROPRIETÂT"
 
 msgid "Do not install a fault handler"
-msgstr ""
+msgstr "No sta instalâ un gjestôr di erôrs"
 
 msgid "Force EOS on sources before shutting the pipeline down"
-msgstr ""
+msgstr "Sfuarce l'EOS su lis sorzints prime di distudâ la pipeline"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Recupere e stampe lis statistichis de tabele"
 
 msgid ""
 "Do not print current position of pipeline. If this option is unspecified, "
 "the position will be printed when stdout is a TTY. To enable printing "
 "position when stdout is not a TTY, use \"force-position\" option"
 msgstr ""
+"No sta stampâ la posizion corinte de pipeline. Se cheste opzion no ven "
+"specificade e se il stdout al è un TTY, la posizion e vignarà stampade. Par "
+"abilitâ la stampe de posizion cuant che il stdout nol è un TTY, dopre la "
+"opzion \"force-position\""
 
 msgid ""
 "Allow printing current position of pipeline even if stdout is not a TTY. "
 "This option has no effect if the \"no-position\" option is specified"
 msgstr ""
+"Permet di stampâ la posizion corinte de pipeline ancje se il stdout nol è un "
+"TTY. Cheste opzion no à efiet se e je stade specificade la opzion “no-"
+"position”"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
-msgstr ""
+msgstr "ERÔR: nol è stât pussibil costruî la pipeline: %s.\n"
 
 msgid "ERROR: pipeline could not be constructed.\n"
-msgstr ""
+msgstr "ERÔR: nol è stât pussibil costruî la pipeline.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr ""
+msgstr "ATENZION: pipeline sbaliade: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr ""
+msgstr "ERÔR: nol è stât cjatât l'element 'pipeline'.\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr ""
+msgstr "Daûr a meti la pipeline a IN PAUSE ...\n"
 
 msgid "Failed to set pipeline to PAUSED.\n"
-msgstr ""
+msgstr "Impussibil meti la pipeline a IN PAUSE.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr ""
@@ -1342,10 +1383,10 @@ msgid "Pipeline is PREROLLING ...\n"
 msgstr ""
 
 msgid "Execution ended after %"
-msgstr ""
+msgstr "Esecuzion finide dopo %"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr ""
+msgstr "Daûr a meti la pipeline a NULE ...\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr ""
+msgstr "Daûr a liberâ la pipeline ...\n"
