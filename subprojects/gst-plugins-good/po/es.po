@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2022-03-04 17:35-0600\n"
 "Last-Translator: Cristian Othón Martínez Vera <cfuga@cfuga.mx>\n"
 "Language-Team: Spanish <es@tp.org.es>\n"
@@ -100,6 +100,12 @@ msgstr "Este archivo está corrupto y no se puede reproducir."
 
 msgid "Invalid atom size."
 msgstr "El tamaño atom no es válido."
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Este archivo está incompleto y no se puede reproducir."

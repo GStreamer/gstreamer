@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.12.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2017-05-05 06:52+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
@@ -98,6 +98,12 @@ msgstr "Tập tin này bị hỏng nên không thể phát."
 
 msgid "Invalid atom size."
 msgstr "Kích thước nguyên tử (atom) không hợp lệ."
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tập tin này chưa hoàn thành nên không thể được phát."

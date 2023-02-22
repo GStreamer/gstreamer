@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.19.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2021-10-04 14:15+0300\n"
 "Last-Translator: Mehmet Kececi <mkececi@mehmetkececi.com>\n"
 "Language-Team: Turkish <gnome-turk@gnome.org>\n"
@@ -101,6 +101,12 @@ msgstr "Bu dosya bozuk ve oynatılamaz."
 
 msgid "Invalid atom size."
 msgstr "Geçersiz atom boyutu."
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Dosya eksik ve oynatılamaz."

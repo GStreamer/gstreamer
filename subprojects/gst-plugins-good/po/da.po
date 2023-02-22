@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2019-02-17 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -101,6 +101,12 @@ msgstr "Denne fil er ødelagt og kan ikke afspilles."
 
 msgid "Invalid atom size."
 msgstr "Ugyldig atomstørrelse."
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Denne fil er ufuldstændig og kan ikke afspilles."

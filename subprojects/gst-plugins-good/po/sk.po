@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 1.15.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2020-06-11 10:01+0200\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -99,6 +99,12 @@ msgstr "Tento súbor je poškodený a nedá sa prehrať."
 
 msgid "Invalid atom size."
 msgstr "Nesprávna atomická veľkosť."
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tento súbor je neúplný a nedá sa prehrať."
