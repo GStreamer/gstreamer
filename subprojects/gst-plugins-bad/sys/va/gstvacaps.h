@@ -41,6 +41,11 @@ GstCaps *             gst_va_create_coded_caps            (GstVaDisplay * displa
                                                            VAProfile profile,
                                                            VAEntrypoint entrypoint,
                                                            guint32 * rt_formats_ptr);
+gboolean              gst_va_video_info_from_caps         (GstVideoInfo * info,
+                                                           guint64 * modifier,
+                                                           GstCaps * caps);
+GstCaps *             gst_va_video_info_to_dma_caps       (GstVideoInfo * info,
+                                                           guint64 modifier);
 
 gboolean              gst_caps_set_format_array           (GstCaps * caps,
                                                            GArray * formats);

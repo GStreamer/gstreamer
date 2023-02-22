@@ -313,6 +313,41 @@ gst_va_create_raw_caps (GstVaDisplay * display, VAProfile profile,
   return caps;
 }
 
+gboolean
+gst_va_video_info_from_caps (GstVideoInfo * info, guint64 * modifier,
+    GstCaps * caps)
+{
+  GstVideoInfoDmaDrm drm_info;
+
+  if (!gst_video_is_dma_drm_caps (caps))
+    return gst_video_info_from_caps (info, caps);
+
+  if (!gst_video_info_dma_drm_from_caps (&drm_info, caps))
+    return FALSE;
+
+  if (!gst_va_video_info_from_dma_info (info, &drm_info))
+    return FALSE;
+
+  if (modifier)
+    *modifier = drm_info.drm_modifier;
+
+  return TRUE;
+}
+
+GstCaps *
+gst_va_video_info_to_dma_caps (GstVideoInfo * info, guint64 modifier)
+{
+  GstVideoInfoDmaDrm drm_info;
+
+  gst_video_info_dma_drm_init (&drm_info);
+  drm_info.vinfo = *info;
+  drm_info.drm_fourcc =
+      gst_va_drm_fourcc_from_video_format (GST_VIDEO_INFO_FORMAT (info));
+  drm_info.drm_modifier = modifier;
+
+  return gst_video_info_dma_drm_to_caps (&drm_info);
+}
+
 /* the purpose of this function is to find broken configurations in
  * JPEG decoders: if the driver doesn't expose a pixel format for a
  * config with a specific sampling, that sampling is not valid */
