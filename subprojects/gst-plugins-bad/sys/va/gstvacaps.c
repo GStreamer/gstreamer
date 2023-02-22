@@ -145,6 +145,38 @@ gst_caps_set_format_array (GstCaps * caps, GArray * formats)
   return TRUE;
 }
 
+static gboolean
+gst_caps_set_drm_format_array (GstCaps * caps, GPtrArray * formats)
+{
+  GValue v_formats = G_VALUE_INIT;
+  const gchar *format;
+  guint i;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (formats, FALSE);
+
+  if (formats->len == 1) {
+    format = g_ptr_array_index (formats, 0);
+    g_value_init (&v_formats, G_TYPE_STRING);
+    g_value_set_string (&v_formats, format);
+  } else if (formats->len > 1) {
+
+    gst_value_list_init (&v_formats, formats->len);
+
+    for (i = 0; i < formats->len; i++) {
+      format = g_ptr_array_index (formats, i);
+      _value_list_append_string (&v_formats, format);
+    }
+  } else {
+    return FALSE;
+  }
+
+  gst_caps_set_value (caps, "drm-format", &v_formats);
+  g_value_unset (&v_formats);
+
+  return TRUE;
+}
+
 /* Fix raw frames ill reported by drivers.
  *
  * Mesa Gallium reports P010 and P016 for H264 encoder:
@@ -154,31 +186,14 @@ gst_caps_set_format_array (GstCaps * caps, GArray * formats)
  * XXX: add issue or pr
  */
 static gboolean
-fix_raw_formats (GstVaDisplay * display, VAConfigID config, GArray * formats)
+fix_raw_formats (GstVaDisplay * display, VAProfile profile,
+    VAEntrypoint entrypoint, GArray * formats)
 {
-  VADisplay dpy;
-  VAStatus status;
-  VAProfile profile;
-  VAEntrypoint entrypoint;
-  VAConfigAttrib *attribs;
   GstVideoFormat format;
-  int num;
 
   if (!(GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965) ||
           GST_VA_DISPLAY_IS_IMPLEMENTATION (display, MESA_GALLIUM)))
     return TRUE;
-
-  dpy = gst_va_display_get_va_dpy (display);
-  attribs = g_new (VAConfigAttrib, vaMaxNumConfigAttributes (dpy));
-  status = vaQueryConfigAttributes (dpy, config, &profile, &entrypoint, attribs,
-      &num);
-  g_free (attribs);
-
-  if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (display, "vaQueryConfigAttributes: %s",
-        vaErrorStr (status));
-    return FALSE;
-  }
 
   if (gst_va_profile_codec (profile) != H264
       || entrypoint != VAEntrypointEncSlice)
@@ -191,6 +206,110 @@ fix_raw_formats (GstVaDisplay * display, VAConfigID config, GArray * formats)
 }
 
 GstCaps *
+gst_va_create_dma_caps (GstVaDisplay * display, VAEntrypoint entrypoint,
+    GArray * formats, gint min_width, gint max_width,
+    gint min_height, gint max_height)
+{
+  guint usage_hint;
+  guint64 modifier;
+  guint32 fourcc;
+  GstVideoFormat fmt;
+  gchar *drm_fmt_str;
+  GPtrArray *drm_formats_str;
+  GstCaps *caps = NULL;
+  guint i;
+
+  switch (entrypoint) {
+    case VAEntrypointVLD:
+      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_DECODER;
+      break;
+    case VAEntrypointEncSlice:
+    case VAEntrypointEncSliceLP:
+    case VAEntrypointEncPicture:
+      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+      break;
+    case VAEntrypointVideoProc:
+      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
+          VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  drm_formats_str = g_ptr_array_new_with_free_func (g_free);
+
+  for (i = 0; i < formats->len; i++) {
+    fmt = g_array_index (formats, GstVideoFormat, i);
+
+    fourcc = gst_va_drm_fourcc_from_video_format (fmt);
+    if (fourcc == DRM_FORMAT_INVALID)
+      continue;
+
+    modifier = gst_va_dmabuf_get_modifier_for_format (display, fmt, usage_hint);
+    if (modifier == DRM_FORMAT_MOD_INVALID)
+      continue;
+
+    drm_fmt_str = gst_video_dma_drm_fourcc_to_string (fourcc, modifier);
+
+    g_ptr_array_add (drm_formats_str, drm_fmt_str);
+  }
+
+  if (drm_formats_str->len == 0)
+    goto out;
+
+  caps = gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
+      min_width, max_width, "height", GST_TYPE_INT_RANGE, min_height,
+      max_height, NULL);
+
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+
+  gst_caps_set_simple (caps, "format", G_TYPE_STRING, "DMA_DRM", NULL);
+
+  if (!gst_caps_set_drm_format_array (caps, drm_formats_str)) {
+    gst_clear_caps (&caps);
+    goto out;
+  }
+
+out:
+  g_ptr_array_unref (drm_formats_str);
+  return caps;
+}
+
+static gboolean
+_get_entrypoint_from_config (GstVaDisplay * display, VAConfigID config,
+    VAProfile * profile_out, VAEntrypoint * entrypoint_out)
+{
+  VADisplay dpy;
+  VAStatus status;
+  VAProfile profile;
+  VAEntrypoint entrypoint;
+  VAConfigAttrib *attribs;
+  int num_attribs = 0;
+
+  dpy = gst_va_display_get_va_dpy (display);
+
+  attribs = g_new (VAConfigAttrib, vaMaxNumConfigAttributes (dpy));
+  status = vaQueryConfigAttributes (dpy, config, &profile, &entrypoint, attribs,
+      &num_attribs);
+  g_free (attribs);
+
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR_OBJECT (display, "vaQueryConfigAttributes: %s",
+        vaErrorStr (status));
+    return FALSE;
+  }
+
+  if (profile_out)
+    *profile_out = profile;
+  if (entrypoint_out)
+    *entrypoint_out = entrypoint;
+
+  return TRUE;
+}
+
+GstCaps *
 gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
 {
   GArray *formats;
@@ -198,9 +317,14 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   GstCapsFeatures *features;
   GstVideoFormat format;
   VASurfaceAttrib *attribs;
+  VAEntrypoint entrypoint;
+  VAProfile profile;
   guint i, attrib_count, mem_type = 0;
   gint min_width = 1, max_width = G_MAXINT;
   gint min_height = 1, max_height = G_MAXINT;
+
+  if (!_get_entrypoint_from_config (display, config, &profile, &entrypoint))
+    return NULL;
 
   attribs = gst_va_get_surface_attribs (display, config, &attrib_count);
   if (!attribs)
@@ -241,7 +365,7 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   if (formats->len == 0)
     goto bail;
 
-  if (!fix_raw_formats (display, config, formats))
+  if (!fix_raw_formats (display, profile, entrypoint, formats))
     goto bail;
 
   base_caps = gst_caps_new_simple ("video/x-raw", "width", GST_TYPE_INT_RANGE,
@@ -263,10 +387,10 @@ gst_va_create_raw_caps_from_config (GstVaDisplay * display, VAConfigID config)
   }
   if (mem_type & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
       || mem_type & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2) {
-    feature_caps = gst_caps_copy (base_caps);
-    features = gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF);
-    gst_caps_set_features_simple (feature_caps, features);
-    caps = gst_caps_merge (caps, feature_caps);
+    feature_caps = gst_va_create_dma_caps (display, entrypoint, formats,
+        min_width, max_width, min_height, max_height);
+    if (feature_caps)
+      caps = gst_caps_merge (caps, feature_caps);
   }
 
   /* raw caps */

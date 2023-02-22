@@ -1071,10 +1071,11 @@ gst_va_filter_get_caps (GstVaFilter * self)
   }
   if (mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
       || mem_types & VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2) {
-    feature_caps = gst_caps_copy (base_caps);
-    features = gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF);
-    gst_caps_set_features_simple (feature_caps, features);
-    caps = gst_caps_merge (caps, feature_caps);
+    feature_caps = gst_va_create_dma_caps (self->display,
+        VAEntrypointVideoProc, surface_formats,
+        self->min_width, self->max_width, self->min_height, self->max_height);
+    if (feature_caps)
+      caps = gst_caps_merge (caps, feature_caps);
   }
 
   gst_caps_unref (base_caps);
