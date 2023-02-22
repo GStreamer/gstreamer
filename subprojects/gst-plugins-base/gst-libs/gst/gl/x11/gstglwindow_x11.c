@@ -62,6 +62,7 @@ struct _GstGLWindowX11Private
 
   gboolean handle_events;
 
+  Colormap internal_colormap;
   GstVideoRectangle render_rect;
 };
 
@@ -216,7 +217,7 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   win_attr.background_pixel = 0;
   win_attr.border_pixel = 0;
 
-  win_attr.colormap =
+  window_x11->priv->internal_colormap = win_attr.colormap =
       XCreateColormap (window_x11->device, window_x11->root,
       window_x11->visual_info->visual, AllocNone);
 
@@ -271,6 +272,8 @@ gst_gl_window_x11_close (GstGLWindow * window)
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
 
       XDestroyWindow (window_x11->device, window_x11->internal_win_id);
+
+      XFreeColormap (window_x11->device, window_x11->priv->internal_colormap);
 
       /* Ensure everything is sent immediatly */
       XSync (window_x11->device, FALSE);
