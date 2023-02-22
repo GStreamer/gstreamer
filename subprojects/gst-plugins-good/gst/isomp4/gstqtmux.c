@@ -5793,15 +5793,17 @@ static gboolean
 gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
 {
   GstQTMuxPad *qtmuxpad = GST_QT_MUX_PAD_CAST (pad);
+  gboolean ret = TRUE;
 
   /* does not go well to renegotiate stream mid-way, unless
    * the old caps are a subset of the new one (this means upstream
    * added more info to the caps, as both should be 'fixed' caps) */
 
+  GST_OBJECT_LOCK (qtmux);
   if (!qtmuxpad->configured_caps) {
     GST_DEBUG_OBJECT (qtmux, "pad %s accepted caps %" GST_PTR_FORMAT,
         GST_PAD_NAME (pad), caps);
-    return TRUE;
+    goto out;
   }
 
   g_assert (caps != NULL);
@@ -5810,14 +5812,18 @@ gst_qt_mux_can_renegotiate (GstQTMux * qtmux, GstPad * pad, GstCaps * caps)
     GST_WARNING_OBJECT (qtmux,
         "pad %s refused renegotiation to %" GST_PTR_FORMAT " from %"
         GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, qtmuxpad->configured_caps);
-    return FALSE;
+    ret = FALSE;
+    goto out;
   }
 
   GST_DEBUG_OBJECT (qtmux,
       "pad %s accepted renegotiation to %" GST_PTR_FORMAT " from %"
       GST_PTR_FORMAT, GST_PAD_NAME (pad), caps, qtmuxpad->configured_caps);
 
-  return TRUE;
+out:
+  GST_OBJECT_UNLOCK (qtmux);
+
+  return ret;
 }
 
 static gboolean
@@ -7038,8 +7044,10 @@ gst_qt_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
         GST_OBJECT_UNLOCK (qtmux);
       }
 
+      GST_OBJECT_LOCK (qtmux);
       if (ret)
         gst_caps_replace (&qtmux_pad->configured_caps, caps);
+      GST_OBJECT_UNLOCK (qtmux);
 
       gst_event_unref (event);
       event = NULL;
