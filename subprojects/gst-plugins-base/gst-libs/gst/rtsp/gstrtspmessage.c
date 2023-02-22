@@ -136,7 +136,7 @@ gst_rtsp_message_new (GstRTSPMessage ** msg)
 
 /**
  * gst_rtsp_message_init:
- * @msg: (out caller-allocates): a #GstRTSPMessage
+ * @msg: (transfer none): a #GstRTSPMessage
  *
  * Initialize @msg. This function is mostly used when @msg is allocated on the
  * stack. The reverse operation of this is gst_rtsp_message_unset().
@@ -201,7 +201,7 @@ gst_rtsp_message_new_request (GstRTSPMessage ** msg, GstRTSPMethod method,
 
 /**
  * gst_rtsp_message_init_request:
- * @msg: (out caller-allocates): a #GstRTSPMessage
+ * @msg: (transfer none): a #GstRTSPMessage
  * @method: the request method to use
  * @uri: (transfer none): the uri of the request
  *
@@ -295,7 +295,7 @@ gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
 
 /**
  * gst_rtsp_message_init_response:
- * @msg: (out caller-allocates): a #GstRTSPMessage
+ * @msg: (transfer none): a #GstRTSPMessage
  * @code: the status code
  * @reason: (transfer none) (nullable): the status reason or %NULL
  * @request: (transfer none) (nullable): the request that triggered the response or %NULL
@@ -421,7 +421,7 @@ gst_rtsp_message_new_data (GstRTSPMessage ** msg, guint8 channel)
 
 /**
  * gst_rtsp_message_init_data:
- * @msg: (out caller-allocates): a #GstRTSPMessage
+ * @msg: (transfer none): a #GstRTSPMessage
  * @channel: a channel
  *
  * Initialize a new data #GstRTSPMessage for @channel.

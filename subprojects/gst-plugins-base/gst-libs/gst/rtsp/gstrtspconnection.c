@@ -2807,7 +2807,7 @@ no_message:
 /**
  * gst_rtsp_connection_receive_usec:
  * @conn: a #GstRTSPConnection
- * @message: (out caller-allocates): the message to read
+ * @message: (transfer none): the message to read
  * @timeout: a timeout value or 0
  *
  * Attempt to read into @message from the connected @conn, blocking up to
@@ -5158,7 +5158,7 @@ gst_rtsp_connection_send_messages (GstRTSPConnection * conn,
 /**
  * gst_rtsp_connection_receive:
  * @conn: a #GstRTSPConnection
- * @message: (out caller-allocates): the message to read
+ * @message: (transfer none): the message to read
  * @timeout: a timeout value or %NULL
  *
  * Attempt to read into @message from the connected @conn, blocking up to
