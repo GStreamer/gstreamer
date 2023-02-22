@@ -1,22 +1,24 @@
-# SOME DESCRIPTIVE TITLE.
+# translation of gst-plugins-good-1.19.2.po to Friulian
+# friulian translation for gst-plugins-good
 # This file is put in the public domain.
-# FABIO TOMAT <f.t.public@gmail.com>, 2017.
+# Fabio Tomat <f.t.public@gmail.com>, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.10.0\n"
+"Project-Id-Version: gst-plugins-good 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2017-02-17 10:54+0100\n"
-"Last-Translator: Fabio Tomat <f.t.public@gmail.com>\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"PO-Revision-Date: 2023-01-27 21:32+0000\n"
+"Last-Translator: Fabio T. <f.t.public@gmail.com>\n"
 "Language-Team: Friulian <f.t.public@gmail.com>\n"
 "Language: fur\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 1.8.11\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Editor: HaiPO 1.4 beta\n"
+"X-Generator: Poedit 1.8.11\n"
 
 msgid "Jack server not found"
 msgstr "Servidôr Jack no cjatât"
@@ -24,13 +26,14 @@ msgstr "Servidôr Jack no cjatât"
 msgid "Failed to decode JPEG image"
 msgstr "No si è rivâts a decodificâ la imagjin JPEG"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "No si è rivâts a assegnâ la memorie domandade."
+msgstr "Nol è stât pussibil lei la memorie"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
+"Nol è stât pussibil configurâ il codificadôr audio mp3 LAME. Controle i tiei "
+"parametris di codifiche."
 
 #. <php-emulation-mode>three underscores for ___rate is really really really
 #. * private as opposed to one underscore<php-emulation-mode>
@@ -41,6 +44,8 @@ msgid ""
 "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
 "bitrate was changed to %d kbit/s."
 msgstr ""
+"Il bitrate domandât %d kbit/s pe proprietât '%s' nol è ametût. Il bitrate al "
+"è stât cambiât a %d kbit/s."
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
@@ -76,6 +81,8 @@ msgstr "Il servidôr nol supuarte la ricercje."
 
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 msgstr ""
+"Nol è stât pussibil configurâ il codificadôr TwoLAME. Controle i tiei "
+"parametris pe codifiche."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "Nissun o invalit audio in jentrade, il flus AVI al sarà ruvinât."
@@ -95,6 +102,12 @@ msgstr "Chest file al è ruvinât e nol pues jessi riprodot."
 
 msgid "Invalid atom size."
 msgstr "Dimension atom no valide."
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Chest file nol è complet e nol pues jessi riprodot."
@@ -171,7 +184,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "Nol è stât pussibil vierzi il dispositîf CoreAudio"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Modul fotocjamare Raspberry Pi"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -195,17 +208,16 @@ msgstr "Il driver dal dispositîf '%s' nol supuarte il metodi IO %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "Il driver dal dispositîf '%s' nol supuarte nissun metodi IO cognossût."
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "Dimension atom no valide."
+msgstr "Capacitâts no validis"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' has no supported format"
-msgstr "Il codificadôr sul dispositîf %s nol à formâts di jentrade supuartâts"
+msgstr "Il dispositîf '%s' nol à un formât supuartâts"
 
 #, c-format
 msgid "Device '%s' failed during initialization"
-msgstr ""
+msgstr "Il dispositîf '%s' al à falât dilunc la inizializazion"
 
 #, c-format
 msgid "Device '%s' is busy"
@@ -221,15 +233,15 @@ msgstr "Il dispositîf '%s' nol pues caturâ tal formât specificât"
 
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr ""
+msgstr "Il dispositîf '%s' al supuarte i “plans no-contiguis”"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "Il servidôr nol supuarte la ricercje."
+msgstr "Il dispositîf '%s' nol supuarte l'interlaçament %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "Il driver dal dispositîf '%s' nol supuarte il metodi IO %d"
+msgstr "Il dispositîf '%s' nol supuarte la colorimetrie %s"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -246,22 +258,20 @@ msgstr "Il dispositîf video nol à furnît un formât di jessude."
 msgid "Video device returned invalid dimensions."
 msgstr "Il dispositîf video al à tornât dimensions no validis."
 
-#, fuzzy
 msgid "Video device uses an unsupported interlacing method."
-msgstr "Il dispositîf video al dopre un metodi di interlazament no supuartât"
+msgstr "Il dispositîf video al dopre un metodi di interlaçament no supuartât."
 
-#, fuzzy
 msgid "Video device uses an unsupported pixel format."
-msgstr "Il dispositîf video al dopre un formât pixel no supuartât."
+msgstr "Il dispositîf video al dopre un formât pixel no supuartât."
 
 msgid "Failed to configure internal buffer pool."
-msgstr ""
+msgstr "Nol è stât pussibil configurâ il bacin de memorie tampon interne."
 
 msgid "Video device did not suggest any buffer size."
 msgstr "Il dispositîf video nol à sugjerît nissune dimension di buffer."
 
 msgid "No downstream pool to import from."
-msgstr ""
+msgstr "Nissun bacin di “flus dâts in jù” di dulà impuartâ."
 
 #, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
@@ -289,7 +299,7 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "No si è rivâts a cambiâ il stât di cidin pal dispositîf '%s'."
 
 msgid "Failed to allocated required memory."
-msgstr ""
+msgstr "Nol è stât pussibil assegnâ la memorie necessarie."
 
 msgid "Failed to allocate required memory."
 msgstr "No si è rivâts a assegnâ la memorie domandade."
@@ -302,16 +312,18 @@ msgstr "Il convertidôr sul dispositîf %s nol à formâts di jentrade supuartâ
 msgid "Converter on device %s has no supported output format"
 msgstr "Il convertidôr sul dispositîf %s nol à formâts di jessude supuartâts"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported input format"
-msgstr "Il codificadôr sul dispositîf %s nol à formâts di jentrade supuartâts"
+msgstr ""
+"Il decodificadôr sul dispositîf %s nol à un formât di jentrade supuartât"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Decoder on device %s has no supported output format"
-msgstr "Il codificadôr sul dispositîf %s nol à formâts di jessude supuartâts"
+msgstr ""
+"Il decodificadôr sul dispositîf %s nol à un formât di jessude supuartât"
 
 msgid "Failed to start decoding thread."
-msgstr ""
+msgstr "Nol è stât pussibil inviâ il thread di decodifiche."
 
 msgid "Failed to process frame."
 msgstr "Impussibil processâ fotogram."
@@ -325,7 +337,7 @@ msgid "Encoder on device %s has no supported input format"
 msgstr "Il codificadôr sul dispositîf %s nol à formâts di jentrade supuartâts"
 
 msgid "Failed to start encoding thread."
-msgstr ""
+msgstr "Nol è stât pussibil inviâ il thread di codifiche."
 
 #, c-format
 msgid ""
@@ -379,7 +391,7 @@ msgstr "Il dispositîf '%s' nol è un dispositîf M2M."
 
 #, c-format
 msgid "Could not dup device '%s' for reading and writing."
-msgstr ""
+msgstr "Impussibil duplicâ il dispositîf '%s' pe leture e scriture."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
@@ -409,9 +421,10 @@ msgstr "No si è rivâts a vê il valôr pal control %d sul dispositîf '%s'."
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "No si è rivâts a meti il valôr %d pal control %d sul dispositîf '%s'."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
-msgstr "No si è rivâts a meti il valôr %d pal control %d sul dispositîf '%s'."
+msgstr ""
+"Nol è stât pussibil stabilî il valôr %s pal control %d sul dispositîf '%s'."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
@@ -419,9 +432,9 @@ msgstr ""
 "No si è rivâts a vê la jentrade atuâl sul dispositîf '%s'. Al podarès jessi "
 "un dispositîf radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "No si è rivâts a stabilî la jentrade %d sul dispositîf %s."
+msgstr "Nol è stât pussibil stabilî la jentrade %u sul dispositîf %s."
 
 #, c-format
 msgid ""
@@ -430,14 +443,13 @@ msgstr ""
 "No si è rivâts a vê la jessude atuâl sul dispositîf '%s'. Al podarès jessi "
 "un dispositîf radio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "No si è rivâts a stabilî la jessude %d sul dispositîf %s."
+msgstr "Nol è stât pussibil stabilî la jessude %u sul dispositîf %s."
 
 msgid "Cannot operate without a clock"
 msgstr "Impussibil operâ cence un orloi"
 
-#, c-format
 #~ msgid "This file contains too many streams. Only playing first %d"
 #~ msgstr "Chest file al conten masse flus. Si riprodusarà nome i prins %d"
 

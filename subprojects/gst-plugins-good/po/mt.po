@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -93,6 +93,12 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Il-fajl huwa korrott u ma jistax jinfetaħ."
 
 msgid "Invalid atom size."
+msgstr ""
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
 msgstr ""
 
 msgid "This file is incomplete and cannot be played."

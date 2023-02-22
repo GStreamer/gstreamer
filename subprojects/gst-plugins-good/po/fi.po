@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
 "PO-Revision-Date: 2010-11-17 23:03+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -98,6 +98,12 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Tiedosto on vioittunut eikä sitä voida näyttää."
 
 msgid "Invalid atom size."
+msgstr ""
+
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
 msgstr ""
 
 msgid "This file is incomplete and cannot be played."

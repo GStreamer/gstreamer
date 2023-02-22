@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.15.1\n"
+"Project-Id-Version: gst-plugins-good-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:41+0000\n"
-"PO-Revision-Date: 2021-05-09 21:14+0800\n"
+"POT-Creation-Date: 2023-02-22 11:52+0000\n"
+"PO-Revision-Date: 2023-02-03 01:03+0800\n"
 "Last-Translator: Yi-Jyun Pan <pan93412@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@lists.linux.org.tw>\n"
 "Language: zh_TW\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 2.4.3\n"
+"X-Generator: Poedit 3.2.2\n"
 
 msgid "Jack server not found"
 msgstr "找不到 Jack 伺服器"
@@ -24,9 +24,8 @@ msgstr "找不到 Jack 伺服器"
 msgid "Failed to decode JPEG image"
 msgstr "無法解碼 JPEG 影像"
 
-#, fuzzy
 msgid "Failed to read memory"
-msgstr "無法配置所需的記憶體。"
+msgstr "無法讀取記憶體"
 
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
@@ -95,6 +94,12 @@ msgstr "此檔案損壞，無法播放。"
 msgid "Invalid atom size."
 msgstr "atom 大小無效。"
 
+msgid "Cannot query file size"
+msgstr ""
+
+msgid "Cannot demux file"
+msgstr ""
+
 msgid "This file is incomplete and cannot be played."
 msgstr "此檔案不完整，無法播放。"
 
@@ -161,7 +166,7 @@ msgid "CoreAudio device could not be opened"
 msgstr "無法開啟 CoreAudio 裝置"
 
 msgid "Raspberry Pi Camera Module"
-msgstr ""
+msgstr "Raspberry Pi 相機模組"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -183,9 +188,8 @@ msgstr "'%s' 裝置的驅動程式不支援 IO 方法 %d"
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr "'%s' 裝置的驅動程式不支援任何已知的 IO 方法。"
 
-#, fuzzy
 msgid "Invalid caps"
-msgstr "atom 大小無效。"
+msgstr "容量 (caps) 無效"
 
 #, c-format
 msgid "Device '%s' has no supported format"
@@ -209,15 +213,15 @@ msgstr "'%s' 裝置無法擷取為指定格式"
 
 #, c-format
 msgid "Device '%s' does support non-contiguous planes"
-msgstr ""
+msgstr "'%s' 裝置不支援非連續 plane"
 
 #, c-format
 msgid "Device '%s' does not support %s interlacing"
-msgstr "「%s」裝置不支援 %s 交錯方式"
+msgstr "'%s' 裝置不支援 %s 交錯方式"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support %s colorimetry"
-msgstr "「%s」裝置不支援 %s 色彩模式"
+msgstr "'%s' 裝置不支援 %s 比色法"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
@@ -386,26 +390,26 @@ msgstr "無法取得 '%2$s' 裝置上控制 %1$d 的值。"
 msgid "Failed to set value %d for control %d on device '%s'."
 msgstr "無法設定 '%3$s' 裝置上控制 %2$d 的值 %1$d。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set value %s for control %d on device '%s'."
-msgstr "無法設定 '%3$s' 裝置上控制 %2$d 的值 %1$d。"
+msgstr "無法設定 '%3$s' 裝置上控制 %2$d 的值 %1$s。"
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr "無法取得 '%s' 裝置上的目前輸入。或許此為廣播裝置"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %u on device %s."
-msgstr "無法設定 %2$s 裝置上的輸入 %1$d。"
+msgstr "無法設定 %2$s 裝置上的輸入 %1$u。"
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr "無法取得 '%s' 裝置上的目前輸出。或許此為廣播裝置"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %u on device %s."
-msgstr "無法設定 %2$s 裝置的輸出 %1$d。"
+msgstr "無法設定 %2$s 裝置的輸出 %1$u。"
 
 msgid "Cannot operate without a clock"
 msgstr "無法在沒有時鐘 (clock) 的情況下動作"
