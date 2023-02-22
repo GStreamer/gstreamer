@@ -112,9 +112,193 @@ plugin_add_dependencies (GstPlugin * plugin)
 }
 
 static gboolean
+_register_encoder (GstPlugin * plugin, guint codec_id)
+{
+  gboolean ret = TRUE;
+
+  switch (codec_id) {
+    case MFX_CODEC_AVC:
+      ret = gst_element_register (plugin, "msdkh264enc", GST_RANK_NONE,
+          GST_TYPE_MSDKH264ENC);
+      break;
+    case MFX_CODEC_HEVC:
+      ret = gst_element_register (plugin, "msdkh265enc", GST_RANK_NONE,
+          GST_TYPE_MSDKH265ENC);
+      break;
+    case MFX_CODEC_MPEG2:
+      ret = gst_element_register (plugin, "msdkmpeg2enc", GST_RANK_NONE,
+          GST_TYPE_MSDKMPEG2ENC);
+      break;
+#ifdef USE_MSDK_VP9_ENC
+    case MFX_CODEC_VP9:
+      ret = gst_element_register (plugin, "msdkvp9enc", GST_RANK_NONE,
+          GST_TYPE_MSDKVP9ENC);
+      break;
+#endif
+#ifdef USE_MSDK_AV1_ENC
+    case MFX_CODEC_AV1:
+      ret = gst_element_register (plugin, "msdkav1enc", GST_RANK_NONE,
+          GST_TYPE_MSDKAV1ENC);
+      break;
+#endif
+    case MFX_CODEC_JPEG:
+      ret = gst_element_register (plugin, "msdkmjpegenc", GST_RANK_NONE,
+          GST_TYPE_MSDKMJPEGENC);
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
+
+  return ret;
+}
+
+static gboolean
+_register_decoder (GstPlugin * plugin, guint codec_id)
+{
+  gboolean ret = TRUE;
+
+  switch (codec_id) {
+    case MFX_CODEC_AVC:
+      ret = gst_element_register (plugin, "msdkh264dec", GST_RANK_NONE,
+          GST_TYPE_MSDKH264DEC);
+      break;
+    case MFX_CODEC_HEVC:
+      ret = gst_element_register (plugin, "msdkh265dec", GST_RANK_NONE,
+          GST_TYPE_MSDKH265DEC);
+      break;
+    case MFX_CODEC_MPEG2:
+      ret = gst_element_register (plugin, "msdkmpeg2dec", GST_RANK_NONE,
+          GST_TYPE_MSDKMPEG2DEC);
+      break;
+    case MFX_CODEC_VP8:
+      ret = gst_element_register (plugin, "msdkvp8dec", GST_RANK_NONE,
+          GST_TYPE_MSDKVP8DEC);
+      break;
+#ifdef USE_MSDK_VP9_DEC
+    case MFX_CODEC_VP9:
+      ret = gst_element_register (plugin, "msdkvp9dec", GST_RANK_NONE,
+          GST_TYPE_MSDKVP9DEC);
+      break;
+#endif
+#ifdef USE_MSDK_AV1_DEC
+    case MFX_CODEC_AV1:
+      ret = gst_element_register (plugin, "msdkav1dec", GST_RANK_NONE,
+          GST_TYPE_MSDKAV1DEC);
+      break;
+#endif
+    case MFX_CODEC_JPEG:
+      ret = gst_element_register (plugin, "msdkmjpegdec", GST_RANK_NONE,
+          GST_TYPE_MSDKMJPEGDEC);
+      break;
+    case MFX_CODEC_VC1:
+      ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_NONE,
+          GST_TYPE_MSDKVC1DEC);
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
+
+  return ret;
+}
+
+#if (MFX_VERSION >= 2000)
+
+static void
+_register_encoders (GstPlugin * plugin,
+    GstMsdkContext * context, mfxEncoderDescription * enc_desc)
+{
+  for (guint c = 0; c < enc_desc->NumCodecs; c++) {
+    if (!_register_encoder (plugin, enc_desc->Codecs[c].CodecID)) {
+      GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " ENC",
+          GST_FOURCC_ARGS (enc_desc->Codecs[c].CodecID));
+    }
+  }
+}
+
+static void
+_register_decoders (GstPlugin * plugin,
+    GstMsdkContext * context, mfxDecoderDescription * dec_desc)
+{
+  for (guint c = 0; c < dec_desc->NumCodecs; c++) {
+    if (!_register_decoder (plugin, dec_desc->Codecs[c].CodecID)) {
+      GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " DEC",
+          GST_FOURCC_ARGS (dec_desc->Codecs[c].CodecID));
+    }
+  }
+}
+
+static void
+_register_vpp (GstPlugin * plugin,
+    GstMsdkContext * context, mfxVPPDescription * vpp_desc)
+{
+  gst_element_register (plugin, "msdkvpp", GST_RANK_NONE, GST_TYPE_MSDKVPP);
+}
+
+#else
+
+static const guint enc_codecs[] = {
+  MFX_CODEC_AVC,
+  MFX_CODEC_HEVC,
+  MFX_CODEC_MPEG2,
+#ifdef USE_MSDK_VP9_ENC
+  MFX_CODEC_VP9,
+#endif
+#ifdef USE_MSDK_AV1_ENC
+  MFX_CODEC_AV1,
+#endif
+  MFX_CODEC_JPEG
+};
+
+static const guint dec_codecs[] = {
+  MFX_CODEC_AVC,
+  MFX_CODEC_HEVC,
+  MFX_CODEC_MPEG2,
+  MFX_CODEC_VP8,
+#ifdef USE_MSDK_VP9_DEC
+  MFX_CODEC_VP9,
+#endif
+#ifdef USE_MSDK_AV1_DEC
+  MFX_CODEC_AV1,
+#endif
+  MFX_CODEC_JPEG,
+  MFX_CODEC_VC1
+};
+
+static void
+_register_encoders (GstPlugin * plugin, GstMsdkContext * context)
+{
+  for (guint c = 0; c < G_N_ELEMENTS (enc_codecs); c++) {
+    if (!_register_encoder (plugin, enc_codecs[c])) {
+      GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " ENC",
+          GST_FOURCC_ARGS (enc_codecs[c]));
+    }
+  }
+}
+
+static void
+_register_decoders (GstPlugin * plugin, GstMsdkContext * context)
+{
+  for (guint c = 0; c < G_N_ELEMENTS (dec_codecs); c++) {
+    if (!_register_decoder (plugin, dec_codecs[c])) {
+      GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " DEC",
+          GST_FOURCC_ARGS (dec_codecs[c]));
+    }
+  }
+}
+
+static void
+_register_vpp (GstPlugin * plugin, GstMsdkContext * context)
+{
+  gst_element_register (plugin, "msdkvpp", GST_RANK_NONE, GST_TYPE_MSDKVPP);
+}
+
+#endif
+
+static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret;
   GstMsdkContext *context;
 
   GST_DEBUG_CATEGORY_INIT (gst_msdk_debug, "msdk", 0, "msdk");
@@ -150,57 +334,27 @@ plugin_init (GstPlugin * plugin)
   if (!context)
     return TRUE;                /* return TRUE to avoid getting blacklisted */
 
-  ret = gst_element_register (plugin, "msdkh264dec", GST_RANK_NONE,
-      GST_TYPE_MSDKH264DEC);
+#if (MFX_VERSION >= 2000)
+  mfxImplDescription *desc = (mfxImplDescription *)
+      msdk_get_impl_description (gst_msdk_context_get_loader (context),
+      gst_msdk_context_get_impl_idx (context));
 
-  ret = gst_element_register (plugin, "msdkh264enc", GST_RANK_NONE,
-      GST_TYPE_MSDKH264ENC);
+  if (desc) {
+    _register_encoders (plugin, context, &desc->Enc);
+    _register_decoders (plugin, context, &desc->Dec);
+    _register_vpp (plugin, context, &desc->VPP);
 
-  ret = gst_element_register (plugin, "msdkh265dec", GST_RANK_NONE,
-      GST_TYPE_MSDKH265DEC);
-
-  ret = gst_element_register (plugin, "msdkh265enc", GST_RANK_NONE,
-      GST_TYPE_MSDKH265ENC);
-
-  ret = gst_element_register (plugin, "msdkmjpegdec", GST_RANK_NONE,
-      GST_TYPE_MSDKMJPEGDEC);
-
-  ret = gst_element_register (plugin, "msdkmjpegenc", GST_RANK_NONE,
-      GST_TYPE_MSDKMJPEGENC);
-
-  ret = gst_element_register (plugin, "msdkmpeg2dec", GST_RANK_NONE,
-      GST_TYPE_MSDKMPEG2DEC);
-
-  ret = gst_element_register (plugin, "msdkmpeg2enc", GST_RANK_NONE,
-      GST_TYPE_MSDKMPEG2ENC);
-
-  ret = gst_element_register (plugin, "msdkvp8dec", GST_RANK_NONE,
-      GST_TYPE_MSDKVP8DEC);
-
-  ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_NONE,
-      GST_TYPE_MSDKVC1DEC);
-#ifdef USE_MSDK_VP9_DEC
-  ret = gst_element_register (plugin, "msdkvp9dec", GST_RANK_NONE,
-      GST_TYPE_MSDKVP9DEC);
+    msdk_release_impl_description (gst_msdk_context_get_loader (context), desc);
+  }
+#else
+  _register_encoders (plugin, context);
+  _register_decoders (plugin, context);
+  _register_vpp (plugin, context);
 #endif
-#ifdef USE_MSDK_VP9_ENC
-  ret = gst_element_register (plugin, "msdkvp9enc", GST_RANK_NONE,
-      GST_TYPE_MSDKVP9ENC);
-#endif
-#ifdef USE_MSDK_AV1_DEC
-  ret = gst_element_register (plugin, "msdkav1dec", GST_RANK_NONE,
-      GST_TYPE_MSDKAV1DEC);
-#endif
-#ifdef USE_MSDK_AV1_ENC
-  ret = gst_element_register (plugin, "msdkav1enc", GST_RANK_NONE,
-      GST_TYPE_MSDKAV1ENC);
-#endif
-  ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
-      GST_TYPE_MSDKVPP);
 
   gst_object_unref (context);
 
-  return ret;
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
