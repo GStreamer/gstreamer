@@ -36,17 +36,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKMJPEGENC \
-  (gst_msdkmjpegenc_get_type())
-#define GST_MSDKMJPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKMJPEGENC,GstMsdkMJPEGEnc))
-#define GST_MSDKMJPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKMJPEGENC,GstMsdkMJPEGEncClass))
-#define GST_IS_MSDKMJPEGENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKMJPEGENC))
-#define GST_IS_MSDKMJPEGENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKMJPEGENC))
-
 typedef struct _GstMsdkMJPEGEnc GstMsdkMJPEGEnc;
 typedef struct _GstMsdkMJPEGEncClass GstMsdkMJPEGEncClass;
 
@@ -61,7 +50,10 @@ struct _GstMsdkMJPEGEncClass
   GstMsdkEncClass parent_class;
 };
 
-GType gst_msdkmjpegenc_get_type (void);
+gboolean
+gst_msdkmjpegenc_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 

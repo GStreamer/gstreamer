@@ -56,31 +56,21 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9enc_debug);
 #define GST_CAT_DEFAULT gst_msdkvp9enc_debug
 
-#define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA"
+#define GST_MSDKVP9ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), G_TYPE_FROM_INSTANCE (obj), GstMsdkVP9Enc))
+#define GST_MSDKVP9ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), G_TYPE_FROM_CLASS (klass), GstMsdkVP9EncClass))
+#define GST_IS_MSDKVP9ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), G_TYPE_FROM_INSTANCE (obj)))
+#define GST_IS_MSDKVP9ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_FROM_CLASS (klass)))
+
 #define PROFILES    "0, 1, 2"
 
 #if (MFX_VERSION >= 1027)
-#define COMMON_FORMAT "{ " RAW_FORMATS ", Y410 }"
 #define SRC_PROFILES  "{ " PROFILES ", 3 }"
 #else
-#define COMMON_FORMAT "{ " RAW_FORMATS " }"
 #define SRC_PROFILES  "{ " PROFILES " }"
-#endif
-
-#ifdef _WIN32
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT,
-            "{ NV12, P010_10LE }") "; "
-        GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE ("{ NV12, P010_10LE }")));
-#else
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT,
-            "{ NV12, P010_10LE }") "; "
-        GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("NV12")));
 #endif
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -92,8 +82,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "profile = (string) " SRC_PROFILES)
     );
 
-#define gst_msdkvp9enc_parent_class parent_class
-G_DEFINE_TYPE (GstMsdkVP9Enc, gst_msdkvp9enc, GST_TYPE_MSDKENC);
+static GstElementClass *parent_class = NULL;
 
 static gboolean
 gst_msdkvp9enc_set_format (GstMsdkEnc * encoder)
@@ -266,11 +255,14 @@ gst_msdkvp9enc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_msdkvp9enc_class_init (GstMsdkVP9EncClass * klass)
+gst_msdkvp9enc_class_init (gpointer klass, gpointer data)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstMsdkEncClass *encoder_class;
+  MsdkEncCData *cdata = data;
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
@@ -293,11 +285,65 @@ gst_msdkvp9enc_class_init (GstMsdkVP9EncClass * klass)
       "VP9 video encoder based on " MFX_API_SDK,
       "Haihao Xiang <haihao.xiang@intel.com>");
 
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
 }
 
 static void
-gst_msdkvp9enc_init (GstMsdkVP9Enc * thiz)
+gst_msdkvp9enc_init (GTypeInstance * instance, gpointer g_class)
 {
+}
+
+gboolean
+gst_msdkvp9enc_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank)
+{
+  GType type;
+  MsdkEncCData *cdata;
+  gchar *type_name, *feature_name;
+  gboolean ret = FALSE;
+
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstMsdkVP9EncClass),
+    .class_init = gst_msdkvp9enc_class_init,
+    .instance_size = sizeof (GstMsdkVP9Enc),
+    .instance_init = gst_msdkvp9enc_init
+  };
+
+  cdata = g_new (MsdkEncCData, 1);
+  cdata->sink_caps = gst_caps_copy (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+
+#ifdef _WIN32
+  gst_msdkcaps_set_strings (cdata->sink_caps,
+      "memory:D3D11Memory", "format", "NV12, P010_10LE");
+#endif
+
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  type_info.class_data = cdata;
+
+  type_name = g_strdup ("GstMsdkVP9Enc");
+  feature_name = g_strdup ("msdkvp9enc");
+
+  type = g_type_register_static (GST_TYPE_MSDKENC, type_name, &type_info, 0);
+  if (type)
+    ret = gst_element_register (plugin, feature_name, rank, type);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
 }

@@ -59,6 +59,7 @@ G_BEGIN_DECLS
 typedef struct _GstMsdkEnc GstMsdkEnc;
 typedef struct _GstMsdkEncClass GstMsdkEncClass;
 typedef struct _MsdkEncTask MsdkEncTask;
+typedef struct _MsdkEncCData MsdkEncCData;
 
 enum
 {
@@ -207,6 +208,12 @@ struct _MsdkEncTask
 {
   mfxSyncPoint sync_point;
   mfxBitstream output_bitstream;
+};
+
+struct _MsdkEncCData
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
 };
 
 GType gst_msdkenc_get_type (void);

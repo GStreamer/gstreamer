@@ -36,17 +36,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKVP9ENC \
-  (gst_msdkvp9enc_get_type())
-#define GST_MSDKVP9ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKVP9ENC,GstMsdkVP9Enc))
-#define GST_MSDKVP9ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKVP9ENC,GstMsdkVP9EncClass))
-#define GST_IS_MSDKVP9ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKVP9ENC))
-#define GST_IS_MSDKVP9ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKVP9ENC))
-
 typedef struct _GstMsdkVP9Enc GstMsdkVP9Enc;
 typedef struct _GstMsdkVP9EncClass GstMsdkVP9EncClass;
 
@@ -64,7 +53,10 @@ struct _GstMsdkVP9EncClass
   GstMsdkEncClass parent_class;
 };
 
-GType gst_msdkvp9enc_get_type (void);
+gboolean
+gst_msdkvp9enc_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 

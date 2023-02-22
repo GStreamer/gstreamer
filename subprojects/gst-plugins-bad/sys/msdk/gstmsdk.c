@@ -112,38 +112,40 @@ plugin_add_dependencies (GstPlugin * plugin)
 }
 
 static gboolean
-_register_encoder (GstPlugin * plugin, guint codec_id)
+_register_encoder (GstPlugin * plugin,
+    GstMsdkContext * context, guint codec_id,
+    GstCaps * sink_caps, GstCaps * src_caps)
 {
   gboolean ret = TRUE;
 
   switch (codec_id) {
     case MFX_CODEC_AVC:
-      ret = gst_element_register (plugin, "msdkh264enc", GST_RANK_NONE,
-          GST_TYPE_MSDKH264ENC);
+      ret = gst_msdkh264enc_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
     case MFX_CODEC_HEVC:
-      ret = gst_element_register (plugin, "msdkh265enc", GST_RANK_NONE,
-          GST_TYPE_MSDKH265ENC);
+      ret = gst_msdkh265enc_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);;
       break;
     case MFX_CODEC_MPEG2:
-      ret = gst_element_register (plugin, "msdkmpeg2enc", GST_RANK_NONE,
-          GST_TYPE_MSDKMPEG2ENC);
+      ret = gst_msdkmpeg2enc_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
 #ifdef USE_MSDK_VP9_ENC
     case MFX_CODEC_VP9:
-      ret = gst_element_register (plugin, "msdkvp9enc", GST_RANK_NONE,
-          GST_TYPE_MSDKVP9ENC);
+      ret = gst_msdkvp9enc_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
 #endif
 #ifdef USE_MSDK_AV1_ENC
     case MFX_CODEC_AV1:
-      ret = gst_element_register (plugin, "msdkav1enc", GST_RANK_NONE,
-          GST_TYPE_MSDKAV1ENC);
+      ret = gst_msdkav1enc_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
 #endif
     case MFX_CODEC_JPEG:
-      ret = gst_element_register (plugin, "msdkmjpegenc", GST_RANK_NONE,
-          GST_TYPE_MSDKMJPEGENC);
+      ret = gst_msdkmjpegenc_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
     default:
       ret = FALSE;
@@ -209,11 +211,26 @@ static void
 _register_encoders (GstPlugin * plugin,
     GstMsdkContext * context, mfxEncoderDescription * enc_desc)
 {
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+
   for (guint c = 0; c < enc_desc->NumCodecs; c++) {
-    if (!_register_encoder (plugin, enc_desc->Codecs[c].CodecID)) {
+    if (!gst_msdkcaps_enc_create_caps (context, enc_desc,
+            enc_desc->Codecs[c].CodecID, &sink_caps, &src_caps)) {
+      GST_WARNING ("Failed to create caps for %" GST_FOURCC_FORMAT " ENC",
+          GST_FOURCC_ARGS (enc_desc->Codecs[c].CodecID));
+      continue;
+    }
+
+    if (!_register_encoder (plugin,
+            context, enc_desc->Codecs[c].CodecID, sink_caps, src_caps)) {
       GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " ENC",
           GST_FOURCC_ARGS (enc_desc->Codecs[c].CodecID));
+      continue;
     }
+
+    gst_caps_unref (sink_caps);
+    gst_caps_unref (src_caps);
   }
 }
 
@@ -269,11 +286,26 @@ static const guint dec_codecs[] = {
 static void
 _register_encoders (GstPlugin * plugin, GstMsdkContext * context)
 {
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+
   for (guint c = 0; c < G_N_ELEMENTS (enc_codecs); c++) {
-    if (!_register_encoder (plugin, enc_codecs[c])) {
+    if (!gst_msdkcaps_enc_create_caps (context,
+            NULL, enc_codecs[c], &sink_caps, &src_caps)) {
+      GST_WARNING ("Failed to create caps for %" GST_FOURCC_FORMAT " ENC",
+          GST_FOURCC_ARGS (enc_codecs[c]));
+      continue;
+    }
+
+    if (!_register_encoder (plugin, context,
+            enc_codecs[c], sink_caps, src_caps)) {
       GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " ENC",
           GST_FOURCC_ARGS (enc_codecs[c]));
+      continue;
     }
+
+    gst_caps_unref (sink_caps);
+    gst_caps_unref (src_caps);
   }
 }
 

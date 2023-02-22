@@ -78,24 +78,6 @@ static void gst_msdkenc_close_encoder (GstMsdkEnc * thiz);
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkenc_debug);
 #define GST_CAT_DEFAULT gst_msdkenc_debug
 
-#ifdef _WIN32
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR
-        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "NV12") "; "
-        GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE ("NV12"))
-    );
-#else
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR
-        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "{ NV12, BGRx }") "; "
-        GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("NV12"))
-    );
-#endif
-
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         4
 #define PROP_TARGET_USAGE_DEFAULT        (MFX_TARGETUSAGE_BALANCED)
@@ -2276,8 +2258,6 @@ gst_msdkenc_class_init (GstMsdkEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_msdkenc_propose_allocation);
   gstencoder_class->src_query = GST_DEBUG_FUNCPTR (gst_msdkenc_src_query);
   gstencoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_msdkenc_sink_query);
-
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
 }
 
 static void

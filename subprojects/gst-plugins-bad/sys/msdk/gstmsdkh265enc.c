@@ -56,6 +56,15 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh265enc_debug);
 #define GST_CAT_DEFAULT gst_msdkh265enc_debug
 
+#define GST_MSDKH265ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), G_TYPE_FROM_INSTANCE (obj), GstMsdkH265Enc))
+#define GST_MSDKH265ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), G_TYPE_FROM_CLASS (klass), GstMsdkH265EncClass))
+#define GST_IS_MSDKH265ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), G_TYPE_FROM_INSTANCE (obj)))
+#define GST_IS_MSDKH265ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_FROM_CLASS (klass)))
+
 enum
 {
 #ifndef GST_REMOVE_DEPRECATED
@@ -101,55 +110,30 @@ enum
 #define PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT 0
 #define PROP_DBLK_IDC_DEFAULT                 0
 
-#define RAW_FORMATS "NV12, I420, YV12, YUY2, UYVY, BGRA, BGR10A2_LE, P010_10LE, VUYA"
 #define PROFILES    "main, main-10, main-444, main-still-picture, main-10-still-picture"
-#define COMMON_FORMAT "{ " RAW_FORMATS " }"
 #define PRFOLIE_STR   "{ " PROFILES " }"
-
 
 #if (MFX_VERSION >= 1027)
 #undef  COMMON_FORMAT
 #undef  PRFOLIE_STR
-#define FORMATS_1027    RAW_FORMATS ", Y410, Y210"
 #define PROFILES_1027   PROFILES ", main-444-10, main-422-10"
-#define COMMON_FORMAT   "{ " FORMATS_1027 " }"
 #define PRFOLIE_STR     "{ " PROFILES_1027 " }"
 #endif
 
 #if (MFX_VERSION >= 1031)
 #undef  COMMON_FORMAT
 #undef  PRFOLIE_STR
-#define FORMATS_1031    FORMATS_1027 ", P012_LE"
 #define PROFILES_1031   PROFILES_1027  ", main-12"
-#define COMMON_FORMAT   "{ " FORMATS_1031 " }"
 #define PRFOLIE_STR     "{ " PROFILES_1031 " }"
 #endif
 
 #if (MFX_VERSION >= 1032)
 #undef  COMMON_FORMAT
 #undef  PRFOLIE_STR
-#define FORMATS_1032    FORMATS_1031
 #define PROFILES_1032   PROFILES_1031  ", screen-extended-main, " \
   "screen-extended-main-10, screen-extended-main-444, " \
   "screen-extended-main-444-10"
-#define COMMON_FORMAT   "{ " FORMATS_1032 " }"
 #define PRFOLIE_STR     "{ " PROFILES_1032 " }"
-#endif
-
-#ifdef _WIN32
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT,
-            "{ NV12, P010_10LE }") "; "
-        GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE ("{ NV12, P010_10LE }")));
-#else
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT,
-            "{ NV12, P010_10LE }") "; "
-        GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("NV12")));
 #endif
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -162,8 +146,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "profile = (string) " PRFOLIE_STR)
     );
 
-#define gst_msdkh265enc_parent_class parent_class
-G_DEFINE_TYPE (GstMsdkH265Enc, gst_msdkh265enc, GST_TYPE_MSDKENC);
+static GstElementClass *parent_class = NULL;
 
 static void
 gst_msdkh265enc_insert_sei (GstMsdkH265Enc * thiz, GstVideoCodecFrame * frame,
@@ -911,31 +894,9 @@ gst_msdkh265enc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
 }
 
 static void
-gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
+_msdkh265enc_install_properties (GObjectClass * gobject_class,
+    GstMsdkEncClass * encoder_class)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *element_class;
-  GstVideoEncoderClass *videoencoder_class;
-  GstMsdkEncClass *encoder_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
-  element_class = GST_ELEMENT_CLASS (klass);
-  videoencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
-  encoder_class = GST_MSDKENC_CLASS (klass);
-
-  gobject_class->finalize = gst_msdkh265enc_finalize;
-  gobject_class->set_property = gst_msdkh265enc_set_property;
-  gobject_class->get_property = gst_msdkh265enc_get_property;
-
-  videoencoder_class->pre_push = gst_msdkh265enc_pre_push;
-
-  encoder_class->set_format = gst_msdkh265enc_set_format;
-  encoder_class->configure = gst_msdkh265enc_configure;
-  encoder_class->set_src_caps = gst_msdkh265enc_set_src_caps;
-  encoder_class->need_reconfig = gst_msdkh265enc_need_reconfig;
-  encoder_class->set_extra_params = gst_msdkh265enc_set_extra_params;
-  encoder_class->need_conversion = gst_msdkh265enc_need_conversion;
-
   gst_msdkenc_install_common_properties (encoder_class);
 
 #ifndef GST_REMOVE_DEPRECATED
@@ -1028,6 +989,38 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
           "Option of disable deblocking idc",
           0, 2, PROP_DBLK_IDC_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+}
+
+static void
+gst_msdkh265enc_class_init (gpointer klass, gpointer data)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstVideoEncoderClass *videoencoder_class;
+  GstMsdkEncClass *encoder_class;
+  MsdkEncCData *cdata = data;
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
+  videoencoder_class = GST_VIDEO_ENCODER_CLASS (klass);
+  encoder_class = GST_MSDKENC_CLASS (klass);
+
+  gobject_class->finalize = gst_msdkh265enc_finalize;
+  gobject_class->set_property = gst_msdkh265enc_set_property;
+  gobject_class->get_property = gst_msdkh265enc_get_property;
+
+  videoencoder_class->pre_push = gst_msdkh265enc_pre_push;
+
+  encoder_class->set_format = gst_msdkh265enc_set_format;
+  encoder_class->configure = gst_msdkh265enc_configure;
+  encoder_class->set_src_caps = gst_msdkh265enc_set_src_caps;
+  encoder_class->need_reconfig = gst_msdkh265enc_need_reconfig;
+  encoder_class->set_extra_params = gst_msdkh265enc_set_extra_params;
+  encoder_class->need_conversion = gst_msdkh265enc_need_conversion;
+
+  _msdkh265enc_install_properties (gobject_class, encoder_class);
 
   gst_element_class_set_static_metadata (element_class,
       "Intel MSDK H265 encoder",
@@ -1035,14 +1028,23 @@ gst_msdkh265enc_class_init (GstMsdkH265EncClass * klass)
       "H265 video encoder based on " MFX_API_SDK,
       "Josep Torra <jtorra@oblong.com>");
 
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+          cdata->sink_caps));
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          cdata->src_caps));
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
 }
 
 static void
-gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
+gst_msdkh265enc_init (GTypeInstance * instance, gpointer g_class)
 {
-  GstMsdkEnc *msdk_enc = (GstMsdkEnc *) thiz;
+  GstMsdkH265Enc *thiz = GST_MSDKH265ENC (instance);
+  GstMsdkEnc *msdk_enc = (GstMsdkEnc *) instance;
   thiz->lowpower = PROP_LOWPOWER_DEFAULT;
   thiz->num_tile_rows = PROP_TILE_ROW_DEFAULT;
   thiz->num_tile_cols = PROP_TILE_COL_DEFAULT;
@@ -1059,4 +1061,54 @@ gst_msdkh265enc_init (GstMsdkH265Enc * thiz)
   thiz->intra_refresh_cycle_dist = PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT;
   thiz->dblk_idc = PROP_DBLK_IDC_DEFAULT;
   msdk_enc->num_extra_frames = 1;
+}
+
+gboolean
+gst_msdkh265enc_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank)
+{
+  GType type;
+  MsdkEncCData *cdata;
+  gchar *type_name, *feature_name;
+  gboolean ret = FALSE;
+
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstMsdkH265EncClass),
+    .class_init = gst_msdkh265enc_class_init,
+    .instance_size = sizeof (GstMsdkH265Enc),
+    .instance_init = gst_msdkh265enc_init
+  };
+
+  cdata = g_new (MsdkEncCData, 1);
+  cdata->sink_caps = gst_caps_copy (sink_caps);
+  cdata->src_caps = gst_caps_copy (src_caps);
+
+#ifdef _WIN32
+  gst_msdkcaps_set_strings (cdata->sink_caps,
+      "memory:D3D11Memory", "format", "NV12, P010_10LE");
+#endif
+
+  gst_caps_set_simple (cdata->src_caps,
+      "alignment", G_TYPE_STRING, "au",
+      "stream-format", G_TYPE_STRING, "byte-stream", NULL);
+
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  type_info.class_data = cdata;
+
+  type_name = g_strdup ("GstMsdkH265Enc");
+  feature_name = g_strdup ("msdkh265enc");
+
+  type = g_type_register_static (GST_TYPE_MSDKENC, type_name, &type_info, 0);
+  if (type)
+    ret = gst_element_register (plugin, feature_name, rank, type);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
 }

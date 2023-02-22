@@ -37,17 +37,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKAV1ENC \
-  (gst_msdkav1enc_get_type())
-#define GST_MSDKAV1ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKAV1ENC,GstMsdkAV1Enc))
-#define GST_MSDKAV1ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKAV1ENC,GstMsdkAV1EncClass))
-#define GST_IS_MSDKAV1ENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKAV1ENC))
-#define GST_IS_MSDKAV1ENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKAV1ENC))
-
 typedef struct _GstMsdkAV1Enc GstMsdkAV1Enc;
 typedef struct _GstMsdkAV1EncClass GstMsdkAV1EncClass;
 
@@ -71,7 +60,10 @@ struct _GstMsdkAV1EncClass
   GstMsdkEncClass parent_class;
 };
 
-GType gst_msdkav1enc_get_type (void);
+gboolean
+gst_msdkav1enc_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 
