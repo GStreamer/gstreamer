@@ -50,13 +50,13 @@ va_destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
 
 gboolean
 va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
-    guint width, guint height, gint usage_hint,
-    VASurfaceAttribExternalBuffers * ext_buf, VASurfaceID * surfaces,
-    guint num_surfaces)
+    guint width, guint height, gint usage_hint, guint64 * modifiers,
+    guint num_modifiers, VASurfaceAttribExternalBuffers * ext_buf,
+    VASurfaceID * surfaces, guint num_surfaces)
 {
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   /* *INDENT-OFF* */
-  VASurfaceAttrib attrs[5] = {
+  VASurfaceAttrib attrs[6] = {
     {
       .type = VASurfaceAttribUsageHint,
       .flags = VA_SURFACE_ATTRIB_SETTABLE,
@@ -71,6 +71,10 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
                                ? VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
                                : VA_SURFACE_ATTRIB_MEM_TYPE_VA,
     },
+  };
+  VADRMFormatModifierList modifier_list = {
+    .num_modifiers = num_modifiers,
+    .modifiers = modifiers,
   };
   /* *INDENT-ON* */
   VAStatus status;
@@ -96,6 +100,17 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
       .flags = VA_SURFACE_ATTRIB_SETTABLE,
       .value.type = VAGenericValueTypePointer,
       .value.value.p = ext_buf,
+    };
+    /* *INDENT-ON* */
+  }
+
+  if (num_modifiers > 0 && modifiers) {
+    /* *INDENT-OFF* */
+    attrs[num_attrs++] = (VASurfaceAttrib) {
+      .type = VASurfaceAttribDRMFormatModifiers,
+      .flags = VA_SURFACE_ATTRIB_SETTABLE,
+      .value.type = VAGenericValueTypePointer,
+      .value.value.p = &modifier_list,
     };
     /* *INDENT-ON* */
   }

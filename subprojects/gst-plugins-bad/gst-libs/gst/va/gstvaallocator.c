@@ -589,8 +589,8 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
 
   if (!va_create_surfaces (self->display, rt_format, fourcc,
           GST_VIDEO_INFO_WIDTH (&self->info),
-          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, extbuf,
-          &surface, 1))
+          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL, 1,
+          extbuf, &surface, 1))
     return FALSE;
 
   /* workaround for missing layered dmabuf formats in i965 */
@@ -1040,7 +1040,8 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   }
 
   ret = va_create_surfaces (display, rt_format, ext_buf.pixel_format,
-      ext_buf.width, ext_buf.height, usage_hint, &ext_buf, &surface, 1);
+      ext_buf.width, ext_buf.height, usage_hint, NULL, 0, &ext_buf, &surface,
+      1);
   if (!ret)
     return FALSE;
 
@@ -1236,7 +1237,7 @@ _update_image_info (GstVaAllocator * va_allocator)
   if (!va_create_surfaces (va_allocator->display, va_allocator->rt_format,
           va_allocator->fourcc, GST_VIDEO_INFO_WIDTH (&va_allocator->info),
           GST_VIDEO_INFO_HEIGHT (&va_allocator->info), va_allocator->usage_hint,
-          NULL, &surface, 1)) {
+          NULL, 0, NULL, &surface, 1)) {
     GST_ERROR_OBJECT (va_allocator, "Failed to create a test surface");
     return FALSE;
   }
@@ -1599,7 +1600,7 @@ gst_va_allocator_alloc (GstAllocator * allocator)
 
   if (!va_create_surfaces (self->display, self->rt_format, self->fourcc,
           GST_VIDEO_INFO_WIDTH (&self->info),
-          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
+          GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL, 0, NULL,
           &surface, 1))
     return NULL;
 
@@ -2066,8 +2067,8 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     display = self->display;
     if (!va_create_surfaces (self->display, rt_format, fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info),
-            GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
-            &surface, 1))
+            GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL, 0,
+            NULL, &surface, 1))
       return FALSE;
   } else if (GST_IS_VA_ALLOCATOR (mem->allocator)) {
     GstVaAllocator *self = GST_VA_ALLOCATOR (mem->allocator);
@@ -2081,8 +2082,8 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     format = GST_VIDEO_INFO_FORMAT (&self->info);
     if (!va_create_surfaces (self->display, self->rt_format, self->fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info),
-            GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
-            &surface, 1))
+            GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL, 0,
+            NULL, &surface, 1))
       return FALSE;
   } else {
     g_assert_not_reached ();

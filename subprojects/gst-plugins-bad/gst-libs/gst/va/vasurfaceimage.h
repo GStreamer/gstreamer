@@ -32,6 +32,8 @@ gboolean              va_create_surfaces                  (GstVaDisplay * displa
                                                            guint rt_format, guint fourcc,
                                                            guint width, guint height,
                                                            gint usage_hint,
+                                                           guint64 * modifiers,
+                                                           guint num_modifiers,
                                                            VASurfaceAttribExternalBuffers * ext_buf,
                                                            VASurfaceID * surfaces,
                                                            guint num_surfaces);
