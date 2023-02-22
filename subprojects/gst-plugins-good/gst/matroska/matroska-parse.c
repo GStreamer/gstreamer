@@ -346,11 +346,8 @@ gst_matroska_parse_add_stream (GstMatroskaParse * parse, GstEbmlRead * ebml)
         if ((ret = gst_ebml_read_uint (ebml, &id, &num)) != GST_FLOW_OK)
           break;
 
-        if (num == 0) {
-          GST_ERROR_OBJECT (parse, "Invalid TrackUID 0");
-          ret = GST_FLOW_ERROR;
-          break;
-        }
+        if (num == 0)
+          GST_WARNING_OBJECT (parse, "Invalid TrackUID 0");
 
         GST_DEBUG_OBJECT (parse, "TrackUID: %" G_GUINT64_FORMAT, num);
         context->uid = num;
