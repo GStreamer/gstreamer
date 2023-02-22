@@ -54,6 +54,7 @@
 #include <stdlib.h>
 
 #include "gstmsdkvpp.h"
+#include "gstmsdkcaps.h"
 #include "gstmsdkcontextutil.h"
 #include "gstmsdkvpputil.h"
 #include "gstmsdkallocator.h"
@@ -598,22 +599,6 @@ error_pool_config:
   }
 }
 
-static gboolean
-_gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
-{
-  guint i;
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
-    /* Skip ANY features, we need an exact match for correct evaluation */
-    if (gst_caps_features_is_any (features))
-      continue;
-    if (gst_caps_features_contains (features, feature))
-      return TRUE;
-  }
-  return FALSE;
-}
-
 static GstBufferPool *
 create_src_pool (GstMsdkVPP * thiz, GstQuery * query, GstCaps * caps)
 {
@@ -688,7 +673,7 @@ gst_msdkvpp_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   }
   /* We allocate the memory of type that downstream allocation requests */
 #ifndef _WIN32
-  if (_gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+  if (gst_msdkcaps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     GST_INFO_OBJECT (thiz, "MSDK VPP srcpad uses DMABuf memory");
     thiz->use_srcpad_dmabuf = TRUE;
   }
@@ -740,7 +725,7 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
 
   /* if upstream allocation query supports dmabuf-capsfeatures,
    * we do allocate dmabuf backed memory */
-  if (_gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+  if (gst_msdkcaps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     GST_INFO_OBJECT (thiz, "MSDK VPP srcpad uses DMABuf memory");
     thiz->use_sinkpad_dmabuf = TRUE;
   }
@@ -1412,7 +1397,7 @@ pad_accept_memory (GstMsdkVPP * thiz, const gchar * mem_type,
       || out_caps == caps)
     goto done;
 
-  if (_gst_caps_has_feature (out_caps, mem_type))
+  if (gst_msdkcaps_has_feature (out_caps, mem_type))
     ret = TRUE;
 done:
   if (caps)

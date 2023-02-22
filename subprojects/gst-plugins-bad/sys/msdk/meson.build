@@ -1,6 +1,7 @@
 msdk_sources = [
   'gstmsdk.c',
   'gstmsdkallocator.c',
+  'gstmsdkcaps.c',
   'gstmsdkcontext.c',
   'gstmsdkcontextutil.c',
   'gstmsdkdec.c',

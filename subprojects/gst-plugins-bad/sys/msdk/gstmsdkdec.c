@@ -514,24 +514,6 @@ failed:
   return FALSE;
 }
 
-
-static gboolean
-_gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
-{
-  guint i;
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
-    /* Skip ANY features, we need an exact match for correct evaluation */
-    if (gst_caps_features_is_any (features))
-      continue;
-    if (gst_caps_features_contains (features, feature))
-      return TRUE;
-  }
-
-  return FALSE;
-}
-
 static gboolean
 pad_accept_memory (GstMsdkDec * thiz, const gchar * mem_type, GstCaps * filter)
 {
@@ -553,7 +535,7 @@ pad_accept_memory (GstMsdkDec * thiz, const gchar * mem_type, GstCaps * filter)
   if (gst_caps_is_any (out_caps) || gst_caps_is_empty (out_caps))
     goto done;
 
-  if (_gst_caps_has_feature (out_caps, mem_type))
+  if (gst_msdkcaps_has_feature (out_caps, mem_type))
     ret = TRUE;
 done:
   if (caps)
@@ -1819,7 +1801,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   /* this will get updated with msdk requirement */
   thiz->min_prealloc_buffers = min_buffers;
 
-  if (_gst_caps_has_feature (pool_caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+  if (gst_msdkcaps_has_feature (pool_caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     thiz->use_dmabuf = TRUE;
   }
   /* Decoder always use its own pool. So we create a pool if msdk APIs
@@ -1915,7 +1897,7 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   min_buffers = thiz->min_prealloc_buffers;
 
   if (!has_videometa && !thiz->ds_has_known_allocator
-      && _gst_caps_has_feature (pool_caps,
+      && gst_msdkcaps_has_feature (pool_caps,
           GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
     /* We need to create other pool with system memory for copy use under conditions:
      * (1) downstream has no videometa; (2) downstream allocator is unknown;

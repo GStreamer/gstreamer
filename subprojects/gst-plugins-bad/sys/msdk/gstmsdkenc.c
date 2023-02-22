@@ -1456,24 +1456,6 @@ error_pool_config:
   }
 }
 
-/* Fixme: Common routine used by all msdk elements, should be
- * moved to a common util file */
-static gboolean
-_gst_caps_has_feature (const GstCaps * caps, const gchar * feature)
-{
-  guint i;
-
-  for (i = 0; i < gst_caps_get_size (caps); i++) {
-    GstCapsFeatures *const features = gst_caps_get_features (caps, i);
-    /* Skip ANY features, we need an exact match for correct evaluation */
-    if (gst_caps_features_is_any (features))
-      continue;
-    if (gst_caps_features_contains (features, feature))
-      return TRUE;
-  }
-  return FALSE;
-}
-
 static gboolean
 sinkpad_can_dmabuf (GstMsdkEnc * thiz)
 {
@@ -1491,7 +1473,7 @@ sinkpad_can_dmabuf (GstMsdkEnc * thiz)
       || allowed_caps == caps)
     goto done;
 
-  if (_gst_caps_has_feature (allowed_caps, GST_CAPS_FEATURE_MEMORY_DMABUF))
+  if (gst_msdkcaps_has_feature (allowed_caps, GST_CAPS_FEATURE_MEMORY_DMABUF))
     ret = TRUE;
 
 done:
@@ -2053,7 +2035,7 @@ gst_msdkenc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
 
   /* if upstream allocation query supports dmabuf-capsfeatures,
    *  we do allocate dmabuf backed memory */
-  if (_gst_caps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+  if (gst_msdkcaps_has_feature (caps, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
     GST_INFO_OBJECT (thiz, "MSDK VPP srcpad uses DMABuf memory");
     thiz->use_dmabuf = TRUE;
   }

@@ -38,6 +38,7 @@
 #include "gstmsdkcontext.h"
 #include "msdk-enums.h"
 #include "gstmsdkdecproputil.h"
+#include "gstmsdkcaps.h"
 
 G_BEGIN_DECLS
 
