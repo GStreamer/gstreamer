@@ -30,6 +30,8 @@
 #if defined(APPLEMEDIA_MOLTENVK)
 #include <gst/vulkan/vulkan.h>
 #endif
+#define GST_USE_UNSTABLE_API
+#include <gst/codecparsers/gsth264parser.h>
 
 G_BEGIN_DECLS
 
@@ -41,6 +43,8 @@ G_BEGIN_DECLS
 
 typedef struct _GstVtdec GstVtdec;
 typedef struct _GstVtdecClass GstVtdecClass;
+
+#define GST_VTDEC_DPB_MAX_SIZE 16
 
 struct _GstVtdec
 {
