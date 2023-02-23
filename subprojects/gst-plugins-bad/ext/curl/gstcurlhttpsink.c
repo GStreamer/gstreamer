@@ -450,8 +450,9 @@ gst_curl_http_sink_transfer_verify_response_code (GstCurlBaseSink * bcsink)
   GST_DEBUG_OBJECT (sink, "response code: %ld", resp);
 
   if (resp < 100 || resp >= 300) {
-    bcsink->error = g_strdup_printf ("HTTP response error: (received: %ld)",
-        resp);
+    GST_ELEMENT_ERROR_WITH_DETAILS (sink, RESOURCE, WRITE,
+        ("HTTP response error code: %ld", resp), (NULL), ("http-status-code",
+            G_TYPE_UINT, (guint) resp, NULL));
     return FALSE;
   }
 
