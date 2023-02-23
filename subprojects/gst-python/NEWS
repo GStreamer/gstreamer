@@ -2,13 +2,16 @@ GStreamer 1.20 Release Notes
 
 GStreamer 1.20.0 was originally released on 3 February 2022.
 
-The latest bug-fix release in the 1.20 series is 1.20.5 and was released
-on 19 December 2022.
+The latest bug-fix release in the now old-stable 1.20 series is 1.20.6
+and was released on 23 February 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
 version of this document.
 
-Last updated: Monday 19 December 2022, 19:00 UTC (log)
+The GStreamer 1.20 stable series has since been superseded by the
+GStreamer 1.22 stable release series.
+
+Last updated: Thursday 23 February 2023, 00:30 UTC (log)
 
 Introduction
 
@@ -3037,19 +3040,198 @@ List of merge requests and issues fixed in 1.20.5
 -   List of Merge Requests applied in 1.20.5
 -   List of Issues fixed in 1.20.5
 
+1.20.6
+
+The sixth 1.20 bug-fix release (1.20.6) was released on 23 February
+2023.
+
+This release only contains bugfixes and it should be safe to upgrade
+from 1.20.x.
+
+Highlighted bugfixes in 1.20.6
+
+-   audio: channel-mix: allow up to 64 channels instead of up to 63
+    channels
+-   AOM AV1 encoder timestamp handling improvements
+-   AV1 video codec caps handling improvements in aom plugin, isomp4 and
+    matroska muxers/demuxers.
+-   avvidenc: fix bitrate control and timestamps off FFmpeg-based video
+    encoders
+-   h264parse: fix missing timestamps on outputs when splitting a frame
+-   rtspsrc: more workarounds for servers with broken control uri
+    handling
+-   playbin3: fix issue with UDP streams, making sure there’s enough
+    buffering
+-   qmlglsrc: Fix deadlock when stopping and some other fixes
+-   qtmux: fix default timescale unit for N/1001 framerates
+-   v4l2h264dec: Fix Raspberry Pi4 will not play video in application
+-   vtdec: Fix non-deterministic frame output after seeks
+-   wasapi2src: Fix loopback capture on Windows 10 Anniversary Update
+-   macOS, iOS: Fix Xcode 14 ABI breakage with older Xcode
+-   cerbero: Fix some regressions for CentOS in the 1.20 branch
+-   cerbero: Fix setuptools site.py breakage in Python 3.11
+-   Fix gst-libav build against FFmpeg from git
+-   gobject-introspection annotation fixes for bindings
+-   Miscellaneous bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+-   Performance improvements
+
+gstreamer
+
+-   buffer: fix copy meta reference debug log formatting
+-   bin: Don’t unlock unlocked mutex in gst_bin_remove_func()
+-   bin: Fix race conditions in unit tests
+-   element: fix deadlock in gst_element_add_pad() when >= PAUSED
+-   pad: Don’t leak user_data in gst_pad_start_task
+-   gobject-introspection annotation fixes
+
+Core Elements
+
+-   input-selector: Take the object lock while iterating sinkpads
+-   multiqueue: Handle use-interleave latency live pipelines, fixing
+    issues with playbin3 and udp streams
+
+gst-plugins-base
+
+-   audio: channel-mix: Fix channel count limit to be able to equal 64
+-   gstglwindow_x11.c: Fix colormap leak
+
+Tools
+
+-   No changes
+
+gst-plugins-good
+
+-   gtkbasesink: Fix widget leak
+-   gstgl: fix broken compilation of libsabi.c test on SLES15
+-   gstgl: Mark gst_gl_context_new_wrapped() return value as nullable
+-   gstgl: Add gstreamer-gl-1.0 pkgconfig vars to internal meson
+    dependency
+-   isomp4/matroska: Add stream-format = (string) obu-stream to AV1 caps
+-   jpegdec: Disable libjpeg-turbo SIMD acceleration support for RGB
+    conversion again for now
+-   redenc: fix setting of extension ID for twcc
+-   rtspsrc: Also consider “Method Not Valid In This State” error in
+    broken…
+-   rtspsrc, rtptimerqueue: Fix memory leak
+-   qmlglsrc: Fix deadlock when stopping
+-   qmlglsrc: Handle HiDPI scaling; unmap buffer before adding sync meta
+-   qtdemux: Don’t emit GstSegment correcting start time when in MSE
+    mode
+-   qtdemux, qtmux: Drop questionable av1C version 0 parsing and
+    implement version 1 parsing/writing
+-   qtmux: do not base default timescale on centiframes
+-   qtmux: Fix assertion on caps update
+-   v4l2h264dec: Fix Raspberry Pi4 will not play video in application
+
+gst-plugins-bad
+
+-   aom: Include stream-format and alignment in the AV1 caps
+-   aom: av1enc: Fix pts
+-   av1parser, h265parser: Fix some code defects
+-   ccconverter: don’t debug a potentially freed filter caps
+-   closedcaption: Don’t leak caps event
+-   d3d11memory: Fix potential crash in GstD3D11PoolAllocator
+-   dvbbasebin: don’t rely on g_key_file_get_(integer|uint64) return
+    when setting properties
+-   h264parse: Add missing timestamp when splitting a frame
+-   mpegpsdemux: Ignore DTS if PTS < DTS
+-   nvcodec: improve error reporting on plugin init
+-   nvvp9dec: Fix return value
+-   srt: Avoid crash on unknown option
+-   vtdec: Fix not waiting for async frames when flushing, fixing
+    non-deterministic frame output after seeking
+-   va: Avoid array index overflow when filling 8x8 scaling list
+-   va: Delay the VAProcPipelineCaps query after context created.
+-   wasapi2src: Fix loopback capture on Windows 10 Anniversary Update
+-   wpe: Logging fixes for the WebExtension
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-libav
+
+-   avviddec: Disable (non-functional) AV1 decoder
+-   avviddec: change
+    AV_CODEC_CAP_AUTO_THREADS->AV_CODEC_CAP_OTHER_THREADS
+-   avvidenc: Don’t take ffmpeg timestamps verbatim but only use them to
+    calculate DTS
+-   avvidenc: Offset PTS to zero to fix bitrate control
+-   avvidenc: Set timebase in the ffmpeg context to nanoseconds and set
+    framerate
+-   avvidenc: avenc_mpeg4 does not respect bitrate as of 1.18 branch
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges: gst_bin_add() is transfer floating so wrappers around it are
+    too
+
+gst-examples:
+
+-   webrtc: Use webrtc.gstreamer.net
+-   webrtc: Fix out of the box errors
+
+Development build environment + gst-full build
+
+-   No major changes
+
+Cerbero build tool and packaging changes in 1.20.6
+
+-   Fix setuptools site.py breakage in Python 3.11
+-   macOS, iOS: Fix Xcode 14 ABI breakage with older Xcode
+-   Fix some regressions for CentOS in the 1.20 branch
+-   Doesn’t work anymore with Python 3.6
+
+Recipes
+
+-   fontconfig 2.14 doesn’t compile with CentOS toolchain
+
+Contributors to 1.20.6
+
+Alicia Boya García, Edward Hervey, Enrique Ocaña González, F. Duncanh,
+He Junyan, Jan Alexander Steffens (heftig), James Hilliard, Jan Schmidt,
+Marek Vasut, Mathieu Duponchelle, Matthew Waters, Matthias Fuchs,
+medithe, Mengkejiergeli Ba, Nirbheek Chauhan, Olivier Crête, Pawel
+Stawicki, Philippe Normand, Piotr Brzeziński, Rodrigo Bernardes,
+Sebastian Dröge, Seungha Yang, Tim-Philipp Müller, Tristan van Berkom,
+U. Artie Eoff, Xuchen Yang, Yatin Maan,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.20.6
+
+-   List of Merge Requests applied in 1.20.6
+-   List of Issues fixed in 1.20.6
+
 Schedule for 1.22
 
-Our next major feature release will be 1.22, and 1.21 will be the
-unstable development version leading up to the stable 1.22 release. The
-development of 1.21/1.22 will happen in the git main branch.
+GStreamer 1.22.0 was released on 23 January 2023.
 
-The plan for the 1.22 development cycle is now confirmed, and we aim for
-a 1.22.0 release in December 2022 or early January 2023.
+See the GStreamer 1.22 release notes for details.
 
-1.22 will be backwards-compatible to the stable 1.20, 1.18, 1.16, 1.14,
-1.12, 1.10, 1.8, 1.6, 1.4, 1.2 and 1.0 release series.
-
-------------------------------------------------------------------------
+We recommend you upgrade at your earliest convenience. - - -
 
 These release notes have been prepared by Tim-Philipp Müller with
 contributions from Matthew Waters, Nicolas Dufresne, Nirbheek Chauhan,
