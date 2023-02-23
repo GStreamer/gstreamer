@@ -1776,6 +1776,8 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
           res = r;
           goto done;
         }
+      } else {
+        videorate->drop++;
       }
       /* No need to keep the buffer around for longer */
       gst_buffer_replace (&videorate->prevbuf, NULL);
