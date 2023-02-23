@@ -1032,8 +1032,10 @@ handle_transfer (GstCurlBaseSink * sink)
   }
 
   if (m_code != CURLM_OK) {
-    sink->error = g_strdup_printf ("failed to write data: %s",
-        curl_multi_strerror (m_code));
+    GST_ELEMENT_ERROR_WITH_DETAILS (sink, RESOURCE, WRITE,
+        ("Failed to write data"), ("Curl multi error: %s",
+            curl_multi_strerror (m_code)), ("curl-multi-status-code",
+            G_TYPE_INT, m_code, NULL));
     retval = GST_FLOW_ERROR;
     goto fail;
   }
@@ -1041,8 +1043,10 @@ handle_transfer (GstCurlBaseSink * sink)
   /* problems still might have occurred on individual transfers even when
    * curl_multi_perform returns CURLM_OK */
   if ((e_code = gst_curl_base_sink_transfer_check (sink)) != CURLE_OK) {
-    sink->error = g_strdup_printf ("failed to transfer data: %s",
-        curl_easy_strerror (e_code));
+    GST_ELEMENT_ERROR_WITH_DETAILS (sink, RESOURCE, WRITE,
+        ("Failed to transfer data"), ("Curl easy error: %s",
+            curl_easy_strerror (e_code)), ("curl-status-code", G_TYPE_INT,
+            e_code, NULL));
     retval = GST_FLOW_ERROR;
     goto fail;
   }
