@@ -112,16 +112,6 @@ enum
 #define PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT 0
 #define PROP_DBLK_IDC_DEFAULT                 0
 
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, "
-        "framerate = (fraction) [0/1, MAX], "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
-        "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) { high, main, baseline, constrained-baseline }")
-    );
-
 static GstElementClass *parent_class = NULL;
 
 static GType
@@ -266,14 +256,16 @@ static gboolean
 gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
 {
   GstMsdkH264Enc *thiz = GST_MSDKH264ENC (encoder);
+  GstPad *srcpad;
   GstCaps *template_caps;
   GstCaps *allowed_caps = NULL;
 
   thiz->profile = 0;
   thiz->level = 0;
 
-  template_caps = gst_static_pad_template_get_caps (&src_factory);
-  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+  srcpad = GST_VIDEO_ENCODER_SRC_PAD (encoder);
+  template_caps = gst_pad_get_pad_template_caps (srcpad);
+  allowed_caps = gst_pad_get_allowed_caps (srcpad);
 
   /* If downstream has ANY caps let encoder decide profile and level */
   if (allowed_caps == template_caps) {

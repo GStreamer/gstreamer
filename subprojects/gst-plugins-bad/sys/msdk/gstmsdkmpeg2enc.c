@@ -63,29 +63,21 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkmpeg2enc_debug);
 #define GST_IS_MSDKMPEG2ENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_FROM_CLASS (klass)))
 
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpeg, "
-        "framerate = (fraction) [0/1, MAX], "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
-        "mpegversion = (int) 2 , systemstream = (bool) false, "
-        "profile = (string) { high, main, simple }")
-    );
-
 static GstElementClass *parent_class = NULL;
 
 static gboolean
 gst_msdkmpeg2enc_set_format (GstMsdkEnc * encoder)
 {
   GstMsdkMPEG2Enc *thiz = GST_MSDKMPEG2ENC (encoder);
+  GstPad *srcpad;
   GstCaps *template_caps;
   GstCaps *allowed_caps = NULL;
 
   thiz->profile = 0;
 
-  template_caps = gst_static_pad_template_get_caps (&src_factory);
-  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+  srcpad = GST_VIDEO_ENCODER_SRC_PAD (encoder);
+  template_caps = gst_pad_get_pad_template_caps (srcpad);
+  allowed_caps = gst_pad_get_allowed_caps (srcpad);
 
   /* If downstream has ANY caps let encoder decide profile and level */
   if (allowed_caps == template_caps) {

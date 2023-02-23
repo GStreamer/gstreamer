@@ -78,35 +78,28 @@ enum
 #define PROP_B_PYRAMID_DEFAULT          MFX_B_REF_UNKNOWN
 #define PROP_P_PYRAMID_DEFAULT          MFX_P_REF_DEFAULT
 
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-av1, "
-        "framerate = (fraction) [0/1, MAX], "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
-        "profile = (string) main")
-    );
-
 static GstElementClass *parent_class = NULL;
 
 static gboolean
 gst_msdkav1enc_set_format (GstMsdkEnc * encoder)
 {
   GstMsdkAV1Enc *thiz = GST_MSDKAV1ENC (encoder);
+  GstPad *srcpad;
   GstCaps *template_caps;
   GstCaps *allowed_caps = NULL;
 
   thiz->profile = MFX_PROFILE_AV1_MAIN;
 
-  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+  srcpad = GST_VIDEO_ENCODER_SRC_PAD (encoder);
 
+  allowed_caps = gst_pad_get_allowed_caps (srcpad);
   if (!allowed_caps || gst_caps_is_empty (allowed_caps)) {
     if (allowed_caps)
       gst_caps_unref (allowed_caps);
     return FALSE;
   }
 
-  template_caps = gst_static_pad_template_get_caps (&src_factory);
+  template_caps = gst_pad_get_pad_template_caps (srcpad);
 
   /* If downstream has ANY caps let encoder decide profile and level */
   if (gst_caps_is_equal (allowed_caps, template_caps)) {
