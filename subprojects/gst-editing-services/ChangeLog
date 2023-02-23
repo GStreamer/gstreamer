@@ -1,7 +1,20 @@
+2023-01-04 12:21:22 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ges/ges-pipeline.c:
+	* ges/ges-timeline.c:
+	  ges: gst_bin_add() is `transfer floating` so wrappers around it are too
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3684>
+
+2022-12-20 00:39:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.5 ===
 
 2022-12-19 23:34:42 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-editing-services.doap:

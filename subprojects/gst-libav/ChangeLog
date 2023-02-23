@@ -1,7 +1,76 @@
+2022-12-20 14:10:01 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Disable AV1 decoder
+	  We have various elements for AV1 decoding, the ffmpeg one only works if
+	  hardware support is available and seems to require special signalling.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4019>
+
+2023-02-13 17:02:01 -0500  U. Artie Eoff <ullysses.a.eoff@intel.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: change AV_CODEC_CAP_AUTO_THREADS->AV_CODEC_CAP_OTHER_THREADS
+	  This fixes a compile error with recent upstream FFmpeg.
+	  The AV_CODEC_CAP_AUTO_THREADS was deprecated and renamed to
+	  AV_CODEC_CAP_OTHER_THREADS in FFmpeg upstream commit
+	  7d09579190de (lavc 58.132.100).
+	  The AV_CODEC_CAP_AUTO_THREADS was finally removed in FFmpeg upstream
+	  commit 10c9a0874cb3 (lavc 59.63.100).
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3965>
+
+2023-01-24 15:38:20 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Don't take ffmpeg timestamps verbatim but only use them to calculate DTS
+	  The ffmpeg timestamps are inaccurate and only in framerate granularity.
+	  To avoid generating inaccurate output timestamps, especially with
+	  variable framerate streams, only use the ffmpeg timestamps for
+	  calculating the DTS.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1544
+	  again.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3791>
+
+2023-01-24 15:28:17 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavvidenc.c:
+	  Revert "avvidenc: Set timebase in the ffmpeg context to nanoseconds and set framerate"
+	  This reverts commit 50db59449e9cdb637c5f0c1b7c5dccd582fac4ee.
+	  This broke the MPEG-1 video encoder as it requires the framerate to be
+	  used for the timebase.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1734
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3791>
+
+2023-01-13 12:43:30 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavvidenc.c:
+	* ext/libav/gstavvidenc.h:
+	  avvidenc: Offset PTS to zero to fix bitrate control
+	  Otherwise ffmpeg's rate control algorithm will not work correctly as
+	  it is based on the absolute PTS values.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gst-libav/-/issues/91
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3727>
+
+2022-12-23 18:01:03 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: Set timebase in the ffmpeg context to nanoseconds and set framerate
+	  As we now actually use the timestamps from ffmpeg for timestamping the
+	  output we would lose a lot of accuracy if the framerate is used.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1544
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/3679>
+
+2022-12-20 00:39:36 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.5 ===
 
 2022-12-19 23:34:42 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:
