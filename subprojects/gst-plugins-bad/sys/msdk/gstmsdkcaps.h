@@ -48,6 +48,10 @@ gst_msdkcaps_enc_create_caps (GstMsdkContext * context,
     gpointer enc_description, guint codec_id,
     GstCaps ** sink_caps, GstCaps ** src_caps);
 
+gboolean
+gst_msdkcaps_set_strings (GstCaps * caps,
+    const gchar * features, const char * field, const gchar * strings);
+
 G_END_DECLS
 
 #endif /* __GST_MSDKCAPS_H__ */

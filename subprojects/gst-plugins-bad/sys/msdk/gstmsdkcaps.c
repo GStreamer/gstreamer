@@ -186,6 +186,22 @@ _list_append_string (GValue * list, const gchar * str)
   g_value_unset (&gval);
 }
 
+static gboolean
+_strings_to_list (const gchar * strings, GValue * list)
+{
+  gchar **strs = NULL;
+
+  if (!strings || !list)
+    return FALSE;
+
+  strs = g_strsplit (strings, DEFAULT_DELIMITER, 0);
+  for (guint i = 0; strs[i]; i++)
+    _list_append_string (list, strs[i]);
+  g_strfreev (strs);
+
+  return TRUE;
+}
+
 static const gchar *
 _get_media_type (guint codec)
 {
@@ -1004,3 +1020,41 @@ failed:
 }
 
 #endif
+
+gboolean
+gst_msdkcaps_set_strings (GstCaps * caps,
+    const gchar * features, const char *field, const gchar * strings)
+{
+  GValue list = G_VALUE_INIT;
+  guint size = gst_caps_get_size (caps);
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (field != NULL, FALSE);
+  g_return_val_if_fail (strings != NULL, FALSE);
+
+  g_value_init (&list, GST_TYPE_LIST);
+  _strings_to_list (strings, &list);
+
+  if (features) {
+    GstStructure *s = NULL;
+    GstCapsFeatures *f = gst_caps_features_from_string (features);
+
+    for (guint i = 0; i < size; i++) {
+      if (gst_caps_features_is_equal (f, gst_caps_get_features (caps, i))) {
+        s = gst_caps_get_structure (caps, i);
+        break;
+      }
+    }
+
+    if (!s)
+      return FALSE;
+
+    gst_structure_set_value (s, field, &list);
+  } else {
+    gst_caps_set_value (caps, field, &list);
+  }
+
+  g_value_unset (&list);
+
+  return TRUE;
+}
