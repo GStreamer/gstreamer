@@ -329,6 +329,7 @@ static void
 gst_mpeg2_decoder_init (GstMpeg2Decoder * self)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
+  gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (self), TRUE);
 
   self->priv = gst_mpeg2_decoder_get_instance_private (self);
 
