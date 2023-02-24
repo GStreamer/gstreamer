@@ -3,8 +3,8 @@
 set -eux
 
 cd C:/
-git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/cerbero.git
-cd cerbero
+git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/cerbero.git C:/cerbero
+cd C:/cerbero
 
 echo 'local_sources="C:/cerbero/cerbero-sources"' > localconf.cbc
 echo 'home_dir="C:/cerbero/cerbero-build"' >> localconf.cbc
