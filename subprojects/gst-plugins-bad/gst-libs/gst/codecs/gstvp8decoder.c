@@ -102,6 +102,7 @@ static void
 gst_vp8_decoder_init (GstVp8Decoder * self)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
+  gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (self), TRUE);
 
   self->priv = gst_vp8_decoder_get_instance_private (self);
 }
