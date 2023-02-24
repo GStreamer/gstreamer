@@ -340,6 +340,7 @@ gst_h264_decoder_init (GstH264Decoder * self)
   GstH264DecoderPrivate *priv;
 
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
+  gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (self), TRUE);
 
   self->priv = priv = gst_h264_decoder_get_instance_private (self);
 
