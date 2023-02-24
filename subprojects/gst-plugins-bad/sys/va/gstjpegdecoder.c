@@ -90,6 +90,8 @@ static void
 gst_jpeg_decoder_init (GstJpegDecoder * self)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
+  gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (self), TRUE);
+
   self->priv = gst_jpeg_decoder_get_instance_private (self);
 }
 
