@@ -356,19 +356,13 @@ print_keyboard_help (void)
 }
 
 static gboolean
-win32_kb_source_cb (Win32KeyHandler * handler)
+win32_kb_source_cb (INPUT_RECORD * buffer)
 {
-  HANDLE h_input = handler->console_handle;
-  INPUT_RECORD buffer;
-  DWORD n;
-
-  if (PeekConsoleInput (h_input, &buffer, 1, &n) && n == 1) {
-    ReadConsoleInput (h_input, &buffer, 1, &n);
-
-    if (buffer.EventType == KEY_EVENT && buffer.Event.KeyEvent.bKeyDown) {
+  {
+    if (buffer->EventType == KEY_EVENT && buffer->Event.KeyEvent.bKeyDown) {
       gchar key_val[2] = { 0 };
 
-      switch (buffer.Event.KeyEvent.wVirtualKeyCode) {
+      switch (buffer->Event.KeyEvent.wVirtualKeyCode) {
         case VK_RIGHT:
           gst_println ("Move xpos to %d", x++);
           gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (sink),
@@ -390,7 +384,7 @@ win32_kb_source_cb (Win32KeyHandler * handler)
               x, y, width, height);
           break;
         default:
-          key_val[0] = buffer.Event.KeyEvent.uChar.AsciiChar;
+          key_val[0] = buffer->Event.KeyEvent.uChar.AsciiChar;
           switch (key_val[0]) {
             case '<':
               gst_println ("Decrease width to %d", width--);
@@ -446,7 +440,8 @@ win32_kb_thread (gpointer user_data)
 
   while (TRUE) {
     DWORD ret = WaitForMultipleObjects (2, handles, FALSE, INFINITE);
-    static guint i = 0;
+    INPUT_RECORD buffer;
+    DWORD n;
 
     if (ret == WAIT_FAILED) {
       g_warning ("WaitForMultipleObject Failed");
@@ -461,7 +456,15 @@ win32_kb_thread (gpointer user_data)
     }
     g_mutex_unlock (&handler->lock);
 
-    g_idle_add ((GSourceFunc) win32_kb_source_cb, handler);
+    if (PeekConsoleInput (handler->console_handle, &buffer, 1, &n) && n == 1) {
+      INPUT_RECORD *record;
+
+      record = g_new0 (INPUT_RECORD, 1);
+      ReadConsoleInput (handler->console_handle, record, 1, &n);
+
+      g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
+          (GSourceFunc) win32_kb_source_cb, record, (GDestroyNotify) g_free);
+    }
   }
 
   return NULL;
