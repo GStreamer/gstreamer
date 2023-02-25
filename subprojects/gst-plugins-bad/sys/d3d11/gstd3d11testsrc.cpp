@@ -40,6 +40,8 @@
 #include "gstd3d11pluginutils.h"
 #include <wrl.h>
 #include <string.h>
+#include <d2d1.h>
+#include <math.h>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -66,6 +68,10 @@ typedef enum
   GST_D3D11_TEST_SRC_CHECKERS2,
   GST_D3D11_TEST_SRC_CHECKERS4,
   GST_D3D11_TEST_SRC_CHECKERS8,
+  GST_D3D11_TEST_SRC_CIRCULAR,
+  GST_D3D11_TEST_SRC_BLINK,
+  /* sync with videotestsrc */
+  GST_D3D11_TEST_SRC_BALL = 18,
 } GstD3D11TestSrcPattern;
 
 /**
@@ -92,6 +98,27 @@ gst_d3d11_test_src_pattern_get_type (void)
       {GST_D3D11_TEST_SRC_CHECKERS2, "Checkers 2px", "checkers-2"},
       {GST_D3D11_TEST_SRC_CHECKERS4, "Checkers 4px", "checkers-4"},
       {GST_D3D11_TEST_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
+
+      /**
+       * GstD3D11TestSrcPattern::circular:
+       *
+       * Since: 1.24
+       */
+      {GST_D3D11_TEST_SRC_CIRCULAR, "Circular", "circular"},
+
+      /**
+       * GstD3D11TestSrcPattern::blink:
+       *
+       * Since: 1.24
+       */
+      {GST_D3D11_TEST_SRC_BLINK, "Blink", "blink"},
+
+      /**
+       * GstD3D11TestSrcPattern::ball:
+       *
+       * Since: 1.24
+       */
+      {GST_D3D11_TEST_SRC_BALL, "Moving ball", "ball"},
       {0, nullptr, nullptr},
     };
 
@@ -174,8 +201,9 @@ typedef struct
 
 typedef struct
 {
-  const ColorValue *clear_color;
+  const ColorValue *clear_color[2];
   GstD3D11TestSrcQuad *quad[2];
+  GstD3D11TestSrcPattern pattern;
 } GstD3D11TestSrcRender;
 
 struct _GstD3D11TestSrc
@@ -194,6 +222,8 @@ struct _GstD3D11TestSrc
   GstD3D11TestSrcPattern pattern;
   GstD3D11TestSrcRender *render;
   D3D11_VIEWPORT viewport;
+  ID2D1Factory *d2d_factory;
+  gint64 token;
 
   gboolean reverse;
   gint64 n_frames;
@@ -1012,6 +1042,28 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   return TRUE;
 }
 
+static gboolean
+setup_d2d_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
+{
+  HRESULT hr;
+  ComPtr < ID2D1Factory > d2d_factory;
+
+  if (self->d2d_factory)
+    return TRUE;
+
+  hr = D2D1CreateFactory (D2D1_FACTORY_TYPE_MULTI_THREADED,
+      IID_PPV_ARGS (&d2d_factory));
+
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't create D2D factory");
+    return FALSE;
+  }
+
+  self->d2d_factory = d2d_factory.Detach ();
+
+  return TRUE;
+}
+
 enum
 {
   PROP_0,
@@ -1295,7 +1347,7 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
       GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
       GST_D3D11_CONVERTER_BACKEND_SHADER, nullptr);
 
-  gst_video_info_set_format (&draw_info, GST_VIDEO_FORMAT_RGBA,
+  gst_video_info_set_format (&draw_info, GST_VIDEO_FORMAT_BGRA,
       self->info.width, self->info.height);
   self->converter = gst_d3d11_converter_new (self->device,
       &draw_info, &self->info, config);
@@ -1341,6 +1393,7 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
   self->viewport.MaxDepth = 1.0f;
 
   self->render = render = g_new0 (GstD3D11TestSrcRender, 1);
+  render->pattern = self->pattern;
 
   switch (self->pattern) {
     case GST_D3D11_TEST_SRC_SMPTE:
@@ -1352,19 +1405,19 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
         goto error;
       break;
     case GST_D3D11_TEST_SRC_BLACK:
-      render->clear_color = &color_table[COLOR_BLACK];
+      render->clear_color[0] = &color_table[COLOR_BLACK];
       break;
     case GST_D3D11_TEST_SRC_WHITE:
-      render->clear_color = &color_table[COLOR_WHITE];
+      render->clear_color[0] = &color_table[COLOR_WHITE];
       break;
     case GST_D3D11_TEST_SRC_RED:
-      render->clear_color = &color_table[COLOR_RED];
+      render->clear_color[0] = &color_table[COLOR_RED];
       break;
     case GST_D3D11_TEST_SRC_GREEN:
-      render->clear_color = &color_table[COLOR_GREEN];
+      render->clear_color[0] = &color_table[COLOR_GREEN];
       break;
     case GST_D3D11_TEST_SRC_BLUE:
-      render->clear_color = &color_table[COLOR_BLUE];
+      render->clear_color[0] = &color_table[COLOR_BLUE];
       break;
     case GST_D3D11_TEST_SRC_CHECKERS1:
       if (!setup_checker_render (self, render, 1))
@@ -1380,6 +1433,15 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
       break;
     case GST_D3D11_TEST_SRC_CHECKERS8:
       if (!setup_checker_render (self, render, 8))
+        goto error;
+      break;
+    case GST_D3D11_TEST_SRC_BLINK:
+      render->clear_color[0] = &color_table[COLOR_BLACK];
+      render->clear_color[1] = &color_table[COLOR_WHITE];
+      break;
+    case GST_D3D11_TEST_SRC_CIRCULAR:
+    case GST_D3D11_TEST_SRC_BALL:
+      if (!setup_d2d_render (self, render))
         goto error;
       break;
   }
@@ -1523,6 +1585,7 @@ gst_d3d11_test_src_start (GstBaseSrc * bsrc)
   self->n_frames = 0;
   self->accum_frames = 0;
   self->accum_rtime = 0;
+  self->token = gst_d3d11_create_user_token ();
 
   gst_video_info_init (&self->info);
 
@@ -1536,6 +1599,7 @@ gst_d3d11_test_src_stop (GstBaseSrc * bsrc)
 
   gst_d3d11_test_src_clear_resource (self);
   gst_clear_object (&self->device);
+  GST_D3D11_CLEAR_COM (self->d2d_factory);
 
   return TRUE;
 }
@@ -1621,9 +1685,218 @@ gst_d3d11_test_src_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
   }
 }
 
+struct GstD3D11TestSrcD2DData
+{
+  ID2D1RenderTarget *target;
+  ID2D1Brush *brush;
+  ID2D1Factory *factory;
+};
+
+static void
+gst_d3d11_test_src_d2d_data_free (GstD3D11TestSrcD2DData * data)
+{
+  GST_D3D11_CLEAR_COM (data->brush);
+  GST_D3D11_CLEAR_COM (data->target);
+  GST_D3D11_CLEAR_COM (data->factory);
+
+  g_free (data);
+}
+
+static gboolean
+gst_d3d11_test_src_draw_ball (GstD3D11TestSrc * self,
+    ID3D11DeviceContext * context, GstD3D11Memory * mem)
+{
+  GstD3D11TestSrcD2DData *data;
+  HRESULT hr;
+  gdouble rad;
+  FLOAT x, y;
+  ID2D1RadialGradientBrush *ball_brush;
+
+  data = (GstD3D11TestSrcD2DData *)
+      gst_d3d11_memory_get_token_data (mem, self->token);
+
+  if (!data) {
+    ComPtr < IDXGISurface > surface;
+    ComPtr < ID2D1RenderTarget > d2d_target;
+    ComPtr < ID2D1GradientStopCollection > collection;
+    ComPtr < ID2D1RadialGradientBrush > brush;
+    ID3D11Texture2D *texture;
+    D2D1_RENDER_TARGET_PROPERTIES props;
+    D2D1_GRADIENT_STOP stops[3];
+
+    props.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
+    props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+    props.dpiX = 0;
+    props.dpiY = 0;
+    props.usage = D2D1_RENDER_TARGET_USAGE_NONE;
+    props.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
+
+    texture = (ID3D11Texture2D *) gst_d3d11_memory_get_resource_handle (mem);
+
+    hr = texture->QueryInterface (IID_PPV_ARGS (&surface));
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't get DXGI surface");
+      return FALSE;
+    }
+
+    hr = self->d2d_factory->CreateDxgiSurfaceRenderTarget (surface.Get (),
+        props, &d2d_target);
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't get D2D render target");
+      return FALSE;
+    }
+
+    stops[0].color = D2D1::ColorF (D2D1::ColorF::White);
+    stops[0].position = 0.0f;
+    stops[1].color = D2D1::ColorF (D2D1::ColorF::Snow);
+    stops[1].position = 0.3f;
+    stops[2].color = D2D1::ColorF (D2D1::ColorF::Black);
+    stops[2].position = 1.0f;
+
+    hr = d2d_target->CreateGradientStopCollection (stops, 3, D2D1_GAMMA_1_0,
+        D2D1_EXTEND_MODE_CLAMP, &collection);
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create gradient stop collection");
+      return FALSE;
+    }
+
+    hr = d2d_target->CreateRadialGradientBrush (D2D1::
+        RadialGradientBrushProperties (D2D1::Point2F (0, 0), D2D1::Point2F (0,
+                0), 20, 20), collection.Get (), &brush);
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create brush");
+      return FALSE;
+    }
+
+    data = g_new0 (GstD3D11TestSrcD2DData, 1);
+    data->target = d2d_target.Detach ();
+    data->brush = brush.Detach ();
+    data->factory = self->d2d_factory;
+    self->d2d_factory->AddRef ();
+
+    gst_d3d11_memory_set_token_data (mem, self->token, data,
+        (GDestroyNotify) gst_d3d11_test_src_d2d_data_free);
+  }
+
+  rad = (gdouble) self->n_frames / 200;
+  rad = 2 * G_PI * rad;
+  x = 20 + (0.5 + 0.5 * sin (rad)) * (self->info.width - 40);
+  y = 20 + (0.5 + 0.5 * sin (rad * sqrt (2))) * (self->info.height - 40);
+
+  ball_brush = (ID2D1RadialGradientBrush *) data->brush;
+  ball_brush->SetCenter (D2D1::Point2F (x, y));
+
+  data->target->BeginDraw ();
+  data->target->Clear (D2D1::ColorF (D2D1::ColorF::Black));
+  data->target->FillEllipse (D2D1::Ellipse (D2D1::Point2F (x, y), 20, 20),
+      data->brush);
+  data->target->EndDraw ();
+  data->target->Flush ();
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d11_test_src_draw_circular (GstD3D11TestSrc * self,
+    ID3D11DeviceContext * context, GstD3D11Memory * mem)
+{
+  GstD3D11TestSrcD2DData *data;
+  HRESULT hr;
+  FLOAT x, y;
+  FLOAT rad;
+
+  rad = ((FLOAT) MAX (self->info.width, self->info.height)) / 2;
+  x = (FLOAT) self->info.width / 2;
+  y = (FLOAT) self->info.height / 2;
+
+  data = (GstD3D11TestSrcD2DData *)
+      gst_d3d11_memory_get_token_data (mem, self->token);
+
+  if (!data) {
+    ComPtr < IDXGISurface > surface;
+    ComPtr < ID2D1RenderTarget > d2d_target;
+    ComPtr < ID2D1GradientStopCollection > collection;
+    ComPtr < ID2D1RadialGradientBrush > brush;
+    ID3D11Texture2D *texture;
+    D2D1_RENDER_TARGET_PROPERTIES props;
+    D2D1_GRADIENT_STOP stops[129];
+    FLOAT position = 1.0f;
+
+    props.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
+    props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+    props.dpiX = 0;
+    props.dpiY = 0;
+    props.usage = D2D1_RENDER_TARGET_USAGE_NONE;
+    props.minLevel = D2D1_FEATURE_LEVEL_DEFAULT;
+
+    texture = (ID3D11Texture2D *) gst_d3d11_memory_get_resource_handle (mem);
+
+    hr = texture->QueryInterface (IID_PPV_ARGS (&surface));
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't get DXGI surface");
+      return FALSE;
+    }
+
+    hr = self->d2d_factory->CreateDxgiSurfaceRenderTarget (surface.Get (),
+        props, &d2d_target);
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't get D2D render target");
+      return FALSE;
+    }
+
+    for (guint i = 0; i < G_N_ELEMENTS (stops); i++) {
+      FLOAT diff;
+      if ((i % 2) == 0)
+        stops[i].color = D2D1::ColorF (D2D1::ColorF::Black);
+      else
+        stops[i].color = D2D1::ColorF (D2D1::ColorF::White);
+
+      stops[i].position = position;
+      diff = position / G_N_ELEMENTS (stops) * 2;
+      position -= diff;
+    }
+
+    hr = d2d_target->CreateGradientStopCollection (stops, G_N_ELEMENTS (stops),
+        &collection);
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create gradient stop collection");
+      return FALSE;
+    }
+
+    hr = d2d_target->CreateRadialGradientBrush (D2D1::
+        RadialGradientBrushProperties (D2D1::Point2F (x, y), D2D1::Point2F (0,
+                0), rad, rad), collection.Get (), &brush);
+    if (!gst_d3d11_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create brush");
+      return FALSE;
+    }
+
+    data = g_new0 (GstD3D11TestSrcD2DData, 1);
+    data->target = d2d_target.Detach ();
+    data->brush = brush.Detach ();
+    data->factory = self->d2d_factory;
+    self->d2d_factory->AddRef ();
+
+    gst_d3d11_memory_set_token_data (mem, self->token, data,
+        (GDestroyNotify) gst_d3d11_test_src_d2d_data_free);
+  }
+
+  data->target->BeginDraw ();
+  data->target->Clear (D2D1::ColorF (D2D1::ColorF::Black));
+  data->target->FillEllipse (D2D1::Ellipse (D2D1::Point2F (x, y), rad, rad),
+      data->brush);
+  data->target->EndDraw ();
+  data->target->Flush ();
+
+  return TRUE;
+}
+
 static gboolean
 gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
-    ID3D11DeviceContext * context, ID3D11RenderTargetView * rtv)
+    ID3D11DeviceContext * context, GstD3D11Memory * mem,
+    ID3D11RenderTargetView * rtv, GstClockTime pts)
 {
   GstD3D11TestSrcRender *render = self->render;
   HRESULT hr;
@@ -1631,10 +1904,18 @@ gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
   D3D11_MAPPED_SUBRESOURCE map;
   UINT offsets = 0;
 
-  if (render->clear_color) {
-    context->ClearRenderTargetView (rtv, render->clear_color->color);
+  if (render->clear_color[0]) {
+    if (render->clear_color[1] && (self->n_frames % 2) == 1)
+      context->ClearRenderTargetView (rtv, render->clear_color[1]->color);
+    else
+      context->ClearRenderTargetView (rtv, render->clear_color[0]->color);
     return TRUE;
   }
+
+  if (render->pattern == GST_D3D11_TEST_SRC_BALL)
+    return gst_d3d11_test_src_draw_ball (self, context, mem);
+  else if (render->pattern == GST_D3D11_TEST_SRC_CIRCULAR)
+    return gst_d3d11_test_src_draw_circular (self, context, mem);
 
   context->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   context->RSSetViewports (1, &self->viewport);
@@ -1656,7 +1937,7 @@ gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
       }
 
       time_buf = (TimeConstBuffer *) map.pData;
-      time_buf->time = (FLOAT) ((FLOAT) (self->running_time + 1) / GST_SECOND);
+      time_buf->time = (FLOAT) pts / GST_SECOND;
       context->Unmap (quad->const_buffer, 0);
 
       context->PSSetConstantBuffers (0, 1, &quad->const_buffer);
@@ -1735,7 +2016,9 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
     goto error;
   }
 
-  gst_d3d11_test_src_draw_pattern (self, context_handle, pattern_rtv);
+  pts = self->accum_rtime + self->running_time;
+  gst_d3d11_test_src_draw_pattern (self, context_handle, dmem, pattern_rtv,
+      pts);
   gst_memory_unmap (mem, &render_info);
   convert_ret = gst_d3d11_converter_convert_buffer_unlocked (self->converter,
       render_buffer, convert_buffer);
@@ -1753,8 +2036,6 @@ gst_d3d11_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   }
 
   gst_clear_buffer (&render_buffer);
-
-  pts = self->accum_rtime + self->running_time;
 
   GST_BUFFER_PTS (buffer) = pts;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;

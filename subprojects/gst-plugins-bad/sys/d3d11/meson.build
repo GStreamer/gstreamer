@@ -47,6 +47,9 @@ if d3d11_winapi_only_app and (not d3dcompiler_lib.found() or not runtimeobject_l
   subdir_done()
 endif
 
+d2d_dep = cc.find_library('d2d1', required: d3d11_option)
+have_d2d_h = cc.has_header('d2d1.h', required: d3d11_option)
+
 have_wgc = cxx.compiles('''
     #include<windows.h>
     #include<winstring.h>
@@ -109,7 +112,8 @@ gstd3d11 = library('gstd3d11',
   c_args : gst_plugins_bad_args + extra_c_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gstcontroller_dep, gstd3d11_dep, gstcodecs_dep] + extra_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gstcontroller_dep,
+                  gstd3d11_dep, gstcodecs_dep, d2d_dep] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )
