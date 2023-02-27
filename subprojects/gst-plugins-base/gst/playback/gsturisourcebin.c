@@ -2292,10 +2292,15 @@ setup_source (GstURISourceBin * urisrc)
 
     return TRUE;
   } else if (urisrc->is_stream) {
-    GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
-    /* do the stream things here */
-    if (!setup_typefind (urisrc, NULL))
-      goto streaming_failed;
+    if (!urisrc->src_np_sig_id) {
+      GST_DEBUG_OBJECT (urisrc, "Setting up streaming");
+      /* do the stream things here */
+      if (!setup_typefind (urisrc, NULL))
+        goto streaming_failed;
+    } else {
+      GST_DEBUG_OBJECT (urisrc, "Not setting up streaming yet, waiting for"
+          " dynamic pads to appear");
+    }
   } else {
     GstIterator *pads_iter;
     gboolean done = FALSE;
