@@ -40,7 +40,10 @@
 #include "qtdemux_tags.h"
 #include "qtdemux_tree.h"
 #include "qtdemux_types.h"
+#include "qtdemux_debug.h"
 #include "fourcc.h"
+
+#define GST_CAT_DEFAULT qtdemux_debug
 
 static GstBuffer *
 _gst_buffer_new_wrapped (gpointer mem, gsize size, GFreeFunc free_func)
