@@ -80,9 +80,6 @@ GST_PLUGIN_STATIC_DECLARE(vorbis);
 #if defined(GST_IOS_PLUGIN_OPUS) || defined(GST_IOS_PLUGINS_CODECS)
 GST_PLUGIN_STATIC_DECLARE(opus);
 #endif
-#if defined(GST_IOS_PLUGIN_IVORBISDEC) || defined(GST_IOS_PLUGINS_CODECS)
-GST_PLUGIN_STATIC_DECLARE(ivorbisdec);
-#endif
 #if defined(GST_IOS_PLUGIN_ALAW) || defined(GST_IOS_PLUGINS_CODECS)
 GST_PLUGIN_STATIC_DECLARE(alaw);
 #endif
@@ -648,9 +645,6 @@ gst_ios_init (void)
 #endif
 #if defined(GST_IOS_PLUGIN_OPUS) || defined(GST_IOS_PLUGINS_CODECS)
     GST_PLUGIN_STATIC_REGISTER(opus);
-#endif
-#if defined(GST_IOS_PLUGIN_IVORBISDEC) || defined(GST_IOS_PLUGINS_CODECS)
-    GST_PLUGIN_STATIC_REGISTER(ivorbisdec);
 #endif
 #if defined(GST_IOS_PLUGIN_ALAW) || defined(GST_IOS_PLUGINS_CODECS)
     GST_PLUGIN_STATIC_REGISTER(alaw);
