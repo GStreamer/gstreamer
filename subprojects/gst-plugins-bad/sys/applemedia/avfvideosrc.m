@@ -1353,7 +1353,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
 
   gst_element_class_set_metadata (gstelement_class,
       "Video Source (AVFoundation)", "Source/Video/Hardware",
-      "Reads frames from an iOS AVFoundation device",
+      "Reads frames from an iOS/MacOS AVFoundation device",
       "Ole André Vadla Ravnås <oleavr@soundrop.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
@@ -1405,24 +1405,24 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_X,
       g_param_spec_uint ("screen-crop-x", "Screen capture crop X",
-          "Horizontal coordinate of top left corner of the screen capture area", 
+          "Horizontal coordinate of top left corner of the screen capture area",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_Y,
       g_param_spec_uint ("screen-crop-y", "Screen capture crop Y",
-          "Vertical coordinate of top left corner of the screen capture area", 
+          "Vertical coordinate of top left corner of the screen capture area",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_WIDTH,
       g_param_spec_uint ("screen-crop-width", "Screen capture crop width",
-          "Width of the screen capture area (0 = maximum)", 
+          "Width of the screen capture area (0 = maximum)",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CROP_HEIGHT,
       g_param_spec_uint ("screen-crop-height", "Screen capture crop height",
-          "Height of the screen capture area (0 = maximum)", 
+          "Height of the screen capture area (0 = maximum)",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
   GST_DEBUG_CATEGORY_INIT (gst_avf_video_src_debug, "avfvideosrc",
-      0, "iOS AVFoundation video source");
+      0, "iOS/MacOS AVFoundation video source");
 
   gst_type_mark_as_plugin_api (GST_TYPE_AVF_VIDEO_SOURCE_POSITION, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_AVF_VIDEO_SOURCE_ORIENTATION, 0);
