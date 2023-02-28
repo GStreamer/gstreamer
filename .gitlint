@@ -9,4 +9,4 @@ line-length=120
 
 # Ensure every title starts with a prefix
 [title-match-regex]
-regex=^\w+:.*
+regex=^[\w]+[\w-]*[\w]+: .*
