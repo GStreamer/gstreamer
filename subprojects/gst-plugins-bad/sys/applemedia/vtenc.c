@@ -234,8 +234,8 @@ gst_vtenc_base_init (GstVTEncClass * klass)
 #ifndef HAVE_IOS
     gboolean enable_argb = TRUE;
     int retval;
-    char cpu_name[15];
-    size_t cpu_len = 15;
+    char cpu_name[30];
+    size_t cpu_len = 30;
 
     if (__builtin_available (macOS 13.0, *)) {
       /* Can't negate a __builtin_available check */
@@ -247,8 +247,12 @@ gst_vtenc_base_init (GstVTEncClass * klass)
 
       if (retval == 0 &&
           (strstr (cpu_name, "M1 Pro") != NULL ||
-              strstr (cpu_name, "M1 Max") != NULL))
+              strstr (cpu_name, "M1 Max") != NULL)) {
+        GST_WARNING
+            ("Disabling ARGB64/RGBA64 caps due to a bug in VideoToolbox "
+            "on M1 Pro/Max running macOS < 13.0.");
         enable_argb = FALSE;
+      }
     }
 
     if (enable_argb) {
