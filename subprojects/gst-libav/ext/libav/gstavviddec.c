@@ -2119,6 +2119,9 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   /* now decode the frame */
   gst_avpacket_init (&packet, data, size);
 
+  if (!packet.size)
+    goto done;
+
   if (ffmpegdec->palette) {
     guint8 *pal;
 
@@ -2127,9 +2130,6 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     gst_buffer_extract (ffmpegdec->palette, 0, pal, AVPALETTE_SIZE);
     GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
   }
-
-  if (!packet.size)
-    goto done;
 
   /* save reference to the timing info */
   ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
@@ -2146,8 +2146,10 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
   if (avcodec_send_packet (ffmpegdec->context, &packet) < 0) {
     GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
+    av_packet_free_side_data (&packet);
     goto send_packet_failed;
   }
+  av_packet_free_side_data (&packet);
   GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   do {
