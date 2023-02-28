@@ -717,7 +717,7 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
 
     /* check if the whole segment is available */
     if (offset + seg.size > mapinfo.size) {
-      GST_INFO_OBJECT (parse, "incomplete segment: %x [offset %d]", marker,
+      GST_DEBUG_OBJECT (parse, "incomplete segment: %x [offset %d]", marker,
           offset);
       parse->last_offset = offset - 2;
       goto beach;
@@ -725,7 +725,7 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
 
     offset += seg.size;
 
-    GST_INFO_OBJECT (parse, "marker found: %x [offset %d / size %"
+    GST_LOG_OBJECT (parse, "marker found: %x [offset %d / size %"
         G_GSSIZE_FORMAT "]", marker, seg.offset, seg.size);
 
     switch (marker) {
@@ -741,7 +741,7 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
             GST_MINI_OBJECT_FLAGS (frame->out_buffer) |=
                 GST_BUFFER_FLAG_CORRUPTED;
 
-            GST_DEBUG_OBJECT (parse, "Push a frame without EOI, size %d",
+            GST_WARNING_OBJECT (parse, "Push a frame without EOI, size %d",
                 seg.offset - 2);
             return gst_jpeg_parse_finish_frame (parse, frame, seg.offset - 2);
           }
