@@ -1526,7 +1526,7 @@ gst_srt_object_read (GstSRTObject * srtobject,
       gint srt_errno = srt_getlasterror (NULL);
 
 #if SRT_VERSION_VALUE >= 0x010402
-      if (srt_errno == SRT_EPOLLEMPTY)
+      if (srt_errno == SRT_EPOLLEMPTY && g_cancellable_is_cancelled (cancellable))
         return 0;
 #endif
 
@@ -1659,7 +1659,7 @@ gst_srt_object_send_headers (GstSRTObject * srtobject, SRTSOCKET sock,
       gint srt_errno = srt_getlasterror (NULL);
 
 #if SRT_VERSION_VALUE >= 0x010402
-      if (srt_errno == SRT_EPOLLEMPTY)
+      if (srt_errno == SRT_EPOLLEMPTY && g_cancellable_is_cancelled (cancellable))
         return TRUE;
 #endif
 
@@ -1821,7 +1821,7 @@ gst_srt_object_write_one (GstSRTObject * srtobject,
       gint srt_errno = srt_getlasterror (NULL);
 
 #if SRT_VERSION_VALUE >= 0x010402
-      if (srt_errno == SRT_EPOLLEMPTY)
+      if (srt_errno == SRT_EPOLLEMPTY && g_cancellable_is_cancelled (cancellable))
         return 0;
 #endif
 
