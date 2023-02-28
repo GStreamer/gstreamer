@@ -1360,7 +1360,8 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
   draw_caps = gst_video_info_to_caps (&draw_info);
   params = gst_d3d11_allocation_params_new (self->device, &draw_info,
       GST_D3D11_ALLOCATION_FLAG_DEFAULT,
-      D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
+      D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET,
+      D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX);
 
   self->render_pool = gst_d3d11_buffer_pool_new_with_options (self->device,
       draw_caps, params, 0, 0);
@@ -1792,7 +1793,6 @@ gst_d3d11_test_src_draw_ball (GstD3D11TestSrc * self,
   data->target->FillEllipse (D2D1::Ellipse (D2D1::Point2F (x, y), 20, 20),
       data->brush);
   data->target->EndDraw ();
-  data->target->Flush ();
 
   return TRUE;
 }
@@ -1888,7 +1888,6 @@ gst_d3d11_test_src_draw_circular (GstD3D11TestSrc * self,
   data->target->FillEllipse (D2D1::Ellipse (D2D1::Point2F (x, y), rad, rad),
       data->brush);
   data->target->EndDraw ();
-  data->target->Flush ();
 
   return TRUE;
 }
