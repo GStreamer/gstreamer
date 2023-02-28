@@ -726,8 +726,10 @@ gst_ffmpegauddec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     goto unmap;
 
   if (avcodec_send_packet (ffmpegdec->context, &packet) < 0) {
+    av_packet_free_side_data (&packet);
     goto send_packet_failed;
   }
+  av_packet_free_side_data (&packet);
 
   do {
     /* decode a frame of audio now */
