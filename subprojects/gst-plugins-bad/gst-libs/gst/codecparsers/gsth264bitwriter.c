@@ -487,7 +487,7 @@ _h264_bit_writer_pps (const GstH264PPS * pps, GstBitWriter * bw,
   gboolean have_space = TRUE;
   gint qp_bd_offset;
 
-  GST_DEBUG ("writing SPS");
+  GST_DEBUG ("writing PPS");
 
   qp_bd_offset = 6 * (pps->sequence->bit_depth_luma_minus8 +
       pps->sequence->separate_colour_plane_flag);
