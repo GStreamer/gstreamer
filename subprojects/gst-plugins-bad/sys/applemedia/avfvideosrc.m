@@ -176,6 +176,10 @@ gst_avf_video_source_device_type_get_type (void)
   AVCaptureConnection *connection;
   CMClockRef inputClock;
 
+  NSCondition *permissionCond;
+  BOOL permissionRequestPending;
+  BOOL permissionStopRequest;
+
   dispatch_queue_t mainQueue;
   dispatch_queue_t workerQueue;
   NSConditionLock *bufQueueLock;
@@ -244,7 +248,6 @@ gst_avf_video_source_device_type_get_type (void)
 - (BOOL)unlockStop;
 - (BOOL)query:(GstQuery *)query;
 - (void)setContext:(GstContext *)context;
-- (GstStateChangeReturn)changeState:(GstStateChange)transition;
 - (GstFlowReturn)create:(GstBuffer **)buf;
 - (GstCaps *)fixate:(GstCaps *)caps;
 - (BOOL)decideAllocation:(GstQuery *)query;
@@ -332,6 +335,8 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
     workerQueue =
         dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc.output", NULL);
 
+    permissionCond = [[NSCondition alloc] init];
+
     gst_base_src_set_live (baseSrc, TRUE);
     gst_base_src_set_format (baseSrc, GST_FORMAT_TIME);
   }
@@ -343,12 +348,60 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 {
   mainQueue = NULL;
   workerQueue = NULL;
+
+  permissionCond = nil;
 }
 
 - (BOOL)openDeviceInput
 {
   NSString *mediaType = AVMediaTypeVideo;
   NSError *err;
+
+  // Since Mojave, permissions are now supposed to be explicitly granted
+  // before capturing from the camera
+  if (@available(macOS 10.14, *)) {
+    // Check if permission has already been granted (or denied)
+    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+    switch (authStatus) {
+      case AVAuthorizationStatusDenied:
+        // The user has explicitly denied permission for media capture.
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
+          ("Device video access permission has been explicitly denied before"), ("Authorization status: %d", (int)authStatus));
+          return NO;
+      case AVAuthorizationStatusRestricted:
+        // The user is not allowed to access media capture devices.
+        GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
+          ("Device video access permission cannot be granted by the user"), ("Authorization status: %d", (int)authStatus));
+        return NO;
+      case AVAuthorizationStatusAuthorized:
+        // The user has explicitly granted permission for media capture,
+        // or explicit user permission is not necessary for the media type in question.
+        GST_DEBUG_OBJECT (element, "Device video access permission has already been granted");
+        break;
+      case AVAuthorizationStatusNotDetermined:
+        // Explicit user permission is required for media capture,
+        // but the user has not yet granted or denied such permission.
+        GST_DEBUG_OBJECT (element, "Requesting device video access permission");
+
+        [permissionCond lock];
+        permissionRequestPending = YES;
+        [permissionCond unlock];
+
+        [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+          GST_DEBUG_OBJECT (element, "Device video access permission %s", granted ? "granted" : "not granted");
+          // Check if permission has been granted
+          if (!granted) {
+             GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
+               ("Device video access permission has been denied"), ("Authorization status: %d", (int)AVAuthorizationStatusDenied));
+          }
+          [permissionCond lock];
+          permissionRequestPending = NO;
+          [permissionCond broadcast];
+          [permissionCond unlock];
+        }];
+        break;
+    }
+  }
 
   if (deviceIndex == DEFAULT_DEVICE_INDEX) {
 #ifdef HAVE_IOS
@@ -453,60 +506,6 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
 
   GST_DEBUG_OBJECT (element, "Opening device");
 
-  // Since Mojave, permissions are now supposed to be explicitly granted 
-  // before performing anything on a device
-  if (@available(macOS 10.14, *)) {
-    if (captureScreen)
-      goto checked;
-
-    // Check if permission has already been granted (or denied)
-    AVAuthorizationStatus authStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-    switch (authStatus) {
-      case AVAuthorizationStatusDenied:
-        // The user has explicitly denied permission for media capture.
-        GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
-          ("Device video access permission has been explicitly denied before"), ("Authorization status: %d", (int)authStatus));
-          return success;
-      case AVAuthorizationStatusRestricted:
-        // The user is not allowed to access media capture devices.
-        GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
-          ("Device video access permission cannot be granted by the user"), ("Authorization status: %d", (int)authStatus));
-        return success;
-      case AVAuthorizationStatusAuthorized:
-        // The user has explicitly granted permission for media capture,
-        // or explicit user permission is not necessary for the media type in question.
-        GST_DEBUG_OBJECT (element, "Device video access permission has already been granted");
-        break;
-      case AVAuthorizationStatusNotDetermined:
-        ;
-        // Explicit user permission is required for media capture,
-        // but the user has not yet granted or denied such permission.
-        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
-        dispatch_sync (mainQueue, ^{
-          [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
-            GST_DEBUG_OBJECT (element, "Device video access permission %s", granted ? "granted" : "not granted");
-            dispatch_semaphore_signal(sema);
-          }];
-        });
-        // Block on dialog being answered
-        if (![NSThread isMainThread]) {
-            dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-        } else {
-            while (dispatch_semaphore_wait(sema, DISPATCH_TIME_NOW)) {
-                [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0]];
-            }
-        }
-        // Check if permission has been granted
-        AVAuthorizationStatus videoAuthorizationStatus = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
-        if (videoAuthorizationStatus != AVAuthorizationStatusAuthorized) {
-          GST_ELEMENT_ERROR (element, RESOURCE, NOT_AUTHORIZED,
-            ("Device video access permission has just been denied"), ("Authorization status: %d", (int)videoAuthorizationStatus));
-          return success;
-        }
-    }
-  }
-
-checked:
   dispatch_sync (mainQueue, ^{
     BOOL ret;
 
@@ -535,11 +534,10 @@ checked:
       connection.videoOrientation = GstAVFVideoSourceOrientation2AVCaptureVideoOrientation(orientation);
 #endif
     inputClock = ((AVCaptureInputPort *)connection.inputPorts[0]).clock;
-
     *successPtr = YES;
   });
 
-  GST_DEBUG_OBJECT (element, "Opening device %s", success ? "succeed" : "failed");
+  GST_DEBUG_OBJECT (element, "Opening device %s", success ? "succeeded" : "failed");
 
   return success;
 }
@@ -915,8 +913,24 @@ checked:
     gst_caps_replace (&caps, new_caps);
     GST_INFO_OBJECT (element, "configured caps %"GST_PTR_FORMAT, caps);
 
-    if (![session isRunning])
-      [session startRunning];
+    if (![session isRunning]) {
+      BOOL stopping = NO;
+
+      /* If permissions are still pending, wait for a response before
+       * starting the capture running, or else we'll get black frames */
+      [permissionCond lock];
+      if (permissionRequestPending && !permissionStopRequest) {
+        GST_DEBUG_OBJECT (element, "Waiting for pending device access permission.");
+        do {
+          [permissionCond wait];
+        } while (permissionRequestPending && !permissionStopRequest);
+      }
+      stopping = permissionStopRequest;
+      [permissionCond unlock];
+
+      if (!stopping)
+        [session startRunning];
+    }
 
     /* Unlock device configuration only after session is started so the session
      * won't reset the capture formats */
@@ -928,6 +942,14 @@ checked:
 
 - (BOOL)start
 {
+  [permissionCond lock];
+  permissionRequestPending = NO;
+  permissionStopRequest = NO;
+  [permissionCond unlock];
+
+  if (![self openDevice])
+    return NO;
+
   bufQueueLock = [[NSConditionLock alloc] initWithCondition:NO_BUFFERS];
   bufQueue = [[NSMutableArray alloc] initWithCapacity:BUFFER_QUEUE_SIZE];
   stopRequest = NO;
@@ -957,6 +979,8 @@ checked:
   if (ctxh)
     gst_gl_context_helper_free (ctxh);
   ctxh = NULL;
+
+  [self closeDevice];
 
   return YES;
 }
@@ -990,6 +1014,11 @@ checked:
   stopRequest = YES;
   [bufQueueLock unlockWithCondition:HAS_BUFFER_OR_STOP_REQUEST];
 
+  [permissionCond lock];
+  permissionStopRequest = YES;
+  [permissionCond broadcast];
+  [permissionCond unlock];
+
   return YES;
 }
 
@@ -999,24 +1028,11 @@ checked:
   stopRequest = NO;
   [bufQueueLock unlockWithCondition:([bufQueue count] == 0) ? NO_BUFFERS : HAS_BUFFER_OR_STOP_REQUEST];
 
+  [permissionCond lock];
+  permissionStopRequest = NO;
+  [permissionCond unlock];
+
   return YES;
-}
-
-- (GstStateChangeReturn)changeState:(GstStateChange)transition
-{
-  GstStateChangeReturn ret;
-
-  if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
-    if (![self openDevice])
-      return GST_STATE_CHANGE_FAILURE;
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  if (transition == GST_STATE_CHANGE_READY_TO_NULL)
-    [self closeDevice];
-
-  return ret;
 }
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput
@@ -1290,8 +1306,6 @@ static void gst_avf_video_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_avf_video_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static GstStateChangeReturn gst_avf_video_src_change_state (
-    GstElement * element, GstStateChange transition);
 static GstCaps * gst_avf_video_src_get_caps (GstBaseSrc * basesrc,
     GstCaps * filter);
 static gboolean gst_avf_video_src_set_caps (GstBaseSrc * basesrc,
@@ -1323,7 +1337,6 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gobject_class->get_property = gst_avf_video_src_get_property;
   gobject_class->set_property = gst_avf_video_src_set_property;
 
-  gstelement_class->change_state = gst_avf_video_src_change_state;
   gstelement_class->set_context = gst_avf_video_src_set_context;
 
   gstbasesrc_class->get_caps = gst_avf_video_src_get_caps;
@@ -1538,16 +1551,6 @@ gst_avf_video_src_set_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static GstStateChangeReturn
-gst_avf_video_src_change_state (GstElement * element, GstStateChange transition)
-{
-  GstStateChangeReturn ret;
-
-  ret = [GST_AVF_VIDEO_SRC_IMPL (element) changeState: transition];
-
-  return ret;
 }
 
 static GstCaps *
