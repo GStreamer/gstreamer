@@ -336,6 +336,7 @@ struct _GstD3D11MemoryPrivate
 
   ID3D11Texture2D *texture = nullptr;
   ID3D11Buffer *buffer = nullptr;
+  IDXGIKeyedMutex *keyed_mutex = nullptr;
 
   GstD3D11MemoryNativeType native_type = GST_D3D11_MEMORY_NATIVE_TYPE_INVALID;
 
@@ -347,7 +348,8 @@ struct _GstD3D11MemoryPrivate
   /* protected by device lock */
   ID3D11Resource *staging = nullptr;
   D3D11_MAPPED_SUBRESOURCE map;
-  gint cpu_map_count = 0;
+  guint64 cpu_map_count = 0;
+  guint64 gpu_map_count = 0;
 
   /* protects resource objects */
   SRWLOCK lock = SRWLOCK_INIT;
@@ -453,14 +455,31 @@ gst_d3d11_memory_download (GstD3D11Memory * dmem)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
   ID3D11DeviceContext *device_context;
+  gboolean locked = FALSE;
 
   if (!priv->staging ||
       !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD))
     return;
 
+  if (priv->keyed_mutex && priv->gpu_map_count == 0) {
+    HRESULT hr;
+
+    GST_LOG_OBJECT (GST_MEMORY_CAST (dmem)->allocator, "Acquiring sync");
+    hr = priv->keyed_mutex->AcquireSync (0, INFINITE);
+    if (hr != S_OK) {
+      GST_ERROR_OBJECT (GST_MEMORY_CAST (dmem)->allocator,
+          "Couldn't acquire sync, error 0x%x", (guint) hr);
+      return;
+    }
+    locked = TRUE;
+  }
+
   device_context = gst_d3d11_device_get_device_context_handle (dmem->device);
   device_context->CopySubresourceRegion (priv->staging, 0, 0, 0, 0,
       priv->texture, priv->subresource_index, NULL);
+
+  if (locked)
+    priv->keyed_mutex->ReleaseSync (0);
 }
 
 static gpointer
@@ -480,6 +499,19 @@ gst_d3d11_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
       g_assert (priv->buffer != nullptr);
       return priv->buffer;
     } else {
+      if (priv->keyed_mutex && priv->gpu_map_count == 0) {
+        HRESULT hr;
+
+        GST_LOG_OBJECT (mem->allocator, "Acquiring sync");
+        hr = priv->keyed_mutex->AcquireSync (0, INFINITE);
+        if (hr != S_OK) {
+          GST_ERROR_OBJECT (mem->allocator,
+              "Couldn't acquire sync, hr: 0x%x", (guint) hr);
+          return nullptr;
+        }
+      }
+
+      priv->gpu_map_count++;
       gst_d3d11_memory_upload (dmem);
       GST_MEMORY_FLAG_UNSET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
 
@@ -552,12 +584,21 @@ gst_d3d11_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
     if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
       GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
+    g_assert (priv->gpu_map_count != 0);
+    if (priv->keyed_mutex && priv->gpu_map_count == 1) {
+      GST_LOG_OBJECT (mem->allocator, "Release sync");
+      priv->keyed_mutex->ReleaseSync (0);
+    }
+
+    priv->gpu_map_count--;
+
     return;
   }
 
   if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD);
 
+  g_assert (priv->cpu_map_count != 0);
   priv->cpu_map_count--;
   if (priv->cpu_map_count > 0)
     return;
@@ -1490,6 +1531,8 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
 
   dmem_priv->token_map.clear ();
 
+  GST_D3D11_CLEAR_COM (dmem_priv->keyed_mutex);
+
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     GST_D3D11_CLEAR_COM (dmem_priv->render_target_view[i]);
     GST_D3D11_CLEAR_COM (dmem_priv->shader_resource_view[i]);
@@ -1527,6 +1570,8 @@ gst_d3d11_allocator_alloc_wrapped_internal (GstD3D11Allocator * self,
   gst_memory_init (GST_MEMORY_CAST (mem),
       (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (self), NULL, 0, 0, 0, 0);
   mem->priv->texture = texture;
+  if ((desc->MiscFlags & D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX) != 0)
+    texture->QueryInterface (IID_PPV_ARGS (&mem->priv->keyed_mutex));
   mem->priv->desc = *desc;
   mem->priv->native_type = GST_D3D11_MEMORY_NATIVE_TYPE_TEXTURE_2D;
   mem->device = (GstD3D11Device *) gst_object_ref (device);
