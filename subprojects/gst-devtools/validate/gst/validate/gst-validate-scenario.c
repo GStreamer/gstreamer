@@ -5292,6 +5292,8 @@ gst_validate_scenario_new (GstValidateRunner *
       g_object_new (GST_TYPE_VALIDATE_SCENARIO, "validate-runner",
       runner, NULL);
 
+  g_object_ref_sink (scenario);
+
   if (structures) {
     gboolean is_config;
     gst_validate_scenario_load_structures (scenario, structures, &is_config,
