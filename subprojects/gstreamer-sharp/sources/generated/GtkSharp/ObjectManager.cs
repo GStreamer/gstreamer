@@ -61,12 +61,14 @@ namespace GtkSharp.GstreamerSharp {
 			GLib.GType.Register (Gst.Rtp.RTPBaseAudioPayload.GType, typeof (Gst.Rtp.RTPBaseAudioPayload));
 			GLib.GType.Register (Gst.Rtp.RTPBaseDepayload.GType, typeof (Gst.Rtp.RTPBaseDepayload));
 			GLib.GType.Register (Gst.Rtp.RTPBasePayload.GType, typeof (Gst.Rtp.RTPBasePayload));
+			GLib.GType.Register (Gst.Rtp.RTPHeaderExtension.GType, typeof (Gst.Rtp.RTPHeaderExtension));
 			GLib.GType.Register (Gst.Tags.TagDemux.GType, typeof (Gst.Tags.TagDemux));
 			GLib.GType.Register (Gst.Tags.TagMux.GType, typeof (Gst.Tags.TagMux));
 			GLib.GType.Register (Gst.Video.ColorBalanceChannel.GType, typeof (Gst.Video.ColorBalanceChannel));
 			GLib.GType.Register (Gst.Video.VideoAggregator.GType, typeof (Gst.Video.VideoAggregator));
 			GLib.GType.Register (Gst.Video.VideoAggregatorConvertPad.GType, typeof (Gst.Video.VideoAggregatorConvertPad));
 			GLib.GType.Register (Gst.Video.VideoAggregatorPad.GType, typeof (Gst.Video.VideoAggregatorPad));
+			GLib.GType.Register (Gst.Video.VideoAggregatorParallelConvertPad.GType, typeof (Gst.Video.VideoAggregatorParallelConvertPad));
 			GLib.GType.Register (Gst.Video.VideoBufferPool.GType, typeof (Gst.Video.VideoBufferPool));
 			GLib.GType.Register (Gst.Video.VideoDecoder.GType, typeof (Gst.Video.VideoDecoder));
 			GLib.GType.Register (Gst.Video.VideoEncoder.GType, typeof (Gst.Video.VideoEncoder));
@@ -74,10 +76,13 @@ namespace GtkSharp.GstreamerSharp {
 			GLib.GType.Register (Gst.Video.VideoSink.GType, typeof (Gst.Video.VideoSink));
 			GLib.GType.Register (Gst.WebRTC.WebRTCDTLSTransport.GType, typeof (Gst.WebRTC.WebRTCDTLSTransport));
 			GLib.GType.Register (Gst.WebRTC.WebRTCDataChannel.GType, typeof (Gst.WebRTC.WebRTCDataChannel));
+			GLib.GType.Register (Gst.WebRTC.WebRTCICE.GType, typeof (Gst.WebRTC.WebRTCICE));
+			GLib.GType.Register (Gst.WebRTC.WebRTCICEStream.GType, typeof (Gst.WebRTC.WebRTCICEStream));
 			GLib.GType.Register (Gst.WebRTC.WebRTCICETransport.GType, typeof (Gst.WebRTC.WebRTCICETransport));
 			GLib.GType.Register (Gst.WebRTC.WebRTCRTPReceiver.GType, typeof (Gst.WebRTC.WebRTCRTPReceiver));
 			GLib.GType.Register (Gst.WebRTC.WebRTCRTPSender.GType, typeof (Gst.WebRTC.WebRTCRTPSender));
 			GLib.GType.Register (Gst.WebRTC.WebRTCRTPTransceiver.GType, typeof (Gst.WebRTC.WebRTCRTPTransceiver));
+			GLib.GType.Register (Gst.WebRTC.WebRTCSCTPTransport.GType, typeof (Gst.WebRTC.WebRTCSCTPTransport));
 		}
 	}
 }

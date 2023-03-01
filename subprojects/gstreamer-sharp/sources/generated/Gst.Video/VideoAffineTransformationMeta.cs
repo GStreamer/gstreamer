@@ -25,12 +25,11 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_video_affine_transformation_meta_apply_matrix(IntPtr raw, float[] matrix);
+		static extern void gst_video_affine_transformation_meta_apply_matrix(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeConst=16)]float[] matrix);
 
 		public void ApplyMatrix(float[] matrix) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			matrix = new float[16];
 			gst_video_affine_transformation_meta_apply_matrix(this_as_native, matrix);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);

@@ -35,11 +35,12 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_packet_add_profile_specific_ext(IntPtr raw, byte[] data, uint len);
+		static extern bool gst_rtcp_packet_add_profile_specific_ext(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint len);
 
-		public bool AddProfileSpecificExt(byte[] data, uint len) {
+		public bool AddProfileSpecificExt(byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint len = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtcp_packet_add_profile_specific_ext(this_as_native, data, len);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
@@ -187,11 +188,12 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_packet_bye_add_ssrcs(IntPtr raw, uint[] ssrc, uint len);
+		static extern bool gst_rtcp_packet_bye_add_ssrcs(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]uint[] ssrc, uint len);
 
-		public bool ByeAddSsrcs(uint[] ssrc, uint len) {
+		public bool ByeAddSsrcs(uint[] ssrc) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint len = (uint)(ssrc == null ? 0 : ssrc.Length);
 			bool raw_ret = gst_rtcp_packet_bye_add_ssrcs(this_as_native, ssrc, len);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);
@@ -510,11 +512,12 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_packet_sdes_add_entry(IntPtr raw, int type, byte len, byte[] data);
+		static extern bool gst_rtcp_packet_sdes_add_entry(IntPtr raw, int type, byte len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data);
 
-		public bool SdesAddEntry(Gst.Rtp.RTCPSDESType type, byte len, byte[] data) {
+		public bool SdesAddEntry(Gst.Rtp.RTCPSDESType type, byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			byte len = (byte)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtcp_packet_sdes_add_entry(this_as_native, (int) type, len, data);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);

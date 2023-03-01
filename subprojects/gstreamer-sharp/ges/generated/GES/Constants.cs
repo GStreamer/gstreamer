@@ -28,7 +28,7 @@ namespace GES {
 		public const uint TIMELINE_ELEMENT_NO_LAYER_PRIORITY = 4294967295;
 		public const int VERSION_MAJOR = 1;
 		public const int VERSION_MICRO = 0;
-		public const int VERSION_MINOR = 19;
+		public const int VERSION_MINOR = 23;
 		public const int VERSION_NANO = 1;
 #endregion
 	}

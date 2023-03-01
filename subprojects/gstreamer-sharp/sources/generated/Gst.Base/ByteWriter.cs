@@ -125,11 +125,12 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_byte_writer_init_with_data(IntPtr raw, byte[] data, uint size, bool initialized);
+		static extern void gst_byte_writer_init_with_data(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size, bool initialized);
 
-		public void InitWithData(byte[] data, uint size, bool initialized) {
+		public void InitWithData(byte[] data, bool initialized) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint size = (uint)(data == null ? 0 : data.Length);
 			gst_byte_writer_init_with_data(this_as_native, data, size, initialized);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
@@ -160,11 +161,12 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_byte_writer_put_data(IntPtr raw, byte[] data, uint size);
+		static extern bool gst_byte_writer_put_data(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size);
 
-		public bool PutData(byte[] data, uint size) {
+		public bool PutData(byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint size = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_byte_writer_put_data(this_as_native, data, size);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);

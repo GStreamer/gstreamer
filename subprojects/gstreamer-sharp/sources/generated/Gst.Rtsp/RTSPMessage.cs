@@ -316,11 +316,12 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_message_set_body(IntPtr raw, byte[] data, uint size);
+		static extern int gst_rtsp_message_set_body(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size);
 
-		public Gst.Rtsp.RTSPResult SetBody(byte[] data, uint size) {
+		public Gst.Rtsp.RTSPResult SetBody(byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_rtsp_message_set_body(this_as_native, data, size);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			ReadNative (this_as_native, ref this);
@@ -357,11 +358,12 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_message_take_body(IntPtr raw, byte[] data, uint size);
+		static extern int gst_rtsp_message_take_body(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size);
 
-		public Gst.Rtsp.RTSPResult TakeBody(byte[] data, uint size) {
+		public Gst.Rtsp.RTSPResult TakeBody(byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_rtsp_message_take_body(this_as_native, data, size);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			ReadNative (this_as_native, ref this);

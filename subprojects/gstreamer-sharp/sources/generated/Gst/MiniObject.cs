@@ -117,6 +117,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_mini_object_get_type();
+
+		public static GLib.GType GType { 
+			get {
+				IntPtr raw_ret = gst_mini_object_get_type();
+				GLib.GType ret = new GLib.GType(raw_ret);
+				return ret;
+			}
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_mini_object_add_parent(IntPtr raw, IntPtr parent);
 
 		public void AddParent(Gst.MiniObject parent) {
@@ -183,34 +194,6 @@ namespace Gst {
 		}
 
 		public MiniObject(IntPtr raw) : base(raw) {}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_mini_object_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_mini_object_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_mini_object_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_mini_object_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_mini_object_unref;
-			}
-		}
 
 
 		// Internal representation of the wrapped structure ABI.

@@ -24,7 +24,7 @@ namespace Gst.Net {
 		}
 
 		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_net_time_packet_new(byte[] buffer);
+		static extern IntPtr gst_net_time_packet_new([MarshalAs(UnmanagedType.LPArray, SizeConst=16)]byte[] buffer);
 
 		public static NetTimePacket New(byte[] buffer)
 		{
@@ -55,19 +55,6 @@ namespace Gst.Net {
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
-			return ret;
-		}
-
-		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern byte gst_net_time_packet_serialize(IntPtr raw);
-
-		public byte Serialize() {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			byte raw_ret = gst_net_time_packet_serialize(this_as_native);
-			byte ret = raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			return ret;
 		}
 

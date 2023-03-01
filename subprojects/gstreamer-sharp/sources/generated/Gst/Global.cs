@@ -21,6 +21,37 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_buffer_list_replace(ref IntPtr old_list, IntPtr new_list);
+
+		public static bool BufferListReplace(ref Gst.BufferList old_list, Gst.BufferList new_list) {
+			IntPtr native_old_list = old_list == null ? IntPtr.Zero : old_list.Handle ;
+			bool raw_ret = gst_buffer_list_replace(ref native_old_list, new_list == null ? IntPtr.Zero : new_list.Handle);
+			bool ret = raw_ret;
+			old_list = native_old_list == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (native_old_list, typeof (Gst.BufferList), true);
+			return ret;
+		}
+
+		public static bool BufferListReplace(ref Gst.BufferList old_list) {
+			return BufferListReplace (ref old_list, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_buffer_list_take(ref IntPtr old_list, IntPtr new_list);
+
+		public static bool BufferListTake(ref Gst.BufferList old_list, Gst.BufferList new_list) {
+			IntPtr native_old_list = old_list == null ? IntPtr.Zero : old_list.Handle ;
+			new_list.Owned = false;
+			bool raw_ret = gst_buffer_list_take(ref native_old_list, new_list == null ? IntPtr.Zero : new_list.Handle);
+			bool ret = raw_ret;
+			old_list = native_old_list == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (native_old_list, typeof (Gst.BufferList), true);
+			return ret;
+		}
+
+		public static bool BufferListTake(ref Gst.BufferList old_list) {
+			return BufferListTake (ref old_list, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_from_string(IntPtr features);
 
 		public static Gst.CapsFeatures CapsFeaturesFromString(string features) {
@@ -40,6 +71,24 @@ namespace Gst {
 			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
 			GLib.Marshaller.Free (native_str1ng);
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_context_replace(IntPtr old_context, IntPtr new_context);
+
+		public static bool ContextReplace(ref Gst.Context old_context, Gst.Context new_context) {
+			IntPtr native_old_context = GLib.Marshaller.StructureToPtrAlloc (old_context);
+			IntPtr native_new_context = GLib.Marshaller.StructureToPtrAlloc (new_context);
+			bool raw_ret = gst_context_replace(native_old_context, native_new_context);
+			bool ret = raw_ret;
+			old_context = Gst.Context.New (native_old_context);
+			Marshal.FreeHGlobal (native_old_context);
+			Marshal.FreeHGlobal (native_new_context);
+			return ret;
+		}
+
+		public static bool ContextReplace(ref Gst.Context old_context) {
+			return ContextReplace (ref old_context, Gst.Context.Zero);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -99,6 +148,15 @@ namespace Gst {
 
 		public static uint EventTypeToQuark(Gst.EventType type) {
 			uint raw_ret = gst_event_type_to_quark((int) type);
+			uint ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_event_type_to_sticky_ordering(int type);
+
+		public static uint EventTypeToStickyOrdering(Gst.EventType type) {
+			uint raw_ret = gst_event_type_to_sticky_ordering((int) type);
 			uint ret = raw_ret;
 			return ret;
 		}
@@ -166,6 +224,22 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_message_take(ref IntPtr old_message, IntPtr new_message);
+
+		public static bool MessageTake(ref Gst.Message old_message, Gst.Message new_message) {
+			IntPtr native_old_message = old_message == null ? IntPtr.Zero : old_message.Handle ;
+			new_message.Owned = false;
+			bool raw_ret = gst_message_take(ref native_old_message, new_message == null ? IntPtr.Zero : new_message.Handle);
+			bool ret = raw_ret;
+			old_message = native_old_message == IntPtr.Zero ? null : (Gst.Message) GLib.Opaque.GetOpaque (native_old_message, typeof (Gst.Message), true);
+			return ret;
+		}
+
+		public static bool MessageTake(ref Gst.Message old_message) {
+			return MessageTake (ref old_message, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_type_get_name(int type);
 
 		public static string MessageTypeGetName(Gst.MessageType type) {
@@ -193,18 +267,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr[] tags);
+		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr tags);
 
 		public static GLib.GType MetaApiTypeRegister(string api, string[] tags) {
 			IntPtr native_api = GLib.Marshaller.StringToPtrGStrdup (api);
-			int cnt_tags = tags == null ? 0 : tags.Length;
-			IntPtr[] native_tags = new IntPtr [cnt_tags + 1];
-			for (int i = 0; i < cnt_tags; i++)
-				native_tags [i] = GLib.Marshaller.StringToPtrGStrdup(tags[i]);
-			native_tags [cnt_tags] = IntPtr.Zero;
+			IntPtr native_tags = GLib.Marshaller.StringArrayToStrvPtr(tags, true);
 			IntPtr raw_ret = gst_meta_api_type_register(native_api, native_tags);
 			GLib.GType ret = new GLib.GType(raw_ret);
 			GLib.Marshaller.Free (native_api);
+			GLib.Marshaller.StrFreeV (native_tags);
 			return ret;
 		}
 
@@ -237,15 +308,11 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_register_custom(IntPtr name, IntPtr[] tags, GstSharp.CustomMetaTransformFunctionNative transform_func, IntPtr user_data, GLib.DestroyNotify destroy_data);
+		static extern IntPtr gst_meta_register_custom(IntPtr name, IntPtr tags, GstSharp.CustomMetaTransformFunctionNative transform_func, IntPtr user_data, GLib.DestroyNotify destroy_data);
 
 		public static Gst.MetaInfo MetaRegisterCustom(string name, string[] tags, Gst.CustomMetaTransformFunction transform_func) {
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
-			int cnt_tags = tags == null ? 0 : tags.Length;
-			IntPtr[] native_tags = new IntPtr [cnt_tags + 1];
-			for (int i = 0; i < cnt_tags; i++)
-				native_tags [i] = GLib.Marshaller.StringToPtrGStrdup(tags[i]);
-			native_tags [cnt_tags] = IntPtr.Zero;
+			IntPtr native_tags = GLib.Marshaller.StringArrayToStrvPtr(tags, true);
 			GstSharp.CustomMetaTransformFunctionWrapper transform_func_wrapper = new GstSharp.CustomMetaTransformFunctionWrapper (transform_func);
 			IntPtr user_data;
 			GLib.DestroyNotify destroy_data;
@@ -259,6 +326,7 @@ namespace Gst {
 			IntPtr raw_ret = gst_meta_register_custom(native_name, native_tags, transform_func_wrapper.NativeDelegate, user_data, destroy_data);
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			GLib.Marshaller.Free (native_name);
+			GLib.Marshaller.StrFreeV (native_tags);
 			return ret;
 		}
 
@@ -314,16 +382,13 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_protection_filter_systems_by_available_decryptors(IntPtr[] system_identifiers);
+		static extern IntPtr gst_protection_filter_systems_by_available_decryptors(IntPtr system_identifiers);
 
 		public static string[] ProtectionFilterSystemsByAvailableDecryptors(string[] system_identifiers) {
-			int cnt_system_identifiers = system_identifiers == null ? 0 : system_identifiers.Length;
-			IntPtr[] native_system_identifiers = new IntPtr [cnt_system_identifiers + 1];
-			for (int i = 0; i < cnt_system_identifiers; i++)
-				native_system_identifiers [i] = GLib.Marshaller.StringToPtrGStrdup(system_identifiers[i]);
-			native_system_identifiers [cnt_system_identifiers] = IntPtr.Zero;
+			IntPtr native_system_identifiers = GLib.Marshaller.StringArrayToStrvPtr(system_identifiers, true);
 			IntPtr raw_ret = gst_protection_filter_systems_by_available_decryptors(native_system_identifiers);
 			string[] ret = GLib.Marshaller.NullTermPtrToStringArray (raw_ret, true);
+			GLib.Marshaller.StrFreeV (native_system_identifiers);
 			return ret;
 		}
 
@@ -346,17 +411,30 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_protection_select_system(IntPtr[] system_identifiers);
+		static extern IntPtr gst_protection_select_system(IntPtr system_identifiers);
 
 		public static string ProtectionSelectSystem(string[] system_identifiers) {
-			int cnt_system_identifiers = system_identifiers == null ? 0 : system_identifiers.Length;
-			IntPtr[] native_system_identifiers = new IntPtr [cnt_system_identifiers + 1];
-			for (int i = 0; i < cnt_system_identifiers; i++)
-				native_system_identifiers [i] = GLib.Marshaller.StringToPtrGStrdup(system_identifiers[i]);
-			native_system_identifiers [cnt_system_identifiers] = IntPtr.Zero;
+			IntPtr native_system_identifiers = GLib.Marshaller.StringArrayToStrvPtr(system_identifiers, true);
 			IntPtr raw_ret = gst_protection_select_system(native_system_identifiers);
 			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			GLib.Marshaller.StrFreeV (native_system_identifiers);
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_query_take(ref IntPtr old_query, IntPtr new_query);
+
+		public static bool QueryTake(ref Gst.Query old_query, Gst.Query new_query) {
+			IntPtr native_old_query = old_query == null ? IntPtr.Zero : old_query.Handle ;
+			new_query.Owned = false;
+			bool raw_ret = gst_query_take(ref native_old_query, new_query == null ? IntPtr.Zero : new_query.Handle);
+			bool ret = raw_ret;
+			old_query = native_old_query == IntPtr.Zero ? null : (Gst.Query) GLib.Opaque.GetOpaque (native_old_query, typeof (Gst.Query), true);
+			return ret;
+		}
+
+		public static bool QueryTake(ref Gst.Query old_query) {
+			return QueryTake (ref old_query, null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -490,6 +568,15 @@ namespace Gst {
 			IntPtr raw_ret = gst_tracing_get_active_tracers();
 			Gst.Tracer[] ret = (Gst.Tracer[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.Tracer));
 			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_tracing_register_hook(IntPtr tracer, IntPtr detail, IntPtr func);
+
+		public static void TracingRegisterHook(Gst.Tracer tracer, string detail, IntPtr func) {
+			IntPtr native_detail = GLib.Marshaller.StringToPtrGStrdup (detail);
+			gst_tracing_register_hook(tracer == null ? IntPtr.Zero : tracer.Handle, native_detail, func);
+			GLib.Marshaller.Free (native_detail);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

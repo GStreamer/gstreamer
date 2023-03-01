@@ -12,6 +12,7 @@ namespace Gst.Video {
 		[StructLayout (LayoutKind.Sequential)]
 		struct GstNavigationInterface {
 			public SendEventNativeDelegate SendEvent;
+			public SendEventSimpleNativeDelegate SendEventSimple;
 		}
 
 		static GstNavigationInterface iface;
@@ -20,6 +21,7 @@ namespace Gst.Video {
 		{
 			GLib.GType.Register (_gtype, typeof (NavigationAdapter));
 			iface.SendEvent = new SendEventNativeDelegate (SendEvent_cb);
+			iface.SendEventSimple = new SendEventSimpleNativeDelegate (SendEventSimple_cb);
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -35,6 +37,19 @@ namespace Gst.Video {
 			}
 		}
 
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void SendEventSimpleNativeDelegate (IntPtr inst, IntPtr evnt);
+
+		static void SendEventSimple_cb (IntPtr inst, IntPtr evnt)
+		{
+			try {
+				INavigationImplementor __obj = GLib.Object.GetObject (inst, false) as INavigationImplementor;
+				__obj.SendEventSimple (evnt == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (evnt, typeof (Gst.Event), true));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
 		static int class_offset = 2 * IntPtr.Size;
 
 		static void Initialize (IntPtr ptr, IntPtr data)
@@ -42,6 +57,7 @@ namespace Gst.Video {
 			IntPtr ifaceptr = new IntPtr (ptr.ToInt64 () + class_offset);
 			GstNavigationInterface native_iface = (GstNavigationInterface) Marshal.PtrToStructure (ifaceptr, typeof (GstNavigationInterface));
 			native_iface.SendEvent = iface.SendEvent;
+			native_iface.SendEventSimple = iface.SendEventSimple;
 			Marshal.StructureToPtr (native_iface, ifaceptr, false);
 		}
 
@@ -122,11 +138,132 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_get_coordinates(IntPtr evnt, out double x, out double y);
+
+		public static bool EventGetCoordinates(Gst.Event evnt, out double x, out double y) {
+			bool raw_ret = gst_navigation_event_get_coordinates(evnt == null ? IntPtr.Zero : evnt.Handle, out x, out y);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_navigation_event_get_type(IntPtr evnt);
 
 		public static Gst.Video.NavigationEventType EventGetType(Gst.Event evnt) {
 			int raw_ret = gst_navigation_event_get_type(evnt == null ? IntPtr.Zero : evnt.Handle);
 			Gst.Video.NavigationEventType ret = (Gst.Video.NavigationEventType) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_command(int command);
+
+		public static Gst.Event EventNewCommand(Gst.Video.NavigationCommand command) {
+			IntPtr raw_ret = gst_navigation_event_new_command((int) command);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_key_press(IntPtr key, int state);
+
+		public static Gst.Event EventNewKeyPress(string key, Gst.Video.NavigationModifierType state) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr raw_ret = gst_navigation_event_new_key_press(native_key, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			GLib.Marshaller.Free (native_key);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_key_release(IntPtr key, int state);
+
+		public static Gst.Event EventNewKeyRelease(string key, Gst.Video.NavigationModifierType state) {
+			IntPtr native_key = GLib.Marshaller.StringToPtrGStrdup (key);
+			IntPtr raw_ret = gst_navigation_event_new_key_release(native_key, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			GLib.Marshaller.Free (native_key);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_button_press(int button, double x, double y, int state);
+
+		public static Gst.Event EventNewMouseButtonPress(int button, double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_button_press(button, x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_button_release(int button, double x, double y, int state);
+
+		public static Gst.Event EventNewMouseButtonRelease(int button, double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_button_release(button, x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_move(double x, double y, int state);
+
+		public static Gst.Event EventNewMouseMove(double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_move(x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_mouse_scroll(double x, double y, double delta_x, double delta_y, int state);
+
+		public static Gst.Event EventNewMouseScroll(double x, double y, double delta_x, double delta_y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_mouse_scroll(x, y, delta_x, delta_y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_cancel(int state);
+
+		public static Gst.Event EventNewTouchCancel(Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_cancel((int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_down(uint identifier, double x, double y, double pressure, int state);
+
+		public static Gst.Event EventNewTouchDown(uint identifier, double x, double y, double pressure, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_down(identifier, x, y, pressure, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_frame(int state);
+
+		public static Gst.Event EventNewTouchFrame(Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_frame((int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_motion(uint identifier, double x, double y, double pressure, int state);
+
+		public static Gst.Event EventNewTouchMotion(uint identifier, double x, double y, double pressure, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_motion(identifier, x, y, pressure, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_navigation_event_new_touch_up(uint identifier, double x, double y, int state);
+
+		public static Gst.Event EventNewTouchUp(uint identifier, double x, double y, Gst.Video.NavigationModifierType state) {
+			IntPtr raw_ret = gst_navigation_event_new_touch_up(identifier, x, y, (int) state);
+			Gst.Event ret = raw_ret == IntPtr.Zero ? null : (Gst.Event) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Event), true);
 			return ret;
 		}
 
@@ -153,6 +290,15 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_parse_modifier_state(IntPtr evnt, int state);
+
+		public static bool EventParseModifierState(Gst.Event evnt, Gst.Video.NavigationModifierType state) {
+			bool raw_ret = gst_navigation_event_parse_modifier_state(evnt == null ? IntPtr.Zero : evnt.Handle, (int) state);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_navigation_event_parse_mouse_button_event(IntPtr evnt, out int button, out double x, out double y);
 
 		public static bool EventParseMouseButtonEvent(Gst.Event evnt, out int button, out double x, out double y) {
@@ -175,6 +321,33 @@ namespace Gst.Video {
 
 		public static bool EventParseMouseScrollEvent(Gst.Event evnt, out double x, out double y, out double delta_x, out double delta_y) {
 			bool raw_ret = gst_navigation_event_parse_mouse_scroll_event(evnt == null ? IntPtr.Zero : evnt.Handle, out x, out y, out delta_x, out delta_y);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_parse_touch_event(IntPtr evnt, out uint identifier, out double x, out double y, out double pressure);
+
+		public static bool EventParseTouchEvent(Gst.Event evnt, out uint identifier, out double x, out double y, out double pressure) {
+			bool raw_ret = gst_navigation_event_parse_touch_event(evnt == null ? IntPtr.Zero : evnt.Handle, out identifier, out x, out y, out pressure);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_parse_touch_up_event(IntPtr evnt, out uint identifier, out double x, out double y);
+
+		public static bool EventParseTouchUpEvent(Gst.Event evnt, out uint identifier, out double x, out double y) {
+			bool raw_ret = gst_navigation_event_parse_touch_up_event(evnt == null ? IntPtr.Zero : evnt.Handle, out identifier, out x, out y);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_navigation_event_set_coordinates(IntPtr evnt, double x, double y);
+
+		public static bool EventSetCoordinates(Gst.Event evnt, double x, double y) {
+			bool raw_ret = gst_navigation_event_set_coordinates(evnt == null ? IntPtr.Zero : evnt.Handle, x, y);
 			bool ret = raw_ret;
 			return ret;
 		}
@@ -317,14 +490,14 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_navigation_query_set_commandsv(IntPtr query, int n_cmds, int[] cmds);
+		static extern void gst_navigation_query_set_commandsv(IntPtr query, int n_cmds, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] cmds);
 
 		public static void QuerySetCommandsv(Gst.Query query, Gst.Video.NavigationCommand[] cmds) {
-			int cnt_cmds = cmds == null ? 0 : cmds.Length;
-			int[] native_cmds = new int [cnt_cmds];
-			for (int i = 0; i < cnt_cmds; i++)
+			int n_cmds = (cmds == null ? 0 : cmds.Length);
+			int[] native_cmds = new int [n_cmds];
+			for (int i = 0; i < n_cmds; i++)
 				native_cmds [i] = (int) cmds[i];
-			gst_navigation_query_set_commandsv(query == null ? IntPtr.Zero : query.Handle, (cmds == null ? 0 : cmds.Length), native_cmds);
+			gst_navigation_query_set_commandsv(query == null ? IntPtr.Zero : query.Handle, n_cmds, native_cmds);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -339,6 +512,14 @@ namespace Gst.Video {
 
 		public void SendEvent(Gst.Structure structure) {
 			gst_navigation_send_event(Handle, structure == null ? IntPtr.Zero : structure.Handle);
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_navigation_send_event_simple(IntPtr raw, IntPtr evnt);
+
+		public void SendEventSimple(Gst.Event evnt) {
+			evnt.Owned = false;
+			gst_navigation_send_event_simple(Handle, evnt == null ? IntPtr.Zero : evnt.Handle);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

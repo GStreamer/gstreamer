@@ -603,34 +603,36 @@ namespace Gst.Base {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void GetTimesNativeDelegate (IntPtr inst, IntPtr buffer, ulong start, ulong end);
+		delegate void GetTimesNativeDelegate (IntPtr inst, IntPtr buffer, out ulong start, out ulong end);
 
-		static void GetTimes_cb (IntPtr inst, IntPtr buffer, ulong start, ulong end)
+		static void GetTimes_cb (IntPtr inst, IntPtr buffer, out ulong start, out ulong end)
 		{
 			try {
 				BaseSink __obj = GLib.Object.GetObject (inst, false) as BaseSink;
-				__obj.OnGetTimes (buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buffer, typeof (Gst.Buffer), false), start, end);
+				__obj.OnGetTimes (buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buffer, typeof (Gst.Buffer), false), out start, out end);
 			} catch (Exception e) {
-				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
 			}
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Base.BaseSink), ConnectionMethod="OverrideGetTimes")]
-		protected virtual void OnGetTimes (Gst.Buffer buffer, ulong start, ulong end)
+		protected virtual void OnGetTimes (Gst.Buffer buffer, out ulong start, out ulong end)
 		{
-			InternalGetTimes (buffer, start, end);
+			InternalGetTimes (buffer, out start, out end);
 		}
 
-		private void InternalGetTimes (Gst.Buffer buffer, ulong start, ulong end)
+		private void InternalGetTimes (Gst.Buffer buffer, out ulong start, out ulong end)
 		{
 			GetTimesNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("get_times"));
 				unmanaged = (GetTimesNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GetTimesNativeDelegate));
 			}
-			if (unmanaged == null) return;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			unmanaged (this.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, start, end);
+			unmanaged (this.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, out start, out end);
 		}
 
 		static ProposeAllocationNativeDelegate ProposeAllocation_cb_delegate;

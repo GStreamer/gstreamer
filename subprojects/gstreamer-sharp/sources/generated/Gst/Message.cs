@@ -76,7 +76,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_message_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -576,6 +576,22 @@ namespace Gst {
 			return ret;
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_message_take(ref IntPtr old_message, IntPtr new_message);
+
+		public static bool Take(ref Gst.Message old_message, Gst.Message new_message) {
+			IntPtr native_old_message = old_message == null ? IntPtr.Zero : old_message.Handle ;
+			new_message.Owned = false;
+			bool raw_ret = gst_message_take(ref native_old_message, new_message == null ? IntPtr.Zero : new_message.Handle);
+			bool ret = raw_ret;
+			old_message = native_old_message == IntPtr.Zero ? null : (Gst.Message) GLib.Opaque.GetOpaque (native_old_message, typeof (Gst.Message), true);
+			return ret;
+		}
+
+		public static bool Take(ref Gst.Message old_message) {
+			return Take (ref old_message, null);
+		}
+
 		public Message(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -1000,34 +1016,6 @@ namespace Gst {
 			Message result = new Message (gst_message_new_warning_with_details(src == null ? IntPtr.Zero : src.Handle, error, native_debug, details == null ? IntPtr.Zero : details.Handle));
 			GLib.Marshaller.Free (native_debug);
 			return result;
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_message_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_message_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_message_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_message_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_message_unref;
-			}
 		}
 
 

@@ -51,7 +51,7 @@ namespace Gst.Video {
 		public uint TileWs;
 		public uint TileHs;
 		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
-		private IntPtr[] _gstGstReserved;
+		public Gst.Video.VideoTileInfo[] TileInfo;
 
 		public static Gst.Video.VideoFormatInfo Zero = new Gst.Video.VideoFormatInfo ();
 
@@ -74,6 +74,19 @@ namespace Gst.Video {
 			return components;
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_video_format_info_extrapolate_stride(IntPtr raw, int plane, int stride);
+
+		public int ExtrapolateStride(int plane, int stride) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			int raw_ret = gst_video_format_info_extrapolate_stride(this_as_native, plane, stride);
+			int ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			return ret;
+		}
+
 		static void ReadNative (IntPtr native, ref Gst.Video.VideoFormatInfo target)
 		{
 			target = New (native);
@@ -81,7 +94,7 @@ namespace Gst.Video {
 
 		public bool Equals (VideoFormatInfo other)
 		{
-			return true && Format.Equals (other.Format) && Name.Equals (other.Name) && Description.Equals (other.Description) && Flags.Equals (other.Flags) && Bits.Equals (other.Bits) && NComponents.Equals (other.NComponents) && Shift.Equals (other.Shift) && Depth.Equals (other.Depth) && PixelStride.Equals (other.PixelStride) && NPlanes.Equals (other.NPlanes) && Plane.Equals (other.Plane) && Poffset.Equals (other.Poffset) && WSub.Equals (other.WSub) && HSub.Equals (other.HSub) && UnpackFormat.Equals (other.UnpackFormat) && UnpackFunc.Equals (other.UnpackFunc) && PackLines.Equals (other.PackLines) && PackFunc.Equals (other.PackFunc) && TileMode.Equals (other.TileMode) && TileWs.Equals (other.TileWs) && TileHs.Equals (other.TileHs);
+			return true && Format.Equals (other.Format) && Name.Equals (other.Name) && Description.Equals (other.Description) && Flags.Equals (other.Flags) && Bits.Equals (other.Bits) && NComponents.Equals (other.NComponents) && Shift.Equals (other.Shift) && Depth.Equals (other.Depth) && PixelStride.Equals (other.PixelStride) && NPlanes.Equals (other.NPlanes) && Plane.Equals (other.Plane) && Poffset.Equals (other.Poffset) && WSub.Equals (other.WSub) && HSub.Equals (other.HSub) && UnpackFormat.Equals (other.UnpackFormat) && UnpackFunc.Equals (other.UnpackFunc) && PackLines.Equals (other.PackLines) && PackFunc.Equals (other.PackFunc) && TileMode.Equals (other.TileMode) && TileWs.Equals (other.TileWs) && TileHs.Equals (other.TileHs) && TileInfo.Equals (other.TileInfo);
 		}
 
 		public override bool Equals (object other)
@@ -91,7 +104,7 @@ namespace Gst.Video {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Format.GetHashCode () ^ Name.GetHashCode () ^ Description.GetHashCode () ^ Flags.GetHashCode () ^ Bits.GetHashCode () ^ NComponents.GetHashCode () ^ Shift.GetHashCode () ^ Depth.GetHashCode () ^ PixelStride.GetHashCode () ^ NPlanes.GetHashCode () ^ Plane.GetHashCode () ^ Poffset.GetHashCode () ^ WSub.GetHashCode () ^ HSub.GetHashCode () ^ UnpackFormat.GetHashCode () ^ UnpackFunc.GetHashCode () ^ PackLines.GetHashCode () ^ PackFunc.GetHashCode () ^ TileMode.GetHashCode () ^ TileWs.GetHashCode () ^ TileHs.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Format.GetHashCode () ^ Name.GetHashCode () ^ Description.GetHashCode () ^ Flags.GetHashCode () ^ Bits.GetHashCode () ^ NComponents.GetHashCode () ^ Shift.GetHashCode () ^ Depth.GetHashCode () ^ PixelStride.GetHashCode () ^ NPlanes.GetHashCode () ^ Plane.GetHashCode () ^ Poffset.GetHashCode () ^ WSub.GetHashCode () ^ HSub.GetHashCode () ^ UnpackFormat.GetHashCode () ^ UnpackFunc.GetHashCode () ^ PackLines.GetHashCode () ^ PackFunc.GetHashCode () ^ TileMode.GetHashCode () ^ TileWs.GetHashCode () ^ TileHs.GetHashCode () ^ TileInfo.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

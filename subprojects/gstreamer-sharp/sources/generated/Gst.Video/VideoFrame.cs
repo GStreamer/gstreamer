@@ -36,7 +36,7 @@ namespace Gst.Video {
 		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
 		public IntPtr[] Data;
 		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
-		public Gst.MapInfo[] MapField;
+		public Gst.MapInfo[] MapInfo;
 		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
 		private IntPtr[] _gstGstReserved;
 
@@ -79,32 +79,6 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_frame_map(IntPtr raw, IntPtr info, IntPtr buffer, int flags);
-
-		public bool Map(Gst.Video.VideoInfo info, Gst.Buffer buffer, Gst.MapFlags flags) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_video_frame_map(this_as_native, info == null ? IntPtr.Zero : info.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, (int) flags);
-			bool ret = raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_frame_map_id(IntPtr raw, IntPtr info, IntPtr buffer, int id, int flags);
-
-		public bool MapId(Gst.Video.VideoInfo info, Gst.Buffer buffer, int id, Gst.MapFlags flags) {
-			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
-			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
-			bool raw_ret = gst_video_frame_map_id(this_as_native, info == null ? IntPtr.Zero : info.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, id, (int) flags);
-			bool ret = raw_ret;
-			ReadNative (this_as_native, ref this);
-			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
-			return ret;
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_frame_unmap(IntPtr raw);
 
 		public void Unmap() {
@@ -115,6 +89,30 @@ namespace Gst.Video {
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_frame_map(IntPtr frame, IntPtr info, IntPtr buffer, int flags);
+
+		public static bool Map(out Gst.Video.VideoFrame frame, Gst.Video.VideoInfo info, Gst.Buffer buffer, Gst.MapFlags flags) {
+			IntPtr native_frame = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoFrame)));
+			bool raw_ret = gst_video_frame_map(native_frame, info == null ? IntPtr.Zero : info.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, (int) flags);
+			bool ret = raw_ret;
+			frame = Gst.Video.VideoFrame.New (native_frame);
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_frame_map_id(IntPtr frame, IntPtr info, IntPtr buffer, int id, int flags);
+
+		public static bool MapId(out Gst.Video.VideoFrame frame, Gst.Video.VideoInfo info, Gst.Buffer buffer, int id, Gst.MapFlags flags) {
+			IntPtr native_frame = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoFrame)));
+			bool raw_ret = gst_video_frame_map_id(native_frame, info == null ? IntPtr.Zero : info.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, id, (int) flags);
+			bool ret = raw_ret;
+			frame = Gst.Video.VideoFrame.New (native_frame);
+			Marshal.FreeHGlobal (native_frame);
+			return ret;
+		}
+
 		static void ReadNative (IntPtr native, ref Gst.Video.VideoFrame target)
 		{
 			target = New (native);
@@ -122,7 +120,7 @@ namespace Gst.Video {
 
 		public bool Equals (VideoFrame other)
 		{
-			return true && Info.Equals (other.Info) && Flags.Equals (other.Flags) && Buffer.Equals (other.Buffer) && _meta.Equals (other._meta) && Id.Equals (other.Id) && Data.Equals (other.Data) && MapField.Equals (other.MapField);
+			return true && Info.Equals (other.Info) && Flags.Equals (other.Flags) && Buffer.Equals (other.Buffer) && _meta.Equals (other._meta) && Id.Equals (other.Id) && Data.Equals (other.Data) && MapInfo.Equals (other.MapInfo);
 		}
 
 		public override bool Equals (object other)
@@ -132,7 +130,7 @@ namespace Gst.Video {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ Info.GetHashCode () ^ Flags.GetHashCode () ^ Buffer.GetHashCode () ^ _meta.GetHashCode () ^ Id.GetHashCode () ^ Data.GetHashCode () ^ MapField.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ Info.GetHashCode () ^ Flags.GetHashCode () ^ Buffer.GetHashCode () ^ _meta.GetHashCode () ^ Id.GetHashCode () ^ Data.GetHashCode () ^ MapInfo.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

@@ -302,6 +302,17 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_aggregator_pad_is_inactive(IntPtr raw);
+
+		public bool IsInactive { 
+			get {
+				bool raw_ret = gst_aggregator_pad_is_inactive(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_aggregator_pad_peek_buffer(IntPtr raw);
 
 		public Gst.Buffer PeekBuffer() {

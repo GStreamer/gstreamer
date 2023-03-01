@@ -104,20 +104,13 @@ namespace Gst.Net {
 		}
 
 		[DllImport("gstnet-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_ptp_init(ulong clock_id, IntPtr[] interfaces);
+		static extern bool gst_ptp_init(ulong clock_id, IntPtr interfaces);
 
 		public static bool PtpInit(ulong clock_id, string[] interfaces) {
-			int cnt_interfaces = interfaces == null ? 0 : interfaces.Length;
-			IntPtr[] native_interfaces = new IntPtr [cnt_interfaces + 1];
-			for (int i = 0; i < cnt_interfaces; i++)
-				native_interfaces [i] = GLib.Marshaller.StringToPtrGStrdup (interfaces[i]);
-			native_interfaces [cnt_interfaces] = IntPtr.Zero;
+			IntPtr native_interfaces = GLib.Marshaller.StringArrayToStrvPtr(interfaces, true);
 			bool raw_ret = gst_ptp_init(clock_id, native_interfaces);
 			bool ret = raw_ret;
-			for (int i = 0; i < native_interfaces.Length - 1; i++) {
-				interfaces [i] = GLib.Marshaller.Utf8PtrToString (native_interfaces[i]);
-				GLib.Marshaller.Free (native_interfaces[i]);
-			}
+			GLib.Marshaller.StrFreeV (native_interfaces);
 			return ret;
 		}
 

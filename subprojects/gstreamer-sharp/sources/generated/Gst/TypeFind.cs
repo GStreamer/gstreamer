@@ -38,10 +38,28 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern byte gst_type_find_peek(IntPtr raw, long offset, uint size);
+
+		public byte Peek(long offset, uint size) {
+			byte raw_ret = gst_type_find_peek(Handle, offset, size);
+			byte ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_type_find_suggest(IntPtr raw, uint probability, IntPtr caps);
 
 		public void Suggest(uint probability, Gst.Caps caps) {
 			gst_type_find_suggest(Handle, probability, caps == null ? IntPtr.Zero : caps.Handle);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_type_find_suggest_empty_simple(IntPtr raw, uint probability, IntPtr media_type);
+
+		public void SuggestEmptySimple(uint probability, string media_type) {
+			IntPtr native_media_type = GLib.Marshaller.StringToPtrGStrdup (media_type);
+			gst_type_find_suggest_empty_simple(Handle, probability, native_media_type);
+			GLib.Marshaller.Free (native_media_type);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

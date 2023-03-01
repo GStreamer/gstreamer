@@ -326,24 +326,37 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_transport_get_mime(int trans, IntPtr mime);
+		static extern int gst_rtsp_transport_get_mime(int trans, out IntPtr mime);
 
 		[Obsolete]
-		public static Gst.Rtsp.RTSPResult RtspTransportGetMime(Gst.Rtsp.RTSPTransMode trans, string mime) {
-			IntPtr native_mime = GLib.Marshaller.StringToPtrGStrdup (mime);
-			int raw_ret = gst_rtsp_transport_get_mime((int) trans, native_mime);
+		public static Gst.Rtsp.RTSPResult RtspTransportGetMime(Gst.Rtsp.RTSPTransMode trans, out string mime) {
+			IntPtr native_mime;
+			int raw_ret = gst_rtsp_transport_get_mime((int) trans, out native_mime);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
-			GLib.Marshaller.Free (native_mime);
+			mime = GLib.Marshaller.Utf8PtrToString (native_mime);
+			return ret;
+		}
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_rtsp_transport_init(IntPtr transport);
+
+		public static Gst.Rtsp.RTSPResult RtspTransportInit(out Gst.Rtsp.RTSPTransport transport) {
+			IntPtr native_transport = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Rtsp.RTSPTransport)));
+			int raw_ret = gst_rtsp_transport_init(native_transport);
+			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			transport = Gst.Rtsp.RTSPTransport.New (native_transport);
+			Marshal.FreeHGlobal (native_transport);
 			return ret;
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_new(IntPtr transport);
 
-		public static Gst.Rtsp.RTSPResult RtspTransportNew(Gst.Rtsp.RTSPTransport transport) {
-			IntPtr native_transport = GLib.Marshaller.StructureToPtrAlloc (transport);
+		public static Gst.Rtsp.RTSPResult RtspTransportNew(out Gst.Rtsp.RTSPTransport transport) {
+			IntPtr native_transport = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Rtsp.RTSPTransport)));
 			int raw_ret = gst_rtsp_transport_new(native_transport);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			transport = Gst.Rtsp.RTSPTransport.New (native_transport);
 			Marshal.FreeHGlobal (native_transport);
 			return ret;
 		}
@@ -351,12 +364,13 @@ namespace Gst.Rtsp {
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_transport_parse(IntPtr str, IntPtr transport);
 
-		public static Gst.Rtsp.RTSPResult RtspTransportParse(string str, Gst.Rtsp.RTSPTransport transport) {
+		public static Gst.Rtsp.RTSPResult RtspTransportParse(string str, out Gst.Rtsp.RTSPTransport transport) {
 			IntPtr native_str = GLib.Marshaller.StringToPtrGStrdup (str);
-			IntPtr native_transport = GLib.Marshaller.StructureToPtrAlloc (transport);
+			IntPtr native_transport = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Rtsp.RTSPTransport)));
 			int raw_ret = gst_rtsp_transport_parse(native_str, native_transport);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			GLib.Marshaller.Free (native_str);
+			transport = Gst.Rtsp.RTSPTransport.New (native_transport);
 			Marshal.FreeHGlobal (native_transport);
 			return ret;
 		}

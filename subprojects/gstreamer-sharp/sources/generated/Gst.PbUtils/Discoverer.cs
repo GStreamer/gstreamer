@@ -69,13 +69,13 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[GLib.Signal("starting")]
-		public event System.EventHandler Starting {
+		[GLib.Signal("source-setup")]
+		public event Gst.PbUtils.SourceSetupHandler SourceSetup {
 			add {
-				this.AddSignalHandler ("starting", value);
+				this.AddSignalHandler ("source-setup", value, typeof (Gst.PbUtils.SourceSetupArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("starting", value);
+				this.RemoveSignalHandler ("source-setup", value);
 			}
 		}
 
@@ -89,14 +89,82 @@ namespace Gst.PbUtils {
 			}
 		}
 
-		[GLib.Signal("source-setup")]
-		public event Gst.PbUtils.SourceSetupHandler SourceSetup {
+		[GLib.Signal("load-serialized-info")]
+		public event Gst.PbUtils.LoadSerializedInfoHandler LoadSerializedInfo {
 			add {
-				this.AddSignalHandler ("source-setup", value, typeof (Gst.PbUtils.SourceSetupArgs));
+				this.AddSignalHandler ("load-serialized-info", value, typeof (Gst.PbUtils.LoadSerializedInfoArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("source-setup", value);
+				this.RemoveSignalHandler ("load-serialized-info", value);
 			}
+		}
+
+		[GLib.Signal("starting")]
+		public event System.EventHandler Starting {
+			add {
+				this.AddSignalHandler ("starting", value);
+			}
+			remove {
+				this.RemoveSignalHandler ("starting", value);
+			}
+		}
+
+		static LoadSerializedInfoNativeDelegate LoadSerializedInfo_cb_delegate;
+		static LoadSerializedInfoNativeDelegate LoadSerializedInfoVMCallback {
+			get {
+				if (LoadSerializedInfo_cb_delegate == null)
+					LoadSerializedInfo_cb_delegate = new LoadSerializedInfoNativeDelegate (LoadSerializedInfo_cb);
+				return LoadSerializedInfo_cb_delegate;
+			}
+		}
+
+		static void OverrideLoadSerializedInfo (GLib.GType gtype)
+		{
+			OverrideLoadSerializedInfo (gtype, LoadSerializedInfoVMCallback);
+		}
+
+		static void OverrideLoadSerializedInfo (GLib.GType gtype, LoadSerializedInfoNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "load-serialized-info", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr LoadSerializedInfoNativeDelegate (IntPtr inst, IntPtr uri);
+
+		static IntPtr LoadSerializedInfo_cb (IntPtr inst, IntPtr uri)
+		{
+			try {
+				Discoverer __obj = GLib.Object.GetObject (inst, false) as Discoverer;
+				Gst.PbUtils.DiscovererInfo __result;
+				__result = __obj.OnLoadSerializedInfo (GLib.Marshaller.Utf8PtrToString (uri));
+				return __result == null ? IntPtr.Zero : __result.OwnedHandle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.PbUtils.Discoverer), ConnectionMethod="OverrideLoadSerializedInfo")]
+		protected virtual Gst.PbUtils.DiscovererInfo OnLoadSerializedInfo (string uri)
+		{
+			return InternalLoadSerializedInfo (uri);
+		}
+
+		private Gst.PbUtils.DiscovererInfo InternalLoadSerializedInfo (string uri)
+		{
+			GLib.Value ret = new GLib.Value (GLib.GType.Object);
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
+			GLib.Value[] vals = new GLib.Value [2];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (uri);
+			inst_and_params.Append (vals [1]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+			Gst.PbUtils.DiscovererInfo result = (Gst.PbUtils.DiscovererInfo) ret;
+			ret.Dispose ();
+			return result;
 		}
 
 		static FinishedNativeDelegate Finished_cb_delegate;
@@ -311,6 +379,66 @@ namespace Gst.PbUtils {
 			unmanaged (this.Handle, source == null ? IntPtr.Zero : source.Handle);
 		}
 
+		static LoadSerializeInfoNativeDelegate LoadSerializeInfo_cb_delegate;
+		static LoadSerializeInfoNativeDelegate LoadSerializeInfoVMCallback {
+			get {
+				if (LoadSerializeInfo_cb_delegate == null)
+					LoadSerializeInfo_cb_delegate = new LoadSerializeInfoNativeDelegate (LoadSerializeInfo_cb);
+				return LoadSerializeInfo_cb_delegate;
+			}
+		}
+
+		static void OverrideLoadSerializeInfo (GLib.GType gtype)
+		{
+			OverrideLoadSerializeInfo (gtype, LoadSerializeInfoVMCallback);
+		}
+
+		static void OverrideLoadSerializeInfo (GLib.GType gtype, LoadSerializeInfoNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("load_serialize_info"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr LoadSerializeInfoNativeDelegate (IntPtr inst, IntPtr uri);
+
+		static IntPtr LoadSerializeInfo_cb (IntPtr inst, IntPtr uri)
+		{
+			try {
+				Discoverer __obj = GLib.Object.GetObject (inst, false) as Discoverer;
+				Gst.PbUtils.DiscovererInfo __result;
+				__result = __obj.OnLoadSerializeInfo (GLib.Marshaller.Utf8PtrToString (uri));
+				return __result == null ? IntPtr.Zero : __result.OwnedHandle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.PbUtils.Discoverer), ConnectionMethod="OverrideLoadSerializeInfo")]
+		protected virtual Gst.PbUtils.DiscovererInfo OnLoadSerializeInfo (string uri)
+		{
+			return InternalLoadSerializeInfo (uri);
+		}
+
+		private Gst.PbUtils.DiscovererInfo InternalLoadSerializeInfo (string uri)
+		{
+			LoadSerializeInfoNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("load_serialize_info"));
+				unmanaged = (LoadSerializeInfoNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(LoadSerializeInfoNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr native_uri = GLib.Marshaller.StringToPtrGStrdup (uri);
+			IntPtr __result = unmanaged (this.Handle, native_uri);
+			GLib.Marshaller.Free (native_uri);
+			return GLib.Object.GetObject(__result, true) as Gst.PbUtils.DiscovererInfo;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -346,14 +474,22 @@ namespace Gst.PbUtils {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // source_setup
 							, "discovered"
+							, "load_serialize_info"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("load_serialize_info"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // load_serialize_info
+							, "source_setup"
 							, "_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _reserved
-							, "source_setup"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _reserved
+							, "load_serialize_info"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

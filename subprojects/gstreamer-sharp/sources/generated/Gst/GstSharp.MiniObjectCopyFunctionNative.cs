@@ -42,7 +42,7 @@ namespace GstSharp {
 
 		Gst.MiniObject InvokeNative (Gst.MiniObject obj)
 		{
-			Gst.MiniObject __result = native_cb (obj == null ? IntPtr.Zero : obj.Handle) == IntPtr.Zero ? null : (Gst.MiniObject) GLib.Opaque.GetOpaque (native_cb (obj == null ? IntPtr.Zero : obj.Handle), typeof (Gst.MiniObject), false);
+			Gst.MiniObject __result = native_cb (obj == null ? IntPtr.Zero : obj.Handle) == IntPtr.Zero ? null : (Gst.MiniObject) GLib.Opaque.GetOpaque (native_cb (obj == null ? IntPtr.Zero : obj.Handle), typeof (Gst.MiniObject), true);
 			return __result;
 		}
 	}
@@ -55,7 +55,7 @@ namespace GstSharp {
 				Gst.MiniObject __ret = managed (obj == IntPtr.Zero ? null : (Gst.MiniObject) GLib.Opaque.GetOpaque (obj, typeof (Gst.MiniObject), false));
 				if (release_on_call)
 					gch.Free ();
-				return __ret == null ? IntPtr.Zero : __ret.Handle;
+				return __ret == null ? IntPtr.Zero : __ret.OwnedCopy;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
 				// NOTREACHED: Above call does not return.

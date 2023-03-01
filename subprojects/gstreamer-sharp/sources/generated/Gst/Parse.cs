@@ -79,33 +79,27 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern unsafe IntPtr gst_parse_launchv(IntPtr[] argv, out IntPtr error);
+		static extern unsafe IntPtr gst_parse_launchv(IntPtr argv, out IntPtr error);
 
 		public static unsafe Gst.Element Launchv(string[] argv) {
-			int cnt_argv = argv == null ? 0 : argv.Length;
-			IntPtr[] native_argv = new IntPtr [cnt_argv + 1];
-			for (int i = 0; i < cnt_argv; i++)
-				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
-			native_argv [cnt_argv] = IntPtr.Zero;
+			IntPtr native_argv = GLib.Marshaller.StringArrayToStrvPtr(argv, true);
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = gst_parse_launchv(native_argv, out error);
 			Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
+			GLib.Marshaller.StrFreeV (native_argv);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern unsafe IntPtr gst_parse_launchv_full(IntPtr[] argv, IntPtr context, int flags, out IntPtr error);
+		static extern unsafe IntPtr gst_parse_launchv_full(IntPtr argv, IntPtr context, int flags, out IntPtr error);
 
 		public static unsafe Gst.Element LaunchvFull(string[] argv, Gst.ParseContext context, Gst.ParseFlags flags) {
-			int cnt_argv = argv == null ? 0 : argv.Length;
-			IntPtr[] native_argv = new IntPtr [cnt_argv + 1];
-			for (int i = 0; i < cnt_argv; i++)
-				native_argv [i] = GLib.Marshaller.StringToPtrGStrdup(argv[i]);
-			native_argv [cnt_argv] = IntPtr.Zero;
+			IntPtr native_argv = GLib.Marshaller.StringArrayToStrvPtr(argv, true);
 			IntPtr error = IntPtr.Zero;
 			IntPtr raw_ret = gst_parse_launchv_full(native_argv, context == null ? IntPtr.Zero : context.Handle, (int) flags, out error);
 			Gst.Element ret = GLib.Object.GetObject(raw_ret) as Gst.Element;
+			GLib.Marshaller.StrFreeV (native_argv);
 			if (error != IntPtr.Zero) throw new GLib.GException (error);
 			return ret;
 		}

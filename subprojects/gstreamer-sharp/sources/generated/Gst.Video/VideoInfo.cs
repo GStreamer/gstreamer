@@ -260,22 +260,6 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_info_from_caps(IntPtr raw, IntPtr caps);
-
-		public bool FromCaps(Gst.Caps caps) {
-			bool raw_ret = gst_video_info_from_caps(Handle, caps == null ? IntPtr.Zero : caps.Handle);
-			bool ret = raw_ret;
-			return ret;
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_video_info_init(IntPtr raw);
-
-		public void Init() {
-			gst_video_info_init(Handle);
-		}
-
-		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_video_info_is_equal(IntPtr raw, IntPtr other);
 
 		public bool IsEqual(Gst.Video.VideoInfo other) {
@@ -311,6 +295,28 @@ namespace Gst.Video {
 			return ret;
 		}
 
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_info_from_caps(out IntPtr info, IntPtr caps);
+
+		public static bool FromCaps(out Gst.Video.VideoInfo info, Gst.Caps caps) {
+			IntPtr native_info;
+			bool raw_ret = gst_video_info_from_caps(out native_info, caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			info = native_info == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Video.VideoInfo), false);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_video_info_init(out IntPtr info);
+
+		public static Gst.Video.VideoInfo Init() {
+			Gst.Video.VideoInfo info;
+			IntPtr native_info;
+			gst_video_info_init(out native_info);
+			info = native_info == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Video.VideoInfo), false);
+			return info;
+		}
+
 		public VideoInfo(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -319,6 +325,14 @@ namespace Gst.Video {
 		public VideoInfo () 
 		{
 			Raw = gst_video_info_new();
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_video_info_new_from_caps(IntPtr caps);
+
+		public VideoInfo (Gst.Caps caps) 
+		{
+			Raw = gst_video_info_new_from_caps(caps == null ? IntPtr.Zero : caps.Handle);
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]

@@ -134,6 +134,8 @@ int main (int argc, char *argv[]) {
 	g_print("\"sizeof(GESProject)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESProject));
 	g_print("\"GESProject.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESProject, priv));
 	g_print("\"sizeof(GESSourceClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESSourceClass));
+	g_print("\"GESSourceClass.select_pad\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESSourceClass, select_pad));
+	g_print("\"GESSourceClass.create_source\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESSourceClass, create_source));
 	g_print("\"sizeof(GESSource)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESSource));
 	g_print("\"GESSource.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GESSource, priv));
 	g_print("\"sizeof(GESSourceClipClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GESSourceClipClass));

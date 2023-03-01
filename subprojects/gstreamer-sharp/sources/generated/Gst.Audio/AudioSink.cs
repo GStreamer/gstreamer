@@ -273,14 +273,14 @@ namespace Gst.Audio {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int WriteNativeDelegate (IntPtr inst, IntPtr data, uint length);
+		delegate int WriteNativeDelegate (IntPtr inst, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]IntPtr[] data, uint length);
 
-		static int Write_cb (IntPtr inst, IntPtr data, uint length)
+		static int Write_cb (IntPtr inst, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]IntPtr[] data, uint length)
 		{
 			try {
 				AudioSink __obj = GLib.Object.GetObject (inst, false) as AudioSink;
 				int __result;
-				__result = __obj.OnWrite (data, length);
+				__result = __obj.OnWrite (data);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -290,12 +290,12 @@ namespace Gst.Audio {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioSink), ConnectionMethod="OverrideWrite")]
-		protected virtual int OnWrite (IntPtr data, uint length)
+		protected virtual int OnWrite (IntPtr[] data)
 		{
-			return InternalWrite (data, length);
+			return InternalWrite (data);
 		}
 
-		private int InternalWrite (IntPtr data, uint length)
+		private int InternalWrite (IntPtr[] data)
 		{
 			WriteNativeDelegate unmanaged = null;
 			unsafe {
@@ -304,6 +304,7 @@ namespace Gst.Audio {
 			}
 			if (unmanaged == null) return 0;
 
+			uint length = (uint)(data == null ? 0 : data.Length);
 			int __result = unmanaged (this.Handle, data, length);
 			return __result;
 		}

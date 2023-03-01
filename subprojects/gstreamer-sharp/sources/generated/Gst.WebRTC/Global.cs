@@ -12,6 +12,15 @@ namespace Gst.WebRTC {
 	public partial class Global {
 
 		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_webrtc_error_quark();
+
+		public static uint WebrtcErrorQuark() {
+			uint raw_ret = gst_webrtc_error_quark();
+			uint ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_webrtc_sdp_type_to_string(int type);
 
 		public static string WebrtcSdpTypeToString(Gst.WebRTC.WebRTCSDPType type) {

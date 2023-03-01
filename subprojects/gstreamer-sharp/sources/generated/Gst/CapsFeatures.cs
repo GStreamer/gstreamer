@@ -40,6 +40,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_caps_features_new_single(IntPtr feature);
+
+		public static CapsFeatures NewSingle(string feature)
+		{
+			IntPtr native_feature = GLib.Marshaller.StringToPtrGStrdup (feature);
+			CapsFeatures result = CapsFeatures.New (gst_caps_features_new_single(native_feature));
+			GLib.Marshaller.Free (native_feature);
+			return result;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_caps_features_get_type();
 
 		public static GLib.GType GType { 

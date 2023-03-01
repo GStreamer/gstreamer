@@ -332,14 +332,14 @@ namespace Gst.Audio {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int ParseNativeDelegate (IntPtr inst, IntPtr adapter, int offset, int length);
+		delegate int ParseNativeDelegate (IntPtr inst, IntPtr adapter, out int offset, out int length);
 
-		static int Parse_cb (IntPtr inst, IntPtr adapter, int offset, int length)
+		static int Parse_cb (IntPtr inst, IntPtr adapter, out int offset, out int length)
 		{
 			try {
 				AudioDecoder __obj = GLib.Object.GetObject (inst, false) as AudioDecoder;
 				Gst.FlowReturn __result;
-				__result = __obj.OnParse (GLib.Object.GetObject(adapter) as Gst.Base.Adapter, offset, length);
+				__result = __obj.OnParse (GLib.Object.GetObject(adapter) as Gst.Base.Adapter, out offset, out length);
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -349,21 +349,21 @@ namespace Gst.Audio {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioDecoder), ConnectionMethod="OverrideParse")]
-		protected virtual Gst.FlowReturn OnParse (Gst.Base.Adapter adapter, int offset, int length)
+		protected virtual Gst.FlowReturn OnParse (Gst.Base.Adapter adapter, out int offset, out int length)
 		{
-			return InternalParse (adapter, offset, length);
+			return InternalParse (adapter, out offset, out length);
 		}
 
-		private Gst.FlowReturn InternalParse (Gst.Base.Adapter adapter, int offset, int length)
+		private Gst.FlowReturn InternalParse (Gst.Base.Adapter adapter, out int offset, out int length)
 		{
 			ParseNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("parse"));
 				unmanaged = (ParseNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(ParseNativeDelegate));
 			}
-			if (unmanaged == null) return (Gst.FlowReturn) 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			int __result = unmanaged (this.Handle, adapter == null ? IntPtr.Zero : adapter.Handle, offset, length);
+			int __result = unmanaged (this.Handle, adapter == null ? IntPtr.Zero : adapter.Handle, out offset, out length);
 			return (Gst.FlowReturn) __result;
 		}
 
@@ -1410,7 +1410,7 @@ namespace Gst.Audio {
 		public Gst.Audio.AudioInfo AudioInfo { 
 			get {
 				IntPtr raw_ret = gst_audio_decoder_get_audio_info(Handle);
-				Gst.Audio.AudioInfo ret = raw_ret == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Audio.AudioInfo), true);
+				Gst.Audio.AudioInfo ret = raw_ret == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Audio.AudioInfo), false);
 				return ret;
 			}
 		}

@@ -67,18 +67,15 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr[] tags);
+		static extern IntPtr gst_meta_api_type_register(IntPtr api, IntPtr tags);
 
 		public static GLib.GType ApiTypeRegister(string api, string[] tags) {
 			IntPtr native_api = GLib.Marshaller.StringToPtrGStrdup (api);
-			int cnt_tags = tags == null ? 0 : tags.Length;
-			IntPtr[] native_tags = new IntPtr [cnt_tags + 1];
-			for (int i = 0; i < cnt_tags; i++)
-				native_tags [i] = GLib.Marshaller.StringToPtrGStrdup(tags[i]);
-			native_tags [cnt_tags] = IntPtr.Zero;
+			IntPtr native_tags = GLib.Marshaller.StringArrayToStrvPtr(tags, true);
 			IntPtr raw_ret = gst_meta_api_type_register(native_api, native_tags);
 			GLib.GType ret = new GLib.GType(raw_ret);
 			GLib.Marshaller.Free (native_api);
+			GLib.Marshaller.StrFreeV (native_tags);
 			return ret;
 		}
 
@@ -111,15 +108,11 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_meta_register_custom(IntPtr name, IntPtr[] tags, GstSharp.CustomMetaTransformFunctionNative transform_func, IntPtr user_data, GLib.DestroyNotify destroy_data);
+		static extern IntPtr gst_meta_register_custom(IntPtr name, IntPtr tags, GstSharp.CustomMetaTransformFunctionNative transform_func, IntPtr user_data, GLib.DestroyNotify destroy_data);
 
 		public static Gst.MetaInfo RegisterCustom(string name, string[] tags, Gst.CustomMetaTransformFunction transform_func) {
 			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
-			int cnt_tags = tags == null ? 0 : tags.Length;
-			IntPtr[] native_tags = new IntPtr [cnt_tags + 1];
-			for (int i = 0; i < cnt_tags; i++)
-				native_tags [i] = GLib.Marshaller.StringToPtrGStrdup(tags[i]);
-			native_tags [cnt_tags] = IntPtr.Zero;
+			IntPtr native_tags = GLib.Marshaller.StringArrayToStrvPtr(tags, true);
 			GstSharp.CustomMetaTransformFunctionWrapper transform_func_wrapper = new GstSharp.CustomMetaTransformFunctionWrapper (transform_func);
 			IntPtr user_data;
 			GLib.DestroyNotify destroy_data;
@@ -133,6 +126,7 @@ namespace Gst {
 			IntPtr raw_ret = gst_meta_register_custom(native_name, native_tags, transform_func_wrapper.NativeDelegate, user_data, destroy_data);
 			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			GLib.Marshaller.Free (native_name);
+			GLib.Marshaller.StrFreeV (native_tags);
 			return ret;
 		}
 

@@ -14,7 +14,7 @@ namespace Gst.Video {
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_overlay_composition_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_video_overlay_composition_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -92,7 +92,7 @@ namespace Gst.Video {
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_overlay_composition_new(IntPtr rectangle);
 
-		public VideoOverlayComposition (Gst.Video.VideoOverlayRectangle rectangle) 
+		public VideoOverlayComposition (Gst.Video.VideoOverlayRectangle rectangle) : base (IntPtr.Zero)
 		{
 			Raw = gst_video_overlay_composition_new(rectangle == null ? IntPtr.Zero : rectangle.Handle);
 		}

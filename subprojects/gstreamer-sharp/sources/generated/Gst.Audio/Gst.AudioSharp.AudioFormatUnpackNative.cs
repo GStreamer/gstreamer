@@ -40,10 +40,10 @@ namespace Gst.AudioSharp {
 			}
 		}
 
-		void InvokeNative (Gst.Audio.AudioFormatInfo info, Gst.Audio.AudioPackFlags flags, byte[] dest, byte[] data)
+		void InvokeNative (Gst.Audio.AudioFormatInfo info, Gst.Audio.AudioPackFlags flags, byte[] dest, byte[] data, int n_length)
 		{
 			IntPtr native_info = GLib.Marshaller.StructureToPtrAlloc (info);
-			native_cb (native_info, (int) flags, dest, data, (data == null ? 0 : data.Length));
+			native_cb (native_info, (int) flags, dest, data, n_length);
 			Marshal.FreeHGlobal (native_info);
 		}
 	}
@@ -53,7 +53,7 @@ namespace Gst.AudioSharp {
 		public void NativeCallback (IntPtr info, int flags, byte[] dest, byte[] data, int n_length)
 		{
 			try {
-				managed (Gst.Audio.AudioFormatInfo.New (info), (Gst.Audio.AudioPackFlags) flags, dest, data);
+				managed (Gst.Audio.AudioFormatInfo.New (info), (Gst.Audio.AudioPackFlags) flags, dest, data, n_length);
 				if (release_on_call)
 					gch.Free ();
 			} catch (Exception e) {

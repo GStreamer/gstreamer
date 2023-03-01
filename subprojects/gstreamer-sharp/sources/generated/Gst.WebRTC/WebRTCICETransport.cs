@@ -48,6 +48,60 @@ namespace Gst.WebRTC {
 			}
 		}
 
+		public Gst.WebRTC.WebRTCICERole Role {
+			get {
+				unsafe {
+					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("role"));
+					return (Gst.WebRTC.WebRTCICERole) (*raw_ptr);
+				}
+			}
+		}
+
+		public Gst.WebRTC.WebRTCICEComponent ComponentField {
+			get {
+				unsafe {
+					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("component"));
+					return (Gst.WebRTC.WebRTCICEComponent) (*raw_ptr);
+				}
+			}
+		}
+
+		public Gst.WebRTC.WebRTCICEConnectionState StateField {
+			get {
+				unsafe {
+					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("state"));
+					return (Gst.WebRTC.WebRTCICEConnectionState) (*raw_ptr);
+				}
+			}
+		}
+
+		public Gst.WebRTC.WebRTCICEGatheringState GatheringStateField {
+			get {
+				unsafe {
+					int* raw_ptr = (int*)(((byte*)Handle) + abi_info.GetFieldOffset("gathering_state"));
+					return (Gst.WebRTC.WebRTCICEGatheringState) (*raw_ptr);
+				}
+			}
+		}
+
+		public Gst.Element Src {
+			get {
+				unsafe {
+					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("src"));
+					return GLib.Object.GetObject((*raw_ptr)) as Gst.Element;
+				}
+			}
+		}
+
+		public Gst.Element Sink {
+			get {
+				unsafe {
+					IntPtr* raw_ptr = (IntPtr*)(((byte*)Handle) + abi_info.GetFieldOffset("sink"));
+					return GLib.Object.GetObject((*raw_ptr)) as Gst.Element;
+				}
+			}
+		}
+
 		[GLib.Signal("on-selected-candidate-pair-change")]
 		public event System.EventHandler OnSelectedCandidatePairChange {
 			add {
@@ -168,13 +222,88 @@ namespace Gst.WebRTC {
 				v.Dispose ();
 		}
 
+		static GatherCandidatesNativeDelegate GatherCandidates_cb_delegate;
+		static GatherCandidatesNativeDelegate GatherCandidatesVMCallback {
+			get {
+				if (GatherCandidates_cb_delegate == null)
+					GatherCandidates_cb_delegate = new GatherCandidatesNativeDelegate (GatherCandidates_cb);
+				return GatherCandidates_cb_delegate;
+			}
+		}
+
+		static void OverrideGatherCandidates (GLib.GType gtype)
+		{
+			OverrideGatherCandidates (gtype, GatherCandidatesVMCallback);
+		}
+
+		static void OverrideGatherCandidates (GLib.GType gtype, GatherCandidatesNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("gather_candidates"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool GatherCandidatesNativeDelegate (IntPtr inst);
+
+		static bool GatherCandidates_cb (IntPtr inst)
+		{
+			try {
+				WebRTCICETransport __obj = GLib.Object.GetObject (inst, false) as WebRTCICETransport;
+				bool __result;
+				__result = __obj.OnGatherCandidates ();
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.WebRTC.WebRTCICETransport), ConnectionMethod="OverrideGatherCandidates")]
+		protected virtual bool OnGatherCandidates ()
+		{
+			return InternalGatherCandidates ();
+		}
+
+		private bool InternalGatherCandidates ()
+		{
+			GatherCandidatesNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("gather_candidates"));
+				unmanaged = (GatherCandidatesNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GatherCandidatesNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			bool __result = unmanaged (this.Handle);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
 		static public new GLib.AbiStruct class_abi {
 			get {
 				if (_class_abi == null)
-					_class_abi = new GLib.AbiStruct (Gst.Object.class_abi.Fields);
+					_class_abi = new GLib.AbiStruct (new List<GLib.AbiField>{ 
+						new GLib.AbiField("gather_candidates"
+							, Gst.Object.class_abi.Fields
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // gather_candidates
+							, null
+							, "_padding"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("_padding"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
+							, "gather_candidates"
+							, null
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+					});
 
 				return _class_abi;
 			}
@@ -194,6 +323,36 @@ namespace Gst.WebRTC {
 			}
 		}
 
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_webrtc_ice_transport_connection_state_change(IntPtr raw, int new_state);
+
+		public void ConnectionStateChange(Gst.WebRTC.WebRTCICEConnectionState new_state) {
+			gst_webrtc_ice_transport_connection_state_change(Handle, (int) new_state);
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_webrtc_ice_transport_gathering_state_change(IntPtr raw, int new_state);
+
+		public void GatheringStateChange(Gst.WebRTC.WebRTCICEGatheringState new_state) {
+			gst_webrtc_ice_transport_gathering_state_change(Handle, (int) new_state);
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_webrtc_ice_transport_new_candidate(IntPtr raw, uint stream_id, int component, IntPtr attr);
+
+		public void NewCandidate(uint stream_id, Gst.WebRTC.WebRTCICEComponent component, string attr) {
+			IntPtr native_attr = GLib.Marshaller.StringToPtrGStrdup (attr);
+			gst_webrtc_ice_transport_new_candidate(Handle, stream_id, (int) component, native_attr);
+			GLib.Marshaller.Free (native_attr);
+		}
+
+		[DllImport("gstwebrtc-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_webrtc_ice_transport_selected_pair_change(IntPtr raw);
+
+		public void SelectedPairChange() {
+			gst_webrtc_ice_transport_selected_pair_change(Handle);
+		}
+
 
 		static WebRTCICETransport ()
 		{
@@ -205,10 +364,95 @@ namespace Gst.WebRTC {
 		static public new GLib.AbiStruct abi_info {
 			get {
 				if (_abi_info == null)
-					_abi_info = new GLib.AbiStruct (Gst.Object.abi_info.Fields);
+					_abi_info = new GLib.AbiStruct (new List<GLib.AbiField>{ 
+						new GLib.AbiField("role"
+							, Gst.Object.abi_info.Fields
+							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCICERole))) // role
+							, null
+							, "component"
+							, (long) Marshal.OffsetOf(typeof(GstWebRTCICETransport_roleAlign), "role")
+							, 0
+							),
+						new GLib.AbiField("component"
+							, -1
+							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCICEComponent))) // component
+							, "role"
+							, "state"
+							, (long) Marshal.OffsetOf(typeof(GstWebRTCICETransport_componentAlign), "component")
+							, 0
+							),
+						new GLib.AbiField("state"
+							, -1
+							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCICEConnectionState))) // state
+							, "component"
+							, "gathering_state"
+							, (long) Marshal.OffsetOf(typeof(GstWebRTCICETransport_stateAlign), "state")
+							, 0
+							),
+						new GLib.AbiField("gathering_state"
+							, -1
+							, (uint) Marshal.SizeOf(System.Enum.GetUnderlyingType(typeof(Gst.WebRTC.WebRTCICEGatheringState))) // gathering_state
+							, "state"
+							, "src"
+							, (long) Marshal.OffsetOf(typeof(GstWebRTCICETransport_gathering_stateAlign), "gathering_state")
+							, 0
+							),
+						new GLib.AbiField("src"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // src
+							, "gathering_state"
+							, "sink"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("sink"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // sink
+							, "src"
+							, "_padding"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("_padding"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _padding
+							, "sink"
+							, null
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+					});
 
 				return _abi_info;
 			}
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct GstWebRTCICETransport_roleAlign
+		{
+			sbyte f1;
+			private Gst.WebRTC.WebRTCICERole role;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct GstWebRTCICETransport_componentAlign
+		{
+			sbyte f1;
+			private Gst.WebRTC.WebRTCICEComponent component;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct GstWebRTCICETransport_stateAlign
+		{
+			sbyte f1;
+			private Gst.WebRTC.WebRTCICEConnectionState state;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		public struct GstWebRTCICETransport_gathering_stateAlign
+		{
+			sbyte f1;
+			private Gst.WebRTC.WebRTCICEGatheringState gathering_state;
 		}
 
 

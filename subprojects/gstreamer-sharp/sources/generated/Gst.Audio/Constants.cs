@@ -13,11 +13,12 @@ namespace Gst.Audio {
 
 		public const string AUDIO_CHANNELS_RANGE = @"(int) [ 1, max ]";
 		public const string AUDIO_CONVERTER_OPT_DITHER_METHOD = @"GstAudioConverter.dither-method";
+		public const string AUDIO_CONVERTER_OPT_DITHER_THRESHOLD = @"GstAudioConverter.dither-threshold";
 		public const string AUDIO_CONVERTER_OPT_MIX_MATRIX = @"GstAudioConverter.mix-matrix";
 		public const string AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD = @"GstAudioConverter.noise-shaping-method";
 		public const string AUDIO_CONVERTER_OPT_QUANTIZATION = @"GstAudioConverter.quantization";
 		public const string AUDIO_CONVERTER_OPT_RESAMPLER_METHOD = @"GstAudioConverter.resampler-method";
-		public const int AUDIO_DECODER_MAX_ERRORS = 10;
+		public const int AUDIO_DECODER_MAX_ERRORS = -1;
 		public const string AUDIO_DECODER_SINK_NAME = @"sink";
 		public const string AUDIO_DECODER_SRC_NAME = @"src";
 		public const int AUDIO_DEF_CHANNELS = 2;
@@ -41,9 +42,13 @@ namespace Gst.Audio {
 		public const int AUDIO_RESAMPLER_QUALITY_DEFAULT = 4;
 		public const int AUDIO_RESAMPLER_QUALITY_MAX = 10;
 		public const int AUDIO_RESAMPLER_QUALITY_MIN = 0;
+		public const string DSD_FORMATS_ALL = @"{ DSDU32BE, DSDU16BE, DSDU8, DSDU32LE, DSDU16LE }";
+		public const string DSD_MEDIA_TYPE = @"audio/x-dsd";
+		public const int DSD_SILENCE_PATTERN_BYTE = 105;
 		public const string META_TAG_AUDIO_CHANNELS_STR = @"channels";
 		public const string META_TAG_AUDIO_RATE_STR = @"rate";
 		public const string META_TAG_AUDIO_STR = @"audio";
+		public const string META_TAG_DSD_PLANE_OFFSETS_STR = @"dsdplaneoffsets";
 #endregion
 	}
 }

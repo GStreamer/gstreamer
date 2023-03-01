@@ -20,6 +20,10 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
+		public uint Attach() {
+			return Attach (null);
+		}
+
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_rtsp_watch_get_send_backlog(IntPtr raw, out UIntPtr bytes, out uint messages);
 
@@ -48,10 +52,11 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_watch_send_messages(IntPtr raw, Gst.Rtsp.RTSPMessage[] messages, uint n_messages, out uint id);
+		static extern int gst_rtsp_watch_send_messages(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]Gst.Rtsp.RTSPMessage[] messages, uint n_messages, out uint id);
 
 		public Gst.Rtsp.RTSPResult SendMessages(Gst.Rtsp.RTSPMessage[] messages, out uint id) {
-			int raw_ret = gst_rtsp_watch_send_messages(Handle, messages, (uint) (messages == null ? 0 : messages.Length), out id);
+			uint n_messages = (uint)(messages == null ? 0 : messages.Length);
+			int raw_ret = gst_rtsp_watch_send_messages(Handle, messages, n_messages, out id);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
 		}
@@ -92,9 +97,10 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_watch_write_data(IntPtr raw, byte[] data, uint size, out uint id);
+		static extern int gst_rtsp_watch_write_data(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size, out uint id);
 
-		public Gst.Rtsp.RTSPResult WriteData(byte[] data, uint size, out uint id) {
+		public Gst.Rtsp.RTSPResult WriteData(byte[] data, out uint id) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_rtsp_watch_write_data(Handle, data, size, out id);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;

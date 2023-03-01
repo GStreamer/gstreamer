@@ -228,6 +228,17 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_child_proxy_get_child_by_name_recurse(IntPtr raw, IntPtr name);
+
+		public GLib.Object GetChildByNameRecurse(string name) {
+			IntPtr native_name = GLib.Marshaller.StringToPtrGStrdup (name);
+			IntPtr raw_ret = gst_child_proxy_get_child_by_name_recurse(Handle, native_name);
+			GLib.Object ret = GLib.Object.GetObject (raw_ret);
+			GLib.Marshaller.Free (native_name);
+			return ret;
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern uint gst_child_proxy_get_children_count(IntPtr raw);
 
 		public uint ChildrenCount { 

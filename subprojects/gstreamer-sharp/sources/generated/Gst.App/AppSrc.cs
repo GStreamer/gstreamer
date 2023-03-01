@@ -52,12 +52,36 @@ namespace Gst.App {
 		}
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_src_get_current_level_buffers(IntPtr raw);
+
+		[GLib.Property ("current-level-buffers")]
+		public ulong CurrentLevelBuffers {
+			get  {
+				ulong raw_ret = gst_app_src_get_current_level_buffers(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_app_src_get_current_level_bytes(IntPtr raw);
 
 		[GLib.Property ("current-level-bytes")]
 		public ulong CurrentLevelBytes {
 			get  {
 				ulong raw_ret = gst_app_src_get_current_level_bytes(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_src_get_current_level_time(IntPtr raw);
+
+		[GLib.Property ("current-level-time")]
+		public ulong CurrentLevelTime {
+			get  {
+				ulong raw_ret = gst_app_src_get_current_level_time(Handle);
 				ulong ret = raw_ret;
 				return ret;
 			}
@@ -145,6 +169,42 @@ namespace Gst.App {
 		}
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_app_src_get_leaky_type(IntPtr raw);
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_src_set_leaky_type(IntPtr raw, int leaky);
+
+		[GLib.Property ("leaky-type")]
+		public Gst.App.AppLeakyType LeakyType {
+			get  {
+				int raw_ret = gst_app_src_get_leaky_type(Handle);
+				Gst.App.AppLeakyType ret = (Gst.App.AppLeakyType) raw_ret;
+				return ret;
+			}
+			set  {
+				gst_app_src_set_leaky_type(Handle, (int) value);
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_src_get_max_buffers(IntPtr raw);
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_src_set_max_buffers(IntPtr raw, ulong max);
+
+		[GLib.Property ("max-buffers")]
+		public ulong MaxBuffers {
+			get  {
+				ulong raw_ret = gst_app_src_get_max_buffers(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_app_src_set_max_buffers(Handle, value);
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern ulong gst_app_src_get_max_bytes(IntPtr raw);
 
 		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -174,6 +234,24 @@ namespace Gst.App {
 				GLib.Value val = new GLib.Value(value);
 				SetProperty("max-latency", val);
 				val.Dispose ();
+			}
+		}
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern ulong gst_app_src_get_max_time(IntPtr raw);
+
+		[DllImport("gstapp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_app_src_set_max_time(IntPtr raw, ulong max);
+
+		[GLib.Property ("max-time")]
+		public ulong MaxTime {
+			get  {
+				ulong raw_ret = gst_app_src_get_max_time(Handle);
+				ulong ret = raw_ret;
+				return ret;
+			}
+			set  {
+				gst_app_src_set_max_time(Handle, value);
 			}
 		}
 
@@ -336,25 +414,25 @@ namespace Gst.App {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate void NeedDataNativeDelegate (IntPtr inst, uint _object);
+		delegate void NeedDataNativeDelegate (IntPtr inst, uint length);
 
-		static void NeedData_cb (IntPtr inst, uint _object)
+		static void NeedData_cb (IntPtr inst, uint length)
 		{
 			try {
 				AppSrc __obj = GLib.Object.GetObject (inst, false) as AppSrc;
-				__obj.OnNeedData (_object);
+				__obj.OnNeedData (length);
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, false);
 			}
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSrc), ConnectionMethod="OverrideNeedData")]
-		protected virtual void OnNeedData (uint _object)
+		protected virtual void OnNeedData (uint length)
 		{
-			InternalNeedData (_object);
+			InternalNeedData (length);
 		}
 
-		private void InternalNeedData (uint _object)
+		private void InternalNeedData (uint length)
 		{
 			NeedDataNativeDelegate unmanaged = null;
 			unsafe {
@@ -363,7 +441,7 @@ namespace Gst.App {
 			}
 			if (unmanaged == null) return;
 
-			unmanaged (this.Handle, _object);
+			unmanaged (this.Handle, length);
 		}
 
 		static EnoughDataNativeDelegate EnoughData_cb_delegate;
@@ -442,14 +520,14 @@ namespace Gst.App {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool SeekDataNativeDelegate (IntPtr inst, ulong _object);
+		delegate bool SeekDataNativeDelegate (IntPtr inst, ulong offset);
 
-		static bool SeekData_cb (IntPtr inst, ulong _object)
+		static bool SeekData_cb (IntPtr inst, ulong offset)
 		{
 			try {
 				AppSrc __obj = GLib.Object.GetObject (inst, false) as AppSrc;
 				bool __result;
-				__result = __obj.OnSeekData (_object);
+				__result = __obj.OnSeekData (offset);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -459,12 +537,12 @@ namespace Gst.App {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSrc), ConnectionMethod="OverrideSeekData")]
-		protected virtual bool OnSeekData (ulong _object)
+		protected virtual bool OnSeekData (ulong offset)
 		{
-			return InternalSeekData (_object);
+			return InternalSeekData (offset);
 		}
 
-		private bool InternalSeekData (ulong _object)
+		private bool InternalSeekData (ulong offset)
 		{
 			SeekDataNativeDelegate unmanaged = null;
 			unsafe {
@@ -473,7 +551,7 @@ namespace Gst.App {
 			}
 			if (unmanaged == null) return false;
 
-			bool __result = unmanaged (this.Handle, _object);
+			bool __result = unmanaged (this.Handle, offset);
 			return __result;
 		}
 
@@ -500,14 +578,14 @@ namespace Gst.App {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int PushBufferEventNativeDelegate (IntPtr inst, IntPtr _object);
+		delegate int PushBufferEventNativeDelegate (IntPtr inst, IntPtr buffer);
 
-		static int PushBufferEvent_cb (IntPtr inst, IntPtr _object)
+		static int PushBufferEvent_cb (IntPtr inst, IntPtr buffer)
 		{
 			try {
 				AppSrc __obj = GLib.Object.GetObject (inst, false) as AppSrc;
 				Gst.FlowReturn __result;
-				__result = __obj.OnPushBufferEvent (_object == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (_object, typeof (Gst.Buffer), false));
+				__result = __obj.OnPushBufferEvent (buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buffer, typeof (Gst.Buffer), false));
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -517,12 +595,12 @@ namespace Gst.App {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSrc), ConnectionMethod="OverridePushBufferEvent")]
-		protected virtual Gst.FlowReturn OnPushBufferEvent (Gst.Buffer _object)
+		protected virtual Gst.FlowReturn OnPushBufferEvent (Gst.Buffer buffer)
 		{
-			return InternalPushBufferEvent (_object);
+			return InternalPushBufferEvent (buffer);
 		}
 
-		private Gst.FlowReturn InternalPushBufferEvent (Gst.Buffer _object)
+		private Gst.FlowReturn InternalPushBufferEvent (Gst.Buffer buffer)
 		{
 			PushBufferEventNativeDelegate unmanaged = null;
 			unsafe {
@@ -531,7 +609,7 @@ namespace Gst.App {
 			}
 			if (unmanaged == null) return (Gst.FlowReturn) 0;
 
-			int __result = unmanaged (this.Handle, _object == null ? IntPtr.Zero : _object.Handle);
+			int __result = unmanaged (this.Handle, buffer == null ? IntPtr.Zero : buffer.Handle);
 			return (Gst.FlowReturn) __result;
 		}
 
@@ -616,14 +694,14 @@ namespace Gst.App {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int PushSampleEventNativeDelegate (IntPtr inst, IntPtr _object);
+		delegate int PushSampleEventNativeDelegate (IntPtr inst, IntPtr sample);
 
-		static int PushSampleEvent_cb (IntPtr inst, IntPtr _object)
+		static int PushSampleEvent_cb (IntPtr inst, IntPtr sample)
 		{
 			try {
 				AppSrc __obj = GLib.Object.GetObject (inst, false) as AppSrc;
 				Gst.FlowReturn __result;
-				__result = __obj.OnPushSampleEvent (_object == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (_object, typeof (Gst.Sample), false));
+				__result = __obj.OnPushSampleEvent (sample == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (sample, typeof (Gst.Sample), false));
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -633,12 +711,12 @@ namespace Gst.App {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSrc), ConnectionMethod="OverridePushSampleEvent")]
-		protected virtual Gst.FlowReturn OnPushSampleEvent (Gst.Sample _object)
+		protected virtual Gst.FlowReturn OnPushSampleEvent (Gst.Sample sample)
 		{
-			return InternalPushSampleEvent (_object);
+			return InternalPushSampleEvent (sample);
 		}
 
-		private Gst.FlowReturn InternalPushSampleEvent (Gst.Sample _object)
+		private Gst.FlowReturn InternalPushSampleEvent (Gst.Sample sample)
 		{
 			PushSampleEventNativeDelegate unmanaged = null;
 			unsafe {
@@ -647,7 +725,7 @@ namespace Gst.App {
 			}
 			if (unmanaged == null) return (Gst.FlowReturn) 0;
 
-			int __result = unmanaged (this.Handle, _object == null ? IntPtr.Zero : _object.Handle);
+			int __result = unmanaged (this.Handle, sample == null ? IntPtr.Zero : sample.Handle);
 			return (Gst.FlowReturn) __result;
 		}
 
@@ -674,14 +752,14 @@ namespace Gst.App {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int PushBufferListEventNativeDelegate (IntPtr inst, IntPtr _object);
+		delegate int PushBufferListEventNativeDelegate (IntPtr inst, IntPtr buffer_list);
 
-		static int PushBufferListEvent_cb (IntPtr inst, IntPtr _object)
+		static int PushBufferListEvent_cb (IntPtr inst, IntPtr buffer_list)
 		{
 			try {
 				AppSrc __obj = GLib.Object.GetObject (inst, false) as AppSrc;
 				Gst.FlowReturn __result;
-				__result = __obj.OnPushBufferListEvent (_object == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (_object, typeof (Gst.BufferList), false));
+				__result = __obj.OnPushBufferListEvent (buffer_list == IntPtr.Zero ? null : (Gst.BufferList) GLib.Opaque.GetOpaque (buffer_list, typeof (Gst.BufferList), false));
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -691,12 +769,12 @@ namespace Gst.App {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSrc), ConnectionMethod="OverridePushBufferListEvent")]
-		protected virtual Gst.FlowReturn OnPushBufferListEvent (Gst.BufferList _object)
+		protected virtual Gst.FlowReturn OnPushBufferListEvent (Gst.BufferList buffer_list)
 		{
-			return InternalPushBufferListEvent (_object);
+			return InternalPushBufferListEvent (buffer_list);
 		}
 
-		private Gst.FlowReturn InternalPushBufferListEvent (Gst.BufferList _object)
+		private Gst.FlowReturn InternalPushBufferListEvent (Gst.BufferList buffer_list)
 		{
 			PushBufferListEventNativeDelegate unmanaged = null;
 			unsafe {
@@ -705,7 +783,7 @@ namespace Gst.App {
 			}
 			if (unmanaged == null) return (Gst.FlowReturn) 0;
 
-			int __result = unmanaged (this.Handle, _object == null ? IntPtr.Zero : _object.Handle);
+			int __result = unmanaged (this.Handle, buffer_list == null ? IntPtr.Zero : buffer_list.Handle);
 			return (Gst.FlowReturn) __result;
 		}
 

@@ -12,16 +12,17 @@ namespace Gst.Rtp {
 	public partial class Global {
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_rtp_source_meta(IntPtr buffer, uint ssrc, uint csrc, uint csrc_count);
+		static extern IntPtr gst_buffer_add_rtp_source_meta(IntPtr buffer, uint ssrc, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]uint[] csrc, uint csrc_count);
 
-		public static Gst.Rtp.RTPSourceMeta BufferAddRtpSourceMeta(Gst.Buffer buffer, uint ssrc, uint csrc, uint csrc_count) {
+		public static Gst.Rtp.RTPSourceMeta BufferAddRtpSourceMeta(Gst.Buffer buffer, uint ssrc, uint[] csrc) {
+			uint csrc_count = (uint)(csrc == null ? 0 : csrc.Length);
 			IntPtr raw_ret = gst_buffer_add_rtp_source_meta(buffer == null ? IntPtr.Zero : buffer.Handle, ssrc, csrc, csrc_count);
 			Gst.Rtp.RTPSourceMeta ret = Gst.Rtp.RTPSourceMeta.New (raw_ret);
 			return ret;
 		}
 
-		public static Gst.Rtp.RTPSourceMeta BufferAddRtpSourceMeta(Gst.Buffer buffer, uint csrc_count) {
-			return BufferAddRtpSourceMeta (buffer, 0, 0, csrc_count);
+		public static Gst.Rtp.RTPSourceMeta BufferAddRtpSourceMeta(Gst.Buffer buffer) {
+			return BufferAddRtpSourceMeta (buffer, 0, null);
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -54,19 +55,21 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtcp_buffer_new_copy_data(byte[] data, uint n_length);
+		static extern IntPtr gst_rtcp_buffer_new_copy_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint n_length);
 
 		public static Gst.Buffer RtcpBufferNewCopyData(byte[] data) {
-			IntPtr raw_ret = gst_rtcp_buffer_new_copy_data(data, (uint) (data == null ? 0 : data.Length));
+			uint n_length = (uint)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtcp_buffer_new_copy_data(data, n_length);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtcp_buffer_new_take_data(byte[] data, uint n_length);
+		static extern IntPtr gst_rtcp_buffer_new_take_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint n_length);
 
 		public static Gst.Buffer RtcpBufferNewTakeData(byte[] data) {
-			IntPtr raw_ret = gst_rtcp_buffer_new_take_data(data, (uint) (data == null ? 0 : data.Length));
+			uint n_length = (uint)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtcp_buffer_new_take_data(data, n_length);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}
@@ -81,18 +84,20 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_buffer_validate_data(byte[] data, uint len);
+		static extern bool gst_rtcp_buffer_validate_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint len);
 
-		public static bool RtcpBufferValidateData(byte[] data, uint len) {
+		public static bool RtcpBufferValidateData(byte[] data) {
+			uint len = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtcp_buffer_validate_data(data, len);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtcp_buffer_validate_data_reduced(byte[] data, uint len);
+		static extern bool gst_rtcp_buffer_validate_data_reduced([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint len);
 
-		public static bool RtcpBufferValidateDataReduced(byte[] data, uint len) {
+		public static bool RtcpBufferValidateDataReduced(byte[] data) {
+			uint len = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtcp_buffer_validate_data_reduced(data, len);
 			bool ret = raw_ret;
 			return ret;
@@ -207,6 +212,15 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtp_buffer_get_extension_onebyte_header_from_bytes(IntPtr bytes, ushort bit_pattern, byte id, uint nth, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=5)]out IntPtr[] data, out uint size);
+
+		public static bool RtpBufferGetExtensionOnebyteHeaderFromBytes(GLib.Bytes bytes, ushort bit_pattern, byte id, uint nth, out IntPtr[] data) {
+			bool raw_ret = gst_rtp_buffer_get_extension_onebyte_header_from_bytes(bytes == null ? IntPtr.Zero : bytes.Handle, bit_pattern, id, nth, out data, out uint size);
+			bool ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool gst_rtp_buffer_map(IntPtr buffer, int flags, IntPtr rtp);
 
 		public static bool RtpBufferMap(Gst.Buffer buffer, Gst.MapFlags flags, out Gst.Rtp.RTPBuffer rtp) {
@@ -237,36 +251,49 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtp_buffer_new_copy_data(byte[] data, UIntPtr n_length);
+		static extern IntPtr gst_rtp_buffer_new_copy_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, UIntPtr n_length);
 
 		public static Gst.Buffer RtpBufferNewCopyData(byte[] data) {
-			IntPtr raw_ret = gst_rtp_buffer_new_copy_data(data, new UIntPtr ((ulong) (data == null ? 0 : data.Length)));
+			ulong n_length = (ulong)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtp_buffer_new_copy_data(data, new UIntPtr ((uint)n_length));
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_rtp_buffer_new_take_data(byte[] data, UIntPtr n_length);
+		static extern IntPtr gst_rtp_buffer_new_take_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, UIntPtr n_length);
 
 		public static Gst.Buffer RtpBufferNewTakeData(byte[] data) {
-			IntPtr raw_ret = gst_rtp_buffer_new_take_data(data, new UIntPtr ((ulong) (data == null ? 0 : data.Length)));
+			ulong n_length = (ulong)(data == null ? 0 : data.Length);
+			IntPtr raw_ret = gst_rtp_buffer_new_take_data(data, new UIntPtr ((uint)n_length));
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtp_hdrext_get_ntp_56(IntPtr[] data, uint size, out ulong ntptime);
+		static extern IntPtr gst_rtp_get_header_extension_list();
 
-		public static bool RtpHdrextGetNtp56(IntPtr[] data, uint size, out ulong ntptime) {
+		public static Gst.ElementFactory[] RtpGetHeaderExtensionList() {
+			IntPtr raw_ret = gst_rtp_get_header_extension_list();
+			Gst.ElementFactory[] ret = (Gst.ElementFactory[]) GLib.Marshaller.ListPtrToArray (raw_ret, typeof(GLib.List), true, true, typeof(Gst.ElementFactory));
+			return ret;
+		}
+
+		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtp_hdrext_get_ntp_56([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]IntPtr[] data, uint size, out ulong ntptime);
+
+		public static bool RtpHdrextGetNtp56(IntPtr[] data, out ulong ntptime) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtp_hdrext_get_ntp_56(data, size, out ntptime);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtp_hdrext_get_ntp_64(IntPtr[] data, uint size, out ulong ntptime);
+		static extern bool gst_rtp_hdrext_get_ntp_64([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]IntPtr[] data, uint size, out ulong ntptime);
 
-		public static bool RtpHdrextGetNtp64(IntPtr[] data, uint size, out ulong ntptime) {
+		public static bool RtpHdrextGetNtp64(IntPtr[] data, out ulong ntptime) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_rtp_hdrext_get_ntp_64(data, size, out ntptime);
 			bool ret = raw_ret;
 			return ret;

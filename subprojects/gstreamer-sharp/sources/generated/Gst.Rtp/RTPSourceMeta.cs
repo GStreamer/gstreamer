@@ -28,11 +28,12 @@ namespace Gst.Rtp {
 		}
 
 		[DllImport("gstrtp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_rtp_source_meta_append_csrc(IntPtr raw, uint csrc, uint csrc_count);
+		static extern bool gst_rtp_source_meta_append_csrc(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]uint[] csrc, uint csrc_count);
 
-		public bool AppendCsrc(uint csrc, uint csrc_count) {
+		public bool AppendCsrc(uint[] csrc) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint csrc_count = (uint)(csrc == null ? 0 : csrc.Length);
 			bool raw_ret = gst_rtp_source_meta_append_csrc(this_as_native, csrc, csrc_count);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);

@@ -90,6 +90,37 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_tag_list_replace(ref IntPtr old_taglist, IntPtr new_taglist);
+
+		public static bool ListReplace(ref Gst.TagList old_taglist, Gst.TagList new_taglist) {
+			IntPtr native_old_taglist = old_taglist == null ? IntPtr.Zero : old_taglist.Handle ;
+			bool raw_ret = gst_tag_list_replace(ref native_old_taglist, new_taglist == null ? IntPtr.Zero : new_taglist.Handle);
+			bool ret = raw_ret;
+			old_taglist = native_old_taglist == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (native_old_taglist, typeof (Gst.TagList), true);
+			return ret;
+		}
+
+		public static bool ListReplace(ref Gst.TagList old_taglist) {
+			return ListReplace (ref old_taglist, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_tag_list_take(ref IntPtr old_taglist, IntPtr new_taglist);
+
+		public static bool ListTake(ref Gst.TagList old_taglist, Gst.TagList new_taglist) {
+			IntPtr native_old_taglist = old_taglist == null ? IntPtr.Zero : old_taglist.Handle ;
+			new_taglist.Owned = false;
+			bool raw_ret = gst_tag_list_take(ref native_old_taglist, new_taglist == null ? IntPtr.Zero : new_taglist.Handle);
+			bool ret = raw_ret;
+			old_taglist = native_old_taglist == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (native_old_taglist, typeof (Gst.TagList), true);
+			return ret;
+		}
+
+		public static bool ListTake(ref Gst.TagList old_taglist) {
+			return ListTake (ref old_taglist, null);
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_tag_merge_strings_with_comma(IntPtr dest, IntPtr src);
 
 		public static GLib.Value MergeStringsWithComma(GLib.Value src) {
@@ -129,20 +160,16 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_freeform_string_to_utf8(IntPtr[] data, int size, IntPtr[] env_vars);
+		static extern IntPtr gst_tag_freeform_string_to_utf8(IntPtr data, int size, IntPtr env_vars);
 
-		public static string FreeformStringToUtf8(string[] data, int size, string[] env_vars) {
-			int cnt_data = data == null ? 0 : data.Length;
-			IntPtr[] native_data = new IntPtr [cnt_data];
-			for (int i = 0; i < cnt_data; i++)
-				native_data [i] = GLib.Marshaller.StringToPtrGStrdup(data[i]);
-			int cnt_env_vars = env_vars == null ? 0 : env_vars.Length;
-			IntPtr[] native_env_vars = new IntPtr [cnt_env_vars + 1];
-			for (int i = 0; i < cnt_env_vars; i++)
-				native_env_vars [i] = GLib.Marshaller.StringToPtrGStrdup(env_vars[i]);
-			native_env_vars [cnt_env_vars] = IntPtr.Zero;
+		public static string FreeformStringToUtf8(string[] data, string[] env_vars) {
+			int size = (data == null ? 0 : data.Length);
+			IntPtr native_data = GLib.Marshaller.StringArrayToStrvPtr(data, false);
+			IntPtr native_env_vars = GLib.Marshaller.StringArrayToStrvPtr(env_vars, true);
 			IntPtr raw_ret = gst_tag_freeform_string_to_utf8(native_data, size, native_env_vars);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
+			GLib.Marshaller.StringArrayPtrFree (native_data, size);
+			GLib.Marshaller.StrFreeV (native_env_vars);
 			return ret;
 		}
 
@@ -337,18 +364,20 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_image_data_to_image_sample(byte[] image_data, uint image_data_len, int image_type);
+		static extern IntPtr gst_tag_image_data_to_image_sample([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] image_data, uint image_data_len, int image_type);
 
-		public static Gst.Sample ImageDataToImageSample(byte[] image_data, uint image_data_len, Gst.Tags.TagImageType image_type) {
+		public static Gst.Sample ImageDataToImageSample(byte[] image_data, Gst.Tags.TagImageType image_type) {
+			uint image_data_len = (uint)(image_data == null ? 0 : image_data.Length);
 			IntPtr raw_ret = gst_tag_image_data_to_image_sample(image_data, image_data_len, (int) image_type);
 			Gst.Sample ret = raw_ret == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Sample), true);
 			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_tag_list_add_id3_image(IntPtr tag_list, byte[] image_data, uint image_data_len, uint id3_picture_type);
+		static extern bool gst_tag_list_add_id3_image(IntPtr tag_list, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] image_data, uint image_data_len, uint id3_picture_type);
 
-		public static bool ListAddId3Image(Gst.TagList tag_list, byte[] image_data, uint image_data_len, uint id3_picture_type) {
+		public static bool ListAddId3Image(Gst.TagList tag_list, byte[] image_data, uint id3_picture_type) {
+			uint image_data_len = (uint)(image_data == null ? 0 : image_data.Length);
 			bool raw_ret = gst_tag_list_add_id3_image(tag_list == null ? IntPtr.Zero : tag_list.Handle, image_data, image_data_len, id3_picture_type);
 			bool ret = raw_ret;
 			return ret;
@@ -382,20 +411,23 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_from_vorbiscomment(byte[] data, UIntPtr size, byte[] id_data, uint id_data_length, out IntPtr vendor_string);
+		static extern IntPtr gst_tag_list_from_vorbiscomment([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, UIntPtr size, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] id_data, uint id_data_length, out IntPtr vendor_string);
 
-		public static Gst.TagList ListFromVorbiscomment(byte[] data, ulong size, byte[] id_data, uint id_data_length, out string vendor_string) {
+		public static Gst.TagList ListFromVorbiscomment(byte[] data, byte[] id_data, out string vendor_string) {
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			uint id_data_length = (uint)(id_data == null ? 0 : id_data.Length);
 			IntPtr native_vendor_string;
-			IntPtr raw_ret = gst_tag_list_from_vorbiscomment(data, new UIntPtr (size), id_data, id_data_length, out native_vendor_string);
+			IntPtr raw_ret = gst_tag_list_from_vorbiscomment(data, new UIntPtr ((uint)size), id_data, id_data_length, out native_vendor_string);
 			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
 			vendor_string = GLib.Marshaller.PtrToStringGFree(native_vendor_string);
 			return ret;
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_from_vorbiscomment_buffer(IntPtr buffer, byte[] id_data, uint id_data_length, out IntPtr vendor_string);
+		static extern IntPtr gst_tag_list_from_vorbiscomment_buffer(IntPtr buffer, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] id_data, uint id_data_length, out IntPtr vendor_string);
 
-		public static Gst.TagList ListFromVorbiscommentBuffer(Gst.Buffer buffer, byte[] id_data, uint id_data_length, out string vendor_string) {
+		public static Gst.TagList ListFromVorbiscommentBuffer(Gst.Buffer buffer, byte[] id_data, out string vendor_string) {
+			uint id_data_length = (uint)(id_data == null ? 0 : id_data.Length);
 			IntPtr native_vendor_string;
 			IntPtr raw_ret = gst_tag_list_from_vorbiscomment_buffer(buffer == null ? IntPtr.Zero : buffer.Handle, id_data, id_data_length, out native_vendor_string);
 			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
@@ -413,10 +445,9 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_new_from_id3v1(byte[] data);
+		static extern IntPtr gst_tag_list_new_from_id3v1([MarshalAs(UnmanagedType.LPArray, SizeConst=128)]byte[] data);
 
 		public static Gst.TagList ListNewFromId3v1(byte[] data) {
-			data = new byte[128];
 			IntPtr raw_ret = gst_tag_list_new_from_id3v1(data);
 			Gst.TagList ret = raw_ret == IntPtr.Zero ? null : (Gst.TagList) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.TagList), true);
 			return ret;
@@ -441,9 +472,10 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_to_vorbiscomment_buffer(IntPtr list, byte[] id_data, uint id_data_length, IntPtr vendor_string);
+		static extern IntPtr gst_tag_list_to_vorbiscomment_buffer(IntPtr list, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] id_data, uint id_data_length, IntPtr vendor_string);
 
-		public static Gst.Buffer ListToVorbiscommentBuffer(Gst.TagList list, byte[] id_data, uint id_data_length, string vendor_string) {
+		public static Gst.Buffer ListToVorbiscommentBuffer(Gst.TagList list, byte[] id_data, string vendor_string) {
+			uint id_data_length = (uint)(id_data == null ? 0 : id_data.Length);
 			IntPtr native_vendor_string = GLib.Marshaller.StringToPtrGStrdup (vendor_string);
 			IntPtr raw_ret = gst_tag_list_to_vorbiscomment_buffer(list == null ? IntPtr.Zero : list.Handle, id_data, id_data_length, native_vendor_string);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
@@ -451,21 +483,18 @@ namespace Gst {
 			return ret;
 		}
 
-		public static Gst.Buffer ListToVorbiscommentBuffer(Gst.TagList list, byte[] id_data, uint id_data_length) {
-			return ListToVorbiscommentBuffer (list, id_data, id_data_length, null);
+		public static Gst.Buffer ListToVorbiscommentBuffer(Gst.TagList list, byte[] id_data) {
+			return ListToVorbiscommentBuffer (list, id_data, null);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_tag_list_to_xmp_buffer(IntPtr list, bool read_only, IntPtr[] schemas);
+		static extern IntPtr gst_tag_list_to_xmp_buffer(IntPtr list, bool read_only, IntPtr schemas);
 
 		public static Gst.Buffer ListToXmpBuffer(Gst.TagList list, bool read_only, string[] schemas) {
-			int cnt_schemas = schemas == null ? 0 : schemas.Length;
-			IntPtr[] native_schemas = new IntPtr [cnt_schemas + 1];
-			for (int i = 0; i < cnt_schemas; i++)
-				native_schemas [i] = GLib.Marshaller.StringToPtrGStrdup(schemas[i]);
-			native_schemas [cnt_schemas] = IntPtr.Zero;
+			IntPtr native_schemas = GLib.Marshaller.StringArrayToStrvPtr(schemas, true);
 			IntPtr raw_ret = gst_tag_list_to_xmp_buffer(list == null ? IntPtr.Zero : list.Handle, read_only, native_schemas);
 			Gst.Buffer ret = raw_ret == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Buffer), true);
+			GLib.Marshaller.StrFreeV (native_schemas);
 			return ret;
 		}
 

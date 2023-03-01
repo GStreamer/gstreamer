@@ -133,20 +133,13 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_device_provider_factory_has_classesv(IntPtr raw, IntPtr[] classes);
+		static extern bool gst_device_provider_factory_has_classesv(IntPtr raw, IntPtr classes);
 
 		public bool HasClassesv(string[] classes) {
-			int cnt_classes = classes == null ? 0 : classes.Length;
-			IntPtr[] native_classes = new IntPtr [cnt_classes + 1];
-			for (int i = 0; i < cnt_classes; i++)
-				native_classes [i] = GLib.Marshaller.StringToPtrGStrdup (classes[i]);
-			native_classes [cnt_classes] = IntPtr.Zero;
+			IntPtr native_classes = GLib.Marshaller.StringArrayToStrvPtr(classes, true);
 			bool raw_ret = gst_device_provider_factory_has_classesv(Handle, native_classes);
 			bool ret = raw_ret;
-			for (int i = 0; i < native_classes.Length - 1; i++) {
-				classes [i] = GLib.Marshaller.Utf8PtrToString (native_classes[i]);
-				GLib.Marshaller.Free (native_classes[i]);
-			}
+			GLib.Marshaller.StrFreeV (native_classes);
 			return ret;
 		}
 

@@ -25,6 +25,21 @@ namespace GES {
 			Raw = ges_marker_list_new();
 		}
 
+		[GLib.Property ("flags")]
+		public GES.MarkerFlags Flags {
+			get {
+				GLib.Value val = GetProperty ("flags");
+				GES.MarkerFlags ret = (GES.MarkerFlags) (Enum) val;
+				val.Dispose ();
+				return ret;
+			}
+			set {
+				GLib.Value val = new GLib.Value((Enum) value);
+				SetProperty("flags", val);
+				val.Dispose ();
+			}
+		}
+
 		[GLib.Signal("marker-added")]
 		public event GES.MarkerAddedHandler MarkerAdded {
 			add {

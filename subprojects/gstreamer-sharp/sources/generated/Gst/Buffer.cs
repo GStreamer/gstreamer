@@ -104,7 +104,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_buffer_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -222,10 +222,11 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern UIntPtr gst_buffer_fill(IntPtr raw, UIntPtr offset, byte[] src, UIntPtr n_length);
+		static extern UIntPtr gst_buffer_fill(IntPtr raw, UIntPtr offset, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] src, UIntPtr n_length);
 
 		public ulong Fill(ulong offset, byte[] src) {
-			UIntPtr raw_ret = gst_buffer_fill(Handle, new UIntPtr (offset), src, new UIntPtr ((ulong) (src == null ? 0 : src.Length)));
+			ulong n_length = (ulong)(src == null ? 0 : src.Length);
+			UIntPtr raw_ret = gst_buffer_fill(Handle, new UIntPtr (offset), src, new UIntPtr ((uint)n_length));
 			ulong ret = (ulong) raw_ret;
 			return ret;
 		}
@@ -422,10 +423,11 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_buffer_memcmp(IntPtr raw, UIntPtr offset, byte[] mem, UIntPtr n_length);
+		static extern int gst_buffer_memcmp(IntPtr raw, UIntPtr offset, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] mem, UIntPtr n_length);
 
 		public int Memcmp(ulong offset, byte[] mem) {
-			int raw_ret = gst_buffer_memcmp(Handle, new UIntPtr (offset), mem, new UIntPtr ((ulong) (mem == null ? 0 : mem.Length)));
+			ulong n_length = (ulong)(mem == null ? 0 : mem.Length);
+			int raw_ret = gst_buffer_memcmp(Handle, new UIntPtr (offset), mem, new UIntPtr ((uint)n_length));
 			int ret = raw_ret;
 			return ret;
 		}
@@ -587,7 +589,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new();
 
-		public Buffer () 
+		public Buffer () : base (IntPtr.Zero)
 		{
 			Raw = gst_buffer_new();
 		}
@@ -595,7 +597,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_allocate(IntPtr allocator, UIntPtr size, IntPtr parms);
 
-		public Buffer (Gst.Allocator allocator, ulong size, Gst.AllocationParams parms) 
+		public Buffer (Gst.Allocator allocator, ulong size, Gst.AllocationParams parms) : base (IntPtr.Zero)
 		{
 			IntPtr native_parms = GLib.Marshaller.StructureToPtrAlloc (parms);
 			Raw = gst_buffer_new_allocate(allocator == null ? IntPtr.Zero : allocator.Handle, new UIntPtr (size), native_parms);
@@ -603,47 +605,29 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_new_memdup([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]IntPtr[] data, UIntPtr size);
+
+		public Buffer (IntPtr[] data) : base (IntPtr.Zero)
+		{
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			Raw = gst_buffer_new_memdup(data, new UIntPtr ((uint)size));
+		}
+
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_wrapped_bytes(IntPtr bytes);
 
-		public Buffer (GLib.Bytes bytes) 
+		public Buffer (GLib.Bytes bytes) : base (IntPtr.Zero)
 		{
 			Raw = gst_buffer_new_wrapped_bytes(bytes == null ? IntPtr.Zero : bytes.Handle);
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_new_wrapped_full(int flags, byte[] data, UIntPtr maxsize, UIntPtr offset, UIntPtr size, IntPtr user_data, GLib.DestroyNotify notify);
+		static extern IntPtr gst_buffer_new_wrapped_full(int flags, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=4)]byte[] data, UIntPtr size, UIntPtr maxsize, UIntPtr offset, IntPtr user_data, GLib.DestroyNotify notify);
 
-		public Buffer (Gst.MemoryFlags flags, byte[] data, ulong maxsize, ulong offset, ulong size, IntPtr user_data, GLib.DestroyNotify notify) 
+		public Buffer (Gst.MemoryFlags flags, byte[] data, ulong maxsize, ulong offset, IntPtr user_data, GLib.DestroyNotify notify) : base (IntPtr.Zero)
 		{
-			Raw = gst_buffer_new_wrapped_full((int) flags, data, new UIntPtr (maxsize), new UIntPtr (offset), new UIntPtr (size), user_data, notify);
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_buffer_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_buffer_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_buffer_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_buffer_unref;
-			}
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			Raw = gst_buffer_new_wrapped_full((int) flags, data, new UIntPtr ((uint)size), new UIntPtr (maxsize), new UIntPtr (offset), user_data, notify);
 		}
 
 

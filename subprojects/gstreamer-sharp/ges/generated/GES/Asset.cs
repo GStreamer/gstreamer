@@ -301,6 +301,66 @@ namespace GES {
 			unmanaged (this.Handle, proxy == null ? IntPtr.Zero : proxy.Handle);
 		}
 
+		static RequestIdUpdateNativeDelegate RequestIdUpdate_cb_delegate;
+		static RequestIdUpdateNativeDelegate RequestIdUpdateVMCallback {
+			get {
+				if (RequestIdUpdate_cb_delegate == null)
+					RequestIdUpdate_cb_delegate = new RequestIdUpdateNativeDelegate (RequestIdUpdate_cb);
+				return RequestIdUpdate_cb_delegate;
+			}
+		}
+
+		static void OverrideRequestIdUpdate (GLib.GType gtype)
+		{
+			OverrideRequestIdUpdate (gtype, RequestIdUpdateVMCallback);
+		}
+
+		static void OverrideRequestIdUpdate (GLib.GType gtype, RequestIdUpdateNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("request_id_update"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool RequestIdUpdateNativeDelegate (IntPtr inst, IntPtr proposed_new_id, IntPtr error);
+
+		static bool RequestIdUpdate_cb (IntPtr inst, IntPtr proposed_new_id, IntPtr error)
+		{
+			try {
+				Asset __obj = GLib.Object.GetObject (inst, false) as Asset;
+				bool __result;
+				__result = __obj.OnRequestIdUpdate (GLib.Marshaller.Utf8PtrToString (proposed_new_id), error);
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Asset), ConnectionMethod="OverrideRequestIdUpdate")]
+		protected virtual bool OnRequestIdUpdate (string proposed_new_id, IntPtr error)
+		{
+			return InternalRequestIdUpdate (proposed_new_id, error);
+		}
+
+		private bool InternalRequestIdUpdate (string proposed_new_id, IntPtr error)
+		{
+			RequestIdUpdateNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("request_id_update"));
+				unmanaged = (RequestIdUpdateNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(RequestIdUpdateNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			IntPtr native_proposed_new_id = GLib.Marshaller.StringToPtrGStrdup (proposed_new_id);
+			bool __result = unmanaged (this.Handle, native_proposed_new_id, error);
+			GLib.Marshaller.Free (native_proposed_new_id);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -446,6 +506,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr ges_asset_get_error(IntPtr raw);
+
+		public IntPtr Error { 
+			get {
+				IntPtr raw_ret = ges_asset_get_error(Handle);
+				IntPtr ret = raw_ret;
+				return ret;
+			}
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_asset_list_proxies(IntPtr raw);
 
 		public GES.Asset[] ListProxies() {
@@ -518,6 +589,19 @@ namespace GES {
 			bool raw_ret = ges_meta_container_get_boolean(Handle, native_meta_item, out dest);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_get_date(IntPtr raw, IntPtr meta_item, out IntPtr dest);
+
+		public bool GetDate(string meta_item, out GLib.Date dest) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			IntPtr native_dest;
+			bool raw_ret = ges_meta_container_get_date(Handle, native_meta_item, out native_dest);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			dest = new GLib.Date(native_dest);
 			return ret;
 		}
 
@@ -667,6 +751,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_register_meta_date(IntPtr raw, int flags, IntPtr meta_item, IntPtr value);
+
+		public bool RegisterMetaDate(GES.MetaFlag flags, string meta_item, GLib.Date value) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_register_meta_date(Handle, (int) flags, native_meta_item, value == null ? IntPtr.Zero : value.Handle);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_register_meta_date_time(IntPtr raw, int flags, IntPtr meta_item, IntPtr value);
 
 		public bool RegisterMetaDateTime(GES.MetaFlag flags, string meta_item, Gst.DateTime value) {
@@ -773,6 +868,17 @@ namespace GES {
 		public bool SetBoolean(string meta_item, bool value) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			bool raw_ret = ges_meta_container_set_boolean(Handle, native_meta_item, value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_set_date(IntPtr raw, IntPtr meta_item, IntPtr value);
+
+		public bool SetDate(string meta_item, GLib.Date value) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_set_date(Handle, native_meta_item, value == null ? IntPtr.Zero : value.Handle);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;

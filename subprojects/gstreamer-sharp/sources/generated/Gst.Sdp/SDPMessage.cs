@@ -203,20 +203,17 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_sdp_message_add_time(IntPtr raw, IntPtr start, IntPtr stop, IntPtr[] repeat);
+		static extern int gst_sdp_message_add_time(IntPtr raw, IntPtr start, IntPtr stop, IntPtr repeat);
 
 		public Gst.Sdp.SDPResult AddTime(string start, string stop, string[] repeat) {
 			IntPtr native_start = GLib.Marshaller.StringToPtrGStrdup (start);
 			IntPtr native_stop = GLib.Marshaller.StringToPtrGStrdup (stop);
-			int cnt_repeat = repeat == null ? 0 : repeat.Length;
-			IntPtr[] native_repeat = new IntPtr [cnt_repeat + 1];
-			for (int i = 0; i < cnt_repeat; i++)
-				native_repeat [i] = GLib.Marshaller.StringToPtrGStrdup(repeat[i]);
-			native_repeat [cnt_repeat] = IntPtr.Zero;
+			IntPtr native_repeat = GLib.Marshaller.StringArrayToStrvPtr(repeat, true);
 			int raw_ret = gst_sdp_message_add_time(Handle, native_start, native_stop, native_repeat);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
 			GLib.Marshaller.Free (native_start);
 			GLib.Marshaller.Free (native_stop);
+			GLib.Marshaller.StrFreeV (native_repeat);
 			return ret;
 		}
 
@@ -393,15 +390,6 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_sdp_message_init(IntPtr raw);
-
-		public Gst.Sdp.SDPResult Init() {
-			int raw_ret = gst_sdp_message_init(Handle);
-			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
-			return ret;
-		}
-
-		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_message_insert_attribute(IntPtr raw, int idx, IntPtr attr);
 
 		public Gst.Sdp.SDPResult InsertAttribute(int idx, Gst.Sdp.SDPAttribute attr) {
@@ -519,6 +507,15 @@ namespace Gst.Sdp {
 
 		public Gst.Sdp.SDPResult RemoveEmail(uint idx) {
 			int raw_ret = gst_sdp_message_remove_email(Handle, idx);
+			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_sdp_message_remove_media(IntPtr raw, uint idx);
+
+		public Gst.Sdp.SDPResult RemoveMedia(uint idx) {
+			int raw_ret = gst_sdp_message_remove_media(Handle, idx);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
 			return ret;
 		}
@@ -748,6 +745,17 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_sdp_message_init(out IntPtr msg);
+
+		public static Gst.Sdp.SDPResult Init(out Gst.Sdp.SDPMessage msg) {
+			IntPtr native_msg;
+			int raw_ret = gst_sdp_message_init(out native_msg);
+			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
+			msg = native_msg == IntPtr.Zero ? null : (Gst.Sdp.SDPMessage) GLib.Opaque.GetOpaque (native_msg, typeof (Gst.Sdp.SDPMessage), false);
+			return ret;
+		}
+
+		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_sdp_message_new(out IntPtr msg);
 
 		public static Gst.Sdp.SDPResult New(out Gst.Sdp.SDPMessage msg) {
@@ -772,9 +780,10 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_sdp_message_parse_buffer(byte[] data, uint size, IntPtr msg);
+		static extern int gst_sdp_message_parse_buffer([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, uint size, IntPtr msg);
 
-		public static Gst.Sdp.SDPResult ParseBuffer(byte[] data, uint size, Gst.Sdp.SDPMessage msg) {
+		public static Gst.Sdp.SDPResult ParseBuffer(byte[] data, Gst.Sdp.SDPMessage msg) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_sdp_message_parse_buffer(data, size, msg == null ? IntPtr.Zero : msg.Handle);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
 			return ret;

@@ -122,11 +122,12 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_bit_reader_init(IntPtr raw, byte[] data, uint size);
+		static extern void gst_bit_reader_init(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size);
 
-		public void Init(byte[] data, uint size) {
+		public void Init(byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint size = (uint)(data == null ? 0 : data.Length);
 			gst_bit_reader_init(this_as_native, data, size);
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);

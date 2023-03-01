@@ -5,6 +5,6 @@ namespace Gst.Audio {
 
 	using System;
 
-	public delegate void AudioFormatPack(Gst.Audio.AudioFormatInfo info, Gst.Audio.AudioPackFlags flags, byte[] src, byte[] data);
+	public delegate void AudioFormatPack(Gst.Audio.AudioFormatInfo info, Gst.Audio.AudioPackFlags flags, byte[] src, byte[] data, int n_length);
 
 }

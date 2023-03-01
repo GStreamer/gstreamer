@@ -53,6 +53,16 @@ namespace GES {
 			}
 		}
 
+		[GLib.Signal("error-loading")]
+		public event GES.ErrorLoadingHandler ErrorLoading {
+			add {
+				this.AddSignalHandler ("error-loading", value, typeof (GES.ErrorLoadingArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("error-loading", value);
+			}
+		}
+
 		[GLib.Signal("asset-added")]
 		public event GES.AssetAddedHandler AssetAdded {
 			add {
@@ -60,6 +70,16 @@ namespace GES {
 			}
 			remove {
 				this.RemoveSignalHandler ("asset-added", value);
+			}
+		}
+
+		[GLib.Signal("error-loading-asset")]
+		public event GES.ErrorLoadingAssetHandler ErrorLoadingAsset {
+			add {
+				this.AddSignalHandler ("error-loading-asset", value, typeof (GES.ErrorLoadingAssetArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("error-loading-asset", value);
 			}
 		}
 
@@ -83,6 +103,16 @@ namespace GES {
 			}
 		}
 
+		[GLib.Signal("missing-uri")]
+		public event GES.MissingUriHandler MissingUri {
+			add {
+				this.AddSignalHandler ("missing-uri", value, typeof (GES.MissingUriArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("missing-uri", value);
+			}
+		}
+
 		[GLib.Signal("asset-loading")]
 		public event GES.AssetLoadingHandler AssetLoading {
 			add {
@@ -91,6 +121,114 @@ namespace GES {
 			remove {
 				this.RemoveSignalHandler ("asset-loading", value);
 			}
+		}
+
+		static ErrorLoadingNativeDelegate ErrorLoading_cb_delegate;
+		static ErrorLoadingNativeDelegate ErrorLoadingVMCallback {
+			get {
+				if (ErrorLoading_cb_delegate == null)
+					ErrorLoading_cb_delegate = new ErrorLoadingNativeDelegate (ErrorLoading_cb);
+				return ErrorLoading_cb_delegate;
+			}
+		}
+
+		static void OverrideErrorLoading (GLib.GType gtype)
+		{
+			OverrideErrorLoading (gtype, ErrorLoadingVMCallback);
+		}
+
+		static void OverrideErrorLoading (GLib.GType gtype, ErrorLoadingNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "error-loading", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void ErrorLoadingNativeDelegate (IntPtr inst, IntPtr timeline, IntPtr error);
+
+		static void ErrorLoading_cb (IntPtr inst, IntPtr timeline, IntPtr error)
+		{
+			try {
+				Project __obj = GLib.Object.GetObject (inst, false) as Project;
+				__obj.OnErrorLoading (GLib.Object.GetObject(timeline) as GES.Timeline, error);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Project), ConnectionMethod="OverrideErrorLoading")]
+		protected virtual void OnErrorLoading (GES.Timeline timeline, IntPtr error)
+		{
+			InternalErrorLoading (timeline, error);
+		}
+
+		private void InternalErrorLoading (GES.Timeline timeline, IntPtr error)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (3);
+			GLib.Value[] vals = new GLib.Value [3];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (timeline);
+			inst_and_params.Append (vals [1]);
+			vals [2] = new GLib.Value (error);
+			inst_and_params.Append (vals [2]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+		}
+
+		static ErrorLoadingAssetNativeDelegate ErrorLoadingAsset_cb_delegate;
+		static ErrorLoadingAssetNativeDelegate ErrorLoadingAssetVMCallback {
+			get {
+				if (ErrorLoadingAsset_cb_delegate == null)
+					ErrorLoadingAsset_cb_delegate = new ErrorLoadingAssetNativeDelegate (ErrorLoadingAsset_cb);
+				return ErrorLoadingAsset_cb_delegate;
+			}
+		}
+
+		static void OverrideErrorLoadingAsset (GLib.GType gtype)
+		{
+			OverrideErrorLoadingAsset (gtype, ErrorLoadingAssetVMCallback);
+		}
+
+		static void OverrideErrorLoadingAsset (GLib.GType gtype, ErrorLoadingAssetNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "error-loading-asset", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate void ErrorLoadingAssetNativeDelegate (IntPtr inst, IntPtr error, IntPtr id, IntPtr extractable_type);
+
+		static void ErrorLoadingAsset_cb (IntPtr inst, IntPtr error, IntPtr id, IntPtr extractable_type)
+		{
+			try {
+				Project __obj = GLib.Object.GetObject (inst, false) as Project;
+				__obj.OnErrorLoadingAsset (error, GLib.Marshaller.Utf8PtrToString (id), new GLib.GType(extractable_type));
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, false);
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Project), ConnectionMethod="OverrideErrorLoadingAsset")]
+		protected virtual void OnErrorLoadingAsset (IntPtr error, string id, GLib.GType extractable_type)
+		{
+			InternalErrorLoadingAsset (error, id, extractable_type);
+		}
+
+		private void InternalErrorLoadingAsset (IntPtr error, string id, GLib.GType extractable_type)
+		{
+			GLib.Value ret = GLib.Value.Empty;
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (4);
+			GLib.Value[] vals = new GLib.Value [4];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (error);
+			inst_and_params.Append (vals [1]);
+			vals [2] = new GLib.Value (id);
+			inst_and_params.Append (vals [2]);
+			vals [3] = new GLib.Value (extractable_type);
+			inst_and_params.Append (vals [3]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
 		}
 
 		static AssetAddedNativeDelegate AssetAdded_cb_delegate;
@@ -250,6 +388,124 @@ namespace GES {
 			if (unmanaged == null) return;
 
 			unmanaged (this.Handle, asset == null ? IntPtr.Zero : asset.Handle);
+		}
+
+		static MissingUriNativeDelegate MissingUri_cb_delegate;
+		static MissingUriNativeDelegate MissingUriVMCallback {
+			get {
+				if (MissingUri_cb_delegate == null)
+					MissingUri_cb_delegate = new MissingUriNativeDelegate (MissingUri_cb);
+				return MissingUri_cb_delegate;
+			}
+		}
+
+		static void OverrideMissingUri (GLib.GType gtype)
+		{
+			OverrideMissingUri (gtype, MissingUriVMCallback);
+		}
+
+		static void OverrideMissingUri (GLib.GType gtype, MissingUriNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("missing_uri"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr MissingUriNativeDelegate (IntPtr inst, IntPtr error, IntPtr wrong_asset);
+
+		static IntPtr MissingUri_cb (IntPtr inst, IntPtr error, IntPtr wrong_asset)
+		{
+			try {
+				Project __obj = GLib.Object.GetObject (inst, false) as Project;
+				string __result;
+				__result = __obj.OnMissingUri (error, GLib.Object.GetObject(wrong_asset) as GES.Asset);
+				return GLib.Marshaller.StringToPtrGStrdup(__result);
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Project), ConnectionMethod="OverrideMissingUri")]
+		protected virtual string OnMissingUri (IntPtr error, GES.Asset wrong_asset)
+		{
+			return InternalMissingUri (error, wrong_asset);
+		}
+
+		private string InternalMissingUri (IntPtr error, GES.Asset wrong_asset)
+		{
+			MissingUriNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("missing_uri"));
+				unmanaged = (MissingUriNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(MissingUriNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr __result = unmanaged (this.Handle, error, wrong_asset == null ? IntPtr.Zero : wrong_asset.Handle);
+			return GLib.Marshaller.PtrToStringGFree(__result);
+		}
+
+		static LoadingErrorNativeDelegate LoadingError_cb_delegate;
+		static LoadingErrorNativeDelegate LoadingErrorVMCallback {
+			get {
+				if (LoadingError_cb_delegate == null)
+					LoadingError_cb_delegate = new LoadingErrorNativeDelegate (LoadingError_cb);
+				return LoadingError_cb_delegate;
+			}
+		}
+
+		static void OverrideLoadingError (GLib.GType gtype)
+		{
+			OverrideLoadingError (gtype, LoadingErrorVMCallback);
+		}
+
+		static void OverrideLoadingError (GLib.GType gtype, LoadingErrorNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("loading_error"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool LoadingErrorNativeDelegate (IntPtr inst, IntPtr error, IntPtr id, IntPtr extractable_type);
+
+		static bool LoadingError_cb (IntPtr inst, IntPtr error, IntPtr id, IntPtr extractable_type)
+		{
+			try {
+				Project __obj = GLib.Object.GetObject (inst, false) as Project;
+				bool __result;
+				__result = __obj.OnLoadingError (error, GLib.Marshaller.Utf8PtrToString (id), new GLib.GType(extractable_type));
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.Project), ConnectionMethod="OverrideLoadingError")]
+		protected virtual bool OnLoadingError (IntPtr error, string id, GLib.GType extractable_type)
+		{
+			return InternalLoadingError (error, id, extractable_type);
+		}
+
+		private bool InternalLoadingError (IntPtr error, string id, GLib.GType extractable_type)
+		{
+			LoadingErrorNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("loading_error"));
+				unmanaged = (LoadingErrorNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(LoadingErrorNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			IntPtr native_id = GLib.Marshaller.StringToPtrGStrdup (id);
+			bool __result = unmanaged (this.Handle, error, native_id, extractable_type.Val);
+			GLib.Marshaller.Free (native_id);
+			return __result;
 		}
 
 		static LoadedNativeDelegate Loaded_cb_delegate;

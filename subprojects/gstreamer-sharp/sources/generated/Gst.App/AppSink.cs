@@ -134,13 +134,33 @@ namespace Gst.App {
 			}
 		}
 
-		[GLib.Signal("try-pull-sample")]
-		public event Gst.App.TryPullSampleEventHandler TryPullSampleEvent {
+		[GLib.Signal("try-pull-object")]
+		public event Gst.App.TryPullObjectEventHandler TryPullObjectEvent {
 			add {
-				this.AddSignalHandler ("try-pull-sample", value, typeof (Gst.App.TryPullSampleEventArgs));
+				this.AddSignalHandler ("try-pull-object", value, typeof (Gst.App.TryPullObjectEventArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("try-pull-sample", value);
+				this.RemoveSignalHandler ("try-pull-object", value);
+			}
+		}
+
+		[GLib.Signal("propose-allocation")]
+		public event Gst.App.ProposeAllocationHandler ProposeAllocation {
+			add {
+				this.AddSignalHandler ("propose-allocation", value, typeof (Gst.App.ProposeAllocationArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("propose-allocation", value);
+			}
+		}
+
+		[GLib.Signal("new-sample")]
+		public event Gst.App.NewSampleHandler NewSample {
+			add {
+				this.AddSignalHandler ("new-sample", value, typeof (Gst.App.NewSampleArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("new-sample", value);
 			}
 		}
 
@@ -154,13 +174,13 @@ namespace Gst.App {
 			}
 		}
 
-		[GLib.Signal("try-pull-preroll")]
-		public event Gst.App.TryPullPrerollEventHandler TryPullPrerollEvent {
+		[GLib.Signal("try-pull-sample")]
+		public event Gst.App.TryPullSampleEventHandler TryPullSampleEvent {
 			add {
-				this.AddSignalHandler ("try-pull-preroll", value, typeof (Gst.App.TryPullPrerollEventArgs));
+				this.AddSignalHandler ("try-pull-sample", value, typeof (Gst.App.TryPullSampleEventArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("try-pull-preroll", value);
+				this.RemoveSignalHandler ("try-pull-sample", value);
 			}
 		}
 
@@ -174,14 +194,138 @@ namespace Gst.App {
 			}
 		}
 
-		[GLib.Signal("new-sample")]
-		public event Gst.App.NewSampleHandler NewSample {
+		[GLib.Signal("try-pull-preroll")]
+		public event Gst.App.TryPullPrerollEventHandler TryPullPrerollEvent {
 			add {
-				this.AddSignalHandler ("new-sample", value, typeof (Gst.App.NewSampleArgs));
+				this.AddSignalHandler ("try-pull-preroll", value, typeof (Gst.App.TryPullPrerollEventArgs));
 			}
 			remove {
-				this.RemoveSignalHandler ("new-sample", value);
+				this.RemoveSignalHandler ("try-pull-preroll", value);
 			}
+		}
+
+		[GLib.Signal("new-serialized-event")]
+		public event Gst.App.NewSerializedEventHandler NewSerializedEvent {
+			add {
+				this.AddSignalHandler ("new-serialized-event", value, typeof (Gst.App.NewSerializedEventArgs));
+			}
+			remove {
+				this.RemoveSignalHandler ("new-serialized-event", value);
+			}
+		}
+
+		static NewSerializedEventNativeDelegate NewSerializedEvent_cb_delegate;
+		static NewSerializedEventNativeDelegate NewSerializedEventVMCallback {
+			get {
+				if (NewSerializedEvent_cb_delegate == null)
+					NewSerializedEvent_cb_delegate = new NewSerializedEventNativeDelegate (NewSerializedEvent_cb);
+				return NewSerializedEvent_cb_delegate;
+			}
+		}
+
+		static void OverrideNewSerializedEvent (GLib.GType gtype)
+		{
+			OverrideNewSerializedEvent (gtype, NewSerializedEventVMCallback);
+		}
+
+		static void OverrideNewSerializedEvent (GLib.GType gtype, NewSerializedEventNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "new-serialized-event", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool NewSerializedEventNativeDelegate (IntPtr inst);
+
+		static bool NewSerializedEvent_cb (IntPtr inst)
+		{
+			try {
+				AppSink __obj = GLib.Object.GetObject (inst, false) as AppSink;
+				bool __result;
+				__result = __obj.OnNewSerializedEvent ();
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSink), ConnectionMethod="OverrideNewSerializedEvent")]
+		protected virtual bool OnNewSerializedEvent ()
+		{
+			return InternalNewSerializedEvent ();
+		}
+
+		private bool InternalNewSerializedEvent ()
+		{
+			GLib.Value ret = new GLib.Value (GLib.GType.Boolean);
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (1);
+			GLib.Value[] vals = new GLib.Value [1];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+			bool result = (bool) ret;
+			ret.Dispose ();
+			return result;
+		}
+
+		static ProposeAllocationNativeDelegate ProposeAllocation_cb_delegate;
+		static ProposeAllocationNativeDelegate ProposeAllocationVMCallback {
+			get {
+				if (ProposeAllocation_cb_delegate == null)
+					ProposeAllocation_cb_delegate = new ProposeAllocationNativeDelegate (ProposeAllocation_cb);
+				return ProposeAllocation_cb_delegate;
+			}
+		}
+
+		static void OverrideProposeAllocation (GLib.GType gtype)
+		{
+			OverrideProposeAllocation (gtype, ProposeAllocationVMCallback);
+		}
+
+		static void OverrideProposeAllocation (GLib.GType gtype, ProposeAllocationNativeDelegate callback)
+		{
+			OverrideVirtualMethod (gtype, "propose-allocation", callback);
+		}
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool ProposeAllocationNativeDelegate (IntPtr inst, IntPtr query);
+
+		static bool ProposeAllocation_cb (IntPtr inst, IntPtr query)
+		{
+			try {
+				AppSink __obj = GLib.Object.GetObject (inst, false) as AppSink;
+				bool __result;
+				__result = __obj.OnProposeAllocation (query == IntPtr.Zero ? null : (Gst.Query) GLib.Opaque.GetOpaque (query, typeof (Gst.Query), false));
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSink), ConnectionMethod="OverrideProposeAllocation")]
+		protected virtual bool OnProposeAllocation (Gst.Query query)
+		{
+			return InternalProposeAllocation (query);
+		}
+
+		private bool InternalProposeAllocation (Gst.Query query)
+		{
+			GLib.Value ret = new GLib.Value (GLib.GType.Boolean);
+			GLib.ValueArray inst_and_params = new GLib.ValueArray (2);
+			GLib.Value[] vals = new GLib.Value [2];
+			vals [0] = new GLib.Value (this);
+			inst_and_params.Append (vals [0]);
+			vals [1] = new GLib.Value (query);
+			inst_and_params.Append (vals [1]);
+			g_signal_chain_from_overridden (inst_and_params.ArrayPtr, ref ret);
+			foreach (GLib.Value v in vals)
+				v.Dispose ();
+			bool result = (bool) ret;
+			ret.Dispose ();
+			return result;
 		}
 
 		static EosNativeDelegate Eos_cb_delegate;
@@ -469,6 +613,64 @@ namespace Gst.App {
 			return __result == IntPtr.Zero ? null : (Gst.Sample) GLib.Opaque.GetOpaque (__result, typeof (Gst.Sample), true);
 		}
 
+		static TryPullObjectEventNativeDelegate TryPullObjectEvent_cb_delegate;
+		static TryPullObjectEventNativeDelegate TryPullObjectEventVMCallback {
+			get {
+				if (TryPullObjectEvent_cb_delegate == null)
+					TryPullObjectEvent_cb_delegate = new TryPullObjectEventNativeDelegate (TryPullObjectEvent_cb);
+				return TryPullObjectEvent_cb_delegate;
+			}
+		}
+
+		static void OverrideTryPullObjectEvent (GLib.GType gtype)
+		{
+			OverrideTryPullObjectEvent (gtype, TryPullObjectEventVMCallback);
+		}
+
+		static void OverrideTryPullObjectEvent (GLib.GType gtype, TryPullObjectEventNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("try_pull_object"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr TryPullObjectEventNativeDelegate (IntPtr inst, ulong timeout);
+
+		static IntPtr TryPullObjectEvent_cb (IntPtr inst, ulong timeout)
+		{
+			try {
+				AppSink __obj = GLib.Object.GetObject (inst, false) as AppSink;
+				Gst.MiniObject __result;
+				__result = __obj.OnTryPullObjectEvent (timeout);
+				return __result == null ? IntPtr.Zero : __result.OwnedCopy;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.App.AppSink), ConnectionMethod="OverrideTryPullObjectEvent")]
+		protected virtual Gst.MiniObject OnTryPullObjectEvent (ulong timeout)
+		{
+			return InternalTryPullObjectEvent (timeout);
+		}
+
+		private Gst.MiniObject InternalTryPullObjectEvent (ulong timeout)
+		{
+			TryPullObjectEventNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("try_pull_object"));
+				unmanaged = (TryPullObjectEventNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(TryPullObjectEventNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr __result = unmanaged (this.Handle, timeout);
+			return __result == IntPtr.Zero ? null : (Gst.MiniObject) GLib.Opaque.GetOpaque (__result, typeof (Gst.MiniObject), true);
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -528,14 +730,22 @@ namespace Gst.App {
 							, -1
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // try_pull_sample
 							, "try_pull_preroll"
+							, "try_pull_object"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("try_pull_object"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // try_pull_object
+							, "try_pull_sample"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 2 // _gst_reserved
-							, "try_pull_sample"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 1 // _gst_reserved
+							, "try_pull_object"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0

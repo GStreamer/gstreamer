@@ -219,6 +219,122 @@ namespace GES {
 				v.Dispose ();
 		}
 
+		static CreateGnlObjectNativeDelegate CreateGnlObject_cb_delegate;
+		static CreateGnlObjectNativeDelegate CreateGnlObjectVMCallback {
+			get {
+				if (CreateGnlObject_cb_delegate == null)
+					CreateGnlObject_cb_delegate = new CreateGnlObjectNativeDelegate (CreateGnlObject_cb);
+				return CreateGnlObject_cb_delegate;
+			}
+		}
+
+		static void OverrideCreateGnlObject (GLib.GType gtype)
+		{
+			OverrideCreateGnlObject (gtype, CreateGnlObjectVMCallback);
+		}
+
+		static void OverrideCreateGnlObject (GLib.GType gtype, CreateGnlObjectNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("create_gnl_object"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr CreateGnlObjectNativeDelegate (IntPtr inst);
+
+		static IntPtr CreateGnlObject_cb (IntPtr inst)
+		{
+			try {
+				TrackElement __obj = GLib.Object.GetObject (inst, false) as TrackElement;
+				Gst.Element __result;
+				__result = __obj.OnCreateGnlObject ();
+				return __result == null ? IntPtr.Zero : __result.Handle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TrackElement), ConnectionMethod="OverrideCreateGnlObject")]
+		protected virtual Gst.Element OnCreateGnlObject ()
+		{
+			return InternalCreateGnlObject ();
+		}
+
+		private Gst.Element InternalCreateGnlObject ()
+		{
+			CreateGnlObjectNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("create_gnl_object"));
+				unmanaged = (CreateGnlObjectNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CreateGnlObjectNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr __result = unmanaged (this.Handle);
+			return GLib.Object.GetObject(__result) as Gst.Element;
+		}
+
+		static CreateElementNativeDelegate CreateElement_cb_delegate;
+		static CreateElementNativeDelegate CreateElementVMCallback {
+			get {
+				if (CreateElement_cb_delegate == null)
+					CreateElement_cb_delegate = new CreateElementNativeDelegate (CreateElement_cb);
+				return CreateElement_cb_delegate;
+			}
+		}
+
+		static void OverrideCreateElement (GLib.GType gtype)
+		{
+			OverrideCreateElement (gtype, CreateElementVMCallback);
+		}
+
+		static void OverrideCreateElement (GLib.GType gtype, CreateElementNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("create_element"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate IntPtr CreateElementNativeDelegate (IntPtr inst);
+
+		static IntPtr CreateElement_cb (IntPtr inst)
+		{
+			try {
+				TrackElement __obj = GLib.Object.GetObject (inst, false) as TrackElement;
+				Gst.Element __result;
+				__result = __obj.OnCreateElement ();
+				return __result == null ? IntPtr.Zero : __result.Handle;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(GES.TrackElement), ConnectionMethod="OverrideCreateElement")]
+		protected virtual Gst.Element OnCreateElement ()
+		{
+			return InternalCreateElement ();
+		}
+
+		private Gst.Element InternalCreateElement ()
+		{
+			CreateElementNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("create_element"));
+				unmanaged = (CreateElementNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(CreateElementNativeDelegate));
+			}
+			if (unmanaged == null) return null;
+
+			IntPtr __result = unmanaged (this.Handle);
+			return GLib.Object.GetObject(__result) as Gst.Element;
+		}
+
 		static ActiveChangedNativeDelegate ActiveChanged_cb_delegate;
 		static ActiveChangedNativeDelegate ActiveChangedVMCallback {
 			get {
@@ -497,25 +613,16 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern void ges_track_element_add_children_props(IntPtr raw, IntPtr element, IntPtr[] wanted_categories, IntPtr[] blacklist, IntPtr[] whitelist);
+		static extern void ges_track_element_add_children_props(IntPtr raw, IntPtr element, IntPtr wanted_categories, IntPtr blacklist, IntPtr whitelist);
 
 		public void AddChildrenProps(Gst.Element element, string[] wanted_categories, string[] blacklist, string[] whitelist) {
-			int cnt_wanted_categories = wanted_categories == null ? 0 : wanted_categories.Length;
-			IntPtr[] native_wanted_categories = new IntPtr [cnt_wanted_categories + 1];
-			for (int i = 0; i < cnt_wanted_categories; i++)
-				native_wanted_categories [i] = GLib.Marshaller.StringToPtrGStrdup(wanted_categories[i]);
-			native_wanted_categories [cnt_wanted_categories] = IntPtr.Zero;
-			int cnt_blacklist = blacklist == null ? 0 : blacklist.Length;
-			IntPtr[] native_blacklist = new IntPtr [cnt_blacklist + 1];
-			for (int i = 0; i < cnt_blacklist; i++)
-				native_blacklist [i] = GLib.Marshaller.StringToPtrGStrdup(blacklist[i]);
-			native_blacklist [cnt_blacklist] = IntPtr.Zero;
-			int cnt_whitelist = whitelist == null ? 0 : whitelist.Length;
-			IntPtr[] native_whitelist = new IntPtr [cnt_whitelist + 1];
-			for (int i = 0; i < cnt_whitelist; i++)
-				native_whitelist [i] = GLib.Marshaller.StringToPtrGStrdup(whitelist[i]);
-			native_whitelist [cnt_whitelist] = IntPtr.Zero;
+			IntPtr native_wanted_categories = GLib.Marshaller.StringArrayToStrvPtr(wanted_categories, true);
+			IntPtr native_blacklist = GLib.Marshaller.StringArrayToStrvPtr(blacklist, true);
+			IntPtr native_whitelist = GLib.Marshaller.StringArrayToStrvPtr(whitelist, true);
 			ges_track_element_add_children_props(Handle, element == null ? IntPtr.Zero : element.Handle, native_wanted_categories, native_blacklist, native_whitelist);
+			GLib.Marshaller.StrFreeV (native_wanted_categories);
+			GLib.Marshaller.StrFreeV (native_blacklist);
+			GLib.Marshaller.StrFreeV (native_whitelist);
 		}
 
 		public void AddChildrenProps(Gst.Element element) {

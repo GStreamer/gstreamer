@@ -104,7 +104,7 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_message_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_mikey_message_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -132,18 +132,20 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_message_add_pke(IntPtr raw, int C, ushort data_len, byte[] data);
+		static extern bool gst_mikey_message_add_pke(IntPtr raw, int C, ushort data_len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data);
 
-		public bool AddPke(Gst.Sdp.MIKEYCacheType C, ushort data_len, byte[] data) {
+		public bool AddPke(Gst.Sdp.MIKEYCacheType C, byte[] data) {
+			ushort data_len = (ushort)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_mikey_message_add_pke(Handle, (int) C, data_len, data);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_message_add_rand(IntPtr raw, byte len, byte[] rand);
+		static extern bool gst_mikey_message_add_rand(IntPtr raw, byte len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] rand);
 
-		public bool AddRand(byte len, byte[] rand) {
+		public bool AddRand(byte[] rand) {
+			byte len = (byte)(rand == null ? 0 : rand.Length);
 			bool raw_ret = gst_mikey_message_add_rand(Handle, len, rand);
 			bool ret = raw_ret;
 			return ret;
@@ -328,7 +330,7 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_message_new();
 
-		public MIKEYMessage () 
+		public MIKEYMessage () : base (IntPtr.Zero)
 		{
 			Raw = gst_mikey_message_new();
 		}
@@ -336,7 +338,7 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_message_new_from_bytes(IntPtr bytes, IntPtr info);
 
-		public MIKEYMessage (GLib.Bytes bytes, Gst.Sdp.MIKEYDecryptInfo info) 
+		public MIKEYMessage (GLib.Bytes bytes, Gst.Sdp.MIKEYDecryptInfo info) : base (IntPtr.Zero)
 		{
 			Raw = gst_mikey_message_new_from_bytes(bytes == null ? IntPtr.Zero : bytes.Handle, info == null ? IntPtr.Zero : info.Handle);
 		}
@@ -344,17 +346,18 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_message_new_from_caps(IntPtr caps);
 
-		public MIKEYMessage (Gst.Caps caps) 
+		public MIKEYMessage (Gst.Caps caps) : base (IntPtr.Zero)
 		{
 			Raw = gst_mikey_message_new_from_caps(caps == null ? IntPtr.Zero : caps.Handle);
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_mikey_message_new_from_data(byte[] data, UIntPtr n_length, IntPtr info);
+		static extern IntPtr gst_mikey_message_new_from_data([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, UIntPtr n_length, IntPtr info);
 
-		public MIKEYMessage (byte[] data, Gst.Sdp.MIKEYDecryptInfo info) 
+		public MIKEYMessage (byte[] data, Gst.Sdp.MIKEYDecryptInfo info) : base (IntPtr.Zero)
 		{
-			Raw = gst_mikey_message_new_from_data(data, new UIntPtr ((ulong) (data == null ? 0 : data.Length)), info == null ? IntPtr.Zero : info.Handle);
+			ulong n_length = (ulong)(data == null ? 0 : data.Length);
+			Raw = gst_mikey_message_new_from_data(data, new UIntPtr ((uint)n_length), info == null ? IntPtr.Zero : info.Handle);
 		}
 
 

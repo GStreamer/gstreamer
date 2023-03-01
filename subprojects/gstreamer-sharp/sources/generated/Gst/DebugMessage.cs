@@ -20,6 +20,17 @@ namespace Gst {
 			return ret;
 		}
 
+		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_debug_message_get_id(IntPtr raw);
+
+		public string Id { 
+			get {
+				IntPtr raw_ret = gst_debug_message_get_id(Handle);
+				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				return ret;
+			}
+		}
+
 		public DebugMessage(IntPtr raw) : base(raw) {}
 
 

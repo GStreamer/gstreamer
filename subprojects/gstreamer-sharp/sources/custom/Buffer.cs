@@ -1,5 +1,5 @@
 // Copyright (C) 2014  Stephan Sundermann <stephansundermann@gmail.com>
-// 
+//
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
@@ -50,7 +50,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_buffer_new_wrapped(IntPtr data, UIntPtr n_length);
 
-		public Buffer(byte[] data) {
+		public Buffer(byte[] data) : base(IntPtr.Zero) {
 			IntPtr ptr = GLib.Marshaller.Malloc((ulong)data.Length);
 			Marshal.Copy(data, 0, ptr, data.Length);
 			Raw = gst_buffer_new_wrapped(ptr, new UIntPtr((ulong)data.Length));

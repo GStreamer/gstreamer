@@ -78,6 +78,10 @@ namespace Gst.Rtsp {
 			return ret;
 		}
 
+		public Gst.Rtsp.RTSPResult DoTunnel() {
+			return DoTunnel (null);
+		}
+
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_rtsp_connection_flush(IntPtr raw, bool flush);
 
@@ -94,6 +98,23 @@ namespace Gst.Rtsp {
 			int raw_ret = gst_rtsp_connection_free(Handle);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
+		}
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_rtsp_connection_get_ignore_x_server_reply(IntPtr raw);
+
+		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_rtsp_connection_set_ignore_x_server_reply(IntPtr raw, bool ignore);
+
+		public bool IgnoreXServerReply { 
+			get {
+				bool raw_ret = gst_rtsp_connection_get_ignore_x_server_reply(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
+			set {
+				gst_rtsp_connection_set_ignore_x_server_reply(Handle, value);
+			}
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -263,38 +284,44 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_poll(IntPtr raw, int events, int revents, IntPtr timeout);
+		static extern int gst_rtsp_connection_poll(IntPtr raw, int events, out int revents, IntPtr timeout);
 
 		[Obsolete]
-		public Gst.Rtsp.RTSPResult Poll(Gst.Rtsp.RTSPEvent events, Gst.Rtsp.RTSPEvent revents, IntPtr timeout) {
-			int raw_ret = gst_rtsp_connection_poll(Handle, (int) events, (int) revents, timeout);
+		public Gst.Rtsp.RTSPResult Poll(Gst.Rtsp.RTSPEvent events, out Gst.Rtsp.RTSPEvent revents, IntPtr timeout) {
+			int native_revents;
+			int raw_ret = gst_rtsp_connection_poll(Handle, (int) events, out native_revents, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			revents = (Gst.Rtsp.RTSPEvent) native_revents;
 			return ret;
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_poll_usec(IntPtr raw, int events, int revents, long timeout);
+		static extern int gst_rtsp_connection_poll_usec(IntPtr raw, int events, out int revents, long timeout);
 
-		public Gst.Rtsp.RTSPResult PollUsec(Gst.Rtsp.RTSPEvent events, Gst.Rtsp.RTSPEvent revents, long timeout) {
-			int raw_ret = gst_rtsp_connection_poll_usec(Handle, (int) events, (int) revents, timeout);
+		public Gst.Rtsp.RTSPResult PollUsec(Gst.Rtsp.RTSPEvent events, out Gst.Rtsp.RTSPEvent revents, long timeout) {
+			int native_revents;
+			int raw_ret = gst_rtsp_connection_poll_usec(Handle, (int) events, out native_revents, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
+			revents = (Gst.Rtsp.RTSPEvent) native_revents;
 			return ret;
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_read(IntPtr raw, byte data, uint size, IntPtr timeout);
+		static extern int gst_rtsp_connection_read(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size, IntPtr timeout);
 
 		[Obsolete]
-		public Gst.Rtsp.RTSPResult Read(byte data, uint size, IntPtr timeout) {
+		public Gst.Rtsp.RTSPResult Read(byte[] data, IntPtr timeout) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_rtsp_connection_read(Handle, data, size, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_read_usec(IntPtr raw, byte data, uint size, long timeout);
+		static extern int gst_rtsp_connection_read_usec(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size, long timeout);
 
-		public Gst.Rtsp.RTSPResult ReadUsec(byte data, uint size, long timeout) {
+		public Gst.Rtsp.RTSPResult ReadUsec(byte[] data, long timeout) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_rtsp_connection_read_usec(Handle, data, size, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
@@ -345,20 +372,22 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_send_messages(IntPtr raw, Gst.Rtsp.RTSPMessage[] messages, uint n_messages, IntPtr timeout);
+		static extern int gst_rtsp_connection_send_messages(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]Gst.Rtsp.RTSPMessage[] messages, uint n_messages, IntPtr timeout);
 
 		[Obsolete]
 		public Gst.Rtsp.RTSPResult SendMessages(Gst.Rtsp.RTSPMessage[] messages, IntPtr timeout) {
-			int raw_ret = gst_rtsp_connection_send_messages(Handle, messages, (uint) (messages == null ? 0 : messages.Length), timeout);
+			uint n_messages = (uint)(messages == null ? 0 : messages.Length);
+			int raw_ret = gst_rtsp_connection_send_messages(Handle, messages, n_messages, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_send_messages_usec(IntPtr raw, Gst.Rtsp.RTSPMessage[] messages, uint n_messages, long timeout);
+		static extern int gst_rtsp_connection_send_messages_usec(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]Gst.Rtsp.RTSPMessage[] messages, uint n_messages, long timeout);
 
 		public Gst.Rtsp.RTSPResult SendMessagesUsec(Gst.Rtsp.RTSPMessage[] messages, long timeout) {
-			int raw_ret = gst_rtsp_connection_send_messages_usec(Handle, messages, (uint) (messages == null ? 0 : messages.Length), timeout);
+			uint n_messages = (uint)(messages == null ? 0 : messages.Length);
+			int raw_ret = gst_rtsp_connection_send_messages_usec(Handle, messages, n_messages, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
 		}
@@ -474,19 +503,21 @@ namespace Gst.Rtsp {
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_write(IntPtr raw, byte data, uint size, IntPtr timeout);
+		static extern int gst_rtsp_connection_write(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size, IntPtr timeout);
 
 		[Obsolete]
-		public Gst.Rtsp.RTSPResult Write(byte data, uint size, IntPtr timeout) {
+		public Gst.Rtsp.RTSPResult Write(byte[] data, IntPtr timeout) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_rtsp_connection_write(Handle, data, size, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstrtsp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_rtsp_connection_write_usec(IntPtr raw, byte data, uint size, long timeout);
+		static extern int gst_rtsp_connection_write_usec(IntPtr raw, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data, uint size, long timeout);
 
-		public Gst.Rtsp.RTSPResult WriteUsec(byte data, uint size, long timeout) {
+		public Gst.Rtsp.RTSPResult WriteUsec(byte[] data, long timeout) {
+			uint size = (uint)(data == null ? 0 : data.Length);
 			int raw_ret = gst_rtsp_connection_write_usec(Handle, data, size, timeout);
 			Gst.Rtsp.RTSPResult ret = (Gst.Rtsp.RTSPResult) raw_ret;
 			return ret;

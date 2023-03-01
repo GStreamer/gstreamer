@@ -15,7 +15,9 @@ namespace Gst.App {
 		private IntPtr _eos;
 		private IntPtr _new_preroll;
 		private IntPtr _new_sample;
-		[MarshalAs (UnmanagedType.ByValArray, SizeConst=4)]
+		private IntPtr _new_event;
+		private IntPtr _propose_allocation;
+		[MarshalAs (UnmanagedType.ByValArray, SizeConst=2)]
 		private IntPtr[] _gstGstReserved;
 
 		public static Gst.App.AppSinkCallbacks Zero = new Gst.App.AppSinkCallbacks ();
@@ -28,7 +30,7 @@ namespace Gst.App {
 
 		public bool Equals (AppSinkCallbacks other)
 		{
-			return true && _eos.Equals (other._eos) && _new_preroll.Equals (other._new_preroll) && _new_sample.Equals (other._new_sample);
+			return true && _eos.Equals (other._eos) && _new_preroll.Equals (other._new_preroll) && _new_sample.Equals (other._new_sample) && _new_event.Equals (other._new_event) && _propose_allocation.Equals (other._propose_allocation);
 		}
 
 		public override bool Equals (object other)
@@ -38,7 +40,7 @@ namespace Gst.App {
 
 		public override int GetHashCode ()
 		{
-			return this.GetType ().FullName.GetHashCode () ^ _eos.GetHashCode () ^ _new_preroll.GetHashCode () ^ _new_sample.GetHashCode ();
+			return this.GetType ().FullName.GetHashCode () ^ _eos.GetHashCode () ^ _new_preroll.GetHashCode () ^ _new_sample.GetHashCode () ^ _new_event.GetHashCode () ^ _propose_allocation.GetHashCode ();
 		}
 
 		private static GLib.GType GType {

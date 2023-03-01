@@ -148,9 +148,9 @@ namespace Gst.Base {
 		}
 
 		[DllImport("gstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_bit_writer_put_bytes(IntPtr raw, byte data, uint nbytes);
+		static extern bool gst_bit_writer_put_bytes(IntPtr raw, byte[] data, uint nbytes);
 
-		public bool PutBytes(byte data, uint nbytes) {
+		public bool PutBytes(byte[] data, uint nbytes) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			bool raw_ret = gst_bit_writer_put_bytes(this_as_native, data, nbytes);

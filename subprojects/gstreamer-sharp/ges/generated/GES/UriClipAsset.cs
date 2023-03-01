@@ -96,6 +96,7 @@ namespace GES {
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern void ges_uri_clip_asset_class_set_timeout(ulong timeout);
 
+		[Obsolete]
 		public static ulong Timeout { 
 			set {
 				ges_uri_clip_asset_class_set_timeout(value);

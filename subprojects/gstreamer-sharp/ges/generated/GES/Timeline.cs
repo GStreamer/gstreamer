@@ -791,7 +791,7 @@ namespace GES {
 		static extern bool ges_timeline_add_track(IntPtr raw, IntPtr track);
 
 		public bool AddTrack(GES.Track track) {
-			bool raw_ret = ges_timeline_add_track(Handle, track == null ? IntPtr.Zero : track.OwnedHandle);
+			bool raw_ret = ges_timeline_add_track(Handle, track == null ? IntPtr.Zero : track.Handle);
 			bool ret = raw_ret;
 			return ret;
 		}
@@ -821,6 +821,31 @@ namespace GES {
 			bool raw_ret = ges_timeline_commit_sync(Handle);
 			bool ret = raw_ret;
 			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern void ges_timeline_disable_edit_apis(IntPtr raw, bool disable_edit_apis);
+
+		public void DisableEditApis(bool disable_edit_apis) {
+			ges_timeline_disable_edit_apis(Handle, disable_edit_apis);
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern void ges_timeline_freeze_commit(IntPtr raw);
+
+		public void FreezeCommit() {
+			ges_timeline_freeze_commit(Handle);
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_timeline_get_edit_apis_disabled(IntPtr raw);
+
+		public bool EditApisDisabled { 
+			get {
+				bool raw_ret = ges_timeline_get_edit_apis_disabled(Handle);
+				bool ret = raw_ret;
+				return ret;
+			}
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
@@ -968,6 +993,13 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern void ges_timeline_thaw_commit(IntPtr raw);
+
+		public void ThawCommit() {
+			ges_timeline_thaw_commit(Handle);
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr ges_extractable_get_asset(IntPtr raw);
 
 		public GES.Asset Asset { 
@@ -1040,6 +1072,19 @@ namespace GES {
 			bool raw_ret = ges_meta_container_get_boolean(Handle, native_meta_item, out dest);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_get_date(IntPtr raw, IntPtr meta_item, out IntPtr dest);
+
+		public bool GetDate(string meta_item, out GLib.Date dest) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			IntPtr native_dest;
+			bool raw_ret = ges_meta_container_get_date(Handle, native_meta_item, out native_dest);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			dest = new GLib.Date(native_dest);
 			return ret;
 		}
 
@@ -1189,6 +1234,17 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_register_meta_date(IntPtr raw, int flags, IntPtr meta_item, IntPtr value);
+
+		public bool RegisterMetaDate(GES.MetaFlag flags, string meta_item, GLib.Date value) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_register_meta_date(Handle, (int) flags, native_meta_item, value == null ? IntPtr.Zero : value.Handle);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
 		static extern bool ges_meta_container_register_meta_date_time(IntPtr raw, int flags, IntPtr meta_item, IntPtr value);
 
 		public bool RegisterMetaDateTime(GES.MetaFlag flags, string meta_item, Gst.DateTime value) {
@@ -1295,6 +1351,17 @@ namespace GES {
 		public bool SetBoolean(string meta_item, bool value) {
 			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
 			bool raw_ret = ges_meta_container_set_boolean(Handle, native_meta_item, value);
+			bool ret = raw_ret;
+			GLib.Marshaller.Free (native_meta_item);
+			return ret;
+		}
+
+		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool ges_meta_container_set_date(IntPtr raw, IntPtr meta_item, IntPtr value);
+
+		public bool SetDate(string meta_item, GLib.Date value) {
+			IntPtr native_meta_item = GLib.Marshaller.StringToPtrGStrdup (meta_item);
+			bool raw_ret = ges_meta_container_set_date(Handle, native_meta_item, value == null ? IntPtr.Zero : value.Handle);
 			bool ret = raw_ret;
 			GLib.Marshaller.Free (native_meta_item);
 			return ret;

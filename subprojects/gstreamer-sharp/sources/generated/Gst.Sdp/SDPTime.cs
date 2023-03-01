@@ -42,24 +42,21 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern int gst_sdp_time_set(IntPtr raw, IntPtr start, IntPtr stop, IntPtr[] repeat);
+		static extern int gst_sdp_time_set(IntPtr raw, IntPtr start, IntPtr stop, IntPtr repeat);
 
 		public Gst.Sdp.SDPResult Set(string start, string stop, string[] repeat) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
 			IntPtr native_start = GLib.Marshaller.StringToPtrGStrdup (start);
 			IntPtr native_stop = GLib.Marshaller.StringToPtrGStrdup (stop);
-			int cnt_repeat = repeat == null ? 0 : repeat.Length;
-			IntPtr[] native_repeat = new IntPtr [cnt_repeat + 1];
-			for (int i = 0; i < cnt_repeat; i++)
-				native_repeat [i] = GLib.Marshaller.StringToPtrGStrdup(repeat[i]);
-			native_repeat [cnt_repeat] = IntPtr.Zero;
+			IntPtr native_repeat = GLib.Marshaller.StringArrayToStrvPtr(repeat, true);
 			int raw_ret = gst_sdp_time_set(this_as_native, native_start, native_stop, native_repeat);
 			Gst.Sdp.SDPResult ret = (Gst.Sdp.SDPResult) raw_ret;
 			ReadNative (this_as_native, ref this);
 			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
 			GLib.Marshaller.Free (native_start);
 			GLib.Marshaller.Free (native_stop);
+			GLib.Marshaller.StrFreeV (native_repeat);
 			return ret;
 		}
 

@@ -83,10 +83,11 @@ namespace Gst {
 		}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_control_source_get_value_array(IntPtr raw, ulong timestamp, ulong interval, uint n_values, double[] values);
+		static extern bool gst_control_source_get_value_array(IntPtr raw, ulong timestamp, ulong interval, uint n_values, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]double[] values);
 
 		public bool GetValues(ulong timestamp, ulong interval, double[] values) {
-			bool raw_ret = gst_control_source_get_value_array(Handle, timestamp, interval, (uint) (values == null ? 0 : values.Length), values);
+			uint n_values = (uint)(values == null ? 0 : values.Length);
+			bool raw_ret = gst_control_source_get_value_array(Handle, timestamp, interval, n_values, values);
 			bool ret = raw_ret;
 			return ret;
 		}

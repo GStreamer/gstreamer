@@ -24,16 +24,27 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_buffer_reorder_channels(IntPtr buffer, int format, int channels, int[] from, int[] to);
+		static extern bool gst_audio_buffer_map(IntPtr buffer, IntPtr info, IntPtr gstbuffer, int flags);
 
-		public static bool AudioBufferReorderChannels(Gst.Buffer buffer, Gst.Audio.AudioFormat format, int channels, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to) {
-			int cnt_from = from == null ? 0 : from.Length;
-			int[] native_from = new int [cnt_from];
-			for (int i = 0; i < cnt_from; i++)
+		public static bool AudioBufferMap(out Gst.Audio.AudioBuffer buffer, Gst.Audio.AudioInfo info, Gst.Buffer gstbuffer, Gst.MapFlags flags) {
+			IntPtr native_buffer = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Audio.AudioBuffer)));
+			bool raw_ret = gst_audio_buffer_map(native_buffer, info == null ? IntPtr.Zero : info.Handle, gstbuffer == null ? IntPtr.Zero : gstbuffer.Handle, (int) flags);
+			bool ret = raw_ret;
+			buffer = Gst.Audio.AudioBuffer.New (native_buffer);
+			Marshal.FreeHGlobal (native_buffer);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_audio_buffer_reorder_channels(IntPtr buffer, int format, int channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]int[] from, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]int[] to);
+
+		public static bool AudioBufferReorderChannels(Gst.Buffer buffer, Gst.Audio.AudioFormat format, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to) {
+			int channels = (from == null ? 0 : from.Length);
+			int[] native_from = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_from [i] = (int) from[i];
-			int cnt_to = to == null ? 0 : to.Length;
-			int[] native_to = new int [cnt_to];
-			for (int i = 0; i < cnt_to; i++)
+			int[] native_to = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_to [i] = (int) to[i];
 			bool raw_ret = gst_audio_buffer_reorder_channels(buffer == null ? IntPtr.Zero : buffer.Handle, (int) format, channels, native_from, native_to);
 			bool ret = raw_ret;
@@ -60,25 +71,25 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_channel_positions_from_mask(int channels, ulong channel_mask, int[] position);
+		static extern bool gst_audio_channel_positions_from_mask(ulong channel_mask, int channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=0)]int[] position);
 
-		public static bool AudioChannelPositionsFromMask(int channels, ulong channel_mask, Gst.Audio.AudioChannelPosition[] position) {
-			int cnt_position = position == null ? 0 : position.Length;
-			int[] native_position = new int [cnt_position];
-			for (int i = 0; i < cnt_position; i++)
+		public static bool AudioChannelPositionsFromMask(ulong channel_mask, Gst.Audio.AudioChannelPosition[] position) {
+			int channels = (position == null ? 0 : position.Length);
+			int[] native_position = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_position [i] = (int) position[i];
-			bool raw_ret = gst_audio_channel_positions_from_mask(channels, channel_mask, native_position);
+			bool raw_ret = gst_audio_channel_positions_from_mask(channel_mask, channels, native_position);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_channel_positions_to_mask(int[] position, int channels, bool force_order, out ulong channel_mask);
+		static extern bool gst_audio_channel_positions_to_mask([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] position, int channels, bool force_order, out ulong channel_mask);
 
-		public static bool AudioChannelPositionsToMask(Gst.Audio.AudioChannelPosition[] position, int channels, bool force_order, out ulong channel_mask) {
-			int cnt_position = position == null ? 0 : position.Length;
-			int[] native_position = new int [cnt_position];
-			for (int i = 0; i < cnt_position; i++)
+		public static bool AudioChannelPositionsToMask(Gst.Audio.AudioChannelPosition[] position, bool force_order, out ulong channel_mask) {
+			int channels = (position == null ? 0 : position.Length);
+			int[] native_position = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_position [i] = (int) position[i];
 			bool raw_ret = gst_audio_channel_positions_to_mask(native_position, channels, force_order, out channel_mask);
 			bool ret = raw_ret;
@@ -86,12 +97,12 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_audio_channel_positions_to_string(int[] position, int channels);
+		static extern IntPtr gst_audio_channel_positions_to_string([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] position, int channels);
 
-		public static string AudioChannelPositionsToString(Gst.Audio.AudioChannelPosition[] position, int channels) {
-			int cnt_position = position == null ? 0 : position.Length;
-			int[] native_position = new int [cnt_position];
-			for (int i = 0; i < cnt_position; i++)
+		public static string AudioChannelPositionsToString(Gst.Audio.AudioChannelPosition[] position) {
+			int channels = (position == null ? 0 : position.Length);
+			int[] native_position = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_position [i] = (int) position[i];
 			IntPtr raw_ret = gst_audio_channel_positions_to_string(native_position, channels);
 			string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
@@ -99,12 +110,12 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_channel_positions_to_valid_order(int[] position, int channels);
+		static extern bool gst_audio_channel_positions_to_valid_order([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] position, int channels);
 
-		public static bool AudioChannelPositionsToValidOrder(Gst.Audio.AudioChannelPosition[] position, int channels) {
-			int cnt_position = position == null ? 0 : position.Length;
-			int[] native_position = new int [cnt_position];
-			for (int i = 0; i < cnt_position; i++)
+		public static bool AudioChannelPositionsToValidOrder(Gst.Audio.AudioChannelPosition[] position) {
+			int channels = (position == null ? 0 : position.Length);
+			int[] native_position = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_position [i] = (int) position[i];
 			bool raw_ret = gst_audio_channel_positions_to_valid_order(native_position, channels);
 			bool ret = raw_ret;
@@ -112,12 +123,12 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_check_valid_channel_positions(int[] position, int channels, bool force_order);
+		static extern bool gst_audio_check_valid_channel_positions([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] position, int channels, bool force_order);
 
-		public static bool AudioCheckValidChannelPositions(Gst.Audio.AudioChannelPosition[] position, int channels, bool force_order) {
-			int cnt_position = position == null ? 0 : position.Length;
-			int[] native_position = new int [cnt_position];
-			for (int i = 0; i < cnt_position; i++)
+		public static bool AudioCheckValidChannelPositions(Gst.Audio.AudioChannelPosition[] position, bool force_order) {
+			int channels = (position == null ? 0 : position.Length);
+			int[] native_position = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_position [i] = (int) position[i];
 			bool raw_ret = gst_audio_check_valid_channel_positions(native_position, channels, force_order);
 			bool ret = raw_ret;
@@ -170,11 +181,13 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_audio_format_fill_silence(IntPtr info, byte[] dest, UIntPtr n_length);
+		static extern void gst_audio_format_fill_silence(IntPtr info, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] dest, UIntPtr n_length);
 
+		[Obsolete]
 		public static void AudioFormatFillSilence(Gst.Audio.AudioFormatInfo info, byte[] dest) {
 			IntPtr native_info = GLib.Marshaller.StructureToPtrAlloc (info);
-			gst_audio_format_fill_silence(native_info, dest, new UIntPtr ((ulong) (dest == null ? 0 : dest.Length)));
+			ulong n_length = (ulong)(dest == null ? 0 : dest.Length);
+			gst_audio_format_fill_silence(native_info, dest, new UIntPtr ((uint)n_length));
 			Marshal.FreeHGlobal (native_info);
 		}
 
@@ -217,16 +230,15 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_get_channel_reorder_map(int channels, int[] from, int[] to, int[] reorder_map);
+		static extern bool gst_audio_get_channel_reorder_map(int channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=0)]int[] from, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=0)]int[] to, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=0)]int[] reorder_map);
 
-		public static bool AudioGetChannelReorderMap(int channels, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to, int[] reorder_map) {
-			int cnt_from = from == null ? 0 : from.Length;
-			int[] native_from = new int [cnt_from];
-			for (int i = 0; i < cnt_from; i++)
+		public static bool AudioGetChannelReorderMap(Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to, int[] reorder_map) {
+			int channels = (from == null ? 0 : from.Length);
+			int[] native_from = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_from [i] = (int) from[i];
-			int cnt_to = to == null ? 0 : to.Length;
-			int[] native_to = new int [cnt_to];
-			for (int i = 0; i < cnt_to; i++)
+			int[] native_to = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_to [i] = (int) to[i];
 			bool raw_ret = gst_audio_get_channel_reorder_map(channels, native_from, native_to, reorder_map);
 			bool ret = raw_ret;
@@ -243,29 +255,71 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_iec61937_payload(byte[] src, uint src_n, byte[] dst, uint dst_n, IntPtr spec, int endianness);
+		static extern bool gst_audio_iec61937_payload([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] src, uint src_n, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] dst, uint dst_n, IntPtr spec, int endianness);
 
-		public static bool AudioIec61937Payload(byte[] src, uint src_n, byte[] dst, uint dst_n, Gst.Audio.AudioRingBufferSpec spec, int endianness) {
+		public static bool AudioIec61937Payload(byte[] src, byte[] dst, Gst.Audio.AudioRingBufferSpec spec, int endianness) {
+			uint src_n = (uint)(src == null ? 0 : src.Length);
+			uint dst_n = (uint)(dst == null ? 0 : dst.Length);
 			bool raw_ret = gst_audio_iec61937_payload(src, src_n, dst, dst_n, spec == null ? IntPtr.Zero : spec.Handle, endianness);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_audio_make_raw_caps(int[] formats, uint len, int layout);
+		static extern bool gst_audio_info_from_caps(out IntPtr info, IntPtr caps);
 
-		public static Gst.Caps AudioMakeRawCaps(Gst.Audio.AudioFormat[] formats, uint len, Gst.Audio.AudioLayout layout) {
-			int cnt_formats = formats == null ? 0 : formats.Length;
-			int[] native_formats = new int [cnt_formats];
-			for (int i = 0; i < cnt_formats; i++)
+		public static bool AudioInfoFromCaps(out Gst.Audio.AudioInfo info, Gst.Caps caps) {
+			IntPtr native_info;
+			bool raw_ret = gst_audio_info_from_caps(out native_info, caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			info = native_info == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Audio.AudioInfo), false);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_audio_info_init(out IntPtr info);
+
+		public static Gst.Audio.AudioInfo AudioInfoInit() {
+			Gst.Audio.AudioInfo info;
+			IntPtr native_info;
+			gst_audio_info_init(out native_info);
+			info = native_info == IntPtr.Zero ? null : (Gst.Audio.AudioInfo) GLib.Opaque.GetOpaque (native_info, typeof (Gst.Audio.AudioInfo), false);
+			return info;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_level_meta_api_get_type();
+
+		public static GLib.GType AudioLevelMetaApiGetType() {
+			IntPtr raw_ret = gst_audio_level_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_level_meta_get_info();
+
+		public static Gst.MetaInfo AudioLevelMetaGetInfo() {
+			IntPtr raw_ret = gst_audio_level_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_audio_make_raw_caps([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]int[] formats, uint len, int layout);
+
+		public static Gst.Caps AudioMakeRawCaps(Gst.Audio.AudioFormat[] formats, Gst.Audio.AudioLayout layout) {
+			uint len = (uint)(formats == null ? 0 : formats.Length);
+			int[] native_formats = new int [len];
+			for (int i = 0; i < len; i++)
 				native_formats [i] = (int) formats[i];
 			IntPtr raw_ret = gst_audio_make_raw_caps(native_formats, len, (int) layout);
 			Gst.Caps ret = raw_ret == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (raw_ret, typeof (Gst.Caps), true);
 			return ret;
 		}
 
-		public static Gst.Caps AudioMakeRawCaps(uint len, Gst.Audio.AudioLayout layout) {
-			return AudioMakeRawCaps (null, len, layout);
+		public static Gst.Caps AudioMakeRawCaps(Gst.Audio.AudioLayout layout) {
+			return AudioMakeRawCaps (null, layout);
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -287,18 +341,18 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_audio_reorder_channels(byte[] data, UIntPtr n_length, int format, int channels, int[] from, int[] to);
+		static extern bool gst_audio_reorder_channels([MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] data, UIntPtr n_length, int format, int channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]int[] from, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]int[] to);
 
-		public static bool AudioReorderChannels(byte[] data, Gst.Audio.AudioFormat format, int channels, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to) {
-			int cnt_from = from == null ? 0 : from.Length;
-			int[] native_from = new int [cnt_from];
-			for (int i = 0; i < cnt_from; i++)
+		public static bool AudioReorderChannels(byte[] data, Gst.Audio.AudioFormat format, Gst.Audio.AudioChannelPosition[] from, Gst.Audio.AudioChannelPosition[] to) {
+			ulong n_length = (ulong)(data == null ? 0 : data.Length);
+			int channels = (from == null ? 0 : from.Length);
+			int[] native_from = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_from [i] = (int) from[i];
-			int cnt_to = to == null ? 0 : to.Length;
-			int[] native_to = new int [cnt_to];
-			for (int i = 0; i < cnt_to; i++)
+			int[] native_to = new int [channels];
+			for (int i = 0; i < channels; i++)
 				native_to [i] = (int) to[i];
-			bool raw_ret = gst_audio_reorder_channels(data, new UIntPtr ((ulong) (data == null ? 0 : data.Length)), (int) format, channels, native_from, native_to);
+			bool raw_ret = gst_audio_reorder_channels(data, new UIntPtr ((uint)n_length), (int) format, channels, native_from, native_to);
 			bool ret = raw_ret;
 			return ret;
 		}
@@ -329,19 +383,28 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_add_audio_downmix_meta(IntPtr buffer, int[] from_position, int from_channels, int[] to_position, int to_channels, float matrix);
+		static extern IntPtr gst_buffer_add_audio_downmix_meta(IntPtr buffer, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]int[] from_position, int from_channels, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=4)]int[] to_position, int to_channels, float matrix);
 
-		public static Gst.Audio.AudioDownmixMeta BufferAddAudioDownmixMeta(Gst.Buffer buffer, Gst.Audio.AudioChannelPosition[] from_position, int from_channels, Gst.Audio.AudioChannelPosition[] to_position, int to_channels, float matrix) {
-			int cnt_from_position = from_position == null ? 0 : from_position.Length;
-			int[] native_from_position = new int [cnt_from_position];
-			for (int i = 0; i < cnt_from_position; i++)
+		public static Gst.Audio.AudioDownmixMeta BufferAddAudioDownmixMeta(Gst.Buffer buffer, Gst.Audio.AudioChannelPosition[] from_position, Gst.Audio.AudioChannelPosition[] to_position, float matrix) {
+			int from_channels = (from_position == null ? 0 : from_position.Length);
+			int[] native_from_position = new int [from_channels];
+			for (int i = 0; i < from_channels; i++)
 				native_from_position [i] = (int) from_position[i];
-			int cnt_to_position = to_position == null ? 0 : to_position.Length;
-			int[] native_to_position = new int [cnt_to_position];
-			for (int i = 0; i < cnt_to_position; i++)
+			int to_channels = (to_position == null ? 0 : to_position.Length);
+			int[] native_to_position = new int [to_channels];
+			for (int i = 0; i < to_channels; i++)
 				native_to_position [i] = (int) to_position[i];
 			IntPtr raw_ret = gst_buffer_add_audio_downmix_meta(buffer == null ? IntPtr.Zero : buffer.Handle, native_from_position, from_channels, native_to_position, to_channels, matrix);
 			Gst.Audio.AudioDownmixMeta ret = Gst.Audio.AudioDownmixMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_add_audio_level_meta(IntPtr buffer, byte level, bool voice_activity);
+
+		public static Gst.Audio.AudioLevelMeta BufferAddAudioLevelMeta(Gst.Buffer buffer, byte level, bool voice_activity) {
+			IntPtr raw_ret = gst_buffer_add_audio_level_meta(buffer == null ? IntPtr.Zero : buffer.Handle, level, voice_activity);
+			Gst.Audio.AudioLevelMeta ret = Gst.Audio.AudioLevelMeta.New (raw_ret);
 			return ret;
 		}
 
@@ -359,15 +422,115 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_buffer_get_audio_downmix_meta_for_channels(IntPtr buffer, int[] to_position, int to_channels);
+		static extern IntPtr gst_buffer_add_dsd_plane_offset_meta(IntPtr buffer, int num_channels, UIntPtr num_bytes_per_channel, UIntPtr offsets);
 
-		public static Gst.Audio.AudioDownmixMeta BufferGetAudioDownmixMetaForChannels(Gst.Buffer buffer, Gst.Audio.AudioChannelPosition[] to_position, int to_channels) {
-			int cnt_to_position = to_position == null ? 0 : to_position.Length;
-			int[] native_to_position = new int [cnt_to_position];
-			for (int i = 0; i < cnt_to_position; i++)
+		public static Gst.Audio.DsdPlaneOffsetMeta BufferAddDsdPlaneOffsetMeta(Gst.Buffer buffer, int num_channels, ulong num_bytes_per_channel, ulong offsets) {
+			IntPtr raw_ret = gst_buffer_add_dsd_plane_offset_meta(buffer == null ? IntPtr.Zero : buffer.Handle, num_channels, new UIntPtr (num_bytes_per_channel), new UIntPtr (offsets));
+			Gst.Audio.DsdPlaneOffsetMeta ret = Gst.Audio.DsdPlaneOffsetMeta.New (raw_ret);
+			return ret;
+		}
+
+		public static Gst.Audio.DsdPlaneOffsetMeta BufferAddDsdPlaneOffsetMeta(Gst.Buffer buffer, int num_channels, ulong num_bytes_per_channel) {
+			return BufferAddDsdPlaneOffsetMeta (buffer, num_channels, num_bytes_per_channel, 0);
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_get_audio_downmix_meta_for_channels(IntPtr buffer, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]int[] to_position, int to_channels);
+
+		public static Gst.Audio.AudioDownmixMeta BufferGetAudioDownmixMetaForChannels(Gst.Buffer buffer, Gst.Audio.AudioChannelPosition[] to_position) {
+			int to_channels = (to_position == null ? 0 : to_position.Length);
+			int[] native_to_position = new int [to_channels];
+			for (int i = 0; i < to_channels; i++)
 				native_to_position [i] = (int) to_position[i];
 			IntPtr raw_ret = gst_buffer_get_audio_downmix_meta_for_channels(buffer == null ? IntPtr.Zero : buffer.Handle, native_to_position, to_channels);
 			Gst.Audio.AudioDownmixMeta ret = Gst.Audio.AudioDownmixMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_buffer_get_audio_level_meta(IntPtr buffer);
+
+		public static Gst.Audio.AudioLevelMeta BufferGetAudioLevelMeta(Gst.Buffer buffer) {
+			IntPtr raw_ret = gst_buffer_get_audio_level_meta(buffer == null ? IntPtr.Zero : buffer.Handle);
+			Gst.Audio.AudioLevelMeta ret = Gst.Audio.AudioLevelMeta.New (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_dsd_convert(byte input_data, byte output_data, int input_format, int output_format, int input_layout, int output_layout, UIntPtr input_plane_offsets, UIntPtr output_plane_offsets, UIntPtr num_dsd_bytes, int num_channels, bool reverse_byte_bits);
+
+		public static void DsdConvert(byte input_data, byte output_data, Gst.Audio.DsdFormat input_format, Gst.Audio.DsdFormat output_format, Gst.Audio.AudioLayout input_layout, Gst.Audio.AudioLayout output_layout, ulong input_plane_offsets, ulong output_plane_offsets, ulong num_dsd_bytes, int num_channels, bool reverse_byte_bits) {
+			gst_dsd_convert(input_data, output_data, (int) input_format, (int) output_format, (int) input_layout, (int) output_layout, new UIntPtr (input_plane_offsets), new UIntPtr (output_plane_offsets), new UIntPtr (num_dsd_bytes), num_channels, reverse_byte_bits);
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_dsd_format_from_string(IntPtr str);
+
+		public static Gst.Audio.DsdFormat DsdFormatFromString(string str) {
+			IntPtr native_str = GLib.Marshaller.StringToPtrGStrdup (str);
+			int raw_ret = gst_dsd_format_from_string(native_str);
+			Gst.Audio.DsdFormat ret = (Gst.Audio.DsdFormat) raw_ret;
+			GLib.Marshaller.Free (native_str);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern uint gst_dsd_format_get_width(int format);
+
+		public static uint DsdFormatGetWidth(Gst.Audio.DsdFormat format) {
+			uint raw_ret = gst_dsd_format_get_width((int) format);
+			uint ret = raw_ret;
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_dsd_format_to_string(int format);
+
+		public static string DsdFormatToString(Gst.Audio.DsdFormat format) {
+			IntPtr raw_ret = gst_dsd_format_to_string((int) format);
+			string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_dsd_info_from_caps(IntPtr info, IntPtr caps);
+
+		public static bool DsdInfoFromCaps(out Gst.Audio.DsdInfo info, Gst.Caps caps) {
+			IntPtr native_info = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Audio.DsdInfo)));
+			bool raw_ret = gst_dsd_info_from_caps(native_info, caps == null ? IntPtr.Zero : caps.Handle);
+			bool ret = raw_ret;
+			info = Gst.Audio.DsdInfo.New (native_info);
+			Marshal.FreeHGlobal (native_info);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern void gst_dsd_info_init(IntPtr info);
+
+		public static Gst.Audio.DsdInfo DsdInfoInit() {
+			Gst.Audio.DsdInfo info;
+			IntPtr native_info = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Audio.DsdInfo)));
+			gst_dsd_info_init(native_info);
+			info = Gst.Audio.DsdInfo.New (native_info);
+			Marshal.FreeHGlobal (native_info);
+			return info;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_dsd_plane_offset_meta_api_get_type();
+
+		public static GLib.GType DsdPlaneOffsetMetaApiGetType() {
+			IntPtr raw_ret = gst_dsd_plane_offset_meta_api_get_type();
+			GLib.GType ret = new GLib.GType(raw_ret);
+			return ret;
+		}
+
+		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr gst_dsd_plane_offset_meta_get_info();
+
+		public static Gst.MetaInfo DsdPlaneOffsetMetaGetInfo() {
+			IntPtr raw_ret = gst_dsd_plane_offset_meta_get_info();
+			Gst.MetaInfo ret = Gst.MetaInfo.New (raw_ret);
 			return ret;
 		}
 

@@ -44,7 +44,7 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_payload_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_mikey_payload_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -99,67 +99,75 @@ namespace Gst.Sdp {
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_payload_key_data_set_interval(IntPtr raw, byte vf_len, byte[] vf_data, byte vt_len, byte[] vt_data);
+		static extern bool gst_mikey_payload_key_data_set_interval(IntPtr raw, byte vf_len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] vf_data, byte vt_len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] vt_data);
 
-		public bool KeyDataSetInterval(byte vf_len, byte[] vf_data, byte vt_len, byte[] vt_data) {
+		public bool KeyDataSetInterval(byte[] vf_data, byte[] vt_data) {
+			byte vf_len = (byte)(vf_data == null ? 0 : vf_data.Length);
+			byte vt_len = (byte)(vt_data == null ? 0 : vt_data.Length);
 			bool raw_ret = gst_mikey_payload_key_data_set_interval(Handle, vf_len, vf_data, vt_len, vt_data);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_payload_key_data_set_key(IntPtr raw, int key_type, ushort key_len, byte[] key_data);
+		static extern bool gst_mikey_payload_key_data_set_key(IntPtr raw, int key_type, ushort key_len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] key_data);
 
-		public bool KeyDataSetKey(Gst.Sdp.MIKEYKeyDataType key_type, ushort key_len, byte[] key_data) {
+		public bool KeyDataSetKey(Gst.Sdp.MIKEYKeyDataType key_type, byte[] key_data) {
+			ushort key_len = (ushort)(key_data == null ? 0 : key_data.Length);
 			bool raw_ret = gst_mikey_payload_key_data_set_key(Handle, (int) key_type, key_len, key_data);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_payload_key_data_set_salt(IntPtr raw, ushort salt_len, byte[] salt_data);
+		static extern bool gst_mikey_payload_key_data_set_salt(IntPtr raw, ushort salt_len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] salt_data);
 
-		public bool KeyDataSetSalt(ushort salt_len, byte[] salt_data) {
+		public bool KeyDataSetSalt(byte[] salt_data) {
+			ushort salt_len = (ushort)(salt_data == null ? 0 : salt_data.Length);
 			bool raw_ret = gst_mikey_payload_key_data_set_salt(Handle, salt_len, salt_data);
 			bool ret = raw_ret;
 			return ret;
 		}
 
-		public bool KeyDataSetSalt(ushort salt_len) {
-			return KeyDataSetSalt (salt_len, null);
+		public bool KeyDataSetSalt() {
+			return KeyDataSetSalt (null);
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_payload_key_data_set_spi(IntPtr raw, byte spi_len, byte[] spi_data);
+		static extern bool gst_mikey_payload_key_data_set_spi(IntPtr raw, byte spi_len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] spi_data);
 
-		public bool KeyDataSetSpi(byte spi_len, byte[] spi_data) {
+		public bool KeyDataSetSpi(byte[] spi_data) {
+			byte spi_len = (byte)(spi_data == null ? 0 : spi_data.Length);
 			bool raw_ret = gst_mikey_payload_key_data_set_spi(Handle, spi_len, spi_data);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_payload_pke_set(IntPtr raw, int C, ushort data_len, byte[] data);
+		static extern bool gst_mikey_payload_pke_set(IntPtr raw, int C, ushort data_len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] data);
 
-		public bool PkeSet(Gst.Sdp.MIKEYCacheType C, ushort data_len, byte[] data) {
+		public bool PkeSet(Gst.Sdp.MIKEYCacheType C, byte[] data) {
+			ushort data_len = (ushort)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_mikey_payload_pke_set(Handle, (int) C, data_len, data);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_payload_rand_set(IntPtr raw, byte len, byte[] rand);
+		static extern bool gst_mikey_payload_rand_set(IntPtr raw, byte len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=1)]byte[] rand);
 
-		public bool RandSet(byte len, byte[] rand) {
+		public bool RandSet(byte[] rand) {
+			byte len = (byte)(rand == null ? 0 : rand.Length);
 			bool raw_ret = gst_mikey_payload_rand_set(Handle, len, rand);
 			bool ret = raw_ret;
 			return ret;
 		}
 
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_mikey_payload_sp_add_param(IntPtr raw, byte type, byte len, byte[] val);
+		static extern bool gst_mikey_payload_sp_add_param(IntPtr raw, byte type, byte len, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=2)]byte[] val);
 
-		public bool SpAddParam(byte type, byte len, byte[] val) {
+		public bool SpAddParam(byte type, byte[] val) {
+			byte len = (byte)(val == null ? 0 : val.Length);
 			bool raw_ret = gst_mikey_payload_sp_add_param(Handle, type, len, val);
 			bool ret = raw_ret;
 			return ret;
@@ -215,7 +223,7 @@ namespace Gst.Sdp {
 		[DllImport("gstsdp-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_mikey_payload_new(int type);
 
-		public MIKEYPayload (Gst.Sdp.MIKEYPayloadType type) 
+		public MIKEYPayload (Gst.Sdp.MIKEYPayloadType type) : base (IntPtr.Zero)
 		{
 			Raw = gst_mikey_payload_new((int) type);
 		}

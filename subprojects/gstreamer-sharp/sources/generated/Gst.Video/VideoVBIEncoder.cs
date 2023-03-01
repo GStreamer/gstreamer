@@ -42,11 +42,12 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool gst_video_vbi_encoder_add_ancillary(IntPtr raw, bool composite, byte DID, byte SDID_block_number, byte[] data, uint data_count);
+		static extern bool gst_video_vbi_encoder_add_ancillary(IntPtr raw, bool composite, byte DID, byte SDID_block_number, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=5)]byte[] data, uint data_count);
 
-		public bool AddAncillary(bool composite, byte DID, byte SDID_block_number, byte[] data, uint data_count) {
+		public bool AddAncillary(bool composite, byte DID, byte SDID_block_number, byte[] data) {
 			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
 			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			uint data_count = (uint)(data == null ? 0 : data.Length);
 			bool raw_ret = gst_video_vbi_encoder_add_ancillary(this_as_native, composite, DID, SDID_block_number, data, data_count);
 			bool ret = raw_ret;
 			ReadNative (this_as_native, ref this);

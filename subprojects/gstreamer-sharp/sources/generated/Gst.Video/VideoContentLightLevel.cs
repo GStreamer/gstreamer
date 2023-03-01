@@ -78,6 +78,21 @@ namespace Gst.Video {
 		}
 
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern bool gst_video_content_light_level_is_equal(IntPtr raw, IntPtr other);
+
+		public bool IsEqual(Gst.Video.VideoContentLightLevel other) {
+			IntPtr this_as_native = System.Runtime.InteropServices.Marshal.AllocHGlobal (System.Runtime.InteropServices.Marshal.SizeOf (this));
+			System.Runtime.InteropServices.Marshal.StructureToPtr (this, this_as_native, false);
+			IntPtr native_other = GLib.Marshaller.StructureToPtrAlloc (other);
+			bool raw_ret = gst_video_content_light_level_is_equal(this_as_native, native_other);
+			bool ret = raw_ret;
+			ReadNative (this_as_native, ref this);
+			System.Runtime.InteropServices.Marshal.FreeHGlobal (this_as_native);
+			Marshal.FreeHGlobal (native_other);
+			return ret;
+		}
+
+		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_video_content_light_level_to_string(IntPtr raw);
 
 		public override string ToString() {

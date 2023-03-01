@@ -738,14 +738,14 @@ namespace Gst.Audio {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate uint CommitNativeDelegate (IntPtr inst, ulong sample, byte[] data, int in_samples, int out_samples, ref int accum);
+		delegate uint CommitNativeDelegate (IntPtr inst, ref ulong sample, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] data, int in_samples, int out_samples, ref int accum);
 
-		static uint Commit_cb (IntPtr inst, ulong sample, byte[] data, int in_samples, int out_samples, ref int accum)
+		static uint Commit_cb (IntPtr inst, ref ulong sample, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] data, int in_samples, int out_samples, ref int accum)
 		{
 			try {
 				AudioRingBuffer __obj = GLib.Object.GetObject (inst, false) as AudioRingBuffer;
 				uint __result;
-				__result = __obj.OnCommit (sample, data, in_samples, out_samples, ref accum);
+				__result = __obj.OnCommit (ref sample, data, out_samples, ref accum);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -755,12 +755,12 @@ namespace Gst.Audio {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.Audio.AudioRingBuffer), ConnectionMethod="OverrideCommit")]
-		protected virtual uint OnCommit (ulong sample, byte[] data, int in_samples, int out_samples, ref int accum)
+		protected virtual uint OnCommit (ref ulong sample, byte[] data, int out_samples, ref int accum)
 		{
-			return InternalCommit (sample, data, in_samples, out_samples, ref accum);
+			return InternalCommit (ref sample, data, out_samples, ref accum);
 		}
 
-		private uint InternalCommit (ulong sample, byte[] data, int in_samples, int out_samples, ref int accum)
+		private uint InternalCommit (ref ulong sample, byte[] data, int out_samples, ref int accum)
 		{
 			CommitNativeDelegate unmanaged = null;
 			unsafe {
@@ -769,7 +769,8 @@ namespace Gst.Audio {
 			}
 			if (unmanaged == null) return 0;
 
-			uint __result = unmanaged (this.Handle, sample, data, in_samples, out_samples, ref accum);
+			int in_samples = (data == null ? 0 : data.Length);
+			uint __result = unmanaged (this.Handle, ref sample, data, in_samples, out_samples, ref accum);
 			return __result;
 		}
 
@@ -1029,10 +1030,11 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_audio_ring_buffer_commit(IntPtr raw, ulong sample, byte[] data, int in_samples, int out_samples, ref int accum);
+		static extern uint gst_audio_ring_buffer_commit(IntPtr raw, ref ulong sample, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] data, int in_samples, int out_samples, ref int accum);
 
-		public uint Commit(ulong sample, byte[] data, int in_samples, int out_samples, ref int accum) {
-			uint raw_ret = gst_audio_ring_buffer_commit(Handle, sample, data, in_samples, out_samples, ref accum);
+		public uint Commit(ref ulong sample, byte[] data, int out_samples, ref int accum) {
+			int in_samples = (data == null ? 0 : data.Length);
+			uint raw_ret = gst_audio_ring_buffer_commit(Handle, ref sample, data, in_samples, out_samples, ref accum);
 			uint ret = raw_ret;
 			return ret;
 		}
@@ -1123,9 +1125,10 @@ namespace Gst.Audio {
 		}
 
 		[DllImport("gstaudio-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern uint gst_audio_ring_buffer_read(IntPtr raw, ulong sample, byte[] data, uint len, out ulong timestamp);
+		static extern uint gst_audio_ring_buffer_read(IntPtr raw, ulong sample, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=3)]byte[] data, uint len, out ulong timestamp);
 
-		public uint Read(ulong sample, byte[] data, uint len, out ulong timestamp) {
+		public uint Read(ulong sample, byte[] data, out ulong timestamp) {
+			uint len = (uint)(data == null ? 0 : data.Length);
 			uint raw_ret = gst_audio_ring_buffer_read(Handle, sample, data, len, out timestamp);
 			uint ret = raw_ret;
 			return ret;

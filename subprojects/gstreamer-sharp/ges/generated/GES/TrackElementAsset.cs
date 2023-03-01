@@ -59,14 +59,14 @@ namespace GES {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate bool GetNaturalFramerateNativeDelegate (IntPtr inst, int framerate_n, int framerate_d);
+		delegate bool GetNaturalFramerateNativeDelegate (IntPtr inst, out int framerate_n, out int framerate_d);
 
-		static bool GetNaturalFramerate_cb (IntPtr inst, int framerate_n, int framerate_d)
+		static bool GetNaturalFramerate_cb (IntPtr inst, out int framerate_n, out int framerate_d)
 		{
 			try {
 				TrackElementAsset __obj = GLib.Object.GetObject (inst, false) as TrackElementAsset;
 				bool __result;
-				__result = __obj.OnGetNaturalFramerate (framerate_n, framerate_d);
+				__result = __obj.OnGetNaturalFramerate (out framerate_n, out framerate_d);
 				return __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -76,21 +76,21 @@ namespace GES {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(GES.TrackElementAsset), ConnectionMethod="OverrideGetNaturalFramerate")]
-		protected virtual bool OnGetNaturalFramerate (int framerate_n, int framerate_d)
+		protected virtual bool OnGetNaturalFramerate (out int framerate_n, out int framerate_d)
 		{
-			return InternalGetNaturalFramerate (framerate_n, framerate_d);
+			return InternalGetNaturalFramerate (out framerate_n, out framerate_d);
 		}
 
-		private bool InternalGetNaturalFramerate (int framerate_n, int framerate_d)
+		private bool InternalGetNaturalFramerate (out int framerate_n, out int framerate_d)
 		{
 			GetNaturalFramerateNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("get_natural_framerate"));
 				unmanaged = (GetNaturalFramerateNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(GetNaturalFramerateNativeDelegate));
 			}
-			if (unmanaged == null) return false;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
-			bool __result = unmanaged (this.Handle, framerate_n, framerate_d);
+			bool __result = unmanaged (this.Handle, out framerate_n, out framerate_d);
 			return __result;
 		}
 
@@ -138,10 +138,10 @@ namespace GES {
 		}
 
 		[DllImport("ges-1.0", CallingConvention = CallingConvention.Cdecl)]
-		static extern bool ges_track_element_asset_get_natural_framerate(IntPtr raw, int framerate_n, int framerate_d);
+		static extern bool ges_track_element_asset_get_natural_framerate(IntPtr raw, out int framerate_n, out int framerate_d);
 
-		public bool GetNaturalFramerate(int framerate_n, int framerate_d) {
-			bool raw_ret = ges_track_element_asset_get_natural_framerate(Handle, framerate_n, framerate_d);
+		public bool GetNaturalFramerate(out int framerate_n, out int framerate_d) {
+			bool raw_ret = ges_track_element_asset_get_natural_framerate(Handle, out framerate_n, out framerate_d);
 			bool ret = raw_ret;
 			return ret;
 		}

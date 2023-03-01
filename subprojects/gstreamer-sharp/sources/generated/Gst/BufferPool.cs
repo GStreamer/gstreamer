@@ -360,14 +360,16 @@ namespace Gst {
 		}
 
 		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-		delegate int AllocBufferNativeDelegate (IntPtr inst, IntPtr buffer, IntPtr parms);
+		delegate int AllocBufferNativeDelegate (IntPtr inst, out IntPtr buffer, IntPtr parms);
 
-		static int AllocBuffer_cb (IntPtr inst, IntPtr buffer, IntPtr parms)
+		static int AllocBuffer_cb (IntPtr inst, out IntPtr buffer, IntPtr parms)
 		{
 			try {
 				BufferPool __obj = GLib.Object.GetObject (inst, false) as BufferPool;
 				Gst.FlowReturn __result;
-				__result = __obj.OnAllocBuffer (buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (buffer, typeof (Gst.Buffer), false), Gst.BufferPoolAcquireParams.New (parms));
+				Gst.Buffer mybuffer;
+				__result = __obj.OnAllocBuffer (out mybuffer, Gst.BufferPoolAcquireParams.New (parms));
+				buffer = mybuffer == null ? IntPtr.Zero : mybuffer.Handle;
 				return (int) __result;
 			} catch (Exception e) {
 				GLib.ExceptionManager.RaiseUnhandledException (e, true);
@@ -377,22 +379,24 @@ namespace Gst {
 		}
 
 		[GLib.DefaultSignalHandler(Type=typeof(Gst.BufferPool), ConnectionMethod="OverrideAllocBuffer")]
-		protected virtual Gst.FlowReturn OnAllocBuffer (Gst.Buffer buffer, Gst.BufferPoolAcquireParams parms)
+		protected virtual Gst.FlowReturn OnAllocBuffer (out Gst.Buffer buffer, Gst.BufferPoolAcquireParams parms)
 		{
-			return InternalAllocBuffer (buffer, parms);
+			return InternalAllocBuffer (out buffer, parms);
 		}
 
-		private Gst.FlowReturn InternalAllocBuffer (Gst.Buffer buffer, Gst.BufferPoolAcquireParams parms)
+		private Gst.FlowReturn InternalAllocBuffer (out Gst.Buffer buffer, Gst.BufferPoolAcquireParams parms)
 		{
 			AllocBufferNativeDelegate unmanaged = null;
 			unsafe {
 				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("alloc_buffer"));
 				unmanaged = (AllocBufferNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(AllocBufferNativeDelegate));
 			}
-			if (unmanaged == null) return (Gst.FlowReturn) 0;
+			if (unmanaged == null) throw new InvalidOperationException ("No base method to invoke");
 
+			IntPtr native_buffer;
 			IntPtr native_parms = GLib.Marshaller.StructureToPtrAlloc (parms);
-			int __result = unmanaged (this.Handle, buffer == null ? IntPtr.Zero : buffer.Handle, native_parms);
+			int __result = unmanaged (this.Handle, out native_buffer, native_parms);
+			buffer = native_buffer == IntPtr.Zero ? null : (Gst.Buffer) GLib.Opaque.GetOpaque (native_buffer, typeof (Gst.Buffer), true);
 			Marshal.FreeHGlobal (native_parms);
 			return (Gst.FlowReturn) __result;
 		}

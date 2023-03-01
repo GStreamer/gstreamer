@@ -104,7 +104,7 @@ namespace Gst {
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_memory_get_type();
 
-		public static GLib.GType GType { 
+		public static new GLib.GType GType { 
 			get {
 				IntPtr raw_ret = gst_memory_get_type();
 				GLib.GType ret = new GLib.GType(raw_ret);
@@ -208,39 +208,12 @@ namespace Gst {
 		public Memory(IntPtr raw) : base(raw) {}
 
 		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_memory_new_wrapped(int flags, byte[] data, UIntPtr maxsize, UIntPtr offset, UIntPtr size, IntPtr user_data, GLib.DestroyNotify notify);
+		static extern IntPtr gst_memory_new_wrapped(int flags, [MarshalAs(UnmanagedType.LPArray, SizeParamIndex=4)]IntPtr[] data, UIntPtr size, UIntPtr maxsize, UIntPtr offset, IntPtr user_data, GLib.DestroyNotify notify);
 
-		public Memory (Gst.MemoryFlags flags, byte[] data, ulong maxsize, ulong offset, ulong size, IntPtr user_data, GLib.DestroyNotify notify) 
+		public Memory (Gst.MemoryFlags flags, IntPtr[] data, ulong maxsize, ulong offset, IntPtr user_data, GLib.DestroyNotify notify) : base (IntPtr.Zero)
 		{
-			Raw = gst_memory_new_wrapped((int) flags, data, new UIntPtr (maxsize), new UIntPtr (offset), new UIntPtr (size), user_data, notify);
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern IntPtr gst_memory_ref(IntPtr raw);
-
-		protected override void Ref (IntPtr raw)
-		{
-			if (!Owned) {
-				gst_memory_ref (raw);
-				Owned = true;
-			}
-		}
-
-		[DllImport("gstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void gst_memory_unref(IntPtr raw);
-
-		protected override void Unref (IntPtr raw)
-		{
-			if (Owned) {
-				gst_memory_unref (raw);
-				Owned = false;
-			}
-		}
-
-		protected override Action<IntPtr> DisposeUnmanagedFunc {
-			get {
-				return gst_memory_unref;
-			}
+			ulong size = (ulong)(data == null ? 0 : data.Length);
+			Raw = gst_memory_new_wrapped((int) flags, data, new UIntPtr ((uint)size), new UIntPtr (maxsize), new UIntPtr (offset), user_data, notify);
 		}
 
 

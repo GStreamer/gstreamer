@@ -109,6 +109,64 @@ namespace Gst.Video {
 			return (Gst.FlowReturn) __result;
 		}
 
+		static SetInfoNativeDelegate SetInfo_cb_delegate;
+		static SetInfoNativeDelegate SetInfoVMCallback {
+			get {
+				if (SetInfo_cb_delegate == null)
+					SetInfo_cb_delegate = new SetInfoNativeDelegate (SetInfo_cb);
+				return SetInfo_cb_delegate;
+			}
+		}
+
+		static void OverrideSetInfo (GLib.GType gtype)
+		{
+			OverrideSetInfo (gtype, SetInfoVMCallback);
+		}
+
+		static void OverrideSetInfo (GLib.GType gtype, SetInfoNativeDelegate callback)
+		{
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) gtype.GetClassPtr()) + (long) class_abi.GetFieldOffset("set_info"));
+				*raw_ptr = Marshal.GetFunctionPointerForDelegate((Delegate) callback);
+			}
+		}
+
+		[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+		delegate bool SetInfoNativeDelegate (IntPtr inst, IntPtr caps, IntPtr info);
+
+		static bool SetInfo_cb (IntPtr inst, IntPtr caps, IntPtr info)
+		{
+			try {
+				VideoSink __obj = GLib.Object.GetObject (inst, false) as VideoSink;
+				bool __result;
+				__result = __obj.OnSetInfo (caps == IntPtr.Zero ? null : (Gst.Caps) GLib.Opaque.GetOpaque (caps, typeof (Gst.Caps), false), info == IntPtr.Zero ? null : (Gst.Video.VideoInfo) GLib.Opaque.GetOpaque (info, typeof (Gst.Video.VideoInfo), false));
+				return __result;
+			} catch (Exception e) {
+				GLib.ExceptionManager.RaiseUnhandledException (e, true);
+				// NOTREACHED: above call does not return.
+				throw e;
+			}
+		}
+
+		[GLib.DefaultSignalHandler(Type=typeof(Gst.Video.VideoSink), ConnectionMethod="OverrideSetInfo")]
+		protected virtual bool OnSetInfo (Gst.Caps caps, Gst.Video.VideoInfo info)
+		{
+			return InternalSetInfo (caps, info);
+		}
+
+		private bool InternalSetInfo (Gst.Caps caps, Gst.Video.VideoInfo info)
+		{
+			SetInfoNativeDelegate unmanaged = null;
+			unsafe {
+				IntPtr* raw_ptr = (IntPtr*)(((long) this.LookupGType().GetThresholdType().GetClassPtr()) + (long) class_abi.GetFieldOffset("set_info"));
+				unmanaged = (SetInfoNativeDelegate) Marshal.GetDelegateForFunctionPointer(*raw_ptr, typeof(SetInfoNativeDelegate));
+			}
+			if (unmanaged == null) return false;
+
+			bool __result = unmanaged (this.Handle, caps == null ? IntPtr.Zero : caps.Handle, info == null ? IntPtr.Zero : info.Handle);
+			return __result;
+		}
+
 
 		// Internal representation of the wrapped structure ABI.
 		static GLib.AbiStruct _class_abi = null;
@@ -120,14 +178,22 @@ namespace Gst.Video {
 							, Gst.Base.BaseSink.class_abi.Fields
 							, (uint) Marshal.SizeOf(typeof(IntPtr)) // show_frame
 							, null
+							, "set_info"
+							, (uint) Marshal.SizeOf(typeof(IntPtr))
+							, 0
+							),
+						new GLib.AbiField("set_info"
+							, -1
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) // set_info
+							, "show_frame"
 							, "_gst_reserved"
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
 							),
 						new GLib.AbiField("_gst_reserved"
 							, -1
-							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 4 // _gst_reserved
-							, "show_frame"
+							, (uint) Marshal.SizeOf(typeof(IntPtr)) * 3 // _gst_reserved
+							, "set_info"
 							, null
 							, (uint) Marshal.SizeOf(typeof(IntPtr))
 							, 0
@@ -155,14 +221,18 @@ namespace Gst.Video {
 		[DllImport("gstvideo-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_video_sink_center_rect(IntPtr src, IntPtr dst, IntPtr _result, bool scaling);
 
-		public static void CenterRect(Gst.Video.VideoRectangle src, Gst.Video.VideoRectangle dst, Gst.Video.VideoRectangle _result, bool scaling) {
+		[Obsolete]
+		public static Gst.Video.VideoRectangle CenterRect(Gst.Video.VideoRectangle src, Gst.Video.VideoRectangle dst, bool scaling) {
+			Gst.Video.VideoRectangle _result;
 			IntPtr native_src = GLib.Marshaller.StructureToPtrAlloc (src);
 			IntPtr native_dst = GLib.Marshaller.StructureToPtrAlloc (dst);
-			IntPtr native__result = GLib.Marshaller.StructureToPtrAlloc (_result);
+			IntPtr native__result = Marshal.AllocHGlobal (Marshal.SizeOf (typeof (Gst.Video.VideoRectangle)));
 			gst_video_sink_center_rect(native_src, native_dst, native__result, scaling);
 			Marshal.FreeHGlobal (native_src);
 			Marshal.FreeHGlobal (native_dst);
+			_result = Gst.Video.VideoRectangle.New (native__result);
 			Marshal.FreeHGlobal (native__result);
+			return _result;
 		}
 
 

@@ -27,6 +27,7 @@ namespace GtkSharp.GstEditingServices {
 			GLib.GType.Register (GES.ClipAsset.GType, typeof (GES.ClipAsset));
 			GLib.GType.Register (GES.CommandLineFormatter.GType, typeof (GES.CommandLineFormatter));
 			GLib.GType.Register (GES.Container.GType, typeof (GES.Container));
+			GLib.GType.Register (GES.DiscovererManager.GType, typeof (GES.DiscovererManager));
 			GLib.GType.Register (GES.Effect.GType, typeof (GES.Effect));
 			GLib.GType.Register (GES.EffectAsset.GType, typeof (GES.EffectAsset));
 			GLib.GType.Register (GES.EffectClip.GType, typeof (GES.EffectClip));

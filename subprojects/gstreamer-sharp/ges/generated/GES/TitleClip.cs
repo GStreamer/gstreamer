@@ -70,7 +70,7 @@ namespace GES {
 		public string FontDesc {
 			get  {
 				IntPtr raw_ret = ges_title_clip_get_font_desc(Handle);
-				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 				return ret;
 			}
 			set  {
@@ -110,7 +110,7 @@ namespace GES {
 		public string Text {
 			get  {
 				IntPtr raw_ret = ges_title_clip_get_text(Handle);
-				string ret = GLib.Marshaller.Utf8PtrToString (raw_ret);
+				string ret = GLib.Marshaller.PtrToStringGFree(raw_ret);
 				return ret;
 			}
 			set  {
