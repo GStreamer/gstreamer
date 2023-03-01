@@ -231,7 +231,6 @@ class D3D11DesktopDupObject
 public:
   D3D11DesktopDupObject ()
     : device_(nullptr)
-    , fence_(nullptr)
     , metadata_buffer_(nullptr)
     , metadata_buffer_size_(0)
     , vertex_buffer_(nullptr)
@@ -247,7 +246,11 @@ public:
     if (vertex_buffer_)
       delete[] vertex_buffer_;
 
-    gst_clear_d3d11_fence (&fence_);
+    if (keyed_mutex_) {
+      keyed_mutex_->ReleaseSync (0);
+      keyed_mutex_ = nullptr;
+    }
+
     gst_clear_object (&device_);
   }
 
@@ -282,12 +285,27 @@ public:
         D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
     texture_desc.CPUAccessFlags = 0;
     /* source element may hold different d3d11 device object */
-    texture_desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+    texture_desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
     hr = device_handle->CreateTexture2D (&texture_desc,
         nullptr, &shared_texture_);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR_OBJECT (device, "Couldn't create texture, hr 0x%x", (guint) hr);
+      return GST_FLOW_ERROR;
+    }
+
+    hr = shared_texture_.As (&keyed_mutex_);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (device, "Couldn't get keyed mutex interface");
+      shared_texture_ = nullptr;
+      return GST_FLOW_ERROR;
+    }
+
+    hr = keyed_mutex_->AcquireSync (0, INFINITE);
+    if (hr != S_OK) {
+      GST_ERROR_OBJECT (device, "Couldn't acquire sync");
+      keyed_mutex_ = nullptr;
+      shared_texture_ = nullptr;
       return GST_FLOW_ERROR;
     }
 
@@ -547,8 +565,8 @@ public:
   {
     ID3D11DeviceContext *context_handle = nullptr;
     ComPtr <ID3D11Texture2D> tex;
+    ComPtr < IDXGIKeyedMutex > other_keyed_mutex;
     HRESULT hr;
-    gboolean is_shared = FALSE;
 
     context_handle = gst_d3d11_device_get_device_context_handle (device);
 
@@ -574,24 +592,21 @@ public:
       if (!gst_d3d11_result (hr, device))
         return GST_FLOW_ERROR;
 
-      if (fence_ && fence_->device != device)
-        gst_clear_d3d11_fence (&fence_);
-
-      if (!fence_)
-        fence_ = gst_d3d11_device_create_fence (device);
-
-      if (!fence_)
+      hr = tex.As (&other_keyed_mutex);
+      if (!gst_d3d11_result (hr, device))
         return GST_FLOW_ERROR;
 
-      is_shared = TRUE;
+      /* release sync from our device, and acquire for other device */
+      keyed_mutex_->ReleaseSync (0);
+      other_keyed_mutex->AcquireSync (0, INFINITE);
     }
 
     context_handle->CopySubresourceRegion (texture, 0, 0, 0, 0,
         tex.Get(), 0, cropBox);
 
-    if (is_shared) {
-      if (!gst_d3d11_fence_signal (fence_) || !gst_d3d11_fence_wait (fence_))
-        return GST_FLOW_ERROR;
+    if (other_keyed_mutex) {
+      other_keyed_mutex->ReleaseSync (0);
+      keyed_mutex_->AcquireSync (0, INFINITE);
     }
 
     return GST_FLOW_OK;
@@ -1472,9 +1487,9 @@ private:
   PTR_INFO ptr_info_;
   DXGI_OUTDUPL_DESC output_desc_;
   GstD3D11Device * device_;
-  GstD3D11Fence * fence_;
 
   ComPtr<ID3D11Texture2D> shared_texture_;
+  ComPtr<IDXGIKeyedMutex> keyed_mutex_;
   ComPtr<ID3D11RenderTargetView> rtv_;
   ComPtr<ID3D11Texture2D> move_texture_;
   ComPtr<ID3D11VertexShader> vs_;
