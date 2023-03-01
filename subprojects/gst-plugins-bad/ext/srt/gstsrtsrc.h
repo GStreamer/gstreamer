@@ -48,7 +48,6 @@ struct _GstSRTSrc {
   GstCaps      *caps;
 
   GstSRTObject *srtobject;
-  GCancellable *cancellable;
 
   guint32       next_pktseq;
   gboolean      keep_listening;

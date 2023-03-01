@@ -48,7 +48,6 @@ struct _GstSRTSink {
   GstBufferList *headers;
 
   GstSRTObject *srtobject;
-  GCancellable *cancellable;
 };
 
 struct _GstSRTSinkClass {

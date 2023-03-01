@@ -116,7 +116,7 @@ gst_srt_src_start (GstBaseSrc * bsrc)
   GError *error = NULL;
   gboolean ret = FALSE;
 
-  ret = gst_srt_object_open (self->srtobject, self->cancellable, &error);
+  ret = gst_srt_object_open (self->srtobject, &error);
 
   if (!ret) {
     /* ensure error is posted since state change will fail */
@@ -157,7 +157,7 @@ gst_srt_src_fill (GstPushSrc * src, GstBuffer * outbuf)
   SRT_MSGCTRL mctrl;
 
 retry:
-  if (g_cancellable_is_cancelled (self->cancellable)) {
+  if (g_cancellable_is_cancelled (self->srtobject->cancellable)) {
     ret = GST_FLOW_FLUSHING;
   }
 
@@ -178,7 +178,7 @@ retry:
   base_time = gst_element_get_base_time (GST_ELEMENT (src));
 
   recv_len = gst_srt_object_read (self->srtobject, info.data,
-      gst_buffer_get_size (outbuf), self->cancellable, &err, &mctrl);
+      gst_buffer_get_size (outbuf), &err, &mctrl);
 
   /* Capture clock values ASAP */
   capture_time = gst_clock_get_time (clock);
@@ -197,7 +197,7 @@ retry:
       "recv_len:%" G_GSIZE_FORMAT " pktseq:%d msgno:%d srctime:%"
       G_GINT64_FORMAT, recv_len, mctrl.pktseq, mctrl.msgno, mctrl.srctime);
 
-  if (g_cancellable_is_cancelled (self->cancellable)) {
+  if (g_cancellable_is_cancelled (self->srtobject->cancellable)) {
     ret = GST_FLOW_FLUSHING;
     goto out;
   }
@@ -276,7 +276,6 @@ static void
 gst_srt_src_init (GstSRTSrc * self)
 {
   self->srtobject = gst_srt_object_new (GST_ELEMENT (self));
-  self->cancellable = g_cancellable_new ();
 
   gst_base_src_set_format (GST_BASE_SRC (self), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
@@ -292,7 +291,6 @@ gst_srt_src_finalize (GObject * object)
 {
   GstSRTSrc *self = GST_SRT_SRC (object);
 
-  g_clear_object (&self->cancellable);
   gst_srt_object_destroy (self->srtobject);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -303,7 +301,7 @@ gst_srt_src_unlock (GstBaseSrc * bsrc)
 {
   GstSRTSrc *self = GST_SRT_SRC (bsrc);
 
-  gst_srt_object_wakeup (self->srtobject, self->cancellable);
+  gst_srt_object_unlock (self->srtobject);
 
   return TRUE;
 }
@@ -313,7 +311,7 @@ gst_srt_src_unlock_stop (GstBaseSrc * bsrc)
 {
   GstSRTSrc *self = GST_SRT_SRC (bsrc);
 
-  g_cancellable_reset (self->cancellable);
+  gst_srt_object_unlock_stop (self->srtobject);
 
   return TRUE;
 }

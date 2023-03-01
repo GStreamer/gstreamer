@@ -130,7 +130,6 @@ gst_srt_sink_finalize (GObject * object)
 {
   GstSRTSink *self = GST_SRT_SINK (object);
 
-  g_clear_object (&self->cancellable);
   gst_srt_object_destroy (self->srtobject);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -140,8 +139,6 @@ static void
 gst_srt_sink_init (GstSRTSink * self)
 {
   self->srtobject = gst_srt_object_new (GST_ELEMENT (self));
-  self->cancellable = g_cancellable_new ();
-
   gst_srt_object_set_uri (self->srtobject, GST_SRT_DEFAULT_URI, NULL);
 }
 
@@ -153,7 +150,7 @@ gst_srt_sink_start (GstBaseSink * bsink)
   GError *error = NULL;
   gboolean ret = FALSE;
 
-  ret = gst_srt_object_open (self->srtobject, self->cancellable, &error);
+  ret = gst_srt_object_open (self->srtobject, &error);
 
   if (!ret) {
     /* ensure error is posted since state change will fail */
@@ -184,7 +181,7 @@ gst_srt_sink_render (GstBaseSink * sink, GstBuffer * buffer)
   GstMapInfo info;
   GError *error = NULL;
 
-  if (g_cancellable_is_cancelled (self->cancellable)) {
+  if (g_cancellable_is_cancelled (self->srtobject->cancellable)) {
     ret = GST_FLOW_FLUSHING;
   }
 
@@ -200,8 +197,7 @@ gst_srt_sink_render (GstBaseSink * sink, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  if (gst_srt_object_write (self->srtobject, self->headers, &info,
-          self->cancellable, &error) < 0) {
+  if (gst_srt_object_write (self->srtobject, self->headers, &info, &error) < 0) {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
         ("Failed to write to SRT socket: %s",
             error ? error->message : "Unknown error"), (NULL));
@@ -229,7 +225,7 @@ gst_srt_sink_unlock (GstBaseSink * bsink)
 {
   GstSRTSink *self = GST_SRT_SINK (bsink);
 
-  gst_srt_object_wakeup (self->srtobject, self->cancellable);
+  gst_srt_object_unlock (self->srtobject);
 
   return TRUE;
 }
@@ -239,7 +235,7 @@ gst_srt_sink_unlock_stop (GstBaseSink * bsink)
 {
   GstSRTSink *self = GST_SRT_SINK (bsink);
 
-  g_cancellable_reset (self->cancellable);
+  gst_srt_object_unlock_stop (self->srtobject);
 
   return TRUE;
 }
