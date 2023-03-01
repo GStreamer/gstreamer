@@ -55,6 +55,8 @@ GST_DEBUG_CATEGORY (gstvalidate_debug);
 static GMutex _gst_validate_registry_mutex;
 static GstRegistry *_gst_validate_registry_default = NULL;
 
+static GRecMutex init_lock = { 0, };
+
 G_LOCK_DEFINE_STATIC (all_configs_lock);
 static GList *all_configs = NULL;
 static gboolean got_configs = FALSE;
@@ -469,7 +471,9 @@ gst_validate_init_debug (void)
 void
 gst_validate_init (void)
 {
+  g_rec_mutex_lock (&init_lock);
   if (validate_initialized) {
+    g_rec_mutex_unlock (&init_lock);
     return;
   }
   gst_validate_init_debug ();
@@ -493,6 +497,7 @@ gst_validate_init (void)
   gst_validate_flow_init ();
   gst_validate_init_plugins ();
   gst_validate_init_runner ();
+  g_rec_mutex_unlock (&init_lock);
 }
 
 void
