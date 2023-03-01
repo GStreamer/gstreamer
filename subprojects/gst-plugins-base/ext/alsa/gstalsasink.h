@@ -77,6 +77,7 @@ struct _GstAlsaSink {
   gboolean is_paused;
   gboolean after_paused;
   gboolean hw_support_pause;
+  gboolean stop_streaming_threads;
   snd_pcm_sframes_t pos_in_buffer;
 
   GMutex alsa_lock;
