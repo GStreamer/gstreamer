@@ -259,6 +259,7 @@ gst_alsasink_init (GstAlsaSink * alsasink)
   alsasink->is_paused = FALSE;
   alsasink->after_paused = FALSE;
   alsasink->hw_support_pause = FALSE;
+  alsasink->stop_streaming_threads = FALSE;
   g_mutex_init (&alsasink->alsa_lock);
   g_mutex_init (&alsasink->delay_lock);
 
@@ -1061,6 +1062,8 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
 
   GST_ALSA_SINK_LOCK (asink);
   while (cptr > 0) {
+    if (alsa->stop_streaming_threads)
+      goto write_error;
     /* start by doing a blocking wait for free space. Set the timeout
      * to 4 times the period time */
     err = snd_pcm_wait (alsa->handle, (4 * alsa->period_time / 1000));
@@ -1169,6 +1172,7 @@ gst_alsasink_pause (GstAudioSink * asink)
     CHECK (snd_pcm_pause (alsa->handle, 1), pause_error);
     GST_DEBUG_OBJECT (alsa, "pause done");
     alsa->is_paused = TRUE;
+    alsa->stop_streaming_threads = TRUE;
     GST_ALSA_SINK_UNLOCK (asink);
   } else {
     gst_alsasink_stop (asink);
@@ -1200,6 +1204,7 @@ gst_alsasink_resume (GstAudioSink * asink)
     GST_ALSA_SINK_UNLOCK (asink);
   }
 
+  alsa->stop_streaming_threads = FALSE;
   return;
 
 resume_error:
@@ -1225,6 +1230,7 @@ gst_alsasink_stop (GstAudioSink * asink)
   GST_DEBUG_OBJECT (alsa, "prepare");
   CHECK (snd_pcm_prepare (alsa->handle), prepare_error);
   GST_DEBUG_OBJECT (alsa, "stop done");
+  alsa->stop_streaming_threads = TRUE;
   GST_ALSA_SINK_UNLOCK (asink);
 
   return;
