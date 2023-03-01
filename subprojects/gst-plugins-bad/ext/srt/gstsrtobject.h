@@ -59,8 +59,6 @@ struct _GstSRTObject
   gboolean                      sent_headers;
 
   GTask                        *listener_task;
-  SRTSOCKET                     listener_sock;
-  gint                          listener_poll_id;
 
   GThread                      *thread;
 
