@@ -1985,7 +1985,8 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
 
   GST_DEBUG_OBJECT (qtdemux, "Resetting demux");
 
-  if (hard || qtdemux->upstream_format_is_time) {
+  if (hard || qtdemux->upstream_format_is_time
+      || qtdemux->variant == VARIANT_MSE_BYTESTREAM) {
     qtdemux->state = QTDEMUX_STATE_INITIAL;
     qtdemux->neededbytes = 16;
     qtdemux->todrop = 0;
@@ -2081,7 +2082,8 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       g_free (qtdemux->preferred_protection_system_id);
       qtdemux->preferred_protection_system_id = NULL;
     }
-  } else if (qtdemux->variant == VARIANT_MSS_FRAGMENTED) {
+  } else if (qtdemux->variant == VARIANT_MSS_FRAGMENTED
+      || qtdemux->variant == VARIANT_MSE_BYTESTREAM) {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     g_ptr_array_foreach (qtdemux->active_streams,
         (GFunc) gst_qtdemux_stream_clear, NULL);
