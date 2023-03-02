@@ -235,11 +235,26 @@ gst_cea608_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   GstCea608Mux *self = GST_CEA608MUX (aggregator);
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstAggregatorPad *best_pad = NULL;
+  GstClockTime output_pts = gst_util_uint64_scale_int (GST_SECOND,
+      self->cdp_fps_entry->fps_d * self->n_output_buffers,
+      self->cdp_fps_entry->fps_n);
+  GstClockTime output_duration =
+      gst_util_uint64_scale_int (GST_SECOND, self->cdp_fps_entry->fps_d,
+      self->cdp_fps_entry->fps_n);
+  GstClockTime output_running_time =
+      gst_segment_to_running_time (&GST_AGGREGATOR_PAD (GST_AGGREGATOR_SRC_PAD
+          (aggregator))->segment,
+      GST_FORMAT_TIME,
+      output_pts);
 
   best_pad =
       find_best_pad (aggregator, &self->earliest_input_running_time, timeout);
 
-  if (best_pad) {
+  if (GST_CLOCK_TIME_IS_VALID (self->earliest_input_running_time)
+      && self->earliest_input_running_time >
+      output_running_time + output_duration) {
+    /* Nothing to consume, earliest pad is not ready yet */
+  } else if (best_pad) {
     GstBuffer *buffer;
 
     buffer = gst_aggregator_pad_pop_buffer (GST_AGGREGATOR_PAD (best_pad));
@@ -272,15 +287,9 @@ gst_cea608_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   }
 
   if (flow_ret == GST_FLOW_OK) {
-    GstClockTime output_pts = gst_util_uint64_scale_int (GST_SECOND,
-        self->cdp_fps_entry->fps_d * self->n_output_buffers,
-        self->cdp_fps_entry->fps_n);
-    GstClockTime output_duration =
-        gst_util_uint64_scale_int (GST_SECOND, self->cdp_fps_entry->fps_d,
-        self->cdp_fps_entry->fps_n);
-
     if (timeout
-        || output_pts + output_duration < self->earliest_input_running_time) {
+        || output_running_time + output_duration <
+        self->earliest_input_running_time) {
       flow_ret = finish_s334_both_fields (self);
     }
   } else if (flow_ret == GST_FLOW_EOS && !cc_buffer_is_empty (self->cc_buffer)) {
