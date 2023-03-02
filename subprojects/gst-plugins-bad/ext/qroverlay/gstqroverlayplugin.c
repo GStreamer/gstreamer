@@ -21,15 +21,7 @@
  */
 
 /**
- * SECTION:element-qroverlay
- *
- * Element to set random data on a qroverlay.
- *
- * ## Example launch line
- *
- * ``` bash
- * gst-launch -v -m videotestsrc ! qroverlay ! fakesink silent=TRUE
- * ```
+ * plugin-qroverlay
  *
  * Since: 1.20
  */

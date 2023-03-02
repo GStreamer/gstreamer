@@ -20,12 +20,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/**
- * plugin-qroverlay
- *
- * Since: 1.20
- */
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
