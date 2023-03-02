@@ -81,6 +81,7 @@ struct _GstInputSelector {
   gboolean eos;
   gboolean eos_sent;
   gboolean flushing;
+  gboolean playing;
 
   GstClockTime upstream_latency;
   GstClockTime last_output_ts;

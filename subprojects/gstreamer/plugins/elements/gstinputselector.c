@@ -853,6 +853,13 @@ gst_input_selector_wait_running_time (GstInputSelector * sel,
         continue;
       }
 
+      if (!sel->playing) {
+        GST_DEBUG_OBJECT (selpad, "Waiting for playing");
+        GST_INPUT_SELECTOR_WAIT (sel);
+        GST_DEBUG_OBJECT (selpad, "Done waiting");
+        continue;
+      }
+
       /* FIXME: If no upstream latency was queried yet, do one now */
       clock_id =
           gst_clock_new_single_shot_id (clock,
@@ -1432,6 +1439,7 @@ gst_input_selector_init (GstInputSelector * sel)
   g_mutex_init (&sel->lock);
   g_cond_init (&sel->cond);
   sel->eos = FALSE;
+  sel->playing = FALSE;
 
   sel->upstream_latency = 0;
   sel->last_output_ts = GST_CLOCK_TIME_NONE;
@@ -2028,6 +2036,12 @@ gst_input_selector_change_state (GstElement * element,
       GST_INPUT_SELECTOR_BROADCAST (self);
       GST_INPUT_SELECTOR_UNLOCK (self);
       break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
+      GST_INPUT_SELECTOR_LOCK (self);
+      self->playing = TRUE;
+      GST_INPUT_SELECTOR_BROADCAST (self);
+      GST_INPUT_SELECTOR_UNLOCK (self);
+    }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       GList *walk;
 
@@ -2051,6 +2065,10 @@ gst_input_selector_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_input_selector_reset (self);
       break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_INPUT_SELECTOR_LOCK (self);
+      self->playing = FALSE;
+      GST_INPUT_SELECTOR_UNLOCK (self);
     default:
       break;
   }
