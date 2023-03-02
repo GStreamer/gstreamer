@@ -170,10 +170,12 @@ prepend_s334_to_cea608 (guint field, guint8 * data, guint * len,
   g_assert (*len / 2 * 3 <= alloc_len);
 
   for (i = *len / 2; i >= 0; i--) {
-    data[i * 3 + 0] = field == 0 ? 0x80 : 0x00;
-    data[i * 3 + 1] = data[i * 2 + 0];
     data[i * 3 + 2] = data[i * 2 + 1];
+    data[i * 3 + 1] = data[i * 2 + 0];
+    data[i * 3 + 0] = field == 0 ? 0x80 : 0x00;
   }
+
+  *len = *len * 3 / 2;
 }
 
 static void
