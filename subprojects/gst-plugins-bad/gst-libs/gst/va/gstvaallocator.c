@@ -37,8 +37,10 @@
 
 #include "gstvaallocator.h"
 
+#ifndef G_OS_WIN32
 #include <sys/types.h>
 #include <unistd.h>
+#endif
 
 #include "gstvasurfacecopy.h"
 #include "gstvavideoformat.h"
@@ -496,7 +498,11 @@ gst_va_dmabuf_allocator_new (GstVaDisplay * display)
 static inline goffset
 _get_fd_size (gint fd)
 {
+#ifndef G_OS_WIN32
   return lseek (fd, 0, SEEK_END);
+#else
+  return 0;
+#endif
 }
 
 static gboolean
@@ -1312,6 +1318,10 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
   } else if (va_allocator->feat_use_derived == GST_VA_FEATURE_DISABLED) {
     use_derived = FALSE;
   } else {
+#ifdef G_OS_WIN32
+    /* XXX: Derived image doesn't seem to work for D3D backend */
+    use_derived = FALSE;
+#else
     switch (gst_va_display_get_implementation (display)) {
       case GST_VA_IMPLEMENTATION_INTEL_IHD:
         /* On Gen7+ Intel graphics the memory is mappable but not
@@ -1337,6 +1347,7 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
         use_derived = va_allocator->use_derived;
         break;
     }
+#endif
   }
   if (use_derived)
     info = &va_allocator->derived_info;

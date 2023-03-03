@@ -49,7 +49,11 @@ enum
 #include <gst/va/va-prelude.h>
 #include <gst/va/va-enumtypes.h>
 #include <gst/va/gstvadisplay.h>
+#ifdef G_OS_WIN32
+#include <gst/va/gstvadisplay_win32.h>
+#else
 #include <gst/va/gstvadisplay_drm.h>
+#endif
 #include <gst/va/gstvadisplay_wrapped.h>
 
 #include <gst/va/gstvaallocator.h>

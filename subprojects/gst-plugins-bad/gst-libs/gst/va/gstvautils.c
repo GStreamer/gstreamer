@@ -32,8 +32,12 @@
 
 #include "gstvautils.h"
 
-#include <gst/va/gstvadisplay_drm.h>
-#include <gst/va/gstvadisplay_wrapped.h>
+#ifdef G_OS_WIN32
+#include "gstvadisplay_win32.h"
+#else
+#include "gstvadisplay_drm.h"
+#endif
+#include "gstvadisplay_wrapped.h"
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
 
@@ -232,8 +236,12 @@ gst_va_ensure_element_data (gpointer element, const gchar * render_device_path,
   if (gst_va_display_found (element, g_atomic_pointer_get (display_ptr)))
     goto done;
 
+#ifdef G_OS_WIN32
+  display = gst_va_display_win32_new (render_device_path);
+#else
   /* If no neighbor, or application not interested, use drm. */
   display = gst_va_display_drm_new_from_path (render_device_path);
+#endif
 
   gst_object_replace ((GstObject **) display_ptr, (GstObject *) display);
 
@@ -374,10 +382,13 @@ gst_context_get_va_display (GstContext * context, const gchar * type_name,
 
   s = gst_context_get_structure (context);
   if (gst_structure_get (s, "gst-display", GST_TYPE_OBJECT, &display, NULL)) {
-    gchar *device_path = NULL;
     gboolean ret;
-
+    gchar *device_path = NULL;
+#ifdef G_OS_WIN32
+    if (GST_IS_VA_DISPLAY_WIN32 (display)) {
+#else
     if (GST_IS_VA_DISPLAY_DRM (display)) {
+#endif
       g_object_get (display, "path", &device_path, NULL);
       ret = (g_strcmp0 (device_path, render_device_path) == 0);
       g_free (device_path);

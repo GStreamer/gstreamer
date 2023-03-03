@@ -40,7 +40,7 @@
 #include <sys/stat.h>
 #include <va/va_drm.h>
 
-#if HAVE_LIBDRM
+#ifdef HAVE_LIBDRM
 #include <xf86drm.h>
 #endif
 
@@ -143,7 +143,7 @@ gst_va_display_drm_create_va_display (GstVaDisplay * display)
         g_strerror (saved_errno));
     return 0;
   }
-#if HAVE_LIBDRM
+#ifdef HAVE_LIBDRM
   {
     drmVersion *version;
 
