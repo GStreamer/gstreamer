@@ -66,6 +66,7 @@
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
 #include "vacompat.h"
+#include "gstvapluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_h264enc_debug);
 #define GST_CAT_DEFAULT gst_va_h264enc_debug
@@ -3510,8 +3511,7 @@ gst_va_h264_enc_class_init (gpointer g_klass, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_h264_enc_prepare_output);
 
   {
-    display =
-        gst_va_display_drm_new_from_path (va_enc_class->render_device_path);
+    display = gst_va_display_platform_new (va_enc_class->render_device_path);
     encoder = gst_va_encoder_new (display, va_enc_class->codec,
         va_enc_class->entrypoint);
     if (gst_va_encoder_get_rate_control_enum (encoder,

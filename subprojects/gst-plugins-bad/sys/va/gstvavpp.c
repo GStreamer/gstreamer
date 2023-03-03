@@ -70,6 +70,7 @@
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
+#include "gstvapluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_vpp_debug);
 #define GST_CAT_DEFAULT gst_va_vpp_debug
@@ -2114,7 +2115,7 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
 
   klass = g_string_new ("Converter/Filter/Colorspace/Scaler/Video/Hardware");
 
-  display = gst_va_display_drm_new_from_path (btrans_class->render_device_path);
+  display = gst_va_display_platform_new (btrans_class->render_device_path);
   filter = gst_va_filter_new (display);
 
   if (gst_va_filter_open (filter)) {

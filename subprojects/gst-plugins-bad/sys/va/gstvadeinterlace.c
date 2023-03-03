@@ -59,6 +59,7 @@
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
+#include "gstvapluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_deinterlace_debug);
 #define GST_CAT_DEFAULT gst_va_deinterlace_debug
@@ -718,7 +719,7 @@ gst_va_deinterlace_class_init (gpointer g_class, gpointer class_data)
       "Filter/Effect/Video/Deinterlace",
       "VA-API based deinterlacer", "Víctor Jáquez <vjaquez@igalia.com>");
 
-  display = gst_va_display_drm_new_from_path (btrans_class->render_device_path);
+  display = gst_va_display_platform_new (btrans_class->render_device_path);
   filter = gst_va_filter_new (display);
 
   if (gst_va_filter_open (filter)) {

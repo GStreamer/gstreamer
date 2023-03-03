@@ -24,7 +24,7 @@
 
 #include "gstvadevice.h"
 
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
 #include <gudev/gudev.h>
 #endif
 
@@ -66,7 +66,7 @@ compare_device_path (gconstpointer a, gconstpointer b, gpointer user_data)
   return g_strcmp0 (pa->render_device_path, pb->render_device_path);
 }
 
-#if HAVE_GUDEV
+#ifdef HAVE_GUDEV
 GList *
 gst_va_device_find_devices (void)
 {

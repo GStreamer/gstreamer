@@ -54,6 +54,7 @@ GRecMutex GST_VA_SHARED_LOCK = { 0, };
 static void
 plugin_add_dependencies (GstPlugin * plugin)
 {
+#ifndef G_OS_WIN32
   const gchar *env_vars[] = { "LIBVA_DRIVER_NAME", NULL };
   const gchar *kernel_paths[] = { "/dev/dri", NULL };
   const gchar *kernel_names[] = { "renderD", NULL };
@@ -72,6 +73,7 @@ plugin_add_dependencies (GstPlugin * plugin)
       LIBVA_DRIVERS_PATH, "_drv_video.so",
       GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_SUFFIX |
       GST_PLUGIN_DEPENDENCY_FLAG_PATHS_ARE_DEFAULT_ONLY);
+#endif
 }
 
 static void

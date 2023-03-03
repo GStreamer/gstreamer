@@ -25,6 +25,7 @@
 
 #include "vacompat.h"
 #include "gstvacaps.h"
+#include "gstvapluginutils.h"
 
 #define GST_CAT_DEFAULT gst_va_base_enc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -851,7 +852,7 @@ gst_va_base_enc_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:{
-      if (!(base->display && GST_IS_VA_DISPLAY_DRM (base->display))) {
+      if (!(base->display && GST_IS_VA_DISPLAY_PLATFORM (base->display))) {
         g_value_set_string (value, NULL);
         return;
       }

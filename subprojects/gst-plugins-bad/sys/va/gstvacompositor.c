@@ -53,6 +53,7 @@
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
 #include "gstvafilter.h"
+#include "gstvapluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_va_compositor_debug);
 #define GST_CAT_DEFAULT gst_va_compositor_debug
@@ -291,7 +292,7 @@ gst_va_compositor_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE_PATH:
     {
-      if (!(self->display && GST_IS_VA_DISPLAY_DRM (self->display))) {
+      if (!(self->display && GST_IS_VA_DISPLAY_PLATFORM (self->display))) {
         g_value_set_string (value, NULL);
         return;
       }
@@ -1337,7 +1338,7 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
     long_name = g_strdup ("VA-API Video Compositor");
   }
 
-  display = gst_va_display_drm_new_from_path (klass->render_device_path);
+  display = gst_va_display_platform_new (klass->render_device_path);
   filter = gst_va_filter_new (display);
 
   if (gst_va_filter_open (filter)) {

@@ -24,6 +24,7 @@
 #include <gst/va/gstvavideoformat.h>
 
 #include "gstvacaps.h"
+#include "gstvapluginutils.h"
 
 #define GST_CAT_DEFAULT (base->debug_category)
 #define GST_VA_BASE_DEC_GET_PARENT_CLASS(obj) (GST_VA_BASE_DEC_GET_CLASS(obj)->parent_decoder_class)
@@ -36,7 +37,7 @@ gst_va_base_dec_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case GST_VA_DEC_PROP_DEVICE_PATH:{
-      if (!(self->display && GST_IS_VA_DISPLAY_DRM (self->display))) {
+      if (!(self->display && GST_IS_VA_DISPLAY_PLATFORM (self->display))) {
         g_value_set_string (value, NULL);
         return;
       }
