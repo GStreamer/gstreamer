@@ -9975,7 +9975,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "NULL",
+                        "default": "%%05d",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
