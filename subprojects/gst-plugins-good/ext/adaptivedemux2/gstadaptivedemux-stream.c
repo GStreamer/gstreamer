@@ -76,6 +76,8 @@ gst_adaptive_demux2_stream_init (GstAdaptiveDemux2Stream * stream)
   stream->last_ret = GST_FLOW_OK;
   stream->next_input_wakeup_time = GST_CLOCK_STIME_NONE;
 
+  stream->recommended_buffering_threshold = GST_CLOCK_TIME_NONE;
+
   stream->fragment_bitrates =
       g_malloc0 (sizeof (guint64) * NUM_LOOKBACK_FRAGMENTS);
 
