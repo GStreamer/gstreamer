@@ -27,6 +27,7 @@
 #include <gst/base/gsttypefindhelper.h>
 #include <gst/base/gstadapter.h>
 #include "downloadrequest.h"
+#include <stdlib.h>
 
 typedef struct _DownloadRequestPrivate DownloadRequestPrivate;
 
