@@ -747,12 +747,111 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, GstTagList * taglist,
         break;
       }
     }
-    if (i == G_N_ELEMENTS (tags))
-      goto unknown_tag;
+
+    /* Some tags might not actually be used for metadata about the media,
+     * but for other purposes. One such tag is iTunSMPB, which contains
+     * padding information for gapless playback. Scan these separately. */
+    if (i == G_N_ELEMENTS (tags)) {
+      if (!g_ascii_strncasecmp ("iTunSMPB", namestr, 8)) {
+        /* iTunSMPB tag format goes as follows:
+         *
+         * " 00000000 xxxxxxxx yyyyyyyy zzzzzzzzzzzzzzzz 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000"
+         *
+         * The data is actually an ASCII string containing these hex fields.
+         * The description above is _not_ a description of a binary format!
+         * These need to be parsed with g_ascii_strtoull() and base 16.
+         *
+         * (The quotes are not part of it; they just emphasize the
+         * whitespace at the beginning of the string).
+         *
+         * Only the fields marked with x/y/z are of interest here.
+         *
+         * The x field is the priming, in samples.
+         * These are the padding samples at the beginning of the stream.
+         *
+         * The y field is the remainder, in samples.
+         * These are the padding samples at the end of the stream.
+         *
+         * The z field is the number of valid PCM frames, excluding the
+         * priming and remainder. (In other words, the number of PCM
+         * frames that make up the actual audio, without the padding.)
+         *
+         * The data starts at offset 16. All access to it must therefore skip
+         * the first 16 bytes.
+         */
+
+        const gsize start_offset = 16;
+        const gsize priming_offset = start_offset + 10;
+        const gsize remainder_offset = start_offset + 19;
+        const gsize num_valid_pcm_frames_offset = start_offset + 28;
+        const gsize total_length = 44;
+        const gchar *str;
+        guint64 priming;
+        guint64 remainder;
+        guint64 num_valid_pcm_frames;
+        /* Temporary buffer for g_ascii_strtoull() calls.
+         * Add extra +1 space for nullbyte. */
+        gchar tmp[16 + 1];
+
+        /* Use the iTunSMPB info if no other info has been found yet. */
+        if (demux->gapless_audio_info.type != GAPLESS_AUDIO_INFO_TYPE_NONE) {
+          GST_DEBUG_OBJECT (demux, "iTunSMPB information found, "
+              "but other gapless audio info was already read");
+          goto finish;
+        }
+
+        if (G_UNLIKELY (datasize < (start_offset + total_length))) {
+          GST_WARNING_OBJECT (demux,
+              "iTunSMPB tag data size too small - not parsing");
+          goto finish;
+        }
+
+        str = (gchar *) ((guint8 *) data->data);
+
+#define PARSE_ITUNSMPB_FIELD(FIELD_NAME, NUM_DIGITS) \
+        G_STMT_START \
+        { \
+          gint str_idx; \
+\
+          for (str_idx = 0; str_idx < (NUM_DIGITS); ++str_idx) { \
+            gchar ch = str[FIELD_NAME ## _offset + str_idx]; \
+            if (!g_ascii_isxdigit (ch)) { \
+              GST_WARNING_OBJECT (demux, #FIELD_NAME " field in iTunSMPB " \
+                  "tag data has invalid character '%c'", ch); \
+              goto finish; \
+            } \
+            tmp[str_idx] = ch; \
+          } \
+          tmp[NUM_DIGITS] = 0; \
+\
+          FIELD_NAME = g_ascii_strtoull (tmp, NULL, 16); \
+        } \
+        G_STMT_END
+
+        PARSE_ITUNSMPB_FIELD (priming, 8);
+        PARSE_ITUNSMPB_FIELD (remainder, 8);
+        PARSE_ITUNSMPB_FIELD (num_valid_pcm_frames, 16);
+
+#undef PARSE_ITUNSMPB_FIELD
+
+        GST_DEBUG_OBJECT (demux, "iTunSMPB information: priming %"
+            G_GUINT64_FORMAT " remainder %" G_GUINT64_FORMAT
+            " num valid PCM frames %" G_GUINT64_FORMAT, priming, remainder,
+            num_valid_pcm_frames);
+
+        demux->gapless_audio_info.type = GAPLESS_AUDIO_INFO_TYPE_ITUNES;
+        demux->gapless_audio_info.num_start_padding_pcm_frames = priming;
+        demux->gapless_audio_info.num_end_padding_pcm_frames = remainder;
+        demux->gapless_audio_info.num_valid_pcm_frames = num_valid_pcm_frames;
+      } else {
+        goto unknown_tag;
+      }
+    }
   } else {
     goto unknown_tag;
   }
 
+finish:
   return;
 
 /* errors */

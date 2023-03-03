@@ -27,6 +27,8 @@
 #include <glib/gprintf.h>
 
 #include <gst/check/check.h>
+#include <gst/app/gstappsink.h>
+#include <gst/audio/audio.h>
 
 #define TEST_FILE_PREFIX GST_TEST_FILES_PATH G_DIR_SEPARATOR_S
 
@@ -1200,6 +1202,419 @@ GST_START_TEST (test_qtdemux_mss_fragment)
 
 GST_END_TEST;
 
+typedef struct
+{
+  const gchar *filename;
+  /* Total number of AAC frames, including any and all dummy/empty/padding frames. */
+  guint num_aac_frames;
+  /* In AAC, this is 1024 in the vast majority of the cases.
+   * AAC can also use 960 samples per frame, but this is rare. */
+  guint num_samples_per_frame;
+  /* How many padding samples to expect at the beginning and the end.
+   * The amount of padding samples can exceed the size of a frame.
+   * This means that the first and last N frame(s) can actually be
+   * fully made of padding samples and thus need to be thrown away. */
+  guint num_start_padding_samples;
+  guint num_end_padding_samples;
+  guint sample_rate;
+  /* Some encoders produce data whose last frame uses a different
+   * (smaller) stts value to handle the padding at the end. Data
+   * produced by such encoders will not get a clipmeta added at the
+   * end. When using test data produced by such an encoder, this
+   * must be set to FALSE, otherwise it must be set to TRUE.
+   * Notably, anything that produces an iTunSMPB tag (iTunes itself
+   * as well as newer Nero encoders for example) will cause such
+   * a clipmeta to be added. */
+  gboolean expect_clipmeta_at_end;
+
+  /* Total number of samples available, with / without padding
+   * samples factored in. */
+  guint64 num_samples_with_padding;
+  guint64 num_samples_without_padding;
+
+  /* The index of the first / last frame that contains valid samples.
+   * Indices start with 0. Valid range is [0 , (num_aac_frames-1)].
+   * In virtually all cases, when the AAC data was encoded with iTunes,
+   * the first and last valid frames will be partially clipped. */
+  guint first_frame_with_valid_samples;
+  guint last_frame_with_valid_samples;
+
+  guint64 num_samples_in_first_valid_frame;
+  guint64 num_samples_in_last_valid_frame;
+
+  GstClockTime total_duration_without_padding;
+
+  GstElement *appsink;
+} GaplessTestInfo;
+
+static void
+precalculate_gapless_test_factors (GaplessTestInfo * info)
+{
+  info->num_samples_with_padding = info->num_aac_frames *
+      info->num_samples_per_frame;
+  info->num_samples_without_padding = info->num_samples_with_padding -
+      info->num_start_padding_samples - info->num_end_padding_samples;
+
+  info->first_frame_with_valid_samples = info->num_start_padding_samples /
+      info->num_samples_per_frame;
+  info->last_frame_with_valid_samples = (info->num_samples_with_padding -
+      info->num_end_padding_samples) / info->num_samples_per_frame;
+
+  info->num_samples_in_first_valid_frame =
+      (info->first_frame_with_valid_samples + 1) * info->num_samples_per_frame -
+      info->num_start_padding_samples;
+  info->num_samples_in_last_valid_frame =
+      (info->num_samples_with_padding - info->num_end_padding_samples) -
+      info->last_frame_with_valid_samples * info->num_samples_per_frame;
+
+  /* The total actual playtime duration. */
+  info->total_duration_without_padding =
+      gst_util_uint64_scale_int (info->num_samples_without_padding, GST_SECOND,
+      info->sample_rate);
+
+  GST_DEBUG ("num_samples_with_padding %" G_GUINT64_FORMAT
+      " num_samples_without_padding %" G_GUINT64_FORMAT
+      " first_frame_with_valid_samples %u"
+      " last_frame_with_valid_samples %u"
+      " num_samples_in_first_valid_frame %" G_GUINT64_FORMAT
+      " num_samples_in_last_valid_frame %" G_GUINT64_FORMAT
+      " total_duration_without_padding %" G_GUINT64_FORMAT,
+      info->num_samples_with_padding, info->num_samples_without_padding,
+      info->first_frame_with_valid_samples, info->last_frame_with_valid_samples,
+      info->num_samples_in_first_valid_frame,
+      info->num_samples_in_last_valid_frame,
+      info->total_duration_without_padding);
+}
+
+static void
+setup_gapless_itunes_test_info (GaplessTestInfo * info)
+{
+  info->filename =
+      "sine-1kHztone-48kHzrate-mono-s32le-200000samples-itunes.m4a";
+  info->num_aac_frames = 198;
+  info->num_samples_per_frame = 1024;
+  info->sample_rate = 48000;
+  info->expect_clipmeta_at_end = TRUE;
+
+  info->num_start_padding_samples = 2112;
+  info->num_end_padding_samples = 640;
+
+  precalculate_gapless_test_factors (info);
+}
+
+static void
+setup_gapless_nero_with_itunsmpb_test_info (GaplessTestInfo * info)
+{
+  info->filename =
+      "sine-1kHztone-48kHzrate-mono-s32le-200000samples-nero-with-itunsmpb.m4a";
+  info->num_aac_frames = 198;
+  info->num_samples_per_frame = 1024;
+  info->sample_rate = 48000;
+  info->expect_clipmeta_at_end = TRUE;
+
+  info->num_start_padding_samples = 2624;
+  info->num_end_padding_samples = 128;
+
+  precalculate_gapless_test_factors (info);
+}
+
+static void
+setup_gapless_nero_without_itunsmpb_test_info (GaplessTestInfo * info)
+{
+  info->filename =
+      "sine-1kHztone-48kHzrate-mono-s32le-200000samples-nero-without-itunsmpb.m4a";
+  info->num_aac_frames = 198;
+  info->num_samples_per_frame = 1024;
+  info->sample_rate = 48000;
+  /* Older Nero AAC encoders produce a different stts value for the
+   * last frame to skip padding data. In this file, all frames except
+   * the last one use an stts value of 1024, while the last value
+   * uses an stts value of 896. Consequently, the logic inside qtdemux
+   * won't deem it necessary to add an audioclipmeta - there are no
+   * padding samples to clip. */
+  info->expect_clipmeta_at_end = FALSE;
+
+  info->num_start_padding_samples = 2624;
+  info->num_end_padding_samples = 128;
+
+  precalculate_gapless_test_factors (info);
+}
+
+static void
+check_parsed_aac_frame (GaplessTestInfo * info, guint frame_num)
+{
+  GstClockTime expected_pts = GST_CLOCK_TIME_NONE;
+  GstClockTime expected_duration = GST_CLOCK_TIME_NONE;
+  GstClockTimeDiff ts_delta;
+  guint64 expected_sample_offset;
+  guint64 expected_num_samples;
+  gboolean expect_audioclipmeta = FALSE;
+  guint64 expected_audioclipmeta_start = 0;
+  guint64 expected_audioclipmeta_end = 0;
+  GstSample *sample;
+  GstBuffer *buffer;
+  GstAudioClippingMeta *audioclip_meta;
+
+  if (frame_num < info->first_frame_with_valid_samples) {
+    /* Frame is at the beginning and is fully clipped. */
+    expected_sample_offset = 0;
+    expected_num_samples = 0;
+
+    expected_audioclipmeta_start = info->num_samples_per_frame;
+    expected_audioclipmeta_end = 0;
+  } else if (frame_num == info->first_frame_with_valid_samples) {
+    /* Frame is at the beginning and is partially clipped. */
+
+    expected_sample_offset = 0;
+    expected_num_samples = info->num_samples_in_first_valid_frame;
+
+    expected_audioclipmeta_start = info->num_samples_per_frame -
+        info->num_samples_in_first_valid_frame;
+    expected_audioclipmeta_end = 0;
+  } else if (frame_num < info->last_frame_with_valid_samples) {
+    /* Regular, unclipped frame. */
+
+    expected_sample_offset = info->num_samples_in_first_valid_frame +
+        info->num_samples_per_frame * (frame_num -
+        info->first_frame_with_valid_samples - 1);
+    expected_num_samples = info->num_samples_per_frame;
+  } else if (frame_num == info->last_frame_with_valid_samples) {
+    /* The first frame at the end with padding samples. This one will have
+     * the last few valid samples, followed by the first padding samples. */
+
+    expected_sample_offset = info->num_samples_in_first_valid_frame +
+        info->num_samples_per_frame * (frame_num -
+        info->first_frame_with_valid_samples - 1);
+    expected_num_samples = info->num_samples_in_last_valid_frame;
+
+    if (info->expect_clipmeta_at_end) {
+      expect_audioclipmeta = TRUE;
+      expected_audioclipmeta_start = 0;
+      expected_audioclipmeta_end =
+          info->num_samples_per_frame - expected_num_samples;
+    }
+  } else {
+    /* A fully clipped frame at the end of the stream. */
+
+    expected_sample_offset = info->num_samples_in_first_valid_frame +
+        info->num_samples_without_padding;
+    expected_num_samples = 0;
+
+    if (info->expect_clipmeta_at_end) {
+      expect_audioclipmeta = TRUE;
+      expected_audioclipmeta_start = 0;
+      expected_audioclipmeta_end = info->num_samples_per_frame;
+    }
+  }
+
+  /* Pull the frame from appsink so we can check it. */
+
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (info->appsink));
+  fail_if (sample == NULL);
+  fail_unless (GST_IS_SAMPLE (sample));
+
+  expected_pts = gst_util_uint64_scale_int (expected_sample_offset,
+      GST_SECOND, info->sample_rate);
+  expected_duration = gst_util_uint64_scale_int (expected_num_samples,
+      GST_SECOND, info->sample_rate);
+
+  buffer = gst_sample_get_buffer (sample);
+  fail_if (buffer == NULL);
+
+  /* Verify the sample's PTS and duration. Allow for 1 nanosecond difference
+   * to account for rounding errors in sample <-> timestamp conversions. */
+  ts_delta = GST_CLOCK_DIFF (GST_BUFFER_PTS (buffer), expected_pts);
+  fail_unless (ABS (ts_delta) <= 1);
+  ts_delta = GST_CLOCK_DIFF (GST_BUFFER_DURATION (buffer), expected_duration);
+  fail_unless (ABS (ts_delta) <= 1);
+  /* Check if there's audio clip metadata, and verify it if it exists. */
+  if (expect_audioclipmeta) {
+    audioclip_meta = gst_buffer_get_audio_clipping_meta (buffer);
+    fail_if (audioclip_meta == NULL);
+    fail_unless_equals_uint64 (audioclip_meta->start,
+        expected_audioclipmeta_start);
+    fail_unless_equals_uint64 (audioclip_meta->end, expected_audioclipmeta_end);
+  }
+
+  gst_sample_unref (sample);
+}
+
+static void
+qtdemux_pad_added_cb_for_gapless (GstElement * demux, GstPad * pad,
+    GaplessTestInfo * info)
+{
+  GstPad *appsink_pad;
+  GstPadLinkReturn ret;
+
+  appsink_pad = gst_element_get_static_pad (info->appsink, "sink");
+
+  if (gst_pad_is_linked (appsink_pad))
+    goto finish;
+
+  ret = gst_pad_link (pad, appsink_pad);
+  if (GST_PAD_LINK_FAILED (ret)) {
+    GST_ERROR ("Could not link qtdemux and appsink: %s",
+        gst_pad_link_get_name (ret));
+  }
+
+finish:
+  gst_object_unref (GST_OBJECT (appsink_pad));
+}
+
+static void
+perform_gapless_test (GaplessTestInfo * info)
+{
+  GstElement *source, *demux, *appsink, *pipeline;
+  GstStateChangeReturn state_ret;
+  guint frame_num;
+
+  pipeline = gst_pipeline_new (NULL);
+  source = gst_element_factory_make ("filesrc", NULL);
+  demux = gst_element_factory_make ("qtdemux", NULL);
+  appsink = gst_element_factory_make ("appsink", NULL);
+
+  info->appsink = appsink;
+
+  g_signal_connect (demux, "pad-added", (GCallback)
+      qtdemux_pad_added_cb_for_gapless, info);
+
+  gst_bin_add_many (GST_BIN (pipeline), source, demux, appsink, NULL);
+  gst_element_link (source, demux);
+
+  {
+    char *full_filename =
+        g_build_filename (GST_TEST_FILES_PATH, info->filename, NULL);
+    g_object_set (G_OBJECT (source), "location", full_filename, NULL);
+    g_free (full_filename);
+  }
+
+  g_object_set (G_OBJECT (appsink), "async", FALSE, "sync", FALSE,
+      "max-buffers", 1, "enable-last-sample", FALSE, "processing-deadline",
+      G_MAXUINT64, NULL);
+
+  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    GST_LOG ("waiting for pipeline to reach PAUSED state");
+    state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+    fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
+  }
+
+  /* Verify all frames from the test signal. */
+  for (frame_num = 0; frame_num < info->num_aac_frames; ++frame_num)
+    check_parsed_aac_frame (info, frame_num);
+
+  /* Check what duration is returned by a query. This duration must exclude
+   * the padding samples. */
+  {
+    GstQuery *query;
+    gint64 duration;
+    GstFormat format;
+
+    query = gst_query_new_duration (GST_FORMAT_TIME);
+    fail_unless (gst_element_query (pipeline, query));
+
+    gst_query_parse_duration (query, &format, &duration);
+    fail_unless_equals_int (format, GST_FORMAT_TIME);
+    fail_unless_equals_uint64 ((guint64) duration,
+        info->total_duration_without_padding);
+
+    gst_query_unref (query);
+  }
+
+  /* Seek tests: Here we seek to a certain position that corresponds to a
+   * certain frame. Then we check if we indeed got that frame. */
+
+  /* Seek back to the first frame. This will _not_ be the first valid frame.
+   * Instead, it will be a frame that gets only decoded and has duration
+   * zero. Other zero-duration frames may follow, until the first frame
+   * with valid data is encountered. This means that when the user seeks
+   * to position 0, downstream will subsequently get a number of buffers
+   * with PTS 0, and all of those buffers except the last will have a
+   * duration of 0. */
+  {
+    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+        GST_STATE_CHANGE_SUCCESS);
+    gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, 0);
+    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+        GST_STATE_CHANGE_SUCCESS);
+
+    check_parsed_aac_frame (info, 0);
+  }
+
+  /* Now move to the frame past the very first one that contained valid samples.
+   * This very first frame will usually be clipped, and be output as the last
+   * buffer at PTS 0 (see above). */
+  {
+    GstClockTime position;
+
+    position =
+        gst_util_uint64_scale_int (info->num_samples_in_first_valid_frame,
+        GST_SECOND, info->sample_rate);
+
+    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+        GST_STATE_CHANGE_SUCCESS);
+    gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+        position);
+    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+        GST_STATE_CHANGE_SUCCESS);
+
+    check_parsed_aac_frame (info, info->first_frame_with_valid_samples + 1);
+  }
+
+  /* Seek to the last frame with valid samples (= the first frame with padding
+   * samples at the end of the stream). */
+  {
+    GstClockTime position;
+
+    position =
+        gst_util_uint64_scale_int (info->num_samples_in_first_valid_frame +
+        info->num_samples_without_padding - info->num_samples_per_frame,
+        GST_SECOND, info->sample_rate);
+
+    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
+        GST_STATE_CHANGE_SUCCESS);
+    gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
+        position);
+    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+        GST_STATE_CHANGE_SUCCESS);
+
+    check_parsed_aac_frame (info, info->last_frame_with_valid_samples);
+  }
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_qtdemux_gapless_itunes_data)
+{
+  GaplessTestInfo info;
+  setup_gapless_itunes_test_info (&info);
+  perform_gapless_test (&info);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_qtdemux_gapless_nero_data_with_itunsmpb)
+{
+  GaplessTestInfo info;
+  setup_gapless_nero_with_itunsmpb_test_info (&info);
+  perform_gapless_test (&info);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_qtdemux_gapless_nero_data_without_itunsmpb)
+{
+  GaplessTestInfo info;
+  setup_gapless_nero_without_itunsmpb_test_info (&info);
+  perform_gapless_test (&info);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtdemux_suite (void)
 {
@@ -1215,6 +1630,9 @@ qtdemux_suite (void)
   tcase_add_test (tc_chain, test_qtdemux_pad_names);
   tcase_add_test (tc_chain, test_qtdemux_compensate_data_offset);
   tcase_add_test (tc_chain, test_qtdemux_mss_fragment);
+  tcase_add_test (tc_chain, test_qtdemux_gapless_itunes_data);
+  tcase_add_test (tc_chain, test_qtdemux_gapless_nero_data_with_itunsmpb);
+  tcase_add_test (tc_chain, test_qtdemux_gapless_nero_data_without_itunsmpb);
 
   return s;
 }

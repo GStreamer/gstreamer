@@ -386,6 +386,8 @@ static gboolean gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux,
 static void gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
     QtDemuxStream * stream, gint segment_index, GstClockTime pos);
 
+static void qtdemux_check_if_is_gapless_audio (GstQTDemux * qtdemux);
+
 static gboolean qtdemux_pull_mfro_mfra (GstQTDemux * qtdemux);
 static void check_update_duration (GstQTDemux * qtdemux, GstClockTime duration);
 
@@ -659,7 +661,12 @@ gst_qtdemux_get_duration (GstQTDemux * qtdemux, GstClockTime * duration)
 
   if (qtdemux->duration != 0 &&
       qtdemux->duration != G_MAXINT64 && qtdemux->timescale != 0) {
-    *duration = QTTIME_TO_GSTTIME (qtdemux, qtdemux->duration);
+    /* If this is single-stream audio media with gapless data,
+     * report the duration of the valid subset of the overall data. */
+    if (qtdemux->gapless_audio_info.type != GAPLESS_AUDIO_INFO_TYPE_NONE)
+      *duration = qtdemux->gapless_audio_info.valid_duration;
+    else
+      *duration = QTTIME_TO_GSTTIME (qtdemux, qtdemux->duration);
     res = TRUE;
   } else {
     *duration = GST_CLOCK_TIME_NONE;
@@ -2047,6 +2054,11 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->chapters_track_id = 0;
     qtdemux->have_group_id = FALSE;
     qtdemux->group_id = G_MAXUINT;
+
+    qtdemux->gapless_audio_info.type = GAPLESS_AUDIO_INFO_TYPE_NONE;
+    qtdemux->gapless_audio_info.num_start_padding_pcm_frames = 0;
+    qtdemux->gapless_audio_info.num_end_padding_pcm_frames = 0;
+    qtdemux->gapless_audio_info.num_valid_pcm_frames = 0;
 
     g_queue_clear_full (&qtdemux->protection_event_queue,
         (GDestroyNotify) gst_event_unref);
@@ -5507,6 +5519,14 @@ gst_qtdemux_stream_update_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   stream->segment.time = time;
   stream->segment.position = stream->segment.start;
 
+  /* Gapless audio requires adjustments to the segment
+   * to reflect the actual playtime length. In
+   * particular, this must exclude padding data. */
+  if (qtdemux->gapless_audio_info.type != GAPLESS_AUDIO_INFO_TYPE_NONE) {
+    stream->segment.stop = stream->segment.start +
+        qtdemux->gapless_audio_info.valid_duration;
+  }
+
   GST_DEBUG_OBJECT (stream->pad, "New segment: %" GST_SEGMENT_FORMAT,
       &stream->segment);
 
@@ -6412,6 +6432,83 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     crypto_info = gst_structure_copy (info->default_properties);
     if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info))
       GST_ERROR_OBJECT (qtdemux, "failed to attach aavd metadata to buffer");
+  }
+
+  if (qtdemux->gapless_audio_info.type != GAPLESS_AUDIO_INFO_TYPE_NONE) {
+    guint64 num_start_padding_pcm_frames;
+    guint64 audio_sample_offset;
+    guint64 audio_sample_offset_end;
+    guint64 start_of_trailing_padding;
+    guint64 start_clip = 0, end_clip = 0;
+    guint64 total_num_clipped_samples;
+    GstClockTime timestamp_decrement;
+
+    /* Attach GstAudioClippingMeta to exclude padding data. */
+
+    num_start_padding_pcm_frames =
+        qtdemux->gapless_audio_info.num_start_padding_pcm_frames;
+
+    audio_sample_offset = stream->sample_index * stream->stts_duration;
+    audio_sample_offset_end = audio_sample_offset + stream->stts_duration;
+    start_of_trailing_padding = num_start_padding_pcm_frames +
+        qtdemux->gapless_audio_info.num_valid_pcm_frames;
+
+    if (audio_sample_offset < num_start_padding_pcm_frames) {
+      guint64 num_padding_audio_samples =
+          num_start_padding_pcm_frames - audio_sample_offset;
+      start_clip = MIN (num_padding_audio_samples, stream->stts_duration);
+    }
+
+    timestamp_decrement = qtdemux->gapless_audio_info.start_padding_duration;
+
+    if (audio_sample_offset >= start_of_trailing_padding) {
+      /* This case happens when the buffer is located fully past
+       * the beginning of the padding area at the end of the stream.
+       * Add the end padding to the decrement amount to ensure
+       * continuous timestamps when transitioning from gapless
+       * media to gapless media. */
+      end_clip = stream->stts_duration;
+      timestamp_decrement += qtdemux->gapless_audio_info.end_padding_duration;
+    } else if (audio_sample_offset_end >= start_of_trailing_padding) {
+      /* This case happens when the beginning of the padding area that
+       * is located at the end of the stream intersects the buffer. */
+      end_clip = audio_sample_offset_end - start_of_trailing_padding;
+    }
+
+    total_num_clipped_samples = start_clip + end_clip;
+
+    if (total_num_clipped_samples != 0) {
+      GST_DEBUG_OBJECT (qtdemux, "adding audio clipping meta: start / "
+          "end clip: %" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT,
+          start_clip, end_clip);
+      gst_buffer_add_audio_clipping_meta (buf, GST_FORMAT_DEFAULT,
+          start_clip, end_clip);
+
+      if (total_num_clipped_samples >= stream->stts_duration) {
+        GST_BUFFER_DURATION (buf) = 0;
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DROPPABLE);
+      } else {
+        guint64 num_valid_samples =
+            stream->stts_duration - total_num_clipped_samples;
+        GST_BUFFER_DURATION (buf) =
+            QTSTREAMTIME_TO_GSTTIME (stream, num_valid_samples);
+      }
+    }
+
+    /* The timestamps need to be shifted to factor in the skipped padding data. */
+
+    if (GST_BUFFER_PTS_IS_VALID (buf)) {
+      GstClockTime ts = GST_BUFFER_PTS (buf);
+      GST_BUFFER_PTS (buf) =
+          (ts >= timestamp_decrement) ? (ts - timestamp_decrement) : 0;
+    }
+
+    if (GST_BUFFER_DTS_IS_VALID (buf)) {
+      GstClockTime ts = GST_BUFFER_DTS (buf);
+      GST_BUFFER_DTS (buf) =
+          (ts >= timestamp_decrement) ? (ts - timestamp_decrement) : 0;
+    }
   }
 
   if (stream->protected && (stream->protection_scheme_type == FOURCC_cenc
@@ -7563,6 +7660,129 @@ gst_qtdemux_send_gap_for_segment (GstQTDemux * demux,
         "segment: %" GST_PTR_FORMAT, gap);
     gst_pad_push_event (stream->pad, gap);
   }
+}
+
+static void
+qtdemux_check_if_is_gapless_audio (GstQTDemux * qtdemux)
+{
+  QtDemuxStream *stream;
+
+  if (QTDEMUX_N_STREAMS (qtdemux) != 1)
+    goto incompatible_stream;
+
+  stream = QTDEMUX_NTH_STREAM (qtdemux, 0);
+
+  if (stream->subtype != FOURCC_soun || stream->n_segments != 1)
+    goto incompatible_stream;
+
+  /* Gapless audio info from revdns tags (most notably iTunSMPB) is
+   * detected in the main udta node. If it isn't present, try as
+   * fallback to recognize the encoder name, and apply known priming
+   * and padding quantities specific to the encoder. */
+  if (qtdemux->gapless_audio_info.type == GAPLESS_AUDIO_INFO_TYPE_NONE) {
+    const gchar *orig_encoder_name = NULL;
+
+    if (gst_tag_list_peek_string_index (qtdemux->tag_list, GST_TAG_ENCODER, 0,
+            &orig_encoder_name) && orig_encoder_name != NULL) {
+      gchar *lowercase_encoder_name = g_ascii_strdown (orig_encoder_name, -1);
+
+      if (strstr (lowercase_encoder_name, "nero") != NULL)
+        qtdemux->gapless_audio_info.type = GAPLESS_AUDIO_INFO_TYPE_NERO;
+
+      g_free (lowercase_encoder_name);
+
+      switch (qtdemux->gapless_audio_info.type) {
+        case GAPLESS_AUDIO_INFO_TYPE_NERO:{
+          guint64 total_length;
+          guint64 valid_length;
+          guint64 start_padding;
+
+          /* The Nero AAC encoder always uses a lead-in of 1600 PCM frames.
+           * Also, in Nero AAC's case, stream->duration contains the number
+           * of PCM frames with start padding but without end padding.
+           * The decoder delay equals 1 frame length, which is covered by
+           * factoring stream->stts_duration into the start padding. */
+          start_padding = 1600 + stream->stts_duration;
+
+          if (G_UNLIKELY (stream->duration < start_padding)) {
+            GST_ERROR_OBJECT (qtdemux, "stream duration is %" G_GUINT64_FORMAT
+                " but start_padding is %" G_GUINT64_FORMAT, stream->duration,
+                start_padding);
+            goto invalid_gapless_audio_info;
+          }
+          valid_length = stream->duration - start_padding;
+
+          qtdemux->gapless_audio_info.num_start_padding_pcm_frames =
+              start_padding;
+          qtdemux->gapless_audio_info.num_valid_pcm_frames = valid_length;
+
+          total_length = stream->n_samples * stream->stts_duration;
+
+          if (G_LIKELY (total_length >= valid_length)) {
+            guint64 total_padding = total_length - valid_length;
+            if (G_UNLIKELY (total_padding < start_padding)) {
+              GST_ERROR_OBJECT (qtdemux, "total_padding is %" G_GUINT64_FORMAT
+                  " but start_padding is %" G_GUINT64_FORMAT, total_padding,
+                  start_padding);
+              goto invalid_gapless_audio_info;
+            }
+
+            qtdemux->gapless_audio_info.num_end_padding_pcm_frames =
+                total_padding - start_padding;
+          } else {
+            qtdemux->gapless_audio_info.num_end_padding_pcm_frames = 0;
+          }
+
+          GST_DEBUG_OBJECT (qtdemux, "media was encoded with Nero AAC encoder; "
+              "using encoder specific lead-in and padding figures");
+        }
+
+        default:
+          break;
+      }
+    }
+  }
+
+  if (qtdemux->gapless_audio_info.type != GAPLESS_AUDIO_INFO_TYPE_NONE) {
+    qtdemux->gapless_audio_info.start_padding_duration =
+        QTSTREAMTIME_TO_GSTTIME (stream,
+        qtdemux->gapless_audio_info.num_start_padding_pcm_frames);
+    qtdemux->gapless_audio_info.end_padding_duration =
+        QTSTREAMTIME_TO_GSTTIME (stream,
+        qtdemux->gapless_audio_info.num_end_padding_pcm_frames);
+    qtdemux->gapless_audio_info.valid_duration =
+        QTSTREAMTIME_TO_GSTTIME (stream,
+        qtdemux->gapless_audio_info.num_valid_pcm_frames);
+  }
+
+  GST_DEBUG_OBJECT (qtdemux, "found valid gapless audio info: num start / end "
+      "PCM padding frames: %" G_GUINT64_FORMAT " / %" G_GUINT64_FORMAT "; "
+      "start / end padding durations: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT
+      "; num valid PCM frames: %" G_GUINT64_FORMAT "; valid duration: %"
+      GST_TIME_FORMAT, qtdemux->gapless_audio_info.num_start_padding_pcm_frames,
+      qtdemux->gapless_audio_info.num_end_padding_pcm_frames,
+      GST_TIME_ARGS (qtdemux->gapless_audio_info.start_padding_duration),
+      GST_TIME_ARGS (qtdemux->gapless_audio_info.end_padding_duration),
+      qtdemux->gapless_audio_info.num_valid_pcm_frames,
+      GST_TIME_ARGS (qtdemux->gapless_audio_info.valid_duration));
+
+  return;
+
+incompatible_stream:
+  if (G_UNLIKELY (qtdemux->gapless_audio_info.type !=
+          GAPLESS_AUDIO_INFO_TYPE_NONE)) {
+    GST_WARNING_OBJECT (qtdemux,
+        "media contains gapless audio info, but it is not suitable for "
+        "gapless audio playback (media must be audio-only, single-stream, "
+        "single-segment; ignoring unusable gapless info");
+    qtdemux->gapless_audio_info.type = GAPLESS_AUDIO_INFO_TYPE_NONE;
+  }
+  return;
+
+invalid_gapless_audio_info:
+  GST_WARNING_OBJECT (qtdemux,
+      "media contains invalid/unusable gapless audio info");
+  return;
 }
 
 static GstFlowReturn
@@ -14008,6 +14228,8 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
       ++sample_num;
     }
   }
+
+  qtdemux_check_if_is_gapless_audio (qtdemux);
 
   return ret;
 }
