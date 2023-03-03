@@ -357,7 +357,7 @@ gst_image_sequence_src_init (GstImageSequenceSrc * self)
   self->start_index = DEFAULT_START_INDEX;
   self->index = 0;
   self->stop_index = DEFAULT_STOP_INDEX;
-  self->path = NULL;
+  self->path = g_strdup (DEFAULT_LOCATION);
   self->caps = NULL;
   self->n_frames = 0;
   self->fps_n = 30;
