@@ -2,10 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
+The latest bug-fix release in the stable 1.22 series is 1.22.1 and was
+released on 04 March 2023.
+
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Monday 23 January 2023, 17:00 UTC (log)
+Last updated: Monday 04 March 2023, 13:00 UTC (log)
 
 Introduction
 
@@ -298,8 +301,8 @@ migrate to the new components to benefit from these improvements.
     -   This is enabled by setting the instant-uri property to true,
         setting the URI to switch to immediately, and then disabling the
         instant-uri property again afterwards.
--   playbin3, decodebin3, uridecodebin3, parsebin, and urisrc are no
-    longer experimental
+-   playbin3, decodebin3, uridecodebin3, parsebin, and urisourcebin are
+    no longer experimental
     -   They were originally marked as ‘technology preview’ but have
         since seen extensive usage in production settings, so are
         considered ready for general use now.
@@ -819,9 +822,9 @@ Video Effects (videofx)
 
 New MP4 muxer + Fragmented MP4 muxer
 
--   fmp4mux: New fragmented MP4/ISOBMFF/CMAF muxer for generating
-    e.g. DASH/HLS media fragments.
--   isomp4mux: New non-fragmented, normal MP4 muxer.
+-   isofmp4mux, cmafmux, dashmp4mux, onviffmp4mux: New fragmented
+    MP4/ISOBMFF/CMAF muxer for generating e.g. DASH/HLS media fragments.
+-   isomp4mux, onvifmp4mux: New non-fragmented, normal MP4 muxer.
 
 Both plugins provides elements that replace the existing qtmux/mp4mux
 element from gst-plugins-good. While not feature-equivalent yet, the new
@@ -1216,6 +1219,240 @@ the git 1.22 branch, which will be a stable branch.
 1.22.0
 
 1.22.0 was originally released on 23 January 2023.
+
+1.22.1
+
+The first 1.22 bug-fix release (1.22.1) was released on 04 March 2023.
+
+This release only contains bugfixes and it should be safe to update from
+1.22.0.
+
+Highlighted bugfixes in 1.22.1
+
+-   audio channel-mix: allow up to 64 channels (instead of up to 63
+    channels)
+-   avfvideosrc: Don’t wait on main thread for permissions request
+-   avvidenc: avoid generating inaccurate output timestamps, especially
+    with variable framerate streams
+-   AV1 video codec caps signalling improvements in various elements
+-   codectimestamper: Fix timestamping on sequence update
+-   d3d11overlaycompositor: fix texture width and height
+-   d3d11videosink: Fix rendering on external handle
+-   dashdemux2: fix seek operation taking a log time to finish for some
+    streams
+-   nvencoder: Fix B-frame encoding on Linux and min buffers in auto GPU
+    mode
+-   playbin3: fixing buffering for live pipelines
+-   playbin: fix potential deadlock when stopping stream with subtitles
+    visible
+-   redenc: fix setting of extension ID for twcc
+-   rtspsrc: improved compatibility with more broken RTSP servers
+-   v4l2h264dec: Fix Raspberry Pi4 will not play video in application
+-   vtdec: fix jittery playback of H.264 Level 4.1 movies in macOS
+-   vtdec: Fix non-deterministic frame output after flushing seeks
+-   vtenc: fix handling of interlaced ProRes on Apple M1 hardware
+-   vtenc: don’t advertise ARGB/RGBA64 input caps on M1 Pro/Max with
+    macOS <13
+-   wasapi2src: Fix loopback capture on Windows 10 Anniversary Update
+-   tools: better handling of non-ASCII command line arguments on
+    Windows
+-   gst-libav: fix build against newer ffmpeg versions
+-   gst-python: Use arch-specific install dir for gi overrides
+-   cerbero: Fix setuptools site.py breakage in Python 3.11
+-   macOS packages: Fix broken binaries on macos < 11.0
+-   various bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   buffer: fix copy meta reference debug log formatting
+-   bin: Don’t unlock unlocked mutex in gst_bin_remove_func()
+-   pad: Don’t leak user_data in gst_pad_start_task()
+-   aggregator: Always lock aggpad around update_time_level
+-   inputselector: Avoid potential deadlock when shutting down,
+    e.g. playbin with subtitles
+-   multiqueue: Handle use-interleave latency live pipelines, fixing
+    buffering for live pipelines in playbin3
+-   GstBaseSrc: fix transfer annotation for fixate() virtual method
+-   GstBaseSrc, GstPushSrc: add nullable annotations to virtual methods
+-   tools: Make sure UTF-8 encoded command line arguments on Windows
+
+gst-plugins-base
+
+-   alsasink: Fix stall when going from PLAYING to NULL (stucked at
+    PAUSED) with uac1 gadget
+-   appsrc: Don’t chain up BaseSrc::negotiate()
+-   audio: channel-mix: Fix channel count limit to be able to equal 64
+-   gldisplay: Mark gst_gl_display_create_context() other_context
+    parameter as nullable
+-   gldisplay: Remove unused code
+-   gstglwindow_x11.c: Fix colormap leak
+-   gl/cocoa: Return a strong ref to the parent GstGLContext
+-   rtspconnection: Annotate RTSP message and RTSP events parameters
+    correctly
+-   sdp, typefind: Fix some annotations
+-   sdp: gstmikey: gst_mikey_message_to_caps: extract ROC from first
+    crypto session
+-   subparse: Properly forward segment seqnum
+-   uridecodebin: Set source element to READY before querying it
+-   uritranscodebin: Fix unref of NULL
+-   gst-play-1.0: Don’t force accurate seeking
+
+gst-plugins-good
+
+-   adaptivedemux2: Fix buffering threshold initialization
+-   dashdemux2: the seek operation takes a log time to finish for some
+    streams
+-   glvideomixer: Keep a reference to the underlying pad
+-   qtdemux: Don’t emit GstSegment correcting start time when in MSE
+    mode
+-   qtdemux: Handle moov atom length=0 case by reading until the end
+-   qtdemux, qtmux: Drop av1C version 0 parsing and implement version 1
+    parsing/writing
+-   qtmux: Fix assertion on caps update
+-   redenc: fix setting of extension ID for twcc
+-   rtspsrc: Use the correct vfunc for the push-backchannel-sample
+    action signal
+-   rtpssrcdemux: set different stream-id on each src pad
+-   udpsrc: GstSocketTimestampMessage only for SCM_TIMESTAMPNS
+-   v4l2h264dec: Fix Raspberry Pi4 will not play video in application
+
+gst-plugins-bad
+
+-   aom: Include stream-format and alignment in the AV1 caps
+-   av1parser, h265parser: Fix some code defects
+-   av1parser: Don’t consider unknown metadata OBUs a bitstream error
+-   avfvideosrc: Don’t wait on main thread for permissions request
+-   ccconverter: don’t debug a potentially freed filter caps
+-   codectimestamper: Fix timestamping on sequence update
+-   codecparsers: {h264, h265}bitwriter: Remove redundant condition
+    checks
+-   codecs: decoders: fail early if no input caps have been provided for
+    all new decoder base classes
+-   closedcaption: Don’t leak caps event
+-   curlhttpsrc: Add curl anyauth option
+-   d3d11overlaycompositor: fix texture width and height
+-   d3d11videosink: Fix rendering on external handle
+-   h265parse: Always set profile on src caps
+-   msdkav1enc: fix the category for msdkav1enc debug
+-   nvcodec: improve error reporting on plugin init
+-   nvencoder: Fix b-frame encoding on Linux
+-   nvencoder: Fix min buffers parameter of allocation query in auto GPU
+    mode
+-   nvvp9dec: Fix return value
+-   qsvav1enc, amfav1enc: Set stream-format on caps
+-   vtdec: Jittery playback of H.264 Level 4.1 movies in macOS (both
+    x86_64 and arm64)
+-   vtdec: Fix DPB size calculations not taking values from SPS into
+    account
+-   vtdec: Fix not waiting for async frames when flushing
+-   vtenc: Disable ARGB/RGBA64 caps on M1 Pro/Max with macOS <13
+-   vtenc: Fix checking for certain CPU variants when running in VMs
+-   vtenc: Disable HW acceleration for interlaced ProRes
+-   va: Avoid the array index overflow when filling 8x8 scaling list.
+-   va: Fix some code defects
+-   vah265enc: Use helper to update properties.
+-   vulkan: memory: Flush non coherent memory after write.
+-   wasapi2src: Fix loopback capture on Windows 10 Anniversary Update
+-   webrtcbin: small stats improvements
+-   win32ipcutils: Add missing include
+-   wpe: Logging fixes for the WebExtension
+
+gst-plugins-ugly
+
+-   mpegpsdemux: Ignore DTS if PTS < DTS
+
+gst-libav
+
+-   avauddec, avviddec: Free packet side data after usage
+-   avviddec: change
+    AV_CODEC_CAP_AUTO_THREADS->AV_CODEC_CAP_OTHER_THREADS to fix build
+    against newer ffmpeg versions
+-   Memory leak in ’ av_packet_add_side_data’ in
+    /lib/x86_64-linux-gnu/libavcodec.so reading the file
+    clock_odd_size_RLE_g1597902.avi
+-   avvidenc: Don’t take ffmpeg timestamps verbatim but only use them to
+    calculate DTS
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   vaapi: Skip plugin pc file for shared plugins
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   gst-python: Use arch-specific install dir for gi overrides
+
+gst-editing-services
+
+-   No changes
+
+gst-validate + gst-integration-testsuites
+
+-   validate:scenario: sink refs when building
+-   tests: Fix known issue definition location for unit tests and how we
+    handle them in validate launcher
+-   tests: mark elements_srtp.test_play test as flaky
+-   Fix gstreamer-validate-1.0 dependency name
+-   validate-scenario: fix g-i warning in annotation
+-   validate: Fix gst_validate_execute_action annotation
+
+gst-examples
+
+-   webrtc examples: Use webrtc.gstreamer.net
+-   webrtc_sendrecv.py: Various fixes
+
+Development build environment
+
+-   gst-env: Handle installing python modules to dist-packages
+-   meson: Allow sysdeps to be forced as fallback subprojects
+-   meson: Switch dav1d wrap to a tarball and update to dav1d 1.1.0
+
+Cerbero build tool and packaging changes in 1.22.1
+
+-   macos: Fix broken binaries on macos < 11.0
+-   orc: Update pthread_jit_write_protect fix for macOS/iOS
+-   dav1d: Update to 1.1.0
+-   libsrtp: update to v2.5.0
+-   rustup: Update to 1.25.2
+-   rust: Update to 1.67; cargo-c to 0.9.16
+-   cerbero: Don’t error out if bindir already exists
+-   Fix setuptools site.py breakage in Python 3.11, bump
+    gobject-introspection, bump windows image
+-   cerbero: Retry if cargo update fails on macOS
+-   gst-plugins-rs: Build glib/gio bindings with 2.74 API support
+
+Contributors to 1.22.1
+
+Alessandro Bono, Arun Raghavan, Bart Van Severen, Carlos Falgueras
+García, Célestin Marot, David Svensson Fors, Edward Hervey, Enrique
+Ocaña González, Frank Dana, Guillaume Desmottes, He Junyan, James
+Hilliard, Jan Alexander Steffens (heftig), Jan Schmidt, Jordan Petridis,
+Mathieu Duponchelle, Matthew Waters, medithe, Mengkejiergeli Ba, Nicolas
+Beland, Nirbheek Chauhan, Patricia Muscalu, Pawel Stawicki, Philippe
+Normand, Piotr Brzeziński, Rajneesh Soni, Robert Rosengren, Sanchayan
+Maity, Sebastian Dröge, Seungha Yang, Simon Himmelbauer, Thibault
+Saunier, Tim-Philipp Müller, Tristan van Berkom, U. Artie Eoff, Víctor
+Manuel Jáquez Leal, Vivia Nikolaidou, Xuchen Yang, Yinhang Liu,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.1
+
+-   List of Merge Requests applied in 1.22.1
+-   List of Issues fixed in 1.22.1
 
 Schedule for 1.24
 
