@@ -84,9 +84,9 @@ struct _GstVaBaseEncClass
                               GstVideoCodecFrame * frame,
                               gboolean bump_all,
                               GstVideoCodecFrame ** out_frame);
-  gboolean (*encode_frame)   (GstVaBaseEnc * encoder,
-                              GstVideoCodecFrame * frame,
-                              gboolean is_last);
+  GstFlowReturn (*encode_frame) (GstVaBaseEnc * encoder,
+                                 GstVideoCodecFrame * frame,
+                                 gboolean is_last);
   void     (*prepare_output) (GstVaBaseEnc * encoder,
                               GstVideoCodecFrame * frame);
 
