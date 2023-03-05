@@ -680,7 +680,7 @@ gst_va_av1_dec_start_picture (GstAV1Decoder * decoder, GstAV1Picture * picture,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstAV1FrameHeaderOBU *frame_header = &picture->frame_hdr;
   GstAV1SequenceHeaderOBU *seq_header = &self->seq;
-  VADecPictureParameterBufferAV1 pic_param = { };
+  VADecPictureParameterBufferAV1 pic_param = { 0, };
   GstVaDecodePicture *va_pic;
   guint i;
 
@@ -884,13 +884,11 @@ gst_va_av1_dec_decode_tile (GstAV1Decoder * decoder, GstAV1Picture * picture,
   GstAV1TileGroupOBU *tile_group = &tile->tile_group;
   GstVaDecodePicture *va_pic;
   guint i;
-  VASliceParameterBufferAV1 slice_param[GST_AV1_MAX_TILE_COUNT];
+  VASliceParameterBufferAV1 slice_param[GST_AV1_MAX_TILE_COUNT] = { 0, };
 
   GST_TRACE_OBJECT (self, "-");
 
   for (i = 0; i < tile_group->tg_end - tile_group->tg_start + 1; i++) {
-    slice_param[i] = (VASliceParameterBufferAV1) {
-    };
     slice_param[i].slice_data_size =
         tile_group->entry[tile_group->tg_start + i].tile_size;
     slice_param[i].slice_data_offset =
