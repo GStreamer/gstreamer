@@ -139,7 +139,6 @@ struct _GstJpegDecoderClass
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstJpegDecoder, gst_object_unref)
 
-GST_CODECS_API
 GType gst_jpeg_decoder_get_type (void);
 
 G_END_DECLS
