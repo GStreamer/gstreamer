@@ -357,7 +357,7 @@ _add_slice (GstVp8Decoder * decoder, GstVp8Picture * picture,
       sizeof (slice_param), (gpointer) picture->data, picture->size);
 }
 
-static gboolean
+static GstFlowReturn
 gst_va_vp8_dec_decode_picture (GstVp8Decoder * decoder, GstVp8Picture * picture,
     GstVp8Parser * parser)
 {
