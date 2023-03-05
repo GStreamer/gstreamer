@@ -31,6 +31,7 @@
 
 #include "gstvacaps.h"
 #include "gstvadisplay_priv.h"
+#include <string.h>
 
 struct _GstVaFilter
 {
@@ -1260,9 +1261,7 @@ _config_color_properties (VAProcColorStandardType * std,
   if (worstscore == 0) {
     /* No properties specified, there's not a useful choice. */
     *std = VAProcColorStandardNone;
-    *props = (VAProcColorProperties) {
-    };
-
+    memset (props, 0, sizeof (VAProcColorProperties));
     return;
   }
 

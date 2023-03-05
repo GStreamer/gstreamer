@@ -538,7 +538,7 @@ _h265_fill_ptl (GstVaH265Enc * self,
     .profile_space = 0,
     .tier_flag = sequence->general_tier_flag,
     .profile_idc = sequence->general_profile_idc,
-    .profile_compatibility_flag = { },
+    .profile_compatibility_flag = { 0, },
     .progressive_source_flag = 1,
     .interlaced_source_flag = 0,
     .non_packed_constraint_flag = 0,
@@ -901,7 +901,7 @@ _h265_fill_sps (GstVaH265Enc * self,
       .delta_palette_max_predictor_size = 32,
       .sps_palette_predictor_initializers_present_flag = 0,
       .sps_num_palette_predictor_initializer_minus1 = 0,
-      .sps_palette_predictor_initializer = { },
+      .sps_palette_predictor_initializer = {{ 0, }},
       .motion_vector_resolution_control_idc = 0,
       .intra_boundary_filtering_disabled_flag = 0,
     },
@@ -1050,7 +1050,7 @@ _h265_fill_slice_header (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     .collocated_ref_idx = (slice_param->slice_type == GST_H265_I_SLICE ?
         0xFF : self->features.collocated_ref_idx),
     /* not used now. */
-    .pred_weight_table = { },
+    .pred_weight_table = { 0, },
     .five_minus_max_num_merge_cand = 5 - slice_param->max_num_merge_cand,
     .use_integer_mv_flag = 0,
     .qp_delta = slice_param->slice_qp_delta,
@@ -1261,7 +1261,7 @@ static gboolean
 _h265_add_aud (GstVaH265Enc * self, GstVaH265EncFrame * frame)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
-  guint8 aud_data[8] = { };
+  guint8 aud_data[8] = { 0, };
   guint size;
   guint8 pic_type = 0;
 
@@ -1692,12 +1692,12 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     .delta_chroma_log2_weight_denom = 0,
     .delta_luma_weight_l0 = { 0, },
     .luma_offset_l0 = { 0, },
-    .delta_chroma_weight_l0 = { },
-    .chroma_offset_l0 = { },
-    .delta_luma_weight_l1 = { },
-    .luma_offset_l1 = { },
-    .delta_chroma_weight_l1 = { },
-    .chroma_offset_l1 = { },
+    .delta_chroma_weight_l0 = {{ 0, }},
+    .chroma_offset_l0 = {{ 0, }},
+    .delta_luma_weight_l1 = { 0, },
+    .luma_offset_l1 = { 0, },
+    .delta_chroma_weight_l1 = {{ 0, }},
+    .chroma_offset_l1 = {{ 0, }},
 
     .max_num_merge_cand = 5,
     .slice_qp_delta = slice_qp_delta,
@@ -1878,9 +1878,9 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
   guint list_forward_num = 0;
   GstVaH265EncFrame *list_backward[16] = { NULL, };
   guint list_backward_num = 0;
-  gint negative_pocs[16] = { };
+  gint negative_pocs[16] = { 0, };
   guint num_negative_pics = 0;
-  gint positive_pocs[16] = { };
+  gint positive_pocs[16] = { 0, };
   guint num_positive_pics = 0;
   gint collocated_poc = -1;
   gint i;

@@ -78,7 +78,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_va_vpp_debug);
 #define GST_VA_VPP_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVaVppClass))
 #define GST_VA_VPP_CLASS(klass)    ((GstVaVppClass *) klass)
 
-#define SWAP(a, b) do { const __typeof__ (a) t = a; a = b; b = t; } while (0)
+#define SWAP_INT(a, b) G_STMT_START { \
+  gint __tmp = a; \
+  a = b; \
+  b = __tmp; \
+} G_STMT_END
 
 typedef struct _GstVaVpp GstVaVpp;
 typedef struct _GstVaVppClass GstVaVppClass;
@@ -494,7 +498,7 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
       case GST_VIDEO_ORIENTATION_90L:
       case GST_VIDEO_ORIENTATION_UL_LR:
       case GST_VIDEO_ORIENTATION_UR_LL:
-        SWAP (from_dar_n, from_dar_d);
+        SWAP_INT (from_dar_n, from_dar_d);
         break;
       default:
         break;
@@ -1332,8 +1336,8 @@ gst_va_vpp_fixate_size (GstVaVpp * self, GstPadDirection direction,
       case GST_VIDEO_ORIENTATION_90L:
       case GST_VIDEO_ORIENTATION_UL_LR:
       case GST_VIDEO_ORIENTATION_UR_LL:
-        SWAP (from_w, from_h);
-        SWAP (from_par_n, from_par_d);
+        SWAP_INT (from_w, from_h);
+        SWAP_INT (from_par_n, from_par_d);
         break;
       default:
         break;

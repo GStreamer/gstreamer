@@ -176,7 +176,7 @@ _fill_quant_matrix (GstVp8Decoder * decoder, GstVp8Picture * picture,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVp8FrameHdr const *frame_hdr = &picture->frame_hdr;
   GstVp8Segmentation *const seg = &parser->segmentation;
-  VAIQMatrixBufferVP8 iq_matrix = { };
+  VAIQMatrixBufferVP8 iq_matrix = { 0, };
   const gint8 QI_MAX = 127;
   gint16 qi, qi_base;
   gint i;
@@ -214,7 +214,7 @@ _fill_probability_table (GstVp8Decoder * decoder, GstVp8Picture * picture)
 {
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVp8FrameHdr const *frame_hdr = &picture->frame_hdr;
-  VAProbabilityDataBufferVP8 prob_table = { };
+  VAProbabilityDataBufferVP8 prob_table = { 0, };
 
   /* Fill in VAProbabilityDataBufferVP8 */
   memcpy (prob_table.dct_coeff_probs, frame_hdr->token_probs.prob,
