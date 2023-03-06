@@ -1027,6 +1027,38 @@ failed:
 
 #endif
 
+static void
+_pad_template_init (GstElementClass * klass,
+    const gchar * name_template, GstPadDirection direction,
+    GstCaps * caps, const gchar * doc_caps_str)
+{
+  GstPadTemplate *pad_templ;
+
+  if (!caps)
+    return;
+
+  pad_templ = gst_pad_template_new (name_template,
+      direction, GST_PAD_ALWAYS, caps);
+  if (doc_caps_str) {
+    GstCaps *doc_caps = gst_caps_from_string (doc_caps_str);
+    gst_pad_template_set_documentation_caps (pad_templ, doc_caps);
+    gst_caps_unref (doc_caps);
+  }
+
+  gst_element_class_add_pad_template (klass, pad_templ);
+}
+
+void
+gst_msdkcaps_pad_template_init (GstElementClass * klass,
+    GstCaps * sink_caps, GstCaps * src_caps,
+    const gchar * doc_sink_caps_str, const gchar * doc_src_caps_str)
+{
+  _pad_template_init (klass,
+      "sink", GST_PAD_SINK, sink_caps, doc_sink_caps_str);
+
+  _pad_template_init (klass, "src", GST_PAD_SRC, src_caps, doc_src_caps_str);
+}
+
 gboolean
 gst_msdkcaps_set_strings (GstCaps * caps,
     const gchar * features, const char *field, const gchar * strings)

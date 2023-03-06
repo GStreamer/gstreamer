@@ -78,6 +78,17 @@ enum
 #define PROP_B_PYRAMID_DEFAULT          MFX_B_REF_UNKNOWN
 #define PROP_P_PYRAMID_DEFAULT          MFX_P_REF_DEFAULT
 
+/* *INDENT-OFF* */
+static const gchar *doc_sink_caps_str =
+    GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf",
+        "{ NV12, P010_10LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:D3D11Memory", "{ NV12 }");
+/* *INDENT-ON* */
+
+static const gchar *doc_src_caps_str = "video/x-av1";
+
 static GstElementClass *parent_class = NULL;
 
 static gboolean
@@ -364,12 +375,8 @@ gst_msdkav1enc_class_init (gpointer klass, gpointer data)
       "Haihao Xiang <haihao.xiang@intel.com>, "
       "Mengkejiergeli Ba <mengkejiergeli.ba@intel.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  gst_msdkcaps_pad_template_init (element_class,
+      cdata->sink_caps, cdata->src_caps, doc_sink_caps_str, doc_src_caps_str);
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);

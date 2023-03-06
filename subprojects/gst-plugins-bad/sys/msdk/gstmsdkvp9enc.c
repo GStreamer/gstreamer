@@ -65,6 +65,18 @@ GST_DEBUG_CATEGORY_EXTERN (gst_msdkvp9enc_debug);
 #define GST_IS_MSDKVP9ENC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_FROM_CLASS (klass)))
 
+/* *INDENT-OFF* */
+static const gchar *doc_sink_caps_str =
+    GST_VIDEO_CAPS_MAKE ("{ NV12, P010_10LE, VUYA, Y410 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf",
+        "{ NV12, P010_10LE, VUYA, Y410 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:D3D11Memory",
+        "{ NV12, P010_10LE }");
+/* *INDENT-ON* */
+
+static const gchar *doc_src_caps_str = "video/x-vp9";
+
 static GstElementClass *parent_class = NULL;
 
 static gboolean
@@ -271,12 +283,8 @@ gst_msdkvp9enc_class_init (gpointer klass, gpointer data)
       "VP9 video encoder based on " MFX_API_SDK,
       "Haihao Xiang <haihao.xiang@intel.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  gst_msdkcaps_pad_template_init (element_class,
+      cdata->sink_caps, cdata->src_caps, doc_sink_caps_str, doc_src_caps_str);
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);

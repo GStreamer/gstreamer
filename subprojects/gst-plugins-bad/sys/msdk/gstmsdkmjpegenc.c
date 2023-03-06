@@ -79,6 +79,17 @@ enum
 
 #define DEFAULT_QUALITY 85
 
+/* *INDENT-OFF* */
+static const gchar *doc_sink_caps_str =
+    GST_VIDEO_CAPS_MAKE ("{ NV12, YUY2, BGRA }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf",
+        "{ NV12, YUY2, BGRA }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:D3D11Memory", "{ NV12 }");
+/* *INDENT-ON* */
+
+static const gchar *doc_src_caps_str = "image/jpeg";
+
 static GstElementClass *parent_class = NULL;
 
 static gboolean
@@ -199,12 +210,8 @@ gst_msdkmjpegenc_class_init (gpointer klass, gpointer data)
       "MJPEG video encoder based on " MFX_API_SDK,
       "Scott D Phillips <scott.d.phillips@intel.com>");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-          cdata->sink_caps));
-  gst_element_class_add_pad_template (element_class,
-      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-          cdata->src_caps));
+  gst_msdkcaps_pad_template_init (element_class,
+      cdata->sink_caps, cdata->src_caps, doc_sink_caps_str, doc_src_caps_str);
 
   gst_caps_unref (cdata->sink_caps);
   gst_caps_unref (cdata->src_caps);
