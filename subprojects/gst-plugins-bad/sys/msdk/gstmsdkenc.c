@@ -696,8 +696,8 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
 
   thiz->frame_duration =
       gst_util_uint64_scale (GST_SECOND,
-      thiz->param.mfx.FrameInfo.FrameRateExtN,
-      thiz->param.mfx.FrameInfo.FrameRateExtD);
+      thiz->param.mfx.FrameInfo.FrameRateExtD,
+      thiz->param.mfx.FrameInfo.FrameRateExtN);
 
   switch (encoder_input_fmt) {
     case GST_VIDEO_FORMAT_P010_10LE:
