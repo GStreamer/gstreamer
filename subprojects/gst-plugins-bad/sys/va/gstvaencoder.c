@@ -1201,7 +1201,7 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
     return NULL;
   }
 
-  pic = g_slice_new (GstVaEncodePicture);
+  pic = g_new (GstVaEncodePicture, 1);
   pic->raw_buffer = gst_buffer_ref (raw_buffer);
   pic->reconstruct_buffer = reconstruct_buffer;
   pic->display = gst_object_ref (self->display);
@@ -1228,7 +1228,7 @@ gst_va_encode_picture_free (GstVaEncodePicture * pic)
   g_clear_pointer (&pic->params, g_array_unref);
   gst_clear_object (&pic->display);
 
-  g_slice_free (GstVaEncodePicture, pic);
+  g_free (pic);
 }
 
 /* currently supported rate controls */

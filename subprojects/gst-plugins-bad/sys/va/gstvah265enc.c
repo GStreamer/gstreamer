@@ -448,7 +448,7 @@ gst_va_h265_enc_frame_new (void)
 {
   GstVaH265EncFrame *frame;
 
-  frame = g_slice_new (GstVaH265EncFrame);
+  frame = g_new (GstVaH265EncFrame, 1);
   frame->last_frame = FALSE;
   frame->picture = NULL;
   frame->total_frame_count = 0;
@@ -461,7 +461,7 @@ gst_va_h265_enc_frame_free (gpointer pframe)
 {
   GstVaH265EncFrame *frame = pframe;
   g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
-  g_slice_free (GstVaH265EncFrame, frame);
+  g_free (frame);
 }
 
 static inline GstVaH265EncFrame *

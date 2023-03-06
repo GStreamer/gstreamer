@@ -375,7 +375,7 @@ gst_va_enc_frame_new (void)
 {
   GstVaH264EncFrame *frame;
 
-  frame = g_slice_new (GstVaH264EncFrame);
+  frame = g_new (GstVaH264EncFrame, 1);
   frame->frame_num = 0;
   frame->unused_for_reference_pic_num = -1;
   frame->picture = NULL;
@@ -390,7 +390,7 @@ gst_va_enc_frame_free (gpointer pframe)
 {
   GstVaH264EncFrame *frame = pframe;
   g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
-  g_slice_free (GstVaH264EncFrame, frame);
+  g_free (frame);
 }
 
 static inline GstVaH264EncFrame *
