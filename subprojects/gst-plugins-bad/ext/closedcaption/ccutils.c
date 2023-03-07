@@ -775,10 +775,17 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
     wrote_first = TRUE;
   }
 
+  // don't write padding if not requested
   if (!buf->output_padding && write_cea608_1_size == 0
       && write_cea608_2_size == 0) {
-    *field1_padding = 0;
-    *field2_padding = 0;
+    // however if we are producing data for a cdp that only has a single 608 field,
+    // in order to keep processing data will still need to alternate fields and
+    // produce the relevant padding data
+    if (fps_entry->max_cea608_count != 1 || (extra_cea608_1 == 0
+            && extra_cea608_2 == 0)) {
+      *field1_padding = 0;
+      *field2_padding = 0;
+    }
   }
 
   GST_TRACE_OBJECT (buf, "allocated sizes ccp:%u, cea608-1:%u (pad:%u), "
