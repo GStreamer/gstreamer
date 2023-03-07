@@ -1067,6 +1067,18 @@ GST_START_TEST (convert_cea708_cdp_cea608_raw_field_one)
 
 GST_END_TEST;
 
+GST_START_TEST (convert_cea608_raw_cea608_raw_field_one)
+{
+  /* Control codes must be translated when converting from field 0 to field 1 */
+  const guint8 in[] = { 0x94, 0x20 };
+  const guint8 out[] = { 0x15, 0x20 };
+  check_conversion_tc_passthrough (in, sizeof (in), out, sizeof (out),
+      "closedcaption/x-cea-608,format=(string)raw,field=(int)0",
+      "closedcaption/x-cea-608,format=(string)raw,field=(int)1");
+}
+
+GST_END_TEST;
+
 GST_START_TEST (convert_cea708_cdp_cea708_cc_data_double_input_data)
 {
   /* caps say 60fps, data has 30fps. Ensure data is taken alternatatively from
@@ -1290,6 +1302,7 @@ ccextractor_suite (void)
   tcase_add_test (tc, convert_cea608_s334_1a_cea608_raw_field_one);
   tcase_add_test (tc, convert_cea708_cc_data_cea608_raw_field_one);
   tcase_add_test (tc, convert_cea708_cdp_cea608_raw_field_one);
+  tcase_add_test (tc, convert_cea608_raw_cea608_raw_field_one);
 
   return s;
 }

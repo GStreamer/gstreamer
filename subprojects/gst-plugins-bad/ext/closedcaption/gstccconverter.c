@@ -483,13 +483,9 @@ gst_cc_converter_set_caps (GstBaseTransform * base, GstCaps * incaps,
 
   gst_video_time_code_clear (&self->current_output_timecode);
 
-  /* For raw 608 caps in and out, we can ignore the field to determine
-   * passthrough. We can also ignore framerate at this point, as our transform_caps
-   * implementation guarantees that it is either absent or present on both sides.
-   */
   if (gst_caps_is_subset (incaps, gst_static_caps_get (&raw_608_caps)) &&
       gst_caps_is_subset (outcaps, gst_static_caps_get (&raw_608_caps))) {
-    passthrough = TRUE;
+    passthrough = self->in_field == self->out_field;
   } else {
     /* Caps can be different but we can passthrough as long as they can
      * intersect, i.e. have same caps name and format */
@@ -722,6 +718,85 @@ convert_cea608_raw_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
     out.data[i * 3] = self->in_field == 0 ? 0x80 : 0x00;
     out.data[i * 3 + 1] = in.data[i * 2];
     out.data[i * 3 + 2] = in.data[i * 2 + 1];
+  }
+
+  gst_buffer_unmap (inbuf, &in);
+  gst_buffer_unmap (outbuf, &out);
+
+  return GST_FLOW_OK;
+}
+
+static inline guint8
+eia608_parity_strip (guint8 cc_data)
+{
+  return cc_data & 0x7F;
+}
+
+static GstFlowReturn
+convert_cea608_raw_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstMapInfo in, out;
+  guint i, n;
+
+  g_assert (self->in_field != self->out_field);
+
+  n = gst_buffer_get_size (inbuf);
+  if (n & 1) {
+    GST_WARNING_OBJECT (self, "Invalid raw CEA608 buffer size");
+    gst_buffer_set_size (outbuf, 0);
+    return GST_FLOW_OK;
+  }
+
+  n /= 2;
+
+  if (n > 3) {
+    GST_WARNING_OBJECT (self, "Too many CEA608 pairs %u.  Truncating to %u", n,
+        3);
+    n = 3;
+  }
+
+  gst_buffer_set_size (outbuf, 2 * n);
+
+  gst_buffer_map (inbuf, &in, GST_MAP_READ);
+  gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
+
+  /* EIA/CEA-608-B 8.4 Closed Caption Mode:
+   *
+   * When closed captioning is used on line 21, field 2,
+   * it shall conform to all of the applicable specifications and
+   * recommended practices as defined for field 1 services with the
+   * following differences:
+   *
+   * a) The non-printing character of the miscellaneous control-character pairs
+   * that fall in the range of 14h, 20h to 14h, 2Fh in field 1, shall be
+   * replaced with 15h, 20h to 15h, 2Fh when used in field 2.
+   *
+   * b) The non-printing character of the miscellaneous control-character pairs
+   * that fall in the range of 1Ch, 20h to 1Ch, 2Fh in field 1, shall be replaced
+   * with 1Dh, 20h to 1Dh, 2Fh when used in field 2.
+   */
+
+  for (i = 0; i < n; i++) {
+    guint8 cc_data_1 = eia608_parity_strip (in.data[i * 2]);
+    guint8 cc_data_2 = eia608_parity_strip (in.data[i * 2 + 1]);
+
+    out.data[i * 2] = in.data[i * 2];
+    out.data[i * 2 + 1] = in.data[i * 2 + 1];
+
+    if (self->in_field == 0 && self->out_field == 1) {
+      if (cc_data_1 == 0x14 && cc_data_2 >= 0x20 && cc_data_2 <= 0x2f) {
+        out.data[i * 2] = 0x15;
+      } else if (cc_data_1 == 0x1c && cc_data_2 >= 0x20 && cc_data_2 <= 0x2f) {
+        out.data[i * 2] = 0x9d;
+      }
+    } else if (self->in_field == 1 && self->out_field == 0) {
+      if (cc_data_1 == 0x15 && cc_data_2 >= 0x20 && cc_data_2 <= 0x2f) {
+        out.data[i * 2] = 0x94;
+      } else if (cc_data_1 == 0x1d && cc_data_2 >= 0x20 && cc_data_2 <= 0x2f) {
+        out.data[i * 2] = 0x1c;
+      }
+    }
   }
 
   gst_buffer_unmap (inbuf, &in);
@@ -1370,6 +1445,8 @@ gst_cc_converter_transform (GstCCConverter * self, GstBuffer * inbuf,
           ret = convert_cea608_raw_cea708_cdp (self, inbuf, outbuf, tc_meta);
           break;
         case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
+          ret = convert_cea608_raw_cea608_raw (self, inbuf, outbuf);
+          break;
         default:
           g_assert_not_reached ();
           break;
