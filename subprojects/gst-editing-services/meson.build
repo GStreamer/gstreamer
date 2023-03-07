@@ -270,9 +270,7 @@ subdir('plugins')
 subdir('tools')
 
 subdir('tests')
-if not get_option('examples').disabled()
-  subdir('examples')
-endif
+subdir('examples')
 subdir('docs')
 
 pygi_override_dir = get_option('pygi-overrides-dir')

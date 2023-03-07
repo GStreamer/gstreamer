@@ -1,3 +1,7 @@
+if get_option('tests').disabled() or static_build
+  subdir_done()
+endif
+
 pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
   pluginsdirs = [gst_dep.get_variable('pluginsdir')]
@@ -7,7 +11,7 @@ else
 endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
-if not get_option('tests').disabled() and gst_check_dep.found()
+if gst_check_dep.found()
   subdir('check')
   subdir('interactive')
   subdir('validate')

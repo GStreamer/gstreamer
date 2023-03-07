@@ -1,5 +1,6 @@
 project('gst-examples', 'c', version : '1.23.0.1', license : 'LGPL')
 
+static_build = get_option('default_library') == 'static'
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required : false)
 
@@ -33,6 +34,10 @@ gstsdp_dep = dependency('gstreamer-sdp-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'sdp_dep'])
 gstrtp_dep = dependency('gstreamer-rtp-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'rtp_dep'])
+
+if static_build
+  subdir_done()
+endif
 
 subdir('playback')
 subdir('network')

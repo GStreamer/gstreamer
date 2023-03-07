@@ -85,15 +85,16 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
 endif
 
 building_full = get_option('default_library') == 'static'
-tools_option = []
-if building_full and not get_option('tools').disabled()
-  # Do not build subprojects tools when we build them against gst-full
-  tools_option = ['tools=disabled']
+building_full_static = get_option('gst-full-target-type') == 'static_library'
+buildind_full_options = []
+
+if building_full
+buildind_full_options = ['gstreamer-full=enabled']
 endif
 
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
-  ['gstreamer', {'build-hotdoc': true, 'subproject_options': tools_option}],
+  ['gstreamer', {'build-hotdoc': true, 'subproject_options': buildind_full_options}],
   ['gst-plugins-base', {'option': get_option('base'), 'build-hotdoc': true}],
   ['gst-plugins-good', {'option': get_option('good'), 'build-hotdoc': true}],
   ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
@@ -101,9 +102,9 @@ subprojects = [
   ['gst-plugins-ugly', { 'option': get_option('ugly'), 'build-hotdoc': true}],
   ['gst-libav', { 'option': get_option('libav'), 'build-hotdoc': true}],
   ['gst-rtsp-server', { 'option': get_option('rtsp_server'), 'build-hotdoc': true}],
-  ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true, 'subproject_options': tools_option}],
+  ['gst-devtools', { 'option': get_option('devtools'), 'build-hotdoc': true}],
   ['gst-integration-testsuites', { 'option': get_option('devtools') }],
-  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true, 'subproject_options': tools_option}],
+  ['gst-editing-services', { 'option': get_option('ges'), 'build-hotdoc': true}],
   ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true}],
   ['gst-omx', { 'option': get_option('omx'), 'build-hotdoc': true}],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
@@ -421,17 +422,17 @@ if building_full
     giomodules_deps += dependency(module)
   endforeach
 
-  # Build both shared and static library
-  gstfull = both_libraries('gstreamer-full-1.0',
+  # Build shared library
+  gstfull = build_target('gstreamer-full-1.0',
     init_static_plugins_c,
+    target_type: get_option('gst-full-target-type'),
     link_args: gstfull_link_args,
     link_whole : exposed_libs,
     dependencies : [incdir_deps, glib_deps, all_plugins, giomodules_deps],
     link_depends : link_deps,
     install : true,
   )
-
-  gst_full_dep = declare_dependency(link_with: gstfull.get_shared_lib(),
+  gst_full_dep = declare_dependency(link_with: gstfull,
     dependencies : incdir_deps + glib_deps,
     include_directories: include_directories('.')
   )
@@ -441,7 +442,12 @@ if building_full
     warning('The compiler does not support `-Wl,--undefined` linker flag. The method `gst_init_static_plugins` might be dropped during the link stage of an application using libgstreamer-full-1.0.a, preventing plugins registration.')
   endif
 
-  if not get_option('introspection').disabled()
+  if building_full_static
+    warning('Introspection is enabled in gst-full static build mode but this is not supported by now. gir generation is now disabled.')
+  endif
+  # FIXME: gnome.generate_gir should link with not only gstfull in static gst-full but the whole gstreamer suite.
+  # tried dependencies without success.
+  if not get_option('introspection').disabled() and not building_full_static
     built_girs = {}
     foreach gir: exposed_girs
       includes = []
@@ -466,10 +472,9 @@ if building_full
 
   if not get_option('tools').disabled()
     foreach tool, data: all_tools
+      gst_full_tools += tool
       exe_name = '@0@-@1@'.format(tool, apiversion)
-      extra_args = data.get('extra_c_args', [])
-      sources = data.get('files')
-      install_tag = data.get('install_tag', 'bin')
+
       deps = []
       foreach d : data.get('deps', [])
         if d not in exposed_deps
@@ -477,14 +482,27 @@ if building_full
         endif
       endforeach
 
-      executable(exe_name,
-        sources,
-        install: true,
-        install_tag: install_tag,
-        include_directories : [configinc],
+      exe = executable(exe_name,
+        data.get('files'),
+        install: data.get('install', true),
+        install_tag: data.get('install_tag', 'bin'),
+        install_dir: data.get('install_dir', get_option('bindir')),
+        include_directories : data.get('include_directories', [configinc]),
         dependencies : [gst_full_dep] + deps,
-        c_args: extra_args + gst_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+        c_args: data.get('extra_c_args', []) + gst_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+        cpp_args: data.get('extra_cpp_args', []),
+        objc_args: data.get('extra_objc_args', []),
+        override_options: data.get('override_options', []),
       )
+
+      if(data.has_key('env'))
+        env = data.get('env')
+        value = env[1]
+        if env[1] == 'exe-full-path'
+          value = exe.full_path()
+        endif
+        meson.add_devenv({env[0]: value})
+      endif
 
       if data.has_key('man_page')
         install_man(data.get('man_page'))
@@ -537,13 +555,7 @@ endif
 
 summary({
   'gstreamer-full library': building_full,
+  'gstreamer-full target type': get_option('gst-full-target-type'),
+  'Tools': gst_full_tools,
+  'Tests and examples disabled': building_full,
 }, section: 'Build options', bool_yn: true, list_sep: '  ')
-
-gst_tools = []
-foreach tool, data: all_tools
-  gst_tools += tool
-endforeach
-
-summary({
-    'Tools': gst_tools,
-}, section: 'Build options', list_sep: ', ')

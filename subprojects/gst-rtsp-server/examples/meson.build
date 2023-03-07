@@ -1,3 +1,7 @@
+if get_option('examples').disabled() or static_build
+  subdir_done()
+endif
+
 examples = [
   'test-appsrc',
   'test-appsrc2',

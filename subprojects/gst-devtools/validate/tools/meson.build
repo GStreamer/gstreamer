@@ -47,7 +47,7 @@ else
   message('Can not build gst-validate-transcoding-' + apiversion)
 endif
 
-if not get_option('tools').disabled()
+if not get_option('tools').disabled() and not static_build
 
   foreach tool, data: gst_tools
     if not data.has_key('config_data')

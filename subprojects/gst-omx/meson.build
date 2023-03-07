@@ -23,6 +23,8 @@ api_version = '1.0'
 plugins_install_dir = '@0@/gstreamer-1.0'.format(get_option('libdir'))
 
 cc = meson.get_compiler('c')
+static_build = get_option('default_library') == 'static'
+
 
 if cc.get_id() == 'msvc'
   msvc_args = [
@@ -410,9 +412,8 @@ if not get_option('tools').disabled()
   subdir('tools')
 endif
 
-if not get_option('tests').disabled() and gstcheck_dep.found()
-  subdir('tests')
-endif
+subdir('tests')
+
 subdir('docs')
 
 # Set release date

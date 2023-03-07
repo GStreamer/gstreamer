@@ -31,7 +31,7 @@ foreach tool : tools
   endif
 
   man_page = files('@0@-1.0.1'.format(tool))
-  if not get_option('tools').disabled()
+  if not get_option('tools').disabled() and not static_build
     executable(exe_name,
       src_file,
       install: true,

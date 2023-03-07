@@ -24,6 +24,7 @@ option('libdw', type : 'feature', value : 'auto', description : 'Use libdw to ge
 option('dbghelp', type : 'feature', value : 'auto', description : 'Use dbghelp to generate backtraces')
 option('bash-completion', type : 'feature', value : 'auto', description : 'Install bash completion files')
 option('coretracers', type : 'feature', value : 'auto', description : 'Build coretracers plugin')
+option('gstreamer-full', type : 'feature', value : 'disabled', description : 'Build with gstreamer-full')
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)

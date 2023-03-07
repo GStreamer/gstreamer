@@ -44,7 +44,7 @@ endif
     },
   }
 
-if not get_option('tools').disabled()
+if not get_option('tools').disabled() and not static_build
   foreach tool, data: gst_tools
     exe_name = '@0@-@1@'.format(tool, api_version)
     executable(exe_name,

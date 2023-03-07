@@ -32,6 +32,7 @@ helpers_install_dir = join_paths(libexecdir, 'gstreamer-1.0')
 
 cc = meson.get_compiler('c')
 host_system = host_machine.system()
+static_build = get_option('default_library') == 'static'
 
 if host_system == 'darwin'
   ios_test_code = '''#include <TargetConditionals.h>
@@ -569,7 +570,8 @@ gst_c_args = ['-DHAVE_CONFIG_H']
 # FIXME: This is only needed on windows and probably breaks when
 # default_library = 'both'. We should add this flag to static_c_args instead
 # when Meson supports it: https://github.com/mesonbuild/meson/issues/3304
-if get_option('default_library') == 'static'
+
+if static_build
   gst_c_args += ['-DGST_STATIC_COMPILATION']
 endif
 
@@ -634,7 +636,7 @@ if host_system == 'darwin'
   pkgconfig_libs = ['-Wl,-rpath,${libdir}']
 endif
 
-static_build = get_option('default_library') == 'static'
+
 gst_libraries = []
 subdir('gst')
 subdir('libs')

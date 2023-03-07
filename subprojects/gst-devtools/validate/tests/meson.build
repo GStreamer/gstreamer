@@ -10,6 +10,10 @@ else
 endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
+if get_option('tests').disabled() or static_build
+  subdir_done()
+endif
+
 # FIXME: make check work on windows
 if host_machine.system() != 'windows' and gst_check_dep.found()
   subdir('check')

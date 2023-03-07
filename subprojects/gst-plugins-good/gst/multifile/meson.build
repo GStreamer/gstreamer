@@ -22,6 +22,10 @@ gstmultifile = library('gstmultifile',
 )
 plugins += [gstmultifile]
 
+if get_option('tests').disabled() or static_build
+  subdir_done()
+endif
+
 test_splitmuxpartreader_sources = [
   'test-splitmuxpartreader.c',
   'gstsplitmuxpartreader.c',

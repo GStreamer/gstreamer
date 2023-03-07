@@ -192,12 +192,10 @@ static_build = get_option('default_library') == 'static'
 gst_libraries = []
 
 subdir('gst')
-if not get_option('tests').disabled()
-  subdir('tests')
-endif
-if not get_option('examples').disabled()
-  subdir('examples')
-endif
+
+subdir('tests')
+subdir('examples')
+
 subdir('docs')
 
 # Set release date

@@ -252,6 +252,10 @@ if not tracer_hooks
   libgst_c_args += ['-DGST_DISABLE_GST_TRACER_HOOKS']
 endif
 
+if get_option('gstreamer-full').enabled()
+  libgst_c_args += ['-DGST_FULL_COMPILATION']
+endif
+
 # Make sure that subproject building gir files work
 gst_incdirs = [configinc]
 gst_gen_sources = [gstenum_h]
