@@ -370,7 +370,7 @@ static void gst_uri_decode_bin3_dispose (GObject * obj);
 static GstSourceHandler *new_source_handler (GstURIDecodeBin3 * uridecodebin,
     GstPlayItem * item, gboolean is_main);
 static void free_source_handler (GstURIDecodeBin3 * uridecodebin,
-    GstSourceHandler * item);
+    GstSourceHandler * item, gboolean lock_state);
 static void free_source_item (GstURIDecodeBin3 * uridecodebin,
     GstSourceItem * item);
 
@@ -976,14 +976,21 @@ link_src_pad_to_db3 (GstURIDecodeBin3 * uridecodebin, GstSourcePad * spad)
   if (handler->is_main_source && handler->play_item->sub_item
       && !handler->play_item->sub_item->handler) {
     GstStateChangeReturn ret;
+
+    /* The state lock is taken to ensure we can atomically change the
+     * urisourcebin back to NULL in case of failures */
+    GST_STATE_LOCK (uridecodebin);
     handler->play_item->sub_item->handler =
         new_source_handler (uridecodebin, handler->play_item, FALSE);
     ret = activate_source_item (handler->play_item->sub_item);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-      free_source_handler (uridecodebin, handler->play_item->sub_item->handler);
+      free_source_handler (uridecodebin, handler->play_item->sub_item->handler,
+          FALSE);
       handler->play_item->sub_item->handler = NULL;
+      GST_STATE_UNLOCK (uridecodebin);
       goto sub_item_activation_failed;
     }
+    GST_STATE_UNLOCK (uridecodebin);
   }
 
   return;
@@ -1631,14 +1638,17 @@ gst_uri_decode_bin3_get_property (GObject * object, guint prop_id,
   }
 }
 
+/* lock_state: TRUE if the STATE LOCK should be taken. Set to FALSE if the
+ * caller already has taken it */
 static void
 free_source_handler (GstURIDecodeBin3 * uridecodebin,
-    GstSourceHandler * handler)
+    GstSourceHandler * handler, gboolean lock_state)
 {
   GST_LOG_OBJECT (uridecodebin, "source handler %p", handler);
   if (handler->active) {
     GList *iter;
-    GST_STATE_LOCK (uridecodebin);
+    if (lock_state)
+      GST_STATE_LOCK (uridecodebin);
     GST_LOG_OBJECT (uridecodebin, "Removing %" GST_PTR_FORMAT,
         handler->urisourcebin);
     for (iter = handler->sourcepads; iter; iter = iter->next) {
@@ -1648,7 +1658,8 @@ free_source_handler (GstURIDecodeBin3 * uridecodebin,
     }
     gst_element_set_state (handler->urisourcebin, GST_STATE_NULL);
     gst_bin_remove ((GstBin *) uridecodebin, handler->urisourcebin);
-    GST_STATE_UNLOCK (uridecodebin);
+    if (lock_state)
+      GST_STATE_UNLOCK (uridecodebin);
     g_list_free (handler->sourcepads);
   }
   if (handler->pending_buffering_msg)
@@ -1672,7 +1683,7 @@ free_source_item (GstURIDecodeBin3 * uridecodebin, GstSourceItem * item)
 {
   GST_LOG_OBJECT (uridecodebin, "source item %p", item);
   if (item->handler)
-    free_source_handler (uridecodebin, item->handler);
+    free_source_handler (uridecodebin, item->handler, TRUE);
   g_free (item->uri);
   g_free (item);
 }
@@ -1899,12 +1910,16 @@ assign_handlers_to_item (GstURIDecodeBin3 * dec, GstPlayItem * item)
 
   /* Create missing handlers */
   if (item->main_item->handler == NULL) {
+    /* The state lock is taken to ensure we can atomically change the
+     * urisourcebin back to NULL in case of failures */
+    GST_STATE_LOCK (dec);
     item->main_item->handler = new_source_handler (dec, item, TRUE);
     ret = activate_source_item (item->main_item);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-      free_source_handler (dec, item->main_item->handler);
+      free_source_handler (dec, item->main_item->handler, FALSE);
       item->main_item->handler = NULL;
     }
+    GST_STATE_UNLOCK (dec);
   }
 
   return ret;
