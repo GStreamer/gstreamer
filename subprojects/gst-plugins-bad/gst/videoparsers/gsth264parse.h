@@ -117,6 +117,7 @@ struct _GstH264Parse
   guint8 sei_pic_struct;
   guint8 sei_pic_struct_pres_flag;
   guint field_pic_flag;
+  gboolean ignore_vui_fps;
 
   /* cached timestamps */
   /* (trying to) track upstream dts and interpolate */
