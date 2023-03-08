@@ -27,8 +27,10 @@ G_BEGIN_DECLS
 
 #ifdef G_OS_WIN32
 #define GST_IS_VA_DISPLAY_PLATFORM(dpy) GST_IS_VA_DISPLAY_WIN32(dpy)
+#define GST_VA_DEVICE_PATH_PROP_DESC "DXGI Adapter LUID"
 #else
 #define GST_IS_VA_DISPLAY_PLATFORM(dpy) GST_IS_VA_DISPLAY_DRM(dpy)
+#define GST_VA_DEVICE_PATH_PROP_DESC "DRM device path"
 #endif
 
 GstVaDisplay * gst_va_display_platform_new (const gchar * path);

@@ -1407,7 +1407,7 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
    * It shows the DRM device path used for the VA operation, if any.
    */
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
-      "Device Path", "DRM device path", NULL,
+      "Device Path", GST_VA_DEVICE_PATH_PROP_DESC, NULL,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   /**

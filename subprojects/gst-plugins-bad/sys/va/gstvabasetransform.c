@@ -648,7 +648,7 @@ gst_va_base_transform_class_init (GstVaBaseTransformClass * klass)
    * Since: 1.22
    */
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
-      "Device Path", "DRM device path", NULL,
+      "Device Path", GST_VA_DEVICE_PATH_PROP_DESC, NULL,
       G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES, properties);
