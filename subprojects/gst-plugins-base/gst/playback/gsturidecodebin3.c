@@ -1103,6 +1103,33 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
     }
   }
 
+  /* If the old pads contains the static decodebin3 sinkpad *and* we have a new
+   *  pad to activate, we re-use it */
+  if (to_activate) {
+    /* Remove unmatched old source pads */
+    for (iterold = old_pads; iterold; iterold = iterold->next) {
+      GstSourcePad *old_spad = iterold->data;
+      if (old_spad->db3_sink_pad && !old_spad->db3_pad_is_request) {
+        GstSourcePad *new_spad = to_activate->data;
+
+        GST_DEBUG_OBJECT (uridecodebin, "Static sinkpad can be re-used");
+        GST_DEBUG_OBJECT (uridecodebin, "Relinking %s:%s from %s:%s to %s:%s",
+            GST_DEBUG_PAD_NAME (old_spad->db3_sink_pad),
+            GST_DEBUG_PAD_NAME (old_spad->src_pad),
+            GST_DEBUG_PAD_NAME (new_spad->src_pad));
+        gst_pad_unlink (old_spad->src_pad, old_spad->db3_sink_pad);
+        new_spad->db3_sink_pad = old_spad->db3_sink_pad;
+        new_spad->db3_pad_is_request = old_spad->db3_pad_is_request;
+        old_spad->db3_sink_pad = NULL;
+
+        gst_pad_link (new_spad->src_pad, new_spad->db3_sink_pad);
+        old_pads = g_list_remove (old_pads, old_spad);
+        to_activate = g_list_remove (to_activate, new_spad);
+        break;
+      }
+    }
+  }
+
   /* Remove unmatched old source pads */
   for (iterold = old_pads; iterold; iterold = iterold->next) {
     GstSourcePad *old_spad = iterold->data;
