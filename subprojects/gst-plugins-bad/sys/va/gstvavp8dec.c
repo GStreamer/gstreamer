@@ -520,22 +520,9 @@ gst_va_vp8_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  /* The first decoder to be registered should use a constant name,
-   * like vavp8dec, for any additional decoders, we create unique
-   * names, using inserting the render device name. */
-  if (device->index == 0) {
-    type_name = g_strdup ("GstVaVp8Dec");
-    feature_name = g_strdup ("vavp8dec");
-  } else {
-    gchar *basename = g_path_get_basename (device->render_device_path);
-    type_name = g_strdup_printf ("GstVa%sVp8Dec", basename);
-    feature_name = g_strdup_printf ("va%svp8dec", basename);
-    cdata->description = basename;
-
-    /* lower rank for non-first device */
-    if (rank > 0)
-      rank--;
-  }
+  gst_va_create_feature_name (device, "GstVaVp8Dec", "GstVa%sVp8Dec",
+      &type_name, "vavp8dec", "va%svp8dec", &feature_name,
+      &cdata->description, &rank);
 
   g_once (&debug_once, _register_debug_category, NULL);
 

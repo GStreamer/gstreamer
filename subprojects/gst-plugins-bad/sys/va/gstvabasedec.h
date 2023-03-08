@@ -32,6 +32,7 @@
 #include "gstvadecoder.h"
 #include "gstvadevice.h"
 #include "gstvaprofile.h"
+#include "gstvapluginutils.h"
 
 G_BEGIN_DECLS
 

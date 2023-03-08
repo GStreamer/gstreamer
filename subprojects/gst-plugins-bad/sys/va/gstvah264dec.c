@@ -967,22 +967,9 @@ gst_va_h264_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  /* The first decoder to be registered should use a constant name,
-   * like vah264dec, for any additional decoders, we create unique
-   * names, using inserting the render device name. */
-  if (device->index == 0) {
-    type_name = g_strdup ("GstVaH264Dec");
-    feature_name = g_strdup ("vah264dec");
-  } else {
-    gchar *basename = g_path_get_basename (device->render_device_path);
-    type_name = g_strdup_printf ("GstVa%sH264Dec", basename);
-    feature_name = g_strdup_printf ("va%sh264dec", basename);
-    cdata->description = basename;
-
-    /* lower rank for non-first device */
-    if (rank > 0)
-      rank--;
-  }
+  gst_va_create_feature_name (device, "GstVaH264Dec", "GstVa%sH264Dec",
+      &type_name, "vah264dec", "va%sh264dec", &feature_name,
+      &cdata->description, &rank);
 
   g_once (&debug_once, _register_debug_category, NULL);
 

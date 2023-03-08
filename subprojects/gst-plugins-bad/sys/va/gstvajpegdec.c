@@ -619,23 +619,9 @@ gst_va_jpeg_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-
-  /* The first decoder to be registered should use a constant name,
-   * like vajpegdec, for any additional decoders, we create unique
-   * names, using inserting the render device name. */
-  if (device->index == 0) {
-    type_name = g_strdup ("GstVaJpegDec");
-    feature_name = g_strdup ("vajpegdec");
-  } else {
-    gchar *basename = g_path_get_basename (device->render_device_path);
-    type_name = g_strdup_printf ("GstVa%sJpegDec", basename);
-    feature_name = g_strdup_printf ("va%sjpegdec", basename);
-    cdata->description = basename;
-
-    /* lower rank for non-first device */
-    if (rank > 0)
-      rank--;
-  }
+  gst_va_create_feature_name (device, "GstVaJpegDec", "GstVa%sJpegDec",
+      &type_name, "vajpegdec", "va%sjpegdec", &feature_name,
+      &cdata->description, &rank);
 
   g_once (&debug_once, _register_debug_category, NULL);
 

@@ -21,6 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/va/gstva.h>
+#include "gstvadevice.h"
 
 G_BEGIN_DECLS
 
@@ -30,14 +31,16 @@ G_BEGIN_DECLS
 #define GST_IS_VA_DISPLAY_PLATFORM(dpy) GST_IS_VA_DISPLAY_DRM(dpy)
 #endif
 
-static GstVaDisplay *
-gst_va_display_platform_new (const gchar * path)
-{
-#ifdef G_OS_WIN32
-  return gst_va_display_win32_new (path);
-#else
-  return gst_va_display_drm_new_from_path (path);
-#endif
-}
+GstVaDisplay * gst_va_display_platform_new (const gchar * path);
+
+void gst_va_create_feature_name (GstVaDevice * device,
+                                 const gchar * type_name_default,
+                                 const gchar * type_name_templ,
+                                 gchar ** type_name,
+                                 const gchar * feature_name_default,
+                                 const gchar * feature_name_templ,
+                                 gchar ** feature_name,
+                                 gchar ** desc,
+                                 guint * rank);
 
 G_END_DECLS

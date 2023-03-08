@@ -5292,31 +5292,14 @@ gst_va_h265_enc_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  /* The first encoder to be registered should use a constant name,
-   * like vah265enc, for any additional encoders, we create unique
-   * names, using inserting the render device name. */
-  if (device->index == 0) {
-    if (entrypoint == VAEntrypointEncSlice) {
-      type_name = g_strdup ("GstVaH265Enc");
-      feature_name = g_strdup ("vah265enc");
-    } else {
-      type_name = g_strdup ("GstVaH265LPEnc");
-      feature_name = g_strdup ("vah265lpenc");
-    }
+  if (entrypoint == VAEntrypointEncSlice) {
+    gst_va_create_feature_name (device, "GstVaH265Enc", "GstVa%sH265Enc",
+        &type_name, "vah265enc", "va%sh265enc", &feature_name,
+        &cdata->description, &rank);
   } else {
-    gchar *basename = g_path_get_basename (device->render_device_path);
-    if (entrypoint == VAEntrypointEncSlice) {
-      type_name = g_strdup_printf ("GstVa%sH265Enc", basename);
-      feature_name = g_strdup_printf ("va%sh265enc", basename);
-    } else {
-      type_name = g_strdup_printf ("GstVa%sH265LPEnc", basename);
-      feature_name = g_strdup_printf ("va%sh265lpenc", basename);
-    }
-    cdata->description = basename;
-
-    /* lower rank for non-first device */
-    if (rank > 0)
-      rank--;
+    gst_va_create_feature_name (device, "GstVaH265LPEnc", "GstVa%sH265LPEnc",
+        &type_name, "vah265lpenc", "va%sh265lpenc", &feature_name,
+        &cdata->description, &rank);
   }
 
   g_once (&debug_once, _register_debug_category, NULL);

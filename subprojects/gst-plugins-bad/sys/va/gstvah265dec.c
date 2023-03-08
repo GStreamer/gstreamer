@@ -1323,22 +1323,9 @@ gst_va_h265_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  /* The first decoder to be registered should use a constant name,
-   * like vah265dec, for any additional decoders, we create unique
-   * names, using inserting the render device name. */
-  if (device->index == 0) {
-    type_name = g_strdup ("GstVaH265Dec");
-    feature_name = g_strdup ("vah265dec");
-  } else {
-    gchar *basename = g_path_get_basename (device->render_device_path);
-    type_name = g_strdup_printf ("GstVa%sH265Dec", basename);
-    feature_name = g_strdup_printf ("va%sh265dec", basename);
-    cdata->description = basename;
-
-    /* lower rank for non-first device */
-    if (rank > 0)
-      rank--;
-  }
+  gst_va_create_feature_name (device, "GstVaH265Dec", "GstVa%sH265Dec",
+      &type_name, "vah265dec", "va%sh265dec", &feature_name,
+      &cdata->description, &rank);
 
   g_once (&debug_once, _register_debug_category, NULL);
 

@@ -1515,24 +1515,9 @@ gst_va_compositor_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  type_name = g_strdup ("GstVaCompositor");
-  feature_name = g_strdup ("vacompositor");
-
-  /* The first compositor to be registered should use a constant
-   * name, like vacompositor, for any additional compositors, we
-   * create unique names, using the render device name. */
-  if (g_type_from_name (type_name)) {
-    gchar *basename = g_path_get_basename (device->render_device_path);
-    g_free (type_name);
-    g_free (feature_name);
-    type_name = g_strdup_printf ("GstVa%sCompositor", basename);
-    feature_name = g_strdup_printf ("va%scompositor", basename);
-    cdata->description = basename;
-
-    /* lower rank for non-first device */
-    if (rank > 0)
-      rank--;
-  }
+  gst_va_create_feature_name (device, "GstVaCompositor", "GstVa%sCompositor",
+      &type_name, "vacompositor", "va%scompositor", &feature_name,
+      &cdata->description, &rank);
 
   g_once (&debug_once, _register_debug_category, NULL);
 

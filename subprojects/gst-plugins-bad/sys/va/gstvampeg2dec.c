@@ -646,22 +646,9 @@ gst_va_mpeg2_dec_register (GstPlugin * plugin, GstVaDevice * device,
 
   type_info.class_data = cdata;
 
-  /* The first decoder to be registered should use a constant name,
-   * like vampeg2dec, for any additional decoders, we create unique
-   * names, using inserting the render device name. */
-  if (device->index == 0) {
-    type_name = g_strdup ("GstVaMpeg2Dec");
-    feature_name = g_strdup ("vampeg2dec");
-  } else {
-    gchar *basename = g_path_get_basename (device->render_device_path);
-    type_name = g_strdup_printf ("GstVa%sMpeg2Dec", basename);
-    feature_name = g_strdup_printf ("va%smpeg2dec", basename);
-    cdata->description = basename;
-
-    /* lower rank for non-first device */
-    if (rank > 0)
-      rank--;
-  }
+  gst_va_create_feature_name (device, "GstVaMpeg2Dec", "GstVa%sMpeg2Dec",
+      &type_name, "vampeg2dec", "va%smpeg2dec", &feature_name,
+      &cdata->description, &rank);
 
   g_once (&debug_once, _register_debug_category, NULL);
 
