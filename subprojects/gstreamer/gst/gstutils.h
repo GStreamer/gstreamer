@@ -1209,6 +1209,10 @@ GST_API
 gint64        gst_util_greatest_common_divisor_int64 (gint64 a, gint64 b);
 
 GST_API
+void          gst_util_simplify_fraction        (gint *numerator, gint *denominator,
+                                                 guint n_terms, guint threshold);
+
+GST_API
 void          gst_util_fraction_to_double       (gint src_n, gint src_d, gdouble *dest);
 
 GST_API
