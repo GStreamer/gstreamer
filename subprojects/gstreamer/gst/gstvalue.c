@@ -4808,6 +4808,104 @@ out:
   return ret;
 }
 
+static gboolean
+gst_value_union_fraction_fraction_range (GValue * dest, const GValue * src1,
+    const GValue * src2)
+{
+  GValue *vals;
+  int f_n, f_d, fr_start_n, fr_start_d, fr_end_n, fr_end_d;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION (src1), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (src2), FALSE);
+
+  /* Fraction */
+  f_n = src1->data[0].v_int;
+  f_d = src1->data[1].v_int;
+
+  vals = src2->data[0].v_pointer;
+  /* Fraction range start */
+  fr_start_n = vals[0].data[0].v_int;
+  fr_start_d = vals[0].data[1].v_int;
+  /* Fraction range end */
+  fr_end_n = vals[1].data[0].v_int;
+  fr_end_d = vals[1].data[1].v_int;
+
+  /* Check if it's already in the range. This is the only case in which we can
+   * successfully perform a union. */
+  if (gst_util_fraction_compare (f_n, f_d, fr_start_n, fr_start_d) >= 0 &&
+      gst_util_fraction_compare (f_n, f_d, fr_end_n, fr_end_d) <= 0) {
+    if (dest)
+      gst_value_init_and_copy (dest, src2);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+gst_value_union_fraction_range_fraction_range (GValue * dest,
+    const GValue * src1, const GValue * src2)
+{
+  GValue *vals1, *vals2;
+  int fr1_start_n, fr1_start_d, fr1_end_n, fr1_end_d;
+  int fr2_start_n, fr2_start_d, fr2_end_n, fr2_end_d;
+  int fr_start_n, fr_start_d, fr_end_n, fr_end_d;
+
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (src1), FALSE);
+  g_return_val_if_fail (GST_VALUE_HOLDS_FRACTION_RANGE (src2), FALSE);
+
+  vals1 = src1->data[0].v_pointer;
+  g_return_val_if_fail (vals1 != NULL, FALSE);
+
+  fr1_start_n = vals1[0].data[0].v_int;
+  fr1_start_d = vals1[0].data[1].v_int;
+  fr1_end_n = vals1[1].data[0].v_int;
+  fr1_end_d = vals1[1].data[1].v_int;
+
+  vals2 = src2->data[0].v_pointer;
+  g_return_val_if_fail (vals2 != NULL, FALSE);
+
+  fr2_start_n = vals2[0].data[0].v_int;
+  fr2_start_d = vals2[0].data[1].v_int;
+  fr2_end_n = vals2[1].data[0].v_int;
+  fr2_end_d = vals2[1].data[1].v_int;
+
+  /* Ranges are completely disjoint: end of one range is less than the start of
+   * other range */
+  if (gst_util_fraction_compare (fr2_end_n, fr2_end_d, fr1_start_n,
+          fr1_start_d) < 0
+      || gst_util_fraction_compare (fr1_end_n, fr1_end_d, fr2_start_n,
+          fr2_start_d) < 0)
+    return FALSE;
+
+  /* Ranges overlap, union is trivial */
+  if (!dest)
+    return TRUE;
+
+  if (gst_util_fraction_compare (fr1_start_n, fr1_start_d, fr2_start_n,
+          fr2_start_d) < 0) {
+    fr_start_n = fr1_start_n;
+    fr_start_d = fr1_start_d;
+  } else {
+    fr_start_n = fr2_start_n;
+    fr_start_d = fr2_start_d;
+  }
+
+  if (gst_util_fraction_compare (fr1_end_n, fr1_end_d, fr2_end_n,
+          fr2_end_d) > 0) {
+    fr_end_n = fr1_end_n;
+    fr_end_d = fr1_end_d;
+  } else {
+    fr_end_n = fr2_end_n;
+    fr_end_d = fr2_end_d;
+  }
+
+  g_value_init (dest, GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction_range_full (dest, fr_start_n, fr_start_d, fr_end_n,
+      fr_end_d);
+  return TRUE;
+}
+
 /****************
  * intersection *
  ****************/
@@ -8342,6 +8440,10 @@ _priv_gst_value_initialize (void)
       gst_value_union_flagset_flagset);
   gst_value_register_union_func (GST_TYPE_STRUCTURE, GST_TYPE_STRUCTURE,
       gst_value_union_structure_structure);
+  gst_value_register_union_func (GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE,
+      gst_value_union_fraction_fraction_range);
+  gst_value_register_union_func (GST_TYPE_FRACTION_RANGE,
+      GST_TYPE_FRACTION_RANGE, gst_value_union_fraction_range_fraction_range);
 
 #if GST_VERSION_NANO == 1
   /* If building from git master, check starting array sizes matched actual size
@@ -8366,14 +8468,6 @@ _priv_gst_value_initialize (void)
         "Please set GST_VALUE_SUBTRACT_TABLE_DEFAULT_SIZE to %u in gstvalue.c",
         gst_value_subtract_funcs->len);
   }
-#endif
-
-#if 0
-  /* Implement these if needed */
-  gst_value_register_union_func (GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE,
-      gst_value_union_fraction_fraction_range);
-  gst_value_register_union_func (GST_TYPE_FRACTION_RANGE,
-      GST_TYPE_FRACTION_RANGE, gst_value_union_fraction_range_fraction_range);
 #endif
 }
 

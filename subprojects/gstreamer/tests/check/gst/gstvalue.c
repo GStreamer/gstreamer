@@ -2656,24 +2656,72 @@ GST_START_TEST (test_fraction_range)
   fail_unless (gst_value_intersect (&dest, &src, &range) == TRUE);
   fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION);
   fail_unless (gst_value_compare (&dest, &src) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* Check that union of fraction + range = range */
+  fail_unless (gst_value_union (&dest, &src, &range) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION_RANGE);
+  fail_unless (gst_value_compare (&dest, &range) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* Check that union of fraction that is not in the range fails */
+  gst_value_set_fraction (&src, 1, 20);
+  fail_unless (gst_value_union (&dest, &src, &range) == FALSE);
+  g_value_unset (&dest);
 
   /* Check that a intersection selects the overlapping range */
   gst_value_set_fraction (&start, 1, 3);
   gst_value_set_fraction (&end, 2, 3);
   gst_value_set_fraction_range (&range2, &start, &end);
-  g_value_unset (&dest);
   fail_unless (gst_value_intersect (&dest, &range, &range2) == TRUE);
   fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION_RANGE);
+  fail_unless (gst_value_compare (&dest, &range2) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
 
+  /* Fully enclosed union: [1/4, 2/3] ∪ [1/3, 2/3] = [1/4, 2/3] */
+  fail_unless (gst_value_union (&dest, &range, &range2) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION_RANGE);
+  fail_unless (gst_value_compare (&dest, &range) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  /* Same, but swapped args */
+  fail_unless (gst_value_union (&dest, &range2, &range) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION_RANGE);
+  fail_unless (gst_value_compare (&dest, &range) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+
+  /* Extend union: [1/5, 1/2] ∪ [1/3, 2/3] = [1/5, 2/3] */
+  gst_value_set_fraction (&start, 1, 5);
+  gst_value_set_fraction (&end, 1, 2);
+  gst_value_set_fraction_range (&range2, &start, &end);
+  fail_unless (gst_value_union (&dest, &range, &range2) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction (&start, 1, 5);
+  gst_value_set_fraction (&end, 2, 3);
   gst_value_set_fraction_range (&range2, &start, &end);
   fail_unless (gst_value_compare (&dest, &range2) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
+  /* Same, but swapped args */
+  gst_value_set_fraction (&start, 1, 5);
+  gst_value_set_fraction (&end, 1, 2);
+  gst_value_set_fraction_range (&range2, &start, &end);
+  fail_unless (gst_value_union (&dest, &range2, &range) == TRUE);
+  fail_unless (G_VALUE_TYPE (&dest) == GST_TYPE_FRACTION_RANGE);
+  gst_value_set_fraction (&start, 1, 5);
+  gst_value_set_fraction (&end, 2, 3);
+  gst_value_set_fraction_range (&range2, &start, &end);
+  fail_unless (gst_value_compare (&dest, &range2) == GST_VALUE_EQUAL);
+  g_value_unset (&dest);
 
   /* Check that non intersection ranges don't intersect */
   gst_value_set_fraction (&start, 4, 2);
   gst_value_set_fraction (&end, 5, 2);
   gst_value_set_fraction_range (&range2, &start, &end);
-  g_value_unset (&dest);
   fail_unless (gst_value_intersect (&dest, &range, &range2) == FALSE);
+
+  /* [1/4, 2/3] ∪ [4/2, 5/2] should fail */
+  fail_unless (gst_value_union (&dest, &range, &range2) == FALSE);
+  /* Same, but swapped args */
+  fail_unless (gst_value_union (&dest, &range2, &range) == FALSE);
 
   g_value_unset (&start);
   g_value_unset (&end);
