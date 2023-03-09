@@ -983,13 +983,13 @@ static void
 gst_cea708dec_show_pango_window (Cea708Dec * decoder, guint window_id)
 {
   cea708Window *window = decoder->cc_windows[window_id];
-  guint16 row, col;
+  gint16 row, col;
   gboolean display = FALSE;     /* = TRUE when text lines should be written */
   gchar line_buffer[LINEBUFFER_SIZE];
   gchar outchar_utf8[CC_UTF8_MAX_LENGTH + 1] = { 0 };
   guint8 utf8_char_length;
-  guint16 i, j;
-  guint16 right_index;          /* within a single line of window text, the
+  gint16 i, j;
+  gint16 right_index;           /* within a single line of window text, the
                                  * index of the rightmost non-blank character */
   guint16 index;
   guint len = 0;
@@ -1653,8 +1653,8 @@ static void
 gst_cea708dec_window_add_char (Cea708Dec * decoder, gunichar c)
 {
   cea708Window *window = decoder->cc_windows[decoder->current_window];
-  guint16 pen_row;
-  guint16 pen_col;
+  gint16 pen_row;
+  gint16 pen_col;
 
   /* Add one character to the current window, using current pen location.
    * Wrap pen location if necessary */
