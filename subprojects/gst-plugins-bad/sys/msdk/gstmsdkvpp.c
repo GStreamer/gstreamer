@@ -446,8 +446,12 @@ gst_msdk_create_va_pool (GstVideoInfo * info, GstMsdkContext * msdk_context,
   if (use_dmabuf)
     allocator = gst_va_dmabuf_allocator_new (display);
   else {
-    formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
-    g_array_append_val (formats, GST_VIDEO_INFO_FORMAT (info));
+    /* From attrib query, va surface format doesn't support RGB565, so leave
+     * the formats as NULL when creating va allocator for RGB565 */
+    if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_RGB16) {
+      formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+      g_array_append_val (formats, GST_VIDEO_INFO_FORMAT (info));
+    }
     allocator = gst_va_allocator_new (display, formats);
   }
   if (!allocator) {
