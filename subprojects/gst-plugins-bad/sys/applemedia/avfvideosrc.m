@@ -1518,10 +1518,11 @@ GstCaps*
 gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutput *output, GstAVFVideoSourceOrientation orientation)
 {
   GstCaps *result_caps, *result_gl_caps;
+  gboolean is_gl_format;
 #if !HAVE_IOS
-  GstVideoFormat gl_format = GST_VIDEO_FORMAT_UYVY;
+  GstVideoFormat gl_formats[] = { GST_VIDEO_FORMAT_UYVY, GST_VIDEO_FORMAT_YUY2, 0 };
 #else
-  GstVideoFormat gl_format = GST_VIDEO_FORMAT_NV12;
+  GstVideoFormat gl_formats[] = { GST_VIDEO_FORMAT_NV12, 0 };
 #endif
 
   result_caps = gst_caps_new_empty ();
@@ -1564,7 +1565,15 @@ gst_av_capture_device_get_caps (AVCaptureDevice *device, AVCaptureVideoDataOutpu
           caps = GST_AVF_FPS_RANGE_CAPS_NEW (gst_format, dimensions.width,
               dimensions.height, min_fps_n, min_fps_d, max_fps_n, max_fps_d);
 
-        if (gst_format != gl_format) {
+        is_gl_format = FALSE;
+        for (int i = 0; i < G_N_ELEMENTS (gl_formats); i++) {
+          if (gst_format == gl_formats[i]) {
+            is_gl_format = TRUE;
+            break;
+          }
+        }
+
+        if (!is_gl_format) {
           gst_caps_append (result_caps, caps);
         } else {
           gst_caps_append (result_caps, gst_caps_copy (caps));
