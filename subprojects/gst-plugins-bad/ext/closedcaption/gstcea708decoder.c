@@ -227,39 +227,43 @@ gst_cea708dec_process_dtvcc_packet (Cea708Dec * decoder, guint8 * dtvcc_buffer,
 
   parse_index += 1;
 
-  block_size = dtvcc_buffer[parse_index] & 0x1F;
-  service_number = (dtvcc_buffer[parse_index] & 0xE0) >> 5;
-  parse_index += 1;
-
-  if (service_number == 7) {
-    /* Get extended service number */
-    service_number = dtvcc_buffer[parse_index] & 0x3F;
+  while (parse_index < dtvcc_size) {
+    block_size = dtvcc_buffer[parse_index] & 0x1F;
+    service_number = (dtvcc_buffer[parse_index] & 0xE0) >> 5;
     parse_index += 1;
-  }
 
-  GST_LOG ("full_size:%" G_GSIZE_FORMAT
-      " size=%d seq=%d block_size=%d service_num=%d", dtvcc_size, pkt_size,
-      sequence_number, block_size, service_number);
-
-
-  /* Process desired_service cc data */
-  if (decoder->desired_service == service_number) {
-    for (i = 0; i < block_size; i++) {
-      /* The Dtvcc buffer contains a stream of commands, command parameters,
-       * and characters which are the actual captions. Process commands and
-       * store captions in simulated 708 windows: */
-      gst_cea708dec_process_dtvcc_byte (decoder, dtvcc_buffer, parse_index + i);
+    if (service_number == 7) {
+      /* Get extended service number */
+      service_number = dtvcc_buffer[parse_index] & 0x3F;
+      parse_index += 1;
     }
 
-    for (window_id = 0; window_id < 8; window_id++) {
-      window = decoder->cc_windows[window_id];
-      GST_LOG ("window #%02d deleted:%d visible:%d updated:%d", window_id,
-          window->deleted, window->visible, window->updated);
-      if (!window->updated) {
-        continue;
+    GST_LOG ("full_size:%" G_GSIZE_FORMAT
+        " size=%d seq=%d block_size=%d service_num=%d", dtvcc_size, pkt_size,
+        sequence_number, block_size, service_number);
+
+    /* Process desired_service cc data */
+    if (decoder->desired_service == service_number) {
+      for (i = 0; i < block_size; i++) {
+        /* The Dtvcc buffer contains a stream of commands, command parameters,
+         * and characters which are the actual captions. Process commands and
+         * store captions in simulated 708 windows: */
+        gst_cea708dec_process_dtvcc_byte (decoder, dtvcc_buffer,
+            parse_index + i);
       }
-      need_render = TRUE;
+
+      for (window_id = 0; window_id < 8; window_id++) {
+        window = decoder->cc_windows[window_id];
+        GST_LOG ("window #%02d deleted:%d visible:%d updated:%d", window_id,
+            window->deleted, window->visible, window->updated);
+        if (!window->updated) {
+          continue;
+        }
+        need_render = TRUE;
+      }
     }
+
+    parse_index += block_size;
   }
 
   return need_render;
