@@ -68,6 +68,10 @@ gst_video_format_to_cvpixelformat (GstVideoFormat fmt)
       return kCVPixelFormatType_422YpCbCr8_yuvs;
       /* Alpha YUV */
     case GST_VIDEO_FORMAT_AYUV64:
+/* This is fine for now because Apple only ships LE devices */
+#if G_BYTE_ORDER != G_LITTLE_ENDIAN
+#error "AYUV64 is NE but kCVPixelFormatType_4444AYpCbCr16 is LE"
+#endif
       return kCVPixelFormatType_4444AYpCbCr16;
       /* RGB formats */
     case GST_VIDEO_FORMAT_ARGB:

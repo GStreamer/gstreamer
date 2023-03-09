@@ -24,6 +24,13 @@
 
 G_BEGIN_DECLS
 
+// kCVPixelFormatType_64RGBALE is only available for 11.3 +.
+// See https://developer.apple.com/documentation/corevideo/1563591-pixel_format_identifiers/kcvpixelformattype_64rgbale
+#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 110300
+#define kCVPixelFormatType_64RGBALE 'l64r'
+#endif
+#define GST_APPLEMEDIA_HAVE_64RGBALE __builtin_available(macOS 11.3, *)
+
 #define GST_CVPIXELFORMAT_FOURCC_ARGS(fourcc) \
   __GST_PRINT_CHAR(((fourcc) >> 24) & 0xff),  \
   __GST_PRINT_CHAR(((fourcc) >> 16) & 0xff),  \

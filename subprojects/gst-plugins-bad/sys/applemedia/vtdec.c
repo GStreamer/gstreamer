@@ -57,6 +57,7 @@
 #include <gst/gl/gstglcontext.h>
 #include "vtdec.h"
 #include "vtutil.h"
+#include "helpers.h"
 #include "corevideobuffer.h"
 #include "coremediabuffer.h"
 #include "videotexturecache-gl.h"
@@ -169,7 +170,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
   {
     GstCaps *caps = gst_caps_from_string (VIDEO_SRC_CAPS);
     /* RGBA64_LE is kCVPixelFormatType_64RGBALE, only available on macOS 11.3+ */
-    if (GST_VTUTIL_HAVE_64RGBALE)
+    if (GST_APPLEMEDIA_HAVE_64RGBALE)
       caps = gst_vtutil_caps_append_video_format (caps, "RGBA64_LE");
     gst_element_class_add_pad_template (element_class,
         gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS, caps));
@@ -299,7 +300,7 @@ get_preferred_video_format (GstStructure * s, gboolean prores)
           return vfmt;
         break;
       case GST_VIDEO_FORMAT_RGBA64_LE:
-        if (GST_VTUTIL_HAVE_64RGBALE) {
+        if (GST_APPLEMEDIA_HAVE_64RGBALE) {
           if (prores)
             return vfmt;
         } else {
@@ -678,35 +679,9 @@ gst_vtdec_create_session (GstVtdec * vtdec, GstVideoFormat format,
   VTDecompressionOutputCallbackRecord callback;
   CFMutableDictionaryRef videoDecoderSpecification;
   OSStatus status;
-  guint32 cv_format = 0;
+  guint32 cv_format = gst_video_format_to_cvpixelformat (format);
 
   g_return_val_if_fail (vtdec->session == NULL, FALSE);
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_NV12:
-      cv_format = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
-      break;
-    case GST_VIDEO_FORMAT_AYUV64:
-/* This is fine for now because Apple only ships LE devices */
-#if G_BYTE_ORDER != G_LITTLE_ENDIAN
-#error "AYUV64 is NE but kCVPixelFormatType_4444AYpCbCr16 is LE"
-#endif
-      cv_format = kCVPixelFormatType_4444AYpCbCr16;
-      break;
-    case GST_VIDEO_FORMAT_ARGB64_BE:
-      cv_format = kCVPixelFormatType_64ARGB;
-      break;
-    case GST_VIDEO_FORMAT_RGBA64_LE:
-      if (GST_VTUTIL_HAVE_64RGBALE)
-        cv_format = kCVPixelFormatType_64RGBALE;
-      else
-        /* Codepath will never be hit on macOS older than Big Sur (11.3) */
-        g_warn_if_reached ();
-      break;
-    default:
-      g_warn_if_reached ();
-      break;
-  }
 
   videoDecoderSpecification =
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,

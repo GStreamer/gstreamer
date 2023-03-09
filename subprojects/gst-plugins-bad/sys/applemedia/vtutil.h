@@ -30,13 +30,6 @@
  * each variant, so we use a dummy type for details->format_id */
 #define GST_kCMVideoCodecType_Some_AppleProRes  1
 
-// kCVPixelFormatType_64RGBALE is only available for 11.3 +.
-// See https://developer.apple.com/documentation/corevideo/1563591-pixel_format_identifiers/kcvpixelformattype_64rgbale
-#if defined(MAC_OS_X_VERSION_MAX_ALLOWED) && MAC_OS_X_VERSION_MAX_ALLOWED < 110300
-#define kCVPixelFormatType_64RGBALE 'l64r'
-#endif
-#define GST_VTUTIL_HAVE_64RGBALE __builtin_available(macOS 11.3, *)
-
 G_BEGIN_DECLS
 
 gchar * gst_vtutil_object_to_string (CFTypeRef obj);
