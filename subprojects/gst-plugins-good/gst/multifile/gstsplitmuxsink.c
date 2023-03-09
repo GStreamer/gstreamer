@@ -569,7 +569,7 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
    * @splitmux: the #GstSplitMuxSink
    * @muxer: the newly added muxer element
    *
-   * Since: 1.14
+   * Since: 1.16
    */
   signals[SIGNAL_MUXER_ADDED] =
       g_signal_new ("muxer-added", G_TYPE_FROM_CLASS (klass),
@@ -580,7 +580,7 @@ gst_splitmux_sink_class_init (GstSplitMuxSinkClass * klass)
    * @splitmux: the #GstSplitMuxSink
    * @sink: the newly added sink element
    *
-   * Since: 1.14
+   * Since: 1.16
    */
   signals[SIGNAL_SINK_ADDED] =
       g_signal_new ("sink-added", G_TYPE_FROM_CLASS (klass),
