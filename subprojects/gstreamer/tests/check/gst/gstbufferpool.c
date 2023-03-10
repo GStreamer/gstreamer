@@ -336,6 +336,58 @@ GST_START_TEST (test_no_deadlock_for_buffer_discard)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parent_meta)
+{
+  GstBufferPool *pool;
+  GstBuffer *buf1, *buf2, *buf3;
+  GstMemory *mem;
+  gint buf1_dcount = 0;
+  gint buf2_dcount = 0;
+
+  pool = create_pool (1, 0, 0);
+  fail_unless (pool);
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf1,
+          NULL) == GST_FLOW_OK);
+  buffer_track_destroy (buf1, &buf1_dcount);
+
+  /* Create a 2nd buffer reffing the same memory. Set parent meta to make sure
+   * buf1 does not return to pool until buf2 is destroyed. */
+  mem = gst_buffer_get_memory (buf1, 0);
+  buf2 = gst_buffer_new ();
+  gst_buffer_append_memory (buf2, mem);
+  gst_buffer_add_parent_buffer_meta (buf2, buf1);
+  buffer_track_destroy (buf2, &buf2_dcount);
+
+  /* buf1 is still reffed by the meta */
+  gst_buffer_unref (buf1);
+  fail_unless_equals_int (buf1_dcount, 0);
+  fail_unless_equals_int (buf2_dcount, 0);
+
+  /* buf2 gets destroyed and buf1 returns to pool */
+  gst_buffer_unref (buf2);
+  fail_unless_equals_int (buf1_dcount, 0);
+  fail_unless_equals_int (buf2_dcount, 1);
+
+  /* buf1 should be recycled with the same memory */
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf3,
+          NULL) == GST_FLOW_OK);
+  fail_unless_equals_pointer (buf1, buf3);
+  fail_unless_equals_pointer (mem, gst_buffer_peek_memory (buf3, 0));
+
+  gst_buffer_unref (buf3);
+  fail_unless_equals_int (buf1_dcount, 0);
+  fail_unless_equals_int (buf2_dcount, 1);
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+  fail_unless_equals_int (buf1_dcount, 1);
+  fail_unless_equals_int (buf2_dcount, 1);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_pool_suite (void)
 {
@@ -355,6 +407,7 @@ gst_buffer_pool_suite (void)
   tcase_add_test (tc_chain, test_pool_config_validate);
   tcase_add_test (tc_chain, test_flushing_pool_returns_flushing);
   tcase_add_test (tc_chain, test_no_deadlock_for_buffer_discard);
+  tcase_add_test (tc_chain, test_parent_meta);
 
   return s;
 }

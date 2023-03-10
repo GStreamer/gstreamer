@@ -789,6 +789,15 @@ _gst_buffer_free (GstBuffer * buffer)
 
   GST_CAT_LOG (GST_CAT_BUFFER, "finalize %p", buffer);
 
+  /* free our memory */
+  len = GST_BUFFER_MEM_LEN (buffer);
+  for (i = 0; i < len; i++) {
+    gst_memory_unlock (GST_BUFFER_MEM_PTR (buffer, i), GST_LOCK_FLAG_EXCLUSIVE);
+    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (GST_BUFFER_MEM_PTR
+            (buffer, i)), GST_MINI_OBJECT_CAST (buffer));
+    gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
+  }
+
   /* free metadata */
   for (walk = GST_BUFFER_META (buffer); walk; walk = next) {
     GstMeta *meta = &walk->meta;
@@ -806,15 +815,6 @@ _gst_buffer_free (GstBuffer * buffer)
   /* get the size, when unreffing the memory, we could also unref the buffer
    * itself */
   msize = GST_BUFFER_SLICE_SIZE (buffer);
-
-  /* free our memory */
-  len = GST_BUFFER_MEM_LEN (buffer);
-  for (i = 0; i < len; i++) {
-    gst_memory_unlock (GST_BUFFER_MEM_PTR (buffer, i), GST_LOCK_FLAG_EXCLUSIVE);
-    gst_mini_object_remove_parent (GST_MINI_OBJECT_CAST (GST_BUFFER_MEM_PTR
-            (buffer, i)), GST_MINI_OBJECT_CAST (buffer));
-    gst_memory_unref (GST_BUFFER_MEM_PTR (buffer, i));
-  }
 
   /* we set msize to 0 when the buffer is part of the memory block */
   if (msize) {
