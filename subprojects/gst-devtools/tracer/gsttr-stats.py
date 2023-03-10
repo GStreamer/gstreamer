@@ -30,6 +30,16 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger('gsttr-stats')
 
 _SCOPE_RELATED_TO = {
+    # The serialization of enums changed in GStreamer 1.18:
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/commit/0dafe6e63971ea89a9a9ff9cf30f5a076f915259
+
+    # Enum nicks (new serialization)
+    'pad': 'Pad',
+    'element': 'Element',
+    'thread': 'Thread',
+    'process': 'Process',
+
+    # Enum names (old serialization):
     'GST_TRACER_VALUE_SCOPE_PAD': 'Pad',
     'GST_TRACER_VALUE_SCOPE_ELEMENT': 'Element',
     'GST_TRACER_VALUE_SCOPE_THREAD': 'Thread',
