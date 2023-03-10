@@ -146,6 +146,9 @@ gst_cuda_load_library_once_func (void)
   const gchar *filename = CUDA_LIBNAME;
   GstNvCodecCudaVTable *vtable;
 
+  GST_DEBUG_CATEGORY_INIT (gst_cudaloader_debug, "cudaloader", 0,
+      "CUDA plugin loader");
+
   module = g_module_open (filename, G_MODULE_BIND_LAZY);
   if (module == nullptr) {
     GST_WARNING ("Could not open library %s, %s", filename, g_module_error ());
