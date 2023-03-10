@@ -22,7 +22,88 @@
  * SECTION:tracer-log
  * @short_description: log hook event
  *
- * A tracing module that logs all data from all hooks.
+ * A tracing module that logs all data from all GstTracer hooks. Takes no
+ * arguments other than an optional name.
+ *
+ * ### Enabling the log tracer
+ *
+ * Enable through an environment variable: `GST_TRACERS=log` (notice
+ * the plural).
+ *
+ * You can double check the plugin has been enabled using
+ * `GST_DEBUG='*:INFO'`. You should see:
+ *
+ * ```
+ * $ GST_TRACERS="log" GST_DEBUG='*:INFO' \
+ *      gst-launch-1.0 fakesrc num-buffers=1 ! fakesink \
+ *      2>&1 | grep "enabling tracers"
+[...] _priv_gst_tracing_init: enabling tracers: 'log'
+ * ```
+ *
+ * ### Using the log tracer
+ *
+ * This tracer logs accross a number of categories at the `TRACE` level.
+ *
+ * **For this reason, you need to set `GST_DEBUG` to capture the output from
+ * this plugin.**
+ *
+ * These are the logging categories under which the different hooks operate:
+ *
+ *  * `GST_DEBUG=GST_BUFFER:TRACE`
+ *    * `pad-push-pre`, `pad-push-post`
+ *    * `pad-pull-range-pre`, `pad-pull-range-post`
+ *  * `GST_DEBUG=GST_BUFFER_LIST:TRACE`
+ *    * `pad-push-list-pre`, `pad-push-list-post`
+ *  * `GST_DEBUG=GST_EVENT:TRACE`
+ *    * `pad-push-event-pre`, `pad-push-event-post`
+ *  * `GST_DEBUG=GST_QUERY:TRACE`
+ *    * `pad-query-pre`, `pad-query-post`
+ *    * `element-query-pre`, `element-query-post`
+ *  * `GST_DEBUG=GST_MESSAGE:TRACE`
+ *    * `element-post-message-pre`, `element-post-message-post`
+ *  * `GST_DEBUG=GST_ELEMENT_FACTORY:TRACE`
+ *    * `element-new`
+ *  * `GST_DEBUG=GST_ELEMENT_PADS:TRACE`
+ *    * `element-add-pad`
+ *    * `element-remove-pad`
+ *  * `GST_DEBUG=GST_STATES:TRACE`
+ *    * `element-change-state-pre`, `element-change-state-post`
+ *  * `GST_DEBUG=GST_BIN:TRACE`
+ *    * `bin-add-pre`, `bin-add-post`
+ *    * `bin-remove-pre`, `bin-remove-post`
+ *  * `GST_DEBUG=GST_PADS:TRACE`
+ *    * `pad-link-pre`, `pad-link-post`
+ *    * `pad-unlink-pre`, `pad-unlink-post`
+ *
+ * Since the categories mentioned above are not exclusive to this tracer
+ * plugin, but are also used by core GStreamer code, you should expect a lot of
+ * unrelated logging to appear.
+ *
+ * On the other hand, the functions in this plugin have a consistent naming
+ * scheme, which should make it easy to filter the logs: `do_{hook_name}`
+ *
+ * ### Example
+ *
+ * As an example, if we wanted to log the flow of events and pads being linked
+ * we could run the following command:
+ *
+ * ```
+ * $ GST_TRACERS="log" \
+ *       GST_DEBUG=GST_EVENT:TRACE,GST_PADS:TRACE \
+ *       gst-play-1.0 file.webm \
+ *       2>&1 | egrep -w 'do_(pad_link)_(pre|post):'
+ * [...]
+ * [...] GST_PADS :0:do_pad_link_pre:<typefind:src> 0:00:00.096516923, src=<typefind:src>, sink=<matroskademux0:sink>
+ * [...] GST_PADS :0:do_pad_link_post:<typefind:src> 0:00:00.096678191, src=<typefind:src>, sink=<matroskademux0:sink>, res=0
+ * [...] GST_PADS :0:do_pad_link_pre:<matroskademux0:audio_0> 0:00:00.103133773, src=<matroskademux0:audio_0>, sink=<decodepad1:proxypad2>
+ * [...] GST_PADS :0:do_pad_link_post:<matroskademux0:audio_0> 0:00:00.103567148, src=<matroskademux0:audio_0>, sink=<decodepad1:proxypad2>, res=0
+ * [...]
+ * [...] GST_EVENT :0:do_push_event_pre:<vp8dec0:sink> 0:00:00.930848627, pad=<vp8dec0:sink>, event=qos event: 0x7fec9c00c0a0, time 99:99:99.999999999, seq-num 393, GstEventQOS, type=(GstQOSType)overflow, proportion=(double)0.036137789409526271, diff=(gint64)-29350000, timestamp=(guint64)533000000;
+ * [...] GST_EVENT :0:do_push_event_pre:<multiqueue0:sink_1> 0:00:00.930901498, pad=<multiqueue0:sink_1>, event=qos event: 0x7fec9c00c0a0, time 99:99:99.999999999, seq-num 393, GstEventQOS, type=(GstQOSType)overflow, proportion=(double)0.036137789409526271, diff=(gint64)-29350000, timestamp=(guint64)533000000;
+ * [...] GST_EVENT :0:do_push_event_post:<multiqueue0:sink_1> 0:00:00.931041882, pad=<multiqueue0:sink_1>, res=1
+ * [...] GST_EVENT :0:do_push_event_post:<vp8dec0:sink> 0:00:00.931082112, pad=<vp8dec0:sink>, res=1
+ * [...]
+ * ```
  */
 
 #ifdef HAVE_CONFIG_H

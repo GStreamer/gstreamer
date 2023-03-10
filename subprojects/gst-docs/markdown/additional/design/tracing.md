@@ -35,10 +35,14 @@ Certain GStreamer core function (such as `gst_pad_push()` or
 `gst_element_add_pad()`) will call into the tracer subsystem to dispatch
 into active tracing modules. Developers will be able to select a list of
 plugins by setting an environment variable, such as
-`GST_TRACERS="meminfo;dbus"`. One can also pass parameters to plugins:
-`GST_TRACERS="log(events,buffers);stats(all)"`. When then plugins are
-loaded, we’ll add them to certain hooks according to which they are
-interested in.
+`GST_TRACERS="meminfo;dbus"`. One can also pass parameters to plugins, e.g:
+
+```
+GST_TRACERS='leaks(filters="GstEvent,GstMessage",stack-traces-flags=none);latency(flags=pipeline+element+reported)'
+```
+
+When then plugins are loaded, we’ll add them to certain hooks according to
+which they are interested in.
 
 Right now tracing info is logged as `GstStructures` to the TRACE level.
 Idea: Another env var `GST_TRACE_CHANNEL` could be used to send the
