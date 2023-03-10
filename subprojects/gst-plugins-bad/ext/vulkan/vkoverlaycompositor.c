@@ -729,6 +729,7 @@ gst_vulkan_overlay_compositor_transform_ip (GstBaseTransform * bt,
 
   comp = gst_video_overlay_composition_ref (ometa->overlay);
   gst_buffer_remove_meta (buffer, (GstMeta *) ometa);
+  ometa = NULL;
 
   n = gst_video_overlay_composition_n_rectangles (comp);
   if (n == 0) {
@@ -765,7 +766,7 @@ gst_vulkan_overlay_compositor_transform_ip (GstBaseTransform * bt,
     struct vk_overlay *over =
         &g_array_index (vk_overlay->overlays, struct vk_overlay, i);
 
-    if (!overlay_in_rectangles (over, ometa->overlay)) {
+    if (!overlay_in_rectangles (over, comp)) {
       g_array_remove_index (vk_overlay->overlays, i);
       continue;
     }
