@@ -37,7 +37,6 @@ GType gst_gl_upload_element_get_type (void);
 
 typedef struct _GstGLUploadElement GstGLUploadElement;
 typedef struct _GstGLUploadElementClass GstGLUploadElementClass;
-typedef struct _GstGLUploadElementPrivate GstGLUploadElementPrivate;
 
 /**
  * GstGLUploadElement
