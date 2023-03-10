@@ -57,29 +57,26 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkmpeg2dec_debug);
 #define GST_CAT_DEFAULT gst_msdkmpeg2dec_debug
 
-#ifndef _WIN32
-#define VA_SRC_CAPS_STR \
-    "; " GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("{ NV12 }")
-#else
-#define VA_SRC_CAPS_STR ""
-#endif
+#define GST_MSDKMPEG2DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), G_TYPE_FROM_INSTANCE (obj), GstMsdkMPEG2Dec))
+#define GST_MSDKMPEG2DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), G_TYPE_FROM_CLASS (klass), GstMsdkMPEG2DecClass))
+#define GST_IS_MSDKMPEG2DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), G_TYPE_FROM_INSTANCE (obj)))
+#define GST_IS_MSDKMPEG2DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_FROM_CLASS (klass)))
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpeg, "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
-        "mpegversion = (int) 2, " "systemstream = (boolean) false")
-    );
+/* *INDENT-OFF* */
+static const gchar *doc_src_caps_str =
+    GST_VIDEO_CAPS_MAKE ("{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf", "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:D3D11Memory", "{ NV12 }");
+/* *INDENT-ON* */
 
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR ("{ NV12 }", "{ NV12 }")
-        VA_SRC_CAPS_STR));
+static const gchar *doc_sink_caps_str = "video/mpeg";
 
-#define gst_msdkmpeg2dec_parent_class parent_class
-G_DEFINE_TYPE (GstMsdkMPEG2Dec, gst_msdkmpeg2dec, GST_TYPE_MSDKDEC);
+static GstElementClass *parent_class = NULL;
 
 static gboolean
 gst_msdkmpeg2dec_configure (GstMsdkDec * decoder)
@@ -140,11 +137,14 @@ gst_msdkdec_mpeg2_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_msdkmpeg2dec_class_init (GstMsdkMPEG2DecClass * klass)
+gst_msdkmpeg2dec_class_init (gpointer klass, gpointer data)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstMsdkDecClass *decoder_class;
+  MsdkDecCData *cdata = data;
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
@@ -163,12 +163,62 @@ gst_msdkmpeg2dec_class_init (GstMsdkMPEG2DecClass * klass)
 
   gst_msdkdec_prop_install_output_oder_property (gobject_class);
 
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_msdkcaps_pad_template_init (element_class,
+      cdata->sink_caps, cdata->src_caps, doc_sink_caps_str, doc_src_caps_str);
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
 }
 
 static void
-gst_msdkmpeg2dec_init (GstMsdkMPEG2Dec * thiz)
+gst_msdkmpeg2dec_init (GTypeInstance * instance, gpointer g_class)
 {
+  GstMsdkMPEG2Dec *thiz = GST_MSDKMPEG2DEC (instance);
   thiz->output_order = PROP_OUTPUT_ORDER_DEFAULT;
+}
+
+gboolean
+gst_msdkmpeg2dec_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank)
+{
+  GType type;
+  MsdkDecCData *cdata;
+  gchar *type_name, *feature_name;
+  gboolean ret = FALSE;
+
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstMsdkMPEG2DecClass),
+    .class_init = gst_msdkmpeg2dec_class_init,
+    .instance_size = sizeof (GstMsdkMPEG2Dec),
+    .instance_init = gst_msdkmpeg2dec_init
+  };
+
+  cdata = g_new (MsdkDecCData, 1);
+  cdata->sink_caps = gst_caps_copy (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+
+  gst_caps_set_simple (cdata->sink_caps,
+      "mpegversion", G_TYPE_INT, 2,
+      "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
+
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  type_info.class_data = cdata;
+
+  type_name = g_strdup ("GstMsdkMPEG2Dec");
+  feature_name = g_strdup ("msdkmpeg2dec");
+
+  type = g_type_register_static (GST_TYPE_MSDKDEC, type_name, &type_info, 0);
+  if (type)
+    ret = gst_element_register (plugin, feature_name, rank, type);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
 }

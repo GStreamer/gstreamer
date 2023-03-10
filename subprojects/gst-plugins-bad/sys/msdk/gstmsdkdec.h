@@ -61,6 +61,7 @@ G_BEGIN_DECLS
 typedef struct _GstMsdkDec GstMsdkDec;
 typedef struct _GstMsdkDecClass GstMsdkDecClass;
 typedef struct _MsdkDecTask MsdkDecTask;
+typedef struct _MsdkDecCData MsdkDecCData;
 
 struct _GstMsdkDec
 {
@@ -132,6 +133,12 @@ struct _GstMsdkDecClass
   gboolean (*preinit_decoder) (GstMsdkDec * decoder);
   /* adjust mfx parameters per codec */
   gboolean (*postinit_decoder) (GstMsdkDec * decoder);
+};
+
+struct _MsdkDecCData
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
 };
 
 GType gst_msdkdec_get_type (void);

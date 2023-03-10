@@ -36,17 +36,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKH265DEC \
-  (gst_msdkh265dec_get_type())
-#define GST_MSDKH265DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKH265DEC,GstMsdkH265Dec))
-#define GST_MSDKH265DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKH265DEC,GstMsdkH265DecClass))
-#define GST_IS_MSDKH265DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKH265DEC))
-#define GST_IS_MSDKH265DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKH265DEC))
-
 typedef struct _GstMsdkH265Dec GstMsdkH265Dec;
 typedef struct _GstMsdkH265DecClass GstMsdkH265DecClass;
 
@@ -61,7 +50,10 @@ struct _GstMsdkH265DecClass
   GstMsdkDecClass parent_class;
 };
 
-GType gst_msdkh265dec_get_type (void);
+gboolean
+gst_msdkh265dec_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 

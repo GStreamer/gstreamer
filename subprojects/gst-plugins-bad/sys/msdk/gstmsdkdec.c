@@ -48,12 +48,6 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkdec_debug);
 #define GST_CAT_DEFAULT gst_msdkdec_debug
 
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR ("NV12", "NV12"))
-    );
-
 #define PROP_HARDWARE_DEFAULT            TRUE
 #define PROP_ASYNC_DEPTH_DEFAULT         1
 
@@ -2245,8 +2239,6 @@ gst_msdkdec_class_init (GstMsdkDecClass * klass)
           "Depth of asynchronous pipeline",
           1, 20, PROP_ASYNC_DEPTH_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
 }
 
 static void

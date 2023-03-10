@@ -36,17 +36,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKMJPEGDEC \
-  (gst_msdkmjpegdec_get_type())
-#define GST_MSDKMJPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKMJPEGDEC,GstMsdkMJPEGDec))
-#define GST_MSDKMJPEGDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKMJPEGDEC,GstMsdkMJPEGDecClass))
-#define GST_IS_MSDKMJPEGDEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKMJPEGDEC))
-#define GST_IS_MSDKMJPEGDEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKMJPEGDEC))
-
 typedef struct _GstMsdkMJPEGDec GstMsdkMJPEGDec;
 typedef struct _GstMsdkMJPEGDecClass GstMsdkMJPEGDecClass;
 
@@ -60,7 +49,10 @@ struct _GstMsdkMJPEGDecClass
   GstMsdkDecClass parent_class;
 };
 
-GType gst_msdkmjpegdec_get_type (void);
+gboolean
+gst_msdkmjpegdec_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 

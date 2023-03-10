@@ -38,17 +38,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKMPEG2DEC \
-  (gst_msdkmpeg2dec_get_type())
-#define GST_MSDKMPEG2DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKMPEG2DEC,GstMsdkMPEG2Dec))
-#define GST_MSDKMPEG2DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKMPEG2DEC,GstMsdkMPEG2DecClass))
-#define GST_IS_MSDKMPEG2DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKMPEG2DEC))
-#define GST_IS_MSDKMPEG2DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKMPEG2DEC))
-
 typedef struct _GstMsdkMPEG2Dec GstMsdkMPEG2Dec;
 typedef struct _GstMsdkMPEG2DecClass GstMsdkMPEG2DecClass;
 
@@ -63,7 +52,10 @@ struct _GstMsdkMPEG2DecClass
   GstMsdkDecClass parent_class;
 };
 
-GType gst_msdkmpeg2dec_get_type (void);
+gboolean
+gst_msdkmpeg2dec_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 

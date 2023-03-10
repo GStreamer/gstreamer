@@ -54,41 +54,26 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkh264dec_debug);
 #define GST_CAT_DEFAULT gst_msdkh264dec_debug
 
-#define COMMON_FORMAT "{ NV12, BGRA, BGRx }"
+#define GST_MSDKH264DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), G_TYPE_FROM_INSTANCE (obj), GstMsdkH264Dec))
+#define GST_MSDKH264DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), G_TYPE_FROM_CLASS (klass), GstMsdkH264DecClass))
+#define GST_IS_MSDKH264DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), G_TYPE_FROM_INSTANCE (obj)))
+#define GST_IS_MSDKH264DEC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_FROM_CLASS (klass)))
 
-#ifndef _WIN32
-#define VA_SRC_CAPS_STR \
-    "; " GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("{ NV12 }")
-#else
-#define D3D11_SRC_CAPS_STR \
-    ";" GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE ("{ NV12 }")
-#endif
+/* *INDENT-OFF* */
+static const gchar *doc_src_caps_str =
+    GST_VIDEO_CAPS_MAKE ("{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf", "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", "{ NV12 }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:D3D11Memory", "{ NV12 }");
+/* *INDENT-ON* */
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h264, "
-        "width = (int) [ 1, MAX ], height = (int) [ 1, MAX ], "
-        "stream-format = (string) byte-stream , alignment = (string) au , "
-        "profile = (string) { high, progressive-high, constrained-high, main, baseline, constrained-baseline }")
-    );
+static const gchar *doc_sink_caps_str = "video/x-h264";
 
-#ifndef _WIN32
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT)
-        VA_SRC_CAPS_STR));
-#else
-static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_MSDK_CAPS_STR (COMMON_FORMAT, COMMON_FORMAT)
-        D3D11_SRC_CAPS_STR));
-#endif
-
-#define gst_msdkh264dec_parent_class parent_class
-G_DEFINE_TYPE (GstMsdkH264Dec, gst_msdkh264dec, GST_TYPE_MSDKDEC);
+static GstElementClass *parent_class = NULL;
 
 static gboolean
 gst_msdkh264dec_configure (GstMsdkDec * decoder)
@@ -177,11 +162,14 @@ gst_msdkdec_h264_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
-gst_msdkh264dec_class_init (GstMsdkH264DecClass * klass)
+gst_msdkh264dec_class_init (gpointer klass, gpointer data)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
   GstMsdkDecClass *decoder_class;
+  MsdkDecCData *cdata = data;
+
+  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
@@ -204,12 +192,62 @@ gst_msdkh264dec_class_init (GstMsdkH264DecClass * klass)
   gst_msdkdec_prop_install_error_report_property (gobject_class);
 #endif
 
-  gst_element_class_add_static_pad_template (element_class, &sink_factory);
-  gst_element_class_add_static_pad_template (element_class, &src_factory);
+  gst_msdkcaps_pad_template_init (element_class,
+      cdata->sink_caps, cdata->src_caps, doc_sink_caps_str, doc_src_caps_str);
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
 }
 
 static void
-gst_msdkh264dec_init (GstMsdkH264Dec * thiz)
+gst_msdkh264dec_init (GTypeInstance * instance, gpointer g_class)
 {
+  GstMsdkH264Dec *thiz = GST_MSDKH264DEC (instance);
   thiz->output_order = PROP_OUTPUT_ORDER_DEFAULT;
+}
+
+gboolean
+gst_msdkh264dec_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank)
+{
+  GType type;
+  MsdkDecCData *cdata;
+  gchar *type_name, *feature_name;
+  gboolean ret = FALSE;
+
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstMsdkH264DecClass),
+    .class_init = gst_msdkh264dec_class_init,
+    .instance_size = sizeof (GstMsdkH264Dec),
+    .instance_init = gst_msdkh264dec_init
+  };
+
+  cdata = g_new (MsdkDecCData, 1);
+  cdata->sink_caps = gst_caps_copy (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+
+  gst_caps_set_simple (cdata->sink_caps,
+      "alignment", G_TYPE_STRING, "au",
+      "stream-format", G_TYPE_STRING, "byte-stream", NULL);
+
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  type_info.class_data = cdata;
+
+  type_name = g_strdup ("GstMsdkH264Dec");
+  feature_name = g_strdup ("msdkh264dec");
+
+  type = g_type_register_static (GST_TYPE_MSDKDEC, type_name, &type_info, 0);
+  if (type)
+    ret = gst_element_register (plugin, feature_name, rank, type);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
 }

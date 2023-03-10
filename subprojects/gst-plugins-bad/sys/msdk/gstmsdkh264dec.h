@@ -36,17 +36,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKH264DEC \
-  (gst_msdkh264dec_get_type())
-#define GST_MSDKH264DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKH264DEC,GstMsdkH264Dec))
-#define GST_MSDKH264DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKH264DEC,GstMsdkH264DecClass))
-#define GST_IS_MSDKH264DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKH264DEC))
-#define GST_IS_MSDKH264DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKH264DEC))
-
 typedef struct _GstMsdkH264Dec GstMsdkH264Dec;
 typedef struct _GstMsdkH264DecClass GstMsdkH264DecClass;
 
@@ -61,7 +50,10 @@ struct _GstMsdkH264DecClass
   GstMsdkDecClass parent_class;
 };
 
-GType gst_msdkh264dec_get_type (void);
+gboolean
+gst_msdkh264dec_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 

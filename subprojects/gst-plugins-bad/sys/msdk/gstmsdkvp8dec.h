@@ -37,17 +37,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_MSDKVP8DEC \
-  (gst_msdkvp8dec_get_type())
-#define GST_MSDKVP8DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MSDKVP8DEC,GstMsdkVP8Dec))
-#define GST_MSDKVP8DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MSDKVP8DEC,GstMsdkVP8DecClass))
-#define GST_IS_MSDKVP8DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MSDKVP8DEC))
-#define GST_IS_MSDKVP8DEC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MSDKVP8DEC))
-
 typedef struct _GstMsdkVP8Dec GstMsdkVP8Dec;
 typedef struct _GstMsdkVP8DecClass GstMsdkVP8DecClass;
 
@@ -62,7 +51,10 @@ struct _GstMsdkVP8DecClass
   GstMsdkDecClass parent_class;
 };
 
-GType gst_msdkvp8dec_get_type (void);
+gboolean
+gst_msdkvp8dec_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank);
 
 G_END_DECLS
 

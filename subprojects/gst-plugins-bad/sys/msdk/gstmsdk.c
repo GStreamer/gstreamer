@@ -156,46 +156,48 @@ _register_encoder (GstPlugin * plugin,
 }
 
 static gboolean
-_register_decoder (GstPlugin * plugin, guint codec_id)
+_register_decoder (GstPlugin * plugin,
+    GstMsdkContext * context, guint codec_id,
+    GstCaps * sink_caps, GstCaps * src_caps)
 {
   gboolean ret = TRUE;
 
   switch (codec_id) {
     case MFX_CODEC_AVC:
-      ret = gst_element_register (plugin, "msdkh264dec", GST_RANK_NONE,
-          GST_TYPE_MSDKH264DEC);
+      ret = gst_msdkh264dec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
     case MFX_CODEC_HEVC:
-      ret = gst_element_register (plugin, "msdkh265dec", GST_RANK_NONE,
-          GST_TYPE_MSDKH265DEC);
+      ret = gst_msdkh265dec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
     case MFX_CODEC_MPEG2:
-      ret = gst_element_register (plugin, "msdkmpeg2dec", GST_RANK_NONE,
-          GST_TYPE_MSDKMPEG2DEC);
+      ret = gst_msdkmpeg2dec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
     case MFX_CODEC_VP8:
-      ret = gst_element_register (plugin, "msdkvp8dec", GST_RANK_NONE,
-          GST_TYPE_MSDKVP8DEC);
+      ret = gst_msdkvp8dec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
 #ifdef USE_MSDK_VP9_DEC
     case MFX_CODEC_VP9:
-      ret = gst_element_register (plugin, "msdkvp9dec", GST_RANK_NONE,
-          GST_TYPE_MSDKVP9DEC);
+      ret = gst_msdkvp9dec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
 #endif
 #ifdef USE_MSDK_AV1_DEC
     case MFX_CODEC_AV1:
-      ret = gst_element_register (plugin, "msdkav1dec", GST_RANK_NONE,
-          GST_TYPE_MSDKAV1DEC);
+      ret = gst_msdkav1dec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
 #endif
     case MFX_CODEC_JPEG:
-      ret = gst_element_register (plugin, "msdkmjpegdec", GST_RANK_NONE,
-          GST_TYPE_MSDKMJPEGDEC);
+      ret = gst_msdkmjpegdec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
     case MFX_CODEC_VC1:
-      ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_NONE,
-          GST_TYPE_MSDKVC1DEC);
+      ret = gst_msdkvc1dec_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE);
       break;
     default:
       ret = FALSE;
@@ -238,11 +240,26 @@ static void
 _register_decoders (GstPlugin * plugin,
     GstMsdkContext * context, mfxDecoderDescription * dec_desc)
 {
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+
   for (guint c = 0; c < dec_desc->NumCodecs; c++) {
-    if (!_register_decoder (plugin, dec_desc->Codecs[c].CodecID)) {
+    if (!gst_msdkcaps_dec_create_caps (context, dec_desc,
+            dec_desc->Codecs[c].CodecID, &sink_caps, &src_caps)) {
+      GST_WARNING ("Failed to create caps for %" GST_FOURCC_FORMAT " DEC",
+          GST_FOURCC_ARGS (dec_desc->Codecs[c].CodecID));
+      continue;
+    }
+
+    if (!_register_decoder (plugin,
+            context, dec_desc->Codecs[c].CodecID, sink_caps, src_caps)) {
       GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " DEC",
           GST_FOURCC_ARGS (dec_desc->Codecs[c].CodecID));
+      continue;
     }
+
+    gst_caps_unref (sink_caps);
+    gst_caps_unref (src_caps);
   }
 }
 
@@ -312,11 +329,26 @@ _register_encoders (GstPlugin * plugin, GstMsdkContext * context)
 static void
 _register_decoders (GstPlugin * plugin, GstMsdkContext * context)
 {
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+
   for (guint c = 0; c < G_N_ELEMENTS (dec_codecs); c++) {
-    if (!_register_decoder (plugin, dec_codecs[c])) {
+    if (!gst_msdkcaps_dec_create_caps (context,
+            NULL, dec_codecs[c], &sink_caps, &src_caps)) {
+      GST_WARNING ("Failed to create caps for %" GST_FOURCC_FORMAT " DEC",
+          GST_FOURCC_ARGS (dec_codecs[c]));
+      continue;
+    }
+
+    if (!_register_decoder (plugin, context,
+            dec_codecs[c], sink_caps, src_caps)) {
       GST_WARNING ("Failed to register %" GST_FOURCC_FORMAT " DEC",
           GST_FOURCC_ARGS (dec_codecs[c]));
+      continue;
     }
+
+    gst_caps_unref (sink_caps);
+    gst_caps_unref (src_caps);
   }
 }
 
