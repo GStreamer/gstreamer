@@ -44,6 +44,7 @@
 #include <dxgi.h>
 #include <va/va_win32.h>
 #include <string>
+#include <vector>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -239,6 +240,12 @@ gst_va_display_win32_new (const gchar * adapter_luid)
   DXGI_ADAPTER_DESC desc;
   gint64 adapter_luid_i64;
   gchar *desc_str;
+  gint max_profiles, max_entry_points;
+  gint num_profiles;
+  VAStatus status;
+  VADisplay dpy;
+  std::vector < VAEntrypoint > entry_points;
+  std::vector < VAProfile > profiles;
 
   g_return_val_if_fail (adapter_luid != nullptr, nullptr);
 
@@ -280,12 +287,40 @@ gst_va_display_win32_new (const gchar * adapter_luid)
       "path", adapter_luid, "adapter-luid", adapter_luid_i64, "device-id",
       desc.DeviceId, "vendor-id", desc.VendorId, nullptr);
   self->desc = desc_str;
-  if (!gst_va_display_initialize (GST_VA_DISPLAY (self))) {
-    gst_object_unref (self);
-    return nullptr;
+  if (!gst_va_display_initialize (GST_VA_DISPLAY (self)))
+    goto error;
+
+  /* Validate device */
+  dpy = gst_va_display_get_va_dpy (GST_VA_DISPLAY (self));
+
+  max_profiles = vaMaxNumProfiles (dpy);
+  if (max_profiles <= 0)
+    goto error;
+
+  max_entry_points = vaMaxNumEntrypoints (dpy);
+  if (max_entry_points <= 0)
+    goto error;
+
+  profiles.resize (max_profiles);
+
+  status = vaQueryConfigProfiles (dpy, &profiles[0], &num_profiles);
+  if (status != VA_STATUS_SUCCESS || num_profiles <= 0)
+    goto error;
+
+  entry_points.resize (max_entry_points);
+  for (guint i = 0; i < num_profiles; i++) {
+    gint num_entry_poinits;
+    status = vaQueryConfigEntrypoints (dpy, profiles[i], &entry_points[0],
+        &num_entry_poinits);
+    if (status != VA_STATUS_SUCCESS)
+      goto error;
   }
 
   gst_object_ref_sink (self);
 
   return GST_VA_DISPLAY (self);
+
+error:
+  gst_object_unref (self);
+  return nullptr;
 }
