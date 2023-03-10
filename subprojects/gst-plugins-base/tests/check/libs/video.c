@@ -792,6 +792,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_parse_caps_rgb)
 {
+  /* *INDENT-OFF* */
   struct
   {
     const gchar *tmpl_caps_string;
@@ -820,6 +821,7 @@ GST_START_TEST (test_parse_caps_rgb)
     GST_VIDEO_CAPS_MAKE ("RGB15"), GST_VIDEO_FORMAT_RGB15}, {
     GST_VIDEO_CAPS_MAKE ("BGR15"), GST_VIDEO_FORMAT_BGR15}
   };
+  /* *INDENT-ON* */
   gint i;
 
   for (i = 0; i < G_N_ELEMENTS (formats); ++i) {
@@ -4111,6 +4113,57 @@ GST_START_TEST (test_video_color_primaries_equivalent)
 
 GST_END_TEST;
 
+GST_START_TEST (test_info_dma_drm)
+{
+  const char *nondma_str = "video/x-raw, format=NV12, width=16, height=16";
+  const char *dma_str = "video/x-raw(memory:DMABuf), format=NV12, width=16, "
+      "height=16";
+  const char *drm_str = "video/x-raw(memory:DMABuf), width=16, height=16, "
+      "drm-format=NV12:0x100000000000002";
+  const char *invaliddrm_str = "video/x-raw(memory:DMABuf), width=16, "
+      "height=16, drm-format=ZZZZ:0xRGCSEz9ew80";
+  GstCaps *caps, *ncaps;
+  GstVideoInfoDmaDrm info;
+  GstVideoInfo vinfo;
+
+  caps = gst_caps_from_string (nondma_str);
+  fail_if (gst_video_is_dma_drm_caps (caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string (dma_str);
+  fail_if (gst_video_info_dma_drm_from_caps (&info, caps));
+  gst_caps_unref (caps);
+
+  caps = gst_caps_from_string (drm_str);
+  fail_unless (gst_video_info_dma_drm_from_caps (&info, caps));
+  fail_unless (info.drm_fourcc == 0x3231564e
+      && info.drm_modifier == 0x100000000000002);
+  ncaps = gst_video_info_dma_drm_to_caps (&info);
+  fail_unless (ncaps);
+  fail_if (gst_caps_is_equal (caps, ncaps));
+  gst_caps_unref (caps);
+  gst_caps_unref (ncaps);
+
+  caps = gst_caps_from_string (invaliddrm_str);
+  fail_if (gst_video_info_dma_drm_from_caps (&info, caps));
+  gst_caps_unref (caps);
+
+  fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_NV12, 16,
+          16));
+  info.vinfo = vinfo;
+  info.drm_fourcc = 0x3231564e;
+  info.drm_modifier = 0x100000000000002;
+  ncaps = gst_video_info_dma_drm_to_caps (&info);
+  fail_unless (ncaps);
+  caps = gst_caps_from_string (drm_str);
+  fail_if (gst_caps_is_equal (caps, ncaps));
+  gst_caps_unref (caps);
+  gst_caps_unref (ncaps);
+
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -4168,6 +4221,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_video_extrapolate_stride);
   tcase_add_test (tc_chain, test_auto_video_frame_unmap);
   tcase_add_test (tc_chain, test_video_color_primaries_equivalent);
+  tcase_add_test (tc_chain, test_info_dma_drm);
 
   return s;
 }
