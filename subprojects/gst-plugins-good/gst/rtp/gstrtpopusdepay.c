@@ -100,6 +100,8 @@ gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstStructure *s;
   gboolean ret;
   const gchar *sprop_maxcapturerate;
+  /* Default unless overridden by sprop_maxcapturerate */
+  gint rate = 48000;
 
   srccaps = gst_caps_new_empty_simple ("audio/x-opus");
 
@@ -215,18 +217,21 @@ gst_rtp_opus_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
 
   if ((sprop_maxcapturerate =
           gst_structure_get_string (s, "sprop-maxcapturerate"))) {
-    gulong rate;
     gchar *tailptr;
+    gulong tmp_rate;
 
-    rate = strtoul (sprop_maxcapturerate, &tailptr, 10);
-    if (rate > INT_MAX || *tailptr != '\0') {
+    tmp_rate = strtoul (sprop_maxcapturerate, &tailptr, 10);
+    if (tmp_rate > INT_MAX || *tailptr != '\0') {
       GST_WARNING_OBJECT (depayload,
           "Failed to parse sprop-maxcapturerate value '%s'",
           sprop_maxcapturerate);
     } else {
-      gst_caps_set_simple (srccaps, "rate", G_TYPE_INT, rate, NULL);
+      /* Valid rate from sprop, let's use it */
+      rate = tmp_rate;
     }
   }
+
+  gst_caps_set_simple (srccaps, "rate", G_TYPE_INT, rate, NULL);
 
   ret = gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (depayload), srccaps);
 
