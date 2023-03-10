@@ -446,7 +446,7 @@ static GstFlowReturn
 gst_vulkan_overlay_compositor_transform_ip (GstBaseTransform * bt,
     GstBuffer * inbuf);
 
-#define IMAGE_FORMATS " { BGRA }"
+#define IMAGE_FORMATS " { BGRA, RGBA }"
 
 static GstStaticPadTemplate gst_vulkan_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
