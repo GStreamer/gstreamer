@@ -101,7 +101,7 @@ gst_webrtc_ice_find_transport (GstWebRTCICE * ice,
  * @ice: The #GstWebRTCICE
  * @stream: The #GstWebRTCICEStream
  * @candidate: The ICE candidate
- * @promise: (allow none): A #GstPromise for task notifications (Since: 1.24)
+ * @promise: (nullable): A #GstPromise for task notifications (Since: 1.24)
  *
  * Since: 1.22
  */

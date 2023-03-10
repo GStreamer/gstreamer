@@ -8935,7 +8935,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    * GstWebRTCBin::add-transceiver:
    * @object: the #webrtcbin
    * @direction: the direction of the new transceiver
-   * @caps: (allow none): the codec preferences for this transceiver
+   * @caps: (nullable): the codec preferences for this transceiver
    *
    * Returns: the new #GstWebRTCRTPTransceiver
    */
