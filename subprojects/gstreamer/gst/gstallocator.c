@@ -110,7 +110,7 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
 
   if (!gst_memory_map (copy, &dinfo, GST_MAP_WRITE)) {
     GST_CAT_WARNING (GST_CAT_MEMORY, "could not write map memory %p", copy);
-    gst_allocator_free (mem->allocator, copy);
+    gst_allocator_free (copy->allocator, copy);
     gst_memory_unmap (mem, &sinfo);
     return NULL;
   }
