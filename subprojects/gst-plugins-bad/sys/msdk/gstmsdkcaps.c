@@ -37,6 +37,7 @@
 #define DEFAULT_VIDEO_FORMAT GST_VIDEO_FORMAT_NV12
 
 #define ENC_IOPATTERN MFX_IOPATTERN_IN_VIDEO_MEMORY
+#define DEC_IOPATTERN MFX_IOPATTERN_OUT_VIDEO_MEMORY
 
 #ifdef _WIN32
 /* fix "unreferenced local variable" for windows */
@@ -856,6 +857,298 @@ failed:
   return FALSE;
 }
 
+static inline gboolean
+_dec_is_param_supported (mfxSession * session,
+    mfxVideoParam * in, mfxVideoParam * out)
+{
+  mfxStatus status = MFXVideoDECODE_Query (*session, in, out);
+  if (status == MFX_ERR_NONE)
+    return TRUE;
+
+  return FALSE;
+}
+
+static inline gboolean
+_dec_ensure_codec (mfxDecoderDescription * dec_desc, guint c)
+{
+  for (guint p = 0; p < dec_desc->Codecs[c].NumProfiles; p++) {
+    if (dec_desc->Codecs[c].Profiles[p].MemDesc->NumColorFormats)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static inline gint
+_dec_get_codec_index (mfxDecoderDescription * dec_desc, guint codec_id)
+{
+  gint c;
+
+  for (c = 0; c < dec_desc->NumCodecs; c++) {
+    if (dec_desc->Codecs[c].CodecID == codec_id) {
+      break;
+    }
+  }
+
+  if (c >= dec_desc->NumCodecs)
+    goto failed;
+
+  if (!_dec_ensure_codec (dec_desc, c))
+    goto failed;
+
+  return c;
+
+failed:
+  GST_WARNING ("Unsupported codec %" GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (codec_id));
+  return -1;
+}
+
+static void
+_jpegdec_set_color_format (mfxVideoParam * param, GstVideoFormat format)
+{
+  param->mfx.JPEGChromaFormat = param->mfx.FrameInfo.ChromaFormat;
+
+  switch (format) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_YUY2:
+      param->mfx.JPEGColorFormat = MFX_JPEG_COLORFORMAT_YCbCr;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+      param->mfx.JPEGColorFormat = MFX_JPEG_COLORFORMAT_RGB;
+      break;
+    default:
+      GST_WARNING ("Jpegdec unsupported format %s",
+          gst_video_format_to_string (format));
+      break;
+  }
+}
+
+static gboolean
+_dec_get_resolution_range (mfxSession * session,
+    mfxDecoderDescription * dec_desc, guint codec_id,
+    ResolutionRange * res_range)
+{
+  guint c;
+  mfxVideoParam in, out;
+  mfxRange32U *width, *height;
+  ResolutionRange res = { default_width, default_width,
+    default_height, default_height
+  };
+
+  g_return_val_if_fail (res_range != NULL, FALSE);
+
+  c = _dec_get_codec_index (dec_desc, codec_id);
+  width = &dec_desc->Codecs[c].Profiles->MemDesc->Width;
+  height = &dec_desc->Codecs[c].Profiles->MemDesc->Height;
+
+  _codec_init_param (&in, codec_id, DEC_IOPATTERN, DEFAULT_VIDEO_FORMAT);
+  if (codec_id == MFX_CODEC_AV1)
+    in.mfx.CodecLevel = MFX_LEVEL_AV1_41;
+  if (codec_id == MFX_CODEC_JPEG)
+    _jpegdec_set_color_format (&in, GST_VIDEO_FORMAT_NV12);
+  out = in;
+
+  IsParamSupportedFunc func = _dec_is_param_supported;
+  if (!_get_min_width (session, &in, &out, func, width, &res.min_width) ||
+      !_get_max_width (session, &in, &out, func, width, &res.max_width) ||
+      !_get_min_height (session, &in, &out, func, height, &res.min_height) ||
+      !_get_max_height (session, &in, &out, func, height, &res.max_height))
+    return FALSE;
+
+  GST_DEBUG ("Got %" GST_FOURCC_FORMAT
+      " DEC supported resolution range width: [%d, %d], height: [%d, %d]",
+      GST_FOURCC_ARGS (dec_desc->Codecs[c].CodecID),
+      res.min_width, res.max_width, res.min_height, res.max_height);
+
+  res_range->min_width = res.min_width;
+  res_range->max_width = res.max_width;
+  res_range->min_height = res.min_height;
+  res_range->max_height = res.max_height;
+
+  return TRUE;
+}
+
+static gboolean
+_dec_is_format_supported (mfxSession * session,
+    guint codec_id, GstVideoFormat format,
+    mfxVideoParam * in, mfxVideoParam * out)
+{
+  if (!_fill_mfxframeinfo (format, &in->mfx.FrameInfo))
+    return FALSE;
+
+  if (codec_id == MFX_CODEC_JPEG)
+    _jpegdec_set_color_format (in, format);
+
+  in->mfx.LowPower = MFX_CODINGOPTION_UNKNOWN;
+  if (!_dec_is_param_supported (session, in, out)) {
+    in->mfx.LowPower = (out->mfx.LowPower == MFX_CODINGOPTION_ON) ?
+        MFX_CODINGOPTION_OFF : MFX_CODINGOPTION_ON;
+
+    if (!_dec_is_param_supported (session, in, out))
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+_dec_get_supported_formats (mfxSession * session,
+    mfxDecoderDescription * dec_desc, guint codec_id, GValue * supported_fmts)
+{
+  guint size;
+  const GValue *gfmt;
+  GValue fmts = G_VALUE_INIT;
+  GstVideoFormat fmt = DEFAULT_VIDEO_FORMAT;
+  mfxVideoParam in, out;
+  gint c;
+
+  _codec_init_param (&in, codec_id, DEC_IOPATTERN, DEFAULT_VIDEO_FORMAT);
+  if (codec_id == MFX_CODEC_AV1)
+    in.mfx.CodecLevel = MFX_LEVEL_AV1_41;
+  out = in;
+
+  g_value_init (&fmts, GST_TYPE_LIST);
+  gst_msdk_get_video_format_list (&fmts);
+  size = gst_value_list_get_size (&fmts);
+
+  c = _dec_get_codec_index (dec_desc, codec_id);
+
+  for (guint p = 0; p < dec_desc->Codecs[c].NumProfiles; p++) {
+    in.mfx.CodecProfile = dec_desc->Codecs[c].Profiles[p].Profile;
+
+    for (guint i = 0; i < size; i++) {
+      gfmt = gst_value_list_get_value (&fmts, i);
+      fmt = g_value_get_uint (gfmt);
+
+      if (_format_in_list (fmt, supported_fmts))
+        continue;
+
+      if (!_fourcc_in_array (gst_msdk_get_mfx_fourcc_from_format (fmt),
+              dec_desc->Codecs[c].Profiles[p].MemDesc->ColorFormats,
+              dec_desc->Codecs[c].Profiles[p].MemDesc->NumColorFormats))
+        continue;
+
+      if (!_dec_is_format_supported (session, codec_id, fmt, &in, &out))
+        continue;
+
+      _list_append_string (supported_fmts, gst_video_format_to_string (fmt));
+    }
+  }
+
+  g_value_unset (&fmts);
+
+  return (gst_value_list_get_size (supported_fmts) == 0) ? FALSE : TRUE;
+}
+
+static GstCaps *
+_dec_create_sink_caps (guint codec_id)
+{
+  GstCaps *caps;
+  const gchar *media_type = NULL;
+
+  media_type = _get_media_type (codec_id);
+  if (!media_type)
+    return NULL;
+
+  caps = gst_caps_new_empty_simple (media_type);
+
+  GST_DEBUG ("Create %" GST_FOURCC_FORMAT " DEC sink_caps %" GST_PTR_FORMAT,
+      GST_FOURCC_ARGS (codec_id), caps);
+
+  return caps;
+}
+
+static GstCaps *
+_dec_create_src_caps (GstMsdkContext * context,
+    mfxSession * session, guint codec_id,
+    mfxDecoderDescription * dec_desc, GValue * supported_formats)
+{
+  GstCaps *caps, *dma_caps;
+  ResolutionRange res = { 1, G_MAXUINT16, 1, G_MAXUINT16 };
+
+  if (!_dec_get_resolution_range (session, dec_desc, codec_id, &res))
+    return NULL;
+
+  caps = gst_caps_from_string ("video/x-raw");
+  gst_caps_set_value (caps, "format", supported_formats);
+
+#ifndef _WIN32
+  dma_caps = gst_caps_from_string ("video/x-raw(memory:DMABuf)");
+  gst_caps_set_value (dma_caps, "format", supported_formats);
+  gst_caps_append (caps, dma_caps);
+
+  gst_caps_append (caps,
+      gst_caps_from_string
+      ("video/x-raw(memory:VAMemory), format=(string){ NV12 }"));
+#else
+  VAR_UNUSED (dma_caps);
+  gst_caps_append (caps,
+      gst_caps_from_string
+      ("video/x-raw(memory:D3D11Memory), format=(string){ NV12 }"));
+#endif
+
+  gst_caps_set_simple (caps,
+      "width", GST_TYPE_INT_RANGE, res.min_width, res.max_width,
+      "height", GST_TYPE_INT_RANGE, res.min_height, res.max_height,
+      "interlace-mode", G_TYPE_STRING, "progressive", NULL);
+
+  GST_DEBUG ("Create %" GST_FOURCC_FORMAT " DEC src_caps %" GST_PTR_FORMAT,
+      GST_FOURCC_ARGS (codec_id), caps);
+
+  return caps;
+}
+
+gboolean
+gst_msdkcaps_dec_create_caps (GstMsdkContext * context,
+    gpointer dec_description, guint codec_id,
+    GstCaps ** sink_caps, GstCaps ** src_caps)
+{
+  mfxDecoderDescription *dec_desc;
+  GstCaps *in_caps = NULL, *out_caps = NULL;
+  GValue supported_fmts = G_VALUE_INIT;
+  mfxSession session;
+
+  g_return_val_if_fail (context, FALSE);
+  g_return_val_if_fail (dec_description, FALSE);
+
+  session = gst_msdk_context_get_session (context);
+  dec_desc = (mfxDecoderDescription *) dec_description;
+
+  if (_dec_get_codec_index (dec_desc, codec_id) < 0)
+    goto failed;
+
+  g_value_init (&supported_fmts, GST_TYPE_LIST);
+  if (!_dec_get_supported_formats (&session,
+          dec_desc, codec_id, &supported_fmts))
+    goto failed;
+
+  in_caps = _dec_create_sink_caps (codec_id);
+  if (!in_caps)
+    goto failed;
+
+  out_caps = _dec_create_src_caps (context,
+      &session, codec_id, dec_desc, &supported_fmts);
+  g_value_unset (&supported_fmts);
+  if (!out_caps)
+    goto failed;
+
+  *sink_caps = in_caps;
+  *src_caps = out_caps;
+
+  return TRUE;
+
+failed:
+  GST_WARNING ("Failed to create caps for %" GST_FOURCC_FORMAT " DEC",
+      GST_FOURCC_ARGS (codec_id));
+
+  g_value_unset (&supported_fmts);
+  if (in_caps)
+    gst_caps_unref (in_caps);
+
+  return FALSE;
+}
+
 #else
 
 static gboolean
@@ -1025,6 +1318,141 @@ failed:
   return FALSE;
 }
 
+static const char *
+_dec_get_raw_formats (guint codec_id)
+{
+  switch (codec_id) {
+    case MFX_CODEC_AVC:
+      return "NV12, BGRA, BGRx";
+    case MFX_CODEC_HEVC:
+      return "NV12, P010_10LE, YUY2, Y210,  VUYA, Y410, P012_LE, "
+          "Y212_LE, Y412_LE, BGRA, BGRx";
+    case MFX_CODEC_MPEG2:
+      return "NV12";
+    case MFX_CODEC_VP9:
+      return "NV12, P010_10LE, VUYA, Y410, P012_LE, Y412_LE";
+    case MFX_CODEC_AV1:
+      return "NV12, P010_10LE, VUYA, Y410";
+    case MFX_CODEC_JPEG:
+      return "NV12, YUY2";
+    case MFX_CODEC_VP8:
+      return "NV12";
+    case MFX_CODEC_VC1:
+      return "NV12";
+    default:
+      GST_WARNING ("Unsupported codec %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (codec_id));
+      break;
+  }
+
+  return NULL;
+}
+
+#ifndef _WIN32
+static const char *
+_dec_get_dma_formats (guint codec_id)
+{
+  switch (codec_id) {
+    case MFX_CODEC_AVC:
+      return "NV12, BGRA, BGRx";
+    case MFX_CODEC_HEVC:
+      return "NV12, P010_10LE, YUY2, Y210,  VUYA, Y410, P012_LE, "
+          "Y212_LE, Y412_LE, BGRA, BGRx";
+    case MFX_CODEC_MPEG2:
+      return "NV12";
+    case MFX_CODEC_VP9:
+      return "NV12, P010_10LE, VUYA, Y410, P012_LE, Y412_LE";
+    case MFX_CODEC_AV1:
+      return "NV12, P010_10LE, VUYA, Y410";
+    case MFX_CODEC_JPEG:
+      return "NV12, YUY2";
+    case MFX_CODEC_VP8:
+      return "NV12";
+    case MFX_CODEC_VC1:
+      return "NV12";
+    default:
+      GST_WARNING ("Unsupported codec %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (codec_id));
+      break;
+  }
+
+  return NULL;
+}
+#endif
+
+gboolean
+gst_msdkcaps_dec_create_caps (GstMsdkContext * context,
+    gpointer dec_description, guint codec_id,
+    GstCaps ** sink_caps, GstCaps ** src_caps)
+{
+  GstCaps *in_caps = NULL, *out_caps = NULL;
+  GstCaps *dma_caps = NULL;
+  gchar *raw_caps_str, *dma_caps_str;
+  const gchar *media_type = NULL;
+  const char *raw_fmts = NULL;
+  const char *dma_fmts = NULL;
+
+  media_type = _get_media_type (codec_id);
+  if (!media_type)
+    goto failed;
+
+  in_caps = gst_caps_new_empty_simple (media_type);
+
+  raw_fmts = _dec_get_raw_formats (codec_id);
+  if (!raw_fmts)
+    goto failed;
+  raw_caps_str = g_strdup_printf ("video/x-raw, format=(string){ %s }",
+      raw_fmts);
+  out_caps = gst_caps_from_string (raw_caps_str);
+  g_free (raw_caps_str);
+
+#ifndef _WIN32
+  dma_fmts = _dec_get_dma_formats (codec_id);
+  if (!dma_fmts)
+    goto failed;
+  dma_caps_str =
+      g_strdup_printf ("video/x-raw(memory:DMABuf), format=(string){ %s }",
+      dma_fmts);
+  dma_caps = gst_caps_from_string (dma_caps_str);
+  g_free (dma_caps_str);
+  gst_caps_append (out_caps, dma_caps);
+
+  gst_caps_append (out_caps,
+      gst_caps_from_string
+      ("video/x-raw(memory:VAMemory), format=(string){ NV12 }"));
+#else
+  VAR_UNUSED (dma_caps_str);
+  VAR_UNUSED (dma_fmts);
+  gst_caps_append (out_caps,
+      gst_caps_from_string
+      ("video/x-raw(memory:D3D11Memory), format=(string){ NV12 }"));
+#endif
+
+  gst_caps_set_simple (out_caps,
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+      "interlace-mode", G_TYPE_STRING, "progressive", NULL);
+
+  *sink_caps = in_caps;
+  *src_caps = out_caps;
+
+  return TRUE;
+
+failed:
+  GST_WARNING ("Failed to create caps for %" GST_FOURCC_FORMAT " DEC",
+      GST_FOURCC_ARGS (codec_id));
+
+  if (in_caps)
+    gst_caps_unref (in_caps);
+  if (out_caps)
+    gst_caps_unref (out_caps);
+  if (dma_caps)
+    gst_caps_unref (dma_caps);
+
+  return FALSE;
+}
+
 #endif
 
 static void
@@ -1093,6 +1521,26 @@ gst_msdkcaps_set_strings (GstCaps * caps,
   }
 
   g_value_unset (&list);
+
+  return TRUE;
+}
+
+gboolean
+gst_msdkcaps_remove_structure (GstCaps * caps, const gchar * features)
+{
+  guint size;
+  GstCapsFeatures *f;
+
+  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
+  g_return_val_if_fail (features != NULL, FALSE);
+
+  size = gst_caps_get_size (caps);
+  f = gst_caps_features_from_string (features);
+
+  for (guint i = 0; i < size; i++) {
+    if (gst_caps_features_is_equal (f, gst_caps_get_features (caps, i)))
+      gst_caps_remove_structure (caps, i);
+  }
 
   return TRUE;
 }
