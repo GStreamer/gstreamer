@@ -18,6 +18,7 @@ RUN choco install -y git-lfs
 RUN choco install -y 7zip
 RUN choco install -y python3 --installargs 'AssociateFiles=1 PrependPath=1 Include_pip=1 Include_dev=1'
 RUN choco install -y msys2 --params '/NoPath /NoUpdate /InstallDir:C:\\msys64'
+RUN choco install -y wixtoolset
 
 # Remove MAX_PATH limit of 260 characters
 RUN New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' `
