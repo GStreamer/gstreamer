@@ -2406,6 +2406,15 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
               "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
           encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "video/av01") == 0) {
+          tmp = gst_structure_new ("video/x-av1",
+              "stream-format", G_TYPE_STRING, "obu-stream",
+              "alignment", G_TYPE_STRING, "tu",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
         } else if (strcmp (type->mime, "video/mpeg2") == 0) {
           tmp = gst_structure_new ("video/mpeg",
               "width", GST_TYPE_INT_RANGE, 16, 4096,

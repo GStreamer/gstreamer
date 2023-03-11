@@ -232,6 +232,8 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
     mime = "video/x-vnd.on2.vp8";
   } else if (strcmp (name, "video/x-vp9") == 0) {
     mime = "video/x-vnd.on2.vp9";
+  } else if (strcmp (name, "video/x-av1") == 0) {
+    mime = "video/av01";
   } else {
     GST_ERROR_OBJECT (encoder, "Failed to convert caps(%s/...) to any mime",
         name);
@@ -459,6 +461,10 @@ caps_from_amc_format (GstAmcFormat * amc_format)
     caps = gst_caps_new_empty_simple ("video/x-vp8");
   } else if (strcmp (mime, "video/x-vnd.on2.vp9") == 0) {
     caps = gst_caps_new_empty_simple ("video/x-vp9");
+  } else if (strcmp (mime, "video/av01") == 0) {
+    caps = gst_caps_new_simple ("video/x-av1",
+        "stream-format", G_TYPE_STRING, "obu-stream",
+        "alignment", G_TYPE_STRING, "tu", NULL);
   }
 
   gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
