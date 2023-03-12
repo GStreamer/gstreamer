@@ -185,6 +185,14 @@ option('x265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video
 option('zbar', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin using zbar library')
 option('zxing', type : 'feature', value : 'auto', description : 'Barcode image scanner plugin using zxing-cpp library')
 option('wpe', type : 'feature', value : 'auto', description : 'WPE Web browser plugin')
+option(
+  'wpe_api',
+  type: 'combo',
+  value: 'auto',
+  choices: ['auto', '1.0', '1.1', '2.0'],
+  description: 'WPE WebKit API to target (1.0 = soup2, 1.1/2.0 = soup3)'
+)
+
 option('magicleap', type : 'feature', value : 'auto', description : 'Magic Leap platform support')
 option('v4l2codecs', type : 'feature', value : 'auto', description : 'Video4Linux Stateless CODECs support')
 option('isac', type : 'feature', value : 'auto', description : 'iSAC plugin')

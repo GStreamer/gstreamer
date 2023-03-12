@@ -186,7 +186,11 @@ initialize_web_extensions (WebKitWebContext *context)
     const gchar *local_path = gst_wpe_get_devenv_extension_path ();
     const gchar *path = g_file_test (local_path, G_FILE_TEST_IS_DIR) ? local_path : G_STRINGIFY (WPE_EXTENSION_INSTALL_DIR);
     GST_INFO ("Loading WebExtension from %s", path);
+#if USE_WPE2
+    webkit_web_context_set_web_process_extensions_directory (context, path);
+#else
     webkit_web_context_set_web_extensions_directory (context, path);
+#endif
 }
 
 static void
@@ -356,10 +360,14 @@ WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* cont
     WPEView* view = nullptr;
     dispatch([&]() mutable {
         if (!glib.web_context) {
+#if USE_WPE2
+            glib.web_context = WEBKIT_WEB_CONTEXT(g_object_new(WEBKIT_TYPE_WEB_CONTEXT, nullptr));
+#else
             auto *manager = webkit_website_data_manager_new(NULL);
             glib.web_context =
                 webkit_web_context_new_with_website_data_manager(manager);
             g_object_unref(manager);
+#endif
         }
         view = new WPEView(glib.web_context, src, context, display, width, height);
     });
@@ -434,7 +442,11 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
 
         if (parent && GST_IS_WPE_SRC (parent)) {
             audio.init_ext_sigid = g_signal_connect (web_context,
+#if USE_WPE2
+                              "initialize-web-process-extensions",
+#else
                               "initialize-web-extensions",
+#endif
                               G_CALLBACK (initialize_web_extensions),
                               NULL);
             audio.extension_msg_sigid = g_signal_connect (web_context,
@@ -726,22 +738,32 @@ void WPEView::loadUri(const gchar* uri)
 
 static void s_runJavascriptFinished(GObject* object, GAsyncResult* result, gpointer user_data)
 {
-    WebKitJavascriptResult* js_result;
-    GError* error = NULL;
+    GError *error = NULL;
+#if USE_WPE2
+    g_autoptr(JSCValue) js_result = webkit_web_view_evaluate_javascript_finish(
+#else
+    g_autoptr(WebKitJavascriptResult) js_result = webkit_web_view_run_javascript_finish(
+#endif
+        WEBKIT_WEB_VIEW(object), result, &error);
 
-    js_result = webkit_web_view_run_javascript_finish(WEBKIT_WEB_VIEW(object), result, &error);
-    if (!js_result) {
+    // TODO: Pass result back to signal call site using a GstPromise?
+    (void) js_result;
+
+    if (error) {
         GST_WARNING("Error running javascript: %s", error->message);
         g_error_free(error);
-        return;
     }
-    webkit_javascript_result_unref(js_result);
 }
 
 void WPEView::runJavascript(const char* script)
 {
     s_view->dispatch([&]() {
+#if USE_WPE2
+        webkit_web_view_evaluate_javascript(webkit.view, script, -1, nullptr, nullptr, nullptr,
+                                            s_runJavascriptFinished, nullptr);
+#else
         webkit_web_view_run_javascript(webkit.view, script, nullptr, s_runJavascriptFinished, nullptr);
+#endif
     });
 }
 

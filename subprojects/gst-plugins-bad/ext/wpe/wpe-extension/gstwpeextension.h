@@ -15,7 +15,11 @@
 
 #pragma once
 
+#if USE_WPE2
+#include <wpe/webkit-web-process-extension.h>
+#else
 #include <wpe/webkit-web-extension.h>
+#endif
 #include <gio/gunixfdlist.h>
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
