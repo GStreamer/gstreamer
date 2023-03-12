@@ -2544,7 +2544,7 @@ _on_sctpdec_pad_added (GstElement * sctpdec, GstPad * pad,
   if (!channel) {
     channel = g_object_new (WEBRTC_TYPE_DATA_CHANNEL, NULL);
     channel->parent.id = stream_id;
-    channel->webrtcbin = webrtc;
+    webrtc_data_channel_set_webrtcbin (channel, webrtc);
 
     g_signal_emit (webrtc, gst_webrtc_bin_signals[PREPARE_DATA_CHANNEL_SIGNAL],
         0, channel, FALSE);
@@ -7196,7 +7196,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
   gst_element_sync_state_with_parent (ret->sink_bin);
 
   ret = gst_object_ref (ret);
-  ret->webrtcbin = webrtc;
+  webrtc_data_channel_set_webrtcbin (ret, webrtc);
   g_ptr_array_add (webrtc->priv->data_channels, ret);
   DC_UNLOCK (webrtc);
 

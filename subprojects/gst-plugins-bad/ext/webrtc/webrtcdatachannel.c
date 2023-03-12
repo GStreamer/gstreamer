@@ -51,6 +51,7 @@ typedef void (*ChannelTask) (GstWebRTCDataChannel * channel,
 
 struct task
 {
+  GstWebRTCBin *webrtcbin;
   GstWebRTCDataChannel *channel;
   ChannelTask func;
   gpointer user_data;
@@ -69,6 +70,7 @@ _execute_task (GstWebRTCBin * webrtc, struct task *task)
 static void
 _free_task (struct task *task)
 {
+  g_object_unref (task->webrtcbin);
   gst_object_unref (task->channel);
 
   if (task->notify)
@@ -80,14 +82,22 @@ static void
 _channel_enqueue_task (WebRTCDataChannel * channel, ChannelTask func,
     gpointer user_data, GDestroyNotify notify)
 {
-  struct task *task = g_new0 (struct task, 1);
+  GstWebRTCBin *webrtcbin = NULL;
+  struct task *task = NULL;
 
+  webrtcbin = g_weak_ref_get (&channel->webrtcbin_weak);
+  if (!webrtcbin)
+    return;
+
+  task = g_new0 (struct task, 1);
+
+  task->webrtcbin = webrtcbin;
   task->channel = gst_object_ref (channel);
   task->func = func;
   task->user_data = user_data;
   task->notify = notify;
 
-  gst_webrtc_bin_enqueue_task (channel->webrtcbin,
+  gst_webrtc_bin_enqueue_task (task->webrtcbin,
       (GstWebRTCBinFunc) _execute_task, task, (GDestroyNotify) _free_task,
       NULL);
 }
@@ -1139,6 +1149,8 @@ gst_webrtc_data_channel_finalize (GObject * object)
   g_clear_object (&channel->appsrc);
   g_clear_object (&channel->appsink);
 
+  g_weak_ref_clear (&channel->webrtcbin_weak);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -1164,6 +1176,8 @@ webrtc_data_channel_init (WebRTCDataChannel * channel)
   G_LOCK (outstanding_channels_lock);
   outstanding_channels = g_list_prepend (outstanding_channels, channel);
   G_UNLOCK (outstanding_channels_lock);
+
+  g_weak_ref_init (&channel->webrtcbin_weak, NULL);
 }
 
 static void
@@ -1212,4 +1226,11 @@ webrtc_data_channel_link_to_sctp (WebRTCDataChannel * channel,
       _on_sctp_notify_state_unlocked (G_OBJECT (sctp_transport), channel);
     }
   }
+}
+
+void
+webrtc_data_channel_set_webrtcbin (WebRTCDataChannel * channel,
+    GstWebRTCBin * webrtcbin)
+{
+  g_weak_ref_set (&channel->webrtcbin_weak, webrtcbin);
 }

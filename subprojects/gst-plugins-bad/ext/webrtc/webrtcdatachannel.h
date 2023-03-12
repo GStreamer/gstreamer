@@ -51,7 +51,7 @@ struct _WebRTCDataChannel
   GstElement                       *sink_bin;
   GstElement                       *appsink;
 
-  GstWebRTCBin                     *webrtcbin;
+  GWeakRef                          webrtcbin_weak;
   gboolean                          opened;
   gulong                            src_probe;
   GError                           *stored_error;
@@ -71,6 +71,10 @@ void    webrtc_data_channel_start_negotiation   (WebRTCDataChannel       *channe
 G_GNUC_INTERNAL
 void    webrtc_data_channel_link_to_sctp (WebRTCDataChannel                 *channel,
                                           WebRTCSCTPTransport               *sctp_transport);
+
+G_GNUC_INTERNAL
+void    webrtc_data_channel_set_webrtcbin (WebRTCDataChannel                *channel,
+                                           GstWebRTCBin                     *webrtcbin);
 
 G_DECLARE_FINAL_TYPE (WebRTCErrorIgnoreBin, webrtc_error_ignore_bin, WEBRTC, ERROR_IGNORE_BIN, GstBin);
 
