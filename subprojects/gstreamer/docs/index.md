@@ -277,7 +277,9 @@ Use `all` to enable all tracing flags.
 
 Set this variable to a file path to redirect all GStreamer debug
 messages to this file. If left unset, debug messages with be output unto
-the standard error.
+the standard error. The %p pattern is replaced with the PID and the
+%r with a random number.
+
 
 **ORC_CODE.**
 
