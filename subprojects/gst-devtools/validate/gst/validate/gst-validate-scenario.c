@@ -4415,7 +4415,8 @@ handle_bus_message (MessageData * d)
           gst_validate_action_set_done (priv->actions->data);
       }
 
-      if (old_state == GST_STATE_READY && state == GST_STATE_PAUSED)
+      if (old_state == scenario->priv->target_state - 1
+          && state == scenario->priv->target_state)
         _add_execute_actions_gsource (scenario);
 
       /* GstBin only send a new latency message when reaching PLAYING if
@@ -4702,14 +4703,17 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       gst_structure_get_boolean (structure, "is-config", is_config);
       gst_structure_get_boolean (structure, "handles-states",
           &priv->handles_state);
+      if (!gst_structure_get_enum (structure, "target-state", GST_TYPE_STATE,
+              (gint *) & priv->target_state) && !priv->handles_state) {
+        priv->target_state = GST_STATE_PLAYING;
+      }
+
       gst_structure_get_boolean (structure, "ignore-eos", &priv->ignore_eos);
       gst_structure_get_boolean (structure, "allow-errors",
           &priv->allow_errors);
       gst_structure_get_boolean (structure, "actions-on-idle",
           &priv->execute_on_idle);
 
-      if (!priv->handles_state)
-        priv->target_state = GST_STATE_PLAYING;
 
       pipeline_name = gst_structure_get_string (structure, "pipeline-name");
       if (pipeline_name) {
@@ -5374,6 +5378,10 @@ gst_validate_scenario_new (GstValidateRunner *
   if (scenario->priv->handles_state) {
     GST_INFO_OBJECT (scenario, "Scenario handles state."
         " Starting the get position source");
+    _add_execute_actions_gsource (scenario);
+  } else if (scenario->priv->target_state == GST_STATE_NULL) {
+    GST_INFO_OBJECT (scenario,
+        "Target state is NULL, starting action execution");
     _add_execute_actions_gsource (scenario);
   }
 
