@@ -822,7 +822,7 @@ main (int argc, char *argv[])
     /* no duration, seek to 1 second, this could EOS */
     position = 1 * GST_SECOND;
 
-  /* seek to the a position in the file. Most files have a black first frame so
+  /* seek to the position in the file. Most files have a black first frame so
    * by seeking to somewhere else we have a bigger chance of getting something
    * more interesting. An optimisation would be to detect black images and then
    * seek a little more */
