@@ -698,6 +698,31 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
   }
 }
 
+void
+gst_d3d11_device_log_live_objects (GstD3D11Device * device,
+    const gchar * file, const gchar * function, gint line)
+{
+#if HAVE_D3D11SDKLAYERS_H
+  if (device->priv->d3d11_debug) {
+    device->priv->d3d11_debug->ReportLiveDeviceObjects ((D3D11_RLDO_FLAGS)
+        GST_D3D11_RLDO_FLAGS);
+  }
+
+  if (device->priv->d3d11_info_queue)
+    gst_d3d11_device_d3d11_debug (device, file, function, line);
+#endif
+
+#if HAVE_DXGIDEBUG_H
+  if (device->priv->dxgi_debug) {
+    device->priv->dxgi_debug->ReportLiveObjects (DXGI_DEBUG_ALL,
+        (DXGI_DEBUG_RLO_FLAGS) GST_D3D11_RLDO_FLAGS);
+  }
+
+  if (device->priv->dxgi_info_queue)
+    gst_d3d11_device_dxgi_debug (device, file, function, line);
+#endif
+}
+
 static void
 gst_d3d11_device_dispose (GObject * object)
 {
@@ -713,29 +738,15 @@ gst_d3d11_device_dispose (GObject * object)
   GST_D3D11_CLEAR_COM (priv->device);
   GST_D3D11_CLEAR_COM (priv->device_context);
   GST_D3D11_CLEAR_COM (priv->factory);
+  gst_d3d11_device_log_live_objects (self, __FILE__, GST_FUNCTION, __LINE__);
+
 #if HAVE_D3D11SDKLAYERS_H
-  if (priv->d3d11_debug) {
-    priv->d3d11_debug->ReportLiveDeviceObjects ((D3D11_RLDO_FLAGS)
-        GST_D3D11_RLDO_FLAGS);
-  }
   GST_D3D11_CLEAR_COM (priv->d3d11_debug);
-
-  if (priv->d3d11_info_queue)
-    gst_d3d11_device_d3d11_debug (self, __FILE__, GST_FUNCTION, __LINE__);
-
   GST_D3D11_CLEAR_COM (priv->d3d11_info_queue);
 #endif
 
 #if HAVE_DXGIDEBUG_H
-  if (priv->dxgi_debug) {
-    priv->dxgi_debug->ReportLiveObjects (DXGI_DEBUG_ALL,
-        (DXGI_DEBUG_RLO_FLAGS) GST_D3D11_RLDO_FLAGS);
-  }
   GST_D3D11_CLEAR_COM (priv->dxgi_debug);
-
-  if (priv->dxgi_info_queue)
-    gst_d3d11_device_dxgi_debug (self, __FILE__, GST_FUNCTION, __LINE__);
-
   GST_D3D11_CLEAR_COM (priv->dxgi_info_queue);
 #endif
 
