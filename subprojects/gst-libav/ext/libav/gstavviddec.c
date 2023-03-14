@@ -2042,8 +2042,12 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
   if (!ffmpegdec->opened)
     return GST_FLOW_OK;
 
-  if (avcodec_send_packet (ffmpegdec->context, NULL))
+  GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
+  if (avcodec_send_packet (ffmpegdec->context, NULL)) {
+    GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
     goto send_packet_failed;
+  }
+  GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   do {
     got_frame = gst_ffmpegviddec_frame (ffmpegdec, NULL, &ret);
