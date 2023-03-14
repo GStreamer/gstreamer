@@ -356,6 +356,7 @@ enum
 #define DEFAULT_PAD_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PAD_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 
+static void gst_d3d11_compositor_pad_dispose (GObject * object);
 static void gst_d3d11_compositor_pad_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_d3d11_compositor_pad_get_property (GObject * object,
@@ -380,6 +381,7 @@ gst_d3d11_compositor_pad_class_init (GstD3D11CompositorPadClass * klass)
   GParamFlags param_flags = (GParamFlags)
       (G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS);
 
+  object_class->dispose = gst_d3d11_compositor_pad_dispose;
   object_class->set_property = gst_d3d11_compositor_pad_set_property;
   object_class->get_property = gst_d3d11_compositor_pad_get_property;
 
@@ -465,6 +467,17 @@ gst_d3d11_compositor_pad_init (GstD3D11CompositorPad * pad)
   pad->desc = blend_templ[DEFAULT_PAD_OPERATOR];
   pad->gamma_mode = DEFAULT_PAD_GAMMA_MODE;
   pad->primaries_mode = DEFAULT_PAD_PRIMARIES_MODE;
+}
+
+static void
+gst_d3d11_compositor_pad_dispose (GObject * object)
+{
+  GstD3D11CompositorPad *self = GST_D3D11_COMPOSITOR_PAD (object);
+
+  gst_clear_object (&self->convert);
+  GST_D3D11_CLEAR_COM (self->blend);
+
+  G_OBJECT_CLASS (parent_pad_class)->dispose (object);
 }
 
 static void
@@ -1208,14 +1221,11 @@ static void
 gst_d3d11_compositor_release_pad (GstElement * element, GstPad * pad)
 {
   GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (element);
-  GstD3D11CompositorPad *cpad = GST_D3D11_COMPOSITOR_PAD (pad);
 
   GST_DEBUG_OBJECT (self, "Releasing pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   gst_child_proxy_child_removed (GST_CHILD_PROXY (self), G_OBJECT (pad),
       GST_OBJECT_NAME (pad));
-
-  gst_d3d11_compositor_pad_clear_resource (self, cpad, nullptr);
 
   GST_ELEMENT_CLASS (parent_class)->release_pad (element, pad);
 }
