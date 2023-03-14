@@ -93,7 +93,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_MSDK_CAPS_STR
-        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "NV12") "; "
+        ("{ NV12, I420, YV12, YUY2, UYVY, BGRA }", "{ NV12, BGRx }") "; "
         GST_MSDK_CAPS_MAKE_WITH_VA_FEATURE ("NV12"))
     );
 #endif
@@ -2249,6 +2249,7 @@ gst_msdkenc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_BGRx:
 #if (MFX_VERSION >= 1027)
     case GST_VIDEO_FORMAT_Y410:
     case GST_VIDEO_FORMAT_Y210:
