@@ -49,9 +49,9 @@ if not get_option('tools').disabled() and not static_build
     exe_name = '@0@-@1@'.format(tool, api_version)
     executable(exe_name,
       data.get('files'),
-      install: true,
+      install: data.get('install', true),
       install_tag: 'bin',
-      include_directories : [configinc],
+      include_directories : data.get('include_directories', [configinc]),
       dependencies : data.get('deps'),
       c_args: data.get('extra_c_args', []) + gst_plugins_base_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
     )

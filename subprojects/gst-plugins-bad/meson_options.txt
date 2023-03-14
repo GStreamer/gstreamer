@@ -224,6 +224,7 @@ option('gpl', type: 'feature', value: 'disabled', yield: true,
 
 # Common feature options
 option('examples', type : 'feature', value : 'auto', yield : true)
+option('tools', type : 'feature', value : 'auto', yield : true)
 option('tests', type : 'feature', value : 'auto', yield : true)
 option('introspection', type : 'feature', value : 'auto', yield : true, description : 'Generate gobject-introspection bindings')
 option('nls', type : 'feature', value : 'auto', yield: true, description : 'Enable native language support (translations)')

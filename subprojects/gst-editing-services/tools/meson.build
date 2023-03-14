@@ -18,7 +18,16 @@ gst_tools = {'ges-launch':
   }
 }
 
-if not get_option('tools').disabled()
+gst_tools = {
+  'ges-launch': {
+    'files': ges_launch_files,
+    'deps': deps,
+    'extra_c_args': [ges_tool_args] + ['-DG_LOG_DOMAIN="ges-launch-@0@"'.format(apiversion)]
+  },
+}
+
+if not get_option('tools').disabled() and not static_build
+  # FIXME: need ges_launch in the tests.
   ges_launch = executable('ges-launch-@0@'.format(apiversion),
       ges_launch_files,
       c_args : [ges_tool_args] + ['-DG_LOG_DOMAIN="ges-launch-@0@"'.format(apiversion)],
