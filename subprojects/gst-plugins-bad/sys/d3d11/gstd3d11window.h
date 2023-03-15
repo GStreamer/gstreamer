@@ -112,7 +112,6 @@ struct _GstD3D11Window
 
   GstBuffer *cached_buffer;
   gboolean first_present;
-  gboolean allow_tearing;
 
   GstVideoOrientationMethod method;
 };
