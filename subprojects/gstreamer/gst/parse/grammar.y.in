@@ -225,6 +225,66 @@ static void  add_missing_element(graph_t *graph,gchar *name){
     }
 }
 
+static gchar *
+str_unwrap (const gchar * s)
+{
+  gchar *ret;
+  gchar *read, *write;
+
+  /* NULL string returns NULL */
+  if (s == NULL)
+    return NULL;
+
+  /* make copy of original string to hold the result. This
+   * string will always be smaller than the original */
+  ret = g_strdup (s);
+  read = ret;
+  write = ret;
+
+  while (*read) {
+    if (GST_ASCII_IS_STRING (*read)) {
+      /* normal chars are just copied */
+      *write++ = *read++;
+    } else if (*read == '\\') {
+      /* got an escape char, move to next position to read a tripplet
+       * of octal numbers */
+      read++;
+      /* is the next char a possible first octal number? */
+      if (*read >= '0' && *read <= '3') {
+        /* parse other 2 numbers, if one of them is not in the range of
+         * an octal number, we error. We also catch the case where a zero
+         * byte is found here. */
+        if (read[1] < '0' || read[1] > '7' || read[2] < '0' || read[2] > '7')
+          goto beach;
+
+        /* now convert the octal number to a byte again. */
+        *write++ = ((read[0] - '0') << 6) +
+            ((read[1] - '0') << 3) + (read[2] - '0');
+
+        read += 3;
+      } else {
+        /* if we run into a \0 here, we definitely won't get a quote later */
+        if (*read == 0)
+          goto beach;
+        /* else copy \X sequence */
+        *write++ = *read++;
+      }
+    } else if (*read == '\0') {
+      goto beach;
+    } else {
+      *write++ = *read++;
+    }
+  }
+
+  /* null terminate result string and return */
+  *write = '\0';
+  return ret;
+
+beach:
+  g_free (ret);
+  return NULL;
+}
+
 
 /*******************************************************************************************
 *** helpers for pipeline-setup
@@ -1271,7 +1331,9 @@ openchain:
 link:	LINK				      { $$ = gst_parse_link_new ();
 						$$->all_pads = FALSE;
 						if ($1) {
-						  $$->caps = gst_caps_from_string ($1);
+						  gchar *str = str_unwrap ($1);
+						  $$->caps = gst_caps_from_string (str);
+						  g_free (str);
 						  if ($$->caps == NULL)
 						    SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $1);
 						  gst_parse_strfree ($1);
@@ -1280,7 +1342,9 @@ link:	LINK				      { $$ = gst_parse_link_new ();
 	| LINK_ALL		              { $$ = gst_parse_link_new ();
 						$$->all_pads = TRUE;
 						if ($1) {
-						  $$->caps = gst_caps_from_string ($1);
+						  gchar *str = str_unwrap ($1);
+						  $$->caps = gst_caps_from_string (str);
+						  g_free (str);
 						  if ($$->caps == NULL)
 						    SET_ERROR (graph->error, GST_PARSE_ERROR_LINK, _("could not parse caps \"%s\""), $1);
 						  gst_parse_strfree ($1);
