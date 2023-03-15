@@ -1417,9 +1417,8 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         }
         break;
       case GST_H264_PARSER_NO_NAL:
-        /* Start code may have up to 4 bytes */
-        *skipsize = size - 4;
-        goto skip;
+        /* we don't have enough bytes to make any decisions yet */
+        goto more;
         break;
       default:
         /* should not really occur either */
@@ -1443,6 +1442,13 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         GST_DEBUG_OBJECT (h264parse, "complete nal (offset, size): (%u, %u) ",
             nalu.offset, nalu.size);
         break;
+      case GST_H264_PARSER_NO_NAL:
+        /* In NAL alignment, assume the NAL is broken */
+        if (h264parse->in_align == GST_H264_PARSE_ALIGN_NAL ||
+            h264parse->in_align == GST_H264_PARSE_ALIGN_AU) {
+          goto broken;
+        }
+        goto more;
       case GST_H264_PARSER_NO_NAL_END:
         /* In NAL alignment, assume the NAL is complete */
         if (h264parse->in_align == GST_H264_PARSE_ALIGN_NAL ||
@@ -1475,10 +1481,6 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         /* should not really occur either */
         GST_ELEMENT_ERROR (h264parse, STREAM, FORMAT,
             ("Error parsing H.264 stream"), ("Invalid H.264 stream"));
-        goto invalid_stream;
-      case GST_H264_PARSER_NO_NAL:
-        GST_ELEMENT_ERROR (h264parse, STREAM, FORMAT,
-            ("Error parsing H.264 stream"), ("No H.264 NAL unit found"));
         goto invalid_stream;
       case GST_H264_PARSER_BROKEN_DATA:
         GST_WARNING_OBJECT (h264parse, "input stream is corrupt; "
