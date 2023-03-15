@@ -252,6 +252,12 @@ buffer_get_meta_string (GstBuffer * buffer)
   while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
     const gchar *desc = g_type_name (meta->info->type);
 
+    if (meta->info->api == GST_PARENT_BUFFER_META_API_TYPE) {
+      /* The parent buffer meta is added automatically every time a buffer gets
+       * copied, it is not useful to track them. */
+      continue;
+    }
+
     if (s == NULL)
       s = g_string_new (NULL);
     else

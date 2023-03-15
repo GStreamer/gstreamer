@@ -388,6 +388,62 @@ GST_START_TEST (test_parent_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_make_writable_parent_meta)
+{
+  GstBufferPool *pool;
+  GstBuffer *buf1, *buf2, *buf3;
+  GstMemory *mem1, *mem2;
+  gint buf1_dcount = 0;
+  gint buf2_dcount = 0;
+
+  pool = create_pool (1, 0, 0);
+  fail_unless (pool);
+  gst_buffer_pool_set_active (pool, TRUE);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf1,
+          NULL) == GST_FLOW_OK);
+  buffer_track_destroy (buf1, &buf1_dcount);
+
+  /* Make buf1 not writable and copy it */
+  gst_buffer_ref (buf1);
+  buf2 = gst_buffer_make_writable (buf1);
+  buffer_track_destroy (buf2, &buf2_dcount);
+  fail_unless (buf1 != buf2);
+  fail_unless (gst_buffer_is_writable (buf2));
+
+  /* buf1 and buf2 should be sharing the same memory */
+  mem1 = gst_buffer_peek_memory (buf1, 0);
+  mem2 = gst_buffer_peek_memory (buf2, 0);
+  fail_unless_equals_pointer (mem1, mem2);
+
+  /* buf1 is still reffed by the meta */
+  gst_buffer_unref (buf1);
+  fail_unless_equals_int (buf1_dcount, 0);
+  fail_unless_equals_int (buf2_dcount, 0);
+
+  /* buf2 gets destroyed and buf1 returns to pool */
+  gst_buffer_unref (buf2);
+  fail_unless_equals_int (buf1_dcount, 0);
+  fail_unless_equals_int (buf2_dcount, 1);
+
+  /* buf1 should be recycled with the same memory */
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &buf3,
+          NULL) == GST_FLOW_OK);
+  fail_unless_equals_pointer (buf1, buf3);
+  fail_unless_equals_pointer (mem1, gst_buffer_peek_memory (buf3, 0));
+
+  gst_buffer_unref (buf3);
+  fail_unless_equals_int (buf1_dcount, 0);
+  fail_unless_equals_int (buf2_dcount, 1);
+
+  gst_buffer_pool_set_active (pool, FALSE);
+  gst_object_unref (pool);
+  fail_unless_equals_int (buf1_dcount, 1);
+  fail_unless_equals_int (buf2_dcount, 1);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_pool_suite (void)
 {
@@ -408,6 +464,7 @@ gst_buffer_pool_suite (void)
   tcase_add_test (tc_chain, test_flushing_pool_returns_flushing);
   tcase_add_test (tc_chain, test_no_deadlock_for_buffer_discard);
   tcase_add_test (tc_chain, test_parent_meta);
+  tcase_add_test (tc_chain, test_make_writable_parent_meta);
 
   return s;
 }
