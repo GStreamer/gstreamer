@@ -174,12 +174,12 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
         "rate = (int) 48000, "
-        "channels = (int) [ 1, 8 ]; "
+        "channels = (int) [ 1, 255 ]; "
         "audio/x-raw, "
         "format = (string) " FORMAT_STR ", "
         "layout = (string) interleaved, "
         "rate = (int) { 8000, 12000, 16000, 24000 }, "
-        "channels = (int) [ 1, 8 ] ")
+        "channels = (int) [ 1, 255 ] ")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -594,13 +594,8 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
         /* Find where they map in Vorbis order */
         c0v = gst_opus_enc_find_channel_position_in_vorbis_order (enc, p0);
         c1v = gst_opus_enc_find_channel_position_in_vorbis_order (enc, p1);
-        if (c0v < 0 || c1v < 0) {
-          GST_WARNING_OBJECT (enc,
-              "Cannot map channel positions to Vorbis order, using unknown mapping");
-          enc->channel_mapping_family = 255;
-          enc->n_stereo_streams = 0;
-          return;
-        }
+        if (c0v < 0 || c1v < 0)
+          goto unpositioned;
 
         enc->encoding_channel_mapping[mapped] = c0;
         enc->encoding_channel_mapping[mapped + 1] = c1;
@@ -624,7 +619,7 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
             gst_opus_channel_names[position]);
         cv = gst_opus_enc_find_channel_position_in_vorbis_order (enc, position);
         if (cv < 0)
-          g_assert_not_reached ();
+          goto unpositioned;
         enc->encoding_channel_mapping[mapped] = n;
         enc->decoding_channel_mapping[cv] = mapped;
         mapped++;
@@ -647,7 +642,8 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
     return;
   }
 
-  /* More than 8 channels, if future mappings are added for those */
+unpositioned:
+  /* More than 8 channels or unsupported positions, if future mappings are added for those */
 
   /* For other cases, we use undefined, with the default trivial mapping
      and all mono streams */
@@ -656,8 +652,20 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
   else
     GST_INFO_OBJECT (enc, "Unpositioned mapping, all channels mono");
 
+  gst_opus_enc_setup_trivial_mapping (enc, enc->encoding_channel_mapping);
+  gst_opus_enc_setup_trivial_mapping (enc, enc->decoding_channel_mapping);
   enc->channel_mapping_family = 255;
   enc->n_stereo_streams = 0;
+
+#ifndef GST_DISABLE_GST_DEBUG
+  GST_INFO_OBJECT (enc,
+      "Mapping tables built: %d channels, %d stereo streams", enc->n_channels,
+      enc->n_stereo_streams);
+  gst_opus_common_log_channel_mapping_table (GST_ELEMENT (enc), opusenc_debug,
+      "Encoding mapping table", enc->n_channels, enc->encoding_channel_mapping);
+  gst_opus_common_log_channel_mapping_table (GST_ELEMENT (enc), opusenc_debug,
+      "Decoding mapping table", enc->n_channels, enc->decoding_channel_mapping);
+#endif
 
 #undef MAPS
 }
@@ -884,19 +892,16 @@ gst_opus_enc_get_sink_template_caps (void)
       gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
           GST_TYPE_BITMASK, channel_mask, NULL);
       gst_caps_append_structure (caps, s);
-
-      /* We also allow unpositioned channels, input will be
-       * treated as a set of individual mono channels */
-      s = gst_structure_copy (s2);
-      gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
-          GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
-      gst_caps_append_structure (caps, s);
-
-      s = gst_structure_copy (s1);
-      gst_structure_set (s, "channels", G_TYPE_INT, i, "channel-mask",
-          GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
-      gst_caps_append_structure (caps, s);
     }
+
+    /* Everything else and unpositioned */
+    s = gst_structure_copy (s1);
+    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 255, NULL);
+    gst_caps_append_structure (caps, s);
+
+    s = gst_structure_copy (s2);
+    gst_structure_set (s, "channels", GST_TYPE_INT_RANGE, 1, 255, NULL);
+    gst_caps_append_structure (caps, s);
 
     gst_structure_free (s1);
     gst_structure_free (s2);
