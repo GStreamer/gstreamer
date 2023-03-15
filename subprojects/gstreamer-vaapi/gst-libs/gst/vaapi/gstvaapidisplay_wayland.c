@@ -391,7 +391,7 @@ gst_vaapi_display_wayland_new (const gchar * display_name)
  * Return value: a newly allocated #GstVaapiDisplay object
  */
 GstVaapiDisplay *
-gst_vaapi_display_wayland_new_with_display (struct wl_display * wl_display)
+gst_vaapi_display_wayland_new_with_display (struct wl_display *wl_display)
 {
   GstVaapiDisplay *display;
 
@@ -418,7 +418,7 @@ gst_vaapi_display_wayland_new_with_display (struct wl_display * wl_display)
 
 GstVaapiDisplay *
 gst_vaapi_display_wayland_new_with_va_display (VADisplay va_display,
-    struct wl_display * wl_display)
+    struct wl_display *wl_display)
 {
   GstVaapiDisplay *display;
   GstVaapiDisplayInfo info = {

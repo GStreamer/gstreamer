@@ -469,29 +469,29 @@ get_BFRACTION (guint bfraction)
   }
   bfraction_map[] = {
     {
-    0, GST_VC1_BFRACTION_BASIS / 2}, {
-    1, GST_VC1_BFRACTION_BASIS / 3}, {
-    2, (GST_VC1_BFRACTION_BASIS * 2) / 3}, {
-    3, GST_VC1_BFRACTION_BASIS / 4}, {
-    4, (GST_VC1_BFRACTION_BASIS * 3) / 4}, {
-    5, GST_VC1_BFRACTION_BASIS / 5}, {
-    6, (GST_VC1_BFRACTION_BASIS * 2) / 5}, {
-    7, (GST_VC1_BFRACTION_BASIS * 3) / 5}, {
-    8, (GST_VC1_BFRACTION_BASIS * 4) / 5}, {
-    9, GST_VC1_BFRACTION_BASIS / 6}, {
-    10, (GST_VC1_BFRACTION_BASIS * 5) / 6}, {
-    11, GST_VC1_BFRACTION_BASIS / 7}, {
-    12, (GST_VC1_BFRACTION_BASIS * 2) / 7}, {
-    13, (GST_VC1_BFRACTION_BASIS * 3) / 7}, {
-    14, (GST_VC1_BFRACTION_BASIS * 4) / 7}, {
-    15, (GST_VC1_BFRACTION_BASIS * 5) / 7}, {
-    16, (GST_VC1_BFRACTION_BASIS * 6) / 7}, {
-    17, GST_VC1_BFRACTION_BASIS / 8}, {
-    18, (GST_VC1_BFRACTION_BASIS * 3) / 8}, {
-    19, (GST_VC1_BFRACTION_BASIS * 5) / 8}, {
-    20, (GST_VC1_BFRACTION_BASIS * 7) / 8}, {
-    21, GST_VC1_BFRACTION_RESERVED}, {
-    22, GST_VC1_BFRACTION_PTYPE_BI}
+        0, GST_VC1_BFRACTION_BASIS / 2}, {
+        1, GST_VC1_BFRACTION_BASIS / 3}, {
+        2, (GST_VC1_BFRACTION_BASIS * 2) / 3}, {
+        3, GST_VC1_BFRACTION_BASIS / 4}, {
+        4, (GST_VC1_BFRACTION_BASIS * 3) / 4}, {
+        5, GST_VC1_BFRACTION_BASIS / 5}, {
+        6, (GST_VC1_BFRACTION_BASIS * 2) / 5}, {
+        7, (GST_VC1_BFRACTION_BASIS * 3) / 5}, {
+        8, (GST_VC1_BFRACTION_BASIS * 4) / 5}, {
+        9, GST_VC1_BFRACTION_BASIS / 6}, {
+        10, (GST_VC1_BFRACTION_BASIS * 5) / 6}, {
+        11, GST_VC1_BFRACTION_BASIS / 7}, {
+        12, (GST_VC1_BFRACTION_BASIS * 2) / 7}, {
+        13, (GST_VC1_BFRACTION_BASIS * 3) / 7}, {
+        14, (GST_VC1_BFRACTION_BASIS * 4) / 7}, {
+        15, (GST_VC1_BFRACTION_BASIS * 5) / 7}, {
+        16, (GST_VC1_BFRACTION_BASIS * 6) / 7}, {
+        17, GST_VC1_BFRACTION_BASIS / 8}, {
+        18, (GST_VC1_BFRACTION_BASIS * 3) / 8}, {
+        19, (GST_VC1_BFRACTION_BASIS * 5) / 8}, {
+        20, (GST_VC1_BFRACTION_BASIS * 7) / 8}, {
+        21, GST_VC1_BFRACTION_RESERVED}, {
+        22, GST_VC1_BFRACTION_PTYPE_BI}
   };
 
   if (!bfraction)

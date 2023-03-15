@@ -299,11 +299,11 @@ image_draw_rectangle (GstVaapiImage * image,
   map[] = {
 #define _(FORMAT) { GST_VIDEO_FORMAT_##FORMAT, draw_rect_##FORMAT }
     _(ARGB),
-        _(BGRA),
-        _(RGBA), _(ABGR), _(NV12), _(YV12), _(I420), _(YUY2), _(UYVY), _(AYUV),
+    _(BGRA),
+    _(RGBA), _(ABGR), _(NV12), _(YV12), _(I420), _(YUY2), _(UYVY), _(AYUV),
 #undef  _
     {
-    0,}
+        0,}
   };
 
   for (i = 0; !draw_rect && map[i].format; i++)

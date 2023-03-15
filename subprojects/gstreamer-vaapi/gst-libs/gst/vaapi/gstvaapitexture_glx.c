@@ -385,8 +385,8 @@ gst_vaapi_texture_glx_put_surface_unlocked (GstVaapiTexture * texture,
   }
 
   flags = GST_MINI_OBJECT_FLAGS (texture);
-  txc = g_texcoords[! !(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED)];
-  tyc = g_texcoords[! !(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED)];
+  txc = g_texcoords[!!(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_X_INVERTED)];
+  tyc = g_texcoords[!!(flags & GST_VAAPI_TEXTURE_ORIENTATION_FLAG_Y_INVERTED)];
 
   glColor4f (1.0f, 1.0f, 1.0f, 1.0f);
   glBegin (GL_QUADS);
