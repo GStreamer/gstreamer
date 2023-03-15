@@ -141,7 +141,7 @@ fedora amd64 docker:
 
 .gst-indent image:
   variables:
-    FDO_DISTRIBUTION_VERSION: 'stretch'
+    FDO_DISTRIBUTION_VERSION: 'bookworm'
     FDO_REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils'
