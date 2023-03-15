@@ -4145,7 +4145,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
     if (in_d3d11)
       piv_available = gst_d3d11_converter_piv_available (self, in_buf);
 
-    if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) != 0) {
+    if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0) {
       /* processor only */
       use_processor = TRUE;
     } else if (piv_available) {
