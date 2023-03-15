@@ -3198,9 +3198,9 @@ unsupported_mode:
   {
     GST_ERROR ("client %p: unsupported mode (media play: %d, media record: %d, "
         "mode play: %d, mode record: %d)", client,
-        ! !(gst_rtsp_media_get_transport_mode (media) &
+        !!(gst_rtsp_media_get_transport_mode (media) &
             GST_RTSP_TRANSPORT_MODE_PLAY),
-        ! !(gst_rtsp_media_get_transport_mode (media) &
+        !!(gst_rtsp_media_get_transport_mode (media) &
             GST_RTSP_TRANSPORT_MODE_RECORD), ct->mode_play, ct->mode_record);
     send_generic_error_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT,
         ctx);

@@ -161,7 +161,7 @@ mikey_add_crypto_sessions (GstRTSPStream * stream, GstMIKEYMessage * msg)
         gst_structure_free (stats);
       }
 
-      roc_found = ! !(roc != -1);
+      roc_found = !!(roc != -1);
       if (!roc_found) {
         GST_ERROR ("unable to obtain ROC for stream %p with SSRC %u",
             stream, ssrc);
