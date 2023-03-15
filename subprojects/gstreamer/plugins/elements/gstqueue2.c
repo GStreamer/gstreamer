@@ -3741,7 +3741,7 @@ gst_queue2_src_activate_pull (GstPad * pad, GstObject * parent, gboolean active)
         result = gst_queue2_open_temp_location_file (queue);
       } else if (!queue->ring_buffer) {
         queue->ring_buffer = g_malloc (queue->ring_buffer_max_size);
-        result = ! !queue->ring_buffer;
+        result = !!queue->ring_buffer;
       } else {
         result = TRUE;
       }

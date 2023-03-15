@@ -349,7 +349,7 @@ _add_properties (GString * json, GString * other_types,
       continue;
 
     g_value_init (&value, spec->value_type);
-    if (object && ! !(spec->flags & G_PARAM_READABLE) &&
+    if (object && !!(spec->flags & G_PARAM_READABLE) &&
         !(spec->flags & GST_PARAM_DOC_SHOW_DEFAULT)) {
       g_object_get_property (G_OBJECT (object), spec->name, &value);
     } else {

@@ -455,7 +455,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
 
     first_flag = TRUE;
     n_print ("%sflags%s: ", PROP_ATTR_NAME_COLOR, RESET_COLOR);
-    readable = ! !(param->flags & G_PARAM_READABLE);
+    readable = !!(param->flags & G_PARAM_READABLE);
     if (readable && obj != NULL) {
       g_object_get_property (obj, param->name, &value);
     } else {

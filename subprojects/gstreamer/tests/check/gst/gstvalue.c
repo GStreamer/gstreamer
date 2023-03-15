@@ -819,28 +819,28 @@ GST_START_TEST (test_deserialize_string)
     const gchar *to;
   } tests[] = {
     {
-    "\"foo\"", "foo"}, {
-    "\"foo\\%\"", "foo%"}, {
-    "\"0123456789_-+/:.\"", "0123456789_-+/:."}, {
-    "\"Hello\\ World\"", "Hello World"}, {
-    "\"Hello\\ World", "\"Hello\\ World"}, {
-    "\"\\", "\"\\"}, {
-    "\"\\0", "\"\\0"}, {
-    "\"t\\303\\274t\"", "tüt"}, {
-      /* utf8 octal sequence */
-    "", ""},                    /* empty strings */
+        "\"foo\"", "foo"}, {
+        "\"foo\\%\"", "foo%"}, {
+        "\"0123456789_-+/:.\"", "0123456789_-+/:."}, {
+        "\"Hello\\ World\"", "Hello World"}, {
+        "\"Hello\\ World", "\"Hello\\ World"}, {
+        "\"\\", "\"\\"}, {
+        "\"\\0", "\"\\0"}, {
+        "\"t\\303\\274t\"", "tüt"}, {
+          /* utf8 octal sequence */
+        "", ""},                /* empty strings */
     {
-    "\"\"", ""}, {              /* quoted empty string -> empty string */
-    "\" \"", " "}, {            /* allow spaces to be not escaped */
-    "tüüt", "tüüt"},        /* allow special chars to be not escaped */
-        /* Expected FAILURES: */
+        "\"\"", ""}, {          /* quoted empty string -> empty string */
+        "\" \"", " "}, {        /* allow spaces to be not escaped */
+        "tüüt", "tüüt"},    /* allow special chars to be not escaped */
+    /* Expected FAILURES: */
     {
-    "\"\\0\"", NULL}, {         /* unfinished escaped character */
-    "\"", NULL}, {              /* solitary quote */
-    "\"\\380\"", NULL}, {       /* invalid octal sequence */
-    "\"\\344\\204\\062\"", NULL}, {
-      /* invalid utf8: wrong end byte */
-    "\"\\344\\204\"", NULL}     /* invalid utf8: wrong number of bytes */
+        "\"\\0\"", NULL}, {     /* unfinished escaped character */
+        "\"", NULL}, {          /* solitary quote */
+        "\"\\380\"", NULL}, {   /* invalid octal sequence */
+        "\"\\344\\204\\062\"", NULL}, {
+          /* invalid utf8: wrong end byte */
+        "\"\\344\\204\"", NULL} /* invalid utf8: wrong number of bytes */
   };
   guint i;
   GValue v = { 0, };
@@ -2806,7 +2806,8 @@ GST_START_TEST (test_compare_caps)
 {
   GValue value = { 0 }
   , value2 = {
-  0};
+    0
+  };
 
   g_value_init (&value, GST_TYPE_CAPS);
   g_value_init (&value2, GST_TYPE_CAPS);
@@ -3280,21 +3281,22 @@ GST_START_TEST (test_stepped_int_range_ops)
     const gchar *result;
   } ranges[] = {
     {
-    "[16, 4096, 16]", "inter", "[100, 200, 10]", "160"}, {
-    "[16, 4096, 16]", "inter", "[100, 200, 100]", NULL}, {
-    "[16, 4096, 16]", "inter", "[0, 512, 256]", "[256, 512, 256]"}, {
-    "[16, 32, 16]", "union", "[32, 96, 16]", "[16, 96, 16]"}, {
-    "[16, 32, 16]", "union", "[48, 96, 16]", "[16, 96, 16]"}, {
-    "[112, 192, 16]", "union", "[48, 96, 16]", "[48, 192, 16]"}, {
-    "[16, 32, 16]", "union", "[64, 96, 16]", NULL}, {
-    "[112, 192, 16]", "union", "[48, 96, 8]", NULL}, {
-    "[10, 20, 5]", "union", "10", "[10, 20, 5]"}, {
-    "[10, 20, 5]", "union", "20", "[10, 20, 5]"}, {
-    "[10, 20, 5]", "union", "15", "[10, 20, 5]"}, {
-    "[10, 20, 5]", "union", "5", "[5, 20, 5]"}, {
-    "[10, 20, 5]", "union", "12", NULL}, {
-    "[10, 20, 5]", "union", "30", NULL}, {
-  "[10, 20, 5]", "union", "25", "[10, 25, 5]"},};
+        "[16, 4096, 16]", "inter", "[100, 200, 10]", "160"}, {
+        "[16, 4096, 16]", "inter", "[100, 200, 100]", NULL}, {
+        "[16, 4096, 16]", "inter", "[0, 512, 256]", "[256, 512, 256]"}, {
+        "[16, 32, 16]", "union", "[32, 96, 16]", "[16, 96, 16]"}, {
+        "[16, 32, 16]", "union", "[48, 96, 16]", "[16, 96, 16]"}, {
+        "[112, 192, 16]", "union", "[48, 96, 16]", "[48, 192, 16]"}, {
+        "[16, 32, 16]", "union", "[64, 96, 16]", NULL}, {
+        "[112, 192, 16]", "union", "[48, 96, 8]", NULL}, {
+        "[10, 20, 5]", "union", "10", "[10, 20, 5]"}, {
+        "[10, 20, 5]", "union", "20", "[10, 20, 5]"}, {
+        "[10, 20, 5]", "union", "15", "[10, 20, 5]"}, {
+        "[10, 20, 5]", "union", "5", "[5, 20, 5]"}, {
+        "[10, 20, 5]", "union", "12", NULL}, {
+        "[10, 20, 5]", "union", "30", NULL}, {
+        "[10, 20, 5]", "union", "25", "[10, 25, 5]"},
+  };
 
   for (n = 0; n < G_N_ELEMENTS (ranges); ++n) {
     gchar *end = NULL;
@@ -3397,8 +3399,9 @@ GST_START_TEST (test_structure_single_ops)
     gboolean can_fixate;
   } single_struct[] = {
     {
-    "foo,bar=(int)1", TRUE, TRUE}, {
-  "foo,bar=(int)[1,2]", FALSE, TRUE},};
+        "foo,bar=(int)1", TRUE, TRUE}, {
+        "foo,bar=(int)[1,2]", FALSE, TRUE},
+  };
   gint i;
 
   for (i = 0; i < G_N_ELEMENTS (single_struct); i++) {

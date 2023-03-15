@@ -386,7 +386,8 @@ tcase_run_tfun_nofork (SRunner * sr, TCase * tc, TF * tfun, int i)
 {
   TestResult *tr;
   struct timespec ts_start = { 0, 0 }, ts_end = {
-  0, 0};
+    0, 0
+  };
 
   tr = tcase_run_checked_setup (sr, tc);
   if (tr == NULL) {
@@ -448,7 +449,8 @@ tcase_run_tfun_fork (SRunner * sr, TCase * tc, TF * tfun, int i)
   pid_t pid;
   int status = 0;
   struct timespec ts_start = { 0, 0 }, ts_end = {
-  0, 0};
+    0, 0
+  };
 
   timer_t timerid;
   struct itimerspec timer_spec;

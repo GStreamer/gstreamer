@@ -339,7 +339,8 @@ GST_START_TEST (test_internal_links)
   GstIteratorResult res;
   GValue val1 = { 0, }
   , val2 = {
-  0,};
+    0,
+  };
 
   tee = gst_check_setup_element ("tee");
 

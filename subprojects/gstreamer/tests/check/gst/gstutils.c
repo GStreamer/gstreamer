@@ -410,11 +410,11 @@ GST_START_TEST (test_parse_bin_from_description)
     const gchar *pad_names;
   } bin_tests[] = {
     {
-    "identity", "identity0/sink,identity0/src"}, {
-    "identity ! identity ! identity", "identity1/sink,identity3/src"}, {
-    "identity ! fakesink", "identity4/sink"}, {
-    "fakesrc ! identity", "identity5/src"}, {
-    "fakesrc ! fakesink", ""}
+        "identity", "identity0/sink,identity0/src"}, {
+        "identity ! identity ! identity", "identity1/sink,identity3/src"}, {
+        "identity ! fakesink", "identity4/sink"}, {
+        "fakesrc ! identity", "identity5/src"}, {
+        "fakesrc ! fakesink", ""}
   };
   gint i;
 
@@ -1904,15 +1904,15 @@ struct test_entry
   guint64 expect_denom;
 } times[] = {
   {
-  32, times1, 257154512360784, 120670380469753, 4052622913376634109,
-        4052799313904261962}, {
-  64, times1, 257359198881356, 120875054227405, 2011895759027682422,
-        2012014931360215503}, {
-  32, times2, 291705506022294, 162134297192792, 2319535707505209857,
-        2321009753483354451}, {
-  32, times3, 291922315691409, 162234934150296, 1370930728180888261,
-        4392719527011673456}, {
-  6, times4, 60, 100, 2, 1}
+        32, times1, 257154512360784, 120670380469753, 4052622913376634109,
+      4052799313904261962}, {
+        64, times1, 257359198881356, 120875054227405, 2011895759027682422,
+      2012014931360215503}, {
+        32, times2, 291705506022294, 162134297192792, 2319535707505209857,
+      2321009753483354451}, {
+        32, times3, 291922315691409, 162234934150296, 1370930728180888261,
+      4392719527011673456}, {
+      6, times4, 60, 100, 2, 1}
 };
 
 GST_START_TEST (test_regression)

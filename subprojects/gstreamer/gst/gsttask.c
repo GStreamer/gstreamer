@@ -162,7 +162,7 @@ gst_task_win32_load_library (void)
   }
 #endif
 
-  return ! !SetThreadDescriptionFunc;
+  return !!SetThreadDescriptionFunc;
 }
 
 static gboolean

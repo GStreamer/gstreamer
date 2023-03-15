@@ -1542,7 +1542,7 @@ gst_input_selector_set_property (GObject * object, guint prop_id,
 
       GST_INPUT_SELECTOR_LOCK (sel);
 
-      sel->active_sinkpad_from_user = ! !pad;
+      sel->active_sinkpad_from_user = !!pad;
 #if DEBUG_CACHED_BUFFERS
       gst_input_selector_debug_cached_buffers (sel);
 #endif

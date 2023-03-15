@@ -54,7 +54,7 @@
 #  ifndef local_wcslen_defined
 #   define local_wcslen_defined 1
 static size_t
-local_wcslen (const wchar_t * s)
+local_wcslen (const wchar_t *s)
 {
   const wchar_t *ptr;
 
@@ -261,7 +261,7 @@ printf_postprocess_args (char_directives * directives, arguments * arguments)
 }
 
 char *
-vasnprintf (char *resultbuf, size_t * lengthp, const char *format, va_list args)
+vasnprintf (char *resultbuf, size_t *lengthp, const char *format, va_list args)
 {
   char_directives d;
   arguments a;

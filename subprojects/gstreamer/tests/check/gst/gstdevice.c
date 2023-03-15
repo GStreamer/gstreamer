@@ -178,7 +178,6 @@ GST_DEVICE_PROVIDER_REGISTER_DECLARE (testdeviceprovider);
 
 GST_DEVICE_PROVIDER_REGISTER_DEFINE (testdeviceprovider, "testdeviceprovider",
     1, gst_test_device_provider_get_type ())
-
      static void register_test_device_provider (void)
 {
   gst_device_provider_register (NULL, "testdeviceprovider", 1,

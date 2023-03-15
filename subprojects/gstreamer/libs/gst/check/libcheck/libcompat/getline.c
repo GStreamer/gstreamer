@@ -25,7 +25,7 @@
 #define DELIMITER '\n'
 
 ssize_t
-getline (char **lineptr, size_t * n, FILE * stream)
+getline (char **lineptr, size_t *n, FILE * stream)
 {
   ssize_t written = 0;
   int character;

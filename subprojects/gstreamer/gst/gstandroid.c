@@ -56,7 +56,7 @@ load_real_signal (gpointer data)
 }
 
 __sighandler_t bsd_signal (int signum, __sighandler_t handler)
-    __attribute__ ((weak));
+    __attribute__((weak));
 __sighandler_t
 bsd_signal (int signum, __sighandler_t handler)
 {

@@ -28,7 +28,7 @@
 #include <stdarg.h>
 
 char *
-asnprintf (char *resultbuf, size_t * lengthp, const char *format, ...)
+asnprintf (char *resultbuf, size_t *lengthp, const char *format, ...)
 {
   va_list args;
   char *result;

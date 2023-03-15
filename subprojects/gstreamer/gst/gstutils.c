@@ -4687,7 +4687,7 @@ gboolean
 gst_type_is_plugin_api (GType type, GstPluginAPIFlags * flags)
 {
   gboolean ret =
-      ! !GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API)));
+      !!GPOINTER_TO_INT (g_type_get_qdata (type, GST_QUARK (PLUGIN_API)));
 
   if (ret && flags) {
     *flags =
