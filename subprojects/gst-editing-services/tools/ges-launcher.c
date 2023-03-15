@@ -278,16 +278,17 @@ print_keyboard_help (void)
     const gchar *key_help;
   } key_controls[] = {
     {
-    "space", "pause/unpause"}, {
-    "q or ESC", "quit"}, {
-    "\342\206\222", "seek forward"}, {
-    "\342\206\220", "seek backward"}, {
-    "+", "increase playback rate"}, {
-    "-", "decrease playback rate"}, {
-    "t", "enable/disable trick modes"}, {
-    "s", "change subtitle track"}, {
-    "0", "seek to beginning"}, {
-  "k", "show keyboard shortcuts"},};
+        "space", "pause/unpause"}, {
+        "q or ESC", "quit"}, {
+        "\342\206\222", "seek forward"}, {
+        "\342\206\220", "seek backward"}, {
+        "+", "increase playback rate"}, {
+        "-", "decrease playback rate"}, {
+        "t", "enable/disable trick modes"}, {
+        "s", "change subtitle track"}, {
+        "0", "seek to beginning"}, {
+        "k", "show keyboard shortcuts"},
+  };
   guint i, chars_to_pad, desc_len, max_desc_len = 0;
 
   gst_print ("\n\n%s\n\n", "Interactive mode - keyboard controls:");

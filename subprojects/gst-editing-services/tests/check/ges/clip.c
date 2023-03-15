@@ -2065,18 +2065,24 @@ GST_START_TEST (test_can_add_effect)
   uri = ges_test_get_audio_video_uri ();
 
   clips[0] = (struct CanAddEffectData) {
-  GES_CLIP (ges_test_clip_new ()), TRUE};
+    GES_CLIP (ges_test_clip_new ()), TRUE
+  };
   clips[1] = (struct CanAddEffectData) {
-  GES_CLIP (ges_uri_clip_new (uri)), TRUE};
+    GES_CLIP (ges_uri_clip_new (uri)), TRUE
+  };
   clips[2] = (struct CanAddEffectData) {
-  GES_CLIP (ges_title_clip_new ()), TRUE};
+    GES_CLIP (ges_title_clip_new ()), TRUE
+  };
   clips[3] = (struct CanAddEffectData) {
-  GES_CLIP (ges_effect_clip_new ("agingtv", "audioecho")), TRUE};
+    GES_CLIP (ges_effect_clip_new ("agingtv", "audioecho")), TRUE
+  };
   clips[4] = (struct CanAddEffectData) {
-  GES_CLIP (ges_transition_clip_new
-        (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)), FALSE};
+    GES_CLIP (ges_transition_clip_new
+        (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)), FALSE
+  };
   clips[5] = (struct CanAddEffectData) {
-  GES_CLIP (ges_text_overlay_clip_new ()), FALSE};
+    GES_CLIP (ges_text_overlay_clip_new ()), FALSE
+  };
 
   g_free (uri);
 
@@ -2435,8 +2441,8 @@ GST_START_TEST (test_children_max_duration)
     GstClockTime max_duration;
   } clips[] = {
     {
-    NULL, GST_SECOND}, {
-    NULL, GST_CLOCK_TIME_NONE}
+        NULL, GST_SECOND}, {
+        NULL, GST_CLOCK_TIME_NONE}
   };
 
   ges_init ();

@@ -242,7 +242,7 @@ _timeline_track_added_cb (GESTimeline * timeline, GESTrack * track,
     GESPipeline * pipeline)
 {
   track_disable_last_gap (track,
-      ! !(pipeline->priv->mode & (GES_PIPELINE_MODE_RENDER |
+      !!(pipeline->priv->mode & (GES_PIPELINE_MODE_RENDER |
               GES_PIPELINE_MODE_SMART_RENDER)));
   _link_track (pipeline, track);
 }
@@ -1208,7 +1208,7 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
 
   if (pipeline->priv->timeline) {
     gboolean disabled =
-        ! !(mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER));
+        !!(mode & (GES_PIPELINE_MODE_RENDER | GES_PIPELINE_MODE_SMART_RENDER));
 
     for (tmp = pipeline->priv->timeline->tracks; tmp; tmp = tmp->next)
       track_disable_last_gap (GES_TRACK (tmp->data), disabled);

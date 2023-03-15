@@ -121,7 +121,7 @@ _set_ghost_pad_target (GESSource * self, GstPad * srcpad, GstElement * element)
   GstPadLinkReturn link_return;
   GESSourcePrivate *priv = self->priv;
   GESSourceClass *source_klass = GES_SOURCE_GET_CLASS (self);
-  gboolean use_converter = ! !priv->first_converter;
+  gboolean use_converter = !!priv->first_converter;
 
   if (source_klass->select_pad && !source_klass->select_pad (self, srcpad)) {
     GST_INFO_OBJECT (self, "Ignoring pad %" GST_PTR_FORMAT, srcpad);
