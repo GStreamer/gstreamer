@@ -166,26 +166,26 @@ static const struct
   const Tag element_tag;
 } tag_map[] = {
   {
-  "cc:License", "rdf:about", TAG_CC_LICENSE}, {
-  "cc:deprecatedOn", "rdf:datatype", TAG_CC_DEPRECATED_ON}, {
-  "cc:jurisdiction", "rdf:resource", TAG_CC_JURISDICTION}, {
-  "cc:legalcode", "rdf:resource", TAG_CC_LEGALCODE}, {
-  "cc:prohibits", "rdf:resource", TAG_CC_PROHIBITS}, {
-  "cc:requires", "rdf:resource", TAG_CC_REQUIRES}, {
-  "cc:permits", "rdf:resource", TAG_CC_PERMITS}, {
-  "dc:creator", "rdf:resource", TAG_DC_CREATOR}, {
-  "dc:source", "rdf:resource", TAG_DC_SOURCE}, {
-  "dc:title", "xml:lang", TAG_DC_TITLE}, {
-  "dc:description", "xml:lang", TAG_DC_DESCRIPTION}, {
-  "dcq:hasVersion", NULL, TAG_DCQ_HAS_VERSION}, {
-  "dcq:isReplacedBy", "rdf:resource", TAG_DCQ_IS_REPLACED_BY}, {
-  "rdf:RDF", NULL, TAG_RDF_RDF}, {
-  "rdf:Description", "rdf:about", TAG_RDF_DESCRIPTION},
-      /* these three are just for by-nc-nd_2.0_jp_.rdf */
+      "cc:License", "rdf:about", TAG_CC_LICENSE}, {
+      "cc:deprecatedOn", "rdf:datatype", TAG_CC_DEPRECATED_ON}, {
+      "cc:jurisdiction", "rdf:resource", TAG_CC_JURISDICTION}, {
+      "cc:legalcode", "rdf:resource", TAG_CC_LEGALCODE}, {
+      "cc:prohibits", "rdf:resource", TAG_CC_PROHIBITS}, {
+      "cc:requires", "rdf:resource", TAG_CC_REQUIRES}, {
+      "cc:permits", "rdf:resource", TAG_CC_PERMITS}, {
+      "dc:creator", "rdf:resource", TAG_DC_CREATOR}, {
+      "dc:source", "rdf:resource", TAG_DC_SOURCE}, {
+      "dc:title", "xml:lang", TAG_DC_TITLE}, {
+      "dc:description", "xml:lang", TAG_DC_DESCRIPTION}, {
+      "dcq:hasVersion", NULL, TAG_DCQ_HAS_VERSION}, {
+      "dcq:isReplacedBy", "rdf:resource", TAG_DCQ_IS_REPLACED_BY}, {
+      "rdf:RDF", NULL, TAG_RDF_RDF}, {
+      "rdf:Description", "rdf:about", TAG_RDF_DESCRIPTION},
+  /* these three are just for by-nc-nd_2.0_jp_.rdf */
   {
-  "dc:isBasedOn", "rdf:resource", TAG_DC_SOURCE}, {
-  "dc:hasVersion", NULL, TAG_DCQ_HAS_VERSION}, {
-  "dc:isReplacedBy", "rdf:resource", TAG_DCQ_IS_REPLACED_BY}
+      "dc:isBasedOn", "rdf:resource", TAG_DC_SOURCE}, {
+      "dc:hasVersion", NULL, TAG_DCQ_HAS_VERSION}, {
+      "dc:isReplacedBy", "rdf:resource", TAG_DCQ_IS_REPLACED_BY}
 };
 
 static void

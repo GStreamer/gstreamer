@@ -358,7 +358,7 @@ kf_factor (int n, int *facbuf)
  * It can be freed with free(), rather than a kiss_fft_s32-specific function.
  * */
 kiss_fft_s32_cfg
-kiss_fft_s32_alloc (int nfft, int inverse_fft, void *mem, size_t * lenmem)
+kiss_fft_s32_alloc (int nfft, int inverse_fft, void *mem, size_t *lenmem)
 {
   kiss_fft_s32_cfg st = NULL;
   size_t memneeded = sizeof (struct kiss_fft_s32_state)

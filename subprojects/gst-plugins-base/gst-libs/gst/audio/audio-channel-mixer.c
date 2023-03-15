@@ -146,21 +146,21 @@ gst_audio_channel_mixer_fill_compatible (gfloat ** matrix, gint in_channels,
     GstAudioChannelPosition pos2[1];
   } conv[] = {
     /* front: mono <-> stereo */
-    { {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    {{
+                GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
-    GST_AUDIO_CHANNEL_POSITION_MONO}},
-        /* front center: 2 <-> 1 */
-    { {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_MONO}},
+    /* front center: 2 <-> 1 */
+    {{
+                GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
             GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
-    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}},
-        /* rear: 2 <-> 1 */
-    { {
-    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}},
+    /* rear: 2 <-> 1 */
+    {{
+                GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
             GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
-    GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}}, { {
-    GST_AUDIO_CHANNEL_POSITION_INVALID}}
+            GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}}, {{
+            GST_AUDIO_CHANNEL_POSITION_INVALID}}
   };
   gint c;
 

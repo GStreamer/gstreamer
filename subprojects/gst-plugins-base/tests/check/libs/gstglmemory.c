@@ -64,10 +64,11 @@ static const struct
   gsize size;
 } formats[] = {
   {
-  GST_VIDEO_FORMAT_RGBA, 1, 1, 0, rgba_pixel, 4}, {
-  GST_VIDEO_FORMAT_RGB, 1, 1, 0, rgba_pixel, 3}, {
-  GST_VIDEO_FORMAT_YUY2, 1, 1, 0, rgba_pixel, 1}, {
-GST_VIDEO_FORMAT_I420, 1, 1, 0, rgba_pixel, 1},};
+      GST_VIDEO_FORMAT_RGBA, 1, 1, 0, rgba_pixel, 4}, {
+      GST_VIDEO_FORMAT_RGB, 1, 1, 0, rgba_pixel, 3}, {
+      GST_VIDEO_FORMAT_YUY2, 1, 1, 0, rgba_pixel, 1}, {
+      GST_VIDEO_FORMAT_I420, 1, 1, 0, rgba_pixel, 1},
+};
 
 GST_START_TEST (test_allocator_alloc)
 {

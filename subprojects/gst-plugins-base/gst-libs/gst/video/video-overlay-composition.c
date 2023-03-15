@@ -1053,7 +1053,7 @@ gst_video_overlay_rectangle_apply_global_alpha (GstVideoOverlayRectangle * rect,
     for (j = 0; j < w; j++) {
       guint8 na = (guint8) (*src * global_alpha);
 
-      if (! !(rect->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)) {
+      if (!!(rect->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA)) {
         dst[argb_r] =
             (guint8) ((double) (dst[argb_r] * 255) / (double) dst[argb_a]) *
             na / 255;
@@ -1201,11 +1201,11 @@ gst_video_overlay_rectangle_get_pixels_raw_internal (GstVideoOverlayRectangle *
   format = GST_VIDEO_INFO_FORMAT (&rectangle->info);
 
   apply_global_alpha =
-      (! !(rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
+      (!!(rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
       && !(flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA));
   revert_global_alpha =
-      (! !(rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
-      && ! !(flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA));
+      (!!(rectangle->flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA)
+      && !!(flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_GLOBAL_ALPHA));
 
   /* This assumes we don't need to adjust the format */
   if (wanted_width == width &&

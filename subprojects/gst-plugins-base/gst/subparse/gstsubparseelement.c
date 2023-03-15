@@ -409,7 +409,6 @@ gst_sub_parse_type_find (GstTypeFind * tf, gpointer private)
 GST_TYPE_FIND_REGISTER_DEFINE (subparse, "subparse_typefind", GST_RANK_MARGINAL,
     gst_sub_parse_type_find, "srt,sub,mpsub,mdvd,smi,txt,dks,vtt", SUB_CAPS,
     NULL, NULL)
-
     gboolean
 sub_parse_element_init (GstPlugin * plugin)
 {

@@ -750,8 +750,9 @@ _get_silent_property (GstElement * element, gboolean * invert)
     const gchar *name;
     gboolean invert;
   } properties[] = { {
-  "silent", FALSE}, {
-  "enable", TRUE}};
+      "silent", FALSE}, {
+      "enable", TRUE}
+  };
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (properties); i++) {

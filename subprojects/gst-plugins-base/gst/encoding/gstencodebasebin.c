@@ -1333,7 +1333,7 @@ setup_smart_encoder (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
       gst_caps_make_writable (gst_encoding_profile_get_format (sprof));
   GstCaps *tmpcaps = gst_pad_query_caps (srcpad, NULL);
   const gboolean native_video =
-      ! !(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
+      !!(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
   GstStructure *structure = gst_caps_get_structure (format, 0);
 
   /* Check if stream format is compatible */
@@ -1755,7 +1755,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
   /* FIXME : Once we have properties for specific converters, use those */
   if (GST_IS_ENCODING_VIDEO_PROFILE (sprof)) {
     const gboolean native_video =
-        ! !(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
+        !!(ebin->flags & GST_ENCODEBIN_FLAG_NO_VIDEO_CONVERSION);
     GstElement *cspace = NULL, *scale, *vrate, *cspace2 = NULL;
 
     GST_LOG ("Adding conversion elements for video stream");

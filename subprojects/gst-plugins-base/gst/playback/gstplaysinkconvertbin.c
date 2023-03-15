@@ -117,7 +117,6 @@ gst_play_sink_convert_bin_add_identity (GstPlaySinkConvertBin * self)
         (_("Missing element '%s' - check your GStreamer installation."),
             "identity"), (self->audio ?
             "audio rendering might fail" : "video rendering might fail")
-
         );
   } else {
     g_object_set (self->identity, "silent", TRUE, "signal-handoffs", FALSE,

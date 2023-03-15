@@ -1045,8 +1045,8 @@ flac_type_find (GstTypeFind * tf, gpointer unused)
     return;
   }
 
-/* disabled because it happily typefinds /dev/urandom as audio/x-flac, and
- * because I yet have to see header-less flac in the wild */
+  /* disabled because it happily typefinds /dev/urandom as audio/x-flac, and
+   * because I yet have to see header-less flac in the wild */
 #if 0
   /* flac without headers (subset format) */
   /* 64K should be enough */
@@ -4862,24 +4862,24 @@ ogganx_type_find (GstTypeFind * tf, gpointer private)
     GstOggStreamType stream_type;
   } markers[] = {
     {
-    "\001vorbis", 7, OGG_AUDIO}, {
-    "\200theora", 7, OGG_VIDEO}, {
-    "fLaC", 4, OGG_AUDIO}, {
-    "\177FLAC", 5, OGG_AUDIO}, {
-    "Speex", 5, OGG_AUDIO}, {
-    "CMML\0\0\0\0", 8, OGG_OTHER}, {
-    "PCM     ", 8, OGG_AUDIO}, {
-    "Annodex", 7, OGG_ANNODEX}, {
-    "fishead", 7, OGG_SKELETON}, {
-    "AnxData", 7, OGG_ANNODEX}, {
-    "CELT    ", 8, OGG_AUDIO}, {
-    "\200kate\0\0\0", 8, OGG_KATE}, {
-    "BBCD\0", 5, OGG_VIDEO}, {
-    "OVP80\1\1", 7, OGG_VIDEO}, {
-    "OpusHead", 8, OGG_AUDIO}, {
-    "\001audio\0\0\0", 9, OGG_AUDIO}, {
-    "\001video\0\0\0", 9, OGG_VIDEO}, {
-    "\001text\0\0\0", 9, OGG_OTHER}
+        "\001vorbis", 7, OGG_AUDIO}, {
+        "\200theora", 7, OGG_VIDEO}, {
+        "fLaC", 4, OGG_AUDIO}, {
+        "\177FLAC", 5, OGG_AUDIO}, {
+        "Speex", 5, OGG_AUDIO}, {
+        "CMML\0\0\0\0", 8, OGG_OTHER}, {
+        "PCM     ", 8, OGG_AUDIO}, {
+        "Annodex", 7, OGG_ANNODEX}, {
+        "fishead", 7, OGG_SKELETON}, {
+        "AnxData", 7, OGG_ANNODEX}, {
+        "CELT    ", 8, OGG_AUDIO}, {
+        "\200kate\0\0\0", 8, OGG_KATE}, {
+        "BBCD\0", 5, OGG_VIDEO}, {
+        "OVP80\1\1", 7, OGG_VIDEO}, {
+        "OpusHead", 8, OGG_AUDIO}, {
+        "\001audio\0\0\0", 9, OGG_AUDIO}, {
+        "\001video\0\0\0", 9, OGG_VIDEO}, {
+        "\001text\0\0\0", 9, OGG_OTHER}
   };
 
   while (c.offset < 4096 && data_scan_ctx_ensure_data (tf, &c, 64)) {

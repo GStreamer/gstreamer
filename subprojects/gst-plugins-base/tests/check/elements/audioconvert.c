@@ -1586,11 +1586,12 @@ GST_START_TEST (test_preserve_width)
     int width;
     const gchar *outf;
   } test_formats[] = { {
-  8, "S8"}, {
-  16, "S16LE"}, {
-  24, "S24LE"}, {
-  32, "S32LE"}, {
-  0, NULL}};
+      8, "S8"}, {
+      16, "S16LE"}, {
+      24, "S24LE"}, {
+      32, "S32LE"}, {
+      0, NULL}
+  };
 
   gint i;
   GstStructure *structure;

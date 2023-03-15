@@ -128,7 +128,7 @@ gst_gl_display_wayland_new (const gchar * name)
  * Returns: (transfer full): a new #GstGLDisplayWayland
  */
 GstGLDisplayWayland *
-gst_gl_display_wayland_new_with_display (struct wl_display * display)
+gst_gl_display_wayland_new_with_display (struct wl_display *display)
 {
   GstGLDisplayWayland *ret;
 

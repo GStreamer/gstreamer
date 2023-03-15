@@ -1183,15 +1183,15 @@ GST_START_TEST (test_xmp_parsing)
     gint result_test;
   } test_data[] = {
     {
-    "", -1, -1}, {
-    "<rdf:Description rdf:about=\"\" />", 0, -1}, {
-    "<rdf:Description rdf:about=\"\"></rdf:Description>", 0, -1}, {
-    "<rdf:Description    rdf:about=\"\"    ></rdf:Description>", 0, -1}, {
-    "<rdf:Description rdf:about=\"\"><dc:description>test</dc:description></rdf:Description>",
-          1, 0}, {
-    "<rdf:Description rdf:about=\"\" dc:description=\"test\"></rdf:Description>",
-          1, 0}, {
-    NULL, -1, -1}
+        "", -1, -1}, {
+        "<rdf:Description rdf:about=\"\" />", 0, -1}, {
+        "<rdf:Description rdf:about=\"\"></rdf:Description>", 0, -1}, {
+        "<rdf:Description    rdf:about=\"\"    ></rdf:Description>", 0, -1}, {
+          "<rdf:Description rdf:about=\"\"><dc:description>test</dc:description></rdf:Description>",
+        1, 0}, {
+          "<rdf:Description rdf:about=\"\" dc:description=\"test\"></rdf:Description>",
+        1, 0}, {
+        NULL, -1, -1}
   };
 
   /* test data */

@@ -239,26 +239,27 @@ GST_START_TEST (test_opus_encode_properties)
     int value;
   } param_changes[steps] = {
     {
-    "frame-size", 40}, {
-    "inband-fec", 1}, {
-    "complexity", 5}, {
-    "bandwidth", 1104}, {
-    "frame-size", 2}, {
-    "max-payload-size", 80}, {
-    "frame-size", 60}, {
-    "max-payload-size", 900}, {
-    "complexity", 1}, {
-    "bitrate", 30000}, {
-    "frame-size", 10}, {
-    "bitrate", 300000}, {
-    "inband-fec", 0}, {
-    "frame-size", 5}, {
-    "bandwidth", 1101}, {
-    "frame-size", 10}, {
-    "bitrate", 500000}, {
-    "frame-size", 5}, {
-    "bitrate", 80000}, {
-  "complexity", 8},};
+        "frame-size", 40}, {
+        "inband-fec", 1}, {
+        "complexity", 5}, {
+        "bandwidth", 1104}, {
+        "frame-size", 2}, {
+        "max-payload-size", 80}, {
+        "frame-size", 60}, {
+        "max-payload-size", 900}, {
+        "complexity", 1}, {
+        "bitrate", 30000}, {
+        "frame-size", 10}, {
+        "bitrate", 300000}, {
+        "inband-fec", 0}, {
+        "frame-size", 5}, {
+        "bandwidth", 1101}, {
+        "frame-size", 10}, {
+        "bitrate", 500000}, {
+        "frame-size", 5}, {
+        "bitrate", 80000}, {
+        "complexity", 8},
+  };
 
   opusenc = setup_opusenc ();
 

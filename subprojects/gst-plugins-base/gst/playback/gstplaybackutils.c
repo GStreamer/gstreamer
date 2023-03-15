@@ -75,7 +75,7 @@ gst_playback_utils_get_n_common_capsfeatures (GstElementFactory * fact1,
       gst_static_caps_get (&raw_video_caps);
   GstStructure *raw_struct = gst_caps_get_structure (raw_caps, 0);
   gboolean native_raw =
-      (isaudioelement ? ! !(flags & GST_PLAY_FLAG_NATIVE_AUDIO) : ! !(flags &
+      (isaudioelement ? !!(flags & GST_PLAY_FLAG_NATIVE_AUDIO) : !!(flags &
           GST_PLAY_FLAG_NATIVE_VIDEO));
 
   fact1_tmpl_caps = get_template_caps (fact1, GST_PAD_SRC);

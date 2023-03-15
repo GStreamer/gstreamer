@@ -1466,7 +1466,7 @@ gst_video_scaler_2d (GstVideoScaler * hscale, GstVideoScaler * vscale,
           &bits))
     goto no_func;
 
-  interlaced = vscale && ! !(vscale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED);
+  interlaced = vscale && !!(vscale->flags & GST_VIDEO_SCALER_FLAG_INTERLACED);
 
 #define LINE(s,ss,i)  ((guint8 *)(s) + ((i) * (ss)))
 #define TMP_LINE(s,i) ((guint8 *)((s)->tmpline1) + (i) * (sizeof (gint32) * width * n_elems))

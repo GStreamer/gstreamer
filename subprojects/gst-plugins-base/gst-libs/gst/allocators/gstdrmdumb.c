@@ -607,7 +607,7 @@ check_cap (GstDRMDumbAllocator * alloc)
   if (ret)
     GST_WARNING_OBJECT (alloc, "could not get dumb buffer capability");
 
-  return ! !(has_dumb);
+  return !!(has_dumb);
 }
 #endif
 
@@ -747,7 +747,7 @@ gst_drm_dumb_allocator_has_prime_export (GstAllocator * base_alloc)
   if (ret)
     GST_WARNING_OBJECT (alloc, "could not get prime capability");
 
-  return ! !(has_prime & DRM_PRIME_CAP_EXPORT);
+  return !!(has_prime & DRM_PRIME_CAP_EXPORT);
 
 #else
   return FALSE;

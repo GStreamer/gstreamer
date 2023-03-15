@@ -244,7 +244,8 @@ gst_gl_filter_fixate_caps (GstBaseTransform * bt,
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
   GValue fpar = { 0, }, tpar = {
-  0,};
+    0,
+  };
 
   othercaps = gst_caps_make_writable (othercaps);
   othercaps = gst_caps_truncate (othercaps);

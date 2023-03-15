@@ -499,9 +499,9 @@ theora_enc_get_supported_formats (void)
     const char *fourcc;
   } formats[] = {
     {
-    TH_PF_420, "I420"}, {
-    TH_PF_422, "Y42B"}, {
-    TH_PF_444, "Y444"}
+        TH_PF_420, "I420"}, {
+        TH_PF_422, "Y42B"}, {
+        TH_PF_444, "Y444"}
   };
   GString *string = NULL;
   guint i;
