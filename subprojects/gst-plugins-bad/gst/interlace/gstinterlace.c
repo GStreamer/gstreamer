@@ -794,8 +794,10 @@ gst_interlace_caps_double_framerate (GstCaps * caps, gboolean half,
     } else if (G_VALUE_TYPE (val) == GST_TYPE_FRACTION_RANGE) {
       const GValue *min, *max;
       GValue nrange = { 0, }, nmin = {
-      0,}, nmax = {
-      0,};
+        0,
+      }, nmax = {
+        0,
+      };
       gint n, d;
 
       g_value_init (&nrange, GST_TYPE_FRACTION_RANGE);

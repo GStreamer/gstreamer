@@ -832,13 +832,13 @@ log_state (GstDtlsConnection * self, const gchar * str)
   GstDtlsConnectionPrivate *priv = self->priv;
   guint states = 0;
 
-  states |= (! !SSL_is_init_finished (priv->ssl) << 0);
-  states |= (! !SSL_in_init (priv->ssl) << 4);
-  states |= (! !SSL_in_before (priv->ssl) << 8);
-  states |= (! !SSL_in_connect_init (priv->ssl) << 12);
-  states |= (! !SSL_in_accept_init (priv->ssl) << 16);
-  states |= (! !SSL_want_write (priv->ssl) << 20);
-  states |= (! !SSL_want_read (priv->ssl) << 24);
+  states |= (!!SSL_is_init_finished (priv->ssl) << 0);
+  states |= (!!SSL_in_init (priv->ssl) << 4);
+  states |= (!!SSL_in_before (priv->ssl) << 8);
+  states |= (!!SSL_in_connect_init (priv->ssl) << 12);
+  states |= (!!SSL_in_accept_init (priv->ssl) << 16);
+  states |= (!!SSL_want_write (priv->ssl) << 20);
+  states |= (!!SSL_want_read (priv->ssl) << 24);
 
 #if OPENSSL_VERSION_NUMBER < 0x10100001L
   GST_LOG_OBJECT (self, "%s: role=%s buf=(%d,%p:%d/%d) %x|%x %s",

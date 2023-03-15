@@ -40,7 +40,7 @@ gst_is_wl_display_handle_need_context_message (GstMessage * msg)
 }
 
 GstContext *
-gst_wl_display_handle_context_new (struct wl_display * display)
+gst_wl_display_handle_context_new (struct wl_display *display)
 {
   GstContext *context =
       gst_context_new (GST_WL_DISPLAY_HANDLE_CONTEXT_TYPE, TRUE);

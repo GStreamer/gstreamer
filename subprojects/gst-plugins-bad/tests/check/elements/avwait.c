@@ -194,7 +194,7 @@ push_vbuffers (gpointer data)
     fail_unless (gst_pad_chain (pad, buf) == GST_FLOW_OK);
 
     if (timestamp == 2 * GST_SECOND && e->switch_after_2s != DO_NOT_SWITCH) {
-      g_object_set (e->element, "recording", ! !e->switch_after_2s, NULL);
+      g_object_set (e->element, "recording", !!e->switch_after_2s, NULL);
     }
   }
   gst_pad_send_event (pad, gst_event_new_eos ());

@@ -346,7 +346,7 @@ scan_codecs (GstPlugin * plugin)
         GstAmcCodecInfo *tmp = l->data;
 
         if (strcmp (tmp->name, gst_codec_info->name) == 0
-            && ! !tmp->is_encoder == ! !gst_codec_info->is_encoder) {
+            && !!tmp->is_encoder == !!gst_codec_info->is_encoder) {
           gint m = tmp->n_supported_types, n;
 
           GST_LOG ("Successfully scanned codec '%s', appending to existing",
@@ -509,20 +509,21 @@ static const struct
   GstVideoFormat video_format;
 } color_format_mapping_table[] = {
   {
-  COLOR_FormatYUV420Planar, GST_VIDEO_FORMAT_I420}, {
-  COLOR_FormatYUV420Flexible, GST_VIDEO_FORMAT_I420}, {
-  COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_TI_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_INTEL_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_INTEL_FormatYUV420PackedSemiPlanar_Tiled, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_QCOM_FormatYVU420SemiPlanar32m, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_OMX_SEC_FormatNV12Tiled, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_FormatYCbYCr, GST_VIDEO_FORMAT_YUY2}, {
-  COLOR_FormatYV12, GST_VIDEO_FORMAT_YV12}
+      COLOR_FormatYUV420Planar, GST_VIDEO_FORMAT_I420}, {
+      COLOR_FormatYUV420Flexible, GST_VIDEO_FORMAT_I420}, {
+      COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_TI_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_INTEL_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_INTEL_FormatYUV420PackedSemiPlanar_Tiled, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
+        COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka,
+      GST_VIDEO_FORMAT_NV12}, {
+      COLOR_QCOM_FormatYVU420SemiPlanar32m, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_QCOM_FormatYVU420SemiPlanar32mMultiView, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_OMX_SEC_FormatNV12Tiled, GST_VIDEO_FORMAT_NV12}, {
+      COLOR_FormatYCbYCr, GST_VIDEO_FORMAT_YUY2}, {
+      COLOR_FormatYV12, GST_VIDEO_FORMAT_YV12}
 };
 
 static gboolean
@@ -1091,8 +1092,8 @@ static const struct
   const gchar *str;
 } hevc_profile_mapping_table[] = {
   {
-  HEVCProfileMain, "main"}, {
-  HEVCProfileMain10, "main-10"}
+      HEVCProfileMain, "main"}, {
+      HEVCProfileMain10, "main-10"}
 };
 
 const gchar *
@@ -1131,32 +1132,32 @@ static const struct
   const gchar *level_str;
 } hevc_tier_level_mapping_table[] = {
   {
-  HEVCMainTierLevel1, "main", "1"}, {
-  HEVCMainTierLevel2, "main", "2"}, {
-  HEVCMainTierLevel21, "main", "2.1"}, {
-  HEVCMainTierLevel3, "main", "3"}, {
-  HEVCMainTierLevel31, "main", "3.1"}, {
-  HEVCMainTierLevel4, "main", "4"}, {
-  HEVCMainTierLevel41, "main", "4.1"}, {
-  HEVCMainTierLevel5, "main", "5"}, {
-  HEVCMainTierLevel51, "main", "5.1"}, {
-  HEVCMainTierLevel52, "main", "5.2"}, {
-  HEVCMainTierLevel6, "main", "6"}, {
-  HEVCMainTierLevel61, "main", "6.1"}, {
-  HEVCMainTierLevel62, "main", "6.2"}, {
-  HEVCHighTierLevel1, "high", "1"}, {
-  HEVCHighTierLevel2, "high", "2"}, {
-  HEVCHighTierLevel21, "high", "2.1"}, {
-  HEVCHighTierLevel3, "high", "3"}, {
-  HEVCHighTierLevel31, "high", "3.1"}, {
-  HEVCHighTierLevel4, "high", "4"}, {
-  HEVCHighTierLevel41, "high", "4.1"}, {
-  HEVCHighTierLevel5, "high", "5"}, {
-  HEVCHighTierLevel51, "high", "5.1"}, {
-  HEVCHighTierLevel52, "high", "5.2"}, {
-  HEVCHighTierLevel6, "high", "6"}, {
-  HEVCHighTierLevel61, "high", "6.1"}, {
-  HEVCHighTierLevel62, "high", "6.2"}
+      HEVCMainTierLevel1, "main", "1"}, {
+      HEVCMainTierLevel2, "main", "2"}, {
+      HEVCMainTierLevel21, "main", "2.1"}, {
+      HEVCMainTierLevel3, "main", "3"}, {
+      HEVCMainTierLevel31, "main", "3.1"}, {
+      HEVCMainTierLevel4, "main", "4"}, {
+      HEVCMainTierLevel41, "main", "4.1"}, {
+      HEVCMainTierLevel5, "main", "5"}, {
+      HEVCMainTierLevel51, "main", "5.1"}, {
+      HEVCMainTierLevel52, "main", "5.2"}, {
+      HEVCMainTierLevel6, "main", "6"}, {
+      HEVCMainTierLevel61, "main", "6.1"}, {
+      HEVCMainTierLevel62, "main", "6.2"}, {
+      HEVCHighTierLevel1, "high", "1"}, {
+      HEVCHighTierLevel2, "high", "2"}, {
+      HEVCHighTierLevel21, "high", "2.1"}, {
+      HEVCHighTierLevel3, "high", "3"}, {
+      HEVCHighTierLevel31, "high", "3.1"}, {
+      HEVCHighTierLevel4, "high", "4"}, {
+      HEVCHighTierLevel41, "high", "4.1"}, {
+      HEVCHighTierLevel5, "high", "5"}, {
+      HEVCHighTierLevel51, "high", "5.1"}, {
+      HEVCHighTierLevel52, "high", "5.2"}, {
+      HEVCHighTierLevel6, "high", "6"}, {
+      HEVCHighTierLevel61, "high", "6.1"}, {
+      HEVCHighTierLevel62, "high", "6.2"}
 };
 
 const gchar *
@@ -1196,13 +1197,13 @@ static const struct
   const gchar *alt_str;
 } avc_profile_mapping_table[] = {
   {
-  AVCProfileBaseline, "baseline", "constrained-baseline"}, {
-  AVCProfileMain, "main", NULL}, {
-  AVCProfileExtended, "extended", NULL}, {
-  AVCProfileHigh, "high"}, {
-  AVCProfileHigh10, "high-10", "high-10-intra"}, {
-  AVCProfileHigh422, "high-4:2:2", "high-4:2:2-intra"}, {
-  AVCProfileHigh444, "high-4:4:4", "high-4:4:4-intra"}
+      AVCProfileBaseline, "baseline", "constrained-baseline"}, {
+      AVCProfileMain, "main", NULL}, {
+      AVCProfileExtended, "extended", NULL}, {
+      AVCProfileHigh, "high"}, {
+      AVCProfileHigh10, "high-10", "high-10-intra"}, {
+      AVCProfileHigh422, "high-4:2:2", "high-4:2:2-intra"}, {
+      AVCProfileHigh444, "high-4:4:4", "high-4:4:4-intra"}
 };
 
 const gchar *
@@ -1244,22 +1245,22 @@ static const struct
   const gchar *str;
 } avc_level_mapping_table[] = {
   {
-  AVCLevel1, "1"}, {
-  AVCLevel1b, "1b"}, {
-  AVCLevel11, "1.1"}, {
-  AVCLevel12, "1.2"}, {
-  AVCLevel13, "1.3"}, {
-  AVCLevel2, "2"}, {
-  AVCLevel21, "2.1"}, {
-  AVCLevel22, "2.2"}, {
-  AVCLevel3, "3"}, {
-  AVCLevel31, "3.1"}, {
-  AVCLevel32, "3.2"}, {
-  AVCLevel4, "4"}, {
-  AVCLevel41, "4.1"}, {
-  AVCLevel42, "4.2"}, {
-  AVCLevel5, "5"}, {
-  AVCLevel51, "5.1"}
+      AVCLevel1, "1"}, {
+      AVCLevel1b, "1b"}, {
+      AVCLevel11, "1.1"}, {
+      AVCLevel12, "1.2"}, {
+      AVCLevel13, "1.3"}, {
+      AVCLevel2, "2"}, {
+      AVCLevel21, "2.1"}, {
+      AVCLevel22, "2.2"}, {
+      AVCLevel3, "3"}, {
+      AVCLevel31, "3.1"}, {
+      AVCLevel32, "3.2"}, {
+      AVCLevel4, "4"}, {
+      AVCLevel41, "4.1"}, {
+      AVCLevel42, "4.2"}, {
+      AVCLevel5, "5"}, {
+      AVCLevel51, "5.1"}
 };
 
 const gchar *
@@ -1296,15 +1297,15 @@ static const struct
   gint gst_id;
 } h263_profile_mapping_table[] = {
   {
-  H263ProfileBaseline, 0}, {
-  H263ProfileH320Coding, 1}, {
-  H263ProfileBackwardCompatible, 2}, {
-  H263ProfileISWV2, 3}, {
-  H263ProfileISWV3, 4}, {
-  H263ProfileHighCompression, 5}, {
-  H263ProfileInternet, 6}, {
-  H263ProfileInterlace, 7}, {
-  H263ProfileHighLatency, 8}
+      H263ProfileBaseline, 0}, {
+      H263ProfileH320Coding, 1}, {
+      H263ProfileBackwardCompatible, 2}, {
+      H263ProfileISWV2, 3}, {
+      H263ProfileISWV3, 4}, {
+      H263ProfileHighCompression, 5}, {
+      H263ProfileInternet, 6}, {
+      H263ProfileInterlace, 7}, {
+      H263ProfileHighLatency, 8}
 };
 
 gint
@@ -1339,13 +1340,13 @@ static const struct
   gint gst_id;
 } h263_level_mapping_table[] = {
   {
-  H263Level10, 10}, {
-  H263Level20, 20}, {
-  H263Level30, 30}, {
-  H263Level40, 40}, {
-  H263Level50, 50}, {
-  H263Level60, 60}, {
-  H263Level70, 70}
+      H263Level10, 10}, {
+      H263Level20, 20}, {
+      H263Level30, 30}, {
+      H263Level40, 40}, {
+      H263Level50, 50}, {
+      H263Level60, 60}, {
+      H263Level70, 70}
 };
 
 gint
@@ -1380,22 +1381,22 @@ static const struct
   const gchar *str;
 } mpeg4_profile_mapping_table[] = {
   {
-  MPEG4ProfileSimple, "simple"}, {
-  MPEG4ProfileSimpleScalable, "simple-scalable"}, {
-  MPEG4ProfileCore, "core"}, {
-  MPEG4ProfileMain, "main"}, {
-  MPEG4ProfileNbit, "n-bit"}, {
-  MPEG4ProfileScalableTexture, "scalable"}, {
-  MPEG4ProfileSimpleFace, "simple-face"}, {
-  MPEG4ProfileSimpleFBA, "simple-fba"}, {
-  MPEG4ProfileBasicAnimated, "basic-animated-texture"}, {
-  MPEG4ProfileHybrid, "hybrid"}, {
-  MPEG4ProfileAdvancedRealTime, "advanced-real-time"}, {
-  MPEG4ProfileCoreScalable, "core-scalable"}, {
-  MPEG4ProfileAdvancedCoding, "advanced-coding-efficiency"}, {
-  MPEG4ProfileAdvancedCore, "advanced-core"}, {
-  MPEG4ProfileAdvancedScalable, "advanced-scalable-texture"}, {
-  MPEG4ProfileAdvancedSimple, "advanced-simple"}
+      MPEG4ProfileSimple, "simple"}, {
+      MPEG4ProfileSimpleScalable, "simple-scalable"}, {
+      MPEG4ProfileCore, "core"}, {
+      MPEG4ProfileMain, "main"}, {
+      MPEG4ProfileNbit, "n-bit"}, {
+      MPEG4ProfileScalableTexture, "scalable"}, {
+      MPEG4ProfileSimpleFace, "simple-face"}, {
+      MPEG4ProfileSimpleFBA, "simple-fba"}, {
+      MPEG4ProfileBasicAnimated, "basic-animated-texture"}, {
+      MPEG4ProfileHybrid, "hybrid"}, {
+      MPEG4ProfileAdvancedRealTime, "advanced-real-time"}, {
+      MPEG4ProfileCoreScalable, "core-scalable"}, {
+      MPEG4ProfileAdvancedCoding, "advanced-coding-efficiency"}, {
+      MPEG4ProfileAdvancedCore, "advanced-core"}, {
+      MPEG4ProfileAdvancedScalable, "advanced-scalable-texture"}, {
+      MPEG4ProfileAdvancedSimple, "advanced-simple"}
 };
 
 const gchar *
@@ -1432,14 +1433,15 @@ static const struct
   const gchar *str;
 } mpeg4_level_mapping_table[] = {
   {
-  MPEG4Level0, "0"}, {
-  MPEG4Level0b, "0b"}, {
-  MPEG4Level1, "1"}, {
-  MPEG4Level2, "2"}, {
-  MPEG4Level3, "3"}, {
-  MPEG4Level4, "4"}, {
-  MPEG4Level4a, "4a"}, {
-MPEG4Level5, "5"},};
+      MPEG4Level0, "0"}, {
+      MPEG4Level0b, "0b"}, {
+      MPEG4Level1, "1"}, {
+      MPEG4Level2, "2"}, {
+      MPEG4Level3, "3"}, {
+      MPEG4Level4, "4"}, {
+      MPEG4Level4a, "4a"}, {
+      MPEG4Level5, "5"},
+};
 
 const gchar *
 gst_amc_mpeg4_level_to_string (gint level)
@@ -1475,10 +1477,10 @@ static const struct
   const gchar *str;
 } aac_profile_mapping_table[] = {
   {
-  AACObjectMain, "main"}, {
-  AACObjectLC, "lc"}, {
-  AACObjectSSR, "ssr"}, {
-  AACObjectLTP, "ltp"}
+      AACObjectMain, "main"}, {
+      AACObjectLC, "lc"}, {
+      AACObjectSSR, "ssr"}, {
+      AACObjectLTP, "ltp"}
 };
 
 const gchar *
@@ -1515,26 +1517,26 @@ static const struct
   GstAudioChannelPosition pos;
 } channel_mapping_table[] = {
   {
-  CHANNEL_OUT_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
-  CHANNEL_OUT_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
-  CHANNEL_OUT_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
-  CHANNEL_OUT_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1}, {
-  CHANNEL_OUT_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
-  CHANNEL_OUT_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
-  CHANNEL_OUT_FRONT_LEFT_OF_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
-  CHANNEL_OUT_FRONT_RIGHT_OF_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
-  CHANNEL_OUT_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
-  CHANNEL_OUT_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
-  CHANNEL_OUT_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
-  CHANNEL_OUT_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
-  CHANNEL_OUT_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
-  CHANNEL_OUT_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
-  CHANNEL_OUT_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
-  CHANNEL_OUT_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
-  CHANNEL_OUT_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
-  CHANNEL_OUT_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID}
+      CHANNEL_OUT_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
+      CHANNEL_OUT_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+      CHANNEL_OUT_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
+      CHANNEL_OUT_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1}, {
+      CHANNEL_OUT_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
+      CHANNEL_OUT_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+        CHANNEL_OUT_FRONT_LEFT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
+        CHANNEL_OUT_FRONT_RIGHT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
+      CHANNEL_OUT_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
+      CHANNEL_OUT_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
+      CHANNEL_OUT_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
+      CHANNEL_OUT_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+      CHANNEL_OUT_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+      CHANNEL_OUT_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+      CHANNEL_OUT_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+      CHANNEL_OUT_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+      CHANNEL_OUT_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_INVALID}, {
+      CHANNEL_OUT_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_INVALID}
 };
 
 gboolean

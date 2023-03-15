@@ -1072,7 +1072,7 @@ vbi3_raw_decoder_debug (vbi3_raw_decoder * rd, vbi_bool enable)
 #endif
   r = TRUE;
 
-  rd->debug = ! !enable;
+  rd->debug = !!enable;
 
   n_lines = 0;
   if (enable) {
@@ -1135,7 +1135,8 @@ vbi3_raw_decoder_services (vbi3_raw_decoder * rd)
 /* Attn: strict must be int for compatibility with libzvbi 0.2 (-1 == 0) */
 vbi_service_set
     vbi3_raw_decoder_set_sampling_par
-    (vbi3_raw_decoder * rd, const vbi_sampling_par * sp, int strict) {
+    (vbi3_raw_decoder * rd, const vbi_sampling_par * sp, int strict)
+{
   unsigned int services;
 
   assert (NULL != rd);

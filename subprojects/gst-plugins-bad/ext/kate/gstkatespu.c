@@ -137,7 +137,7 @@ gst_kate_spu_decode_colcon (GstKateEnc * ke, const guint8 * ptr, guint16 sz)
 }
 
 static inline guint8
-gst_kate_spu_get_nybble (const guint8 * nybbles, size_t * nybble_offset)
+gst_kate_spu_get_nybble (const guint8 * nybbles, size_t *nybble_offset)
 {
   guint8 ret;
 
@@ -155,7 +155,7 @@ gst_kate_spu_get_nybble (const guint8 * nybbles, size_t * nybble_offset)
 }
 
 static guint16
-gst_kate_spu_get_rle_code (const guint8 * nybbles, size_t * nybble_offset)
+gst_kate_spu_get_rle_code (const guint8 * nybbles, size_t *nybble_offset)
 {
   guint16 code;
 

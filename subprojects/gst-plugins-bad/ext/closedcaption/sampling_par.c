@@ -332,7 +332,8 @@ static vbi_bool
 vbi_service_set
     _vbi_sampling_par_check_services_log
     (const vbi_sampling_par * sp,
-    vbi_service_set services, unsigned int strict, _vbi_log_hook * log) {
+    vbi_service_set services, unsigned int strict, _vbi_log_hook * log)
+{
   const _vbi_service_par *par;
   vbi_service_set rservices;
 
@@ -359,7 +360,8 @@ vbi_service_set
     (vbi_sampling_par * sp,
     unsigned int *max_rate,
     vbi_videostd_set videostd_set_req,
-    vbi_service_set services, _vbi_log_hook * log) {
+    vbi_service_set services, _vbi_log_hook * log)
+{
   const _vbi_service_par *par;
   vbi_service_set rservices;
   vbi_videostd_set videostd_set;
@@ -502,8 +504,8 @@ vbi_service_set
  */
 vbi_service_set
     vbi_sampling_par_check_services
-    (const vbi_sampling_par * sp,
-    vbi_service_set services, unsigned int strict) {
+    (const vbi_sampling_par * sp, vbi_service_set services, unsigned int strict)
+{
   return _vbi_sampling_par_check_services_log (sp, services, strict,
       /* log_hook */ NULL);
 }

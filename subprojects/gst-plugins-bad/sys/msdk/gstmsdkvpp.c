@@ -921,7 +921,7 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     free_msdk_surface (in_surface);
     return GST_FLOW_ERROR;
   }
-  locked_by_others = ! !in_surface->surface->Data.Locked;
+  locked_by_others = !!in_surface->surface->Data.Locked;
 
   /* always convert timestamp of input surface as msdk timestamp */
   if (inbuf->pts == GST_CLOCK_TIME_NONE)

@@ -846,7 +846,8 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
     guint i;
     GValue va = { 0, }
     , v = {
-    0,};
+      0,
+    };
     GstBuffer *buf;
     GstMapInfo map;
 
@@ -888,7 +889,8 @@ mxf_metadata_aes3_audio_essence_descriptor_to_structure (MXFMetadataBase * m)
     guint i;
     GValue va = { 0, }
     , v = {
-    0,};
+      0,
+    };
     GstBuffer *buf;
     GstMapInfo map;
 

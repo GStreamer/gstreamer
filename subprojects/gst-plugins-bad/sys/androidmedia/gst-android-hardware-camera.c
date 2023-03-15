@@ -56,7 +56,8 @@ static struct
   jmethodID stopSmoothZoom;
   jmethodID unlock;
 } android_hardware_camera = {
-0};
+  0
+};
 
 static struct
 {
@@ -67,7 +68,8 @@ static struct
   jint CAMERA_FACING_BACK;
   jint CAMERA_FACING_FRONT;
 } android_hardware_camera_camerainfo = {
-0};
+  0
+};
 
 gint CameraInfo_CAMERA_FACING_BACK;
 gint CameraInfo_CAMERA_FACING_FRONT;
@@ -78,7 +80,8 @@ static struct
   jfieldID width;
   jfieldID height;
 } android_hardware_camera_size = {
-0};
+  0
+};
 
 static struct
 {
@@ -186,7 +189,8 @@ static struct
   jstring FOCUS_MODE_CONTINUOUS_VIDEO;
   jstring FOCUS_MODE_CONTINUOUS_PICTURE;
 } android_hardware_camera_parameters = {
-0};
+  0
+};
 
 const gchar *Parameters_WHITE_BALANCE_AUTO;
 const gchar *Parameters_WHITE_BALANCE_INCANDESCENT;
@@ -250,7 +254,8 @@ static struct
   jclass klass;
   jmethodID iterator;
 } java_util_list = {
-0};
+  0
+};
 
 static struct
 {
@@ -258,28 +263,32 @@ static struct
   jmethodID hasNext;
   jmethodID next;
 } java_util_iterator = {
-0};
+  0
+};
 
 static struct
 {
   jclass klass;
   jmethodID intValue;
 } java_lang_integer = {
-0};
+  0
+};
 
 static struct
 {
   jclass klass;
   jmethodID equals;
 } java_lang_string = {
-0};
+  0
+};
 
 static struct
 {
   jclass klass;
   jmethodID constructor;
 } org_freedesktop_gstreamer_androidmedia_gstahccallback = {
-0};
+  0
+};
 
 static void
 gst_ah_camera_on_preview_frame (JNIEnv * env, jclass klass, jbyteArray data,

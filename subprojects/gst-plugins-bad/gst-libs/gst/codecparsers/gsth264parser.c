@@ -986,7 +986,7 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
       hrd = &vui->vcl_hrd_parameters;
     }
 
-    tim->CpbDpbDelaysPresentFlag = ! !hrd;
+    tim->CpbDpbDelaysPresentFlag = !!hrd;
     tim->pic_struct_present_flag = vui->pic_struct_present_flag;
 
     if (tim->CpbDpbDelaysPresentFlag) {

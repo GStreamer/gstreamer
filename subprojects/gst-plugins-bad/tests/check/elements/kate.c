@@ -594,9 +594,10 @@ GST_START_TEST (test_kate_encode_keepalives)
     gint packets;
   } cfg[3] = {
     {
-    0.5, n_keepalives}, {
-    2.0, n_keepalives / 2}, {
-  5.0, n_keepalives / 5},};
+        0.5, n_keepalives}, {
+        2.0, n_keepalives / 2}, {
+        5.0, n_keepalives / 5},
+  };
 
   for (round = 0; round < 3; ++round) {
     kateenc = setup_kateenc ();

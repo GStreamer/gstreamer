@@ -52,30 +52,30 @@ static const struct
   const gchar *caps_string;
 } _rgba_mapping_table[] = {
   {
-    "RGB", 3, {
-  'R', 8, 'G', 8, 'B', 8}, GST_VIDEO_CAPS_MAKE ("RGB")}, {
-    "BGR", 3, {
-  'B', 8, 'G', 8, 'R', 8}, GST_VIDEO_CAPS_MAKE ("BGR")}, {
-    "v308", 3, {
-  'Y', 8, 'U', 8, 'V', 8}, GST_VIDEO_CAPS_MAKE ("v308")}, {
-    "xRGB", 4, {
-  'F', 8, 'R', 8, 'G', 8, 'B', 8}, GST_VIDEO_CAPS_MAKE ("xRGB")}, {
-    "RGBx", 4, {
-  'R', 8, 'G', 8, 'B', 8, 'F', 8}, GST_VIDEO_CAPS_MAKE ("RGBx")}, {
-    "xBGR", 4, {
-  'F', 8, 'B', 8, 'G', 8, 'R', 8}, GST_VIDEO_CAPS_MAKE ("xBGR")}, {
-    "BGRx", 4, {
-  'B', 8, 'G', 8, 'R', 8, 'F', 8}, GST_VIDEO_CAPS_MAKE ("BGRx")}, {
-    "RGBA", 4, {
-  'R', 8, 'G', 8, 'B', 8, 'A', 8}, GST_VIDEO_CAPS_MAKE ("RGBA")}, {
-    "ARGB", 4, {
-  'A', 8, 'R', 8, 'G', 8, 'B', 8}, GST_VIDEO_CAPS_MAKE ("RGBA")}, {
-    "BGRA", 4, {
-  'B', 8, 'G', 8, 'R', 8, 'A', 8}, GST_VIDEO_CAPS_MAKE ("BGRA")}, {
-    "ABGR", 4, {
-  'A', 8, 'B', 8, 'G', 8, 'R', 8}, GST_VIDEO_CAPS_MAKE ("ABGR")}, {
-    "AYUV", 4, {
-  'A', 8, 'Y', 8, 'U', 8, 'V', 8}, GST_VIDEO_CAPS_MAKE ("AYUV")}
+        "RGB", 3, {
+          'R', 8, 'G', 8, 'B', 8}, GST_VIDEO_CAPS_MAKE ("RGB")}, {
+        "BGR", 3, {
+          'B', 8, 'G', 8, 'R', 8}, GST_VIDEO_CAPS_MAKE ("BGR")}, {
+        "v308", 3, {
+          'Y', 8, 'U', 8, 'V', 8}, GST_VIDEO_CAPS_MAKE ("v308")}, {
+        "xRGB", 4, {
+          'F', 8, 'R', 8, 'G', 8, 'B', 8}, GST_VIDEO_CAPS_MAKE ("xRGB")}, {
+        "RGBx", 4, {
+          'R', 8, 'G', 8, 'B', 8, 'F', 8}, GST_VIDEO_CAPS_MAKE ("RGBx")}, {
+        "xBGR", 4, {
+          'F', 8, 'B', 8, 'G', 8, 'R', 8}, GST_VIDEO_CAPS_MAKE ("xBGR")}, {
+        "BGRx", 4, {
+          'B', 8, 'G', 8, 'R', 8, 'F', 8}, GST_VIDEO_CAPS_MAKE ("BGRx")}, {
+        "RGBA", 4, {
+          'R', 8, 'G', 8, 'B', 8, 'A', 8}, GST_VIDEO_CAPS_MAKE ("RGBA")}, {
+        "ARGB", 4, {
+          'A', 8, 'R', 8, 'G', 8, 'B', 8}, GST_VIDEO_CAPS_MAKE ("RGBA")}, {
+        "BGRA", 4, {
+          'B', 8, 'G', 8, 'R', 8, 'A', 8}, GST_VIDEO_CAPS_MAKE ("BGRA")}, {
+        "ABGR", 4, {
+          'A', 8, 'B', 8, 'G', 8, 'R', 8}, GST_VIDEO_CAPS_MAKE ("ABGR")}, {
+        "AYUV", 4, {
+          'A', 8, 'Y', 8, 'U', 8, 'V', 8}, GST_VIDEO_CAPS_MAKE ("AYUV")}
 };
 
 static const struct
@@ -88,8 +88,9 @@ static const struct
   const gchar *caps_string;
 } _cdci_mapping_table[] = {
   {
-  "YUY2", 2, 1, 0, TRUE, GST_VIDEO_CAPS_MAKE ("YUY2")}, {
-"UYVY", 2, 1, 0, FALSE, GST_VIDEO_CAPS_MAKE ("UYVY")},};
+      "YUY2", 2, 1, 0, TRUE, GST_VIDEO_CAPS_MAKE ("YUY2")}, {
+      "UYVY", 2, 1, 0, FALSE, GST_VIDEO_CAPS_MAKE ("UYVY")},
+};
 
 typedef struct
 {

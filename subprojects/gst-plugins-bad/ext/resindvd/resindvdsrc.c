@@ -2438,7 +2438,7 @@ rsn_dvdsrc_src_event (GstBaseSrc * basesrc, GstEvent * event)
       GST_LOG_OBJECT (src, "handling seek event");
 
       gst_event_parse_seek (event, NULL, NULL, &flags, NULL, NULL, NULL, NULL);
-      src->flushing_seek = ! !(flags & GST_SEEK_FLAG_FLUSH);
+      src->flushing_seek = !!(flags & GST_SEEK_FLAG_FLUSH);
       GST_DEBUG_OBJECT (src, "%s seek event",
           src->flushing_seek ? "flushing" : "non-flushing");
 

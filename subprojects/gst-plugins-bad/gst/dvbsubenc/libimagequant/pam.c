@@ -104,7 +104,8 @@ pam_computeacolorhash (struct acolorhash_table *acht,
           // the array was allocated with spare items
           if (i < achl->capacity) {
             other_items[i] = (struct acolorhist_arr_item) {
-            .color = px,.perceptual_weight = boost,};
+              .color = px,.perceptual_weight = boost,
+            };
             achl->used++;
             ++colors;
             continue;
@@ -155,7 +156,8 @@ pam_computeacolorhash (struct acolorhash_table *acht,
           achl->other_items = new_items;
           achl->capacity = capacity;
           new_items[i] = (struct acolorhist_arr_item) {
-          .color = px,.perceptual_weight = boost,};
+            .color = px,.perceptual_weight = boost,
+          };
           achl->used++;
         } else {
           // these are elses for first checks whether first and second inline-stored colors are used
@@ -204,8 +206,9 @@ pam_allocacolorhash (unsigned int maxcolors, unsigned int surface,
   if (!t)
     return NULL;
   *t = (struct acolorhash_table) {
-  .mempool = m,.hash_size = hash_size,.maxcolors = maxcolors,.ignorebits =
-        ignorebits,};
+    .mempool = m,.hash_size = hash_size,.maxcolors = maxcolors,.ignorebits =
+        ignorebits,
+  };
   memset (t->buckets, 0, hash_size * sizeof (struct acolorhist_arr_head));
   return t;
 }
@@ -217,7 +220,7 @@ pam_allocacolorhash (unsigned int maxcolors, unsigned int surface,
 }
 
 LIQ_PRIVATE histogram *
-pam_acolorhashtoacolorhist (const struct acolorhash_table * acht,
+pam_acolorhashtoacolorhist (const struct acolorhash_table *acht,
     const double gamma, void *(*malloc) (size_t), void (*free) (void *))
 {
   histogram *hist = malloc (sizeof (hist[0]));

@@ -535,7 +535,7 @@ signal_u8 (uint8_t * raw,
         goto bounds;
 
       if (sp->interlaced) {
-        row *= 2 + ! !(flags & _VBI_RAW_SWAP_FIELDS);
+        row *= 2 + !!(flags & _VBI_RAW_SWAP_FIELDS);
       } else if (flags & _VBI_RAW_SWAP_FIELDS) {
         row += sp->count[0];
       }

@@ -156,7 +156,7 @@ gst_vulkan_display_wayland_new (const gchar * name)
  * Since: 1.18
  */
 GstVulkanDisplayWayland *
-gst_vulkan_display_wayland_new_with_display (struct wl_display * display)
+gst_vulkan_display_wayland_new_with_display (struct wl_display *display)
 {
   GstVulkanDisplayWayland *ret;
 

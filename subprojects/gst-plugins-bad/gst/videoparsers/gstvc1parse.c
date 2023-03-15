@@ -95,9 +95,9 @@ static const struct
   VC1HeaderFormat en;
 } header_formats[] = {
   {
-  "none", VC1_HEADER_FORMAT_NONE}, {
-  "asf", VC1_HEADER_FORMAT_ASF}, {
-  "sequence-layer", VC1_HEADER_FORMAT_SEQUENCE_LAYER}
+      "none", VC1_HEADER_FORMAT_NONE}, {
+      "asf", VC1_HEADER_FORMAT_ASF}, {
+      "sequence-layer", VC1_HEADER_FORMAT_SEQUENCE_LAYER}
 };
 
 static const struct
@@ -106,14 +106,15 @@ static const struct
   VC1StreamFormat en;
 } stream_formats[] = {
   {
-  "bdu", VC1_STREAM_FORMAT_BDU}, {
-  "bdu-frame", VC1_STREAM_FORMAT_BDU_FRAME}, {
-  "sequence-layer-bdu", VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU}, {
-  "sequence-layer-bdu-frame", VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME}, {
-  "sequence-layer-raw-frame", VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME}, {
-  "sequence-layer-frame-layer", VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER}, {
-  "asf", VC1_STREAM_FORMAT_ASF}, {
-  "frame-layer", VC1_STREAM_FORMAT_FRAME_LAYER}
+      "bdu", VC1_STREAM_FORMAT_BDU}, {
+      "bdu-frame", VC1_STREAM_FORMAT_BDU_FRAME}, {
+      "sequence-layer-bdu", VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU}, {
+      "sequence-layer-bdu-frame", VC1_STREAM_FORMAT_SEQUENCE_LAYER_BDU_FRAME}, {
+      "sequence-layer-raw-frame", VC1_STREAM_FORMAT_SEQUENCE_LAYER_RAW_FRAME}, {
+        "sequence-layer-frame-layer",
+      VC1_STREAM_FORMAT_SEQUENCE_LAYER_FRAME_LAYER}, {
+      "asf", VC1_STREAM_FORMAT_ASF}, {
+      "frame-layer", VC1_STREAM_FORMAT_FRAME_LAYER}
 };
 
 static const struct
@@ -122,8 +123,8 @@ static const struct
   GstVC1ParseFormat en;
 } parse_formats[] = {
   {
-  "WMV3", GST_VC1_PARSE_FORMAT_WMV3}, {
-  "WVC1", GST_VC1_PARSE_FORMAT_WVC1}
+      "WMV3", GST_VC1_PARSE_FORMAT_WMV3}, {
+      "WVC1", GST_VC1_PARSE_FORMAT_WVC1}
 };
 
 static const gchar *
@@ -2032,22 +2033,22 @@ static const struct
   gint par_n, par_d;
 } aspect_ratios[] = {
   {
-  0, 0}, {
-  1, 1}, {
-  12, 11}, {
-  10, 11}, {
-  16, 11}, {
-  40, 33}, {
-  24, 11}, {
-  20, 11}, {
-  32, 11}, {
-  80, 33}, {
-  18, 11}, {
-  15, 11}, {
-  64, 33}, {
-  160, 99}, {
-  0, 0}, {
-  0, 0}
+      0, 0}, {
+      1, 1}, {
+      12, 11}, {
+      10, 11}, {
+      16, 11}, {
+      40, 33}, {
+      24, 11}, {
+      20, 11}, {
+      32, 11}, {
+      80, 33}, {
+      18, 11}, {
+      15, 11}, {
+      64, 33}, {
+      160, 99}, {
+      0, 0}, {
+      0, 0}
 };
 
 /* SMPTE 421M Table 8 */

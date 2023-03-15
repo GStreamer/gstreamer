@@ -606,10 +606,10 @@ add_count_or_num_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar *corr_num;      /* corresponding NUMBER tag (if count) */
   } corr[] = {
     {
-    GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, NULL}, {
-    GST_TAG_TRACK_COUNT, NULL, GST_TAG_TRACK_NUMBER}, {
-    GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT, NULL}, {
-    GST_TAG_ALBUM_VOLUME_COUNT, NULL, GST_TAG_ALBUM_VOLUME_NUMBER}
+        GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, NULL}, {
+        GST_TAG_TRACK_COUNT, NULL, GST_TAG_TRACK_NUMBER}, {
+        GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT, NULL}, {
+        GST_TAG_ALBUM_VOLUME_COUNT, NULL, GST_TAG_ALBUM_VOLUME_NUMBER}
   };
   guint idx;
 
@@ -846,23 +846,24 @@ add_musicbrainz_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
     const gchar realworld_id[32];
   } mb_ids[] = {
     {
-    GST_TAG_MUSICBRAINZ_ARTISTID, "MusicBrainz Artist Id",
-          "musicbrainz_artistid"}, {
-    GST_TAG_MUSICBRAINZ_ALBUMID, "MusicBrainz Album Id", "musicbrainz_albumid"}, {
-    GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "MusicBrainz Album Artist Id",
-          "musicbrainz_albumartistid"}, {
-    GST_TAG_MUSICBRAINZ_RELEASEGROUPID, "MusicBrainz Release Group Id",
-          "musicbrainz_releasegroupid"}, {
-    GST_TAG_MUSICBRAINZ_TRMID, "MusicBrainz TRM Id", "musicbrainz_trmid"}, {
-    GST_TAG_CDDA_MUSICBRAINZ_DISCID, "MusicBrainz DiscID",
-          "musicbrainz_discid"}, {
-      /* the following one is more or less made up, there seems to be little
-       * evidence that any popular application is actually putting this info
-       * into TXXX frames; the first one comes from a musicbrainz wiki 'proposed
-       * tags' page, the second one is analogue to the vorbis/ape/flac tag. */
-    GST_TAG_CDDA_CDDB_DISCID, "CDDB DiscID", "discid"}, {
-    GST_TAG_MUSICBRAINZ_RELEASETRACKID, "MusicBrainz Track Id",
-          "musicbrainz_trackid"}
+          GST_TAG_MUSICBRAINZ_ARTISTID, "MusicBrainz Artist Id",
+        "musicbrainz_artistid"}, {
+          GST_TAG_MUSICBRAINZ_ALBUMID, "MusicBrainz Album Id",
+        "musicbrainz_albumid"}, {
+          GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "MusicBrainz Album Artist Id",
+        "musicbrainz_albumartistid"}, {
+          GST_TAG_MUSICBRAINZ_RELEASEGROUPID, "MusicBrainz Release Group Id",
+        "musicbrainz_releasegroupid"}, {
+        GST_TAG_MUSICBRAINZ_TRMID, "MusicBrainz TRM Id", "musicbrainz_trmid"}, {
+          GST_TAG_CDDA_MUSICBRAINZ_DISCID, "MusicBrainz DiscID",
+        "musicbrainz_discid"}, {
+          /* the following one is more or less made up, there seems to be little
+           * evidence that any popular application is actually putting this info
+           * into TXXX frames; the first one comes from a musicbrainz wiki 'proposed
+           * tags' page, the second one is analogue to the vorbis/ape/flac tag. */
+        GST_TAG_CDDA_CDDB_DISCID, "CDDB DiscID", "discid"}, {
+          GST_TAG_MUSICBRAINZ_RELEASETRACKID, "MusicBrainz Track Id",
+        "musicbrainz_trackid"}
   };
   guint i, idx;
 
@@ -1136,75 +1137,75 @@ static const struct
   const gchar *data;
 } add_funcs[] = {
   {
-    /* Simple text tags */
-  GST_TAG_ARTIST, add_text_tag, "TPE1"}, {
-  GST_TAG_ALBUM_ARTIST, add_text_tag, "TPE2"}, {
-  GST_TAG_TITLE, add_text_tag, "TIT2"}, {
-  GST_TAG_ALBUM, add_text_tag, "TALB"}, {
-  GST_TAG_COPYRIGHT, add_text_tag, "TCOP"}, {
-  GST_TAG_COMPOSER, add_text_tag, "TCOM"}, {
-  GST_TAG_GENRE, add_text_tag, "TCON"}, {
-  GST_TAG_ENCODED_BY, add_text_tag, "TENC"}, {
-  GST_TAG_PUBLISHER, add_text_tag, "TPUB"}, {
-  GST_TAG_INTERPRETED_BY, add_text_tag, "TPE4"}, {
-  GST_TAG_MUSICAL_KEY, add_text_tag, "TKEY"}, {
+        /* Simple text tags */
+      GST_TAG_ARTIST, add_text_tag, "TPE1"}, {
+      GST_TAG_ALBUM_ARTIST, add_text_tag, "TPE2"}, {
+      GST_TAG_TITLE, add_text_tag, "TIT2"}, {
+      GST_TAG_ALBUM, add_text_tag, "TALB"}, {
+      GST_TAG_COPYRIGHT, add_text_tag, "TCOP"}, {
+      GST_TAG_COMPOSER, add_text_tag, "TCOM"}, {
+      GST_TAG_GENRE, add_text_tag, "TCON"}, {
+      GST_TAG_ENCODED_BY, add_text_tag, "TENC"}, {
+      GST_TAG_PUBLISHER, add_text_tag, "TPUB"}, {
+      GST_TAG_INTERPRETED_BY, add_text_tag, "TPE4"}, {
+      GST_TAG_MUSICAL_KEY, add_text_tag, "TKEY"}, {
 
-    /* Private frames */
-  GST_TAG_PRIVATE_DATA, add_private_data_tag, "PRIV"}, {
-  GST_ID3_DEMUX_TAG_ID3V2_FRAME, add_id3v2frame_tag, NULL}, {
+        /* Private frames */
+      GST_TAG_PRIVATE_DATA, add_private_data_tag, "PRIV"}, {
+      GST_ID3_DEMUX_TAG_ID3V2_FRAME, add_id3v2frame_tag, NULL}, {
 
-    /* Track and album numbers */
-  GST_TAG_TRACK_NUMBER, add_count_or_num_tag, "TRCK"}, {
-  GST_TAG_TRACK_COUNT, add_count_or_num_tag, "TRCK"}, {
-  GST_TAG_ALBUM_VOLUME_NUMBER, add_count_or_num_tag, "TPOS"}, {
-  GST_TAG_ALBUM_VOLUME_COUNT, add_count_or_num_tag, "TPOS"}, {
+        /* Track and album numbers */
+      GST_TAG_TRACK_NUMBER, add_count_or_num_tag, "TRCK"}, {
+      GST_TAG_TRACK_COUNT, add_count_or_num_tag, "TRCK"}, {
+      GST_TAG_ALBUM_VOLUME_NUMBER, add_count_or_num_tag, "TPOS"}, {
+      GST_TAG_ALBUM_VOLUME_COUNT, add_count_or_num_tag, "TPOS"}, {
 
-    /* Comment tags */
-  GST_TAG_COMMENT, add_comment_tag, NULL}, {
-  GST_TAG_EXTENDED_COMMENT, add_comment_tag, NULL}, {
+        /* Comment tags */
+      GST_TAG_COMMENT, add_comment_tag, NULL}, {
+      GST_TAG_EXTENDED_COMMENT, add_comment_tag, NULL}, {
 
-    /* BPM tag */
-  GST_TAG_BEATS_PER_MINUTE, add_bpm_tag, NULL}, {
+        /* BPM tag */
+      GST_TAG_BEATS_PER_MINUTE, add_bpm_tag, NULL}, {
 
-    /* Images */
-  GST_TAG_IMAGE, add_image_tag, NULL}, {
-  GST_TAG_PREVIEW_IMAGE, add_image_tag, NULL}, {
+        /* Images */
+      GST_TAG_IMAGE, add_image_tag, NULL}, {
+      GST_TAG_PREVIEW_IMAGE, add_image_tag, NULL}, {
 
-    /* Misc user-defined text tags for IDs (and UFID frame) */
-  GST_TAG_MUSICBRAINZ_ARTISTID, add_musicbrainz_tag, "\000"}, {
-  GST_TAG_MUSICBRAINZ_ALBUMID, add_musicbrainz_tag, "\001"}, {
-  GST_TAG_MUSICBRAINZ_ALBUMARTISTID, add_musicbrainz_tag, "\002"}, {
-  GST_TAG_MUSICBRAINZ_RELEASEGROUPID, add_musicbrainz_tag, "\003"}, {
-  GST_TAG_MUSICBRAINZ_TRMID, add_musicbrainz_tag, "\004"}, {
-  GST_TAG_CDDA_MUSICBRAINZ_DISCID, add_musicbrainz_tag, "\005"}, {
-  GST_TAG_CDDA_CDDB_DISCID, add_musicbrainz_tag, "\006"}, {
-  GST_TAG_MUSICBRAINZ_RELEASETRACKID, add_musicbrainz_tag, "\007"}, {
-  GST_TAG_MUSICBRAINZ_TRACKID, add_unique_file_id_tag, NULL}, {
+        /* Misc user-defined text tags for IDs (and UFID frame) */
+      GST_TAG_MUSICBRAINZ_ARTISTID, add_musicbrainz_tag, "\000"}, {
+      GST_TAG_MUSICBRAINZ_ALBUMID, add_musicbrainz_tag, "\001"}, {
+      GST_TAG_MUSICBRAINZ_ALBUMARTISTID, add_musicbrainz_tag, "\002"}, {
+      GST_TAG_MUSICBRAINZ_RELEASEGROUPID, add_musicbrainz_tag, "\003"}, {
+      GST_TAG_MUSICBRAINZ_TRMID, add_musicbrainz_tag, "\004"}, {
+      GST_TAG_CDDA_MUSICBRAINZ_DISCID, add_musicbrainz_tag, "\005"}, {
+      GST_TAG_CDDA_CDDB_DISCID, add_musicbrainz_tag, "\006"}, {
+      GST_TAG_MUSICBRAINZ_RELEASETRACKID, add_musicbrainz_tag, "\007"}, {
+      GST_TAG_MUSICBRAINZ_TRACKID, add_unique_file_id_tag, NULL}, {
 
-    /* Info about encoder */
-  GST_TAG_ENCODER, add_encoder_tag, NULL}, {
-  GST_TAG_ENCODER_VERSION, add_encoder_tag, NULL}, {
+        /* Info about encoder */
+      GST_TAG_ENCODER, add_encoder_tag, NULL}, {
+      GST_TAG_ENCODER_VERSION, add_encoder_tag, NULL}, {
 
-    /* URIs */
-  GST_TAG_COPYRIGHT_URI, add_uri_tag, "WCOP"}, {
-  GST_TAG_LICENSE_URI, add_uri_tag, "WCOP"}, {
+        /* URIs */
+      GST_TAG_COPYRIGHT_URI, add_uri_tag, "WCOP"}, {
+      GST_TAG_LICENSE_URI, add_uri_tag, "WCOP"}, {
 
-    /* Up to here, all the frame ids and contents have been the same between
-       versions 2.3 and 2.4. The rest of them differ... */
-    /* Date (in ID3v2.3, this is a TYER tag. In v2.4, it's a TDRC tag */
-  GST_TAG_DATE_TIME, add_date_tag, NULL}, {
+        /* Up to here, all the frame ids and contents have been the same between
+           versions 2.3 and 2.4. The rest of them differ... */
+        /* Date (in ID3v2.3, this is a TYER tag. In v2.4, it's a TDRC tag */
+      GST_TAG_DATE_TIME, add_date_tag, NULL}, {
 
-    /* Replaygain data (not really supported in 2.3, we use an experimental
-       tag there) */
-  GST_TAG_TRACK_PEAK, add_relative_volume_tag, NULL}, {
-  GST_TAG_TRACK_GAIN, add_relative_volume_tag, NULL}, {
-  GST_TAG_ALBUM_PEAK, add_relative_volume_tag, NULL}, {
-  GST_TAG_ALBUM_GAIN, add_relative_volume_tag, NULL}, {
+        /* Replaygain data (not really supported in 2.3, we use an experimental
+           tag there) */
+      GST_TAG_TRACK_PEAK, add_relative_volume_tag, NULL}, {
+      GST_TAG_TRACK_GAIN, add_relative_volume_tag, NULL}, {
+      GST_TAG_ALBUM_PEAK, add_relative_volume_tag, NULL}, {
+      GST_TAG_ALBUM_GAIN, add_relative_volume_tag, NULL}, {
 
-    /* Sortable version of various tags. These are all v2.4 ONLY */
-  GST_TAG_ARTIST_SORTNAME, add_text_tag_v4, "TSOP"}, {
-  GST_TAG_ALBUM_SORTNAME, add_text_tag_v4, "TSOA"}, {
-  GST_TAG_TITLE_SORTNAME, add_text_tag_v4, "TSOT"}
+        /* Sortable version of various tags. These are all v2.4 ONLY */
+      GST_TAG_ARTIST_SORTNAME, add_text_tag_v4, "TSOP"}, {
+      GST_TAG_ALBUM_SORTNAME, add_text_tag_v4, "TSOA"}, {
+      GST_TAG_TITLE_SORTNAME, add_text_tag_v4, "TSOT"}
 };
 
 static void
@@ -1377,14 +1378,14 @@ static const struct
   const GstId3v1WriteFunc func;
 } v1_funcs[] = {
   {
-  GST_TAG_TITLE, 3, 30, latin1_convert}, {
-  GST_TAG_ARTIST, 33, 30, latin1_convert}, {
-  GST_TAG_ALBUM, 63, 30, latin1_convert}, {
-  GST_TAG_DATE_TIME, 93, 4, date_v1_convert}, {
-  GST_TAG_COMMENT, 97, 28, latin1_convert}, {
-    /* Note: one-byte gap here */
-  GST_TAG_TRACK_NUMBER, 126, 1, track_number_convert}, {
-  GST_TAG_GENRE, 127, 1, genre_v1_convert}
+      GST_TAG_TITLE, 3, 30, latin1_convert}, {
+      GST_TAG_ARTIST, 33, 30, latin1_convert}, {
+      GST_TAG_ALBUM, 63, 30, latin1_convert}, {
+      GST_TAG_DATE_TIME, 93, 4, date_v1_convert}, {
+      GST_TAG_COMMENT, 97, 28, latin1_convert}, {
+        /* Note: one-byte gap here */
+      GST_TAG_TRACK_NUMBER, 126, 1, track_number_convert}, {
+      GST_TAG_GENRE, 127, 1, genre_v1_convert}
 };
 
 GstBuffer *

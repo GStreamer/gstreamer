@@ -2398,7 +2398,7 @@ gst_dash_demux_seek (GstAdaptiveDemux * demux, GstEvent * seek)
     return FALSE;
   }
 
-  trickmode_no_audio = ! !(flags & GST_SEEK_FLAG_TRICKMODE_NO_AUDIO);
+  trickmode_no_audio = !!(flags & GST_SEEK_FLAG_TRICKMODE_NO_AUDIO);
 
   streams = demux->streams;
   if (current_period != gst_mpd_client_get_period_index (dashdemux->client)) {

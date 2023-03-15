@@ -548,9 +548,9 @@ create_source (TestFeatures features, int fdina, int fdouta, int fdinv,
     int fdoutv, test_data * td)
 {
   GstElement *pipeline = NULL;
-  gboolean live = ! !(features & TEST_FEATURE_LIVE);
-  gboolean longdur = ! !(features & TEST_FEATURE_LONG_DURATION);
-  gboolean has_video = ! !(features & TEST_FEATURE_HAS_VIDEO);
+  gboolean live = !!(features & TEST_FEATURE_LIVE);
+  gboolean longdur = !!(features & TEST_FEATURE_LONG_DURATION);
+  gboolean has_video = !!(features & TEST_FEATURE_HAS_VIDEO);
 
   if (features & TEST_FEATURE_TEST_SOURCE) {
 
@@ -874,7 +874,7 @@ test_base (const char *name, TestFeatures features,
       if (pid) {
         die_on_child_death ();
       }
-      c_src = ! !pid;
+      c_src = !!pid;
       c_sink = !pid;
     } else {
       c_src = TRUE;
@@ -5020,7 +5020,7 @@ dynamic_pipeline_change_stress_source_blocked_switch_av (GstPad * pad,
 
   g_mutex_lock (&d->mutex);
   switch_av (td->p, gst_element_get_name (source),
-      ! !(td->features & TEST_FEATURE_LIVE), TRUE);
+      !!(td->features & TEST_FEATURE_LIVE), TRUE);
   g_mutex_unlock (&d->mutex);
 
   g_idle_add_full (G_PRIORITY_HIGH, remove_source, source, g_object_unref);
@@ -5093,7 +5093,7 @@ dynamic_pipeline_change_stress_source_blocked_change_audio_channel (GstPad *
 
   g_mutex_lock (&d->mutex);
   change_audio_channel (td->p, gst_element_get_name (source),
-      ipcpipelinesink_name, ! !(td->features & TEST_FEATURE_LIVE));
+      ipcpipelinesink_name, !!(td->features & TEST_FEATURE_LIVE));
   g_mutex_unlock (&d->mutex);
 
   g_idle_add_full (G_PRIORITY_HIGH, remove_source, source, g_object_unref);

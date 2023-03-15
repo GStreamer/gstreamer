@@ -374,7 +374,7 @@ plugin_init (GstPlugin * plugin)
 }
 
 #ifdef __GNUC__
-__attribute__ ((destructor))
+__attribute__((destructor))
 #endif
      static void plugin_cleanup (GstPlugin * plugin)
 {

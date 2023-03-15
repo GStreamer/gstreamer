@@ -588,7 +588,7 @@ out:
 
 gboolean
 gst_wasapi_util_get_device (GstMMDeviceEnumerator * self,
-    gint data_flow, gint role, const wchar_t * device_strid,
+    gint data_flow, gint role, const wchar_t *device_strid,
     IMMDevice ** ret_device)
 {
   gboolean res = FALSE;

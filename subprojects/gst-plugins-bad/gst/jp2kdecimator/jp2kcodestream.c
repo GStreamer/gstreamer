@@ -574,8 +574,8 @@ parse_cod (GstJP2kDecimator * self, GstByteReader * reader,
   }
 
   Scod = gst_byte_reader_get_uint8_unchecked (reader);
-  cod->sop = ! !(Scod & 0x02);
-  cod->eph = ! !(Scod & 0x04);
+  cod->sop = !!(Scod & 0x02);
+  cod->eph = !!(Scod & 0x04);
 
   /* SGcod */
   cod->progression_order = gst_byte_reader_get_uint8_unchecked (reader);

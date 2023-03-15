@@ -62,7 +62,8 @@ static struct
   jstring SENSOR_SERVICE;
   jmethodID getSystemService;
 } android_content_context = {
-0};
+  0
+};
 
 static struct
 {
@@ -70,7 +71,8 @@ static struct
   jfieldID accuracy;
   jfieldID values;
 } android_hardware_sensor_event = {
-0};
+  0
+};
 
 static struct
 {
@@ -79,14 +81,16 @@ static struct
   jmethodID registerListener;
   jmethodID unregisterListener;
 } android_hardware_sensor_manager = {
-0};
+  0
+};
 
 static struct
 {
   jclass klass;
   jmethodID constructor;
 } org_freedesktop_gstreamer_androidmedia_gstahscallback = {
-0};
+  0
+};
 
 GHashTable *sensor_sizes = NULL;
 static void
@@ -99,50 +103,52 @@ gst_ah_sensor_sensor_sizes_init (void)
     gsize size;
   } types[] = {
     {
-    AHS_SENSOR_TYPE_ACCELEROMETER, sizeof (GstAHSAccelerometerValues)}
+        AHS_SENSOR_TYPE_ACCELEROMETER, sizeof (GstAHSAccelerometerValues)}
     , {
-    AHS_SENSOR_TYPE_AMBIENT_TEMPERATURE,
-          sizeof (GstAHSAmbientTemperatureValues)}
+          AHS_SENSOR_TYPE_AMBIENT_TEMPERATURE,
+        sizeof (GstAHSAmbientTemperatureValues)}
     , {
-    AHS_SENSOR_TYPE_GAME_ROTATION_VECTOR,
-          sizeof (GstAHSGameRotationVectorValues)}
+          AHS_SENSOR_TYPE_GAME_ROTATION_VECTOR,
+        sizeof (GstAHSGameRotationVectorValues)}
     , {
-    AHS_SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR,
-          sizeof (GstAHSGeomagneticRotationVectorValues)}
+          AHS_SENSOR_TYPE_GEOMAGNETIC_ROTATION_VECTOR,
+        sizeof (GstAHSGeomagneticRotationVectorValues)}
     , {
-    AHS_SENSOR_TYPE_GRAVITY, sizeof (GstAHSGravityValues)}
+        AHS_SENSOR_TYPE_GRAVITY, sizeof (GstAHSGravityValues)}
     , {
-    AHS_SENSOR_TYPE_GYROSCOPE, sizeof (GstAHSGyroscopeValues)}
+        AHS_SENSOR_TYPE_GYROSCOPE, sizeof (GstAHSGyroscopeValues)}
     , {
-    AHS_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED,
-          sizeof (GstAHSGyroscopeUncalibratedValues)}
+          AHS_SENSOR_TYPE_GYROSCOPE_UNCALIBRATED,
+        sizeof (GstAHSGyroscopeUncalibratedValues)}
     , {
-    AHS_SENSOR_TYPE_HEART_RATE, sizeof (GstAHSHeartRateValues)}
+        AHS_SENSOR_TYPE_HEART_RATE, sizeof (GstAHSHeartRateValues)}
     , {
-    AHS_SENSOR_TYPE_LIGHT, sizeof (GstAHSLightValues)}
+        AHS_SENSOR_TYPE_LIGHT, sizeof (GstAHSLightValues)}
     , {
-    AHS_SENSOR_TYPE_LINEAR_ACCELERATION,
-          sizeof (GstAHSLinearAccelerationValues)}
+          AHS_SENSOR_TYPE_LINEAR_ACCELERATION,
+        sizeof (GstAHSLinearAccelerationValues)}
     , {
-    AHS_SENSOR_TYPE_MAGNETIC_FIELD, sizeof (GstAHSMagneticFieldValues)}
+        AHS_SENSOR_TYPE_MAGNETIC_FIELD, sizeof (GstAHSMagneticFieldValues)}
     , {
-    AHS_SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED,
-          sizeof (GstAHSMagneticFieldUncalibratedValues)}
+          AHS_SENSOR_TYPE_MAGNETIC_FIELD_UNCALIBRATED,
+        sizeof (GstAHSMagneticFieldUncalibratedValues)}
     , {
-    AHS_SENSOR_TYPE_ORIENTATION, sizeof (GstAHSOrientationValues)}
+        AHS_SENSOR_TYPE_ORIENTATION, sizeof (GstAHSOrientationValues)}
     , {
-    AHS_SENSOR_TYPE_PRESSURE, sizeof (GstAHSPressureValues)}
+        AHS_SENSOR_TYPE_PRESSURE, sizeof (GstAHSPressureValues)}
     , {
-    AHS_SENSOR_TYPE_PROXIMITY, sizeof (GstAHSProximityValues)}
+        AHS_SENSOR_TYPE_PROXIMITY, sizeof (GstAHSProximityValues)}
     , {
-    AHS_SENSOR_TYPE_RELATIVE_HUMIDITY, sizeof (GstAHSRelativeHumidityValues)}
+          AHS_SENSOR_TYPE_RELATIVE_HUMIDITY,
+        sizeof (GstAHSRelativeHumidityValues)}
     , {
-    AHS_SENSOR_TYPE_ROTATION_VECTOR, sizeof (GstAHSRotationVectorValues)}
+        AHS_SENSOR_TYPE_ROTATION_VECTOR, sizeof (GstAHSRotationVectorValues)}
     , {
-    AHS_SENSOR_TYPE_STEP_COUNTER, sizeof (GstAHSStepCounterValues)}
+        AHS_SENSOR_TYPE_STEP_COUNTER, sizeof (GstAHSStepCounterValues)}
     , {
-    AHS_SENSOR_TYPE_STEP_DETECTOR, sizeof (GstAHSStepDetectorValues)}
-  ,};
+        AHS_SENSOR_TYPE_STEP_DETECTOR, sizeof (GstAHSStepDetectorValues)}
+    ,
+  };
 
   g_assert_null (sensor_sizes);
 

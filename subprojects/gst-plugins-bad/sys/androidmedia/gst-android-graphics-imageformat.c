@@ -43,7 +43,8 @@ static struct
   jint YUY2;
   jint YV12;
 } android_graphics_imageformat = {
-0};
+  0
+};
 
 gint ImageFormat_JPEG;
 gint ImageFormat_NV16;

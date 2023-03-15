@@ -115,7 +115,7 @@ vad_get_threshold_as_db (struct _vad_s *p)
 }
 
 gint
-vad_update (struct _vad_s * p, gint16 * data, gint len)
+vad_update (struct _vad_s *p, gint16 * data, gint len)
 {
   guint64 tail;
   gint frame_type;

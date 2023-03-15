@@ -157,13 +157,15 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
     const gchar *key;
     gint id;
   } amc_profile = {
-  NULL, -1};
+    NULL, -1
+  };
   struct
   {
     const gchar *key;
     gint id;
   } amc_level = {
-  NULL, -1};
+    NULL, -1
+  };
   gint color_format;
   gint stride, slice_height;
   GstAmcFormat *format = NULL;
@@ -1158,7 +1160,7 @@ process_buffer:
       _find_nearest_frame (self,
       gst_util_uint64_scale (buffer_info.presentation_time_us, GST_USECOND, 1));
 
-  is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
+  is_eos = !!(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
 
   flow_ret =
       gst_amc_video_enc_handle_output_frame (self, buf, &buffer_info, frame);

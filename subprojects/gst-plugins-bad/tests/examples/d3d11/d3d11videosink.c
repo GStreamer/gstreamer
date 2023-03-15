@@ -190,9 +190,9 @@ print_keyboard_help (void)
     const gchar *key_help;
   } key_controls[] = {
     {
-    "q or ESC", "Quit"}, {
-    "SPACE", "Toggle fullscreen mode"}, {
-    "f", "Toggle force-aspect-ratio"}
+        "q or ESC", "Quit"}, {
+        "SPACE", "Toggle fullscreen mode"}, {
+        "f", "Toggle force-aspect-ratio"}
   };
   guint i, chars_to_pad, desc_len, max_desc_len = 0;
 

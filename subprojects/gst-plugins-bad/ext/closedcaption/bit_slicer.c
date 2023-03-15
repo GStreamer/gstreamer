@@ -277,7 +277,6 @@ BIT_SLICER (Y8, 4, DEF_THR_FRAC)        /* any format with 0 bytes between Y or 
     BIT_SLICER (RGBA24_LE, 4, DEF_THR_FRAC)     /* 3 bytes */
     BIT_SLICER (RGB16_LE, 4, bs->thresh_frac)
     BIT_SLICER (RGB16_BE, 4, bs->thresh_frac)
-
      static const unsigned int LP_AVG = 4;
 
      static vbi_bool
@@ -506,7 +505,8 @@ vbi_bool
     uint8_t * buffer,
     unsigned int buffer_size,
     vbi3_bit_slicer_point * points,
-    unsigned int *n_points, unsigned int max_points, const uint8_t * raw) {
+    unsigned int *n_points, unsigned int max_points, const uint8_t * raw)
+{
   static const vbi_pixfmt pixfmt = VBI_PIXFMT_Y8;
   static const unsigned int bpp = 1;
   static const unsigned int oversampling = 4;   /* see above */

@@ -271,24 +271,30 @@ GST_START_TEST (test_crf_cvf_data)
   gst_object_unref (avtpcrfbase);
 
   orig = (struct buffer_tstamps) {
-  .buf_pts = 103000,.buf_dts = 100000,.avtp_ts = 110000,.h264_ts = 108000};
+    .buf_pts = 103000,.buf_dts = 100000,.avtp_ts = 110000,.h264_ts = 108000
+  };
   expected = (struct buffer_tstamps) {
-  .buf_pts = 104204,.buf_dts = 100000,.avtp_ts = 110000,.h264_ts = 109204};
+    .buf_pts = 104204,.buf_dts = 100000,.avtp_ts = 110000,.h264_ts = 109204
+  };
   test_crf_tstamps (h, buf, &orig, &expected);
 
   orig = (struct buffer_tstamps) {
-  .buf_pts = 107000,.buf_dts = 105000,.avtp_ts = 113000,.h264_ts = 118500};
+    .buf_pts = 107000,.buf_dts = 105000,.avtp_ts = 113000,.h264_ts = 118500
+  };
   expected = (struct buffer_tstamps) {
-  .buf_pts = 108400,.buf_dts = 105300,.avtp_ts = 113300,.h264_ts = 119900};
+    .buf_pts = 108400,.buf_dts = 105300,.avtp_ts = 113300,.h264_ts = 119900
+  };
   test_crf_tstamps (h, buf, &orig, &expected);
 
   /* test for invalid DTS */
   orig = (struct buffer_tstamps) {
-  .buf_pts = 107000,.buf_dts = GST_CLOCK_TIME_NONE,.avtp_ts =
-        113000,.h264_ts = 118500};
+    .buf_pts = 107000,.buf_dts = GST_CLOCK_TIME_NONE,.avtp_ts =
+        113000,.h264_ts = 118500
+  };
   expected = (struct buffer_tstamps) {
-  .buf_pts = 108400,.buf_dts = GST_CLOCK_TIME_NONE,.avtp_ts =
-        113300,.h264_ts = 119900};
+    .buf_pts = 108400,.buf_dts = GST_CLOCK_TIME_NONE,.avtp_ts =
+        113300,.h264_ts = 119900
+  };
   test_crf_tstamps (h, buf, &orig, &expected);
 
   gst_buffer_unref (buf);
@@ -313,15 +319,19 @@ GST_START_TEST (test_crf_aaf_data)
   gst_object_unref (avtpcrfbase);
 
   orig = (struct buffer_tstamps) {
-  .buf_pts = 108000,.buf_dts = 0,.avtp_ts = 110000,.h264_ts = 0};
+    .buf_pts = 108000,.buf_dts = 0,.avtp_ts = 110000,.h264_ts = 0
+  };
   expected = (struct buffer_tstamps) {
-  .buf_pts = 108000,.buf_dts = 0,.avtp_ts = 110000,.h264_ts = 0};
+    .buf_pts = 108000,.buf_dts = 0,.avtp_ts = 110000,.h264_ts = 0
+  };
   test_crf_tstamps (h, buf, &orig, &expected);
 
   orig = (struct buffer_tstamps) {
-  .buf_pts = 110000,.buf_dts = 0,.avtp_ts = 113000,.h264_ts = 0};
+    .buf_pts = 110000,.buf_dts = 0,.avtp_ts = 113000,.h264_ts = 0
+  };
   expected = (struct buffer_tstamps) {
-  .buf_pts = 110300,.buf_dts = 0,.avtp_ts = 113300,.h264_ts = 0};
+    .buf_pts = 110300,.buf_dts = 0,.avtp_ts = 113300,.h264_ts = 0
+  };
   test_crf_tstamps (h, buf, &orig, &expected);
 
   gst_buffer_unref (buf);
@@ -346,9 +356,11 @@ GST_START_TEST (test_crf_period_zero)
   gst_object_unref (avtpcrfbase);
 
   orig = (struct buffer_tstamps) {
-  .buf_pts = 100,.buf_dts = 105,.avtp_ts = 112,.h264_ts = 110};
+    .buf_pts = 100,.buf_dts = 105,.avtp_ts = 112,.h264_ts = 110
+  };
   expected = (struct buffer_tstamps) {
-  .buf_pts = 100,.buf_dts = 105,.avtp_ts = 112,.h264_ts = 110};
+    .buf_pts = 100,.buf_dts = 105,.avtp_ts = 112,.h264_ts = 110
+  };
   test_crf_tstamps (h, buf, &orig, &expected);
 
   gst_buffer_unref (buf);

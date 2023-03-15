@@ -53,7 +53,7 @@ buffer_size_valid (GstMapInfo * info)
 }
 
 GstClockTime
-get_avtp_tstamp (GstAvtpCrfBase * avtpcrfbase, struct avtp_stream_pdu * pdu)
+get_avtp_tstamp (GstAvtpCrfBase * avtpcrfbase, struct avtp_stream_pdu *pdu)
 {
   guint64 tstamp = GST_CLOCK_TIME_NONE, tstamp_valid;
   guint32 type;
@@ -91,7 +91,7 @@ get_avtp_tstamp (GstAvtpCrfBase * avtpcrfbase, struct avtp_stream_pdu * pdu)
 }
 
 gboolean
-h264_tstamp_valid (struct avtp_stream_pdu * pdu)
+h264_tstamp_valid (struct avtp_stream_pdu *pdu)
 {
   guint64 subtype, h264_time_valid;
   guint32 type;

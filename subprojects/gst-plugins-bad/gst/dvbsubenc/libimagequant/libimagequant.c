@@ -410,7 +410,7 @@ liq_set_last_index_transparent (liq_attr * attr, int is_last)
   if (!CHECK_STRUCT_TYPE (attr, liq_attr))
     return;
 
-  attr->last_index_transparent = ! !is_last;
+  attr->last_index_transparent = !!is_last;
 }
 
 LIQ_EXPORT void

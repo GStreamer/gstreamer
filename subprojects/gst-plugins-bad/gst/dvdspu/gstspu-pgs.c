@@ -33,7 +33,7 @@ const struct PgsFrameRateEntry
   guint fps_d;
 } PgsFrameRates[] = {
   {
-  64, 30000, 1001}              /* 29.97 FPS */
+      64, 30000, 1001}          /* 29.97 FPS */
 };
 
 typedef enum PgsCommandType PgsCommandType;

@@ -422,9 +422,9 @@ gst_x265_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
     if (max_bit_minus_8 >= 2)
       has_10bit = TRUE;
 
-    has_8bit &= ! !vtable_8bit;
-    has_10bit &= ! !vtable_10bit;
-    has_12bit &= ! !vtable_12bit;
+    has_8bit &= !!vtable_8bit;
+    has_10bit &= !!vtable_10bit;
+    has_12bit &= !!vtable_12bit;
 
     /* 4:4:4 profiles can handle 4:2:2 and 4:2:0 */
     if (max_chroma_index >= 2)
@@ -534,8 +534,8 @@ gst_x265_enc_class_init (GstX265EncClass * klass)
       "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
 
   gst_x265_enc_add_x265_chroma_format (gst_caps_get_structure
-      (supported_sinkcaps, 0), TRUE, TRUE, TRUE, ! !vtable_8bit,
-      ! !vtable_10bit, ! !vtable_12bit);
+      (supported_sinkcaps, 0), TRUE, TRUE, TRUE, !!vtable_8bit,
+      !!vtable_10bit, !!vtable_12bit);
 
   sink_templ = gst_pad_template_new ("sink",
       GST_PAD_SINK, GST_PAD_ALWAYS, supported_sinkcaps);

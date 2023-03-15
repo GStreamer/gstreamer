@@ -491,7 +491,7 @@ retry:
       " flags 0x%08x", idx, buffer_info.offset, buffer_info.size,
       buffer_info.presentation_time_us, buffer_info.flags);
 
-  is_eos = ! !(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
+  is_eos = !!(buffer_info.flags & BUFFER_FLAG_END_OF_STREAM);
 
   buf = gst_amc_codec_get_output_buffer (self->codec, idx, &err);
   if (err) {

@@ -344,7 +344,7 @@ error:
 
 GstWlWindow *
 gst_wl_window_new_in_surface (GstWlDisplay * display,
-    struct wl_surface * parent, GMutex * render_lock)
+    struct wl_surface *parent, GMutex * render_lock)
 {
   GstWlWindow *self;
   GstWlWindowPrivate *priv;

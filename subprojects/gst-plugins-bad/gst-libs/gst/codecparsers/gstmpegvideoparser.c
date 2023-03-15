@@ -523,7 +523,8 @@ gst_mpeg_video_packet_parse_sequence_display_extension (const GstMpegVideoPacket
 gboolean
     gst_mpeg_video_packet_parse_sequence_scalable_extension
     (const GstMpegVideoPacket * packet,
-    GstMpegVideoSequenceScalableExt * seqscaleext) {
+    GstMpegVideoSequenceScalableExt * seqscaleext)
+{
   GstBitReader br;
 
   g_return_val_if_fail (seqscaleext != NULL, FALSE);

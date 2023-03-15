@@ -40,12 +40,12 @@ GST_START_TEST (test_pnm_enc_dec)
     const gchar *out_fmt;
   } test_formats[] = {
     {
-    "RGB", "RGB"}, {
-    "GRAY8", "GRAY8"}, {
-    "GRAY16_BE", "GRAY16_BE"}, {
-    "GRAY16_BE", "GRAY16_LE"}, {
-    "GRAY16_LE", "GRAY16_BE"}, {
-    "GRAY16_LE", "GRAY16_LE"}
+        "RGB", "RGB"}, {
+        "GRAY8", "GRAY8"}, {
+        "GRAY16_BE", "GRAY16_BE"}, {
+        "GRAY16_BE", "GRAY16_LE"}, {
+        "GRAY16_LE", "GRAY16_BE"}, {
+        "GRAY16_LE", "GRAY16_LE"}
   };
 
   pipeline =

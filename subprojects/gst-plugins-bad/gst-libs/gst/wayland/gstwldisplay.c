@@ -349,7 +349,7 @@ gst_wl_display_new (const gchar * name, GError ** error)
 }
 
 GstWlDisplay *
-gst_wl_display_new_existing (struct wl_display * display,
+gst_wl_display_new_existing (struct wl_display *display,
     gboolean take_ownership, GError ** error)
 {
   GstWlDisplay *self;

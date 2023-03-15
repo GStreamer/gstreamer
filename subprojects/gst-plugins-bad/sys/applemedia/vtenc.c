@@ -108,7 +108,7 @@ const CFStringRef kVTCompressionPropertyKey_Quality = CFSTR ("Quality");
 #ifdef HAVE_VIDEOTOOLBOX_10_9_6
 extern OSStatus
 VTCompressionSessionPrepareToEncodeFrames (VTCompressionSessionRef session)
-    __attribute__ ((weak_import));
+    __attribute__((weak_import));
 #endif
 
 /* This property key is currently completely undocumented. The only way you can

@@ -293,7 +293,7 @@ test_play_audio_video_eos_cb (GstPlay * player, TestPlayerStateChange change,
   gint step = GPOINTER_TO_INT (new_state->test_data);
   gboolean video;
 
-  video = ! !(step & 0x10);
+  video = !!(step & 0x10);
   step = (step & (~0x10));
 
   switch (step) {

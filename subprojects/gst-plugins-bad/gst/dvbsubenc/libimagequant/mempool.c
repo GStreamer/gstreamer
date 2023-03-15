@@ -37,8 +37,9 @@ mempool_create (mempool * mptr, const unsigned int size, unsigned int max_size,
   if (!*mptr)
     return NULL;
   **mptr = (struct mempool) {
-  .malloc = malloc,.free = free,.size = MEMPOOL_RESERVED + max_size,.used =
-        sizeof (struct mempool),.next = old,};
+    .malloc = malloc,.free = free,.size = MEMPOOL_RESERVED + max_size,.used =
+        sizeof (struct mempool),.next = old,
+  };
   mptr_used_start = (uintptr_t) (*mptr) + (*mptr)->used;
   (*mptr)->used += (ALIGN_MASK + 1 - (mptr_used_start & ALIGN_MASK)) & ALIGN_MASK;      // reserve bytes required to make subsequent allocations aligned
   assert (!(((uintptr_t) (*mptr) + (*mptr)->used) & ALIGN_MASK));
