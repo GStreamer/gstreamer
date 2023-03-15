@@ -152,11 +152,11 @@ gst_flv_demux_parse_and_add_index_entry (GstFlvDemux * demux, GstClockTime ts,
     gboolean key;
 
     gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
-    key = ! !(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
+    key = !!(GST_INDEX_ASSOC_FLAGS (entry) & GST_ASSOCIATION_FLAG_KEY_UNIT);
     GST_LOG_OBJECT (demux, "position already mapped to time %" GST_TIME_FORMAT
         ", keyframe %d", GST_TIME_ARGS (time), key);
     /* there is not really a way to delete the existing one */
-    if (time != ts || key != ! !keyframe)
+    if (time != ts || key != !!keyframe)
       GST_DEBUG_OBJECT (demux, "metadata mismatch");
 #endif
     gst_object_unref (index);
@@ -1913,7 +1913,7 @@ beach:
 
 static GstClockTime
 gst_flv_demux_parse_tag_timestamp (GstFlvDemux * demux, gboolean index,
-    GstBuffer * buffer, size_t * tag_size)
+    GstBuffer * buffer, size_t *tag_size)
 {
   guint32 dts = 0, dts_ext = 0;
   guint32 tag_data_size;
@@ -3014,7 +3014,7 @@ flv_demux_handle_seek_push (GstFlvDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -3185,7 +3185,7 @@ gst_flv_demux_handle_seek_pull (GstFlvDemux * demux, GstEvent * event,
     demux->seeking = seeking;
   GST_OBJECT_UNLOCK (demux);
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
 
   if (flush) {
     /* Flush start up and downstream to make sure data flow and loops are

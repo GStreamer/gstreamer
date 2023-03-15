@@ -1638,7 +1638,7 @@ gst_pulsesrc_success_cb (pa_stream * s, int success, void *userdata)
 {
   GstPulseSrc *pulsesrc = GST_PULSESRC_CAST (userdata);
 
-  pulsesrc->operation_success = ! !success;
+  pulsesrc->operation_success = !!success;
   pa_threaded_mainloop_signal (pulsesrc->mainloop, 0);
 }
 

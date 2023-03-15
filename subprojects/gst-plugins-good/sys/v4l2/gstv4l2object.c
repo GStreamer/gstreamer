@@ -4380,7 +4380,7 @@ unsupported_format:
  * Returns: %TRUE on success, %FALSE on failure.
  */
 gboolean
-gst_v4l2_object_set_crop (GstV4l2Object * obj, struct v4l2_rect * crop_rect)
+gst_v4l2_object_set_crop (GstV4l2Object * obj, struct v4l2_rect *crop_rect)
 {
   struct v4l2_selection sel = { 0 };
   struct v4l2_crop crop = { 0 };
@@ -4503,14 +4503,13 @@ gst_v4l2_object_get_crop_rect (GstV4l2Object * obj, guint target,
 }
 
 gboolean
-gst_v4l2_object_get_crop_bounds (GstV4l2Object * obj, struct v4l2_rect * result)
+gst_v4l2_object_get_crop_bounds (GstV4l2Object * obj, struct v4l2_rect *result)
 {
   return gst_v4l2_object_get_crop_rect (obj, V4L2_SEL_TGT_CROP_BOUNDS, result);
 }
 
 gboolean
-gst_v4l2_object_get_crop_default (GstV4l2Object * obj,
-    struct v4l2_rect * result)
+gst_v4l2_object_get_crop_default (GstV4l2Object * obj, struct v4l2_rect *result)
 {
   return gst_v4l2_object_get_crop_rect (obj, V4L2_SEL_TGT_CROP_DEFAULT, result);
 }

@@ -318,7 +318,7 @@ gst_rtp_h263_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     if (payload_len > 4 && (GST_READ_UINT32_BE (payload) >> 10 == 0x20)) {
       GST_DEBUG ("Mode %c with PSC => frame start", "ABC"[F + P]);
       rtph263depay->start = TRUE;
-      if ((! !(payload[4] & 0x02)) != I) {
+      if ((!!(payload[4] & 0x02)) != I) {
         GST_DEBUG ("Wrong Picture Coding Type Flag in rtp header");
         I = !I;
       }

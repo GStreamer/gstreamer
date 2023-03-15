@@ -429,7 +429,8 @@ gst_v4l2_transform_fixate_caps (GstBaseTransform * trans,
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
   GValue fpar = { 0, }, tpar = {
-  0,};
+    0,
+  };
 
   othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);

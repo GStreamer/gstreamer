@@ -716,14 +716,14 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, GstTagList * taglist,
       const gchar tag[28];
     } tags[] = {
       {
-      "replaygain_track_gain", GST_TAG_TRACK_GAIN}, {
-      "replaygain_track_peak", GST_TAG_TRACK_PEAK}, {
-      "replaygain_album_gain", GST_TAG_ALBUM_GAIN}, {
-      "replaygain_album_peak", GST_TAG_ALBUM_PEAK}, {
-      "MusicBrainz Track Id", GST_TAG_MUSICBRAINZ_TRACKID}, {
-      "MusicBrainz Artist Id", GST_TAG_MUSICBRAINZ_ARTISTID}, {
-      "MusicBrainz Album Id", GST_TAG_MUSICBRAINZ_ALBUMID}, {
-      "MusicBrainz Album Artist Id", GST_TAG_MUSICBRAINZ_ALBUMARTISTID}
+          "replaygain_track_gain", GST_TAG_TRACK_GAIN}, {
+          "replaygain_track_peak", GST_TAG_TRACK_PEAK}, {
+          "replaygain_album_gain", GST_TAG_ALBUM_GAIN}, {
+          "replaygain_album_peak", GST_TAG_ALBUM_PEAK}, {
+          "MusicBrainz Track Id", GST_TAG_MUSICBRAINZ_TRACKID}, {
+          "MusicBrainz Artist Id", GST_TAG_MUSICBRAINZ_ARTISTID}, {
+          "MusicBrainz Album Id", GST_TAG_MUSICBRAINZ_ALBUMID}, {
+          "MusicBrainz Album Artist Id", GST_TAG_MUSICBRAINZ_ALBUMARTISTID}
     };
     int i;
 
@@ -823,63 +823,64 @@ static const struct
   const GstQTDemuxAddTagFunc func;
 } add_funcs[] = {
   {
-  FOURCC__nam, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
-  FOURCC_titl, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
-  FOURCC__grp, GST_TAG_GROUPING, NULL, qtdemux_tag_add_str}, {
-  FOURCC__wrt, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
-  FOURCC__ART, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
-  FOURCC_aART, GST_TAG_ALBUM_ARTIST, NULL, qtdemux_tag_add_str}, {
-  FOURCC_perf, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
-  FOURCC_auth, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
-  FOURCC__alb, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
-  FOURCC_albm, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
-  FOURCC_cprt, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
-  FOURCC__cpy, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
-  FOURCC__cmt, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
-  FOURCC__des, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
-  FOURCC_desc, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
-  FOURCC_dscp, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
-  FOURCC__lyr, GST_TAG_LYRICS, NULL, qtdemux_tag_add_str}, {
-  FOURCC__day, GST_TAG_DATE, NULL, qtdemux_tag_add_date}, {
-  FOURCC_yrrc, GST_TAG_DATE, NULL, qtdemux_tag_add_year}, {
-  FOURCC__too, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
-  FOURCC__inf, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
-  FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT, qtdemux_tag_add_num}, {
-  FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
-        qtdemux_tag_add_num}, {
-  FOURCC_disc, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
-        qtdemux_tag_add_num}, {
-  FOURCC__gen, GST_TAG_GENRE, NULL, qtdemux_tag_add_str}, {
-  FOURCC_gnre, GST_TAG_GENRE, NULL, qtdemux_tag_add_gnre}, {
-  FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, qtdemux_tag_add_tmpo}, {
-  FOURCC_covr, GST_TAG_IMAGE, NULL, qtdemux_tag_add_covr}, {
-  FOURCC_sonm, GST_TAG_TITLE_SORTNAME, NULL, qtdemux_tag_add_str}, {
-  FOURCC_soal, GST_TAG_ALBUM_SORTNAME, NULL, qtdemux_tag_add_str}, {
-  FOURCC_soar, GST_TAG_ARTIST_SORTNAME, NULL, qtdemux_tag_add_str}, {
-  FOURCC_soaa, GST_TAG_ALBUM_ARTIST_SORTNAME, NULL, qtdemux_tag_add_str}, {
-  FOURCC_soco, GST_TAG_COMPOSER_SORTNAME, NULL, qtdemux_tag_add_str}, {
-  FOURCC_sosn, GST_TAG_SHOW_SORTNAME, NULL, qtdemux_tag_add_str}, {
-  FOURCC_tvsh, GST_TAG_SHOW_NAME, NULL, qtdemux_tag_add_str}, {
-  FOURCC_tvsn, GST_TAG_SHOW_SEASON_NUMBER, NULL, qtdemux_tag_add_uint32}, {
-  FOURCC_tves, GST_TAG_SHOW_EPISODE_NUMBER, NULL, qtdemux_tag_add_uint32}, {
-  FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_keywords}, {
-  FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
-  FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
-  FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, qtdemux_tag_add_location}, {
-  FOURCC_clsf, GST_QT_DEMUX_CLASSIFICATION_TAG, NULL,
-        qtdemux_tag_add_classification}, {
-  FOURCC__mak, GST_TAG_DEVICE_MANUFACTURER, NULL, qtdemux_tag_add_str}, {
-  FOURCC__mod, GST_TAG_DEVICE_MODEL, NULL, qtdemux_tag_add_str}, {
-  FOURCC__swr, GST_TAG_APPLICATION_NAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC__nam, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
+      FOURCC_titl, GST_TAG_TITLE, NULL, qtdemux_tag_add_str}, {
+      FOURCC__grp, GST_TAG_GROUPING, NULL, qtdemux_tag_add_str}, {
+      FOURCC__wrt, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
+      FOURCC__ART, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+      FOURCC_aART, GST_TAG_ALBUM_ARTIST, NULL, qtdemux_tag_add_str}, {
+      FOURCC_perf, GST_TAG_ARTIST, NULL, qtdemux_tag_add_str}, {
+      FOURCC_auth, GST_TAG_COMPOSER, NULL, qtdemux_tag_add_str}, {
+      FOURCC__alb, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
+      FOURCC_albm, GST_TAG_ALBUM, NULL, qtdemux_tag_add_str}, {
+      FOURCC_cprt, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
+      FOURCC__cpy, GST_TAG_COPYRIGHT, NULL, qtdemux_tag_add_str}, {
+      FOURCC__cmt, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
+      FOURCC__des, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
+      FOURCC_desc, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
+      FOURCC_dscp, GST_TAG_DESCRIPTION, NULL, qtdemux_tag_add_str}, {
+      FOURCC__lyr, GST_TAG_LYRICS, NULL, qtdemux_tag_add_str}, {
+      FOURCC__day, GST_TAG_DATE, NULL, qtdemux_tag_add_date}, {
+      FOURCC_yrrc, GST_TAG_DATE, NULL, qtdemux_tag_add_year}, {
+      FOURCC__too, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
+      FOURCC__inf, GST_TAG_COMMENT, NULL, qtdemux_tag_add_str}, {
+        FOURCC_trkn, GST_TAG_TRACK_NUMBER, GST_TAG_TRACK_COUNT,
+      qtdemux_tag_add_num}, {
+        FOURCC_disk, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
+      qtdemux_tag_add_num}, {
+        FOURCC_disc, GST_TAG_ALBUM_VOLUME_NUMBER, GST_TAG_ALBUM_VOLUME_COUNT,
+      qtdemux_tag_add_num}, {
+      FOURCC__gen, GST_TAG_GENRE, NULL, qtdemux_tag_add_str}, {
+      FOURCC_gnre, GST_TAG_GENRE, NULL, qtdemux_tag_add_gnre}, {
+      FOURCC_tmpo, GST_TAG_BEATS_PER_MINUTE, NULL, qtdemux_tag_add_tmpo}, {
+      FOURCC_covr, GST_TAG_IMAGE, NULL, qtdemux_tag_add_covr}, {
+      FOURCC_sonm, GST_TAG_TITLE_SORTNAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC_soal, GST_TAG_ALBUM_SORTNAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC_soar, GST_TAG_ARTIST_SORTNAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC_soaa, GST_TAG_ALBUM_ARTIST_SORTNAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC_soco, GST_TAG_COMPOSER_SORTNAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC_sosn, GST_TAG_SHOW_SORTNAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC_tvsh, GST_TAG_SHOW_NAME, NULL, qtdemux_tag_add_str}, {
+      FOURCC_tvsn, GST_TAG_SHOW_SEASON_NUMBER, NULL, qtdemux_tag_add_uint32}, {
+      FOURCC_tves, GST_TAG_SHOW_EPISODE_NUMBER, NULL, qtdemux_tag_add_uint32}, {
+      FOURCC_kywd, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_keywords}, {
+      FOURCC_keyw, GST_TAG_KEYWORDS, NULL, qtdemux_tag_add_str}, {
+      FOURCC__enc, GST_TAG_ENCODER, NULL, qtdemux_tag_add_str}, {
+      FOURCC_loci, GST_TAG_GEO_LOCATION_NAME, NULL, qtdemux_tag_add_location}, {
+        FOURCC_clsf, GST_QT_DEMUX_CLASSIFICATION_TAG, NULL,
+      qtdemux_tag_add_classification}, {
+      FOURCC__mak, GST_TAG_DEVICE_MANUFACTURER, NULL, qtdemux_tag_add_str}, {
+      FOURCC__mod, GST_TAG_DEVICE_MODEL, NULL, qtdemux_tag_add_str}, {
+      FOURCC__swr, GST_TAG_APPLICATION_NAME, NULL, qtdemux_tag_add_str}, {
 
-    /* This is a special case, some tags are stored in this
-     * 'reverse dns naming', according to:
-     * http://atomicparsley.sourceforge.net/mpeg-4files.html and
-     * bug #614471
-     */
-  FOURCC_____, "", NULL, qtdemux_tag_add_revdns}, {
-    /* see http://www.mp4ra.org/specs.html for ID32 in meta box */
-  FOURCC_ID32, "", NULL, qtdemux_tag_add_id32}
+        /* This is a special case, some tags are stored in this
+         * 'reverse dns naming', according to:
+         * http://atomicparsley.sourceforge.net/mpeg-4files.html and
+         * bug #614471
+         */
+      FOURCC_____, "", NULL, qtdemux_tag_add_revdns}, {
+        /* see http://www.mp4ra.org/specs.html for ID32 in meta box */
+      FOURCC_ID32, "", NULL, qtdemux_tag_add_id32}
 };
 
 struct _GstQtDemuxTagList

@@ -140,9 +140,10 @@ check_filter_varargs (const gchar * name, GstEvent * event, gint num_buffers,
   {
     const int width, height;
   } resolutions[] = { {
-  384, 288}, {
-  385, 289}, {
-  385, 385}};
+      384, 288}, {
+      385, 289}, {
+      385, 385}
+  };
   gint i, n, r;
   gint size;
   GstCaps *allcaps, *templ = gst_caps_from_string (VIDEO_CAPS_TEMPLATE_STRING);

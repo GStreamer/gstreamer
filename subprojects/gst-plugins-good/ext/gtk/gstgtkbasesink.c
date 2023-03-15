@@ -405,7 +405,7 @@ gst_gtk_base_sink_start_on_main (GstBaseSink * bsink)
 static gboolean
 gst_gtk_base_sink_start (GstBaseSink * bsink)
 {
-  return ! !gst_gtk_invoke_on_main ((GThreadFunc)
+  return !!gst_gtk_invoke_on_main ((GThreadFunc)
       gst_gtk_base_sink_start_on_main, bsink);
 }
 
@@ -429,7 +429,7 @@ gst_gtk_base_sink_stop (GstBaseSink * bsink)
   GstGtkBaseSink *gst_sink = GST_GTK_BASE_SINK (bsink);
 
   if (gst_sink->window)
-    return ! !gst_gtk_invoke_on_main ((GThreadFunc)
+    return !!gst_gtk_invoke_on_main ((GThreadFunc)
         gst_gtk_base_sink_stop_on_main, bsink);
 
   return TRUE;

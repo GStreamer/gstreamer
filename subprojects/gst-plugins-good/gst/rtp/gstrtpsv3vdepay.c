@@ -139,13 +139,13 @@ gst_rtp_sv3v_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     guint width, height;
   } resolutions[7] = {
     {
-    160, 128}, {
-    128, 96}, {
-    176, 144}, {
-    352, 288}, {
-    704, 576}, {
-    240, 180}, {
-    320, 240}
+        160, 128}, {
+        128, 96}, {
+        176, 144}, {
+        352, 288}, {
+        704, 576}, {
+        240, 180}, {
+        320, 240}
   };
   gint payload_len;
   guint8 *payload;

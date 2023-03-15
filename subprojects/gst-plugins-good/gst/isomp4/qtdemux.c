@@ -1405,8 +1405,8 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
     gint64 min_offset;
     gboolean next, before, after;
 
-    before = ! !(flags & GST_SEEK_FLAG_SNAP_BEFORE);
-    after = ! !(flags & GST_SEEK_FLAG_SNAP_AFTER);
+    before = !!(flags & GST_SEEK_FLAG_SNAP_BEFORE);
+    after = !!(flags & GST_SEEK_FLAG_SNAP_AFTER);
     next = after && !before;
     if (segment->rate < 0)
       next = !next;
@@ -1486,8 +1486,8 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 
   GST_DEBUG_OBJECT (qtdemux, "seek format %s", gst_format_get_name (format));
 
-  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
-  instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
+  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
+  instant_rate_change = !!(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
 
   /* Directly send the instant-rate-change event here before taking the
    * stream-lock so that it can be applied as soon as possible */
@@ -1634,7 +1634,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
 
       gst_event_parse_seek (event, NULL, &seek_format, &flags, NULL, NULL, NULL,
           NULL);
-      instant_rate_change = ! !(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
+      instant_rate_change = !!(flags & GST_SEEK_FLAG_INSTANT_RATE_CHANGE);
 
       if (seqnum == qtdemux->segment_seqnum) {
         GST_LOG_OBJECT (pad,
@@ -9569,7 +9569,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   /* sync sample atom */
   stream->stps_present = FALSE;
   if ((stream->stss_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stss,
               &stream->stss) ? TRUE : FALSE) == TRUE) {
     /* copy atom data into a new buffer for later use */
     stream->stss.data = g_memdup2 (stream->stss.data, stream->stss.size);
@@ -9587,7 +9587,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
     /* partial sync sample atom */
     if ((stream->stps_present =
-            ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
+            !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_stps,
                 &stream->stps) ? TRUE : FALSE) == TRUE) {
       /* copy atom data into a new buffer for later use */
       stream->stps.data = g_memdup2 (stream->stps.data, stream->stps.size);
@@ -9687,7 +9687,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
 
   /* composition time-to-sample */
   if ((stream->ctts_present =
-          ! !qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
+          !!qtdemux_tree_get_child_by_type_full (stbl, FOURCC_ctts,
               &stream->ctts) ? TRUE : FALSE) == TRUE) {
     GstByteReader cslg = GST_BYTE_READER_INIT (NULL, 0);
     guint8 ctts_version;

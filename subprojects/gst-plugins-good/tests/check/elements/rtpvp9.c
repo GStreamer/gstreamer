@@ -141,34 +141,34 @@ create_rtp_vp9_buffer_full (guint seqnum, guint picid, guint buffer_type,
     gint picid_bits;
   } templates[] = {
     {
-    intra_nopicid_seqnum0, sizeof (intra_nopicid_seqnum0), 0}
+        intra_nopicid_seqnum0, sizeof (intra_nopicid_seqnum0), 0}
     , {
-    intra_picid24_seqnum0, sizeof (intra_picid24_seqnum0), 7}
+        intra_picid24_seqnum0, sizeof (intra_picid24_seqnum0), 7}
     , {
-    intra_picid6336_seqnum0, sizeof (intra_picid6336_seqnum0), 15}
+        intra_picid6336_seqnum0, sizeof (intra_picid6336_seqnum0), 15}
     ,
-        /*
-           { intra_nopicid_seqnum0_tl1_sync_tl0picidx12,
-           sizeof (intra_nopicid_seqnum0_tl1_sync_tl0picidx12),
-           0
-           },
-           { intra_picid24_seqnum0_tl1_sync_tl0picidx12,
-           sizeof (intra_picid24_seqnum0_tl1_sync_tl0picidx12),
-           7
-           },
-           { intra_picid6336_seqnum0_tl1_sync_tl0picidx12,
-           sizeof (intra_picid6336_seqnum0_tl1_sync_tl0picidx12),
-           15
-           },
-           { intra_picid24_seqnum0_tl1_sync_no_tl0picidx,
-           sizeof (intra_picid24_seqnum0_tl1_sync_no_tl0picidx),
-           7
-           },
-           { intra_picid24_seqnum0_notyk_tl0picidx12,
-           sizeof (intra_picid24_seqnum0_notyk_tl0picidx12),
-           7
-           }
-         */
+    /*
+       { intra_nopicid_seqnum0_tl1_sync_tl0picidx12,
+       sizeof (intra_nopicid_seqnum0_tl1_sync_tl0picidx12),
+       0
+       },
+       { intra_picid24_seqnum0_tl1_sync_tl0picidx12,
+       sizeof (intra_picid24_seqnum0_tl1_sync_tl0picidx12),
+       7
+       },
+       { intra_picid6336_seqnum0_tl1_sync_tl0picidx12,
+       sizeof (intra_picid6336_seqnum0_tl1_sync_tl0picidx12),
+       15
+       },
+       { intra_picid24_seqnum0_tl1_sync_no_tl0picidx,
+       sizeof (intra_picid24_seqnum0_tl1_sync_no_tl0picidx),
+       7
+       },
+       { intra_picid24_seqnum0_notyk_tl0picidx12,
+       sizeof (intra_picid24_seqnum0_notyk_tl0picidx12),
+       7
+       }
+     */
   };
   struct BufferTemplate *template = &templates[buffer_type];
   guint8 *packet = g_memdup2 (template->template, template->size);

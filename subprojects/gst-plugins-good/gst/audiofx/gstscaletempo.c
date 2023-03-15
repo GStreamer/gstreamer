@@ -602,7 +602,7 @@ gst_scaletempo_sink_event (GstBaseTransform * trans, GstEvent * event)
 
     if (segment.format != GST_FORMAT_TIME
         || scaletempo->scale != ABS (segment.rate)
-        || ! !scaletempo->reverse != ! !(segment.rate < 0.0)) {
+        || !!scaletempo->reverse != !!(segment.rate < 0.0)) {
       if (segment.format != GST_FORMAT_TIME || ABS (segment.rate - 1.0) < 1e-10) {
         scaletempo->scale = 1.0;
         gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (scaletempo),

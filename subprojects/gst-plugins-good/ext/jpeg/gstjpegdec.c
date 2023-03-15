@@ -234,20 +234,20 @@ gst_jpeg_dec_term_source (j_decompress_ptr cinfo)
 }
 
 METHODDEF (void)
-    gst_jpeg_dec_my_output_message (j_common_ptr cinfo)
+gst_jpeg_dec_my_output_message (j_common_ptr cinfo)
 {
   return;                       /* do nothing */
 }
 
 METHODDEF (void)
-    gst_jpeg_dec_my_emit_message (j_common_ptr cinfo, int msg_level)
+gst_jpeg_dec_my_emit_message (j_common_ptr cinfo, int msg_level)
 {
   /* GST_LOG_OBJECT (CINFO_GET_JPEGDEC (&cinfo), "msg_level=%d", msg_level); */
   return;
 }
 
 METHODDEF (void)
-    gst_jpeg_dec_my_error_exit (j_common_ptr cinfo)
+gst_jpeg_dec_my_error_exit (j_common_ptr cinfo)
 {
   struct GstJpegDecErrorMgr *err_mgr = (struct GstJpegDecErrorMgr *) cinfo->err;
 

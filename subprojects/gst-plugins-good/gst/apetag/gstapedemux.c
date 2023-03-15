@@ -118,27 +118,27 @@ static const struct _GstApeDemuxTagTableEntry
   const gchar *gst_tag;
 } tag_table[] = {
   {
-  "replaygain_track_gain", GST_TAG_TRACK_GAIN}, {
-  "replaygain_track_peak", GST_TAG_TRACK_PEAK}, {
-  "replaygain_album_gain", GST_TAG_ALBUM_GAIN}, {
-  "replaygain_album_peak", GST_TAG_ALBUM_PEAK}, {
-  "title", GST_TAG_TITLE}, {
-  "artist", GST_TAG_ARTIST}, {
-  "album", GST_TAG_ALBUM}, {
-  "composer", GST_TAG_COMPOSER}, {
-  "comment", GST_TAG_COMMENT}, {
-  "comments", GST_TAG_COMMENT}, {
-  "copyright", GST_TAG_COPYRIGHT}, {
-  "genre", GST_TAG_GENRE}, {
-  "isrc", GST_TAG_ISRC}, {
-  "disc", GST_TAG_ALBUM_VOLUME_NUMBER}, {
-  "disk", GST_TAG_ALBUM_VOLUME_NUMBER}, {
-  "discnumber", GST_TAG_ALBUM_VOLUME_NUMBER}, {
-  "disknumber", GST_TAG_ALBUM_VOLUME_NUMBER}, {
-  "track", GST_TAG_TRACK_NUMBER}, {
-  "tracknumber", GST_TAG_TRACK_NUMBER}, {
-  "year", GST_TAG_DATE}, {
-  "file", GST_TAG_LOCATION}
+      "replaygain_track_gain", GST_TAG_TRACK_GAIN}, {
+      "replaygain_track_peak", GST_TAG_TRACK_PEAK}, {
+      "replaygain_album_gain", GST_TAG_ALBUM_GAIN}, {
+      "replaygain_album_peak", GST_TAG_ALBUM_PEAK}, {
+      "title", GST_TAG_TITLE}, {
+      "artist", GST_TAG_ARTIST}, {
+      "album", GST_TAG_ALBUM}, {
+      "composer", GST_TAG_COMPOSER}, {
+      "comment", GST_TAG_COMMENT}, {
+      "comments", GST_TAG_COMMENT}, {
+      "copyright", GST_TAG_COPYRIGHT}, {
+      "genre", GST_TAG_GENRE}, {
+      "isrc", GST_TAG_ISRC}, {
+      "disc", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+      "disk", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+      "discnumber", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+      "disknumber", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+      "track", GST_TAG_TRACK_NUMBER}, {
+      "tracknumber", GST_TAG_TRACK_NUMBER}, {
+      "year", GST_TAG_DATE}, {
+      "file", GST_TAG_LOCATION}
 };
 
 static gboolean

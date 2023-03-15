@@ -329,43 +329,47 @@ gst_audio_amplify_process_function (gint clipping, GstAudioFormat format)
     GstAudioAmplifyProcessFunc func;
   } process[] = {
     {
-    GST_AUDIO_FORMAT_F32, METHOD_CLIP, gst_audio_amplify_transform_gfloat_clip}, {
-    GST_AUDIO_FORMAT_F32, METHOD_WRAP_NEGATIVE,
-          gst_audio_amplify_transform_gfloat_wrap_negative}, {
-    GST_AUDIO_FORMAT_F32, METHOD_WRAP_POSITIVE,
-          gst_audio_amplify_transform_gfloat_wrap_positive}, {
-    GST_AUDIO_FORMAT_F32, METHOD_NOCLIP,
-          gst_audio_amplify_transform_gfloat_noclip}, {
-    GST_AUDIO_FORMAT_F64, METHOD_CLIP,
-          gst_audio_amplify_transform_gdouble_clip}, {
-    GST_AUDIO_FORMAT_F64, METHOD_WRAP_NEGATIVE,
-          gst_audio_amplify_transform_gdouble_wrap_negative}, {
-    GST_AUDIO_FORMAT_F64, METHOD_WRAP_POSITIVE,
-          gst_audio_amplify_transform_gdouble_wrap_positive}, {
-    GST_AUDIO_FORMAT_F64, METHOD_NOCLIP,
-          gst_audio_amplify_transform_gdouble_noclip}, {
-    GST_AUDIO_FORMAT_S8, METHOD_CLIP, gst_audio_amplify_transform_gint8_clip}, {
-    GST_AUDIO_FORMAT_S8, METHOD_WRAP_NEGATIVE,
-          gst_audio_amplify_transform_gint8_wrap_negative}, {
-    GST_AUDIO_FORMAT_S8, METHOD_WRAP_POSITIVE,
-          gst_audio_amplify_transform_gint8_wrap_positive}, {
-    GST_AUDIO_FORMAT_S8, METHOD_NOCLIP,
-          gst_audio_amplify_transform_gint8_noclip}, {
-    GST_AUDIO_FORMAT_S16, METHOD_CLIP, gst_audio_amplify_transform_gint16_clip}, {
-    GST_AUDIO_FORMAT_S16, METHOD_WRAP_NEGATIVE,
-          gst_audio_amplify_transform_gint16_wrap_negative}, {
-    GST_AUDIO_FORMAT_S16, METHOD_WRAP_POSITIVE,
-          gst_audio_amplify_transform_gint16_wrap_positive}, {
-    GST_AUDIO_FORMAT_S16, METHOD_NOCLIP,
-          gst_audio_amplify_transform_gint16_noclip}, {
-    GST_AUDIO_FORMAT_S32, METHOD_CLIP, gst_audio_amplify_transform_gint32_clip}, {
-    GST_AUDIO_FORMAT_S32, METHOD_WRAP_NEGATIVE,
-          gst_audio_amplify_transform_gint32_wrap_negative}, {
-    GST_AUDIO_FORMAT_S32, METHOD_WRAP_POSITIVE,
-          gst_audio_amplify_transform_gint32_wrap_positive}, {
-    GST_AUDIO_FORMAT_S32, METHOD_NOCLIP,
-          gst_audio_amplify_transform_gint32_noclip}, {
-    0, 0, NULL}
+          GST_AUDIO_FORMAT_F32, METHOD_CLIP,
+        gst_audio_amplify_transform_gfloat_clip}, {
+          GST_AUDIO_FORMAT_F32, METHOD_WRAP_NEGATIVE,
+        gst_audio_amplify_transform_gfloat_wrap_negative}, {
+          GST_AUDIO_FORMAT_F32, METHOD_WRAP_POSITIVE,
+        gst_audio_amplify_transform_gfloat_wrap_positive}, {
+          GST_AUDIO_FORMAT_F32, METHOD_NOCLIP,
+        gst_audio_amplify_transform_gfloat_noclip}, {
+          GST_AUDIO_FORMAT_F64, METHOD_CLIP,
+        gst_audio_amplify_transform_gdouble_clip}, {
+          GST_AUDIO_FORMAT_F64, METHOD_WRAP_NEGATIVE,
+        gst_audio_amplify_transform_gdouble_wrap_negative}, {
+          GST_AUDIO_FORMAT_F64, METHOD_WRAP_POSITIVE,
+        gst_audio_amplify_transform_gdouble_wrap_positive}, {
+          GST_AUDIO_FORMAT_F64, METHOD_NOCLIP,
+        gst_audio_amplify_transform_gdouble_noclip}, {
+          GST_AUDIO_FORMAT_S8, METHOD_CLIP,
+        gst_audio_amplify_transform_gint8_clip}, {
+          GST_AUDIO_FORMAT_S8, METHOD_WRAP_NEGATIVE,
+        gst_audio_amplify_transform_gint8_wrap_negative}, {
+          GST_AUDIO_FORMAT_S8, METHOD_WRAP_POSITIVE,
+        gst_audio_amplify_transform_gint8_wrap_positive}, {
+          GST_AUDIO_FORMAT_S8, METHOD_NOCLIP,
+        gst_audio_amplify_transform_gint8_noclip}, {
+          GST_AUDIO_FORMAT_S16, METHOD_CLIP,
+        gst_audio_amplify_transform_gint16_clip}, {
+          GST_AUDIO_FORMAT_S16, METHOD_WRAP_NEGATIVE,
+        gst_audio_amplify_transform_gint16_wrap_negative}, {
+          GST_AUDIO_FORMAT_S16, METHOD_WRAP_POSITIVE,
+        gst_audio_amplify_transform_gint16_wrap_positive}, {
+          GST_AUDIO_FORMAT_S16, METHOD_NOCLIP,
+        gst_audio_amplify_transform_gint16_noclip}, {
+          GST_AUDIO_FORMAT_S32, METHOD_CLIP,
+        gst_audio_amplify_transform_gint32_clip}, {
+          GST_AUDIO_FORMAT_S32, METHOD_WRAP_NEGATIVE,
+        gst_audio_amplify_transform_gint32_wrap_negative}, {
+          GST_AUDIO_FORMAT_S32, METHOD_WRAP_POSITIVE,
+        gst_audio_amplify_transform_gint32_wrap_positive}, {
+          GST_AUDIO_FORMAT_S32, METHOD_NOCLIP,
+        gst_audio_amplify_transform_gint32_noclip}, {
+        0, 0, NULL}
   };
   const struct process *p;
 

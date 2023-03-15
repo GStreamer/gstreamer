@@ -477,7 +477,7 @@ gst_oss4_sink_open (GstAudioSink * asink, gboolean silent_errors)
 
     if (ioctl (oss->fd, SNDCTL_DSP_GET_PLAYTGT_NAMES, &routings) != -1) {
       GST_LOG_OBJECT (oss, "%u output routings (static list: %d)",
-          routings.nvalues, ! !(routings.version == 0));
+          routings.nvalues, !!(routings.version == 0));
       for (i = 0; i < routings.nvalues; ++i) {
         GST_LOG_OBJECT (oss, "  output routing %d: %s", i,
             &routings.strings[routings.strindex[i]]);

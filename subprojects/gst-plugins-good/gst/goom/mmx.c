@@ -126,7 +126,6 @@ zoom_filter_mmx (int prevX, int prevY,
         "psrlw $8, %%mm0 \n\t"
         "packuswb %%mm7, %%mm0 \n\t" "movd %%mm0,%0 \n\t":"=g" (expix2[loop])
         :"r" (pos), "r" (coeffs), "r" (expix1)
-
         );
 
     emms ();

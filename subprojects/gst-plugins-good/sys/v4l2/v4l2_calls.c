@@ -1143,7 +1143,7 @@ input_failed:
 }
 
 gboolean
-gst_v4l2_query_input (GstV4l2Object * obj, struct v4l2_input * input)
+gst_v4l2_query_input (GstV4l2Object * obj, struct v4l2_input *input)
 {
   gint ret;
 
@@ -1274,7 +1274,7 @@ failed:
 }
 
 gboolean
-gst_v4l2_dequeue_event (GstV4l2Object * v4l2object, struct v4l2_event * event)
+gst_v4l2_dequeue_event (GstV4l2Object * v4l2object, struct v4l2_event *event)
 {
   gint ret;
 
@@ -1297,7 +1297,7 @@ gst_v4l2_dequeue_event (GstV4l2Object * v4l2object, struct v4l2_event * event)
 
 gboolean
 gst_v4l2_set_dv_timings (GstV4l2Object * v4l2object,
-    struct v4l2_dv_timings * timings)
+    struct v4l2_dv_timings *timings)
 {
   gint ret;
 
@@ -1317,7 +1317,7 @@ gst_v4l2_set_dv_timings (GstV4l2Object * v4l2object,
 
 gboolean
 gst_v4l2_query_dv_timings (GstV4l2Object * v4l2object,
-    struct v4l2_dv_timings * timings)
+    struct v4l2_dv_timings *timings)
 {
   gint ret;
 

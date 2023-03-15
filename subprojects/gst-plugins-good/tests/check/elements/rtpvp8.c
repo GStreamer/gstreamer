@@ -136,18 +136,18 @@ static const struct no_meta_test_data
   guint vp8_payload_control_value;
 } no_meta_test_data[] = {
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, 1, 0x10},       /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, 1, 0x10},   /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, 3, 0x90},    /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, 3, 0x90},        /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, 4, 0x90},    /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
-      /* repeated with non reference frame */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, 4, 0x90},        /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+  /* repeated with non reference frame */
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, 1, 0x30},       /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, 1, 0x30},   /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, 3, 0xB0},    /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, 3, 0xB0},        /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, 4, 0xB0},    /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, 4, 0xB0},        /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
 };
 
 GST_START_TEST (test_pay_no_meta)
@@ -221,42 +221,42 @@ static const struct with_meta_test_data
   guint vp8_payload_extended_value;
 } with_meta_test_data[] = {
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, FALSE, FALSE, 1, 0x10, 0x80},   /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, FALSE, FALSE, 1, 0x10, 0x80},       /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, FALSE, FALSE, 3, 0x90, 0x80},        /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, FALSE, FALSE, 3, 0x90, 0x80},    /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, FALSE, FALSE, 4, 0x90, 0x80},        /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, FALSE, FALSE, 4, 0x90, 0x80},    /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, FALSE, 4, 0x90, 0x60},    /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, FALSE, 4, 0x90, 0x60},        /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, FALSE, 5, 0x90, 0xE0}, /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, FALSE, 5, 0x90, 0xE0},     /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, FALSE, 6, 0x90, 0xE0}, /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, FALSE, 6, 0x90, 0xE0},     /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, TRUE, 4, 0x90, 0x60},     /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, TRUE, 4, 0x90, 0x60}, /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, TRUE, 5, 0x90, 0xE0},  /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, TRUE, 5, 0x90, 0xE0},      /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, TRUE, 6, 0x90, 0xE0},  /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
-      /* repeated with non reference frame */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, TRUE, 6, 0x90, 0xE0},      /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+  /* repeated with non reference frame */
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, FALSE, FALSE, 1, 0x30, 0x80},   /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, FALSE, FALSE, 1, 0x30, 0x80},       /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, FALSE, FALSE, 3, 0xB0, 0x80},        /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, FALSE, FALSE, 3, 0xB0, 0x80},    /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, FALSE, FALSE, 4, 0xB0, 0x80},        /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, FALSE, FALSE, 4, 0xB0, 0x80},    /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, FALSE, 4, 0xB0, 0x60},    /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, FALSE, 4, 0xB0, 0x60},        /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, FALSE, 5, 0xB0, 0xE0}, /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, FALSE, 5, 0xB0, 0xE0},     /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, FALSE, 6, 0xB0, 0xE0}, /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, FALSE, 6, 0xB0, 0xE0},     /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
   {
-  VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, TRUE, 4, 0xB0, 0x60},     /* no picture ID single byte header, S set */
+      VP8_PAY_NO_PICTURE_ID, FALSE, TRUE, TRUE, 4, 0xB0, 0x60}, /* no picture ID single byte header, S set */
   {
-  VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, TRUE, 5, 0xB0, 0xE0},  /* X bit to allow for I bit means header is three bytes, S and X set */
+      VP8_PAY_PICTURE_ID_7BITS, FALSE, TRUE, TRUE, 5, 0xB0, 0xE0},      /* X bit to allow for I bit means header is three bytes, S and X set */
   {
-  VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, TRUE, 6, 0xB0, 0xE0},  /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
+      VP8_PAY_PICTURE_ID_15BITS, TRUE, TRUE, TRUE, 6, 0xB0, 0xE0},      /* X bit to allow for I bit with M bit means header is four bytes, S, X and M set */
 };
 
 GST_START_TEST (test_pay_with_meta)

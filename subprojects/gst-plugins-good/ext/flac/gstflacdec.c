@@ -96,7 +96,7 @@ GST_DEBUG_CATEGORY_STATIC (flacdec_debug);
 
 static FLAC__StreamDecoderReadStatus
 gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
-    FLAC__byte buffer[], size_t * bytes, void *client_data);
+    FLAC__byte buffer[], size_t *bytes, void *client_data);
 static FLAC__StreamDecoderWriteStatus
 gst_flac_dec_write_stream (const FLAC__StreamDecoder * decoder,
     const FLAC__Frame * frame,
@@ -387,7 +387,7 @@ gst_flac_dec_scan_got_frame (GstFlacDec * flacdec, const guint8 * data,
   if (data[0] != 0xFF || (data[1] & 0xFC) != 0xF8)
     return FALSE;
 
-  vbs = ! !(data[1] & 1);       /* variable blocksize */
+  vbs = !!(data[1] & 1);        /* variable blocksize */
   bs = (data[2] & 0xF0) >> 4;   /* blocksize marker   */
   sr = (data[2] & 0x0F);        /* samplerate marker  */
   ca = (data[3] & 0xF0) >> 4;   /* channel assignment */
@@ -567,7 +567,7 @@ gst_flac_dec_error_cb (const FLAC__StreamDecoder * d,
 
 static FLAC__StreamDecoderReadStatus
 gst_flac_dec_read_stream (const FLAC__StreamDecoder * decoder,
-    FLAC__byte buffer[], size_t * bytes, void *client_data)
+    FLAC__byte buffer[], size_t *bytes, void *client_data)
 {
   GstFlacDec *dec = GST_FLAC_DEC (client_data);
   guint len;

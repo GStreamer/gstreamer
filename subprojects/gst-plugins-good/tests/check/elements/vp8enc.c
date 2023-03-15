@@ -242,7 +242,8 @@ configure_vp8ts (GstHarness * h)
   GValueArray *layer_ids = g_value_array_new (4);
   GValueArray *bitrates = g_value_array_new (3);
   GValue ival = { 0, }, bval = {
-  0,};
+    0,
+  };
 
   gst_value_array_init (&layer_sync_flags, 8);
 
@@ -331,23 +332,24 @@ GST_START_TEST (test_encode_temporally_scaled)
     gboolean droppable;
   } expected[] = {
     {
-    TRUE, 0, 1, FALSE},         /* This is an intra */
+        TRUE, 0, 1, FALSE},     /* This is an intra */
     {
-    TRUE, 2, 1, TRUE}, {
-    TRUE, 1, 1, FALSE}, {
-    FALSE, 2, 1, TRUE}, {
-    FALSE, 0, 2, FALSE}, {
-    FALSE, 2, 2, TRUE}, {
-    FALSE, 1, 2, FALSE}, {
-    FALSE, 2, 2, TRUE}, {
-    FALSE, 0, 3, FALSE}, {
-    TRUE, 2, 3, TRUE}, {
-    TRUE, 1, 3, FALSE}, {
-    FALSE, 2, 3, TRUE}, {
-    FALSE, 0, 4, FALSE}, {
-    FALSE, 2, 4, TRUE}, {
-    FALSE, 1, 4, FALSE}, {
-  FALSE, 2, 4, TRUE},};
+        TRUE, 2, 1, TRUE}, {
+        TRUE, 1, 1, FALSE}, {
+        FALSE, 2, 1, TRUE}, {
+        FALSE, 0, 2, FALSE}, {
+        FALSE, 2, 2, TRUE}, {
+        FALSE, 1, 2, FALSE}, {
+        FALSE, 2, 2, TRUE}, {
+        FALSE, 0, 3, FALSE}, {
+        TRUE, 2, 3, TRUE}, {
+        TRUE, 1, 3, FALSE}, {
+        FALSE, 2, 3, TRUE}, {
+        FALSE, 0, 4, FALSE}, {
+        FALSE, 2, 4, TRUE}, {
+        FALSE, 1, 4, FALSE}, {
+        FALSE, 2, 4, TRUE},
+  };
   GstHarness *h = gst_harness_new ("vp8enc");
   gst_harness_set_src_caps (h, gst_caps_new_i420 (320, 240));
   configure_vp8ts (h);

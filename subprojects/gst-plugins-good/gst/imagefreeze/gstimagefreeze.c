@@ -696,7 +696,7 @@ gst_image_freeze_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           &stop_type, &stop);
       gst_event_unref (event);
 
-      flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+      flush = !!(flags & GST_SEEK_FLAG_FLUSH);
 
       if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
         GST_ERROR_OBJECT (pad, "Seek in invalid format: %s",

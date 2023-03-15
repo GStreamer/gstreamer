@@ -295,7 +295,7 @@ check_rtp_buffer (GstClockTime ts, GstClockTime duration, gboolean start,
 
   fail_unless (payload[0] == number);
   fail_unless ((payload[1] & 0x7F) == volume);
-  fail_unless (! !(payload[1] & 0x80) == end);
+  fail_unless (!!(payload[1] & 0x80) == end);
   fail_unless (GST_READ_UINT16_BE (payload + 2) == rtpduration);
 
   gst_rtp_buffer_unmap (&rtpbuffer);

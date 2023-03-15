@@ -375,7 +375,7 @@ gst_alpha_set_property (GObject * object, guint prop_id,
     case PROP_PREFER_PASSTHROUGH:{
       gboolean prefer_passthrough = g_value_get_boolean (value);
 
-      reconfigure = ((! !prefer_passthrough) != (! !alpha->prefer_passthrough))
+      reconfigure = ((!!prefer_passthrough) != (!!alpha->prefer_passthrough))
           && (alpha->method == ALPHA_METHOD_SET) && (alpha->alpha == 1.0);
       alpha->prefer_passthrough = prefer_passthrough;
       break;
