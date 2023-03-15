@@ -2968,7 +2968,7 @@ gst_omx_port_set_enabled_unlocked (GstOMXPort * port, gboolean enabled)
 
   /* Check if the port is already enabled/disabled first */
   gst_omx_port_update_port_definition (port, NULL);
-  if (! !port->port_def.bEnabled == ! !enabled)
+  if (!!port->port_def.bEnabled == !!enabled)
     goto done;
 
   if (enabled)
@@ -3246,7 +3246,7 @@ gst_omx_port_wait_enabled_unlocked (GstOMXPort * port, GstClockTime timeout)
   gst_omx_port_update_port_definition (port, NULL);
   gst_omx_component_handle_messages (comp);
   while (signalled && last_error == OMX_ErrorNone &&
-      (! !port->port_def.bEnabled != ! !enabled || port->enabled_pending
+      (!!port->port_def.bEnabled != !!enabled || port->enabled_pending
           || port->disabled_pending)) {
     signalled = gst_omx_component_wait_message (comp, timeout);
     if (signalled)
@@ -3311,7 +3311,7 @@ gst_omx_port_is_enabled (GstOMXPort * port)
   g_return_val_if_fail (port != NULL, FALSE);
 
   gst_omx_port_update_port_definition (port, NULL);
-  enabled = ! !port->port_def.bEnabled;
+  enabled = !!port->port_def.bEnabled;
 
   GST_DEBUG_OBJECT (port->comp->parent, "%s port %u is enabled: %d",
       port->comp->name, port->index, enabled);
