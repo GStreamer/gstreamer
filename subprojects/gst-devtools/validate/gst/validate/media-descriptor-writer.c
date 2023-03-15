@@ -908,7 +908,8 @@ done:
 
 gboolean
     gst_validate_media_descriptor_writer_add_taglist
-    (GstValidateMediaDescriptorWriter * writer, const GstTagList * taglist) {
+    (GstValidateMediaDescriptorWriter * writer, const GstTagList * taglist)
+{
   gchar *str_str = NULL;
   GstValidateMediaTagsNode *tagsnode;
   GstValidateMediaTagNode *tagnode;

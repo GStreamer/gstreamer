@@ -1501,7 +1501,7 @@ gst_validate_structure_set_variables_from_struct_file (GstStructure * vars,
   gchar *t, *config_name_dir;
   gchar *validateflow, *expectations_dir, *actual_result_dir;
   const gchar *logdir;
-  gboolean local = ! !vars;
+  gboolean local = !!vars;
 
   if (!struct_file)
     return;
