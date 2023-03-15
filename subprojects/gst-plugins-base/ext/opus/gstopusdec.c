@@ -63,7 +63,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "format = (string) " GST_AUDIO_NE (S16) ", "
         "layout = (string) interleaved, "
         "rate = (int) { 48000, 24000, 16000, 12000, 8000 }, "
-        "channels = (int) [ 1, 8 ] ")
+        "channels = (int) [ 1, 255 ] ")
     );
 
 static GstStaticPadTemplate opus_dec_sink_factory =
