@@ -43,27 +43,28 @@ static const struct
   GstAudioChannelPosition gst;
 } _ff_to_gst_layout[] = {
   {
-  AV_CH_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
-  AV_CH_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
-  AV_CH_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
-  AV_CH_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1}, {
-  AV_CH_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
-  AV_CH_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
-  AV_CH_FRONT_LEFT_OF_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
-  AV_CH_FRONT_RIGHT_OF_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
-  AV_CH_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
-  AV_CH_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
-  AV_CH_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
-  AV_CH_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_CENTER}, {
-  AV_CH_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT}, {
-  AV_CH_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER}, {
-  AV_CH_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT}, {
-  AV_CH_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT}, {
-  AV_CH_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER}, {
-  AV_CH_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}, {
-  AV_CH_STEREO_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
-  AV_CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
+      AV_CH_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
+      AV_CH_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+      AV_CH_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER}, {
+      AV_CH_LOW_FREQUENCY, GST_AUDIO_CHANNEL_POSITION_LFE1}, {
+      AV_CH_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_REAR_LEFT}, {
+      AV_CH_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT}, {
+        AV_CH_FRONT_LEFT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER}, {
+        AV_CH_FRONT_RIGHT_OF_CENTER,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER}, {
+      AV_CH_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_REAR_CENTER}, {
+      AV_CH_SIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT}, {
+      AV_CH_SIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}, {
+      AV_CH_TOP_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_CENTER}, {
+      AV_CH_TOP_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_LEFT}, {
+      AV_CH_TOP_FRONT_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER}, {
+      AV_CH_TOP_FRONT_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT}, {
+      AV_CH_TOP_BACK_LEFT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_LEFT}, {
+      AV_CH_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER}, {
+      AV_CH_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}, {
+      AV_CH_STEREO_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
+      AV_CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
 };
 
 static guint64
@@ -323,24 +324,25 @@ gst_ff_vid_caps_new (AVCodecContext * context, const AVCodec * codec,
           gint framerate_n, framerate_d;
         } profiles[] = {
           {
-          "Y41B", 720, 480, 8, 9, 30000, 1001}, {
-          "Y41B", 720, 480, 32, 27, 30000, 1001}, {
-          "Y42B", 720, 480, 8, 9, 30000, 1001}, {
-          "Y42B", 720, 480, 32, 27, 30000, 1001}, {
-          "I420", 720, 576, 16, 15, 25, 1}, {
-          "I420", 720, 576, 64, 45, 25, 1}, {
-          "Y41B", 720, 576, 16, 15, 25, 1}, {
-          "Y41B", 720, 576, 64, 45, 25, 1}, {
-          "Y42B", 720, 576, 16, 15, 25, 1}, {
-          "Y42B", 720, 576, 64, 45, 25, 1}, {
-          "Y42B", 1280, 1080, 1, 1, 30000, 1001}, {
-          "Y42B", 1280, 1080, 3, 2, 30000, 1001}, {
-          "Y42B", 1440, 1080, 1, 1, 25, 1}, {
-          "Y42B", 1440, 1080, 4, 3, 25, 1}, {
-          "Y42B", 960, 720, 1, 1, 60000, 1001}, {
-          "Y42B", 960, 720, 4, 3, 60000, 1001}, {
-          "Y42B", 960, 720, 1, 1, 50, 1}, {
-        "Y42B", 960, 720, 4, 3, 50, 1},};
+              "Y41B", 720, 480, 8, 9, 30000, 1001}, {
+              "Y41B", 720, 480, 32, 27, 30000, 1001}, {
+              "Y42B", 720, 480, 8, 9, 30000, 1001}, {
+              "Y42B", 720, 480, 32, 27, 30000, 1001}, {
+              "I420", 720, 576, 16, 15, 25, 1}, {
+              "I420", 720, 576, 64, 45, 25, 1}, {
+              "Y41B", 720, 576, 16, 15, 25, 1}, {
+              "Y41B", 720, 576, 64, 45, 25, 1}, {
+              "Y42B", 720, 576, 16, 15, 25, 1}, {
+              "Y42B", 720, 576, 64, 45, 25, 1}, {
+              "Y42B", 1280, 1080, 1, 1, 30000, 1001}, {
+              "Y42B", 1280, 1080, 3, 2, 30000, 1001}, {
+              "Y42B", 1440, 1080, 1, 1, 25, 1}, {
+              "Y42B", 1440, 1080, 4, 3, 25, 1}, {
+              "Y42B", 960, 720, 1, 1, 60000, 1001}, {
+              "Y42B", 960, 720, 4, 3, 60000, 1001}, {
+              "Y42B", 960, 720, 1, 1, 50, 1}, {
+              "Y42B", 960, 720, 4, 3, 50, 1},
+        };
         GstCaps *temp;
         gint n_sizes = G_N_ELEMENTS (profiles);
 
@@ -2618,7 +2620,7 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
   }
 
   layout = gst_structure_get_string (structure, "layout");
-  interleaved = ! !g_strcmp0 (layout, "non-interleaved");
+  interleaved = !!g_strcmp0 (layout, "non-interleaved");
 
   switch (format) {
     case GST_AUDIO_FORMAT_F32:
@@ -3623,7 +3625,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
 
 gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
-    enum AVCodecID ** video_codec_list, enum AVCodecID ** audio_codec_list,
+    enum AVCodecID **video_codec_list, enum AVCodecID **audio_codec_list,
     AVOutputFormat * plugin)
 {
   static enum AVCodecID tmp_vlist[] = {

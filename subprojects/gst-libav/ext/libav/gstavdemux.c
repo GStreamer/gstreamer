@@ -1099,27 +1099,27 @@ static const struct
   const gchar *gst_tag_name;
 } tagmapping[] = {
   {
-  "album", GST_TAG_ALBUM}, {
-  "album_artist", GST_TAG_ALBUM_ARTIST}, {
-  "artist", GST_TAG_ARTIST}, {
-  "comment", GST_TAG_COMMENT}, {
-  "composer", GST_TAG_COMPOSER}, {
-  "copyright", GST_TAG_COPYRIGHT},
-      /* Need to convert ISO 8601 to GstDateTime: */
+      "album", GST_TAG_ALBUM}, {
+      "album_artist", GST_TAG_ALBUM_ARTIST}, {
+      "artist", GST_TAG_ARTIST}, {
+      "comment", GST_TAG_COMMENT}, {
+      "composer", GST_TAG_COMPOSER}, {
+      "copyright", GST_TAG_COPYRIGHT},
+  /* Need to convert ISO 8601 to GstDateTime: */
   {
-  "creation_time", GST_TAG_DATE_TIME},
-      /* Need to convert ISO 8601 to GDateTime: */
+      "creation_time", GST_TAG_DATE_TIME},
+  /* Need to convert ISO 8601 to GDateTime: */
   {
-  "date", GST_TAG_DATE_TIME}, {
-  "disc", GST_TAG_ALBUM_VOLUME_NUMBER}, {
-  "encoder", GST_TAG_ENCODER}, {
-  "encoded_by", GST_TAG_ENCODED_BY}, {
-  "genre", GST_TAG_GENRE}, {
-  "language", GST_TAG_LANGUAGE_CODE}, {
-  "performer", GST_TAG_PERFORMER}, {
-  "publisher", GST_TAG_PUBLISHER}, {
-  "title", GST_TAG_TITLE}, {
-  "track", GST_TAG_TRACK_NUMBER}
+      "date", GST_TAG_DATE_TIME}, {
+      "disc", GST_TAG_ALBUM_VOLUME_NUMBER}, {
+      "encoder", GST_TAG_ENCODER}, {
+      "encoded_by", GST_TAG_ENCODED_BY}, {
+      "genre", GST_TAG_GENRE}, {
+      "language", GST_TAG_LANGUAGE_CODE}, {
+      "performer", GST_TAG_PERFORMER}, {
+      "publisher", GST_TAG_PUBLISHER}, {
+      "title", GST_TAG_TITLE}, {
+      "track", GST_TAG_TRACK_NUMBER}
 };
 
 static const gchar *

@@ -1348,7 +1348,7 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   GstStructure *in_s;
   GstVideoInterlaceMode interlace_mode;
   gint caps_height;
-  gboolean one_field = ! !(flags & GST_VIDEO_BUFFER_FLAG_ONEFIELD);
+  gboolean one_field = !!(flags & GST_VIDEO_BUFFER_FLAG_ONEFIELD);
 
   if (!update_video_context (ffmpegdec, context, picture, one_field))
     return TRUE;
@@ -1846,7 +1846,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   GST_DEBUG_OBJECT (ffmpegdec, "repeat_pict:%d",
       ffmpegdec->picture->repeat_pict);
   GST_DEBUG_OBJECT (ffmpegdec, "corrupted frame: %d",
-      ! !(ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT));
+      !!(ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT));
 
   if (!gst_ffmpegviddec_negotiate (ffmpegdec, ffmpegdec->context,
           ffmpegdec->picture, GST_BUFFER_FLAGS (out_frame->input_buffer)))
