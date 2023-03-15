@@ -657,6 +657,41 @@ unpositioned:
   enc->channel_mapping_family = 255;
   enc->n_stereo_streams = 0;
 
+  /* check if downstream requests a specific channel configuration */
+  {
+    GstCaps *allowed_caps =
+        gst_pad_get_allowed_caps (GST_AUDIO_ENCODER_SRC_PAD (enc));
+    GstCaps *filter_caps =
+        gst_caps_new_simple ("audio/x-opus", "channels", G_TYPE_INT,
+        enc->n_channels, "rate", G_TYPE_INT, enc->sample_rate,
+        "channel-mapping-family", G_TYPE_INT, 255, NULL);
+
+    if (allowed_caps) {
+      GstCaps *intersection =
+          gst_caps_intersect_full (allowed_caps, filter_caps,
+          GST_CAPS_INTERSECT_FIRST);
+      guint8 stream_count, coupled_count;
+      guint8 channel_mapping[256];
+
+      intersection = gst_caps_fixate (intersection);
+
+      if (gst_codec_utils_opus_parse_caps (intersection, NULL, NULL, NULL,
+              &stream_count, &coupled_count, channel_mapping)
+          && stream_count + coupled_count == enc->n_channels) {
+        enc->n_stereo_streams = coupled_count;
+        memcpy (enc->decoding_channel_mapping, channel_mapping,
+            sizeof (channel_mapping));
+        memcpy (enc->encoding_channel_mapping, channel_mapping,
+            sizeof (channel_mapping));
+      }
+
+      gst_clear_caps (&intersection);
+    }
+
+    gst_clear_caps (&allowed_caps);
+    gst_clear_caps (&filter_caps);
+  }
+
 #ifndef GST_DISABLE_GST_DEBUG
   GST_INFO_OBJECT (enc,
       "Mapping tables built: %d channels, %d stereo streams", enc->n_channels,
