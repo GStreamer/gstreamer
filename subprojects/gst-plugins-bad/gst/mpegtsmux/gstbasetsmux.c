@@ -78,6 +78,7 @@
 #include <gst/pbutils/pbutils.h>
 #include <gst/videoparsers/gstjpeg2000parse.h>
 #include <gst/video/video-color.h>
+#include <gst/base/base.h>
 
 #include "gstbasetsmux.h"
 #include "gstbasetsmuxaac.h"
@@ -384,7 +385,8 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   const gchar *mt;
   const GValue *value = NULL;
   GstBuffer *codec_data = NULL;
-  guint8 opus_channel_config_code = 0;
+  guint8 opus_channel_config[1 + 2 + 1 + 1 + 255] = { 0, };
+  gsize opus_channel_config_len = 0;
   guint16 profile = GST_JPEG2000_PARSE_PROFILE_NONE;
   guint8 main_level = 0;
   guint32 max_rate = 0;
@@ -524,11 +526,14 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     }
 
     if (channels <= 2 && mapping_family == 0) {
-      opus_channel_config_code = channels;
-    } else if (channels == 2 && mapping_family == 255 && stream_count == 1
-        && coupled_count == 1) {
+      opus_channel_config[0] = channels;
+      opus_channel_config_len = 1;
+    } else if (channels == 2 && mapping_family == 255 && ((stream_count == 1
+                && coupled_count == 1) || (stream_count == 2
+                && coupled_count == 0))) {
       /* Dual mono */
-      opus_channel_config_code = 0;
+      opus_channel_config[0] = coupled_count == 0 ? 0x80 : 0x00;
+      opus_channel_config_len = 1;
     } else if (channels >= 2 && channels <= 8 && mapping_family == 1) {
       static const guint8 coupled_stream_counts[9] = {
         1, 0, 1, 1, 2, 2, 2, 3, 3
@@ -559,16 +564,45 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
           coupled_count == coupled_stream_counts[channels] &&
           memcmp (channel_mapping, channel_map_a[channels - 1],
               channels) == 0) {
-        opus_channel_config_code = channels;
+        opus_channel_config[0] = channels;
+        opus_channel_config_len = 1;
       } else if (stream_count == channels - coupled_stream_counts[channels] &&
           coupled_count == coupled_stream_counts[channels] &&
           memcmp (channel_mapping, channel_map_b[channels - 1],
               channels) == 0) {
-        opus_channel_config_code = channels | 0x80;
+        opus_channel_config[0] = channels | 0x80;
+        opus_channel_config_len = 1;
       } else {
         GST_FIXME_OBJECT (ts_pad, "Opus channel mapping not handled");
         goto not_negotiated;
       }
+    } else {
+      GstBitWriter writer;
+      guint i;
+      guint n_bits;
+
+      gst_bit_writer_init_with_data (&writer, opus_channel_config,
+          sizeof (opus_channel_config), FALSE);
+      gst_bit_writer_put_bits_uint8_unchecked (&writer, 0x81, 8);
+      gst_bit_writer_put_bits_uint8_unchecked (&writer, channels, 8);
+      gst_bit_writer_put_bits_uint8_unchecked (&writer, mapping_family, 8);
+
+      n_bits = g_bit_storage (channels);
+      gst_bit_writer_put_bits_uint8_unchecked (&writer, stream_count - 1,
+          n_bits);
+      n_bits = g_bit_storage (stream_count + 1);
+      gst_bit_writer_put_bits_uint8_unchecked (&writer, coupled_count, n_bits);
+
+      n_bits = g_bit_storage (stream_count + coupled_count + 1);
+      for (i = 0; i < channels; i++) {
+        gst_bit_writer_put_bits_uint8_unchecked (&writer, channel_mapping[i],
+            n_bits);
+      }
+
+      gst_bit_writer_align_bytes_unchecked (&writer, 0);
+      g_assert (writer.bit_size % 8 == 0);
+
+      opus_channel_config_len = writer.bit_size / 8;
     }
 
     st = TSMUX_ST_PS_OPUS;
@@ -727,7 +761,9 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   ts_pad->stream->max_bitrate = max_rate;
   ts_pad->stream->profile_and_level = profile | main_level;
 
-  ts_pad->stream->opus_channel_config_code = opus_channel_config_code;
+  memcpy (ts_pad->stream->opus_channel_config, opus_channel_config,
+      sizeof (opus_channel_config));
+  ts_pad->stream->opus_channel_config_len = opus_channel_config_len;
 
   tsmux_stream_set_buffer_release_func (ts_pad->stream, release_buffer_cb);
 

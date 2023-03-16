@@ -209,7 +209,9 @@ struct TsMuxStream {
 
   /* Opus */
   gboolean is_opus;
-  guint8 opus_channel_config_code;
+  guint8 opus_channel_config[1 + 2 + 1 + 1 + 255];
+  gsize opus_channel_config_len;
+
   /* Jpeg2000 */
   gint32 horizontal_size;
   gint32 vertical_size;

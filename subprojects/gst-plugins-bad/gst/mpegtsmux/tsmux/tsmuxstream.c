@@ -1033,7 +1033,7 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
         descriptor =
             gst_mpegts_descriptor_from_custom_with_extension
             (GST_MTS_DESC_DVB_EXTENSION, 0x80,
-            &stream->opus_channel_config_code, 1);
+            stream->opus_channel_config, stream->opus_channel_config_len);
 
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }

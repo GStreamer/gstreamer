@@ -123,8 +123,7 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "audio/x-ac3, framed = (boolean) TRUE;"
         "audio/x-dts, framed = (boolean) TRUE;"
         "audio/x-opus, "
-        "channels = (int) [1, 8], "
-        "channel-mapping-family = (int) {0, 1};"
+        "channels = (int) [1, 255];"
         "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true;"
         "image/x-jpc, alignment = (string) frame, profile = (int)[0, 49151];"));
 
