@@ -69,6 +69,28 @@ gst_d3d11_converter_backend_get_type (void)
   return type;
 }
 
+GType
+gst_d3d11_converter_sampler_filter_get_type (void)
+{
+  static GType filter_type = 0;
+  static const GEnumValue filter_types[] = {
+    {D3D11_FILTER_MIN_MAG_MIP_POINT,
+        "D3D11_FILTER_MIN_MAG_MIP_POINT", "min-mag-mip-point"},
+    {D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+        "D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT", "min-linear-mag-mip-point"},
+    {D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT,
+        "D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT", "min-mag-linear-mip-point"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    filter_type = g_enum_register_static ("GstD3D11ConverterSamplerFilter",
+        filter_types);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return filter_type;
+}
+
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
@@ -1259,7 +1281,8 @@ get_vuya_component (GstVideoFormat format, gchar * y, gchar * u,
 
 static gboolean
 gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
-    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
+    const GstVideoInfo * in_info, const GstVideoInfo * out_info,
+    D3D11_FILTER sampler_filter)
 {
   GstD3D11ConverterPrivate *priv = self->priv;
   GstD3D11Device *device = self->device;
@@ -1290,7 +1313,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
   /* bilinear filtering */
-  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+  sampler_desc.Filter = sampler_filter;
   sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
   sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
   sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
@@ -3106,6 +3129,7 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   guint wanted_backend = 0;
   gboolean allow_gamma = FALSE;
   gboolean allow_primaries = FALSE;
+  D3D11_FILTER sampler_filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
   gchar *backend_str;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
@@ -3133,6 +3157,8 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
       allow_primaries = TRUE;
     }
 
+    gst_structure_get_enum (config, GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
+        GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER, (int *) &sampler_filter);
     gst_structure_free (config);
   }
 
@@ -3306,8 +3332,10 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
       goto out;
   }
 
-  if (!gst_d3d11_color_convert_setup_shader (self, in_info, out_info))
+  if (!gst_d3d11_color_convert_setup_shader (self, in_info, out_info,
+          sampler_filter)) {
     goto out;
+  }
 
   priv->supported_backend |= GST_D3D11_CONVERTER_BACKEND_SHADER;
 

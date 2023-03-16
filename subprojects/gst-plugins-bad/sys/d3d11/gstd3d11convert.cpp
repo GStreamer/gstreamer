@@ -48,10 +48,57 @@ static GstStaticCaps src_template_caps =
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         GST_D3D11_SRC_FORMATS));
 
+typedef enum
+{
+  GST_D3D11_SAMPLING_METHOD_NEAREST,
+  GST_D3D11_SAMPLING_METHOD_BILINEAR,
+  GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
+} GstD3D11SamplingMethod;
+
+static const GEnumValue gst_d3d11_sampling_methods[] = {
+  {GST_D3D11_SAMPLING_METHOD_NEAREST,
+      "Nearest Neighbour", "nearest-neighbour"},
+  {GST_D3D11_SAMPLING_METHOD_BILINEAR,
+      "Bilinear", "bilinear"},
+  {GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
+      "Linear minification, point magnification", "linear-minification"},
+  {0, nullptr, nullptr},
+};
+
+#define GST_TYPE_D3D11_SAMPLING_METHOD gst_d3d11_sampling_method_get_type()
+static GType
+gst_d3d11_sampling_method_get_type (void)
+{
+  static GType type = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D11SamplingMethod",
+        gst_d3d11_sampling_methods);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return type;
+}
+
+static D3D11_FILTER
+gst_d3d11_base_convert_sampling_method_to_filter (GstD3D11SamplingMethod method)
+{
+  static const D3D11_FILTER filters[] = {
+    D3D11_FILTER_MIN_MAG_MIP_POINT,     // GST_D3D11_SAMPLING_METHOD_NEAREST
+    D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT,      // GST_D3D11_SAMPLING_METHOD_BILINEAR
+    D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT,      // GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION
+  };
+
+  G_STATIC_ASSERT_EXPR (G_N_ELEMENTS (filters) ==
+      G_N_ELEMENTS (gst_d3d11_sampling_methods) - 1);
+
+  return filters[method];
+}
+
 #define DEFAULT_ADD_BORDERS TRUE
 #define DEFAULT_BORDER_COLOR G_GUINT64_CONSTANT(0xffff000000000000)
 #define DEFAULT_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
+#define DEFAULT_SAMPLING_METHOD GST_D3D11_SAMPLING_METHOD_BILINEAR
 
 struct _GstD3D11BaseConvert
 {
@@ -74,6 +121,9 @@ struct _GstD3D11BaseConvert
   guint64 border_color;
   GstVideoGammaMode gamma_mode;
   GstVideoPrimariesMode primaries_mode;
+
+  /* sampling method, configured via property */
+  GstD3D11SamplingMethod sampling_method;
 
   /* orientation */
   /* method configured via property */
@@ -101,6 +151,18 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstD3D11BaseConvert, gst_d3d11_base_convert,
     GST_DEBUG_CATEGORY_INIT (gst_d3d11_convert_debug, "d3d11convert", 0,
         "d3d11convert"));
 
+enum
+{
+  PROP_BASE_CONVERT_0,
+  PROP_BASE_CONVERT_SAMPLING_METHOD,
+};
+
+static void
+gst_d3d11_base_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void
+gst_d3d11_base_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static void gst_d3d11_base_convert_dispose (GObject * object);
 static GstCaps *gst_d3d11_base_convert_transform_caps (GstBaseTransform *
     trans, GstPadDirection direction, GstCaps * caps, GstCaps * filter);
@@ -122,6 +184,9 @@ static GstFlowReturn gst_d3d11_base_convert_transform (GstBaseTransform *
 static gboolean gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
+static void
+gst_d3d11_base_convert_set_sampling_method (GstD3D11BaseConvert * self,
+    GstD3D11SamplingMethod method);
 
 /* copies the given caps */
 static GstCaps *
@@ -257,7 +322,24 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
   GstD3D11BaseFilterClass *bfilter_class = GST_D3D11_BASE_FILTER_CLASS (klass);
   GstCaps *caps;
 
+  gobject_class->set_property = gst_d3d11_base_convert_set_property;
+  gobject_class->get_property = gst_d3d11_base_convert_get_property;
   gobject_class->dispose = gst_d3d11_base_convert_dispose;
+
+  /**
+   * GstD3D11BaseConvert:method:
+   *
+   * Method used for sampling
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_BASE_CONVERT_SAMPLING_METHOD,
+      g_param_spec_enum ("method", "Method",
+          "Method used for sampling",
+          GST_TYPE_D3D11_SAMPLING_METHOD, DEFAULT_SAMPLING_METHOD,
+          (GParamFlags) (GST_PARAM_MUTABLE_PLAYING | G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS)));
 
   caps = gst_d3d11_get_updated_template_caps (&sink_template_caps);
   gst_element_class_add_pad_template (element_class,
@@ -298,6 +380,7 @@ gst_d3d11_base_convert_init (GstD3D11BaseConvert * self)
   self->border_color = DEFAULT_BORDER_COLOR;
   self->gamma_mode = DEFAULT_GAMMA_MODE;
   self->primaries_mode = DEFAULT_PRIMARIES_MODE;
+  self->sampling_method = DEFAULT_SAMPLING_METHOD;
 }
 
 static void
@@ -308,6 +391,39 @@ gst_d3d11_base_convert_dispose (GObject * object)
   gst_clear_object (&self->converter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_d3d11_base_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstD3D11BaseConvert *base = GST_D3D11_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_BASE_CONVERT_SAMPLING_METHOD:
+      gst_d3d11_base_convert_set_sampling_method (base,
+          (GstD3D11SamplingMethod) g_value_get_enum (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_d3d11_base_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstD3D11BaseConvert *base = GST_D3D11_BASE_CONVERT (object);
+
+  switch (prop_id) {
+    case PROP_BASE_CONVERT_SAMPLING_METHOD:
+      g_value_set_enum (value, base->sampling_method);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstCaps *
@@ -1541,7 +1657,11 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
       GST_TYPE_VIDEO_GAMMA_MODE, self->gamma_mode,
       GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
-      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode, nullptr);
+      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode,
+      GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
+      GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER,
+      gst_d3d11_base_convert_sampling_method_to_filter (self->sampling_method),
+      nullptr);
 
   self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info,
       config);
@@ -1970,6 +2090,22 @@ gst_d3d11_base_convert_set_primaries_mode (GstD3D11BaseConvert * self,
 
     if (prev_enabled != new_enabled)
       gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
+  }
+}
+
+static void
+gst_d3d11_base_convert_set_sampling_method (GstD3D11BaseConvert * self,
+    GstD3D11SamplingMethod method)
+{
+  GstD3D11SRWLockGuard lk (&self->lock);
+
+  GST_DEBUG_OBJECT (self, "Sampling method %s -> %s",
+      gst_d3d11_sampling_methods[self->sampling_method].value_nick,
+      gst_d3d11_sampling_methods[method].value_nick);
+
+  if (self->sampling_method != method) {
+    self->sampling_method = method;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
   }
 }
 
