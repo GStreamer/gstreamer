@@ -871,6 +871,7 @@ webrtc_data_channel_send_data (GstWebRTCDataChannel * base_channel,
     GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
     g_set_error (error, GST_WEBRTC_ERROR,
         GST_WEBRTC_ERROR_INVALID_STATE, "channel is not open");
+    gst_buffer_unref (buffer);
     return FALSE;
   }
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
@@ -945,6 +946,7 @@ webrtc_data_channel_send_string (GstWebRTCDataChannel * base_channel,
     GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
     g_set_error (error, GST_WEBRTC_ERROR,
         GST_WEBRTC_ERROR_INVALID_STATE, "channel is not open");
+    gst_buffer_unref (buffer);
     return FALSE;
   }
   GST_WEBRTC_DATA_CHANNEL_UNLOCK (channel);
