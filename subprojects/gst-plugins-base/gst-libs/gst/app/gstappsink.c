@@ -155,6 +155,7 @@ enum
   SIGNAL_TRY_PULL_PREROLL,
   SIGNAL_TRY_PULL_SAMPLE,
   SIGNAL_TRY_PULL_OBJECT,
+  SIGNAL_PROPOSE_ALLOCATION,
 
   LAST_SIGNAL
 };
@@ -212,6 +213,8 @@ static GstFlowReturn gst_app_sink_render_list (GstBaseSink * psink,
     GstBufferList * list);
 static gboolean gst_app_sink_setcaps (GstBaseSink * sink, GstCaps * caps);
 static GstCaps *gst_app_sink_getcaps (GstBaseSink * psink, GstCaps * filter);
+static gboolean gst_app_sink_propose_allocation (GstBaseSink * bsink,
+    GstQuery * query);
 
 static guint gst_app_sink_signals[LAST_SIGNAL] = { 0 };
 
@@ -335,6 +338,23 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
       G_STRUCT_OFFSET (GstAppSinkClass, new_sample),
       NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
 
+  /**
+   * GstAppSink::propose-allocation:
+   * @appsink: the appsink element that emitted the signal
+   * @query: the allocation query
+   *
+   * Signal that a new propose_allocation query is available.
+   *
+   * This signal is emitted from the streaming thread and only when the
+   * "emit-signals" property is %TRUE.
+   *
+   * Since: 1.24
+   */
+  gst_app_sink_signals[SIGNAL_PROPOSE_ALLOCATION] =
+      g_signal_new ("propose-allocation", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstAppSinkClass, propose_allocation),
+      NULL, NULL, NULL, G_TYPE_BOOLEAN, 1,
+      GST_TYPE_QUERY | G_SIGNAL_TYPE_STATIC_SCOPE);
   /**
    * GstAppSink::new-serialized-event:
    * @appsink: the appsink element that emitted the signal
@@ -539,6 +559,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   basesink_class->get_caps = gst_app_sink_getcaps;
   basesink_class->set_caps = gst_app_sink_setcaps;
   basesink_class->query = gst_app_sink_query;
+  basesink_class->propose_allocation = gst_app_sink_propose_allocation;
 
   klass->pull_preroll = gst_app_sink_pull_preroll;
   klass->pull_sample = gst_app_sink_pull_sample;
@@ -2046,4 +2067,33 @@ gst_app_sink_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->get_uri = gst_app_sink_uri_get_uri;
   iface->set_uri = gst_app_sink_uri_set_uri;
 
+}
+
+static gboolean
+gst_app_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstAppSink *appsink = GST_APP_SINK_CAST (bsink);
+  GstAppSinkPrivate *priv = appsink->priv;
+  Callbacks *callbacks = NULL;
+  gboolean emit;
+
+  g_mutex_lock (&priv->mutex);
+  emit = priv->emit_signals;
+  if (priv->callbacks)
+    callbacks = callbacks_ref (priv->callbacks);
+  g_mutex_unlock (&priv->mutex);
+
+  if (callbacks && callbacks->callbacks.propose_allocation) {
+    ret =
+        callbacks->callbacks.propose_allocation (appsink, query,
+        callbacks->user_data);
+  } else if (emit) {
+    g_signal_emit (appsink, gst_app_sink_signals[SIGNAL_PROPOSE_ALLOCATION], 0,
+        query, &ret);
+  }
+
+  g_clear_pointer (&callbacks, callbacks_unref);
+
+  return ret;
 }

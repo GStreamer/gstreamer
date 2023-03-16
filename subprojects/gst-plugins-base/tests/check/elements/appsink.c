@@ -23,6 +23,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/app/gstappsink.h>
+#include <gst/video/video.h>
 
 gint global_testdata;
 
@@ -1068,6 +1069,92 @@ GST_START_TEST (test_caps_before_flush_race_condition)
 
 GST_END_TEST;
 
+static gboolean
+propose_allocation_cb (GstAppSink * appsink, GstQuery * query,
+    gpointer callback_data)
+{
+  guint *allocation_query_count = callback_data;
+  *allocation_query_count += 1;
+  fail_unless (gst_query_is_writable (query));
+  fail_unless (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION);
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  return TRUE;
+}
+
+/* Verifies that the allocation query callback is called */
+GST_START_TEST (test_query_allocation_callback)
+{
+  GstElement *sink;
+  GstAppSinkCallbacks callbacks = { NULL };
+  GstAppSink *app_sink;
+  GstQuery *query = NULL;
+  guint allocation_query_count = 0;
+  GstPad *sinkpad;
+
+  sink = setup_appsink ();
+  app_sink = GST_APP_SINK (sink);
+
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  fail_unless (sinkpad);
+
+  callbacks.propose_allocation = propose_allocation_cb;
+  gst_app_sink_set_callbacks (app_sink, &callbacks, &allocation_query_count,
+      NULL);
+
+  query = gst_query_new_allocation (NULL, FALSE);
+  fail_unless (gst_pad_query (sinkpad, query));
+
+  fail_unless_equals_int (allocation_query_count, 1);
+  fail_unless (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE,
+          NULL));
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  gst_object_unref (sinkpad);
+  gst_query_unref (query);
+
+  GST_DEBUG ("cleaning up appsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_query_allocation_signals)
+{
+  GstElement *sink;
+  GstQuery *query = NULL;
+  guint allocation_query_count = 0;
+  GstPad *sinkpad;
+
+  sink = setup_appsink ();
+
+  g_object_set (sink, "emit-signals", TRUE, NULL);
+  g_signal_connect (sink, "propose-allocation",
+      G_CALLBACK (propose_allocation_cb), &allocation_query_count);
+
+  sinkpad = gst_element_get_static_pad (sink, "sink");
+  fail_unless (sinkpad);
+  query = gst_query_new_allocation (NULL, FALSE);
+  fail_unless (gst_pad_query (sinkpad, query));
+
+  fail_unless_equals_int (allocation_query_count, 1);
+  fail_unless (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE,
+          NULL));
+
+  ASSERT_SET_STATE (sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
+
+  gst_object_unref (sinkpad);
+  if (query)
+    gst_query_unref (query);
+
+  GST_DEBUG ("cleaning up appsink");
+  ASSERT_SET_STATE (sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsink (sink);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsink_suite (void)
 {
@@ -1094,6 +1181,8 @@ appsink_suite (void)
   tcase_add_test (tc_chain, test_event_paused);
   tcase_add_test (tc_chain, test_reverse_stepping);
   tcase_add_test (tc_chain, test_caps_before_flush_race_condition);
+  tcase_add_test (tc_chain, test_query_allocation_callback);
+  tcase_add_test (tc_chain, test_query_allocation_signals);
 
   return s;
 }

@@ -374,6 +374,16 @@
                         "return-type": "gboolean",
                         "when": "last"
                     },
+                    "propose-allocation": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GstQuery"
+                            }
+                        ],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    },
                     "pull-preroll": {
                         "action": true,
                         "args": [],
