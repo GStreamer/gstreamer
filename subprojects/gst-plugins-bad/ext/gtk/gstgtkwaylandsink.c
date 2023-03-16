@@ -226,6 +226,7 @@ window_destroy_cb (GtkWidget * widget, GstGtkWaylandSink * self)
       gst_gtk_wayland_sink_get_instance_private (self);
 
   GST_OBJECT_LOCK (self);
+  g_clear_object (&priv->wl_window);
   priv->gtk_window = NULL;
   GST_OBJECT_UNLOCK (self);
 
@@ -621,6 +622,7 @@ gst_gtk_wayland_sink_stop_on_main (GstGtkWaylandSink * self)
       g_signal_handler_disconnect (priv->gtk_window,
           priv->gtk_window_destroy_id);
     priv->gtk_window_destroy_id = 0;
+    g_clear_object (&priv->wl_window);
     gtk_widget_destroy (priv->gtk_window);
     priv->gtk_window = NULL;
   }
