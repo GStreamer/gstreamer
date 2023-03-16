@@ -111,6 +111,10 @@ static const gchar *test_lines[] = {
   "fakesrc : video/x-all : fakesink",   /* linking all matching pads with filter */
   "fakesrc ! video/x-all : fakesink",   /* linking all matching pads with filter */
   "fakesrc : video/x-all ! fakesink",   /* linking all matching pads with filter */
+  "fakesrc ! audio/x-opus, channel-mapping=(int)<0, 1> ! fakesink silent=true", /* array in capsfilter */
+  "fakesrc ! audio/x-opus, channel-mapping=(int)<0,\\ 1> ! fakesink silent=true",       /* array in capsfilter with escaped spaces */
+  "fakesrc ! capsfilter caps=\"audio/x-opus, channel-mapping=(int)<0, 1>\" ! fakesink silent=true",     /* array in explicit capsfilter */
+  "fakesrc ! capsfilter caps=\"audio/x-opus, channel-mapping=(int)<0,\\ 1>\" ! fakesink silent=true",   /* array in explicit capsfilter with escaped spaces */
   NULL
 };
 
