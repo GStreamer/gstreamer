@@ -23655,7 +23655,23 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "primary",
+                "signals": {
+                    "accept-certificate": {
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "GTlsCertificate"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "GTlsCertificateFlags"
+                            }
+                        ],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    }
+                }
             }
         },
         "filename": "gstsoup",

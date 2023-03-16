@@ -198,6 +198,14 @@ enum
   PROP_TLS_INTERACTION,
 };
 
+enum
+{
+  SIGNAL_ACCEPT_CERTIFICATE,
+  LAST_SIGNAL,
+};
+
+static guint gst_soup_http_src_signals[LAST_SIGNAL] = { 0 };
+
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc " PACKAGE_VERSION " "
 #define DEFAULT_IRADIO_MODE          TRUE
 #define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_HEADERS
@@ -496,6 +504,27 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
       g_param_spec_string ("method", "HTTP method",
           "The HTTP method to use (GET, HEAD, OPTIONS, etc)",
           DEFAULT_SOUP_METHOD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSoupHTTPSrc::accept-certificate:
+   * @souphttpsrc: a #GstSoupHTTPSrc
+   * @peer_cert: the peer's #GTlsCertificate
+   * @errors: the problems with @peer_cert
+   *
+   * This will directly map to #SoupMessage 's "accept-certificate" after
+   * an unacceptable TLS certificate has been received, and only for libsoup 3.x
+   * or above. If "ssl-strict" was set to %FALSE, this signal will not be
+   * emitted.
+   *
+   * Returns: %TRUE to accept the TLS certificate and stop other handlers from
+   * being invoked, or %FALSE to propagate the event further.
+   *
+   * Since: 1.24
+   */
+  gst_soup_http_src_signals[SIGNAL_ACCEPT_CERTIFICATE] =
+      g_signal_new ("accept-certificate", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, g_signal_accumulator_true_handled, NULL, NULL,
+      G_TYPE_BOOLEAN, 2, G_TYPE_TLS_CERTIFICATE, G_TYPE_TLS_CERTIFICATE_FLAGS);
 
   gst_element_class_add_static_pad_template (gstelement_class, &srctemplate);
 
@@ -1312,6 +1341,7 @@ gst_soup_http_src_accept_certificate_cb (SoupMessage * msg,
     gpointer user_data)
 {
   GstSoupHTTPSrc *src = user_data;
+  gboolean accept = FALSE;
 
   /* Might be from another user of the shared session */
   if (!GST_IS_SOUP_HTTP_SRC (src) || msg != src->msg)
@@ -1321,7 +1351,10 @@ gst_soup_http_src_accept_certificate_cb (SoupMessage * msg,
   if (!src->ssl_strict)
     return TRUE;
 
-  return FALSE;
+  g_signal_emit (src, gst_soup_http_src_signals[SIGNAL_ACCEPT_CERTIFICATE], 0,
+      tls_certificate, tls_errors, &accept);
+
+  return accept;
 }
 
 static void
