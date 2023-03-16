@@ -269,8 +269,6 @@ gst_video_info_dma_drm_to_caps (const GstVideoInfoDmaDrm * drm_info)
     return NULL;
   }
 
-  caps = gst_caps_make_writable (caps);
-
   str = gst_video_dma_drm_fourcc_to_string (drm_info->drm_fourcc,
       drm_info->drm_modifier);
 
@@ -316,7 +314,7 @@ gst_video_info_dma_drm_from_caps (GstVideoInfoDmaDrm * drm_info,
 
   GST_DEBUG ("parsing caps %" GST_PTR_FORMAT, caps);
 
-  tmp_caps = gst_caps_make_writable (gst_caps_copy (caps));
+  tmp_caps = gst_caps_copy (caps);
   structure = gst_caps_get_structure (tmp_caps, 0);
 
   str = gst_structure_get_string (structure, "drm-format");
