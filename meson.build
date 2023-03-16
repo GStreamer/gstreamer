@@ -150,6 +150,10 @@ plugins_doc_caches = []
 orc_update_targets = []
 all_plugins = []
 all_tools = {}
+all_helpers = {}
+gst_tools = []
+gst_helpers = []
+gst_libraries =[]
 # Using a list and not a dict to keep the ordering to build the chain of `gir`
 # dependencies
 all_libraries = []
@@ -194,6 +198,7 @@ foreach sp : subprojects
     all_libraries += subproj.get_variable('gst_libraries', [])
     if not get_option('tools').disabled()
       all_tools += subproj.get_variable('gst_tools', {})
+      all_helpers += subproj.get_variable('gst_helpers', {})
     endif
 
     orc_update_targets += subproj.get_variable('orc_update_targets', [])
@@ -370,6 +375,7 @@ if building_full
 
   foreach pkgname_library : all_libraries
     pkg_name = pkgname_library[0]
+    gst_libraries += pkg_name
     lib_def = pkgname_library[1]
 
     if pkg_name in wanted_libs or all_libs
@@ -471,8 +477,9 @@ if building_full
   meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
 
   if not get_option('tools').disabled()
+    # Loop for tools
     foreach tool, data: all_tools
-      gst_full_tools += tool
+      gst_tools += tool
       exe_name = '@0@-@1@'.format(tool, apiversion)
 
       deps = []
@@ -509,7 +516,57 @@ if building_full
       endif
 
     endforeach
+
+    # Loop for helpers tools
+    foreach helper, data: all_helpers
+      gst_helpers += helper
+      exe_name = '@0@'.format(helper)
+
+      deps = []
+      foreach d : data.get('deps', [])
+        if d not in exposed_deps
+          deps += d
+        endif
+      endforeach
+
+      exe = executable(exe_name,
+        data.get('files'),
+        install: data.get('install', true),
+        install_tag: data.get('install_tag', 'bin'),
+        install_dir: data.get('install_dir', get_option('bindir')),
+        include_directories : data.get('include_directories', [configinc]),
+        dependencies : [gst_full_dep] + deps,
+        c_args: data.get('extra_c_args', []) + gst_c_args + ['-DG_LOG_DOMAIN="@0@"'.format(exe_name)],
+        cpp_args: data.get('extra_cpp_args', []),
+        objc_args: data.get('extra_objc_args', []),
+        override_options: data.get('override_options', []),
+      )
+
+      if(data.has_key('env'))
+        env = data.get('env')
+        value = env[1]
+        if env[1] == 'exe-full-path'
+          value = exe.full_path()
+        endif
+        meson.add_devenv({env[0]: value})
+      endif
+
+      if data.has_key('man_page')
+        install_man(data.get('man_page'))
+      endif
+
+    endforeach
   endif
+else # not gst_full
+  foreach tool, data: all_tools
+    gst_tools += tool
+  endforeach
+  foreach helper, data: all_helpers
+    gst_helpers += helper
+  endforeach
+  foreach library : all_libraries
+    gst_libraries = library[0]
+  endforeach
 endif
 
 message('Building subprojects: ' + ', '.join(subprojects_names))
@@ -556,6 +613,8 @@ endif
 summary({
   'gstreamer-full library': building_full,
   'gstreamer-full target type': get_option('gst-full-target-type'),
-  'Tools': gst_full_tools,
+  'Tools': gst_tools,
+  'Helpers': gst_helpers,
+  'Libraries': gst_libraries,
   'Tests and examples disabled': building_full,
 }, section: 'Build options', bool_yn: true, list_sep: '  ')
