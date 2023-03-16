@@ -52,8 +52,6 @@
 
 #include <math.h>
 
-#define _gst_log2(x) (log(x)/log(2))
-
 /*
  * tsdemux
  *
@@ -1514,7 +1512,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
             gst_byte_reader_init (&br, desc->data + 3, desc->length - 1);
             channel_config_code = gst_byte_reader_get_uint8_unchecked (&br);
 
-            if ((channel_config_code & 0x8f) <= 8) {
+            if (channel_config_code < 0x89) {
               static const guint8 coupled_stream_counts[9] = {
                 1, 0, 1, 1, 2, 2, 2, 3, 3
               };
@@ -1540,7 +1538,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
               };
 
               gint channels = -1, stream_count, coupled_count, mapping_family;
-              guint8 *channel_mapping = NULL;
+              guint8 channel_mapping[255] = { 0, };
 
               channels = channel_config_code ? (channel_config_code & 0x0f) : 2;
               if (channel_config_code == 0 || channel_config_code == 0x80) {
@@ -1553,7 +1551,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                   stream_count = 2;
                   coupled_count = 0;
                 }
-                channel_mapping = g_new0 (guint8, channels);
                 memcpy (channel_mapping, &channel_map_a[1], channels);
               } else if (channel_config_code <= 8) {
                 mapping_family = (channels > 2) ? 1 : 0;
@@ -1562,7 +1559,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                     coupled_stream_counts[channel_config_code];
                 coupled_count = coupled_stream_counts[channel_config_code];
                 if (mapping_family != 0) {
-                  channel_mapping = g_new0 (guint8, channels);
                   memcpy (channel_mapping, &channel_map_a[channels - 1],
                       channels);
                 }
@@ -1571,7 +1567,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                 mapping_family = 1;
                 stream_count = channels;
                 coupled_count = 0;
-                channel_mapping = g_new0 (guint8, channels);
                 memcpy (channel_mapping, &channel_map_b[channels - 1],
                     channels);
               } else if (channel_config_code == 0x81) {
@@ -1608,7 +1603,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                       gst_byte_reader_get_data_unchecked
                       (&br, remaining_bytes), remaining_bytes);
 
-                  stream_count_minus_one_len = ceil (_gst_log2 (channels));
+                  stream_count_minus_one_len = g_bit_storage (channels);
                   if (!gst_bit_reader_get_bits_uint8 (&breader,
                           &stream_count_minus_one,
                           stream_count_minus_one_len)) {
@@ -1619,8 +1614,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                   }
 
                   stream_count = stream_count_minus_one + 1;
-                  coupled_stream_count_len =
-                      ceil (_gst_log2 (stream_count_minus_one + 2));
+                  coupled_stream_count_len = g_bit_storage (stream_count + 1);
 
                   if (!gst_bit_reader_get_bits_uint8 (&breader,
                           &coupled_stream_count, coupled_stream_count_len)) {
@@ -1633,9 +1627,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                   coupled_count = coupled_stream_count;
 
                   channel_mapping_len =
-                      ceil (_gst_log2 (stream_count_minus_one + 1 +
-                          coupled_stream_count + 1));
-                  channel_mapping = g_new0 (guint8, channels);
+                      g_bit_storage (stream_count + coupled_stream_count + 1);
                   for (i = 0; i < channels; i++) {
                     if (!gst_bit_reader_get_bits_uint8 (&breader,
                             &channel_mapping[i], channel_mapping_len)) {
@@ -1648,8 +1640,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                   /* error above */
                   if (i != channels) {
                     channels = -1;
-                    g_free (channel_mapping);
-                    channel_mapping = NULL;
                     break;
                   }
                 }
@@ -1663,8 +1653,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
                     gst_codec_utils_opus_create_caps (48000, channels,
                     mapping_family, stream_count, coupled_count,
                     channel_mapping);
-
-                g_free (channel_mapping);
               }
             } else {
               GST_WARNING_OBJECT (demux,
