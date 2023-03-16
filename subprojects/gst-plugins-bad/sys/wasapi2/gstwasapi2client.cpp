@@ -144,7 +144,6 @@ public:
     client = (GstWasapi2Client *) g_weak_ref_get (&listener_);
 
     if (!client) {
-      this->Release ();
       GST_WARNING ("No listener was configured");
       return S_OK;
     }
@@ -176,8 +175,6 @@ public:
     /* return S_OK anyway, but listener can know it's succeeded or not
      * by passed IAudioClient handle via gst_wasapi2_client_on_device_activated
      */
-
-    this->Release ();
 
     return S_OK;
   }
@@ -230,17 +227,6 @@ public:
     } else {
       hr = work_item->Invoke ();
     }
-
-    /* We should hold activator object until activation callback has executed,
-     * because OS doesn't hold reference of this callback COM object.
-     * otherwise access violation would happen
-     * See https://docs.microsoft.com/en-us/windows/win32/api/mmdeviceapi/nf-mmdeviceapi-activateaudiointerfaceasync
-     *
-     * This reference count will be decreased by self later on callback,
-     * which will be called from device worker thread.
-     */
-    if (gst_wasapi2_result (hr))
-      this->AddRef ();
 
     return hr;
   }
@@ -404,9 +390,6 @@ static void
 gst_wasapi2_client_constructed (GObject * object)
 {
   GstWasapi2Client *self = GST_WASAPI2_CLIENT (object);
-  /* *INDENT-OFF* */
-  ComPtr<GstWasapiDeviceActivator> activator;
-  /* *INDENT-ON* */
 
   /* Create a new thread to ensure that COM thread can be MTA thread.
    * We cannot ensure whether CoInitializeEx() was called outside of here for
@@ -958,6 +941,10 @@ run_loop:
   GST_DEBUG_OBJECT (self, "Stopped main loop");
 
   g_main_context_pop_thread_default (self->context);
+
+  /* Wait for pending async op if any */
+  if (self->dispatcher)
+    gst_wasapi2_client_ensure_activation (self);
 
   GST_WASAPI2_CLEAR_COM (self->audio_client);
 
