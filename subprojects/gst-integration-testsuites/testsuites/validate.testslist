@@ -942,9 +942,9 @@ validate.test.matroska.demux_flush_within_cluster.default
 validate.test.mp4.qtdemux_change_edit_list.default
 validate.test.mp4.qtdemux_reverse_playback_full_gop.reverse_playback_full_gop
 validate.test.mp4.redirect.play_15s
-validate.test.mse.segment_future_past_mse.segment_future_past_mse
-validate.test.mse.segment_future_past_mse_edit_lists.segment_future_past_mse_edit_lists
-validate.test.mse.segment_future_past_nomse.segment_future_past_nomse
+validate.test.mse.segment_future_past_mse
+validate.test.mse.segment_future_past_mse_edit_lists
+validate.test.mse.segment_future_past_nomse
 validate.test.nle.urisource.play
 validate.test.playbin.check_active_stream
 validate.test.playbin3.ignore_raw_audio_from_demuxer
