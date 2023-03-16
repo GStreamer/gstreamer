@@ -48,9 +48,7 @@ gst_va_create_feature_name (GstVaDevice * device,
   if (device->index == 0) {
     *type_name = g_strdup (type_name_default);
     *feature_name = g_strdup (feature_name_default);
-#ifdef G_OS_WIN32
     g_object_get (device->display, "description", desc, NULL);
-#endif
     return;
   }
 #ifdef G_OS_WIN32
@@ -62,12 +60,15 @@ gst_va_create_feature_name (GstVaDevice * device,
   *type_name = g_strdup_printf (type_name_templ, basename);
   *feature_name = g_strdup_printf (feature_name_templ, basename);
 
-#ifdef G_OS_WIN32
   g_object_get (device->display, "description", desc, NULL);
-  g_free (basename);
-#else
-  *desc = basename;
+#ifndef G_OS_WIN32
+  {
+    gchar *newdesc = g_strdup_printf ("%s in %s", *desc, basename);
+    g_free (*desc);
+    *desc = newdesc;
+  }
 #endif
+  g_free (basename);
 
   if (*rank > 0)
     *rank -= 1;

@@ -88,6 +88,40 @@ _get_implementation (const char *vendor)
   return GST_VA_IMPLEMENTATION_OTHER;
 }
 
+static char *
+_get_desc (const char *vendor, GstVaImplementation impl)
+{
+  char *end, *start;
+  char desc[1024];
+  size_t size;
+
+  if (impl == GST_VA_IMPLEMENTATION_OTHER)
+    return g_strdup (vendor);
+
+  start = strstr (vendor, "for ");
+  if (!start)
+    return g_strdup (vendor);
+  start += 4;
+
+  switch (impl) {
+    case GST_VA_IMPLEMENTATION_MESA_GALLIUM:
+      end = strchr (start, '(');
+      break;
+    default:
+      end = strstr (start, "- ");
+      break;
+  }
+
+  if (!end)
+    return g_strdup (vendor);
+  end -= 1;
+
+  size = MIN (1024, end - start);
+  memcpy (desc, start, size);
+  desc[size] = '\0';
+  return g_strdup (desc);
+}
+
 static gboolean
 _gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
 {
@@ -108,7 +142,7 @@ _gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
     priv->foreign = TRUE;
   }
   priv->impl = _get_implementation (vendor);
-  priv->vendor_desc = g_strdup (vendor);
+  priv->vendor_desc = _get_desc (vendor, priv->impl);
 
   return TRUE;
 }
