@@ -2082,11 +2082,12 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       g_free (qtdemux->preferred_protection_system_id);
       qtdemux->preferred_protection_system_id = NULL;
     }
-  } else if (qtdemux->variant == VARIANT_MSS_FRAGMENTED
-      || qtdemux->variant == VARIANT_MSE_BYTESTREAM) {
+  } else if (qtdemux->variant == VARIANT_MSS_FRAGMENTED) {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     g_ptr_array_foreach (qtdemux->active_streams,
         (GFunc) gst_qtdemux_stream_clear, NULL);
+  } else if (qtdemux->variant == VARIANT_MSE_BYTESTREAM) {
+    /* Do nothing */
   } else {
     gst_flow_combiner_reset (qtdemux->flowcombiner);
     for (i = 0; i < QTDEMUX_N_STREAMS (qtdemux); i++) {
