@@ -149,13 +149,14 @@ _on_candidate_gathering_done (NiceAgent * agent, guint stream_id,
 
   ice->priv->gathered = TRUE;
 
-  for (l = ice->priv->transports; l; l = l->next) {
+  for (l = ice->priv->transports; l;) {
     GstWebRTCICETransport *trans = g_weak_ref_get (l->data);
 
     if (trans) {
       gst_webrtc_ice_transport_gathering_state_change (trans,
           GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE);
       g_object_unref (trans);
+      l = l->next;
     } else {
       l = _delete_transport (&ice->priv->transports, l);
     }
@@ -174,7 +175,7 @@ gst_webrtc_nice_stream_find_transport (GstWebRTCICEStream * stream,
   GList *l;
   GstWebRTCNiceStream *nice_stream = GST_WEBRTC_NICE_STREAM (stream);
 
-  for (l = nice_stream->priv->transports; l; l = l->next) {
+  for (l = nice_stream->priv->transports; l;) {
     GstWebRTCICETransport *trans = g_weak_ref_get (l->data);
     if (trans) {
       g_object_get (trans, "component", &trans_comp, NULL);
@@ -183,6 +184,7 @@ gst_webrtc_nice_stream_find_transport (GstWebRTCICEStream * stream,
         return trans;
       else
         gst_object_unref (trans);
+      l = l->next;
     } else {
       l = _delete_transport (&nice_stream->priv->transports, l);
     }
@@ -234,13 +236,14 @@ gst_webrtc_nice_stream_gather_candidates (GstWebRTCICEStream * stream)
   if (nice_stream->priv->gathered)
     return TRUE;
 
-  for (l = nice_stream->priv->transports; l; l = l->next) {
+  for (l = nice_stream->priv->transports; l;) {
     GstWebRTCICETransport *trans = g_weak_ref_get (l->data);
 
     if (trans) {
       gst_webrtc_ice_transport_gathering_state_change (trans,
           GST_WEBRTC_ICE_GATHERING_STATE_GATHERING);
       g_object_unref (trans);
+      l = l->next;
     } else {
       l = _delete_transport (&nice_stream->priv->transports, l);
     }
@@ -273,12 +276,13 @@ gst_webrtc_nice_stream_gather_candidates (GstWebRTCICEStream * stream)
     goto cleanup;
   }
 
-  for (l = nice_stream->priv->transports; l; l = l->next) {
+  for (l = nice_stream->priv->transports; l;) {
     GstWebRTCNiceTransport *trans = g_weak_ref_get (l->data);
 
     if (trans) {
       gst_webrtc_nice_transport_update_buffer_size (trans);
       g_object_unref (trans);
+      l = l->next;
     } else {
       l = _delete_transport (&nice_stream->priv->transports, l);
     }
