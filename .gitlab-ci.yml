@@ -1,9 +1,9 @@
 include:
   - project: 'freedesktop/ci-templates'
-    ref: 14731f78c23c7b523a85a26a068ade9ac1ecd2f3
+    ref: 9f0eb526291fe74651fe1430cbd2397f4c0a819b
     file: '/templates/fedora.yml'
   - project: 'freedesktop/ci-templates'
-    ref: 14731f78c23c7b523a85a26a068ade9ac1ecd2f3
+    ref: 9f0eb526291fe74651fe1430cbd2397f4c0a819b
     file: '/templates/debian.yml'
   ###
   # IMPORTANT
