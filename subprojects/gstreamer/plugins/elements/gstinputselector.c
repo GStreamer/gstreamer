@@ -2045,6 +2045,10 @@ gst_input_selector_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       GList *walk;
 
+      GST_INPUT_SELECTOR_LOCK (self);
+      self->playing = FALSE;
+      GST_INPUT_SELECTOR_BROADCAST (self);
+      GST_OBJECT_LOCK (self);
       for (walk = GST_ELEMENT_CAST (self)->sinkpads; walk;
           walk = g_list_next (walk)) {
         GstSelectorPad *selpad = GST_SELECTOR_PAD_CAST (walk->data);
@@ -2053,6 +2057,8 @@ gst_input_selector_change_state (GstElement * element,
           gst_clock_id_unschedule (selpad->clock_id);
         }
       }
+      GST_OBJECT_UNLOCK (self);
+      GST_INPUT_SELECTOR_UNLOCK (self);
       break;
     }
     default:
@@ -2065,10 +2071,6 @@ gst_input_selector_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_input_selector_reset (self);
       break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      GST_INPUT_SELECTOR_LOCK (self);
-      self->playing = FALSE;
-      GST_INPUT_SELECTOR_UNLOCK (self);
     default:
       break;
   }
