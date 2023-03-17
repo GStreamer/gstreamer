@@ -6155,7 +6155,7 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
 {
   MXFMetadataMultipleDescriptor *self = MXF_METADATA_MULTIPLE_DESCRIPTOR (m);
   MXFMetadataBase *current = NULL;
-  guint i, have_subdescriptors = 0;
+  guint i;
 #ifndef GST_DISABLE_GST_DEBUG
   gchar str[48];
 #endif
@@ -6171,7 +6171,6 @@ mxf_metadata_multiple_descriptor_resolve (MXFMetadataBase * m,
     if (current && MXF_IS_METADATA_GENERIC_DESCRIPTOR (current)) {
       if (mxf_metadata_base_resolve (current, metadata)) {
         self->sub_descriptors[i] = MXF_METADATA_GENERIC_DESCRIPTOR (current);
-        have_subdescriptors++;
       } else {
         GST_ERROR ("Couldn't resolve descriptor %s",
             mxf_uuid_to_string (&self->sub_descriptors_uids[i], str));

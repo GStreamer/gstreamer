@@ -202,7 +202,6 @@ gst_oss_helper_rate_probe_check (GstOssProbe * probe)
   GQueue *ranges;
   int exact_rates = 0;
   gboolean checking_exact_rates = TRUE;
-  int n_checks = 0;
   gboolean result = TRUE;
 
   ranges = g_queue_new ();
@@ -210,7 +209,6 @@ gst_oss_helper_rate_probe_check (GstOssProbe * probe)
   probe->rates = g_array_new (FALSE, FALSE, sizeof (int));
 
   probe->min = gst_oss_helper_rate_check_rate (probe, 1000);
-  n_checks++;
   probe->max = gst_oss_helper_rate_check_rate (probe, 100000);
   /* a little bug workaround */
   {
@@ -223,7 +221,6 @@ gst_oss_helper_rate_probe_check (GstOssProbe * probe)
       probe->max = max;
     }
   }
-  n_checks++;
   if (probe->min == -1 || probe->max == -1) {
     /* This is a workaround for drivers that return -EINVAL (or another
      * error) for rates outside of [8000,48000].  If this fails, the
@@ -252,7 +249,6 @@ gst_oss_helper_rate_probe_check (GstOssProbe * probe)
       /* FIXME ioctl returned an error.  do something */
       GST_DEBUG ("unexpected check_rate error");
     }
-    n_checks++;
 
     if (mid == mid_ret && checking_exact_rates) {
       int max_exact_matches = 20;
