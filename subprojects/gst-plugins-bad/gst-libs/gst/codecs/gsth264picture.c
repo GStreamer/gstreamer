@@ -659,7 +659,7 @@ gst_h264_dpb_has_empty_frame_buffer (GstH264Dpb * dpb)
 }
 
 static gint
-gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
+gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb, gboolean force,
     GstH264Picture ** picture)
 {
   gint i;
@@ -672,7 +672,7 @@ gst_h264_dpb_get_lowest_output_needed_picture (GstH264Dpb * dpb,
     GstH264Picture *picture =
         g_array_index (dpb->pic_list, GstH264Picture *, i);
 
-    if (!picture->needed_for_output)
+    if (!force && !picture->needed_for_output)
       continue;
 
     if (!GST_H264_PICTURE_IS_FRAME (picture) &&
@@ -721,7 +721,8 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
 
   lowest_poc = G_MAXINT32;
   is_ref_picture = FALSE;
-  lowest_index = gst_h264_dpb_get_lowest_output_needed_picture (dpb, &picture);
+  lowest_index = gst_h264_dpb_get_lowest_output_needed_picture (dpb,
+      FALSE, &picture);
   if (lowest_index >= 0) {
     lowest_poc = picture->pic_order_cnt;
     is_ref_picture = picture->ref_pic;
@@ -887,23 +888,36 @@ gst_h264_dpb_bump (GstH264Dpb * dpb, gboolean drain)
   GstH264Picture *other_picture;
   gint i;
   gint index;
+  gboolean output_needed = TRUE;
 
   g_return_val_if_fail (dpb != NULL, NULL);
 
-  index = gst_h264_dpb_get_lowest_output_needed_picture (dpb, &picture);
+  index = gst_h264_dpb_get_lowest_output_needed_picture (dpb, FALSE, &picture);
+  /* Bumping is needed but has no output needed pictures. Pick the smallest
+   * POC picture */
+  if (!picture && !drain) {
+    index = gst_h264_dpb_get_lowest_output_needed_picture (dpb, TRUE, &picture);
+    if (picture)
+      output_needed = FALSE;
+  }
 
   if (!picture || index < 0)
     return NULL;
 
   picture->needed_for_output = FALSE;
 
-  dpb->num_output_needed--;
+  if (output_needed)
+    dpb->num_output_needed--;
+
   g_assert (dpb->num_output_needed >= 0);
 
   /* NOTE: don't use g_array_remove_index_fast here since the last picture
    * need to be referenced for bumping decision */
-  if (!GST_H264_PICTURE_IS_REF (picture) || drain)
+  if (!GST_H264_PICTURE_IS_REF (picture) || drain ||
+      /* Or in case of emergency bumping, remove this picture from dpb as well */
+      !output_needed) {
     g_array_remove_index (dpb->pic_list, index);
+  }
 
   other_picture = picture->other_field;
   if (other_picture) {
