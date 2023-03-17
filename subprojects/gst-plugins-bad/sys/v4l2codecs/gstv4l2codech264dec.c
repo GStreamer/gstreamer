@@ -735,15 +735,11 @@ gst_v4l2_codec_h264_dec_fill_slice_params (GstV4l2CodecH264Dec * self,
     GstH264Slice * slice)
 {
   gint n = self->num_slices++;
-  gsize slice_size = slice->nalu.size;
   struct v4l2_ctrl_h264_slice_params *params;
 
   /* Ensure array is large enough */
   if (self->slice_params->len < self->num_slices)
     g_array_set_size (self->slice_params, self->slice_params->len * 2);
-
-  if (needs_start_codes (self))
-    slice_size += 3;
 
   /* *INDENT-OFF* */
   params = &g_array_index (self->slice_params, struct v4l2_ctrl_h264_slice_params, n);

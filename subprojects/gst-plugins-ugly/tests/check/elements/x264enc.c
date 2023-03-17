@@ -276,7 +276,7 @@ test_video_profile (const gchar * profile, gint profile_id,
     switch (i) {
       case 0:
       {
-        gint nsize, npos, j, type, next_type;
+        gint nsize, npos, type, next_type;
         GstMapInfo map;
         const guint8 *data;
         gsize size;
@@ -286,7 +286,6 @@ test_video_profile (const gchar * profile, gint profile_id,
         size = map.size;
 
         npos = 0;
-        j = 0;
         /* need SPS first */
         next_type = 7;
         /* loop through NALs */
@@ -311,7 +310,6 @@ test_video_profile (const gchar * profile, gint profile_id,
               default:
                 break;
             }
-            j++;
           }
           npos += nsize + 4;
         }

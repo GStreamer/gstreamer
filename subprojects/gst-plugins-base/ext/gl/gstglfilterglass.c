@@ -75,7 +75,8 @@ static gboolean gst_gl_filter_glass_init_shader (GstGLFilter * filter);
 static gboolean gst_gl_filter_glass_filter_texture (GstGLFilter * filter,
     GstGLMemory * in_tex, GstGLMemory * out_tex);
 
-static void gst_gl_filter_glass_draw_background_gradient ();
+static void gst_gl_filter_glass_draw_background_gradient (GstGLFilterGlass *
+    glass);
 static void gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
     gint width, gint height, guint texture, gfloat center_x, gfloat center_y,
     gfloat start_alpha, gfloat stop_alpha, gboolean reversed, gfloat rotation);

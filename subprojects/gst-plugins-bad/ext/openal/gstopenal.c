@@ -34,10 +34,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (openalsink, plugin);
-  ret |= GST_ELEMENT_REGISTER (openalsrc, plugin);
+  GST_ELEMENT_REGISTER (openalsink, plugin);
+  GST_ELEMENT_REGISTER (openalsrc, plugin);
 
   return TRUE;
 }

@@ -32,10 +32,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (osssrc, plugin);
-  ret |= GST_ELEMENT_REGISTER (osssink, plugin);
+  GST_ELEMENT_REGISTER (osssrc, plugin);
+  GST_ELEMENT_REGISTER (osssink, plugin);
 
   return TRUE;
 }
