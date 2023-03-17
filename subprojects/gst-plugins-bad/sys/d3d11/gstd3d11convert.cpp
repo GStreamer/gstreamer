@@ -1889,11 +1889,12 @@ static void
 gst_d3d11_base_convert_set_add_border (GstD3D11BaseConvert * self,
     gboolean add_border)
 {
-  gboolean prev = self->add_borders;
+  GstD3D11SRWLockGuard lk (&self->lock);
 
-  self->add_borders = add_border;
-  if (prev != self->add_borders)
+  if (add_border != self->add_borders) {
+    self->add_borders = add_border;
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
 }
 
 static void
