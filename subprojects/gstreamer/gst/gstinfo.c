@@ -317,6 +317,7 @@ typedef struct
 LogFuncEntry;
 static GMutex __log_func_mutex;
 static GSList *__log_functions = NULL;
+FILE *log_file = NULL;
 
 /* whether to add the default log function in gst_init() */
 static gboolean add_default_log_func = TRUE;
@@ -360,7 +361,6 @@ void
 _priv_gst_debug_init (void)
 {
   const gchar *env;
-  FILE *log_file;
 
   if (add_default_log_func) {
     env = g_getenv ("GST_DEBUG_FILE");
@@ -568,9 +568,8 @@ gst_debug_log_valist (GstDebugCategory * category, GstDebugLevel level,
   G_VA_COPY (message.arguments, args);
 
   handler = __log_functions;
-  while (handler) {
+  if (handler) {
     entry = handler->data;
-    handler = g_slist_next (handler);
     entry->func (category, level, file, function, line, object, &message,
         entry->user_data);
   }
@@ -1538,7 +1537,10 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
 
     if (entry->notify)
       entry->notify (entry->user_data);
-
+	if (entry->user_data == log_file) {
+		fclose(log_file);
+		log_file = NULL;
+	}
     g_slice_free (LogFuncEntry, entry);
     cleanup = g_slist_delete_link (cleanup, cleanup);
   }
@@ -2291,6 +2293,8 @@ _priv_gst_debug_cleanup (void)
     g_slice_free (LogFuncEntry, log_func_entry);
     __log_functions = g_slist_delete_link (__log_functions, __log_functions);
   }
+  if (log_file != NULL)
+	  fclose(log_file);
   g_mutex_unlock (&__log_func_mutex);
 }
 
