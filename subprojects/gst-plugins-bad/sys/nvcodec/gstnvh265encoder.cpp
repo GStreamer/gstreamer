@@ -1276,7 +1276,7 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
       rc_params->constQP.qpIntra = self->qp_i;
     if (self->qp_p >= 0)
       rc_params->constQP.qpInterP = self->qp_p;
-    if (self->qp_p >= 0)
+    if (self->qp_b >= 0)
       rc_params->constQP.qpInterB = self->qp_b;
   }
 
@@ -2236,9 +2236,9 @@ gst_nv_h265_encoder_register_auto_select (GstPlugin * plugin,
   std::string resolution_str;
   GList *iter;
   guint adapter_luid_size = 0;
-  gint64 adapter_luid_list[8];
+  gint64 adapter_luid_list[8] = { 0, };
   guint cuda_device_id_size = 0;
-  guint cuda_device_id_list[8];
+  guint cuda_device_id_list[8] = { 0, };
   GstNvEncoderDeviceCaps dev_caps;
   GstNvEncoderClassData *cdata;
   GstCaps *sink_caps = nullptr;
