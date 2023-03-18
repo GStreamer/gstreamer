@@ -660,15 +660,17 @@ xml_check_first_element (GstTypeFind * tf, const gchar * element, guint elen,
 
   length = gst_type_find_get_length (tf);
 
-  /* try a default that should be enough */
-  if (length == 0)
-    length = 512;
-  else if (length < 32)
+  if (length == 0) {
+    length = 4096;
+    while (!(data = gst_type_find_peek (tf, 0, length)) && length >= 512)
+      length /= 2;
+  } else if (length < 32) {
     return FALSE;
-  else                          /* the first few bytes should be enough */
+  } else {                      /* the first few bytes should be enough */
     length = MIN (4096, length);
+    data = gst_type_find_peek (tf, 0, length);
+  }
 
-  data = gst_type_find_peek (tf, 0, length);
   if (!data)
     return FALSE;
 
