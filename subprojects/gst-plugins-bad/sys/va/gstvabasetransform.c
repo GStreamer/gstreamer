@@ -74,14 +74,17 @@ gst_va_base_transform_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstVaBaseTransform *self = GST_VA_BASE_TRANSFORM (object);
+  GstVaBaseTransformClass *klass = GST_VA_BASE_TRANSFORM_GET_CLASS (self);
 
   switch (prop_id) {
     case PROP_DEVICE_PATH:{
-      if (!(self->display && GST_IS_VA_DISPLAY_PLATFORM (self->display))) {
+      if (!self->display)
+        g_value_set_string (value, klass->render_device_path);
+      else if (GST_IS_VA_DISPLAY_PLATFORM (self->display))
+        g_object_get_property (G_OBJECT (self->display), "path", value);
+      else
         g_value_set_string (value, NULL);
-        return;
-      }
-      g_object_get_property (G_OBJECT (self->display), "path", value);
+
       break;
     }
     default:
@@ -649,7 +652,7 @@ gst_va_base_transform_class_init (GstVaBaseTransformClass * klass)
    */
   properties[PROP_DEVICE_PATH] = g_param_spec_string ("device-path",
       "Device Path", GST_VA_DEVICE_PATH_PROP_DESC, NULL,
-      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+      GST_PARAM_DOC_SHOW_DEFAULT | G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES, properties);
 
