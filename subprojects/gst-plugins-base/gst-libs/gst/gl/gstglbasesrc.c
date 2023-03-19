@@ -443,8 +443,8 @@ gst_gl_base_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 gl_error:
   {
     g_rec_mutex_unlock (&src->priv->context_lock);
-    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (_("failed to draw pattern")),
-        (_("A GL error occurred")));
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+        (_("failed to fill GL memory")), (_("A GL error occurred")));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 not_negotiated:
