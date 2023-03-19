@@ -130,7 +130,7 @@ gst_dshow_device_provider_start (GstDeviceProvider * provider)
     if (dev->data)
       gst_device_provider_device_add (provider, (GstDevice *) dev->data);
   }
-  g_list_free (devs);
+  g_list_free_full (devs, gst_object_unref);
 
   return TRUE;
 }
