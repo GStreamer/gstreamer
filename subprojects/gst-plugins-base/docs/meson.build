@@ -37,7 +37,8 @@ else
         required: false)
 endif
 
-plugins_cache = join_paths(meson.current_source_dir(), 'plugins', 'gst_plugins_cache.json')
+cdir = meson.current_source_dir()
+plugins_cache = cdir / 'plugins/gst_plugins_cache.json'
 if plugins.length() == 0
     message('All base plugins have been disabled')
 elif plugins_cache_generator.found()
@@ -193,34 +194,23 @@ else
     )]
 endif
 
-plugins_doc = []
-sitemap = 'all_index.md\n'
-
-list_plugin_res = run_command(python3, '-c',
-'''
-import sys
-import json
-
-with open("@0@") as f:
-    print(':'.join(json.load(f).keys()), end='')
-'''.format(plugins_cache),
-  check: true)
-foreach plugin_name: list_plugin_res.stdout().split(':')
-    plugins_doc += [hotdoc.generate_doc(plugin_name,
-        project_version: api_version,
-        sitemap: 'plugins/sitemap.txt',
-        index: 'plugins/index.md',
-        gst_index: 'plugins/index.md',
-        gst_smart_index: true,
-        gst_c_sources: [
-          '../sys/*/*.[ch]',
-          '../ext/*/*.[cmh]',
-          '../gst/*/*.[ch]',
-        ],
-        dependencies: [gst_dep],
-        gst_order_generated_subpages: true,
-        gst_cache_file: plugins_cache,
-        gst_plugin_name: plugin_name,
-    )]
-    sitemap += '        @0@-doc.json\n'.format(plugin_name)
-endforeach
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
+gst_plugins_doc = run_command(
+    plugins_cache_generator,
+    'hotdoc-config',
+    '--builddir', meson.current_build_dir(),
+    '--project_version', api_version,
+    '--sitemap', cdir / 'plugins/sitemap.txt',
+    '--index', cdir / 'plugins/index.md',
+    '--gst_index', cdir / 'plugins/index.md',
+    '--gst_c_sources',
+        cdir / '../sys/*/*.[ch]',
+        cdir / '../ext/*/*.[cmh]',
+        cdir / '../gst/*/*.[ch]',
+    '--gst_cache_file', plugins_cache,
+    check: true,
+).stdout().split(pathsep)

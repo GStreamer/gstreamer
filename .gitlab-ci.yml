@@ -613,7 +613,7 @@ playbin3 integration:
     USE_PLAYBIN3: 1
   # Let's allow failures for now until we're 100% sure everything works
   allow_failure: true
-    
+
 # gstreamer-full:
 gstreamer-full static build:
   extends: '.build fedora x86_64'
@@ -785,7 +785,8 @@ valgrind ges:
   - git checkout subprojects/*.wrap
   - ./ci/scripts/check-diff.py
 
-  - ./gst-env.py ninja -C build subprojects/gst-docs/GStreamer-doc
+  - export GI_TYPELIB_PATH=$PWD/girs
+  - hotdoc run --conf-file build/subprojects/gst-docs/GStreamer-doc.json
 
   - mv build/subprojects/gst-docs/GStreamer-doc/html documentation/
 

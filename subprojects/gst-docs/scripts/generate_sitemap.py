@@ -12,7 +12,7 @@ if __name__ == "__main__":
 
         if sys.argv[4]:
             libs, plugins = sys.argv[4].split(os.pathsep), sorted(
-                sys.argv[5].split(os.pathsep), key=lambda x: os.path.basename(x))
+                sys.argv[5].replace('\n', '').split(os.pathsep), key=lambda x: os.path.basename(x))
             index += '\n\tlibs.md'
             for lib in libs:
                 if not lib:
@@ -22,7 +22,10 @@ if __name__ == "__main__":
             for plugin in plugins:
                 if not plugin:
                     continue
-                index += "\n\t\t" + plugin + '.json'
+                fname = plugin
+                if not fname.endswith('.json'):
+                    fname += '.json'
+                index += "\n\t\t" + fname
 
         index = '%s\n%s' % (index_md, index)
 

@@ -85,35 +85,27 @@ endforeach
 
 excludes += [join_paths(meson.current_source_dir(), '..', 'sys', 'rpicamsrc', 'Raspi*.[ch]')]
 
-list_plugin_res = run_command(python3, '-c',
-'''
-import sys
-import json
-
-with open("@0@") as f:
-    print(':'.join(json.load(f).keys()), end='')
-'''.format(plugins_cache),
-  check: true)
-foreach plugin_name: list_plugin_res.stdout().split(':')
-    plugins_doc += [hotdoc.generate_doc(plugin_name,
-    project_version: api_version,
-      sitemap: 'sitemap.txt',
-      index: 'index.md',
-      gst_index: 'index.md',
-      gst_smart_index: true,
-      gst_c_sources: [
-        '../sys/*/*.[cmh]',
-        '../ext/*/*.[ch]',
-        '../ext/*/*/*.[ch]',
-        '../gst/*/*.[ch]',
-      ],
-      gst_c_source_filters: excludes,
-      dependencies: [gst_dep],
-      gst_order_generated_subpages: true,
-      install: false,
-      disable_incremental_build: true,
-      gst_cache_file: plugins_cache,
-      gst_plugin_name: plugin_name,
-      include_paths: join_paths(meson.current_source_dir(), '..'),
-      )]
-endforeach
+cdir = meson.current_source_dir()
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
+gst_plugins_doc = run_command(
+    plugins_cache_generator,
+    'hotdoc-config',
+    '--builddir', meson.current_build_dir(),
+    '--project_version', api_version,
+    '--sitemap', cdir / 'sitemap.txt',
+    '--index', cdir / 'index.md',
+    '--gst_index', cdir / 'index.md',
+    '--gst_c_sources',
+        cdir / '../sys/*/*.[cmh]',
+        cdir / '../ext/*/*.[ch]',
+        cdir / '../ext/*/*/*.[ch]',
+        cdir / '../gst/*/*.[ch]',
+    '--gst_c_source_filters', excludes,
+    '--gst_cache_file', plugins_cache,
+    '--include_paths', cdir / '..',
+    check: true,
+).stdout().split(pathsep)

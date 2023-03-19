@@ -48,15 +48,22 @@ if not hotdoc.has_extensions(required_hotdoc_extensions)
 endif
 
 message('Plugins: @0@'.format(plugins))
-libs_doc = []
-plugins_doc = [hotdoc.generate_doc('omx',
-    project_version: api_version,
-    sitemap: 'sitemap.txt',
-    index: 'index.md',
-    gst_index: 'index.md',
-    gst_smart_index: true,
-    gst_c_sources: ['../gst/*/*.[ch]',],
-    gst_cache_file: plugins_cache,
-    gst_plugin_name: 'omx',
-    dependencies: [gstomx],
-)]
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
+cdir = meson.current_source_dir()
+gst_plugins_doc = run_command(
+    plugins_cache_generator,
+    'hotdoc-config',
+    '--builddir', meson.current_build_dir(),
+    '--project_version', api_version,
+    '--sitemap', cdir / 'sitemap.txt',
+    '--index', cdir / 'index.md',
+    '--gst_index', cdir / 'index.md',
+    '--gst_c_sources', cdir / '../gst/*/*.[ch]',
+    '--gst_cache_file', cdir / plugins_cache,
+    check: true,
+).stdout().split(pathsep)
+

@@ -23,12 +23,61 @@ import sys
 import re
 import subprocess
 import tempfile
+from pathlib import Path as P
+from argparse import ArgumentParser
 
 from collections import OrderedDict
 try:
     from collections.abc import Mapping
 except ImportError:  # python <3.3
     from collections import Mapping
+
+
+class GstPluginsHotdocConfGen:
+    def __init__(self):
+
+        parser = ArgumentParser()
+        parser.add_argument('--builddir', type=P)
+        parser.add_argument('--gst_cache_file', type=P)
+        parser.add_argument('--sitemap', type=P)
+        parser.add_argument('--index', type=P)
+        parser.add_argument('--c_flags')
+        parser.add_argument('--gst_index', type=P)
+        parser.add_argument('--gst_c_sources', nargs='*', default=[])
+        parser.add_argument('--project_version')
+        parser.add_argument('--include_paths', nargs='*', default=[])
+        parser.add_argument('--gst_c_source_filters', nargs='*', default=[])
+
+        parser.parse_args(namespace=self, args=sys.argv[2:])
+
+    def generate_plugins_configs(self):
+        plugin_files = []
+        with self.gst_cache_file.open() as fd:
+            all_plugins = json.load(fd)
+
+            for plugin_name in all_plugins.keys():
+                conf = self.builddir / f'plugin-{plugin_name}.json'
+                plugin_files.append(str(conf))
+                with conf.open('w') as f:
+                    json.dump({
+                        'sitemap': str(self.sitemap),
+                        'index': str(self.index),
+                        'gst_index': str(self.index),
+                        'output': f'plugin-{plugin_name}',
+                        'conf': str(conf),
+                        'project_name': plugin_name,
+                        'project_version': self.project_version,
+                        'gst_cache_file': str(self.gst_cache_file),
+                        'gst_plugin_name': plugin_name,
+                        'c_flags': self.c_flags,
+                        'gst_smart_index': True,
+                        'gst_c_sources': self.gst_c_sources,
+                        'gst_c_source_filters': [str(s) for s in self.gst_c_source_filters],
+                        'include_paths': self.include_paths,
+                        'gst_order_generated_subpages': True,
+                    }, f, indent=4)
+
+        return plugin_files
 
 
 # Marks values in the json file as "unstable" so that they are
@@ -78,6 +127,11 @@ def test_unstable_values():
     assert (current_cache == { "v1": "no", "v2": "yay", "unstable-values": "v2" })
 
 if __name__ == "__main__":
+    if sys.argv[1] == "hotdoc-config":
+        fs = GstPluginsHotdocConfGen().generate_plugins_configs()
+        print(os.pathsep.join(fs))
+        sys.exit(0)
+
     cache_filename = sys.argv[1]
     output_filename = sys.argv[2]
     build_root = os.environ.get('MESON_BUILD_ROOT', '')
@@ -115,7 +169,7 @@ if __name__ == "__main__":
         except subprocess.CalledProcessError as e:
             log.flush()
             with open(stderrlogfile, 'r', encoding='utf8') as f:
-                print(f.read(), file=sys.stderr)
+                print(f.read(), file=sys.stderr, end='')
             raise
 
     with open(out, 'r', newline='\n', encoding='utf8') as jfile:

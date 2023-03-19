@@ -74,15 +74,22 @@ endforeach
 
 
 libs_doc = []
-plugins_doc = [hotdoc.generate_doc('libav',
-    project_version: api_version,
-    sitemap: 'sitemap.txt',
-    index: 'index.md',
-    gst_index: 'index.md',
-    gst_smart_index: true,
-    gst_c_sources: ['../ext/*/*.[ch]',],
-    gst_cache_file: plugins_cache,
-    gst_plugin_name: 'libav',
-    dependencies: [gst_dep],
-    disable_incremental_build: true,
-)]
+cdir = meson.current_source_dir()
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
+gst_plugins_doc = run_command(
+    plugins_cache_generator,
+    'hotdoc-config',
+    '--project_version', api_version,
+    '--builddir', meson.current_build_dir(),
+    '--sitemap', cdir / 'sitemap.txt',
+    '--index', cdir / 'index.md',
+    '--gst_index', cdir / 'index.md',
+    '--gst_c_sources', cdir / '../ext/*/*.[ch]',
+    '--gst_cache_file', plugins_cache,
+    check: true,
+).stdout().split(pathsep)
+

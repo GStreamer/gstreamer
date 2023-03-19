@@ -94,16 +94,23 @@ libs_doc = [hotdoc.generate_doc('gst-rtsp-server',
     depends: rtsp_server_gir[0],
 )]
 
-plugins_doc = [hotdoc.generate_doc('rtspclientsink',
-    project_version: api_version,
-    sitemap: 'plugins/sitemap.txt',
-    index: 'plugins/index.md',
-    gst_index: 'plugins/index.md',
-    gst_c_sources: ['../gst/rtsp-sink/*.[ch]'],
-    gst_dl_sources: [rtspsink.full_path()],
-    gst_smart_index: true,
-    dependencies: gst_rtsp_server_deps + [rtspsink],
-    gst_cache_file: plugins_cache,
-    gst_plugin_name: 'rtspclientsink',
-)]
+if host_machine.system() == 'windows'
+  pathsep = ';'
+else
+  pathsep = ':'
+endif
+cdir = meson.current_source_dir()
+gst_plugins_doc = run_command(
+    plugins_cache_generator,
+    'hotdoc-config',
+    '--builddir', meson.current_build_dir(),
+    '--project_version', api_version,
+    '--sitemap', cdir / 'plugins/sitemap.txt',
+    '--index', cdir / 'plugins/index.md',
+    '--gst_index', cdir / 'plugins/index.md',
+    '--gst_c_sources', cdir / '../gst/rtsp-sink/*.[ch]',
+    '--gst_cache_file', plugins_cache,
+    check: true,
+).stdout().split(pathsep)
+
 doc = libs_doc[0]

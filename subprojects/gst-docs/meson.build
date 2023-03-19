@@ -74,9 +74,14 @@ if built_subprojects != ''
             endforeach
 
             foreach plugin_doc: sub.get_variable('plugins_doc', [])
+              warning(project_name+ ': variable plugins_doc is deprecated, use gst_plugins_doc instead')
               plugins_doc += plugin_doc.full_path() + pathsep
               hotdoc_subprojects += [plugin_doc]
               deps += [plugin_doc]
+            endforeach
+
+            foreach plugin_doc: sub.get_variable('gst_plugins_doc', [])
+              plugins_doc += plugin_doc + pathsep
             endforeach
         else
             message('@0@ did not build hotdoc documentation, can\'t build API doc'.format(project_name))
