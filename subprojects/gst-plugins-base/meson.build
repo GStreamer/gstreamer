@@ -307,7 +307,7 @@ endif
 
 libdrm_dep = dependency('libdrm', version : '>= 2.4.98',
   required : get_option('drm'),
-  fallback: ['libdrm', 'ext_libdrm']
+  allow_fallback: host_system not in ['darwin', 'ios', 'android', 'windows']
 )
 
 core_conf.set('HAVE_LIBDRM', libdrm_dep.found())
