@@ -82,6 +82,13 @@ typedef enum
   GST_AV1_ENC_SUPERRES_QTHRESH = 3,
 } GstAV1EncSuperresMode;
 
+#ifdef HAVE_LIBAOM_3
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_SUPERRES_NONE == (guint) AOM_SUPERRES_NONE);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_SUPERRES_FIXED == (guint) AOM_SUPERRES_FIXED);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_SUPERRES_RANDOM == (guint) AOM_SUPERRES_RANDOM);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_SUPERRES_QTHRESH == (guint) AOM_SUPERRES_QTHRESH);
+#endif
+
 /**
  * GstAV1EncEndUsageMode:
  * @GST_AV1_ENC_END_USAGE_VBR: Variable Bit Rate Mode
@@ -100,6 +107,11 @@ typedef enum
   GST_AV1_ENC_END_USAGE_Q = 3,
 } GstAV1EncEndUsageMode;
 
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_END_USAGE_VBR == (guint) AOM_VBR);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_END_USAGE_CBR == (guint) AOM_CBR);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_END_USAGE_CQ == (guint) AOM_CQ);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_END_USAGE_Q == (guint) AOM_Q);
+
 /**
  * GstAV1EncKFMode:
  * @GST_AV1_ENC_KF_DISABLED: Encoder does not place keyframes
@@ -115,6 +127,9 @@ typedef enum
   GST_AV1_ENC_KF_DISABLED = 0,
   GST_AV1_ENC_KF_AUTO = 1,
 } GstAV1EncKFMode;
+
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_KF_DISABLED == (guint) AOM_KF_DISABLED);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_KF_AUTO == (guint) AOM_KF_AUTO);
 
 /**
  * GstAV1EncEncPass:
@@ -134,6 +149,13 @@ typedef enum
   GST_AV1_ENC_SECOND_PASS = 2,
   GST_AV1_ENC_THIRD_PASS = 3,
 } GstAV1EncEncPass;
+
+#ifdef HAVE_LIBAOM_3_2
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_ONE_PASS == (guint) AOM_RC_ONE_PASS);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_FIRST_PASS == (guint) AOM_RC_FIRST_PASS);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_SECOND_PASS == (guint) AOM_RC_SECOND_PASS);
+G_STATIC_ASSERT ((guint) GST_AV1_ENC_THIRD_PASS == (guint) AOM_RC_THIRD_PASS);
+#endif
 
 /**
  * GstAV1EncUsageProfile:

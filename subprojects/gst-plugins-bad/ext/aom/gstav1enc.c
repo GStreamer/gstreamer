@@ -568,7 +568,11 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->aom_cfg.rc_resize_mode = DEFAULT_RESIZE_MODE;
   av1enc->aom_cfg.rc_resize_denominator = DEFAULT_RESIZE_DENOMINATOR;
   av1enc->aom_cfg.rc_resize_kf_denominator = DEFAULT_RESIZE_KF_DENOMINATOR;
+#ifdef HAVE_LIBAOM_3
+  av1enc->aom_cfg.rc_superres_mode = (aom_superres_mode) DEFAULT_SUPERRES_MODE;
+#else
   av1enc->aom_cfg.rc_superres_mode = DEFAULT_SUPERRES_MODE;
+#endif
   av1enc->aom_cfg.rc_superres_denominator = DEFAULT_SUPERRES_DENOMINATOR;
   av1enc->aom_cfg.rc_superres_kf_denominator = DEFAULT_SUPERRES_KF_DENOMINATOR;
   av1enc->aom_cfg.rc_superres_qthresh = DEFAULT_SUPERRES_QTHRESH;
