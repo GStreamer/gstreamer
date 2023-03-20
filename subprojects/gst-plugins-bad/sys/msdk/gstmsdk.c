@@ -267,7 +267,20 @@ static void
 _register_vpp (GstPlugin * plugin,
     GstMsdkContext * context, mfxVPPDescription * vpp_desc)
 {
-  gst_element_register (plugin, "msdkvpp", GST_RANK_NONE, GST_TYPE_MSDKVPP);
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+
+  if (!gst_msdkcaps_vpp_create_caps (context, vpp_desc, &sink_caps, &src_caps)) {
+    GST_WARNING ("Failed to create caps for VPP");
+  }
+
+  if (!gst_msdkvpp_register (plugin,
+          context, sink_caps, src_caps, GST_RANK_NONE)) {
+    GST_WARNING ("Failed to register VPP");
+  }
+
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (src_caps);
 }
 
 #else
@@ -355,7 +368,20 @@ _register_decoders (GstPlugin * plugin, GstMsdkContext * context)
 static void
 _register_vpp (GstPlugin * plugin, GstMsdkContext * context)
 {
-  gst_element_register (plugin, "msdkvpp", GST_RANK_NONE, GST_TYPE_MSDKVPP);
+  GstCaps *sink_caps = NULL;
+  GstCaps *src_caps = NULL;
+
+  if (!gst_msdkcaps_vpp_create_caps (context, NULL, &sink_caps, &src_caps)) {
+    GST_WARNING ("Failed to create caps for VPP");
+  }
+
+  if (!gst_msdkvpp_register (plugin, context,
+          sink_caps, src_caps, GST_RANK_NONE)) {
+    GST_WARNING ("Failed to register VPP");
+  }
+
+  gst_caps_unref (sink_caps);
+  gst_caps_unref (src_caps);
 }
 
 #endif

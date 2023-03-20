@@ -72,98 +72,19 @@
 #include <gst/d3d11/gstd3d11.h>
 #endif
 
-#if (MFX_VERSION >= 2004)
-#define EXT_SINK_FORMATS        ", RGB16, Y410, Y210, P012_LE, Y212_LE, Y412_LE"
-#define EXT_SRC_FORMATS         ", YV12, Y410, Y210, RGBP, BGRP, P012_LE, Y212_LE, Y412_LE"
-#elif (MFX_VERSION >= 1032)
-#define EXT_SINK_FORMATS        ", RGB16, Y410, Y210, P012_LE, Y212_LE, Y412_LE"
-#define EXT_SRC_FORMATS         ", YV12, Y410, Y210, P012_LE, Y212_LE, Y412_LE"
-#elif (MFX_VERSION >= 1031)
-#define EXT_SINK_FORMATS        ", RGB16, Y410, Y210, P012_LE, Y212_LE, Y412_LE"
-#define EXT_SRC_FORMATS         ", Y410, Y210, P012_LE, Y212_LE, Y412_LE"
-#elif (MFX_VERSION >= 1028)
-#define EXT_SINK_FORMATS        ", RGB16, Y410, Y210"
-#define EXT_SRC_FORMATS         ", Y410, Y210"
-#elif (MFX_VERSION >= 1027)
-#define EXT_SINK_FORMATS        ", Y410, Y210"
-#define EXT_SRC_FORMATS         ", Y410, Y210"
-#else
-#define EXT_SINK_FORMATS        ""
-#define EXT_SRC_FORMATS         ""
-#endif
 
 GST_DEBUG_CATEGORY_EXTERN (gst_msdkvpp_debug);
 #define GST_CAT_DEFAULT gst_msdkvpp_debug
 
-#define SUPPORTED_SYSTEM_FORMAT \
-    "{ NV12, YV12, I420, YUY2, UYVY, VUYA, BGRA, BGRx, P010_10LE" EXT_SINK_FORMATS "}"
-#define SUPPORTED_DMABUF_FORMAT \
-    "{ NV12, BGRA, YUY2, UYVY, VUYA, P010_10LE" EXT_SINK_FORMATS "}"
-#define SUPPORTED_VA_FORMAT \
-    "{ NV12, VUYA, P010_10LE }"
-#define SUPPORTED_D3D11_FORMAT \
-    "{ NV12, VUYA, P010_10LE }"
-#define SRC_SYSTEM_FORMAT \
-    "{ NV12, BGRA, YUY2, UYVY, VUYA, BGRx, P010_10LE" EXT_FORMATS EXT_SRC_FORMATS "}"
-#define SRC_DMABUF_FORMAT       \
-    "{ NV12, BGRA, YUY2, UYVY, VUYA, BGRx, P010_10LE" EXT_FORMATS EXT_SRC_FORMATS "}"
+#define GST_MSDKVPP(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), G_TYPE_FROM_INSTANCE (obj), GstMsdkVPP))
+#define GST_MSDKVPP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), G_TYPE_FROM_CLASS (klass), GstMsdkVPPClass))
+#define GST_IS_MSDKVPP(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), G_TYPE_FROM_INSTANCE (obj)))
+#define GST_IS_MSDKVPP_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), G_TYPE_FROM_CLASS (klass)))
 
-#ifndef _WIN32
-#define DMABUF_SINK_CAPS_STR \
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, \
-      SUPPORTED_DMABUF_FORMAT) ";"
-#define VA_SINK_CAPS_STR \
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", SUPPORTED_VA_FORMAT)
-#else
-#define D3D11_SINK_CAPS_STR \
-  GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE (SUPPORTED_D3D11_FORMAT)
-#endif
-
-#ifndef _WIN32
-#define DMABUF_SRC_CAPS_STR \
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF, \
-      SRC_DMABUF_FORMAT) ";"
-#define VA_SRC_CAPS_STR \
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory", SUPPORTED_VA_FORMAT)
-#else
-#define D3D11_SRC_CAPS_STR \
-  GST_MSDK_CAPS_MAKE_WITH_D3D11_FEATURE (SUPPORTED_D3D11_FORMAT)
-#endif
-
-#ifndef _WIN32
-static GstStaticPadTemplate gst_msdkvpp_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SUPPORTED_SYSTEM_FORMAT)
-        ", " "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
-        DMABUF_SINK_CAPS_STR VA_SINK_CAPS_STR));
-
-static GstStaticPadTemplate gst_msdkvpp_src_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (DMABUF_SRC_CAPS_STR
-        GST_VIDEO_CAPS_MAKE (SRC_SYSTEM_FORMAT) ", "
-        "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
-        VA_SRC_CAPS_STR));
-#else
-static GstStaticPadTemplate gst_msdkvpp_sink_factory =
-    GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SUPPORTED_SYSTEM_FORMAT)
-        ", " "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
-        D3D11_SINK_CAPS_STR));
-
-static GstStaticPadTemplate gst_msdkvpp_src_factory =
-    GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (SRC_SYSTEM_FORMAT) ", "
-        "interlace-mode = (string){ progressive, interleaved, mixed }" ";"
-        D3D11_SRC_CAPS_STR));
-#endif
 enum
 {
   PROP_0,
@@ -220,8 +141,39 @@ enum
 /* 8 should enough for a normal encoder */
 #define SRC_POOL_SIZE_DEFAULT            8
 
-#define gst_msdkvpp_parent_class parent_class
-G_DEFINE_TYPE (GstMsdkVPP, gst_msdkvpp, GST_TYPE_BASE_TRANSFORM);
+/* *INDENT-OFF* */
+static const gchar *doc_sink_caps_str =
+    GST_VIDEO_CAPS_MAKE (
+        "{ NV12, YV12, I420, P010_10LE, YUY2, UYVY, BGRA, BGRx, RGB16, VUYA, "
+        "Y210, Y410, P012_LE, Y212_LE, Y412_LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf",
+        "{ NV12, YV12, I420, P010_10LE, YUY2, UYVY, BGRA, BGRx, RGB16, VUYA, "
+        "Y210, Y410, P012_LE, Y212_LE, Y412_LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
+        "{ NV12, VUYA, P010_10LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:D3D11Memory",
+        "{ NV12, VUYA, P010_10LE }");
+
+static const gchar *doc_src_caps_str =
+    GST_VIDEO_CAPS_MAKE (
+        "{ NV12, BGRA, YUY2, UYVY, VUYA, BGRx, P010_10LE, BGR10A2_LE, YV12, "
+        "Y410, Y210, RGBP, BGRP, P012_LE, Y212_LE, Y412_LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:DMABuf",
+        "{ NV12, BGRA, YUY2, UYVY, VUYA, BGRx, P010_10LE, BGR10A2_LE, YV12, "
+        "Y410, Y210, RGBP, BGRP, P012_LE, Y212_LE, Y412_LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:VAMemory",
+        "{ NV12, VUYA, P010_10LE }") " ;"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("memory:D3D11Memory",
+        "{ NV12, VUYA, P010_10LE }");
+/* *INDENT-ON* */
+
+static GstElementClass *parent_class = NULL;
+
+typedef struct
+{
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+} MsdkVPPCData;
 
 static void
 free_msdk_surface (gpointer p)
@@ -1471,10 +1423,13 @@ gst_msdkvpp_transform_caps (GstBaseTransform * trans,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  if (direction == GST_PAD_SRC)
-    out_caps = gst_static_pad_template_get_caps (&gst_msdkvpp_sink_factory);
-  else
-    out_caps = gst_static_pad_template_get_caps (&gst_msdkvpp_src_factory);
+  if (direction == GST_PAD_SINK) {
+    out_caps =
+        gst_pad_get_pad_template_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
+  } else {
+    out_caps =
+        gst_pad_get_pad_template_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
+  }
 
   if (out_caps && filter) {
     GstCaps *intersection;
@@ -1734,48 +1689,9 @@ gst_msdkvpp_set_context (GstElement * element, GstContext * context)
 }
 
 static void
-gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
+_msdkvpp_install_properties (GObjectClass * gobject_class)
 {
-  GObjectClass *gobject_class;
-  GstElementClass *element_class;
-  GstBaseTransformClass *trans_class;
   GParamSpec *obj_properties[PROP_N] = { NULL, };
-
-  gobject_class = G_OBJECT_CLASS (klass);
-  element_class = GST_ELEMENT_CLASS (klass);
-  trans_class = GST_BASE_TRANSFORM_CLASS (klass);
-
-  gobject_class->set_property = gst_msdkvpp_set_property;
-  gobject_class->get_property = gst_msdkvpp_get_property;
-  gobject_class->dispose = gst_msdkvpp_dispose;
-
-  element_class->set_context = gst_msdkvpp_set_context;
-
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_msdkvpp_src_factory);
-  gst_element_class_add_static_pad_template (element_class,
-      &gst_msdkvpp_sink_factory);
-
-  gst_element_class_set_static_metadata (element_class,
-      "Intel MSDK Video Postprocessor",
-      "Filter/Converter/Video;Filter/Converter/Video/Scaler;"
-      "Filter/Effect/Video;Filter/Effect/Video/Deinterlace",
-      "Video Postprocessing Filter based on " MFX_API_SDK,
-      "Sreerenj Balachandrn <sreerenj.balachandran@intel.com>");
-
-  trans_class->start = GST_DEBUG_FUNCPTR (gst_msdkvpp_start);
-  trans_class->stop = GST_DEBUG_FUNCPTR (gst_msdkvpp_stop);
-  trans_class->transform_caps = GST_DEBUG_FUNCPTR (gst_msdkvpp_transform_caps);
-  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_msdkvpp_fixate_caps);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_msdkvpp_set_caps);
-  trans_class->transform = GST_DEBUG_FUNCPTR (gst_msdkvpp_transform);
-  trans_class->propose_allocation =
-      GST_DEBUG_FUNCPTR (gst_msdkvpp_propose_allocation);
-  trans_class->decide_allocation =
-      GST_DEBUG_FUNCPTR (gst_msdkvpp_decide_allocation);
-  trans_class->prepare_output_buffer =
-      GST_DEBUG_FUNCPTR (gst_msdkvpp_prepare_output_buffer);
-  trans_class->query = GST_DEBUG_FUNCPTR (gst_msdkvpp_query);
 
   obj_properties[PROP_HARDWARE] =
       g_param_spec_boolean ("hardware", "Hardware", "Enable hardware VPP",
@@ -1899,9 +1815,62 @@ gst_msdkvpp_class_init (GstMsdkVPPClass * klass)
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
 
+
 static void
-gst_msdkvpp_init (GstMsdkVPP * thiz)
+gst_msdkvpp_class_init (gpointer klass, gpointer data)
 {
+  GObjectClass *gobject_class;
+  GstElementClass *element_class;
+  GstBaseTransformClass *trans_class;
+  MsdkVPPCData *cdata = data;
+
+  parent_class = g_type_class_peek_parent (klass);
+
+  gobject_class = G_OBJECT_CLASS (klass);
+  element_class = GST_ELEMENT_CLASS (klass);
+  trans_class = GST_BASE_TRANSFORM_CLASS (klass);
+
+  gobject_class->set_property = gst_msdkvpp_set_property;
+  gobject_class->get_property = gst_msdkvpp_get_property;
+  gobject_class->dispose = gst_msdkvpp_dispose;
+
+  _msdkvpp_install_properties (gobject_class);
+
+  trans_class->start = GST_DEBUG_FUNCPTR (gst_msdkvpp_start);
+  trans_class->stop = GST_DEBUG_FUNCPTR (gst_msdkvpp_stop);
+  trans_class->transform_caps = GST_DEBUG_FUNCPTR (gst_msdkvpp_transform_caps);
+  trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_msdkvpp_fixate_caps);
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_msdkvpp_set_caps);
+  trans_class->transform = GST_DEBUG_FUNCPTR (gst_msdkvpp_transform);
+  trans_class->propose_allocation =
+      GST_DEBUG_FUNCPTR (gst_msdkvpp_propose_allocation);
+  trans_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_msdkvpp_decide_allocation);
+  trans_class->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_msdkvpp_prepare_output_buffer);
+  trans_class->query = GST_DEBUG_FUNCPTR (gst_msdkvpp_query);
+
+  element_class->set_context = gst_msdkvpp_set_context;
+
+  gst_element_class_set_static_metadata (element_class,
+      "Intel MSDK Video Postprocessor",
+      "Filter/Converter/Video;Filter/Converter/Video/Scaler;"
+      "Filter/Effect/Video;Filter/Effect/Video/Deinterlace",
+      "Video Postprocessing Filter based on " MFX_API_SDK,
+      "Sreerenj Balachandrn <sreerenj.balachandran@intel.com>");
+
+  gst_msdkcaps_pad_template_init (element_class,
+      cdata->sink_caps, cdata->src_caps, doc_sink_caps_str, doc_src_caps_str);
+
+  gst_caps_unref (cdata->sink_caps);
+  gst_caps_unref (cdata->src_caps);
+  g_free (cdata);
+}
+
+static void
+gst_msdkvpp_init (GTypeInstance * instance, gpointer g_class)
+{
+  GstMsdkVPP *thiz = GST_MSDKVPP (instance);
   thiz->initialized = FALSE;
   thiz->hardware = PROP_HARDWARE_DEFAULT;
   thiz->async_depth = PROP_ASYNC_DEPTH_DEFAULT;
@@ -1932,4 +1901,46 @@ gst_msdkvpp_init (GstMsdkVPP * thiz)
 
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
+}
+
+gboolean
+gst_msdkvpp_register (GstPlugin * plugin,
+    GstMsdkContext * context, GstCaps * sink_caps,
+    GstCaps * src_caps, guint rank)
+{
+  GType type;
+  MsdkVPPCData *cdata;
+  gchar *type_name, *feature_name;
+  gboolean ret = FALSE;
+
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstMsdkVPPClass),
+    .class_init = gst_msdkvpp_class_init,
+    .instance_size = sizeof (GstMsdkVPP),
+    .instance_init = gst_msdkvpp_init
+  };
+
+  cdata = g_new (MsdkVPPCData, 1);
+  cdata->sink_caps = gst_caps_ref (sink_caps);
+  cdata->src_caps = gst_caps_ref (src_caps);
+
+  GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_MINI_OBJECT_FLAG_SET (cdata->src_caps,
+      GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  type_info.class_data = cdata;
+
+  type_name = g_strdup ("GstMsdkVPP");
+  feature_name = g_strdup ("msdkvpp");
+
+  type = g_type_register_static (GST_TYPE_BASE_TRANSFORM,
+      type_name, &type_info, 0);
+  if (type)
+    ret = gst_element_register (plugin, feature_name, rank, type);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
 }
