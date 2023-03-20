@@ -888,6 +888,7 @@ av1_decode_tile_data (GstVaapiDecoderAV1 * decoder, GstVaapiDecoderUnit * unit)
     slice_param->tile_column =
         tile_group->entry[tile_group->tg_start + i].tile_col;
     slice_param->slice_data_flag = 0;
+    slice_param->anchor_frame_idx = 255;
   }
 
   gst_vaapi_picture_add_slice (GST_VAAPI_PICTURE_CAST (picture), slice);
