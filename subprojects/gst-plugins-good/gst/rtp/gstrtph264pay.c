@@ -1265,7 +1265,7 @@ gst_rtp_h264_pay_send_bundle (GstRtpH264Pay * rtph264pay, gboolean end_of_au)
       end_of_au, delta, discont);
 }
 
-static gboolean
+static GstFlowReturn
 gst_rtp_h264_pay_payload_nal_bundle (GstRTPBasePayload * basepayload,
     GstBuffer * paybuf, GstClockTime dts, GstClockTime pts, gboolean end_of_au,
     gboolean delta_unit, gboolean discont, guint8 nal_header)

@@ -1351,7 +1351,7 @@ gst_rtp_h265_pay_send_bundle (GstRtpH265Pay * rtph265pay, gboolean marker)
       marker, delta_unit);
 }
 
-static gboolean
+static GstFlowReturn
 gst_rtp_h265_pay_payload_nal_bundle (GstRTPBasePayload * basepayload,
     GstBuffer * paybuf, GstClockTime dts, GstClockTime pts,
     gboolean marker, gboolean delta_unit, guint8 nal_type,

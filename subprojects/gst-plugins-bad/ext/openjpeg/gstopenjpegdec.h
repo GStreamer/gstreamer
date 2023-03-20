@@ -66,7 +66,7 @@ struct _GstOpenJPEGDec
   void (*fill_frame) (GstOpenJPEGDec *self,
                       GstVideoFrame *frame, opj_image_t * image);
 
-  gboolean (*decode_frame) (GstVideoDecoder * decoder, GstVideoCodecFrame *frame);
+  GstFlowReturn (*decode_frame) (GstVideoDecoder * decoder, GstVideoCodecFrame *frame);
 
   opj_dparameters_t params;
 

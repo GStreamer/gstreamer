@@ -70,7 +70,7 @@ static gboolean gst_openjpeg_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static gboolean gst_openjpeg_dec_flush (GstVideoDecoder * decoder);
-static gboolean gst_openjpeg_dec_finish (GstVideoDecoder * decoder);
+static GstFlowReturn gst_openjpeg_dec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_openjpeg_dec_decide_allocation (GstVideoDecoder * decoder,
@@ -80,10 +80,10 @@ static void gst_openjpeg_dec_set_property (GObject * object,
 static void gst_openjpeg_dec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-static gboolean gst_openjpeg_dec_decode_frame_multiple (GstVideoDecoder *
+static GstFlowReturn gst_openjpeg_dec_decode_frame_multiple (GstVideoDecoder *
     decoder, GstVideoCodecFrame * frame);
-static gboolean gst_openjpeg_dec_decode_frame_single (GstVideoDecoder * decoder,
-    GstVideoCodecFrame * frame);
+static GstFlowReturn gst_openjpeg_dec_decode_frame_single (GstVideoDecoder *
+    decoder, GstVideoCodecFrame * frame);
 
 static void gst_openjpeg_dec_pause_loop (GstOpenJPEGDec * self,
     GstFlowReturn flow_ret);
