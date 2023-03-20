@@ -1121,7 +1121,7 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
   gint64 min_byte_offset = -1;
   guint i;
 
-  min_offset = desired_time;
+  min_offset = next ? G_MAXUINT64 : desired_time;
 
   /* for each stream, find the index of the sample in the segment
    * and move back to the previous keyframe. */
@@ -1180,10 +1180,10 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
       index++;
 
     if (!empty_segment) {
-      /* find previous keyframe */
+      /* find previous or next keyframe */
       kindex = gst_qtdemux_find_keyframe (qtdemux, str, index, next);
 
-      /* we will settle for one before if none found after */
+      /* if looking for next one, we will settle for one before if none found after */
       if (next && kindex == -1)
         kindex = gst_qtdemux_find_keyframe (qtdemux, str, index, FALSE);
 
@@ -1209,8 +1209,12 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
           /* this keyframe is inside the segment, convert back to
            * segment time */
           seg_time = (media_time - seg->media_start) + seg->time;
-          if ((!next && (seg_time < min_offset)) ||
-              (next && (seg_time > min_offset)))
+
+          /* Adjust the offset based on the earliest suitable keyframe found,
+           * based on which GST_SEEK_FLAG_SNAP_* is present (indicated by 'next').
+           * For SNAP_BEFORE we look for the earliest keyframe before desired_time,
+           * and in case of SNAP_AFTER - for the closest one after it. */
+          if (seg_time < min_offset)
             min_offset = seg_time;
         }
       }
