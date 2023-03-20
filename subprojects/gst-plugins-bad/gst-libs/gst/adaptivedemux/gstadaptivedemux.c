@@ -271,7 +271,7 @@ static gboolean gst_adaptive_demux_has_next_period (GstAdaptiveDemux * demux);
 static void gst_adaptive_demux_advance_period (GstAdaptiveDemux * demux);
 
 static void gst_adaptive_demux_stream_free (GstAdaptiveDemuxStream * stream);
-static GstFlowReturn
+static gboolean
 gst_adaptive_demux_stream_push_event (GstAdaptiveDemuxStream * stream,
     GstEvent * event);
 

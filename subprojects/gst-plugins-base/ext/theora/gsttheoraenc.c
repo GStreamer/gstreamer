@@ -1051,7 +1051,7 @@ encoder_disabled:
   }
 }
 
-static gboolean
+static GstFlowReturn
 theora_enc_finish (GstVideoEncoder * benc)
 {
   GstTheoraEnc *enc;
@@ -1071,7 +1071,7 @@ theora_enc_finish (GstVideoEncoder * benc)
 
   theora_enc_clear_multipass_cache (enc);
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
