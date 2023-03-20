@@ -958,7 +958,8 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         .pApplicationName = APP_SHORT_NAME,
         .applicationVersion = 0,
         .pEngineName = APP_SHORT_NAME,
-        .engineVersion = 0,
+        .engineVersion = VK_MAKE_VERSION (GST_VERSION_MAJOR, GST_VERSION_MINOR,
+            GST_VERSION_MICRO),
         .apiVersion = requested_instance_api,
     };
 
