@@ -1329,10 +1329,10 @@ expose_output_pad (GstURISourceBin * urisrc, GstPad * pad)
 
   target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
 
+  gst_pad_set_active (pad, TRUE);
   gst_pad_sticky_events_foreach (target, copy_sticky_events, pad);
   gst_object_unref (target);
 
-  gst_pad_set_active (pad, TRUE);
   GST_URI_SOURCE_BIN_LOCK (urisrc);
   if (!urisrc->activated) {
     GST_DEBUG_OBJECT (urisrc, "Not fully activated, adding pad once PAUSED !");
