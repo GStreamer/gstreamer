@@ -65,6 +65,15 @@ struct _GstVulkanPhysicalDevice
   VkQueueFamilyProperties *queue_family_props;
   guint32 n_queue_families;
 
+  /**
+   * GstVulkanPhysicalDevice.queue_family_video_ops:
+   *
+   * vulkan video operations allowed per queue family
+   *
+   * Since: 1.24
+   */
+  guint32 *queue_family_video_ops;
+
   /* <private> */
   gpointer _reserved        [GST_PADDING];
 };
