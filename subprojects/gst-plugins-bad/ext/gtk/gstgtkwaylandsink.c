@@ -1075,6 +1075,9 @@ render_last_buffer (GstGtkWaylandSink * self, gboolean redraw)
   struct wl_surface *surface;
   struct wl_callback *callback;
 
+  if (!priv->wl_window)
+    return;
+
   wlbuffer = gst_buffer_get_wl_buffer (priv->display, priv->last_buffer);
   surface = gst_wl_window_get_wl_surface (priv->wl_window);
 
