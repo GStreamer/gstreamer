@@ -1272,7 +1272,7 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
 {
   gboolean apcontinue = TRUE;
   GValueArray *factories = NULL, *result = NULL;
-  GstParsePad *parsepad;
+  GstParsePad *parsepad = NULL;
   GstElementFactory *factory;
   const gchar *classification;
   gboolean is_parser_converter = FALSE;
@@ -1418,7 +1418,6 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
       goto expose_pad;
     }
     /* Else we will bail out */
-    gst_object_unref (parsepad);
     goto unknown_type;
   }
 
@@ -1513,12 +1512,24 @@ analyze_new_pad (GstParseBin * parsebin, GstElement * src, GstPad * pad,
   if (is_parser_converter)
     gst_object_unref (pad);
 
-  gst_object_unref (parsepad);
   g_value_array_free (factories);
 
-  if (!res)
+  if (!res) {
+    if (deadend_details == NULL) {
+      /* connect_pad() only failed because no element was compatible
+       * (i.e. deadend_details is NULL). If this stream is an elementary stream,
+       * we can expose it since this is non-fatal */
+      GstPbUtilsCapsDescriptionFlags caps_flags =
+          gst_pb_utils_get_caps_description_flags (caps);
+      if (caps_flags
+          && !(caps_flags & GST_PBUTILS_CAPS_DESCRIPTION_FLAG_CONTAINER)) {
+        goto expose_pad;
+      }
+    }
     goto unknown_type;
+  }
 
+  gst_object_unref (parsepad);
   gst_caps_unref (caps);
 
   return;
@@ -1535,6 +1546,8 @@ expose_pad:
 unknown_type:
   {
     GST_LOG_OBJECT (pad, "Unknown type, posting message and firing signal");
+    if (parsepad)
+      gst_object_unref (parsepad);
 
     chain->deadend_details = deadend_details;
     chain->deadend = TRUE;
