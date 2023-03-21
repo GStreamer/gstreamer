@@ -1883,7 +1883,8 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
   sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str;
 
   if (dev_caps.field_encoding > 0) {
-    sink_caps_str += ", interlace-mode = (string) { interleaved, mixed }";
+    sink_caps_str +=
+        ", interlace-mode = (string) { progressive, interleaved, mixed }";
   } else {
     sink_caps_str += ", interlace-mode = (string) progressive";
   }
@@ -2200,7 +2201,8 @@ gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
   sink_caps_str = "video/x-raw, " + format_str + ", " + resolution_str;
 
   if (dev_caps.field_encoding > 0) {
-    sink_caps_str += ", interlace-mode = (string) { interleaved, mixed }";
+    sink_caps_str +=
+        ", interlace-mode = (string) { progressive, interleaved, mixed }";
   } else {
     sink_caps_str += ", interlace-mode = (string) progressive";
   }
