@@ -1,6 +1,6 @@
 # List of commits meant to be ignored by `git blame` like coding style changes.
 # Can be used with `git blame --ignore-revs-file .git-blame-ignore-revs`
-# or enabled globally using `git config --global blame.ignoreRevsFile .git-blame-ignore-revs`
+# or enabled on this repo using `git config blame.ignoreRevsFile .git-blame-ignore-revs`
 # See https://michaelheap.com/git-ignore-rev/
 
 # re-indent with GNU indent 2.2.12
