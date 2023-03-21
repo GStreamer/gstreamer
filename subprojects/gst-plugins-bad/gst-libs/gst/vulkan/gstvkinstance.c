@@ -940,6 +940,16 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
   {
     VkApplicationInfo app = { 0, };
     VkInstanceCreateInfo inst_info = { 0, };
+#if !defined (GST_DISABLE_DEBUG) && defined (VK_API_VERSION_1_2)
+    VkValidationFeaturesEXT validation_features;
+    VkValidationFeatureEnableEXT feat_list[] = {
+      VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT,
+      VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_RESERVE_BINDING_SLOT_EXT,
+#if defined (VK_API_VERSION_1_3)
+      VK_VALIDATION_FEATURE_ENABLE_SYNCHRONIZATION_VALIDATION_EXT,
+#endif
+    };
+#endif
 
     /* *INDENT-OFF* */
     app = (VkApplicationInfo) {
@@ -962,6 +972,24 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
         .ppEnabledExtensionNames = (const char *const *) priv->enabled_extensions->pdata,
     };
     /* *INDENT-ON* */
+
+#if !defined (GST_DISABLE_DEBUG)
+    vulkan_debug_level =
+        gst_debug_category_get_threshold (GST_VULKAN_DEBUG_CAT);
+
+#if defined (VK_API_VERSION_1_2)
+    if (vulkan_debug_level >= GST_LEVEL_ERROR) {
+      /* *INDENT-OFF* */
+      validation_features = (VkValidationFeaturesEXT) {
+          .sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT,
+          .pEnabledValidationFeatures = feat_list,
+          .enabledValidationFeatureCount = G_N_ELEMENTS (feat_list),
+      };
+      inst_info.pNext = &validation_features;
+      /* *INDENT-ON* */
+    }
+#endif
+#endif
 
     err = vkCreateInstance (&inst_info, NULL, &instance->instance);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateInstance") < 0) {
@@ -994,8 +1022,6 @@ gst_vulkan_instance_open (GstVulkanInstance * instance, GError ** error)
     goto error;
 
 #if !defined (GST_DISABLE_DEBUG)
-  vulkan_debug_level = gst_debug_category_get_threshold (GST_VULKAN_DEBUG_CAT);
-
   if (vulkan_debug_level >= GST_LEVEL_ERROR
       && gst_vulkan_instance_is_extension_enabled_unlocked (instance,
           VK_EXT_DEBUG_REPORT_EXTENSION_NAME, NULL)) {
