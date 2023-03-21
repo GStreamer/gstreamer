@@ -25,8 +25,10 @@ GST_ELEMENT_REGISTER_DECLARE (uvcsink);
 struct _GstUvcSink
 {
   GstBin bin;
+  GstElement *fakesink;
   GstElement *v4l2sink;
   GstPad *sinkpad;
+  GstPad *fakesinkpad;
   GstPad *v4l2sinkpad;
 
   /* streaming status */
@@ -51,6 +53,16 @@ struct _GstUvcSink
   struct uvc_streaming_control commit;
 
   int control;
+
+  /* probes */
+  int buffer_peer_probe_id;
+  int idle_probe_id;
+
+  GstClock *v4l2_clock;
+
+  int caps_changed;
+  int streamon;
+  int streamoff;
 };
 
 #define UVCSINK_MSG_LOCK(v) g_mutex_lock(&(v)->msg_lock)
