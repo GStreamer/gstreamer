@@ -1095,7 +1095,7 @@ gst_vulkan_instance_get_proc_address (GstVulkanInstance * instance,
 /**
  * gst_vulkan_instance_create_device:
  * @instance: a #GstVulkanInstance
- * @error: (optional): a #GError
+ * @error: (out) (optional): a #GError
  *
  * Returns: (transfer full): a new #GstVulkanDevice
  *

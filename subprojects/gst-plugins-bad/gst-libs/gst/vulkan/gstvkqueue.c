@@ -112,7 +112,7 @@ gst_vulkan_queue_get_device (GstVulkanQueue * queue)
 /**
  * gst_vulkan_queue_create_command_pool:
  * @queue: a #GstVulkanQueue
- * @error: (optional): a #GError
+ * @error: (out) (optional): a #GError
  *
  * Returns: (transfer full): a new #GstVulkanCommandPool or %NULL
  *

@@ -489,7 +489,7 @@ gst_vulkan_get_or_create_image_view (GstVulkanImageMemory * image)
  * @device: a #GstVulkanDevice
  * @code: the SPIR-V shader byte code
  * @size: length of @code.  Must be a multiple of 4
- * @error: (optional): a #GError to fill on failure
+ * @error: (out) (optional): a #GError to fill on failure
  *
  * Returns: (transfer full): a #GstVulkanHandle for @image matching the
  *                           original layout and format of @image or %NULL
