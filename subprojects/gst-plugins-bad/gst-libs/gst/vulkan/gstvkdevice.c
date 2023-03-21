@@ -24,6 +24,7 @@
 
 #include "gstvkdevice.h"
 #include "gstvkdebug.h"
+#include "gstvkphysicaldevice-private.h"
 
 #include <string.h>
 
@@ -317,7 +318,8 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     queue_info.pQueuePriorities = &queue_priority;
 
     device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    device_info.pNext = NULL;
+    device_info.pNext =
+        gst_vulkan_physical_device_get_features (device->physical_device);
     device_info.queueCreateInfoCount = 1;
     device_info.pQueueCreateInfos = &queue_info;
     device_info.enabledLayerCount = priv->enabled_layers->len;
