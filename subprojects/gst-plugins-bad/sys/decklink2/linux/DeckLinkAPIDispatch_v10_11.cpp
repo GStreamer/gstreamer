@@ -66,6 +66,8 @@ static CreateVideoConversionInstanceFunc	gCreateVideoConversionFunc	= NULL;
 static CreateDeckLinkDiscoveryInstanceFunc	gCreateDeckLinkDiscoveryFunc = NULL;
 static CreateVideoFrameAncillaryPacketsInstanceFunc	gCreateVideoFrameAncillaryPacketsFunc = NULL;
 
+#define fprintf(a,b,c) do{}while(0)
+
 static void	InitDeckLinkAPI (void)
 {
 	void *libraryHandle;

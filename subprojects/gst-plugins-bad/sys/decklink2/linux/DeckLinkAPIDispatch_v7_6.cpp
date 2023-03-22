@@ -58,6 +58,8 @@ static CreateIteratorFunc_v7_6						gCreateIteratorFunc			= NULL;
 static CreateOpenGLScreenPreviewHelperFunc_v7_6		gCreateOpenGLPreviewFunc	= NULL;
 static CreateVideoConversionInstanceFunc_v7_6		gCreateVideoConversionFunc	= NULL;
 
+#define fprintf(a,b,c) do{}while(0)
+
 static void	InitDeckLinkAPI_v7_6 (void)
 {
 	void *libraryHandle;

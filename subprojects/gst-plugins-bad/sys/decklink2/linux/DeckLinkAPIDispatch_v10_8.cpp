@@ -64,6 +64,8 @@ static CreateOpenGLScreenPreviewHelperFunc	gCreateOpenGLPreviewFunc = NULL;
 static CreateVideoConversionInstanceFunc	gCreateVideoConversionFunc = NULL;
 static CreateDeckLinkDiscoveryInstanceFunc	gCreateDeckLinkDiscoveryFunc = NULL;
 
+#define fprintf(a,b,c) do{}while(0)
+
 static void	InitDeckLinkAPI(void)
 {
 	void *libraryHandle;
