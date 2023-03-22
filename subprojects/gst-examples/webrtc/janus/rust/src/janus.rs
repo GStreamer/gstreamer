@@ -27,7 +27,7 @@ use {
     futures::sink::{Sink, SinkExt},
     futures::stream::{Stream, StreamExt},
     gst::prelude::*,
-    http::Request,
+    http::Uri,
     log::{debug, error, info, trace},
     rand::prelude::*,
     serde_derive::{Deserialize, Serialize},
@@ -407,11 +407,15 @@ pub struct JanusGateway {
 
 impl JanusGateway {
     pub async fn new(pipeline: gst::Bin) -> Result<Self, anyhow::Error> {
+        use tungstenite::client::IntoClientRequest;
+
         let args = Args::parse();
-        let request = Request::builder()
-            .uri(&args.server)
-            .header("Sec-WebSocket-Protocol", "janus-protocol")
-            .body(())?;
+
+        let mut request = args.server.parse::<Uri>()?.into_client_request()?;
+        request.headers_mut().append(
+            "Sec-WebSocket-Protocol",
+            http::HeaderValue::from_static("janus-protocol"),
+        );
 
         let (mut ws, _) = connect_async(request).await?;
 
