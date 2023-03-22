@@ -124,7 +124,7 @@
  *   sink is in the bin, the query fails.
  *
  * A #GstBin will by default forward any event sent to it to all sink
- * ( %GST_EVENT_TYPE_DOWNSTREAM ) or source ( %GST_EVENT_TYPE_UPSTREAM ) elements
+ * ( %GST_EVENT_TYPE_UPSTREAM ) or source ( %GST_EVENT_TYPE_DOWNSTREAM ) elements
  * depending on the event type.
  *
  * If all the elements return %TRUE, the bin will also return %TRUE, else %FALSE
