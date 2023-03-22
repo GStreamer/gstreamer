@@ -203,6 +203,7 @@ static const FormatInfo formats[] = {
       FLAG_VIDEO, ""},
   {"subpicture/x-dvd", "DVD subpicture", FLAG_VIDEO, ""},
   {"video/x-ffv", N_("FFMpeg v1"), FLAG_VIDEO, ""},
+  {"video/x-ffvhuff", "FFmpeg Huffman YUV variant", FLAG_VIDEO, ""},
   {"video/x-flash-screen", "Flash Screen Video", FLAG_VIDEO, ""},
   {"video/x-flash-video", "Sorenson Spark Video", FLAG_VIDEO, ""},
   {"video/x-h261", "H.261", FLAG_VIDEO, ""},

@@ -256,6 +256,16 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("Huffman Lossless Codec");
       break;
 
+    case GST_MAKE_FOURCC ('F', 'F', 'V', 'H'):
+      caps = gst_caps_new_empty_simple ("video/x-ffvhuff");
+      if (strf) {
+        gst_caps_set_simple (caps, "bpp",
+            G_TYPE_INT, (int) strf->bit_cnt, NULL);
+      }
+      if (codec_name)
+        *codec_name = g_strdup ("FFmpeg Huffman YUV variant");
+      break;
+
     case GST_MAKE_FOURCC ('M', 'P', 'E', 'G'):
     case GST_MAKE_FOURCC ('M', 'P', 'G', 'I'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
