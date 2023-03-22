@@ -1271,6 +1271,16 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       }
       break;
 
+    case AV_CODEC_ID_FFVHUFF:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+          "video/x-ffvhuff", NULL);
+      if (context) {
+        gst_caps_set_simple (caps,
+            "bpp", G_TYPE_INT, context->bits_per_coded_sample, NULL);
+      }
+      break;
+
     case AV_CODEC_ID_CYUV:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode,
@@ -1909,7 +1919,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
     case AV_CODEC_ID_VIXL:
     case AV_CODEC_ID_QPEG:
     case AV_CODEC_ID_PGMYUV:
-    case AV_CODEC_ID_FFVHUFF:
     case AV_CODEC_ID_WNV1:
     case AV_CODEC_ID_MP3ADU:
     case AV_CODEC_ID_MP3ON4:
@@ -4091,6 +4100,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       video = TRUE;
   } else if (!strcmp (mimetype, "video/x-huffyuv")) {
     id = AV_CODEC_ID_HUFFYUV;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-ffvhuff")) {
+    id = AV_CODEC_ID_FFVHUFF;
     video = TRUE;
   } else if (!strcmp (mimetype, "audio/x-mace")) {
     gint maceversion = 0;
