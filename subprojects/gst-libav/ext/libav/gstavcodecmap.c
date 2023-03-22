@@ -2358,7 +2358,21 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
     case AV_CODEC_ID_AV1:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-av1",
-          NULL);
+          "stream-format", G_TYPE_STRING, "obu-stream", NULL);
+      if (encode) {
+        GValue arr = { 0, };
+        GValue item = { 0, };
+        g_value_init (&arr, GST_TYPE_LIST);
+        g_value_init (&item, G_TYPE_STRING);
+        g_value_set_string (&item, "tu");
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_string (&item, "frame");
+        gst_value_list_append_value (&arr, &item);
+        g_value_unset (&item);
+
+        gst_caps_set_value (caps, "alignment", &arr);
+        g_value_unset (&arr);
+      }
       break;
     default:
       GST_DEBUG ("Unknown codec ID %d, please add mapping here", codec_id);
@@ -4152,6 +4166,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-vp9")) {
     id = AV_CODEC_ID_VP9;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-av1")) {
+    id = AV_CODEC_ID_AV1;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-flash-screen")) {
     id = AV_CODEC_ID_FLASHSV;
