@@ -187,6 +187,9 @@
  * type. The new location may be a relative or an absolute URI. Examples
  * for such redirects can be found in many quicktime movie trailers.
  *
+ * NOTE: playbin3 (via uridecodebin3) will handle the redirect messages if
+ * possible. The message will only be forwarded if it can't handle it.
+ *
  * ## Examples
  * |[
  * gst-launch-1.0 -v playbin3 uri=file:///path/to/somefile.mp4

@@ -2040,6 +2040,53 @@ find_source_handler_for_element (GstURIDecodeBin3 * uridecodebin,
   return NULL;
 }
 
+static GstMessage *
+gst_uri_decode_bin3_handle_redirection (GstURIDecodeBin3 * uridecodebin,
+    GstMessage * message, const GstStructure * details)
+{
+  gchar *uri = NULL;
+  GstSourceHandler *handler;
+  const gchar *location;
+  gchar *current_uri;
+
+  PLAY_ITEMS_LOCK (uridecodebin);
+  /* Find the matching handler (if any) */
+  handler = find_source_handler_for_element (uridecodebin, message->src);
+  if (!handler || !handler->play_item || !handler->play_item->main_item)
+    goto beach;
+
+  current_uri = handler->play_item->main_item->uri;
+
+  location = gst_structure_get_string ((GstStructure *) details,
+      "redirect-location");
+  GST_DEBUG_OBJECT (uridecodebin, "Handle redirection message from '%s' to '%s",
+      current_uri, location);
+
+  if (gst_uri_is_valid (location)) {
+    uri = g_strdup (location);
+  } else if (current_uri) {
+    uri = gst_uri_join_strings (current_uri, location);
+  }
+  if (!uri)
+    goto beach;
+
+  if (g_strcmp0 (current_uri, uri)) {
+    gboolean was_instant = uridecodebin->instant_uri;
+    GST_DEBUG_OBJECT (uridecodebin, "Doing instant switch to '%s'", uri);
+    uridecodebin->instant_uri = TRUE;
+    /* Force instant switch */
+    gst_uri_decode_bin3_set_uri (uridecodebin, uri);
+    uridecodebin->instant_uri = was_instant;
+    gst_message_unref (message);
+    message = NULL;
+  }
+  g_free (uri);
+
+beach:
+  PLAY_ITEMS_UNLOCK (uridecodebin);
+  return message;
+}
+
 static void
 gst_uri_decode_bin3_handle_message (GstBin * bin, GstMessage * msg)
 {
@@ -2089,6 +2136,16 @@ gst_uri_decode_bin3_handle_message (GstBin * bin, GstMessage * msg)
       PLAY_ITEMS_UNLOCK (uridecodebin);
       break;
 
+    }
+    case GST_MESSAGE_ERROR:
+    {
+      const GstStructure *details = NULL;
+
+      gst_message_parse_error_details (msg, &details);
+      if (details && gst_structure_has_field (details, "redirect-location"))
+        msg =
+            gst_uri_decode_bin3_handle_redirection (uridecodebin, msg, details);
+      break;
     }
     default:
       break;
