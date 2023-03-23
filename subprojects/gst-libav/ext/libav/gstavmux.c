@@ -486,6 +486,9 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstObject * parent, GstCaps * caps)
   /* copy over the aspect ratios, ffmpeg expects the stream aspect to match the
    * codec aspect. */
   st->sample_aspect_ratio = st->codecpar->sample_aspect_ratio;
+  /* copy over the frame rate to be used in the container format. */
+  st->time_base.num = tmp.time_base.num;
+  st->time_base.den = tmp.time_base.den;
 
   GST_LOG_OBJECT (pad, "accepted caps %" GST_PTR_FORMAT, caps);
   return TRUE;
