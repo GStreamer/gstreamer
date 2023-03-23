@@ -705,7 +705,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
      * marker */
     gst_adapter_copy (rtpjpegdepay->adapter, end, avail - 2, 2);
 
-    if (end[0] != 0xff && end[1] != 0xd9) {
+    if (GST_READ_UINT16_BE (end) != 0xffd9) {
       GST_DEBUG_OBJECT (rtpjpegdepay, "no EOI marker, adding one");
 
       /* no EOI marker, add one */
