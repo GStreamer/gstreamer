@@ -107,6 +107,7 @@ static const FormatInfo formats[] = {
   {"video/x-quicktime", "Quicktime", AVIS_CONTAINER, "mov"},
   {"video/quicktime", "Quicktime", AVIS_CONTAINER, "mov"},
   {"video/mj2", "Motion JPEG 2000", AVIS_CONTAINER, "mj2"},
+  {"video/x-ivf", "Indeo video format (IVF)", AVIS_CONTAINER, "ivf"},
 
   /* audio formats with static descriptions */
   {"audio/x-ac3", "AC-3 (ATSC A/52)", FLAG_AUDIO, "ac3"},
