@@ -206,7 +206,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     GST_LOG_OBJECT (self, "Direct3D11 Allocation params");
     GST_LOG_OBJECT (self, "\tD3D11AllocationFlags: 0x%x",
         priv->d3d11_params->flags);
-    for (i = 0; GST_VIDEO_MAX_PLANES; i++) {
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
       if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
         break;
       GST_LOG_OBJECT (self, "\t[plane %d] %dx%d, DXGI format %d",
