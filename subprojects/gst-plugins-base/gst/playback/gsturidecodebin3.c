@@ -1059,6 +1059,7 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
   GList *old_pads = get_all_play_item_source_pads (uridecodebin->input_item);
   GList *to_activate = NULL;
   GList *iternew, *iterold;
+  gboolean inactive_previous_item = old_pads == NULL;
 
   /* Deactivate old urisourcebins first ? Problem is they might remove the pads */
 
@@ -1124,6 +1125,17 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
   if (uridecodebin->input_item->sub_item) {
     free_source_item (uridecodebin, uridecodebin->input_item->sub_item);
     uridecodebin->input_item->sub_item = NULL;
+  }
+
+  /* If the previous play item was not active at all (i.e. was never linked to
+   * decodebin3), this one *also* becomes the output one */
+  if (inactive_previous_item) {
+    GST_DEBUG_OBJECT (uridecodebin,
+        "Previous play item was never activated, discarding");
+    uridecodebin->play_items =
+        g_list_remove (uridecodebin->play_items, uridecodebin->input_item);
+    free_play_item (uridecodebin, uridecodebin->input_item);
+    uridecodebin->output_item = new_item;
   }
 
   /* and set new one as input item */
