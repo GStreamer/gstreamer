@@ -274,6 +274,11 @@ libgst = library('gstreamer-1.0', gst_sources,
                   backtrace_deps, platform_deps, extra_deps],
 )
 
+gst_compile_args = []
+if static_build
+  gst_compile_args += ['-DGST_STATIC_COMPILATION']
+endif
+
 pkg_name = 'gstreamer-1.0'
 library_def = {'lib': libgst}
 pkgconfig.generate(libgst,
@@ -283,6 +288,7 @@ pkgconfig.generate(libgst,
   subdirs : pkgconfig_subdirs,
   name : pkg_name,
   description : 'Streaming media framework',
+  extra_cflags: gst_compile_args,
 )
 
 if build_gir
@@ -323,10 +329,7 @@ if build_gir
 endif
 gst_libraries += [[pkg_name, library_def]]
 
-gst_compile_args = []
-if get_option('default_library') == 'static'
-  gst_compile_args += ['-DGST_STATIC_COMPILATION']
-endif
+
 
 gst_dep = declare_dependency(link_with : libgst,
   compile_args : gst_compile_args,

@@ -87,7 +87,6 @@ endif
 building_full = get_option('default_library') == 'static'
 building_full_static = get_option('gst-full-target-type') == 'static_library'
 buildind_full_options = []
-
 if building_full
 buildind_full_options = ['gstreamer-full=enabled']
 endif
@@ -438,7 +437,13 @@ if building_full
     link_depends : link_deps,
     install : true,
   )
+  gst_full_c_flags =  []
+  if building_full_static
+    gst_full_c_flags += ['-DGST_STATIC_COMPILATION']
+  endif
+
   gst_full_dep = declare_dependency(link_with: gstfull,
+    compile_args: gst_full_c_flags,
     dependencies : incdir_deps + glib_deps,
     include_directories: include_directories('.')
   )
@@ -473,6 +478,7 @@ if building_full
   pkgconfig.generate(gstfull,
     requires: glib_deps,
     libraries_private: gst_full_libs_private,
+    extra_cflags: gst_full_c_flags,
     subdirs : 'gstreamer-1.0')
   meson.override_dependency('gstreamer-full-1.0', gst_full_dep)
 
