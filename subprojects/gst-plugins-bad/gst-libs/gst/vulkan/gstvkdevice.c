@@ -59,8 +59,7 @@ struct _GstVulkanDevicePrivate
   GPtrArray *enabled_extensions;
 
   gboolean opened;
-  guint queue_family_id;
-  guint n_queues;
+  GArray *queues;
 
   GstVulkanFenceCache *fence_cache;
 };
@@ -215,6 +214,11 @@ gst_vulkan_device_dispose (GObject * object)
   GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
 
+  if (priv->queues) {
+    g_array_unref (priv->queues);
+    priv->queues = NULL;
+  }
+
   if (priv->fence_cache) {
     /* clear any outstanding fences */
     g_object_run_dispose (G_OBJECT (priv->fence_cache));
@@ -251,6 +255,132 @@ gst_vulkan_device_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetParallel */
+/* TODO: add this function for general use and consider compiler builtins */
+static inline guint32
+_pop_count (guint32 n)
+{
+  n = n - ((n >> 1) & 0x55555555);
+  n = (n & 0x33333333) + ((n >> 2) & 0x33333333);
+  return (((n + (n >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
+}
+
+/* look for the queue with more capabilities for the requested flag and also
+ * used by other flags, thus we could use the same queue for more ops. Though,
+ * perhaps it's not the best strategy for parallelism. */
+static inline int
+_pick_queue_family (VkQueueFamilyProperties * queue_family_props,
+    guint32 num_queue_families, VkQueueFlagBits flags, guint32 * family_scores)
+{
+  int i, index = -1;
+  guint32 score, max_score = 0;
+
+  for (i = 0; i < num_queue_families; i++) {
+    const VkQueueFlagBits queue_flags = queue_family_props[i].queueFlags;
+    if (queue_flags & flags) {
+      score = _pop_count (queue_flags) + family_scores[i];
+      if (score > max_score) {
+        index = i;
+        max_score = score;
+      }
+    }
+  }
+
+  if (index > -1)
+    family_scores[index]++;
+
+  return index;
+}
+
+static GArray *
+_append_queue_create_info (GArray * array, int family_index,
+    VkQueueFamilyProperties * queue_family_props)
+{
+  int i;
+  VkDeviceQueueCreateInfo queue_info;
+  gint queue_count;
+  gfloat *priorities;
+
+  if (family_index == -1)
+    return array;
+
+  for (i = 0; i < array->len; i++) {
+    VkDeviceQueueCreateInfo *qi =
+        &g_array_index (array, VkDeviceQueueCreateInfo, i);
+    if (qi->queueFamilyIndex == family_index)
+      return array;
+  }
+
+  /* shall we open all -- queue_family_props[family_index].queueCount ? */
+  queue_count = 1;
+
+  priorities = g_new (gfloat, queue_count);
+  for (i = 0; i < queue_count; i++)
+    priorities[i] = 1.0 / queue_count;
+
+  /* *INDENT-OFF* */
+  queue_info = (VkDeviceQueueCreateInfo) {
+      .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+      .queueFamilyIndex = family_index,
+      .queueCount = queue_count,
+      .pQueuePriorities = priorities,
+  };
+  /* *INDENT-ON* */
+
+  return g_array_append_val (array, queue_info);
+}
+
+
+/* Returns an array of VkDeviceQueueCreateInfo with the list of queues to
+ * create. The list will contain one or more queues which will support all the
+ * required families */
+static GArray *
+gst_vulkan_device_choose_queues (GstVulkanDevice * device)
+{
+  VkQueueFamilyProperties *queue_family_props;
+  GArray *array;
+  guint32 *family_scores, n_queue_families;
+  int graph_index, comp_index, tx_index;
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  int dec_index = -1;
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+  int enc_index = -1;
+#endif
+#endif
+
+  n_queue_families = device->physical_device->n_queue_families;
+  queue_family_props = device->physical_device->queue_family_props;
+
+  array = g_array_sized_new (FALSE, FALSE, sizeof (VkDeviceQueueCreateInfo),
+      n_queue_families);
+
+  family_scores = g_new0 (guint32, n_queue_families);
+
+  graph_index = _pick_queue_family (queue_family_props, n_queue_families,
+      VK_QUEUE_GRAPHICS_BIT, family_scores);
+  array = _append_queue_create_info (array, graph_index, queue_family_props);
+  comp_index = _pick_queue_family (queue_family_props, n_queue_families,
+      VK_QUEUE_COMPUTE_BIT, family_scores);
+  array = _append_queue_create_info (array, comp_index, queue_family_props);
+  tx_index = _pick_queue_family (queue_family_props, n_queue_families,
+      VK_QUEUE_TRANSFER_BIT, family_scores);
+  array = _append_queue_create_info (array, tx_index, queue_family_props);
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  dec_index = _pick_queue_family (queue_family_props, n_queue_families,
+      VK_QUEUE_VIDEO_DECODE_BIT_KHR, family_scores);
+  array = _append_queue_create_info (array, dec_index, queue_family_props);
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+  enc_index = _pick_queue_family (queue_family_props, n_queue_families,
+      VK_QUEUE_VIDEO_ENCODE_BIT_KHR, family_scores);
+  array = _append_queue_create_info (array, enc_index, queue_family_props);
+#endif
+#endif
+
+  g_free (family_scores);
+
+  return array;
+}
+
 /**
  * gst_vulkan_device_open:
  * @device: a #GstVulkanDevice
@@ -266,7 +396,6 @@ gboolean
 gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
 {
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
-  VkPhysicalDevice gpu;
   VkResult err;
   guint i;
 
@@ -279,21 +408,14 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
     return TRUE;
   }
 
-  gpu = gst_vulkan_device_get_physical_device (device);
-
-  /* FIXME: allow overriding/selecting */
-  for (i = 0; i < device->physical_device->n_queue_families; i++) {
-    if (device->physical_device->
-        queue_family_props[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
-      break;
-  }
-  if (i >= device->physical_device->n_queue_families) {
+  priv->queues = gst_vulkan_device_choose_queues (device);
+  if (priv->queues->len == 0) {
+    g_array_unref (priv->queues);
+    priv->queues = NULL;
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Failed to find a compatible queue family");
     goto error;
   }
-  priv->queue_family_id = i;
-  priv->n_queues = 1;
 
   GST_INFO_OBJECT (device, "Creating a device from physical %" GST_PTR_FORMAT
       " with %u layers and %u extensions", device->physical_device,
@@ -307,21 +429,15 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
         (gchar *) g_ptr_array_index (priv->enabled_extensions, i));
 
   {
-    VkDeviceQueueCreateInfo queue_info = { 0, };
+    VkPhysicalDevice gpu;
     VkDeviceCreateInfo device_info = { 0, };
-    gfloat queue_priority = 0.5;
-
-    queue_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queue_info.pNext = NULL;
-    queue_info.queueFamilyIndex = priv->queue_family_id;
-    queue_info.queueCount = priv->n_queues;
-    queue_info.pQueuePriorities = &queue_priority;
 
     device_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     device_info.pNext =
         gst_vulkan_physical_device_get_features (device->physical_device);
-    device_info.queueCreateInfoCount = 1;
-    device_info.pQueueCreateInfos = &queue_info;
+    device_info.queueCreateInfoCount = priv->queues->len;
+    device_info.pQueueCreateInfos = (VkDeviceQueueCreateInfo *)
+        priv->queues->data;
     device_info.enabledLayerCount = priv->enabled_layers->len;
     device_info.ppEnabledLayerNames =
         (const char *const *) priv->enabled_layers->pdata;
@@ -330,6 +446,7 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
         (const char *const *) priv->enabled_extensions->pdata;
     device_info.pEnabledFeatures = NULL;
 
+    gpu = gst_vulkan_device_get_physical_device (device);
     err = vkCreateDevice (gpu, &device_info, NULL, &device->device);
     if (gst_vulkan_error_to_g_error (err, error, "vkCreateDevice") < 0) {
       goto error;
@@ -339,6 +456,12 @@ gst_vulkan_device_open (GstVulkanDevice * device, GError ** error)
   priv->fence_cache = gst_vulkan_fence_cache_new (device);
   /* avoid reference loops between us and the fence cache */
   gst_object_unref (device);
+
+  for (i = 0; i < priv->queues->len; i++) {
+    VkDeviceQueueCreateInfo *qi =
+        &g_array_index (priv->queues, VkDeviceQueueCreateInfo, i);
+    g_free ((gpointer) qi->pQueuePriorities);
+  }
 
   priv->opened = TRUE;
   GST_OBJECT_UNLOCK (device);
@@ -367,14 +490,20 @@ gst_vulkan_device_get_queue (GstVulkanDevice * device, guint32 queue_family,
 {
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
   GstVulkanQueue *ret;
+  int i;
 
   g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), NULL);
   g_return_val_if_fail (device->device != NULL, NULL);
   g_return_val_if_fail (priv->opened, NULL);
-  g_return_val_if_fail (queue_family < priv->n_queues, NULL);
-  g_return_val_if_fail (queue_i <
-      device->physical_device->queue_family_props[queue_family].queueCount,
-      NULL);
+
+  for (i = 0; i < priv->queues->len; i++) {
+    VkDeviceQueueCreateInfo *qi =
+        &g_array_index (priv->queues, VkDeviceQueueCreateInfo, i);
+    if (qi->queueFamilyIndex == queue_family && qi->queueCount >= queue_i)
+      break;
+  }
+
+  g_return_val_if_fail (i < priv->queues->len, NULL);
 
   ret = g_object_new (GST_TYPE_VULKAN_QUEUE, NULL);
   gst_object_ref_sink (ret);
@@ -403,19 +532,24 @@ gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
 {
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
   gboolean done = FALSE;
-  guint i;
+  guint i, j;
 
-  for (i = 0; i < priv->n_queues; i++) {
-    GstVulkanQueue *queue =
-        gst_vulkan_device_get_queue (device, priv->queue_family_id, i);
+  for (i = 0; i < priv->queues->len; i++) {
+    VkDeviceQueueCreateInfo *qi =
+        &g_array_index (priv->queues, VkDeviceQueueCreateInfo, i);
 
-    if (!func (device, queue, user_data))
-      done = TRUE;
+    for (j = 0; j < qi->queueCount; j++) {
+      GstVulkanQueue *queue =
+          gst_vulkan_device_get_queue (device, qi->queueFamilyIndex, j);
 
-    gst_object_unref (queue);
+      if (!func (device, queue, user_data))
+        done = TRUE;
 
-    if (done)
-      break;
+      gst_object_unref (queue);
+
+      if (done)
+        return;
+    }
   }
 }
 
