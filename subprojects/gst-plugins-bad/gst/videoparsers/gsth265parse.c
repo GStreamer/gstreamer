@@ -2155,7 +2155,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
     }
 
     /* 0/1 is set as the default in the codec parser */
-    if (vui->timing_info_present_flag) {
+    if (vui->timing_info_present_flag && !h265parse->framerate_from_caps) {
       gint fps_num = 0, fps_den = 1;
 
       if (!(sps->fps_num == 0 && sps->fps_den == 1)) {
@@ -2166,8 +2166,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
         fps_num = sps->vui_params.time_scale;
         fps_den = sps->vui_params.num_units_in_tick;
 
-        if (gst_h265_parse_is_field_interlaced (h265parse)
-            && h265parse->framerate_from_caps) {
+        if (gst_h265_parse_is_field_interlaced (h265parse)) {
           gint new_fps_num, new_fps_den;
 
           if (!gst_util_fraction_multiply (fps_num, fps_den, 1, 2, &new_fps_num,
@@ -2180,7 +2179,6 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             fps_num = new_fps_num;
             fps_den = new_fps_den;
           }
-          h265parse->framerate_from_caps = FALSE;
         }
       }
 
@@ -2203,7 +2201,6 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             h265parse->parsed_par_n, h265parse->parsed_par_d);
         modified = TRUE;
       }
-
     }
 
     if (vui->video_signal_type_present_flag &&
@@ -2275,7 +2272,7 @@ gst_h265_parse_update_src_caps (GstH265Parse * h265parse, GstCaps * caps)
             &h265parse->parsed_fps_d);
         gst_base_parse_set_frame_rate (GST_BASE_PARSE (h265parse),
             fps_num, fps_den, 0, 0);
-        val = sps->profile_tier_level.interlaced_source_flag ? GST_SECOND / 2 :
+        val = gst_h265_parse_is_field_interlaced (h265parse) ? GST_SECOND / 2 :
             GST_SECOND;
         h265parse->framerate_from_caps = TRUE;
 
