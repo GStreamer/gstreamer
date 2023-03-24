@@ -219,12 +219,15 @@ finish_s334_both_fields (GstCea608Mux * self)
       gst_util_uint64_scale_int (GST_SECOND, self->cdp_fps_entry->fps_d,
       self->cdp_fps_entry->fps_n);
   GstBuffer *output = gst_buffer_new_allocate (NULL, MAX_CDP_PACKET_LEN, NULL);
+  GstSegment *agg_segment =
+      &GST_AGGREGATOR_PAD (GST_AGGREGATOR (self)->srcpad)->segment;
 
   take_s334_both_fields (self, output);
   GST_BUFFER_PTS (output) = output_pts;
   GST_BUFFER_DURATION (output) = output_duration;
   GST_DEBUG_OBJECT (self, "Finishing %" GST_PTR_FORMAT, output);
   self->n_output_buffers += 1;
+  agg_segment->position = output_pts + output_duration;
 
   return gst_aggregator_finish_buffer (GST_AGGREGATOR (self), output);
 }
