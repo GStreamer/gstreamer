@@ -312,7 +312,7 @@ $ meson compile -C builddir
 You can easily run the test of all the components:
 
 ```
-meson test -C build
+meson test -C builddir
 ```
 
 To list all available tests:
