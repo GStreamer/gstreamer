@@ -1045,15 +1045,18 @@ gst_va_encoder_get_srcpad_caps (GstVaEncoder * self)
 static gboolean
 _destroy_all_buffers (GstVaEncodePicture * pic)
 {
+  GstVaDisplay *display;
   VABufferID buffer;
   guint i;
   gboolean ret = TRUE;
 
-  g_return_val_if_fail (GST_IS_VA_DISPLAY (pic->display), FALSE);
+  display = gst_va_buffer_peek_display (pic->raw_buffer);
+  if (!display)
+    return FALSE;
 
   for (i = 0; i < pic->params->len; i++) {
     buffer = g_array_index (pic->params, VABufferID, i);
-    ret &= _destroy_buffer (pic->display, buffer);
+    ret &= _destroy_buffer (display, buffer);
   }
   pic->params = g_array_set_size (pic->params, 0);
 
@@ -1204,7 +1207,6 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
   pic = g_new (GstVaEncodePicture, 1);
   pic->raw_buffer = gst_buffer_ref (raw_buffer);
   pic->reconstruct_buffer = reconstruct_buffer;
-  pic->display = gst_object_ref (self->display);
   pic->coded_buffer = coded_buffer;
 
   pic->params = g_array_sized_new (FALSE, FALSE, sizeof (VABufferID), 8);
@@ -1215,18 +1217,23 @@ gst_va_encode_picture_new (GstVaEncoder * self, GstBuffer * raw_buffer)
 void
 gst_va_encode_picture_free (GstVaEncodePicture * pic)
 {
+  GstVaDisplay *display;
+
   g_return_if_fail (pic);
 
   _destroy_all_buffers (pic);
 
+  display = gst_va_buffer_peek_display (pic->raw_buffer);
+  if (!display)
+    return;
+
   if (pic->coded_buffer != VA_INVALID_ID)
-    _destroy_buffer (pic->display, pic->coded_buffer);
+    _destroy_buffer (display, pic->coded_buffer);
 
   gst_buffer_unref (pic->raw_buffer);
   gst_buffer_unref (pic->reconstruct_buffer);
 
   g_clear_pointer (&pic->params, g_array_unref);
-  gst_clear_object (&pic->display);
 
   g_free (pic);
 }

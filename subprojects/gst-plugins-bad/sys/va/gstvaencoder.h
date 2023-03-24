@@ -33,8 +33,6 @@ G_DECLARE_FINAL_TYPE (GstVaEncoder, gst_va_encoder, GST, VA_ENCODER, GstObject);
 typedef struct _GstVaEncodePicture GstVaEncodePicture;
 struct _GstVaEncodePicture
 {
-  GstVaDisplay *display;
-
   /* picture parameters */
   GArray *params;
 
