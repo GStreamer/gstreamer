@@ -1,7 +1,7 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
-event caps: video/x-h265, alignment=(string)au, bit-depth-chroma=(uint)8, bit-depth-luma=(uint)8, chroma-format=(string)4:2:0, codec_data=(buffer)0101400000004000000000003cf000fcfdf8f800000f03200001001840010c01ffff01400000030040000003000003003c250240210001003642010101400000030040000003000003003ca009881a7779e96e44a1735010202ed00000030010000004b51affde103e805df7c2010422000100074401c07181cdb2, colorimetry=(string)2:0:0:1, framerate=(fraction)75/1, height=(int)200, level=(string)2, parsed=(boolean)true, profile=(string)main, stream-format=(string)hvc1, tier=(string)main, width=(int)300;
+event caps: video/x-h265, alignment=(string)au, bit-depth-chroma=(uint)8, bit-depth-luma=(uint)8, chroma-format=(string)4:2:0, codec_data=(buffer)0101400000004000000000003cf000fcfdf8f800000f03200001001840010c01ffff01400000030040000003000003003c250240210001003642010101400000030040000003000003003ca009881a7779e96e44a1735010202ed00000030010000004b51affde103e805df7c2010422000100074401c07181cdb2, colorimetry=(string)2:0:0:1, framerate=(fraction)75/2, height=(int)200, level=(string)2, parsed=(boolean)true, profile=(string)main, stream-format=(string)hvc1, tier=(string)main, width=(int)300;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ Profile\\\)\"\;";
-buffer: dts=0:00:00.000000000, dur=0:00:00.006666666, flags=discont marker header last
-buffer: dts=0:00:00.006666666, dur=0:00:00.006666666, flags=header delta-unit last
+buffer: dts=0:00:00.000000000, dur=0:00:00.013333333, flags=discont marker header last
+buffer: dts=0:00:00.013333333, dur=0:00:00.013333333, flags=header delta-unit last
 event eos: (no structure)
