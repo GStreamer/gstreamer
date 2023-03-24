@@ -318,8 +318,17 @@ struct _GstValidateActionParameter
   const gchar  *possible_variables;
   const gchar  *def;
 
+  /**
+   * GstValidateActionParameter.free:
+   *
+   * Function that frees the various members of the structure when done using
+   *
+   * Since: 1.24
+   */
+  GDestroyNotify free;
+
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING];
+  gpointer     _gst_reserved[GST_PADDING - 1];
 };
 
 struct _GstValidateScenarioClass

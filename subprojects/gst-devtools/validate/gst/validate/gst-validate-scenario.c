@@ -607,6 +607,12 @@ struct _GstValidateActionTypePrivate
 static void
 _action_type_free (GstValidateActionType * type)
 {
+  for (gint i = 0; type->parameters[i].name; i++) {
+    if (type->parameters[i].free) {
+      type->parameters[i].free (&type->parameters[i]);
+    }
+  }
+
   g_free (type->parameters);
   g_free (type->description);
   g_free (type->name);
