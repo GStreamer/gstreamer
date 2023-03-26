@@ -240,7 +240,7 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
     GstVideoInfo * info, gboolean * reuse_prev)
 {
   GstDebugQROverlay *filter = GST_DEBUG_QR_OVERLAY (base);
-  GString *res = g_string_new (NULL);
+  GString *res;
   JsonGenerator *jgen;
   gchar *framerate_string = g_strdup_printf ("%d/%d", info->fps_n, info->fps_d);
 
@@ -276,9 +276,10 @@ get_qrcode_content (GstBaseQROverlay * base, GstBuffer * buf,
   jgen = json_generator_new ();
   json_node_set_object (root, jobj);
   json_generator_set_root (jgen, root);
+  res = g_string_new (NULL);
   res = json_generator_to_gstring (jgen, res);
   g_object_unref (jgen);
   filter->frame_number++;
 
-  return g_strdup (g_string_free (res, FALSE));
+  return g_string_free (res, FALSE);
 }
