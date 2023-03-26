@@ -237,8 +237,7 @@ gst_ks_video_device_parse_win32_error (const gchar * func_name,
           : "failed to retrieve system error message");
     }
 
-    *ret_error_str = message->str;
-    g_string_free (message, FALSE);
+    *ret_error_str = g_string_free (message, FALSE);
   }
 }
 

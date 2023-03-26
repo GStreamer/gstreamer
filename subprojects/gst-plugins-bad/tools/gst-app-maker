@@ -261,7 +261,7 @@ gst_replace_create_pipeline (GstReplace *replace)
   if (verbose) g_print ("pipeline: %s\n", pipe_desc->str);
 
   pipeline = (GstElement *) gst_parse_launch (pipe_desc->str, &error);
-  g_string_free (pipe_desc, FALSE);
+  g_string_free (pipe_desc, TRUE);
 
   if (error) {
     g_print("pipeline parsing error: %s\n", error->message);
