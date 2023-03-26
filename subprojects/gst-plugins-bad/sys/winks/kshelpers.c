@@ -383,7 +383,6 @@ ks_state_to_string (KSSTATE state)
 gchar *
 ks_options_flags_to_string (gulong flags)
 {
-  gchar *ret;
   GString *str;
 
   str = g_string_sized_new (128);
@@ -404,10 +403,7 @@ ks_options_flags_to_string (gulong flags)
   if (flags != 0)
     g_string_append_printf (str, "|0x%08x", (guint) flags);
 
-  ret = str->str;
-  g_string_free (str, FALSE);
-
-  return ret;
+  return g_string_free (str, FALSE);
 }
 
 typedef struct

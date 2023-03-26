@@ -874,9 +874,8 @@ gst_teletextdec_export_text_page (GstTeletextDec * teletext, vbi_page * page,
     if (!g_strcmp0 (subs->str, ""))
       g_string_append (subs, "\n");
 
-    text = subs->str;
     size = subs->len + 1;
-    g_string_free (subs, FALSE);
+    text = g_string_free (subs, FALSE);
     g_strfreev (lines);
   } else {
     size = page->columns * page->rows;
@@ -935,6 +934,7 @@ gst_teletextdec_export_pango_page (GstTeletextDec * teletext, vbi_page * page,
   gchar **lines;
   GString *subs;
   guint start, stop, k;
+  gsize len;
   gint i, j;
 
   colors = (gchar **) g_malloc (sizeof (gchar *) * (rows + 1));
@@ -965,11 +965,11 @@ gst_teletextdec_export_pango_page (GstTeletextDec * teletext, vbi_page * page,
   }
 
   /* Allocate new buffer */
-  *buf = gst_buffer_new_wrapped (subs->str, subs->len + 1);
+  len = subs->len + 1;
+  *buf = gst_buffer_new_wrapped (g_string_free (subs, FALSE), len);
 
   g_strfreev (lines);
   g_strfreev (colors);
-  g_string_free (subs, FALSE);
   return GST_FLOW_OK;
 }
 

@@ -608,8 +608,7 @@ parse_mdvdsub (ParserState * state, const gchar * line)
       break;
     }
   }
-  ret = markup->str;
-  g_string_free (markup, FALSE);
+  ret = g_string_free (markup, FALSE);
   GST_DEBUG ("parse_mdvdsub returning (%f+%f): %s",
       state->start_time / (double) GST_SECOND,
       state->duration / (double) GST_SECOND, ret);
