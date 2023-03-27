@@ -2312,6 +2312,7 @@ check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     slot->dbin->requested_selection =
         remove_from_list (slot->dbin->requested_selection,
         gst_stream_get_stream_id (slot->active_stream));
+    dbin->selection_updated = TRUE;
     SELECTION_UNLOCK (dbin);
     reassign_slot (dbin, slot);
   } else {
