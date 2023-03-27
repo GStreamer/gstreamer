@@ -64,23 +64,6 @@ variables:
     -Dgst-omx:target=generic
     -Ddoc=disabled
 
-  MESON_GST_WERROR: >
-    -Dgstreamer:werror=true
-    -Dgst-plugins-base:werror=true
-    -Dgst-plugins-good:werror=true
-    -Dgst-plugins-ugly:werror=true
-    -Dgst-plugins-bad:werror=true
-    -Dgst-rtsp-server:werror=true
-    -Dgst-libav:werror=true
-    -Dgst-examples:werror=true
-    -Dgst-editing-services:werror=true
-    -Dgst-docs:werror=true
-    -Dgst-omx:werror=true
-    -Dgst-devtools:werror=true
-    -Dgst-python:werror=true
-    -Dgstreamer-vaapi:werror=true
-    -Dgstreamer-sharp:werror=true
-
 workflow:
   # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
   rules:
@@ -269,7 +252,7 @@ commitlint:
   - export ARGS="--default-library=${BUILD_TYPE:-both} -Dgstreamer:gst_debug=${BUILD_GST_DEBUG:-true} ${MESON_ARGS}"
   - |-
     if [ $GST_WERROR == "true" ]; then
-      export ARGS="$ARGS $MESON_GST_WERROR"
+      export ARGS="$ARGS --native-file ./ci/meson/gst-werror.ini"
     fi
   - echo $ARGS
   - date -R
