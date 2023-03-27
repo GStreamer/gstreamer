@@ -1103,8 +1103,12 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
   g_assert (priv->surface_location.h ==
       gst_vulkan_image_memory_get_height (swap_img));
 
-  gst_video_sink_center_rect (src, priv->surface_location, &priv->display_rect,
-      priv->force_aspect_ratio);
+  if (priv->force_aspect_ratio) {
+    gst_video_sink_center_rect (src, priv->surface_location,
+        &priv->display_rect, priv->force_aspect_ratio);
+  } else {
+    priv->display_rect = priv->surface_location;
+  }
 
   GST_TRACE_OBJECT (swapper, "rendering into result rectangle %ux%u+%u,%u "
       "src %ux%u dst %ux%u", priv->display_rect.w, priv->display_rect.h,
