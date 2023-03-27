@@ -834,6 +834,7 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     if (ret == GST_FLOW_FLUSHING) {
       GstD3D11CSLockGuard lk (&self->lock);
       GST_WARNING_OBJECT (self, "Couldn't prepare window but we are flushing");
+      gst_d3d11_window_unprepare (self->window);
       gst_clear_object (&self->window);
       gst_object_unref (window);
 
