@@ -21,7 +21,8 @@
 #include <config.h>
 #endif
 
-#include "gsth264picture.h"
+#include "gsth264picture-private.h"
+
 #include <stdlib.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_h264_decoder_debug);
@@ -212,6 +213,22 @@ gst_h264_dpb_get_interlaced (GstH264Dpb * dpb)
   g_return_val_if_fail (dpb != NULL, FALSE);
 
   return dpb->interlaced;
+}
+
+/**
+ * gst_h264_dpb_get_last_output_poc:
+ * @dpb: a #GstH264Dpb
+ *
+ * Returns: the last outputted picture order count
+ *
+ * Since: 1.24
+ */
+gint32
+gst_h264_dpb_get_last_output_poc (GstH264Dpb * dpb)
+{
+  g_return_val_if_fail (dpb != NULL, G_MININT32);
+
+  return dpb->last_output_poc;
 }
 
 /**

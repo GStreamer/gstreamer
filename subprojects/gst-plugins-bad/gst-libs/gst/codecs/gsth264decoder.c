@@ -60,6 +60,7 @@
 
 #include <gst/base/base.h>
 #include "gsth264decoder.h"
+#include "gsth264picture-private.h"
 
 GST_DEBUG_CATEGORY (gst_h264_decoder_debug);
 #define GST_CAT_DEFAULT gst_h264_decoder_debug
@@ -125,9 +126,6 @@ struct _GstH264DecoderPrivate
   gint prev_ref_pic_order_cnt_lsb;
 
   GstH264PictureField prev_ref_field;
-
-  /* PicOrderCount of the previously outputted frame */
-  gint last_output_poc;
 
   gboolean process_ref_pic_lists;
   guint preferred_output_delay;
@@ -344,8 +342,6 @@ gst_h264_decoder_init (GstH264Decoder * self)
 
   self->priv = priv = gst_h264_decoder_get_instance_private (self);
 
-  priv->last_output_poc = G_MININT32;
-
   priv->ref_pic_list_p0 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
   g_array_set_clear_func (priv->ref_pic_list_p0,
@@ -485,7 +481,6 @@ gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
   gst_h264_decoder_clear_ref_pic_lists (self);
   gst_clear_h264_picture (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
-  priv->last_output_poc = G_MININT32;
 }
 
 static gboolean
@@ -1774,19 +1769,23 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
   GstVideoCodecFrame *frame = NULL;
   GstH264DecoderOutputFrame output_frame;
   GstFlowReturn flow_ret = GST_FLOW_OK;
+#ifndef GST_DISABLE_GST_DEBUG
+  guint32 last_output_poc;
+#endif
 
   g_assert (ret != NULL);
 
   GST_LOG_OBJECT (self, "Outputting picture %p (frame_num %d, poc %d)",
       picture, picture->frame_num, picture->pic_order_cnt);
 
-  if (picture->pic_order_cnt < priv->last_output_poc) {
+#ifndef GST_DISABLE_GST_DEBUG
+  last_output_poc = gst_h264_dpb_get_last_output_poc (priv->dpb);
+  if (picture->pic_order_cnt < last_output_poc) {
     GST_WARNING_OBJECT (self,
         "Outputting out of order %d -> %d, likely a broken stream",
-        priv->last_output_poc, picture->pic_order_cnt);
+        last_output_poc, picture->pic_order_cnt);
   }
-
-  priv->last_output_poc = picture->pic_order_cnt;
+#endif
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
       picture->system_frame_number);
@@ -1878,7 +1877,6 @@ gst_h264_decoder_drain_internal (GstH264Decoder * self)
 
   gst_clear_h264_picture (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
-  priv->last_output_poc = G_MININT32;
 
   return ret;
 }
