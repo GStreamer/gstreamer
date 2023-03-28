@@ -534,6 +534,9 @@ gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
   gboolean done = FALSE;
   guint i, j;
 
+  g_return_if_fail (GST_IS_VULKAN_DEVICE (device));
+  g_return_if_fail (priv->opened);
+
   for (i = 0; i < priv->queues->len; i++) {
     VkDeviceQueueCreateInfo *qi =
         &g_array_index (priv->queues, VkDeviceQueueCreateInfo, i);
