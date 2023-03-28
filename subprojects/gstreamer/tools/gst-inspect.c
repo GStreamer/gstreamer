@@ -1095,11 +1095,13 @@ print_signal_info (GstElement * element)
   GSList *found_signals, *l;
 
   for (k = 0; k < 2; k++) {
+    gboolean want_actions = (k == 1);
+
     found_signals = NULL;
 
     /* For elements that have sometimes pads, also list a few useful GstElement
      * signals. Put these first, so element-specific ones come later. */
-    if (k == 0 && has_sometimes_template (element)) {
+    if (!want_actions && has_sometimes_template (element)) {
       query = g_new0 (GSignalQuery, 1);
       g_signal_query (g_signal_lookup ("pad-added", GST_TYPE_ELEMENT), query);
       found_signals = g_slist_append (found_signals, query);
@@ -1124,8 +1126,8 @@ print_signal_info (GstElement * element)
         query = g_new0 (GSignalQuery, 1);
         g_signal_query (signals[i], query);
 
-        if ((k == 0 && !(query->signal_flags & G_SIGNAL_ACTION)) ||
-            (k == 1 && (query->signal_flags & G_SIGNAL_ACTION)))
+        if ((!want_actions && !(query->signal_flags & G_SIGNAL_ACTION)) ||
+            (want_actions && (query->signal_flags & G_SIGNAL_ACTION)))
           found_signals = g_slist_append (found_signals, query);
         else
           g_free (query);
@@ -1136,7 +1138,7 @@ print_signal_info (GstElement * element)
 
     if (found_signals) {
       n_print ("\n");
-      if (k == 0)
+      if (!want_actions)
         n_print ("%sElement Signals%s:\n", HEADING_COLOR, RESET_COLOR);
       else
         n_print ("%sElement Actions%s:\n", HEADING_COLOR, RESET_COLOR);
@@ -1153,18 +1155,28 @@ print_signal_info (GstElement * element)
 
       query = (GSignalQuery *) l->data;
       retval_type_name = pretty_type_name (query->return_type, &pmark);
-      indent_len =
-          strlen (query->signal_name) + strlen (retval_type_name) + 24 +
-          strlen (pmark) - 1;
+
+      indent_len = strlen (query->signal_name) + strlen (retval_type_name);
+      indent_len += strlen (pmark) - 1;
+      indent_len += (want_actions) ? 36 : 24;
 
       indent = g_new0 (gchar, indent_len + 1);
       memset (indent, ' ', indent_len);
 
-      n_print ("  %s\"%s\"%s :  %s%s%s%suser_function%s (%s%s%s * object%s",
-          PROP_NAME_COLOR, query->signal_name, RESET_COLOR,
-          DATATYPE_COLOR, retval_type_name, PROP_VALUE_COLOR,
-          pmark, RESET_COLOR, DATATYPE_COLOR, g_type_name (type),
-          PROP_VALUE_COLOR, RESET_COLOR);
+      if (want_actions) {
+        n_print
+            ("  %s\"%s\"%s -> %s%s%s %s:  g_signal_emit_by_name%s (%selement%s, %s\"%s\"%s",
+            PROP_NAME_COLOR, query->signal_name, RESET_COLOR, DATATYPE_COLOR,
+            retval_type_name, PROP_VALUE_COLOR, pmark,
+            RESET_COLOR, PROP_VALUE_COLOR, RESET_COLOR, PROP_NAME_COLOR,
+            query->signal_name, RESET_COLOR);
+      } else {
+        n_print ("  %s\"%s\"%s :  %s%s%s%suser_function%s (%s%s%s * object%s",
+            PROP_NAME_COLOR, query->signal_name, RESET_COLOR,
+            DATATYPE_COLOR, retval_type_name, PROP_VALUE_COLOR,
+            pmark, RESET_COLOR, DATATYPE_COLOR, g_type_name (type),
+            PROP_VALUE_COLOR, RESET_COLOR);
+      }
 
       for (j = 0; j < query->n_params; j++) {
         const gchar *type_name, *asterisk, *const_prefix;
@@ -1183,13 +1195,18 @@ print_signal_info (GstElement * element)
             type_name, PROP_VALUE_COLOR, asterisk, j, RESET_COLOR);
       }
 
-      if (k == 0) {
+      if (!want_actions) {
         g_print (",\n");
         n_print ("%s%sgpointer %suser_data%s);\n", indent, DATATYPE_COLOR,
             PROP_VALUE_COLOR, RESET_COLOR);
-      } else
-        g_print (");\n");
-
+      } else if (query->return_type == G_TYPE_NONE) {
+        n_print ("%s);\n", RESET_COLOR);
+      } else {
+        g_print (",\n");
+        n_print ("%s%s%s%s *%sp_return_value%s);\n", indent, DATATYPE_COLOR,
+            g_type_name (query->return_type), PROP_VALUE_COLOR, pmark,
+            RESET_COLOR);
+      }
       g_free (indent);
       g_print ("\n");
     }
