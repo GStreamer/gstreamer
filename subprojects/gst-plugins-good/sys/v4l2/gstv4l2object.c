@@ -1093,6 +1093,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       rank = YUV_BASE_RANK + 10;
       break;
     case V4L2_PIX_FMT_YVU420:  /* YV12, 12 bits per pixel */
+    case V4L2_PIX_FMT_YVU420M:
       rank = YUV_BASE_RANK + 6;
       break;
     case V4L2_PIX_FMT_UYVY:    /* UYVY, 16 bits per pixel */
@@ -1375,6 +1376,7 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
       format = GST_VIDEO_FORMAT_YUY2;
       break;
     case V4L2_PIX_FMT_YVU420:
+    case V4L2_PIX_FMT_YVU420M:
       format = GST_VIDEO_FORMAT_YV12;
       break;
     case V4L2_PIX_FMT_UYVY:
@@ -1542,6 +1544,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_YUV420M:
     case V4L2_PIX_FMT_YUYV:
     case V4L2_PIX_FMT_YVU420:
+    case V4L2_PIX_FMT_YVU420M:
     case V4L2_PIX_FMT_UYVY:
     case V4L2_PIX_FMT_YUV422P:
     case V4L2_PIX_FMT_YVYU:
@@ -1795,6 +1798,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         break;
       case GST_VIDEO_FORMAT_YV12:
         fourcc = V4L2_PIX_FMT_YVU420;
+        fourcc_nc = V4L2_PIX_FMT_YVU420M;
         break;
       case GST_VIDEO_FORMAT_Y41B:
         fourcc = V4L2_PIX_FMT_YUV411P;
