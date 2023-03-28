@@ -432,6 +432,7 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
       (GCompareDataFunc) sort_gparamspecs, NULL);
 
   n_print ("%s%s%s:\n", HEADING_COLOR, desc, RESET_COLOR);
+  n_print ("\n");
 
   push_indent ();
 
@@ -780,6 +781,8 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
     pop_indent_n (11);
 
     g_value_reset (&value);
+
+    n_print ("\n");
   }
   if (num_properties == 0)
     n_print ("%snone%s\n", PROP_VALUE_COLOR, RESET_COLOR);
@@ -1122,6 +1125,7 @@ print_signal_info (GstElement * element)
         n_print ("%sElement Signals%s:\n", HEADING_COLOR, RESET_COLOR);
       else
         n_print ("%sElement Actions%s:\n", HEADING_COLOR, RESET_COLOR);
+      n_print ("\n");
     } else {
       continue;
     }
@@ -1170,6 +1174,7 @@ print_signal_info (GstElement * element)
         g_print (");\n");
 
       g_free (indent);
+      g_print ("\n");
     }
 
     if (found_signals) {
