@@ -199,7 +199,8 @@ gst_util_set_object_arg (GObject * object, const gchar * name,
 
   value_type = pspec->value_type;
 
-  GST_DEBUG ("pspec->flags is %d, pspec->value_type is %s",
+  GST_CAT_DEBUG_OBJECT (GST_CAT_PARAMS, object,
+      "pspec->flags is %d, pspec->value_type is %s",
       pspec->flags, g_type_name (value_type));
 
   if (!(pspec->flags & G_PARAM_WRITABLE))
@@ -1145,9 +1146,8 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (GST_IS_PAD (pad), NULL);
 
-  GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
-      "finding pad in %s compatible with %s:%s",
-      GST_ELEMENT_NAME (element), GST_DEBUG_PAD_NAME (pad));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+      "finding pad compatible with %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   g_return_val_if_fail (GST_PAD_PEER (pad) == NULL, NULL);
 
@@ -1173,8 +1173,8 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
 
         current = g_value_get_object (&padptr);
 
-        GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examining pad %s:%s",
-            GST_DEBUG_PAD_NAME (current));
+        GST_CAT_LOG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+            "examining pad %s:%s", GST_DEBUG_PAD_NAME (current));
 
         if (GST_PAD_IS_SRC (current)) {
           srcpad = current;
@@ -1204,7 +1204,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
           gst_caps_unref (intersection);
 
           if (compatible) {
-            GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+            GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
                 "found existing unlinked compatible pad %s:%s",
                 GST_DEBUG_PAD_NAME (current));
             gst_iterator_free (pads);
@@ -1262,7 +1262,7 @@ gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
   gst_object_unref (templ);
 
   if (foundpad) {
-    GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+    GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
         "found existing request pad %s:%s", GST_DEBUG_PAD_NAME (foundpad));
     return foundpad;
   }
@@ -1618,13 +1618,15 @@ prepare_link_maybe_ghosting (GstPad ** src, GstPad ** sink,
   e2 = GST_OBJECT_PARENT (*sink);
 
   if (G_UNLIKELY (e1 == NULL)) {
-    GST_WARNING ("Trying to ghost a pad that doesn't have a parent: %"
-        GST_PTR_FORMAT, *src);
+    GST_CAT_WARNING (GST_CAT_ELEMENT_PADS,
+        "Trying to ghost a pad that doesn't have a parent: %" GST_PTR_FORMAT,
+        *src);
     return FALSE;
   }
   if (G_UNLIKELY (e2 == NULL)) {
-    GST_WARNING ("Trying to ghost a pad that doesn't have a parent: %"
-        GST_PTR_FORMAT, *sink);
+    GST_CAT_WARNING (GST_CAT_ELEMENT_PADS,
+        "Trying to ghost a pad that doesn't have a parent: %" GST_PTR_FORMAT,
+        *sink);
     return FALSE;
   }
 
@@ -2158,7 +2160,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
 
     capsfilter = gst_element_factory_make ("capsfilter", NULL);
     if (!capsfilter) {
-      GST_ERROR ("Could not make a capsfilter");
+      GST_CAT_ERROR (GST_CAT_ELEMENT_PADS, "Could not make a capsfilter");
       return FALSE;
     }
 
@@ -2168,7 +2170,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
     gst_element_get_state (GST_ELEMENT_CAST (parent), &state, &pending, 0);
 
     if (!gst_bin_add (GST_BIN (parent), capsfilter)) {
-      GST_ERROR ("Could not add capsfilter");
+      GST_CAT_ERROR (GST_CAT_ELEMENT_PADS, "Could not add capsfilter");
       gst_object_unref (parent);
       return FALSE;
     }
@@ -2327,15 +2329,16 @@ gst_element_unlink_pads (GstElement * src, const gchar * srcpadname,
     if ((srcpad = gst_element_request_pad_simple (src, srcpadname)))
       srcrequest = TRUE;
   if (srcpad == NULL) {
-    GST_WARNING_OBJECT (src, "source element has no pad \"%s\"", srcpadname);
+    GST_CAT_WARNING_OBJECT (GST_CAT_ELEMENT_PADS, src,
+        "source element has no pad \"%s\"", srcpadname);
     return;
   }
   if (!(destpad = gst_element_get_static_pad (dest, destpadname)))
     if ((destpad = gst_element_request_pad_simple (dest, destpadname)))
       destrequest = TRUE;
   if (destpad == NULL) {
-    GST_WARNING_OBJECT (dest, "destination element has no pad \"%s\"",
-        destpadname);
+    GST_CAT_WARNING_OBJECT (GST_CAT_ELEMENT_PADS, dest,
+        "destination element has no pad \"%s\"", destpadname);
     goto free_src;
   }
 
@@ -2813,9 +2816,11 @@ query_caps_func (GstPad * pad, QueryCapsData * data)
     GstCaps *peercaps, *intersection;
 
     gst_query_parse_caps_result (data->query, &peercaps);
-    GST_DEBUG_OBJECT (pad, "intersect with result %" GST_PTR_FORMAT, peercaps);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "intersect with result %" GST_PTR_FORMAT, peercaps);
     intersection = gst_caps_intersect (data->ret, peercaps);
-    GST_DEBUG_OBJECT (pad, "intersected %" GST_PTR_FORMAT, intersection);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "intersected %" GST_PTR_FORMAT, intersection);
 
     gst_caps_unref (data->ret);
     data->ret = intersection;
@@ -3194,7 +3199,7 @@ gst_pad_query_accept_caps (GstPad * pad, GstCaps * caps)
   query = gst_query_new_accept_caps (caps);
   if (gst_pad_query (pad, query)) {
     gst_query_parse_accept_caps_result (query, &res);
-    GST_DEBUG_OBJECT (pad, "query returned %d", res);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "query returned %d", res);
   }
   gst_query_unref (query);
 
@@ -3223,7 +3228,7 @@ gst_pad_peer_query_accept_caps (GstPad * pad, GstCaps * caps)
   query = gst_query_new_accept_caps (caps);
   if (gst_pad_peer_query (pad, query)) {
     gst_query_parse_accept_caps_result (query, &res);
-    GST_DEBUG_OBJECT (pad, "query returned %d", res);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "query returned %d", res);
   }
   gst_query_unref (query);
 
@@ -3256,14 +3261,14 @@ element_find_unlinked_pad (GstElement * element, GstPadDirection direction)
         GstPad *peer;
         GstPad *pad = g_value_get_object (&data);
 
-        GST_CAT_LOG (GST_CAT_ELEMENT_PADS, "examining pad %s:%s",
-            GST_DEBUG_PAD_NAME (pad));
+        GST_CAT_LOG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+            "examining pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
         peer = gst_pad_get_peer (pad);
         if (peer == NULL) {
           unlinked_pad = gst_object_ref (pad);
           done = TRUE;
-          GST_CAT_DEBUG (GST_CAT_ELEMENT_PADS,
+          GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
               "found existing unlinked pad %s:%s",
               GST_DEBUG_PAD_NAME (unlinked_pad));
         } else {
@@ -4313,9 +4318,10 @@ gst_pad_get_stream_id (GstPad * pad)
     gst_event_parse_stream_start (event, &stream_id);
     ret = g_strdup (stream_id);
     gst_event_unref (event);
-    GST_LOG_OBJECT (pad, "pad has stream-id '%s'", ret);
+    GST_CAT_LOG_OBJECT (GST_CAT_PADS, pad, "pad has stream-id '%s'", ret);
   } else {
-    GST_DEBUG_OBJECT (pad, "pad has not received a stream-start event yet");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "pad has not received a stream-start event yet");
   }
 
   return ret;
@@ -4348,9 +4354,10 @@ gst_pad_get_stream (GstPad * pad)
   if (event != NULL) {
     gst_event_parse_stream (event, &stream);
     gst_event_unref (event);
-    GST_LOG_OBJECT (pad, "pad has stream object %p", stream);
+    GST_CAT_LOG_OBJECT (GST_CAT_PADS, pad, "pad has stream object %p", stream);
   } else {
-    GST_DEBUG_OBJECT (pad, "pad has not received a stream-start event yet");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_PADS, pad,
+        "pad has not received a stream-start event yet");
   }
 
   return stream;
