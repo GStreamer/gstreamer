@@ -35,7 +35,8 @@ gboolean                gst_d3d11_winrt_capture_load_library (void);
 
 GstD3D11ScreenCapture * gst_d3d11_winrt_capture_new (GstD3D11Device * device,
                                                      HMONITOR monitor_handle,
-                                                     HWND window_handle);
+                                                     HWND window_handle,
+                                                     gboolean client_only);
 
 G_END_DECLS
 

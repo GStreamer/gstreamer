@@ -91,9 +91,11 @@ if d3d11_winapi_desktop
     extra_dep += [winmm_lib]
   endif
 
-  if have_wgc
+  dwmapi_lib = cc.find_library('dwmapi', required: false)
+  if have_wgc and dwmapi_lib.found()
     d3d11_sources += ['gstd3d11winrtcapture.cpp']
     extra_args += ['-DHAVE_WINRT_CAPTURE']
+    extra_dep += [dwmapi_lib]
   endif
 endif
 

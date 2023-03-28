@@ -66,6 +66,7 @@ enum
   PROP_SHOW_BORDER,
   PROP_CAPTURE_API,
   PROP_ADAPTER,
+  PROP_WINDOW_CAPTURE_MODE,
 };
 
 typedef enum
@@ -73,6 +74,12 @@ typedef enum
   GST_D3D11_SCREEN_CAPTURE_API_DXGI,
   GST_D3D11_SCREEN_CAPTURE_API_WGC,
 } GstD3D11ScreenCaptureAPI;
+
+typedef enum
+{
+  GST_D3D11_WINDOW_CAPTURE_DEFAULT,
+  GST_D3D11_WINDOW_CAPTURE_CLIENT,
+} GstD3D11WindowCaptureMode;
 
 #ifdef HAVE_WINRT_CAPTURE
 /**
@@ -109,6 +116,42 @@ gst_d3d11_screen_capture_api_get_type (void)
 
   return api_type;
 }
+
+/**
+ * GstD3D11WindowCaptureMode:
+ *
+ * Since: 1.24
+ */
+#define GST_TYPE_D3D11_WINDOW_CAPTURE_MODE (gst_d3d11_window_capture_mode_get_type())
+static GType
+gst_d3d11_window_capture_mode_get_type (void)
+{
+  static GType type = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    static const GEnumValue hwnd_modes[] = {
+      /**
+       * GstD3D11WindowCaptureMode::default:
+       *
+       * Since: 1.24
+       */
+      {GST_D3D11_WINDOW_CAPTURE_DEFAULT,
+          "Capture entire window area", "default"},
+
+      /**
+       * GstD3D11WindowCaptureMode::client:
+       *
+       * Since: 1.24
+       */
+      {GST_D3D11_WINDOW_CAPTURE_CLIENT, "Capture client area", "client"},
+      {0, nullptr, nullptr},
+    };
+
+    type = g_enum_register_static ("GstD3D11WindowCaptureMode", hwnd_modes);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return type;
+}
 #endif
 
 #define DEFAULT_MONITOR_INDEX -1
@@ -116,6 +159,7 @@ gst_d3d11_screen_capture_api_get_type (void)
 #define DEFAULT_SHOW_BORDER FALSE
 #define DEFAULT_CAPTURE_API GST_D3D11_SCREEN_CAPTURE_API_DXGI
 #define DEFAULT_ADAPTER -1
+#define DEFAULT_WINDOW_CAPTURE_MODE GST_D3D11_WINDOW_CAPTURE_DEFAULT
 
 static GstStaticCaps template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
@@ -142,6 +186,7 @@ struct _GstD3D11ScreenCaptureSrc
   gboolean show_cursor;
   gboolean show_border;
   GstD3D11ScreenCaptureAPI capture_api;
+  GstD3D11WindowCaptureMode hwnd_capture_mode;
   gint adapter;
 
   guint crop_x;
@@ -343,6 +388,20 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
             -1, G_MAXINT32, DEFAULT_ADAPTER,
             (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
                 GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
+
+    /**
+     * GstD3D11ScreenCaptureSrc:hwnd-capture-mode:
+     *
+     * Since: 1.24
+     */
+    g_object_class_install_property (gobject_class, PROP_WINDOW_CAPTURE_MODE,
+        g_param_spec_enum ("window-capture-mode", "Window Capture Mode",
+            "Window capture mode to use if \"window-handle\" is set",
+            GST_TYPE_D3D11_WINDOW_CAPTURE_MODE, DEFAULT_WINDOW_CAPTURE_MODE,
+            (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+                GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
+    gst_type_mark_as_plugin_api (GST_TYPE_D3D11_WINDOW_CAPTURE_MODE,
+        (GstPluginAPIFlags) 0);
   }
 #endif
 
@@ -388,6 +447,7 @@ gst_d3d11_screen_capture_src_init (GstD3D11ScreenCaptureSrc * self)
   self->show_cursor = DEFAULT_SHOW_CURSOR;
   self->show_border = DEFAULT_SHOW_BORDER;
   self->capture_api = DEFAULT_CAPTURE_API;
+  self->hwnd_capture_mode = DEFAULT_WINDOW_CAPTURE_MODE;
   self->adapter = DEFAULT_ADAPTER;
   self->min_latency = GST_CLOCK_TIME_NONE;
   self->max_latency = GST_CLOCK_TIME_NONE;
@@ -459,6 +519,10 @@ gst_d3d11_screen_capture_src_set_property (GObject * object, guint prop_id,
     case PROP_ADAPTER:
       self->adapter = g_value_get_int (value);
       break;
+    case PROP_WINDOW_CAPTURE_MODE:
+      self->hwnd_capture_mode =
+          (GstD3D11WindowCaptureMode) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -504,6 +568,9 @@ gst_d3d11_screen_capture_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ADAPTER:
       g_value_set_int (value, self->adapter);
+      break;
+    case PROP_WINDOW_CAPTURE_MODE:
+      g_value_set_enum (value, self->hwnd_capture_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -965,9 +1032,11 @@ gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
 #ifdef HAVE_WINRT_CAPTURE
   if (self->window_handle) {
     capture = gst_d3d11_winrt_capture_new (self->device, nullptr,
-        self->window_handle);
+        self->window_handle,
+        self->hwnd_capture_mode == GST_D3D11_WINDOW_CAPTURE_CLIENT);
   } else if (self->capture_api == GST_D3D11_SCREEN_CAPTURE_API_WGC) {
-    capture = gst_d3d11_winrt_capture_new (self->device, monitor, nullptr);
+    capture = gst_d3d11_winrt_capture_new (self->device,
+        monitor, nullptr, FALSE);
   }
 #endif
 
@@ -990,7 +1059,8 @@ gst_d3d11_screen_capture_src_start (GstBaseSrc * bsrc)
         self->capture_api = GST_D3D11_SCREEN_CAPTURE_API_WGC;
         gst_clear_object (&capture);
         GST_WARNING_OBJECT (self, "DXGI capture is not available");
-        capture = gst_d3d11_winrt_capture_new (self->device, monitor, nullptr);
+        capture = gst_d3d11_winrt_capture_new (self->device,
+            monitor, nullptr, FALSE);
         if (capture
             && gst_d3d11_screen_capture_prepare (capture) == GST_FLOW_OK) {
           GST_INFO_OBJECT (self, "Fallback to Windows Graphics Capture");

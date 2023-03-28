@@ -38,6 +38,7 @@
 #include <windows.graphics.directx.direct3d11.h>
 #include <windows.graphics.directx.direct3d11.interop.h>
 #include <string.h>
+#include <dwmapi.h>
 
 #include <wrl.h>
 
@@ -79,6 +80,7 @@ typedef struct
   HRESULT (WINAPI * WindowsDeleteString) (HSTRING string);
   HRESULT (WINAPI * RoGetActivationFactory) (HSTRING activatable_class_id,
       REFIID iid, void ** factory);
+  DPI_AWARENESS_CONTEXT (WINAPI * SetThreadDpiAwarenessContext) (DPI_AWARENESS_CONTEXT context);
 } GstD3D11WinRTVTable;
 
 static GstD3D11WinRTVTable winrt_vtable = { FALSE, };
@@ -153,6 +155,8 @@ struct GstD3D11WinRTCaptureInner
       g_module_close (d3d11_module); \
     if (combase_module) \
       g_module_close (combase_module); \
+    if (user32_module) \
+      g_module_close (user32_module); \
     return; \
   } \
 } G_STMT_END
@@ -162,6 +166,7 @@ gst_d3d11_winrt_capture_load_library (void)
 {
   static GModule *d3d11_module = nullptr;
   static GModule *combase_module = nullptr;
+  static GModule *user32_module = nullptr;
 
   GST_D3D11_CALL_ONCE_BEGIN {
     d3d11_module = g_module_open ("d3d11.dll", G_MODULE_BIND_LAZY);
@@ -175,6 +180,13 @@ gst_d3d11_winrt_capture_load_library (void)
       return;
     }
 
+    user32_module = g_module_open ("user32.dll", G_MODULE_BIND_LAZY);
+    if (!user32_module) {
+      g_module_close (combase_module);
+      g_module_close (d3d11_module);
+      return;
+    }
+
     LOAD_SYMBOL (d3d11_module, CreateDirect3D11DeviceFromDXGIDevice,
         CreateDirect3D11DeviceFromDXGIDevice);
     LOAD_SYMBOL (combase_module, RoInitialize, RoInitialize);
@@ -183,6 +195,8 @@ gst_d3d11_winrt_capture_load_library (void)
     LOAD_SYMBOL (combase_module, WindowsDeleteString, WindowsDeleteString);
     LOAD_SYMBOL (combase_module, RoGetActivationFactory,
         RoGetActivationFactory);
+    LOAD_SYMBOL (user32_module, SetThreadDpiAwarenessContext,
+        SetThreadDpiAwarenessContext);
 
     winrt_vtable.loaded = TRUE;
   }
@@ -197,6 +211,7 @@ enum
   PROP_D3D11_DEVICE,
   PROP_MONITOR_HANDLE,
   PROP_WINDOW_HANDLE,
+  PROP_CLIENT_ONLY,
 };
 
 struct _GstD3D11WinRTCapture
@@ -210,6 +225,8 @@ struct _GstD3D11WinRTCapture
   /* Actual texture resolution */
   UINT width;
   UINT height;
+  UINT capture_width;
+  UINT capture_height;
 
   gboolean flushing;
   boolean show_mouse;
@@ -225,6 +242,7 @@ struct _GstD3D11WinRTCapture
 
   HMONITOR monitor_handle;
   HWND window_handle;
+  gboolean client_only;
 
   HWND hidden_window;
 };
@@ -291,6 +309,11 @@ gst_d3d11_winrt_capture_class_init (GstD3D11WinRTCaptureClass * klass)
       g_param_spec_pointer ("window-handle", "Window Handle",
           "A HWND handle of window to capture", (GParamFlags)
           (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
+              G_PARAM_STATIC_STRINGS)));
+  g_object_class_install_property (gobject_class, PROP_CLIENT_ONLY,
+      g_param_spec_boolean ("client-only",
+          "Client Only", "Captures only client area", FALSE,
+          (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
               G_PARAM_STATIC_STRINGS)));
 
   capture_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_winrt_capture_prepare);
@@ -371,6 +394,9 @@ gst_d3d11_winrt_capture_set_property (GObject * object, guint prop_id,
       break;
     case PROP_WINDOW_HANDLE:
       self->window_handle = (HWND) g_value_get_pointer (value);
+      break;
+    case PROP_CLIENT_ONLY:
+      self->client_only = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -478,8 +504,26 @@ gst_d3d11_winrt_configure (GstD3D11WinRTCapture * self)
     goto error;
   }
 
-  self->width = (UINT) self->pool_size.Width;
-  self->height = (UINT) self->pool_size.Height;
+  self->width = self->capture_width = (UINT) self->pool_size.Width;
+  self->height = self->capture_height = (UINT) self->pool_size.Height;
+
+  if (self->window_handle && self->client_only) {
+    RECT rect;
+    if (!GetClientRect (self->window_handle, &rect)) {
+      GST_ERROR_OBJECT (self, "Could not get client rect");
+      goto error;
+    }
+
+    self->capture_width = rect.right - rect.left;
+    self->capture_height = rect.bottom - rect.top;
+
+    self->capture_width = MAX (self->capture_width, 1);
+    self->capture_height = MAX (self->capture_height, 1);
+
+    GST_DEBUG_OBJECT (self, "Client rect %d:%d:%d:%d, pool size %dx%d",
+        rect.left, rect.top, rect.right, rect.bottom,
+        self->width, self->height);
+  }
 
   hr = pool_statics2->CreateFreeThreaded (inner->d3d_device.Get (),
       DirectXPixelFormat::DirectXPixelFormat_B8G8R8A8UIntNormalized,
@@ -652,6 +696,9 @@ gst_d3d11_winrt_capture_thread_func (GstD3D11WinRTCapture * self)
   }
 #endif
 
+  winrt_vtable.SetThreadDpiAwarenessContext
+      (DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+
   QueryPerformanceFrequency (&self->frequency);
 
   winrt_vtable.RoInitialize (RO_INIT_MULTITHREADED);
@@ -744,8 +791,8 @@ gst_d3d11_winrt_capture_get_size (GstD3D11ScreenCapture * capture,
 {
   GstD3D11WinRTCapture *self = GST_D3D11_WINRT_CAPTURE (capture);
 
-  *width = self->width;
-  *height = self->height;
+  *width = self->capture_width;
+  *height = self->capture_height;
 
   return TRUE;
 }
@@ -819,6 +866,7 @@ gst_d3d11_winrt_capture_do_capture (GstD3D11ScreenCapture * capture,
   LONGLONG timeout;
   D3D11_TEXTURE2D_DESC desc;
   gboolean size_changed = FALSE;
+  D3D11_BOX box = *crop_box;
 
   GstD3D11CSLockGuard lk (&self->lock);
 again:
@@ -933,7 +981,77 @@ again:
         self->width, self->height, desc.Width, desc.Height);
     self->width = desc.Width;
     self->height = desc.Height;
+    if (!self->window_handle || !self->client_only) {
+      self->capture_width = self->width;
+      self->capture_height = self->capture_height;
+    }
+
     size_changed = TRUE;
+  }
+
+  if (self->window_handle && self->client_only) {
+    RECT client_rect, bound_rect;
+    POINT client_pos = { 0, };
+    UINT width, height;
+    DPI_AWARENESS_CONTEXT prev;
+    BOOL ret;
+
+    prev = winrt_vtable.SetThreadDpiAwarenessContext
+        (DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+    ret = GetClientRect (self->window_handle, &client_rect) &&
+        DwmGetWindowAttribute (self->window_handle,
+        DWMWA_EXTENDED_FRAME_BOUNDS, &bound_rect, sizeof (RECT)) == S_OK &&
+        ClientToScreen (self->window_handle, &client_pos);
+
+    if (prev)
+      winrt_vtable.SetThreadDpiAwarenessContext (prev);
+
+    if (!ret) {
+      GST_ERROR_OBJECT (self, "Could not get client rect");
+      return GST_FLOW_ERROR;
+    }
+
+    width = client_rect.right - client_rect.left;
+    height = client_rect.bottom - client_rect.top;
+
+    width = MAX (width, 1);
+    height = MAX (height, 1);
+
+    if (self->capture_width != width || self->capture_height != height) {
+      GST_DEBUG_OBJECT (self, "Client rect size changed %dx%d -> %dx%d",
+          self->capture_width, self->capture_height, width, height);
+      self->capture_width = width;
+      self->capture_height = height;
+      size_changed = TRUE;
+    } else {
+      UINT x_offset = 0;
+      UINT y_offset = 0;
+
+      GST_LOG_OBJECT (self, "bound-rect: %d:%d:%d:%d, "
+          "client-rect: %d:%d:%d:%d, client-upper-left: %d:%d",
+          bound_rect.left, bound_rect.top, bound_rect.right, bound_rect.bottom,
+          client_rect.left, client_rect.top, client_rect.right,
+          client_rect.bottom, client_pos.x, client_pos.y);
+
+      if (client_pos.x > bound_rect.left)
+        x_offset = client_pos.x - bound_rect.left;
+
+      if (client_pos.y > bound_rect.top)
+        y_offset = client_pos.y - bound_rect.top;
+
+      box.left += x_offset;
+      box.top += y_offset;
+
+      box.right += x_offset;
+      box.bottom += y_offset;
+
+      /* left and top is inclusive */
+      box.left = MIN (desc.Width - 1, box.left);
+      box.top = MIN (desc.Height - 1, box.top);
+
+      box.right = MIN (desc.Width, box.right);
+      box.bottom = MIN (desc.Height, box.bottom);
+    }
   }
 
   if (size_changed)
@@ -942,14 +1060,14 @@ again:
   context_handle = gst_d3d11_device_get_device_context_handle (self->device);
   GstD3D11DeviceLockGuard device_lk (self->device);
   context_handle->CopySubresourceRegion (texture, 0, 0, 0, 0,
-      captured_texture.Get (), 0, crop_box);
+      captured_texture.Get (), 0, &box);
 
   return GST_FLOW_OK;
 }
 
 GstD3D11ScreenCapture *
 gst_d3d11_winrt_capture_new (GstD3D11Device * device, HMONITOR monitor_handle,
-    HWND window_handle)
+    HWND window_handle, gboolean client_only)
 {
   GstD3D11WinRTCapture *self;
 
@@ -963,7 +1081,9 @@ gst_d3d11_winrt_capture_new (GstD3D11Device * device, HMONITOR monitor_handle,
 
   self = (GstD3D11WinRTCapture *) g_object_new (GST_TYPE_D3D11_WINRT_CAPTURE,
       "d3d11device", device, "monitor-handle", (gpointer) monitor_handle,
-      "window-handle", (gpointer) window_handle, nullptr);
+      "window-handle", (gpointer) window_handle, "client-only", client_only,
+      nullptr);
+
   if (!self->inner) {
     gst_clear_object (&self);
     return nullptr;
