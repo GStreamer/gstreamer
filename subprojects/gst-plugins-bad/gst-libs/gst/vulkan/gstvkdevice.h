@@ -124,6 +124,9 @@ GstVulkanQueue *    gst_vulkan_device_get_queue             (GstVulkanDevice * d
                                                              guint32 queue_family,
                                                              guint32 queue_i);
 GST_VULKAN_API
+GArray *            gst_vulkan_device_queue_family_indices  (GstVulkanDevice * device);
+
+GST_VULKAN_API
 VkPhysicalDevice    gst_vulkan_device_get_physical_device   (GstVulkanDevice * device);
 
 GST_VULKAN_API

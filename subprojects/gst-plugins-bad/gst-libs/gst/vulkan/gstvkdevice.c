@@ -60,6 +60,7 @@ struct _GstVulkanDevicePrivate
 
   gboolean opened;
   GArray *queues;
+  GArray *queue_family_indices;
 
   GstVulkanFenceCache *fence_cache;
 };
@@ -213,6 +214,11 @@ gst_vulkan_device_dispose (GObject * object)
 {
   GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
+
+  if (priv->queue_family_indices) {
+    g_array_unref (priv->queue_family_indices);
+    priv->queue_family_indices = NULL;
+  }
 
   if (priv->queues) {
     g_array_unref (priv->queues);
@@ -554,6 +560,51 @@ gst_vulkan_device_foreach_queue (GstVulkanDevice * device,
         return;
     }
   }
+}
+
+/**
+ * gst_vulkan_device_queue_family_indices:
+ * @device: a #GstVulkanDevice
+ *
+ * Returns: (element-type uint32_t) (transfer full): An array with the family
+ *     indexes of the created queues in @device
+ *
+ * Since: 1.24
+ */
+GArray *
+gst_vulkan_device_queue_family_indices (GstVulkanDevice * device)
+{
+  GstVulkanDevicePrivate *priv = GET_PRIV (device);
+  guint i, j;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), NULL);
+  g_return_val_if_fail (priv->opened, NULL);
+
+  GST_OBJECT_LOCK (device);
+
+  if (priv->queue_family_indices)
+    goto beach;
+
+  priv->queue_family_indices =
+      g_array_sized_new (FALSE, FALSE, sizeof (uint32_t), priv->queues->len);
+
+  for (i = 0; i < priv->queues->len; i++) {
+    VkDeviceQueueCreateInfo *qi =
+        &g_array_index (priv->queues, VkDeviceQueueCreateInfo, i);
+
+    for (j = 0; j < priv->queue_family_indices->len; j++) {
+      uint32_t qfi = g_array_index (priv->queue_family_indices, uint32_t, j);
+      if (qfi == qi->queueFamilyIndex)
+        break;
+    }
+
+    if (j == priv->queue_family_indices->len)
+      g_array_append_val (priv->queue_family_indices, qi->queueFamilyIndex);
+  }
+
+beach:
+  GST_OBJECT_UNLOCK (device);
+  return g_array_ref (priv->queue_family_indices);
 }
 
 /**
