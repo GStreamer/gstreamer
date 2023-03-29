@@ -813,6 +813,7 @@ gst_vulkan_full_screen_quad_init (GstVulkanFullScreenQuad * self)
   priv->dst_alpha_blend_factor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   priv->colour_blend_op = VK_BLEND_OP_ADD;
   priv->alpha_blend_op = VK_BLEND_OP_ADD;
+  priv->enable_clear = TRUE;
 }
 
 /**
