@@ -25,4 +25,8 @@ G_BEGIN_DECLS
 
 gint32 gst_h264_dpb_get_last_output_poc (GstH264Dpb * dpb);
 
+void   gst_h264_picture_set_reference   (GstH264Picture * picture,
+                                         GstH264PictureReference reference,
+                                         gboolean other_field);
+
 G_END_DECLS

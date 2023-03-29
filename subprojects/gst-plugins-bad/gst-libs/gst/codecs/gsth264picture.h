@@ -324,11 +324,6 @@ gboolean         gst_h264_dpb_perform_memory_management_control_operation (GstH2
                                                                            GstH264RefPicMarking *ref_pic_marking,
                                                                            GstH264Picture * picture);
 
-/* Internal methods */
-void  gst_h264_picture_set_reference (GstH264Picture * picture,
-                                      GstH264PictureReference reference,
-                                      gboolean other_field);
-
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstH264Picture, gst_h264_picture_unref)
 
 G_END_DECLS
