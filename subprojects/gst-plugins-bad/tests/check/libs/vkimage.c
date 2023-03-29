@@ -66,7 +66,8 @@ create_image_mem (GstVideoInfo * v_info)
 
   vk_format = gst_vulkan_format_from_video_info (v_info, 0);
 
-  usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+      | VK_IMAGE_USAGE_SAMPLED_BIT;
   mem =
       gst_vulkan_image_memory_alloc (device, vk_format,
       GST_VIDEO_INFO_COMP_WIDTH (v_info, 0),
