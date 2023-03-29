@@ -591,6 +591,11 @@ can_take_buffer (GstCCConverter * self,
   output_time_cmp = gst_util_fraction_compare (input_frame_n, input_frame_d,
       output_frame_n, output_frame_d);
 
+  if (output_time_cmp == 0) {
+    self->output_frames = 0;
+    self->input_frames = 0;
+  }
+
   in_fps_entry = cdp_fps_entry_from_fps (self->in_fps_n, self->in_fps_d);
   if (!in_fps_entry || in_fps_entry->fps_n == 0)
     g_assert_not_reached ();
@@ -1454,6 +1459,11 @@ can_generate_output (GstCCConverter * self)
 
   output_time_cmp = gst_util_fraction_compare (input_frame_n, input_frame_d,
       output_frame_n, output_frame_d);
+
+  if (output_time_cmp == 0) {
+    self->output_frames = 0;
+    self->input_frames = 0;
+  }
 
   /* if the next output frame is at or before the current input frame */
   if (output_time_cmp >= 0)
