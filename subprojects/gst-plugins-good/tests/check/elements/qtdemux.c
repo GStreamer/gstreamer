@@ -1462,10 +1462,25 @@ finish:
 }
 
 static void
+switch_state_with_async_wait (GstElement * pipeline, GstState state)
+{
+  GstStateChangeReturn state_ret;
+
+  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    GST_LOG ("waiting for pipeline to reach %s state",
+        gst_element_state_get_name (state));
+    state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+    fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
+  }
+}
+
+static void
 perform_gapless_test (GaplessTestInfo * info)
 {
   GstElement *source, *demux, *appsink, *pipeline;
-  GstStateChangeReturn state_ret;
   guint frame_num;
 
   pipeline = gst_pipeline_new (NULL);
@@ -1488,19 +1503,9 @@ perform_gapless_test (GaplessTestInfo * info)
     g_free (full_filename);
   }
 
-  g_object_set (G_OBJECT (appsink), "async", FALSE, "sync", FALSE,
-      "max-buffers", 1, "enable-last-sample", FALSE, "processing-deadline",
-      G_MAXUINT64, NULL);
+  g_object_set (G_OBJECT (appsink), "sync", FALSE, NULL);
 
-  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
-
-  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
-
-  if (state_ret == GST_STATE_CHANGE_ASYNC) {
-    GST_LOG ("waiting for pipeline to reach PAUSED state");
-    state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
-    fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
-  }
+  switch_state_with_async_wait (pipeline, GST_STATE_PLAYING);
 
   /* Verify all frames from the test signal. */
   for (frame_num = 0; frame_num < info->num_aac_frames; ++frame_num)
@@ -1535,11 +1540,9 @@ perform_gapless_test (GaplessTestInfo * info)
    * with PTS 0, and all of those buffers except the last will have a
    * duration of 0. */
   {
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
-        GST_STATE_CHANGE_SUCCESS);
+    switch_state_with_async_wait (pipeline, GST_STATE_PAUSED);
     gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH, 0);
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-        GST_STATE_CHANGE_SUCCESS);
+    switch_state_with_async_wait (pipeline, GST_STATE_PLAYING);
 
     check_parsed_aac_frame (info, 0);
   }
@@ -1554,12 +1557,10 @@ perform_gapless_test (GaplessTestInfo * info)
         gst_util_uint64_scale_int (info->num_samples_in_first_valid_frame,
         GST_SECOND, info->sample_rate);
 
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
-        GST_STATE_CHANGE_SUCCESS);
+    switch_state_with_async_wait (pipeline, GST_STATE_PAUSED);
     gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
         position);
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-        GST_STATE_CHANGE_SUCCESS);
+    switch_state_with_async_wait (pipeline, GST_STATE_PLAYING);
 
     check_parsed_aac_frame (info, info->first_frame_with_valid_samples + 1);
   }
@@ -1574,12 +1575,10 @@ perform_gapless_test (GaplessTestInfo * info)
         info->num_samples_without_padding - info->num_samples_per_frame,
         GST_SECOND, info->sample_rate);
 
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PAUSED),
-        GST_STATE_CHANGE_SUCCESS);
+    switch_state_with_async_wait (pipeline, GST_STATE_PAUSED);
     gst_element_seek_simple (pipeline, GST_FORMAT_TIME, GST_SEEK_FLAG_FLUSH,
         position);
-    fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
-        GST_STATE_CHANGE_SUCCESS);
+    switch_state_with_async_wait (pipeline, GST_STATE_PLAYING);
 
     check_parsed_aac_frame (info, info->last_frame_with_valid_samples);
   }
