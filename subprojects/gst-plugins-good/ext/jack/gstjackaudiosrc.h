@@ -43,13 +43,12 @@
 #ifndef __GST_JACK_AUDIO_SRC_H__
 #define __GST_JACK_AUDIO_SRC_H__
 
-#include <jack/jack.h>
-
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosrc.h>
 
 #include "gstjackaudioclient.h"
 #include "gstjack.h"
+#include "gstjackloader.h"
 
 G_BEGIN_DECLS
 

@@ -22,8 +22,8 @@
 #ifndef _GST_JACK_H_
 #define _GST_JACK_H_
 
-#include <jack/jack.h>
 #include <gst/audio/audio.h>
+#include "gstjackloader.h"
 
 GST_ELEMENT_REGISTER_DECLARE (jackaudiosrc);
 GST_ELEMENT_REGISTER_DECLARE (jackaudiosink);

@@ -22,9 +22,8 @@
 #ifndef __GST_JACK_AUDIO_CLIENT_H__
 #define __GST_JACK_AUDIO_CLIENT_H__
 
-#include <jack/jack.h>
-
 #include <gst/gst.h>
+#include "gstjackloader.h"
 
 G_BEGIN_DECLS
 

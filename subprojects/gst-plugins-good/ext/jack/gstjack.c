@@ -22,6 +22,7 @@
 #endif
 
 #include "gstjack.h"
+#include "gstjackloader.h"
 
 GType
 gst_jack_connect_get_type (void)
@@ -102,6 +103,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret = FALSE;
+
+  if (!gst_jack_load_library ()) {
+    GST_WARNING ("Failed to load jack library");
+    return FALSE;
+  }
 
   ret |= GST_ELEMENT_REGISTER (jackaudiosrc, plugin);
   ret |= GST_ELEMENT_REGISTER (jackaudiosink, plugin);

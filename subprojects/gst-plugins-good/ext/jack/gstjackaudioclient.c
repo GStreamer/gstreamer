@@ -24,8 +24,6 @@
 #include "gstjackaudioclient.h"
 #include "gstjack.h"
 
-#include <gst/glib-compat-private.h>
-
 GST_DEBUG_CATEGORY_STATIC (gst_jack_audio_client_debug);
 #define GST_CAT_DEFAULT gst_jack_audio_client_debug
 
@@ -47,8 +45,8 @@ gst_jack_audio_client_init (void)
   GST_DEBUG_CATEGORY_INIT (gst_jack_audio_client_debug, "jackclient", 0,
       "jackclient helpers");
 
-  jack_set_error_function (jack_log_error);
-  jack_set_info_function (jack_info_error);
+  gst_jack_set_error_function (jack_log_error);
+  gst_jack_set_info_function (jack_info_error);
 }
 
 /* a list of global connections indexed by id and server. */
@@ -123,7 +121,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
   GstJackAudioConnection *conn = (GstJackAudioConnection *) arg;
   GList *walk;
   int res = 0;
-  jack_transport_state_t ts = jack_transport_query (conn->client, NULL);
+  jack_transport_state_t ts = gst_jack_transport_query (conn->client, NULL);
 
   if (ts != conn->cur_ts) {
     conn->cur_ts = ts;
@@ -295,7 +293,7 @@ gst_jack_audio_make_connection (const gchar * id, const gchar * server,
     options |= JackServerName;
   /* open the client */
   if (jclient == NULL)
-    jclient = jack_client_open (id, options, status, server);
+    jclient = gst_jack_client_open (id, options, status, server);
   if (jclient == NULL)
     goto could_not_open;
 
@@ -314,15 +312,15 @@ gst_jack_audio_make_connection (const gchar * id, const gchar * server,
   conn->transport_state = GST_STATE_VOID_PENDING;
 
   /* set our callbacks  */
-  jack_set_process_callback (jclient, jack_process_cb, conn);
+  gst_jack_set_process_callback (jclient, jack_process_cb, conn);
   /* these callbacks cause us to error */
-  jack_set_buffer_size_callback (jclient, jack_buffer_size_cb, conn);
-  jack_set_sample_rate_callback (jclient, jack_sample_rate_cb, conn);
-  jack_on_shutdown (jclient, jack_shutdown_cb, conn);
+  gst_jack_set_buffer_size_callback (jclient, jack_buffer_size_cb, conn);
+  gst_jack_set_sample_rate_callback (jclient, jack_sample_rate_cb, conn);
+  gst_jack_on_shutdown (jclient, jack_shutdown_cb, conn);
 
   /* all callbacks are set, activate the client */
   GST_INFO ("activate jack_client %p", jclient);
-  if ((res = jack_activate (jclient)))
+  if ((res = gst_jack_activate (jclient)))
     goto could_not_activate;
 
   GST_DEBUG ("opened connection %p", conn);
@@ -417,13 +415,13 @@ gst_jack_audio_unref_connection (GstJackAudioConnection * conn)
      *      jack_process_cb()
      */
     GST_INFO ("deactivate jack_client %p", conn->client);
-    if ((res = jack_deactivate (conn->client))) {
+    if ((res = gst_jack_deactivate (conn->client))) {
       /* we only warn, this means the server is probably shut down and the client
        * is gone anyway. */
       GST_WARNING ("Could not deactivate Jack client (%d)", res);
     }
     /* close connection */
-    if ((res = jack_client_close (conn->client))) {
+    if ((res = gst_jack_client_close (conn->client))) {
       /* we assume the client is gone. */
       GST_WARNING ("close failed (%d)", res);
     }
@@ -664,7 +662,7 @@ gst_jack_audio_client_get_port_names_from_string (jack_client_t * jclient,
     goto invalid;
 
   for (i = 0; i < len; i++) {
-    jack_port_t *port = jack_port_by_name (jclient, p[i]);
+    jack_port_t *port = gst_jack_port_by_name (jclient, p[i]);
     int flags;
 
     if (!port) {
@@ -672,7 +670,7 @@ gst_jack_audio_client_get_port_names_from_string (jack_client_t * jclient,
       goto invalid;
     }
 
-    flags = jack_port_flags (port);
+    flags = gst_jack_port_flags (port);
     if ((flags & port_flags) != port_flags) {
       GST_WARNING ("Port flags 0x%x doesn't match expected flags 0x%x",
           flags, port_flags);
