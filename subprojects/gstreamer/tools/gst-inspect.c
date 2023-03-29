@@ -1068,6 +1068,21 @@ gtype_needs_ptr_marker (GType type)
   return FALSE;
 }
 
+static const gchar *
+pretty_type_name (GType type, const gchar ** p_pmark)
+{
+  if (type == G_TYPE_STRING) {
+    *p_pmark = " * ";
+    return "gchar";
+  } else if (type == G_TYPE_STRV) {
+    *p_pmark = " ** ";
+    return "gchar";
+  } else {
+    *p_pmark = gtype_needs_ptr_marker (type) ? " * " : " ";
+    return g_type_name (type);
+  }
+}
+
 static void
 print_signal_info (GstElement * element)
 {
@@ -1133,37 +1148,39 @@ print_signal_info (GstElement * element)
     for (l = found_signals; l; l = l->next) {
       gchar *indent;
       const gchar *pmark;
+      const gchar *retval_type_name;
       int indent_len;
 
       query = (GSignalQuery *) l->data;
-      indent_len = strlen (query->signal_name) +
-          strlen (g_type_name (query->return_type)) + 24;
-
-      if (gtype_needs_ptr_marker (query->return_type)) {
-        pmark = "* ";
-        indent_len += 2;
-      } else {
-        pmark = " ";
-      }
+      retval_type_name = pretty_type_name (query->return_type, &pmark);
+      indent_len =
+          strlen (query->signal_name) + strlen (retval_type_name) + 24 +
+          strlen (pmark) - 1;
 
       indent = g_new0 (gchar, indent_len + 1);
       memset (indent, ' ', indent_len);
 
-      n_print ("  %s\"%s\"%s :  %s%s%s%suser_function%s (%s%s%s* object%s",
+      n_print ("  %s\"%s\"%s :  %s%s%s%suser_function%s (%s%s%s * object%s",
           PROP_NAME_COLOR, query->signal_name, RESET_COLOR,
-          DATATYPE_COLOR, g_type_name (query->return_type), PROP_VALUE_COLOR,
+          DATATYPE_COLOR, retval_type_name, PROP_VALUE_COLOR,
           pmark, RESET_COLOR, DATATYPE_COLOR, g_type_name (type),
           PROP_VALUE_COLOR, RESET_COLOR);
 
       for (j = 0; j < query->n_params; j++) {
-        const gchar *type_name, *asterisk;
+        const gchar *type_name, *asterisk, *const_prefix;
 
-        type_name = g_type_name (query->param_types[j]);
-        asterisk = gtype_needs_ptr_marker (query->param_types[j]) ? "*" : "";
+        type_name = pretty_type_name (query->param_types[j], &asterisk);
+
+        /* Add const prefix for string and string array arguments */
+        if (g_str_equal (type_name, "gchar") && strchr (asterisk, '*')) {
+          const_prefix = "const ";
+        } else {
+          const_prefix = "";
+        }
 
         g_print (",\n");
-        n_print ("%s%s%s%s%s arg%d%s", indent, DATATYPE_COLOR, type_name,
-            PROP_VALUE_COLOR, asterisk, j, RESET_COLOR);
+        n_print ("%s%s%s%s%s%sarg%d%s", indent, DATATYPE_COLOR, const_prefix,
+            type_name, PROP_VALUE_COLOR, asterisk, j, RESET_COLOR);
       }
 
       if (k == 0) {
