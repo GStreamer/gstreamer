@@ -151,7 +151,7 @@ _vk_mem_unmap_full (GstVulkanMemory * mem, GstMapInfo * info)
       /* .pNext = */
       .memory = mem->mem_ptr,
       .offset = mem->vk_offset,
-      .size = mem->mem.size,
+      .size = VK_WHOLE_SIZE,
     };
 
     err = vkFlushMappedMemoryRanges (mem->device->device, 1u, &range);
