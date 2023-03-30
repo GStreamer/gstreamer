@@ -789,6 +789,23 @@ gst_msdkh264enc_set_extra_params (GstMsdkEnc * encoder,
     gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h264enc->roi[0]);
 }
 
+static gboolean
+gst_msdkh264enc_is_format_supported (GstMsdkEnc * encoder,
+    GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
 static void
 _msdkh264enc_install_properties (GObjectClass * gobject_class,
     GstMsdkEncClass * encoder_class)
@@ -986,6 +1003,7 @@ gst_msdkh264enc_class_init (gpointer klass, gpointer data)
   encoder_class->set_src_caps = gst_msdkh264enc_set_src_caps;
   encoder_class->need_reconfig = gst_msdkh264enc_need_reconfig;
   encoder_class->set_extra_params = gst_msdkh264enc_set_extra_params;
+  encoder_class->is_format_supported = gst_msdkh264enc_is_format_supported;
 
   _msdkh264enc_install_properties (gobject_class, encoder_class);
 

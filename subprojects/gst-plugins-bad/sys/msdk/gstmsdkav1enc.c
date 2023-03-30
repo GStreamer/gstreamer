@@ -237,6 +237,15 @@ gst_msdkav1enc_set_src_caps (GstMsdkEnc * encoder)
   return caps;
 }
 
+static gboolean
+gst_msdkav1enc_is_format_supported (GstMsdkEnc * encoder, GstVideoFormat format)
+{
+  if (format == GST_VIDEO_FORMAT_NV12 || format == GST_VIDEO_FORMAT_P010_10LE)
+    return TRUE;
+
+  return FALSE;
+}
+
 static void
 gst_msdkav1enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -363,6 +372,7 @@ gst_msdkav1enc_class_init (gpointer klass, gpointer data)
   encoder_class->set_format = gst_msdkav1enc_set_format;
   encoder_class->configure = gst_msdkav1enc_configure;
   encoder_class->set_src_caps = gst_msdkav1enc_set_src_caps;
+  encoder_class->is_format_supported = gst_msdkav1enc_is_format_supported;
   encoder_class->qp_max = 255;
   encoder_class->qp_min = 0;
 

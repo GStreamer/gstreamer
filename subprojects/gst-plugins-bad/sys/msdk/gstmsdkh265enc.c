@@ -898,16 +898,19 @@ gst_msdkh265enc_set_extra_params (GstMsdkEnc * encoder,
 }
 
 static gboolean
-gst_msdkh265enc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
-    GstVideoFormat * out_format)
+gst_msdkh265enc_is_format_supported (GstMsdkEnc * encoder,
+    GstVideoFormat format)
 {
   GstMsdkH265Enc *h265enc = GST_MSDKH265ENC (encoder);
 
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
+  switch (format) {
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_Y212_LE:
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_VUYA:
 #if (MFX_VERSION >= 1027)
     case GST_VIDEO_FORMAT_Y410:
     case GST_VIDEO_FORMAT_Y210:
@@ -915,20 +918,15 @@ gst_msdkh265enc_need_conversion (GstMsdkEnc * encoder, GstVideoInfo * info,
 #if (MFX_VERSION >= 1031)
     case GST_VIDEO_FORMAT_P012_LE:
 #endif
-      return FALSE;
-
+      return TRUE;
     case GST_VIDEO_FORMAT_YUY2:
 #if (MFX_VERSION >= 1027)
       if (encoder->codename >= MFX_PLATFORM_ICELAKE &&
           h265enc->tune_mode == MFX_CODINGOPTION_OFF)
-        return FALSE;
+        return TRUE;
 #endif
     default:
-      if (GST_VIDEO_INFO_COMP_DEPTH (info, 0) == 10)
-        *out_format = GST_VIDEO_FORMAT_P010_10LE;
-      else
-        *out_format = GST_VIDEO_FORMAT_NV12;
-      return TRUE;
+      return FALSE;
   }
 }
 
@@ -1123,7 +1121,7 @@ gst_msdkh265enc_class_init (gpointer klass, gpointer data)
   encoder_class->set_src_caps = gst_msdkh265enc_set_src_caps;
   encoder_class->need_reconfig = gst_msdkh265enc_need_reconfig;
   encoder_class->set_extra_params = gst_msdkh265enc_set_extra_params;
-  encoder_class->need_conversion = gst_msdkh265enc_need_conversion;
+  encoder_class->is_format_supported = gst_msdkh265enc_is_format_supported;
 
   _msdkh265enc_install_properties (gobject_class, encoder_class);
 

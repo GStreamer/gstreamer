@@ -232,6 +232,22 @@ gst_msdkvp9enc_set_src_caps (GstMsdkEnc * encoder)
   return caps;
 }
 
+static gboolean
+gst_msdkvp9enc_is_format_supported (GstMsdkEnc * encoder, GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_P010_10LE:
+#if (MFX_VERSION >= 1027)
+    case GST_VIDEO_FORMAT_Y410:
+#endif
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
 static void
 gst_msdkvp9enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -272,6 +288,7 @@ gst_msdkvp9enc_class_init (gpointer klass, gpointer data)
   encoder_class->set_format = gst_msdkvp9enc_set_format;
   encoder_class->configure = gst_msdkvp9enc_configure;
   encoder_class->set_src_caps = gst_msdkvp9enc_set_src_caps;
+  encoder_class->is_format_supported = gst_msdkvp9enc_is_format_supported;
   encoder_class->qp_max = 255;
   encoder_class->qp_min = 0;
 

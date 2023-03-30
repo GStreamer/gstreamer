@@ -107,20 +107,12 @@ struct _GstMsdkEnc
   GstMsdkContext *context;
   GstMsdkContext *old_context;
   mfxVideoParam param;
-  guint num_surfaces;
   guint num_tasks;
   MsdkEncTask *tasks;
   guint next_task;
   /* Extra frames for encoding, set by each element,
    * the default value is 0 */
   guint num_extra_frames;
-
-  gboolean has_vpp;
-  mfxVideoParam vpp_param;
-  guint num_vpp_surfaces;
-  /* Input interfaces, output above */
-  mfxFrameAllocResponse vpp_alloc_resp;
-  mfxFrameAllocResponse alloc_resp;
 
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
   guint num_extra_params;
@@ -186,13 +178,7 @@ struct _GstMsdkEncClass
   gboolean (*set_format) (GstMsdkEnc * encoder);
   gboolean (*configure) (GstMsdkEnc * encoder);
   GstCaps *(*set_src_caps) (GstMsdkEnc * encoder);
-  /* Return TRUE if vpp is required before encoding
-   * @info (in), input video info
-   * @out_format (out), a pointer to the output format of vpp, which is set
-   * when return TRUE
-   */
-  gboolean (*need_conversion) (GstMsdkEnc * encoder, GstVideoInfo * info,
-      GstVideoFormat * out_format);
+  gboolean (*is_format_supported) (GstMsdkEnc * encoder, GstVideoFormat format);
 
   /* Return TRUE if sub class requires a recofnig */
   gboolean (*need_reconfig) (GstMsdkEnc * encoder, GstVideoCodecFrame * frame);
