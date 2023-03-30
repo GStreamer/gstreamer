@@ -21,6 +21,7 @@
 #define __GST_VTENC_H__
 
 #include <gst/gst.h>
+#include <gst/codecparsers/gsth264parser.h>
 #include <gst/video/video.h>
 #include <VideoToolbox/VideoToolbox.h>
 
@@ -60,6 +61,7 @@ struct _GstVTEnc
 
   CMVideoCodecType specific_format_id;
   CFStringRef profile_level;
+  GstH264Profile h264_profile;
   guint bitrate;
   gboolean allow_frame_reordering;
   gboolean realtime;
@@ -81,6 +83,7 @@ struct _GstVTEnc
   GstVideoInfo video_info;
   VTCompressionSessionRef session;
   CFDictionaryRef keyframe_props;
+  GstClockTime dts_offset;
 
   GAsyncQueue * cur_outframes;
 };

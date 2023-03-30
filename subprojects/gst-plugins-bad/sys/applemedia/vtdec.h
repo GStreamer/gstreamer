@@ -30,7 +30,6 @@
 #if defined(APPLEMEDIA_MOLTENVK)
 #include <gst/vulkan/vulkan.h>
 #endif
-#define GST_USE_UNSTABLE_API
 #include <gst/codecparsers/gsth264parser.h>
 
 G_BEGIN_DECLS
