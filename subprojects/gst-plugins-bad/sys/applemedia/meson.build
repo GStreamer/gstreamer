@@ -16,12 +16,14 @@ applemedia_args = [
     '-Dgst_core_media_buffer_get_type=gst_core_media_buffer_priv_get_type',
     '-Dgst_core_media_buffer_get_pixel_buffer=gst_core_media_buffer_priv_get_pixel_buffer',
     '-Dgst_core_video_buffer_new=gst_core_video_buffer_priv_new',
-    '-Dgst_core_video_buffer_get_type=gst_core_video_buffer_priv_get_type'
+    '-Dgst_core_video_buffer_get_type=gst_core_video_buffer_priv_get_type',
+    '-DGST_USE_UNSTABLE_API'
 ]
 
 applemedia_objc_args = []
 applemedia_option = get_option('applemedia')
 if not ['darwin', 'ios'].contains(host_system) or applemedia_option.disabled()
+  applemedia_found_deps = false
   subdir_done()
 endif
 
