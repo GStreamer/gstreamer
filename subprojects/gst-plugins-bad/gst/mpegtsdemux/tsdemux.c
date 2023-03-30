@@ -44,6 +44,8 @@
 #include "tsdemux.h"
 #include "gstmpegdesc.h"
 #include "gstmpegdefs.h"
+#include "gst/mpegts/gst-mpegtspesmetadatameta.h"
+#include "gst/mpegts/gst-metadata-descriptor.h"
 #include "mpegtspacketizer.h"
 #include "pesparse.h"
 #include <gst/codecparsers/gsth264parser.h>
@@ -60,6 +62,9 @@
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
+
+/* Length of metadata_AU_cell header, see ISO/IEC 13818-1:2018 Section 2.12.4 */
+#define PES_PACKET_METADATA_AU_HEADER_LEN 5
 
 /* Seeking/Scanning related variables */
 
@@ -3305,6 +3310,74 @@ out:
   return gst_buffer_new_wrapped (stream->data, stream->current_size);
 }
 
+static GstBufferList *
+parse_pes_metadata_frame (TSDemuxStream * stream)
+{
+  GstByteReader reader;
+  GstBufferList *buffer_list = NULL;
+
+  buffer_list = gst_buffer_list_new ();
+  gst_byte_reader_init (&reader, stream->data, stream->current_size);
+
+  do {
+    GstBuffer *buffer;
+    GstMpegtsPESMetadataMeta *meta;
+    guint8 *au_data;
+    guint16 au_size;
+    guint8 service_id;
+    guint8 sequence_number;
+    guint8 flags;
+
+    if (gst_byte_reader_get_remaining (&reader) <
+        PES_PACKET_METADATA_AU_HEADER_LEN)
+      goto error;
+
+    if (!gst_byte_reader_get_uint8 (&reader, &service_id))
+      goto error;
+
+    if (!gst_byte_reader_get_uint8 (&reader, &sequence_number))
+      goto error;
+
+    if (!gst_byte_reader_get_uint8 (&reader, &flags))
+      goto error;
+
+    if (!gst_byte_reader_get_uint16_be (&reader, &au_size))
+      goto error;
+
+    if (gst_byte_reader_get_remaining (&reader) < au_size)
+      goto error;
+
+    if (!gst_byte_reader_dup_data (&reader, au_size, &au_data))
+      goto error;
+
+    buffer = gst_buffer_new_wrapped (au_data, au_size);
+    meta = gst_buffer_add_mpegts_pes_metadata_meta (buffer);
+    meta->metadata_service_id = service_id;
+    meta->flags = flags;
+    GST_DEBUG_OBJECT (stream->pad,
+        "metadata_service_id: 0x%02x, flags: 0x%02x, cell_data_length: 0x%04x",
+        meta->metadata_service_id, meta->flags, au_size);
+
+    gst_buffer_list_add (buffer_list, buffer);
+  } while (gst_byte_reader_get_remaining (&reader) > 0);
+
+  g_free (stream->data);
+  stream->data = NULL;
+  stream->current_size = 0;
+
+  return buffer_list;
+
+error:
+  {
+    GST_ERROR ("Failed to parse PES metadata access units");
+    g_free (stream->data);
+    stream->data = NULL;
+    stream->current_size = 0;
+    if (buffer_list)
+      gst_buffer_list_unref (buffer_list);
+    return NULL;
+  }
+}
 
 static GstFlowReturn
 gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,

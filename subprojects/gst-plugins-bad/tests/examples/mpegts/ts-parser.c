@@ -31,6 +31,8 @@
 #include <glib/gprintf.h>
 #include <gst/gst.h>
 #include <gst/mpegts/mpegts.h>
+#include <gst/mpegts/gst-metadata-descriptor.h>
+
 #define MPEGTIME_TO_GSTTIME(t) ((t) * (guint64)100000 / 9)
 
 static void
@@ -776,6 +778,47 @@ dump_generic_descriptor (GstMpegtsDescriptor * desc, guint spacing)
         g_printf ("%*s      magazine    : %u\n", spacing, "", magazine);
         g_printf ("%*s      page number : %u\n", spacing, "", page_number);
         g_free (lang);
+      }
+    }
+      break;
+    case GST_MTS_DESC_METADATA:
+    {
+      GstMpegtsMetadataDescriptor *metadataDescriptor;
+      if (gst_mpegts_descriptor_parse_metadata (desc, &metadataDescriptor)) {
+        g_printf ("%*s   metadata application format : 0x%04x\n", spacing, "",
+            metadataDescriptor->metadata_application_format);
+        g_printf ("%*s   metadata format             : 0x%02x\n", spacing, "",
+            metadataDescriptor->metadata_format);
+        if (metadataDescriptor->metadata_format ==
+            GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD) {
+          g_printf ("%*s   metadata format identifier  : 0x%08x\n", spacing, "",
+              metadataDescriptor->metadata_format_identifier);
+        }
+        g_printf ("%*s   metadata service id         : 0x%02x\n", spacing, "",
+            metadataDescriptor->metadata_service_id);
+        g_printf ("%*s   decoder config flags        : 0x%x\n", spacing, "",
+            metadataDescriptor->decoder_config_flags);
+        g_printf ("%*s   DSM-CC flag                 : %s\n", spacing, "",
+            metadataDescriptor->dsm_cc_flag ? "Set" : "Not set");
+        g_free (metadataDescriptor);
+      }
+    }
+      break;
+    case GST_MTS_DESC_METADATA_STD:
+    {
+      guint32 metadata_input_leak_rate;
+      guint32 metadata_buffer_size;
+      guint32 metadata_output_leak_rate;
+
+      if (gst_mpegts_descriptor_parse_metadata_std (desc,
+              &metadata_input_leak_rate, &metadata_buffer_size,
+              &metadata_output_leak_rate)) {
+        g_printf ("%*s   metadata input leak rate  : %i\n", spacing, "",
+            metadata_input_leak_rate);
+        g_printf ("%*s   metadata buffer size      : %i\n", spacing, "",
+            metadata_buffer_size);
+        g_printf ("%*s   metadata output leak rate : %i\n", spacing, "",
+            metadata_output_leak_rate);
       }
     }
       break;
