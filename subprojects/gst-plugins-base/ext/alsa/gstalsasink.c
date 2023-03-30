@@ -259,7 +259,7 @@ gst_alsasink_init (GstAlsaSink * alsasink)
   alsasink->is_paused = FALSE;
   alsasink->after_paused = FALSE;
   alsasink->hw_support_pause = FALSE;
-  alsasink->stop_streaming_threads = FALSE;
+  alsasink->stop_streaming_threads = TRUE;
   g_mutex_init (&alsasink->alsa_lock);
   g_mutex_init (&alsasink->delay_lock);
 
@@ -943,6 +943,7 @@ gst_alsasink_prepare (GstAudioSink * asink, GstAudioRingBufferSpec * spec)
       alsa->channels, GST_AUDIO_BASE_SINK (alsa)->ringbuffer);
 #endif /* SND_CHMAP_API_VERSION */
 
+  alsa->stop_streaming_threads = FALSE;
   return TRUE;
 
   /* ERRORS */
