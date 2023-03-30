@@ -1,5 +1,6 @@
 [wrap-file]
 directory=dav1d-1.1.0
 source_url = https://download.videolan.org/pub/videolan/dav1d/1.1.0/dav1d-1.1.0.tar.xz
+source_filename = dav1d-1.1.0.tar.xz
 source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/dav1d-1.1.0.tar.xz
 source_hash = fb57aae7875f28c30fb3dbae4a3683d27e2f91dde09ce5c60c22cef9bc58dfd1
