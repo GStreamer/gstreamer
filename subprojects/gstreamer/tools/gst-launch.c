@@ -1178,6 +1178,10 @@ real_main (int argc, char *argv[])
   gst_init (&argc, &argv);
 #endif
 
+#ifdef G_OS_WIN32
+  argc = g_strv_length (argv);
+#endif
+
   gst_tools_print_version ();
 
 #ifdef G_OS_UNIX

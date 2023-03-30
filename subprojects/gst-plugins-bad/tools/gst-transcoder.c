@@ -373,6 +373,10 @@ real_main (int argc, char *argv[])
     g_option_context_free (ctx);
     return 1;
   }
+#ifdef G_OS_WIN32
+  argc = g_strv_length (argv);
+#endif
+
   gst_pb_utils_init ();
 
   if (settings.list) {

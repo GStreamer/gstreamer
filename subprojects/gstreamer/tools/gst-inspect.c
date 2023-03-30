@@ -2187,6 +2187,10 @@ real_main (int argc, char *argv[])
   gst_init (&argc, &argv);
 #endif
 
+#if defined(G_OS_WIN32) && !defined(GST_CHECK_MAIN)
+  argc = g_strv_length (argv);
+#endif
+
   gst_tools_print_version ();
 
   if (print_all && argc > 1) {

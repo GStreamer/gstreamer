@@ -337,6 +337,10 @@ real_main (int argc, char **argv)
   }
   g_option_context_free (ctx);
 
+#ifdef G_OS_WIN32
+  argc = g_strv_length (argv);
+#endif
+
   GST_DEBUG_CATEGORY_INIT (devmon_debug, "device-monitor", 0,
       "gst-device-monitor");
 
