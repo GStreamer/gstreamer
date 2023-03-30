@@ -1743,8 +1743,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
             bstream->registration_id = DRF_ID_KLVA;
 
             caps = gst_caps_new_simple ("meta/x-klv",
-                "parsed", G_TYPE_BOOLEAN, TRUE,
-                "stream-type", G_TYPE_INT, bstream->stream_type, NULL);
+                "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
           }
           g_free (metadataDescriptor);
         }
