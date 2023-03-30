@@ -1728,6 +1728,28 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           "mpegversion", G_TYPE_INT, 4,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
+    case GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS:
+      desc = mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_METADATA);
+      if (desc) {
+        GstMpegtsMetadataDescriptor *metadataDescriptor;
+        if (gst_mpegts_descriptor_parse_metadata (desc, &metadataDescriptor)) {
+          if ((metadataDescriptor->metadata_format ==
+                  GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD)
+              && (metadataDescriptor->metadata_format_identifier ==
+                  DRF_ID_KLVA)) {
+            sparse = TRUE;
+            is_private = TRUE;
+            /* registration_id is not correctly set or parsed for some streams */
+            bstream->registration_id = DRF_ID_KLVA;
+
+            caps = gst_caps_new_simple ("meta/x-klv",
+                "parsed", G_TYPE_BOOLEAN, TRUE,
+                "stream-type", G_TYPE_INT, bstream->stream_type, NULL);
+          }
+          g_free (metadataDescriptor);
+        }
+      }
+      break;
     case GST_MPEGTS_STREAM_TYPE_VIDEO_H264:
       is_video = TRUE;
       caps = gst_caps_new_simple ("video/x-h264",
@@ -3431,15 +3453,16 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
           res = GST_FLOW_ERROR;
           goto beach;
         }
-
-        if (gst_buffer_list_length (buffer_list) == 1) {
-          buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, 0));
-          gst_buffer_list_unref (buffer_list);
-          buffer_list = NULL;
-        }
       } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
         buffer = parse_jp2k_access_unit (stream);
         if (!buffer) {
+          res = GST_FLOW_ERROR;
+          goto beach;
+        }
+      } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
+          && bs->registration_id == DRF_ID_KLVA) {
+        buffer_list = parse_pes_metadata_frame (stream);
+        if (!buffer_list) {
           res = GST_FLOW_ERROR;
           goto beach;
         }
@@ -3485,12 +3508,6 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
         res = GST_FLOW_ERROR;
         goto beach;
       }
-
-      if (gst_buffer_list_length (buffer_list) == 1) {
-        buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, 0));
-        gst_buffer_list_unref (buffer_list);
-        buffer_list = NULL;
-      }
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
       buffer = parse_jp2k_access_unit (stream);
       if (!buffer) {
@@ -3500,6 +3517,13 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS) {
       buffer = parse_aac_adts_frame (stream);
       if (!buffer) {
+        res = GST_FLOW_ERROR;
+        goto beach;
+      }
+    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
+        && bs->registration_id == DRF_ID_KLVA) {
+      buffer_list = parse_pes_metadata_frame (stream);
+      if (!buffer_list) {
         res = GST_FLOW_ERROR;
         goto beach;
       }
@@ -3533,6 +3557,13 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
           "Not enough information to push buffers yet, storing buffer");
       goto beach;
     }
+  }
+
+
+  if (buffer_list != NULL && gst_buffer_list_length (buffer_list) == 1) {
+    buffer = gst_buffer_ref (gst_buffer_list_get (buffer_list, 0));
+    gst_buffer_list_unref (buffer_list);
+    buffer_list = NULL;
   }
 
   if (G_UNLIKELY (stream->need_newsegment))
