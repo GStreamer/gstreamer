@@ -546,6 +546,8 @@ pub mod windows {
     pub const FILE_TYPE_CHAR: u32 = 0x0002;
     pub const FILE_TYPE_PIPE: u32 = 0x0003;
 
+    pub const THREAD_PRIORITY_TIME_CRITICAL: i32 = 15;
+
     #[link(name = "kernel32")]
     extern "system" {
         pub fn GetStdHandle(nstdhandle: i32) -> HANDLE;
@@ -597,6 +599,9 @@ pub mod windows {
             lpmem: *mut c_void,
             dwbytes: usize,
         ) -> *mut c_void;
+
+        pub fn SetThreadPriority(pthread: HANDLE, npriority: i32) -> i32;
+        pub fn GetCurrentThread() -> HANDLE;
     }
 
     pub const BCRYPT_USE_SYSTEM_PREFERRED_RNG: u32 = 0x00000002;

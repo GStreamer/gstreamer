@@ -29,6 +29,7 @@ mod io;
 mod net;
 mod privileges;
 mod rand;
+mod thread;
 
 use error::{Context, Error};
 use rand::rand;
@@ -126,6 +127,8 @@ fn main() -> Result<(), Error> {
     let event_socket = create_socket(PTP_EVENT_PORT).context("Failed creating event socket")?;
     let general_socket =
         create_socket(PTP_GENERAL_PORT).context("Failed creating general socket")?;
+
+    thread::set_priority().context("Failed to set thread priority")?;
 
     privileges::drop().context("Failed dropping privileges")?;
 
