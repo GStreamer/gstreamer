@@ -75,17 +75,26 @@ if __name__ == "__main__":
         project_url = os.environ['CI_PROJECT_URL']
         project_branch = os.environ['CI_COMMIT_REF_NAME']
 
+    variables = {
+        "CI_GSTREAMER_URL": project_url,
+        "CI_GSTREAMER_REF_NAME": project_branch,
+        # This tells cerbero CI that this is a pipeline started via the
+        # trigger API, which means it can use a deps cache instead of
+        # building from scratch.
+        "CI_GSTREAMER_TRIGGERED": "true",
+    }
+
+    meson_commit = os.environ.get('MESON_COMMIT')
+    if meson_commit:
+        # Propagate the Meson commit to cerbero pipeline and make sure it's not
+        # using deps cache.
+        variables['MESON_COMMIT'] = meson_commit
+        del variables['CI_GSTREAMER_TRIGGERED']
+
     pipe = cerbero.trigger_pipeline(
         token=os.environ['CI_JOB_TOKEN'],
         ref=cerbero_branch,
-        variables={
-            "CI_GSTREAMER_URL": project_url,
-            "CI_GSTREAMER_REF_NAME": project_branch,
-            # This tells cerbero CI that this is a pipeline started via the
-            # trigger API, which means it can use a deps cache instead of
-            # building from scratch.
-            "CI_GSTREAMER_TRIGGERED": "true",
-        }
+        variables=variables,
     )
 
     fprint(f'Cerbero pipeline running at {pipe.web_url} ')
