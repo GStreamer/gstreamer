@@ -685,6 +685,10 @@ real_main (int argc, char **argv)
 
   g_option_context_free (ctx);
 
+#ifdef G_OS_WIN32
+  argc = g_strv_length (argv);
+#endif
+
   if (argc < 2) {
     g_print ("usage: %s <uris>\n", argv[0]);
     exit (-1);
