@@ -1467,18 +1467,18 @@ _enc_get_static_raw_formats (guint codec_id)
 {
   switch (codec_id) {
     case MFX_CODEC_AVC:
-      return "NV12, I420, YV12, YUY2, UYVY, BGRA";
+      return "NV12, YUY2, UYVY, BGRA";
     case MFX_CODEC_HEVC:
-      return "NV12, I420, YV12, YUY2, UYVY, BGRA, BGR10A2_LE, "
-          "P010_10LE, VUYA, Y410, Y210, P012_LE";
+      return "NV12, YUY2, BGRA, BGR10A2_LE, P010_10LE, VUYA, Y410, Y210, "
+          "P012_LE";
     case MFX_CODEC_MPEG2:
-      return "NV12, I420, YV12, YUY2, UYVY, BGRA";
+      return "NV12";
     case MFX_CODEC_VP9:
-      return "NV12, I420, YV12, YUY2, UYVY, BGRA, P010_10LE, VUYA, Y410";
+      return "NV12, P010_10LE, VUYA, Y410";
     case MFX_CODEC_AV1:
       return "NV12, P010_10LE";
     case MFX_CODEC_JPEG:
-      return "NV12, I420, YV12, YUY2, UYVY, BGRA";
+      return "NV12, YUY2, UYVY, BGRA";
     default:
       GST_WARNING ("Unsupported codec %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_id));
@@ -1498,7 +1498,7 @@ _enc_get_static_dma_formats (guint codec_id)
     case MFX_CODEC_HEVC:
       return "NV12, P010_10LE";
     case MFX_CODEC_MPEG2:
-      return "NV12, BGRx";
+      return "NV12";
     case MFX_CODEC_VP9:
       return "NV12, P010_10LE";
     case MFX_CODEC_AV1:
