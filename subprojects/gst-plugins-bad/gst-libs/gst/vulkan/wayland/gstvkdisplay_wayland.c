@@ -58,8 +58,20 @@ registry_handle_global (void *data, struct wl_registry *registry,
   }
 }
 
+static void
+registry_handle_global_remove (void *data, struct wl_registry *registry,
+    uint32_t name)
+{
+  GstVulkanDisplayWayland *window_wayland = data;
+
+  /* TODO: deal with any registry objects that may be removed */
+  GST_TRACE_OBJECT (window_wayland, "wl_registry %p global_remove %"
+      G_GUINT32_FORMAT, registry, name);
+}
+
 static const struct wl_registry_listener registry_listener = {
-  registry_handle_global
+  registry_handle_global,
+  registry_handle_global_remove,
 };
 
 static void
