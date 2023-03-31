@@ -54,6 +54,9 @@ struct _GstVulkanWindowWayland {
   struct wl_shell_surface   *shell_surface;
   struct wl_callback        *callback;
 
+  struct xdg_surface        *xdg_surface;
+  struct xdg_toplevel       *xdg_toplevel;
+
   int window_width, window_height;
 
   GSource *wl_source;
