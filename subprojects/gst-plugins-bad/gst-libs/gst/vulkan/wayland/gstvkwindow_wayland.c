@@ -40,8 +40,8 @@ _init_debug (void)
   static gsize _init = 0;
 
   if (g_once_init_enter (&_init)) {
-    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanwindowxcb", 0,
-        "Vulkan XCB Window");
+    GST_DEBUG_CATEGORY_INIT (GST_CAT_DEFAULT, "vulkanwindowwayland", 0,
+        "Vulkan Wayland Window");
     g_once_init_leave (&_init, 1);
   }
 }
