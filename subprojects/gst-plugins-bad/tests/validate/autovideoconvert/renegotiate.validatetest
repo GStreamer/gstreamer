@@ -3,7 +3,7 @@ meta,
         "gltestsrc ! gldownload ! autovideoconvert name=convert ! capsfilter name=capsfilter caps=\"video/x-raw(memory:GLMemory)\" ! fakevideosink name=sink",
     },
     configs = {
-       "$(validateflow), pad=convert:src, record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream},buffer={meta}\"",
+       "$(validateflow), pad=\"^convert:src$\", record-buffers=true, ignored-fields=\"stream-start={stream-id,group-id,stream},buffer={meta}\"",
     }
 
 crank-clock, repeat=2
@@ -15,6 +15,7 @@ foreach,
             "video/x-raw",
            >,
     actions = {
+        [checkpoint, text="Setup capsfilter caps=$(caps)"],
         [set-properties, capsfilter::caps="$(caps)"],
         [crank-clock, repeat=2],
         [wait, on-clock=true],

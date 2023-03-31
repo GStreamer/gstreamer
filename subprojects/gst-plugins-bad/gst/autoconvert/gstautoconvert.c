@@ -43,6 +43,8 @@
 #include "gstautoconvert.h"
 #include <gst/pbutils/pbutils.h>
 
+GST_DEBUG_CATEGORY (autoconvert_debug);
+#define GST_CAT_DEFAULT (autoconvert_debug)
 struct _GstAutoConvert
 {
   GstBaseAutoConvert parent;
@@ -155,6 +157,9 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
+  GST_DEBUG_CATEGORY_INIT (autoconvert_debug, "autoconvert", 0,
+      "Auto convert element");
+
   gobject_class->set_property = gst_auto_convert_set_property;
   gobject_class->get_property = gst_auto_convert_get_property;
 
@@ -187,6 +192,8 @@ gst_auto_convert_class_init (GstAutoConvertClass * klass)
               "An element factory name", NULL,
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS),
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_BASE_AUTO_CONVERT_CLASS (klass)->registers_filters = FALSE;
 }
 
 static void

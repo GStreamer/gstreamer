@@ -1,6 +1,8 @@
 /* GStreamer
  * Copyright 2010 ST-Ericsson SA
  *  @author: Benjamin Gaignard <benjamin.gaignard@stericsson.com>
+ * Copyright 2023 Igalia S.L.
+ *  @author: Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -27,8 +29,20 @@
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE(GstAutoVideoConvert, gst_auto_video_convert, GST, AUTO_VIDEO_CONVERT, GstAutoConvert);
+G_DECLARE_FINAL_TYPE(GstAutoVideoConvert, gst_auto_video_convert, GST, AUTO_VIDEO_CONVERT, GstBaseAutoConvert);
 GST_ELEMENT_REGISTER_DECLARE (autovideoconvert);
+
+typedef struct
+{
+  const gchar *first_elements[4];
+  const gchar *colorspace_converters[4];
+  const gchar *last_elements[4];
+
+  const gchar *possible_filters[4];
+  GstRank rank;
+} GstAutoVideoConvertFilterBinsGenerator;
+
+void gst_auto_video_register_well_known_bins (GstAutoVideoConvert *self, GstAutoVideoConvertFilterBinsGenerator *gen);
 
 G_END_DECLS
 #endif /* __GST_AUTO_VIDEO_CONVERT_H__ */

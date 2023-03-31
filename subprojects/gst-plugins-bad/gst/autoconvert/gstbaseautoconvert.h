@@ -42,6 +42,7 @@ struct _GstBaseAutoConvert
   GstBin bin;                   /* we extend GstBin */
 
   GList *factories;
+  GList *filters_info;
 
   GstPad *sinkpad;
   GstPad *srcpad;
@@ -54,17 +55,36 @@ struct _GstBaseAutoConvert
   GstPad *current_internal_srcpad;
   GstPad *current_internal_sinkpad;
 
-  GHashTable * elements;
+  GHashTable *elements;
 };
+
+/* This structure is used to allow handling random bin from their description
+   without needing to register a factory. The data it contains is pretty similar
+   but is specific for filters (1sinkpad and 1 srcpad).
+*/
+typedef struct
+{
+  /* Name of the filter, each instance of should have that name */
+  gchar *name;
+  gchar *bindesc;
+  GstRank rank;
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+} GstAutoConvertFilterInfo;
 
 struct _GstBaseAutoConvertClass
 {
   GstBinClass parent_class;
 
-  GList* (*load_factories)(GstBaseAutoConvert *base_autoconvert);
+  gboolean registers_filters;
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstBaseAutoConvert, gst_object_unref)
 GType gst_base_auto_convert_get_type (void);
+
+gboolean
+gst_base_auto_convert_register_filter(GstBaseAutoConvert *self, gchar *name,
+    gchar * bindesc, GstRank rank);
+void gst_base_auto_convert_reset_filters (GstBaseAutoConvert * self);
 
 G_END_DECLS

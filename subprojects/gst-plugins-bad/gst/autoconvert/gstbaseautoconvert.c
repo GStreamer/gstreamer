@@ -102,8 +102,8 @@ static gboolean gst_base_auto_convert_internal_src_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
 static gboolean gst_base_auto_convert_internal_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
-static GList *gst_base_auto_convert_get_or_load_factories (GstBaseAutoConvert *
-    self);
+static GList *gst_base_auto_convert_get_or_load_filters_info (GstBaseAutoConvert
+    * self);
 
 G_DECLARE_FINAL_TYPE (GstBaseAutoConvertPad, gst_base_auto_convert_pad, GST,
     BASE_AUTO_CONVERT_PAD, GstPad);
@@ -185,6 +185,112 @@ gst_base_auto_convert_element_removed (GstBin * bin, GstElement * child)
 }
 
 static void
+gst_auto_convert_filter_info_free (GstAutoConvertFilterInfo * knwon_bin)
+{
+  g_free (knwon_bin->name);
+  g_free (knwon_bin->bindesc);
+
+  g_free (knwon_bin);
+}
+
+static gint
+g_auto_convert_filter_info_compare (GstAutoConvertFilterInfo * b1,
+    GstAutoConvertFilterInfo * b2)
+{
+  gint diff;
+
+  diff = b2->rank - b1->rank;
+  if (diff != 0)
+    return diff;
+
+  diff = g_strcmp0 (b2->name, b1->name);
+
+  return diff;
+}
+
+static GstCaps *
+gst_base_auto_convert_get_template_caps_for (GstElement * subbin,
+    GstPadDirection dir)
+{
+  GstElement *element = NULL;
+  GstPad *pad = NULL;
+  GstCaps *res = NULL;
+
+  g_assert (g_list_length (subbin->sinkpads) == 1);
+  g_assert (g_list_length (subbin->srcpads) == 1);
+  if (GST_IS_BIN (subbin)) {
+    GstPad *ghostpad =
+        (dir == GST_PAD_SINK) ? subbin->sinkpads->data : subbin->srcpads->data;
+    GstPad *internal = gst_pad_get_single_internal_link (ghostpad);
+
+    pad = gst_pad_get_peer (internal);
+
+    gst_object_unref (internal);
+  } else {
+    pad =
+        (dir ==
+        GST_PAD_SINK) ? gst_object_ref (subbin->
+        sinkpads->data) : gst_object_ref (subbin->srcpads->data);
+  }
+
+  element = GST_ELEMENT (GST_OBJECT_PARENT (pad));
+  g_assert (element);
+
+  if (!g_strcmp0 (GST_OBJECT_NAME (gst_element_get_factory (element)),
+          "capsfilter")) {
+    g_object_get (G_OBJECT (element), "caps", &res, NULL);
+  } else {
+    res = gst_pad_get_pad_template_caps (pad);
+  }
+  gst_object_unref (pad);
+
+  return gst_caps_make_writable (res);
+}
+
+gboolean
+gst_base_auto_convert_register_filter (GstBaseAutoConvert * self, gchar * name,
+    gchar * bindesc, GstRank rank)
+{
+  g_assert (name);
+
+  for (GList * tmp = self->filters_info; tmp; tmp = tmp->next) {
+    g_return_val_if_fail (g_strcmp0 (name,
+            ((GstAutoConvertFilterInfo *) tmp->data)->name), FALSE);
+  }
+
+  GError *err = NULL;
+  bindesc = g_strchomp (bindesc);
+  GstElement *subbin = gst_parse_bin_from_description_full (bindesc, TRUE,
+      NULL, GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN,
+      &err);
+
+  if (!subbin) {
+    GST_INFO ("Could not create subbin for %s", name);
+    g_free (name);
+    g_free (bindesc);
+
+    return FALSE;
+  }
+
+  GstAutoConvertFilterInfo *filter_info = g_new0 (GstAutoConvertFilterInfo, 1);
+  filter_info->sink_caps =
+      gst_base_auto_convert_get_template_caps_for (subbin, GST_PAD_SINK);
+  filter_info->src_caps =
+      gst_base_auto_convert_get_template_caps_for (subbin, GST_PAD_SRC);
+  filter_info->name = name;
+  filter_info->bindesc = bindesc;
+  filter_info->rank = rank;
+
+  GST_OBJECT_LOCK (self);
+  self->filters_info =
+      g_list_insert_sorted (self->filters_info, filter_info,
+      (GCompareFunc) g_auto_convert_filter_info_compare);
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
+static void
 gst_base_auto_convert_class_init (GstBaseAutoConvertClass * klass)
 {
   GstElementClass *gstelement_class = (GstElementClass *) klass;
@@ -201,6 +307,8 @@ gst_base_auto_convert_class_init (GstBaseAutoConvertClass * klass)
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_auto_convert_finalize);
 
   gstbin_class->element_removed = gst_base_auto_convert_element_removed;
+
+  klass->registers_filters = TRUE;
 }
 
 static void
@@ -255,32 +363,10 @@ gst_base_auto_convert_finalize (GObject * object)
   if (self->factories)
     gst_plugin_feature_list_free (self->factories);
   g_hash_table_unref (self->elements);
+  g_list_free_full (self->filters_info,
+      (GDestroyNotify) gst_auto_convert_filter_info_free);
 
   G_OBJECT_CLASS (gst_base_auto_convert_parent_class)->finalize (object);
-}
-
-static GstElement *
-gst_base_auto_convert_get_element_by_type (GstBaseAutoConvert * self,
-    GType type)
-{
-  GList *item, *elements;
-  GstElement *element = NULL;
-
-  g_return_val_if_fail (type != 0, NULL);
-
-  GST_BASEAUTOCONVERT_LOCK (self);
-  elements = g_hash_table_get_keys (self->elements);
-  for (item = elements; item; item = item->next) {
-    if (G_OBJECT_TYPE (item->data) == type) {
-      element = gst_object_ref (item->data);
-      break;
-    }
-  }
-  GST_BASEAUTOCONVERT_UNLOCK (self);
-
-  g_list_free (elements);
-
-  return element;
 }
 
 /**
@@ -401,18 +487,28 @@ gst_base_auto_convert_get_internal_srcpad (GstBaseAutoConvert * self)
 
 static GstElement *
 gst_base_auto_convert_add_element (GstBaseAutoConvert * self,
-    GstElementFactory * factory)
+    GstAutoConvertFilterInfo * filter_info)
 {
   GstElement *element = NULL;
   InternalPads *pads;
+  GError *error = NULL;
 
   GST_DEBUG_OBJECT (self, "Adding element %s to the baseautoconvert bin",
-      gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+      filter_info->name);
 
-  element = gst_element_factory_create (factory, NULL);
-  if (!element)
+  element = gst_parse_bin_from_description_full (filter_info->bindesc, TRUE,
+      NULL, GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN,
+      &error);
+  if (!element) {
+    GST_INFO_OBJECT (self, "Could not build %s: %s", filter_info->name,
+        error->message);
+
+    g_error_free (error);
+
     return NULL;
+  }
 
+  gst_object_set_name (GST_OBJECT (element), filter_info->name);
   pads = internal_pads_new (self, GST_OBJECT_NAME (element));
   g_hash_table_insert (self->elements, element, pads);
 
@@ -434,25 +530,16 @@ gst_base_auto_convert_add_element (GstBaseAutoConvert * self,
 }
 
 static GstElement *
-gst_base_auto_convert_get_or_make_element_from_factory (GstBaseAutoConvert *
-    self, GstElementFactory * factory)
+gst_base_auto_convert_get_or_make_element_from_filter_info (GstBaseAutoConvert *
+    self, GstAutoConvertFilterInfo * nb)
 {
   GstElement *element = NULL;
-  GstElementFactory *loaded_factory =
-      GST_ELEMENT_FACTORY (gst_plugin_feature_load (GST_PLUGIN_FEATURE
-          (factory)));
 
-  if (!loaded_factory)
-    return NULL;
-
-  element = gst_base_auto_convert_get_element_by_type (self,
-      gst_element_factory_get_element_type (loaded_factory));
+  element = gst_bin_get_by_name (GST_BIN (self), nb->name);
 
   if (!element) {
-    element = gst_base_auto_convert_add_element (self, loaded_factory);
+    element = gst_base_auto_convert_add_element (self, nb);
   }
-
-  gst_object_unref (loaded_factory);
 
   return element;
 }
@@ -464,51 +551,25 @@ gst_base_auto_convert_get_or_make_element_from_factory (GstBaseAutoConvert *
  */
 
 static gboolean
-factory_can_intersect (GstBaseAutoConvert * self,
-    GstElementFactory * factory, GstPadDirection direction, GstCaps * caps)
+filter_info_can_intersect (GstBaseAutoConvert * self,
+    GstAutoConvertFilterInfo * filter_info, GstPadDirection direction,
+    GstCaps * caps)
 {
-  const GList *templates;
-  gint has_direction = FALSE;
-  gboolean ret = FALSE;
+  gboolean res;
+  GST_LOG_OBJECT (self, "Checking if %s (bin_desc=%s) supports %s caps:",
+      filter_info->name, filter_info->bindesc,
+      direction == GST_PAD_SINK ? "sink" : "src");
+  GST_LOG_OBJECT (self, "Supported caps: %" GST_PTR_FORMAT,
+      direction ==
+      GST_PAD_SINK ? filter_info->sink_caps : filter_info->src_caps);
+  GST_LOG_OBJECT (self, "Caps: %" GST_PTR_FORMAT, caps);
 
-  g_return_val_if_fail (factory != NULL, FALSE);
-  g_return_val_if_fail (caps != NULL, FALSE);
+  res =
+      gst_caps_can_intersect (direction ==
+      GST_PAD_SINK ? filter_info->sink_caps : filter_info->src_caps, caps);
+  GST_LOG_OBJECT (self, "Intersect result: %d", res);
 
-  templates = gst_element_factory_get_static_pad_templates (factory);
-
-  while (templates) {
-    GstStaticPadTemplate *template = (GstStaticPadTemplate *) templates->data;
-
-    if (template->direction == direction) {
-      GstCaps *tmpl_caps = NULL;
-      gboolean intersect;
-
-      /* If there is more than one pad in this direction, we return FALSE
-       * Only transform elements (with one sink and one source pad)
-       * are accepted
-       */
-      if (has_direction) {
-        GST_ERROR_OBJECT (self, "Factory %p"
-            " has more than one static template with dir %d",
-            template, direction);
-        return FALSE;
-      }
-      has_direction = TRUE;
-
-      tmpl_caps = gst_static_caps_get (&template->static_caps);
-      intersect = gst_caps_can_intersect (tmpl_caps, caps);
-      GST_DEBUG_OBJECT (self, "Factories %" GST_PTR_FORMAT
-          " static caps %" GST_PTR_FORMAT " and caps %" GST_PTR_FORMAT
-          " can%s intersect", factory, tmpl_caps, caps,
-          intersect ? "" : " not");
-      gst_caps_unref (tmpl_caps);
-
-      ret |= intersect;
-    }
-    templates = g_list_next (templates);
-  }
-
-  return ret;
+  return res;
 }
 
 static gboolean
@@ -633,6 +694,9 @@ gst_base_auto_convert_activate_element (GstBaseAutoConvert * self,
       GST_OBJECT_NAME (GST_OBJECT (element)));
 
 done:
+  GST_DEBUG_OBJECT (element, "Activating element %s",
+      res ? "succeeded" : "failed");
+
   gst_object_unref (element);
   internal_pads_unref (pads);
   gst_clear_object (&srcpad);
@@ -677,6 +741,22 @@ gst_base_auto_convert_iterate_internal_links (GstPad * pad, GstObject * parent)
   return it;
 }
 
+static GstAutoConvertFilterInfo *
+gst_auto_convert_get_filter_info (GstBaseAutoConvert * self,
+    GstElement * element)
+{
+  GList *tmp;
+
+  for (tmp = self->filters_info; tmp; tmp = tmp->next) {
+    GstAutoConvertFilterInfo *filter_info = tmp->data;
+
+    if (!g_strcmp0 (filter_info->name, GST_OBJECT_NAME (element)))
+      return filter_info;
+  }
+
+  return NULL;
+}
+
 /*
  * If there is already an internal element, it will try to call set_caps on it
  *
@@ -689,9 +769,9 @@ static gboolean
 gst_base_auto_convert_sink_setcaps (GstBaseAutoConvert * self, GstCaps * caps,
     gboolean check_downstream)
 {
-  GList *elem;
+  GList *tmp;
   GstCaps *other_caps = NULL;
-  GList *factories;
+  GList *filters_info = NULL;
   GstCaps *current_caps = NULL;
   gboolean res = FALSE;
   GstElement *current_subelement = NULL;
@@ -709,66 +789,81 @@ gst_base_auto_convert_sink_setcaps (GstBaseAutoConvert * self, GstCaps * caps,
     other_caps = gst_pad_peer_query_caps (self->srcpad, NULL);
 
   current_subelement = gst_base_auto_convert_get_subelement (self);
+  GST_DEBUG_OBJECT (self,
+      "'%" GST_PTR_FORMAT "' Setting caps to: %" GST_PTR_FORMAT
+      " - other caps: %" GST_PTR_FORMAT, current_subelement, caps, other_caps);
   if (current_subelement) {
     if (gst_pad_peer_query_accept_caps (self->current_internal_srcpad, caps)) {
+      GstAutoConvertFilterInfo *filter_info =
+          gst_auto_convert_get_filter_info (self, current_subelement);
 
       res = TRUE;
       if (other_caps) {
-        GstElementFactory *factory =
-            gst_element_get_factory (current_subelement);
-
-        if (!factory_can_intersect (self, factory, GST_PAD_SRC, other_caps)) {
+        GST_DEBUG_OBJECT (self,
+            "Checking if known bin %s can intersect with %" GST_PTR_FORMAT,
+            filter_info->name, other_caps);
+        if (!filter_info_can_intersect (self, filter_info, GST_PAD_SRC,
+                other_caps)) {
           GST_LOG_OBJECT (self,
-              "Factory %s does not accept src caps %" GST_PTR_FORMAT,
-              gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
-              other_caps);
+              "filter_info %s does not accept src caps %" GST_PTR_FORMAT,
+              filter_info->name, other_caps);
           res = FALSE;
         }
+        GST_DEBUG_OBJECT (self, "Filter %s can intersect", filter_info->name);
       }
 
       if (res) {
         /* If we can set the new caps on the current element,
          * then we just get out
          */
-        GST_ERROR_OBJECT (self, "Could set %s:%s to %" GST_PTR_FORMAT,
-            GST_DEBUG_PAD_NAME (self->current_internal_srcpad), caps);
+        GST_DEBUG_OBJECT (self,
+            "Could set %s:%s to %" GST_PTR_FORMAT " reusing %s",
+            GST_DEBUG_PAD_NAME (self->current_internal_srcpad), caps,
+            filter_info->name);
         goto get_out;
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "Can't reuse currently configured subelement: %s",
+            filter_info->name);
       }
     }
   }
 
   if (!check_downstream)
     other_caps = gst_pad_peer_query_caps (self->srcpad, NULL);
-  /* We already queries downstream caps otherwise */
+  /* We already queried downstream caps otherwise */
 
-  factories = gst_base_auto_convert_get_or_load_factories (self);
-
-  for (elem = factories; elem; elem = g_list_next (elem)) {
-    GstElementFactory *factory = GST_ELEMENT_FACTORY (elem->data);
+  filters_info = gst_base_auto_convert_get_or_load_filters_info (self);
+  for (tmp = filters_info; tmp; tmp = g_list_next (tmp)) {
+    GstAutoConvertFilterInfo *filter_info = tmp->data;
     GstElement *element;
 
-    /* Lets first check if according to the static pad templates on the factory
+    GST_DEBUG_OBJECT (self, "Trying %s (bin_desc=%s)", filter_info->name,
+        filter_info->bindesc);
+    /* Lets first check if according to the static pad templates on the known bin
      * these caps have any chance of success
      */
-    if (!factory_can_intersect (self, factory, GST_PAD_SINK, caps)) {
-      GST_LOG_OBJECT (self, "Factory %s does not accept sink caps %"
-          GST_PTR_FORMAT,
-          gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)), caps);
+    if (!filter_info_can_intersect (self, filter_info, GST_PAD_SINK, caps)) {
+      GST_DEBUG_OBJECT (self, "Known bin %s does not accept sink caps %"
+          GST_PTR_FORMAT, filter_info->name, caps);
       continue;
     }
     if (other_caps != NULL) {
-      if (!factory_can_intersect (self, factory, GST_PAD_SRC, other_caps)) {
-        GST_LOG_OBJECT (self,
-            "Factory %s does not accept src caps %" GST_PTR_FORMAT,
-            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
-            other_caps);
+      if (!filter_info_can_intersect (self, filter_info, GST_PAD_SRC,
+              other_caps)) {
+        GST_DEBUG_OBJECT (self,
+            "Known bin %s does not accept src caps %" GST_PTR_FORMAT,
+            filter_info->name, other_caps);
         continue;
       }
+      GST_DEBUG_OBJECT (self, "Filter %s can intersect", filter_info->name);
     }
 
     /* The element had a chance of success, lets make it */
+    GST_DEBUG_OBJECT (self, "Trying bin %s", filter_info->name);
     element =
-        gst_base_auto_convert_get_or_make_element_from_factory (self, factory);
+        gst_base_auto_convert_get_or_make_element_from_filter_info (self,
+        filter_info);
     if (!element)
       continue;
 
@@ -786,9 +881,10 @@ get_out:
   gst_clear_caps (&other_caps);
   gst_clear_caps (&current_caps);
 
-  if (!res)
+  if (!res) {
     GST_WARNING_OBJECT (self,
         "Could not find a matching element for caps: %" GST_PTR_FORMAT, caps);
+  }
 
   return res;
 }
@@ -870,32 +966,51 @@ compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 }
 
 static GList *
-gst_base_auto_convert_get_or_load_factories (GstBaseAutoConvert * self)
+gst_base_auto_convert_get_or_load_filters_info (GstBaseAutoConvert * self)
 {
   GList *all_factories;
-  GstBaseAutoConvertClass *klass = GST_BASE_AUTO_CONVERT_GET_CLASS (self);
 
   GST_OBJECT_LOCK (self);
-  if (self->factories)
+  if (self->filters_info) {
+    GST_OBJECT_UNLOCK (self);
     goto done;
-  GST_OBJECT_UNLOCK (self);
+  }
 
-  if (klass->load_factories) {
-    all_factories = klass->load_factories (self);
-  } else {
+  if (GST_BASE_AUTO_CONVERT_GET_CLASS (self)->registers_filters) {
+    GST_ERROR_OBJECT (self,
+        "Filters should have been registered but none found");
+
+    GST_ELEMENT_ERROR (self, CORE, MISSING_PLUGIN, ("No known filter found."),
+        (NULL));
+
+    goto done;
+  }
+
+  if (!self->factories) {
+    GST_OBJECT_UNLOCK (self);
+
     all_factories =
         g_list_sort (gst_registry_feature_filter (gst_registry_get (),
             gst_base_auto_convert_default_filter_func, FALSE, NULL),
         (GCompareFunc) compare_ranks);
+
+    GST_OBJECT_LOCK (self);
+    self->factories = all_factories;
   }
-
-  GST_OBJECT_LOCK (self);
-  self->factories = all_factories;
-
-done:
   GST_OBJECT_UNLOCK (self);
 
-  return self->factories;
+  for (GList * tmp = self->factories; tmp; tmp = g_list_next (tmp)) {
+    GstElementFactory *factory = tmp->data;
+
+    gst_base_auto_convert_register_filter (self,
+        gst_object_get_name (GST_OBJECT (factory)),
+        gst_object_get_name (GST_OBJECT (factory)),
+        gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (factory))
+        );
+  }
+
+done:
+  return self->filters_info;
 }
 
 /* In this case, we should almost always have an internal element, because
@@ -1078,7 +1193,7 @@ gst_base_auto_convert_getcaps (GstBaseAutoConvert * self, GstCaps * filter,
     GstPadDirection dir)
 {
   GstCaps *caps = NULL, *other_caps = NULL;
-  GList *elem, *factories;
+  GList *kb, *filters_info;
 
   caps = gst_caps_new_empty ();
 
@@ -1095,35 +1210,35 @@ gst_base_auto_convert_getcaps (GstBaseAutoConvert * self, GstCaps * filter,
     goto out;
   }
 
-  factories = gst_base_auto_convert_get_or_load_factories (self);
-  for (elem = factories; elem; elem = g_list_next (elem)) {
-    GstElementFactory *factory = GST_ELEMENT_FACTORY (elem->data);
+  filters_info = gst_base_auto_convert_get_or_load_filters_info (self);
+  for (kb = filters_info; kb; kb = g_list_next (kb)) {
+    GstAutoConvertFilterInfo *filter_info = kb->data;
     GstElement *element = NULL;
     GstCaps *element_caps;
     InternalPads *pads;
 
     if (filter) {
-      if (!factory_can_intersect (self, factory, dir, filter)) {
+      if (!filter_info_can_intersect (self, filter_info, dir, filter)) {
         GST_LOG_OBJECT (self,
-            "Factory %s does not accept src caps %" GST_PTR_FORMAT,
-            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
-            other_caps);
+            "Bin %s does not accept %s caps %" GST_PTR_FORMAT,
+            filter_info->name, dir == GST_PAD_SRC ? "src" : "sink", other_caps);
         continue;
       }
     }
 
     if (other_caps != NULL) {
-      if (!factory_can_intersect (self, factory,
+      if (!filter_info_can_intersect (self, filter_info,
               dir == GST_PAD_SINK ? GST_PAD_SRC : GST_PAD_SINK, other_caps)) {
         GST_LOG_OBJECT (self,
-            "Factory %s does not accept src caps %" GST_PTR_FORMAT,
-            gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)),
-            other_caps);
+            "%s does not accept %s caps %" GST_PTR_FORMAT,
+            filter_info->name,
+            dir == GST_PAD_SINK ? "src" : "sink", other_caps);
         continue;
       }
 
-      element = gst_base_auto_convert_get_or_make_element_from_factory (self,
-          factory);
+      element =
+          gst_base_auto_convert_get_or_make_element_from_filter_info (self,
+          filter_info);
       if (element == NULL)
         continue;
 
@@ -1141,24 +1256,16 @@ gst_base_auto_convert_getcaps (GstBaseAutoConvert * self, GstCaps * filter,
       if (gst_caps_is_any (caps))
         goto out;
     } else {
-      const GList *tmp;
+      GstCaps *static_caps =
+          dir == GST_PAD_SRC ? filter_info->src_caps : filter_info->sink_caps;
 
-      for (tmp = gst_element_factory_get_static_pad_templates (factory);
-          tmp; tmp = g_list_next (tmp)) {
-        GstStaticPadTemplate *template = tmp->data;
-
-        if (GST_PAD_TEMPLATE_DIRECTION (template) == dir) {
-          GstCaps *static_caps = gst_static_pad_template_get_caps (template);
-
-          if (static_caps) {
-            caps = gst_caps_merge (caps, static_caps);
-          }
-
-          /* Early out, any is absorbing */
-          if (gst_caps_is_any (caps))
-            goto out;
-        }
+      if (static_caps) {
+        caps = gst_caps_merge (caps, static_caps);
       }
+
+      /* Early out, any is absorbing */
+      if (gst_caps_is_any (caps))
+        goto out;
     }
   }
 
@@ -1191,7 +1298,7 @@ gst_base_auto_convert_src_event (GstPad * pad, GstObject * parent,
     gst_object_unref (internal_sinkpad);
   } else if (GST_EVENT_TYPE (event) != GST_EVENT_RECONFIGURE) {
     GST_WARNING_OBJECT (self,
-        "Got upstream event while no element was selected," "forwarding.");
+        "Got upstream event while no element was selected, forwarding.");
     ret = gst_pad_push_event (self->sinkpad, event);
   } else
     gst_event_unref (event);
@@ -1338,4 +1445,15 @@ gst_base_auto_convert_internal_src_query (GstPad * pad, GstObject * parent,
   GstBaseAutoConvert *self = GST_BASE_AUTO_CONVERT_PAD (pad)->obj;
 
   return gst_pad_peer_query (self->sinkpad, query);
+}
+
+
+void
+gst_base_auto_convert_reset_filters (GstBaseAutoConvert * self)
+{
+  GST_OBJECT_LOCK (self);
+  g_list_free_full (self->filters_info,
+      (GDestroyNotify) gst_auto_convert_filter_info_free);
+  self->filters_info = NULL;
+  GST_OBJECT_UNLOCK (self);
 }
