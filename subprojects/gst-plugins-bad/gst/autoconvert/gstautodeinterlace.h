@@ -1,6 +1,4 @@
 /* GStreamer
- * Copyright 2010 ST-Ericsson SA
- *  @author: Benjamin Gaignard <benjamin.gaignard@stericsson.com>
  * Copyright 2023 Igalia S.L.
  *  @author: Thibault Saunier <tsaunier@igalia.com>
  *
@@ -28,7 +26,8 @@
 
 G_BEGIN_DECLS
 
-G_DECLARE_FINAL_TYPE(GstAutoVideoConvert, gst_auto_video_convert, GST, AUTO_VIDEO_CONVERT, GstBaseAutoConvert);
-GST_ELEMENT_REGISTER_DECLARE (autovideoconvert);
+G_DECLARE_FINAL_TYPE(GstAutoDeinterlace, gst_auto_deinterlace, GST, AUTO_DEINTERLACE, GstBaseAutoConvert);
+GST_ELEMENT_REGISTER_DECLARE (autodeinterlace);
 
 G_END_DECLS
+

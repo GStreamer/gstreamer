@@ -1,7 +1,9 @@
 autocon_sources = [
   'gstbaseautoconvert.c',
   'gstautoconvert.c',
+  'gstautovideo.c',
   'gstautovideoconvert.c',
+  'gstautodeinterlace.c',
   'plugin.c',
 ]
 

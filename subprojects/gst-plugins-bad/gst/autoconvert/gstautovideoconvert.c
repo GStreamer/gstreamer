@@ -35,6 +35,7 @@
 #include <string.h>
 
 #include "gstautovideoconvert.h"
+#include "gstautovideo.h"
 
 GST_DEBUG_CATEGORY (autovideoconvert_debug);
 #define GST_CAT_DEFAULT (autovideoconvert_debug)
