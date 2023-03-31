@@ -128,6 +128,15 @@ GST_VULKAN_API
 VkFormat                        gst_vulkan_format_from_video_info               (GstVideoInfo * v_info,
                                                                                  guint plane);
 
+GST_VULKAN_API
+gboolean                        gst_vulkan_format_from_video_info_2            (GstVulkanPhysicalDevice * physical_device,
+                                                                                GstVideoInfo * info,
+                                                                                VkImageTiling tiling,
+                                                                                gboolean no_multiplane,
+                                                                                VkFormat fmts[GST_VIDEO_MAX_PLANES],
+                                                                                int * n_imgs,
+                                                                                VkImageUsageFlags * usage);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_FORMAT_H__ */

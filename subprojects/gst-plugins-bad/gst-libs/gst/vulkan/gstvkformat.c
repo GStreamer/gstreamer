@@ -506,3 +506,161 @@ gst_vulkan_format_from_video_info (GstVideoInfo * v_info, guint plane)
 
   return VK_FORMAT_UNDEFINED;
 }
+
+#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
+/* *INDENT-OFF* */
+const static struct {
+  VkFormatFeatureFlagBits2KHR feature;
+  VkImageUsageFlags usage;
+} vk_usage_map[] = {
+  { VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT_KHR, VK_IMAGE_USAGE_SAMPLED_BIT },
+  { VK_FORMAT_FEATURE_2_TRANSFER_SRC_BIT_KHR, VK_IMAGE_USAGE_TRANSFER_SRC_BIT },
+  { VK_FORMAT_FEATURE_2_TRANSFER_DST_BIT_KHR, VK_IMAGE_USAGE_TRANSFER_DST_BIT },
+  { VK_FORMAT_FEATURE_2_STORAGE_IMAGE_BIT_KHR, VK_IMAGE_USAGE_STORAGE_BIT },
+  { VK_FORMAT_FEATURE_2_COLOR_ATTACHMENT_BIT_KHR, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT },
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  { VK_FORMAT_FEATURE_2_VIDEO_DECODE_OUTPUT_BIT_KHR, VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR },
+  { VK_FORMAT_FEATURE_2_VIDEO_DECODE_DPB_BIT_KHR, VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR },
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+  { VK_FORMAT_FEATURE_2_VIDEO_ENCODE_DPB_BIT_KHR, VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR },
+  { VK_FORMAT_FEATURE_2_VIDEO_ENCODE_INPUT_BIT_KHR, VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR },
+#endif
+#endif
+};
+/* *INDENT-ON* */
+
+static VkImageUsageFlags
+_get_usage (guint64 feature)
+{
+  int i;
+  VkImageUsageFlags usage = 0;
+
+  for (i = 0; i < G_N_ELEMENTS (vk_usage_map); i++) {
+    if (vk_usage_map[i].feature & feature)
+      usage |= vk_usage_map[i].usage;
+  }
+
+  return usage;
+}
+#else
+static VkImageUsageFlags
+_get_usage (guint64 feature)
+{
+  /* return what GstVulkan has been using since it was merged */
+  return VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT
+      | VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+}
+#endif /* (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195) */
+
+
+/**
+ * gst_vulkan_format_from_video_info_2: (skip)
+ * @physical_device: a #GstVulkanPhysicalDevice
+ * @info: the #GstVideoInfo
+ * @tiling: the tiling to use
+ * @no_multiplane: query for vulkan formats without multiple images
+ * @fmts: (out) (array fixed-size=4): Vulkan formats per image/plane
+ * @n_imgs: (out): number of images/planes used by the Vulkan format
+ * @usage: (out): The potential usage of the format
+ *
+ * Returns: %TRUE if requested GStreamer format maps to a Vulkan format and its
+ * properties.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
+    GstVideoInfo * info, VkImageTiling tiling, gboolean no_multiplane,
+    VkFormat fmts[GST_VIDEO_MAX_PLANES], int *n_imgs, VkImageUsageFlags * usage)
+{
+  int i;
+#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
+  VkPhysicalDevice gpu;
+  const VkFormatFeatureFlagBits2KHR basic_flags =
+      VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT |
+      VK_FORMAT_FEATURE_2_TRANSFER_SRC_BIT |
+      VK_FORMAT_FEATURE_2_TRANSFER_DST_BIT;
+  VkFormatProperties2 prop = {
+    .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2,
+  };
+
+  gpu = gst_vulkan_physical_device_get_handle (physical_device);
+#endif
+
+  for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
+    gboolean basics_primary = FALSE, basics_secondary = FALSE;
+    guint64 feats_primary = 0, feats_secondary = 0;
+
+#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
+    if (vk_formats_map[i].format != GST_VIDEO_INFO_FORMAT (info))
+      continue;
+
+    vkGetPhysicalDeviceFormatProperties2 (gpu, vk_formats_map[i].vkfrmt, &prop);
+
+    feats_primary = tiling == VK_IMAGE_TILING_LINEAR ?
+        prop.formatProperties.linearTilingFeatures :
+        prop.formatProperties.optimalTilingFeatures;
+    basics_primary = (feats_primary & basic_flags) == basic_flags;
+
+    if (vk_formats_map[i].vkfrmt != vk_formats_map[i].vkfrmts[0]) {
+      vkGetPhysicalDeviceFormatProperties2 (gpu, vk_formats_map[i].vkfrmts[0],
+          &prop);
+
+      feats_secondary = tiling == VK_IMAGE_TILING_LINEAR ?
+          prop.formatProperties.linearTilingFeatures :
+          prop.formatProperties.optimalTilingFeatures;
+      basics_secondary = (feats_secondary & basic_flags) == basic_flags;
+    } else {
+      basics_secondary = basics_primary;
+    }
+#endif
+
+    if (GST_VIDEO_INFO_IS_RGB (info)) {
+      if (basics_primary && GST_VIDEO_INFO_COLORIMETRY (info).transfer !=
+          GST_VIDEO_TRANSFER_SRGB) {
+        if (fmts)
+          fmts[0] = vk_formats_map[i].vkfrmt;
+        if (n_imgs)
+          *n_imgs = 1;
+        if (usage)
+          *usage = _get_usage (feats_primary);
+      } else if (basics_secondary
+          && GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB) {
+        if (fmts)
+          fmts[0] = vk_formats_map[i].vkfrmts[0];
+        if (n_imgs)
+          *n_imgs = 1;
+        if (usage)
+          *usage = _get_usage (feats_secondary);
+      } else {
+        return FALSE;
+      }
+    } else {
+      if (basics_primary && !(no_multiplane
+              && GST_VIDEO_INFO_N_PLANES (info) > 1)) {
+        if (fmts)
+          fmts[0] = vk_formats_map[i].vkfrmt;
+        if (n_imgs)
+          *n_imgs = 1;
+        if (usage)
+          *usage = _get_usage (feats_primary);
+      } else if (basics_secondary) {
+        if (fmts) {
+          memcpy (fmts, vk_formats_map[i].vkfrmts,
+              GST_VIDEO_MAX_PLANES * sizeof (VkFormat));
+        }
+        if (n_imgs)
+          *n_imgs = GST_VIDEO_INFO_N_PLANES (info);
+        if (usage)
+          *usage = _get_usage (feats_secondary);
+      } else {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
