@@ -1446,6 +1446,192 @@ GST_START_TEST (test_appsrc_send_custom_event)
 
 GST_END_TEST;
 
+enum ExpectedObj
+{
+  EXPECTED_STREAM_START,
+  EXPECTED_CAPS,
+  EXPECTED_SEGMENT,
+  EXPECTED_CUSTOM,
+  EXPECTED_BUFFER,
+};
+
+static enum ExpectedObj expected_obj;
+
+static gboolean
+send_event_before_buffer_event_func (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GST_LOG ("event %" GST_PTR_FORMAT, event);
+
+  if (expected_obj == EXPECTED_STREAM_START) {
+    g_assert_cmpuint (GST_EVENT_TYPE (event), ==, GST_EVENT_STREAM_START);
+    expected_obj = EXPECTED_CAPS;
+  } else if (expected_obj == EXPECTED_CAPS) {
+    g_assert_cmpuint (GST_EVENT_TYPE (event), ==, GST_EVENT_CAPS);
+    expected_obj = EXPECTED_SEGMENT;
+  } else if (expected_obj == EXPECTED_SEGMENT) {
+    g_assert_cmpuint (GST_EVENT_TYPE (event), ==, GST_EVENT_SEGMENT);
+    expected_obj = EXPECTED_CUSTOM;
+  } else if (expected_obj == EXPECTED_CUSTOM) {
+    g_assert_cmpuint (GST_EVENT_TYPE (event), ==, GST_EVENT_CUSTOM_DOWNSTREAM);
+    expected_obj = EXPECTED_BUFFER;
+  } else {
+    g_assert_not_reached ();
+  }
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
+static GstFlowReturn
+send_event_before_buffer_chain_func (GstPad * pad, GstObject * parent,
+    GstBuffer * buf)
+{
+  GST_LOG ("buffer # %3u", (guint) GST_BUFFER_OFFSET (buf));
+
+  g_assert_cmpuint (expected_obj, ==, EXPECTED_BUFFER);
+
+  g_mutex_lock (&check_mutex);
+  done = TRUE;
+  g_cond_signal (&check_cond);
+  g_mutex_unlock (&check_mutex);
+
+  gst_buffer_unref (buf);
+  return GST_FLOW_OK;
+}
+
+/* send a custom event to appsrc before the first buffer */
+GST_START_TEST (test_appsrc_send_event_before_buffer)
+{
+  GstElement *src;
+  GstBuffer *buf;
+  GstCaps *caps;
+
+  src = setup_appsrc ();
+  g_object_set (src, "format", GST_FORMAT_TIME, NULL);
+
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  gst_pad_set_event_function (mysinkpad, send_event_before_buffer_event_func);
+  gst_pad_set_chain_function (mysinkpad, send_event_before_buffer_chain_func);
+
+  expected_obj = EXPECTED_STREAM_START;
+
+  /* send a custom event and then the first buffer */
+  gst_element_send_event (src,
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new ("custom", NULL, NULL)));
+
+  caps = gst_caps_from_string ("video/x-raw");
+  gst_app_src_set_caps (GST_APP_SRC_CAST (src), caps);
+  gst_caps_unref (caps);
+
+  buf = gst_buffer_new_and_alloc (2);
+  GST_BUFFER_OFFSET (buf) = 0;
+  fail_unless (gst_app_src_push_buffer (GST_APP_SRC_CAST (src),
+          buf) == GST_FLOW_OK);
+
+  g_mutex_lock (&check_mutex);
+  while (!done)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsrc (src);
+}
+
+GST_END_TEST;
+
+/* send a custom event to appsrc before the first sample */
+GST_START_TEST (test_appsrc_send_event_before_sample)
+{
+  GstElement *src;
+  GstSample *sample;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+
+  src = setup_appsrc ();
+  g_object_set (src, "format", GST_FORMAT_TIME, NULL);
+
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  gst_pad_set_event_function (mysinkpad, send_event_before_buffer_event_func);
+  gst_pad_set_chain_function (mysinkpad, send_event_before_buffer_chain_func);
+
+  expected_obj = EXPECTED_STREAM_START;
+
+  /* send a custom event and then the first sample */
+  gst_element_send_event (src,
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new ("custom", NULL, NULL)));
+
+  buf = gst_buffer_new_and_alloc (2);
+  caps = gst_caps_from_string ("video/x-raw");
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 5;
+
+  sample = gst_sample_new (buf, caps, &segment, NULL);
+  fail_unless (gst_app_src_push_sample (GST_APP_SRC_CAST (src),
+          sample) == GST_FLOW_OK);
+
+  gst_caps_unref (caps);
+  gst_buffer_unref (buf);
+  gst_sample_unref (sample);
+
+  g_mutex_lock (&check_mutex);
+  while (!done)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsrc (src);
+}
+
+GST_END_TEST;
+
+/* send a custom event to appsrc between the caps and the first buffer */
+GST_START_TEST (test_appsrc_send_event_between_caps_buffer)
+{
+  GstElement *src;
+  GstBuffer *buf;
+  GstCaps *caps;
+
+  src = setup_appsrc ();
+  g_object_set (src, "format", GST_FORMAT_TIME, NULL);
+
+  ASSERT_SET_STATE (src, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  gst_pad_set_event_function (mysinkpad, send_event_before_buffer_event_func);
+  gst_pad_set_chain_function (mysinkpad, send_event_before_buffer_chain_func);
+
+  expected_obj = EXPECTED_STREAM_START;
+
+  caps = gst_caps_from_string ("video/x-raw");
+  gst_app_src_set_caps (GST_APP_SRC_CAST (src), caps);
+  gst_caps_unref (caps);
+
+  /* send a custom event and then the first buffer */
+  gst_element_send_event (src,
+      gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+          gst_structure_new ("custom", NULL, NULL)));
+
+  buf = gst_buffer_new_and_alloc (2);
+  GST_BUFFER_OFFSET (buf) = 0;
+  fail_unless (gst_app_src_push_buffer (GST_APP_SRC_CAST (src),
+          buf) == GST_FLOW_OK);
+
+  g_mutex_lock (&check_mutex);
+  while (!done)
+    g_cond_wait (&check_cond, &check_mutex);
+  g_mutex_unlock (&check_mutex);
+
+  ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
+  cleanup_appsrc (src);
+}
+
+GST_END_TEST;
+
 static Suite *
 appsrc_suite (void)
 {
@@ -1461,6 +1647,9 @@ appsrc_suite (void)
   tcase_add_test (tc_chain, test_appsrc_custom_segment_twice);
   tcase_add_test (tc_chain, test_appsrc_limits);
   tcase_add_test (tc_chain, test_appsrc_send_custom_event);
+  tcase_add_test (tc_chain, test_appsrc_send_event_before_buffer);
+  tcase_add_test (tc_chain, test_appsrc_send_event_before_sample);
+  tcase_add_test (tc_chain, test_appsrc_send_event_between_caps_buffer);
 
   if (RUNNING_ON_VALGRIND)
     tcase_add_loop_test (tc_chain, test_appsrc_block_deadlock, 0, 5);
