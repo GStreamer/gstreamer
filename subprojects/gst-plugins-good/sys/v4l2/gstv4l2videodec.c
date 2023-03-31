@@ -472,9 +472,9 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (decoder, "Done draining buffers");
 
-  /* Draining of the capture buffer has completed. 
+  /* Draining of the capture buffer has completed.
    * If any pending frames remain at this point there is a decoder error.
-   * This has been observed as a driver bug, where eos is sent too early.   
+   * This has been observed as a driver bug, where eos is sent too early.
    * These frames will never be rendered, so drop them now with a warning */
 
   pending_frames = gst_video_decoder_get_frames (decoder);
