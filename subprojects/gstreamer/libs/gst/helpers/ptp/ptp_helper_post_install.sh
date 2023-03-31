@@ -17,8 +17,8 @@ case "$with_ptp_helper_permissions" in
     ls -l "$ptp_helper"
     ;;
   capabilities)
-    echo "Calling $setcap cap_net_bind_service,cap_net_admin+ep $ptp_helper"
-    $setcap cap_net_bind_service,cap_net_admin+ep "$ptp_helper" || true
+    echo "Calling $setcap cap_sys_nice,cap_net_bind_service,cap_net_admin+ep $ptp_helper"
+    $setcap cap_sys_nice,cap_net_bind_service,cap_net_admin+ep "$ptp_helper" || true
     ;;
   none)
     echo "No perms/caps to set for $ptp_helper"

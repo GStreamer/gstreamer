@@ -178,6 +178,8 @@ pub mod unix {
     #[cfg(not(any(target_os = "linux", target_os = "solaris", target_os = "illumos")))]
     pub const IF_NAMESIZE: usize = 16;
 
+    pub const PRIO_PROCESS: c_int = 0;
+
     extern "C" {
         #[cfg_attr(
             all(target_os = "macos", target_arch = "x86"),
@@ -220,6 +222,8 @@ pub mod unix {
 
         pub fn getifaddrs(ifap: *mut *mut ifaddrs) -> c_int;
         pub fn freeifaddrs(ifa: *mut ifaddrs);
+
+        pub fn setpriority(which: c_int, who: c_int, prio: c_int) -> c_int;
     }
 
     #[cfg(any(target_os = "linux", target_os = "solaris", target_os = "illumos"))]

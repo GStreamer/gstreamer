@@ -11,6 +11,25 @@
 use crate::error::Error;
 
 pub fn set_priority() -> Result<(), Error> {
+    #[cfg(unix)]
+    {
+        use std::io;
+
+        use crate::{bail, ffi::unix::*};
+
+        // SAFETY: Setting the process priority can happen at any time. A negative
+        // priority require special permissions, which should've been given to the process.
+        //
+        // On error it returns a negative value.
+        unsafe {
+            if setpriority(PRIO_PROCESS, 0, -5) < 0 {
+                bail!(
+                    source: io::Error::last_os_error(),
+                    "Failed to set process priority"
+                );
+            }
+        }
+    }
     #[cfg(windows)]
     {
         use std::io;
