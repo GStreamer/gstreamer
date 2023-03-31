@@ -1629,6 +1629,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         GstCaps *next_caps = GST_CAPS (obj);
         gboolean caps_changed = TRUE;
 
+        GST_DEBUG_OBJECT (appsrc, "pop caps %" GST_PTR_FORMAT, next_caps);
+
         if (next_caps && priv->current_caps)
           caps_changed = !gst_caps_is_equal (next_caps, priv->current_caps);
         else
@@ -1650,6 +1652,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       if (GST_IS_BUFFER (obj)) {
         GstBuffer *buffer = GST_BUFFER (obj);
 
+        GST_DEBUG_OBJECT (appsrc, "pop buffer %" GST_PTR_FORMAT, buffer);
+
         /* Mark the buffer as DISCONT if we previously dropped a buffer
          * instead of outputting it */
         if (priv->need_discont_downstream) {
@@ -1663,6 +1667,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
         GstBufferList *buffer_list;
 
         buffer_list = GST_BUFFER_LIST (obj);
+        GST_DEBUG_OBJECT (appsrc, "pop buffer list %" GST_PTR_FORMAT,
+            buffer_list);
 
         /* Mark the first buffer of the buffer list as DISCONT if we
          * previously dropped a buffer instead of outputting it */
