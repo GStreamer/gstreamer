@@ -570,7 +570,7 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstVideoInfo info;
   GstVideoCodecState *output_state;
-  GstCaps *acquired_caps, *available_caps, *caps, *filter;
+  GstCaps *acquired_caps, *fixation_caps, *available_caps, *caps, *filter;
   GstStructure *st;
   GstBufferPool *cpool;
   gboolean active;
@@ -598,7 +598,8 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
     /* Create caps from the acquired format, remove the format field */
     acquired_caps = gst_video_info_to_caps (&info);
     GST_DEBUG_OBJECT (self, "Acquired caps: %" GST_PTR_FORMAT, acquired_caps);
-    st = gst_caps_get_structure (acquired_caps, 0);
+    fixation_caps = gst_caps_copy (acquired_caps);
+    st = gst_caps_get_structure (fixation_caps, 0);
     gst_structure_remove_fields (st, "format", "colorimetry", "chroma-site",
         NULL);
 
@@ -610,10 +611,10 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
      * with downstream, not coded size. */
     gst_caps_map_in_place (available_caps, gst_v4l2_video_remove_padding, self);
 
-    filter = gst_caps_intersect_full (available_caps, acquired_caps,
+    filter = gst_caps_intersect_full (available_caps, fixation_caps,
         GST_CAPS_INTERSECT_FIRST);
     GST_DEBUG_OBJECT (self, "Filtered caps: %" GST_PTR_FORMAT, filter);
-    gst_caps_unref (acquired_caps);
+    gst_caps_unref (fixation_caps);
     gst_caps_unref (available_caps);
     caps = gst_pad_peer_query_caps (decoder->srcpad, filter);
     gst_caps_unref (filter);
@@ -622,6 +623,14 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
     if (gst_caps_is_empty (caps)) {
       gst_caps_unref (caps);
       goto not_negotiated;
+    }
+
+    /* Prefer the acquired caps over anything suggested downstream, this ensure
+     * that we preserves the bit depth, as we don't have any fancy fixation
+     * process */
+    if (gst_caps_is_subset (acquired_caps, caps)) {
+      gst_caps_unref (acquired_caps);
+      goto use_acquired_caps;
     }
 
     /* Fixate pixel format */
@@ -634,6 +643,8 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
       gst_video_info_from_caps (&info, caps);
     else
       gst_v4l2_clear_error (&error);
+
+  use_acquired_caps:
     gst_caps_unref (caps);
 
     output_state = gst_video_decoder_set_output_state (decoder,
@@ -644,18 +655,18 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
     output_state->info.colorimetry = info.colorimetry;
     gst_video_codec_state_unref (output_state);
 
-    cpool = gst_v4l2_object_get_buffer_pool (self->v4l2capture);
-    gst_v4l2_buffer_pool_enable_resolution_change (GST_V4L2_BUFFER_POOL
-        (cpool));
-
     if (!gst_video_decoder_negotiate (decoder)) {
-      if (cpool)
-        gst_object_unref (cpool);
       if (GST_PAD_IS_FLUSHING (decoder->srcpad))
         goto flushing;
       else
         goto not_negotiated;
     }
+
+    /* The pool may be created through gst_video_decoder_negotiate(), so must
+     * be kept after */
+    cpool = gst_v4l2_object_get_buffer_pool (self->v4l2capture);
+    gst_v4l2_buffer_pool_enable_resolution_change (GST_V4L2_BUFFER_POOL
+        (cpool));
 
     /* Ensure our internal pool is activated */
     active = gst_buffer_pool_set_active (cpool, TRUE);

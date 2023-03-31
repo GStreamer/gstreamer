@@ -2333,8 +2333,6 @@ gst_v4l2_buffer_pool_enable_resolution_change (GstV4l2BufferPool * pool)
 {
   guint32 input_id = 0;
 
-  g_return_if_fail (!gst_buffer_pool_is_active (GST_BUFFER_POOL (pool)));
-
   /* Make sure we subscribe for the current input */
   gst_v4l2_get_input (pool->obj, &input_id);
 
