@@ -28,6 +28,7 @@
 
 #include <gst/vulkan/wayland/gstvkdisplay_wayland.h>
 #include "gstvkwindow_wayland.h"
+#include "gstvkdisplay_wayland_private.h"
 
 #include "wayland_event_source.h"
 
@@ -58,6 +59,79 @@ static VkSurfaceKHR gst_vulkan_window_wayland_get_surface (GstVulkanWindow
 static gboolean
 gst_vulkan_window_wayland_get_presentation_support (GstVulkanWindow *
     window, GstVulkanDevice * device, guint32 queue_family_idx);
+
+static void
+handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
+{
+  GstVulkanWindow *window = data;
+
+  GST_DEBUG ("XDG toplevel got a \"close\" event.");
+
+  gst_vulkan_window_close (window);
+}
+
+static void
+handle_xdg_toplevel_configure (void *data, struct xdg_toplevel *xdg_toplevel,
+    int32_t width, int32_t height, struct wl_array *states)
+{
+#if 0
+  GstVulkanWindowWayland *window_wl = data;
+  const uint32_t *state;
+#endif
+  GST_DEBUG ("configure event on XDG toplevel %p, %ix%i", xdg_toplevel,
+      width, height);
+#if 0
+  // TODO: deal with resizes
+  if (width > 0 && height > 0)
+    window_resize (window_egl, width, height);
+#endif
+}
+
+static const struct xdg_toplevel_listener xdg_toplevel_listener = {
+  handle_xdg_toplevel_configure,
+  handle_xdg_toplevel_close,
+};
+
+static void
+handle_xdg_surface_configure (void *data, struct xdg_surface *xdg_surface,
+    uint32_t serial)
+{
+  xdg_surface_ack_configure (xdg_surface, serial);
+}
+
+static const struct xdg_surface_listener xdg_surface_listener = {
+  handle_xdg_surface_configure,
+};
+
+static void
+create_xdg_surface (GstVulkanWindowWayland * window_wl)
+{
+  GstVulkanDisplayWayland *display =
+      GST_VULKAN_DISPLAY_WAYLAND (GST_VULKAN_WINDOW (window_wl)->display);
+  GstVulkanDisplayWaylandPrivate *display_priv =
+      gst_vulkan_display_wayland_get_private (display);
+  struct xdg_surface *xdg_surface;
+  struct xdg_toplevel *xdg_toplevel;
+
+  GST_DEBUG ("Creating surfaces with XDG-shell");
+
+  /* First create the XDG surface */
+  xdg_surface = xdg_wm_base_get_xdg_surface (display_priv->xdg_wm_base,
+      window_wl->surface);
+  xdg_surface_add_listener (xdg_surface, &xdg_surface_listener, window_wl);
+
+  /* Then the XDG top-level */
+  xdg_toplevel = xdg_surface_get_toplevel (xdg_surface);
+  xdg_toplevel_set_title (xdg_toplevel, "Vulkan Renderer");
+  xdg_toplevel_add_listener (xdg_toplevel, &xdg_toplevel_listener, window_wl);
+
+  /* Commit the xdg_surface state */
+  wl_surface_commit (window_wl->surface);
+
+  /* And save them into the fields */
+  window_wl->xdg_surface = xdg_surface;
+  window_wl->xdg_toplevel = xdg_toplevel;
+}
 
 static void
 handle_ping (void *data, struct wl_shell_surface *shell_surface,
@@ -98,18 +172,37 @@ static const struct wl_shell_surface_listener shell_surface_listener = {
 };
 
 static void
+create_wl_shell_surface (GstVulkanWindowWayland * window_wl)
+{
+  GstVulkanDisplayWayland *display =
+      GST_VULKAN_DISPLAY_WAYLAND (GST_VULKAN_WINDOW (window_wl)->display);
+
+  GST_DEBUG ("Creating surfaces with wl_shell");
+
+  window_wl->shell_surface =
+      wl_shell_get_shell_surface (display->shell, window_wl->surface);
+  if (window_wl->queue)
+    wl_proxy_set_queue ((struct wl_proxy *) window_wl->shell_surface,
+        window_wl->queue);
+
+  wl_shell_surface_add_listener (window_wl->shell_surface,
+      &shell_surface_listener, window_wl);
+
+  wl_shell_surface_set_title (window_wl->shell_surface, "Vulkan Renderer");
+  wl_shell_surface_set_toplevel (window_wl->shell_surface);
+  GST_DEBUG_OBJECT (window_wl, "Successfully created shell surface %p",
+      window_wl->shell_surface);
+}
+
+static void
 destroy_surfaces (GstVulkanWindowWayland * window_wl)
 {
   GST_DEBUG_OBJECT (window_wl, "destroying created surfaces");
 
-  if (window_wl->shell_surface) {
-    wl_shell_surface_destroy (window_wl->shell_surface);
-    window_wl->shell_surface = NULL;
-  }
-  if (window_wl->surface) {
-    wl_surface_destroy (window_wl->surface);
-    window_wl->surface = NULL;
-  }
+  g_clear_pointer (&window_wl->xdg_toplevel, xdg_toplevel_destroy);
+  g_clear_pointer (&window_wl->xdg_surface, xdg_surface_destroy);
+  g_clear_pointer (&window_wl->shell_surface, wl_shell_surface_destroy);
+  g_clear_pointer (&window_wl->surface, wl_surface_destroy);
 }
 
 static void
@@ -117,6 +210,8 @@ create_surfaces (GstVulkanWindowWayland * window_wl)
 {
   GstVulkanDisplayWayland *display =
       GST_VULKAN_DISPLAY_WAYLAND (GST_VULKAN_WINDOW (window_wl)->display);
+  GstVulkanDisplayWaylandPrivate *display_priv =
+      gst_vulkan_display_wayland_get_private (display);
   gint width, height;
 
   if (!window_wl->surface) {
@@ -126,20 +221,10 @@ create_surfaces (GstVulkanWindowWayland * window_wl)
           window_wl->queue);
   }
 
-  if (!window_wl->shell_surface) {
-    window_wl->shell_surface =
-        wl_shell_get_shell_surface (display->shell, window_wl->surface);
-    if (window_wl->queue)
-      wl_proxy_set_queue ((struct wl_proxy *) window_wl->shell_surface,
-          window_wl->queue);
-
-    wl_shell_surface_add_listener (window_wl->shell_surface,
-        &shell_surface_listener, window_wl);
-
-    wl_shell_surface_set_title (window_wl->shell_surface, "Vulkan Renderer");
-    wl_shell_surface_set_toplevel (window_wl->shell_surface);
-    GST_DEBUG_OBJECT (window_wl, "Successfully created shell surface %p",
-        window_wl->shell_surface);
+  if (display_priv->xdg_wm_base) {
+    create_xdg_surface (window_wl);
+  } else {
+    create_wl_shell_surface (window_wl);
   }
 
   if (window_wl->window_width > 0)

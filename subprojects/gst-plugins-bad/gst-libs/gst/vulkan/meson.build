@@ -173,12 +173,32 @@ if xcb_dep.found() and xkbcommon_dep.found() and xkbcommon_x11_dep.found() and c
 endif
 
 wayland_client_dep = dependency('wayland-client', version : '>=1.4', required : get_option('wayland'))
-if wayland_client_dep.found() and cc.has_header('vulkan/vulkan_wayland.h', dependencies : vulkan_dep)
+wayland_protocols_dep = dependency('wayland-protocols', version : '>= 1.15', required : get_option('wayland'))
+wayland_scanner = find_program('wayland-scanner', required: get_option('wayland'))
+if wayland_client_dep.found() and wayland_protocols_dep.found() and wayland_scanner.found() and cc.has_header('vulkan/vulkan_wayland.h', dependencies : vulkan_dep)
+  # Generate the XDG shell interface
+  wayland_protocols_basedir = wayland_protocols_dep.get_variable('pkgdatadir')
+  xdg_shell_xml_spec = join_paths(wayland_protocols_basedir, 'stable', 'xdg-shell', 'xdg-shell.xml')
+  xdg_shell_header = custom_target('xdg-shell-client-header',
+    command: [ wayland_scanner, 'client-header', '@INPUT@', '@OUTPUT@' ],
+    input: xdg_shell_xml_spec,
+    output: 'xdg-shell-client-protocol.h',
+  )
+  xdg_shell_code = custom_target('xdg-shell-client-code',
+    command: [ wayland_scanner, 'private-code', '@INPUT@', '@OUTPUT@' ],
+    input: xdg_shell_xml_spec,
+    output: 'xdg-shell-client-protocol.c',
+  )
+
   vulkan_priv_sources += files(
     'wayland/gstvkdisplay_wayland.c',
     'wayland/gstvkwindow_wayland.c',
     'wayland/wayland_event_source.c',
   )
+  vulkan_priv_sources += [
+    xdg_shell_header,
+    xdg_shell_code,
+  ]
   vulkan_wayland_sources += files(
     'wayland/gstvkdisplay_wayland.c',
   )
