@@ -22,6 +22,7 @@
 #define __GST_VULKAN_FORMAT_H__
 
 #include <gst/vulkan/vulkan.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -122,6 +123,10 @@ struct _GstVulkanFormatInfo
 
 GST_VULKAN_API
 const GstVulkanFormatInfo *     gst_vulkan_format_get_info                      (VkFormat format);
+
+GST_VULKAN_API
+VkFormat                        gst_vulkan_format_from_video_info               (GstVideoInfo * v_info,
+                                                                                 guint plane);
 
 G_END_DECLS
 

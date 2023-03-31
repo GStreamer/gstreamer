@@ -436,3 +436,73 @@ gst_vulkan_format_get_info (VkFormat format)
 
   return NULL;
 }
+
+/* *INDENT-OFF* */
+const static struct {
+  GstVideoFormat format;
+  VkFormat vkfrmt;
+  VkFormat vkfrmts[GST_VIDEO_MAX_PLANES];
+} vk_formats_map[] = {
+  /* RGB                                                     transfer sRGB */
+  { GST_VIDEO_FORMAT_RGBx,  VK_FORMAT_R8G8B8A8_SRGB,       { VK_FORMAT_R8G8B8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_RGBA,  VK_FORMAT_R8G8B8A8_SRGB,       { VK_FORMAT_R8G8B8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_BGRx,  VK_FORMAT_B8G8R8A8_SRGB,       { VK_FORMAT_B8G8R8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_BGRA,  VK_FORMAT_B8G8R8A8_SRGB,       { VK_FORMAT_B8G8R8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_xRGB,  VK_FORMAT_UNDEFINED,           { VK_FORMAT_R8G8B8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_ARGB,  VK_FORMAT_UNDEFINED,           { VK_FORMAT_R8G8B8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_xBGR,  VK_FORMAT_UNDEFINED,           { VK_FORMAT_R8G8B8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_ABGR,  VK_FORMAT_UNDEFINED,           { VK_FORMAT_R8G8B8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_RGB,   VK_FORMAT_R8G8B8_UNORM,        { VK_FORMAT_UNDEFINED, } },
+  { GST_VIDEO_FORMAT_BGR,   VK_FORMAT_B8G8R8_UNORM,        { VK_FORMAT_UNDEFINED, } },
+  { GST_VIDEO_FORMAT_RGB16, VK_FORMAT_R5G6B5_UNORM_PACK16, { VK_FORMAT_UNDEFINED, } },
+  { GST_VIDEO_FORMAT_BGR16, VK_FORMAT_B5G6R5_UNORM_PACK16, { VK_FORMAT_UNDEFINED, } },
+  /* Gray */
+  { GST_VIDEO_FORMAT_GRAY16_BE, VK_FORMAT_R8G8_UNORM, { VK_FORMAT_UNDEFINED, } },
+  { GST_VIDEO_FORMAT_GRAY16_LE, VK_FORMAT_R8G8_UNORM, { VK_FORMAT_UNDEFINED, } },
+  { GST_VIDEO_FORMAT_GRAY8,     VK_FORMAT_R8_UNORM,   { VK_FORMAT_UNDEFINED, } },
+  /* YUV                                               planes */
+  { GST_VIDEO_FORMAT_AYUV, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8G8B8A8_UNORM, } },
+  { GST_VIDEO_FORMAT_YUY2, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8G8_UNORM, } },
+  { GST_VIDEO_FORMAT_UYVY, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8G8_UNORM, } },
+  { GST_VIDEO_FORMAT_NV12, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM, VK_FORMAT_R8G8_UNORM } },
+  { GST_VIDEO_FORMAT_NV21, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM, VK_FORMAT_R8G8_UNORM } },
+  { GST_VIDEO_FORMAT_Y444, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM,  } },
+  { GST_VIDEO_FORMAT_Y42B, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM, } },
+  { GST_VIDEO_FORMAT_Y41B, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM, } },
+  { GST_VIDEO_FORMAT_I420, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM, } },
+  { GST_VIDEO_FORMAT_YV12, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM, } },
+};
+/* *INDENT-ON* */
+
+/**
+ * gst_vulkan_format_from_video_info: (skip)
+ * @v_info: the #GstVideoInfo
+ * @plane: the plane
+ *
+ * Returns: the VkFormat to use for @v_format and @plane
+ *
+ * Since: 1.18
+ */
+VkFormat
+gst_vulkan_format_from_video_info (GstVideoInfo * v_info, guint plane)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
+    if (vk_formats_map[i].format != GST_VIDEO_INFO_FORMAT (v_info))
+      continue;
+
+    if (GST_VIDEO_INFO_IS_RGB (v_info) &&
+        (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+            GST_VIDEO_TRANSFER_SRGB)) {
+      return vk_formats_map[i].vkfrmts[0];
+    } else if (GST_VIDEO_INFO_IS_YUV (v_info) &&
+        GST_VIDEO_INFO_N_PLANES (v_info) > plane) {
+      return vk_formats_map[i].vkfrmts[plane];
+    }
+
+    return vk_formats_map[i].vkfrmt;
+  }
+
+  return VK_FORMAT_UNDEFINED;
+}
