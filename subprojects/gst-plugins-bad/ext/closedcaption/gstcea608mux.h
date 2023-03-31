@@ -47,6 +47,7 @@ struct _GstCea608Mux
 
   CCBuffer *cc_buffer;
   GstClockTime earliest_input_running_time;
+  GstClockTime start_time;
   gint n_output_buffers;
   const struct cdp_fps_entry *cdp_fps_entry;
 };
