@@ -43,6 +43,8 @@ struct _GstVulkanImageBufferPoolPrivate
   GstVideoInfo v_info;
   VkImageUsageFlags usage;
   VkMemoryPropertyFlags mem_props;
+  VkFormat vk_fmts[GST_VIDEO_MAX_PLANES];
+  int n_imgs;
 };
 
 static void gst_vulkan_image_buffer_pool_finalize (GObject * object);
@@ -99,10 +101,12 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 {
   GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  VkImageTiling tiling;
+  VkImageUsageFlags supported_usage;
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL;
   GstCapsFeatures *features;
-  gboolean ret = TRUE;
+  gboolean found, ret = TRUE;
   guint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -128,22 +132,35 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   gst_vulkan_image_buffer_pool_config_get_allocation_params (config,
       &priv->usage, &priv->mem_props);
 
+  tiling = priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
+  found = gst_vulkan_format_from_video_info_2 (vk_pool->device->physical_device,
+      &priv->v_info, tiling, FALSE, priv->vk_fmts, &priv->n_imgs,
+      &supported_usage);
+  if (!found)
+    goto no_vk_format;
+
+  if (priv->usage == 0) {
+    priv->usage = supported_usage & (VK_BUFFER_USAGE_TRANSFER_DST_BIT
+        | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT
+        | VK_IMAGE_USAGE_SAMPLED_BIT);
+  }
+
   /* get the size of the buffer to allocate */
   priv->v_info.size = 0;
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
+  for (i = 0; i < priv->n_imgs; i++) {
     GstVulkanImageMemory *img_mem;
-    VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
     guint width, height;
-    VkFormat vk_format;
 
-    vk_format = gst_vulkan_format_from_video_info (&priv->v_info, i);
-    width = GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i);
-    height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
-    if (priv->raw_caps)
-      tiling = VK_IMAGE_TILING_LINEAR;
+    if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) != priv->n_imgs) {
+      width = GST_VIDEO_INFO_WIDTH (&priv->v_info);
+      height = GST_VIDEO_INFO_HEIGHT (&priv->v_info);
+    } else {
+      width = GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i);
+      height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
+    }
 
     img_mem = (GstVulkanImageMemory *)
-        gst_vulkan_image_memory_alloc (vk_pool->device, vk_format, width,
+        gst_vulkan_image_memory_alloc (vk_pool->device, priv->vk_fmts[i], width,
         height, tiling, priv->usage, priv->mem_props);
 
     priv->v_info.offset[i] = priv->v_info.size;
@@ -174,6 +191,12 @@ wrong_caps:
         "failed getting geometry from caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
+no_vk_format:
+  {
+    GST_WARNING_OBJECT (pool, "no Vulkan format available for %s",
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&priv->v_info)));
+    return FALSE;
+  }
 }
 
 /* This function handles GstBuffer creation */
@@ -183,6 +206,9 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  VkImageTiling tiling =
+      priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
+
   GstBuffer *buf;
   guint i;
 
@@ -190,19 +216,20 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     goto no_buffer;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-    VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
-    VkFormat vk_format;
+  for (i = 0; i < priv->n_imgs; i++) {
     GstMemory *mem;
+    guint width, height;
 
-    vk_format = gst_vulkan_format_from_video_info (&priv->v_info, i);
-    if (priv->raw_caps)
-      tiling = VK_IMAGE_TILING_LINEAR;
+    if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) != priv->n_imgs) {
+      width = GST_VIDEO_INFO_WIDTH (&priv->v_info);
+      height = GST_VIDEO_INFO_HEIGHT (&priv->v_info);
+    } else {
+      width = GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i);
+      height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
+    }
 
-    mem = gst_vulkan_image_memory_alloc (vk_pool->device,
-        vk_format, GST_VIDEO_INFO_COMP_WIDTH (&priv->v_info, i),
-        GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i), tiling, priv->usage,
-        priv->mem_props);
+    mem = gst_vulkan_image_memory_alloc (vk_pool->device, priv->vk_fmts[i],
+        width, height, tiling, priv->usage, priv->mem_props);
     if (!mem) {
       gst_buffer_unref (buf);
       goto mem_create_failed;
