@@ -44,6 +44,7 @@ G_LOCK_DEFINE_STATIC (create_lock);
 #define WM_GST_D3D11_DESTROY_INTERNAL_WINDOW (WM_USER + 3)
 #define WM_GST_D3D11_MOVE_WINDOW (WM_USER + 4)
 #define WM_GST_D3D11_SHOW_WINDOW (WM_USER + 5)
+#define WS_GST_D3D11 (WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW)
 
 static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
@@ -579,8 +580,7 @@ gst_d3d11_window_win32_create_internal_window (GstD3D11WindowWin32 * self)
 
   self->internal_hwnd = CreateWindowExA (0,
       "GSTD3D11",
-      "Direct3D11 renderer",
-      WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW,
+      "Direct3D11 renderer", WS_GST_D3D11,
       CW_USEDEFAULT, CW_USEDEFAULT,
       0, 0, (HWND) NULL, (HMENU) NULL, hinstance, self);
 
@@ -1136,14 +1136,22 @@ gst_d3d11_window_win32_show (GstD3D11Window * window)
     /* if no parent the real size has to be set now because this has not been done
      * when at window creation */
     if (!self->external_hwnd) {
-      RECT rect;
-      GetClientRect (self->internal_hwnd, &rect);
-      width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
-      height +=
-          2 * GetSystemMetrics (SM_CYSIZEFRAME) +
-          GetSystemMetrics (SM_CYCAPTION);
-      MoveWindow (self->internal_hwnd, rect.left, rect.top, width,
-          height, FALSE);
+      RECT rect = { 0, };
+
+      rect.right = width;
+      rect.bottom = height;
+
+      if (AdjustWindowRect (&rect, WS_GST_D3D11, FALSE)) {
+        width = rect.right - rect.left;
+        height = rect.bottom - rect.top;
+      } else {
+        width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
+        height +=
+            2 * GetSystemMetrics (SM_CYSIZEFRAME) +
+            GetSystemMetrics (SM_CYCAPTION);
+      }
+
+      MoveWindow (self->internal_hwnd, 0, 0, width, height, FALSE);
       ShowWindow (self->internal_hwnd, SW_SHOW);
     } else if (self->internal_hwnd) {
       /* ShowWindow will throw message to message pumping thread (app thread)
