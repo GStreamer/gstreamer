@@ -86,7 +86,7 @@ typedef enum
       D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_BLEND,
   GST_D3D11_DEINTERLACE_METHOD_BOB =
       D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_BOB,
-  GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE =
+  GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE =
       D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_ADAPTIVE,
   GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION =
       D3D11_VIDEO_PROCESSOR_PROCESSOR_CAPS_DEINTERLACE_MOTION_COMPENSATION,
@@ -99,7 +99,7 @@ DEFINE_ENUM_FLAG_OPERATORS (GstD3D11DeinterlaceMethod);
 #define DEINTERLACE_METHOD_ALL \
     ((GstD3D11DeinterlaceMethod) (GST_D3D11_DEINTERLACE_METHOD_BLEND | \
         GST_D3D11_DEINTERLACE_METHOD_BOB | \
-        GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE | \
+        GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE | \
         GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION))
 
 /**
@@ -124,7 +124,7 @@ gst_d3d11_deinterlace_method_type (void)
       {GST_D3D11_DEINTERLACE_METHOD_BOB,
           "Bob: Interpolating missing lines by using the adjacent lines. "
             "Framerate will be doubled (e,g, 60i -> 60p)", "bob"},
-      {GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE,
+      {GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE,
             "Adaptive: Interpolating missing lines by using spatial/temporal references. "
             "Framerate will be doubled (e,g, 60i -> 60p)",
           "adaptive"},
@@ -511,7 +511,7 @@ gst_d3d11_deinterlace_update_method (GstD3D11Deinterlace * self)
   /* Single method was requested? */
   if (self->method == GST_D3D11_DEINTERLACE_METHOD_BLEND ||
       self->method == GST_D3D11_DEINTERLACE_METHOD_BOB ||
-      self->method == GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE ||
+      self->method == GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE ||
       self->method == GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION) {
     if (self->method == requested_method)
       updated = FALSE;
@@ -520,9 +520,9 @@ gst_d3d11_deinterlace_update_method (GstD3D11Deinterlace * self)
     if ((self->method & GST_D3D11_DEINTERLACE_METHOD_BOB) ==
         GST_D3D11_DEINTERLACE_METHOD_BOB) {
       self->method = GST_D3D11_DEINTERLACE_METHOD_BOB;
-    } else if ((self->method & GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE) ==
-        GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE) {
-      self->method = GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE;
+    } else if ((self->method & GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE) ==
+        GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE) {
+      self->method = GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE;
     } else if ((self->method & GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION)
         == GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION) {
       self->method = GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION;
@@ -925,7 +925,7 @@ gst_d3d11_deinterlace_propose_allocation (GstBaseTransform * trans,
      * a single interlaced frame. To determine timestamp and duration,
      * we might need to hold one past frame if buffer duration is unknown */
     min_buffers = 2;
-  } else if (self->method == GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE ||
+  } else if (self->method == GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE ||
       self->method == GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION) {
     /* For advanced deinterlacing methods, we will hold more frame so that
      * device can use them as reference frames */
@@ -2306,7 +2306,7 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
   bob = IS_SUPPORTED_METHOD (supported_methods,
       GST_D3D11_DEINTERLACE_METHOD_BOB);
   adaptive = IS_SUPPORTED_METHOD (supported_methods,
-      GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE);
+      GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE);
   mocomp = IS_SUPPORTED_METHOD (supported_methods,
       GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION);
 #undef IS_SUPPORTED_METHOD
@@ -2317,7 +2317,7 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
   /* Drop all not supported methods from flags */
   supported_methods = supported_methods &
       (GST_D3D11_DEINTERLACE_METHOD_BLEND | GST_D3D11_DEINTERLACE_METHOD_BOB |
-      GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE |
+      GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE |
       GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION);
 
   /* Prefer bob, it's equivalent to "linear" which is default mode of
@@ -2328,7 +2328,7 @@ gst_d3d11_deinterlace_register (GstPlugin * plugin, GstD3D11Device * device,
   if (bob) {
     default_method = GST_D3D11_DEINTERLACE_METHOD_BOB;
   } else if (adaptive) {
-    default_method = GST_D3D11_DEINTERLACE_METHOD_ADAPTVIE;
+    default_method = GST_D3D11_DEINTERLACE_METHOD_ADAPTIVE;
   } else if (mocomp) {
     default_method = GST_D3D11_DEINTERLACE_METHOD_MOTION_COMPENSATION;
   } else if (blend) {
