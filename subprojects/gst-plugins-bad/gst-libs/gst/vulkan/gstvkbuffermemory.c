@@ -126,8 +126,8 @@ _vk_buffer_mem_new_alloc_with_buffer_info (GstAllocator * allocator,
       &params, buffer_info->size, user_data, notify);
   mem->buffer = buffer;
 
-  if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
-          mem->requirements.memoryTypeBits, mem_prop_flags, &type_idx))
+  if (!gst_vulkan_memory_find_memory_type_index_with_requirements (device,
+          &mem->requirements, mem_prop_flags, &type_idx))
     goto error;
 
   mem->vk_mem = (GstVulkanMemory *) gst_vulkan_memory_alloc (device, type_idx,

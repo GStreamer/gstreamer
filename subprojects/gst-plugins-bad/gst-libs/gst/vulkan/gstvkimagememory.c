@@ -169,8 +169,8 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
           "vkGetPhysicalDeviceImageFormatProperties") < 0)
     goto vk_error;
 
-  if (!gst_vulkan_memory_find_memory_type_index_with_type_properties (device,
-          mem->requirements.memoryTypeBits, mem_prop_flags, &type_idx))
+  if (!gst_vulkan_memory_find_memory_type_index_with_requirements (device,
+          &mem->requirements, mem_prop_flags, &type_idx))
     goto error;
 
   if ((mem->requirements.alignment & (mem->requirements.alignment - 1)) != 0) {

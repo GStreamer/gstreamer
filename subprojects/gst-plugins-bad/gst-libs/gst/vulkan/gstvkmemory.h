@@ -138,10 +138,11 @@ GstMemory *     gst_vulkan_memory_alloc         (GstVulkanDevice * device,
                                                  VkMemoryPropertyFlags mem_prop_flags);
 
 GST_VULKAN_API
-gboolean        gst_vulkan_memory_find_memory_type_index_with_type_properties   (GstVulkanDevice * device,
-                                                                                 guint32 type_bits,
+gboolean       gst_vulkan_memory_find_memory_type_index_with_requirements       (GstVulkanDevice * device,
+                                                                                 VkMemoryRequirements * req,
                                                                                  VkMemoryPropertyFlags properties,
                                                                                  guint32 * type_index);
+
 
 G_END_DECLS
 

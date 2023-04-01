@@ -236,34 +236,39 @@ _vk_mem_free (GstAllocator * allocator, GstMemory * memory)
 }
 
 /**
- * gst_vulkan_memory_find_memory_type_index_with_type_properties:
+ * gst_vulkan_memory_find_memory_type_index_with_requirements:
  * @device: a #GstVulkanDevice
- * @type_bits: memory type bits to search for
+ * @req:  memory requirements to look for
  * @properties: memory properties to search for
- * @type_index: resulting index of the memory type
+ * @type_index: (out): resulting index of the memory type
  *
  * Returns: whether a valid memory type could be found
  *
- * Since: 1.18
+ * Since: 1.24
  */
 gboolean
-gst_vulkan_memory_find_memory_type_index_with_type_properties (GstVulkanDevice *
-    device, guint32 type_bits, VkMemoryPropertyFlags properties,
+gst_vulkan_memory_find_memory_type_index_with_requirements (GstVulkanDevice *
+    device, VkMemoryRequirements * req, VkMemoryPropertyFlags properties,
     guint32 * type_index)
 {
   guint32 i;
+  VkPhysicalDeviceMemoryProperties *props;
+
+  g_return_val_if_fail (GST_IS_VULKAN_DEVICE (device), FALSE);
+
+  props = &device->physical_device->memory_properties;
 
   /* Search memtypes to find first index with those properties */
-  for (i = 0; i < 32; i++) {
-    if ((type_bits & 1) == 1) {
-      /* Type is available, does it match user properties? */
-      if ((device->physical_device->memory_properties.memoryTypes[i].
-              propertyFlags & properties) == properties) {
-        *type_index = i;
-        return TRUE;
-      }
-    }
-    type_bits >>= 1;
+  for (i = 0; i < props->memoryTypeCount; i++) {
+    if (!(req->memoryTypeBits & (1 << i)))
+      continue;
+    if ((props->memoryTypes[i].propertyFlags & properties) != properties)
+      continue;
+    if (req->size > props->memoryHeaps[props->memoryTypes[i].heapIndex].size)
+      continue;
+
+    *type_index = i;
+    return TRUE;
   }
 
   return FALSE;
