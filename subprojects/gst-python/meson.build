@@ -131,6 +131,11 @@ configinc = include_directories('.')
 
 meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.26.0', meson.project_version())
 
+# dist common files from monorepo root
+if not meson.is_subproject()
+  meson.add_dist_script('scripts/dist-common-files.py', meson.project_version())
+endif
+
 pkgconfig = import('pkgconfig')
 plugins_install_dir = join_paths(get_option('libdir'), 'gstreamer-1.0')
 python_plugin_install_dir = join_paths(plugins_install_dir, 'python')
