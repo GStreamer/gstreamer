@@ -258,6 +258,11 @@ configure_file(output: 'config.h', configuration: cdata)
 
 meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.26.0', meson.project_version())
 
+# dist common files from monorepo root
+if not meson.is_subproject()
+  meson.add_dist_script('scripts/dist-common-files.py', meson.project_version())
+endif
+
 gst_plugins = []
 foreach plugin: plugins
   pkgconfig.generate(plugin, install_dir: plugins_pkgconfig_install_dir)
