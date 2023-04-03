@@ -829,6 +829,7 @@ cerbero trigger:
     - ci/gitlab/trigger_cerbero_pipeline.py
 
   rules:
+    - if: '$MESON_COMMIT'
     # Never run post merge
     - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
       when: never
