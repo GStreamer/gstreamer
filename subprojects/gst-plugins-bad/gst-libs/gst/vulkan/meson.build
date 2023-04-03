@@ -32,6 +32,7 @@ vulkan_sources = files(
   'gstvkswapper.c',
   'gstvktrash.c',
   'gstvkvideofilter.c',
+  'gstvkvideoutils.c',
   'gstvkutils.c',
   'gstvkwindow.c',
 )
@@ -66,6 +67,7 @@ vulkan_headers = files(
   'gstvktrash.h',
   'gstvkutils.h',
   'gstvkvideofilter.h',
+  'gstvkvideoutils.h',
   'gstvkwindow.h',
   'vulkan-prelude.h',
   'vulkan_fwd.h',
