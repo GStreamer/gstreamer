@@ -31,6 +31,9 @@ run_main_with_nsapp (ThreadArgs args)
   GThread *gst_thread;
 
   [NSApplication sharedApplication]; 
+  if ([NSApp activationPolicy] == NSApplicationActivationPolicyProhibited) {
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyAccessory];
+  }
   gst_thread = g_thread_new ("macos-gst-thread", (GThreadFunc) gst_thread_func, &args);
   [NSApp run];
 
