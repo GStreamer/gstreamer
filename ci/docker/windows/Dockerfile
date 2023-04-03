@@ -58,6 +58,9 @@ RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git co
 COPY install_mingw.ps1 C:\
 RUN C:\install_mingw.ps1
 
+COPY install_rust.ps1 C:\
+RUN C:\install_rust.ps1
+
 ARG DEFAULT_BRANCH="main"
 
 COPY prepare_gst_env.ps1 C:\
