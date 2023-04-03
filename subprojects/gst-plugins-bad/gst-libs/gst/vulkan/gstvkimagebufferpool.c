@@ -45,6 +45,8 @@ struct _GstVulkanImageBufferPoolPrivate
   VkMemoryPropertyFlags mem_props;
   VkFormat vk_fmts[GST_VIDEO_MAX_PLANES];
   int n_imgs;
+  gboolean has_profile;
+  GstVulkanVideoProfile profile;
 };
 
 static void gst_vulkan_image_buffer_pool_finalize (GObject * object);
@@ -79,9 +81,29 @@ gst_vulkan_image_buffer_pool_config_set_allocation_params (GstStructure *
       G_TYPE_UINT, mem_properties, NULL);
 }
 
+/**
+ * gst_vulkan_image_buffer_pool_config_set_decode_caps:
+ * @config: the #GstStructure with the pool's configuration.
+ * @caps: Upstream decode caps.
+ *
+ * Decode @caps are used when the buffers are going to be used either as decoded
+ * dest or DPB images.
+ *
+ * Since: 1.24
+ */
+void
+gst_vulkan_image_buffer_pool_config_set_decode_caps (GstStructure * config,
+    GstCaps * caps)
+{
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  gst_structure_set (config, "decode-caps", GST_TYPE_CAPS, caps, NULL);
+}
+
 static inline gboolean
 gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
-    config, VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props)
+    config, VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props,
+    GstCaps ** decode_caps)
 {
   if (!gst_structure_get_uint (config, "usage", usage)) {
     *usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
@@ -91,6 +113,9 @@ gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
 
   if (!gst_structure_get_uint (config, "memory-properties", mem_props))
     *mem_props = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+
+  if (decode_caps)
+    gst_structure_get (config, "decode-caps", GST_TYPE_CAPS, decode_caps, NULL);
 
   return TRUE;
 }
@@ -105,9 +130,9 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   VkImageUsageFlags supported_usage;
   VkImageCreateInfo image_info;
   guint min_buffers, max_buffers;
-  GstCaps *caps = NULL;
+  GstCaps *caps = NULL, *decode_caps = NULL;
   GstCapsFeatures *features;
-  gboolean found, ret = TRUE;
+  gboolean found, no_multiplane = FALSE, ret = TRUE;
   guint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -131,11 +156,31 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
       GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
 
   gst_vulkan_image_buffer_pool_config_get_allocation_params (config,
-      &priv->usage, &priv->mem_props);
+      &priv->usage, &priv->mem_props, &decode_caps);
+
+  priv->has_profile = FALSE;
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  if (decode_caps && ((priv->usage
+              & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+                  | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
+    priv->has_profile =
+        gst_vulkan_video_profile_from_caps (&priv->profile, decode_caps);
+  }
+#endif
+  gst_clear_caps (&decode_caps);
+
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  if (((priv->usage & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+                  | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)
+      && !priv->has_profile)
+    goto missing_profile;
+
+  no_multiplane = !priv->has_profile;
+#endif
 
   tiling = priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
   found = gst_vulkan_format_from_video_info_2 (vk_pool->device->physical_device,
-      &priv->v_info, tiling, FALSE, priv->vk_fmts, &priv->n_imgs,
+      &priv->v_info, tiling, no_multiplane, priv->vk_fmts, &priv->n_imgs,
       &supported_usage);
   if (!found)
     goto no_vk_format;
@@ -170,6 +215,13 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   for (i = 0; i < priv->n_imgs; i++) {
     GstVulkanImageMemory *img_mem;
     guint width, height;
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    VkVideoProfileListInfoKHR profile_list = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
+      .profileCount = 1,
+      .pProfiles = &priv->profile.profile,
+    };
+#endif
 
     if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) != priv->n_imgs) {
       width = GST_VIDEO_INFO_WIDTH (&priv->v_info);
@@ -183,6 +235,10 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     /* *INDENT-OFF* */
     image_info.extent = (VkExtent3D) { width, height, 1 };
     /* *INDENT-ON* */
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    if (priv->has_profile)
+      image_info.pNext = &profile_list;
+#endif
 
     img_mem = (GstVulkanImageMemory *)
         gst_vulkan_image_memory_alloc_with_image_info (vk_pool->device,
@@ -229,6 +285,13 @@ mem_create_failed:
     GST_WARNING_OBJECT (pool, "Could not create Vulkan Memory");
     return FALSE;
   }
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+missing_profile:
+  {
+    GST_WARNING_OBJECT (pool, "missing or invalid decode-caps");
+    return FALSE;
+  }
+#endif
 }
 
 /* This function handles GstBuffer creation */
@@ -284,6 +347,10 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     /* *INDENT-OFF* */
     image_info.extent = (VkExtent3D) { width, height, 1 };
     /* *INDENT-ON* */
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    if (priv->has_profile)
+      image_info.pNext = &priv->profile;
+#endif
 
     mem = gst_vulkan_image_memory_alloc_with_image_info (vk_pool->device,
         &image_info, priv->mem_props);

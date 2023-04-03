@@ -78,12 +78,18 @@ struct _GstVulkanImageBufferPoolClass
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVulkanImageBufferPool, gst_object_unref);
 
 GST_VULKAN_API
-GstBufferPool *gst_vulkan_image_buffer_pool_new (GstVulkanDevice * device);
+GstBufferPool * gst_vulkan_image_buffer_pool_new        (GstVulkanDevice * device);
 
 GST_VULKAN_API
-void gst_vulkan_image_buffer_pool_config_set_allocation_params (GstStructure * config,
-                                                                VkImageUsageFlags usage,
-                                                                VkMemoryPropertyFlags mem_properties);
+void            gst_vulkan_image_buffer_pool_config_set_allocation_params
+                                                        (GstStructure * config,
+                                                         VkImageUsageFlags usage,
+                                                         VkMemoryPropertyFlags mem_properties);
+
+GST_VULKAN_API
+void            gst_vulkan_image_buffer_pool_config_set_decode_caps
+                                                        (GstStructure * config,
+                                                         GstCaps * caps);
 
 G_END_DECLS
 
