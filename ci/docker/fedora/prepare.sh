@@ -15,7 +15,7 @@ sudo dnf install -y \
   "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
   "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 
-dnf upgrade -y
+dnf upgrade -y && dnf distro-sync -y
 
 # install rest of the extra deps
 dnf install -y \
@@ -222,8 +222,8 @@ rpm -i --reinstall *.rpm
 rm -f *.rpm
 
 # Install Rust
-RUSTUP_VERSION=1.25.1
-RUST_VERSION=1.63.0
+RUSTUP_VERSION=1.25.2
+RUST_VERSION=1.68.2
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 dnf install -y wget
