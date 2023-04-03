@@ -55,6 +55,7 @@ variables:
     -Drtsp_server=enabled
     -Dvaapi=enabled
     -Dsharp=disabled
+    -Drs=disabled
     -Dgpl=enabled
 
   MESON_GST_WERROR: >
@@ -245,6 +246,9 @@ commitlint:
 # build setup templates
 #
 .build_template: &build
+  - export RUSTUP_HOME="/usr/local/rustup"
+  - export CARGO_HOME="/usr/local/cargo"
+  - export PATH="/usr/local/cargo/bin:$PATH"
   - date -R
   - ci/scripts/handle-subprojects-cache.py subprojects/
   - date -R
@@ -293,7 +297,6 @@ commitlint:
   -Domx=enabled
   -Dgst-omx:target=generic
   -Ddoc=disabled
-  -Drs=disabled
   ${MESON_BUILDTYPE_ARGS}
   ${MESON_GST_WERROR}
 
