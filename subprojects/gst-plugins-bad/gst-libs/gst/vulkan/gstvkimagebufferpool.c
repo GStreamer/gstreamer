@@ -103,6 +103,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   VkImageTiling tiling;
   VkImageUsageFlags supported_usage;
+  VkImageCreateInfo image_info;
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL;
   GstCapsFeatures *features;
@@ -146,6 +147,25 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   }
 
   /* get the size of the buffer to allocate */
+  /* *INDENT-OFF* */
+  image_info = (VkImageCreateInfo) {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .pNext = NULL,
+    .flags = 0,
+    .imageType = VK_IMAGE_TYPE_2D,
+    /* .format = fill per image,  */
+    /* .extent = fill per plane, */
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = tiling,
+    .usage = priv->usage,
+    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    .queueFamilyIndexCount = 0,
+    .pQueueFamilyIndices = NULL,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+  };
+  /* *INDENT-ON* */
   priv->v_info.size = 0;
   for (i = 0; i < priv->n_imgs; i++) {
     GstVulkanImageMemory *img_mem;
@@ -159,9 +179,16 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
       height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
     }
 
+    image_info.format = priv->vk_fmts[i];
+    /* *INDENT-OFF* */
+    image_info.extent = (VkExtent3D) { width, height, 1 };
+    /* *INDENT-ON* */
+
     img_mem = (GstVulkanImageMemory *)
-        gst_vulkan_image_memory_alloc (vk_pool->device, priv->vk_fmts[i], width,
-        height, tiling, priv->usage, priv->mem_props);
+        gst_vulkan_image_memory_alloc_with_image_info (vk_pool->device,
+        &image_info, priv->mem_props);
+    if (!img_mem)
+      goto mem_create_failed;
 
     priv->v_info.offset[i] = priv->v_info.size;
     priv->v_info.size += img_mem->requirements.size;
@@ -197,6 +224,11 @@ no_vk_format:
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&priv->v_info)));
     return FALSE;
   }
+mem_create_failed:
+  {
+    GST_WARNING_OBJECT (pool, "Could not create Vulkan Memory");
+    return FALSE;
+  }
 }
 
 /* This function handles GstBuffer creation */
@@ -208,9 +240,29 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   VkImageTiling tiling =
       priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
-
+  VkImageCreateInfo image_info;
   GstBuffer *buf;
   guint i;
+
+  /* *INDENT-OFF* */
+  image_info = (VkImageCreateInfo) {
+    .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+    .pNext = NULL,
+    .flags = 0,
+    .imageType = VK_IMAGE_TYPE_2D,
+    /* .format = fill per image,  */
+    /* .extent = fill per plane, */
+    .mipLevels = 1,
+    .arrayLayers = 1,
+    .samples = VK_SAMPLE_COUNT_1_BIT,
+    .tiling = tiling,
+    .usage = priv->usage,
+    .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
+    .queueFamilyIndexCount = 0,
+    .pQueueFamilyIndices = NULL,
+    .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+  };
+  /* *INDENT-ON* */
 
   if (!(buf = gst_buffer_new ())) {
     goto no_buffer;
@@ -228,8 +280,13 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
       height = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i);
     }
 
-    mem = gst_vulkan_image_memory_alloc (vk_pool->device, priv->vk_fmts[i],
-        width, height, tiling, priv->usage, priv->mem_props);
+    image_info.format = priv->vk_fmts[i];
+    /* *INDENT-OFF* */
+    image_info.extent = (VkExtent3D) { width, height, 1 };
+    /* *INDENT-ON* */
+
+    mem = gst_vulkan_image_memory_alloc_with_image_info (vk_pool->device,
+        &image_info, priv->mem_props);
     if (!mem) {
       gst_buffer_unref (buf);
       goto mem_create_failed;
