@@ -4142,3 +4142,66 @@ gst_base_src_submit_buffer_list (GstBaseSrc * src, GstBufferList * buffer_list)
   GST_LOG_OBJECT (src, "%u buffers submitted in buffer list",
       gst_buffer_list_length (buffer_list));
 }
+
+/**
+ * gst_base_src_push_segment:
+ * @src: a #GstBaseSrc
+ * @segment: a pointer to a #GstSegment
+ *
+ * Send a new segment downstream. This function must
+ * only be called by derived sub-classes, and only from the #GstBaseSrcClass::create function,
+ * as the stream-lock needs to be held.
+ * This method also requires that an out caps has been configured, so
+ * gst_base_src_set_caps() needs to have been called before.
+ *
+ * The format for the @segment must be identical with the current format
+ * of the source, as configured with gst_base_src_set_format().
+ *
+ * The format of @src must not be %GST_FORMAT_UNDEFINED and the format
+ * should be configured via gst_base_src_set_format() before calling this method.
+ *
+ * This is a variant of gst_base_src_new_segment() sending the segment right away,
+ * which can be useful to ensure events ordering.
+ *
+ * Returns: %TRUE if sending of new segment succeeded.
+ *
+ * Since: 1.24
+*/
+gboolean
+gst_base_src_push_segment (GstBaseSrc * src, const GstSegment * segment)
+{
+  GstEvent *seg_event;
+
+  g_return_val_if_fail (GST_IS_BASE_SRC (src), FALSE);
+  g_return_val_if_fail (segment != NULL, FALSE);
+
+  GST_OBJECT_LOCK (src);
+
+  if (src->segment.format == GST_FORMAT_UNDEFINED) {
+    /* subclass must set valid format before calling this method */
+    GST_WARNING_OBJECT (src, "segment format is not configured yet, ignore");
+    GST_OBJECT_UNLOCK (src);
+    return FALSE;
+  }
+
+  if (src->segment.format != segment->format) {
+    GST_WARNING_OBJECT (src, "segment format mismatched, ignore");
+    GST_OBJECT_UNLOCK (src);
+    return FALSE;
+  }
+
+  gst_segment_copy_into (segment, &src->segment);
+  seg_event = gst_event_new_segment (&src->segment);
+  src->priv->segment_pending = FALSE;
+  src->priv->segment_seqnum = gst_util_seqnum_next ();
+  gst_event_set_seqnum (seg_event, src->priv->segment_seqnum);
+  gst_pad_push_event (src->srcpad, seg_event);
+
+  GST_DEBUG_OBJECT (src, "Sending new segment %" GST_SEGMENT_FORMAT, segment);
+
+  GST_OBJECT_UNLOCK (src);
+
+  src->running = TRUE;
+
+  return TRUE;
+}
