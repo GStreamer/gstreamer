@@ -54,6 +54,9 @@ struct _GstCodecTimestamperClass
   gboolean      (*set_caps)      (GstCodecTimestamper * timestamper,
                                   GstCaps * caps);
 
+  GstCaps *     (*get_sink_caps) (GstCodecTimestamper * timestamper,
+                                  GstCaps      * filter);
+
   GstFlowReturn (*handle_buffer) (GstCodecTimestamper * timestamper,
                                   GstBuffer * buffer);
 };

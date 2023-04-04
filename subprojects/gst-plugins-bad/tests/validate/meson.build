@@ -6,6 +6,7 @@ endif
 tests = [
     {'path': 'opencv/cvtracker'},
     {'path': 'testsrcbin/caps_spec'},
+    {'path': 'codectimestamper/h264_propagate_caps'},
     {'path': 'wpe/load_bytes_first', 'skip': not building_wpe},
 ]
 

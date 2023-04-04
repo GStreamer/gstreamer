@@ -76,13 +76,16 @@ static GstFlowReturn gst_codec_timestamper_chain (GstPad * pad,
     GstObject * parent, GstBuffer * buffer);
 static gboolean gst_codec_timestamper_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
+static gboolean gst_codec_timestamper_sink_query (GstPad * pad,
+    GstObject * parent, GstQuery * query);
 static gboolean gst_codec_timestamper_src_query (GstPad * pad,
     GstObject * parent, GstQuery * query);
-static GstStateChangeReturn
-gst_codec_timestamper_change_state (GstElement * element,
-    GstStateChange transition);
-static void
-gst_codec_timestamper_clear_frame (GstCodecTimestamperFrame * frame);
+static GstCaps *gst_timestamper_get_caps (GstCodecTimestamper * self,
+    GstCaps * filter);
+static GstStateChangeReturn gst_codec_timestamper_change_state (GstElement *
+    element, GstStateChange transition);
+static void gst_codec_timestamper_clear_frame (GstCodecTimestamperFrame *
+    frame);
 static void gst_codec_timestamper_reset (GstCodecTimestamper * self);
 static void gst_codec_timestamper_drain (GstCodecTimestamper * self);
 
@@ -142,6 +145,9 @@ gst_codec_timestamper_class_init (GstCodecTimestamperClass * klass)
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_codec_timestamper_change_state);
 
+  /* Default implementation is correct for both H264 and H265 */
+  klass->get_sink_caps = gst_timestamper_get_caps;
+
   GST_DEBUG_CATEGORY_INIT (gst_codec_timestamper_debug, "codectimestamper", 0,
       "codectimestamper");
 
@@ -169,6 +175,9 @@ gst_codec_timestamper_init (GstCodecTimestamper * self,
       GST_DEBUG_FUNCPTR (gst_codec_timestamper_chain));
   gst_pad_set_event_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_codec_timestamper_sink_event));
+  gst_pad_set_query_function (self->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_codec_timestamper_sink_query));
+
   GST_PAD_SET_PROXY_SCHEDULING (self->sinkpad);
   GST_PAD_SET_ACCEPT_INTERSECT (self->sinkpad);
   GST_PAD_SET_ACCEPT_TEMPLATE (self->sinkpad);
@@ -580,6 +589,76 @@ gst_codec_timestamper_chain (GstPad * pad, GstObject * parent,
   }
 
   return gst_codec_timestamper_process_output_frame (self);
+}
+
+static GstCaps *
+gst_timestamper_get_caps (GstCodecTimestamper * self, GstCaps * filter)
+{
+  GstCaps *peercaps, *templ;
+  GstCaps *res, *tmp, *pcopy;
+
+  templ = gst_pad_get_pad_template_caps (self->sinkpad);
+  if (filter) {
+    GstCaps *fcopy = gst_caps_copy (filter);
+
+    peercaps = gst_pad_peer_query_caps (self->srcpad, fcopy);
+    gst_caps_unref (fcopy);
+  } else {
+    peercaps = gst_pad_peer_query_caps (self->srcpad, NULL);
+  }
+
+  pcopy = gst_caps_copy (peercaps);
+
+  res = gst_caps_intersect_full (pcopy, templ, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (pcopy);
+  gst_caps_unref (templ);
+
+  if (filter) {
+    GstCaps *tmp = gst_caps_intersect_full (res, filter,
+        GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (res);
+    res = tmp;
+  }
+
+  /* Try if we can put the downstream caps first */
+  pcopy = gst_caps_copy (peercaps);
+  tmp = gst_caps_intersect_full (pcopy, res, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (pcopy);
+  if (!gst_caps_is_empty (tmp))
+    res = gst_caps_merge (tmp, res);
+  else
+    gst_caps_unref (tmp);
+
+  gst_caps_unref (peercaps);
+  return res;
+}
+
+static gboolean
+gst_codec_timestamper_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstCodecTimestamper *self = GST_CODEC_TIMESTAMPER (parent);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CAPS:{
+      GstCaps *caps, *filter;
+      GstCodecTimestamperClass *klass = GST_CODEC_TIMESTAMPER_GET_CLASS (self);
+
+      gst_query_parse_caps (query, &filter);
+      g_assert (klass->get_sink_caps);
+      caps = klass->get_sink_caps (self, filter);
+      GST_LOG_OBJECT (self, "sink getcaps returning caps %" GST_PTR_FORMAT,
+          caps);
+      gst_query_set_caps_result (query, caps);
+      gst_caps_unref (caps);
+
+      return TRUE;
+    }
+    default:
+      break;
+  }
+
+  return gst_pad_query_default (pad, parent, query);
 }
 
 static gboolean
