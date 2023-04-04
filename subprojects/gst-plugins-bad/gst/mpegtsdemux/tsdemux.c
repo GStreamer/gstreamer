@@ -3446,25 +3446,18 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS &&
           bs->registration_id == DRF_ID_OPUS) {
         buffer_list = parse_opus_access_unit (stream);
-        if (!buffer_list) {
-          res = GST_FLOW_ERROR;
-          goto beach;
-        }
       } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
         buffer = parse_jp2k_access_unit (stream);
-        if (!buffer) {
-          res = GST_FLOW_ERROR;
-          goto beach;
-        }
       } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
           && bs->registration_id == DRF_ID_KLVA) {
         buffer_list = parse_pes_metadata_frame (stream);
-        if (!buffer_list) {
-          res = GST_FLOW_ERROR;
-          goto beach;
-        }
       } else {
         buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
+      }
+
+      if (buffer == NULL && buffer_list == NULL) {
+        res = GST_FLOW_ERROR;
+        goto beach;
       }
 
       stream->seeked_pts = stream->pts;
@@ -3501,31 +3494,19 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_PRIVATE_PES_PACKETS &&
         bs->registration_id == DRF_ID_OPUS) {
       buffer_list = parse_opus_access_unit (stream);
-      if (!buffer_list) {
-        res = GST_FLOW_ERROR;
-        goto beach;
-      }
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JP2K) {
       buffer = parse_jp2k_access_unit (stream);
-      if (!buffer) {
-        res = GST_FLOW_ERROR;
-        goto beach;
-      }
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_AUDIO_AAC_ADTS) {
       buffer = parse_aac_adts_frame (stream);
-      if (!buffer) {
-        res = GST_FLOW_ERROR;
-        goto beach;
-      }
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
         && bs->registration_id == DRF_ID_KLVA) {
       buffer_list = parse_pes_metadata_frame (stream);
-      if (!buffer_list) {
-        res = GST_FLOW_ERROR;
-        goto beach;
-      }
     } else {
       buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
+    }
+    if (buffer == NULL && buffer_list == NULL) {
+      res = GST_FLOW_ERROR;
+      goto beach;
     }
 
     if (G_UNLIKELY (stream->pending_ts && !check_pending_buffers (demux))) {
