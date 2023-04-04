@@ -92,7 +92,15 @@ struct _GstPsStream
   gint id;
   gint type;
 
-  GstClockTime segment_thresh;
+  /* Threshold for sending a GAP event on this stream */
+  GstClockTime gap_threshold;
+  /* Reference PTS used to detect gaps */
+  GstClockTime gap_ref_pts;
+  /* Number of outputted buffers */
+  guint32 nb_out_buffers;
+  /* Reference number of buffers for gaps */
+  guint32 gap_ref_buffers;
+
   GstClockTime last_ts;
 
   gboolean discont;

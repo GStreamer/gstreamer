@@ -59,8 +59,8 @@
 #define SCAN_SCR_SZ                 12
 #define SCAN_PTS_SZ                 80
 
-#define SEGMENT_THRESHOLD (300*GST_MSECOND)
-#define VIDEO_SEGMENT_THRESHOLD (500*GST_MSECOND)
+#define DEFAULT_GAP_THRESHOLD (300*GST_MSECOND)
+#define VIDEO_GAP_THRESHOLD   (500*GST_MSECOND)
 
 #define DURATION_SCAN_LIMIT         4 * 1024 * 1024
 
@@ -417,7 +417,7 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type,
   gchar *name;
   GstPsDemuxClass *klass = GST_PS_DEMUX_GET_CLASS (demux);
   GstCaps *caps;
-  GstClockTime threshold = SEGMENT_THRESHOLD;
+  GstClockTime gap_threshold = DEFAULT_GAP_THRESHOLD;
   GstEvent *event;
   gchar *stream_id;
 
@@ -449,7 +449,7 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type,
           "mpegversion", G_TYPE_INT, mpeg_version,
           "systemstream", G_TYPE_BOOLEAN, FALSE,
           "parsed", G_TYPE_BOOLEAN, FALSE, NULL);
-      threshold = VIDEO_SEGMENT_THRESHOLD;
+      gap_threshold = VIDEO_GAP_THRESHOLD;
       break;
     }
     case ST_AUDIO_MPEG1:
@@ -488,14 +488,14 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type,
       name = g_strdup_printf ("video_%02x", id);
       caps = gst_caps_new_simple ("video/x-h264",
           "stream-format", G_TYPE_STRING, "byte-stream", NULL);
-      threshold = VIDEO_SEGMENT_THRESHOLD;
+      gap_threshold = VIDEO_GAP_THRESHOLD;
       break;
     case ST_VIDEO_H265:
       template = klass->video_template;
       name = g_strdup_printf ("video_%02x", id);
       caps = gst_caps_new_simple ("video/x-h265",
           "stream-format", G_TYPE_STRING, "byte-stream", NULL);
-      threshold = VIDEO_SEGMENT_THRESHOLD;
+      gap_threshold = VIDEO_GAP_THRESHOLD;
       break;
 
     case ST_PS_AUDIO_AC3:
@@ -542,7 +542,11 @@ gst_ps_demux_create_stream (GstPsDemux * demux, gint id, gint stream_type,
   stream->type = stream_type;
   stream->pending_tags = NULL;
   stream->pad = gst_pad_new_from_template (template, name);
-  stream->segment_thresh = threshold;
+  stream->gap_threshold = gap_threshold;
+  stream->nb_out_buffers = 0;
+  stream->gap_ref_buffers = 0;
+  stream->gap_ref_pts = GST_CLOCK_TIME_NONE;
+
   gst_pad_set_event_function (stream->pad,
       GST_DEBUG_FUNCPTR (gst_ps_demux_src_event));
   gst_pad_set_query_function (stream->pad,
@@ -766,6 +770,8 @@ gst_ps_demux_send_data (GstPsDemux * demux, GstPsStream * stream,
       GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT,
       stream->id, stream->type, GST_TIME_ARGS (pts), gst_buffer_get_size (buf));
   result = gst_pad_push (stream->pad, buf);
+  stream->nb_out_buffers += 1;
+
   GST_LOG_OBJECT (demux, "result: %s", gst_flow_get_name (result));
 
   return result;
@@ -1001,13 +1007,13 @@ gst_ps_demux_clear_times (GstPsDemux * demux)
 }
 
 static inline void
-gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime new_start)
+gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime time)
 {
   GstClockTime base_time, stop;
   gint i, count = demux->found_count;
   GstEvent *event = NULL;
 
-  if (new_start == GST_CLOCK_TIME_NONE)
+  if (time == GST_CLOCK_TIME_NONE)
     return;
 
   /* Advance all lagging streams by sending a gap event */
@@ -1018,7 +1024,7 @@ gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime new_start)
   if (stop != GST_CLOCK_TIME_NONE)
     stop += base_time;
 
-  if (new_start > stop)
+  if (time > stop)
     return;
 
   /* FIXME: Handle reverse playback */
@@ -1030,19 +1036,25 @@ gst_ps_demux_send_gap_updates (GstPsDemux * demux, GstClockTime new_start)
           stream->last_ts < demux->src_segment.start + base_time)
         stream->last_ts = demux->src_segment.start + base_time;
 
-      if (stream->last_ts + stream->segment_thresh < new_start) {
+      if (stream->last_ts + stream->gap_threshold < time &&
+          stream->nb_out_buffers == stream->gap_ref_buffers &&
+          stream->gap_ref_pts != stream->last_ts) {
         /* should send segment info before gap event */
         gst_ps_demux_send_segment (demux, stream, GST_CLOCK_TIME_NONE);
 
         GST_LOG_OBJECT (demux,
             "Sending gap update to pad %s from time %" GST_TIME_FORMAT " to %"
             GST_TIME_FORMAT, GST_PAD_NAME (stream->pad),
-            GST_TIME_ARGS (stream->last_ts), GST_TIME_ARGS (new_start));
-        event =
-            gst_event_new_gap (stream->last_ts, new_start - stream->last_ts);
+            GST_TIME_ARGS (stream->last_ts), GST_TIME_ARGS (time));
+        event = gst_event_new_gap (stream->last_ts, time - stream->last_ts);
         gst_pad_push_event (stream->pad, event);
-        stream->last_ts = new_start;
+        stream->last_ts = time;
       }
+
+      /* Update GAP tracking vars so we don't re-check this stream for a while */
+      stream->gap_ref_pts = time;
+      if (stream->last_ts != GST_CLOCK_TIME_NONE && stream->last_ts > time)
+        stream->gap_ref_pts = stream->last_ts;
     }
   }
 }
