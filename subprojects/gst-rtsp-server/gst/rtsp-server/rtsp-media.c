@@ -4102,12 +4102,12 @@ default_unprepare (GstRTSPMedia * media)
   gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_UNPREPARING);
 
   if (priv->eos_shutdown) {
-    GST_DEBUG ("sending EOS for shutdown");
-    /* ref so that we don't disappear */
-    gst_element_send_event (priv->pipeline, gst_event_new_eos ());
     /* we need to go to playing again for the EOS to propagate, normally in this
      * state, nothing is receiving data from us anymore so this is ok. */
+    GST_DEBUG ("Temporarily go to PLAYING again for sending EOS");
     set_state (media, GST_STATE_PLAYING);
+    GST_DEBUG ("sending EOS for shutdown");
+    gst_element_send_event (priv->pipeline, gst_event_new_eos ());
   } else {
     finish_unprepare (media);
   }
