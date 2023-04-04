@@ -93,6 +93,7 @@ base_tests = [
   [['libs/av1parser.c'], false, [gstcodecparsers_dep]],
   [['libs/h264bitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/h265bitwriter.c'], false, [gstcodecparsers_dep]],
+  [['libs/vkformat.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkmemory.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['elements/vkcolorconvert.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkwindow.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
@@ -101,6 +102,7 @@ base_tests = [
   [['libs/vkcommandpool.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkimage.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/vkinstance.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
+  [['libs/vkimagebufferpool.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/d3d11device.cpp'], not gstd3d11_dep.found(), [gstd3d11_dep]],
   [['libs/cudamemory.c'], not gstcuda_dep.found(), [gstcuda_dep, gstcuda_stub_dep]],
 ]
