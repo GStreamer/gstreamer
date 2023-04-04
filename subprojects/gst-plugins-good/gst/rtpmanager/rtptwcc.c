@@ -598,6 +598,20 @@ rtp_twcc_manager_add_fci (RTPTWCCManager * twcc, GstRTCPPacket * packet)
 
   g_array_sort (twcc->recv_packets, _twcc_seqnum_sort);
 
+  /* Quick scan to remove duplicates */
+  prev = &g_array_index (twcc->recv_packets, RecvPacket, 0);
+  for (i = 1; i < twcc->recv_packets->len;) {
+    RecvPacket *cur = &g_array_index (twcc->recv_packets, RecvPacket, i);
+
+    if (prev->seqnum == cur->seqnum) {
+      GST_DEBUG ("Removing duplicate packet #%u", cur->seqnum);
+      g_array_remove_index (twcc->recv_packets, i);
+    } else {
+      prev = cur;
+      i += 1;
+    }
+  }
+
   /* get first and last packet */
   first = &g_array_index (twcc->recv_packets, RecvPacket, 0);
   last =
@@ -740,6 +754,11 @@ _many_packets_some_lost (RTPTWCCManager * twcc, guint16 seqnum)
   first = &g_array_index (twcc->recv_packets, RecvPacket, 0);
   packet_count = seqnum - first->seqnum + 1;
 
+  /* If there are a high number of duplicates, we can't use the following
+   * metrics */
+  if (received_packets > packet_count)
+    return FALSE;
+
   /* check if we lost half of the threshold */
   lost_packets = packet_count - received_packets;
   if (received_packets >= 30 && lost_packets >= 60)
@@ -787,17 +806,6 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc, RTPPacketInfo * pinfo)
     return FALSE;
   }
 
-  if (twcc->recv_packets->len > 0) {
-    RecvPacket *last = &g_array_index (twcc->recv_packets, RecvPacket,
-        twcc->recv_packets->len - 1);
-
-    diff = gst_rtp_buffer_compare_seqnum (last->seqnum, seqnum);
-    if (diff == 0) {
-      GST_INFO ("Received duplicate packet (%u), dropping", seqnum);
-      return FALSE;
-    }
-  }
-
   /* store the packet for Transport-wide RTCP feedback message */
   recv_packet_init (&packet, seqnum, pinfo);
   g_array_append_val (twcc->recv_packets, packet);
@@ -817,6 +825,8 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc, RTPPacketInfo * pinfo)
           pinfo->running_time + twcc->feedback_interval;
 
     if (pinfo->running_time >= twcc->next_feedback_send_time) {
+      GST_LOG ("Generating feedback : Exceeded feedback interval %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (twcc->feedback_interval));
       rtp_twcc_manager_create_feedback (twcc);
       send_feedback = TRUE;
 
@@ -824,6 +834,8 @@ rtp_twcc_manager_recv_packet (RTPTWCCManager * twcc, RTPPacketInfo * pinfo)
         twcc->next_feedback_send_time += twcc->feedback_interval;
     }
   } else if (pinfo->marker || _many_packets_some_lost (twcc, seqnum)) {
+    GST_LOG ("Generating feedback because of %s",
+        pinfo->marker ? "marker packet" : "many packets some lost");
     rtp_twcc_manager_create_feedback (twcc);
     send_feedback = TRUE;
 

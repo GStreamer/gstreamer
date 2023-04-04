@@ -3466,7 +3466,7 @@ GST_START_TEST (test_twcc_duplicate_seqnums)
   TWCCPacket packets[] = {
     {1, 4 * 32 * GST_MSECOND, FALSE},
     {2, 5 * 32 * GST_MSECOND, FALSE},
-    {2, 6 * 32 * GST_MSECOND, FALSE},
+    {1, 6 * 32 * GST_MSECOND, FALSE},
     {3, 7 * 32 * GST_MSECOND, TRUE},
   };
 
