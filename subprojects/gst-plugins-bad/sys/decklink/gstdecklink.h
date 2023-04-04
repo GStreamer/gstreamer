@@ -303,11 +303,20 @@ typedef enum {
   GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV, /* bmdFormat10BitYUV */
   GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB, /* bmdFormat8BitARGB */
   GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA, /* bmdFormat8BitBGRA */
+
+  /**
+   * GstDecklinkVideoFormat::10bit-rgb:
+   *
+   * Since: 1.22.2
+   */
   GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB, /* bmdFormat10BitRGB */
+  /* Not yet supported */
+#if 0
   GST_DECKLINK_VIDEO_FORMAT_12BIT_RGB, /* bmdFormat12BitRGB */
   GST_DECKLINK_VIDEO_FORMAT_12BIT_RGBLE, /* bmdFormat12BitRGBLE */
   GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBXLE, /* bmdFormat10BitRGBXLE */
   GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBX, /* bmdFormat10BitRGBX */
+#endif
 } GstDecklinkVideoFormat;
 #define GST_TYPE_DECKLINK_VIDEO_FORMAT (gst_decklink_video_format_get_type ())
 GType gst_decklink_video_format_get_type (void);

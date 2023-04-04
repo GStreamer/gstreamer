@@ -483,6 +483,7 @@ gst_decklink_video_src_set_property (GObject * object, guint property_id,
       switch (self->video_format) {
         case GST_DECKLINK_VIDEO_FORMAT_8BIT_YUV:
         case GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV:
+        case GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB:
         case GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB:
         case GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA:
           self->caps_format =
