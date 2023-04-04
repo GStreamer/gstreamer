@@ -3912,6 +3912,8 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
       continue;
     if (g_str_has_prefix (fname, "rtcp-fb-"))
       continue;
+    if (g_str_has_prefix (fname, "ssrc-"))
+      continue;
 
     if (!strcmp (fname, "a-framesize")) {
       /* a-framesize attribute */
