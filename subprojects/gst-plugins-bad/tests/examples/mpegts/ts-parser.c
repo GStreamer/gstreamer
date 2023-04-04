@@ -31,7 +31,6 @@
 #include <glib/gprintf.h>
 #include <gst/gst.h>
 #include <gst/mpegts/mpegts.h>
-#include <gst/mpegts/gst-metadata-descriptor.h>
 
 #define MPEGTIME_TO_GSTTIME(t) ((t) * (guint64)100000 / 9)
 

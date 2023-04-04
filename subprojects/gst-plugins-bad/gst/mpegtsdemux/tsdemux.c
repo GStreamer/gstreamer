@@ -44,8 +44,6 @@
 #include "tsdemux.h"
 #include "gstmpegdesc.h"
 #include "gstmpegdefs.h"
-#include "gst/mpegts/gst-mpegtspesmetadatameta.h"
-#include "gst/mpegts/gst-metadata-descriptor.h"
 #include "mpegtspacketizer.h"
 #include "pesparse.h"
 #include <gst/codecparsers/gsth264parser.h>
