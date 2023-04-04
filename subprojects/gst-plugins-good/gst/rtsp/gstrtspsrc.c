@@ -2301,6 +2301,13 @@ gst_rtspsrc_collect_payloads (GstRTSPSrc * src, const GstSDPMessage * sdp,
     outcaps = gst_caps_intersect (caps, global_caps);
     gst_caps_unref (caps);
 
+    if (gst_caps_is_empty (outcaps)) {
+      GST_WARNING_OBJECT (src,
+          " skipping pt %d with caps conflicting with the global caps", pt);
+      gst_caps_unref (outcaps);
+      continue;
+    }
+
     /* the first pt will be the default */
     if (stream->ptmap->len == 0)
       stream->default_pt = pt;
