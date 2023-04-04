@@ -387,6 +387,8 @@ public:
         return bmdFormat8BitARGB;
       case GST_VIDEO_FORMAT_BGRA:
         return bmdFormat8BitBGRA;
+      case GST_VIDEO_FORMAT_r210:
+        return bmdFormat10BitRGB;
       default:
         g_assert_not_reached ();
     }
@@ -776,6 +778,7 @@ gst_decklink_video_sink_set_property (GObject * object, guint property_id,
         case GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV:
         case GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB:
         case GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA:
+        case GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB:
           break;
         default:
           GST_ELEMENT_WARNING (GST_ELEMENT (self), CORE, NOT_IMPLEMENTED,

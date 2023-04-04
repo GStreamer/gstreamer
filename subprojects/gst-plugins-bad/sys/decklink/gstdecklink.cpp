@@ -171,8 +171,8 @@ gst_decklink_video_format_get_type (void)
     {GST_DECKLINK_VIDEO_FORMAT_10BIT_YUV, "bmdFormat10BitYUV", "10bit-yuv"},
     {GST_DECKLINK_VIDEO_FORMAT_8BIT_ARGB, "bmdFormat8BitARGB", "8bit-argb"},
     {GST_DECKLINK_VIDEO_FORMAT_8BIT_BGRA, "bmdFormat8BitBGRA", "8bit-bgra"},
+    {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB, "bmdFormat10BitRGB", "10bit-rgb"},
     /* Not yet supported:
-       {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGB, "bmdFormat10BitRGB", "10bit-rgb"},
        {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGB, "bmdFormat12BitRGB", "12bit-rgb"},
        {GST_DECKLINK_VIDEO_FORMAT_12BIT_RGBLE, "bmdFormat12BitRGBLE", "12bit-rgble"},
        {GST_DECKLINK_VIDEO_FORMAT_10BIT_RGBXLE, "bmdFormat10BitRGBXLE", "10bit-rgbxle"},
@@ -455,8 +455,8 @@ static const struct
   {bmdFormat10BitYUV, 4, GST_VIDEO_FORMAT_v210},
   {bmdFormat8BitARGB, 4, GST_VIDEO_FORMAT_ARGB},
   {bmdFormat8BitBGRA, 4, GST_VIDEO_FORMAT_BGRA},
+  {bmdFormat10BitRGB, 4, GST_VIDEO_FORMAT_r210},
 /* Not yet supported
-  {bmdFormat10BitRGB, FIXME, FIXME},
   {bmdFormat12BitRGB, FIXME, FIXME},
   {bmdFormat12BitRGBLE, FIXME, FIXME},
   {bmdFormat10BitRGBXLE, FIXME, FIXME},
@@ -881,6 +881,8 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f,
       gst_structure_set (s, "format", G_TYPE_STRING, "BGRA", NULL);
       break;
     case bmdFormat10BitRGB:    /* 'r210' Big-endian RGB 10-bit per component with SMPTE video levels (64-960). Packed as 2:10:10:10 */
+      gst_structure_set (s, "format", G_TYPE_STRING, "r210", NULL);
+      break;
     case bmdFormat12BitRGB:    /* 'R12B' Big-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
     case bmdFormat12BitRGBLE:  /* 'R12L' Little-endian RGB 12-bit per component with full range (0-4095). Packed as 12-bit per component */
     case bmdFormat10BitRGBXLE: /* 'R10l' Little-endian 10-bit RGB with SMPTE video levels (64-940) */
@@ -1108,13 +1110,18 @@ public:
     GST_INFO ("Video input format changed");
 
     /* Detect input format */
-    if ((formatFlags & bmdDetectedVideoInputRGB444)
-        && (formatFlags & bmdDetectedVideoInput8BitDepth)) {
-      /* Cannot detect ARGB vs BGRA, so assume ARGB unless user sets BGRA */
-      if (m_input->format == bmdFormat8BitBGRA) {
-        pixelFormat = bmdFormat8BitBGRA;
+    if (formatFlags & bmdDetectedVideoInputRGB444) {
+      if (formatFlags & bmdDetectedVideoInput10BitDepth) {
+        pixelFormat = bmdFormat10BitRGB;
+      } else if (formatFlags & bmdDetectedVideoInput8BitDepth) {
+        /* Cannot detect ARGB vs BGRA, so assume ARGB unless user sets BGRA */
+        if (m_input->format == bmdFormat8BitBGRA) {
+          pixelFormat = bmdFormat8BitBGRA;
+        } else {
+          pixelFormat = bmdFormat8BitARGB;
+        }
       } else {
-        pixelFormat = bmdFormat8BitARGB;
+        GST_ERROR ("Not implemented depth");
       }
     } else if (formatFlags & bmdDetectedVideoInputYCbCr422) {
       if (formatFlags & bmdDetectedVideoInput10BitDepth) {
