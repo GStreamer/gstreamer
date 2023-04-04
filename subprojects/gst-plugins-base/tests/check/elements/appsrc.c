@@ -1389,6 +1389,8 @@ send_event_chain_func (GstPad * pad, GstObject * parent, GstBuffer * buf)
   return GST_FLOW_OK;
 }
 
+static gboolean got_event = FALSE;
+
 static gboolean
 send_event_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -1396,6 +1398,7 @@ send_event_event_func (GstPad * pad, GstObject * parent, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_DOWNSTREAM) {
     /* this event should arrive after the first buffer */
     fail_unless_equals_int (expect_offset, 1);
+    got_event = TRUE;
   }
   gst_event_unref (event);
   return TRUE;
@@ -1434,6 +1437,8 @@ GST_START_TEST (test_appsrc_send_custom_event)
   while (!done)
     g_cond_wait (&check_cond, &check_mutex);
   g_mutex_unlock (&check_mutex);
+
+  g_assert (got_event);
 
   ASSERT_SET_STATE (src, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
   cleanup_appsrc (src);
