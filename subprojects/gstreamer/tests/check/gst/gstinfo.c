@@ -516,8 +516,8 @@ GST_END_TEST;
 
 GST_START_TEST (info_set_and_reset_string)
 {
-  GstDebugCategory *states;
-  GstDebugCategory *caps;
+  GstDebugCategory *states = NULL;
+  GstDebugCategory *caps = NULL;
   GstDebugLevel cat;
 
   GST_DEBUG_CATEGORY_GET (states, "GST_STATES");
