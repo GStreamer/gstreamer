@@ -170,6 +170,9 @@ gst_codec_timestamper_init (GstCodecTimestamper * self,
   gst_pad_set_event_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_codec_timestamper_sink_event));
   GST_PAD_SET_PROXY_SCHEDULING (self->sinkpad);
+  GST_PAD_SET_ACCEPT_INTERSECT (self->sinkpad);
+  GST_PAD_SET_ACCEPT_TEMPLATE (self->sinkpad);
+
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   template = gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass),
