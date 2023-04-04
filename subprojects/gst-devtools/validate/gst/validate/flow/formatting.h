@@ -33,7 +33,7 @@ void format_time(gchar* dest_str, guint64 time);
 
 gchar* validate_flow_format_segment(const GstSegment* segment, gchar** logged_fields, gchar** ignored_fields);
 
-gchar* validate_flow_format_caps (const GstCaps* caps, gchar **wanted_fields);
+gchar* validate_flow_format_caps (const GstCaps* caps, gchar **wanted_fields, gchar **ignored_fields);
 
 gchar* validate_flow_format_buffer(GstBuffer* buffer, gboolean add_checksum, GstStructure* logged_fields_struct, GstStructure* ignored_fields_struct);
 
