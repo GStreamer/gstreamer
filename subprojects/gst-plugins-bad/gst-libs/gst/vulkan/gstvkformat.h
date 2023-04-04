@@ -119,10 +119,22 @@ struct _GstVulkanFormatInfo
   guint8 poffset[GST_VULKAN_MAX_COMPONENTS];
   guint8 w_sub[GST_VULKAN_MAX_COMPONENTS];
   guint8 h_sub[GST_VULKAN_MAX_COMPONENTS];
+
+  /**
+   * GstVulkanFormatInfo.aspect:
+   *
+   * image aspect of this format
+   *
+   * Since: 1.24
+   */
+  VkImageAspectFlags aspect;
 };
 
 GST_VULKAN_API
 const GstVulkanFormatInfo *     gst_vulkan_format_get_info                      (VkFormat format);
+
+GST_VULKAN_API
+guint                           gst_vulkan_format_get_aspect                    (VkFormat format);
 
 GST_VULKAN_API
 VkFormat                        gst_vulkan_format_from_video_info               (GstVideoInfo * v_info,
