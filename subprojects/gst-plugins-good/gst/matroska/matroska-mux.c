@@ -142,7 +142,7 @@ static GstStaticPadTemplate videosink_templ =
         COMMON_VIDEO_CAPS "; "
         "video/x-raw, "
         "format = (string) { YUY2, I420, YV12, UYVY, AYUV, GRAY8, GRAY10_LE32,"
-            " BGR, RGB, RGBA64_LE, BGRA64_LE }, "
+        " GRAY16_LE, BGR, RGB, RGBA64_LE, BGRA64_LE }, "
         COMMON_VIDEO_CAPS "; "
         "video/x-prores, "
         COMMON_VIDEO_CAPS "; "
@@ -1259,6 +1259,8 @@ skip_details:
         videocontext->fourcc = GST_MAKE_FOURCC ('Y', '8', '0', '0');
       else if (!strcmp (fstr, "GRAY10_LE32"))
         videocontext->fourcc = GST_MAKE_FOURCC ('Y', '1', 0, 10);
+      else if (!strcmp (fstr, "GRAY16_LE"))
+        videocontext->fourcc = GST_MAKE_FOURCC ('Y', '1', 0, 16);
       else if (!strcmp (fstr, "BGR"))
         videocontext->fourcc = GST_MAKE_FOURCC ('B', 'G', 'R', 24);
       else if (!strcmp (fstr, "RGB"))

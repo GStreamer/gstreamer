@@ -6504,6 +6504,9 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       case GST_MAKE_FOURCC ('Y', '1', 0, 10):
         format = GST_VIDEO_FORMAT_GRAY10_LE32;
         break;
+      case GST_MAKE_FOURCC ('Y', '1', 0, 16):
+        format = GST_VIDEO_FORMAT_GRAY16_LE;
+        break;
       case GST_MAKE_FOURCC ('R', 'G', 'B', 24):
         format = GST_VIDEO_FORMAT_RGB;
         break;
