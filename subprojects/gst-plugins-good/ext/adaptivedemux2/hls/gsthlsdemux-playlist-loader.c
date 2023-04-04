@@ -358,6 +358,10 @@ static gchar *
 apply_directives_to_uri (GstHLSDemuxPlaylistLoader * pl,
     const gchar * playlist_uri, struct PlaylistDownloadParams *dl_params)
 {
+  /* Short-circuit URI parsing if nothing will change */
+  if (dl_params->flags == 0)
+    return g_strdup (playlist_uri);
+
   GstUri *uri = gst_uri_from_string (playlist_uri);
 
   if (dl_params->flags & PLAYLIST_DOWNLOAD_FLAG_SKIP_V1) {
