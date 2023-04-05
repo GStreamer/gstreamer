@@ -88,6 +88,34 @@ typedef enum
  * It blocks until the lock can be obtained.
  */
 #define GST_OBJECT_LOCK(obj)                   g_mutex_lock(GST_OBJECT_GET_LOCK(obj))
+
+/**
+ * GST_OBJECT_AUTO_LOCK:
+ * @obj: a #GstObject to lock
+ * @var: a variable name to be declared
+ *
+ * Declare a #GMutexLocker variable with g_autoptr() and lock the object. The
+ * mutex will be unlocked automatically when leaving the scope.
+ *
+ * ``` c
+ * {
+ *   GST_OBJECT_AUTO_LOCK (obj, locker);
+ *
+ *   obj->stuff_with_lock();
+ *   if (cond) {
+ *     // No need to unlock
+ *     return;
+ *   }
+ *
+ *   // Unlock before end of scope
+ *   g_clear_pointer (&locker, g_mutex_locker_free);
+ *   obj->stuff_without_lock();
+ * }
+ * ```
+ * Since: 1.24.0
+ */
+#define GST_OBJECT_AUTO_LOCK(obj, var) g_autoptr(GMutexLocker) G_GNUC_UNUSED var = g_mutex_locker_new(GST_OBJECT_GET_LOCK(obj))
+
 /**
  * GST_OBJECT_TRYLOCK:
  * @obj: a #GstObject.

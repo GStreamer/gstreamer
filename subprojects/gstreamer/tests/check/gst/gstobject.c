@@ -284,12 +284,18 @@ GST_START_TEST (test_fake_object_name_threaded_right)
 
   /* start looping and set/get name repeatedly */
   for (i = 0; i < 1000; ++i) {
+#ifndef g_autoptr
     GST_OBJECT_LOCK (object);
+#else
+    GST_OBJECT_AUTO_LOCK (object, locker);
+#endif
     g_free (GST_OBJECT_NAME (object));
     GST_OBJECT_NAME (object) = g_strdup ("main");
     THREAD_SWITCH ();
     name = g_strdup (GST_OBJECT_NAME (object));
+#ifndef g_autoptr
     GST_OBJECT_UNLOCK (object);
+#endif
 
     fail_unless (strcmp (name, "main") == 0,
         "Name got changed while lock held during run %d", i);
