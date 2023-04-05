@@ -528,5 +528,7 @@ gst_gl_context_wgl_get_config (GstGLContext * context)
 
   pixfmt = GetPixelFormat (hdc);
 
+  gst_object_unref (window);
+
   return pixel_format_to_structure (hdc, pixfmt);
 }
