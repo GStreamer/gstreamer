@@ -71,8 +71,8 @@ _create_info_from_args (VkImageCreateInfo * info, VkFormat format, gsize width,
 gboolean
 gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
     GstAllocator * allocator, GstMemory * parent, GstVulkanDevice * device,
-    VkImageUsageFlags usage, GstAllocationParams * params, gsize size,
-    gpointer user_data, GDestroyNotify notify)
+    VkFormat format, VkImageUsageFlags usage, GstAllocationParams * params,
+    gsize size, gpointer user_data, GDestroyNotify notify)
 {
   gsize align = gst_memory_alignment, offset = 0, maxsize = size;
   GstMemoryFlags flags = 0;
@@ -94,7 +94,7 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
   mem->barrier.image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
   /* *INDENT-OFF* */
   mem->barrier.subresource_range = (VkImageSubresourceRange) {
-          .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+          .aspectMask = gst_vulkan_format_get_aspect (format),
           .baseMipLevel = 0,
           .levelCount = 1,
           .baseArrayLayer = 0,
@@ -156,7 +156,8 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   vkGetImageMemoryRequirements (device->device, image, &mem->requirements);
 
   gst_vulkan_image_memory_init (mem, allocator, parent, device,
-      image_info->usage, &params, mem->requirements.size, user_data, notify);
+      image_info->format, image_info->usage, &params, mem->requirements.size,
+      user_data, notify);
   mem->create_info = *image_info;
   /* XXX: to avoid handling pNext lifetime  */
   mem->create_info.pNext = NULL;
@@ -245,8 +246,8 @@ _vk_image_mem_new_wrapped (GstAllocator * allocator, GstMemory * parent,
   /* XXX: assumes alignment is a power of 2 */
   params.align = mem->requirements.alignment - 1;
   params.flags = GST_MEMORY_FLAG_NOT_MAPPABLE;
-  gst_vulkan_image_memory_init (mem, allocator, parent, device, usage, &params,
-      mem->requirements.size, user_data, notify);
+  gst_vulkan_image_memory_init (mem, allocator, parent, device, format, usage,
+      &params, mem->requirements.size, user_data, notify);
   mem->wrapped = TRUE;
 
   if (!_create_info_from_args (&mem->create_info, format, width, height, tiling,
