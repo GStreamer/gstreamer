@@ -177,24 +177,6 @@ _get_function_table (GstVulkanSwapper * swapper)
 #undef GET_PROC_ADDRESS_REQUIRED
 }
 
-static GstVideoFormat
-_vk_format_to_video_format (VkFormat format)
-{
-  switch (format) {
-      /* double check endianness */
-    case VK_FORMAT_R8G8B8A8_UNORM:
-      return GST_VIDEO_FORMAT_RGBA;
-    case VK_FORMAT_R8G8B8_UNORM:
-      return GST_VIDEO_FORMAT_RGB;
-    case VK_FORMAT_B8G8R8A8_UNORM:
-      return GST_VIDEO_FORMAT_BGRA;
-    case VK_FORMAT_B8G8R8_UNORM:
-      return GST_VIDEO_FORMAT_BGR;
-    default:
-      return GST_VIDEO_FORMAT_UNKNOWN;
-  }
-}
-
 static VkColorSpaceKHR
 _vk_color_space_from_video_info (GstVideoInfo * v_info)
 {
@@ -206,7 +188,7 @@ _add_vk_format_to_list (GValue * list, VkFormat format)
 {
   GstVideoFormat v_format;
 
-  v_format = _vk_format_to_video_format (format);
+  v_format = gst_vulkan_format_to_video_format (format);
   if (v_format) {
     const gchar *format_str = gst_video_format_to_string (v_format);
     GValue item = G_VALUE_INIT;
