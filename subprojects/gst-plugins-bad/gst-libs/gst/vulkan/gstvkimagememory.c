@@ -555,8 +555,7 @@ gst_vulkan_image_memory_release_view (GstVulkanImageMemory * image,
   GST_CAT_TRACE (GST_CAT_VULKAN_IMAGE_MEMORY, "image %p removing view %p",
       image, view);
   if (g_ptr_array_find (image->outstanding_views, view, &index)) {
-    /* really g_ptr_array_steal_index_fast() but that requires glib 2.58 */
-    g_ptr_array_remove_index_fast (image->outstanding_views, index);
+    g_ptr_array_steal_index_fast (image->outstanding_views, index);
     g_ptr_array_add (image->views, view);
   } else {
     g_warning ("GstVulkanImageMemory:%p attempt to remove a view %p "
@@ -654,8 +653,7 @@ gst_vulkan_image_memory_find_view (GstVulkanImageMemory * image,
             index));
   } else if (g_ptr_array_find_with_equal_func (image->views, &view,
           (GEqualFunc) find_view_func, &index)) {
-    /* really g_ptr_array_steal_index_fast() but that requires glib 2.58 */
-    ret = g_ptr_array_remove_index_fast (image->views, index);
+    ret = g_ptr_array_steal_index_fast (image->views, index);
     g_ptr_array_add (image->outstanding_views, ret);
     ret->image = (GstVulkanImageMemory *) gst_memory_ref ((GstMemory *) image);
   }

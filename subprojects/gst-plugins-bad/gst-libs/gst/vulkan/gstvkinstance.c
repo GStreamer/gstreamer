@@ -456,32 +456,14 @@ gst_vulkan_instance_get_extension_info (GstVulkanInstance * instance,
   return ret;
 }
 
-/* reimplement a specfic case of g_ptr_array_find_with_equal_func as that
- * requires Glib 2.54 */
-static gboolean
-ptr_array_find_string (GPtrArray * array, const gchar * str, guint * index)
-{
-  guint i;
-
-  for (i = 0; i < array->len; i++) {
-    gchar *val = (gchar *) g_ptr_array_index (array, i);
-    if (g_strcmp0 (val, str) == 0) {
-      if (index)
-        *index = i;
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
 static gboolean
 gst_vulkan_instance_is_extension_enabled_unlocked (GstVulkanInstance * instance,
     const gchar * name, guint * index)
 {
   GstVulkanInstancePrivate *priv = GET_PRIV (instance);
 
-  return ptr_array_find_string (priv->enabled_extensions, name, index);
+  return g_ptr_array_find_with_equal_func (priv->enabled_extensions, name,
+      g_str_equal, index);
 }
 
 /**
@@ -627,7 +609,8 @@ gst_vulkan_instance_is_layer_enabled_unlocked (GstVulkanInstance * instance,
 {
   GstVulkanInstancePrivate *priv = GET_PRIV (instance);
 
-  return ptr_array_find_string (priv->enabled_layers, name, NULL);
+  return g_ptr_array_find_with_equal_func (priv->enabled_layers, name,
+      g_str_equal, NULL);
 }
 
 /**

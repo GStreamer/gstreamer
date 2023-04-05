@@ -644,32 +644,14 @@ gst_vulkan_device_create_fence (GstVulkanDevice * device, GError ** error)
   return gst_vulkan_fence_cache_acquire (priv->fence_cache, error);
 }
 
-/* reimplement a specfic case of g_ptr_array_find_with_equal_func as that
- * requires Glib 2.54 */
-static gboolean
-ptr_array_find_string (GPtrArray * array, const gchar * str, guint * index)
-{
-  guint i;
-
-  for (i = 0; i < array->len; i++) {
-    gchar *val = (gchar *) g_ptr_array_index (array, i);
-    if (g_strcmp0 (val, str) == 0) {
-      if (index)
-        *index = i;
-      return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
 static gboolean
 gst_vulkan_device_is_extension_enabled_unlocked (GstVulkanDevice * device,
     const gchar * name, guint * index)
 {
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
 
-  return ptr_array_find_string (priv->enabled_extensions, name, index);
+  return g_ptr_array_find_with_equal_func (priv->enabled_extensions, name,
+      g_str_equal, index);
 }
 
 /**
@@ -798,7 +780,8 @@ gst_vulkan_device_is_layer_enabled_unlocked (GstVulkanDevice * device,
 {
   GstVulkanDevicePrivate *priv = GET_PRIV (device);
 
-  return ptr_array_find_string (priv->enabled_layers, name, NULL);
+  return g_ptr_array_find_with_equal_func (priv->enabled_layers, name,
+      g_str_equal, NULL);
 }
 
 /**
