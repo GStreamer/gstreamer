@@ -149,6 +149,9 @@ gboolean                        gst_vulkan_format_from_video_info_2            (
                                                                                 int * n_imgs,
                                                                                 VkImageUsageFlags * usage);
 
+GST_VULKAN_API
+GstVideoFormat                  gst_vulkan_format_to_video_format              (VkFormat vk_format);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_FORMAT_H__ */

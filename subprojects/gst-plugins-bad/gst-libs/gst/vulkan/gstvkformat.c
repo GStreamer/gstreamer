@@ -656,3 +656,26 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
 
   return FALSE;
 }
+
+/**
+ * gst_vulkan_format_to_video_format:
+ * @vk_format: the Vulkan format to convert
+ *
+ * Returns: the #GstVideoFormat that maps to @vk_format
+ *
+ * Since: 1.24
+ */
+GstVideoFormat
+gst_vulkan_format_to_video_format (VkFormat vk_format)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
+    if (vk_formats_map[i].vkfrmt != vk_format)
+      continue;
+
+    return vk_formats_map[i].format;
+  }
+
+  return GST_VIDEO_FORMAT_UNKNOWN;
+}
