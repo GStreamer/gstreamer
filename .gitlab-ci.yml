@@ -272,6 +272,7 @@ commitlint:
 
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
+  - .gitlab-image-tags.yml
   - gst-env.py
   - ci/gitlab/*.py
   - meson.build
