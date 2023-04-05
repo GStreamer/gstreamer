@@ -653,7 +653,6 @@ gst_jack_ring_buffer_stop (GstAudioRingBuffer * buf)
   return TRUE;
 }
 
-#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
 static guint
 gst_jack_ring_buffer_delay (GstAudioRingBuffer * buf)
 {
@@ -673,29 +672,6 @@ gst_jack_ring_buffer_delay (GstAudioRingBuffer * buf)
 
   return res;
 }
-#else /* !(defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)) */
-static guint
-gst_jack_ring_buffer_delay (GstAudioRingBuffer * buf)
-{
-  GstJackAudioSink *sink;
-  guint i, res = 0;
-  guint latency;
-  jack_client_t *client;
-
-  sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
-  client = gst_jack_audio_client_get_client (sink->client);
-
-  for (i = 0; i < sink->port_count; i++) {
-    latency = jack_port_get_total_latency (client, sink->ports[i]);
-    if (latency > res)
-      res = latency;
-  }
-
-  GST_LOG_OBJECT (sink, "delay %u", res);
-
-  return res;
-}
-#endif
 
 static GstStaticPadTemplate jackaudiosink_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",

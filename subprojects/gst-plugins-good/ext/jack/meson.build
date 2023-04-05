@@ -92,7 +92,7 @@ endif
 
 gstjack = library('gstjack',
   jack_sources,
-  c_args : gst_plugins_good_args + ['-DHAVE_JACK_1_9_7'],
+  c_args : gst_plugins_good_args,
   include_directories : jack_incdirs,
   dependencies : [gst_dep, gstbase_dep, gstaudio_dep, libjack_dep],
   install : true,

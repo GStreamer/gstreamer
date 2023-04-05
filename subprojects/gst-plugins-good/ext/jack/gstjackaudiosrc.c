@@ -661,7 +661,6 @@ gst_jack_ring_buffer_stop (GstAudioRingBuffer * buf)
   return TRUE;
 }
 
-#if defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)
 static guint
 gst_jack_ring_buffer_delay (GstAudioRingBuffer * buf)
 {
@@ -681,30 +680,6 @@ gst_jack_ring_buffer_delay (GstAudioRingBuffer * buf)
 
   return res;
 }
-#else /* !(defined (HAVE_JACK_0_120_1) || defined(HAVE_JACK_1_9_7)) */
-static guint
-gst_jack_ring_buffer_delay (GstAudioRingBuffer * buf)
-{
-  GstJackAudioSrc *src;
-  guint i, res = 0;
-  guint latency;
-  jack_client_t *client;
-
-  src = GST_JACK_AUDIO_SRC (GST_OBJECT_PARENT (buf));
-
-  client = gst_jack_audio_client_get_client (src->client);
-
-  for (i = 0; i < src->port_count; i++) {
-    latency = jack_port_get_total_latency (client, src->ports[i]);
-    if (latency > res)
-      res = latency;
-  }
-
-  GST_DEBUG_OBJECT (src, "delay %u", res);
-
-  return res;
-}
-#endif
 
 /* Audiosrc signals and args */
 enum
