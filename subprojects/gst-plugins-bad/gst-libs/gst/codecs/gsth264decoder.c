@@ -2293,7 +2293,7 @@ gst_h264_decoder_set_latency (GstH264Decoder * self, const GstH264SPS * sps,
   GstStructure *structure;
   gint fps_d = 1, fps_n = 0;
   GstH264DpbBumpMode bump_level;
-  guint32 frames_delay;
+  guint32 frames_delay, max_frames_delay;
 
   caps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SRC_PAD (self));
   if (!caps && self->input_state)
@@ -2316,35 +2316,27 @@ gst_h264_decoder_set_latency (GstH264Decoder * self, const GstH264SPS * sps,
     fps_d = 1;
   }
 
+  frames_delay = max_dpb_size;
+
   bump_level = get_bump_level (self);
-  frames_delay = 0;
-  switch (bump_level) {
-    case GST_H264_DPB_BUMP_NORMAL_LATENCY:
-      /* We always wait the DPB full before bumping. */
-      frames_delay = max_dpb_size;
-      break;
-    case GST_H264_DPB_BUMP_LOW_LATENCY:
-      /* We bump the IDR if the second frame is not a minus POC. */
-      frames_delay = 1;
-      break;
-    case GST_H264_DPB_BUMP_VERY_LOW_LATENCY:
-      /* We bump the IDR immediately. */
-      frames_delay = 0;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
+  if (bump_level != GST_H264_DPB_BUMP_NORMAL_LATENCY) {
+    guint32 max_reorder_frames =
+        gst_h264_dpb_get_max_num_reorder_frames (priv->dpb);
+    frames_delay = MIN (max_dpb_size, max_reorder_frames);
   }
 
   /* Consider output delay wanted by subclass */
   frames_delay += priv->preferred_output_delay;
 
-  min = gst_util_uint64_scale_int (frames_delay * GST_SECOND, fps_d, fps_n);
-  max = gst_util_uint64_scale_int ((max_dpb_size + priv->preferred_output_delay)
-      * GST_SECOND, fps_d, fps_n);
+  max_frames_delay = max_dpb_size + priv->preferred_output_delay;
 
-  GST_LOG_OBJECT (self,
-      "latency min %" G_GUINT64_FORMAT " max %" G_GUINT64_FORMAT, min, max);
+  min = gst_util_uint64_scale_int (frames_delay * GST_SECOND, fps_d, fps_n);
+  max = gst_util_uint64_scale_int (max_frames_delay * GST_SECOND, fps_d, fps_n);
+
+  GST_DEBUG_OBJECT (self,
+      "latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
+      ", frames-delay %d", GST_TIME_ARGS (min), GST_TIME_ARGS (max),
+      frames_delay);
 
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (self), min, max);
 }
@@ -2360,6 +2352,8 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
   gint max_dpb_frames;
   gint max_dpb_size;
   gint prev_max_dpb_size;
+  gint max_reorder_frames;
+  gint prev_max_reorder_frames;
   gboolean prev_interlaced;
   gboolean interlaced;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -2424,15 +2418,22 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
 
   prev_max_dpb_size = gst_h264_dpb_get_max_num_frames (priv->dpb);
   prev_interlaced = gst_h264_dpb_get_interlaced (priv->dpb);
+
+  prev_max_reorder_frames = gst_h264_dpb_get_max_num_reorder_frames (priv->dpb);
+  max_reorder_frames =
+      gst_h264_decoder_get_max_num_reorder_frames (self, sps, max_dpb_size);
+
   if (priv->width != sps->width || priv->height != sps->height ||
-      prev_max_dpb_size != max_dpb_size || prev_interlaced != interlaced) {
+      prev_max_dpb_size != max_dpb_size || prev_interlaced != interlaced ||
+      prev_max_reorder_frames != max_reorder_frames) {
     GstH264DecoderClass *klass = GST_H264_DECODER_GET_CLASS (self);
 
     GST_DEBUG_OBJECT (self,
         "SPS updated, resolution: %dx%d -> %dx%d, dpb size: %d -> %d, "
-        "interlaced %d -> %d",
+        "interlaced %d -> %d, max_reorder_frames: %d -> %d",
         priv->width, priv->height, sps->width, sps->height,
-        prev_max_dpb_size, max_dpb_size, prev_interlaced, interlaced);
+        prev_max_dpb_size, max_dpb_size, prev_interlaced, interlaced,
+        prev_max_reorder_frames, max_reorder_frames);
 
     ret = gst_h264_decoder_drain (GST_VIDEO_DECODER (self));
     if (ret != GST_FLOW_OK)
@@ -2458,13 +2459,11 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
     priv->width = sps->width;
     priv->height = sps->height;
 
-    gst_h264_decoder_set_latency (self, sps, max_dpb_size);
     gst_h264_dpb_set_max_num_frames (priv->dpb, max_dpb_size);
     gst_h264_dpb_set_interlaced (priv->dpb, interlaced);
+    gst_h264_dpb_set_max_num_reorder_frames (priv->dpb, max_reorder_frames);
+    gst_h264_decoder_set_latency (self, sps, max_dpb_size);
   }
-
-  gst_h264_dpb_set_max_num_reorder_frames (priv->dpb,
-      gst_h264_decoder_get_max_num_reorder_frames (self, sps, max_dpb_size));
 
   return GST_FLOW_OK;
 }

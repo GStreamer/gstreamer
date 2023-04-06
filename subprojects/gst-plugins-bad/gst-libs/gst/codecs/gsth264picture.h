@@ -250,6 +250,9 @@ void gst_h264_dpb_set_max_num_reorder_frames (GstH264Dpb * dpb,
                                               guint32 max_num_reorder_frames);
 
 GST_CODECS_API
+guint32 gst_h264_dpb_get_max_num_reorder_frames (GstH264Dpb * dpb);
+
+GST_CODECS_API
 gboolean gst_h264_dpb_get_interlaced  (GstH264Dpb * dpb);
 
 GST_CODECS_API
