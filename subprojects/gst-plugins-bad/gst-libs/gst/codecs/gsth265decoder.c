@@ -363,17 +363,19 @@ gst_h265_decoder_set_latency (GstH265Decoder * self, const GstH265SPS * sps,
   guint frames_delay;
 
   caps = gst_pad_get_current_caps (GST_VIDEO_DECODER_SRC_PAD (self));
-  if (!caps)
-    return;
+  if (!caps && self->input_state)
+    caps = gst_caps_ref (self->input_state->caps);
 
-  structure = gst_caps_get_structure (caps, 0);
-  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
-    if (fps_n == 0) {
-      /* variable framerate: see if we have a max-framerate */
-      gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
+  if (caps) {
+    structure = gst_caps_get_structure (caps, 0);
+    if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
+      if (fps_n == 0) {
+        /* variable framerate: see if we have a max-framerate */
+        gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
+      }
     }
+    gst_caps_unref (caps);
   }
-  gst_caps_unref (caps);
 
   /* if no fps or variable, then 25/1 */
   if (fps_n == 0) {
