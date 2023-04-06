@@ -123,16 +123,8 @@ struct _GstAppSinkClass
    */
    
   GstMiniObject * (*try_pull_object)    (GstAppSink *appsink, GstClockTime timeout);
- /**
-   * GstAppSinkClass::propose_allocation:
-   *
-   * See #GstAppSink::propose-allocation: signal.
-   *
-   * Since: 1.24
-   */
-  gboolean        (*propose_allocation) (GstAppSink *appsink, GstQuery *query);
   /*< private >*/
-  gpointer     _gst_reserved[GST_PADDING - 4];
+  gpointer     _gst_reserved[GST_PADDING - 3];
 };
 
 GST_APP_API
