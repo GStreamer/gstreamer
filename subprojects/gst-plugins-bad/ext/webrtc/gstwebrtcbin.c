@@ -6300,6 +6300,7 @@ get_last_generated_description (GstWebRTCBin * webrtc, SDPSource source,
 static GstStructure *
 _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
 {
+  GstWebRTCSignalingState old_signaling_state = webrtc->signaling_state;
   GstWebRTCSignalingState new_signaling_state = webrtc->signaling_state;
   gboolean signalling_state_changed = FALSE;
   GError *error = NULL;
@@ -6654,7 +6655,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
    */
   if (signalling_state_changed) {
     const gchar *from = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
-        webrtc->signaling_state);
+        old_signaling_state);
     const gchar *to = _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
         new_signaling_state);
     GST_TRACE_OBJECT (webrtc, "notify signaling-state from %s "
