@@ -281,6 +281,22 @@ gst_h264_dpb_set_max_num_reorder_frames (GstH264Dpb * dpb,
 }
 
 /**
+ * gst_h264_dpb_get_max_num_reorder_frames:
+ * @dpb: a #GstH264Dpb
+ *
+ * Returns: Maximum number of reorder frames
+ *
+ * Since: 1.22.2
+ */
+guint32
+gst_h264_dpb_get_max_num_reorder_frames (GstH264Dpb * dpb)
+{
+  g_return_val_if_fail (dpb != NULL, GST_H264_DPB_MAX_SIZE);
+
+  return dpb->max_num_reorder_frames;
+}
+
+/**
  * gst_h264_dpb_add:
  * @dpb: a #GstH264Dpb
  * @picture: (transfer full): a #GstH264Picture
