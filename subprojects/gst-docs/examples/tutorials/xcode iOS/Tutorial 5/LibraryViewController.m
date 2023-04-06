@@ -164,7 +164,7 @@ static NSString *CellIdentifier = @"CellIdentifier";
 
     // Non-existing entries (to debug error reporting facilities)
     [entries addObject:@"http://non-existing.org/Non_Existing_Server"];
-    [entries addObject:@"https://www.freedesktop.org/software/gstreamer-sdk/data/media/Non_Existing_File"];
+    [entries addObject:@"https://gstreamer.freedesktop.org//data/media/Non_Existing_File"];
 
     self->onlineEntries = entries;
 }

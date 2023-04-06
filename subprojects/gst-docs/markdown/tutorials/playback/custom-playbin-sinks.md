@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm", NULL);
 
   /* Create the elements inside the sink bin */
   equalizer = gst_element_factory_make ("equalizer-3bands", "equalizer");

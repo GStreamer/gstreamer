@@ -45,7 +45,7 @@ tutorial_main (int argc, char *argv[])
 
   /* Set the URI to play */
   g_object_set (data.playbin, "uri",
-      "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
+      "https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm",
       NULL);
 
   /* Start playing */

@@ -18,7 +18,7 @@ Gst.init(sys.argv[1:])
 
 # build the pipeline
 pipeline = Gst.parse_launch(
-    "playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm"
+    "playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm"
 )
 
 # start playing

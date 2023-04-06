@@ -86,7 +86,7 @@ public class Tutorial4 extends Activity implements SurfaceHolder.Callback, OnSee
     private int desired_position;         // Position where the users wants to seek to
     private String mediaUri;              // URI of the clip being played
 
-    private final String defaultMediaUri = "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-368p.ogv";
+    private final String defaultMediaUri = "https://gstreamer.freedesktop.org/data/media/sintel_trailer-368p.ogv";
 
     // Called when the activity is first created.
     @Override

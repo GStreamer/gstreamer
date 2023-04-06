@@ -144,7 +144,7 @@ stream out of a
 demuxer:
 
 ```
-gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.video_0 ! matroskamux ! filesink location=sintel_video.mkv
+gst-launch-1.0 souphttpsrc location=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.video_0 ! matroskamux ! filesink location=sintel_video.mkv
 ```
 
 This fetches a media file from the internet using `souphttpsrc`, which
@@ -162,7 +162,7 @@ new matroska file with the video. If we wanted to keep only the
 audio:
 
 ```
-gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.audio_0 ! vorbisparse ! matroskamux ! filesink location=sintel_audio.mka
+gst-launch-1.0 souphttpsrc location=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm ! matroskademux name=d d.audio_0 ! vorbisparse ! matroskamux ! filesink location=sintel_audio.mka
 ```
 
 The `vorbisparse` element is required to extract some information from
@@ -188,7 +188,7 @@ Consider the following
 pipeline:
 
 ```
-gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux ! filesink location=test
+gst-launch-1.0 souphttpsrc location=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm ! matroskademux ! filesink location=test
 ```
 
 This is the same media file and demuxer as in the previous example. The
@@ -202,7 +202,7 @@ previous sub-section, or by using **Caps
 Filters**:
 
 ```
-gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux ! video/x-vp8 ! matroskamux ! filesink location=sintel_video.mkv
+gst-launch-1.0 souphttpsrc location=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm ! matroskademux ! video/x-vp8 ! matroskamux ! filesink location=sintel_video.mkv
 ```
 
 A Caps Filter behaves like a pass-through element which does nothing and
@@ -222,7 +222,7 @@ producing for a particular pipeline, run `gst-launch-1.0` as usual, with the
 Play a media file using `playbin` (as in [](tutorials/basic/hello-world.md)):
 
 ```
-gst-launch-1.0 playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm
+gst-launch-1.0 playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm
 ```
 
 A fully operation playback pipeline, with audio and video (more or less
@@ -230,7 +230,7 @@ the same pipeline that `playbin` will create
 internally):
 
 ```
-gst-launch-1.0 souphttpsrc location=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! matroskademux name=d ! queue ! vp8dec ! videoconvert ! autovideosink d. ! queue ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
+gst-launch-1.0 souphttpsrc location=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm ! matroskademux name=d ! queue ! vp8dec ! videoconvert ! autovideosink d. ! queue ! vorbisdec ! audioconvert ! audioresample ! autoaudiosink
 ```
 
 A transcoding pipeline, which opens the webm container and decodes both
@@ -240,7 +240,7 @@ with a different codec, and puts them back together in an Ogg container
 it).
 
 ```
-gst-launch-1.0 uridecodebin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm name=d ! queue ! theoraenc ! oggmux name=m ! filesink location=sintel.ogg d. ! queue ! audioconvert ! audioresample ! flacenc ! m.
+gst-launch-1.0 uridecodebin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm name=d ! queue ! theoraenc ! oggmux name=m ! filesink location=sintel.ogg d. ! queue ! audioconvert ! audioresample ! flacenc ! m.
 ```
 
 A rescaling pipeline. The `videoscale` element performs a rescaling
@@ -249,7 +249,7 @@ output caps. The output caps are set by the Caps Filter to
 320x200.
 
 ```
-gst-launch-1.0 uridecodebin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm ! queue ! videoscale ! video/x-raw-yuv,width=320,height=200 ! videoconvert ! autovideosink
+gst-launch-1.0 uridecodebin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm ! queue ! videoscale ! video/x-raw-yuv,width=320,height=200 ! videoconvert ! autovideosink
 ```
 
 This short description of `gst-launch-1.0` should be enough to get you
@@ -386,10 +386,10 @@ Let's see an
 example:
 
 ```
-gst-discoverer-1.0 https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm -v
+gst-discoverer-1.0 https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm -v
 
-Analyzing https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm
-Done discovering https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm
+Analyzing https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm
+Done discovering https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm
 Topology:
   container: video/webm
     audio: audio/x-vorbis, channels=(int)2, rate=(int)48000

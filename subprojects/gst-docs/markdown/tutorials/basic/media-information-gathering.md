@@ -35,7 +35,7 @@ The recovered information includes codec descriptions, stream topology
 audio language).
 
 As an example, this is the result
-of discovering https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel\_trailer-480p.webm
+of discovering https://gstreamer.freedesktop.org/data/media/sintel\_trailer-480p.webm
 
     Duration: 0:00:52.250000000
     Tags:
@@ -249,7 +249,7 @@ static void on_finished_cb (GstDiscoverer *discoverer, CustomData *data) {
 int main (int argc, char **argv) {
   CustomData data;
   GError *err = NULL;
-  gchar *uri = "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm";
+  gchar *uri = "https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm";
 
   /* if a URI was provided, use it instead of the default one */
   if (argc > 1) {

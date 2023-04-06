@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
   memset (&data, 0, sizeof (data));
 
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm", NULL);
   bus = gst_element_get_bus (pipeline);
 
   /* Start playing */

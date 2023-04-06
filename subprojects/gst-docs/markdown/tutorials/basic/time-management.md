@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
   }
 
   /* Set the URI to play */
-  g_object_set (data.playbin, "uri", "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+  g_object_set (data.playbin, "uri", "https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm", NULL);
 
   /* Start playing */
   ret = gst_element_set_state (data.playbin, GST_STATE_PLAYING);

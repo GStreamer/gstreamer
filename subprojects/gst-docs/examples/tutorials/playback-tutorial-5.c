@@ -136,7 +136,7 @@ tutorial_main (int argc, char *argv[])
   /* Build the pipeline */
   data.pipeline =
       gst_parse_launch
-      ("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
+      ("playbin uri=https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm",
       NULL);
 
   /* Add a keyboard watch so we get notified of keystrokes */

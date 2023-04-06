@@ -57,12 +57,12 @@ tutorial_main (int argc, char *argv[])
 
   /* Set the URI to play */
   g_object_set (data.playbin, "uri",
-      "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.ogv",
+      "https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.ogv",
       NULL);
 
   /* Set the subtitle URI to play and some font description */
   g_object_set (data.playbin, "suburi",
-      "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer_gr.srt",
+      "https://gstreamer.freedesktop.org/data/media/sintel_trailer_gr.srt",
       NULL);
   g_object_set (data.playbin, "subtitle-font-desc", "Sans, 18", NULL);
 
