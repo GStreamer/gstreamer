@@ -2168,44 +2168,26 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
     _bump_dpb (self, bump_level, NULL, ret);
 }
 
-static gboolean
-gst_h264_decoder_update_max_num_reorder_frames (GstH264Decoder * self,
-    GstH264SPS * sps)
+static gint
+gst_h264_decoder_get_max_num_reorder_frames (GstH264Decoder * self,
+    GstH264SPS * sps, gint max_dpb_size)
 {
   GstH264DecoderPrivate *priv = self->priv;
-  gsize max_num_reorder_frames = 0;
 
   if (sps->vui_parameters_present_flag
       && sps->vui_parameters.bitstream_restriction_flag) {
-    max_num_reorder_frames = sps->vui_parameters.num_reorder_frames;
-    if (max_num_reorder_frames > gst_h264_dpb_get_max_num_frames (priv->dpb)) {
+    if (sps->vui_parameters.num_reorder_frames > max_dpb_size) {
       GST_WARNING
           ("max_num_reorder_frames present, but larger than MaxDpbFrames (%d > %d)",
-          (gint) max_num_reorder_frames,
-          gst_h264_dpb_get_max_num_frames (priv->dpb));
-
-      max_num_reorder_frames = 0;
-      return FALSE;
+          sps->vui_parameters.num_reorder_frames, max_dpb_size);
+      return max_dpb_size;
     }
 
-    gst_h264_dpb_set_max_num_reorder_frames (priv->dpb, max_num_reorder_frames);
-
-    return TRUE;
-  }
-
-  if (priv->compliance == GST_H264_DECODER_COMPLIANCE_STRICT) {
-    gst_h264_dpb_set_max_num_reorder_frames (priv->dpb,
-        gst_h264_dpb_get_max_num_frames (priv->dpb));
-    return TRUE;
-  }
-
-  /* max_num_reorder_frames not present, infer it from profile/constraints. */
-  if (sps->profile_idc == 66 || sps->profile_idc == 83) {
-    /* baseline, constrained baseline and scalable-baseline profiles
-       only contain I/P frames. */
-    max_num_reorder_frames = 0;
+    return sps->vui_parameters.num_reorder_frames;
   } else if (sps->constraint_set3_flag) {
-    /* constraint_set3_flag may mean the -intra only profile. */
+    /* If max_num_reorder_frames is not present, if profile id is equal to
+     * 44, 86, 100, 110, 122, or 244 and constraint_set3_flag is equal to 1,
+     * max_num_reorder_frames shall be inferred to be equal to 0 */
     switch (sps->profile_idc) {
       case 44:
       case 86:
@@ -2213,19 +2195,21 @@ gst_h264_decoder_update_max_num_reorder_frames (GstH264Decoder * self,
       case 110:
       case 122:
       case 244:
-        max_num_reorder_frames = 0;
-        break;
+        return 0;
       default:
-        max_num_reorder_frames = gst_h264_dpb_get_max_num_frames (priv->dpb);
         break;
     }
-  } else {
-    max_num_reorder_frames = gst_h264_dpb_get_max_num_frames (priv->dpb);
   }
 
-  gst_h264_dpb_set_max_num_reorder_frames (priv->dpb, max_num_reorder_frames);
+  /* Relaxed conditions (undefined by spec) */
+  if (priv->compliance != GST_H264_DECODER_COMPLIANCE_STRICT &&
+      (sps->profile_idc == 66 || sps->profile_idc == 83)) {
+    /* baseline, constrained baseline and scalable-baseline profiles
+     * only contain I/P frames. */
+    return 0;
+  }
 
-  return TRUE;
+  return max_dpb_size;
 }
 
 typedef enum
@@ -2477,8 +2461,8 @@ gst_h264_decoder_process_sps (GstH264Decoder * self, GstH264SPS * sps)
     gst_h264_dpb_set_interlaced (priv->dpb, interlaced);
   }
 
-  if (!gst_h264_decoder_update_max_num_reorder_frames (self, sps))
-    return GST_FLOW_ERROR;
+  gst_h264_dpb_set_max_num_reorder_frames (priv->dpb,
+      gst_h264_decoder_get_max_num_reorder_frames (self, sps, max_dpb_size));
 
   return GST_FLOW_OK;
 }
