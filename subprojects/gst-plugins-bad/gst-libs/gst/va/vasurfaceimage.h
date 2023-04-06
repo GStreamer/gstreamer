@@ -51,6 +51,10 @@ gboolean              va_sync_surface                     (GstVaDisplay * displa
 GST_VA_API
 gboolean              va_check_surface                    (GstVaDisplay * display,
                                                            VASurfaceID surface);
+GST_VA_API
+gboolean              va_check_surface_has_status         (GstVaDisplay * display,
+                                                           VASurfaceID surface,
+                                                           VASurfaceStatus surface_status);
 
 gboolean              va_copy_surface                     (GstVaDisplay * display,
                                                            VASurfaceID dst,

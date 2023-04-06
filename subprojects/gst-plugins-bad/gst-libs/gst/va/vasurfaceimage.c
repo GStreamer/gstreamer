@@ -384,6 +384,30 @@ va_check_surface (GstVaDisplay * display, VASurfaceID surface)
 }
 
 gboolean
+va_check_surface_has_status (GstVaDisplay * display, VASurfaceID surface,
+    VASurfaceStatus surface_status)
+{
+  VADisplay dpy = gst_va_display_get_va_dpy (display);
+  VAStatus status;
+  VASurfaceStatus state;
+
+  status = vaQuerySurfaceStatus (dpy, surface, &state);
+
+  if (status != VA_STATUS_SUCCESS) {
+    GST_ERROR ("vaQuerySurfaceStatus: %s", vaErrorStr (status));
+    return FALSE;
+  }
+
+  GST_LOG ("surface %#x status %d", surface, state);
+
+  /* Just query the surface, no flag to compare, we succeed. */
+  if (!surface_status)
+    return TRUE;
+
+  return ((state & surface_status) == surface_status);
+}
+
+gboolean
 va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
 {
   VADisplay dpy = gst_va_display_get_va_dpy (display);
