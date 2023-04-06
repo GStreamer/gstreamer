@@ -198,7 +198,7 @@ gst-launch-1.0 audiotestsrc ! audioconvert ! autoaudiosink
 ### `audioresample`
 
 This element resamples raw audio buffers to different sampling rates
-using a configurable windowing function to enhance quality
+using a configurable windowing function to enhance quality.
 
 Again, use it to solve negotiation problems regarding sampling rates and
 do not fear to use it
