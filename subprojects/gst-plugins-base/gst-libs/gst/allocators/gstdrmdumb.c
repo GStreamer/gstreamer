@@ -685,7 +685,7 @@ gst_drm_dumb_allocator_new_with_device_path (const gchar * drm_device_path)
 
 /**
  * gst_drm_dumb_allocator_alloc:
- * @allocator: the allocator instance
+ * @allocator: (type GstAllocators.DRMDumbAllocator): the allocator instance
  * @drm_fourcc: the DRM format to allocate for
  * @width: padded width for this allocation
  * @height: padded height for this allocation
@@ -724,7 +724,7 @@ gst_drm_dumb_allocator_alloc (GstAllocator * base_alloc,
 
 /**
  * gst_drm_dumb_allocator_has_prime_export:
- * @allocator: the #GstAllocator
+ * @allocator: (type GstAllocators.DRMDumbAllocator): the #GstAllocator
  *
  * This function allow verifying if the driver support dma-buf exportation.
  *
