@@ -35,9 +35,15 @@ G_BEGIN_DECLS
 
 #define GST_VA_BASE_ENC_ENTRYPOINT(obj) (GST_VA_BASE_ENC_GET_CLASS(obj)->entrypoint)
 
+typedef struct _GstVaEncFrame GstVaEncFrame;
 typedef struct _GstVaBaseEnc GstVaBaseEnc;
 typedef struct _GstVaBaseEncClass GstVaBaseEncClass;
 typedef struct _GstVaBaseEncPrivate GstVaBaseEncPrivate;
+
+struct _GstVaEncFrame
+{
+  GstVaEncodePicture *picture;
+};
 
 struct _GstVaBaseEnc
 {
@@ -155,6 +161,22 @@ void                  gst_va_base_enc_update_property_bool (GstVaBaseEnc * base,
                                                             gboolean * old_val,
                                                             gboolean new_val,
                                                             GParamSpec * pspec);
+
+static inline gpointer
+gst_va_get_enc_frame (GstVideoCodecFrame * frame)
+{
+  GstVaEncFrame *enc_frame = gst_video_codec_frame_get_user_data (frame);
+  g_assert (enc_frame);
+
+  return enc_frame;
+}
+
+static inline void
+gst_va_set_enc_frame (GstVideoCodecFrame * frame,
+    GstVaEncFrame * frame_in, GDestroyNotify notify)
+{
+  gst_video_codec_frame_set_user_data (frame, frame_in, notify);
+}
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVaBaseEnc, gst_object_unref)
 

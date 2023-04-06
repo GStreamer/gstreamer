@@ -262,7 +262,7 @@ struct _GstVaH264Enc
 
 struct _GstVaH264EncFrame
 {
-  GstVaEncodePicture *picture;
+  GstVaEncFrame base;
   GstH264SliceType type;
   gboolean is_ref;
   guint pyramid_level;
@@ -378,7 +378,7 @@ gst_va_enc_frame_new (void)
   frame = g_new (GstVaH264EncFrame, 1);
   frame->frame_num = 0;
   frame->unused_for_reference_pic_num = -1;
-  frame->picture = NULL;
+  frame->base.picture = NULL;
   frame->last_frame = FALSE;
 
   return frame;
@@ -388,16 +388,14 @@ static void
 gst_va_enc_frame_free (gpointer pframe)
 {
   GstVaH264EncFrame *frame = pframe;
-  g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
+  g_clear_pointer (&frame->base.picture, gst_va_encode_picture_free);
   g_free (frame);
 }
 
 static inline GstVaH264EncFrame *
 _enc_frame (GstVideoCodecFrame * frame)
 {
-  GstVaH264EncFrame *enc_frame = gst_video_codec_frame_get_user_data (frame);
-  g_assert (enc_frame);
-  return enc_frame;
+  return gst_va_get_enc_frame (frame);
 }
 
 /* Normalizes bitrate (and CPB size) for HRD conformance */
@@ -2177,7 +2175,7 @@ _add_sequence_header (GstVaH264Enc * self, GstVaH264EncFrame * frame)
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderSequence, packed_sps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed sequence header");
     return FALSE;
@@ -2304,10 +2302,10 @@ _fill_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
   *pic_param = (VAEncPictureParameterBufferH264) {
     .CurrPic = {
       .picture_id =
-          gst_va_encode_picture_get_reconstruct_surface (frame->picture),
+          gst_va_encode_picture_get_reconstruct_surface (frame->base.picture),
       .TopFieldOrderCnt = frame->poc,
     },
-    .coded_buf = frame->picture->coded_buffer,
+    .coded_buf = frame->base.picture->coded_buffer,
     /* Only support one sps and pps now. */
     .pic_parameter_set_id = 0,
     .seq_parameter_set_id = 0,
@@ -2356,7 +2354,7 @@ _fill_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
       f = _enc_frame (g_queue_peek_nth (&base->ref_list, i));
 
       pic_param->ReferenceFrames[i].picture_id =
-          gst_va_encode_picture_get_reconstruct_surface (f->picture);
+          gst_va_encode_picture_get_reconstruct_surface (f->base.picture);
       pic_param->ReferenceFrames[i].TopFieldOrderCnt = f->poc;
       pic_param->ReferenceFrames[i].flags =
           VA_PICTURE_H264_SHORT_TERM_REFERENCE;
@@ -2375,7 +2373,7 @@ _add_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
 
-  if (!gst_va_encoder_add_param (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, frame->base.picture,
           VAEncPictureParameterBufferType, pic_param,
           sizeof (VAEncPictureParameterBufferH264))) {
     GST_ERROR_OBJECT (self, "Failed to create the picture parameter");
@@ -2439,7 +2437,7 @@ _add_picture_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderPicture, packed_pps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed picture header");
     return FALSE;
@@ -2517,7 +2515,8 @@ _add_one_slice (GstVaH264Enc * self, GstVaH264EncFrame * frame,
   if (frame->type != GST_H264_I_SLICE) {
     for (; i < list0_num; i++) {
       slice->RefPicList0[i].picture_id =
-          gst_va_encode_picture_get_reconstruct_surface (list0[i]->picture);
+          gst_va_encode_picture_get_reconstruct_surface
+          (list0[i]->base.picture);
       slice->RefPicList0[i].TopFieldOrderCnt = list0[i]->poc;
       slice->RefPicList0[i].flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
       slice->RefPicList0[i].frame_idx = list0[i]->frame_num;
@@ -2532,7 +2531,8 @@ _add_one_slice (GstVaH264Enc * self, GstVaH264EncFrame * frame,
   if (frame->type == GST_H264_B_SLICE) {
     for (; i < list1_num; i++) {
       slice->RefPicList1[i].picture_id =
-          gst_va_encode_picture_get_reconstruct_surface (list1[i]->picture);
+          gst_va_encode_picture_get_reconstruct_surface
+          (list1[i]->base.picture);
       slice->RefPicList1[i].TopFieldOrderCnt = list1[i]->poc;
       slice->RefPicList1[i].flags |= VA_PICTURE_H264_SHORT_TERM_REFERENCE;
       slice->RefPicList1[i].frame_idx = list1[i]->frame_num;
@@ -2543,7 +2543,7 @@ _add_one_slice (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     slice->RefPicList1[i].flags = VA_PICTURE_H264_INVALID;
   }
 
-  if (!gst_va_encoder_add_param (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, frame->base.picture,
           VAEncSliceParameterBufferType, slice,
           sizeof (VAEncSliceParameterBufferH264))) {
     GST_ERROR_OBJECT (self, "Failed to create the slice parameter");
@@ -2774,7 +2774,7 @@ _add_slice_header (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderSlice, packed_slice_hdr, size * 8 + trail_bits,
           FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed slice header");
@@ -2814,7 +2814,7 @@ _add_aud (GstVaH264Enc * self, GstVaH264EncFrame * frame)
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderRawData, aud_data, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the AUD");
     return FALSE;
@@ -2929,7 +2929,7 @@ _add_sei_cc (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
     goto out;
   }
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderRawData, packed_sei, sei_size * 8, FALSE)) {
     GST_WARNING_OBJECT (self, "Failed to add SEI CC data");
     goto out;
@@ -2966,24 +2966,24 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
   if (frame->poc == 0) {
     VAEncSequenceParameterBufferH264 sequence;
 
-    if (!gst_va_base_enc_add_rate_control_parameter (base, frame->picture,
+    if (!gst_va_base_enc_add_rate_control_parameter (base, frame->base.picture,
             self->rc.rc_ctrl_mode, self->rc.max_bitrate_bits,
             self->rc.target_percentage, self->rc.qp_i, self->rc.min_qp,
             self->rc.max_qp, self->rc.mbbrc))
       return FALSE;
 
-    if (!gst_va_base_enc_add_quality_level_parameter (base, frame->picture,
+    if (!gst_va_base_enc_add_quality_level_parameter (base, frame->base.picture,
             self->rc.target_usage))
       return FALSE;
 
-    if (!gst_va_base_enc_add_frame_rate_parameter (base, frame->picture))
+    if (!gst_va_base_enc_add_frame_rate_parameter (base, frame->base.picture))
       return FALSE;
 
-    if (!gst_va_base_enc_add_hrd_parameter (base, frame->picture,
+    if (!gst_va_base_enc_add_hrd_parameter (base, frame->base.picture,
             self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
       return FALSE;
 
-    if (!gst_va_base_enc_add_trellis_parameter (base, frame->picture,
+    if (!gst_va_base_enc_add_trellis_parameter (base, frame->base.picture,
             self->use_trellis))
       return FALSE;
 
@@ -2991,7 +2991,7 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
     if (!_fill_sps (self, &sequence))
       return FALSE;
 
-    if (!_add_sequence_parameter (self, frame->picture, &sequence))
+    if (!_add_sequence_parameter (self, frame->base.picture, &sequence))
       return FALSE;
 
     if ((self->packed_headers & VA_ENC_PACKED_HEADER_SEQUENCE)
@@ -3088,7 +3088,7 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
     slice_start_mb += slice_mbs;
   }
 
-  if (!gst_va_encoder_encode (base->encoder, frame->picture)) {
+  if (!gst_va_encoder_encode (base->encoder, frame->base.picture)) {
     GST_ERROR_OBJECT (self, "Encode frame error");
     return FALSE;
   }
@@ -3129,7 +3129,7 @@ gst_va_h264_enc_prepare_output (GstVaBaseEnc * base,
   }
 
   buf = gst_va_base_enc_create_output_buffer (base,
-      frame_enc->picture, NULL, 0);
+      frame_enc->base.picture, NULL, 0);
   if (!buf) {
     GST_ERROR_OBJECT (base, "Failed to create output buffer");
     return FALSE;
@@ -3236,11 +3236,11 @@ gst_va_h264_enc_encode_frame (GstVaBaseEnc * base,
   frame = _enc_frame (gst_frame);
   frame->last_frame = is_last;
 
-  g_assert (frame->picture == NULL);
-  frame->picture = gst_va_encode_picture_new (base->encoder,
+  g_assert (frame->base.picture == NULL);
+  frame->base.picture = gst_va_encode_picture_new (base->encoder,
       gst_frame->input_buffer);
 
-  if (!frame->picture) {
+  if (!frame->base.picture) {
     GST_ERROR_OBJECT (self, "Failed to create the encode picture");
     return GST_FLOW_ERROR;
   }
@@ -3280,7 +3280,8 @@ gst_va_h264_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   GstVaH264EncFrame *frame_in;
 
   frame_in = gst_va_enc_frame_new ();
-  gst_video_codec_frame_set_user_data (frame, frame_in, gst_va_enc_frame_free);
+  gst_va_set_enc_frame (frame, (GstVaEncFrame *) frame_in,
+      gst_va_enc_frame_free);
 
   gst_va_base_enc_push_dts (base, frame, self->gop.num_reorder_frames);
 

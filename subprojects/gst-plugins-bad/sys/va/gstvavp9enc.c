@@ -153,7 +153,7 @@ struct _GstVaVp9GFGroup
 
 struct _GstVaVp9EncFrame
 {
-  GstVaEncodePicture *picture;
+  GstVaEncFrame base;
   GstVp9FrameType type;
   /* VP9 does not define a frame number.
      This is a virtual number after the key frame. */
@@ -264,7 +264,7 @@ gst_va_vp9_enc_frame_new (void)
   frame = g_new (GstVaVp9EncFrame, 1);
   frame->frame_num = -1;
   frame->type = FRAME_TYPE_INVALID;
-  frame->picture = NULL;
+  frame->base.picture = NULL;
   frame->pyramid_level = 0;
   frame->flags = 0;
   frame->bidir_ref = FALSE;
@@ -281,7 +281,7 @@ gst_va_vp9_enc_frame_free (gpointer pframe)
 {
   GstVaVp9EncFrame *frame = pframe;
 
-  g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
+  g_clear_pointer (&frame->base.picture, gst_va_encode_picture_free);
   g_free (frame);
 }
 
@@ -291,7 +291,7 @@ gst_va_vp9_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   GstVaVp9EncFrame *frame_in;
 
   frame_in = gst_va_vp9_enc_frame_new ();
-  gst_video_codec_frame_set_user_data (frame, frame_in,
+  gst_va_set_enc_frame (frame, (GstVaEncFrame *) frame_in,
       gst_va_vp9_enc_frame_free);
 
   return TRUE;
@@ -2322,10 +2322,10 @@ _vp9_fill_frame_param (GstVaVp9Enc * self, GstVaVp9EncFrame * va_frame,
     .frame_width_dst = base->width,
     .frame_height_dst = base->height,
     .reconstructed_frame =
-        gst_va_encode_picture_get_reconstruct_surface (va_frame->picture),
+        gst_va_encode_picture_get_reconstruct_surface (va_frame->base.picture),
     /* Set it later. */
     .reference_frames = { 0, },
-    .coded_buf = va_frame->picture->coded_buffer,
+    .coded_buf = va_frame->base.picture->coded_buffer,
     .ref_flags.bits = {
       .force_kf = 0,
       /* Set all the refs later if inter frame. */
@@ -2392,7 +2392,7 @@ _vp9_fill_frame_param (GstVaVp9Enc * self, GstVaVp9EncFrame * va_frame,
 
       pic_param->reference_frames[i] =
           gst_va_encode_picture_get_reconstruct_surface
-          (_enc_frame (self->gop.ref_list[i])->picture);
+          (_enc_frame (self->gop.ref_list[i])->base.picture);
 
     }
 
@@ -2428,13 +2428,13 @@ _vp9_encode_one_frame (GstVaVp9Enc * self, GstVaVp9EncFrame * va_frame)
     return FALSE;
   }
 
-  if (!gst_va_encoder_add_param (base->encoder, va_frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, va_frame->base.picture,
           VAEncPictureParameterBufferType, &pic_param, sizeof (pic_param))) {
     GST_ERROR_OBJECT (self, "Failed to create the frame parameter");
     return FALSE;
   }
 
-  if (!gst_va_encoder_encode (base->encoder, va_frame->picture)) {
+  if (!gst_va_encoder_encode (base->encoder, va_frame->base.picture)) {
     GST_ERROR_OBJECT (self, "Encode frame error");
     return FALSE;
   }
@@ -2504,33 +2504,35 @@ gst_va_vp9_enc_encode_frame (GstVaBaseEnc * base,
     g_assert (va_frame->flags & FRAME_FLAG_ALREADY_ENCODED);
     _vp9_add_repeat_frame_header (self, va_frame);
   } else {
-    g_assert (va_frame->picture == NULL);
-    va_frame->picture = gst_va_encode_picture_new (base->encoder,
+    g_assert (va_frame->base.picture == NULL);
+    va_frame->base.picture = gst_va_encode_picture_new (base->encoder,
         gst_frame->input_buffer);
 
     _vp9_find_ref_to_update (base, gst_frame);
 
     /* Repeat the sequence for each key. */
     if (va_frame->frame_num == 0) {
-      if (!gst_va_base_enc_add_rate_control_parameter (base, va_frame->picture,
+      if (!gst_va_base_enc_add_rate_control_parameter (base,
+              va_frame->base.picture,
               self->rc.rc_ctrl_mode, self->rc.max_bitrate_bits,
               self->rc.target_percentage, self->rc.base_qindex,
               self->rc.min_qindex, self->rc.max_qindex, self->rc.mbbrc))
         return FALSE;
 
-      if (!gst_va_base_enc_add_quality_level_parameter (base, va_frame->picture,
-              self->rc.target_usage))
+      if (!gst_va_base_enc_add_quality_level_parameter (base,
+              va_frame->base.picture, self->rc.target_usage))
         return FALSE;
 
-      if (!gst_va_base_enc_add_frame_rate_parameter (base, va_frame->picture))
+      if (!gst_va_base_enc_add_frame_rate_parameter (base,
+              va_frame->base.picture))
         return FALSE;
 
-      if (!gst_va_base_enc_add_hrd_parameter (base, va_frame->picture,
+      if (!gst_va_base_enc_add_hrd_parameter (base, va_frame->base.picture,
               self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
         return FALSE;
 
       _vp9_fill_sequence_param (self, &seq_param);
-      if (!_vp9_add_sequence_param (self, va_frame->picture, &seq_param))
+      if (!_vp9_add_sequence_param (self, va_frame->base.picture, &seq_param))
         return FALSE;
     }
 
@@ -2576,7 +2578,7 @@ _vp9_create_super_frame_output_buffer (GstVaVp9Enc * self,
     frame_enc = _enc_frame (self->frames_in_super[num]);
 
     frame_size[num] = gst_va_base_enc_copy_output_data (base,
-        frame_enc->picture, data + offset, total_sz - offset);
+        frame_enc->base.picture, data + offset, total_sz - offset);
     if (frame_size[num] <= 0) {
       GST_ERROR_OBJECT (self, "Fails to copy the output data of "
           "system_frame_number %d, frame_num: %d",
@@ -2590,7 +2592,7 @@ _vp9_create_super_frame_output_buffer (GstVaVp9Enc * self,
 
   frame_enc = _enc_frame (last_frame);
   frame_size[num] = gst_va_base_enc_copy_output_data (base,
-      frame_enc->picture, data + offset, total_sz - offset);
+      frame_enc->base.picture, data + offset, total_sz - offset);
   if (frame_size[num] <= 0) {
     GST_ERROR_OBJECT (self, "Fails to copy the output data of "
         "system_frame_number %d, frame_num: %d",
@@ -2699,7 +2701,7 @@ gst_va_vp9_enc_prepare_output (GstVaBaseEnc * base,
       buf = _vp9_create_super_frame_output_buffer (self, frame);
     } else {
       buf = gst_va_base_enc_create_output_buffer (base,
-          frame_enc->picture, NULL, 0);
+          frame_enc->base.picture, NULL, 0);
     }
     if (!buf) {
       GST_ERROR_OBJECT (base, "Failed to create output buffer%s",

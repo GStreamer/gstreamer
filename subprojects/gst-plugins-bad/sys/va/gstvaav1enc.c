@@ -161,7 +161,7 @@ struct _GstVaAV1Ref
 
 struct _GstVaAV1EncFrame
 {
-  GstVaEncodePicture *picture;
+  GstVaEncFrame base;
   GstAV1FrameType type;
   guint8 temporal_id;
   guint8 spatial_id;
@@ -507,7 +507,7 @@ gst_va_av1_enc_frame_new (void)
   frame->type = FRAME_TYPE_INVALID;
   frame->temporal_id = 0;
   frame->spatial_id = 0;
-  frame->picture = NULL;
+  frame->base.picture = NULL;
   frame->pyramid_level = 0;
   frame->flags = 0;
   frame->bidir_ref = FALSE;
@@ -524,7 +524,7 @@ gst_va_av1_enc_frame_free (gpointer pframe)
 {
   GstVaAV1EncFrame *frame = pframe;
 
-  g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
+  g_clear_pointer (&frame->base.picture, gst_va_encode_picture_free);
   g_free (frame);
 }
 
@@ -534,7 +534,7 @@ gst_va_av1_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   GstVaAV1EncFrame *frame_in;
 
   frame_in = gst_va_av1_enc_frame_new ();
-  gst_video_codec_frame_set_user_data (frame, frame_in,
+  gst_va_set_enc_frame (frame, (GstVaEncFrame *) frame_in,
       gst_va_av1_enc_frame_free);
 
   return TRUE;
@@ -3052,7 +3052,7 @@ _av1_add_sequence_header (GstVaAV1Enc * self, GstVaAV1EncFrame * frame,
 
   *size_offset += size;
 
-  if (!gst_va_encoder_add_packed_header (base->encoder, frame->picture,
+  if (!gst_va_encoder_add_packed_header (base->encoder, frame->base.picture,
           VAEncPackedHeaderAV1_SPS, packed_sps, size * 8, FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add packed sequence header.");
     return FALSE;
@@ -3234,8 +3234,8 @@ _av1_fill_frame_param (GstVaAV1Enc * self, GstVaAV1EncFrame * va_frame,
     .frame_width_minus_1 = base->width - 1,
     .frame_height_minus_1 = base->height - 1,
     .reconstructed_frame =
-        gst_va_encode_picture_get_reconstruct_surface (va_frame->picture),
-    .coded_buf = va_frame->picture->coded_buffer,
+        gst_va_encode_picture_get_reconstruct_surface (va_frame->base.picture),
+    .coded_buf = va_frame->base.picture->coded_buffer,
     .primary_ref_frame = primary_ref_frame,
     .order_hint = va_frame->order_hint,
     .refresh_frame_flags = refresh_frame_flags,
@@ -3357,7 +3357,7 @@ _av1_fill_frame_param (GstVaAV1Enc * self, GstVaAV1EncFrame * va_frame,
 
       pic_param->reference_frames[i] =
           gst_va_encode_picture_get_reconstruct_surface
-          (_enc_frame (self->gop.ref_list[i])->picture);
+          (_enc_frame (self->gop.ref_list[i])->base.picture);
     }
 
     for (i = 0; i < 7; i++) {
@@ -3663,7 +3663,7 @@ _av1_add_tile_group_param (GstVaAV1Enc * self, GstVaAV1EncFrame * va_frame,
     tile_group_param.tg_end = (index + 1) * div - 1;
   }
 
-  if (!gst_va_encoder_add_param (base->encoder, va_frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, va_frame->base.picture,
           VAEncSliceParameterBufferType, &tile_group_param,
           sizeof (VAEncTileGroupBufferAV1))) {
     GST_ERROR_OBJECT (self, "Failed to add one tile group parameter");
@@ -3738,14 +3738,14 @@ _av1_encode_one_frame (GstVaAV1Enc * self, GstVaAV1EncFrame * va_frame,
     }
   }
 
-  if (!gst_va_encoder_add_param (base->encoder, va_frame->picture,
+  if (!gst_va_encoder_add_param (base->encoder, va_frame->base.picture,
           VAEncPictureParameterBufferType, &pic_param, sizeof (pic_param))) {
     GST_ERROR_OBJECT (self, "Failed to create the frame parameter");
     return FALSE;
   }
 
   if ((self->packed_headers & VA_ENC_PACKED_HEADER_PICTURE) &&
-      !gst_va_encoder_add_packed_header (base->encoder, va_frame->picture,
+      !gst_va_encoder_add_packed_header (base->encoder, va_frame->base.picture,
           VAEncPackedHeaderAV1_PPS, packed_frame_hdr, frame_hdr_size * 8,
           FALSE)) {
     GST_ERROR_OBJECT (self, "Failed to add the packed frame header");
@@ -3759,7 +3759,7 @@ _av1_encode_one_frame (GstVaAV1Enc * self, GstVaAV1EncFrame * va_frame,
     }
   }
 
-  if (!gst_va_encoder_encode (base->encoder, va_frame->picture)) {
+  if (!gst_va_encoder_encode (base->encoder, va_frame->base.picture)) {
     GST_ERROR_OBJECT (self, "Encode frame error");
     return FALSE;
   }
@@ -3840,8 +3840,8 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
   } else {
     guint size_offset = 0;
 
-    g_assert (va_frame->picture == NULL);
-    va_frame->picture = gst_va_encode_picture_new (base->encoder,
+    g_assert (va_frame->base.picture == NULL);
+    va_frame->base.picture = gst_va_encode_picture_new (base->encoder,
         gst_frame->input_buffer);
 
     _av1_find_ref_to_update (base, gst_frame);
@@ -3860,25 +3860,27 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
 
     /* Repeat the sequence for each key. */
     if (va_frame->frame_num == 0) {
-      if (!gst_va_base_enc_add_rate_control_parameter (base, va_frame->picture,
+      if (!gst_va_base_enc_add_rate_control_parameter (base,
+              va_frame->base.picture,
               self->rc.rc_ctrl_mode, self->rc.max_bitrate_bits,
               self->rc.target_percentage, self->rc.base_qindex,
               self->rc.min_qindex, self->rc.max_qindex, self->rc.mbbrc))
         return FALSE;
 
-      if (!gst_va_base_enc_add_quality_level_parameter (base, va_frame->picture,
-              self->rc.target_usage))
+      if (!gst_va_base_enc_add_quality_level_parameter (base,
+              va_frame->base.picture, self->rc.target_usage))
         return FALSE;
 
-      if (!gst_va_base_enc_add_frame_rate_parameter (base, va_frame->picture))
+      if (!gst_va_base_enc_add_frame_rate_parameter (base,
+              va_frame->base.picture))
         return FALSE;
 
-      if (!gst_va_base_enc_add_hrd_parameter (base, va_frame->picture,
+      if (!gst_va_base_enc_add_hrd_parameter (base, va_frame->base.picture,
               self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
         return FALSE;
 
       _av1_fill_sequence_param (self, &seq_param);
-      if (!_av1_add_sequence_param (self, va_frame->picture, &seq_param))
+      if (!_av1_add_sequence_param (self, va_frame->base.picture, &seq_param))
         return FALSE;
 
       _av1_fill_sequence_header (self, &seq_param);
@@ -3936,7 +3938,7 @@ _av1_create_tu_output_buffer (GstVaAV1Enc * self,
     }
 
     frame_size = gst_va_base_enc_copy_output_data (base,
-        frame_enc->picture, data + offset, total_sz - offset);
+        frame_enc->base.picture, data + offset, total_sz - offset);
     if (frame_size <= 0) {
       GST_ERROR_OBJECT (self, "Fails to copy the output data of "
           "system_frame_number %d, frame_num: %d",
@@ -3956,7 +3958,7 @@ _av1_create_tu_output_buffer (GstVaAV1Enc * self,
   }
 
   frame_size = gst_va_base_enc_copy_output_data (base,
-      frame_enc->picture, data + offset, total_sz - offset);
+      frame_enc->base.picture, data + offset, total_sz - offset);
   if (frame_size <= 0) {
     GST_ERROR_OBJECT (self, "Fails to copy the output data of "
         "system_frame_number %d, frame_num: %d",
@@ -4050,7 +4052,7 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
     if (self->frames_in_tu_num > 0) {
       buf = _av1_create_tu_output_buffer (self, frame);
     } else {
-      buf = gst_va_base_enc_create_output_buffer (base, frame_enc->picture,
+      buf = gst_va_base_enc_create_output_buffer (base, frame_enc->base.picture,
           (frame_enc->cached_frame_header_size > 0 ?
               frame_enc->cached_frame_header : NULL),
           frame_enc->cached_frame_header_size);
