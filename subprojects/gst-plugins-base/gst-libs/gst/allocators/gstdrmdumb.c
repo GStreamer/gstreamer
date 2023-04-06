@@ -493,7 +493,7 @@ gst_drm_dumb_allocator_class_init (GstDRMDumbAllocatorClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
 
   /**
-   * GstDRMDumbAllocator:drm-device-path:
+   * GstDRMDumbAllocator:drm-device-path: (type filename):
    *
    * Since: 1.24
    */
@@ -649,7 +649,7 @@ gst_drm_dumb_allocator_new_with_fd (gint drm_fd)
 
 /**
  * gst_drm_dumb_allocator_new_with_device_path:
- * @drm_device_path: path to the DRM device to open
+ * @drm_device_path: (type filename): path to the DRM device to open
  *
  * Creates a new #GstDRMDumbAllocator for the specific device path. This
  * function can fail if the path does not exist, is not a DRM device or if
