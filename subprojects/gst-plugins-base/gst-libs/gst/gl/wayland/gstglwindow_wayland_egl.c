@@ -478,6 +478,9 @@ gst_gl_window_wayland_egl_close (GstGLWindow * gl_window)
   g_source_unref (window_egl->wl_source);
   window_egl->wl_source = NULL;
 
+  wl_proxy_wrapper_destroy (window_egl->display.display);
+  wl_event_queue_destroy (window_egl->window.queue);
+
   GST_GL_WINDOW_CLASS (parent_class)->close (gl_window);
 }
 
