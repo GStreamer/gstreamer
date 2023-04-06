@@ -660,8 +660,11 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
     if (ret != GST_FLOW_OK)
       goto error_encode;
 
-    while (g_queue_get_length (&base->output_list) > 0)
+    while (ret == GST_FLOW_OK && g_queue_get_length (&base->output_list) > 0)
       ret = _push_out_one_buffer (base);
+
+    if (ret != GST_FLOW_OK)
+      goto error_push_buffer;
 
     frame_encode = NULL;
     if (!base_class->reorder_frame (base, NULL, FALSE, &frame_encode))
@@ -704,6 +707,12 @@ error_encode:
         ("Failed to encode the frame %s.", gst_flow_get_name (ret)), (NULL));
     gst_clear_buffer (&frame_encode->output_buffer);
     gst_video_encoder_finish_frame (venc, frame_encode);
+    return ret;
+  }
+error_push_buffer:
+  {
+    GST_ELEMENT_ERROR (venc, STREAM, ENCODE,
+        ("Failed to push one frame."), (NULL));
     return ret;
   }
 }
