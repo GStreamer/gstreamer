@@ -650,6 +650,18 @@ gst_msdk_context_get_session (GstMsdkContext * context)
   return context->priv->session.session;
 }
 
+const mfxLoader *
+gst_msdk_context_get_loader (GstMsdkContext * context)
+{
+  return &context->priv->session.loader;
+}
+
+mfxU32
+gst_msdk_context_get_impl_idx (GstMsdkContext * context)
+{
+  return context->priv->session.impl_idx;
+}
+
 gpointer
 gst_msdk_context_get_handle (GstMsdkContext * context)
 {
