@@ -332,9 +332,11 @@ gst_decklink_audio_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     sample_depth = bmdAudioSampleType32bitInteger;
   }
 
+  g_mutex_lock (&self->output->lock);
   ret = self->output->output->EnableAudioOutput (bmdAudioSampleRate48kHz,
       sample_depth, info.channels, bmdAudioOutputStreamContinuous);
   if (ret != S_OK) {
+    g_mutex_unlock (&self->output->lock);
     GST_WARNING_OBJECT (self, "Failed to enable audio output 0x%08lx",
         (unsigned long) ret);
     return FALSE;
@@ -342,6 +344,10 @@ gst_decklink_audio_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   self->output->audio_enabled = TRUE;
   self->info = info;
+
+  if (self->output->start_scheduled_playback && self->output->videosink)
+    self->output->start_scheduled_playback (self->output->videosink);
+  g_mutex_unlock (&self->output->lock);
 
   // Create a new resampler as needed
   if (self->resampler)
