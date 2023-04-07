@@ -388,20 +388,6 @@ failed:
   return msdk_session;
 }
 
-gboolean
-msdk_is_available (void)
-{
-  /* Make sure we can create GstMsdkContext instance (the job type is not used actually) */
-  GstMsdkContext *msdk_context = gst_msdk_context_new (1, GST_MSDK_JOB_DECODER);
-
-  if (!msdk_context) {
-    return FALSE;
-  }
-
-  gst_object_unref (msdk_context);
-  return TRUE;
-}
-
 void
 gst_msdk_set_video_alignment (GstVideoInfo * info, guint alloc_w, guint alloc_h,
     GstVideoAlignment * alignment)

@@ -304,15 +304,13 @@ gst_msdk_context_use_d3d11 (GstMsdkContext * context)
 #endif
 
 static gboolean
-gst_msdk_context_open (GstMsdkContext * context, gboolean hardware,
-    GstMsdkContextJobType job_type)
+gst_msdk_context_open (GstMsdkContext * context, gboolean hardware)
 {
   mfxU16 codename;
   GstMsdkContextPrivate *priv = context->priv;
   MsdkSession msdk_session;
   mfxIMPL impl;
 
-  priv->job_type = job_type;
   priv->hardware = hardware;
 
   impl = hardware ? MFX_IMPL_HARDWARE_ANY : MFX_IMPL_SOFTWARE;
@@ -410,15 +408,26 @@ gst_msdk_context_class_init (GstMsdkContextClass * klass)
 }
 
 GstMsdkContext *
-gst_msdk_context_new (gboolean hardware, GstMsdkContextJobType job_type)
+gst_msdk_context_new (gboolean hardware)
 {
   GstMsdkContext *obj = g_object_new (GST_TYPE_MSDK_CONTEXT, NULL);
 
-  if (obj && !gst_msdk_context_open (obj, hardware, job_type)) {
-    if (obj)
-      gst_object_unref (obj);
+  if (obj && !gst_msdk_context_open (obj, hardware)) {
+    gst_object_unref (obj);
     return NULL;
   }
+
+  return obj;
+}
+
+GstMsdkContext *
+gst_msdk_context_new_with_job_type (gboolean hardware,
+    GstMsdkContextJobType job_type)
+{
+  GstMsdkContext *obj = gst_msdk_context_new (hardware);
+
+  if (obj)
+    obj->priv->job_type = job_type;
 
   return obj;
 }
@@ -781,6 +790,13 @@ GstMsdkContextJobType
 gst_msdk_context_get_job_type (GstMsdkContext * context)
 {
   return context->priv->job_type;
+}
+
+void
+gst_msdk_context_set_job_type (GstMsdkContext * context,
+    GstMsdkContextJobType job_type)
+{
+  context->priv->job_type = job_type;
 }
 
 void

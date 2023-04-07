@@ -264,7 +264,7 @@ gst_msdk_ensure_new_context (GstElement * element, gboolean hardware,
      to enable user to choose GPU device in multi-GPU environment. This variable
      is only valid when there's no context returned by upstream or downstream.
      Otherwise it will use the device that created by upstream or downstream. */
-  msdk_context = gst_msdk_context_new (hardware, job);
+  msdk_context = gst_msdk_context_new_with_job_type (hardware, job);
   if (!msdk_context) {
     GST_ERROR_OBJECT (element, "Context creation failed");
     return FALSE;

@@ -114,8 +114,6 @@ MsdkSession msdk_open_session (mfxIMPL impl);
 void msdk_close_mfx_session (mfxSession session);
 void msdk_close_session (MsdkSession * session);
 
-gboolean msdk_is_available (void);
-
 mfxFrameSurface1 *msdk_get_free_surface (mfxFrameSurface1 * surfaces,
     guint size);
 void msdk_frame_to_surface (GstVideoFrame * frame, mfxFrameSurface1 * surface);

@@ -115,6 +115,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
+  GstMsdkContext *context;
 
   GST_DEBUG_CATEGORY_INIT (gst_msdk_debug, "msdk", 0, "msdk");
   GST_DEBUG_CATEGORY_INIT (gst_msdkdec_debug, "msdkdec", 0, "msdkdec");
@@ -145,7 +146,8 @@ plugin_init (GstPlugin * plugin)
 
   plugin_add_dependencies (plugin);
 
-  if (!msdk_is_available ())
+  context = gst_msdk_context_new (TRUE);
+  if (!context)
     return TRUE;                /* return TRUE to avoid getting blacklisted */
 
   ret = gst_element_register (plugin, "msdkh264dec", GST_RANK_NONE,
@@ -195,6 +197,8 @@ plugin_init (GstPlugin * plugin)
 #endif
   ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
       GST_TYPE_MSDKVPP);
+
+  gst_object_unref (context);
 
   return ret;
 }

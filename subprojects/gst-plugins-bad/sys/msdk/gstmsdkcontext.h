@@ -87,7 +87,9 @@ struct _GstMsdkContextClass
 
 GType gst_msdk_context_get_type (void);
 
-GstMsdkContext * gst_msdk_context_new (gboolean hardware, GstMsdkContextJobType job_type);
+GstMsdkContext * gst_msdk_context_new (gboolean hardware);
+GstMsdkContext * gst_msdk_context_new_with_job_type (gboolean hardware,
+    GstMsdkContextJobType job_type);
 GstMsdkContext * gst_msdk_context_new_with_parent (GstMsdkContext * parent);
 #ifndef _WIN32
 GstMsdkContext * gst_msdk_context_new_with_va_display (GstObject * display_obj,
@@ -140,6 +142,10 @@ gst_msdk_context_get_alloc_pool (GstMsdkContext * context);
 
 GstMsdkContextJobType
 gst_msdk_context_get_job_type (GstMsdkContext * context);
+
+void
+gst_msdk_context_set_job_type (GstMsdkContext * context,
+    GstMsdkContextJobType job_type);
 
 void
 gst_msdk_context_add_job_type (GstMsdkContext * context, GstMsdkContextJobType job_type);
