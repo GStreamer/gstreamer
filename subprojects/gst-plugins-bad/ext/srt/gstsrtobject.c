@@ -426,6 +426,7 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
       break;
     case PROP_AUTHENTICATION:
       srtobject->authentication = g_value_get_boolean (value);
+      break;
     case PROP_AUTO_RECONNECT:
       srtobject->auto_reconnect = g_value_get_boolean (value);
       break;
@@ -534,7 +535,10 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       GST_OBJECT_UNLOCK (srtobject->element);
       break;
     case PROP_AUTHENTICATION:
+      GST_OBJECT_LOCK (srtobject->element);
       g_value_set_boolean (value, srtobject->authentication);
+      GST_OBJECT_UNLOCK (srtobject->element);
+      break;
     case PROP_AUTO_RECONNECT:
       GST_OBJECT_LOCK (srtobject->element);
       g_value_set_boolean (value, srtobject->auto_reconnect);
