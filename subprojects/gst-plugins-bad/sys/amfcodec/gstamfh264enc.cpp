@@ -395,7 +395,7 @@ static void gst_amf_h264_enc_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_amf_h264_enc_getcaps (GstVideoEncoder * encoder,
     GstCaps * filter);
 static gboolean gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
-    GstVideoCodecState * state, gpointer component);
+    GstVideoCodecState * state, gpointer component, guint * num_reorder_frames);
 static gboolean gst_amf_h264_enc_set_output_state (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component);
 static gboolean gst_amf_h264_enc_set_surface_prop (GstAmfEncoder * encoder,
@@ -1162,7 +1162,7 @@ gst_amf_h264_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 
 static gboolean
 gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
-    GstVideoCodecState * state, gpointer component)
+    GstVideoCodecState * state, gpointer component, guint * num_reorder_frames)
 {
   GstAmfH264Enc *self = GST_AMF_H264_ENC (encoder);
   GstAmfH264EncClass *klass = GST_AMF_H264_ENC_GET_CLASS (self);
@@ -1499,6 +1499,21 @@ gst_amf_h264_enc_set_format (GstAmfEncoder * encoder,
     GST_ERROR_OBJECT (self, "Failed to set cabac, result %"
         GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
     goto error;
+  }
+
+  if (dev_caps->bframes && (profile == AMF_VIDEO_ENCODER_PROFILE_MAIN ||
+          profile == AMF_VIDEO_ENCODER_PROFILE_HIGH)) {
+    int64_val = 0;
+    result = comp->GetProperty (AMF_VIDEO_ENCODER_B_PIC_PATTERN, &int64_val);
+    if (result != AMF_OK) {
+      GST_ERROR_OBJECT (self, "Couldn't get b-frame setting, result %"
+          GST_AMF_RESULT_FORMAT, GST_AMF_RESULT_ARGS (result));
+      goto error;
+    }
+
+    if (int64_val > 0) {
+      *num_reorder_frames = (guint) int64_val;
+    }
   }
 
   self->property_updated = FALSE;

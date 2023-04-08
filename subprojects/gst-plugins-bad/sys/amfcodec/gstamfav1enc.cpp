@@ -350,7 +350,7 @@ static void gst_amf_av1_enc_set_property (GObject * object, guint prop_id,
 static void gst_amf_av1_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
-    GstVideoCodecState * state, gpointer component);
+    GstVideoCodecState * state, gpointer component, guint * num_reorder_frames);
 static gboolean gst_amf_av1_enc_set_output_state (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component);
 static gboolean gst_amf_av1_enc_set_surface_prop (GstAmfEncoder * encoder,
@@ -923,7 +923,7 @@ gst_amf_av1_enc_get_property (GObject * object, guint prop_id,
 
 static gboolean
 gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
-    GstVideoCodecState * state, gpointer component)
+    GstVideoCodecState * state, gpointer component, guint * num_reorder_frames)
 {
   GstAmfAv1Enc *self = GST_AMF_AV1_ENC (encoder);
   GstAmfAv1EncClass *klass = GST_AMF_AV1_ENC_GET_CLASS (self);

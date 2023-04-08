@@ -29,6 +29,8 @@
 #include <wrl.h>
 #include <string.h>
 #include <mmsystem.h>
+#include <queue>
+#include <algorithm>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -346,26 +348,32 @@ typedef struct
   GstMapInfo info;
 } GstAmfEncoderFrameData;
 
+
+/* *INDENT-OFF* */
 struct _GstAmfEncoderPrivate
 {
-  gint64 adapter_luid;
-  const wchar_t *codec_id;
+  gint64 adapter_luid = 0;
+  const wchar_t *codec_id = nullptr;
 
-  GstD3D11Device *device;
-  GstD3D11Fence *fence;
-  AMFContext *context;
-  AMFComponent *comp;
-  GstBufferPool *internal_pool;
+  GstD3D11Device *device = nullptr;
+  GstD3D11Fence *fence = nullptr;
+  AMFContext *context = nullptr;
+  AMFComponent *comp = nullptr;
+  GstBufferPool *internal_pool = nullptr;
 
-  GstVideoCodecState *input_state;
+  GstVideoCodecState *input_state = nullptr;
 
   /* High precision clock */
-  guint timer_resolution;
+  guint timer_resolution = 0;
+
+  std::queue <GstClockTime> timestamp_queue;
+  GstClockTime dts_offset = 0;
+  GstClockTime last_dts = GST_CLOCK_TIME_NONE;
 };
+/* *INDENT-ON* */
 
 #define gst_amf_encoder_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (GstAmfEncoder, gst_amf_encoder,
-    GST_TYPE_VIDEO_ENCODER);
+G_DEFINE_ABSTRACT_TYPE (GstAmfEncoder, gst_amf_encoder, GST_TYPE_VIDEO_ENCODER);
 
 static void gst_amf_encoder_dispose (GObject * object);
 static void gst_amf_encoder_finalize (GObject * object);
@@ -440,8 +448,7 @@ gst_amf_encoder_init (GstAmfEncoder * self)
   GstAmfEncoderPrivate *priv;
   TIMECAPS time_caps;
 
-  priv = self->priv =
-      (GstAmfEncoderPrivate *) gst_amf_encoder_get_instance_private (self);
+  priv = self->priv = new GstAmfEncoderPrivate ();
 
   gst_video_encoder_set_min_pts (GST_VIDEO_ENCODER (self),
       GST_SECOND * 60 * 60 * 1000);
@@ -476,6 +483,8 @@ gst_amf_encoder_finalize (GObject * object)
 
   if (priv->timer_resolution)
     timeEndPeriod (priv->timer_resolution);
+
+  delete priv;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -567,12 +576,19 @@ gst_amf_encoder_reset (GstAmfEncoder * self)
     priv->comp = nullptr;
   }
 
+  std::queue < GstClockTime > empty_queue;
+  std::swap (priv->timestamp_queue, empty_queue);
+
+  priv->dts_offset = 0;
+  priv->last_dts = GST_CLOCK_TIME_NONE;
+
   return TRUE;
 }
 
 static GstFlowReturn
 gst_amf_encoder_process_output (GstAmfEncoder * self, AMFBuffer * buffer)
 {
+  GstAmfEncoderPrivate *priv = self->priv;
   GstAmfEncoderClass *klass = GST_AMF_ENCODER_GET_CLASS (self);
   GstVideoEncoder *venc = GST_VIDEO_ENCODER_CAST (self);
   AMF_RESULT result;
@@ -614,11 +630,35 @@ gst_amf_encoder_process_output (GstAmfEncoder * self, AMFBuffer * buffer)
   GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_MARKER);
 
   if (frame) {
+    GstClockTime dts = GST_CLOCK_TIME_NONE;
+
+    if (GST_CLOCK_TIME_IS_VALID (frame->pts) && !priv->timestamp_queue.empty ()) {
+      dts = priv->timestamp_queue.front ();
+      priv->timestamp_queue.pop ();
+
+      if (priv->dts_offset > 0)
+        dts -= priv->dts_offset;
+
+      if (!GST_CLOCK_TIME_IS_VALID (priv->last_dts)) {
+        dts = MIN (dts, frame->pts);
+        priv->last_dts = dts;
+      } else {
+        dts = MAX (priv->last_dts, dts);
+        dts = MIN (dts, frame->pts);
+        priv->last_dts = dts;
+      }
+    }
+
+    frame->dts = dts;
     frame->output_buffer = output_buffer;
 
     if (sync_point)
       GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
   } else {
+    GstClockTime pts = buffer->GetPts () * 100;
+
+    GST_BUFFER_PTS (output_buffer) = pts;
+
     if (!sync_point)
       GST_BUFFER_FLAG_SET (output_buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
@@ -805,6 +845,7 @@ gst_amf_encoder_open_component (GstAmfEncoder * self)
   AMFFactory *factory = (AMFFactory *) gst_amf_get_factory ();
   AMFComponentPtr comp;
   AMF_RESULT result;
+  guint num_reorder_frames = 0;
 
   gst_amf_encoder_drain (self, FALSE);
 
@@ -818,7 +859,8 @@ gst_amf_encoder_open_component (GstAmfEncoder * self)
     return FALSE;
   }
 
-  if (!klass->set_format (self, priv->input_state, comp.GetPtr ())) {
+  if (!klass->set_format (self, priv->input_state, comp.GetPtr (),
+          &num_reorder_frames)) {
     GST_ERROR_OBJECT (self, "Failed to set format");
     return FALSE;
   }
@@ -829,6 +871,19 @@ gst_amf_encoder_open_component (GstAmfEncoder * self)
   }
 
   priv->comp = comp.Detach ();
+
+  if (num_reorder_frames > 0) {
+    gint fps_n = 25;
+    gint fps_d = 1;
+
+    if (priv->input_state->info.fps_n > 0 && priv->input_state->info.fps_d > 0) {
+      fps_n = priv->input_state->info.fps_n;
+      fps_d = priv->input_state->info.fps_d;
+    }
+
+    priv->dts_offset = gst_util_uint64_scale (GST_SECOND, fps_d, fps_n) *
+        num_reorder_frames;
+  }
 
   return TRUE;
 }
@@ -1110,7 +1165,8 @@ gst_amf_frame_data_free (GstAmfEncoderFrameData * data)
 }
 
 static GstFlowReturn
-gst_amf_encoder_submit_input (GstAmfEncoder * self, AMFSurface * surface)
+gst_amf_encoder_submit_input (GstAmfEncoder * self, GstVideoCodecFrame * frame,
+    AMFSurface * surface)
 {
   GstAmfEncoderPrivate *priv = self->priv;
   AMF_RESULT result;
@@ -1122,6 +1178,8 @@ gst_amf_encoder_submit_input (GstAmfEncoder * self, AMFSurface * surface)
       GST_TRACE_OBJECT (self, "SubmitInput returned %" GST_AMF_RESULT_FORMAT,
           GST_AMF_RESULT_ARGS (result));
       ret = GST_FLOW_OK;
+      if (GST_CLOCK_TIME_IS_VALID (frame->pts))
+        priv->timestamp_queue.push (frame->pts);
       break;
     }
 
@@ -1228,7 +1286,7 @@ gst_amf_encoder_handle_frame (GstVideoEncoder * encoder,
   klass->set_surface_prop (self, frame, surface.GetPtr ());
   gst_video_codec_frame_unref (frame);
 
-  ret = gst_amf_encoder_submit_input (self, surface.GetPtr ());
+  ret = gst_amf_encoder_submit_input (self, frame, surface.GetPtr ());
   if (ret == GST_FLOW_OK)
     ret = gst_amf_encoder_try_output (self, FALSE);
   if (ret == GST_AMF_ENCODER_FLOW_TRY_AGAIN)

@@ -88,7 +88,8 @@ struct _GstAmfEncoderClass
   GstAmfEncoderPASupportedOptions pa_supported;
   gboolean    (*set_format)           (GstAmfEncoder * encoder,
                                        GstVideoCodecState * state,
-                                       gpointer component);
+                                       gpointer component,
+                                       guint * num_reorder_frames);
 
   gboolean    (*set_output_state)     (GstAmfEncoder * encoder,
                                        GstVideoCodecState * state,

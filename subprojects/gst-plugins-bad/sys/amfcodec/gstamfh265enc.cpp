@@ -365,7 +365,7 @@ static void gst_amf_h265_enc_get_property (GObject * object, guint prop_id,
 static GstCaps *gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder,
     GstCaps * filter);
 static gboolean gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
-    GstVideoCodecState * state, gpointer component);
+    GstVideoCodecState * state, gpointer component, guint * num_reorder_frames);
 static gboolean gst_amf_h265_enc_set_output_state (GstAmfEncoder * encoder,
     GstVideoCodecState * state, gpointer component);
 static gboolean gst_amf_h265_enc_set_surface_prop (GstAmfEncoder * encoder,
@@ -1054,7 +1054,7 @@ gst_amf_h265_enc_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 
 static gboolean
 gst_amf_h265_enc_set_format (GstAmfEncoder * encoder,
-    GstVideoCodecState * state, gpointer component)
+    GstVideoCodecState * state, gpointer component, guint * num_reorder_frames)
 {
   GstAmfH265Enc *self = GST_AMF_H265_ENC (encoder);
   GstAmfH265EncClass *klass = GST_AMF_H265_ENC_GET_CLASS (self);
