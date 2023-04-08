@@ -1021,6 +1021,9 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
   }
   color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_UNKNOWN;
   switch (cinfo->matrix) {
+      /* XXX: There's a driver bug that BT601 color matrix here results in
+       * identity matrix specified */
+#if 0
     case GST_VIDEO_COLOR_MATRIX_BT601:
       if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
         color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_601;
@@ -1028,6 +1031,7 @@ gst_amf_av1_enc_set_format (GstAmfEncoder * encoder,
         color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_601;
       }
       break;
+#endif
     case GST_VIDEO_COLOR_MATRIX_BT709:
       if (cinfo->range == GST_VIDEO_COLOR_RANGE_0_255) {
         color_profile = AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_709;
