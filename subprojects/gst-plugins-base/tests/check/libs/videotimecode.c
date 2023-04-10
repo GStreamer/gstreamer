@@ -714,6 +714,56 @@ GST_START_TEST (videotimecode_from_to_string)
 
 GST_END_TEST;
 
+GST_START_TEST (videotimecode_half_fps)
+{
+  GstVideoTimeCode *tc;
+  GDateTime *dt;
+
+  dt = g_date_time_new_utc (2016, 7, 29, 10, 32, 50);
+
+  tc = gst_video_time_code_new (1, 2, dt,
+      GST_VIDEO_TIME_CODE_FLAGS_NONE, 0, 0, 0, 0, 0);
+
+  fail_unless (gst_video_time_code_is_valid (tc));
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc), 0);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      0);
+  fail_unless_equals_int (tc->frames, 0);
+  fail_unless_equals_int (tc->seconds, 0);
+  fail_unless_equals_int (tc->minutes, 0);
+  fail_unless_equals_int (tc->hours, 0);
+
+  gst_video_time_code_add_frames (tc, 10);
+  fail_unless (gst_video_time_code_is_valid (tc));
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      20 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      10);
+  fail_unless_equals_int (tc->frames, 0);
+  fail_unless_equals_int (tc->seconds, 20);
+  fail_unless_equals_int (tc->minutes, 0);
+  fail_unless_equals_int (tc->hours, 0);
+
+  gst_video_time_code_add_frames (tc, 40);
+  fail_unless (gst_video_time_code_is_valid (tc));
+  fail_unless_equals_uint64 (gst_video_time_code_nsec_since_daily_jam (tc),
+      100 * GST_SECOND);
+  fail_unless_equals_uint64 (gst_video_time_code_frames_since_daily_jam (tc),
+      50);
+  fail_unless_equals_int (tc->frames, 0);
+  fail_unless_equals_int (tc->seconds, 40);
+  fail_unless_equals_int (tc->minutes, 1);
+  fail_unless_equals_int (tc->hours, 0);
+
+  tc->seconds += 1;
+  fail_if (gst_video_time_code_is_valid (tc));
+
+  gst_video_time_code_free (tc);
+  g_date_time_unref (dt);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_videotimecode_suite (void)
 {
@@ -754,6 +804,8 @@ gst_videotimecode_suite (void)
   tcase_add_test (tc, videotimecode_from_date_time);
 
   tcase_add_test (tc, videotimecode_from_to_string);
+
+  tcase_add_test (tc, videotimecode_half_fps);
 
   return s;
 }
