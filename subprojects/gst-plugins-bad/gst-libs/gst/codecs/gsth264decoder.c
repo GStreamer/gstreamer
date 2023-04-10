@@ -2162,9 +2162,9 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
 
   gst_h264_picture_unref (picture);
 
-  /* For the live mode, we try to bump here to avoid waiting
-     for another decoding circle. */
-  if (priv->is_live && priv->compliance != GST_H264_DECODER_COMPLIANCE_STRICT)
+  /* For low-latency output, we try to bump here to avoid waiting
+   * for another decoding circle. */
+  if (bump_level != GST_H264_DPB_BUMP_NORMAL_LATENCY)
     _bump_dpb (self, bump_level, NULL, ret);
 }
 
@@ -2318,9 +2318,14 @@ gst_h264_decoder_set_latency (GstH264Decoder * self, const GstH264SPS * sps,
 
   bump_level = get_bump_level (self);
   if (bump_level != GST_H264_DPB_BUMP_NORMAL_LATENCY) {
-    guint32 max_reorder_frames =
-        gst_h264_dpb_get_max_num_reorder_frames (priv->dpb);
-    frames_delay = MIN (max_dpb_size, max_reorder_frames);
+    if (sps->pic_order_cnt_type == 2) {
+      /* POC type 2 has does not allow frame reordering */
+      frames_delay = 0;
+    } else {
+      guint32 max_reorder_frames =
+          gst_h264_dpb_get_max_num_reorder_frames (priv->dpb);
+      frames_delay = MIN (max_dpb_size, max_reorder_frames);
+    }
   }
 
   /* Consider output delay wanted by subclass */

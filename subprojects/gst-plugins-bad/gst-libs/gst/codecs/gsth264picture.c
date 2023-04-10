@@ -777,6 +777,12 @@ gst_h264_dpb_needs_bump (GstH264Dpb * dpb, GstH264Picture * to_insert,
     if (!gst_h264_dpb_has_empty_frame_buffer (dpb))
       goto normal_bump;
 
+    /* In case of POC type 2, decoding order is equal to output order */
+    if (picture->pic_order_cnt_type == 2) {
+      GST_TRACE ("POC type == 2, bumping");
+      return TRUE;
+    }
+
     /* 7.4.1.2.2: The values of picture order count for the coded pictures
        in consecutive access units in decoding order containing non-reference
        pictures shall be non-decreasing. Safe. */
