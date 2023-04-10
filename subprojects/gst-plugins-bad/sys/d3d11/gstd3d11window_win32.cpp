@@ -222,6 +222,7 @@ gst_d3d11_window_win32_prepare (GstD3D11Window * window, guint display_width,
 
   hwnd = (HWND) window->external_handle;
   if (!IsWindow (hwnd)) {
+    gst_structure_free (config);
     GST_ERROR_OBJECT (self, "Invalid window handle");
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Invalid window handle");
@@ -234,6 +235,7 @@ gst_d3d11_window_win32_prepare (GstD3D11Window * window, guint display_width,
   GST_DEBUG_OBJECT (self, "Preparing external handle");
   ret = gst_d3d11_window_win32_set_external_handle (self);
   if (ret != GST_FLOW_OK) {
+    gst_structure_free (config);
     if (ret == GST_FLOW_FLUSHING) {
       GST_WARNING_OBJECT (self, "Flushing");
       return GST_FLOW_FLUSHING;
