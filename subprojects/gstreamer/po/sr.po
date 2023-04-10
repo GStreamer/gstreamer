@@ -2,13 +2,14 @@
 # Copyright © 2020 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Danilo Segan <dsegan@gmx.net>, 2004-2005.
-# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2021.
+# Мирослав Николић <miroslavnikolic@rocketmail.com>, 2011–2023.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.19.2\n"
+"Project-Id-Version: gstreamer-1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-11 15:40+0000\n"
-"PO-Revision-Date: 2021-10-01 22:08+0200\n"
+"POT-Creation-Date: 2023-04-10 13:49+0100\n"
+"PO-Revision-Date: 2023-02-26 08:09+0100\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <(nothing)>\n"
 "Language: sr\n"
@@ -19,6 +20,7 @@ msgstr ""
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
 "X-Project-Style: gnome\n"
+"X-Generator: Gtranslator 41.0\n"
 
 msgid "Print the GStreamer version"
 msgstr "Исписује издање Гстримера"
@@ -873,7 +875,7 @@ msgid "link has no sink [source=%s@%p]"
 msgstr "веза нема усклађивање [source=%s@%p]"
 
 msgid "No such property."
-msgstr ""
+msgstr "Нема таквог својства."
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
@@ -895,9 +897,9 @@ msgstr "нема елемента „%s“"
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "не могу да поставим особину „%s“ у елементу „%s“ на „%s“"
 
-#, fuzzy, c-format
+#, c-format
 msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
-msgstr "не могу да поставим особину „%s“ у елементу „%s“ на „%s“"
+msgstr "не могу да поставим особину „%s“ у породу елемента „%s“ на „%s“"
 
 msgid "Delayed linking failed."
 msgstr "Одложено повезивање није успело."
