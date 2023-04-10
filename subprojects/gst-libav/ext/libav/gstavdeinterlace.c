@@ -196,10 +196,10 @@ gst_ffmpegdeinterlace_update_passthrough (GstFFMpegDeinterlace * deinterlace)
 }
 
 static gboolean
-gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_ffmpegdeinterlace_sink_setcaps (GstPad * pad, GstObject * parent,
+    GstCaps * caps)
 {
-  GstFFMpegDeinterlace *deinterlace =
-      GST_FFMPEGDEINTERLACE (gst_pad_get_parent (pad));
+  GstFFMpegDeinterlace *deinterlace = GST_FFMPEGDEINTERLACE (parent);
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   const gchar *imode;
   AVCodecContext *ctx;
@@ -260,7 +260,7 @@ gst_ffmpegdeinterlace_sink_event (GstPad * pad, GstObject * parent,
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      ret = gst_ffmpegdeinterlace_sink_setcaps (pad, caps);
+      ret = gst_ffmpegdeinterlace_sink_setcaps (pad, parent, caps);
       gst_event_unref (event);
       break;
     }
@@ -414,7 +414,7 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
     deinterlace->reconfigure = FALSE;
     GST_OBJECT_UNLOCK (deinterlace);
     if ((caps = gst_pad_get_current_caps (deinterlace->srcpad))) {
-      gst_ffmpegdeinterlace_sink_setcaps (deinterlace->sinkpad, caps);
+      gst_ffmpegdeinterlace_sink_setcaps (deinterlace->sinkpad, parent, caps);
       gst_caps_unref (caps);
     }
   } else {
