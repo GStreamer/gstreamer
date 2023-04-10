@@ -81,16 +81,28 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
 
   /* We can't have more frames than rounded up frames per second */
   fr = (tc->config.fps_n + (tc->config.fps_d >> 1)) / tc->config.fps_d;
-  if (tc->frames >= fr && (tc->config.fps_n != 0 || tc->config.fps_d != 1))
-    return FALSE;
+  if (tc->config.fps_d > tc->config.fps_n) {
+    guint64 s;
 
-  /* We either need a specific X/1001 framerate or otherwise an integer
-   * framerate */
+    if (tc->frames > 0)
+      return FALSE;
+    /* For less than 1 fps only certain second values are allowed */
+    s = tc->seconds + (60 * (tc->minutes + (60 * tc->hours)));
+    if ((s * tc->config.fps_n) % tc->config.fps_d != 0)
+      return FALSE;
+  } else {
+    if (tc->frames >= fr && (tc->config.fps_n != 0 || tc->config.fps_d != 1))
+      return FALSE;
+  }
+
+  /* We either need a specific X/1001 framerate, otherwise an integer
+   * framerate or less than 1 frame per second */
   if (tc->config.fps_d == 1001) {
     if (tc->config.fps_n != 30000 && tc->config.fps_n != 60000 &&
         tc->config.fps_n != 24000)
       return FALSE;
-  } else if (tc->config.fps_n % tc->config.fps_d != 0) {
+  } else if (tc->config.fps_n >= tc->config.fps_d
+      && tc->config.fps_n % tc->config.fps_d != 0) {
     return FALSE;
   }
 
@@ -256,8 +268,6 @@ gst_video_time_code_init_from_date_time_full (GstVideoTimeCode * tc,
     GDateTime * dt, GstVideoTimeCodeFlags flags, guint field_count)
 {
   GDateTime *jam;
-  guint64 frames;
-  gboolean add_a_frame = FALSE;
 
   g_return_val_if_fail (tc != NULL, FALSE);
   g_return_val_if_fail (dt != NULL, FALSE);
@@ -268,31 +278,51 @@ gst_video_time_code_init_from_date_time_full (GstVideoTimeCode * tc,
   jam = g_date_time_new_local (g_date_time_get_year (dt),
       g_date_time_get_month (dt), g_date_time_get_day_of_month (dt), 0, 0, 0.0);
 
-  /* Note: This might be inaccurate for 1 frame
-   * in case we have a drop frame timecode */
-  frames =
-      gst_util_uint64_scale_round (g_date_time_get_microsecond (dt) *
-      G_GINT64_CONSTANT (1000), fps_n, fps_d * GST_SECOND);
-  if (G_UNLIKELY (((frames == fps_n) && (fps_d == 1)) ||
-          ((frames == fps_n / 1000) && (fps_d == 1001)))) {
-    /* Avoid invalid timecodes */
-    frames--;
-    add_a_frame = TRUE;
-  }
+  if (fps_d > fps_n) {
+    guint64 hour, min, sec;
 
-  gst_video_time_code_init (tc, fps_n, fps_d, jam, flags,
-      g_date_time_get_hour (dt), g_date_time_get_minute (dt),
-      g_date_time_get_second (dt), frames, field_count);
+    sec =
+        g_date_time_get_second (dt) + (60 * (g_date_time_get_minute (dt) +
+            (60 * g_date_time_get_hour (dt))));
+    sec -= (sec * fps_n) % fps_d;
 
-  if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) {
-    guint df = (tc->config.fps_n + (tc->config.fps_d >> 1)) /
-        (15 * tc->config.fps_d);
-    if (tc->minutes % 10 && tc->seconds == 0 && tc->frames < df) {
-      tc->frames = df;
+    min = sec / 60;
+    sec = sec % 60;
+    hour = min / 60;
+    min = min % 60;
+
+    gst_video_time_code_init (tc, fps_n, fps_d, jam, flags,
+        hour, min, sec, 0, field_count);
+  } else {
+    guint64 frames;
+    gboolean add_a_frame = FALSE;
+
+    /* Note: This might be inaccurate for 1 frame
+     * in case we have a drop frame timecode */
+    frames =
+        gst_util_uint64_scale_round (g_date_time_get_microsecond (dt) *
+        G_GINT64_CONSTANT (1000), fps_n, fps_d * GST_SECOND);
+    if (G_UNLIKELY (((frames == fps_n) && (fps_d == 1)) ||
+            ((frames == fps_n / 1000) && (fps_d == 1001)))) {
+      /* Avoid invalid timecodes */
+      frames--;
+      add_a_frame = TRUE;
     }
+
+    gst_video_time_code_init (tc, fps_n, fps_d, jam, flags,
+        g_date_time_get_hour (dt), g_date_time_get_minute (dt),
+        g_date_time_get_second (dt), frames, field_count);
+
+    if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) {
+      guint df = (tc->config.fps_n + (tc->config.fps_d >> 1)) /
+          (15 * tc->config.fps_d);
+      if (tc->minutes % 10 && tc->seconds == 0 && tc->frames < df) {
+        tc->frames = df;
+      }
+    }
+    if (add_a_frame)
+      gst_video_time_code_increment_frame (tc);
   }
-  if (add_a_frame)
-    gst_video_time_code_increment_frame (tc);
 
   g_date_time_unref (jam);
 
@@ -366,6 +396,9 @@ gst_video_time_code_frames_since_daily_jam (const GstVideoTimeCode * tc)
         (ff_minutes * tc->minutes) +
         dropframe_multiplier * ((gint) (tc->minutes / 10)) +
         (ff_hours * tc->hours);
+  } else if (tc->config.fps_d > tc->config.fps_n) {
+    return gst_util_uint64_scale (tc->seconds + (60 * (tc->minutes +
+                (60 * tc->hours))), tc->config.fps_n, tc->config.fps_d);
   } else {
     return tc->frames + (ff_nom * (tc->seconds + (60 * (tc->minutes +
                     (60 * tc->hours)))));
@@ -468,6 +501,17 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
         framecount - (ff_nom * sec_new) - (ff_minutes * min_new) -
         (dropframe_multiplier * ((gint) (min_new / 10))) -
         (ff_hours * h_notmod24);
+  } else if (tc->config.fps_d > tc->config.fps_n) {
+    frames_new =
+        frames + gst_util_uint64_scale (tc->seconds + (60 * (tc->minutes +
+                (60 * tc->hours))), tc->config.fps_n, tc->config.fps_d);
+    sec_new =
+        gst_util_uint64_scale (frames_new, tc->config.fps_d, tc->config.fps_n);
+    frames_new = 0;
+    min_new = sec_new / 60;
+    sec_new = sec_new % 60;
+    h_notmod24 = min_new / 60;
+    min_new = min_new % 60;
   } else {
     framecount =
         frames + tc->frames + (ff_nom * (tc->seconds + (sixty * (tc->minutes +
@@ -492,7 +536,7 @@ gst_video_time_code_add_frames (GstVideoTimeCode * tc, gint64 frames)
   /* The calculations above should always give correct results */
   g_assert (min_new < 60);
   g_assert (sec_new < 60);
-  g_assert (frames_new < ff_nom);
+  g_assert (frames_new < ff_nom || (ff_nom == 0 && frames_new == 0));
 
   tc->hours = h_new;
   tc->minutes = min_new;
