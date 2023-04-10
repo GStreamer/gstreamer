@@ -103,7 +103,8 @@ static void gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux,
     GstFFMpegMuxClass * g_class);
 static void gst_ffmpegmux_finalize (GObject * object);
 
-static gboolean gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps);
+static gboolean gst_ffmpegmux_setcaps (GstPad * pad, GstObject * parent,
+    GstCaps * caps);
 static GstPad *gst_ffmpegmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads * pads,
@@ -460,19 +461,10 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   return pad;
 }
 
-/**
- * gst_ffmpegmux_setcaps
- * @pad: #GstPad
- * @caps: New caps.
- *
- * Set caps to pad.
- *
- * Returns: #TRUE on success.
- */
 static gboolean
-gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
+gst_ffmpegmux_setcaps (GstPad * pad, GstObject * parent, GstCaps * caps)
 {
-  GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) (gst_pad_get_parent (pad));
+  GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) parent;
   GstFFMpegMuxPad *collect_pad;
   AVStream *st;
   AVCodecContext tmp;
@@ -526,7 +518,7 @@ gst_ffmpegmux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CAPS:{
       GstCaps *caps;
       gst_event_parse_caps (event, &caps);
-      if (!(res = gst_ffmpegmux_setcaps (pad, caps)))
+      if (!(res = gst_ffmpegmux_setcaps (pad, parent, caps)))
         goto beach;
       break;
     }
