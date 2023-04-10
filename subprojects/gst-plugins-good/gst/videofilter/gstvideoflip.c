@@ -1790,6 +1790,10 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
         gst_video_flip_set_method (vf, method, TRUE);
       }
       break;
+    case GST_EVENT_STREAM_START:
+      GST_DEBUG_OBJECT (vf, "new stream, reset orientation from tags");
+      gst_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_IDENTITY, TRUE);
+      break;
     default:
       break;
   }

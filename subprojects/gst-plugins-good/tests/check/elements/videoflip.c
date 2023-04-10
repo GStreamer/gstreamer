@@ -369,6 +369,15 @@ GST_START_TEST (test_orientation_tag)
   // caps is updated as the frame is now rotated
   caps_update (flip, &in_info, TRUE);
 
+  // orientation is reset on STREAM_START
+  gst_harness_push_event (flip, gst_event_new_stream_start ("2"));
+
+  e = gst_harness_pull_event (flip);
+  fail_unless_equals_int (GST_EVENT_TYPE (e), GST_EVENT_STREAM_START);
+  gst_event_unref (e);
+
+  caps_update (flip, &in_info, FALSE);
+
   gst_harness_teardown (flip);
 }
 
