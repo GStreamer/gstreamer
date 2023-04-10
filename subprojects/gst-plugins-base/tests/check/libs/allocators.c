@@ -95,7 +95,43 @@ GST_START_TEST (test_fdmem)
   gst_memory_unmap (mem, &info);
 
   gst_memory_unref (mem);
-  fail_unless (g_close (fd, NULL) == 0);
+  gst_object_unref (alloc);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_fdmem_dont_close)
+{
+  GstAllocator *alloc;
+  GstMemory *mem;
+  GstMapInfo info;
+  GError *error = NULL;
+  int fd;
+  const char *data = "0123456789";
+
+  fd = g_file_open_tmp (NULL, NULL, &error);
+  fail_if (error);
+  fail_unless (write (fd, data, 10) == 10);
+
+  alloc = gst_fd_allocator_new ();
+  fail_unless (alloc);
+  mem = gst_fd_allocator_alloc (alloc, fd, 10,
+      GST_FD_MEMORY_FLAG_KEEP_MAPPED | GST_FD_MEMORY_FLAG_DONT_CLOSE);
+
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  fail_unless (info.data[5] == '5');
+  gst_memory_unmap (mem, &info);
+
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_WRITE));
+  info.data[5] = 'X';
+  gst_memory_unmap (mem, &info);
+
+  fail_unless (gst_memory_map (mem, &info, GST_MAP_READ));
+  fail_unless (info.data[5] == 'X');
+  gst_memory_unmap (mem, &info);
+
+  gst_memory_unref (mem);
+  fail_unless (g_close (fd, NULL));
   gst_object_unref (alloc);
 }
 
@@ -110,6 +146,7 @@ allocators_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_dmabuf);
   tcase_add_test (tc_chain, test_fdmem);
+  tcase_add_test (tc_chain, test_fdmem_dont_close);
 
   return s;
 }
