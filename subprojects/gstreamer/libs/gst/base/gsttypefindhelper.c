@@ -728,10 +728,9 @@ gst_type_find_helper_for_data_with_caps (GstObject * obj,
 {
   GstTypeFind *find;
   GstTypeFindData *find_data;
-  GstTypeFindFactory *factory;
   GList *l, *factories = NULL;
   GstCaps *result = NULL;
-  GstTypeFindProbability found_probability, last_found_probability;
+  GstTypeFindProbability last_found_probability;
 
   g_return_val_if_fail (data != NULL, NULL);
   g_return_val_if_fail (caps != NULL, NULL);
@@ -747,11 +746,11 @@ gst_type_find_helper_for_data_with_caps (GstObject * obj,
     goto out;
   }
 
-  found_probability = GST_TYPE_FIND_NONE;
   last_found_probability = GST_TYPE_FIND_NONE;
 
   for (l = factories; l; l = l->next) {
-    factory = GST_TYPE_FIND_FACTORY (l->data);
+    GstTypeFindProbability found_probability;
+    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (l->data);
 
     gst_type_find_factory_call_function (factory, find);
 
