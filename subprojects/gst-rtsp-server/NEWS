@@ -2,13 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
-The latest bug-fix release in the stable 1.22 series is 1.22.1 and was
-released on 04 March 2023.
+The latest bug-fix release in the stable 1.22 series is 1.22.2 and was
+released on 11 April 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Monday 04 March 2023, 13:00 UTC (log)
+Last updated: Tuesday 11 April 2023, 16:45 UTC (log)
 
 Introduction
 
@@ -1453,6 +1453,200 @@ List of merge requests and issues fixed in 1.22.1
 
 -   List of Merge Requests applied in 1.22.1
 -   List of Issues fixed in 1.22.1
+
+1.22.2
+
+The second 1.22 bug-fix release (1.22.2) was released on 11 April 2023.
+
+This release only contains bugfixes and it should be safe to update from
+1.22.x.
+
+Highlighted bugfixes in 1.22.2
+
+-   avdec_h264: fix decoder deadlocks with FFmpeg 6.0
+-   rtspsrc: fix regression with URI protocols in OPTIONS requests for
+    RTSP over TLS
+-   rtspsrc: improved control url handling compatibility for broken
+    servers
+-   decklink: fix 10 bit RGB (r210) format auto detection for capture
+    and fix playout if video caps are configured before audio caps
+-   d3d11videosink: Fix tearing in case of fullscreen mode
+-   playbin: fix deadlock when stopping stream with subtitles visible
+    (even more)
+-   typefinding: fix regression not detecting application/dash+xml in
+    some corner cases
+-   osxvideosink: fix broken aspect ratio and frame drawing region
+-   decodebin3, parsebin: Improve elementary stream handling when
+    decoders are not present and fix hang when removing a failing stream
+-   urisourcebin: Propagate sticky events from parsebin, so that the
+    STREAM_START event with the GstStream info is always available when
+    pads get exposed
+-   v4l2: Add support for YVU420M format; mark JPEG content as parsed
+-   h264decoder, h265decoder: DPB bumping process and latency reporting
+    fixes
+-   Opus: Fix reading of extended channel config in MPEG-TS and fix
+    missing sample rate when remuxing from RTP to Matroska
+-   zxing: add support for building against zxing-c++ 2.0
+-   cerbero: Fix packaging of Rust plugins on Android; fix modern Gentoo
+    distro detection
+-   various bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   datetime: Return G_MAXFLOAT instead of G_MAXDOUBLE for no timezone
+    offset
+-   inputselector: Wake up streaming thread before PLAYING_TO_PAUSED
+    transition
+-   tools: fix potential crash when passing command-line options on
+    Windows
+
+gst-plugins-base
+
+-   alsasink: Fix for being stuck in stop_streaming_threads state
+-   decodebin3: fix hang when removing a failing stream
+-   gl: wayland: cleanup on close
+-   parsebin: Improve elementary stream handling
+-   playbin: fix deadlock when stopping stream with subtitles visible
+    even more
+-   sdp: Skip source-specific caps fields when creating an SDP media
+    from caps
+-   urisourcebin: Propagate sticky events from parsebin
+-   urisourcebin: Activate pad before transferring sticky events
+-   typefinding: fix failure to recognize application/dash+xml in some
+    cases
+
+gst-plugins-good
+
+-   osxvideosink: fix broken aspect ratio and frame drawing region
+-   qtdemux: Fix seek adjustment with SNAP_AFTER flag
+-   rtpopusdepay, matroskamux: Fix invalid rate while muxing Opus in
+    Matroska
+-   rtpmanager: twcc: Fix duplicate packet handling
+-   rtsp: url: fix incorrect request URI scheme for TLS transport
+    methods (regression)
+-   rtspsrc: Consider “451: Parameter Not Understood” when handling
+    broken control urls
+-   rtspsrc: fix behavior change with URI protocols in OPTIONS requests
+-   rtspsrc: Skip PTs with caps incompatible to the global caps
+-   rtpjpegdepay: fix logic error when checking if an end of image (EOI)
+    tag is present
+-   v4l2: Add support for YVU420M format
+-   v4l2: mark JPEG as parsed
+
+gst-plugins-bad
+
+-   cea708overlay: fix HCR interpretation
+-   d3d11bufferpool: Fix invalid access in debug print loop
+-   d3d11compositor: Fix composition error on release_pad()
+-   d3d11converter: Fix conversion backend selection
+-   d3d11videosink: Fix tearing in case of fullscreen mode -
+    d3d11bufferpool: Fix invalid access in debug print loop
+-   d3d11window: fix memory leak
+-   decklink: fix 10 bit RGB (r210) format auto detection
+-   decklinkaudiosink: Fix playback when video caps is configured before
+    audio
+-   decklinkvideosrc: RGB 4:4:4 doesn’t work after GStreamer upgrade
+    (regression)
+-   decklinkvideosrc: unable to show HDMI stream that Blackmagic’s Media
+    Express is able to see
+-   debugqroverlay: fix string leak
+-   gtkwaylandsink: Destroy GstWlWindow when parent GtkWindow is
+    destroyed
+-   gtkwaylandsink: Fix crash when rendering after the window is closed
+-   ksvideo, directshow: Fix reference leaks in device providers
+-   h264decoder: Fix DPB bumping process
+-   h264decoder, h265decoder: Latency reporting related fixes
+-   h264parse: Validate VUI framerate
+-   jpegparse: reset parse state when the SOI is not the first marker
+-   nvencoder: Fix CQP option setting
+-   nvh264encoder: Fix template caps to include progressive mode as well
+-   openjpegdec: allow multithread decoding only in subframe mode
+-   tsdemux: Fix reading of extended Opus channel configuration
+-   vulkan: fix validation layer issues
+-   vulkanoverlaycompositor: fix potential use after free
+-   vulkanswapper: correctly handle force-aspect-ratio=false
+-   wasapi2: Fix potential crash on device activation failure
+-   webrtc: Fix segfault traversing ice transports
+-   webrtc: patch leak caused by early return
+-   zxing: add support for zxing-c++ 2.0
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-libav
+
+-   avdec_h264 pipeline freeze with FFmpeg6
+-   avdeinterlace, avmux: fix element reference leak
+-   avviddec: Drop decoder stream lock when calling send_packet
+
+gst-rtsp-server
+
+-   rtsp-server: fix deadlock on shutdown with non-live pipeline if
+    media isn’t playing/prerolled yet and eos-shutdown is enabled for
+    the media
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   No changes
+
+gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   git: prevent CRLF line ending conversion for patches to fix pango
+    subproject patching issues on Windows
+
+Cerbero build tool and packaging changes in 1.22.2
+
+-   build: retry rust build on SIGBUS errors too
+-   Fix packaging of rust plugins on Android
+-   ﻿Modern Gentoo distro adaptation
+-   sbc: update to 2.0
+-   speex: update to 1.2.1
+
+Contributors to 1.22.2
+
+Adrien De Coninck, Albert Sjölund, Alexande B, Antonio Rojas, Arun
+Raghavan, Bart Van Severen, Carlo Cabrera, Colin Kinloch, Edward Hervey,
+Guillaume Desmottes, Haihua Hu, He Junyan, Ilie Halip, Jordan Petridis,
+Josef Kolář, Lily Foster, Mathieu Duponchelle, Matt Feury, Matthew
+Waters, Maxim P. Dementyev, Michael Tretter, Nicolas Dufresne, Nirbheek
+Chauhan, Piotr Brzeziński, Robert Rosengren, Rouven Czerwinski,
+Sebastian Dröge, Seungha Yang, Shengqi Yu, Stéphane Cerveau, Talha Khan,
+Thibault Saunier, Tim-Philipp Müller, Víctor Manuel Jáquez Leal, Vivia
+Nikolaidou, Wang Chuan, Wojciech Kapsa,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.2
+
+-   List of Merge Requests applied in 1.22.2
+-   List of Issues fixed in 1.22.2
 
 Schedule for 1.24
 
