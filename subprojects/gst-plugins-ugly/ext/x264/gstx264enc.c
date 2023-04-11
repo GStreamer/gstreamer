@@ -2332,7 +2332,13 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
     if (info->finfo->format == old->finfo->format
         && info->width == old->width && info->height == old->height
         && info->fps_n == old->fps_n && info->fps_d == old->fps_d
-        && info->par_n == old->par_n && info->par_d == old->par_d) {
+        && info->par_n == old->par_n && info->par_d == old->par_d
+        && info->interlace_mode == old->interlace_mode
+        && gst_video_colorimetry_is_equal (&info->colorimetry,
+            &old->colorimetry)
+        && GST_VIDEO_INFO_CHROMA_SITE (info) == GST_VIDEO_INFO_CHROMA_SITE (old)
+        && GST_VIDEO_INFO_MULTIVIEW_MODE (info) ==
+        GST_VIDEO_INFO_MULTIVIEW_MODE (old)) {
       gst_video_codec_state_unref (encoder->input_state);
       encoder->input_state = gst_video_codec_state_ref (state);
       return TRUE;
