@@ -444,14 +444,14 @@ gl_error:
   {
     g_rec_mutex_unlock (&src->priv->context_lock);
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-        (_("failed to fill GL memory")), (_("A GL error occurred")));
+        (_("An OpenGL error occurred")), ("failed to fill GL memory"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 not_negotiated:
   {
     g_rec_mutex_unlock (&src->priv->context_lock);
     GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
-        (_("format wasn't negotiated before get function")));
+        ("format wasn't negotiated before get function"));
     return GST_FLOW_NOT_NEGOTIATED;
   }
 eos:
@@ -586,8 +586,9 @@ unsupported_gl_api:
     gchar *supported_gl_api_str =
         gst_gl_api_to_string (klass->supported_gl_api);
     GST_ELEMENT_ERROR (src, RESOURCE, BUSY,
-        ("GL API's not compatible context: %s supported: %s", gl_api_str,
-            supported_gl_api_str), (NULL));
+        (_("The GL API is not compatible with the current GL context")),
+        ("Current GL API is %s, supported APIs: %s", gl_api_str,
+            supported_gl_api_str));
 
     g_free (supported_gl_api_str);
     g_free (gl_api_str);
@@ -610,7 +611,7 @@ context_error:
 error:
   {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        ("Subclass failed to initialize."), (NULL));
+        (_("Subclass failed to initialize.")), (NULL));
     return FALSE;
   }
 }
