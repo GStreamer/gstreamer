@@ -888,7 +888,18 @@ cc_buffer_take_cc_data (CCBuffer * buf,
           cea608_1_i += 2;
           buf->last_cea608_written_was_field1 = TRUE;
         } else if (cea608_1_i < write_cea608_1_size + field1_padding) {
-          cc_data[out_i++] = 0xf8;
+          GST_TRACE_OBJECT (buf,
+              "write field2:%u field2_i:%u, cea608-2 buf len:%u",
+              write_cea608_2_size, cea608_2_i, buf->cea608_2->len);
+          if (cea608_2_i < write_cea608_2_size
+              || buf->cea608_2->len > write_cea608_2_size) {
+            /* if we are writing field 2, then we have to write valid field 1 */
+            GST_TRACE_OBJECT (buf, "writing valid field1 padding because "
+                "we need to write valid field2");
+            cc_data[out_i++] = 0xfc;
+          } else {
+            cc_data[out_i++] = 0xf8;
+          }
           cc_data[out_i++] = 0x80;
           cc_data[out_i++] = 0x80;
           cea608_1_i += 2;
