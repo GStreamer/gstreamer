@@ -380,6 +380,27 @@ gst_cea608_mux_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
   return TRUE;
 }
 
+static GstBuffer *
+gst_cea608_mux_clip (GstAggregator * aggregator, GstAggregatorPad * pad,
+    GstBuffer * buffer)
+{
+  GstClockTime time;
+
+  if (!GST_BUFFER_PTS_IS_VALID (buffer))
+    return buffer;
+
+  time = gst_segment_to_running_time (&pad->segment, GST_FORMAT_TIME,
+      GST_BUFFER_PTS (buffer));
+  if (!GST_CLOCK_TIME_IS_VALID (time)) {
+    GST_DEBUG_OBJECT (pad, "Dropping buffer on pad outside segment %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
+    gst_buffer_unref (buffer);
+    return NULL;
+  }
+
+  return buffer;
+}
+
 static void
 gst_cea608_mux_class_init (GstCea608MuxClass * klass)
 {
@@ -411,6 +432,7 @@ gst_cea608_mux_class_init (GstCea608MuxClass * klass)
   aggregator_class->flush = gst_cea608_mux_flush;
   aggregator_class->negotiated_src_caps = gst_cea608_mux_negotiated_src_caps;
   aggregator_class->get_next_time = gst_aggregator_simple_get_next_time;
+  aggregator_class->clip = gst_cea608_mux_clip;
 
   GST_DEBUG_CATEGORY_INIT (gst_cea608_mux_debug, "cea608mux",
       0, "Closed Caption muxer");
