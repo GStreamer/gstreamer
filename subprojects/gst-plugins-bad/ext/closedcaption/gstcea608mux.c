@@ -244,27 +244,14 @@ gst_cea608_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
       gst_util_uint64_scale_int (GST_SECOND, self->cdp_fps_entry->fps_d,
       self->cdp_fps_entry->fps_n);
   GstSegment *agg_segment = &GST_AGGREGATOR_PAD (aggregator->srcpad)->segment;
-  GstClockTime output_running_time = agg_segment->position;
+  GstClockTime output_start_time = agg_segment->position;
+  GstClockTime output_end_running_time;
+
+  if (agg_segment->position == -1 || agg_segment->position < agg_segment->start)
+    output_start_time = agg_segment->start;
 
   if (!GST_CLOCK_TIME_IS_VALID (self->start_time)) {
-    if (!GST_CLOCK_TIME_IS_VALID (output_running_time)) {
-      agg_segment->position = agg_segment->start + output_duration;
-
-      GST_TRACE_OBJECT (self, "Initial timeout, setting output position %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (agg_segment->position));
-      return GST_AGGREGATOR_FLOW_NEED_DATA;
-    }
-
-    /* Waiting for first buffer to determine start time */
-    if (timeout) {
-      agg_segment->position += output_duration;
-
-      GST_TRACE_OBJECT (self, "Timeout, advancing output position to %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (agg_segment->position));
-      return GST_AGGREGATOR_FLOW_NEED_DATA;
-    }
-
-    self->start_time = output_running_time;
+    self->start_time = output_start_time;
     GST_DEBUG_OBJECT (self, "Start time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (self->start_time));
   }
@@ -272,16 +259,19 @@ gst_cea608_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   best_pad =
       find_best_pad (aggregator, &self->earliest_input_running_time, timeout);
 
+  output_end_running_time =
+      gst_segment_to_running_time (agg_segment, GST_FORMAT_TIME,
+      output_start_time + output_duration);
+
   GST_LOG_OBJECT (self, "best-pad: %s, timeout: %d, "
       "earliest input running time: %"
       GST_TIME_FORMAT ", output running time: %" GST_TIME_FORMAT,
       best_pad ? GST_OBJECT_NAME (best_pad) : "NULL", timeout,
       GST_TIME_ARGS (self->earliest_input_running_time),
-      GST_TIME_ARGS (output_running_time));
+      GST_TIME_ARGS (output_end_running_time));
 
   if (GST_CLOCK_TIME_IS_VALID (self->earliest_input_running_time)
-      && self->earliest_input_running_time >
-      output_running_time + output_duration) {
+      && self->earliest_input_running_time > output_end_running_time) {
     /* Nothing to consume, earliest pad is not ready yet */
     GST_LOG_OBJECT (self, "Nothing to consume");
   } else if (best_pad) {
@@ -318,9 +308,7 @@ gst_cea608_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
   }
 
   if (flow_ret == GST_FLOW_OK) {
-    if (timeout
-        || output_running_time + output_duration <
-        self->earliest_input_running_time) {
+    if (timeout || output_end_running_time < self->earliest_input_running_time) {
       flow_ret = finish_s334_both_fields (self);
     }
   } else if (flow_ret == GST_FLOW_EOS && !cc_buffer_is_empty (self->cc_buffer)) {
@@ -349,10 +337,15 @@ static GstFlowReturn
 gst_cea608_mux_flush (GstAggregator * aggregator)
 {
   GstCea608Mux *self = GST_CEA608MUX (aggregator);
+  GstSegment *agg_segment = &GST_AGGREGATOR_PAD (aggregator->srcpad)->segment;
+
+  GST_DEBUG_OBJECT (self, "Flush");
 
   cc_buffer_discard (self->cc_buffer);
   self->n_output_buffers = 0;
   self->earliest_input_running_time = 0;
+  self->start_time = GST_CLOCK_TIME_NONE;
+  agg_segment->position = -1;
 
   return GST_FLOW_OK;
 }
