@@ -812,7 +812,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
    * environment variable */
   _priv_gst_plugin_feature_rank_initialize ();
 
-#ifndef GST_DISABLE_GST_DEBUG
+#ifndef GST_DISABLE_GST_TRACER_HOOKS
   _priv_gst_tracing_init ();
 #endif
 
