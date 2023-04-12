@@ -408,6 +408,8 @@ gst_video_convert_scale_class_init (GstVideoConvertScaleClass * klass)
   klass->any_memory = FALSE;
   klass->converts = TRUE;
   klass->scales = TRUE;
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VIDEO_CONVERT_SCALE, 0);
 }
 
 static void
