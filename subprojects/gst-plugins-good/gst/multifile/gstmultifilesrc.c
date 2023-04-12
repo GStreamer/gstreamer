@@ -46,7 +46,7 @@
 #endif
 
 #include "gstmultifilesrc.h"
-
+#include <glib/gi18n-lib.h>
 
 static GstFlowReturn gst_multi_file_src_create (GstPushSrc * src,
     GstBuffer ** buffer);
@@ -392,7 +392,12 @@ gst_multi_file_src_get_filename (GstMultiFileSrc * multifilesrc)
   gchar *filename;
 
   GST_DEBUG ("%d", multifilesrc->index);
-  filename = g_strdup_printf (multifilesrc->filename, multifilesrc->index);
+  if (multifilesrc->filename != NULL) {
+    filename = g_strdup_printf (multifilesrc->filename, multifilesrc->index);
+  } else {
+    GST_WARNING_OBJECT (multifilesrc, "No filename location set!");
+    filename = NULL;
+  }
 
   return filename;
 }
@@ -423,6 +428,9 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
   }
 
   filename = gst_multi_file_src_get_filename (multifilesrc);
+
+  if (!filename)
+    goto error_no_filename;
 
   GST_DEBUG_OBJECT (multifilesrc, "reading from file \"%s\".", filename);
 
@@ -472,6 +480,12 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
   *buffer = buf;
   return GST_FLOW_OK;
 
+error_no_filename:
+  {
+    GST_ELEMENT_ERROR (multifilesrc, RESOURCE, NOT_FOUND,
+        (_("No file name specified for reading.")), (NULL));
+    return GST_FLOW_ERROR;
+  }
 handle_error:
   {
     if (error != NULL) {
