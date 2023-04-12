@@ -156,6 +156,7 @@ typedef struct
    * binary chunk format: 64 bytes
    * architecture: 64 bytes */
   guint8 version_info[GST_PLUGIN_LOADER_VERSION_INFO_SIZE];
+  gboolean apc_called;
 } Win32PluginLoader;
 
 struct _GstPluginLoader
@@ -168,6 +169,7 @@ struct _GstPluginLoader
   wchar_t *env_string;
 
   PROCESS_INFORMATION child_info;
+  LARGE_INTEGER frequency;
 
   gboolean got_plugin_detail;
   gboolean client_running;
@@ -286,6 +288,8 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   DWORD wait_ret;
   gchar *pipe_name = NULL;
   HANDLE waitables[2];
+  LARGE_INTEGER now;
+  LONGLONG timeout;
 
   memset (&si, 0, sizeof (STARTUPINFOW));
   si.cb = sizeof (STARTUPINFOW);
@@ -317,6 +321,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   loader->overlap.InternalHigh = 0;
   loader->overlap.Offset = 0;
   loader->overlap.OffsetHigh = 0;
+  loader->apc_called = FALSE;
 
   /* Async pipe should return zero */
   if (ConnectNamedPipe (loader->pipe, &loader->overlap)) {
@@ -352,26 +357,60 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
     goto error;
   }
 
+  ret = QueryPerformanceCounter (&now);
+  g_assert (ret);
+
+  /* 10 seconds timeout */
+  timeout = now.QuadPart + 10 * self->frequency.QuadPart;
+
   /* Wait for client connection */
   waitables[0] = loader->overlap.hEvent;
   waitables[1] = self->child_info.hProcess;
-  wait_ret = WaitForMultipleObjectsEx (2, waitables, FALSE, 5000, TRUE);
-  if (wait_ret == WAIT_OBJECT_0) {
-    ret = GetOverlappedResult (loader->pipe, &loader->overlap, &n_bytes, FALSE);
-    if (!ret) {
-      last_err = GetLastError ();
-      err = g_win32_error_message (last_err);
-      GST_ERROR ("GetOverlappedResult failed with 0x%x (%s)",
-          last_err, GST_STR_NULL (err));
-      goto kill_child;
+  do {
+    wait_ret = WaitForMultipleObjectsEx (2, waitables, FALSE, 5000, TRUE);
+    switch (wait_ret) {
+      case WAIT_OBJECT_0:
+        ret = GetOverlappedResult (loader->pipe,
+            &loader->overlap, &n_bytes, FALSE);
+        if (!ret) {
+          last_err = GetLastError ();
+          err = g_win32_error_message (last_err);
+          GST_ERROR ("GetOverlappedResult failed with 0x%x (%s)",
+              last_err, GST_STR_NULL (err));
+          goto kill_child;
+        }
+        break;
+      case WAIT_OBJECT_0 + 1:
+        GST_ERROR ("Child process got terminated");
+        goto kill_child;
+      case WAIT_IO_COMPLETION:
+        ret = QueryPerformanceCounter (&now);
+        g_assert (ret);
+
+        if (now.QuadPart > timeout) {
+          GST_ERROR ("Connection takes too long, give up");
+          goto kill_child;
+        }
+
+        if (loader->apc_called) {
+          GST_WARNING
+              ("Unexpected our APC called while waiting for client connection");
+        } else {
+          GST_DEBUG ("WAIT_IO_COMPLETION, waiting again");
+        }
+        break;
+      case WAIT_TIMEOUT:
+        GST_ERROR ("WaitForMultipleObjectsEx timeout");
+        goto kill_child;
+      default:
+        last_err = GetLastError ();
+        err = g_win32_error_message (last_err);
+        GST_ERROR
+            ("Unexpected WaitForMultipleObjectsEx return 0x%x, with 0x%x (%s)",
+            (guint) wait_ret, last_err, GST_STR_NULL (err));
+        goto kill_child;
     }
-  } else {
-    last_err = GetLastError ();
-    err = g_win32_error_message (last_err);
-    GST_ERROR ("Unexpected WaitForSingleObjectEx return 0x%x, with 0x%x (%s)",
-        (guint) wait_ret, last_err, GST_STR_NULL (err));
-    goto kill_child;
-  }
+  } while (wait_ret == WAIT_IO_COMPLETION);
 
   /* Do version check */
   loader->expected_pkt = PACKET_VERSION;
@@ -563,6 +602,8 @@ win32_plugin_loader_write_payload_finish (DWORD error_code, DWORD n_bytes,
   Win32PluginLoader *self = (Win32PluginLoader *) overlapped;
   PacketHeader *header = &self->tx_header;
 
+  self->apc_called = TRUE;
+
   if (error_code != ERROR_SUCCESS)
     SET_ERROR_AND_RETURN (self, error_code);
 
@@ -581,6 +622,8 @@ win32_plugin_loader_write_header_finish (DWORD error_code, DWORD n_bytes,
 {
   Win32PluginLoader *self = (Win32PluginLoader *) overlapped;
   PacketHeader *header = &self->tx_header;
+
+  self->apc_called = TRUE;
 
   if (error_code != ERROR_SUCCESS)
     SET_ERROR_AND_RETURN (self, error_code);
@@ -855,6 +898,8 @@ win32_plugin_loader_read_payload_finish (DWORD error_code, DWORD n_bytes,
   Win32PluginLoader *self = (Win32PluginLoader *) overlapped;
   PacketHeader *header = &self->rx_header;
 
+  self->apc_called = TRUE;
+
   if (error_code != ERROR_SUCCESS)
     SET_ERROR_AND_RETURN (self, error_code);
 
@@ -873,6 +918,8 @@ win32_plugin_loader_read_header_finish (DWORD error_code, DWORD n_bytes,
 {
   Win32PluginLoader *self = (Win32PluginLoader *) overlapped;
   PacketHeader *header = &self->rx_header;
+
+  self->apc_called = TRUE;
 
   if (error_code != ERROR_SUCCESS)
     SET_ERROR_AND_RETURN (self, error_code);
@@ -1016,6 +1063,7 @@ gst_plugin_loader_new (GstRegistry * registry)
   guint i;
   wchar_t lib_dir[MAX_PATH];
   wchar_t *origin_path = NULL;
+  BOOL ret;
 
   if (!registry)
     return NULL;
@@ -1087,6 +1135,10 @@ gst_plugin_loader_new (GstRegistry * registry)
 
   free (origin_path);
   FreeEnvironmentStringsW (env_str);
+
+  ret = QueryPerformanceFrequency (&self->frequency);
+  /* Must not return zero */
+  g_assert (ret);
 
   return self;
 }
