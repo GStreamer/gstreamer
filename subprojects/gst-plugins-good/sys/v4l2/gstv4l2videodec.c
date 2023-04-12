@@ -591,7 +591,6 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
     info.fps_n = self->v4l2output->info.fps_n;
     info.fps_d = self->v4l2output->info.fps_d;
 
-    gst_v4l2_object_clear_format_list (self->v4l2capture);
     gst_caps_replace (&self->probed_srccaps, NULL);
     self->probed_srccaps = gst_v4l2_object_probe_caps (self->v4l2capture,
         gst_v4l2_object_get_raw_caps ());
@@ -646,6 +645,11 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
 
   use_acquired_caps:
     gst_caps_unref (caps);
+
+    /* catch possible bogus driver that don't enumerate the format it actually
+     * returned from G_FMT */
+    if (!self->v4l2capture->fmtdesc)
+      goto not_negotiated;
 
     output_state = gst_video_decoder_set_output_state (decoder,
         info.finfo->format, info.width, info.height, self->input_state);
