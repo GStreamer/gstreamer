@@ -164,6 +164,8 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_mux_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_mux_release_pad);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_mux_change_state);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_RTP_MUX, 0);
 }
 
 static void
