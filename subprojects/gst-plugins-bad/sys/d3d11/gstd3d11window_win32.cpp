@@ -82,7 +82,6 @@ struct _GstD3D11WindowWin32
   HWND external_hwnd;
   GstD3D11WindowWin32OverlayState overlay_state;
 
-  HDC device_handle;
   gboolean have_swapchain1;
 
   /* atomic */
@@ -601,7 +600,6 @@ gst_d3d11_window_win32_create_internal_window (GstD3D11WindowWin32 * self)
     GST_LOG_OBJECT (self, "window class was already registered");
   }
 
-  self->device_handle = 0;
   self->internal_hwnd = 0;
   self->visible = FALSE;
 
@@ -620,12 +618,6 @@ gst_d3d11_window_win32_create_internal_window (GstD3D11WindowWin32 * self)
 
   GST_DEBUG_OBJECT (self, "d3d11 window created: %" G_GUINTPTR_FORMAT,
       (guintptr) self->internal_hwnd);
-
-  /* device_handle is set in the window_proc */
-  if (!self->device_handle) {
-    GST_ERROR_OBJECT (self, "device handle is not available");
-    return FALSE;
-  }
 
   GST_LOG_OBJECT (self,
       "Created a internal d3d11 window %p", self->internal_hwnd);
@@ -875,12 +867,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     self = GST_D3D11_WINDOW_WIN32 (((LPCREATESTRUCT) lParam)->lpCreateParams);
 
     GST_LOG_OBJECT (self, "WM_CREATE");
-
-    self->device_handle = GetDC (hWnd);
-    /* Do this, otherwise we hang on exit. We can still use it (due to the
-     * CS_OWNDC flag in the WindowClass) after we have Released.
-     */
-    ReleaseDC (hWnd, self->device_handle);
 
     SetPropA (hWnd, D3D11_WINDOW_PROP_NAME, self);
   } else if ((self = gst_d3d11_window_win32_hwnd_get_instance (hWnd))) {
