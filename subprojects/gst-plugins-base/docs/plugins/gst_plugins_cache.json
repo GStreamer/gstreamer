@@ -7119,6 +7119,242 @@
                     }
                 ]
             },
+            "GstGLSinkBin": {
+                "hierarchy": [
+                    "GstGLSinkBin",
+                    "GstBin",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstChildProxy",
+                    "GstVideoOverlay",
+                    "GstNavigation",
+                    "GstColorBalance"
+                ],
+                "kind": "object",
+                "properties": {
+                    "async": {
+                        "blurb": "Go asynchronously to PAUSED",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "blocksize": {
+                        "blurb": "Size in bytes to pull per buffer (0 = default)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "4096",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "brightness": {
+                        "blurb": "brightness",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0",
+                        "max": "1",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "contrast": {
+                        "blurb": "contrast",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "1",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "enable-last-sample": {
+                        "blurb": "Enable the last-sample property",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "hue": {
+                        "blurb": "hue",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "0",
+                        "max": "1",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "last-sample": {
+                        "blurb": "The last sample received in the sink",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstSample",
+                        "writable": false
+                    },
+                    "max-bitrate": {
+                        "blurb": "The maximum bits per second to render (0 = disabled)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "max-lateness": {
+                        "blurb": "Maximum number of nanoseconds that a buffer can be late before it is dropped (-1 unlimited)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "5000000",
+                        "max": "9223372036854775807",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": true
+                    },
+                    "qos": {
+                        "blurb": "Generate Quality-of-Service events upstream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "render-delay": {
+                        "blurb": "Additional render delay of the sink in nanoseconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "saturation": {
+                        "blurb": "saturation",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": true,
+                        "default": "1",
+                        "max": "2",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gdouble",
+                        "writable": true
+                    },
+                    "sink": {
+                        "blurb": "The GL sink chain to use",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "GstElement",
+                        "writable": true
+                    },
+                    "sync": {
+                        "blurb": "Sync on the clock",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "throttle-time": {
+                        "blurb": "The time to keep between rendered buffers (0 = disabled)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "ts-offset": {
+                        "blurb": "Timestamp offset in nanoseconds",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "9223372036854775807",
+                        "min": "-9223372036854775808",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint64",
+                        "writable": true
+                    }
+                },
+                "signals": {
+                    "create-element": {
+                        "args": [],
+                        "return-type": "GstElement",
+                        "when": "last"
+                    }
+                }
+            },
             "GstGLStereoDownmix": {
                 "kind": "enum",
                 "values": [

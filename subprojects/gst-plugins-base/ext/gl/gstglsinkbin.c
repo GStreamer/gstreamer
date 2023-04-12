@@ -266,6 +266,8 @@ gst_gl_sink_bin_init (GstGLSinkBin * self)
   if (!res) {
     GST_WARNING_OBJECT (self, "Failed to add/connect the necessary machinery");
   }
+
+  gst_type_mark_as_plugin_api (GST_TYPE_GL_SINK_BIN, 0);
 }
 
 static void
