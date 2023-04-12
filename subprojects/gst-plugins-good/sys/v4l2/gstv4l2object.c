@@ -4050,6 +4050,99 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   if (format.fmt.pix.pixelformat != pixelformat)
     goto invalid_pixelformat;
 
+  /* Passing HDR10 information
+   *
+   * TODO: should not configure capture of v4l2transform for HDR to HDR conversion.
+   */
+  if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
+    GstVideoMasteringDisplayInfo video_master_display_info;
+    GstVideoContentLightLevel video_content_light_level;
+    struct v4l2_ext_control ext_control[2];
+    struct v4l2_ctrl_hdr10_mastering_display hdr10_mastering_display;
+    struct v4l2_ctrl_hdr10_cll_info hdr10_cll_info;
+    int count = 0;
+
+    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Passing HDR10 medata");
+    memset (&hdr10_cll_info, 0, sizeof (struct v4l2_ctrl_hdr10_cll_info));
+    memset (&hdr10_mastering_display,
+        0, sizeof (struct v4l2_ctrl_hdr10_mastering_display));
+
+    if (gst_video_mastering_display_info_from_caps (&video_master_display_info,
+            caps)) {
+      GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+          "video mastering display info: %d:%d:%d:%d:%d:%d:%d:%d:%d:%d",
+          video_master_display_info.display_primaries[0].x,
+          video_master_display_info.display_primaries[0].y,
+          video_master_display_info.display_primaries[1].x,
+          video_master_display_info.display_primaries[1].y,
+          video_master_display_info.display_primaries[2].x,
+          video_master_display_info.display_primaries[2].y,
+          video_master_display_info.white_point.x,
+          video_master_display_info.white_point.y,
+          video_master_display_info.max_display_mastering_luminance,
+          video_master_display_info.min_display_mastering_luminance);
+
+      hdr10_mastering_display.display_primaries_x[2] =
+          video_master_display_info.display_primaries[0].x;
+      hdr10_mastering_display.display_primaries_y[2] =
+          video_master_display_info.display_primaries[0].y;
+      hdr10_mastering_display.display_primaries_x[0] =
+          video_master_display_info.display_primaries[1].x;
+      hdr10_mastering_display.display_primaries_y[0] =
+          video_master_display_info.display_primaries[1].y;
+      hdr10_mastering_display.display_primaries_x[1] =
+          video_master_display_info.display_primaries[2].x;
+      hdr10_mastering_display.display_primaries_y[1] =
+          video_master_display_info.display_primaries[2].y;
+      hdr10_mastering_display.white_point_x =
+          video_master_display_info.white_point.x;
+      hdr10_mastering_display.white_point_y =
+          video_master_display_info.white_point.y;
+      hdr10_mastering_display.min_display_mastering_luminance =
+          video_master_display_info.min_display_mastering_luminance;
+      hdr10_mastering_display.max_display_mastering_luminance =
+          video_master_display_info.max_display_mastering_luminance;
+
+      ext_control[count].id = V4L2_CID_COLORIMETRY_HDR10_MASTERING_DISPLAY;
+      ext_control[count].size =
+          sizeof (struct v4l2_ctrl_hdr10_mastering_display);
+      ext_control[count].ptr = &hdr10_mastering_display;
+      count++;
+    }
+
+    if (gst_video_content_light_level_from_caps (&video_content_light_level,
+            caps)) {
+      GST_DEBUG_OBJECT (v4l2object->dbg_obj, "video content light level: %d:%d",
+          video_content_light_level.max_content_light_level,
+          video_content_light_level.max_frame_average_light_level);
+
+      hdr10_cll_info.max_content_light_level =
+          video_content_light_level.max_content_light_level;
+      hdr10_cll_info.max_pic_average_light_level =
+          video_content_light_level.max_frame_average_light_level;
+
+      ext_control[count].id = V4L2_CID_COLORIMETRY_HDR10_CLL_INFO;
+      ext_control[count].size = sizeof (struct v4l2_ctrl_hdr10_cll_info);
+      ext_control[count].ptr = &hdr10_cll_info;
+      count++;
+    }
+
+    if (count != 0) {
+      struct v4l2_ext_controls ext_controls = {
+        .ctrl_class = V4L2_CTRL_CLASS_COLORIMETRY,
+        .count = count,
+        .controls = ext_control,
+      };
+
+      if (v4l2object->ioctl (fd, VIDIOC_S_EXT_CTRLS, &ext_controls) < 0) {
+        if (errno != ENOTTY) {
+          GST_WARNING_OBJECT (v4l2object->dbg_obj,
+              "Failed to set HDR10 metadata, err: %s", g_strerror (errno));
+        }
+      }
+    }
+  }
+
   /* Only negotiate size with raw data.
    * For some codecs the dimensions are *not* in the bitstream, IIRC VC1
    * in ASF mode for example, there is also not reason for a driver to
