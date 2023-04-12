@@ -550,6 +550,19 @@ gst_v4l2_object_new (GstElement * element,
   return v4l2object;
 }
 
+
+static gboolean
+gst_v4l2_object_clear_format_list (GstV4l2Object * v4l2object)
+{
+  g_slist_foreach (v4l2object->formats, (GFunc) g_free, NULL);
+  g_slist_free (v4l2object->formats);
+  v4l2object->formats = NULL;
+  v4l2object->fmtdesc = NULL;
+
+  return TRUE;
+}
+
+
 void
 gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 {
@@ -574,16 +587,6 @@ gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
   g_free (v4l2object);
 }
 
-
-gboolean
-gst_v4l2_object_clear_format_list (GstV4l2Object * v4l2object)
-{
-  g_slist_foreach (v4l2object->formats, (GFunc) g_free, NULL);
-  g_slist_free (v4l2object->formats);
-  v4l2object->formats = NULL;
-
-  return TRUE;
-}
 
 static gint
 gst_v4l2_object_prop_to_cid (guint prop_id)
@@ -4663,8 +4666,19 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
   GstCaps *ret;
   GSList *walk;
   GSList *formats;
+  guint32 fourcc = 0;
 
+  if (v4l2object->fmtdesc)
+    fourcc = GST_V4L2_PIXELFORMAT (v4l2object);
+
+  gst_v4l2_object_clear_format_list (v4l2object);
   formats = gst_v4l2_object_get_format_list (v4l2object);
+
+  /* Recover the fmtdesc, it may no longer exist, in which case it will be set
+   * to null */
+  if (fourcc)
+    v4l2object->fmtdesc =
+        gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
 
   ret = gst_caps_new_empty ();
 
