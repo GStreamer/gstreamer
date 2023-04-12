@@ -379,6 +379,7 @@ gst_srt_sink_class_init (GstSRTSinkClass * klass)
   gstbasesink_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_srt_sink_unlock_stop);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_srt_sink_set_caps);
 
+  gst_type_mark_as_plugin_api (GST_TYPE_SRT_SINK, 0);
 }
 
 static GstURIType

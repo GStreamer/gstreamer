@@ -476,6 +476,8 @@ gst_srt_src_class_init (GstSRTSrcClass * klass)
   gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_srt_src_query);
 
   gstpushsrc_class->fill = GST_DEBUG_FUNCPTR (gst_srt_src_fill);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_SRT_SRC, 0);
 }
 
 static GstURIType
