@@ -3,6 +3,7 @@ option('gst_parse', type : 'boolean', value : true,
        description: 'Enable pipeline string parser')
 option('registry', type : 'boolean', value : true)
 option('tracer_hooks', type : 'boolean', value : true, description: 'Enable tracer usage')
+option('ptp-helper', type: 'feature', description: 'Build gst-ptp-helper')
 option('ptp-helper-setuid-user', type : 'string',
        description : 'User to switch to when installing gst-ptp-helper setuid root')
 option('ptp-helper-setuid-group', type : 'string',
