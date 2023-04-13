@@ -988,6 +988,7 @@ gst_v4l2_codec_h265_dec_fill_decode_params (GstV4l2CodecH265Dec * self,
     .num_poc_st_curr_before = decoder->NumPocStCurrBefore,
     .num_poc_st_curr_after = decoder->NumPocStCurrAfter,
     .num_poc_lt_curr = decoder->NumPocLtCurr,
+    .num_delta_pocs_of_ref_rps_idx = slice->header.short_term_ref_pic_sets.NumDeltaPocsOfRefRpsIdx,
     .flags =
       (GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type) ? V4L2_HEVC_DECODE_PARAM_FLAG_IRAP_PIC : 0) |
       (GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type) ? V4L2_HEVC_DECODE_PARAM_FLAG_IDR_PIC : 0) |
