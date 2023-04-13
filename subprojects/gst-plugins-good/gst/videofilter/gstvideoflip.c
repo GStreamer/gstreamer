@@ -1787,11 +1787,24 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
       gst_event_parse_tag (event, &taglist);
 
       if (gst_video_orientation_from_tag (taglist, &method)) {
-        gst_video_flip_set_method (vf, method, TRUE);
+        if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_STREAM) {
+          vf->got_orientation_stream_tag = TRUE;
+        }
+
+        if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_GLOBAL
+            && vf->got_orientation_stream_tag) {
+          GST_DEBUG_OBJECT (vf,
+              "ignoring global tags as we received stream specific ones: %"
+              GST_PTR_FORMAT, taglist);
+        } else {
+          gst_video_flip_set_method (vf, method, TRUE);
+        }
       }
+
       break;
     case GST_EVENT_STREAM_START:
       GST_DEBUG_OBJECT (vf, "new stream, reset orientation from tags");
+      vf->got_orientation_stream_tag = FALSE;
       gst_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_IDENTITY, TRUE);
       break;
     default:
