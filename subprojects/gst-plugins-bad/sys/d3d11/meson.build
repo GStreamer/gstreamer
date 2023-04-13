@@ -9,6 +9,7 @@ d3d11_sources = [
   'gstd3d11h264dec.cpp',
   'gstd3d11h265dec.cpp',
   'gstd3d11mpeg2dec.cpp',
+  'gstd3d11overlay.cpp',
   'gstd3d11overlaycompositor.cpp',
   'gstd3d11pluginutils.cpp',
   'gstd3d11testsrc.cpp',

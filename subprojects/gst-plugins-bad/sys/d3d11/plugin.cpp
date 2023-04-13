@@ -75,6 +75,7 @@
 #include "gstd3d11av1dec.h"
 #include "gstd3d11deinterlace.h"
 #include "gstd3d11testsrc.h"
+#include "gstd3d11overlay.h"
 
 #if !GST_D3D11_WINAPI_ONLY_APP
 #include "gstd3d11screencapturesrc.h"
@@ -235,6 +236,8 @@ plugin_init (GstPlugin * plugin)
       "d3d11compositor", GST_RANK_SECONDARY, GST_TYPE_D3D11_COMPOSITOR);
   gst_element_register (plugin,
       "d3d11testsrc", GST_RANK_NONE, GST_TYPE_D3D11_TEST_SRC);
+  gst_element_register (plugin,
+      "d3d11overlay", GST_RANK_NONE, GST_TYPE_D3D11_OVERLAY);
 
 #if !GST_D3D11_WINAPI_ONLY_APP
   if (gst_d3d11_is_windows_8_or_greater ()) {
