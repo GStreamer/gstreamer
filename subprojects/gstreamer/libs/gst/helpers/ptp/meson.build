@@ -10,7 +10,7 @@ if have_ptp
   have_rust = add_languages('rust', native : false, required : false)
   if not have_rust
     have_ptp = false
-    message('PTP not supported without Rust compiler')
+    warning('PTP not supported without Rust compiler')
   endif
 endif
 
@@ -18,7 +18,7 @@ if have_ptp
   rustc = meson.get_compiler('rust')
 
   if rustc.get_id() not in ['rustc', 'clippy-driver rustc']
-    message('PTP support is only tested with rustc, found different compiler @0@ @1@'.format(rustc.get_id(), rustc.version()))
+    warning('PTP support is only tested with rustc, found different compiler @0@ @1@'.format(rustc.get_id(), rustc.version()))
   endif
 
   # We currently need at least Rust 1.48 on all platforms but Windows.
@@ -31,7 +31,7 @@ if have_ptp
 
   if rustc.get_id() in ['rustc', 'clippy-driver rustc'] and not rustc.version().version_compare('>=' + rust_req)
     have_ptp = false
-    message('PTP support requires at least Rust @0@ on this platform, found @1@'.format(rust_req, rustc.version()))
+    warning('PTP support requires at least Rust @0@ on this platform, found @1@'.format(rust_req, rustc.version()))
   endif
 endif
 
