@@ -1,14 +1,17 @@
 # Check PTP support
-have_rust = add_languages('rust', native : false, required : false)
 have_ptp = true
-if not have_rust
-  have_ptp = false
-  message('PTP not supported without Rust compiler')
-endif
 
-if not ['linux', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'darwin', 'sunos', 'solaris', 'illumos', 'windows'].contains(host_system)
+if host_system not in ['linux', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'darwin', 'sunos', 'solaris', 'illumos', 'windows']
   have_ptp = false
   message('PTP not supported on this OS')
+endif
+
+if have_ptp
+  have_rust = add_languages('rust', native : false, required : false)
+  if not have_rust
+    have_ptp = false
+    message('PTP not supported without Rust compiler')
+  endif
 endif
 
 if have_ptp
