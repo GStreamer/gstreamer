@@ -455,6 +455,22 @@ GST_START_TEST (test_orientation_tag_scopes)
   // caps is updated as the frame is now rotated
   caps_update (flip, &in_info, TRUE);
 
+  // sending a stream tag without orientation switch back to the global one, so no orientation change (global: 90, stream: /)
+  send_orientation_tag (flip, NULL, GST_TAG_SCOPE_STREAM);
+  caps_not_updated (flip, &in_info);
+
+  // remove orientation from global tag, restoring identity (global: /, stream: /)
+  send_orientation_tag (flip, NULL, GST_TAG_SCOPE_GLOBAL);
+  caps_update (flip, &in_info, FALSE);
+
+  // send rotation in stream tag (global: /, stream: 90)
+  send_orientation_tag (flip, "rotate-90", GST_TAG_SCOPE_STREAM);
+  caps_update (flip, &in_info, TRUE);
+
+  // sending a global tag without orientation does not change the rotation (global: /, stream: 90)
+  send_orientation_tag (flip, NULL, GST_TAG_SCOPE_GLOBAL);
+  caps_not_updated (flip, &in_info);
+
   gst_harness_teardown (flip);
 }
 

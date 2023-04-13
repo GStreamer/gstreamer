@@ -1789,6 +1789,8 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
       if (gst_video_orientation_from_tag (taglist, &method)) {
         if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_STREAM) {
           vf->got_orientation_stream_tag = TRUE;
+        } else if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_GLOBAL) {
+          vf->global_tag_method = method;
         }
 
         if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_GLOBAL
@@ -1799,12 +1801,33 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
         } else {
           gst_video_flip_set_method (vf, method, TRUE);
         }
+      } else {
+        // no orientation in tag
+        if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_STREAM) {
+          GST_DEBUG_OBJECT (vf,
+              "stream tag does not contain orientation, restore the global one: %d",
+              vf->global_tag_method);
+          vf->got_orientation_stream_tag = FALSE;
+          gst_video_flip_set_method (vf, vf->global_tag_method, TRUE);
+        } else if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_GLOBAL) {
+          vf->global_tag_method = GST_VIDEO_ORIENTATION_IDENTITY;
+
+          if (!vf->got_orientation_stream_tag) {
+            GST_DEBUG_OBJECT (vf,
+                "global taglist withtout orientation, set to identity");
+            gst_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_IDENTITY,
+                TRUE);
+          } else {
+            // keep using the orientation from the stream tag
+          }
+        }
       }
 
       break;
     case GST_EVENT_STREAM_START:
       GST_DEBUG_OBJECT (vf, "new stream, reset orientation from tags");
       vf->got_orientation_stream_tag = FALSE;
+      vf->global_tag_method = GST_VIDEO_ORIENTATION_IDENTITY;
       gst_video_flip_set_method (vf, GST_VIDEO_ORIENTATION_IDENTITY, TRUE);
       break;
     default:
