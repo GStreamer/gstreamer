@@ -138,6 +138,10 @@ gst_v4l2_video_dec_open (GstVideoDecoder * decoder)
   if (gst_caps_is_empty (self->probed_sinkcaps))
     goto no_encoded_format;
 
+  self->supports_source_change =
+      gst_v4l2_object_subscribe_event (self->v4l2capture,
+      V4L2_EVENT_SOURCE_CHANGE);
+
   return TRUE;
 
 no_encoded_format:
@@ -697,6 +701,33 @@ flushing:
   return GST_FLOW_FLUSHING;
 }
 
+/* Only used initially to wait for a SRC_CH event
+ * called with decoder stream lock */
+static GstFlowReturn
+gst_v4l2_video_dec_wait_for_src_ch (GstV4l2VideoDec * self)
+{
+  GstFlowReturn flowret;
+
+  if (!self->wait_for_source_change)
+    return GST_FLOW_OK;
+
+  GST_VIDEO_DECODER_STREAM_UNLOCK (GST_VIDEO_DECODER (self));
+  flowret = gst_v4l2_object_poll (self->v4l2capture, GST_CLOCK_TIME_NONE);
+  GST_VIDEO_DECODER_STREAM_LOCK (GST_VIDEO_DECODER (self));
+
+  /* Fix the flow return value, as the poll is watching for buffer, but we are
+   * looking for the source change event */
+  if (flowret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
+    self->wait_for_source_change = FALSE;
+    flowret = GST_FLOW_OK;
+  } else if (flowret == GST_FLOW_OK) {
+    /* A buffer would be unexpected, in this case just terminate */
+    flowret = GST_V4L2_FLOW_LAST_BUFFER;
+  }
+
+  return flowret;
+}
+
 static void
 gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 {
@@ -707,12 +738,17 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   GstFlowReturn ret;
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-  /* FIXME at the moment we need a capture pool to poll for SRC_CH, they may
-   * cause suprious reallocation. */
   if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2capture))) {
+    ret = gst_v4l2_video_dec_wait_for_src_ch (self);
+    if (ret != GST_FLOW_OK) {
+      GST_INFO_OBJECT (decoder, "Polling for source change was interrupted");
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      goto beach;
+    }
+
     ret = gst_v4l2_video_dec_setup_capture (decoder);
     if (ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (decoder, "Failed setup capture queue.\n");
+      GST_ERROR_OBJECT (decoder, "Failed setup capture queue");
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       goto beach;
     }
@@ -841,6 +877,7 @@ resolution_changed:
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   /* FIXME, should be draining here */
   gst_v4l2_object_stop (self->v4l2capture);
+  gst_v4l2_object_unlock_stop (self->v4l2capture);
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
   return;
 
@@ -921,6 +958,11 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
         goto activate_failed;
     }
 
+    /* Ensure to unlock capture, as it may be flushing due to previous
+     * unlock/stop calls */
+    gst_v4l2_object_unlock_stop (self->v4l2output);
+    gst_v4l2_object_unlock_stop (self->v4l2capture);
+
     if (!gst_buffer_pool_set_active (pool, TRUE))
       goto activate_failed;
 
@@ -933,6 +975,12 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
     gst_buffer_unref (codec_data);
+
+    /* Only wait for source change if the formats supports it */
+    if (self->v4l2output->fmtdesc->flags & V4L2_FMT_FLAG_DYN_RESOLUTION) {
+      gst_v4l2_object_unlock_stop (self->v4l2capture);
+      self->wait_for_source_change = TRUE;
+    }
   }
 
   task_state = gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self));
