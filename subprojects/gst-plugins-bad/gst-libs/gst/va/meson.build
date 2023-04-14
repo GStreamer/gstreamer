@@ -49,27 +49,35 @@ if host_system not in ['linux', 'windows']
   subdir_done()
 endif
 
+va_opt = get_option('va')
+msdk_opt = get_option('msdk')
+qsv_opt = get_option('qsv')
+if va_opt.disabled() and msdk_opt.disabled() and qsv_opt.disabled()
+  subdir_done()
+endif
+
+va_required = va_opt.enabled() or msdk_opt.enabled() or qsv_opt.enabled()
+
 libva_req = ['>= 1.6']
 if host_system == 'windows'
   libva_req = ['>= 1.18']
 endif
 
-libva_dep = dependency('libva', version: libva_req, required: false,
+libva_dep = dependency('libva', version: libva_req, required: va_required,
     fallback: ['libva', 'libva_dep'])
-
 if not libva_dep.found()
   subdir_done()
 endif
 
 if host_system == 'linux'
-  libva_drm_dep = dependency('libva-drm', version: libva_req, required: false,
+  libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_required,
       fallback: ['libva', 'libva_drm_dep'])
   if not libva_drm_dep.found()
     subdir_done()
   endif
   platform_deps += [libva_drm_dep]
 
-  libdrm_dep = dependency('libdrm', required: false, fallback: ['libdrm', 'ext_libdrm'])
+  libdrm_dep = dependency('libdrm', version: '>=2.4', required: false)
   if libdrm_dep.found()
     platform_deps += [libdrm_dep]
     extra_args += ['-DHAVE_LIBDRM']
@@ -78,13 +86,13 @@ if host_system == 'linux'
   va_sources += va_linux_sources
   va_headers += va_linux_headers
 else
-  libva_win32_dep = dependency('libva-win32', version: libva_req, required: false,
+  libva_win32_dep = dependency('libva-win32', version: libva_req, required: va_required,
       fallback: ['libva', 'libva_win32_dep'])
   if not libva_win32_dep.found()
     subdir_done()
   endif
 
-  dxgi_lib = cc.find_library('dxgi', required : false)
+  dxgi_lib = cc.find_library('dxgi', required: va_required)
   if not dxgi_lib.found()
     subdir_done()
   endif

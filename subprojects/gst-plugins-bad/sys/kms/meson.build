@@ -11,11 +11,9 @@ if host_system != 'linux'
 endif
 
 libdrm_dep = dependency('libdrm', version : '>= 2.4.98',
-                        required : get_option('kms'),
-                        fallback: ['libdrm', 'ext_libdrm'])
+                        required : get_option('kms'))
 libdrm_hdr_dep = dependency('libdrm', version : '>= 2.4.104',
-                            required : false,
-                            fallback: ['libdrm', 'ext_libdrm'])
+                            required : false)
 mathlib = cc.find_library('m', required : false)
 
 if libdrm_hdr_dep.found() and mathlib.found()

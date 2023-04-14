@@ -88,8 +88,7 @@ libva_wayland_dep = dependency('libva-wayland', version: libva_req,
 libva_x11_dep = dependency('libva-x11', version: libva_req,
   required: get_option('x11'), fallback : ['libva', 'libva_x11_dep'])
 
-libdrm_dep = dependency('libdrm', version: libdrm_req,
-  required: get_option('drm'), fallback: ['libdrm', 'ext_libdrm'])
+libdrm_dep = dependency('libdrm', version: libdrm_req, required: get_option('drm'))
 libudev_dep = dependency('libudev', required: get_option('drm'))
 
 x11_dep = dependency('x11', required: get_option('x11'))
