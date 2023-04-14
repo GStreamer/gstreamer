@@ -41,7 +41,7 @@
           "${workspaceFolder}/${config:mesonbuild.buildFolder}",
         ],
         "searchMicrosoftSymbolServer": true,
-        "cachePath": "${workspaceFolder}\\${config:mesonbuild.buildFolder}\\cache",
+        "cachePath": "${workspaceFolder}\\${config:mesonbuild.buildFolder}\\vscode-symbols-cache",
         "moduleFilter": {
           "mode": "loadAllButExcluded",
           "excludedModules": []
