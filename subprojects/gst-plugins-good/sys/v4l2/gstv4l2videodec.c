@@ -685,13 +685,16 @@ gst_v4l2_video_dec_setup_capture (GstVideoDecoder * decoder)
 not_negotiated:
   GST_ERROR_OBJECT (self, "not negotiated");
   gst_v4l2_error (self, &error);
+  gst_v4l2_object_stop (self->v4l2capture);
   return GST_FLOW_NOT_NEGOTIATED;
 activate_failed:
   GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
       (_("Failed to allocate required memory.")),
       ("Buffer pool activation failed"));
+  gst_v4l2_object_stop (self->v4l2capture);
   return GST_FLOW_ERROR;
 flushing:
+  gst_v4l2_object_stop (self->v4l2capture);
   return GST_FLOW_FLUSHING;
 }
 
