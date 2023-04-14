@@ -54,7 +54,7 @@ extra_dep = []
 c_std_arg = ['c_std=c99']
 
 if host_system == 'linux'
-  libgudev_dep = dependency('gudev-1.0', required: false, allow_fallback: true)
+  libgudev_dep = dependency('gudev-1.0', required: get_option('udev'), allow_fallback: true)
   if libgudev_dep.found()
     extra_args += ['-DHAVE_GUDEV']
     extra_dep += [libgudev_dep]

@@ -50,13 +50,19 @@ if host_system not in ['linux', 'windows']
 endif
 
 va_opt = get_option('va')
-msdk_opt = get_option('msdk')
-qsv_opt = get_option('qsv')
-if va_opt.disabled() and msdk_opt.disabled() and qsv_opt.disabled()
-  subdir_done()
+if host_system == 'linux'
+  msdk_opt = get_option('msdk')
+  qsv_opt = get_option('qsv')
+  if va_opt.disabled() and msdk_opt.disabled() and qsv_opt.disabled()
+    subdir_done()
+  endif
+  va_required = va_opt.enabled() or msdk_opt.enabled() or qsv_opt.enabled()
+else
+  if va_opt.disabled()
+    subdir_done()
+  endif
+  va_required = va_opt
 endif
-
-va_required = va_opt.enabled() or msdk_opt.enabled() or qsv_opt.enabled()
 
 libva_req = ['>= 1.6']
 if host_system == 'windows'
@@ -77,7 +83,7 @@ if host_system == 'linux'
   endif
   platform_deps += [libva_drm_dep]
 
-  libdrm_dep = dependency('libdrm', version: '>=2.4', required: false)
+  libdrm_dep = dependency('libdrm', version: '>=2.4', required: get_option('drm'))
   if libdrm_dep.found()
     platform_deps += [libdrm_dep]
     extra_args += ['-DHAVE_LIBDRM']
