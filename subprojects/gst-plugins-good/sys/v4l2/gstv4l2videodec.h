@@ -62,6 +62,12 @@ struct _GstV4l2VideoDec
   GstVideoCodecState *input_state;
   gboolean active;
   GstFlowReturn output_flow;
+
+  /* Source Change Events */
+  gboolean wait_for_source_change;
+
+  /* Capabilities */
+  gboolean supports_source_change;
 };
 
 struct _GstV4l2VideoDecClass
