@@ -185,7 +185,6 @@ gst_v4l2_video_dec_start (GstVideoDecoder * decoder)
 
   gst_v4l2_object_unlock (self->v4l2output);
   g_atomic_int_set (&self->active, TRUE);
-  g_atomic_int_set (&self->capture_configuration_change, FALSE);
   self->output_flow = GST_FLOW_OK;
 
   return TRUE;
@@ -708,27 +707,21 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   GstFlowReturn ret;
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-  if (g_atomic_int_get (&self->capture_configuration_change)) {
-    gst_v4l2_object_stop (self->v4l2capture);
+  /* FIXME at the moment we need a capture pool to poll for SRC_CH, they may
+   * cause suprious reallocation. */
+  if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2capture))) {
     ret = gst_v4l2_video_dec_setup_capture (decoder);
     if (ret != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (decoder, "Failed setup capture queue.\n");
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
-      /* if caps negotiation failed, avoid trying it repeatly */
-      if (ret == GST_FLOW_NOT_NEGOTIATED) {
-        GST_ERROR_OBJECT (decoder,
-            "capture configuration change fail, return negotiation fail");
-        goto beach;
-      } else {
-        return;
-      }
+      goto beach;
     }
-    g_atomic_int_set (&self->capture_configuration_change, FALSE);
+
+    /* just a safety, as introducing mistakes in setup_capture seems rather
+     * easy.*/
+    g_return_if_fail (GST_V4L2_IS_ACTIVE (self->v4l2capture));
   }
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
-  if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2capture)))
-    return;
 
   GST_LOG_OBJECT (decoder, "Allocate output buffer");
 
@@ -752,8 +745,7 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 
     if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
       GST_INFO_OBJECT (decoder, "Received resolution change");
-      g_atomic_int_set (&self->capture_configuration_change, TRUE);
-      return;
+      goto resolution_changed;
     }
 
     if (ret != GST_FLOW_OK)
@@ -771,8 +763,7 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 
     if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
       GST_INFO_OBJECT (decoder, "Received resolution change");
-      g_atomic_int_set (&self->capture_configuration_change, TRUE);
-      return;
+      goto resolution_changed;
     }
   } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER);
 
@@ -846,6 +837,13 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
 
   return;
 
+resolution_changed:
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+  /* FIXME, should be draining here */
+  gst_v4l2_object_stop (self->v4l2capture);
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+  return;
+
 beach:
   GST_DEBUG_OBJECT (decoder, "Leaving output thread: %s",
       gst_flow_get_name (ret));
@@ -862,7 +860,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 {
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
-  GstBufferPool *pool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
+  GstBufferPool *pool = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean processed = FALSE;
   GstBuffer *tmp;
@@ -881,14 +879,7 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
       goto not_negotiated;
   }
 
-  if (!g_atomic_int_get (&self->capture_configuration_change)) {
-    ret = gst_v4l2_video_dec_setup_capture (decoder);
-    if (ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (decoder, "setup capture fail\n");
-      goto not_negotiated;
-    }
-  }
-
+  pool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
   if (G_UNLIKELY (!gst_buffer_pool_is_active (pool))) {
     GstBuffer *codec_data;
     GstStructure *config = gst_buffer_pool_get_config (pool);
