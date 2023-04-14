@@ -113,11 +113,13 @@ subprojects = [
   ['gst-plugins-rs', { 'option': get_option('rs'), 'build-hotdoc': true, 'match_gst_version': false}],
 ]
 
-if build_system == 'windows'
-  subproject('win-flex-bison-binaries')
-  subproject('win-nasm')
-elif build_system == 'darwin'
-  subproject('macos-bison-binary')
+if get_option('build-tools-source') == 'subproject'
+  if build_system == 'windows'
+    subproject('win-flex-bison-binaries')
+    subproject('win-nasm')
+  elif build_system == 'darwin'
+    subproject('macos-bison-binary')
+  endif
 endif
 
 orc_option = get_option('orc')
