@@ -136,6 +136,9 @@ struct _GstV4l2Object {
   /* the video-device's file descriptor */
   gint video_fd;
   GstV4l2IOMode mode;
+  GstPoll *poll;
+  GstPollFD pollfd;
+  gboolean can_poll_device;
 
   gboolean active;
 
@@ -315,6 +318,9 @@ gboolean     gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery *
 GstBufferPool * gst_v4l2_object_get_buffer_pool (GstV4l2Object * v4l2object);
 
 GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
+
+GstFlowReturn  gst_v4l2_object_poll (GstV4l2Object * v4l2object, GstClockTime timeout);
+gboolean       gst_v4l2_object_subscribe_event (GstV4l2Object * v4l2object, guint32 event);
 
 /* crop / compose */
 gboolean     gst_v4l2_object_set_crop (GstV4l2Object * obj, struct v4l2_rect *result);
