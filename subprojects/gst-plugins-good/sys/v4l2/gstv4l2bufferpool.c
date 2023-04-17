@@ -1032,7 +1032,9 @@ gst_v4l2_buffer_pool_orphan (GstV4l2Object * v4l2object)
   GstV4l2BufferPool *pool;
   gboolean ret;
 
-  g_return_val_if_fail (bpool, FALSE);
+  /* Nothing to do if there is no pool */
+  if (!bpool)
+    return TRUE;
 
   pool = GST_V4L2_BUFFER_POOL (bpool);
 
