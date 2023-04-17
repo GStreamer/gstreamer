@@ -12276,7 +12276,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                    * rest: OBUs.
                    */
 
-                  switch (av1_data[9]) {
+                  switch (av1_data[8]) {
                     case 0x81:{
                       guint8 pres_delay_field;
 
@@ -12297,10 +12297,11 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                       gst_caps_set_simple (entry->caps,
                           "codec_data", GST_TYPE_BUFFER, buf, NULL);
                       gst_buffer_unref (buf);
+                      break;
                     }
                     default:
-                      GST_WARNING ("Unknown version %d of av1C box",
-                          av1_data[9]);
+                      GST_WARNING ("Unknown version 0x%02x of av1C box",
+                          av1_data[8]);
                       break;
                   }
 
