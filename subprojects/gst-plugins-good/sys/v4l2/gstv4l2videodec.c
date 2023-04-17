@@ -713,6 +713,8 @@ gst_v4l2_video_dec_wait_for_src_ch (GstV4l2VideoDec * self)
   if (!self->wait_for_source_change)
     return GST_FLOW_OK;
 
+  GST_DEBUG_OBJECT (self, "Waiting for source change event");
+
   GST_VIDEO_DECODER_STREAM_UNLOCK (GST_VIDEO_DECODER (self));
   flowret = gst_v4l2_object_poll (self->v4l2capture, GST_CLOCK_TIME_NONE);
   GST_VIDEO_DECODER_STREAM_LOCK (GST_VIDEO_DECODER (self));
@@ -739,6 +741,8 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   GstBuffer *buffer = NULL;
   GstFlowReturn ret;
 
+  GST_LOG_OBJECT (self, "Looping.");
+
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
   if (G_UNLIKELY (!GST_V4L2_IS_ACTIVE (self->v4l2capture))) {
     ret = gst_v4l2_video_dec_wait_for_src_ch (self);
@@ -761,7 +765,7 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
   }
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
-  GST_LOG_OBJECT (decoder, "Allocate output buffer");
+  GST_LOG_OBJECT (decoder, "Acquire output buffer");
 
   self->output_flow = GST_FLOW_OK;
 
