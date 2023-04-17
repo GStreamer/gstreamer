@@ -320,6 +320,7 @@ struct _GstD3D11Compositor
   GstD3D11Device *device;
 
   GstBuffer *fallback_buf;
+  GstCaps *negotiated_caps;
 
   GstD3D11CompositorQuad *checker_background;
   /* black/white/transparent */
@@ -1293,6 +1294,7 @@ gst_d3d11_compositor_stop (GstAggregator * agg)
 
   g_clear_pointer (&self->checker_background, gst_d3d11_compositor_quad_free);
   gst_clear_object (&self->device);
+  gst_clear_caps (&self->negotiated_caps);
 
   return GST_AGGREGATOR_CLASS (parent_class)->stop (agg);
 }
@@ -1658,6 +1660,11 @@ gst_d3d11_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
     return FALSE;
   }
 
+  if (self->negotiated_caps && gst_caps_is_equal (self->negotiated_caps, caps)) {
+    GST_DEBUG_OBJECT (self, "Negotiated caps is not changed");
+    goto done;
+  }
+
   features = gst_caps_get_features (caps, 0);
   if (features
       && gst_caps_features_contains (features,
@@ -1714,6 +1721,9 @@ gst_d3d11_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
     gst_object_unref (pool);
   }
 
+  gst_caps_replace (&self->negotiated_caps, caps);
+
+done:
   return GST_AGGREGATOR_CLASS (parent_class)->negotiated_src_caps (agg, caps);
 }
 
