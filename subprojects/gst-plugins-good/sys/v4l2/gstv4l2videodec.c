@@ -493,9 +493,11 @@ gst_v4l2_video_dec_finish (GstVideoDecoder * decoder)
       counter++;
       gst_video_decoder_drop_frame (decoder, frame);
     }
-    g_warning
-        ("%s: %i frames %u-%u left undrained after CMD_STOP, eos sent too early: bug in decoder -- please file a bug",
-        GST_ELEMENT_NAME (decoder), counter, first, last);
+    if (self->output_flow == GST_FLOW_OK) {
+      g_warning ("%s: %i frames %u-%u left undrained after CMD_STOP, "
+          "eos sent too early: bug in decoder -- please file a bug",
+          GST_ELEMENT_NAME (decoder), counter, first, last);
+    }
     if (pending_frames)
       g_list_free (pending_frames);
   }
