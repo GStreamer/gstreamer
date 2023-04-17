@@ -89,6 +89,12 @@ GstEGLImage *           gst_egl_image_from_dmabuf               (GstGLContext * 
                                                                  gint plane,
                                                                  gsize offset);
 GST_GL_API
+GstEGLImage *           gst_egl_image_from_dmabuf_with_dma_drm  (GstGLContext * context,
+                                                                 gint dmabuf,
+                                                                 const GstVideoInfoDmaDrm * in_info_dma,
+                                                                 gint plane,
+                                                                 gsize offset);
+GST_GL_API
 GstEGLImage *           gst_egl_image_from_dmabuf_direct        (GstGLContext * context,
                                                                  gint *fd,
                                                                  const gsize *offset,
@@ -100,6 +106,13 @@ GstEGLImage *           gst_egl_image_from_dmabuf_direct_target (GstGLContext * 
                                                                  const GstVideoInfo * in_info,
                                                                  GstGLTextureTarget target);
 
+GST_GL_API
+GstEGLImage *           gst_egl_image_from_dmabuf_direct_target_with_dma_drm
+                                                                (GstGLContext * context,
+                                                                 gint * fd,
+                                                                 const gsize * offset,
+                                                                 const GstVideoInfoDmaDrm * in_info_dma,
+                                                                 GstGLTextureTarget target);
 GST_GL_API
 gboolean                gst_egl_image_export_dmabuf             (GstEGLImage *image, int *fd, gint *stride, gsize *offset);
 #endif
