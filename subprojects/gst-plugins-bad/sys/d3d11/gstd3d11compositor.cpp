@@ -965,6 +965,7 @@ enum
   PROP_0,
   PROP_ADAPTER,
   PROP_BACKGROUND,
+  PROP_IGNORE_INACTIVE_PADS,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -1037,6 +1038,26 @@ gst_d3d11_compositor_class_init (GstD3D11CompositorClass * klass)
       g_param_spec_enum ("background", "Background", "Background type",
           GST_TYPE_D3D11_COMPOSITOR_BACKGROUND,
           DEFAULT_BACKGROUND,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11Compositor:ignore-inactive-pads:
+   *
+   * Don't wait for inactive pads when live. An inactive pad
+   * is a pad that hasn't yet received a buffer, but that has
+   * been waited on at least once.
+   *
+   * The purpose of this property is to avoid aggregating on
+   * timeout when new pads are requested in advance of receiving
+   * data flow, for example the user may decide to connect it later,
+   * but wants to configure it already.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class,
+      PROP_IGNORE_INACTIVE_PADS, g_param_spec_boolean ("ignore-inactive-pads",
+          "Ignore inactive pads",
+          "Avoid timing out waiting for inactive pads", FALSE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   element_class->request_new_pad =
@@ -1122,6 +1143,10 @@ gst_d3d11_compositor_set_property (GObject * object,
       self->background =
           (GstD3D11CompositorBackground) g_value_get_enum (value);
       break;
+    case PROP_IGNORE_INACTIVE_PADS:
+      gst_aggregator_set_ignore_inactive_pads (GST_AGGREGATOR (object),
+          g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1140,6 +1165,10 @@ gst_d3d11_compositor_get_property (GObject * object,
       break;
     case PROP_BACKGROUND:
       g_value_set_enum (value, self->background);
+      break;
+    case PROP_IGNORE_INACTIVE_PADS:
+      g_value_set_boolean (value,
+          gst_aggregator_get_ignore_inactive_pads (GST_AGGREGATOR (object)));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
