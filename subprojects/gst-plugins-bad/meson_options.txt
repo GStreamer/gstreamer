@@ -195,6 +195,7 @@ option(
 
 option('magicleap', type : 'feature', value : 'auto', description : 'Magic Leap platform support')
 option('v4l2codecs', type : 'feature', value : 'auto', description : 'Video4Linux Stateless CODECs support')
+option('uvcgadget', type : 'feature', value : 'auto', description : 'uvc video gadget plugin')
 option('isac', type : 'feature', value : 'auto', description : 'iSAC plugin')
 
 # HLS plugin options
