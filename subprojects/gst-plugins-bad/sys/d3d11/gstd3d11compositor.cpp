@@ -766,6 +766,9 @@ gst_d3d11_compositor_pad_check_frame_obscured (GstVideoAggregatorPad * pad,
    *     left unscaled)
    */
 
+  if (cpad->alpha == 0)
+    return TRUE;
+
   gst_d3d11_compositor_pad_get_output_size (cpad, GST_VIDEO_INFO_PAR_N (info),
       GST_VIDEO_INFO_PAR_D (info), &width, &height, &x_offset, &y_offset);
 
