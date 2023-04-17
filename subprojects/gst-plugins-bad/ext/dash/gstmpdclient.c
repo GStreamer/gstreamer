@@ -1768,7 +1768,7 @@ gst_mpd_client_stream_seek (GstMPDClient * client, GstActiveStream * stream,
 
     g_return_val_if_fail (GST_MPD_MULT_SEGMENT_BASE_NODE
         (stream->cur_seg_template)->SegmentTimeline == NULL, FALSE);
-    if (!GST_CLOCK_TIME_IS_VALID (duration)) {
+    if (!GST_CLOCK_TIME_IS_VALID (duration) || duration == 0) {
       return FALSE;
     }
 
