@@ -26,6 +26,7 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstGLDmaModifier GstGLDmaModifier;
 typedef struct _GstGLContextEGL GstGLContextEGL;
 typedef struct _GstGLContextEGLClass GstGLContextEGLClass;
 
@@ -40,6 +41,17 @@ G_GNUC_INTERNAL GType gst_gl_context_egl_get_type (void);
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLContextEGL, gst_object_unref)
 
+/**
+ * GstGLDmaModifier: (skip)
+ *
+ * Opaque struct
+ */
+struct _GstGLDmaModifier
+{
+  /*< private >*/
+  guint64 modifier;
+  gboolean external_only;
+};
 
 /**
  * GstGLContextEGL:
@@ -70,6 +82,8 @@ struct _GstGLContextEGL
   gulong window_handle_signal;
 
   GstStructure *requested_config;
+
+  GArray *dma_formats;
 };
 
 /**
@@ -95,6 +109,10 @@ gpointer            gst_gl_context_egl_get_proc_address     (GstGLAPI gl_api, co
 G_GNUC_INTERNAL
 gboolean            gst_gl_context_egl_fill_info            (GstGLContext * context, GError ** error);
 
+G_GNUC_INTERNAL
+gboolean            gst_gl_context_egl_get_format_modifiers (GstGLContext * context,
+                                                             gint fourcc,
+                                                             const GArray ** modifiers);
 G_END_DECLS
 
 #endif /* __GST_GL_CONTEXT_EGL_H__ */
