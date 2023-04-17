@@ -31,6 +31,11 @@ gboolean                gst_egl_image_check_dmabuf_direct       (GstGLContext * 
                                                                  const GstVideoInfo * in_info,
                                                                  GstGLTextureTarget target);
 
+G_GNUC_INTERNAL
+gboolean                gst_egl_image_check_dmabuf_direct_with_dma_drm
+                                                                (GstGLContext * context,
+                                                                 const GstVideoInfoDmaDrm * in_info_dma,
+                                                                 GstGLTextureTarget target);
 
 G_END_DECLS
 
