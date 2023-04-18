@@ -509,11 +509,11 @@ GST_START_TEST (test_effect_set_properties)
   ges_timeline_element_get_child_properties (effect,
       "GstAgingTV::scratch-lines", &scratch_line,
       "color-aging", &color_aging, NULL);
-  fail_unless (scratch_line == 17);
-  fail_unless (color_aging == FALSE);
+  assert_equals_int (scratch_line, 17);
+  assert_equals_int (color_aging, FALSE);
 
   pspecs = ges_timeline_element_list_children_properties (effect, &n_props);
-  fail_unless (n_props == 7);
+  assert_equals_int (n_props, 7);
 
   spec = pspecs[0];
   i = 1;
@@ -527,7 +527,7 @@ GST_START_TEST (test_effect_set_properties)
 
   ges_timeline_element_set_child_property_by_pspec (effect, spec, &val);
   ges_timeline_element_get_child_property_by_pspec (effect, spec, &nval);
-  fail_unless (g_value_get_uint (&nval) == 10);
+  assert_equals_int (g_value_get_uint (&nval), 10);
 
   for (i = 0; i < n_props; i++) {
     g_param_spec_unref (pspecs[i]);
