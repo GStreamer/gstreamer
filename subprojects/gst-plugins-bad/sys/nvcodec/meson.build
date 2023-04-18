@@ -3,6 +3,11 @@ nvcodec_sources = [
   'gstcudaconverter.c',
   'gstcudaconvertscale.c',
   'gstcudafilter.c',
+  'gstcudaipc.cpp',
+  'gstcudaipcclient.cpp',
+  'gstcudaipcserver.cpp',
+  'gstcudaipcsink.cpp',
+  'gstcudaipcsrc.cpp',
   'gstcudamemorycopy.c',
   'gstcuvidloader.c',
   'gstnvav1dec.cpp',
@@ -28,6 +33,16 @@ nvmm_sources = [
   'gstcudanvmm.c',
 ]
 
+nvcodec_win32_sources = [
+  'gstcudaipcclient_win32.cpp',
+  'gstcudaipcserver_win32.cpp',
+]
+
+nvcodec_unix_sources = [
+  'gstcudaipcclient_unix.cpp',
+  'gstcudaipcserver_unix.cpp',
+]
+
 if get_option('nvcodec').disabled()
   subdir_done()
 endif
@@ -41,6 +56,7 @@ endif
 
 plugin_incdirs = [configinc, cuda_stubinc]
 extra_args = ['-DGST_USE_UNSTABLE_API']
+extra_deps = []
 
 if gstgl_dep.found()
   extra_args += ['-DHAVE_CUDA_GST_GL']
@@ -60,6 +76,13 @@ if host_system == 'linux'
     extra_args += ['-DHAVE_NVCODEC_NVMM']
     nvcodec_sources += nvmm_sources
   endif
+
+  gio_unix_dep = dependency('gio-unix-2.0', required : get_option('nvcodec'))
+  extra_deps += [gio_dep, gio_unix_dep]
+
+  nvcodec_sources += nvcodec_unix_sources
+else
+  nvcodec_sources += nvcodec_win32_sources
 endif
 
 if cc.get_id() != 'msvc'
@@ -82,7 +105,9 @@ gstnvcodec = library('gstnvcodec',
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : plugin_incdirs,
-  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep, gstglproto_dep, gmodule_dep, gstcodecs_dep, gstd3d11_dep, gstcuda_dep],
+  dependencies : [gstbase_dep, gstvideo_dep, gstpbutils_dep, gstgl_dep,
+                  gstglproto_dep, gmodule_dep, gstcodecs_dep,
+                  gstd3d11_dep, gstcuda_dep] + extra_deps,
   override_options : ['cpp_std=c++14'],
   install : true,
   install_dir : plugins_install_dir,
