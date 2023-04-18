@@ -917,6 +917,25 @@ gst_msdkdec_finish_task (GstMsdkDec * thiz, MsdkDecTask * task)
     GST_DEBUG_OBJECT (thiz, "Decoded MFX TimeStamp: %" G_GUINT64_FORMAT,
         (guint64) surface->surface->Data.TimeStamp);
     pts = surface->surface->Data.TimeStamp;
+
+    if (thiz->param.mfx.CodecId == MFX_CODEC_VP9) {
+      GstVideoCodecState *output_state =
+          gst_video_decoder_get_output_state (GST_VIDEO_DECODER (thiz));
+      /* detect whether the resolution change and negotiate with downstream if so */
+      if ((surface->surface->Info.CropW && surface->surface->Info.CropH)
+          && ((output_state->info.width != surface->surface->Info.CropW)
+              || (output_state->info.height != surface->surface->Info.CropH))) {
+        output_state->info.width = surface->surface->Info.CropW;
+        output_state->info.height = surface->surface->Info.CropH;
+        output_state->caps = gst_video_info_to_caps (&output_state->info);
+        if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (thiz))) {
+          GST_ERROR_OBJECT (thiz, "Failed to negotiate");
+          gst_video_codec_state_unref (output_state);
+          return GST_FLOW_NOT_NEGOTIATED;
+        }
+      }
+      gst_video_codec_state_unref (output_state);
+    }
   }
 
   if (G_LIKELY (task->sync_point || (surface && task->decode_only))) {
