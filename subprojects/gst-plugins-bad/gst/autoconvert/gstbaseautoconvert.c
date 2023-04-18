@@ -781,8 +781,10 @@ gst_base_auto_convert_sink_setcaps (GstBaseAutoConvert * self, GstCaps * caps,
   if (!check_downstream) {
     current_caps = gst_pad_get_current_caps (self->sinkpad);
 
-    if (current_caps && gst_caps_is_equal_fixed (caps, current_caps))
+    if (current_caps && gst_caps_is_equal_fixed (caps, current_caps)) {
+      res = TRUE;
       goto get_out;
+    }
   }
 
   if (check_downstream)
