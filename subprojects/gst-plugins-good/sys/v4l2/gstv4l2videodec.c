@@ -304,14 +304,6 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
   }
 
   ret = gst_v4l2_object_set_format (self->v4l2output, state->caps, &error);
-
-  gst_caps_replace (&self->probed_srccaps, NULL);
-  self->probed_srccaps = gst_v4l2_object_probe_caps (self->v4l2capture,
-      gst_v4l2_object_get_raw_caps ());
-
-  if (gst_caps_is_empty (self->probed_srccaps))
-    goto no_raw_format;
-
   if (ret)
     self->input_state = gst_video_codec_state_ref (state);
   else
@@ -319,12 +311,6 @@ gst_v4l2_video_dec_set_format (GstVideoDecoder * decoder,
 
 done:
   return ret;
-
-no_raw_format:
-  GST_ELEMENT_ERROR (self, RESOURCE, SETTINGS,
-      (_("Decoder on device %s has no supported output format"),
-          self->v4l2output->videodev), (NULL));
-  return GST_FLOW_ERROR;
 }
 
 static gboolean
