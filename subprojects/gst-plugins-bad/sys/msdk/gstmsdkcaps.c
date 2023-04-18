@@ -1728,8 +1728,6 @@ failed:
     gst_caps_unref (in_caps);
   if (out_caps)
     gst_caps_unref (out_caps);
-  if (dma_caps)
-    gst_caps_unref (dma_caps);
 
   return FALSE;
 }
