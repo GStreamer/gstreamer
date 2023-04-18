@@ -6,7 +6,7 @@ uvch264_sources = [
   'uvc_h264.c',
 ]
 
-libgudev_dep = dependency('gudev-1.0', required : get_option('uvch264'))
+libgudev_dep = dependency('gudev-1.0', required : get_option('uvch264'), allow_fallback: true)
 libusb_dep = dependency('libusb-1.0', required : get_option('uvch264'))
 has_uvcvideo_h = cc.has_header('linux/uvcvideo.h')
 if not has_uvcvideo_h and get_option('uvch264').enabled()

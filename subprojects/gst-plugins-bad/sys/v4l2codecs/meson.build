@@ -13,7 +13,7 @@ v4l2codecs_sources = [
   'gstv4l2codecalphadecodebin.c',
 ]
 
-libgudev_dep = dependency('gudev-1.0', required: get_option('v4l2codecs'))
+libgudev_dep = dependency('gudev-1.0', required: get_option('v4l2codecs'), allow_fallback: true)
 
 if get_option('v4l2codecs').disabled()
   have_v4l2 = false

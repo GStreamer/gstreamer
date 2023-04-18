@@ -52,7 +52,7 @@ cdata.set('GST_V4L2_ENABLE_PROBE', get_option('v4l2-probe'))
 if have_v4l2
   message('building v4l2 plugin')
   cdata.set('HAVE_GST_V4L2', true)
-  gudev_dep = dependency('gudev-1.0', version : '>=147', required : get_option('v4l2-gudev'))
+  gudev_dep = dependency('gudev-1.0', version : '>=147', required : get_option('v4l2-gudev'), allow_fallback: true)
   cdata.set('HAVE_GUDEV', gudev_dep.found())
 
   # libv4l2 is only needed for converting some obscure formats
