@@ -103,6 +103,7 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "systemstream = (boolean) false; "
         "video/x-dirac;"
         "image/x-jpc, alignment = (string) frame;"
+        "video/x-av1,stream-format=(string)obu-stream,alignment=(string)frame;"
         "video/x-h264,stream-format=(string)byte-stream,"
         "alignment=(string){au, nal}; "
         "video/x-h265,stream-format=(string)byte-stream,"

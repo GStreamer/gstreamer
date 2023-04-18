@@ -136,6 +136,7 @@ enum TsMuxStreamType {
   TSMUX_ST_PS_ST_2038                 = 0x91,    /* only used internally */
   TSMUX_ST_PS_S302M                   = 0x92,    /* only used internally */
   TSMUX_ST_PS_VP9                     = 0x93,    /* only used internally */
+  TSMUX_ST_PS_VIDEO_AV1               = 0x94,    /* only used internally */
   TSMUX_ST_PS_DVD_SUBPICTURE          = 0xff,
 
   /* Non-standard definitions */

@@ -633,6 +633,23 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
       GST_ERROR_OBJECT (mux,
           "VP9 requires enabling custom mapping which does not have a public specification");
     }
+  } else if (strcmp (mt, "video/x-av1") == 0) {
+    if (mux->enable_custom_mappings) {
+      st = TSMUX_ST_PS_VIDEO_AV1;
+      if (!codec_data)
+        codec_data = gst_codec_utils_av1_create_av1c_from_caps (caps);
+      if (codec_data) {
+        GstMapInfo map;
+        if (gst_buffer_map (codec_data, &map, GST_MAP_READ)) {
+          pmt_descriptor =
+              gst_mpegts_descriptor_from_custom (0x80, map.data, map.size);
+          gst_buffer_unmap (codec_data, &map);
+        }
+      }
+    } else {
+      GST_ERROR_OBJECT (mux,
+          "AV1 requires enabling custom mapping which does not have a public specification yet");
+    }
   } else if (strcmp (mt, "audio/mpeg") == 0) {
     gint mpegversion;
 

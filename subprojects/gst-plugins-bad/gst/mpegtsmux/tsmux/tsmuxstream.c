@@ -258,6 +258,13 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
+    case TSMUX_ST_PS_VIDEO_AV1:
+      /* FIXME: assign sequential extended IDs? */
+      stream->id = 0xBD;
+      stream->gst_stream_type = GST_STREAM_TYPE_VIDEO;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      break;
     default:
       /* Might be a custom stream type implemented by a subclass */
       break;
@@ -1044,6 +1051,13 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
         descriptor = gst_mpegts_descriptor_from_registration ("VP09", NULL, 0);
         GST_DEBUG ("adding VP09 registration descriptor");
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
+      }
+      if (stream->internal_stream_type == TSMUX_ST_PS_VIDEO_AV1) {
+        /* AV1G is our custom non-bytestream format ! */
+        descriptor = gst_mpegts_descriptor_from_registration ("AV1G", NULL, 0);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+        if (stream->pmt_descriptor)
+          g_ptr_array_add (pmt_stream->descriptors, stream->pmt_descriptor);
       }
     default:
       break;
