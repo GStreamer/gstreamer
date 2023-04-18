@@ -479,11 +479,12 @@ _add_all_groups (GESFormatter * self)
         lchild = lchild->next) {
       child = g_hash_table_lookup (priv->containers, lchild->data);
 
-      GST_DEBUG_OBJECT (tmp->data, "Adding %s child %" GST_PTR_FORMAT " %s",
+      GST_DEBUG_OBJECT (pgroup->group, "Adding %s child %" GST_PTR_FORMAT " %s",
           (const gchar *) lchild->data, child,
           GES_TIMELINE_ELEMENT_NAME (child));
       if (!ges_container_add (GES_CONTAINER (pgroup->group), child)) {
-        GST_ERROR ("%" GES_FORMAT " could not add child %p while"
+        GST_ERROR_OBJECT (pgroup->group,
+            "%" GES_FORMAT " could not add child %p while"
             " reloading, this should never happen", GES_ARGS (pgroup->group),
             child);
       }
