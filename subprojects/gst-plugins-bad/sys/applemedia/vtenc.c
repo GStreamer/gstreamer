@@ -745,8 +745,8 @@ gst_vtenc_stop (GstVideoEncoder * enc)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = NULL;
 
-  self->negotiated_width = self->negotiated_height = 0;
-  self->negotiated_fps_n = self->negotiated_fps_d = 0;
+  self->video_info.width = self->video_info.height = 0;
+  self->video_info.fps_n = self->video_info.fps_d = 0;
 
   gst_vtenc_clear_cached_caps_downstream (self);
 
@@ -929,10 +929,6 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
 
-  self->negotiated_width = state->info.width;
-  self->negotiated_height = state->info.height;
-  self->negotiated_fps_n = state->info.fps_n;
-  self->negotiated_fps_d = state->info.fps_d;
   self->video_info = state->info;
 
   GST_OBJECT_LOCK (self);
@@ -952,7 +948,7 @@ gst_vtenc_set_format (GstVideoEncoder * enc, GstVideoCodecState * state)
 static gboolean
 gst_vtenc_is_negotiated (GstVTEnc * self)
 {
-  return self->negotiated_width != 0;
+  return self->video_info.width != 0;
 }
 
 /*
@@ -985,10 +981,10 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
   GstStructure *s;
   GstVideoCodecState *state;
 
-  if (self->caps_width == self->negotiated_width &&
-      self->caps_height == self->negotiated_height &&
-      self->caps_fps_n == self->negotiated_fps_n &&
-      self->caps_fps_d == self->negotiated_fps_d) {
+  if (self->caps_width == self->video_info.width &&
+      self->caps_height == self->video_info.height &&
+      self->caps_fps_n == self->video_info.fps_n &&
+      self->caps_fps_d == self->video_info.fps_d) {
     return TRUE;
   }
 
@@ -996,10 +992,10 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
   caps = gst_caps_make_writable (caps);
   s = gst_caps_get_structure (caps, 0);
   gst_structure_set (s,
-      "width", G_TYPE_INT, self->negotiated_width,
-      "height", G_TYPE_INT, self->negotiated_height,
+      "width", G_TYPE_INT, self->video_info.width,
+      "height", G_TYPE_INT, self->video_info.height,
       "framerate", GST_TYPE_FRACTION,
-      self->negotiated_fps_n, self->negotiated_fps_d, NULL);
+      self->video_info.fps_n, self->video_info.fps_d, NULL);
 
   switch (self->details->format_id) {
     case kCMVideoCodecType_H264:
@@ -1066,10 +1062,10 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
   gst_video_codec_state_unref (state);
   result = gst_video_encoder_negotiate (GST_VIDEO_ENCODER_CAST (self));
 
-  self->caps_width = self->negotiated_width;
-  self->caps_height = self->negotiated_height;
-  self->caps_fps_n = self->negotiated_fps_n;
-  self->caps_fps_d = self->negotiated_fps_d;
+  self->caps_width = self->video_info.width;
+  self->caps_height = self->video_info.height;
+  self->caps_fps_n = self->video_info.fps_n;
+  self->caps_fps_d = self->video_info.fps_d;
 
   return result;
 }
@@ -1297,9 +1293,9 @@ gst_vtenc_create_session (GstVTEnc * self)
     pb_attrs = CFDictionaryCreateMutable (NULL, 0,
         &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferWidthKey,
-        self->negotiated_width);
+        self->video_info.width);
     gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
-        self->negotiated_height);
+        self->video_info.height);
   }
 
   /* This was set in gst_vtenc_negotiate_specific_format_details() */
@@ -1313,11 +1309,11 @@ gst_vtenc_create_session (GstVTEnc * self)
   }
 
   status = VTCompressionSessionCreate (NULL,
-      self->negotiated_width, self->negotiated_height,
+      self->video_info.width, self->video_info.height,
       self->specific_format_id, encoder_spec, pb_attrs, NULL,
       gst_vtenc_enqueue_buffer, self, &session);
   GST_INFO_OBJECT (self, "VTCompressionSessionCreate for %d x %d => %d",
-      self->negotiated_width, self->negotiated_height, (int) status);
+      self->video_info.width, self->video_info.height, (int) status);
   if (status != noErr) {
     GST_ERROR_OBJECT (self, "VTCompressionSessionCreate() returned: %d",
         (int) status);
@@ -1326,7 +1322,7 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   if (self->profile_level) {
     gst_vtenc_session_configure_expected_framerate (self, session,
-        (gdouble) self->negotiated_fps_n / (gdouble) self->negotiated_fps_d);
+        (gdouble) self->video_info.fps_n / (gdouble) self->video_info.fps_d);
 
     /*
      * https://developer.apple.com/documentation/videotoolbox/kvtcompressionpropertykey_profilelevel
@@ -1714,8 +1710,8 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
     }
 
     cv_ret =
-        CVPixelBufferCreate (NULL, self->negotiated_width,
-        self->negotiated_height, pixel_format_type, NULL, &pbuf);
+        CVPixelBufferCreate (NULL, self->video_info.width,
+        self->video_info.height, pixel_format_type, NULL, &pbuf);
 
     if (cv_ret != kCVReturnSuccess) {
       GST_ERROR_OBJECT (self, "CVPixelBufferCreate failed: %i", cv_ret);
@@ -1780,7 +1776,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
       }
 
       cv_ret = CVPixelBufferCreateWithPlanarBytes (NULL,
-          self->negotiated_width, self->negotiated_height,
+          self->video_info.width, self->video_info.height,
           pixel_format_type,
           frame,
           GST_VIDEO_FRAME_SIZE (&vframe->videoframe),
