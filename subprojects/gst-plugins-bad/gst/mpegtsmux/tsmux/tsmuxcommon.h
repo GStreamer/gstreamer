@@ -66,6 +66,7 @@
 
 #include <glib.h>
 #include <gst/gst.h>
+#include <gst/mpegts/mpegts.h>
 
 G_BEGIN_DECLS
 

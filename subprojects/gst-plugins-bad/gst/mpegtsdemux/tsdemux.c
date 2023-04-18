@@ -1517,6 +1517,24 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           is_audio = TRUE;
           caps = gst_caps_new_empty_simple ("audio/x-smpte-302m");
           break;
+        case DRF_ID_AV1G:
+          GST_DEBUG ("AV1");
+          is_video = TRUE;
+          caps =
+              gst_caps_new_simple ("video/x-av1", "stream-format",
+              G_TYPE_STRING, "obu-stream", "alignment", G_TYPE_STRING, "frame",
+              NULL);
+          desc = mpegts_get_descriptor_from_stream (bstream, 0x80);
+          if (desc != NULL) {
+            GstCaps *av1c_caps;
+            GstBuffer *buf = gst_buffer_new_wrapped (g_memdup2 (desc->data + 2,
+                    desc->length), desc->length);
+            av1c_caps = gst_codec_utils_av1_create_caps_from_av1c (buf);
+            gst_caps_set_simple (av1c_caps, "codec_data", GST_TYPE_BUFFER, buf,
+                NULL);
+            caps = gst_caps_intersect (caps, av1c_caps);
+          }
+          break;
         case DRF_ID_OPUS:
           desc = mpegts_get_descriptor_from_stream (bstream,
               GST_MTS_DESC_DVB_EXTENSION);

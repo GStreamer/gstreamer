@@ -488,6 +488,10 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     st = TSMUX_ST_VIDEO_H264;
   } else if (strcmp (mt, "video/x-h265") == 0) {
     st = TSMUX_ST_VIDEO_HEVC;
+  } else if (strcmp (mt, "video/x-av1") == 0) {
+    st = TSMUX_ST_PS_VIDEO_AV1;
+    if (!codec_data)
+      codec_data = gst_codec_utils_av1_create_av1c_from_caps (caps);
   } else if (strcmp (mt, "audio/mpeg") == 0) {
     gint mpegversion;
 
@@ -805,6 +809,11 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     gst_structure_get_int (mux->prog_map, pmt_name, &ts_pad->stream->pmt_index);
   }
   g_free (pmt_name);
+
+  /* Codec data */
+  if (codec_data) {
+    ts_pad->stream->codec_data = gst_buffer_ref (codec_data);
+  }
 
   interlace_mode = gst_structure_get_string (s, "interlace-mode");
   gst_structure_get_int (s, "rate", &ts_pad->stream->audio_sampling);

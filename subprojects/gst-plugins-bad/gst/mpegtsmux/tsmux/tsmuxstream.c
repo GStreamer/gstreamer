@@ -226,6 +226,14 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       stream->is_opus = TRUE;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
+    case TSMUX_ST_PS_VIDEO_AV1:
+      /* FIXME: assign sequential extended IDs? */
+      stream->id = 0xBD;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->is_video_stream = TRUE;
+      stream->is_av1 = TRUE;
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      break;
     default:
       /* Might be a custom stream type implemented by a subclass */
       break;
@@ -289,6 +297,9 @@ tsmux_stream_free (TsMuxStream * stream)
     g_free (tmbuf);
   }
   g_list_free (stream->buffers);
+
+  if (stream->codec_data)
+    gst_buffer_unref (stream->codec_data);
 
   g_free (stream);
 }
@@ -943,6 +954,21 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
         descriptor = gst_mpegts_descriptor_from_registration ("KLVA", NULL, 0);
         GST_DEBUG ("adding KLVA registration descriptor");
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
+      }
+      if (stream->is_av1) {
+        /* AV1G Is our custom non-bytestream format ! */
+        descriptor = gst_mpegts_descriptor_from_registration ("AV1G", NULL, 0);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+        if (stream->codec_data) {
+          GstMapInfo map;
+          if (gst_buffer_map (stream->codec_data, &map, GST_MAP_READ)) {
+            descriptor =
+                gst_mpegts_descriptor_from_custom (0x80, map.data, map.size);
+            g_ptr_array_add (pmt_stream->descriptors, descriptor);
+            gst_buffer_unmap (stream->codec_data, &map);
+          }
+        }
+
       }
     default:
       break;
