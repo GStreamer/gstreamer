@@ -74,8 +74,6 @@ struct _GstVTEnc
   gboolean dump_properties;
   gboolean dump_attributes;
 
-  gint negotiated_width, negotiated_height;
-  gint negotiated_fps_n, negotiated_fps_d;
   gint caps_width, caps_height;
   gint caps_fps_n, caps_fps_d;
   gboolean have_field_order;
