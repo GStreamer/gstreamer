@@ -1545,6 +1545,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
               channels = channel_config_code ? (channel_config_code & 0x0f) : 2;
               if (channel_config_code == 0 || channel_config_code == 0x80) {
                 /* Dual Mono */
+                channels = 2;
                 mapping_family = 255;
                 if (channel_config_code == 0) {
                   stream_count = 1;
