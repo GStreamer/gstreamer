@@ -161,6 +161,13 @@ gboolean  gst_codec_utils_opus_parse_header (GstBuffer * header,
                                              guint16   * pre_skip,
                                              gint16    * output_gain);
 
+/* AV1 */
+GST_PBUTILS_API
+GstCaps * gst_codec_utils_av1_create_caps_from_av1c (GstBuffer *av1c);
+
+GST_PBUTILS_API
+GstBuffer * gst_codec_utils_av1_create_av1c_from_caps (GstCaps *caps);
+
 /* General */
 GST_PBUTILS_API
 gchar * gst_codec_utils_caps_get_mime_codec (GstCaps * caps);

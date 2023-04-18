@@ -2417,6 +2417,231 @@ done:
   return ret;
 }
 
+/**
+ * gst_codec_utils_av1_create_caps_from_av1c:
+ * @av1c: (transfer none): a #GstBuffer containing a AV1CodecConfigurationRecord
+ *
+ * Parses the provided @av1c and returns the corresponding caps
+ *
+ * Since: 1.26
+ *
+ * Returns: (transfer full): The parsed AV1 caps, or NULL if there is an error
+ */
+GstCaps *
+gst_codec_utils_av1_create_caps_from_av1c (GstBuffer * av1c)
+{
+  GstMapInfo map;
+  GstCaps *ret = NULL;
+  const gchar *profile, *chroma_format;
+  guint bit_depth_luma = 8;
+  gint presentation_delay = -1;
+
+  g_return_val_if_fail (av1c, NULL);
+
+  if (!gst_buffer_map (av1c, &map, GST_MAP_READ))
+    return NULL;
+
+  if (map.size < 4) {
+    GST_WARNING ("av1c too small");
+    goto done;
+  }
+
+  /*
+   *  unsigned int (1) marker = 1;
+   *  unsigned int (7) version = 1;
+   */
+  if (map.data[0] != 0x81) {
+    GST_WARNING ("Wrong av1c marker/version: 0x%02x", map.data[0]);
+    goto done;
+  }
+
+  /*
+   *  unsigned int (3) seq_profile;
+   *  unsigned int (5) seq_level_idx_0;
+   */
+  switch (map.data[1] >> 5) {
+    case 0:
+      profile = "main";
+      break;
+    case 1:
+      profile = "high";
+      break;
+    case 2:
+      profile = "professional";
+      break;
+    default:
+      GST_WARNING ("Invalid seq_profile %d", map.data[1] >> 5);
+      goto done;
+  }
+
+  /* FIXME : Add level processing */
+
+  /*
+   *  unsigned int (1) seq_tier_0;
+   *  unsigned int (1) high_bitdepth;
+   *  unsigned int (1) twelve_bit;
+   *  unsigned int (1) monochrome;
+   *  unsigned int (1) chroma_subsampling_x;
+   *  unsigned int (1) chroma_subsampling_y;
+   *  unsigned int (2) chroma_sample_position;
+   */
+  if ((map.data[2] & 0x60) == 0x60) {
+    bit_depth_luma = 12;
+  } else if ((map.data[2] & 0x60) == 0x40) {
+    bit_depth_luma = 10;
+  }
+
+  switch (map.data[2] & 0x1c) {
+    case 0x1c:
+      chroma_format = "4:0:0";
+      break;
+    case 0x0c:
+      chroma_format = "4:2:0";
+      break;
+    case 0x08:
+      chroma_format = "4:2:2";
+      break;
+    case 0x00:
+      chroma_format = "4:4:4";
+      break;
+    default:
+      GST_WARNING ("invalid chroma format values");
+      goto done;
+  }
+
+  /*
+   *  unsigned int (3) reserved = 0;
+   *
+   *  unsigned int (1) initial_presentation_delay_present;
+   *  if (initial_presentation_delay_present) {
+   *    unsigned int (4) initial_presentation_delay_minus_one;
+   *  } else {
+   *    unsigned int (4) reserved = 0;
+   *  }
+   */
+  if (map.data[3] & 0x10)
+    presentation_delay = map.data[3] & 0xf;
+
+  ret = gst_caps_new_simple ("video/x-av1", "profile", G_TYPE_STRING, profile,
+      "bit-depth-luma", G_TYPE_UINT, bit_depth_luma,
+      "chroma-format", G_TYPE_STRING, chroma_format, NULL);
+
+  if (presentation_delay != -1)
+    gst_caps_set_simple (ret, "presentation-delay", G_TYPE_INT,
+        presentation_delay, NULL);
+
+  /* FIXME : Extract more information from optional configOBU */
+
+done:
+  gst_buffer_unmap (av1c, &map);
+
+  return ret;
+}
+
+/**
+ * gst_codec_utils_av1_create_av1c_from_caps:
+ * @caps: a video/x-av1 #GstCaps
+ *
+ * Creates the corresponding AV1 Codec Configuration Record
+ *
+ * Since: 1.26
+ *
+ * Returns: (transfer full): The AV1 Codec Configuration Record, or NULL if
+ * there was an error.
+ */
+
+GstBuffer *
+gst_codec_utils_av1_create_av1c_from_caps (GstCaps * caps)
+{
+  gint presentation_delay = -1;
+  GstBuffer *av1_codec_data = NULL;
+  GstStructure *structure;
+  GstMapInfo map;
+  const gchar *tmp;
+  guint tmp2;
+
+  g_return_val_if_fail (caps, NULL);
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (!structure || !gst_structure_has_name (structure, "video/x-av1")) {
+    GST_WARNING ("Caps provided are not video/x-av1");
+    return NULL;
+  }
+
+  gst_structure_get_int (structure, "presentation-delay", &presentation_delay);
+
+  av1_codec_data = gst_buffer_new_allocate (NULL, 4, NULL);
+  gst_buffer_map (av1_codec_data, &map, GST_MAP_WRITE);
+
+  /*
+   *  unsigned int (1) marker = 1;
+   *  unsigned int (7) version = 1;
+   *  unsigned int (3) seq_profile;
+   *  unsigned int (5) seq_level_idx_0;
+   *  unsigned int (1) seq_tier_0;
+   *  unsigned int (1) high_bitdepth;
+   *  unsigned int (1) twelve_bit;
+   *  unsigned int (1) monochrome;
+   *  unsigned int (1) chroma_subsampling_x;
+   *  unsigned int (1) chroma_subsampling_y;
+   *  unsigned int (2) chroma_sample_position;
+   *  unsigned int (3) reserved = 0;
+   *
+   *  unsigned int (1) initial_presentation_delay_present;
+   *  if (initial_presentation_delay_present) {
+   *    unsigned int (4) initial_presentation_delay_minus_one;
+   *  } else {
+   *    unsigned int (4) reserved = 0;
+   *  }
+   */
+
+  map.data[0] = 0x81;
+  map.data[1] = 0x00;
+  if ((tmp = gst_structure_get_string (structure, "profile"))) {
+    if (strcmp (tmp, "main") == 0)
+      map.data[1] |= (0 << 5);
+    if (strcmp (tmp, "high") == 0)
+      map.data[1] |= (1 << 5);
+    if (strcmp (tmp, "professional") == 0)
+      map.data[1] |= (2 << 5);
+  }
+  /* FIXME: level set to 1 */
+  map.data[1] |= 0x01;
+  /* FIXME: tier set to 0 */
+
+  if (gst_structure_get_uint (structure, "bit-depth-luma", &tmp2)) {
+    if (tmp2 == 10) {
+      map.data[2] |= 0x40;
+    } else if (tmp2 == 12) {
+      map.data[2] |= 0x60;
+    }
+  }
+
+  /* Assume 4:2:0 if nothing else is given */
+  map.data[2] |= 0x0C;
+  if ((tmp = gst_structure_get_string (structure, "chroma-format"))) {
+    if (strcmp (tmp, "4:0:0") == 0)
+      map.data[2] |= 0x1C;
+    if (strcmp (tmp, "4:2:0") == 0)
+      map.data[2] |= 0x0C;
+    if (strcmp (tmp, "4:2:2") == 0)
+      map.data[2] |= 0x08;
+    if (strcmp (tmp, "4:4:4") == 0)
+      map.data[2] |= 0x00;
+  }
+
+  /* FIXME: keep chroma-site unknown */
+
+  if (presentation_delay != -1) {
+    map.data[3] = 0x10 | (MAX (0xF, presentation_delay) & 0xF);
+  }
+
+  gst_buffer_unmap (av1_codec_data, &map);
+
+  return av1_codec_data;
+}
+
+
 static gboolean
 h264_caps_structure_get_profile_flags_level (GstStructure * caps_st,
     guint8 * profile, guint8 * flags, guint8 * level)
