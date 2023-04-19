@@ -22,8 +22,13 @@
  * SECTION:element-d3d11overlay
  * @title: d3d11overlay
  *
- * Provides Direct3D11 render target view to an application so that
- * the application overlay/blend application image on the render target view
+ * Provides Direct3D11 render target view handles to an application so that
+ * the application can overlay/blend an image on the render target
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 d3d11testsrc ! queue ! d3d11overlay ! queue ! d3d11videosink
+ * ```
  *
  * Since: 1.24
  *
@@ -83,12 +88,15 @@ gst_d3d11_overlay_class_init (GstD3D11OverlayClass * klass)
    * GstD3D11Overlay::draw:
    * @overlay: Overlay element emitting the signal
    * @device: GstD3D11Device object
-   * @rtv: ID3D11RenderTargetView handle
+   * @render_target: ID3D11RenderTargetView handle
    * @timestamp: Timestamp (see #GstClockTime) of the current buffer
    * @duration: Duration (see #GstClockTime) of the current buffer
    *
-   * This signal is emitted when the overlay should be drawn with
-   * gst_d3d11_device_lock taken.
+   * This signal is emitted when an overlay can be drawn. This signal is
+   * emitted with gst_d3d11_device_lock taken.
+   *
+   * Client should return %TRUE if an overlay has been rendered.
+   * Otherwise the element might discard the updated scene.
    *
    * Returns: %TRUE if rendering operation happend
    *
@@ -141,7 +149,7 @@ gst_d3d11_overlay_class_init (GstD3D11OverlayClass * klass)
 }
 
 static void
-gst_d3d11_overlay_init (GstD3D11Overlay * download)
+gst_d3d11_overlay_init (GstD3D11Overlay * self)
 {
 }
 
