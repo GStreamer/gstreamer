@@ -750,6 +750,8 @@ on_candidate_resolved (GstWebRTCICE * ice, GAsyncResult * res,
   }
 
   new_addr = g_inet_address_to_string (addresses->data);
+  g_resolver_free_addresses (addresses);
+  addresses = NULL;
 
   new_candv[0] = rc->prefix;
   new_candv[1] = new_addr;
@@ -1317,6 +1319,8 @@ on_http_proxy_resolved (GstWebRTCICE * ice, GAsyncResult * res,
 
   /* XXX: only the first IP is used */
   ip = g_inet_address_to_string (addresses->data);
+  g_resolver_free_addresses (addresses);
+  addresses = NULL;
 
   if (!ip) {
     GST_ERROR_OBJECT (ice, "failed to resolve host for proxy");
