@@ -75,6 +75,14 @@ GstValidateActionReturn gst_validate_object_set_property (GstValidateReporter * 
                                                           gboolean optional);
 
 GST_VALIDATE_API
+GstValidateActionReturn gst_validate_object_set_property_full(GstValidateReporter * reporter,
+                                                              GObject * object,
+                                                              const gchar * property,
+                                                              const GValue * value,
+                                                              GstValidateObjectSetPropertyFlags flags);
+
+
+GST_VALIDATE_API
 void gst_validate_spin_on_fault_signals (void);
 
 GST_VALIDATE_API

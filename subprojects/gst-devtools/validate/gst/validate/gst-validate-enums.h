@@ -113,4 +113,19 @@ typedef enum {
     GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_EXPRESSION = 1 << 1,
 } GstValidateStructureResolveVariablesFlags;
 
+
+/**
+ * GstValidateObjectSetPropertyFlags:
+ * @GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL: The property is optional, if it
+ * is not found on the object, nothing happens.
+ * @GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK: Do not check that after
+ * setting the property, the value is the one we set.
+ *
+ * Since: 1.24
+ */
+typedef enum {
+  GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL = (1 << 0),
+  GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK = (1 << 1),
+} GstValidateObjectSetPropertyFlags;
+
 #endif /* __GST_VALIDATE_ENUMS_H__ */

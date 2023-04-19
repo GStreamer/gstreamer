@@ -1726,6 +1726,16 @@ target is in.</doc>
         </array>
       </field>
     </record>
+    <bitfield name="ObjectSetPropertyFlags" version="1.24" glib:type-name="GstValidateObjectSetPropertyFlags" glib:get-type="gst_validate_object_set_property_flags_get_type" c:type="GstValidateObjectSetPropertyFlags">
+      <member name="optional" value="1" c:identifier="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL" glib:nick="optional">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">The property is optional, if it
+is not found on the object, nothing happens.</doc>
+      </member>
+      <member name="no_value_check" value="2" c:identifier="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK" glib:nick="no-value-check">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">Do not check that after
+setting the property, the value is the one we set.</doc>
+      </member>
+    </bitfield>
     <class name="Override" c:symbol-prefix="override" c:type="GstValidateOverride" parent="Gst.Object" glib:type-name="GstValidateOverride" glib:get-type="gst_validate_override_get_type" glib:type-struct="OverrideClass">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-override.h"/>
       <implements name="Reporter"/>
@@ -4089,6 +4099,34 @@ function.</doc>
         </parameter>
         <parameter name="optional" transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="object_set_property_full" c:identifier="gst_validate_object_set_property_full" version="1.24">
+      <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-utils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="ActionReturn" c:type="GstValidateActionReturn"/>
+      </return-value>
+      <parameters>
+        <parameter name="reporter" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-utils.c">The #GstValidateReporter to use to report errors</doc>
+          <type name="Reporter" c:type="GstValidateReporter*"/>
+        </parameter>
+        <parameter name="object" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-utils.c">The #GObject to set the property on</doc>
+          <type name="GObject.Object" c:type="GObject*"/>
+        </parameter>
+        <parameter name="property" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-utils.c">The name of the property to set</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="value" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-utils.c">The value to set the property to</doc>
+          <type name="GObject.Value" c:type="const GValue*"/>
+        </parameter>
+        <parameter name="flags" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-utils.c">The #GstValidateObjectSetPropertyFlags to use</doc>
+          <type name="ObjectSetPropertyFlags" c:type="GstValidateObjectSetPropertyFlags"/>
         </parameter>
       </parameters>
     </function>

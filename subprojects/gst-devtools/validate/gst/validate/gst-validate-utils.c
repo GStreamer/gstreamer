@@ -1032,10 +1032,20 @@ gst_validate_utils_get_clocktime (GstStructure * structure, const gchar * name,
   return TRUE;
 }
 
+/**
+ * gst_validate_object_set_property_full:
+ * @reporter: The #GstValidateReporter to use to report errors
+ * @object: The #GObject to set the property on
+ * @property: The name of the property to set
+ * @value: The value to set the property to
+ * @flags: The #GstValidateObjectSetPropertyFlags to use
+ *
+ * Since: 1.24
+ */
 GstValidateActionReturn
-gst_validate_object_set_property (GstValidateReporter * reporter,
+gst_validate_object_set_property_full (GstValidateReporter * reporter,
     GObject * object, const gchar * property,
-    const GValue * value, gboolean optional)
+    const GValue * value, GstValidateObjectSetPropertyFlags flags)
 {
   GParamSpec *paramspec;
   GObjectClass *klass = G_OBJECT_GET_CLASS (object);
@@ -1044,7 +1054,7 @@ gst_validate_object_set_property (GstValidateReporter * reporter,
 
   paramspec = g_object_class_find_property (klass, property);
   if (paramspec == NULL) {
-    if (optional)
+    if (!!(flags & GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL))
       return TRUE;
     GST_ERROR ("Target doesn't have property %s", property);
     return FALSE;
@@ -1078,16 +1088,18 @@ gst_validate_object_set_property (GstValidateReporter * reporter,
   g_value_init (&nvalue, paramspec->value_type);
   g_object_get_property (object, property, &nvalue);
 
-  if (gst_value_compare (&cvalue, &nvalue) != GST_VALUE_EQUAL) {
-    gchar *nvalstr = gst_value_serialize (&nvalue);
-    gchar *cvalstr = gst_value_serialize (&cvalue);
-    GST_VALIDATE_REPORT (reporter, SCENARIO_ACTION_EXECUTION_ERROR,
-        "Setting value %" GST_PTR_FORMAT "::%s failed, expected value: %s"
-        " value after setting %s", object, property, cvalstr, nvalstr);
+  if (!(flags & GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK)) {
+    if (gst_value_compare (&cvalue, &nvalue) != GST_VALUE_EQUAL) {
+      gchar *nvalstr = gst_value_serialize (&nvalue);
+      gchar *cvalstr = gst_value_serialize (&cvalue);
+      GST_VALIDATE_REPORT (reporter, SCENARIO_ACTION_EXECUTION_ERROR,
+          "Setting value %" GST_PTR_FORMAT "::%s failed, expected value: %s"
+          " value after setting %s", object, property, cvalstr, nvalstr);
 
-    res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-    g_free (nvalstr);
-    g_free (cvalstr);
+      res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
+      g_free (nvalstr);
+      g_free (cvalstr);
+    }
   }
 
   g_value_reset (&cvalue);
@@ -1592,4 +1604,13 @@ gst_validate_fail_on_missing_plugin (void)
       return fail_on_missing_plugin;
   }
   return FALSE;
+}
+
+GstValidateActionReturn
+gst_validate_object_set_property (GstValidateReporter * reporter,
+    GObject * object,
+    const gchar * property, const GValue * value, gboolean optional)
+{
+  return gst_validate_object_set_property_full (reporter, object, property,
+      value, optional ? GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL : 0);
 }

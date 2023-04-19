@@ -1418,9 +1418,11 @@ _set_or_check_properties (GQuark field_id, const GValue * value,
   GstValidateAction *action;
   GstObject *obj = NULL;
   GParamSpec *paramspec = NULL;
+  gboolean no_value_check = FALSE;
+  GstValidateObjectSetPropertyFlags flags = 0;
   const gchar *field = g_quark_to_string (field_id);
   const gchar *unused_fields[] = { "__scenario__", "__action__", "__res__",
-    "playback-time", "repeat", NULL
+    "playback-time", "repeat", "no-value-check", NULL
   };
 
   if (g_strv_contains (unused_fields, field))
@@ -1429,14 +1431,23 @@ _set_or_check_properties (GQuark field_id, const GValue * value,
   gst_structure_get (structure, "__scenario__", G_TYPE_POINTER, &scenario,
       "__action__", G_TYPE_POINTER, &action, NULL);
 
+  gst_structure_get_boolean (structure, "no-value-check", &no_value_check);
+
+  if (no_value_check) {
+    flags |= GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK;
+  }
+  if (action->priv->optional)
+    flags |= GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL;
+
   obj = _get_target_object_property (scenario, action, field, &paramspec);
   if (!obj || !paramspec) {
     res = GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
     goto done;
   }
   if (gst_structure_has_name (action->structure, "set-properties"))
-    res = gst_validate_object_set_property (GST_VALIDATE_REPORTER (scenario),
-        G_OBJECT (obj), paramspec->name, value, action->priv->optional);
+    res =
+        gst_validate_object_set_property_full (GST_VALIDATE_REPORTER (scenario),
+        G_OBJECT (obj), paramspec->name, value, flags);
   else
     res = _check_property (scenario, action, obj, paramspec->name, value);
 
