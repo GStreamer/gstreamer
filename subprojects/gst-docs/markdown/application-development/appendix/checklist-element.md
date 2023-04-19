@@ -82,9 +82,6 @@ a list of all available options:
 
   - `--gst-debug-disable` disables debugging altogether.
 
-  - `--gst-plugin-spew` enables printout of errors while loading
-    GStreamer plugins.
-
 ## Conversion plugins
 
 GStreamer contains a bunch of conversion plugins that most applications

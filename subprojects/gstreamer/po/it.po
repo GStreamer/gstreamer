@@ -169,10 +169,6 @@ msgstr ""
 msgid "Disable debugging"
 msgstr "Disabilita debug"
 
-# --gst-plugin-spew
-msgid "Enable verbose plugin loading diagnostics"
-msgstr "Abilita diagnostica prolissa del caricamento plugin"
-
 # --gst-plugin-path=PERCORSI
 msgid "Colon-separated paths containing plugins"
 msgstr "Percorsi che contengono i plugin separati da due punti (:)"

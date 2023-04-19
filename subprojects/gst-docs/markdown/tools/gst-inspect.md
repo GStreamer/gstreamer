@@ -64,11 +64,6 @@ mechanisms.
 
 *GStreamer* info and debugging flags to set (list with --help)
 
- **--gst-plugin-spew**
-
-*GStreamer* info flags to set Enable printout of errors while
-loading *GStreamer* plugins
-
  **--gst-plugin-path=PATH**
 
 Add directories separated with ':' to the plugin search path
