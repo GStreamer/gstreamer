@@ -2812,6 +2812,13 @@ return to upstream/caller (indicating either GST_FLOW_ERROR or GST_FLOW_OK).</do
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="VIDEO_DMA_DRM_CAPS_MAKE" value="video/x-raw(memory:DMABuf), format = (string) DMA_DRM, width = " c:type="GST_VIDEO_DMA_DRM_CAPS_MAKE" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h">Generic caps string for video wit DMABuf(GST_CAPS_FEATURE_MEMORY_DMABUF)
+feature, for use in pad templates. As drm-format is supposed to be defined
+at run-time it's not predefined here.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="VIDEO_ENCODER" c:identifier="GST_VIDEO_ENCODER" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoencoder.h"/>
       <parameters>

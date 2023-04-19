@@ -25,6 +25,22 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_VIDEO_DMA_DRM_CAPS_MAKE:
+ *
+ * Generic caps string for video wit DMABuf(GST_CAPS_FEATURE_MEMORY_DMABUF)
+ * feature, for use in pad templates. As drm-format is supposed to be defined
+ * at run-time it's not predefined here.
+ *
+ * Since: 1.24
+ */
+#define GST_VIDEO_DMA_DRM_CAPS_MAKE                                     \
+    "video/x-raw(memory:DMABuf), "                                      \
+    "format = (string) DMA_DRM, "                                       \
+    "width = " GST_VIDEO_SIZE_RANGE ", "                                \
+    "height = " GST_VIDEO_SIZE_RANGE ", "                               \
+    "framerate = " GST_VIDEO_FPS_RANGE
+
 typedef struct _GstVideoInfoDmaDrm GstVideoInfoDmaDrm;
 
 /**
