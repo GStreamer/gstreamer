@@ -351,6 +351,7 @@ gst_pcap_parse_read_uint32 (GstPcapParse * self, const guint8 * p)
 #define ETH_HEADER_LEN    14
 #define ETH_VLAN_HEADER_LEN    4
 #define SLL_HEADER_LEN    16
+#define SLL2_HEADER_LEN    20
 #define IP_HEADER_MIN_LEN 20
 #define UDP_HEADER_LEN     8
 
@@ -403,6 +404,13 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
 
       eth_type = GUINT16_FROM_BE (*((guint16 *) (buf + 14)));
       buf_ip = buf + SLL_HEADER_LEN;
+      break;
+    case LINKTYPE_SLL2:
+      if (buf_size < SLL2_HEADER_LEN + IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
+        return FALSE;
+
+      eth_type = GUINT16_FROM_BE (*((guint16 *) (buf)));
+      buf_ip = buf + SLL2_HEADER_LEN;
       break;
     case LINKTYPE_RAW:
       if (buf_size < IP_HEADER_MIN_LEN + UDP_HEADER_LEN)
@@ -641,9 +649,9 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       }
 
       if (linktype != LINKTYPE_ETHER && linktype != LINKTYPE_SLL &&
-          linktype != LINKTYPE_RAW) {
+          linktype != LINKTYPE_RAW && linktype != LINKTYPE_SLL2) {
         GST_ELEMENT_ERROR (self, STREAM, WRONG_TYPE, (NULL),
-            ("Only dumps of type Ethernet, raw IP or Linux Cooked (SLL) "
+            ("Only dumps of type Ethernet, raw IP or Linux Cooked (SLL/SLL2) "
                 "understood; type %d unknown", linktype));
         ret = GST_FLOW_ERROR;
         goto out;
