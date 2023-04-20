@@ -98,7 +98,6 @@ conf_lib_rs = configure_file(input : 'conf_lib.rs.in',
 
 conf = static_library('gst_ptp_helper_conf', conf_lib_rs,
   override_options : ['rust_std=2018'],
-  rust_args : ['-Cpanic=abort'],
   rust_crate_type : 'rlib')
 
 exe = executable('gst-ptp-helper', 'main.rs',
@@ -108,6 +107,16 @@ exe = executable('gst-ptp-helper', 'main.rs',
   link_with : conf,
   install_dir : helpers_install_dir,
   install : true)
+
+exe_test = executable('gst-ptp-helper-test', 'main.rs',
+  override_options : ['rust_std=2018'],
+  rust_args : ['--test', rust_args],
+  dependencies : [cap_dep],
+  link_with : conf,
+  install_dir : helpers_install_dir,
+  install : true)
+
+test('gst-ptp-helper-test', exe_test, protocol : 'rust')
 
 if host_system != 'windows'
   meson.add_install_script('ptp_helper_post_install.sh',

@@ -665,3 +665,34 @@ mod imp {
 }
 
 pub use imp::*;
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_query_interfaces() {
+        let ifaces = super::query_interfaces().unwrap();
+        for iface in ifaces {
+            assert!(!iface.name.is_empty());
+            assert_ne!(iface.index, 0);
+            assert!(!iface.ip_addr.is_unspecified());
+        }
+    }
+
+    #[test]
+    fn test_join_multicast() {
+        let ifaces = super::query_interfaces().unwrap();
+        let iface = if ifaces.is_empty() {
+            return;
+        } else {
+            &ifaces[0]
+        };
+
+        let socket = std::net::UdpSocket::bind(std::net::SocketAddr::from((
+            std::net::Ipv4Addr::UNSPECIFIED,
+            0,
+        )))
+        .unwrap();
+        super::set_reuse(&socket);
+        super::join_multicast_v4(&socket, &std::net::Ipv4Addr::new(224, 0, 0, 1), iface).unwrap();
+    }
+}

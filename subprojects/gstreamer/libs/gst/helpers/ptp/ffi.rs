@@ -224,6 +224,9 @@ pub mod unix {
         pub fn freeifaddrs(ifa: *mut ifaddrs);
 
         pub fn setpriority(which: c_int, who: c_int, prio: c_int) -> c_int;
+
+        #[cfg(test)]
+        pub fn pipe(pipefd: *mut i32) -> i32;
     }
 
     #[cfg(any(target_os = "linux", target_os = "solaris", target_os = "illumos"))]
@@ -606,6 +609,14 @@ pub mod windows {
 
         pub fn SetThreadPriority(pthread: HANDLE, npriority: i32) -> i32;
         pub fn GetCurrentThread() -> HANDLE;
+
+        #[cfg(test)]
+        pub fn CreatePipe(
+            hreadpipe: *mut HANDLE,
+            hwritepipe: *mut HANDLE,
+            lppipeattributes: *mut c_void,
+            nsize: u32,
+        ) -> i32;
     }
 
     pub const BCRYPT_USE_SYSTEM_PREFERRED_RNG: u32 = 0x00000002;

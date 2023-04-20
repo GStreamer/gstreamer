@@ -8,8 +8,23 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
+/// Result of polling the inputs of the `Poll`.
+///
+/// Any input that has data available for reading will be set to `true`, potentially multiple
+/// at once.
+///
+/// Note that reading from the sockets is non-blocking but reading from stdin is blocking so
+/// special care has to be taken to only read as much as is available.
+pub struct PollResult {
+    pub event_socket: bool,
+    pub general_socket: bool,
+    pub stdin: bool,
+}
+
 #[cfg(unix)]
 mod imp {
+    use super::PollResult;
+
     use std::{
         io::{self, Read, Write},
         net::UdpSocket,
@@ -28,17 +43,81 @@ mod imp {
         stdout: Stdout,
     }
 
-    /// Result of polling the inputs of the `Poll`.
-    ///
-    /// Any input that has data available for reading will be set to `true`, potentially multiple
-    /// at once.
-    ///
-    /// Note that reading from the sockets is non-blocking but reading from stdin is blocking so
-    /// special care has to be taken to only read as much as is available.
-    pub struct PollResult {
-        pub event_socket: bool,
-        pub general_socket: bool,
-        pub stdin: bool,
+    #[cfg(test)]
+    /// A file descriptor pair representing a pipe for testing purposes.
+    pub struct Pipe {
+        pub read: i32,
+        pub write: i32,
+    }
+
+    #[cfg(test)]
+    impl Pipe {
+        fn new() -> io::Result<Self> {
+            // SAFETY: Requires two integers to be passed in and creates the read
+            // and write end of a pipe.
+            unsafe {
+                let mut fds = std::mem::MaybeUninit::<[i32; 2]>::uninit();
+                let res = pipe(fds.as_mut_ptr() as *mut i32);
+                if res == 0 {
+                    let fds = fds.assume_init();
+                    Ok(Pipe {
+                        read: fds[0],
+                        write: fds[1],
+                    })
+                } else {
+                    Err(io::Error::last_os_error())
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
+    impl Drop for Pipe {
+        fn drop(&mut self) {
+            // SAFETY: Only ever created with valid fds
+            unsafe {
+                close(self.read);
+                close(self.write);
+            }
+        }
+    }
+
+    #[cfg(test)]
+    impl Read for Pipe {
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            // SAFETY: read() requires a valid fd and a mutable buffer with the given size.
+            // The fd is valid by construction as is the buffer.
+            //
+            // read() will return the number of bytes read or a negative value on errors.
+            let res = unsafe { read(self.read, buf.as_mut_ptr(), buf.len()) };
+
+            if res < 0 {
+                Err(std::io::Error::last_os_error())
+            } else {
+                Ok(res as usize)
+            }
+        }
+    }
+
+    #[cfg(test)]
+    impl Write for Pipe {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            // SAFETY: write() requires a valid fd and a mutable buffer with the given size.
+            // The fd is valid by construction as is the buffer.
+            //
+            // write() will return the number of bytes written or a negative value on errors.
+            let res = unsafe { write(self.write, buf.as_ptr(), buf.len()) };
+
+            if res == -1 {
+                Err(std::io::Error::last_os_error())
+            } else {
+                Ok(res as usize)
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
     }
 
     impl Poll {
@@ -63,6 +142,29 @@ mod imp {
                 stdin,
                 stdout,
             })
+        }
+
+        #[cfg(test)]
+        /// Create a new `Poll` instance for testing purposes.
+        ///
+        /// The returned `Pipe`s are for stdin and stdout.
+        pub fn new_test(
+            event_socket: UdpSocket,
+            general_socket: UdpSocket,
+        ) -> Result<(Self, Pipe, Pipe), Error> {
+            let stdin = Pipe::new().unwrap();
+            let stdout = Pipe::new().unwrap();
+
+            Ok((
+                Self {
+                    event_socket,
+                    general_socket,
+                    stdin: Stdin(stdin.read),
+                    stdout: Stdout(stdout.write),
+                },
+                stdin,
+                stdout,
+            ))
         }
 
         /// Mutable reference to the event socket.
@@ -210,6 +312,8 @@ mod imp {
 
 #[cfg(windows)]
 mod imp {
+    use super::PollResult;
+
     use std::{
         cmp,
         io::{self, Read, Write},
@@ -270,25 +374,111 @@ mod imp {
         }
     }
 
-    /// Result of polling the inputs of the `Poll`.
-    ///
-    /// Any input that has data available for reading will be set to `true`, potentially multiple
-    /// at once.
-    ///
-    /// Note that reading from the sockets is non-blocking but reading from stdin is blocking so
-    /// special care has to be taken to only read as much as is available.
-    pub struct PollResult {
-        pub event_socket: bool,
-        pub general_socket: bool,
-        pub stdin: bool,
+    #[cfg(test)]
+    pub struct Pipe {
+        read: HANDLE,
+        write: HANDLE,
+    }
+
+    #[cfg(test)]
+    impl Drop for Pipe {
+        fn drop(&mut self) {
+            // SAFETY: Both handles are by construction valid up there.
+            unsafe {
+                CloseHandle(self.read);
+                CloseHandle(self.write);
+            }
+        }
+    }
+
+    #[cfg(test)]
+    impl Pipe {
+        fn new() -> io::Result<Self> {
+            // SAFETY: On success returns a non-zero integer and stores read/write handles in the
+            // two out pointers, which will have to be closed again later.
+            unsafe {
+                let mut readpipe = mem::MaybeUninit::uninit();
+                let mut writepipe = mem::MaybeUninit::uninit();
+
+                let res = CreatePipe(
+                    readpipe.as_mut_ptr(),
+                    writepipe.as_mut_ptr(),
+                    ptr::null_mut(),
+                    0,
+                );
+
+                if res != 0 {
+                    Ok(Self {
+                        read: readpipe.assume_init(),
+                        write: writepipe.assume_init(),
+                    })
+                } else {
+                    Err(io::Error::last_os_error())
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
+    impl Read for Pipe {
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            // SAFETY: Reads the given number of bytes into the buffer from the stdin handle.
+            unsafe {
+                let mut lpnumberofbytesread = mem::MaybeUninit::uninit();
+                let res = ReadFile(
+                    self.read,
+                    buf.as_mut_ptr(),
+                    cmp::min(buf.len() as u32, u32::MAX) as u32,
+                    lpnumberofbytesread.as_mut_ptr(),
+                    ptr::null_mut(),
+                );
+
+                if res == 0 {
+                    Err(io::Error::last_os_error())
+                } else {
+                    Ok(lpnumberofbytesread.assume_init() as usize)
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
+    impl Write for Pipe {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            // SAFETY: Writes the given number of bytes to stdout or at most u32::MAX. On error
+            // zero is returned, otherwise the number of bytes written is set accordingly and
+            // returned.
+            unsafe {
+                let mut lpnumberofbyteswritten = mem::MaybeUninit::uninit();
+                let res = WriteFile(
+                    self.write,
+                    buf.as_ptr(),
+                    cmp::min(buf.len() as u32, u32::MAX) as u32,
+                    lpnumberofbyteswritten.as_mut_ptr(),
+                    ptr::null_mut(),
+                );
+
+                if res == 0 {
+                    Err(io::Error::last_os_error())
+                } else {
+                    Ok(lpnumberofbyteswritten.assume_init() as usize)
+                }
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
     }
 
     impl Poll {
-        /// Create a new `Poll` instance from the two sockets.
-        pub fn new(event_socket: UdpSocket, general_socket: UdpSocket) -> Result<Self, Error> {
-            let stdin = Stdin::acquire().context("Failure acquiring stdin handle")?;
-            let stdout = Stdout::acquire().context("Failed acquiring stdout handle")?;
-
+        /// Internal constructor.
+        pub fn new_internal(
+            event_socket: UdpSocket,
+            general_socket: UdpSocket,
+            stdin: Stdin,
+            stdout: Stdout,
+        ) -> Result<Self, Error> {
             // Create event objects for the readability of the sockets.
             let event_socket_event = EventHandle::new().context("Failed creating WSA event")?;
             let general_socket_event = EventHandle::new().context("Failed creating WSA event")?;
@@ -327,6 +517,35 @@ mod imp {
                 stdin,
                 stdout,
             })
+        }
+
+        /// Create a new `Poll` instance from the two sockets.
+        pub fn new(event_socket: UdpSocket, general_socket: UdpSocket) -> Result<Self, Error> {
+            let stdin = Stdin::acquire().context("Failure acquiring stdin handle")?;
+            let stdout = Stdout::acquire().context("Failed acquiring stdout handle")?;
+
+            Self::new_internal(event_socket, general_socket, stdin, stdout)
+        }
+
+        #[cfg(test)]
+        /// Create a new `Poll` instance for testing purposes.
+        ///
+        /// The returned `Pipe`s are for stdin and stdout.
+        pub fn new_test(
+            event_socket: UdpSocket,
+            general_socket: UdpSocket,
+        ) -> Result<(Self, Pipe, Pipe), Error> {
+            let stdin_pipe = Pipe::new().unwrap();
+            let stdout_pipe = Pipe::new().unwrap();
+
+            let stdin =
+                Stdin::from_handle(stdin_pipe.read).context("Failure acquiring stdin handle")?;
+            let stdout =
+                Stdout::from_handle(stdout_pipe.write).context("Failed acquiring stdout handle")?;
+
+            let poll = Self::new_internal(event_socket, general_socket, stdin, stdout)?;
+
+            Ok((poll, stdin_pipe, stdout_pipe))
         }
 
         /// Mutable reference to the event socket.
@@ -516,6 +735,11 @@ mod imp {
 
                 handle
             };
+
+            Self::from_handle(handle)
+        }
+
+        fn from_handle(handle: HANDLE) -> Result<Self, Error> {
             // SAFETY: GetFileType() is safe to call on any valid handle.
             let type_ = unsafe { GetFileType(handle) };
 
@@ -717,6 +941,11 @@ mod imp {
 
                 handle
             };
+
+            Self::from_handle(handle)
+        }
+
+        fn from_handle(handle: HANDLE) -> Result<Self, Error> {
             // SAFETY: GetFileType() is safe to call on any valid handle.
             let type_ = unsafe { GetFileType(handle) };
 
@@ -766,4 +995,69 @@ mod imp {
     }
 }
 
-pub use self::imp::{Poll, PollResult, Stdin, Stdout};
+pub use self::imp::{Poll, Stdin, Stdout};
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn test_poll() {
+        use std::io::prelude::*;
+
+        let event_socket = std::net::UdpSocket::bind(std::net::SocketAddr::from((
+            std::net::Ipv4Addr::LOCALHOST,
+            0,
+        )))
+        .unwrap();
+        let event_port = event_socket.local_addr().unwrap().port();
+
+        let general_socket = std::net::UdpSocket::bind(std::net::SocketAddr::from((
+            std::net::Ipv4Addr::LOCALHOST,
+            0,
+        )))
+        .unwrap();
+        let general_port = general_socket.local_addr().unwrap().port();
+
+        let send_socket = std::net::UdpSocket::bind(std::net::SocketAddr::from((
+            std::net::Ipv4Addr::LOCALHOST,
+            0,
+        )))
+        .unwrap();
+
+        let (mut poll, mut stdin, _stdout) =
+            super::Poll::new_test(event_socket, general_socket).unwrap();
+
+        let mut buf = [0u8; 4];
+
+        for _ in 0..10 {
+            send_socket
+                .send_to(&[1, 2, 3, 4], (std::net::Ipv4Addr::LOCALHOST, event_port))
+                .unwrap();
+            let res = poll.poll().unwrap();
+            assert!(res.event_socket);
+            assert!(!res.general_socket);
+            assert!(!res.stdin);
+            assert_eq!(poll.event_socket().recv(&mut buf).unwrap(), 4);
+            assert_eq!(buf, [1, 2, 3, 4]);
+
+            send_socket
+                .send_to(&[1, 2, 3, 4], (std::net::Ipv4Addr::LOCALHOST, general_port))
+                .unwrap();
+            let res = poll.poll().unwrap();
+            assert!(!res.event_socket);
+            assert!(res.general_socket);
+            assert!(!res.stdin);
+            assert_eq!(poll.general_socket().recv(&mut buf).unwrap(), 4);
+            assert_eq!(buf, [1, 2, 3, 4]);
+
+            stdin.write_all(&[1, 2, 3, 4]).unwrap();
+            let res = poll.poll().unwrap();
+            assert!(!res.event_socket);
+            assert!(!res.general_socket);
+            assert!(res.stdin);
+            poll.stdin().read_exact(&mut buf).unwrap();
+            assert_eq!(buf, [1, 2, 3, 4]);
+        }
+
+        drop(poll);
+    }
+}
