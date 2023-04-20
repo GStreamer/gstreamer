@@ -322,6 +322,8 @@ GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 GstFlowReturn  gst_v4l2_object_poll (GstV4l2Object * v4l2object, GstClockTime timeout);
 gboolean       gst_v4l2_object_subscribe_event (GstV4l2Object * v4l2object, guint32 event);
 
+gboolean     gst_v4l2_object_is_raw (GstV4l2Object * obj);
+
 /* crop / compose */
 gboolean     gst_v4l2_object_set_crop (GstV4l2Object * obj, struct v4l2_rect *result);
 gboolean     gst_v4l2_object_get_crop_bounds (GstV4l2Object * obj, struct v4l2_rect *bounds);

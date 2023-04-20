@@ -1668,6 +1668,22 @@ done:
   return template;
 }
 
+gboolean
+gst_v4l2_object_is_raw (GstV4l2Object * v4l2object)
+{
+  gint i;
+
+  if (GST_VIDEO_INFO_FORMAT (&v4l2object->info) != GST_VIDEO_FORMAT_ENCODED)
+    return TRUE;
+
+  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+    if (gst_v4l2_formats[i].format == GST_V4L2_PIXELFORMAT (v4l2object)) {
+      return !!(gst_v4l2_formats[i].flags & GST_V4L2_RAW);
+    }
+  }
+  return FALSE;
+}
+
 /* Add an 'alternate' variant of the caps with the feature */
 static void
 add_alternate_variant (GstV4l2Object * v4l2object, GstCaps * caps,

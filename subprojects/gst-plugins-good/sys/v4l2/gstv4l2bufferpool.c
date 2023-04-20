@@ -1381,7 +1381,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
       break;
   }
 
-  if (GST_VIDEO_INFO_FORMAT (&obj->info) == GST_VIDEO_FORMAT_ENCODED) {
+  if (!gst_v4l2_object_is_raw (obj)) {
     if ((group->buffer.flags & V4L2_BUF_FLAG_KEYFRAME) ||
         GST_V4L2_PIXELFORMAT (obj) == V4L2_PIX_FMT_MJPEG ||
         GST_V4L2_PIXELFORMAT (obj) == V4L2_PIX_FMT_JPEG ||
