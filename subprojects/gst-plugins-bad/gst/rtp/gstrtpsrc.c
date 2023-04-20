@@ -358,6 +358,46 @@ gst_rtp_src_handle_message (GstBin * bin, GstMessage * message)
 }
 
 static void
+gst_rtp_src_constructed (GObject * object)
+{
+  gchar name[48];
+  GstRtpSrc *self = GST_RTP_SRC (object);
+  gchar *tmpname;
+
+  if (!self->rtp_src || !self->rtcp_src || !self->rtcp_sink)
+    return;
+
+  tmpname = g_strdup_printf ("%s_rtp_udpsrc", GST_OBJECT_NAME (self));
+  gst_object_set_name (GST_OBJECT (self->rtp_src), tmpname);
+  g_free (tmpname);
+
+  tmpname = g_strdup_printf ("%s_rtcp_udpsrc", GST_OBJECT_NAME (self));
+  gst_object_set_name (GST_OBJECT (self->rtcp_src), tmpname);
+  g_free (tmpname);
+
+  tmpname = g_strdup_printf ("%s_rtcp_udpsink", GST_OBJECT_NAME (self));
+  gst_object_set_name (GST_OBJECT (self->rtcp_sink), tmpname);
+  g_free (tmpname);
+
+  /* Add elements as needed, since udpsrc/udpsink for RTCP share a socket,
+   * not all at the same moment */
+  gst_bin_add (GST_BIN (self), self->rtp_src);
+  gst_bin_add (GST_BIN (self), self->rtcp_src);
+  gst_bin_add (GST_BIN (self), self->rtcp_sink);
+
+  g_object_set (self->rtcp_sink, "sync", FALSE, "async", FALSE, NULL);
+  gst_element_set_locked_state (self->rtcp_sink, TRUE);
+
+  /* pads are all named */
+  g_snprintf (name, 48, "recv_rtp_sink_%u", GST_ELEMENT (self)->numpads);
+  gst_element_link_pads (self->rtp_src, "src", self->rtpbin, name);
+  g_snprintf (name, 48, "recv_rtcp_sink_%u", GST_ELEMENT (self)->numpads);
+  gst_element_link_pads (self->rtcp_src, "src", self->rtpbin, name);
+  g_snprintf (name, 48, "send_rtcp_src_%u", GST_ELEMENT (self)->numpads);
+  gst_element_link_pads (self->rtpbin, name, self->rtcp_sink, "sink");
+}
+
+static void
 gst_rtp_src_class_init (GstRtpSrcClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -366,6 +406,7 @@ gst_rtp_src_class_init (GstRtpSrcClass * klass)
 
   gobject_class->set_property = gst_rtp_src_set_property;
   gobject_class->get_property = gst_rtp_src_get_property;
+  gobject_class->constructed = gst_rtp_src_constructed;
   gobject_class->finalize = gst_rtp_src_finalize;
   gstelement_class->change_state = gst_rtp_src_change_state;
   gstbin_class->handle_message = gst_rtp_src_handle_message;
@@ -798,7 +839,6 @@ gst_rtp_src_change_state (GstElement * element, GstStateChange transition)
 static void
 gst_rtp_src_init (GstRtpSrc * self)
 {
-  gchar name[48];
   const gchar *missing_plugin = NULL;
 
   self->rtpbin = NULL;
@@ -868,23 +908,6 @@ gst_rtp_src_init (GstRtpSrc * self)
     missing_plugin = "udp";
     goto missing_plugin;
   }
-
-  /* Add elements as needed, since udpsrc/udpsink for RTCP share a socket,
-   * not all at the same moment */
-  gst_bin_add (GST_BIN (self), self->rtp_src);
-  gst_bin_add (GST_BIN (self), self->rtcp_src);
-  gst_bin_add (GST_BIN (self), self->rtcp_sink);
-
-  g_object_set (self->rtcp_sink, "sync", FALSE, "async", FALSE, NULL);
-  gst_element_set_locked_state (self->rtcp_sink, TRUE);
-
-  /* pads are all named */
-  g_snprintf (name, 48, "recv_rtp_sink_%u", GST_ELEMENT (self)->numpads);
-  gst_element_link_pads (self->rtp_src, "src", self->rtpbin, name);
-  g_snprintf (name, 48, "recv_rtcp_sink_%u", GST_ELEMENT (self)->numpads);
-  gst_element_link_pads (self->rtcp_src, "src", self->rtpbin, name);
-  g_snprintf (name, 48, "send_rtcp_src_%u", GST_ELEMENT (self)->numpads);
-  gst_element_link_pads (self->rtpbin, name, self->rtcp_sink, "sink");
 
   if (missing_plugin == NULL)
     return;
