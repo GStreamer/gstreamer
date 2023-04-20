@@ -2811,7 +2811,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
       if (next_factory) {
         output->decoder = gst_element_factory_create ((GstElementFactory *)
             next_factory->data, NULL);
-        GST_DEBUG ("Created decoder '%s'", GST_ELEMENT_NAME (output->decoder));
+        GST_DEBUG ("Created decoder %" GST_PTR_FORMAT, output->decoder);
       } else {
         GST_DEBUG ("Could not find an element for caps %" GST_PTR_FORMAT,
             new_caps);
