@@ -4998,9 +4998,8 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       /* fall through */
     case GST_STATE_CHANGE_READY_TO_NULL:
       GST_PLAY_SINK_LOCK (playsink);
-      if (playsink->audiochain && playsink->audiochain->sink_volume) {
-        /* remove our links to the volume elements when they were
-         * provided by a sink */
+      if (playsink->audiochain) {
+        /* remove our links to the volume elements */
         disconnect_audio_chain (playsink->audiochain, playsink);
         if (playsink->audiochain->volume)
           gst_object_unref (playsink->audiochain->volume);
