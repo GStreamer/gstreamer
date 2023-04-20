@@ -2389,7 +2389,7 @@ gst_play_media_info_create (GstPlay * self)
     gst_query_parse_seeking (query, NULL, &media_info->seekable, NULL, NULL);
   gst_query_unref (query);
 
-  if (self->use_playbin3 && self->collection) {
+  if (self->use_playbin3) {
     gst_play_streams_info_create_from_collection (self, media_info,
         self->collection);
   } else {
