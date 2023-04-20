@@ -76,6 +76,7 @@ struct _GstVideoFlip {
 
   /* < private > */
   GstVideoFormat v_format;
+  gchar *stream_id;
 
   GstVideoOrientationMethod method;
   GstVideoOrientationMethod tag_method;
