@@ -519,7 +519,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_OBJECT_LOCK (element);
       pipeline->priv->is_live = FALSE;
+      GST_OBJECT_UNLOCK (element);
       reset_start_time (pipeline, 0);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -529,9 +531,11 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   if (GST_STATE_TRANSITION_NEXT (transition) == GST_STATE_PAUSED) {
+    GST_OBJECT_LOCK (element);
     pipeline->priv->is_live = result == GST_STATE_CHANGE_NO_PREROLL;
     GST_INFO_OBJECT (pipeline, "pipeline is%slive",
         pipeline->priv->is_live ? " " : " not ");
+    GST_OBJECT_UNLOCK (element);
   }
 
   switch (transition) {
@@ -621,6 +625,7 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_RESET_TIME:
     {
       GstClockTime running_time;
+      gboolean is_live;
 
       gst_message_parse_reset_time (message, &running_time);
 
@@ -628,9 +633,12 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
        * children. */
       reset_start_time (pipeline, running_time);
 
+      GST_OBJECT_LOCK (pipeline);
+      is_live = pipeline->priv->is_live;
+      GST_OBJECT_UNLOCK (pipeline);
+
       /* If we are live, sample a new base_time immediately */
-      if (pipeline->priv->is_live
-          && GST_STATE_TARGET (pipeline) == GST_STATE_PLAYING) {
+      if (is_live && GST_STATE_TARGET (pipeline) == GST_STATE_PLAYING) {
         gst_pipeline_change_state (GST_ELEMENT (pipeline),
             GST_STATE_CHANGE_PAUSED_TO_PLAYING);
       }
