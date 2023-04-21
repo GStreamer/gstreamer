@@ -174,8 +174,6 @@ commitlint docker:
 
 windows amd64 docker:
   stage: "preparation"
-  needs:
-    - "trigger"
   timeout: '3h'
   variables:
     # Unlike the buildah/linux jobs, this file
