@@ -1922,8 +1922,9 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
             /* If we have no more buffer, and can allocate it time to do so */
             if (num_queued == 0) {
               if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
+                GST_DEBUG_OBJECT (pool, "Resurrect for empty queue");
                 ret = gst_v4l2_buffer_pool_resurrect_buffer (pool);
-                if (ret == GST_FLOW_OK)
+                if (ret == GST_FLOW_OK || ret == GST_FLOW_FLUSHING)
                   goto done;
               }
             }
@@ -1933,8 +1934,9 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
               GstBuffer *copy;
 
               if (GST_V4L2_ALLOCATOR_CAN_ALLOCATE (pool->vallocator, MMAP)) {
+                GST_DEBUG_OBJECT (pool, "Resurrect for threshold");
                 ret = gst_v4l2_buffer_pool_resurrect_buffer (pool);
-                if (ret == GST_FLOW_OK)
+                if (ret == GST_FLOW_OK || ret == GST_FLOW_FLUSHING)
                   goto done;
               }
 
