@@ -177,12 +177,35 @@ static void
 gst_vulkan_device_constructed (GObject * object)
 {
   GstVulkanDevice *device = GST_VULKAN_DEVICE (object);
+  const char *optional_extensions[] = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+    VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME,
+#if (defined(VK_VERSION_1_3) || (defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 170))
+    VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
+#endif
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    VK_KHR_VIDEO_QUEUE_EXTENSION_NAME,
+    VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME,
+    VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME,
+    VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME,
+#ifdef VK_ENABLE_BETA_EXTENSION
+    VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME,
+    VK_EXT_VIDEO_ENCODE_H264_EXTENSION_NAME,
+    VK_EXT_VIDEO_ENCODE_H265_EXTENSION_NAME,
+#endif
+#endif
+  };
+  int i;
 
   g_object_get (device->physical_device, "instance", &device->instance, NULL);
 
-  /* by default allow vkswapper to work for rendering to an output window.
-   * Ignore the failure if the extension does not exist. */
-  gst_vulkan_device_enable_extension (device, VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+  /* Ignore the failure if the extension does not exist. */
+  for (i = 0; i < G_N_ELEMENTS (optional_extensions); i++) {
+    if (!gst_vulkan_device_enable_extension (device, optional_extensions[i])) {
+      GST_INFO_OBJECT (device, "Could not enable extension %s",
+          optional_extensions[i]);
+    }
+  }
 
   G_OBJECT_CLASS (parent_class)->constructed (object);
 }
