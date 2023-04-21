@@ -682,9 +682,11 @@ gst_v4l2_buffer_pool_streamon (GstV4l2BufferPool * pool)
         guint num_queued;
         guint i, n = 0;
 
+        GST_OBJECT_LOCK (pool);
         num_queued = g_atomic_int_get (&pool->num_queued);
         if (num_queued < pool->num_allocated)
           n = pool->num_allocated - num_queued;
+        GST_OBJECT_UNLOCK (pool);
 
         /* For captures, we need to enqueue buffers before we start streaming,
          * so the driver don't underflow immediately. As we have put then back
@@ -1147,6 +1149,8 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
   gint old_buffer_state;
   gint index;
 
+  GST_OBJECT_LOCK (pool);
+
   index = group->buffer.index;
 
   old_buffer_state =
@@ -1182,8 +1186,6 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
     }
   }
 
-  GST_OBJECT_LOCK (pool);
-
   /* If the pool was orphaned, don't try to queue any returned buffers.
    * This is done with the objet lock in order to synchronize with
    * orphaning. */
@@ -1205,6 +1207,7 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf,
 already_queued:
   {
     GST_ERROR_OBJECT (pool, "the buffer %i was already queued", index);
+    GST_OBJECT_UNLOCK (pool);
     return GST_FLOW_ERROR;
   }
 was_orphaned:
@@ -2281,7 +2284,9 @@ gst_v4l2_buffer_pool_flush (GstV4l2Object * v4l2object)
 
   pool = GST_V4L2_BUFFER_POOL (bpool);
 
+  GST_OBJECT_LOCK (pool);
   gst_v4l2_buffer_pool_streamoff (pool);
+  GST_OBJECT_UNLOCK (pool);
 
   if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
     ret = gst_v4l2_buffer_pool_flush_events (v4l2object);
