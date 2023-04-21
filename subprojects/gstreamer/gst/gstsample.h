@@ -154,9 +154,18 @@ gst_sample_copy (const GstSample * sample)
 {
   return GST_SAMPLE_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST (sample)));
 }
+
+static inline void
+gst_clear_sample (GstSample ** sample_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) sample_ptr);
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 GstSample *   gst_sample_copy (const GstSample * sample);
+
+GST_API
+void          gst_clear_sample (GstSample ** sample_ptr);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 /**

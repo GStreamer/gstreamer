@@ -479,3 +479,22 @@ gst_sample_copy (const GstSample * sample)
       GST_SAMPLE_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CONST_CAST
           (sample)));
 }
+
+/**
+ * gst_clear_sample: (skip)
+ * @sample_ptr: a pointer to a #GstSample reference
+ *
+ * Clears a reference to a #GstSample
+ *
+ * @sample_ptr must not be %NULL.
+ *
+ * If the reference is %NULL then this function does nothing. Otherwise, the
+ * reference count of the sample is decreased and the pointer is set to %NULL.
+ *
+ * Since: 1.24
+ */
+void
+gst_clear_sample (GstSample ** sample_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) sample_ptr);
+}

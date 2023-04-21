@@ -38632,11 +38632,11 @@ Free-function: gst_sample_unref</doc>
 copy of the data the source sample contains.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
         <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">a new copy of @buf.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">a new copy of @sample.</doc>
           <type name="Sample" c:type="GstSample*"/>
         </return-value>
         <parameters>
-          <instance-parameter name="buf" transfer-ownership="none">
+          <instance-parameter name="sample" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">a #GstSample.</doc>
             <type name="Sample" c:type="const GstSample*"/>
           </instance-parameter>
@@ -49786,6 +49786,24 @@ reference count of the query is decreased and the pointer is set to %NULL.</doc>
         <parameter name="query_ptr" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstquery.c">a pointer to a #GstQuery reference</doc>
           <type name="Query" c:type="GstQuery**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="clear_sample" c:identifier="gst_clear_sample" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">Clears a reference to a #GstSample
+
+@sample_ptr must not be %NULL.
+
+If the reference is %NULL then this function does nothing. Otherwise, the
+reference count of the sample is decreased and the pointer is set to %NULL.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstsample.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="sample_ptr" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstsample.c">a pointer to a #GstSample reference</doc>
+          <type name="Sample" c:type="GstSample**"/>
         </parameter>
       </parameters>
     </function>
