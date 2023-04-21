@@ -272,6 +272,7 @@ _register_vpp (GstPlugin * plugin,
 
   if (!gst_msdkcaps_vpp_create_caps (context, vpp_desc, &sink_caps, &src_caps)) {
     GST_WARNING ("Failed to create caps for VPP");
+    return;
   }
 
   if (!gst_msdkvpp_register (plugin,
@@ -373,6 +374,7 @@ _register_vpp (GstPlugin * plugin, GstMsdkContext * context)
 
   if (!gst_msdkcaps_vpp_create_caps (context, NULL, &sink_caps, &src_caps)) {
     GST_WARNING ("Failed to create caps for VPP");
+    return;
   }
 
   if (!gst_msdkvpp_register (plugin, context,
