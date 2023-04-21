@@ -2225,11 +2225,14 @@ gst_discoverer_info_to_variant_recurse (GstDiscovererStreamInfo * sinfo,
     GstDiscovererStreamInfo *ninfo =
         gst_discoverer_stream_info_get_next (sinfo);
 
-    nextv = gst_discoverer_info_to_variant_recurse (ninfo, flags);
-
-    stream_variant =
-        g_variant_new ("(yvv)", 'n', common_stream_variant,
-        g_variant_new ("v", nextv));
+    if (ninfo) {
+      nextv = gst_discoverer_info_to_variant_recurse (ninfo, flags);
+      stream_variant =
+          g_variant_new ("(yvv)", 'n', common_stream_variant,
+          g_variant_new ("v", nextv));
+    } else {
+      stream_variant = g_variant_new ("(yv)", 'n', common_stream_variant);
+    }
   }
 
   return stream_variant;
@@ -2370,8 +2373,11 @@ _parse_discovery (GVariant * variant, GstDiscovererInfo * info)
 {
   gchar type;
   GVariant *common = g_variant_get_child_value (variant, 1);
-  GVariant *specific = g_variant_get_child_value (variant, 2);
+  GVariant *specific = NULL;
   GstDiscovererStreamInfo *sinfo = NULL;
+
+  if (g_variant_n_children (variant) > 2)
+    specific = g_variant_get_child_value (variant, 2);
 
   GET_FROM_TUPLE (variant, byte, 0, &type);
   switch (type) {
@@ -2434,7 +2440,8 @@ _parse_discovery (GVariant * variant, GstDiscovererInfo * info)
 out:
 
   g_variant_unref (common);
-  g_variant_unref (specific);
+  if (specific)
+    g_variant_unref (specific);
   g_variant_unref (variant);
   return sinfo;
 }
@@ -2700,7 +2707,9 @@ gst_discoverer_info_to_variant (GstDiscovererInfo * info,
 
   g_return_val_if_fail (GST_IS_DISCOVERER_INFO (info), NULL);
   g_return_val_if_fail (gst_discoverer_info_get_result (info) ==
-      GST_DISCOVERER_OK, NULL);
+      GST_DISCOVERER_OK
+      || gst_discoverer_info_get_result (info) ==
+      GST_DISCOVERER_MISSING_PLUGINS, NULL);
 
   sinfo = gst_discoverer_info_get_stream_info (info);
   stream_variant = gst_discoverer_info_to_variant_recurse (sinfo, flags);
