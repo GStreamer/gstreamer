@@ -1409,6 +1409,31 @@ failed:
 
 #else
 
+gboolean
+gst_msdkcaps_enc_create_caps (GstMsdkContext * context,
+    gpointer enc_description, guint codec_id,
+    GstCaps ** sink_caps, GstCaps ** src_caps)
+{
+  return FALSE;
+}
+
+gboolean
+gst_msdkcaps_dec_create_caps (GstMsdkContext * context,
+    gpointer dec_description, guint codec_id,
+    GstCaps ** sink_caps, GstCaps ** src_caps)
+{
+  return FALSE;
+}
+
+gboolean
+gst_msdkcaps_vpp_create_caps (GstMsdkContext * context,
+    gpointer vpp_description, GstCaps ** sink_caps, GstCaps ** src_caps)
+{
+  return FALSE;
+}
+
+#endif
+
 static gboolean
 _get_profiles (guint codec_id, GValue * supported_profs)
 {
@@ -1437,7 +1462,7 @@ _get_profiles (guint codec_id, GValue * supported_profs)
 }
 
 static const char *
-_enc_get_raw_formats (guint codec_id)
+_enc_get_static_raw_formats (guint codec_id)
 {
   switch (codec_id) {
     case MFX_CODEC_AVC:
@@ -1464,7 +1489,7 @@ _enc_get_raw_formats (guint codec_id)
 
 #ifndef _WIN32
 static const char *
-_enc_get_dma_formats (guint codec_id)
+_enc_get_static_dma_formats (guint codec_id)
 {
   switch (codec_id) {
     case MFX_CODEC_AVC:
@@ -1490,9 +1515,8 @@ _enc_get_dma_formats (guint codec_id)
 #endif
 
 gboolean
-gst_msdkcaps_enc_create_caps (GstMsdkContext * context,
-    gpointer enc_description, guint codec_id,
-    GstCaps ** sink_caps, GstCaps ** src_caps)
+gst_msdkcaps_enc_create_static_caps (GstMsdkContext * context,
+    guint codec_id, GstCaps ** sink_caps, GstCaps ** src_caps)
 {
   GstCaps *in_caps = NULL, *out_caps = NULL;
   GstCaps *dma_caps = NULL;
@@ -1502,7 +1526,7 @@ gst_msdkcaps_enc_create_caps (GstMsdkContext * context,
   const char *dma_fmts = NULL;
   GValue supported_profs = G_VALUE_INIT;
 
-  raw_fmts = _enc_get_raw_formats (codec_id);
+  raw_fmts = _enc_get_static_raw_formats (codec_id);
   if (!raw_fmts)
     goto failed;
   raw_caps_str = g_strdup_printf ("video/x-raw, format=(string){ %s }",
@@ -1511,7 +1535,7 @@ gst_msdkcaps_enc_create_caps (GstMsdkContext * context,
   g_free (raw_caps_str);
 
 #ifndef _WIN32
-  dma_fmts = _enc_get_dma_formats (codec_id);
+  dma_fmts = _enc_get_static_dma_formats (codec_id);
   if (!dma_fmts)
     goto failed;
   dma_caps_str =
@@ -1577,7 +1601,7 @@ failed:
 }
 
 static const char *
-_dec_get_raw_formats (guint codec_id)
+_dec_get_static_raw_formats (guint codec_id)
 {
   switch (codec_id) {
     case MFX_CODEC_AVC:
@@ -1608,7 +1632,7 @@ _dec_get_raw_formats (guint codec_id)
 
 #ifndef _WIN32
 static const char *
-_dec_get_dma_formats (guint codec_id)
+_dec_get_static_dma_formats (guint codec_id)
 {
   switch (codec_id) {
     case MFX_CODEC_AVC:
@@ -1639,9 +1663,8 @@ _dec_get_dma_formats (guint codec_id)
 #endif
 
 gboolean
-gst_msdkcaps_dec_create_caps (GstMsdkContext * context,
-    gpointer dec_description, guint codec_id,
-    GstCaps ** sink_caps, GstCaps ** src_caps)
+gst_msdkcaps_dec_create_static_caps (GstMsdkContext * context,
+    guint codec_id, GstCaps ** sink_caps, GstCaps ** src_caps)
 {
   GstCaps *in_caps = NULL, *out_caps = NULL;
   GstCaps *dma_caps = NULL;
@@ -1656,7 +1679,7 @@ gst_msdkcaps_dec_create_caps (GstMsdkContext * context,
 
   in_caps = gst_caps_new_empty_simple (media_type);
 
-  raw_fmts = _dec_get_raw_formats (codec_id);
+  raw_fmts = _dec_get_static_raw_formats (codec_id);
   if (!raw_fmts)
     goto failed;
   raw_caps_str = g_strdup_printf ("video/x-raw, format=(string){ %s }",
@@ -1665,7 +1688,7 @@ gst_msdkcaps_dec_create_caps (GstMsdkContext * context,
   g_free (raw_caps_str);
 
 #ifndef _WIN32
-  dma_fmts = _dec_get_dma_formats (codec_id);
+  dma_fmts = _dec_get_static_dma_formats (codec_id);
   if (!dma_fmts)
     goto failed;
   dma_caps_str =
@@ -1712,7 +1735,7 @@ failed:
 }
 
 static const char *
-_vpp_get_raw_formats (GstPadDirection direction)
+_vpp_get_static_raw_formats (GstPadDirection direction)
 {
   switch (direction) {
     case GST_PAD_SINK:
@@ -1731,7 +1754,7 @@ _vpp_get_raw_formats (GstPadDirection direction)
 
 #ifndef _WIN32
 static const char *
-_vpp_get_dma_formats (GstPadDirection direction)
+_vpp_get_static_dma_formats (GstPadDirection direction)
 {
   switch (direction) {
     case GST_PAD_SINK:
@@ -1750,20 +1773,20 @@ _vpp_get_dma_formats (GstPadDirection direction)
 #endif
 
 static GstCaps *
-_vpp_create_caps (GstMsdkContext * context, GstPadDirection direction)
+_vpp_create_static_caps (GstMsdkContext * context, GstPadDirection direction)
 {
   GstCaps *caps = NULL, *dma_caps = NULL;
   gchar *caps_str;
 
   caps_str = g_strdup_printf ("video/x-raw, format=(string){ %s }",
-      _vpp_get_raw_formats (direction));
+      _vpp_get_static_raw_formats (direction));
   caps = gst_caps_from_string (caps_str);
   g_free (caps_str);
 
 #ifndef _WIN32
   caps_str =
       g_strdup_printf ("video/x-raw(memory:DMABuf), format=(string){ %s }",
-      _vpp_get_dma_formats (direction));
+      _vpp_get_static_dma_formats (direction));
   dma_caps = gst_caps_from_string (caps_str);
   g_free (caps_str);
   gst_caps_append (caps, dma_caps);
@@ -1791,16 +1814,14 @@ _vpp_create_caps (GstMsdkContext * context, GstPadDirection direction)
 }
 
 gboolean
-gst_msdkcaps_vpp_create_caps (GstMsdkContext * context,
-    gpointer vpp_description, GstCaps ** sink_caps, GstCaps ** src_caps)
+gst_msdkcaps_vpp_create_static_caps (GstMsdkContext * context,
+    GstCaps ** sink_caps, GstCaps ** src_caps)
 {
-  *sink_caps = _vpp_create_caps (context, GST_PAD_SINK);
-  *src_caps = _vpp_create_caps (context, GST_PAD_SRC);
+  *sink_caps = _vpp_create_static_caps (context, GST_PAD_SINK);
+  *src_caps = _vpp_create_static_caps (context, GST_PAD_SRC);
 
   return TRUE;
 }
-
-#endif
 
 static void
 _pad_template_init (GstElementClass * klass,
