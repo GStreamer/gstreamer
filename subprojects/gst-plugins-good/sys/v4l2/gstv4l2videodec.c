@@ -746,9 +746,17 @@ gst_v4l2_video_dec_loop (GstVideoDecoder * decoder)
       goto beach;
     }
 
+    GST_DEBUG_OBJECT (decoder, "Setup the capture queue");
     ret = gst_v4l2_video_dec_setup_capture (decoder);
+    /* FIXME not super nice ? */
+    if (ret == GST_FLOW_FLUSHING || GST_PAD_IS_FLUSHING (decoder->sinkpad)
+        || GST_PAD_IS_FLUSHING (decoder->srcpad)) {
+      ret = GST_FLOW_FLUSHING;
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      goto beach;
+    }
     if (ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (decoder, "Failed setup capture queue");
+      GST_ERROR_OBJECT (decoder, "Failed to setup capture queue");
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       goto beach;
     }
