@@ -1850,12 +1850,16 @@ _get_info_from_cachefile (GstDiscoverer * dc, gchar * cachefile)
     if (info) {
       info->cachefile = cachefile;
       info->from_cache = (gpointer) 0x01;
+    } else {
+      g_free (cachefile);
     }
 
     GST_INFO_OBJECT (dc, "Got info from cache: %p", info);
     g_free (data);
 
     return info;
+  } else {
+    g_free (cachefile);
   }
 
   return NULL;
@@ -1871,7 +1875,6 @@ load_serialized_info (GstDiscoverer * dc, gchar * uri)
 
     if (cachefile) {
       res = _get_info_from_cachefile (dc, cachefile);
-      g_free (cachefile);
     }
   }
 
