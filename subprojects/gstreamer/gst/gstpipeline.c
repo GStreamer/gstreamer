@@ -1176,3 +1176,27 @@ gst_pipeline_handle_instant_rate (GstPipeline * pipeline, gdouble rate,
 
   return gst_element_send_event (GST_ELEMENT_CAST (pipeline), event);
 }
+
+/**
+ * gst_pipeline_is_live:
+ * @pipeline: a #GstPipeline
+ *
+ * Check if @pipeline is live.
+ *
+ * Returns: %TRUE if @pipeline is live, %FALSE if not or if it did not reach the PAUSED state yet.
+ *
+ * MT safe.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_pipeline_is_live (GstPipeline * pipeline)
+{
+  gboolean is_live;
+
+  GST_OBJECT_LOCK (pipeline);
+  is_live = pipeline->priv->is_live;
+  GST_OBJECT_UNLOCK (pipeline);
+
+  return is_live;
+}

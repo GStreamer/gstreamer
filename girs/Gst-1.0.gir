@@ -32902,6 +32902,22 @@ clock, even if the pipeline is not in the PLAYING state.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="is_live" c:identifier="gst_pipeline_is_live" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">Check if @pipeline is live.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpipeline.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">%TRUE if @pipeline is live, %FALSE if not or if it did not reach the PAUSED state yet.
+
+MT safe.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pipeline" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">a #GstPipeline</doc>
+            <type name="Pipeline" c:type="GstPipeline*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="set_auto_flush_bus" c:identifier="gst_pipeline_set_auto_flush_bus">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">Usually, when a pipeline goes from READY to NULL state, it automatically
 flushes all pending messages on the bus, which is done for refcounting
