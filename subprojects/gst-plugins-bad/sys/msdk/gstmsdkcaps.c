@@ -1365,8 +1365,11 @@ gst_msdkcaps_vpp_create_caps (GstMsdkContext * context,
   g_return_val_if_fail (context, FALSE);
   g_return_val_if_fail (vpp_description, FALSE);
 
-  session = gst_msdk_context_get_session (context);
   vpp_desc = (mfxVPPDescription *) vpp_description;
+  if (vpp_desc->NumFilters == 0)
+    return FALSE;
+
+  session = gst_msdk_context_get_session (context);
 
   g_value_init (&supported_in_fmts, GST_TYPE_LIST);
   g_value_init (&supported_out_fmts, GST_TYPE_LIST);
