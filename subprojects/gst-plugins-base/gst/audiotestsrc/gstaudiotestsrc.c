@@ -953,6 +953,10 @@ gst_audio_test_src_create_tick_##type (GstAudioTestSrc * src, g##type * samples)
       src->accumulator = 0; \
       src->tick_counter++; \
       volscale = calc_scaled_tick_volume (src, scale); \
+      for (c = 0; c < channels; ++c) { \
+        *ptr = 0; \
+        ptr += channel_step; \
+      } \
     } else if (samplemod < num_nonzero_samples)  { \
       gdouble ramp; \
       if (num_ramp_samples > 0) { \
