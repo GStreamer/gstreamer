@@ -56,6 +56,15 @@ G_BEGIN_DECLS
 
 #define MAX_EXTRA_PARAMS 8
 
+#define check_update_property(type, obj, old_val, new_val)          \
+  gst_msdkenc_check_update_property_##type (obj, old_val, new_val)
+#define check_update_property_uint(obj, old_val, new_val)           \
+  check_update_property (uint, obj, old_val, new_val)
+#define check_update_property_int(obj, old_val, new_val)            \
+  check_update_property (int, obj, old_val, new_val)
+#define check_update_property_bool(obj, old_val, new_val)           \
+  check_update_property (bool, obj, old_val, new_val)
+
 typedef struct _GstMsdkEnc GstMsdkEnc;
 typedef struct _GstMsdkEncClass GstMsdkEncClass;
 typedef struct _MsdkEncTask MsdkEncTask;
@@ -208,6 +217,18 @@ void gst_msdkenc_add_extra_param (GstMsdkEnc * thiz, mfxExtBuffer * param);
 
 void
 gst_msdkenc_install_common_properties (GstMsdkEncClass *encoder_class);
+
+gboolean
+gst_msdkenc_check_update_property_uint (GstMsdkEnc * thiz, guint * old_val,
+                                        guint new_val);
+
+gboolean
+gst_msdkenc_check_update_property_int (GstMsdkEnc * thiz, gint * old_val,
+                                        gint new_val);
+
+gboolean
+gst_msdkenc_check_update_property_bool (GstMsdkEnc * thiz, gboolean * old_val,
+                                        gboolean new_val);
 
 gboolean
 gst_msdkenc_set_common_property (GObject * object, guint prop_id,

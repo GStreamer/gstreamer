@@ -2006,6 +2006,39 @@ gst_msdkenc_init (GstMsdkEnc * thiz)
       EC_PROPS_EXTBRC, G_TYPE_STRING, "off", NULL);
 }
 
+/* *INDENT-OFF* */
+#define UPDATE_PROPERTY                         \
+  if (*old_val == new_val) {                    \
+    return FALSE;                               \
+  }                                             \
+  *old_val = new_val;                                                   \
+  thiz->reconfig = TRUE;                                                \
+  return TRUE;                                                          \
+
+gboolean
+gst_msdkenc_check_update_property_uint (GstMsdkEnc * thiz, guint * old_val,
+    guint new_val)
+{
+  UPDATE_PROPERTY
+}
+
+gboolean
+gst_msdkenc_check_update_property_int (GstMsdkEnc * thiz, gint * old_val,
+    gint new_val)
+{
+  UPDATE_PROPERTY
+}
+
+gboolean
+gst_msdkenc_check_update_property_bool (GstMsdkEnc * thiz, gboolean * old_val,
+    gboolean new_val)
+{
+  UPDATE_PROPERTY
+}
+
+#undef UPDATE_PROPERTY
+/* *INDENT-ON* */
+
 /* gst_msdkenc_set_common_property:
  *
  * This is a helper function to set the common property
